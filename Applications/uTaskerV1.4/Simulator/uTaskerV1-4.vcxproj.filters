@@ -1,0 +1,602 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{60118a63-8179-4bb1-a7a2-22808811feb1}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;rc;def;r;odl;idl;hpj;bat</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{865310c7-9fb4-4963-99a9-edfe2256535b}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl</Extensions>
+    </Filter>
+    <Filter Include="uTasker">
+      <UniqueIdentifier>{e8a54d7b-111a-443f-8153-1bd3c3c4ab14}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="uTasker\MODBUS">
+      <UniqueIdentifier>{6fc83b95-75a5-450f-a756-c20c419995d9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="uTasker\uGLCDLIB">
+      <UniqueIdentifier>{7dacf7fd-4ae9-425c-8b1a-eb9a65893b09}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="uTasker\utFAT">
+      <UniqueIdentifier>{94222f42-f598-4ea2-ae83-848e469de872}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Hardware">
+      <UniqueIdentifier>{f06902ea-ba4b-4953-8595-1597b66e0da9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="WinSim">
+      <UniqueIdentifier>{c7e80ac7-2792-4dcb-b005-d5320437cf8c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="WinSim\SIMKinetis">
+      <UniqueIdentifier>{b656e3d0-d378-472e-9a0f-b11a778266a4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Hardware\Kinetis">
+      <UniqueIdentifier>{d14f3859-65c4-43f3-945f-ee1de218884a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="TCP/IP">
+      <UniqueIdentifier>{ab5acb6e-4bb5-4b4c-ac5d-49a33cf47c84}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Hardware\Kinetis\CMSIS_DSP">
+      <UniqueIdentifier>{71bd96e7-a06a-40a7-a47a-fe3c17ab5252}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Hardware\Kinetis\Crypto">
+      <UniqueIdentifier>{6a282eab-ef7a-4345-a6bd-d07924c86da0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="TCP/IP\mbedtls">
+      <UniqueIdentifier>{5e2e57d6-05ad-417c-9710-0b90c686fba0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="WinSim\Resource Files">
+      <UniqueIdentifier>{0e548044-0a8b-43a6-8623-c4a89e23df2a}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\application.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\debug.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KeyScan.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\modbus_app.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\NetworkIndicator.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\usb_application.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\uTasker\can_drv.c">
+      <Filter>uTasker</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\uTasker\Driver.c">
+      <Filter>uTasker</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\uTasker\eth_drv.c">
+      <Filter>uTasker</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\uTasker\GlobalTimer.c">
+      <Filter>uTasker</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\uTasker\low_power.c">
+      <Filter>uTasker</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\uTasker\SSC_drv.c">
+      <Filter>uTasker</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\uTasker\Tty_drv.c">
+      <Filter>uTasker</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\uTasker\uFile.c">
+      <Filter>uTasker</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\uTasker\uMalloc.c">
+      <Filter>uTasker</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\uTasker\uNetwork.c">
+      <Filter>uTasker</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\uTasker\USB_drv.c">
+      <Filter>uTasker</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\uTasker\uTasker.c">
+      <Filter>uTasker</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\uTasker\Watchdog.c">
+      <Filter>uTasker</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\uTasker\MODBUS\MODBUS.c">
+      <Filter>uTasker\MODBUS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\uTasker\uGLCDLIB\GLCD.c">
+      <Filter>uTasker\uGLCDLIB</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\uTasker\uGLCDLIB\LCD.c">
+      <Filter>uTasker\uGLCDLIB</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\uTasker\utFAT\mass_storage.c">
+      <Filter>uTasker\utFAT</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\arp.c">
+      <Filter>TCP/IP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\dhcp.c">
+      <Filter>TCP/IP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\dns.c">
+      <Filter>TCP/IP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\Ethernet.c">
+      <Filter>TCP/IP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\ftp.c">
+      <Filter>TCP/IP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\http.c">
+      <Filter>TCP/IP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\icmp.c">
+      <Filter>TCP/IP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\ip.c">
+      <Filter>TCP/IP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\ip_utils.c">
+      <Filter>TCP/IP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\NetBIOS.c">
+      <Filter>TCP/IP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\pop3.c">
+      <Filter>TCP/IP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\ppp.c">
+      <Filter>TCP/IP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\smtp.c">
+      <Filter>TCP/IP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\snmp.c">
+      <Filter>TCP/IP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\tcp.c">
+      <Filter>TCP/IP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\telnet.c">
+      <Filter>TCP/IP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\tftp.c">
+      <Filter>TCP/IP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\udp.c">
+      <Filter>TCP/IP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\webutils.c">
+      <Filter>TCP/IP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\WinSim\Ethereal.cpp">
+      <Filter>WinSim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\WinSim\FileToDisk.c">
+      <Filter>WinSim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\WinSim\LCD\KeyPadSim.cpp">
+      <Filter>WinSim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\WinSim\LCD\LCDSim.cpp">
+      <Filter>WinSim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\WinSim\PortSim.cpp">
+      <Filter>WinSim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\WinSim\SDcard_sim.c">
+      <Filter>WinSim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\WinSim\WinPcap.cpp">
+      <Filter>WinSim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\WinSim\WinSim.c">
+      <Filter>WinSim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\WinSim\WinSimMain.cpp">
+      <Filter>WinSim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Hardware\Kinetis\kinetis.c">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Hardware\Kinetis\kinetis_ports.cpp">
+      <Filter>WinSim\SIMKinetis</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\zero_config.c">
+      <Filter>TCP/IP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\ftp_client.c">
+      <Filter>TCP/IP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\WinSim\Komodo\komodo.c">
+      <Filter>WinSim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\snmp_mib_handlers.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\igmp.c">
+      <Filter>TCP/IP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\uTasker\time_keeper.c">
+      <Filter>uTasker</Filter>
+    </ClCompile>
+    <ClCompile Include="..\webInterface.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FreeMaster.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\nRF24201.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Hardware\Kinetis\kinetisSim.c">
+      <Filter>WinSim\SIMKinetis</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Hardware\Kinetis\CMSIS_DSP\arm_cmplx_mag_f32.c">
+      <Filter>Hardware\Kinetis\CMSIS_DSP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Hardware\Kinetis\CMSIS_DSP\arm_common_tables.c">
+      <Filter>Hardware\Kinetis\CMSIS_DSP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Hardware\Kinetis\CMSIS_DSP\arm_max_f32.c">
+      <Filter>Hardware\Kinetis\CMSIS_DSP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Hardware\Kinetis\CMSIS_DSP\arm_cfft_radix8_f32.c">
+      <Filter>Hardware\Kinetis\CMSIS_DSP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Hardware\Kinetis\CMSIS_DSP\arm_const_structs.c">
+      <Filter>Hardware\Kinetis\CMSIS_DSP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Hardware\Kinetis\CMSIS_DSP\arm_cfft_f32.c">
+      <Filter>Hardware\Kinetis\CMSIS_DSP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\WinSim\serial_dev.c">
+      <Filter>WinSim\SIMKinetis</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\uTasker\i2c_drv.c">
+      <Filter>uTasker</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\uTasker\crypto.c">
+      <Filter>uTasker</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\uTasker\DSP.c">
+      <Filter>uTasker</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\SSL\mbedtls-1.3.10\aes.c">
+      <Filter>TCP/IP\mbedtls</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\ADC_Timers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\app_user_files.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\application.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\application_lcd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\can_tests.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\config.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Port_Interrupts.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\TaskConfig.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\uTasker\uTasker.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\widgets.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\uTasker\MODBUS\modbus.h">
+      <Filter>uTasker\MODBUS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\uTasker\uGLCDLIB\glcd.h">
+      <Filter>uTasker\uGLCDLIB</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\uTasker\uGLCDLIB\glcd_cglcd.h">
+      <Filter>uTasker\uGLCDLIB</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\uTasker\uGLCDLIB\glcd_fonts.h">
+      <Filter>uTasker\uGLCDLIB</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\uTasker\uGLCDLIB\glcd_nokia.h">
+      <Filter>uTasker\uGLCDLIB</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\uTasker\uGLCDLIB\glcd_oled.h">
+      <Filter>uTasker\uGLCDLIB</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\uTasker\uGLCDLIB\glcd_samsung.h">
+      <Filter>uTasker\uGLCDLIB</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\uTasker\uGLCDLIB\glcd_tft.h">
+      <Filter>uTasker\uGLCDLIB</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\uTasker\uGLCDLIB\glcd_toshiba.h">
+      <Filter>uTasker\uGLCDLIB</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\uTasker\utFAT\mass_storage.h">
+      <Filter>uTasker\utFAT</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\hardware.h">
+      <Filter>Hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\WinSim\WinSim.h">
+      <Filter>WinSim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\spi_flash_kinetis_atmel.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\spi_flash_kinetis_sst25.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\spi_flash_kinetis_stmicro.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_port.h">
+      <Filter>WinSim\SIMKinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\simkinetis.h">
+      <Filter>WinSim\SIMKinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\uTasker\utFAT\NAND_driver.h">
+      <Filter>uTasker\utFAT</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_port_k10.h">
+      <Filter>WinSim\SIMKinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_port_k20.h">
+      <Filter>WinSim\SIMKinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_port_k30.h">
+      <Filter>WinSim\SIMKinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_port_k40.h">
+      <Filter>WinSim\SIMKinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_port_k50.h">
+      <Filter>WinSim\SIMKinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_port_k51.h">
+      <Filter>WinSim\SIMKinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_port_k52.h">
+      <Filter>WinSim\SIMKinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_port_k53.h">
+      <Filter>WinSim\SIMKinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_port_k70.h">
+      <Filter>WinSim\SIMKinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_port_k61.h">
+      <Filter>WinSim\SIMKinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\WinSim\Komodo\komodo.h">
+      <Filter>WinSim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\app_hw_kinetis.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_port_ke.h">
+      <Filter>WinSim\SIMKinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_port_kl.h">
+      <Filter>WinSim\SIMKinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\WinSim\LCD\lcd.h">
+      <Filter>WinSim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\debug_hal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\utasker\uglcdlib\glcd_st7565s.h">
+      <Filter>uTasker\uGLCDLIB</Filter>
+    </ClInclude>
+    <ClInclude Include="..\usb_cdc_descriptors.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\slcd_time.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\usb_msd_descriptors.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\usb_keyboard_descriptors.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\usb_mouse_descriptors.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\spi_sc16IS7xx.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\hardware\kinetis\kinetis_port_kv.h">
+      <Filter>WinSim\SIMKinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_UART.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_ENET.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_CAN.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_I2C.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_FLASH.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_SDHC.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_PWM.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_low_power.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_KBI.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_RTC.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_PIT.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_LPTMR.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_FLEXTIMER.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_PDB.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_ADC.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_DAC.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_PORTS.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_LLWU.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\spi_flash_w25q.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\user_glcd_fonts.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_errata.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_port_k00.h">
+      <Filter>WinSim\SIMKinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\spi_flash_kinetis_s25fl1-k.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_USB_HS_Device.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\usb_hid_raw_descriptors.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_USB_OTG.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\usb_audio_descriptors.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_DMA.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_I2S.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_port_K26_K65_K66.h">
+      <Filter>WinSim\SIMKinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_port_k80.h">
+      <Filter>WinSim\SIMKinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_port_kw.h">
+      <Filter>WinSim\SIMKinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\i2c_tests.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\CMSIS_DSP\arm_common_tables.h">
+      <Filter>Hardware\Kinetis\CMSIS_DSP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\CMSIS_DSP\arm_math.h">
+      <Filter>Hardware\Kinetis\CMSIS_DSP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\CMSIS_DSP\core_cm4.h">
+      <Filter>Hardware\Kinetis\CMSIS_DSP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\CMSIS_DSP\arm_const_structs.h">
+      <Filter>Hardware\Kinetis\CMSIS_DSP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\CMSIS_DSP\cmsis_compiler.h">
+      <Filter>Hardware\Kinetis\CMSIS_DSP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\CMSIS_DSP\cmsis_gcc.h">
+      <Filter>Hardware\Kinetis\CMSIS_DSP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\CMSIS_DSP\core_cm0plus.h">
+      <Filter>Hardware\Kinetis\CMSIS_DSP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\mbedtls-1.3.10\aes.h">
+      <Filter>TCP/IP\mbedtls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\uTasker\driver.h">
+      <Filter>uTasker</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\uTasker\usb.h">
+      <Filter>uTasker</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Stack\tcpip.h">
+      <Filter>TCP/IP</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="cursor1.cur">
+      <Filter>WinSim\Resource Files</Filter>
+    </None>
+    <None Include="small.ico">
+      <Filter>WinSim\Resource Files</Filter>
+    </None>
+    <None Include="uTasker.ico">
+      <Filter>WinSim\Resource Files</Filter>
+    </None>
+    <None Include="..\GNU_Kinetis\make_uTaskerV1.4_GNU_Kinetis" />
+    <None Include="..\..\..\Hardware\Kinetis\kinetis_asm.s">
+      <Filter>Hardware\Kinetis</Filter>
+    </None>
+    <None Include="cursor7.cur">
+      <Filter>WinSim\Resource Files</Filter>
+    </None>
+    <None Include="..\GNU_Kinetis\Build_Kinetis.bat" />
+    <None Include="..\..\..\Hardware\Kinetis\CMSIS_DSP\arm_bitreversal2.S">
+      <Filter>Hardware\Kinetis\CMSIS_DSP</Filter>
+    </None>
+    <None Include="..\..\..\Hardware\Kinetis\Crypto\mmcau_aes_functions.s">
+      <Filter>Hardware\Kinetis\Crypto</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="uTasker.rc">
+      <Filter>WinSim\Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

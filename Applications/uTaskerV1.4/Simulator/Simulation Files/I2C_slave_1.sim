@@ -1,0 +1,35 @@
+// Simulate I2C operation of a slave device
+//
+// Address 0xd0 write, set address 0x09 and then send ony byte of data 0x55 (EEPROM would save 0x55 to address 9)
++50 I2C-0 d0 09 55
+
+// Two subsequent writes with a repeated start in between them
++50 I2CR-0 d0 09 55
++50 I2C-0 d0 09 55
+
+// Address 0xd1 read of two bytes
++50 I2C-0 d1 02
+
+// Address 0xd0 write to set address with repeated start to follow
++50 I2CR-0 d0 09
++0  I2C-0 d1 02 // complete the read of 2 bytes
+
+// Address 0xc0 write to set address with repeated start to read from 0xd1
++50 I2CR-0 c0 09 // write address to first slave
++0  I2C-0  d1 02 // read of 2 bytes from different slave
+
+// Address 0xd0 write to set address with repeated start to read from 0xc1
++50 I2CR-0 d0 09 // write address to first slave
++0  I2C-0  c1 02 // read of 2 bytes from different slave
+
+// Two slave operations with repeated starts throughout
++50 I2CR-0 d0 09
++0  I2CR-0 d1 02 // complete the read of 2 bytes
++50 I2CR-0 c0 09
++0  I2C-0  c1 02 // complete the read of 2 bytes (stop condition)
+
+// Two slave operations with repeated starts throughout (mixing addresses in the sequence)
++50 I2CR-0 d0 09
++0  I2CR-0 c0 09
++50 I2CR-0 d1 02 // complete the read of 2 bytes
++50 I2C-0  c1 02 // complete the read of 2 bytes (stop condition)

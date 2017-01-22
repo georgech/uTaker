@@ -1,0 +1,17 @@
+"--endian=little" 
+
+"--cpu=Cortex-M4" 
+
+"--fpu=VFPv4_SP" 
+
+"-p" 
+
+"D:\Programs\IAR Systems\Embedded Workbench 7.5\arm\CONFIG\debugger\NXP\MK70FN1M0xxx12.ddf" 
+
+"--semihosting=none" 
+
+"--device=MK70FN1M0xxx12" 
+
+
+
+
