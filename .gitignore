@@ -39,3 +39,14 @@ Applications/uTaskerSerialBoot/Simulator/Debug/uTasker.res
 Applications/uTaskerSerialBoot/Simulator/Debug/uTaskerSerialLoader.exe
 Applications/uTaskerV1.4/Simulator/uTasker___Win32_uTasker_Kinetis_build/uTasker.res
 Applications/uTaskerV1.4/Simulator/uTasker___Win32_uTasker_Kinetis_build/uTaskerKinetis.exe
+*.ini
+Applications/uTaskerSerialBoot/Simulator/MEMSTICK0.bin
+Applications/uTaskerSerialBoot/Simulator/UART0.txt
+Applications/uTaskerSerialBoot/Simulator/USB_Endpoint_00.txt
+Applications/uTaskerSerialBoot/Simulator/USB_Endpoint_02.txt
+uTaskerSerialLoader_FLASH/
+uTaskerBM_loader/
+*.lst
+uTaskerV1.4_FLASH/
+uTaskerV1.4_BM_FLASH/
+uTaskerV1.4_RAM/
