@@ -21,6 +21,7 @@
     04.09.2015 Exit KL PIT interrupt if the PIT has been powered down
     22.11.2015 Move PIT power up to avoid the need to apply errate e7914 workaround {5}
     13.07.2016 Test workaround for potential race state that can cause a hard fault to occur when PIT interrupt disables module while it is being enabled by user code {6}
+    22.01.2017 Enable PIT DMA support with SUPPORT_PIT_DMA_PORT_TOGGLE   {7}
 
 */
 
@@ -204,7 +205,7 @@ static void fnDisablePIT(int iPIT)
             SIM_SOPT7 = ((SIM_SOPT7_ADC0TRGSEL_PIT0 + PIT_settings->ucPIT) | SIM_SOPT7_ADC0PRETRGSEL_B | SIM_SOPT7_ADC0ALTTRGEN); // trigger ADC0 channel B
     #endif
         }
-    #if !defined DEVICE_WITHOUT_DMA
+    #if !defined DEVICE_WITHOUT_DMA && defined SUPPORT_PIT_DMA_PORT_TOGGLE // {7}
         if ((PIT_settings->mode & PIT_OUTPUT_DMA_TRIG) != 0) {           // if the PIT is to trigger a port toggle by DMA
             // Note that PIT channel number must match with the DMA channel (hardware requirement) and the DMA channel is chosen here to match the PIT
             //
