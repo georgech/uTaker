@@ -50,3 +50,14 @@ uTaskerBM_loader/
 uTaskerV1.4_FLASH/
 uTaskerV1.4_BM_FLASH/
 uTaskerV1.4_RAM/
+Applications/uTaskerBoot/IAR7_Kinetis/uTaskerBoot - Flash/
+*.xcl
+Applications/uTaskerBoot/IAR7_Kinetis/settings/uTaskerBoot.uTaskerBoot_-_Flash.cspy.bat
+*.pbi
+Applications/uTaskerV1.4/IAR7_Kinetis/Flash_BM/
+Applications/uTaskerV1.4/IAR7_Kinetis/Flash/
+Applications/uTaskerSerialBoot/IAR7_Kinetis/FLASH/
+Applications/uTaskerV1.4/Simulator/MEMSTICK0.bin
+Applications/uTaskerV1.4/Simulator/UART0.txt
+Applications/uTaskerV1.4/Simulator/USB_Endpoint_00.txt
+Applications/uTaskerV1.4/Simulator/USB_Endpoint_02.txt
