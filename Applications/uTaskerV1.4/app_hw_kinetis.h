@@ -2424,6 +2424,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 
 #if !defined KINETIS_KL02
     #define SUPPORT_PITS                                                 // support PITs
+    #define SUPPORT_PIT_DMA_PORT_TOGGLE                                  // PIT driver supports triggering port toggles
 #endif
 #if defined MODBUS_RTU && !defined SUPPORT_PITS
     #define SUPPORT_PITS                                                 // support PITs
