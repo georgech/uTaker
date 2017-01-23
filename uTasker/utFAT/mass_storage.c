@@ -41,7 +41,8 @@
 
 #include "config.h"
 
-#define FAT12_DEVELOPMENT                                                // temporary for migration to FAT12 support
+#define FAT12_DEVELOPMENT                                                // temporary for migration to FAT12 support (can be made permanent after full validation)
+#define FAT16_READ_WORKAROUND                                            // temporary to work around FAT16 read problem
 
 /* =================================================================== */
 /*                          local definitions                          */
@@ -2428,6 +2429,11 @@ extern void fnMassStorage(TTASKTABLE *ptrTaskTable)
                 utDisks[iDiskNumber].usDiskFlags |= DISK_FORMATTED;
                 utDisks[iDiskNumber].utFAT.usBytesPerSector = BPB_BytesPerSec;
                 ulFirstDataSector = (BPB_RsvdSecCnt + ulFatSize);
+            #if defined _WINDOWS
+                if (ulFirstDataSector > ulTotalSections) {
+                    _EXCEPTION("Boot sector problem!!");
+                }
+            #endif
                 ulCountofClusters = ((ulTotalSections - ulFirstDataSector)/ptrBootSector->boot_sector_bpb.BPB_SecPerClus);
                 if ((ulCountofClusters < 65525) && (iFAT32 == 0)) {      // not FAT32
             #if defined UTFAT16 || defined UTFAT12
@@ -3646,6 +3652,13 @@ static int fnNextSector(UTDISK *ptr_utDisk, FILE_LOCATION *ptr_location)
         }
         ptr_location->ulCluster = ulCluster;                             // set next cluster
         ptr_location->ulSector = ((ptr_location->ulCluster * ptr_utDisk->utFAT.ucSectorsPerCluster) + ptr_utDisk->ulVirtualBaseAddress);
+#if defined UTFAT16 && defined FAT16_READ_WORKAROUND
+        if ((ptr_utDisk->usDiskFlags & DISK_FORMAT_FAT16) != 0) {
+            if (ptr_utDisk->utFAT.ucSectorsPerCluster > 1) {
+                ptr_location->ulSector -= (ptr_utDisk->utFAT.ucSectorsPerCluster - 1);
+            }
+        }
+#endif
     }
     return UTFAT_SUCCESS;
 }
@@ -4504,13 +4517,20 @@ static int _utOpenDirectory(OPEN_FILE_BLOCK *ptrOpenBlock, UTDIRECTORY *ptrDirOb
                             if ((ptrFoundEntry->DIR_Attr & DIR_ATTR_DIRECTORY) == 0) {
                                 ptrDirObject->public_file_location.ulCluster = ptrOpenBlock->ulCluster; // file's start cluster
                                 ptrDirObject->public_file_location.ulSector = ((ptrOpenBlock->ulCluster * ptr_utDisk->utFAT.ucSectorsPerCluster) + ptr_utDisk->ulVirtualBaseAddress);// section referenced to logical base address
+#if defined UTFAT16 && defined FAT16_READ_WORKAROUND
+                                if ((ptr_utDisk->usDiskFlags & DISK_FORMAT_FAT16) != 0) {
+                                    if (ptr_utDisk->utFAT.ucSectorsPerCluster > 1) {
+                                        ptrDirObject->public_file_location.ulSector -= (ptr_utDisk->utFAT.ucSectorsPerCluster - 1);
+                                    }
+                                }
+#endif
                                 return UTFAT_PATH_IS_FILE;               // not a directory so can not be traced further
                             }
                             if ((ptrOpenBlock->iQualifiedPathType != 0) && (ptrOpenBlock->usDirFlags & UTDIR_DIR_AS_FILE)) { // if a directory is to be treated as a file, its location is preserved rather than moving to its content
                                 return UTFAT_SUCCESS;                    // file matched
                             }
                             ptrDiskLocation->directory_location.ulCluster = ptrOpenBlock->ulCluster; // move to the new directory
-                            ptrDiskLocation->directory_location.ulSector = ((ptrOpenBlock->ulCluster * ptr_utDisk->utFAT.ucSectorsPerCluster) + ptr_utDisk->ulVirtualBaseAddress);// section referenced to logical base address
+                            ptrDiskLocation->directory_location.ulSector = ((ptrOpenBlock->ulCluster * ptr_utDisk->utFAT.ucSectorsPerCluster) + ptr_utDisk->ulVirtualBaseAddress); // section referenced to logical base address
                             ptrDiskLocation->ucDirectoryEntry = 2;       // skip "." and ".." entries
                             if (*ptrLocalDirPath == 0) {                 // check whether the end of the path has been reached
                                 if (ROOT_DIRECTORY_RELOCATE == ptrOpenBlock->iRootDirectory) {
@@ -4689,12 +4709,12 @@ static int _fnHandlePath(OPEN_FILE_BLOCK *ptrOpenBlock, const CHAR *ptrDirPath, 
             ptrDirObject->private_disk_location.directory_location.ulSector = (ptr_utDisk->utFAT.ucSectorsPerCluster + ptr_utDisk->ulVirtualBaseAddress - (32 - 1));// the sector in which the directory entries begin
         }
         else {
-            ptrDirObject->private_disk_location.directory_location.ulSector = (ptrOpenBlock->ulCluster * ptr_utDisk->utFAT.ucSectorsPerCluster);// section referenced to logical base address
-            ptrDirObject->private_disk_location.directory_location.ulSector += ptr_utDisk->ulVirtualBaseAddress;// the sector in which the directory entries begin
+            ptrDirObject->private_disk_location.directory_location.ulSector = (ptrOpenBlock->ulCluster * ptr_utDisk->utFAT.ucSectorsPerCluster); // section referenced to logical base address
+            ptrDirObject->private_disk_location.directory_location.ulSector += ptr_utDisk->ulVirtualBaseAddress; // the sector in which the directory entries begin
         }
 #else
-        ptrDirObject->private_disk_location.directory_location.ulSector = (ptrOpenBlock->ulCluster * ptr_utDisk->utFAT.ucSectorsPerCluster);// section referenced to logical base address
-        ptrDirObject->private_disk_location.directory_location.ulSector += ptr_utDisk->ulVirtualBaseAddress;// the sector in which the directory entries begin
+        ptrDirObject->private_disk_location.directory_location.ulSector = (ptrOpenBlock->ulCluster * ptr_utDisk->utFAT.ucSectorsPerCluster); // section referenced to logical base address
+        ptrDirObject->private_disk_location.directory_location.ulSector += ptr_utDisk->ulVirtualBaseAddress; // the sector in which the directory entries begin
 #endif
         ptrDirObject->private_disk_location.ucDirectoryEntry = 0;        // reset the entry index
         uMemcpy(&ptrDirObject->root_disk_location, &ptrDirObject->private_disk_location, sizeof(ptrDirObject->root_disk_location)); // enter the fixed root location
