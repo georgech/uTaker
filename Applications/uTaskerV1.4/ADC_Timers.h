@@ -70,7 +70,7 @@
       //#define TEST_PIT                                                 // test a user defined periodic interrupt
           //#define TEST_PIT_SINGLE_SHOT                                 // test single-shot PIT
             #define TEST_PIT_PERIODIC                                    // test periodic PIT
-          //#define TEST_PIT_DMA_GPIO                                    // use PIT to toggle port output
+          //#define TEST_PIT_DMA_GPIO                                    // use PIT to toggle port output (requires SUPPORT_PIT_DMA_PORT_TOGGLE to be enabled)
         #if defined SERIAL_INTERFACE && defined UART_TIMED_TRANSMISSION
             #define TIMED_UART_TX_TEST                                   // {23} demonstrate sending timed UART transmissions from a message
                 #define TIMED_UART  1                                    // the UART to use
