@@ -165,7 +165,7 @@ static void fnHandleWakeupSources(volatile unsigned char *prtFlagRegister, int i
             ucFlags &= ~ucBit;
             if (iSouceStart >= (WAKEUP_SOURCES_0_7 + WAKEUP_SOURCES_8_15)) { // wakeup module interrupts
     #if !defined KINETIS_WITHOUT_RTC
-                switch (1 << (iSouceStart - (WAKEUP_SOURCES_0_7 + WAKEUP_SOURCES_8_15))) { // wakeup module interrupts must be cleard at the source
+                switch (1 << (iSouceStart - (WAKEUP_SOURCES_0_7 + WAKEUP_SOURCES_8_15))) { // wakeup module interrupts must be cleared at the source
                 case MODULE_LPTMR0:
         #if defined TICK_USES_LPTMR
                     _RealTimeInterrupt();                                // call the TICK interrupt handler to clear the interrupt source
