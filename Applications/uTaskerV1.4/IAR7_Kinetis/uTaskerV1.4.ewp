@@ -2011,7 +2011,7 @@
         </option>
         <option>
           <name>OGChipSelectEditMenu</name>
-          <state>MK22FN1M0xxx12	NXP MK22FN1M0xxx12</state>
+          <state>MK64FN1M0xxx12	NXP MK64FN1M0xxx12</state>
         </option>
         <option>
           <name>GenLowLevelInterface</name>
@@ -2071,7 +2071,7 @@
         </option>
         <option>
           <name>GFPUDeviceSlave</name>
-          <state>MK22FN1M0xxx12	NXP MK22FN1M0xxx12</state>
+          <state>MK64FN1M0xxx12	NXP MK64FN1M0xxx12</state>
         </option>
         <option>
           <name>FPU2</name>
@@ -2649,7 +2649,7 @@
         </option>
         <option>
           <name>IlinkIcfFile</name>
-          <state>$PROJ_DIR$\settings\K_1M_128_Blaze.icf</state>
+          <state>$PROJ_DIR$\settings\K_1M_256_BM.icf</state>
         </option>
         <option>
           <name>IlinkIcfFileSlave</name>
@@ -2893,6 +2893,30 @@
   </group>
   <group>
     <name>TCP/IP</name>
+    <group>
+      <name>mbedtls</name>
+      <file>
+        <name>$PROJ_DIR$\..\..\..\stack\SSL\mbedtls-1.3.10\aes.c</name>
+      </file>
+    </group>
+    <group>
+      <name>OpenSSL</name>
+      <file>
+        <name>$PROJ_DIR$\..\..\..\stack\SSL\openssl-1.0.2\aes_cbc.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\..\stack\SSL\openssl-1.0.2\aes_core.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\..\stack\SSL\openssl-1.0.2\cbc128.c</name>
+      </file>
+    </group>
+    <group>
+      <name>wolfSSL</name>
+      <file>
+        <name>$PROJ_DIR$\..\..\..\stack\SSL\wolfssl-3.9.6\w_aes.c</name>
+      </file>
+    </group>
     <file>
       <name>$PROJ_DIR$\..\..\..\stack\arp.c</name>
     </file>

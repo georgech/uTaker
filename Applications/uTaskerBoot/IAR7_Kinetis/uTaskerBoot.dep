@@ -6,83 +6,56 @@
   <configuration>
     <name>uTaskerBoot - Flash</name>
     <outputs>
-      <file>$PROJ_DIR$\uTaskerBoot - Flash\Obj\uTaskerBootLoader.__cstat.et</file>
-      <file>$PROJ_DIR$\settings\K_1M_256.icf</file>
+      <file>$PROJ_DIR$\..\..\..\Hardware\hardware.h</file>
+      <file>$PROJ_DIR$\uTaskerBoot - Flash\Obj\kinetis_boot.pbi</file>
       <file>$PROJ_DIR$\uTaskerBoot - Flash\Obj\kinetis_boot.__cstat.et</file>
-      <file>$PROJ_DIR$\..\..\..\Hardware\Kinetis\kinetis.h</file>
-      <file>$PROJ_DIR$\..\uTaskerBootLoader.c</file>
-      <file>$PROJ_DIR$\..\..\..\Hardware\Kinetis\kinetis_boot.c</file>
-      <file>$PROJ_DIR$\..\config.h</file>
-      <file>$PROJ_DIR$\..\types.h</file>
       <file>$PROJ_DIR$\..\..\..\stack\tcpip.h</file>
-      <file>$TOOLKIT_DIR$\inc\c\intrinsics.h</file>
-      <file>$PROJ_DIR$\..\..\..\Hardware\Kinetis\spi_flash_kinetis_atmel.h</file>
-      <file>$TOOLKIT_DIR$\lib\dl7M_tln.a</file>
-      <file>$TOOLKIT_DIR$\lib\rt7M_tl.a</file>
-      <file>$PROJ_DIR$\..\..\..\Hardware\Kinetis\spi_flash_kinetis_stmicro.h</file>
       <file>$PROJ_DIR$\..\..\..\Hardware\Kinetis\spi_flash_kinetis_sst25.h</file>
-      <file>$PROJ_DIR$\..\..\..\uTasker\driver.h</file>
+      <file>$PROJ_DIR$\..\..\..\Hardware\Kinetis\spi_flash_kinetis_stmicro.h</file>
+      <file>$PROJ_DIR$\..\..\..\Hardware\Kinetis\kinetis_boot.c</file>
+      <file>$PROJ_DIR$\settings\K_1M_256.icf</file>
+      <file>$PROJ_DIR$\..\config.h</file>
+      <file>$PROJ_DIR$\..\..\..\Hardware\Kinetis\spi_flash_kinetis_atmel.h</file>
+      <file>$PROJ_DIR$\..\uTaskerBootLoader.c</file>
+      <file>$PROJ_DIR$\uTaskerBoot - Flash\Obj\uTaskerBootLoader.__cstat.et</file>
+      <file>$TOOLKIT_DIR$\inc\c\intrinsics.h</file>
+      <file>$TOOLKIT_DIR$\lib\dl7M_tln.a</file>
+      <file>$PROJ_DIR$\uTaskerBoot - Flash\Obj\uTaskerBoot.pbd</file>
+      <file>$TOOLKIT_DIR$\lib\rt7M_tl.a</file>
+      <file>$PROJ_DIR$\..\..\..\Hardware\Kinetis\kinetis.h</file>
+      <file>$PROJ_DIR$\..\types.h</file>
       <file>$TOOLKIT_DIR$\lib\m7M_tls.a</file>
       <file>$PROJ_DIR$\uTaskerBoot - Flash\Exe\uTaskerBoot.out</file>
       <file>$PROJ_DIR$\uTaskerBoot - Flash\Exe\uTaskerBoot.bin</file>
-      <file>$PROJ_DIR$\..\..\..\Hardware\hardware.h</file>
-      <file>$PROJ_DIR$\uTaskerBoot - Flash\Obj\kinetis_boot.pbi</file>
-      <file>$PROJ_DIR$\uTaskerBoot - Flash\Obj\uTaskerBoot.pbd</file>
+      <file>$PROJ_DIR$\..\..\..\uTasker\driver.h</file>
       <file>$PROJ_DIR$\uTaskerBoot - Flash\Obj\uTaskerBootLoader.o</file>
       <file>$TOOLKIT_DIR$\inc\c\ycheck.h</file>
-      <file>$PROJ_DIR$\uTaskerBoot - Flash\Obj\uTaskerBootLoader.pbi</file>
-      <file>$PROJ_DIR$\..\..\..\uTasker\uTasker.h</file>
-      <file>$PROJ_DIR$\uTaskerBoot - Flash\List\uTaskerBoot.map</file>
-      <file>$PROJ_DIR$\uTaskerBoot - Flash\Obj\kinetis_boot.o</file>
       <file>$PROJ_DIR$\..\..\..\Hardware\Kinetis\kinetis_errata.h</file>
       <file>$PROJ_DIR$\..\..\..\Hardware\Kinetis\kinetis_FLASH.h</file>
+      <file>$PROJ_DIR$\uTaskerBoot - Flash\Obj\uTaskerBootLoader.pbi</file>
+      <file>$PROJ_DIR$\uTaskerBoot - Flash\Obj\kinetis_boot.o</file>
+      <file>$PROJ_DIR$\uTaskerBoot - Flash\List\uTaskerBoot.map</file>
+      <file>$PROJ_DIR$\..\..\..\uTasker\uTasker.h</file>
     </outputs>
     <file>
       <name>[ROOT_NODE]</name>
       <outputs>
         <tool>
           <name>ILINK</name>
-          <file> 17 26</file>
+          <file> 19 28</file>
         </tool>
       </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\uTaskerBootLoader.c</name>
-      <outputs>
-        <tool>
-          <name>ICCARM</name>
-          <file> 22</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 24</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 0</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICCARM</name>
-          <file> 6 7 3 9 23 28 25 15 8 19</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 8 9 25 3 7 15 19 28 6 23</file>
-        </tool>
-      </inputs>
     </file>
     <file>
       <name>$PROJ_DIR$\..\..\..\Hardware\Kinetis\kinetis_boot.c</name>
       <outputs>
         <tool>
-          <name>ICCARM</name>
-          <file> 27</file>
+          <name>BICOMP</name>
+          <file> 1</file>
         </tool>
         <tool>
-          <name>BICOMP</name>
-          <file> 20</file>
+          <name>ICCARM</name>
+          <file> 27</file>
         </tool>
         <tool>
           <name>__cstat</name>
@@ -91,12 +64,39 @@
       </outputs>
       <inputs>
         <tool>
-          <name>ICCARM</name>
-          <file> 6 7 3 9 23 28 25 15 8 19 29</file>
+          <name>BICOMP</name>
+          <file> 29 3 24 8 25 17 21 0 16 12 23</file>
         </tool>
         <tool>
+          <name>ICCARM</name>
+          <file> 8 17 16 12 23 24 29 21 3 0 25</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\uTaskerBootLoader.c</name>
+      <outputs>
+        <tool>
           <name>BICOMP</name>
-          <file> 25 8 28 6 29 7 15 19 3 9 23</file>
+          <file> 26</file>
+        </tool>
+        <tool>
+          <name>ICCARM</name>
+          <file> 22</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 11</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 3 12 29 16 17 21 0 24 8 23</file>
+        </tool>
+        <tool>
+          <name>ICCARM</name>
+          <file> 8 17 16 12 23 24 29 21 3 0</file>
         </tool>
       </inputs>
     </file>
@@ -104,18 +104,18 @@
       <name>$PROJ_DIR$\uTaskerBoot - Flash\Exe\uTaskerBoot.out</name>
       <outputs>
         <tool>
-          <name>ILINK</name>
-          <file> 26</file>
+          <name>OBJCOPY</name>
+          <file> 20</file>
         </tool>
         <tool>
-          <name>OBJCOPY</name>
-          <file> 18</file>
+          <name>ILINK</name>
+          <file> 28</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>ILINK</name>
-          <file> 1 27 22 12 16 11</file>
+          <file> 7 27 22 15 18 13</file>
         </tool>
       </inputs>
     </file>

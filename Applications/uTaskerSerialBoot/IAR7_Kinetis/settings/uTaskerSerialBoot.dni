@@ -1,5 +1,5 @@
 [DebugChecksum]
-Checksum=-858957224
+Checksum=1978150809
 [DisAssemblyWindow]
 NumStates=_ 1
 State 1=_ 1
@@ -249,7 +249,7 @@ mode=1
 Bp0=_ "STD_CODE" "0x00001754" 0 0 0 0 "" 0 "" 0
 Bp1=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12\Applications\uTaskerSerialBoot\serial_loader.c}.1835.1" 0 0 0 0 "" 0 "" 0
 Bp2=_ "STD_CODE" "0x00015CEE" 0 0 0 0 "" 0 "" 0
-Bp3=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12\Applications\uTaskerSerialBoot\usb_device_loader.c}.2707.13" 1 0 0 0 "" 0 "" 0
+Bp3=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12\Applications\uTaskerSerialBoot\usb_device_loader.c}.2707.13" 0 0 0 0 "" 0 "" 0
 Count=4
 [Aliases]
 Count=0
