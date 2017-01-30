@@ -92,12 +92,12 @@
         #define GPT_CAPTURES     5                                       // when testing captures, collect this many values
     #endif
     #if defined SUPPORT_TIMER                                            // standard timers
-      //#define TEST_TIMER                                               // test a user defined timer interrupt
+        #define TEST_TIMER                                               // test a user defined timer interrupt
         #if defined TEST_TIMER
           //#define TEST_SINGLE_SHOT_TIMER                               // test single-shot mode
-          //#define TEST_PERIODIC_TIMER                                  // test periodic interrupt mode
+            #define TEST_PERIODIC_TIMER                                  // test periodic interrupt mode
           //#define TEST_ADC_TIMER                                       // test periodic ADC trigger mode (Luminary)
-            #define TEST_PWM                                             // {1} test generating PWM output from timer
+          //#define TEST_PWM                                             // {1} test generating PWM output from timer
           //#define TEST_CAPTURE                                         // {6} test timer capture mode
         #endif
     #endif
@@ -1573,6 +1573,7 @@ static void fnConfigure_Timer(void)
     #elif defined _KINETIS                                               // {16} Kinetis FlexTimer
     timer_setup.timer_reference = 0;                                     // FlexTimer/TPM channel 0
         #if defined TEST_PERIODIC_TIMER
+  //timer_setup.timer_mode = (TIMER_PERIODIC | TIMER_EXT_CLK_1);         // period timer interrupt using external clocksource 1
     timer_setup.timer_mode = (TIMER_PERIODIC);                           // period timer interrupt
     timer_setup.timer_value = TIMER_MS_DELAY(150);                       // 150ms periodic interrupt
         #else                                                            // single-shot
