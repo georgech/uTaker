@@ -61,7 +61,11 @@
             case 0:
     #if defined KINETIS_KL
                 POWER_UP(6, SIM_SCGC6_DAC0);                             // ensure the DAC 0 is powered up
+        #if defined KINETIS_KL05
+                _CONFIG_PERIPHERAL(B, 1, PB_1_DAC0_OUT);                 // ensure that the DAC output pin is configured
+        #else
                 _CONFIG_PERIPHERAL(E, 30, PE_30_DAC0_OUT);               // ensure that the DAC output pin is configured
+        #endif
     #else
                 POWER_UP(2, SIM_SCGC2_DAC0);                             // ensure the DAC 0 is powered up
     #endif
