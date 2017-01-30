@@ -48,6 +48,12 @@
     <Filter Include="WinSim\Resource Files">
       <UniqueIdentifier>{0e548044-0a8b-43a6-8623-c4a89e23df2a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="TCP/IP\wolfSSL">
+      <UniqueIdentifier>{c29fc182-06e4-4eee-be7d-bd464953f3b1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="TCP/IP\OpenSSL">
+      <UniqueIdentifier>{2e7c4f70-af0c-4e3d-b1d8-0535fa3674af}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\application.c">
@@ -271,6 +277,18 @@
     </ClCompile>
     <ClCompile Include="..\..\..\stack\SSL\mbedtls-1.3.10\aes.c">
       <Filter>TCP/IP\mbedtls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\SSL\wolfssl-3.9.6\w_aes.c">
+      <Filter>TCP/IP\wolfSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\SSL\openssl-1.0.2\aes_cbc.c">
+      <Filter>TCP/IP\OpenSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\SSL\openssl-1.0.2\cbc128.c">
+      <Filter>TCP/IP\OpenSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\SSL\openssl-1.0.2\aes_core.c">
+      <Filter>TCP/IP\OpenSSL</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -568,6 +586,45 @@
     <ClInclude Include="..\..\..\Stack\tcpip.h">
       <Filter>TCP/IP</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\wolfssl-3.9.6\aes.h">
+      <Filter>TCP/IP\wolfSSL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\wolfssl-3.9.6\error-crypt.h">
+      <Filter>TCP/IP\wolfSSL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\wolfssl-3.9.6\memory.h">
+      <Filter>TCP/IP\wolfSSL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\wolfssl-3.9.6\misc.h">
+      <Filter>TCP/IP\wolfSSL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\wolfssl-3.9.6\settings.h">
+      <Filter>TCP/IP\wolfSSL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\wolfssl-3.9.6\types.h">
+      <Filter>TCP/IP\wolfSSL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\wolfssl-3.9.6\visibility.h">
+      <Filter>TCP/IP\wolfSSL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\wolfssl-3.9.6\wc_port.h">
+      <Filter>TCP/IP\wolfSSL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\wolfssl-3.9.6\misc_code.h">
+      <Filter>TCP/IP\wolfSSL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\openssl-1.0.2\aes.h">
+      <Filter>TCP/IP\OpenSSL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\openssl-1.0.2\modes.h">
+      <Filter>TCP/IP\OpenSSL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\openssl-1.0.2\aes_locl.h">
+      <Filter>TCP/IP\OpenSSL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\openssl-1.0.2\modes_lcl.h">
+      <Filter>TCP/IP\OpenSSL</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="cursor1.cur">
@@ -590,7 +647,7 @@
     <None Include="..\..\..\Hardware\Kinetis\CMSIS_DSP\arm_bitreversal2.S">
       <Filter>Hardware\Kinetis\CMSIS_DSP</Filter>
     </None>
-    <None Include="..\..\..\Hardware\Kinetis\Crypto\mmcau_aes_functions.s">
+    <None Include="..\..\..\Hardware\Kinetis\Crypto\mmcau_aes_functions.S">
       <Filter>Hardware\Kinetis\Crypto</Filter>
     </None>
   </ItemGroup>
