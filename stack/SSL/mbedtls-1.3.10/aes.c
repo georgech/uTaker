@@ -27,7 +27,7 @@
  *
  *   12.01.2017 uTasker version (aes_mbedTLS.c)                          {1}
  */
-#include "config.h"                                                      //  {1}
+#include "config.h"                                                      // {1}
 
 #if 0
 #if !defined(POLARSSL_CONFIG_FILE)
@@ -39,7 +39,6 @@
 
 #if defined CRYPTOGRAPHY && defined CRYPTO_MBEDTLS && defined CRYPTO_AES // {1}
 
-//#define memset uMemset                                                   // {1}
 #define polarssl_zeroize(x,y) uMemset(x, 0, y)                           // {1}
 
 #include "aes.h"                                                         // {1}
@@ -96,7 +95,7 @@ static void polarssl_zeroize( void *v, size_t n ) {
 static int aes_padlock_ace = -1;
 #endif
 
-#if defined(MBEDTLS_AES_ROM_TABLES)
+#if defined(MBEDTLS_AES_ROM_TABLES) && !defined USE_CRYPTO_ACCELERATION
 /*
  * Forward S-box
  */
@@ -361,7 +360,7 @@ static const uint32_t RCON[10] =
     0x0000001B, 0x00000036
 };
 
-#else /* MBEDTLS_AES_ROM_TABLES */
+#elif !defined USE_CRYPTO_ACCELERATION /* MBEDTLS_AES_ROM_TABLES */
 
 /*
  * Forward S-box & tables
@@ -492,12 +491,12 @@ void aes_free( aes_context *ctx )
 int aes_setkey_enc( aes_context *ctx, const unsigned char *key,
                     unsigned int keysize )
 {
-#if defined _WINDOWS || (!defined CAU_V1_AVAILABLE && !defined CAU_V2_AVAILABLE)
+#if !defined USE_CRYPTO_ACCELERATION
     unsigned int i;
 #endif
     uint32_t *RK;
 
-#if !defined(MBEDTLS_AES_ROM_TABLES)
+#if !defined(MBEDTLS_AES_ROM_TABLES) && !defined USE_CRYPTO_ACCELERATION
     if( aes_init_done == 0 )
     {
         aes_gen_tables();
@@ -528,7 +527,7 @@ int aes_setkey_enc( aes_context *ctx, const unsigned char *key,
     if( aesni_supports( POLARSSL_AESNI_AES ) )
         return( aesni_setkey_enc( (unsigned char *) ctx->rk, key, keysize ) );
 #endif
-#if !defined _WINDOWS && (defined CAU_V1_AVAILABLE || defined CAU_V2_AVAILABLE)
+#if defined USE_CRYPTO_ACCELERATION
     mmcau_aes_set_key(key, (const int)keysize, (unsigned char *)ctx->buf); // perform an AES key expansion using mmCAU
 #else
     for( i = 0; i < ( keysize >> 5 ); i++ )
@@ -605,6 +604,13 @@ int aes_setkey_enc( aes_context *ctx, const unsigned char *key,
 /*
  * AES key schedule (decryption)
  */
+#if defined USE_CRYPTO_ACCELERATION
+int aes_setkey_dec(aes_context *ctx, const unsigned char *key,
+    unsigned int keysize )
+{
+    return (aes_setkey_enc(ctx, key, keysize));
+}
+#else
 int aes_setkey_dec( aes_context *ctx, const unsigned char *key,
                     unsigned int keysize )
 {
@@ -668,6 +674,7 @@ exit:
 
     return( ret );
 }
+#endif
 
 #define AES_FROUND(X0,X1,X2,X3,Y0,Y1,Y2,Y3)     \
 {                                               \
@@ -723,7 +730,7 @@ int aes_crypt_ecb(aes_context *ctx,
     const unsigned char input[16],
     unsigned char output[16])
 {
-#if !defined _WINDOWS && (defined CAU_V1_AVAILABLE || defined CAU_V2_AVAILABLE)
+#if defined USE_CRYPTO_ACCELERATION
     if (mode == AES_ENCRYPT) {
         mmcau_aes_encrypt(input, (const unsigned char *)(ctx->buf), (const int)(ctx->nr), output); // make use of crypto acceleration routines
     }
