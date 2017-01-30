@@ -103,6 +103,7 @@
     20.07.2016 Enable MPU in K22 FN parts with 512k Flash                {86}
     07.09.2016 correct KE operation directly from crystal source when bypassing FEE [RUN_FROM_EXTERNAL_CLOCK] {87}
     09.12.2016 Add PWT                                                   {88}
+    26.01.2017 Add external clock source selection to timer interface    {89}
 
 */
 
@@ -1003,7 +1004,7 @@ typedef struct stRESET_VECTOR
 
 // CAU configuration
 //
-#if defined KINETIS_K21 || defined KINETIS_K26 || defined KINETIS_K60 || defined KINETIS_K61 || defined KINETIS_K70
+#if defined KINETIS_K21 || defined KINETIS_K26 || defined KINETIS_K60 || defined KINETIS_K61 || defined KINETIS_K70 || defined KINETIS_K80
     #define CAU_V2_AVAILABLE
 #elif (defined KINETIS_K24 && (SIZE_OF_FLASH == (1 * 1024 * 1024))) || defined  KINETIS_K64
     #define CAU_V1_AVAILABLE
@@ -9390,6 +9391,8 @@ typedef struct stKINETIS_ADMA2_BD
     #define PE_22_TPM2_CH0               PORT_MUX_ALT3
     #define PE_23_TPM2_CH1               PORT_MUX_ALT3
 #endif
+    #define PE_29_TPM_CLKIN0             PORT_MUX_ALT4
+    #define PE_30_TPM_CLKIN1             PORT_MUX_ALT4
 #if defined KINETIS_KL02 || defined KINETIS_KL03 || defined KINETIS_KL04 || defined KINETIS_KL05
     #define PB_11_TPM0_CH0               PORT_MUX_ALT2
     #define PB_10_TPM0_CH1               PORT_MUX_ALT2
@@ -9629,15 +9632,19 @@ typedef struct stKINETIS_ADMA2_BD
     #define PC_5_I2S0_RXD0               PORT_MUX_ALT4
 #endif
 #if defined KINETIS_KL
-    #define PE_30_DAC0_OUT               PORT_MUX_ALT0
+    #if defined KINETIS_KL05
+        #define PB_1_DAC0_OUT            PORT_MUX_ALT0
+    #else
+        #define PE_30_DAC0_OUT           PORT_MUX_ALT0
+    #endif
     #define PB_0_ADC0_SE8                PORT_MUX_ALT0
     #define PE_21_ADC0_SE4               PORT_MUX_ALT0
     #define PE_30_ADC0_SE23              PORT_MUX_ALT0
-#endif
-#if defined KINETIS_KL
     #if defined KINETIS_KL03
         #define PA_4_CLKOUT              PORT_MUX_ALT5
         #define PA_12_CLKOUT             PORT_MUX_ALT5
+    #elif defined KINETIS_KL05
+        #define PA_15_CLKOUT             PORT_MUX_ALT3
     #else
         #define PC_3_CLKOUT              PORT_MUX_ALT5
     #endif
@@ -13613,6 +13620,8 @@ extern void fnSimPers(void);
 #define TIMER_STOP_PWM_MAT1       0x0080
 #define TIMER_STOP_PWM_MAT2       0x0100
 #define TIMER_DONT_DISTURB        0x0200
+#define TIMER_EXT_CLK_0           0x0400                                 // {89}
+#define TIMER_EXT_CLK_1           0x0800
 #define TIMER_DMA_TRIGGER         0x4000
 #define TIMER_STOP                0x8000
 
