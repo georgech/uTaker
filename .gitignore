@@ -61,3 +61,6 @@ Applications/uTaskerV1.4/Simulator/MEMSTICK0.bin
 Applications/uTaskerV1.4/Simulator/UART0.txt
 Applications/uTaskerV1.4/Simulator/USB_Endpoint_00.txt
 Applications/uTaskerV1.4/Simulator/USB_Endpoint_02.txt
+Applications/uTaskerV1.4/GNU_Kinetis/uTaskerBM.bin
+Applications/uTaskerV1.4/GNU_Kinetis/uTaskerSA.bin
+*.enc
