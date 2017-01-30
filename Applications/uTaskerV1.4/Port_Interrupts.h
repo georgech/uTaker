@@ -277,12 +277,12 @@ static void fnInitIRQ(void)
             #if defined FRDM_KL05Z || defined TEENSY_LC
                 #if defined WAKEUP_TEST
     interrupt_setup.int_type       = WAKEUP_INTERRUPT;                   // configure as wake-up interrupt
-    interrupt_setup.int_port       = PORTB;                              // the port that the interrupt input is on
+    interrupt_setup.int_port       = PORTA;                              // the port that the interrupt input is on
         #if defined TEENSY_LC
     interrupt_setup.int_port_bits  = PORTB_BIT0;
         #else
     interrupt_setup.int_handler    = test_irq_5;
-    interrupt_setup.int_port_bits  = PORTB_BIT2;
+    interrupt_setup.int_port_bits  = PORTA_BIT7;                         // PTA7 (LLWU_P3) on J7-4 of FRDM-KL05Z
         #endif
                 #else
     interrupt_setup.int_port_bits  = PORTA_BIT5;                         // the IRQ input connected (LLWU_P1)
@@ -305,7 +305,7 @@ static void fnInitIRQ(void)
         fnConfigDMA_buffer(9, DMAMUX0_CHCFG_SOURCE_PORTB, sizeof(ulOutput), (void *)&ulOutput, (void *)&(((GPIO_REGS *)GPIOC_ADD)->PTOR), (DMA_FIXED_ADDRESSES | DMA_LONG_WORDS), 0, 0); // use DMA channel 9 without and interrupts (free-runnning)
     }
         #else
-    #if defined FRDM_KL25Z
+    #if defined FRDM_KL25Z || defined FRDM_KL05Z
     interrupt_setup.int_port_sense = (IRQ_FALLING_EDGE | PULLUP_ON | ENABLE_PORT_MODE); // set the pin to port mode - this is needed if the pin is disabled by default otherwise the pull-up/LLWU functions won't work
     #else
     interrupt_setup.int_port_sense = (IRQ_FALLING_EDGE | PULLUP_ON);     // interrupt is to be falling edge sensitive
