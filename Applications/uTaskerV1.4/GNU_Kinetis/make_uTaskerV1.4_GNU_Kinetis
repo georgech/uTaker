@@ -24,8 +24,8 @@
 # Compiler flags (thumb mode - little endian)
 # (set to Cortex-M4 or Cortex-M0+ accordingly)
 #C_FLAGS = -mcpu=cortex-m0plus -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections
-#C_FLAGS = -mcpu=cortex-m4 -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections 
-C_FLAGS = -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections 
+C_FLAGS = -mcpu=cortex-m4 -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections 
+#C_FLAGS = -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections 
 #C_FLAGS = -mcpu=cortex-m7 -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections 
 
 
@@ -35,7 +35,7 @@ OBJS = Build/application.o Build/debug.o Build/webInterface.o Build/KeyScan.o Bu
        Build/MODBUS.o Build/modbus_app.o \
        Build/mass_storage.o \
        Build/GLCD.o Build/LCD.o \
-       Build/aes.o Build/mmcau_aes_functions.o \
+       Build/aes.o Build/w_aes.o Build/aes_cbc.o Build/cbc128.o Build/aes_core.o Build/mmcau_aes_functions.o \
        Build/arm_bitreversal2.o Build/arm_cfft_f32.o Build/arm_cfft_radix8_f32.o Build/arm_cmplx_mag_f32.o Build/arm_common_tables.o Build/arm_const_structs.o Build/arm_max_f32.o \
        Build/eth_drv.o Build/Driver.o Build/uMalloc.o Build/uTasker.o Build/Tty_drv.o Build/i2c_drv.o Build/USB_drv.o Build/uFile.o Build/Watchdog.o Build/GlobalTimer.o Build/time_keeper.o Build/low_power.o Build/can_drv.o \
        Build/Ethernet.o Build/arp.o Build/dhcp.o Build/dns.o Build/ftp.o Build/http.o Build/icmp.o Build/ip_utils.o Build/ip.o Build/pop3.o Build/smtp.o Build/snmp.o \
@@ -289,16 +289,28 @@ Build/modbus_app.o: ../modbus_app.c $(DEPENDS)
 		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../modbus_app.c -o Build/modbus_app.o
 
 #CRYPTO
-# mmcau_aes_functions.s cannot be assembled for cortex-m0 so we always build for m4, whereby it will not be included in cortex-m0 projects (no CAU present)
-Build/mmcau_aes_functions.o: ../../../Hardware/Kinetis/Crypto/mmcau_aes_functions.s
+# mmcau_aes_functions.S cannot be assembled for cortex-m0 so we always build for m4, whereby it will not be included in cortex-m0 projects (no CAU present)
+Build/mmcau_aes_functions.o: ../../../Hardware/Kinetis/Crypto/mmcau_aes_functions.S
 ifeq (,$(findstring mcpu=cortex-m0plus,$(C_FLAGS)))
-		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../Hardware/Kinetis/Crypto/mmcau_aes_functions.s -o Build/mmcau_aes_functions.o
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../Hardware/Kinetis/Crypto/mmcau_aes_functions.S -o Build/mmcau_aes_functions.o
 else
 		$(CC) -mcpu=cortex-m4 -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections $(INC) $(OPTS) ../../../Hardware/Kinetis/Crypto/mmcau_aes_functions.s -o Build/mmcau_aes_functions.o
 endif
 
+Build/w_aes.o: ../../../stack/SSL/wolfssl-3.9.6/w_aes.c $(DEPENDS) ../../../stack/SSL/wolfssl-3.9.6/aes.h
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../stack/SSL/wolfssl-3.9.6/w_aes.c -o Build/w_aes.o
+
 Build/aes.o: ../../../stack/SSL/mbedtls-1.3.10/aes.c $(DEPENDS) ../../../stack/SSL/mbedtls-1.3.10/aes.h
 		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../stack/SSL/mbedtls-1.3.10/aes.c -o Build/aes.o
+
+Build/aes_cbc.o: ../../../stack/SSL/openssl-1.0.2/aes_cbc.c $(DEPENDS) ../../../stack/SSL/openssl-1.0.2/aes.h
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../stack/SSL/openssl-1.0.2/aes_cbc.c -o Build/aes_cbc.o
+
+Build/cbc128.o: ../../../stack/SSL/openssl-1.0.2/cbc128.c $(DEPENDS) ../../../stack/SSL/openssl-1.0.2/aes.h
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../stack/SSL/openssl-1.0.2/cbc128.c -o Build/cbc128.o
+
+Build/aes_core.o: ../../../stack/SSL/openssl-1.0.2/aes_core.c $(DEPENDS) ../../../stack/SSL/openssl-1.0.2/aes.h
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../stack/SSL/openssl-1.0.2/aes_core.c -o Build/aes_core.o
 
 
 #CMSIS DSP
