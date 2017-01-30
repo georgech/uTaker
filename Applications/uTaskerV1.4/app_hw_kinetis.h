@@ -484,7 +484,7 @@
     #define CLOCK_DIV            4                                       // input must be divided to 2MHz..4MHz range (/1 to /25 possible)
     #if defined FRDM_KL46Z || defined TWR_KL46Z48M || defined FRDM_KL25Z || defined FRDM_KL26Z || defined TWR_KL25Z48M
         #define CLOCK_MUL        48                                      // the PLL multiplication factor to achieve MCGPLLCLK operating frequency of 98MHz (x24 to x55 possible) (MCGPLLCLK/2 is 48MHz - required by USB)
-        #define SYSTEM_CLOCK_DIVIDE 1                                    // divide (1,2,3..16 possible) to get core clock of 48MHz
+        #define SYSTEM_CLOCK_DIVIDE 2                                    // divide (1,2,3..16 possible) to get core clock of 48MHz
         #define BUS_CLOCK_DIVIDE    2                                    // divide from core clock for bus and flash clock (1,2,3..8 possible) 24MHz
         #define FLASH_CLOCK_DIVIDE  2
     #else
@@ -990,7 +990,7 @@
     #define SIZE_OF_FLASH       (256 * 1024)                             // 256k program Flash
     #define SIZE_OF_RAM         (32 * 1024)                              // 32k SRAM
 #elif defined TEENSY_LC
-    #define PIN_COUNT           PIN_COUNT_64_PIN                         // 64 pin package
+    #define PIN_COUNT           PIN_COUNT_48_PIN                         // 48 pin package
     #define PACKAGE_TYPE        PACKAGE_QFN                              // QFN
     #define SIZE_OF_FLASH       (64 * 1024)                              // 64k program Flash
     #define SIZE_OF_RAM         (8 * 1024)                               // 8k SRAM
@@ -1346,8 +1346,8 @@
 
 #if defined KINETIS_KL
   //#define TPM_CLOCKED_FROM_OSCERCLK                                    // TPM clock is connected to OSCERCLK (external crystal or oscillator)
-    #define TPM_CLOCKED_FROM_MCGIRCLK                                    // TPM clock is connected to MCGIRCLK (either 32kHz or 4MHz)
-  //#define USE_FAST_INTERNAL_CLOCK
+  //#define TPM_CLOCKED_FROM_MCGIRCLK                                    // TPM clock is connected to MCGIRCLK (either 32kHz or 4MHz)
+  //#define USE_FAST_INTERNAL_CLOCK                                      // select fast interal clock (4MHz) rather than slow (32kHz)
                                                                          // default is to use MCGPLLCLK/2 or MCGFLLCLK (depending on whether FLL or PLL is used)
 #endif
 
@@ -1970,7 +1970,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
             #define uFILE_START      (FLASH_START_ADDRESS + (100 * 1024))// FLASH location at 100k start
             #define FILE_GRANULARITY (1 * FLASH_GRANULARITY)             // each file a multiple of 2k
             #define FILE_SYSTEM_SIZE (28 * 1024)                         // 28k reserved for file system
-        #elif defined BLAZE_K22
+        #elif defined BLAZE_K22 || defined FRDM_K64F
             #define uFILE_START      (FLASH_START_ADDRESS + (512 * 1024))// FLASH location at 512k start
             #define FILE_GRANULARITY (1 * FLASH_GRANULARITY)              // each file a multiple of 4k
             #define FILE_SYSTEM_SIZE (SIZE_OF_FLASH - uFILE_START)
@@ -5918,7 +5918,11 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define ACTIVATE_WATCHDOG()     SIM_COPC = (SIM_COPC_COPCLKS_1K | SIM_COPC_COPT_LONGEST) // 1.024s watchdog timeout
     #define TOGGLE_WATCHDOG_LED()  _TOGGLE_PORT(E, BLINK_LED)
 
-    #define CONFIG_TEST_OUTPUT()                                         // we use DEMO_LED_2 which is configured by the user code (and can be disabled in parameters if required)
+    #if defined USE_MAINTENANCE
+        #define CONFIG_TEST_OUTPUT()                                     // we use DEMO_LED_2 which is configured by the user code (and can be disabled in parameters if required)
+    #else
+        #define CONFIG_TEST_OUTPUT()   _CONFIG_DRIVE_PORT_OUTPUT_VALUE(E, (DEMO_LED_2), (DEMO_LED_2), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+    #endif
     #define TOGGLE_TEST_OUTPUT()   _TOGGLE_PORT(E, DEMO_LED_2)
     #define SET_TEST_OUTPUT()      _SETBITS(E, DEMO_LED_2)
     #define CLEAR_TEST_OUTPUT()    _CLEARBITS(E, DEMO_LED_2)

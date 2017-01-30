@@ -926,16 +926,18 @@
         #if defined USB_HOST_SUPPORT
             #define NUMBER_USB     (5 + 1)                               // physical queues (control plus 5 endpoints)
         #else                                                            // define one or more device classes (multiple classes creates a composite device)
-          //#define USE_USB_CDC                                          // USB-CDC (use also for Modbus over USB)
+            #define USE_USB_CDC                                          // USB-CDC (use also for Modbus over USB)
           //#define USE_USB_MSD                                          // needs SD card to compile (or alternatives FLASH_FAT / SPI_FLASH_FAT / FAT_EMULATION)
           //#define USE_USB_HID_MOUSE                                    // human interface device (mouse)
           //#define USE_USB_HID_KEYBOARD                                 // human interface device (keyboard)
               //#define USB_KEYBOARD_DELAY                               // enable inter-character delay control
           //#define USE_USB_HID_RAW                                      // human interface device (raw)
-            #define USE_USB_AUDIO                                        // audio device
+          //#define USE_USB_AUDIO                                        // audio device
+            #if defined USE_USB_AUDIO
                 #define AUDIO_BUFFER_COUNT  (32)                         // this many isochronous packets can fit into the buffer (the buffer size is AUDIO_BUFFER_COUNT * isochronous endpoint size)
                 #define AUDIO_FFT                                        // perform FFT on audio input input
                     #define CMSIS_DSP_FFT_512                            // enable 512 point FFT
+            #endif
             #if defined USE_USB_CDC
               //#define USB_CDC_RNDIS                                    // Remote Network Driver Interface Specification for virtual network adapter
                   //#define USB_TX_MESSAGE_MODE                          // enable transmission message mode when using RNDIS
@@ -1030,8 +1032,8 @@
             #define USB_HS_INTERFACE                                     // use HS interface rather than FS interface (needs external ULPI transceiver) - use with TWR_SER2 and secondary elevator (not dummy elevator)
         #endif
         #if defined USB_HOST_SUPPORT
-          //#define USB_MSD_HOST                                         // works together with mass-storage for a USB memory stick as disk E
-            #define USB_CDC_HOST
+            #define USB_MSD_HOST                                         // works together with mass-storage for a USB memory stick as disk E
+          //#define USB_CDC_HOST
             #if defined USB_MSD_HOST
                 #define SUPPORT_USB_SIMPLEX_HOST_ENDPOINTS               // allow operation with memory sticks using bulk IN/OUT on the same endpoint
             #endif
@@ -1588,17 +1590,23 @@
 
 #define RANDOM_NUMBER_GENERATOR                                          // support a random number generator (useful for DHCP and possibly DNS)
 
-//#define CRYPTOGRAPHY                                                   // enable cryptography support
+//#define CRYPTOGRAPHY                                                   // enable cryptography support - details at http://www.utasker.com/docs/uTasker/uTasker_Cryptography.pdf
+  //#define CRYPTO_OPEN_SSL                                              // use OpenSSL library code
+  //#define CRYPTO_WOLF_SSL                                              // use wolfSSL library code
     #define CRYPTO_MBEDTLS                                               // use mbedTLS library code
     #define CRYPTO_AES                                                   // use AES cypher
-        #define MBEDTLS_AES_ROM_TABLES                                   // mbedTLS uses ROM tables for AES rather than calculating sbox and tables
-      //#define MBEDTLS_AES_ELECTRONIC_CODE_BOOK                         // cipher block chaining (cbc mode) should normally be used - enabling ecb mode is not recommended except for use by experts who know how to use it but retain security (otherwise consider as unsecure!)
+        #define MBEDTLS_AES_ROM_TABLES                                   // mbedTLS uses ROM tables for AES rather than calculating sbox and tables (costs 8k Flash, saves 8.5k RAM, loses about 70% performance)
+        #define OPENSSL_AES_FULL_LOOP_UNROLL                             // unroll loops for improved performance (costs 4k Flash, gains about 20% performance)
+        #define NATIVE_AES_CAU                                           // use uTasker mmCAU - only possible when the device has mmCAU - simulation requires a SW library to be enabled for alternate use
+      //#define AES_DISABLE_CAU                                          // force software implementation by disabling any available crypto accelerator (used mainly for testing CAU efficiency increase)
 
 #if defined USE_USB_AUDIO && defined AUDIO_FFT
-    #define CMSIS_DSP_CFFT                                               // enable CMSIS CFFT support
+  //#define CMSIS_DSP_CFFT                                               // enable CMSIS CFFT support
 #else
-  //#define CMSIS_DSP_CFFT
+  //#define CMSIS_DSP_CFFT                                               // enable FFT support - details at http://www.utasker.com/docs/uTasker/uTasker_DSP.pdf
       //#define CMSIS_DSP_FFT_16                                         // enable 16 point FFT
+      //#define CMSIS_DSP_FFT_32                                         // enable 32 point FFT
+      //#define CMSIS_DSP_FFT_64                                         // enable 64 point FFT
       //#define CMSIS_DSP_FFT_128                                        // enable 128 point FFT
       //#define CMSIS_DSP_FFT_256                                        // enable 256 point FFT
       //#define CMSIS_DSP_FFT_512                                        // enable 512 point FFT
