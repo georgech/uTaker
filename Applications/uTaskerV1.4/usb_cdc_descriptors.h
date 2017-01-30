@@ -58,7 +58,7 @@
     #if defined USE_USB_HID_MOUSE                                        // CDC with HID mouse
         #define USB_HID_MOUSE_INTERFACE_COUNT 1
         #define USB_HID_MOUSE_ENDPOINT_COUNT  1
-        #define USB_MOUSE_INTERFACE_NUMBER    ((USB_CDC_COUNT * 2) + 1  + USB_HID_MOUSE_INTERFACE_COUNT)
+        #define USB_MOUSE_INTERFACE_NUMBER    ((USB_CDC_COUNT * 2) + 1  + USB_MSD_INTERFACE_COUNT)
     #else
         #define USB_HID_MOUSE_INTERFACE_COUNT 0
         #define USB_HID_MOUSE_ENDPOINT_COUNT  0
@@ -1134,7 +1134,7 @@ static const USB_CONFIGURATION_DESCRIPTOR_COLLECTION config_descriptor = {
     {                                                                    // interface descriptor
     DESCRIPTOR_TYPE_INTERFACE_LENGTH,                                    // length (0x09)
     DESCRIPTOR_TYPE_INTERFACE,                                           // 0x04
-    ((USB_CDC_COUNT * 2) + 1 + USB_MSD_INTERFACE_COUNT),                 // interface number
+    (USB_MOUSE_INTERFACE_NUMBER),                                        // interface number
     0,                                                                   // alternative setting 0
     1,                                                                   // number of endpoints in addition to EP0
     USB_CLASS_HID,                                                       // interface class (0x03)

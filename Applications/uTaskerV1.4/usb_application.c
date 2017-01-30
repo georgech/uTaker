@@ -3653,7 +3653,7 @@ static void fnPerformFFT(int iBufferReference)
         break;
     }
     uMemcpy(&sRawInput[iOutputSample], &fft_buffer[iInputSample], iCopyLength * sizeof(signed short));
-    fnFFT(fft_buffer, fft_magnitude_buffer, FFT_INPUT_SAMPLES, iInputOffset, (FFT_INPUT_SAMPLES * 2), windowing_buffer, window_conversionFactor, (FFT_INPUT_HALF_WORDS_SIGNED | FFT_OUTPUT_FLOATS)); // perform complex fast-fourier transform (the result is in the input buffer)
+    fnFFT((void *)fft_buffer, (void *)fft_magnitude_buffer, FFT_INPUT_SAMPLES, iInputOffset, (FFT_INPUT_SAMPLES * sizeof(signed short)), windowing_buffer, window_conversionFactor, (FFT_INPUT_HALF_WORDS_SIGNED | FFT_OUTPUT_FLOATS | FFT_MAGNITUDE_RESULT)); // perform complex fast-fourier transform (the result is in the input buffer)
     #if defined BLAZE_K22
     fnDisplayFFT(fft_magnitude_buffer, sRawInput);                       // display FFT output on display
     #endif
