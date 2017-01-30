@@ -1,10 +1,10 @@
 /***********************************************************************
     Mark Butcher    Bsc (Hons) MPhil MIET
-
+    
     M.J.Butcher Consulting
     Birchstrasse 20f,    CH-5406, Rütihof
     Switzerland
-
+    
     www.uTasker.com    Skype: M_J_Butcher
     
     ---------------------------------------------------------------------
@@ -972,7 +972,7 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
             if ((iFTP_data_state & (FTP_DATA_STATE_GETTING | FTP_DATA_STATE_PUTTING)) == 0) {
                 fnEchoInput(ucInputMessage, Length);
             }
-        #else 
+        #else
             fnEchoInput(ucInputMessage, Length);
         #endif
         #if defined USE_MAINTENANCE

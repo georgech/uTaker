@@ -1106,12 +1106,14 @@ extern USER_FILE *fnActivateEmbeddedUserFiles(CHAR *cFile, int iType);
 // Cryptography                                                          {73}
 //
 extern int fnAES_Init(int iInstanceCommand, const unsigned char *ptrKey, int iKeyLength);
-extern int fnAES_Cipher(int iInstanceCommand, const unsigned char *ptrPlaintext, unsigned char *ptrCiphertext, unsigned long ulDataLength);
+extern int fnAES_Cipher(int iInstanceCommand, const unsigned char *ptrTextIn, unsigned char *ptrTextOut, unsigned long ulDataLength);
 
 #define AES_BLOCK_LENGTH               16
 #define AES_INVALID_INSTANCE_REFERENCE -1
 #define AES_INSTANCE_NOT_INITIALISED   -2
 #define AES_ENCRYPT_BAD_LENGTH         -3
+#define AES_ENCRYPT_BAD_ALIGNMENT      -4
+#define AES_INVALID_KEY_LENGTH         -5
 
 #define AES_INSTANCE_MASK               0x00ff
 #define AES_COMMAND_AES_ENCRYPT         0x0100
@@ -1125,7 +1127,7 @@ extern int fnAES_Cipher(int iInstanceCommand, const unsigned char *ptrPlaintext,
 //
 extern float fnGenerateWindowFloat(float *ptrWindowBuffer, int iInputSamples, int iWindowType);
     #define BLACKMANN_HARRIS_WINDOW        0
-extern int fnFFT(void *ptrInputBuffer, float *ptrOutputBuffer, int iInputSamples, int iSampleOffset, int iInputBufferSize, float *ptrWindowingBuffer, float window_conversionFactor, int iInputOutputType);
+extern int fnFFT(void *ptrInputBuffer, void *ptrOutputBuffer, int iInputSamples, int iSampleOffset, int iInputBufferSize, float *ptrWindowingBuffer, float window_conversionFactor, int iInputOutputType);
     #define FFT_INPUT_MASK                 0x00f
     #define FFT_INPUT_BYTES_UNSIGNED       0x000
     #define FFT_INPUT_BYTES_SIGNED         0x001

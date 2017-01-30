@@ -63,7 +63,7 @@ extern float fnGenerateWindowFloat(float *ptrWindowBuffer, int iInputSamples, in
 #endif
 // Perform complex fast-fourier transform on an input circular sample buffer with optional offset and optional windowing
 //
-extern int fnFFT(void *ptrInputBuffer, float *ptrOutputBuffer, int iInputSamples, int iSampleOffset, int iInputBufferSize, float *ptrWindowingBuffer, float window_conversionFactor, int iInputOutputType)
+extern int fnFFT(void *ptrInputBuffer, void *ptrOutputBuffer, int iInputSamples, int iSampleOffset, int iInputBufferSize, float *ptrWindowingBuffer, float window_conversionFactor, int iInputOutputType)
 {
     float fft_buffer[MAX_FFT_BUFFER_LENGTH];                             // temporary working buffer (for complex inputs and so twice the size)
     const arm_cfft_instance_f32 *ptrFFT_consts = 0;
@@ -173,18 +173,18 @@ extern int fnFFT(void *ptrInputBuffer, float *ptrOutputBuffer, int iInputSamples
         arm_cfft_f32(ptrFFT_consts, fft_buffer, 0, 1);                   // perform an in-place complex FFT
         TOGGLE_TEST_OUTPUT();                                            // stop/start measurement of processing time
         if ((iInputOutputType & FFT_MAGNITUDE_RESULT) != 0) {            // if the magnitudes are required
+            float *ptrFloatOutputBuffer = (float *)ptrOutputBuffer;
             iInputSamples /= 2;                                          // half the values are of interest (the second half is a mirrored version of the first half)
-            arm_cmplx_mag_f32(fft_buffer, ptrOutputBuffer, iInputSamples); // calculate the magnitude of each frequency component            
+            arm_cmplx_mag_f32(fft_buffer, ptrFloatOutputBuffer, (unsigned long)iInputSamples); // calculate the magnitude of each frequency component            
             if (ptrWindowingBuffer != 0) {
                 TOGGLE_TEST_OUTPUT();                                    // start/stop measurement of processing time
                 while (iInputSamples-- > 0) {
-                    *ptrOutputBuffer++ *= window_conversionFactor;       // compensate each frequency amplitude with the windowing coefficient
+                    *ptrFloatOutputBuffer++ *= window_conversionFactor;  // compensate each frequency amplitude with the windowing coefficient
                 }
             }
-            TOGGLE_TEST_OUTPUT();                                        // start/stop measurement of processing time
         }
         else {                                                           // complex result is to be returned
-            uMemcpy(ptrOutputBuffer, fft_buffer, (iInputSamples * sizeof(float)));
+            uMemcpy(ptrOutputBuffer, fft_buffer, (iInputSamples * sizeof(float))); // it is expected that the output buffer is float of adequate size!
             TOGGLE_TEST_OUTPUT();                                        // start/stop measurement of processing time
             return 0;
         }

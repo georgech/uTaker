@@ -271,7 +271,9 @@
     #define DO_SET_BACKLIGHT       41                                    // specific hardware command to set backlight intensity
     #define DO_SUSPEND_PAGE        42                                    // specific hardware command to test suspend/resume operation during erasure
     #define DO_FFT                 43                                    // specific hardware command to test CMSIS CFFT operation
-    #define DO_AES                 44                                    // specific hardware command to test AES256 operation
+    #define DO_AES128              44                                    // specific hardware command to test AES128 operation
+    #define DO_AES192              45                                    // specific hardware command to test AES192 operation
+    #define DO_AES256              46                                    // specific hardware command to test AES256 operation
 
 
 #define DO_TELNET                 2                                      // reference to Telnet group
@@ -1055,10 +1057,12 @@ static const DEBUG_COMMAND tCANCommand[] = {                             // {38}
 static const DEBUG_COMMAND tAdvancedCommand[] = {                             // {84}
     {"up",                "go to main menu",                       DO_HELP,          DO_HELP_UP },
 #if defined TEST_CMSIS_CFFT
-    {"fft",               "Do reference CFFT [len (16|32|...|2048|4096)]", DO_HARDWARE, DO_FFT},
+    {"fft",               "Test CFFT [len (16|32|...|2048|4096)]", DO_HARDWARE,      DO_FFT},
 #endif
 #if defined CRYPTOGRAPHY
-    { "aes",              "Test aes256",                           DO_HARDWARE,      DO_AES },
+    { "aes128",           "Test aes128",                           DO_HARDWARE,      DO_AES128 },
+    { "aes192",           "Test aes192",                           DO_HARDWARE,      DO_AES192 },
+    { "aes256",           "Test aes256",                           DO_HARDWARE,      DO_AES256 },
 #endif
     {"quit",              "Leave command mode",                    DO_TELNET,        DO_TELNET_QUIT },
 };
@@ -3342,11 +3346,9 @@ static void fnMeasurePWM(int iPortRef, unsigned long ulPortBit)
 
 
 #if defined TEST_CMSIS_CFFT                                              // {84}
-#include "..\..\Hardware\Kinetis\CMSIS_DSP\arm_const_structs.h"          // include defines required for the use of FFT
-
 // ARM's standard test input, defined as "Test Input signal contains 10KHz signal + Uniformly distributed white noise" but as samples rather than complex values
 //
-static const float32_t _testInput_f32_10khz[1024] =
+static const float _testInput_f32_10khz[1024] =
 {
    -0.865129623056441,     	-2.655020678073846,    	0.600664612949661,     	0.080378093886515,    
    -2.899160484012034,     	2.563004262857762,     	3.078328403304206,     	0.105906778385130,    
@@ -3632,14 +3634,14 @@ static const float32_t _testInput_f32_10khz[1024] =
 
 static void fnTestFFT(int iLength)
 {
-    float32_t fft_result_buffer[MAX_FFT_TEST_LENGTH / 2];                // temporary result buffer
+    float fft_result_buffer[MAX_FFT_TEST_LENGTH/2];                      // temporary result buffer
     if (iLength > MAX_FFT_TEST_LENGTH) {
         iLength = MAX_FFT_TEST_LENGTH;                                   // limit the size
         fnDebugMsg("FFT length reduced to max. of ");
         fnDebugDec(iLength, WITH_CR_LF);
     }
-
-    if (fnFFT((void *)_testInput_f32_10khz, fft_result_buffer, iLength, 0, iLength, 0, 0, (FFT_INPUT_FLOATS | FFT_OUTPUT_FLOATS)) < 0) {
+    
+    if (fnFFT((void *)_testInput_f32_10khz, (void *)fft_result_buffer, iLength, 0, iLength, 0, 0, (FFT_INPUT_FLOATS | FFT_OUTPUT_FLOATS | FFT_MAGNITUDE_RESULT)) < 0) {
         fnDebugMsg("Invalid FFT length\r\n");
         return;
     }
@@ -3779,33 +3781,61 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
           break;
 #endif
 #if defined CRYPTOGRAPHY                                                 // {84}
-      case DO_AES:
+      case DO_AES128:
+      case DO_AES192:
+      case DO_AES256:
           {
+              typedef struct stALIGNED_BUFFER
+              {
+                  unsigned long  ulAlignedLongWord;                      // unused long word to ensure following data alignment
+                  unsigned char  ucData[256/8 + 32];
+              } ALIGNED_BUFFER;
+           // static const ALIGNED_BUFFER encryption_key = { 0, { 0x60,0x3d,0xeb,0x10,0x15,0xca,0x71,0xbe,0x2b,0x73,0xae,0xf0,0x85,0x7d,0x77,0x81,0x1f,0x35,0x2c,0x07,0x3b,0x61,0x08,0xd7,0x2d,0x98,0x10,0xa3,0x09,0x14,0xdf,0xf4 } };
+           // static const ALIGNED_BUFFER plaintext = { 0, { 0x60,0x3d,0xeb,0x10,0x15,0xca,0x71,0xbe,0x2b,0x73,0xae,0xf0,0x85,0x7d,0x77,0x81,0x1f,0x35,0x2c,0x07,0x3b,0x61,0x08,0xd7,0x2d,0x98,0x10,0xa3,0x09,0x14,0xdf,0xf4 } };
+
+
+              static const ALIGNED_BUFFER encryption_key = { 0, { 0x63, 0x68 , 0x69 , 0x63 , 0x6B , 0x65 , 0x6E , 0x20 , 0x74 , 0x65 , 0x72, 0x69 , 0x79 , 0x61 , 0x6B , 0x69 , 0x2C , 0x20 , 0x69 , 0x73 , 0x20 , 0x76 , 0x65 , 0x72 , 0x79 , 0x20 , 0x79 , 0x75 , 0x6D , 0x6D , 0x79 , 0x21 } };
+              static const ALIGNED_BUFFER plaintext = { 0, "I would like the General Gau's Chicken," };
+
+
+
+              ALIGNED_BUFFER ciphertext = {0};
+              ALIGNED_BUFFER recovered = {0};
               int i;
-              static const unsigned char encryption_key[256/8]     = { 0x60,0x3d,0xeb,0x10,0x15,0xca,0x71,0xbe,0x2b,0x73,0xae,0xf0,0x85,0x7d,0x77,0x81,0x1f,0x35,0x2c,0x07,0x3b,0x61,0x08,0xd7,0x2d,0x98,0x10,0xa3,0x09,0x14,0xdf,0xf4 };
-              static const unsigned char plaintext[256/8] = { 0x60,0x3d,0xeb,0x10,0x15,0xca,0x71,0xbe,0x2b,0x73,0xae,0xf0,0x85,0x7d,0x77,0x81,0x1f,0x35,0x2c,0x07,0x3b,0x61,0x08,0xd7,0x2d,0x98,0x10,0xa3,0x09,0x14,0xdf,0xf4 };
-              unsigned char ciphertext[256/8] = { 0 };
-              unsigned char recovered[256/8] = { 0 };
+              int iKeyLength;
+              switch (ucType) {
+              case DO_AES128:
+                  iKeyLength = 128;
+                  break;
+              case DO_AES192:
+                  iKeyLength = 192;
+                  break;
+              case DO_AES256:
+                  iKeyLength = 256;
+                  break;
+              }
 
               TOGGLE_TEST_OUTPUT();
-              fnAES_Init(AES_COMMAND_AES_SET_KEY_ENCRYPT, encryption_key, 256); // set our encryption key
+              fnAES_Init(AES_COMMAND_AES_SET_KEY_ENCRYPT, encryption_key.ucData, iKeyLength); // register the encryption key
               TOGGLE_TEST_OUTPUT();
-              fnAES_Cipher((AES_COMMAND_AES_ENCRYPT | AES_COMMAND_AES_RESET_IV), plaintext, ciphertext, sizeof(plaintext)); // encrypt the data content
+              fnAES_Cipher((AES_COMMAND_AES_ENCRYPT | AES_COMMAND_AES_RESET_IV), plaintext.ucData, ciphertext.ucData, sizeof(plaintext.ucData)); // encrypt the data content
               TOGGLE_TEST_OUTPUT();
               for (i = 0; i < 32; i++) {
-                  fnDebugHex(ciphertext[i], (WITH_SPACE | sizeof(unsigned char) | WITH_LEADIN));
+                  fnDebugHex(ciphertext.ucData[i], (WITH_SPACE | sizeof(unsigned char) | WITH_LEADIN));
               }
               fnDebugMsg("\r\n");
               TOGGLE_TEST_OUTPUT();
-              fnAES_Init(AES_COMMAND_AES_SET_KEY_DECRYPT, encryption_key, 256); // set our decryption key
+              fnAES_Init(AES_COMMAND_AES_SET_KEY_DECRYPT, encryption_key.ucData, iKeyLength); // register the decryption key
               TOGGLE_TEST_OUTPUT();
-              fnAES_Cipher((AES_COMMAND_AES_DECRYPT | AES_COMMAND_AES_RESET_IV), (const unsigned char *)ciphertext, recovered, sizeof(ciphertext)); // decrypt the data content
+              fnAES_Cipher((AES_COMMAND_AES_DECRYPT | AES_COMMAND_AES_RESET_IV), (const unsigned char *)ciphertext.ucData, recovered.ucData, sizeof(ciphertext.ucData)); // decrypt the data content
               TOGGLE_TEST_OUTPUT();
-              if (uMemcmp(plaintext, recovered, sizeof(recovered)) == 0) {
-                  fnDebugMsg("AES256 passed\n\r");
+              fnDebugMsg("AES");
+              fnDebugDec(iKeyLength, 0);
+              if (uMemcmp(plaintext.ucData, recovered.ucData, sizeof(recovered.ucData)) == 0) {
+                  fnDebugMsg(" passed\n\r");
               }
               else {
-                  fnDebugMsg("AES256 failed\n\r");
+                  fnDebugMsg(" failed\n\r");
               }
           }
           break;
