@@ -657,10 +657,10 @@
 /**************** Configure driver services *******************************************************************/
 
 #if !defined K70F150M_12M && !defined KWIKSTIK && !(defined TEENSY_3_1 && defined SPECIAL_VERSION) && !defined BLAZE_K22
-  //#define SERIAL_INTERFACE                                             // enable serial interface driver
+    #define SERIAL_INTERFACE                                             // enable serial interface driver
 #endif
 #if defined SERIAL_INTERFACE
-    #define KBOOT_LOADER                                                 // use KBOOT UART interface rather than SREC/iHex interface
+  //#define KBOOT_LOADER                                                 // use KBOOT UART interface rather than SREC/iHex interface
   //#define DEVELOPERS_LOADER                                            // Freescale Developer's Bootloader (AN2295) compatible mode (rather than SREC/iHex)
       //#define DEVELOPERS_LOADER_PROTOCOL_VERSION_9                     // user protocol version 9 rather than obselete Kinetis 8 (not completed at the moment)
         #define DEVELOPERS_LOADER_READ                                   // support reading back program
@@ -699,8 +699,8 @@
     #define USB_INTERFACE                                                // enable USB driver interface
     #if defined USB_INTERFACE
       //#define USE_USB_CDC                                              // allow SREC/iHex loading via virtual COM
-        #define USB_MSD_DEVICE_LOADER                                    // USB-MSD device mode (the board appears as a hardware to the host)
-      //#define USB_MSD_HOST_LOADER                                      // USB-MSD host mode (the board operates as host and can read new code from a memory stick)
+      //#define USB_MSD_DEVICE_LOADER                                    // USB-MSD device mode (the board appears as a hardware to the host)
+        #define USB_MSD_HOST_LOADER                                      // USB-MSD host mode (the board operates as host and can read new code from a memory stick)
         #if defined USE_USB_CDC
             #undef SERIAL_INTERFACE                                      // remove the UART interface
             #define NUMBER_SERIAL          0
@@ -727,7 +727,7 @@
             #define USB_HOST_SUPPORT                                     // requires USB host driver support
             #define SUPPORT_USB_SIMPLEX_HOST_ENDPOINTS                   // allow operation with memory sticks using bulk IN/OUT on the same endpoint
             #define RANDOM_NUMBER_GENERATOR                              // random numbers required for USB-MSD host tags
-            #define DELETE_SDCARD_FILE_AFTER_UPDATE
+          //#define DELETE_SDCARD_FILE_AFTER_UPDATE
             #if defined DELETE_SDCARD_FILE_AFTER_UPDATE
                 #define UTFAT_WRITE
             #endif
