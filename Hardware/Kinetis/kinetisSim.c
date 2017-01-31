@@ -6151,7 +6151,7 @@ extern void fnCheckUSBOut(int iDevice, int iEndpoint)
     KINETIS_USB_BD *bufferDescriptor;
     unsigned long ulAddress = ((BDT_PAGE_01 << 8) | (BDT_PAGE_02 << 16) | (BDT_PAGE_03 << 24));
     KINETIS_USB_ENDPOINT_BD *bdt = (KINETIS_USB_ENDPOINT_BD *)ulAddress;
-    int iMaxUSB_ints = TICK_RESOLUTION;
+    int iMaxUSB_ints = (TICK_RESOLUTION/1000);
     #if defined USB_HOST_SUPPORT
     int iRealEndpoint = iEndpoint;
     #endif
@@ -6728,10 +6728,10 @@ extern int fnSimTimers(void)
         else {
             unsigned long ulCOP_trigger = 0;
             if ((SIM_COPC & SIM_COPC_COPCLKS_BUS) != 0) {                // COP clocked from bus clock
-                ulCOPcounter += ((BUS_CLOCK * TICK_RESOLUTION)/1000);    // clocks in a tick period
+                ulCOPcounter += ((BUS_CLOCK * (TICK_RESOLUTION/1000))/1000); // clocks in a tick period
             }
             else {                                                       // COP clocked from 1kHz clock
-                ulCOPcounter += (TICK_RESOLUTION * (1000/1000));
+                ulCOPcounter += ((TICK_RESOLUTION/1000) * (1000/1000));
             }
             switch (SIM_COPC & SIM_COPC_COPT_LONGEST) {                  // COP mode
             case SIM_COPC_COPT_SHORTEST:
@@ -6767,7 +6767,7 @@ extern int fnSimTimers(void)
     }
 #elif defined KINETIS_KE
     if (WDOG_CS1 & WDOG_CS1_EN) {
-        unsigned long ulCounter = (TICK_RESOLUTION * (1000/1000));       // assume 1000Hz LPO clock
+        unsigned long ulCounter = ((TICK_RESOLUTION/1000) * (1000/1000));// assume 1000Hz LPO clock
         unsigned long ulWdogCnt = ((WDOG_CNTH << 8) | WDOG_CNTL);        // present watchdog count value
         unsigned long ulWdogTimeout = ((WDOG_TOVALH << 8) | WDOG_TOVALL);// timeout value
         ulWdogCnt += ulCounter;                                          // next value
@@ -6779,7 +6779,7 @@ extern int fnSimTimers(void)
     }
 #else
     if (WDOG_STCTRLH & WDOG_STCTRLH_WDOGEN) {                            // watchdog enabled
-        unsigned long ulCounter = (TICK_RESOLUTION * (1000/1000));       // {28} assume 1000Hz LPO clock
+        unsigned long ulCounter = ((TICK_RESOLUTION/1000) * (1000/1000));// {28} assume 1000Hz LPO clock
         unsigned long ulWatchdogCount = ((WDOG_TMROUTH << 16) | (WDOG_TMROUTL)); // present watchdog count
         unsigned long ulWatchdogTimeout = ((WDOG_TOVALH << 16) | (WDOG_TOVALL)); // watchdog timeout value        
         if (WDOG_STCTRLH & WDOG_STCTRLH_CLKSRC) {                        // not sure which source is which at the moment
@@ -6801,7 +6801,7 @@ extern int fnSimTimers(void)
     if ((SYSTICK_CSR & SYSTICK_ENABLE) != 0) {                           // SysTick is enabled
         unsigned long ulTickCount = 0;
         if ((SYSTICK_CSR & SYSTICK_CORE_CLOCK) != 0) {
-            ulTickCount = (TICK_RESOLUTION * (SYSTEM_CLOCK/1000));       // count per tick period from internal clock
+            ulTickCount = ((TICK_RESOLUTION/1000) * (SYSTEM_CLOCK/1000));// count per tick period from internal clock
         }
         if ((SYSTICK_CURRENT + 1) > ulTickCount) {
             SYSTICK_CURRENT -= ulTickCount;
@@ -6820,7 +6820,7 @@ extern int fnSimTimers(void)
 #if !defined KINETIS_WITHOUT_PIT
     if ((PIT_MCR & PIT_MCR_MDIS) == 0) {                                 // if PIT module is not disabled
         if ((PIT_TCTRL0 & PIT_TCTRL_TEN) != 0) {                         // if PIT0 is enabled
-            unsigned long ulCount = (TICK_RESOLUTION * (BUS_CLOCK/1000));// count in a tick period
+            unsigned long ulCount = ((TICK_RESOLUTION/1000) * (BUS_CLOCK/1000)); // count in a tick period
             if (PIT_CVAL0 <= ulCount) {
                 ulCount -= PIT_CVAL0;
                 if (ulCount >= PIT_LDVAL0) {
@@ -6864,7 +6864,7 @@ extern int fnSimTimers(void)
             }
         }
         if ((PIT_TCTRL1 & PIT_TCTRL_TEN) != 0) {                         // if PIT1 is enabled
-            unsigned long ulCount = (TICK_RESOLUTION * (BUS_CLOCK/1000));// count in a tick period
+            unsigned long ulCount = ((TICK_RESOLUTION/1000) * (BUS_CLOCK/1000)); // count in a tick period
             if (PIT_CVAL1 <= ulCount) {
                 ulCount -= PIT_CVAL1;
                 if (ulCount >= PIT_LDVAL1) {
@@ -6903,7 +6903,7 @@ extern int fnSimTimers(void)
         }
     #if !defined KINETIS_KL && !defined KINETIS_KE                       // {24}
         if ((PIT_TCTRL2 & PIT_TCTRL_TEN) != 0) {                         // if PIT2 is enabled
-            unsigned long ulCount = (TICK_RESOLUTION * (BUS_CLOCK/1000));// count in a tick period
+            unsigned long ulCount = ((TICK_RESOLUTION/1000) * (BUS_CLOCK/1000)); // count in a tick period
             if (PIT_CVAL2 <= ulCount) {
                 ulCount -= PIT_CVAL2;
                 if (ulCount >= PIT_LDVAL2) {
@@ -6932,7 +6932,7 @@ extern int fnSimTimers(void)
             }
         }
         if ((PIT_TCTRL3 & PIT_TCTRL_TEN) != 0) {                         // if PIT3 is enabled
-            unsigned long ulCount = (TICK_RESOLUTION * (BUS_CLOCK/1000));// count in a tick period
+            unsigned long ulCount = ((TICK_RESOLUTION/1000) * (BUS_CLOCK/1000)); // count in a tick period
             if (PIT_CVAL3 <= ulCount) {
                 ulCount -= PIT_CVAL3;
                 if (ulCount >= PIT_LDVAL3) {
@@ -6969,17 +6969,17 @@ extern int fnSimTimers(void)
             unsigned long ulCounter;
             switch (SIM_SOPT1 & SIM_SOPT1_OSC32KSEL_MASK) {
             case SIM_SOPT1_OSC32KSEL_SYS_OSC:
-                ulCounter = ((TICK_RESOLUTION * 32000)/1000);            // approximately 32kHz clock pulses in a TICK period
+                ulCounter = (((TICK_RESOLUTION/1000) * 32000)/1000);     // approximately 32kHz clock pulses in a TICK period
                 break;
             case SIM_SOPT1_OSC32KSEL_LPO_1kHz:
-                ulCounter = (TICK_RESOLUTION);                           // approximately 1kHz clock pulses in a TICK period
+                ulCounter = ((TICK_RESOLUTION/1000));                    // approximately 1kHz clock pulses in a TICK period
                 break;
     #if defined KINETIS_KL
             case SIM_SOPT1_OSC32KSEL_RTC_CLKIN:                          // 32kHz clock input assumed
     #else
             case SIM_SOPT1_OSC32KSEL_32k:
     #endif
-                ulCounter = ((TICK_RESOLUTION * 32768)/1000);            // 32kHz clock pulses in a TICK period
+                ulCounter = (((TICK_RESOLUTION/1000) * 32768)/1000);     // 32kHz clock pulses in a TICK period
                 break;
             }
             RTC_TPR += ulCounter;
@@ -7018,7 +7018,7 @@ extern int fnSimTimers(void)
     #if !defined _EXTERNAL_CLOCK                                         // if no external clock is available the OSCERCLK is not valid
         #define _EXTERNAL_CLOCK 0
     #endif
-            ulCount = ((TICK_RESOLUTION * _EXTERNAL_CLOCK)/1000);        // prescaler count in tick interval
+            ulCount = (((TICK_RESOLUTION/1000) * _EXTERNAL_CLOCK)/1000); // prescaler count in tick interval
             switch (RTC_SC & RTC_SC_RTCPS_1000) {
             case RTC_SC_RTCPS_1:
                 break;
@@ -7043,7 +7043,7 @@ extern int fnSimTimers(void)
             }
             break;
         case RTC_SC_RTCLKS_INT:                                          // internal 32kHz clock
-            ulCount = (TICK_RESOLUTION * 32);
+            ulCount = ((TICK_RESOLUTION/1000) * 32);
             switch (RTC_SC & RTC_SC_RTCPS_1000) {
             case RTC_SC_RTCPS_1:
                 break;
@@ -7068,7 +7068,7 @@ extern int fnSimTimers(void)
             }
             break;
         case RTC_SC_RTCLKS_1K:                                           // internal 1kHz clock
-            ulCount = TICK_RESOLUTION;
+            ulCount = (TICK_RESOLUTION/1000);
             switch (RTC_SC & RTC_SC_RTCPS_1000) {
             case RTC_SC_RTCPS_128:
                 ulCount /= 128;
@@ -7094,7 +7094,7 @@ extern int fnSimTimers(void)
             }
             break;
         case RTC_SC_RTCLKS_BUS:                                          // bus clock
-            ulCount = ((TICK_RESOLUTION * BUS_CLOCK)/1000);
+            ulCount = (((TICK_RESOLUTION/1000) * BUS_CLOCK)/1000);
             switch (RTC_SC & RTC_SC_RTCPS_1000) {
             case RTC_SC_RTCPS_128:
                 ulCount /= 128;
@@ -7136,26 +7136,26 @@ extern int fnSimTimers(void)
         }
     }
 #elif defined SUPPORT_LPTMR                                              // {35}
-    if ((SIM_SCGC5 & SIM_SCGC5_LPTIMER) && (LPTMR0_CSR & LPTMR_CSR_TEN)) { // if the low power timer is enabled and running
+    if (((SIM_SCGC5 & SIM_SCGC5_LPTIMER) != 0) && ((LPTMR0_CSR & LPTMR_CSR_TEN) != 0)) { // if the low power timer is enabled and running
         unsigned long ulCount = 0;                                       // count in a tick period
         switch (LPTMR0_PSR & LPTMR_PSR_PCS_OSC0ERCLK) {
         case LPTMR_PSR_PCS_LPO:
-            ulCount = (TICK_RESOLUTION);
+            ulCount = ((TICK_RESOLUTION/1000));
             break;
         case LPTMR_PSR_PCS_MCGIRCLK:
-            if (MCG_C2 & MCG_C2_IRCS) {
-                ulCount = (TICK_RESOLUTION * (4000000/1000));
+            if ((MCG_C2 & MCG_C2_IRCS) != 0) {
+                ulCount = ((TICK_RESOLUTION/1000) * (4000000/1000));
             }
             else {
-                ulCount = ((TICK_RESOLUTION * 35000)/1000);
+                ulCount = (((TICK_RESOLUTION/1000) * 35000)/1000);
             }
             break;
         case LPTMR_PSR_PCS_ERCLK32K:
-            ulCount = ((TICK_RESOLUTION * 32768)/1000);
+            ulCount = ((TICK_RESOLUTION) * 32768);
             break;
         case LPTMR_PSR_PCS_OSC0ERCLK:
     #if defined _EXTERNAL_CLOCK
-            ulCount = (TICK_RESOLUTION * (_EXTERNAL_CLOCK/1000));        // external clocks in a tick period (assuming no pre-scaler)
+            ulCount = ((TICK_RESOLUTION/1000) * (_EXTERNAL_CLOCK/1000)); // external clocks in a tick period (assuming no pre-scaler)
     #else
             _EXCEPTION("no external clock defined so this selection should not be used");
     #endif
@@ -7167,13 +7167,13 @@ extern int fnSimTimers(void)
         if (LPTMR0_CNR <= LPTMR0_CMR) {                                  // timer count has not yet reached the match value
             ulCount = (LPTMR0_CNR + ulCount);                            // the next count value
             if (ulCount > LPTMR0_CMR) {
-                if (!(LPTMR0_CSR & LPTMR_CSR_TFC_FREERUN)) {
+                if ((LPTMR0_CSR & LPTMR_CSR_TFC_FREERUN) == 0) {
                     ulCount = (ulCount - LPTMR0_CMR);
                     if (ulCount > LPTMR0_CMR) {
                         ulCount = LPTMR0_CMR;
                     }
                 }
-                if (LPTMR0_CSR & LPTMR_CSR_TIE) {                        // if LPTMR interrupt is enabled
+                if ((LPTMR0_CSR & LPTMR_CSR_TIE) != 0) {                 // if LPTMR interrupt is enabled
                     if (fnGenInt(irq_LPT_ID) != 0) {                     // if LPTMR interrupt is not disabled
                         VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                         ptrVect->processor_interrupts.irq_LPT();         // call the interrupt handler
@@ -7200,7 +7200,7 @@ extern int fnSimTimers(void)
             }
         }
         if (iPDB != 0) {                                                 // if running
-            unsigned long ulPDB_count = (TICK_RESOLUTION * (BUS_CLOCK/1000));
+            unsigned long ulPDB_count = ((TICK_RESOLUTION/1000) * (BUS_CLOCK/1000));
             switch (PDB0_SC & PDB_SC_MULT_40) {
             case PDB_SC_MULT_1:
                 break;
@@ -7320,7 +7320,7 @@ extern int fnSimTimers(void)
         unsigned long ulCountIncrease;
         switch (SIM_SOPT2 & SIM_SOPT2_TPMSRC_MCGIRCLK) {                 // {38}
         case SIM_SOPT2_TPMSRC_MCGIRCLK:
-            ulCountIncrease = (TICK_RESOLUTION * ((MCGIRCLK)/1000));     // bus clocks in a period
+            ulCountIncrease = ((TICK_RESOLUTION/1000) * ((MCGIRCLK)/1000)); // bus clocks in a period
             if (MCG_C2 & MCG_C2_IRCS) {                                  // if fast clock
                 int prescaler = ((MCG_SC >> 1) & 0x7);                   // FCRDIV value
                 while (prescaler--) {
@@ -7330,23 +7330,23 @@ extern int fnSimTimers(void)
             break;
         case SIM_SOPT2_TPMSRC_OSCERCLK:
         #if defined OSCERCLK
-            ulCountIncrease= (TICK_RESOLUTION * ((OSCERCLK)/1000));      // bus clocks in a period
+            ulCountIncrease= ((TICK_RESOLUTION/1000) * ((OSCERCLK)/1000)); // bus clocks in a period
         #else
             _EXCEPTION("No OSCERCLK available");
         #endif
             break;
         case SIM_SOPT2_TPMSRC_MCG:
         #if defined FLL_FACTOR
-            ulCountIncrease= (TICK_RESOLUTION * ((MCGFLLCLK)/1000));     // bus clocks in a period
+            ulCountIncrease= ((TICK_RESOLUTION/1000) * ((MCGFLLCLK)/1000)); // bus clocks in a period
         #else
-            ulCountIncrease= (TICK_RESOLUTION * ((MCGPLLCLK/2)/1000));   // bus clocks in a period
+            ulCountIncrease= ((TICK_RESOLUTION/1000) * ((MCGPLLCLK/2)/1000)); // bus clocks in a period
         #endif
             break;
         }
     #elif defined KINETIS_KE
-        unsigned long ulCountIncrease = (TICK_RESOLUTION * ((BUS_CLOCK)/1000)); // bus clocks in a period (assume clocked from bus clock)
+        unsigned long ulCountIncrease = ((TICK_RESOLUTION/1000) * ((BUS_CLOCK)/1000)); // bus clocks in a period (assume clocked from bus clock)
     #else
-        unsigned long ulCountIncrease = (TICK_RESOLUTION * ((BUS_CLOCK)/1000)); // bus clocks in a period (assume clocked from bus clock)
+        unsigned long ulCountIncrease = ((TICK_RESOLUTION/1000) * ((BUS_CLOCK)/1000)); // bus clocks in a period (assume clocked from bus clock)
     #endif
         ulCountIncrease /= (1 << (FTM0_SC & FTM_SC_PS_128));             // apply pre-scaler
         ulCountIncrease += FTM0_CNT;                                     // new counter value (assume up counting)
@@ -7386,7 +7386,7 @@ extern int fnSimTimers(void)
         unsigned long ulCountIncrease;
         switch (SIM_SOPT2 & SIM_SOPT2_TPMSRC_MCGIRCLK) {                 // {38}
         case SIM_SOPT2_TPMSRC_MCGIRCLK:
-            ulCountIncrease = (TICK_RESOLUTION * ((MCGIRCLK)/1000));     // bus clocks in a period
+            ulCountIncrease = ((TICK_RESOLUTION/1000) * ((MCGIRCLK)/1000)); // bus clocks in a period
             if (MCG_C2 & MCG_C2_IRCS) {                                  // if fast clock
                 int prescaler = ((MCG_SC >> 1) & 0x7);                   // FCRDIV value
                 while (prescaler--) {
@@ -7396,23 +7396,23 @@ extern int fnSimTimers(void)
             break;
         case SIM_SOPT2_TPMSRC_OSCERCLK:
         #if defined OSCERCLK
-            ulCountIncrease= (TICK_RESOLUTION * ((OSCERCLK)/1000));      // bus clocks in a period
+            ulCountIncrease= ((TICK_RESOLUTION/1000) * ((OSCERCLK)/1000));  // bus clocks in a period
         #else
             _EXCEPTION("No OSCERCLK available");
         #endif
             break;
         case SIM_SOPT2_TPMSRC_MCG:
         #if defined FLL_FACTOR
-            ulCountIncrease= (TICK_RESOLUTION * ((MCGFLLCLK)/1000));     // bus clocks in a period
+            ulCountIncrease= ((TICK_RESOLUTION/1000) * ((MCGFLLCLK)/1000)); // bus clocks in a period
         #else
-            ulCountIncrease= (TICK_RESOLUTION * ((MCGPLLCLK/2)/1000));   // bus clocks in a period
+            ulCountIncrease= ((TICK_RESOLUTION/1000) * ((MCGPLLCLK/2)/1000)); // bus clocks in a period
         #endif
             break;
         }
         #elif defined KINETIS_KE
-        unsigned long ulCountIncrease = (TICK_RESOLUTION * ((BUS_CLOCK)/1000)); // bus clocks in a period (assume clocked from bus clock)
+        unsigned long ulCountIncrease = ((TICK_RESOLUTION/1000) * ((BUS_CLOCK)/1000)); // bus clocks in a period (assume clocked from bus clock)
         #else
-        unsigned long ulCountIncrease = (TICK_RESOLUTION * ((BUS_CLOCK)/1000)); // bus clocks in a period (assume clocked from bus clock)
+        unsigned long ulCountIncrease = ((TICK_RESOLUTION/1000) * ((BUS_CLOCK)/1000)); // bus clocks in a period (assume clocked from bus clock)
         #endif
         ulCountIncrease /= (1 << (FTM1_SC & FTM_SC_PS_128));             // apply pre-scaler
         ulCountIncrease += FTM1_CNT;                                     // new counter value (assume up counting)
@@ -7458,7 +7458,7 @@ extern int fnSimTimers(void)
         unsigned long ulCountIncrease;
         switch (SIM_SOPT2 & SIM_SOPT2_TPMSRC_MCGIRCLK) {                 // {38}
         case SIM_SOPT2_TPMSRC_MCGIRCLK:
-            ulCountIncrease = (TICK_RESOLUTION * ((MCGIRCLK)/1000));     // bus clocks in a period
+            ulCountIncrease = ((TICK_RESOLUTION/1000) * ((MCGIRCLK)/1000)); // bus clocks in a period
             if (MCG_C2 & MCG_C2_IRCS) {                                  // if fast clock
                 int prescaler = ((MCG_SC >> 1) & 0x7);                   // FCRDIV value
                 while (prescaler-- != 0) {
@@ -7468,23 +7468,23 @@ extern int fnSimTimers(void)
             break;
         case SIM_SOPT2_TPMSRC_OSCERCLK:
             #if defined OSCERCLK
-            ulCountIncrease= (TICK_RESOLUTION * ((OSCERCLK)/1000));      // bus clocks in a period
+            ulCountIncrease= ((TICK_RESOLUTION/1000) * ((OSCERCLK)/1000)); // bus clocks in a period
             #else
             _EXCEPTION("No OSCERCLK available!!");
             #endif
             break;
         case SIM_SOPT2_TPMSRC_MCG:
         #if defined FLL_FACTOR
-            ulCountIncrease= (TICK_RESOLUTION * ((MCGFLLCLK)/1000));     // bus clocks in a period
+            ulCountIncrease= ((TICK_RESOLUTION/1000) * ((MCGFLLCLK)/1000)); // bus clocks in a period
         #else
-            ulCountIncrease= (TICK_RESOLUTION * ((MCGPLLCLK/2)/1000));   // bus clocks in a period
+            ulCountIncrease= ((TICK_RESOLUTION/1000) * ((MCGPLLCLK/2)/1000)); // bus clocks in a period
         #endif
             break;
         }
         #elif defined KINETIS_KE
-        unsigned long ulCountIncrease = (TICK_RESOLUTION * ((BUS_CLOCK)/1000)); // bus clocks in a period (assume clocked from bus clock)
+        unsigned long ulCountIncrease = ((TICK_RESOLUTION/1000) * ((BUS_CLOCK)/1000)); // bus clocks in a period (assume clocked from bus clock)
         #else
-        unsigned long ulCountIncrease = (TICK_RESOLUTION * ((BUS_CLOCK)/1000)); // bus clocks in a period (assume clocked from bus clock)
+        unsigned long ulCountIncrease = ((TICK_RESOLUTION/1000) * ((BUS_CLOCK)/1000)); // bus clocks in a period (assume clocked from bus clock)
         #endif
         ulCountIncrease /= (1 << (FTM2_SC & FTM_SC_PS_128));             // apply pre-scaler
         ulCountIncrease += FTM2_CNT;                                     // new counter value (assume up counting)
@@ -7525,7 +7525,7 @@ extern int fnSimTimers(void)
         unsigned long ulCountIncrease;
         switch (SIM_SOPT2 & SIM_SOPT2_TPMSRC_MCGIRCLK) {                 // {38}
         case SIM_SOPT2_TPMSRC_MCGIRCLK:
-            ulCountIncrease = (TICK_RESOLUTION * ((MCGIRCLK)/1000));     // bus clocks in a period
+            ulCountIncrease = ((TICK_RESOLUTION/1000) * ((MCGIRCLK)/1000)); // bus clocks in a period
             if (MCG_C2 & MCG_C2_IRCS) {                                  // if fast clock
                 int prescaler = ((MCG_SC >> 1) & 0x7);                   // FCRDIV value
                 while (prescaler--) {
@@ -7534,20 +7534,20 @@ extern int fnSimTimers(void)
             }
             break;
         case SIM_SOPT2_TPMSRC_OSCERCLK:
-            ulCountIncrease= (TICK_RESOLUTION * ((OSCERCLK)/1000));      // bus clocks in a period
+            ulCountIncrease= ((TICK_RESOLUTION/1000) * ((OSCERCLK)/1000)); // bus clocks in a period
             break;
         case SIM_SOPT2_TPMSRC_MCG:
         #if defined FLL_FACTOR
-            ulCountIncrease= (TICK_RESOLUTION * ((MCGFLLCLK)/1000));     // bus clocks in a period
+            ulCountIncrease= ((TICK_RESOLUTION/1000) * ((MCGFLLCLK)/1000)); // bus clocks in a period
         #else
-            ulCountIncrease= (TICK_RESOLUTION * ((MCGPLLCLK/2)/1000));   // bus clocks in a period
+            ulCountIncrease= ((TICK_RESOLUTION/1000) * ((MCGPLLCLK/2)/1000)); // bus clocks in a period
         #endif
             break;
         }
         #elif defined KINETIS_KE
-        unsigned long ulCountIncrease = (TICK_RESOLUTION * ((BUS_CLOCK)/1000)); // bus clocks in a period (assume clocked from bus clock)
+        unsigned long ulCountIncrease = ((TICK_RESOLUTION/1000) * ((BUS_CLOCK)/1000)); // bus clocks in a period (assume clocked from bus clock)
         #else
-        unsigned long ulCountIncrease = (TICK_RESOLUTION * ((BUS_CLOCK)/1000)); // bus clocks in a period (assume clocked from bus clock)
+        unsigned long ulCountIncrease = ((TICK_RESOLUTION/1000) * ((BUS_CLOCK)/1000)); // bus clocks in a period (assume clocked from bus clock)
         #endif
         ulCountIncrease /= (1 << (FTM3_SC & FTM_SC_PS_128));             // apply pre-scaler
         ulCountIncrease += FTM3_CNT;                                     // new counter value (assume up counting)

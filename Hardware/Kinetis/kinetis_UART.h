@@ -1180,7 +1180,6 @@ extern QUEUE_TRANSFER fnTxByteDMA(QUEUE_HANDLE Channel, unsigned char *ptrStart,
         #if defined KINETIS_KL
             #if defined UART_TIMED_TRANSMISSION                          // {208}
     if ((tx_length > 1) && (ulInterCharTxDelay[Channel] != 0)) {         // if timed transmissions are required on this channel (linear buffer is always assumed and 7/8 bit characters)
-TOGGLE_TEST_OUTPUT();
        ptrDMA->DMA_DSR_BCR = DMA_DSR_BCR_DONE;                           // clear the DONE flag and clear errors etc. before starting the HW timer to trigger transfers
         fnStartTxTimer(Channel, ulInterCharTxDelay[Channel]);            // start the periodic timer that will control subsequent byte transmissions
                 #if defined _WINDOWS

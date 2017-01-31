@@ -141,7 +141,7 @@ static unsigned long fnGetTimeDelay(int iFile)
     if (fnGetTime(iFile) <= 0) {
         return 0;                                                        // error or complete - quit
     }
-    return ((ulTimeDifference + TICK_RESOLUTION)/TICK_RESOLUTION);       // time to wait in TICK intervals
+    return ((ulTimeDifference + (TICK_RESOLUTION/1000))/(TICK_RESOLUTION/1000)); // time to wait in TICK intervals
 }
 
 static int fnEquivalent(char *input, char *command)

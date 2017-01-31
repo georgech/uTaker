@@ -1171,7 +1171,7 @@ static unsigned long fnGetTCP_init_seq(void)
 {
     static unsigned char ucSequenceUses = 0;                             // this variable ensures different sequence numbers for multiple connections started in one tick interval
                                                                          // in this period the counter would count RESms/4us == RES*1000/4 or RES*250
-    return (((uTaskerSystemTick + ucSequenceUses++) * (TICK_RESOLUTION * 250)));
+    return (((uTaskerSystemTick + ucSequenceUses++) * ((TICK_RESOLUTION/1000) * 250)));
 }
 
 // Client connect

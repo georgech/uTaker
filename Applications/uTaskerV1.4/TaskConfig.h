@@ -164,8 +164,10 @@ const UTASK_TASK ctNodes[] = {                                           // we u
 #if defined USE_MODBUS
     TASK_MODBUS,                                                         // MODBUS task
 #endif
+#if !defined BLINKEY
     TASK_APPLICATION,                                                    // application task
     TASK_DEBUG,                                                          // maintenance task
+#endif
 #if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined MANAGED_FILES || defined USB_MSD_HOST
     TASK_MASS_STORAGE,                                                   // {5} mass storage task
 #endif
@@ -208,10 +210,10 @@ const UTASK_TASK ctNodes[] = {                                           // we u
 #if defined USE_IGMP
     TASK_IGMP,                                                           // {10} IGMP task
 #endif
-#if defined LAN_REPORT_ACTIVITY || defined PHY_POLL_LINK || defined INTERRUPT_TASK_PHY // {11}
+#if (defined LAN_REPORT_ACTIVITY || defined PHY_POLL_LINK || defined INTERRUPT_TASK_PHY) && !defined BLINKEY // {11}
     TASK_NETWORK_INDICATOR,                                              // network activity indicator task
 #endif
-#if defined USE_SNTP || defined USE_TIME_SERVER || defined USE_TIME_SERVER || defined SUPPORT_RTC || defined SUPPORT_SW_RTC // {12}
+#if (defined USE_SNTP || defined USE_TIME_SERVER || defined USE_TIME_SERVER || defined SUPPORT_RTC || defined SUPPORT_SW_RTC) && !defined BLINKEY // {12}
     TASK_TIME_KEEPER,
 #endif
 #if defined QUICK_DEV_TASKS
@@ -241,7 +243,7 @@ const UTASKTABLEINIT ctTaskTable[] = {
 #if defined _HW_SAM7X
     {"Wdog",      fnTaskWatchdog, NO_QUE,   (DELAY_LIMIT)(0.2 * SEC), (DELAY_LIMIT)(0.2 * SEC),  UTASKER_STOP}, // watchdog task (note SAM7X is not allowed to start watchdog immediately since it also checks for too fast triggering!!)
 #else
-    {"Wdog",      fnTaskWatchdog, NO_QUE,   0, (DELAY_LIMIT)(0.2 * SEC),  UTASKER_GO}, // watchdog task (runs immediately and then periodically)
+    {"Wdog",      fnTaskWatchdog, NO_QUE,   0, 1/*(DELAY_LIMIT)(0.2 * SEC)*/,  UTASKER_GO}, // watchdog task (runs immediately and then periodically)
 #endif
 #if defined USE_IP || defined USE_IPV6                                   // {6} warning - start ARP task before Ethernet. If Ethernet messages are received before ARP table is ready there would be an error..
     {"ARP",       fnTaskArp,    MEDIUM_QUE, (DELAY_LIMIT)(0.05 * SEC), 0, UTASKER_STOP}, // ARP task check periodically state of ARP table
@@ -256,9 +258,9 @@ const UTASKTABLEINIT ctTaskTable[] = {
 #if defined USE_MODBUS
     {"O-MOD",     fnMODBUS,     MEDIUM_QUE,  (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP}, // MODBUS task  
 #endif
-#if defined _EXE && defined ETH_INTERFACE
+#if defined _EXE && defined ETH_INTERFACE && !defined BLINKEY
     {"app",       fnApplication,  MEDIUM_QUE,  (DELAY_LIMIT)((0.5 * SEC) + (PHY_POWERUP_DELAY)), 0, UTASKER_STOP}, // application - start after Ethernet to be sure we have Ethernet handle
-#else
+#elif !defined BLINKEY
     {"app",       fnApplication,  MEDIUM_QUE,  (DELAY_LIMIT)((0.10 * SEC) + (PHY_POWERUP_DELAY)), 0, UTASKER_STOP}, // application - start after Ethernet to be sure we have Ethernet handle
 #endif
 #if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined MANAGED_FILES || defined USB_MSD_HOST
@@ -309,13 +311,13 @@ const UTASKTABLEINIT ctTaskTable[] = {
 #if defined USE_MAINTENANCE
     {"maintenace",fnDebug,      SMALL_QUEUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP}, // task used for debug messages (started by application)
 #endif
-#if defined LAN_REPORT_ACTIVITY || defined PHY_POLL_LINK || defined INTERRUPT_TASK_PHY // {9}{11}
+#if (defined LAN_REPORT_ACTIVITY || defined PHY_POLL_LINK || defined INTERRUPT_TASK_PHY) && !defined BLINKEY // {9}{11}
     {"NetInd",    fnNetworkIndicator,LARGE_QUE,   (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP}, // network activity task
 #endif
 #if defined USB_INTERFACE
     {"usb",       fnTaskUSB,    SMALL_QUEUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP}, // USB (application) task
 #endif
-#if defined USE_SNTP || defined USE_TIME_SERVER || defined USE_TIME_SERVER || defined SUPPORT_RTC || defined SUPPORT_SW_RTC // {12}
+#if (defined USE_SNTP || defined USE_TIME_SERVER || defined USE_TIME_SERVER || defined SUPPORT_RTC || defined SUPPORT_SW_RTC) && !defined BLINKEY // {12}
     {"keeper",    fnTimeKeeper, SMALL_QUEUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP}, // time keeper task
 #endif
 #if defined QUICK_DEV_TASKS

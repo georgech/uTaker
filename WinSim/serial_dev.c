@@ -1368,22 +1368,22 @@ extern void fnInitTime(char *argv[])
 
 extern int fnCheckRTC(void)
 {
-    if ((!(simDS1307.bTime.ucSeconds & 0x80)) && (simDS1307.bTime.ucControl & 0x10)) {
-        if (simDS1307.bTime.ucControl & 0x03) {
+    if (((simDS1307.bTime.ucSeconds & 0x80) == 0) && ((simDS1307.bTime.ucControl & 0x10) != 0)) {
+        if ((simDS1307.bTime.ucControl & 0x03) != 0) {
             return 1;                                                    // fastest rate possible
         }
         else {
             static unsigned char ucRTC_Output = 0;
-            if (++ucRTC_Output >= (500/TICK_RESOLUTION)) {
+            if (++ucRTC_Output >= (500000/(TICK_RESOLUTION))) {
                 ucRTC_Output = 0;
                 return 1;                                                // 1 Hz TICK rate
             }
         }
     }
-    if (!(simPCF2129A.bTime.ucControl1 & 0x20)) {                        // {9} if the RTC is not stopped
+    if ((simPCF2129A.bTime.ucControl1 & 0x20) == 0) {                    // {9} if the RTC is not stopped
         if (simPCF2129A.bTime.ucControl1 & 0x01) {                       // if seconds interrupt is enabled
             static unsigned char ucRTC_Output = 0;
-            if (++ucRTC_Output >= (500/TICK_RESOLUTION)) {
+            if (++ucRTC_Output >= (500000/(TICK_RESOLUTION))) {
                 ucRTC_Output = 0;
                 return 1;                                                // 1 Hz TICK rate
             }

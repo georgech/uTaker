@@ -26,11 +26,11 @@
 #elif PIN_COUNT == PIN_COUNT_48_PIN                                      // LQFP48 or QFN48
     #define _PIN_COUNT              1
 #elif PIN_COUNT == PIN_COUNT_64_PIN
-  #if PACKAGE_TYPE ==  PACKAGE_LQFP
-    #define _PIN_COUNT              2                                    // LQFP64
-  #else
-    #define _PIN_COUNT              3                                    // MAPBGA64
-  #endif
+    #if PACKAGE_TYPE ==  PACKAGE_LQFP
+        #define _PIN_COUNT          2                                    // LQFP64
+    #else
+        #define _PIN_COUNT          3                                    // MAPBGA64
+    #endif
 #elif PIN_COUNT == PIN_COUNT_80_PIN                                      // LQFP80
     #define _PIN_COUNT              4
 #elif PIN_COUNT == PIN_COUNT_81_PIN                                      // MAPBGA81

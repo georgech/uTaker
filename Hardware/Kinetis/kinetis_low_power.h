@@ -129,7 +129,9 @@ extern void fnDoLowPower(void)
     }
     #endif
     #if !defined _WINDOWS
+    TOGGLE_WATCHDOG_LED()
     __sleep_mode();                                                      // enter low power mode using wait for interrupt processor state
+    TOGGLE_WATCHDOG_LED()
     #endif
     #if defined KINETIS_KL && defined SUPPORT_RTC
     if (fnPresentLP_mode() >= LOW_LEAKAGE_MODES) {                       // if we are waking from a low leakage mode we need to resynchronise the RTC due to the fact that the seconds interrupt was not serviced in the meantime

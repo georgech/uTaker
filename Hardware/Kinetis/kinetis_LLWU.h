@@ -248,7 +248,7 @@ static __interrupt void _wakeup_isr(void)
     #if !defined KINETIS_KL03                                            // KL03 has no module wakeup support
                 // The wakeup interrupts are now mapped to modules
                 //
-                if (wakeup_interrupt->int_port_bits & ~(WAKEUP_MODULES)) {
+                if ((wakeup_interrupt->int_port_bits & ~(WAKEUP_MODULES)) != 0) {
                     _EXCEPTION("Invalid wakeup module being selected!");
                 }
                 LLWU_ME = (LLWU_ME & (unsigned char)(~(wakeup_interrupt->int_port_bits))); // disable the wakeup functionality
@@ -257,7 +257,7 @@ static __interrupt void _wakeup_isr(void)
                 LLWU_F3 = 0;
         #endif
                 while (ulPortBits != 0) {                                // handle each module
-                    if (wakeup_interrupt->int_port_bits & ulBit) {       // if the module wakeup is to be enabled
+                    if ((wakeup_interrupt->int_port_bits & ulBit) != 0) {// if the module wakeup is to be enabled
                         wakeup_handlers[iBitRef + (WAKEUP_SOURCES_0_7 + WAKEUP_SOURCES_8_15)] = wakeup_interrupt->int_handler; // enter the user interrupt handler for this wakeup input
                         ulPortBits &= ~ulBit;
                     }

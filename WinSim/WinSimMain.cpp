@@ -3407,7 +3407,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
             --iTxActivity;
         }
 #endif
-        Sleep(TICK_RESOLUTION);                                          // we sleep to simulate the basic tick operation
+        Sleep(TICK_RESOLUTION/1000);                                     // we sleep to simulate the basic tick operation
 
 #if !defined BOOT_LOADER
         fnDoPortSim(0, 0);                                               // if we are playing back port simulation script, do it here {8}

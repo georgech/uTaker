@@ -982,7 +982,7 @@ static unsigned char fnStartDHCPTimer(unsigned char ucTimerEvent, int iNetwork)
 {
     DELAY_LIMIT ThisDelay;
     unsigned char ucNewEvent;
-    #define MAX_TIMER_DELAY (((DELAY_LIMIT)0xffffffff)/(SEC)/*TICK_RESOLUTION*/) // {5}
+    #define MAX_TIMER_DELAY (((DELAY_LIMIT)0xffffffff)/(SEC)/*((TICK_RESOLUTION/1000)/1000)*/) // {5}
 
     switch (ucTimerEvent) {
     case E_START_RENEWAL:
@@ -1030,7 +1030,7 @@ static unsigned char fnStartDHCPTimer(unsigned char ucTimerEvent, int iNetwork)
 static void fnRandomise(DELAY_LIMIT DHCPTimeout, unsigned char ucTimerEvent, int iNetwork)
 {
 #if defined RANDOM_NUMBER_GENERATOR                                      // {2}
-    DELAY_LIMIT random_sec = (fnRandom() / (0xffff/(4 * TICK_RESOLUTION)));
+    DELAY_LIMIT random_sec = (fnRandom() / (0xffff/(4 * (TICK_RESOLUTION/1000))));
     if (random_sec > (DELAY_LIMIT)(1 * SEC)) {
         DHCPTimeout -= ((DELAY_LIMIT)(2 * SEC) - random_sec);            // decrease of 0..1s
     }

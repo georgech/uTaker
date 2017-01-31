@@ -568,7 +568,12 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
     #endif
 
     if (STATE_INIT == iAppState) {
+#if defined SERIAL_INTERFACE && defined DEMO_UART
         HEAP_REQUIREMENTS OS_heap = (fnHeapAvailable() - fnHeapFree());  // the amount of heap allocated before the application starts working
+#endif
+#if defined FRDM_K22F
+        fnSetLowPowerMode(VLPS_MODE);
+#endif
       //float fTest = fnFloatStrFloat("1235.0123");                      // test floating point input
       //fTest = fnFloatStrFloat("-0.000123");
       //fTest = fnFloatStrFloat("-456.123");
@@ -2350,6 +2355,7 @@ extern void fnRestrictGatewayInterface(ARP_TAB *ptrARPTab)               // {89}
 //
 extern void fnUserHWInit(void)
 {
+    CONFIG_TEST_OUTPUT();                                                // allow user configuration of a test output
     #if defined USB_HOST_SUPPORT
     USB_HOST_POWER_CONFIG();                                             // configure USB host power supply to default (off) state
     #endif

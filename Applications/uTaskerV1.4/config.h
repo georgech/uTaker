@@ -32,8 +32,9 @@
     #define MEM_FACTOR 1.0
 #endif
 
+//#define BLINKEY                                                        // simplest possible configuration where just an LED is flashed (possibly still using low power mode)
 //#define _APPLICATION_VALIDATION                                        // support application validation
-#define USE_MAINTENANCE                                                  // include some maintenance support for the application and command line interface (remove to reduce project size for special tests or possibly running from limited RAM)
+//#define USE_MAINTENANCE                                                // include some maintenance support for the application and command line interface (remove to reduce project size for special tests or possibly running from limited RAM)
     #define PREVIOUS_COMMAND_BUFFERS  4
     #define MEMORY_DEBUGGER                                              // memory debugger interface (read, write and fill)
 
@@ -100,7 +101,7 @@
 //#define K20FX512_120                                                   // development board with 120MHz K20
 //#define TWR_K21D50M                                                    // tower board http://www.utasker.com/kinetis/TWR-K21D50M.html
 //#define TWR_K21F120M                                                   // tower board http://www.utasker.com/kinetis/TWR-K21F120M.html
-//#define FRDM_K22F                                                      // freedom board http://www.utasker.com/kinetis/FRDM-K22F.html
+#define FRDM_K22F                                                        // freedom board http://www.utasker.com/kinetis/FRDM-K22F.html
 //#define TWR_K22F120M                                                   // tower board http://www.utasker.com/kinetis/TWR-K22F120M.html
 //#define BLAZE_K22                                                      // K22FN1M0 with 1.6" color display and touch http://www.utasker.com/kinetis/BLAZE_K22.html
 //#define TWR_K24F120M                                                   // tower board http://www.utasker.com/kinetis/TWR-K24F120M.html
@@ -120,7 +121,7 @@
 
 //#define EMCRAFT_K61F150M                                               // K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - http://www.utasker.com/kinetis/EMCRAFT_K61F150M.html
 
-#define FRDM_K64F                                                        // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
+//#define FRDM_K64F                                                      // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
 //#define TWR_K64F120M                                                   // tower board http://www.utasker.com/kinetis/TWR-K64F120M.html
 //#define TEENSY_3_5                                                     // USB development board with K64FX512 - http://www.utasker.com/kinetis/TEENSY_3.5.html
 //#define FreeLON                                                        // K64 based with integrated LON
@@ -683,8 +684,7 @@
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((30 * 1024) * MEM_FACTOR)
 #endif
 
-#define TICK_RESOLUTION      50                                          // 50 ms system time period - max possible at 50MHz SYSTICK would be about 335ms !
-
+#define _TICK_RESOLUTION     TICK_UNIT_US(50000)                         // 50 ms system time period - max possible at 50MHz SYSTICK would be about 335ms !
 
 // Specify the parameter system and a file for use by FTP, HTML and such functions
 //
@@ -849,7 +849,7 @@
     #define NUMBER_CAN   0                                               // no physical queue needed
 #endif
 
-#define SERIAL_INTERFACE                                                 // enable serial interface driver
+//#define SERIAL_INTERFACE                                               // enable serial interface driver
 #if defined SERIAL_INTERFACE
   //#define FREEMASTER_UART                                              // UART for run-time debugging use
   //#define UART_EXTENDED_MODE                                           // required for 9-bit mode
@@ -1841,6 +1841,34 @@
 #define SUPPORT_DOUBLE_QUEUE_WRITES                                      // allow double queue writes to improve efficiency of long queue copies
 //#define MULTISTART                                                     // enable a board to user multiple task configurations
 //#define PERIODIC_TIMER_EVENT                                           // delayed and periodic tasks are schedule with timer events if enabled (otherwise they are simply scheduled)
+
+#if defined BLINKEY
+    #undef USE_MAINTENANCE
+    #undef USB_INTERFACE
+    #undef SERIAL_INTERFACE
+    #undef I2C_INTERFACE
+    #undef CAN_INTERFACE
+    #undef SUPPORT_KEY_SCAN
+    #undef ETH_INTERFACE
+    #undef SUPPORT_GLCD
+    #undef SUPPORT_OLED
+    #undef SUPPORT_GLCD
+    #undef CMSIS_DSP_CFFT
+    #undef CRYPTOGRAPHY
+    #undef SDCARD_SUPPORT
+    #undef FLASH_FAT
+    #undef SPI_FLASH_FAT
+    #undef FLASH_FILE_SYSTEM
+    #undef SPI_FILE_SYSTEM
+    #undef USE_PARAMETER_BLOCK
+    #undef INTERNAL_USER_FILES
+    #undef ACTIVE_FILE_SYSTEM
+    #undef MANAGED_FILES
+    #undef GLOBAL_TIMER_TASK
+    #undef USE_MODBUS
+    #undef QUICK_DEV_TASKS
+    #define NO_FLASH_SUPPORT
+#endif
 
 // Project includes are set here for all files in the correct order
 //

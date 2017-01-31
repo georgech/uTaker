@@ -864,6 +864,7 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void (*
 
 static __interrupt void _RealTimeInterrupt(void)
 {
+    TOGGLE_TEST_OUTPUT();
 #if defined TICK_USES_LPTMR                                              // {94} tick interrupt from low power timer
     LPTMR0_CSR = LPTMR0_CSR;                                             // clear pending interrupt
 #elif defined TICK_USES_RTC                                              // {100} tick interrupt from RTC
@@ -877,6 +878,7 @@ static __interrupt void _RealTimeInterrupt(void)
     uDisable_Interrupt();                                                // ensure tick handler cannot be interrupted
         fnRtmkSystemTick();                                              // operating system tick
     uEnable_Interrupt();
+    TOGGLE_TEST_OUTPUT();
 }
 
 
@@ -895,19 +897,43 @@ extern void fnStartTick(void)
     #elif defined LPTMR_CLOCK_INTERNAL_4MHz
     MCG_C2 |= MCG_C2_IRCS;                                               // select fast internal reference clock
     LPTMR0_PSR = (LPTMR_PSR_PCS_MCGIRCLK | LPTMR_PSR_PBYP);
-    #elif defined LPTMR_CLOCK_EXTERNAL_32kHz
-    LPTMR0_PSR = (LPTMR_PSR_PCS_ERCLK32K | LPTMR_PSR_PBYP);
-    #else                                                                // LPTMR_CLOCK_OSCERCLK
-    OSC0_CR |= (OSC_CR_ERCLKEN | OSC_CR_EREFSTEN);                       // enable the external reference clock and keep it enabled in stop mode
+    #elif defined LPTMR_CLOCK_RTC_32kHz
+    POWER_UP(6, SIM_SCGC6_RTC);                                          // enable access and interrupts to the RTC
+    if ((RTC_SR & RTC_SR_TIF) != 0) {                                    // if timer invalid
+        RTC_SR = 0;                                                      // ensure stopped
+        RTC_TSR = 0;                                                     // write to clear RTC_SR_TIF in status register when not yet enabled
+        #if !defined KINETIS_KL
+        RTC_CR = (RTC_CR_OSCE);                                          // enable oscillator and supply it to other peripherals
+        #endif
+    }
+    SIM_SOPT1 = ((SIM_SOPT1 & ~SIM_SOPT1_OSC32KSEL_MASK) | SIM_SOPT1_OSC32KSEL_32k); // select ERCLK32K from the RTC 32k clock
+        #if defined KINETIS_K22
+    SIM_SOPT1 = ((SIM_SOPT1 & ~SIM_SOPT1_OSC32KOUT_MASK) | SIM_SOPT1_OSC32KOUT_PTE0); // 32kHz output to CLKOUT32k pin
+        #endif
         #if defined LPTMR_PRESCALE
     LPTMR0_PSR = (LPTMR_PSR_PCS_OSC0ERCLK | ((LPTMR_PRESCALE_VALUE) << LPTMR_PSR_PRESCALE_SHIFT)); // program prescaler
         #else
+    LPTMR0_PSR = (LPTMR_PSR_PCS_ERCLK32K | LPTMR_PSR_PBYP);
+        #endif
+    #else                                                                // LPTMR_CLOCK_EXTERNAL_32kHz or LPTMR_CLOCK_OSCERCLK
+    OSC0_CR |= (OSC_CR_ERCLKEN | OSC_CR_EREFSTEN);                       // enable the external reference clock and keep it enabled in stop mode
+        #if defined LPTMR_CLOCK_EXTERNAL_32kHz                           // 32kHz crystal
+            #if defined LPTMR_PRESCALE
+    LPTMR0_PSR = (LPTMR_PSR_PCS_OSC0ERCLK | ((LPTMR_PRESCALE_VALUE) << LPTMR_PSR_PRESCALE_SHIFT)); // program prescaler
+            #else
+    LPTMR0_PSR = (LPTMR_PSR_PCS_ERCLK32K | LPTMR_PSR_PBYP);
+            #endif
+        #else
+            #if defined LPTMR_PRESCALE
+    LPTMR0_PSR = (LPTMR_PSR_PCS_OSC0ERCLK | ((LPTMR_PRESCALE_VALUE) << LPTMR_PSR_PRESCALE_SHIFT)); // program prescaler
+            #else
     LPTMR0_PSR = (LPTMR_PSR_PCS_OSC0ERCLK | LPTMR_PSR_PBYP);
+            #endif
         #endif
     #endif
     fnEnterInterrupt(irq_LPT_ID, LPTMR0_INTERRUPT_PRIORITY, (void (*)(void))_RealTimeInterrupt); // enter interrupt handler
     LPTMR0_CSR |= LPTMR_CSR_TIE;                                         // enable timer interrupt
-    LPTMR0_CMR = LPTMR_MS_DELAY(TICK_RESOLUTION);                        // TICK period
+    LPTMR0_CMR = LPTMR_US_DELAY((TICK_RESOLUTION));                      // TICK period
     #if defined _WINDOWS
     if (LPTMR0_CMR > 0xffff) {
         _EXCEPTION("LPTMR0_CMR value too large (16 bits)");
@@ -918,9 +944,9 @@ extern void fnStartTick(void)
     POWER_UP(6, SIM_SCGC6_RTC);                                          // ensure the RTC is powered
     fnEnterInterrupt(irq_RTC_OVERFLOW_ID, PRIORITY_RTC, (void (*)(void))_RealTimeInterrupt); // enter interrupt handler
     #if defined RTC_USES_EXT_CLK || defined RTC_USES_INT_REF
-    RTC_MOD = ((((TICK_RESOLUTION * _EXTERNAL_CLOCK)/RTC_CLOCK_PRESCALER_1)/1000) - 1); // set the match value
+    RTC_MOD = (((((TICK_RESOLUTION/1000) * _EXTERNAL_CLOCK)/RTC_CLOCK_PRESCALER_1)/1000) - 1); // set the match value
     #else
-    RTC_MOD = ((((TICK_RESOLUTION * _EXTERNAL_CLOCK)/RTC_CLOCK_PRESCALER_2)/1000) - 1); // set the match value
+    RTC_MOD = (((((TICK_RESOLUTION/1000) * _EXTERNAL_CLOCK)/RTC_CLOCK_PRESCALER_2)/1000) - 1); // set the match value
     #endif
     RTC_SC = (RTC_SC_RTIE | RTC_SC_RTIF | _RTC_CLOCK_SOURCE | _RTC_PRESCALER); // clock the RTC from the defined clock source/pre-scaler and enable interrupt
     #if defined _WINDOWS
@@ -929,7 +955,7 @@ extern void fnStartTick(void)
     }
     #endif
 #else                                                                    // use systick to derive the tick interrupt from
-    #define REQUIRED_MS ((1000/TICK_RESOLUTION))                         // the TICK frequency we require in kHz
+    #define REQUIRED_MS ((1000/(TICK_RESOLUTION/1000)))                  // the TICK frequency we require in kHz
     #define TICK_DIVIDE (((CORE_CLOCK + REQUIRED_MS/2)/REQUIRED_MS) - 1) // the divide ratio required (for systick)
 
     #if TICK_DIVIDE > 0x00ffffff
@@ -1285,14 +1311,14 @@ extern void fnResetBoard(void)
 #endif
 }
 
-#if defined KINETIS_KL && defined CLKOUT_AVAILABLE
+#if defined CLKOUT_AVAILABLE
 extern int fnClkout(int iClockSource)                                    // {120}
 {
     unsigned long ulSIM_SOPT2 = (SIM_SOPT2 & ~(SIM_SOPT2_CLKOUTSEL_MASK)); // original control register value with clock source masked
     switch (iClockSource) {                                              // set the required clock source to be output on CLKOUT
     case FLASH_CLOCK_OUT:
     case BUS_CLOCK_OUT:
-        ulSIM_SOPT2 |= SIM_SOPT2_CLKOUTSEL_BUS;
+        ulSIM_SOPT2 |= SIM_SOPT2_CLKOUTSEL_FLASH;
         break;
     case LOW_POWER_OSCILLATOR_CLOCK_OUT:
         ulSIM_SOPT2 |= SIM_SOPT2_CLKOUTSEL_LPO;
@@ -1301,7 +1327,7 @@ extern int fnClkout(int iClockSource)                                    // {120
         ulSIM_SOPT2 |= SIM_SOPT2_CLKOUTSEL_MCGIRCLK;
         break;
     case EXTERNAL_OSCILLATOR_CLOCK_OUT:
-        ulSIM_SOPT2 |= SIM_SOPT2_CLKOUTSEL_OSCERCLK;
+        ulSIM_SOPT2 |= SIM_SOPT2_CLKOUTSEL_OSCERCLK0;
         break;
     #if defined KINETIS_HAS_IRC48M
     case INTERNAL_IRC48M_CLOCK_OUT:
@@ -1713,7 +1739,7 @@ static void _LowLevelInit(void)
     MCG_C4 = ((MCG_C4 & ~(MCG_C4_DMX32 | MCG_C4_HIGH_RANGE)) | (_FLL_VALUE)); // adjust FLL factor to obtain the required operating frequency
         #endif
     #endif
-#elif defined KINETIS_KL && defined RUN_FROM_LIRC
+#elif (defined KINETIS_KL || defined KINETIS_K22) && defined RUN_FROM_LIRC
     MCG_SC = MCG_SC_FCRDIV_1;                                            // no divide after fast clock (4MHz)
     MCG_C2 |= MCG_C2_IRCS;                                               // select fast internal reference clock (rather than slow one) for MCGIRCLK
     MCG_C1 = (MCG_C1_IREFSTEN | MCG_C1_IRCLKEN | MCG_C1_CLKS_INTERN_CLK);// enable and select 4MHz IRC clock source and allow it to continue operating in STOP mode
@@ -1723,7 +1749,11 @@ static void _LowLevelInit(void)
         MCG_S |= MCG_S_CLKST_INTERN_CLK;
     #endif
     }
+    #if defined KINETIS_K22
+    SIM_CLKDIV1 = (((SYSTEM_CLOCK_DIVIDE - 1) << 28) | ((BUS_CLOCK_DIVIDE - 1) << 24) | ((FLEX_CLOCK_DIVIDE - 1) << 20) | ((FLASH_CLOCK_DIVIDE - 1) << 16)); // prepare bus clock divides
+    #else
     SIM_CLKDIV1 = (((SYSTEM_CLOCK_DIVIDE - 1) << 28) | ((BUS_CLOCK_DIVIDE - 1) << 16)); // set system and bus clock dividers
+    #endif
     MCG_C2 |= MCG_C2_LP;                                                 // disable FLL in bypass mode
 #elif defined RUN_FROM_HIRC || defined RUN_FROM_HIRC_FLL || defined RUN_FROM_HIRC_PLL // 48MHz
     #if !defined KINETIS_K64 && defined SUPPORT_RTC && !defined RTC_USES_RTC_CLKIN && !defined RTC_USES_LPO_1kHz
@@ -1979,8 +2009,8 @@ static void _LowLevelInit(void)
         #endif
     #endif
 #endif
-#if defined KINETIS_KL && defined CLKOUT_AVAILABLE
-  //fnClkout(BUS_CLOCK_OUT);                                             // select the bus clock to monitor on CLKOUT
+#if defined CLKOUT_AVAILABLE
+  //fnClkout(BUS_CLOCK_OUT);                                             // select the clock to monitor on CLKOUT
 #endif
 #if defined KINETIS_KL && defined ROM_BOOTLOADER && defined BOOTLOADER_ERRATA // {125}
     if ((RCM_MR & (RCM_MR_BOOTROM_BOOT_FROM_ROM_BOOTCFG0 | RCM_MR_BOOTROM_BOOT_FROM_ROM_FOPT7)) != 0) { // if the reset was via the ROM loader

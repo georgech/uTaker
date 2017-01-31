@@ -92,7 +92,7 @@
         #define GPT_CAPTURES     5                                       // when testing captures, collect this many values
     #endif
     #if defined SUPPORT_TIMER                                            // standard timers
-        #define TEST_TIMER                                               // test a user defined timer interrupt
+      //#define TEST_TIMER                                               // test a user defined timer interrupt
         #if defined TEST_TIMER
           //#define TEST_SINGLE_SHOT_TIMER                               // test single-shot mode
             #define TEST_PERIODIC_TIMER                                  // test periodic interrupt mode
@@ -1167,7 +1167,6 @@ static void fnConfigurePIT(void)
     pit_setup.mode = PIT_SINGLE_SHOT;                                    // one-shot interrupt
     #elif defined TEST_PIT_PERIODIC && defined _KINETIS                  // {10}
     pit_setup.mode = PIT_PERIODIC;
-    CONFIG_TEST_OUTPUT();
         #if defined TEST_PIT_DMA_GPIO
     pit_setup.int_handler = 0;                                           // no interrupt due to DMA
         #else
@@ -1176,7 +1175,6 @@ static void fnConfigurePIT(void)
     pit_setup.int_priority = PIT0_INTERRUPT_PRIORITY;
     pit_setup.count_delay = PIT_US_DELAY(500);                           // 500us period
     #elif defined TEST_PIT_PERIODIC                                      // coldfire
-    CONFIG_TEST_OUTPUT();
     PORTTC |= (PORT_TC_BIT1 | PORT_TC_BIT2);
     DDRTC |= (PORT_TC_BIT1 | PORT_TC_BIT2);
     pit_setup.int_handler = test_nmi;
@@ -1232,8 +1230,6 @@ static void fnConfigureTimedUART(void)
     tInterfaceParameters.ucFlowHighWater = 80;                           // set the flow control high and low water levels in %
     tInterfaceParameters.ucFlowLowWater = 20;
     #endif
-CONFIG_TEST_OUTPUT();
-
     tInterfaceParameters.Config = (CHAR_MODE | CHAR_8 | NO_PARITY | ONE_STOP | NO_HANDSHAKE | UART_TIMED_TRANSMISSION_MODE); // the output will be used in timer transmission mode
     #if defined SERIAL_SUPPORT_DMA
     tInterfaceParameters.ucDMAConfig = (UART_TX_DMA);                    // dma is used as base of timer transmissions
@@ -1283,7 +1279,6 @@ static void test_timer_int(void)
 static void fnConfigureRIT(void)
 {
     RIT_SETUP rit_setup;                                                 // interrupt configuration parameters
-    CONFIG_TEST_OUTPUT();
     rit_setup.int_type = RIT_INTERRUPT;
     rit_setup.int_handler = test_timer_int;                              // test a single shot timer
     rit_setup.int_priority = RIT_INTERRUPT_PRIORITY;
@@ -1331,7 +1326,6 @@ static void DMA_timer_int(void)
 static void fnConfigure_DMA_Timer(void)
 {
     DMA_TIMER_SETUP dma_timer_setup;                                     // interrupt configuration parameters
-    CONFIG_TEST_OUTPUT();
     dma_timer_setup.int_type = DMA_TIMER_INTERRUPT;
     dma_timer_setup.int_handler = DMA_timer_int;
     dma_timer_setup.channel = 1;                                         // DMA timer channel 1
@@ -1514,7 +1508,6 @@ static void fnConfigure_Timer(void)
     #endif
 #else
     static TIMER_INTERRUPT_SETUP timer_setup = {0};                      // interrupt configuration parameters
-    CONFIG_TEST_OUTPUT();
     timer_setup.int_type = TIMER_INTERRUPT;
     timer_setup.int_priority = PRIORITY_TIMERS;
     timer_setup.int_handler = timer_int;

@@ -276,7 +276,7 @@ extern int fnConfigureRTC(void *ptrSettings)
         rtc_interrupt_handler[iIRQ] = ((INTERRUPT_SETUP *)ptrSettings)->int_handler; // enter the handling interrupt
     #else
         POWER_UP(6, SIM_SCGC6_RTC);                                      // enable access and interrupts to the RTC
-        if (RTC_SR & RTC_SR_TIF) {                                       // if timer invalid
+        if ((RTC_SR & RTC_SR_TIF) != 0) {                                // if timer invalid
             RTC_SR = 0;                                                  // ensure stopped
             RTC_TSR = 0;                                                 // write to clear RTC_SR_TIF in status register when not yet enabled
         #if !defined KINETIS_KL

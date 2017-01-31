@@ -140,7 +140,7 @@ static int fn_sysObjectID(MIB_CONTROL *ptrMIB_control)
 static int fn_sysUpTime(MIB_CONTROL *ptrMIB_control)
 {
     unsigned long ulHundredths = uTaskerSystemTick;
-    ulHundredths *= TICK_RESOLUTION;
+    ulHundredths *= (TICK_RESOLUTION/1000);
     ulHundredths /= 100;                                                 // up time in 100th of second
     ptrMIB_control->ucObjectType = ASN1_TIME_STAMP_CODE;                 // time ticks type
     ptrMIB_control->ulInteger = ulHundredths;

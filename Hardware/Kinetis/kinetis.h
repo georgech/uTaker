@@ -259,7 +259,7 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
         #endif
     #endif
 #elif defined KINETIS_K21 || defined KINETIS_K22 || defined KINETIS_K24 || defined KINETIS_K64 || defined KINETIS_KV30 // {44}
-    #if !defined RUN_FROM_EXTERNAL_CLOCK && !defined RUN_FROM_DEFAULT_CLOCK && !defined RUN_FROM_HIRC && !defined FLL_FACTOR // no PLL/FLL used
+    #if !defined RUN_FROM_EXTERNAL_CLOCK && !defined RUN_FROM_DEFAULT_CLOCK && !defined RUN_FROM_HIRC && !defined FLL_FACTOR && !defined RUN_FROM_LIRC // no PLL/FLL used
         #if (CLOCK_DIV < 1) || (CLOCK_DIV > 24)
             #error input divide must be between 1 and 24
         #endif
@@ -514,7 +514,7 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
         #else
             #define MCGOUTCLK  (_EXTERNAL_CLOCK)                         // run directly from EXT
         #endif
-    #elif defined RUN_FROM_LIRC && (defined KINETIS_KL)
+    #elif defined RUN_FROM_LIRC && (defined KINETIS_KL || defined KINETIS_K22)
         #define MCGOUTCLK      (4000000)
     #elif defined RUN_FROM_HIRC
         #define MCGOUTCLK      (48000000)
@@ -992,7 +992,7 @@ typedef struct stRESET_VECTOR
      #define NON_INITIALISED_RAM_SIZE    (4 + PERSISTENT_RAM_SIZE)
 #endif
 
-#if defined KINETIS_KL && !defined KINETIS_KL02
+#if ((defined KINETIS_KL && !defined KINETIS_KL02) || defined KINETIS_K22)
     #define CLKOUT_AVAILABLE
 #endif
 
@@ -7245,7 +7245,7 @@ typedef struct stKINETIS_ADMA2_BD
       #define RTC_CR_SC4P       0x00001000                               // enable 4pF load
       #define RTC_CR_SC2P       0x00002000                               // enable 2pF load
     #define RTC_SR              *(volatile unsigned long *)(RTC_BLOCK + 0x014) // RTC Status Register
-      #define RTC_SR_TIF        0x00000001                               // time invalid flag (set one VBAT power up or software reset)
+      #define RTC_SR_TIF        0x00000001                               // time invalid flag (set on VBAT power up or software reset)
       #define RTC_SR_TOF        0x00000002                               // time overflow flag
       #define RTC_SR_TAF        0x00000004                               // time alarm flag
       #define RTC_SR_TCE        0x00000010                               // time counter is enabled
@@ -7891,6 +7891,11 @@ typedef struct stKINETIS_ADMA2_BD
 #else
     #if !defined KINETIS_KL02
         #define SIM_SOPT1                        *(unsigned long *)(SIM_BLOCK + 0x0000) // System Options Register 1 - this register is only reset at power cycles
+      #if defined KINETIS_K22
+          #define SIM_SOPT1_OSC32KOUT_MASK       0x00030000
+          #define SIM_SOPT1_OSC32KOUT_PTE0       0x00010000
+          #define SIM_SOPT1_OSC32KOUT_PTE26      0x00020000
+      #endif
           #define SIM_SOPT1_OSC32KSEL_MASK       0x000c0000
           #define SIM_SOPT1_OSC32KSEL_SYS_OSC    0x00000000              // OSC32KCLK
          #if defined KINETIS_KL
@@ -7935,16 +7940,17 @@ typedef struct stKINETIS_ADMA2_BD
             #define SIM_SOPT2_CLKOUTSEL_MCGIRCLK  0x00000080             // select MCGIRCLK clock as output on CLKOUT
             #define SIM_SOPT2_CLKOUTSEL_LIRC_CLK  0x00000080             // select LIRC_CLK clock as output on CLKOUT (equivalent to MCGIRCLK for certain parts)
             #define SIM_SOPT2_CLKOUTSEL_RTC       0x000000a0             // select RTC 32.768kHz clock as output on CLKOUT
-            #define SIM_SOPT2_CLKOUTSEL_OSCERCLK  0x000000c0             // select external clock as output on CLKOUT
+            #define SIM_SOPT2_CLKOUTSEL_OSCERCLK0 0x000000c0             // select external clock as output on CLKOUT
             #define SIM_SOPT2_CLKOUTSEL_IRC48M    0x000000e0             // select 48MHz IRC clock as output on CLKOUT
             #define SIM_SOPT2_PLLFLLSEL_IRC48M    0x00000000             // for compatibility
             #define SIM_SOPT2_PLLFLLSEL           0x00000000             // for compatibility
         #else
             #define SIM_SOPT2_RTCCLKOUT_OSC      0x00000010              // OSCERCLK clock is output on RTC_CLKOUT pin
             #define SIM_SOPT2_CLKOUTSEL_BUS      0x00000040              // Bus clock is output on the CLKOUT pin
+            #define SIM_SOPT2_CLKOUTSEL_FLASH    SIM_SOPT2_CLKOUTSEL_BUS
             #define SIM_SOPT2_CLKOUTSEL_LPO      0x00000060              // LPO (1kHz) is output on the CLKOUT pin
             #define SIM_SOPT2_CLKOUTSEL_MCGIRCLK 0x00000080              // MCGIRCLK is output on the CLKOUT pin
-            #define SIM_SOPT2_CLKOUTSEL_OSCERCLK 0x000000c0              // OSCERCLK is output on the CLKOUT pin
+            #define SIM_SOPT2_CLKOUTSEL_OSCERCLK0 0x000000c0             // OSCERCLK is output on the CLKOUT pin
             #define SIM_SOPT2_PLLFLLSEL          0x00010000              // select PLL source (MCGPLLCLK/2 rather than MCGFLLCLK)
         #endif
         #define SIM_SOPT2_CLKOUTSEL_MASK     0x000000f0
@@ -7964,6 +7970,7 @@ typedef struct stKINETIS_ADMA2_BD
         #define SIM_SOPT2_UART1SRC_OSCERCLK  0x20000000                  // UART1 clock source OSCERCLK
         #define SIM_SOPT2_UART1SRC_MCGIRCLK  0x30000000                  // UART1 clock source MCGIRCLK
       #else
+        #define SIM_SOPT2_CLKOUTSEL_MASK     0x000000e0
         #if defined KINETIS_WITH_USBPHY
             #define SIM_SOPT2_USBSLSRC_RTC   0x00000001                  // USB slow clock source RTC 32.768kHz instead of MCGIRCLK
             #define SIM_SOPT2_USBREGEN       0x00000002                  // enable USB PHY PLL regulator
@@ -7980,7 +7987,7 @@ typedef struct stKINETIS_ADMA2_BD
             #define SIM_SOPT2_CLKOUTSEL_LPO       0x00000060             // select 1kHz LPO clock as output on CLKOUT
             #define SIM_SOPT2_CLKOUTSEL_MCGIRCLK  0x00000080             // select MCGIRCLK clock as output on CLKOUT
             #define SIM_SOPT2_CLKOUTSEL_RTC       0x000000a0             // select RTC 32.768kHz clock as output on CLKOUT
-            #define SIM_SOPT2_CLKOUTSEL_OSCERCLK0 0x000000c0             // select FlexBus clock as output on CLKOUT
+            #define SIM_SOPT2_CLKOUTSEL_OSCERCLK0 0x000000c0             // select oscillator clock as output on CLKOUT
             #if defined KINETIS_HAS_IRC48M
                 #define SIM_SOPT2_CLKOUTSEL_IRC48M  0x000000e0           // select 48MHz IRC clock as output on CLKOUT
             #endif
@@ -9648,6 +9655,10 @@ typedef struct stKINETIS_ADMA2_BD
     #else
         #define PC_3_CLKOUT              PORT_MUX_ALT5
     #endif
+#else
+    #define PC_3_CLKOUT                  PORT_MUX_ALT5
+    #define PE_0_RTC_CLKOUT              PORT_MUX_ALT7
+    #define PE_26_RTC_CLKOUT             PORT_MUX_ALT6
 #endif
 
 #if defined KINETIS_KE04 && (SIZE_OF_FLASH <= (8 * 1024))                // KE04 ADC

@@ -910,25 +910,25 @@ extern void fnConfigSimSCI(QUEUE_HANDLE Channel, unsigned long ulSpeed, TTYTABLE
             ulActions_2 |= OPEN_EXT_COM_0;                               // signal we want a COM port mapped to this UART
             ulExtChannel0Speed = ulSpeed;
             ExtChannel0Config = pars->Config;
-            iExtChannel0Speed = (ulSpeed/10/(1000/TICK_RESOLUTION));     // approx. max. characters capable of transmitting in a tick period {10}
+            iExtChannel0Speed = (ulSpeed/10/(10000000/TICK_RESOLUTION)); // approx. max. characters capable of transmitting in a tick period {10}
             break;
         case 1:
             ulActions_2 |= OPEN_EXT_COM_1;                               // signal we want a COM port mapped to this UART
             ulExtChannel1Speed = ulSpeed;
             ExtChannel1Config = pars->Config;
-            iExtChannel1Speed = (ulSpeed/10/(1000/TICK_RESOLUTION));     // approx. max. characters capable of transmitting in a tick period {10}
+            iExtChannel1Speed = (ulSpeed/10/(10000000/TICK_RESOLUTION)); // approx. max. characters capable of transmitting in a tick period {10}
             break;
         case 2:
             ulActions_2 |= OPEN_EXT_COM_2;                               // signal we want a COM port mapped to this UART
             ulExtChannel2Speed = ulSpeed;
             ExtChannel2Config = pars->Config;
-            iExtChannel2Speed = (ulSpeed/10/(1000/TICK_RESOLUTION));     // approx. max. characters capable of transmitting in a tick period {10}
+            iExtChannel2Speed = (ulSpeed/10/(10000000/TICK_RESOLUTION)); // approx. max. characters capable of transmitting in a tick period {10}
             break;
         case 3:
             ulActions_2 |= OPEN_EXT_COM_3;                               // signal we want a COM port mapped to this UART
             ulExtChannel3Speed = ulSpeed;
             ExtChannel3Config = pars->Config;
-            iExtChannel3Speed = (ulSpeed/10/(1000/TICK_RESOLUTION));     // approx. max. characters capable of transmitting in a tick period {10}
+            iExtChannel3Speed = (ulSpeed/10/(10000000/TICK_RESOLUTION)); // approx. max. characters capable of transmitting in a tick period {10}
             break;
         }
         return;
@@ -939,42 +939,42 @@ extern void fnConfigSimSCI(QUEUE_HANDLE Channel, unsigned long ulSpeed, TTYTABLE
         ulActions_2 |= OPEN_COM_0;                                       // signal we want a COM port mapped to this UART
         ulChannel0Speed = ulSpeed;
         Channel0Config = pars->Config;                                   // {45}
-        iChannel0Speed = (ulSpeed/10/(1000/TICK_RESOLUTION));            // approx. max. characters capable of transmitting in a tick period {10}
+        iChannel0Speed = (ulSpeed/10/(10000000/TICK_RESOLUTION));        // approx. max. characters capable of transmitting in a tick period {10}
         break;
 
     case 1:
         ulActions_2 |= OPEN_COM_1;                                       // signal we want a COM port mapped to this UART
         ulChannel1Speed = ulSpeed;
         Channel1Config = pars->Config;                                   // {45}
-        iChannel1Speed = (ulSpeed/10/(1000/TICK_RESOLUTION));            // approx. max. characters capable of transmitting in a tick period {10}
+        iChannel1Speed = (ulSpeed/10/(10000000/TICK_RESOLUTION));        // approx. max. characters capable of transmitting in a tick period {10}
         break;
 
     case 2:
         ulActions_2 |= OPEN_COM_2;                                       // signal we want a COM port mapped to this UART
         ulChannel2Speed = ulSpeed;
         Channel2Config = pars->Config;                                   // {45}
-        iChannel2Speed = (ulSpeed/10/(1000/TICK_RESOLUTION));            // approx. max. characters capable of transmitting in a tick period {10}
+        iChannel2Speed = (ulSpeed/10/(10000000/TICK_RESOLUTION));        // approx. max. characters capable of transmitting in a tick period {10}
         break;
 
     case 3:                                                              // {12}
         ulActions_2 |= OPEN_COM_3;                                       // signal we want a COM port mapped to this UART
         ulChannel3Speed = ulSpeed;
         Channel3Config = pars->Config;                                   // {45}
-        iChannel3Speed = (ulSpeed/10/(1000/TICK_RESOLUTION));            // approx. max. characters capable of transmitting in a tick period {10}
+        iChannel3Speed = (ulSpeed/10/(10000000/TICK_RESOLUTION));        // approx. max. characters capable of transmitting in a tick period {10}
         break;
 
     case 4:                                                              // {56}
         ulActions_2 |= OPEN_COM_4;                                       // signal we want a COM port mapped to this UART
         ulChannel4Speed = ulSpeed;
         Channel4Config = pars->Config;
-        iChannel4Speed = (ulSpeed/10/(1000/TICK_RESOLUTION));            // approx. max. characters capable of transmitting in a tick period {10}
+        iChannel4Speed = (ulSpeed/10/(10000000/TICK_RESOLUTION));        // approx. max. characters capable of transmitting in a tick period {10}
         break;
 
     case 5:                                                              // {56}
         ulActions_2 |= OPEN_COM_5;                                       // signal we want a COM port mapped to this UART
         ulChannel5Speed = ulSpeed;
         Channel5Config = pars->Config;
-        iChannel5Speed = (ulSpeed/10/(1000/TICK_RESOLUTION));            // approx. max. characters capable of transmitting in a tick period {10}
+        iChannel5Speed = (ulSpeed/10/(10000000/TICK_RESOLUTION));        // approx. max. characters capable of transmitting in a tick period {10}
         break;
     }
 }
@@ -986,16 +986,16 @@ extern void fnConfigSimI2C(QUEUE_HANDLE Channel, unsigned long ulSpeed)
 {
     switch (Channel) {
     case 0:
-        iI2C_Channel0Speed = ulSpeed/9/(1000/TICK_RESOLUTION);           // approx. max. I2C bytes capable of transmitting/receiving in a tick period;
+        iI2C_Channel0Speed = ulSpeed/9/(10000000/TICK_RESOLUTION);       // approx. max. I2C bytes capable of transmitting/receiving in a tick period;
         break;
     case 1:
-        iI2C_Channel1Speed = ulSpeed/9/(1000/TICK_RESOLUTION);           // approx. max. I2C bytes capable of transmitting/receiving in a tick period;;
+        iI2C_Channel1Speed = ulSpeed/9/(1000000/TICK_RESOLUTION);        // approx. max. I2C bytes capable of transmitting/receiving in a tick period;;
         break;
     case 2:                                                              // {28}
-        iI2C_Channel2Speed = ulSpeed/9/(1000/TICK_RESOLUTION);           // approx. max. I2C bytes capable of transmitting/receiving in a tick period;;
+        iI2C_Channel2Speed = ulSpeed/9/(1000000/TICK_RESOLUTION);        // approx. max. I2C bytes capable of transmitting/receiving in a tick period;;
         break;
     case 3:
-        iI2C_Channel3Speed = ulSpeed/9/(1000/TICK_RESOLUTION);           // approx. max. I2C bytes capable of transmitting/receiving in a tick period;;
+        iI2C_Channel3Speed = ulSpeed/9/(1000000/TICK_RESOLUTION);        // approx. max. I2C bytes capable of transmitting/receiving in a tick period;;
         break;
     }
 }

@@ -34,7 +34,7 @@
         #define IRQ_TEST                                                 // test IRQ port interrupts
       //#define DMA_PORT_MIRRORING                                       // demonstrate using DMA to control one or more output ports to follow an input port
         #if defined SUPPORT_LOW_POWER
-          //#define WAKEUP_TEST                                          // test wake-up port interrupts (wake-up from kinetis low leakage mode)
+            #define WAKEUP_TEST                                          // test wake-up port interrupts (wake-up from kinetis low leakage mode)
         #endif
     #endif
 
@@ -523,11 +523,17 @@ static void fnInitIRQ(void)
     fnConfigureInterrupt((void *)&interrupt_setup);                      // configure wakeup pins on this port
     #endif
 
-    #if (defined FRDM_K64F || defined FRDM_KL25Z || defined FRDM_KL27Z || defined CAPUCCINO_KL27 || defined FRDM_KL26Z || defined FRDM_KL43Z || defined TWR_KL43Z48M || defined FRDM_KL05Z) && defined WAKEUP_TEST && defined SUPPORT_RTC
+    #if defined WAKEUP_TEST && defined FRDM_K22F
+    interrupt_setup.int_type = WAKEUP_INTERRUPT;
+    interrupt_setup.int_port = PORT_MODULE;                              // define a wakeup interrupt on a module
+    interrupt_setup.int_port_bits = (MODULE_LPTMR0);                     // wakeup on low power timer match
+    interrupt_setup.int_handler = 0;                                     // no handler since it will be serviced by the tick interrupt
+    fnConfigureInterrupt((void *)&interrupt_setup);                      // configure interrupt
+    #elif (defined FRDM_K64F || defined FRDM_KL25Z || defined FRDM_KL27Z || defined CAPUCCINO_KL27 || defined FRDM_KL26Z || defined FRDM_KL43Z || defined TWR_KL43Z48M || defined FRDM_KL05Z) && defined WAKEUP_TEST && defined SUPPORT_RTC
     interrupt_setup.int_type = WAKEUP_INTERRUPT;
     interrupt_setup.int_port = PORT_MODULE;                              // define a wakeup interrupt on a module
     interrupt_setup.int_port_bits = (MODULE_RTC_ALARM);                  // wakeup on RTC alarm interrupts
-    fnConfigureInterrupt((void *)&interrupt_setup);                      // configure test interrupt
+    fnConfigureInterrupt((void *)&interrupt_setup);                      // configure interrupt
     #endif
 }
 #endif

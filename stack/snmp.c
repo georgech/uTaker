@@ -157,7 +157,7 @@ static unsigned short fnAddTimeStamp(unsigned char *ptrBuffer)
     unsigned long ulHundredths = uTaskerSystemTick;
     *ptrBuffer++ = ASN1_TIME_STAMP_CODE;
     *ptrBuffer++ = sizeof(unsigned long);                                // content length
-    ulHundredths *= TICK_RESOLUTION;
+    ulHundredths *= (TICK_RESOLUTION/1000);
     ulHundredths /= 100;                                                 // up time in 100th of second
     *ptrBuffer++ = (unsigned char)(ulHundredths >> 24);
     *ptrBuffer++ = (unsigned char)(ulHundredths >> 16);

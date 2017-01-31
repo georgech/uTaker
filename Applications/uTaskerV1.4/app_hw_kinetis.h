@@ -381,10 +381,15 @@
     #define USB_CLOCK_GENERATED_INTERNALLY                               // use USB clock from internal source rather than external pin - 120MHz is suitable
 #elif defined FRDM_K22F || defined TWR_K22F120M
   //#define RUN_FROM_DEFAULT_CLOCK                                       // default mode is FLL Engaged Internal - the 32kHz IRC is multiplied by FLL factor of 640 to obtain 20.9715MHz nominal frequency (20MHz..25MHz)
+    #define RUN_FROM_LIRC                                                // clock directly from internal 4MHz RC clock
   //#define RUN_FROM_HIRC                                                // clock directly from internal 48MHz RC clock
   //#define RUN_FROM_HIRC_PLL                                            // use 48MHz RC clock as input to the PLL
   //#define RUN_FROM_HIRC_FLL                                            // use 48MHz RC clock as input to the FLL
-    #if !defined RUN_FROM_DEFAULT_CLOCK
+    #if defined RUN_FROM_LIRC                                            // 4MHz
+        #define FLEX_CLOCK_DIVIDE    5                                   // 4/5 to give 800kHz
+        #define FLASH_CLOCK_DIVIDE   5                                   // 4/5 to give 800kHz
+        #define BUS_CLOCK_DIVIDE     5                                   // 4/5 to give 800kHz
+    #elif !defined RUN_FROM_DEFAULT_CLOCK
         #define OSC_LOW_GAIN_MODE
         #define CRYSTAL_FREQUENCY    8000000                             // 8 MHz crystal on board
         #define USE_HIGH_SPEED_RUN_MODE
@@ -1318,15 +1323,15 @@
             #define RTC_CLOCK_PRESCALER_2  100                           // 128, 256, 512, 1024, 2048, 100 or 1000 (valid for bus clock or 1kHz LPO clock)
     #endif
 #else
-  //#define SUPPORT_LPTMR                                                // {28} support low power timer
+    #define SUPPORT_LPTMR                                                // {28} support low power timer
     #if defined SUPPORT_LPTMR
         #define TICK_USES_LPTMR                                          // use low power timer for TICK so that it continues to operate in stop based low power modes
         //Select the clock used by the low power timer - if the timer if to continue running in low power modes the clock chosen should continue to run in that mode too
         //
-        #define LPTMR_CLOCK_LPO                                          // clock the low power timer from LPO (1kHz)
+      //#define LPTMR_CLOCK_LPO                                          // clock the low power timer from LPO (1kHz)
       //#define LPTMR_CLOCK_INTERNAL_30_40kHz                            // clock the low power timer from the 30..40kHz internal reference
       //#define LPTMR_CLOCK_INTERNAL_4MHz                                // clock the low power timer from the 4MHz internal reference
-      //#define LPTMR_CLOCK_EXTERNAL_32kHz                               // clock the low power timer from external 32kHz reference
+        #define LPTMR_CLOCK_EXTERNAL_32kHz                               // clock the low power timer from external 32kHz reference
       //#define LPTMR_CLOCK_OSCERCLK                                     // clock the low power timer from the external reference
         #if defined FRDM_K64F || defined FreeLON
           //#define LPTMR_PRESCALE   64                                  // when using the external oscillator add this pre-scaler value to the low power timer input
@@ -1337,6 +1342,8 @@
             #define LPTMR_CLOCK_EXTERNAL_32kHz                           // run the low power timer from the 32kHz oscillator
         #elif defined FRDM_KL46Z
             #define LPTMR_PRESCALE   32                                  // when using the external oscillator add this pre-scaler value to the low power timer input
+        #elif defined LPTMR_CLOCK_EXTERNAL_32kHz && defined FRDM_K22F    // use the RTC oscillator as ERCLK32k source
+            #define LPTMR_CLOCK_RTC_32kHz
         #endif
     #endif
 #endif
@@ -4212,7 +4219,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #if defined USE_MAINTENANCE
         #define INIT_WATCHDOG_LED()                                      // let the port set up do this (the user can disable blinking)
     #else
-        #define INIT_WATCHDOG_LED() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(A, (BLINK_LED | DEMO_LED_2), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+        #define INIT_WATCHDOG_LED() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(A, (BLINK_LED), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH))
     #endif
 
     #define SHIFT_DEMO_LED_1        2                                    // since the port bits may be spread out shift each to the lowest 4 bits
@@ -4225,12 +4232,16 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define MAPPED_DEMO_LED_3       (DEMO_LED_3 >> SHIFT_DEMO_LED_3)
     #define MAPPED_DEMO_LED_4       (DEMO_LED_4 >> SHIFT_DEMO_LED_4)
 
-    #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(C, (SWITCH_2), PORT_PS_UP_ENABLE); _CONFIG_PORT_INPUT_FAST_LOW(B, (SWITCH_3), PORT_PS_UP_ENABLE) // use fast access version (beware that this can only operate on half of the 32 bits at a time)
+    #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(C, (SWITCH_2), PORT_PS_UP_ENABLE); _CONFIG_PORT_INPUT_FAST_HIGH(B, (SWITCH_3), PORT_PS_UP_ENABLE) // use fast access version (beware that this can only operate on half of the 32 bits at a time)
     #define WATCHDOG_DISABLE()      (_READ_PORT_MASK(C, SWITCH_2) == 0)  // pull this input down to disable watchdog (hold SW2 at reset)
     #define ACTIVATE_WATCHDOG()     UNLOCK_WDOG(); WDOG_TOVALL = (2000/5); WDOG_TOVALH = 0; WDOG_STCTRLH = (WDOG_STCTRLH_STNDBYEN | WDOG_STCTRLH_WAITEN | WDOG_STCTRLH_STOPEN | WDOG_STCTRLH_WDOGEN) // watchdog enabled to generate reset on 2s timeout (no further updates allowed)
     #define TOGGLE_WATCHDOG_LED()   _TOGGLE_PORT(A, BLINK_LED)
 
-    #define CONFIG_TEST_OUTPUT()                                         // we use DEMO_LED_2 which is configured by the user code (and can be disabled in parameters if required)
+    #if defined USE_MAINTENANCE
+        #define CONFIG_TEST_OUTPUT()                                         // we use DEMO_LED_2 which is configured by the user code (and can be disabled in parameters if required)
+    #else
+        #define CONFIG_TEST_OUTPUT() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(A, (DEMO_LED_2), (DEMO_LED_2), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+    #endif
     #define TOGGLE_TEST_OUTPUT()    _TOGGLE_PORT(A, DEMO_LED_2)
     #define SET_TEST_OUTPUT()       _SETBITS(A, DEMO_LED_2)
     #define CLEAR_TEST_OUTPUT()     _CLEARBITS(A, DEMO_LED_2)
