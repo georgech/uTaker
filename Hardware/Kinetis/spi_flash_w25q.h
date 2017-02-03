@@ -17,7 +17,8 @@
     It is declared as a header so that projects do not need to specify that it is not to be compiled.
     Its goal is to improve overall readability of the hardware interface.
 
-    15.01.2016 Added SPI_FLASH_W25Q128 and control of final SPI byte for Kinetis parts with queued SPI CS
+    15.01.2016 Added SPI_FLASH_W25Q128 and control of final SPI byte for Kinetis parts with FIFO based SPI CS
+    02.02.2017 Correct read for FIFO based SPI                           {1}
 
     **********************************************************************/
 
@@ -214,6 +215,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         ucCommandBuffer[2] = (unsigned char)(ulPageNumberOffset);
         while (ucTxCount < sizeof(ucCommandBuffer)) {                    // complete the command sequence
             WAIT_SPI_RECEPTION_END();                                    // wait until at least one byte is in the receive FIFO
+            (void)READ_SPI_FLASH_DATA();                                 // {1} the rx data is not interesting here
             CLEAR_RECEPTION_FLAG();                                      // clear the receive flag
             if ((ucTxCount == 2) && (iErase != 0)) {                     // erase doesn't have further data after the address
                 WRITE_SPI_CMD0_LAST(ucCommandBuffer[ucTxCount++]);       // send address with no further data to follow
