@@ -13,6 +13,7 @@
     ---------------------------------------------------------------------
     Copyright (C) M.J.Butcher Consulting 2004..2017
     *********************************************************************
+    02.02.2017 Adapt for us tick resolution (_TICK_RESOLUTION)
 
 
 */
@@ -22,10 +23,6 @@
                   
 
 #if !defined _ASSEMBLER_CONFIG                                           // remove all following when used for assembler configuration
-
-#if defined _CODE_WARRIOR_CF
-    #pragma const_strings on                                             // ensure strings are of const type when compiling with CodeWarrior
-#endif
 
 #if defined _WINDOWS
     #define MEM_FACTOR 1.0                                               // Windows tends to use more memory so expand heap slightly
@@ -38,6 +35,7 @@
 #define _NO_CHECK_QUEUE_INPUT                                            // code size optimisations
 #define _MINIMUM_IRQ_INITIALISATION
 
+#define _TICK_RESOLUTION     TICK_UNIT_MS(50000)                         // 50 ms system time period - max possible at 50MHz SYSTICK would be about 335ms !
 
 // Major hardware dependent settings for this project (choice of board - select only one at a time)
 //
@@ -605,8 +603,6 @@
     #define DEVICE_WITHOUT_ETHERNET                                      // K82 doesn't have Ethernet controller
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((30 * 1024) * MEM_FACTOR)
 #endif
-
-#define TICK_RESOLUTION     50                                           // 50 ms system time period - max possible at 50MHz SYSTICK would be about 335ms !
 
 
 //#define NO_FLASH_SUPPORT                                               // neither parameter nor file system

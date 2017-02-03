@@ -25,6 +25,7 @@
     14.01.2011 Add Kinetis                                               {10}
     18.01.2016 Increase buffer to accept full sizes LAN frames           {11}
     24.12.2016 Add I2C data injection                                    {12}
+    02.02.2017 Adapt for us tick resolution                              {13}
 
 */
 
@@ -135,18 +136,19 @@ static int fnGetTime(int iFile)
     return 0;                                                            // end of file
 }
 
-
+// Get the number of Tick intervals to wait for net ms delay
+//
 static unsigned long fnGetTimeDelay(int iFile) 
 {
     if (fnGetTime(iFile) <= 0) {
         return 0;                                                        // error or complete - quit
     }
-    return ((ulTimeDifference + (TICK_RESOLUTION/1000))/(TICK_RESOLUTION/1000)); // time to wait in TICK intervals
+    return ((((ulTimeDifference * 1000) + (TICK_RESOLUTION))/(TICK_RESOLUTION))/1000); // {13} time to wait in TICK intervals
 }
 
 static int fnEquivalent(char *input, char *command)
 {
-    while (*input) {
+    while (*input != 0) {
         if (*input != *command) {
             if (*input != (*command + ('a' - 'A'))) {                    // accept small/capital mix
                 return 0;

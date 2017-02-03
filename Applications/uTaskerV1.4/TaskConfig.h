@@ -243,7 +243,7 @@ const UTASKTABLEINIT ctTaskTable[] = {
 #if defined _HW_SAM7X
     {"Wdog",      fnTaskWatchdog, NO_QUE,   (DELAY_LIMIT)(0.2 * SEC), (DELAY_LIMIT)(0.2 * SEC),  UTASKER_STOP}, // watchdog task (note SAM7X is not allowed to start watchdog immediately since it also checks for too fast triggering!!)
 #else
-    {"Wdog",      fnTaskWatchdog, NO_QUE,   0, 1/*(DELAY_LIMIT)(0.2 * SEC)*/,  UTASKER_GO}, // watchdog task (runs immediately and then periodically)
+    {"Wdog",      fnTaskWatchdog, NO_QUE,   0, (DELAY_LIMIT)(0.2 * SEC),  UTASKER_GO}, // watchdog task (runs immediately and then periodically)
 #endif
 #if defined USE_IP || defined USE_IPV6                                   // {6} warning - start ARP task before Ethernet. If Ethernet messages are received before ARP table is ready there would be an error..
     {"ARP",       fnTaskArp,    MEDIUM_QUE, (DELAY_LIMIT)(0.05 * SEC), 0, UTASKER_STOP}, // ARP task check periodically state of ARP table

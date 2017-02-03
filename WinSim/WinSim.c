@@ -85,6 +85,7 @@
     16.05.2015 USB-CDC line coding test performed for each CDC interface {69}
     15.01.2016 Add SPI_FLASH_W25Q128 IDs                                 {70}
     24.12.2016 Add I2C data injection                                    {71}
+    02.02.2017 Adapt for us tick resolution
  
 */   
 #include <windows.h>
@@ -910,25 +911,37 @@ extern void fnConfigSimSCI(QUEUE_HANDLE Channel, unsigned long ulSpeed, TTYTABLE
             ulActions_2 |= OPEN_EXT_COM_0;                               // signal we want a COM port mapped to this UART
             ulExtChannel0Speed = ulSpeed;
             ExtChannel0Config = pars->Config;
-            iExtChannel0Speed = (ulSpeed/10/(10000000/TICK_RESOLUTION)); // approx. max. characters capable of transmitting in a tick period {10}
+            iExtChannel0Speed = ((ulSpeed * TICK_RESOLUTION)/10000000);  // approx. max. characters capable of transmitting in a tick period {10}
+            if (iExtChannel0Speed == 0) {
+                iExtChannel0Speed = 1;
+            }
             break;
         case 1:
             ulActions_2 |= OPEN_EXT_COM_1;                               // signal we want a COM port mapped to this UART
             ulExtChannel1Speed = ulSpeed;
             ExtChannel1Config = pars->Config;
-            iExtChannel1Speed = (ulSpeed/10/(10000000/TICK_RESOLUTION)); // approx. max. characters capable of transmitting in a tick period {10}
+            iExtChannel1Speed = ((ulSpeed * TICK_RESOLUTION)/10000000);  // approx. max. characters capable of transmitting in a tick period {10}
+            if (iExtChannel1Speed == 0) {
+                iExtChannel1Speed = 1;
+            }
             break;
         case 2:
             ulActions_2 |= OPEN_EXT_COM_2;                               // signal we want a COM port mapped to this UART
             ulExtChannel2Speed = ulSpeed;
             ExtChannel2Config = pars->Config;
-            iExtChannel2Speed = (ulSpeed/10/(10000000/TICK_RESOLUTION)); // approx. max. characters capable of transmitting in a tick period {10}
+            iExtChannel2Speed = ((ulSpeed * TICK_RESOLUTION)/10000000);  // approx. max. characters capable of transmitting in a tick period {10}
+            if (iExtChannel2Speed == 0) {
+                iExtChannel2Speed = 1;
+            }
             break;
         case 3:
             ulActions_2 |= OPEN_EXT_COM_3;                               // signal we want a COM port mapped to this UART
             ulExtChannel3Speed = ulSpeed;
             ExtChannel3Config = pars->Config;
-            iExtChannel3Speed = (ulSpeed/10/(10000000/TICK_RESOLUTION)); // approx. max. characters capable of transmitting in a tick period {10}
+            iExtChannel3Speed = ((ulSpeed * TICK_RESOLUTION)/10000000);  // approx. max. characters capable of transmitting in a tick period {10}
+            if (iExtChannel3Speed == 0) {
+                iExtChannel3Speed = 1;
+            }
             break;
         }
         return;
@@ -939,42 +952,60 @@ extern void fnConfigSimSCI(QUEUE_HANDLE Channel, unsigned long ulSpeed, TTYTABLE
         ulActions_2 |= OPEN_COM_0;                                       // signal we want a COM port mapped to this UART
         ulChannel0Speed = ulSpeed;
         Channel0Config = pars->Config;                                   // {45}
-        iChannel0Speed = (ulSpeed/10/(10000000/TICK_RESOLUTION));        // approx. max. characters capable of transmitting in a tick period {10}
+        iChannel0Speed = ((ulSpeed * TICK_RESOLUTION)/10000000);         // approx. max. characters capable of transmitting in a tick period {10}
+        if (iChannel0Speed == 0) {
+            iChannel0Speed = 1;
+        }
         break;
 
     case 1:
         ulActions_2 |= OPEN_COM_1;                                       // signal we want a COM port mapped to this UART
         ulChannel1Speed = ulSpeed;
         Channel1Config = pars->Config;                                   // {45}
-        iChannel1Speed = (ulSpeed/10/(10000000/TICK_RESOLUTION));        // approx. max. characters capable of transmitting in a tick period {10}
+        iChannel1Speed = ((ulSpeed * TICK_RESOLUTION)/10000000);         // approx. max. characters capable of transmitting in a tick period {10}
+        if (iChannel1Speed == 0) {
+            iChannel1Speed = 1;
+        }
         break;
 
     case 2:
         ulActions_2 |= OPEN_COM_2;                                       // signal we want a COM port mapped to this UART
         ulChannel2Speed = ulSpeed;
         Channel2Config = pars->Config;                                   // {45}
-        iChannel2Speed = (ulSpeed/10/(10000000/TICK_RESOLUTION));        // approx. max. characters capable of transmitting in a tick period {10}
+        iChannel2Speed = ((ulSpeed * TICK_RESOLUTION)/10000000);         // approx. max. characters capable of transmitting in a tick period {10}
+        if (iChannel2Speed == 0) {
+            iChannel2Speed = 1;
+        }
         break;
 
     case 3:                                                              // {12}
         ulActions_2 |= OPEN_COM_3;                                       // signal we want a COM port mapped to this UART
         ulChannel3Speed = ulSpeed;
         Channel3Config = pars->Config;                                   // {45}
-        iChannel3Speed = (ulSpeed/10/(10000000/TICK_RESOLUTION));        // approx. max. characters capable of transmitting in a tick period {10}
+        iChannel3Speed = ((ulSpeed * TICK_RESOLUTION)/10000000);         // approx. max. characters capable of transmitting in a tick period {10}
+        if (iChannel3Speed == 0) {
+            iChannel3Speed = 1;
+        }
         break;
 
     case 4:                                                              // {56}
         ulActions_2 |= OPEN_COM_4;                                       // signal we want a COM port mapped to this UART
         ulChannel4Speed = ulSpeed;
         Channel4Config = pars->Config;
-        iChannel4Speed = (ulSpeed/10/(10000000/TICK_RESOLUTION));        // approx. max. characters capable of transmitting in a tick period {10}
+        iChannel4Speed = ((ulSpeed * TICK_RESOLUTION)/10000000);         // approx. max. characters capable of transmitting in a tick period {10}
+        if (iChannel4Speed == 0) {
+            iChannel4Speed = 1;
+        }
         break;
 
     case 5:                                                              // {56}
         ulActions_2 |= OPEN_COM_5;                                       // signal we want a COM port mapped to this UART
         ulChannel5Speed = ulSpeed;
         Channel5Config = pars->Config;
-        iChannel5Speed = (ulSpeed/10/(10000000/TICK_RESOLUTION));        // approx. max. characters capable of transmitting in a tick period {10}
+        iChannel5Speed = ((ulSpeed * TICK_RESOLUTION)/10000000);         // approx. max. characters capable of transmitting in a tick period {10}
+        if (iChannel5Speed == 0) {
+            iChannel5Speed = 1;
+        }
         break;
     }
 }

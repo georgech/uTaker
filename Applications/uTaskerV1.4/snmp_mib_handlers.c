@@ -18,8 +18,9 @@
     - since this file is included from snmp.c it should be excluded from the build
     - the MIB table mib_table[] is declared at the bottom of the file
 
-    16.04.2014 Modify SNMP_GET_VARIABLE_BINDING handling                 // {1}
+    16.04.2014 Modify SNMP_GET_VARIABLE_BINDING handling                 {1}
     31.01.2015 Updated callback to include community read and write checks as well as revised trap usage
+    02.02.2017 Adapt for us tick resolution                              {2}
 
 */
 
@@ -140,7 +141,11 @@ static int fn_sysObjectID(MIB_CONTROL *ptrMIB_control)
 static int fn_sysUpTime(MIB_CONTROL *ptrMIB_control)
 {
     unsigned long ulHundredths = uTaskerSystemTick;
+    #if TICK_RESOLUTION >= 1000                                          // {2}
     ulHundredths *= (TICK_RESOLUTION/1000);
+    #else
+    ulHundredths /= (1000/TICK_RESOLUTION);
+    #endif
     ulHundredths /= 100;                                                 // up time in 100th of second
     ptrMIB_control->ucObjectType = ASN1_TIME_STAMP_CODE;                 // time ticks type
     ptrMIB_control->ulInteger = ulHundredths;

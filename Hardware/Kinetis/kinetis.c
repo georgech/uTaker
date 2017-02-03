@@ -57,6 +57,7 @@
     18.03.2016 Add NMI_IN_FLASH option                                   {123}
     11.04.2016 Set registers to volatile to ensure no optimisation in fnDelayLoop() {124}
     25.11.2016 Add ROM bootloader errata workaround                      {125}
+    31.01.2017 Add fnClearPending() and fnIsPending()                    {126}
 
 */
 
@@ -857,6 +858,20 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void (*
 #endif
 }
 
+extern void fnClearPending(int iInterruptID)                             // {126}
+{
+    volatile unsigned long *ptrIntClr = IRQ0_31_CPR_ADD;                 // the first clear pending register
+    ptrIntClr += (iInterruptID/32);                                      // move to the clear pending interrupt enable register in which this interrupt is controlled
+    *ptrIntClr = (0x01 << (iInterruptID % 32));                          // clear the pending interrupt
+}
+
+extern int fnIsPending(int iInterruptID)                                 // {126}
+{
+    volatile unsigned long *ptrIntActive = IRQ0_31_CPR_ADD;              // the first clear pending register, which also shows pending interrupts
+    ptrIntActive += (iInterruptID/32);                                   // move to the clear pending interrupt enable register in which this interrupt is controlled
+    return ((*ptrIntActive & (0x01 << (iInterruptID % 32))) != 0);       // return the pending state of this interrupt
+}
+
 
 /* =================================================================== */
 /*                                 TICK                                */
@@ -864,7 +879,6 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void (*
 
 static __interrupt void _RealTimeInterrupt(void)
 {
-    TOGGLE_TEST_OUTPUT();
 #if defined TICK_USES_LPTMR                                              // {94} tick interrupt from low power timer
     LPTMR0_CSR = LPTMR0_CSR;                                             // clear pending interrupt
 #elif defined TICK_USES_RTC                                              // {100} tick interrupt from RTC
@@ -878,7 +892,6 @@ static __interrupt void _RealTimeInterrupt(void)
     uDisable_Interrupt();                                                // ensure tick handler cannot be interrupted
         fnRtmkSystemTick();                                              // operating system tick
     uEnable_Interrupt();
-    TOGGLE_TEST_OUTPUT();
 }
 
 
@@ -908,7 +921,7 @@ extern void fnStartTick(void)
     }
     SIM_SOPT1 = ((SIM_SOPT1 & ~SIM_SOPT1_OSC32KSEL_MASK) | SIM_SOPT1_OSC32KSEL_32k); // select ERCLK32K from the RTC 32k clock
         #if defined KINETIS_K22
-    SIM_SOPT1 = ((SIM_SOPT1 & ~SIM_SOPT1_OSC32KOUT_MASK) | SIM_SOPT1_OSC32KOUT_PTE0); // 32kHz output to CLKOUT32k pin
+  //SIM_SOPT1 = ((SIM_SOPT1 & ~SIM_SOPT1_OSC32KOUT_MASK) | SIM_SOPT1_OSC32KOUT_PTE0); // 32kHz output to CLKOUT32k pin
         #endif
         #if defined LPTMR_PRESCALE
     LPTMR0_PSR = (LPTMR_PSR_PCS_OSC0ERCLK | ((LPTMR_PRESCALE_VALUE) << LPTMR_PSR_PRESCALE_SHIFT)); // program prescaler
@@ -943,10 +956,12 @@ extern void fnStartTick(void)
 #elif defined TICK_USES_RTC                                              // {100} use RTC to derive the tick interrupt from
     POWER_UP(6, SIM_SCGC6_RTC);                                          // ensure the RTC is powered
     fnEnterInterrupt(irq_RTC_OVERFLOW_ID, PRIORITY_RTC, (void (*)(void))_RealTimeInterrupt); // enter interrupt handler
-    #if defined RTC_USES_EXT_CLK || defined RTC_USES_INT_REF
-    RTC_MOD = (((((TICK_RESOLUTION/1000) * _EXTERNAL_CLOCK)/RTC_CLOCK_PRESCALER_1)/1000) - 1); // set the match value
+    #if defined RTC_USES_EXT_CLK
+    RTC_MOD = (unsigned long)((((unsigned long long)((unsigned long long)TICK_RESOLUTION * (unsigned long long)_EXTERNAL_CLOCK)/RTC_CLOCK_PRESCALER_1)/1000000) - 1); // set the match value
+    #elif defined RTC_USES_INT_REF
+    RTC_MOD = ((((TICK_RESOLUTION * ICSIRCLK)/RTC_CLOCK_PRESCALER_1)/1000000) - 1); // set the match value
     #else
-    RTC_MOD = (((((TICK_RESOLUTION/1000) * _EXTERNAL_CLOCK)/RTC_CLOCK_PRESCALER_2)/1000) - 1); // set the match value
+    RTC_MOD = ((((TICK_RESOLUTION * ICSIRCLK) / RTC_CLOCK_PRESCALER_2) / 1000000) - 1); // set the match value
     #endif
     RTC_SC = (RTC_SC_RTIE | RTC_SC_RTIF | _RTC_CLOCK_SOURCE | _RTC_PRESCALER); // clock the RTC from the defined clock source/pre-scaler and enable interrupt
     #if defined _WINDOWS
@@ -955,8 +970,8 @@ extern void fnStartTick(void)
     }
     #endif
 #else                                                                    // use systick to derive the tick interrupt from
-    #define REQUIRED_MS ((1000/(TICK_RESOLUTION/1000)))                  // the TICK frequency we require in kHz
-    #define TICK_DIVIDE (((CORE_CLOCK + REQUIRED_MS/2)/REQUIRED_MS) - 1) // the divide ratio required (for systick)
+    #define REQUIRED_US ((1000000/(TICK_RESOLUTION)))                    // the TICK frequency we require in MHz
+    #define TICK_DIVIDE (((CORE_CLOCK + REQUIRED_US/2)/REQUIRED_US) - 1) // the divide ratio required (for systick)
 
     #if TICK_DIVIDE > 0x00ffffff
         #error "TICK value cannot be achieved with SYSTICK at this core frequency!!"

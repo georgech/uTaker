@@ -30,6 +30,7 @@
     07.02.2015 Add DHCP server mode                                      {15}
     09.07.2015 Upgrade interrupt events to fnARP_report() contain network information {16}
     10.08.2015 Correct lease time seconds to byte conversion             {17}
+    02.02.2017 Adapt for us tick resolution                              {18}
 
     See http://www.utasker.com/docs/uTasker/uTaskerDHCP.pdf for DHCP documentation
 */        
@@ -1030,7 +1031,11 @@ static unsigned char fnStartDHCPTimer(unsigned char ucTimerEvent, int iNetwork)
 static void fnRandomise(DELAY_LIMIT DHCPTimeout, unsigned char ucTimerEvent, int iNetwork)
 {
 #if defined RANDOM_NUMBER_GENERATOR                                      // {2}
-    DELAY_LIMIT random_sec = (fnRandom() / (0xffff/(4 * (TICK_RESOLUTION/1000))));
+    #if TICK_RESOLUTION >= 1000                                          // {18}
+    DELAY_LIMIT random_sec = (fnRandom()/(0xffff/(4*(TICK_RESOLUTION/1000))));
+    #else
+    DELAY_LIMIT random_sec = (fnRandom()/(0xffff/(4/(1000/TICK_RESOLUTION))));
+    #endif
     if (random_sec > (DELAY_LIMIT)(1 * SEC)) {
         DHCPTimeout -= ((DELAY_LIMIT)(2 * SEC) - random_sec);            // decrease of 0..1s
     }

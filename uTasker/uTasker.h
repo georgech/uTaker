@@ -31,7 +31,15 @@
 
 #define TICK_UNIT_MS(T) (T * 1000)                                       // {7} tick is defined in ms
 #define TICK_UNIT_US(T) (T)                                              // {7} tick is defined in us
-#define TICK_RESOLUTION (_TICK_RESOLUTION)
+#if defined _WINDOWS
+    #if _TICK_RESOLUTION < 1000                                          // limit tick to 1ms when simulating
+        #define TICK_RESOLUTION (1000)
+    #else
+        #define TICK_RESOLUTION (_TICK_RESOLUTION)
+    #endif
+#else
+    #define TICK_RESOLUTION (_TICK_RESOLUTION)
+#endif
 
 #define SEC     (1000000 / TICK_RESOLUTION)                              // {7} used for sec conversions
 

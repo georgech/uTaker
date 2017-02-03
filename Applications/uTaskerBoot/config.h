@@ -39,6 +39,7 @@
     24.08.2013 Add option for multiple intermediate locations            {22}
     25.08.2013 Add NET_KBED and NET_K60                                  {23}
     18.04.2016 Add specific FRDM-K64F target                             {24}
+    02.02.2017 Adapt for us tick resolution (_TICK_RESOLUTION)           {25}
 
 */
 
@@ -70,7 +71,7 @@
     #endif
 
     #define OUR_HEAP_SIZE (unsigned short)((25 * 1024))                  // for simulator compatibility only
-    #define TICK_RESOLUTION        50                                    // for simulator compatibility only
+    #define _TICK_RESOLUTION     TICK_UNIT_MS(50)                        // {25} for simulator compatibility only
 
     #if defined _KINETIS                                                 // {20}
       //#define KINETIS_K40

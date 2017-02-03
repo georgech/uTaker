@@ -86,10 +86,12 @@ static unsigned short fnFlashRoutine[] = {                               // to a
 #if defined _WINDOWS
 static int fnFlashProtected(unsigned long *ptrWord)
 {
+    #if !defined KINETIS_KE
     unsigned long ulProtectionBlock = (1 << (((CAST_POINTER_ARITHMETIC)ptrWord) % (SIZE_OF_FLASH / 32)));
     if ((FTFL_FPROT3_0 & ulProtectionBlock) == 0) {
         return 1;                                                        // the area is protected
     }
+    #endif
     return 0;                                                            // the area is not protected
 }
 #endif

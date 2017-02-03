@@ -42,6 +42,7 @@
     06.01.2016 Add FRDM_K82F
     24.01.2016 Add BLAZE_K22
     22.11.2016 Add TEENSY_3_5 and TEENSY_3_6
+    02.02.2017 Add fnVirtualWakeupInterruptHandler()                     {13}
 
 */
 
@@ -2121,7 +2122,35 @@ extern void fnShowLowPowerMode(void)
         case STOP_MODE:
             fnDebugMsg("2 = STOP");
             break;
-    #if defined KINETIS_KL27
+    #if defined KINETIS_K22
+        case VLPR_MODE:
+            fnDebugMsg("3 = VLPR");
+            break;
+        case VLPW_MODE:
+            fnDebugMsg("4 = VLPW");
+            break;
+        case VLPS_MODE:
+            fnDebugMsg("5 = VLPS");
+            break;
+        case LLS2_MODE:
+            fnDebugMsg("6 = LLS2");
+            break;
+        case LLS3_MODE:
+            fnDebugMsg("7 = LLS3");
+            break;
+        case VLLS0_MODE:
+            fnDebugMsg("8 = VLLS0");
+            break;
+        case VLLS1_MODE:
+            fnDebugMsg("9 = VLLS1");
+            break;
+        case VLLS2_MODE:
+            fnDebugMsg("10 = VLLS1");
+            break;
+        case VLLS3_MODE:
+            fnDebugMsg("11 = VLLS3");
+            break;
+    #elif defined KINETIS_KL27
         case VLPR_MODE:
             fnDebugMsg("3 = VLPR");
             break;
@@ -2204,4 +2233,37 @@ extern void fnShowLowPowerMode(void)
         fnDebugMsg("\r\n");
     }
 }
+
+
+    #if defined LOW_POWER_CYCLING_MODE
+extern int fnVirtualWakeupInterruptHandler(int iDeepSleep)               // {13}
+{
+    if (iDeepSleep == 0) {
+        return 0;                                                        // only loop in deep sleep modes (not wait based)
+    }
+    if (fnIsPending(irq_UART1_ID) != 0) {                                // if there is a pending interrupt from the UART
+        iLowPowerLoopMode = LOW_POWER_CYCLING_PAUSED;
+        return 0;
+    }
+    if (fnIsPending(irq_RTC_SECONDS_ID) != 0) {                          // if there is a pending interrupt from the RTC
+        iLowPowerLoopMode = LOW_POWER_CYCLING_PAUSED;
+        return 0;
+    }
+    if (fnIsPending(irq_DMA4_ID) != 0) {                                 // if there is a pending interrupt from the UART tx DMA
+        iLowPowerLoopMode = LOW_POWER_CYCLING_PAUSED;
+        return 0;
+    }
+    TOGGLE_TEST_OUTPUT();
+    LPTMR0_CSR = LPTMR0_CSR;                                             // clear pending interrupt at LPTMR (wakeup source)
+    WRITE_ONE_TO_CLEAR(*(volatile unsigned char *)(LLWU_FLAG_ADDRESS + 2), MODULE_LPTMR0); // reset the wakeup flag (write '1' to clear)
+    fnClearPending(irq_LL_wakeup_ID);
+    fnClearPending(irq_LPT_ID);
+    if (++iLowPowerLoopMode > (DELAY_LIMIT)(0.2 * SEC)) {                // take over basic tick operation to retrigger the watchog every 200ms
+        fnRetriggerWatchdog();
+        iLowPowerLoopMode = LOW_POWER_CYCLING_ENABLED;
+    }
+    TOGGLE_TEST_OUTPUT();
+    return 1;                                                            // stay in low power cycling mode
+}
+    #endif
 #endif

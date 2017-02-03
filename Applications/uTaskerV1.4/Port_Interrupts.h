@@ -522,7 +522,6 @@ static void fnInitIRQ(void)
     interrupt_setup.int_port_bits  = (PORTE_BIT1 | PORTE_BIT2 | PORTE_BIT4);
     fnConfigureInterrupt((void *)&interrupt_setup);                      // configure wakeup pins on this port
     #endif
-
     #if defined WAKEUP_TEST && defined FRDM_K22F
     interrupt_setup.int_type = WAKEUP_INTERRUPT;
     interrupt_setup.int_port = PORT_MODULE;                              // define a wakeup interrupt on a module

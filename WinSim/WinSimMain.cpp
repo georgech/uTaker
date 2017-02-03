@@ -127,6 +127,7 @@
     07.11.2016 Add software version to window title (if avaiable)        {106}
     15.11.2016 Pass complete change state in fnInjectInputChange()       {107}
     24.12.2016 Add fnInjectI2C()                                         {108}
+    02.02.2017 Allow sub-ms tick setting                                 {109}
 
     */
 
@@ -3407,7 +3408,11 @@ int APIENTRY WinMain(HINSTANCE hInstance,
             --iTxActivity;
         }
 #endif
+#if TICK_RESOLUTION >= 1000                                              // {109}
         Sleep(TICK_RESOLUTION/1000);                                     // we sleep to simulate the basic tick operation
+#else
+        Sleep(1);                                                        // we sleep to simulate the basic tick operation
+#endif
 
 #if !defined BOOT_LOADER
         fnDoPortSim(0, 0);                                               // if we are playing back port simulation script, do it here {8}
@@ -3427,7 +3432,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
             }
 #endif
 
-            while (*doPtr) {
+            while (*doPtr != 0) {
                 switch (*doPtr++) {
 #if defined SERIAL_INTERFACE
     #if NUMBER_EXTERNAL_SERIAL > 0                                       // {41}

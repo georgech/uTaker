@@ -32,6 +32,7 @@
     09.08.2012 Add multiple networks/interface configuration             {10}
     06.03.2014 Add USER_INFO_MASK and USER_INFO_SHIFT                    {11}
     13.04.2014 Add USOCKET configuration for two networks                {12}
+    02.02.2017 Adapt for us tick resolution                              {13}
 
 */
 
@@ -55,7 +56,11 @@ typedef unsigned char     QUEUE_LIMIT;                                   // the 
 #define QUEUE_HANDLE      QUEUE_LIMIT                                    // as many queue handles as there are queues
 typedef unsigned short    QUEUE_TRANSFER;                                // the system supports transfers to 64k bytes
 typedef unsigned char     PHYSICAL_Q_LIMIT;                              // the system supports up to 255 physical queues
-typedef unsigned short    DELAY_LIMIT;                                   // delays up to 64k TICKs
+#if (TICK_RESOLUTION < 50000)                                            // {13}
+    typedef unsigned long DELAY_LIMIT;                                   // delays up to 4G TICKs (1ms tick gives maximum 47.7 days)
+#else
+    typedef unsigned short DELAY_LIMIT;                                  // delays up to 64k TICKs (50ms tick gives maximum 54.6 minutes)
+#endif
 typedef unsigned short    MAX_MALLOC;                                    // upto 64k heap chunks
 typedef unsigned short    LENGTH_CHUNK_COUNT;                            // http string insertion and chunk counter for dynamic generation
 #if !defined _HW_NE64                                                    // {1}

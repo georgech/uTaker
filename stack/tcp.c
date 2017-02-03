@@ -82,6 +82,7 @@
     01.10.2015 Start testing MJBC_TEST5
     31.05.2016 Modify MJB_TEST5 case to accept FIN together with final data content {66}
     13.10.2016 Simultaneous close correction                             {67}
+    02.02.2017 Adapt for us tick resolution                              {68}
 
 */
 
@@ -1171,7 +1172,11 @@ static unsigned long fnGetTCP_init_seq(void)
 {
     static unsigned char ucSequenceUses = 0;                             // this variable ensures different sequence numbers for multiple connections started in one tick interval
                                                                          // in this period the counter would count RESms/4us == RES*1000/4 or RES*250
+#if TICK_RESOLUTION >= 1000                                              // {68}
     return (((uTaskerSystemTick + ucSequenceUses++) * ((TICK_RESOLUTION/1000) * 250)));
+#else
+    return (((uTaskerSystemTick + ucSequenceUses++) * (250/(1000/TICK_RESOLUTION))));
+#endif
 }
 
 // Client connect

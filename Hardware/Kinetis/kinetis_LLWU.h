@@ -13,6 +13,7 @@
     ---------------------------------------------------------------------
     Copyright (C) M.J.Butcher Consulting 2004..2017
     *********************************************************************
+    02.02.2017 Clear pending interrupt at LPTMR after module wakeup event {1}
 
 */
 
@@ -169,6 +170,7 @@ static void fnHandleWakeupSources(volatile unsigned char *prtFlagRegister, int i
                 case MODULE_LPTMR0:
         #if defined TICK_USES_LPTMR
                     _RealTimeInterrupt();                                // call the TICK interrupt handler to clear the interrupt source
+                    fnClearPending(irq_LPT_ID);                          // {1} clear pending interrupt at LPTMR so that it is not taken (even though the source has been cleared)
         #else
                     LPTMR0_CSR = LPTMR0_CSR;                             // clear pending interrupt
         #endif

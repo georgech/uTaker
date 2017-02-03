@@ -381,8 +381,8 @@
     #define USB_CLOCK_GENERATED_INTERNALLY                               // use USB clock from internal source rather than external pin - 120MHz is suitable
 #elif defined FRDM_K22F || defined TWR_K22F120M
   //#define RUN_FROM_DEFAULT_CLOCK                                       // default mode is FLL Engaged Internal - the 32kHz IRC is multiplied by FLL factor of 640 to obtain 20.9715MHz nominal frequency (20MHz..25MHz)
-    #define RUN_FROM_LIRC                                                // clock directly from internal 4MHz RC clock
-  //#define RUN_FROM_HIRC                                                // clock directly from internal 48MHz RC clock
+  //#define RUN_FROM_LIRC                                                // clock directly from internal 4MHz RC clock
+    #define RUN_FROM_HIRC                                                // clock directly from internal 48MHz RC clock
   //#define RUN_FROM_HIRC_PLL                                            // use 48MHz RC clock as input to the PLL
   //#define RUN_FROM_HIRC_FLL                                            // use 48MHz RC clock as input to the FLL
     #if defined RUN_FROM_LIRC                                            // 4MHz
@@ -392,7 +392,7 @@
     #elif !defined RUN_FROM_DEFAULT_CLOCK
         #define OSC_LOW_GAIN_MODE
         #define CRYSTAL_FREQUENCY    8000000                             // 8 MHz crystal on board
-        #define USE_HIGH_SPEED_RUN_MODE
+      //#define USE_HIGH_SPEED_RUN_MODE
         #if defined USE_HIGH_SPEED_RUN_MODE                              // 120 MHz requires use of the high speed run mode (with restriction of not being able to program flash in that mode)
             #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
             #define CLOCK_DIV            2                               // input must be divided to 2MHz..4MHz range (/1 to /24)
@@ -1312,17 +1312,7 @@
     #undef LAN_REPORT_ACTIVITY
 #endif
 
-#if defined KINETIS_KE
-  //#define TICK_USES_RTC                                                // use RTC for TICK so that it continues to operate in stop based low power modes
-    #if defined TICK_USES_RTC
-      //#define RTC_USES_EXT_CLK                                         // use the external clock as RTC clock source
-        #define RTC_USES_INT_REF                                         // use the internal reference clock (ICSIRCLK) as RTC clock source
-            #define RTC_CLOCK_PRESCALER_1  32                            // 1, 2, 4, 8, 16, 32 or 64 (valid for internal reference or external clock input)
-      //#define RTC_USES_BUS_CLOCK                                       // use the bus clock as RTC clock source
-      //#define RTC_USES_LPO_1kHz                                        // use the 1kHz LPO clock as RTC source (not high accuracy)
-            #define RTC_CLOCK_PRESCALER_2  100                           // 128, 256, 512, 1024, 2048, 100 or 1000 (valid for bus clock or 1kHz LPO clock)
-    #endif
-#else
+#if !defined KINETIS_KE
     #define SUPPORT_LPTMR                                                // {28} support low power timer
     #if defined SUPPORT_LPTMR
         #define TICK_USES_LPTMR                                          // use low power timer for TICK so that it continues to operate in stop based low power modes
@@ -1360,6 +1350,17 @@
 
 #if defined KINETIS_KV || defined KINETIS_KL02 || defined KINETIS_K02    // device without RTC
     #define SUPPORT_SW_RTC                                               // support real time clock based purely on software
+#elif defined KINETIS_KE
+    #define SUPPORT_RTC                                                  // support real time clock (do not use together with TICK_USES_RTC)
+  //#define TICK_USES_RTC                                                // use RTC for TICK so that it continues to operate in stop based low power modes
+    #if defined TICK_USES_RTC || defined SUPPORT_RTC
+      //#define RTC_USES_EXT_CLK                                         // use the external clock as RTC clock source
+        #define RTC_USES_INT_REF                                         // use the internal reference clock (ICSIRCLK) as RTC clock source
+            #define RTC_CLOCK_PRESCALER_1  1                             // 1, 2, 4, 8, 16, 32 or 64 (valid for internal reference or external clock input)
+      //#define RTC_USES_BUS_CLOCK                                       // use the bus clock as RTC clock source
+      //#define RTC_USES_LPO_1kHz                                        // use the 1kHz LPO clock as RTC source (not high accuracy)
+            #define RTC_CLOCK_PRESCALER_2  100                           // 128, 256, 512, 1024, 2048, 100 or 1000 (valid for bus clock or 1kHz LPO clock)
+    #endif
 #else
     #define SUPPORT_RTC                                                  // support real time clock
     #define ALARM_TASK   TASK_APPLICATION                                // alarm is handled by the application task (handled by time keeper if not defined)
@@ -1368,15 +1369,9 @@
     #elif defined KINETIS_KL && !defined FRDM_KL03Z && !defined FRDM_KL27Z // FRDM-KL03Z and FRDM-KL27Z have 32kHz crystals which are used as preference
         #define RTC_USES_LPO_1kHz                                        // use the 1kHz LPO clock as RTC source (not high accuracy)
       //#define RTC_USES_RTC_CLKIN                                       // 32.768kHz input on RTC_CLKIN
-    #elif defined KINETIS_KE && defined SUPPORT_RTC
-      //#define RTC_USES_EXT_CLK                                         // use the external clock as RTC clock source
-        #define RTC_USES_INT_REF                                         // use the internal reference clock (ICSIRCLK - 32768Hz) as RTC clock source
-            #define RTC_CLOCK_PRESCALER_1  64                            // 1, 2, 4, 8, 16, 32 or 64 (valid for internal reference or external clock input)
-      //#define RTC_USES_BUS_CLOCK                                       // use the bus clock as RTC clock source
-      //#define RTC_USES_LPO_1kHz                                        // use the 1kHz LPO clock as RTC source (not high accuracy)
-            #define RTC_CLOCK_PRESCALER_2  100                           // 128, 256, 512, 1024, 2048, 100 or 1000 (valid for bus clock or 1kHz LPO clock)
     #endif
 #endif
+
 
 // Include the Kinetis hardware header here
 // - beware that the header delivers rules for subsequent parts of this header file but also accepts some rules from previous parts,

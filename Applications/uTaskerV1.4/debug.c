@@ -107,6 +107,7 @@
     23.11.2015 Add USB host CDC virtual COM connection                   {82}
     17.01.2015 Add file hide and write-protect commands                  {83}
     12.12.2016 Add CMSIS CFFT and AES                                    {84}
+    02.02.2017 Add low power cycling control                             {84} - see video https://youtu.be/v4UnfcDiaE4
 
 */
 
@@ -274,7 +275,7 @@
     #define DO_AES128              44                                    // specific hardware command to test AES128 operation
     #define DO_AES192              45                                    // specific hardware command to test AES192 operation
     #define DO_AES256              46                                    // specific hardware command to test AES256 operation
-
+    #define DO_LP_CYCLE            47                                    // specific hardware command to enable/disable low power cycle mode
 
 #define DO_TELNET                 2                                      // reference to Telnet group
     #define DO_TELNET_QUIT              0                                // specific Telnet comand to quit the session
@@ -828,6 +829,9 @@ static const DEBUG_COMMAND tADMINCommand[] = {
 #if defined SUPPORT_LOW_POWER
     {"show_lp",           "Show low power mode and options",       DO_HARDWARE,      DO_LP_GET }, // {71}
     {"set_lp",            "[option] Set low power mode",           DO_HARDWARE,      DO_LP_SET }, // {71}
+    #if defined LOW_POWER_CYCLING_MODE
+    { "lpc",              "low power cycling [1/0]",               DO_HARDWARE,      DO_LP_CYCLE }, // {85}
+    #endif
 #endif
     {"reset",             "Reset device",                          DO_HARDWARE,      DO_RESET },
     {"last_rst",          "Reset cause",                           DO_HARDWARE,      DO_LAST_RESET }, // {63}
@@ -3679,6 +3683,19 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
             fnSetLowPowerMode(ucPowerMode);
         }
         break;
+    #if defined LOW_POWER_CYCLING_MODE                                   // {85}
+    case DO_LP_CYCLE:
+        fnDebugMsg("Low Power Cycling ");
+        if (*ptrInput == '1') {
+            iLowPowerLoopMode = LOW_POWER_CYCLING_ENABLED;
+            fnDebugMsg("ON\r\n");
+        }
+        else {
+            fnDebugMsg("OFF\r\n");
+            iLowPowerLoopMode = LOW_POWER_CYCLING_DISABLED;
+        }
+        break;
+    #endif
 #endif
     case DO_DISPLAY_MEMORY_USE:                                          // memory use display
         {

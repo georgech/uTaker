@@ -13,6 +13,7 @@
     ---------------------------------------------------------------------
     Copyright (C) M.J.Butcher Consulting 2004..2017
     **********************************************************************
+    02.02.2017 Adapt for us tick resolution (_TICK_RESOLUTION)
     
 */
 
@@ -22,32 +23,32 @@
 
 #if !defined _ASSEMBLER_CONFIG                                           // remove all following when used for assembler configuration
 
-#if defined _CODE_WARRIOR_CF
-    #pragma const_strings on                                             // ensure strings are of const type when compiling with CodeWarrior
-#endif
+/////////////////////////////////////////////////////////////////////////
+//                                                                       // new users who would like to see just a blinking LED before enabling the project's many powerful features can set this
+//#define BLINKEY                                                        // it give simplest scheduling of a single task called at 200ms rate that retriggers the watchdog and toggles respective the board's heartbeat LED
+//                                                                       // 
+/////////////////////////////////////////////////////////////////////////
+
+#define _TICK_RESOLUTION     TICK_UNIT_MS(50)                            // 50ms system tick period - max possible at 50MHz SYSTICK would be about 335ms !
+
+#define USE_MAINTENANCE                                                  // include the command line shell (on UART, USB-CDC and/or Telenet) with maintenance support for the application (remove to reduce project size for special tests or possibly running from limited RAM)
+    #define PREVIOUS_COMMAND_BUFFERS  4                                  // allow the up-arrow to retrieve this many past commands
+    #define MEMORY_DEBUGGER                                              // memory debugger interface (read, write and fill)
+
+//#define MONITOR_PERFORMANCE                                            // support measuring duration of tasks and idle phases (based on a hardware timer)
+//#define _APPLICATION_VALIDATION                                        // support application validation
+//#define DUSK_AND_DAWN                                                  // support dusk and dawn calculation
+#define UNUSED_STACK_PATTERN       0x55                                  // this is the stack fill pattern for recognising maximum stack usage (disable to remove monitoring)
+//#define UNUSED_HEAP_PATTERN      0xaa                                  // this is the initial unused heap content for usage debugging recognistion (disable to remove monitoring)
+//#define IMMEDIATE_MEMORY_ALLOCATION                                    // immediately allocate all dynamic memory that will be used rather than doing it only when first used
+//#define SUPPORT_UFREE                                                  // we allow program memory to be freed when it has stopped
+#define UREVERSEMEMCPY                                                   // allow uReverseMemcpy() - useful for shifting buffers to right and improving efficiency of HTTP content generation (DMA based when possible)
 
 #if defined _WINDOWS
-    #define MEM_FACTOR 1.0                                               // Windows tends to use more memory so expand heap slightly
+    #define MEM_FACTOR 1.0                                               // Windows tends to use more memory so expand heap slightly in case of deviations
 #else
     #define MEM_FACTOR 1.0
 #endif
-
-//#define BLINKEY                                                        // simplest possible configuration where just an LED is flashed (possibly still using low power mode)
-//#define _APPLICATION_VALIDATION                                        // support application validation
-//#define USE_MAINTENANCE                                                // include some maintenance support for the application and command line interface (remove to reduce project size for special tests or possibly running from limited RAM)
-    #define PREVIOUS_COMMAND_BUFFERS  4
-    #define MEMORY_DEBUGGER                                              // memory debugger interface (read, write and fill)
-
-//#define MONITOR_PERFORMANCE                                            // support measuring duration of tasks and idle phases
-
-//#define DUSK_AND_DAWN                                                  // support dusk and dawn calculation
-
-#define UNUSED_STACK_PATTERN       0x55                                  // this is the stack fill pattern for recognising maximum stack usage
-  //#define UNUSED_HEAP_PATTERN    0xaa                                  // this is the initial unused heap content for usage debugging recognistion
-
-//#define IMMEDIATE_MEMORY_ALLOCATION                                    // immediately allocate all dynamic memory that will be used rather than doing it only when first used
-//#define SUPPORT_UFREE                                                  // we allow program memory to be freed when it has stopped
-#define UREVERSEMEMCPY                                                   // allow uReverseMemcpy() - useful for shifting buffers to right
 
 
 // Major hardware dependent settings for this project (choice of board - select only one at a time)
@@ -138,7 +139,10 @@
 //#define TWR_K80F150M                                                   // tower board http://www.utasker.com/kinetis/TWR-K80F150M.html
 
 
-// Add some basic details for the board/processor being used
+
+
+
+// Add some basic details for the particular board/processor being used
 //
 #if defined FRDM_KE02Z
     #define TARGET_HW            "FRDM_KE02Z Kinetis"
@@ -684,9 +688,8 @@
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((30 * 1024) * MEM_FACTOR)
 #endif
 
-#define _TICK_RESOLUTION     TICK_UNIT_US(50000)                         // 50 ms system time period - max possible at 50MHz SYSTICK would be about 335ms !
 
-// Specify the parameter system and a file for use by FTP, HTML and such functions
+// Specify the uParameterSystem and a uFileSystem for use by FTP, HTML and such functions
 //
 #if defined FRDM_KE04Z || defined FRDM_KL03Z || defined TWR_KV10Z32 || defined TEENSY_LC || defined TRK_KEA8 // due to the restricted flash size in this device the flash is used only for program code
     #define NO_FLASH_SUPPORT                                             // neither parameter nor file system
@@ -716,17 +719,15 @@
   //#define FLASH_ROUTINES                                               // supply flash routines (can be used to force flash write/erase support without any file system)
 
     #if !defined SPI_FILE_SYSTEM && !defined I2C_EEPROM_FILE_SYSTEM && !defined SPI_EEPROM_FILE_SYSTEM && !defined NVRAM && !defined EXT_FLASH_FILE_SYSTEM
-        #define ONLY_INTERNAL_FLASH_STORAGE
+        #define ONLY_INTERNAL_FLASH_STORAGE                              // no external storage present
     #endif
 
     #if defined (SPI_FILE_SYSTEM) || defined (FLASH_FILE_SYSTEM) || defined (NVRAM) || defined (I2C_EEPROM_FILE_SYSTEM) || defined SPI_EEPROM_FILE_SYSTEM || defined EXT_FLASH_FILE_SYSTEM
-        #define ACTIVE_FILE_SYSTEM
+        #define ACTIVE_FILE_SYSTEM                                       // enable uFileSystem
     #endif
 #endif
 
 #define SUPPORT_MIME_IDENTIFIER                                          // if the file type is to be handled (eg. when mixing HTML with JPGs etc.) this should be set - note that the file system header will be adjusted
-//#define IMMEDIATE_MEMORY_ALLOCATION                                    // immediately allocate all dynamic memory that will be used rather than doing it only when first used
-//#define SUPPORT_UFREE                                                  // support allocating and freeing a uMalloc() region
 
 #if defined FLASH_FILE_SYSTEM && defined SPI_FILE_SYSTEM                 // when a file system is located in SPI flash
     // Specify the SPI flash type used
@@ -833,23 +834,9 @@
 #endif
 
 
-// Configure driver services
+// Serial interface (UART)
 //
-#if !defined DEVICE_WITHOUT_CAN                                          // if the device has CAN
-  //#define CAN_INTERFACE                                                // enable CAN bus interface
-#endif
-#if defined CAN_INTERFACE
-    #define NUMBER_CAN          4                                        // the number of logical queues required for CAN support (2 logical queues each for up to 2 CAN controllers)
-  //#define UTASKER_SIM                                                  // simulator HW extension
-        #define SIM_HW_IP_ADD       192,168,0,4                          // IP address of our HW simulator extension
-        #define SIM_HW_PORT_NUMBER  1234                                 // port number used by out HW simulator
-    #define SIM_KOMODO                                                   // use Komodo as simulator CAN extension
-        #define KOMODO_USB_PORT 1                                        // use this USB port (0 or 1) - any additional monitor program sharing the Komodo can use the other port
-#else
-    #define NUMBER_CAN   0                                               // no physical queue needed
-#endif
-
-//#define SERIAL_INTERFACE                                               // enable serial interface driver
+#define SERIAL_INTERFACE                                                 // enable serial interface driver
 #if defined SERIAL_INTERFACE
   //#define FREEMASTER_UART                                              // UART for run-time debugging use
   //#define UART_EXTENDED_MODE                                           // required for 9-bit mode
@@ -915,6 +902,8 @@
     #define SUPPORT_FLUSH                                                // support queue flush for use by the MODBUS gateway
 #endif
 
+// USB
+//
 #if defined DEVICE_WITHOUT_USB
     #define NUMBER_USB     0                                             // no physical queue needed
 #else
@@ -1063,6 +1052,8 @@
     #endif
 #endif
 
+// I2C
+//
 //#define I2C_INTERFACE
 #if defined I2C_INTERFACE
   //#define I2C_SLAVE_MODE                                               // support slave mode
@@ -1072,15 +1063,32 @@
     #define NUMBER_I2C     0                                             // no physical queue needed
 #endif
 
-#if defined TWR_K60F120M || defined TWR_K70F120M || defined EMCRAFT_K70F120M // NAND flash available so utFAT can be operated in it
-    #define NAND_FLASH_FAT                                               // NAND flash requires SDCARD_SUPPORT to also be active but takes priority over SD card
-        #define VERIFY_NAND                                              // development help functions
+// CAN
+//
+#if !defined DEVICE_WITHOUT_CAN                                          // if the device has CAN
+  //#define CAN_INTERFACE                                                // enable CAN bus interface
+    #if defined CAN_INTERFACE
+        #define NUMBER_CAN          4                                    // the number of logical queues required for CAN support (2 logical queues each for up to 2 CAN controllers)
+      //#define UTASKER_SIM                                              // simulator HW extension
+            #define SIM_HW_IP_ADD       192,168,0,4                      // IP address of our HW simulator extension
+            #define SIM_HW_PORT_NUMBER  1234                             // port number used by out HW simulator
+        #define SIM_KOMODO                                               // use Komodo as simulator CAN extension
+            #define KOMODO_USB_PORT 1                                    // use this USB port (0 or 1) - any additional monitor program sharing the Komodo can use the other port
+    #endif
+#else
+    #define NUMBER_CAN   0                                               // no physical queue needed
 #endif
 
+// utFAT
+//
 //#define SDCARD_SUPPORT                                                 // SD-card interface
 //#define FLASH_FAT                                                      // FAT in internal flash
 //#define SPI_FLASH_FAT                                                  // FAT in external SPI flash
     #define SIMPLE_FLASH                                                 // don't perform block management and wear-leveling
+#if defined TWR_K60F120M || defined TWR_K70F120M || defined EMCRAFT_K70F120M // NAND flash available so utFAT can be operated in it
+    #define NAND_FLASH_FAT                                               // NAND flash requires SDCARD_SUPPORT to also be active but takes priority over SD card
+        #define VERIFY_NAND                                              // development help functions
+#endif
 #if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST
     #if defined SPI_FLASH_FAT
         #undef ONLY_INTERNAL_FLASH_STORAGE                               // allow multiple flash storage support
@@ -1140,6 +1148,8 @@
     #define FREEMASTER_STORAGE_ACCESS                                    // use storage interface rather than direct memory mapping so that SPI flash content can be addressed and also flash can be written
 #endif
 
+// nRF24L01
+//
 #if defined FRDM_K64F || defined FRDM_K22F || defined FRDM_KL25Z || defined FRDM_KL46Z || defined FRDM_KL03Z || defined FRDM_KL43Z // during development only - these boards have been configured and tested
   //#define nRF24L01_INTERFACE                                           // nRF24L01+ interface - low power RF
     #if defined FRDM_K64F
@@ -1150,6 +1160,8 @@
     #endif
 #endif
 
+// Ethernet
+//
 #if !defined DEVICE_WITHOUT_ETHERNET && !defined K70F150M_12M && !defined TEENSY_3_5 && !defined TEENSY_3_6
   //#define ETH_INTERFACE                                                // enable Ethernet interface driver
 #elif defined TEENSY_3_1 || defined TEENSY_LC
@@ -1580,6 +1592,7 @@
 #else
     #define NUMBER_MODBUS_QUEUES  0
 #endif
+
 #if defined SUPPORT_FIFO_QUEUES
     #define NUMBER_FIFO_QUEUES    3                                      // the number of software FIFOs required
 #else
@@ -1590,6 +1603,8 @@
 
 #define RANDOM_NUMBER_GENERATOR                                          // support a random number generator (useful for DHCP and possibly DNS)
 
+// Cryptography
+//
 //#define CRYPTOGRAPHY                                                   // enable cryptography support - details at http://www.utasker.com/docs/uTasker/uTasker_Cryptography.pdf
   //#define CRYPTO_OPEN_SSL                                              // use OpenSSL library code
   //#define CRYPTO_WOLF_SSL                                              // use wolfSSL library code
@@ -1600,6 +1615,8 @@
         #define NATIVE_AES_CAU                                           // use uTasker mmCAU - only possible when the device has mmCAU - simulation requires a SW library to be enabled for alternate use
       //#define AES_DISABLE_CAU                                          // force software implementation by disabling any available crypto accelerator (used mainly for testing CAU efficiency increase)
 
+// Signal Processing (DSP)
+//
 #if defined USE_USB_AUDIO && defined AUDIO_FFT
   //#define CMSIS_DSP_CFFT                                               // enable CMSIS CFFT support
 #else
@@ -1615,6 +1632,8 @@
       //#define CMSIS_DSP_FFT_4096                                       // enable 4096 point FFT
 #endif
 
+// Character LCD
+//
 //#define SUPPORT_LCD                                                    // enable a task for interfacing to a character LCD
 #if defined SUPPORT_LCD
     #define LCD_LINES              2                                     // use 2 x 16 LCD
@@ -1625,9 +1644,15 @@
     #define LCD_PARTNER_TASK       TASK_APPLICATION
   //#define LCD_CYRILLIC_FONT                                            // use cyrillic extended ASCII character set instead of standard extended
 #endif
+
+// Segment LCD
+//
 #if defined KINETIS_K30 || defined KINETIS_K40 || defined KINETIS_K51 || defined KINETIS_K53 || defined KINETIS_KL40 // if processor supports SLCD
     #define SUPPORT_SLCD                                                 // segment LCD
 #endif
+
+// Graphical LCD
+//
 #if defined BLAZE_K22
     #define SUPPORT_GLCD                                                 // enable the task for interfacing to a graphical LCD
   //#define TFT2N0369_GLCD_MODE                                          // use colour TFT in GLCD compatible mode (as base)
@@ -1761,6 +1786,8 @@
     #define MAX_TEXT_LENGTH        64                                    // maximum text length when writing fonts
 #endif
 
+// OLED
+//
 //#define SUPPORT_OLED                                                   // enable the task for interfacing to a graphical OLED
 #if defined SUPPORT_OLED
     #define LCD_PARTNER_TASK       TASK_APPLICATION
@@ -1784,6 +1811,8 @@
     #define MAX_TEXT_LENGTH        64                                    // maximum text length when writing fonts
 #endif
 
+// Key entry
+//
 #if defined NET_K60 || defined rcARM_KL26                                // NET-K60 enables key pad or rcARM touch buttons
     #define SUPPORT_KEY_SCAN                                             // enable a task for key pad scanning
 #else
@@ -1815,7 +1844,8 @@
     #define VIRTUAL_KEY_COLUMNS       1
 #endif
 
-
+// Software Timers
+//
 #if defined SUPPORT_DISTRIBUTED_NODES
     #define GLOBAL_TIMER_TASK
 #elif defined USE_MODBUS                                                 // MODBUS generally requires multiple SW timer support
@@ -1825,7 +1855,6 @@
 #else
     #define GLOBAL_TIMER_TASK                                            // enable a task for global timer tasks
 #endif
-
 #if defined GLOBAL_TIMER_TASK
     #if defined USE_IGMP && (IGMP_MAX_HOSTS > 1)
         #define TIMER_QUANTITY (IGMP_MAX_HOSTS + 10)                     // the number of global timers required
@@ -1834,15 +1863,19 @@
     #endif
 #endif
 
+// Low Power
+//
 #if !((defined K70F150M_12M || defined TWR_K70F120M || defined TWR_K60F120M || defined K60F150M_50M) && defined USB_INTERFACE) // don't use low power mode due to errata e7166
     #define SUPPORT_LOW_POWER                                            // a low power task supervises power reduction when possible
+        #define LOW_POWER_CYCLING_MODE                                   // allow low power cycle loop with a "Virtual Wake-up Interrupt Handler" - see video https://youtu.be/v4UnfcDiaE4
 #endif
 
 #define SUPPORT_DOUBLE_QUEUE_WRITES                                      // allow double queue writes to improve efficiency of long queue copies
 //#define MULTISTART                                                     // enable a board to user multiple task configurations
 //#define PERIODIC_TIMER_EVENT                                           // delayed and periodic tasks are schedule with timer events if enabled (otherwise they are simply scheduled)
 
-#if defined BLINKEY
+
+#if defined BLINKEY                                                      // if the BLINKEY operation is defined we ensure that the following are disabled to give simplest configuration
     #undef USE_MAINTENANCE
     #undef USB_INTERFACE
     #undef SERIAL_INTERFACE
@@ -1890,7 +1923,7 @@
     #include "../../WinSim/WinSim.h"
 #endif
 
-#if defined OPSYS_CONFIG                                                 // this is only set in the hardware module
+#if defined OPSYS_CONFIG                                                 // this is only used by the hardware module
     #if defined ETH_INTERFACE || defined USB_CDC_RNDIS                   // if we support Ethernet we define some constants for its (TCP/IP) use
         const unsigned char cucNullMACIP[MAC_LENGTH] = { 0, 0, 0, 0, 0, 0 };
         const unsigned char cucBroadcast[MAC_LENGTH] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff }; // used also for broadcast IP

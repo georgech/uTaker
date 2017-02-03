@@ -73,6 +73,7 @@
     23.12.2015 Add parameter to fnActivateHWEndpoint()                   {45}
     12.01.2016 Add fnSetFragmentMode()                                   {46}
     15.02.2016 Add fnDMA_BufferReset()                                   {47}
+    31.01.2017 Add fnVirtualWakeupInterruptHandler()                     {48}
 
 */
 
@@ -256,6 +257,13 @@ extern void fnDMA_BufferReset(int iChannel, int iAction);                // {47}
 //
 extern int  fnGetLowPowerMode(void);                                     // {43}
 extern void fnSetLowPowerMode(int);
+#if defined LOW_POWER_CYCLING_MODE
+    extern int fnVirtualWakeupInterruptHandler(int iDeepSleep);          // {48}
+    extern int iLowPowerLoopMode;
+    #define LOW_POWER_CYCLING_DISABLED 0
+    #define LOW_POWER_CYCLING_PAUSED   1
+    #define LOW_POWER_CYCLING_ENABLED  2
+#endif
 
 extern void fnResetBoard(void);
 #if !defined start_application

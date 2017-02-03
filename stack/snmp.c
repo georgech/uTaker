@@ -18,6 +18,7 @@
     30.03.2014 Modify trap generation to send to each specific manager rather than collect first a list of managers {3}
     24.09.2014 Extend value that can be handled by fnAddASN1_identifier_string() and fnExtractVariableBinding() {4}
     25.09.2014 Added community for read and write                        {5}
+    02.02.2017 Adapt for us tick resolution                              {6}
 
 */
 
@@ -157,7 +158,11 @@ static unsigned short fnAddTimeStamp(unsigned char *ptrBuffer)
     unsigned long ulHundredths = uTaskerSystemTick;
     *ptrBuffer++ = ASN1_TIME_STAMP_CODE;
     *ptrBuffer++ = sizeof(unsigned long);                                // content length
+    #if TICK_RESOLUTION >= 1000                                          // {6}
     ulHundredths *= (TICK_RESOLUTION/1000);
+    #else
+    ulHundredths /= (1000/TICK_RESOLUTION);
+    #endif
     ulHundredths /= 100;                                                 // up time in 100th of second
     *ptrBuffer++ = (unsigned char)(ulHundredths >> 24);
     *ptrBuffer++ = (unsigned char)(ulHundredths >> 16);

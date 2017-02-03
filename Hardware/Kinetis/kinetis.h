@@ -104,6 +104,7 @@
     07.09.2016 correct KE operation directly from crystal source when bypassing FEE [RUN_FROM_EXTERNAL_CLOCK] {87}
     09.12.2016 Add PWT                                                   {88}
     26.01.2017 Add external clock source selection to timer interface    {89}
+    31.01.2017 Add fnClearPending() and fnIsPending()                    {90}
 
 */
 
@@ -11928,10 +11929,13 @@ typedef struct stUSB_HW
         #define SMC_PMCTRL_RUNM_HSRUN 0x60                               // high speed run mode
       #endif
       #define SMC_PMCTRL_LPWUI        0x80                               // (not KL) the system exits from VLP mode (VLPR, VLPW or VLPS) on an interrupt
-    #if defined KINETIS_KL
+    #if defined KINETIS_KL || defined KINETIS_K22
         #define SMC_STOPCTRL     *(unsigned char *)(SMC_BASE_ADD + 0x2)  // Stop Control Register
           #define SMC_STOPCTRL_VLLSM_VLLS0   0x00                        // VLLS mode control - VLLS0
           #define SMC_STOPCTRL_VLLSM_VLLS1   0x01                        // VLLS mode control - VLLS1
+        #if defined KINETIS_K22
+          #define SMC_STOPCTRL_VLLSM_VLLS2   0x02                        // VLLS mode control - VLLS2
+        #endif
           #define SMC_STOPCTRL_VLLSM_VLLS3   0x03                        // VLLS mode control - VLLS3
           #define SMC_STOPCTRL_PORPO         0x20                        // disable POR detect circuit in VLLS0 mode
           #define SMC_STOPCTRL_PSTOPO_STOP   0x00                        // partial stop option - normal stop mode
@@ -12031,7 +12035,18 @@ typedef struct stUSB_HW
 #if defined KINETIS_KE
     #define MAX_LP_MODES          STOP_MODE                              // lowest power mode for KE devices
 #else
-    #if defined KINETIS_KL27
+    #if defined KINETIS_K22
+        #define VLPR_MODE             3                                  // very low power run
+        #define VLPW_MODE             4                                  // very low power wait
+        #define VLPS_MODE             5                                  // very low power stop
+        #define LLS2_MODE             6                                  // low leakage stop 2
+        #define LLS3_MODE             7                                  // low leakage stop 2
+        #define VLLS0_MODE            8                                  // very low leakage stop 0
+        #define VLLS1_MODE            9                                  // very low leakage stop 1
+        #define VLLS2_MODE            10                                 // very low leakage stop 1
+        #define VLLS3_MODE            11                                 // very low leakage stop 3
+        #define LOW_LEAKAGE_MODES     LLS2_MODE
+    #elif defined KINETIS_KL27
         #define VLPR_MODE             3                                  // very low power run
         #define VLPW_MODE             4                                  // very low power wait
         #define VLPS_MODE             5                                  // very low power stop
@@ -14168,6 +14183,8 @@ typedef struct stPDB_SETUP                                               // {37}
 /************************************************************************************************/
 
 extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void (*InterruptFunc)(void)); // {34}
+extern void fnClearPending(int iInterruptID);                            // {90}
+extern int  fnIsPending(int iInterruptID);                               // {90}
 
 // Cortex M4 private registers
 //
@@ -14222,14 +14239,15 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void (*
 #define IRQ192_223_SPR              *( unsigned long*)(CORTEX_M4_BLOCK + 0x218)        // NVIC IRQ192..223 Set Pending Register
 #define IRQ224_239_SPR              *( unsigned long*)(CORTEX_M4_BLOCK + 0x21c)        // NVIC IRQ224..239 Set Pending Register
 
-#define IRQ0_31_CPR                 *( unsigned long*)(CORTEX_M4_BLOCK + 0x280)        // NVIC IRQ0..31    Clear Pending Register
-#define IRQ32_63_CPR                *( unsigned long*)(CORTEX_M4_BLOCK + 0x284)        // NVIC IRQ32..64   Clear Pending Register
-#define IRQ64_95_CPR                *( unsigned long*)(CORTEX_M4_BLOCK + 0x288)        // NVIC IRQ64..95   Clear Pending Register
-#define IRQ96_127_CPR               *( unsigned long*)(CORTEX_M4_BLOCK + 0x28c)        // NVIC IRQ96..127  Clear Pending Register
-#define IRQ128_159_CPR              *( unsigned long*)(CORTEX_M4_BLOCK + 0x290)        // NVIC IRQ128..159 Clear Pending Register
-#define IRQ160_191_CPR              *( unsigned long*)(CORTEX_M4_BLOCK + 0x294)        // NVIC IRQ160..191 Clear Pending Register
-#define IRQ192_223_CPR              *( unsigned long*)(CORTEX_M4_BLOCK + 0x298)        // NVIC IRQ192..223 Clear Pending Register
-#define IRQ224_239_CPR              *( unsigned long*)(CORTEX_M4_BLOCK + 0x29c)        // NVIC IRQ224..239 Clear Pending Register
+#define IRQ0_31_CPR_ADD             ( unsigned long*)(CORTEX_M4_BLOCK + 0x280)
+#define IRQ0_31_CPR                 *(volatile unsigned long*)(CORTEX_M4_BLOCK + 0x280)// NVIC IRQ0..31    Clear Pending Register
+#define IRQ32_63_CPR                *(volatile unsigned long*)(CORTEX_M4_BLOCK + 0x284)// NVIC IRQ32..64   Clear Pending Register
+#define IRQ64_95_CPR                *(volatile unsigned long*)(CORTEX_M4_BLOCK + 0x288)// NVIC IRQ64..95   Clear Pending Register
+#define IRQ96_127_CPR               *(volatile unsigned long*)(CORTEX_M4_BLOCK + 0x28c)// NVIC IRQ96..127  Clear Pending Register
+#define IRQ128_159_CPR              *(volatile unsigned long*)(CORTEX_M4_BLOCK + 0x290)// NVIC IRQ128..159 Clear Pending Register
+#define IRQ160_191_CPR              *(volatile unsigned long*)(CORTEX_M4_BLOCK + 0x294)// NVIC IRQ160..191 Clear Pending Register
+#define IRQ192_223_CPR              *(volatile unsigned long*)(CORTEX_M4_BLOCK + 0x298)// NVIC IRQ192..223 Clear Pending Register
+#define IRQ224_239_CPR              *(volatile unsigned long*)(CORTEX_M4_BLOCK + 0x29c)// NVIC IRQ224..239 Clear Pending Register
 
 #define IRQ0_31_ABR                 *(volatile unsigned long*)(CORTEX_M4_BLOCK + 0x300)// NVIC IRQ0..31    Active Bit Register (read only)
 #define IRQ32_63_ABR                *(volatile unsigned long*)(CORTEX_M4_BLOCK + 0x304)// NVIC IRQ32..64   Active Bit Register (read only)
