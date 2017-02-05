@@ -236,6 +236,13 @@ Fmt0=KINETIS_USB_BD-ulUSB_BDControl	4	0
 Fmt0=unsigned long[2]	4	0
 [watch_formats]
 Fmt0={W}1:ptUSB_BD->ulUSB_BDControl	4	0
+[Log file]
+LoggingEnabled=_ 0
+LogFile=_ ""
+Category=_ 0
+[TermIOLog]
+LoggingEnabled=_ 0
+LogFile=_ ""
 [Disassemble mode]
 mode=1
 [Breakpoints]
@@ -244,13 +251,6 @@ Bp1=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12\A
 Bp2=_ "STD_CODE" "0x00015CEE" 0 0 0 0 "" 0 "" 0
 Bp3=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12\Applications\uTaskerSerialBoot\usb_device_loader.c}.2709.40" 0 0 0 0 "" 0 "" 0
 Count=4
-[Log file]
-LoggingEnabled=_ 0
-LogFile=_ ""
-Category=_ 0
-[TermIOLog]
-LoggingEnabled=_ 0
-LogFile=_ ""
 [Aliases]
 Count=0
 SuppressDialog=0

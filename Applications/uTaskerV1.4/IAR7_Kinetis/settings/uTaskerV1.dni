@@ -1,5 +1,5 @@
 [DebugChecksum]
-Checksum=754881517
+Checksum=1311643745
 [DisAssemblyWindow]
 NumStates=_ 1
 State 1=_ 1
@@ -108,22 +108,22 @@ FREQ_LIGHTNING=_ "1"
 FREQ_OPENSDA=_ "0"
 RESET_DELAY=_ "0"
 PORT=_ "181"
-PORT_NAME_STRING=_ "7A630E63"
+PORT_NAME_STRING=_ "40B7DE09"
 interface_selection=_ "7"
 SHOWDIALOG=_ "1"
 TraceLink_MaxBufferSize=_ "1"
 [PE_STORED_DEVICES]
-device0=_ "NXP_KEx_S9KEAZN32M4"
-device1=_ "NXP_K2x_K22FN1M0M12"
-device2=_ "NXP_KL2x_KL26Z128M4"
-device3=_ "NXP_KL2x_KL27Z64M4"
-device4=_ "NXP_K6x_K64FN1M0M12"
+device0=_ "NXP_K2x_K22FN1M0M12"
+device1=_ "NXP_KL2x_KL26Z128M4"
+device2=_ "NXP_KL2x_KL27Z64M4"
+device3=_ "NXP_K6x_K64FN1M0M12"
+device4=_ "NXP_K2x_K22FN512M12"
 [PE_PEDEBUG]
-CURRENTDEVICE=_ "NXP_K6x_K64FN1M0M12"
+CURRENTDEVICE=_ "NXP_K2x_K22FN512M12"
 ERASE_PROGRAM_WITHOUT_ASKING=_ "1"
 CURRENTMODE=_ "4"
 [PE_DEVICE]
-CHIPMODE=_ "NXP_K6x_K64FN1M0M12"
+CHIPMODE=_ "NXP_K2x_K22FN512M12"
 [PE_SETTINGS]
 MEMORYSTART1=_ "0"
 MEMORYSTART2=_ "0"
@@ -193,13 +193,13 @@ Fmt4=unsigned long[32]	4	0
 Fmt5=unsigned long[4]	4	0
 [watch_formats]
 Fmt0={W}0:ulBlockWriteLength	4	0
+[TermIOLog]
+LoggingEnabled=_ 0
+LogFile=_ ""
 [Log file]
 LoggingEnabled=_ 0
 LogFile=_ ""
 Category=_ 0
-[TermIOLog]
-LoggingEnabled=_ 0
-LogFile=_ ""
 [Disassemble mode]
 mode=3
 [Breakpoints]
