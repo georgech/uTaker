@@ -22,6 +22,7 @@
     22.11.2015 Move PIT power up to avoid the need to apply errate e7914 workaround {5}
     13.07.2016 Test workaround for potential race state that can cause a hard fault to occur when PIT interrupt disables module while it is being enabled by user code {6}
     22.01.2017 Enable PIT DMA support with SUPPORT_PIT_DMA_PORT_TOGGLE   {7}
+    03.02.2017 Check channel's interrupt flag before clearing it (KL)    {8}
 
 */
 
@@ -50,18 +51,20 @@ static unsigned char ucPITmodes = 0;                                     // PIT 
 static __interrupt void _PIT_Interrupt(void)
 {
     int iChannel = 0;
-    KINETIS_PIT_CTL *ptrCtl = (KINETIS_PIT_CTL *)PIT_CTL_ADD;            // set PIT control struture pointer to first PIT
+    KINETIS_PIT_CTL *ptrCtl = (KINETIS_PIT_CTL *)PIT_CTL_ADD;            // set PIT control structure pointer to first PIT
     do {
         if ((ptrCtl->PIT_TCTRL & (PIT_TCTRL_TIE | PIT_TCTRL_TEN)) == (PIT_TCTRL_TIE | PIT_TCTRL_TEN)) { // if the channel and its interrupt are enabled
-            WRITE_ONE_TO_CLEAR(ptrCtl->PIT_TFLG, PIT_TFLG_TIF);          // clear pending interrupts
-            if ((ucPITmodes & (PIT_PERIODIC << (iChannel * 2))) == 0) {  // if not periodic mode (single-shot usage)
-                fnDisablePIT(iChannel);                                  // stop PIT operation and power down when no other activity
-            }
-            uDisable_Interrupt();
-                pit_interrupt_handler[iChannel]();                       // call handling function
-            uEnable_Interrupt();
-            if (IS_POWERED_UP(6, SIM_SCGC6_PIT) == 0) {                  // if the PIT module has been powered down we return rather than checking further channels
-                return;
+            if ((ptrCtl->PIT_TFLG & PIT_TFLG_TIF) != 0) {                // {8} if this channel's interrupt has fired
+                WRITE_ONE_TO_CLEAR(ptrCtl->PIT_TFLG, PIT_TFLG_TIF);      // clear pending interrupts
+                if ((ucPITmodes & (PIT_PERIODIC << (iChannel * 2))) == 0) { // if not periodic mode (single-shot usage)
+                    fnDisablePIT(iChannel);                              // stop PIT operation and power down when no other activity
+                }
+                uDisable_Interrupt();
+                    pit_interrupt_handler[iChannel]();                   // call handling function
+                uEnable_Interrupt();
+                if (IS_POWERED_UP(6, SIM_SCGC6_PIT) == 0) {              // if the PIT module has been powered down we return rather than checking further channels
+                    return;
+                }
             }
         }
         ptrCtl++;                                                        // move to next PIT control structure
@@ -119,7 +122,7 @@ static void fnDisablePIT(int iPIT)
     uDisable_Interrupt();                                                // {2} protect the mode variable during modification
         ucPITmodes &= ~((PIT_SINGLE_SHOT | PIT_PERIODIC) << (iPIT * 2)); // clear the PIT's mode flags
     #if !defined PIT_TIMER_USED_BY_PERFORMANCE_MONITOR                   // don't power the PITs down if one is being used for performance monitoring
-        if (ucPITmodes == 0) {                                           // if not PITs are in use power down the PIT module
+        if (ucPITmodes == 0) {                                           // if no PITs are in use power down the PIT module
             POWER_UP(6, SIM_SCGC6_PIT);                                  // {2} ensure that the module is powered up for the next operation
             PIT_MCR = PIT_MCR_MDIS;                                      // disable clocks to module since no more timers are active
             POWER_DOWN(6, SIM_SCGC6_PIT);                                // power down the PIT module
