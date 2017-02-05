@@ -350,6 +350,9 @@ extern void fnLCD(TTASKTABLE *ptrTaskTable)                              // LCD 
                 if ((ucInputMessage[0] & TCS_CTRL_TOUCH_DETECT) != 0) {  // if pen is down
                     fnWrite(TouchPortID, (unsigned char *)ucGetTouchData, sizeof(ucGetTouchData)); // set the read address
                     fnRead(TouchPortID,  (unsigned char *)ucGetData, 0); // start the read process of the block of data
+     #if defined PEN_DOWN_ACTION
+                    PEN_DOWN_ACTION();                                   // user definable pen down action
+     #endif
                     fnDebugMsg("PEN DOWN\n\r");
                     iTouchState = TOUCH_POLLING;                         // we now poll to monitor movement
                     iPenDown = 1;                                        // pen state is down
