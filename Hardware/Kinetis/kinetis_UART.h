@@ -910,7 +910,7 @@ static __interrupt void _uart0_tx_dma_Interrupt(void)
     #endif
             #if defined UART_TIMED_TRANSMISSION                          // {208}
     if (ulInterCharTxDelay[0] != 0) {
-        fnStopTxTimer(0);                                                // start the periodic timer that controlled byte transmissions
+        fnStopTxTimer(0);                                                // stop the periodic timer that controlled byte transmissions
     }
         #endif
     #if defined SUPPORT_LOW_POWER                                        // {96}
@@ -944,7 +944,7 @@ static __interrupt void _uart1_tx_dma_Interrupt(void)
         #endif
         #if defined UART_TIMED_TRANSMISSION                              // {208}
     if (ulInterCharTxDelay[1] != 0) {
-        fnStopTxTimer(1);                                                // start the periodic timer that controlled byte transmissions
+        fnStopTxTimer(1);                                                // stop the periodic timer that controlled byte transmissions
     }
         #endif
         #if defined SUPPORT_LOW_POWER                                    // {96}
@@ -982,7 +982,7 @@ static __interrupt void _uart2_tx_dma_Interrupt(void)
         #endif
         #if defined UART_TIMED_TRANSMISSION                              // {208}
     if (ulInterCharTxDelay[2] != 0) {
-        fnStopTxTimer(2);                                                // start the periodic timer that controlled byte transmissions
+        fnStopTxTimer(2);                                                // stop the periodic timer that controlled byte transmissions
     }
         #endif
         #if defined SUPPORT_LOW_POWER                                    // {96}
@@ -1013,7 +1013,7 @@ static __interrupt void _uart3_tx_dma_Interrupt(void)
         #endif
         #if defined UART_TIMED_TRANSMISSION                              // {208}
     if (ulInterCharTxDelay[3] != 0) {
-        fnStopTxTimer(3);                                                // start the periodic timer that controlled byte transmissions
+        fnStopTxTimer(3);                                                // stop the periodic timer that controlled byte transmissions
     }
         #endif
         #if defined SUPPORT_LOW_POWER                                    // {96}
@@ -1130,8 +1130,8 @@ static void fnStopTxTimer(int Channel)
     PIT_SETUP pit_setup;                                                 // interrupt configuration parameters
     pit_setup.int_type = PIT_INTERRUPT;
     pit_setup.mode = (PIT_STOP);                                         // stop the timer
-    pit_setup.ucPIT = (unsigned char)Channel;                            // use PIT equal to the channel number
-    fnConfigureInterrupt((void *)&pit_setup);                            // configure and start PIT
+    pit_setup.ucPIT = (unsigned char)Channel;                            // the PIT channel equal to the channel number
+    fnConfigureInterrupt((void *)&pit_setup);                            // stop PIT
 }
 #endif
 
