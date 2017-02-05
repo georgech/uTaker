@@ -14,8 +14,7 @@
     Copyright (C) M.J.Butcher Consulting 2004..2017
     *********************************************************************/
 
-
-// Work in progress - ports A and E have been completed for K82
+// Work in progress - ports A, B and E have been completed for K82
 
 #if PIN_COUNT == PIN_COUNT_100_PIN                                       // 100 pin LQFP
     #define _PIN_COUNT              1
@@ -33,7 +32,7 @@
 
 #define ALTERNATIVE_FUNCTIONS   7                                        // GPIO plus 7 possible peripheral/extra/system functions
 
-static const char *cPinNumber[PORTS_AVAILABLE + 1][PORT_WIDTH][2] = {
+static const char *cPinNumber[PORTS_AVAILABLE + 1][PORT_WIDTH][4] = {
     {
         //  144LQFP   100 LQFP   121XFBGA   121 WLCSP                    GPIO A
         {  "50",       "36",     "L7",       "J7",    },                 // PA0
@@ -232,7 +231,17 @@ static const char *cPinNumber[PORTS_AVAILABLE + 1][PORT_WIDTH][2] = {
         {  "-",       "-",       "-",       "-",   },                    //
         {  "-",       "-",       "-",       "-",   },                    //
         {  "-",       "-",       "-",       "-",   },                    //
-
+        {  "-",       "-",       "-",       "-",   },                    //
+        {  "-",       "-",       "-",       "-",   },                    //
+        {  "-",       "-",       "-",       "-",   },                    //
+        {  "-",       "-",       "-",       "-",   },                    //
+        {  "-",       "-",       "-",       "-",   },                    //
+        {  "-",       "-",       "-",       "-",   },                    //
+        {  "-",       "-",       "-",       "-",   },                    //
+        {  "-",       "-",       "-",       "-",   },                    //
+        {  "-",       "-",       "-",       "-",   },                    //
+        {  "-",       "-",       "-",       "-",   },                    //
+        {  "-",       "-",       "-",       "-",   },                    //
     }
 };
 
@@ -279,30 +288,30 @@ static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][8] = {
     },
     {
         // ALT 0           ALT 1    ALT2         ALT 3         ALT 4          ALT 5        ALT 6       ALT 7
-        {  "ADC0_SE8/TSI0_CH0","PTB0","I2C0_SCL","FTM1_CH0",   "MII_MDIO",    "-",         "FTM1_QD_PHA", "-"              }, // PORT B
-        {  "ADC0_SE9/TSI0_CH6","PTB1","I2C0_SDA","FTM1_CH1",   "MII_MCD",     "-",         "FTM1_QD_PHB", "-"              },
-        {  "ADC0_SE12/TSI0_CH7","PTB2","I2C0_SCL","UART0_RTS_b","ENET_1588_TMR0","-",      "FTM0_FLT3","-"                 },
-        {  "ADC0_SE13/TSI0_CH8","PTB3","I2C0_SDA","UART0_CTS_b/UART0_COL_b","ENET_1588_TMR1","-","FTM0_FLT0","-"           },
-        {  "ADC1_SE10",    "PTB4",  "GLCD_CONTRAST","-",       "ENET_1588_TMR2","-",       "FTM1_FLT0","-"                 },
-        {  "ADC1_SE11",    "PTB5",  "-",         "-",          "ENET_1588_TMR3","-",       "FTM2_FLT0","-"                 },
-        {  "ADC1_SE12",    "PTB6",  "-",         "-",          "-",           "FB_AD23",   "-",        "-"                 },
-        {  "ADC1_SE13",    "PTB7",  "-",         "-",          "-",           "FB_AD22",   "-",        "-"                 },
-        {  "-",            "PTB8",  "-",         "UART3_RTS_b","-",           "FB_AD21",   "-",        "-"                 },
-        {  "-",            "PTB9",  "SPI1_PCS1", "UART3_CTS_b","-",           "FB_AD20",   "-",        "-"                 },
-        {  "ADC1_SE14",    "PTB10", "SPI1_PCS0", "UART3_RX",   "I2S1_TX_BCLK","FB_AD19",   "FTM0_FLT1","-"                 },
-        {  "ADC1_SE15",    "PTB11", "SPI1_SCK",  "UART3_TX",   "I2S1_TX_FS",  "FB_AD18",   "FTM0_FLT2","-"                 },
+        {  "ADC0_SE8/TSI0_CH0","PTB0/LLWU_P5","I2C0_SCL","FTM1_CH0","-",      "SDRAM_CAS_b","FTM1_QD_PHA/TPM1_CH0","FXIO0_D0" }, // PORT B
+        {  "ADC0_SE9/TSI0_CH6","PTB1","I2C0_SDA","FTM1_CH1",   "-",           "SDRAM_RAS_b","FTM1_QD_PHB/TPM1_CH1","FXIO0_D1" },
+        {  "ADC0_SE12/TSI0_CH7","PTB2","I2C0_SCL","LPUART0_RTS_b","-",        "SDRAM_WE",  "FTM0_FLT3","FXIO0_D2"          },
+        {  "ADC0_SE13/TSI0_CH8","PTB3","I2C0_SDA","LPUART0_CTS_b","-",        "SDRAM_CS0_b","FTM0_FLT0","FXIO_D3"          },
+        {  "-",            "PTB4",  "EMVSIM1_IO","-",          "-",           "SDRAM_CS1_b","FTM1_FLT0","-"                },
+        {  "-",            "PTB5",  "EMVSIM1_CLK","-",         "-",           "-",         "FTM2_FLT0","-"                 },
+        {  "-",            "PTB6",  "EMVSIM1_VCCEN","-",       "-",           "FB_AD23/SDRAM_D23","-", "-"                 },
+        {  "-",            "PTB7",  "EMVSIM1_PD","-",          "-",           "FB_AD22/SDRAM_D22","-", "-"                 },
+        {  "-",            "PTB8",  "EMVSIM1_RST","LPUART3_RTS_b","-",        "FB_AD21/SDRAM_D21","-", "-"                 },
+        {  "-",            "PTB9",  "SPI1_PCS1", "LPUART3_CTS_b","-",         "FB_AD20/SDRAM_D20","-", "-"                 },
+        {  "-",            "PTB10", "SPI1_PCS0", "LPUART3_RX", "I2C2_SCL",    "FB_AD19/SDRAM_D19","FTM0_FLT1","FXIO0_D4"   },
+        {  "-",            "PTB11", "SPI1_SCK",  "LPUART3_TX", "I2C2_SDA",    "FB_AD18/SDRAM_D18","FTM0_FLT2","FXIO0_D5"   },
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "TSI0_CH9",     "PTB16", "SPI1_SOUT", "UART0_RX",   "I2S1_TXD0",    "FB_AD17",   "EWM_IN",   "-"                },
-        {  "TSI0_CH10",    "PTB17", "SPI1_SIN",  "UART0_TX",   "I2S1_TXD1",    "FB_AD16",   "EWM_OUT_b","-"                },
-        {  "TSI0_CH11",    "PTB18", "CAN0_TX",   "FTM2_CH0",   "I2S0_TX_BCLK", "FB_AD15",   "FTM2_QD_PHA","-"              },
-        {  "TSI0_CH12",    "PTB19", "CAN0_RX",   "FTM2_CH1",   "I2S0_TX_FS",   "FB_OE_b",   "FTM2_QD_PHB","-"              },
-        {  "ADC2_SE4a",    "PTB20", "SPI2_PCS0", "-",          "-",            "FB_AD31/NFC_DATA15","CMP0_OUT","-"         },
-        {  "ADC2_SE5a",    "PTB21", "SPI2_SCK",  "-",          "-",            "FB_AD30/NFC_DATA14","CMP1_OUT","-"         },
-        {  "-",            "PTB22", "SPI2_SOUT", "-",          "-",            "FB_AD29/NFC_DATA13","CMP2_OUT","-"         },
-        {  "-",            "PTB23", "SPI2_SIN",  "SPI0_PCS5",  "-",            "FB_AD28/NFC_DATA12","CMP3_OUT","-"         },
+        {  "TSI0_CH9",     "PTB16", "SPI1_SOUT", "LPUART0_RX", "FTM_CLKIN0",  "FB_AD17/SDRAM_D17","EWM_IN","TPM_CLKIN0"    },
+        {  "TSI0_CH10",    "PTB17", "SPI1_SIN",  "LPUART0_TX", "FTM_CLKIN1",  "FB_AD16/SDRAM_D16","EWM_OUT_b","TPM_CLKIN1" },
+        {  "TSI0_CH11",    "PTB18", "-",         "FTM2_CH0",   "I2S0_TX_BCLK","FB_AD15/SDRAM_A23","FTM2_QD_PHA/TPM2_CH0","FXIO0_D6" },
+        {  "TSI0_CH12",    "PTB19", "-",         "FTM2_CH1",   "I2S0_TX_FS",  "FB_OE_b",   "FTM2_QD_PHB/TPM2_CH1","FXIO0_D7" },
+        {  "-",            "PTB20", "SPI2_PCS0", "-",          "-",           "FB_AD31/SDRAM_D31","CMP0_OUT","FXIO0_D8"    },
+        {  "-",            "PTB21", "SPI2_SCK",  "-",          "-",           "FB_AD30/SDRAM_D30","CMP1_OUT","FXIO0_D9"    },
+        {  "-",            "PTB22", "SPI2_SOUT", "-",          "-",           "FB_AD29/SDRAM_D29","-","FXIO0_D10"          },
+        {  "-",            "PTB23", "SPI2_SIN",  "SPI0_PCS5",  "-",           "FB_AD28/SDRAM_D28","-","FXIO0_D11"          },
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
