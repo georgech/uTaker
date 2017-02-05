@@ -501,7 +501,7 @@
         #define FLEX_CLOCK_DIVIDE    2                                   // 120/2 to give 60MHz
         #define FLASH_CLOCK_DIVIDE   5                                   // 120/5 to give 24MHz
     #endif
-  //#define USB_CRYSTAL_LESS                                             // use 48MHz IRC as USB source (according to Freescale AN4905 - only possible in device mode)
+    #define USB_CRYSTAL_LESS                                             // use 48MHz IRC as USB source (according to Freescale AN4905 - only possible in device mode)
     #define USB_CLOCK_GENERATED_INTERNALLY                               // use USB clock from internal source rather than external pin - 120MHz is suitable
 #else                                                                    // TWR_K40X256 and TWR_K40D100M
     #define CRYSTAL_FREQUENCY    8000000                                 // 8 MHz crystal
@@ -538,7 +538,7 @@
     #define SIZE_OF_FLASH       (512 * 1024)                             // 512k FLASH
     #define SIZE_OF_RAM         (128 * 1024)                             // 128k SRAM
 #elif defined BLAZE_K22
-    #define MASK_0N50M                                                   // mask relevant to this this device
+    #define MASK_0N50M                                                   // mask relevant to this device
     #define PIN_COUNT           PIN_COUNT_64_PIN                         // 64 LQFP pin package
     #define PACKAGE_TYPE        PACKAGE_LQFP
     #define SIZE_OF_FLASH       (1024 * 1024)                            // 1M FLASH
@@ -1539,6 +1539,8 @@
     #define TC_INT_PRIORTY          PRIORITY_PORT_B_INT                  // touch screen interrupt priority level
     #define TC_INT_PORT             PORTB                                // the port that the touch screen interrupt input is on
     #define TC_INT_PORT_BIT         TSI_INTERRUPT_LINE                   // the touch screen interrupt input
+
+    #define PEN_DOWN_ACTION()       fnInterruptMessage(TASK_APPLICATION, USER_FORCE_LOADER) // if the touch screen is tapped before the application starts the USB loader will be activated
 
     #define BUTTON_KEY_DEFINITIONS  {_PORTA, EXT_IO0, {544,   4, 633,  30}}, \
                                     {_PORTA, EXT_IO1, {544,  39, 633,  69}}, \

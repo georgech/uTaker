@@ -139,9 +139,9 @@ extern void fnDoLowPower(void)
     }
     #endif
     #if !defined _WINDOWS
-    TOGGLE_TEST_OUTPUT();
+  //TOGGLE_TEST_OUTPUT();
     __sleep_mode();                                                      // enter low power mode using wait for interrupt processor state
-    TOGGLE_TEST_OUTPUT();
+  //TOGGLE_TEST_OUTPUT();
     #endif
     // The processor will continue after being woken by any pending interrupt (also when the global interrupt mask is still set)
     // - this mean that the processor has woken again when the code execution reaches this location
@@ -229,9 +229,9 @@ extern void fnDoLowPower(void)
     }
         #endif
     #endif
-    TOGGLE_TEST_OUTPUT();
+  //TOGGLE_TEST_OUTPUT();
     uEnable_Interrupt();                                                 // enable interrupts so that the masked interrupt that became pending can be taken
-    TOGGLE_TEST_OUTPUT();
+  //TOGGLE_TEST_OUTPUT();
 }
 
 static int fnPresentLP_mode(void)

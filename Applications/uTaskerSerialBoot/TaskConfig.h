@@ -158,7 +158,11 @@ const UTASKTABLEINIT ctTaskTable[] = {
     { "Host",      fnTaskUSB_host, SMALL_QUEUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP}, // USB host (application) task (started by the SD loader task when required)
     #endif
     #if !defined USB_MSD_HOST_LOADER || defined USB_MSD_DEVICE_LOADER
+        #if defined BLAZE_K22
+    { "usb",       fnTaskUSB,      SMALL_QUEUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP }, // USB (application) task is only started if commanded
+        #else
     { "usb",       fnTaskUSB,      SMALL_QUEUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_ACTIVATE}, // USB (application) task
+        #endif
     #endif
 #endif
 #if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined USB_MSD_HOST_LOADER // {2}

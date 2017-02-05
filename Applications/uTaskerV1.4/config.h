@@ -102,9 +102,9 @@
 //#define K20FX512_120                                                   // development board with 120MHz K20
 //#define TWR_K21D50M                                                    // tower board http://www.utasker.com/kinetis/TWR-K21D50M.html
 //#define TWR_K21F120M                                                   // tower board http://www.utasker.com/kinetis/TWR-K21F120M.html
-#define FRDM_K22F                                                        // freedom board http://www.utasker.com/kinetis/FRDM-K22F.html
+//#define FRDM_K22F                                                      // freedom board http://www.utasker.com/kinetis/FRDM-K22F.html
 //#define TWR_K22F120M                                                   // tower board http://www.utasker.com/kinetis/TWR-K22F120M.html
-//#define BLAZE_K22                                                      // K22FN1M0 with 1.6" color display and touch http://www.utasker.com/kinetis/BLAZE_K22.html
+#define BLAZE_K22                                                        // K22FN1M0 with 1.6" color display and touch http://www.utasker.com/kinetis/BLAZE_K22.html
 //#define TWR_K24F120M                                                   // tower board http://www.utasker.com/kinetis/TWR-K24F120M.html
 
 //#define KWIKSTIK                                                       // K processors Cortex M4 with USB and segment LCD http://www.utasker.com/kinetis/KWIKSTIK.html
@@ -493,7 +493,7 @@
     #define DEVICE_WITHOUT_ETHERNET                                      // K20 doesn't have Ethernet controller
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((24 * 1024) * MEM_FACTOR)
     #define I2C_INTERFACE                                                // enable I2C driver for touch screen interface
-  //#define BLAZE_DIGITAL_WATCH
+    #define BLAZE_DIGITAL_WATCH
 #elif defined TWR_K24F120M
     #define TARGET_HW            "TWR-K24F120M"
     #define KINETIS_K_FPU                                                // part with floating point unit
@@ -907,7 +907,7 @@
 #if defined DEVICE_WITHOUT_USB
     #define NUMBER_USB     0                                             // no physical queue needed
 #else
-  //#define USB_INTERFACE                                                // enable USB driver interface
+    #define USB_INTERFACE                                                // enable USB driver interface
     #if defined USB_INTERFACE
       //#define MICROSOFT_OS_STRING_DESCRIPTOR                           // support MODs
       //#define USB_HOST_SUPPORT                                         // host rather than device
@@ -1074,6 +1074,8 @@
             #define SIM_HW_PORT_NUMBER  1234                             // port number used by out HW simulator
         #define SIM_KOMODO                                               // use Komodo as simulator CAN extension
             #define KOMODO_USB_PORT 1                                    // use this USB port (0 or 1) - any additional monitor program sharing the Komodo can use the other port
+    #else
+        #define NUMBER_CAN   0                                           // no physical queue needed
     #endif
 #else
     #define NUMBER_CAN   0                                               // no physical queue needed

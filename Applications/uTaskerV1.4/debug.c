@@ -107,7 +107,7 @@
     23.11.2015 Add USB host CDC virtual COM connection                   {82}
     17.01.2015 Add file hide and write-protect commands                  {83}
     12.12.2016 Add CMSIS CFFT and AES                                    {84}
-    02.02.2017 Add low power cycling control                             {84} - see video https://youtu.be/v4UnfcDiaE4
+    02.02.2017 Add low power cycling control                             {85} - see video https://youtu.be/v4UnfcDiaE4
 
 */
 
@@ -643,7 +643,7 @@ static const DEBUG_COMMAND tMainCommand[] = {
     {"9",                 "FTP/TELNET client commands",            DO_HELP,          DO_MENU_HELP_FTP_TELNET }, // {37}
     {"a",                 "CAN commands",                          DO_HELP,          DO_MENU_HELP_CAN }, // {38}
 #if defined CMSIS_DSP_CFFT || defined CRYPTOGRAPHY                       // {84}
-    {"b",                  "Advanced commands",                    DO_HELP,          DO_MENU_HELP_ADVANCED },
+    {"b",                 "Advanced commands",                     DO_HELP,          DO_MENU_HELP_ADVANCED },
 #endif
     {"help",              "Display menu specific help",            DO_HELP,          DO_MAIN_HELP },
     {"quit",              "Leave command mode",                    DO_TELNET,        DO_TELNET_QUIT },
@@ -3660,6 +3660,8 @@ static void fnTestFFT(int iLength)
 }
 #endif
 
+
+
 static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
 {
 #if defined MEMORY_DEBUGGER && defined _WINDOWS
@@ -3805,17 +3807,10 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
               typedef struct stALIGNED_BUFFER
               {
                   unsigned long  ulAlignedLongWord;                      // unused long word to ensure following data alignment
-                  unsigned char  ucData[256/8 + 32];
+                  unsigned char  ucData[256/8];
               } ALIGNED_BUFFER;
-           // static const ALIGNED_BUFFER encryption_key = { 0, { 0x60,0x3d,0xeb,0x10,0x15,0xca,0x71,0xbe,0x2b,0x73,0xae,0xf0,0x85,0x7d,0x77,0x81,0x1f,0x35,0x2c,0x07,0x3b,0x61,0x08,0xd7,0x2d,0x98,0x10,0xa3,0x09,0x14,0xdf,0xf4 } };
-           // static const ALIGNED_BUFFER plaintext = { 0, { 0x60,0x3d,0xeb,0x10,0x15,0xca,0x71,0xbe,0x2b,0x73,0xae,0xf0,0x85,0x7d,0x77,0x81,0x1f,0x35,0x2c,0x07,0x3b,0x61,0x08,0xd7,0x2d,0x98,0x10,0xa3,0x09,0x14,0xdf,0xf4 } };
-
-
-              static const ALIGNED_BUFFER encryption_key = { 0, { 0x63, 0x68 , 0x69 , 0x63 , 0x6B , 0x65 , 0x6E , 0x20 , 0x74 , 0x65 , 0x72, 0x69 , 0x79 , 0x61 , 0x6B , 0x69 , 0x2C , 0x20 , 0x69 , 0x73 , 0x20 , 0x76 , 0x65 , 0x72 , 0x79 , 0x20 , 0x79 , 0x75 , 0x6D , 0x6D , 0x79 , 0x21 } };
-              static const ALIGNED_BUFFER plaintext = { 0, "I would like the General Gau's Chicken," };
-
-
-
+              static const ALIGNED_BUFFER encryption_key = { 0, { 0x60,0x3d,0xeb,0x10,0x15,0xca,0x71,0xbe,0x2b,0x73,0xae,0xf0,0x85,0x7d,0x77,0x81,0x1f,0x35,0x2c,0x07,0x3b,0x61,0x08,0xd7,0x2d,0x98,0x10,0xa3,0x09,0x14,0xdf,0xf4 } };
+              static const ALIGNED_BUFFER plaintext = { 0, { 0x60,0x3d,0xeb,0x10,0x15,0xca,0x71,0xbe,0x2b,0x73,0xae,0xf0,0x85,0x7d,0x77,0x81,0x1f,0x35,0x2c,0x07,0x3b,0x61,0x08,0xd7,0x2d,0x98,0x10,0xa3,0x09,0x14,0xdf,0xf4 } };
               ALIGNED_BUFFER ciphertext = {0};
               ALIGNED_BUFFER recovered = {0};
               int i;
@@ -3849,9 +3844,12 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
               fnDebugMsg("AES");
               fnDebugDec(iKeyLength, 0);
               if (uMemcmp(plaintext.ucData, recovered.ucData, sizeof(recovered.ucData)) == 0) {
+                  TOGGLE_TEST_OUTPUT();
                   fnDebugMsg(" passed\n\r");
+                  TOGGLE_TEST_OUTPUT();
               }
               else {
+                  TOGGLE_TEST_OUTPUT();
                   fnDebugMsg(" failed\n\r");
               }
           }

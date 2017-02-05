@@ -22,8 +22,9 @@ C_FLAGS = -mcpu=cortex-m4 -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototy
 #
 OBJS = Build/serial_loader.o Build/usb_device_loader.o Build/disk_loader.o Build/usb_host_loader.o Build/usb_application.o Build/webInterface.o \
        Build/mass_storage.o \
+       Build/GLCD.o \
        Build/kinetis.o \
-       Build/eth_drv.o Build/Driver.o Build/uMalloc.o Build/uTasker.o Build/Tty_drv.o Build/USB_drv.o Build/uFile.o Build/Watchdog.o \
+       Build/eth_drv.o Build/Driver.o Build/uMalloc.o Build/uTasker.o Build/Tty_drv.o Build/i2c_drv.o Build/USB_drv.o Build/uFile.o Build/Watchdog.o \
 	   Build/Ethernet.o Build/arp.o Build/ip.o Build/tftp.o Build/udp.o Build/tcp.o Build/http.o Build/dhcp.o Build/ip_utils.o Build/webutils.o Build/icmp.o
 
 
@@ -32,6 +33,7 @@ OBJS = Build/serial_loader.o Build/usb_device_loader.o Build/disk_loader.o Build
 #
 DEPENDS = ../config.h ../app_hw_kinetis.h ../Loader.h ../types.h ../TaskConfig.h ../../../uTasker/driver.h  ../../../uTasker/uTasker.h \
        ../../../uTasker/utFAT/mass_storage.h \
+       ../../../uTasker/uGLCDLIB/glcd.h \
 	   ../../../stack/tcpip.h \
        ../../../Hardware/hardware.h ../../../Hardware/Kinetis/kinetis.h
 
@@ -122,6 +124,9 @@ Build/uMalloc.o: ../../../uTasker/uMalloc.c $(DEPENDS)
 Build/Tty_drv.o: ../../../uTasker/Tty_drv.c $(DEPENDS)
 		$(CC) $(C_FLAGS) -I../../uTaskerSerialBoot $(OPTS) ../../../uTasker/Tty_drv.c -o Build/Tty_drv.o
 
+Build/i2c_drv.o: ../../../uTasker/i2c_drv.c $(DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../uTasker/i2c_drv.c -o Build/i2c_drv.o
+
 Build/USB_drv.o: ../../../uTasker/USB_drv.c $(DEPENDS)
 		$(CC) $(C_FLAGS) -I../../uTaskerSerialBoot $(OPTS) ../../../uTasker/USB_drv.c -o Build/USB_drv.o
 
@@ -171,6 +176,11 @@ Build/tcp.o: ../../../stack/tcp.c $(DEPENDS)
 Build/webutils.o: ../../../stack/webutils.c $(DEPENDS)
 		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../stack/webutils.c -o Build/webutils.o
 
+# uGLCDLIB files
+#
+Build/GLCD.o: ../../../uTasker/uGLCDLIB/GLCD.c $(DEPENDS) ../../../uTasker/uGLCDLIB/glcd_fonts.h ../../../uTasker/uGLCDLIB/glcd_samsung.h ../../../uTasker/uGLCDLIB/glcd_toshiba.h ../../../uTasker/uGLCDLIB/glcd_oled.h ../../../uTasker/uGLCDLIB/glcd_cglcd.h ../../../uTasker/uGLCDLIB/glcd_st7565s.h ../../../uTasker/uGLCDLIB/glcd_tft.h
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../uTasker/uGLCDLIB/GLCD.c -o Build/GLCD.o
+
 
 # utFAT files
 #
@@ -178,12 +188,11 @@ Build/mass_storage.o: ../../../uTasker/utFAT/mass_storage.c $(DEPENDS)
 		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../uTasker/utFAT/mass_storage.c -o Build/mass_storage.o
 
 
-
 # Link
 # Create output files and show program size
 #
 uTaskerSerialBoot.elf: $(OBJS) K_1M_256.ld K_256_256.ld K_1M_128.ld K_512_64.ld K_256_64.ld K_128_16.ld KW_512_64.ld KW_256_32.ld KL_256_32.ld KL_128_16.ld KL_64_8.ld KL_32_4.ld KL_32_2.ld KV_32_8.ld KV_512_96.ld KE_128_16.ld KE_64_4.ld KE_8_1.ld KEA_128_16.ld KEA_64_4.ld
-	$(CC) $(C_FLAGS) -Os -g -TK_1M_256.ld -nostartfiles -Xlinker --gc-sections -Wl,-Map,"uTaskerSerialBoot.map" -o "uTaskerSerialBoot.elf" $(OBJS)
+	$(CC) $(C_FLAGS) -Os -g -TK_1M_128.ld -nostartfiles -Xlinker --gc-sections -Wl,-Map,"uTaskerSerialBoot.map" -o "uTaskerSerialBoot.elf" $(OBJS)
 	$(CC_OBJ) --output-target=srec uTaskerSerialBoot.elf uTaskerSerialBoot.s19
 	$(CC_OBJ) --output-target=ihex uTaskerSerialBoot.elf uTaskerSerialBoot.hex
 	$(CC_OBJ) --only-section=.data --only-section=.init --only-section=.text --only-section=.rodata --only-section=.vectors --only-section=.f_config --output-target=binary uTaskerSerialBoot.elf uTaskerSerialBoot.bin

@@ -2350,6 +2350,12 @@
   <group>
     <name>uTasker</name>
     <group>
+      <name>uGLCDLIB</name>
+      <file>
+        <name>$PROJ_DIR$\..\..\..\uTasker\uGLCDLIB\GLCD.c</name>
+      </file>
+    </group>
+    <group>
       <name>utFAT</name>
       <file>
         <name>$PROJ_DIR$\..\..\..\uTasker\utFAT\mass_storage.c</name>
@@ -2363,6 +2369,9 @@
     </file>
     <file>
       <name>$PROJ_DIR$\..\..\..\uTasker\eth_drv.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\..\uTasker\i2c_drv.c</name>
     </file>
     <file>
       <name>$PROJ_DIR$\..\..\..\uTasker\Tty_drv.c</name>

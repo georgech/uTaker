@@ -89,7 +89,7 @@
         </option>
         <option>
           <name>OGChipSelectEditMenu</name>
-          <state>MK64FN1M0xxx12	NXP MK64FN1M0xxx12</state>
+          <state>MK22FN1M0xxx12	NXP MK22FN1M0xxx12</state>
         </option>
         <option>
           <name>GenLowLevelInterface</name>
@@ -149,7 +149,7 @@
         </option>
         <option>
           <name>GFPUDeviceSlave</name>
-          <state>MK64FN1M0xxx12	NXP MK64FN1M0xxx12</state>
+          <state>MK22FN1M0xxx12	NXP MK22FN1M0xxx12</state>
         </option>
         <option>
           <name>FPU2</name>
@@ -727,7 +727,7 @@
         </option>
         <option>
           <name>IlinkIcfFile</name>
-          <state>$PROJ_DIR$\settings\K_1M_256.icf</state>
+          <state>$PROJ_DIR$\settings\K_1M_128.icf</state>
         </option>
         <option>
           <name>IlinkIcfFileSlave</name>
@@ -1960,6 +1960,12 @@
   <group>
     <name>uTasker</name>
     <group>
+      <name>uGLCDLIB</name>
+      <file>
+        <name>$PROJ_DIR$\..\..\..\uTasker\uGLCDLIB\GLCD.c</name>
+      </file>
+    </group>
+    <group>
       <name>utFAT</name>
       <file>
         <name>$PROJ_DIR$\..\..\..\uTasker\utFAT\mass_storage.c</name>
@@ -1973,6 +1979,9 @@
     </file>
     <file>
       <name>$PROJ_DIR$\..\..\..\uTasker\eth_drv.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\..\uTasker\i2c_drv.c</name>
     </file>
     <file>
       <name>$PROJ_DIR$\..\..\..\uTasker\Tty_drv.c</name>

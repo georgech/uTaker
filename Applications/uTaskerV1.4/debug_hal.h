@@ -2241,6 +2241,7 @@ extern int fnVirtualWakeupInterruptHandler(int iDeepSleep)               // {13}
     if (iDeepSleep == 0) {
         return 0;                                                        // only loop in deep sleep modes (not wait based)
     }
+    #if defined FRDM_K22F
     if (fnIsPending(irq_UART1_ID) != 0) {                                // if there is a pending interrupt from the UART
         iLowPowerLoopMode = LOW_POWER_CYCLING_PAUSED;
         return 0;
@@ -2253,6 +2254,8 @@ extern int fnVirtualWakeupInterruptHandler(int iDeepSleep)               // {13}
         iLowPowerLoopMode = LOW_POWER_CYCLING_PAUSED;
         return 0;
     }
+    #endif
+    #if defined TICK_USES_LPTMR
     TOGGLE_TEST_OUTPUT();
     LPTMR0_CSR = LPTMR0_CSR;                                             // clear pending interrupt at LPTMR (wakeup source)
     WRITE_ONE_TO_CLEAR(*(volatile unsigned char *)(LLWU_FLAG_ADDRESS + 2), MODULE_LPTMR0); // reset the wakeup flag (write '1' to clear)
@@ -2263,6 +2266,7 @@ extern int fnVirtualWakeupInterruptHandler(int iDeepSleep)               // {13}
         iLowPowerLoopMode = LOW_POWER_CYCLING_ENABLED;
     }
     TOGGLE_TEST_OUTPUT();
+    #endif
     return 1;                                                            // stay in low power cycling mode
 }
     #endif

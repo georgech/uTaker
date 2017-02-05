@@ -151,7 +151,7 @@
             #define UTASKER_APP_START     (32 * 1024)                    // application starts at this address
         #endif
       //#define INTERMEDIATE_PROG_BUFFER  (8 * 1024)                     // when UART speed greater than 57600 Baud is used an intermediate buffer is recommended
-        #define UTASKER_APP_END           (unsigned char *)(UTASKER_APP_START + (256 * 1024)) // end of application space - after maximum application size
+        #define UTASKER_APP_END           (unsigned char *)(UTASKER_APP_START + (128 * 1024)) // end of application space - after maximum application size
     #endif
     #if !defined TEENSY_3_1 && !defined TEENSY_LC                        // warning: do not use mass erase with Teensy devices since their loader doesn't support the completely erased state and requires an external loader to recoved to the unsecured flash state
         #define MASS_ERASE                                               // support a mass-erase command. This is used together with a protected FLASH configuration.
@@ -325,6 +325,10 @@ extern void fnSetBacklight(void);
 #define E_LCD_SCROLL              10
 #define E_LCD_STYLE               11
 
+// Application interrupt events
+//
+#define USER_FORCE_LOADER         1
+
 // USB to mass storage
 //
 #define MOUNT_USB_MSD             1
@@ -364,6 +368,6 @@ typedef struct stKBOOT_PACKET
 } KBOOT_PACKET;
 
 extern int fnHandleKboot(QUEUE_HANDLE USBPortID_coms, int iInterfaceType, KBOOT_PACKET *ptrKBOOT_packet);
-  #define KBOOT_UART 0
-  #define KBOOT_HID  1
+    #define KBOOT_UART 0
+    #define KBOOT_HID  1
 

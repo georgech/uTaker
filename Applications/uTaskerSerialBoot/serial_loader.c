@@ -59,7 +59,7 @@
 /*                          local definitions                          */
 /* =================================================================== */
 
-#define OWN_TASK                   TASK_APPLICATION
+#define OWN_TASK                    TASK_APPLICATION
 
 #define STATE_INIT                  0x0000                               // task states
 #define STATE_ACTIVE                0x0001
@@ -193,6 +193,9 @@ typedef struct
         static unsigned char *fnBlankCheck(void);
         static void fnPrintScreen(void);
     #endif
+#endif
+#if defined BLAZE_K22
+    static void fnLoaderForced(int iNoFirmware);
 #endif
 
 /* =================================================================== */
@@ -332,6 +335,7 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
 #endif
 #if defined SUPPORT_GLCD
         uTaskerStateChange(TASK_LCD, UTASKER_ACTIVATE);                  // start LCD task
+        uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(3 * SEC), T_HOOKUP_TIMEOUT); // allow time for the user to force loader mode
 #endif
         iAppState = STATE_ACTIVE;                                        // move to the active state since initialisation has completed
     }
@@ -358,17 +362,21 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
                     fnDebugMsg("\x11*");                                 // start flow control again since block programming has completed
                 }
 #endif
-                else {                                                   // assumed - go to application (or hook-up timeout)
+                else {                                                   // assumed - go to application (or T_HOOKUP_TIMEOUT timeout)
                     fnJumpToValidApplication(1);                         // {25} if there is a valid application jump to it after disabling used peripherals
-                    iAppState = STATE_ACTIVE;
+                    iAppState = STATE_ACTIVE;                            // we return of there is no application
+#if defined BLAZE_K22
+                    fnLoaderForced(1);                                   // no firmware present so start loader
+#endif
 #if defined RX_UART_TO_HOLD_LOADER
                     fnPrintScreen();                                     // print screen to show that there is no application available
 #endif
                 }
             }
-#if defined USE_TFTP
+#if defined USE_TFTP || defined BLAZE_K22
             else if (INTERRUPT_EVENT == ucInputMessage[MSG_SOURCE_TASK]) {
                 switch (ucInputMessage[MSG_INTERRUPT_EVENT]) {
+    #if defined USE_TFTP
                 case DHCP_SUCCESSFUL:                                    // we can now use the network connection
                     fnTransferTFTP();
                     break;
@@ -376,6 +384,12 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
                 case DHCP_MISSING_SERVER:
                     fnStopDHCP();                                        // DHCP server is missing so stop and continue with backup address (if available)
                     break;
+    #endif
+    #if defined BLAZE_K22
+                case USER_FORCE_LOADER:
+                    fnLoaderForced(0);                                   // start loader since the user wants to use it
+                    break;
+    #endif
                 }
             }
 #endif
@@ -385,13 +399,14 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
                 if (E_LCD_INITIALISED == ucInputMessage[0]) {
                     GLCD_TEXT_POSITION text_pos;
                     text_pos.ucMode = PAINT_LIGHT;
-                    text_pos.usX = 2;
-                    text_pos.usY = 0;
-                    text_pos.ucFont = FONT_NINE_DOT;
-                    fnDoLCD_text(&text_pos, "Welcome to the");
+                    text_pos.usX = 10;
                     text_pos.usY = 20;
-                    text_pos.ucMode = (REDRAW);
+                    text_pos.ucFont = FONT_NINE_DOT;
                     fnDoLCD_text(&text_pos, "uTasker USB-MSD Loader");
+                    text_pos.usX = 40;
+                    text_pos.usY = 40;
+                    text_pos.ucMode = (REDRAW);
+                    fnDoLCD_text(&text_pos, "Tap to enter");
                 }
             }
 #endif
@@ -901,6 +916,25 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
     }
 #endif
 }
+
+#if defined BLAZE_K22
+static void fnLoaderForced(int iNoFirmware)
+{
+    GLCD_TEXT_POSITION text_pos;
+    uTaskerStopTimer(OWN_TASK);
+    uTaskerStateChange(TASK_USB, UTASKER_ACTIVATE);      // start the USB task to allow loading new code
+    text_pos.ucFont = FONT_NINE_DOT;
+    text_pos.usX = 40;
+    if (iNoFirmware != 0) {
+        text_pos.ucMode = (PAINT_LIGHT);
+        text_pos.usY = 120;
+        fnDoLCD_text(&text_pos, "No Firmware");
+    }
+    text_pos.ucMode = (PAINT_LIGHT | REDRAW);
+    text_pos.usY = 100;
+    fnDoLCD_text(&text_pos, "USB enabled");
+}
+#endif
 
 #if defined MEMORY_SWAP
 extern void fnHandleSwap(int iCheck)
@@ -1883,16 +1917,5 @@ extern void fnUserHWInit(void)
 #endif
 #if defined SUPPORT_GLCD
     CONFIGURE_GLCD();
-    #if defined BLAZE_K22_
-    if (IS_POWERED_UP(4, SIM_SCGC4_USBOTG) != 0) {                       // if the USB controller has been left powered up by the Blaze boot loader
-        USB_USBTRC0 |= USB_USBTRC0_USBRESET;                             // command a reset of the USB controller
-        while ((USB_USBTRC0 & USB_USBTRC0_USBRESET) != 0) {              // wait for the reset to complete
-            #if defined _WINDOWS
-            USB_USBTRC0 = 0;
-            #endif
-        }
-        POWER_DOWN(4, SIM_SCGC4_USBOTG);                                 // power down the USB controller
-     }
-    #endif
 #endif
 }

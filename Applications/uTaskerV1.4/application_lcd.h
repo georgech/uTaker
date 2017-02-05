@@ -248,7 +248,7 @@ extern void fnDoLCD_com_text(unsigned char ucType, unsigned char *ptrInput, unsi
             fnRead(PortIDInternal, ucInputMessage, ucInputMessage[MSG_CONTENT_LENGTH]); // read the complete message
             if (E_LCD_INITIALISED == ucInputMessage[0]) {                // the LCD initialisation has completed and use may start
     #if defined SUPPORT_GLCD
-        #if !(defined USE_USB_AUDIO && defined AUDIO_FFT && defined BLAZE_K22)
+        #if !(defined USE_USB_AUDIO && defined AUDIO_FFT && defined BLAZE_K22) && !defined BLAZE_DIGITAL_WATCH
                 GLCD_TEXT_POSITION text_pos;
         #endif
         #if defined SUPPORT_TOUCH_SCREEN && defined USE_PARAMETER_BLOCK && !defined TOUCH_FT6206 // only calibrate when it is possible to save parameters
@@ -657,13 +657,13 @@ extern void fnDoLCD_com_text(unsigned char ucType, unsigned char *ptrInput, unsi
                 CHAR cTimeDateBuf[20];
                 fnSetShowTime(DISPLAY_RTC_TIME, cTimeDateBuf);
                 text_pos.ucMode = PAINT_LIGHT;
-                text_pos.usX = 3;
-                text_pos.usY = 38;
+                text_pos.usX = 60;
+                text_pos.usY = 90;
                 text_pos.ucFont = FONT_EIGHTEEN_DOT;
                 text_pos.ucMode = (PAINT_LIGHT);
                 fnDoLCD_text(&text_pos, cTimeDateBuf);
-                text_pos.usX = 22;
-                text_pos.usY = 70;
+                text_pos.usX = 75;
+                text_pos.usY = 130;
                 fnSetShowTime(DISPLAY_RTC_DATE, cTimeDateBuf);
                 text_pos.ucFont = FONT_TEN_DOT;
                 text_pos.ucMode = (PAINT_LIGHT | REDRAW);

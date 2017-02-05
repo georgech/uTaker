@@ -301,6 +301,7 @@
 #define SW_EMPTY                           0
 #define SW_PROGRAMMING                     1
 #define SW_AVAILABLE                       2
+#define SW_UNKNOWN_DATA                    3
 
 #define TIMEOUT_RESET_NOW                  1
 #define TIMEOUT_ACCEPT_UPLOAD              2
@@ -2523,7 +2524,7 @@ static int _fnReadSector(unsigned char ucDisk, unsigned char *ptrBuffer, unsigne
                 break;
             }
     #endif
-            if (iSoftwareState[ucDisk] == SW_AVAILABLE) {                // if there is software loaded
+            if (iSoftwareState[ucDisk] >= SW_AVAILABLE) {                // if there is software loaded
     #if defined UTFAT12                                                  // {17} this setting became inverted and stopped read-back from operating correctly in FAT12 formatted mode
                 unsigned short *ptrCluster = (unsigned short *)ptr_utDisk->ptrSectorData;
         #if defined ENABLE_READBACK
@@ -2545,6 +2546,11 @@ static int _fnReadSector(unsigned char ucDisk, unsigned char *ptrBuffer, unsigne
                     ucOffset = 2;
                     usCluster = 4;                                       // first cluster
                     iAnswer = 1;
+            #if defined CHECK_VALID_FILE_OBJECT && !defined FAT_EMULATION
+                    if (iSoftwareState[ucDisk] == SW_UNKNOWN_DATA) {
+                        ulFileSize = (unsigned long)(UTASKER_APP_END - _UTASKER_APP_START_);
+                    }
+            #endif
                 }
                 while (ulFileSize >= (unsigned long)(BYTES_PER_SECTOR * ptr_utDisk->utFAT.ucSectorsPerCluster)) { // add single file cluster information
                     if (ptrCluster >= (unsigned short *)&ptr_utDisk->ptrSectorData[BYTES_PER_SECTOR]) {
@@ -2716,14 +2722,15 @@ static int fnCheckFileObject(DIR_ENTRY_STRUCTURE_FAT32 *ptrDir, int iSize)
                     ptrDir++;
                     dummyFile.ptrLastAddress = UTASKER_APP_END;          // maximum application size
                     fnSetObjectDetails(ptrDir, &dummyFile);
+                    ptrDir->DIR_FstClusLO[0] = (RESERVED_SECTION_COUNT + 1);
                     ptrDir->DIR_Attr = DIR_ATTR_ARCHIVE;                 // add an unknown file so that it can be deleted
-                    uMemcpy(ptrDir->DIR_Name, "Firmwarebin", 11);
+                    uMemcpy(ptrDir->DIR_Name, "Unknown bin", 11);        // we display a file so that it can be deleted before copying new code
                     break;
                 }
                 ptrDirCheck++;
                 i += sizeof(DIR_ENTRY_STRUCTURE_FAT32);
             }
-            return SW_AVAILABLE;
+            return SW_UNKNOWN_DATA;
         }
     }
     uMemset(ptrDir, 0, iSize);                                           // start with empty root directory
@@ -3155,7 +3162,7 @@ static int _fnWriteSector(unsigned char ucDisk, unsigned char *ptrBuffer, unsign
             uMemcpy((((unsigned char *)&root_file[ucDisk]) + BYTES_PER_SECTOR), ptrBuffer, BYTES_PER_SECTOR); // update the second root sector
         }
     #endif
-        if (iSoftwareState[ucDisk] == SW_AVAILABLE) {                    // check whether a delete has just been performed since software is already present
+        if (iSoftwareState[ucDisk] >= SW_AVAILABLE) {                    // check whether a delete has just been performed since software is already present
     #if defined FAT_EMULATION
             DIR_ENTRY_STRUCTURE_FAT32 *file_object = ptrDiskInfo[ucDisk]->rootBuffer;
     #else
@@ -3245,6 +3252,11 @@ static void fnDebugWrite(int iDisk, unsigned char *ptr_ucBuffer, unsigned long u
     case SW_PROGRAMMING:
         fnDebugMsg(" - programming");
         break;
+    #if defined CHECK_VALID_FILE_OBJECT && !defined FAT_EMULATION
+    case SW_UNKNOWN_DATA:
+        fnDebugMsg(" - trash exists");
+        break;
+    #endif
     case SW_AVAILABLE:
         fnDebugMsg(" - SW exists");
         break;
@@ -3285,8 +3297,8 @@ static void fnDebugWrite(int iDisk, unsigned char *ptr_ucBuffer, unsigned long u
 #define CREATION_SECONDS        0
 
 #define CREATION_DAY_OF_MONTH   5
-#define CREATION_MONTH_OF_YEAR  11
-#define CREATION_YEAR           (2015 - 1980)
+#define CREATION_MONTH_OF_YEAR  2
+#define CREATION_YEAR           (2017 - 1980)
 
 // This routine sets a time and data to a data file object - it uses a fixed time stamp if no date/time information is present
 //
@@ -3426,7 +3438,7 @@ extern int uDatacopy(int iDisk, int iDataRef, unsigned char *ptrSectorData, cons
 //
 static void fnPrepareEmulatedFAT(int iDisk)
 {
-    if (iSoftwareState[iDisk] == SW_AVAILABLE) {                         // only display a software file when firmware is available
+    if (iSoftwareState[iDisk] >= SW_AVAILABLE) {                         // only display a software file when firmware is available
         const LFN_ENTRY_STRUCTURE_FAT32 *ptrDirObject = (const LFN_ENTRY_STRUCTURE_FAT32 *)fnGetFlashAdd((unsigned char *)(ptr_fileobject_location[iDisk]));
     #if defined READ_PASSWORD
         dataFile[iDisk][0].ucFormatType = FORMAT_TYPE_RAW_BINARY_PROTECTED; // reads return zero content unless a password has been copied

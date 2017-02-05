@@ -35,7 +35,7 @@
 #define _NO_CHECK_QUEUE_INPUT                                            // code size optimisations
 #define _MINIMUM_IRQ_INITIALISATION
 
-#define _TICK_RESOLUTION     TICK_UNIT_MS(50000)                         // 50 ms system time period - max possible at 50MHz SYSTICK would be about 335ms !
+#define _TICK_RESOLUTION     TICK_UNIT_MS(50)                            // 50 ms system time period - max possible at 50MHz SYSTICK would be about 335ms !
 
 // Major hardware dependent settings for this project (choice of board - select only one at a time)
 //
@@ -86,7 +86,7 @@
 //#define TWR_K21F120M                                                   // tower board http://www.utasker.com/kinetis/TWR-K21F120M.html
 //#define FRDM_K22F                                                      // freedom board http://www.utasker.com/kinetis/FRDM-K22F.html
 //#define TWR_K22F120M                                                   // tower board http://www.utasker.com/kinetis/TWR-K22F120M.html
-//#define BLAZE_K22                                                      // K22FN1M0 with 1.6" color display and touch http://www.utasker.com/kinetis/BLAZE_K22.html
+#define BLAZE_K22                                                        // K22FN1M0 with 1.6" color display and touch http://www.utasker.com/kinetis/BLAZE_K22.html
 //#define TWR_K24F120M                                                   // tower board http://www.utasker.com/kinetis/TWR-K24F120M.html
 //#define K24FN1M0_120
 //#define K26FN2_180                                                     // development board with 180MHz K26F
@@ -104,7 +104,7 @@
 
 //#define EMCRAFT_K61F150M                                               // K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - http://www.utasker.com/kinetis/EMCRAFT_K61F150M.html
 
-#define FRDM_K64F                                                        // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
+//#define FRDM_K64F                                                      // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
 //#define TWR_K64F120M                                                   // tower board http://www.utasker.com/kinetis/TWR-K64F120M.html
 //#define TEENSY_3_5                                                     // USB development board with K64FX512 - http://www.utasker.com/kinetis/TEENSY_3.5.html
 //#define TWR_K65F180M                                                   // tower board http://www.utasker.com/kinetis/TWR-K65F180M.html
@@ -114,7 +114,7 @@
 //#define TWR_K70F120M                                                   // K processors Cortex M4 with graphical LCD, Ethernet, USB, encryption, tamper - tower board http://www.utasker.com/kinetis/TWR-K70F120M.html
 //#define K70F150M_12M                                                   // development board with 150MHz K70 and 12MHz crystal
 
-//#define FRDM_K82F                                                      // K processors Cortex M4 with USB, encryption, tamper (scalable and secure)
+//#define FRDM_K82F                                                      // K processors Cortex M4 with USB, encryption, tamper (scalable and secure) - freedom board http://www.utasker.com/kinetis/FRDM-K82F.html
 //#define TWR_POS_K81
 //#define TWR_K80F150M                                                   // tower board http://www.utasker.com/kinetis/TWR-K80F150M.html
 
@@ -695,8 +695,8 @@
     #define USB_INTERFACE                                                // enable USB driver interface
     #if defined USB_INTERFACE
       //#define USE_USB_CDC                                              // allow SREC/iHex loading via virtual COM
-      //#define USB_MSD_DEVICE_LOADER                                    // USB-MSD device mode (the board appears as a hardware to the host)
-        #define USB_MSD_HOST_LOADER                                      // USB-MSD host mode (the board operates as host and can read new code from a memory stick)
+        #define USB_MSD_DEVICE_LOADER                                    // USB-MSD device mode (the board appears as a hardware to the host)
+      //#define USB_MSD_HOST_LOADER                                      // USB-MSD host mode (the board operates as host and can read new code from a memory stick)
         #if defined USE_USB_CDC
             #undef SERIAL_INTERFACE                                      // remove the UART interface
             #define NUMBER_SERIAL          0

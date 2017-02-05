@@ -296,7 +296,7 @@
     #define OSC_LOW_GAIN_MODE
     #define CRYSTAL_FREQUENCY    12000000                                // 12 MHz crystal
     #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
-  //#define USE_HIGH_SPEED_RUN_MODE
+    #define USE_HIGH_SPEED_RUN_MODE
     #define CLOCK_DIV            1                                       // input must be divided to 8MHz..16MHz range (/1 to /8 for 150MHz parts)
     #if defined USE_HIGH_SPEED_RUN_MODE
         #define CLOCK_MUL            25                                  // the PLL multiplication factor to achieve operating frequency of 150MHz (x16 to x47 possible - divided by 2 at VCO output)
@@ -304,11 +304,11 @@
         #define FLASH_CLOCK_DIVIDE   6                                   // 150/6 to give 25MHz
     #else
         #define CLOCK_MUL            20                                  // the PLL multiplication factor to achieve operating frequency of 120MHz (x16 to x47 possible - divided by 2 at VCO output)
-        #define FLEX_CLOCK_DIVIDE    3                                   // 120/2 to give 60MHz
-        #define FLASH_CLOCK_DIVIDE   6                                   // 120/5 to give 24MHz
+        #define FLEX_CLOCK_DIVIDE    2                                   // 120/2 to give 60MHz
+        #define FLASH_CLOCK_DIVIDE   5                                   // 120/5 to give 24MHz
     #endif
     #define USB_CRYSTAL_LESS                                             // use 48MHz IRC as USB source (according to Freescale AN4905 - only possible in device mode)
-  //#define USB_CLOCK_GENERATED_INTERNALLY                               // use USB clock from internal source rather than external pin - 120MHz is suitable
+    #define USB_CLOCK_GENERATED_INTERNALLY                               // use USB clock from internal source rather than external pin - 120MHz is suitable
 #elif defined TWR_K60N512 || defined TWR_K60D100M || defined KINETIS_K52 || defined TWR_K53N512 || defined KINETIS_K61 || defined KINETIS_K70
         #define EXTERNAL_CLOCK       50000000                            // this must be 50MHz in order to use Ethernet in RMII mode
         #define _EXTERNAL_CLOCK      EXTERNAL_CLOCK
@@ -716,13 +716,13 @@
     #define SIZE_OF_FLASH       (1024 * 1024)                            // 1024k program Flash
     #define SIZE_OF_RAM         (128 * 1024)                             // 128k SRAM
 #elif defined FRDM_K22F
-    #define MASK_0N50M                                                   // mask relevant to this this device
+    #define MASK_0N50M                                                   // mask relevant to this device
     #define PIN_COUNT           PIN_COUNT_64_PIN                         // 64 LQFP pin package
     #define PACKAGE_TYPE        PACKAGE_LQFP
     #define SIZE_OF_FLASH       (512 * 1024)                             // 512k FLASH
     #define SIZE_OF_RAM         (128 * 1024)                             // 128k SRAM
 #elif defined BLAZE_K22
-    #define MASK_0N50M                                                   // mask relevant to this this device
+    #define MASK_0N50M                                                   // mask relevant to this device
     #define PIN_COUNT           PIN_COUNT_64_PIN                         // 64 LQFP pin package
     #define PACKAGE_TYPE        PACKAGE_LQFP
     #define SIZE_OF_FLASH       (1024 * 1024)                            // 1M FLASH
@@ -1313,9 +1313,9 @@
 #endif
 
 #if !defined KINETIS_KE
-    #define SUPPORT_LPTMR                                                // {28} support low power timer
+  //#define SUPPORT_LPTMR                                                // {28} support low power timer
     #if defined SUPPORT_LPTMR
-        #define TICK_USES_LPTMR                                          // use low power timer for TICK so that it continues to operate in stop based low power modes
+      //#define TICK_USES_LPTMR                                          // use low power timer for TICK so that it continues to operate in stop based low power modes
         //Select the clock used by the low power timer - if the timer if to continue running in low power modes the clock chosen should continue to run in that mode too
         //
       //#define LPTMR_CLOCK_LPO                                          // clock the low power timer from LPO (1kHz)
