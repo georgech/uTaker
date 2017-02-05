@@ -4722,9 +4722,9 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                     LPUART1_STAT |= LPUART_STAT_RDRF;                    // set interrupt cause
                     if ((LPUART1_CTRL & LPUART_CTRL_RIE) != 0) {
                                                                          // if reception interrupt is enabled
-        #if !defined KINETIS_KE && !defined KINETIS_KL03 && !defined KINETIS_KL43 // these don't support DMA
+            #if !defined KINETIS_KE && !defined KINETIS_KL03 && !defined KINETIS_KL43 // these don't support DMA
                         if ((LPUART1_BAUD & LPUART_BAUD_RDMAE) != 0) {   // if the UART is operating in DMA reception mode
-            #if defined SERIAL_SUPPORT_DMA && defined DMA_LPUART1_RX_CHANNEL
+                #if defined SERIAL_SUPPORT_DMA && defined DMA_LPUART1_RX_CHANNEL
                             if ((DMA_ERQ & (DMA_ERQ_ERQ0 << DMA_LPUART1_RX_CHANNEL)) != 0) { // if source enabled
                                 KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
                                 ptrDMA_TCD += DMA_LPUART1_RX_CHANNEL;
@@ -4732,17 +4732,119 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                                 fnSimulateDMA(DMA_LPUART1_RX_CHANNEL);   // trigger DMA transfer on the UART's channel
                                 LPUART1_STAT &= ~LPUART_STAT_RDRF;       // remove interrupt cause
                             }
-            #endif
+                #endif
                         }
                         else {
-        #endif
+            #endif
                             if (fnGenInt(irq_LPUART1_ID) != 0) {             // if LPUART1 interrupt is not disabled
                                 VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                                 ptrVect->processor_interrupts.irq_LPUART1(); // call the interrupt handler
                             }
-        #if !defined KINETIS_KE && !defined KINETIS_KL03 & !defined KINETIS_KL43
+                #if !defined KINETIS_KE && !defined KINETIS_KL03 & !defined KINETIS_KL43
                         }
+                #endif
+                    }
+                }
+            }
+            break;
         #endif
+        #if LPUARTS_AVAILABLE > 2
+            #if defined LPUARTS_PARALLEL
+        case (UARTS_AVAILABLE + 2):
+            #else
+        case 2:
+            #endif
+            if ((LPUART2_CTRL & LPUART_CTRL_RE) != 0) {                  // if receiver enabled
+                while ((usLen--) != 0) {                                 // for each reception character
+                    LPUART2_DATA = *ptrDebugIn++;
+                    LPUART2_STAT |= LPUART_STAT_RDRF;                    // set interrupt cause
+                    if ((LPUART2_CTRL & LPUART_CTRL_RIE) != 0) {
+                                                                         // if reception interrupt is enabled
+                        if ((LPUART2_BAUD & LPUART_BAUD_RDMAE) != 0) {   // if the UART is operating in DMA reception mode
+            #if defined SERIAL_SUPPORT_DMA && defined DMA_LPUART2_RX_CHANNEL
+                            if ((DMA_ERQ & (DMA_ERQ_ERQ0 << DMA_LPUART2_RX_CHANNEL)) != 0) { // if source enabled
+                                KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
+                                ptrDMA_TCD += DMA_LPUART2_RX_CHANNEL;
+                                ptrDMA_TCD->DMA_TCD_CSR |= (DMA_TCD_CSR_ACTIVE); // trigger
+                                fnSimulateDMA(DMA_LPUART2_RX_CHANNEL);   // trigger DMA transfer on the UART's channel
+                                LPUART2_STAT &= ~LPUART_STAT_RDRF;       // remove interrupt cause
+                            }
+            #endif
+                        }
+                        else {
+                            if (fnGenInt(irq_LPUART2_ID) != 0) {             // if LPUART2 interrupt is not disabled
+                                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                                ptrVect->processor_interrupts.irq_LPUART2(); // call the interrupt handler
+                            }
+                        }
+                    }
+                }
+            }
+            break;
+        #endif
+        #if LPUARTS_AVAILABLE > 3
+            #if defined LPUARTS_PARALLEL
+        case (UARTS_AVAILABLE + 3):
+            #else
+        case 3:
+            #endif
+            if ((LPUART3_CTRL & LPUART_CTRL_RE) != 0) {                  // if receiver enabled
+                while ((usLen--) != 0) {                                 // for each reception character
+                    LPUART3_DATA = *ptrDebugIn++;
+                    LPUART3_STAT |= LPUART_STAT_RDRF;                    // set interrupt cause
+                    if ((LPUART3_CTRL & LPUART_CTRL_RIE) != 0) {
+                                                                         // if reception interrupt is enabled
+                        if ((LPUART3_BAUD & LPUART_BAUD_RDMAE) != 0) {   // if the UART is operating in DMA reception mode
+            #if defined SERIAL_SUPPORT_DMA && defined DMA_LPUART3_RX_CHANNEL
+                            if ((DMA_ERQ & (DMA_ERQ_ERQ0 << DMA_LPUART3_RX_CHANNEL)) != 0) { // if source enabled
+                                KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
+                                ptrDMA_TCD += DMA_LPUART3_RX_CHANNEL;
+                                ptrDMA_TCD->DMA_TCD_CSR |= (DMA_TCD_CSR_ACTIVE); // trigger
+                                fnSimulateDMA(DMA_LPUART3_RX_CHANNEL);   // trigger DMA transfer on the UART's channel
+                                LPUART3_STAT &= ~LPUART_STAT_RDRF;       // remove interrupt cause
+                            }
+            #endif
+                        }
+                        else {
+                            if (fnGenInt(irq_LPUART3_ID) != 0) {             // if LPUART3 interrupt is not disabled
+                                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                                ptrVect->processor_interrupts.irq_LPUART3(); // call the interrupt handler
+                            }
+                        }
+                    }
+                }
+            }
+            break;
+        #endif
+        #if LPUARTS_AVAILABLE > 4
+            #if defined LPUARTS_PARALLEL
+        case (UARTS_AVAILABLE + 4):
+            #else
+        case 4:
+            #endif
+            if ((LPUART4_CTRL & LPUART_CTRL_RE) != 0) {                  // if receiver enabled
+                while ((usLen--) != 0) {                                 // for each reception character
+                    LPUART4_DATA = *ptrDebugIn++;
+                    LPUART4_STAT |= LPUART_STAT_RDRF;                    // set interrupt cause
+                    if ((LPUART4_CTRL & LPUART_CTRL_RIE) != 0) {
+                                                                         // if reception interrupt is enabled
+                        if ((LPUART4_BAUD & LPUART_BAUD_RDMAE) != 0) {   // if the UART is operating in DMA reception mode
+            #if defined SERIAL_SUPPORT_DMA && defined DMA_LPUART3_RX_CHANNEL
+                            if ((DMA_ERQ & (DMA_ERQ_ERQ0 << DMA_LPUART4_RX_CHANNEL)) != 0) { // if source enabled
+                                KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
+                                ptrDMA_TCD += DMA_LPUART4_RX_CHANNEL;
+                                ptrDMA_TCD->DMA_TCD_CSR |= (DMA_TCD_CSR_ACTIVE); // trigger
+                                fnSimulateDMA(DMA_LPUART4_RX_CHANNEL);   // trigger DMA transfer on the UART's channel
+                                LPUART4_STAT &= ~LPUART_STAT_RDRF;       // remove interrupt cause
+                            }
+            #endif
+                        }
+                        else {
+                            if (fnGenInt(irq_LPUART4_ID) != 0) {             // if LPUART4 interrupt is not disabled
+                                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                                ptrVect->processor_interrupts.irq_LPUART4(); // call the interrupt handler
+                            }
+                        }
                     }
                 }
             }
@@ -6818,7 +6920,7 @@ extern int fnSimTimers(void)
     if ((SYSTICK_CSR & SYSTICK_ENABLE) != 0) {                           // SysTick is enabled
         unsigned long ulTickCount = 0;
         if ((SYSTICK_CSR & SYSTICK_CORE_CLOCK) != 0) {
-            ulTickCount = ((unsigned long long)((unsigned long long)TICK_RESOLUTION * (unsigned long long)SYSTEM_CLOCK)/1000000); // count per tick period from internal clock
+            ulTickCount = (unsigned long)((unsigned long long)((unsigned long long)TICK_RESOLUTION * (unsigned long long)SYSTEM_CLOCK)/1000000); // count per tick period from internal clock
         }
         if ((SYSTICK_CURRENT + 1) > ulTickCount) {
             SYSTICK_CURRENT -= ulTickCount;
@@ -7184,7 +7286,7 @@ extern int fnSimTimers(void)
             break;
         case LPTMR_PSR_PCS_OSC0ERCLK:
     #if defined _EXTERNAL_CLOCK
-            ulCount = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)_EXTERNAL_CLOCK)/1000000)); // external clocks in a tick period (assuming no pre-scaler)
+            ulCount = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)_EXTERNAL_CLOCK)/1000000); // external clocks in a tick period (assuming no pre-scaler)
     #else
             _EXCEPTION("no external clock defined so this selection should not be used");
     #endif
