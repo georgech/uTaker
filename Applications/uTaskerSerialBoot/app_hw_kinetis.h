@@ -1590,8 +1590,19 @@
 
     #define BACK_LIGHT_MAX_INTENSITY() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(A, GLCD_BACK_LIGHT, GLCD_BACK_LIGHT, PORT_SRE_SLOW)
     #define BACK_LIGHT_MIN_INTENSITY() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(A, GLCD_BACK_LIGHT, 0, PORT_SRE_SLOW)
+    #define ENABLE_BACKLIGHT()
 
-    #define ENABLE_BACKLIGHT()        BACK_LIGHT_MAX_INTENSITY()
+    #define FTM_DEBUG_BEHAVIOUR       FTM_CONF_BDMMODE_3                 // allow timer to continue operating when debugging
+    #define _GLCD_BACKLIGHT_PWM_FREQUENCY  PWM_FREQUENCY(1000, 16)       // 1000Hz PWM with divide by 16 prescaler
+    #define BACK_LIGHT_INTENSITY()    POWER_UP(6, SIM_SCGC6_FTM0); \
+                                      _CONFIG_PERIPHERAL(A, 5, (PA_5_FTM0_CH2 | PORT_SRE_FAST | PORT_DSE_HIGH)); \
+                                      FTM0_CONF = FTM_DEBUG_BEHAVIOUR; \
+                                      FTM0_C2SC = FTM_CSC_MS_ELS_PWM_HIGH_TRUE_PULSES; \
+                                      FTM0_CNTIN = 0; \
+                                      FTM0_MOD = (_GLCD_BACKLIGHT_PWM_FREQUENCY - 1); \
+                                      FTM0_C2V = _PWM_PERCENT(35, _GLCD_BACKLIGHT_PWM_FREQUENCY); \
+                                      FTM0_SC = (PWM_SYS_CLK | PWM_PRESCALER_16)
+
     // BLAZE uses 16 bit FlexBus interface using RS, RD and WR. The address range is set to 128K because the DC signal is connected on address wire. FlexBus setup as fast as possible in multiplexed mode
     // the 8 bit data appears at AD0..AD7
     //

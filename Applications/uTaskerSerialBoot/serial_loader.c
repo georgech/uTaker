@@ -55,6 +55,9 @@
 
 #if defined SERIAL_INTERFACE || defined USE_USB_CDC || defined SUPPORT_GLCD || (defined USB_INTERFACE && defined HID_LOADER && defined KBOOT_HID_LOADER) || defined ETH_INTERFACE                    // {9}{16} remove srec/kboot loader when no serial interface but keep parts for Ethernet operation
 
+#if defined BLAZE_K22
+    #include "widgets.h"                                                 // widgets and images used by the project
+#endif
 /* =================================================================== */
 /*                          local definitions                          */
 /* =================================================================== */
@@ -335,7 +338,7 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
 #endif
 #if defined SUPPORT_GLCD
         uTaskerStateChange(TASK_LCD, UTASKER_ACTIVATE);                  // start LCD task
-        uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(3 * SEC), T_HOOKUP_TIMEOUT); // allow time for the user to force loader mode
+        uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(2 * SEC), T_HOOKUP_TIMEOUT); // allow time for the user to force loader mode
 #endif
         iAppState = STATE_ACTIVE;                                        // move to the active state since initialisation has completed
     }
@@ -397,16 +400,51 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
             else if (TASK_LCD == ucInputMessage[MSG_SOURCE_TASK]) {
                 fnRead(PortIDInternal, ucInputMessage, ucInputMessage[MSG_CONTENT_LENGTH]); // read the complete message
                 if (E_LCD_INITIALISED == ucInputMessage[0]) {
+                    #define SPLASH_SCREEN_X   70
+                    #define SPLASH_SCREEN_Y   15
+    #if defined VARIABLE_PIXEL_COLOUR
+                    GLCD_STYLE graphic_style;
+    #endif
+                    GLCD_PIC test_pic;
                     GLCD_TEXT_POSITION text_pos;
-                    text_pos.ucMode = PAINT_LIGHT;
-                    text_pos.usX = 10;
-                    text_pos.usY = 20;
+                    test_pic.usX = (SPLASH_SCREEN_X + 13);
+                    test_pic.usY = (SPLASH_SCREEN_Y - 2);
+                    test_pic.ucMode = (PAINT_LIGHT);
+                    test_pic.ptrPic = (GBITMAP *)flame;
+                    fnDoLCD_pic(&test_pic);                              // draw blaze's flame
+                    test_pic.usX = (SPLASH_SCREEN_X + 2);
+                    test_pic.usY = (SPLASH_SCREEN_Y + 120);
+                    test_pic.ptrPic = (GBITMAP *)Blaze;
+                    test_pic.ucMode = (PAINT_LIGHT | REDRAW);
+                    fnDoLCD_pic(&test_pic);                              // draw blaze's name
                     text_pos.ucFont = FONT_NINE_DOT;
-                    fnDoLCD_text(&text_pos, "uTasker USB-MSD Loader");
-                    text_pos.usX = 40;
-                    text_pos.usY = 40;
-                    text_pos.ucMode = (REDRAW);
-                    fnDoLCD_text(&text_pos, "Tap to enter");
+                    text_pos.usX = (SPLASH_SCREEN_X + 12);
+                    text_pos.usY = (SPLASH_SCREEN_Y + 158);
+                    text_pos.ucMode = (PAINT_LIGHT);
+    #if defined VARIABLE_PIXEL_COLOUR
+                    graphic_style.ucMode = STYLE_PIXEL_COLOR;
+                    graphic_style.color = (COLORREF)RGB(0, 0, 0);        // black pixels
+                    fnDoLCD_style(&graphic_style);
+    #endif
+                    fnDoLCD_text(&text_pos, "POWERED BY");
+                    test_pic.usX = (SPLASH_SCREEN_X + 23);
+                    test_pic.usY = (SPLASH_SCREEN_Y + 175);
+                    test_pic.ptrPic = (GBITMAP *)Tasker;
+                    fnDoLCD_pic(&test_pic);                              // draw uTasker name
+                    test_pic.usX = (SPLASH_SCREEN_X - 4);
+                    test_pic.usY = (SPLASH_SCREEN_Y + 180);
+                    test_pic.ptrPic = (GBITMAP *)u_symbol;
+    #if defined VARIABLE_PIXEL_COLOUR
+                    graphic_style.ucMode = STYLE_PIXEL_COLOR;
+                    graphic_style.color = (COLORREF)RGB(255, 0, 0);      // red pixels
+                    fnDoLCD_style(&graphic_style);
+    #endif
+                    fnDoLCD_pic(&test_pic);                              // draw uTasker start symbol
+    #if defined VARIABLE_PIXEL_COLOUR
+                    graphic_style.ucMode = STYLE_PIXEL_COLOR;
+                    graphic_style.color = (COLORREF)RGB(255, 255, 255);  // white pixels
+                    fnDoLCD_style(&graphic_style);
+    #endif
                 }
             }
 #endif
@@ -924,15 +962,16 @@ static void fnLoaderForced(int iNoFirmware)
     uTaskerStopTimer(OWN_TASK);
     uTaskerStateChange(TASK_USB, UTASKER_ACTIVATE);      // start the USB task to allow loading new code
     text_pos.ucFont = FONT_NINE_DOT;
-    text_pos.usX = 40;
+    text_pos.usX = 5;
     if (iNoFirmware != 0) {
         text_pos.ucMode = (PAINT_LIGHT);
-        text_pos.usY = 120;
+        text_pos.usY = 19;
         fnDoLCD_text(&text_pos, "No Firmware");
     }
     text_pos.ucMode = (PAINT_LIGHT | REDRAW);
-    text_pos.usY = 100;
+    text_pos.usY = 5;
     fnDoLCD_text(&text_pos, "USB enabled");
+    BACK_LIGHT_MAX_INTENSITY();
 }
 #endif
 

@@ -66,3 +66,4 @@ Applications/uTaskerV1.4/GNU_Kinetis/uTaskerSA.bin
 *.enc
 Applications/uTaskerV1.4/Simulator/UART4.txt
 Applications/uTaskerV1.4/Simulator/UART1.txt
+Applications/uTaskerSerialBoot/widgets.h

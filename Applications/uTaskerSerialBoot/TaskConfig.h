@@ -174,7 +174,7 @@ const UTASKTABLEINIT ctTaskTable[] = {
     #endif
 #endif
 #if defined SUPPORT_GLCD
-    {"LCD",       fnLCD,           MEDIUM_QUE,  (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP}, // large queue for queuing text
+    {"LCD",       fnLCD,           LARGE_QUE,  (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP}, // large queue for queuing text
 #endif
 #if defined SUPPORT_LOW_POWER
     { "lowPower", fnLowPower,      NO_QUE,      0, 0, UTASKER_GO},         // low power task

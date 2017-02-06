@@ -413,6 +413,7 @@
     #define ST7789S_GLCD_MODE                                            // adjustments for specific controller
     #define SUPPORT_TOUCH_SCREEN                                         // with touch screen operation
     #define TOUCH_FT6206                                                 // FT6206 capacitative touch panel controller
+        #define DONT_HANDLE_TOUCH_SCREEN_MOVEMENT                        // don't handle movement
     #define GLCD_BACKLIGHT_CONTROL                                       // PWM based backlight control
         #define FIXED_BACKLIGHT_INTENSITY                                // don't use PWM but instead fixed on
     #define I2C_INTERFACE                                                // enable I2C driver for touch screen interface
@@ -421,9 +422,10 @@
         #undef BIG_PIXEL
         #define CGLCD_PIXEL_SIZE   1                                     // for each CGLCD pixel use 2 physical pixels in x and y directions - also reduces GLCD memory requirements
         #define LCD_PARTNER_TASK   TASK_APPLICATION                      // GLCD task sends initialise complete event and acks to this task
-            #define LCD_PIXEL_COLOUR   (COLORREF)RGB(255,255,0)          // RGB colour of LCD pixel when on
-            #define LCD_ON_COLOUR      (COLORREF)RGB(0,0,255)            // RGB colour of LCD when backlight is on
+            #define LCD_PIXEL_COLOUR   (COLORREF)RGB(247,150,17)         // RGB colour of LCD pixel when on
+            #define LCD_ON_COLOUR      (COLORREF)RGB(40,40,40)           // RGB colour of LCD when backlight is on
             #define LCD_OFF_COLOUR     (COLORREF)RGB(0,0,0)              // RGB colour of LCD when backlight is off (used only by the simulator)
+            #define VARIABLE_PIXEL_COLOUR
 
     #define USER_SPECIAL_SEVEN_DOT      0                                // extend 7 dot font by 0 user characters
     #define USER_SPECIAL_NINE_DOT       0                                // extend 9 dot font by 3 user characters

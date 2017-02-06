@@ -137,7 +137,7 @@ static void fnClearScreen(void);
 #if !defined TFT_GLCD_MODE && !defined CGLCD_GLCD_MODE && !defined KITRONIX_GLCD_MODE && !defined MB785_GLCD_MODE && !defined TFT2N0369_GLCD_MODE && !defined ST7789S_GLCD_MODE
     static int fnCheckLCD(void);
 #endif
-#if defined SUPPORT_TOUCH_SCREEN && (defined MB785_GLCD_MODE || defined TOUCH_FT6206)
+#if ! defined DONT_HANDLE_TOUCH_SCREEN_MOVEMENT && (defined SUPPORT_TOUCH_SCREEN && (defined MB785_GLCD_MODE || defined TOUCH_FT6206))
     static void fnHandleTouch(unsigned short usX, unsigned short usY, int iPenDown);
 #endif
 
@@ -381,20 +381,24 @@ extern void fnLCD(TTASKTABLE *ptrTaskTable)                              // LCD 
                     fnRead(TouchPortID, ucInputMessage, TOUCH_DATA_LENGTH);
     #if defined MB785_GLCD_MODE
                     if ((ucInputMessage[0] & FIFO_STA_FIFO_EMPTY) == 0) {// only when valid touch position
+        #if !defined DONT_HANDLE_TOUCH_SCREEN_MOVEMENT
                         unsigned short usY = ((ucInputMessage[2] << 8) + ucInputMessage[3]);
                         unsigned short usX = ((ucInputMessage[4] << 8) + ucInputMessage[5]);
                         fnHandleTouch(usX, usY, iPenDown);
-                        iPenDown = 0;                                    // reset reporting of new pen-down
                       //while (x < Length) {                             // display received bytes
                       //    fnDebugHex(ucInputMessage[x++], (WITH_LEADIN | WITH_SPACE | 1));
                       //}
                       //fnDebugMsg("\r\n");
+        #endif
+                        iPenDown = 0;                                    // reset reporting of new pen-down
                     }
     #elif defined TOUCH_FT6206
                     if ((ucInputMessage[0] & TCS_CTRL_TOUCH_DETECT) != 0) { // if pen is down
+        #if !defined DONT_HANDLE_TOUCH_SCREEN_MOVEMENT
                         unsigned short usY = ((ucInputMessage[3] << 8) + ucInputMessage[4]);
                         unsigned short usX = ((ucInputMessage[1] << 8) + ucInputMessage[2]);
                         fnHandleTouch((usX & 0x0fff), (usY & 0x0fff), iPenDown);
+        #endif
                         iPenDown = 0;                                    // reset reporting of new pen-down
                     }
                     else {
@@ -2215,7 +2219,7 @@ extern void fnDoLCD_scroll(GLCD_SCROLL *scroll)                          // {4}
 extern void fnSetBacklight(void)
 {
     #if defined FIXED_BACKLIGHT_INTENSITY
-        BACK_LIGHT_MAX_INTENSITY();
+        BACK_LIGHT_INTENSITY();
     #else
     if (temp_pars->temp_parameters.ucGLCDBacklightPWM >= 96) {           // consider as maximum brightness and apply constant '1'
         BACK_LIGHT_MAX_INTENSITY();
@@ -2248,7 +2252,7 @@ extern void fnSetBacklight(void)
         timer_setup.timer_value = _GLCD_BACKLIGHT_PWM_FREQUENCY;         // backlight frequency
         timer_setup.pwm_value   = (unsigned short)_PWM_PERCENT(temp_pars->temp_parameters.ucGLCDBacklightPWM, timer_setup.timer_value); // contrast as PWM value
         fnConfigureInterrupt((void *)&timer_setup);                      // configure PWM output for contrast control
-    #    endif
+        #endif
     }
     #endif
 }        
@@ -2273,6 +2277,7 @@ extern void fnSetBacklight(void)
     #define MAX_MOVEMENT_X     5
 #endif
 
+#if !defined DONT_HANDLE_TOUCH_SCREEN_MOVEMENT
 static void fnHandleTouch(unsigned short usX, unsigned short usY, int iPenDown)
 {
     static unsigned short usLastPixelX, usLastPixelY;
@@ -2331,6 +2336,7 @@ static void fnHandleTouch(unsigned short usX, unsigned short usY, int iPenDown)
         ucByteUpdateArray[usY][usX/64] |= (0x80 >> (usX/8)%8);           // mark the need for an update
     }
 }
+#endif
 #endif
 
 #if defined VARIABLE_PIXEL_COLOUR

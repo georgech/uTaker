@@ -1,0 +1,8 @@
+// This file is used as input to which bit maps are to be added to the graphic widgets code (bmp should be 24 bit color or mono-chrome)
+
+Images\flame.bmp -i -n flame    // Inverted (top/bottom), display negative and the uTasker bitmap array is called flame
+Images\Blaze.bmp -i -n Blaze    // Inverted (top/bottom), display negative and the uTasker bitmap array is called Blaze
+Images\Tasker.bmp -i -n Tasker  // Inverted (top/bottom), display negative and the uTasker bitmap array is called Tasker
+Images\u.bmp -i -n u_symbol     // Inverted (top/bottom), display negative and the uTasker bitmap array is called u_symbol
+
+// end
