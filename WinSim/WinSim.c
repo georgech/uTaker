@@ -86,6 +86,7 @@
     15.01.2016 Add SPI_FLASH_W25Q128 IDs                                 {70}
     24.12.2016 Add I2C data injection                                    {71}
     02.02.2017 Adapt for us tick resolution
+    13.02.2017 Get endpoint size of Host from endpoint 0 (kinetis)       {72}
  
 */   
 #include <windows.h>
@@ -533,15 +534,24 @@ _abort_multi:
                     break;;
                 }
             }
-            if (iEndpoint & USB_SETUP_FLAG) {                            // {30} identify that a setup frame is being simulated
+            if ((iEndpoint & USB_SETUP_FLAG) != 0) {                     // {30} identify that a setup frame is being simulated
                 iEndpoint &= ~(USB_SETUP_FLAG);                          // remove the identifier
                 ucPID = SETUP_PID;                                       // change from default OUT to SETUP PID
             }
+    #if defined USB_HOST_SUPPORT && defined _KINETIS
+            if (iHostMode != 0) {                                        // {72}
+                usEndpointSize = fnGetEndpointInfo(0);                   // the host mode always receives on its 0 endpoint
+            }
+            else {
+                usEndpointSize = fnGetEndpointInfo(iEndpoint);           // get the endpoint buffer length     
+            }
+    #else
             usEndpointSize = fnGetEndpointInfo(iEndpoint);               // get the endpoint buffer length            
+    #endif
             if (usEndpointSize != 0) {                                   // if the endpoint can accept data
                 static void fnQueueUSB(int iEndpoint, unsigned char *ptrData, unsigned short usLength);
                 unsigned short usFrameLength;
-                while (1) {                                              // {43}
+                while (1 != 0) {                                         // {43}
                     if (usLength < usEndpointSize) {
                         usFrameLength = usLength;
                     }
