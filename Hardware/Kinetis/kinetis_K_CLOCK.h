@@ -91,16 +91,6 @@
         #elif defined RUN_FROM_RTC_FLL
     MCG_C4 = ((MCG_C4 & ~(MCG_C4_DMX32 | MCG_C4_HIGH_RANGE)) | (_FLL_VALUE)); // adjust FLL factor to obtain the required operating frequency
         #else                                                            // external oscillator
-            #if defined KINETIS_KW2X && defined RUN_FROM_MODEM_CLK_OUT
-    // Single crystal with CLK_OUT used by MCU
-    //
-    _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_LOW(C, GPIO5, 0, (PORT_SRE_FAST | PORT_DSE_LOW)); // set the output to select 4MHz CLK_OUT frequency
-    _SETBITS(B, RST_B);                                                  // release the modem reset
-    _CONFIG_PORT_INPUT_FAST_LOW(B, IRQ_B, (PORT_PS_UP_ENABLE));          // enable input to monitor the modem's interrupt line
-                #if !defined _WINDOWS
-    while (_READ_PORT_MASK(B, IRQ_B) != 0) {}                            // wait for modem start-up interrupt request (approx. 25ms)
-                #endif
-            #endif
             #if EXTERNAL_CLOCK >= 8000000
     MCG_C2 = (MCG_C2_RANGE_8M_32M | MCG_C2_LOCRE0);                      // select external clock source (with reset on clock loss)
     MCG_C1 = (MCG_C1_CLKS_EXTERN_CLK | MCG_C1_FRDIV_1024);               // switch to external input clock (the FLL input clock is set to as close to its input range as possible, although this is not absolutely necessary since the FLL will not be used)
