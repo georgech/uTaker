@@ -58,6 +58,8 @@
     13.04.2016 Change parameter of fnGetUSB_string_entry() to unsigned char {40}
     15.11.2016 Default FIRST_CDC_INTERFACE to 0 for USB host CDC         {41}
     05.01.2017 Add audio reception FFT analysis                          {42}
+    06.02.2017 Automatically enable IN polling on CDC bulk IN endpoint   {43}
+    12.02.2017 Allow USB-MSD or USB-CDC host operation, depending on which device is detected {44}
 
 */
 
@@ -151,6 +153,9 @@
 #define RNDIS_STATE_BUS_INITIALISED         1
 #define RNDIS_INITIALISED                   2
 #define RNDIS_DATA_INITIALISED              3
+
+#define USB_HOST_MSD_ACTIVE                 0x01
+#define USB_HOST_CDC_ACTIVE                 0x02
 
 #if defined USB_HOST_SUPPORT && defined USB_CDC_HOST && !defined FIRST_CDC_INTERFACE
     #define FIRST_CDC_INTERFACE             0                            // {41}
@@ -251,7 +256,9 @@ __PACK_ON                                                                // comp
 static QUEUE_HANDLE USB_control = NO_ID_ALLOCATED;                       // USB default control endpoint handle
 static unsigned short usExpectedData = 0;                                // used by the control endpoint to collect data
 static unsigned char  ucCollectingMode = 0xff;
-
+#if defined USB_HOST_SUPPORT
+    static unsigned long ulDeviceType = 0;                               // {44}
+#endif
 #if defined USB_HOST_SUPPORT && defined USB_MSD_HOST
     static QUEUE_HANDLE USBPortID_msd_host = NO_ID_ALLOCATED;
 #endif
@@ -377,7 +384,7 @@ static void fnConfigureUSB(void);                                        // rout
 #endif
 #if defined USB_HOST_SUPPORT
     static void fnConfigureApplicationEndpoints(unsigned char ucConfiguration);
-    static unsigned char fnDisplayDeviceInfo(void);
+    static unsigned char fnDisplayDeviceInfo(unsigned long *ptrDeviceType);
     #if defined USB_MSD_HOST
         static void fnRequestLUN(void);
         static int fnSendMSD_host(unsigned char ucOpcode);
@@ -698,9 +705,9 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
 #if defined USB_HOST_SUPPORT                                             // {32}
                 case E_USB_DEVICE_INFO:                                  // the USB host has collected information ready to decide how to work with a device
                     fnDebugMsg("USB device information ready:\r\n");
-                    ucInputMessage[0] = fnDisplayDeviceInfo();           // analyse and display information
+                    ucInputMessage[0] = fnDisplayDeviceInfo(&ulDeviceType); // analyse and display information
                     if (ucInputMessage[0] != 0) {                        // if there is a supported configuration to be enabled
-    #if defined USB_MSD_HOST
+    #if defined USB_MSD_HOST                        
                         ulTag = fnRandom();                              // start with random tag number
                         ulTag <<= 16;
                         ulTag |= fnRandom();
@@ -771,7 +778,14 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
                 fnConfigureApplicationEndpoints(ucInputMessage[MSG_CONTENT_COMMAND + 1]); // configure endpoints according to configuration
     #if defined USB_MSD_HOST
                 iUSB_MSD_OpCode = 0;
-                fnRequestLUN();                                          // the first thing that the MSD host does is request the number of logical units that the disk drive has
+                if ((ulDeviceType & USB_HOST_MSD_ACTIVE) != 0) {         // {44}
+                    fnRequestLUN();                                      // the first thing that the MSD host does is request the number of logical units that the disk drive has
+                }
+    #endif
+    #if defined USB_CDC_HOST
+                if ((ulDeviceType & USB_HOST_CDC_ACTIVE) != 0) {         // {44}
+                    fnDriver(USBPortID_comms[FIRST_CDC_INTERFACE], (RX_ON), 0); // {43} enable IN polling
+                }
     #endif
 #endif
 #if defined USE_USB_HID_MOUSE
@@ -797,152 +811,151 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
 
 #if defined USB_HOST_SUPPORT
     #if defined USB_MSD_HOST
-    if (USBPortID_msd_host == NO_ID_ALLOCATED) {                         // don't check bulk input queue until host is configured
-        return;
-    }
-    while (fnMsgs(USBPortID_msd_host) != 0) {                            // reception from host IN endpoint
-        Length = fnRead(USBPortID_msd_host, ucInputMessage, 64);         // read the content (up to 64 bytes content each time)
-        switch (iUSB_MSD_OpCode) {
-        case UFI_READ_10:
-            {
-                static unsigned char ucBuffer[512];
-                static int iOffset = 0;
-                fnDriver(USBPortID_msd_host, (RX_ON), 0);                // enable IN polling so that we can receive next block or the status transport
-                if (Length >= ulBlockByteCount) {                        // final data packet
-                    uMemcpy(&ucBuffer[iOffset], ucInputMessage, ulBlockByteCount);
-                    ulBlockByteCount = 0;
-                    iOffset = 0;
+    if (USBPortID_msd_host != NO_ID_ALLOCATED) {                         // don't check bulk input queue until host is configured
+        while (fnMsgs(USBPortID_msd_host) != 0) {                        // reception from host IN endpoint
+            Length = fnRead(USBPortID_msd_host, ucInputMessage, 64);     // read the content (up to 64 bytes content each time)
+            switch (iUSB_MSD_OpCode) {
+            case UFI_READ_10:
+                {
+                    static unsigned char ucBuffer[512];
+                    static int iOffset = 0;
+                    fnDriver(USBPortID_msd_host, (RX_ON), 0);            // enable IN polling so that we can receive next block or the status transport
+                    if (Length >= ulBlockByteCount) {                    // final data packet
+                        uMemcpy(&ucBuffer[iOffset], ucInputMessage, ulBlockByteCount);
+                        ulBlockByteCount = 0;
+                        iOffset = 0;
+                        iUSB_MSD_OpCode |= STATUS_TRANSPORT;
+                    }
+                    else {                                               // more data expected
+                        uMemcpy(&ucBuffer[iOffset], ucInputMessage, Length);
+                        iOffset += Length;
+                        ulBlockByteCount -= Length;
+                    }
+                }
+                break;
+            case UFI_INQUIRY:                                            // expecting data transport from inquiry
+                {
+                  //CBW_INQUIRY_DATA *ptrInquiry = (CBW_INQUIRY_DATA *)ucInputMessage;
+                    fnDriver(USBPortID_msd_host, (RX_ON), 0);            // enable IN polling so that we can receive the status transport
                     iUSB_MSD_OpCode |= STATUS_TRANSPORT;
                 }
-                else {                                                   // more data expected
-                    uMemcpy(&ucBuffer[iOffset], ucInputMessage, Length);
-                    iOffset += Length;
-                    ulBlockByteCount -= Length;
+                break;
+            case UFI_READ_FORMAT_CAPACITY:
+                {
+                    CBW_CAPACITY_LIST *ptrCapacityList = (CBW_CAPACITY_LIST *)ucInputMessage;
+                    unsigned char ucListLength = ptrCapacityList->ucCapacityListLength;
+                    CAPACITY_DESCRIPTOR *ptrCapacityDescriptor = &ptrCapacityList->capacityDescriptor;
+                    const UTDISK *ptrDiskInfo = fnGetDiskInfo(DISK_MEM_STICK);
+                    fnDriver(USBPortID_msd_host, (RX_ON), 0);            // enable IN polling so that we can receive the status transport
+                    iUSB_MSD_OpCode |= STATUS_TRANSPORT;
+                    while (ucListLength >= 8) {                          // for each capacity descriptor
+                        unsigned long ulBlockLength = ((ptrCapacityDescriptor->ucBlockLength[0] << 16) | (ptrCapacityDescriptor->ucBlockLength[1] << 8) | ptrCapacityDescriptor->ucBlockLength[2]);
+                        unsigned long ulNoOfBlocks  = ((ptrCapacityDescriptor->ucNumberOfBlocks[0] << 24) | (ptrCapacityDescriptor->ucNumberOfBlocks[1] << 16) | (ptrCapacityDescriptor->ucNumberOfBlocks[2] << 8) | ptrCapacityDescriptor->ucNumberOfBlocks[3]);
+                        fnDebugMsg("(");
+                        fnDebugDec(ptrCapacityDescriptor->ucDescriptorCode, 0);
+                        fnDebugMsg(":");
+                        fnDebugDec(ulBlockLength, 0);
+                        fnDebugMsg(":");
+                        fnDebugDec(ulNoOfBlocks, 0);
+                        fnDebugMsg(") ");
+                        ptrCapacityDescriptor++;
+                        if (ucListLength >= 16) {
+                            ucListLength -= 8;
+                        }
+                        else {
+                            ((UTDISK *)ptrDiskInfo)->ulSD_sectors = ulNoOfBlocks; // if we are to format the memory stick we need to know how many sectors it has
+                            break;
+                        }
+                    }
                 }
-            }
-            break;
-        case UFI_INQUIRY:                                                // expecting data transport from inquiry
-            {
-              //CBW_INQUIRY_DATA *ptrInquiry = (CBW_INQUIRY_DATA *)ucInputMessage;
-                fnDriver(USBPortID_msd_host, (RX_ON), 0);                // enable IN polling so that we can receive the status transport
-                iUSB_MSD_OpCode |= STATUS_TRANSPORT;
-            }
-            break;
-        case UFI_READ_FORMAT_CAPACITY:
-            {
-                CBW_CAPACITY_LIST *ptrCapacityList = (CBW_CAPACITY_LIST *)ucInputMessage;
-                unsigned char ucListLength = ptrCapacityList->ucCapacityListLength;
-                CAPACITY_DESCRIPTOR *ptrCapacityDescriptor = &ptrCapacityList->capacityDescriptor;
-                const UTDISK *ptrDiskInfo = fnGetDiskInfo(DISK_MEM_STICK);
-                fnDriver(USBPortID_msd_host, (RX_ON), 0);                // enable IN polling so that we can receive the status transport
-                iUSB_MSD_OpCode |= STATUS_TRANSPORT;
-                while (ucListLength >= 8) {                              // for each capacity descriptor
-                    unsigned long ulBlockLength = ((ptrCapacityDescriptor->ucBlockLength[0] << 16) | (ptrCapacityDescriptor->ucBlockLength[1] << 8) | ptrCapacityDescriptor->ucBlockLength[2]);
-                    unsigned long ulNoOfBlocks  = ((ptrCapacityDescriptor->ucNumberOfBlocks[0] << 24) | (ptrCapacityDescriptor->ucNumberOfBlocks[1] << 16) | (ptrCapacityDescriptor->ucNumberOfBlocks[2] << 8) | ptrCapacityDescriptor->ucNumberOfBlocks[3]);
+                break;
+            case UFI_REQUEST_SENSE:
+                {
+                  //CBW_RETURN_SENSE_DATA *ptrSenseData = (CBW_RETURN_SENSE_DATA *)ucInputMessage;
+                    fnDriver(USBPortID_msd_host, (RX_ON), 0);            // enable IN polling so that we can receive the status transport
+                    iUSB_MSD_OpCode |= STATUS_TRANSPORT;
+                }
+                break;
+            case UFI_READ_CAPACITY:
+                {
+                    CBW_READ_CAPACITY_DATA *ptrCapacity = (CBW_READ_CAPACITY_DATA *)ucInputMessage;
+                    unsigned long ulLastLogicalBlockAddress = ((ptrCapacity->ucLastLogicalBlockAddress[0] << 24) | (ptrCapacity->ucLastLogicalBlockAddress[1] << 16) | (ptrCapacity->ucLastLogicalBlockAddress[2] << 8) | ptrCapacity->ucLastLogicalBlockAddress[3]);
+                    unsigned long ulBlockLengthInBytes =  ((ptrCapacity->ucBlockLengthInBytes[0] << 24) | (ptrCapacity->ucBlockLengthInBytes[1] << 16) | (ptrCapacity->ucBlockLengthInBytes[2] << 8) | ptrCapacity->ucBlockLengthInBytes[3]);
+                    const UTDISK *ptrDiskInfo = fnGetDiskInfo(DISK_MEM_STICK);
+                    fnDriver(USBPortID_msd_host, (RX_ON), 0);            // enable IN polling so that we can receive the status transport
+                    iUSB_MSD_OpCode |= STATUS_TRANSPORT;
                     fnDebugMsg("(");
-                    fnDebugDec(ptrCapacityDescriptor->ucDescriptorCode, 0);
+                    fnDebugDec(ulBlockLengthInBytes, 0);                 // block length
                     fnDebugMsg(":");
-                    fnDebugDec(ulBlockLength, 0);
-                    fnDebugMsg(":");
-                    fnDebugDec(ulNoOfBlocks, 0);
+                    fnDebugDec(ulLastLogicalBlockAddress, 0);            // last logical block address
                     fnDebugMsg(") ");
-                    ptrCapacityDescriptor++;
-                    if (ucListLength >= 16) {
-                        ucListLength -= 8;
+                    ((UTDISK *)ptrDiskInfo)->ulSD_sectors = ulLastLogicalBlockAddress; // if we are to format the memory stick we need to know how many sectors it has
+                }
+                break;
+            case (UFI_INQUIRY | STATUS_TRANSPORT):                       // expecting status transport after inquiry data
+            case (UFI_READ_FORMAT_CAPACITY | STATUS_TRANSPORT):          // expecting status transport after reading format capacities
+            case (UFI_REQUEST_SENSE | STATUS_TRANSPORT):                 // expecting status transport after reading requesting sense
+            case (UFI_READ_CAPACITY | STATUS_TRANSPORT):                 // expecting status transport after reading capacity
+            case (UFI_TEST_UNIT_READY | STATUS_TRANSPORT):               // expecting status transport after sending unit ready
+            case (UFI_READ_10 | STATUS_TRANSPORT):                       // expecting status transport after reading data
+                {
+                    USB_MASS_STORAGE_CBW_LW *ptrStatus = (USB_MASS_STORAGE_CBW_LW *)ucInputMessage;
+                    fnDebugMsg("Status transport - ");
+                    if ((ptrStatus->dCBWSignatureL == USBS_SIGNATURE) && (ptrStatus->dCBWTagL == ulTag)) { // check the status transport's signature and tag
+                        if (ptrStatus->dmCBWFlags == CSW_STATUS_COMMAND_PASSED) { // check that there are no errors reported
+                            fnDebugMsg("Passed\r\n");
+                            ucRequestCount = 0;
+                            switch (iUSB_MSD_OpCode) {
+                            case (UFI_INQUIRY | STATUS_TRANSPORT):       // inquiry was successful
+                                fnSendMSD_host(UFI_REQUEST_SENSE);       // now request sense
+                                break;
+                            case (UFI_REQUEST_SENSE | STATUS_TRANSPORT):
+                                fnSendMSD_host(UFI_READ_FORMAT_CAPACITY);// now request format capacity
+                                break;
+                            case (UFI_READ_FORMAT_CAPACITY | STATUS_TRANSPORT):
+                                fnSendMSD_host(UFI_READ_CAPACITY);       // now request capacity
+                                break;
+                            case (UFI_READ_CAPACITY | STATUS_TRANSPORT):
+                                // At this point the memory stick details are known and it can be mounted
+                                //
+                                fnEventMessage(TASK_MASS_STORAGE, TASK_USB_HOST, MOUNT_USB_MSD); // initiate mounting the memory stick at the mass storage task
+                                break;
+                            case (UFI_TEST_UNIT_READY | STATUS_TRANSPORT):
+                                fnSendMSD_host(UFI_READ_FORMAT_CAPACITY);// now request format capacity
+                                break;
+                            case (UFI_READ_10 | STATUS_TRANSPORT):
+                                iUSB_MSD_OpCode = 0;
+                                fnDebugMsg("READ:");
+                                break;
+                            }
+                        }
+                        else {                                           // failed
+                            iUSB_MSD_OpCode &= ~(STATUS_TRANSPORT);      // the origial request
+                            if (UFI_TEST_UNIT_READY == iUSB_MSD_OpCode) {// unit of not ready
+                                fnDebugMsg("Not ready\r\n");             // alway repeat when not ready
+                                iUSB_MSD_OpCode = UFI_REQUEST_SENSE;
+                            }
+                            else if (ucRequestCount != 0) {              // if the original request stalled
+                                if (UFI_READ_FORMAT_CAPACITY == iUSB_MSD_OpCode) { // some sticks may not support this so we repeat just three times and then accept that there will be no ansswer
+                                    if (ucRequestCount >= 3) {
+                                        iUSB_MSD_OpCode = UFI_READ_CAPACITY; // continue with next request
+                                        ucRequestCount = 0;
+                                    }
+                                }
+                                else if (UFI_READ_CAPACITY == iUSB_MSD_OpCode) { // some sticks may be slow and stall on UFI_READ_FORMAT_CAPACITY and then never accept UFI_READ_CAPACITY
+                                    if (ucRequestCount >= 3) {
+                                        iUSB_MSD_OpCode = UFI_TEST_UNIT_READY;
+                                        ucRequestCount = 0;
+                                    }
+                                }
+                            }
+                            uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(0.05 * SEC), T_REPEAT_COMMAND); // repeat command after a short delay
+                        }
                     }
                     else {
-                        ((UTDISK *)ptrDiskInfo)->ulSD_sectors = ulNoOfBlocks; // if we are to format the memory stick we need to know how many sectors it has
-                        break;
+                        fnDebugMsg("ERROR STATUS\r\n");
+                        iUSB_MSD_OpCode = 0;
                     }
-                }
-            }
-            break;
-        case UFI_REQUEST_SENSE:
-            {
-              //CBW_RETURN_SENSE_DATA *ptrSenseData = (CBW_RETURN_SENSE_DATA *)ucInputMessage;
-                fnDriver(USBPortID_msd_host, (RX_ON), 0);                // enable IN polling so that we can receive the status transport
-                iUSB_MSD_OpCode |= STATUS_TRANSPORT;
-            }
-            break;
-        case UFI_READ_CAPACITY:
-            {
-                CBW_READ_CAPACITY_DATA *ptrCapacity = (CBW_READ_CAPACITY_DATA *)ucInputMessage;
-                unsigned long ulLastLogicalBlockAddress = ((ptrCapacity->ucLastLogicalBlockAddress[0] << 24) | (ptrCapacity->ucLastLogicalBlockAddress[1] << 16) | (ptrCapacity->ucLastLogicalBlockAddress[2] << 8) | ptrCapacity->ucLastLogicalBlockAddress[3]);
-                unsigned long ulBlockLengthInBytes =  ((ptrCapacity->ucBlockLengthInBytes[0] << 24) | (ptrCapacity->ucBlockLengthInBytes[1] << 16) | (ptrCapacity->ucBlockLengthInBytes[2] << 8) | ptrCapacity->ucBlockLengthInBytes[3]);
-                const UTDISK *ptrDiskInfo = fnGetDiskInfo(DISK_MEM_STICK);
-                fnDriver(USBPortID_msd_host, (RX_ON), 0);                // enable IN polling so that we can receive the status transport
-                iUSB_MSD_OpCode |= STATUS_TRANSPORT;
-                fnDebugMsg("(");
-                fnDebugDec(ulBlockLengthInBytes, 0);                     // block length
-                fnDebugMsg(":");
-                fnDebugDec(ulLastLogicalBlockAddress, 0);                // last logical block address
-                fnDebugMsg(") ");
-                ((UTDISK *)ptrDiskInfo)->ulSD_sectors = ulLastLogicalBlockAddress; // if we are to format the memory stick we need to know how many sectors it has
-            }
-            break;
-        case (UFI_INQUIRY | STATUS_TRANSPORT):                           // expecting status transport after inquiry data
-        case (UFI_READ_FORMAT_CAPACITY | STATUS_TRANSPORT):              // expecting status transport after reading format capacities
-        case (UFI_REQUEST_SENSE | STATUS_TRANSPORT):                     // expecting status transport after reading requesting sense
-        case (UFI_READ_CAPACITY | STATUS_TRANSPORT):                     // expecting status transport after reading capacity
-        case (UFI_TEST_UNIT_READY | STATUS_TRANSPORT):                   // expecting status transport after sending unit ready
-        case (UFI_READ_10 | STATUS_TRANSPORT):                           // expecting status transport after reading data
-            {
-                USB_MASS_STORAGE_CBW_LW *ptrStatus = (USB_MASS_STORAGE_CBW_LW *)ucInputMessage;
-                fnDebugMsg("Status transport - ");
-                if ((ptrStatus->dCBWSignatureL == USBS_SIGNATURE) && (ptrStatus->dCBWTagL == ulTag)) { // check the status transport's signature and tag
-                    if (ptrStatus->dmCBWFlags == CSW_STATUS_COMMAND_PASSED) { // check that there are no errors reported
-                        fnDebugMsg("Passed\r\n");
-                        ucRequestCount = 0;
-                        switch (iUSB_MSD_OpCode) {
-                        case (UFI_INQUIRY | STATUS_TRANSPORT):           // inquiry was successful
-                            fnSendMSD_host(UFI_REQUEST_SENSE);           // now request sense
-                            break;
-                        case (UFI_REQUEST_SENSE | STATUS_TRANSPORT):
-                            fnSendMSD_host(UFI_READ_FORMAT_CAPACITY);    // now request format capacity
-                            break;
-                        case (UFI_READ_FORMAT_CAPACITY | STATUS_TRANSPORT):
-                            fnSendMSD_host(UFI_READ_CAPACITY);           // now request capacity
-                            break;
-                        case (UFI_READ_CAPACITY | STATUS_TRANSPORT):
-                            // At this point the memory stick details are known and it can be mounted
-                            //
-                            fnEventMessage(TASK_MASS_STORAGE, TASK_USB_HOST, MOUNT_USB_MSD); // initiate mounting the memory stick at the mass storage task
-                            break;
-                        case (UFI_TEST_UNIT_READY | STATUS_TRANSPORT):
-                            fnSendMSD_host(UFI_READ_FORMAT_CAPACITY);    // now request format capacity
-                            break;
-                        case (UFI_READ_10 | STATUS_TRANSPORT):
-                            iUSB_MSD_OpCode = 0;
-                            fnDebugMsg("READ:");
-                            break;
-                        }
-                    }
-                    else {                                               // failed
-                        iUSB_MSD_OpCode &= ~(STATUS_TRANSPORT);          // the origial request
-                        if (UFI_TEST_UNIT_READY == iUSB_MSD_OpCode) {    // unit of not ready
-                            fnDebugMsg("Not ready\r\n");                 // alway repeat when not ready
-                            iUSB_MSD_OpCode = UFI_REQUEST_SENSE;
-                        }
-                        else if (ucRequestCount != 0) {                  // if the original request stalled
-                            if (UFI_READ_FORMAT_CAPACITY == iUSB_MSD_OpCode) { // some sticks may not support this so we repeat just three times and then accept that there will be no ansswer
-                                if (ucRequestCount >= 3) {
-                                    iUSB_MSD_OpCode = UFI_READ_CAPACITY; // continue with next request
-                                    ucRequestCount = 0;
-                                }
-                            }
-                            else if (UFI_READ_CAPACITY == iUSB_MSD_OpCode) { // some sticks may be slow and stall on UFI_READ_FORMAT_CAPACITY and then never accept UFI_READ_CAPACITY
-                                if (ucRequestCount >= 3) {
-                                    iUSB_MSD_OpCode = UFI_TEST_UNIT_READY;
-                                    ucRequestCount = 0;
-                                }
-                            }
-                        }
-                        uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(0.05 * SEC), T_REPEAT_COMMAND); // repeat command after a short delay
-                    }
-                }
-                else {
-                    fnDebugMsg("ERROR STATUS\r\n");
-                    iUSB_MSD_OpCode = 0;
                 }
             }
         }
@@ -1241,7 +1254,7 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
 #elif ((defined USE_USB_CDC && (USB_CDC_VCOM_COUNT > 0)) && defined USE_MAINTENANCE) || defined USB_CDC_HOST // USB-CDC with command line interface
     while (fnMsgs(USBPortID_comms[FIRST_CDC_INTERFACE]) != 0) {          // reception from OUT endpoint on first CDC interface
     #if defined USB_CDC_HOST
-        fnDriver(USBPortID_comms[FIRST_CDC_INTERFACE], (RX_ON), 0);      // enable IN polling again
+        fnDriver(USBPortID_comms[FIRST_CDC_INTERFACE], (RX_ON), 0);      // enable IN polling again so that further data can be received
     #endif
     #if defined USE_MAINTENANCE
         if ((usUSB_state & (ES_USB_DOWNLOAD_MODE | ES_USB_RS232_MODE)) != 0) {
@@ -1274,7 +1287,13 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
     #else
         Length = fnRead(USBPortID_comms[FIRST_CDC_INTERFACE], ucInputMessage, LARGE_MESSAGE); // read the content
     #endif
+    #if defined USB_CDC_HOST
+        fnDriver(USBPortID_comms[FIRST_CDC_INTERFACE], (RX_OFF), 0);     // pause IN polling so that we can sent
+    #endif
         fnWrite(USBPortID_comms[FIRST_CDC_INTERFACE], ucInputMessage, Length); // echo input
+    #if defined USB_CDC_HOST
+        fnDriver(USBPortID_comms[FIRST_CDC_INTERFACE], (RX_ON), 0);      // enable IN polling again so that further data can be received
+    #endif
     #if !defined USB_CDC_HOST
         if (usUSB_state == ES_NO_CONNECTION) {
             if (fnCommandInput(ucInputMessage, Length, SOURCE_USB) != 0) {
@@ -3104,7 +3123,7 @@ static void fnDisplayEndpoint(USB_ENDPOINT_DESCRIPTOR *ptr_endpoint_desc)
     fnDebugMsg("\r\n");
 }
 
-static unsigned char fnDisplayDeviceInfo(void)
+static unsigned char fnDisplayDeviceInfo(unsigned long *ptrDeviceType)
 {
     USB_DEVICE_DESCRIPTOR *ptr_device_descriptor;
     USB_CONFIGURATION_DESCRIPTOR *ptr_config_desc;
@@ -3175,6 +3194,7 @@ static unsigned char fnDisplayDeviceInfo(void)
             fnDisplayEndpoint(ptr_endpoint_desc);
             ptr_endpoint_desc++;
         }
+        *ptrDeviceType = USB_HOST_MSD_ACTIVE;                            // MSD device detected (not composite)
         return (ptr_config_desc->bConfigurationValue);                   // the valid configuration to be enabled
     }
     #endif
@@ -3210,7 +3230,8 @@ static unsigned char fnDisplayDeviceInfo(void)
             fnDisplayEndpoint(ptr_endpoint_desc);
             ptr_interface_desc = (USB_INTERFACE_DESCRIPTOR *)(ptr_endpoint_desc + 1);
         }
-        return 1;
+        *ptrDeviceType = USB_HOST_CDC_ACTIVE;                            // CDC device detected (not composite)
+        return (ptr_config_desc->bConfigurationValue);                   // the valid configuration to be enabled
     }
     #endif
     fnDebugMsg("NON-SUPPORTED CLASS -");
@@ -3223,35 +3244,39 @@ static void fnConfigureApplicationEndpoints(unsigned char ucActiveConfiguration)
     USBTABLE tInterfaceParameters;                                       // table for passing information to driver
 
     #if defined USB_MSD_HOST
-    if (NO_ID_ALLOCATED == USBPortID_msd_host) {
-        tInterfaceParameters.owner_task = OWN_TASK;                      // wake usb task on receptions
-        tInterfaceParameters.Endpoint = ucMSDBulkOutEndpoint;            // set USB endpoints to act as an input/output pair - transmitter (OUT)
-        tInterfaceParameters.Paired_RxEndpoint = ucMSDBulkInEndpoint;    // receiver (IN)
-        tInterfaceParameters.usEndpointSize = usMSDBulkOutEndpointSize;  // endpoint queue size (2 buffers of this size will be created for reception)
-        tInterfaceParameters.usb_callback = 0;                           // no call-back since we use rx buffer - the same task is owner
-        tInterfaceParameters.usConfig = 0;
-        tInterfaceParameters.queue_sizes.RxQueueSize = 1024;             // optional input queue (used only when no call-back defined)
-        tInterfaceParameters.queue_sizes.TxQueueSize = (512 + 32);       // additional tx buffer - allow queueing a sector plus a command
-        #if defined WAKE_BLOCKED_USB_TX
-        tInterfaceParameters.low_water_level = (tInterfaceParameters.queue_sizes.TxQueueSize/2); // TX_FREE event on half buffer empty
-        #endif
-        USBPortID_msd_host = fnOpen(TYPE_USB, 0, &tInterfaceParameters); // open the endpoints with defined configurations (initially inactive)
+    if ((ulDeviceType & USB_HOST_MSD_ACTIVE) != 0) {                     // {44}
+        if (NO_ID_ALLOCATED == USBPortID_msd_host) {
+            tInterfaceParameters.owner_task = OWN_TASK;                  // wake usb task on receptions
+            tInterfaceParameters.Endpoint = ucMSDBulkOutEndpoint;        // set USB endpoints to act as an input/output pair - transmitter (OUT)
+            tInterfaceParameters.Paired_RxEndpoint = ucMSDBulkInEndpoint;// receiver (IN)
+            tInterfaceParameters.usEndpointSize = usMSDBulkOutEndpointSize; // endpoint queue size (2 buffers of this size will be created for reception)
+            tInterfaceParameters.usb_callback = 0;                       // no call-back since we use rx buffer - the same task is owner
+            tInterfaceParameters.usConfig = 0;
+            tInterfaceParameters.queue_sizes.RxQueueSize = 1024;         // optional input queue (used only when no call-back defined)
+            tInterfaceParameters.queue_sizes.TxQueueSize = (512 + 32);   // additional tx buffer - allow queueing a sector plus a command
+            #if defined WAKE_BLOCKED_USB_TX
+            tInterfaceParameters.low_water_level = (tInterfaceParameters.queue_sizes.TxQueueSize/2); // TX_FREE event on half buffer empty
+            #endif
+            USBPortID_msd_host = fnOpen(TYPE_USB, 0, &tInterfaceParameters); // open the endpoints with defined configurations (initially inactive)
+        }
     }
     #endif
     #if defined USB_CDC_HOST                                             // {37}
-    if (NO_ID_ALLOCATED == USBPortID_comms[FIRST_CDC_INTERFACE]) {
-        tInterfaceParameters.owner_task = OWN_TASK;                      // wake usb task on receptions
-        tInterfaceParameters.Endpoint = ucCDCBulkOutEndpoint;            // set USB endpoints to act as an input/output pair - transmitter (OUT)
-        tInterfaceParameters.Paired_RxEndpoint = ucCDCBulkInEndpoint;    // receiver (IN)
-        tInterfaceParameters.usEndpointSize = usCDCBulkOutEndpointSize;  // endpoint queue size (2 buffers of this size will be created for reception)
-        tInterfaceParameters.usb_callback = 0;                           // no call-back since we use rx buffer - the same task is owner
-        tInterfaceParameters.usConfig = 0;
-        tInterfaceParameters.queue_sizes.RxQueueSize = 512;              // optional input queue (used only when no call-back defined)
-        tInterfaceParameters.queue_sizes.TxQueueSize = 1024;             // additional tx buffer
+    if ((ulDeviceType & USB_HOST_CDC_ACTIVE) != 0) {                     // {44}
+        if (NO_ID_ALLOCATED == USBPortID_comms[FIRST_CDC_INTERFACE]) {
+            tInterfaceParameters.owner_task = OWN_TASK;                  // wake usb task on receptions
+            tInterfaceParameters.Endpoint = ucCDCBulkOutEndpoint;        // set USB endpoints to act as an input/output pair - transmitter (OUT)
+            tInterfaceParameters.Paired_RxEndpoint = ucCDCBulkInEndpoint;// receiver (IN)
+            tInterfaceParameters.usEndpointSize = usCDCBulkOutEndpointSize; // endpoint queue size (2 buffers of this size will be created for reception)
+            tInterfaceParameters.usb_callback = 0;                       // no call-back since we use rx buffer - the same task is owner
+            tInterfaceParameters.usConfig = 0;
+            tInterfaceParameters.queue_sizes.RxQueueSize = 512;          // optional input queue (used only when no call-back defined)
+            tInterfaceParameters.queue_sizes.TxQueueSize = 1024;         // additional tx buffer
         #if defined WAKE_BLOCKED_USB_TX
-        tInterfaceParameters.low_water_level = (tInterfaceParameters.queue_sizes.TxQueueSize/2); // TX_FREE event on half buffer empty
+            tInterfaceParameters.low_water_level = (tInterfaceParameters.queue_sizes.TxQueueSize / 2); // TX_FREE event on half buffer empty
         #endif
-        USBPortID_comms[FIRST_CDC_INTERFACE] = fnOpen(TYPE_USB, 0, &tInterfaceParameters); // open the endpoints with defined configurations (initially inactive)
+            USBPortID_comms[FIRST_CDC_INTERFACE] = fnOpen(TYPE_USB, 0, &tInterfaceParameters); // open the endpoints with defined configurations (initially inactive)
+        }
     }
     #endif
     fnSetUSBConfigState(USB_CONFIG_ACTIVATE, ucActiveConfiguration);     // now activate the configuration
