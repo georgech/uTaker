@@ -337,7 +337,7 @@ static void disable_watchdog(void)
         ACTIVATE_WATCHDOG();                                             // allow user configuration of internal watch dog timer
     }
     else {
-        #if defined KINETIS_KL                                           // {67}
+        #if defined KINETIS_KL && !defined KINETIS_KL82                  // {67}
         SIM_COPC = SIM_COPC_COPT_DISABLED;                               // disable the COP
         #else
         UNLOCK_WDOG();                                                   // open a window to write to watchdog
@@ -1007,7 +1007,7 @@ extern void fnStartTick(void)
 //
 extern void fnRetriggerWatchdog(void)
 {
-#if defined KINETIS_KL                                                   // {67}
+#if defined KINETIS_KL && !defined KINETIS_KL82                          // {67}
     if ((SIM_COPC & SIM_COPC_COPT_LONGEST) != 0) {                       // if the COP is enabled
         SIM_SRVCOP = SIM_SRVCOP_1;                                       // issue COP service sequency
         SIM_SRVCOP = SIM_SRVCOP_2;
@@ -1650,7 +1650,7 @@ static void _LowLevelInit(void)
         ACTIVATE_WATCHDOG();                                             // allow user configuration of internal watchdog timer
     }
     else {                                                               // disable the watchdog
-    #if defined KINETIS_KL                                               // {67}
+    #if defined KINETIS_KL && !defined KINETIS_KL82                      // {67}
         SIM_COPC = SIM_COPC_COPT_DISABLED;                               // disable the COP
     #else
         UNLOCK_WDOG();                                                   // open a window to write to watchdog
@@ -1684,345 +1684,25 @@ static void _LowLevelInit(void)
     FMC_PFB1CR &= ~(BANKDCE | BANKICE | BANKSEBE);
 #endif
     // Configure clock generator
+    //
     // - initially the processor is in FEI (FLL Engaged Internal) - Kinetis K presently running from 20..25MHz internal clock (32.768kHz IRC x 640 FLL factor; 20.97MHz)
     //
-#if defined KINETIS_KE                                                   // KE and KEA presently running at default IRC x FLL frequency
-    SIM_SOPT0 = SIM_SOPT_KE_DEFAULT;                                     // set required default - some fields are "write-only" and so can only be set once
-    #if !defined RUN_FROM_DEFAULT_CLOCK
-    OSC0_CR = (OSC_CR_OSCEN | OSC_CR_OSCSTEN | OSC_CR_OSCOS_SOURCE | _OSC_RANGE); // low gain mode, select crystal range and enable oscillator
-    while ((OSC0_CR & OSC_CR_OSCINIT) == 0) {                            // wait until the oscillator has been initialised
-        #if defined _WINDOWS
-        OSC0_CR |= OSC_CR_OSCINIT;
-        #endif
-    }
-        #if defined RUN_FROM_EXTERNAL_CLOCK
-    ICS_C1 = (ICS_C1_CLKS_EXTERNAL_REF | _FLL_VALUE);                    // divide value to obtain 31.25kHz..39.06525kHz range from input frequency and select external clock as clock source
-    while ((ICS_S & ICS_S_IREFST) != 0) {                                // wait for the clock source to become external clock
-            #if defined _WINDOWS
-        ICS_S &= ~(ICS_S_IREFST);
-            #endif
-    }
-        #else
-    ICS_C1 = (ICS_C1_CLKS_FLL | _FLL_VALUE);                             // divide value to obtain 31.25kHz..39.06525kHz range from input frequency and select FLL as clock source
-    while ((ICS_S & ICS_S_IREFST) != 0) {                                // wait for the clock source to become external clock
-            #if defined _WINDOWS
-        ICS_S &= ~(ICS_S_IREFST);
-            #endif
-    }
-    while ((ICS_S & ICS_S_LOCK) == 0) {                                  // wait for the FLL to lock
-            #if defined _WINDOWS
-        ICS_S |= ICS_S_LOCK;
-            #endif
-    }
-        #endif
-    #endif
-    #if (BUS_CLOCK_DIVIDE == 2)
-        #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
-    SIM_CLKDIV = (SIM_CLKDIV_OUTDIV2_2);                                 // bus clock half the system clock (ICSOUTCLK)
-        #else
-    SIM_BUSDIV = SIM_BUSDIVBUSDIV;                                       // bus clock half the system clock (ICSOUTCLK)
-        #endif
-    #else
-        #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
-    SIM_CLKDIV = 0;                                                      // bus clock is equal to the system clock (ICSOUTCLK)
-        #else
-    SIM_BUSDIV = 0;                                                      // bus clock is equal to the system clock (ICSOUTCLK)
-        #endif
-    #endif
-    ICS_C2 = _SYSCLK__DIV;                                               // set system clock frequency (ICSOUTCLK) once the bus/flash divider has been configured
-    #if !defined _WINDOWS
-    ICS_S |= ICS_S_LOLS;                                                 // clear loss of lock status
-    #endif
-#elif defined RUN_FROM_DEFAULT_CLOCK                                     // no configuration performed - remain in default clocked mode
-    #if defined KINETIS_KL
-    SIM_CLKDIV1 = (((SYSTEM_CLOCK_DIVIDE - 1) << 28) | ((FLASH_CLOCK_DIVIDE - 1) << 16)); // prepare system and flash clock divides (valid also as bus clock divider)
-        #if defined FLL_FACTOR
-    MCG_C4 = ((MCG_C4 & ~(MCG_C4_DMX32 | MCG_C4_HIGH_RANGE)) | (_FLL_VALUE)); // adjust FLL factor to obtain the required operating frequency
-        #endif
-    #elif defined KINETIS_KV
-        #if defined ADC_CLOCK_ENABLED 
-    SIM_CLKDIV1 = (((SYSTEM_CLOCK_DIVIDE - 1) << 28) | ((BUS_CLOCK_DIVIDE - 1) << 16)  | ((ADC_CLOCK_DIVIDE - 1) << 12) | SIM_OUTDIV5EN); // prepare bus clock divides
-        #else
-    SIM_CLKDIV1 = (((SYSTEM_CLOCK_DIVIDE - 1) << 28) | ((BUS_CLOCK_DIVIDE - 1) << 16)  | SIM_CLKDIV5_ADC_8); // prepare bus clock divides
-        #endif
-        #if defined FLL_FACTOR
-    MCG_C4 = ((MCG_C4 & ~(MCG_C4_DMX32 | MCG_C4_HIGH_RANGE)) | (_FLL_VALUE)); // adjust FLL factor to obtain the required operating frequency
-        #endif
-    #else
-    SIM_CLKDIV1 = (((SYSTEM_CLOCK_DIVIDE - 1) << 28) | ((BUS_CLOCK_DIVIDE - 1) << 24) | ((FLEX_CLOCK_DIVIDE - 1) << 20) | ((FLASH_CLOCK_DIVIDE - 1) << 16)); // prepare bus clock divides
-        #if defined FLL_FACTOR
-    MCG_C4 = ((MCG_C4 & ~(MCG_C4_DMX32 | MCG_C4_HIGH_RANGE)) | (_FLL_VALUE)); // adjust FLL factor to obtain the required operating frequency
-        #endif
-    #endif
-#elif (defined KINETIS_KL || defined KINETIS_K22) && defined RUN_FROM_LIRC
-    MCG_SC = MCG_SC_FCRDIV_1;                                            // no divide after fast clock (4MHz)
-    MCG_C2 |= MCG_C2_IRCS;                                               // select fast internal reference clock (rather than slow one) for MCGIRCLK
-    MCG_C1 = (MCG_C1_IREFSTEN | MCG_C1_IRCLKEN | MCG_C1_CLKS_INTERN_CLK);// enable and select 4MHz IRC clock source and allow it to continue operating in STOP mode
-    while ((MCG_S & MCG_S_CLKST_MASK) != MCG_S_CLKST_INTERN_CLK) {       // wait until the 4MHz IRC source is selected
-    #if defined _WINDOWS
-        MCG_S &= ~MCG_S_CLKST_MASK;
-        MCG_S |= MCG_S_CLKST_INTERN_CLK;
-    #endif
-    }
-    #if defined KINETIS_K22
-    SIM_CLKDIV1 = (((SYSTEM_CLOCK_DIVIDE - 1) << 28) | ((BUS_CLOCK_DIVIDE - 1) << 24) | ((FLEX_CLOCK_DIVIDE - 1) << 20) | ((FLASH_CLOCK_DIVIDE - 1) << 16)); // prepare bus clock divides
-    #else
-    SIM_CLKDIV1 = (((SYSTEM_CLOCK_DIVIDE - 1) << 28) | ((BUS_CLOCK_DIVIDE - 1) << 16)); // set system and bus clock dividers
-    #endif
-    MCG_C2 |= MCG_C2_LP;                                                 // disable FLL in bypass mode
+#if defined KINETIS_KE
+    #include "kinetis_KE_CLOCK.h"                                        // KE and KEA clock configuration
 #elif defined RUN_FROM_HIRC || defined RUN_FROM_HIRC_FLL || defined RUN_FROM_HIRC_PLL // 48MHz
-    #if !defined KINETIS_K64 && defined SUPPORT_RTC && !defined RTC_USES_RTC_CLKIN && !defined RTC_USES_LPO_1kHz
-    MCG_C2 = MCG_C2_EREFS;                                               // request oscillator
-    OSC0_CR |= (OSC_CR_ERCLKEN | OSC_CR_EREFSTEN);                       // enable the external reference clock and keep it enabled in stop mode
-    #endif
-  //MCG_MC = MCG_MC_HIRCEN;                                              // this is optional and would allow the HIRC to run even when the processor is not working in HIRC mode
-    #if defined MCG_C1_CLKS_HIRC
-    SIM_CLKDIV1 = (((SYSTEM_CLOCK_DIVIDE - 1) << 28) | ((BUS_CLOCK_DIVIDE - 1) << 16)); // prepare bus clock divides
-    MCG_C1 = MCG_C1_CLKS_HIRC;                                           // select HIRC clock source
-    while ((MCG_S & MCG_S_CLKST_MASK) != MCG_S_CLKST_HICR) {             // wait until the source is selected
-        #if defined _WINDOWS
-        MCG_S &= ~MCG_S_CLKST_MASK;
-        MCG_S |= MCG_S_CLKST_HICR;
-        #endif
-    }
-    #else
-    MCG_C7 = MCG_C7_OSCSEL_IRC48MCLK;                                    // route the IRC48M clock to the external reference clock input (this enables IRC48M)
-    SIM_CLKDIV1 = (((SYSTEM_CLOCK_DIVIDE - 1) << 28) | ((BUS_CLOCK_DIVIDE - 1) << 24) | ((FLEX_CLOCK_DIVIDE - 1) << 20) | ((FLASH_CLOCK_DIVIDE - 1) << 16)); // prepare bus clock divides
-    MCG_C1 = (MCG_C1_IREFS | MCG_C1_CLKS_EXTERN_CLK);                    // switch IRC48M reference to MCGOUTCLK
-    while ((MCG_S & MCG_S_CLKST_MASK) != MCG_S_CLKST_EXTERN_CLK) {       // wait until the new source is valid (move to FBI using IRC48M external source is complete)
-        #if defined _WINDOWS
-        MCG_S &= ~MCG_S_CLKST_MASK;
-        MCG_S |= MCG_S_CLKST_EXTERN_CLK;
-        #endif
-        #if (defined KINETIS_K64 || (defined KINETIS_K24 && (SIZE_OF_FLASH == (1024 * 1024)))) // older K64 devices require the IRC48M to be switched on by the USB module
-        if (++iIRC48M_USB_control >= IRC48M_TIMEOUT) {                   // if the switch-over is taking too long it means that the clock needs to be enabled in the USB controller
-            POWER_UP(4, SIM_SCGC4_USBOTG);                               // power up the USB controller module
-            USB_CLK_RECOVER_IRC_EN = (USB_CLK_RECOVER_IRC_EN_REG_EN | USB_CLK_RECOVER_IRC_EN_IRC_EN); // the IRC48M is only usable when enabled via the USB module
-        }
-        #endif
-    }
-        #if defined RUN_FROM_HIRC_FLL
-    MCG_C2 = (MCG_C2_IRCS | MCG_C2_RANGE_8M_32M);                        // select a high frquency range values so that the FLL input divide range is increased
-    MCG_C1 = (MCG_C1_CLKS_PLL_FLL | MCG_C1_FRDIV_1280);                  // switch FLL input to the external clock source with correct divide value, and select the FLL output for MCGOUTCLK
-    while ((MCG_S & MCG_S_CLKST_MASK) != MCG_S_CLKST_FLL) {              // wait for the output to be set
-        #if defined _WINDOWS
-        MCG_S &= ~MCG_S_CLKST_MASK;
-        MCG_S |= MCG_S_CLKST_FLL;
-        #endif
-    }
-    MCG_C4 = ((MCG_C4 & ~(MCG_C4_DMX32 | MCG_C4_HIGH_RANGE)) | (_FLL_VALUE)); // adjust FLL factor to obtain the required operating frequency
-        #elif defined RUN_FROM_HIRC_PLL                                  // we are presently running directly from the IRC48MCLK and have also determined whether a K64 is an older or newer device (with IRC48M independent from the USB module)
-    MCG_C1 = (MCG_C1_CLKS_EXTERN_CLK | MCG_C1_FRDIV_1280);               // switch the external clock source also to the FLL to satisfy the PBE state requirement
-    MCG_C5 = ((CLOCK_DIV - 1) | MCG_C5_PLLSTEN0);                        // PLL remains enabled in normal stop modes
-    MCG_C6 = ((CLOCK_MUL - MCG_C6_VDIV0_LOWEST) | MCG_C6_PLLS);          // complete PLL configuration and move to PBE
-    while ((MCG_S & MCG_S_PLLST) == 0) {                                 // loop until the PLLS clock source becomes valid
-            #if defined _WINDOWS
-        MCG_S |= MCG_S_PLLST;
-            #endif
-    }
-    while ((MCG_S & MCG_S_LOCK) == 0) {                                  // loop until PLL locks
-            #if defined _WINDOWS
-        MCG_S |= MCG_S_LOCK;
-            #endif
-    }
-    MCG_C1 = (MCG_C1_CLKS_PLL_FLL | MCG_C1_FRDIV_1024);                  // finally move from PBE to PEE mode - switch to PLL clock
-    while ((MCG_S & MCG_S_CLKST_MASK) != MCG_S_CLKST_PLL) {              // loop until the PLL clock is selected
-            #if defined _WINDOWS
-        MCG_S &= ~MCG_S_CLKST_MASK;
-        MCG_S |= MCG_S_CLKST_PLL;
-            #endif
-    }
-        #else
-    MCG_C2 |= MCG_C2_LP;                                                 // set bypass to disable FLL and complete move to BLPE (in which PLL is also always disabled)
-        #endif
-    #endif
-#elif defined KINETIS_WITH_MCG_LITE && defined RUN_FROM_LIRC             // 8MHz default
-    // The IRC8 defaults to 8MHz with no FCRDIV divide
-    //
-    #if defined RUN_FROM_LIRC_2M                                         // select 2MHz ICR rather than 8MHz
-    MCG_C2 = 0;
-    #else
-    MCG_C2 = MCG_C2_IRCS;                                                // ensure 8MHz ICR is selected
-    #endif
-    #if defined SLOW_CLOCK_DIVIDE                                        // if a slow clock output divider is specified
-    MCG_SC = SLOW_CLOCK_DIVIDE_VALUE;                                    // select the output divider ratio
-    #endif
-    SIM_CLKDIV1 = (((SYSTEM_CLOCK_DIVIDE - 1) << 28) | ((BUS_CLOCK_DIVIDE - 1) << 16)); // set bus clock divides
+    #include "kinetis_HIRC.h"                                            // high speed internal clock
+#elif defined KINETIS_WITH_MCG_LITE
+    #include "kinetis_MCG_LITE.h"                                        // MCG LITE clock configuration
+#elif defined KINETIS_KL
+    #include "kinetis_KL_CLOCK.h"                                        // KL clock configuration
+#elif defined KINETIS_KV
+    #include "kinetis_KV_CLOCK.h"                                        // KV clock configuration
+#elif defined KINETIS_KW
+    #include "kinetis_KW_CLOCK.h"                                        // KW clock configuration
+#elif defined KINETIS_KM
+    #include "kinetis_KM_CLOCK.h"                                        // KM clock configuration
 #else
-    #if defined KINETIS_WITH_MCG_LITE                                    // EXT mode (run directly from the oscillator input)
-    MCG_C2 = (MCG_C2_EREFS | MCG_C2_IRCS);                               // select oscillator as external clock source
-    OSC0_CR = (OSC_CR_ERCLKEN | OSC_CR_EREFSTEN);                        // enable the oscillator and allow it to continue oscillating in stop mode
-    SIM_CLKDIV1 = (((SYSTEM_CLOCK_DIVIDE - 1) << 28) | ((BUS_CLOCK_DIVIDE - 1) << 16)); // prepare bus clock divides
-    while ((MCG_S & MCG_S_OSCINIT0) == 0) {                              // wait for the oscillator to start
-        #if defined _WINDOWS
-        MCG_S |= MCG_S_OSCINIT0;
-        #endif
-    }
-    MCG_C1 = MCG_C1_CLKS_EXTERN_CLK;                                     // select external clock source
-    while ((MCG_S & MCG_S_CLKST_MASK) != MCG_S_CLKST_EXT) {              // wait until the source is selected
-    #if defined _WINDOWS
-        MCG_S &= ~MCG_S_CLKST_MASK;
-        MCG_S |= MCG_S_CLKST_EXT;
-    #endif
-    }
-    #elif defined EXTERNAL_CLOCK                                         // first move from state FEI to state FBE
-        #if defined RUN_FROM_HIRC_PLL
-    MCG_C7 = MCG_C7_OSCSEL_IRC48MCLK;                                    // route the IRC48M clock to the external reference clock input (this enables IRC48M)
-        #endif
-        #if defined RUN_FROM_RTC_FLL
-    POWER_UP(6, SIM_SCGC6_RTC);                                          // enable access to the RTC
-    MCG_C7 = MCG_C7_OSCSEL_32K;                                          // select the RTC clock as external clock input to the FLL
-    RTC_CR = (RTC_CR_OSCE);                                              // enable RTC oscillator and output the 32.768kHz output clock so that it can be used by the MCG (the first time that it starts it can have a startup/stabilisation time but this is not critical for the FLL usage)
-    MCG_C1 = ((MCG_C1_CLKS_PLL_FLL | MCG_C1_FRDIV_RANGE0_1) & ~MCG_C1_IREFS); // switch the FLL input to the undivided external clock source (RTC)
-    SIM_CLKDIV1 = (((SYSTEM_CLOCK_DIVIDE - 1) << 28) | ((BUS_CLOCK_DIVIDE - 1) << 24) | ((FLEX_CLOCK_DIVIDE - 1) << 20) | ((FLASH_CLOCK_DIVIDE - 1) << 16)); // prepare bus clock divides
-    while ((MCG_S & MCG_S_IREFST) != 0) {                                // wait until the switch to the external clock source has completed
-            #if defined _WINDOWS
-        MCG_S &= ~(MCG_S_IREFST);
-            #endif
-    }
-    MCG_C4 = ((MCG_C4 & ~(MCG_C4_DMX32 | MCG_C4_HIGH_RANGE)) | (_FLL_VALUE)); // adjust FLL factor to obtain the required operating frequency
-        #elif defined RUN_FROM_RTC_FLL
-    MCG_C4 = ((MCG_C4 & ~(MCG_C4_DMX32 | MCG_C4_HIGH_RANGE)) | (_FLL_VALUE)); // adjust FLL factor to obtain the required operating frequency
-        #else                                                            // external oscillator
-            #if defined KINETIS_KW2X && defined RUN_FROM_MODEM_CLK_OUT
-    // Single crystal with CLK_OUT used by MCU
-    //
-    _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_LOW(C, GPIO5, 0, (PORT_SRE_FAST | PORT_DSE_LOW)); // set the output to select 4MHz CLK_OUT frequency
-    _SETBITS(B, RST_B);                                                  // release the modem reset
-    _CONFIG_PORT_INPUT_FAST_LOW(B, IRQ_B, (PORT_PS_UP_ENABLE));          // enable input to monitor the modem's interrupt line
-                #if !defined _WINDOWS
-    while (_READ_PORT_MASK(B, IRQ_B) != 0) {}                            // wait for modem start-up interrupt request (approx. 25ms)
-                #endif
-            #endif
-            #if EXTERNAL_CLOCK >= 8000000
-    MCG_C2 = (MCG_C2_RANGE_8M_32M | MCG_C2_LOCRE0);                      // select external clock source (with reset on clock loss)
-    MCG_C1 = (MCG_C1_CLKS_EXTERN_CLK | MCG_C1_FRDIV_1024);               // switch to external input clock (the FLL input clock is set to as close to its input range as possible, although this is not absolutely necessary since the FLL will not be used)
-            #else
-    MCG_C2 = (MCG_C2_RANGE_1M_8M | MCG_C2_LOCRE0);                       // select external clock source (with reset on clock loss)
-    MCG_C1 = (MCG_C1_CLKS_EXTERN_CLK | MCG_C1_FRDIV_128);                // switch to external input clock (the FLL input clock is set to as close to its input range as possible, although this is not absolutely necessary since the FLL will not be used)
-            #endif
-        #endif
-    #else                                                                // crystal clock
-        #if defined OSC_LOW_GAIN_MODE                                    // {66} if using low frequency low power mode no external resistor or load capacitors are used
-            #define MCG_C2_GAIN_MODE 0                                   // don't select high gain mode since the oscillator will not start
-        #else
-            #define MCG_C2_GAIN_MODE MCG_C2_HGO                          // select high gain mode
-        #endif
-        #if defined FLL_FACTOR || defined RUN_FROM_EXTERNAL_CLOCK
-    OSC0_CR = (OSC_CR_ERCLKEN | OSC_CR_EREFSTEN);                        // enable the oscillator and allow it to continue oscillating in stop mode
-        #endif
-        #if CRYSTAL_FREQUENCY > 8000000
-    MCG_C2 = (MCG_C2_RANGE_8M_32M | MCG_C2_GAIN_MODE | MCG_C2_EREFS | MCG_C2_LOCRE0); // select crystal oscillator and select a suitable range
-        #elif CRYSTAL_FREQUENCY >= 1000000
-    MCG_C2 = (MCG_C2_RANGE_1M_8M | MCG_C2_GAIN_MODE | MCG_C2_EREFS | MCG_C2_LOCRE0); // select crystal oscillator and select a suitable range
-        #else                                                            // assumed to be 32kHz crystal
-    MCG_C2 = (MCG_C2_RANGE_32K_40K | MCG_C2_GAIN_MODE | MCG_C2_EREFS | MCG_C2_LOCRE0); // select crystal oscillator and select a suitable range
-        #endif
-        #if CRYSTAL_FREQUENCY == 8000000
-    MCG_C1 = (MCG_C1_CLKS_EXTERN_CLK | MCG_C1_FRDIV_256);                // switch to external source (the FLL input clock is set to as close to its input range as possible, although this is not absolutely necessary if the FLL will not be used)
-        #elif CRYSTAL_FREQUENCY == 16000000
-    MCG_C1 = (MCG_C1_CLKS_EXTERN_CLK | MCG_C1_FRDIV_512);                // switch to external source (the FLL input clock is set to as close to its input range as possible, although this is not absolutely necessary if the FLL will not be used)
-        #elif CRYSTAL_FREQUENCY == 24000000
-    MCG_C1 = (MCG_C1_CLKS_EXTERN_CLK | MCG_C1_FRDIV_1024);               // switch to external source (the FLL input clock is set to as close to its input range as possible, although this is not absolutely necessary if the FLL will not be used)
-        #elif CRYSTAL_FREQUENCY >= 10000000 && CRYSTAL_FREQUENCY <= 12000000
-    MCG_C1 = (MCG_C1_CLKS_EXTERN_CLK | MCG_C1_FRDIV_256);                // switch to external source (the FLL input clock is set to as close to its input range as possible, although this is not absolutely necessary if the FLL will not be used)
-        #elif CRYSTAL_FREQUENCY == 4000000
-    MCG_C1 = (MCG_C1_CLKS_EXTERN_CLK | MCG_C1_FRDIV_128);                // switch to external source (the FLL input clock is set to as close to its input range as possible, although this is not absolutely necessary if the FLL will not be used)
-        #elif CRYSTAL_FREQUENCY == 32768
-            #if !defined FLL_FACTOR
-    MCG_C1 = (MCG_C1_CLKS_EXTERN_CLK | MCG_C1_FRDIV_RANGE0_1);           // switch to external source (the FLL input clock is set to as close to its input range as possible, although this is not absolutely necessary if the FLL will not be used)
-            #endif
-        #else
-            #error crystal speed support needs to be added!
-        #endif
-    while ((MCG_S & MCG_S_OSCINIT) == 0) {                               // loop until the crystal source has been selected
-        #if defined _WINDOWS
-        MCG_S |= MCG_S_OSCINIT;                                          // set the flag indicating that the ocsillator initialisation has completed
-        #endif
-    }
-        #if defined FLL_FACTOR
-            #if defined KINETIS_KL
-    SIM_CLKDIV1 = (((SYSTEM_CLOCK_DIVIDE - 1) << 28) | ((BUS_CLOCK_DIVIDE - 1) << 16)); // prepare bus clock divides
-            #elif defined KINETIS_KV
-                #if defined ADC_CLOCK_ENABLED 
-    SIM_CLKDIV1 = (((SYSTEM_CLOCK_DIVIDE - 1) << 28) | ((BUS_CLOCK_DIVIDE - 1) << 16)  | ((ADC_CLOCK_DIVIDE - 1) << 12) | SIM_OUTDIV5EN); // prepare bus clock divides
-                #else
-    SIM_CLKDIV1 = (((SYSTEM_CLOCK_DIVIDE - 1) << 28) | ((BUS_CLOCK_DIVIDE - 1) << 16)  | ((SIM_CLKDIV5_ADC_8 - 1) << 12)); // prepare bus clock divides
-                #endif
-            #else
-    SIM_CLKDIV1 = (((SYSTEM_CLOCK_DIVIDE - 1) << 28) | ((BUS_CLOCK_DIVIDE - 1) << 24) | ((FLEX_CLOCK_DIVIDE - 1) << 20) | ((FLASH_CLOCK_DIVIDE - 1) << 16)); // prepare bus clock divides
-            #endif
-    MCG_C4 = ((MCG_C4 & ~(MCG_C4_DMX32 | MCG_C4_HIGH_RANGE)) | (_FLL_VALUE)); // adjust FLL factor to obtain the required operating frequency
-    MCG_C1 &= ~(MCG_C1_CLKS_INTERN_CLK | MCG_C1_CLKS_EXTERN_CLK | MCG_C1_IREFS); // move to FEE (MCGOUTCLK is derived from the FLL clock), selecting the external clock as source (rather than slow internal clock)
-    while ((MCG_S & (MCG_S_CLKST_EXTERN_CLK | MCG_S_CLKST_INTERN_CLK)) != MCG_S_CLKST_FLL) { // loop until the FLL clock source becomes valid
-            #if defined _WINDOWS
-        MCG_S &= ~(MCG_S_CLKST_EXTERN_CLK | MCG_S_CLKST_INTERN_CLK);
-            #endif
-    }
-        #endif
-    #endif                                                               // endif not EXTERNAL_CLOCK
-    #if !defined KINETIS_WITH_MCG_LITE && !defined RUN_FROM_RTC_FLL
-    while ((MCG_S & MCG_S_IREFST) != 0) {                                // loop until the FLL source is no longer the internal reference clock
-        #if defined _WINDOWS
-        MCG_S &= ~MCG_S_IREFST;
-        #endif
-    }
-        #if !defined FLL_FACTOR
-    while ((MCG_S & MCG_S_CLKST_MASK) != MCG_S_CLKST_EXTERN_CLK) {       // loop until the external reference clock source is valid
-            #if defined _WINDOWS
-        MCG_S &= ~MCG_S_CLKST_MASK;
-        MCG_S |= MCG_S_CLKST_EXTERN_CLK;
-            #endif
-    }
-            #if defined RUN_FROM_EXTERNAL_CLOCK                          // {101}
-                #if defined KINETIS_KL
-    SIM_CLKDIV1 = (((SYSTEM_CLOCK_DIVIDE - 1) << 28) | ((BUS_CLOCK_DIVIDE - 1) << 16)); // prepare bus clock divides
-                #else
-    SIM_CLKDIV1 = (((SYSTEM_CLOCK_DIVIDE - 1) << 28) | ((BUS_CLOCK_DIVIDE - 1) << 24) | ((FLEX_CLOCK_DIVIDE - 1) << 20) | ((FLASH_CLOCK_DIVIDE - 1) << 16)); // prepare bus clock divides
-                #endif
-            #endif
-        #endif
-        #if defined CLOCK_DIV_1                                          // {90} PLL1 is to be configured and enabled 
-    MCG_C11 = (MCG_C11_PLLREFSEL1_OSC0 | MCG_C11_PLLCLKEN1 | (CLOCK_DIV_1 - 1)); // use OSCO clock source for PLL1 with input divide set
-    MCG_C12 = (CLOCK_MUL_1 - MCG_C12_VDIV1_LOWEST);                      // set multiplier - we don't wait for PLL1 to lock until after PLL0 setup has completed (allow them to lock in parallel)
-        #endif
-        #if !defined FLL_FACTOR && !defined RUN_FROM_EXTERNAL_CLOCK      // {95}
-    MCG_C5 = ((CLOCK_DIV - 1) | MCG_C5_PLLSTEN0);                        // now move from state FEE to state PBE (or FBE) PLL remains enabled in normal stop modes
-    MCG_C6 = ((CLOCK_MUL - MCG_C6_VDIV0_LOWEST) | MCG_C6_PLLS);          // set the PLL multiplication factor
-    while ((MCG_S & MCG_S_PLLST) == 0) {                                 // loop until the PLLS clock source becomes valid
-            #if defined _WINDOWS
-        MCG_S |= MCG_S_PLLST;
-            #endif
-    }
-    while ((MCG_S & MCG_S_LOCK) == 0) {                                  // loop until PLL locks
-            #if defined _WINDOWS
-        MCG_S |= MCG_S_LOCK;
-            #endif
-    }
-            #if defined KINETIS_KL
-    SIM_CLKDIV1 = (((SYSTEM_CLOCK_DIVIDE - 1) << 28) | ((BUS_CLOCK_DIVIDE - 1) << 16)); // prepare bus clock divides
-            #else
-    SIM_CLKDIV1 = (((SYSTEM_CLOCK_DIVIDE - 1) << 28) | ((BUS_CLOCK_DIVIDE - 1) << 24) | ((FLEX_CLOCK_DIVIDE - 1) << 20) | ((FLASH_CLOCK_DIVIDE - 1) << 16)); // prepare bus clock divides
-            #endif
-            #if defined HIGH_SPEED_RUN_MODE_AVAILABLE && defined HIGH_SPEED_RUN_MODE_REQUIRED
-    SMC_PMCTRL = SMC_PMCTRL_RUNM_HSRUN;                                  // {118} set high speed run mode (restrictions apply) so that the clock speeds can be obtained  
-            #endif
-    MCG_C1 = (MCG_C1_CLKS_PLL_FLL | MCG_C1_FRDIV_1024);                  // finally move from PBE to PEE mode - switch to PLL clock
-    while ((MCG_S & MCG_S_CLKST_MASK) != MCG_S_CLKST_PLL) {              // loop until the PLL clock is selected
-            #if defined _WINDOWS
-        MCG_S &= ~MCG_S_CLKST_MASK;
-        MCG_S |= MCG_S_CLKST_PLL;
-            #endif
-    }
-        #endif
-        #if defined CLOCK_DIV_1                                          // {90} PLL1 used by FS USB or SDRAM
-    while ((MCG_S2 & MCG_S2_LOCK1) == 0) {                               // loop until PLL1 locks
-            #if defined _WINDOWS
-        MCG_S2 |= MCG_S2_LOCK1;
-            #endif
-    }
-        #endif
-    #endif
+    #include "kinetis_K_CLOCK.h"                                         // K clock configuration
 #endif
 #if defined CLKOUT_AVAILABLE
   //fnClkout(BUS_CLOCK_OUT);                                             // select the clock to monitor on CLKOUT

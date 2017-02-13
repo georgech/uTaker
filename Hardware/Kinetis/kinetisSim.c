@@ -323,9 +323,34 @@ static void fnSetDevice(unsigned long *port_inits)
 #elif !defined KINETIS_KE && !defined KINETIS_KEA
     MC_SRSL = (MC_SRSL_POR | MC_SRSL_LVD);                               // mode control - reset status due to power on reset
 #endif
-#if defined KINETIS_KL                                                   // {24}
+#if defined KINETIS_KL && !defined KINETIS_KL82
     SIM_COPC = SIM_COPC_COPT_LONGEST;                                    // COP (computer operating properly) rather than watchdog
-    #if defined KINETIS_KL03 || defined KINETIS_KL43 || defined KINETIS_KL27
+#elif defined KINETIS_KE
+    WDOG_CS1 = WDOG_CS1_EN;
+    WDOG_CS2 = WDOG_CS2_CLK_1kHz;
+    WDOG_TOVALL = 0x04;
+#else
+    WDOG_STCTRLH = (WDOG_STCTRLH_STNDBYEN | WDOG_STCTRLH_WAITEN | WDOG_STCTRLH_STOPEN | WDOG_STCTRLH_ALLOWUPDATE | WDOG_STCTRLH_CLKSRC | WDOG_STCTRLH_WDOGEN); // watchdog
+    WDOG_STCTRLL = 0x0001;
+    WDOG_TOVALH = 0x004c;
+    WDOG_TOVALL = 0x4b4c;
+    WDOG_WINL = 0x0010;
+    WDOG_REFRESH = 0xb480;
+    WDOG_UNLOCK = 0xd928;
+    WDOG_PRESC = 0x0400;
+#endif
+#if defined KINETIS_KL                                                   // {24}
+    #if defined KINETIS_WITH_SCG
+    SCG_VERID = 0x00000040;
+    SCG_CSR = 0x02000001;
+    SCG_RCCR = 0x02000001;
+    SCG_VCCR = 0x02000001;
+    SCG_HCCR = 0x02000001;
+    SCG_CLKOUTCNFG = 0x02000000;
+    SCG_SOSCCFG = 0x00000010;
+    SCG_SIRCCSR = 0x03000005;
+    SCG_SIRCCFG = 0x00000001;
+    #elif defined KINETIS_KL03 || defined KINETIS_KL43 || defined KINETIS_KL27
     MCG_C1 = MCG_C1_CLKS_LIRC;
     MCG_C2 = MCG_C2_IRCS;
     MCG_S  = MCG_S_CLKST_LICR;
@@ -334,24 +359,10 @@ static void fnSetDevice(unsigned long *port_inits)
     #endif
 #elif defined KINETIS_KE
     SIM_SRSID = (SIM_SRSID_LVD | SIM_SRSID_POR);
-
-    WDOG_CS1 = WDOG_CS1_EN;
-    WDOG_CS2 = WDOG_CS2_CLK_1kHz;
-    WDOG_TOVALL = 0x04;
-
     ICS_C1 = ICS_C1_IREFS;
     ICS_C2 = ICS_C2_BDIV_2;
     ICS_S = ICS_S_IREFST;
 #else
-    WDOG_STCTRLH  = (WDOG_STCTRLH_STNDBYEN | WDOG_STCTRLH_WAITEN | WDOG_STCTRLH_STOPEN | WDOG_STCTRLH_ALLOWUPDATE | WDOG_STCTRLH_CLKSRC | WDOG_STCTRLH_WDOGEN); // watchdog
-    WDOG_STCTRLL  = 0x0001;
-    WDOG_TOVALH   = 0x004c;
-    WDOG_TOVALL   = 0x4b4c;
-    WDOG_WINL     = 0x0010;
-    WDOG_REFRESH  = 0xb480;
-    WDOG_UNLOCK   = 0xd928;
-    WDOG_PRESC    = 0x0400;
-
     EWM_CMPH = 0xff;                                                     // external watchdog monitor
 
     MCG_C1 = MCG_C1_IREFS;                                               // multi-purpose clock generator
@@ -3963,7 +3974,7 @@ extern void fnSimPers(void)
 
 extern int fnSimulateDMA(int channel)                                    // {3}
 {
-#if !defined DEVICE_WITHOUT_DMA
+#if !defined DEVICE_WITHOUT_DMA && !defined KINETIS_KL82
 #if defined KINETIS_KL                                                   // {32}
     KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
     ptrDMA += channel;
@@ -5668,7 +5679,7 @@ extern int fnSimulateUSB(int iDevice, int iEndPoint, unsigned char ucPID, unsign
             }
     #if defined USB_HOST_SUPPORT
             if ((CTL & HOST_MODE_EN) != 0) {
-                if (ptrBDT->usb_bd_rx_odd.ulUSB_BDControl & DTS) {      // if data toggle synchronisation is being used
+                if ((ptrBDT->usb_bd_rx_odd.ulUSB_BDControl & DTS) != 0) {// if data toggle synchronisation is being used
                     if (((ptrBDT->usb_bd_rx_odd.ulUSB_BDControl & DATA_1) == 0) == iData1Frame[iRealEndpoint]) { // check that the receive buffer accepts this data token
                         _EXCEPTION("Wrong Rx buffer!!");
                     }
@@ -5681,7 +5692,7 @@ extern int fnSimulateUSB(int iDevice, int iEndPoint, unsigned char ucPID, unsign
             ptrData = _fnLE_add((unsigned long)ptrData);
             ptrBDT->usb_bd_rx_odd.ulUSB_BDControl |= SET_FRAME_LENGTH(usLenEvent); // add length
     #if defined USB_HOST_SUPPORT                                         // {25}
-            if (CTL & HOST_MODE_EN) {
+            if ((CTL & HOST_MODE_EN) != 0) {
                 if (STALL_PID == ucPID) {
                     ptrBDT->usb_bd_rx_odd.ulUSB_BDControl |= (STALL_PID << RX_PID_SHIFT);
                 }
@@ -5791,7 +5802,7 @@ static unsigned char ucGetToken(int iNoIN)
                 iTokenOut = 0;
             }
         }
-    } while ((iNoIN != 0) && (ucToken == (IN_PID << 4)));                // skip IN tokens if so requested
+    } while ((iNoIN != 0) && ((ucToken >> 4) == IN_PID));                // skip IN tokens if so requested
     return ucToken;
 }
 
@@ -5965,10 +5976,10 @@ static const unsigned char ucConfigDescriptor[] = {                      // cons
     0x05, 0x24, 0x01, 0x01, 0x00,                                        // class descriptor
     0x04, 0x24, 0x02, 0x02,                                              // class descriptor
     0x05, 0x24, 0x06, 0x00, 0x01,                                        // class descriptor
-    0x07, 0x05, 0x83, 0x03, 0x40, 0x00, 0x0a,                            // interrupt IN endpoint - 64 bytes on endpoint 3
+    0x07, 0x05, 0x81, 0x03, 0x20, 0x00, 0x0a,                            // interrupt IN endpoint - 32 bytes on endpoint 1
     0x09, 0x04, 0x01, 0x00, 0x02, 0x0a, 0x00, 0x00, 0x05,                // interface descriptor
-    0x07, 0x05, 0x01, 0x02, 0x40, 0x00, 0x00,                            // bulk OUT endpoint - 64 bytes on endpoint 1
-    0x07, 0x05, 0x82, 0x02, 0x40, 0x00, 0x00,                            // bulk OUT endpoint - 64 bytes on endpoint 2
+    0x07, 0x05, 0x02, 0x02, 0x20, 0x00, 0x00,                            // bulk OUT endpoint - 32 bytes on endpoint 2
+    0x07, 0x05, 0x82, 0x02, 0x20, 0x00, 0x00,                            // bulk OUT endpoint - 32 bytes on endpoint 2
 };
 #endif
 
@@ -6115,15 +6126,15 @@ static void fnUSBHostModel(int iEndpoint, unsigned char ucPID, unsigned short us
                         break;
                     case 2:                                              // product
                         ucStringDescriptor[0] = 0x0c;
-                        ucStringDescriptor[2] = 0x44;
+                        ucStringDescriptor[2] = 'C';
                         ucStringDescriptor[3] = 0x00;
-                        ucStringDescriptor[4] = 0x72;
+                        ucStringDescriptor[4] = 'D';
                         ucStringDescriptor[5] = 0x00;
-                        ucStringDescriptor[6] = 0x69;
+                        ucStringDescriptor[6] = 'C';
                         ucStringDescriptor[7] = 0x00;
-                        ucStringDescriptor[8] = 0x76;
+                        ucStringDescriptor[8] = ' ';
                         ucStringDescriptor[9] = 0x00;
-                        ucStringDescriptor[10] = 0x65;
+                        ucStringDescriptor[10] = ' ';
                         ucStringDescriptor[11] = 0x00;
                         break;
                     case 3:                                              // serial number
@@ -6316,7 +6327,7 @@ extern void fnCheckUSBOut(int iDevice, int iEndpoint)
                 bufferDescriptor->ulUSB_BDControl &= ~OWN;               // remove SIE ownership
             }
     #if defined USB_HOST_SUPPORT                                         // {25}
-            if (CTL & HOST_MODE_EN) {                                    // if in host mode
+            if ((CTL & HOST_MODE_EN) != 0) {                             // if in host mode
                 unsigned char ucToken = ucGetToken(1);                   // the token that was sent (skip INs)
                 if ((ucToken >> 4) == SETUP_PID) {                       // a SETUP token was sent (will always be on control endpoint 0
                     fnLogUSB(iRealEndpoint, SETUP_PID, usUSBLength, ptrUSBData, ((bufferDescriptor->ulUSB_BDControl & DATA_1) != 0));
@@ -6327,7 +6338,8 @@ extern void fnCheckUSBOut(int iDevice, int iEndpoint)
                     fnUSBHostModel((ucToken & 0x0f), OUT_PID, usUSBLength, ptrUSBData); // let the host model handle the data
                 }
                 else {
-                    fnLogUSB(iRealEndpoint, 0, usUSBLength, ptrUSBData, ((bufferDescriptor->ulUSB_BDControl & DATA_1) != 0));
+                    _EXCEPTION("Unexpected token queued");               // IN tokens are not expected to be returned since they should be skipped
+                    return;
                 }
                 bufferDescriptor->ulUSB_BDControl &= ~(RX_PID_MASK);
                 bufferDescriptor->ulUSB_BDControl |= (ACK_PID << RX_PID_SHIFT); // insert ACK
@@ -6346,14 +6358,14 @@ extern void fnCheckUSBOut(int iDevice, int iEndpoint)
             fnSimulateUSB(iDevice, iEndpoint, 0, 0, USB_IN_SUCCESS);     // generate tx interrupt
     #endif
         }                                                                // handle further buffer if available
-        else {                                                           // no data to be sent
+        else {                                                           // no data to be sent - the buffer descrptior is not owned
     #if defined USB_HOST_SUPPORT                                         // {25}
-            if (CTL & HOST_MODE_EN) {                                    // if in host mode
+            if ((CTL & HOST_MODE_EN) != 0) {                             // if in host mode
                 unsigned char ucToken = ucGetToken(0);                   // we expect an IN
                 if ((ucToken >> 4) == IN_PID) {                          // an IN token is to be sent so that the device can return data
                     fnUSBHostModel((ucToken & 0x0f), IN_PID, 0, 0);      // let the host model prepare the data
                 }
-                else if (ucToken != 0) {
+                else if (ucToken != 0) {                                 // an OUT_PID is never expected here since the buffer descrptior would be owned if it were set as token
                     _EXCEPTION("Unexpected token");
                 }
             }
@@ -6827,7 +6839,7 @@ extern int fnSimTimers(void)
     }
     // Watchdog
     //
-#if defined KINETIS_KL                                                   // {24}
+#if defined KINETIS_KL && !defined KINETIS_KL82                          // {24}
     if ((SIM_COPC & SIM_COPC_COPT_LONGEST) != SIM_COPC_COPT_DISABLED) {  // check only when COP is enabled 
         if (SIM_SRVCOP == SIM_SRVCOP_2) {                                // assume retriggered
             ulCOPcounter = 0;

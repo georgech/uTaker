@@ -44,6 +44,7 @@
     09.01.2016 Add QSPI and USB PHY                                      {29}
     02.06.2016 Add ACMP and CMP                                          {30}
     09.12.2016 Add PWT                                                   {31}
+    11.02.2017 Add system clock generator                                {32}
 
 */  
 
@@ -1789,7 +1790,7 @@ typedef struct stKINETIS_SIM
     unsigned long SIM_SCGC6;
     unsigned long SIM_SCGC7;
     unsigned long SIM_CLKDIV1;
-    #if defined KINETIS_KL
+    #if defined KINETIS_KL && !defined KINETIS_KL82
         unsigned long ulRes2b;
     #else
         unsigned long SIM_CLKDIV2;
@@ -1804,7 +1805,7 @@ typedef struct stKINETIS_SIM
     unsigned long SIM_UIDMH;
     unsigned long SIM_UIDML;
     unsigned long SIM_UIDL;
-    #if defined KINETIS_KL                                               // {15}
+    #if defined KINETIS_KL && !defined KINETIS_KL82                      // {15}
         unsigned long ulRes3[39];
         unsigned long SIM_COPC;
         unsigned long SIM_SRVCOPC;
@@ -1884,7 +1885,7 @@ typedef struct stKINETIS_SIM
     } KINETIS_PORT;
 #endif
 
-#if !defined KINETIS_KL
+#if !defined KINETIS_KL || defined KINETIS_KL82
     typedef struct stKINETIS_WDOG
     {
     #if defined KINETIS_KE
@@ -1932,6 +1933,37 @@ unsigned char EWM_CMPH;
     unsigned char ICS_C4;
     unsigned char ICS_S;
     } KINETIS_ICS;
+#elif defined KINETIS_WITH_SCG                                           // {32}
+    typedef struct stKINETIS_SCG
+    {
+    unsigned long SCG_VERID;
+    unsigned long SCG_PARAM;
+    unsigned long ulRes0;
+    unsigned long SCG_CSR;
+    unsigned long SCG_RCCR;
+    unsigned long SCG_VCCR;
+    unsigned long SCG_HCCR;
+    unsigned long SCG_CLKOUTCNFG;
+    unsigned long ulRes1[56];
+    unsigned long SCG_SOSCCSR;
+    unsigned long SCG_SOSCDIV;
+    unsigned long SCG_SOSCCFG;
+    unsigned long ulRes2[62];
+    unsigned long SCG_SIRCCSR;
+    unsigned long SCG_SIRCDIV;
+    unsigned long SCG_SIRCCFG;
+    unsigned long ulRes3[62];
+    unsigned long SCG_FIRCCSR;
+    unsigned long SCG_FIRCDIV;
+    unsigned long SCG_FIRCCFG;
+    unsigned long ulRes4;
+    unsigned long SCG_FIRCTCFG;
+    unsigned long SCG_FIRCSTAT;
+    unsigned long ulRes5[186];
+    unsigned long SCG_SPPLCCSR;
+    unsigned long SCG_SPPLCDIV;
+    unsigned long SCG_SPPLCFG;
+    } KINETIS_SCG;
 #else
     typedef struct stKINETIS_MCG
     {
@@ -2936,7 +2968,7 @@ typedef struct stKINETIS_PERIPH
 #else
     KINETIS_PORT       PORT[PORTS_AVAILABLE];
 #endif
-#if !defined KINETIS_KL
+#if !defined KINETIS_KL || defined KINETIS_KL82
     KINETIS_WDOG       WDOG;
 #endif
 #if defined CHIP_HAS_FLEXIO                                              // {23}
@@ -2950,6 +2982,8 @@ typedef struct stKINETIS_PERIPH
 #endif
 #if defined KINETIS_KE
     KINETIS_ICS        ICS;
+#elif defined KINETIS_WITH_SCG                                           // {32}
+    KINETIS_SCG        SCG;
 #else
     KINETIS_MCG        MCG;
 #endif

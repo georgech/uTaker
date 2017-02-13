@@ -565,7 +565,7 @@ static __interrupt void _PWM_Interrupt_3(void)
                 _CONFIG_PERIPHERAL(A, 19, (PA_19_FTM_CLKIN1 | PORT_PS_UP_ENABLE)); // FTM_CKLIN1 on PA.19 (alt. function 4)
         #endif
     #else
-        #if !defined KINETIS_KE
+        #if !defined KINETIS_KE && !defined KINETIS_KL82
                 SIM_SOPT4 &= ~(SIM_SOPT4_FTM0CLKSEL << ucChannel);       // select CLKIN0 to FTN
         #endif
         #if defined KINETIS_KL02 && defined TPMCLKIN0_ALT
