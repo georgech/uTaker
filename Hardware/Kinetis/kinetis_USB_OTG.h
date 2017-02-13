@@ -20,6 +20,7 @@
     30.10.2014 Add optional crystal-less USB clock for K64, K63, K22 and K24 {104}
     01.12.2015 Allow control endpoint to operate with reversed data toggle (required to receive fast multi-frame OUTs belonging to a SETUP block) {1}
     23.12.2015 Add zero copy OUT endpoint buffer option                  {2}
+    12.02.2017 Add KL82 support and allow USB host operation with shared endpoints {3}
 
 */
 
@@ -93,7 +94,14 @@ static int fnSendToken(unsigned char ucPID)
             return -1;                                                   // quit
         }
     #if defined _WINDOWS
-         fnSimInts(0);                                                   // allow USB interrupts to be handled
+        if (((TOKEN >> 4) == IN_PID) && ((ucPID >> 4) == OUT_PID)) {     // if presently sending IN tokens and we want to send an OUT
+            static int iCnt = 0;
+            iCnt++;
+            CTL &= ~TXSUSPEND_TOKENBUSY;                                 // abort present token transaction since we allow changing from IN to OUT tokens
+        }
+        else {
+            fnSimInts(0);                                                // allow USB interrupts to be handled to clear the busy condition
+        }
     #endif
         if (ucPID == TOKEN) {                                            // if an IN token is being set while already polling we can ignore the command
             if ((ucPID >> 4) == IN_PID) {
@@ -103,10 +111,14 @@ static int fnSendToken(unsigned char ucPID)
     }
     if ((ucPID >> 4) == IN_PID) {                                        // if an IN PID is to be sent
         unsigned char ucEndpoint = (ucPID & 0x0f);                       // the endpoint
-        if (ucEndpoint != usb_hardware.ucHostEndpointActive) {           // change of endpoint detected
+        if ((ucEndpoint != usb_hardware.ucHostEndpointActive)            // change of endpoint detected
+    #if defined SUPPORT_USB_SIMPLEX_HOST_ENDPOINTS                       // {3} always synchronise the reception buffer characteristics on application endpoints since they may be shared and this don't change the value bwteeen tx and rx usage
+        || (ucEndpoint != 0))
+    #endif
+        {
             usb_hardware.ptrEndpoint = &usb_endpoints[ucEndpoint];       // the endpoint's characteristics
             usb_hardware.ucHostEndpointActive = ucEndpoint;              // the newly active endpoint
-            if (usb_endpoints[ucEndpoint].ulNextRxData0 & DATA_1) {      // ensure that the receive buffer has the endpoints data flags set correctly
+            if (usb_endpoints[ucEndpoint].ulNextRxData0 & DATA_1) {      // ensure that the receive buffer has the endpoint's data flags set correctly
                 *(usb_hardware.ptr_ulUSB_Rx_BDControl) |= DATA_1;
                 *(usb_hardware.ptr_ulUSB_Alt_Rx_BDControl) &= ~(DATA_1);
             }
@@ -184,6 +196,7 @@ extern int fnHostEndpoint(unsigned char ucEndpoint, int iCommand, int iEvent)
                     while ((CTL & TXSUSPEND_TOKENBUSY) != 0) {           // wait until the present token has terminated
     #if defined _WINDOWS
                         fnSimInts(0);                                    // allow USB interrupts to be handled
+                        CTL &= ~(TXSUSPEND_TOKENBUSY);
     #endif
                     }
                     ENDPT0 &= ~(RETRY_DIS);
@@ -476,7 +489,7 @@ static __interrupt void _usb_otg_isr(void)
             }
             if ((ucUSB_Int_status & USB_ERROR) != 0) {                   // error detected
     #if defined USE_BUS_TIMEOUT
-                if (ERR_STAT & BTO_ERR) {                                // bus turnaround timeout error
+                if ((ERR_STAT & BTO_ERR) != 0) {                         // bus turnaround timeout error
                     USB_errors.ulUSB_timeouts++;
                 }
     #endif
@@ -610,7 +623,7 @@ static __interrupt void _usb_otg_isr(void)
                 case (OUT_PID << RX_PID_SHIFT):                          // OUT frame - for any endpoint
                     {
                         unsigned long ulDataToggle;
-                        if (usb_endpoints[iEndpoint_ref].ulEndpointSize & DTS) { // data toggling active on this endpoint (not isochronous)
+                        if ((usb_endpoints[iEndpoint_ref].ulEndpointSize & DTS) != 0) { // data toggling active on this endpoint (not isochronous)
                             ulDataToggle = (usb_endpoints[iEndpoint_ref].ulNextRxData0 & RX_DATA_TOGGLE); // the expected DATA
                             if ((ulDataToggle != 0) != ((ptUSB_BD->ulUSB_BDControl & DATA_1) != 0)) { // if the received is not synchronous to the data toggling it represents repeated data since an ACK from us has been lost
     #if defined _SUPRESS_REPEAT_DATA
@@ -624,7 +637,7 @@ static __interrupt void _usb_otg_isr(void)
                         else {
                             ulDataToggle = RX_DATA_TOGGLE;
                         }
-                        if (*fnGetEndPointCtr(iEndpoint_ref) & EP_CTL_DIS) { // check whether this endpoint is a non-control type
+                        if ((*fnGetEndPointCtr(iEndpoint_ref) & EP_CTL_DIS) != 0) { // check whether this endpoint is a non-control type
                             fnProcessInput(iEndpoint_ref, &usb_hardware, USB_OUT_FRAME, ptUSB_BD, ptEndpointBD); // non-control endpoint
                         }
                         else {                                           // control endpoint
@@ -973,8 +986,10 @@ extern void fnConfigUSB(QUEUE_HANDLE Channel, USBTABLE *pars)
     #if !defined KINETIS_KL
     FMC_PFAPR |= FMC_FPAPR_USB_FS;                                       // allow USB controller to read from Flash
     #endif
+    #if !defined KINETIS_KL82                                            // {3} KL82 doesn't have regulator control
     SIM_SOPT1_SET(SIM_SOPT1_USBREGEN, SIM_SOPT1CFG_URWE);                // ensure USB regulator is enabled
     SIM_SOPT1_CLR(SIM_SOPT1_USBSTBY, SIM_SOPT1CFG_UVSWE);                // and not in standby
+    #endif
     switch (pars->ucClockSource) {                                       // set USB clock source
     case INTERNAL_USB_CLOCK:
     #if (defined KINETIS_K_FPU || (KINETIS_MAX_SPEED > 100000000)) && !defined KINETIS_K21 && !defined KINETIS_K22 && !defined KINETIS_K24 && !defined KINETIS_K26 && !defined KINETIS_K64 && !defined KINETIS_K65 && !defined KINETIS_K66 && !defined KINETIS_K80
