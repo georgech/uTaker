@@ -61,7 +61,16 @@ PERIPH_DEP = ../../../Hardware/Kinetis/spi_sc16IS7xx.h \
              ../../../Hardware/Kinetis/kinetis_RTC.h \
              ../../../Hardware/Kinetis/kinetis_PIT.h \
              ../../../Hardware/Kinetis/kinetis_LPTMR.h \
-             ../../../Hardware/Kinetis/kinetis_PDB.h
+             ../../../Hardware/Kinetis/kinetis_PDB.h \
+             ../../../Hardware/Kinetis/kinetis_K_CLOCK.h \
+             ../../../Hardware/Kinetis/kinetis_MCG_LITE.h \
+             ../../../Hardware/Kinetis/kinetis_HIRC.h \
+             ../../../Hardware/Kinetis/kinetis_KL_CLOCK.h \
+             ../../../Hardware/Kinetis/kinetis_KV_CLOCK.h \
+             ../../../Hardware/Kinetis/kinetis_KW_CLOCK.h \
+             ../../../Hardware/Kinetis/kinetis_KM_CLOCK.h \
+             ../../../Hardware/Kinetis/kinetis_KE_CLOCK.h
+
 
 # SPI FLASH dependencies
 #
@@ -191,7 +200,7 @@ Build/mass_storage.o: ../../../uTasker/utFAT/mass_storage.c $(DEPENDS)
 # Link
 # Create output files and show program size
 #
-uTaskerSerialBoot.elf: $(OBJS) K_1M_256.ld K_256_256.ld K_1M_128.ld K_512_64.ld K_256_64.ld K_128_16.ld KW_512_64.ld KW_256_32.ld KL_256_32.ld KL_128_16.ld KL_64_8.ld KL_32_4.ld KL_32_2.ld KV_32_8.ld KV_512_96.ld KE_128_16.ld KE_64_4.ld KE_8_1.ld KEA_128_16.ld KEA_64_4.ld
+uTaskerSerialBoot.elf: $(OBJS) K_2M_256.ld K_1M_256.ld K_256_256.ld K_1M_128.ld K_512_64.ld K_256_64.ld K_128_16.ld KW_512_64.ld KW_256_32.ld KL_256_32.ld KL_128_96.ld KL_128_16.ld KL_64_8.ld KL_32_4.ld KL_32_2.ld KV_32_8.ld KV_512_96.ld KE_128_16.ld KE_64_4.ld KE_8_1.ld KEA_128_16.ld KEA_64_4.ld
 	$(CC) $(C_FLAGS) -Os -g -TK_1M_256.ld -nostartfiles -Xlinker --gc-sections -Wl,-Map,"uTaskerSerialBoot.map" -o "uTaskerSerialBoot.elf" $(OBJS)
 	$(CC_OBJ) --output-target=srec uTaskerSerialBoot.elf uTaskerSerialBoot.s19
 	$(CC_OBJ) --output-target=ihex uTaskerSerialBoot.elf uTaskerSerialBoot.hex

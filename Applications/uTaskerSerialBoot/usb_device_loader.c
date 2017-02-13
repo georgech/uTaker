@@ -138,7 +138,11 @@
         #define USB_VENDOR_ID              0x0425                        // MOTOROLA vendor ID {1}
         #define USB_PRODUCT_ID             0x03fc                        // uTasker Motorola MSD development product ID {1}
         #define USB_MSD_OUT_ENDPOINT_NUMBER     1
-        #define USB_MSD_IN_ENDPOINT_NUMBER      2
+        #if defined USB_SIMPLEX_ENDPOINTS
+            #define USB_MSD_IN_ENDPOINT_NUMBER  1
+        #else
+            #define USB_MSD_IN_ENDPOINT_NUMBER  2
+        #endif
     #endif
 #elif defined _LM3SXXXX
     #define USB_VENDOR_ID                  0x1cbe                        // Luminary Micro, Inc. vendor ID
@@ -857,7 +861,7 @@ static const USB_CONFIGURATION_DESCRIPTOR_COLLECTION config_descriptor = {
     USB_ABSTRACT_LINE_CONTROL_MODEL,                                     // interface sub-class (0x02)
     0,                                                                   // interface protocol
     #else                                                                // USB-MSD
-    2,
+    2,                                                                   // 2 endpoints used by USB-MSD
     INTERFACE_CLASS_MASS_STORAGE,                                        // interface class (0x08)
     GENERIC_SCSI_MEDIA,                                                  // interface sub-class (0x06)
     BULK_ONLY_TRANSPORT,                                                 // interface protocol (0x50)    // number of endpoints in addition to EP0

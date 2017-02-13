@@ -76,18 +76,24 @@
 //#define TEENSY_LC                                                      // USB development board with KL26Z64 - http://www.utasker.com/kinetis/TEENSY_LC.html
 //#define FRDM_KL27Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL27Z.html
 //#define CAPUCCINO_KL27                                                 // http://www.utasker.com/kinetis/Capuccino-KL27.html
-//#define FRDM_KL28Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL82Z.html
+//#define TWR_KL28Z72M                                                   // tower board http://www.utasker.com/kinetis/FRDM-KL28Z72M
+//#define FRDM_KL28Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL28Z.html
 //#define FRDM_KL43Z                                                     // L processors Cortex-M0+ (ultra-low power) with USB and segment LCD - freedom board http://www.utasker.com/kinetis/FRDM-KL43Z.html
 //#define TWR_KL43Z48M                                                   // tower board http://www.utasker.com/kinetis/TWR-KL43Z48M.html
 //#define FRDM_KL46Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL46Z.html
 //#define TWR_KL46Z48M                                                   // tower board http://www.utasker.com/kinetis/TWR-KL46Z48M.html
 
+//#define TWR_KL82Z72M                                                   // tower board http://www.utasker.com/kinetis/FRDM-KL82Z72M
 //#define FRDM_KL82Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL82Z.html
 
 //#define TWR_KM34Z50M                                                   // M processors Cortex M0+ (metrology) - tower board http://www.utasker.com/kinetis/TWR-KM34Z50M.html
+//#define TWR_KM34Z75M                                                   // tower board http://www.utasker.com/kinetis/TWR-KM34Z75M.html
 
 //#define TWR_KV10Z32                                                    // V processors Cortex M0+/M4 (M0+ - motor control and power conversion - low dynamic control) - tower board http://www.utasker.com/kinetis/TWR-KV10Z32.html
+//#define TWR_KV11Z75M                                                   // tower board http://www.utasker.com/kinetis/TWR-KV11Z75M.html
 //#define TWR_KV31F120M                                                  // (M4 - high dynamic control) - tower board http://www.utasker.com/kinetis/TWR-KV31F120M.html
+//#define TWR_KV46F150M                                                  // tower board http://www.utasker.com/kinetis/TWR-KV46F150M.html
+//#define TWR_KV58F220M                                                  // tower board http://www.utasker.com/kinetis/TWR-KV58F220M.html
 
 //#define TWR_KW21D256                                                   // W processors Cortex M0+/M4 (wireless connectivity) - tower board http://www.utasker.com/kinetis/TWR-KW21D256.html
 //#define TWR_KW24D512                                                   // tower board http://www.utasker.com/kinetis/TWR-KW24D512.html
@@ -322,6 +328,13 @@
     #define KINETIS_KL46
     #define DEVICE_WITHOUT_CAN                                           // KL doesn't have CAN controller
     #define DEVICE_WITHOUT_ETHERNET
+#elif defined FRDM_KL82Z
+    #define KINETIS_KL
+    #define KINETIS_KL82
+    #define TARGET_HW       "FRDM-KL82Z"
+    #define OUR_HEAP_SIZE   (HEAP_REQUIREMENTS)((12 * 1024) * MEM_FACTOR)
+    #define DEVICE_WITHOUT_CAN                                           // KL doesn't have CAN controller
+    #define DEVICE_WITHOUT_ETHERNET                                      // KL doesn't have Ethernet controller
 #elif defined TWR_KV10Z32
     #define TARGET_HW            "TWR-KV10Z32"
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((5 * 1024) * MEM_FACTOR)
@@ -630,7 +643,6 @@
         #define USB_HS_INTERFACE                                         // use HS interface rather than FS interface
     #endif
 #elif defined FRDM_K66F
-  //#define TWR_SER                                                      // use TWR-SER serial board instead of OpenSDA virtual COM port
     #define TARGET_HW            "FRDM-K66F"
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((48 * 1024) * MEM_FACTOR) // large SRAM parts
     #define KINETIS_MAX_SPEED    180000000
@@ -638,9 +650,7 @@
     #define KINETIS_K60                                                  // specify the sub-family
     #define KINETIS_REVISION_2
     #define KINETIS_K66                                                  // extra sub-family type precision
-    #if !defined TWR_SER
-        #define USB_HS_INTERFACE                                         // use HS interface rather than FS interface
-    #endif
+    #define USB_HS_INTERFACE                                             // use HS interface rather than FS interface
 #elif defined TEENSY_3_6
     #define TARGET_HW            "Teensy 3.6 (K66FX1M0)"
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((48 * 1024) * MEM_FACTOR) // large SRAM parts
@@ -907,7 +917,7 @@
 #if defined DEVICE_WITHOUT_USB
     #define NUMBER_USB     0                                             // no physical queue needed
 #else
-  //#define USB_INTERFACE                                                // enable USB driver interface
+    #define USB_INTERFACE                                                // enable USB driver interface
     #if defined USB_INTERFACE
       //#define MICROSOFT_OS_STRING_DESCRIPTOR                           // support MODs
       //#define USB_HOST_SUPPORT                                         // host rather than device
@@ -968,7 +978,7 @@
               //#define IN_COMPLETE_CALLBACK                             // use the previous transmission complete event as trigger rather than polling
             #endif
             #if defined USE_USB_CDC
-              //#define USB_SIMPLEX_ENDPOINTS                            // share IN and OUT on a single endpoint
+                #define USB_SIMPLEX_ENDPOINTS                            // share IN and OUT on a single endpoint
               //#define FREEMASTER_CDC                                   // CDC instance for run-time debugging use (if USB_CDC_COUNT is 1 the single USB-CDC connection is used, otherwise the last instance is used)
                 #if defined USB_CDC_RNDIS
                     #define USB_CDC_RNDIS_COUNT       1                  // the number of RNDIS virtual network interfaces
@@ -1008,7 +1018,7 @@
                     #define USB_SPEC_VERSION          USB_SPEC_VERSION_2_0 // multiple interface composite devices should use USB2.0
                 #endif
                 #if defined USB_SIMPLEX_ENDPOINTS
-                    #define NUMBER_USB     ((2 * USB_CDC_COUNT) + NUMBER_USB_MSD + NUMBER_USB_HID ++ NUMBER_USB_AUDIO + 1) // physical queues (control plus 3 endpoints for each USB-CDC interface) needed for USB-CDC interface
+                    #define NUMBER_USB     ((2 * USB_CDC_COUNT) + NUMBER_USB_MSD + NUMBER_USB_HID + NUMBER_USB_AUDIO + 1) // physical queues (control plus 3 endpoints for each USB-CDC interface) needed for USB-CDC interface
                 #else
                     #define NUMBER_USB     ((3 * USB_CDC_COUNT) + NUMBER_USB_MSD + NUMBER_USB_HID + NUMBER_USB_AUDIO + 1) // physical queues (control plus 3 endpoints for each USB-CDC interface) needed for USB-CDC interface
                 #endif
@@ -1021,11 +1031,9 @@
             #define USB_HS_INTERFACE                                     // use HS interface rather than FS interface (needs external ULPI transceiver) - use with TWR_SER2 and secondary elevator (not dummy elevator)
         #endif
         #if defined USB_HOST_SUPPORT
-            #define USB_MSD_HOST                                         // works together with mass-storage for a USB memory stick as disk E
-          //#define USB_CDC_HOST
-            #if defined USB_MSD_HOST
-                #define SUPPORT_USB_SIMPLEX_HOST_ENDPOINTS               // allow operation with memory sticks using bulk IN/OUT on the same endpoint
-            #endif
+          //#define USB_MSD_HOST                                         // works together with mass-storage for a USB memory stick as disk E
+            #define USB_CDC_HOST                                         // supports CDC device
+                #define SUPPORT_USB_SIMPLEX_HOST_ENDPOINTS               // allow operation with devices using bulk IN/OUT on the same endpoint
         #endif
         #if defined USB_HS_INTERFACE || defined USB_HOST_SUPPORT || defined USE_USB_AUDIO || defined USB_CDC_RNDIS // since RNDIS makes intensive use of enpoint 0 for status and control it makes snese to use the largest size possible (assuming at least full-speed operation)
             #define ENDPOINT_0_SIZE         64                           // high speed devices should use 64 bytes (and hosts use full size endpoint size)

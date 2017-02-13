@@ -141,7 +141,7 @@
     #elif defined FRDM_KEAZ64Q64
         #define UTASKER_APP_START     (32 * 1024)                        // application starts at this address
         #define UTASKER_APP_END       (unsigned char *)(UTASKER_APP_START + (28 * 1024)) // end of application space - after maximum application size
-    #elif defined FRDM_KEAZ128Q80
+    #elif defined FRDM_KEAZ128Q80 || defined FRDM_KL82Z
         #define UTASKER_APP_START     (32 * 1024)                        // application starts at this address
         #define UTASKER_APP_END       (unsigned char *)(UTASKER_APP_START + (40 * 1024)) // end of application space - after maximum application size
     #else

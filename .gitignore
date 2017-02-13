@@ -70,3 +70,5 @@ Applications/uTaskerSerialBoot/widgets.h
 Applications/uTaskerSerialBoot/Simulator/UART2.txt
 Applications/SHoistID/
 Applications/emBasic/
+Applications/uTaskerSerialBoot/Simulator/UART3.txt
+Applications/uTaskerV1.4/Simulator/UART2.txt

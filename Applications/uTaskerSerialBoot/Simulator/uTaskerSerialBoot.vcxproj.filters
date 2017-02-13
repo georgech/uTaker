@@ -370,6 +370,21 @@
     <ClInclude Include="..\..\..\uTasker\uGLCDLIB\glcd_toshiba.h">
       <Filter>uTasker\uGLCDLIB</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_KE_CLOCK.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_K_CLOCK.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_KV_CLOCK.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_KL_CLOCK.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_MCG_LITE.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="cursor1.cur">

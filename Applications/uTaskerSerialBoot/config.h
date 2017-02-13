@@ -59,6 +59,7 @@
 //#define FRDM_KL26Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL26Z.html
 //#define TEENSY_LC                                                      // USB development board with KL26Z64 - http://www.utasker.com/kinetis/TEENSY_LC.html
 //#define FRDM_KL27Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL27Z.html
+//#define FRDM_KL28Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL28Z.html
 //#define FRDM_KL43Z                                                     // L processors Cortex-M0+ (ultra-low power) with USB and segment LCD - freedom board http://www.utasker.com/kinetis/FRDM-KL43Z.html
 //#define TWR_KL43Z48M                                                   // tower board http://www.utasker.com/kinetis/TWR-KL43Z48M.html
 //#define FRDM_KL46Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL46Z.html
@@ -239,6 +240,13 @@
     #define KINETIS_KL27
     #define DEVICE_WITHOUT_CAN                                           // KL doesn't have CAN controller
     #define DEVICE_WITHOUT_ETHERNET                                      // KL doesn't have Ethernet controller
+#elif defined FRDM_KL28Z
+    #define TARGET_HW            "FRDM-KL28Z Kinetis"
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((10 * 1024) * MEM_FACTOR)
+    #define KINETIS_KL
+    #define KINETIS_KL28
+    #define DEVICE_WITHOUT_CAN                                           // KL doesn't have CAN controller
+    #define DEVICE_WITHOUT_ETHERNET                                      // KL doesn't have Ethernet controller
 #elif defined TEENSY_LC
   //#define SPECIAL_VERSION                                              // temporary special version with some specific setups
     #define KINETIS_KL
@@ -264,6 +272,12 @@
     #define KINETIS_KL
     #define KINETIS_KL46
     #define TARGET_HW       "TWR-KL46Z48M Kinetis"
+    #define OUR_HEAP_SIZE   (HEAP_REQUIREMENTS)((12 * 1024) * MEM_FACTOR)
+    #define DEVICE_WITHOUT_ETHERNET                                      // KL doesn't have Ethernet controller
+#elif defined FRDM_KL82Z
+    #define KINETIS_KL
+    #define KINETIS_KL82
+    #define TARGET_HW       "FRDM-KL82Z"
     #define OUR_HEAP_SIZE   (HEAP_REQUIREMENTS)((12 * 1024) * MEM_FACTOR)
     #define DEVICE_WITHOUT_ETHERNET                                      // KL doesn't have Ethernet controller
 #elif defined TWR_KV10Z32
@@ -563,6 +577,15 @@
     #if !defined TWR_SER
         #define USB_HS_INTERFACE                                         // use HS interface rather than FS interface
     #endif
+#elif defined FRDM_K66F
+    #define TARGET_HW            "FRDM-K66F"
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((48 * 1024) * MEM_FACTOR) // large SRAM parts
+    #define KINETIS_MAX_SPEED    180000000
+    #define KINETIS_K_FPU                                                // part with floating point unit
+    #define KINETIS_K60                                                  // specify the sub-family
+    #define KINETIS_REVISION_2
+    #define KINETIS_K66                                                  // extra sub-family type precision
+    #define USB_HS_INTERFACE                                             // use HS interface rather than FS interface
 #elif defined TEENSY_3_6
     #define TARGET_HW            "Teensy 3.6 (K66FX1M0)"
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((48 * 1024) * MEM_FACTOR) // large SRAM parts
@@ -663,7 +686,7 @@
       //#define DEVELOPERS_LOADER_PROTOCOL_VERSION_9                     // user protocol version 9 rather than obselete Kinetis 8 (not completed at the moment)
         #define DEVELOPERS_LOADER_READ                                   // support reading back program
         #define DEVELOPERS_LOADER_CRC                                    // support CRC in communication
-  //#define REMOVE_SREC_LOADING                                          // disable SREC (and Intel Hex) loading but keep debug output and the command line menu
+    #define REMOVE_SREC_LOADING                                          // disable SREC (and Intel Hex) loading but keep debug output and the command line menu
     #if !defined REMOVE_SREC_LOADING
       //#define SUPPORT_INTEL_HEX_MODE                                   // support Intel Hex mode together with SREC (auto-recognition)
       //#define EXCLUSIVE_INTEL_HEX_MODE                                 // loading mode is exclusively Intel Hex (use with or without SUPPORT_INTEL_HEX_MODE)
@@ -753,6 +776,7 @@
             #else
                 #define ENDPOINT_0_SIZE            8                     // maximum packet size for endpoint 0. Low speed devices must use 8 whereas full speed devices can chose to use 8, 16, 32 or 64
             #endif
+          //#define USB_SIMPLEX_ENDPOINTS                                // share IN and OUT on single endpoint
         #endif
         #define USB_STRING_OPTION                                        // support optional string descriptors
             #define USB_MAX_STRINGS                3                     // the maximum number of strings supported by host

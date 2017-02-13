@@ -625,6 +625,30 @@
     <ClInclude Include="..\..\..\stack\SSL\openssl-1.0.2\modes_lcl.h">
       <Filter>TCP/IP\OpenSSL</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_KL_CLOCK.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_MCG_LITE.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_K_CLOCK.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_KV_CLOCK.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_KE_CLOCK.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_KM_CLOCK.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_KW_CLOCK.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_HIRC.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="cursor1.cur">
