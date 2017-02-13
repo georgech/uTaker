@@ -370,7 +370,7 @@ extern QUEUE_TRANSFER entry_usb(QUEUE_HANDLE channel, unsigned char *ptBuffer, Q
             else {
 #endif
                 uEnable_Interrupt();                                     // fnFillBuffer disables and then re-enables interrupts - be sure we are compatible
-                rtn_val = fnFillBuf(&ptrUsbQueue->USB_queue, ptBuffer, Counter); // copy the input data to the output circular buffer
+                    rtn_val = fnFillBuf(&ptrUsbQueue->USB_queue, ptBuffer, Counter); // copy the input data to the output circular buffer
                 uDisable_Interrupt();
 #if defined USB_TX_MESSAGE_MODE
             }

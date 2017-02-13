@@ -54,7 +54,7 @@
     21.11.2014 Correct passive mode from utFAT which could try to handle file transfer actively {38}
     22.11.2014 Allow multiple control connections                        {39}
     23.11.2014 Correct data connection's use of the data tcp control object on first frame transmission when using passive mode {40}
-    23.01.2015 Return 500 if an unknown commnd is received before or during authentication {41}
+    23.01.2015 Return 500 if an unknown command is received before or during authentication {41}
 
 */
 

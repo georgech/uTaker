@@ -136,7 +136,7 @@ static int fnGetTime(int iFile)
     return 0;                                                            // end of file
 }
 
-// Get the number of Tick intervals to wait for net ms delay
+// Get the number of Tick intervals to wait for next ms delay
 //
 static unsigned long fnGetTimeDelay(int iFile) 
 {

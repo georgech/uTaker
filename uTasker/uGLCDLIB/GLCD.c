@@ -95,6 +95,7 @@
 
 #define PEN_STATE_CHANGE            1                                    // interrupt events
 
+#define TOUCH_IDLE                  0x00
 #define TOUCH_GET_PEN               0x01
 #define TOUCH_POLLING               0x02
 
@@ -196,7 +197,7 @@ static int iSendAck = 0;
 static int iLCD_State = STATE_INIT;
 #if defined SUPPORT_TOUCH_SCREEN && (defined MB785_GLCD_MODE || defined TOUCH_FT6206) // {9}
     static QUEUE_HANDLE TouchPortID = 0;
-    static int iTouchState = 0;
+    static int iTouchState = TOUCH_IDLE;
     static int iPenDown = 0;
 #endif
 
@@ -339,7 +340,7 @@ extern void fnLCD(TTASKTABLE *ptrTaskTable)                              // LCD 
         }
     }
 #if defined SUPPORT_TOUCH_SCREEN && (defined MB785_GLCD_MODE || defined TOUCH_FT6206) // touch screen via I2C
-    if (iTouchState != 0) {
+    if (iTouchState != TOUCH_IDLE) {
         while (fnMsgs(TouchPortID) != 0) {                               // touch screen message(s) available
             switch (iTouchState) {
             case TOUCH_GET_PEN:                                          // requesting first pen state after interrupt
@@ -358,7 +359,7 @@ extern void fnLCD(TTASKTABLE *ptrTaskTable)                              // LCD 
                     iPenDown = 1;                                        // pen state is down
                 }
                 else {                                                   // pen is up
-                    iTouchState = 0;
+                    iTouchState = TOUCH_IDLE;
     #if defined MB785_GLCD_MODE
                     fnWrite(TouchPortID, (unsigned char *)ucResetFIFO1, sizeof(ucResetFIFO1)); // flush FIFO
                     fnWrite(TouchPortID, (unsigned char *)ucResetFIFO2, sizeof(ucResetFIFO2)); // release flush FIFO
@@ -402,7 +403,7 @@ extern void fnLCD(TTASKTABLE *ptrTaskTable)                              // LCD 
                         iPenDown = 0;                                    // reset reporting of new pen-down
                     }
                     else {
-                        iTouchState = 0;
+                        iTouchState = TOUCH_IDLE;
                         fnDebugMsg("PEN UP\n\r");
                         break;
                     }
@@ -430,7 +431,7 @@ extern void fnLCD(TTASKTABLE *ptrTaskTable)                              // LCD 
 #if defined SUPPORT_TOUCH_SCREEN && (defined MB785_GLCD_MODE || defined TOUCH_FT6206)
             if (PEN_STATE_CHANGE == ucInputMessage[MSG_INTERRUPT_EVENT]) {
 #if defined TOUCH_FT6206
-                if (iTouchState == 0)                                    // if not already in the process of requesting the state (otherwise ignore)
+                if (iTouchState == TOUCH_IDLE)                           // if not already in the process of requesting the state (otherwise ignore)
 #else
                 if ((iTouchState & TOUCH_GET_PEN) == 0)
 #endif

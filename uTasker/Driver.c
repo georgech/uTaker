@@ -833,12 +833,12 @@ extern CHAR *fnDebugDec(signed long slNumberToConvert, unsigned char ucStyle, CH
     }
     #endif
 
-    if (WITH_SPACE & ucStyle) {
+    if ((WITH_SPACE & ucStyle) != 0) {
         *cPtr++ = ' ';
         ucStyle &= ~LEADING_SPACE;
     }
 
-    if ((ucStyle & DISPLAY_NEGATIVE) && (slNumberToConvert < 0)) {
+    if (((ucStyle & DISPLAY_NEGATIVE) != 0) && (slNumberToConvert < 0)) {
         ulNumberToConvert = (unsigned long)-slNumberToConvert;
         *cPtr++ = '-';
     }
@@ -846,7 +846,7 @@ extern CHAR *fnDebugDec(signed long slNumberToConvert, unsigned char ucStyle, CH
         ulNumberToConvert = (unsigned long)slNumberToConvert;
     }
 
-    while (ulNumberToConvert) {
+    while (ulNumberToConvert != 0) {
         while (ulDiv > ulNumberToConvert) {
             ulDiv /= 10;
             if (iFirstFound) {
@@ -872,23 +872,23 @@ extern CHAR *fnDebugDec(signed long slNumberToConvert, unsigned char ucStyle, CH
         ulNumberToConvert -= (ucResult * ulDiv);
         ulDiv /= 10;
     }
-    while ((ulDiv) && (iFirstFound)) {
+    while ((ulDiv != 0) && (iFirstFound != 0)) {
         ulDiv /= 10;
         *cPtr++ = '0';                                                   // add trailing zeros
     }
 
     if (iFirstFound == 0) {                                              // special case for zero
-        if (ucStyle & LEADING_SPACE) {
+        if ((ucStyle & LEADING_SPACE) != 0) {
             *cPtr++ = ' ';
         }
         else {
-            if (ucStyle & LEADING_ZERO) {
+            if ((ucStyle & LEADING_ZERO) != 0) {
                 *cPtr++ = '0';
             }
             *cPtr++ = '0';
         }
     }
-    if (ucStyle & WITH_CR_LF) {                                          // {10}
+    if ((ucStyle & WITH_CR_LF) != 0) {                                   // {10}
         *cPtr++ = '\r';
         *cPtr++ = '\n';
     }
@@ -981,7 +981,6 @@ extern CHAR *fnBufferHex(unsigned long ulValue, unsigned char ucLen, CHAR *pBuf)
     if ((ucLen & WITH_SPACE) != 0) {
         *pBuf++ = ' ';
     }
-
     if ((ucLen & WITH_LEADIN) != 0) {
         *pBuf++ = '0';
         *pBuf++ = 'x';
@@ -1179,7 +1178,7 @@ extern void *uReverseMemcpy(void *ptrTo, const void *ptrFrom, size_t Size)
     ptr1 += Size;                                                        // move to the end of the buffers
     ptr2 += Size;
 
-    while (Size--) {
+    while (Size-- != 0) {
         *(--ptr1) = *(--ptr2);                                           // copy backwards
     }
 
