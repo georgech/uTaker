@@ -43,7 +43,7 @@
 
 #include <string.h>
 
-#if defined(_MSC_VER) && !defined _WINDOWS && !defined(EFIX64) && !defined(EFI32)
+#if defined(_MSC_VER) && !defined(EFIX64) && !defined(EFI32)
 #include <basetsd.h>
 typedef UINT32 uint32_t;
 #else
