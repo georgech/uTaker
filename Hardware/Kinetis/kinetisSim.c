@@ -9006,16 +9006,31 @@ extern void fnUpdateOperatingDetails(void)
     ptrBuffer = uStrcpy(ptrBuffer, "k, BUS CLOCK = ");
     #endif
     #if defined KINETIS_KL
+        #if defined BUS_FLASH_CLOCK_SHARED
     ulBusClockSpeed = (SYSTEM_CLOCK/(((SIM_CLKDIV1 >> 16) & 0xf) + 1));
+        #else
+    ulBusClockSpeed = (MCGOUTCLK / (((SIM_CLKDIV1 >> 24) & 0xf) + 1));
+        #endif
     #elif defined KINETIS_KV10
     ulBusClockSpeed = (SYSTEM_CLOCK/(((SIM_CLKDIV1 >> 16) & 0x7) + 1));
     #elif defined KINETIS_KE
-        #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
-    if (SIM_CLKDIV & SIM_CLKDIV_OUTDIV2_2) {
-        ulBusClockSpeed = (SYSTEM_CLOCK/2);
-    }
-    else {
-        ulBusClockSpeed = SYSTEM_CLOCK;
+        #if defined KINETIS_KE04 || defined KINETIS_KEA8 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+	ulBusClockSpeed = ICSOUT_CLOCK;
+	switch (SIM_CLKDIV & SIM_CLKDIV_OUTDIV1_4) {
+	case SIM_CLKDIV_OUTDIV1_1:
+		break;
+	case SIM_CLKDIV_OUTDIV1_2:
+		ulBusClockSpeed /= 2;
+		break;
+	case SIM_CLKDIV_OUTDIV1_3:
+		ulBusClockSpeed /= 3;
+		break;
+	case SIM_CLKDIV_OUTDIV1_4:
+		ulBusClockSpeed /= 4;
+		break;
+	}
+    if ((SIM_CLKDIV & SIM_CLKDIV_OUTDIV2_2) != 0) {
+        ulBusClockSpeed /= 2;
     }
         #else
     if (SIM_BUSDIV & SIM_BUSDIVBUSDIV) {
