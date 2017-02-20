@@ -128,6 +128,7 @@
     15.11.2016 Pass complete change state in fnInjectInputChange()       {107}
     24.12.2016 Add fnInjectI2C()                                         {108}
     02.02.2017 Allow sub-ms tick setting                                 {109}
+    19.02.2017 Add FT800 emulation                                       {110}
 
     */
 
@@ -173,6 +174,10 @@
 #if defined nRF24L01_INTERFACE || defined ENC424J600_INTERFACE
 #pragma comment(lib, "Ws2_32.lib")
     static void fnUDP_socket(PVOID pvoid);
+#endif
+
+#if (defined FT800_GLCD_MODE && defined FT800_EMULATOR)
+    static void fnInitFT800_emulator(void);
 #endif
 
 // Global variables
@@ -2659,7 +2664,7 @@ static void fnDoDraw(HWND hWnd, HDC hdc, PAINTSTRUCT ps, RECT &rect)
 #if (defined SUPPORT_KEY_SCAN || defined KEYPAD || defined BUTTON_KEY_DEFINITIONS) && defined LCD_ON_KEYPAD
     DisplayKeyPad(hWnd, rt, rect);                                       // draw the keypad if needed
 #endif
-#if defined SUPPORT_LCD || defined SUPPORT_GLCD || defined SUPPORT_OLED || defined SUPPORT_TFT || defined GLCD_COLOR || defined SLCD_FILE // {35}
+#if (defined SUPPORT_LCD || defined SUPPORT_GLCD || defined SUPPORT_OLED || defined SUPPORT_TFT || defined GLCD_COLOR || defined SLCD_FILE) && !(defined FT800_GLCD_MODE && defined FT800_EMULATOR) // {35}
     #if defined LCD_ON_KEYPAD
     DisplayLCD(hWnd, rect);                                              // re-draw the LCD if needed
     #else
@@ -3180,7 +3185,11 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 #if defined SUPPORT_LCD
     LCDinit(LCD_LINES, LCD_CHARACTERS);
 #elif defined SUPPORT_GLCD || defined SUPPORT_OLED || defined SUPPORT_TFT || defined GLCD_COLOR || defined SLCD_FILE // {35}{65}
+    #if (defined FT800_GLCD_MODE && defined FT800_EMULATOR)
+    fnInitFT800_emulator();
+    #else
     LCDinit(0, 0);
+    #endif
 #endif
 
     if (InitInstance(hInstance, nCmdShow) == 0) {
@@ -3385,7 +3394,6 @@ int APIENTRY WinMain(HINSTANCE hInstance,
         }
     #endif
 #endif
-
         if (iInputChange != 0) {
             if (KEY_CHANGED & iInputChange) {
                 fnProcessKeyChange();
@@ -3413,7 +3421,6 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 #else
         Sleep(1);                                                        // we sleep to simulate the basic tick operation
 #endif
-
 #if !defined BOOT_LOADER
         fnDoPortSim(0, 0);                                               // if we are playing back port simulation script, do it here {8}
 #endif
@@ -4124,7 +4131,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     rt.right = UTASKER_WIN_WIDTH;                                        // basic windows size without LCD or keypad/panel
     rt.bottom = UTASKER_WIN_HEIGHT;
 
-#if defined SUPPORT_LCD || defined SUPPORT_GLCD  || defined SUPPORT_OLED || defined SUPPORT_TFT || defined GLCD_COLOR || defined SLCD_FILE // {35}{65}
+#if (defined SUPPORT_LCD || defined SUPPORT_GLCD  || defined SUPPORT_OLED || defined SUPPORT_TFT || defined GLCD_COLOR || defined SLCD_FILE) && !(defined FT800_GLCD_MODE && defined FT800_EMULATOR) // {35}{65}
     #if defined _M5225X
     iLCD_Bottom = fnInitLCD(rt, UTASKER_WIN_HEIGHT, (UTASKER_WIN_WIDTH + 70));
     #else
@@ -5426,10 +5433,80 @@ extern "C" unsigned long fnRemoteSimulationInterface(int iInterfaceReference, un
         }
         break;
     }
-    return 0;
-#else
-return 0;
 #endif
+    return 0;
+}
+#endif
+
+#if defined FT800_GLCD_MODE && defined FT800_EMULATOR                    // {110}
+static volatile int iEmulatorReady = 0;
+    #undef RGB
+    #undef ADC_DIFFERENTIAL
+    #undef ADC_SINGLE_ENDED
+    #undef KEEP
+    #include "LCD\FT800\FT_Emulator.h"
+
+
+// Call back when the emulator has completed its initialisation
+//
+static void setup(void)
+{
+    iEmulatorReady = 1;                                                  // this flag is used to stop the LCD task from accessing the FT800 emulation before it has completed its initialisation
 }
 
+// Call back when the emulator is idle
+//
+static void loop(void)
+{
+}
+
+// Assert the CS line to the FT800
+//
+extern "C" void _FT8XXEMU_cs(int cs)
+{
+    while (iEmulatorReady == 0) {                                        // if the emulator has not yet initistaed we wait
+        Sleep(10);
+    }
+    FT8XXEMU_cs(cs);
+}
+
+// Send a byte to the emulator
+//
+extern "C" unsigned char _FT8XXEMU_transfer(unsigned char data)
+{
+    return FT8XXEMU_transfer(data);
+}
+
+static void FT800_emulator_thread(void *hArgs)
+{
+    FT8XXEMU_EmulatorParameters params;
+    FT8XXEMU_EmulatorMode       Ft_GpuEmu_Mode;
+    #if defined (FT_800_ENABLE)                                           // select the emulation mode
+    Ft_GpuEmu_Mode = FT8XXEMU_EmulatorFT800;
+    #elif defined (FT_801_ENABLE)
+    Ft_GpuEmu_Mode = FT8XXEMU_EmulatorFT801;
+    #elif defined (FT_810_ENABLE)
+    Ft_GpuEmu_Mode =  FT8XXEMU_EmulatorFT810;
+    #elif defined (FT_811_ENABLE)
+    Ft_GpuEmu_Mode = FT8XXEMU_EmulatorFT811;
+    #elif defined (FT_812_ENABLE)
+    Ft_GpuEmu_Mode = FT8XXEMU_EmulatorFT812;
+    #elif defined(FT_813_ENABLE)
+    Ft_GpuEmu_Mode = FT8XXEMU_EmulatorFT813;
+    #else
+    Ft_GpuEmu_Mode = FT8XXEMU_EmulatorFT800;
+    #endif
+
+    FT8XXEMU_defaults(FT8XXEMU_VERSION_API, &params, Ft_GpuEmu_Mode);    // get the parameters for the emulation mode
+    params.Flags &= (~FT8XXEMU_EmulatorEnableDynamicDegrade & ~FT8XXEMU_EmulatorEnableRegPwmDutyEmulation);
+    params.Setup = setup;
+    params.Loop = loop;
+    FT8XXEMU_run(FT8XXEMU_VERSION_API, &params);                         // start the emulation - this doesn't return
+}
+
+static void fnInitFT800_emulator(void)
+{
+    DWORD ThreadIDRead;
+    HANDLE hThreadRead = CreateThread (NULL, 0, (LPTHREAD_START_ROUTINE)FT800_emulator_thread, (LPVOID)0, 0, (LPDWORD)&ThreadIDRead);
+}
 #endif
