@@ -18,10 +18,11 @@
     09.08.2010 Add CGLCD_PIXEL_SIZE to control effective size            {3}
     29.08.2010 Add touch screen operation                                {4}
     09.11.2010 Change EIB to EBI (AVR32 external bus interface naming)
+    19.02.2017 Add FT800                                                 {5}
 
 */
 
-#if (defined CGLCD_GLCD_MODE || defined KITRONIX_GLCD_MODE || defined MB785_GLCD_MODE || defined TFT2N0369_GLCD_MODE || defined ST7789S_GLCD_MODE) && !defined _GLCD_SAMSUNG && !defined OLED_GLCD_MODE && !defined TFT_GLCD_MODE && !defined NOKIA_GLCD_MODE
+#if (defined CGLCD_GLCD_MODE || defined KITRONIX_GLCD_MODE || defined MB785_GLCD_MODE || defined TFT2N0369_GLCD_MODE || defined FT800_GLCD_MODE || defined ST7789S_GLCD_MODE) && !defined _GLCD_SAMSUNG && !defined OLED_GLCD_MODE && !defined TFT_GLCD_MODE && !defined NOKIA_GLCD_MODE
     #if !defined _GLCD_CGLCD_DEFINES
 
         #define MAX_GLCD_READY              100
@@ -82,7 +83,7 @@
             static void fnCommandGlcd_1(unsigned char ucCommand, unsigned char ucParameter);
             static void fnCommandGlcd_2(unsigned char ucCommand, unsigned short usParameter);
             static void fnWriteGLCD_data_pair(unsigned short usBytePair);
-        #elif defined KITRONIX_GLCD_MODE || defined TFT2N0369_GLCD_MODE || defined ST7789S_GLCD_MODE
+        #elif defined KITRONIX_GLCD_MODE || defined TFT2N0369_GLCD_MODE || defined FT800_GLCD_MODE || defined ST7789S_GLCD_MODE
             #if defined ST7789S_GLCD_MODE
                 static void fnCommandGlcd_1(unsigned char ucCommand);
                 static void fnDataGlcd_1(unsigned char ucData);
@@ -93,11 +94,21 @@
 	                    #define fnCommandGlcd_1(command) CollectCommand(1, (command))
                         #define fnCommandGlcd_2(command, data) CollectCommand(1, (command)); CollectCommand(0, (data))
                         #define fnWriteGLCD_data_pair(data) CollectCommand(0, (data));
+
                 #else
                         #define fnCommandGlcd_1(command)       *((volatile unsigned short*)GLCD_COMMAND_ADDR) = (command)
                         #define fnCommandGlcd_2(command, data) *((volatile unsigned short*)GLCD_COMMAND_ADDR) = (command); *((volatile unsigned short*)GLCD_DATA_ADDR) = (data)
                         #define fnWriteGLCD_data_pair(data)    *((volatile unsigned short*)GLCD_DATA_ADDR) = (data)
                 #endif
+            #elif defined FT800_GLCD_MODE                                // {5}
+                static unsigned char Ft_Gpu_Hal_Rd8(unsigned long ulReg);
+                static void Ft_Gpu_HostCommand(unsigned char ucCommand);
+                static void Ft_Gpu_Hal_Wr8(unsigned long ulReg, unsigned char ucData);
+                static void Ft_Gpu_Hal_Wr16(unsigned long ulReg, unsigned short usData);
+                static void Ft_Gpu_Hal_WrMem(unsigned long ulReg, unsigned char *ptrData, unsigned long ulDataLength);
+    	                #define fnCommandGlcd_1(command)
+                        #define fnCommandGlcd_2(command, data)
+                        #define fnWriteGLCD_data_pair(data)
             #else
                 static void fnCommandGlcd_1(unsigned char ucCommand);
                 static void fnCommandGlcd_2(unsigned char ucCommand, unsigned short usParameter);
@@ -871,7 +882,125 @@ static void fnSetWindow(unsigned short x1, unsigned short y1, unsigned short x2,
 #endif
 
 
-#if defined KITRONIX_GLCD_MODE || defined TFT2N0369_GLCD_MODE || defined ST7789S_GLCD_MODE
+#if defined KITRONIX_GLCD_MODE || defined TFT2N0369_GLCD_MODE || defined ST7789S_GLCD_MODE || defined FT800_GLCD_MODE
+
+#if defined FT800_GLCD_MODE
+static void Ft_Gpu_HostCommand(unsigned char ucCommand)
+{
+    unsigned char hcmd[4] = {0};
+	hcmd[0] = ucCommand;
+	hcmd[1] = 0;
+	hcmd[2] = 0;
+	hcmd[3] = 0;
+    #if defined TARGET
+		spi_open(SPIM,host->hal_config.spi_cs_pin_no); // this also sets the CS line low
+		spi_writen(SPIM,hcmd,3);
+		spi_close(SPIM,host->hal_config.spi_cs_pin_no);
+    #else
+    // emulator is not interested in this
+    #endif
+}
+
+
+static unsigned char Ft_Gpu_Hal_Rd8(unsigned long ulReg)
+{
+    unsigned char value = 0;
+    #if defined TARGET
+	ft_uint8_t spidata[4];
+	spidata[0] = (addr >> 16);
+	spidata[1] = (addr >> 8);
+	spidata[2] = addr & 0xff;
+	spi_open(SPIM, host->hal_config.spi_cs_pin_no); // this also sets the CS low
+	spi_writen(SPIM, spidata, 3);
+	spi_read(SPIM, &value);
+    spi_close(SPIM, host->hal_config.spi_cs_pin_no);
+    #else
+    extern void _FT8XXEMU_cs(int cs);
+    extern unsigned char _FT8XXEMU_transfer(unsigned char data);
+    _FT8XXEMU_cs(1);
+    _FT8XXEMU_transfer((unsigned char)(ulReg >> 16));
+    _FT8XXEMU_transfer((unsigned char)(ulReg >> 8));
+    _FT8XXEMU_transfer((unsigned char)ulReg);
+    _FT8XXEMU_transfer((unsigned char)0);
+    value = _FT8XXEMU_transfer(0);
+    _FT8XXEMU_cs(0);
+    #endif
+    return value;
+}
+
+static void Ft_Gpu_Hal_Wr8(unsigned long ulReg, unsigned char ucData)
+{
+    #if defined TARGET
+	ft_uint8_t spidata[4];
+	spidata[0] = ((ulReg >> 16) | 0x80);
+	spidata[1] = (ulReg >> 8);
+	spidata[2] = ulReg & 0xff;
+	spi_open(SPIM, host->hal_config.spi_cs_pin_no);          // this aso sets the CS line low
+	spi_writen(SPIM, spidata, 3);
+	spi_write(SPIM, usData);
+    spi_close(SPIM, host->hal_config.spi_cs_pin_no);
+    #else
+    extern void _FT8XXEMU_cs(int cs);
+    extern unsigned char _FT8XXEMU_transfer(unsigned char data);
+    _FT8XXEMU_cs(1);
+    _FT8XXEMU_transfer((unsigned char)((ulReg >> 16) | 0x80));
+    _FT8XXEMU_transfer((unsigned char)(ulReg >> 8));
+    _FT8XXEMU_transfer((unsigned char)ulReg);
+    _FT8XXEMU_transfer((unsigned char)ucData);
+    _FT8XXEMU_cs(0);
+    #endif
+}
+
+static void Ft_Gpu_Hal_Wr16(unsigned long ulReg, unsigned short usData)
+{
+    #if defined TARGET
+	ft_uint8_t spidata[4];
+	spidata[0] = ((ulReg >> 16) | 0x80);
+	spidata[1] = (ulReg >> 8);
+	spidata[2] = ulReg & 0xff;
+	spi_open(SPIM, host->hal_config.spi_cs_pin_no);  // this also sets the CS line low
+	spi_writen(SPIM, spidata, 3);
+	spi_write(SPIM, usData);
+	spi_write(SPIM, (usData >> 8));
+    spi_close(SPIM, host->hal_config.spi_cs_pin_no);
+    #else
+    extern void _FT8XXEMU_cs(int cs);
+    extern unsigned char _FT8XXEMU_transfer(unsigned char data);
+    _FT8XXEMU_cs(1);
+    _FT8XXEMU_transfer((unsigned char)((ulReg >> 16) | 0x80));
+    _FT8XXEMU_transfer((unsigned char)(ulReg >> 8));
+    _FT8XXEMU_transfer((unsigned char)ulReg);
+    _FT8XXEMU_transfer((unsigned char)usData);
+    _FT8XXEMU_transfer((unsigned char)(usData >> 8));
+    _FT8XXEMU_cs(0);
+    #endif
+}
+
+static void Ft_Gpu_Hal_WrMem(unsigned long ulReg, unsigned char *ptrData, unsigned long ulDataLength)
+{
+    #if defined TARGET
+	ft_uint8_t spidata[4];
+	spidata[0] = ((ulReg >> 16) | 0x80);
+	spidata[1] = (ulReg >> 8);
+	spidata[2] = ulReg & 0xff;
+	spi_open(SPIM, host->hal_config.spi_cs_pin_no); // this also sets the CS line low
+	spi_writen(SPIM, spidata, 3);
+    spi_writen(SPIM,ptrData,ulDataLength);
+    spi_close(SPIM, host->hal_config.spi_cs_pin_no);
+    #else
+    extern void _FT8XXEMU_cs(int cs);
+    extern unsigned char _FT8XXEMU_transfer(unsigned char data);
+    _FT8XXEMU_cs(1);
+    _FT8XXEMU_transfer((unsigned char)((ulReg >> 16) | 0x80));
+    _FT8XXEMU_transfer((unsigned char)(ulReg >> 8));
+    _FT8XXEMU_transfer((unsigned char)ulReg);
+    while (ulDataLength-- != 0) {
+        _FT8XXEMU_transfer(*ptrData++);
+    }
+    _FT8XXEMU_cs(0);
+    #endif
+}
+#endif
 
 #if defined ST7789S_GLCD_MODE
     #if defined _WINDOWS
@@ -935,7 +1064,7 @@ static void fnWriteGLCD_data_pair(unsigned short usData)
     CollectCommand(0, *((volatile unsigned short *)GLCD_DATA_ADDR));     // pass the data to the LCD simulator
 #endif
 }
-#elif !defined TFT2N0369_GLCD_MODE && !defined ST7789S_GLCD_MODE
+#elif !defined TFT2N0369_GLCD_MODE && !defined ST7789S_GLCD_MODE && !defined FT800_GLCD_MODE
 // Write a 16 bit word to the graphic memory in the LCD. It is expected that the display has been commanded to graphic mode
 //
 static void fnWriteGLCD_data_pair(unsigned short usBytePair)
@@ -1025,7 +1154,7 @@ static void fnSetWindow(unsigned short x1, unsigned short y1, unsigned short x2,
 
 #if defined SUPPORT_TOUCH_SCREEN && !defined TOUCH_FT6206                // {4}
 
-#if defined TFT2N0369_GLCD_MODE                                          // Freescale Tower LCD
+#if defined TFT2N0369_GLCD_MODE                                          // Freescale/NXP Tower LCD
     static void fnY_ready(ADC_INTERRUPT_RESULT *res);
     #define TOUCH_X_DRIVE_PLUS   PORT_AN_BIT6
     #define TOUCH_X_DRIVE_MINUS  PORT_AN_BIT4
@@ -1056,7 +1185,7 @@ static void fnSetWindow(unsigned short x1, unsigned short y1, unsigned short x2,
     #define PEN_DOWN_DEBOUNCE    6
 #endif
 
-#if defined TFT2N0369_GLCD_MODE                                          // Freescale Tower LCD
+#if defined TFT2N0369_GLCD_MODE                                          // Freescale/NXP Tower LCD
     static ADC_RESULTS    Results;                                       // buffer for results
 #else
     static unsigned short usResults[4];                                  // buffer for results
@@ -1068,7 +1197,7 @@ static void fnSetWindow(unsigned short x1, unsigned short y1, unsigned short x2,
 
 // 2..4ms touch screen interrupt (from ADC result)
 //
-#if defined TFT2N0369_GLCD_MODE                                          // Freescale Tower LCD
+#if defined TFT2N0369_GLCD_MODE                                          // Freescale/NXP Tower LCD
 static void fnTouchInterrupt(ADC_INTERRUPT_RESULT *res)
 #else
 static void fnTouchInterrupt(void)                                       // new x and y samples ready
@@ -1085,7 +1214,7 @@ static void fnTouchInterrupt(void)                                       // new 
     unsigned char ucMemoryContent, ucNewContent;
 #endif
 #if defined TOUCH_FT6206
-#elif defined TFT2N0369_GLCD_MODE                                        // Freescale Tower LCD
+#elif defined TFT2N0369_GLCD_MODE                                        // Freescale/NXP Tower LCD
     ADC_RESULTS  samples;
     _CLEARBITS(AN, (TOUCH_X_DRIVE_PLUS | TOUCH_X_DRIVE_MINUS | TOUCH_Y_DRIVE_PLUS | TOUCH_Y_DRIVE_MINUS));
     PANPAR &= ~(TOUCH_X_DRIVE_PLUS | TOUCH_X_DRIVE_MINUS);               // set as GPIO - momentarily driving 0
@@ -1211,7 +1340,7 @@ static void fnTouchInterrupt(void)                                       // new 
 #endif
 }
 
-#if !defined TFT2N0369_GLCD_MODE && !defined ST7789S_GLCD_MODE           // not Freescale Tower LCD
+#if !defined TFT2N0369_GLCD_MODE && !defined ST7789S_GLCD_MODE && !defined FT800_GLCD_MODE // not Freescale/NXP Tower LCD
 static void fnX_stabilise(void)
 {
     ADC_SETUP adc_setup; 
@@ -1231,7 +1360,7 @@ static void fnX_stabilise(void)
 }
 #endif
 
-#if defined TFT2N0369_GLCD_MODE                                          // Freescale Tower LCD
+#if defined TFT2N0369_GLCD_MODE                                          // Freescale/NXP Tower LCD
 static void fnY_ready(ADC_INTERRUPT_RESULT *res)
 #else
 static void fnY_ready(void)
@@ -1239,7 +1368,7 @@ static void fnY_ready(void)
 {
 #if !defined TOUCH_FT6206
     ADC_SETUP adc_setup; 
-#if defined TFT2N0369_GLCD_MODE                                          // Freescale Tower LCD
+#if defined TFT2N0369_GLCD_MODE                                          // Freescale/NXP Tower LCD
     #if defined M52259_TOWER
     static unsigned char ucIntensityInput = (PORT_TA_BIT0 | PORT_TA_BIT1);
     #endif
@@ -1296,7 +1425,7 @@ static void fnY_ready(void)
 #endif
 }
 
-#if !defined TFT2N0369_GLCD_MODE && !defined ST7789S_GLCD_MODE           // not Freescale Tower LCD
+#if !defined TFT2N0369_GLCD_MODE && !defined ST7789S_GLCD_MODE && !defined FT800_GLCD_MODE // not Freescale/NXP Tower LCD
 static void fnY_stabilise(void)
 {
     ADC_SETUP adc_setup;                                                 // Luminary Micro IDM_L35_B
@@ -1350,7 +1479,7 @@ static void fnStartTouch(void)
         fnConfigureInterrupt((void *)&interrupt_setup);                  // configure touch screen interrupt
         TOUCHRESET_H();                                                  // negate the reset line to the touch screen controller (it will report via the interrupt when it is ready (about 300ms later)
     }
-    #elif defined TFT2N0369_GLCD_MODE                                    // Freescale Tower LCD
+    #elif defined TFT2N0369_GLCD_MODE                                    // Freescale/NXP Tower LCD
     ADC_SETUP adc_setup; 
     adc_setup.int_type = ADC_INTERRUPT;                                  // identifier when configuring
     adc_setup.int_handler = fnY_ready;
@@ -1781,6 +1910,102 @@ static void fnStartTouch(void)
         #if defined GLCD_BACKLIGHT_CONTROL
             fnSetBacklight();
         #endif
+    #elif defined GLCD_INIT && defined FT800_GLCD_MODE                   // {5}
+            GLCD_RST_H();                                                // release the reset line (this is in fact the power down line on the FT800 - not needed by emulator)
+            #define FT_GPU_ACTIVE_M  0x00
+            Ft_Gpu_HostCommand(FT_GPU_ACTIVE_M);                         // access address 0 to wake up the device (4 bytes sent) - not needed by emulator
+            uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(0.020 * SEC), E_INIT_DELAY); // 20ms delay for display to complete initialisation
+            iLCD_State = STATE_INITIALISING;
+            return;
+        case STATE_INITIALISING:                                         // controller SSD1289 but many registers compatible with SSD2119
+            #define REG_ID               3153920UL
+			if (Ft_Gpu_Hal_Rd8(REG_ID) != 0x7c) {                        // read register ID to check if FT800 is ready
+                uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(0.020 * SEC), E_INIT_DELAY); // 20ms delay before trying again
+                return;
+            }
+            #define REG_HCYCLE           3153964UL
+            #define REG_HOFFSET          3153968UL
+            #define REG_HSIZE            3153972UL
+            #define REG_HSYNC0           3153976UL
+            #define REG_HSYNC1           3153980UL
+            #define REG_VCYCLE           3153984UL
+            #define REG_VOFFSET          3153988UL
+            #define REG_VSYNC0           3153996UL
+            #define REG_VSYNC1           3154000UL
+            #define REG_SWIZZLE          3154020UL
+            #define REG_PCLK_POL         3154028UL
+            #define REG_VSIZE            3153992UL
+            #define REG_CSPREAD          3154024UL
+            #define REG_DITHER           3154016UL
+	        Ft_Gpu_Hal_Wr16(REG_HCYCLE, 408);                            // 320 x 240
+	        Ft_Gpu_Hal_Wr16(REG_HOFFSET, 70);
+	        Ft_Gpu_Hal_Wr16(REG_HSYNC0, 0);
+	        Ft_Gpu_Hal_Wr16(REG_HSYNC1, 10);
+	        Ft_Gpu_Hal_Wr16(REG_VCYCLE, 263);
+	        Ft_Gpu_Hal_Wr16(REG_VOFFSET, 13);
+	        Ft_Gpu_Hal_Wr16(REG_VSYNC0, 0);
+	        Ft_Gpu_Hal_Wr16(REG_VSYNC1, 2);
+	        Ft_Gpu_Hal_Wr8(REG_SWIZZLE, 2);
+	        Ft_Gpu_Hal_Wr8(REG_PCLK_POL, 8);
+	        Ft_Gpu_Hal_Wr16(REG_HSIZE, GLCD_X);
+	        Ft_Gpu_Hal_Wr16(REG_VSIZE, GLCD_Y);
+	        Ft_Gpu_Hal_Wr16(REG_CSPREAD, 1);
+	        Ft_Gpu_Hal_Wr16(REG_DITHER, 1);
+            /*
+            Ft_Gpu_Hal_Wr16(REG_HCYCLE, 928);                            // original reference
+	        Ft_Gpu_Hal_Wr16(REG_HOFFSET, 88);
+	        Ft_Gpu_Hal_Wr16(REG_HSYNC0, 0);
+	        Ft_Gpu_Hal_Wr16(REG_HSYNC1, 48);
+	        Ft_Gpu_Hal_Wr16(REG_VCYCLE, 525);
+	        Ft_Gpu_Hal_Wr16(REG_VOFFSET, 32);
+	        Ft_Gpu_Hal_Wr16(REG_VSYNC0, 0);
+	        Ft_Gpu_Hal_Wr16(REG_VSYNC1, 3);
+	        Ft_Gpu_Hal_Wr8(REG_SWIZZLE, 0);
+	        Ft_Gpu_Hal_Wr8(REG_PCLK_POL, 1);
+	        Ft_Gpu_Hal_Wr16(REG_HSIZE, 800);
+	        Ft_Gpu_Hal_Wr16(REG_VSIZE, 480);
+	        Ft_Gpu_Hal_Wr16(REG_CSPREAD, 0);
+	        Ft_Gpu_Hal_Wr16(REG_DITHER, 1);*/
+            #define REG_TOUCH_RZTHRESH   3154200UL
+            #define RESISTANCE_THRESHOLD					(1200)
+            Ft_Gpu_Hal_Wr16(REG_TOUCH_RZTHRESH,RESISTANCE_THRESHOLD);
+            #define REG_GPIOX            3154076UL
+            #define REG_GPIOX_DIR        3154072UL
+            Ft_Gpu_Hal_Wr16(REG_GPIOX_DIR, 0xffff);
+            Ft_Gpu_Hal_Wr16(REG_GPIOX, 0xffff);
+
+            /*It is optional to clear the screen here*/
+            {
+                /* Boot up for FT800 followed by graphics primitive sample cases */
+                /* Initial boot up DL - make the back ground green color */
+                const unsigned char FT_DLCODE_BOOTUP[12] = 
+                {
+                0,0,0,2,//GPU instruction CLEAR_COLOR_RGB
+                7,0,0,38, //GPU instruction CLEAR
+                0,0,0,0,  //GPU instruction DISPLAY
+                };
+                #define RAM_DL               3145728UL
+                Ft_Gpu_Hal_WrMem(RAM_DL,(unsigned char *)FT_DLCODE_BOOTUP,sizeof(FT_DLCODE_BOOTUP));
+                #define REG_DLSWAP           3154004UL
+                #define DLSWAP_FRAME         2UL
+                Ft_Gpu_Hal_Wr8(REG_DLSWAP,DLSWAP_FRAME);
+            }
+
+            #define REG_PCLK             3154032UL
+            Ft_Gpu_Hal_Wr8(REG_PCLK,8);//after this display is visible on the LCD
+            uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(0.120 * SEC), E_INIT_DELAY); // 120ms delay
+            iLCD_State = STATE_INITIALISING_1;
+            break;
+        case STATE_INITIALISING_1:
+        #if defined SUPPORT_TOUCH_SCREEN
+            fnStartTouch();
+        #endif
+        #if defined GLCD_BACKLIGHT_CONTROL
+            fnSetBacklight();
+        #endif
+            fnEventMessage(LCD_PARTNER_TASK, TASK_LCD, E_LCD_INITIALISED);
+            iLCD_State = STATE_LCD_READY;
+            break;
     #elif defined GLCD_INIT && defined TFT2N0369_GLCD_MODE
             GLCD_RST_H();                                                // release the reset line
             uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(0.003 * SEC), E_INIT_DELAY); // 3ms delay for display to complete initialisation

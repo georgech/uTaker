@@ -54,6 +54,7 @@
 /*                          local definitions                          */
 /* =================================================================== */
 
+
 #define MAX_GLCD_READY              100                                  // this many maximum tries will be made to detect the GLCD on power up. If hasn't been detected after this many it will be assumed that no GLCD is connected and the interface doesn't disturb the processor
 
 #include "glcd_samsung.h"                                                // import GLCD (or emulated GLCD) defines
@@ -135,7 +136,7 @@ static int  fnWriteScroll(GLCD_SCROLL *scroll);
     static int  fnConfigureBlink(unsigned char ucObjectType, void *object);
 #endif
 static void fnClearScreen(void);
-#if !defined TFT_GLCD_MODE && !defined CGLCD_GLCD_MODE && !defined KITRONIX_GLCD_MODE && !defined MB785_GLCD_MODE && !defined TFT2N0369_GLCD_MODE && !defined ST7789S_GLCD_MODE
+#if !defined TFT_GLCD_MODE && !defined CGLCD_GLCD_MODE && !defined KITRONIX_GLCD_MODE && !defined MB785_GLCD_MODE && !defined TFT2N0369_GLCD_MODE && !defined ST7789S_GLCD_MODE && !defined FT800_GLCD_MODE
     static int fnCheckLCD(void);
 #endif
 #if ! defined DONT_HANDLE_TOUCH_SCREEN_MOVEMENT && (defined SUPPORT_TOUCH_SCREEN && (defined MB785_GLCD_MODE || defined TOUCH_FT6206))
@@ -235,7 +236,7 @@ extern void fnLCD(TTASKTABLE *ptrTaskTable)                              // LCD 
             #define GLCD_INIT
             #include "glcd_tft.h"                                        // include initialisation code
             #undef GLCD_INIT
-#elif (defined CGLCD_GLCD_MODE && (defined AVR32_EVK1105 || defined EK_LM3S3748)) || defined KITRONIX_GLCD_MODE || defined MB785_GLCD_MODE || defined TFT2N0369_GLCD_MODE || defined ST7789S_GLCD_MODE
+#elif (defined CGLCD_GLCD_MODE && (defined AVR32_EVK1105 || defined EK_LM3S3748)) || defined KITRONIX_GLCD_MODE || defined MB785_GLCD_MODE || defined TFT2N0369_GLCD_MODE || defined FT800_GLCD_MODE || defined ST7789S_GLCD_MODE || defined FT800_GLCD_MODE
             #define GLCD_INIT
             #include "glcd_cglcd.h"                                      // include initialisation code
             #undef GLCD_INIT
@@ -253,7 +254,7 @@ extern void fnLCD(TTASKTABLE *ptrTaskTable)                              // LCD 
             #define GLCD_INIT
             #include "glcd_nokia.h"                                      // include initialisation code
             #undef GLCD_INIT
-    #elif defined _GLCD_SAMSUNG                                          // Samsung controller
+    #elif defined _GLCD_SAMSUNG                                          // samsung controller
           //while (GLCD_BUSY()) {};
             fnWriteGLCD_cmd(GLCD_ON, GLCD_CHIP0);                        // power on first chip
         #if SAMSUNG_CHIPS > 1
@@ -278,7 +279,7 @@ extern void fnLCD(TTASKTABLE *ptrTaskTable)                              // LCD 
         #if defined GLCD_BACKLIGHT_CONTROL
             fnSetBacklight();
         #endif
-    #else                                                                // Toshiba controller
+    #else                                                                // toshiba controller
             fnCommandGlcd_2(SET_GRAPHICS_HOME_ADDRESS, 0x0000);          // set graphics start at zero
             fnCommandGlcd_2(SET_GRAPHICS_HORIZ_BYTES, X_BYTES);          // set the number of horizontal bytes
             fnCommandGlcd_2(SET_TEXT_HOME_ADDRESS, X_BYTES*GLCD_Y);      // set text start after graphics memory
@@ -304,12 +305,12 @@ extern void fnLCD(TTASKTABLE *ptrTaskTable)                              // LCD 
             }
             break;
 
-#if defined NOKIA_GLCD_MODE || defined CGLCD_GLCD_MODE || defined KITRONIX_GLCD_MODE || defined TFT2N0369_GLCD_MODE || defined MB785_GLCD_MODE || defined ST7789S_GLCD_MODE
+#if defined NOKIA_GLCD_MODE || defined CGLCD_GLCD_MODE || defined KITRONIX_GLCD_MODE || defined TFT2N0369_GLCD_MODE || defined FT800_GLCD_MODE || defined MB785_GLCD_MODE || defined ST7789S_GLCD_MODE
         case STATE_LCD_CLEARING_DISPLAY:
             iLCD_State = fnSmartUpdate(0);                               // continue with display updating
             if (iLCD_State == STATE_LCD_READY) {                         // if the write has completed
     #if defined NOKIA_GLCD_MODE
-                WriteSpiCommand(DISON);                                  // display
+                WriteSpiCommand(DISON);                                  // display on
     #elif defined ST7789S_GLCD_MODE
                 fnCommandGlcd_1(ST7637_DISPLAY_ON);                      // display on (0x29)
                 fnSetWindow(0, 0, (GLCD_X - 1), (GLCD_Y - 1));           // set a window equal to the complete display size
@@ -579,7 +580,7 @@ static void fnWriteBitMap(unsigned short x, unsigned short y,
                const unsigned char *glyph_ptr, unsigned char ucMode,
                RECT_COORDINATES *window)
 {
-#if (defined _GLCD_SAMSUNG || defined ST7565S_GLCD_MODE) && !defined OLED_GLCD_MODE && !defined TFT_GLCD_MODE && !defined NOKIA_GLCD_MODE && !defined CGLCD_GLCD_MODE && !defined KITRONIX_GLCD_MODE && !defined TFT2N0369_GLCD_MODE && !defined MB785_GLCD_MODE && !defined ST7789S_GLCD_MODE // {19}
+#if (defined _GLCD_SAMSUNG || defined ST7565S_GLCD_MODE) && !defined OLED_GLCD_MODE && !defined TFT_GLCD_MODE && !defined NOKIA_GLCD_MODE && !defined CGLCD_GLCD_MODE && !defined KITRONIX_GLCD_MODE && !defined TFT2N0369_GLCD_MODE && !defined FT800_GLCD_MODE && !defined MB785_GLCD_MODE && !defined ST7789S_GLCD_MODE // {19}
     register unsigned char ucMemoryContent;
     register unsigned char ucOriginal_content;
     int iX = x;
@@ -853,7 +854,7 @@ static int fnWriteLine(GLCD_LINE_BLINK *line)                            // {1}
         usX_Start = line->line_start_end.usX_end;
         usX_End   = line->line_start_end.usX_start;
     }
-#if (defined _GLCD_SAMSUNG || defined ST7565S_GLCD_MODE) && !defined OLED_GLCD_MODE && !defined TFT_GLCD_MODE && !defined NOKIA_GLCD_MODE && !defined CGLCD_GLCD_MODE && !defined KITRONIX_GLCD_MODE && !defined TFT2N0369_GLCD_MODE && !defined MB785_GLCD_MODE && !defined ST7789S_GLCD_MODE // {19}    
+#if (defined _GLCD_SAMSUNG || defined ST7565S_GLCD_MODE) && !defined OLED_GLCD_MODE && !defined TFT_GLCD_MODE && !defined NOKIA_GLCD_MODE && !defined CGLCD_GLCD_MODE && !defined KITRONIX_GLCD_MODE && !defined TFT2N0369_GLCD_MODE && !defined FT800_GLCD_MODE && !defined MB785_GLCD_MODE && !defined ST7789S_GLCD_MODE // {19}    
     iY_steps = (usY_End - usY_Start);                                    // height
     if (usX_Start <= usX_End) {
         iHorizontalDirection = 1;                                        // draw from left to right        
@@ -1089,7 +1090,7 @@ static int fnWriteRect(GLCD_RECT_BLINK *rect)                            // {1}
         usX_Start = rect->rect_corners.usX_end;
         usX_End   = rect->rect_corners.usX_start;
     }
-#if (defined _GLCD_SAMSUNG || defined ST7565S_GLCD_MODE) && !defined OLED_GLCD_MODE && !defined TFT_GLCD_MODE && !defined NOKIA_GLCD_MODE && !defined CGLCD_GLCD_MODE && !defined KITRONIX_GLCD_MODE && !defined TFT2N0369_GLCD_MODE && !defined MB785_GLCD_MODE && !defined ST7789S_GLCD_MODE // {19}
+#if (defined _GLCD_SAMSUNG || defined ST7565S_GLCD_MODE) && !defined OLED_GLCD_MODE && !defined TFT_GLCD_MODE && !defined NOKIA_GLCD_MODE && !defined CGLCD_GLCD_MODE && !defined KITRONIX_GLCD_MODE && !defined TFT2N0369_GLCD_MODE && defined FT800_GLCD_MODE && !defined MB785_GLCD_MODE && !defined ST7789S_GLCD_MODE // {19}
     if (usX_Start <= usX_End) {
         iHorizontalDirection = 1;                                        // draw from left to right
     }
@@ -1206,7 +1207,7 @@ static int fnWriteRect(GLCD_RECT_BLINK *rect)                            // {1}
 //
 static int fnWriteScroll(GLCD_SCROLL *scroll)
 {
-#if (defined _GLCD_SAMSUNG || defined ST7565S_GLCD_MODE) && !defined OLED_GLCD_MODE && !defined TFT_GLCD_MODE && !defined NOKIA_GLCD_MODE && !defined CGLCD_GLCD_MODE && !defined KITRONIX_GLCD_MODE && !defined TFT2N0369_GLCD_MODE && !defined MB785_GLCD_MODE && !defined ST7789S_GLCD_MODE // {19}
+#if (defined _GLCD_SAMSUNG || defined ST7565S_GLCD_MODE) && !defined OLED_GLCD_MODE && !defined TFT_GLCD_MODE && !defined NOKIA_GLCD_MODE && !defined CGLCD_GLCD_MODE && !defined KITRONIX_GLCD_MODE && !defined TFT2N0369_GLCD_MODE && defined FT800_GLCD_MODE && !defined MB785_GLCD_MODE && !defined ST7789S_GLCD_MODE // {19}
     int iX = 0;
     int iY;
     int iByteShift = (scroll->sY_scroll/8);
@@ -1457,7 +1458,7 @@ static int fnConfigureBlink(unsigned char ucObjectType, void *object)
 }
 #endif
 
-#if defined _GLCD_SAMSUNG && !defined OLED_GLCD_MODE && !defined TFT_GLCD_MODE && !defined NOKIA_GLCD_MODE && !defined CGLCD_GLCD_MODE && !defined KITRONIX_GLCD_MODE && !defined TFT2N0369_GLCD_MODE && !defined MB785_GLCD_MODE && !defined ST7789S_GLCD_MODE
+#if defined _GLCD_SAMSUNG && !defined OLED_GLCD_MODE && !defined TFT_GLCD_MODE && !defined NOKIA_GLCD_MODE && !defined CGLCD_GLCD_MODE && !defined KITRONIX_GLCD_MODE && !defined TFT2N0369_GLCD_MODE && defined FT800_GLCD_MODE && !defined MB785_GLCD_MODE && !defined ST7789S_GLCD_MODE
 // Position XY Address Pointer within the (64 x X) x 64 Display Area
 //
 static void fnGLCDGotoXY(unsigned char ucXPos, unsigned char ucYPos) 
@@ -1679,19 +1680,19 @@ static int fnSmartUpdate(int iStart)
         x_stall = 0;
     }
 #else
-#if defined CGLCD_GLCD_MODE || defined KITRONIX_GLCD_MODE || defined MB785_GLCD_MODE || defined TFT2N0369_GLCD_MODE || defined ST7789S_GLCD_MODE
+#if defined CGLCD_GLCD_MODE || defined KITRONIX_GLCD_MODE || defined MB785_GLCD_MODE || defined TFT2N0369_GLCD_MODE || defined FT800_GLCD_MODE || defined ST7789S_GLCD_MODE
     static unsigned short usLastX_pixel = 0xffff;                        // force the initial window to be set
     static unsigned short usLastY_pixel = 0xffff;
 #endif
     static unsigned char x_stall = 0;
     static unsigned char y_stall = 0;
-#if defined _GLCD_SAMSUNG && !defined OLED_GLCD_MODE && !defined TFT_GLCD_MODE && !defined NOKIA_GLCD_MODE && !defined CGLCD_GLCD_MODE && !defined KITRONIX_GLCD_MODE && !defined MB785_GLCD_MODE && !defined TFT2N0369_GLCD_MODE && !defined ST7789S_GLCD_MODE
+#if defined _GLCD_SAMSUNG && !defined OLED_GLCD_MODE && !defined TFT_GLCD_MODE && !defined NOKIA_GLCD_MODE && !defined CGLCD_GLCD_MODE && !defined KITRONIX_GLCD_MODE && !defined MB785_GLCD_MODE && !defined TFT2N0369_GLCD_MODE && !defined FT800_GLCD_MODE && !defined ST7789S_GLCD_MODE
     static unsigned short usNextAddress[SAMSUNG_CHIPS] = {0};
 #elif defined ST7565S_GLCD_MODE                                          // {19}
     static unsigned short usNextAddress = 0;
 #elif defined TFT_GLCD_MODE
     unsigned long *ptDst;
-#elif !defined CGLCD_GLCD_MODE && !defined KITRONIX_GLCD_MODE && !defined TFT2N0369_GLCD_MODE && !defined MB785_GLCD_MODE && !defined ST7789S_GLCD_MODE
+#elif !defined CGLCD_GLCD_MODE && !defined KITRONIX_GLCD_MODE && !defined TFT2N0369_GLCD_MODE && !defined FT800_GLCD_MODE && !defined MB785_GLCD_MODE && !defined ST7789S_GLCD_MODE
     static unsigned short usLastAddress = 0xffff;
 #endif
     int iMaxText = MAX_GLCD_WRITE_BURST;                                 // allow this many writes before yielding
@@ -1701,7 +1702,7 @@ static int fnSmartUpdate(int iStart)
         x_stall = DISPLAY_LEFT_PIXEL;
         y_stall = DISPLAY_TOP_PIXEL;
     }
-#if defined _GLCD_SAMSUNG && !defined OLED_GLCD_MODE && !defined TFT_GLCD_MODE && !defined NOKIA_GLCD_MODE && !defined CGLCD_GLCD_MODE && !defined KITRONIX_GLCD_MODE && !defined TFT2N0369_GLCD_MODE && !defined MB785_GLCD_MODE && !defined ST7789S_GLCD_MODE
+#if defined _GLCD_SAMSUNG && !defined OLED_GLCD_MODE && !defined TFT_GLCD_MODE && !defined NOKIA_GLCD_MODE && !defined CGLCD_GLCD_MODE && !defined KITRONIX_GLCD_MODE && !defined TFT2N0369_GLCD_MODE && !defined FT800_GLCD_MODE && !defined MB785_GLCD_MODE && !defined ST7789S_GLCD_MODE
     for (y = y_stall; y < GLCD_Y;) {                                     // for each row
         unsigned char ucPixelByteBit = (0x01 << (y/8));
         while (ucPixelByteBit != 0) {
@@ -1782,10 +1783,10 @@ static int fnSmartUpdate(int iStart)
     for (y = y_stall; y <= (DISPLAY_BOTTOM_PIXEL/CGLCD_PIXEL_SIZE); y++) { // for each row
         for (x = x_stall; x < (UPDATE_WIDTH); x++) {                     // for each column
             if (ucByteUpdateArray[y][x] != 0) {                          // check if a pixel has changed in this byte
-    #if !defined TFT_GLCD_MODE && !defined CGLCD_GLCD_MODE && !defined KITRONIX_GLCD_MODE && !defined TFT2N0369_GLCD_MODE && !defined MB785_GLCD_MODE && !defined ST7789S_GLCD_MODE
+    #if !defined TFT_GLCD_MODE && !defined CGLCD_GLCD_MODE && !defined KITRONIX_GLCD_MODE && !defined TFT2N0369_GLCD_MODE && !defined FT800_GLCD_MODE && !defined MB785_GLCD_MODE && !defined ST7789S_GLCD_MODE
                 int iOffset = ((y * X_BYTES) + (x * 8)); 
     #endif
-    #if defined CGLCD_GLCD_MODE || defined KITRONIX_GLCD_MODE || defined MB785_GLCD_MODE || defined TFT2N0369_GLCD_MODE || defined ST7789S_GLCD_MODE
+    #if defined CGLCD_GLCD_MODE || defined KITRONIX_GLCD_MODE || defined MB785_GLCD_MODE || defined TFT2N0369_GLCD_MODE || defined ST7789S_GLCD_MODE || defined FT800_GLCD_MODE
                 int iRepeatY = 0;
     #endif
                 int iAdd = 0;
@@ -1881,7 +1882,7 @@ static int fnSmartUpdate(int iStart)
                         }
                         iMaxText--;
                         ucByteUpdateArray[y][x] &= ~ucBit;               // reset since the changed content has been updated
-    #elif defined CGLCD_GLCD_MODE || defined KITRONIX_GLCD_MODE || defined MB785_GLCD_MODE || defined TFT2N0369_GLCD_MODE || defined ST7789S_GLCD_MODE
+    #elif defined CGLCD_GLCD_MODE || defined KITRONIX_GLCD_MODE || defined MB785_GLCD_MODE || defined TFT2N0369_GLCD_MODE || defined FT800_GLCD_MODE || defined ST7789S_GLCD_MODE
                         static unsigned short usLastX_window = 0;
                         static unsigned short usLastY_window = 0;
                         unsigned short usNextPixel = (unsigned short)((((x * 8) + iAdd) * 8) * CGLCD_PIXEL_SIZE);
@@ -1907,7 +1908,7 @@ static int fnSmartUpdate(int iStart)
             #if CGLCD_PIXEL_SIZE > 1
                                 WRITE_DATA(_LCD_PIXEL_COLOUR);
             #endif
-        #elif defined EK_LM3S3748 || defined KITRONIX_GLCD_MODE || defined MB785_GLCD_MODE || defined TFT2N0369_GLCD_MODE || defined ST7789S_GLCD_MODE
+        #elif defined EK_LM3S3748 || defined KITRONIX_GLCD_MODE || defined MB785_GLCD_MODE || defined TFT2N0369_GLCD_MODE || defined ST7789S_GLCD_MODE || defined FT800_GLCD_MODE
                                 fnWriteGLCD_data_pair(_LCD_PIXEL_COLOUR);
             #if CGLCD_PIXEL_SIZE > 1
                                 fnWriteGLCD_data_pair(_LCD_PIXEL_COLOUR);
@@ -1920,7 +1921,7 @@ static int fnSmartUpdate(int iStart)
             #if CGLCD_PIXEL_SIZE > 1
                                 WRITE_DATA(_LCD_ON_COLOUR);
             #endif
-        #elif defined EK_LM3S3748 || defined KITRONIX_GLCD_MODE || defined MB785_GLCD_MODE || defined TFT2N0369_GLCD_MODE || defined ST7789S_GLCD_MODE
+        #elif defined EK_LM3S3748 || defined KITRONIX_GLCD_MODE || defined MB785_GLCD_MODE || defined TFT2N0369_GLCD_MODE || defined ST7789S_GLCD_MODE || defined FT800_GLCD_MODE
                                 fnWriteGLCD_data_pair(_LCD_ON_COLOUR);   // write the background color
             #if CGLCD_PIXEL_SIZE > 1
                                 fnWriteGLCD_data_pair(_LCD_ON_COLOUR);   // repeat for next physical pixel
@@ -2020,12 +2021,12 @@ static void fnClearScreen(void)
     unsigned char ucChip = GLCD_CHIP0;
     #elif defined ST7565S_GLCD_MODE                                      // {19}
     unsigned char ucPagesY, ucColX;
-    #elif !defined CGLCD_GLCD_MODE && !defined KITRONIX_GLCD_MODE && !defined TFT2N0369_GLCD_MODE && !defined MB785_GLCD_MODE && !defined ST7789S_GLCD_MODE
+    #elif !defined CGLCD_GLCD_MODE && !defined KITRONIX_GLCD_MODE && !defined TFT2N0369_GLCD_MODE && !defined MB785_GLCD_MODE && !defined ST7789S_GLCD_MODE && !defined FT800_GLCD_MODE
     int iWrites = (X_BYTES * Y_BYTES) + (X_BYTES * Y_BYTES);             // size of graphic and text areas
     #endif
 #endif
     uMemset(ucPixelArray, 0x00, sizeof(ucPixelArray));                   // initialise screen backup memory
-#if defined CGLCD_GLCD_MODE || defined KITRONIX_GLCD_MODE || defined MB785_GLCD_MODE || defined TFT2N0369_GLCD_MODE || defined ST7789S_GLCD_MODE
+#if defined CGLCD_GLCD_MODE || defined KITRONIX_GLCD_MODE || defined MB785_GLCD_MODE || defined TFT2N0369_GLCD_MODE || defined ST7789S_GLCD_MODE || defined FT800_GLCD_MODE
     uMemset(ucByteUpdateArray, 0xff, sizeof(ucByteUpdateArray));         // cause a complete display refresh
     if (fnSmartUpdate(1) == STATE_LCD_WRITING) {                         // we must yield but aren't complete with the initialisation
         iLCD_State = STATE_LCD_CLEARING_DISPLAY;
@@ -2085,7 +2086,7 @@ static void fnClearScreen(void)
 
 
 
-#if !defined TFT_GLCD_MODE && !defined CGLCD_GLCD_MODE && !defined KITRONIX_GLCD_MODE && !defined MB785_GLCD_MODE && !defined TFT2N0369_GLCD_MODE && !defined ST7789S_GLCD_MODE
+#if !defined TFT_GLCD_MODE && !defined CGLCD_GLCD_MODE && !defined KITRONIX_GLCD_MODE && !defined MB785_GLCD_MODE && !defined TFT2N0369_GLCD_MODE && !defined ST7789S_GLCD_MODE && !defined FT800_GLCD_MODE
 // Check that the GLCD can be detected after a reset
 //
 static int fnCheckLCD(void)
@@ -2383,7 +2384,7 @@ extern int iGetPixelState(unsigned long ulPixelNumber)
         #undef _GLCD_COMMANDS
     #endif
 
-#if (defined MB785_GLCD_MODE || defined AVR32_EVK1105 || defined IDM_L35_B || defined TFT2N0369_GLCD_MODE || defined ST7789S_GLCD_MODE || defined OLIMEX_LPC1766_STK || defined OLIMEX_LPC2478_STK || defined IAR_LPC1788_SK || defined TWR_LCD_RGB_GLCD_MODE) && defined GLCD_X // {17}{18} accept color images
+#if (defined MB785_GLCD_MODE || defined AVR32_EVK1105 || defined IDM_L35_B || defined TFT2N0369_GLCD_MODE || defined FT800_GLCD_MODE || defined ST7789S_GLCD_MODE || defined OLIMEX_LPC1766_STK || defined OLIMEX_LPC2478_STK || defined IAR_LPC1788_SK || defined TWR_LCD_RGB_GLCD_MODE) && defined GLCD_X // {17}{18} accept color images
     #if defined AVR32_EVK1105
 extern void et024006_SetLimits(unsigned short x1, unsigned short y1, unsigned short x2, unsigned short y2)
 {
@@ -2520,7 +2521,7 @@ extern int fnDisplayBitmap(unsigned char *ptrData, unsigned short usLength)
                     BMP_Length -= (ulImageWidthBytes + ucCorrection);
                     usValidData = 0;                                     // complete buffer emptied
                 }
-#elif defined IDM_L35_B || defined TFT2N0369_GLCD_MODE || defined ST7789S_GLCD_MODE
+#elif defined IDM_L35_B || defined TFT2N0369_GLCD_MODE || defined FT800_GLCD_MODE || defined ST7789S_GLCD_MODE
                 if (usValidData >= (ulImageWidthBytes + ucCorrection)) { // a complete line has been collected so write it to the display
                     unsigned long ulPixel;
                     ulImageHeight--;
