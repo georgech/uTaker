@@ -92,7 +92,7 @@ static int fnProcessInput(int iEndpoint_ref, USB_HW *usb_hardware, unsigned char
         return MAINTAIN_OWNERSHIP;
     case STALL_ENDPOINT:                                                 // send stall
         if (iEndpoint_ref == 0) {                                        // check whether control 0 endpoint
-            ptEndpointBD->usb_bd_tx_even.ulUSB_BDControl = (OWN | BDT_STALL);// force stall handshake on both control 0 buffers
+            ptEndpointBD->usb_bd_tx_even.ulUSB_BDControl = (OWN | BDT_STALL); // force stall handshake on both control 0 buffers
             ptEndpointBD->usb_bd_tx_odd.ulUSB_BDControl  = (OWN | BDT_STALL);
             fnSetUSBEndpointState(iEndpoint_ref, USB_ENDPOINT_STALLED);       
             _SIM_USB(USB_SIM_STALL, iEndpoint_ref, usb_hardware);
