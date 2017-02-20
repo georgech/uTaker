@@ -149,7 +149,7 @@
         MCG_S |= MCG_S_LOCK;
             #endif
     }
-            #if defined KINETIS_KL82                                     // the KL82 has seperate flash and bus clocks, as well as a QSPI clock
+            #if !defined BUS_FLASH_CLOCK_SHARED                           // the KL82 has seperate flash and bus clocks, as well as a QSPI clock
     SIM_CLKDIV1 = (((SYSTEM_CLOCK_DIVIDE - 1) << 28) | ((BUS_CLOCK_DIVIDE - 1) << 24) | ((FLASH_CLOCK_DIVIDE - 1) << 16) | ((QSPI_CLOCK_DIVIDE - 1) << 12)); // prepare bus clock divides
             #else
     SIM_CLKDIV1 = (((SYSTEM_CLOCK_DIVIDE - 1) << 28) | ((BUS_CLOCK_DIVIDE - 1) << 16)); // prepare bus clock divides (flash and bus clocks are the same)
