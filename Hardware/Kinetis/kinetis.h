@@ -1051,6 +1051,12 @@ typedef struct stRESET_VECTOR
     #define CAU_V1_AVAILABLE
 #endif
 
+// Crossbar switch
+//
+#if defined KINETIS_K02
+    #define CROSSBAR_SWITCH_LITE
+#endif
+
 // UART configuration
 //
 #if defined KINETIS_KL03 || defined KINETIS_KL28 || defined KINETIS_KL82 || defined KINETIS_K80  // devices with exclusively LPUARTs
@@ -7535,7 +7541,7 @@ typedef struct stKINETIS_ADMA2_BD
 #define LPTMR0_CMR                       *(volatile unsigned long *)(LPTMR_BLOCK + 0x8) // Low Power Timer 0 Compare Register (16 bits) - this register can only be altered once the timer is set active  when the timer compare flag is set
 #define LPTMR0_CNR                       *(volatile unsigned long *)(LPTMR_BLOCK + 0xc) // Low Power Timer 0 Counter Register (16 bits read-only) - to read the counter value write any value to this register and immediately read back
 
-#if !defined KINETIS_KL && !defined KINETIS_KE
+#if !defined KINETIS_KL && !defined KINETIS_KE && !defined CROSSBAR_SWITCH_LITE
 // Crossbar Switch                                                       {50}
 //
 #define AXBS_PRS0                        *(volatile unsigned long *)(AXBS_BLOCK + 0x000) // Priority Registers Slave 0
@@ -13803,19 +13809,26 @@ extern void fnSimPers(void);
 
 // Miscellaneous Control Module                                          {29}
 //
-#define MCM_PLASC                        *(volatile unsigned short *)(MCM_BLOCK + 0x08)   // Crossbar Switch (AXBS) Slave Configuration (read-only)
-#define MCM_PLAMC                        *(volatile unsigned short *)(MCM_BLOCK + 0x0a)   // Crossbar Switch (AXBS) Master Configuration (read-only)
-#define MCM_CR                           *(unsigned long *)(MCM_BLOCK + 0x0c)   // Control Register
-  #define MCM_CR_DDR_SIZE_DISABLED       0x00000000
-  #define MCM_CR_DDR_SIZE_128MB          0x00010000
-  #define MCM_CR_DDR_SIZE_256MB          0x00020000
-  #define MCM_CR_DDR_SIZE_512MB          0x00030000
-#define MCM_ISR                          *(volatile unsigned long *)(MCM_BLOCK + 0x10)   // Interrupt Status Register
-#define MCM_ETBCC                        *(unsigned long *)(MCM_BLOCK + 0x14)   // ETB Counter Control Register
-#define MCM_ETBRL                        *(unsigned long *)(MCM_BLOCK + 0x18)   // ETB Reload Register
-#define MCM_ETBCNT                       *(volatile unsigned long *)(MCM_BLOCK + 0x1c)   // ETB Counter Value Register
-#define MCM_PID                          *(unsigned long *)(MCM_BLOCK + 0x30)   // Process ID Register
-
+#define MCM_PLASC                        *(volatile unsigned short *)(MCM_BLOCK + 0x08)   // crossbar switch (AXBS) slave configuration (read-only)
+#define MCM_PLAMC                        *(volatile unsigned short *)(MCM_BLOCK + 0x0a)   // crossbar switch (AXBS) master configuration (read-only)
+#if defined KINETIS_K02
+    #define MCM_PLACR                    *(unsigned long *)(MCM_BLOCK + 0x0c)   // crossbar switch control register
+      #define MCM_PLACR_ARB_FIXED_PRIORITY 0x00000000
+      #define MCM_PLACR_ARB_ROUND_ROBIN    0x00000200                    // round-robin arbitration for crossbar masters rather than fixed priority
+    #define MCM_ISCR                     *(volatile unsigned long *)(MCM_BLOCK + 0x10)   // interrupt status and control register (read-only)
+    #define MCM_CPO                      *(unsigned long *)(MCM_BLOCK + 0x40)   // compute operation control register
+#else
+    #define MCM_CR                       *(unsigned long *)(MCM_BLOCK + 0x0c)   // control register
+      #define MCM_CR_DDR_SIZE_DISABLED   0x00000000
+      #define MCM_CR_DDR_SIZE_128MB      0x00010000
+      #define MCM_CR_DDR_SIZE_256MB      0x00020000
+      #define MCM_CR_DDR_SIZE_512MB      0x00030000
+    #define MCM_ISR                      *(volatile unsigned long *)(MCM_BLOCK + 0x10)   // Interrupt Status Register
+    #define MCM_ETBCC                    *(unsigned long *)(MCM_BLOCK + 0x14)   // ETB Counter Control Register
+    #define MCM_ETBRL                    *(unsigned long *)(MCM_BLOCK + 0x18)   // ETB Reload Register
+    #define MCM_ETBCNT                   *(volatile unsigned long *)(MCM_BLOCK + 0x1c)   // ETB Counter Value Register
+    #define MCM_PID                      *(unsigned long *)(MCM_BLOCK + 0x30)   // Process ID Register
+#endif
 
 // Memory-Mapped Cryptographic Accelerator Unit                          {45}
 //

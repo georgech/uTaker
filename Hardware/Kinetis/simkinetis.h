@@ -1643,6 +1643,7 @@ unsigned long LPTMR_CNR;
 } KINETIS_LPTMR;
 #endif
 
+#if !defined CROSSBAR_SWITCH_LITE
 typedef struct stKINETIS_AXBS                                            // {18}
 {
 unsigned long AXBS_PRS0;
@@ -1693,6 +1694,7 @@ unsigned long AXBS_MGPCR6;
 unsigned long ulResm6[63];
 unsigned long AXBS_MGPCR7;
 } KINETIS_AXBS;
+#endif
 
 typedef struct stKINETIS_TSI
 {
@@ -2607,13 +2609,20 @@ typedef struct stKINETIS_MCM                                             // {11}
 unsigned long ulRes0[2];
 unsigned short MCM_PLASC;
 unsigned short MCM_PLAMC;
-unsigned long MCM_CR;
-unsigned long MCM_ISR;
-unsigned long MCM_ETBCC;
-unsigned long MCM_ETBRL;
-unsigned long MCM_ETBCNT;
-unsigned long ulRes1[4];
-unsigned long MCM_PID;
+#if defined KINETIS_K02
+    unsigned long MCM_PLACR;
+    unsigned long MCM_ISCR;
+    unsigned long ulRes1[12];
+    unsigned long MCM_CPO;
+#else
+    unsigned long MCM_CR;
+    unsigned long MCM_ISR;
+    unsigned long MCM_ETBCC;
+    unsigned long MCM_ETBRL;
+    unsigned long MCM_ETBCNT;
+    unsigned long ulRes1[4];
+    unsigned long MCM_PID;
+#endif
 } KINETIS_MCM;
 
 #if defined CAU_V1_AVAILABLE || defined CAU_V2_AVAILABLE
@@ -3025,7 +3034,7 @@ typedef struct stKINETIS_PERIPH
 #if !defined KINETIS_KE
     KINETIS_LPTMR      LPTMR;                                            // {20}
 #endif
-#if !defined KINETIS_KE && !defined KINETIS_KL
+#if !defined KINETIS_KE && !defined KINETIS_KL && !defined CROSSBAR_SWITCH_LITE
     KINETIS_AXBS       AXBS;                                             // {19}
 #endif
     KINETIS_TSI        TSI;

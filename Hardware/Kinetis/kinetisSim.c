@@ -622,7 +622,7 @@ static void fnSetDevice(unsigned long *port_inits)
     #elif !defined KINETIS_KE
     RTC_RAR     = (RTC_RAR_TSRW | RTC_RAR_TPRW | RTC_RAR_TARW| RTC_RAR_TCRW | RTC_RAR_CRW | RTC_RAR_SRW | RTC_RAR_LRW | RTC_RAR_IERW);
     #endif
-    #if !defined KINETIS_KL && !defined KINETIS_KE
+    #if !defined KINETIS_KL && !defined KINETIS_KE && !defined CROSSBAR_SWITCH_LITE
     AXBS_CRS0 = 0x76543210;                                              // {34} default crossbar switch settings
     AXBS_CRS1 = 0x76543210;
     AXBS_CRS2 = 0x76543210;
