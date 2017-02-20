@@ -45,6 +45,7 @@
     02.06.2016 Add ACMP and CMP                                          {30}
     09.12.2016 Add PWT                                                   {31}
     11.02.2017 Add system clock generator                                {32}
+    14.02.2017 Add LTC                                                   {33}
 
 */  
 
@@ -2756,6 +2757,72 @@ unsigned long FLEXIO_TIMCMP3;
 } KINETIS_FLEXIO;
 #endif
 
+#if defined LTC_AVAILABLE                                                // {33}
+typedef struct stKINETIS_LTC
+{
+unsigned long LTC0_MD_MDPK;
+unsigned long ulRes0;
+unsigned long LTC0_KS;
+unsigned long LTC0_DS;
+unsigned long ulRes1;
+unsigned long LTC0_ICVS;
+unsigned long ulRes2[5];
+unsigned long LTC0_COM;
+unsigned long LTC0_CTL;
+unsigned long ulRes3[2];
+unsigned long LTC0_CW;
+unsigned long ulRes4;
+unsigned long LTC0_STA;
+unsigned long LTC0_ESTA;
+unsigned long ulRes5[2];
+unsigned long LTC0_AADSZ;
+unsigned long ulRes6;
+unsigned long LTC0_IVS;
+unsigned long ulRes7;
+unsigned long LTC0_DPAMS;
+unsigned long ulRes8[5];
+unsigned long LTC0_PKASZ;
+unsigned long ulRes9;
+unsigned long LTC0_PKBSZ;
+unsigned long ulRes10;
+unsigned long LTC0_PKNSZ;
+unsigned long ulRes11;
+unsigned long LTC0_PKESZ;
+unsigned long ulRes12[26];
+unsigned long LTC0_CTX_0;
+unsigned long LTC0_CTX_1;
+unsigned long LTC0_CTX_2;
+unsigned long LTC0_CTX_3;
+unsigned long LTC0_CTX_4;
+unsigned long LTC0_CTX_5;
+unsigned long LTC0_CTX_6;
+unsigned long LTC0_CTX_7;
+unsigned long LTC0_CTX_8;
+unsigned long LTC0_CTX_9;
+unsigned long LTC0_CTX_10;
+unsigned long LTC0_CTX_11;
+unsigned long LTC0_CTX_12;
+unsigned long LTC0_CTX_13;
+unsigned long LTC0_CTX_14;
+unsigned long LTC0_CTX_15;
+unsigned long ulRes13[49];
+unsigned long LTC0_KEY_0;
+unsigned long LTC0_KEY_1;
+unsigned long LTC0_KEY_2;
+unsigned long LTC0_KEY_3;
+unsigned long LTC0_KEY_4;
+unsigned long LTC0_KEY_5;
+unsigned long LTC0_KEY_6;
+unsigned long LTC0_KEY_7;
+unsigned long ulRes14[361];
+unsigned long LTC0_FIFOSTA;
+unsigned long ulRes15[8];
+unsigned long LTC0_IFIFO;
+unsigned long ulRes16[4];
+unsigned long LTC0_OFIFO;
+} KINETIS_LTC;
+#endif
+
 #if defined KINETIS_K80
 typedef struct stKINETIS_QSPI                                            // {29}
 {
@@ -2973,6 +3040,9 @@ typedef struct stKINETIS_PERIPH
 #endif
 #if defined CHIP_HAS_FLEXIO                                              // {23}
     KINETIS_FLEXIO     FLEXIO;
+#endif
+#if defined LTC_AVAILABLE
+    KINETIS_LTC        LTC;                                              // {33}
 #endif
 #if defined KINETIS_K80
     KINETIS_QSPI       QSPI;                                             // {29}
