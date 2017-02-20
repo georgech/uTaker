@@ -1685,8 +1685,6 @@ static void _LowLevelInit(void)
 #endif
     // Configure clock generator
     //
-    // - initially the processor is in FEI (FLL Engaged Internal) - Kinetis K presently running from 20..25MHz internal clock (32.768kHz IRC x 640 FLL factor; 20.97MHz)
-    //
 #if defined KINETIS_KE
     #include "kinetis_KE_CLOCK.h"                                        // KE and KEA clock configuration
 #elif defined RUN_FROM_HIRC || defined RUN_FROM_HIRC_FLL || defined RUN_FROM_HIRC_PLL // 48MHz
@@ -1994,9 +1992,21 @@ const _RESET_VECTOR __vector_table
     irq_default,                                                         // 14
     irq_default,                                                         // 15
     irq_default,                                                         // 16
+    #if defined SUPPORT_TIMER && (FLEX_TIMERS_AVAILABLE > 0)
+	_flexTimerInterrupt_0,                                               // 17
+    #else
     irq_default,                                                         // 17
+    #endif
+    #if defined SUPPORT_TIMER && (FLEX_TIMERS_AVAILABLE > 1)
+	_flexTimerInterrupt_1,                                               // 18
+    #else
     irq_default,                                                         // 18
+    #endif
+	#if defined SUPPORT_TIMER && (FLEX_TIMERS_AVAILABLE > 0)
+	_flexTimerInterrupt_2,                                               // 19
+    #else
     irq_default,                                                         // 19
+    #endif
     #if defined SUPPORT_RTC && defined KINETIS_KE
     _rtc_handler,                                                        // 20
     irq_default,                                                         // 21
@@ -2008,11 +2018,17 @@ const _RESET_VECTOR __vector_table
     irq_default,                                                         // 21
     #endif
     #if (defined SUPPORT_PITS || defined USB_HOST_SUPPORT) && !defined KINETIS_WITHOUT_PIT
-    _PIT_Interrupt,                                                      // 22
+        #if defined KINETIS_KL
+	_PIT_Interrupt,                                                      // 22
+	irq_default,                                                         // 23
+        #else
+	_PIT0_Interrupt,                                                     // 22
+	_PIT1_Interrupt,                                                     // 23
+        #endif
     #else
     irq_default,                                                         // 22
+	irq_default,                                                         // 23
     #endif
-    irq_default,                                                         // 23
     #if defined USB_INTERFACE
     _usb_otg_isr,                                                        // 24
     #else
