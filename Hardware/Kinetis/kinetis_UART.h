@@ -1407,6 +1407,14 @@ extern void fnControlLine(QUEUE_HANDLE channel, unsigned short usModifications, 
                     _CONFIGURE_RTS_0_LOW();                              // configure RTS output and set to '0'
                     ucRTS_neg[0] = 1;                                    // inverted RTS mode
                 }
+                #elif defined KINETIS_K02
+                    #if defined UART0_A_LOW
+                _CONFIG_PERIPHERAL(A, 3, (PA_3_UART0_RTS | UART_PULL_UPS)); // UART0_RX on PA1 (alt. function 2)
+                    #elif defined UART0_ON_D
+                _CONFIG_PERIPHERAL(D, 4, (PD_4_UART0_RTS | UART_PULL_UPS)); // UART0_RX on PD6 (alt. function 3)
+                    #else
+                _CONFIG_PERIPHERAL(B, 2, (PB_2_UART0_RTS | UART_PULL_UPS)); // UART0_RX on PB16 (alt. function 3)
+                    #endif
                 #elif defined UART0_A_LOW
                 _CONFIG_PERIPHERAL(A, 3, (PA_3_UART0_RTS | UART_PULL_UPS)); // UART0_RTS on PA3 (alt. function 2)
                 #elif defined UART0_ON_B
