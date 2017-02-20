@@ -78,10 +78,10 @@ static __interrupt void _LPTMR_single(void)
                 LPTMR0_CSR |= LPTMR_CSR_TIE;                             // enable timer interrupt
             }
             LPTMR0_CMR = lptmr_setup->count_delay;                       // set the match value
-            if (lptmr_setup->mode & LPTMR_TRIGGER_ADC0_A) {              // if the LPTMR is to trigger ADC 0 A conversion
+            if ((lptmr_setup->mode & LPTMR_TRIGGER_ADC0_A) != 0) {       // if the LPTMR is to trigger ADC 0 A conversion
                 SIM_SOPT7 = (SIM_SOPT7_ADC0TRGSEL_LPTMR0 | SIM_SOPT7_ADC0PRETRGSEL_A | SIM_SOPT7_ADC0ALTTRGEN);
             }
-            else if (lptmr_setup->mode & LPTMR_TRIGGER_ADC0_B) {         // if the LPTMR is to trigger ADC 0 B conversion
+            else if ((lptmr_setup->mode & LPTMR_TRIGGER_ADC0_B) != 0) {  // if the LPTMR is to trigger ADC 0 B conversion
                 SIM_SOPT7 = (SIM_SOPT7_ADC0TRGSEL_LPTMR0 | SIM_SOPT7_ADC0PRETRGSEL_B | SIM_SOPT7_ADC0ALTTRGEN);
             }
             LPTMR0_CSR |= LPTMR_CSR_TEN;                                 // enable the timer
