@@ -921,7 +921,7 @@ static unsigned char Ft_Gpu_Hal_Rd8(unsigned long ulReg)
     _FT8XXEMU_transfer((unsigned char)(ulReg >> 16));
     _FT8XXEMU_transfer((unsigned char)(ulReg >> 8));
     _FT8XXEMU_transfer((unsigned char)ulReg);
-    _FT8XXEMU_transfer((unsigned char)0);
+    _FT8XXEMU_transfer((unsigned char)0);                                // dummy byte read
     value = _FT8XXEMU_transfer(0);
     _FT8XXEMU_cs(0);
     #endif
@@ -975,6 +975,94 @@ static void Ft_Gpu_Hal_Wr16(unsigned long ulReg, unsigned short usData)
     _FT8XXEMU_cs(0);
     #endif
 }
+
+extern void Ft_Gpu_Hal_Wr32(void *host, unsigned long ulAddress, unsigned long ulValue)
+{
+	#if defined TARGET
+
+	#else
+        extern void _FT8XXEMU_cs(int cs);
+    extern unsigned char _FT8XXEMU_transfer(unsigned char data);
+    _FT8XXEMU_cs(1);
+    _FT8XXEMU_transfer((unsigned char)((ulAddress >> 16) | 0x80));
+    _FT8XXEMU_transfer((unsigned char)(ulAddress >> 8));
+    _FT8XXEMU_transfer((unsigned char)ulAddress);
+    _FT8XXEMU_transfer((unsigned char)ulValue);                          // lsb first
+    _FT8XXEMU_transfer((unsigned char)(ulValue >> 8));
+    _FT8XXEMU_transfer((unsigned char)(ulValue >> 16));
+    _FT8XXEMU_transfer((unsigned char)(ulValue >> 24));
+    _FT8XXEMU_cs(0);
+	#endif
+}
+
+extern unsigned long Ft_Gpu_Hal_Rd32(unsigned long ulAddress)
+{
+    unsigned long ulValue = 0;
+    #if defined TARGET
+	ft_uint8_t spidata[4];
+	spidata[0] = (addr >> 16);
+	spidata[1] = (addr >> 8);
+	spidata[2] = addr & 0xff;
+	spi_open(SPIM, host->hal_config.spi_cs_pin_no); // this also sets the CS low
+	spi_writen(SPIM, spidata, 3);
+	spi_read(SPIM, &value);
+    spi_close(SPIM, host->hal_config.spi_cs_pin_no);
+    #else
+    extern void _FT8XXEMU_cs(int cs);
+    extern unsigned char _FT8XXEMU_transfer(unsigned char data);
+    _FT8XXEMU_cs(1);
+    _FT8XXEMU_transfer((unsigned char)(ulAddress >> 16));
+    _FT8XXEMU_transfer((unsigned char)(ulAddress >> 8));
+    _FT8XXEMU_transfer((unsigned char)ulAddress);
+    _FT8XXEMU_transfer((unsigned char)0);                                // dummy byte read
+    ulValue = _FT8XXEMU_transfer(0);
+    ulValue |= (_FT8XXEMU_transfer(0) << 8);
+    ulValue |= (_FT8XXEMU_transfer(0) << 16);
+    ulValue |= (_FT8XXEMU_transfer(0) << 24);
+    _FT8XXEMU_cs(0);
+    #endif
+    return ulValue;
+}
+
+extern void Ft_GpuEmu_SPII2C_csHigh(void)
+{
+    // To remove...
+    extern void _FT8XXEMU_cs(int cs);
+    _FT8XXEMU_cs(0);
+}
+
+void  Ft_GpuEmu_SPII2C_StartRead(unsigned long ulAddress)
+{
+    // To remove...
+    extern void _FT8XXEMU_cs(int cs);
+    extern unsigned char _FT8XXEMU_transfer(unsigned char data);
+    _FT8XXEMU_cs(1);
+    _FT8XXEMU_transfer((unsigned char)(ulAddress >> 16));
+    _FT8XXEMU_transfer((unsigned char)(ulAddress >> 8));
+    _FT8XXEMU_transfer((unsigned char)ulAddress);
+
+    _FT8XXEMU_transfer((unsigned char)0);                                // dummy byte read
+}
+
+void  Ft_GpuEmu_SPII2C_StartWrite(unsigned long ulAddress)
+{
+    // To remove...
+    extern void _FT8XXEMU_cs(int cs);
+    extern unsigned char _FT8XXEMU_transfer(unsigned char data);
+    _FT8XXEMU_cs(1);
+    _FT8XXEMU_transfer((unsigned char)(ulAddress >> 16) | 0x80);
+    _FT8XXEMU_transfer((unsigned char)(ulAddress >> 8));
+    _FT8XXEMU_transfer((unsigned char)ulAddress);
+}
+
+
+unsigned char Ft_GpuEmu_SPII2C_transfer(unsigned char data)
+{
+    // To remove
+    extern unsigned char _FT8XXEMU_transfer(unsigned char data);
+	return _FT8XXEMU_transfer(data);
+}
+
 
 static void Ft_Gpu_Hal_WrMem(unsigned long ulReg, unsigned char *ptrData, unsigned long ulDataLength)
 {
@@ -1937,6 +2025,7 @@ static void fnStartTouch(void)
             #define REG_VSIZE            3153992UL
             #define REG_CSPREAD          3154024UL
             #define REG_DITHER           3154016UL
+#if 0
 	        Ft_Gpu_Hal_Wr16(REG_HCYCLE, 408);                            // 320 x 240
 	        Ft_Gpu_Hal_Wr16(REG_HOFFSET, 70);
 	        Ft_Gpu_Hal_Wr16(REG_HSYNC0, 0);
@@ -1951,7 +2040,7 @@ static void fnStartTouch(void)
 	        Ft_Gpu_Hal_Wr16(REG_VSIZE, GLCD_Y);
 	        Ft_Gpu_Hal_Wr16(REG_CSPREAD, 1);
 	        Ft_Gpu_Hal_Wr16(REG_DITHER, 1);
-            /*
+#else
             Ft_Gpu_Hal_Wr16(REG_HCYCLE, 928);                            // original reference
 	        Ft_Gpu_Hal_Wr16(REG_HOFFSET, 88);
 	        Ft_Gpu_Hal_Wr16(REG_HSYNC0, 0);
@@ -1965,7 +2054,8 @@ static void fnStartTouch(void)
 	        Ft_Gpu_Hal_Wr16(REG_HSIZE, 800);
 	        Ft_Gpu_Hal_Wr16(REG_VSIZE, 480);
 	        Ft_Gpu_Hal_Wr16(REG_CSPREAD, 0);
-	        Ft_Gpu_Hal_Wr16(REG_DITHER, 1);*/
+	        Ft_Gpu_Hal_Wr16(REG_DITHER, 1);
+#endif
             #define REG_TOUCH_RZTHRESH   3154200UL
             #define RESISTANCE_THRESHOLD					(1200)
             Ft_Gpu_Hal_Wr16(REG_TOUCH_RZTHRESH,RESISTANCE_THRESHOLD);
