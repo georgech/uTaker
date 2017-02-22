@@ -101,11 +101,11 @@
                         #define fnWriteGLCD_data_pair(data)    *((volatile unsigned short*)GLCD_DATA_ADDR) = (data)
                 #endif
             #elif defined FT800_GLCD_MODE                                // {5}
-                static unsigned char Ft_Gpu_Hal_Rd8(unsigned long ulReg);
-                static void Ft_Gpu_HostCommand(unsigned char ucCommand);
-                static void Ft_Gpu_Hal_Wr8(unsigned long ulReg, unsigned char ucData);
-                static void Ft_Gpu_Hal_Wr16(unsigned long ulReg, unsigned short usData);
-                static void Ft_Gpu_Hal_WrMem(unsigned long ulReg, unsigned char *ptrData, unsigned long ulDataLength);
+                extern unsigned char Ft_Gpu_Hal_Rd8(void *host, unsigned long ulReg);
+                extern void Ft_Gpu_HostCommand(void *host, unsigned char ucCommand);
+                extern void Ft_Gpu_Hal_WrMem(void *host, unsigned long ulReg, const unsigned char *ptrData, unsigned long ulDataLength);
+                extern void Ft_Gpu_Hal_Wr8(void *host, unsigned long ulReg, unsigned char ucData);
+                extern void Ft_Gpu_Hal_Wr16(void *host, unsigned long ulReg, unsigned short usData);
     	                #define fnCommandGlcd_1(command)
                         #define fnCommandGlcd_2(command, data)
                         #define fnWriteGLCD_data_pair(data)
@@ -885,208 +885,161 @@ static void fnSetWindow(unsigned short x1, unsigned short y1, unsigned short x2,
 #if defined KITRONIX_GLCD_MODE || defined TFT2N0369_GLCD_MODE || defined ST7789S_GLCD_MODE || defined FT800_GLCD_MODE
 
 #if defined FT800_GLCD_MODE
-static void Ft_Gpu_HostCommand(unsigned char ucCommand)
-{
-    unsigned char hcmd[4] = {0};
-	hcmd[0] = ucCommand;
-	hcmd[1] = 0;
-	hcmd[2] = 0;
-	hcmd[3] = 0;
-    #if defined TARGET
-		spi_open(SPIM,host->hal_config.spi_cs_pin_no); // this also sets the CS line low
-		spi_writen(SPIM,hcmd,3);
-		spi_close(SPIM,host->hal_config.spi_cs_pin_no);
-    #else
-    // emulator is not interested in this
+    #if defined _WINDOWS
+        extern void _FT8XXEMU_cs(int cs);                                // FT800 emulation interface prototypes
+        extern unsigned char _FT8XXEMU_transfer(unsigned char data);
     #endif
+
+extern void Ft_Gpu_HostCommand(void *host, unsigned char ucCommand)
+{
+    WRITE_LCD_SPI_CMD0_FIRST(ucCommand);                                 // assert the CS line and send the command
+    WRITE_LCD_SPI_CMD0(0);                                               // send three futher dummy bytes
+    WRITE_LCD_SPI_CMD0(0);
+    WRITE_LCD_SPI_CMD0_LAST(0);                                          // remove the CS line after final byte
+    FLUSH_LCD_SPI_RX(4);                                                 // ensure that the activity has terminated before quitting so that further reads/writes can't disturb
 }
 
-
-static unsigned char Ft_Gpu_Hal_Rd8(unsigned long ulReg)
+extern unsigned char Ft_Gpu_Hal_Rd8(void *host, unsigned long ulReg)
 {
-    unsigned char value = 0;
-    #if defined TARGET
-	ft_uint8_t spidata[4];
-	spidata[0] = (addr >> 16);
-	spidata[1] = (addr >> 8);
-	spidata[2] = addr & 0xff;
-	spi_open(SPIM, host->hal_config.spi_cs_pin_no); // this also sets the CS low
-	spi_writen(SPIM, spidata, 3);
-	spi_read(SPIM, &value);
-    spi_close(SPIM, host->hal_config.spi_cs_pin_no);
-    #else
-    extern void _FT8XXEMU_cs(int cs);
-    extern unsigned char _FT8XXEMU_transfer(unsigned char data);
-    _FT8XXEMU_cs(1);
-    _FT8XXEMU_transfer((unsigned char)(ulReg >> 16));
-    _FT8XXEMU_transfer((unsigned char)(ulReg >> 8));
-    _FT8XXEMU_transfer((unsigned char)ulReg);
-    _FT8XXEMU_transfer((unsigned char)0);                                // dummy byte read
-    value = _FT8XXEMU_transfer(0);
-    _FT8XXEMU_cs(0);
-    #endif
+    unsigned char value;
+    WRITE_LCD_SPI_CMD0_FIRST((unsigned char)(ulReg >> 16));              // assert the CS line and send the most significant byte of the address
+    WRITE_LCD_SPI_CMD0((unsigned char)(ulReg >> 8));
+    WRITE_LCD_SPI_CMD0((unsigned char)ulReg);
+    WRITE_LCD_SPI_CMD0(0);
+    FLUSH_LCD_SPI_RX(4);                                                 // we are not interested in the data returned from the first 4 bytes
+    READ_LCD_SPI_CMD0_LAST(0, value);                                    // read a byte and remove the CS line afterwards
     return value;
 }
 
-static void Ft_Gpu_Hal_Wr8(unsigned long ulReg, unsigned char ucData)
+extern void Ft_Gpu_Hal_Wr8(void *host, unsigned long ulReg, unsigned char ucData)
 {
-    #if defined TARGET
-	ft_uint8_t spidata[4];
-	spidata[0] = ((ulReg >> 16) | 0x80);
-	spidata[1] = (ulReg >> 8);
-	spidata[2] = ulReg & 0xff;
-	spi_open(SPIM, host->hal_config.spi_cs_pin_no);          // this aso sets the CS line low
-	spi_writen(SPIM, spidata, 3);
-	spi_write(SPIM, usData);
-    spi_close(SPIM, host->hal_config.spi_cs_pin_no);
-    #else
-    extern void _FT8XXEMU_cs(int cs);
-    extern unsigned char _FT8XXEMU_transfer(unsigned char data);
-    _FT8XXEMU_cs(1);
-    _FT8XXEMU_transfer((unsigned char)((ulReg >> 16) | 0x80));
-    _FT8XXEMU_transfer((unsigned char)(ulReg >> 8));
-    _FT8XXEMU_transfer((unsigned char)ulReg);
-    _FT8XXEMU_transfer((unsigned char)ucData);
-    _FT8XXEMU_cs(0);
-    #endif
+    WRITE_LCD_SPI_CMD0_FIRST((unsigned char)((ulReg >> 16) | 0x80));     // assert the CS line and send the most significant byte of the address (for write)
+    WRITE_LCD_SPI_CMD0((unsigned char)(ulReg >> 8));
+    WRITE_LCD_SPI_CMD0((unsigned char)(ulReg));
+    WRITE_LCD_SPI_CMD0_LAST((unsigned char)(ucData));                    // send the data byte and negate the chip select line
+    FLUSH_LCD_SPI_RX(4);                                                 // ensure that the activity has terminated before quitting so that further reads/writes can't disturb
 }
 
-static void Ft_Gpu_Hal_Wr16(unsigned long ulReg, unsigned short usData)
+extern void Ft_Gpu_Hal_Wr16(void *host, unsigned long ulReg, unsigned short usData)
 {
-    #if defined TARGET
-	ft_uint8_t spidata[4];
-	spidata[0] = ((ulReg >> 16) | 0x80);
-	spidata[1] = (ulReg >> 8);
-	spidata[2] = ulReg & 0xff;
-	spi_open(SPIM, host->hal_config.spi_cs_pin_no);  // this also sets the CS line low
-	spi_writen(SPIM, spidata, 3);
-	spi_write(SPIM, usData);
-	spi_write(SPIM, (usData >> 8));
-    spi_close(SPIM, host->hal_config.spi_cs_pin_no);
-    #else
-    extern void _FT8XXEMU_cs(int cs);
-    extern unsigned char _FT8XXEMU_transfer(unsigned char data);
-    _FT8XXEMU_cs(1);
-    _FT8XXEMU_transfer((unsigned char)((ulReg >> 16) | 0x80));
-    _FT8XXEMU_transfer((unsigned char)(ulReg >> 8));
-    _FT8XXEMU_transfer((unsigned char)ulReg);
-    _FT8XXEMU_transfer((unsigned char)usData);
-    _FT8XXEMU_transfer((unsigned char)(usData >> 8));
-    _FT8XXEMU_cs(0);
-    #endif
+    WRITE_LCD_SPI_CMD0_FIRST((unsigned char)((ulReg >> 16) | 0x80));     // assert the CS line and send the most significant byte of the address (for write)
+    WRITE_LCD_SPI_CMD0((unsigned char)(ulReg >> 8));
+    WRITE_LCD_SPI_CMD0((unsigned char)(ulReg));
+    WRITE_LCD_SPI_CMD0((unsigned char)(usData));                         // send the least significant data bytes first
+    WAIT_LCD_SPI_TX();                                                   // ensure that there is at least one byte place in the transmitter for final byte
+    WRITE_LCD_SPI_CMD0_LAST((unsigned char)(usData >> 8));               // send the most significant data byte and negate the chip select line
+    FLUSH_LCD_SPI_RX(4);                                                 // ensure that the activity has terminated before quitting so that further reads/writes can't disturb
 }
 
-extern void Ft_Gpu_Hal_Wr32(void *host, unsigned long ulAddress, unsigned long ulValue)
+extern unsigned short Ft_Gpu_Hal_Rd16(void *host, unsigned long ulReg)
 {
-	#if defined TARGET
-
-	#else
-        extern void _FT8XXEMU_cs(int cs);
-    extern unsigned char _FT8XXEMU_transfer(unsigned char data);
-    _FT8XXEMU_cs(1);
-    _FT8XXEMU_transfer((unsigned char)((ulAddress >> 16) | 0x80));
-    _FT8XXEMU_transfer((unsigned char)(ulAddress >> 8));
-    _FT8XXEMU_transfer((unsigned char)ulAddress);
-    _FT8XXEMU_transfer((unsigned char)ulValue);                          // lsb first
-    _FT8XXEMU_transfer((unsigned char)(ulValue >> 8));
-    _FT8XXEMU_transfer((unsigned char)(ulValue >> 16));
-    _FT8XXEMU_transfer((unsigned char)(ulValue >> 24));
-    _FT8XXEMU_cs(0);
-	#endif
+    unsigned char ucValue1, ucValue2;
+    WRITE_LCD_SPI_CMD0_FIRST((unsigned char)(ulReg >> 16));              // assert the CS line and send the most significant byte of the address
+    WRITE_LCD_SPI_CMD0((unsigned char)(ulReg >> 8));
+    WRITE_LCD_SPI_CMD0((unsigned char)ulReg);
+    WRITE_LCD_SPI_CMD0(0);
+    FLUSH_LCD_SPI_RX(4);                                                 // we are not interested in the data returned from the first 4 bytes
+    READ_LCD_SPI_CMD0(0, ucValue1);                                      // read a byte
+    READ_LCD_SPI_CMD0_LAST(0, ucValue2);                                 // read a byte and remove the CS line afterwards
+    return (ucValue1 | (ucValue2 << 8));                                 // return the read 16 bit value
 }
 
-extern unsigned long Ft_Gpu_Hal_Rd32(unsigned long ulAddress)
+extern void Ft_Gpu_Hal_Wr32(void *host, unsigned long ulReg, unsigned long ulValue)
 {
-    unsigned long ulValue = 0;
-    #if defined TARGET
-	ft_uint8_t spidata[4];
-	spidata[0] = (addr >> 16);
-	spidata[1] = (addr >> 8);
-	spidata[2] = addr & 0xff;
-	spi_open(SPIM, host->hal_config.spi_cs_pin_no); // this also sets the CS low
-	spi_writen(SPIM, spidata, 3);
-	spi_read(SPIM, &value);
-    spi_close(SPIM, host->hal_config.spi_cs_pin_no);
-    #else
-    extern void _FT8XXEMU_cs(int cs);
-    extern unsigned char _FT8XXEMU_transfer(unsigned char data);
-    _FT8XXEMU_cs(1);
-    _FT8XXEMU_transfer((unsigned char)(ulAddress >> 16));
-    _FT8XXEMU_transfer((unsigned char)(ulAddress >> 8));
-    _FT8XXEMU_transfer((unsigned char)ulAddress);
-    _FT8XXEMU_transfer((unsigned char)0);                                // dummy byte read
-    ulValue = _FT8XXEMU_transfer(0);
-    ulValue |= (_FT8XXEMU_transfer(0) << 8);
-    ulValue |= (_FT8XXEMU_transfer(0) << 16);
-    ulValue |= (_FT8XXEMU_transfer(0) << 24);
-    _FT8XXEMU_cs(0);
-    #endif
-    return ulValue;
+    WRITE_LCD_SPI_CMD0_FIRST((unsigned char)((ulReg >> 16) | 0x80));     // assert the CS line and send the most significant byte of the address
+    WRITE_LCD_SPI_CMD0((unsigned char)(ulReg >> 8));
+    WRITE_LCD_SPI_CMD0((unsigned char)ulReg);
+    WRITE_LCD_SPI_CMD0((unsigned char)ulValue);                          // least significant data byte first
+    WAIT_LCD_SPI_TX();                                                   // ensure that there is at least one byte place in the transmitter next byte
+    WRITE_LCD_SPI_CMD0((unsigned char)(ulValue >> 8));
+    WAIT_LCD_SPI_TX();                                                   // ensure that there is at least one byte place in the transmitter next byte
+    WRITE_LCD_SPI_CMD0((unsigned char)(ulValue >> 16));
+    WAIT_LCD_SPI_TX();                                                   // ensure that there is at least one byte place in the transmitter next byte
+    WRITE_LCD_SPI_CMD0_LAST((unsigned char)(ulValue >> 24));             // send most significant byte and negate the chip select line
+    FLUSH_LCD_SPI_RX(4);                                                 // ensure that the activity has terminated before quitting so that further reads/writes can't disturb
 }
 
+extern unsigned long Ft_Gpu_Hal_Rd32(void *host, unsigned long ulReg)
+{
+    unsigned char ucValue1, ucValue2, ucValue3, ucValue4;
+    WRITE_LCD_SPI_CMD0_FIRST((unsigned char)(ulReg >> 16));              // assert the CS line and send the most significant byte of the address
+    WRITE_LCD_SPI_CMD0((unsigned char)(ulReg >> 8));
+    WRITE_LCD_SPI_CMD0((unsigned char)ulReg);
+    WRITE_LCD_SPI_CMD0(0);
+    FLUSH_LCD_SPI_RX(4);                                                 // we are not interested in the data returned from the first 4 bytes
+    READ_LCD_SPI_CMD0(0, ucValue1);                                      // read a byte
+    READ_LCD_SPI_CMD0(0, ucValue2);                                      // read a byte
+    READ_LCD_SPI_CMD0(0, ucValue3);                                      // read a byte
+    READ_LCD_SPI_CMD0_LAST(0, ucValue4);                                 // read the final byte and remove the CS line afterwards
+    return (ucValue1 | (ucValue2 << 8) | (ucValue3 << 16) | (ucValue4 << 24)); // return the read 32 bit value
+}
+
+extern void Ft_Gpu_Hal_RdMem(void *host, unsigned long ulReg, unsigned char *buffer, unsigned long length)
+{
+    WRITE_LCD_SPI_CMD0_FIRST((unsigned char)(ulReg >> 16));              // assert the CS line and send the most significant byte of the address
+    WRITE_LCD_SPI_CMD0((unsigned char)(ulReg >> 8));
+    WRITE_LCD_SPI_CMD0((unsigned char)ulReg);
+    WRITE_LCD_SPI_CMD0(0);
+    FLUSH_LCD_SPI_RX(4);                                                 // we are not interested in the data returned from the first 4 bytes
+    while (length > 1) {
+        READ_LCD_SPI_CMD0(0, *buffer);                                   // read a byte
+        buffer++;
+        length--;
+    }
+    READ_LCD_SPI_CMD0_LAST(0, *buffer);                                  // read the final byte and remove the CS line afterwards
+}
+
+#if 0
 extern void Ft_GpuEmu_SPII2C_csHigh(void)
 {
     // To remove...
-    extern void _FT8XXEMU_cs(int cs);
+   // _EXCEPTION("Should never be called!!!");
     _FT8XXEMU_cs(0);
 }
 
 void  Ft_GpuEmu_SPII2C_StartRead(unsigned long ulAddress)
 {
     // To remove...
-    extern void _FT8XXEMU_cs(int cs);
-    extern unsigned char _FT8XXEMU_transfer(unsigned char data);
-    _FT8XXEMU_cs(1);
+   //  _EXCEPTION("Should never be called!!!");   
+     _FT8XXEMU_cs(1);
     _FT8XXEMU_transfer((unsigned char)(ulAddress >> 16));
     _FT8XXEMU_transfer((unsigned char)(ulAddress >> 8));
     _FT8XXEMU_transfer((unsigned char)ulAddress);
-
     _FT8XXEMU_transfer((unsigned char)0);                                // dummy byte read
 }
 
 void  Ft_GpuEmu_SPII2C_StartWrite(unsigned long ulAddress)
 {
+//    _EXCEPTION("Should never be called!!!");
     // To remove...
-    extern void _FT8XXEMU_cs(int cs);
-    extern unsigned char _FT8XXEMU_transfer(unsigned char data);
     _FT8XXEMU_cs(1);
     _FT8XXEMU_transfer((unsigned char)(ulAddress >> 16) | 0x80);
     _FT8XXEMU_transfer((unsigned char)(ulAddress >> 8));
     _FT8XXEMU_transfer((unsigned char)ulAddress);
 }
 
-
 unsigned char Ft_GpuEmu_SPII2C_transfer(unsigned char data)
 {
+ //   _EXCEPTION("Should never be called!!!");
     // To remove
-    extern unsigned char _FT8XXEMU_transfer(unsigned char data);
 	return _FT8XXEMU_transfer(data);
 }
+#endif
 
-
-static void Ft_Gpu_Hal_WrMem(unsigned long ulReg, unsigned char *ptrData, unsigned long ulDataLength)
+extern void Ft_Gpu_Hal_WrMem(void *host, unsigned long ulReg, const unsigned char *ptrData, unsigned long ulDataLength)
 {
-    #if defined TARGET
-	ft_uint8_t spidata[4];
-	spidata[0] = ((ulReg >> 16) | 0x80);
-	spidata[1] = (ulReg >> 8);
-	spidata[2] = ulReg & 0xff;
-	spi_open(SPIM, host->hal_config.spi_cs_pin_no); // this also sets the CS line low
-	spi_writen(SPIM, spidata, 3);
-    spi_writen(SPIM,ptrData,ulDataLength);
-    spi_close(SPIM, host->hal_config.spi_cs_pin_no);
-    #else
-    extern void _FT8XXEMU_cs(int cs);
-    extern unsigned char _FT8XXEMU_transfer(unsigned char data);
-    _FT8XXEMU_cs(1);
-    _FT8XXEMU_transfer((unsigned char)((ulReg >> 16) | 0x80));
-    _FT8XXEMU_transfer((unsigned char)(ulReg >> 8));
-    _FT8XXEMU_transfer((unsigned char)ulReg);
-    while (ulDataLength-- != 0) {
-        _FT8XXEMU_transfer(*ptrData++);
+    WRITE_LCD_SPI_CMD0_FIRST((unsigned char)((ulReg >> 16) | 0x80));     // assert the CS line and send the most significant byte of the address (for write)
+    WRITE_LCD_SPI_CMD0((unsigned char)(ulReg >> 8));
+    WRITE_LCD_SPI_CMD0((unsigned char)(ulReg));
+    while (ulDataLength > 1) {
+        WAIT_LCD_SPI_TX();                                               // ensure that there is at least one byte place in the transmitter next byte
+        WRITE_LCD_SPI_CMD0((unsigned char)(*ptrData));                   // send the data bytes
+        ptrData++;
+        ulDataLength--;
     }
-    _FT8XXEMU_cs(0);
-    #endif
+    WAIT_LCD_SPI_TX();                                                   // ensure that there is at least one byte place in the transmitter for final byte
+    WRITE_LCD_SPI_CMD0_LAST((unsigned char)(*ptrData));                  // send the final data byte and negate the chip select line
+    FLUSH_LCD_SPI_RX(4);                                                 // ensure that the activity has terminated before quitting so that further reads/writes can't disturb
 }
 #endif
 
@@ -2001,13 +1954,13 @@ static void fnStartTouch(void)
     #elif defined GLCD_INIT && defined FT800_GLCD_MODE                   // {5}
             GLCD_RST_H();                                                // release the reset line (this is in fact the power down line on the FT800 - not needed by emulator)
             #define FT_GPU_ACTIVE_M  0x00
-            Ft_Gpu_HostCommand(FT_GPU_ACTIVE_M);                         // access address 0 to wake up the device (4 bytes sent) - not needed by emulator
+            Ft_Gpu_HostCommand(0, FT_GPU_ACTIVE_M);                      // access address 0 to wake up the device
             uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(0.020 * SEC), E_INIT_DELAY); // 20ms delay for display to complete initialisation
             iLCD_State = STATE_INITIALISING;
             return;
         case STATE_INITIALISING:                                         // controller SSD1289 but many registers compatible with SSD2119
             #define REG_ID               3153920UL
-			if (Ft_Gpu_Hal_Rd8(REG_ID) != 0x7c) {                        // read register ID to check if FT800 is ready
+			if (Ft_Gpu_Hal_Rd8(0, REG_ID) != 0x7c) {                     // read register ID to check if FT800 is ready
                 uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(0.020 * SEC), E_INIT_DELAY); // 20ms delay before trying again
                 return;
             }
@@ -2025,44 +1978,44 @@ static void fnStartTouch(void)
             #define REG_VSIZE            3153992UL
             #define REG_CSPREAD          3154024UL
             #define REG_DITHER           3154016UL
-#if 0
-	        Ft_Gpu_Hal_Wr16(REG_HCYCLE, 408);                            // 320 x 240
-	        Ft_Gpu_Hal_Wr16(REG_HOFFSET, 70);
-	        Ft_Gpu_Hal_Wr16(REG_HSYNC0, 0);
-	        Ft_Gpu_Hal_Wr16(REG_HSYNC1, 10);
-	        Ft_Gpu_Hal_Wr16(REG_VCYCLE, 263);
-	        Ft_Gpu_Hal_Wr16(REG_VOFFSET, 13);
-	        Ft_Gpu_Hal_Wr16(REG_VSYNC0, 0);
-	        Ft_Gpu_Hal_Wr16(REG_VSYNC1, 2);
-	        Ft_Gpu_Hal_Wr8(REG_SWIZZLE, 2);
-	        Ft_Gpu_Hal_Wr8(REG_PCLK_POL, 8);
-	        Ft_Gpu_Hal_Wr16(REG_HSIZE, GLCD_X);
-	        Ft_Gpu_Hal_Wr16(REG_VSIZE, GLCD_Y);
-	        Ft_Gpu_Hal_Wr16(REG_CSPREAD, 1);
-	        Ft_Gpu_Hal_Wr16(REG_DITHER, 1);
+#if 1
+	        Ft_Gpu_Hal_Wr16(0, REG_HCYCLE, 408);                         // 320 x 240
+	        Ft_Gpu_Hal_Wr16(0, REG_HOFFSET, 70);
+	        Ft_Gpu_Hal_Wr16(0, REG_HSYNC0, 0);
+	        Ft_Gpu_Hal_Wr16(0, REG_HSYNC1, 10);
+	        Ft_Gpu_Hal_Wr16(0, REG_VCYCLE, 263);
+	        Ft_Gpu_Hal_Wr16(0, REG_VOFFSET, 13);
+	        Ft_Gpu_Hal_Wr16(0, REG_VSYNC0, 0);
+	        Ft_Gpu_Hal_Wr16(0, REG_VSYNC1, 2);
+	        Ft_Gpu_Hal_Wr8(0, REG_SWIZZLE, 2);
+	        Ft_Gpu_Hal_Wr8(0, REG_PCLK_POL, 8);
+	        Ft_Gpu_Hal_Wr16(0, REG_HSIZE, GLCD_X);
+	        Ft_Gpu_Hal_Wr16(0, REG_VSIZE, GLCD_Y);
+	        Ft_Gpu_Hal_Wr16(0, REG_CSPREAD, 1);
+	        Ft_Gpu_Hal_Wr16(0, REG_DITHER, 1);
 #else
-            Ft_Gpu_Hal_Wr16(REG_HCYCLE, 928);                            // original reference
-	        Ft_Gpu_Hal_Wr16(REG_HOFFSET, 88);
-	        Ft_Gpu_Hal_Wr16(REG_HSYNC0, 0);
-	        Ft_Gpu_Hal_Wr16(REG_HSYNC1, 48);
-	        Ft_Gpu_Hal_Wr16(REG_VCYCLE, 525);
-	        Ft_Gpu_Hal_Wr16(REG_VOFFSET, 32);
-	        Ft_Gpu_Hal_Wr16(REG_VSYNC0, 0);
-	        Ft_Gpu_Hal_Wr16(REG_VSYNC1, 3);
-	        Ft_Gpu_Hal_Wr8(REG_SWIZZLE, 0);
-	        Ft_Gpu_Hal_Wr8(REG_PCLK_POL, 1);
-	        Ft_Gpu_Hal_Wr16(REG_HSIZE, 800);
-	        Ft_Gpu_Hal_Wr16(REG_VSIZE, 480);
-	        Ft_Gpu_Hal_Wr16(REG_CSPREAD, 0);
-	        Ft_Gpu_Hal_Wr16(REG_DITHER, 1);
+            Ft_Gpu_Hal_Wr16(0, REG_HCYCLE, 928);                         // original reference
+	        Ft_Gpu_Hal_Wr16(0, REG_HOFFSET, 88);
+	        Ft_Gpu_Hal_Wr16(0, REG_HSYNC0, 0);
+	        Ft_Gpu_Hal_Wr16(0, REG_HSYNC1, 48);
+	        Ft_Gpu_Hal_Wr16(0, REG_VCYCLE, 525);
+	        Ft_Gpu_Hal_Wr16(0, REG_VOFFSET, 32);
+	        Ft_Gpu_Hal_Wr16(0, REG_VSYNC0, 0);
+	        Ft_Gpu_Hal_Wr16(0, REG_VSYNC1, 3);
+	        Ft_Gpu_Hal_Wr8(0, REG_SWIZZLE, 0);
+	        Ft_Gpu_Hal_Wr8(0, REG_PCLK_POL, 1);
+	        Ft_Gpu_Hal_Wr16(0, REG_HSIZE, 800);
+	        Ft_Gpu_Hal_Wr16(0, REG_VSIZE, 480);
+	        Ft_Gpu_Hal_Wr16(0, REG_CSPREAD, 0);
+	        Ft_Gpu_Hal_Wr16(0, REG_DITHER, 1);
 #endif
             #define REG_TOUCH_RZTHRESH   3154200UL
             #define RESISTANCE_THRESHOLD					(1200)
-            Ft_Gpu_Hal_Wr16(REG_TOUCH_RZTHRESH,RESISTANCE_THRESHOLD);
+            Ft_Gpu_Hal_Wr16(0, REG_TOUCH_RZTHRESH,RESISTANCE_THRESHOLD);
             #define REG_GPIOX            3154076UL
             #define REG_GPIOX_DIR        3154072UL
-            Ft_Gpu_Hal_Wr16(REG_GPIOX_DIR, 0xffff);
-            Ft_Gpu_Hal_Wr16(REG_GPIOX, 0xffff);
+            Ft_Gpu_Hal_Wr16(0, REG_GPIOX_DIR, 0xffff);
+            Ft_Gpu_Hal_Wr16(0, REG_GPIOX, 0xffff);
 
             /*It is optional to clear the screen here*/
             {
@@ -2075,14 +2028,14 @@ static void fnStartTouch(void)
                 0,0,0,0,  //GPU instruction DISPLAY
                 };
                 #define RAM_DL               3145728UL
-                Ft_Gpu_Hal_WrMem(RAM_DL,(unsigned char *)FT_DLCODE_BOOTUP,sizeof(FT_DLCODE_BOOTUP));
+                Ft_Gpu_Hal_WrMem(0, RAM_DL, FT_DLCODE_BOOTUP,sizeof(FT_DLCODE_BOOTUP));
                 #define REG_DLSWAP           3154004UL
                 #define DLSWAP_FRAME         2UL
-                Ft_Gpu_Hal_Wr8(REG_DLSWAP,DLSWAP_FRAME);
+                Ft_Gpu_Hal_Wr8(0, REG_DLSWAP,DLSWAP_FRAME);
             }
 
             #define REG_PCLK             3154032UL
-            Ft_Gpu_Hal_Wr8(REG_PCLK,8);//after this display is visible on the LCD
+            Ft_Gpu_Hal_Wr8(0, REG_PCLK,8);//after this display is visible on the LCD
             uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(0.120 * SEC), E_INIT_DELAY); // 120ms delay
             iLCD_State = STATE_INITIALISING_1;
             break;
