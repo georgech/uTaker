@@ -240,7 +240,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         (void)READ_SPI_FLASH_DATA();                                     // discard the received byte
     #endif
     #if defined KINETIS_KL || defined MANUAL_FLASH_CS_CONTROL
-        NEGATE_CS_LINE(ulChipSelectLine);                                  negate the chip select line
+        NEGATE_CS_LINE(ulChipSelectLine);                                //  negate the chip select line
     #endif
     #if defined _WINDOWS
         #if !defined KINETIS_KL
