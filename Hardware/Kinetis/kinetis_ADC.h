@@ -505,6 +505,36 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
     #endif
             }
             if (((ptrADC_settings->int_adc_mode & (ADC_GET_RESULT)) != 0) && (ptrADC_settings->int_adc_result != 0)) { // if there is a result structure
+    #if defined _WINDOWS
+                switch (ptrADC_settings->int_adc_controller) {
+                case 0:
+                    if (IS_POWERED_UP(6, SIM_SCGC6_ADC0) == 0) {
+                        _EXCEPTION("Trying to read from ADC0 that is not powered up!");
+                    }
+                    break;
+        #if ADC_CONTROLLERS > 1
+                case 1:
+                    if (IS_POWERED_UP(3, SIM_SCGC3_ADC1) == 0) {
+                        _EXCEPTION("Trying to read from ADC1 that is not powered up!");
+                    }
+                    break;
+        #endif
+        #if ADC_CONTROLLERS > 2
+                case 2:
+                    if (IS_POWERED_UP(6, SIM_SCGC6_ADC2) == 0) {
+                        _EXCEPTION("Trying to read from ADC2 that is not powered up!");
+                    }
+                    break;
+        #endif
+        #if ADC_CONTROLLERS > 3
+                case 3:
+                    if (IS_POWERED_UP(3, SIM_SCGC3_ADC3) == 0) {
+                        _EXCEPTION("Trying to read from ADC3 that is not powered up!");
+                    }
+                    break;
+        #endif
+                }
+    #endif
                 if (((ptrADC_settings->int_adc_mode & ADC_READ_ONLY) == 0) && ((ptrADC->ADC_SC1A & ADC_SC1A_AIEN) == 0)) { // no interrupt and not simple read
                     while ((ptrADC->ADC_SC1A & ADC_SC1A_COCO) == 0) {    // wait for conversion to complete
     #if defined _WINDOWS
