@@ -742,7 +742,7 @@ static __interrupt void _SCI5_Interrupt(void)                            // UART
 //
 extern int fnTxByte(QUEUE_HANDLE Channel, unsigned char ucTxByte)
 {
-    KINETIS_UART_CONTROL *uart_reg = fnSelectChannel(Channel);
+    KINETIS_UART_CONTROL *uart_reg = (KINETIS_UART_CONTROL *)fnSelectChannel(Channel);
     #if NUMBER_EXTERNAL_SERIAL > 0
     if (Channel >= NUMBER_SERIAL) {
         fnExtSCI_send((QUEUE_HANDLE)(Channel - NUMBER_SERIAL), ucTxByte);// pass on to the external interface for transmission
@@ -814,7 +814,7 @@ extern void fnClearTxInt(QUEUE_HANDLE Channel)
         return;
     }
     #endif
-    uart_reg = fnSelectChannel(Channel);
+    uart_reg = (KINETIS_UART_CONTROL *)fnSelectChannel(Channel);
     #if defined SERIAL_SUPPORT_DMA                                       // {6}
         #if defined KINETIS_KL && (UARTS_AVAILABLE > 1)
     if (Channel == 0) {
