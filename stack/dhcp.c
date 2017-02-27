@@ -444,7 +444,7 @@ static void fnSendDHCP(unsigned char ucDHCP_message, int iNetwork)
     ucBuf += sizeof(cRequestHeader);
 #endif
     
-    if (ucDHCP_state[iNetwork] & (DHCP_STATE_BOUND | DHCP_STATE_RENEWING | DHCP_STATE_REBINDING)) { // ciaddr is only sent when in BOUND, RENEW or REBINDING state
+    if ((ucDHCP_state[iNetwork] & (DHCP_STATE_BOUND | DHCP_STATE_RENEWING | DHCP_STATE_REBINDING)) != 0) { // ciaddr is only sent when in BOUND, RENEW or REBINDING state
         uMemcpy(ucBuf, &network[iNetwork].ucOurIP[0], IPV4_LENGTH);      // insert our IP address
     }
     ucBuf += (4 * IPV4_LENGTH);                                          // leave yiaddr, siaddr and giaddr at zero
