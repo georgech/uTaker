@@ -38,11 +38,11 @@ Revision History:
 /* platform specific macros */
 #define MSVC_FT800EMU 							(1)// enable by default for emulator platform
 
-//#define VM800B43_50								(1)
+#define VM800B43_50								(1)
 //#define VM800B35								(1)
 //#define VM801B43_50								(1)
 //#define VM810C50								(1)
-#define ME812AU_WH50R							(1)
+//#define ME812AU_WH50R							(1)
 //#define ME813AU_WH50C                           (1)
 //#define ME810AU_WH70R                         (1)
 //#define ME811AU_WH70C                         (1)
