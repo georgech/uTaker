@@ -984,9 +984,9 @@ static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][8] = {
         {  "ADC0_SE14/TSI0_CH13","PTC0","-","EXTRG_IN",        "-",           "CMP0_OUT",  "-",        "-"                 }, // KL25 has no I2S
         {  "ADC0_SE15/TSI0_CH14","PTC1/LLWU_P6/RTC_CLKIN","I2C1_SCL","-","TPM0_CH0","-",   "-",        "-"                 },
         {  "ADC0_SE11/TSI0_CH15","PTC2","I2C1_SDA","-",        "TPM0_CH1",    "-",         "-",        "-"                 },
-        {  "-",            "PTC3",  "-",         "UART1_RX",   "TPM0_CH2",    "CLKOUT",    "-",        "-"                 },
+        {  "-",            "PTC3/LLWU_P7","-",   "UART1_RX",   "TPM0_CH2",    "CLKOUT",    "-",        "-"                 },
         {  "-",            "PTC4/LLWU_P8","SPI0_PCS0","UART1_TX","TPM0_CH3",  "-",         "-",        "-"                 },
-        {  "-",            "PTC5",  "SPI0_SCK",  "LPTMR0_ALT2","-",           "-",         "CMP0_OUT", "-"                 },
+        {  "-",            "PTC5/LLWU_P9","SPI0_SCK","LPTMR0_ALT2","-",       "-",         "CMP0_OUT", "-"                 },
         {  "CMP0_IN0",     "PTC6/LLWU_P10","SPI0_MOSI","EXTRG_IN","-",        "SPI0_MISO", "-",        "-"                 },
         {  "CMP0_IN1",     "PTC7",  "SPI0_MISO","-",           "-",           "SPI0_MOSI", "-",        "-"                 },
         {  "CMP0_IN2",     "PTC8",  "I2C0_SCL", "TPM0_CH4",    "-",           "-",         "-",        "-"                 },
