@@ -5444,13 +5444,6 @@ extern "C" unsigned long fnRemoteSimulationInterface(int iInterfaceReference, un
 
 static volatile int iEmulatorReady = 0;                                  // variable used to monitor whether the emulator has competed its initialisaion
 
-#if 1
-    #undef RGB
-    #undef ADC_DIFFERENTIAL
-    #undef ADC_SINGLE_ENDED
-    #undef KEEP
-    #include "LCD\FT800\FT_Emulator.h"
-#else
 typedef unsigned long argb8888;
 
 typedef enum
@@ -5582,22 +5575,15 @@ typedef struct
 
 } FT8XXEMU_EmulatorParameters;
 
-#define FT8XXEMU_API  __declspec(dllimport)
-
-// Transfer data over the imaginary SPI bus. Call from the MCU thread (from the setup/loop callbacks). See FT8XX documentation for SPI transfer protocol
-FT8XXEMU_API extern unsigned char (*FT8XXEMU_transfer)(unsigned char data);
-
-// Set cable select. Must be set to 1 to start data transfer, 0 to end. See FT8XX documentation for CS_N
-FT8XXEMU_API extern void (*FT8XXEMU_cs)(int cs);
-
-// Returns 1 if there is an interrupt flag set. Depends on mask. See FT8XX documentation for INT_N
-FT8XXEMU_API extern int (*FT8XXEMU_int)();
-
 extern "C" {
     extern void FT8XXEMU_defaults(unsigned long versionApi, FT8XXEMU_EmulatorParameters *params, FT8XXEMU_EmulatorMode mode);
     extern void FT8XXEMU_run(unsigned long versionApi, const FT8XXEMU_EmulatorParameters *params);
+
+    __declspec(dllimport) extern unsigned char (*FT8XXEMU_transfer)(unsigned char data); // transfer data over the imaginary SPI bus. Call from the MCU thread (from the setup/loop callbacks). See FT8XX documentation for SPI transfer protocol
+    __declspec(dllimport) extern void (*FT8XXEMU_cs)(int cs);                     // set cable select. Must be set to 1 to start data transfer, 0 to end. See FT8XX documentation for CS_N
+    __declspec(dllimport) extern int (*FT8XXEMU_int)();                           // returns 1 if there is an interrupt flag set. Depends on mask. See FT8XX documentation for INT_N
 }
-#endif
+
 
 // Call back when the emulator has completed its initialisation
 //
