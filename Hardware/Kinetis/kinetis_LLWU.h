@@ -308,7 +308,7 @@ static __interrupt void _wakeup_isr(void)
                 // The port inputs are now mapped to available LLWU pins (pins that do not have LLWU functionality will not be configured)
                 //
                 while (ulPortBits != 0) {                                // handle each bit on the port
-                    if (wakeup_interrupt->int_port_bits & ulBit) {       // if the port bit is to be enabled
+                    if ((wakeup_interrupt->int_port_bits & ulBit) != 0) {// if the port bit is to be enabled
                         if (cWakeupPorts[wakeup_interrupt->int_port][iBitRef] != NO_WAKEUP) {
                             int iShift = ((cWakeupPorts[wakeup_interrupt->int_port][iBitRef]%4) * LLWU_PE_WUPE_SHIFT);
                             volatile unsigned char *ptrFlagRegister = (LLWU_FLAG_ADDRESS + (cWakeupPorts[wakeup_interrupt->int_port][iBitRef]/8));
