@@ -2004,7 +2004,12 @@ static void fnStartTouch(void)
             #define REG_VSIZE            1057860UL
             #define REG_CSPREAD          1057892UL
             #define REG_DITHER           1057884UL
-#if 1
+            #define RAM_DL               1048576UL
+            #define REG_DLSWAP           1057872UL
+            #define DLSWAP_FRAME         2UL
+            #define REG_TOUCH_RZTHRESH   1058052UL
+            #define RESISTANCE_THRESHOLD (1200)
+        #if defined FT_800_ENABLE
 	        Ft_Gpu_Hal_Wr16(0, REG_HCYCLE, 408);                         // 320 x 240
 	        Ft_Gpu_Hal_Wr16(0, REG_HOFFSET, 70);
 	        Ft_Gpu_Hal_Wr16(0, REG_HSYNC0, 0);
@@ -2018,9 +2023,7 @@ static void fnStartTouch(void)
             Ft_Gpu_Hal_Wr8(0,  REG_PCLK, 8);
 	        Ft_Gpu_Hal_Wr16(0, REG_HSIZE, GLCD_X);
 	        Ft_Gpu_Hal_Wr16(0, REG_VSIZE, GLCD_Y);
-	      //Ft_Gpu_Hal_Wr16(0, REG_CSPREAD, 1);
-	      //Ft_Gpu_Hal_Wr16(0, REG_DITHER, 1);
-#else
+        #else
             Ft_Gpu_Hal_Wr16(0, REG_HCYCLE, 928);                         // original reference
 	        Ft_Gpu_Hal_Wr16(0, REG_HOFFSET, 88);
 	        Ft_Gpu_Hal_Wr16(0, REG_HSYNC0, 0);
@@ -2034,16 +2037,12 @@ static void fnStartTouch(void)
             Ft_Gpu_Hal_Wr8(0,  REG_PCLK, 5);
 	        Ft_Gpu_Hal_Wr16(0, REG_HSIZE, 800);
 	        Ft_Gpu_Hal_Wr16(0, REG_VSIZE, 480);
-	      //Ft_Gpu_Hal_Wr16(0, REG_CSPREAD, 0);
-	      //Ft_Gpu_Hal_Wr16(0, REG_DITHER, 1);
-#endif
+	        Ft_Gpu_Hal_Wr16(0, REG_CSPREAD, 0);
+	        Ft_Gpu_Hal_Wr16(0, REG_DITHER, 1);
+        #endif
             Ft_Gpu_Hal_Wr8(0, REG_GPIO_DIR, (0x83 | Ft_Gpu_Hal_Rd8(0, REG_GPIO_DIR))); // set the display enable to '1'
             Ft_Gpu_Hal_Wr8(0, REG_GPIO, (0x083 | Ft_Gpu_Hal_Rd8(0, REG_GPIO)));
-
-            #define REG_TOUCH_RZTHRESH   1058052UL
-            #define RESISTANCE_THRESHOLD (1200)
             Ft_Gpu_Hal_Wr16(0, REG_TOUCH_RZTHRESH,RESISTANCE_THRESHOLD);
-   
 
             /*It is optional to clear the screen here*/
             {
@@ -2055,10 +2054,7 @@ static void fnStartTouch(void)
                 7,0,0,38,                                                // GPU instruction CLEAR
                 0,0,0,0,                                                 // GPU instruction DISPLAY
                 };
-                #define RAM_DL               1048576UL
                 Ft_Gpu_Hal_WrMem(0, RAM_DL, FT_DLCODE_BOOTUP,sizeof(FT_DLCODE_BOOTUP));
-                #define REG_DLSWAP           1057872UL
-                #define DLSWAP_FRAME         2UL
                 Ft_Gpu_Hal_Wr8(0, REG_DLSWAP, DLSWAP_FRAME);
             }
             uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(0.120 * SEC), E_INIT_DELAY); // 120ms delay
