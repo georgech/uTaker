@@ -10258,11 +10258,11 @@ typedef struct stKINETIS_ADMA2_BD
         #define MCG_S_CLKST_INTERN_CLK   0x04                            // internal reference clock is selected
         #define MCG_S_CLKST_EXTERN_CLK   0x08                            // external reference clock is selected
         #define MCG_S_CLKST_PLL          0x0c                            // PLL output is selected
-        #define MCG_S_CLKST_MASK         0x0c
+        #define MCG_S_CLKST_MASK         0x0c                            // clock selection field mask
         #define MCG_S_IREFST             0x10                            // FLL reference source is internal reference clock
         #define MCG_S_PLLST_FLL          0x00                            // source of PLLS is FLL clock
         #define MCG_S_PLLST              0x20                            // source of PLLS is PLL clock
-        #define MCG_S_LOCK               0x40                            // PLL has aquired lock
+        #define MCG_S_LOCK               0x40                            // PLL has acquired lock
         #define MCG_S_LOLS               0x80                            // PLL has lost lock since LOLS was last cleared
       #endif
       #if (defined KINETIS_K_FPU || (KINETIS_MAX_SPEED > 100000000)) || defined KINETIS_KL || defined KINETIS_KV || defined KINETIS_KW2X
@@ -11497,7 +11497,7 @@ typedef struct stKINETIS_USB_BD
 #define TOK_PID_2             0x00000010
 #define NINC                  0x00000010                                 // No INCrement bit - DMA engine doesn't increment address after each byte transfer
 #define TOK_PID_3             0x00000020
-#define KEEP                  0x00000020                                 // KEEP ownership at USB-FS
+#define KEEP_OWNERSHIP        0x00000020                                 // KEEP ownership at USB-FS
 #define DATA_1                0x00000040
 #define OWN                   0x00000080                                 // USB-FS has exclusive ownership of the buffer descriptor
 #define USB_BYTE_CNT_MASK     0x03ff0000    
@@ -14319,8 +14319,8 @@ typedef struct stADC_SETUP
 #define ADC_CONFIGURE_ADC               0x00800000
 #define ADC_GET_RESULT                  0x01000000
 #define ADC_DISABLE_ADC                 0x02000000
-#define ADC_SINGLE_ENDED                0x00000000
-#define ADC_DIFFERENTIAL                0x04000000
+#define ADC_SINGLE_ENDED_INPUT          0x00000000
+#define ADC_DIFFERENTIAL_INPUT          0x04000000
 #define ADC_SINGLE_SHOT_MODE            0x00000000
 #define ADC_LOOP_MODE                   0x08000000
 #define ADC_SELECT_INPUTS_A             0x00000000                       // {33}

@@ -5628,7 +5628,7 @@ extern int fnSimulateUSB(int iDevice, int iEndPoint, unsigned char ucPID, unsign
                 _EXCEPTION("Rx buffer not ready!!");
                 return 1;                                                // no controller ownership so ignore
             }
-            if ((ptrBDT->usb_bd_rx_even.ulUSB_BDControl & KEEP) == 0) {
+            if ((ptrBDT->usb_bd_rx_even.ulUSB_BDControl & KEEP_OWNERSHIP) == 0) {
                 ptrBDT->usb_bd_rx_even.ulUSB_BDControl &= ~OWN;          // mark that the buffer is no longer owned by the USB controller
             }
             usLength = (unsigned short)((ptrBDT->usb_bd_rx_even.ulUSB_BDControl & USB_BYTE_CNT_MASK) >> USB_CNT_SHIFT); // the size that this endpoint can receive
@@ -5670,7 +5670,7 @@ extern int fnSimulateUSB(int iDevice, int iEndPoint, unsigned char ucPID, unsign
                 _EXCEPTION("Rx buffer not ready!!");
                 return 1;                                                // no controller ownership so ignore
             }
-            if ((ptrBDT->usb_bd_rx_odd.ulUSB_BDControl & KEEP) == 0) {
+            if ((ptrBDT->usb_bd_rx_odd.ulUSB_BDControl & KEEP_OWNERSHIP) == 0) {
                 ptrBDT->usb_bd_rx_odd.ulUSB_BDControl &= ~OWN;           // the buffer descriptor is now owned by the controller
             }
             usLength = (unsigned short)((ptrBDT->usb_bd_rx_odd.ulUSB_BDControl & USB_BYTE_CNT_MASK) >> USB_CNT_SHIFT); // the size that this endpoint can receive
@@ -6323,7 +6323,7 @@ extern void fnCheckUSBOut(int iDevice, int iEndpoint)
             if (usUSBLength != 0) {
                 ptrUSBData = _fnLE_add((CAST_POINTER_ARITHMETIC)bufferDescriptor->ptrUSB_BD_Data); // the data to be sent
             }
-            if ((bufferDescriptor->ulUSB_BDControl & KEEP) == 0) {       // if the KEEP bit is not set
+            if ((bufferDescriptor->ulUSB_BDControl & KEEP_OWNERSHIP) == 0) { // if the KEEP bit is not set
                 bufferDescriptor->ulUSB_BDControl &= ~OWN;               // remove SIE ownership
             }
     #if defined USB_HOST_SUPPORT                                         // {25}

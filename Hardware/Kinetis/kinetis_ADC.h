@@ -431,7 +431,7 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
                 }
                 if ((ptrADC_settings->int_adc_mode & ADC_CONFIGURE_CHANNEL) != 0) { // if a channel is to be configured
     #if !defined KINETIS_KE
-                    ucChannelConfig = fnSetADC_channel(ucADC_channel, ((ptrADC_settings->int_adc_mode & ADC_DIFFERENTIAL) != 0)); // check that the ADC channel is valid and prepare configuration value
+                    ucChannelConfig = fnSetADC_channel(ucADC_channel, ((ptrADC_settings->int_adc_mode & ADC_DIFFERENTIAL_INPUT) != 0)); // check that the ADC channel is valid and prepare configuration value
                     if ((ptrADC_settings->int_adc_mode & ADC_HW_TRIGGERED) != 0) { // channel B is only valid in hardware triggered mode
                         ptrADC->ADC_SC1B = fnSetADC_channel(ptrADC_settings->int_adc_bit_b, (ptrADC_settings->int_adc_mode & ADC_DIFFERENTIAL_B));
                     }
