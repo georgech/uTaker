@@ -129,6 +129,7 @@
     24.12.2016 Add fnInjectI2C()                                         {108}
     02.02.2017 Allow sub-ms tick setting                                 {109}
     19.02.2017 Add FT800 emulation                                       {110}
+    28.02.2017 Add UARTs 6 and 7                                         {111}
 
     */
 
@@ -829,6 +830,8 @@ unsigned long *pPixels = 0;
     static HANDLE sm_hComm3 = INVALID_HANDLE_VALUE;                      // {9}
     static HANDLE sm_hComm4 = INVALID_HANDLE_VALUE;                      // {67}
     static HANDLE sm_hComm5 = INVALID_HANDLE_VALUE;
+    static HANDLE sm_hComm6 = INVALID_HANDLE_VALUE;                      // {111}
+    static HANDLE sm_hComm7 = INVALID_HANDLE_VALUE;
     #if NUMBER_EXTERNAL_SERIAL > 0                                       // {41}
         static HANDLE sm_hCommExt_0 = INVALID_HANDLE_VALUE;
         static HANDLE sm_hCommExt_1 = INVALID_HANDLE_VALUE;
@@ -3319,7 +3322,45 @@ int APIENTRY WinMain(HINSTANCE hInstance,
             }
         #endif
             while ((iRxSize = fnCheckRx(sm_hComm5, ucRxBuffer)) != 0) {
-                fnProcessRx(ucRxBuffer, (unsigned short)iRxSize, 5);     // if we have received something from the serial port (UART4), process it here
+                fnProcessRx(ucRxBuffer, (unsigned short)iRxSize, 5);     // if we have received something from the serial port (UART5), process it here
+            }
+        }
+    #endif
+    #if NUMBER_SERIAL > 6                                                // {111}
+        if (sm_hComm6 != INVALID_HANDLE_VALUE) {
+        #if defined SUPPORT_HW_FLOW
+            static DWORD lpModemLastStat6 = 0;
+            DWORD lpModemStat6;
+            GetCommModemStatus(sm_hComm6, &lpModemStat6);
+            if (lpModemStat6 != lpModemLastStat6) {
+                char *ptr[2];
+                ptr[0] = (char *)&lpModemStat6;
+                ptr[1] = (char *)&lpModemLastStat6;
+                _main(MODEM_COM_6, ptr);
+                lpModemLastStat6 = lpModemStat6;                         // set the new CTS state for reference
+            }
+        #endif
+            while ((iRxSize = fnCheckRx(sm_hComm6, ucRxBuffer)) != 0) {
+                fnProcessRx(ucRxBuffer, (unsigned short)iRxSize, 5);     // if we have received something from the serial port (UART6), process it here
+            }
+        }
+    #endif
+    #if NUMBER_SERIAL > 7                                                // {111}
+        if (sm_hComm7 != INVALID_HANDLE_VALUE) {
+        #if defined SUPPORT_HW_FLOW
+            static DWORD lpModemLastStat7 = 0;
+            DWORD lpModemStat7;
+            GetCommModemStatus(sm_hComm7, &lpModemStat7);
+            if (lpModemStat7 != lpModemLastStat7) {
+                char *ptr[2];
+                ptr[0] = (char *)&lpModemStat7;
+                ptr[1] = (char *)&lpModemLastStat7;
+                _main(MODEM_COM_7, ptr);
+                lpModemLastStat7 = lpModemStat7;                         // set the new CTS state for reference
+            }
+        #endif
+            while ((iRxSize = fnCheckRx(sm_hComm7, ucRxBuffer)) != 0) {
+                fnProcessRx(ucRxBuffer, (unsigned short)iRxSize, 5);     // if we have received something from the serial port (UART7), process it here
             }
         }
     #endif
@@ -3603,7 +3644,42 @@ int APIENTRY WinMain(HINSTANCE hInstance,
                     }
                     break;
     #endif
-
+    #if defined SERIAL_PORT_6
+                case OPEN_PC_COM6:                                       // {111}
+                    {
+                        unsigned long ulSpeed = fnGetValue(doPtr + 1, sizeof(ulSpeed));
+                        UART_MODE_CONFIG Mode = (unsigned short)fnGetValue(doPtr + 1 + sizeof(ulSpeed), sizeof(Mode));
+                        if (sm_hComm6 != INVALID_HANDLE_VALUE) {
+                            CloseHandle(sm_hComm6);                      // if we have an open port we want to reconfigure it - so close it
+                        }
+                        sm_hComm6 = fnConfigureSerialInterface(SERIAL_PORT_6, ulSpeed, Mode); // try to open com since the embedded system wants to use it
+                        if (sm_hComm6 >= 0) {
+                            fnUART_string(6, SERIAL_PORT_6, ulSpeed, Mode); //create a UART string that can be displayed on the status bar
+                        }
+                        else {
+                            fnUART_string(6, 0, ulSpeed, Mode);          // create a UART string that can be displayed on the status bar (not assigned to COM port)
+                        }
+                    }
+                    break;
+    #endif
+    #if defined SERIAL_PORT_7
+                case OPEN_PC_COM7:                                       // {111}
+                    {
+                        unsigned long ulSpeed = fnGetValue(doPtr + 1, sizeof(ulSpeed));
+                        UART_MODE_CONFIG Mode = (unsigned short)fnGetValue(doPtr + 1 + sizeof(ulSpeed), sizeof(Mode));
+                        if (sm_hComm7 != INVALID_HANDLE_VALUE) {
+                            CloseHandle(sm_hComm7);                      // if we have an open port we want to reconfigure it - so close it
+                        }
+                        sm_hComm7 = fnConfigureSerialInterface(SERIAL_PORT_7, ulSpeed, Mode); // try to open com since the embedded system wants to use it
+                        if (sm_hComm7 >= 0) {
+                            fnUART_string(7, SERIAL_PORT_7, ulSpeed, Mode); //create a UART string that can be displayed on the status bar
+                        }
+                        else {
+                            fnUART_string(7, 0, ulSpeed, Mode);          // create a UART string that can be displayed on the status bar (not assigned to COM port)
+                        }
+                    }
+                    break;
+    #endif
                 case MODEM_SIGNAL_CHANGE:                                // {7}
                     {
                         unsigned char ucComPort = (unsigned char)fnGetValue(doPtr + 1, 1); // port to be changed
@@ -3672,7 +3748,6 @@ int APIENTRY WinMain(HINSTANCE hInstance,
                     fnSendSerialMessage(sm_hComm4, (const void *)fnGetValue(doPtr + 1 + sizeof(ulLength), sizeof(const void *)), ulLength);
                     }
                     break;
-
                 case SEND_PC_COM5:
                     {
                     unsigned long ulLength = fnGetValue(doPtr + 1, sizeof(ulLength)); // we send embedded system serial data UART 5 over COM
@@ -3680,6 +3755,19 @@ int APIENTRY WinMain(HINSTANCE hInstance,
                     }
                     break;
 
+                case SEND_PC_COM6:                                       // {111}
+                    {
+                    unsigned long ulLength = fnGetValue(doPtr + 1, sizeof(ulLength)); // we send embedded system serial data UART 6 over COM
+                    fnSendSerialMessage(sm_hComm6, (const void *)fnGetValue(doPtr + 1 + sizeof(ulLength), sizeof(const void *)), ulLength);
+                    }
+                    break;
+
+                case SEND_PC_COM7:
+                    {
+                    unsigned long ulLength = fnGetValue(doPtr + 1, sizeof(ulLength)); // we send embedded system serial data UART 7 over COM
+                    fnSendSerialMessage(sm_hComm7, (const void *)fnGetValue(doPtr + 1 + sizeof(ulLength), sizeof(const void *)), ulLength);
+                    }
+                    break;
     #if NUMBER_EXTERNAL_SERIAL > 0                                       // {41}
                 case SEND_PC_EXT_COM0:
                     {

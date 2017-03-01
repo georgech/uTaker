@@ -67,6 +67,7 @@
     21.11.2015 Add fnGetSimDiskData()                                    {49}
     02.09.2016 Add TOGGLE_INPUT_POS, TOGGLE_INPUT_ANALOG and INPUT_TOGGLE_POS {50}
     24.12.2016 Add SIM_I2C_OUT and fnInjectI2C()                         {51}
+    28.02.2017 Add UARTs 6 and 7                                         {52}
 
 */
  
@@ -124,13 +125,15 @@
 #define MODEM_COM_3          103                                         // {11}
 #define MODEM_COM_4          104
 #define MODEM_COM_5          105
-#define MODEM_EXT_COM_0      106                                         // {4}
-#define MODEM_EXT_COM_1      107
-#define MODEM_EXT_COM_2      108
-#define MODEM_EXT_COM_3      109 
+#define MODEM_COM_6          106                                         // {52}
+#define MODEM_COM_7          107
+#define MODEM_EXT_COM_0      108                                         // {4}
+#define MODEM_EXT_COM_1      109
+#define MODEM_EXT_COM_2      110
+#define MODEM_EXT_COM_3      111 
 
-#define SIM_UART_BREAK       110                                         // {20}
-#define SIM_UART_CTS         111
+#define SIM_UART_BREAK       112                                         // {20}
+#define SIM_UART_CTS         113
 
 #define INPUT_TOGGLE_POS     200                                         // {50}
 #define INPUT_TOGGLE_NEG_ANALOG  201
@@ -151,14 +154,16 @@
 #define THROUGHPUT_UART3     3
 #define THROUGHPUT_UART4     4
 #define THROUGHPUT_UART5     5
-#define THROUGHPUT_I2C0      6
-#define THROUGHPUT_I2C1      7
-#define THROUGHPUT_I2C2      8
-#define THROUGHPUT_I2C3      9
-#define THROUGHPUT_EXT_UART0 10
-#define THROUGHPUT_EXT_UART1 11
-#define THROUGHPUT_EXT_UART2 12
-#define THROUGHPUT_EXT_UART3 13
+#define THROUGHPUT_UART6     6                                           // {52}
+#define THROUGHPUT_UART7     7
+#define THROUGHPUT_I2C0      8
+#define THROUGHPUT_I2C1      9
+#define THROUGHPUT_I2C2      10
+#define THROUGHPUT_I2C3      11
+#define THROUGHPUT_EXT_UART0 12
+#define THROUGHPUT_EXT_UART1 13
+#define THROUGHPUT_EXT_UART2 14
+#define THROUGHPUT_EXT_UART3 15
 
 // Do defines
 //
@@ -174,29 +179,33 @@
 #define SEND_PC_COM4         10
 #define OPEN_PC_COM5         11
 #define SEND_PC_COM5         12
-#define DISPLAY_PORT_CHANGE  13
-#define SET_COM_BREAK_0      14
-#define CLR_COM_BREAK_0      15
-#define SET_COM_BREAK_1      16
-#define CLR_COM_BREAK_1      17
-#define SET_COM_BREAK_2      18
-#define CLR_COM_BREAK_2      19
-#define SET_COM_BREAK_3      20                                          // {11}
-#define CLR_COM_BREAK_3      21
-#define SET_COM_BREAK_4      22
-#define CLR_COM_BREAK_4      23
-#define SET_COM_BREAK_5      24
-#define CLR_COM_BREAK_5      25
-#define IP_CHANGE            26
-#define MODEM_SIGNAL_CHANGE  27                                          // {4}
-#define OPEN_PC_EXT_COM0     28
-#define OPEN_PC_EXT_COM1     29
-#define OPEN_PC_EXT_COM2     30
-#define OPEN_PC_EXT_COM3     31
-#define SEND_PC_EXT_COM0     32
-#define SEND_PC_EXT_COM1     33
-#define SEND_PC_EXT_COM2     34
-#define SEND_PC_EXT_COM3     35
+#define OPEN_PC_COM6         13                                          // {52}
+#define SEND_PC_COM6         14
+#define OPEN_PC_COM7         15
+#define SEND_PC_COM7         16
+#define DISPLAY_PORT_CHANGE  17
+#define SET_COM_BREAK_0      18
+#define CLR_COM_BREAK_0      19
+#define SET_COM_BREAK_1      20
+#define CLR_COM_BREAK_1      21
+#define SET_COM_BREAK_2      22
+#define CLR_COM_BREAK_2      23
+#define SET_COM_BREAK_3      24                                          // {11}
+#define CLR_COM_BREAK_3      25
+#define SET_COM_BREAK_4      26
+#define CLR_COM_BREAK_4      27
+#define SET_COM_BREAK_5      28
+#define CLR_COM_BREAK_5      29
+#define IP_CHANGE            30
+#define MODEM_SIGNAL_CHANGE  31                                          // {4}
+#define OPEN_PC_EXT_COM0     32
+#define OPEN_PC_EXT_COM1     33
+#define OPEN_PC_EXT_COM2     34
+#define OPEN_PC_EXT_COM3     35
+#define SEND_PC_EXT_COM0     36
+#define SEND_PC_EXT_COM1     37
+#define SEND_PC_EXT_COM2     38
+#define SEND_PC_EXT_COM3     39
 
 #define CHANNEL_0_SERIAL_INT 0x00000001
 #define CHANNEL_1_SERIAL_INT 0x00000002
@@ -204,14 +213,16 @@
 #define CHANNEL_3_SERIAL_INT 0x00000008                                  // {11}
 #define CHANNEL_4_SERIAL_INT 0x00000010                                  // {38}
 #define CHANNEL_5_SERIAL_INT 0x00000020
-#define I2C_INT0             0x00000040
-#define I2C_INT1             0x00000080
-#define I2C_INT2             0x00000100                                  // {26}
-#define I2C_INT3             0x00000200
-#define USB_INT              0x00000400                                  // {17}
-#define PSEUDO_INT           0x00000800                                  // {29}
-#define CHANNEL_0_SSC_INT    0x00001000                                  // {31}
-#define CHANNEL_1_SSC_INT    0x00002000
+#define CHANNEL_6_SERIAL_INT 0x00000040                                  // {52}
+#define CHANNEL_7_SERIAL_INT 0x00000080
+#define I2C_INT0             0x00000100
+#define I2C_INT1             0x00000200
+#define I2C_INT2             0x00000400                                  // {26}
+#define I2C_INT3             0x00000800
+#define USB_INT              0x00001000                                  // {17}
+#define PSEUDO_INT           0x00002000                                  // {29}
+#define CHANNEL_0_SSC_INT    0x00004000                                  // {31}
+#define CHANNEL_1_SSC_INT    0x00008000
 
 #define CHANNEL_0_EXT_SERIAL_INT 0x00040000                              // {33}
 #define CHANNEL_1_EXT_SERIAL_INT 0x00080000
@@ -258,30 +269,32 @@
 #define SEND_COM_3           0x00000008
 #define SEND_COM_4           0x00000010                                  // {38}
 #define SEND_COM_5           0x00000020
-#define SET_BREAK_COM_0      0x00000040
-#define CLR_BREAK_COM_0      0x00000080
-#define SET_BREAK_COM_1      0x00000100
-#define CLR_BREAK_COM_1      0x00000200
-#define SET_BREAK_COM_2      0x00000400
-#define CLR_BREAK_COM_2      0x00000800
-#define SET_BREAK_COM_3      0x00001000                                 // {11}
-#define CLR_BREAK_COM_3      0x00002000
-#define SET_BREAK_COM_4      0x00004000                                 // {38}
-#define CLR_BREAK_COM_4      0x00008000
-#define SET_BREAK_COM_5      0x00010000
-#define CLR_BREAK_COM_5      0x00020000
-#define ASSERT_RTS_COM_0     0x00040000                                 // {4}
-#define NEGATE_RTS_COM_0     0x00080000
-#define ASSERT_RTS_COM_1     0x00100000
-#define NEGATE_RTS_COM_1     0x00200000
-#define ASSERT_RTS_COM_2     0x00400000
-#define NEGATE_RTS_COM_2     0x00800000
-#define ASSERT_RTS_COM_3     0x01000000                                 // {11}
-#define NEGATE_RTS_COM_3     0x02000000
-#define ASSERT_RTS_COM_4     0x04000000                                 // {38}
-#define NEGATE_RTS_COM_4     0x08000000
-#define ASSERT_RTS_COM_5     0x10000000
-#define NEGATE_RTS_COM_5     0x20000000
+#define SEND_COM_6           0x00000040                                  // {52}
+#define SEND_COM_7           0x00000080
+#define SET_BREAK_COM_0      0x00000100
+#define CLR_BREAK_COM_0      0x00000200
+#define SET_BREAK_COM_1      0x00000400
+#define CLR_BREAK_COM_1      0x00000800
+#define SET_BREAK_COM_2      0x00001000
+#define CLR_BREAK_COM_2      0x00002000
+#define SET_BREAK_COM_3      0x00004000                                 // {11}
+#define CLR_BREAK_COM_3      0x00008000
+#define SET_BREAK_COM_4      0x00010000                                 // {38}
+#define CLR_BREAK_COM_4      0x00020000
+#define SET_BREAK_COM_5      0x00040000
+#define CLR_BREAK_COM_5      0x00080000
+#define ASSERT_RTS_COM_0     0x00100000                                 // {4}
+#define NEGATE_RTS_COM_0     0x00200000
+#define ASSERT_RTS_COM_1     0x00400000
+#define NEGATE_RTS_COM_1     0x00800000
+#define ASSERT_RTS_COM_2     0x01000000
+#define NEGATE_RTS_COM_2     0x02000000
+#define ASSERT_RTS_COM_3     0x04000000                                 // {11}
+#define NEGATE_RTS_COM_3     0x08000000
+#define ASSERT_RTS_COM_4     0x10000000                                 // {38}
+#define NEGATE_RTS_COM_4     0x20000000
+#define ASSERT_RTS_COM_5     0x40000000
+#define NEGATE_RTS_COM_5     0x80000000
 
 #define OPEN_COM_0           0x00000001
 #define OPEN_COM_1           0x00000002
@@ -289,14 +302,16 @@
 #define OPEN_COM_3           0x00000008                                  // {38}
 #define OPEN_COM_4           0x00000010
 #define OPEN_COM_5           0x00000020
-#define OPEN_EXT_COM_0       0x00000040                                  // {34}
-#define OPEN_EXT_COM_1       0x00000080
-#define OPEN_EXT_COM_2       0x00000100
-#define OPEN_EXT_COM_3       0x00000200
-#define SEND_EXT_COM_0       0x00000400                                  // {38} - moved to ulActions_2
-#define SEND_EXT_COM_1       0x00000800
-#define SEND_EXT_COM_2       0x00001000
-#define SEND_EXT_COM_3       0x00002000
+#define OPEN_COM_6           0x00000040                                  // {52}
+#define OPEN_COM_7           0x00000080
+#define OPEN_EXT_COM_0       0x00000100                                  // {34}
+#define OPEN_EXT_COM_1       0x00000200
+#define OPEN_EXT_COM_2       0x00000400
+#define OPEN_EXT_COM_3       0x00000800
+#define SEND_EXT_COM_0       0x00001000                                  // {38} - moved to ulActions_2
+#define SEND_EXT_COM_1       0x00002000
+#define SEND_EXT_COM_2       0x00004000
+#define SEND_EXT_COM_3       0x00008000
 
 #define PORT_CHANGE          0x10000000
 #define IP_CONFIG_CHANGED    0x20000000
@@ -349,6 +364,8 @@ extern void fnLogTx2(unsigned char ucTxByte);
 extern void fnLogTx3(unsigned char ucTxByte);                            // {11}
 extern void fnLogTx4(unsigned char ucTxByte);                            // {38}
 extern void fnLogTx5(unsigned char ucTxByte);
+extern void fnLogTx6(unsigned char ucTxByte);                            // {52}
+extern void fnLogTx7(unsigned char ucTxByte);
 extern int  fnLogExtTx0(void);                                           // {32}
 extern int  fnLogExtTx1(void);
 extern int  fnLogExtTx2(void);
