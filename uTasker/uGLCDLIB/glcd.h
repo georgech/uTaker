@@ -223,5 +223,98 @@ extern void fnDoLCD_rect(void *rect);
 extern void fnDoLCD_scroll(GLCD_SCROLL *scroll);
 extern void fnDoLCD_style(GLCD_STYLE *style);
 
+#if defined FT800_GLCD_MODE
+
+typedef char ft_char8_t;
+typedef signed char ft_schar8_t;
+typedef unsigned char ft_uchar8_t;
+typedef ft_uchar8_t ft_uint8_t;
+typedef short  ft_int16_t;
+typedef unsigned short ft_uint16_t;
+typedef unsigned int ft_uint32_t;
+typedef int ft_int32_t;
+typedef void ft_void_t;
+typedef long long ft_int64_t;
+typedef unsigned long long ft_uint64_t;
+typedef float ft_float_t;
+typedef double ft_double_t;
+typedef char ft_bool_t;
+
+#define ft_prog_uchar8_t  ft_uchar8_t
+#define ft_prog_char8_t   ft_char8_t
+#define ft_prog_uint16_t  ft_uint16_t
+
+#define FT_PROGMEM
+
+typedef struct {
+	ft_uint8_t reserved;
+}Ft_Gpu_App_Context_t;
+
+typedef struct {
+	union {
+		ft_uint8_t spi_cs_pin_no;		//spi chip select number of ft8xx chip
+		ft_uint8_t i2c_addr;			//i2c address of ft8xx chip
+	};
+	union {
+		ft_uint16_t spi_clockrate_khz;  //In KHz
+		ft_uint16_t i2c_clockrate_khz;  //In KHz
+	};
+	ft_uint8_t channel_no;				//mpsse channel number
+	ft_uint8_t pdn_pin_no;				//ft8xx power down pin number
+}Ft_Gpu_Hal_Config_t;
+
+typedef enum {
+	FT_GPU_HAL_OPENED,
+	FT_GPU_HAL_READING,
+	FT_GPU_HAL_WRITING,
+	FT_GPU_HAL_CLOSED,
+
+	FT_GPU_HAL_STATUS_COUNT,
+	FT_GPU_HAL_STATUS_ERROR = FT_GPU_HAL_STATUS_COUNT
+}FT_GPU_HAL_STATUS_E;
+
+typedef struct {
+	Ft_Gpu_App_Context_t    app_header;
+	Ft_Gpu_Hal_Config_t     hal_config;
+
+    ft_uint16_t 			ft_cmd_fifo_wp; //coprocessor fifo write pointer
+    ft_uint16_t 			ft_dl_buff_wp;  //display command memory write pointer
+
+	FT_GPU_HAL_STATUS_E 	status;        //OUT
+	ft_void_t*          	hal_handle;    //IN/OUT
+    ft_void_t*          	hal_handle2;   //IN/OUT LibFT4222 uses this member to store GPIO handle	
+	/* Additions specific to ft81x */
+	ft_uint8_t				spichannel;			//variable to contain single/dual/quad channels
+	ft_uint8_t				spinumdummy;		//number of dummy bytes as 1 or 2 for spi read
+    ft_uint8_t *            spiwrbuf_ptr;
+}Ft_Gpu_Hal_Context_t;
+
+#include "FT_Gpu.h"
+#include "FT_CoPro_Cmds.h"
+
+#define Ft_Gpu_Hal_WrMemFromFlash(a,b,c,d) Ft_Gpu_Hal_WrMem(a,b,c,d)
+
+extern void Ft_Gpu_Hal_Wr32(void *host, unsigned long ulReg, unsigned long ulValue);
+extern unsigned char Ft_Gpu_Hal_Rd8(void *host, unsigned long ulReg);
+extern void Ft_Gpu_HostCommand(void *host, unsigned char ucCommand);
+extern void Ft_Gpu_Hal_WrMem(void *host, unsigned long ulReg, const unsigned char *ptrData, unsigned long ulDataLength);
+extern void Ft_Gpu_Hal_Wr8(void *host, unsigned long ulReg, unsigned char ucData);
+extern void Ft_Gpu_Hal_Wr16(void *host, unsigned long ulReg, unsigned short usData);
+extern unsigned long Ft_Gpu_Hal_Rd32(void *host, unsigned long ulReg);
+extern void Ft_Gpu_Hal_RdMem(void *host, unsigned long ulReg, unsigned char *buffer, unsigned long length);
+
+extern void Ft_Gpu_Hal_WaitCmdfifo_empty(Ft_Gpu_Hal_Context_t *host);
+extern void Ft_Gpu_Hal_Updatecmdfifo(Ft_Gpu_Hal_Context_t *host, ft_uint32_t count);
+extern ft_uint16_t Ft_Gpu_Cmdfifo_Freespace(Ft_Gpu_Hal_Context_t *host);
+extern void Ft_Gpu_Hal_WrCmdBuf(Ft_Gpu_Hal_Context_t *host, ft_uint8_t *buffer, ft_uint32_t count);
+extern void Ft_Gpu_Hal_CheckCmdBuffer(Ft_Gpu_Hal_Context_t *host, ft_uint32_t count);
+
+extern void SAMAPP_GPU_DLSwap(ft_uint8_t DL_Swap_Type);
+extern void Ft_App_WrCoCmd_Buffer(Ft_Gpu_Hal_Context_t *phost,ft_uint32_t cmd);
+extern void Ft_App_WrCoStr_Buffer(Ft_Gpu_Hal_Context_t *phost, const ft_char8_t *s);
+extern void Ft_App_Flush_Co_Buffer(Ft_Gpu_Hal_Context_t *phost);
+extern void Ft_App_WrDlCmd_Buffer(Ft_Gpu_Hal_Context_t *phost,ft_uint32_t cmd);
+extern void Ft_App_Flush_DL_Buffer(Ft_Gpu_Hal_Context_t *phost);
+#endif
 
 #endif

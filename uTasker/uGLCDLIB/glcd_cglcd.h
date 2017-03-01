@@ -101,14 +101,9 @@
                         #define fnWriteGLCD_data_pair(data)    *((volatile unsigned short*)GLCD_DATA_ADDR) = (data)
                 #endif
             #elif defined FT800_GLCD_MODE                                // {5}
-                extern unsigned char Ft_Gpu_Hal_Rd8(void *host, unsigned long ulReg);
-                extern void Ft_Gpu_HostCommand(void *host, unsigned char ucCommand);
-                extern void Ft_Gpu_Hal_WrMem(void *host, unsigned long ulReg, const unsigned char *ptrData, unsigned long ulDataLength);
-                extern void Ft_Gpu_Hal_Wr8(void *host, unsigned long ulReg, unsigned char ucData);
-                extern void Ft_Gpu_Hal_Wr16(void *host, unsigned long ulReg, unsigned short usData);
-    	                #define fnCommandGlcd_1(command)
-                        #define fnCommandGlcd_2(command, data)
-                        #define fnWriteGLCD_data_pair(data)
+    	        #define fnCommandGlcd_1(command)                         // dummy for compatibility
+                #define fnCommandGlcd_2(command, data)
+                #define fnWriteGLCD_data_pair(data)
             #else
                 static void fnCommandGlcd_1(unsigned char ucCommand);
                 static void fnCommandGlcd_2(unsigned char ucCommand, unsigned short usParameter);
@@ -1005,6 +1000,136 @@ extern void Ft_Gpu_Hal_WrMem(void *host, unsigned long ulReg, const unsigned cha
     FLUSH_LCD_SPI_RX(2);                                                 // ensure that the activity has terminated before quitting so that further reads/writes can't disturb
 }
 
+extern void SAMAPP_GPU_DLSwap(ft_uint8_t DL_Swap_Type)
+{
+	ft_uint8_t Swap_Type = DLSWAP_FRAME, Swap_Done = DLSWAP_FRAME;
+
+	if(DL_Swap_Type == DLSWAP_LINE)
+	{
+		Swap_Type = DLSWAP_LINE;
+	}
+
+	/* Perform a new DL swap */
+	Ft_Gpu_Hal_Wr8(0,REG_DLSWAP,Swap_Type);
+
+	/* Wait till the swap is done */
+	while(Swap_Done)
+	{
+		Swap_Done = Ft_Gpu_Hal_Rd8(0,REG_DLSWAP);
+
+		if(DLSWAP_DONE != Swap_Done)
+		{
+	//Ft_Gpu_Hal_Sleep(10);//wait for 10ms
+		}
+	}
+}
+
+ft_uint32_t Ft_CmdBuffer_Index = 0;
+ft_uint32_t Ft_DlBuffer_Index;
+//#ifdef BUFFER_OPTIMIZATION
+ft_uint8_t  Ft_DlBuffer[FT_DL_SIZE];
+ft_uint8_t  Ft_CmdBuffer[FT_CMD_FIFO_SIZE];
+//#endif
+
+extern void Ft_App_WrCoCmd_Buffer(Ft_Gpu_Hal_Context_t *phost,ft_uint32_t cmd)
+{
+   /* Copy the command instruction into buffer */
+   ft_uint32_t *pBuffcmd =(ft_uint32_t*)&Ft_CmdBuffer[Ft_CmdBuffer_Index];
+   *pBuffcmd = cmd;
+   /* Increment the command index */
+   Ft_CmdBuffer_Index += FT_CMD_SIZE;
+}
+
+extern void Ft_App_WrCoStr_Buffer(Ft_Gpu_Hal_Context_t *phost, const ft_char8_t *s)
+{
+  ft_uint16_t length = 0;
+  length = uStrlen(s) + 1;//last for the null termination
+
+  uStrcpy((CHAR *)&Ft_CmdBuffer[Ft_CmdBuffer_Index],s);
+
+  /* increment the length and align it by 4 bytes */
+  Ft_CmdBuffer_Index += ((length + 3) & ~3);
+}
+
+extern void Ft_App_Flush_Co_Buffer(Ft_Gpu_Hal_Context_t *phost)
+{ 
+   if (Ft_CmdBuffer_Index > 0) {
+     Ft_Gpu_Hal_WrCmdBuf(phost,Ft_CmdBuffer,Ft_CmdBuffer_Index);  
+   }
+   Ft_CmdBuffer_Index = 0;
+}
+
+extern void Ft_App_WrDlCmd_Buffer(Ft_Gpu_Hal_Context_t *phost,ft_uint32_t cmd)
+{
+   /* Copy the command instruction into buffer */
+   ft_uint32_t *pBuffcmd = (ft_uint32_t*)&Ft_DlBuffer[Ft_DlBuffer_Index];
+   *pBuffcmd = cmd;
+
+   /* Increment the command index */
+   Ft_DlBuffer_Index += FT_CMD_SIZE;
+}
+
+extern void Ft_App_Flush_DL_Buffer(Ft_Gpu_Hal_Context_t *phost)
+{
+   if (Ft_DlBuffer_Index > 0) {
+     Ft_Gpu_Hal_WrMem(phost,RAM_DL,Ft_DlBuffer,Ft_DlBuffer_Index);
+   }
+   Ft_DlBuffer_Index = 0;
+}
+
+extern void Ft_Gpu_Hal_Updatecmdfifo(Ft_Gpu_Hal_Context_t *host, ft_uint32_t count)
+{
+	host->ft_cmd_fifo_wp  = (host->ft_cmd_fifo_wp + count) & 4095;
+
+	//4 byte alignment
+	host->ft_cmd_fifo_wp = (host->ft_cmd_fifo_wp + 3) & 0xffc;
+	Ft_Gpu_Hal_Wr16(0,REG_CMD_WRITE,host->ft_cmd_fifo_wp);
+}
+
+extern ft_uint16_t Ft_Gpu_Cmdfifo_Freespace(Ft_Gpu_Hal_Context_t *host)
+{
+	ft_uint16_t fullness,retval;
+
+	//host->ft_cmd_fifo_wp = Ft_Gpu_Hal_Rd16(host,REG_CMD_WRITE);
+
+	fullness = (host->ft_cmd_fifo_wp - Ft_Gpu_Hal_Rd16(0,REG_CMD_READ)) & 4095;
+	retval = (FT_CMD_FIFO_SIZE - 4) - fullness;
+	return (retval);
+}
+
+extern void Ft_Gpu_Hal_CheckCmdBuffer(Ft_Gpu_Hal_Context_t *host, ft_uint32_t count)
+{
+   ft_uint16_t getfreespace;
+   do{
+        getfreespace = Ft_Gpu_Cmdfifo_Freespace(host);
+   } while (getfreespace < count);
+}
+
+extern void Ft_Gpu_Hal_WrCmdBuf(Ft_Gpu_Hal_Context_t *host, ft_uint8_t *buffer, ft_uint32_t count)
+{
+	ft_uint32_t length =0, availablefreesize;
+
+	do {                
+		length = count;
+        availablefreesize = Ft_Gpu_Cmdfifo_Freespace(host);
+
+		if (length > availablefreesize) {
+		    length = availablefreesize;
+		}
+      	Ft_Gpu_Hal_CheckCmdBuffer(host,length);
+        Ft_Gpu_Hal_WrMem(host,(host->ft_cmd_fifo_wp + RAM_CMD),buffer, length);
+		Ft_Gpu_Hal_Updatecmdfifo(host,length);
+		Ft_Gpu_Hal_WaitCmdfifo_empty(host);
+		count -= length;
+	} while (count > 0);
+}
+
+extern void Ft_Gpu_Hal_WaitCmdfifo_empty(Ft_Gpu_Hal_Context_t *host)
+{
+   while(Ft_Gpu_Hal_Rd16(0,REG_CMD_READ) != Ft_Gpu_Hal_Rd16(0,REG_CMD_WRITE));
+   
+   host->ft_cmd_fifo_wp = Ft_Gpu_Hal_Rd16(0,REG_CMD_WRITE);
+}
 
 #if 0
 extern void Ft_GpuEmu_SPII2C_csHigh(void)
@@ -1530,7 +1655,7 @@ static void fnStartTouch(void)
     adc_setup.int_adc_int_type = ADC_END_OF_SCAN_INT;
     adc_setup.int_adc_offset = 0;                                        // no offset
     adc_setup.int_high_level_trigger = 0;
-    adc_setup.int_adc_mode = (ADC_CONFIGURE_ADC | ADC_CONFIGURE_CHANNEL | ADC_AUTO_POWER_DOWN_MODE | ADC_SEQUENTIAL_MODE | ADC_SINGLE_ENDED | ADC_SINGLE_SHOT_MODE);
+    adc_setup.int_adc_mode = (ADC_CONFIGURE_ADC | ADC_CONFIGURE_CHANNEL | ADC_AUTO_POWER_DOWN_MODE | ADC_SEQUENTIAL_MODE | ADC_SINGLE_ENDED_INPUT | ADC_SINGLE_SHOT_MODE);
     adc_setup.int_adc_speed = (unsigned char)(ADC_SAMPLING_SPEED(650000));// 650kHz sampling - slowest possible at 80MHz (must be between 100kHz and 5MHz)
     fnConfigureInterrupt((void *)&adc_setup);                            // configure ADC and channel 4
     adc_setup.int_adc_bit = 5;
