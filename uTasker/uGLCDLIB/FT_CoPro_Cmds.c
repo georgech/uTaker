@@ -31,6 +31,8 @@ Revision History:
 //#include "FT_Platform.h"
 
 #include "config.h"                                                      // use uTasker headers
+
+#if defined FT800_GLCD_MODE
 #define strlen uStrlen                                                   // use uTasker string functions
 #define strcpy uStrcpy
 #define MSVC_FT800EMU
@@ -697,6 +699,7 @@ ft_void_t Ft_Gpu_CoCmd_EndFunc(Ft_Gpu_Hal_Context_t *phost,ft_uint16_t count)
 #endif
 
 }
+#endif
 /* Nothing beyond this */
 
 

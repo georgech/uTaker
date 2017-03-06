@@ -274,19 +274,19 @@ typedef enum {
 }FT_GPU_HAL_STATUS_E;
 
 typedef struct {
-	Ft_Gpu_App_Context_t    app_header;
-	Ft_Gpu_Hal_Config_t     hal_config;
+  //Ft_Gpu_App_Context_t    app_header;
+  //Ft_Gpu_Hal_Config_t     hal_config;
 
     ft_uint16_t 			ft_cmd_fifo_wp; //coprocessor fifo write pointer
-    ft_uint16_t 			ft_dl_buff_wp;  //display command memory write pointer
+  //ft_uint16_t 			ft_dl_buff_wp;  //display command memory write pointer
 
-	FT_GPU_HAL_STATUS_E 	status;        //OUT
-	ft_void_t*          	hal_handle;    //IN/OUT
-    ft_void_t*          	hal_handle2;   //IN/OUT LibFT4222 uses this member to store GPIO handle	
+  //FT_GPU_HAL_STATUS_E 	status;        //OUT
+  //ft_void_t*          	hal_handle;    //IN/OUT
+  //ft_void_t*          	hal_handle2;   //IN/OUT LibFT4222 uses this member to store GPIO handle	
 	/* Additions specific to ft81x */
-	ft_uint8_t				spichannel;			//variable to contain single/dual/quad channels
-	ft_uint8_t				spinumdummy;		//number of dummy bytes as 1 or 2 for spi read
-    ft_uint8_t *            spiwrbuf_ptr;
+  //ft_uint8_t				spichannel;			//variable to contain single/dual/quad channels
+  //ft_uint8_t				spinumdummy;		//number of dummy bytes as 1 or 2 for spi read
+  //ft_uint8_t *            spiwrbuf_ptr;
 }Ft_Gpu_Hal_Context_t;
 
 #include "FT_Gpu.h"
@@ -300,6 +300,7 @@ extern void Ft_Gpu_HostCommand(void *host, unsigned char ucCommand);
 extern void Ft_Gpu_Hal_WrMem(void *host, unsigned long ulReg, const unsigned char *ptrData, unsigned long ulDataLength);
 extern void Ft_Gpu_Hal_Wr8(void *host, unsigned long ulReg, unsigned char ucData);
 extern void Ft_Gpu_Hal_Wr16(void *host, unsigned long ulReg, unsigned short usData);
+extern unsigned short Ft_Gpu_Hal_Rd16(void *host, unsigned long ulReg);
 extern unsigned long Ft_Gpu_Hal_Rd32(void *host, unsigned long ulReg);
 extern void Ft_Gpu_Hal_RdMem(void *host, unsigned long ulReg, unsigned char *buffer, unsigned long length);
 
