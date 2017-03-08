@@ -978,9 +978,9 @@ static void fnLoaderForced(int iNoFirmware)
 #if defined MEMORY_SWAP
 extern void fnHandleSwap(int iCheck)
 {
-    int iResut = fnSwapMemory(iCheck);
+    int iResult = fnSwapMemory(iCheck);
     fnDebugMsg("\r\nSwap ");
-    switch (iResut) {
+    switch (iResult) {
     case SWAP_STATE_UNINITIALISED:
         fnDebugMsg("uninitialised");
         break;
