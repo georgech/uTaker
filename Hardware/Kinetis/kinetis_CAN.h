@@ -15,6 +15,7 @@
     *********************************************************************
     11.01.2013 Set CAN controller clock source before moving to freeze mode {65}
     04.03.2014 Correct CAN time stamp request option                     {70}
+    02.03.2017 Move controller clock source configuration to after setting freeze mode (due to problems with at least some parts) {3}
 
 */
 
@@ -395,13 +396,13 @@ extern void fnInitCAN(CANTABLE *pars)
     KINETIS_CAN_BUF *ptrMessageBuffer;
     KINETIS_CAN_CONTROL *ptrCAN_control;
 
-    #if !defined ERRATA_E2583_SOLVED                                     // in early silicon the CAN controllers only work when the OSC is enabled
+    #if defined ERRATA_ID_2583                                           // in early silicon the CAN controllers only work when the OSC is enabled
     if ((OSC0_CR & OSC_CR_ERCLKEN) == 0) {
         OSC0_CR = OSC_CR_ERCLKEN;                _SIM_PER_CHANGE;        // enable the external reference clock source whether the bus clock or external clock is to be used
     }
     #else
     if ((CAN_PLL_CLOCK & pars->usMode) == 0) {                           // if the external clock is to be used enable it
-        if ((OSC0_CR & OSC_CR_ERCLKEN) == 0) {
+        if ((OSC0_CR & OSC_CR_ERCLKEN) == 0) {                           // if the clock has not been enabled
             OSC0_CR = OSC_CR_ERCLKEN;            _SIM_PER_CHANGE;        // enable the external reference clock source for CAN use
         }
     }
@@ -437,7 +438,7 @@ extern void fnInitCAN(CANTABLE *pars)
 
     uMemset(ptrMessageBuffer, 0x00, (sizeof(KINETIS_CAN_BUF) * NUMBER_CAN_MESSAGE_BUFFERS)); // the buffers are not reset so clear here
                                                                          // calculate the settings for the required speed
-    ptrCAN_control->CAN_CTRL1 = fnOptimalCAN_clock(pars->usMode, pars->ulSpeed); // {65} write the clock setting and source before freeze mode
+  //ptrCAN_control->CAN_CTRL1 = fnOptimalCAN_clock(pars->usMode, pars->ulSpeed); // {3}{65} write the clock setting and source before freeze mode
                                                                          // note that the crystal can be used and has better jitter performance than the PLL
     ptrCAN_control->CAN_MCR &= ~CAN_MDIS;                                // move from disabled to freeze mode
     while ((ptrCAN_control->CAN_MCR & CAN_LPMACK) != 0) {                // wait for CAN controller to leave disabled mode
@@ -445,6 +446,7 @@ extern void fnInitCAN(CANTABLE *pars)
         ptrCAN_control->CAN_MCR &= ~(CAN_LPMACK);
     #endif
     }
+    ptrCAN_control->CAN_CTRL1 = fnOptimalCAN_clock(pars->usMode, pars->ulSpeed); // {3} write the clock setting and source before freeze mode
 
     if ((pars->usMode & CAN_LOOPBACK) != 0) {
         ptrCAN_control->CAN_CTRL1 |= LPB;                                // set loopback mode
