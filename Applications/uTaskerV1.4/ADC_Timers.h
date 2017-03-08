@@ -47,6 +47,7 @@
     #if defined SUPPORT_ADC                                              // if HW support is enabled
       //#define TEST_ADC                                                 // enable test of ADC operation
       //#define TEST_AD_DA                                               // {14} enable test of reading ADC and writing (after delay) to DAC
+          //#define ADC_TRIGGER_TPM                                      // use TPM module rather than PIT for ADC trigger (valid for KL parts)
           //#define VOICE_RECORDER                                       // {15} needs TEST_AD_DA and mass-storage and saves sampled input to SD card
       //#define INTERNAL_TEMP                                            // {2} read also internal temperature (Luminary Micro)
 
@@ -61,9 +62,9 @@
     #endif
     #if defined SUPPORT_DAC
       //#define TEST_DMA_DAC                                             // test generating a signal using DMA to DAC (based on timer trigger)
-            #define GENERATE_SINE
+          //#define GENERATE_SINE
             #if defined GENERATE_SINE
-                #include <math.h>                                        // this may need libm.a explicitly inked (depending on IDE and compiler used)
+                #include <math.h>                                        // this may need libm.a explicitly linked (depending on IDE and compiler used)
             #endif
     #endif
     #if (defined SUPPORT_PIT1 || defined SUPPORT_PITS) && !defined KINETIS_WITHOUT_PIT // periodic interrupt
@@ -95,7 +96,7 @@
       //#define TEST_TIMER                                               // test a user defined timer interrupt
         #if defined TEST_TIMER
           //#define TEST_SINGLE_SHOT_TIMER                               // test single-shot mode
-            #define TEST_PERIODIC_TIMER                                  // test periodic interrupt mode
+          //#define TEST_PERIODIC_TIMER                                  // test periodic interrupt mode
           //#define TEST_ADC_TIMER                                       // test periodic ADC trigger mode (Luminary)
           //#define TEST_PWM                                             // {1} test generating PWM output from timer
           //#define TEST_CAPTURE                                         // {6} test timer capture mode
@@ -200,7 +201,7 @@
         #endif
         static signed short sADC_buffer[AD_DA_BUFFER_LENGTH] = {0};      // 16 bit samples
     #elif defined TEST_AD_DA && (defined KINETIS_KL || defined KINETIS_KE)
-      //static signed short *ptrADC_buffer = 0;                          // pointer to aligned buffer - 16 bit samples 
+        static signed short *ptrADC_buffer = 0;                          // pointer to aligned buffer - 16 bit samples 
     #endif
     #if defined TEST_GPT
         static unsigned long ulCaptureList[GPT_CAPTURES];                // make space for capture values
@@ -685,46 +686,60 @@ static void _pdb_interrupt(void)
 }
     #endif
 
-// Configure the PDB/LPTMR/PIT to generate ADC triggers (ADC channels must already be configured previous to starting the timer)
+// Configure the PDB/LPTMR/PIT/PTM to generate ADC triggers (ADC channels must already be configured previous to starting the timer)
 //
 static void fnStart_ADC_Trigger(void)
 {
     #if defined KINETIS_KL || defined KINETIS_KE                         // the KL devices do not have a PDB so the PIT is used instead to trigger the ADC/DAC
-        PIT_SETUP pit_setup;                                             // interrupt configuration parameters
-        pit_setup.int_type = PIT_INTERRUPT;
-        pit_setup.int_handler = 0;                                       // no interrupt used since the PIT triggers ADC/DAC only
-        pit_setup.int_priority = PIT0_INTERRUPT_PRIORITY;
-        pit_setup.count_delay = PIT_US_DELAY(125);                       // 8kHz period
-        pit_setup.ucPIT = 0;                                             // use PIT0 since it is the only one that can trigger DAC conversions
-        pit_setup.mode = (PIT_PERIODIC | PIT_RETRIGGER | PIT_TRIGGER_ADC0_A); // periodically trigger ADC0 channel A (PIT0 trigger was defined in ADC configuration) - uses retrigger in case the PIT was running previously
-        fnConfigureInterrupt((void *)&pit_setup);                        // configure PIT0
-    #else
-        PDB_SETUP pdb_setup;                                             // interrupt configuration parameters
-        pdb_setup.int_type = PDB_INTERRUPT;
-      //pdb_setup.int_handler = _pdb_interrupt;                          // interrupt on each PDB cycle match
-        pdb_setup.int_handler = 0;                                       // no interrupt
-        pdb_setup.int_priority = PRIORITY_PDB;    
-      //pdb_setup.pdb_mode = (PDB_PERIODIC_DMA | PDB_TRIGGER_ADC1_A);    // periodic DMA and trigger ADC1 - channel A
-        #if defined KWIKSTIK || defined TEENSY_3_1
-        pdb_setup.pdb_mode = (PDB_PERIODIC_INTERRUPT | PDB_TRIGGER_ADC0_A); // periodic interrupt and trigger ADC0 - channel A
+        #if defined ADC_TRIGGER_TPM                                      // ADC triggering from TPM 1 - channel 0 and 1 (these channels are the default ADC triggers for ADC 0 inputs A and B)
+    PWM_INTERRUPT_SETUP pwm_setup;
+    pwm_setup.int_type = PWM_INTERRUPT;
+    pwm_setup.pwm_mode = (PWM_SYS_CLK | PWM_PRESCALER_16 | PWM_CENTER_ALIGNED | PWM_DMA_PERIOD_ENABLE | PWM_NO_OUTPUT); // clock PWM timer from the system clock with /16 pre-scaler (don't use an output)
+    pwm_setup.int_handler = 0;                                           // no user interrupt call-back on PWM cycle
+    pwm_setup.pwm_frequency = PWM_FREQUENCY(1000, 16);                   // generate 1kHz on PWM output
+    pwm_setup.pwm_value = _PWM_PERCENT(1, pwm_setup.pwm_frequency);      // 1% PWM (high/low)
+    pwm_setup.pwm_reference = (_TIMER_1 | 0);                            // timer module 1, channel 0 (triggers ADC0 input A)
+    fnConfigureInterrupt((void *)&pwm_setup);
+    pwm_setup.pwm_value = _PWM_PERCENT(99, pwm_setup.pwm_frequency);     // 99% PWM (high/low)
+    pwm_setup.pwm_reference = (_TIMER_1 | 1);                            // timer module 1, channel 1 (triggers ADC0 input B)
+    fnConfigureInterrupt((void *)&pwm_setup);
         #else
-        pdb_setup.pdb_mode = (PDB_PERIODIC_INTERRUPT | PDB_TRIGGER_ADC1_A); // periodic interrupt and trigger ADC1 - channel A
+    PIT_SETUP pit_setup;                                                 // interrupt configuration parameters
+    pit_setup.int_type = PIT_INTERRUPT;
+    pit_setup.int_handler = 0;                                           // no interrupt used since the PIT triggers ADC/DAC only
+    pit_setup.int_priority = PIT0_INTERRUPT_PRIORITY;
+    pit_setup.count_delay = PIT_US_DELAY(125);                           // 8kHz period
+    pit_setup.ucPIT = 0;                                                 // use PIT0 since it is the only one that can trigger DAC conversions
+    pit_setup.mode = (PIT_PERIODIC | PIT_RETRIGGER | PIT_TRIGGER_ADC0_A);// periodically trigger ADC0 channel A (PIT0 trigger was defined in ADC configuration) - uses retrigger in case the PIT was running previously
+    fnConfigureInterrupt((void *)&pit_setup);                            // configure PIT0
         #endif
-      //pdb_setup.pdb_mode = PDB_MONO_TIMER_INTERRUPT;                   // single-shot timer interrupt
-        pdb_setup.prescaler = (PDB_PRESCALER_4 | PDB_MUL_1);             // pre-scaler values of 1, 2, 4, 8, 16, 32, 64 and 128 are possible (with multipliers of 1, 10, 20 or 40)
-        pdb_setup.period = PDB_FREQUENCY(4, 1, 8000);                    // frequency of PDB cycle is 8kHz
-        pdb_setup.int_match = 0;                                         // PDB interrupt/DMA at the start of the period so that it uses the old ADC value
-        pdb_setup.ch0_delay_0 = pdb_setup.period;                        // ADC0 channel A trigger occurs at end of the PDB period
-        pdb_setup.ch0_delay_1 = 0;
-        pdb_setup.ch1_delay_0 = pdb_setup.period;                        // ADC1 channel A trigger occurs at end of the PDB period
-        pdb_setup.ch1_delay_1 = 0;
-        #if defined SUPPORT_DAC
-        pdb_setup.pdb_mode &= ~PDB_PERIODIC_INTERRUPT;
-        pdb_setup.pdb_mode |= PDB_PERIODIC_DMA;                          // use DMA to trigger DAC data writes
-        pdb_setup.dac0_delay_0 = 0;
-        #endif
-        pdb_setup.pdb_trigger = PDB_TRIGGER_SW;                          // triggered by software (started immediately)
-        fnConfigureInterrupt((void *)&pdb_setup);                        // configure PDB interrupt
+    #else
+    PDB_SETUP pdb_setup;                                                 // interrupt configuration parameters
+    pdb_setup.int_type = PDB_INTERRUPT;
+    //pdb_setup.int_handler = _pdb_interrupt;                            // interrupt on each PDB cycle match
+    pdb_setup.int_handler = 0;                                           // no interrupt
+    pdb_setup.int_priority = PRIORITY_PDB;    
+    //pdb_setup.pdb_mode = (PDB_PERIODIC_DMA | PDB_TRIGGER_ADC1_A);      // periodic DMA and trigger ADC1 - channel A
+    #if defined KWIKSTIK || defined TEENSY_3_1
+    pdb_setup.pdb_mode = (PDB_PERIODIC_INTERRUPT | PDB_TRIGGER_ADC0_A);  // periodic interrupt and trigger ADC0 - channel A
+    #else
+    pdb_setup.pdb_mode = (PDB_PERIODIC_INTERRUPT | PDB_TRIGGER_ADC1_A);  // periodic interrupt and trigger ADC1 - channel A
+    #endif
+    //pdb_setup.pdb_mode = PDB_MONO_TIMER_INTERRUPT;                     // single-shot timer interrupt
+    pdb_setup.prescaler = (PDB_PRESCALER_4 | PDB_MUL_1);                 // pre-scaler values of 1, 2, 4, 8, 16, 32, 64 and 128 are possible (with multipliers of 1, 10, 20 or 40)
+    pdb_setup.period = PDB_FREQUENCY(4, 1, 8000);                        // frequency of PDB cycle is 8kHz
+    pdb_setup.int_match = 0;                                             // PDB interrupt/DMA at the start of the period so that it uses the old ADC value
+    pdb_setup.ch0_delay_0 = pdb_setup.period;                            // ADC0 channel A trigger occurs at end of the PDB period
+    pdb_setup.ch0_delay_1 = 0;
+    pdb_setup.ch1_delay_0 = pdb_setup.period;                            // ADC1 channel A trigger occurs at end of the PDB period
+    pdb_setup.ch1_delay_1 = 0;
+    #if defined SUPPORT_DAC
+    pdb_setup.pdb_mode &= ~PDB_PERIODIC_INTERRUPT;
+    pdb_setup.pdb_mode |= PDB_PERIODIC_DMA;                              // use DMA to trigger DAC data writes
+    pdb_setup.dac0_delay_0 = 0;
+    #endif
+    pdb_setup.pdb_trigger = PDB_TRIGGER_SW;                              // triggered by software (started immediately)
+    fnConfigureInterrupt((void *)&pdb_setup);                            // configure PDB interrupt
     #endif
 }
 #endif
@@ -741,6 +756,11 @@ static void fnConfigureADC(void)
     #if !defined DEVICE_WITHOUT_DMA
     adc_setup.dma_int_priority = 3;                                      // priority of DMA interrupt the user wants to set
     adc_setup.dma_int_handler = 0;                                       // no interrupt so that free-running circular buffer is used (when ADC_FULL_BUFFER_DMA_AUTO_REPEAT is not defined)
+        #if defined KINETIS_KL && defined TEST_AD_DA && defined ADC_TRIGGER_TPM
+    adc_setup.ucDmaTriggerSource = DMAMUX0_CHCFG_SOURCE_TPM1_OVERFLOW;   // trigger DMA TPM overflows
+        #else
+    adc_setup.ucDmaTriggerSource = 0;                                    // default trigger is the ADC conversion completion fo the channel in question
+        #endif
     #endif
     #if !defined KINETIS_KE
     adc_setup.pga_gain = PGA_GAIN_OFF;                                   // {13} PGA gain can be specified for certain inputs
@@ -788,7 +808,7 @@ static void fnConfigureADC(void)
             #endif
             #if !defined DEVICE_WITHOUT_DMA
                 #if defined KINETIS_KL                                   // {21}
-    adc_setup.ucDmaChannel = 1;                                          // DMA channel 1 used
+    adc_setup.ucDmaChannel = 2;                                          // DMA channel 2 used
                 #else
     adc_setup.ucDmaChannel = 6;                                          // DMA channel 6 used
                 #endif
@@ -803,24 +823,24 @@ static void fnConfigureADC(void)
                 #endif
             #else
                 #if defined KINETIS_KL                                   // {21}
-  //adc_setup.int_adc_mode = (ulCalibrate | ADC_LOOP_MODE | ADC_FULL_BUFFER_DMA | ADC_HALF_BUFFER_DMA | ADC_SELECT_INPUTS_A | ADC_CLOCK_BUS_DIV_2 | ADC_CLOCK_DIVIDE_4 | ADC_SAMPLE_ACTIVATE_LONG | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_ENDED | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE); // continuous conversion (DMA to buffer)
-    adc_setup.int_adc_mode = (ulCalibrate | ADC_FULL_BUFFER_DMA | ADC_HALF_BUFFER_DMA | ADC_SELECT_INPUTS_A | ADC_CLOCK_BUS_DIV_2 | ADC_CLOCK_DIVIDE_8 | ADC_SAMPLE_ACTIVATE_LONG | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_ENDED | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE | ADC_HW_TRIGGERED); // hardware triggering (DMA to buffer)
+  //adc_setup.int_adc_mode = (ulCalibrate | ADC_LOOP_MODE | ADC_FULL_BUFFER_DMA | ADC_HALF_BUFFER_DMA | ADC_SELECT_INPUTS_A | ADC_CLOCK_BUS_DIV_2 | ADC_CLOCK_DIVIDE_4 | ADC_SAMPLE_ACTIVATE_LONG | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_ENDED_INPUT | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE); // continuous conversion (DMA to buffer)
+    adc_setup.int_adc_mode = (ulCalibrate | ADC_FULL_BUFFER_DMA | ADC_HALF_BUFFER_DMA | ADC_SELECT_INPUTS_A | ADC_CLOCK_BUS_DIV_2 | ADC_CLOCK_DIVIDE_8 | ADC_SAMPLE_ACTIVATE_LONG | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_ENDED_INPUT | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE | ADC_HW_TRIGGERED); // hardware triggering (DMA to buffer)
     adc_setup.int_adc_mode |= ADC_FULL_BUFFER_DMA_AUTO_REPEAT;           // automated DMA (using interrupt) restart when not using modulo repetitions
     adc_setup.dma_int_handler = 0;                                       // no user interrupt call-back
                 #else
-    adc_setup.int_adc_mode = (ulCalibrate | /*ADC_LOOP_MODE |*/ ADC_HALF_BUFFER_DMA | ADC_SELECT_INPUTS_A | ADC_CLOCK_BUS_DIV_2 | ADC_CLOCK_DIVIDE_8 | ADC_SAMPLE_ACTIVATE_LONG | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_ENDED | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE | ADC_HW_TRIGGERED); // hardware triggering example (DMA to buffer with interrupt on half-buffer completion) - requires PDB set up afterwards
+    adc_setup.int_adc_mode = (ulCalibrate | /*ADC_LOOP_MODE |*/ ADC_HALF_BUFFER_DMA | ADC_SELECT_INPUTS_A | ADC_CLOCK_BUS_DIV_2 | ADC_CLOCK_DIVIDE_8 | ADC_SAMPLE_ACTIVATE_LONG | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_ENDED_INPUT | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE | ADC_HW_TRIGGERED); // hardware triggering example (DMA to buffer with interrupt on half-buffer completion) - requires PDB set up afterwards
                 #endif
     adc_setup.int_adc_sample = (ADC_SAMPLE_LONG_PLUS_12 | ADC_SAMPLE_AVERAGING_8); // additional sampling clocks and hardware averaging
             #endif
-    adc_setup.int_adc_bit_b = 0;                                         // channel B is only valid when using HW triggered mode
+    adc_setup.int_adc_bit_b = ADC_TEMP_SENSOR;                           // channel B is only valid when using HW triggered mode
         #elif defined KINETIS_KE
     adc_setup.int_adc_mode = (ADC_CLOCK_BUS_DIV_2 | ADC_CLOCK_DIVIDE_8 | ADC_SAMPLE_ACTIVATE_LONG | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE | ADC_SW_TRIGGERED | ADC_LOW_POWER_CONFIG); // single shot with interrupt on completion {12}
         #else
-    adc_setup.int_adc_mode = (ulCalibrate | ADC_SELECT_INPUTS_A | ADC_CLOCK_BUS_DIV_2 | ADC_CLOCK_DIVIDE_8 | ADC_SAMPLE_ACTIVATE_LONG | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_ENDED | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE | ADC_SW_TRIGGERED); // note that the first configuration should calibrate the ADC - single shot with interrupt on completion {12}
+    adc_setup.int_adc_mode = (ulCalibrate | ADC_SELECT_INPUTS_A | ADC_CLOCK_BUS_DIV_2 | ADC_CLOCK_DIVIDE_8 | ADC_SAMPLE_ACTIVATE_LONG | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_ENDED_INPUT | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE | ADC_SW_TRIGGERED); // note that the first configuration should calibrate the ADC - single shot with interrupt on completion {12}
     adc_setup.int_adc_sample = (ADC_SAMPLE_LONG_PLUS_12 | ADC_SAMPLE_AVERAGING_32); // additional sampling clocks
         #endif
     #endif
-     adc_setup.int_adc_result = 0;                                        // no result is requested
+     adc_setup.int_adc_result = 0;                                       // no result is requested
 #else
     adc_setup.int_handler = adc_level_change_high;                       // handling function
     adc_setup.int_priority = ADC_ERR_PRIORITY;                           // ADC interrupt priority
@@ -829,8 +849,8 @@ static void fnConfigureADC(void)
   //adc_setup.int_adc_int_type = (ADC_END_OF_SCAN_INT | ADC_SINGLE_SHOT_TRIGGER_INT); // use to test SYNCA trigger
     adc_setup.int_adc_offset = 0;                                        // no offset
     adc_setup.int_high_level_trigger = (unsigned short)(ADC_VOLT * 2);
-    adc_setup.int_adc_mode = (ADC_CONFIGURE_ADC | ADC_CONFIGURE_CHANNEL | ADC_SEQUENTIAL_MODE | ADC_SINGLE_ENDED | ADC_LOOP_MODE); // use to test single ended
-  //adc_setup.int_adc_mode = (ADC_CONFIGURE_ADC | ADC_CONFIGURE_CHANNEL | ADC_SEQUENTIAL_MODE | ADC_DIFFERENTIAL | ADC_LOOP_MODE); // use to test differential
+    adc_setup.int_adc_mode = (ADC_CONFIGURE_ADC | ADC_CONFIGURE_CHANNEL | ADC_SEQUENTIAL_MODE | ADC_SINGLE_ENDED_INPUT | ADC_LOOP_MODE); // use to test single ended
+  //adc_setup.int_adc_mode = (ADC_CONFIGURE_ADC | ADC_CONFIGURE_CHANNEL | ADC_SEQUENTIAL_MODE | ADC_DIFFERENTIAL_INPUT | ADC_LOOP_MODE); // use to test differential
   //adc_setup.int_adc_mode = (ADC_CONFIGURE_ADC | ADC_CONFIGURE_CHANNEL | ADC_SEQUENTIAL_MODE | ADC_TRIGGERED_MODE); // use to test SYNCA trigger
     adc_setup.int_adc_speed = (unsigned char)(ADC_SAMPLING_SPEED(5000000)); // 5MHz sampling (must be between 100kHz and 5MHz)
     adc_setup.int_adc_result = 0;                                        // no result is requested
@@ -854,10 +874,14 @@ static void fnConfigureADC(void)
         dac_setup.int_dac_controller = 0;                                // DAC 0
         #endif
         #if defined KINETIS_KL
-        dac_setup.ptrDAC_Buffer = (unsigned short *)ptrADC_buffer;
+        dac_setup.ptrDAC_Buffer = (unsigned short *)&sADC_buffer[0];
         dac_setup.ulDAC_buffer_length = (AD_DA_BUFFER_LENGTH * sizeof(unsigned short));
-        dac_setup.ucDmaChannel = 0;                                      // DMA channel 0 used (highest priority)
+        dac_setup.ucDmaChannel = 1;                                      // DMA channel 1 used
+            #if defined KINETIS_KL && defined ADC_TRIGGER_TPM
+        dac_setup.ucDmaTriggerSource = DMAMUX0_CHCFG_SOURCE_TPM1_OVERFLOW; // trigger DMA to DAC when TPM overflows
+            #else
         dac_setup.ucDmaTriggerSource = DMAMUX_CHCFG_SOURCE_ADC0;         // trigger DMA to DAC when ADC0 sample completes
+            #endif
         dac_setup.dac_mode |= DAC_HW_TRIGGER_MODE;                       // use HW trigger mode rather than SW triggered mode
         dac_setup.dac_mode |= DAC_FULL_BUFFER_DMA_AUTO_REPEAT;           // automated DMA restart (using interrupt) when not using modulo repetitions
         #else
