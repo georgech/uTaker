@@ -156,12 +156,12 @@
 #elif defined MASK_0M33Z                                                 // Kinetis K masks
     #define ERRATA_ID_2550                                               // ADC: ADC abort conversion logic error
     #define ERRATA_ID_3863                                               // ADC: conversion error when positive input is near upper rail reference voltage
-    #define ERRATA_ID_2776                                               // CRC: may have incorrect CDC rsult when performing CRC 8 or 16 bit writes with transpose enabled
+    #define ERRATA_ID_2776                                               // CRC: may have incorrect CRC result when performing CRC 8 or 16 bit writes with transpose enabled
     #define ERRATA_ID_2547                                               // DAC: 12-bit DAC buffer registers cannot be read
     #define ERRATA_ID_2670                                               // ENET: IEEE 1588 TS_AVAIL interrut is incorrectly mapped to NVIC vector 94
     #define ERRATA_ID_2579                                               // ENET: no support for IEEE 1588 TS_TIMER timestamp timer overflow interrupt
     #define ERRATA_ID_2596                                               // EzPort and FTFL: the 64-bit flash programming command PGMSEC is not fully implemented
-    #define ERRATA_ID_2647                                               // FMC: cache aliasing is not supported on 512k and 384k program flash onyl devices
+    #define ERRATA_ID_2647                                               // FMC: cache aliasing is not supported on 512k and 384k program flash only devices
     #define ERRATA_ID_2687                                               // FMC: flash clock divider setting for divide-by-1 is not allowed
     #define ERRATA_ID_2448                                               // FMC: flash prefetch could result in incorect read data
     #define ERRATA_ID_2671                                               // FMC: incorrect data returned during speculative access
@@ -428,6 +428,61 @@
 #elif defined MASK_4N22D
 #elif defined MASK_4N30D
 #elif defined MASK_4N96B
+    #define ERRATA_ID_6378                                               // Cache: cache write buffer error enable (MCM_ISCR[CWBEE]) does not work
+    #define ERRATA_ID_6939                                               // Core: interrupted loads to SP can cause erroneous behavior
+    #define ERRATA_ID_6940                                               // Core: VDIV or VSQRT instructions might not complete correctly when very short ISRs are used
+    #define ERRATA_ID_5243                                               // DDRMC: it is possible for data corruption to occur If the value programmed in RDLATADJ is larger than the CAS latency
+    #define ERRATA_ID_5241                                               // DDRMC: putting the memory into a power down mode while DDR_CR11[AREFMODE] is set can prevent the DDRMC from providing refreshes to the memory while it is powered down
+    #define ERRATA_ID_5263                                               // DDRMC: while the memory is in a power down state, setting DDR_CR11[AREF] in an attempt to force a refresh command will cause a refresh cycle to be missed
+    #define ERRATA_ID_4588                                               // DMAMUX: when using PIT with "always enabled" request, DMA request does not deassert correctly
+    #define ERRATA_ID_6358                                               // ENET: write to Transmit Descriptor Active Register (ENET_TDAR) is ignored
+    #define ERRATA_ID_5861                                               // FTM: FTM2 and FTM3 do not correctly enter BDM mode when a debugger connection is active
+    #define ERRATA_ID_4710                                               // FTM: FTMx_PWMLOAD register does not support 8-/16-bit accesses
+    #define ERRATA_ID_6484                                               // FTM: the process of clearing the FTMx_SC[TOF] bit does not work as expected under a certain condition when the FTM counter reaches FTM_MOD value
+    #define ERRATA_ID_6573                                               // JTAG: JTAG TDO function on the PTA2 disables the pull resistor
+    #define ERRATA_ID_3964                                               // JTAGC: when debug is active a wakeup from STOP or VLPS with interrupt causes a hard fault interrupt
+    #define ERRATA_ID_4553                                               // LCDC: cursor color limited in 24bpp Mode
+    #define ERRATA_ID_4569                                               // LCDC: graphic window color key limited in 24bpp Mode
+    #define ERRATA_ID_4570                                               // LCDC: graphic window may shift pixel data
+    #define ERRATA_ID_4571                                               // LCDC: LCDC can only use half of internal SRAM for frame buffer
+    #define ERRATA_ID_3898                                               // MCG: setting the MCG_C6[PLLS] bit will enable both OSC0 and OSC1
+    #define ERRATA_ID_4590                                               // MCG: transitioning from VLPS to VLPR low power modes while in BLPI clock mode is not supported
+    #define ERRATA_ID_4176                                               // NMI: NMI interrupt service routine (ISR) might not be called when MCU wakes up from VLLSx modes
+    #define ERRATA_ID_3794                                               // NVIC: NMI interrupt does not wakeup MCU from STOP and VLPS
+    #define ERRATA_ID_5667                                               // PMC: when used as an input to ADC or CMP modules, the PMC bandgap 1-V voltage reference is not available in VLPx, LLS, or VLLSx modes
+    #define ERRATA_ID_5130                                               // SAI: under certain conditions, the CPU cannot reenter STOP mode via an asynchronous interrupt wakeup event
+    #define ERRATA_ID_3981                                               // SDHC: ADMA fails when data length in the last descriptor is less or equal to 4 bytes
+    #define ERRATA_ID_3982                                               // SDHC: ADMA transfer error when the block size is not a multiple of four
+    #define ERRATA_ID_4624                                               // SDHC: AutoCMD12 and R1b polling problem
+    #define ERRATA_ID_3977                                               // SDHC: does not support Infinite Block Transfer Mode
+    #define ERRATA_ID_4627                                               // SDHC: erroneous CMD CRC error and CMD Index error may occur on sending new CMD during data transfer
+    #define ERRATA_ID_3980                                               // SDHC: glitch is generated on card clock with software reset or clock divider change
+    #define ERRATA_ID_6934                                               // SDHC: issues with card removal/insertion detection
+    #define ERRATA_ID_3983                                               // SDHC: problem when ADMA2 last descriptor is LINK or NOP
+    #define ERRATA_ID_3984                                               // SDHC: eSDHC misses SDIO interrupt when CINT is disabled
+    #define ERRATA_ID_3941                                               // SIM/DDR: SIM_SOPT2[FBSL] does not determine allowable DDR controller accesses when security is enabled
+    #define ERRATA_ID_4218                                               // SIM/FLEXBUS: SIM_SCGC7[FLEXBUS] bit should be cleared when the FlexBus is not being used
+    #define ERRATA_ID_5952                                               // SMC: wakeup via the LLWU from LLS/VLLS to RUN to VLPR incorrectly triggers an immediate wakeup from the next low power mode entry
+    #define ERRATA_ID_7166                                               // SOC: SDHC, NFC, USBOTG, and cache modules are not clocked correctly in low-power modes
+    #define ERRATA_ID_3926                                               // TSI: the TSI will run several scan cycles during reference clock instead of scanning each electrode once
+    #define ERRATA_ID_2638                                               // TSI: the counter registers are not immediately updated after the EOSF bit is set
+    #define ERRATA_ID_4546                                               // TSI: the counter values reported from TSI increase when in low power modes (LLS, VLLS1, VLLS2, VLLS3)
+    #define ERRATA_ID_4181                                               // TSI: when the overrun flag is set, the TSI scanning sequence will exhibit undefined behavior
+    #define ERRATA_ID_4935                                               // UART: CEA709.1 features not supported
+    #define ERRATA_ID_7027                                               // UART: during ISO-7816 T=0 initial character detection invalid initial characters are stored in the RxFIFO
+    #define ERRATA_ID_7028                                               // UART: during ISO-7816 initial character detection the parity, framing, and noise error flags can set
+    #define ERRATA_ID_6472                                               // UART: ETU compensation needed for ISO-7816 wait time (WT) and block wait time (BWT)
+    #define ERRATA_ID_4647                                               // UART: flow control timing issue can result in loss of characters if FIFO is not enabled
+    #define ERRATA_ID_4945                                               // UART: ISO-7816 T=1 mode receive data format with a single stop bit is not supported
+    #define ERRATA_ID_3892                                               // UART: ISO-7816 automatic initial character detect feature not working correctly
+    #define ERRATA_ID_7029                                               // UART: in ISO-7816 T=1 mode, CWT interrupts assert at both character and block boundaries
+    #define ERRATA_ID_7090                                               // UART: in ISO-7816 mode, timer interrupts flags do not clear
+    #define ERRATA_ID_7031                                               // UART: in single wire receive mode UART will attempt to transmit if data is written to UART_D
+    #define ERRATA_ID_5704                                               // UART: TC bit in UARTx_S1 register is set before the last character is sent out in ISO7816 T=0 mode
+    #define ERRATA_ID_7091                                               // UART: UART_S1[NF] and UART_S1[PE] can set erroneously while UART_S1[FE] is set
+    #define ERRATA_ID_7092                                               // UART: UART_S1[TC] is not cleared by queuing a preamble or break character
+    #define ERRATA_ID_5928                                               // USBOTG: USBx_USBTRC0[USBRESET] bit does not operate as expected in all cases
+    #define ERRATA_ID_6933                                               // eDMA: possible misbehavior of a preempted channel when using continuous link mode
 #elif defined MASK_5N22D
 #elif defined MASK_8N30D
 #elif defined MASK_1N86B                                                 // Kinetis K - 50MHz masks
