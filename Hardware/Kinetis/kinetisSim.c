@@ -3957,7 +3957,7 @@ extern void fnSimPers(void)
                     ulPeripherals[iPort] |= ulBit;
                 }
             }
-    #if !defined ERRATE_E3402_SOLVED
+    #if defined ERRATA_ID_3402
             if ((iPort == XTAL0_PORT) && (iPin == XTAL0_PIN)) {
                 if (OSC0_CR & OSC_CR_ERCLKEN) {                          // if OSC is enabled the XTAL pin is overridden by the oscillator functions
                     ucPortFunctions[iPort][iPin] = 0;
@@ -6437,12 +6437,12 @@ extern unsigned long fnSimDMA(char *argv[])
     #if defined SERIAL_INTERFACE && defined SERIAL_SUPPORT_DMA           // {4}
             case DMA_UART0_TX_CHANNEL:                                   // handle UART DMA transmission on UART 0
         #if LPUARTS_AVAILABLE > 0 && !defined LPUARTS_PARALLEL
-                if (LPUART0_BAUD & LPUART_BAUD_TDMAE)                    // if DMA operation is enabled
+                if ((LPUART0_BAUD & LPUART_BAUD_TDMAE) != 0)             // if DMA operation is enabled
         #else
-                if (UART0_C5 & UART_C5_TDMAS)                            // if DMA operation is enabled
+                if ((UART0_C5 & UART_C5_TDMAS) != 0)                     // if DMA operation is enabled
         #endif
                 {
-                    ptrCnt = (int *)argv[THROUGHPUT_UART0];
+                    ptrCnt = (int *)argv[THROUGHPUT_UART0];              // the number of characters in each tick period
                     if (*ptrCnt != 0) {
                         if (--(*ptrCnt) == 0) {
                             iMasks |= ulChannel;                         // enough serial DMA transfers handled in this tick period
@@ -7539,16 +7539,16 @@ extern int fnSimTimers(void)
             break;
         case SIM_SOPT2_TPMSRC_OSCERCLK:
         #if defined OSCERCLK
-            ulCountIncrease= (unsigned long)((unsigned long long)TICK_RESOLUTION * (unsigned long long)OSCERCLK)/1000000; // bus clocks in a period
+            ulCountIncrease = (unsigned long)((unsigned long long)TICK_RESOLUTION * (unsigned long long)OSCERCLK)/1000000; // bus clocks in a period
         #else
             _EXCEPTION("No OSCERCLK available");
         #endif
             break;
         case SIM_SOPT2_TPMSRC_MCG:
         #if defined FLL_FACTOR
-            ulCountIncrease= (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)MCGFLLCLK)/1000000); // bus clocks in a period
+            ulCountIncrease = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)MCGFLLCLK)/1000000); // bus clocks in a period
         #else
-            ulCountIncrease= (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)(MCGPLLCLK/2))/1000000); // bus clocks in a period
+            ulCountIncrease = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)(MCGPLLCLK/2))/1000000); // bus clocks in a period
         #endif
             break;
         }
@@ -7575,7 +7575,7 @@ extern int fnSimTimers(void)
         #endif
         }
         FTM1_CNT = ulCountIncrease;                                      // new counter value
-        if ((FTM1_SC & FTM_SC_TOIE) && (FTM1_SC & FTM_SC_TOF)) {         // if overflow occurred and interrupt enabled
+        if (((FTM1_SC & FTM_SC_TOIE) != 0) && ((FTM1_SC & FTM_SC_TOF) != 0)) { // if overflow occurred and interrupt enabled
         #if defined KINETIS_KL
             if (fnGenInt(irq_TPM1_ID) != 0) {                            // if timer/PWM module 1 interrupt is not disabled
                 VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
@@ -7588,6 +7588,18 @@ extern int fnSimTimers(void)
             }
         #endif
         }
+        #if defined KINETIS_KL
+        // Check for ADC triggers
+        //
+        if ((SIM_SOPT7 & SIM_SOPT7_ADC0ALTTRGEN) == 0) {                 // if the default hardware trigger source is used
+            if (FTM1_CNT >= FTM0_C0V) {                                  // TPM1 channel 0 can trigger ADC0 input A
+                fnTriggerADC(0, 1);
+            }
+            if (FTM1_CNT >= FTM0_C1V) {                                  // TPM1 channel 1 can trigger ADC0 input B
+                fnTriggerADC(0, 1);
+            }
+        }
+        #endif
     }
     #endif
     #if FLEX_TIMERS_AVAILABLE > 2
