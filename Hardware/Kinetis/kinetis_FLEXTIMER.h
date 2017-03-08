@@ -263,11 +263,20 @@ static __interrupt void _flexTimerInterrupt_3(void)
                 usFlexTimerMode[iTimerReference] |= (FTM_SC_CLKS_EXT | FTM_SC_TOIE | FTM_SC_TOF); // select external clock (which should be half the speed of the module's clock due to synchronisation requirements)
                 if ((ptrTimerSetup->timer_mode & (TIMER_EXT_CLK_1)) != 0) {
                     SIM_SOPT4 |= ulExtSelect;                            // select CLKIN1 source to this timer
+        #if defined KINETIS_KL03
+                    _CONFIG_PERIPHERAL(B, 6, (PB_6_TPM_CLKIN1 | PORT_PS_UP_ENABLE)); // TPM_CLKIN1 on PB.6 (alt. function 3)
+        #else
                     _CONFIG_PERIPHERAL(E, 30, (PE_30_TPM_CLKIN1 | PORT_PS_UP_ENABLE)); // TPM_CLKIN1 on PE.30 (alt. function 4)
+        #endif
                 }
                 else {
                     SIM_SOPT4 &= ~(ulExtSelect);                         // select CLKIN0 source to this timer
+        #if defined KINETIS_KL03
+                    _CONFIG_PERIPHERAL(A, 12, (PA_12_TPM_CLKIN0 | PORT_PS_UP_ENABLE)); // TPM_CLKIN0 on PA.12 (alt. function 3)
+                  //_CONFIG_PERIPHERAL(A, 1, (PA_1_TPM_CLKIN0 | PORT_PS_UP_ENABLE)); // TPM_CLKIN0 on PA.1 (alt. function 2)
+        #else
                     _CONFIG_PERIPHERAL(E, 29, (PE_29_TPM_CLKIN0 | PORT_PS_UP_ENABLE)); // TPM_CLKIN0 on PE.29 (alt. function 4)
+        #endif
                 }
             }
             else {
