@@ -274,25 +274,17 @@ typedef enum {
 }FT_GPU_HAL_STATUS_E;
 
 typedef struct {
-  //Ft_Gpu_App_Context_t    app_header;
-  //Ft_Gpu_Hal_Config_t     hal_config;
-
-    ft_uint16_t 			ft_cmd_fifo_wp; //coprocessor fifo write pointer
-  //ft_uint16_t 			ft_dl_buff_wp;  //display command memory write pointer
-
-  //FT_GPU_HAL_STATUS_E 	status;        //OUT
-  //ft_void_t*          	hal_handle;    //IN/OUT
-  //ft_void_t*          	hal_handle2;   //IN/OUT LibFT4222 uses this member to store GPIO handle	
-	/* Additions specific to ft81x */
-  //ft_uint8_t				spichannel;			//variable to contain single/dual/quad channels
-  //ft_uint8_t				spinumdummy;		//number of dummy bytes as 1 or 2 for spi read
-  //ft_uint8_t *            spiwrbuf_ptr;
+    unsigned short   ft_cmd_fifo_wp;                                     // coprocessor fifo write pointer
+    int iCoProcessorWait;
+    unsigned char *buffer;
+    unsigned long count;
+    unsigned long length;
 }Ft_Gpu_Hal_Context_t;
 
 #include "FT_Gpu.h"
 #include "FT_CoPro_Cmds.h"
 
-#define Ft_Gpu_Hal_WrMemFromFlash(a,b,c,d) Ft_Gpu_Hal_WrMem(a,b,c,d)
+#define Ft_Gpu_Hal_WrMemFromFlash(a,b,c,d)   Ft_Gpu_Hal_WrMem(a,b,c,d)
 
 extern void Ft_Gpu_Hal_Wr32(void *host, unsigned long ulReg, unsigned long ulValue);
 extern unsigned char Ft_Gpu_Hal_Rd8(void *host, unsigned long ulReg);
@@ -304,17 +296,17 @@ extern unsigned short Ft_Gpu_Hal_Rd16(void *host, unsigned long ulReg);
 extern unsigned long Ft_Gpu_Hal_Rd32(void *host, unsigned long ulReg);
 extern void Ft_Gpu_Hal_RdMem(void *host, unsigned long ulReg, unsigned char *buffer, unsigned long length);
 
-extern void Ft_Gpu_Hal_WaitCmdfifo_empty(Ft_Gpu_Hal_Context_t *host);
-extern void Ft_Gpu_Hal_Updatecmdfifo(Ft_Gpu_Hal_Context_t *host, ft_uint32_t count);
-extern ft_uint16_t Ft_Gpu_Cmdfifo_Freespace(Ft_Gpu_Hal_Context_t *host);
-extern void Ft_Gpu_Hal_WrCmdBuf(Ft_Gpu_Hal_Context_t *host, ft_uint8_t *buffer, ft_uint32_t count);
-extern void Ft_Gpu_Hal_CheckCmdBuffer(Ft_Gpu_Hal_Context_t *host, ft_uint32_t count);
+extern int  Ft_Gpu_Hal_WaitCmdfifo_empty(Ft_Gpu_Hal_Context_t *host);
+extern void Ft_Gpu_Hal_Updatecmdfifo(Ft_Gpu_Hal_Context_t *host, unsigned long count);
+extern unsigned short Ft_Gpu_Cmdfifo_Freespace(Ft_Gpu_Hal_Context_t *host);
+extern int  Ft_Gpu_Hal_WrCmdBuf(Ft_Gpu_Hal_Context_t *host, unsigned char *buffer, unsigned long count);
+extern void Ft_Gpu_Hal_CheckCmdBuffer(Ft_Gpu_Hal_Context_t *host, unsigned long count);
 
-extern void SAMAPP_GPU_DLSwap(ft_uint8_t DL_Swap_Type);
-extern void Ft_App_WrCoCmd_Buffer(Ft_Gpu_Hal_Context_t *phost,ft_uint32_t cmd);
-extern void Ft_App_WrCoStr_Buffer(Ft_Gpu_Hal_Context_t *phost, const ft_char8_t *s);
-extern void Ft_App_Flush_Co_Buffer(Ft_Gpu_Hal_Context_t *phost);
-extern void Ft_App_WrDlCmd_Buffer(Ft_Gpu_Hal_Context_t *phost,ft_uint32_t cmd);
+extern int  SAMAPP_GPU_DLSwap(ft_uint8_t DL_Swap_Type);
+extern void Ft_App_WrCoCmd_Buffer(Ft_Gpu_Hal_Context_t *phost, unsigned long cmd);
+extern void Ft_App_WrCoStr_Buffer(Ft_Gpu_Hal_Context_t *phost, const unsigned char *s);
+extern int  Ft_App_Flush_Co_Buffer(Ft_Gpu_Hal_Context_t *phost);
+extern void Ft_App_WrDlCmd_Buffer(Ft_Gpu_Hal_Context_t *phost,unsigned long cmd);
 extern void Ft_App_Flush_DL_Buffer(Ft_Gpu_Hal_Context_t *phost);
 #endif
 

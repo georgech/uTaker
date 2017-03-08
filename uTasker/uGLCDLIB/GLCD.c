@@ -35,6 +35,7 @@
     12.08.2013 Add inverse mode to bit maps with samsung type display    {20}
     14.08.2013 Protect LCD image uploads to size of the display          {21}
     20.12.2014 Add TWR_LCD_RGB_GLCD_MODE support
+    08.03.2017 Add FT800 support                                         {22}
 
 */        
 
@@ -201,6 +202,13 @@ static int iLCD_State = STATE_INIT;
     static int iTouchState = TOUCH_IDLE;
     static int iPenDown = 0;
 #endif
+#if defined FT800_GLCD_MODE                                              // {22}
+    static Ft_Gpu_Hal_Context_t ft800_host = {0};
+    ft_uint32_t Ft_CmdBuffer_Index = 0;
+    ft_uint32_t Ft_DlBuffer_Index;
+    ft_uint8_t  Ft_DlBuffer[FT_DL_SIZE];
+    ft_uint8_t  Ft_CmdBuffer[FT_CMD_FIFO_SIZE];
+#endif
 
 
 // The GLCD task
@@ -298,7 +306,32 @@ extern void fnLCD(TTASKTABLE *ptrTaskTable)                              // LCD 
             break; 
 
         case STATE_LCD_WRITING:
+#if defined FT800_GLCD_MODE                                              // {22}
+            switch (ft800_host.iCoProcessorWait) {
+            case FIFO_WRITE_YIELD:
+                ft800_host.iCoProcessorWait = NO_YIELD;
+                ft800_host.ft_cmd_fifo_wp = Ft_Gpu_Hal_Rd16(0, REG_CMD_WRITE);
+                if (ft800_host.count != 0) {
+                    ft800_host.buffer += ft800_host.length;
+                    ft800_host.count -= ft800_host.length;
+                    if (ft800_host.count != 0) {
+                        if (Ft_Gpu_Hal_WrCmdBuf(0, ft800_host.buffer, ft800_host.count) != 0) { // continue
+                            return;
+                        }
+                    }
+                }
+                break;
+            case SWAP_YIELD:                                             // after yielding for the swap the operation can continue without further actions
+                ft800_host.iCoProcessorWait = NO_YIELD;
+                break;
+            }
+            iSendAck = 1;
+            iLCD_State = STATE_LCD_READY;
+            Ft_CmdBuffer_Index = 0;
+            uTaskerStateChange(OWN_TASK, UTASKER_STOP);                  // switch to event mode of operation since write has completed
+#else
             iLCD_State = fnSmartUpdate(0);                               // continue with display updating
+#endif
             if ((iLCD_State == STATE_LCD_READY) && (iSendAck != 0)) {    // if the write has completed
                 fnEventMessage(LCD_PARTNER_TASK, TASK_LCD, E_LCD_READY);
                 iSendAck = 0;

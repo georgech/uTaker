@@ -46,7 +46,14 @@
 
         #define WRITE_DATA_INC              0xc0
 
-        #define GLCD_BUSY()                 0
+        #if defined FT800_GLCD_MODE
+            #define NO_YIELD                0
+            #define FIFO_WRITE_YIELD        1
+            #define SWAP_YIELD              2
+            #define GLCD_BUSY()             (((ft800_host.iCoProcessorWait == FIFO_WRITE_YIELD) && ((Ft_Gpu_Hal_Rd16(0, REG_CMD_READ) != Ft_Gpu_Hal_Rd16(0, REG_CMD_WRITE)))) || ((ft800_host.iCoProcessorWait == SWAP_YIELD) && ((Ft_Gpu_Hal_Rd8(0, REG_DLSWAP) != DLSWAP_DONE))))
+        #else
+            #define GLCD_BUSY()             0
+        #endif
 
         #define NWE_SETUP                   20                           // NWE setup time in ns
         #define NCS_WR_SETUP                0                            // NCS write setup time in ns
@@ -1000,38 +1007,30 @@ extern void Ft_Gpu_Hal_WrMem(void *host, unsigned long ulReg, const unsigned cha
     FLUSH_LCD_SPI_RX(2);                                                 // ensure that the activity has terminated before quitting so that further reads/writes can't disturb
 }
 
-extern void SAMAPP_GPU_DLSwap(ft_uint8_t DL_Swap_Type)
+extern int SAMAPP_GPU_DLSwap(unsigned char DL_Swap_Type)
 {
-	ft_uint8_t Swap_Type = DLSWAP_FRAME, Swap_Done = DLSWAP_FRAME;
+    #define SWAP_MAX   500
+    volatile int iYield = 0;
+    unsigned char Swap_Type = DLSWAP_FRAME;
 
-	if(DL_Swap_Type == DLSWAP_LINE)
-	{
-		Swap_Type = DLSWAP_LINE;
-	}
+    if (DL_Swap_Type == DLSWAP_LINE) {
+        Swap_Type = DLSWAP_LINE;
+    }
 
-	/* Perform a new DL swap */
-	Ft_Gpu_Hal_Wr8(0,REG_DLSWAP,Swap_Type);
+    Ft_Gpu_Hal_Wr8(0, REG_DLSWAP, Swap_Type);                            // perform a new DL swap
 
-	/* Wait till the swap is done */
-	while(Swap_Done)
-	{
-		Swap_Done = Ft_Gpu_Hal_Rd8(0,REG_DLSWAP);
-
-		if(DLSWAP_DONE != Swap_Done)
-		{
-	//Ft_Gpu_Hal_Sleep(10);//wait for 10ms
-		}
-	}
+    while (Ft_Gpu_Hal_Rd8(0, REG_DLSWAP) != DLSWAP_DONE) {               // wait until the swap has completed
+        if (++iYield > SWAP_MAX) {
+            iLCD_State = STATE_LCD_WRITING;
+            ft800_host.iCoProcessorWait = SWAP_YIELD;                    // mark that the co-processor is busy and we yield until it is ready again
+            uTaskerStateChange(OWN_TASK, UTASKER_GO);                    // poll the co-processor state and inform on completion
+            return 1;
+        }
+    }
+    return 0;
 }
 
-ft_uint32_t Ft_CmdBuffer_Index = 0;
-ft_uint32_t Ft_DlBuffer_Index;
-//#ifdef BUFFER_OPTIMIZATION
-ft_uint8_t  Ft_DlBuffer[FT_DL_SIZE];
-ft_uint8_t  Ft_CmdBuffer[FT_CMD_FIFO_SIZE];
-//#endif
-
-extern void Ft_App_WrCoCmd_Buffer(Ft_Gpu_Hal_Context_t *phost,ft_uint32_t cmd)
+extern void Ft_App_WrCoCmd_Buffer(Ft_Gpu_Hal_Context_t *phost, unsigned long cmd)
 {
    /* Copy the command instruction into buffer */
    ft_uint32_t *pBuffcmd =(ft_uint32_t*)&Ft_CmdBuffer[Ft_CmdBuffer_Index];
@@ -1040,29 +1039,31 @@ extern void Ft_App_WrCoCmd_Buffer(Ft_Gpu_Hal_Context_t *phost,ft_uint32_t cmd)
    Ft_CmdBuffer_Index += FT_CMD_SIZE;
 }
 
-extern void Ft_App_WrCoStr_Buffer(Ft_Gpu_Hal_Context_t *phost, const ft_char8_t *s)
+extern void Ft_App_WrCoStr_Buffer(Ft_Gpu_Hal_Context_t *phost, const unsigned char *s)
 {
-  ft_uint16_t length = 0;
-  length = uStrlen(s) + 1;//last for the null termination
+    unsigned short length = 0;
+    length = (uStrlen(s) + 1);                                           //last for the null termination
 
-  uStrcpy((CHAR *)&Ft_CmdBuffer[Ft_CmdBuffer_Index],s);
+    uStrcpy((CHAR *)&Ft_CmdBuffer[Ft_CmdBuffer_Index], s);
 
-  /* increment the length and align it by 4 bytes */
-  Ft_CmdBuffer_Index += ((length + 3) & ~3);
+    Ft_CmdBuffer_Index += ((length + 3) & ~3);                           // increment the length and long-word align
 }
 
-extern void Ft_App_Flush_Co_Buffer(Ft_Gpu_Hal_Context_t *phost)
+extern int Ft_App_Flush_Co_Buffer(Ft_Gpu_Hal_Context_t *phost)
 { 
-   if (Ft_CmdBuffer_Index > 0) {
-     Ft_Gpu_Hal_WrCmdBuf(phost,Ft_CmdBuffer,Ft_CmdBuffer_Index);  
-   }
-   Ft_CmdBuffer_Index = 0;
+    if (Ft_CmdBuffer_Index > 0) {
+        if (Ft_Gpu_Hal_WrCmdBuf(0, Ft_CmdBuffer, Ft_CmdBuffer_Index) != 0) {
+            return 1;
+        }
+    }
+    Ft_CmdBuffer_Index = 0;
+    return 0;
 }
 
-extern void Ft_App_WrDlCmd_Buffer(Ft_Gpu_Hal_Context_t *phost,ft_uint32_t cmd)
+extern void Ft_App_WrDlCmd_Buffer(Ft_Gpu_Hal_Context_t *phost, unsigned long cmd)
 {
    /* Copy the command instruction into buffer */
-   ft_uint32_t *pBuffcmd = (ft_uint32_t*)&Ft_DlBuffer[Ft_DlBuffer_Index];
+   unsigned long *pBuffcmd = (unsigned long *)&Ft_DlBuffer[Ft_DlBuffer_Index];
    *pBuffcmd = cmd;
 
    /* Increment the command index */
@@ -1072,63 +1073,85 @@ extern void Ft_App_WrDlCmd_Buffer(Ft_Gpu_Hal_Context_t *phost,ft_uint32_t cmd)
 extern void Ft_App_Flush_DL_Buffer(Ft_Gpu_Hal_Context_t *phost)
 {
    if (Ft_DlBuffer_Index > 0) {
-     Ft_Gpu_Hal_WrMem(phost,RAM_DL,Ft_DlBuffer,Ft_DlBuffer_Index);
+     Ft_Gpu_Hal_WrMem(0, RAM_DL, Ft_DlBuffer, Ft_DlBuffer_Index);
    }
    Ft_DlBuffer_Index = 0;
 }
 
-extern void Ft_Gpu_Hal_Updatecmdfifo(Ft_Gpu_Hal_Context_t *host, ft_uint32_t count)
+extern void Ft_Gpu_Hal_Updatecmdfifo(Ft_Gpu_Hal_Context_t *host, unsigned long count)
 {
-	host->ft_cmd_fifo_wp  = (host->ft_cmd_fifo_wp + count) & 4095;
+    ft800_host.ft_cmd_fifo_wp  = (ft800_host.ft_cmd_fifo_wp + count) & 4095;
 
 	//4 byte alignment
-	host->ft_cmd_fifo_wp = (host->ft_cmd_fifo_wp + 3) & 0xffc;
-	Ft_Gpu_Hal_Wr16(0,REG_CMD_WRITE,host->ft_cmd_fifo_wp);
+    ft800_host.ft_cmd_fifo_wp = (ft800_host.ft_cmd_fifo_wp + 3) & 0xffc;
+	Ft_Gpu_Hal_Wr16(0,REG_CMD_WRITE, ft800_host.ft_cmd_fifo_wp);
 }
 
-extern ft_uint16_t Ft_Gpu_Cmdfifo_Freespace(Ft_Gpu_Hal_Context_t *host)
+extern unsigned short Ft_Gpu_Cmdfifo_Freespace(Ft_Gpu_Hal_Context_t *host)
 {
-	ft_uint16_t fullness,retval;
-
-	//host->ft_cmd_fifo_wp = Ft_Gpu_Hal_Rd16(host,REG_CMD_WRITE);
-
-	fullness = (host->ft_cmd_fifo_wp - Ft_Gpu_Hal_Rd16(0,REG_CMD_READ)) & 4095;
-	retval = (FT_CMD_FIFO_SIZE - 4) - fullness;
-	return (retval);
+    unsigned short fullness, retval;
+    //ft800_host.ft_cmd_fifo_wp = Ft_Gpu_Hal_Rd16(host,REG_CMD_WRITE);
+    fullness = ((ft800_host.ft_cmd_fifo_wp - Ft_Gpu_Hal_Rd16(0,REG_CMD_READ)) & 4095);
+    retval = ((FT_CMD_FIFO_SIZE - 4) - fullness);
+    return (retval);
 }
 
-extern void Ft_Gpu_Hal_CheckCmdBuffer(Ft_Gpu_Hal_Context_t *host, ft_uint32_t count)
+extern void Ft_Gpu_Hal_CheckCmdBuffer(Ft_Gpu_Hal_Context_t *host, unsigned long count)
 {
-   ft_uint16_t getfreespace;
-   do{
-        getfreespace = Ft_Gpu_Cmdfifo_Freespace(host);
-   } while (getfreespace < count);
+    unsigned short getfreespace;
+    do {
+        getfreespace = Ft_Gpu_Cmdfifo_Freespace(0);
+    } while (getfreespace < count);
 }
 
-extern void Ft_Gpu_Hal_WrCmdBuf(Ft_Gpu_Hal_Context_t *host, ft_uint8_t *buffer, ft_uint32_t count)
+
+extern int Ft_Gpu_Hal_WrCmdBuf(Ft_Gpu_Hal_Context_t *host, unsigned char *buffer, unsigned long count)
 {
-	ft_uint32_t length =0, availablefreesize;
-
-	do {                
-		length = count;
-        availablefreesize = Ft_Gpu_Cmdfifo_Freespace(host);
-
-		if (length > availablefreesize) {
-		    length = availablefreesize;
-		}
-      	Ft_Gpu_Hal_CheckCmdBuffer(host,length);
-        Ft_Gpu_Hal_WrMem(host,(host->ft_cmd_fifo_wp + RAM_CMD),buffer, length);
-		Ft_Gpu_Hal_Updatecmdfifo(host,length);
-		Ft_Gpu_Hal_WaitCmdfifo_empty(host);
-		count -= length;
-	} while (count > 0);
+    unsigned long length = 0;
+    unsigned long availablefreesize;
+    do {                
+        availablefreesize = Ft_Gpu_Cmdfifo_Freespace(0);
+        if (count > availablefreesize) {
+            length = availablefreesize;
+        }
+        else {
+            length = count;
+        }
+      //Ft_Gpu_Hal_CheckCmdBuffer(0, length);                            // this is not necessary since the free space has been checked already
+        Ft_Gpu_Hal_WrMem(0, (ft800_host.ft_cmd_fifo_wp + RAM_CMD), buffer, length);
+        Ft_Gpu_Hal_Updatecmdfifo(0, length);
+        if (Ft_Gpu_Hal_WaitCmdfifo_empty(0) != 0) {
+            ft800_host.buffer = buffer;                                  // the buffer being written
+            ft800_host.count = count;                                    // length remaining
+            ft800_host.length = length;                                  // stalled length
+            return 1;
+        }
+        count -= length;
+        buffer += length;
+    } while (count > 0);
+    return 0;
 }
 
-extern void Ft_Gpu_Hal_WaitCmdfifo_empty(Ft_Gpu_Hal_Context_t *host)
+extern int Ft_Gpu_Hal_WaitCmdfifo_empty(Ft_Gpu_Hal_Context_t *host)
 {
-   while(Ft_Gpu_Hal_Rd16(0,REG_CMD_READ) != Ft_Gpu_Hal_Rd16(0,REG_CMD_WRITE));
-   
-   host->ft_cmd_fifo_wp = Ft_Gpu_Hal_Rd16(0,REG_CMD_WRITE);
+    if (ft800_host.iCoProcessorWait != NO_YIELD) {
+        _EXCEPTION("Don't call if we have already yielded!!");
+        return -1;                                                       // not yet completed
+    }
+    else {
+        #define MAX_YIELD_TIME    500
+        volatile int iYield = 0;
+        while (Ft_Gpu_Hal_Rd16(0, REG_CMD_READ) != Ft_Gpu_Hal_Rd16(0, REG_CMD_WRITE)) {
+            if (++iYield > MAX_YIELD_TIME) {
+                iLCD_State = STATE_LCD_WRITING;
+                ft800_host.iCoProcessorWait = FIFO_WRITE_YIELD;          // mark that the co-processor is busy and we yield until it is ready again
+                uTaskerStateChange(OWN_TASK, UTASKER_GO);                // poll the co-processor state and inform on completion
+                return 1;                                                // not yet completed
+            }
+        }
+        ft800_host.ft_cmd_fifo_wp = Ft_Gpu_Hal_Rd16(0, REG_CMD_WRITE);
+        return 0;                                                        // completed
+    }
 }
 
 #if 0
