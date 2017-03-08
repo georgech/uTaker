@@ -107,6 +107,8 @@
     31.01.2017 Add fnClearPending() and fnIsPending()                    {90}
     11.02.2017 Add system clock generator                                {91}
     14.02.2017 Add LTC                                                   {92}
+    08.03.2017 Add PWM_NO_OUTPUT and PWM_DMA_CHANNEL_ENABLE PWM options  {93}
+    08.03.2017 Add ucDmaTriggerSource to ADC setup                       {94}
 
 */
 
@@ -4784,16 +4786,16 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
   #define DMAMUX_CHCFG_SOURCE_IEEE1588_T1    55                          // 0x37 IEEE 1588 timer 1
   #define DMAMUX_CHCFG_SOURCE_IEEE1588_T2    56                          // 0x38 IEEE 1588 timer 2
   #define DMAMUX_CHCFG_SOURCE_IEEE1588_T3    57                          // 0x39 IEEE 1588 timer 3
-#elif !defined KINETIS_K21
-  #define DMAMUX0_CHCFG_SOURCE_FTM3_C4       54                          // 0x36 FTM3 channel 4
-  #define DMAMUX0_CHCFG_SOURCE_FTM3_C5       55                          // 0x37 FTM3 channel 5
-  #define DMAMUX0_CHCFG_SOURCE_FTM3_C6       56                          // 0x38 FTM3 channel 6
-  #define DMAMUX0_CHCFG_SOURCE_FTM3_C7       57                          // 0x39 FTM3 channel 7
 #elif defined KINETIS_KL
   #define DMAMUX0_CHCFG_SOURCE_TPM0_OVERFLOW 54                          // 0x36 TPM0 overflow
   #define DMAMUX0_CHCFG_SOURCE_TPM1_OVERFLOW 55                          // 0x37 TPM1 overflow
   #define DMAMUX0_CHCFG_SOURCE_TPM2_OVERFLOW 56                          // 0x38 TPM2 overflow
   #define DMAMUX0_CHCFG_SOURCE_TSI           57                          // 0x39 TSI
+#elif !defined KINETIS_K21
+  #define DMAMUX0_CHCFG_SOURCE_FTM3_C4       54                          // 0x36 FTM3 channel 4
+  #define DMAMUX0_CHCFG_SOURCE_FTM3_C5       55                          // 0x37 FTM3 channel 5
+  #define DMAMUX0_CHCFG_SOURCE_FTM3_C6       56                          // 0x38 FTM3 channel 6
+  #define DMAMUX0_CHCFG_SOURCE_FTM3_C7       57                          // 0x39 FTM3 channel 7
 #endif
 #if defined KINETIS_K80
   #define DMAMUX0_CHCFG_SOURCE_SPI2_RX       (58)                        // 0x3a SPI2 RX
@@ -6045,9 +6047,10 @@ typedef struct stKINETIS_PIT_CTL                                         // PIT 
  #if defined KINETIS_KL
   #define FTM_SC_CLKS_EXT   0x00000010                                   // clock source - TPM_EXTCLK (rising edge)
   #define FTM_SC_DMA        0x00000100                                   // DMA enable
-   #else
+ #else
   #define FTM_SC_CLKS_FIX   0x00000010                                   // clock source - fixed clock is MCGFFCLK
   #define FTM_SC_CLKS_EXT   0x00000018                                   // clock source - external clock
+  #define FTM_SC_DMA        0x00000000                                   // for compatibility
  #endif
   #define FTM_SC_CPWMS      0x00000020                                   // centre-aligned PWM select (FTM operates in up/down counting mode rather than up counting mode)
   #define FTM_SC_TOIE       0x00000040                                   // timer overflow interrupt enable
@@ -9640,6 +9643,9 @@ typedef struct stKINETIS_ADMA2_BD
     #define PB_8_TPM0_CH3                PORT_MUX_ALT2
     #define PA_6_TPM0_CH4                PORT_MUX_ALT2
     #define PA_5_TPM0_CH5                PORT_MUX_ALT2
+    #define PA_1_TPM_CLKIN0              PORT_MUX_ALT2
+    #define PA_12_TPM_CLKIN0             PORT_MUX_ALT3
+    #define PB_6_TPM_CLKIN1              PORT_MUX_ALT3
 #endif
 
 #define PB_0_FTM1_CH0                    PORT_MUX_ALT3                   // FlexTimer 1
@@ -10358,7 +10364,7 @@ typedef struct stKINETIS_ADMA2_BD
   #define OSC_CR_ERCLKEN                 0x80                            // enable external reference clock
 #endif
 
-#if !defined ERRATE_E3402_SOLVED && !defined KINETIS_KL
+#if defined ERRATA_ID_3402 && !defined KINETIS_KL
     #define XTAL0_PORT                   _PORTA                          // when the OSC is enabled the XTAL port pin is forced to default function and can not be used as GPIO
     #define XTAL0_PIN                    19
 #endif
@@ -13981,7 +13987,6 @@ typedef struct stPWM_INTERRUPT_SETUP
 #define _TIMER_3                0xc0
 #define _TIMER_MODULE_MASK      0xc0
 
-#define PWM_MODE_SETTINGS_MASK  (0x0007 | FTM_SC_CPWMS | FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)
 #define PWM_PRESCALER_128       0x0007
 #define PWM_PRESCALER_64        0x0006
 #define PWM_PRESCALER_32        0x0005
@@ -13997,9 +14002,14 @@ typedef struct stPWM_INTERRUPT_SETUP
 #define PWM_SYS_CLK             FTM_SC_CLKS_SYS                          // 0x08
 #define PWM_IRC48M_CLK          FTM_SC_CLKS_SYS                          // for use by device with IRC48M
 #define PWM_POLARITY            0x0080
-#define PWM_FULL_BUFFER_DMA     0x0100
-#define PWM_HALF_BUFFER_DMA     0x0200
-#define PWM_FULL_BUFFER_DMA_AUTO_REPEAT 0x0400
+#define PWM_DMA_PERIOD_ENABLE   FTM_SC_DMA                               // 0x100 (only valid for KL)
+#define PWM_FULL_BUFFER_DMA     0x0200
+#define PWM_HALF_BUFFER_DMA     0x0400
+#define PWM_FULL_BUFFER_DMA_AUTO_REPEAT 0x0800
+#define PWM_NO_OUTPUT           0x1000                                   // {93} run PWM without connecting it to a physical output (for internal timing, for example triggering ADCs)
+#define PWM_DMA_CHANNEL_ENABLE  0x2000                                   // {93} enable the channel to trigger DMA
+
+#define PWM_MODE_SETTINGS_MASK  (PWM_PRESCALER_128 | FTM_SC_CPWMS | FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS | PWM_DMA_PERIOD_ENABLE)
 
 #define PWM_FREQUENCY(frequency, prescaler)  (PWM_CLOCK/prescaler/frequency) // {83}
 #if (((PWM_CLOCK/1000000) * 1000000) != PWM_CLOCK)                       // if the clock is not an exact MHz value
@@ -14089,7 +14099,6 @@ typedef struct stI2S_SAI_SETUP
     unsigned char    ucDmaTriggerSource;
     unsigned char    ucSynchBits;
     void            *ptrI2S_SAI_Buffer;
-
 } I2S_SAI_SETUP;
 
 #define I2S_SAI_CONFIG_TX                   0x01
@@ -14259,6 +14268,7 @@ typedef struct stADC_SETUP
         unsigned long    ulADC_buffer_length;                            // {36} buffer length
         signed short    *ptrADC_Buffer;                                  // {36} if DMA is specified this is a pointer to the buffer in which the samples will be saved to
         unsigned char    ucDmaChannel;                                   // {36} DMA channel to be used
+        unsigned char    ucDmaTriggerSource;                             // {94} DMA trigger souce (0 defaults to the channel's ADC conversion completion)
         unsigned char    dma_int_priority;                               // priority the user wants to set for DMA completion interrupt
     #endif
 } ADC_SETUP;
