@@ -111,8 +111,8 @@
             if ((ptrDAC_settings->dac_mode & (DAC_FULL_BUFFER_DMA | DAC_HALF_BUFFER_DMA)) != 0) { // {60} if DMA is being specified
                 unsigned long ulDMA_rules = (DMA_DIRECTION_OUTPUT | DMA_HALF_WORDS); // DMA transfer is from a buffer to a fixed address and each transfer is a half-word in size
         #if defined _WINDOWS
-                if ((ptrDAC_settings->int_dac_controller == 0) && (DMAMUX0_DMA0_CHCFG_SOURCE_PIT0 != ptrDAC_settings->ucDmaTriggerSource)) {
-                    _EXCEPTION("DAC0 can only be triggered from PIT channel 0!!");
+                if ((ptrDAC_settings->int_dac_controller == 0) && (DMAMUX0_DMA0_CHCFG_SOURCE_PIT1 == ptrDAC_settings->ucDmaTriggerSource)) {
+                    _EXCEPTION("DAC0 cannot be triggered from PIT channel 1!!");
                 }
         #endif
                 ptrDAC_regs->DAC_C1 = 0;
