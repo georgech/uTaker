@@ -58,6 +58,7 @@
     11.04.2016 Set registers to volatile to ensure no optimisation in fnDelayLoop() {124}
     25.11.2016 Add ROM bootloader errata workaround                      {125}
     31.01.2017 Add fnClearPending() and fnIsPending()                    {126}
+    02.03.2017 Add optional alternative memcpy DMA channel for use by interrupts {127}
 
 */
 
@@ -701,13 +702,22 @@ INITHW void fnInitHW(void)                                               // perf
     #if !defined KINETIS_KL && !defined KINETIS_KE                       // {80}
         unsigned long *ptr_eDMAdes = (unsigned long *)eDMA_DESCRIPTORS;
         KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS; // {9}
-        ptrDMA_TCD += DMA_MEMCPY_CHANNEL;
+        ptrDMA_TCD += DMA_MEMCPY_CHANNEL;                                // the DMA channel used for memory copy DMA
         while (ptr_eDMAdes < eDMA_DESCRIPTORS_END) {
             *ptr_eDMAdes++ = 0;                                          // clear out DMA descriptors after reset
         }
         ptrDMA_TCD->DMA_TCD_SOFF = 4;                                    // {87} source increment one long word for uMemcpy()
         ptrDMA_TCD->DMA_TCD_DOFF = 4;                                    // destination increment one long word
         ptrDMA_TCD->DMA_TCD_BITER_ELINK = 1;
+        ptrDMA_TCD->DMA_TCD_ATTR = (DMA_TCD_ATTR_DSIZE_32 | DMA_TCD_ATTR_SSIZE_32); // {87} default transfer sizes long words
+        #if defined DMA_MEMCPY_CHANNEL_ALT                               // {127}
+        ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
+        ptrDMA_TCD += DMA_MEMCPY_CHANNEL_ALT;                            // move to the alternate channel (may be used by interrupts)
+        ptrDMA_TCD->DMA_TCD_SOFF = 4;                                    // source increment one long word for uMemcpy()
+        ptrDMA_TCD->DMA_TCD_DOFF = 4;                                    // destination increment one long word
+        ptrDMA_TCD->DMA_TCD_BITER_ELINK = 1;
+        ptrDMA_TCD->DMA_TCD_ATTR = (DMA_TCD_ATTR_DSIZE_32 | DMA_TCD_ATTR_SSIZE_32); // default transfer sizes long words
+        #endif
         #if defined DMA_CHANNEL_0_PRIORITY                               // user defined channel priorities
         _SET_DMA_CHANNEL_PRIORITY(0, DMA_CHANNEL_0_PRIORITY);            // DMA priority, whereby channel can suspend a lower priority channel
         _SET_DMA_CHANNEL_PRIORITY(1, DMA_CHANNEL_1_PRIORITY);            // all channel priorities are set before use since it can be dangerous to change them later when DMA operations could take place during the process
@@ -727,12 +737,17 @@ INITHW void fnInitHW(void)                                               // perf
         _SET_DMA_CHANNEL_PRIORITY(15, DMA_CHANNEL_15_PRIORITY);
         _SET_DMA_CHANNEL_CHARACTERISTIC(DMA_MEMCPY_CHANNEL, (DMA_DCHPRI_ECP | DMA_DCHPRI_DPA)); // can be pre-empted by higher priority channel - it is expected that this channel will normally have priority 0
         #else                                                            // leave default channel priority (equal to the corresponding channel number)
-        _SET_DMA_CHANNEL_PRIORITY(DMA_MEMCPY_CHANNEL, (/*DMA_DCHPRI_ECP | */DMA_DCHPRI_DPA | 0)); // lowest DMA priority and can be pre-empted by higher priority channel
+        _SET_DMA_CHANNEL_PRIORITY(DMA_MEMCPY_CHANNEL, (DMA_DCHPRI_DPA | 0)); // lowest DMA priority and can be pre-empted by higher priority channel
             #if DMA_MEMCPY_CHANNEL != 0
         _SET_DMA_CHANNEL_PRIORITY(0, (DMA_MEMCPY_CHANNEL));              // no two priorities may ever be the same when the controller is used - switch priorities to avoid
             #endif
+            #if defined DMA_MEMCPY_CHANNEL_ALT                           // {127}
+        _SET_DMA_CHANNEL_PRIORITY(DMA_MEMCPY_CHANNEL_ALT, (DMA_DCHPRI_DPA | 1)); // second lowest DMA priority and can be pre-empted by higher priority channel
+                #if DMA_MEMCPY_CHANNEL_ALT != 1
+        _SET_DMA_CHANNEL_PRIORITY(1, (DMA_MEMCPY_CHANNEL_ALT));          // no two priorities may ever be the same when the controller is used - switch priorities to avoid
+                #endif
+            #endif
         #endif
-        ptrDMA_TCD->DMA_TCD_ATTR = (DMA_TCD_ATTR_DSIZE_32 | DMA_TCD_ATTR_SSIZE_32); // {87} default transfer sizes long words
     #endif
     }
 #endif
@@ -1675,11 +1690,11 @@ static void _LowLevelInit(void)
 #if defined USER_STARTUP_CODE                                            // {1} allow user defined start-up code immediately after the watchdog configuration and before clock configuration to be defined
     USER_STARTUP_CODE;
 #endif
-#if !defined ERRATA_E2644_SOLVED && !defined KINETIS_FLEX
+#if defined ERRATA_ID_2644 && !defined KINETIS_FLEX
     FMC_PFB0CR &= ~(BANK_DPE | BANKIPE);                                 // disable speculation logic
     FMC_PFB1CR &= ~(BANK_DPE | BANKIPE);
 #endif
-#if !defined ERRATE_E2647_SOLVED && !defined KINETIS_FLEX && (SIZE_OF_FLASH > (256 * 1024))
+#if defined ERRATA_ID_2647 && !defined KINETIS_FLEX && (SIZE_OF_FLASH > (256 * 1024))
     FMC_PFB0CR &= ~(BANKDCE | BANKICE | BANKSEBE);                       // disable cache
     FMC_PFB1CR &= ~(BANKDCE | BANKICE | BANKSEBE);
 #endif
@@ -1717,12 +1732,14 @@ static void _LowLevelInit(void)
             PORTB_PCR0 = PORT_PS_UP_ENABLE;
             PORTB_PCR1 = PORT_PS_UP_ENABLE;
         }
+    #if PORTS_AVAILABLE > 2
         if (IS_POWERED_UP(5, SIM_SCGC5_PORTC) != 0) {
             PORTC_PCR4 = PORT_PS_UP_ENABLE;
             PORTC_PCR5 = PORT_PS_UP_ENABLE;
             PORTC_PCR6 = PORT_PS_UP_ENABLE;
             PORTC_PCR7 = PORT_PS_UP_ENABLE;
         }
+    #endif
         POWER_DOWN(5, (SIM_SCGC5_PORTA | SIM_SCGC5_PORTB | SIM_SCGC5_PORTC | SIM_SCGC5_PORTD | SIM_SCGC5_PORTE | SIM_SCGC5_LPUART0)); // power down ports and LPUART0
         POWER_DOWN(4, (SIM_SCGC4_I2C0 | SIM_SCGC4_SPI0));                // power down I2C0 and SPI0
         SIM_SOPT2 = 0;                                                   // set default LPUART0 clock source 
