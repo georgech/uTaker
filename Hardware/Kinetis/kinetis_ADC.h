@@ -20,6 +20,7 @@
     04.12.2015 Add Kinetis KE ADC mode                                   {2}
     23.12.2015 Add automatic ADC DMA buffer repetition                   {3}
     04.01.2016 Allow free-run ADC with DMA                               {4}
+    06.03.2017 Allow alternative DMA trigger sources                     {5}
 
 */
 
@@ -441,6 +442,7 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
                         if ((ptrADC_settings->int_adc_mode & (ADC_FULL_BUFFER_DMA | ADC_HALF_BUFFER_DMA)) != 0) { // {57} if DMA operation is being specified
                             unsigned long *ptrADC_result = (unsigned long *)((unsigned long)ptrADC + 0x010); // ADC channel as result register
                             unsigned long ulDMA_rules = (DMA_DIRECTION_INPUT | DMA_HALF_WORDS);
+                            unsigned char ucTriggerSource = ptrADC_settings->ucDmaTriggerSource; // {5}
                             ptrADC->ADC_SC2 |= ADC_SC2_DMAEN;            // enable DMA trigger on ADC conversion end
                             if ((ptrADC_settings->int_adc_mode & ADC_FULL_BUFFER_DMA_AUTO_REPEAT) != 0) {
                                 ulDMA_rules |= DMA_AUTOREPEAT;
@@ -448,7 +450,10 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
                             if ((ptrADC_settings->int_adc_mode & ADC_HALF_BUFFER_DMA) != 0) {
                                 ulDMA_rules |= DMA_HALF_BUFFER_INTERRUPT;
                             }
-                            fnConfigDMA_buffer(ptrADC_settings->ucDmaChannel, (DMAMUX_CHCFG_SOURCE_ADC0 + ptrADC_settings->int_adc_controller), ptrADC_settings->ulADC_buffer_length, ptrADC_result, ptrADC_settings->ptrADC_Buffer, ulDMA_rules, ptrADC_settings->dma_int_handler, ptrADC_settings->dma_int_priority); // source is the ADC result register and destination is the ADC buffer
+                            if (ucTriggerSource == 0) {                  // {5} if the default is defined
+                                ucTriggerSource = (DMAMUX_CHCFG_SOURCE_ADC0 + ptrADC_settings->int_adc_controller);
+                            }
+                            fnConfigDMA_buffer(ptrADC_settings->ucDmaChannel, ucTriggerSource, ptrADC_settings->ulADC_buffer_length, ptrADC_result, ptrADC_settings->ptrADC_Buffer, ulDMA_rules, ptrADC_settings->dma_int_handler, ptrADC_settings->dma_int_priority); // source is the ADC result register and destination is the ADC buffer
                             fnDMA_BufferReset(ptrADC_settings->ucDmaChannel, DMA_BUFFER_START);
                         }
                         else if ((ptrADC_settings->int_adc_mode & ADC_LOOP_MODE) == 0) { // single shot mode {4}
