@@ -60,6 +60,7 @@
     05.01.2017 Add audio reception FFT analysis                          {42}
     06.02.2017 Automatically enable IN polling on CDC bulk IN endpoint   {43}
     12.02.2017 Allow USB-MSD or USB-CDC host operation, depending on which device is detected {44}
+    07.03.2017 Add USB_MSD_REMOVED event on memory stick removal         {45}
 
 */
 
@@ -640,6 +641,9 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
                 usUSB_state &= ~(ES_USB_RS232_MODE);
     #endif
                 fnDebugMsg("USB device removed\r\n");
+    #if defined USB_MSD_HOST
+                fnEventMessage(TASK_MASS_STORAGE, TASK_USB_HOST, USB_MSD_REMOVED); // {45} initiate mounting the memory stick at the mass storage task
+    #endif
                 break;
     #if defined USB_MSD_HOST
             case EVENT_LUN_READY:
@@ -1959,27 +1963,27 @@ static void fnReturnUART_settings(int iInterface)
     ulSpeed >>= 8;
     uart_setting[iInterface].dwDTERate[3] = (unsigned char)ulSpeed;
 
-    if (SerialMode & CHAR_7) {                                           // set present character length
+    if ((SerialMode & CHAR_7) != 0) {                                    // set present character length
         uart_setting[iInterface].bDataBits = CDC_PSTN_7_DATA_BITS;
     }
     else {
         uart_setting[iInterface].bDataBits = CDC_PSTN_8_DATA_BITS;
     }
 
-    if (SerialMode & RS232_EVEN_PARITY) {                                // set present parity
+    if ((SerialMode & RS232_EVEN_PARITY) != 0) {                         // set present parity
         uart_setting[iInterface].bParityType = CDC_PSTN_EVEN_PARITY;
     }
-    else if (SerialMode & RS232_ODD_PARITY) {
+    else if ((SerialMode & RS232_ODD_PARITY) != 0) {
         uart_setting[iInterface].bParityType = CDC_PSTN_ODD_PARITY;
     }
     else {
         uart_setting[iInterface].bParityType = CDC_PSTN_NO_PARITY;
     }
 
-    if (SerialMode & ONE_HALF_STOPS) {                                   // set present format
+    if ((SerialMode & ONE_HALF_STOPS) != 0) {                            // set present format
         uart_setting[iInterface].bCharFormat = CDC_PSTN_1_5_STOP_BIT;
     }
-    else if (SerialMode & TWO_STOPS) {
+    else if ((SerialMode & TWO_STOPS) != 0) {
         uart_setting[iInterface].bCharFormat = CDC_PSTN_2_STOP_BITS;
     }
     else {
