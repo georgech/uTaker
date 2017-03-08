@@ -35,6 +35,7 @@
     11.06.2015 Modify the handling of link-down with _KSZ8081RNA         {100}
     17.01.2016 Add fnResetENET() when restarting Ethernet (for simulator){101}
     27.01.2016 Add _KSZ8051RNL                                           {102}
+    08.03.2017 Add option to not initialise MII_RXER pin (NO_MII_RXER)   {103}
 
 */
 
@@ -256,7 +257,7 @@ extern signed char fnEthernetEvent(unsigned char *ucEvent, ETHERNET_FRAME *rx_fr
                 CRC_CRC = *ptr++;                                        // process long world
                 ulLength -= 4;                                           // by bytes at a time - the CRC calculation requires 2 clock cycles
             }
-        #if defined ERRATE_E2776_SOLVED || defined _WINDOWS
+        #if !defined ERRATA_ID_2776 || defined _WINDOWS
             if (ulLength != 0) {                                         // remaining bytes that didn't fit into a long word
                 unsigned char *ptrByte = (unsigned char *)ptr;
                 CRC_CRC_HU = *ptrByte++;                                 // write bytes starting with MSB
@@ -940,7 +941,7 @@ extern int fnConfigEthernet(ETHTABLE *pars)
 
     #if defined JTAG_DEBUG_IN_USE_ERRATA_2541
     _CONFIG_PERIPHERAL(A, 5, (PORT_PS_DOWN_ENABLE));                     // pull the optional line down to 0V to avoid disturbing JTAG_TRST - not needed when using SWD for debugging 
-    #else
+    #elif !defined NO_MII_RXER                                           // {103}
     _CONFIG_PERIPHERAL(A, 5, PA_5_MII0_RXER);                            // MII0_RXER on PA.5 (alt. function 4)
     #endif
     _CONFIG_PERIPHERAL(A, 12, PA_12_MII0_RXD1);                          // MII0_RXD1 on PA.12 (alt. function 4)
