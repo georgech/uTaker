@@ -185,7 +185,7 @@ static void fnSendIGMP_report_delayed(int iHostGroupID, unsigned char ucMaxDelay
     #endif
     if (ptrIGMP_host->report_delay != 0) {                               // if a report is already queued we generally leave it to timeout and be sent
     #if defined USE_IGMP_V2 && !defined USE_IGMP_V3
-        if (ptrIGMP_host->report_delay <= (ucMaxDelay * SEC)) {          // if the existing delay is greater than the maximum specified delay
+        if (ptrIGMP_host->report_delay <= (DELAY_LIMIT)(ucMaxDelay * SEC)) { // if the existing delay is greater than the maximum specified delay
             return;
         }
     #else
