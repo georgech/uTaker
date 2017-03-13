@@ -1145,8 +1145,8 @@ extern void fnSendSNMPTrap(unsigned char ucTrap, unsigned char ucSpecificCode, u
     unsigned long ulValidManager = 0x00000001;
     int iManagerNumber = 0;
     while (iManagerNumber < SNMP_MANAGER_COUNT) {                        // enter the trap into the queue
-        if (ulManagers & ulValidManager) {                               // if this manager is to be informed
-            if ((ucTrapCnt[iManagerNumber] < SNMP_TRAP_QUEUE_LENGTH) && (temp_pars->temp_parameters.usServers & (ACTIVE_SNMP_0 << iManagerNumber)) && (uMemcmp(ptrSNMP_manager_details[iManagerNumber].snmp_manager_ip_address, cucNullMACIP, IPV4_LENGTH) != 0)) { // if there is space in its trap queue and the manager's IP address is valid
+        if ((ulManagers & ulValidManager) != 0) {                        // if this manager is to be informed
+            if ((ucTrapCnt[iManagerNumber] < SNMP_TRAP_QUEUE_LENGTH) && (temp_pars->temp_parameters.usServers[DEFAULT_NETWORK] & (ACTIVE_SNMP_0 << iManagerNumber)) && (uMemcmp(ptrSNMP_manager_details[iManagerNumber].snmp_manager_ip_address, cucNullMACIP, IPV4_LENGTH) != 0)) { // if there is space in its trap queue and the manager's IP address is valid
                 trap_list[iManagerNumber][ucTrapCnt[iManagerNumber]].ucTrapType = ucTrap; // enter the trap details
                 trap_list[iManagerNumber][ucTrapCnt[iManagerNumber]].ucTrapSpecificCode = ucSpecificCode;
                 if (ucTrapCnt[iManagerNumber]++ == 0) {                  // first in queue
