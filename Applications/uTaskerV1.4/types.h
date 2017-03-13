@@ -114,6 +114,8 @@ typedef unsigned short    LENGTH_CHUNK_COUNT;                            // http
         typedef signed short         USOCKET;
         #define NETWORK_SHIFT        10
         #define NETWORK_MASK         0x01
+        #define INTERFACE_SHIFT      0
+        #define INTERFACE_MASK       0
         #define USER_INFO_SHIFT      8
         #define USER_INFO_MASK       0x0003
         #define SOCKET_NUMBER_MASK   0x00ff                              // dual-network, 256 UDP and 256 TCP sockets possible - up to 4 user functions
