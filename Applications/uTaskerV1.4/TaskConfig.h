@@ -73,9 +73,6 @@
 #define TASK_DEV_4              '4'
 #undef  OWN_TASK
 
-#define TASK_HTTP               '5'
-#define TASK_NETX               '6'
-extern void fnHTTP_task(TTASKTABLE *ptrTaskTable);
 
 #if defined LAN_REPORT_ACTIVITY
    #define INTERRUPT_TASK_PHY         TASK_NETWORK_INDICATOR             // this task is woken on PHY changes (set 0 for none)
@@ -153,7 +150,6 @@ const UTASK_TASK ctNodes[] = {                                           // we u
 #endif
 #if defined ETH_INTERFACE
     TASK_ETHERNET,                                                       // ethernet task
-    TASK_HTTP,
 #endif
 #if defined USE_TCP
     TASK_TCP,                                                            // TCP task
@@ -250,7 +246,6 @@ const UTASKTABLEINIT ctTaskTable[] = {
 #endif
 #if defined ETH_INTERFACE
     {"Eth",       fnTaskEthernet, (HEADER_LENGTH * 12), (DELAY_LIMIT)((0.05 * SEC) + (PHY_POWERUP_DELAY)), 0, UTASKER_STOP}, // {1} ethernet task - runs automatically
-    {"5",         fnHTTP_task,    MEDIUM_QUE, 0, 0, UTASKER_STOP },
 #endif
 #if defined USE_TCP
     {"TCP",       fnTaskTCP,    MEDIUM_QUE,  (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP}, // {1} TCP task checks periodically state of session timeouts (controlled by task itself)
