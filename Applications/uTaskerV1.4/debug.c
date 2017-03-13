@@ -6099,7 +6099,8 @@ static int fnTestTCP(USOCKET Socket, unsigned char ucTestCase)
     return 0;
 }
 
-#define FAST_PEER_DROPED_FRAME_TEST // temp test
+//#define FAST_PEER_DROPED_FRAME_TEST                                    // temp test
+#if defined FAST_PEER_DROPED_FRAME_TEST
 static unsigned char test_buffer[1500] = {0};
 
 static int fnFastRxTest(USOCKET Socket)
@@ -6150,11 +6151,13 @@ static int fnFastRxTestAck(USOCKET Socket)
     return iRtn;
 
 }
-
+#endif
 
 static int fnServerTestListener(USOCKET Socket, unsigned char ucEvent, unsigned char *ucIp_Data, unsigned short usPortLen)
 {
+    #if !defined FAST_PEER_DROPED_FRAME_TEST
     static unsigned char ucTestMode = 0;
+    #endif
     switch (ucEvent) {
     case TCP_EVENT_CONREQ:                                               // session request received on the TCP port
         fnDebugMsg("Connection request\n\r");
