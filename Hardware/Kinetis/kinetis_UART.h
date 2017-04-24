@@ -742,7 +742,7 @@ static __interrupt void _SCI5_Interrupt(void)                            // UART
 //
 extern int fnTxByte(QUEUE_HANDLE Channel, unsigned char ucTxByte)
 {
-    KINETIS_UART_CONTROL *uart_reg = fnSelectChannel(Channel);
+    KINETIS_UART_CONTROL *uart_reg = (KINETIS_UART_CONTROL *)fnSelectChannel(Channel);
     #if NUMBER_EXTERNAL_SERIAL > 0
     if (Channel >= NUMBER_SERIAL) {
         fnExtSCI_send((QUEUE_HANDLE)(Channel - NUMBER_SERIAL), ucTxByte);// pass on to the external interface for transmission
@@ -814,7 +814,7 @@ extern void fnClearTxInt(QUEUE_HANDLE Channel)
         return;
     }
     #endif
-    uart_reg = fnSelectChannel(Channel);
+    uart_reg = (KINETIS_UART_CONTROL *)fnSelectChannel(Channel);
     #if defined SERIAL_SUPPORT_DMA                                       // {6}
         #if defined KINETIS_KL && (UARTS_AVAILABLE > 1)
     if (Channel == 0) {
@@ -1407,6 +1407,14 @@ extern void fnControlLine(QUEUE_HANDLE channel, unsigned short usModifications, 
                     _CONFIGURE_RTS_0_LOW();                              // configure RTS output and set to '0'
                     ucRTS_neg[0] = 1;                                    // inverted RTS mode
                 }
+                #elif defined KINETIS_K02
+                    #if defined UART0_A_LOW
+                _CONFIG_PERIPHERAL(A, 3, (PA_3_UART0_RTS | UART_PULL_UPS)); // UART0_RX on PA1 (alt. function 2)
+                    #elif defined UART0_ON_D
+                _CONFIG_PERIPHERAL(D, 4, (PD_4_UART0_RTS | UART_PULL_UPS)); // UART0_RX on PD6 (alt. function 3)
+                    #else
+                _CONFIG_PERIPHERAL(B, 2, (PB_2_UART0_RTS | UART_PULL_UPS)); // UART0_RX on PB16 (alt. function 3)
+                    #endif
                 #elif defined UART0_A_LOW
                 _CONFIG_PERIPHERAL(A, 3, (PA_3_UART0_RTS | UART_PULL_UPS)); // UART0_RTS on PA3 (alt. function 2)
                 #elif defined UART0_ON_B
@@ -1516,7 +1524,7 @@ extern void fnControlLine(QUEUE_HANDLE channel, unsigned short usModifications, 
             #endif
             }
             #if !defined KINETIS_KE && !defined KINETIS_KL
-            if (usModifications & SET_RS485_MODE) {                      // Kinetis supports automatic control of the RTS line which is used in RS485 mode
+            if ((usModifications & SET_RS485_MODE) != 0) {               // Kinetis supports automatic control of the RTS line which is used in RS485 mode
                 ucMode |= UART_MODEM_TXRTSE;                             // enable automatic RTS control
                 if ((usModifications & SET_RS485_NEG) == 0) {            // the polarity of the RTS line is inverted
                     ucMode |= UART_MODEM_TXRTSPOL;                       // positive RTS polarity
@@ -1526,7 +1534,7 @@ extern void fnControlLine(QUEUE_HANDLE channel, unsigned short usModifications, 
             #endif
         }
             #if !defined KINETIS_KE && !defined KINETIS_KL
-        if (usModifications & CONFIG_CTS_PIN) {                          // configure CTS for HW flow control
+        if ((usModifications & CONFIG_CTS_PIN) != 0) {                   // configure CTS for HW flow control
             switch (channel) {
             case 0:                                                      // configure the UART0_CTS pin
             #if defined UART0_A_LOW
@@ -1592,7 +1600,7 @@ extern void fnControlLine(QUEUE_HANDLE channel, unsigned short usModifications, 
             #endif
     }
         #if defined KINETIS_KE || defined KINETIS_KL                     // {200}
-        if (((usModifications & (SET_RTS)) && (ucRTS_neg[0] == 0)) || ((usModifications & (CLEAR_RTS)) && (ucRTS_neg[0] != 0))) { // assert RTS output signal by setting output to '0' (or inverted negate)
+        if ((((usModifications & (SET_RTS)) != 0) && (ucRTS_neg[0] == 0)) || (((usModifications & (CLEAR_RTS)) != 0) && (ucRTS_neg[0] != 0))) { // assert RTS output signal by setting output to '0' (or inverted negate)
             switch (channel) {
             case 0:
                 _SET_RTS_0_LOW();
@@ -1624,7 +1632,7 @@ extern void fnControlLine(QUEUE_HANDLE channel, unsigned short usModifications, 
             #endif
             }
         }
-        if (((usModifications & (CLEAR_RTS)) && (ucRTS_neg[0] == 0)) || ((usModifications & (SET_RTS)) && (ucRTS_neg[0] != 0))) {    // negate RTS output signal by setting output to '0' (or inverted assert)
+        if ((((usModifications & (CLEAR_RTS)) != 0) && (ucRTS_neg[0] == 0)) || (((usModifications & (SET_RTS)) != 0) && (ucRTS_neg[0] != 0))) { // negate RTS output signal by setting output to '0' (or inverted assert)
             switch (channel) {
             case 0:
                 _SET_RTS_0_HIGH();
@@ -1658,11 +1666,11 @@ extern void fnControlLine(QUEUE_HANDLE channel, unsigned short usModifications, 
         }
         #else
     if ((ucMode & UART_MODEM_TXRTSE) == 0) {                             // control the polarity of the RTS line when not in RS485 mode
-        if (usModifications & (SET_RTS)) {                               // assert RTS output signal
+        if ((usModifications & (SET_RTS)) != 0) {                        // assert RTS output signal
           //uart_reg->UART_MODEM |= UART_MODEM_TXRTSPOL;
             uart_reg->UART_MODEM |= UART_MODEM_RXRTSE;                   // {7} RTS is asserted as long as the receive FIFO has space to receive
         }
-        if (usModifications & (CLEAR_RTS)) {                             // negate RTS output signal
+        if ((usModifications & (CLEAR_RTS)) != 0) {                      // negate RTS output signal
           //uart_reg->UART_MODEM &= ~UART_MODEM_TXRTSPOL;
             uart_reg->UART_MODEM &= ~UART_MODEM_RXRTSE;                  // {7} disable control of RTS by receiver space which negates the RTS line
         }
@@ -1677,13 +1685,13 @@ extern QUEUE_TRANSFER fnControlLineInterrupt(QUEUE_HANDLE channel, unsigned shor
         #if !defined KINETIS_KE && !defined KINETIS_KL
     KINETIS_UART_CONTROL *uart_reg = fnSelectChannel(channel);
 
-    if (usModifications & ENABLE_CTS_CHANGE) {
+    if ((usModifications & ENABLE_CTS_CHANGE) != 0) {
         uart_reg->UART_MODEM |= UART_MODEM_TXCTSE;                       // enable CTS line to automatically stop the transmitter when negated (HW flow control)
     }
-    if (usModifications & DISABLE_CTS_CHANGE) {
+    if ((usModifications & DISABLE_CTS_CHANGE) != 0) {
         uart_reg->UART_MODEM &= ~UART_MODEM_TXCTSE;                      // disable CTS line flow control
     }
-    return SET_CTS;                                                      // the state of the CTS line can not be read but report that it is asserted since flow control is performed by hardware
+    return SET_CTS;                                                      // the state of the CTS line cannot be read but report that it is asserted since flow control is performed by hardware
         #else
     return 0;
         #endif

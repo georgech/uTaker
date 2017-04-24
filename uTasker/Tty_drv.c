@@ -128,10 +128,10 @@ static QUEUE_TRANSFER entry_tty(QUEUE_HANDLE channel, unsigned char *ptBuffer, Q
 
         if (Counter != 0) {                                              // modify driver state
 #if defined SUPPORT_HW_FLOW                                              // {6}
-            if (Counter & MODIFY_CONTROL) {                              // control signals
+            if ((Counter & MODIFY_CONTROL) != 0) {                       // control signals
                 fnControlLine(channel, (unsigned short)Counter, ptTTYQue->opn_mode);// pass on to hardware
             }
-            else if (MODIFY_INTERRUPT & Counter) {
+            else if ((MODIFY_INTERRUPT & Counter) != 0) {
                 rtn_val = fnControlLineInterrupt(channel, (unsigned short)Counter, ptTTYQue->opn_mode); // pass on to hardware
                 fnRTS_change(channel, ((rtn_val & SET_CTS) != 0));       // synchronise control with buffer control
                 break;
@@ -1065,7 +1065,7 @@ extern void fnRTS_change(QUEUE_HANDLE Channel, int iState)
     TTYQUE *tx_ctl = tx_control[Channel];
 
     if (iState != 0) {                                                   // line has just gone active - we are allowed to transmit
-        if (tx_ctl->ucState & TX_WAIT) {                                 // {31} if the state was blocking transmission
+        if ((tx_ctl->ucState & TX_WAIT) != 0) {                          // {31} if the state was blocking transmission
             tx_ctl->ucState &= ~TX_WAIT;                                 // unblock transmitter
             send_next_byte(Channel, tx_ctl);                             // restart transmission, if paused {5}
         }

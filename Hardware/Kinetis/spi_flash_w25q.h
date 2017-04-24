@@ -19,6 +19,7 @@
 
     15.01.2016 Added SPI_FLASH_W25Q128 and control of final SPI byte for Kinetis parts with FIFO based SPI CS
     02.02.2017 Correct read for FIFO based SPI                           {1}
+    01.03.2017 Correct write for FIFO based SPI                          {2}
 
     **********************************************************************/
 
@@ -235,12 +236,12 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     #if defined _WINDOWS
         fnSimW25Qxx(W25Q_WRITE, (unsigned char)SPI_TX_BYTE);             // simulate the SPI FLASH device
     #endif
-    #if defined KINETIS_KL
+  //#if defined KINETIS_KL                                               // {2}
         WAIT_SPI_RECEPTION_END();                                        // wait until the command has been sent
         (void)READ_SPI_FLASH_DATA();                                     // discard the received byte
-    #endif
+  //#endif
     #if defined KINETIS_KL || defined MANUAL_FLASH_CS_CONTROL
-        NEGATE_CS_LINE(ulChipSelectLine);                                  negate the chip select line
+        NEGATE_CS_LINE(ulChipSelectLine);                                //  negate the chip select line
     #endif
     #if defined _WINDOWS
         #if !defined KINETIS_KL
@@ -296,19 +297,26 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         }
     }
     else {
+        WAIT_SPI_RECEPTION_END();                                        // wait until tx byte has been sent
+        (void)READ_SPI_FLASH_DATA();                                     // {2} discard
+        CLEAR_RECEPTION_FLAG();                                          // {2} clear the receive flag
         while (DataLength-- != 0) {                                      // while data bytes to be written
             if (DataLength == 0) {                                       // final byte
                 WRITE_SPI_CMD0_LAST(*ucData++);                          // send data (final byte)
+    #if defined _WINDOWS
+                fnSimW25Qxx(W25Q_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
+    #endif
             }
             else {
                 WRITE_SPI_CMD0(*ucData++);                               // send data
-            }
     #if defined _WINDOWS
-            fnSimW25Qxx(W25Q_WRITE, (unsigned char)SPI_TX_BYTE);         // simulate the SPI FLASH device
+                fnSimW25Qxx(W25Q_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
     #endif
+            }
             WAIT_SPI_RECEPTION_END();                                    // wait until tx byte has been sent
+            (void)READ_SPI_FLASH_DATA();                                 // {2} discard
+            CLEAR_RECEPTION_FLAG();                                      // {2} clear the receive flag
         }
-        WAIT_SPI_RECEPTION_END();                                        // wait until last byte has been completely received before negating the CS line
     }
 
     #if defined KINETIS_KL || defined MANUAL_FLASH_CS_CONTROL

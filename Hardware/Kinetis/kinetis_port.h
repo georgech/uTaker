@@ -618,7 +618,7 @@ static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][8] = {              // 121 
         // ALT 0           ALT 1    ALT2         ALT 3         ALT 4          ALT 5        ALT 6       ALT 7
         {  "TSI0_CH1",     "PTA0",  "UART0_CTS_b","FTM0_CH5",  "-",           "-",         "-",        "JTAG_TCLK/SWD_CLK" }, // PORT A
         {  "TSI0_CH2",     "PTA1",  "UART0_RX",  "FTM0_CH6",   "-",           "-",         "-",        "JTAG_TDI"          },
-        {  "TSI0_CH3",     "PTA2",  "UART0_TX",  "FTM0_CH7",   "-",           "-",         "-",        "JTAG_TDI/TRACE_SWO"},
+        {  "TSI0_CH3",     "PTA2",  "UART0_TX",  "FTM0_CH7",   "-",           "-",         "-",        "JTAG_TDO/TRACE_SWO"},
         {  "TSI0_CH4",     "PTA3",  "UART0_RTS_b","FTM0_CH0",  "-",           "-",         "-",        "JTAG_TMS/SWD_DIO"  },
         {  "TSI0_CH5",     "PTA4",  "-",         "FTM0_CH1",   "-",           "-",         "-",        "NMI_b"             },
         {  "-",            "PTA5",  "-",         "FTM0_CH2",   "MII_RXER",    "CMP2_OUT",  "I2S0_RX_BCLK","JTAG_TRST"      },
@@ -797,7 +797,7 @@ static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][8] = {              // 144 
     #if defined KINETIS_K64
         {  "-",            "PTA0",  "UART0_CTS_b/UART0_COL_b", "FTM0_CH5","-","-",         "-",        "JTAG_TCLK/SWD_CLK" }, // PORT A
         {  "-",            "PTA1",  "UART0_RX",  "FTM0_CH6",   "-",           "-",         "-",        "JTAG_TDI"          },
-        {  "-",            "PTA2",  "UART0_TX",  "FTM0_CH7",   "-",           "-",         "-",        "JTAG_TDI/TRACE_SWO"},
+        {  "-",            "PTA2",  "UART0_TX",  "FTM0_CH7",   "-",           "-",         "-",        "JTAG_TDO/TRACE_SWO"},
         {  "-",            "PTA3",  "UART0_RTS_b","FTM0_CH0",  "-",           "-",         "-",        "JTAG_TMS/SWD_DIO"  },
         {  "-",            "PTA4/LLWU_P3", "-",  "FTM0_CH1",   "-",           "-",         "-",        "NMI_b"             },
         {  "-",            "PTA5",  "USB_CLKIN", "FTM0_CH2",   "MII_RXER",    "CMP2_OUT",  "I2S0_RX_BCLK","JTAG_TRST"      },
@@ -818,7 +818,7 @@ static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][8] = {              // 144 
     #else
         {  "TSI0_CH1",     "PTA0",  "UART0_CTS", "FTM0_CH5",   "-",           "-",         "-",        "JTAG_TCLK/SWD_CLK" }, // PORT A
         {  "TSI0_CH2",     "PTA1",  "UART0_RX",  "FTM0_CH6",   "-",           "-",         "-",        "JTAG_TDI"          },
-        {  "TSI0_CH3",     "PTA2",  "UART0_TX",  "FTM0_CH7",   "-",           "-",         "-",        "JTAG_TDI/TRACE_SWO"},
+        {  "TSI0_CH3",     "PTA2",  "UART0_TX",  "FTM0_CH7",   "-",           "-",         "-",        "JTAG_TDO/TRACE_SWO"},
         {  "TSI0_CH4",     "PTA3",  "UART0_RTS", "FTM0_CH0",   "-",           "-",         "-",        "JTAG_TMS/SWD_DIO"  },
         {  "TSI0_CH5",     "PTA4",  "-",         "FTM0_CH1",   "-",           "-",         "-",        "NMI"               },
         {  "-",            "PTA5",  "-",         "FTM0_CH2",   "MII_RXER",    "CMP2_OUT",  "I2S0_RX_BCLK","JTAG_TRST"      },

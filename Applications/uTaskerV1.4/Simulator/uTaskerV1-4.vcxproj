@@ -13,6 +13,7 @@
   <PropertyGroup Label="Globals">
     <ProjectName>uTaskerKinetis</ProjectName>
     <ProjectGuid>{F08CCFCE-B19A-4F3C-9FA7-CF907BB6F36F}</ProjectGuid>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'" Label="Configuration">
@@ -49,6 +50,9 @@
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</LinkIncremental>
     <PostBuildEventUseInBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">false</PostBuildEventUseInBuild>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">
+    <ReferencePath>$(ReferencePath)</ReferencePath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">
     <Midl>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -81,9 +85,9 @@
       <AdditionalIncludeDirectories>..\..\..\WinSim\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>odbc32.lib;odbccp32.lib;wpcap.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>odbc32.lib;odbccp32.lib;wpcap.lib;ft8xxemu.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Lib;.\..\..\..\WinSim\LCD\FT800;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>.\uTasker___Win32_uTasker_Kinetis_plus_GCC_build/uTaskerV1-4.pdb</ProgramDatabaseFile>
       <SubSystem>Windows</SubSystem>
@@ -135,9 +139,9 @@ Build_Kinetis.bat
       <AdditionalIncludeDirectories>..\..\..\WinSim\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>odbc32.lib;odbccp32.lib;wpcap.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>odbc32.lib;odbccp32.lib;wpcap.lib;ft8xxemu.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Lib;.\..\..\..\WinSim\LCD\FT800;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>.\uTasker___Win32_uTasker_Kinetis_build/uTaskerV1-4.pdb</ProgramDatabaseFile>
       <SubSystem>Windows</SubSystem>
@@ -178,6 +182,7 @@ Build_Kinetis.bat
     <ClCompile Include="..\..\..\uTasker\DSP.c" />
     <ClCompile Include="..\..\..\uTasker\i2c_drv.c" />
     <ClCompile Include="..\..\..\uTasker\time_keeper.c" />
+    <ClCompile Include="..\..\..\uTasker\uGLCDLIB\FT_CoPro_Cmds.c" />
     <ClCompile Include="..\..\..\WinSim\Komodo\komodo.c" />
     <ClCompile Include="..\..\..\WinSim\serial_dev.c" />
     <ClCompile Include="..\application.c">
@@ -575,6 +580,8 @@ Build_Kinetis.bat
     <ClInclude Include="..\..\..\stack\SSL\wolfssl-3.9.6\types.h" />
     <ClInclude Include="..\..\..\stack\SSL\wolfssl-3.9.6\visibility.h" />
     <ClInclude Include="..\..\..\stack\SSL\wolfssl-3.9.6\wc_port.h" />
+    <ClInclude Include="..\..\..\uTasker\uGLCDLIB\FT_CoPro_Cmds.h" />
+    <ClInclude Include="..\..\..\uTasker\uGLCDLIB\FT_Gpu.h" />
     <ClInclude Include="..\..\..\utasker\uglcdlib\glcd_st7565s.h" />
     <ClInclude Include="..\..\..\uTasker\utFAT\NAND_driver.h" />
     <ClInclude Include="..\..\..\WinSim\Komodo\komodo.h" />
@@ -642,9 +649,7 @@ Build_Kinetis.bat
     <CustomBuildStep Include="..\..\..\Hardware\SAM7X\startup_keil.s">
       <FileType>Document</FileType>
     </CustomBuildStep>
-    <None Include="..\..\..\Hardware\Kinetis\CMSIS_DSP\arm_bitreversal2.S">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
-    </None>
+    <None Include="..\..\..\Hardware\Kinetis\CMSIS_DSP\arm_bitreversal2.S" />
     <None Include="..\..\..\Hardware\Kinetis\Crypto\mmcau_aes_functions.S">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
     </None>

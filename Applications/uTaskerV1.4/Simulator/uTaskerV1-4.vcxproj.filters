@@ -290,6 +290,9 @@
     <ClCompile Include="..\..\..\stack\SSL\openssl-1.0.2\aes_core.c">
       <Filter>TCP/IP\OpenSSL</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\uTasker\uGLCDLIB\FT_CoPro_Cmds.c">
+      <Filter>uTasker\uGLCDLIB</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\ADC_Timers.h">
@@ -649,6 +652,12 @@
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_HIRC.h">
       <Filter>Hardware\Kinetis</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\uTasker\uGLCDLIB\FT_CoPro_Cmds.h">
+      <Filter>uTasker\uGLCDLIB</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\uTasker\uGLCDLIB\FT_Gpu.h">
+      <Filter>uTasker\uGLCDLIB</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="cursor1.cur">
@@ -668,11 +677,11 @@
       <Filter>WinSim\Resource Files</Filter>
     </None>
     <None Include="..\GNU_Kinetis\Build_Kinetis.bat" />
-    <None Include="..\..\..\Hardware\Kinetis\CMSIS_DSP\arm_bitreversal2.S">
-      <Filter>Hardware\Kinetis\CMSIS_DSP</Filter>
-    </None>
     <None Include="..\..\..\Hardware\Kinetis\Crypto\mmcau_aes_functions.S">
       <Filter>Hardware\Kinetis\Crypto</Filter>
+    </None>
+    <None Include="..\..\..\Hardware\Kinetis\CMSIS_DSP\arm_bitreversal2.S">
+      <Filter>Hardware\Kinetis\CMSIS_DSP</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

@@ -47,6 +47,8 @@
     23.12.2015 Add zero copy operation                                   {31}
     27.01.2016 Add USB tx message mode operation                         {32}
     13.04.2016 Change parameter of fnGetUSB_string_entry() to unsigned char {33}
+    12.04.2017 In host mode reset previous string reception length counter when reception completes with a zero length frame {34}
+    12.04.2017 Use USB_DEVICE_TIMEOUT in host mode to repeat a get descriptor request {35}
 
 */
 
@@ -898,7 +900,7 @@ static int fnHostEmumeration(int iEndpoint, int iEvent, USB_HW *ptrUSB_HW)
     case HOST_ENUMERATION_SET_ADDRESS:                                   // address has been acknowledged by the device
         fnSetUSB_device_address(USB_DEVICE_ADDRESS);                     // set the device address since it has been acknowledged
         ucRequestLengthRemaining = 255;                                  // up to 255 bytes possible
-        fnPrepareOutData(HOST_SETUP  (unsigned char *)&get_configuration_descriptor, sizeof(get_configuration_descriptor), 8, 0, ptrUSB_HW); // send setup stage of get device descriptor
+        fnPrepareOutData(HOST_SETUP  (unsigned char *)&get_configuration_descriptor, sizeof(get_configuration_descriptor), 8, 0, ptrUSB_HW); // send setup stage of get device descriptor (this is sent to the new address)
         ucRequestType = HOST_ENUMERATION_CONFIGURATION_DESCRIPTOR;       // set next state
         break;
 
@@ -941,6 +943,7 @@ static int fnHostEmumeration(int iEndpoint, int iEvent, USB_HW *ptrUSB_HW)
         break;
     #if defined USB_STRING_OPTION
     case HOST_ENUMERATION_REQUEST_STRING:
+        ucRequestingReceived = 0;                                        // {34} reset previous string reception length counter since this transaction has completed
         ucRequestType = HOST_ENUMERATION_REQUEST_STRING_ACK;             // set next state since we expect an ack
         return TERMINATE_ZERO_DATA;                                      // reception buffer has been consumed and we need to send a zero termination
     #endif
@@ -1036,7 +1039,7 @@ extern void *fnGetDeviceInfo(int iInfoRef)
 //
 extern int fnUSB_handle_frame(unsigned char ucType, unsigned char *ptrData, int iEndpoint, USB_HW *ptrUSB_HW)
 {
-    switch (ucType) {
+    switch (ucType) {                                                    // depending on the event
     case USB_TX_ACKED:                                                   // a previous transmission has been successfully acked
         {
             USB_ENDPOINT *tx_queue = (usb_endpoint_control + iEndpoint);
@@ -1174,7 +1177,7 @@ extern int fnUSB_handle_frame(unsigned char ucType, unsigned char *ptrData, int 
                     if (_USB_HOST_MODE()) {                              // if host transmission has been acked
                         tx_queue->usCompleteMessage = 0;                 // message completely sent
                         if (ucRequestType != HOST_ENUMERATION_IDLE) {    // if we are requesting setup information
-                            return INITIATE_IN_TOKEN;                    // initiate IN token stage
+                            return INITIATE_IN_TOKEN;                    // initiate IN token stage since we expect a reply from the device
                         }
                         return BUFFER_CONSUMED;
                     }
@@ -1567,7 +1570,7 @@ extern int fnUSB_handle_frame(unsigned char ucType, unsigned char *ptrData, int 
         break;                                                           // we do nothing, except free the buffer - it could be counted if required
 #if defined USB_HOST_SUPPORT                                             // {29}
     case USB_DEVICE_DETECTED:                                            // device has been connected to the USB bus, reset has been completed and SOFs are being sent
-        ucRequestType = HOST_ENUMERATION_IDLE;                           // initialise host state on detection
+        ucRequestType = HOST_ENUMERATION_IDLE;                           // initialise host state on detection of device (bus reset has been executed)
     case USB_HOST_SOF:                                                   // start of frame event
         return (fnHostEmumeration(iEndpoint, DEVICE_DETECTED, ptrUSB_HW)); // initiate host state-event-machine
     case USB_DEVICE_REMOVED:                                             // device has been removed from the bus
@@ -1585,10 +1588,9 @@ extern int fnUSB_handle_frame(unsigned char ucType, unsigned char *ptrData, int 
             fnUSB_message(E_USB_DEVICE_STALLED, &ucEndpoint, 1, usb_endpoint_control->event_task); // inform the owner task so that it can decide what to do
         }
         break;
-    case USB_DEVICE_TIMEOUT:
-        ucRequestType = HOST_ENUMERATION_IDLE;
-      //return (fnHostEmumeration(iEndpoint, DEVICE_TIMEOUT, ptrUSB_HW));
-        break;
+    case USB_DEVICE_TIMEOUT:                                             // {35}
+        ucRequestType--;                                                 // set previous state
+        return (fnHostEmumeration(iEndpoint, 0, ptrUSB_HW));             // repeat previous setup request since there was no answer
     case USB_HOST_ACK_PID_DETECTED:                                      // error code 0
     case USB_HOST_NACK_PID_DETECTED:                                     // error code 1
     case USB_HOST_BUS_TIMEOUT_DETECTED:                                  // error code 2

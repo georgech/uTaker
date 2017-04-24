@@ -56,31 +56,13 @@
     21.07.2016 Add FRDM_KEAZN32Q64, FRDM_KEAZ64Q64 and FRDM_KEAZ128Q80
     06.10.2016 Add FRDM_K66F
     22.11.2016 Add TEENSY_3_5 and TEENSY_3_6
+    24.04.2017 Add FT800 interface configuration (tested on FRDM-K64F)   {31}
 
     Application specific hardware configuration
 */
 
 #if defined _KINETIS && !defined __APP_HW_KINETIS__
 #define __APP_HW_KINETIS__
-#if defined KINETIS_K_FPU || defined K02F100M || defined TWR_K20D50M || defined TWR_K21D50M || defined FRDM_K20D50M || defined tinyK20 || defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_KV || defined KINETIS_KW2X // newer devices have these errate solved
-    #define ERRATA_E2583_SOLVED                                          // in early silicon the CAN controllers only work when the OSC is enabled (enable if the chip revision used doesn't suffer from the problem)
-    #define ERRATA_E2644_SOLVED                                          // early devices without flex memory doesn't support speculation logic and this should be disabled
-    #define ERRATE_E2647_SOLVED                                          // early 512k and 384k flash-only devices don't support cache aliasing and this needs to be disabled
-    #define ERRATE_E2448_SOLVED                                          // early devices can have a flash pre-fetch problem when writing the SIM_DIV1 register during the clock change sequence
-    #define ERRATE_E3402_SOLVED                                          // early devices cannot use the XTAL pin as GPIO when the ERCLKEN bit is enabled (simulator blocks its operation in this case)
-    #if !defined FRDM_K64F && !defined TWR_K64F120M && !defined FreeLON
-        #define LAN_TX_FPU_WORKAROUND                                    // {6} when ERRATE_E2647_SOLVED is enabled it is found that the Ethernet Tx can miss a waiting frame in an output buffer. This workaround enables the transmit frame interrupt, which retriggers buffer polling
-    #endif
-    #define ERRATE_E2776_SOLVED                                          // write accesses to the CRC should always be 32-bit when transpose is enabled
-#else                                                                    // when using older devices they can be set accoring to the revision used
-    #define ERRATA_E2583_SOLVED                                          // in early silicon the CAN controllers only work when the OSC is enabled (enable if the chip revision used doesn't suffer from the problem)
-  //#define ERRATA_E2644_SOLVED                                          // early devices without flex memory doesn't support speculation logic and this should be disabled
-  //#define ERRATE_E2647_SOLVED                                          // early 512k and 384k flash-only devices don't support cache aliasing and this needs to be disabled
-  //#define ERRATE_E2448_SOLVED                                          // early devices can have a flash pre-fetch problem when writing the SIM_DIV1 register during the clock change sequence
-  //#define ERRATE_E3402_SOLVED                                          // early devices cannot use the XTAL pin as GPIO when the ERCLKEN bit is enabled (simulator blocks its operation in this case)
-  //#define ERRATE_E2776_SOLVED                                          // write accesses to the CRC should always be 32-bit when transpose is enabled
-#endif
-
 
 // Define clock settings
 //
@@ -90,7 +72,7 @@
     #endif
     #define EXTERNAL_CLOCK       50000000                                // this must be 50MHz in order to use Ethernet in RMII mode
     #define _EXTERNAL_CLOCK      EXTERNAL_CLOCK
-    #if defined USB_INTERFACE                                            // when using USB generate 96MHz clock so that a 48Mhz clock can be generated from it
+    #if defined USB_INTERFACE                                            // when using USB generate 96MHz clock so that a 48MHz clock can be generated from it
         #define CLOCK_DIV        25                                      // input must be divided to 2MHz..4MHz range (/1 to /25 possible)
         #define CLOCK_MUL        48                                      // the PLL multiplication factor to achieve operating frequency of 100MHz (x24 to x55 possible)
     #else
@@ -207,7 +189,7 @@
         #define OSC_LOW_GAIN_MODE
         #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
       //#define USE_HIGH_SPEED_RUN_MODE
-        #if defined USE_HIGH_SPEED_RUN_MODE
+        #if defined USE_HIGH_SPEED_RUN_MODE                              // high speed run mode allow faster operation but can't program/erase flash
             #if defined FRDM_KL82Z
                 #define CLOCK_MUL        16                              // the PLL multiplication factor to achieve operating frequency of 96MHz (x16 to x47 possible) [PLL output range 90..180MHz - VCO is PLL * 2]
             #elif defined FRDM_K66F
@@ -224,11 +206,13 @@
                 #define FLEX_CLOCK_DIVIDE    3                           // 180/3 to give 60MHz (max. 60MHz)
                 #define FLASH_CLOCK_DIVIDE   7                           // 180/7 to give 25.714MHz (max. 28MHz)
             #endif
-        #else
+        #else                                                            // run mode has no functional restrictions but can't operate as fast as high speed run mode
             #if defined FRDM_KL82Z
                 #define CLOCK_MUL        24                              // the PLL multiplication factor to achieve operating frequency of 144MHz (x16 to x47 possible) [PLL output range 90..180MHz - VCO is PLL * 2]
-            #else
+            #elif defined TEENSY_3_6
                 #define CLOCK_MUL        30                              // the PLL multiplication factor to achieve operating frequency of 120MHz (x16 to x47 possible) [PLL output range 90..180MHz - VCO is PLL * 2]
+            #else
+                #define CLOCK_MUL        20                              // the PLL multiplication factor to achieve operating frequency of 120MHz (x16 to x47 possible) [PLL output range 90..180MHz - VCO is PLL * 2]
             #endif
             #if defined FRDM_KL82Z
                 #define SYSTEM_CLOCK_DIVIDE  2                           // 144/2 to give 72MHz
@@ -338,8 +322,8 @@
     #define USB_CRYSTAL_LESS                                             // use 48MHz IRC as USB source (according to Freescale AN4905 - only possible in device mode)
     #define USB_CLOCK_GENERATED_INTERNALLY                               // use USB clock from internal source rather than external pin - 120MHz is suitable
 #elif defined TWR_K60N512 || defined TWR_K60D100M || defined KINETIS_K52 || defined TWR_K53N512 || defined KINETIS_K61 || defined KINETIS_K70
-        #define EXTERNAL_CLOCK       50000000                            // this must be 50MHz in order to use Ethernet in RMII mode
-        #define _EXTERNAL_CLOCK      EXTERNAL_CLOCK
+    #define EXTERNAL_CLOCK           50000000                            // this must be 50MHz in order to use Ethernet in RMII mode
+    #define _EXTERNAL_CLOCK          EXTERNAL_CLOCK
   //#define RUN_FROM_DEFAULT_CLOCK
     #if defined RUN_FROM_DEFAULT_CLOCK
         #define SYSTEM_CLOCK_DIVIDE   1
@@ -347,7 +331,7 @@
         #define FLASH_CLOCK_DIVIDE    2
         #define FLEX_CLOCK_DIVIDE     2
     #else
-        #if defined USB_INTERFACE                                        // when using USB generate 96MHz clock so that a 48Mhz clock can be generated from it
+        #if defined USB_INTERFACE                                        // when using USB generate 96MHz clock so that a 48MHz clock can be generated from it
             #define CLOCK_DIV        25                                  // input must be divided to 2MHz..4MHz range (/1 to /25 possible)
             #define CLOCK_MUL        48                                  // the PLL multiplication factor to achieve operating frequency of 100MHz (x24 to x55 possible)
         #else
@@ -599,6 +583,7 @@
     #define RUN_FROM_DEFAULT_CLOCK                                       // default mode is FLL Engaged Internal - the 31.25kHz IRC is multiplied by FLL factor of 1024 to obtain 32MHz nominal frequency
     #define SYSTEM_CLOCK_DIVIDE  1                                       // divide the clock output to give the system clock (maximum 40MHz) (/1, 2, 4, 8, 16, 32, 64 or 128 possible)
     #define BUS_CLOCK_DIVIDE     2                                       // divide by 1 or 2 to give bus and flash clock (maximum 20MHz)
+  //#define TIMER_CLOCK_DIVIDE_2                                         // optionally clock timers from the ICSOUTCLK/2
 #elif defined TRK_KEA128 || defined FRDM_KEAZ64Q64 || defined FRDM_KEAZ128Q80
     #define CRYSTAL_FREQUENCY    8000000                                 // 8 MHz crystal
   //#define RUN_FROM_EXTERNAL_CLOCK                                      // run directly from external 8MHz clock (without FLL)
@@ -1144,6 +1129,7 @@
     #define SIZE_OF_FLASH       (1024 * 1024)                            // 1M FLASH
     #define SIZE_OF_RAM         (128 * 1024)                             // 128k SRAM
 #elif defined EMCRAFT_K70F120M || defined TWR_K70F120M
+    #define MASK_4N96B
   //#define KINETIS_FLEX                                                 // X part with flex memory rather than N part with program Flash only        
     #define PIN_COUNT           PIN_COUNT_256_PIN                        // 256 pin MAPBGA package
   //#define PIN_COUNT           PIN_COUNT_196_PIN                        // 196 pin MAPBGA package
@@ -1167,6 +1153,9 @@
     #define SIZE_OF_RAM         (256 * 1024)                             // 256k SRAM
     #define QSPI_FILE_SYSTEM                                             // user QSPI interface
 #elif defined KINETIS_K60
+    #if defined TWR_K60N512
+        #define MASK_0M33Z                                               // the mask used on early devices requiring certain important workarounds
+    #endif
   //#define KINETIS_FLEX                                                 // X part with flex memory rather than N part with program Flash only
   //#define PIN_COUNT_100_PIN
   //#define PIN_COUNT_121_PIN
@@ -1341,6 +1330,8 @@
     #undef PHY_ADDRESS
     #define PHY_ADDRESS            2                                     // use 0x02 since 0x01 may not correctly return the PHYID
     #define PHY_ADDRESS_2          1
+    #define PHY_IDENTIFIER         0x00221430                            // phy address 2
+    #define MII_MANAGEMENT_CLOCK_SPEED   2500000                         // 2.5MHz
 #endif
 
 #define PHY_MASK                   0xfffffff0                            // don't check the revision number
@@ -1355,7 +1346,7 @@
 #endif
 
 #if !defined KINETIS_KE
-  //#define SUPPORT_LPTMR                                                // {28} support low power timer
+    #define SUPPORT_LPTMR                                                // {28} support low power timer
     #if defined SUPPORT_LPTMR
       //#define TICK_USES_LPTMR                                          // use low power timer for TICK so that it continues to operate in stop based low power modes
         //Select the clock used by the low power timer - if the timer if to continue running in low power modes the clock chosen should continue to run in that mode too
@@ -1380,16 +1371,6 @@
     #endif
 #endif
 
-
-//#define SUPPORT_TIMER                                                  // support hardware timer interrupt configuration (FlexTimer or TPM)
-
-#if defined KINETIS_KL
-  //#define TPM_CLOCKED_FROM_OSCERCLK                                    // TPM clock is connected to OSCERCLK (external crystal or oscillator)
-  //#define TPM_CLOCKED_FROM_MCGIRCLK                                    // TPM clock is connected to MCGIRCLK (either 32kHz or 4MHz)
-  //#define USE_FAST_INTERNAL_CLOCK                                      // select fast interal clock (4MHz) rather than slow (32kHz)
-                                                                         // default is to use MCGPLLCLK/2 or MCGFLLCLK (depending on whether FLL or PLL is used)
-#endif
-
 #if defined KINETIS_KV || defined KINETIS_KL02 || defined KINETIS_K02    // device without RTC
     #define SUPPORT_SW_RTC                                               // support real time clock based purely on software
 #elif defined KINETIS_KE
@@ -1404,7 +1385,7 @@
             #define RTC_CLOCK_PRESCALER_2  100                           // 128, 256, 512, 1024, 2048, 100 or 1000 (valid for bus clock or 1kHz LPO clock)
     #endif
 #else
-    #define SUPPORT_RTC                                                  // support real time clock
+  //#define SUPPORT_RTC                                                  // support real time clock
     #define ALARM_TASK   TASK_APPLICATION                                // alarm is handled by the application task (handled by time keeper if not defined)
     #if defined TWR_KL46Z48M || defined TWR_KL43Z48M
         #define RTC_USES_RTC_CLKIN                                       // TWR-KL46Z48M and TWR-KL43Z48M have a 32kHz oscillator supplying an accurate clock and the OpenSDA interface supplies a clock on the FRDM-KL46Z as long as the debug interface is powered (not possible with P&E debugger version)
@@ -1414,6 +1395,23 @@
     #endif
 #endif
 
+#define SUPPORT_TIMER                                                    // support hardware timer interrupt configuration (FlexTimer or TPM)
+
+#if defined KINETIS_KL || defined KINETIS_K66
+  //#define TPM_CLOCKED_FROM_OSCERCLK                                    // TPM clock is connected to OSCERCLK (external crystal or oscillator)
+  //#define TPM_CLOCKED_FROM_MCGIRCLK                                    // TPM clock is connected to MCGIRCLK (either 32kHz or 4MHz)
+  //#define USE_FAST_INTERNAL_CLOCK                                      // select fast interal clock (4MHz) rather than slow (32kHz)
+    #if defined KINETIS_K66                                              // device with both flex timer and TPM
+      //#define TPM_CLOCKED_FROM_MCGFFLCLK                               // TPM is clocked by MCGFFLCLK
+      //#define TPM_CLOCKED_FROM_IRC48M                                  // TPM is clocked by IRC48M
+      //#define TPM_CLOCKED_FROM_USB1_PDF                                // TPM is clocked by USB1_PDF
+                                                                         // default is to use MCGPLLCLK
+        #define PERIPHERAL_CLOCK_DIVIDE          2                       // optional divider for these options (divide 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 5, 6, 7 or 8)
+        #define PERIPHERAL_CLOCK_DIVIDE_FRACTION 5                       // 0 or 5 (eg. PERIPHERAL_CLOCK_DIVIDE 2 and PERIPHERAL_CLOCK_DIVIDE_FRACTION 0 gives 2.0 and PERIPHERAL_CLOCK_DIVIDE_FRACTION 5 gives 2.5 divide)
+    #else
+                                                                         // default is to use MCGPLLCLK/2 or MCGFLLCLK (depending on whether FLL or PLL is used)
+    #endif
+#endif
 
 // Include the Kinetis hardware header here
 // - beware that the header delivers rules for subsequent parts of this header file but also accepts some rules from previous parts,
@@ -1780,13 +1778,13 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define SPI_CS0_PORT                ~(SPI2_PUSHR)                // for simulator
     #endif
 #else                                                                    // SPI flash configuration not assigned to a specific board
-    #define MANUAL_FLASH_CS_CONTROL
-    #define CS0_LINE                        PORTE_BIT4                   // CS0 line used when SPI FLASH is enabled
+  //#define MANUAL_FLASH_CS_CONTROL
+  //#define CS0_LINE                        PORTE_BIT4                   // CS0 line used when SPI FLASH is enabled
     #define ASSERT_CS_LINE(ulChipSelectLine) _CLEARBITS(E, ulChipSelectLine)
     #define NEGATE_CS_LINE(ulChipSelectLine) _SETBITS(E, ulChipSelectLine)
 
 
-  //#define CS0_LINE                        SPI_PUSHR_PCS0               // CS0 line used when SPI FLASH is enabled
+    #define CS0_LINE                        SPI_PUSHR_PCS0               // CS0 line used when SPI FLASH is enabled
     #define CS1_LINE                                                     // CS1 line used when extended SPI FLASH is enabled
     #define CS2_LINE                                                     // CS2 line used when extended SPI FLASH is enabled
     #define CS3_LINE                                                     // CS3 line used when extended SPI FLASH is enabled
@@ -2087,9 +2085,9 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define KINETIS_FLASH_CONFIGURATION_PROGRAM_PROTECTION (0xffffffff)  // PROT[31:24]:PROT[23:16]:PROT[15:8]:PROT[7:0] - no protection when all are '1'
     #define KINETIS_FLASH_CONFIGURATION_SECURITY           (FTFL_FSEC_SEC_UNSECURE | FTFL_FSEC_FSLACC_GRANTED | FTFL_FSEC_MEEN_ENABLED | FTFL_FSEC_KEYEN_ENABLED)
     #if defined KINETIS_KL || defined KINETIS_KV
-        #if defined KINETIS_KL03 || defined KINETIS_KL43 || defined KINETIS_KL27
+        #if defined ROM_BOOTLOADER
             #define BOOTLOADER_ERRATA
-            #if defined TWR_KL43Z48M || defined FRDM_KL43Z || defined FRDM_KL03Z || defined FRDM_KL27Z || defined CAPUCCINO_KL27
+            #if defined TWR_KL43Z48M || defined FRDM_KL43Z || defined FRDM_KL03Z || defined FRDM_KL27Z || defined FRDM_KL82Z || defined CAPUCCINO_KL27
                 #define KINETIS_FLASH_CONFIGURATION_NONVOL_OPTION  (FTFL_FOPT_LPBOOT_CLK_DIV_0 | FTFL_FOPT_RESET_PIN_ENABLED | FTFL_FOPT_BOOTSRC_SEL_FLASH | FTFL_FOPT_BOOTPIN_OPT_DISABLE | FTFL_FOPT_NMI_DISABLED) // never use boot ROM
               //#define KINETIS_FLASH_CONFIGURATION_NONVOL_OPTION  (FTFL_FOPT_LPBOOT_CLK_DIV_0 | FTFL_FOPT_RESET_PIN_ENABLED | FTFL_FOPT_BOOTSRC_SEL_FLASH | FTFL_FOPT_BOOTPIN_OPT_ENABLE | FTFL_FOPT_NMI_DISABLED) // use boot ROM if NMI is held low at reset
               //#define KINETIS_FLASH_CONFIGURATION_NONVOL_OPTION (FTFL_FOPT_BOOTSRC_SEL_ROM | FTFL_FOPT_BOOTPIN_OPT_DISABLE | FTFL_FOPT_FAST_INIT | FTFL_FOPT_LPBOOT_CLK_DIV_0 | FTFL_FOPT_RESET_PIN_ENABLED | FTFL_FOPT_NMI_DISABLED) // always use boot ROM
@@ -2134,14 +2132,19 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 
     #if defined KWIKSTIK || defined TWR_K60F120M || defined K20FX512_120 || defined TWR_K21F120M || (defined TWR_K64F120M && defined TWR_SER) || (defined TWR_K60N512 && defined DEBUG_ON_VIRT_COM)
         #define DEMO_UART    5                                           // use UART 5
+        #define RFC2217_UART 0
     #elif defined FRDM_K82F || defined TRINAMIC_LANDUNGSBRUECKE
         #define DEMO_UART    4                                           // use UART 4
-    #elif defined TWR_K70F120M || defined EMCRAFT_K70F120M || defined EMCRAFT_K61F150M || defined TRK_KEA128 || defined TRK_KEA64 || defined TWR_KL46Z48M || defined TWR_KL43Z48M || defined TWR_K21D50M || defined TWR_K65F180M || defined FRDM_K66F || defined FRDM_KEAZN32Q64 || defined FRDM_KEAZ64Q64 || defined FRDM_KEAZ128Q80 || defined TEENSY_3_5 || defined TEENSY_3_6 // {9}{23}
+        #define RFC2217_UART 0
+    #elif defined TWR_K70F120M || defined EMCRAFT_K70F120M || defined EMCRAFT_K61F150M || defined TRK_KEA128 || defined TRK_KEA64 || defined TWR_KL46Z48M || defined TWR_KL43Z48M || defined TWR_K21D50M || defined TWR_K65F180M || defined FRDM_KEAZN32Q64 || defined FRDM_KEAZ64Q64 || defined FRDM_KEAZ128Q80 || defined TEENSY_3_5 || defined TEENSY_3_6 // {9}{23}
         #define DEMO_UART    2                                           // use UART 2
+        #define RFC2217_UART 0
     #elif defined TWR_K20D50M || defined TWR_K80F150M || defined tinyK20 || defined TWR_K20D72M || defined NET_K60 || defined FRDM_KE02Z || defined FRDM_KE02Z40M || defined FRDM_KE06Z || defined FRDM_K22F || defined TWR_K22F120M || defined TWR_K24F120M || defined TWR_K64F120M || defined TWR_KW21D256 || defined TWR_KW24D512 || defined rcARM_KL26 || defined BLAZE_K22 // {2}{16}{25}{30}
         #define DEMO_UART    1                                           // use UART 1
-    #elif defined K02F100M || defined FRDM_K20D50M || defined FRDM_KL46Z || defined FRDM_KL43Z || defined FRDM_KL25Z || defined FRDM_KL26Z || defined FRDM_KL27Z || defined FRDM_KL82Z || defined CAPUCCINO_KL27 || defined TEENSY_LC || defined TWR_KL25Z48M || defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined TRK_KEA8 || defined TEENSY_3_1 || defined FRDM_KE04Z || defined FRDM_K64F || defined TWR_KV10Z32  || defined TWR_KV31F120M || ((defined TWR_K40X256 || defined TWR_K40D100M) && defined DEBUG_ON_VIRT_COM) || defined FreeLON // {21}{22}{24}{25}
+        #define RFC2217_UART 0
+    #elif defined K02F100M || defined FRDM_K20D50M || defined FRDM_KL46Z || defined FRDM_KL43Z || defined FRDM_KL25Z || defined FRDM_KL26Z || defined FRDM_KL27Z || defined FRDM_KL82Z || defined CAPUCCINO_KL27 || defined TEENSY_LC || defined TWR_KL25Z48M || defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined TRK_KEA8 || defined TEENSY_3_1 || defined FRDM_KE04Z || defined FRDM_K64F || defined FRDM_K66F || defined TWR_KV10Z32  || defined TWR_KV31F120M || ((defined TWR_K40X256 || defined TWR_K40D100M) && defined DEBUG_ON_VIRT_COM) || defined FreeLON // {21}{22}{24}{25}
         #define DEMO_UART    0                                           // use UART 0
+        #define RFC2217_UART 1
     #elif defined NET_KBED                                               // {16}
         #if defined KBEDM_BOARD
             #if defined SPI_LCD
@@ -2156,8 +2159,10 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #else
             #define DEMO_UART    5                                       // use UART 5        
         #endif
+        #define RFC2217_UART     2
     #else
         #define DEMO_UART        3                                       // use UART 3
+        #define RFC2217_UART     0
     #endif
     #if defined FRDM_KL03Z || defined FRDM_KL43Z || defined FRDM_KL27Z || defined FRDM_KL82Z || defined CAPUCCINO_KL27 || defined TWR_KL43Z48M || defined FRDM_K22F || defined TWR_KV31F120M || defined TWR_K80F150M || defined FRDM_K82F
         #define LPUART_IRC48M                                            // if the 48MHz clock is available clock the LPUART from it
@@ -2215,7 +2220,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #elif defined rcARM_KL26
         #define UART1_ON_C                                               // UART1-RX on PTC3
         #define UART1_ON_A_TX                                            // UART1-TX on PTA19 (override)
-    #elif defined FRDM_K20D50M || defined TEENSY_3_1 || defined FRDM_KE04Z || defined FRDM_K64F || defined TWR_KV10Z32 || defined TWR_KV31F120M || defined FreeLON // {21}{26}
+    #elif defined FRDM_K20D50M || defined TWR_K20D50M || defined TEENSY_3_1 || defined FRDM_KE04Z || defined FRDM_K64F || defined FRDM_K66F || defined TWR_KV10Z32 || defined TWR_KV31F120M || defined FreeLON // {21}{26}
         #define UART0_ON_B                                               // alternative UART0 pin mapping
         #if defined FRDM_K20D50M
             #define UART1_ON_C
@@ -2265,8 +2270,6 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define UART1_ON_C
     #elif defined FRDM_KL82Z
         #define LPUART0_ON_B                                             // alternative LPUART0 pin mapping
-    #elif defined TWR_K20D50M
-        #define UART0_ON_B                                               // alternative UART0 pin mapping
     #elif defined TWR_K20D72M
         #define UART3_ON_B                                               // alternative UART3 pin mapping
     #else
@@ -2336,7 +2339,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 #if defined FRDM_K64F || defined TWR_K60N512 || defined TWR_K60D100M || defined TWR_K60F120M || defined TWR_K64F120M || defined TWR_K70F120M || defined TWR_K80F150M || defined NET_KBED || defined NET_K60 // {16}
     #define CAN0_ON_PB                                                   // CAN 0 on PB pins rather than PA
 #endif
-#if defined TWR_K60N512 || defined TWR_K60D100M || defined TWR_K70F120M || defined TWR_K80F150M || defined NET_KBED	|| defined NET_K60 // {16}
+#if defined TWR_K60N512 || defined TWR_K60D100M || defined TWR_K80F150M || defined NET_KBED	|| defined NET_K60 // {16}
     #define CAN1_ON_PE                                                   // CAN 1 on PE pins rather than PC
 #endif
 
@@ -2513,6 +2516,10 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
       //#define FTM1_0_ON_B                                              // FTM1 channel 0 on port B rather than port A
       //#define FTM1_1_ALT_C                                             // FTM1 channel 1 on second port A location
       //#define FTM1_1_ON_B                                              // FTM1 channel 1 on port B rather than port A
+        #if defined FRDM_KL26Z
+            #define TPM1_0_ON_E
+            #define TPM1_1_ON_E
+        #endif
 
       //#define FTM2_0_ON_B                                              // FTM2 channel 0 on port B rather than port A
       //#define FTM2_1_ON_B                                              // FTM2 channel 1 on port B rather than port A
@@ -2563,7 +2570,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 #define SUPPORT_PORT_INTERRUPTS                                          // support code for port interrupts (IRQ for KE/KEA devices)
     #if defined FRDM_KL03Z
         #define NO_PORT_INTERRUPTS_PORTA                                 // remove port interrupt support from port A
-      //#define NO_PORT_INTERRUPTS_PORTB                                 // remove port interrupt support from port B
+        #define NO_PORT_INTERRUPTS_PORTB                                 // remove port interrupt support from port B
     #else
       //#define NO_PORT_INTERRUPTS_PORTA                                 // remove port interrupt support from port A
       //#define NO_PORT_INTERRUPTS_PORTB                                 // remove port interrupt support from port B
@@ -2576,9 +2583,9 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define UART_PULL_UPS  (PORT_PS_UP_ENABLE)                           // activate pull-ups on UART lines to avoid them floating in low power modes (which causes leakage currents to flow)
     #define SUPPORT_LLWU                                                 // enable support of the low-leakage wakeup unit (when available)
     #if defined FRDM_KL03Z
-      //#define NO_WAKEUP_0_7                                            // no wakeup support of LLWU_P0..P7
-        #define NO_WAKEUP_8_15                                           // no wakeup support of LLWU_P8..P15
-      //#define NO_WAKEUP_MODULE                                         // no wakeup support of LLWU modules
+      //#define NO_WAKEUP_0_7                                            // no wakeup support on LLWU_P0..P7
+        #define NO_WAKEUP_8_15                                           // no wakeup support on LLWU_P8..P15
+      //#define NO_WAKEUP_MODULE                                         // no wakeup support on LLWU modules
     #endif
 #endif
 
@@ -2632,6 +2639,9 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define NUMBER_OF_TX_BUFFERS_IN_ETHERNET_DEVICE         2            // allocate 2 buffers for transmission
     #define NUMBER_OF_RX_BUFFERS_IN_ETHERNET_DEVICE         6            // allocate 6 (full) buffers for reception
     //#define USE_MULTIPLE_BUFFERS                                       // construct the receive buffer space using multiple 256 byte buffers (improved overrun performance for total memory requirement but reduced efficiency due to extra copy)
+    #if !defined ERRATA_ID_2647 && !defined KINETIS_K64
+        #define LAN_TX_FPU_WORKAROUND                                    // when ERRATE_ID_2647 is not present it is found that the Ethernet Tx can miss a waiting frame in an output buffer. This workaround enables the transmit frame interrupt, which retriggers buffer polling
+    #endif
 #endif
 #if defined ETH_INTERFACE || defined USB_CDC_RNDIS
     #if !defined USB_TO_ETHERNET
@@ -2734,7 +2744,8 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define DMA_UART4_RX_INT_PRIORITY  (PRIORITY_DMA13)                  // the interrupts used by the DMA transfer completion need to match with the DMA channel used
     #define DMA_UART5_RX_INT_PRIORITY  (PRIORITY_DMA14)                  // the interrupts used by the DMA transfer completion need to match with the DMA channel used
 
-    #define DMA_MEMCPY_CHANNEL     15                                    // use this DMA channel when memory to memory operations are performed (this should lowest priority and can be stalled by higher priority channels)
+    #define DMA_MEMCPY_CHANNEL_ALT 14                                    // alternative DMA channel to use if DMA based memory to memory operations are already in progress
+    #define DMA_MEMCPY_CHANNEL     15                                    // use this DMA channel when memory to memory operations are performed (this should have lowest priority and can be stalled by higher priority channels)
 #elif defined KINETIS_KL
     #define DMA_UART0_TX_CHANNEL   0                                     // use this DMA channel when using UART 0 for transmission driven by DMA
     #define DMA_UART1_TX_CHANNEL   1                                     // use this DMA channel when using UART 1 for transmission driven by DMA
@@ -2828,8 +2839,8 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     // Define interrupt priorities in the system (kinetis supports 0..15 - 0 is highest priority and 15 is lowest priority)
     //
     #define SYSTICK_PRIORITY           15                                // lowest priority
-    #define PRIORITY_USB_HS_OTG        14
-    #define USB_PIT_INTERRUPT_PRIORITY 13
+    #define USB_PIT_INTERRUPT_PRIORITY 14                                // the PIT used by USB host must have a lower interrupt priority than the USB host itself!
+    #define PRIORITY_USB_HS_OTG        13
     #define PRIORITY_UART0             12
     #define PRIORITY_UART1             11
     #define PRIORITY_UART2             10
@@ -2896,7 +2907,8 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define PRIORITY_RTC               2
     #define PRIORITY_EMAC              1
 
-  //#define EMAC_PREEMPT_LEVEL         (PIT0_INTERRUPT_PRIORITY << __NVIC_PRIORITY_SHIFT) // don't allow interrupts of this priority and below to pre-empt Ethernet transmissions (such interrupts can then safely send Ethernet frames)
+  //#define EMAC_PREEMPT_LEVEL            (PIT0_INTERRUPT_PRIORITY << __NVIC_PRIORITY_SHIFT) // don't allow interrupts of this priority and below to pre-empt Ethernet transmissions (such interrupts can then safely send Ethernet frames)
+  //#define SYSTEM_NO_DISABLE_LEVEL       (1 << __NVIC_PRIORITY_SHIFT)   // allow interrupts of higher priority than this to not be blocked in critical regions
     #define LOWEST_PRIORITY_PREEMPT_LEVEL  0                             // normal level is for all interrupts to be able to operate
 #endif
 
@@ -3605,7 +3617,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define SWITCH_3               (PORTA_BIT4)                          // switch 3 - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
 
     #define DEMO_LED_1             (LED_GREEN)
-    #define DEMO_LED_2             (PORTC_BIT16)
+    #define DEMO_LED_2             (PORTC_BIT16)                         // J1-2
     #define DEMO_LED_3             (LED_RED)
     #define DEMO_LED_4             (LED_BLUE)
 
@@ -3759,6 +3771,8 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define ENC424J600_IRQ_PORT  PORTC                               // the port that the IRQ line is on
         #define ENC424J600_IRQ_PRIORITY PRIORITY_PORT_C_INT              // the interrupt priority
     #endif
+
+    #define LCD_PWRDN_N            (PORTC_BIT5)                          // power down LCD - J1-15 on FRDM-K64F
     #endif
 #elif defined EMCRAFT_K70F120M || defined EMCRAFT_K61F150M               // {9}
     #define LED_DS3                (PORTE_BIT11)                         // LED on mother board - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
@@ -3885,6 +3899,10 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define WAVE_DISK_START_STOP_INT_PORT        PORTE
     #define WAVE_DISK_START_STOP_INT_BIT         SWITCH_2
     #define RECORDER_WAVE_FILE_NAME              "TWR_K60F120.wav"
+
+    // When using HS USB on the TWR-SER2 board the USB tranceiver needs to be taken out of reset by setting PTB8 to '1'
+    //
+    #define ENABLE_HSUSB_TRANSCEIVER()   _CONFIG_DRIVE_PORT_OUTPUT_VALUE(B, (PORTB_BIT8), (PORTB_BIT8), (PORT_SRE_SLOW | PORT_DSE_LOW)); // take the HS USB transceiver out of reset state
 #elif defined K60F150M_50M
     #define DEMO_LED_1             (PORTB_BIT6)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
     #define DEMO_LED_2             (PORTB_BIT7)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
@@ -5041,7 +5059,11 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define ACTIVATE_WATCHDOG()     SIM_COPC = (SIM_COPC_COPCLKS_1K | SIM_COPC_COPT_LONGEST) // 1.024s watchdog timeout
     #define TOGGLE_WATCHDOG_LED()   _TOGGLE_PORT(B, BLINK_LED)
 
-    #define CONFIG_TEST_OUTPUT()                                         // we use DEMO_LED_2 which is configured by the user code (and can be disabled in parameters if required)
+    #if defined USE_MAINTENANCE
+        #define CONFIG_TEST_OUTPUT()                                     // we use DEMO_LED_2 which is configured by the user code (and can be disabled in parameters if required)
+    #else
+        #define CONFIG_TEST_OUTPUT() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(B, (DEMO_LED_2), (DEMO_LED_2), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+    #endif
     #define TOGGLE_TEST_OUTPUT()    _TOGGLE_PORT(B, DEMO_LED_2)
     #define SET_TEST_OUTPUT()       _SETBITS(B, DEMO_LED_2)
     #define CLEAR_TEST_OUTPUT()     _CLEARBITS(B, DEMO_LED_2)
@@ -6999,10 +7021,17 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define USER_PORT_1_BIT        PORTD_BIT8                             // use free PA pins on Eval board
     #define USER_PORT_2_BIT        PORTD_BIT9
     #define USER_PORT_3_BIT        PORTD_BIT10
-    #define USER_PORT_4_BIT        PORTD_BIT11
-    #define USER_PORT_5_BIT        PORTD_BIT12
-    #define USER_PORT_6_BIT        PORTD_BIT13
-    #define USER_PORT_7_BIT        PORTD_BIT14
+    #if defined TWR_K60D100M && defined SPI_FILE_SYSTEM                  // avoid reconfiguring SPI Flash lines
+        #define USER_PORT_4_BIT    0
+        #define USER_PORT_5_BIT    0
+        #define USER_PORT_6_BIT    0
+        #define USER_PORT_7_BIT    0
+    #else
+        #define USER_PORT_4_BIT    PORTD_BIT11
+        #define USER_PORT_5_BIT    PORTD_BIT12
+        #define USER_PORT_6_BIT    PORTD_BIT13
+        #define USER_PORT_7_BIT    PORTD_BIT14
+    #endif
     #if defined TWR_K64F120M
         #define USER_PORT_8_BIT    0                                     // avoid PHY interrupt line
     #else
@@ -7037,10 +7066,17 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define _CONFIG_OUTPUT_PORT_2()    _CONFIG_PORT_OUTPUT(D, PORTD_BIT9,  (PORT_SRE_SLOW))
     #endif
     #define _CONFIG_OUTPUT_PORT_3()    _CONFIG_PORT_OUTPUT(D, PORTD_BIT10, (PORT_SRE_SLOW))
-    #define _CONFIG_OUTPUT_PORT_4()    _CONFIG_PORT_OUTPUT(D, PORTD_BIT11, (PORT_SRE_SLOW))
-    #define _CONFIG_OUTPUT_PORT_5()    _CONFIG_PORT_OUTPUT(D, PORTD_BIT12, (PORT_SRE_SLOW))
-    #define _CONFIG_OUTPUT_PORT_6()    _CONFIG_PORT_OUTPUT(D, PORTD_BIT13, (PORT_SRE_SLOW))
-    #define _CONFIG_OUTPUT_PORT_7()    _CONFIG_PORT_OUTPUT(D, PORTD_BIT14, (PORT_SRE_SLOW))
+    #if defined TWR_K60D100M && defined SPI_FILE_SYSTEM                  // avoid reconfiguring SPI Flash lines
+        #define _CONFIG_OUTPUT_PORT_4()
+        #define _CONFIG_OUTPUT_PORT_5()
+        #define _CONFIG_OUTPUT_PORT_6()
+        #define _CONFIG_OUTPUT_PORT_7()
+    #else
+        #define _CONFIG_OUTPUT_PORT_4()    _CONFIG_PORT_OUTPUT(D, PORTD_BIT11, (PORT_SRE_SLOW))
+        #define _CONFIG_OUTPUT_PORT_5()    _CONFIG_PORT_OUTPUT(D, PORTD_BIT12, (PORT_SRE_SLOW))
+        #define _CONFIG_OUTPUT_PORT_6()    _CONFIG_PORT_OUTPUT(D, PORTD_BIT13, (PORT_SRE_SLOW))
+        #define _CONFIG_OUTPUT_PORT_7()    _CONFIG_PORT_OUTPUT(D, PORTD_BIT14, (PORT_SRE_SLOW))
+    #endif
     #if defined TWR_K64F120M
         #define _CONFIG_OUTPUT_PORT_8()                                  // avoid PHY interrupt line
     #else
@@ -7700,7 +7736,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define POWER_UP_SD_CARD()                                       // apply power to the SD card if appropriate
         #define POWER_DOWN_SD_CARD()
         #define GET_SDCARD_WP_STATE()  0                                 // never write protect
-    #elif defined FRDM_KL25Z
+    #elif defined FRDM_KL25Z || defined TWR_KL25Z48M
         // Configure to suit special connection SPI mode at between 100k and 400k (SPI1)
         // - SPI1_CS   PTD-4 (J1-6) [VDD J9-4 / 0V J9-14]
         // - SPI1_SCK  PTD-5 (J2-4)
@@ -7724,7 +7760,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define SET_SPI_SD_INTERFACE_FULL_SPEED() SPI1_BR = (SPI_BR_SPPR_PRE_1 | SPI_BR_SPR_DIV_2)
         #if defined _WINDOWS
             #define WRITE_SPI_CMD(byte)    SPI1_D = (byte); SPI1_D = _fnSimSD_write((unsigned char)byte)
-            #define WAIT_TRANSMISSON_END() while (!(SPI1_S & (SPI_S_SPRF))) { SPI1_S |= (SPI_S_SPRF); }
+            #define WAIT_TRANSMISSON_END() while ((SPI1_S & (SPI_S_SPRF)) == 0) { SPI1_S |= (SPI_S_SPRF); }
             #define READ_SPI_DATA()        (unsigned char)SPI1_D
         #else
             #define WRITE_SPI_CMD(byte)    SPI1_D = (byte)
@@ -8621,6 +8657,52 @@ typedef unsigned long LCD_CONTROL_PORT_SIZE;
     #define _GLCD_BACKLIGHT_PWM_FREQUENCY (unsigned char)(PWM_US_DELAY(PWM_FREQUENCY_VALUE(2000 * 128)))
 #endif
 
+#if defined FT800_GLCD_MODE                                              // {31}
+    #define ENABLE_BACKLIGHT()
+
+    #define FLUSH_LCD_SPI_FIFO_AND_FLAGS()      SPI0_MCR |= SPI_MCR_CLR_RXF; SPI0_SR = (SPI_SR_EOQF | SPI_SR_TFUF | SPI_SR_TFFF | SPI_SR_RFOF | SPI_SR_RFDF)
+
+    #define CONFIGURE_GLCD()          POWER_UP(6, SIM_SCGC6_SPI0);\
+                                      _CONFIG_PERIPHERAL(D, 0, (PD_0_SPI0_PCS0 | PORT_SRE_FAST | PORT_DSE_HIGH));\
+                                      _CONFIG_PERIPHERAL(D, 1, (PD_1_SPI0_SCK | PORT_SRE_FAST | PORT_DSE_HIGH));\
+                                      _CONFIG_PERIPHERAL(D, 2, (PD_2_SPI0_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH));\
+                                      _CONFIG_PERIPHERAL(D, 3, PD_3_SPI0_SIN);\
+                                      SPI0_MCR = (SPI_MCR_MSTR | SPI_MCR_DCONF_SPI | SPI_MCR_CLR_RXF | SPI_MCR_CLR_TXF | SPI_MCR_PCSIS_CS0 | SPI_MCR_PCSIS_CS1 | SPI_MCR_PCSIS_CS2 | SPI_MCR_PCSIS_CS3 | SPI_MCR_PCSIS_CS4 | SPI_MCR_PCSIS_CS5);\
+                                      SPI0_CTAR0 = (SPI_CTAR_DBR | SPI_CTAR_FMSZ_8 | SPI_CTAR_PDT_7 | SPI_CTAR_BR_4 | SPI_CTAR_ASC_0); // for 50MHz bus, 25MHz speed and 140ns min de-select time      
+    #if !defined _WINDOWS
+        #define _FT8XXEMU_cs(x)
+        #define _FT8XXEMU_transfer(x)
+    #endif
+    #define WRITE_LCD_SPI_CMD0(byte)            SPI0_PUSHR = (byte | SPI_PUSHR_CONT | SPI_PUSHR_PCS0 | SPI_PUSHR_CTAS_CTAR0); _FT8XXEMU_transfer(byte);  // write a single byte to the output FIFO - assert CS line
+    #define WRITE_LCD_SPI_CMD0_FIRST(byte)      FLUSH_LCD_SPI_FIFO_AND_FLAGS(); _FT8XXEMU_cs(1); WRITE_LCD_SPI_CMD0(byte) // assert the chip select line and send a byte
+    #define WRITE_LCD_SPI_CMD0_LAST(byte)       SPI0_PUSHR = (byte | SPI_PUSHR_EOQ | SPI_PUSHR_PCS0 | SPI_PUSHR_CTAS_CTAR0); _FT8XXEMU_transfer(byte); _FT8XXEMU_cs(1) // write final byte to output FIFO - this will negate the CS line when complete
+    #define WAIT_LCD_SPI_RECEPTION_END()        while ((SPI0_SR & SPI_SR_RFDF) == 0) {}
+    #define READ_LCD_SPI_FLUSH_DATA()           (unsigned char)SPI0_POPR
+    #define CLEAR_LCD_SPI_RECEPTION_FLAG()      SPI0_SR |= SPI_SR_RFDF
+    #if defined _WINDOWS
+        #define READ_LCD_SPI_CMD0(byte, value) SPI0_PUSHR = (byte | SPI_PUSHR_CONT | SPI_PUSHR_PCS0 | SPI_PUSHR_CTAS_CTAR0); value = _FT8XXEMU_transfer(byte)
+        #define READ_LCD_SPI_CMD0_LAST(byte, value) SPI0_PUSHR = (byte | SPI_PUSHR_EOQ | SPI_PUSHR_PCS0 | SPI_PUSHR_CTAS_CTAR0); value = _FT8XXEMU_transfer(byte); _FT8XXEMU_cs(1)
+    #else
+        #define READ_LCD_SPI_CMD0(byte, value)  SPI0_PUSHR = (byte | SPI_PUSHR_CONT | SPI_PUSHR_PCS0 | SPI_PUSHR_CTAS_CTAR0); WAIT_LCD_SPI_RECEPTION_END(); value = READ_LCD_SPI_FLUSH_DATA(); CLEAR_LCD_SPI_RECEPTION_FLAG()
+        #define READ_LCD_SPI_CMD0_LAST(byte, value) SPI0_PUSHR = (byte | SPI_PUSHR_EOQ | SPI_PUSHR_PCS0 | SPI_PUSHR_CTAS_CTAR0); WAIT_LCD_SPI_RECEPTION_END(); value = READ_LCD_SPI_FLUSH_DATA(); CLEAR_LCD_SPI_RECEPTION_FLAG()
+    #endif
+    #define FLUSH_LCD_SPI_RX(count)             {int i = count; while (i != 0) {WAIT_LCD_SPI_RECEPTION_END(); (void)SPI0_POPR; CLEAR_LCD_SPI_RECEPTION_FLAG(); i--;}}
+                                      
+    #define GLCD_RST_H()              _SETBITS(C, LCD_PWRDN_N);
+    #if defined _WINDOWS
+        #define MAX_GLCD_WRITE_BURST   10000                             // the maximum number of writes to the GLCD before the task yields
+    #else
+        #define MAX_GLCD_WRITE_BURST   1000                              // the maximum number of writes to the GLCD before the task yields
+    #endif
+
+  //#define GLCD_BACKLIGHT_CONTROL                                       // (requires SUPPORT_PWM_MODULE)
+  //#define TEMP_HUM_TEST
+  //#define VARIABLE_PIXEL_COLOUR                                        // support control of background and pixel colors
+
+    #define _GLCD_BACKLIGHT_TIMER         6                              // PWM channel 6 (TC)
+    #define _GLCD_TIMER_MODE_OF_OPERATION (PWM_PRESCALER_128 | PWM_SCALED_CLOCK_INPUT | PWM_POLARITY)
+    #define _GLCD_BACKLIGHT_PWM_FREQUENCY (unsigned char)(PWM_US_DELAY(PWM_FREQUENCY_VALUE(2000 * 128)))
+#endif
 
 // Keypad
 //

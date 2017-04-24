@@ -20,7 +20,7 @@
     18.07.2015 Add USB_SIMPLEX_ENDPOINTS suport to HS device             {1}
     05.10.2015 fnGetUSB_HW() modification for compatibility with host mode
     23.12.2015 Add zero copy OUT endpoint buffer option                  {2}
-    07.02.2016 Set length to 8 when receiving setup frames (to avoid old lengths form OUTs on the endpoint form being kept) {3}
+    07.02.2016 Set length to 8 when receiving setup frames (to avoid old lengths from OUTs on the endpoint from being kept) {3}
 
 */
 #if defined USB_HS_INTERFACE
@@ -92,7 +92,7 @@ static int fnProcessInput(int iEndpoint_ref, USB_HW *usb_hardware, unsigned char
         return MAINTAIN_OWNERSHIP;
     case STALL_ENDPOINT:                                                 // send stall
         if (iEndpoint_ref == 0) {                                        // check whether control 0 endpoint
-            ptEndpointBD->usb_bd_tx_even.ulUSB_BDControl = (OWN | BDT_STALL);// force stall handshake on both control 0 buffers
+            ptEndpointBD->usb_bd_tx_even.ulUSB_BDControl = (OWN | BDT_STALL); // force stall handshake on both control 0 buffers
             ptEndpointBD->usb_bd_tx_odd.ulUSB_BDControl  = (OWN | BDT_STALL);
             fnSetUSBEndpointState(iEndpoint_ref, USB_ENDPOINT_STALLED);       
             _SIM_USB(USB_SIM_STALL, iEndpoint_ref, usb_hardware);

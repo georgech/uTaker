@@ -87,7 +87,7 @@ extern void fnConnectGPIO(int iPortRef, unsigned long ulPortBits, unsigned long 
         ulMask = (PORT_MUX_MASK | PORT_DSE_HIGH | PORT_ODE | PORT_PFE | PORT_SRE_SLOW | PORT_PS_UP_ENABLE);
     }
     while (ulPortBits != 0) {                                            // for each specified pin
-        if (ulPortBits & ulBit) {
+        if ((ulPortBits & ulBit) != 0) {
             *ptrPCR = ((*ptrPCR & ~ulMask) | ulCharacteristics);         // {115} set the GPIO characteristics for each port pin
             ulPortBits &= ~(ulBit);                                      // pin has been set
         }
@@ -122,7 +122,7 @@ static void (*gpio_handlers_A[PORT_WIDTH])(void) = {0};                  // a ha
     #if !defined NO_PORT_INTERRUPTS_PORTB && (defined irq_PORTB_ID || defined irq_PORTBCD_E_ID) // {1} if port B support has not been removed
 static void (*gpio_handlers_B[PORT_WIDTH])(void) = {0};                  // a handler for each possible port B pin
     #endif
-    #if (PORTS_AVAILABLE > 2) && !defined NO_PORT_INTERRUPTS_PORTC       // if port C support has not been removed
+    #if (PORTS_AVAILABLE > 2) && (defined irq_PORTC_ID || defined irq_PORTC_D_ID || defined irq_PORTBCD_E_ID) && !defined NO_PORT_INTERRUPTS_PORTC  // if port C support has not been removed
 static void (*gpio_handlers_C[PORT_WIDTH])(void) = {0};                  // a handler for each possible port C pin
     #endif
     #if (PORTS_AVAILABLE > 3) && !defined NO_PORT_INTERRUPTS_PORTD       // if port D support has not been removed
@@ -539,7 +539,7 @@ static void fnEnterPortInterruptHandler(INTERRUPT_SETUP *port_interrupt, unsigne
                 }
                 break;
     #endif
-    #if (PORTS_AVAILABLE > 2) && (defined irq_PORTC_ID || defined irq_PORTC_D_ID || defined irq_PORTBCD_E_ID) &&  !defined NO_PORT_INTERRUPTS_PORTC // if port C support has not been removed
+    #if (PORTS_AVAILABLE > 2) && (defined irq_PORTC_ID || defined irq_PORTC_D_ID || defined irq_PORTBCD_E_ID) && !defined NO_PORT_INTERRUPTS_PORTC // if port C support has not been removed
             case PORTC:
                 gpio_handlers_C[port_bit] = port_interrupt->int_handler; // {26} enter the application handler
                 if (gpio_handlers_C[port_bit] != 0) {

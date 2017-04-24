@@ -163,7 +163,7 @@ static void fnHandleWakeupSources(volatile unsigned char *prtFlagRegister, int i
     ucBit = 0x01;
     while (ucFlags != 0) {                                               // while sources are flagged
         if ((ucFlags & ucBit) != 0) {
-            ucFlags &= ~ucBit;
+            ucFlags &= ~ucBit;                                           // source handled
             if (iSouceStart >= (WAKEUP_SOURCES_0_7 + WAKEUP_SOURCES_8_15)) { // wakeup module interrupts
     #if !defined KINETIS_WITHOUT_RTC
                 switch (1 << (iSouceStart - (WAKEUP_SOURCES_0_7 + WAKEUP_SOURCES_8_15))) { // wakeup module interrupts must be cleared at the source
@@ -287,13 +287,13 @@ static __interrupt void _wakeup_isr(void)
                     ucInterruptType = LLWU_PE_WUPE_OFF;
                     break;
                 }
-                if (wakeup_interrupt->int_port_sense & PULLUP_ON) {
+                if ((wakeup_interrupt->int_port_sense & PULLUP_ON) != 0) {
                     ulCharacteristics |= (PORT_PS_UP_ENABLE | PORT_PSEUDO_FLAG_SET_ONLY_PULLS);
                 }
-                else if (wakeup_interrupt->int_port_sense & PULLDOWN_ON) {
+                else if ((wakeup_interrupt->int_port_sense & PULLDOWN_ON) != 0) {
                     ulCharacteristics |= (PORT_PS_DOWN_ENABLE | PORT_PSEUDO_FLAG_SET_ONLY_PULLS);
                 }
-                if ((ulCharacteristics != 0) || (ENABLE_PORT_MODE & wakeup_interrupt->int_port_sense)) { // if a pull-up / down is specified or port enable desired
+                if ((ulCharacteristics != 0) || ((ENABLE_PORT_MODE & wakeup_interrupt->int_port_sense) != 0)) { // if a pull-up / down is specified or port enable desired
                     if (wakeup_interrupt->int_port >= PORTS_AVAILABLE) {
                         _EXCEPTION("Invalid port!!");
                         return;
@@ -308,9 +308,9 @@ static __interrupt void _wakeup_isr(void)
                 // The port inputs are now mapped to available LLWU pins (pins that do not have LLWU functionality will not be configured)
                 //
                 while (ulPortBits != 0) {                                // handle each bit on the port
-                    if (wakeup_interrupt->int_port_bits & ulBit) {       // if the port bit is to be enabled
+                    if ((wakeup_interrupt->int_port_bits & ulBit) != 0) {// if the port bit is to be enabled
                         if (cWakeupPorts[wakeup_interrupt->int_port][iBitRef] != NO_WAKEUP) {
-                            int iShift = ((cWakeupPorts[wakeup_interrupt->int_port][iBitRef]%4) * LLWU_PE_WUPE_SHIFT);
+                            int iShift = ((cWakeupPorts[wakeup_interrupt->int_port][iBitRef] % 4) * LLWU_PE_WUPE_SHIFT);
                             volatile unsigned char *ptrFlagRegister = (LLWU_FLAG_ADDRESS + (cWakeupPorts[wakeup_interrupt->int_port][iBitRef]/8));
                             unsigned char *ptrWakeupEnable = (unsigned char *)LLWU_BLOCK + (cWakeupPorts[wakeup_interrupt->int_port][iBitRef]/4); // set the enable register pointer
                             unsigned char ucValueMask = (LLWU_PE_WUPE_MASK << iShift); // set the mask in the enable register

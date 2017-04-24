@@ -31,6 +31,7 @@
     16.11.2015 Ensure that EMULATED_FAT_LUMS is available                {13}
     17.01.2016 Add utFileAttribute() - allows changing file attributes (not directories) {14}
     17.01.2016 Reset long file name counter when skipping hidden files   {15} [uFATV2.03]
+    24.04.2017 Handle USB_MSD_REMOVED when memory stick is removed       {16}
 
 */
 
@@ -3005,7 +3006,7 @@ extern void fnMassStorage(TTASKTABLE *ptrTaskTable)
         #endif
     #endif                                                               // end #if defined SDCARD_SUPPORT || defined USB_MSD_HOST
 
-    // Interrupt and timer events are onyl valid for the SD card interface
+    // Interrupt and timer events are only valid for the SD card interface
     //
     while (fnRead(ptrTaskTable->TaskID, ucInputMessage, HEADER_LENGTH)) {// check task input queue
         switch (ucInputMessage[MSG_SOURCE_TASK]) {
@@ -3078,6 +3079,12 @@ extern void fnMassStorage(TTASKTABLE *ptrTaskTable)
                     uTaskerStateChange(OWN_TASK, UTASKER_ACTIVATE);      // schedule the task to start mounting
                     fnDebugMsg("Mem-Stick mounting...\r\n");
                 }
+            }
+            else if (ucInputMessage[0] == USB_MSD_REMOVED) {             // {16} the memory stick has been removed so the disk can be unmounted
+                utDisks[DISK_E].usDiskFlags = DISK_NOT_PRESENT;
+                iMemoryState[DISK_E] = SD_STATE_STARTING;
+                iMemoryOperation[DISK_E] = _IDLE_MEMORY;
+                fnDebugMsg("Mem-Stick unmounted\r\n");
             }
             break;
     #endif

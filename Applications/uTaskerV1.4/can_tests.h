@@ -27,7 +27,7 @@
     #define _CAN_CONFIG
 
     #define TEST_CAN                                                     // test CAN operation
-        #define PARTNER_CAN                                              // quick set of CAN partner addresses (use this when testing between two boards running the same test - one with and one without this)
+      //#define PARTNER_CAN                                              // quick set of CAN partner addresses (use this when testing between two boards running the same test - one with and one without this)
       //#define TEST_FIRST_CAN_ONLY
 
 /* =================================================================== */
@@ -195,8 +195,8 @@ static void fnInitCANInterface(void)                                     // {1}
 
     tCANParameters.Task_to_wake = OWN_TASK;                              // wake us on buffer events
     tCANParameters.Channel = 0;                                          // CAN0 interface
-    tCANParameters.ulSpeed = 1000000;                                    // 1 Meg speed
-  //tCANParameters.ulSpeed = 40000;                                      // slow speed for test
+  //tCANParameters.ulSpeed = 1000000;                                    // 1 Meg speed
+    tCANParameters.ulSpeed = 40000;                                      // slow speed for test
     #if defined PARTNER_CAN
     tCANParameters.ulTxID = (CAN_EXTENDED_ID | 0x00000105);              // our partner's ID on the bus (extended)
     tCANParameters.ulRxID = 0x102;                                       // our standard rx ID on the bus (not extended)
@@ -214,7 +214,7 @@ static void fnInitCANInterface(void)                                     // {1}
 
     #if !defined TEST_FIRST_CAN_ONLY && (NUMBER_OF_CAN_INTERFACES > 1)   // {3}
     tCANParameters.Channel = 1;                                          // CAN1 interface
-        #ifdef PARTNER_CAN
+        #if defined PARTNER_CAN
     tCANParameters.ulTxID = 0x102;                                       // default ID of destination (not extended)
     tCANParameters.ulRxID = (CAN_EXTENDED_ID | 0x00000105);              // our ID (extended)
     tCANParameters.ulRxIDMask = CAN_EXTENDED_MASK;

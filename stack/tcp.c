@@ -899,7 +899,7 @@ extern QUEUE_TRANSFER fnSendBufTCP(USOCKET TCP_socket, unsigned char *ptrBuf, un
                 if (tcp_tx->ucPutFrame-- == 0) {
                     tcp_tx->ucPutFrame = (WINDOWING_BUFFERS-1);
                 }
-                if ((iRepeatSimple) || (tcp_tx->tx_window[tcp_tx->ucPutFrame].ucNegotiate & TCP_CONTENT_NEGOTIATION)) {
+                if ((iRepeatSimple != 0) || ((tcp_tx->tx_window[tcp_tx->ucPutFrame].ucNegotiate & TCP_CONTENT_NEGOTIATION) != 0)) {
                     tcp_tx->tx_window[tcp_tx->ucPutFrame].usWindowTimeout = 1; // repeat as soon as possible if necessary
                     iRepeatSimple++;
                 }

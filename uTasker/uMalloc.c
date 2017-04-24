@@ -105,7 +105,7 @@ extern void *uMalloc(MAX_MALLOC __size)
 {
 #if defined _ALIGN_HEAP_4
     unsigned char *ptr = (pucBottomOfHeap + present_HeapSize);
-    if ((unsigned long)ptr & 0x3) {                                      // ensure all memory is aligned on 4 byte boundary
+    if (((unsigned long)ptr & 0x3) != 0) {                               // ensure all memory is aligned on 4 byte boundary
         ptr = (unsigned char *)((unsigned long)ptr & ~0x3);
         ptr += 4;
     }

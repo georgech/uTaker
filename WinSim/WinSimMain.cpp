@@ -128,6 +128,8 @@
     15.11.2016 Pass complete change state in fnInjectInputChange()       {107}
     24.12.2016 Add fnInjectI2C()                                         {108}
     02.02.2017 Allow sub-ms tick setting                                 {109}
+    19.02.2017 Add FT800 emulation                                       {110}
+    28.02.2017 Add UARTs 6 and 7                                         {111}
 
     */
 
@@ -173,6 +175,10 @@
 #if defined nRF24L01_INTERFACE || defined ENC424J600_INTERFACE
 #pragma comment(lib, "Ws2_32.lib")
     static void fnUDP_socket(PVOID pvoid);
+#endif
+
+#if (defined FT800_GLCD_MODE && defined FT800_EMULATOR)
+    static void fnInitFT800_emulator(void);
 #endif
 
 // Global variables
@@ -824,6 +830,8 @@ unsigned long *pPixels = 0;
     static HANDLE sm_hComm3 = INVALID_HANDLE_VALUE;                      // {9}
     static HANDLE sm_hComm4 = INVALID_HANDLE_VALUE;                      // {67}
     static HANDLE sm_hComm5 = INVALID_HANDLE_VALUE;
+    static HANDLE sm_hComm6 = INVALID_HANDLE_VALUE;                      // {111}
+    static HANDLE sm_hComm7 = INVALID_HANDLE_VALUE;
     #if NUMBER_EXTERNAL_SERIAL > 0                                       // {41}
         static HANDLE sm_hCommExt_0 = INVALID_HANDLE_VALUE;
         static HANDLE sm_hCommExt_1 = INVALID_HANDLE_VALUE;
@@ -2659,7 +2667,7 @@ static void fnDoDraw(HWND hWnd, HDC hdc, PAINTSTRUCT ps, RECT &rect)
 #if (defined SUPPORT_KEY_SCAN || defined KEYPAD || defined BUTTON_KEY_DEFINITIONS) && defined LCD_ON_KEYPAD
     DisplayKeyPad(hWnd, rt, rect);                                       // draw the keypad if needed
 #endif
-#if defined SUPPORT_LCD || defined SUPPORT_GLCD || defined SUPPORT_OLED || defined SUPPORT_TFT || defined GLCD_COLOR || defined SLCD_FILE // {35}
+#if (defined SUPPORT_LCD || defined SUPPORT_GLCD || defined SUPPORT_OLED || defined SUPPORT_TFT || defined GLCD_COLOR || defined SLCD_FILE) && !(defined FT800_GLCD_MODE && defined FT800_EMULATOR) // {35}
     #if defined LCD_ON_KEYPAD
     DisplayLCD(hWnd, rect);                                              // re-draw the LCD if needed
     #else
@@ -3180,7 +3188,11 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 #if defined SUPPORT_LCD
     LCDinit(LCD_LINES, LCD_CHARACTERS);
 #elif defined SUPPORT_GLCD || defined SUPPORT_OLED || defined SUPPORT_TFT || defined GLCD_COLOR || defined SLCD_FILE // {35}{65}
+    #if (defined FT800_GLCD_MODE && defined FT800_EMULATOR)
+    fnInitFT800_emulator();
+    #else
     LCDinit(0, 0);
+    #endif
 #endif
 
     if (InitInstance(hInstance, nCmdShow) == 0) {
@@ -3310,7 +3322,45 @@ int APIENTRY WinMain(HINSTANCE hInstance,
             }
         #endif
             while ((iRxSize = fnCheckRx(sm_hComm5, ucRxBuffer)) != 0) {
-                fnProcessRx(ucRxBuffer, (unsigned short)iRxSize, 5);     // if we have received something from the serial port (UART4), process it here
+                fnProcessRx(ucRxBuffer, (unsigned short)iRxSize, 5);     // if we have received something from the serial port (UART5), process it here
+            }
+        }
+    #endif
+    #if NUMBER_SERIAL > 6                                                // {111}
+        if (sm_hComm6 != INVALID_HANDLE_VALUE) {
+        #if defined SUPPORT_HW_FLOW
+            static DWORD lpModemLastStat6 = 0;
+            DWORD lpModemStat6;
+            GetCommModemStatus(sm_hComm6, &lpModemStat6);
+            if (lpModemStat6 != lpModemLastStat6) {
+                char *ptr[2];
+                ptr[0] = (char *)&lpModemStat6;
+                ptr[1] = (char *)&lpModemLastStat6;
+                _main(MODEM_COM_6, ptr);
+                lpModemLastStat6 = lpModemStat6;                         // set the new CTS state for reference
+            }
+        #endif
+            while ((iRxSize = fnCheckRx(sm_hComm6, ucRxBuffer)) != 0) {
+                fnProcessRx(ucRxBuffer, (unsigned short)iRxSize, 5);     // if we have received something from the serial port (UART6), process it here
+            }
+        }
+    #endif
+    #if NUMBER_SERIAL > 7                                                // {111}
+        if (sm_hComm7 != INVALID_HANDLE_VALUE) {
+        #if defined SUPPORT_HW_FLOW
+            static DWORD lpModemLastStat7 = 0;
+            DWORD lpModemStat7;
+            GetCommModemStatus(sm_hComm7, &lpModemStat7);
+            if (lpModemStat7 != lpModemLastStat7) {
+                char *ptr[2];
+                ptr[0] = (char *)&lpModemStat7;
+                ptr[1] = (char *)&lpModemLastStat7;
+                _main(MODEM_COM_7, ptr);
+                lpModemLastStat7 = lpModemStat7;                         // set the new CTS state for reference
+            }
+        #endif
+            while ((iRxSize = fnCheckRx(sm_hComm7, ucRxBuffer)) != 0) {
+                fnProcessRx(ucRxBuffer, (unsigned short)iRxSize, 5);     // if we have received something from the serial port (UART7), process it here
             }
         }
     #endif
@@ -3385,7 +3435,6 @@ int APIENTRY WinMain(HINSTANCE hInstance,
         }
     #endif
 #endif
-
         if (iInputChange != 0) {
             if (KEY_CHANGED & iInputChange) {
                 fnProcessKeyChange();
@@ -3413,7 +3462,6 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 #else
         Sleep(1);                                                        // we sleep to simulate the basic tick operation
 #endif
-
 #if !defined BOOT_LOADER
         fnDoPortSim(0, 0);                                               // if we are playing back port simulation script, do it here {8}
 #endif
@@ -3596,7 +3644,42 @@ int APIENTRY WinMain(HINSTANCE hInstance,
                     }
                     break;
     #endif
-
+    #if defined SERIAL_PORT_6
+                case OPEN_PC_COM6:                                       // {111}
+                    {
+                        unsigned long ulSpeed = fnGetValue(doPtr + 1, sizeof(ulSpeed));
+                        UART_MODE_CONFIG Mode = (unsigned short)fnGetValue(doPtr + 1 + sizeof(ulSpeed), sizeof(Mode));
+                        if (sm_hComm6 != INVALID_HANDLE_VALUE) {
+                            CloseHandle(sm_hComm6);                      // if we have an open port we want to reconfigure it - so close it
+                        }
+                        sm_hComm6 = fnConfigureSerialInterface(SERIAL_PORT_6, ulSpeed, Mode); // try to open com since the embedded system wants to use it
+                        if (sm_hComm6 >= 0) {
+                            fnUART_string(6, SERIAL_PORT_6, ulSpeed, Mode); //create a UART string that can be displayed on the status bar
+                        }
+                        else {
+                            fnUART_string(6, 0, ulSpeed, Mode);          // create a UART string that can be displayed on the status bar (not assigned to COM port)
+                        }
+                    }
+                    break;
+    #endif
+    #if defined SERIAL_PORT_7
+                case OPEN_PC_COM7:                                       // {111}
+                    {
+                        unsigned long ulSpeed = fnGetValue(doPtr + 1, sizeof(ulSpeed));
+                        UART_MODE_CONFIG Mode = (unsigned short)fnGetValue(doPtr + 1 + sizeof(ulSpeed), sizeof(Mode));
+                        if (sm_hComm7 != INVALID_HANDLE_VALUE) {
+                            CloseHandle(sm_hComm7);                      // if we have an open port we want to reconfigure it - so close it
+                        }
+                        sm_hComm7 = fnConfigureSerialInterface(SERIAL_PORT_7, ulSpeed, Mode); // try to open com since the embedded system wants to use it
+                        if (sm_hComm7 >= 0) {
+                            fnUART_string(7, SERIAL_PORT_7, ulSpeed, Mode); //create a UART string that can be displayed on the status bar
+                        }
+                        else {
+                            fnUART_string(7, 0, ulSpeed, Mode);          // create a UART string that can be displayed on the status bar (not assigned to COM port)
+                        }
+                    }
+                    break;
+    #endif
                 case MODEM_SIGNAL_CHANGE:                                // {7}
                     {
                         unsigned char ucComPort = (unsigned char)fnGetValue(doPtr + 1, 1); // port to be changed
@@ -3665,7 +3748,6 @@ int APIENTRY WinMain(HINSTANCE hInstance,
                     fnSendSerialMessage(sm_hComm4, (const void *)fnGetValue(doPtr + 1 + sizeof(ulLength), sizeof(const void *)), ulLength);
                     }
                     break;
-
                 case SEND_PC_COM5:
                     {
                     unsigned long ulLength = fnGetValue(doPtr + 1, sizeof(ulLength)); // we send embedded system serial data UART 5 over COM
@@ -3673,6 +3755,19 @@ int APIENTRY WinMain(HINSTANCE hInstance,
                     }
                     break;
 
+                case SEND_PC_COM6:                                       // {111}
+                    {
+                    unsigned long ulLength = fnGetValue(doPtr + 1, sizeof(ulLength)); // we send embedded system serial data UART 6 over COM
+                    fnSendSerialMessage(sm_hComm6, (const void *)fnGetValue(doPtr + 1 + sizeof(ulLength), sizeof(const void *)), ulLength);
+                    }
+                    break;
+
+                case SEND_PC_COM7:
+                    {
+                    unsigned long ulLength = fnGetValue(doPtr + 1, sizeof(ulLength)); // we send embedded system serial data UART 7 over COM
+                    fnSendSerialMessage(sm_hComm7, (const void *)fnGetValue(doPtr + 1 + sizeof(ulLength), sizeof(const void *)), ulLength);
+                    }
+                    break;
     #if NUMBER_EXTERNAL_SERIAL > 0                                       // {41}
                 case SEND_PC_EXT_COM0:
                     {
@@ -4124,7 +4219,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     rt.right = UTASKER_WIN_WIDTH;                                        // basic windows size without LCD or keypad/panel
     rt.bottom = UTASKER_WIN_HEIGHT;
 
-#if defined SUPPORT_LCD || defined SUPPORT_GLCD  || defined SUPPORT_OLED || defined SUPPORT_TFT || defined GLCD_COLOR || defined SLCD_FILE // {35}{65}
+#if (defined SUPPORT_LCD || defined SUPPORT_GLCD  || defined SUPPORT_OLED || defined SUPPORT_TFT || defined GLCD_COLOR || defined SLCD_FILE) && !(defined FT800_GLCD_MODE && defined FT800_EMULATOR) // {35}{65}
     #if defined _M5225X
     iLCD_Bottom = fnInitLCD(rt, UTASKER_WIN_HEIGHT, (UTASKER_WIN_WIDTH + 70));
     #else
@@ -5426,10 +5521,218 @@ extern "C" unsigned long fnRemoteSimulationInterface(int iInterfaceReference, un
         }
         break;
     }
-    return 0;
-#else
-return 0;
 #endif
+    return 0;
+}
+#endif
+
+#if defined FT800_GLCD_MODE && defined FT800_EMULATOR                    // {110}
+
+#define FT8XXEMU_VERSION_API    9                                        // API version is increased for the library whenever FT8XXEMU_EmulatorParameters format changes or functions are modified
+
+static volatile int iEmulatorReady = 0;                                  // variable used to monitor whether the emulator has competed its initialisaion
+
+typedef unsigned long argb8888;
+
+typedef enum
+{
+	// frame render has changes since last render
+	FT8XXEMU_FrameBufferChanged = 0x01,
+	// frame is completely rendered (without degrade)
+	FT8XXEMU_FrameBufferComplete = 0x02,
+	// frame has changes since last render
+	FT8XXEMU_FrameChanged = 0x04,
+	// frame rendered right after display list swap
+	FT8XXEMU_FrameSwap = 0x08,
+
+	// NOTE: Difference between FrameChanged and FrameBufferChanged is that
+	// FrameChanged will only be true if the content of the frame changed,
+	// whereas FrameBufferChanged will be true if the rendered buffer changed.
+	// For example, when the emulator renders a frame incompletely due to
+	// CPU overload, it will then finish the frame in the next callback,
+	// and when this is the same frame, FrameChanged will be false,
+	// but FrameBufferChanged will be true as the buffer has changed.
+
+	// NOTE: Frames can change even though no frame was swapped, due to
+	// several parameters such as REG_MACRO or REG_ROTATE.
+
+	// NOTE: If you only want completely rendered frames, turn OFF
+	// the EmulatorEnableDynamicDegrade feature.
+
+	// NOTE: To get the accurate frame after a frame swap, wait for FrameSwap
+	// to be set, and get the first frame which has FrameBufferComplete set.
+
+	// NOTE: To get the accurate frame after any frame change, wait for
+	// FrameChanged, and get the first frame which has FrameBufferComplete set.
+} FT8XXEMU_FrameFlags;
+
+typedef enum
+{
+	FT8XXEMU_EmulatorFT800 = 0x0800,
+	FT8XXEMU_EmulatorFT801 = 0x0801,
+	FT8XXEMU_EmulatorFT810 = 0x0810,
+	FT8XXEMU_EmulatorFT811 = 0x0811,
+	FT8XXEMU_EmulatorFT812 = 0x0812,
+	FT8XXEMU_EmulatorFT813 = 0x0813,
+} FT8XXEMU_EmulatorMode;
+
+typedef enum
+{
+	// enables the keyboard to be used as input (default: on)
+	FT8XXEMU_EmulatorEnableKeyboard = 0x01,
+	// enables audio (default: on)
+	FT8XXEMU_EmulatorEnableAudio = 0x02,
+	// enables coprocessor (default: on)
+	FT8XXEMU_EmulatorEnableCoprocessor = 0x04,
+	// enables mouse as touch (default: on)
+	FT8XXEMU_EmulatorEnableMouse = 0x08,
+	// enable debug shortkeys (default: on)
+	FT8XXEMU_EmulatorEnableDebugShortkeys = 0x10,
+	// enable graphics processor multithreading (default: on)
+	FT8XXEMU_EmulatorEnableGraphicsMultithread = 0x20,
+	// enable dynamic graphics quality degrading by interlacing and dropping frames (default: on)
+	FT8XXEMU_EmulatorEnableDynamicDegrade = 0x40,
+	// enable usage of REG_ROTATE (default: off)
+	// FT8XXEMU_EmulatorEnableRegRotate = 0x80, // Now always on
+	// enable emulating REG_PWM_DUTY by fading the rendered display to black (default: off)
+	FT8XXEMU_EmulatorEnableRegPwmDutyEmulation = 0x100,
+	// enable usage of touch transformation matrix (default: on) (should be disabled in editor)
+	FT8XXEMU_EmulatorEnableTouchTransformation = 0x200,
+} FT8XXEMU_EmulatorFlags;
+
+typedef struct
+{
+	// Microcontroller function called before loop.
+	void(*Setup)();
+	// Microcontroller continuous loop.
+	void(*Loop)();
+	// See EmulatorFlags.
+	int Flags;
+	// Emulator mode
+	FT8XXEMU_EmulatorMode Mode;
+
+	// Called after keyboard update.
+	// Supplied function can use Keyboard.isKeyDown(FT8XXEMU_KEY_F3)
+	// or FT8XXEMU_isKeyDown(FT8XXEMU_KEY_F3) functions.
+	void(*Keyboard)();
+	// The default mouse pressure, default 0 (maximum).
+	// See REG_TOUCH_RZTRESH, etc.
+	unsigned long MousePressure;
+	// External frequency. See CLK, etc.
+	unsigned long ExternalFrequency;
+
+	// Reduce graphics processor threads by specified number, default 0
+	// Necessary when doing very heavy work on the MCU or Coprocessor
+	unsigned long ReduceGraphicsThreads;
+
+	// Sleep function for MCU thread usage throttle. Defaults to generic system sleep
+	void(*MCUSleep)(int ms);
+
+	// Replaces the default builtin ROM with a custom ROM from a file.
+	// NOTE: String is copied and may be deallocated after call to run(...)
+	char *RomFilePath;
+	// Replaces the default builtin OTP with a custom OTP from a file.
+	// NOTE: String is copied and may be deallocated after call to run(...)
+	char *OtpFilePath;
+	// Replaces the builtin coprocessor ROM.
+	// NOTE: String is copied and may be deallocated after call to run(...)
+	char *CoprocessorRomFilePath;
+
+	// Graphics driverless mode
+	// Setting this callback means no window will be created, and all
+	// rendered graphics will be automatically sent to this function.
+	// For enabling touch functionality, the functions
+	// Memory.setTouchScreenXY and Memory.resetTouchScreenXY must be
+	// called manually from the host application.
+	// Builtin keyboard functionality is not supported and must be
+	// implemented manually when using this mode.
+	// The output parameter is false (0) when the display is turned off.
+	// The contents of the buffer pointer are undefined after this
+	// function returns.
+	// Return false (0) when the application must exit, otherwise return true (1).
+	int (*Graphics)(int output, const argb8888 *buffer, unsigned long hsize, unsigned long vsize, FT8XXEMU_FrameFlags flags);
+
+	// Interrupt handler
+	// void (*Interrupt)();
+
+	// Exception callback
+	void(*Exception)(const char *message);
+
+	// Safe exit
+	void(*Close)();
+
+} FT8XXEMU_EmulatorParameters;
+
+extern "C" {
+    extern void FT8XXEMU_defaults(unsigned long versionApi, FT8XXEMU_EmulatorParameters *params, FT8XXEMU_EmulatorMode mode);
+    extern void FT8XXEMU_run(unsigned long versionApi, const FT8XXEMU_EmulatorParameters *params);
+
+    __declspec(dllimport) extern unsigned char (*FT8XXEMU_transfer)(unsigned char data); // transfer data over the imaginary SPI bus. Call from the MCU thread (from the setup/loop callbacks). See FT8XX documentation for SPI transfer protocol
+    __declspec(dllimport) extern void (*FT8XXEMU_cs)(int cs);                     // set cable select. Must be set to 1 to start data transfer, 0 to end. See FT8XX documentation for CS_N
+    __declspec(dllimport) extern int (*FT8XXEMU_int)();                           // returns 1 if there is an interrupt flag set. Depends on mask. See FT8XX documentation for INT_N
 }
 
+
+// Call back when the emulator has completed its initialisation
+//
+static void setup(void)
+{
+    iEmulatorReady = 1;                                                  // this flag is used to stop the LCD task from accessing the FT800 emulation before it has completed its initialisation
+}
+
+// Call back when the emulator is idle
+//
+static void loop(void)
+{
+}
+
+// Assert the CS line to the FT800
+//
+extern "C" void _FT8XXEMU_cs(int cs)
+{
+    while (iEmulatorReady == 0) {                                        // if the emulator has not yet initistaed we wait
+        Sleep(10);
+    }
+    FT8XXEMU_cs(cs);
+}
+
+// Send a byte to the emulator
+//
+extern "C" unsigned char _FT8XXEMU_transfer(unsigned char data)
+{
+    return FT8XXEMU_transfer(data);
+}
+
+static void FT800_emulator_thread(void *hArgs)
+{
+    FT8XXEMU_EmulatorParameters params;
+    FT8XXEMU_EmulatorMode       Ft_GpuEmu_Mode;
+    #if defined (FT_800_ENABLE)                                           // select the emulation mode
+    Ft_GpuEmu_Mode = FT8XXEMU_EmulatorFT800;
+    #elif defined (FT_801_ENABLE)
+    Ft_GpuEmu_Mode = FT8XXEMU_EmulatorFT801;
+    #elif defined (FT_810_ENABLE)
+    Ft_GpuEmu_Mode =  FT8XXEMU_EmulatorFT810;
+    #elif defined (FT_811_ENABLE)
+    Ft_GpuEmu_Mode = FT8XXEMU_EmulatorFT811;
+    #elif defined (FT_812_ENABLE)
+    Ft_GpuEmu_Mode = FT8XXEMU_EmulatorFT812;
+    #elif defined(FT_813_ENABLE)
+    Ft_GpuEmu_Mode = FT8XXEMU_EmulatorFT813;
+    #else
+    Ft_GpuEmu_Mode = FT8XXEMU_EmulatorFT800;
+    #endif
+
+    FT8XXEMU_defaults(FT8XXEMU_VERSION_API, &params, Ft_GpuEmu_Mode);    // get the parameters for the emulation mode
+    params.Flags &= (~FT8XXEMU_EmulatorEnableDynamicDegrade & ~FT8XXEMU_EmulatorEnableRegPwmDutyEmulation);
+    params.Setup = setup;
+    params.Loop = loop;
+    FT8XXEMU_run(FT8XXEMU_VERSION_API, &params);                         // start the emulation - this doesn't return
+}
+
+static void fnInitFT800_emulator(void)
+{
+    DWORD ThreadIDRead;
+    HANDLE hThreadRead = CreateThread (NULL, 0, (LPTHREAD_START_ROUTINE)FT800_emulator_thread, (LPVOID)0, 0, (LPDWORD)&ThreadIDRead);
+}
 #endif

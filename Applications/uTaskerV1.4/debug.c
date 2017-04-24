@@ -135,7 +135,7 @@
     #define TEST_CMSIS_CFFT                                              // {84} enable test of CMSIS CFFT
 #endif
 #if !defined KINETIS_KE && !defined KINETIS_KL
-    #define EZPORT_CLONER                                                // {55}
+  //#define EZPORT_CLONER                                                // {55}
         #define EZPORT_CLONER_SKIP_REGIONS                               // cloner leaves defined areas blank
 #endif
 //#define LOW_MEMORY                                                     // remove utFAT print and sector display to save stack space when calling other utFAT interface routines
@@ -1096,7 +1096,7 @@ static const MENUS ucMenus[] = {
 #endif
 };
 
-#if defined EZPORT_CLONER_SKIP_REGIONS
+#if defined EZPORT_CLONER && defined EZPORT_CLONER_SKIP_REGIONS
     static const CLONER_SKIP_REGION ulSkipRegion[] = {
         {PARAMETER_BLOCK_START, (FLASH_START_ADDRESS + SIZE_OF_FLASH)},
         {0}                                                              // end of list
@@ -6089,7 +6089,7 @@ static int fnTestTCP(USOCKET Socket, unsigned char ucTestCase)
             for (i = 0; i < 26; i++) {
                 test_buffer[i] = 'a' + i;
             }
-            while (fnSendBufTCP(Socket, 0, 26, TCP_BUF_CHECK)) {         // while space in output buffer              
+            while (fnSendBufTCP(Socket, 0, 26, TCP_BUF_CHECK) != 0) {    // while space in output buffer              
                 iSent += fnSendBufTCP(Socket, test_buffer, 26, (TCP_BUF_SEND | TCP_BUF_SEND_REPORT_COPY));
             }
             return iSent;
@@ -6149,7 +6149,6 @@ static int fnFastRxTestAck(USOCKET Socket)
     }
     iCnt++;
     return iRtn;
-
 }
 #endif
 

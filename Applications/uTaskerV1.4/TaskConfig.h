@@ -31,6 +31,7 @@
     02.06.2014 Allow task TASK_NETWORK_INDICATOR to be used with define INTERRUPT_TASK_PHY {11}
     11.02.2015 Added task TASK_TIME_KEEPER                               {12}
     18.11.2015 Add USB host task                                         {13}
+    18.04.2017 Add BLINKEY configuration
 
 */
  
@@ -73,6 +74,7 @@
 #define TASK_DEV_4              '4'
 #undef  OWN_TASK
 
+extern void fnHTTP_task(TTASKTABLE *ptrTaskTable);
 
 #if defined LAN_REPORT_ACTIVITY
    #define INTERRUPT_TASK_PHY         TASK_NETWORK_INDICATOR             // this task is woken on PHY changes (set 0 for none)

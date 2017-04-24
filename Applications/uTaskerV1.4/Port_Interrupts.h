@@ -33,7 +33,7 @@
     #if !defined K70F150M_12M && !defined TWR_K53N512 && !defined TWR_K40X256 && !defined TWR_K40D100M && !defined KWIKSTIK
       //#define IRQ_TEST                                                 // test IRQ port interrupts
       //#define DMA_PORT_MIRRORING                                       // demonstrate using DMA to control one or more output ports to follow an input port
-        #if defined SUPPORT_LOW_POWER
+        #if defined SUPPORT_LOW_POWER && defined IRQ_TEST
           //#define WAKEUP_TEST                                          // test wake-up port interrupts (wake-up from kinetis low leakage mode)
         #endif
     #endif
@@ -154,6 +154,7 @@ static void test_irq_11(void)
 }
     #endif
 
+
 // Configure several IRQ inputs to demonstrate port change/wakeup interrupts
 //
 static void fnInitIRQ(void)
@@ -262,7 +263,7 @@ static void fnInitIRQ(void)
     interrupt_setup.int_port_bits  = PORTA_BIT16;                        // J2-9 on FRDM-KL25Z
     interrupt_setup.int_priority   = PRIORITY_PORT_A_INT;                // interrupt priority level
             #endif
-        #elif defined FRDM_KL03
+        #elif defined FRDM_KL03Z
             #if defined WAKEUP_TEST
     interrupt_setup.int_type       = WAKEUP_INTERRUPT;                   // configure as wake-up interrupt
     interrupt_setup.int_port_bits  = SWITCH_2;                           // PTB0

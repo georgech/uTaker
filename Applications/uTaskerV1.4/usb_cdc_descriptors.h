@@ -602,7 +602,7 @@ static const USB_CONFIGURATION_DESCRIPTOR_COLLECTION config_descriptor = {
     1                                                                    // subordinate interface
     },                                                                   // end of function descriptors
 
-    // Interrupt endpoint descriptor for seconf CDC - control interface
+    // Interrupt endpoint descriptor for second CDC - control interface
     //
     {                                                                    // interrupt endpoint descriptor for first interface
     DESCRIPTOR_TYPE_ENDPOINT_LENGTH,                                     // descriptor size in bytes (0x07)

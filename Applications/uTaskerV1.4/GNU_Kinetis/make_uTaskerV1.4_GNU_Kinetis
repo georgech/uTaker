@@ -19,6 +19,7 @@
 # 14.12.2016 Add Cortex M4 FPU settings and CMSIS FFT components
 # 13.01.2017 Add AES and crypto
 # 17.01.2017 Add dsp
+# 01.03.2017 Add FT_CoPro_Cmds
 
 
 # Compiler flags (thumb mode - little endian)
@@ -34,7 +35,7 @@ C_FLAGS = -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mlittle-en
 OBJS = Build/application.o Build/debug.o Build/webInterface.o Build/KeyScan.o Build/NetworkIndicator.o Build/usb_application.o Build/snmp_mib_handlers.o Build/FreeMaster.o Build/nRF24201.o \
        Build/MODBUS.o Build/modbus_app.o \
        Build/mass_storage.o \
-       Build/GLCD.o Build/LCD.o \
+       Build/GLCD.o Build/LCD.o Build/FT_CoPro_Cmds.o  \
        Build/aes.o Build/w_aes.o Build/aes_cbc.o Build/cbc128.o Build/aes_core.o Build/mmcau_aes_functions.o \
        Build/arm_bitreversal2.o Build/arm_cfft_f32.o Build/arm_cfft_radix8_f32.o Build/arm_cmplx_mag_f32.o Build/arm_common_tables.o Build/arm_const_structs.o Build/arm_max_f32.o \
        Build/eth_drv.o Build/Driver.o Build/uMalloc.o Build/uTasker.o Build/Tty_drv.o Build/i2c_drv.o Build/USB_drv.o Build/uFile.o Build/Watchdog.o Build/GlobalTimer.o Build/time_keeper.o Build/low_power.o Build/can_drv.o \
@@ -53,7 +54,7 @@ DEPENDS = ../config.h ../app_hw_kinetis.h ../types.h ../TaskConfig.h ../../../uT
        ../../../Hardware/hardware.h ../../../Hardware/Kinetis/kinetis.h \
        ../../../uTasker/MODBUS/modbus.h \
        ../../../uTasker/utFAT/mass_storage.h \
-       ../../../uTasker/uGLCDLIB/glcd.h \
+       ../../../uTasker/uGLCDLIB/glcd.h ../../../uTasker/uGLCDLIB/FT_Gpu.h ../../../uTasker/uGLCDLIB/FT_CoPro_Cmds.h \
        ../../../stack/tcpip.h
 
 DEPENDS_CMSIS = ../config.h \
@@ -280,6 +281,9 @@ Build/GLCD.o: ../../../uTasker/uGLCDLIB/GLCD.c $(DEPENDS) ../application.h ../..
 
 Build/LCD.o: ../../../uTasker/uGLCDLIB/LCD.c $(DEPENDS) ../application.h
 		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../uTasker/uGLCDLIB/LCD.c -o Build/LCD.o
+
+Build/FT_CoPro_Cmds.o: ../../../uTasker/uGLCDLIB/FT_CoPro_Cmds.c $(DEPENDS) ../application.h
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../uTasker/uGLCDLIB/FT_CoPro_Cmds.c -o Build/FT_CoPro_Cmds.o
 
 # utFAT files
 #

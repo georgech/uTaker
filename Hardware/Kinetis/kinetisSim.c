@@ -55,6 +55,7 @@
     14.05.2015 Add ADC compare function                                  {40}
     17.01.2016 Add fnResetENET()                                         {41}
     02.02.2017 Adapt for us tick resolution
+    24.03.2017 Reset all host endpoints data frame types                 {42}
 
 */  
                           
@@ -622,7 +623,7 @@ static void fnSetDevice(unsigned long *port_inits)
     #elif !defined KINETIS_KE
     RTC_RAR     = (RTC_RAR_TSRW | RTC_RAR_TPRW | RTC_RAR_TARW| RTC_RAR_TCRW | RTC_RAR_CRW | RTC_RAR_SRW | RTC_RAR_LRW | RTC_RAR_IERW);
     #endif
-    #if !defined KINETIS_KL && !defined KINETIS_KE
+    #if !defined KINETIS_KL && !defined KINETIS_KE && !defined CROSSBAR_SWITCH_LITE
     AXBS_CRS0 = 0x76543210;                                              // {34} default crossbar switch settings
     AXBS_CRS1 = 0x76543210;
     AXBS_CRS2 = 0x76543210;
@@ -3957,7 +3958,7 @@ extern void fnSimPers(void)
                     ulPeripherals[iPort] |= ulBit;
                 }
             }
-    #if !defined ERRATE_E3402_SOLVED
+    #if defined ERRATA_ID_3402
             if ((iPort == XTAL0_PORT) && (iPin == XTAL0_PIN)) {
                 if (OSC0_CR & OSC_CR_ERCLKEN) {                          // if OSC is enabled the XTAL pin is overridden by the oscillator functions
                     ucPortFunctions[iPort][iPin] = 0;
@@ -5628,7 +5629,7 @@ extern int fnSimulateUSB(int iDevice, int iEndPoint, unsigned char ucPID, unsign
                 _EXCEPTION("Rx buffer not ready!!");
                 return 1;                                                // no controller ownership so ignore
             }
-            if ((ptrBDT->usb_bd_rx_even.ulUSB_BDControl & KEEP) == 0) {
+            if ((ptrBDT->usb_bd_rx_even.ulUSB_BDControl & KEEP_OWNERSHIP) == 0) {
                 ptrBDT->usb_bd_rx_even.ulUSB_BDControl &= ~OWN;          // mark that the buffer is no longer owned by the USB controller
             }
             usLength = (unsigned short)((ptrBDT->usb_bd_rx_even.ulUSB_BDControl & USB_BYTE_CNT_MASK) >> USB_CNT_SHIFT); // the size that this endpoint can receive
@@ -5670,7 +5671,7 @@ extern int fnSimulateUSB(int iDevice, int iEndPoint, unsigned char ucPID, unsign
                 _EXCEPTION("Rx buffer not ready!!");
                 return 1;                                                // no controller ownership so ignore
             }
-            if ((ptrBDT->usb_bd_rx_odd.ulUSB_BDControl & KEEP) == 0) {
+            if ((ptrBDT->usb_bd_rx_odd.ulUSB_BDControl & KEEP_OWNERSHIP) == 0) {
                 ptrBDT->usb_bd_rx_odd.ulUSB_BDControl &= ~OWN;           // the buffer descriptor is now owned by the controller
             }
             usLength = (unsigned short)((ptrBDT->usb_bd_rx_odd.ulUSB_BDControl & USB_BYTE_CNT_MASK) >> USB_CNT_SHIFT); // the size that this endpoint can receive
@@ -6101,12 +6102,12 @@ static void fnUSBHostModel(int iEndpoint, unsigned char ucPID, unsigned short us
                     iHostQueue = QUEUE_STRING_DESCRIPTOR;                // send the configuration descriptor on next IN
                     switch (ptrDescriptor->wValue[0]) {                  // the string referenced
                     case 0:                                              // string language ID
-                        ucStringDescriptor[0] = 4;
+                        ucStringDescriptor[0] = 4;                       // length
                         ucStringDescriptor[2] = 0x09;                    // English (US)
                         ucStringDescriptor[3] = 0x04;
                         break;
                     case 1:                                              // manufacturer
-                        ucStringDescriptor[0] = 0x12;
+                        ucStringDescriptor[0] = 0x12;                    // length
                         ucStringDescriptor[2] = 0x54;
                         ucStringDescriptor[3] = 0x00;
                         ucStringDescriptor[4] = 0x44;
@@ -6125,7 +6126,7 @@ static void fnUSBHostModel(int iEndpoint, unsigned char ucPID, unsigned short us
                         ucStringDescriptor[17] = 0x00;
                         break;
                     case 2:                                              // product
-                        ucStringDescriptor[0] = 0x0c;
+                        ucStringDescriptor[0] = 0x10;                    // length
                         ucStringDescriptor[2] = 'C';
                         ucStringDescriptor[3] = 0x00;
                         ucStringDescriptor[4] = 'D';
@@ -6136,9 +6137,13 @@ static void fnUSBHostModel(int iEndpoint, unsigned char ucPID, unsigned short us
                         ucStringDescriptor[9] = 0x00;
                         ucStringDescriptor[10] = ' ';
                         ucStringDescriptor[11] = 0x00;
+                        ucStringDescriptor[12] = ' ';
+                        ucStringDescriptor[13] = 0x00;
+                        ucStringDescriptor[14] = ' ';
+                        ucStringDescriptor[15] = 0x00;
                         break;
                     case 3:                                              // serial number
-                        ucStringDescriptor[0] = 0x0c;
+                        ucStringDescriptor[0] = 0x0c;                    // length
                         ucStringDescriptor[2] = 0x31;
                         ucStringDescriptor[3] = 0x00;
                         ucStringDescriptor[4] = 0x32;
@@ -6250,11 +6255,15 @@ static void fnUSBHostModel(int iEndpoint, unsigned char ucPID, unsigned short us
     }
 }
 
-// Synchronise to data 1 frame for setups
+// Synchronise to correct data frame for all endpoints
 //
 extern void fnResetUSB_buffers(void)
 {
-    iData1Frame[0] = 1;                                                  // reset endpoint 0 to DATA 1
+    int i = 0;
+    iData1Frame[i++] = 1;                                                // reset endpoint 0 to DATA1
+    while (i < NUMBER_OF_USB_ENDPOINTS) {                                // {42}
+        iData1Frame[i++] = 0;                                            // reset additional endpoint data frames to DATA0
+    }
 }
 #endif
 
@@ -6323,14 +6332,14 @@ extern void fnCheckUSBOut(int iDevice, int iEndpoint)
             if (usUSBLength != 0) {
                 ptrUSBData = _fnLE_add((CAST_POINTER_ARITHMETIC)bufferDescriptor->ptrUSB_BD_Data); // the data to be sent
             }
-            if ((bufferDescriptor->ulUSB_BDControl & KEEP) == 0) {       // if the KEEP bit is not set
+            if ((bufferDescriptor->ulUSB_BDControl & KEEP_OWNERSHIP) == 0) { // if the KEEP bit is not set
                 bufferDescriptor->ulUSB_BDControl &= ~OWN;               // remove SIE ownership
             }
     #if defined USB_HOST_SUPPORT                                         // {25}
             if ((CTL & HOST_MODE_EN) != 0) {                             // if in host mode
                 unsigned char ucToken = ucGetToken(1);                   // the token that was sent (skip INs)
                 if ((ucToken >> 4) == SETUP_PID) {                       // a SETUP token was sent (will always be on control endpoint 0
-                    fnLogUSB(iRealEndpoint, SETUP_PID, usUSBLength, ptrUSBData, ((bufferDescriptor->ulUSB_BDControl & DATA_1) != 0));
+                    fnLogUSB(iRealEndpoint, SETUP_PID, usUSBLength, ptrUSBData, ((bufferDescriptor->ulUSB_BDControl & DATA_1) != 0)); // log the transmitted data
                     fnUSBHostModel((ucToken & 0x0f), SETUP_PID, usUSBLength, ptrUSBData); // let the host model handle the data
                 }
                 else if ((ucToken >> 4) == OUT_PID) {                    // an OUT token was sent
@@ -6437,12 +6446,12 @@ extern unsigned long fnSimDMA(char *argv[])
     #if defined SERIAL_INTERFACE && defined SERIAL_SUPPORT_DMA           // {4}
             case DMA_UART0_TX_CHANNEL:                                   // handle UART DMA transmission on UART 0
         #if LPUARTS_AVAILABLE > 0 && !defined LPUARTS_PARALLEL
-                if (LPUART0_BAUD & LPUART_BAUD_TDMAE)                    // if DMA operation is enabled
+                if ((LPUART0_BAUD & LPUART_BAUD_TDMAE) != 0)             // if DMA operation is enabled
         #else
-                if (UART0_C5 & UART_C5_TDMAS)                            // if DMA operation is enabled
+                if ((UART0_C5 & UART_C5_TDMAS) != 0)                     // if DMA operation is enabled
         #endif
                 {
-                    ptrCnt = (int *)argv[THROUGHPUT_UART0];
+                    ptrCnt = (int *)argv[THROUGHPUT_UART0];              // the number of characters in each tick period
                     if (*ptrCnt != 0) {
                         if (--(*ptrCnt) == 0) {
                             iMasks |= ulChannel;                         // enough serial DMA transfers handled in this tick period
@@ -7539,16 +7548,16 @@ extern int fnSimTimers(void)
             break;
         case SIM_SOPT2_TPMSRC_OSCERCLK:
         #if defined OSCERCLK
-            ulCountIncrease= (unsigned long)((unsigned long long)TICK_RESOLUTION * (unsigned long long)OSCERCLK)/1000000; // bus clocks in a period
+            ulCountIncrease = (unsigned long)((unsigned long long)TICK_RESOLUTION * (unsigned long long)OSCERCLK)/1000000; // bus clocks in a period
         #else
             _EXCEPTION("No OSCERCLK available");
         #endif
             break;
         case SIM_SOPT2_TPMSRC_MCG:
         #if defined FLL_FACTOR
-            ulCountIncrease= (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)MCGFLLCLK)/1000000); // bus clocks in a period
+            ulCountIncrease = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)MCGFLLCLK)/1000000); // bus clocks in a period
         #else
-            ulCountIncrease= (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)(MCGPLLCLK/2))/1000000); // bus clocks in a period
+            ulCountIncrease = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)(MCGPLLCLK/2))/1000000); // bus clocks in a period
         #endif
             break;
         }
@@ -7575,7 +7584,7 @@ extern int fnSimTimers(void)
         #endif
         }
         FTM1_CNT = ulCountIncrease;                                      // new counter value
-        if ((FTM1_SC & FTM_SC_TOIE) && (FTM1_SC & FTM_SC_TOF)) {         // if overflow occurred and interrupt enabled
+        if (((FTM1_SC & FTM_SC_TOIE) != 0) && ((FTM1_SC & FTM_SC_TOF) != 0)) { // if overflow occurred and interrupt enabled
         #if defined KINETIS_KL
             if (fnGenInt(irq_TPM1_ID) != 0) {                            // if timer/PWM module 1 interrupt is not disabled
                 VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
@@ -7588,6 +7597,18 @@ extern int fnSimTimers(void)
             }
         #endif
         }
+        #if defined KINETIS_KL
+        // Check for ADC triggers
+        //
+        if ((SIM_SOPT7 & SIM_SOPT7_ADC0ALTTRGEN) == 0) {                 // if the default hardware trigger source is used
+            if (FTM1_CNT >= FTM0_C0V) {                                  // TPM1 channel 0 can trigger ADC0 input A
+                fnTriggerADC(0, 1);
+            }
+            if (FTM1_CNT >= FTM0_C1V) {                                  // TPM1 channel 1 can trigger ADC0 input B
+                fnTriggerADC(0, 1);
+            }
+        }
+        #endif
     }
     #endif
     #if FLEX_TIMERS_AVAILABLE > 2
@@ -9006,16 +9027,31 @@ extern void fnUpdateOperatingDetails(void)
     ptrBuffer = uStrcpy(ptrBuffer, "k, BUS CLOCK = ");
     #endif
     #if defined KINETIS_KL
+        #if defined BUS_FLASH_CLOCK_SHARED
     ulBusClockSpeed = (SYSTEM_CLOCK/(((SIM_CLKDIV1 >> 16) & 0xf) + 1));
+        #else
+    ulBusClockSpeed = (MCGOUTCLK / (((SIM_CLKDIV1 >> 24) & 0xf) + 1));
+        #endif
     #elif defined KINETIS_KV10
     ulBusClockSpeed = (SYSTEM_CLOCK/(((SIM_CLKDIV1 >> 16) & 0x7) + 1));
     #elif defined KINETIS_KE
-        #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
-    if (SIM_CLKDIV & SIM_CLKDIV_OUTDIV2_2) {
-        ulBusClockSpeed = (SYSTEM_CLOCK/2);
-    }
-    else {
-        ulBusClockSpeed = SYSTEM_CLOCK;
+        #if defined KINETIS_KE04 || defined KINETIS_KEA8 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+	ulBusClockSpeed = ICSOUT_CLOCK;
+	switch (SIM_CLKDIV & SIM_CLKDIV_OUTDIV1_4) {
+	case SIM_CLKDIV_OUTDIV1_1:
+		break;
+	case SIM_CLKDIV_OUTDIV1_2:
+		ulBusClockSpeed /= 2;
+		break;
+	case SIM_CLKDIV_OUTDIV1_3:
+		ulBusClockSpeed /= 3;
+		break;
+	case SIM_CLKDIV_OUTDIV1_4:
+		ulBusClockSpeed /= 4;
+		break;
+	}
+    if ((SIM_CLKDIV & SIM_CLKDIV_OUTDIV2_2) != 0) {
+        ulBusClockSpeed /= 2;
     }
         #else
     if (SIM_BUSDIV & SIM_BUSDIVBUSDIV) {

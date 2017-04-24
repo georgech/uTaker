@@ -119,6 +119,7 @@
     25.10.2015 Add emulated FAT data files and their handling            {98}
     12.12.2015 Modify parameter of fnSetDefaultNetwork()                 {99}
     09.07.2016 Handle DHCP as Ethernet messages (previously interrupt events) {100}
+    24.04.2017 Add RFC2217 interface                                     {101}
 
 */
 
@@ -236,6 +237,11 @@ static void fnValidatedInit(void);
 #if defined FAT_EMULATION                                                // {98}
     static void fnPrepareEmulatedFAT(void);
 #endif
+#if defined SERIAL_INTERFACE && defined USE_TELNET && defined TELNET_RFC2217_SUPPORT // {101}
+    #define RFC2217_SERVER_PORT     5555
+    static USOCKET Telnet_RFC2217_socket = -1;
+    static void    fnConfigureTelnetRFC2217Server(void);
+#endif
 
 /* =================================================================== */
 /*                             constants                               */
@@ -251,12 +257,8 @@ static const NETWORK_PARAMETERS network_default[IP_NETWORK_COUNT] = {
     #else
         (AUTO_NEGOTIATE /*| FULL_DUPLEX*/ | RX_FLOW_CONTROL | LAN_LEDS), // {42} usNetworkOptions - see driver.h for other possibilities
     #endif
-      //{0x00, 0x00, 0x00, 0x00, 0x00, 0x00},                            // ucOurMAC - when no other value can be read from parameters this will be used
-      //{0x00, 0x50, 0xc2, 0xfa, 0xd0, 0x4e},
-        {0x00, 0x00, 0x77, 0x00, 0x00, 0x01 },
-      //{ 192, 168, 0, 5 },                                              // ucOurIP - our default IP address
-        { 192, 168, 1, 8 },
-      //{ 10, 0, 16, 40 },
+        {0x00, 0x00, 0x00, 0x00, 0x00, 0x00},                            // ucOurMAC - when no other value can be read from parameters this will be used
+        { 192, 168, 0, 5 },                                              // ucOurIP - our default IP address
         { 255, 255, 255, 0 },                                            // ucNetMask - Our default network mask
         { 192, 168, 0, 1 },                                              // ucDefGW - Our default gateway
         { 192, 168, 0, 1 },                                              // ucDNS_server - Our default DNS server
@@ -549,6 +551,9 @@ TEMPPARS *temp_pars = 0;                                                 // work
 #if defined FREEMASTER_UART
     static QUEUE_HANDLE FreemasterPortID = NO_ID_ALLOCATED;              // FreeMaster serial port handle
 #endif
+#if defined SERIAL_INTERFACE && defined USE_TELNET && defined TELNET_RFC2217_SUPPORT // {101}
+    static QUEUE_HANDLE SerialPortID_RFC2217 = NO_ID_ALLOCATED;
+#endif
 static QUEUE_HANDLE save_handle = NETWORK_HANDLE;                        // temporary debug handle backup
 static int iAppState = STATE_INIT;                                       // task state
 
@@ -708,6 +713,9 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
 #endif
 #if defined nRF24L01_INTERFACE
         fnInit_nRF24L01();
+#endif
+#if defined SERIAL_INTERFACE && defined USE_TELNET && defined TELNET_RFC2217_SUPPORT // {101}
+        fnConfigureTelnetRFC2217Server();
 #endif
     }
 #if defined SUPPORT_GLCD && (defined MB785_GLCD_MODE || defined AVR32_EVK1105 || defined AVR32_AT32UC3C_EK || defined IDM_L35_B || defined M52259_TOWER || defined TWR_K60N512 || defined TWR_K60D100M || defined TWR_K70F120M || defined OLIMEX_LPC2478_STK || defined K70F150M_12M || (defined OLIMEX_LPC1766_STK && defined NOKIA_GLCD_MODE)) && defined SDCARD_SUPPORT // {58}{68}
@@ -969,7 +977,7 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
             }
             #endif
         #endif
-        #if defined USE_FTP_CLIENT                                       // {67}
+        #if defined USE_MAINTENANCE && defined USE_FTP_CLIENT            // {67}
             if ((iFTP_data_state & (FTP_DATA_STATE_GETTING | FTP_DATA_STATE_PUTTING)) == 0) {
                 fnEchoInput(ucInputMessage, Length);
             }
@@ -992,6 +1000,11 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
         }
     }
     #endif
+#endif
+#if defined SERIAL_INTERFACE && defined USE_TELNET && defined TELNET_RFC2217_SUPPORT // {101}
+    while ((Length = fnRead(SerialPortID_RFC2217, ucInputMessage, MEDIUM_MESSAGE)) != 0) { // handle UART input
+        fnSendBufTCP(Telnet_RFC2217_socket, ucInputMessage, Length, (TCP_BUF_SEND | TCP_BUF_SEND_REPORT_COPY)); // send to TELNET RFC2217 socket connection
+    }
 #endif
 
 #define _I2C_READ_CODE
@@ -1442,11 +1455,11 @@ extern QUEUE_HANDLE fnSetNewSerialMode(unsigned char ucDriverMode)
   //tInterfaceParameters.ucDMAConfig = (UART_RX_DMA /*| UART_RX_DMA_HALF_BUFFER*/); // test half buffer DMA reception
     #endif
     #if defined SUPPORT_HW_FLOW
-  //tInterfaceParameters.Config |= RTS_CTS;                              // test RTS/CTS operation
+    tInterfaceParameters.Config |= RTS_CTS;                              // enable RTS/CTS operation (HW flow control)
     #endif
     if ((SerialPortID = fnOpen(TYPE_TTY, ucDriverMode, &tInterfaceParameters)) != NO_ID_ALLOCATED) { // open or change the channel with defined configurations (initially inactive)
         fnDriver(SerialPortID, (TX_ON | RX_ON), 0);                      // enable rx and tx
-        if ((tInterfaceParameters.Config & RTS_CTS) != 0) {              // {8}
+        if ((tInterfaceParameters.Config & RTS_CTS) != 0) {              // {8} if HW flow control is being used
             fnDriver(SerialPortID, (MODIFY_INTERRUPT | ENABLE_CTS_CHANGE), 0); // activate CTS interrupt when working with HW flow control (this returns also the present control line states)
             fnDriver(SerialPortID, (MODIFY_CONTROL | SET_RTS), 0);       // activate RTS line when working with HW flow control
         }
@@ -2343,6 +2356,220 @@ extern void fnRestrictGatewayInterface(ARP_TAB *ptrARPTab)               // {89}
     ptrARPTab->ucInterface = INTERFACE_MASK;                             // re-resolve on all interfaces (default when RESTRICTED_GATEWAY_INTERFACE is not defined)
     // The user is free to add other decisions such as restricting to certain interfaces
     //
+}
+#endif
+
+#if defined SERIAL_INTERFACE && defined USE_TELNET && defined TELNET_RFC2217_SUPPORT // {101}
+static void fnConvertUARTmode(TTYTABLE *ptrMode, RFC2217_UART_SETTINGS *ptrRFC2271Mode, int iDirection)
+{
+    if (iDirection == 0) {                                               // convert from RFC2217 format to uTasker format
+        if (ptrRFC2271Mode->ulBaudRate >= 250000) {
+            ptrMode->ucSpeed = SERIAL_BAUD_250K;
+        }
+        else if (ptrRFC2271Mode->ulBaudRate >= 230400) {
+            ptrMode->ucSpeed = SERIAL_BAUD_230400;
+        }
+        else if (ptrRFC2271Mode->ulBaudRate >= 115200) {
+            ptrMode->ucSpeed = SERIAL_BAUD_115200;
+        }
+        else if (ptrRFC2271Mode->ulBaudRate >= 57600) {
+            ptrMode->ucSpeed = SERIAL_BAUD_57600;
+        }
+        else if (ptrRFC2271Mode->ulBaudRate >= 38400) {
+            ptrMode->ucSpeed = SERIAL_BAUD_38400;
+        }
+        else if (ptrRFC2271Mode->ulBaudRate >= 19200) {
+            ptrMode->ucSpeed = SERIAL_BAUD_19200;
+        }
+        else if (ptrRFC2271Mode->ulBaudRate >= 14400) {
+            ptrMode->ucSpeed = SERIAL_BAUD_14400;
+        }
+        else if (ptrRFC2271Mode->ulBaudRate >= 9600) {
+            ptrMode->ucSpeed = SERIAL_BAUD_9600;
+        }
+        else if (ptrRFC2271Mode->ulBaudRate >= 4800) {
+            ptrMode->ucSpeed = SERIAL_BAUD_4800;
+        }
+        else if (ptrRFC2271Mode->ulBaudRate >= 2400) {
+            ptrMode->ucSpeed = SERIAL_BAUD_2400;
+        }
+        else if (ptrRFC2271Mode->ulBaudRate >= 1200) {
+            ptrMode->ucSpeed = SERIAL_BAUD_1200;
+        }
+        else if (ptrRFC2271Mode->ulBaudRate >= 600) {
+            ptrMode->ucSpeed = SERIAL_BAUD_600;
+        }
+        else {
+            ptrMode->ucSpeed = SERIAL_BAUD_300;
+        }
+
+        if (ptrRFC2271Mode->ucDataSize < 8) {
+            ptrMode->Config = (CHAR_MODE | CHAR_7 | NO_PARITY | ONE_STOP | NO_HANDSHAKE);
+        }
+        else {
+            ptrMode->Config = (CHAR_MODE | CHAR_8 | NO_PARITY | ONE_STOP | NO_HANDSHAKE);
+        }
+        if (ptrRFC2271Mode->ucStopBits == RFC2217_STOPS_1_5) {
+            ptrMode->Config |= ONE_HALF_STOPS;
+        }
+        else if (ptrRFC2271Mode->ucStopBits == RFC2217_STOPS_TWO) {
+            ptrMode->Config |= TWO_STOPS;
+        }
+        if (ptrRFC2271Mode ->ucFlowControl == RFC2217_XON_XOFF_FLOW_CONTROL) {
+            ptrMode->Config |= USE_XON_OFF;
+        }
+        else if (ptrRFC2271Mode->ucFlowControl == RFC2217_HARDWARE_FLOW_CONTROL) {
+            ptrMode->Config |= RTS_CTS;
+        }
+        if (ptrRFC2271Mode->ucParity == RFC2217_PARITY_ODD) {
+            ptrMode->Config |= RS232_ODD_PARITY;
+        }
+        else if (ptrRFC2271Mode->ucParity == RFC2217_PARITY_EVEN) {
+            ptrMode->Config |= RS232_EVEN_PARITY;
+        }
+    }
+    else {                                                               // convert from uTasker format to RFC2217 format
+        switch (ptrMode->ucSpeed) {
+        case SERIAL_BAUD_300:
+            ptrRFC2271Mode->ulBaudRate = 300;
+            break;
+        case SERIAL_BAUD_600:
+            ptrRFC2271Mode->ulBaudRate = 600;
+            break;
+        case SERIAL_BAUD_1200:
+            ptrRFC2271Mode->ulBaudRate = 1200;
+            break;
+        case SERIAL_BAUD_2400:
+            ptrRFC2271Mode->ulBaudRate = 2400;
+            break;
+        case SERIAL_BAUD_4800:
+            ptrRFC2271Mode->ulBaudRate = 4800;
+            break;
+        case SERIAL_BAUD_9600:
+            ptrRFC2271Mode->ulBaudRate = 9600;
+            break;
+        case SERIAL_BAUD_14400:
+            ptrRFC2271Mode->ulBaudRate = 14400;
+            break;
+        case SERIAL_BAUD_19200:
+            ptrRFC2271Mode->ulBaudRate = 19200;
+            break;
+        case SERIAL_BAUD_38400:
+            ptrRFC2271Mode->ulBaudRate = 38400;
+            break;
+        case SERIAL_BAUD_57600:
+            ptrRFC2271Mode->ulBaudRate = 57600;
+            break;
+        case SERIAL_BAUD_115200:
+            ptrRFC2271Mode->ulBaudRate = 115200;
+            break;
+        case SERIAL_BAUD_230400:
+            ptrRFC2271Mode->ulBaudRate = 230400;
+            break;
+        case SERIAL_BAUD_250K:
+            ptrRFC2271Mode->ulBaudRate = 250000;
+            break;
+        }
+
+        if ((ptrMode->Config & CHAR_7) != 0) {
+            ptrRFC2271Mode->ucDataSize = 7;
+        }
+        else {
+            ptrRFC2271Mode->ucDataSize = 8;
+        }
+        if ((ptrMode->Config & ONE_HALF_STOPS) != 0) {
+            ptrRFC2271Mode->ucStopBits = RFC2217_STOPS_1_5;
+        }
+        else if ((ptrMode->Config & TWO_STOPS) != 0) {
+            ptrRFC2271Mode->ucStopBits = RFC2217_STOPS_TWO;
+        }
+        else {
+            ptrRFC2271Mode->ucStopBits = RFC2217_STOPS_ONE;
+        }
+        if ((ptrMode->Config & USE_XON_OFF) != 0) {
+            ptrRFC2271Mode->ucFlowControl = RFC2217_XON_XOFF_FLOW_CONTROL;
+        }
+        else if ((ptrMode->Config & RTS_CTS) != 0) {
+            ptrRFC2271Mode->ucFlowControl = RFC2217_HARDWARE_FLOW_CONTROL;
+        }
+        else {
+            ptrRFC2271Mode->ucFlowControl = RFC2217_NO_FLOW_CONTROL;
+        }
+        if ((ptrMode->Config & RS232_ODD_PARITY) != 0) {
+            ptrRFC2271Mode->ucParity = RFC2217_PARITY_ODD;
+        }
+        else if ((ptrMode->Config & RS232_EVEN_PARITY) != 0) {
+            ptrRFC2271Mode->ucParity = RFC2217_PARITY_EVEN;
+        }
+        else {
+            ptrRFC2271Mode->ucParity = RFC2217_PARITY_NONE;
+        }
+    }
+}
+
+static QUEUE_HANDLE fnConfigRFC2217_uart(RFC2217_UART_SETTINGS *uart_config, unsigned char ucDriverMode)
+{
+    QUEUE_HANDLE ThisPortID;
+    TTYTABLE tInterfaceParameters;                                       // table for passing information to driver
+    tInterfaceParameters.Channel = RFC2217_UART;                         // set UART channel for serial use
+    fnConvertUARTmode(&tInterfaceParameters, uart_config, 0);            // convert the RFC2217 settings to uTasker ones
+    fnConvertUARTmode(&tInterfaceParameters, uart_config, 1);            // convert back to update anything that could not be set as required
+    tInterfaceParameters.Rx_tx_sizes.RxQueueSize = RX_BUFFER_SIZE;       // input buffer size
+    tInterfaceParameters.Rx_tx_sizes.TxQueueSize = TX_BUFFER_SIZE;       // output buffer size
+    tInterfaceParameters.Task_to_wake = OWN_TASK;                        // wake self when messages have been received
+    #if defined SUPPORT_FLOW_HIGH_LOW
+    tInterfaceParameters.ucFlowHighWater = 80;                            // set the flow control high and low water levels in %
+    tInterfaceParameters.ucFlowLowWater = 20;
+    #endif
+    #if defined SERIAL_SUPPORT_DMA
+    tInterfaceParameters.ucDMAConfig = UART_TX_DMA;                      // activate DMA on transmission
+    #endif
+    if ((ThisPortID = fnOpen(TYPE_TTY, ucDriverMode, &tInterfaceParameters)) != NO_ID_ALLOCATED) { // open or change the channel with defined configurations (initially inactive)
+        fnDriver(ThisPortID, (TX_ON | RX_ON), 0);                        // enable rx and tx
+        if ((tInterfaceParameters.Config & RTS_CTS) != 0) {
+            fnDriver(ThisPortID, (MODIFY_INTERRUPT | ENABLE_CTS_CHANGE), 0); // activate CTS interrupt when working with HW flow control (this returns also the present control line states)
+            fnDriver(ThisPortID, (MODIFY_CONTROL | SET_RTS), 0);         // activate RTS line when working with HW flow control
+        }
+    }
+    return ThisPortID;
+}
+
+
+// This is called when changes need to be made to the UART used by telnet
+//
+static int fnRCF2217_callback(int iEvent, RFC2217_UART_SETTINGS *ptrUARTsettings)
+{
+    if (iEvent == RFC2217_CONNECTION_OPENED) {
+        // From this point on all data received from the UART is to be sent to the TCP connection
+        //
+    }
+    else if (iEvent == RFC2217_CONNECTION_CLOSED) {
+        // The UART is used for its orignal purpose again
+    }
+    if (ptrUARTsettings != 0) {
+        fnConfigRFC2217_uart(ptrUARTsettings, MODIFY_CONFIG);            // reconfigure the UART accordingly - if not possible, the setting values that were used can be set in the passed struct
+    }
+    return 0;
+}
+
+static void fnConfigureTelnetRFC2217Server(void)
+{
+    RFC2217_SESSION_CONFIG uart_config;                                  // this may not be const since it can be modified
+    uart_config.usPortNumber = RFC2217_SERVER_PORT;                      // telnet listener's TCP port number
+    uart_config.usIdleTimeout = (5 * 60);                                // idle connection timeout
+
+    uart_config.RFC2217_userCallback = fnRCF2217_callback;
+
+    // The uart port settings need to be converted between saved format and RFC2217 format
+    //
+    uart_config.uart_settings.ulBaudRate = 19200;                        // the default serial interface speed
+    uart_config.uart_settings.ucDataSize = 8;
+    uart_config.uart_settings.ucFlowControl = RFC2217_NO_FLOW_CONTROL;
+    uart_config.uart_settings.ucParity = RFC2217_PARITY_NONE;
+    uart_config.uart_settings.ucStopBits = RFC2217_STOPS_ONE;
+    SerialPortID_RFC2217 = fnConfigRFC2217_uart(&uart_config.uart_settings, FOR_I_O);  // open and configure the UART
+    uart_config.uart_settings.uartID = SerialPortID_RFC2217;             // serial interface associated with the telnet session
+    Telnet_RFC2217_socket = fnTelnetRF2217(&uart_config);                // enable RFC2217 com port control option
 }
 #endif
 
