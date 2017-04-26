@@ -17,6 +17,7 @@
     22.07.2014 Add clock source selection to TPM                         {2}
     04.01.2017 Don't adjust the RC clock setting when the processor is running from it {3}
     26.01.2017 Add external clock selection for KL parts                 {4}
+    26.04.2017 Add KL82 TPM clock input selection                        {5}
 
 */
 
@@ -177,7 +178,11 @@ static __interrupt void _flexTimerInterrupt_3(void)
                 ptrFlexTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_0;         // KL and KE parts actually use the TPM which is however very similar to the FlexTimer
     #if defined KINETIS_KL
                 iInterruptID = irq_TPM0_ID;
+        #if defined KINETIS_KL82                                         // {5}
+                ulExtSelect = SIM_SOPT9_TPM0CLKSEL;
+        #else
                 ulExtSelect = SIM_SOPT4_FTM0CLKSEL;
+        #endif
     #else
                 iInterruptID = irq_FTM0_ID;
     #endif
@@ -192,7 +197,11 @@ static __interrupt void _flexTimerInterrupt_3(void)
                 ptrFlexTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_1;         // KL and KE parts actually use the TPM which is however very similar to the FlexTimer
         #if defined KINETIS_KL
                 iInterruptID = irq_TPM1_ID;
+            #if defined KINETIS_KL82                                     // {5}
+                ulExtSelect = SIM_SOPT9_TPM1CLKSEL;
+            #else
                 ulExtSelect = SIM_SOPT4_FTM1CLKSEL;
+            #endif
         #else
                 iInterruptID = irq_FTM1_ID;
         #endif
@@ -216,7 +225,11 @@ static __interrupt void _flexTimerInterrupt_3(void)
                 ptrFlexTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_2;         // KL and KE parts actually use the TPM which is however very similar to the FlexTimer
         #if defined KINETIS_KL
                 iInterruptID = irq_TPM2_ID;
+            #if defined KINETIS_KL82                                     // {5}
+                ulExtSelect = SIM_SOPT9_TPM2CLKSEL;
+            #else
                 ulExtSelect = SIM_SOPT4_FTM2CLKSEL;
+            #endif
         #else
                 iInterruptID = irq_FTM2_ID;
         #endif
@@ -262,7 +275,11 @@ static __interrupt void _flexTimerInterrupt_3(void)
             if ((ptrTimerSetup->timer_mode & (TIMER_EXT_CLK_0 | TIMER_EXT_CLK_1)) != 0) { // {4} the external clock source is to be used
                 usFlexTimerMode[iTimerReference] |= (FTM_SC_CLKS_EXT | FTM_SC_TOIE | FTM_SC_TOF); // select external clock (which should be half the speed of the module's clock due to synchronisation requirements)
                 if ((ptrTimerSetup->timer_mode & (TIMER_EXT_CLK_1)) != 0) {
+        #if defined KINETIS_KL82                                         // {5}
+                    SIM_SOPT9 |= ulExtSelect;                            // select CLKIN1 source to this timer
+        #else
                     SIM_SOPT4 |= ulExtSelect;                            // select CLKIN1 source to this timer
+        #endif
         #if defined KINETIS_KL03
                     _CONFIG_PERIPHERAL(B, 6, (PB_6_TPM_CLKIN1 | PORT_PS_UP_ENABLE)); // TPM_CLKIN1 on PB.6 (alt. function 3)
         #else
@@ -270,7 +287,11 @@ static __interrupt void _flexTimerInterrupt_3(void)
         #endif
                 }
                 else {
+        #if defined KINETIS_KL82                                         // {5}
+                    SIM_SOPT9 &= ~(ulExtSelect);                         // select CLKIN0 source to this timer
+        #else
                     SIM_SOPT4 &= ~(ulExtSelect);                         // select CLKIN0 source to this timer
+        #endif
         #if defined KINETIS_KL03
                     _CONFIG_PERIPHERAL(A, 12, (PA_12_TPM_CLKIN0 | PORT_PS_UP_ENABLE)); // TPM_CLKIN0 on PA.12 (alt. function 3)
                   //_CONFIG_PERIPHERAL(A, 1, (PA_1_TPM_CLKIN0 | PORT_PS_UP_ENABLE)); // TPM_CLKIN0 on PA.1 (alt. function 2)
