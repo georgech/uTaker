@@ -84,7 +84,7 @@
 //#define TWR_KL46Z48M                                                   // tower board http://www.utasker.com/kinetis/TWR-KL46Z48M.html
 
 //#define TWR_KL82Z72M                                                   // tower board http://www.utasker.com/kinetis/FRDM-KL82Z72M
-//#define FRDM_KL82Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL82Z.html
+#define FRDM_KL82Z                                                       // freedom board http://www.utasker.com/kinetis/FRDM-KL82Z.html
 
 //#define TWR_KM34Z50M                                                   // M processors Cortex M0+ (metrology) - tower board http://www.utasker.com/kinetis/TWR-KM34Z50M.html
 //#define TWR_KM34Z75M                                                   // tower board http://www.utasker.com/kinetis/TWR-KM34Z75M.html
@@ -128,7 +128,7 @@
 
 //#define EMCRAFT_K61F150M                                               // K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - http://www.utasker.com/kinetis/EMCRAFT_K61F150M.html
 
-#define FRDM_K64F                                                        // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
+//#define FRDM_K64F                                                      // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
 //#define TWR_K64F120M                                                   // tower board http://www.utasker.com/kinetis/TWR-K64F120M.html
 //#define TEENSY_3_5                                                     // USB development board with K64FX512 - http://www.utasker.com/kinetis/TEENSY_3.5.html
 //#define FreeLON                                                        // K64 based with integrated LON
@@ -1097,7 +1097,7 @@
 
 // utFAT
 //
-#define SDCARD_SUPPORT                                                   // SD-card interface
+//#define SDCARD_SUPPORT                                                 // SD-card interface
 //#define FLASH_FAT                                                      // FAT in internal flash
 //#define SPI_FLASH_FAT                                                  // FAT in external SPI flash
     #define SIMPLE_FLASH                                                 // don't perform block management and wear-leveling
@@ -1687,7 +1687,7 @@
     #define TOUCH_MOUSE_TASK    TASK_APPLICATION                         // application received touch mouse events
     #define ENABLE_BACKLIGHT()
 #else
-    #define SUPPORT_GLCD
+  //#define SUPPORT_GLCD
   //#define SUPPORT_TOUCH_SCREEN                                         // touch screen operation
 #endif
 
@@ -1702,7 +1702,7 @@
       //#define KITRONIX_GLCD_MODE                                       // use colour TFT in GLCD compatible mode (IDM_L35_B)
       //#define MB785_GLCD_MODE                                          // use colour TFT in GLCD compatible mode (STM321C-EVAL)
       //#define TFT2N0369_GLCD_MODE                                      // use colour TFT in GLCD compatible mode (TWR-LCD)
-        #define FT800_GLCD_MODE                                          // FTDI FT800 controller
+      //#define FT800_GLCD_MODE                                          // FTDI FT800 controller
             #define FT_800_ENABLE                                        // select the FT800 display type used
             #define FT800_EMULATOR
         #if defined TWR_K70F120M || defined K70F150M_12M

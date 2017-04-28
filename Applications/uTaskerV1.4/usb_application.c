@@ -3741,7 +3741,7 @@ static int fnAudioPacket(unsigned char *ptrData, unsigned short usLength, int iC
         #if !defined SUPPORT_I2S_SAI
             #if defined AUDIO_FFT                                        // {42}
                 #if defined _WINDOWS                                     // when simulating we can inject test signals here
-    fnInjectSine(0, INJECT_SINE_HALF_WORDS_SIGNED, ptrData, usLength);   // when simulatin we inject a sine wave for test purposes
+    fnInjectSine(0, INJECT_SINE_HALF_WORDS_SIGNED, ptrData, usLength);   // when simulating we inject a sine wave for test purposes
                 #endif
     fnCollectFFT((signed short *)ptrData, usLength);                     // collect the input to an FFT buffer (data is signed short and aligned)
             #endif

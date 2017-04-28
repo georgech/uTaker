@@ -1000,6 +1000,9 @@ typedef struct stRESET_VECTOR
 #if (defined KINETIS_KL && !defined KINETIS_KL28) || defined KINETIS_KE || defined KINETIS_KV10 // {42}
     #define RAM_START_ADDRESS   (0x20000000 - (SIZE_OF_RAM/4))           // SRAM L is 1/4 of the RAM size and is anchored to end at 0x1ffffffff
                                                                          // SRAM H is 3/4 of the RAM size and is anchored to start at 0x20000000
+#elif defined KINETIS_K22 && defined KINETIS_K_FPU && (SIZE_OF_RAM == (48 * 1024))
+    #define RAM_START_ADDRESS   (0x20000000 - (16 * 1024))               // SRAM L is 16k and is anchored to end at 0x1ffffffff
+                                                                         // SRAM H is the remainder of RAM size and is anchored to start at 0x20000000
 #elif defined KINETIS_K64 || defined KINETIS_K24 || defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_K80
     #define RAM_START_ADDRESS   (0x20000000 - (64 * 1024))               // SRAM L is 64k and is anchored to end at 0x1ffffffff
                                                                          // SRAM H is the remainder of RAM size and is anchored to start at 0x20000000

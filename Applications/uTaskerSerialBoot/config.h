@@ -79,7 +79,7 @@
 //#define K02F100M                                                       // development board with 100MHz K02F
 //#define FRDM_K20D50M                                                   // K processors Cortex M4 (performance and integration) with USB - freedom board http://www.utasker.com/kinetis/FRDM-K20D50M.html
 //#define tinyK20                                                        // USB memory stick format board with SD card and 50MHz K20DX128 http://www.utasker.com/kinetis/tinyK20.html
-//#define TWR_K20D50M                                                    // tower board http://www.utasker.com/kinetis/TWR-K20D50M.html
+#define TWR_K20D50M                                                      // tower board http://www.utasker.com/kinetis/TWR-K20D50M.html
 //#define TWR_K20D72M                                                    // tower board http://www.utasker.com/kinetis/TWR-K20D72M.html
 //#define TEENSY_3_1                                                     // USB development board with K20DX256 http://www.utasker.com/kinetis/TEENSY_3.1.html
 //#define K20FX512_120                                                   // development board with 120MHz K20F
@@ -105,7 +105,7 @@
 
 //#define EMCRAFT_K61F150M                                               // K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - http://www.utasker.com/kinetis/EMCRAFT_K61F150M.html
 
-#define FRDM_K64F                                                        // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
+//#define FRDM_K64F                                                      // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
 //#define TWR_K64F120M                                                   // tower board http://www.utasker.com/kinetis/TWR-K64F120M.html
 //#define TEENSY_3_5                                                     // USB development board with K64FX512 - http://www.utasker.com/kinetis/TEENSY_3.5.html
 //#define TWR_K65F180M                                                   // tower board http://www.utasker.com/kinetis/TWR-K65F180M.html

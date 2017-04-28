@@ -1006,16 +1006,6 @@
   //#define SIZE_OF_RAM         (8 * 1024)                               // 8k SRAM
     #define SIZE_OF_RAM         (16 * 1024)                              // 16k SRAM
   //#define SIZE_OF_RAM         (32 * 1024)                              // 32k SRAM
-#elif defined FRDM_KL82Z
-    #define MASK_0N51R                                                   // enable errata workarounds for this mask
-  //#define PIN_COUNT           PIN_COUNT_64_PIN
-    #define PIN_COUNT           PIN_COUNT_80_PIN                         // 80 pin package
-  //#define PIN_COUNT           PIN_COUNT_100_PIN
-  //#define PIN_COUNT           PIN_COUNT_121_PIN
-    #define PACKAGE_TYPE        PACKAGE_LQFP                             // LQFP
-  //#define PACKAGE_TYPE        PACKAGE_BGA
-    #define SIZE_OF_FLASH       (128 * 1024)                             // 128k program Flash
-    #define SIZE_OF_RAM         (96 * 1024)                              // 96k SRAM
 #elif defined CAPUCCINO_KL27
     #define PIN_COUNT           PIN_COUNT_64_PIN                         // 64 pin package
     #define PACKAGE_TYPE        PACKAGE_LQFP                             // LQFP
@@ -1026,6 +1016,16 @@
     #define PACKAGE_TYPE        PACKAGE_QFN                              // QFN
     #define SIZE_OF_FLASH       (64 * 1024)                              // 64k program Flash
     #define SIZE_OF_RAM         (8 * 1024)                               // 8k SRAM
+#elif defined FRDM_KL82Z
+    #define MASK_0N51R                                                   // enable errata workarounds for this mask
+  //#define PIN_COUNT           PIN_COUNT_64_PIN
+    #define PIN_COUNT           PIN_COUNT_80_PIN                         // 80 pin package
+  //#define PIN_COUNT           PIN_COUNT_100_PIN
+  //#define PIN_COUNT           PIN_COUNT_121_PIN
+    #define PACKAGE_TYPE        PACKAGE_LQFP                             // LQFP
+  //#define PACKAGE_TYPE        PACKAGE_BGA
+    #define SIZE_OF_FLASH       (128 * 1024)                             // 128k program Flash
+    #define SIZE_OF_RAM         (96 * 1024)                              // 96k SRAM
 #elif defined TRK_KEA8
   //#define PIN_COUNT           PIN_COUNT_16_PIN                         // 16 pin TSSOP
     #define PIN_COUNT           PIN_COUNT_24_PIN                         // 24 pin QFN
