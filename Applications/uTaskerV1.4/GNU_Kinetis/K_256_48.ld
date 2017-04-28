@@ -3,7 +3,6 @@
 /* Use when running in FLASH (256k FLASH / 48k CPU SRAM)                 */
 
 
-
 MEMORY
 {
     FLASH (rx) : ORIGIN = 0x00000000, LENGTH = 0x00040000                /* 256k Flash */
