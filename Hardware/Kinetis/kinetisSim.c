@@ -56,6 +56,7 @@
     17.01.2016 Add fnResetENET()                                         {41}
     02.02.2017 Adapt for us tick resolution
     24.03.2017 Reset all host endpoints data frame types                 {42}
+    03.05.2017 Improve LPUART and UART rx DMA operation
 
 */  
                           
@@ -4017,114 +4018,120 @@ extern int fnSimulateDMA(int channel)                                    // {3}
                 }
             }
             if ((ptrDMA->DMA_DCR & DMA_DCR_CS) != 0) {                   // if in cycle-steal mode only one transfer is performed at a time
-                if (ptrDMA->DMA_DSR_BCR != 0) {
-                    return 1;                                            // still active
-                }
-                else {
-                    unsigned long ulLength = 0;
-                    switch (ptrDMA->DMA_DCR & DMA_DCR_SMOD_256K) {       // hande automatic source modulo buffer operation
-                    case DMA_DCR_SMOD_16:
-                        ulLength = 16;
-                        break;
-                    case DMA_DCR_SMOD_32:
-                        ulLength = 32;
-                        break;
-                    case DMA_DCR_SMOD_64:
-                        ulLength = 64;
-                        break;
-                    case DMA_DCR_SMOD_128:
-                        ulLength = 128;
-                        break;
-                    case DMA_DCR_SMOD_256:
-                        ulLength = 256;
-                        break;
-                    case DMA_DCR_SMOD_512:
-                        ulLength = 512;
-                        break;
-                    case DMA_DCR_SMOD_1K:
-                        ulLength = 1024;
-                        break;
-                    case DMA_DCR_SMOD_2K:
-                        ulLength = (2 * 1024);
-                        break;
-                    case DMA_DCR_SMOD_4K:
-                        ulLength = (4 * 1024);
-                        break;
-                    case DMA_DCR_SMOD_8K:
-                        ulLength = (8 * 1024);
-                        break;
-                    case DMA_DCR_SMOD_16K:
-                        ulLength = (16 * 1024);
-                        break;
-                    case DMA_DCR_SMOD_32K:
-                        ulLength = (32 * 1024);
-                        break;
-                    case DMA_DCR_SMOD_64K:
-                        ulLength = (64 * 1024);
-                        break;
-                    case DMA_DCR_SMOD_128K:
-                        ulLength = (128 * 1024);
-                        break;
-                    case DMA_DCR_SMOD_256K:
-                        ulLength = (256 * 1024);
-                        break;
-                    }
-                    ptrDMA->DMA_DSR_BCR = ulLength;
-                    ptrDMA->DMA_SAR -= ulLength;
-                    switch (ptrDMA->DMA_DCR & DMA_DCR_DMOD_256K) {       // hande automatic destination modulo buffer operation
-                    case DMA_DCR_DMOD_16:
-                        ulLength = 16;
-                        break;
-                    case DMA_DCR_DMOD_32:
-                        ulLength = 32;
-                        break;
-                    case DMA_DCR_DMOD_64:
-                        ulLength = 64;
-                        break;
-                    case DMA_DCR_DMOD_128:
-                        ulLength = 128;
-                        break;
-                    case DMA_DCR_DMOD_256:
-                        ulLength = 256;
-                        break;
-                    case DMA_DCR_DMOD_512:
-                        ulLength = 512;
-                        break;
-                    case DMA_DCR_DMOD_1K:
-                        ulLength = 1024;
-                        break;
-                    case DMA_DCR_DMOD_2K:
-                        ulLength = (2 * 1024);
-                        break;
-                    case DMA_DCR_DMOD_4K:
-                        ulLength = (4 * 1024);
-                        break;
-                    case DMA_DCR_DMOD_8K:
-                        ulLength = (8 * 1024);
-                        break;
-                    case DMA_DCR_DMOD_16K:
-                        ulLength = (16 * 1024);
-                        break;
-                    case DMA_DCR_DMOD_32K:
-                        ulLength = (32 * 1024);
-                        break;
-                    case DMA_DCR_DMOD_64K:
-                        ulLength = (64 * 1024);
-                        break;
-                    case DMA_DCR_DMOD_128K:
-                        ulLength = (128 * 1024);
-                        break;
-                    case DMA_DCR_DMOD_256K:
-                        ulLength = (256 * 1024);
-                        break;
-                    default:
-                        ulLength = 0;
-                        break;
-                    }
-                    ptrDMA->DMA_DAR -= ulLength;
-                    ptrDMA->DMA_DSR_BCR |= ulLength;
+                unsigned long ulLength = 0;
+                switch (ptrDMA->DMA_DCR & DMA_DCR_SMOD_256K) {           // handle automatic source modulo buffer operation
+                case DMA_DCR_SMOD_16:
+                    ulLength = 16;
+                    break;
+                case DMA_DCR_SMOD_32:
+                    ulLength = 32;
+                    break;
+                case DMA_DCR_SMOD_64:
+                    ulLength = 64;
+                    break;
+                case DMA_DCR_SMOD_128:
+                    ulLength = 128;
+                    break;
+                case DMA_DCR_SMOD_256:
+                    ulLength = 256;
+                    break;
+                case DMA_DCR_SMOD_512:
+                    ulLength = 512;
+                    break;
+                case DMA_DCR_SMOD_1K:
+                    ulLength = 1024;
+                    break;
+                case DMA_DCR_SMOD_2K:
+                    ulLength = (2 * 1024);
+                    break;
+                case DMA_DCR_SMOD_4K:
+                    ulLength = (4 * 1024);
+                    break;
+                case DMA_DCR_SMOD_8K:
+                    ulLength = (8 * 1024);
+                    break;
+                case DMA_DCR_SMOD_16K:
+                    ulLength = (16 * 1024);
+                    break;
+                case DMA_DCR_SMOD_32K:
+                    ulLength = (32 * 1024);
+                    break;
+                case DMA_DCR_SMOD_64K:
+                    ulLength = (64 * 1024);
+                    break;
+                case DMA_DCR_SMOD_128K:
+                    ulLength = (128 * 1024);
+                    break;
+                case DMA_DCR_SMOD_256K:
+                    ulLength = (256 * 1024);
+                    break;
+                default:
                     break;
                 }
+                if (ulLength != 0) {
+                    if ((ptrDMA->DMA_SAR % ulLength) == 0) {
+                        ptrDMA->DMA_SAR -= ulLength;
+                    }
+                }
+                switch (ptrDMA->DMA_DCR & DMA_DCR_DMOD_256K) {           // handle automatic destination modulo buffer operation
+                case DMA_DCR_DMOD_16:
+                    ulLength = 16;
+                    break;
+                case DMA_DCR_DMOD_32:
+                    ulLength = 32;
+                    break;
+                case DMA_DCR_DMOD_64:
+                    ulLength = 64;
+                    break;
+                case DMA_DCR_DMOD_128:
+                    ulLength = 128;
+                    break;
+                case DMA_DCR_DMOD_256:
+                    ulLength = 256;
+                    break;
+                case DMA_DCR_DMOD_512:
+                    ulLength = 512;
+                    break;
+                case DMA_DCR_DMOD_1K:
+                    ulLength = 1024;
+                    break;
+                case DMA_DCR_DMOD_2K:
+                    ulLength = (2 * 1024);
+                    break;
+                case DMA_DCR_DMOD_4K:
+                    ulLength = (4 * 1024);
+                    break;
+                case DMA_DCR_DMOD_8K:
+                    ulLength = (8 * 1024);
+                    break;
+                case DMA_DCR_DMOD_16K:
+                    ulLength = (16 * 1024);
+                    break;
+                case DMA_DCR_DMOD_32K:
+                    ulLength = (32 * 1024);
+                    break;
+                case DMA_DCR_DMOD_64K:
+                    ulLength = (64 * 1024);
+                    break;
+                case DMA_DCR_DMOD_128K:
+                    ulLength = (128 * 1024);
+                    break;
+                case DMA_DCR_DMOD_256K:
+                    ulLength = (256 * 1024);
+                    break;
+                default:
+                    ulLength = 0;
+                    break;
+                }
+                if (ulLength != 0) {
+                    if ((ptrDMA->DMA_DAR % ulLength) == 0) {
+                        ptrDMA->DMA_DAR -= ulLength;
+                    }
+                }
+                break;
+            }
+            if (ptrDMA->DMA_DSR_BCR != 0) {
+                return 1;                                                // still active
             }
         }
         ptrDMA->DMA_DSR_BCR |= DMA_DSR_BCR_DONE;
@@ -4699,14 +4706,23 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                                                                          // if reception interrupt is enabled
         #if !defined KINETIS_KE && !defined KINETIS_KL03 && !defined KINETIS_KL43 // these don't support DMA
                         if ((LPUART0_BAUD & LPUART_BAUD_RDMAE) != 0) {   // if the LPUART is operating in DMA reception mode
-            #if defined SERIAL_SUPPORT_DMA && defined DMA_LPUART0_RX_CHANNEL
-                            if ((DMA_ERQ & (DMA_ERQ_ERQ0 << DMA_LPUART0_RX_CHANNEL)) != 0) { // if source enabled
+            #if defined SERIAL_SUPPORT_DMA
+                #if defined KINETIS_KL
+                            KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
+                            ptrDMA += DMA_UART0_RX_CHANNEL;
+                            if ((ptrDMA->DMA_DCR & DMA_DCR_ERQ) != 0) { // if source enabled
+                                fnSimulateDMA(DMA_UART0_RX_CHANNEL);     // trigger DMA transfer on the UART's channel
+                                LPUART0_STAT &= ~LPUART_STAT_RDRF;       // remove interrupt cause
+                            }
+                #else
+                            if ((DMA_ERQ & (DMA_ERQ_ERQ0 << DMA_UART0_RX_CHANNEL)) != 0) { // if source enabled
                                 KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
                                 ptrDMA_TCD += DMA_LPUART0_RX_CHANNEL;
                                 ptrDMA_TCD->DMA_TCD_CSR |= (DMA_TCD_CSR_ACTIVE); // trigger
                                 fnSimulateDMA(DMA_LPUART0_RX_CHANNEL);   // trigger DMA transfer on the UART's channel
                                 LPUART0_STAT &= ~LPUART_STAT_RDRF;       // remove interrupt cause
                             }
+                #endif
             #endif
                         }
                         else {
@@ -4736,7 +4752,15 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                                                                          // if reception interrupt is enabled
             #if !defined KINETIS_KE && !defined KINETIS_KL03 && !defined KINETIS_KL43 // these don't support DMA
                         if ((LPUART1_BAUD & LPUART_BAUD_RDMAE) != 0) {   // if the UART is operating in DMA reception mode
-                #if defined SERIAL_SUPPORT_DMA && defined DMA_LPUART1_RX_CHANNEL
+                #if defined SERIAL_SUPPORT_DMA
+                    #if defined KINETIS_KL
+                            KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
+                            ptrDMA += DMA_UART1_RX_CHANNEL;
+                            if ((ptrDMA->DMA_DCR & DMA_DCR_ERQ) != 0) {  // if source enabled
+                                fnSimulateDMA(DMA_UART1_RX_CHANNEL);     // trigger DMA transfer on the UART's channel
+                                LPUART1_STAT &= ~LPUART_STAT_RDRF;       // remove interrupt cause
+                            }
+                    #else
                             if ((DMA_ERQ & (DMA_ERQ_ERQ0 << DMA_LPUART1_RX_CHANNEL)) != 0) { // if source enabled
                                 KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
                                 ptrDMA_TCD += DMA_LPUART1_RX_CHANNEL;
@@ -4744,6 +4768,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                                 fnSimulateDMA(DMA_LPUART1_RX_CHANNEL);   // trigger DMA transfer on the UART's channel
                                 LPUART1_STAT &= ~LPUART_STAT_RDRF;       // remove interrupt cause
                             }
+                    #endif
                 #endif
                         }
                         else {
@@ -4945,18 +4970,26 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
     #if (UARTS_AVAILABLE > 2 && (LPUARTS_AVAILABLE < 3 || defined LPUARTS_PARALLEL)) || ((UARTS_AVAILABLE == 1) && (LPUARTS_AVAILABLE == 2))
     case 2:
         if ((UART2_C2 & UART_C2_RE) != 0) {                              // if receiver enabled
-            while (usLen--) {                                            // for each reception character
+            while ((usLen--) != 0) {                                     // for each reception character
                 UART2_D = *ptrDebugIn++;
                 UART2_S1 |= UART_S1_RDRF;                                // set interrupt cause
-                if (UART2_C2 & UART_C2_RIE) {                            // if reception interrupt is enabled
+                if ((UART2_C2 & UART_C2_RIE) != 0) {                     // if reception interrupt is enabled
         #if !defined KINETIS_KE
-            #if defined KINETIS_KL
-                    if (UART2_C4 & UART_C4_TDMAS)
+            #if defined KINETIS_KL &&  (UARTS_AVAILABLE > 1)
+                    if ((UART2_C4 & UART_C4_RDMAS) != 0)                 // if DMA mode is enabled
             #else
-                    if (UART2_C5 & UART_C5_RDMAS)
+                    if ((UART2_C5 & UART_C5_RDMAS) != 0)
             #endif
                     {                                                    // {4} if the UART is operating in DMA reception mode
             #if defined SERIAL_SUPPORT_DMA && defined DMA_UART2_RX_CHANNEL
+                #if defined KINETIS_KL
+                        KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
+                        ptrDMA += DMA_UART2_RX_CHANNEL;
+                        if ((ptrDMA->DMA_DCR & DMA_DCR_ERQ) != 0) {      // if source enabled
+                            fnSimulateDMA(DMA_UART2_RX_CHANNEL);         // trigger DMA transfer on the UART's channel
+                            UART2_S1 &= ~UART_S1_RDRF;                   // remove interrupt cause
+                        }
+                #else
                         if (DMA_ERQ & (DMA_ERQ_ERQ0 << DMA_UART2_RX_CHANNEL)) { // if source enabled
                             KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
                             ptrDMA_TCD += DMA_UART2_RX_CHANNEL;
@@ -4964,6 +4997,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                             fnSimulateDMA(DMA_UART2_RX_CHANNEL);         // trigger DMA transfer on the UART's channel
                             UART2_S1 &= ~UART_S1_RDRF;                   // remove interrupt cause
                         }
+               #endif
             #endif
                     }
                     else {

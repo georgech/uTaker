@@ -1733,6 +1733,7 @@ static void _LowLevelInit(void)
 #endif
 #if defined CLKOUT_AVAILABLE
   //fnClkout(BUS_CLOCK_OUT);                                             // select the clock to monitor on CLKOUT
+  //fnClkout(INTERNAL_IRC48M_CLOCK_OUT);
 #endif
 #if defined KINETIS_KL && defined ROM_BOOTLOADER && defined BOOTLOADER_ERRATA // {125}
     if ((RCM_MR & (RCM_MR_BOOTROM_BOOT_FROM_ROM_BOOTCFG0 | RCM_MR_BOOTROM_BOOT_FROM_ROM_FOPT7)) != 0) { // if the reset was via the ROM loader

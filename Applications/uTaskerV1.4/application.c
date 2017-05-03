@@ -120,6 +120,7 @@
     12.12.2015 Modify parameter of fnSetDefaultNetwork()                 {99}
     09.07.2016 Handle DHCP as Ethernet messages (previously interrupt events) {100}
     24.04.2017 Add RFC2217 interface                                     {101}
+    03.05.2017 Add FREE_RUNNING_RX_DMA_RECEPTION option                  {102}
 
 */
 
@@ -149,6 +150,7 @@
 // The project includes a variety of quick tests which can be activated here
 /*****************************************************************************/
 
+//#define FREE_RUNNING_RX_DMA_RECEPTION                                  // {102} use the UART receiver in free-running DMA mode (requires SERIAL_SUPPORT_DMA_RX and SERIAL_SUPPORT_DMA_RX_FREERUN)
 //#define RAM_TEST                                                       // {61} perform a RAM test on startup - if error found, stop
 //#define TEST_MSG_MODE                                                  // test UART in message mode
 //#define TEST_MSG_CNT_MODE                                              // test UART in message counter mode
@@ -306,7 +308,8 @@ const PARS cParameters = {
 #endif
     },
 #if defined FRDM_KL03Z                                                   // this board has a capacitor connected to the LPUART0_RX pin so can not use fast speeds
-    SERIAL_BAUD_19200,                                                   // baud rate of serial interface
+    SERIAL_BAUD_115200,
+  //SERIAL_BAUD_19200,                                                   // baud rate of serial interface
 #else
     SERIAL_BAUD_115200,                                                  // baud rate of serial interface
 #endif
@@ -1450,9 +1453,18 @@ extern QUEUE_HANDLE fnSetNewSerialMode(unsigned char ucDriverMode)
     tInterfaceParameters.ucMessageTerminator = '\r';
     #endif
     #if defined SERIAL_SUPPORT_DMA
+        #if defined FREE_RUNNING_RX_DMA_RECEPTION
+            #if defined KINETIS_KL
+    tInterfaceParameters.ucDMAConfig = (UART_RX_DMA | UART_RX_MODULO);   // modulo aligned reception memory is required by kinetis Kl parts in free-running DMA mode
+            #else
+    tInterfaceParameters.ucDMAConfig = (UART_RX_DMA);
+            #endif
+    uTaskerStateChange(OWN_TASK, UTASKER_POLLING);                       // set the task to polling mode to regularly check the receive buffer
+        #else
   //tInterfaceParameters.ucDMAConfig = 0;
     tInterfaceParameters.ucDMAConfig = UART_TX_DMA;                      // activate DMA on transmission
-  //tInterfaceParameters.ucDMAConfig = (UART_RX_DMA /*| UART_RX_DMA_HALF_BUFFER*/); // test half buffer DMA reception
+  //tInterfaceParameters.ucDMAConfig = (UART_RX_DMA | UART_RX_DMA_HALF_BUFFER | UART_RX_DMA_FULL_BUFFER | UART_RX_DMA_BREAK));
+        #endif
     #endif
     #if defined SUPPORT_HW_FLOW
     tInterfaceParameters.Config |= RTS_CTS;                              // enable RTS/CTS operation (HW flow control)

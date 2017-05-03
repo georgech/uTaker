@@ -91,6 +91,7 @@
     07.01.2017 Add UART_TIMED_TRANSMISSION_MODE                          {72}
     16.02.2017 Add crypography AES defines                               {73}
     17.01.2017 Add DSP FFT defines                                       {74}
+    03.05.2017 Add UART_RX_MODULO and UART_TX_MODULO flags               {75}
 
 */
 
@@ -261,6 +262,8 @@
 #define UART_RX_DMA_FULL_BUFFER      0x04                                // DMA complete when rx buffer full
 #define UART_RX_DMA_HALF_BUFFER      0x08                                // DMA complete when rx buffer half full
 #define UART_RX_DMA_BREAK            0x10                                // DMA complete when break detected
+#define UART_RX_MODULO               0x20                                // {75} reception memory must be moduo aligned
+#define UART_TX_MODULO               0x40                                // {75} transmission memory must be moduo aligned
 
 #define FLUSH_RX          0
 #define FLUSH_TX          1

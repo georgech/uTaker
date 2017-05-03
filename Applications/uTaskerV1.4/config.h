@@ -84,7 +84,7 @@
 //#define TWR_KL46Z48M                                                   // tower board http://www.utasker.com/kinetis/TWR-KL46Z48M.html
 
 //#define TWR_KL82Z72M                                                   // tower board http://www.utasker.com/kinetis/FRDM-KL82Z72M
-#define FRDM_KL82Z                                                       // freedom board http://www.utasker.com/kinetis/FRDM-KL82Z.html
+//#define FRDM_KL82Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL82Z.html
 
 //#define TWR_KM34Z50M                                                   // M processors Cortex M0+ (metrology) - tower board http://www.utasker.com/kinetis/TWR-KM34Z50M.html
 //#define TWR_KM34Z75M                                                   // tower board http://www.utasker.com/kinetis/TWR-KM34Z75M.html
@@ -128,7 +128,7 @@
 
 //#define EMCRAFT_K61F150M                                               // K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - http://www.utasker.com/kinetis/EMCRAFT_K61F150M.html
 
-//#define FRDM_K64F                                                      // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
+#define FRDM_K64F                                                        // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
 //#define TWR_K64F120M                                                   // tower board http://www.utasker.com/kinetis/TWR-K64F120M.html
 //#define TEENSY_3_5                                                     // USB development board with K64FX512 - http://www.utasker.com/kinetis/TEENSY_3.5.html
 //#define FreeLON                                                        // K64 based with integrated LON
@@ -923,7 +923,7 @@
 #if defined DEVICE_WITHOUT_USB
     #define NUMBER_USB     0                                             // no physical queue needed
 #else
-    #define USB_INTERFACE                                                // enable USB driver interface
+  //#define USB_INTERFACE                                                // enable USB driver interface
     #if defined USB_INTERFACE
       //#define MICROSOFT_OS_STRING_DESCRIPTOR                           // support MODs
       //#define USB_HOST_SUPPORT                                         // host rather than device

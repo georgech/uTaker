@@ -454,15 +454,24 @@ extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned char ucDmaT
             if ((ulBufLength != 16) && (ulBufLength != 32) && (ulBufLength != 64) && (ulBufLength != 128) && (ulBufLength != 256) && (ulBufLength != 512) && (ulBufLength != 1024) && (ulBufLength != (2 * 1024)) && (ulBufLength != (4 * 1024)) && (ulBufLength != (8 * 1024)) && (ulBufLength != (16 * 1024)) && (ulBufLength != (32 * 1024)) && (ulBufLength != (64 * 1024)) && (ulBufLength != (128 * 1024)) && (ulBufLength != (256 * 1024))) {
                 _EXCEPTION("Invalid circular buffer size!!");
             }
-            if ((unsigned long)ptrBufSource & (ulBufLength - 1)) {
-                _EXCEPTION("Circular buffer not-aligned!!");
+            if ((ulRules & DMA_FIXED_ADDRESSES) == 0) {
+                if ((ulRules & DMA_DIRECTION_OUTPUT) != 0) {
+                    if ((unsigned long)ptrBufSource & (ulBufLength - 1)) {
+                        _EXCEPTION("Circular source buffer not-aligned!!");
+                    }
+                }
+                else {
+                    if ((unsigned long)ptrBufDest & (ulBufLength - 1)) {
+                        _EXCEPTION("Circular destination buffer not-aligned!!");
+                    }
+                }
             }
     #endif
             while (ulBufLength < (256 * 1024)) {                         // calculate the modulo value required for the source
                 ulBufLength *= 2;
                 ulMod -= DMA_DCR_SMOD_16;
             }
-            if ((ulRules & DMA_DIRECTION_OUTPUT) != 0) {                 // if the buffer is the destination
+            if ((ulRules & DMA_DIRECTION_OUTPUT) == 0) {                 // if the buffer is the destination
                 ulMod >>= 4;                                             // move to destination MOD field
             }
             ptrDMA->DMA_DCR |= ulMod;                                    // the modulo setting
