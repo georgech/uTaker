@@ -4128,7 +4128,7 @@ extern int fnSimulateDMA(int channel)                                    // {3}
                         ptrDMA->DMA_DAR -= ulLength;
                     }
                 }
-                break;
+//                break;
             }
             if (ptrDMA->DMA_DSR_BCR != 0) {
                 return 1;                                                // still active
@@ -6474,7 +6474,7 @@ extern unsigned long fnSimDMA(char *argv[])
     #endif
 
     while (_iDMA != 0) {                                                 // while DMA operations to be performed
-        if (_iDMA & ulChannel) {                                         // DMA request on this channel
+        if ((_iDMA & ulChannel) != 0) {                                  // DMA request on this channel
             _iDMA &= ~ulChannel;
             switch (iChannel) {
     #if defined SERIAL_INTERFACE && defined SERIAL_SUPPORT_DMA           // {4}
