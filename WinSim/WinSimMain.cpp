@@ -5668,8 +5668,8 @@ extern "C" {
     extern void FT8XXEMU_run(unsigned long versionApi, const FT8XXEMU_EmulatorParameters *params);
 
     __declspec(dllimport) extern unsigned char (*FT8XXEMU_transfer)(unsigned char data); // transfer data over the imaginary SPI bus. Call from the MCU thread (from the setup/loop callbacks). See FT8XX documentation for SPI transfer protocol
-    __declspec(dllimport) extern void (*FT8XXEMU_cs)(int cs);                     // set cable select. Must be set to 1 to start data transfer, 0 to end. See FT8XX documentation for CS_N
-    __declspec(dllimport) extern int (*FT8XXEMU_int)();                           // returns 1 if there is an interrupt flag set. Depends on mask. See FT8XX documentation for INT_N
+    __declspec(dllimport) extern void (*FT8XXEMU_cs)(int cs);            // set cable select. Must be set to 1 to start data transfer, 0 to end. See FT8XX documentation for CS_N
+    __declspec(dllimport) extern int (*FT8XXEMU_int)();                  // returns 1 if there is an interrupt flag set. Depends on mask. See FT8XX documentation for INT_N
 }
 
 
@@ -5690,7 +5690,7 @@ static void loop(void)
 //
 extern "C" void _FT8XXEMU_cs(int cs)
 {
-    while (iEmulatorReady == 0) {                                        // if the emulator has not yet initistaed we wait
+    while (iEmulatorReady == 0) {                                        // if the emulator has not yet initialised we wait
         Sleep(10);
     }
     FT8XXEMU_cs(cs);
