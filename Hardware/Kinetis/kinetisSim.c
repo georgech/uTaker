@@ -4704,7 +4704,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                     LPUART0_STAT |= LPUART_STAT_RDRF;                    // set interrupt cause
                     if ((LPUART0_CTRL & LPUART_CTRL_RIE) != 0) {
                                                                          // if reception interrupt is enabled
-        #if !defined KINETIS_KE && !defined KINETIS_KL03 && !defined KINETIS_KL43 // these don't support DMA
+        #if !defined DEVICE_WITHOUT_DMA                                  // if the device supports DMA
                         if ((LPUART0_BAUD & LPUART_BAUD_RDMAE) != 0) {   // if the LPUART is operating in DMA reception mode
             #if defined SERIAL_SUPPORT_DMA
                 #if defined KINETIS_KL
@@ -4731,7 +4731,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                                 VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                                 ptrVect->processor_interrupts.irq_LPUART0(); // call the interrupt handler
                             }
-        #if !defined KINETIS_KE && !defined KINETIS_KL03 & !defined KINETIS_KL43
+        #if !defined DEVICE_WITHOUT_DMA                              // if the device supports DMA
                         }
         #endif
                     }
@@ -4750,7 +4750,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                     LPUART1_STAT |= LPUART_STAT_RDRF;                    // set interrupt cause
                     if ((LPUART1_CTRL & LPUART_CTRL_RIE) != 0) {
                                                                          // if reception interrupt is enabled
-            #if !defined KINETIS_KE && !defined KINETIS_KL03 && !defined KINETIS_KL43 // these don't support DMA
+            #if !defined DEVICE_WITHOUT_DMA                              // if the device supports DMA
                         if ((LPUART1_BAUD & LPUART_BAUD_RDMAE) != 0) {   // if the UART is operating in DMA reception mode
                 #if defined SERIAL_SUPPORT_DMA
                     #if defined KINETIS_KL
@@ -4777,7 +4777,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                                 VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                                 ptrVect->processor_interrupts.irq_LPUART1(); // call the interrupt handler
                             }
-                #if !defined KINETIS_KE && !defined KINETIS_KL03 & !defined KINETIS_KL43
+                #if !defined DEVICE_WITHOUT_DMA                              // if the device supports DMA
                         }
                 #endif
                     }
@@ -4894,18 +4894,31 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
         #endif
     #endif
 
-    #if UARTS_AVAILABLE > 0
+    #if UARTS_AVAILABLE > 0                                              // UARTs
     switch (iPort) {
         #if LPUARTS_AVAILABLE < 1 || defined LPUARTS_PARALLEL
-    case 0:
+    case 0:                                                              // UART0
         if ((UART0_C2 & UART_C2_RE) != 0) {                              // if receiver enabled
-            while ((usLen--) != 0) {                                     // for each reception character
+            while (usLen-- != 0) {                                       // for each reception character
                 UART0_D = *ptrDebugIn++;
                 UART0_S1 |= UART_S1_RDRF;                                // set interrupt cause
                 if ((UART0_C2 & UART_C2_RIE) != 0) {                     // if reception interrupt is enabled
-            #if !defined KINETIS_KE && !defined KINETIS_KL03             // these don't support DMA
-                    if ((UART0_C5 & UART_C5_RDMAS) != 0) {               // {4} if the UART is operating in DMA reception mode
+            #if !defined DEVICE_WITHOUT_DMA                              // if the device supports DMA
+                #if defined KINETIS_KL
+                    if ((UART0_C4 & UART_C4_RDMAS) != 0)                 // DMA mode
+                #else
+                    if ((UART0_C5 & UART_C5_RDMAS) != 0)                 // {4} if the UART is operating in DMA reception mode
+                #endif
+                    {
                 #if defined SERIAL_SUPPORT_DMA && defined DMA_UART0_RX_CHANNEL
+                    #if defined KINETIS_KL
+                        KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
+                        ptrDMA += DMA_UART0_RX_CHANNEL;
+                        if ((ptrDMA->DMA_DCR & DMA_DCR_ERQ) != 0) {      // if source enabled
+                            fnSimulateDMA(DMA_UART0_RX_CHANNEL);         // trigger DMA transfer on the UART's channel
+                            UART0_S1 &= ~UART_S1_RDRF;                   // remove interrupt cause
+                        }
+                    #else
                         if ((DMA_ERQ & (DMA_ERQ_ERQ0 << DMA_UART0_RX_CHANNEL)) != 0) { // if source enabled
                             KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
                             ptrDMA_TCD += DMA_UART0_RX_CHANNEL;
@@ -4913,6 +4926,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                             fnSimulateDMA(DMA_UART0_RX_CHANNEL);         // trigger DMA transfer on the UART's channel
                             UART0_S1 &= ~UART_S1_RDRF;                   // remove interrupt cause
                         }
+                    #endif
                 #endif
                     }
                     else {
@@ -4921,7 +4935,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                             VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                             ptrVect->processor_interrupts.irq_UART0();   // call the interrupt handler
                         }
-            #if !defined KINETIS_KE && !defined KINETIS_KL03 & !defined KINETIS_KL43
+            #if !defined DEVICE_WITHOUT_DMA                              // if the device supports DMA
                     }
             #endif
                 }
@@ -4936,7 +4950,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                 UART1_D = *ptrDebugIn++;                                 // save the received byte to the UART data register
                 UART1_S1 |= UART_S1_RDRF;                                // set interrupt cause
                 if ((UART1_C2 & UART_C2_RIE) != 0) {                     // if reception interrupt (or DMA) is enabled
-        #if !defined KINETIS_KE
+        #if !defined DEVICE_WITHOUT_DMA                              // if the device supports DMA
             #if defined KINETIS_KL
                     if ((UART1_C4 & UART_C4_RDMAS) != 0)                 // DMA mode
             #else
@@ -4944,6 +4958,14 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
             #endif
                     {                                                    // {4} if the UART is operating in DMA reception mode
             #if defined SERIAL_SUPPORT_DMA && defined DMA_UART1_RX_CHANNEL
+                #if defined KINETIS_KL
+                        KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
+                        ptrDMA += DMA_UART1_RX_CHANNEL;
+                        if ((ptrDMA->DMA_DCR & DMA_DCR_ERQ) != 0) {      // if source enabled
+                            fnSimulateDMA(DMA_UART1_RX_CHANNEL);         // trigger DMA transfer on the UART's channel
+                            UART1_S1 &= ~UART_S1_RDRF;                   // remove interrupt cause
+                        }
+                #else
                         if ((DMA_ERQ & (DMA_ERQ_ERQ0 << DMA_UART1_RX_CHANNEL)) != 0) { // if source enabled
                             KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
                             ptrDMA_TCD += DMA_UART1_RX_CHANNEL;
@@ -4951,6 +4973,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                             fnSimulateDMA(DMA_UART1_RX_CHANNEL);         // trigger DMA transfer on the UART's channel
                             UART1_S1 &= ~UART_S1_RDRF;                   // remove interrupt cause
                         }
+                #endif
             #endif
                     }
                     else {
@@ -4959,7 +4982,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                             VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                             ptrVect->processor_interrupts.irq_UART1();   // call the interrupt handler
                         }
-        #if !defined KINETIS_KE
+        #if !defined DEVICE_WITHOUT_DMA                              // if the device supports DMA
                     }
         #endif
                 }
