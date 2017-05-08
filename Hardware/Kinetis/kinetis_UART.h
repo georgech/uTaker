@@ -557,13 +557,13 @@ static __interrupt void _SCI2_Interrupt(void)                            // UART
             #endif
     {                                                                    // if the receiver is operating in DMA mode ignore reception interrupt flags
         #endif
-        if ((ucState & UART_S1_RDRF) & UART2_C2) {                       // reception interrupt flag is set and the reception interrupt is enabled
+        if (((ucState & UART_S1_RDRF) & UART2_C2) != 0) {                // reception interrupt flag is set and the reception interrupt is enabled
             fnUART2_HANDLER((unsigned char)(UART2_D & ucUART_mask[2]), 2); // receive data interrupt - read the byte (masked with character width)
         #if defined _WINDOWS
             UART2_S1 &= ~(UART_S1_RDRF);                                 // simulate reset of interrupt flag
         #endif
             ucState = UART2_S1;                                          // {92} update the status register
-            if (ucState & UART_S1_OR) {                                  // if the overrun flag is set at this point it means that an overrun took place between reading the status register on entry to the interrupt and reading the data register
+            if ((ucState & UART_S1_OR) != 0) {                           // if the overrun flag is set at this point it means that an overrun took place between reading the status register on entry to the interrupt and reading the data register
                 (void)UART2_D;                                           // read the data register in order to clear the overrun flag and allow the receiver to continue operating
             }
         }
@@ -578,7 +578,7 @@ static __interrupt void _SCI2_Interrupt(void)                            // UART
             #endif
     {                                                                    // if the transmitter is operating in DMA mode ignore transmission interrupt flags
         #endif
-        if ((ucState & (UART_S1_TDRE | UART_S1_TC)) & UART2_C2) {        // transmit buffer or transmit is empty and the corresponding interrupt is enabled
+        if ((ucState & ((UART_S1_TDRE | UART_S1_TC)) & UART2_C2) != 0) { // transmit buffer or transmit is empty and the corresponding interrupt is enabled
             fnSciTxByte(2);                                              // transmit data empty interrupt - write next byte
         #if defined TRUE_UART_TX_2_STOPS && defined SUPPORT_LOW_POWER
             if (ucStops[2] != 0) {                                       // if the channel is working in true 2 stop bit mode it will always use the transmit complete interrupt and the peripheral idle control is performed in fnClearTxInt() instead
@@ -590,7 +590,7 @@ static __interrupt void _SCI2_Interrupt(void)                            // UART
     }
         #endif
         #if defined SUPPORT_LOW_POWER                                    // {96} transmitter using DMA
-    if ((UART2_C2 & UART_C2_TCIE) && (UART2_S1 & UART_S1_TC)) {          // transmit complete interrupt after final byte transmission together with low power operation
+    if ((((UART2_C2 & UART_C2_TCIE) != 0) && (UART2_S1 & UART_S1_TC)) != 0) { // transmit complete interrupt after final byte transmission together with low power operation
         UART2_C2 &= ~(UART_C2_TCIE);                                     // disable the interrupt
         ulPeripheralNeedsClock &= ~(UART2_TX_CLK_REQUIRED);              // confirmation that the final byte has been sent out on the line so the UART no longer needs a UART clock (stop mode doesn't needed to be blocked)
     }

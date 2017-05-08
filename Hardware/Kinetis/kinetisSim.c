@@ -4717,9 +4717,9 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                 #else
                             if ((DMA_ERQ & (DMA_ERQ_ERQ0 << DMA_UART0_RX_CHANNEL)) != 0) { // if source enabled
                                 KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
-                                ptrDMA_TCD += DMA_LPUART0_RX_CHANNEL;
+                                ptrDMA_TCD += DMA_UART0_RX_CHANNEL;
                                 ptrDMA_TCD->DMA_TCD_CSR |= (DMA_TCD_CSR_ACTIVE); // trigger
-                                fnSimulateDMA(DMA_LPUART0_RX_CHANNEL);   // trigger DMA transfer on the UART's channel
+                                fnSimulateDMA(DMA_UART0_RX_CHANNEL);     // trigger DMA transfer on the UART's channel
                                 LPUART0_STAT &= ~LPUART_STAT_RDRF;       // remove interrupt cause
                             }
                 #endif
