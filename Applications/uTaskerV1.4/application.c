@@ -150,7 +150,7 @@
 // The project includes a variety of quick tests which can be activated here
 /*****************************************************************************/
 
-//#define FREE_RUNNING_RX_DMA_RECEPTION                                  // {102} use the UART receiver in free-running DMA mode (requires SERIAL_SUPPORT_DMA_RX and SERIAL_SUPPORT_DMA_RX_FREERUN)
+//#define FREE_RUNNING_RX_DMA_RECEPTION                                  // {102} use the UART receiver in free-running DMA mode (requires SERIAL_SUPPORT_DMA_RX and SERIAL_SUPPORT_DMA_RX_FREERUN) - see videos https://youtu.be/dNZvvouiqis and https://youtu.be/GaoWE-tMRq4
 //#define RAM_TEST                                                       // {61} perform a RAM test on startup - if error found, stop
 //#define TEST_MSG_MODE                                                  // test UART in message mode
 //#define TEST_MSG_CNT_MODE                                              // test UART in message counter mode
@@ -251,7 +251,7 @@ static void fnValidatedInit(void);
 
 // The application is responsible for defining the IP configuration - here are the default settings
 //
-#if defined ETH_INTERFACE || defined USB_CDC_RNDIS
+#if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP
 static const NETWORK_PARAMETERS network_default[IP_NETWORK_COUNT] = {
     {
     #if defined LAN_REPORT_ACTIVITY
@@ -492,7 +492,7 @@ TEMPPARS *temp_pars = 0;                                                 // work
 #if defined USE_PARAMETER_BLOCK
     PARS *parameters = 0;                                                // back up of original parameters so that they can be restored after unwanted changes
 #endif
-#if defined ETH_INTERFACE || defined USB_CDC_RNDIS
+#if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP
     NETWORK_PARAMETERS network[IP_NETWORK_COUNT] = {{0}};                // used network values
     NETWORK_PARAMETERS network_flash[IP_NETWORK_COUNT] = {{0}};          // these are the values really in FLASH
 #endif
@@ -605,7 +605,7 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
         parameters = (PARS *)uMalloc(sizeof(PARS));                      // get RAM for a local copy of device parameters
 #endif
         if (fnGetOurParameters(0) == TEMPORARY_PARAM_SET) {
-#if defined USE_PARAMETER_BLOCK && defined USE_PAR_SWAP_BLOCK && (defined ETH_INTERFACE || defined USB_CDC_RNDIS)
+#if defined USE_PARAMETER_BLOCK && defined USE_PAR_SWAP_BLOCK && (defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP)
             uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(2 * 60 * SEC), E_TIMER_VALIDATE); // we have test parameters and wait for them to be validated else reset
             iAppState = STATE_VALIDATING;                                // critical parameter values have been changed so we start a period of validation
 #endif
@@ -736,7 +736,7 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
             case E_TIMER_SW_DELAYED_RESET:
                 fnResetBoard();                                          // delayed reset to allow rest page to be served
                 break;
-#if defined USE_PARAMETER_BLOCK && defined USE_PAR_SWAP_BLOCK && (defined ETH_INTERFACE || defined USB_CDC_RNDIS)
+#if defined USE_PARAMETER_BLOCK && defined USE_PAR_SWAP_BLOCK && (defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP)
             case E_TIMER_VALIDATE:
                 fnDelPar(INVALIDATE_TEST_PARAMETER_BLOCK);               // validation timer fired before new parameters were verified. We delete the temporary parameters and restart with the original or defaults
                 fnResetBoard();
@@ -1068,7 +1068,7 @@ static void fnConfigureDHCP_ZERO(void)
 }
 #endif
 
-#if defined ETH_INTERFACE || defined USB_CDC_RNDIS
+#if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP
 extern void fnSetDefaultNetwork(void)                                    // {99}
 {
     uMemcpy(&network[0], &network_default, sizeof(network_default));     // copy the default network values to the working set
@@ -1078,7 +1078,7 @@ extern void fnSetDefaultNetwork(void)                                    // {99}
 #if defined USE_PARAMETER_BLOCK
 extern void fnRestoreFactory(void)
 {
-    #if defined ETH_INTERFACE || defined USB_CDC_RNDIS
+    #if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP
     uMemcpy(temp_pars->temp_network, &network_default, sizeof(network_default));
     uMemcpy(&temp_pars->temp_network[DEFAULT_NETWORK].ucOurMAC[0], &network[DEFAULT_NETWORK].ucOurMAC[0], MAC_LENGTH); // return our mac since we never want to lose it
         #if IP_NETWORK_COUNT > 1
@@ -1144,7 +1144,7 @@ extern void fnAddDiscoverySerialNumber(CHAR *ptrBuffer, int iMaxLength)
 #endif
 
 #if defined USE_PARAMETER_BLOCK
-    #if ((defined ETH_INTERFACE || defined USB_CDC_RNDIS) && !defined NO_INTERNAL_ETHERNET && defined _LM3SXXXX && defined MAC_FROM_USER_REG) // {45}
+    #if ((defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP) && !defined NO_INTERNAL_ETHERNET && defined _LM3SXXXX && defined MAC_FROM_USER_REG) // {45}
 static void fnGetUserMAC(void)
 {
     if ((USER_REG0 != 0xffffffff) && (USER_REG1 != 0xffffffff)) {        // set the MAC address from the LM user registers if not empty
@@ -1156,7 +1156,7 @@ static void fnGetUserMAC(void)
         network[DEFAULT_NETWORK].ucOurMAC[5] = (unsigned char)(USER_REG1 >> 16);
     }
 }
-    #elif ((defined ETH_INTERFACE || defined USB_CDC_RNDIS) && !defined NO_INTERNAL_ETHERNET && defined _KINETIS && defined SUPPORT_PROGRAM_ONCE && defined MAC_FROM_USER_REG) // {79}
+    #elif ((defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP) && !defined NO_INTERNAL_ETHERNET && defined _KINETIS && defined SUPPORT_PROGRAM_ONCE && defined MAC_FROM_USER_REG) // {79}
 static void fnGetUserMAC(void)
 {
         unsigned long ulTestBuffer[2];                                   // the MAC address is saved in two long words
@@ -1168,7 +1168,7 @@ static void fnGetUserMAC(void)
     #endif
 #endif
 
-#if defined ETH_INTERFACE || defined USB_CDC_RNDIS
+#if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP
 extern void fnGetEthernetPars(void)
 {
     #if defined USE_PARAMETER_BLOCK
@@ -1180,7 +1180,7 @@ extern void fnGetEthernetPars(void)
             fnSetDefaultNetwork();                                       // if no parameters are available, load the default set
         }
     }
-        #if (defined ETH_INTERFACE || defined USB_CDC_RNDIS) && !defined NO_INTERNAL_ETHERNET && defined MAC_FROM_USER_REG && (defined _LM3SXXXX || (defined _KINETIS && defined SUPPORT_PROGRAM_ONCE)) // {45}{79}
+        #if (defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP) && !defined NO_INTERNAL_ETHERNET && defined MAC_FROM_USER_REG && (defined _LM3SXXXX || (defined _KINETIS && defined SUPPORT_PROGRAM_ONCE)) // {45}{79}
     fnGetUserMAC();
         #endif
     #else
@@ -1215,7 +1215,7 @@ static unsigned short fnGetOurParameters_1(void)
     if (fnGetPar((PAR_DEVICE | TEMPORARY_PARAM_SET), (unsigned char *)&temp_pars->temp_parameters, sizeof(temp_pars->temp_parameters)) < 0) { // try to load working parameters from temporary parameters
         if (fnGetPar(PAR_DEVICE, (unsigned char *)&temp_pars->temp_parameters, sizeof(temp_pars->temp_parameters)) < 0) { // else try to load for vaid parameters
             uMemcpy(&temp_pars->temp_parameters, (unsigned char *)&cParameters, sizeof(PARS)); // no valid parameters available - set defaults
-    #if defined ETH_INTERFACE || defined USB_CDC_RNDIS
+    #if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP
             if ((network[DEFAULT_NETWORK].usNetworkOptions & NETWORK_VALUES_FIXED) == 0) {
                 fnSetDefaultNetwork();                                   // if no parameters are available, load the default set
         #if defined MAC_FROM_USER_REG && !defined NO_INTERNAL_ETHERNET && (defined _LM3SXXXX || (defined _KINETIS && defined SUPPORT_PROGRAM_ONCE)) // {45}{79}
@@ -1235,7 +1235,7 @@ static unsigned short fnGetOurParameters_1(void)
         }
         usTemp = 0;                                                      // continue using valid set of parameters
     }
-    #if defined ETH_INTERFACE || defined USB_CDC_RNDIS
+    #if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP
     if ((network[DEFAULT_NETWORK].usNetworkOptions & NETWORK_VALUES_FIXED) == 0) { // if the network values have not been set and fixed
         fnGetPar((unsigned short)(PAR_NETWORK | usTemp), (unsigned char *)&network[DEFAULT_NETWORK], sizeof(network));  // network parameters
         #if defined MAC_FROM_USER_REG && !defined NO_INTERNAL_ETHERNET && (defined _LM3SXXXX || (defined _KINETIS && defined SUPPORT_PROGRAM_ONCE)) // {45}{79}
@@ -1259,7 +1259,7 @@ extern unsigned short fnGetOurParameters(int iCase)
 {
 #if defined USE_PARAMETER_BLOCK
     unsigned short usTemp;
-    #if defined ETH_INTERFACE || defined USB_CDC_RNDIS
+    #if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP
     if (iCase == 1) {
         int iNetwork = 0;
         NETWORK_PARAMETERS network_back[IP_NETWORK_COUNT];               // backup of possibly DHCP modified values
@@ -1278,7 +1278,7 @@ extern unsigned short fnGetOurParameters(int iCase)
     }
     else {
     #endif
-    #if defined ETH_INTERFACE || defined USB_CDC_RNDIS
+    #if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP
         usTemp = fnGetOurParameters_1();
         #if !defined DNS_SERVER_OWN_ADDRESS                                  // {63}
         uMemcpy(network[DEFAULT_NETWORK].ucDNS_server, network[DEFAULT_NETWORK].ucDefGW, IPV4_LENGTH); // DNS server address follows default gateway address
@@ -1317,7 +1317,7 @@ extern unsigned short fnGetOurParameters(int iCase)
 #else
     uMemcpy(&temp_pars->temp_parameters, &cParameters, sizeof(PARS));    // {10}
   //uMemcpy(parameters, &cParameters, sizeof(PARS));
-    #if defined ETH_INTERFACE || defined USB_CDC_RNDIS
+    #if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP
     uMemcpy(&temp_pars->temp_network, &network[DEFAULT_NETWORK], sizeof(temp_pars->temp_network));
     #endif
     return 0;
@@ -1455,14 +1455,14 @@ extern QUEUE_HANDLE fnSetNewSerialMode(unsigned char ucDriverMode)
     #if defined SERIAL_SUPPORT_DMA
         #if defined FREE_RUNNING_RX_DMA_RECEPTION
             #if defined KINETIS_KL
-    tInterfaceParameters.ucDMAConfig = (UART_RX_DMA | UART_RX_MODULO);   // modulo aligned reception memory is required by kinetis Kl parts in free-running DMA mode
+    tInterfaceParameters.ucDMAConfig = (UART_RX_DMA | UART_RX_MODULO);   // modulo aligned reception memory is required by kinetis KL parts in free-running DMA mode
             #else
     tInterfaceParameters.ucDMAConfig = (UART_RX_DMA);
             #endif
     uTaskerStateChange(OWN_TASK, UTASKER_POLLING);                       // set the task to polling mode to regularly check the receive buffer
         #else
-  //tInterfaceParameters.ucDMAConfig = 0;
-    tInterfaceParameters.ucDMAConfig = UART_TX_DMA;                      // activate DMA on transmission
+    tInterfaceParameters.ucDMAConfig = 0;
+  //tInterfaceParameters.ucDMAConfig = UART_TX_DMA;                      // activate DMA on transmission
   //tInterfaceParameters.ucDMAConfig = (UART_RX_DMA | UART_RX_DMA_HALF_BUFFER | UART_RX_DMA_FULL_BUFFER | UART_RX_DMA_BREAK));
         #endif
     #endif
@@ -2261,7 +2261,7 @@ static void fnPrepareEmulatedFAT(void)
 #endif
 
 
-#if defined ETHERNET_BRIDGING && !defined USB_CDC_RNDIS                  // {75}
+#if defined ETHERNET_BRIDGING && !defined USB_CDC_RNDIS && !defined USE_PPP // {75}
 // Example of bridging Ethernet reception content to the serial interface
 //
 extern void fnBridgeEthernetFrame(ETHERNET_FRAME *ptr_rx_frame)

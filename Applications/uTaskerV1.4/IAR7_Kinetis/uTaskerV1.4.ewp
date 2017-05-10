@@ -89,7 +89,7 @@
         </option>
         <option>
           <name>OGChipSelectEditMenu</name>
-          <state>MK64FN1M0xxx12	NXP MK64FN1M0xxx12</state>
+          <state>MK66FN2M0xxx18	NXP MK66FN2M0xxx18</state>
         </option>
         <option>
           <name>GenLowLevelInterface</name>
@@ -149,7 +149,7 @@
         </option>
         <option>
           <name>GFPUDeviceSlave</name>
-          <state>MK64FN1M0xxx12	NXP MK64FN1M0xxx12</state>
+          <state>MK66FN2M0xxx18	NXP MK66FN2M0xxx18</state>
         </option>
         <option>
           <name>FPU2</name>

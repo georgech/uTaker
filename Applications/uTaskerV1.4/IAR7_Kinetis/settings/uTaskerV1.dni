@@ -1,5 +1,5 @@
 [DebugChecksum]
-Checksum=1311643745
+Checksum=-869467122
 [DisAssemblyWindow]
 NumStates=_ 1
 State 1=_ 1
@@ -42,6 +42,7 @@ TraceBufferSize=0x00010000
 TraceStallIfFIFOFull=0x00000000
 TracePortSize=0x00000004
 CStepIntDis=_ 0
+LeaveTargetRunning=_ 0
 [InterruptLog]
 LogEnabled=0
 SumEnabled=0
@@ -76,14 +77,6 @@ MemConfigValue=C:\Program Files (x86)\IAR Systems\Embedded Workbench 7.2_2\arm\C
 FirstRun=0
 [ArmDriver]
 EnableCache=1
-[CallStackLog]
-Enabled=0
-[DriverProfiling]
-Enabled=0
-Mode=1
-Graph=0
-Symbiont=0
-Exclusions=
 [PE_STARTUP]
 CPUTARGETTYPENAME=_ "ARM Processor - Autodetect"
 jtag_numbits_pre_ir=_ "0"
@@ -108,22 +101,22 @@ FREQ_LIGHTNING=_ "1"
 FREQ_OPENSDA=_ "0"
 RESET_DELAY=_ "0"
 PORT=_ "181"
-PORT_NAME_STRING=_ "40B7DE09"
+PORT_NAME_STRING=_ "43603E57"
 interface_selection=_ "7"
 SHOWDIALOG=_ "1"
 TraceLink_MaxBufferSize=_ "1"
 [PE_STORED_DEVICES]
 device0=_ "NXP_K2x_K22FN1M0M12"
 device1=_ "NXP_KL2x_KL26Z128M4"
-device2=_ "NXP_KL2x_KL27Z64M4"
-device3=_ "NXP_K6x_K64FN1M0M12"
-device4=_ "NXP_K2x_K22FN512M12"
+device2=_ "NXP_K6x_K64FN1M0M12"
+device3=_ "NXP_K2x_K22FN512M12"
+device4=_ "NXP_KL2x_KL27Z64M4"
 [PE_PEDEBUG]
-CURRENTDEVICE=_ "NXP_K2x_K22FN512M12"
+CURRENTDEVICE=_ "NXP_KL2x_KL27Z64M4"
 ERASE_PROGRAM_WITHOUT_ASKING=_ "1"
 CURRENTMODE=_ "4"
 [PE_DEVICE]
-CHIPMODE=_ "NXP_K2x_K22FN512M12"
+CHIPMODE=_ "NXP_KL2x_KL27Z64M4"
 [PE_SETTINGS]
 MEMORYSTART1=_ "0"
 MEMORYSTART2=_ "0"
@@ -152,9 +145,6 @@ ItmLogPorts=0
 ItmLogFile=$PROJ_DIR$\ITM.log
 PowerForcePC=1
 PowerConnectPC=1
-[Trace1]
-Enabled=0
-ShowSource=1
 [ETMTraceWindow]
 PortWidth=4
 PortMode=0
@@ -178,8 +168,6 @@ EventEXC=0
 EventFOLD=0
 EventLSU=0
 EventSLEEP=0
-[Breakpoints2]
-Count=0
 [PEMICRODriver]
 PEM_LeaveTargetRunning=0x00000000
 [struct_types]
@@ -193,16 +181,31 @@ Fmt4=unsigned long[32]	4	0
 Fmt5=unsigned long[4]	4	0
 [watch_formats]
 Fmt0={W}0:ulBlockWriteLength	4	0
-[TermIOLog]
-LoggingEnabled=_ 0
-LogFile=_ ""
+[Breakpoints]
+Count=0
+[Trace1]
+Enabled=0
+ShowSource=1
 [Log file]
 LoggingEnabled=_ 0
 LogFile=_ ""
 Category=_ 0
+[TermIOLog]
+LoggingEnabled=_ 0
+LogFile=_ ""
+[DriverProfiling]
+Enabled=0
+Mode=1
+Graph=0
+Symbiont=0
+Exclusions=
+[CallStackLog]
+Enabled=0
+[CallStackStripe]
+ShowTiming=1
 [Disassemble mode]
 mode=3
-[Breakpoints]
+[Breakpoints2]
 Count=0
 [Aliases]
 Count=0

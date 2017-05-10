@@ -474,11 +474,12 @@ static void fnSetDevice(unsigned long *port_inits)
     ADD_INFO = IEHOST;
     OTG_INT_STAT = MSEC_1;
 #endif
-#if LPUARTS_AVAILABLE > 0
+#if (LPUARTS_AVAILABLE > 0)
     LPUART0_BAUD = (LPUART_BAUD_OSR_16 | 0x00000004);
     LPUART0_STAT = (LPUART_STAT_TDRE | LPUART_STAT_TC);
     LPUART0_DATA = (LPUART_DATA_RXEMPT);
-#elif UARTS_AVAILABLE > 0
+#endif
+#if ((UARTS_AVAILABLE > 0) && (LPUARTS_AVAILABLE == 0)) || (defined LPUARTS_PARALLEL && (UARTS_AVAILABLE > 0))
     UART0_BDL    = 0x04;                                                 // UARTs
     UART0_S1     = (UART_S1_TDRE | UART_S1_TC);
     #if !defined KINETIS_KL && !defined KINETIS_KE
@@ -4645,11 +4646,31 @@ extern void fnSimulateI2C(int iPort, unsigned char *ptrDebugIn, unsigned short u
 #define UART_TYPE_LPUART 0
 #define UART_TYPE_UART   1
 static const unsigned char uart_type[LPUARTS_AVAILABLE + UARTS_AVAILABLE] = {
-        #if defined LPUARTS_PARALLEL                                     // K22
+        #if defined LPUARTS_PARALLEL
     UART_TYPE_UART,                                                      // UART0
     UART_TYPE_UART,                                                      // UART1
     UART_TYPE_UART,                                                      // UART2
+    #if ((LPUARTS_AVAILABLE + UARTS_AVAILABLE) > 3)
+            #if UARTS_AVAILABLE == 3
     UART_TYPE_LPUART,                                                    // LPUART0 (numbered 3)
+            #else
+    UART_TYPE_UART,                                                      // UART3
+            #endif
+    #endif
+    #if ((LPUARTS_AVAILABLE + UARTS_AVAILABLE) > 4)
+            #if UARTS_AVAILABLE == 4
+    UART_TYPE_LPUART,                                                    // LPUART0 (numbered 4)
+            #else
+    UART_TYPE_UART,                                                      // UART4
+            #endif
+    #endif
+    #if ((LPUARTS_AVAILABLE + UARTS_AVAILABLE) > 5)
+            #if UARTS_AVAILABLE == 5
+    UART_TYPE_LPUART,                                                    // LPUART0 (numbered 5)
+            #else
+    UART_TYPE_UART,                                                      // UART5
+            #endif
+    #endif
         #else                                                            // KL43
     UART_TYPE_LPUART,                                                    // LPUART0
     UART_TYPE_LPUART,                                                    // LPUART1
@@ -5069,10 +5090,10 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
     #if UARTS_AVAILABLE > 4
     case 4:
         if ((UART4_C2 & UART_C2_RE) != 0) {                              // if receiver enabled
-            while (usLen--) {                                            // for each reception character
+            while (usLen-- != 0) {                                       // for each reception character
                 UART4_D = *ptrDebugIn++;
                 UART4_S1 |= UART_S1_RDRF;                                // set interrupt cause
-                if (UART4_C2 & UART_C2_RIE) {                            // if reception interrupt is enabled
+                if ((UART4_C2 & UART_C2_RIE) != 0) {                     // if reception interrupt is enabled
                     if (UART4_C5 & UART_C5_RDMAS) {                      // {4} if the UART is operating in DMA reception mode
         #if defined SERIAL_SUPPORT_DMA
                         if (DMA_ERQ & (DMA_ERQ_ERQ0 << DMA_UART4_RX_CHANNEL)) { // if source enabled
@@ -5182,7 +5203,7 @@ static void fnUART_Tx_int(int iChannel)
     switch (iChannel) {
         #if LPUARTS_AVAILABLE < 1 || defined LPUARTS_PARALLEL
     case 0:
-        if (UART0_C2 & UART_C2_TE) {                                     // if transmitter enabled
+        if ((UART0_C2 & UART_C2_TE) != 0) {                              // if transmitter enabled
             UART0_S1 |= (UART_S1_TDRE | UART_S1_TC);                     // set interrupt cause
             if ((UART0_C2 & UART0_S1) != 0) {                            // if transmit interrupt type enabled
                 if (fnGenInt(irq_UART0_ID) != 0) {
@@ -6723,7 +6744,7 @@ extern void fnSimulateLinkUp(void)
     fnSimulateInputChange(PHY_INTERRUPT_PORT, ucPortBit, CLEAR_INPUT);   // clear level sensitive interrupt input
     #endif
     fnUpdateIPConfig();                                                  // update display in simulator
-#elif defined USB_CDC_RNDIS
+#elif defined USB_CDC_RNDIS || defined USE_PPP
     fnUpdateIPConfig();                                                  // update display in simulator
 #endif
 }

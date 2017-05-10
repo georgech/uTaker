@@ -209,7 +209,7 @@
         #else                                                            // run mode has no functional restrictions but can't operate as fast as high speed run mode
             #if defined FRDM_KL82Z
                 #define CLOCK_MUL        24                              // the PLL multiplication factor to achieve operating frequency of 144MHz (x16 to x47 possible) [PLL output range 90..180MHz - VCO is PLL * 2]
-            #elif defined TEENSY_3_6
+            #elif defined TEENSY_3_6 || defined TWR_K65F180M
                 #define CLOCK_MUL        30                              // the PLL multiplication factor to achieve operating frequency of 120MHz (x16 to x47 possible) [PLL output range 90..180MHz - VCO is PLL * 2]
             #else
                 #define CLOCK_MUL        20                              // the PLL multiplication factor to achieve operating frequency of 120MHz (x16 to x47 possible) [PLL output range 90..180MHz - VCO is PLL * 2]
@@ -1385,7 +1385,7 @@
             #define RTC_CLOCK_PRESCALER_2  100                           // 128, 256, 512, 1024, 2048, 100 or 1000 (valid for bus clock or 1kHz LPO clock)
     #endif
 #else
-  //#define SUPPORT_RTC                                                  // support real time clock
+    #define SUPPORT_RTC                                                  // support real time clock
     #define ALARM_TASK   TASK_APPLICATION                                // alarm is handled by the application task (handled by time keeper if not defined)
     #if defined TWR_KL46Z48M || defined TWR_KL43Z48M
         #define RTC_USES_RTC_CLKIN                                       // TWR-KL46Z48M and TWR-KL43Z48M have a 32kHz oscillator supplying an accurate clock and the OpenSDA interface supplies a clock on the FRDM-KL46Z as long as the debug interface is powered (not possible with P&E debugger version)
@@ -2124,10 +2124,10 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define NUMBER_SERIAL   (UARTS_AVAILABLE + LPUARTS_AVAILABLE)        // the number of physical queues needed for serial interface(s)
     #define SIM_COM_EXTENDED                                             // COM ports defined from 1..255
     #define SERIAL_PORT_0    4                                           // if we open UART channel 0 we simulate using comx on the PC
-    #define SERIAL_PORT_1    4                                           // if we open UART channel 1 we simulate using comx on the PC
+    #define SERIAL_PORT_1    6                                           // if we open UART channel 1 we simulate using comx on the PC
     #define SERIAL_PORT_2    4                                           // if we open UART channel 2 we simulate using comx on the PC
     #define SERIAL_PORT_3    4                                           // if we open UART channel 3 we simulate using comx on the PC
-    #define SERIAL_PORT_4    4                                           // if we open UART channel 4 we simulate using comx on the PC
+    #define SERIAL_PORT_4    8                                           // if we open UART channel 4 we simulate using comx on the PC
     #define SERIAL_PORT_5    4                                           // if we open UART channel 5 we simulate using comx on the PC
 
     #if defined KWIKSTIK || defined TWR_K60F120M || defined K20FX512_120 || defined TWR_K21F120M || (defined TWR_K64F120M && defined TWR_SER) || (defined TWR_K60N512 && defined DEBUG_ON_VIRT_COM)
@@ -2187,8 +2187,8 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #if !defined DEVICE_WITHOUT_DMA
         #if defined KINETIS_K_FPU || defined TWR_K20D50M || defined FRDM_K20D50M || defined tinyK20 || defined KINETIS_KL || defined KINETIS_KV
             #define SERIAL_SUPPORT_DMA                                   // enable UART DMA support
-          //#define SERIAL_SUPPORT_DMA_RX                                // enable also DMA on receiver (used less that transmit DMA)
-          //#define SERIAL_SUPPORT_DMA_RX_FREERUN                        // support free-running reception mode
+            #define SERIAL_SUPPORT_DMA_RX                                // enable also DMA on receiver (used less that transmit DMA)
+            #define SERIAL_SUPPORT_DMA_RX_FREERUN                        // support free-running reception mode
         #else
             #define SERIAL_SUPPORT_DMA                                   // enable UART DMA support
           //#define SERIAL_SUPPORT_DMA_RX                                // enable also DMA on receiver (used less that transmit DMA)
@@ -2643,8 +2643,8 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define LAN_TX_FPU_WORKAROUND                                    // when ERRATE_ID_2647 is not present it is found that the Ethernet Tx can miss a waiting frame in an output buffer. This workaround enables the transmit frame interrupt, which retriggers buffer polling
     #endif
 #endif
-#if defined ETH_INTERFACE || defined USB_CDC_RNDIS
-    #if !defined USB_TO_ETHERNET
+#if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP
+    #if !defined USB_TO_ETHERNET && !defined USE_PPP
         #define IP_RX_CHECKSUM_OFFLOAD                                   // allow the HW to perform IPv4/v6 UDP, TCP and ICMP checksum verification so that no such calculation is required in code
         #define IP_TX_CHECKSUM_OFFLOAD                                   // allow the HW to insert IPv4/v6 header checksum and so the software doesn't need to calculate and insert this
             #define IP_TX_PAYLOAD_CHECKSUM_OFFLOAD                       // allow the HW to insert IPv4/v6 payload checksum and so the software doesn't need to calculate and insert this

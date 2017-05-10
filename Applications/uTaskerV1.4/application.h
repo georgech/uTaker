@@ -232,7 +232,7 @@ typedef struct stPARS
 
 typedef struct stTEMPPARS
 {
-#if defined ETH_INTERFACE || defined USB_CDC_RNDIS
+#if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP
     NETWORK_PARAMETERS temp_network[IP_NETWORK_COUNT];                   // {17}
 #endif
     PARS               temp_parameters;

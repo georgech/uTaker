@@ -779,7 +779,7 @@ extern int fnTxByte(QUEUE_HANDLE Channel, unsigned char ucTxByte)
         #endif
     #endif
     #if UARTS_AVAILABLE > 0
-        if ((uart_reg->UART_S1 & UART_S1_TDRE) == 0) {
+        if ((uart_reg->UART_S1 & UART_S1_TDRE) == 0) {                   // check whether transmit buffer is presently empty
             return 1;                                                    // UART transmitter is presently active
         }
         #if defined SUPPORT_LOW_POWER                                    // {96}

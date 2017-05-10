@@ -651,7 +651,7 @@ static const DEBUG_COMMAND tMainCommand[] = {
 
 static const DEBUG_COMMAND tLANCommand[] = {
     {"up",                "go to main menu",                       DO_HELP,          DO_HELP_UP },
-#if defined ETH_INTERFACE || defined USB_CDC_RNDIS
+#if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP
     #if IP_NETWORK_COUNT > 1
     {"net",               "Set network reference (0 default)",     DO_IP,            DO_SET_NETWORK },
     #endif
@@ -795,7 +795,7 @@ static const DEBUG_COMMAND tIOCommand[] = {
 
 static const DEBUG_COMMAND tADMINCommand[] = {
     {"up",                "go to main menu",                       DO_HELP,          DO_HELP_UP },
-#if defined ETH_INTERFACE || defined USB_CDC_RNDIS
+#if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP
     {"set_ftp",           "[enable/disable] FTP server",           DO_SERVER,        DO_ENABLE_FTP },
     {"set_telnet",        "[enable/disable] Telnet service",       DO_SERVER,        DO_ENABLE_TELNET },
     {"set_web",           "[enable/disable] WEB server",           DO_SERVER,        DO_ENABLE_WEB_SERVER },
@@ -841,7 +841,7 @@ static const DEBUG_COMMAND tADMINCommand[] = {
 
 static const DEBUG_COMMAND tStatCommand[] = {
     {"up",                "go to main menu",                       DO_HELP,          DO_HELP_UP },
-#if defined ETH_INTERFACE || defined USB_CDC_RNDIS
+#if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP
     {"ipstat",            "Show Ethernet statistics",              DO_IP,            DO_SHOW_ETHERNET_STATS },
     {"r_ipstat",          "Reset Ethernet statistics",             DO_IP,            DO_RESET_ETHERNET_STATS },
 #endif
@@ -1395,7 +1395,7 @@ extern void fnDebug(TTASKTABLE *ptrTaskTable)
             }
 #endif
             break;
-#if defined ETH_INTERFACE || defined USB_CDC_RNDIS
+#if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP
         case TASK_ARP:
             fnRead(PortIDInternal, ucInputMessage, ucInputMessage[MSG_CONTENT_LENGTH]);  // read the contents
             if (ucInputMessage[0] == ARP_RESOLUTION_SUCCESS) {
@@ -1637,7 +1637,7 @@ static void fnDoFlash(unsigned char ucType, CHAR *ptrInput)
         }
         break;
     case DO_REJECT_CHANGES:
-    #if defined ETH_INTERFACE || defined USB_CDC_RNDIS
+    #if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP
         uMemcpy(&temp_pars->temp_network[0], &network[0], sizeof(network)); // reverse all changes in the network settings
     #endif
         uMemcpy(&temp_pars->temp_parameters, parameters, sizeof(PARS));
@@ -2008,7 +2008,7 @@ static int fnEnableDisableServers(CHAR *ptr_input, unsigned short usOption) // {
     return 0;
 }
 
-#if defined ETH_INTERFACE || defined USB_CDC_RNDIS
+#if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP
 static int fnShowServerEnabled(const CHAR *cText, unsigned char ucOption)
 {
     fnDebugMsg((CHAR *)cText);
@@ -2148,7 +2148,7 @@ static void fnDoSerial(unsigned char ucType, CHAR *ptr_input)
 }
 #endif
 
-#if defined ETH_INTERFACE || defined USB_CDC_RNDIS
+#if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP
     #if defined USE_IP_STATS
 static const CHAR cIPStatTypes[TOTAL_OTHER_EVENTS + 1][19] = {
     {"Total Rx frames"},
@@ -2478,7 +2478,7 @@ static void fnDoIP(unsigned char ucType, CHAR *ptr_input)
         }
         break; 
 #endif
-#if defined ETH_INTERFACE || defined USB_CDC_RNDIS
+#if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP
     case DO_SET_MAC:                                                     // set device's MAC address
         if (((uMemcmp(&network[ucPresentNetwork].ucOurMAC[0], cucNullMACIP, MAC_LENGTH))) || ((fnSetMAC(ptr_input, &temp_pars->temp_network[ucPresentNetwork].ucOurMAC[0])) == 0)) {                                       // interpret MAC address input and save this
             fnDebugMsg("MAC may not be modified!!\r\n");                 // we are only allowed to save the new address once
@@ -2926,7 +2926,7 @@ static void fnDoAdmin(unsigned char ucType, CHAR *ptrInput)
     }
 }
 
-#if defined ETH_INTERFACE || defined USB_CDC_RNDIS
+#if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP
 static void fnShowSec(void)
 {
     fnDebugMsg("\r\nSecurity settings\r\n");
@@ -2945,7 +2945,7 @@ static void fnShowSec(void)
 static void fnDoServer(unsigned char ucType, CHAR *ptrInput)
 {
     switch (ucType) {
-#if defined ETH_INTERFACE || defined USB_CDC_RNDIS
+#if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP
     #if defined USE_TELNET
     case DO_ENABLE_TELNET:
         if (fnEnableDisableServers(ptrInput, ACTIVE_TELNET_SERVER)) {
@@ -2973,7 +2973,7 @@ static void fnDoServer(unsigned char ucType, CHAR *ptrInput)
             return;
         }
         break;
-#if defined ETH_INTERFACE || defined USB_CDC_RNDIS
+#if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP
     case DO_ENABLE_WEB_SERVER:
         if (fnEnableDisableServers(ptrInput, ACTIVE_WEB_SERVER)) {
             return;
@@ -6908,7 +6908,7 @@ extern int fnCommandInput(unsigned char *ptrData, unsigned short usLen, int iSou
 //
 extern int fnSaveNewPars(int iTemp)
 {
-    #if defined ETH_INTERFACE || defined USB_CDC_RNDIS
+    #if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP
     // Network variables
     //
     if (iTemp == SAVE_NEW_PARAMETERS_CHECK_CRITICAL) {                   // we check to see whether network parameters have been changed
@@ -6921,7 +6921,7 @@ extern int fnSaveNewPars(int iTemp)
     fnDelPar(INVALIDATE_PARAMETER_BLOCK);                                // delete parameter block before continuing
     iTemp = SAVE_NEW_PARAMETERS;
     #endif
-    #if defined ETH_INTERFACE || defined USB_CDC_RNDIS
+    #if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP
     fnSetPar((unsigned short)(PAR_NETWORK | TEMPORARY_PARAM_SET), (unsigned char *)&temp_pars->temp_network[DEFAULT_NETWORK], sizeof(temp_pars->temp_network)); // network parameters
     #endif
 

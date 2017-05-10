@@ -12,26 +12,20 @@
     Project:   Single Chip Embedded Internet
     --------------------------------------------------------------------
     Copyright (C) M.J.Butcher Consulting 2004..2017
-    ********************************************************************/
+    ********************************************************************
+    09.05.2017 SLIP [RFC1055] implemented (PPP is not presently used but shows an initial test framework)
+    
+ */
 
-/***********************************************************************/
-/***********************************************************************/
-/*******                                                        ********/
-/*******     WARNING: This file is in development !!!!          ********/
-/*******     It is included in the present service pack         ********/
-/*******     so that you can use it for first tests or          ********/
-/*******     you can further develop it for your own needs      ********/
-/*******     or in collaboration with myself.                   ********/
-/*******     To learn more about the state of development       ********/
-/*******     or if you have any questions or suggestions        ********/
-/*******     please email me at Mark@uTasker.com                ********/
-/***********************************************************************/
-/***********************************************************************/
 
 #include "config.h"
 
 
 #if defined USE_PPP
+
+ /* =================================================================== */
+ /*                          local definitions                          */
+ /* =================================================================== */
 
 #define OWN_TASK TASK_PPP
 
@@ -47,50 +41,184 @@
 #define PPP_INIT_CRC         0xffff
 #define PPP_GOOD_CRC         0xf0b8
 
-static int fnHandlePPP_frame(unsigned char *ptrFrame, QUEUE_TRANSFER ppp_frame_length);
-static unsigned short fnPPP_crc(unsigned short crc_value, unsigned char ucData);
+#define SLIP_END_CHARACTER           192                         // octal 300 or hex 0xc0
+#define SLIP_ESCAPE_CHARACTER        219                         // octal 333 or hex 0xdb
+#define SLIP_ESCAPE_END_CHARACTER    220                         // octal 334 or hex 0xdc
+#define SLIP_ESCAPE_ESCAPE_CHARACTER 221                         // octal 335 or hex 0xdd
+
+#if !defined PPP_NETWORK
+    #define PPP_NETWORK              0
+#endif
+
+#define SLIP_MAX_DATAGRAM            1006
+
+
+ /* =================================================================== */
+ /*                      local structure definitions                    */
+ /* =================================================================== */
+
+ /* =================================================================== */
+ /*                 local function prototype declarations               */
+ /* =================================================================== */
+
+#if defined USE_SLIP
+    static int fnPPP_ConfigEthernet(ETHTABLE *pars);
+    static int fnPPP_GetQuantityRxBuf(void);
+    static unsigned char *fnPPP_GetTxBufferAdd(int iBufNr);
+    static int fnPPP_WaitTxFree(void);
+    static void fnPPP_PutInBuffer(unsigned char *ptrOut, unsigned char *ptrIn, QUEUE_TRANSFER nr_of_bytes);
+    static QUEUE_TRANSFER fnPPP_StartEthTx(QUEUE_TRANSFER DataLen, unsigned char *ptr_put);
+    static void fnPPP_FreeEthernetBuffer(int iBufNr);
+    #if defined USE_IGMP
+        static void fnPPP_ModifyMulticastFilter(QUEUE_TRANSFER action, unsigned char *ptrIP);
+    #endif
+#else
+    static int fnHandlePPP_frame(unsigned char *ptrFrame, QUEUE_TRANSFER ppp_frame_length);
+    static unsigned short fnPPP_crc(unsigned short crc_value, unsigned char ucData);
+#endif
+
+/* =================================================================== */
+/*                             constants                               */
+/* =================================================================== */
+
+#if defined USE_SLIP
+    static const unsigned char cEscapeEscapeEnd[] = { SLIP_ESCAPE_CHARACTER, SLIP_ESCAPE_ESCAPE_CHARACTER, SLIP_ESCAPE_END_CHARACTER };
+
+    static const ETHERNET_FUNCTIONS PPP_EthernetFunctions = {
+        fnPPP_ConfigEthernet,                                            // configuration function for this interface
+        fnPPP_GetQuantityRxBuf,
+        fnPPP_GetTxBufferAdd,
+        fnPPP_WaitTxFree,
+        fnPPP_PutInBuffer,
+        fnPPP_StartEthTx,
+        fnPPP_FreeEthernetBuffer,
+    #if defined USE_IGMP
+        fnPPP_ModifyMulticastFilter,
+    #endif
+        };
+#else
+    static const unsigned char cClient[] = { 'C', 'L', 'I', 'E', 'N', 'T', 'S', 'E', 'R', 'V', 'E', 'R' };
+#endif
+
+/* =================================================================== */
+/*                     global variable definitions                     */
+/* =================================================================== */
+
+/* =================================================================== */
+/*                      local variable definitions                     */
+/* =================================================================== */
 
 static int iPPP_State = PPP_STATE_INIT;
 static QUEUE_HANDLE PPP_PortID;
-static unsigned long ulACCM_bits = 0xffffffff;                           // default: escape all characters between 0x00 and 0x1f
-static unsigned char ucMagicNumer[4];
 
-static const unsigned char cClient[] = {'C', 'L', 'I', 'E', 'N', 'T', 'S', 'E', 'R', 'V', 'E', 'R'};
-
+#if !defined USE_SLIP
+    static unsigned long ulACCM_bits = 0xffffffff;                       // default: escape all characters between 0x00 and 0x1f
+    static unsigned char ucMagicNumer[4];
+#endif
 
 
 // PPP task
 //
 extern void fnPPP(TTASKTABLE *ptrTaskTable)
 {
+    static QUEUE_HANDLE    PPP_Handle = 0;
     static unsigned char   ucInputMessage[PPP_RX_BUFFER_SPACE];          // reserve space for receiving messages
     static QUEUE_TRANSFER  ppp_frame_length = 0;                         // collected frame size
+    #if !defined USE_SLIP
     static int             iRxEscape = 0;
     static unsigned short  crc_value;
-  //QUEUE_HANDLE           PortIDInternal = ptrTaskTable->TaskID;        // queue ID for task input
+    #endif
 
     if (iPPP_State == PPP_STATE_INIT) {
-        TTYTABLE tInterfaceParameters;                                   // table for passing information to driver
-
-        tInterfaceParameters.Channel = PPP_UART;                         // set UART channel for serial use
-        tInterfaceParameters.ucSpeed = SERIAL_BAUD_19200;                // baud rate
-        tInterfaceParameters.Rx_tx_sizes.RxQueueSize = PPP_RX_BUFFER_SIZE; // input buffer size
-        tInterfaceParameters.Rx_tx_sizes.TxQueueSize = PPP_TX_BUFFER_SIZE; // output buffer size
-        tInterfaceParameters.Task_to_wake = OWN_TASK;                    // wake self when messages have been received
-        #if defined SUPPORT_FLOW_HIGH_LOW
-        tInterfaceParameters.ucFlowHighWater = 80;                       // set the flow control high and low water levels in %
-        tInterfaceParameters.ucFlowLowWater = 20;
-        #endif
-        tInterfaceParameters.Config = (CHAR_8 + NO_PARITY + ONE_STOP /*+ USE_XON_OFF*/ + CHAR_MODE);
-        #if defined SERIAL_SUPPORT_DMA
-            tInterfaceParameters.ucDMAConfig = 0;
-        #endif
-        if ((PPP_PortID = fnOpen(TYPE_TTY, FOR_I_O, &tInterfaceParameters)) != NO_ID_ALLOCATED) { // open serial port with defined parameters
-            fnDriver(PPP_PortID, (TX_ON | RX_ON), 0);                    // enable rx and tx
-        }
+        ETHTABLE ethernet;                                               // configuration structure to be passed to the Ethernet configuration
+        ethernet.ptrEthernetFunctions = (void *)&PPP_EthernetFunctions;  // enter the Ethernet function list for the defult internal controller
+        ethernet.Task_to_wake  = 0;
+    #if defined ETH_INTERFACE
+        ethernet.Channel       = 1;                                      // the Ethernet controller has channel 0 so PPP uses Ethernet channel 1
+    #else
+        ethernet.Channel       = 0;                                      // default channel number
+    #endif
+        ethernet.usMode        = network[PPP_NETWORK].usNetworkOptions;  // options to be used by the interface
+    #if defined USE_IPV6                                                 // generate an IPv6 link-local address from the MAC address
+        ucLinkLocalIPv6Address[PPP_NETWORK][0]  = 0xfe;                  // link-local unicast
+        ucLinkLocalIPv6Address[PPP_NETWORK][1]  = 0x80;                  // link-local unicast
+                                                                            // intermediate values left at 0x00
+        ucLinkLocalIPv6Address[PPP_NETWORK][8]  = (network[PPP_NETWORK].ucOurMAC[0] | 0x2); // invert the universal/local bit (since it is always '0' it means setting to '1')
+        ucLinkLocalIPv6Address[PPP_NETWORK][9]  = network[PPP_NETWORK].ucOurMAC[1];
+        ucLinkLocalIPv6Address[PPP_NETWORK][10] = network[PPP_NETWORK].ucOurMAC[2];
+        ucLinkLocalIPv6Address[PPP_NETWORK][11] = 0xff;                  // insert standard 16 bit value to extend MAC-48 to EUI-64
+        ucLinkLocalIPv6Address[PPP_NETWORK][12] = 0xfe;
+        ucLinkLocalIPv6Address[PPP_NETWORK][13] = network[PPP_NETWORK].ucOurMAC[3];
+        ucLinkLocalIPv6Address[v][14] = network[PPP_NETWORK].ucOurMAC[4];
+        ucLinkLocalIPv6Address[v][15] = network[v].ucOurMAC[5];
+        ethernet.usMode |= CON_MULTICAST;                                // enable multicast when using IPV6
+    #else
+        uMemcpy(ethernet.ucMAC, &network[PPP_NETWORK].ucOurMAC[0], MAC_LENGTH); // the MAC address to be used by the interface
+    #endif
+    #if defined ETHERNET_BRIDGING
+        ethernet.usMode        |= (PROMISCUOUS);                         // Ethernet bridging requires promiscuous operation
+    #endif
+        ethernet.usSizeTx      = (sizeof(ETHERNET_FRAME_CONTENT));       // transmit buffer size requested by user (Ethernet MTU)
+        ethernet.ucEthTypes    = (ARP | IPV4);                           // enable reception of these protocols (used only by NE64 controller)
+        ethernet.usExtEthTypes = 0;                                      // specify extended frame types (only used by NE64 controller)
+        PPP_Handle = fnOpen(TYPE_ETHERNET, FOR_I_O, &ethernet);
+    #if IP_INTERFACE_COUNT > 1
+        fnEnterInterfaceHandle(RNDIS_IP_INTERFACE, RNDIS_Handle, ((INTERFACE_NO_TX_CS_OFFLOADING | INTERFACE_NO_RX_CS_OFFLOADING | INTERFACE_NO_TX_PAYLOAD_CS_OFFLOADING))); // enter the queue as RNDIS interface handler
+    #else
+        Ethernet_handle[0] = PPP_Handle;
+    #endif
+    #if defined USE_SLIP_DIAL_OUT
+        fnWrite(PPP_PortID, (unsigned char *)"*99***1#", 8);             // establish a connection to the modem
+    #endif
         iPPP_State = PPP_STATE_IDLE;
     }
 
+#if defined USE_SLIP
+    while (fnRead(PPP_PortID, &ucInputMessage[ppp_frame_length], 1) != 0) { // while serial input waiting
+        if (iPPP_State == PPP_STATE_IN_FRAME) { 
+            if (SLIP_ESCAPE_END_CHARACTER == ucInputMessage[ppp_frame_length]) {
+                ucInputMessage[ppp_frame_length] = SLIP_END_CHARACTER;
+            }
+            else if (SLIP_ESCAPE_ESCAPE_CHARACTER == ucInputMessage[ppp_frame_length]) {
+                ucInputMessage[ppp_frame_length] = SLIP_ESCAPE_CHARACTER;
+            }
+            else {                                                       // this is a protocol violation but it is recommended to just put the received byto to the buffer
+                ucInputMessage[ppp_frame_length] = ucInputMessage[ppp_frame_length];
+            }
+            iPPP_State = PPP_STATE_IDLE;
+        }
+        else {
+            switch (ucInputMessage[ppp_frame_length]) {
+            case SLIP_END_CHARACTER:                                     // end of a datagram (pass datagram to the stack)
+                if (ppp_frame_length != 0) {
+                    ETHERNET_FRAME rx_frame;
+                    rx_frame.frame_size = (unsigned short)ppp_frame_length++;;
+                    rx_frame.ptEth = (ETHERNET_FRAME_CONTENT *)ucInputMessage;
+                    rx_frame.usDataLength = 0;
+                    rx_frame.usIPLength = 0;
+    #if (IP_INTERFACE_COUNT > 1)
+                    rx_frame.ucInterface = (RNDIS_INTERFACE >> INTERFACE_SHIFT); // reception is on the RNDIS interface
+                    rx_frame.ucInterfaceHandling = (DEFAULT_INTERFACE_CHARACTERISTICS | INTERFACE_NO_MAC_FILTERING); // default interface handling
+    #endif
+    #if defined IPV4_SUPPORT_RX_DEFRAGMENTATION && defined IP_RX_CHECKSUM_OFFLOAD
+                    rx_frame.ucSpecialHandling = (INTERFACE_NO_TX_PAYLOAD_CS_OFFLOADING | INTERFACE_NO_TX_CS_OFFLOADING | INTERFACE_NO_RX_CS_OFFLOADING | INTERFACE_NO_MAC_FILTERING);
+    #endif
+                    fnHandleEthernetFrame(&rx_frame, PPP_Handle);        // handle the reception
+                    ppp_frame_length = 0;
+                }
+                continue;
+            case SLIP_ESCAPE_CHARACTER:                                  // escape sequence in progress
+                iPPP_State = PPP_STATE_IN_FRAME;                         // next character determines the meaning
+                continue;
+            default:
+                break;
+            }
+        }
+        if (++ppp_frame_length >= sizeof(ucInputMessage)) {              // protect input buffer form overflows in case of invalid input
+            ppp_frame_length = 0;
+        }
+    }
+#else
     while (fnRead(PPP_PortID, &ucInputMessage[ppp_frame_length], 1) != 0) { // while serial input waiting
         switch (iPPP_State) {
         case PPP_STATE_IDLE:                                             // waiting for dial in
@@ -142,8 +270,103 @@ extern void fnPPP(TTASKTABLE *ptrTaskTable)
 
         }
     }
+#endif
 }
 
+
+#if defined USE_SLIP
+static int fnPPP_ConfigEthernet(ETHTABLE *pars)
+{
+    TTYTABLE tInterfaceParameters;                                       // table for passing information to driver
+    tInterfaceParameters.Channel = PPP_UART;                             // set UART channel for serial use
+    tInterfaceParameters.ucSpeed = SERIAL_BAUD_19200;                    // baud rate
+    tInterfaceParameters.Rx_tx_sizes.RxQueueSize = PPP_RX_BUFFER_SIZE;   // input buffer size
+    tInterfaceParameters.Rx_tx_sizes.TxQueueSize = PPP_TX_BUFFER_SIZE;   // output buffer size
+    tInterfaceParameters.Task_to_wake = OWN_TASK;                        // wake self when messages have been received
+    #if defined SUPPORT_FLOW_HIGH_LOW
+    tInterfaceParameters.ucFlowHighWater = 80;                           // set the flow control high and low water levels in %
+    tInterfaceParameters.ucFlowLowWater = 20;
+    #endif
+    tInterfaceParameters.Config = (CHAR_8 + NO_PARITY + ONE_STOP /*+ USE_XON_OFF*/ + CHAR_MODE);
+    #if defined SERIAL_SUPPORT_DMA
+    tInterfaceParameters.ucDMAConfig = 0;
+    #endif
+    if ((PPP_PortID = fnOpen(TYPE_TTY, FOR_I_O, &tInterfaceParameters)) != NO_ID_ALLOCATED) { // open serial port with defined parameters
+        fnDriver(PPP_PortID, (TX_ON | RX_ON), 0);                        // enable rx and tx
+    }
+    return 0;
+}
+
+static int fnPPP_GetQuantityRxBuf(void)
+{
+    return 0;                                                            // no reception buffer
+}
+
+static unsigned char *fnPPP_GetTxBufferAdd(int iBufNr)
+{
+    return 0;                                                            // return a pointer to the payload area of the message (buffer not used)
+}
+
+static int fnPPP_WaitTxFree(void)
+{
+    return 0;
+}
+
+static void fnPPP_FreeEthernetBuffer(int iBufNr)                          // dummy since not used
+{
+}
+
+// The Ethernet transmission is passed in increasing protocol layers and we send it directly to the serial interface after inserting and escape sequences necessary
+//
+static void fnPPP_PutInBuffer(unsigned char *ptrOut, unsigned char *ptrIn, QUEUE_TRANSFER nr_of_bytes)
+{
+    QUEUE_TRANSFER ChunkLen = 0;
+    unsigned char *ptrToSend = ptrIn;
+    while (nr_of_bytes-- != 0) {                                         // scan for escape requirements
+        if (*ptrToSend == SLIP_END_CHARACTER) {                          // end character found in the data
+            if (ChunkLen != 0) {
+                fnWrite(PPP_PortID, ptrIn, ChunkLen);                    // copy preceding raw data
+            }
+            fnWrite(PPP_PortID, (unsigned char *)&cEscapeEscapeEnd[1], 2); // insert an escape sequence
+            ptrIn += (ChunkLen + 1);
+            ChunkLen = 0;
+        }
+        else if (*ptrToSend == SLIP_ESCAPE_CHARACTER) {                  // escape character found in the data
+            if (ChunkLen != 0) {
+                fnWrite(PPP_PortID, ptrIn, ChunkLen);                    // copy preceding raw data
+            }
+            fnWrite(PPP_PortID, (unsigned char *)&cEscapeEscapeEnd[0], 2); // insert an escape sequence
+            ptrIn += (ChunkLen + 1);
+            ChunkLen = 0;
+        }
+        else {
+            ChunkLen++;                                                  // count raw input
+        }
+        ptrToSend++;
+    }
+    if (ChunkLen != 0) {
+        fnWrite(PPP_PortID, ptrIn, ChunkLen);                            // copy remaining raw data
+    }
+}
+
+// Initiate transmission of prepared Ethernet content to PPP interface
+//
+static QUEUE_TRANSFER fnPPP_StartEthTx(QUEUE_TRANSFER DataLen, unsigned char *ptr_put)
+{
+    fnWrite(PPP_PortID, (unsigned char *)&cEscapeEscapeEnd[2], 1);       // copy preceding raw data
+    return (DataLen);
+}
+
+
+    #if defined USE_IGMP
+static void fnPPP_ModifyMulticastFilter(QUEUE_TRANSFER action, unsigned char *ptrIP)
+{
+    _EXCEPTION("Not implemented");
+}
+    #endif
+#endif
+
+#if !defined USE_SLIP
 #define LCP_PROTOCOL       0xc021
 #define PAP_PROTOCOL       0xc023
 #define CHAP_PROTOCOL      0xc22305
@@ -155,7 +378,6 @@ extern void fnPPP(TTASKTABLE *ptrTaskTable)
 #define CCP_PROTOCOL       0x80fd
 #define IPCP_PROTOCOL      0x8021
 #define IPV4_PROTOCOL      0x0021
-
 
 #define VENDOR_EXTENSION   0x00
 #define CONFIG_REQUEST     0x01
@@ -175,6 +397,7 @@ extern void fnPPP(TTASKTABLE *ptrTaskTable)
 #define RESET_ACK          0x0f
 
 // Options
+//
 #define ACCM               0x02                                          // Asynchronous Control Character Map
 #define AUTH_PROT          0x03
 #define QUALITY_PROT       0x04
@@ -634,7 +857,7 @@ static unsigned short fnPPP_crc(unsigned short usCRC, unsigned char ucData)
     return ((((unsigned short)ucData << 8) | (usCRC >> 8)) ^ (ucData >> 4) ^ ((unsigned short)ucData << 3));
 }
 #endif
-
+#endif
 
 
 #endif

@@ -3881,7 +3881,7 @@ static void fnConfigureApplicationEndpoints(void)
         fnUSBModifyMulticastFilter,
             #endif
         };
-        ethernet.ptrEthernetFunctions = (void *)&USBEthernetFunctions;   // enter the Ethernet function list for the defult internal controller
+        ethernet.ptrEthernetFunctions = (void *)&USBEthernetFunctions;   // enter the Ethernet function list for the default internal controller
         ethernet.Task_to_wake  = 0;
             #if defined ETH_INTERFACE
         ethernet.Channel       = 1;                                      // the Ethernet controller has channel 0 so RNDIS used Ethernet channel 1

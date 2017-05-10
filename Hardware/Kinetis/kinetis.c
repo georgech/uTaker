@@ -471,7 +471,7 @@ extern unsigned short fnGetRndHW(void)
     RNG_SR &= ~RNG_SR_FIFO_LVL_MASK;
         #endif
     #else                                                                // RNGA
-    while (!(RNG_SR & RNG_SR_OREG_LVL)) {                                // wait for an output to become available
+    while ((RNG_SR & RNG_SR_OREG_LVL) == 0) {                            // wait for an output to become available
         #if defined _WINDOWS
         RNG_SR |= RNG_SR_OREG_LVL;
         RNG_OR = rand();

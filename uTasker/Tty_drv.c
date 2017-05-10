@@ -47,7 +47,8 @@
     06.08.2013 Allow fnMsgs() to work with free-running DMA              {33}
     07.01.2017 Automatically set tx control pointer when no rx used      {34}
     07.01.2017 Add UART_TIMED_TRANSMISSION mode                          {35}
-    03.05.2017 Add optional modulo ttx buffer alignment                  {36}
+    03.05.2017 Add optional modulo tx buffer alignment                   {36}
+    09.05.2017 Add transmission pause mode                               {37}
 
 */
 
@@ -169,10 +170,23 @@ static QUEUE_TRANSFER entry_tty(QUEUE_HANDLE channel, unsigned char *ptBuffer, Q
                 }
 
                 if ((Counter & TX_ON) != 0) {
-                    fnTxOn(channel);
+                    if ((Counter & PAUSE_TX) != 0) {                     // {37}
+                        ptTTYQue->ucState &= ~(TX_WAIT);                 // remove pause
+                        if ((ptTTYQue->ucState & (TX_ACTIVE)) == 0) {
+                            send_next_byte(channel, ptTTYQue);           // this is not done when the transmitter is already performing a transfer or if suspended
+                        }
+                    }
+                    else {
+                        fnTxOn(channel);
+                    }
                 }
                 else if ((Counter & TX_OFF) != 0) {
-                    fnTxOff(channel);
+                    if ((Counter & PAUSE_TX) != 0) {                 // {37}
+                        ptTTYQue->ucState |= (TX_WAIT);              // pause transmission so that data can be added to the buffer without yet being released
+                    }
+                    else {
+                        fnTxOff(channel);
+                    }
                 }
 #if defined SERIAL_SUPPORT_ECHO
                 if ((Counter & ECHO_ON) != 0) {
@@ -519,7 +533,7 @@ extern QUEUE_HANDLE fnOpenTTY(TTYTABLE *pars, unsigned char driver_mode)
         return (NO_ID_ALLOCATED);                                        // no free IDs available
     }
 
-    ptrQueue = &que_ids[DriverID-1];
+    ptrQueue = &que_ids[DriverID - 1];
     ptrQueue->CallAddress = entry_add;
 
     if ((driver_mode & FOR_WRITE) != 0) {                                // define transmitter
@@ -783,9 +797,9 @@ extern void fnSciRxByte(unsigned char ch, QUEUE_HANDLE Channel)
 #endif
 
 #if defined SERIAL_SUPPORT_DMA && defined SERIAL_SUPPORT_DMA_RX
-    if (rx_ctl->ucDMA_mode & UART_RX_DMA) {                              // new characters in the buffer - increment message count
+    if ((rx_ctl->ucDMA_mode & UART_RX_DMA) != 0) {                       // new characters in the buffer - increment message count
         QUEUE_TRANSFER transfer_length = rx_ctl->tty_queue.buf_length;
-        if (rx_ctl->ucDMA_mode & UART_RX_DMA_HALF_BUFFER) {
+        if ((rx_ctl->ucDMA_mode & UART_RX_DMA_HALF_BUFFER) != 0) {
             transfer_length /= 2;
         }
         rx_ctl->tty_queue.put += transfer_length;
@@ -814,8 +828,8 @@ extern void fnSciRxByte(unsigned char ch, QUEUE_HANDLE Channel)
     }
 #endif
 #if defined SERIAL_SUPPORT_ESCAPE                                        // escape sequence
-    if (RX_ESC_MODE & rx_ctl->opn_mode) {
-        if (rx_ctl->ucState & ESCAPE_SEQUENCE) {
+    if ((RX_ESC_MODE & rx_ctl->opn_mode) != 0) {
+        if ((rx_ctl->ucState & ESCAPE_SEQUENCE) != 0) {
             rx_ctl->ucState &= ~ESCAPE_SEQUENCE;
         }
         else if (rx_ctl->ucMessageFilter == ch) {
@@ -823,7 +837,7 @@ extern void fnSciRxByte(unsigned char ch, QUEUE_HANDLE Channel)
             return;                                                      // we don't save this character yet
         }
         else {
-            if (MSG_MODE & rx_ctl->opn_mode) {
+            if ((MSG_MODE & rx_ctl->opn_mode) != 0) {
                 if (rx_ctl->ucMessageTerminator == ch) {
                     iBlockBuffer = 1;
                 }
@@ -831,7 +845,7 @@ extern void fnSciRxByte(unsigned char ch, QUEUE_HANDLE Channel)
         }
     }
     else {
-        if (MSG_MODE & rx_ctl->opn_mode) {
+        if ((MSG_MODE & rx_ctl->opn_mode) != 0) {
             if (rx_ctl->ucMessageTerminator == ch) {
                 iBlockBuffer = 1;
             }
@@ -848,7 +862,7 @@ extern void fnSciRxByte(unsigned char ch, QUEUE_HANDLE Channel)
 #endif
 
 #if defined SERIAL_SUPPORT_XON_XOFF                                      // XON XOFF support
-    if (rx_ctl->opn_mode & USE_XON_OFF) {
+    if ((rx_ctl->opn_mode & USE_XON_OFF) != 0) {
         if (XOFF_CODE == ch) {
     #if defined SERIAL_SUPPORT_DMA                                       // {18}
             if (tx_ctl->ucDMA_mode & UART_TX_DMA) {

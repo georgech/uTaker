@@ -37,7 +37,7 @@
 #include "config.h"
 
 
-#if defined ETH_INTERFACE || (defined USB_CDC_RNDIS && defined USB_TO_TCP_IP)
+#if defined ETH_INTERFACE || (defined USB_CDC_RNDIS && defined USB_TO_TCP_IP) || defined USE_PPP
 
 /* =================================================================== */
 /*                          local definitions                          */
@@ -111,7 +111,7 @@ static QUEUE_TRANSFER entry_eth(QUEUE_HANDLE channel, unsigned char *ptBuffer, Q
     #if defined EMAC_PREEMPT_LEVEL
                     uMask_Interrupt(EMAC_PREEMPT_LEVEL);                 // {10} set interrupt mask level to block low priority pre-emption until the frame has been completed and released
     #endif
-    #if !defined ETH_INTERFACE || !defined ETHERNET_AVAILABLE || defined NO_INTERNAL_ETHERNET || (ETHERNET_INTERFACES > 1) || defined USB_CDC_RNDIS
+    #if !defined ETH_INTERFACE || !defined ETHERNET_AVAILABLE || defined NO_INTERNAL_ETHERNET || (ETHERNET_INTERFACES > 1) || defined USB_CDC_RNDIS || defined USE_PPP
                     ptTTYQue->ETH_queue.put = ((ETHERNET_FUNCTIONS *)(que_ids[DriverID].ptrDriverFunctions))->fnGetTxBufferAdd(0);
     #else
                     ptTTYQue->ETH_queue.put = fnGetTxBufferAdd(0);       // get next buffer space
@@ -119,7 +119,7 @@ static QUEUE_TRANSFER entry_eth(QUEUE_HANDLE channel, unsigned char *ptBuffer, Q
                     uEnable_Interrupt();                                 // {9} enable all interrupts - a non-zero value in ptTTYQue->ETH_queue.put now signals that the buffer is in use
 #endif
 #if !defined _LM3SXXXX                                                   // {3}
-    #if !defined ETH_INTERFACE || !defined ETH_INTERFACE || !defined ETHERNET_AVAILABLE || defined NO_INTERNAL_ETHERNET || (ETHERNET_INTERFACES > 1) || defined USB_CDC_RNDIS
+    #if !defined ETH_INTERFACE || !defined ETH_INTERFACE || !defined ETHERNET_AVAILABLE || defined NO_INTERNAL_ETHERNET || (ETHERNET_INTERFACES > 1) || defined USB_CDC_RNDIS || defined USE_PPP
                     if (((ETHERNET_FUNCTIONS *)(que_ids[DriverID].ptrDriverFunctions))->fnWaitTxFree() != 0)
     #else
                     if (fnWaitTxFree() != 0)                             // wait for a short time if the buffer is not free
@@ -158,18 +158,18 @@ static QUEUE_TRANSFER entry_eth(QUEUE_HANDLE channel, unsigned char *ptBuffer, Q
                     }
 #endif
                 }
-#if !defined ETHERNET_AVAILABLE || defined NO_INTERNAL_ETHERNET || ETHERNET_INTERFACES > 1 || defined USB_CDC_RNDIS
+#if !defined ETHERNET_AVAILABLE || defined NO_INTERNAL_ETHERNET || ETHERNET_INTERFACES > 1 || defined USB_CDC_RNDIS || defined USE_PPP
                 ((ETHERNET_FUNCTIONS *)(que_ids[DriverID].ptrDriverFunctions))->fnPutInBuffer(ptTTYQue->ETH_queue.put, ptBuffer, Counter);
 #else
                 ETH_BUFF_COPY(ptTTYQue->ETH_queue.put, ptBuffer, Counter); // copy since buffers are linear
 #endif
                 ptTTYQue->ETH_queue.put += Counter;                      // increment pointer in output buffer
                 ptTTYQue->ETH_queue.chars += Counter;                    // the number of bytes in the output buffer that will be sent
-                return (Counter);
+                return (Counter);                                        // the number of bytes saved
             }
 #if defined USE_IGMP                                                     // {8}
             else {                                                       // use this case to communicate multicast filter requirements
-    #if !defined ETH_INTERFACE || !defined ETHERNET_AVAILABLE || defined NO_INTERNAL_ETHERNET || ETHERNET_INTERFACES > 1 || defined USB_CDC_RNDIS
+    #if !defined ETH_INTERFACE || !defined ETHERNET_AVAILABLE || defined NO_INTERNAL_ETHERNET || ETHERNET_INTERFACES > 1 || defined USB_CDC_RNDIS || defined USE_PPP
                 ((ETHERNET_FUNCTIONS *)(que_ids[DriverID].ptrDriverFunctions))->fnModifyMulticastFilter(Counter, ptBuffer);
     #else
                 fnModifyMulticastFilter(Counter, ptBuffer);
@@ -180,9 +180,9 @@ static QUEUE_TRANSFER entry_eth(QUEUE_HANDLE channel, unsigned char *ptBuffer, Q
         }
         else {
 #if !defined (_HW_NE64)                                                  // {2}{3}
-            QUEUE_TRANSFER TxLength = ptTTYQue->ETH_queue.chars;
-            ptTTYQue->ETH_queue.chars = 0;
-    #if !defined ETH_INTERFACE || !defined ETHERNET_AVAILABLE || defined NO_INTERNAL_ETHERNET || (ETHERNET_INTERFACES > 1) || defined USB_CDC_RNDIS
+            QUEUE_TRANSFER TxLength = ptTTYQue->ETH_queue.chars;         // the length of the frame to be sent
+            ptTTYQue->ETH_queue.chars = 0;                               // after transmission the buffer is empty again
+    #if !defined ETH_INTERFACE || !defined ETHERNET_AVAILABLE || defined NO_INTERNAL_ETHERNET || (ETHERNET_INTERFACES > 1) || defined USB_CDC_RNDIS || defined USE_PPP
             rtn_val = ((ETHERNET_FUNCTIONS *)(que_ids[DriverID].ptrDriverFunctions))->fnStartEthTx(TxLength, ptTTYQue->ETH_queue.put);
     #else
             rtn_val = fnStartEthTx(TxLength, ptTTYQue->ETH_queue.put);   // this causes frame to be sent
@@ -220,7 +220,7 @@ static QUEUE_TRANSFER entry_eth(QUEUE_HANDLE channel, unsigned char *ptBuffer, Q
 
     case CALL_FREE:
         ptTTYQue = (struct stETHERNETQue *)(que_ids[DriverID].input_buffer_control); // set to input control block
-#if !defined ETH_INTERFACE || !defined ETHERNET_AVAILABLE || defined NO_INTERNAL_ETHERNET || (ETHERNET_INTERFACES > 1) || defined USB_CDC_RNDIS
+#if !defined ETH_INTERFACE || !defined ETHERNET_AVAILABLE || defined NO_INTERNAL_ETHERNET || (ETHERNET_INTERFACES > 1) || defined USB_CDC_RNDIS || defined USE_PPP
         ((ETHERNET_FUNCTIONS *)(que_ids[DriverID].ptrDriverFunctions))->fnFreeEthernetBuffer(Counter);
 #else
         fnFreeEthernetBuffer(Counter);
@@ -269,7 +269,14 @@ extern QUEUE_HANDLE fnOpenETHERNET(ETHTABLE *pars, unsigned short driver_mode)
 #if defined(SUPPORT_DISTRIBUTED_NODES) && defined (UPROTOCOL_WITH_RETRANS)
     fnInitUNetwork();
 #endif
-#if !defined ETH_INTERFACE || !defined ETHERNET_AVAILABLE || defined NO_INTERNAL_ETHERNET || (ETHERNET_INTERFACES > 1) || defined USB_CDC_RNDIS
+    if (0 == entry_add) {
+        return (NO_ID_ALLOCATED);                                        // call was not valid
+    }
+    else {                                                               // fill general structure entries
+        que_ids[DriverID].CallAddress = entry_add;
+        que_ids[DriverID].qHandle = pars->Channel;
+    }
+#if !defined ETH_INTERFACE || !defined ETHERNET_AVAILABLE || defined NO_INTERNAL_ETHERNET || (ETHERNET_INTERFACES > 1) || defined USB_CDC_RNDIS || defined USE_PPP
     que_ids[DriverID].ptrDriverFunctions = pars->ptrEthernetFunctions;
     if (((ETHERNET_FUNCTIONS *)(pars->ptrEthernetFunctions))->fnConfigEthernet(pars) != 0) {
         return NO_ID_ALLOCATED;
@@ -324,15 +331,6 @@ extern QUEUE_HANDLE fnOpenETHERNET(ETHTABLE *pars, unsigned short driver_mode)
     ptEthQue->ETH_queue.put = ptEthQue->ETH_queue.get = ptEthQue->ETH_queue.QUEbuffer = 0; // {9} fnGetTxBufferAdd(0) replaced since 0 means that the buffer is presently not in use
     ptEthQue->ETH_queue.buf_length = pars->usSizeTx;
   //ptEthQue->opn_mode = 0;
-
-    que_ids[DriverID].CallAddress = entry_add;    
-
-    if (0 == que_ids[DriverID].CallAddress) {
-        return (NO_ID_ALLOCATED);                                        // call was not valid
-    }
-    else {                                                               // fill general structure entries
-        que_ids[DriverID].qHandle = pars->Channel;
-        return (DriverID + 1);                                           // return the allocated ID - begins with 1 ... MAX
-    }
+    return (DriverID + 1);                                               // return the allocated ID - begins with 1 ... MAX
 }
 #endif

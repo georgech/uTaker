@@ -213,7 +213,7 @@ extern QUEUE_HANDLE fnOpen(unsigned char type_of_driver, unsigned char driver_mo
         return (fnOpenCAN((CANTABLE*)pars, driver_mode));
 #endif
 
-#if defined ETH_INTERFACE || (defined USB_CDC_RNDIS && defined USB_TO_TCP_IP)
+#if defined ETH_INTERFACE || (defined USB_CDC_RNDIS && defined USB_TO_TCP_IP) || defined USE_PPP
     case TYPE_ETHERNET:
         return(fnOpenETHERNET((ETHTABLE*)pars, driver_mode));
 #endif

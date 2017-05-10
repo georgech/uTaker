@@ -44,7 +44,7 @@
 
 #include "config.h"
 
-#if defined ETH_INTERFACE || defined USB_CDC_RNDIS
+#if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP
 
 #if defined _WINDOWS
     extern void fnOpenDefaultHostAdapter(void);
@@ -166,7 +166,7 @@ extern void fnTaskEthernet(TTASKTABLE *ptrTaskTable)
 
     if (Ethernet_handle[ETHERNET_IP_INTERFACE] == NO_ID_ALLOCATED) {
         ETHTABLE ethernet;                                               // configuration structure to be passed to the Ethernet configuration
-#if (defined ETHERNET_AVAILABLE && !defined NO_INTERNAL_ETHERNET && (ETHERNET_INTERFACES > 1)) || defined USB_CDC_RNDIS
+#if (defined ETHERNET_AVAILABLE && !defined NO_INTERNAL_ETHERNET && (ETHERNET_INTERFACES > 1)) || defined USB_CDC_RNDIS  || defined USE_PPP
         ethernet.ptrEthernetFunctions = (void *)&InternalEthernetFunctions; // enter the Ethernet function list for the defult internal controller
 #endif
 #if defined REMOTE_SIMULATION_INTERFACE                                  // when being uses as simulation extension node

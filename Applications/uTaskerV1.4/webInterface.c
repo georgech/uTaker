@@ -591,7 +591,7 @@ static int fnHandleWeb(unsigned char ucType, CHAR *ptrData, HTTP *http_session)
         break;
 
     /********************************************************************/
-#if defined ETH_INTERFACE || defined USB_CDC_RNDIS
+#if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP
     case 'c':                                                            // set MAC (only possible when zero)
         if (uMemcmp(&temp_pars->temp_network[DEFAULT_NETWORK].ucOurMAC[0], cucNullMACIP, MAC_LENGTH) == 0) {
             fnSetMAC((ptrData + 1), &temp_pars->temp_network[DEFAULT_NETWORK].ucOurMAC[0]);

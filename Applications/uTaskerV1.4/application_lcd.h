@@ -1147,6 +1147,216 @@ extern void fnDoLCD_com_text(unsigned char ucType, unsigned char *ptrInput, unsi
             break;
 #endif
 
+#if defined GLCD_MENU_TEST
+
+static void fnDrawMenu(MENU_POSITION *ptrMenuPosition)
+{
+    #define START_MENU_X       20
+    #define START_MENU_Y       2
+    #define MENU_ENTRY_WIDTH   100
+    #define MENU_ENTRY_HEIGHT  18
+    #define MENUE_ENTRY_BORDER 3
+    #define MENU_VERTICAL_GAP  1
+    #define TEXT_LEFT_MARGIN   12
+    #define TEXT_TOP_MARGIN    1
+    #define MAX_ENTRIES        3
+
+    const MENU_LOCATION *ptrPresentLocation = ptrMenuLocation;
+    GLCD_TEXT_POSITION text_pos;
+    GLCD_RECT box;
+    const CHAR *ptrMenuText;
+    unsigned char ucItemNumber = 0;
+
+    box.rect_corners.usX_start = START_MENU_X;
+    box.rect_corners.usX_end = (START_MENU_X + MENU_ENTRY_WIDTH);
+    box.rect_corners.usY_start = START_MENU_Y;
+    box.rect_corners.usY_end = (START_MENU_Y + MENU_ENTRY_HEIGHT);
+
+    while (ucItemNumber < MAX_ENTRIES) {
+        ptrMenuText = ptrPresentLocation->menuName;
+        // Draw a box for the menu text
+        //
+        if (ptrMenuText == 0) {
+            box.ucMode = PAINT_DARK;
+            if (++ucItemNumber >= MAX_ENTRIES) {                         // if end of menu items at this level
+                box.ucMode |= (REDRAW);                                  // the final box will cause a redraw
+            }
+            fnDoLCD_rect(&box);
+        }
+        else {
+            box.ucMode = PAINT_LIGHT;
+            fnDoLCD_rect(&box);
+            if (ptrMenuPosition->ucMenuItem != ucItemNumber) {           // presently selected item is highlighted
+                box.ucMode = PAINT_DARK;
+                text_pos.ucMode = PAINT_LIGHT;
+            }
+            else {
+                text_pos.ucMode = PAINT_DARK;
+            }
+            box.rect_corners.usX_start += MENUE_ENTRY_BORDER;
+            box.rect_corners.usX_end -= MENUE_ENTRY_BORDER;
+            box.rect_corners.usY_start += MENUE_ENTRY_BORDER;
+            box.rect_corners.usY_end -= MENUE_ENTRY_BORDER;
+            fnDoLCD_rect(&box);
+            // Add the menu text
+            //
+            text_pos.ucFont = FONT_NINE_DOT;
+            text_pos.usX = (box.rect_corners.usX_start + TEXT_LEFT_MARGIN);
+            text_pos.usY = (box.rect_corners.usY_start + TEXT_TOP_MARGIN);
+
+            if (ptrPresentLocation->ucOptions & OPTION_1) {
+                GLCD_RECT Option;
+                Option.ucMode = PAINT_LIGHT;
+                Option.rect_corners.usX_start = (box.rect_corners.usX_end - 6);
+                Option.rect_corners.usX_end = (box.rect_corners.usX_end - 1);
+                Option.rect_corners.usY_start = (box.rect_corners.usY_start + 1);
+                Option.rect_corners.usY_end = (box.rect_corners.usY_end - 1);
+                fnDoLCD_rect(&Option);
+            }
+            if (ptrPresentLocation->ucOptions & OPTION_2) {
+                GLCD_LINE Option;
+                Option.ucMode = PAINT_LIGHT;
+                Option.line_start_end.usX_start = (box.rect_corners.usX_end - 6);
+                Option.line_start_end.usX_end = (box.rect_corners.usX_end - 1);
+                Option.line_start_end.usY_start = (box.rect_corners.usY_start + 1);
+                Option.line_start_end.usY_end = (box.rect_corners.usY_end - 1);
+                fnDoLCD_line(&Option);
+            }
+
+            ptrPresentLocation++;                                        // move to next menu item
+
+            if (++ucItemNumber >= MAX_ENTRIES) {                         // if end of menu items at this level
+                text_pos.ucMode |= (REDRAW);                             // the final text will cause a redraw
+            }
+            fnDoLCD_text(&text_pos, ptrMenuText);
+        }
+        // Prepare for next menu entry
+        //
+        box.rect_corners.usX_start -= MENUE_ENTRY_BORDER;
+        box.rect_corners.usX_end += MENUE_ENTRY_BORDER;
+        box.rect_corners.usY_start += (1 + MENU_ENTRY_HEIGHT - MENUE_ENTRY_BORDER + MENU_VERTICAL_GAP);
+        box.rect_corners.usY_end += (1 + MENU_ENTRY_HEIGHT + MENUE_ENTRY_BORDER + MENU_VERTICAL_GAP);
+    }
+}
+
+static void fnDrawParameter(MENU_POSITION *ptrMenuPosition)
+{
+    PARAMETER *ptrPar = (PARAMETER *)((ptrMenuLocation + ptrMenuPosition->ucMenuItem)->ptrNextLevel);
+    GLCD_RECT box;
+    GLCD_TEXT_POSITION text_pos;
+    CHAR cParValueBuffer[8];
+    box.ucMode = PAINT_DARK;
+    text_pos.ucMode = PAINT_LIGHT;
+    box.rect_corners.usX_start = START_MENU_X;
+    box.rect_corners.usX_end = (START_MENU_X + MENU_ENTRY_WIDTH);
+    box.rect_corners.usY_start = START_MENU_Y;
+    box.rect_corners.usY_end = (START_MENU_Y + ((MENU_ENTRY_HEIGHT + MENU_VERTICAL_GAP + 1) * 3));
+    fnDoLCD_rect(&box);
+
+    text_pos.ucFont = FONT_NINE_DOT;
+    text_pos.usX = (START_MENU_X + 4);
+    text_pos.usY = (START_MENU_Y + 20);
+    fnDoLCD_text(&text_pos, ptrPar->title);
+
+    text_pos.usX = (START_MENU_X + 55);
+    fnBufferDec(*ptrPar->ptrVariable , 0, cParValueBuffer);              // convert the parameter value to a string
+    fnDoLCD_text(&text_pos, cParValueBuffer);
+
+    text_pos.ucFont = FONT_SEVEN_DOT;
+    text_pos.ucMode = (PAINT_LIGHT | REDRAW);
+    text_pos.usY += 3;
+    text_pos.usX = (START_MENU_X + 80);
+    fnDoLCD_text(&text_pos, ptrPar->unit);
+}
+
+
+static void fnHandleKey(MENU_POSITION *ptrMenuPosition, unsigned char ucKeyAction)
+{
+    switch (ucKeyAction) {
+    case 14:                                                             // down key pressed
+        switch (ptrMenuPosition->ucPresentFunction) {
+        case PRESENT_FUNCTION_MENU:
+            if ((ptrMenuLocation + ptrMenuPosition->ucMenuItem + 1)->menuName != 0) { // if not already at bottom
+                ptrMenuPosition->ucMenuItem++;                           // move to next menu item
+                fnDrawMenu(ptrMenuPosition);                             // redraw menu
+            }
+            break;
+        case PRESENT_FUNCTION_PARAMETER:
+            // Decrement present variable
+            //
+            {
+                PARAMETER *ptrPar = (PARAMETER *)((ptrMenuLocation + ptrMenuPosition->ucMenuItem)->ptrNextLevel);
+                if (*ptrPar->ptrVariable > ptrPar->ucValueMin) {
+                    (*ptrPar->ptrVariable)--;
+                    fnDrawParameter(ptrMenuPosition);
+                }
+            }
+            break;
+        }
+        break;
+    case 8:                                                              // up key pressed
+        switch (ptrMenuPosition->ucPresentFunction) {
+        case PRESENT_FUNCTION_MENU:
+            if (ptrMenuPosition->ucMenuItem != 0) {                      // if not already at top
+                ptrMenuPosition->ucMenuItem--;                           // move to previous menu item
+                fnDrawMenu(ptrMenuPosition);                             // redraw menu
+            }
+            break;
+        case PRESENT_FUNCTION_PARAMETER:
+            // Increment present variable
+            //
+            {
+                PARAMETER *ptrPar = (PARAMETER *)((ptrMenuLocation + ptrMenuPosition->ucMenuItem)->ptrNextLevel);
+                if (*ptrPar->ptrVariable < ptrPar->ucValueMax) {
+                    (*ptrPar->ptrVariable)++;
+                    fnDrawParameter(ptrMenuPosition);
+                }
+            }
+            break;
+        }
+        break;
+    case 12:                                                             // enter key pressed
+        switch (ptrMenuPosition->ucPresentFunction) {
+        case PRESENT_FUNCTION_MENU:
+            if ((ptrMenuLocation + ptrMenuPosition->ucMenuItem)->ptrNextLevel != 0) { // if there is a lower level (or parameter)
+                if ((ptrMenuLocation + ptrMenuPosition->ucMenuItem)->ucOptions & DO_PARAMETER) { // move to a parameter setting rather than a sub-menu
+                    ptrMenuPosition->ucPresentFunction = PRESENT_FUNCTION_PARAMETER;
+                    fnDrawParameter(ptrMenuPosition);
+                }
+                else {
+                    ptrParentMenu[ptrMenuPosition->ucMenuDepth] = ptrMenuLocation; // remember the higher level menu
+                    ptrMenuLocation = (ptrMenuLocation + ptrMenuPosition->ucMenuItem)->ptrNextLevel; // move to next menu list
+                    ptrMenuPosition->ucMenuDepth++;                      // mark the new level
+                    ptrMenuPosition->ucMenuItem = 0;                     // start at the top of the new list
+                    fnDrawMenu(ptrMenuPosition);                         // redraw menu
+                }
+            }
+            break;
+        case PRESENT_FUNCTION_PARAMETER:
+            // Save present variable value
+            //
+            break;
+        }
+        break;
+    case 10:                                                             // back up key pressed
+        switch (ptrMenuPosition->ucPresentFunction) {
+        case PRESENT_FUNCTION_MENU:
+            if (ptrMenuPosition->ucMenuDepth != 0) {                     // if there is a higher level
+                ptrMenuPosition->ucMenuDepth--;                          // mark the new level
+                ptrMenuLocation = ptrParentMenu[ptrMenuPosition->ucMenuDepth]; // move up
+                fnDrawMenu(ptrMenuPosition);                             // redraw menu
+            }
+            break;
+        case PRESENT_FUNCTION_PARAMETER:
+            ptrMenuPosition->ucPresentFunction = PRESENT_FUNCTION_MENU;  // move back to menu mode
+            fnDrawMenu(ptrMenuPosition);                                 // redraw menu
+            break;
+        }
+        break;
+    }
+}
+#endif
+
 // Message transmission routine used to send text and images to the LCD task - mono-GLCD
 //
 #if defined LCD_MESSAGE_ROUTINES && defined SUPPORT_OLED  && !defined GLCD_COLOR && !defined SUPPORT_TFT // {1}{3}

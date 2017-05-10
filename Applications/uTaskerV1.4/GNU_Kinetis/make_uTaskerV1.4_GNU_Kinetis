@@ -20,6 +20,7 @@
 # 13.01.2017 Add AES and crypto
 # 17.01.2017 Add dsp
 # 01.03.2017 Add FT_CoPro_Cmds
+# 09.05.2017 Add ppp.c
 
 
 # Compiler flags (thumb mode - little endian)
@@ -40,7 +41,7 @@ OBJS = Build/application.o Build/debug.o Build/webInterface.o Build/KeyScan.o Bu
        Build/arm_bitreversal2.o Build/arm_cfft_f32.o Build/arm_cfft_radix8_f32.o Build/arm_cmplx_mag_f32.o Build/arm_common_tables.o Build/arm_const_structs.o Build/arm_max_f32.o \
        Build/eth_drv.o Build/Driver.o Build/uMalloc.o Build/uTasker.o Build/Tty_drv.o Build/i2c_drv.o Build/USB_drv.o Build/uFile.o Build/Watchdog.o Build/GlobalTimer.o Build/time_keeper.o Build/low_power.o Build/can_drv.o \
        Build/Ethernet.o Build/arp.o Build/dhcp.o Build/dns.o Build/ftp.o Build/http.o Build/icmp.o Build/ip_utils.o Build/ip.o Build/pop3.o Build/smtp.o Build/snmp.o \
-       Build/tcp.o Build/telnet.o Build/tftp.o Build/udp.o Build/webutils.o Build/NetBIOS.o Build/zero_config.o Build/ftp_client.o Build/igmp.o \
+       Build/tcp.o Build/telnet.o Build/tftp.o Build/udp.o Build/webutils.o Build/NetBIOS.o Build/zero_config.o Build/ftp_client.o Build/igmp.o Build/ppp.o \
        Build/crypto.o Build/DSP.o
 
 OBJS2 = Build/kinetis.o
@@ -272,6 +273,8 @@ Build/ftp_client.o: ../../../stack/ftp_client.c $(DEPENDS)
 Build/igmp.o: ../../../stack/igmp.c $(DEPENDS)
 		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../stack/igmp.c -o Build/igmp.o
 
+Build/ppp.o: ../../../stack/ppp.c $(DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../stack/ppp.c -o Build/ppp.o
 
 
 # uGLCDLIB files
@@ -364,7 +367,7 @@ uTaskerV1.4.elf: $(OBJS) $(OBJS2) K_2M_256.ld K_1M_256.ld K_1M_128.ld K_512_64.l
 	$(CC_SIZE) uTaskerV1.4.elf
 
 uTaskerV1.4_BM.elf: $(OBJS) $(OBJS2_BM) K_2M_256_BM.ld K_1M_256_BM.ld K_1M_128_BM.ld K_512_64_BM.ld K_256_256_BM.ld K_256_64_BM.ld K_128_16_BM.ld KL_128_96_BM.ld KL_256_32_BM.ld KL_128_16_BM.ld KL_64_8_BM.ld KL_32_4_BM.ld KV_32_8_BM.ld KV_512_96_BM.ld KE_128_16_BM.ld KE_64_4_BM.ld KEA_128_16_BM.ld KEA_64_4_BM.ld KEA_32_4_BM.ld K_1M_128_Blaze.ld
-	$(CC_LNK) $(C_FLAGS) -Os -g -TK_1M_256_BM.ld -nostartfiles -Xlinker --gc-sections -lm -Wl,-Map=uTaskerV1.4_BM.map -o uTaskerV1.4_BM.elf $(OBJS) $(OBJS2_BM)
+	$(CC_LNK) $(C_FLAGS) -Os -g -TK_2M_256_BM.ld -nostartfiles -Xlinker --gc-sections -lm -Wl,-Map=uTaskerV1.4_BM.map -o uTaskerV1.4_BM.elf $(OBJS) $(OBJS2_BM)
 	$(CC_OBJ) --only-section=.data --only-section=.init --only-section=.text --only-section=.rodata --only-section=.vectors --output-target=srec uTaskerV1.4_BM.elf uTaskerV1.4_BM.srec
 	$(CC_OBJ) --only-section=.data --only-section=.init --only-section=.text --only-section=.rodata --only-section=.vectors --output-target=ihex uTaskerV1.4_BM.elf uTaskerV1.4_BM.hex
 	$(CC_OBJ) --only-section=.data --only-section=.init --only-section=.text --only-section=.rodata --only-section=.vectors --output-target=binary uTaskerV1.4_BM.elf uTaskerV1.4_BM.bin

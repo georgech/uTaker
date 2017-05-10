@@ -92,6 +92,7 @@
     16.02.2017 Add crypography AES defines                               {73}
     17.01.2017 Add DSP FFT defines                                       {74}
     03.05.2017 Add UART_RX_MODULO and UART_TX_MODULO flags               {75}
+    09.05.2017 Add PAUSE_TX                                              {76}
 
 */
 
@@ -178,6 +179,7 @@
 #define CONFIG_CTS_PIN    0x1000                                         // {14}
 #define SET_RS485_MODE    0x2000                                         // {14}
 #define SET_RS485_NEG     0x4000                                         // {36}
+#define PAUSE_TX          0x8000                                         // {76}
 
 #define MODIFY_TX         0x1000
 #define MODIFY_RX         0x0000
@@ -617,7 +619,7 @@ typedef struct stSPITABLE {
 // Ethernet table structure used to configure an Ethernet interface
 //
 typedef struct stETHtable {
-#if !defined ETHERNET_AVAILABLE || defined NO_INTERNAL_ETHERNET || (ETHERNET_INTERFACES > 1) || (defined USB_CDC_RNDIS && defined USB_TO_TCP_IP)
+#if !defined ETHERNET_AVAILABLE || defined NO_INTERNAL_ETHERNET || (ETHERNET_INTERFACES > 1) || (defined USB_CDC_RNDIS && defined USB_TO_TCP_IP) || defined USE_PPP
     void *ptrEthernetFunctions;                                          // function table used when there is an external controller available
 #endif
     QUEUE_HANDLE   Channel;                                              // channel number 0, 1, ...

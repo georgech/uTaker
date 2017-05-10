@@ -909,6 +909,10 @@
         #define MODBUS_SUPPORT_SERIAL_LINE_DIAGNOSTICS                   // support serial line diagnostics
         #define MODBUS_CRC_FROM_LOOKUP_TABLE                             // MODBUS RTU cyclic redundancy check performed with help of loop up table (requires 512 bytes FLASH table, but faster than calculation loop)
     #endif
+
+  //#define USE_PPP                                                      // allow TCP/IP on serial
+        #define USE_SLIP                                                 // use slip rather than PPP
+        #define USE_SLIP_DIAL_OUT                                        // dial-out
 #else
     #define NUMBER_SERIAL              0                                 // no physical queue needed
     #define NUMBER_EXTERNAL_SERIAL     0
@@ -923,7 +927,7 @@
 #if defined DEVICE_WITHOUT_USB
     #define NUMBER_USB     0                                             // no physical queue needed
 #else
-  //#define USB_INTERFACE                                                // enable USB driver interface
+    #define USB_INTERFACE                                                // enable USB driver interface
     #if defined USB_INTERFACE
       //#define MICROSOFT_OS_STRING_DESCRIPTOR                           // support MODs
       //#define USB_HOST_SUPPORT                                         // host rather than device
@@ -1121,7 +1125,7 @@
             #define FLEXFLASH_DATA                                       // use FlexNMV in data mode
             #define FLASH_FAT_MANAGEMENT_ADDRESS    (256 * 1024)         // physical address where the used flash starts
         #elif defined FRDM_KL25Z
-            #define FLASH_FAT_MANAGEMENT_ADDRESS    (54 * 1024)          // physical address where the used flash starts
+            #define FLASH_FAT_MANAGEMENT_ADDRESS    (64 * 1024)          // physical address where the used flash starts
         #else
             #define FLASH_FAT_MANAGEMENT_ADDRESS    (128 * 1024)         // physical address where the used flash starts
         #endif
@@ -1179,14 +1183,14 @@
 // Ethernet
 //
 #if !defined DEVICE_WITHOUT_ETHERNET && !defined K70F150M_12M && !defined TEENSY_3_5 && !defined TEENSY_3_6
-    #define ETH_INTERFACE                                                // enable Ethernet interface driver
+  //#define ETH_INTERFACE                                                // enable Ethernet interface driver
 #elif defined TEENSY_3_1 || defined TEENSY_LC
   //#define ETH_INTERFACE                                                // enable external Ethernet interface driver
     #if defined ETH_INTERFACE
         #define ENC424J600_INTERFACE                                     // using ENC424J600
     #endif
 #endif
-#if (defined ETH_INTERFACE || defined USB_CDC_RNDIS) && !defined BLINKEY
+#if (defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP) && !defined BLINKEY
     #define MAC_DELIMITER  '-'                                           // used for display and entry of mac addresses
     #define IPV6_DELIMITER ':'                                           // used for display and entry of IPV6 addresses
     #define NUMBER_LAN     1                                             // one physical interface needed for LAN
@@ -1955,7 +1959,7 @@
 #endif
 
 #if defined OPSYS_CONFIG                                                 // this is only used by the hardware module
-    #if defined ETH_INTERFACE || defined USB_CDC_RNDIS                   // if we support Ethernet we define some constants for its (TCP/IP) use
+    #if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP// if we support Ethernet we define some constants for its (TCP/IP) use
         const unsigned char cucNullMACIP[MAC_LENGTH] = { 0, 0, 0, 0, 0, 0 };
         const unsigned char cucBroadcast[MAC_LENGTH] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff }; // used also for broadcast IP
     #endif
