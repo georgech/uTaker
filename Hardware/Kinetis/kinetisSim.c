@@ -5229,9 +5229,9 @@ static void fnUART_Tx_int(int iChannel)
         #endif
         #if (UARTS_AVAILABLE > 2 && (LPUARTS_AVAILABLE < 3 || defined LPUARTS_PARALLEL)) || (LPUARTS_AVAILABLE == 2 && UARTS_AVAILABLE == 1)
     case 2:
-        if (UART2_C2 & UART_C2_TE) {                                     // if transmitter enabled
+        if ((UART2_C2 & UART_C2_TE) != 0) {                              // if transmitter enabled
             UART2_S1 |= (UART_S1_TDRE | UART_S1_TC);                     // set interrupt cause
-            if (UART2_C2 & UART2_S1) {                                   // if transmit interrupt type enabled
+            if ((UART2_C2 & UART2_S1) != 0) {                            // if transmit interrupt type enabled
                 if (fnGenInt(irq_UART2_ID) != 0) {                       // if UART2 interrupt is not disabled
                     VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                     ptrVect->processor_interrupts.irq_UART2();           // call the interrupt handler

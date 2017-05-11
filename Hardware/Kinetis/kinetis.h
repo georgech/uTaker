@@ -2848,8 +2848,10 @@ typedef struct stVECTOR_TABLE
     #if UARTS_AVAILABLE > 1 && (LPUARTS_AVAILABLE < 2 || defined LPUARTS_PARALLEL)
         #define UART1_BLOCK                    ((unsigned char *)(&kinetis.UART[1]))
     #endif
-    #if (UARTS_AVAILABLE > 2 && (LPUARTS_AVAILABLE < 3 || defined LPUARTS_PARALLEL)) || ((UARTS_AVAILABLE == 1 && LPUARTS_AVAILABLE == 2))
+    #if (UARTS_AVAILABLE > 2 && (LPUARTS_AVAILABLE < 3 || defined LPUARTS_PARALLEL))
         #define UART2_BLOCK                    ((unsigned char *)(&kinetis.UART[2]))
+    #elif ((UARTS_AVAILABLE == 1 && LPUARTS_AVAILABLE == 2))
+        #define UART2_BLOCK                    ((unsigned char *)(&kinetis.UART[0]))
     #endif
     #if UARTS_AVAILABLE > 3
         #define UART3_BLOCK                    ((unsigned char *)(&kinetis.UART[3]))
