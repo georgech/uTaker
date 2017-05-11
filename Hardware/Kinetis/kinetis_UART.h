@@ -2551,7 +2551,7 @@ _configDMA:
             uart_reg->UART_C2 |= (UART_C2_TIE);                          // enable the tx dma request (DMA not yet enabled) rather than interrupt mode
         }
             #else
-                #if defined KINETIS_KL43                                 // the UART in the KL43 behaves like one in the K devies with respect to needing the interrupt enabled for DMA to be triggered
+                #if defined KINETIS_KL43 || defined KINETIS_KL27         // the UART in the KL43/KL27 behaves like one in the K devies with respect to needing the interrupt enabled for DMA to be triggered
         uart_reg->UART_C2 |= (UART_C2_TIE);                              // enable the tx dma request (DMA not yet enabled) rather than interrupt mode
                 #endif
         uart_reg->UART_C5 |= UART_C5_TDMAS;                              // use DMA rather than interrupts for transmission

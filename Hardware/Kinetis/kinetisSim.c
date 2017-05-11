@@ -6588,12 +6588,12 @@ extern unsigned long fnSimDMA(char *argv[])
         #endif
         #if ((UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 2)
             case DMA_UART2_TX_CHANNEL:                                   // handle UART DMA transmission on UART 2
-            #if defined KINETIS_KL && !defined KINETIS_KL43
-                if (UART2_C4 & UART_C4_TDMAS)
+            #if defined KINETIS_KL && !defined KINETIS_KL43 && !defined KINETIS_KL27
+                if ((UART2_C4 & UART_C4_TDMAS) != 0)
             #elif LPUARTS_AVAILABLE > 2 && !defined LPUARTS_PARALLEL
-                if (LPUART2_BAUD & LPUART_BAUD_TDMAE)                    // if DMA operation is enabled
+                if ((LPUART2_BAUD & LPUART_BAUD_TDMAE) != 0)             // if DMA operation is enabled
             #else
-                if (UART2_C5 & UART_C5_TDMAS)
+                if ((UART2_C5 & UART_C5_TDMAS) != 0)
             #endif
                 {                                                        // if DMA operation is enabled
                     ptrCnt = (int *)argv[THROUGHPUT_UART2];
