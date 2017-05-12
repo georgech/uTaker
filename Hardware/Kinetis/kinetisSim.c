@@ -374,7 +374,11 @@ static void fnSetDevice(unsigned long *port_inits)
     MCG_SC = 0x02;
     MCG_C10 = 0x80;
     #endif
-    SIM_SDID = 0x014a;                                                   // K60 ID
+    #if defined KINETIS_REVISION_2
+    SIM_SDID = 0x114a;                                                   // K60 ID (revision 2)
+    #else
+    SIM_SDID = 0x014a;                                                   // K60 ID (revision 1)
+    #endif
 #endif
     PMC_LVDSC1 = PMC_LVDSC1_LVDRE;                                       // low voltage detect reset enabled by default
     PMC_REGSC = PMC_REGSC_REGONS;                                        // regulator is in run regulation
@@ -709,8 +713,9 @@ static void fnSetDevice(unsigned long *port_inits)
     #if defined RANDOM_NUMBER_GENERATOR_B                                // {64}
     RNG_VER     = (RNG_VER_RNGB | 0x00000280);
     RNG_SR      = (RNG_SR_FIFO_SIZE_5 | RNG_SR_RS | RNG_SR_SLP | 0x00000001);
-    #else
-    RNG_SR      = (RNG_SR_OREG_SIZE);
+    #endif
+    #if defined RANDOM_NUMBER_GENERATOR_A
+    RNGA_SR     = (RNGA_SR_OREG_SIZE);
     #endif
 #endif
     MCM_PLASC  = 0x001f;                                                  // {15}
@@ -6588,7 +6593,7 @@ extern unsigned long fnSimDMA(char *argv[])
         #endif
         #if ((UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 2)
             case DMA_UART2_TX_CHANNEL:                                   // handle UART DMA transmission on UART 2
-            #if defined KINETIS_KL && !defined KINETIS_KL43 && !defined KINETIS_KL27
+            #if defined KINETIS_KL && !defined K_STYLE_UART2
                 if ((UART2_C4 & UART_C4_TDMAS) != 0)
             #elif LPUARTS_AVAILABLE > 2 && !defined LPUARTS_PARALLEL
                 if ((LPUART2_BAUD & LPUART_BAUD_TDMAE) != 0)             // if DMA operation is enabled
@@ -8271,11 +8276,11 @@ extern void fnSimulateSLCD(void)
 {
     #if defined SLCD_FILE
         #if defined KINETIS_KL || defined KINETIS_KL43
-    if ((!(SIM_SCGC5 & SIM_SCGC5_SLCD)) || (!(LCD_GCR & LCD_GCR_LCDEN))) { // if SLCD controller not enabled
+    if (((SIM_SCGC5 & SIM_SCGC5_SLCD) == 0) || ((LCD_GCR & LCD_GCR_LCDEN) == 0)) { // if SLCD controller not enabled
         return;
     }
         #else
-    if ((!(SIM_SCGC3 & SIM_SCGC3_SLCD)) || (!(LCD_GCR & LCD_GCR_LCDEN))) { // if SLCD controller not enabled
+    if (((SIM_SCGC3 & SIM_SCGC3_SLCD) == 0) || ((LCD_GCR & LCD_GCR_LCDEN) != 0)) { // if SLCD controller not enabled
         return;
     }
         #endif

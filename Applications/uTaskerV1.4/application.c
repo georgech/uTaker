@@ -1456,6 +1456,7 @@ extern QUEUE_HANDLE fnSetNewSerialMode(unsigned char ucDriverMode)
         #if defined FREE_RUNNING_RX_DMA_RECEPTION
             #if defined KINETIS_KL
     tInterfaceParameters.ucDMAConfig = (UART_RX_DMA | UART_RX_MODULO);   // modulo aligned reception memory is required by kinetis KL parts in free-running DMA mode
+  //tInterfaceParameters.ucDMAConfig = (UART_RX_DMA | UART_RX_MODULO | UART_TX_DMA);   // modulo aligned reception memory is required by kinetis KL parts in free-running DMA mode
             #else
     tInterfaceParameters.ucDMAConfig = (UART_RX_DMA);
             #endif

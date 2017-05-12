@@ -1093,6 +1093,9 @@ typedef struct stRESET_VECTOR
     #define UARTS_AVAILABLE         5
 #elif defined KINETIS_KL02 || defined KINETIS_KL05 || defined KINETIS_KL43 || defined KINETIS_KL27 || defined KINETIS_KEA8
     #define UARTS_AVAILABLE         1
+    #if defined KINETIS_KL43 || defined KINETIS_KL27
+        #define K_STYLE_UART2                                            // KL parts with K type UART2
+    #endif
 #elif defined KINETIS_KV
     #if defined KINETIS_KV31
         #define UARTS_AVAILABLE     3
@@ -1136,7 +1139,7 @@ typedef struct stRESET_VECTOR
 #if defined KINETIS_K80
     #define LPUARTS_AVAILABLE       5
 #elif defined KINETIS_KL28 || defined KINETIS_KL82
-    #define LPUARTS_AVAILABLE       2 // provisional since 3 are available but need muxed interrupt
+    #define LPUARTS_AVAILABLE       2                                    // provisional since 3 are available but need muxed interrupt
 #elif defined KINETIS_KL03
     #define LPUARTS_AVAILABLE       1
 #elif defined KINETIS_KV31 || defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66
@@ -1336,6 +1339,9 @@ typedef struct stRESET_VECTOR
         #define TRUE_RANDOM_NUMBER_GENERATOR                             // true random number generator is available
     #elif defined KINETIS_REVISION_2 || defined KINETIS_K70
         #define RANDOM_NUMBER_GENERATOR_A                                // random number generator A is available
+        #if defined KINETIS_REVISION_1                                   // if there is a risk of revison 1 parts being encountered
+            #define RANDOM_NUMBER_GENERATOR_B                            // random number generator B may be present instead
+        #endif
     #else
         #define RANDOM_NUMBER_GENERATOR_B                                // random number generator B is available (not RNGA)
     #endif
@@ -8429,6 +8435,8 @@ typedef struct stKINETIS_ADMA2_BD
             #define SIM_SOPT9_TPM2CLKSEL     0x04000000                  // TPM2 external clock pin selection
     #endif
     #define SIM_SDID                         *(volatile unsigned long *)(SIM_BLOCK + 0x1024) // System Device Identification Register (read-only)
+        #define SIM_SDID_REVID_MASK          0x0000f000
+        #define SIM_SDID_REVID_SHIFT         12
     #if !defined KINETIS_KL
         #define SIM_SCGC1                    *(volatile unsigned long *)(SIM_BLOCK + 0x1028) // System Clock Gating Control Register 1
           #define SIM_SCGC1_OSC1             0x00000020
@@ -11300,7 +11308,7 @@ typedef struct stKINETIS_CAN_CONTROL
 #define UART2_S2                         *(volatile unsigned char*)(UART2_BLOCK + 0x05)   // UART 2 Status Register 2
 #define UART2_C3                         *(unsigned char*)(UART2_BLOCK + 0x06)            // UART 2 Control Register 3
 #define UART2_D                          *(volatile unsigned char*)(UART2_BLOCK + 0x07)   // UART 2 Data Register
-#if defined KINETIS_KL && !defined KINETIS_KL43 && !defined KINETIS_KL27
+#if defined KINETIS_KL && !defined K_STYLE_UART2
     #define UART2_C4                     *(unsigned char*)(UART2_BLOCK + 0x08)            // UART 2 Control Register 4
 #elif !defined KINETIS_KE
     #define UART2_MA1                    *(unsigned char*)(UART2_BLOCK + 0x08)            // UART 2 Match Address Registers 1
@@ -11320,7 +11328,7 @@ typedef struct stKINETIS_CAN_CONTROL
     #define UART2_RWFIFO                 *(unsigned char*)(UART2_BLOCK + 0x15)            // UART 2 FIFO Receive Watermark
     #define UART2_RCFIFI                 *(volatile unsigned char*)(UART2_BLOCK + 0x16)   // UART 2 FIFO Receive Count (read-only)
 #endif
-#if (!defined KINETIS_KL && !defined KINETIS_KE) || defined KINETIS_KL43 || defined KINETIS_KL27
+#if (!defined KINETIS_KL && !defined KINETIS_KE) || defined K_STYLE_UART2
     #define UART2_C7816                  *(unsigned char*)(UART2_BLOCK + 0x18)            // UART 2 7816 Control Register
     #define UART2_IE7816                 *(unsigned char*)(UART2_BLOCK + 0x19)            // UART 2 7816 Interrupt Enable Register
     #define UART2_IS7816                 *(volatile unsigned char*)(UART2_BLOCK + 0x1a)   // UART 2 7816 Interrupt Status Register
@@ -12486,24 +12494,25 @@ typedef struct stUSB_HW
 
 // Random number generator
 //
-#if !defined RANDOM_NUMBER_GENERATOR_B                                   // {41}{43}
-    #define RNG_CR               *(volatile unsigned long *)(RNGA_BASE_ADD + 0x00) // RNGA Control Register
-      #define RNG_CR_GO          0x00000001                              // output register is loaded with random data
-      #define RNG_CR_HA          0x00000002                              // high assurance
-      #define RNG_CR_INTM        0x00000004                              // interrupt mask
-      #define RNG_CR_CLRI        0x00000008                              // clear interrupt - reads 0
-      #define RNG_CR_SLP         0x00000010                              // sleep
-    #define RNG_SR               *(volatile unsigned long *)(RNGA_BASE_ADD + 0x04) // RNGA Status Register (read-only)
-      #define RNG_SR_SECV        0x00000001                              // security violation
-      #define RNG_SR_LRS         0x00000002                              // lasr read status
-      #define RNG_SR_ORU         0x00000004                              // output register underflow
-      #define RNG_SR_ERRI        0x00000008                              // error interrupt
-      #define RNG_SR_SLP         0x00000010                              // RNGA is in sleep mode
-      #define RNG_SR_OREG_LVL    0x00000100                              // output register level
-      #define RNG_SR_OREG_SIZE   0x00010000                              // output register size
-    #define RNG_ER               *(volatile unsigned long *)(RNGA_BASE_ADD + 0x08) // RNGA Entropy Register (always reads 0)
-    #define RNG_OR               *(volatile unsigned long *)(RNGA_BASE_ADD + 0x0c) // RNGA Output Register (read-only)
-#else
+#if defined RANDOM_NUMBER_GENERATOR_A                                    // {41}{43}
+    #define RNGA_CR              *(volatile unsigned long *)(RNGA_BASE_ADD + 0x00) // RNGA Control Register
+      #define RNGA_CR_GO         0x00000001                              // output register is loaded with random data
+      #define RNGA_CR_HA         0x00000002                              // high assurance
+      #define RNGA_CR_INTM       0x00000004                              // interrupt mask
+      #define RNGA_CR_CLRI       0x00000008                              // clear interrupt - reads 0
+      #define RNGA_CR_SLP        0x00000010                              // sleep
+    #define RNGA_SR              *(volatile unsigned long *)(RNGA_BASE_ADD + 0x04) // RNGA Status Register (read-only)
+      #define RNGA_SR_SECV       0x00000001                              // security violation
+      #define RNGA_SR_LRS        0x00000002                              // lasr read status
+      #define RNGA_SR_ORU        0x00000004                              // output register underflow
+      #define RNGA_SR_ERRI       0x00000008                              // error interrupt
+      #define RNGA_SR_SLP        0x00000010                              // RNGA is in sleep mode
+      #define RNGA_SR_OREG_LVL   0x00000100                              // output register level
+      #define RNGA_SR_OREG_SIZE  0x00010000                              // output register size
+    #define RNGA_ER              *(volatile unsigned long *)(RNGA_BASE_ADD + 0x08) // RNGA Entropy Register (always reads 0)
+    #define RNGA_OR              *(volatile unsigned long *)(RNGA_BASE_ADD + 0x0c) // RNGA Output Register (read-only)
+#endif
+#if defined RANDOM_NUMBER_GENERATOR_B
     #define RNG_VER              *(volatile unsigned long *)(RNGB_BASE_ADD + 0x00) // RNGB Version ID Register (read-only)
       #define RNG_VER_RNGB       0x10000000
     #define RNG_CMD              *(volatile unsigned long *)(RNGB_BASE_ADD + 0x04) // RNGB Command Register

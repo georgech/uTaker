@@ -2230,10 +2230,10 @@ typedef struct stKINETIS_UART
         unsigned char UART_RWFIFO;
         unsigned char UART_RCFIFI;
         unsigned char ucRes1;
-    #elif defined KINETIS_KL43
+    #elif defined K_STYLE_UART2
         unsigned char ucRes1[12];
     #endif
-    #if (!defined KINETIS_KL && !defined KINETIS_KE) || defined KINETIS_KL43
+    #if (!defined KINETIS_KL && !defined KINETIS_KE) || defined K_STYLE_UART2
         unsigned char UART_C7816;
         unsigned char UART_IE7816;
         unsigned char UART_IS7816;
@@ -2431,13 +2431,14 @@ unsigned char MC_PMCTRL;
     unsigned long RNG_ESR;
     unsigned long RNG_OUT;
     } KINETIS_RNGB;
-    #else
+    #endif
+    #if defined RANDOM_NUMBER_GENERATOR_A
     typedef struct stKINETIS_RNGA
     {
-    unsigned long RNG_CR;
-    unsigned long RNG_SR;
-    unsigned long RNG_ER;
-    unsigned long RNG_OR;
+    unsigned long RNGA_CR;
+    unsigned long RNGA_SR;
+    unsigned long RNGA_ER;
+    unsigned long RNGA_OR;
     } KINETIS_RNGA;
     #endif
 #endif
@@ -3090,9 +3091,10 @@ typedef struct stKINETIS_PERIPH
     KINETIS_VREF       VREF;
 #endif
 #if defined RNG_AVAILABLE
-    #if !defined RANDOM_NUMBER_GENERATOR_B                               // {13}
+    #if defined RANDOM_NUMBER_GENERATOR_A                               // {13}
     KINETIS_RNGA       RNGA;
-    #else
+    #endif
+    #if defined RANDOM_NUMBER_GENERATOR_B
     KINETIS_RNGB       RNGB;
     #endif
 #endif

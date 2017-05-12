@@ -927,7 +927,7 @@
 #if defined DEVICE_WITHOUT_USB
     #define NUMBER_USB     0                                             // no physical queue needed
 #else
-    #define USB_INTERFACE                                                // enable USB driver interface
+  //#define USB_INTERFACE                                                // enable USB driver interface
     #if defined USB_INTERFACE
       //#define MICROSOFT_OS_STRING_DESCRIPTOR                           // support MODs
       //#define USB_HOST_SUPPORT                                         // host rather than device

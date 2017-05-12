@@ -59,6 +59,7 @@
     25.11.2016 Add ROM bootloader errata workaround                      {125}
     31.01.2017 Add fnClearPending() and fnIsPending()                    {126}
     02.03.2017 Add optional alternative memcpy DMA channel for use by interrupts {127}
+    12.05.2017 Allow detection of RNG type in case both revison 1 and revision 2 parts may be encountered {128}
 
 */
 
@@ -442,14 +443,20 @@ extern void _init(void)
     #if defined RND_HW_SUPPORT
 extern void fnInitialiseRND(unsigned short *usSeedValue)
 {
-    #if defined RANDOM_NUMBER_GENERATOR_B                                // {64}
+    #if defined RANDOM_NUMBER_GENERATOR_B                                // {64} support revison 1 types
     POWER_UP(3, SIM_SCGC3_RNGB);                                         // power up RNGB
-    RNG_CR = (RNG_CR_FUFMODE_TE | RNG_CR_AR);                            // automatic reseed mode and generate a bus error on FIFO underrun
+        #if defined RANDOM_NUMBER_GENERATOR_A                            // {128} support revison 2 types too
+    if (((SIM_SDID & SIM_SDID_REVID_MASK) >> SIM_SDID_REVID_SHIFT) > 0) {// if from revision 2 part is detected (clock enable is compatible)
+        RNGA_CR = (RNGA_CR_INTM | RNGA_CR_HA | RNGA_CR_GO);              // start first conversion in RNGA module
+        return;
+    }
+        #endif
+    RNG_CR = (RNG_CR_FUFMODE_TE | RNG_CR_AR);                            // automatic re-seed mode and generate a bus error on FIFO underrun
     RNG_CMD = (RNG_CMD_GS | RNG_CMD_CI | RNG_CMD_CE);                    // start the initial seed process
                                                                          // the initial seeding takes some time but we don't wait for it to complete here - if it hasn't completed when we first need a value we will wait for it then
     #else
     POWER_UP(3, SIM_SCGC3_RNGA);                                         // power up RNGA
-    RNG_CR = (RNG_CR_INTM | RNG_CR_HA | RNG_CR_GO);                      // start first conversion
+    RNGA_CR = (RNGA_CR_INTM | RNGA_CR_HA | RNGA_CR_GO);                  // start first conversion
     #endif
 }
 
@@ -458,31 +465,44 @@ extern void fnInitialiseRND(unsigned short *usSeedValue)
 extern unsigned short fnGetRndHW(void)
 {
     unsigned long ulRandomNumber;
-    #if defined RANDOM_NUMBER_GENERATOR_B                                // {64}
-    while ((RNG_SR & RNG_SR_BUSY) != 0) {}                               // wait for the RNGB to become ready (it may be seeding)
-    while ((RNG_SR & RNG_SR_FIFO_LVL_MASK) == 0) {                       // wait for at least one output word to become available
-        #if defined _WINDOWS
-        RNG_OUT = rand();
-        RNG_SR |= 0x00000100;                                            // put one result in the FIFO
-        #endif
+    #if defined _WINDOWS
+    if (IS_POWERED_UP(3, SIM_SCGC3_RNGB) == 0) {
+        _EXCEPTION("Warning: RNG being used before initialised!!!");
     }
-    ulRandomNumber = RNG_OUT;                                            // read from the FIFO
-        #if defined _WINDOWS
-    RNG_SR &= ~RNG_SR_FIFO_LVL_MASK;
-        #endif
-    #else                                                                // RNGA
-    while ((RNG_SR & RNG_SR_OREG_LVL) == 0) {                            // wait for an output to become available
-        #if defined _WINDOWS
-        RNG_SR |= RNG_SR_OREG_LVL;
-        RNG_OR = rand();
-        #endif
-    }
-        #if defined _WINDOWS
-    RNG_SR &= ~RNG_SR_OREG_LVL;
-        #endif
-    ulRandomNumber = RNG_OR;                                             // read output value that has been generated
     #endif
+    #if defined RANDOM_NUMBER_GENERATOR_B                                // {64} support revison 1 types
+        #if defined RANDOM_NUMBER_GENERATOR_A                            // {128} support revison 2 types too
+    if (((SIM_SDID & SIM_SDID_REVID_MASK) >> SIM_SDID_REVID_SHIFT)== 0) {// if not from revision 2 part
+        #endif
+        while ((RNG_SR & RNG_SR_BUSY) != 0) {}                           // wait for the RNGB to become ready (it may be seeding)
+        while ((RNG_SR & RNG_SR_FIFO_LVL_MASK) == 0) {                   // wait for at least one output word to become available
+        #if defined _WINDOWS
+            RNG_OUT = rand();
+            RNG_SR |= 0x00000100;                                        // put one result in the FIFO
+        #endif
+        }
+        ulRandomNumber = RNG_OUT;                                        // read from the FIFO
+        #if defined _WINDOWS
+        RNG_SR &= ~RNG_SR_FIFO_LVL_MASK;
+        #endif
+        return (unsigned short)(ulRandomNumber);                         // return 16 bits of output
+        #if defined RANDOM_NUMBER_GENERATOR_A
+    }
+        #endif
+    #endif
+    #if defined RANDOM_NUMBER_GENERATOR_A                                // RNGA
+    while ((RNGA_SR & RNGA_SR_OREG_LVL) == 0) {                          // wait for an output to become available
+        #if defined _WINDOWS
+        RNGA_SR |= RNGA_SR_OREG_LVL;
+        RNGA_OR = rand();
+        #endif
+    }
+        #if defined _WINDOWS
+    RNGA_SR &= ~RNGA_SR_OREG_LVL;
+        #endif
+    ulRandomNumber = RNGA_OR;                                            // read output value that has been generated
     return (unsigned short)(ulRandomNumber);                             // return 16 bits of output
+    #endif
 }
     #else
 // How the random number seed is set depends on the hardware possibilities available.

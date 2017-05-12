@@ -2125,7 +2125,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define SIM_COM_EXTENDED                                             // COM ports defined from 1..255
     #define SERIAL_PORT_0    4                                           // if we open UART channel 0 we simulate using comx on the PC
     #define SERIAL_PORT_1    6                                           // if we open UART channel 1 we simulate using comx on the PC
-    #define SERIAL_PORT_2    4                                           // if we open UART channel 2 we simulate using comx on the PC
+    #define SERIAL_PORT_2    8                                           // if we open UART channel 2 we simulate using comx on the PC
     #define SERIAL_PORT_3    4                                           // if we open UART channel 3 we simulate using comx on the PC
     #define SERIAL_PORT_4    8                                           // if we open UART channel 4 we simulate using comx on the PC
     #define SERIAL_PORT_5    4                                           // if we open UART channel 5 we simulate using comx on the PC
@@ -2182,7 +2182,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define MODBUS_UART_1    2
         #define MODBUS_UART_2    0
     #endif
-    #define PPP_UART             4                                       // use UART 4 for PPP
+    #define PPP_UART             2                                       // use UART 2 for PPP
     #define FREEMASTER_UART_CH   1                                       // user UART 1 for FreeMaster via UART
     #if !defined DEVICE_WITHOUT_DMA
         #if defined KINETIS_K_FPU || defined TWR_K20D50M || defined FRDM_K20D50M || defined tinyK20 || defined KINETIS_KL || defined KINETIS_KV
@@ -2751,9 +2751,9 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define DMA_UART1_TX_CHANNEL   1                                     // use this DMA channel when using UART 1 for transmission driven by DMA
     #define DMA_UART2_TX_CHANNEL   2                                     // use this DMA channel when using UART 2 for transmission driven by DMA
 
-    #define DMA_UART0_RX_CHANNEL   0                                     // use this DMA channel when using UART 0 for transmission driven by DMA
-    #define DMA_UART1_RX_CHANNEL   1                                     // use this DMA channel when using UART 1 for transmission driven by DMA
-    #define DMA_UART2_RX_CHANNEL   2                                     // use this DMA channel when using UART 2 for transmission driven by DMA
+    #define DMA_UART0_RX_CHANNEL   2                                     // use this DMA channel when using UART 0 for transmission driven by DMA
+    #define DMA_UART1_RX_CHANNEL   0                                     // use this DMA channel when using UART 1 for transmission driven by DMA
+    #define DMA_UART2_RX_CHANNEL   1                                     // use this DMA channel when using UART 2 for transmission driven by DMA
 
     #define DMA_UART0_TX_INT_PRIORITY  (PRIORITY_DMA0)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
     #define DMA_UART1_TX_INT_PRIORITY  (PRIORITY_DMA1)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
@@ -2762,7 +2762,6 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define DMA_UART0_RX_INT_PRIORITY  (PRIORITY_DMA0)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
     #define DMA_UART1_RX_INT_PRIORITY  (PRIORITY_DMA1)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
     #define DMA_UART2_RX_INT_PRIORITY  (PRIORITY_DMA2)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
-
 
     #define DMA_MEMCPY_CHANNEL     3                                     // use lowest priority DMA channel
 #else

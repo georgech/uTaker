@@ -2551,7 +2551,7 @@ _configDMA:
             uart_reg->UART_C2 |= (UART_C2_TIE);                          // enable the tx dma request (DMA not yet enabled) rather than interrupt mode
         }
             #else
-                #if defined KINETIS_KL43 || defined KINETIS_KL27         // the UART in the KL43/KL27 behaves like one in the K devies with respect to needing the interrupt enabled for DMA to be triggered
+                #if defined K_STYLE_UART2                                // the UART in some KL parts behave like one in the K devices with respect to needing the interrupt enabled for DMA to be triggered
         uart_reg->UART_C2 |= (UART_C2_TIE);                              // enable the tx dma request (DMA not yet enabled) rather than interrupt mode
                 #endif
         uart_reg->UART_C5 |= UART_C5_TDMAS;                              // use DMA rather than interrupts for transmission
@@ -2728,7 +2728,7 @@ static void _fnConfigSimSCI(QUEUE_HANDLE Channel, TTYTABLE *pars, unsigned short
         ulBaudRate = (unsigned long)((float)ulSpecialClock/((float)usDivider)/16);
     }
     else {
-        #if defined KINETIS_KL43 || defined KINETIS_KL27
+        #if defined K_STYLE_UART2
         ulBaudRate = (unsigned long)((float)ulBusClock/((float)usDivider + (((float)ucFraction)/32))/16);
         #else
         ulBaudRate = (unsigned long)((float)ulBusClock/((float)usDivider)/16);
@@ -2768,7 +2768,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
 {
     KINETIS_UART_CONTROL *uart_reg;
     unsigned short usDivider = 0;
-    #if (!defined KINETIS_KL && !defined KINETIS_KE && !defined KINETIS_K80) || defined KINETIS_KL43 || defined KINETIS_KL27
+    #if (!defined KINETIS_KL && !defined KINETIS_KE && !defined KINETIS_K80) || defined K_STYLE_UART2
     unsigned char ucFraction = 0;
     #endif
     #if NUMBER_EXTERNAL_SERIAL > 0
@@ -3158,7 +3158,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         if (Channel >= UARTS_AVAILABLE) {                                // LPUART using its own special clock
             switch (pars->ucSpeed) {              
             case SERIAL_BAUD_300:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)SPECIAL_LPUART_CLOCK/(float)(16 * 300)) + (float)0.5) * (float)2)/2); // best divider for 300
         #else
                 ucFraction = (unsigned char)((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)300) - (int)(BUS_CLOCK/16/300)) * 32)); // calculate fraction
@@ -3166,7 +3166,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
                 break;
             case SERIAL_BAUD_600:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)SPECIAL_LPUART_CLOCK/(float)(16 * 600)) + (float)0.5) * (float)2)/2); // best divider for 600
         #else
                 ucFraction = (unsigned char)((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)600) - (int)(SPECIAL_LPUART_CLOCK/16/600)) * 32)); // calculate fraction
@@ -3174,7 +3174,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
                 break;
             case SERIAL_BAUD_1200:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)SPECIAL_LPUART_CLOCK/(float)(16 * 1200)) + (float)0.5) * (float)2)/2); // best divider for 1200
         #else
                 ucFraction = (unsigned char)((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)1200) - (int)(SPECIAL_LPUART_CLOCK/16/1200)) * 32)); // calculate fraction
@@ -3182,7 +3182,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
                 break;
             case SERIAL_BAUD_2400:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)SPECIAL_LPUART_CLOCK/(float)(16 * 2400)) + (float)0.5) * (float)2)/2); // best divider for 2400
         #else
                 ucFraction = (unsigned char)((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)2400) - (int)(SPECIAL_LPUART_CLOCK/16/2400)) * 32)); // calculate fractio
@@ -3190,7 +3190,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
                 break;
             case SERIAL_BAUD_4800:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)SPECIAL_LPUART_CLOCK/(float)(16 * 4800)) + (float)0.5) * (float)2)/2); // best divider for 4800
         #else
                 ucFraction = (unsigned char)((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)4800) - (int)(SPECIAL_LPUART_CLOCK/16/4800)) * 32)); // calculate fraction
@@ -3198,7 +3198,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
                 break;
             case SERIAL_BAUD_9600:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)SPECIAL_LPUART_CLOCK/(float)(16 * 9600)) + (float)0.5) * (float)2)/2); // best divider for 9600
         #else
                 ucFraction = (unsigned char)((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)9600) - (int)(SPECIAL_LPUART_CLOCK/16/9600)) * 32)); // calculate fraction
@@ -3206,7 +3206,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
                 break;
             case SERIAL_BAUD_14400:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)SPECIAL_LPUART_CLOCK/(float)(16 * 14400)) + (float)0.5) * (float)2)/2); // best divider for 14400
         #else
                 ucFraction = (unsigned char)((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)14400) - (int)(SPECIAL_LPUART_CLOCK/16/14400)) * 32)); // calculate fraction
@@ -3215,7 +3215,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
                 break;
             default:                                                     // if not valid value set this speed
             case SERIAL_BAUD_19200:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)SPECIAL_LPUART_CLOCK/(float)(16 * 19200)) + (float)0.5) * (float)2)/2); // best divider for 19200
         #else
                 ucFraction = (unsigned char)((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)19200) - (int)(SPECIAL_LPUART_CLOCK/16/19200)) * 32)); // calculate fraction
@@ -3224,7 +3224,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
                 break;
         #if defined SUPPORT_MIDI_BAUD_RATE
             case SERIAL_BAUD_31250:                                      // {207} set 31250
-            #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+            #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)SPECIAL_LPUART_CLOCK/(float)(16 * 31250)) + (float)0.5) * (float)2)/2); // best divider for 31250
             #else
                 ucFraction = (unsigned char)((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)31250) - (int)(SPECIAL_LPUART_CLOCK/16/ 31250)) * 32)); // calculate fraction
@@ -3233,7 +3233,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
                 break;
         #endif
             case SERIAL_BAUD_38400:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)SPECIAL_LPUART_CLOCK/(float)(16 * 38400)) + (float)0.5) * (float)2)/2); // best divider for 38400
         #else
                 ucFraction = (unsigned char)((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)38400) - (int)(SPECIAL_LPUART_CLOCK/16/38400)) * 32)); // calculate fraction
@@ -3241,7 +3241,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
                 break;
             case SERIAL_BAUD_57600:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)SPECIAL_LPUART_CLOCK/(float)(16 * 57600)) + (float)0.5) * (float)2)/2); // best divider for 57600
         #else
                 ucFraction = (unsigned char)((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)57600) - (int)(SPECIAL_LPUART_CLOCK/16/57600)) * 32)); // calculate fraction
@@ -3249,7 +3249,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
                 break;
             case SERIAL_BAUD_115200:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)SPECIAL_LPUART_CLOCK/(float)(16 * 115200)) + (float)0.5) * (float)2)/2); // best divider for 115200
         #else
                 ucFraction = (unsigned char)((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)115200) - (int)(SPECIAL_LPUART_CLOCK/16/115200)) * 32)); // calculate fraction
@@ -3257,7 +3257,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
                 break;
             case SERIAL_BAUD_230400:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)SPECIAL_LPUART_CLOCK/(float)(16 * 230400)) + (float)0.5) * (float)2)/2); // best divider for 230400
         #else
                 ucFraction = (unsigned char)((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)230400) - (int)(SPECIAL_LPUART_CLOCK/16/230400)) * 32)); // calculate fraction
@@ -3265,7 +3265,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
                 break;
             case SERIAL_BAUD_250K:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)SPECIAL_LPUART_CLOCK/(float)(16 * 250000)) + (float)0.5) * (float)2)/2); // best divider for 250000
         #else
                 ucFraction = (unsigned char)((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)250000) - (int)(SPECIAL_LPUART_CLOCK/16/ 250000)) * 32)); // calculate fraction
@@ -3276,10 +3276,10 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         }
         else {
     #endif
-    #if (UARTS_AVAILABLE > 2) || (defined KINETIS_K02 || defined KINETIS_KL43 || defined KINETIS_KL27) || (defined KINETIS_KV && UARTS_AVAILABLE > 1)
+    #if (UARTS_AVAILABLE > 2) || (defined KINETIS_K02 || defined K_STYLE_UART2) || (defined KINETIS_KV && UARTS_AVAILABLE > 1)
             switch (pars->ucSpeed) {
             case SERIAL_BAUD_300:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)BUS_CLOCK/(float)(16 * 300)) + (float)0.5) * (float)2)/2); // best divider for 300
         #else
                 ucFraction = (unsigned char)((float)((((float)BUS_CLOCK/(float)16/(float)300) - (int)(BUS_CLOCK/16/300)) * 32)); // calculate fraction
@@ -3287,7 +3287,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
                 break;
             case SERIAL_BAUD_600:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)BUS_CLOCK/(float)(16 * 600)) + (float)0.5) * (float)2)/2); // best divider for 600
         #else
                 ucFraction = (unsigned char)((float)((((float)BUS_CLOCK/(float)16/(float)600) - (int)(BUS_CLOCK/16/600)) * 32)); // calculate fraction
@@ -3295,7 +3295,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
                 break;
             case SERIAL_BAUD_1200:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)BUS_CLOCK/(float)(16 * 1200)) + (float)0.5) * (float)2)/2); // best divider for 1200
         #else
                 ucFraction = (unsigned char)((float)((((float)BUS_CLOCK/(float)16/(float)1200) - (int)(BUS_CLOCK/16/1200)) * 32)); // calculate fraction
@@ -3303,7 +3303,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
                 break;
             case SERIAL_BAUD_2400:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)BUS_CLOCK/(float)(16 * 2400)) + (float)0.5) * (float)2)/2); // best divider for 2400
         #else
                 ucFraction = (unsigned char)((float)((((float)BUS_CLOCK/(float)16/(float)2400) - (int)(BUS_CLOCK/16/2400)) * 32)); // calculate fractio
@@ -3311,7 +3311,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
                 break;
             case SERIAL_BAUD_4800:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)BUS_CLOCK/(float)(16 * 4800)) + (float)0.5) * (float)2)/2); // best divider for 4800
         #else
                 ucFraction = (unsigned char)((float)((((float)BUS_CLOCK/(float)16/(float)4800) - (int)(BUS_CLOCK/16/4800)) * 32)); // calculate fraction
@@ -3319,7 +3319,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
                 break;
             case SERIAL_BAUD_9600:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)BUS_CLOCK/(float)(16 * 9600)) + (float)0.5) * (float)2)/2); // best divider for 9600
         #else
                 ucFraction = (unsigned char)((float)((((float)BUS_CLOCK/(float)16/(float)9600) - (int)(BUS_CLOCK/16/9600)) * 32)); // calculate fraction
@@ -3327,7 +3327,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
                 break;
             case SERIAL_BAUD_14400:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)BUS_CLOCK/(float)(16 * 14400)) + (float)0.5) * (float)2)/2); // best divider for 14400
         #else
                 ucFraction = (unsigned char)((float)((((float)BUS_CLOCK/(float)16/(float)14400) - (int)(BUS_CLOCK/16/14400)) * 32)); // calculate fraction
@@ -3336,7 +3336,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
                 break;
             default:                                                     // if not valid value set this speed
             case SERIAL_BAUD_19200:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)BUS_CLOCK/(float)(16 * 19200)) + (float)0.5) * (float)2)/2); // best divider for 19200
         #else
                 ucFraction = (unsigned char)((float)((((float)BUS_CLOCK/(float)16/(float)19200) - (int)(BUS_CLOCK/16/19200)) * 32)); // calculate fraction
@@ -3345,7 +3345,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
                 break;
         #if defined SUPPORT_MIDI_BAUD_RATE
             case SERIAL_BAUD_31250:                                      // {207} set 31250
-            #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+            #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)BUS_CLOCK/(float)(16 * 31250)) + (float)0.5) * (float)2)/2); // best divider for 31250
             #else
                 ucFraction = (unsigned char)((float)((((float)BUS_CLOCK/(float)16/(float)31250) - (int)(BUS_CLOCK/16/ 31250)) * 32)); // calculate fraction
@@ -3354,7 +3354,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
                 break;
         #endif
             case SERIAL_BAUD_38400:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)BUS_CLOCK/(float)(16 * 38400)) + (float)0.5) * (float)2)/2); // best divider for 38400
         #else
                 ucFraction = (unsigned char)((float)((((float)BUS_CLOCK/(float)16/(float)38400) - (int)(BUS_CLOCK/16/38400)) * 32)); // calculate fraction
@@ -3362,7 +3362,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
                 break;
             case SERIAL_BAUD_57600:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)BUS_CLOCK/(float)(16 * 57600)) + (float)0.5) * (float)2)/2); // best divider for 57600
         #else
                 ucFraction = (unsigned char)((float)((((float)BUS_CLOCK/(float)16/(float)57600) - (int)(BUS_CLOCK/16/57600)) * 32)); // calculate fraction
@@ -3370,7 +3370,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
                 break;
             case SERIAL_BAUD_115200:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)BUS_CLOCK/(float)(16 * 115200)) + (float)0.5) * (float)2)/2); // best divider for 115200
         #else
                 ucFraction = (unsigned char)((float)((((float)BUS_CLOCK/(float)16/(float)115200) - (int)(BUS_CLOCK/16/115200)) * 32)); // calculate fraction
@@ -3378,7 +3378,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
                 break;
             case SERIAL_BAUD_230400:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)BUS_CLOCK/(float)(16 * 230400)) + (float)0.5) * (float)2)/2); // best divider for 230400
         #else
                 ucFraction = (unsigned char)((float)((((float)BUS_CLOCK/(float)16/(float)230400) - (int)(BUS_CLOCK/16/230400)) * 32)); // calculate fraction
@@ -3386,7 +3386,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
                 break;
             case SERIAL_BAUD_250K:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)BUS_CLOCK/(float)(16 * 250000)) + (float)0.5) * (float)2)/2); // best divider for 250000
         #else
                 ucFraction = (unsigned char)((float)((((float)BUS_CLOCK/(float)16/(float)250000) - (int)(BUS_CLOCK/16/250000)) * 32)); // calculate fraction
@@ -3419,7 +3419,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #if UARTS_AVAILABLE > 0
     }
     else {
-            #if (!defined KINETIS_KL && !defined KINETIS_KE) || defined KINETIS_KL43 || defined KINETIS_KL27
+            #if (!defined KINETIS_KL && !defined KINETIS_KE) || defined K_STYLE_UART2
         uart_reg->UART_C4  = ucFraction;
             #endif
         fnConfigUART(Channel, pars, uart_reg, usDivider);                // configure the UART
@@ -3433,7 +3433,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
     #endif
 
     #if defined _WINDOWS
-        #if (!defined KINETIS_KL && !defined KINETIS_KE && !defined KINETIS_K80) || defined KINETIS_KL43 || defined KINETIS_KL27
+        #if (!defined KINETIS_KL && !defined KINETIS_KE && !defined KINETIS_K80) || defined K_STYLE_UART2
     _fnConfigSimSCI(Channel, pars, usDivider, ucFraction, BUS_CLOCK, SPECIAL_UART_CLOCK); // open a serial port on PC if desired
         #else
     _fnConfigSimSCI(Channel, pars, usDivider, 0, BUS_CLOCK, SPECIAL_UART_CLOCK); // open a serial port on PC if desired
