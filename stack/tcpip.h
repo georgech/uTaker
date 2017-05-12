@@ -124,6 +124,7 @@
     11.02 2016 Parameters for fnStartHTTP() modified                     {101}
     05.11.2016 Add pseudo flag TCP_FLAG_FIN_RECEIVED                     {102}
     16.02.2017 Add RFC 2217 (Telnet com port control option) mode        {103}
+    10.05.2017 Add optional Ethernet frame ucErrorFlags field            {104}
 
 */
 
@@ -231,7 +232,14 @@ typedef struct _PACK stETHERNET_FRAME                                    // {1}
 #if defined PHY_TAIL_TAGGING                                             // {76}
     unsigned char           ucRxPort;                                    // the source port of the receive frame
 #endif
+#if defined ETH_ERROR_FLAGS
+    unsigned char           ucErrorFlags;                                // {104}
+#endif
 } ETHERNET_FRAME;
+
+#define ETH_ERROR_INVALID_IPv4                0x01                       // not IPv4, or corrupted IPv4 content
+#define ETH_ERROR_INVALID_IPv4_CHECKSUM       0x02                       // IPv4 type but with bad IP checksum
+#define ETH_ERROR_INVALID_ARP_RARP            0x04                       // not ARP/RARP
 
 #define INTERFACE_NO_RX_CS_OFFLOADING         0x01                       // force receive IP checksum calculation
 #define INTERFACE_NO_TX_CS_OFFLOADING         0x02                       // force transmit IP checksum calculation in all cases

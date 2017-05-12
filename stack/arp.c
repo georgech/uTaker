@@ -37,7 +37,8 @@
     30.12.2013 Set single interface flag on ARP resolution               {21}
     30.03.2014 Ensure ARP resolution is reported to owner when receiving an ARP request from the destination whilst resolving {22}
     13.04.2014 Add fnAssignNetwork() call to associate received frames to a network {23}
-    05.06.2015 Modify the default behavior of re-resolves of the gatway address in multiple-network environments {24}
+    05.06.2015 Modify the default behavior of re-resolves of the gateway address in multiple-network environments {24}
+    12.05.2017 Add optional Ethernet error flags support                 {25}
 
 */  
       
@@ -802,17 +803,26 @@ extern int fnProcessARP(ETHERNET_FRAME *frame)
     if ((frame->ptEth->ethernet_frame_type[0] != (unsigned char)(PROTOCOL_ARP >> 8)) && (frame->ptEth->ethernet_frame_type[1] != (unsigned char)(PROTOCOL_ARP))) { // Note caller checks whether second byte in type is correct (efficiency reasons)
         iArpType = 0;                                                    // not ARP
         if ((frame->ptEth->ethernet_frame_type[0] != (unsigned char)(PROTOCOL_RARP >> 8)) && (frame->ptEth->ethernet_frame_type[1] != (unsigned char)(PROTOCOL_RARP))) { // Note caller checks whether second byte in type is correct (efficiency reasons)
+        #if defined ETH_ERROR_FLAGS                                      // {25}
+        frame->ucErrorFlags = ETH_ERROR_INVALID_ARP_RARP;
+        #endif
             return 0;                                                    // and not RARP
         }
     }
     #else
     if (frame->ptEth->ethernet_frame_type[0] != (unsigned char)(PROTOCOL_ARP >> 8)) { // note caller checks whether second byte in type is correct (efficiency reasons)
+        #if defined ETH_ERROR_FLAGS                                      // {25}
+        frame->ucErrorFlags = ETH_ERROR_INVALID_ARP_RARP;
+        #endif
         return 0;                                                        // not ARP
     }
     #endif
    
-    if (frame->frame_size < ((2 * MAC_LENGTH) + (2 * IPV4_LENGTH) + 2 + 6)) { // check that the frame is not too small to be valid 
-        return (0);
+    if (frame->frame_size < ((2 * MAC_LENGTH) + (2 * IPV4_LENGTH) + 2 + 6)) { // check that the frame is not too small to be valid
+        #if defined ETH_ERROR_FLAGS                                      // {25}
+        frame->ucErrorFlags = ETH_ERROR_INVALID_ARP_RARP;
+        #endif
+        return 0;
     }
     
     ptrData = frame->ptEth->ucData;

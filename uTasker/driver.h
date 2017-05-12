@@ -626,7 +626,7 @@ typedef struct stETHtable {
     unsigned short usMode;                                               // mode of operation
     unsigned short usSizeRx;                                             // size to set for Rx buffer
     unsigned short usSizeTx;                                             // size to set for Tx buffer
-    UTASK_TASK     Task_to_wake;                                         // 0 = don't wake any else first letter
+    UTASK_TASK     Task_to_wake;                                         // 0 = don't wake any, else first letter
 #if !defined USE_IPV6
     unsigned char  ucMAC[6];                                             // MAC address of device
 #endif
@@ -636,14 +636,14 @@ typedef struct stETHtable {
 
 typedef struct stETHERNET_FUNCTIONS {
     int (*fnConfigEthernet)(ETHTABLE *);                                 // configuration function for the Ethernet interface
-    int (*fnGetQuantityRxBuf)(void);
-    unsigned char *(*fnGetTxBufferAdd)(int);
-    int (*fnWaitTxFree)(void);
-    void (*fnPutInBuffer)(unsigned char *, unsigned char *, QUEUE_TRANSFER);
-    QUEUE_TRANSFER (*fnStartEthTx)(QUEUE_TRANSFER, unsigned char *);
-    void (*fnFreeEthernetBuffer)(int);
+    int (*fnGetQuantityRxBuf)(void);                                     // call-back used to get the number of available receive buffers
+    unsigned char *(*fnGetTxBufferAdd)(int);                             // call-back used to get a memory-mapped buffer address
+    int (*fnWaitTxFree)(void);                                           // call-back used to allow waiting on transmit buffer availability
+    void (*fnPutInBuffer)(unsigned char *, unsigned char *, QUEUE_TRANSFER); // call-back used to prepare transmit data to the output buffer
+    QUEUE_TRANSFER (*fnStartEthTx)(QUEUE_TRANSFER, unsigned char *);     // call-back used to release a prepared transmit buffer
+    void (*fnFreeEthernetBuffer)(int);                                   // call-back used to free a used reception buffer
 #if defined USE_IGMP
-    void (*fnModifyMulticastFilter)(QUEUE_TRANSFER, unsigned char *);
+    void (*fnModifyMulticastFilter)(QUEUE_TRANSFER, unsigned char *);    // call-back used to setup the multicast filter
 #endif
 } ETHERNET_FUNCTIONS;
 

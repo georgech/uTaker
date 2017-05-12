@@ -34,6 +34,7 @@
     16.04.2014 Extend IGMP counters and IP statistics to multiple networks {18}
     05.12.2015 Add ETHERNET_FILTERED_BRIDGING support                    {19}
     15.03.2016 Allow IPv4 broadcast/multicast reception to be handled on multiple networks {20}
+    12.05.2017 Add optional Ethernet error flags support                 {21}
 
 */
 
@@ -278,6 +279,9 @@ extern int fnHandleEthernetFrame(ETHERNET_FRAME *ptr_rx_frame, QUEUE_HANDLE inte
 {
 #if defined ETHERNET_BRIDGING                                            // {12}
     int iBridgeFrame;                                                    // flag for bridging option
+#endif
+#if defined ETH_ERROR_FLAGS                                              // {21}
+    ptr_rx_frame->ucErrorFlags = 0;                                      // initially no errors to report for this receptionETH_ERROR_FLAGS
 #endif
 #if defined IP_RX_CHECKSUM_OFFLOAD                                       // {7} the reception has flagged a corrupted frame
     if (ptr_rx_frame->frame_size == 0) {                                 // reception is invalid IPv4/v6 frame so discard

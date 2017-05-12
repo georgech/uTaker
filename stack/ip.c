@@ -38,6 +38,7 @@
     04.09.2014 Allow user to define which networks respond to broadcasts {23}
     02.01.2016 Optionally support IPv4 transmission fragmentation        {24}
     02.01.2016 Optionally support IPv4 reception de-fragmentation        {25}
+    12.05.2017 Add optional Ethernet error flags support                 {26}
 
 */        
 
@@ -515,11 +516,17 @@ extern int fnHandleIPv4(ETHERNET_FRAME *frame)                           // {9}
     if ((frame->ptEth->ethernet_frame_type[1] != (unsigned char)PROTOCOL_IPv4) // not IP frame
        || (frame->frame_size < ETH_HEADER_LEN) || ((frame->frame_size - ETH_HEADER_LEN) < IP_MIN_HLEN) // invalid length
        ) {
+    #if defined ETH_ERROR_FLAGS                                          // {26}
+        frame->ucErrorFlags = ETH_ERROR_INVALID_IPv4;
+    #endif
         return 0;                                 
     }
     received_ip_packet = (IP_PACKET *)frame->ptEth->ucData;              // use a structure for interpretation of frame
 
     if ((received_ip_packet->version_header_length & IP_VERSION_MASK) != (IPV4_LENGTH << 4)) { // check IP version
+    #if defined ETH_ERROR_FLAGS                                          // {26}
+        frame->ucErrorFlags = ETH_ERROR_INVALID_IPv4;
+    #endif
         return 0;                                                        // not IPv4
     }
         
@@ -528,6 +535,9 @@ extern int fnHandleIPv4(ETHERNET_FRAME *frame)                           // {9}
     tLen += received_ip_packet->total_length[1];
     #if !defined IP_RX_CHECKSUM_OFFLOAD || defined IP_INTERFACE_WITHOUT_CS_OFFLOADING || defined _WINDOWS // {5}    
     if (tLen > (frame->frame_size - ETH_HEADER_LEN)) {
+    #if defined ETH_ERROR_FLAGS                                          // {26}
+        frame->ucErrorFlags = ETH_ERROR_INVALID_IPv4;
+    #endif
         return 0;                                                        // length error
     }
     #endif
@@ -585,6 +595,9 @@ extern int fnHandleIPv4(ETHERNET_FRAME *frame)                           // {9}
     #if !defined IP_RX_CHECKSUM_OFFLOAD || defined IP_INTERFACE_WITHOUT_CS_OFFLOADING || defined _WINDOWS // {5}    
     if (IP_GOOD_CS != fnRxCalcIP_CS(0, frame, (unsigned short)(IP_MIN_HLEN + ucOptionsLength))) {
         #if !defined _WINDOWS                                            // Win7 offloading is difficult to disable so ignore
+            #if defined ETH_ERROR_FLAGS                                  // {26}
+        frame->ucErrorFlags = ETH_ERROR_INVALID_IPv4_CHECKSUM;
+            #endif
         return 0;                                                        // check sum error - quit    
         #endif
     }

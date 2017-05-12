@@ -86,14 +86,14 @@
 
     static const ETHERNET_FUNCTIONS PPP_EthernetFunctions = {
         fnPPP_ConfigEthernet,                                            // configuration function for this interface
-        fnPPP_GetQuantityRxBuf,
-        fnPPP_GetTxBufferAdd,
-        fnPPP_WaitTxFree,
-        fnPPP_PutInBuffer,
-        fnPPP_StartEthTx,
-        fnPPP_FreeEthernetBuffer,
+        fnPPP_GetQuantityRxBuf,                                          // call-back used to get the number of available receive buffers
+        fnPPP_GetTxBufferAdd,                                            // call-back used to get a memory-mapped buffer address
+        fnPPP_WaitTxFree,                                                // call-back used to allow waiting on transmit buffer availability
+        fnPPP_PutInBuffer,                                               // call-back used to prepare transmit data to the output buffer
+        fnPPP_StartEthTx,                                                // call-back used to release a prepared transmit buffer
+        fnPPP_FreeEthernetBuffer,                                        // call-back used to free a used reception buffer
     #if defined USE_IGMP
-        fnPPP_ModifyMulticastFilter,
+        fnPPP_ModifyMulticastFilter,                                     // call-back used to setup the multicast filter
     #endif
         };
 #else
@@ -112,8 +112,8 @@ static int iPPP_State = PPP_STATE_INIT;
 static QUEUE_HANDLE PPP_PortID;
 
 #if !defined USE_SLIP
-    static unsigned long ulACCM_bits = 0xffffffff;                       // default: escape all characters between 0x00 and 0x1f
-    static unsigned char ucMagicNumer[4];
+static unsigned long ulACCM_bits = 0xffffffff;                       // default: escape all characters between 0x00 and 0x1f
+static unsigned char ucMagicNumer[4];
 #endif
 
 
@@ -124,58 +124,58 @@ extern void fnPPP(TTASKTABLE *ptrTaskTable)
     static QUEUE_HANDLE    PPP_Handle = 0;
     static unsigned char   ucInputMessage[PPP_RX_BUFFER_SPACE];          // reserve space for receiving messages
     static QUEUE_TRANSFER  ppp_frame_length = 0;                         // collected frame size
-    #if !defined USE_SLIP
+#if !defined USE_SLIP
     static int             iRxEscape = 0;
     static unsigned short  crc_value;
-    #endif
+#endif
 
     if (iPPP_State == PPP_STATE_INIT) {
-        ETHTABLE ethernet;                                               // configuration structure to be passed to the Ethernet configuration
-        ethernet.ptrEthernetFunctions = (void *)&PPP_EthernetFunctions;  // enter the Ethernet function list for the defult internal controller
-        ethernet.Task_to_wake  = 0;
-    #if defined ETH_INTERFACE
-        ethernet.Channel       = 1;                                      // the Ethernet controller has channel 0 so PPP uses Ethernet channel 1
-    #else
-        ethernet.Channel       = 0;                                      // default channel number
-    #endif
-        ethernet.usMode        = network[PPP_NETWORK].usNetworkOptions;  // options to be used by the interface
-    #if defined USE_IPV6                                                 // generate an IPv6 link-local address from the MAC address
-        ucLinkLocalIPv6Address[PPP_NETWORK][0]  = 0xfe;                  // link-local unicast
-        ucLinkLocalIPv6Address[PPP_NETWORK][1]  = 0x80;                  // link-local unicast
-                                                                            // intermediate values left at 0x00
-        ucLinkLocalIPv6Address[PPP_NETWORK][8]  = (network[PPP_NETWORK].ucOurMAC[0] | 0x2); // invert the universal/local bit (since it is always '0' it means setting to '1')
-        ucLinkLocalIPv6Address[PPP_NETWORK][9]  = network[PPP_NETWORK].ucOurMAC[1];
+        ETHTABLE ppp_ethernet;                                           // configuration structure to be passed to the Ethernet configuration
+        ppp_ethernet.ptrEthernetFunctions = (void *)&PPP_EthernetFunctions; // enter the Ethernet function list for the defult internal controller
+        ppp_ethernet.Task_to_wake = 0;
+#if defined ETH_INTERFACE
+        ppp_ethernet.Channel = 1;                                        // the Ethernet controller has channel 0 so PPP uses Ethernet channel 1
+#else
+        ppp_ethernet.Channel = 0;                                        // default channel number
+#endif
+        ppp_ethernet.usMode = network[PPP_NETWORK].usNetworkOptions;     // options to be used by the interface
+#if defined USE_IPV6                                                 // generate an IPv6 link-local address from the MAC address
+        ucLinkLocalIPv6Address[PPP_NETWORK][0] = 0xfe;                  // link-local unicast
+        ucLinkLocalIPv6Address[PPP_NETWORK][1] = 0x80;                  // link-local unicast
+                                                                         // intermediate values left at 0x00
+        ucLinkLocalIPv6Address[PPP_NETWORK][8] = (network[PPP_NETWORK].ucOurMAC[0] | 0x2); // invert the universal/local bit (since it is always '0' it means setting to '1')
+        ucLinkLocalIPv6Address[PPP_NETWORK][9] = network[PPP_NETWORK].ucOurMAC[1];
         ucLinkLocalIPv6Address[PPP_NETWORK][10] = network[PPP_NETWORK].ucOurMAC[2];
         ucLinkLocalIPv6Address[PPP_NETWORK][11] = 0xff;                  // insert standard 16 bit value to extend MAC-48 to EUI-64
         ucLinkLocalIPv6Address[PPP_NETWORK][12] = 0xfe;
         ucLinkLocalIPv6Address[PPP_NETWORK][13] = network[PPP_NETWORK].ucOurMAC[3];
         ucLinkLocalIPv6Address[v][14] = network[PPP_NETWORK].ucOurMAC[4];
         ucLinkLocalIPv6Address[v][15] = network[v].ucOurMAC[5];
-        ethernet.usMode |= CON_MULTICAST;                                // enable multicast when using IPV6
-    #else
-        uMemcpy(ethernet.ucMAC, &network[PPP_NETWORK].ucOurMAC[0], MAC_LENGTH); // the MAC address to be used by the interface
-    #endif
-    #if defined ETHERNET_BRIDGING
-        ethernet.usMode        |= (PROMISCUOUS);                         // Ethernet bridging requires promiscuous operation
-    #endif
-        ethernet.usSizeTx      = (sizeof(ETHERNET_FRAME_CONTENT));       // transmit buffer size requested by user (Ethernet MTU)
-        ethernet.ucEthTypes    = (ARP | IPV4);                           // enable reception of these protocols (used only by NE64 controller)
-        ethernet.usExtEthTypes = 0;                                      // specify extended frame types (only used by NE64 controller)
-        PPP_Handle = fnOpen(TYPE_ETHERNET, FOR_I_O, &ethernet);
-    #if IP_INTERFACE_COUNT > 1
+        ppp_ethernet.usMode |= CON_MULTICAST;                            // enable multicast when using IPV6
+#else
+        uMemcpy(ppp_ethernet.ucMAC, &network[PPP_NETWORK].ucOurMAC[0], MAC_LENGTH); // the MAC address to be used by the interface
+#endif
+#if defined ETHERNET_BRIDGING
+        ppp_ethernet.usMode |= (PROMISCUOUS);                            // Ethernet bridging requires promiscuous operation
+#endif
+        ppp_ethernet.usSizeTx = SLIP_MAX_DATAGRAM;                       // transmit buffer size
+        ppp_ethernet.ucEthTypes = (ARP | IPV4);                         // enable reception of these protocols (used only by NE64 controller)
+        ppp_ethernet.usExtEthTypes = 0;                                  // specify extended frame types (only used by NE64 controller)
+        PPP_Handle = fnOpen(TYPE_ETHERNET, FOR_I_O, &ppp_ethernet);
+#if IP_INTERFACE_COUNT > 1
         fnEnterInterfaceHandle(RNDIS_IP_INTERFACE, RNDIS_Handle, ((INTERFACE_NO_TX_CS_OFFLOADING | INTERFACE_NO_RX_CS_OFFLOADING | INTERFACE_NO_TX_PAYLOAD_CS_OFFLOADING))); // enter the queue as RNDIS interface handler
-    #else
+#else
         Ethernet_handle[0] = PPP_Handle;
-    #endif
-    #if defined USE_SLIP_DIAL_OUT
+#endif
+#if defined USE_SLIP_DIAL_OUT
         fnWrite(PPP_PortID, (unsigned char *)"*99***1#", 8);             // establish a connection to the modem
-    #endif
+#endif
         iPPP_State = PPP_STATE_IDLE;
     }
 
 #if defined USE_SLIP
     while (fnRead(PPP_PortID, &ucInputMessage[ppp_frame_length], 1) != 0) { // while serial input waiting
-        if (iPPP_State == PPP_STATE_IN_FRAME) { 
+        if (iPPP_State == PPP_STATE_IN_FRAME) {
             if (SLIP_ESCAPE_END_CHARACTER == ucInputMessage[ppp_frame_length]) {
                 ucInputMessage[ppp_frame_length] = SLIP_END_CHARACTER;
             }
@@ -192,19 +192,25 @@ extern void fnPPP(TTASKTABLE *ptrTaskTable)
             case SLIP_END_CHARACTER:                                     // end of a datagram (pass datagram to the stack)
                 if (ppp_frame_length != 0) {
                     ETHERNET_FRAME rx_frame;
-                    rx_frame.frame_size = (unsigned short)ppp_frame_length++;;
+                    rx_frame.frame_size = (unsigned short)ppp_frame_length;
                     rx_frame.ptEth = (ETHERNET_FRAME_CONTENT *)ucInputMessage;
                     rx_frame.usDataLength = 0;
                     rx_frame.usIPLength = 0;
-    #if (IP_INTERFACE_COUNT > 1)
+#if (IP_INTERFACE_COUNT > 1)
                     rx_frame.ucInterface = (RNDIS_INTERFACE >> INTERFACE_SHIFT); // reception is on the RNDIS interface
                     rx_frame.ucInterfaceHandling = (DEFAULT_INTERFACE_CHARACTERISTICS | INTERFACE_NO_MAC_FILTERING); // default interface handling
-    #endif
-    #if defined IPV4_SUPPORT_RX_DEFRAGMENTATION && defined IP_RX_CHECKSUM_OFFLOAD
+#endif
+#if defined IPV4_SUPPORT_RX_DEFRAGMENTATION && defined IP_RX_CHECKSUM_OFFLOAD
                     rx_frame.ucSpecialHandling = (INTERFACE_NO_TX_PAYLOAD_CS_OFFLOADING | INTERFACE_NO_TX_CS_OFFLOADING | INTERFACE_NO_RX_CS_OFFLOADING | INTERFACE_NO_MAC_FILTERING);
-    #endif
+#endif
                     fnHandleEthernetFrame(&rx_frame, PPP_Handle);        // handle the reception
                     ppp_frame_length = 0;
+#if defined ETH_ERROR_FLAGS
+                    if ((rx_frame.ucErrorFlags & (ETH_ERROR_INVALID_IPv4 | ETH_ERROR_INVALID_IPv4_CHECKSUM | ETH_ERROR_INVALID_ARP_RARP)) != 0) {
+                        // Check for other coding?
+                        //
+                    }
+#endif
                 }
                 continue;
             case SLIP_ESCAPE_CHARACTER:                                  // escape sequence in progress
