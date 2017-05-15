@@ -113,6 +113,9 @@
 
 #include <string.h>
 
+#undef LWIP_DEBUGF()
+#define LWIP_DEBUGF(debug, message)
+
 /*************************/
 /*** LOCAL DEFINITIONS ***/
 /*************************/
@@ -2089,18 +2092,99 @@ u32_t sio_write(sio_fd_t fd, u8_t *data, u32_t len)
 }
 struct pbuf *pbuf_alloc(pbuf_layer l, u16_t length, pbuf_type type)
 {
-    static unsigned char ucBuffer[2048];
-    static struct pbuf organiser;
-    organiser.payload = ucBuffer;
-    return &organiser;
+    static int thisBuffer = 0;
+    static unsigned char ucBuffer[10][2048];
+    static struct pbuf organiser[10];
+    struct pbuf *ptrOrganiser = &organiser[thisBuffer];
+    organiser[thisBuffer].payload = ucBuffer[thisBuffer];
+    organiser[thisBuffer].type = type;
+    organiser[thisBuffer].len = 0;
+    if (++thisBuffer >= 10) {
+        thisBuffer = 0;
+    }
+    return ptrOrganiser;
 }
 void pbuf_realloc(struct pbuf *p, u16_t size)
 {
     _EXCEPTION("TO DO");
 }
-u8_t pbuf_header(struct pbuf *p, s16_t header_size)
+u8_t pbuf_header(struct pbuf *p, s16_t header_size_increment)
 {
-    _EXCEPTION("TO DO");
+#define SIZEOF_STRUCT_PBUF        LWIP_MEM_ALIGN_SIZE(sizeof(struct pbuf))
+    u16_t type;
+    void *payload;
+    u16_t increment_magnitude;
+
+    LWIP_ASSERT("p != NULL", p != NULL);
+    if ((header_size_increment == 0) || (p == NULL)) {
+        return 0;
+    }
+
+    if (header_size_increment < 0) {
+        increment_magnitude = -header_size_increment;
+        /* Check that we aren't going to move off the end of the pbuf */
+        LWIP_ERROR("increment_magnitude <= p->len", (increment_magnitude <= p->len), return 1;);
+    }
+    else {
+        increment_magnitude = header_size_increment;
+#if 0
+        /* Can't assert these as some callers speculatively call
+        pbuf_header() to see if it's OK.  Will return 1 below instead. */
+        /* Check that we've got the correct type of pbuf to work with */
+        LWIP_ASSERT("p->type == PBUF_RAM || p->type == PBUF_POOL",
+            p->type == PBUF_RAM || p->type == PBUF_POOL);
+        /* Check that we aren't going to move off the beginning of the pbuf */
+        LWIP_ASSERT("p->payload - increment_magnitude >= p + SIZEOF_STRUCT_PBUF",
+            (u8_t *)p->payload - increment_magnitude >= (u8_t *)p + SIZEOF_STRUCT_PBUF);
+#endif
+    }
+
+    type = p->type;
+    /* remember current payload pointer */
+    payload = p->payload;
+
+    /* pbuf types containing payloads? */
+    if (type == PBUF_RAM || type == PBUF_POOL) {
+        /* set new payload pointer */
+        p->payload = (u8_t *)p->payload - header_size_increment;
+        /* boundary check fails? */
+#if 0
+        if ((u8_t *)p->payload < (u8_t *)p + SIZEOF_STRUCT_PBUF) {
+            LWIP_DEBUGF(PBUF_DEBUG | LWIP_DBG_LEVEL_SERIOUS,
+                ("pbuf_header: failed as %p < %p (not enough space for new header size)\n",
+                (void *)p->payload, (void *)(p + 1)));
+            /* restore old payload pointer */
+            p->payload = payload;
+            /* bail out unsuccesfully */
+            return 1;
+        }
+#endif
+        /* pbuf types refering to external payloads? */
+    }
+    else if (type == PBUF_REF || type == PBUF_ROM) {
+        /* hide a header in the payload? */
+        if ((header_size_increment < 0) && (increment_magnitude <= p->len)) {
+            /* increase payload pointer */
+            p->payload = (u8_t *)p->payload - header_size_increment;
+        }
+        else {
+            /* cannot expand payload to front (yet!)
+            * bail out unsuccesfully */
+            return 1;
+        }
+    }
+    else {
+        /* Unknown type */
+        LWIP_ASSERT("bad pbuf type", 0);
+        return 1;
+    }
+    /* modify pbuf length fields */
+    p->len += header_size_increment;
+    p->tot_len += header_size_increment;
+
+    LWIP_DEBUGF(PBUF_DEBUG | LWIP_DBG_TRACE, ("pbuf_header: old %p new %p (%"S16_F")\n",
+        (void *)payload, (void *)p->payload, header_size_increment));
+
     return 0;
 }
 u8_t pbuf_free(struct pbuf *p)
