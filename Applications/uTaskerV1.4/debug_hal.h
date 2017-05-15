@@ -49,7 +49,7 @@
 
 
 #if defined USE_MAINTENANCE
-
+#if !defined REMOVE_PORT_INITIALISATIONS
 // Check the present state of a particular port
 //
 extern int fnPortState(CHAR cPortBit)
@@ -237,7 +237,6 @@ extern int fnPortState(CHAR cPortBit)
     }
 }
 
-
 // Check whether the port is configured as an input or as output
 //
 extern int fnPortInputConfig(CHAR cPortBit)
@@ -398,7 +397,6 @@ extern int fnPortInputConfig(CHAR cPortBit)
         return 0;
     }
 }
-
 
 // Configure a processor port pin as input/output or analogue
 //
@@ -857,7 +855,6 @@ extern int fnConfigPort(CHAR cPortBit, CHAR cType)
     return 0;
 }
 
-
 // Set a single output to logical '1' or '0' state
 //
 static void fnSetPortBit(unsigned short usBit, int iSetClr)
@@ -970,7 +967,6 @@ static void fnSetPortBit(unsigned short usBit, int iSetClr)
 #endif
 }
 
-
 // Request present logic level of an output
 //
 extern int fnUserPortState(CHAR cPortBit)
@@ -1076,7 +1072,6 @@ static int fnConfigOutputPort(CHAR cPortBit)
 #endif
     return 0;
 }
-
 
 // Toggle the state of an output port
 //
@@ -1648,6 +1643,7 @@ extern void fnSetPortOut(unsigned char ucPortOutputs, int iInitialisation)
     }
 #endif
 }
+#endif                                                                   // end !defined REMOVE_PORT_INITIALISATIONS
 #endif                                                                   // end USE_MAINTENANCE
 
 #if defined EZPORT_CLONER && defined USE_MAINTENANCE && defined KEEP_DEBUG // {2}

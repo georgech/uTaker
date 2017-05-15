@@ -617,8 +617,10 @@ typedef struct stCLONER_SKIP_REGION
     #if defined USE_TELNET_CLIENT
         static int fnTELNETClientListener(USOCKET Socket, unsigned char ucEvent, unsigned char *ucIp_Data, unsigned short usPortLen);
     #endif
+    #if !defined REMOVE_PORT_INITIALISATIONS
     static void fnSetPortBit(unsigned short usBit, int iSetClr);
     static int  fnConfigOutputPort(CHAR cPortBit);
+    #endif
 #endif
 
 /* =================================================================== */
@@ -756,12 +758,12 @@ static const DEBUG_COMMAND tIOCommand[] = {
     {"se",                "Storage Erase [address] [len-hex]",     DO_HARDWARE,      DO_STORAGE_ERASE }, // {74}
     #endif
 #endif
-//  {"set_user",          "Set output mode [0..3] [<d>|<u>]",      DO_HARDWARE,      DO_SET_USER_OUTPUT },
-//  {"get_user",          "Get output mode [0..3]",                DO_HARDWARE,      DO_GET_USER_OUTPUT },
+#if !defined REMOVE_PORT_INITIALISATIONS
     {"set_ddr",           "Set port type [1..4] [<i>|<o>",         DO_HARDWARE,      DO_DDR },
     {"get_ddr",           "Get data direction [1..4]",             DO_HARDWARE,      DO_GET_DDR },
     {"read_port",         "Read port input [1..4]",                DO_HARDWARE,      DO_INPUT },
     {"write_port",        "Set port output [1..4] [0/1]",          DO_HARDWARE,      DO_OUTPUT },
+#endif
 #if defined GLCD_BACKLIGHT_CONTROL                                       // {75}
     {"sbl",               "Show backlight",                        DO_HARDWARE,      DO_GET_BACKLIGHT },
     {"blight",            "Set backlight [0..100]%",               DO_HARDWARE,      DO_SET_BACKLIGHT },
@@ -785,7 +787,9 @@ static const DEBUG_COMMAND tIOCommand[] = {
     {"ez_clone",          "Clone software",                        DO_HARDWARE,      DO_EZCLONE },
     {"ez_s_clone",        "Securely Clone software",               DO_HARDWARE,      DO_EZSCLONE },
 #endif
+#if defined PWM_MEASUREMENT_DEVELOPMENT
     { "test",             "Temp test",                             DO_HARDWARE,      75 },
+#endif
 #if defined USE_PARAMETER_BLOCK
     {"save",              "Save port setting as default",          DO_HARDWARE,      DO_SAVE_PORT },
 #endif
@@ -3735,21 +3739,7 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
             fnDebugMsg(cUpTime);
         }
         return;
-
-//    case DO_GET_USER_OUTPUT:                                           // display whether default or user - removed {2}
-//        if ((*ptrInput < '0') || (*ptrInput > '3')) {
-//            fnDebugMsg("Bad port number\r\n");
-//            break;
-//        }
-//        fnDebugMsg("\r\nPort use: ");
-//        if (!fnPortInputConfig(*ptrInput)) {
-//            fnDebugMsg("USER\r\n");
-//        }
-//        else {
-//            fnDebugMsg("DEFAULT\r\n");
-//        }
-//        break;
-
+#if !defined REMOVE_PORT_INITIALISATIONS
       case DO_GET_DDR:                                                   // get present ddr setting {2}
           if ((*ptrInput < '1') || (*ptrInput > '4')) {
               fnDebugMsg("Bad port number\r\n");
@@ -3794,6 +3784,7 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
               fnSetPortOut(ucPresentPort, 0);                            // set new port state
           }
           break;
+#endif
 #if defined TEST_CMSIS_CFFT                                              // {84}
       case DO_FFT:
           fnTestFFT((int)fnDecStrHex(ptrInput));
@@ -3871,17 +3862,12 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
           break;
 #endif
 
-//    case DO_SET_USER_OUTPUT:                                           // set either default or user - removed {2}
-//        if (fnConfigPort(*ptrInput, *(ptrInput+2)) < 0) {
-//            fnDebugMsg("Error in input\r\n");
-//            return;
-//        }
-//        break;
-#if defined USE_PARAMETER_BLOCK
+#if !defined REMOVE_PORT_INITIALISATIONS
+    #if defined USE_PARAMETER_BLOCK
       case DO_SAVE_PORT:
           fnSavePorts();
           break;
-#endif
+    #endif
 
       case DO_INPUT:                                                     // read an input bit {2}
             if ((*ptrInput < '1') || (*ptrInput > '4')) {
@@ -3899,10 +3885,11 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
 
       case DO_DDR:                                                       // set port direction (and use)
           if (fnSetPort(ucType, ptrInput)) {                             // modify the port
-              fnDebugMsg("\r\n??\r\n#");                                 // signal input not recognised and send prompt in command mode
+              fnDebugMsg("\r\n??");                                      // signal input not recognised
               return;
           }
           break;
+#endif
 #if defined MEMORY_DEBUGGER
     case DO_MEM_DISPLAY:
     #if !defined NO_FLASH_SUPPORT
@@ -6501,27 +6488,28 @@ extern void fnResetChanges(void)
     }
     fnGetOurParameters(1);                                               // get original parameters from FLASH, but preserve DHCP defined values
     #if defined SERIAL_INTERFACE && defined DEMO_UART                    // {10}
-    if (iActions & CHANGE_SERIAL_SETTINGS) {
+    if ((iActions & CHANGE_SERIAL_SETTINGS) != 0) {
         fnSetNewSerialMode(MODIFY_CONFIG);                               // return settings to interface
     }
     #endif
-    if (CHANGE_WEB_SERVER & iActions) {
+    if ((CHANGE_WEB_SERVER & iActions) != 0) {
     #if defined USE_HTTP
         fnConfigureAndStartWebServer();
     #endif
     }
-    if (CHANGE_FTP_SERVER & iActions) {
+    if ((CHANGE_FTP_SERVER & iActions) != 0) {
         fnConfigureFtpServer(FTP_TIMEOUT);                               // {3}
     }
     #if defined USE_TELNET
-    if (CHANGE_TELNET_SERVER & iActions) {
+    if ((CHANGE_TELNET_SERVER & iActions) != 0) {
         fnConfigureTelnetServer();
     }
     #endif
 }
 #endif
 
-#if defined USE_PARAMETER_BLOCK
+#if !defined REMOVE_PORT_INITIALISATIONS
+    #if defined USE_PARAMETER_BLOCK
 // Save port setup to flash
 //
 extern void fnSavePorts(void)
@@ -6546,8 +6534,7 @@ extern void fnSavePorts(void)
     temp_pars->temp_parameters.usUserDefinedOutputs = usTempUserDefinedOutputs;
     fnSaveNewPars(SAVE_NEW_PARAMETERS);                                  // save these settings as default
 }
-#endif
-
+    #endif
 
 // Set all port bits to new state
 // The ARM processors tend to use set and clear registers to perform the job
@@ -6562,8 +6549,6 @@ static void fnSetUserPortOut(unsigned short usPortOutputs)
     }
     temp_pars->temp_parameters.usUserDefinedOutputs = usPortOutputs;     // backup the new setting
 }
-
-
 
 // Initialise ports to input/output
 //
@@ -6592,7 +6577,7 @@ extern void fnInitialisePorts(void)
     }
     fnSetUserPortOut(temp_pars->temp_parameters.usUserDefinedOutputs);   // set all user outputs to default states
 }
-
+#endif
 
 #if defined USE_USB_CDC && defined ACTIVE_FILE_SYSTEM                    // {8}
     typedef struct stUPLOAD_HEADER                                       // the start of a uTasker boot binary file

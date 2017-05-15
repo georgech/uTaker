@@ -135,12 +135,14 @@
 #define OWN_TASK                  TASK_APPLICATION
 
 #include "application_lcd.h"                                             // {46} LCD tests
-#include "ADC_Timers.h"                                                  // {46} ADC and timer tests
-#if !defined BLAZE_K22
-    #include "i2c_tests.h"                                               // {46} i2c tests
+#if !defined NO_PERIPHERAL_DEMONSTRATIONS
+    #include "ADC_Timers.h"                                              // {46} ADC and timer tests
+    #if !defined BLAZE_K22
+        #include "i2c_tests.h"                                           // {46} i2c tests
+    #endif
+    #include "Port_Interrupts.h"                                         // {46} port interrupt tests
+    #include "can_tests.h"                                               // {46} CAN tests
 #endif
-#include "Port_Interrupts.h"                                             // {46} port interrupt tests
-#include "can_tests.h"                                                   // {46} CAN tests
 
 /* =================================================================== */
 /*                          local definitions                          */
@@ -632,7 +634,7 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
         fnEnterUserFiles((USER_FILE *)user_files);                       // user_files defined in app_user_files.h
     #endif
 #endif
-#if defined USE_MAINTENANCE && (!(defined KWIKSTIK && defined SUPPORT_SLCD))
+#if defined USE_MAINTENANCE && !defined REMOVE_PORT_INITIALISATIONS && (!(defined KWIKSTIK && defined SUPPORT_SLCD))
         fnInitialisePorts();                                             // set up ports as required by the user
 #endif
         uTaskerStateChange(TASK_DEBUG, UTASKER_ACTIVATE);
@@ -707,9 +709,11 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
 #if defined RTC_TEST                                                     // {3}
         fnTestRTC();
 #endif
-#define _ADC_TIMER_INIT
-    #include "ADC_Timers.h"                                              // ADC and timer initialisation
-#undef  _ADC_TIMER_INIT
+#if !defined NO_PERIPHERAL_DEMONSTRATIONS
+    #define _ADC_TIMER_INIT
+        #include "ADC_Timers.h"                                          // ADC and timer initialisation
+    #undef  _ADC_TIMER_INIT
+#endif
 
 #if defined CAN_INTERFACE && defined TEST_CAN                            // {39}
         fnInitCANInterface();                                            // {57}
@@ -789,9 +793,11 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
     #include "application_lcd.h"                                         // include timer handling from LCD task
     #undef HANDLE_TIMERS
 #endif
-#define _ADC_TIMER_TIMER_EVENTS                                          // {49}
-    #include "ADC_Timers.h"                                              // include timer handling by ADC demo
-#undef _ADC_TIMER_TIMER_EVENTS
+#if !defined NO_PERIPHERAL_DEMONSTRATIONS
+    #define _ADC_TIMER_TIMER_EVENTS                                      // {49}
+        #include "ADC_Timers.h"                                          // include timer handling by ADC demo
+    #undef _ADC_TIMER_TIMER_EVENTS
+#endif
             default:
 #if defined TEST_GLOBAL_TIMERS                                           // assume unhandled timer events belong to global timers
                 fnHandleGlobalTimers(ucInputMessage[MSG_TIMER_EVENT]);
@@ -828,9 +834,11 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
                 fnHandle_nRF24L01_event();
                 break;
 #endif
-#define _CAN_INT_EVENTS
-    #include "can_tests.h"                                               // CAN interrupt event handling - specific
-#undef _CAN_INT_EVENTS
+#if !defined NO_PERIPHERAL_DEMONSTRATIONS
+    #define _CAN_INT_EVENTS
+        #include "can_tests.h"                                           // CAN interrupt event handling - specific
+    #undef _CAN_INT_EVENTS
+#endif
 
 #if defined USE_ZERO_CONFIG                                              // {59}
             case ZERO_CONFIG_SUCCESSFUL:
@@ -856,9 +864,11 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
     #include "application_lcd.h"                                         // include LCD interrupt handling
     #undef HANDLE_LCD_INTERRUPT_EVENTS
 #endif
-#define _ADC_TIMER_INT_EVENTS_1
-    #include "ADC_Timers.h"                                              // ADC and timer interrupt event handling - specific
-#undef _ADC_TIMER_INT_EVENTS_1
+#if !defined NO_PERIPHERAL_DEMONSTRATIONS
+    #define _ADC_TIMER_INT_EVENTS_1
+        #include "ADC_Timers.h"                                          // ADC and timer interrupt event handling - specific
+    #undef _ADC_TIMER_INT_EVENTS_1
+#endif
             default:
 #if defined SUPPORT_KEY_SCAN
                 if ((KEY_EVENT_COL_1_ROW_1_PRESSED <= ucInputMessage[MSG_INTERRUPT_EVENT]) && (KEY_EVENT_COL_4_ROW_4_RELEASED >= ucInputMessage[MSG_INTERRUPT_EVENT])) {
@@ -869,12 +879,14 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
                     break;
                 }
 #endif
-#define _ADC_TIMER_INT_EVENTS_2
-    #include "ADC_Timers.h"                                              // ADC and timer interrupt event handling - ranges
-#undef _ADC_TIMER_INT_EVENTS_2
-#define _PORT_INTS_EVENTS
-    #include "Port_Interrupts.h"                                         // port interrupt timer interrupt event handling - ranges
-#undef _PORT_INTS_EVENTS
+#if !defined NO_PERIPHERAL_DEMONSTRATIONS
+    #define _ADC_TIMER_INT_EVENTS_2
+        #include "ADC_Timers.h"                                          // ADC and timer interrupt event handling - ranges
+    #undef _ADC_TIMER_INT_EVENTS_2
+    #define _PORT_INTS_EVENTS
+        #include "Port_Interrupts.h"                                     // port interrupt timer interrupt event handling - ranges
+    #undef _PORT_INTS_EVENTS
+#endif
                 break;
             }
             break;
@@ -1010,14 +1022,16 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
     }
 #endif
 
-#define _I2C_READ_CODE
-#if !defined BLAZE_K22
-    #include "i2c_tests.h"                                               // include I2C code to handle reception
+#if !defined NO_PERIPHERAL_DEMONSTRATIONS
+    #define _I2C_READ_CODE
+    #if !defined BLAZE_K22
+        #include "i2c_tests.h"                                           // include I2C code to handle reception
+    #endif
+    #undef _I2C_READ_CODE
+    #define _PORT_NMI_CHECK                                              // {53}
+        #include "Port_Interrupts.h"                                     // port interrupt timer interrupt event handling - ranges
+    #undef _PORT_NMI_CHECK
 #endif
-#undef _I2C_READ_CODE
-#define _PORT_NMI_CHECK                                                  // {53}
-    #include "Port_Interrupts.h"                                         // port interrupt timer interrupt event handling - ranges
-#undef _PORT_NMI_CHECK
 }
 
 #if defined USE_DHCP_CLIENT || defined USE_DHCP_SERVER || defined USE_ZERO_CONFIG
@@ -1743,7 +1757,7 @@ static void fnTransferTFTP()
 }
 #endif
 
-#if !defined BLAZE_K22
+#if !defined BLAZE_K22 && !defined NO_PERIPHERAL_DEMONSTRATIONS
     #define _I2C_RTC_CODE
         #include "i2c_tests.h"                                           // include I2C RTC code to save and retrieve the time and convert format as well as handle a second interrupt
     #undef _I2C_RTC_CODE
@@ -1864,9 +1878,19 @@ static unsigned long *fnRAM_test(int iBlockNumber, int iBlockCount)
 }
 #endif
 
-#define _PORT_INT_CODE
-    #include "Port_Interrupts.h"                                         // port interrupt configuration code and interrupt handling
-#undef  _PORT_INT_CODE
+#if !defined NO_PERIPHERAL_DEMONSTRATIONS
+    #define _PORT_INT_CODE
+        #include "Port_Interrupts.h"                                     // port interrupt configuration code and interrupt handling
+    #undef  _PORT_INT_CODE
+
+    #define _ADC_TIMER_ROUTINES                                          // include ADC configuration and interrupt handlers
+        #include "ADC_Timers.h"                                          // as well as PIT configuration and handling
+    #undef  _ADC_TIMER_ROUTINES                                          // and DMA timer, GPT timer and gstandard timer configuration and handling
+
+    #define _CAN_INIT_CODE
+        #include "can_tests.h"                                           // CAN initialiation code and transmission routine
+    #undef _CAN_INIT_CODE
+#endif
 
 #if defined RTC_TEST                                                     // {3}
 // Interrupt once a minute
@@ -1951,14 +1975,6 @@ static void fnTestRTC(void)
     fnConfigureRTC((void *)&rtc_setup);                                  // set 2 minute stop watch (expected after 67 seconds)
 }
 #endif
-
-#define _ADC_TIMER_ROUTINES                                              // include ADC configuration and interrupt handlers
-    #include "ADC_Timers.h"                                              // as well as PIT configuration and handling
-#undef  _ADC_TIMER_ROUTINES                                              // and DMA timer, GPT timer and gstandard timer configuration and handling
-
-#define _CAN_INIT_CODE
-    #include "can_tests.h"                                               // CAN initialiation code and transmission routine
-#undef _CAN_INIT_CODE
 
 #if defined SUPPORT_SLCD && defined SUPPORT_RTC                          // {60}
     #include "slcd_time.h"                                               // {95} hardware specific time drawing functions

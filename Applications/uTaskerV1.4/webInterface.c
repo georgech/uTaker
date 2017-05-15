@@ -269,29 +269,29 @@ static unsigned char fnIsSelected(unsigned char *ptrBuffer)
         return ucCheck;
 
     case 'S':                                                            // set various Server enabled states
-        if (temp_pars->temp_parameters.usServers[DEFAULT_NETWORK] & fnGetServerType(*ptrBuffer)) {
+        if ((temp_pars->temp_parameters.usServers[DEFAULT_NETWORK] & fnGetServerType(*ptrBuffer)) != 0) {
             return IS_CHECKED;                                           // check server state
         }
         break;
-#if defined USE_MAINTENANCE                                              // {12}
+#if defined USE_MAINTENANCE && !defined REMOVE_PORT_INITIALISATIONS      // {12}
     case 'I':                                                            // port input configuration
-        if (fnPortInputConfig(*ptrBuffer)) {
+        if (fnPortInputConfig(*ptrBuffer) != 0) {
             return IS_CHECKED;
         }
         break;
     case 'O':                                                            // port output configuration
-        if (!(fnPortInputConfig(*ptrBuffer))) {
+        if ((fnPortInputConfig(*ptrBuffer)) == 0) {
             return IS_CHECKED;
         }
         break;
     case 'P':                                                            // port value
-        if (fnPortState(*ptrBuffer)) {
+        if (fnPortState(*ptrBuffer) != 0) {
             return IS_CHECKED;
         }
         break;
 #endif
     case 'M':                                                            // modified
-        if (fnModified(*ptrBuffer)) {
+        if (fnModified(*ptrBuffer) != 0) {
             return IS_CHECKED;
         }
         break;
@@ -506,14 +506,16 @@ static int fnHandleWeb(unsigned char ucType, CHAR *ptrData, HTTP *http_session)
             }
             break;
 #if defined USE_MAINTENANCE && defined USE_PARAMETER_BLOCK               // {12}
+    #if !defined REMOVE_PORT_INITIALISATIONS
         case 'q':                                                        // save the port setup as default
             fnSavePorts();
             break;
+    #endif
         case 'r':                                                        // reject changes
             fnResetChanges();
             break;
         case 's':                                                        // save changes temporarily and reset awaiting validation
-            if (fnSaveNewPars(SAVE_NEW_PARAMETERS_CHECK_CRITICAL)) {     // save new parameters
+            if (fnSaveNewPars(SAVE_NEW_PARAMETERS_CHECK_CRITICAL) != 0) {// save new parameters
                 fnSaveNewPars(SAVE_NEW_PARAMETERS_VALIDATE);             // temporarily save new parameters
                 fnDelayResetBoard();                                     // reset to test the new parameters
 //              return WARN_BEFORE_SAVE;                                 // the user wants to change a critical parameter so we first show a side warning of this
@@ -621,7 +623,7 @@ static int fnHandleWeb(unsigned char ucType, CHAR *ptrData, HTTP *http_session)
                 fnSetNewValue(TELNET_PORT, (ptrData+2));
             }
             break;
-#if defined USE_MAINTENANCE                                              // {12}
+#if defined USE_MAINTENANCE && !defined REMOVE_PORT_INITIALISATIONS      // {12}
         case 'P':                                                        // port settings (configure as input, output or ADC)
             fnConfigPort(*ptrData, *(ptrData+2));
             break;
@@ -756,7 +758,7 @@ static CHAR *fnInsertString(unsigned char *ptrBuffer, LENGTH_CHUNK_COUNT TxLengt
 
         case 'K':                                                        // we insert the color a key is to be displayed, depending on output setting
             uStrcpy(cValue, cBackgroundColor);
-#if defined USE_MAINTENANCE                                              // {12}
+#if defined USE_MAINTENANCE && !defined REMOVE_PORT_INITIALISATIONS      // {12}
             if (fnUserPortState(*ptrBuffer)) {
                 uStrcpy(&cValue[(sizeof(cBackgroundColor) - 1)], cOnColor);
             }

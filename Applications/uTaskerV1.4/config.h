@@ -21,7 +21,6 @@
 #if !defined __CONFIG__
     #define __CONFIG__
 
-#if !defined _ASSEMBLER_CONFIG                                           // remove all following when used for assembler configuration
 
 /////////////////////////////////////////////////////////////////////////
 //                                                                       // new users who would like to see just a blinking LED before enabling the project's many powerful features can set this
@@ -31,9 +30,12 @@
 
 #define _TICK_RESOLUTION     TICK_UNIT_MS(50)                            // 50ms system tick period - max possible at 50MHz SYSTICK would be about 335ms !
 
+#define REMOVE_PORT_INITIALISATIONS                                      // remove port initialisation and use demonstration to ensure that port configuration and use doesn't conflict with specific application development (exception is blink LED)
+#define NO_PERIPHERAL_DEMONSTRATIONS                                     // disable peripheral demonstration code (ADC/I2C/CAN/port interrupts/etc.) so that they can't interfere with new application developments
+
 #define USE_MAINTENANCE                                                  // include the command line shell (on UART, USB-CDC and/or Telenet) with maintenance support for the application (remove to reduce project size for special tests or possibly running from limited RAM)
     #define PREVIOUS_COMMAND_BUFFERS  4                                  // allow the up-arrow to retrieve this many past commands
-    #define MEMORY_DEBUGGER                                              // memory debugger interface (read, write and fill)
+    #define MEMORY_DEBUGGER                                              // memory and storage debugger interface (read, write, fill and erase)
 
 //#define MONITOR_PERFORMANCE                                            // support measuring duration of tasks and idle phases (based on a hardware timer)
 //#define _APPLICATION_VALIDATION                                        // support application validation
@@ -49,7 +51,6 @@
 #else
     #define MEM_FACTOR 1.0
 #endif
-
 
 // Major hardware dependent settings for this project (choice of board - select only one at a time)
 //
@@ -301,6 +302,12 @@
     #define DEVICE_WITHOUT_CAN                                           // KL doesn't have CAN controller
     #define DEVICE_WITHOUT_ETHERNET                                      // KL doesn't have Ethernet controller
     #define SPI_LCD                                                      // optional SPI_LCD
+#elif defined TEENSY_LC
+    #define KINETIS_KL
+    #define KINETIS_KL26
+    #define TARGET_HW            "Teensy LC"
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((5.0 * 1024) * MEM_FACTOR)
+    #define DEVICE_WITHOUT_ETHERNET                                      // KL doesn't have Ethernet controller
 #elif defined FRDM_KL27Z
     #define TARGET_HW            "FRDM-KL27Z"
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((10 * 1024) * MEM_FACTOR)
@@ -315,11 +322,12 @@
     #define KINETIS_KL27
     #define DEVICE_WITHOUT_CAN                                           // KL doesn't have CAN controller
     #define DEVICE_WITHOUT_ETHERNET                                      // KL doesn't have Ethernet controller
-#elif defined TEENSY_LC
+#elif defined FRDM_KL28Z
+    #define TARGET_HW            "FRDM-KL28Z"
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((20 * 1024) * MEM_FACTOR)
     #define KINETIS_KL
-    #define KINETIS_KL26
-    #define TARGET_HW            "Teensy LC"
-    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((5.0 * 1024) * MEM_FACTOR)
+    #define KINETIS_KL28
+    #define DEVICE_WITHOUT_CAN                                           // KL doesn't have CAN controller
     #define DEVICE_WITHOUT_ETHERNET                                      // KL doesn't have Ethernet controller
 #elif defined TWR_KL46Z48M
     #define TARGET_HW            "TWR-KL46Z48M"
@@ -911,7 +919,7 @@
     #endif
 
   //#define USE_PPP                                                      // allow TCP/IP on serial
-        #define USE_SLIP                                                 // use slip rather than PPP
+      //#define USE_SLIP                                                 // use slip rather than PPP
         #define USE_SLIP_DIAL_OUT                                        // dial-out
 #else
     #define NUMBER_SERIAL              0                                 // no physical queue needed
@@ -1183,7 +1191,7 @@
 // Ethernet
 //
 #if !defined DEVICE_WITHOUT_ETHERNET && !defined K70F150M_12M && !defined TEENSY_3_5 && !defined TEENSY_3_6
-  //#define ETH_INTERFACE                                                // enable Ethernet interface driver
+    #define ETH_INTERFACE                                                // enable Ethernet interface driver
 #elif defined TEENSY_3_1 || defined TEENSY_LC
   //#define ETH_INTERFACE                                                // enable external Ethernet interface driver
     #if defined ETH_INTERFACE
@@ -1237,9 +1245,16 @@
             #define USER_WRITE_HANDLERS  1                               // if application is handling some interface handles the quantity needs to be entered
         #endif
         #define ENC424J600_NETWORK       DEFAULT_NETWORK                 // the ENC424J600 interface is on the default network
+    #elif defined USE_PPP
+        #define IP_INTERFACE_COUNT       2                               // two interfaces available (PPP and Ethernet)
+        #define ETHERNET_INTERFACES      1
+        #define ETHERNET_IP_INTERFACE    DEFAULT_IP_INTERFACE
+        #define PPP_IP_INTERFACE         (unsigned char)1
+        #define ETHERNET_INTERFACE       defineInterface(ETHERNET_IP_INTERFACE) // ethernet interface is default interface
+        #define PPP_INTERFACE            defineInterface(PPP_IP_INTERFACE) // PPP interface is second interface
     #else
         #if !defined IP_INTERFACE_COUNT
-            #define IP_INTERFACE_COUNT       1                           // single interface available
+            #define IP_INTERFACE_COUNT   1                               // single interface available
         #endif
         #define ETHERNET_INTERFACE  defineInterface(DEFAULT_IP_INTERFACE)// ethernet interface is default interface
     #endif
@@ -1997,5 +2012,4 @@
 
 #define PLAIN_TEXTCONTENT(x) (x == MIME_TXT)                             // list of content types considered as plain text
 
-#endif
 #endif

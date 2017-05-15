@@ -54,6 +54,9 @@
     <Filter Include="TCP/IP\OpenSSL">
       <UniqueIdentifier>{2e7c4f70-af0c-4e3d-b1d8-0535fa3674af}</UniqueIdentifier>
     </Filter>
+    <Filter Include="TCP/IP\PPP">
+      <UniqueIdentifier>{ce5bdfad-5223-4050-b57e-62db7a870bba}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\application.c">
@@ -292,6 +295,45 @@
     </ClCompile>
     <ClCompile Include="..\..\..\uTasker\uGLCDLIB\FT_CoPro_Cmds.c">
       <Filter>uTasker\uGLCDLIB</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\PPP\auth.c">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\PPP\chap.c">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\PPP\chpms.c">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\PPP\fsm.c">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\PPP\ipcp.c">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\PPP\lcp.c">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\PPP\lwppp.c">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\PPP\magic.c">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\PPP\md5.c">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\PPP\pap.c">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\PPP\ppp_oe.c">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\PPP\randm.c">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\PPP\vj.c">
+      <Filter>TCP/IP\PPP</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -657,6 +699,48 @@
     </ClInclude>
     <ClInclude Include="..\..\..\uTasker\uGLCDLIB\FT_Gpu.h">
       <Filter>uTasker\uGLCDLIB</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\auth.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\chap.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\chpms.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\fsm.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\ipcp.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\lcp.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\magic.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\md5.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\pap.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\ppp.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\ppp_impl.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\pppdebug.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\randm.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\vj.h">
+      <Filter>TCP/IP\PPP</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -819,7 +819,7 @@ typedef struct stUSBQUE
 //
 typedef struct stIDinfo
 {
-#if (!defined ETH_INTERFACE && (ETHERNET_INTERFACES == 1)) || !defined ETHERNET_AVAILABLE || defined NO_INTERNAL_ETHERNET || (ETHERNET_INTERFACES > 1) || defined USB_CDC_RNDIS
+#if (!defined ETH_INTERFACE && (ETHERNET_INTERFACES == 1)) || !defined ETHERNET_AVAILABLE || defined NO_INTERNAL_ETHERNET || (ETHERNET_INTERFACES > 1) || defined USB_CDC_RNDIS || defined USE_PPP
     void *ptrDriverFunctions;                                            // list of functions that are used to handle certain driver types
 #endif
     QUEUE_TRANSFER (*CallAddress)(QUEUE_HANDLE, unsigned char *, QUEUE_TRANSFER, unsigned char, QUEUE_HANDLE); // address of driver for all interraction
