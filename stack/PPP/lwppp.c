@@ -2051,20 +2051,19 @@ ppp_set_netif_linkcallback(int pd, netif_status_callback_fn link_callback)
 #define _EXCEPTION(x) *(int *)0 = 0
 
 
+// convert network long to host byte order
 u32_t lwip_ntohl(u32_t x)
 {
-    _EXCEPTION("TO DO");
-    return 0;
+    return (u32_t)((x << 24) | ((x >> 8) & 0x0000ff00) | ((x << 8) & 0x00ff0000) | (x >> 24));
 }
 u32_t lwip_htonl(u32_t x)
 {
-    _EXCEPTION("TO DO");
-    return 0;
+    return (u32_t)((x << 24) | ((x >> 8) & 0x0000ff00) | ((x << 8) & 0x00ff0000) | (x >> 24));
 }
+
 u16_t lwip_htons(u16_t x)
 {
-    _EXCEPTION("TO DO");
-    return 0;
+    return (u16_t)((x << 8) | (x >> 8));
 }
 
 extern void start_timer(void(*fsm_timeout)(void *), int msecs, void *f);
@@ -2189,7 +2188,6 @@ u8_t pbuf_header(struct pbuf *p, s16_t header_size_increment)
 }
 u8_t pbuf_free(struct pbuf *p)
 {
-    //_EXCEPTION("TO DO");
     return 0;
 }
 extern void pbuf_cat(void)
@@ -2242,7 +2240,7 @@ extern void start_ppp_now(unsigned char uart_handle)
 
     fd = uart_handle;
 
-    lcp_init(0);
+    pppInit();
 
     pppOverSerialOpen(&fd, linkStatusCB, &linkStatusCtx);
 }
