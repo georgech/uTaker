@@ -69,7 +69,7 @@
     24.12.2016 Add SIM_I2C_OUT and fnInjectI2C()                         {51}
     28.02.2017 Add UARTs 6 and 7                                         {52}
     18.05.2017 Add fnLogRx()                                             {53}
-
+ 
 */
  
 #include <stdlib.h>	

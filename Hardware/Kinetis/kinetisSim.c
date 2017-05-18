@@ -58,7 +58,7 @@
     24.03.2017 Reset all host endpoints data frame types                 {42}
     03.05.2017 Improve LPUART and UART rx DMA operation
     18.05.2017 Add optional logging of UART reception to a simulation file {43}
-
+ 
 */  
                           
 

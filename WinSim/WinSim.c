@@ -89,7 +89,7 @@
     13.02.2017 Get endpoint size of Host from endpoint 0 (kinetis)       {72}
     28.02.2017 Increase UARTs from 6 to 8                                {73}
     18.05.2017 Add fnLogRx()                                             {74}
- 
+  
 */   
 #include <windows.h>
 #include "conio.h"
