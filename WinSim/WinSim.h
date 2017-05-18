@@ -68,6 +68,7 @@
     02.09.2016 Add TOGGLE_INPUT_POS, TOGGLE_INPUT_ANALOG and INPUT_TOGGLE_POS {50}
     24.12.2016 Add SIM_I2C_OUT and fnInjectI2C()                         {51}
     28.02.2017 Add UARTs 6 and 7                                         {52}
+    18.05.2017 Add fnLogRx()                                             {53}
 
 */
  
@@ -370,6 +371,7 @@ extern int  fnLogExtTx0(void);                                           // {32}
 extern int  fnLogExtTx1(void);
 extern int  fnLogExtTx2(void);
 extern int  fnLogExtTx3(void);
+extern void fnLogRx(int iPort, unsigned char *ptrDebugIn, unsigned short usLen); // {53}
 extern void fnFollowOnFrame(void);
 extern void fnSimPhyInt(void);
 

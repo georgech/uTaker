@@ -88,6 +88,7 @@
     02.02.2017 Adapt for us tick resolution
     13.02.2017 Get endpoint size of Host from endpoint 0 (kinetis)       {72}
     28.02.2017 Increase UARTs from 6 to 8                                {73}
+    18.05.2017 Add fnLogRx()                                             {74}
  
 */   
 #include <windows.h>
@@ -1492,6 +1493,50 @@ static int fnSimulateActions(char *argv[])
     return iReturn; 
 }
 
+#if defined SERIAL_INTERFACE && defined LOG_UART_RX                      // {74}
+    #if !defined NUMBER_EXTERNAL_SERIAL
+        #define NUMBER_EXTERNAL_SERIAL 0
+    #endif
+static int iUART_Rx_File[NUMBER_SERIAL + NUMBER_EXTERNAL_SERIAL] = { 0 };
+static unsigned long ulLastRx[NUMBER_SERIAL + NUMBER_EXTERNAL_SERIAL] = { 0 };
+extern void fnLogRx(int iPort, unsigned char *ptrDebugIn, unsigned short usLen)
+{
+    CHAR rxData[(1024 * 3) + 32];
+    CHAR *ptrBuffer;
+    unsigned long ulDiffMS;
+    if (iUART_Rx_File[iPort] == 0) {
+        CHAR fileName[] = "UART0.sim";
+        fileName[4] = ('0' + iPort);
+        #if _VC80_UPGRADE<0x0600
+        iUART_Rx_File[iPort] = _open(fileName, (_O_TRUNC | _O_CREAT | _O_WRONLY), _S_IWRITE);
+        #else
+        _sopen_s(&iUART_Rx_File[iPort], fileName, (_O_TRUNC | _O_CREAT | _O_WRONLY), _SH_DENYWR, _S_IWRITE);
+        #endif
+        ulLastRx[iPort] = uTaskerSystemTick;
+    }
+    if (usLen > 1024) {
+        usLen = 1024;
+    }
+    rxData[0] = '+';
+    ulDiffMS = (uTaskerSystemTick - ulLastRx[iPort]);                    // difference in ticks since last reception
+    ulDiffMS *= (1000/SEC);
+    ptrBuffer = fnBufferDec(ulDiffMS, 0, &rxData[1]);
+    *ptrBuffer++ = ' ';
+    *ptrBuffer++ = 'U';
+    *ptrBuffer++ = 'A';
+    *ptrBuffer++ = 'R';
+    *ptrBuffer++ = 'T';
+    *ptrBuffer++ = '-';
+    *ptrBuffer++ = ('0' + iPort);
+    *ptrBuffer++ = ' ';
+    while (usLen-- != 0) {
+        ptrBuffer = fnBufferHex(*ptrDebugIn++, (WITH_SPACE | sizeof(unsigned char)), ptrBuffer);
+    }
+    *ptrBuffer++ = '\r';
+    *ptrBuffer++ = '\n';
+    _write(iUART_Rx_File[iPort], rxData, (ptrBuffer - rxData));
+}
+#endif
 
 static int iUART_File0 = 0;
 extern void fnLogTx0(unsigned char ucTxByte)

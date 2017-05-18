@@ -57,6 +57,7 @@
     02.02.2017 Adapt for us tick resolution
     24.03.2017 Reset all host endpoints data frame types                 {42}
     03.05.2017 Improve LPUART and UART rx DMA operation
+    18.05.2017 Add optional logging of UART reception to a simulation file {43}
 
 */  
                           
@@ -4684,12 +4685,16 @@ static const unsigned char uart_type[LPUARTS_AVAILABLE + UARTS_AVAILABLE] = {
 };
 #endif
 
+
 // Simulate the reception of serial data by inserting bytes into the input buffer and calling interrupts
 //
 extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned short usLen)
 {
 #if defined SERIAL_INTERFACE
     VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+    #if defined LOG_UART_RX
+    fnLogRx(iPort, ptrDebugIn, usLen);                                   // {43}
+    #endif
     #if NUMBER_EXTERNAL_SERIAL > 0
     if (iPort >= NUMBER_SERIAL) {
         extern int fnRxExtSCI(int iChannel, unsigned char *ptrData, unsigned short usLength);
@@ -5099,9 +5104,9 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                 UART4_D = *ptrDebugIn++;
                 UART4_S1 |= UART_S1_RDRF;                                // set interrupt cause
                 if ((UART4_C2 & UART_C2_RIE) != 0) {                     // if reception interrupt is enabled
-                    if (UART4_C5 & UART_C5_RDMAS) {                      // {4} if the UART is operating in DMA reception mode
+                    if ((UART4_C5 & UART_C5_RDMAS) != 0) {               // {4} if the UART is operating in DMA reception mode
         #if defined SERIAL_SUPPORT_DMA
-                        if (DMA_ERQ & (DMA_ERQ_ERQ0 << DMA_UART4_RX_CHANNEL)) { // if source enabled
+                        if ((DMA_ERQ & (DMA_ERQ_ERQ0 << DMA_UART4_RX_CHANNEL)) != 0) { // if source enabled
                             KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
                             ptrDMA_TCD += DMA_UART4_RX_CHANNEL;
                             ptrDMA_TCD->DMA_TCD_CSR |= (DMA_TCD_CSR_ACTIVE); // trigger
