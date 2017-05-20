@@ -37,6 +37,7 @@
     05.01.2016 Clear PWM interrupt entry                                 {22}
     08.01.2017 Add TIMED_UART_TX_TEST                                    {23}
     22.04.2017 Add ADC_TRIGGER_TPM and TEST_STEPPER options
+    20.05.2017 Add Kinetis timer capture test                            {24}
 
     The file is otherwise not specifically linked in to the project since it is included by application.c when needed.
 
@@ -99,9 +100,9 @@
           //#define TEST_SINGLE_SHOT_TIMER                               // test single-shot mode
           //#define TEST_PERIODIC_TIMER                                  // test periodic interrupt mode
           //#define TEST_ADC_TIMER                                       // test periodic ADC trigger mode (Luminary)
-            #define TEST_PWM                                             // {1} test generating PWM output from timer
+          //#define TEST_PWM                                             // {1} test generating PWM output from timer
           //#define TEST_CAPTURE                                         // {6} test timer capture mode
-            #define TEST_STEPPER                                         // test generating stepper motor frequency patterns (use together with PWM)
+          //#define TEST_STEPPER                                         // test generating stepper motor frequency patterns (use together with PWM)
         #endif
     #endif
     #if defined SUPPORT_RIT
@@ -1394,6 +1395,10 @@ static void fnConfigure_GPT(void)
     #if !((defined _KINETIS || defined _M5223X) && defined TEST_PWM)
 static void timer_int(void)
 {
+#if defined TEST_CAPTURE && defined _KINETIS                             // {24}
+    static volatile unsigned long ulLastCapture = 0;
+    ulLastCapture = CAPTURE_VALUE(0, 1);                                 // update the last capture value
+#endif
     TOGGLE_TEST_OUTPUT();
         #if defined TEST_SINGLE_SHOT_TIMER
     fnConfigure_Timer();
@@ -1697,11 +1702,15 @@ static void fnConfigure_Timer(void)
     timer_setup.timer_value = TIMER_US_DELAY(TIMER_FREQUENCY_VALUE(1500));// generate 1500Hz on timer output
     timer_setup.pwm_value   = _PWM_PERCENT(50, TIMER_US_DELAY(TIMER_FREQUENCY_VALUE(1500))); // 50% PWM (high/low)
     #elif defined _KINETIS                                               // {16} Kinetis FlexTimer
-    timer_setup.timer_reference = 0;                                     // FlexTimer/TPM channel 0
+    timer_setup.timer_reference = 0;                                     // FlexTimer/TPM 0
         #if defined TEST_PERIODIC_TIMER
   //timer_setup.timer_mode = (TIMER_PERIODIC | TIMER_EXT_CLK_1);         // period timer interrupt using external clocksource 1
     timer_setup.timer_mode = (TIMER_PERIODIC);                           // period timer interrupt
     timer_setup.timer_value = TIMER_MS_DELAY(150);                       // 150ms periodic interrupt
+        #elif defined TEST_CAPTURE                                       // {24}
+    timer_setup.capture_channel = 1;                                     // channel 1
+    timer_setup.capture_prescaler = 128;                                 // 1, 2, ..128 possible
+    timer_setup.timer_mode = (TIMER_CAPTURE_FALLING);                    // capture interrupt on falling edge
         #else                                                            // single-shot
     timer_setup.timer_value += TIMER_US_DELAY(100);                      // each subsequent delay increased by 100us
         #endif

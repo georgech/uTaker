@@ -111,6 +111,7 @@
     08.03.2017 Add ucDmaTriggerSource to ADC setup                       {94}
     19.04.2017 Adjust USB FS crossbar master setting for K65 and K66     {95}
     08.05.2017 Correct K26, K65 and K66 HS USB base address              {96}
+    20.05.2017 Add timer capture mode                                    {97}
 
 */
 
@@ -6157,7 +6158,13 @@ typedef struct stKINETIS_PIT_CTL                                         // PIT 
       #define FTM_CONF_CSOT     0x00010000                                   // counter start on trigger
       #define FTM_CONF_CSOO     0x00020000                                   // counter stop on overflow
       #define FTM_CONF_CROT     0x00040000                                   // counter reload on trigger
-      #define FTM_CONF_TRGSEL   0x00000000                                   // (change only when TPM is disabled)
+      #define FTM_CONF_CPOT     0x00080000                                   // 
+      #define FTM_CONF_TRGPOL   0x00400000                                   // 
+      #define FTM_CONF_TRGSRC   0x00800000                                   // 
+      #define FTM_CONF_TRGSEL0  0x01000000                                   // channel 0 pin input capture (change only when TPM is disabled)
+      #define FTM_CONF_TRGSEL1  0x02000000                                   // channel 1 pin input capture (change only when TPM is disabled)
+      #define FTM_CONF_TRGSEL2  0x04000000                                   // channel 2 pin input capture (change only when TPM is disabled)
+      #define FTM_CONF_TRGSEL3  0x08000000                                   // channel 3 pin input capture (change only when TPM is disabled)
 #else
     #define FTM0_C6SC           *(volatile unsigned long *)(FTM_BLOCK_0 + 0x03c) // FTM0 Channel 6 and Control
     #define FTM0_C6V            *(volatile unsigned long *)(FTM_BLOCK_0 + 0x040) // FTM0 Channel 6 Value (16 bit)
@@ -6426,6 +6433,7 @@ typedef struct stFLEX_TIMER_MODULE
 #endif
 } FLEX_TIMER_MODULE;
 
+#define CAPTURE_VALUE(timer, channel)  FTM##timer##_C##channel##V
 
 // ADC
 //
@@ -14053,15 +14061,13 @@ extern void fnSimPers(void);
 #define I2S_SAI_INTERRUPT         10
 
 #define TIMER_SINGLE_SHOT         0x0000
-#define TIMER_PWM_MAT0            0x0001
-#define TIMER_PWM_MAT1            0x0002
-#define TIMER_PWM_MAT2            0x0004
+#define TIMER_CAPTURE_RISING      0x0002                                 // {97}
+#define TIMER_CAPTURE_FALLING     0x0004
+#define TIMER_CAPTURE_RISING_FALLING  (TIMER_CAPTURE_RISING | TIMER_CAPTURE_FALLING)
 #define TIMER_PERIODIC            0x0010
 #define TIMER_MS_VALUE            0x0000
 #define TIMER_US_VALUE            0x0020
-#define TIMER_STOP_PWM_MAT0       0x0040
-#define TIMER_STOP_PWM_MAT1       0x0080
-#define TIMER_STOP_PWM_MAT2       0x0100
+
 #define TIMER_DONT_DISTURB        0x0200
 #define TIMER_EXT_CLK_0           0x0400                                 // {89}
 #define TIMER_EXT_CLK_1           0x0800
@@ -14306,6 +14312,8 @@ typedef struct stTIMER_INTERRUPT_SETUP
     unsigned long    timer_value;                                        // the delay value
     unsigned short   timer_mode;                                         // timer mode
     unsigned char    timer_reference;                                    // hardware timer to use (0, 1, 2, 3)
+    unsigned char    capture_prescaler;                                  // {97}
+    unsigned char    capture_channel;                                    // {97}
 } TIMER_INTERRUPT_SETUP;
 
 #define PORTA                0

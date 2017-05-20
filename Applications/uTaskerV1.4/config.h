@@ -31,9 +31,9 @@
 #define _TICK_RESOLUTION     TICK_UNIT_MS(50)                            // 50ms system tick period - max possible at 50MHz SYSTICK would be about 335ms !
 
 #define REMOVE_PORT_INITIALISATIONS                                      // remove port initialisation and use demonstration to ensure that port configuration and use doesn't conflict with specific application development (exception is blink LED)
-#define NO_PERIPHERAL_DEMONSTRATIONS                                     // disable peripheral demonstration code (ADC/I2C/CAN/port interrupts/etc.) so that they can't interfere with new application developments
+//#define NO_PERIPHERAL_DEMONSTRATIONS                                   // disable peripheral demonstration code (ADC/I2C/CAN/port interrupts/etc.) so that they can't interfere with new application developments
 
-#define USE_MAINTENANCE                                                  // include the command line shell (on UART, USB-CDC and/or Telenet) with maintenance support for the application (remove to reduce project size for special tests or possibly running from limited RAM)
+//#define USE_MAINTENANCE                                                // include the command line shell (on UART, USB-CDC and/or Telenet) with maintenance support for the application (remove to reduce project size for special tests or possibly running from limited RAM)
     #define PREVIOUS_COMMAND_BUFFERS  4                                  // allow the up-arrow to retrieve this many past commands
     #define MEMORY_DEBUGGER                                              // memory and storage debugger interface (read, write, fill and erase)
 
@@ -731,7 +731,7 @@
         #define FLASH_FILE_SYSTEM                                        // we have an internal file system in FLASH
     #endif
   //#define NVRAM                                                        // we have an external file system in non-volatile RAM
-    #define INTERNAL_USER_FILES                                          // allow user to specify program file content
+  //#define INTERNAL_USER_FILES                                          // allow user to specify program file content
   //#define EMBEDDED_USER_FILES                                          // use together with INTERNAL_USER_FILES to allow sending an embedded user file to the uFileSystem
     #if !defined NAND_FLASH_FAT && defined FLASH_FILE_SYSTEM
       //#define MANAGED_FILES                                            // use memory management when interfacing with uFileSystem in internal or external SPI memory
@@ -894,6 +894,8 @@
     #define LOG_UART3                                                    // activate this option to log all data sent to UART 3 to a file called "UART3.txt"
     #define LOG_UART4                                                    // activate this option to log all data sent to UART 4 to a file called "UART4.txt"
     #define LOG_UART5                                                    // activate this option to log all data sent to UART 5 to a file called "UART5.txt"
+
+    #define LOG_UART_RX                                                  // log UART receptions to simulation files "UARTx.sim"
 
     #if defined USE_MODBUS
         #define MODBUS_RTU                                               // support binary RTU mode
@@ -1080,7 +1082,7 @@
 
 // I2C
 //
-//#define I2C_INTERFACE
+#define I2C_INTERFACE
 #if defined I2C_INTERFACE
   //#define I2C_SLAVE_MODE                                               // support slave mode
         #define I2C_SLAVE_TX_BUFFER                                      // support preparing slave transmissions with fnWrite()

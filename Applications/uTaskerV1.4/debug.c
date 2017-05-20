@@ -181,8 +181,8 @@
 
     #define STALL_CRITICAL          (TX_BUFFER_SIZE/2)                   // when the Windows TCP implementation sees that the window is less than half the maximum windows size we have advertised it will perform a delay of about 5s.
 
-    #define I2C_WRITE_ADDRESS       0xd0
-    #define I2C_READ_ADDRESS        0xd1
+    #define I2C_WRITE_ADDRESS       0xa4
+    #define I2C_READ_ADDRESS        0xa5
 
     #define UT_PATH_LENGTH          256                                  // length of maximum directory string
 

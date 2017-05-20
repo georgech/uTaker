@@ -637,6 +637,49 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
 #if defined USE_MAINTENANCE && !defined REMOVE_PORT_INITIALISATIONS && (!(defined KWIKSTIK && defined SUPPORT_SLCD))
         fnInitialisePorts();                                             // set up ports as required by the user
 #endif
+
+#if defined TRINAMIC_LANDUNGSBRUECKE // temp
+        #define CAN_STBY     PORTA_BIT14
+        #define RED_LED_3    PORTA_BIT15
+        #define GREEN_LED_4  PORTA_BIT16
+        #define RED_LED_4    PORTA_BIT17
+        #define RED_LED_1    PORTB_BIT20
+        #define GREEN_LED_1  PORTB_BIT21
+        #define GREEN_LED_2  PORTB_BIT9
+        #define ACC_INT1     PORTC_BIT12
+        #define ACC_INT2     PORTC_BIT13
+        #define WT12_reset_line PORTE_BIT6
+        #define NO_NAME_OUTPUT PORTE_BIT2
+        #define GPIO_1       PORTB_BIT22
+        #define GPIO_2       PORTB_BIT23
+
+        _CONFIG_PORT_OUTPUT(A, CAN_STBY, (PORT_SRE_SLOW));
+        _CONFIG_PORT_OUTPUT(A, RED_LED_3, (PORT_SRE_SLOW));
+        _CONFIG_PORT_OUTPUT(A, GREEN_LED_4, (PORT_SRE_SLOW));
+        _CONFIG_PORT_OUTPUT(A, RED_LED_4, (PORT_SRE_SLOW));
+        _CONFIG_PORT_OUTPUT(B, RED_LED_1, (PORT_SRE_SLOW));
+        _CONFIG_PORT_OUTPUT(B, GREEN_LED_1, (PORT_SRE_SLOW));
+        _CONFIG_PORT_OUTPUT(B, GREEN_LED_2, (PORT_SRE_SLOW));
+        _CONFIG_PORT_INPUT(C, ACC_INT1, (PORT_PS_UP_ENABLE));
+        _CONFIG_PORT_INPUT(C, ACC_INT2, (PORT_PS_UP_ENABLE));
+        _CONFIG_PORT_OUTPUT(E, WT12_reset_line, (PORT_SRE_SLOW));
+        _CONFIG_PORT_OUTPUT(E, NO_NAME_OUTPUT, (PORT_SRE_SLOW));
+      //_CONFIG_PERIPHERAL(E, 3, (PE_3_ADC));
+        _CONFIG_PERIPHERAL(E, 4, (PE_4_UART3_TX));
+        _CONFIG_PERIPHERAL(E, 5, (PE_5_UART3_RX));
+        _CONFIG_PERIPHERAL(E, 24, (PE_24_UART4_TX));
+        _CONFIG_PERIPHERAL(E, 25, (PE_25_UART4_RX));
+        _CONFIG_PERIPHERAL(B, 10, (PB_10_SPI1_PCS0));
+        _CONFIG_PERIPHERAL(B, 11, (PB_11_SPI1_SCK));
+        _CONFIG_PORT_OUTPUT(B, GPIO_1, (PORT_SRE_SLOW));
+        _CONFIG_PORT_OUTPUT(B, GPIO_2, (PORT_SRE_SLOW));
+#endif
+
+
+
+
+
+
         uTaskerStateChange(TASK_DEBUG, UTASKER_ACTIVATE);
 #if defined SERIAL_INTERFACE && defined DEMO_UART                        // {32} this serial interface is used for debug output and menu based control
         if (NO_ID_ALLOCATED == fnSetNewSerialMode(FOR_I_O)) {            // open serial port for I/O

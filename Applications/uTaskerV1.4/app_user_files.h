@@ -24,7 +24,7 @@
 //#define FAVICON_UTASKER                                                // use the uTasker favicon rather than chip manufacturer's
 
 
-#ifdef FAVICON_UTASKER
+#if defined FAVICON_UTASKER
         #define _favicon uTaskerfavicon
 static const unsigned char uTaskerfavicon[] = {
     0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x10, 0x10,   0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x28, 0x01,
