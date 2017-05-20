@@ -2087,6 +2087,10 @@ void sys_assert(const char *const msg)
 extern QUEUE_TRANSFER fnWrite(QUEUE_HANDLE driver_id, unsigned char *output_buffer, QUEUE_TRANSFER nr_of_bytes);
 u32_t sio_write(sio_fd_t fd, u8_t *data, u32_t len)
 {
+    if (*data != 0x7e) { // if the escape is missing at the start
+        unsigned char escape = 0x7e;
+        fnWrite(*(QUEUE_HANDLE *)fd, &escape, 1);
+    }
     return (fnWrite(*(QUEUE_HANDLE *)fd, data, len));
 }
 struct pbuf *pbuf_alloc(pbuf_layer l, u16_t length, pbuf_type type)
