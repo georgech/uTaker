@@ -2198,23 +2198,31 @@ extern void pbuf_cat(void)
 {
     _EXCEPTION("TO DO");
 }
+
+extern void fnSetIPStuff(unsigned long ipaddr, unsigned long netmask, unsigned long gw);
+
 struct netif *netif_add(struct netif *netif, ip_addr_t *ipaddr, ip_addr_t *netmask,
     ip_addr_t *gw, void *state, netif_init_fn init, netif_input_fn input)
 {
-    _EXCEPTION("TO DO");
-    return 0;
+    fnSetIPStuff(ipaddr->addr, netmask->addr, gw->addr);
+    return 1;
 }
+
+// Looks to be used to clear an interface
+//
 extern void netif_remove(void)
 {
-    _EXCEPTION("TO DO");
+    //_EXCEPTION("TO DO");
 }
+// define a default route (??)
 extern void netif_set_default(void)
 {
-    _EXCEPTION("TO DO");
+   // _EXCEPTION("TO DO");
 }
+// We may be expected to set the netif struct content here(?)
 void netif_set_up(struct netif *netif)
 {
-    _EXCEPTION("TO DO");
+  //_EXCEPTION("TO DO");
 }
 extern void netif_set_down(void)
 {
@@ -2231,10 +2239,10 @@ err_t ip_input(struct pbuf *p, struct netif *inp)
     return 0;
 }
 
-
+// Called when the IP setting has been set
 static void linkStatusCB(void)
 {
-    _EXCEPTION("TO DO");
+  //_EXCEPTION("TO DO");
 }
 
 extern void start_ppp_now(unsigned char uart_handle)

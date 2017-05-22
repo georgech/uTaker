@@ -126,6 +126,12 @@ static QUEUE_HANDLE PPP_PortID;
     static unsigned char ucMagicNumer[4];
 #endif
 
+    
+#if defined ETH_INTERFACE
+    #define PPP_INTERFACE_CHANNEL  1                                     // the Ethernet controller has channel 0 so PPP uses Ethernet channel 1
+#else
+    #define PPP_INTERFACE_CHANNEL  0                                     // default channel number
+#endif
 
 // PPP task
 //
@@ -144,11 +150,7 @@ extern void fnPPP(TTASKTABLE *ptrTaskTable)
         ETHTABLE ppp_ethernet;                                           // configuration structure to be passed to the Ethernet configuration
         ppp_ethernet.ptrEthernetFunctions = (void *)&PPP_EthernetFunctions; // enter the Ethernet function list for the defult internal controller
         ppp_ethernet.Task_to_wake = 0;
-#if defined ETH_INTERFACE
-        ppp_ethernet.Channel = 1;                                        // the Ethernet controller has channel 0 so PPP uses Ethernet channel 1
-#else
-        ppp_ethernet.Channel = 0;                                        // default channel number
-#endif
+        ppp_ethernet.Channel = PPP_INTERFACE_CHANNEL;
         ppp_ethernet.usMode = network[PPP_NETWORK].usNetworkOptions;     // options to be used by the interface
 #if defined USE_IPV6                                                     // generate an IPv6 link-local address from the MAC address
         ucLinkLocalIPv6Address[PPP_NETWORK][0] = 0xfe;                   // link-local unicast
@@ -354,6 +356,26 @@ static int fnPPP_WaitTxFree(void)
 static void fnPPP_FreeEthernetBuffer(int iBufNr)                          // dummy since not used
 {
 }
+
+#if defined TEMP_LWIPP_PPP
+extern void fnSetIPStuff(unsigned long ipaddr, unsigned long netmask, unsigned long gw)
+{
+    network[PPP_NETWORK].ucOurIP[0] = (unsigned char)(ipaddr >> 24);
+    network[PPP_NETWORK].ucOurIP[1] = (unsigned char)(ipaddr >> 16);
+    network[PPP_NETWORK].ucOurIP[2] = (unsigned char)(ipaddr >> 8);
+    network[PPP_NETWORK].ucOurIP[3] = (unsigned char)(ipaddr);
+
+    network[PPP_NETWORK].ucNetMask[0] = (unsigned char)(netmask >> 24);
+    network[PPP_NETWORK].ucNetMask[1] = (unsigned char)(netmask >> 16);
+    network[PPP_NETWORK].ucNetMask[2] = (unsigned char)(netmask >> 8);
+    network[PPP_NETWORK].ucNetMask[3] = (unsigned char)(netmask);
+
+    network[PPP_NETWORK].ucDefGW[0] = (unsigned char)(gw >> 24);
+    network[PPP_NETWORK].ucDefGW[1] = (unsigned char)(gw >> 16);
+    network[PPP_NETWORK].ucDefGW[2] = (unsigned char)(gw >> 8);
+    network[PPP_NETWORK].ucDefGW[3] = (unsigned char)(gw);
+}
+#endif
 
 #if defined USE_SLIP
 static int iTxCount = 0;
