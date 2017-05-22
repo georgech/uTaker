@@ -1519,6 +1519,7 @@ extern void fnLogRx(int iPort, unsigned char *ptrDebugIn, unsigned short usLen)
     }
     rxData[0] = '+';
     ulDiffMS = (uTaskerSystemTick - ulLastRx[iPort]);                    // difference in ticks since last reception
+    ulLastRx[iPort] = uTaskerSystemTick;
     ulDiffMS *= (1000/SEC);
     ptrBuffer = fnBufferDec(ulDiffMS, 0, &rxData[1]);
     *ptrBuffer++ = ' ';
