@@ -3064,7 +3064,7 @@ static int fnJumpWhiteSpace(CHAR **ptrptrInput)
     return (*ptrInput == 0);
 }
 
-
+#if !defined REMOVE_PORT_INITIALISATIONS
 static int fnSetPort(unsigned char ucType, CHAR *ptrInput)               // modify the port type
 {
     unsigned char ucBit;
@@ -3079,6 +3079,7 @@ static int fnSetPort(unsigned char ucType, CHAR *ptrInput)               // modi
     }
     return 0;
 }
+#endif
 
 #if defined MONITOR_PERFORMANCE                                          // {25}
 static void fnDisplayTaskUse(CHAR cTask)

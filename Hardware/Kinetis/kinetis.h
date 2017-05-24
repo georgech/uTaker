@@ -14149,6 +14149,7 @@ typedef struct stPWM_INTERRUPT_SETUP
 #define PWM_PRESCALER_2         0x0001
 #define PWM_PRESCALER_1         0x0000
 #define PWM_PRESCALER_0         0x0000
+#define PWM_EDGE_ALIGNED        0x0000
 #define PWM_CENTER_ALIGNED      FTM_SC_CPWMS                             // 0x20
 #define PWM_EXTERNAL_CLK        FTM_SC_CLKS_EXT                          // 0x18
 #define PWM_FIXED_CLK           FTM_SC_CLKS_FIX                          // 0x10 presently not supported

@@ -62,6 +62,7 @@
           //#define _SAM7X_ADC_TEST6                                     // test zero crossing, high and low triggers
         #endif
     #endif
+
     #if defined SUPPORT_DAC
       //#define TEST_DMA_DAC                                             // test generating a signal using DMA to DAC (based on timer trigger)
           //#define GENERATE_SINE
@@ -69,7 +70,8 @@
                 #include <math.h>                                        // this may need libm.a explicitly linked (depending on IDE and compiler used)
             #endif
     #endif
-    #if (defined SUPPORT_PIT1 || defined SUPPORT_PITS) && !defined KINETIS_WITHOUT_PIT // periodic interrupt
+
+    #if (defined SUPPORT_PIT1 || defined SUPPORT_PITS) && !defined KINETIS_WITHOUT_PIT // M522xx nd Kinetis periodic interrupt timer
       //#define TEST_PIT                                                 // test a user defined periodic interrupt
           //#define TEST_PIT_SINGLE_SHOT                                 // test single-shot PIT
             #define TEST_PIT_PERIODIC                                    // test periodic PIT
@@ -79,36 +81,35 @@
                 #define TIMED_UART  1                                    // the UART to use
         #endif
     #endif
-    #if defined SUPPORT_LPTMR                                            // {18}
+    #if defined SUPPORT_LPTMR                                            // Kinetis low power timer {18}
       //#define TEST_LPTMR_PERIODIC                                      // test a user defined periodic interrupt
       //#define TEST_LPTMR_SINGLE_SHOT                                   // test a user defined single-shot interrupt
     #endif
     #if defined SUPPORT_DMA_TIMER                                        // M522XX DMA timers
       //#define TEST_DMA_TIMER                                           // test a user defined periodic interrupt
     #endif
-    #if defined SUPPORT_PWM_MODULE                                       // {9}
-      //#define TEST_TIMER
-      //#define TEST_PWM
-    #endif
-    #if defined SUPPORT_GENERAL_PURPOSE_TIMER                            // general purpose timers
+    #if defined SUPPORT_GENERAL_PURPOSE_TIMER                            // M522XX general purpose timers
       //#define TEST_GPT                                                 // test general purpose timer operation
         #define GPT_CAPTURES     5                                       // when testing captures, collect this many values
     #endif
-    #if defined SUPPORT_TIMER                                            // standard timers
-      //#define TEST_TIMER                                               // test a user defined timer interrupt
+    #if defined SUPPORT_TIMER || defined SUPPORT_PWM_MODULE              // standard timers
+        #define TEST_TIMER                                               // enable timer test(s)
         #if defined TEST_TIMER
-          //#define TEST_SINGLE_SHOT_TIMER                               // test single-shot mode
-          //#define TEST_PERIODIC_TIMER                                  // test periodic interrupt mode
-          //#define TEST_ADC_TIMER                                       // test periodic ADC trigger mode (Luminary)
-          //#define TEST_PWM                                             // {1} test generating PWM output from timer
-          //#define TEST_CAPTURE                                         // {6} test timer capture mode
-          //#define TEST_STEPPER                                         // test generating stepper motor frequency patterns (use together with PWM)
+            #if defined SUPPORT_PWM_MODULE                               // {9}
+                #define TEST_PWM                                         // {1} test generating PWM output from timer
+              //#define TEST_STEPPER                                     // test generating stepper motor frequency patterns (use together with PWM)
+            #endif
+            #if defined SUPPORT_TIMER
+              //#define TEST_SINGLE_SHOT_TIMER                           // test single-shot mode
+              //#define TEST_PERIODIC_TIMER                              // test periodic interrupt mode
+              //#define TEST_ADC_TIMER                                   // test periodic ADC trigger mode (Luminary)
+              //#define TEST_CAPTURE                                     // {6} test timer capture mode
+            #endif
         #endif
     #endif
-    #if defined SUPPORT_RIT
-        #define RIT_TEST                                                 // {7} LPC17XX repetitive interrupt timer
+    #if defined SUPPORT_RIT                                              // {7} LPC17XX repetitive interrupt timer
+        #define RIT_TEST
     #endif
-
     #if defined VOICE_RECORDER                                           // {15}
         // RIFF WAVE header
         //
@@ -1538,7 +1539,7 @@ static void fnConfigure_Timer(void)
 #if (defined _KINETIS || defined _M5223X) && defined TEST_PWM            // {9} Kinetis and Coldfire PWM
     PWM_INTERRUPT_SETUP pwm_setup;
     pwm_setup.int_type = PWM_INTERRUPT;
-    pwm_setup.pwm_mode = (PWM_SYS_CLK | PWM_PRESCALER_16);               // clock PWM timer from the system clock with /16 pre-scaler
+    pwm_setup.pwm_mode = (PWM_SYS_CLK | PWM_PRESCALER_128 | PWM_EDGE_ALIGNED); // clock PWM timer from the system clock with /16 pre-scaler
     pwm_setup.int_handler = 0;                                           // {22} no user interrupt call-back on PWM cycle
     #if defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KE02Z || defined FRDM_KE04Z || defined FRDM_KE06Z
     pwm_setup.pwm_reference = (_TIMER_0 | 1);                            // timer module 0, channel 1
@@ -1613,7 +1614,7 @@ static void fnConfigure_Timer(void)
     fnConfigureInterrupt((void *)&pwm_setup);                            // configure and start the PWM output
     return;
     #else
-    pwm_setup.pwm_frequency = PWM_FREQUENCY(1000, 16);                   // generate 1000Hz on PWM output
+    pwm_setup.pwm_frequency = PWM_FREQUENCY(54, 128);                   // generate 1000Hz on PWM output
     pwm_setup.pwm_value   = _PWM_PERCENT(20, pwm_setup.pwm_frequency);   // 20% PWM (high/low)
     fnConfigureInterrupt((void *)&pwm_setup);                            // enter configuration for PWM test
     #endif
@@ -1633,8 +1634,21 @@ static void fnConfigure_Timer(void)
     pwm_setup.pwm_mode |= PWM_POLARITY;                                  // change polarity of second channel
     #endif
     pwm_setup.pwm_value  = _PWM_TENTH_PERCENT(706, pwm_setup.pwm_frequency); // 70.6% PWM (low/high) on different channel
-  //fnConfigureInterrupt((void *)&pwm_setup);
-    #if defined FRDM_KL02Z || defined FRDM_KE02Z40M
+    fnConfigureInterrupt((void *)&pwm_setup);
+    #if defined FRDM_K64F
+    pwm_setup.pwm_value = _PWM_TENTH_PERCENT(553, pwm_setup.pwm_frequency); // 55.3% PWM (low/high) on different channel
+    pwm_setup.pwm_reference = (_TIMER_0 | 1);
+    fnConfigureInterrupt((void *)&pwm_setup);
+    pwm_setup.pwm_value = _PWM_TENTH_PERCENT(249, pwm_setup.pwm_frequency); // 24.9% PWM (low/high) on different channel
+    pwm_setup.pwm_reference = (_TIMER_0 | 0);
+    fnConfigureInterrupt((void *)&pwm_setup);
+    pwm_setup.pwm_value = _PWM_TENTH_PERCENT(129, pwm_setup.pwm_frequency); // 12.9% PWM (low/high) on different channel
+    pwm_setup.pwm_reference = (_TIMER_0 | 4);
+    fnConfigureInterrupt((void *)&pwm_setup);
+    pwm_setup.pwm_value = _PWM_TENTH_PERCENT(20, pwm_setup.pwm_frequency); // 2.0% PWM (low/high) on different channel
+    pwm_setup.pwm_reference = (_TIMER_0 | 5);
+    fnConfigureInterrupt((void *)&pwm_setup);
+    #elif defined FRDM_KL02Z || defined FRDM_KE02Z40M
     pwm_setup.pwm_reference = (_TIMER_1 | 1);                            // timer module 1, channel 1 (red LED for FRDM-KL02Z and blue for FRDM-KE02Z40M)
     fnConfigureInterrupt((void *)&pwm_setup);
     #elif defined FRDM_KL25Z
