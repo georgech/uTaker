@@ -1539,7 +1539,7 @@ static void fnConfigure_Timer(void)
 #if (defined _KINETIS || defined _M5223X) && defined TEST_PWM            // {9} Kinetis and Coldfire PWM
     PWM_INTERRUPT_SETUP pwm_setup;
     pwm_setup.int_type = PWM_INTERRUPT;
-    pwm_setup.pwm_mode = (PWM_SYS_CLK | PWM_PRESCALER_128 | PWM_EDGE_ALIGNED); // clock PWM timer from the system clock with /16 pre-scaler
+    pwm_setup.pwm_mode = (PWM_SYS_CLK | PWM_PRESCALER_16 | PWM_EDGE_ALIGNED); // clock PWM timer from the system clock with /16 pre-scaler
     pwm_setup.int_handler = 0;                                           // {22} no user interrupt call-back on PWM cycle
     #if defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KE02Z || defined FRDM_KE04Z || defined FRDM_KE06Z
     pwm_setup.pwm_reference = (_TIMER_0 | 1);                            // timer module 0, channel 1
@@ -1614,7 +1614,7 @@ static void fnConfigure_Timer(void)
     fnConfigureInterrupt((void *)&pwm_setup);                            // configure and start the PWM output
     return;
     #else
-    pwm_setup.pwm_frequency = PWM_FREQUENCY(54, 128);                   // generate 1000Hz on PWM output
+    pwm_setup.pwm_frequency = PWM_FREQUENCY(1000, 16);                   // generate 1000Hz on PWM output
     pwm_setup.pwm_value   = _PWM_PERCENT(20, pwm_setup.pwm_frequency);   // 20% PWM (high/low)
     fnConfigureInterrupt((void *)&pwm_setup);                            // enter configuration for PWM test
     #endif
