@@ -39,6 +39,7 @@
     02.01.2016 Optionally support IPv4 transmission fragmentation        {24}
     02.01.2016 Optionally support IPv4 reception de-fragmentation        {25}
     12.05.2017 Add optional Ethernet error flags support                 {26}
+    26.05.2017 Allow PPP interfaces to use IP without ARP                {27}
 
 */        
 
@@ -713,6 +714,9 @@ static unsigned short fnInsertIP_checksum(unsigned char *ptrData, unsigned char 
 //
 extern signed short fnSendIPv4(unsigned char *prIP_to, unsigned char ucProtType, unsigned char ucTypeOfService, unsigned char ucTTL, unsigned char *dat, unsigned short usLen, UTASK_TASK Owner, USOCKET cSocket)
 {
+    #if defined USE_PPP
+    static const ARP_TAB PPP_ARP = { ARP_BROADCAST_ENTRY, 0 };           // {27} dummy ARP entry for PPP interface use
+    #endif
     static const unsigned char ucIP_ProtV4[] = {(unsigned char)(PROTOCOL_IPv4 >> 8), (unsigned char)(PROTOCOL_IPv4)};
     static unsigned short usIP_identification_field = 0;                 // IP identification field content initially zero and is incremented in every IP frame that is sent
     #if defined USE_IGMP && (defined USE_IGMP_V2 || defined USE_IGMP_V3) // {20}
@@ -751,9 +755,13 @@ extern signed short fnSendIPv4(unsigned char *prIP_to, unsigned char ucProtType,
     
     #if defined SUPPORT_MULTICAST_TX || defined USE_IGMP                 // {18}
     if (((ucProtType != IP_UDP) && (ucProtType != IP_IGMPV2)) || (*prIP_to < 224) || (*prIP_to > 239)) { // {20} if not a UDP multicast destination use standard ARP resolution
+        #if defined USE_PPP && IP_INTERFACE_COUNT == 1                   // {27} PPP interface never used ARP
+        ptrARP = (ARP_TAB *)&PPP_ARP;                                    // PPP interface traffic doesn't use ARP so use a dummy entry
+        #else
         if ((ptrARP = fnGetIP_ARP(prIP_to, Owner, cSocket)) == 0) {      // see whether IP is in ARP table
             return NO_ARP_ENTRY;                                         // ARP will normally try to resolve the address here and we receive notification when it has completed
         }
+        #endif
     }
     else {                                                               // transmission to an IGMP or UDP multicast address
         #if IP_INTERFACE_COUNT > 1
@@ -767,7 +775,7 @@ extern signed short fnSendIPv4(unsigned char *prIP_to, unsigned char ucProtType,
                 if (cSocket & interfaces) {                              // multicast frame is to be sent on this interface
                     if ((ucProtType == IP_UDP) && (usUDPchecksum != 0)) {// multicast UDP with a UDP checksum
                         if ((fnGetInterfaceCharacteristics(uReference) & INTERFACE_NO_TX_CS_OFFLOADING) == 0) { // if this interface performes checksum offloading we must ensure that the UDP checksum is set to zero
-                            *(dat + 6) = 0;                           // set the UDP checksum in the frame zu zero
+                            *(dat + 6) = 0;                              // set the UDP checksum in the frame zu zero
                             *(dat + 7) = 0;
                         }
                     }
@@ -800,9 +808,21 @@ extern signed short fnSendIPv4(unsigned char *prIP_to, unsigned char ucProtType,
         #endif
     }
     #else
+        #if defined USE_PPP && IP_INTERFACE_COUNT == 1                   // {27}
+        ptrARP = (ARP_TAB *)&PPP_ARP;                                    // PPP interface traffic doesn't use ARP so use a dummy entry
+        #else
     if ((ptrARP = fnGetIP_ARP(prIP_to, Owner, cSocket)) == 0) {          // see whether IP is in ARP table
+            #if defined USE_PPP && IP_INTERFACE_COUNT > 1                // {27}
+        cSocket &= ~((INTERFACE_MASK << INTERFACE_SHIFT) & ~(PPP_INTERFACES)); // remove non-PPP interfaces from the interface ist
+        if ((cSocket & (INTERFACE_MASK << INTERFACE_SHIFT)) == 0) {      // check whether there are remaining PPP interfaces
+            return NO_ARP_ENTRY;                                         // if no PPP interface in operation we quit
+        }
+        ptrARP = (ARP_TAB *)&PPP_ARP;                                    // PPP interface traffic doesn't use ARP so use a dummy entry
+            #else
         return NO_ARP_ENTRY;                                             // ARP will normally try to resolve the address here and we receive notification when it has completed
+            #endif
     }
+        #endif
     #endif
 
     #if IP_NETWORK_COUNT > 1                                             // use the network and interface as detailed by the sender (not ARP entry)
@@ -825,7 +845,7 @@ extern signed short fnSendIPv4(unsigned char *prIP_to, unsigned char ucProtType,
     uMemcpy(&ucData[2 * MAC_LENGTH], ucIP_ProtV4, sizeof(ucIP_ProtV4));
     #if defined IPV4_SUPPORT_TX_FRAGMENTATION                            // {24}
     do {                                                                 // send as many fragments as required
-        i = (2 * MAC_LENGTH + sizeof(ucIP_ProtV4));
+        i = ((2 * MAC_LENGTH) + sizeof(ucIP_ProtV4));
         if (usLen > ETH_MTU) {                                           // if the datagram payload is larger than can be carried in the MTU
             unsigned short usPayloadMax = (ETH_MTU - IP_MIN_HLEN);
         #if defined USE_IGMP && (defined USE_IGMP_V2 || defined USE_IGMP_V3)
@@ -841,7 +861,7 @@ extern signed short fnSendIPv4(unsigned char *prIP_to, unsigned char ucProtType,
             usRemainder = 0;                                             // no fragmentation required for this frame
         }
     #else
-        i = (2 * MAC_LENGTH + sizeof(ucIP_ProtV4));
+        i = ((2 * MAC_LENGTH) + sizeof(ucIP_ProtV4));
     #endif
         ucData[i++]  = (IP_DEFAULT_VERSION_HEADER_LENGTH + OPTION_LENGTH/4); // construct the IP header with no option
         ucData[i++]  = ucTypeOfService;

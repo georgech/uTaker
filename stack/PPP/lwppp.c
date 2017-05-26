@@ -2199,13 +2199,31 @@ extern void pbuf_cat(void)
     _EXCEPTION("TO DO");
 }
 
+
+static struct netif *Ournetif = 0;
+
+extern int fnSendPPP(unsigned char *buffer, int iLength)
+{
+    struct pbuf pb;
+    if ((Ournetif == 0) || (Ournetif->output == 0)) {
+        return 0;
+    }
+    pb.len = iLength;
+    pb.payload = buffer;
+    pb.next = 0;
+    Ournetif->output(Ournetif, &pb, 0);
+    return iLength;
+}
+
 extern void fnSetIPStuff(unsigned long ipaddr, unsigned long netmask, unsigned long gw);
 
 struct netif *netif_add(struct netif *netif, ip_addr_t *ipaddr, ip_addr_t *netmask,
     ip_addr_t *gw, void *state, netif_init_fn init, netif_input_fn input)
 {
-    fnSetIPStuff(ipaddr->addr, netmask->addr, gw->addr);
-    return 1;
+    int iResult = init(netif);
+    fnSetIPStuff(ipaddr->addr, netmask->addr, gw->addr, netif->output);
+    Ournetif = netif;
+    return (netif);
 }
 
 // Looks to be used to clear an interface
@@ -2226,7 +2244,7 @@ void netif_set_up(struct netif *netif)
 }
 extern void netif_set_down(void)
 {
-    _EXCEPTION("TO DO");
+  //_EXCEPTION("TO DO");
 }
 extern unsigned long uTaskerSystemTick;
 u32_t sys_jiffies(void)

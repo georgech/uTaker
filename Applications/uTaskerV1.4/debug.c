@@ -2321,6 +2321,8 @@ static void fnDoIP(unsigned char ucType, CHAR *ptr_input)
         fnStrIP(ptr_input, ucTempIP);                                    // ping entered address
     #if defined ENC424J600_INTERFACE && (IP_INTERFACE_COUNT > 1)
         fnPingTest(ETHERNET_INTERFACE | ENC424J00_INTERFACE | IPv4_DUMMY_SOCKET); // ping on both Ethernet interfaces
+    #elif defined USE_PPP && defined ETH_INTERFACE
+        fnPingTest(ETHERNET_INTERFACE | PPP_INTERFACE | IPv4_DUMMY_SOCKET); // ping on both Ethernet and PPP interfaces
     #else
         fnPingTest(IPv4_DUMMY_SOCKET);                                   // {50} execute using dummy IPv4 socket
     #endif

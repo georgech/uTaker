@@ -33,7 +33,7 @@
 #define REMOVE_PORT_INITIALISATIONS                                      // remove port initialisation and use demonstration to ensure that port configuration and use doesn't conflict with specific application development (exception is blink LED)
 //#define NO_PERIPHERAL_DEMONSTRATIONS                                   // disable peripheral demonstration code (ADC/I2C/CAN/port interrupts/etc.) so that they can't interfere with new application developments
 
-//#define USE_MAINTENANCE                                                // include the command line shell (on UART, USB-CDC and/or Telenet) with maintenance support for the application (remove to reduce project size for special tests or possibly running from limited RAM)
+#define USE_MAINTENANCE                                                  // include the command line shell (on UART, USB-CDC and/or Telenet) with maintenance support for the application (remove to reduce project size for special tests or possibly running from limited RAM)
     #define PREVIOUS_COMMAND_BUFFERS  4                                  // allow the up-arrow to retrieve this many past commands
     #define MEMORY_DEBUGGER                                              // memory and storage debugger interface (read, write, fill and erase)
 
@@ -248,7 +248,7 @@
     #define KINETIS_KL02
     #define DEVICE_WITHOUT_CAN                                           // KL doesn't have CAN controller
     #define DEVICE_WITHOUT_ETHERNET                                      // KL doesn't have Ethernet controller
-    #define DEVICE_WITHOUT_USB                                           // KL00 doesn't have USB
+    #define DEVICE_WITHOUT_USB                                           // KL02 doesn't have USB
 #elif defined FRDM_KL03Z
     #define TARGET_HW            "FRDM-KL03Z Kinetis"
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((1.0 * 1024) * MEM_FACTOR)
@@ -257,7 +257,7 @@
     #define KINETIS_KL03
     #define DEVICE_WITHOUT_CAN                                           // KL doesn't have CAN controller
     #define DEVICE_WITHOUT_ETHERNET                                      // KL doesn't have Ethernet controller
-    #define DEVICE_WITHOUT_USB                                           // KL00 doesn't have USB
+    #define DEVICE_WITHOUT_USB                                           // KL02 doesn't have USB
     #define INTERRUPT_VECTORS_IN_FLASH                                   // save some memory by keeping interrupt vectors in SRAM
 #elif defined FRDM_KL05Z
     #define TARGET_HW            "FRDM_KL05Z Kinetis"
@@ -266,7 +266,7 @@
     #define KINETIS_KL05
     #define DEVICE_WITHOUT_CAN                                           // KL doesn't have CAN controller
     #define DEVICE_WITHOUT_ETHERNET                                      // KL doesn't have Ethernet controller
-    #define DEVICE_WITHOUT_USB                                           // KL00 doesn't have USB
+    #define DEVICE_WITHOUT_USB                                           // KL05 doesn't have USB
 #elif defined TWR_KL25Z48M
     #define TARGET_HW            "TWR-KL25Z48M Kinetis"
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((10 * 1024) * MEM_FACTOR)
@@ -1082,7 +1082,7 @@
 
 // I2C
 //
-#define I2C_INTERFACE
+//#define I2C_INTERFACE
 #if defined I2C_INTERFACE
   //#define I2C_SLAVE_MODE                                               // support slave mode
         #define I2C_SLAVE_TX_BUFFER                                      // support preparing slave transmissions with fnWrite()
@@ -1248,12 +1248,18 @@
         #endif
         #define ENC424J600_NETWORK       DEFAULT_NETWORK                 // the ENC424J600 interface is on the default network
     #elif defined USE_PPP
-        #define IP_INTERFACE_COUNT       2                               // two interfaces available (PPP and Ethernet)
-        #define ETHERNET_INTERFACES      1
-        #define ETHERNET_IP_INTERFACE    DEFAULT_IP_INTERFACE
-        #define PPP_IP_INTERFACE         (unsigned char)1
-        #define ETHERNET_INTERFACE       defineInterface(ETHERNET_IP_INTERFACE) // ethernet interface is default interface
-        #define PPP_INTERFACE            defineInterface(PPP_IP_INTERFACE) // PPP interface is second interface
+        #if defined ETH_INTERFACE
+            #define IP_INTERFACE_COUNT       2                           // two interfaces available (PPP and Ethernet)
+            #define ETHERNET_INTERFACES      1
+            #define ETHERNET_IP_INTERFACE    DEFAULT_IP_INTERFACE
+            #define PPP_IP_INTERFACE         (unsigned char)1
+            #define ETHERNET_INTERFACE       defineInterface(ETHERNET_IP_INTERFACE) // ethernet interface is default interface
+        #else
+            #define IP_INTERFACE_COUNT       1                           // one interface available
+            #define PPP_IP_INTERFACE         DEFAULT_IP_INTERFACE
+        #endif
+        #define PPP_INTERFACE                defineInterface(PPP_IP_INTERFACE)
+        #define PPP_INTERFACES               (PPP_INTERFACE)             // when multiple PPP interfaces exist, each one can be ORed to this mask
     #else
         #if !defined IP_INTERFACE_COUNT
             #define IP_INTERFACE_COUNT   1                               // single interface available
@@ -1286,9 +1292,11 @@
         #define ARP_IGNORE_FOREIGN_ENTRIES                               // only add used addresses to ARP table
       //#define RESTRICTED_GATEWAY_INTERFACE                             // used only when multiple interfaces are available, in which case the user must supply fnRestrictGatewayInterface() to decide which interfaces are included in gateway ARP re-resolves (when not used all interfaces are used in a single network environment or only the original interface in a multi-network environment)
         #define USE_ICMP                                                 // enable ICMP
-        #define USE_IGMP                                                 // enable IGMP (must be enabled for level 2 hosts that handle multicast IP datagram reception and thus need to have full IP multicasting support)
+      //#define USE_IGMP                                                 // enable IGMP (must be enabled for level 2 hosts that handle multicast IP datagram reception and thus need to have full IP multicasting support)
             #if defined ENC424J600_INTERFACE && (ETHERNET_INTERFACES > 1)
                 #define IGMP_ALL_HOSTS_INTERFACES   (ETHERNET_INTERFACE | ENC424J00_INTERFACE) // interfaces that IGMP is to work on (enabling the all-host group on all required interfaces - only needed when IP_INTERFACE_COUNT > 1)
+            #elif defined USE_PPP && (ETHERNET_INTERFACES > 0)
+                #define IGMP_ALL_HOSTS_INTERFACES   (ETHERNET_INTERFACE | PPP_INTERFACE) // interfaces that IGMP is to work on (enabling the all-host group on all required interfaces - only needed when IP_INTERFACE_COUNT > 1)
             #elif defined RNDIS_IP_INTERFACE && (ETHERNET_INTERFACES > 1)
                 #define IGMP_ALL_HOSTS_INTERFACES   (ETHERNET_INTERFACE | RNDIS_IP_INTERFACE) // interfaces that IGMP is to work on (enabling the all-host group on all required interfaces - only needed when IP_INTERFACE_COUNT > 1)
             #else
@@ -1341,7 +1349,7 @@
           //#define USE_POP3                                             // enable POP3 Email - needs TCP
             #define USE_HTTP                                             // support embedded Web server - needs TCP
             #define USE_TELNET                                           // enable TELNET support
-                #define TELNET_RFC2217_SUPPORT                           // support TELNET COM port control options
+              //#define TELNET_RFC2217_SUPPORT                           // support TELNET COM port control options
           //#define USE_TELNET_CLIENT                                    // enable TELNET client support
           //#define USE_TIME_SERVER                                      // enable time server support - presently demo started in application
                 #define NUMBER_OF_TIME_SERVERS 3                         // number of time servers that are used
@@ -1386,7 +1394,7 @@
             #define USE_DHCP_CLIENT                                      // enable DHCP client  - needs UDP - IPCONFIG default zero - needs >= 1k Ethernet RX buffers (set random number also)
                 #define DHCP_HOST_NAME                                   // we send our host name as DHCP option - the application must supply fnGetDHCP_host_name()
           //#define USE_DHCP_SERVER                                      // enable DHCP server
-            #define USE_mDNS_SERVER                                      // enable mDNS server - needs UDP and IGMP
+          //#define USE_mDNS_SERVER                                      // enable mDNS server - needs UDP and IGMP
           //#define USE_DNS                                              // enable DNS - needs UDP
                 #define DNS_SERVER_OWN_ADDRESS                           // command line menu allows DNS server address to be set, otherwise it uses the default gateway
           //#define USE_TFTP                                             // enable TFTP - needs UDP
@@ -1396,7 +1404,7 @@
                 #define SNMP_MANAGER_COUNT        3                      // the number of managers supported
                 #define SNMP_TRAP_QUEUE_LENGTH    8                      // traps that can be queued to each manager
                 #define SNMP_MAX_BUFFER           512                    // largest UDP content size (in bytes - cannot be larger than maximum UDP data length)
-            #define USE_SNTP                                             // simple network time protocol
+          //#define USE_SNTP                                             // simple network time protocol
                 #define SNTP_SERVERS              4                      // number of SNTP servers that are used
 
             #if defined USE_DHCP_CLIENT && defined USE_DHCP_SERVER

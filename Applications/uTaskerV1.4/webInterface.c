@@ -965,7 +965,7 @@ static CHAR *fnInsertString(unsigned char *ptrBuffer, LENGTH_CHUNK_COUNT TxLengt
 #if defined USE_PARAMETER_BLOCK
                 if (parameters->usServers[DEFAULT_NETWORK] & ACTIVE_DHCP)
 #else
-                if (temp_pars->temp_parameters.usServers & ACTIVE_DHCP)
+                if (temp_pars->temp_parameters.usServers[DEFAULT_NETWORK] & ACTIVE_DHCP)
 #endif
                 {
                     cPtr = (CHAR *)&network[DEFAULT_NETWORK].ucOurIP[0]; // display working address
@@ -980,7 +980,7 @@ static CHAR *fnInsertString(unsigned char *ptrBuffer, LENGTH_CHUNK_COUNT TxLengt
 #if defined USE_PARAMETER_BLOCK
                 if (parameters->usServers[DEFAULT_NETWORK] & ACTIVE_DHCP)
 #else
-                if (temp_pars->temp_parameters.usServers & ACTIVE_DHCP)
+                if (temp_pars->temp_parameters.usServers[DEFAULT_NETWORK] & ACTIVE_DHCP)
 #endif
                 {
                     cPtr = (CHAR *)&network[DEFAULT_NETWORK].ucNetMask[0]; // display working sub-net mask
@@ -995,7 +995,7 @@ static CHAR *fnInsertString(unsigned char *ptrBuffer, LENGTH_CHUNK_COUNT TxLengt
 #if defined USE_PARAMETER_BLOCK
                 if (parameters->usServers[DEFAULT_NETWORK] & ACTIVE_DHCP)
 #else
-                if (temp_pars->temp_parameters.usServers & ACTIVE_DHCP)
+                if (temp_pars->temp_parameters.usServers[DEFAULT_NETWORK] & ACTIVE_DHCP)
 #endif
                 {
                     cPtr = (CHAR *)&network[DEFAULT_NETWORK].ucDefGW[0]; // display working gateway

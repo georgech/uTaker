@@ -1359,10 +1359,10 @@
       //#define TICK_USES_LPTMR                                          // use low power timer for TICK so that it continues to operate in stop based low power modes
         //Select the clock used by the low power timer - if the timer if to continue running in low power modes the clock chosen should continue to run in that mode too
         //
-      //#define LPTMR_CLOCK_LPO                                          // clock the low power timer from LPO (1kHz)
+        #define LPTMR_CLOCK_LPO                                          // clock the low power timer from LPO (1kHz)
       //#define LPTMR_CLOCK_INTERNAL_30_40kHz                            // clock the low power timer from the 30..40kHz internal reference
       //#define LPTMR_CLOCK_INTERNAL_4MHz                                // clock the low power timer from the 4MHz internal reference
-        #define LPTMR_CLOCK_EXTERNAL_32kHz                               // clock the low power timer from external 32kHz reference
+      //#define LPTMR_CLOCK_EXTERNAL_32kHz                               // clock the low power timer from external 32kHz reference
       //#define LPTMR_CLOCK_OSCERCLK                                     // clock the low power timer from the external reference
         #if defined FRDM_K64F || defined FreeLON
           //#define LPTMR_PRESCALE   64                                  // when using the external oscillator add this pre-scaler value to the low power timer input
@@ -1403,7 +1403,7 @@
     #endif
 #endif
 
-#define SUPPORT_TIMER                                                    // support hardware timer interrupt configuration (FlexTimer or TPM)
+//#define SUPPORT_TIMER                                                  // support hardware timer interrupt configuration (FlexTimer or TPM)
   //#define SUPPORT_CAPTURE                                              // support capture mode of operation
 
 #if defined KINETIS_KL || defined KINETIS_K66
@@ -2508,16 +2508,18 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
       //#define FTM2_1_ON_H
       //#define FTM2_2_ON_D
     #else
-      //#define FTM0_0_ON_C                                              // FTM0 channel 0 on port C rather than port A
-      //#define FTM0_1_ON_C                                              // FTM0 channel 1 on port C rather than port A
+        #if defined FRDM_K64F
+            #define FTM0_0_ON_C                                          // FTM0 channel 0 on port C rather than port A
+            #define FTM0_1_ON_C                                          // FTM0 channel 1 on port C rather than port A
+            #define FTM0_4_ON_D                                          // FTM0 channel 4 on port D rather than port A
+            #define FTM0_5_ON_D                                          // FTM0 channel 5 on port D rather than port A
+        #endif
         #if !defined TWR_KL46Z48M && !defined TWR_K64F120M && !defined BLAZE_K22
             #define FTM0_2_ON_C                                          // FTM0 channel 2 on port C rather than port A
         #endif
         #if defined KINETIS_K64
             #define FTM0_3_ON_C                                          // FTM0 channel 3 on port C rather than port A
         #endif
-      //#define FTM0_4_ON_D                                              // FTM0 channel 4 on port D rather than port A
-      //#define FTM0_5_ON_D                                              // FTM0 channel 5 on port D rather than port A
       //#define FTM0_6_ON_D                                              // FTM0 channel 6 on port D rather than port A
       //#define FTM0_7_ON_D                                              // FTM0 channel 7 on port D rather than port A
 

@@ -728,7 +728,25 @@ lcp_ackci(fsm *f, u_char *p, int len)
   ACKCISHORT(CI_AUTHTYPE, !go->neg_chap && go->neg_upap, PPP_PAP);
   ACKCILQR(CI_QUALITY, go->neg_lqr, go->lqr_period);
   ACKCICHAR(CI_CALLBACK, go->neg_cbcp, CBCP_OPT);
-  ACKCILONG(CI_MAGICNUMBER, go->neg_magicnumber, go->magicnumber);
+  //ACKCILONG(CI_MAGICNUMBER, go->neg_magicnumber, go->magicnumber);
+
+//#define ACKCILONG(opt, neg, val)
+  if (go->neg_magicnumber) { 
+    if ((len -= CILEN_LONG) < 0) 
+      goto bad; 
+    GETCHAR(citype, p); 
+    GETCHAR(cilen, p); 
+    if (cilen != CILEN_LONG ||  citype != CI_MAGICNUMBER) 
+      goto bad; 
+    GETLONG(cilong, p); 
+#if defined _WINDOWS
+    go->magicnumber = cilong;
+#endif
+    if (cilong != go->magicnumber) 
+      goto bad; 
+  }
+
+
   ACKCIVOID(CI_PCOMPRESSION, go->neg_pcompression);
   ACKCIVOID(CI_ACCOMPRESSION, go->neg_accompression);
 

@@ -26,6 +26,7 @@
 #define TEMP_LWIPP_PPP
 extern void start_ppp_now(unsigned char uart_handle);                    // temporary using lwip PPP
 extern void pass_raw_input(unsigned char *buffer, int iLength);
+extern int fnSendPPP(unsigned char *buffer, int iLength);
 void (*ppp_callback)(void *) = 0;
 void *ppp_parameter = 0;
 
@@ -360,20 +361,23 @@ static void fnPPP_FreeEthernetBuffer(int iBufNr)                          // dum
 #if defined TEMP_LWIPP_PPP
 extern void fnSetIPStuff(unsigned long ipaddr, unsigned long netmask, unsigned long gw)
 {
-    network[PPP_NETWORK].ucOurIP[0] = (unsigned char)(ipaddr >> 24);
-    network[PPP_NETWORK].ucOurIP[1] = (unsigned char)(ipaddr >> 16);
-    network[PPP_NETWORK].ucOurIP[2] = (unsigned char)(ipaddr >> 8);
-    network[PPP_NETWORK].ucOurIP[3] = (unsigned char)(ipaddr);
+    network[PPP_NETWORK].ucOurIP[3] = (unsigned char)(ipaddr >> 24);
+    network[PPP_NETWORK].ucOurIP[2] = (unsigned char)(ipaddr >> 16);
+    network[PPP_NETWORK].ucOurIP[1] = (unsigned char)(ipaddr >> 8);
+    network[PPP_NETWORK].ucOurIP[0] = (unsigned char)(ipaddr);
 
-    network[PPP_NETWORK].ucNetMask[0] = (unsigned char)(netmask >> 24);
-    network[PPP_NETWORK].ucNetMask[1] = (unsigned char)(netmask >> 16);
-    network[PPP_NETWORK].ucNetMask[2] = (unsigned char)(netmask >> 8);
-    network[PPP_NETWORK].ucNetMask[3] = (unsigned char)(netmask);
+    network[PPP_NETWORK].ucNetMask[3] = (unsigned char)(netmask >> 24);
+    network[PPP_NETWORK].ucNetMask[2] = (unsigned char)(netmask >> 16);
+    network[PPP_NETWORK].ucNetMask[1] = (unsigned char)(netmask >> 8);
+    network[PPP_NETWORK].ucNetMask[0] = (unsigned char)(netmask);
 
-    network[PPP_NETWORK].ucDefGW[0] = (unsigned char)(gw >> 24);
-    network[PPP_NETWORK].ucDefGW[1] = (unsigned char)(gw >> 16);
-    network[PPP_NETWORK].ucDefGW[2] = (unsigned char)(gw >> 8);
-    network[PPP_NETWORK].ucDefGW[3] = (unsigned char)(gw);
+    network[PPP_NETWORK].ucDefGW[3] = (unsigned char)(gw >> 24);
+    network[PPP_NETWORK].ucDefGW[2] = (unsigned char)(gw >> 16);
+    network[PPP_NETWORK].ucDefGW[1] = (unsigned char)(gw >> 8);
+    network[PPP_NETWORK].ucDefGW[0] = (unsigned char)(gw);
+#if defined _WINDOWS
+    fnSimulateLinkUp();
+#endif
 }
 #endif
 
@@ -444,18 +448,23 @@ extern void stop_timer(void(*fsm_timeout)(void *))
 }
 #endif
 
+static unsigned char ucTxBuffer[2048] = { 0 };
+static QUEUE_TRANSFER txLength = 0;
+
 // The Ethernet transmission is passed in increasing protocol layers and we send it directly to the serial interface after inserting any escape sequences necessary
 //
 static void fnPPP_PutInBuffer(unsigned char *ptrOut, unsigned char *ptrIn, QUEUE_TRANSFER nr_of_bytes)
 {
-    _EXCEPTION("TO DO...");
+    uMemcpy(&ucTxBuffer[txLength], ptrIn, nr_of_bytes);
+    txLength += nr_of_bytes;
 }
 
 // Initiate transmission of prepared Ethernet content to PPP interface
 //
 static QUEUE_TRANSFER fnPPP_StartEthTx(QUEUE_TRANSFER DataLen, unsigned char *ptr_put)
 {
-    _EXCEPTION("TO DO...");
+    fnSendPPP(&ucTxBuffer[((2 * MAC_LENGTH) + 2)], (DataLen - ((2 * MAC_LENGTH) + 2)));
+    txLength = 0;
     return (DataLen);
 }
 #endif

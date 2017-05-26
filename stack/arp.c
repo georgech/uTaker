@@ -39,6 +39,7 @@
     13.04.2014 Add fnAssignNetwork() call to associate received frames to a network {23}
     05.06.2015 Modify the default behavior of re-resolves of the gateway address in multiple-network environments {24}
     12.05.2017 Add optional Ethernet error flags support                 {25}
+    26.05.2017 Allow PPP interfaces to skip ARP                          {26}
 
 */  
       
@@ -933,6 +934,12 @@ extern ARP_TAB *fnGetIP_ARP(unsigned char *Search_IP, UTASK_TASK OwnerTask, USOC
     #endif
     #if defined ARP_VLAN_SUPPORT                                         // {13}
     unsigned short usVLAN_ID;
+    #endif
+    #if defined USE_PPP && IP_INTERFACE_COUNT > 1                        // {26}
+    Socket &= ~(PPP_INTERFACES);                                         // remove PPP interface(s) from resolve list
+    if ((Socket & (INTERFACE_MASK << INTERFACE_SHIFT)) == 0) {           // check whether there are non-PPP interfaces that still need to resolve
+        return 0;                                                        // no non-PPP interfaces in use so return with zero pointer
+    }
     #endif
 
     #if defined SUPPORT_SUBNET_TX_BROADCAST                              // {10}
