@@ -40,6 +40,7 @@
     02.01.2016 Optionally support IPv4 reception de-fragmentation        {25}
     12.05.2017 Add optional Ethernet error flags support                 {26}
     26.05.2017 Allow PPP interfaces to use IP without ARP                {27}
+    29.05.2017 Avoid PPP reception adding ARP entries                    {28}
 
 */        
 
@@ -603,9 +604,17 @@ extern int fnHandleIPv4(ETHERNET_FRAME *frame)                           // {9}
         #endif
     }
     #endif
-    if (uMemcmp(received_ip_packet->source_IP_address, cucBroadcast, IPV4_LENGTH) != 0) { // add the address to ARP cache as long as not broadcast
-        fnAddARP(received_ip_packet->source_IP_address, frame->ptEth->ethernet_source_MAC, &arp_details); // {15}
+    #if defined USE_PPP && (IP_INTERFACE_COUNT > 1)                      // {28}
+    if ((frame->ucInterfaceHandling & INTERFACE_NO_MAC_ETHERNET_II) == 0) { // only add IP addresses to ARP cache when the interfaces uses a MAC address
+    #endif
+    #if !defined USE_PPP || (IP_INTERFACE_COUNT != 1)                    // {28}
+        if (uMemcmp(received_ip_packet->source_IP_address, cucBroadcast, IPV4_LENGTH) != 0) { // add the address to ARP cache as long as not broadcast
+            fnAddARP(received_ip_packet->source_IP_address, frame->ptEth->ethernet_source_MAC, &arp_details); // {15}
+        }
+    #endif
+    #if defined USE_PPP && (IP_INTERFACE_COUNT > 1)
     }
+    #endif
     frame->usIPLength = (IP_MIN_HLEN + ucOptionsLength);
     frame->usDataLength = (tLen - (IP_MIN_HLEN + ucOptionsLength));      // {9}
     #if defined IPV4_SUPPORT_RX_DEFRAGMENTATION                          // {25}
@@ -813,7 +822,7 @@ extern signed short fnSendIPv4(unsigned char *prIP_to, unsigned char ucProtType,
         #else
     if ((ptrARP = fnGetIP_ARP(prIP_to, Owner, cSocket)) == 0) {          // see whether IP is in ARP table
             #if defined USE_PPP && IP_INTERFACE_COUNT > 1                // {27}
-        cSocket &= ~((INTERFACE_MASK << INTERFACE_SHIFT) & ~(PPP_INTERFACES)); // remove non-PPP interfaces from the interface ist
+        cSocket &= ~((INTERFACE_MASK << INTERFACE_SHIFT) & ~(PPP_INTERFACES)); // remove non-PPP interfaces from the interface list
         if ((cSocket & (INTERFACE_MASK << INTERFACE_SHIFT)) == 0) {      // check whether there are remaining PPP interfaces
             return NO_ARP_ENTRY;                                         // if no PPP interface in operation we quit
         }

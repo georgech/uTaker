@@ -245,8 +245,9 @@ typedef struct _PACK stETHERNET_FRAME                                    // {1}
 #define INTERFACE_NO_TX_CS_OFFLOADING         0x02                       // force transmit IP checksum calculation in all cases
 #define INTERFACE_NO_TX_PAYLOAD_CS_OFFLOADING 0x04                       // force transmit IP checksum calculation when payload is involved
 #define INTERFACE_NO_MAC_FILTERING            0x08                       // the interface operate in promiscuous mode so MAC filtering may be required in software
+#define INTERFACE_NO_MAC_ETHERNET_II          0x10                       // the interface uses IP without MAC (eg. PPP)
 
-#define INTERFACE_RX_PAYLOAD_CS_FRAGS         0x10                       // used only locally - do not set as interface characteristic
+#define INTERFACE_RX_PAYLOAD_CS_FRAGS         0x40                       // used only locally - do not set as interface characteristic
 #define INTERFACE_CALC_TCP_IPv6               0x80                       // used only locally - do not set as interface characteristic
 
 #define VLAN_UNTAG_TX_FRAME   0x10                                       // force transmission to be untagged
@@ -2176,7 +2177,7 @@ extern int  fnStartTFTP_client(void (*Callback)(unsigned short, CHAR *), unsigne
 #else
     #define FGEN_PROTO unsigned char (*fnGenerator)(unsigned char *)
 #endif
-extern int fnStart_mDNS(USOCKET network_interface);                      // {}
+extern int fnStart_mDNS(USOCKET network_interface);
 
 typedef struct stHTTP_FUNCTION_SET                                       // {101}
 {

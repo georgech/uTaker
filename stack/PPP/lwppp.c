@@ -2095,11 +2095,12 @@ u32_t sio_write(sio_fd_t fd, u8_t *data, u32_t len)
 }
 struct pbuf *pbuf_alloc(pbuf_layer l, u16_t length, pbuf_type type)
 {
+    #define MAC_LENGTH 6
     static int thisBuffer = 0;
     static unsigned char ucBuffer[10][2048];
     static struct pbuf organiser[10];
     struct pbuf *ptrOrganiser = &organiser[thisBuffer];
-    organiser[thisBuffer].payload = ucBuffer[thisBuffer];
+    organiser[thisBuffer].payload = (ucBuffer[thisBuffer] + ((2 * MAC_LENGTH) + 2));
     organiser[thisBuffer].type = type;
     organiser[thisBuffer].len = 0;
     if (++thisBuffer >= 10) {
@@ -2216,12 +2217,14 @@ extern int fnSendPPP(unsigned char *buffer, int iLength)
 }
 
 extern void fnSetIPStuff(unsigned long ipaddr, unsigned long netmask, unsigned long gw);
+extern unsigned char IP_input(struct pbuf *p, struct netif *inp);
 
 struct netif *netif_add(struct netif *netif, ip_addr_t *ipaddr, ip_addr_t *netmask,
     ip_addr_t *gw, void *state, netif_init_fn init, netif_input_fn input)
 {
     int iResult = init(netif);
-    fnSetIPStuff(ipaddr->addr, netmask->addr, gw->addr, netif->output);
+    fnSetIPStuff(ipaddr->addr, netmask->addr, gw->addr);
+    netif->input = IP_input;
     Ournetif = netif;
     return (netif);
 }

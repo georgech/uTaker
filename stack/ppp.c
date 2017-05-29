@@ -379,6 +379,51 @@ extern void fnSetIPStuff(unsigned long ipaddr, unsigned long netmask, unsigned l
     fnSimulateLinkUp();
 #endif
 }
+
+struct pbuf {
+    /** next pbuf in singly linked pbuf chain */
+    struct pbuf *next;
+
+    /** pointer to the actual data in the buffer */
+    unsigned char *payload;
+
+    /**
+    * total length of this buffer and all next buffers in chain
+    * belonging to the same packet.
+    *
+    * For non-queue packet chains this is the invariant:
+    * p->tot_len == p->len + (p->next? p->next->tot_len: 0)
+    */
+    unsigned short tot_len;
+
+    /** length of this buffer */
+    unsigned short len;
+
+    /** pbuf_type as u8_t instead of enum to save space */
+    unsigned char /*pbuf_type*/ type;
+
+    /** misc flags */
+    unsigned char flags;
+
+    /**
+    * the reference count always equals the number of pointers
+    * that refer to this pbuf. This can be pointers from an application,
+    * the stack itself, or pbuf->next pointers from a chain.
+    */
+    unsigned short ref;
+};
+
+extern unsigned char IP_input(struct pbuf *p, void *inp)
+{
+    ETHERNET_FRAME rx_frame;
+    rx_frame.frame_size = (p->len + ((2 * MAC_LENGTH) + 2));
+    rx_frame.ptEth = (ETHERNET_FRAME_CONTENT *)(p->payload - ((2 * MAC_LENGTH) + 2));
+    rx_frame.ptEth->ethernet_frame_type[0] = (unsigned char)(PROTOCOL_IPv4 >> 8);
+    rx_frame.ptEth->ethernet_frame_type[1] = (unsigned char)(PROTOCOL_IPv4);
+    rx_frame.ucInterfaceHandling = (INTERFACE_NO_TX_CS_OFFLOADING | INTERFACE_NO_RX_CS_OFFLOADING | INTERFACE_NO_TX_PAYLOAD_CS_OFFLOADING | INTERFACE_NO_MAC_ETHERNET_II);
+    fnHandleEthernetFrame(&rx_frame, PPP_PortID);
+    return 0;
+}
 #endif
 
 #if defined USE_SLIP

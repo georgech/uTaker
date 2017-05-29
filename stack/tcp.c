@@ -1627,7 +1627,7 @@ extern void fnHandleTCP(ETHERNET_FRAME *ptrRx_frame)                     // {41}
     rx_tcp_packet.ulSeqNr                <<= 8;
     rx_tcp_packet.ulSeqNr                 |= *tcp_data++;
 
-#if defined _WINDOWS
+#if defined _WINDOWS                                                     // use as breakpoint location to stop on a known sequence number
     if (rx_tcp_packet.ulSeqNr == 0x18aa1716) {
         rx_tcp_packet.ulSeqNr = rx_tcp_packet.ulSeqNr;
     }
