@@ -120,7 +120,8 @@ static const ETHERNET_FUNCTIONS PPP_EthernetFunctions = {
 /* =================================================================== */
 
 static int iPPP_State = PPP_STATE_INIT;
-static QUEUE_HANDLE PPP_PortID;
+static QUEUE_HANDLE PPP_PortID = 0;
+static QUEUE_HANDLE PPP_Handle = 0;
 
 #if !defined USE_SLIP
     static unsigned long ulACCM_bits = 0xffffffff;                       // default: escape all characters between 0x00 and 0x1f
@@ -138,7 +139,6 @@ static QUEUE_HANDLE PPP_PortID;
 //
 extern void fnPPP(TTASKTABLE *ptrTaskTable)
 {
-    static QUEUE_HANDLE    PPP_Handle = 0;
     QUEUE_HANDLE           PortIDInternal = ptrTaskTable->TaskID;        // queue ID for task input
     static unsigned char   ucInputMessage[PPP_RX_BUFFER_SPACE];          // reserve space for receiving messages
     static QUEUE_TRANSFER  ppp_frame_length = 0;                         // collected frame size
@@ -415,13 +415,16 @@ struct pbuf {
 
 extern unsigned char IP_input(struct pbuf *p, void *inp)
 {
-    ETHERNET_FRAME rx_frame;
-    rx_frame.frame_size = (p->len + ((2 * MAC_LENGTH) + 2));
+    ETHERNET_FRAME rx_frame;                                             // temporary frame strcuture
+    rx_frame.frame_size = (p->len + ((2 * MAC_LENGTH) + 2));             // add Ethernet II header for compatibility
     rx_frame.ptEth = (ETHERNET_FRAME_CONTENT *)(p->payload - ((2 * MAC_LENGTH) + 2));
-    rx_frame.ptEth->ethernet_frame_type[0] = (unsigned char)(PROTOCOL_IPv4 >> 8);
+    rx_frame.ptEth->ethernet_frame_type[0] = (unsigned char)(PROTOCOL_IPv4 >> 8); // assume always IPv4 content
     rx_frame.ptEth->ethernet_frame_type[1] = (unsigned char)(PROTOCOL_IPv4);
+    #if IP_INTERFACE_COUNT > 1
     rx_frame.ucInterfaceHandling = (INTERFACE_NO_TX_CS_OFFLOADING | INTERFACE_NO_RX_CS_OFFLOADING | INTERFACE_NO_TX_PAYLOAD_CS_OFFLOADING | INTERFACE_NO_MAC_ETHERNET_II);
-    fnHandleEthernetFrame(&rx_frame, PPP_PortID);
+    rx_frame.ucInterface = (PPP_INTERFACE >> INTERFACE_SHIFT);           // reception is on the PPP interface
+    #endif
+    fnHandleEthernetFrame(&rx_frame, PPP_Handle);                        // pass to the TCP/IP for handling the received IP datagram
     return 0;
 }
 #endif
