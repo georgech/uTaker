@@ -190,7 +190,7 @@
 #elif defined TRK_KEA8
     #define TARGET_HW            "TRK-KEA8"
     #define KINETIS_MAX_SPEED    48000000
-    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((2 * 1024) * MEM_FACTOR)
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((560) * MEM_FACTOR)
     #define KINETIS_KE
     #define KINETIS_KEA
     #define KINETIS_KEA8
@@ -731,7 +731,7 @@
         #define FLASH_FILE_SYSTEM                                        // we have an internal file system in FLASH
     #endif
   //#define NVRAM                                                        // we have an external file system in non-volatile RAM
-  //#define INTERNAL_USER_FILES                                          // allow user to specify program file content
+    #define INTERNAL_USER_FILES                                          // allow user to specify program file content
   //#define EMBEDDED_USER_FILES                                          // use together with INTERNAL_USER_FILES to allow sending an embedded user file to the uFileSystem
     #if !defined NAND_FLASH_FAT && defined FLASH_FILE_SYSTEM
       //#define MANAGED_FILES                                            // use memory management when interfacing with uFileSystem in internal or external SPI memory
@@ -871,15 +871,15 @@
       //#define SUPPORT_MSG_CNT                                          // enable the message counter mode (MSG_MODE_RX_CNT) - requires also SUPPORT_MSG_MODE
       //#define MSG_CNT_WORD                                             // 64k message length support (rather than 255)
       //#define SUPPORT_MSG_MODE_EXTRACT                                 // allow extracting messages using a number of reads rather than one single read
-    #define WAKE_BLOCKED_TX                                              // allow a blocked transmitter to continue after an interrupt event
+  //#define WAKE_BLOCKED_TX                                              // allow a blocked transmitter to continue after an interrupt event
       //#define WAKE_BLOCKED_TX_BUFFER_LEVEL                             // define specific level in output buffer for wake to occur
-    #define SUPPORT_FLUSH                                                // support rx flush
-    #define SERIAL_SUPPORT_XON_XOFF                                      // enable XON/XOFF support in driver
+  //#define SUPPORT_FLUSH                                                // support rx flush
+  //#define SERIAL_SUPPORT_XON_XOFF                                      // enable XON/XOFF support in driver
     #define HIGH_WATER_MARK   20                                         // stop flow control when the input buffer has less than this space (if variable settings are required, use SUPPORT_FLOW_HIGH_LOW define)
     #define LOW_WATER_MARK    20                                         // restart when the input buffer content falls below this value
-    #define SUPPORT_FLOW_HIGH_LOW                                        // allow flow control levels to be configured (in % of buffer size)
-    #define SERIAL_SUPPORT_ECHO                                          // enable echo mode in rx driver
-    #define SERIAL_SUPPORT_ESCAPE                                        // enable escape sequencing in driver
+  //#define SUPPORT_FLOW_HIGH_LOW                                        // allow flow control levels to be configured (in % of buffer size)
+  //#define SERIAL_SUPPORT_ECHO                                          // enable echo mode in rx driver
+  //#define SERIAL_SUPPORT_ESCAPE                                        // enable escape sequencing in driver
   //#define SERIAL_SUPPORT_SCAN                                          // serial receiver supports scanning of input buffer for a sequence
     #if !defined KINETIS_KL
       //#define SUPPORT_HW_FLOW                                          // support RTS/CTS flow control and other possible modem signals
@@ -946,7 +946,7 @@
             #define NUMBER_USB     (5 + 1)                               // physical queues (control plus 5 endpoints)
         #else                                                            // define one or more device classes (multiple classes creates a composite device)
             #define USE_USB_CDC                                          // USB-CDC (use also for Modbus over USB)
-          //#define USE_USB_MSD                                          // needs SD card to compile (or alternatives FLASH_FAT / SPI_FLASH_FAT / FAT_EMULATION)
+            #define USE_USB_MSD                                          // needs SD card to compile (or alternatives FLASH_FAT / SPI_FLASH_FAT / FAT_EMULATION)
           //#define USE_USB_HID_MOUSE                                    // human interface device (mouse)
           //#define USE_USB_HID_KEYBOARD                                 // human interface device (keyboard)
               //#define USB_KEYBOARD_DELAY                               // enable inter-character delay control
@@ -972,7 +972,7 @@
                 #define NUMBER_USB_AUDIO  0
             #endif
             #if defined USE_USB_MSD
-              //#define FAT_EMULATION                                    // support FAT emulation (full mass-storage not required by USB-MSD)
+                #define FAT_EMULATION                                    // support FAT emulation (full mass-storage not required by USB-MSD)
                 #if defined FAT_EMULATION
                     #define NUMBER_USB_MSD 1                             // single MSD LUM (set to 2 for SD card and emulated drive)
                     #define EMULATED_FAT_LUMS         1                  // the number of logical units on emulated drive
@@ -984,6 +984,7 @@
                     #if defined EMULATED_FAT_FILE_NAME_CONTROL
                         #define FAT_EMULATION_LFN                        // allow long file names to be used for emulated files
                             #define UTFAT_LFN_WRITE_PATCH                // use Linux workaround to avoid patent issues
+                            #define RANDOM_NUMBER_GENERATOR              // random number generator required
                     #endif
                 #else
                     #define NUMBER_USB_MSD 1                             // single MSB LUM
@@ -1161,6 +1162,7 @@
         #define UTFAT_LFN_DELETE                                         // support deleting files with long file names (cleaning up all LFN directory entries)
         #define UTFAT_LFN_WRITE                                          // support writing long file names
         #define UTFAT_LFN_WRITE_PATCH                                    // patch long file writes to potentially avoid possible patent issues
+        #define RANDOM_NUMBER_GENERATOR                                  // random number generator required
             #define SFN_ENTRY_CACHE_SIZE 20                              // short file name cache used to speed up SFN alias collision searching when writing LFNs
       //#define UTFAT_SAFE_DELETE                                        // delete operation removes all information (name and content details are removed from disk - no undelete possible)
         #define UTFAT_UNDELETE                                           // undelete a file or directory
@@ -1647,7 +1649,7 @@
 
 #define PHYSICAL_QUEUES   (NUMBER_SERIAL + NUMBER_EXTERNAL_SERIAL + NUMBER_LAN + NUMBER_I2C + NUMBER_CAN + NUMBER_USB + NUMBER_MODBUS_QUEUES + NUMBER_FIFO_QUEUES) // the number of physical queues in the system
 
-#define RANDOM_NUMBER_GENERATOR                                          // support a random number generator (useful for DHCP and possibly DNS)
+//#define RANDOM_NUMBER_GENERATOR                                        // support a random number generator (useful for DHCP and possibly DNS)
 
 // Cryptography
 //
@@ -1906,8 +1908,10 @@
     #define GLOBAL_TIMER_TASK
 #elif defined USE_IGMP && ((defined USE_IGMP_V2 || defined USE_IGMP_V3) || (IGMP_MAX_HOSTS > 1))
     #define GLOBAL_TIMER_TASK
+#elif defined USE_DHCP_CLIENT && (IP_NETWORK_COUNT > 1)
+    #define GLOBAL_TIMER_TASK
 #else
-    #define GLOBAL_TIMER_TASK                                            // enable a task for global timer tasks
+  //#define GLOBAL_TIMER_TASK                                            // enable a task for global timer tasks
 #endif
 #if defined GLOBAL_TIMER_TASK
     #if defined USE_IGMP && (IGMP_MAX_HOSTS > 1)
@@ -1924,7 +1928,7 @@
       //#define LOW_POWER_CYCLING_MODE                                   // allow low power cycle loop with a "Virtual Wake-up Interrupt Handler" - see video https://youtu.be/v4UnfcDiaE4
 #endif
 
-#define SUPPORT_DOUBLE_QUEUE_WRITES                                      // allow double queue writes to improve efficiency of long queue copies
+//#define SUPPORT_DOUBLE_QUEUE_WRITES                                    // allow double queue writes to improve efficiency of long queue copies
 //#define MULTISTART                                                     // enable a board to user multiple task configurations
 //#define PERIODIC_TIMER_EVENT                                           // delayed and periodic tasks are schedule with timer events if enabled (otherwise they are simply scheduled)
 

@@ -1323,12 +1323,12 @@ static void fnDisplayPorts(HDC hdc)
 #endif
         ulBit = ulMSB;
         for (y = 0; y < ucPortWidth; y++) {                              // draw each port state
-            if (ulPortMask & ulBit) {
+            if ((ulPortMask & ulBit) != 0) {
                 cPorts[y + PORT_NAME_LENGTH] = '-';                      // bit with no function
             }
             else {
-                if (ulPortPeripheral[i] & ulBit) {
-                    if (ulPortStates[i] & ulBit) {
+                if ((ulPortPeripheral[i] & ulBit) != 0) {
+                    if ((ulPortStates[i] & ulBit) != 0) {
                         cPorts[y + PORT_NAME_LENGTH] = 'P';              // used for peripheral function ('1' state)
                     }
                     else {
@@ -1336,8 +1336,8 @@ static void fnDisplayPorts(HDC hdc)
                     }
                 }
                 else {
-                    if (ulPortFunction[i] & ulBit) {                     // defined as an output
-                        if (ulPortStates[i] & ulBit) {
+                    if ((ulPortFunction[i] & ulBit) != 0) {              // defined as an output
+                        if ((ulPortStates[i] & ulBit) != 0) {
                             cPorts[y + PORT_NAME_LENGTH] = '1';
                         }
                         else {
@@ -1345,7 +1345,7 @@ static void fnDisplayPorts(HDC hdc)
                         }
                     }
                     else {
-                        if (ulPortStates[i] & ulBit) {                   // display the input state
+                        if ((ulPortStates[i] & ulBit) != 0) {            // display the input state
                             cPorts[y + PORT_NAME_LENGTH] = '^';
                         }
                         else {

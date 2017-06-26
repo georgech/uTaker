@@ -1037,7 +1037,7 @@
 #elif defined TRK_KEA8
   //#define PIN_COUNT           PIN_COUNT_16_PIN                         // 16 pin TSSOP
     #define PIN_COUNT           PIN_COUNT_24_PIN                         // 24 pin QFN
-    #define SIZE_OF_FLASH       (64 * 1024)                              // 8k program Flash
+    #define SIZE_OF_FLASH       (8 * 1024)                               // 8k program Flash
     #define SIZE_OF_RAM         (1 * 1024)                               // 1k SRAM
     #define INTERRUPT_VECTORS_IN_FLASH                                   // since RAM is limited interrupt vectors are fixed in flash
 #elif defined FRDM_KEAZN32Q64
@@ -1354,7 +1354,7 @@
 #endif
 
 #if !defined KINETIS_KE
-  //#define SUPPORT_LPTMR                                                // {28} support low power timer
+    #define SUPPORT_LPTMR                                                // {28} support low power timer
     #if defined SUPPORT_LPTMR
       //#define TICK_USES_LPTMR                                          // use low power timer for TICK so that it continues to operate in stop based low power modes
         //Select the clock used by the low power timer - if the timer if to continue running in low power modes the clock chosen should continue to run in that mode too
@@ -1382,7 +1382,7 @@
 #if defined KINETIS_KV || defined KINETIS_KL02 || defined KINETIS_K02    // device without RTC
     #define SUPPORT_SW_RTC                                               // support real time clock based purely on software
 #elif defined KINETIS_KE
-    #define SUPPORT_RTC                                                  // support real time clock (do not use together with TICK_USES_RTC)
+  //#define SUPPORT_RTC                                                  // support real time clock (do not use together with TICK_USES_RTC)
   //#define TICK_USES_RTC                                                // use RTC for TICK so that it continues to operate in stop based low power modes
     #if defined TICK_USES_RTC || defined SUPPORT_RTC
       //#define RTC_USES_EXT_CLK                                         // use the external clock as RTC clock source
@@ -1507,6 +1507,41 @@
     #define WAIT_SPI_RECEPTION_END()        while ((SPI0_SR & SPI_SR_RFDF) == 0) {}
     #define CLEAR_RECEPTION_FLAG()          SPI0_SR |= SPI_SR_RFDF
 #elif defined NET_K60 || defined FRDM_K64F || defined FRDM_K22F || defined TWR_K22F120M || defined FreeLON
+#if 0 // temp - to remove
+    #define CS0_LINE                        SPI_PUSHR_PCS1               // CS0 line used when SPI FLASH is enabled
+    #define CS1_LINE                                                     // CS1 line used when extended SPI FLASH is enabled
+    #define CS2_LINE                                                     // CS2 line used when extended SPI FLASH is enabled
+    #define CS3_LINE                                                     // CS3 line used when extended SPI FLASH is enabled
+
+    #define SPI_CS0_PORT                    ~(SPI2_PUSHR)                // for simulator
+    #define SPI_TX_BYTE                     SPI2_PUSHR                   // for simulator
+    #define SPI_RX_BYTE                     SPI2_POPR                    // for simulator
+
+    #define POWER_UP_SPI_FLASH_INTERFACE()  POWER_UP(3, SIM_SCGC3_SPI2)
+
+    #define CONFIGURE_SPI_FLASH_INTERFACE() _CONFIG_PERIPHERAL(D, 15, (PD_15_SPI2_PCS1 | PORT_SRE_FAST | PORT_DSE_HIGH));\
+    _CONFIG_PERIPHERAL(D, 12, (PD_12_SPI2_SCK | PORT_SRE_FAST | PORT_DSE_HIGH)); \
+    _CONFIG_PERIPHERAL(D, 13, (PD_13_SPI2_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); \
+    _CONFIG_PERIPHERAL(D, 14, PD_14_SPI2_SIN); \
+    SPI2_MCR = (SPI_MCR_MSTR | SPI_MCR_DCONF_SPI | SPI_MCR_CLR_RXF | SPI_MCR_CLR_TXF | SPI_MCR_PCSIS_CS0 | SPI_MCR_PCSIS_CS1 | SPI_MCR_PCSIS_CS2 | SPI_MCR_PCSIS_CS3 | SPI_MCR_PCSIS_CS4 | SPI_MCR_PCSIS_CS5); \
+    SPI2_CTAR0 = (SPI_CTAR_DBR | SPI_CTAR_FMSZ_8 | SPI_CTAR_PDT_7 | SPI_CTAR_BR_2 | SPI_CTAR_CPHA | SPI_CTAR_CPOL); // for 50MHz bus, 25MHz speed and 140ns min de-select time
+
+                                                                                                                    //D, 15, (PD_15_SPI2_PCS1 | PORT_SRE_FAST | PORT_DSE_HIGH)
+
+    #define POWER_DOWN_SPI_FLASH_INTERFACE() POWER_DOWN(3, SIM_SCGC3_SPI2) // power down SPI interface if no SPI Flash detected
+
+
+    #define FLUSH_SPI_FIFO_AND_FLAGS()      SPI2_MCR |= SPI_MCR_CLR_RXF; SPI2_SR = (SPI_SR_EOQF | SPI_SR_TFUF | SPI_SR_TFFF | SPI_SR_RFOF | SPI_SR_RFDF);
+
+
+    #define WRITE_SPI_CMD0(byte)            SPI2_PUSHR = (byte | SPI_PUSHR_CONT | ulChipSelectLine | SPI_PUSHR_CTAS_CTAR0) // write a single byte to the output FIFO - assert CS line
+    #define WRITE_SPI_CMD0_LAST(byte)       SPI2_PUSHR = (byte | SPI_PUSHR_EOQ  | ulChipSelectLine | SPI_PUSHR_CTAS_CTAR0) // write final byte to output FIFO - this will negate the CS line when complete
+    #define READ_SPI_FLASH_DATA()           (unsigned char)SPI2_POPR
+    #define WAIT_SPI_RECEPTION_END()        while ((SPI2_SR & SPI_SR_RFDF) == 0) {}
+    #define CLEAR_RECEPTION_FLAG()          SPI2_SR |= SPI_SR_RFDF
+    #define SET_SPI_FLASH_MODE()                                         // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
+    #define REMOVE_SPI_FLASH_MODE()
+#else
     #define CS0_LINE                        SPI_PUSHR_PCS0               // CS0 line used when SPI FLASH is enabled
     #define CS1_LINE                                                     // CS1 line used when extended SPI FLASH is enabled
     #define CS2_LINE                                                     // CS2 line used when extended SPI FLASH is enabled
@@ -1546,6 +1581,7 @@
     #define CLEAR_RECEPTION_FLAG()          SPI0_SR |= SPI_SR_RFDF
     #define SET_SPI_FLASH_MODE()                                         // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
     #define REMOVE_SPI_FLASH_MODE()                                      // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
+#endif
 #elif defined TWR_K24F120M
     #define CS0_LINE                        SPI_PUSHR_PCS0               // CS0 line used when SPI FLASH is enabled
     #define CS1_LINE                                                     // CS1 line used when extended SPI FLASH is enabled
@@ -2206,7 +2242,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #endif
 
     #if defined FRDM_KE04Z || defined TRK_KEA8
-        #define TX_BUFFER_SIZE   (64)                                    // the size of demo RS232 input and output buffers
+        #define TX_BUFFER_SIZE   (128)                                   // the size of demo RS232 input and output buffers
         #define RX_BUFFER_SIZE   (8)
     #elif defined FRDM_KL03Z
         #define TX_BUFFER_SIZE   (128)                                   // the size of demo RS232 input and output buffers
@@ -2364,7 +2400,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 
 // ADC
 //
-#define SUPPORT_ADC                                                      // {1}
+//#define SUPPORT_ADC                                                    // {1}
 #define ADC_REFERENCE_VOLTAGE                      3300                  // ADC uses 3.3V reference
 #define ADC_SIM_STEP_SIZE                          200                   // 200mV steps when simulating
 
@@ -2481,7 +2517,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 //#define SUPPORT_I2S_SAI                                                // support I2S/SAI
 
 #if !defined KINETIS_KL02
-    #define SUPPORT_PITS                                                 // support PITs
+  //#define SUPPORT_PITS                                                 // support PITs
     #define SUPPORT_PIT_DMA_PORT_TOGGLE                                  // PIT driver supports triggering port toggles
 #endif
 #if defined MODBUS_RTU && !defined SUPPORT_PITS
@@ -4615,7 +4651,42 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define ACTIVATE_WATCHDOG()     UNLOCK_WDOG(); WDOG_TOVALL = (2000/5); WDOG_TOVALH = 0; WDOG_STCTRLH = (WDOG_STCTRLH_STNDBYEN | WDOG_STCTRLH_WAITEN | WDOG_STCTRLH_STOPEN | WDOG_STCTRLH_WDOGEN) // watchdog enabled to generate reset on 2s timeout (no further updates allowed)
     #define TOGGLE_WATCHDOG_LED()   _TOGGLE_PORT(A, BLINK_LED)
 
-    #define CONFIG_TEST_OUTPUT()                                         // we use DEMO_LED_2 which is configured by the user code (and can be disabled in parameters if required)
+    #define CAN_STBY         PORTA_BIT14
+    #define RED_LED_3        PORTA_BIT15
+    #define GREEN_LED_4      PORTA_BIT16
+    #define RED_LED_4        PORTA_BIT17
+    #define RED_LED_1        PORTB_BIT20
+    #define GREEN_LED_1      PORTB_BIT21
+    #define GREEN_LED_2      PORTB_BIT9
+    #define ACC_INT1         PORTC_BIT12
+    #define ACC_INT2         PORTC_BIT13
+    #define WT12_reset_line  PORTE_BIT6
+    #define NO_NAME_OUTPUT   PORTE_BIT2
+    #define GPIO_1           PORTB_BIT22
+    #define GPIO_2           PORTB_BIT23
+
+    // We use DEMO_LED_2 which is configured by the user code (and can be disabled in parameters if required) but take the opportunity to configure some board-specific pins
+    //
+    #define CONFIG_TEST_OUTPUT()    _CONFIG_PORT_OUTPUT(A, CAN_STBY, (PORT_SRE_SLOW)); \
+                                    _CONFIG_PORT_OUTPUT(A, RED_LED_3, (PORT_SRE_SLOW)); \
+                                    _CONFIG_PORT_OUTPUT(A, GREEN_LED_4, (PORT_SRE_SLOW)); \
+                                    _CONFIG_PORT_OUTPUT(A, RED_LED_4, (PORT_SRE_SLOW)); \
+                                    _CONFIG_PORT_OUTPUT(B, RED_LED_1, (PORT_SRE_SLOW)); \
+                                    _CONFIG_PORT_OUTPUT(B, GREEN_LED_1, (PORT_SRE_SLOW)); \
+                                    _CONFIG_PORT_OUTPUT(B, GREEN_LED_2, (PORT_SRE_SLOW)); \
+                                    _CONFIG_PORT_INPUT(C, ACC_INT1, (PORT_PS_UP_ENABLE)); \
+                                    _CONFIG_PORT_INPUT(C, ACC_INT2, (PORT_PS_UP_ENABLE)); \
+                                    _CONFIG_PORT_OUTPUT(E, WT12_reset_line, (PORT_SRE_SLOW)); \
+                                    _CONFIG_PORT_OUTPUT(E, NO_NAME_OUTPUT, (PORT_SRE_SLOW)); \
+                                    _CONFIG_PERIPHERAL(E, 4, (PE_4_UART3_TX)); \
+                                    _CONFIG_PERIPHERAL(E, 5, (PE_5_UART3_RX)); \
+                                    _CONFIG_PERIPHERAL(E, 24, (PE_24_UART4_TX)); \
+                                    _CONFIG_PERIPHERAL(E, 25, (PE_25_UART4_RX)); \
+                                    _CONFIG_PERIPHERAL(B, 10, (PB_10_SPI1_PCS0)); \
+                                    _CONFIG_PERIPHERAL(B, 11, (PB_11_SPI1_SCK)); \
+                                    _CONFIG_PORT_OUTPUT(B, GPIO_1, (PORT_SRE_SLOW)); \
+                                    _CONFIG_PORT_OUTPUT(B, GPIO_2, (PORT_SRE_SLOW));
+
     #define TOGGLE_TEST_OUTPUT()    _TOGGLE_PORT(A, DEMO_LED_2)
     #define SET_TEST_OUTPUT()       _SETBITS(A, DEMO_LED_2)
     #define CLEAR_TEST_OUTPUT()     _CLEARBITS(A, DEMO_LED_2)
@@ -4629,7 +4700,6 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 
     #define BUTTON_KEY_DEFINITIONS  {SWITCH_1_PORT, SWITCH_1, {362, 408, 376, 422}}, \
                                     {SWITCH_2_PORT, SWITCH_2, {341, 386, 359, 401}}
-
 
         // '0'          '1'           input state   center (x,   y)   0 = circle, radius, controlling port, controlling pin 
     #define KEYPAD_LED_DEFINITIONS  \
@@ -5223,9 +5293,13 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define DEMO_LED_4             (KE_PORTC_BIT3)                       // (blue LED - PTC3) if the port is changed (eg. A to D) the port macros will require appropriate adjustment too
 
     #define BLINK_LED              DEMO_LED_1
-
-    #define SWITCH_1               (KE_PORTD_BIT0)                        // SW1 if the port is changed (eg. A to D) the port macros will require appropriate adjustment too
-    #define SWITCH_2               (KE_PORTD_BIT1)                        // SW2 if the port is changed (eg. A to D) the port macros will require appropriate adjustment too
+    #if defined TRK_KEA8
+        #define SWITCH_1           (KE_PORTC_BIT4)                       // SW1 if the port is changed (eg. A to D) the port macros will require appropriate adjustment too
+        #define SWITCH_2           (KE_PORTC_BIT5)                       // SW2 if the port is changed (eg. A to D) the port macros will require appropriate adjustment too
+    #else
+        #define SWITCH_1           (KE_PORTD_BIT0)                       // SW1 if the port is changed (eg. A to D) the port macros will require appropriate adjustment too
+        #define SWITCH_2           (KE_PORTD_BIT1)                       // SW2 if the port is changed (eg. A to D) the port macros will require appropriate adjustment too
+    #endif
 
     #define INIT_WATCHDOG_LED()    _CONFIG_DRIVE_PORT_OUTPUT_VALUE(A, (BLINK_LED), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH))
     #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT(A, (SWITCH_1 | SWITCH_2), PORT_PS_UP_ENABLE) // configure as inputs
@@ -5249,148 +5323,199 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define MEASURE_LOW_POWER_ON()    _CLEARBITS(A, DEMO_LED_2)          // signal when the processor is in sleep mode
     #define MEASURE_LOW_POWER_OFF()   _SETBITS(A, DEMO_LED_2)            // signal when the processor is in active mode
 
-        // '0'          '1'           input state  rectangle      controlling port, controlling pin (4 LEDs then connector ports)
-    #define KEYPAD_LED_DEFINITIONS  \
-        {RGB(200,200,200),  RGB(0,0,255), 0, {447, 231, 466, 238 }, (_PORTA * 4), KE_PORTC_BIT0}, \
-        {RGB(200,200,200),  RGB(0,0,255), 0, {447, 243, 466, 250 }, (_PORTA * 4), KE_PORTC_BIT1}, \
-        {RGB(200,200,200),  RGB(0,0,255), 0, {447, 255, 466, 263 }, (_PORTA * 4), KE_PORTC_BIT2}, \
-        {RGB(200,200,200),  RGB(0,0,255), 0, {447, 267, 466, 275 }, (_PORTA * 4), KE_PORTC_BIT3}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {192, 48,  0,   2   }, (_PORTB * 4), KE_PORTF_BIT7}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {192, 61,  0,   2   }, (_PORTB * 4), KE_PORTF_BIT6}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {192, 74,  0,   2   }, (_PORTB * 4), KE_PORTF_BIT5}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {192, 87,  0,   2   }, (_PORTB * 4), KE_PORTF_BIT4}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {192, 101, 0,   2   }, (_PORTB * 4), KE_PORTF_BIT3}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {192, 113, 0,   2   }, (_PORTB * 4), KE_PORTF_BIT2}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {192, 126, 0,   2   }, (_PORTB * 4), KE_PORTF_BIT1}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {192, 140, 0,   2   }, (_PORTB * 4), KE_PORTF_BIT0}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {218, 48,  0,   2   }, (_PORTB * 4), KE_PORTG_BIT0}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {218, 61,  0,   2   }, (_PORTB * 4), KE_PORTG_BIT1}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {218, 74,  0,   2   }, (_PORTB * 4), KE_PORTG_BIT2}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {218, 87,  0,   2   }, (_PORTB * 4), KE_PORTG_BIT3}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {218, 101, 0,   2   }, (_PORTB * 4), KE_PORTG_BIT4}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {218, 113, 0,   2   }, (_PORTB * 4), KE_PORTG_BIT5}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {218, 126, 0,   2   }, (_PORTB * 4), KE_PORTG_BIT6}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {218, 140, 0,   2   }, (_PORTB * 4), KE_PORTG_BIT7}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {244, 74,  0,   2   }, (_PORTB * 4), KE_PORTB_BIT2}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {244, 87,  0,   2   }, (_PORTB * 4), KE_PORTB_BIT3}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {244, 101, 0,   2   }, (_PORTB * 4), KE_PORTB_BIT4}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {244, 113, 0,   2   }, (_PORTB * 4), KE_PORTB_BIT5}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {244, 126, 0,   2   }, (_PORTB * 4), KE_PORTB_BIT6}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {244, 140, 0,   2   }, (_PORTB * 4), KE_PORTB_BIT7}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {271, 48,  0,   2   }, (_PORTA * 4), KE_PORTA_BIT0}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {271, 61,  0,   2   }, (_PORTA * 4), KE_PORTA_BIT1}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {271, 87,  0,   2   }, (_PORTA * 4), KE_PORTA_BIT2}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {271, 101, 0,   2   }, (_PORTA * 4), KE_PORTA_BIT3}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {271, 113, 0,   2   }, (_PORTA * 4), KE_PORTA_BIT4}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {271, 126, 0,   2   }, (_PORTA * 4), KE_PORTA_BIT6}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {271, 140, 0,   2   }, (_PORTA * 4), KE_PORTA_BIT7}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {297, 48,  0,   2   }, (_PORTB * 4), KE_PORTE_BIT0}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {297, 61,  0,   2   }, (_PORTB * 4), KE_PORTE_BIT1}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {297, 74,  0,   2   }, (_PORTB * 4), KE_PORTE_BIT2}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {297, 87,  0,   2   }, (_PORTB * 4), KE_PORTE_BIT3}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {297, 101, 0,   2   }, (_PORTB * 4), KE_PORTE_BIT4}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {297, 113, 0,   2   }, (_PORTB * 4), KE_PORTE_BIT5}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {297, 126, 0,   2   }, (_PORTB * 4), KE_PORTE_BIT6}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {297, 140, 0,   2   }, (_PORTB * 4), KE_PORTE_BIT7}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {324, 61,  0,   2   }, (_PORTC * 4), KE_PORTI_BIT0}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {324, 74,  0,   2   }, (_PORTC * 4), KE_PORTI_BIT1}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {324, 87,  0,   2   }, (_PORTC * 4), KE_PORTI_BIT2}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {324, 101, 0,   2   }, (_PORTC * 4), KE_PORTI_BIT3}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {324, 113, 0,   2   }, (_PORTC * 4), KE_PORTI_BIT4}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {324, 126, 0,   2   }, (_PORTC * 4), KE_PORTI_BIT5}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {324, 140, 0,   2   }, (_PORTC * 4), KE_PORTI_BIT6}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {349, 48,  0,   2   }, (_PORTA * 4), KE_PORTD_BIT0}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {349, 62,  0,   2   }, (_PORTA * 4), KE_PORTD_BIT1}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {349, 74,  0,   2   }, (_PORTA * 4), KE_PORTD_BIT2}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {349, 87,  0,   2   }, (_PORTA * 4), KE_PORTD_BIT3}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {349, 101, 0,   2   }, (_PORTA * 4), KE_PORTD_BIT4}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {349, 114, 0,   2   }, (_PORTA * 4), KE_PORTD_BIT5}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {377, 48,  0,   2   }, (_PORTB * 4), KE_PORTH_BIT7}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {377, 61,  0,   2   }, (_PORTB * 4), KE_PORTH_BIT6}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {377, 74,  0,   2   }, (_PORTB * 4), KE_PORTH_BIT5}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {377, 87,  0,   2   }, (_PORTB * 4), KE_PORTH_BIT4}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {377, 101, 0,   2   }, (_PORTB * 4), KE_PORTH_BIT3}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {377, 113, 0,   2   }, (_PORTB * 4), KE_PORTH_BIT2}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {377, 126, 0,   2   }, (_PORTB * 4), KE_PORTH_BIT1}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {377, 140, 0,   2   }, (_PORTB * 4), KE_PORTH_BIT0}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {404, 48,  0,   2   }, (_PORTA * 4), KE_PORTC_BIT7}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {404, 61,  0,   2   }, (_PORTA * 4), KE_PORTC_BIT6}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {404, 74,  0,   2   }, (_PORTA * 4), KE_PORTC_BIT5}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {404, 87,  0,   2   }, (_PORTA * 4), KE_PORTC_BIT4}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {404, 101, 0,   2   }, (_PORTA * 4), KE_PORTC_BIT3}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {404, 113, 0,   2   }, (_PORTA * 4), KE_PORTC_BIT2}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {404, 126, 0,   2   }, (_PORTA * 4), KE_PORTC_BIT1}, \
-        {RGB(0,0,0),   RGB(255,0,0),      0, {404, 140, 0,   2   }, (_PORTA * 4), KE_PORTC_BIT0}, \
+    #if defined TRK_KEA8
+            // '0'          '1'           input state  rectangle      controlling port, controlling pin (4 LEDs then connector ports)
+        #define KEYPAD_LED_DEFINITIONS  \
+            {RGB(200,200,200),  RGB(0,0,255), 0, {447, 231, 466, 238 }, (_PORTA * 4), KE_PORTC_BIT0}, \
+            {RGB(200,200,200),  RGB(0,0,255), 0, {447, 243, 466, 250 }, (_PORTA * 4), KE_PORTC_BIT1}, \
+            {RGB(200,200,200),  RGB(0,0,255), 0, {447, 255, 466, 263 }, (_PORTA * 4), KE_PORTC_BIT2}, \
+            {RGB(200,200,200),  RGB(0,0,255), 0, {447, 267, 466, 275 }, (_PORTA * 4), KE_PORTC_BIT3}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {244, 74,  0,   2   }, (_PORTB * 4), KE_PORTB_BIT2}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {244, 87,  0,   2   }, (_PORTB * 4), KE_PORTB_BIT3}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {244, 101, 0,   2   }, (_PORTB * 4), KE_PORTB_BIT4}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {244, 113, 0,   2   }, (_PORTB * 4), KE_PORTB_BIT5}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {244, 126, 0,   2   }, (_PORTB * 4), KE_PORTB_BIT6}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {244, 140, 0,   2   }, (_PORTB * 4), KE_PORTB_BIT7}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {271, 48,  0,   2   }, (_PORTA * 4), KE_PORTA_BIT0}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {271, 61,  0,   2   }, (_PORTA * 4), KE_PORTA_BIT1}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {271, 87,  0,   2   }, (_PORTA * 4), KE_PORTA_BIT2}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {271, 101, 0,   2   }, (_PORTA * 4), KE_PORTA_BIT3}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {271, 113, 0,   2   }, (_PORTA * 4), KE_PORTA_BIT4}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {271, 126, 0,   2   }, (_PORTA * 4), KE_PORTA_BIT6}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {271, 140, 0,   2   }, (_PORTA * 4), KE_PORTA_BIT7}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {404, 74,  0,   2   }, (_PORTA * 4), KE_PORTC_BIT5}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {404, 87,  0,   2   }, (_PORTA * 4), KE_PORTC_BIT4}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {404, 101, 0,   2   }, (_PORTA * 4), KE_PORTC_BIT3}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {404, 113, 0,   2   }, (_PORTA * 4), KE_PORTC_BIT2}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {404, 126, 0,   2   }, (_PORTA * 4), KE_PORTC_BIT1}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {404, 140, 0,   2   }, (_PORTA * 4), KE_PORTC_BIT0},
 
 
-    #define BUTTON_KEY_DEFINITIONS  {_PORTD, (KE_PORTD_BIT0 >> (3 * 8)), {25,  140, 45,  150 }}, \
-                                    {_PORTD, (KE_PORTD_BIT1 >> (3 * 8)), {25,  188, 45,  198 }}, \
-                                    {_PORTF, (KE_PORTF_BIT7 >> (1 * 8)), {188, 42,  197, 52  }}, \
-                                    {_PORTF, (KE_PORTF_BIT6 >> (1 * 8)), {188, 56,  197, 67  }}, \
-                                    {_PORTF, (KE_PORTF_BIT5 >> (1 * 8)), {188, 70,  197, 79  }}, \
-                                    {_PORTF, (KE_PORTF_BIT4 >> (1 * 8)), {188, 83,  197, 90  }}, \
-                                    {_PORTF, (KE_PORTF_BIT3 >> (1 * 8)), {188, 96,  197, 104 }}, \
-                                    {_PORTF, (KE_PORTF_BIT2 >> (1 * 8)), {188, 109, 197, 118 }}, \
-                                    {_PORTF, (KE_PORTF_BIT1 >> (1 * 8)), {188, 123, 197, 131 }}, \
-                                    {_PORTF, (KE_PORTF_BIT0 >> (1 * 8)), {188, 138, 197, 146 }}, \
-                                    {_PORTG, (KE_PORTG_BIT0 >> (2 * 8)), {213, 42,  222, 52  }}, \
-                                    {_PORTG, (KE_PORTG_BIT1 >> (2 * 8)), {213, 56,  222, 67  }}, \
-                                    {_PORTG, (KE_PORTG_BIT2 >> (2 * 8)), {213, 70,  222, 79  }}, \
-                                    {_PORTG, (KE_PORTG_BIT3 >> (2 * 8)), {213, 83,  222, 90  }}, \
-                                    {_PORTG, (KE_PORTG_BIT4 >> (2 * 8)), {213, 96,  222, 104 }}, \
-                                    {_PORTG, (KE_PORTG_BIT5 >> (2 * 8)), {213, 109, 222, 118 }}, \
-                                    {_PORTG, (KE_PORTG_BIT6 >> (2 * 8)), {213, 123, 222, 131 }}, \
-                                    {_PORTG, (KE_PORTG_BIT7 >> (2 * 8)), {213, 138, 222, 146 }}, \
-                                    {_PORTB, (KE_PORTB_BIT2 >> (1 * 8)), {238, 70,  247, 79  }}, \
-                                    {_PORTB, (KE_PORTB_BIT3 >> (1 * 8)), {238, 83,  247, 90  }}, \
-                                    {_PORTB, (KE_PORTB_BIT4 >> (1 * 8)), {238, 96,  247, 104 }}, \
-                                    {_PORTB, (KE_PORTB_BIT5 >> (1 * 8)), {238, 109, 247, 118 }}, \
-                                    {_PORTB, (KE_PORTB_BIT6 >> (1 * 8)), {238, 123, 247, 131 }}, \
-                                    {_PORTB, (KE_PORTB_BIT7 >> (1 * 8)), {238, 138, 247, 146 }}, \
-                                    {_PORTA, (KE_PORTA_BIT0 >> (0 * 8)), {267, 42,  274, 52  }}, \
-                                    {_PORTA, (KE_PORTA_BIT1 >> (0 * 8)), {267, 56,  274, 67  }}, \
-                                    {_PORTA, (KE_PORTA_BIT2 >> (0 * 8)), {267, 83,  274, 90  }}, \
-                                    {_PORTA, (KE_PORTA_BIT3 >> (0 * 8)), {267, 96,  274, 104 }}, \
-                                    {_PORTA, (KE_PORTA_BIT4 >> (0 * 8)), {267, 109, 274, 118 }}, \
-                                    {_PORTA, (KE_PORTA_BIT6 >> (0 * 8)), {267, 123, 274, 131 }}, \
-                                    {_PORTA, (KE_PORTA_BIT7 >> (0 * 8)), {267, 138, 274, 146 }}, \
-                                    {_PORTE, (KE_PORTE_BIT0 >> (0 * 8)), {293, 42,  299, 52  }}, \
-                                    {_PORTE, (KE_PORTE_BIT1 >> (0 * 8)), {293, 56,  299, 67  }}, \
-                                    {_PORTE, (KE_PORTE_BIT2 >> (0 * 8)), {293, 70,  299, 79  }}, \
-                                    {_PORTE, (KE_PORTE_BIT3 >> (0 * 8)), {293, 83,  299, 90  }}, \
-                                    {_PORTE, (KE_PORTE_BIT4 >> (0 * 8)), {293, 96,  299, 104 }}, \
-                                    {_PORTE, (KE_PORTE_BIT5 >> (0 * 8)), {293, 109, 299, 118 }}, \
-                                    {_PORTE, (KE_PORTE_BIT6 >> (0 * 8)), {293, 123, 299, 131 }}, \
-                                    {_PORTE, (KE_PORTE_BIT7 >> (0 * 8)), {293, 138, 299, 146 }}, \
-                                    {_PORTI, (KE_PORTI_BIT0 >> (0 * 8)), {319, 56,  327, 67  }}, \
-                                    {_PORTI, (KE_PORTI_BIT1 >> (0 * 8)), {319, 70,  327, 79  }}, \
-                                    {_PORTI, (KE_PORTI_BIT2 >> (0 * 8)), {319, 83,  327, 90  }}, \
-                                    {_PORTI, (KE_PORTI_BIT3 >> (0 * 8)), {319, 96,  327, 104 }}, \
-                                    {_PORTI, (KE_PORTI_BIT4 >> (0 * 8)), {319, 109, 327, 118 }}, \
-                                    {_PORTI, (KE_PORTI_BIT5 >> (0 * 8)), {319, 123, 327, 131 }}, \
-                                    {_PORTI, (KE_PORTI_BIT6 >> (0 * 8)), {319, 138, 327, 146 }}, \
-                                    {_PORTD, (KE_PORTD_BIT0 >> (3 * 8)), {345, 43,  356, 52  }}, \
-                                    {_PORTD, (KE_PORTD_BIT1 >> (3 * 8)), {345, 57,  356, 65  }}, \
-                                    {_PORTD, (KE_PORTD_BIT2 >> (3 * 8)), {345, 71,  356, 79  }}, \
-                                    {_PORTD, (KE_PORTD_BIT3 >> (3 * 8)), {345, 83,  356, 91  }}, \
-                                    {_PORTD, (KE_PORTD_BIT4 >> (3 * 8)), {345, 97,  356, 105 }}, \
-                                    {_PORTD, (KE_PORTD_BIT5 >> (3 * 8)), {345, 110, 356, 119 }}, \
-                                    {_PORTH, (KE_PORTH_BIT7 >> (3 * 8)), {372, 42,  382, 52  }}, \
-                                    {_PORTH, (KE_PORTH_BIT6 >> (3 * 8)), {372, 56,  382, 67  }}, \
-                                    {_PORTH, (KE_PORTH_BIT5 >> (3 * 8)), {372, 70,  382, 79  }}, \
-                                    {_PORTH, (KE_PORTH_BIT4 >> (3 * 8)), {372, 83,  382, 90  }}, \
-                                    {_PORTH, (KE_PORTH_BIT3 >> (3 * 8)), {372, 96,  382, 104 }}, \
-                                    {_PORTH, (KE_PORTH_BIT2 >> (3 * 8)), {372, 109, 382, 118 }}, \
-                                    {_PORTH, (KE_PORTH_BIT1 >> (3 * 8)), {372, 123, 382, 131 }}, \
-                                    {_PORTH, (KE_PORTH_BIT0 >> (3 * 8)), {372, 138, 382, 146 }}, \
-                                    {_PORTC, (KE_PORTC_BIT7 >> (2 * 8)), {400, 42,  407, 52  }}, \
-                                    {_PORTC, (KE_PORTC_BIT6 >> (2 * 8)), {400, 56,  407, 67  }}, \
-                                    {_PORTC, (KE_PORTC_BIT5 >> (2 * 8)), {400, 70,  407, 79  }}, \
-                                    {_PORTC, (KE_PORTC_BIT4 >> (2 * 8)), {400, 83,  407, 90  }}, \
-                                    {_PORTC, (KE_PORTC_BIT3 >> (2 * 8)), {400, 96,  407, 104 }}, \
-                                    {_PORTC, (KE_PORTC_BIT2 >> (2 * 8)), {400, 109, 407, 118 }}, \
-                                    {_PORTC, (KE_PORTC_BIT1 >> (2 * 8)), {400, 123, 407, 131 }}, \
-                                    {_PORTC, (KE_PORTC_BIT0 >> (2 * 8)), {400, 138, 407, 146 }}, \
+        #define BUTTON_KEY_DEFINITIONS  {_PORTC, (SWITCH_1 >> (2 * 8)), {25,  140, 45,  150 }}, \
+                                        {_PORTC, (SWITCH_2 >> (2 * 8)), {25,  188, 45,  198 }}, \
+                                        {_PORTB, (KE_PORTB_BIT2 >> (1 * 8)), {238, 70,  247, 79  }}, \
+                                        {_PORTB, (KE_PORTB_BIT3 >> (1 * 8)), {238, 83,  247, 90  }}, \
+                                        {_PORTB, (KE_PORTB_BIT4 >> (1 * 8)), {238, 96,  247, 104 }}, \
+                                        {_PORTB, (KE_PORTB_BIT5 >> (1 * 8)), {238, 109, 247, 118 }}, \
+                                        {_PORTB, (KE_PORTB_BIT6 >> (1 * 8)), {238, 123, 247, 131 }}, \
+                                        {_PORTB, (KE_PORTB_BIT7 >> (1 * 8)), {238, 138, 247, 146 }}, \
+                                        {_PORTA, (KE_PORTA_BIT0 >> (0 * 8)), {267, 42,  274, 52  }}, \
+                                        {_PORTA, (KE_PORTA_BIT1 >> (0 * 8)), {267, 56,  274, 67  }}, \
+                                        {_PORTA, (KE_PORTA_BIT2 >> (0 * 8)), {267, 83,  274, 90  }}, \
+                                        {_PORTA, (KE_PORTA_BIT3 >> (0 * 8)), {267, 96,  274, 104 }}, \
+                                        {_PORTA, (KE_PORTA_BIT4 >> (0 * 8)), {267, 109, 274, 118 }}, \
+                                        {_PORTA, (KE_PORTA_BIT6 >> (0 * 8)), {267, 123, 274, 131 }}, \
+                                        {_PORTA, (KE_PORTA_BIT7 >> (0 * 8)), {267, 138, 274, 146 }}, \
+                                        {_PORTC, (KE_PORTC_BIT5 >> (2 * 8)), {400, 70,  407, 79  }}, \
+                                        {_PORTC, (KE_PORTC_BIT4 >> (2 * 8)), {400, 83,  407, 90  }}, \
+                                        {_PORTC, (KE_PORTC_BIT3 >> (2 * 8)), {400, 96,  407, 104 }}, \
+                                        {_PORTC, (KE_PORTC_BIT2 >> (2 * 8)), {400, 109, 407, 118 }}, \
+                                        {_PORTC, (KE_PORTC_BIT1 >> (2 * 8)), {400, 123, 407, 131 }}, \
+                                        {_PORTC, (KE_PORTC_BIT0 >> (2 * 8)), {400, 138, 407, 146 }},
+    #else
+            // '0'          '1'           input state  rectangle      controlling port, controlling pin (4 LEDs then connector ports)
+        #define KEYPAD_LED_DEFINITIONS  \
+            {RGB(200,200,200),  RGB(0,0,255), 0, {447, 231, 466, 238 }, (_PORTA * 4), KE_PORTC_BIT0}, \
+            {RGB(200,200,200),  RGB(0,0,255), 0, {447, 243, 466, 250 }, (_PORTA * 4), KE_PORTC_BIT1}, \
+            {RGB(200,200,200),  RGB(0,0,255), 0, {447, 255, 466, 263 }, (_PORTA * 4), KE_PORTC_BIT2}, \
+            {RGB(200,200,200),  RGB(0,0,255), 0, {447, 267, 466, 275 }, (_PORTA * 4), KE_PORTC_BIT3}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {192, 48,  0,   2   }, (_PORTB * 4), KE_PORTF_BIT7}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {192, 61,  0,   2   }, (_PORTB * 4), KE_PORTF_BIT6}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {192, 74,  0,   2   }, (_PORTB * 4), KE_PORTF_BIT5}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {192, 87,  0,   2   }, (_PORTB * 4), KE_PORTF_BIT4}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {192, 101, 0,   2   }, (_PORTB * 4), KE_PORTF_BIT3}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {192, 113, 0,   2   }, (_PORTB * 4), KE_PORTF_BIT2}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {192, 126, 0,   2   }, (_PORTB * 4), KE_PORTF_BIT1}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {192, 140, 0,   2   }, (_PORTB * 4), KE_PORTF_BIT0}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {218, 48,  0,   2   }, (_PORTB * 4), KE_PORTG_BIT0}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {218, 61,  0,   2   }, (_PORTB * 4), KE_PORTG_BIT1}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {218, 74,  0,   2   }, (_PORTB * 4), KE_PORTG_BIT2}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {218, 87,  0,   2   }, (_PORTB * 4), KE_PORTG_BIT3}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {218, 101, 0,   2   }, (_PORTB * 4), KE_PORTG_BIT4}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {218, 113, 0,   2   }, (_PORTB * 4), KE_PORTG_BIT5}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {218, 126, 0,   2   }, (_PORTB * 4), KE_PORTG_BIT6}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {218, 140, 0,   2   }, (_PORTB * 4), KE_PORTG_BIT7}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {244, 74,  0,   2   }, (_PORTB * 4), KE_PORTB_BIT2}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {244, 87,  0,   2   }, (_PORTB * 4), KE_PORTB_BIT3}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {244, 101, 0,   2   }, (_PORTB * 4), KE_PORTB_BIT4}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {244, 113, 0,   2   }, (_PORTB * 4), KE_PORTB_BIT5}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {244, 126, 0,   2   }, (_PORTB * 4), KE_PORTB_BIT6}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {244, 140, 0,   2   }, (_PORTB * 4), KE_PORTB_BIT7}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {271, 48,  0,   2   }, (_PORTA * 4), KE_PORTA_BIT0}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {271, 61,  0,   2   }, (_PORTA * 4), KE_PORTA_BIT1}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {271, 87,  0,   2   }, (_PORTA * 4), KE_PORTA_BIT2}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {271, 101, 0,   2   }, (_PORTA * 4), KE_PORTA_BIT3}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {271, 113, 0,   2   }, (_PORTA * 4), KE_PORTA_BIT4}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {271, 126, 0,   2   }, (_PORTA * 4), KE_PORTA_BIT6}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {271, 140, 0,   2   }, (_PORTA * 4), KE_PORTA_BIT7}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {297, 48,  0,   2   }, (_PORTB * 4), KE_PORTE_BIT0}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {297, 61,  0,   2   }, (_PORTB * 4), KE_PORTE_BIT1}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {297, 74,  0,   2   }, (_PORTB * 4), KE_PORTE_BIT2}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {297, 87,  0,   2   }, (_PORTB * 4), KE_PORTE_BIT3}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {297, 101, 0,   2   }, (_PORTB * 4), KE_PORTE_BIT4}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {297, 113, 0,   2   }, (_PORTB * 4), KE_PORTE_BIT5}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {297, 126, 0,   2   }, (_PORTB * 4), KE_PORTE_BIT6}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {297, 140, 0,   2   }, (_PORTB * 4), KE_PORTE_BIT7}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {324, 61,  0,   2   }, (_PORTC * 4), KE_PORTI_BIT0}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {324, 74,  0,   2   }, (_PORTC * 4), KE_PORTI_BIT1}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {324, 87,  0,   2   }, (_PORTC * 4), KE_PORTI_BIT2}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {324, 101, 0,   2   }, (_PORTC * 4), KE_PORTI_BIT3}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {324, 113, 0,   2   }, (_PORTC * 4), KE_PORTI_BIT4}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {324, 126, 0,   2   }, (_PORTC * 4), KE_PORTI_BIT5}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {324, 140, 0,   2   }, (_PORTC * 4), KE_PORTI_BIT6}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {349, 48,  0,   2   }, (_PORTA * 4), KE_PORTD_BIT0}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {349, 62,  0,   2   }, (_PORTA * 4), KE_PORTD_BIT1}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {349, 74,  0,   2   }, (_PORTA * 4), KE_PORTD_BIT2}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {349, 87,  0,   2   }, (_PORTA * 4), KE_PORTD_BIT3}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {349, 101, 0,   2   }, (_PORTA * 4), KE_PORTD_BIT4}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {349, 114, 0,   2   }, (_PORTA * 4), KE_PORTD_BIT5}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {377, 48,  0,   2   }, (_PORTB * 4), KE_PORTH_BIT7}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {377, 61,  0,   2   }, (_PORTB * 4), KE_PORTH_BIT6}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {377, 74,  0,   2   }, (_PORTB * 4), KE_PORTH_BIT5}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {377, 87,  0,   2   }, (_PORTB * 4), KE_PORTH_BIT4}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {377, 101, 0,   2   }, (_PORTB * 4), KE_PORTH_BIT3}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {377, 113, 0,   2   }, (_PORTB * 4), KE_PORTH_BIT2}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {377, 126, 0,   2   }, (_PORTB * 4), KE_PORTH_BIT1}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {377, 140, 0,   2   }, (_PORTB * 4), KE_PORTH_BIT0}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {404, 48,  0,   2   }, (_PORTA * 4), KE_PORTC_BIT7}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {404, 61,  0,   2   }, (_PORTA * 4), KE_PORTC_BIT6}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {404, 74,  0,   2   }, (_PORTA * 4), KE_PORTC_BIT5}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {404, 87,  0,   2   }, (_PORTA * 4), KE_PORTC_BIT4}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {404, 101, 0,   2   }, (_PORTA * 4), KE_PORTC_BIT3}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {404, 113, 0,   2   }, (_PORTA * 4), KE_PORTC_BIT2}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {404, 126, 0,   2   }, (_PORTA * 4), KE_PORTC_BIT1}, \
+            {RGB(0,0,0),   RGB(255,0,0),      0, {404, 140, 0,   2   }, (_PORTA * 4), KE_PORTC_BIT0},
+
+
+        #define BUTTON_KEY_DEFINITIONS  {_PORTD, (KE_PORTD_BIT0 >> (3 * 8)), {25,  140, 45,  150 }}, \
+                                        {_PORTD, (KE_PORTD_BIT1 >> (3 * 8)), {25,  188, 45,  198 }}, \
+                                        {_PORTF, (KE_PORTF_BIT7 >> (1 * 8)), {188, 42,  197, 52  }}, \
+                                        {_PORTF, (KE_PORTF_BIT6 >> (1 * 8)), {188, 56,  197, 67  }}, \
+                                        {_PORTF, (KE_PORTF_BIT5 >> (1 * 8)), {188, 70,  197, 79  }}, \
+                                        {_PORTF, (KE_PORTF_BIT4 >> (1 * 8)), {188, 83,  197, 90  }}, \
+                                        {_PORTF, (KE_PORTF_BIT3 >> (1 * 8)), {188, 96,  197, 104 }}, \
+                                        {_PORTF, (KE_PORTF_BIT2 >> (1 * 8)), {188, 109, 197, 118 }}, \
+                                        {_PORTF, (KE_PORTF_BIT1 >> (1 * 8)), {188, 123, 197, 131 }}, \
+                                        {_PORTF, (KE_PORTF_BIT0 >> (1 * 8)), {188, 138, 197, 146 }}, \
+                                        {_PORTG, (KE_PORTG_BIT0 >> (2 * 8)), {213, 42,  222, 52  }}, \
+                                        {_PORTG, (KE_PORTG_BIT1 >> (2 * 8)), {213, 56,  222, 67  }}, \
+                                        {_PORTG, (KE_PORTG_BIT2 >> (2 * 8)), {213, 70,  222, 79  }}, \
+                                        {_PORTG, (KE_PORTG_BIT3 >> (2 * 8)), {213, 83,  222, 90  }}, \
+                                        {_PORTG, (KE_PORTG_BIT4 >> (2 * 8)), {213, 96,  222, 104 }}, \
+                                        {_PORTG, (KE_PORTG_BIT5 >> (2 * 8)), {213, 109, 222, 118 }}, \
+                                        {_PORTG, (KE_PORTG_BIT6 >> (2 * 8)), {213, 123, 222, 131 }}, \
+                                        {_PORTG, (KE_PORTG_BIT7 >> (2 * 8)), {213, 138, 222, 146 }}, \
+                                        {_PORTB, (KE_PORTB_BIT2 >> (1 * 8)), {238, 70,  247, 79  }}, \
+                                        {_PORTB, (KE_PORTB_BIT3 >> (1 * 8)), {238, 83,  247, 90  }}, \
+                                        {_PORTB, (KE_PORTB_BIT4 >> (1 * 8)), {238, 96,  247, 104 }}, \
+                                        {_PORTB, (KE_PORTB_BIT5 >> (1 * 8)), {238, 109, 247, 118 }}, \
+                                        {_PORTB, (KE_PORTB_BIT6 >> (1 * 8)), {238, 123, 247, 131 }}, \
+                                        {_PORTB, (KE_PORTB_BIT7 >> (1 * 8)), {238, 138, 247, 146 }}, \
+                                        {_PORTA, (KE_PORTA_BIT0 >> (0 * 8)), {267, 42,  274, 52  }}, \
+                                        {_PORTA, (KE_PORTA_BIT1 >> (0 * 8)), {267, 56,  274, 67  }}, \
+                                        {_PORTA, (KE_PORTA_BIT2 >> (0 * 8)), {267, 83,  274, 90  }}, \
+                                        {_PORTA, (KE_PORTA_BIT3 >> (0 * 8)), {267, 96,  274, 104 }}, \
+                                        {_PORTA, (KE_PORTA_BIT4 >> (0 * 8)), {267, 109, 274, 118 }}, \
+                                        {_PORTA, (KE_PORTA_BIT6 >> (0 * 8)), {267, 123, 274, 131 }}, \
+                                        {_PORTA, (KE_PORTA_BIT7 >> (0 * 8)), {267, 138, 274, 146 }}, \
+                                        {_PORTE, (KE_PORTE_BIT0 >> (0 * 8)), {293, 42,  299, 52  }}, \
+                                        {_PORTE, (KE_PORTE_BIT1 >> (0 * 8)), {293, 56,  299, 67  }}, \
+                                        {_PORTE, (KE_PORTE_BIT2 >> (0 * 8)), {293, 70,  299, 79  }}, \
+                                        {_PORTE, (KE_PORTE_BIT3 >> (0 * 8)), {293, 83,  299, 90  }}, \
+                                        {_PORTE, (KE_PORTE_BIT4 >> (0 * 8)), {293, 96,  299, 104 }}, \
+                                        {_PORTE, (KE_PORTE_BIT5 >> (0 * 8)), {293, 109, 299, 118 }}, \
+                                        {_PORTE, (KE_PORTE_BIT6 >> (0 * 8)), {293, 123, 299, 131 }}, \
+                                        {_PORTE, (KE_PORTE_BIT7 >> (0 * 8)), {293, 138, 299, 146 }}, \
+                                        {_PORTI, (KE_PORTI_BIT0 >> (0 * 8)), {319, 56,  327, 67  }}, \
+                                        {_PORTI, (KE_PORTI_BIT1 >> (0 * 8)), {319, 70,  327, 79  }}, \
+                                        {_PORTI, (KE_PORTI_BIT2 >> (0 * 8)), {319, 83,  327, 90  }}, \
+                                        {_PORTI, (KE_PORTI_BIT3 >> (0 * 8)), {319, 96,  327, 104 }}, \
+                                        {_PORTI, (KE_PORTI_BIT4 >> (0 * 8)), {319, 109, 327, 118 }}, \
+                                        {_PORTI, (KE_PORTI_BIT5 >> (0 * 8)), {319, 123, 327, 131 }}, \
+                                        {_PORTI, (KE_PORTI_BIT6 >> (0 * 8)), {319, 138, 327, 146 }}, \
+                                        {_PORTD, (KE_PORTD_BIT0 >> (3 * 8)), {345, 43,  356, 52  }}, \
+                                        {_PORTD, (KE_PORTD_BIT1 >> (3 * 8)), {345, 57,  356, 65  }}, \
+                                        {_PORTD, (KE_PORTD_BIT2 >> (3 * 8)), {345, 71,  356, 79  }}, \
+                                        {_PORTD, (KE_PORTD_BIT3 >> (3 * 8)), {345, 83,  356, 91  }}, \
+                                        {_PORTD, (KE_PORTD_BIT4 >> (3 * 8)), {345, 97,  356, 105 }}, \
+                                        {_PORTD, (KE_PORTD_BIT5 >> (3 * 8)), {345, 110, 356, 119 }}, \
+                                        {_PORTH, (KE_PORTH_BIT7 >> (3 * 8)), {372, 42,  382, 52  }}, \
+                                        {_PORTH, (KE_PORTH_BIT6 >> (3 * 8)), {372, 56,  382, 67  }}, \
+                                        {_PORTH, (KE_PORTH_BIT5 >> (3 * 8)), {372, 70,  382, 79  }}, \
+                                        {_PORTH, (KE_PORTH_BIT4 >> (3 * 8)), {372, 83,  382, 90  }}, \
+                                        {_PORTH, (KE_PORTH_BIT3 >> (3 * 8)), {372, 96,  382, 104 }}, \
+                                        {_PORTH, (KE_PORTH_BIT2 >> (3 * 8)), {372, 109, 382, 118 }}, \
+                                        {_PORTH, (KE_PORTH_BIT1 >> (3 * 8)), {372, 123, 382, 131 }}, \
+                                        {_PORTH, (KE_PORTH_BIT0 >> (3 * 8)), {372, 138, 382, 146 }}, \
+                                        {_PORTC, (KE_PORTC_BIT7 >> (2 * 8)), {400, 42,  407, 52  }}, \
+                                        {_PORTC, (KE_PORTC_BIT6 >> (2 * 8)), {400, 56,  407, 67  }}, \
+                                        {_PORTC, (KE_PORTC_BIT5 >> (2 * 8)), {400, 70,  407, 79  }}, \
+                                        {_PORTC, (KE_PORTC_BIT4 >> (2 * 8)), {400, 83,  407, 90  }}, \
+                                        {_PORTC, (KE_PORTC_BIT3 >> (2 * 8)), {400, 96,  407, 104 }}, \
+                                        {_PORTC, (KE_PORTC_BIT2 >> (2 * 8)), {400, 109, 407, 118 }}, \
+                                        {_PORTC, (KE_PORTC_BIT1 >> (2 * 8)), {400, 123, 407, 131 }}, \
+                                        {_PORTC, (KE_PORTC_BIT0 >> (2 * 8)), {400, 138, 407, 146 }},
+    #endif
 
 
     #define KEYPAD "KeyPads/TRK-KEA.bmp"
@@ -5460,6 +5585,24 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define TOGGLE_TEST_OUTPUT()
     #define SET_TEST_OUTPUT()
     #define CLEAR_TEST_OUTPUT()
+
+    // RTS control via GPIO output
+    //
+    #define RTS_2_LINE              KE_PORTA_BIT1
+    #define _CONFIGURE_RTS_2_HIGH() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(A, (RTS_2_LINE), (RTS_2_LINE), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+    #define _CONFIGURE_RTS_2_LOW()  _CONFIG_DRIVE_PORT_OUTPUT_VALUE(A, (RTS_2_LINE), (0), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+    #define _SET_RTS_2_HIGH()       _SETBITS(A, RTS_2_LINE)
+    #define _SET_RTS_2_LOW()        _CLEARBITS(A, RTS_2_LINE)
+
+    #define _CONFIGURE_RTS_1_HIGH()
+    #define _CONFIGURE_RTS_1_LOW()
+    #define _SET_RTS_1_HIGH()
+    #define _SET_RTS_1_LOW()
+
+    #define _CONFIGURE_RTS_0_HIGH()
+    #define _CONFIGURE_RTS_0_LOW()
+    #define _SET_RTS_0_HIGH()
+    #define _SET_RTS_0_LOW()
 #elif defined FRDM_KE06Z                                                 // {30}
     #define DEMO_LED_1             (KE_PORTG_BIT6)                       // (green LED - PTG6) if the port is changed (eg. A to D) the port macros will require appropriate adjustment too
     #define DEMO_LED_2             (KE_PORTG_BIT5)                       // (red LED - PTG5) if the port is changed (eg. A to D) the port macros will require appropriate adjustment too

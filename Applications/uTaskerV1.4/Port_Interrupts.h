@@ -34,7 +34,7 @@
         #define IRQ_TEST                                                 // test IRQ port interrupts
       //#define DMA_PORT_MIRRORING                                       // demonstrate using DMA to control one or more output ports to follow an input port
         #if defined SUPPORT_LOW_POWER && defined IRQ_TEST
-            #define WAKEUP_TEST                                          // test wake-up port interrupts (wake-up from kinetis low leakage mode)
+          //#define WAKEUP_TEST                                          // test wake-up port interrupts (wake-up from kinetis low leakage mode)
         #endif
     #endif
 
@@ -72,13 +72,33 @@
                         break;
                     }
     #else 
+        #if !(defined TRK_KEA8 && defined SUPPORT_LOW_POWER)
                     fnDebugMsg("IRQ_");
+        #endif
                     switch (ucInputMessage[MSG_INTERRUPT_EVENT]) {
                     case IRQ1_EVENT:
                         fnDebugMsg("1");
                         break;
                     case IRQ4_EVENT:
+        #if defined TRK_KEA8 && defined SUPPORT_LOW_POWER
+                        switch (fnGetLowPowerMode()) {
+                        case STOP_MODE:
+                            fnSetLowPowerMode(RUN_MODE);
+                            fnDebugMsg("RUN");
+                            break;
+                        case RUN_MODE:
+                            fnSetLowPowerMode(WAIT_MODE);
+                            fnDebugMsg("WAIT");
+                            break;
+                        default:
+                            fnSetLowPowerMode(STOP_MODE);
+                            fnDebugMsg("STOP");
+                            break;
+                        }
+                        fnDebugMsg(" mode\r\n");
+        #else
                         fnDebugMsg("4");
+        #endif
         #if defined CAN_INTERFACE && defined TEST_CAN
                         fnSendCAN(1);                                    // {4}
         #endif
@@ -174,6 +194,13 @@ static void fnInitIRQ(void)
             #else
     interrupt_setup.int_port_bits  = PORTC_BIT12;                        // the IRQ input connected (SWITCH_3 on FRDM-KL46Z)
             #endif
+        #elif defined TRK_KEA8
+    // Keyboard
+    //
+    interrupt_setup.int_type       = KEYBOARD_INTERRUPT;                 // define keyboard interrupt rather than IRQ
+    interrupt_setup.int_priority   = PRIORITY_KEYBOARD_INT;              // interrupt priority level
+    interrupt_setup.int_port       = KE_PORTC;                           // the port that the interrupt input is on (KE_PORTA, KE_PORTB, KE_PORTC and KE_PORTD are the same)
+    interrupt_setup.int_port_bits  = (KE_PORTC_BIT4);                    // the IRQ input connected (switch 1)
         #elif defined FRDM_KE02Z || defined FRDM_KE02Z40M || defined TRK_KEA64 || defined TRK_KEA128 || defined FRDM_KEAZN32Q64 || defined FRDM_KEAZN64Q64 || defined FRDM_KEAZN128Q80
     // Keyboard
     //
@@ -315,6 +342,8 @@ static void fnInitIRQ(void)
         #else
     #if defined FRDM_KL25Z || defined FRDM_KL05Z || defined FRDM_KL27Z
     interrupt_setup.int_port_sense = (IRQ_FALLING_EDGE | PULLUP_ON | ENABLE_PORT_MODE); // set the pin to port mode - this is needed if the pin is disabled by default otherwise the pull-up/LLWU functions won't work
+    #elif defined TRK_KEA8
+    interrupt_setup.int_port_sense = (IRQ_RISING_EDGE | PULLUP_DOWN_OFF);// interrupt is to be rising edge sensitive
     #else
     interrupt_setup.int_port_sense = (IRQ_FALLING_EDGE | PULLUP_ON);     // interrupt is to be falling edge sensitive
     #endif

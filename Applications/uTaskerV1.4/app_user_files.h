@@ -281,7 +281,7 @@ static const USER_FILE user_files[] = {
 
     {"flash.bin", (unsigned char *)(FLASH_START_ADDRESS + 1), (SIZE_OF_FLASH - 1), MIME_BINARY, (FILE_VISIBLE | FILE_NOT_CODE)},
 #if defined SPI_SW_UPLOAD || defined SPI_FLASH_FAT || (defined SPI_FILE_SYSTEM && defined FLASH_FILE_SYSTEM)
-    {"spi_flash.bin", (unsigned char *)(FLASH_START_ADDRESS + SIZE_OF_FLASH), (SPI_DATA_FLASH_SIZE), MIME_BINARY, (FILE_VISIBLE | FILE_NOT_CODE)},
+  //{"spi_flash.bin", (unsigned char *)(FLASH_START_ADDRESS + SIZE_OF_FLASH), (SPI_DATA_FLASH_SIZE), MIME_BINARY, (FILE_VISIBLE | FILE_NOT_CODE)}, // used to be able to load an image of the SPI Flash content (don't enable for normal file sysetm operation starting at the beginning of SPI Flash!)
 #endif
     {"ram.bin",   (unsigned char *)RAM_START_ADDRESS, (SIZE_OF_RAM), MIME_BINARY, (FILE_VISIBLE | FILE_NOT_CODE)},
 

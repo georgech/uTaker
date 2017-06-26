@@ -628,9 +628,6 @@
     <ClInclude Include="..\..\..\uTasker\usb.h">
       <Filter>uTasker</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Stack\tcpip.h">
-      <Filter>TCP/IP</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\stack\SSL\wolfssl-3.9.6\aes.h">
       <Filter>TCP/IP\wolfSSL</Filter>
     </ClInclude>
@@ -870,6 +867,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\stack\PPP\lwipopts.h">
       <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Stack\tcpip.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

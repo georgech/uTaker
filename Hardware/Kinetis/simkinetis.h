@@ -1823,7 +1823,7 @@ typedef struct stKINETIS_SIM
 #if defined KINETIS_KE
     typedef struct stKINETIS_KE_PORT
     {
-    #if (defined KINETIS_KE04 && (SIZE_OF_FLASH > (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA
+    #if (defined KINETIS_KE04 && (SIZE_OF_FLASH > (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
         unsigned long PORT_IOFLT0;
         unsigned long PORT_IOFLT1;
         unsigned long PORT_PUE0;

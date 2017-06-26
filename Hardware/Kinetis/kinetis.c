@@ -2516,9 +2516,17 @@ const _RESET_VECTOR __vector_table
     #if defined USB_INTERFACE
     _usb_otg_isr,                                                        // 24
     #else
+        #if defined KINETIS_KE && defined SUPPORT_KEYBOARD_INTERRUPTS && (KBIS_AVAILABLE > 0)
+    _KBI0_isr,                                                           // 24
+        #else
     irq_default,                                                         // 24
+        #endif
     #endif
+        #if defined KINETIS_KE && defined SUPPORT_KEYBOARD_INTERRUPTS && (KBIS_AVAILABLE > 1)
+    _KBI1_isr,                                                           // 25
+        #else
     irq_default,                                                         // 25
+        #endif
     irq_default,                                                         // 26
     irq_default,                                                         // 27
     #if defined TICK_USES_LPTMR

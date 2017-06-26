@@ -2278,9 +2278,34 @@ extern void start_ppp_now(unsigned char uart_handle)
     pppOverSerialOpen(&fd, linkStatusCB, &linkStatusCtx);
 }
 
-extern void pass_raw_input(unsigned char *buffer, int iLength)
+// passes unescaped input
+//
+extern void pass_raw_input(unsigned char newByte)
 {
-    pppos_input(0, buffer, iLength);
+    pppos_input(0, &newByte, 1);
+}
+
+// passes complete escaped input frame
+//
+extern void pass_ppp_input(unsigned char *buffer, int iLength)
+{
+    struct pbuf inp;
+    struct pppInputHeader *ptrHead = (struct pppInputHeader *)(buffer);
+    inp.len = iLength;
+    inp.tot_len = iLength;
+    inp.type = PBUF_RAM;
+    ptrHead->unit = 0;
+    inp.payload = buffer;
+    if (*(buffer + 4) == 0xff) {
+        ptrHead->proto = ((buffer[4 + 2] << 8) | buffer[4 + 3]);
+    }
+    else {
+        ptrHead->proto = ((buffer[4 + 0] << 8) | buffer[4 + 1]);
+        if (ptrHead->proto == 0x2145) {
+            ptrHead->proto = 0x21;
+        }
+    }
+    pppInput(&inp);
 }
 
 

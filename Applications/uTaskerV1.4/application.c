@@ -596,7 +596,7 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
         fnStartRTC(0);                                                   // start the RTC if it isn't yet operating
         #endif
         #if defined KINETIS_KL && !defined _WINDOWS
-        if (RCM_SRS0 & (RCM_SRS0_POR | RCM_SRS0_LVD)) {                  // power on reset/low voltage detector
+        if ((RCM_SRS0 & (RCM_SRS0_POR | RCM_SRS0_LVD)) != 0) {           // power on reset/low voltage detector
             fnResetBoard();                                              // temp fix for first alarm that otherwise immediately fires
         }
         #endif
@@ -637,49 +637,6 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
 #if defined USE_MAINTENANCE && !defined REMOVE_PORT_INITIALISATIONS && (!(defined KWIKSTIK && defined SUPPORT_SLCD))
         fnInitialisePorts();                                             // set up ports as required by the user
 #endif
-
-#if defined TRINAMIC_LANDUNGSBRUECKE // temp
-        #define CAN_STBY     PORTA_BIT14
-        #define RED_LED_3    PORTA_BIT15
-        #define GREEN_LED_4  PORTA_BIT16
-        #define RED_LED_4    PORTA_BIT17
-        #define RED_LED_1    PORTB_BIT20
-        #define GREEN_LED_1  PORTB_BIT21
-        #define GREEN_LED_2  PORTB_BIT9
-        #define ACC_INT1     PORTC_BIT12
-        #define ACC_INT2     PORTC_BIT13
-        #define WT12_reset_line PORTE_BIT6
-        #define NO_NAME_OUTPUT PORTE_BIT2
-        #define GPIO_1       PORTB_BIT22
-        #define GPIO_2       PORTB_BIT23
-
-        _CONFIG_PORT_OUTPUT(A, CAN_STBY, (PORT_SRE_SLOW));
-        _CONFIG_PORT_OUTPUT(A, RED_LED_3, (PORT_SRE_SLOW));
-        _CONFIG_PORT_OUTPUT(A, GREEN_LED_4, (PORT_SRE_SLOW));
-        _CONFIG_PORT_OUTPUT(A, RED_LED_4, (PORT_SRE_SLOW));
-        _CONFIG_PORT_OUTPUT(B, RED_LED_1, (PORT_SRE_SLOW));
-        _CONFIG_PORT_OUTPUT(B, GREEN_LED_1, (PORT_SRE_SLOW));
-        _CONFIG_PORT_OUTPUT(B, GREEN_LED_2, (PORT_SRE_SLOW));
-        _CONFIG_PORT_INPUT(C, ACC_INT1, (PORT_PS_UP_ENABLE));
-        _CONFIG_PORT_INPUT(C, ACC_INT2, (PORT_PS_UP_ENABLE));
-        _CONFIG_PORT_OUTPUT(E, WT12_reset_line, (PORT_SRE_SLOW));
-        _CONFIG_PORT_OUTPUT(E, NO_NAME_OUTPUT, (PORT_SRE_SLOW));
-      //_CONFIG_PERIPHERAL(E, 3, (PE_3_ADC));
-        _CONFIG_PERIPHERAL(E, 4, (PE_4_UART3_TX));
-        _CONFIG_PERIPHERAL(E, 5, (PE_5_UART3_RX));
-        _CONFIG_PERIPHERAL(E, 24, (PE_24_UART4_TX));
-        _CONFIG_PERIPHERAL(E, 25, (PE_25_UART4_RX));
-        _CONFIG_PERIPHERAL(B, 10, (PB_10_SPI1_PCS0));
-        _CONFIG_PERIPHERAL(B, 11, (PB_11_SPI1_SCK));
-        _CONFIG_PORT_OUTPUT(B, GPIO_1, (PORT_SRE_SLOW));
-        _CONFIG_PORT_OUTPUT(B, GPIO_2, (PORT_SRE_SLOW));
-#endif
-
-
-
-
-
-
         uTaskerStateChange(TASK_DEBUG, UTASKER_ACTIVATE);
 #if defined SERIAL_INTERFACE && defined DEMO_UART                        // {32} this serial interface is used for debug output and menu based control
         if (NO_ID_ALLOCATED == fnSetNewSerialMode(FOR_I_O)) {            // open serial port for I/O
@@ -747,7 +704,7 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
         uTaskerStateChange(TASK_MASS_STORAGE, UTASKER_ACTIVATE);         // {52} start mass storage task
 #endif
 #if defined IRQ_TEST || defined WAKEUP_TEST
-        fnInitIRQ();
+        fnInitIRQ();                                                     // initialise pin interrupts or wakeup source(s)
 #endif
 #if defined RTC_TEST                                                     // {3}
         fnTestRTC();
@@ -817,7 +774,7 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
                 }
                 break;
 #endif
-#if /*defined MODBUS_DELAYED_RESPONSE &&*/ defined USE_MODBUS && defined USE_MODBUS_MASTER // {66}
+#if defined USE_MODBUS && defined USE_MODBUS_MASTER // {66}
             case E_TEST_MODBUS_DELAY:
                 {
                     extern void fnNextTest(void);
@@ -882,7 +839,6 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
         #include "can_tests.h"                                           // CAN interrupt event handling - specific
     #undef _CAN_INT_EVENTS
 #endif
-
 #if defined USE_ZERO_CONFIG                                              // {59}
             case ZERO_CONFIG_SUCCESSFUL:
                 fnDebugMsg("Zero config successful\r\n");
@@ -1041,6 +997,11 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
             }
         #else
             fnEchoInput(ucInputMessage, Length);
+            #if defined TRK_KEA8
+            if (ucInputMessage[0] == CARRIAGE_RETURN) {                           // device with very small memory so no command line interface used - show memory utilisation
+                fnDisplayMemoryUsage();
+            }
+            #endif
         #endif
         #if defined USE_MAINTENANCE
             if (usData_state == ES_NO_CONNECTION) {

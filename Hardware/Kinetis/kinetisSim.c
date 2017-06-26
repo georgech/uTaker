@@ -1323,57 +1323,57 @@ static void fnHandleKBI(int iController, int iPort, unsigned long ulNewState, un
     switch (iPort) {                                                     // check ports that have potential interrupt functions
     case KE_PORTA:
         if (iController == 0) {
-            if (ulChangedBit & KE_PORTA_BIT0) {
+            if ((ulChangedBit & KE_PORTA_BIT0) != 0) {
                 if (ucPortFunctions[iPort][0] == PA_0_KBI0_P0) {         // this input is programmed as keyboard interrupt
                     KBI_input = 0x01;
                     break;
                 }
             }
-            else if (ulChangedBit & KE_PORTA_BIT1) {
+            else if ((ulChangedBit & KE_PORTA_BIT1) != 0) {
                 if (ucPortFunctions[iPort][1] == PA_1_KBI0_P1) {         // this input is programmed as keyboard interrupt
                     KBI_input = 0x02;
                     break;
                 }
             }
-            else if (ulChangedBit & KE_PORTA_BIT2) {
+            else if ((ulChangedBit & KE_PORTA_BIT2) != 0) {
                 if (ucPortFunctions[iPort][2] == PA_2_KBI0_P2) {         // this input is programmed as keyboard interrupt
                     KBI_input = 0x04;
                     break;
                 }
             }
-            else if (ulChangedBit & KE_PORTA_BIT3) {
+            else if ((ulChangedBit & KE_PORTA_BIT3) != 0) {
                 if (ucPortFunctions[iPort][3] == PA_3_KBI0_P3) {         // this input is programmed as keyboard interrupt
                     KBI_input = 0x08;
                     break;
                 }
             }
     #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
-            else if (ulChangedBit & KE_PORTA_BIT4) {
+            else if ((ulChangedBit & KE_PORTA_BIT4) != 0) {
                 if (ucPortFunctions[iPort][4] == PA_4_KBI0_P4) {         // this input is programmed as keyboard interrupt
                     KBI_input = 0x10;
                     break;
                 }
             }
-            else if (ulChangedBit & KE_PORTA_BIT5) {
+            else if ((ulChangedBit & KE_PORTA_BIT5) != 0) {
                 if (ucPortFunctions[iPort][5] == PA_5_KBI0_P5) {         // this input is programmed as keyboard interrupt
                     KBI_input = 0x20;
                     break;
                 }
             }
-            else if (ulChangedBit & KE_PORTA_BIT6) {
+            else if ((ulChangedBit & KE_PORTA_BIT6) != 0) {
                 if (ucPortFunctions[iPort][6] == PA_6_KBI0_P6) {         // this input is programmed as keyboard interrupt
                     KBI_input = 0x40;
                     break;
                 }
             }
-            else if (ulChangedBit & KE_PORTA_BIT7) {
+            else if ((ulChangedBit & KE_PORTA_BIT7) != 0) {
                 if (ucPortFunctions[iPort][7] == PA_7_KBI0_P7) {         // this input is programmed as keyboard interrupt
                     KBI_input = 0x80;
                     break;
                 }
             }
     #endif
-            else if (ulChangedBit & KE_PORTB_BIT0) {
+            else if ((ulChangedBit & KE_PORTB_BIT0) != 0) {
     #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                 if (ucPortFunctions[iPort][8] == PB_0_KBI0_P8) {         // this input is programmed as keyboard interrupt
                     KBI_input = 0x100;
@@ -1386,7 +1386,7 @@ static void fnHandleKBI(int iController, int iPort, unsigned long ulNewState, un
                 }
     #endif
             }
-            else if (ulChangedBit & KE_PORTB_BIT1) {
+            else if ((ulChangedBit & KE_PORTB_BIT1) != 0) {
     #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                 if (ucPortFunctions[iPort][9] == PB_1_KBI0_P9) {         // this input is programmed as keyboard interrupt
                     KBI_input = 0x200;
@@ -1399,20 +1399,20 @@ static void fnHandleKBI(int iController, int iPort, unsigned long ulNewState, un
                 }
     #endif
             }
-            else if (ulChangedBit & KE_PORTB_BIT2) {
+            else if ((ulChangedBit & KE_PORTB_BIT2) != 0) {
     #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                 if (ucPortFunctions[iPort][10] == PB_2_KBI0_P10) {       // this input is programmed as keyboard interrupt
                     KBI_input = 0x400;
                     break;
                 }
     #else
-                if (ucPortFunctions[iPort][10] == PB_2_KBI0_P6) {        // this input is programmed as keyboard interrupt
+                if ((ucPortFunctions[iPort][10] == PB_2_KBI0_P6) != 0) { // this input is programmed as keyboard interrupt
                     KBI_input = 0x40;
                     break;
                 }
     #endif
             }
-            else if (ulChangedBit & KE_PORTB_BIT3) {
+            else if ((ulChangedBit & KE_PORTB_BIT3) != 0) {
     #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                 if (ucPortFunctions[iPort][11] == PB_3_KBI0_P11) {       // this input is programmed as keyboard interrupt
                     KBI_input = 0x800;
@@ -1426,73 +1426,73 @@ static void fnHandleKBI(int iController, int iPort, unsigned long ulNewState, un
     #endif
             }
     #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
-            else if (ulChangedBit & KE_PORTB_BIT4) {
+            else if ((ulChangedBit & KE_PORTB_BIT4) != 0) {
                 if (ucPortFunctions[iPort][12] == PB_4_KBI0_P12) {       // this input is programmed as keyboard interrupt
                     KBI_input = 0x1000;
                     break;
                 }
             }
-            else if (ulChangedBit & KE_PORTB_BIT5) {
+            else if ((ulChangedBit & KE_PORTB_BIT5) != 0) {
                 if (ucPortFunctions[iPort][13] == PB_5_KBI0_P13) {       // this input is programmed as keyboard interrupt
                     KBI_input = 0x2000;
                     break;
                 }
             }
-            else if (ulChangedBit & KE_PORTB_BIT6) {
+            else if ((ulChangedBit & KE_PORTB_BIT6) != 0) {
                 if (ucPortFunctions[iPort][14] == PB_6_KBI0_P14) {       // this input is programmed as keyboard interrupt
                     KBI_input = 0x4000;
                     break;
                 }
             }
-            else if (ulChangedBit & KE_PORTB_BIT7) {
+            else if ((ulChangedBit & KE_PORTB_BIT7) != 0) {
                 if (ucPortFunctions[iPort][15] == PB_7_KBI0_P15) {       // this input is programmed as keyboard interrupt
                     KBI_input = 0x8000;
                     break;
                 }
             }
-            else if (ulChangedBit & KE_PORTC_BIT0) {
+            else if ((ulChangedBit & KE_PORTC_BIT0) != 0) {
                 if (ucPortFunctions[iPort][16] == PC_0_KBI0_P16) {       // this input is programmed as keyboard interrupt
                     KBI_input = 0x10000;
                     break;
                 }
             }
-            else if (ulChangedBit & KE_PORTC_BIT1) {
+            else if ((ulChangedBit & KE_PORTC_BIT1) != 0) {
                 if (ucPortFunctions[iPort][17] == PC_1_KBI0_P17) {       // this input is programmed as keyboard interrupt
                     KBI_input = 0x20000;
                     break;
                 }
             }
-            else if (ulChangedBit & KE_PORTC_BIT2) {
+            else if ((ulChangedBit & KE_PORTC_BIT2) != 0) {
                 if (ucPortFunctions[iPort][18] == PC_2_KBI0_P18) {       // this input is programmed as keyboard interrupt
                     KBI_input = 0x40000;
                     break;
                 }
             }
-            else if (ulChangedBit & KE_PORTC_BIT3) {
+            else if ((ulChangedBit & KE_PORTC_BIT3) != 0) {
                 if (ucPortFunctions[iPort][19] == PC_3_KBI0_P19) {       // this input is programmed as keyboard interrupt
                     KBI_input = 0x80000;
                     break;
                 }
             }
-            else if (ulChangedBit & KE_PORTC_BIT4) {
+            else if ((ulChangedBit & KE_PORTC_BIT4) != 0) {
                 if (ucPortFunctions[iPort][20] == PC_4_KBI0_P20) {       // this input is programmed as keyboard interrupt
                     KBI_input = 0x100000;
                     break;
                 }
             }
-            else if (ulChangedBit & KE_PORTC_BIT5) {
+            else if ((ulChangedBit & KE_PORTC_BIT5) != 0) {
                 if (ucPortFunctions[iPort][21] == PC_5_KBI0_P21) {       // this input is programmed as keyboard interrupt
                     KBI_input = 0x200000;
                     break;
                 }
             }
-            else if (ulChangedBit & KE_PORTC_BIT6) {
+            else if ((ulChangedBit & KE_PORTC_BIT6) != 0) {
                 if (ucPortFunctions[iPort][22] == PC_6_KBI0_P22) {       // this input is programmed as keyboard interrupt
                     KBI_input = 0x400000;
                     break;
                 }
             }
-            else if (ulChangedBit & KE_PORTC_BIT7) {
+            else if ((ulChangedBit & KE_PORTC_BIT7) != 0) {
                 if (ucPortFunctions[iPort][23] == PC_7_KBI0_P23) {       // this input is programmed as keyboard interrupt
                     KBI_input = 0x800000;
                     break;
@@ -1504,59 +1504,109 @@ static void fnHandleKBI(int iController, int iPort, unsigned long ulNewState, un
                     break;
                 }
             }
-            else if (ulChangedBit & KE_PORTD_BIT1) {
+            else if ((ulChangedBit & KE_PORTD_BIT1) != 0) {
                 if (ucPortFunctions[iPort][25] == PD_1_KBI0_P25) {       // this input is programmed as keyboard interrupt
                     KBI_input = 0x2000000;
                     break;
                 }
             }
-            else if (ulChangedBit & KE_PORTD_BIT2) {
+            else if ((ulChangedBit & KE_PORTD_BIT2) != 0) {
                 if (ucPortFunctions[iPort][26] == PD_2_KBI0_P26) {       // this input is programmed as keyboard interrupt
                     KBI_input = 0x4000000;
                     break;
                 }
             }
-            else if (ulChangedBit & KE_PORTD_BIT3) {
+            else if ((ulChangedBit & KE_PORTD_BIT3) != 0) {
                 if (ucPortFunctions[iPort][27] == PD_3_KBI0_P27) {       // this input is programmed as keyboard interrupt
                     KBI_input = 0x8000000;
                     break;
                 }
             }
-            else if (ulChangedBit & KE_PORTD_BIT4) {
+            else if ((ulChangedBit & KE_PORTD_BIT4) != 0) {
                 if (ucPortFunctions[iPort][28] == PD_4_KBI0_P28) {       // this input is programmed as keyboard interrupt
                     KBI_input = 0x10000000;
                     break;
                 }
             }
-            else if (ulChangedBit & KE_PORTD_BIT5) {
+            else if ((ulChangedBit & KE_PORTD_BIT5) != 0) {
                 if (ucPortFunctions[iPort][29] == PD_5_KBI0_P29) {       // this input is programmed as keyboard interrupt
                     KBI_input = 0x20000000;
                     break;
                 }
             }
-            else if (ulChangedBit & KE_PORTD_BIT6) {
+            else if ((ulChangedBit & KE_PORTD_BIT6) != 0) {
                 if (ucPortFunctions[iPort][30] == PD_6_KBI0_P30) {       // this input is programmed as keyboard interrupt
                     KBI_input = 0x40000000;
                     break;
                 }
             }
-            else if (ulChangedBit & KE_PORTD_BIT7) {
+            else if ((ulChangedBit & KE_PORTD_BIT7) != 0) {
                 if (ucPortFunctions[iPort][31] == PD_7_KBI0_P31) {       // this input is programmed as keyboard interrupt
                     KBI_input = 0x80000000;
                     break;
                 }
             }
-   #endif
+    #endif
         }
     #if KBIS_AVAILABLE > 1 &&  !defined KINETIS_KE04 && !defined KINETIS_KE06 && !defined KINETIS_KEA64 && !defined KINETIS_KEA128
         else {
-            if (ulChangedBit & KE_PORTD_BIT0) {
+        #if defined KINETIS_KEA8
+            if ((ulChangedBit & KE_PORTB_BIT4) != 0) {
+                if (ucPortFunctions[iPort][12] == PB_4_KBI1_P6) {        // this input is programmed as keyboard interrupt
+                    KBI_input = 0x40;
+                    break;
+                }
+            }
+            else if ((ulChangedBit & KE_PORTB_BIT5) != 0) {
+                if (ucPortFunctions[iPort][13] == PB_5_KBI1_P7) {        // this input is programmed as keyboard interrupt
+                    KBI_input = 0x80;
+                    break;
+                }
+            }
+            else if ((ulChangedBit & KE_PORTC_BIT0) != 0) {
+                if (ucPortFunctions[iPort][16] == PC_0_KBI1_P2) {        // this input is programmed as keyboard interrupt
+                    KBI_input = 0x04;
+                    break;
+                }
+            }
+            else if ((ulChangedBit & KE_PORTC_BIT1) != 0) {
+                if (ucPortFunctions[iPort][17] == PC_1_KBI1_P3) {       // this input is programmed as keyboard interrupt
+                    KBI_input = 0x08;
+                    break;
+                }
+            }
+            else if ((ulChangedBit & KE_PORTC_BIT2) != 0) {
+                if (ucPortFunctions[iPort][18] == PC_2_KBI1_P4) {        // this input is programmed as keyboard interrupt
+                    KBI_input = 0x10;
+                    break;
+                }
+            }
+            else if ((ulChangedBit & KE_PORTC_BIT3) != 0) {
+                if (ucPortFunctions[iPort][19] == PC_3_KBI1_P5) {        // this input is programmed as keyboard interrupt
+                    KBI_input = 0x20;
+                    break;
+                }
+            }
+            else if ((ulChangedBit & KE_PORTC_BIT4) != 0) {
+                if (ucPortFunctions[iPort][20] == PC_4_KBI1_P0) {        // this input is programmed as keyboard interrupt
+                    KBI_input = 0x01;
+                    break;
+                }
+            }
+            else if ((ulChangedBit & KE_PORTC_BIT5) != 0) {
+                if (ucPortFunctions[iPort][21] == PC_5_KBI1_P1) {        // this input is programmed as keyboard interrupt
+                    KBI_input = 0x02;
+                    break;
+                }
+            }
+        #endif
+            if ((ulChangedBit & KE_PORTD_BIT0) != 0) {
                 if (ucPortFunctions[iPort][24] == PD_0_KBI1_P0) {        // this input is programmed as keyboard interrupt
                     KBI_input = 0x01;
                     break;
                 }
             }
-            else if (ulChangedBit & KE_PORTD_BIT1) {
+            else if ((ulChangedBit & KE_PORTD_BIT1) != 0) {
                 if (ucPortFunctions[iPort][25] == PD_1_KBI1_P1) {        // this input is programmed as keyboard interrupt
                     KBI_input = 0x02;
                     break;
@@ -1568,13 +1618,13 @@ static void fnHandleKBI(int iController, int iPort, unsigned long ulNewState, un
                     break;
                 }
             }
-            else if (ulChangedBit & KE_PORTD_BIT3) {
+            else if ((ulChangedBit & KE_PORTD_BIT3) != 0) {
                 if (ucPortFunctions[iPort][27] == PD_3_KBI1_P3) {        // this input is programmed as keyboard interrupt
                     KBI_input = 0x08;
                     break;
                 }
             }
-            else if (ulChangedBit & KE_PORTD_BIT4) {
+            else if ((ulChangedBit & KE_PORTD_BIT4) != 0) {
                 if (ucPortFunctions[iPort][28] == PD_4_KBI1_P4) {        // this input is programmed as keyboard interrupt
                     KBI_input = 0x10;
                     break;
@@ -1586,13 +1636,13 @@ static void fnHandleKBI(int iController, int iPort, unsigned long ulNewState, un
                     break;
                 }
             }
-            else if (ulChangedBit & KE_PORTD_BIT6) {
+            else if ((ulChangedBit & KE_PORTD_BIT6) != 0) {
                 if (ucPortFunctions[iPort][30] == PD_6_KBI1_P6) {        // this input is programmed as keyboard interrupt
                     KBI_input = 0x40;
                     break;
                 }
             }
-            else if (ulChangedBit & KE_PORTD_BIT7) {
+            else if ((ulChangedBit & KE_PORTD_BIT7) != 0) {
                 if (ucPortFunctions[iPort][31] == PD_7_KBI1_P7) {        // this input is programmed as keyboard interrupt
                     KBI_input = 0x80;
                     break;
@@ -1803,8 +1853,8 @@ static void fnHandleKBI(int iController, int iPort, unsigned long ulNewState, un
     // A valid keyboard interrupt input has changed so we check to see whether the change/state matches with the programmed one
     //
     if (iController == 0) {
-        if (KBI0_SC & KBI_SC_KBIE) {                                     // main KBI interrupt enabled
-            if (KBI0_ES & KBI_input) {                                   // high or rising edge sensitive
+        if ((KBI0_SC & KBI_SC_KBIE) != 0) {                              // main KBI interrupt enabled
+            if ((KBI0_ES & KBI_input) != 0) {                            // high or rising edge sensitive
                 if ((ulNewState & ulChangedBit) == 0) {                  // input has changed to '0'
                     return;
                 }
@@ -3053,17 +3103,17 @@ extern void fnSimPers(void)
                         break;
                     }
     #endif
-                    if ((UART0_C2 & UART_C2_TE) && (!(SIM_PINSEL0 & SIM_PINSEL_UART0PS) == 0)) { // UART0 tx enabled and not mapped to PTA2 and PTA3 rather than PTB0 and PTB1
+                    if ((UART0_C2 & UART_C2_TE) && ((SIM_PINSEL0 & SIM_PINSEL_UART0PS) == 0)) { // UART0 tx enabled and not mapped to PTA2 and PTA3 rather than PTB0 and PTB1
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTB][iPin - 8] = PB_1_UART0_TX;
                     }
     #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
-                    else if (KBI0_PE & 0x200) {                          // pin is enabled as keyboard interrupt
+                    else if ((KBI0_PE & 0x200) != 0) {                   // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTB][iPin - 8] = PB_1_KBI0_P9;
                     }
     #else
-                    else if (KBI0_PE & 0x20) {                           // pin is enabled as keyboard interrupt
+                    else if ((KBI0_PE & 0x20) != 0) {                    // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTB][iPin - 8] = PB_1_KBI0_P5;
                     }
@@ -3347,6 +3397,11 @@ extern void fnSimPers(void)
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTC][iPin - 16] = PC_4_KBI0_P20;
                     }
+    #elif defined KINETIS_KEA8
+                    else if (KBI1_PE & 0x000001) {                       // pin is enabled as keyboard interrupt
+                        ulPeripherals[iPort] |= ulBit;
+                        ucPortFunctions[_PORTC][iPin - 16] = PC_4_KBI1_P0;
+                    }
     #endif
                     break;
                 case KE_PORTC_BIT5:
@@ -3358,6 +3413,11 @@ extern void fnSimPers(void)
                     else if (KBI0_PE & 0x200000) {                       // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTC][iPin - 16] = PC_5_KBI0_P21;
+                    }
+    #elif defined KINETIS_KEA8
+                    else if (KBI1_PE & 0x000002) {                       // pin is enabled as keyboard interrupt
+                        ulPeripherals[iPort] |= ulBit;
+                        ucPortFunctions[_PORTC][iPin - 16] = PC_5_KBI1_P1;
                     }
     #endif
                     break;
@@ -3521,14 +3581,20 @@ extern void fnSimPers(void)
                     break;
                 case KE_PORTD_BIT6:
     #if UARTS_AVAILABLE > 2
-                    if ((UART2_C2 & UART_C2_RE) && (!(UART2_C1 & UART_C1_LOOPS))) { // UART2 rx enabled and not in sigle-wire/loop back mode
-                        ulPeripherals[iPort] |= ulBit;
-                        ucPortFunctions[_PORTD][iPin - 24] = PD_6_UART2_RX;
-                        break;
+                    if (((UART2_C2 & UART_C2_RE) != 0) && ((UART2_C1 & UART_C1_LOOPS) == 0)) { // UART2 rx enabled and not in single-wire/loop back mode
+        #if defined SIM_PINSEL1
+                        if ((SIM_PINSEL1 & SIM_PINSEL1_UART2PS) == 0) { // if not alternate pinout selected
+        #endif
+                            ulPeripherals[iPort] |= ulBit;
+                            ucPortFunctions[_PORTD][iPin - 24] = PD_6_UART2_RX;
+                            break;
+        #if defined SIM_PINSEL1
+                        }
+        #endif
                     }
     #endif
     #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
-                    if (KBI0_PE & 0x40000000) {                          // pin is enabled as keyboard interrupt
+                    if ((KBI0_PE & 0x40000000) != 0) {                   // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTD][iPin - 24] = PD_6_KBI0_P30;
                         break;
@@ -3542,10 +3608,16 @@ extern void fnSimPers(void)
                     break;
                 case KE_PORTD_BIT7:
     #if UARTS_AVAILABLE > 2
-                    if (UART2_C2 & UART_C2_TE) {                         // UART2 tx enabled
-                        ulPeripherals[iPort] |= ulBit;
-                        ucPortFunctions[_PORTD][iPin - 24] = PD_7_UART2_TX;
-                        break;
+                    if ((UART2_C2 & UART_C2_TE) != 0) {                  // UART2 tx enabled
+        #if defined SIM_PINSEL1
+                        if ((SIM_PINSEL1 & SIM_PINSEL1_UART2PS) == 0) {  // if not alternate pinout selected
+        #endif
+                            ulPeripherals[iPort] |= ulBit;
+                            ucPortFunctions[_PORTD][iPin - 24] = PD_7_UART2_TX;
+                            break;
+        #if defined SIM_PINSEL1
+                        }
+        #endif
                     }
     #endif
     #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
@@ -3901,19 +3973,29 @@ extern void fnSimPers(void)
             else {
                 switch (ulBit) {
                 case KE_PORTI_BIT0:
-                    if (IRQ_SC & IRQ_SC_IRQPE) {                         // IRQ pin function enabled
+                    if ((IRQ_SC & IRQ_SC_IRQPE) != 0) {                  // IRQ pin function enabled
                         if ((SIM_PINSEL0 & SIM_PINSEL_IRQPS_PTI6) == SIM_PINSEL_IRQPS_PTI0) {
                             ulPeripherals[iPort] |= ulBit;
                             ucPortFunctions[_PORTI][iPin] = PI_0_IRQ;
+                            break;
                         }
+                    }
+                    if ((SIM_PINSEL1 & SIM_PINSEL1_UART2PS) != 0) {
+                        ulPeripherals[iPort] |= ulBit;
+                        ucPortFunctions[_PORTI][iPin] = PI_0_UART2_RX;  
                     }
                     break;
                 case KE_PORTI_BIT1:
-                    if (IRQ_SC & IRQ_SC_IRQPE) {                         // IRQ pin function enabled
+                    if ((IRQ_SC & IRQ_SC_IRQPE) != 0) {                  // IRQ pin function enabled
                         if ((SIM_PINSEL0 & SIM_PINSEL_IRQPS_PTI6) == SIM_PINSEL_IRQPS_PTI1) {
                             ulPeripherals[iPort] |= ulBit;
                             ucPortFunctions[_PORTI][iPin] = PI_1_IRQ;
+                            break;
                         }
+                    }
+                    if ((SIM_PINSEL1 & SIM_PINSEL1_UART2PS) != 0) {
+                        ulPeripherals[iPort] |= ulBit;
+                        ucPortFunctions[_PORTI][iPin] = PI_1_UART2_TX;
                     }
                     break;
                 case KE_PORTI_BIT2:
@@ -7377,7 +7459,7 @@ extern int fnSimTimers(void)
         switch (LPTMR0_PSR & LPTMR_PSR_PCS_OSC0ERCLK) {
         case LPTMR_PSR_PCS_LPO:
     #if TICK_RESOLUTION >= 1000
-            ulCount = (TICK_RESOLUTION/1000);
+            ulCount = (TICK_RESOLUTION/1000);                            // counts in a tick interval
     #else
             ulCount = 1;
     #endif
@@ -7391,7 +7473,7 @@ extern int fnSimTimers(void)
             }
             break;
         case LPTMR_PSR_PCS_ERCLK32K:
-            ulCount = (TICK_RESOLUTION * 32768);
+            ulCount = ((TICK_RESOLUTION * 32768)/1000000);               // counts in a tick interval
             break;
         case LPTMR_PSR_PCS_OSC0ERCLK:
     #if defined _EXTERNAL_CLOCK

@@ -1290,7 +1290,7 @@ static int fnSimulateActions(char *argv[])
         }
     #endif
 #endif
-        if (ulActions_2 & PORT_CHANGE) {
+        if ((ulActions_2 & PORT_CHANGE) != 0) {
             int iPorts = 0;
             ucDo = fnGetNextDoPlace(argv);
             *ucDo++ = DISPLAY_PORT_CHANGE;                               // we inform that we may want to display a port change
@@ -1313,7 +1313,7 @@ static int fnSimulateActions(char *argv[])
         ulActions_2 = 0;
     }
 
-    if (ulActions) {                                                     // we have some actions to be performed by windows
+    if (ulActions != 0) {                                                // we have some actions to be performed by windows
         if (ulActions & (ASSERT_RTS_COM_0 | NEGATE_RTS_COM_0 | ASSERT_RTS_COM_1 | NEGATE_RTS_COM_1 | ASSERT_RTS_COM_2 | NEGATE_RTS_COM_2 | ASSERT_RTS_COM_3 | NEGATE_RTS_COM_3)) { // {41} if a RTS line change
             if (ulActions & ASSERT_RTS_COM_0) {                          // {7}
                 ucDo = fnGetNextDoPlace(argv);

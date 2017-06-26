@@ -47,6 +47,7 @@
     12.12.2015 Modify parameter of fnSetDefaultNetwork()                 {31}
     12.12.2015 Changed PAR_DEVICE and PAR_MODBUS to respect the number of networks present {32}
     12.12.2015 usServer added for each network                           {33}
+    26.06.2017 Add fnDisplayMemoryUsage()                                {34}
 
 */
 
@@ -128,6 +129,7 @@ extern int  fnAreWeValidating(void);
 extern void fnWeHaveBeenValidated(void);
 extern int  fnSaveNewPars(int iTemp);
 extern CHAR *fnShowSN(CHAR *cValue);
+extern void fnDisplayMemoryUsage(void);                                       // {34}
 extern void fnDoLCD_com_text(unsigned char ucType, unsigned char *ptrInput, unsigned char ucLength);
 extern unsigned char fnAddResetCause(CHAR *ptrBuffer);                   // {5}
 extern int  fnDisplayBitmap(unsigned char *ptrData, unsigned short usLength); // {8}

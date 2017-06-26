@@ -58,7 +58,7 @@
 //#define TWR_KL25Z48M                                                   // tower board http://www.utasker.com/kinetis/TWR-KL25Z48M.html
 //#define FRDM_KL26Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL26Z.html
 //#define TEENSY_LC                                                      // USB development board with KL26Z64 - http://www.utasker.com/kinetis/TEENSY_LC.html
-#define FRDM_KL27Z                                                       // freedom board http://www.utasker.com/kinetis/FRDM-KL27Z.html
+//#define FRDM_KL27Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL27Z.html
 //#define FRDM_KL28Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL28Z.html
 //#define FRDM_KL43Z                                                     // L processors Cortex-M0+ (ultra-low power) with USB and segment LCD - freedom board http://www.utasker.com/kinetis/FRDM-KL43Z.html
 //#define TWR_KL43Z48M                                                   // tower board http://www.utasker.com/kinetis/TWR-KL43Z48M.html
@@ -113,7 +113,7 @@
 //#define TEENSY_3_6                                                     // USB development board with K66FX1M0 - http://www.utasker.com/kinetis/TEENSY_3.6.html
 
 //#define TWR_K70F120M                                                   // K processors Cortex M4 with graphical LCD, Ethernet, USB, encryption, tamper - tower board http://www.utasker.com/kinetis/TWR-K70F120M.html
-//#define K70F150M_12M                                                   // development board with 150MHz K70 and 12MHz crystal
+#define K70F150M_12M                                                     // development board with 150MHz K70 and 12MHz crystal
 
 //#define FRDM_K82F                                                      // K processors Cortex M4 with USB, encryption, tamper (scalable and secure) - freedom board http://www.utasker.com/kinetis/FRDM-K82F.html
 //#define TWR_POS_K81
@@ -720,8 +720,8 @@
     #define USB_INTERFACE                                                // enable USB driver interface
     #if defined USB_INTERFACE
       //#define USE_USB_CDC                                              // allow SREC/iHex loading via virtual COM
-        #define USB_MSD_DEVICE_LOADER                                    // USB-MSD device mode (the board appears as a hardware to the host)
-      //#define USB_MSD_HOST_LOADER                                      // USB-MSD host mode (the board operates as host and can read new code from a memory stick)
+      //#define USB_MSD_DEVICE_LOADER                                    // USB-MSD device mode (the board appears as a hardware to the host)
+        #define USB_MSD_HOST_LOADER                                      // USB-MSD host mode (the board operates as host and can read new code from a memory stick)
         #if defined USE_USB_CDC
             #undef SERIAL_INTERFACE                                      // remove the UART interface
             #define NUMBER_SERIAL          0

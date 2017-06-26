@@ -23,9 +23,10 @@
 
 #if defined USE_PPP
 
-#define TEMP_LWIPP_PPP
-extern void start_ppp_now(unsigned char uart_handle);                    // temporary using lwip PPP
-extern void pass_raw_input(unsigned char *buffer, int iLength);
+#define TEMP_LWIPP_PPP                                                   // temporary using lwip PPP
+//#define UTASKER_PPP_LOW_LAYER                                          // replace PPP lowest layer by uTasker implementation
+extern void start_ppp_now(unsigned char uart_handle);
+extern void pass_raw_input(unsigned char newByte);
 extern int fnSendPPP(unsigned char *buffer, int iLength);
 void (*ppp_callback)(void *) = 0;
 void *ppp_parameter = 0;
@@ -125,7 +126,7 @@ static QUEUE_HANDLE PPP_Handle = 0;
 
 #if !defined USE_SLIP
     static unsigned long ulACCM_bits = 0xffffffff;                       // default: escape all characters between 0x00 and 0x1f
-    static unsigned char ucMagicNumer[4];
+    static unsigned char ucMagicNumber[4];
 #endif
 
     
@@ -142,6 +143,9 @@ extern void fnPPP(TTASKTABLE *ptrTaskTable)
     QUEUE_HANDLE           PortIDInternal = ptrTaskTable->TaskID;        // queue ID for task input
     static unsigned char   ucInputMessage[PPP_RX_BUFFER_SPACE];          // reserve space for receiving messages
     static QUEUE_TRANSFER  ppp_frame_length = 0;                         // collected frame size
+#if defined UTASKER_PPP_LOW_LAYER
+    unsigned char          ucThisChar;
+#endif
 #if !defined USE_SLIP
     static int             iRxEscape = 0;
     static unsigned short  crc_value;
@@ -261,12 +265,18 @@ extern void fnPPP(TTASKTABLE *ptrTaskTable)
     // PPP character reception
     //
     while (fnRead(PPP_PortID, &ucInputMessage[ppp_frame_length], 1) != 0) { // while serial input waiting
+    #if defined UTASKER_PPP_LOW_LAYER
+        static unsigned char rx_accm[32] = { 0 };                        // asychronous control character map as used by receiver
+    #endif
+        ucThisChar = ucInputMessage[ppp_frame_length];
     #if defined TEMP_LWIPP_PPP
-        pass_raw_input(ucInputMessage, 1);
-    #else
+        pass_raw_input(ucThisChar);                                      // pass each received UART input character to LWIP PPP stack
+    #endif
+    #if defined UTASKER_PPP_LOW_LAYER
         switch (iPPP_State) {
         case PPP_STATE_IDLE:                                             // waiting for dial in
-            if (ucInputMessage[ppp_frame_length] == cClient[ppp_frame_length]) {
+        #if defined PPP_DIAL_IN
+            if (ucThisChar == cClient[ppp_frame_length]) {
                 if (++ppp_frame_length >= 6)  {
                     iPPP_State = PPP_STATE_CLIENT;
                     fnWrite(PPP_PortID, (unsigned char *)cClient, sizeof(cClient)); // answer with CLIENTSERVER
@@ -275,33 +285,61 @@ extern void fnPPP(TTASKTABLE *ptrTaskTable)
                     break;
                 }
             }
+        #endif
+            rx_accm[0] = 0xff;                                           // 0x00..0x07 are control characters by default
+            rx_accm[1] = 0xff;                                           // 0x08..0x0f are control characters by default
+            rx_accm[2] = 0xff;                                           // 0x10..0x17 are control characters by default
+            rx_accm[3] = 0xff;                                           // 0x18..0x1f are control characters by default
+            uMemset(&rx_accm[4], 0, (sizeof(rx_accm) - 4));              // rest are not control characters
             ppp_frame_length = 0;
+        #if defined PPP_DIAL_IN
             break;
+        #endif
 
         case PPP_STATE_CLIENT:
-            if (ucInputMessage[0] == 0x7e) {
+            if (ucThisChar == 0x7e) {                                    // start of frame
                 iPPP_State = PPP_STATE_IN_FRAME;
                 crc_value = PPP_INIT_CRC;                                // prime crc value for frame checking
+                break;
             }
-            break;
-
+            else if (ucThisChar != 0xff) {                               // we also accept an all stations broadcast address without a start sync
+                break;
+            }
+            iPPP_State = PPP_STATE_IN_FRAME;
+            // Fall through intentionally on 0xff (all stations broadcast address)
+            //
         case PPP_STATE_IN_FRAME:
-            if (ucInputMessage[ppp_frame_length] == 0x7e) {
-                static int iFrameCnt = 0;
-                if (++iFrameCnt == 0x0e) {
-                    iFrameCnt = 0;
+            if (ucThisChar == 0x7e) {                                    // end of frame
+                if (ppp_frame_length == 0) {                             // ignore multiple 0x7e
+                    break;
                 }
-                if (crc_value == PPP_GOOD_CRC) {                         // drop all frames with bad crc value
-                    iPPP_State = fnHandlePPP_frame(ucInputMessage, ppp_frame_length);
+                else {
+                    static int iFrameCnt = 0;
+                    if (++iFrameCnt == 0x0e) {
+                        iFrameCnt = 0;
+                    }
+                    if (crc_value == PPP_GOOD_CRC) {                     // drop all frames with bad crc value
+                        /*iPPP_State = */fnHandlePPP_frame(ucInputMessage, (ppp_frame_length - 2));
+                    }
+        #if defined _WINDOWS
+                    else {
+                        crc_value = crc_value;
+                    }
+        #endif
+                    iRxEscape = 0;
+                    crc_value = PPP_INIT_CRC;                            // prime crc value for frame checking
+                    ppp_frame_length = 0;
+                    break;
                 }
-                ppp_frame_length = 0;
+            }
+            else if ((rx_accm[ucThisChar/8] & (1 << (ucThisChar & 0x7))) != 0) { // îf this is a non-escaped control character we ignore it
                 break;
             }
             if (iRxEscape != 0) {                                        // escaping character
                 ucInputMessage[ppp_frame_length] ^= 0x20;
                 iRxEscape = 0;
             }
-            else if (ucInputMessage[ppp_frame_length] == 0x7d) {
+            else if (ucThisChar == 0x7d) {                               // receiving an escape character
                 iRxEscape = 1;
                 break;
             }
@@ -809,27 +847,27 @@ static void fnNegotiateOptions(unsigned short usProtocol, PPP_INFO *ppp_inf, uns
     usOptionsLength |= ppp_inf->ucPPP_Length[1];
     usOptionsLength -= sizeof(PPP_INFO);
 
-    while (usOptionsLength) {
+    while (usOptionsLength != 0) {
         ptrFrame += sizeof(PPP_OPTION);
         if (LCP_PROTOCOL == usProtocol) {
             switch (ppp_opt->ucPPP_option) {
             case ACCM:
-     //           ulACCM_bits = *ptrFrame;                               // set the requested character map
-     //           ulACCM_bits <<= 8;            // validate only when moving to open state
-     //           ulACCM_bits = *(ptrFrame+1);
-     //           ulACCM_bits <<= 8;
-     //           ulACCM_bits = *(ptrFrame+2);
-     //           ulACCM_bits <<= 8;
-     //           ulACCM_bits = *(ptrFrame+3);
+                ulACCM_bits = *ptrFrame;                                 // set the requested character map
+                ulACCM_bits <<= 8;                                       // validate only when moving to open state
+                ulACCM_bits = *(ptrFrame+1);
+                ulACCM_bits <<= 8;
+                ulACCM_bits = *(ptrFrame+2);
+                ulACCM_bits <<= 8;
+                ulACCM_bits = *(ptrFrame+3);
                 break;
             case MAGIC_NUMBER:
-                uMemcpy(ucMagicNumer, ptrFrame, 4);
+                uMemcpy(ucMagicNumber, ptrFrame, 4);                     // set the advertised
                 break;
-            case PFC:                                                    // Protocol field compression
+            case PFC:                                                    // protocol field compression
             case ACFC:                                                   // address and control field compression
             case CALLBACK:
                 fnReject(usProtocol, ppp_opt->ucPPP_option, ptrFrame, ppp_opt->ucPPP_option_length); // reject the option
-                return;
+                break;
             }
         }
         else if (CCP_PROTOCOL == usProtocol) {
@@ -960,7 +998,7 @@ static int fnHandlePPP_frame(unsigned char *ptrFrame, QUEUE_TRANSFER ppp_frame_l
             }
         }
     }
-    return PPP_STATE_CLIENT;
+    return 0;
 }
 
 #if defined _PPP_CRC_LOOKUP

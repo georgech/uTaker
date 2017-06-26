@@ -58,7 +58,7 @@
         #else
     ucSPI_FLASH_Type[0] = fnCheckW25Qxx();                               // flag whether the SPI FLASH device is connected
         #endif
-    if (ucSPI_FLASH_Type[0] < W25Q10) {                             // we expect at least this part to be available
+    if (ucSPI_FLASH_Type[0] < W25Q10) {                                  // we expect at least this part to be available
         POWER_DOWN_SPI_FLASH_INTERFACE();                                // power down SPI 
     }
     else {

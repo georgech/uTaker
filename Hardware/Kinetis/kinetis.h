@@ -986,7 +986,7 @@ typedef struct stRESET_VECTOR
     #define FLEXRAM_MAX_SECTION_COPY_SIZE (2 * 1024)
 #endif
 
-#if defined KINETIS_K26 || defined KINETIS_KL28 || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_K80 || defined KINETIS_K02 || defined KINETIS_K63 || (defined KINETIS_K22 && (SIZE_OF_FLASH == (512 * 1024))) || defined KINETIS_K24 || defined KINETIS_KL43 || defined KINETIS_KL03 || defined KINETIS_KL27 || defined KINETIS_KL82 || defined KINETIS_KV30
+#if defined KINETIS_K26 || defined KINETIS_KL28 || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_K80 || defined KINETIS_K02 || defined KINETIS_K63 || (defined KINETIS_K22 && ((SIZE_OF_FLASH == (512 * 1024)) || (SIZE_OF_FLASH == (128 * 1024)))) || defined KINETIS_K24 || defined KINETIS_KL43 || defined KINETIS_KL03 || defined KINETIS_KL27 || defined KINETIS_KL82 || defined KINETIS_KV30
     #define KINETIS_HAS_IRC48M                                           // device has IRC48M which can be used for crystal-less USB
 #endif
 
@@ -1004,6 +1004,9 @@ typedef struct stRESET_VECTOR
                                                                          // SRAM H is 3/4 of the RAM size and is anchored to start at 0x20000000
 #elif defined KINETIS_K22 && defined KINETIS_K_FPU && (SIZE_OF_RAM == (48 * 1024))
     #define RAM_START_ADDRESS   (0x20000000 - (16 * 1024))               // SRAM L is 16k and is anchored to end at 0x1ffffffff
+                                                                         // SRAM H is the remainder of RAM size and is anchored to start at 0x20000000
+#elif defined KINETIS_K22 && defined KINETIS_K_FPU && (SIZE_OF_RAM == (24 * 1024))
+    #define RAM_START_ADDRESS   (0x20000000 - (8 * 1024))                // SRAM L is 8k and is anchored to end at 0x1ffffffff
                                                                          // SRAM H is the remainder of RAM size and is anchored to start at 0x20000000
 #elif defined KINETIS_K64 || defined KINETIS_K24 || defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_K80
     #define RAM_START_ADDRESS   (0x20000000 - (64 * 1024))               // SRAM L is 64k and is anchored to end at 0x1ffffffff
@@ -1106,7 +1109,7 @@ typedef struct stRESET_VECTOR
 #elif defined KINETIS_K02
     #define UARTS_AVAILABLE         2
 #elif defined KINETIS_K22
-    #if ((SIZE_OF_FLASH == (512 * 1024)) || (SIZE_OF_FLASH == (256 * 1024)))
+    #if ((SIZE_OF_FLASH == (512 * 1024)) || (SIZE_OF_FLASH == (256 * 1024)) || (SIZE_OF_FLASH == (128 * 1024)))
         #define UARTS_AVAILABLE     3
     #else
         #define UARTS_AVAILABLE     6
@@ -1149,7 +1152,7 @@ typedef struct stRESET_VECTOR
 #elif defined KINETIS_KL43 || defined KINETIS_KL27
     #define LPUARTS_AVAILABLE       2
 #elif defined KINETIS_K22
-    #if ((SIZE_OF_FLASH == (512 * 1024)) || (SIZE_OF_FLASH == (256 * 1024)))
+    #if ((SIZE_OF_FLASH == (512 * 1024)) || (SIZE_OF_FLASH == (256 * 1024)) || (SIZE_OF_FLASH == (128 * 1024)))
         #define LPUARTS_AVAILABLE   1
         #define LPUARTS_PARALLEL                                         // LPUARTs and UARTs are counted from 0
     #else
@@ -1163,6 +1166,8 @@ typedef struct stRESET_VECTOR
 //
 #if defined KINETIS_K02
     #define SPI_AVAILABLE           1
+#elif defined KINETIS_K22 && (SIZE_OF_FLASH == (128 * 1024))
+    #define SPI_AVAILABLE           2
 #elif (defined KINETIS_K20 && (KINETIS_MAX_SPEED < 100000000))
     #define SPI_AVAILABLE           2
 #else
@@ -1235,6 +1240,8 @@ typedef struct stRESET_VECTOR
 #if defined KINETIS_K66 || defined KINETIS_K80
     #define FLEX_TIMERS_AVAILABLE   6                                    // 4 flex timers plus 2 TPMs
     #define TPMS_AVAILABLE          2                                    // TPM in addition to flex timers
+#elif defined KINETIS_K22 && (SIZE_OF_FLASH == (128 * 1024))
+    #define FLEX_TIMERS_AVAILABLE   3
 #elif defined KINETIS_K61 || defined KINETIS_K64 || defined KINETIS_K70 || ((defined KINETIS_K10 || defined KINETIS_K60 || defined KINETIS_K21 || defined KINETIS_K22 || defined KINETIS_K24 || defined KINETIS_KV30) && (KINETIS_MAX_SPEED > 100000000))
     #define FLEX_TIMERS_AVAILABLE   4
 #elif defined KINETIS_KL05 || ((defined KINETIS_K10 || defined KINETIS_K20) && (KINETIS_MAX_SPEED <= 50000000))
@@ -1402,6 +1409,8 @@ typedef struct stRESET_VECTOR
         #else
             #define DMA_CHANNEL_COUNT    4
         #endif
+    #elif defined KINETIS_K22 && (SIZE_OF_FLASH == (128 * 1024))
+        #define DMA_CHANNEL_COUNT    4
     #else
         #define DMA_CHANNEL_COUNT    16
     #endif
@@ -9249,6 +9258,8 @@ typedef struct stKINETIS_ADMA2_BD
     #define PB_0_UART0_RX                PORT_MUX_ALT2
     #define PC_6_UART1_RX                PORT_MUX_ALT2
     #define PD_6_UART2_RX                PORT_MUX_ALT2
+    #define PI_0_UART2_RX                PORT_MUX_ALT3
+    #define PI_1_UART2_TX                PORT_MUX_ALT3
 #elif defined KINETIS_KV31
     #define PB_1_UART0_TX                PORT_MUX_ALT7
     #define PB_0_UART0_RX                PORT_MUX_ALT7
@@ -9919,6 +9930,16 @@ typedef struct stKINETIS_ADMA2_BD
         #define PH_6_KBI1_P30            PORT_MUX_ALT1
         #define PH_7_KBI1_P31            PORT_MUX_ALT1
     #else
+        #if defined KINETIS_KEA8
+            #define PB_4_KBI1_P6         PORT_MUX_ALT1
+            #define PB_5_KBI1_P7         PORT_MUX_ALT1
+            #define PC_0_KBI1_P2         PORT_MUX_ALT1
+            #define PC_1_KBI1_P3         PORT_MUX_ALT1
+            #define PC_2_KBI1_P4         PORT_MUX_ALT1
+            #define PC_3_KBI1_P5         PORT_MUX_ALT1
+            #define PC_4_KBI1_P0         PORT_MUX_ALT1
+            #define PC_5_KBI1_P1         PORT_MUX_ALT1
+        #endif
         #define PB_0_KBI0_P4             PORT_MUX_ALT1
         #define PB_1_KBI0_P5             PORT_MUX_ALT1
         #define PB_2_KBI0_P6             PORT_MUX_ALT1
@@ -13422,7 +13443,7 @@ typedef struct stDAC_REGS                                                // {23}
     #define GPIOB_PDIR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x050)   // Port B Data Input Register (read-only)
     #define GPIOB_PDDR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x054)   // Port B Data Direction Register
     #if defined KINETIS_KE
-    #define GPIOB_PIDR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x058)   // Port B Input Disable Register
+        #define GPIOB_PIDR               *(volatile unsigned long*)(GPIO_BLOCK + 0x058)   // Port B Input Disable Register
     #endif
 #endif
 #if PORTS_AVAILABLE > 2
@@ -13433,6 +13454,9 @@ typedef struct stDAC_REGS                                                // {23}
     #define GPIOC_PTOR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x08c)   // Port C Toggle Output Register (write-only - always reads 0)
     #define GPIOC_PDIR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x090)   // Port C Data Input Register (read-only)
     #define GPIOC_PDDR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x094)   // Port C Data Direction Register
+    #if defined KINETIS_KE
+        #define GPIOC_PIDR               *(volatile unsigned long*)(GPIO_BLOCK + 0x098)   // Port C Input Disable Register
+    #endif
 #endif
 #if PORTS_AVAILABLE > 3
     #define GPIOD_ADD                    (volatile unsigned long*)(GPIO_BLOCK + 0x0c0)
@@ -14240,7 +14264,7 @@ typedef struct stLPTMR_SETUP                                             // {51}
     #define LPTMR_US_DELAY(us_delay)  (((us_delay * (LPTMR_CLOCK/1000))/1000) - 1) // macros for setting LPTMR interrupt times
     #define LPTMR_MS_DELAY(ms_delay)  ((ms_delay * (LPTMR_CLOCK/1000)) - 1) 
 #endif
-#define LPTMR_S_DELAY(s_delay)        (s_delay * LPTMR_CLOCK) - 1)
+#define LPTMR_S_DELAY(s_delay)        ((s_delay * LPTMR_CLOCK) - 1)
 
 
 typedef struct stI2S_SAI_SETUP

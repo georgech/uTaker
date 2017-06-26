@@ -86,7 +86,7 @@ static void _KBI0_isr(void)                                              // KE k
     KBI0_SP = 0;
     #endif
     while (ulFlags != 0) {                                               // for each keyboard interrupt that has signalled a trigger
-        if (ulPin & ulFlags) {
+        if ((ulPin & ulFlags) != 0) {
             ulFlags &= ~ulPin;
             if (KBI_handlers[0][iPin] != 0) {
                 uDisable_Interrupt();
@@ -199,7 +199,7 @@ static void _KBI1_isr(void)                                              // KE k
                 iBitNumber++;
                 ulBit <<= 1;
             }
-            if (port_interrupt->int_port_sense & PULLUP_ON) {            // pull up required on the input
+            if ((port_interrupt->int_port_sense & PULLUP_ON) != 0) {     // pull up required on the input
                 *ptrPullUps |= port_interrupt->int_port_bits;            // enabled pull-ups on the specified KBI inputs
             }
             else {
@@ -219,13 +219,13 @@ static void _KBI1_isr(void)                                              // KE k
     #endif
                     }
                     ptrKBI->KBI_SC &= ~KBI_SC_KBIE;                      // mask main KBI interrupt
-                    if (port_interrupt->int_port_sense & (IRQ_LOW_LEVEL | IRQ_HIGH_LEVEL)) { // level sensitive input
+                    if ((port_interrupt->int_port_sense & (IRQ_LOW_LEVEL | IRQ_HIGH_LEVEL)) != 0) { // level sensitive input
                         ptrKBI->KBI_SC |= KBI_SC_KBMOD;                  // detect levels as well as edges
                     }
                     else {
                         ptrKBI->KBI_SC &= ~KBI_SC_KBMOD;                 // detect only edges
                     }
-                    if (port_interrupt->int_port_sense & IRQ_RISING_EDGE) {
+                    if ((port_interrupt->int_port_sense & IRQ_RISING_EDGE) != 0) {
                         ptrKBI->KBI_ES |= KBI_enables[iBitNumber];       // select rising edge interrupt
                     }
                     else {
@@ -236,6 +236,9 @@ static void _KBI1_isr(void)                                              // KE k
                     ptrKBI->KBI_SC |= (KBI_SC_RSTKBSP | KBI_SC_KBACK | KBI_SC_KBSPEN); // clear any false interrupts and clear flagged interrupts - real KBI_SP register enable
     #else
                     ptrKBI->KBI_SC |= KBI_SC_KBACK;                      // clear any false interrupts
+        #if defined _WINDOWS
+                    ptrKBI->KBI_SC &= ~KBI_SC_KBACK;                     // reset write-only bit in simulator
+        #endif
     #endif
                     ptrKBI->KBI_SC |= KBI_SC_KBIE;                       // enable main KBI interrupt
                 }

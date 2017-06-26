@@ -1,25 +1,25 @@
 /**********************************************************************
-   Mark Butcher    Bsc (Hons) MPhil MIET
+    Mark Butcher    Bsc (Hons) MPhil MIET
 
-   M.J.Butcher Consulting
-   Birchstrasse 20f,    CH-5406, Rütihof
-   Switzerland
+    M.J.Butcher Consulting
+    Birchstrasse 20f,    CH-5406, Rütihof
+    Switzerland
 
-   www.uTasker.com    Skype: M_J_Butcher
+    www.uTasker.com    Skype: M_J_Butcher
 
-   --------------------------------------------------------------------
-   File:        modbus.h
-   Project:     uTasker Demonstration project
-   --------------------------------------------------------------------
-   Copyright (C) M.J.Butcher Consulting 2004..2017
-   ********************************************************************
-   22.08.2009 Dimensions of tcp_master_timeout and tcp_master_broadcast_timeout corrected to MODBUS_TCP_MASTERS {V1.04}
-   29.09.2009 Add SERIAL_ROUTE_INFO                                      {V1.07}
-   02.09.2009 Add fnClose_MODBUS_port() and fnGet_MODBUS_TCP_port_status() {V1.07}
-   23.11.2009 Struct packing control removed to driver.h
-   20.01.2010 Add ADJUST_READ_WRITE_MULTIPLE_REGISTER                    {V1.09}
-   03.05.2010 Allow MODBUS_TCP_SERVERS 0 value to disable                {V1.10}
-   25.08.2010 Extra configuration definitions for more verified configurations {V1.14}
+    --------------------------------------------------------------------
+    File:        modbus.h
+    Project:     uTasker Demonstration project
+    --------------------------------------------------------------------
+    Copyright (C) M.J.Butcher Consulting 2004..2017
+    ********************************************************************
+    22.08.2009 Dimensions of tcp_master_timeout and tcp_master_broadcast_timeout corrected to MODBUS_TCP_MASTERS {V1.04}
+    29.09.2009 Add SERIAL_ROUTE_INFO                                      {V1.07}
+    02.09.2009 Add fnClose_MODBUS_port() and fnGet_MODBUS_TCP_port_status() {V1.07}
+    23.11.2009 Struct packing control removed to driver.h
+    20.01.2010 Add ADJUST_READ_WRITE_MULTIPLE_REGISTER                    {V1.09}
+    03.05.2010 Allow MODBUS_TCP_SERVERS 0 value to disable                {V1.10}
+    25.08.2010 Extra configuration definitions for more verified configurations {V1.14}
 
 */
 

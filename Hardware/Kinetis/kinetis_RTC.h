@@ -21,6 +21,7 @@
     24.06.2015 Synchronise the variable counters to the RTC counter when KL devices are used without LPO {2}
     02.07.2015 Allow setting alarm directly from local UTC value         {3}
     24.02.2016 Correct stop watch interrupt by removing redundent flag   {4}
+    13.06.2017 Synchronise prescaler when setting new time               {5}
 
 */
 
@@ -199,6 +200,13 @@ extern int fnConfigureRTC(void *ptrSettings)
     #if !defined SUPPORT_SW_RTC && !defined KINETIS_KE
         #if !defined irq_RTC_SECONDS_ID                                  // {75}
         RTC_TAR = RTC_TSR;                                               // set next second interrupt alarm match
+        #endif
+        #if defined KINETIS_KL                                           // {5}
+            #if defined RTC_USES_LPO_1kHz
+        RTC_TPR = (32768 - 1000);                                        // synchronise the prescaler to trigger in 1s time
+            #else
+        RTC_TPR = 0;                                                     // reset the prescaler
+            #endif
         #endif
         RTC_SR = RTC_SR_TCE;                                             // enable counter again
     #endif

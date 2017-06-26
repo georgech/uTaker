@@ -1447,6 +1447,11 @@
     #define WATCHDOG_DISABLE()     (_READ_PORT_MASK(A, SWITCH_3) == 0)   // pull this input down to disable watchdog (hold S3 at reset)
     #define FORCE_BOOT()           (_READ_PORT_MASK(A, SWITCH_2) == 0)   // pull this input down to force boot loader mode (hold S2 at reset)
     #define TOGGLE_WATCHDOG_LED()  _TOGGLE_PORT(A, BLINK_LED)
+
+    #define USB_HOST_POWER_CONFIG()
+    #define USB_HOST_POWER_ON()
+    #define USB_HOST_POWER_OFF()
+    #define RETAIN_LOADER_MODE()   (_READ_PORT_MASK(A, SWITCH_3) == 0) 
 #elif defined TWR_K21F120M
     #define BLINK_LED              (PORTD_BIT4)
     #define SWITCH_2               (PORTC_BIT7)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
@@ -1465,7 +1470,7 @@
     #if defined SDCARD_SUPPORT
         #define FORCE_BOOT()       ((_READ_PORT_MASK(C, SWITCH_3) == 0) || (_READ_PORT_MASK(C, SDCARD_DETECT) == 0)) // pull this input down to force boot loader mode (hold SW2 at reset) or with inserted SD card
     #else
-        #define FORCE_BOOT()       (_READ_PORT_MASK(C, SWITCH_3) == 0)       // pull this input down to force boot loader mode (hold SW2 at reset)
+        #define FORCE_BOOT()       (_READ_PORT_MASK(C, SWITCH_3) == 0)   // pull this input down to force boot loader mode (hold SW2 at reset)
     #endif
     #define RETAIN_LOADER_MODE() (_READ_PORT_MASK(C, SWITCH_3) == 0)
 
@@ -1512,12 +1517,12 @@
     #endif
     #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(C, (SWITCH_2), PORT_PS_UP_ENABLE); _CONFIG_PORT_INPUT_FAST_LOW(B, (SWITCH_3), PORT_PS_UP_ENABLE); // configure as input
 
-    #define WATCHDOG_DISABLE()     (!_READ_PORT_MASK(B, SWITCH_3))       // pull this input down to disable watchdog (hold SW3 at reset)
+    #define WATCHDOG_DISABLE()     (_READ_PORT_MASK(B, SWITCH_3) == 0)   // pull this input down to disable watchdog (hold SW3 at reset)
     #if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT
-        #define FORCE_BOOT()       ((!_READ_PORT_MASK(C, SWITCH_2)) || (_READ_PORT_MASK(B, SDCARD_DETECT))) // pull this input down to force boot loader mode (hold SW2 at reset) or with inserted SD card
-        #define RETAIN_LOADER_MODE()   (!_READ_PORT_MASK(C, SWITCH_2))
+        #define FORCE_BOOT()       ((_READ_PORT_MASK(C, SWITCH_2) == 0) || (_READ_PORT_MASK(B, SDCARD_DETECT))) // pull this input down to force boot loader mode (hold SW2 at reset) or with inserted SD card
+        #define RETAIN_LOADER_MODE()   (_READ_PORT_MASK(C, SWITCH_2) == 0)
     #else
-        #define FORCE_BOOT()       (!_READ_PORT_MASK(C, SWITCH_2))       // pull this input down to force boot loader mode (hold SW2 at reset)
+        #define FORCE_BOOT()       (_READ_PORT_MASK(C, SWITCH_2) == 0)   // pull this input down to force boot loader mode (hold SW2 at reset)
     #endif
 
     #define TOGGLE_WATCHDOG_LED()   _TOGGLE_PORT(A, BLINK_LED)
@@ -1729,10 +1734,10 @@
     #define INIT_WATCHDOG_LED() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(D, (BLINK_LED), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH))
 
     #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(C, (SWITCH_1 | SWITCH_2), PORT_PS_UP_ENABLE) // use fast access version (beware that this can only operate on half of the 32 bits at a time)
-    #define WATCHDOG_DISABLE()      (!_READ_PORT_MASK(C, SWITCH_2))      // pull this input down to disable watchdog (hold SW2 at reset)
+    #define WATCHDOG_DISABLE()      (_READ_PORT_MASK(C, SWITCH_2) == 0)  // pull this input down to disable watchdog (hold SW2 at reset)
     #define TOGGLE_WATCHDOG_LED()   _TOGGLE_PORT(D, BLINK_LED)
 
-    #define FORCE_BOOT()           (!_READ_PORT_MASK(C, SWITCH_1))       // pull this input down to force boot loader mode (hold SW1 at reset)
+    #define FORCE_BOOT()           (_READ_PORT_MASK(C, SWITCH_1) == 0)   // pull this input down to force boot loader mode (hold SW1 at reset)
 #elif defined TWR_K22F120M
     #define LED_GREEN              (PORTD_BIT4)                          // green LED - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
     #define LED_BLUE               (PORTD_BIT7)                          // blue LED - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
@@ -2134,7 +2139,7 @@
         #define DEL_USB_SYMBOL()                                         // control display of USB enumeration - clear
         #define SET_USB_SYMBOL()                                         // control display of USB enumeration - set
 
-      //#define START_ON_INTERRUPT                                       // enable optional detection of a push button interrupt to restart update check and to jump to the [new] application)
+        #define START_ON_INTERRUPT                                       // enable optional detection of a push button interrupt to restart update check and to jump to the [new] application)
         #if defined START_ON_INTERRUPT
             #define BUTTON_PORT            PORTD;                        // the port that the interrupt button is on
             #define BUTTON_INPUT           SWITCH_2                      // the port pin that the interrupt button is on

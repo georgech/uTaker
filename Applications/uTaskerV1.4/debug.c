@@ -790,6 +790,9 @@ static const DEBUG_COMMAND tIOCommand[] = {
 #if defined PWM_MEASUREMENT_DEVELOPMENT
     { "test",             "Temp test",                             DO_HARDWARE,      75 },
 #endif
+#if defined SUPPORT_LPTMR
+    { "lp_cnt",           "Read LPTMR CNT",                        DO_HARDWARE,      76 },
+#endif
 #if defined USE_PARAMETER_BLOCK
     {"save",              "Save port setting as default",          DO_HARDWARE,      DO_SAVE_PORT },
 #endif
@@ -3707,20 +3710,7 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
     #endif
 #endif
     case DO_DISPLAY_MEMORY_USE:                                          // memory use display
-        {
-            STACK_REQUIREMENTS stackUsed;                                // {79}
-            fnDebugMsg("\n\rSystem memory use:\n\r");
-            fnDebugMsg(    "==================\n\r");
-            fnDebugMsg("Free heap = ");
-            fnDebugHex(fnHeapFree(), (2 | WITH_LEADIN));
-            fnDebugMsg(" from ");
-            fnDebugHex(fnHeapAvailable(), (2 | WITH_LEADIN));
-            fnDebugMsg("\n\rUnused stack = ");
-            fnDebugHex(fnStackFree(&stackUsed), (2 | WITH_LEADIN));      // {79}
-            fnDebugMsg(" (");
-            fnDebugHex(stackUsed, (2 | WITH_LEADIN));                    // {79}
-            fnDebugMsg(")\n\r");
-        }
+        fnDisplayMemoryUsage();
         break;
 
 #if defined MONITOR_PERFORMANCE                                          // {25}
@@ -4249,8 +4239,18 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
           break;
 #endif
 #if defined PWM_MEASUREMENT_DEVELOPMENT
-        case 75: // temp
+        case 75:                                                         // temp
             fnMeasurePWM(PORTC, PORTC_BIT4);                             // test measuring a PWM input on this input
+            break;
+#endif
+#if defined SUPPORT_LPTMR
+        case 76:                                                         // temp
+            {
+            unsigned long ulCnt;
+            LPTMR0_CNR = 0;                                              // write any value to the counter register so that it puts its present counter value into a temporay register
+            ulCnt = LPTMR0_CNR;                                          // read the value form the temporary reguster
+            fnDebugHex(ulCnt, (WITH_LEADIN | WITH_CR_LF | sizeof(ulCnt)));
+            }
             break;
 #endif
     }
@@ -6890,6 +6890,22 @@ extern int fnCommandInput(unsigned char *ptrData, unsigned short usLen, int iSou
 }
     #endif
 #endif
+
+extern void fnDisplayMemoryUsage(void)
+{
+    STACK_REQUIREMENTS stackUsed;                                // {79}
+    fnDebugMsg("\n\rSystem memory use:\n\r");
+    fnDebugMsg("==================\n\r");
+    fnDebugMsg("Free heap = ");
+    fnDebugHex(fnHeapFree(), (2 | WITH_LEADIN));
+    fnDebugMsg(" from ");
+    fnDebugHex(fnHeapAvailable(), (2 | WITH_LEADIN));
+    fnDebugMsg("\n\rUnused stack = ");
+    fnDebugHex(fnStackFree(&stackUsed), (2 | WITH_LEADIN));      // {79}
+    fnDebugMsg(" (");
+    fnDebugHex(stackUsed, (2 | WITH_LEADIN));                    // {79}
+    fnDebugMsg(")\n\r");
+}
 
 #if defined USE_PARAMETER_BLOCK
 // When this routine is called, the parameter block is set to a new valid block and the old block is deleted

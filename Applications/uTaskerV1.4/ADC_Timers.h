@@ -86,14 +86,14 @@
       //#define TEST_LPTMR_SINGLE_SHOT                                   // test a user defined single-shot interrupt
     #endif
     #if defined SUPPORT_DMA_TIMER                                        // M522XX DMA timers
-      //#define TEST_DMA_TIMER                                           // test a user defined periodic interrupt
+      //#define TEST_DMA_TIMER      ulCnt                                     // test a user defined periodic interrupt
     #endif
     #if defined SUPPORT_GENERAL_PURPOSE_TIMER                            // M522XX general purpose timers
       //#define TEST_GPT                                                 // test general purpose timer operation
         #define GPT_CAPTURES     5                                       // when testing captures, collect this many values
     #endif
     #if defined SUPPORT_TIMER || defined SUPPORT_PWM_MODULE              // standard timers
-        #define TEST_TIMER                                               // enable timer test(s)
+      //#define TEST_TIMER                                               // enable timer test(s)
         #if defined TEST_TIMER
             #if defined SUPPORT_PWM_MODULE                               // {9}
                 #define TEST_PWM                                         // {1} test generating PWM output from timer
@@ -1533,6 +1533,10 @@ static void fnEndOfRamp(void)
 }
 #endif  
 
+//static void PWM_IRQ(void)
+//{
+//    TOGGLE_TEST_OUTPUT();
+//}
 
 static void fnConfigure_Timer(void)
 {
@@ -1541,7 +1545,8 @@ static void fnConfigure_Timer(void)
     pwm_setup.int_type = PWM_INTERRUPT;
     pwm_setup.pwm_mode = (PWM_SYS_CLK | PWM_PRESCALER_16 | PWM_EDGE_ALIGNED); // clock PWM timer from the system clock with /16 pre-scaler
     pwm_setup.int_handler = 0;                                           // {22} no user interrupt call-back on PWM cycle
-    #if defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KE02Z || defined FRDM_KE04Z || defined FRDM_KE06Z
+  //pwm_setup.int_handler = PWM_IRQ;                                     // enable to generate an interrupt on each PWM cycle
+    #if defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KE02Z || defined FRDM_KE04Z || defined FRDM_KE06Z || defined FRDM_K22F
     pwm_setup.pwm_reference = (_TIMER_0 | 1);                            // timer module 0, channel 1
     #elif defined FRDM_KL05Z
     pwm_setup.pwm_reference = (_TIMER_0 | 0);                            // timer module 0, channel 0
