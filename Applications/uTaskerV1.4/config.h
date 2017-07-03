@@ -24,7 +24,7 @@
 
 ///////////////////////////////////////////////////////////////////////////
 //                                                                       // new users who would like to see just a blinking LED before enabling the project's many powerful features can set this
-#define BLINKY                                                           // it give simplest scheduling of a single task called at 200ms rate that retriggers the watchdog and toggles respective the board's heartbeat LED
+//#define BLINKY                                                         // to give simplest scheduling of a single task called at 200ms rate that retriggers the watchdog and toggles the board's heartbeat LED
 //                                                                       // 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -924,7 +924,7 @@
 
   //#define USE_PPP                                                      // allow TCP/IP on serial
       //#define USE_SLIP                                                 // use slip rather than PPP
-        #define USE_SLIP_DIAL_OUT                                        // dial-out
+      //#define USE_SLIP_DIAL_OUT                                        // dial-out
 #else
     #define NUMBER_SERIAL              0                                 // no physical queue needed
     #define NUMBER_EXTERNAL_SERIAL     0

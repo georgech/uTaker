@@ -33,8 +33,8 @@
 #ifndef __SYS_C64_H__
 #define __SYS_C64_H__
 
-#include "fsl_os_abstraction.h"
-#include "fsl_debug_console.h"
+#include "../fsl_os_abstraction.h"
+#include "../fsl_debug_console.h"
 #include <stdio.h>
 
 #if !NO_SYS

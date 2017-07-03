@@ -2067,16 +2067,16 @@ u16_t lwip_htons(u16_t x)
 }
 
 extern void start_timer(void(*fsm_timeout)(void *), int msecs, void *f);
-extern void sys_timeout(int msecs, void (*fsm_timeout)(void *), fsm *f)
+extern void sys_timeout(u32_t msecs, sys_timeout_handler handler, void *arg)
 {
     // start timer
-    start_timer(fsm_timeout, msecs, f);
+    start_timer(handler, msecs, arg);
 }
 extern void stop_timer(void(*fsm_timeout)(void *));
-extern void sys_untimeout(void(*fsm_timeout)(void *), fsm *f)
+extern void sys_untimeout(sys_timeout_handler handler, void *arg)
 {
     // stop timer
-    stop_timer(fsm_timeout);
+    stop_timer(handler);
 }
 void sys_assert(const char *const msg)
 {
@@ -2195,7 +2195,7 @@ u8_t pbuf_free(struct pbuf *p)
 {
     return 0;
 }
-extern void pbuf_cat(void)
+extern void pbuf_cat(struct pbuf *head, struct pbuf *tail)
 {
     _EXCEPTION("TO DO");
 }
@@ -2231,12 +2231,12 @@ struct netif *netif_add(struct netif *netif, ip_addr_t *ipaddr, ip_addr_t *netma
 
 // Looks to be used to clear an interface
 //
-extern void netif_remove(void)
+extern void netif_remove(struct netif * netif)
 {
     //_EXCEPTION("TO DO");
 }
 // define a default route (??)
-extern void netif_set_default(void)
+extern void netif_set_default(struct netif *netif)
 {
    // _EXCEPTION("TO DO");
 }
@@ -2245,7 +2245,7 @@ void netif_set_up(struct netif *netif)
 {
   //_EXCEPTION("TO DO");
 }
-extern void netif_set_down(void)
+extern void netif_set_down(struct netif *netif)
 {
   //_EXCEPTION("TO DO");
 }

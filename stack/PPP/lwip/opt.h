@@ -42,8 +42,8 @@
  * Include user defined options first. Anything not defined in these files
  * will be set to standard values. Override anything you dont like!
  */
-#include "lwipopts.h"
-#include "lwip/debug.h"
+#include "../lwipopts.h"
+#include "debug.h"
 
 /*
    -----------------------------------------------
@@ -1628,7 +1628,7 @@
  * PPP_SUPPORT==1: Enable PPP.
  */
 #ifndef PPP_SUPPORT
-#define PPP_SUPPORT                     0
+#define PPP_SUPPORT                     1
 #endif
 
 /**

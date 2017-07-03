@@ -143,9 +143,7 @@ extern void fnPPP(TTASKTABLE *ptrTaskTable)
     QUEUE_HANDLE           PortIDInternal = ptrTaskTable->TaskID;        // queue ID for task input
     static unsigned char   ucInputMessage[PPP_RX_BUFFER_SPACE];          // reserve space for receiving messages
     static QUEUE_TRANSFER  ppp_frame_length = 0;                         // collected frame size
-#if defined UTASKER_PPP_LOW_LAYER
     unsigned char          ucThisChar;
-#endif
 #if !defined USE_SLIP
     static int             iRxEscape = 0;
     static unsigned short  crc_value;
