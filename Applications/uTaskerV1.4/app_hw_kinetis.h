@@ -1507,41 +1507,6 @@
     #define WAIT_SPI_RECEPTION_END()        while ((SPI0_SR & SPI_SR_RFDF) == 0) {}
     #define CLEAR_RECEPTION_FLAG()          SPI0_SR |= SPI_SR_RFDF
 #elif defined NET_K60 || defined FRDM_K64F || defined FRDM_K22F || defined TWR_K22F120M || defined FreeLON
-#if 0 // temp - to remove
-    #define CS0_LINE                        SPI_PUSHR_PCS1               // CS0 line used when SPI FLASH is enabled
-    #define CS1_LINE                                                     // CS1 line used when extended SPI FLASH is enabled
-    #define CS2_LINE                                                     // CS2 line used when extended SPI FLASH is enabled
-    #define CS3_LINE                                                     // CS3 line used when extended SPI FLASH is enabled
-
-    #define SPI_CS0_PORT                    ~(SPI2_PUSHR)                // for simulator
-    #define SPI_TX_BYTE                     SPI2_PUSHR                   // for simulator
-    #define SPI_RX_BYTE                     SPI2_POPR                    // for simulator
-
-    #define POWER_UP_SPI_FLASH_INTERFACE()  POWER_UP(3, SIM_SCGC3_SPI2)
-
-    #define CONFIGURE_SPI_FLASH_INTERFACE() _CONFIG_PERIPHERAL(D, 15, (PD_15_SPI2_PCS1 | PORT_SRE_FAST | PORT_DSE_HIGH));\
-    _CONFIG_PERIPHERAL(D, 12, (PD_12_SPI2_SCK | PORT_SRE_FAST | PORT_DSE_HIGH)); \
-    _CONFIG_PERIPHERAL(D, 13, (PD_13_SPI2_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); \
-    _CONFIG_PERIPHERAL(D, 14, PD_14_SPI2_SIN); \
-    SPI2_MCR = (SPI_MCR_MSTR | SPI_MCR_DCONF_SPI | SPI_MCR_CLR_RXF | SPI_MCR_CLR_TXF | SPI_MCR_PCSIS_CS0 | SPI_MCR_PCSIS_CS1 | SPI_MCR_PCSIS_CS2 | SPI_MCR_PCSIS_CS3 | SPI_MCR_PCSIS_CS4 | SPI_MCR_PCSIS_CS5); \
-    SPI2_CTAR0 = (SPI_CTAR_DBR | SPI_CTAR_FMSZ_8 | SPI_CTAR_PDT_7 | SPI_CTAR_BR_2 | SPI_CTAR_CPHA | SPI_CTAR_CPOL); // for 50MHz bus, 25MHz speed and 140ns min de-select time
-
-                                                                                                                    //D, 15, (PD_15_SPI2_PCS1 | PORT_SRE_FAST | PORT_DSE_HIGH)
-
-    #define POWER_DOWN_SPI_FLASH_INTERFACE() POWER_DOWN(3, SIM_SCGC3_SPI2) // power down SPI interface if no SPI Flash detected
-
-
-    #define FLUSH_SPI_FIFO_AND_FLAGS()      SPI2_MCR |= SPI_MCR_CLR_RXF; SPI2_SR = (SPI_SR_EOQF | SPI_SR_TFUF | SPI_SR_TFFF | SPI_SR_RFOF | SPI_SR_RFDF);
-
-
-    #define WRITE_SPI_CMD0(byte)            SPI2_PUSHR = (byte | SPI_PUSHR_CONT | ulChipSelectLine | SPI_PUSHR_CTAS_CTAR0) // write a single byte to the output FIFO - assert CS line
-    #define WRITE_SPI_CMD0_LAST(byte)       SPI2_PUSHR = (byte | SPI_PUSHR_EOQ  | ulChipSelectLine | SPI_PUSHR_CTAS_CTAR0) // write final byte to output FIFO - this will negate the CS line when complete
-    #define READ_SPI_FLASH_DATA()           (unsigned char)SPI2_POPR
-    #define WAIT_SPI_RECEPTION_END()        while ((SPI2_SR & SPI_SR_RFDF) == 0) {}
-    #define CLEAR_RECEPTION_FLAG()          SPI2_SR |= SPI_SR_RFDF
-    #define SET_SPI_FLASH_MODE()                                         // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
-    #define REMOVE_SPI_FLASH_MODE()
-#else
     #define CS0_LINE                        SPI_PUSHR_PCS0               // CS0 line used when SPI FLASH is enabled
     #define CS1_LINE                                                     // CS1 line used when extended SPI FLASH is enabled
     #define CS2_LINE                                                     // CS2 line used when extended SPI FLASH is enabled
@@ -1581,7 +1546,6 @@
     #define CLEAR_RECEPTION_FLAG()          SPI0_SR |= SPI_SR_RFDF
     #define SET_SPI_FLASH_MODE()                                         // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
     #define REMOVE_SPI_FLASH_MODE()                                      // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
-#endif
 #elif defined TWR_K24F120M
     #define CS0_LINE                        SPI_PUSHR_PCS0               // CS0 line used when SPI FLASH is enabled
     #define CS1_LINE                                                     // CS1 line used when extended SPI FLASH is enabled
@@ -2648,7 +2612,6 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #else
         #define OUR_I2C_CHANNEL       0                                  // use I2C0 for reference
     #endif
-    #define NUMBER_I2C                I2C_AVAILABLE                      // I2C interfaces available
 
     #if defined FRDM_K20D50M || defined BLAZE_K22
         #define I2C0_B_LOW                                               // I2C0_SCL on PB0 and I2C0_SDA on PB1

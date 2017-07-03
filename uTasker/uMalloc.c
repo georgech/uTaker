@@ -58,7 +58,7 @@ extern void fnInitialiseHeap(const HEAP_NEEDS *ctOurHeap, void *HeapStart)
 {
 #if defined UNUSED_STACK_PATTERN                                         // {2}
     unsigned char *ucPattern;
-    #if !defined _WINDOWS 
+    #if !defined _WINDOWS
     unsigned char ucTopOfStack;                                          // put a temporary variable on stack
     #endif
 #endif

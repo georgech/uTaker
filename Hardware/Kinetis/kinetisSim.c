@@ -102,6 +102,9 @@ static unsigned long ulPeripherals[PORTS_AVAILABLE] = {0};
     static unsigned short usADC_values[ADC_CHANNELS * ADC_CONTROLLERS];
     static void *ptrPorts[2] = {(void *)ucPortFunctions, (void *)usADC_values}; // {2}
 #endif
+#if defined RUN_IN_FREE_RTOS
+    extern void fnExecutePendingInterrupts(int iRecursive);
+#endif
 
 static const unsigned long ulDisabled[PORTS_AVAILABLE] = {
 #if defined KINETIS_K00
@@ -7013,7 +7016,7 @@ extern int fnSimTimers(void)
     fnSimCAN(0, 0, CAN_SIM_CHECK_RX);                                    // poll the CAN interface at the tick rate
 #endif
 
-    if (APPLICATION_INT_RESET_CTR_REG & SYSRESETREQ) {
+    if ((APPLICATION_INT_RESET_CTR_REG & SYSRESETREQ) != 0) {
         return RESET_SIM_CARD;                                           // commanded reset
     }
     // Watchdog
@@ -7084,7 +7087,7 @@ extern int fnSimTimers(void)
         WDOG_CNTL = (unsigned char)(ulWdogCnt);
     }
 #else
-    if (WDOG_STCTRLH & WDOG_STCTRLH_WDOGEN) {                            // watchdog enabled
+    if ((WDOG_STCTRLH & WDOG_STCTRLH_WDOGEN) != 0) {                     // watchdog enabled
     #if TICK_RESOLUTION >= 1000
         unsigned long ulCounter = (TICK_RESOLUTION/1000);                // {28} assume 1000Hz LPO clock
     #else
@@ -7092,7 +7095,7 @@ extern int fnSimTimers(void)
     #endif
         unsigned long ulWatchdogCount = ((WDOG_TMROUTH << 16) | (WDOG_TMROUTL)); // present watchdog count
         unsigned long ulWatchdogTimeout = ((WDOG_TOVALH << 16) | (WDOG_TOVALL)); // watchdog timeout value        
-        if (WDOG_STCTRLH & WDOG_STCTRLH_CLKSRC) {                        // not sure which source is which at the moment
+        if ((WDOG_STCTRLH & WDOG_STCTRLH_CLKSRC) != 0) {                 // not sure which source is which at the moment
         }
         else {
             ulCounter /= (((WDOG_PRESC >> 8) & 0x7) + 1);                // {28} respect LPO clock presecaler
@@ -7119,10 +7122,14 @@ extern int fnSimTimers(void)
         else {
             SYSTICK_CURRENT = SYSTICK_RELOAD;
             if ((SYSTICK_CSR & SYSTICK_TICKINT) != 0) {                  // if interrupt enabled
-                INT_CONT_STATE_REG |= PENDSTSET;
-                if ((kinetis.CORTEX_M4_REGS.ulPRIMASK & INTERRUPT_MASKED) == 0) { // if interrupt have been enabled, call interrupt handler
-                    ptrVect->ptrSysTick();
+                INT_CONT_STATE_REG |= PENDSTSET;                         // set the systick as pending
+#if defined RUN_IN_FREE_RTOS
+                fnExecutePendingInterrupts(0);
+#else
+                if ((kinetis.CORTEX_M4_REGS.ulPRIMASK & INTERRUPT_MASKED) == 0) { // if global interrupts have been enabled, call interrupt handler
+                    ptrVect->ptrSysTick();                               // call the systick interrupt service routine
                 }
+#endif
             }
         }
     }
@@ -7913,6 +7920,35 @@ extern int fnSimTimers(void)
     return 0;
 }
 
+#if defined RUN_IN_FREE_RTOS
+extern void fnExecutePendingInterrupts(int iRecursive)
+{
+    static int iExecuting = 0;
+    static unsigned char ucPresentPriority = 255;                        // lowest priority that doesn't block anything
+    unsigned char ucPreviousPriority = ucPresentPriority;
+    VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+    if (iExecuting != 0) {
+        if (iRecursive == 0) {
+            return;                                                      // ignore when called non-recursively when already executing
+        }
+    }
+    iExecuting = 1;
+    if ((kinetis.CORTEX_M4_REGS.ulPRIMASK & INTERRUPT_MASKED) != 0) {
+        iExecuting = 0;
+        return;                                                          // if the global interrupt is masked we quit
+    }
+    if ((INT_CONT_STATE_REG & PENDSTSET) != 0) {                         // systick is pending
+        unsigned char ucPriority = (SYSTEM_HANDLER_12_15_PRIORITY_REGISTER >> (24 + __NVIC_PRIORITY_SHIFT)); // systick interrupt priority
+        if (ucPriority < ucPresentPriority) {                            // check that the interrupt has adequate priority to be called
+            ucPresentPriority = ucPriority;                              // set the new priority level
+            ptrVect->ptrSysTick();                                       // call the systick interrupt service routine
+            ucPresentPriority = ucPreviousPriority;
+            fnExecutePendingInterrupts(1);                               // allow further pending interrupt to be executed if needed
+        }
+    }
+    iExecuting = 0;
+}
+#endif
 
 extern unsigned char *fnGetSimTxBufferAdd(void)
 {

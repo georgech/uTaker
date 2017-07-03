@@ -3436,10 +3436,10 @@ int APIENTRY WinMain(HINSTANCE hInstance,
     #endif
 #endif
         if (iInputChange != 0) {
-            if (KEY_CHANGED & iInputChange) {
+            if ((KEY_CHANGED & iInputChange) != 0) {
                 fnProcessKeyChange();
             }
-            if (INPUT_CHANGED & iInputChange) {
+            if ((INPUT_CHANGED & iInputChange) != 0) {
                 fnProcessInputChange();
             }
             iInputChange = 0;
@@ -3450,10 +3450,10 @@ int APIENTRY WinMain(HINSTANCE hInstance,
             iLastTxActivity = (iTxActivity > 0);
             InvalidateRect(ghWnd, &rect_LAN_LED, FALSE);                 // redraw new LAN activity state
         }
-        if (iRxActivity) {
+        if (iRxActivity != 0) {
             --iRxActivity;
         }
-        if (iTxActivity) {
+        if (iTxActivity != 0) {
             --iTxActivity;
         }
 #endif

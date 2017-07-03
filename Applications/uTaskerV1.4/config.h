@@ -22,11 +22,13 @@
     #define __CONFIG__
 
 
-/////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
 //                                                                       // new users who would like to see just a blinking LED before enabling the project's many powerful features can set this
-//#define BLINKEY                                                        // it give simplest scheduling of a single task called at 200ms rate that retriggers the watchdog and toggles respective the board's heartbeat LED
+#define BLINKY                                                           // it give simplest scheduling of a single task called at 200ms rate that retriggers the watchdog and toggles respective the board's heartbeat LED
 //                                                                       // 
-/////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
+
+//#define RUN_IN_FREE_RTOS                                               // use uTasker in a FreeRTOS task to benefit from both worlds!
 
 #define _TICK_RESOLUTION     TICK_UNIT_MS(50)                            // 50ms system tick period - max possible at 50MHz SYSTICK would be about 335ms !
 
@@ -861,7 +863,7 @@
 // Serial interface (UART)
 //
 #define SERIAL_INTERFACE                                                 // enable serial interface driver
-#if !defined BLINKEY && defined SERIAL_INTERFACE
+#if !defined BLINKY && defined SERIAL_INTERFACE
   //#define FREEMASTER_UART                                              // UART for run-time debugging use
   //#define UART_EXTENDED_MODE                                           // required for 9-bit mode
       //#define SERIAL_MULTIDROP_TX                                      // enable 9-bit support in the transmission direction
@@ -1083,8 +1085,9 @@
 
 // I2C
 //
-//#define I2C_INTERFACE
+#define I2C_INTERFACE
 #if defined I2C_INTERFACE
+    #define NUMBER_I2C       I2C_AVAILABLE                               // I2C interfaces available
   //#define I2C_SLAVE_MODE                                               // support slave mode
         #define I2C_SLAVE_TX_BUFFER                                      // support preparing slave transmissions with fnWrite()
         #define I2C_SLAVE_RX_BUFFER                                      // support slave reception buffer for fnRead()
@@ -1202,7 +1205,7 @@
         #define ENC424J600_INTERFACE                                     // using ENC424J600
     #endif
 #endif
-#if (defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP) && !defined BLINKEY
+#if (defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP) && !defined BLINKY
     #define MAC_DELIMITER  '-'                                           // used for display and entry of mac addresses
     #define IPV6_DELIMITER ':'                                           // used for display and entry of IPV6 addresses
     #define NUMBER_LAN     1                                             // one physical interface needed for LAN
@@ -1924,7 +1927,7 @@
 // Low Power
 //
 #if !((defined K70F150M_12M || defined TWR_K70F120M || defined TWR_K60F120M || defined K60F150M_50M) && defined USB_INTERFACE) // don't use low power mode due to errata e7166
-    #define SUPPORT_LOW_POWER                                            // a low power task supervises power reduction when possible
+  //#define SUPPORT_LOW_POWER                                            // a low power task supervises power reduction when possible
       //#define LOW_POWER_CYCLING_MODE                                   // allow low power cycle loop with a "Virtual Wake-up Interrupt Handler" - see video https://youtu.be/v4UnfcDiaE4
 #endif
 
@@ -1933,7 +1936,7 @@
 //#define PERIODIC_TIMER_EVENT                                           // delayed and periodic tasks are schedule with timer events if enabled (otherwise they are simply scheduled)
 
 
-#if defined BLINKEY                                                      // if the BLINKEY operation is defined we ensure that the following are disabled to give simplest configuration
+#if defined BLINKY                                                       // if the BLINKY operation is defined we ensure that the following are disabled to give simplest configuration
     #undef USE_MAINTENANCE
     #undef USB_INTERFACE
     #undef USB_HOST_SUPPORT
@@ -1967,24 +1970,26 @@
     #define NO_FLASH_SUPPORT
 #endif
 
-// Project includes are set here for all files in the correct order
-//
-#include "types.h"                                                       // project specific type settings (include the hardware configuration headers)
-#if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST || defined MANAGED_FILES || defined FAT_EMULATION
-    #include "../../uTasker/utFAT/mass_storage.h"
-#endif
-#include "../../stack/tcpip.h"                                           // TCP/IP stack and web utilities
-#include "../../uTasker/driver.h"                                        // driver and general formatting routines
-#include "../../Hardware/hardware.h"                                     // general hardware
-#include "../../uTasker/uTasker.h"                                       // operating system defines
-#if defined USE_MODBUS
-    #include "../../uTasker/MODBUS/modbus.h"
-#endif
-#include "TaskConfig.h"                                                  // the specific task configuration
-#include "application.h"                                                 // general project specific include
-#include "../../uTasker/uGLCDLIB/glcd.h"                                 // LCD
-#if defined _WINDOWS
-    #include "../../WinSim/WinSim.h"
+#if !defined _FREE_RTOS_APPLICATION && !defined INC_FREERTOS_H
+    // Project includes are set here for all files in the correct order
+    //
+    #include "types.h"                                                   // project specific type settings (include the hardware configuration headers)
+    #if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST || defined MANAGED_FILES || defined FAT_EMULATION
+        #include "../../uTasker/utFAT/mass_storage.h"
+    #endif
+    #include "../../stack/tcpip.h"                                       // TCP/IP stack and web utilities
+    #include "../../uTasker/driver.h"                                    // driver and general formatting routines
+    #include "../../Hardware/hardware.h"                                 // general hardware
+    #include "../../uTasker/uTasker.h"                                   // operating system defines
+    #if defined USE_MODBUS
+        #include "../../uTasker/MODBUS/modbus.h"
+    #endif
+    #include "TaskConfig.h"                                              // the specific task configuration
+    #include "application.h"                                             // general project specific include
+    #include "../../uTasker/uGLCDLIB/glcd.h"                             // LCD
+    #if defined _WINDOWS
+        #include "../../WinSim/WinSim.h"
+    #endif
 #endif
 
 #if defined OPSYS_CONFIG                                                 // this is only used by the hardware module

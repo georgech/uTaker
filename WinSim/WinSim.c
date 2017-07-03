@@ -233,6 +233,9 @@ static unsigned char  ucCom7Data[UART_BUFFER_LENGTH];
 static int  fnSimulateActions(char *argv[]);
 static void fnCloseAll(void);
 extern void RealTimeInterrupt(void);
+#if defined RUN_IN_FREE_RTOS
+    extern void fnFreeRTOS_main(void);
+#endif
 
 #if defined ETH_INTERFACE                                                // {13}
     #if LOSE_ACKS > 0
@@ -276,7 +279,14 @@ extern int main(int argc, char *argv[])
         fnSetProjectDetails(++argv);
 	    fnInitHW();                                                      // initialise hardware  
         fnSimPorts();                                                    // ensure simulator is aware of any hardware port initialisations
-#if defined MULTISTART
+#if defined RUN_IN_FREE_RTOS
+        {
+            DWORD ThreadIDRead;                                          // start the FreeRTOS main loop in a thread since it never returns
+            fnInitialiseHeap(ctOurHeap, fnGetHeapStart());               // create heap
+            HANDLE hThreadRead = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)fnFreeRTOS_main, (LPVOID)0, 0, (LPDWORD)&ThreadIDRead);
+        }
+#else
+    #if defined MULTISTART
         if (ptMultiStartTable == 0) {                                    // normal startup
 _abort_multi:
             fnInitialiseHeap(ctOurHeap, fnGetHeapStart());               // create standard heap
@@ -287,11 +297,11 @@ _abort_multi:
         }
         else {                                                           // start using information from the application table
             if (ptMultiStartTable->new_hw_init) {
-    #if defined DYNAMIC_MULTISTART
+        #if defined DYNAMIC_MULTISTART
                 pucHeapStart = ptMultiStartTable->new_hw_init(JumpTable, &ptMultiStartTable, OurConfigNr);
-    #else
+        #else
                 pucHeapStart = ptMultiStartTable->new_hw_init(JumpTable);
-    #endif
+        #endif
                 if (pucHeapStart == 0) {
                     goto _abort_multi;                                   // this can happen if the jump table version doesn't match - prefer to stay in boot mode than start an application which will crash
                 }
@@ -303,11 +313,12 @@ _abort_multi:
                                                                          // re-start the operating system
             uTaskerStart((UTASKTABLEINIT *)ptMultiStartTable->ptTaskTable, ptMultiStartTable->ptNodesTable, PHYSICAL_QUEUES);
         }
-#else
+    #else
         fnInitialiseHeap(ctOurHeap, fnGetHeapStart());                   // create heap
 	    uTaskerStart((UTASKTABLEINIT *)ctTaskTable, ctNodes, PHYSICAL_QUEUES); // start the operating system
-#endif
+    #endif
         iRun = 5;
+#endif
         iInitialised = 1;
         break;
 
@@ -330,10 +341,25 @@ _abort_multi:
 #endif
 
     case TICK_CALL:
+
+
+//EnterCriticalSection(ptrcs); // protect from task switching
+
         if (iReset = fnSimTimers()) {                                    // simulate timers and check for watchdog timer
             iOpSysActive = 0;                                            // {36}
+
+
+//LeaveCriticalSection(ptrcs);
+
+
+
             return iReset;                                               // reset commanded or Watchdog fired
         }
+
+//LeaveCriticalSection(ptrcs);
+
+
+
         RealTimeInterrupt();                                             // simulate a timer tick
         iRun = 10;                                                       // allow the scheduler to run a few times to handle inter-task events
         iSimulate = 1;                                                   // flag that simulation flags should be handled
@@ -773,10 +799,12 @@ _abort_multi:
     if (iRun != 0) {
         do {
             if (iWinPcapSending == 0) {
-    #if defined MULTISTART
+    #if !defined RUN_IN_FREE_RTOS
+        #if defined MULTISTART
                 ptrNewstart =
-    #endif
+        #endif
                 uTaskerSchedule();                                       // let the tasker run a few more times to allow internal message passing to be processed and free running tasks to run a while
+    #endif
                 fnSimPorts();
     #if defined MULTISTART
                 if (ptrNewstart != 0) {
@@ -3295,7 +3323,7 @@ extern unsigned char fnSimW25Qxx(int iSimType, unsigned char ucTxByte)
     }
         #else
         #define ulDeviceOffset 0
-    if (SPI_CS0_PORT & CS0_LINE) {                                       // CS0 line negated
+    if ((SPI_CS0_PORT & CS0_LINE) != 0) {                                // CS0 line negated
         fnActionW25Q(0, 0);
         return 0xff;                                                     // chip not selected, return idle
     }

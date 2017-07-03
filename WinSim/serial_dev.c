@@ -212,7 +212,7 @@ typedef struct stTIME_BLOCK_S
 /*                      M24M01 EEPROM                                     */
 /**************************************************************************/
 
-#ifdef I2C_EEPROM_FILE_SYSTEM                                            // {7} M24M01 (note that these conflict with addresses for 24C01 and DS3640 so are not used together
+#if defined I2C_EEPROM_FILE_SYSTEM                                       // {7} M24M01 (note that these conflict with addresses for 24C01 and DS3640 so are not used together
     unsigned char M24M01_eeprom[2][128 * 1024];
 
     typedef struct stM24M01
@@ -224,7 +224,7 @@ typedef struct stTIME_BLOCK_S
         unsigned long  ulInternalPointer;
     } M24M01;
 
-    static M24M01 simM24M01[2] = {
+    static M24M01 simM24M01[2] = {                                       // two devices
         {0x20000, 0xa0, 0},
         {0x20000, 0xa4, 0},
     };
@@ -257,6 +257,20 @@ typedef struct stTIME_BLOCK_S
     } EEPROM_24C01;
 
     static EEPROM_24C01 sim24C01 = {128, 0xa4, 0};
+
+    typedef struct stEEPROM_M24256
+    {
+        unsigned short usMaxEEPROMLength;
+        unsigned char  address;
+        unsigned char  ucPageSize;
+        unsigned char  ucState;
+        unsigned char  ucRW;
+        unsigned short usNextInternalAddress;
+        unsigned short usInternalAddress;
+        unsigned char  ucEEPROM[32 * 1024];
+    } EEPROM_M24256;
+
+    static EEPROM_M24256 simM24256 = { (32 * 1024), 0xae, 64, 0 };
 
     typedef struct stDS3640_DATA
     {     
@@ -383,7 +397,7 @@ typedef struct stSHT21
 static SHT21 simSHT21 = {0x80, 0, 0, 0, 0x02, 0x61, 0x64, 0x55, 0x63, 0x52, 0x63}; // temperatire 20.0°C, humidity 42.5%
 
 
-#ifdef USE_USB_OTG_CHARGE_PUMP
+#if defined USE_USB_OTG_CHARGE_PUMP
 /**************************************************************************/
 /* MAX3353 USB OTG Charge Pump with switchable Pullup/Pulldown resistors  */
 /**************************************************************************/
@@ -447,7 +461,7 @@ static WM8510 simWM8510 = {0x34, 0};
 /**************************************************************************/
 
 #define ADDRESS_MAX543X 0x28
-#ifdef MAX543X_PROJECT_ADDRESS
+#if defined MAX543X_PROJECT_ADDRESS
     #undef ADDRESS_MAX543X
     #define ADDRESS_MAX543X MAX543X_PROJECT_ADDRESS                      // allow project address define
 #endif
@@ -1051,7 +1065,7 @@ static void fnResetOthers(unsigned char ucAddress)
         simWM8510.ucState = 0;
     }
 
-#ifdef I2C_EEPROM_FILE_SYSTEM                                            // {7}
+#if defined I2C_EEPROM_FILE_SYSTEM                                       // {7}
     if ((ucAddress & ~0x02) != simM24M01[0].address) {
         simM24M01[0].ucState = 0;
     }
@@ -1059,6 +1073,9 @@ static void fnResetOthers(unsigned char ucAddress)
         simM24M01[1].ucState = 0;
     }
 #else
+    if (ucAddress != simM24256.address) {
+        simM24256.ucState = 0;
+    }
     if (ucAddress != sim24C01.address) {
         sim24C01.ucState = 0;
     }
@@ -1104,7 +1121,7 @@ static void fnResetOthers(unsigned char ucAddress)
         i++;
     }
 #endif
-#ifdef USE_USB_OTG_CHARGE_PUMP
+#if defined USE_USB_OTG_CHARGE_PUMP
     if (ucAddress != simMAX3353.address) {
         simMAX3353.ucState = 0;
     }
@@ -1427,7 +1444,7 @@ unsigned char fnSimI2C_devices(unsigned char ucType, unsigned char ucData)
             simWM8510.ucState = 1;
             simWM8510.ucRW = (ucData & 0x01);
         }
-#ifdef I2C_EEPROM_FILE_SYSTEM                                            // {7}
+#if defined I2C_EEPROM_FILE_SYSTEM                                       // {7}
         else if ((ucData & ~0x03) == simM24M01[0].address) {
             simM24M01[0].ucRW = (ucData & 0x01);                         // being read or written
             if ((simM24M01[0].ucRW) && (simM24M01[0].ucState >= 3)) {    // repeated start after setting address and moving to sequential read mode
@@ -1449,6 +1466,13 @@ unsigned char fnSimI2C_devices(unsigned char ucType, unsigned char ucData)
             }
         }
 #else
+        else if ((ucData & ~0x01) == simM24256.address) {
+            simM24256.ucState++;                                         // being addressed
+            simM24256.ucRW = (ucData & 0x01);                            // being read or written
+            if (simM24256.ucState >= 5) {
+                simM24256.ucState = 1;
+            }
+        }
         else if ((ucData & ~0x01) == sim24C01.address) {
             sim24C01.ucState++;                                          // being addressed
             sim24C01.ucRW = (ucData & 0x01);                             // being read or written
@@ -1500,7 +1524,7 @@ unsigned char fnSimI2C_devices(unsigned char ucType, unsigned char ucData)
         }
     #endif
 #endif
-#ifdef USE_USB_OTG_CHARGE_PUMP
+#if defined USE_USB_OTG_CHARGE_PUMP
         else if ((ucData & ~0x01) == simMAX3353.address) {               // being addressed
             simMAX3353.ucState = 1;
             simMAX3353.ucRW = (ucData & 0x01);
@@ -1635,7 +1659,7 @@ unsigned char fnSimI2C_devices(unsigned char ucType, unsigned char ucData)
             simWM8510.usRegisters[simWM8510.ucInternalRegister] = simWM8510.usData;
             simWM8510.ucState = 0;
         }
-#ifdef I2C_EEPROM_FILE_SYSTEM                                            // {7}
+#if defined I2C_EEPROM_FILE_SYSTEM                                       // {7}
         else if ((simM24M01[0].ucState == 3) && (simM24M01[0].ucRW == 0)) { // writing
             M24M01_eeprom[0][simM24M01[0].ulInternalPointer++] = ucData;
             if ((simM24M01[0].ulInternalPointer % 128) == 0) {           // handle page write
@@ -1669,6 +1693,22 @@ unsigned char fnSimI2C_devices(unsigned char ucType, unsigned char ucData)
             simM24M01[1].ucState++;
         }
 #else
+        else if ((simM24256.ucState == 1) && (simM24256.ucRW == 0)) {    // being addressed for write
+            simM24256.usNextInternalAddress = (ucData << 8);             // set internal pointer (MSB)
+            simM24256.ucState++;
+        }
+        else if ((simM24256.ucState == 2) && (simM24256.ucRW == 0)) {    // being addressed for write
+            simM24256.usNextInternalAddress |= ucData;                   // set internal pointer (LSB)
+            simM24256.usInternalAddress = simM24256.usNextInternalAddress;
+            simM24256.ucState++;
+        }
+        else if ((simM24256.ucState >= 3) && (simM24256.ucRW == 0)) {    // being addressed for write
+            simM24256.ucEEPROM[simM24256.usInternalAddress++] = ucData;  // write new data to EEPROM
+            if (simM24256.usInternalAddress%simM24256.ucPageSize == 0) { // end of page reached
+                simM24256.usInternalAddress &= ~((simM24256.ucPageSize * 2) - 1); // roll-over to start of present page
+            }
+            simM24256.ucState++;
+        }
         else if ((sim24C01.ucState == 1) && (sim24C01.ucRW == 0)) {      // being addressed for write
             sim24C01.ucInternalAddress = ucData;                         // set internal pointer
             sim24C01.ucState++;
@@ -1790,7 +1830,7 @@ unsigned char fnSimI2C_devices(unsigned char ucType, unsigned char ucData)
         }
     #endif
 #endif
-#ifdef USE_USB_OTG_CHARGE_PUMP
+#if defined USE_USB_OTG_CHARGE_PUMP
         else if ((simMAX3353.ucState > 0) && (simMAX3353.ucRW == 0)) {   // being addressed for write
             if (simMAX3353.ucState == 1) {
                 simMAX3353.ucCommand = ucData;                           // set the control register being written
@@ -1878,7 +1918,7 @@ unsigned char fnSimI2C_devices(unsigned char ucType, unsigned char ucData)
                 return 0;
             }
         }
-#ifdef I2C_EEPROM_FILE_SYSTEM                                            // {7}
+#if defined I2C_EEPROM_FILE_SYSTEM                                       // {7}
         else if ((simM24M01[0].ucRW) && (simM24M01[0].ucState == 4)) {   // reading
             unsigned char ucReturn = M24M01_eeprom[0][simM24M01[0].ulInternalPointer++];
             if (simM24M01[0].ulInternalPointer >= simM24M01[0].ulMaxEEPROMLength) {
@@ -1894,7 +1934,14 @@ unsigned char fnSimI2C_devices(unsigned char ucType, unsigned char ucData)
             return ucReturn;
         }
 #else
-        else if (sim24C01.ucRW && (sim24C01.ucState >= 3)) {             // repeated start - first byte is data
+        else if (simM24256.ucRW && (simM24256.ucState >= 4)) {           // repeated start - first byte is data (or following)
+            unsigned char ucReturn = simM24256.ucEEPROM[simM24256.usInternalAddress++];
+            if (simM24256.usInternalAddress >= simM24256.usMaxEEPROMLength) {
+                simM24256.usInternalAddress = 0;
+            }
+            return (ucReturn);
+        }
+        else if (sim24C01.ucRW && (sim24C01.ucState >= 3)) {             // repeated start - first byte is data (or following)
             unsigned char ucReturn = sim24C01.ucEEPROM[sim24C01.ucInternalAddress++];
             if (sim24C01.ucInternalAddress >= sim24C01.usMaxEEPROMLength) {
                 sim24C01.ucInternalAddress = 0;
@@ -2011,14 +2058,14 @@ unsigned char fnSimI2C_devices(unsigned char ucType, unsigned char ucData)
         }
     #endif
 #endif
-#ifdef USE_USB_OTG_CHARGE_PUMP
+#if defined USE_USB_OTG_CHARGE_PUMP
         else if (simMAX3353.ucRW && (simMAX3353.ucState >= 3)) {         // repeated start - first byte is data
             return (0);
         }
 #endif
         else {
-            int i = 0;
 #if defined PCF8575_CNT
+            int i = 0;
             i = 0;
             while (i < PCF8575_CNT) {
                 if ((simPCF8575[i].ucState >= 1) && (simPCF8575[i].ucRW & 0x01)) { // device being addressed as read
