@@ -21,6 +21,7 @@
 # 17.01.2017 Add dsp
 # 01.03.2017 Add FT_CoPro_Cmds
 # 09.05.2017 Add ppp.c
+# 03.07.2017 Add FreeRTOS files and application
 
 
 # Compiler flags (thumb mode - little endian)
@@ -33,7 +34,7 @@ C_FLAGS = -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mlittle-en
 
 # All objects (Hardware, application, uTasker, stack)
 #
-OBJS = Build/application.o Build/debug.o Build/webInterface.o Build/KeyScan.o Build/NetworkIndicator.o Build/usb_application.o Build/snmp_mib_handlers.o Build/FreeMaster.o Build/nRF24201.o \
+OBJS = Build/application.o Build/debug.o Build/webInterface.o Build/KeyScan.o Build/NetworkIndicator.o Build/usb_application.o Build/snmp_mib_handlers.o Build/FreeMaster.o Build/nRF24201.o Build/FreeRTOSapplication.o \
        Build/MODBUS.o Build/modbus_app.o \
        Build/mass_storage.o \
        Build/GLCD.o Build/LCD.o Build/FT_CoPro_Cmds.o  \
@@ -42,7 +43,8 @@ OBJS = Build/application.o Build/debug.o Build/webInterface.o Build/KeyScan.o Bu
        Build/eth_drv.o Build/Driver.o Build/uMalloc.o Build/uTasker.o Build/Tty_drv.o Build/i2c_drv.o Build/USB_drv.o Build/uFile.o Build/Watchdog.o Build/GlobalTimer.o Build/time_keeper.o Build/low_power.o Build/can_drv.o \
        Build/Ethernet.o Build/arp.o Build/dhcp.o Build/dns.o Build/ftp.o Build/http.o Build/icmp.o Build/ip_utils.o Build/ip.o Build/pop3.o Build/smtp.o Build/snmp.o \
        Build/tcp.o Build/telnet.o Build/tftp.o Build/udp.o Build/webutils.o Build/NetBIOS.o Build/zero_config.o Build/ftp_client.o Build/igmp.o Build/ppp.o \
-       Build/crypto.o Build/DSP.o
+       Build/crypto.o Build/DSP.o \
+       Build/tasks.o Build/timers.o Build/queue.o Build/list.o Build/event_groups.o Build/croutine.o Build/port.o
 
 OBJS2 = Build/kinetis.o
 
@@ -65,6 +67,15 @@ DEPENDS_CMSIS = ../config.h \
        ../../../Hardware/Kinetis/CMSIS_DSP/core_cm4.h \
        ../../../Hardware/Kinetis/CMSIS_DSP/cmsis_compiler.h \
        ../../../Hardware/Kinetis/CMSIS_DSP/cmsis_gcc.h
+
+FREERTOS_INC = ../../../FreeRTOS\Source\include
+FREERTOS_PORT_INC = ../../../FreeRTOS/Source/portable/GCC/ARM_CM4F
+
+DEPENDS_FREERTOS = $(FREERTOS_INC) \
+                   $(FREERTOS_PORT_INC)
+
+FREERTOS_INCLUDE = -I$(FREERTOS_INC) \
+                   -I$(FREERTOS_PORT_INC)
 
 
 INC     = -I../ 
@@ -148,6 +159,10 @@ Build/FreeMaster.o: ../FreeMaster.c $(DEPENDS) ../application.h
 
 Build/nRF24201.o: ../nRF24201.c $(DEPENDS) ../application.h
 		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../nRF24201.c -o Build/nRF24201.o
+
+Build/FreeRTOSapplication.o: ../FreeRTOSapplication.c $(DEPENDS) $(DEPENDS_FREERTOS) ../application.h
+		$(CC) $(C_FLAGS) $(INC) $(FREERTOS_INCLUDE) $(OPTS) ../FreeRTOSapplication.c -o Build/FreeRTOSapplication.o
+
 
 
 
@@ -354,6 +369,27 @@ Build/arm_const_structs.o: ../../../Hardware/Kinetis/CMSIS_DSP/arm_const_structs
 Build/arm_max_f32.o : ../../../Hardware/Kinetis/CMSIS_DSP/arm_max_f32.c $(DEPENDS_CMSIS)
 		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../Hardware/Kinetis/CMSIS_DSP/arm_max_f32.c -o Build/arm_max_f32.o
 
+# Free RTOS
+Build/tasks.o : ../../../FreeRTOS/Source/tasks.c $(DEPENDS_FREERTOS)
+		$(CC) $(C_FLAGS) $(INC) $(FREERTOS_INCLUDE) $(OPTS) ../../../FreeRTOS/Source/tasks.c -o Build/tasks.o
+
+Build/timers.o : ../../../FreeRTOS/Source/timers.c $(DEPENDS_FREERTOS)
+		$(CC) $(C_FLAGS) $(INC) $(FREERTOS_INCLUDE) $(OPTS) ../../../FreeRTOS/Source/timers.c -o Build/timers.o
+
+Build/queue.o : ../../../FreeRTOS/Source/queue.c $(DEPENDS_FREERTOS)
+		$(CC) $(C_FLAGS) $(INC) $(FREERTOS_INCLUDE) $(OPTS) ../../../FreeRTOS/Source/queue.c -o Build/queue.o
+
+Build/list.o : ../../../FreeRTOS/Source/list.c $(DEPENDS_FREERTOS)
+		$(CC) $(C_FLAGS) $(INC) $(FREERTOS_INCLUDE) $(OPTS) ../../../FreeRTOS/Source/list.c -o Build/list.o
+
+Build/event_groups.o : ../../../FreeRTOS/Source/event_groups.c $(DEPENDS_FREERTOS)
+		$(CC) $(C_FLAGS) $(INC) $(FREERTOS_INCLUDE) $(OPTS) ../../../FreeRTOS/Source/event_groups.c -o Build/event_groups.o
+
+Build/croutine.o : ../../../FreeRTOS/Source/croutine.c $(DEPENDS_FREERTOS)
+		$(CC) $(C_FLAGS) $(INC) $(FREERTOS_INCLUDE) $(OPTS) ../../../FreeRTOS/Source/croutine.c -o Build/croutine.o
+
+Build/port.o : ../../../FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c $(DEPENDS_FREERTOS)
+		$(CC) $(C_FLAGS) $(INC) $(FREERTOS_INCLUDE) $(OPTS) ../../../FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c -o Build/port.o
 
 
 # Link

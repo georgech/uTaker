@@ -163,24 +163,31 @@ Build_Kinetis.bat
   <ItemGroup>
     <ClCompile Include="..\..\..\FreeRTOS\Source\croutine.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);;..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
     </ClCompile>
     <ClCompile Include="..\..\..\FreeRTOS\Source\event_groups.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);;..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
     </ClCompile>
     <ClCompile Include="..\..\..\FreeRTOS\Source\list.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);;..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
     </ClCompile>
     <ClCompile Include="..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F\port.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
     </ClCompile>
     <ClCompile Include="..\..\..\FreeRTOS\Source\queue.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);;..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
     </ClCompile>
     <ClCompile Include="..\..\..\FreeRTOS\Source\tasks.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);;..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
     </ClCompile>
     <ClCompile Include="..\..\..\FreeRTOS\Source\timers.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);;..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
     </ClCompile>
     <ClCompile Include="..\..\..\Hardware\Kinetis\CMSIS_DSP\arm_cfft_f32.c" />
     <ClCompile Include="..\..\..\Hardware\Kinetis\CMSIS_DSP\arm_cfft_radix8_f32.c" />
@@ -233,7 +240,8 @@ Build_Kinetis.bat
     </ClCompile>
     <ClCompile Include="..\FreeMaster.c" />
     <ClCompile Include="..\FreeRTOSapplication.c">
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\MSVC-MingW</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
     </ClCompile>
     <ClCompile Include="..\KeyScan.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
