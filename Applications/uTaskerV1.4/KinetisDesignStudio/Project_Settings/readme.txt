@@ -1,4 +1,4 @@
-It is possible to work with CodeWarrior10.x, Atollic or Kinetis Design Studio.
+It is possible to work with CodeWarrior10.x, Atollic, MCUXpresso or Kinetis Design Studio.
 These are however all based on Eclipse and need their project configuration files to be located at the top of the project directory structure, meaning that only one can be used at a time.
 
 

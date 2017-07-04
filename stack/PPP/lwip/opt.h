@@ -1628,7 +1628,7 @@
  * PPP_SUPPORT==1: Enable PPP.
  */
 #ifndef PPP_SUPPORT
-#define PPP_SUPPORT                     1
+#define PPP_SUPPORT                     0
 #endif
 
 /**
