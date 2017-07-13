@@ -975,7 +975,9 @@ typedef struct stRESET_VECTOR
 #if defined PHRASE_PROGRAMMING_METHOD
     #define FLASH_GRANULARITY   (4 * 1024)                               // smallest sector which can be erased independently
     #define FLEXRAM_MAX_SECTION_COPY_SIZE (1 * 1024)
-#elif defined KINETIS_K24 || defined KINETIS_K80 || defined KINETIS_KL82  // K24, K80 and KL82 without phrase programming still uses 4k sectors
+#elif defined KINETIS_KL82
+    #define FLASH_GRANULARITY   (2 * 1024)                               // smallest sector which can be erased independently
+#elif defined KINETIS_K24 || defined KINETIS_K80                         // K24 and K80 without phrase programming still uses 4k sectors
     #define FLASH_GRANULARITY   (4 * 1024)                               // smallest sector which can be erased independently
 #elif defined KINETIS_KE
     #define FLASH_GRANULARITY   (512)                                    // smallest sector which can be erased independently
