@@ -71,9 +71,7 @@
             ucSPI_FLASH_Type[i] = fnCheckAT45dbxxx(i);
         }
         #endif
-        #if !defined BOOT_LOADER                                         // the boot loader doesn't use storage lists
         UserStorageListPtr = (STORAGE_AREA_ENTRY *)&spi_flash_storage;   // insert spi flash as storage medium
-        #endif
     }
 #endif
 

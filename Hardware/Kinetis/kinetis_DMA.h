@@ -870,7 +870,7 @@ extern void *uMemset(void *ptrTo, unsigned char ucValue, size_t Size)    // {9}
         #endif
             ptr += ulTransfer;                                           // move the destination pointer to beyond the transfer
             Size -= ulTransfer;                                          // bytes remaining
-            while (Size--) {                                             // {87} complete any remaining bytes
+            while (Size-- != 0) {                                        // {87} complete any remaining bytes
                 *ptr++ = ucValue;
             }
             while ((ptrDMA->DMA_DSR_BCR & DMA_DSR_BCR_DONE) == 0) { fnSimulateDMA(DMA_MEMCPY_CHANNEL); } // wait until completed

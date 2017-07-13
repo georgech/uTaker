@@ -20,6 +20,7 @@
     15.01.2016 Added SPI_FLASH_W25Q128 and control of final SPI byte for Kinetis parts with FIFO based SPI CS
     02.02.2017 Correct read for FIFO based SPI                           {1}
     01.03.2017 Correct write for FIFO based SPI                          {2}
+    13.07.2017 Adapt chip select line control dependency                 {3}
 
     **********************************************************************/
 
@@ -68,9 +69,7 @@
             ucSPI_FLASH_Type[i] = fnCheckW25Qxx(i);
         }
         #endif
-        #if !defined BOOT_LOADER                                         // the boot loader doesn't use storage lists
         UserStorageListPtr = (STORAGE_AREA_ENTRY *)&spi_flash_storage;   // insert spi flash as storage medium
-        #endif
     }
 #endif
 
@@ -195,7 +194,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
 
     SET_SPI_FLASH_MODE();
 
-    #if defined KINETIS_KL || defined MANUAL_FLASH_CS_CONTROL
+    #if !defined DSPI_SPI || defined MANUAL_FLASH_CS_CONTROL             // {3} control chip select line when no automation is available or when specifically preferred
     ASSERT_CS_LINE(ulChipSelectLine);                                    // assert the chip select line
     #endif
 
@@ -236,15 +235,15 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     #if defined _WINDOWS
         fnSimW25Qxx(W25Q_WRITE, (unsigned char)SPI_TX_BYTE);             // simulate the SPI FLASH device
     #endif
-  //#if defined KINETIS_KL                                               // {2}
+  //#if !defined DSPI_SPI                                                // {2}
         WAIT_SPI_RECEPTION_END();                                        // wait until the command has been sent
         (void)READ_SPI_FLASH_DATA();                                     // discard the received byte
   //#endif
-    #if defined KINETIS_KL || defined MANUAL_FLASH_CS_CONTROL
+    #if !defined DSPI_SPI || defined MANUAL_FLASH_CS_CONTROL             // {3} control chip select line when no automation is available or when specifically preferred
         NEGATE_CS_LINE(ulChipSelectLine);                                //  negate the chip select line
     #endif
     #if defined _WINDOWS
-        #if !defined KINETIS_KL
+        #if defined DSPI_SPI
         if ((SPI_TX_BYTE & SPI_PUSHR_EOQ) != 0) {                        // check that the CS has been negated
             SPI_TX_BYTE &= ~(ulChipSelectLine);
         }
@@ -269,7 +268,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     #if defined _WINDOWS
         fnSimW25Qxx(W25Q_WRITE, (unsigned char)SPI_TX_BYTE);             // simulate the SPI FLASH device
     #endif
-    #if defined KINETIS_KL
+    #if !defined DSPI_SPI
         WAIT_SPI_RECEPTION_END();                                        // wait until the command has been sent
         (void)READ_SPI_FLASH_DATA();                                     // discard the received byte
     #endif
@@ -319,11 +318,11 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         }
     }
 
-    #if defined KINETIS_KL || defined MANUAL_FLASH_CS_CONTROL
+    #if !defined DSPI_SPI || defined MANUAL_FLASH_CS_CONTROL             // {3} control chip select line when no automation is available or when specifically preferred
     NEGATE_CS_LINE(ulChipSelectLine);                                    // negate the chip select line
     #endif
     #if defined _WINDOWS
-        #if !defined KINETIS_KL
+        #if defined DSPI_SPI
     if ((SPI_TX_BYTE & SPI_PUSHR_EOQ) != 0) {                            // check that the CS has been negated
         SPI_TX_BYTE &= ~(ulChipSelectLine);
     }

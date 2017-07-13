@@ -1665,7 +1665,7 @@
     #define SET_SPI_FLASH_MODE()                                         // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
     #define REMOVE_SPI_FLASH_MODE()                                      // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
 #elif defined FRDM_KL25Z
-    // - SPI1_CS   PTE-4 (J9-13) [VDD J9-4 / 0V J9-14] card detect input on PTB-8 (J9-1)
+    // - SPI1_CS   PTE-4 (J9-13)
     // - SPI1_SCK  PTE-2 (J9-9)
     // - SPI1_MOSI PTE-1 (J2-20)
     // - SPI1_MISO PTE-3 (J9-11)
@@ -1705,6 +1705,40 @@
     #endif
     #define CLEAR_RECEPTION_FLAG()          
             
+    #define SET_SPI_FLASH_MODE()                                         // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
+    #define REMOVE_SPI_FLASH_MODE()                                      // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
+#elif defined FRDM_KL82Z
+    // - SPI1_CS   PTE-5
+    // - SPI1_SCK  PTE-1
+    // - SPI1_SOUT PTE-2
+    // - SPI1_SIN  PTE-4
+    //
+    #define CS0_LINE                        SPI_PUSHR_PCS0               // CS0 line used when SPI FLASH is enabled
+    #define CS1_LINE                                                     // CS1 line used when extended SPI FLASH is enabled
+    #define CS2_LINE                                                     // CS2 line used when extended SPI FLASH is enabled
+    #define CS3_LINE                                                     // CS3 line used when extended SPI FLASH is enabled
+
+    #define SPI_CS0_PORT                    ~(SPI1_PUSHR)                // for simulator
+    #define SPI_TX_BYTE                     SPI1_PUSHR                   // for simulator
+    #define SPI_RX_BYTE                     SPI1_POPR                    // for simulator
+
+    #define POWER_UP_SPI_FLASH_INTERFACE()  POWER_UP(6, SIM_SCGC6_SPI1)
+    #define CONFIGURE_SPI_FLASH_INTERFACE() _CONFIG_PERIPHERAL(E, 5, (PE_5_SPI1_PCS0 | PORT_SRE_FAST | PORT_DSE_HIGH)); \
+                                            _CONFIG_PERIPHERAL(E, 1, PE_1_SPI1_SCK); \
+                                            _CONFIG_PERIPHERAL(E, 2, (PE_2_SPI1_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); \
+                                            _CONFIG_PERIPHERAL(E, 4, (PE_4_SPI1_SIN | PORT_PS_UP_ENABLE)); \
+                                            SPI1_MCR = (SPI_MCR_MSTR | SPI_MCR_DCONF_SPI | SPI_MCR_CLR_RXF | SPI_MCR_CLR_TXF | SPI_MCR_PCSIS_CS0 | SPI_MCR_PCSIS_CS1 | SPI_MCR_PCSIS_CS2 | SPI_MCR_PCSIS_CS3 | SPI_MCR_PCSIS_CS4 | SPI_MCR_PCSIS_CS5); \
+                                            SPI1_CTAR0 = (SPI_CTAR_DBR | SPI_CTAR_FMSZ_8 | SPI_CTAR_PDT_7 | SPI_CTAR_BR_2 | SPI_CTAR_CPHA | SPI_CTAR_CPOL); // for 50MHz bus, 25MHz speed and 140ns min de-select time
+
+    #define POWER_DOWN_SPI_FLASH_INTERFACE() POWER_DOWN(6, SIM_SCGC6_SPI1) // power down SPI interface if no SPI Flash detected
+
+    #define FLUSH_SPI_FIFO_AND_FLAGS()      SPI1_MCR |= SPI_MCR_CLR_RXF; SPI1_SR = (SPI_SR_EOQF | SPI_SR_TFUF | SPI_SR_TFFF | SPI_SR_RFOF | SPI_SR_RFDF);
+
+    #define WRITE_SPI_CMD0(byte)            SPI1_PUSHR = (byte | SPI_PUSHR_CONT | ulChipSelectLine | SPI_PUSHR_CTAS_CTAR0) // write a single byte to the output FIFO - assert CS line
+    #define WRITE_SPI_CMD0_LAST(byte)       SPI1_PUSHR = (byte | SPI_PUSHR_EOQ  | ulChipSelectLine | SPI_PUSHR_CTAS_CTAR0) // write final byte to output FIFO - this will negate the CS line when complete
+    #define READ_SPI_FLASH_DATA()           (unsigned char)(SPI1_POPR)
+    #define WAIT_SPI_RECEPTION_END()        while ((SPI1_SR & SPI_SR_RFDF) == 0) {}
+    #define CLEAR_RECEPTION_FLAG()          SPI1_SR |= SPI_SR_RFDF
     #define SET_SPI_FLASH_MODE()                                         // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
     #define REMOVE_SPI_FLASH_MODE()                                      // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
 #elif defined KINETIS_K80 && defined QSPI_FILE_SYSTEM                    // interface using QSPI
@@ -2215,7 +2249,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define TX_BUFFER_SIZE   (256)                                   // the size of RS232 input and output buffers
         #define RX_BUFFER_SIZE   (32)
     #else
-        #define TX_BUFFER_SIZE   (QUEUE_TRANSFER)(1.0 * 1024)            // the size of RS232 input and output buffers
+        #define TX_BUFFER_SIZE   (QUEUE_TRANSFER)(1.5 * 1024)            // the size of RS232 input and output buffers
         #define RX_BUFFER_SIZE   (128)
     #endif
   //#define TRUE_UART_TX_2_STOPS                                         // allow true 2 stop bit transmission timing on devices without this UART controller support

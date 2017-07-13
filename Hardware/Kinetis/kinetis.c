@@ -901,9 +901,13 @@ extern void uEnable_Interrupt(void)
     #endif
 extern void DONT_INLINE uMask_Interrupt(unsigned char ucMaskLevel) // {102}
 {
-    #if !defined KINETIS_KL && !defined KINETIS_KE && !defined KINETIS_KV && !defined _WINDOWS
+    #if !defined KINETIS_KL && !defined KINETIS_KE && !defined KINETIS_KV
+        #if defined _WINDOWS
+    kinetis.CORTEX_M4_REGS.ulBASEPRI = ucMaskLevel;                       // value 0 has no effect - non-zero defines the base priority for exception processing (the processor does not process any exception with a priority value greater than or equal to BASEPRI))
+        #else
     asm("msr basepri, r0");                                               // modify the base priority to block interrupts with a lower priority than this level
     asm("bx lr");                                                         // return
+        #endif
     #endif
 }
 #endif

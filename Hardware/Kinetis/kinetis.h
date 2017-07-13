@@ -975,12 +975,12 @@ typedef struct stRESET_VECTOR
 #if defined PHRASE_PROGRAMMING_METHOD
     #define FLASH_GRANULARITY   (4 * 1024)                               // smallest sector which can be erased independently
     #define FLEXRAM_MAX_SECTION_COPY_SIZE (1 * 1024)
+#elif defined KINETIS_K24 || defined KINETIS_K80 || defined KINETIS_KL82  // K24, K80 and KL82 without phrase programming still uses 4k sectors
+    #define FLASH_GRANULARITY   (4 * 1024)                               // smallest sector which can be erased independently
 #elif defined KINETIS_KE
     #define FLASH_GRANULARITY   (512)                                    // smallest sector which can be erased independently
 #elif (defined KINETIS_KL || (defined KINETIS_MAX_SPEED && (KINETIS_MAX_SPEED <= 50000000))) && !defined KINETIS_KW2X // {42}{49}
     #define FLASH_GRANULARITY   (1 * 1024)                               // smallest sector which can be erased independently
-#elif defined KINETIS_K24 || defined KINETIS_K80                         // K24 and K80 without phrase programming still uses 4k sectors
-    #define FLASH_GRANULARITY   (4 * 1024)                               // smallest sector which can be erased independently
 #else
     #define FLASH_GRANULARITY   (2 * 1024)                               // smallest sector which can be erased independently
     #define FLEXRAM_MAX_SECTION_COPY_SIZE (2 * 1024)
@@ -1164,8 +1164,20 @@ typedef struct stRESET_VECTOR
 
 // SPI configuration
 //
+#if defined KINETIS_KL || defined KINETIS_KE                             // KL and KE usually have SPI instead of DSPI
+    #if defined KINETIS_KL82
+        #define DSPI_SPI
+    #else
+        #define SPI_SPI
+    #endif
+#else
+    #define DSPI_SPI
+#endif
+
 #if defined KINETIS_K02
     #define SPI_AVAILABLE           1
+#elif defined KINETIS_KL82
+    #define SPI_AVAILABLE           2
 #elif defined KINETIS_K22 && (SIZE_OF_FLASH == (128 * 1024))
     #define SPI_AVAILABLE           2
 #elif (defined KINETIS_K20 && (KINETIS_MAX_SPEED < 100000000))
@@ -2735,9 +2747,14 @@ typedef struct stVECTOR_TABLE
     #if defined KINETIS_KE
         #define IRQ_BLOCK                      ((unsigned char *)(&kinetis.IRQ)) // external IRQ
     #endif
-    #if defined KINETIS_KL || defined KINETIS_KE
+    #if !defined DSPI_SPI
         #define SPI0_BLOCK                     ((unsigned char *)(&kinetis.SPI[0])) // SPI0
         #define SPI1_BLOCK                     ((unsigned char *)(&kinetis.SPI[1])) // SPI1
+    #else
+        #define DSPI0_BLOCK                    ((unsigned char *)(&kinetis.DSPI[0])) // DSPI0
+        #define DSPI1_BLOCK                    ((unsigned char *)(&kinetis.DSPI[1])) // DSPI1
+    #endif
+    #if defined KINETIS_KL || defined KINETIS_KE
         #if KBIS_AVAILABLE > 0
             #define KBI0_BLOCK                 ((unsigned char *)(&kinetis.KBI[0])) // Keyboard interrupt 0
         #endif
@@ -2752,8 +2769,6 @@ typedef struct stVECTOR_TABLE
         #if NUMBER_OF_CAN_INTERFACES > 1
             #define CAN1_BASE_ADD              ((unsigned char *)(&kinetis.CAN[1])) // FLEXCAN module 1
         #endif
-        #define DSPI0_BLOCK                    ((unsigned char *)(&kinetis.DSPI[0])) // DSPI0
-        #define DSPI1_BLOCK                    ((unsigned char *)(&kinetis.DSPI[1])) // DSPI1
         #define CRC_BLOCK                      ((unsigned char *)(&kinetis.CRC)) // {8} CRC 
     #endif
     #if defined LLWU_AVAILABLE
@@ -2978,17 +2993,19 @@ typedef struct stVECTOR_TABLE
     #if defined I2S_AVAILABLE
         #define I2S0_BLOCK                     0x4002f000                // I2S0
     #endif
-    #if defined KINETIS_KL
+    #if !defined DSPI_SPI
         #define SPI0_BLOCK                     0x40076000                // SPI0
         #define SPI1_BLOCK                     0x40077000                // SPI1
     #else
+        #define DSPI0_BLOCK                    0x4002c000                // DSPI0
+        #define DSPI1_BLOCK                    0x4002d000                // DSPI1
+    #endif
+    #if !defined KINETIS_KL
         #if defined MSCAN_CAN_INTERFACE
             #define MSCAN_BASE_ADD             0x40024000                // MSCAN modul
         #else
             #define CAN0_BASE_ADD              0x40024000                // FLEXCAN module 0
         #endif
-        #define DSPI0_BLOCK                    0x4002c000                // DSPI0
-        #define DSPI1_BLOCK                    0x4002d000                // DSPI1
         #if defined KINETIS_KE
             #define IRQ_BLOCK                  0x40031000                // IRQ controller
         #endif
@@ -5124,7 +5141,7 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
     } _KINETIS_I2S_SAI;
 #endif
 
-#if defined KINETIS_KL || defined KINETIS_KE                             // KL and KE have SPI instead of DSPI
+#if !defined DSPI_SPI                                                    // SPI instead of DSPI
   #if defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL43 || defined KINETIS_KL46 // KL devices supporting 16 bit words
     #define SPI0_S             *(volatile unsigned char *)(SPI0_BLOCK + 0x0) // SPI0 status register (read only)
     #if defined KINETIS_KL43
@@ -8582,13 +8599,13 @@ typedef struct stKINETIS_ADMA2_BD
       #define SIM_SCGC6_DMAMUX0              0x00000002
       #define SIM_SCGC6_DMAMUX1              0x00000004
       #define SIM_SCGC6_FLEXCAN0             0x00000010
-    #if !defined KINETIS_KL
-      #if !defined KINETIS_K80
-        #define SIM_SCGC6_LPUART0            0x00000400
+      #if defined DSPI_SPI
+          #define SIM_SCGC6_SPI0             0x00001000
+          #define SIM_SCGC6_SPI1             0x00002000
       #endif
-      #define SIM_SCGC6_SPI0                 0x00001000
-      #define SIM_SCGC6_SPI1                 0x00002000
-    #endif
+      #if !defined KINETIS_KL && !defined KINETIS_K80
+          #define SIM_SCGC6_LPUART0          0x00000400
+      #endif
       #define SIM_SCGC6_SAI0                 0x00008000
       #define SIM_SCGC6_I2S                  0x00008000
       #define SIM_SCGC6_CRC                  0x00040000
@@ -9635,6 +9652,11 @@ typedef struct stKINETIS_ADMA2_BD
         #define PD_4_SPI1_SS             PORT_MUX_ALT2
         #define PD_6_SPI1_MISO           PORT_MUX_ALT5
         #define PD_7_SPI1_MOSI           PORT_MUX_ALT5
+    #elif defined KINETIS_KL82
+        #define PE_5_SPI1_PCS0           PORT_MUX_ALT2
+        #define PE_1_SPI1_SCK            PORT_MUX_ALT2
+        #define PE_2_SPI1_SOUT           PORT_MUX_ALT2
+        #define PE_4_SPI1_SIN            PORT_MUX_ALT2
     #endif
 #endif
 
@@ -14831,5 +14853,6 @@ extern int  fnIsPending(int iInterruptID);                               // {90}
 #define CPACR *(unsigned long *)(CORTEX_M4_BLOCK + 0xd88)                // {13} Co-processor Access Control Register
 
 #if defined KINETIS_K_FPU
+    #define FPCCR *(unsigned long *)(CORTEX_M4_BLOCK + 0xf34)            // floating point context control register
     #define __FPU_PRESENT  1
 #endif

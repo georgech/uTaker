@@ -470,7 +470,7 @@ extern MAIN_FUNCTION_TYPE uTaskerBoot(void)
     do {                                                                 // for each possible code location in the table
 #endif
 #if defined SPI_SW_UPLOAD && !defined MULTIPLE_INTERMEDIATE_CODE_LOCATIONS
-        if (!(fnConfigSPIFileSystem()) && (fnCheckNewCode(&file_header)))// configure SPI interface for maximum speed {3} and see whether waiting code is valid
+        if ((fnConfigSPIFileSystem() == 0) && (fnCheckNewCode(&file_header)))// configure SPI interface for maximum speed {3} and see whether waiting code is valid
 #else
         if (fnCheckNewCode(&file_header) != 0)                           // see whether waiting code is valid
 #endif
@@ -558,7 +558,7 @@ static void fnCopyNewCode(UPLOAD_HEADER *file_header)
     #if defined NO_UFILE_HEADER                                          // {26}
     ptrFile += SIZE_OF_UPLOAD_HEADER;
     #else
-    ptrFile += SIZE_OF_UPLOAD_HEADER + FILE_HEADER;
+    ptrFile += (SIZE_OF_UPLOAD_HEADER + FILE_HEADER);
     #endif
 #endif
 #if defined ADAPTABLE_PARAMETERS                                         // {22}
@@ -621,7 +621,7 @@ static void fnDeleteCodeCopy(void)
 #else
     uFileErase(ptrFile, (MAX_FILE_LENGTH)(file_length + FILE_HEADER));
 #endif
-#if defined SPI_SW_UPLOAD                                                 // {8} the erase of SPI FLASH can take some time. Wait until complete before starting the application.
+#if defined SPI_SW_UPLOAD                                                // {8} the erase of SPI FLASH can take some time. Wait until complete before starting the application.
     uGetFileLength(ptrFile);                                             // this automatically waits for the SPI FLASH to be ready again
 #endif
 }

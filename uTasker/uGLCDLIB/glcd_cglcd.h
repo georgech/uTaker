@@ -2156,35 +2156,35 @@ static void fnStartTouch(void)
             #define REG_TOUCH_RZTHRESH   1058052UL
             #define RESISTANCE_THRESHOLD (1200)
         #if defined FT_800_ENABLE
-	        Ft_Gpu_Hal_Wr16(0, REG_HCYCLE, 408);                         // 320 x 240
-	        Ft_Gpu_Hal_Wr16(0, REG_HOFFSET, 70);
-	        Ft_Gpu_Hal_Wr16(0, REG_HSYNC0, 0);
-	        Ft_Gpu_Hal_Wr16(0, REG_HSYNC1, 10);
-	        Ft_Gpu_Hal_Wr16(0, REG_VCYCLE, 263);
-	        Ft_Gpu_Hal_Wr16(0, REG_VOFFSET, 13);
-	        Ft_Gpu_Hal_Wr16(0, REG_VSYNC0, 0);
-	        Ft_Gpu_Hal_Wr16(0, REG_VSYNC1, 2);
-	        Ft_Gpu_Hal_Wr8(0,  REG_SWIZZLE, 2);
-	        Ft_Gpu_Hal_Wr8(0,  REG_PCLK_POL, 8);
+            Ft_Gpu_Hal_Wr16(0, REG_HCYCLE, 408);                         // 320 x 240
+            Ft_Gpu_Hal_Wr16(0, REG_HOFFSET, 70);
+            Ft_Gpu_Hal_Wr16(0, REG_HSYNC0, 0);
+            Ft_Gpu_Hal_Wr16(0, REG_HSYNC1, 10);
+            Ft_Gpu_Hal_Wr16(0, REG_VCYCLE, 263);
+            Ft_Gpu_Hal_Wr16(0, REG_VOFFSET, 13);
+            Ft_Gpu_Hal_Wr16(0, REG_VSYNC0, 0);
+            Ft_Gpu_Hal_Wr16(0, REG_VSYNC1, 2);
+            Ft_Gpu_Hal_Wr8(0,  REG_SWIZZLE, 2);
+            Ft_Gpu_Hal_Wr8(0,  REG_PCLK_POL, 8);
             Ft_Gpu_Hal_Wr8(0,  REG_PCLK, 8);
-	        Ft_Gpu_Hal_Wr16(0, REG_HSIZE, GLCD_X);
-	        Ft_Gpu_Hal_Wr16(0, REG_VSIZE, GLCD_Y);
+            Ft_Gpu_Hal_Wr16(0, REG_HSIZE, GLCD_X);
+            Ft_Gpu_Hal_Wr16(0, REG_VSIZE, GLCD_Y);
         #else
             Ft_Gpu_Hal_Wr16(0, REG_HCYCLE, 928);                         // original reference
-	        Ft_Gpu_Hal_Wr16(0, REG_HOFFSET, 88);
-	        Ft_Gpu_Hal_Wr16(0, REG_HSYNC0, 0);
-	        Ft_Gpu_Hal_Wr16(0, REG_HSYNC1, 48);
-	        Ft_Gpu_Hal_Wr16(0, REG_VCYCLE, 525);
-	        Ft_Gpu_Hal_Wr16(0, REG_VOFFSET, 32);
-	        Ft_Gpu_Hal_Wr16(0, REG_VSYNC0, 0);
-	        Ft_Gpu_Hal_Wr16(0, REG_VSYNC1, 3);
-	        Ft_Gpu_Hal_Wr8(0,  REG_SWIZZLE, 0);
-	        Ft_Gpu_Hal_Wr8(0,  REG_PCLK_POL, 1);
+            Ft_Gpu_Hal_Wr16(0, REG_HOFFSET, 88);
+            Ft_Gpu_Hal_Wr16(0, REG_HSYNC0, 0);
+            Ft_Gpu_Hal_Wr16(0, REG_HSYNC1, 48);
+            Ft_Gpu_Hal_Wr16(0, REG_VCYCLE, 525);
+            Ft_Gpu_Hal_Wr16(0, REG_VOFFSET, 32);
+            Ft_Gpu_Hal_Wr16(0, REG_VSYNC0, 0);
+            Ft_Gpu_Hal_Wr16(0, REG_VSYNC1, 3);
+            Ft_Gpu_Hal_Wr8(0,  REG_SWIZZLE, 0);
+            Ft_Gpu_Hal_Wr8(0,  REG_PCLK_POL, 1);
             Ft_Gpu_Hal_Wr8(0,  REG_PCLK, 5);
-	        Ft_Gpu_Hal_Wr16(0, REG_HSIZE, 800);
-	        Ft_Gpu_Hal_Wr16(0, REG_VSIZE, 480);
-	        Ft_Gpu_Hal_Wr16(0, REG_CSPREAD, 0);
-	        Ft_Gpu_Hal_Wr16(0, REG_DITHER, 1);
+            Ft_Gpu_Hal_Wr16(0, REG_HSIZE, 800);
+            Ft_Gpu_Hal_Wr16(0, REG_VSIZE, 480);
+            Ft_Gpu_Hal_Wr16(0, REG_CSPREAD, 0);
+            Ft_Gpu_Hal_Wr16(0, REG_DITHER, 1);
         #endif
             Ft_Gpu_Hal_Wr8(0, REG_GPIO_DIR, (0x83 | Ft_Gpu_Hal_Rd8(0, REG_GPIO_DIR))); // set the display enable to '1'
             Ft_Gpu_Hal_Wr8(0, REG_GPIO, (0x083 | Ft_Gpu_Hal_Rd8(0, REG_GPIO)));

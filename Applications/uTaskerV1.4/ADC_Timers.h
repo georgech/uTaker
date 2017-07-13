@@ -1676,7 +1676,7 @@ static void fnConfigure_Timer(void)
         #elif defined TEST_ADC_TIMER
     timer_setup.timer_mode = (TIMER_TRIGGER_ADC | TIMER_PERIODIC | TIMER_MS_VALUE); // period timer
     timer_setup.int_handler = 0;                                         // no interrupts - used together with ADC triggering
-    timer_setup.timer_value += 100;                                      // each subsequent delay increased by 100us
+    timer_setup.timer_value += 100;                                      // each subsequent delay increased by 100ms
         #elif defined TEST_PERIODIC_TIMER
     timer_setup.timer_mode = (TIMER_PERIODIC | TIMER_MS_VALUE);          // period timer interrupt
     timer_setup.timer_value += 100;                                      // each subsequent delay increased by 100us

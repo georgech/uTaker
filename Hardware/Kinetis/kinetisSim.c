@@ -58,6 +58,7 @@
     24.03.2017 Reset all host endpoints data frame types                 {42}
     03.05.2017 Improve LPUART and UART rx DMA operation
     18.05.2017 Add optional logging of UART reception to a simulation file {43}
+    13.07.2017 Define KL82 disabled ports                                {44}
  
 */  
                           
@@ -246,6 +247,12 @@ static const unsigned long ulDisabled[PORTS_AVAILABLE] = {
     0x00000c38,                                                          // port C disabled default pins
     0x0000009d,                                                          // port D disabled default pins
     0x83000003                                                           // port E disabled default pins
+    #elif defined KINETIS_KL82                                           // {44}
+    0x2003fc00,                                                          // port A disabled default pins
+    0x00f00ff0,                                                          // port B disabled default pins
+    0x000ffc38,                                                          // port C disabled default pins
+    0x0000ff9d,                                                          // port D disabled default pins
+    0xffffffff                                                           // port E disabled default pins
     #else                                                                // KL20/KL40
     0x0003f0e6,                                                          // port A disabled default pins
     0x00000000,                                                          // port B disabled default pins
@@ -561,19 +568,7 @@ static void fnSetDevice(unsigned long *port_inits)
     FTFL_FPROT2 = (unsigned char)(KINETIS_FLASH_CONFIGURATION_PROGRAM_PROTECTION >> 8);
     FTFL_FPROT3 = (unsigned char)(KINETIS_FLASH_CONFIGURATION_PROGRAM_PROTECTION);
 #endif
-#if defined KINETIS_KL || defined KINETIS_KE
-    SPI0_C1     = SPI_C1_CPHA;
-    SPI0_S      = SPI_S_SPTEF;
-    #if !defined KINETIS_KL03
-    SPI1_C1     = SPI_C1_CPHA;
-    SPI1_S      = SPI_S_SPTEF;
-    #endif
-    #if defined MSCAN_CAN_INTERFACE
-    MSCAN_CANCTL0 = MSCAN_CANCTL0_INITRQ;
-    MSCAN_CANCTL1 = (MSCAN_CANCTL1_INITAK | MSCAN_CANCTL1_LISTEN);
-    MSCAN_CANTFLG = (MSCAN_CANTFLG_TXE0 | MSCAN_CANTFLG_TXE1 | MSCAN_CANTFLG_TXE2);
-    #endif
-#else
+#if defined DSPI_SPI
     SPI0_MCR    = (SPI_MCR_DOZE | SPI_MCR_HALT);                         // DSPI
     SPI0_CTAR0  = 0x78000000;
     SPI0_CTAR1  = 0x78000000;
@@ -590,6 +585,21 @@ static void fnSetDevice(unsigned long *port_inits)
     SPI2_CTAR1  = 0x78000000;
     SPI2_SR     = 0x02000000;
     #endif
+#else
+    SPI0_C1     = SPI_C1_CPHA;
+    SPI0_S      = SPI_S_SPTEF;
+    #if !defined KINETIS_KL03
+    SPI1_C1     = SPI_C1_CPHA;
+    SPI1_S      = SPI_S_SPTEF;
+    #endif
+#endif
+#if defined KINETIS_KL || defined KINETIS_KE
+    #if defined MSCAN_CAN_INTERFACE
+    MSCAN_CANCTL0 = MSCAN_CANCTL0_INITRQ;
+    MSCAN_CANCTL1 = (MSCAN_CANCTL1_INITAK | MSCAN_CANCTL1_LISTEN);
+    MSCAN_CANTFLG = (MSCAN_CANTFLG_TXE0 | MSCAN_CANTFLG_TXE1 | MSCAN_CANTFLG_TXE2);
+    #endif
+#else
     SDHC_PROCTL    = SDHC_PROCTL_EMODE_LITTLE;                           // SDHC
     SDHC_SYSCTL    = (SDHC_SYSCTL_SDCLKFS_256 | SDHC_SYSCTL_SDCLKEN);
     SDHC_IRQSTATEN = 0x117f013f;
@@ -9198,6 +9208,36 @@ extern void fnGetPenSamples(unsigned short *ptrX, unsigned short *ptrY)
     else {
         *ptrX = (MIN_X_TOUCH + ((iPenLocationX * ((MAX_X_TOUCH - MIN_X_TOUCH)))/GLCD_X));
         *ptrY = (MIN_Y_TOUCH + ((iPenLocationY * ((MAX_Y_TOUCH - MIN_Y_TOUCH)))/GLCD_Y));
+    }
+}
+#endif
+
+#if 1 //defined RUN_IN_FREE_RTOS
+extern unsigned long *fnGetRegisterAddress(unsigned long ulAddress)
+{
+    ulAddress -= 0xe000e000;
+    ulAddress += (unsigned long)CORTEX_M4_BLOCK;
+    return (unsigned long *)ulAddress;
+}
+
+extern void fnSetReg(int iRef, unsigned long ulValue)
+{
+    switch (iRef) {
+    case 0:
+        kinetis.CORTEX_M4_REGS.ulR0 = ulValue;
+        break;
+    case 14:
+        kinetis.CORTEX_M4_REGS.ulPSP = ulValue;
+        break;
+    case 15:
+        kinetis.CORTEX_M4_REGS.ulMSP = ulValue;
+        break;
+    case 19:
+        kinetis.CORTEX_M4_REGS.ulPRIMASK = ulValue;
+        break;
+    case 20:
+        kinetis.CORTEX_M4_REGS.ulFAULTMASK = ulValue;
+        break;
     }
 }
 #endif

@@ -252,7 +252,15 @@ BaseType_t xReturn;
 portFORCE_INLINE static void vPortRaiseBASEPRI( void )
 {
 #if defined _WINDOWS
-// To do...
+    extern void uMask_Interrupt(unsigned char ucMaskLevel);
+  //mov.w r3, $50
+  //msr BASEPRI, r3                                                      // set configMAX_SYSCALL_INTERRUPT_PRIORITY (0x50) to BASEPRI register
+  //isb sy                                                               // ISB acts as an instruction synchronization barrier.
+                                                                         // It flushes the pipeline of the processor, so that all instructions following the ISB are fetched from cache or memory again, after the ISB instruction has been completed.
+  //dsb sy                                                               // DSB acts as a special data synchronization memory barrier.
+                                                                         // Instructions that come after the DSB, in program order, do not execute until the DSB instruction completes.
+                                                                         // The DSB instruction completes when all explicit memory accesses before it complete.
+    uMask_Interrupt(configMAX_SYSCALL_INTERRUPT_PRIORITY);
 #else
     uint32_t ulNewBASEPRI;
 	__asm volatile

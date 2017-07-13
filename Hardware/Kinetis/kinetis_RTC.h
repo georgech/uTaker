@@ -233,7 +233,7 @@ extern int fnConfigureRTC(void *ptrSettings)
         iIRQ++;
     case RTC_TICK_SEC:                                                   // interrupt on each second
     #if defined SUPPORT_SW_RTC
-        if (RTC_INCREMENT & ptr_rtc_setup->command) {                    // second increment is to be performed as if it were a RTC interrupt
+        if ((RTC_INCREMENT & ptr_rtc_setup->command) != 0) {             // second increment is to be performed as if it were a RTC interrupt
             _rtc_handler();
             break;
         }
@@ -341,7 +341,7 @@ extern int fnConfigureRTC(void *ptrSettings)
             fnConvertSecondsTime(0, RTC_TSR);                            // {2} take the present seconds count value, convert and set to time and date
         #elif defined RTC_USES_LPO_1kHz
             SIM_SOPT1 = ((SIM_SOPT1 & ~SIM_SOPT1_OSC32KSEL_MASK) | SIM_SOPT1_OSC32KSEL_LPO_1kHz); // select 1kHz clock as source
-            if ((RCM_SRS0 & (RCM_SRS0_POR | RCM_SRS0_LVD)) || (*RTC_VALID_LOCATION != RTC_VALID_PATTERN)) { // power on reset
+            if (((RCM_SRS0 & (RCM_SRS0_POR | RCM_SRS0_LVD)) != 0) || (*RTC_VALID_LOCATION != RTC_VALID_PATTERN)) { // power on reset
             #if defined _WINDOWS
                 RTC_TSR = 0;
             #endif

@@ -3,6 +3,7 @@
 # 18.07.2011 Add zero_config.c and K40 linker script options
 # 20.04.2014 Add m0+ compile option and new linker script file name
 # 05.08.2014 Modified compiler and linker options to achieve around 7% smaller code size
+# 13.07.2017 Add peripheral an SPI Flash dependencies
 
 # All objects (Hardware, application, uTasker, stack)
 #
@@ -18,13 +19,31 @@ DEPENDS = ../config.h ../types.h ../../../Hardware/hardware.h ../../../Hardware/
 C_FLAGS = -mcpu=cortex-m4 -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char  -ffunction-sections -fdata-sections  
 #C_FLAGS = -mcpu=cortex-m7 -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections 
 
-
 OPTS    = -D _GNU -D _KINETIS -g -c -Os
 
 CC      = arm-none-eabi-gcc
 CC_OBJ  = arm-none-eabi-objcopy
 CC_SIZE = arm-none-eabi-size
 
+# Hardware peripheral dependencies
+#
+PERIPH_DEP = ../../../Hardware/Kinetis/kinetis_FLASH.h \
+             ../../../Hardware/Kinetis/kinetis_K_CLOCK.h \
+             ../../../Hardware/Kinetis/kinetis_MCG_LITE.h \
+             ../../../Hardware/Kinetis/kinetis_HIRC.h \
+             ../../../Hardware/Kinetis/kinetis_KL_CLOCK.h \
+             ../../../Hardware/Kinetis/kinetis_KV_CLOCK.h \
+             ../../../Hardware/Kinetis/kinetis_KW_CLOCK.h \
+             ../../../Hardware/Kinetis/kinetis_KM_CLOCK.h \
+             ../../../Hardware/Kinetis/kinetis_KE_CLOCK.h
+
+# SPI FLASH dependencies
+#
+SPI_FLASH_DEP = ../../../Hardware/Kinetis/spi_flash_kinetis_atmel.h \
+                ../../../Hardware/Kinetis/spi_flash_kinetis_stmicro.h \
+				../../../Hardware/Kinetis/spi_flash_kinetis_sst25.h \
+				../../../Hardware/Kinetis/spi_flash_w25q.h \
+				../../../Hardware/Kinetis/spi_flash_kinetis_s25fl1-k.h
 
 all: uTaskerBoot.elf
 
@@ -36,7 +55,7 @@ Build/uTaskerBootLoader.o: ../uTaskerBootLoader.c $(DEPENDS)
 # Hardware files
 #
 
-Build/kinetis_boot.o: ../../../Hardware/Kinetis/kinetis_boot.c $(DEPENDS)
+Build/kinetis_boot.o: ../../../Hardware/Kinetis/kinetis_boot.c $(DEPENDS) $(PERIPH_DEP) $(SPI_FLASH_DEP)
 		$(CC) $(C_FLAGS) -I../../uTaskerBoot $(OPTS) ../../../Hardware/Kinetis/kinetis_boot.c -o Build/kinetis_boot.o
 
 

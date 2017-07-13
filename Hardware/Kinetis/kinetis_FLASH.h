@@ -368,7 +368,7 @@ static int fnFlashNow(unsigned char ucCommand, unsigned long *ptrWord, unsigned 
             #endif
             }
             else {
-                _EXCEPTION("OTP location already programmed and can not be modified!!!");
+                _EXCEPTION("OTP location already programmed and cannot be modified!!!");
                 return FTFL_STAT_FPVIOL;                                 // signal programming error
             }
         }
@@ -1229,7 +1229,7 @@ extern int fnGetParameters(unsigned char ucValidBlock, unsigned short usParamete
     ptrPar += usParameterReference;                                      // {10} move to double-long word location
         #endif
 
-    while (usLength--) {
+    while (usLength-- != 0) {
         fnGetParsFile((unsigned char *)ptrPar, ucValue++, 1);
         ptrPar += (PARAMETER_STATUS_SIZE/2);
     }

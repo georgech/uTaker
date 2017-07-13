@@ -108,6 +108,7 @@
     17.01.2015 Add file hide and write-protect commands                  {83}
     12.12.2016 Add CMSIS CFFT and AES                                    {84}
     02.02.2017 Add low power cycling control                             {85} - see video https://youtu.be/v4UnfcDiaE4
+    05.07.2017 Modify SD card sector write interface                     {86}
 
 */
 
@@ -126,7 +127,7 @@
 /*                          local definitions                          */
 /* =================================================================== */
 
-//#define TEST_SDCARD_SECTOR_WRITE                                       // {44} activate to allow sector writes to be tested
+#define TEST_SDCARD_SECTOR_WRITE                                         // {44} activate to allow sector writes to be tested
 //#define TEST_I2C_INTERFACE                                             // activate to enable special I2C tests via menu
 //#define DEVELOP_PHY_CONTROL                                            // {33} activate to enable PHY register dump and writes to individual register addresses
                                                                          // note that STOP_MII_CLOCK should not be enabled when using this (kinetis)
@@ -910,87 +911,87 @@ static const DEBUG_COMMAND tI2CCommand[] = {
 };
 
 static const DEBUG_COMMAND tDiskCommand[] = {                            // {17}
-    {"up",                "go to main menu",                       DO_HELP,          DO_HELP_UP },
+    {"up",                "go to main menu",                       DO_HELP,          DO_HELP_UP},
 #if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST // {81}
     #if DISK_COUNT > 1
-    {"disk",              "select disk [C/D/E]",                   DO_DISK,          DO_DISK_NUMBER },
+    {"disk",              "select disk [C/D/E]",                   DO_DISK,          DO_DISK_NUMBER},
     #endif
-    {"info",              "utFAT/card info",                       DO_DISK,          DO_INFO },
-    {"dir",               "[path] show directory content",         DO_DISK,          DO_DIR },
+    {"info",              "utFAT/card info",                       DO_DISK,          DO_INFO},
+    {"dir",               "[path] show directory content",         DO_DISK,          DO_DIR},
     #if defined UTFAT_UNDELETE || defined UTFAT_EXPERT_FUNCTIONS         // {60}
-    {"dird",              "[path] show deleted directory content", DO_DISK,          DO_DIR_DELETED },
+    {"dird",              "[path] show deleted directory content", DO_DISK,          DO_DIR_DELETED},
     #endif
     #if defined UTFAT_EXPERT_FUNCTIONS                                   // {60}
-    {"dirh",              "[path] show hidden content",            DO_DISK,          DO_DIR_HIDDEN },
-  //{"dirc",              "[path] show corrupted directory content", DO_DISK,        DO_DIR_CORRUPTED },
-    {"infof",             "[path] show file info",                 DO_DISK,          DO_INFO_FILE },
-    {"infod",             "[path] show deleted info",              DO_DISK,          DO_INFO_DELETED },
+    {"dirh",              "[path] show hidden content",            DO_DISK,          DO_DIR_HIDDEN},
+  //{"dirc",              "[path] show corrupted directory content", DO_DISK,        DO_DIR_CORRUPTED},
+    {"infof",             "[path] show file info",                 DO_DISK,          DO_INFO_FILE},
+    {"infod",             "[path] show deleted info",              DO_DISK,          DO_INFO_DELETED},
     #endif
-    {"cd",                "[path] change dir. (.. for up)",        DO_DISK,          DO_CHANGE_DIR },
+    {"cd",                "[path] change dir. (.. for up)",        DO_DISK,          DO_CHANGE_DIR},
     #if defined UTFAT_WRITE                                              // {45}
-    {"file" ,             "[path] new empty file",                 DO_DISK,          DO_NEW_FILE },
-    {"write",             "[path] test write to file",             DO_DISK,          DO_WRITE_FILE },
-    {"mkdir" ,            "new empty dir",                         DO_DISK,          DO_NEW_DIR },
-    {"rename" ,           "[from] [to] rename",                    DO_DISK,          DO_RENAME },
-    {"trunc" ,            "truncate to [length] [path]",           DO_DISK,          DO_TEST_TRUNCATE }, // {59}
+    {"file" ,             "[path] new empty file",                 DO_DISK,          DO_NEW_FILE},
+    {"write",             "[path] test write to file",             DO_DISK,          DO_WRITE_FILE},
+    {"mkdir" ,            "new empty dir",                         DO_DISK,          DO_NEW_DIR},
+    {"rename" ,           "[from] [to] rename",                    DO_DISK,          DO_RENAME},
+    {"trunc" ,            "truncate to [length] [path]",           DO_DISK,          DO_TEST_TRUNCATE}, // {59}
         #if defined UTFAT_EXPERT_FUNCTIONS                               // {83}
-    {"hide",              "[path] file/dir to hide",               DO_DISK,          DO_WRITE_HIDE },
-    {"unhide",            "[path] file/dir to un-hide",            DO_DISK,          DO_WRITE_UNHIDE },
-    {"prot",              "[path] file/dir to write-protect",      DO_DISK,          DO_SET_PROTECT },
-    {"unprot",            "[path] file/dir to un-protet",          DO_DISK,          DO_REMOVE_PROTECT },
+    {"hide",              "[path] file/dir to hide",               DO_DISK,          DO_WRITE_HIDE},
+    {"unhide",            "[path] file/dir to un-hide",            DO_DISK,          DO_WRITE_UNHIDE},
+    {"prot",              "[path] file/dir to write-protect",      DO_DISK,          DO_SET_PROTECT},
+    {"unprot",            "[path] file/dir to un-protet",          DO_DISK,          DO_REMOVE_PROTECT},
         #endif
     #endif
     #if !defined LOW_MEMORY
     {"print",             "[path] print file content",             DO_DISK,          DO_PRINT_FILE },
     #endif
-  //{"root",              "set root dir",                          DO_DISK,          DO_ROOT }, {19}
+  //{"root",              "set root dir",                          DO_DISK,          DO_ROOT}, {19}
     #if defined UTFAT_WRITE                                              // {45}
-    {"del",               "[path] delete file or dir.",            DO_DISK,          DO_DELETE },
+    {"del",               "[path] delete file or dir.",            DO_DISK,          DO_DELETE},
         #if defined UTFAT_SAFE_DELETE                                    // {60}
-    {"dels",              "[path] safe delete file or dir.",       DO_DISK,          DO_DELETE_SAFE },
+    {"dels",              "[path] safe delete file or dir.",       DO_DISK,          DO_DELETE_SAFE},
         #endif
         #if defined UTFAT_UNDELETE && defined UTFAT_WRITE                // {60}
-    {"undel",             "undelete [name]",                       DO_DISK,          DO_UNDELETE },
+    {"undel",             "undelete [name]",                       DO_DISK,          DO_UNDELETE},
         #endif
         #if defined UTFAT_FORMATTING
-    {"format",            "[-16/12] [label] format (unformatted) disk",DO_DISK,      DO_FORMAT }, // {26}
+    {"format",            "[-16/12] [label] format (unformatted) disk",DO_DISK,      DO_FORMAT}, // {26}
         #endif
         #if defined UTFAT_FULL_FORMATTING
-    {"fformat",           "[-16/12] [label] full format (unformatted) disk",DO_DISK, DO_FORMAT_FULL }, // {26}   
+    {"fformat",           "[-16/12] [label] full format (unformatted) disk",DO_DISK, DO_FORMAT_FULL}, // {26}   
         #endif
         #if defined UTFAT_FORMATTING
-    {"re-format",         "[-16/12] [label] reformat disk!!!!!",      DO_DISK,       DO_REFORMAT }, // {26} 
+    {"re-format",         "[-16/12] [label] reformat disk!!!!!",      DO_DISK,       DO_REFORMAT}, // {26} 
         #endif
         #if defined UTFAT_FULL_FORMATTING
     {"re-fformat",        "[-16/12] [label] full reformat disk!!!!!", DO_DISK,       DO_REFORMAT_FULL },// {26}
         #endif
     #endif
         #if !defined LOW_MEMORY
-    {"sect",              "[hex no.] display sector",              DO_DISK,          DO_DISPLAY_SECTOR },
+    {"sect",              "[hex no.] display sector",              DO_DISK,          DO_DISPLAY_SECTOR},
         #endif
     #if defined UTFAT_WRITE
         #if defined NAND_FLASH_FAT
-    {"secti",             "[hex number] display sector info",      DO_DISK,          DO_DISPLAY_SECTOR_INFO },
-    {"del-remap",         "delete remapping table!!",              DO_DISK,          DO_DELETE_REMAP_INFO },
-    {"del-FAT",           "delete FAT",                            DO_DISK,          DO_DELETE_FAT },
-    {"page",              "[hex number] display physical page",    DO_DISK,          DO_DISPLAY_PAGE },
+    {"secti",             "[hex number] display sector info",      DO_DISK,          DO_DISPLAY_SECTOR_INFO},
+    {"del-remap",         "delete remapping table!!",              DO_DISK,          DO_DELETE_REMAP_INFO},
+    {"del-FAT",           "delete FAT",                            DO_DISK,          DO_DELETE_FAT},
+    {"page",              "[hex number] display physical page",    DO_DISK,          DO_DISPLAY_PAGE},
             #if defined VERIFY_NAND
-    {"tnand",             "write test patterns to NAND",           DO_DISK,          DO_TEST_NAND },
-    {"vnand",             "verify test patterns in NAND",          DO_DISK,          DO_VERIFY_NAND },
+    {"tnand",             "write test patterns to NAND",           DO_DISK,          DO_TEST_NAND},
+    {"vnand",             "verify test patterns in NAND",          DO_DISK,          DO_VERIFY_NAND},
             #endif
         #elif defined TEST_SDCARD_SECTOR_WRITE
-    {"sectw",             "[hex no.] [patt.] [cnt]",               DO_DISK,          DO_WRITE_SECTOR }, // {44}
+    {"sectw",             "[hex no.] [offset] [val] [cnt]",        DO_DISK,          DO_WRITE_SECTOR}, // {44}{86}
             #if defined UTFAT_MULTIPLE_BLOCK_WRITE
-    {"sectmw",            "multi-block [dito]",                    DO_DISK,          DO_WRITE_MULTI_SECTOR },
+    {"sectmw",            "multi-block [dito]",                    DO_DISK,          DO_WRITE_MULTI_SECTOR},
                 #if defined UTFAT_PRE_ERASE
-    {"sectmwp",           "multi-block with pre-erase [dito]",     DO_DISK,          DO_WRITE_MULTI_SECTOR_PRE },
+    {"sectmwp",           "multi-block with pre-erase [dito]",     DO_DISK,          DO_WRITE_MULTI_SECTOR_PRE},
                 #endif
             #endif
         #endif
     #endif
-    {"help",              "Display menu specific help",            DO_HELP,          DO_MAIN_HELP },
+    {"help",              "Display menu specific help",            DO_HELP,          DO_MAIN_HELP},
 #endif
-    {"quit",              "Leave command mode",                    DO_TELNET,        DO_TELNET_QUIT },
+    {"quit",              "Leave command mode",                    DO_TELNET,        DO_TELNET_QUIT},
 };
 
 static const DEBUG_COMMAND tFTP_TELNET_Command[] = {                     // {37}
@@ -4878,28 +4879,41 @@ static int fnDoDisk(unsigned char ucType, CHAR *ptrInput)
     case DO_WRITE_MULTI_SECTOR_PRE:
         #endif
     #endif
-    case DO_WRITE_SECTOR:
+    case DO_WRITE_SECTOR:                                                // {86} write a number of bytes to a sector at a specified offset in the sector
         {
             unsigned long ulSectorNumber = fnHexStrHex(ptrInput);        // the sector number
-            int i;
-            unsigned char ucPattern = 0x00;
-            unsigned char ucTestPattern[512];
-            unsigned char ucSectorCount = 1;
-            if (fnJumpWhiteSpace(&ptrInput) == 0) {
-                ucPattern = (unsigned char)fnHexStrHex(ptrInput);
+            unsigned short usOffset = 0;
+            unsigned char  ucPattern = 0x00;
+            unsigned long  ulBuffer[512/sizeof(unsigned long)];
+            unsigned char *ptrStart = (unsigned char *)ulBuffer;
+            unsigned short usByteCount = 1;
+            unsigned short usThisWriteLength;
+            if (fnJumpWhiteSpace(&ptrInput) == 0) {                      // move over the input to the next parameter
+                usOffset = (unsigned short)fnDecStrHex(ptrInput);
+                if (fnJumpWhiteSpace(&ptrInput) == 0) {                  // move over the input to the next parameter
+                    ucPattern = (unsigned char)fnHexStrHex(ptrInput);
+                    if (fnJumpWhiteSpace(&ptrInput) == 0) {
+                        usByteCount = (unsigned short)fnDecStrHex(ptrInput);
+                        if (usByteCount == 0) {
+                            usByteCount = 1;
+                        }
+                    }
+                }
+                usOffset %= 512;
             }
-            for (i = 0; i < sizeof(ucTestPattern); i++) {                // generate the test pattern starting with the defined value
-                ucTestPattern[i] = ucPattern++;
+            if (fnReadSector(ucPresentDisk, (unsigned char *)ulBuffer, ulSectorNumber) != 0) { // read the present sector content
+                fnDebugMsg(" FAILED to read!!\r\n");
+                break;
             }
-            fnDebugMsg("Writing sector(s) ");
+            ptrStart += usOffset;
+            usThisWriteLength = usByteCount;
+            if ((usOffset + usByteCount) > 512) {                        // limit to a single sector
+                usThisWriteLength = (512 - usOffset);
+            }
+            uMemset(ptrStart, ucPattern, usThisWriteLength);             // modify the sector content in the buffer
+            fnDebugMsg("Writing sector ");
             fnDebugHex(ulSectorNumber, (WITH_LEADIN | sizeof(ulSectorNumber)));
             TOGGLE_TEST_OUTPUT();                                        // enable measurement of the write time
-            if (fnJumpWhiteSpace(&ptrInput) == 0) {
-                ucSectorCount = (unsigned char)fnHexStrHex(ptrInput);
-                if (ucSectorCount == 0) {
-                    ucSectorCount = 1;
-                }
-            }
     #if defined UTFAT_MULTIPLE_BLOCK_WRITE
             if (ucType == DO_WRITE_MULTI_SECTOR) {
                 fnPrepareBlockWrite(ucPresentDisk, ucSectorCount, 0);    // multiple sector write but without pre-delete
@@ -4911,18 +4925,13 @@ static int fnDoDisk(unsigned char ucType, CHAR *ptrInput)
             }
         #endif
     #endif
-else {
-//fnPrepareBlockWrite(ucPresentDisk, 0, 0); // test abort
-}
-            do {
-                if (fnWriteSector(ucPresentDisk, ucTestPattern, ulSectorNumber) != UTFAT_SUCCESS) {
-                    fnDebugMsg(" Sector write error!\n\r");
-                }
-                else {
-                    fnDebugMsg(" - OK\n\r");                             // sector write successful
-                }
-                ulSectorNumber++;
-            } while (--ucSectorCount != 0);
+          //fnPrepareBlockWrite(ucPresentDisk, 0, 0); // test abort
+            if (fnWriteSector(ucPresentDisk, (unsigned char *)ulBuffer, ulSectorNumber) != UTFAT_SUCCESS) { // write the modified sector back
+                fnDebugMsg(" Sector write error!\n\r");
+            }
+            else {
+                fnDebugMsg(" - OK\n\r");                                 // sector write successful
+            }
             TOGGLE_TEST_OUTPUT();
         }
         break;

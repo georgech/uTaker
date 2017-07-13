@@ -79,6 +79,10 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
+#if defined _WINDOWS
+    extern unsigned long *fnGetRegisterAddress(unsigned long ulAddress);
+#endif
+
 #ifndef __VFP_FP__
 	#error This port can only be used when the project options are configured to enable hardware floating point support.
 #endif
@@ -241,7 +245,11 @@ StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, TaskFunction_t px
 
 	*pxTopOfStack = portINITIAL_XPSR;	/* xPSR */
 	pxTopOfStack--;
+#if defined _WINDOWS
+    *pxTopOfStack = ((StackType_t)pxCode);	/* PC */
+#else
 	*pxTopOfStack = ( ( StackType_t ) pxCode ) & portSTART_ADDRESS_MASK;	/* PC */
+#endif
 	pxTopOfStack--;
 	*pxTopOfStack = ( StackType_t ) portTASK_RETURN_ADDRESS;	/* LR */
 
@@ -277,6 +285,11 @@ static void prvTaskExitError( void )
 void vPortSVCHandler( void )
 {
 #if defined _WINDOWS
+    
+//    fnSetReg(16, (unsigned long)pxCurrentTCB->pxTopOfStack); // set the process stack pointer
+//    fnPopRegisters();                                                    // pop the task's registers
+    uMask_Interrupt(0);
+  //bx r14                                                               // jump to the task's next address to be executed
 #else
 	__asm volatile (
 					"	ldr	r3, pxCurrentTCBConst2		\n" /* Restore the context. */
@@ -299,6 +312,25 @@ void vPortSVCHandler( void )
 static void prvPortStartFirstTask( void )
 {
 #if defined _WINDOWS
+    extern void fnSetReg(int iRef, unsigned long ulValue);
+  //" ldr r0, =0xE000ED08 	\n" /* Use the NVIC offset register to locate the stack. */
+  //" ldr r0, [r0] 			\n"
+  //" ldr r0, [r0] 			\n"
+    unsigned long ulPtr = *fnGetRegisterAddress(0xE000ED08);             // the vector table address content points to the reset vector location
+    ulPtr = *(unsigned long *)ulPtr;                                     // get the initial stack pointer value
+  //" msr msp, r0			\n"
+    fnSetReg(15, ulPtr);                                                 // set the initial stack pointer value to the main stack pointer
+  //" cpsie i				\n"
+    fnSetReg(19, 0);                                                     // clear the global interrupt mask
+  //" cpsie f				\n"
+    fnSetReg(20, 0);                                                     // clear the hard-fault interrupt mask
+  //dsb sy                                                               // DSB acts as a special data synchronization memory barrier.
+                                                                         // Instructions that come after the DSB, in program order, do not execute until the DSB instruction completes.
+                                                                         // The DSB instruction completes when all explicit memory accesses before it complete.
+  //isb sy                                                               // ISB acts as an instruction synchronization barrier.
+                                                                         // It flushes the pipeline of the processor, so that all instructions following the ISB are fetched from cache or memory again, after the ISB instruction has been completed.
+  //" svc 0					\n"                                          // supervisor call
+    vPortSVCHandler();                                                   // the switch to the supervisor (SVC interrupt handling routine)
 #else
 	__asm volatile(
 					" ldr r0, =0xE000ED08 	\n" /* Use the NVIC offset register to locate the stack. */
@@ -336,7 +368,11 @@ BaseType_t xPortStartScheduler( void )
 	#if( configASSERT_DEFINED == 1 )
 	{
 		volatile uint32_t ulOriginalPriority;
+#if defined _WINDOWS
+        volatile uint8_t * const pucFirstUserPriorityRegister = (uint8_t * const)fnGetRegisterAddress(portNVIC_IP_REGISTERS_OFFSET_16 + portFIRST_USER_INTERRUPT_NUMBER);
+#else
 		volatile uint8_t * const pucFirstUserPriorityRegister = ( volatile uint8_t * const ) ( portNVIC_IP_REGISTERS_OFFSET_16 + portFIRST_USER_INTERRUPT_NUMBER );
+#endif
 		volatile uint8_t ucMaxPriorityValue;
 
 		/* Determine the maximum priority from which ISR safe FreeRTOS API
@@ -350,7 +386,9 @@ BaseType_t xPortStartScheduler( void )
 		/* Determine the number of priority bits available.  First write to all
 		possible bits. */
 		*pucFirstUserPriorityRegister = portMAX_8_BIT_VALUE;
-
+#if defined _WINDOWS
+        *pucFirstUserPriorityRegister &= 0xf0;
+#endif
 		/* Read the value back to see how many bits stuck. */
 		ucMaxPriorityValue = *pucFirstUserPriorityRegister;
 
@@ -378,8 +416,13 @@ BaseType_t xPortStartScheduler( void )
 	#endif /* conifgASSERT_DEFINED */
 
 	/* Make PendSV and SysTick the lowest priority interrupts. */
+#if defined _WINDOWS
+    *fnGetRegisterAddress(0xe000ed20) |= portNVIC_PENDSV_PRI;
+    *fnGetRegisterAddress(0xe000ed20) |= portNVIC_SYSTICK_PRI;
+#else
 	portNVIC_SYSPRI2_REG |= portNVIC_PENDSV_PRI;
 	portNVIC_SYSPRI2_REG |= portNVIC_SYSTICK_PRI;
+#endif
 
 	/* Start the timer that generates the tick ISR.  Interrupts are disabled
 	here already. */
@@ -392,7 +435,11 @@ BaseType_t xPortStartScheduler( void )
 	vPortEnableVFP();
 
 	/* Lazy save always. */
+#if defined _WINDOWS
+    *fnGetRegisterAddress((unsigned long)portFPCCR) |= portASPEN_AND_LSPEN_BITS;
+#else
 	*( portFPCCR ) |= portASPEN_AND_LSPEN_BITS;
+#endif
 
 	/* Start the first task. */
 	prvPortStartFirstTask();
@@ -694,8 +741,13 @@ _WEAK_FUNCTION void vPortSetupTimerInterrupt( void )
 	#endif /* configUSE_TICKLESS_IDLE */
 
 	/* Configure SysTick to interrupt at the requested rate. */
+#if defined _WINDOWS
+    *fnGetRegisterAddress(0xe000e014) = (configSYSTICK_CLOCK_HZ / configTICK_RATE_HZ) - 1UL;
+    *fnGetRegisterAddress(0xe000e010) = (portNVIC_SYSTICK_CLK_BIT | portNVIC_SYSTICK_INT_BIT | portNVIC_SYSTICK_ENABLE_BIT);
+#else
 	portNVIC_SYSTICK_LOAD_REG = ( configSYSTICK_CLOCK_HZ / configTICK_RATE_HZ ) - 1UL;
 	portNVIC_SYSTICK_CTRL_REG = ( portNVIC_SYSTICK_CLK_BIT | portNVIC_SYSTICK_INT_BIT | portNVIC_SYSTICK_ENABLE_BIT );
+#endif
 }
 /*-----------------------------------------------------------*/
 
@@ -703,6 +755,7 @@ _WEAK_FUNCTION void vPortSetupTimerInterrupt( void )
 static void vPortEnableVFP( void )
 {
 #if defined _WINDOWS
+    *fnGetRegisterAddress(0xe000ed88) |= (0xf << 20);
 #else
 	__asm volatile
 	(

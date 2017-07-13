@@ -1085,7 +1085,7 @@
 
 // I2C
 //
-#define I2C_INTERFACE
+//#define I2C_INTERFACE
 #if defined I2C_INTERFACE
     #define NUMBER_I2C       I2C_AVAILABLE                               // I2C interfaces available
   //#define I2C_SLAVE_MODE                                               // support slave mode
@@ -1115,7 +1115,7 @@
 
 // utFAT
 //
-//#define SDCARD_SUPPORT                                                 // SD-card interface
+//#define SDCARD_SUPPORT                                                   // SD-card interface
 //#define FLASH_FAT                                                      // FAT in internal flash
 //#define SPI_FLASH_FAT                                                  // FAT in external SPI flash
     #define SIMPLE_FLASH                                                 // don't perform block management and wear-leveling
@@ -1151,7 +1151,7 @@
     #define SD_CARD_RETRY_INTERVAL       5                               // attempt SD card initialisation at 5s intervals
     #define UT_DIRECTORIES_AVAILABLE     DISK_COUNT                      // this many directories objects are available for allocation (just one per disk for application interface)
     #define UTMANAGED_FILE_COUNT         10                              // allow this many managed files at one time
-    #define UTFAT_LFN_READ                                               // enable long file name read support
+    #define UTFAT_LFN_READ                                               // enable long file name read support (remove for no long file name support)
     #define STR_EQUIV_ON                                                 // ensure that this routine is available
     #if defined UTFAT_LFN_READ
         #define MAX_UTFAT_FILE_NAME      (100)                           // the maximum file name length supported - maximum 255
