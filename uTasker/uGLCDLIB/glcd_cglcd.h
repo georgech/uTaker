@@ -2108,9 +2108,6 @@ static void fnStartTouch(void)
             #define FT_GPU_EXTERNAL_OSC  0x44
             #define FT_GPU_PLL_48M       0x62
             #define FT_GPU_CORE_RESET    0x68
-            #define REG_ID               1057792UL
-            #define REG_GPIO             1057936UL
-            #define REG_GPIO_DIR         1057932UL
             Ft_Gpu_HostCommand(0, FT_GPU_ACTIVE_M);                      // access address 0 to wake up the device
             uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(0.020 * SEC), E_INIT_DELAY); // 20ms delay for display to complete initialisation
             iLCD_State = STATE_INITIALISING_1;
@@ -2135,25 +2132,7 @@ static void fnStartTouch(void)
                 uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(0.020 * SEC), E_INIT_DELAY); // 20ms delay before trying again
                 return;
             }
-            #define REG_HCYCLE           1057832UL
-            #define REG_HOFFSET          1057836UL
-            #define REG_HSIZE            1057840UL
-            #define REG_HSYNC0           1057844UL
-            #define REG_HSYNC1           1057848UL
-            #define REG_VCYCLE           1057852UL
-            #define REG_VOFFSET          1057856UL
-            #define REG_VSYNC0           1057864UL
-            #define REG_VSYNC1           1057868UL
-            #define REG_SWIZZLE          1057888UL
-            #define REG_PCLK_POL         1057896UL
-            #define REG_PCLK             1057900UL
-            #define REG_VSIZE            1057860UL
-            #define REG_CSPREAD          1057892UL
-            #define REG_DITHER           1057884UL
-            #define RAM_DL               1048576UL
-            #define REG_DLSWAP           1057872UL
             #define DLSWAP_FRAME         2UL
-            #define REG_TOUCH_RZTHRESH   1058052UL
             #define RESISTANCE_THRESHOLD (1200)
         #if defined FT_800_ENABLE
             Ft_Gpu_Hal_Wr16(0, REG_HCYCLE, 408);                         // 320 x 240

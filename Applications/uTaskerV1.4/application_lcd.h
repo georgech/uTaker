@@ -562,7 +562,8 @@ extern void fnDoLCD_com_text(unsigned char ucType, unsigned char *ptrInput, unsi
 	                        ft_int32_t Arrayoffset;
                         }SAMAPP_Bitmap_header_t;
 
-                        /* Header of raw data containing properties of bitmap */
+                        // Header of raw data containing properties of bitmap
+                        //
                         SAMAPP_Bitmap_header_t SAMAPP_Bitmap_RawData_Header[] = 
                         {
 	                        /* format,width,height,stride,arrayoffset */
@@ -571,7 +572,8 @@ extern void fnDoLCD_com_text(unsigned char ucType, unsigned char *ptrInput, unsi
 	                        {PALETTED,	480,	272,	480,	0	},
                         };
 
-                        /* Raw data array for Lena Face*/
+                        // Raw data array for Lena Face
+                        //
                         FT_PROGMEM  ft_prog_uchar8_t SAMAPP_Bitmap_RawData[] = 
                         {
                         72,57,105,57,171,65,236,73,237,65,236,65,72,41,35,8,70,49,44,139,80,188,243,204,148,213,182,164,120,173,24,198,55,206,214,197,149,197,149,197,83,205,18,213,50,221,214,229,55,230,121,238,217,230,218,230,250,238,27,239,60,247,59,247,
@@ -629,9 +631,9 @@ extern void fnDoLCD_com_text(unsigned char ucType, unsigned char *ptrInput, unsi
 	                    ft_int16_t BMoffsetx,BMoffsety;
 
 	                    p_bmhdr = (SAMAPP_Bitmap_header_t *)&SAMAPP_Bitmap_RawData_Header[0];
-	                    /* Copy raw data into address 0 followed by generation of bitmap */
+	                    // Copy raw data into address 0 followed by generation of bitmap
+                        //
 	                    Ft_Gpu_Hal_WrMemFromFlash(phost, RAM_G,&SAMAPP_Bitmap_RawData[p_bmhdr->Arrayoffset], p_bmhdr->Stride*p_bmhdr->Height);
-
 
 	                    Ft_App_WrDlCmd_Buffer(phost, CLEAR(1, 1, 1)); // clear screen
 	                    Ft_App_WrDlCmd_Buffer(phost,COLOR_RGB(255,255,255));
@@ -657,15 +659,11 @@ extern void fnDoLCD_com_text(unsigned char ucType, unsigned char *ptrInput, unsi
 	                    Ft_App_WrDlCmd_Buffer(phost,VERTEX2II(BMoffsetx, BMoffsety, 0, 0));
 	                    Ft_App_WrDlCmd_Buffer(phost,COLOR_A(255));
 	                    Ft_App_WrDlCmd_Buffer(phost,COLOR_RGB(255,255,255));
-	                    Ft_App_WrDlCmd_Buffer(phost,VERTEX2F(-10*16, -10*16));//for -ve coordinates use vertex2f instruction
+	                    Ft_App_WrDlCmd_Buffer(phost,VERTEX2F(-10*16, -10*16)); //for -ve coordinates use vertex2f instruction
 	                    Ft_App_WrDlCmd_Buffer(phost,END());
 	                    Ft_App_WrDlCmd_Buffer(phost, DISPLAY() );
-
-	                    /* Download the DL into DL RAM */
-	                    Ft_App_Flush_DL_Buffer(phost);
-
-	                    /* Do a swap */
-                        if (SAMAPP_GPU_DLSwap(DLSWAP_FRAME) != 0) {
+	                    Ft_App_Flush_DL_Buffer(phost);                   // download the DL into DL RAM
+                        if (SAMAPP_GPU_DLSwap(DLSWAP_FRAME) != 0) {      // do a swap
                             next_delay = 0;
                         }
                     }
@@ -691,56 +689,42 @@ extern void fnDoLCD_com_text(unsigned char ucType, unsigned char *ptrInput, unsi
 		                /* Read the font table from hardware */
 		                Ft_Gpu_Hal_RdMem(phost,(FontTableAddress + iFontNumber*FT_GPU_FONT_TABLE_SIZE),(ft_uint8_t *)&Display_fontstruct,FT_GPU_FONT_TABLE_SIZE);
 
-                #if defined(FT_81X_ENABLE)
-		                /* Display hello world by offsetting wrt char size */
+                #if defined (FT_81X_ENABLE)
+		                // Display hello world by offsetting wrt char size
+                        //
 		                if ((iFontNumber + 16) > 31) {
 			                Ft_Gpu_CoCmd_Dlstart(phost);
-
-			                //this is a co-processor command and it needs to get pushed to the display list first.
+			                // This is a co-processor command and it needs to get pushed to the display list first
+                            //
 			                Ft_Gpu_CoCmd_RomFont(phost, ((iFontNumber + 16) % 32), (iFontNumber + 16));
-
-			                /* Download the commands into FIFIO */
-			                Ft_App_Flush_Co_Buffer(phost);
-			                /* Wait till coprocessor completes the operation */
-			                Ft_Gpu_Hal_WaitCmdfifo_empty(phost);
-
-			                //update the display list pointer for display list commands
-			                Ft_DlBuffer_Index = Ft_Gpu_Hal_Rd16(phost, REG_CMD_DL);
+			                Ft_App_Flush_Co_Buffer(phost);			     // download the commands into FIFIO
+			                Ft_Gpu_Hal_WaitCmdfifo_empty(phost);         // wait till coprocessor completes the operation
+			                //Ft_DlBuffer_Index = Ft_Gpu_Hal_Rd16(phost, REG_CMD_DL); // update the display list pointer for display list commands
 		                }
                 #endif
-
-		                Ft_App_WrDlCmd_Buffer(phost, CLEAR(1, 1, 1)); // clear screen
-		                Ft_App_WrDlCmd_Buffer(phost, COLOR_RGB(255, 255, 255)); // clear screen
-
-		                /* Display string at the center of display */
-		                Ft_App_WrDlCmd_Buffer(phost, BEGIN(BITMAPS));
+		                Ft_App_WrDlCmd_Buffer(phost, CLEAR(1, 1, 1));          // clear screen
+		                Ft_App_WrDlCmd_Buffer(phost, COLOR_RGB(255, 255, 255));// clear screen
+		                Ft_App_WrDlCmd_Buffer(phost, BEGIN(BITMAPS));          // display string at the center of display
 		                hoffset = ((GLCD_X - 160) / 2);
 		                voffset = ((GLCD_Y - Display_fontstruct.FontHeightInPixels) / 2);
 
-		                //FT81X devices support larger rom fonts fonts in font handle 32, 33, 34
+		                // FT81X devices support larger rom fonts fonts in font handle 32, 33, 34
+                        //
                 #if defined(FT_81X_ENABLE)
-		                /* Display hello world by offsetting wrt char size */
-		                {
-			                Ft_App_WrDlCmd_Buffer(phost, BITMAP_HANDLE((iFontNumber + 16) % 32));
-		                }
+			            Ft_App_WrDlCmd_Buffer(phost, BITMAP_HANDLE((iFontNumber + 16) % 32)); // Display hello world by offsetting wrt char size
                 #else
-		                /* Display hello world by offsetting wrt char size */
-		                Ft_App_WrDlCmd_Buffer(phost, BITMAP_HANDLE((iFontNumber+16)));
+		                Ft_App_WrDlCmd_Buffer(phost, BITMAP_HANDLE((iFontNumber+16))); // Display hello world by offsetting wrt char size
                 #endif
-		                for (j = 0; j < stringlen; j++)
-		                {
+		                for (j = 0; j < stringlen; j++) {
 			                Ft_App_WrDlCmd_Buffer(phost, CELL(Display_string[j]));
 			                Ft_App_WrDlCmd_Buffer(phost, VERTEX2F(hoffset*16,voffset*16));
 			                hoffset += Display_fontstruct.FontWidth[Display_string[j]];
 		                }
 		                Ft_App_WrDlCmd_Buffer(phost, END());
 		                Ft_App_WrDlCmd_Buffer(phost, DISPLAY() );
+		                Ft_App_Flush_DL_Buffer(phost);                   // download the DL into DL RAM
 
-		                /* Download the DL into DL RAM */
-		                Ft_App_Flush_DL_Buffer(phost);
-
-		                /* Do a swap */
-                        if (SAMAPP_GPU_DLSwap(DLSWAP_FRAME) != 0) {
+                        if (SAMAPP_GPU_DLSwap(DLSWAP_FRAME) != 0) {      // do a swap
                             next_delay = 0;
                         }
                     }
@@ -762,12 +746,14 @@ extern void fnDoLCD_com_text(unsigned char ucType, unsigned char *ptrInput, unsi
                         Ft_App_WrCoCmd_Buffer(phost, CLEAR_COLOR_RGB(64, 64, 64));
                         Ft_App_WrCoCmd_Buffer(phost, CLEAR(1, 1, 1));
                         Ft_App_WrCoCmd_Buffer(phost, COLOR_RGB(0xff, 0xff, 0xff));
-                        /* Draw number at 0,0 location */
+                        // Draw number at 0,0 location
+                        //
                         //Ft_App_WrCoCmd_Buffer(phost,COLOR_A(30));
                         Ft_Gpu_CoCmd_Text(phost, (GLCD_X / 2), (GLCD_Y / 2), 27, OPT_CENTER, "Please Tap on the dot");
                         Ft_Gpu_CoCmd_Calibrate(phost, 0);
 
-                        /* Download the commands into FIFIO */
+                        // Download the commands into FIFIO
+                        //
                         Ft_App_Flush_Co_Buffer(phost); // this will start the calibration procedure so we wait for the completion event before continuing
                         next_delay = 0;
                         break;
@@ -804,7 +790,8 @@ extern void fnDoLCD_com_text(unsigned char ucType, unsigned char *ptrInput, unsi
                         Ft_App_WrCoCmd_Buffer(phost, CLEAR(1, 1, 1));
                         Ft_App_WrCoCmd_Buffer(phost, COLOR_RGB(0xff, 0xff, 0xff));
                         Ft_App_WrCoCmd_Buffer(phost, TAG_MASK(0));
-                        /* Draw informative text at width/2,20 location */
+                        // Draw informative text at width/2,20 location
+                        //
                         ptrString = uStrcpy(ptrString, "Touch Raw XY (");
                         ReadWord = Ft_Gpu_Hal_Rd32(phost, REG_TOUCH_RAW_XY);
                         yvalue = (ft_int16_t)(ReadWord & 0xffff);
@@ -875,8 +862,7 @@ extern void fnDoLCD_com_text(unsigned char ucType, unsigned char *ptrInput, unsi
                         Ft_Gpu_CoCmd_FgColor(phost, 0x008000);
                         Ft_App_WrCoCmd_Buffer(phost, TAG_MASK(1));
                         tagoption = 0;
-                        if (12 == tagval)
-                        {
+                        if (12 == tagval) {
                             tagoption = OPT_FLAT;
                         }
 
@@ -884,8 +870,7 @@ extern void fnDoLCD_com_text(unsigned char ucType, unsigned char *ptrInput, unsi
                         Ft_Gpu_CoCmd_Button(phost, (GLCD_X / 4) - (wbutton / 2), (GLCD_Y * 2 / 4) - (hbutton / 2), wbutton, hbutton, 26, tagoption, "Tag12");
                         Ft_App_WrCoCmd_Buffer(phost, TAG(13));
                         tagoption = 0;
-                        if (13 == tagval)
-                        {
+                        if (13 == tagval) {
                             tagoption = OPT_FLAT;
                         }
                         Ft_Gpu_CoCmd_Button(phost, (GLCD_X * 3 / 4) - (wbutton / 2), (GLCD_Y * 3 / 4) - (hbutton / 2), wbutton, hbutton, 26, tagoption, "Tag13");
@@ -893,15 +878,12 @@ extern void fnDoLCD_com_text(unsigned char ucType, unsigned char *ptrInput, unsi
                         Ft_App_WrCoCmd_Buffer(phost, DISPLAY());
                         Ft_Gpu_CoCmd_Swap(phost);
 
-                        /* Download the commands into fifo */
-                        if (Ft_App_Flush_Co_Buffer(phost) != 0) {
+                        if (Ft_App_Flush_Co_Buffer(phost) != 0) {        // download the commands into fifo
                             next_delay = 0;
                             break;
                         }
-
-                        /* Wait till coprocessor completes the operation */
                       //Ft_Gpu_Hal_WaitCmdfifo_empty(phost);
-                        next_delay = (DELAY_LIMIT)(0.05 * SEC);
+                        next_delay = (DELAY_LIMIT)(0.05 * SEC);          // wait till coprocessor completes the operation
                     }
                 }
                 break;
