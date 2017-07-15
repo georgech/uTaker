@@ -5528,8 +5528,6 @@ extern "C" unsigned long fnRemoteSimulationInterface(int iInterfaceReference, un
 
 #if defined FT800_GLCD_MODE && defined FT800_EMULATOR                    // {110}
 
-#define FT8XXEMU_VERSION_API    9                                        // API version is increased for the library whenever FT8XXEMU_EmulatorParameters format changes or functions are modified
-
 static volatile int iEmulatorReady = 0;                                  // variable used to monitor whether the emulator has competed its initialisaion
 
 typedef unsigned long argb8888;
@@ -5693,18 +5691,21 @@ extern "C" void _FT8XXEMU_cs(int cs)
     while (iEmulatorReady == 0) {                                        // if the emulator has not yet initialised we wait
         Sleep(10);
     }
-    FT8XXEMU_cs(cs);
+    FT8XXEMU_cs(cs);                                                     // from ft8xxemu.lib
 }
 
 // Send a byte to the emulator
 //
 extern "C" unsigned char _FT8XXEMU_transfer(unsigned char data)
 {
-    return FT8XXEMU_transfer(data);
+    return FT8XXEMU_transfer(data);                                      // from ft8xxemu.lib
 }
 
 static void FT800_emulator_thread(void *hArgs)
 {
+  //#define FT8XXEMU_VERSION_API    9                                    // (2012) API version is increased for the library whenever FT8XXEMU_EmulatorParameters format changes or functions are modified
+    #define FT8XXEMU_VERSION_API    10                                   // (2015) API version is increased for the library whenever FT8XXEMU_EmulatorParameters format changes or functions are modified
+
     FT8XXEMU_EmulatorParameters params;
     FT8XXEMU_EmulatorMode       Ft_GpuEmu_Mode;
     #if defined (FT_800_ENABLE)                                           // select the emulation mode
@@ -5727,7 +5728,10 @@ static void FT800_emulator_thread(void *hArgs)
     params.Flags &= (~FT8XXEMU_EmulatorEnableDynamicDegrade & ~FT8XXEMU_EmulatorEnableRegPwmDutyEmulation);
     params.Setup = setup;
     params.Loop = loop;
-    FT8XXEMU_run(FT8XXEMU_VERSION_API, &params);                         // start the emulation - this doesn't return
+    FT8XXEMU_run(FT8XXEMU_VERSION_API, &params);                         // start the emulation - this doesn't return until terminated
+    if (iEmulatorReady == 0) {
+        _EXCEPTION("Mismatch vetween the API version selected and the library linked - please adjust FT8XXEMU_VERSION_API (above) appropriately!");
+    }
 }
 
 static void fnInitFT800_emulator(void)

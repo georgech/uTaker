@@ -337,7 +337,7 @@ static void fnInitIRQ(void)
         // Configure the DMA trigger from the UART input pin change to toggle an alternative port so that the input signal is mirrored to that output without CPU intervention
         //
         static const unsigned long ulOutput = PORTC_BIT16;               // the output to be mirrored to
-        fnConfigDMA_buffer(9, DMAMUX0_CHCFG_SOURCE_PORTB, sizeof(ulOutput), (void *)&ulOutput, (void *)&(((GPIO_REGS *)GPIOC_ADD)->PTOR), (DMA_FIXED_ADDRESSES | DMA_LONG_WORDS), 0, 0); // use DMA channel 9 without and interrupts (free-runnning)
+        fnConfigDMA_buffer(9, DMAMUX0_CHCFG_SOURCE_PORTB, sizeof(ulOutput), (void *)&ulOutput, (void *)&(((GPIO_REGS *)GPIOC_ADD)->PTOR), (DMA_FIXED_ADDRESSES | DMA_LONG_WORDS), 0, 0); // use DMA channel 9 without any interrupts (free-runnning)
     }
         #else
     #if defined FRDM_KL25Z || defined FRDM_KL05Z || defined FRDM_KL27Z

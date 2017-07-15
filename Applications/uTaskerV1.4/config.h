@@ -1115,7 +1115,7 @@
 
 // utFAT
 //
-//#define SDCARD_SUPPORT                                                   // SD-card interface
+//#define SDCARD_SUPPORT                                                 // SD-card interface
 //#define FLASH_FAT                                                      // FAT in internal flash
 //#define SPI_FLASH_FAT                                                  // FAT in external SPI flash
     #define SIMPLE_FLASH                                                 // don't perform block management and wear-leveling
@@ -1737,8 +1737,13 @@
       //#define MB785_GLCD_MODE                                          // use colour TFT in GLCD compatible mode (STM321C-EVAL)
       //#define TFT2N0369_GLCD_MODE                                      // use colour TFT in GLCD compatible mode (TWR-LCD)
       //#define FT800_GLCD_MODE                                          // FTDI FT800 controller
-            #define FT_800_ENABLE                                        // select the FT800 display type used
-            #define FT800_EMULATOR
+          //#define FT_800_ENABLE                                        // select the FT800 display type
+          //#define FT_801_ENABLE                                        // select the FT801 display type
+            #define FT_810_ENABLE                                        // select the FT810 display type
+          //#define FT_811_ENABLE                                        // select the FT811 display type
+          //#define FT_812_ENABLE                                        // select the FT812 display type
+          //#define FT_813_ENABLE                                        // select the FT813 display type
+            #define FT800_EMULATOR                                       // enable FTDI emulator (valid for all types and needs to be on to build with visual studio)
         #if defined TWR_K70F120M || defined K70F150M_12M
             #define TWR_LCD_RGB_GLCD_MODE                                // use colour TFT in GLCD compatible mode (TWR-LCD-RGB)
             #define TFT_GLCD_MODE                                        // use a TFT in GLCD compatible mode (only use together with LCD controller)

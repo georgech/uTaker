@@ -151,4 +151,14 @@ utFAT V2.03 - 17.01.2016 : http://www.uTasker.com/software/utFAT/utFAT2.03.zip
     17.01.2016 Reset long file name counter when skipping hidden files   {15} [uFATV2.03]
 
 
+utFAT V2.04 - 14.07.2017 : http://www.uTasker.com/software/utFAT/utFAT2.04.zip
+=============================================================================
+    24.04.2017 Handle USB_MSD_REMOVED when memory stick is removed       {16}
+    09.07.2017 Allow renaming a file to a different directory location   {17}
+    14.07.2017 Avoid matching directories when not complete path handled {18} [utFAT2.04]
+
+Renaming files to different locations is possible with this release. Also renaming directories to different locations is supported.
+
+
+
 
