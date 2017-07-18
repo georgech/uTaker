@@ -5149,7 +5149,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define MAPPED_DEMO_LED_4       (DEMO_LED_4 >> SHIFT_DEMO_LED_4)
 
     #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(B, (SWITCH_2 | SWITCH_3), PORT_PS_UP_ENABLE) // configure as input
-    #define WATCHDOG_DISABLE()      (_READ_PORT_MASK(B, SWITCH_2) == 0)  // hold switch 2 down at reset to disable watchdog
+    #define WATCHDOG_DISABLE()      0 //(_READ_PORT_MASK(B, SWITCH_2) == 0)  // hold switch 2 down at reset to disable watchdog
     #define ACTIVATE_WATCHDOG()     SIM_COPC = (SIM_COPC_COPCLKS_1K | SIM_COPC_COPT_LONGEST) // 1.024s watchdog timeout
     #define TOGGLE_WATCHDOG_LED()   _TOGGLE_PORT(B, BLINK_LED)
 

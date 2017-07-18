@@ -215,7 +215,7 @@ Build_Kinetis.bat</Command>
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_KW_CLOCK.h" />
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_K_CLOCK.h" />
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_MCG_LITE.h" />
-    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_port.h" />
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_PORTS.h" />
     <ClInclude Include="..\..\..\Hardware\Kinetis\simkinetis.h" />
     <ClInclude Include="..\..\..\Hardware\Kinetis\spi_flash_kinetis_atmel.h" />
     <ClInclude Include="..\..\..\Hardware\Kinetis\spi_flash_kinetis_s25fl1-k.h" />

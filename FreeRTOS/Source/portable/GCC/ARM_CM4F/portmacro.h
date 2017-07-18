@@ -66,9 +66,10 @@
 
     1 tab == 4 spaces!
 
-
+    // uTasker adaptations
     03.07.2017 portFORCE_INLINE used in place of __attribute__((always_inline))
     03.07.2017 Add Windows assembly emulation (_WINDOWS)
+    16.07.2017 Combine Cortex-M0+, Cortex-M4 and Cortex-M4F content to simplify file management
 
 
 */
@@ -76,6 +77,10 @@
 
 #ifndef PORTMACRO_H
 #define PORTMACRO_H
+
+
+
+#if defined ARM_MATH_CM4 && defined __VFP_FP__                           // Cortex-M4F
 
 #ifdef __cplusplus
 extern "C" {
@@ -317,6 +322,100 @@ portFORCE_INLINE static void vPortSetBASEPRI( uint32_t ulNewMaskValue )
 
 #ifdef __cplusplus
 }
+#endif
+
+#elif defined ARM_MATH_CM4                                               // Cortex-M4 (without FPU)
+#else                                                                    // Cortex-M0+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/*-----------------------------------------------------------
+ * Port specific definitions.
+ *
+ * The settings in this file configure FreeRTOS correctly for the
+ * given hardware and compiler.
+ *
+ * These settings should not be altered.
+ *-----------------------------------------------------------
+ */
+
+/* Type definitions. */
+#define portCHAR		char
+#define portFLOAT		float
+#define portDOUBLE		double
+#define portLONG		long
+#define portSHORT		short
+#define portSTACK_TYPE	uint32_t
+#define portBASE_TYPE	long
+
+typedef portSTACK_TYPE StackType_t;
+typedef long BaseType_t;
+typedef unsigned long UBaseType_t;
+
+#if( configUSE_16_BIT_TICKS == 1 )
+	typedef uint16_t TickType_t;
+	#define portMAX_DELAY ( TickType_t ) 0xffff
+#else
+	typedef uint32_t TickType_t;
+	#define portMAX_DELAY ( TickType_t ) 0xffffffffUL
+
+	/* 32-bit tick type on a 32-bit architecture, so reads of the tick count do
+	not need to be guarded with a critical section. */
+	#define portTICK_TYPE_IS_ATOMIC 1
+#endif
+/*-----------------------------------------------------------*/
+
+/* Architecture specifics. */
+#define portSTACK_GROWTH			( -1 )
+#define portTICK_PERIOD_MS			( ( TickType_t ) 1000 / configTICK_RATE_HZ )
+#define portBYTE_ALIGNMENT			8
+/*-----------------------------------------------------------*/
+
+
+/* Scheduler utilities. */
+extern void vPortYield( void );
+#define portNVIC_INT_CTRL_REG		( * ( ( volatile uint32_t * ) 0xe000ed04 ) )
+#define portNVIC_PENDSVSET_BIT		( 1UL << 28UL )
+#define portYIELD()					vPortYield()
+#define portEND_SWITCHING_ISR( xSwitchRequired ) if( xSwitchRequired ) portNVIC_INT_CTRL_REG = portNVIC_PENDSVSET_BIT
+#define portYIELD_FROM_ISR( x ) portEND_SWITCHING_ISR( x )
+/*-----------------------------------------------------------*/
+
+
+/* Critical section management. */
+extern void vPortEnterCritical( void );
+extern void vPortExitCritical( void );
+extern uint32_t ulSetInterruptMaskFromISR( void ) _NAKED_FUNCTION;
+extern void vClearInterruptMaskFromISR( uint32_t ulMask )  _NAKED_FUNCTION;
+
+#define portSET_INTERRUPT_MASK_FROM_ISR()		ulSetInterruptMaskFromISR()
+#define portCLEAR_INTERRUPT_MASK_FROM_ISR(x)	vClearInterruptMaskFromISR( x )
+#if defined _WINDOWS
+    #define portDISABLE_INTERRUPTS()            fnSetReg(19, 1)          // mark that interrupts are masked globally
+    #define portENABLE_INTERRUPTS()             fnSetReg(19, 0)          // mark that interrupts are no longer masked globally
+#else
+    #define portDISABLE_INTERRUPTS()            __asm volatile 	( " cpsid i " )
+    #define portENABLE_INTERRUPTS()             __asm volatile 	( " cpsie i " )
+#endif
+#define portENTER_CRITICAL()					vPortEnterCritical()
+#define portEXIT_CRITICAL()						vPortExitCritical()
+
+/*-----------------------------------------------------------*/
+
+/* Task function macros as described on the FreeRTOS.org WEB site. */
+#define portTASK_FUNCTION_PROTO( vFunction, pvParameters ) void vFunction( void *pvParameters )
+#define portTASK_FUNCTION( vFunction, pvParameters ) void vFunction( void *pvParameters )
+
+#define portNOP()
+
+#ifdef __cplusplus
+}
+#endif
+
+
+
 #endif
 
 #endif /* PORTMACRO_H */

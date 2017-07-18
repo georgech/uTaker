@@ -2609,12 +2609,20 @@ static void fnConfigureTelnetRFC2217Server(void)
 #if defined BLINKY && defined RUN_IN_FREE_RTOS
 extern void fnInitialiseRedLED(void)
 {
+    #if defined FRDM_K64F
     _CONFIG_DRIVE_PORT_OUTPUT_VALUE(B, (LED_RED), (LED_RED), (PORT_SRE_SLOW | PORT_DSE_HIGH)); // initialise port output to drive the red LED on the FRDM-K64F
+    #else
+    CONFIG_TEST_OUTPUT();
+    #endif
 }
 
 extern void fnToggleRedLED(void)
 {
+    #if defined FRDM_K64F
     _TOGGLE_PORT(B, LED_RED);                                        // toggle red LED on FRDM-K64F
+    #else
+    TOGGLE_TEST_OUTPUT();
+    #endif
 }
 #endif
 

@@ -96,8 +96,13 @@
     #define _EXCEPTION(x)        *(unsigned char *)0 = 0                 // generate exception when simulating
     #define TICK_UNIT_MS(T) (T * 1000)                                   // tick is defined in ms
     #define TICK_UNIT_US(T) (T)                                          // tick is defined in us
-    #define CORE_CLOCK (120000000)                                       // can't yet access the value...
+    #define CORE_CLOCK (48000000)                                        // can't yet access the value...
+  //#define CORE_CLOCK (120000000)                                       // can't yet access the value...
+    #define ARM_MATH_CM0PLUS                                             // can't yet access the value...
+  //#define ARM_MATH_CM4                                                 // can't yet access the value...
     #if defined _WINDOWS
+        extern void fnSetReg(int iRef, unsigned long ulValue);
+        extern unsigned long *fnGetRegisterAddress(unsigned long ulAddress);
         #define portFORCE_INLINE
         #define _NAKED_FUNCTION
         #define _WEAK_FUNCTION
@@ -106,7 +111,7 @@
         #define _NAKED_FUNCTION  __attribute__((naked))
         #define _WEAK_FUNCTION   __attribute__((weak))
     #endif
-    #if defined _WINDOWS
+    #if defined _WINDOWS && defined KINETIS_K_FPU
         #define __VFP_FP__                                               // processor has floating point support
     #endif
 #endif

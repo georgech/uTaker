@@ -85,9 +85,6 @@
     <ClInclude Include="..\..\..\Hardware\Kinetis\spi_flash_kinetis_stmicro.h">
       <Filter>Hardware\KINETIS</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_port.h">
-      <Filter>WinSim\SIMKINETIS</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\simkinetis.h">
       <Filter>WinSim\SIMKINETIS</Filter>
     </ClInclude>
@@ -122,6 +119,9 @@
       <Filter>Hardware\KINETIS</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_MCG_LITE.h">
+      <Filter>Hardware\KINETIS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_PORTS.h">
       <Filter>Hardware\KINETIS</Filter>
     </ClInclude>
   </ItemGroup>

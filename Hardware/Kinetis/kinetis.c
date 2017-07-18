@@ -2511,7 +2511,12 @@ const _RESET_VECTOR __vector_table
     0,
     0,
     0,
-    #if defined _MINIMUM_IRQ_INITIALISATION
+    #if defined RUN_IN_FREE_RTOS
+    vPortSVCHandler,                                                     // FreeRTOS's SCV handler
+    irq_debug_monitor,
+    0,
+    xPortPendSVHandler,                                                  // FreeRTOS's PendSV handler
+    #elif defined _MINIMUM_IRQ_INITIALISATION
     irq_default,
     irq_default,
     0,

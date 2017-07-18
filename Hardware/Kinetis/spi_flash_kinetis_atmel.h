@@ -18,6 +18,7 @@
     Its goal is to improve overall readability of the hardware interface.
     08.03.2014 Adapt for KL family compatibility (KL has neither FIFO nor automatic chip select control)
     22.11.2014 Add automatic power of 2s mode setting if the page size is defined for this {1}
+    17.07.2017 Adapt chip select line control dependency                 {2}
 
 */ 
 
@@ -144,9 +145,9 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
 static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOffset, volatile unsigned char *ucData, MAX_FILE_LENGTH DataLength)
     #endif
 {
-#if defined KINETIS_K80
+    #if defined KINETIS_K80
     unsigned char dummy = 0;
-#endif
+    #endif
     #if defined SPI_FLASH_MULTIPLE_CHIPS
     unsigned long ulChipSelectLine = ulChipSelect[iChipSelect];
     #else
@@ -169,7 +170,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
 
     SET_SPI_FLASH_MODE();
 
-    #if defined KINETIS_KL || defined MANUAL_FLASH_CS_CONTROL
+    #if !defined DSPI_SPI || defined MANUAL_FLASH_CS_CONTROL             // {2}
     ASSERT_CS_LINE(ulChipSelectLine);                                    // assert the chip select line
     #endif
 
@@ -187,7 +188,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     #endif
     case WRITE_BUFFER_1:                                                 // write data to the buffer
   //case WRITE_BUFFER_2:
-    #if defined KINETIS_KL
+    #if !defined DSPI_SPI                                                // {2}
         WAIT_SPI_RECEPTION_END();                                        // wait until the command has been sent
         (void)READ_SPI_FLASH_DATA();                                     // discard the received byte
     #endif
@@ -195,7 +196,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     #if defined _WINDOWS
         fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
     #endif
-    #if defined KINETIS_KL
+    #if !defined DSPI_SPI                                                // {2}
         WAIT_SPI_RECEPTION_END();                                        // wait until the command has been sent
         (void)READ_SPI_FLASH_DATA();                                     // discard the received byte
     #endif
@@ -203,7 +204,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     #if defined _WINDOWS
         fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
     #endif
-    #if defined KINETIS_KL
+    #if !defined DSPI_SPI                                                // {2}
         WAIT_SPI_RECEPTION_END();                                        // wait until the command has been sent
         (void)READ_SPI_FLASH_DATA();                                     // discard the received byte
     #endif
@@ -212,7 +213,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
     #endif
         dataWrites = DataLength;
-    #if defined KINETIS_KL
+    #if !defined DSPI_SPI                                                // {2}
         discardCount = (DataLength + 1);
     #else
         discardCount = (DataLength + 4);
@@ -227,7 +228,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
   //case ERASE_PROG_FROM_BUFFER_2:
     case PAGE_ERASE:
     case BLOCK_ERASE:
-    #if defined KINETIS_KL
+    #if !defined DSPI_SPI                                                // {2}
         WAIT_SPI_RECEPTION_END();                                        // wait until the command has been sent
         (void)READ_SPI_FLASH_DATA();                                     // discard the received byte
     #endif
@@ -253,7 +254,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     #if defined _WINDOWS
         fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
     #endif
-    #if defined KINETIS_KL
+    #if !defined DSPI_SPI                                                // {2}
         WAIT_SPI_RECEPTION_END();                                        // wait until the command has been sent
         (void)READ_SPI_FLASH_DATA();                                     // discard the received byte
     #endif
@@ -264,7 +265,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         WRITE_SPI_CMD0((unsigned char)(ulPageNumberOffset << 3));
         #endif
     #elif SPI_FLASH_PAGE_LENGTH >= 512
-        #if SPI_FLASH_PAGE_LENGTH == 512                                // power of 2s mode
+        #if SPI_FLASH_PAGE_LENGTH == 512                                 // power of 2s mode
         WRITE_SPI_CMD0((unsigned char)(ulPageNumberOffset << 1));
         #else
         WRITE_SPI_CMD0((unsigned char)(ulPageNumberOffset << 2));
@@ -279,7 +280,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     #if defined _WINDOWS
         fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
     #endif
-    #if defined KINETIS_KL
+    #if !defined DSPI_SPI                                                // {2}
         WAIT_SPI_RECEPTION_END();                                        // wait until the command has been sent
         (void)READ_SPI_FLASH_DATA();                                     // discard the received byte
     #endif
@@ -293,7 +294,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
     #endif
         SPI_FLASH_Danger[iChipSelect] = 1;                               // mark that the device will be busy for some time
-    #if defined KINETIS_KL
+    #if !defined DSPI_SPI                                                // {2}
         discardCount = 1;
     #else
         discardCount = 4;
@@ -301,7 +302,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         break;
 
     case CONTINUOUS_ARRAY_READ:                                          // this is a legacy command for compatibility between B and D-devices
-    #if defined KINETIS_KL
+    #if !defined DSPI_SPI                                                // {2}
         WAIT_SPI_RECEPTION_END();                                        // wait until the command has been sent
         (void)READ_SPI_FLASH_DATA();                                     // discard the received byte
     #endif
@@ -309,7 +310,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     #if defined _WINDOWS
         fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
     #endif
-    #if defined KINETIS_KL
+    #if !defined DSPI_SPI                                                // {2}
         WAIT_SPI_RECEPTION_END();                                        // wait until the command has been sent
         (void)READ_SPI_FLASH_DATA();                                     // discard the received byte
     #endif
@@ -317,7 +318,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     #if defined _WINDOWS
         fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
     #endif
-    #if defined KINETIS_KL
+    #if !defined DSPI_SPI                                                // {2}
         WAIT_SPI_RECEPTION_END();                                        // wait until the command has been sent
         (void)READ_SPI_FLASH_DATA();                                     // discard the received byte
     #endif
@@ -326,7 +327,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
     #endif
         dummyWrites = (DataLength + 4);                                  // 4 dummy bytes needed before the device returns data
-    #if defined KINETIS_KL
+    #if !defined DSPI_SPI                                                // {2}
         discardCount = 5;
     #else
         discardCount = 8;
@@ -334,7 +335,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         break;
 
     case READ_MANUFACTURER_ID:                                           // this only works on D-device     
-    #if defined KINETIS_KL
+    #if !defined DSPI_SPI                                                // {2}
         dummyWrites = 5;
     #else
         WRITE_SPI_CMD0(0xff);                                            // ensure transmit FIFO has more than one byte in it
@@ -344,7 +345,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         break;
 
     case READ_STATUS_REGISTER:                                           // read single byte from status register
-    #if defined KINETIS_KL
+    #if !defined DSPI_SPI                                                // {2}
         dummyWrites = 1;
     #else
         WRITE_SPI_CMD0_LAST(0xff);                                       // dummy write
@@ -401,11 +402,11 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         CLEAR_RECEPTION_FLAG();                                          // clear the receive flag
         discardCount--;
     }
-    #if defined KINETIS_KL || defined MANUAL_FLASH_CS_CONTROL
+    #if !defined DSPI_SPI || defined MANUAL_FLASH_CS_CONTROL
     NEGATE_CS_LINE(ulChipSelectLine);                                    // negate the chip select line
     #endif
     #if defined _WINDOWS
-        #if !defined KINETIS_KL
+        #if defined DSPI_SPI                                             // {2}
     if (SPI_TX_BYTE & SPI_PUSHR_EOQ) {                                   // check that the CS has been negated
         SPI_TX_BYTE &= ~(ulChipSelectLine);
     }

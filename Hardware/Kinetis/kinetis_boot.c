@@ -21,6 +21,7 @@
     13.07.2017 Add w25q (winbond) and s25fl1-k (spansion) SPI Flash support {6}
     13.07.2017 Use standard SPI Flash interface                          {7}
     13.07.2017 Use standard clock configuration                          {8}
+    17.07.2017 Use standard port configuration                           {9}
 
     */
 
@@ -80,7 +81,6 @@ extern void __iar_program_start(void);                                   // IAR 
 //
 static void disable_watchdog(void)
 {
-    UNLOCK_WDOG();                                                       // enable watchdog modification
     CONFIGURE_WATCHDOG();                                                // allow user configuration of internal watch dog timer
     #if defined USER_STARTUP_CODE                                        // {2} allow user defined start-up code immediately after the watchdog configuration and before clock configuration to be defined
     USER_STARTUP_CODE;
@@ -155,6 +155,14 @@ extern void *uMemcpy(void *ptrTo, const void *ptrFrom, size_t Size)
 
     return buffer;
 }
+
+
+/* =================================================================== */
+/*                              GPIO                                   */
+/* =================================================================== */
+#define _PORT_MUX_CODE
+    #include "kinetis_PORTS.h"                                           // {9}
+#undef _PORT_MUX_CODE
 
 
 
@@ -321,7 +329,6 @@ extern void
     int iIRC48M_USB_control = 0;
 #endif
 #if !defined _COMPILE_IAR
-    UNLOCK_WDOG();                                                       // enable watchdog modification
     CONFIGURE_WATCHDOG();                                                // allow user configuration of internal watch dog timer
     #if defined USER_STARTUP_CODE                                        // {2} allow user defined start-up code immediately after the watchdog configuration and before clock configuration to be defined
     USER_STARTUP_CODE;

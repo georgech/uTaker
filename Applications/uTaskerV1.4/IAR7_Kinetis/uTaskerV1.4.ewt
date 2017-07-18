@@ -3473,12 +3473,27 @@
   <group>
     <name>FreeRTOS</name>
     <group>
-      <name>portable</name>
+      <name>portableM0</name>
+      <file>
+        <name>$PROJ_DIR$\..\..\..\FreeRTOS\Source\portable\IAR\ARM_CM0\port.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\..\FreeRTOS\Source\portable\IAR\ARM_CM0\portasm.s</name>
+        <configuration>
+          <name>Flash</name>
+        </configuration>
+      </file>
+    </group>
+    <group>
+      <name>portableM4F</name>
       <file>
         <name>$PROJ_DIR$\..\..\..\FreeRTOS\Source\portable\IAR\ARM_CM4F\port.c</name>
       </file>
       <file>
         <name>$PROJ_DIR$\..\..\..\FreeRTOS\Source\portable\IAR\ARM_CM4F\portasm.s</name>
+        <configuration>
+          <name>Flash</name>
+        </configuration>
       </file>
     </group>
     <file>
@@ -3499,6 +3514,9 @@
     <file>
       <name>$PROJ_DIR$\..\..\..\FreeRTOS\Source\timers.c</name>
     </file>
+    <configuration>
+      <name>Flash</name>
+    </configuration>
   </group>
   <group>
     <name>Hardware</name>

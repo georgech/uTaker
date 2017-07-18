@@ -37,34 +37,34 @@ extern void fnConnectGPIO(int iPortRef, unsigned long ulPortBits, unsigned long 
         *ptrPullup &= ~ulPortBits;
     }
     if (iPortRef == 0) {                                                 // KE ports A, B, C and D
-        if (ulPortBits & KE_PORTB_BIT4) {
+        if ((ulPortBits & KE_PORTB_BIT4) != 0) {
             ulHighDrive |= 0x01;
         }
-        if (ulPortBits & KE_PORTB_BIT5) {
+        if ((ulPortBits & KE_PORTB_BIT5) != 0) {
             ulHighDrive |= 0x02;
         }
-        if (ulPortBits & KE_PORTD_BIT0) {
+        if ((ulPortBits & KE_PORTD_BIT0) != 0) {
             ulHighDrive |= 0x04;
         }
-        if (ulPortBits & KE_PORTD_BIT1) {
+        if ((ulPortBits & KE_PORTD_BIT1) != 0) {
             ulHighDrive |= 0x08;
         }
     }
     else {                                                               // KE ports E, F, G and H
-        if (ulPortBits & KE_PORTE_BIT0) {
+        if ((ulPortBits & KE_PORTE_BIT0) != 0) {
             ulHighDrive |= 0x10;
         }
-        if (ulPortBits & KE_PORTE_BIT1) {
+        if ((ulPortBits & KE_PORTE_BIT1) != 0) {
             ulHighDrive |= 0x20;
         }
-        if (ulPortBits & KE_PORTH_BIT0) {
+        if ((ulPortBits & KE_PORTH_BIT0) != 0) {
             ulHighDrive |= 0x40;
         }
-        if (ulPortBits & KE_PORTH_BIT1) {
+        if ((ulPortBits & KE_PORTH_BIT1) != 0) {
             ulHighDrive |= 0x80;
         }
     }
-    if (ulCharacteristics & PORT_DSE_HIGH) {                             // if high drive strength is requested filter the pins that support it and set the approriate control bit(s)
+    if ((ulCharacteristics & PORT_DSE_HIGH) != 0) {                      // if high drive strength is requested filter the pins that support it and set the approriate control bit(s)
         PORT_HDRVE |= ulHighDrive;
     }
     else {

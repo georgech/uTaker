@@ -41,6 +41,7 @@
     18.04.2016 Add specific FRDM-K64F target                             {24}
     02.02.2017 Adapt for us tick resolution (_TICK_RESOLUTION)           {25}
     13.07.2017 Add w25q (windbond) spi flash option and a target for the FRDM-KL82Z
+    17.07.2017 Add target for the FRDM-KL25Z
 
 */
 
@@ -77,10 +78,11 @@
     #define _TICK_RESOLUTION     TICK_UNIT_MS(50)                        // {25} for simulator compatibility only
 
     #if defined _KINETIS                                                 // {20}
+        #define FRDM_KL25Z
       //#define FRDM_KL82Z
       //#define KINETIS_K40
       //#define KINETIS_K60
-        #define FRDM_K64F                                                // {24} next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area
+      //#define FRDM_K64F                                                // {24} next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area
       //#define KINETIS_K70
 
       //#define NET_KBED
@@ -146,6 +148,29 @@
 
             #define PIN_COUNT          PIN_COUNT_100_PIN                 // used only by the simulator
             #define KINETIS_K_FPU                                        // 120MHz FPU version
+        #elif defined FRDM_KL25Z
+            #define OSC_LOW_GAIN_MODE                                    // oscillator without feedback resistor or load capacitors so use low gain mode
+          //#define RUN_FROM_LIRC                                        // clock from internal 4MHz RC clock
+          //#define RUN_FROM_DEFAULT_CLOCK                               // run from FLL default setting
+          //#define RUN_FROM_EXTERNAL_CLOCK                              // run directly from external 8MHz clock (without PLL)
+            #define CRYSTAL_FREQUENCY    8000000                         // 8 MHz crystal
+            #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
+            #define CLOCK_DIV            4                               // input must be divided to 2MHz..4MHz range (/1 to /25 possible)
+            #define CLOCK_MUL        48                                  // the PLL multiplication factor to achieve MCGPLLCLK operating frequency of 98MHz (x24 to x55 possible) (MCGPLLCLK/2 is 48MHz - required by USB)
+            #define SYSTEM_CLOCK_DIVIDE 2                                // divide (1,2,3..16 possible) to get core clock of 48MHz
+            #define BUS_CLOCK_DIVIDE    2                                // divide from core clock for bus and flash clock (1,2,3..8 possible) 24MHz
+            #define FLASH_CLOCK_DIVIDE  2
+            #define KINETIS_KL
+            #define KINETIS_KL25
+            #define MASK_2N97F
+            #define PIN_COUNT           PIN_COUNT_80_PIN                 // 80 pin package
+            #define PACKAGE_TYPE        PACKAGE_LQFP                     // LQFP
+            #define SIZE_OF_FLASH       (128 * 1024)                     // 128k program Flash
+            #define SIZE_OF_RAM         (16 * 1024)                      // 16k SRAM
+
+            #define uFILE_START        (0)
+            #define FILE_SYSTEM_SIZE   (SIZE_OF_FLASH)                   // 128k reserved for file system
+            #define FILE_GRANULARITY   (1 * FLASH_GRANULARITY)           // each file a multiple of 1k
         #elif defined FRDM_KL82Z
           //#define RUN_FROM_DEFAULT_CLOCK                               // default mode is FLL Engaged Internal - the 32kHz IRC is multiplied by FLL factor of 640 to obtain 20.9715MHz nominal frequency (20MHz..25MHz)
           //#define RUN_FROM_HIRC                                        // clock directly from internal 48MHz RC clock
@@ -329,9 +354,12 @@
         #define KINETIS_FLASH_CONFIGURATION_EEPROM_PROT        0xff
         #define KINETIS_FLASH_CONFIGURATION_DATAFLASH_PROT     0xff
 
-        #define CONFIGURE_WATCHDOG()  WDOG_STCTRLH = (WDOG_STCTRLH_STNDBYEN | WDOG_STCTRLH_WAITEN | WDOG_STCTRLH_STOPEN | WDOG_STCTRLH_ALLOWUPDATE | WDOG_STCTRLH_CLKSRC); // disable watchdog
-      //#define CONFIGURE_WATCHDOG()  WDOG_TOVALL = 2000; WDOG_TOVALH = 0; WDOG_STCTRLH = (WDOG_STCTRLH_STNDBYEN | WDOG_STCTRLH_WAITEN | WDOG_STCTRLH_STOPEN | WDOG_STCTRLH_WDOGEN); // watchdog enabled to generate reset on 2s timeout (no further updates allowed)
-
+        #if !defined KINETIS_KL || defined KINETIS_KL82
+            #define CONFIGURE_WATCHDOG()  UNLOCK_WDOG(); WDOG_STCTRLH = (WDOG_STCTRLH_STNDBYEN | WDOG_STCTRLH_WAITEN | WDOG_STCTRLH_STOPEN | WDOG_STCTRLH_ALLOWUPDATE | WDOG_STCTRLH_CLKSRC); // disable watchdog
+          //#define CONFIGURE_WATCHDOG()  UNLOCK_WDOG(); WDOG_TOVALL = /2000/5); WDOG_TOVALH = 0; WDOG_STCTRLH = (WDOG_STCTRLH_STNDBYEN | WDOG_STCTRLH_WAITEN | WDOG_STCTRLH_STOPEN | WDOG_STCTRLH_WDOGEN); // watchdog enabled to generate reset on 2s timeout (no further updates allowed)
+        #else
+            #define CONFIGURE_WATCHDOG()  SIM_COPC = (SIM_COPC_COPCLKS_1K | SIM_COPC_COPT_LONGEST) // 1.024s watchdog timeout
+        #endif
         #if defined NET_KBED || defined NET_K60                          // {23} these require the external PHY to be configured with the correct clock speed before continuing
             #define USER_STARTUP_CODE   PHY_RESET_20MS
             #if defined NET_KBED
@@ -396,6 +424,49 @@
             #define READ_SPI_FLASH_DATA()            (volatile unsigned char)SPI0_POPR
             #define WAIT_SPI_RECEPTION_END()         while (!(SPI0_SR & SPI_SR_RFDF)) {}
             #define CLEAR_RECEPTION_FLAG()           SPI0_SR |= SPI_SR_RFDF
+        #elif defined FRDM_KL25Z
+            // - SPI1_CS   PTE-4 (J9-13)
+            // - SPI1_SCK  PTE-2 (J9-9)
+            // - SPI1_MOSI PTE-1 (J2-20)
+            // - SPI1_MISO PTE-3 (J9-11)
+            //
+            #define CS0_LINE                        PORTE_BIT4           // CS0 line used when SPI FLASH is enabled
+            #define CS1_LINE                                             // CS1 line used when extended SPI FLASH is enabled
+            #define CS2_LINE                                             // CS2 line used when extended SPI FLASH is enabled
+            #define CS3_LINE                                             // CS3 line used when extended SPI FLASH is enabled
+
+            #define ASSERT_CS_LINE(ulChipSelectLine) _CLEARBITS(E, ulChipSelectLine)
+            #define NEGATE_CS_LINE(ulChipSelectLine) _SETBITS(E, ulChipSelectLine)
+
+            #define SPI_CS0_PORT                    GPIOE_PDOR           // for simulator
+            #define SPI_TX_BYTE                     SPI1_D               // for simulator
+            #define SPI_RX_BYTE                     SPI1_D               // for simulator
+
+            #define POWER_UP_SPI_FLASH_INTERFACE()  POWER_UP(4, SIM_SCGC4_SPI1)
+            #define CONFIGURE_SPI_FLASH_INTERFACE() _CONFIG_PERIPHERAL(E, 2, PE_2_SPI1_SCK); \
+                                                    _CONFIG_PERIPHERAL(E, 1, (PE_1_SPI1_MOSI | PORT_SRE_FAST | PORT_DSE_HIGH)); \
+                                                    _CONFIG_PERIPHERAL(E, 3, (PE_3_SPI1_MISO | PORT_PS_UP_ENABLE)); \
+                                                    _CONFIG_DRIVE_PORT_OUTPUT_VALUE(E, CS0_LINE, CS0_LINE, (PORT_SRE_FAST | PORT_DSE_HIGH)); \
+                                                    SPI1_C1 = (SPI_C1_CPHA | SPI_C1_CPOL | SPI_C1_MSTR | SPI_C1_SPE); \
+                                                    SPI1_BR = (SPI_BR_SPPR_PRE_1 | SPI_BR_SPR_DIV_2); \
+                                                    (unsigned char)SPI1_S; (unsigned char)SPI1_D
+
+            #define POWER_DOWN_SPI_FLASH_INTERFACE() POWER_DOWN(4, SIM_SCGC4_SPI1) // power down SPI interface if no SPI Flash detected
+
+            #define FLUSH_SPI_FIFO_AND_FLAGS()      
+
+            #define WRITE_SPI_CMD0(byte)            SPI1_D = (byte)      // write a single byte
+            #define WRITE_SPI_CMD0_LAST(byte)       SPI1_D = (byte)      // write final byte
+            #define READ_SPI_FLASH_DATA()           (unsigned char)SPI1_D
+            #if defined _WINDOWS
+                #define WAIT_SPI_RECEPTION_END()    while ((SPI1_S & (SPI_S_SPRF)) == 0) {SPI1_S |= SPI_S_SPRF;}
+            #else
+                #define WAIT_SPI_RECEPTION_END()    while ((SPI1_S & (SPI_S_SPRF)) == 0) {}
+            #endif
+            #define CLEAR_RECEPTION_FLAG()          
+            
+            #define SET_SPI_FLASH_MODE()                                 // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
+            #define REMOVE_SPI_FLASH_MODE()                              // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
         #elif defined FRDM_KL82Z
             // - SPI1_CS   PTE-5
             // - SPI1_SCK  PTE-1
@@ -550,9 +621,9 @@
           //#define SPI_FLASH_AT45DB011                                  // define the ATMEL type used here
           //#define SPI_FLASH_AT45DB021
           //#define SPI_FLASH_AT45DB041
-          //#define SPI_FLASH_AT45DB081
+            #define SPI_FLASH_AT45DB081
           //#define SPI_FLASH_AT45DB161
-            #define SPI_FLASH_AT45DB321
+          //#define SPI_FLASH_AT45DB321
           //#define SPI_FLASH_AT45DB642
             #define SPI_FLASH_AT45XXXXD_TYPE                             // specify that a D-type rather than a B/C type is being used
 

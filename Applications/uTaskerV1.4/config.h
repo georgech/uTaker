@@ -758,7 +758,7 @@
 #if defined FLASH_FILE_SYSTEM && defined SPI_FILE_SYSTEM                 // when a file system is located in SPI flash
     // Specify the SPI flash type used
     //
-    #define SPI_FLASH_W25Q                                               // use Winbond W25Q SPI flash rather than ATMEL
+  //#define SPI_FLASH_W25Q                                               // use Winbond W25Q SPI flash rather than ATMEL
   //#define SPI_FLASH_SST25                                              // use SST SPI SPI flash rather than ATMEL
   //#define SPI_FLASH_ST                                                 // use ST SPI flash rather than ATMEL
   //#define SPI_DATA_FLASH                                               // FLASH type is data flash supporting sub-sectors (relevant for ST types)
@@ -873,7 +873,7 @@
       //#define SUPPORT_MSG_CNT                                          // enable the message counter mode (MSG_MODE_RX_CNT) - requires also SUPPORT_MSG_MODE
       //#define MSG_CNT_WORD                                             // 64k message length support (rather than 255)
       //#define SUPPORT_MSG_MODE_EXTRACT                                 // allow extracting messages using a number of reads rather than one single read
-  //#define WAKE_BLOCKED_TX                                              // allow a blocked transmitter to continue after an interrupt event
+    #define WAKE_BLOCKED_TX                                              // allow a blocked transmitter to continue after an interrupt event
       //#define WAKE_BLOCKED_TX_BUFFER_LEVEL                             // define specific level in output buffer for wake to occur
   //#define SUPPORT_FLUSH                                                // support rx flush
   //#define SERIAL_SUPPORT_XON_XOFF                                      // enable XON/XOFF support in driver
@@ -1636,7 +1636,7 @@
         #define MODBUS_TCP_SERVERS       0
         #define MODBUS_TCP_MASTERS       0
     #endif
-    #if!defined MODBUS_SERIAL_INTERFACES
+    #if !defined MODBUS_SERIAL_INTERFACES
         #define MODBUS_SERIAL_INTERFACES 0
     #endif
     #define NUMBER_MODBUS_QUEUES  (MODBUS_SERIAL_INTERFACES + MODBUS_TCP_SERVERS + MODBUS_TCP_MASTERS) // reserve one queue for each serial MODBUS port and each MODBUS tcp socket

@@ -35,7 +35,8 @@ PERIPH_DEP = ../../../Hardware/Kinetis/kinetis_FLASH.h \
              ../../../Hardware/Kinetis/kinetis_KV_CLOCK.h \
              ../../../Hardware/Kinetis/kinetis_KW_CLOCK.h \
              ../../../Hardware/Kinetis/kinetis_KM_CLOCK.h \
-             ../../../Hardware/Kinetis/kinetis_KE_CLOCK.h
+             ../../../Hardware/Kinetis/kinetis_KE_CLOCK.h \
+             ../../../Hardware/Kinetis/kinetis_PORTS.h
 
 # SPI FLASH dependencies
 #
