@@ -283,7 +283,7 @@
     #define ERRATA_ID_4481                                               // PMC: STOP mode recovery unstable
     #define ERRATA_ID_4065                                               // PTD4 pin is not 5V tolerant
     #define ERRATA_ID_5138                                               // RTC: the RTC_WAKEUP pin does not operate as specified and the WPON bit in RTC_IER register does not work
-    #define ERRATA_ID_5176                                               // Reset and Boot: Device may not exit the power on reset (POR) event correctly
+    #define ERRATA_ID_5176                                               // Reset and Boot: device may not exit the power on reset (POR) event correctly
     #define ERRATA_ID_5130                                               // SAI: under certain conditions, the CPU cannot reenter STOP mode via an asynchronous interrupt wakeup event
     #define ERRATA_ID_3981                                               // SDHC: ADMA fails when data length in the last descriptor is less or equal to 4 bytes
     #define ERRATA_ID_3982                                               // SDHC: ADMA transfer error when the block size is not a multiple of four
@@ -503,4 +503,51 @@
     #define ERRATA_ID_10180                                              // SCG: slock switch may hang if SCG_RCCR is written to the switch system clock source with a different divide ratio while an external reset is asserted
     #define ERRATA_ID_10181                                              // SCG: only clearing the SOSCEN bit of the SCG_SOSCCSR register cannot disable the SOSC analog circuit
 #elif defined MASK_1N36B                                                 // Kinetis K - 72MHz masks
+    #define ERRATA_ID_6804                                               // CJTAG: performing a mode change from Standard Protocol to Advanced Protocol may reset the CJTAG
+    #define ERRATA_ID_6990                                               // CJTAG: possible incorrect TAP state machine advance during Check Packet
+    #define ERRATA_ID_6939                                               // Core: interrupted loads to SP can cause erroneous behavior
+    #define ERRATA_ID_6940                                               // Core: VDIV or VSQRT instructions might not complete correctly when very short ISRs are used
+    #define ERRATA_ID_4588                                               // DMAMUX: when using PIT with "always enabled" request, DMA request does not deassert correctly
+    #define ERRATA_ID_6933                                               // eDMA: possible misbehavior of a preempted channel when using continuous link mode
+    #define ERRATA_ID_5751                                               // FTFx: launching the Read 1's Section command (RD1SEC) on an entire flash block results in access error(ACCER).
+    #define ERRATA_ID_4710                                               // FTM: FTMx_PWMLOAD register does not support 8-/16-bit accesses
+    #define ERRATA_ID_6484                                               // FTM: the process of clearing the FTMx_SC[TOF] bit does not work as expected under a certain condition when the FTM counter reaches FTM_MOD value
+    #define ERRATA_ID_2793                                               // I2C: MCU does not wake from STOP mode on subsequent address matches if previous address is mismatched
+    #define ERRATA_ID_6573                                               // JTAG: JTAG TDO function on the PTA2 disables the pull resistor
+    #define ERRATA_ID_3964                                               // JTAGC: when debug is active a wakeup from STOP or VLPS with interrupt causes a hard fault interrupt
+    #define ERRATA_ID_7214                                               // Low Leakage Stop (LLS) mode non-functional
+    #define ERRATA_ID_7993                                               // MCG: FLL frequency may be incorrect after changing the FLL reference clock
+    #define ERRATA_ID_7735                                               // MCG: IREFST status bit may set before the IREFS multiplexor switches the FLL reference clock
+    #define ERRATA_ID_4590                                               // MCG: transitioning from VLPS to VLPR low power modes while in BLPI clock mode is not supported
+    #define ERRATA_ID_6665                                               // operating requirements: Limitation of the device operating range
+    #define ERRATA_ID_7401                                               // PMC: maximum current consumption in VLPR, VLPW, VLPS, LLS and VLLSx modes may be higher than data sheet specification
+    #define ERRATA_ID_4481                                               // PMC: STOP mode recovery unstable
+    #define ERRATA_ID_4638                                               // PMC: VLLSx mode current draw at cold can exceed maximum specification at cold
+    #define ERRATA_ID_5667                                               // PMC: when used as an input to ADC or CMP modules, the PMC bandgap 1-V voltage reference is not available in VLPx, LLS, or VLLSx modes
+    #define ERRATA_ID_4949                                               // Reset and Boot: device may not exit the power on reset (POR) event correctly with fast ramp-up slew rates
+    #define ERRATA_ID_5130                                               // SAI: under certain conditions, the CPU cannot reenter STOP mode via an asynchronous interrupt wakeup event
+    #define ERRATA_ID_4218                                               // SIM/FLEXBUS: SIM_SCGC7[FLEXBUS] bit should be cleared when the FlexBus is not being used
+    #define ERRATA_ID_6272                                               // SIM: the System Integration Module Registers may not be programmed correctly
+    #define ERRATA_ID_5708                                               // SLCD: LCD waveforms can exceed voltage specification for 3V or 5V glass
+    #define ERRATA_ID_5952                                               // SMC: wakeup via the LLWU from LLS/VLLS to RUN to VLPR incorrectly triggers an immediate wakeup from the next low power mode entry
+    #define ERRATA_ID_2638                                               // TSI: the counter registers are not immediately updated after the EOSF bit is set
+    #define ERRATA_ID_3926                                               // TSI: The TSI will run several scan cycles during reference clock instead of scanning each electrode once
+    #define ERRATA_ID_4181                                               // TSI: when the overrun flag is set, the TSI scanning sequence will exhibit undefined behavior
+    #define ERRATA_ID_4935                                               // UART: CEA709.1 features not supported
+    #define ERRATA_ID_7027                                               // UART: during ISO-7816 T=0 initial character detection invalid initial characters are stored in the RxFIFO
+    #define ERRATA_ID_7028                                               // UART: during ISO-7816 initial character detection the parity, framing, and noise error flags can set
+    #define ERRATA_ID_8184                                               // UART: UART: during ISO-7816 T=0, TC bit set at 12 ETUs may cause loss of characters when UART is switched from transmit to receive mode
+    #define ERRATA_ID_6472                                               // UART: ETU compensation needed for ISO-7816 wait time (WT) and block wait time (BWT)
+    #define ERRATA_ID_2582                                               // UART: flow control timing issue can result in loss of characters
+    #define ERRATA_ID_4647                                               // UART: flow control timing issue can result in loss of characters if FIFO is not enabled
+    #define ERRATA_ID_7090                                               // UART: in ISO-7816 mode, timer interrupts flags do not clear
+    #define ERRATA_ID_7029                                               // UART: in ISO-7816 T=1 mode, CWT interrupts assert at both character and block boundaries
+    #define ERRATA_ID_7031                                               // UART: in single wire receive mode UART will attempt to transmit if data is written to UART_D
+    #define ERRATA_ID_3892                                               // UART: ISO-7816 automatic initial character detect feature not working correctly
+    #define ERRATA_ID_4945                                               // UART: ISO-7816 T=1 mode receive data format with a single stop bit is not supported
+    #define ERRATA_ID_5704                                               // UART: TC bit in UARTx_S1 register is set before the last character is sent out in ISO7816 T=0 mode
+    #define ERRATA_ID_7091                                               // UART: UART_S1[NF] and UART_S1[PE] can set erroneously while UART_S1[FE] is set
+    #define ERRATA_ID_7092                                               // UART: UART_S1[TC] is not cleared by queuing a preamble or break character
+    #define ERRATA_ID_8807                                               // USB: in host mode, transmission errors may occur when communicating with a low speed (LS) device through a USB hub
+    #define ERRATA_ID_5928                                               // USBOTG: USBx_USBTRC0[USBRESET] bit does not operate as expected in all cases
 #endif

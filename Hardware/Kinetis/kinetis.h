@@ -184,7 +184,7 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
 //
 #include "kinetis_errata.h"                                              // {61}
 
-#if defined KINETIS_KL || defined KINETIS_KE
+#if defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_KV
     #define ARM_MATH_CM0PLUS                                             // Cortex-M0 to be used
 #else
     #define ARM_MATH_CM4                                                 // Cortex-M4 to be used
@@ -8766,9 +8766,19 @@ typedef struct stKINETIS_ADMA2_BD
           #define SIM_COPC_COPCLKS_1K        0x00000000                      // COP source is 1kHz clock
           #define SIM_COPC_COPCLKS_BUS       0x00000002                      // COP source is bus clock
           #define SIM_COPC_COPT_DISABLED     0x00000000                      // COP disabled
-          #define SIM_COPC_COPT_SHORTEST     0x00000004                      // 2^13 bus clocks or 32ms timeout
-          #define SIM_COPC_COPT_MEDIUM       0x00000008                      // 2^16 bus clocks or 256ms timeout
-          #define SIM_COPC_COPT_LONGEST      0x0000000c                      // 2^18 bus clocks or 1.024s timeout
+          #define SIM_COPC_COPT_SHORTEST     0x00000004                      // 2^13 cycles or 32ms timeout (LPO) - 2^5 for short timeout (when supported)
+          #define SIM_COPC_COPT_MEDIUM       0x00000008                      // 2^16 cycles or 256ms timeout (LPO) - 2^8 for short timeout (when supported)
+          #define SIM_COPC_COPT_LONGEST      0x0000000c                      // 2^18 cycles or 1.024s timeout (LPO) - 2^10 for short timeout (when supported)
+          // Newer KL parts, whereby compatible with base devices
+          //
+          #define SIM_COPC_COPCLKS_SHORT     0x00000000                      // COP configured for short timeout
+          #define SIM_COPC_COPCLKS_LONG      0x00000002                      // COP configured for long timeout
+          #define SIM_COPC_COPSTPEN          0x00000010                      // COP is enabled in stop modes
+          #define SIM_COPC_COPDBGEN          0x00000020                      // COP is enabled in debug mode
+          #define SIM_COPC_COPCLKSEL_1K      0x00000000                      // COP clock source selection - LPO(1kHz)
+          #define SIM_COPC_COPCLKSEL_MCGIRCLK 0x00000040                     // COP clock source selection - MCGIRCLK
+          #define SIM_COPC_COPCLKSEL_OSCERCLK 0x00000080                     // COP clock source selection - OSCERCLK
+          #define SIM_COPC_COPCLKSEL_BUS     0x000000c0                      // COP clock source selection - bus clock
         #define SIM_SRVCOP                  *(volatile unsigned long *)(SIM_BLOCK + 0x1104) // COP Control Register (write-only)
           #define SIM_SRVCOP_1               0x00000055                      // to service the COP 0x55 is written, followed by 0xaa
           #define SIM_SRVCOP_2               0x000000aa
@@ -10219,7 +10229,7 @@ typedef struct stKINETIS_ADMA2_BD
         #define WDOG_PRESC                   *(unsigned short *)(WDOG_BLOCK + 0x16)           // Watchdog Prescaler Register
 
         #if defined _WINDOWS
-            #define REFRESH_WDOG()           WDOG_REFRESH = WDOG_REFRESH_SEQUENCE_1; WDOG_REFRESH = WDOG_REFRESH_SEQUENCE_2; WDOG_TMROUTH = 0; WDOG_TMROUTL = 0; // this sequence must be performed within 20 bus cycles (it should be protected against interrupt disturbing this)
+            #define REFRESH_WDOG()           WDOG_REFRESH = WDOG_REFRESH_SEQUENCE_1; WDOG_REFRESH = WDOG_REFRESH_SEQUENCE_2; WDOG_TMROUTH = 0; WDOG_TMROUTL = 0; // this sequence must be performed within 20 bus cycles (it should be protected against interrupts disturbing it)
         #else
             #define REFRESH_WDOG()           WDOG_REFRESH = WDOG_REFRESH_SEQUENCE_1; WDOG_REFRESH = WDOG_REFRESH_SEQUENCE_2 // this sequence must be performed within 20 bus cycles (it should be protected against interrupt disturbing this)
         #endif
@@ -10493,10 +10503,10 @@ typedef struct stKINETIS_ADMA2_BD
       #endif
       #if defined KINETIS_K_FPU || (KINETIS_MAX_SPEED > 100000000) || defined KINETIS_KW2X
         #define MCG_C7                   *(unsigned char *)(MCG_BLOCK + 0x0c) // MSG Control 7 Register
-          #define MCG_C7_OSCSEL_OSCCLK   0x00                            // MCG FLL external reference clock is OSCCLK
+          #define MCG_C7_OSCSEL_OSCCLK   0x00                            // MCG FLL external reference clock is OSCCLK (OSCCLK0)
           #define MCG_C7_OSCSEL_32K      0x01                            // MCG FLL external reference clock is 32 kHz RTC Oscillator
-        #if defined KINETIS_K64 || defined KINETIS_K22 || defined KINETIS_K24 || defined KINETIS_K02
-          #define MCG_C7_OSCSEL_IRC48MCLK 0x02                           // MCG FLL external reference clock is IRC48M
+        #if defined KINETIS_HAS_IRC48M
+          #define MCG_C7_OSCSEL_IRC48MCLK 0x02                           // MCG FLL external reference clock is IRC48M (OSCCLK1)
         #endif
         #define MCG_C8                   *(volatile unsigned char *)(MCG_BLOCK + 0x0d) // MSG Control 8 Register
         #define MCG_C10                  *(unsigned char *)(MCG_BLOCK + 0x0f) // MSG Control 10 Register

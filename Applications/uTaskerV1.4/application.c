@@ -2156,7 +2156,7 @@ static unsigned long fnGetDataFileLength(const unsigned char *ptrRawData, unsign
     unsigned short *ptrData = (unsigned short *)ptrRawData;
     signed short sValue;
     unsigned long ulFileContentLength = 0;
-    while (1) {                                                          // identify the raw data size in data file
+    while ((int)1 != (int)0) {                                           // identify the raw data size in data file
         fnGetParsFile((unsigned char *)ptrData, (unsigned char *)&sValue, sizeof(sValue));
         if (sValue == -1) {
             break;                                                       // 0xffff considered as empty data location so quit counting size
