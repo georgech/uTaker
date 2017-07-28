@@ -1713,7 +1713,7 @@ _user_data_reception:
         }
     }
     else {
-        if (usb_endpoint_queue->ucState & USB_ENDPOINT_BLOCKED) {
+        if ((usb_endpoint_queue->ucState & USB_ENDPOINT_BLOCKED) != 0) {
             return MAINTAIN_OWNERSHIP;                                   // the input buffer is presently blocked so maintain the USB buffer until it is freed by the application
         }
         if ((ptrQueue->USB_queue.buf_length - ptrQueue->USB_queue.chars) >= usLength) { // is there enough space to put this data packet in to the input buffer?
@@ -1745,7 +1745,7 @@ _user_data_reception:
     if ((usb_endpoint_queue->usParameters & USB_ENDPOINT_ZERO_COPY_OUT) != 0) { // {31}
         return BUFFER_CONSUMED;
     }
-    if (usb_endpoint_queue->ucState & USB_ENDPOINT_BLOCKED) {
+    if ((usb_endpoint_queue->ucState & USB_ENDPOINT_BLOCKED) != 0) {
         return MAINTAIN_OWNERSHIP;                                       // the input buffer is presently blocked so maintain the USB buffer until it is freed by the application
     }
     if ((ptrQueue->USB_queue.buf_length - ptrQueue->USB_queue.chars) >= usLength) { // is there enough space to put this data packet in to the input buffer?

@@ -539,9 +539,11 @@ extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned char ucDmaT
     *(unsigned char *)(DMAMUX0_BLOCK + ucDMA_channel) = (ucDmaTriggerSource | DMAMUX_CHCFG_ENBL); // connect trigger source to DMA channel
     #endif
     #if defined _WINDOWS                                                 // simulator checks to help detect incorrect usage
+        #if defined DMA_MEMCPY_CHANNEL
     if (DMA_MEMCPY_CHANNEL == ucDMA_channel) {
         _EXCEPTION("Warning - peripheral DMA is using the channel reserved for DMA based uMemcpy()!!");
     }
+        #endif
         #if defined DMA_MEMCPY_CHANNEL_ALT                               // {5}
     if (DMA_MEMCPY_CHANNEL_ALT == ucDMA_channel) {
         _EXCEPTION("Warning - peripheral DMA is using the alternative channel reserved for DMA based uMemcpy()!!");

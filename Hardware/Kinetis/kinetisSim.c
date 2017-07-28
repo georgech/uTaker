@@ -7784,7 +7784,7 @@ extern int fnSimTimers(void)
             }
         #endif
         }
-        #if defined KINETIS_KL
+        #if defined KINETIS_KL && defined SUPPORT_ADC
         // Check for ADC triggers
         //
         if ((SIM_SOPT7 & SIM_SOPT7_ADC0ALTTRGEN) == 0) {                 // if the default hardware trigger source is used

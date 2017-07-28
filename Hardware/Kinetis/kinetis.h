@@ -1557,7 +1557,7 @@ typedef struct stPROCESSOR_IRQ
     void  (*irq_PORTA)(void);                                            // 30
   #if (PORTS_AVAILABLE == 2)
     void  (*irq_PORTB)(void);                                            // 31
-  #elif defined KINETIS_KL27
+  #elif defined KINETIS_KL27 && (SIZE_OF_FLASH <= (64 * 1024))
     void  (*irq_PORTBCD_E)(void);                                        // 31 single interrupt vector for ports B, C, D and E
   #else
     void  (*irq_PORTC_D)(void);                                          // 31 single interrupt vector for ports C and D
@@ -2226,7 +2226,7 @@ typedef struct stVECTOR_TABLE
     #define irq_PORTA_ID                  30                             // 30 (port A)
   #if (PORTS_AVAILABLE == 2)
     #define irq_PORTB_ID                  31                             // 31 (port B)
-  #elif defined KINETIS_KL27 && (FLASH_SIZE <= (64 * 1024))
+  #elif defined KINETIS_KL27 && (SIZE_OF_FLASH <= (64 * 1024))
     #define irq_PORTBCD_E_ID              31                             // 31 (ports B, C D and E share an interrupt)
   #elif defined KINETIS_KL25
     #define irq_PORTD_ID                  31                             // 31 (port D)

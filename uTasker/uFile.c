@@ -268,7 +268,6 @@ extern int fnDelPar(unsigned char ucDeleteType)
     return (fnSetParameters(ucValidPars, 1, 0, 0));                      // delete and invalidate (temp) parameter block
 }
 #elif defined USE_PARAMETER_AREA                                         // {17}
-
 static unsigned char *fnGetValidParArea(unsigned short usLength, unsigned char **ppNext)
 {
     unsigned char *pucArea = (unsigned char *)PARAMETER_BLOCK_START;     // the start of the parameter area
@@ -287,7 +286,7 @@ static unsigned char *fnGetValidParArea(unsigned short usLength, unsigned char *
     }
     if (ppNext != 0) {
         if ((*fnGetFlashAdd(pucArea) == 0xff) || (pucNextBlock >= (unsigned char *)(PARAMETER_BLOCK_START + PAR_BLOCK_SIZE - usRoundedLength))) {
-            pucNextBlock = pucArea;                                      // empty or no further room so next block is same a present block
+            pucNextBlock = pucArea;                                      // empty or no further room so next block is same as present block
         }
         *ppNext = pucNextBlock;
     }

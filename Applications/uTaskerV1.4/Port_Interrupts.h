@@ -272,12 +272,12 @@ static void fnInitIRQ(void)
     interrupt_setup.int_port       = PORTC;                              // the port that the interrupt input is on
             #if defined FRDM_K22F || defined FRDM_KL27Z
     interrupt_setup.int_port_bits  = PORTC_BIT1;                         // the IRQ input connected (SW2 on FRDM-K22F) LLWU_P6 (SW3 on FRDM-KL27Z)
-            #if defined FRDM_KL27Z
+                #if defined FRDM_KL27Z
     interrupt_setup.int_port_sense = (IRQ_FALLING_EDGE | PULLUP_ON);     // interrupt is to be falling edge sensitive
     fnConfigureInterrupt((void *)&interrupt_setup);                      // configure interrupt
     interrupt_setup.int_port_bits = PORTC_BIT4;
     interrupt_setup.int_handler = test_irq_4;
-            #endif
+                #endif
             #elif defined TWR_K53N512 || defined TWR_K40D100M
     interrupt_setup.int_port_bits  = PORTC_BIT5;                         // the IRQ input connected (SW1 on TWR-K53N512 and TWR-K40D100M) LLWU_P9
             #else

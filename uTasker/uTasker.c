@@ -65,7 +65,7 @@
 /*                     global variable definitions                     */
 /* =================================================================== */
 
-volatile UTASK_TICK uTaskerSystemTick= 0;                                // system tick counter
+volatile UTASK_TICK uTaskerSystemTick = 0;                               // system tick counter
 
 #if defined MULTISTART
     MULTISTART_TABLE *ptMultiStartTable = 0;

@@ -356,7 +356,7 @@ extern void fnUnhaltEndpoint(unsigned char ucEndpoint)
     KINETIS_USB_ENDPOINT_BD *ptEndpointBD = ptrBDT;
     unsigned char *ptrEndPointCtr = fnGetEndPointCtr(ucEndpoint & ~IN_ENDPOINT);
     ptEndpointBD += (ucEndpoint & ~IN_ENDPOINT);
-    if (ucEndpoint & IN_ENDPOINT) {
+    if ((ucEndpoint & IN_ENDPOINT) != 0) {
         usb_endpoints[ucEndpoint & ~IN_ENDPOINT].ulNextTxData0 &= ~DATA_1;
         ptEndpointBD->usb_bd_tx_even.ulUSB_BDControl = 0;
         ptEndpointBD->usb_bd_tx_odd.ulUSB_BDControl  = 0;
@@ -391,7 +391,6 @@ static void fnUSB_HostDelay(void (*timeout_handler)(void), unsigned long ulDelay
     }
     fnConfigureInterrupt((void *)&pit_setup);                            // enter interrupt
 }
-
 
 extern void fnUSB_ResetCycle(void)
 {
@@ -984,7 +983,7 @@ extern int fnConsumeUSB_out(unsigned char ucEndpointRef)
     KINETIS_USB_BD *ptUSB_BD;                                             // specific BD
     KINETIS_USB_ENDPOINT_BD *ptEndpointBD = ptrBDT;                       // start of BDT
     ptEndpointBD += ucEndpointRef;
-    if (usb_endpoints[ucEndpointRef].ulNextRxData0 & DATA_1) {
+    if ((usb_endpoints[ucEndpointRef].ulNextRxData0 & DATA_1) != 0) {
         ptUSB_BD = &ptEndpointBD->usb_bd_rx_even;
         ulBuffer = 0;
     }
@@ -992,7 +991,7 @@ extern int fnConsumeUSB_out(unsigned char ucEndpointRef)
         ptUSB_BD = &ptEndpointBD->usb_bd_rx_odd;
         ulBuffer = DATA_1;
     }
-    if (ptUSB_BD->ulUSB_BDControl & OWN) {                               // no data available
+    if ((ptUSB_BD->ulUSB_BDControl & OWN) != 0) {                        // no data available
         return USB_BUFFER_NO_DATA;
     }
     usLength = GET_FRAME_LENGTH();                                       // the number of bytes waiting in the buffer
