@@ -46,3 +46,9 @@ Version V1.4 19-04-2016
 
 Correct optional offset when building with VS2010, respecting that the input is now in unicode
 
+
+Version V1.5 31-07-2017
+=======================
+
+Terminate iHex line with CR + LF (rather than just LF)
+
