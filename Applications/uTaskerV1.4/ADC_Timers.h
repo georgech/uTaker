@@ -82,11 +82,11 @@
         #endif
     #endif
     #if defined SUPPORT_LPTMR                                            // Kinetis low power timer {18}
-      //#define TEST_LPTMR_PERIODIC                                      // test a user defined periodic interrupt
+        #define TEST_LPTMR_PERIODIC                                      // test a user defined periodic interrupt
       //#define TEST_LPTMR_SINGLE_SHOT                                   // test a user defined single-shot interrupt
     #endif
     #if defined SUPPORT_DMA_TIMER                                        // M522XX DMA timers
-      //#define TEST_DMA_TIMER      ulCnt                                     // test a user defined periodic interrupt
+      //#define TEST_DMA_TIMER      ulCnt                                // test a user defined periodic interrupt
     #endif
     #if defined SUPPORT_GENERAL_PURPOSE_TIMER                            // M522XX general purpose timers
       //#define TEST_GPT                                                 // test general purpose timer operation

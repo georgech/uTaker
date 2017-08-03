@@ -19,6 +19,7 @@
     11.12.2015 Add port F                                                {2}
     11.12.2015 Add DMA trigger option                                    {3}
     11.12.2015 Add keep peripheral setting option                        {4}
+    31.07.2017 Add IRQ_DISABLE_INT support                               {5}
 
 */
 
@@ -697,31 +698,33 @@ static void fnEnterPortInterruptHandler(INTERRUPT_SETUP *port_interrupt, unsigne
         #endif
     #else                                                                // else use port control interrupt module
             unsigned long ulCharacteristics = 0;                         // default is to disable interrupts
-            if ((port_interrupt->int_port_sense & IRQ_LOW_LEVEL) != 0) {
-                ulCharacteristics = PORT_IRQC_LOW_LEVEL;
-            }
-            else if ((port_interrupt->int_port_sense & IRQ_HIGH_LEVEL) != 0) {
-                ulCharacteristics = PORT_IRQC_HIGH_LEVEL;
-            }
-            else if ((port_interrupt->int_port_sense & IRQ_RISING_EDGE) != 0) {
-                if ((port_interrupt->int_port_sense & IRQ_FALLING_EDGE) != 0) {
-                    ulCharacteristics = PORT_IRQC_BOTH;
+            if ((port_interrupt->int_port_sense & IRQ_DISABLE_INT) == 0) { // {5} if the interrupt is not being disabled
+                if ((port_interrupt->int_port_sense & IRQ_LOW_LEVEL) != 0) {
+                    ulCharacteristics = PORT_IRQC_LOW_LEVEL;
                 }
-                else {
-                    ulCharacteristics = PORT_IRQC_RISING;
+                else if ((port_interrupt->int_port_sense & IRQ_HIGH_LEVEL) != 0) {
+                    ulCharacteristics = PORT_IRQC_HIGH_LEVEL;
                 }
-            }
-            else if ((port_interrupt->int_port_sense & IRQ_FALLING_EDGE) != 0) {
-                ulCharacteristics = PORT_IRQC_FALLING;
+                else if ((port_interrupt->int_port_sense & IRQ_RISING_EDGE) != 0) {
+                    if ((port_interrupt->int_port_sense & IRQ_FALLING_EDGE) != 0) {
+                        ulCharacteristics = PORT_IRQC_BOTH;
+                    }
+                    else {
+                        ulCharacteristics = PORT_IRQC_RISING;
+                    }
+                }
+                else if ((port_interrupt->int_port_sense & IRQ_FALLING_EDGE) != 0) {
+                    ulCharacteristics = PORT_IRQC_FALLING;
+                }
+                if ((port_interrupt->int_port_sense & PORT_DMA_MODE) != 0) { // {3} if DMA is required rather than interrupt
+                    ulCharacteristics &= ~(PORT_IRQC_LOW_LEVEL);         // DMA transfer rather that an interrupt
+                }
             }
             if ((port_interrupt->int_port_sense & PULLUP_ON) != 0) {
-                ulCharacteristics |= (PORT_PS_UP_ENABLE);
+                ulCharacteristics |= (PORT_PS_UP_ENABLE);                // enable pull-up resistor on the input
             }
             else if ((port_interrupt->int_port_sense & PULLDOWN_ON) != 0) {
-                ulCharacteristics |= (PORT_PS_DOWN_ENABLE);
-            }
-            if ((port_interrupt->int_port_sense & PORT_DMA_MODE) != 0) { // {3} if DMA is required rather than interrupt
-                ulCharacteristics &= ~(PORT_IRQC_LOW_LEVEL);             // DMA transfer rather that an interrupt
+                ulCharacteristics |= (PORT_PS_DOWN_ENABLE);              // enable pull-down resistor on the input
             }
             fnEnterPortInterruptHandler(port_interrupt, ulCharacteristics); // configure the interrupt and port bits according to the interrupt requirements
     #endif

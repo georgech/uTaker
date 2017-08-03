@@ -313,11 +313,15 @@
 #define TIMEOUT_USB_LOADING_COMPLETE_C     4
 #define TIMEOUT_USB_LOADING_COMPLETE_D     (TIMEOUT_USB_LOADING_COMPLETE_C + 1)
 
-#define UNKNOWN_CONTENT                    0
-#define FIRMWARE_START_CONTENT             1
-#define HIDDEN_FILE_CLUSTER                2
-#define WINDOWS_HIDDEN_DATA_CONTENT        3
-#define MAC_HIDDEN_DATA_CONTENT            4
+#define FIRMWARE_BLOCKED                   0
+#define CONTENT_BEING_FILTERED             1
+#define FIRMWARE_START_SREC                2
+#define FIRMWARE_START_HEX                 3
+#define FIRMWARE_START_CONTENT             4
+#define HIDDEN_FILE_CLUSTER                5
+#define WINDOWS_HIDDEN_DATA_CONTENT        6
+#define MAC_HIDDEN_DATA_CONTENT            7
+#define UNKNOWN_CONTENT                    8
 
 #if defined FAT_EMULATION
     #define APPLICATION_DATA_FILES           MAXIMUM_DATA_FILES
@@ -1451,9 +1455,9 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
         #if (defined WINDOWS_8_1_WORKAROUND || defined MAC_OS_X_WORKAROUND) && !defined NO_BLOCKING_PERIOD // {15}
             case TIMEOUT_ACCEPT_UPLOAD:
             #if defined MAC_OS_X_WORKAROUND
-                uMemset(ucAcceptUploads, 1, sizeof(ucAcceptUploads));    // potentially accept software uploads from now (valid for all disks)
+                uMemset(ucAcceptUploads, CONTENT_BEING_FILTERED, sizeof(ucAcceptUploads)); // potentially accept software uploads from now (valid for all disks)
             #else
-                uMemset(ucAcceptUploads, 2, sizeof(ucAcceptUploads));    // accept software uploads from now (valid for all disks)
+                uMemset(ucAcceptUploads, FIRMWARE_START_CONTENT, sizeof(ucAcceptUploads)); // accept software uploads from now (valid for all disks)
             #endif
             #if defined DEBUG_MAC
                 fnDebugMsg("Blocking period expired\r\n");
@@ -1483,7 +1487,7 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
                     fnWriteBytesFlash(0, 0, 0);                          // close any outstanding FLASH buffer from end of the file
         #endif
         #if defined WINDOWS_8_1_WORKAROUND || defined MAC_OS_X_WORKAROUND// {21} jump possible hidden files (added by Windows 8.1 or MAC OS X) and deleted entries
-                    while (1) {
+                    while ((int)1 != (int)0) {
                         if ((ptrVolumeEntry->DIR_Name[0] == DIR_NAME_FREE) || ((ptrVolumeEntry->DIR_Attr != DIR_ATTR_LONG_NAME) && (ptrVolumeEntry->DIR_Attr & (DIR_ATTR_HIDDEN | DIR_ATTR_VOLUME_ID)))) { // volume ID, deleted or hidden system file/directory {25} and hidden type is ignored
                             ptrVolumeEntryBackup = 0;                    // invalid as upload file so reset
                         }
@@ -1559,9 +1563,9 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
     #if defined USB_MSD_DEVICE_LOADER && (defined WINDOWS_8_1_WORKAROUND || defined MAC_OS_X_WORKAROUND) // {15}
         #if defined NO_BLOCKING_PERIOD
             #if defined MAC_OS_X_WORKAROUND
-                uMemset(ucAcceptUploads, 1, sizeof(ucAcceptUploads));    // potentially accept software uploads from now (valid for all disks)
+                uMemset(ucAcceptUploads, CONTENT_BEING_FILTERED, sizeof(ucAcceptUploads)); // potentially accept software uploads from now (valid for all disks)
             #else
-                uMemset(ucAcceptUploads, 2, sizeof(ucAcceptUploads));    // accept software uploads from now (valid for all disks)
+                uMemset(ucAcceptUploads, FIRMWARE_START_CONTENT, sizeof(ucAcceptUploads)); // accept software uploads from now (valid for all disks)
             #endif
         #else
                 uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(2 * SEC), TIMEOUT_ACCEPT_UPLOAD); // start a period where writes will be ignored - when the timer has expired uploads are accepted
@@ -2874,6 +2878,7 @@ static int fnIsInClusterChain(unsigned char ucDisk, unsigned long ulSectorNumber
     } while (1);
 }
 
+    #if !defined USB_MSD_REJECTS_BINARY_FILES
 static int fnIsWindows(unsigned char *ptrBuffer)
 {
     if (ptrBuffer[0] != '{') {                                           // start of {.1.4.2.2.7.F.1.6.-.7.9.E.6.-.4.4.2.A.-.A.9.6.9.-.B.D.9.8.A.5.F.6.E.C.1.B.} unicode string where . is 0x00
@@ -2923,8 +2928,8 @@ static int fnIsMAC(unsigned char *ptrBuffer)
     }
     return 0;                                                            // very high chance that this is MAC hidden file data that is being written to an as yet unassigned cluster
 }
-
-    #if defined AUTO_DELETE_ON_ANY_FIRMWARE
+    #endif
+    #if defined AUTO_DELETE_ON_ANY_FIRMWARE && !defined USB_MSD_REJECTS_BINARY_FILES
 static unsigned long fnGetContentAddress(unsigned char *ptrBuffer)
 {
     unsigned long ulAddress = *ptrBuffer++;
@@ -2950,14 +2955,14 @@ static unsigned long fnGetContentAddress(unsigned char *ptrBuffer)
 static int fnIsFirmware(unsigned char *ptrBuffer)
 {
     unsigned long ulAddress = fnGetContentAddress(ptrBuffer);
-    if ((ulAddress > RAM_START_ADDRESS) && (ulAddress <= (RAM_START_ADDRESS + SIZE_OF_RAM))) {
+    if ((ulAddress > RAM_START_ADDRESS) && (ulAddress <= (RAM_START_ADDRESS + SIZE_OF_RAM))) { // check whether the stack pointer would be in the internal SRAM
         ulAddress = fnGetContentAddress(ptrBuffer + 4);
     #if defined MEMORY_SWAP
         if ((ulAddress > FLASH_START_ADDRESS) && (ulAddress <= (FLASH_START_ADDRESS + (SIZE_OF_FLASH/2)))) {
             return 0;                                                    // probably firmware content
         }
     #else
-        if ((ulAddress > _UTASKER_APP_START_) && (ulAddress <= (FLASH_START_ADDRESS + SIZE_OF_FLASH))) {
+        if ((ulAddress > _UTASKER_APP_START_) && (ulAddress <= (FLASH_START_ADDRESS + SIZE_OF_FLASH))) { // check that the program counter would be in internal flash
             return 0;                                                    // probably firmware content
         }
     #endif
@@ -2965,6 +2970,38 @@ static int fnIsFirmware(unsigned char *ptrBuffer)
     return -1;                                                           // not firmware content
 }
     #endif
+
+    #if defined USB_MSD_ACCEPTS_SREC_FILES || defined USB_MSD_ACCEPTS_HEX_FILES
+static int fnStoreRecord(int iType, unsigned char *ptrBuffer)
+{
+    static unsigned char ucInputBuffer[256] = {0};                       // intermediate buffer
+    static int iInputLength = 0;
+    int i = 0;
+    int iReturn = CORRUPTED_SREC;                                        // if no record can be tested we report bad content
+    register unsigned char ucNewByte;
+    while (i++ < BYTES_PER_SECTOR) {
+        ucInputBuffer[iInputLength] = ucNewByte = *ptrBuffer;            // transfer the data content to the input protocol buffer
+        if (ucNewByte != '\n') {                                         // ignore
+            if (ucNewByte == '\r') {                                     // end of a line
+                iReturn = fnHandleRecord(ucInputBuffer, (ucInputBuffer + iInputLength + 1), iType); // handle the buffer as protocol content
+                if (iType == 0) {                                        // if testing for valid content return result immediately before programming can begin
+                    break;
+                }
+                iInputLength = 0;
+            }
+            else {
+                if (++iInputLength >= sizeof(ucInputBuffer)) {           // protect the collection buffer from overflow
+                    iInputLength = 0;
+                }
+            }
+        }
+        ptrBuffer++;
+    }
+    return iReturn;
+}
+    #endif
+
+
 
 // This function is called to check the content of the first sector written to cluster space in a block write
 // - if the write is to a cluster that is known to belong to a hidden file it is rejected
@@ -2998,14 +3035,22 @@ static int fnCorrolateData(unsigned char ucDisk, unsigned char *ptrBuffer, unsig
         }
         file_object++;
     }
-    if (fnIsWindows(ptrBuffer) == 0) {
+    #if !defined USB_MSD_REJECTS_BINARY_FILES
+    if (fnIsWindows(ptrBuffer) == 0) {                                   // try to identify windows content pattern
         return WINDOWS_HIDDEN_DATA_CONTENT;                              // probably hidden windows data
     }
-    if (fnIsMAC(ptrBuffer) == 0) {
+    if (fnIsMAC(ptrBuffer) == 0) {                                       // try to identfy MAC content pattern
         return MAC_HIDDEN_DATA_CONTENT;                                  // probably hidden MAC data
     }
-    #if defined AUTO_DELETE_ON_ANY_FIRMWARE
-    if (fnIsFirmware(ptrBuffer) == 0) {
+    #endif
+    #if defined USB_MSD_ACCEPTS_SREC_FILES || defined USB_MSD_ACCEPTS_HEX_FILES
+    if (LINE_ACCEPTED == fnStoreRecord(TEST_SERIAL_CONTENT, ptrBuffer)) {// check for valid SREC/iHEX content
+      //fnDeleteApplication(ucDisk);                                     // delete the original firmware
+        return FIRMWARE_START_SREC;                                      // start SREC/iHEX loading
+    }
+    #endif
+    #if defined AUTO_DELETE_ON_ANY_FIRMWARE && !defined USB_MSD_REJECTS_BINARY_FILES
+    if (fnIsFirmware(ptrBuffer) == 0) {                                  // check that the binary content is a valid firmware start
         return FIRMWARE_START_CONTENT;                                   // probably the start of firmware copy
     }
     #endif
@@ -3047,17 +3092,15 @@ static int _fnWriteSector(unsigned char ucDisk, unsigned char *ptrBuffer, unsign
                 ulNewWriteBlock[ucDisk] = 0;
                 return UTFAT_SUCCESS;                                    // ignore all writes
             }
-            else if (ucAcceptUploads[ucDisk] == 1) {                     // we need to filter data content before we accept data
+            else if (ucAcceptUploads[ucDisk] == CONTENT_BEING_FILTERED) {// we need to filter data content before we accept data
                 if (ulNewWriteBlock[ucDisk] != 0) {                      // first sector write in a cluster
                     ulNewWriteBlock[ucDisk] = 0;                         // check is only made on first sector of a cluster block write
-        #if defined AUTO_DELETE_ON_ANY_FIRMWARE
-                    if (fnCorrolateData(ucDisk, ptrBuffer, ulSectorNumber) != FIRMWARE_START_CONTENT) { // check whether the first sector of this data corresponds to a hidden MAC/Windows file write
+                    ucAcceptUploads[ucDisk] = fnCorrolateData(ucDisk, ptrBuffer, ulSectorNumber);
+                    if (ucAcceptUploads[ucDisk] > FIRMWARE_START_CONTENT) { // check whether the first sector of this data corresponds to a hidden MAC/Windows file write
+                        ucAcceptUploads[ucDisk] = CONTENT_BEING_FILTERED;// continue filtering
                         return UTFAT_SUCCESS;                            // ignore all writes in this block
                     }
-        #else
-                    if (fnCorrolateData(ucDisk, ptrBuffer, ulSectorNumber) > FIRMWARE_START_CONTENT) { // check whether the first sector of this data corresponds to a hidden MAC/Windows file write
-                        return UTFAT_SUCCESS;                            // ignore all writes in this block
-                    }
+        #if !defined AUTO_DELETE_ON_ANY_FIRMWARE
                     if (ulLastIgnoredClusterWrite[ucDisk] != 0) {        // this is the first write after a delete was performed
                         if (ulSectorNumber == ulLastIgnoredClusterWrite[ucDisk]) { // filter a single post-delete write to the same cluster
                           //ulLastIgnoredClusterWrite[ucDisk] = 0;       // only ignore single block write
@@ -3065,7 +3108,8 @@ static int _fnWriteSector(unsigned char ucDisk, unsigned char *ptrBuffer, unsign
                         }
                     }
         #endif
-                    ucAcceptUploads[ucDisk] = 2;                         // from this point on all cluster writes are accepted
+                    // From this point on all cluster writes are accepted (ucAcceptUploads[ucDisk] holds the loading mode)
+                    //
         #if defined DEBUG_MAC
                     fnDebugMsg("Prog. accepted\r\n");
         #endif
@@ -3088,25 +3132,34 @@ static int _fnWriteSector(unsigned char ucDisk, unsigned char *ptrBuffer, unsign
     #endif
             }
             ptrProgAdd -= ulOffset[ucDisk];                              // adjust offset to align flash address to start of application if needed
-    #if defined MEMORY_SWAP
-            if ((ptrProgAdd < ptr_disk_end[ucDisk]) && (ptrProgAdd >= (ptr_disk_location[ucDisk])))
-    #else
-            if ((ptrProgAdd < ptr_disk_end[ucDisk]) && (ptrProgAdd >= (ptr_disk_location[ucDisk] + (ROOT_FILE_ENTRIES * sizeof(DIR_ENTRY_STRUCTURE_FAT32)))))
+    #if defined USB_MSD_ACCEPTS_SREC_FILES || defined USB_MSD_ACCEPTS_HEX_FILES
+            if (ucAcceptUploads[ucDisk] != FIRMWARE_START_CONTENT) {     // if not binary content
+                fnStoreRecord(USB_LOADING_IN_OPERATION, ptrBuffer);      // program the content according to its content type
+            }
+            else {
     #endif
-            {                                                            // limit location and length of file
-                MAX_FILE_LENGTH write_length = (MAX_FILE_LENGTH)(UTASKER_APP_END - ptrProgAdd); // {27} space remaining in the application area
-                if (write_length > BYTES_PER_SECTOR) {                   // limit each write size to a single sector
-                    write_length = BYTES_PER_SECTOR;                     // usually complete sectors are written
+    #if defined MEMORY_SWAP
+                if ((ptrProgAdd < ptr_disk_end[ucDisk]) && (ptrProgAdd >= (ptr_disk_location[ucDisk])))
+    #else
+                if ((ptrProgAdd < ptr_disk_end[ucDisk]) && (ptrProgAdd >= (ptr_disk_location[ucDisk] + (ROOT_FILE_ENTRIES * sizeof(DIR_ENTRY_STRUCTURE_FAT32)))))
+    #endif
+                {                                                        // limit location and length of file
+                    MAX_FILE_LENGTH write_length = (MAX_FILE_LENGTH)(UTASKER_APP_END - ptrProgAdd); // {27} space remaining in the application area
+                    if (write_length > BYTES_PER_SECTOR) {               // limit each write size to a single sector
+                        write_length = BYTES_PER_SECTOR;                 // usually complete sectors are written
+                    }
+    #if defined DEBUG_CODE
+                    fnDebugMsg("W:");
+                    fnDebugHex((unsigned long)ptrProgAdd, (WITH_LEADIN | WITH_CR_LF | sizeof(ptrProgAdd)));
+    #endif
+                    fnWriteBytesFlash(ptrProgAdd, ptrBuffer, write_length); // program the sector (or part of final sector)
                 }
     #if defined DEBUG_CODE
-                fnDebugMsg("W:");
-                fnDebugHex((unsigned long)ptrProgAdd, (WITH_LEADIN | WITH_CR_LF | sizeof(ptrProgAdd)));
+                else {
+                    fnDebugMsg("N");                                     // write outside of code area - ignored
+                }
     #endif
-                fnWriteBytesFlash(ptrProgAdd, ptrBuffer, write_length);  // program the sector (or part of final sector)
-            }
-    #if defined DEBUG_CODE
-            else {
-                fnDebugMsg("N");                                         // write outside of code area - ignored
+    #if defined USB_MSD_ACCEPTS_SREC_FILES || defined USB_MSD_ACCEPTS_HEX_FILES
             }
     #endif
     #if defined _WINDOWS
@@ -3235,11 +3288,11 @@ static void fnDebugWrite(int iDisk, unsigned char *ptr_ucBuffer, unsigned long u
     fnDebugDec((uTaskerSystemTick / SEC), 0);
     fnDebugMsg("s] LBA = ");
     fnDebugDec(ulLogicalBlockAdr, 0);
-    #if defined UTFAT12
+        #if defined UTFAT12
     if (ulLogicalBlockAdr >= ptr_utDisk->ulVirtualBaseAddress)           // write to cluster space
-    #else
+        #else
     if (ulLogicalBlockAdr >= ptr_utDisk->ulLogicalBaseAddress)
-    #endif
+        #endif
     {
         fnDebugMsg(" - cluster");
     }
@@ -3256,11 +3309,11 @@ static void fnDebugWrite(int iDisk, unsigned char *ptr_ucBuffer, unsigned long u
     case SW_PROGRAMMING:
         fnDebugMsg(" - programming");
         break;
-    #if defined CHECK_VALID_FILE_OBJECT && !defined FAT_EMULATION
+        #if defined CHECK_VALID_FILE_OBJECT && !defined FAT_EMULATION
     case SW_UNKNOWN_DATA:
         fnDebugMsg(" - trash exists");
         break;
-    #endif
+        #endif
     case SW_AVAILABLE:
         fnDebugMsg(" - SW exists");
         break;
@@ -3272,10 +3325,18 @@ static void fnDebugWrite(int iDisk, unsigned char *ptr_ucBuffer, unsigned long u
     case 0:
         fnDebugMsg(" - blocking\r\n");
         break;
-    case 1:
+    case CONTENT_BEING_FILTERED:
         fnDebugMsg(" - filtering\r\n");
         break;
-    case 2:
+        #if defined USB_MSD_ACCEPTS_SREC_FILES
+    case FIRMWARE_START_SREC:
+        break;
+        #endif
+        #if defined USB_MSD_ACCEPTS_HEX_FILES
+    case FIRMWARE_START_HEX:
+        break;
+        #endif
+    default:
         fnDebugMsg(" - accepting\r\n");
         break;
     }

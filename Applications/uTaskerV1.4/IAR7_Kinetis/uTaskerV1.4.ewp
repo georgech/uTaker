@@ -89,7 +89,7 @@
         </option>
         <option>
           <name>OGChipSelectEditMenu</name>
-          <state>MKL03Z32xxx4	NXP MKL03Z32xxx4</state>
+          <state>MK66FX1M0xxx18	NXP MK66FX1M0xxx18</state>
         </option>
         <option>
           <name>GenLowLevelInterface</name>
@@ -128,7 +128,7 @@
         <option>
           <name>GBECoreSlave</name>
           <version>24</version>
-          <state>35</state>
+          <state>39</state>
         </option>
         <option>
           <name>OGUseCmsis</name>
@@ -145,11 +145,11 @@
         <option>
           <name>CoreVariant</name>
           <version>24</version>
-          <state>35</state>
+          <state>39</state>
         </option>
         <option>
           <name>GFPUDeviceSlave</name>
-          <state>MKL03Z32xxx4	NXP MKL03Z32xxx4</state>
+          <state>MK66FX1M0xxx18	NXP MK66FX1M0xxx18</state>
         </option>
         <option>
           <name>FPU2</name>
@@ -168,7 +168,7 @@
         <option>
           <name>GFPUCoreSlave2</name>
           <version>24</version>
-          <state>35</state>
+          <state>39</state>
         </option>
       </data>
     </settings>
@@ -729,7 +729,7 @@
         </option>
         <option>
           <name>IlinkIcfFile</name>
-          <state>$PROJ_DIR$\settings\KL_32_2.icf</state>
+          <state>$PROJ_DIR$\settings\K_2M_256.icf</state>
         </option>
         <option>
           <name>IlinkIcfFileSlave</name>

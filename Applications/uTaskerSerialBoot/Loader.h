@@ -296,6 +296,26 @@
 extern void fnConfigureAndStartWebServer(void);
 extern void fnTransferTFTP(void);
 extern void fnSetBacklight(void);
+#if defined USB_MSD_ACCEPTS_SREC_FILES || defined USB_MSD_ACCEPTS_HEX_FILES
+    extern int fnHandleRecord(unsigned char *ptrLine, unsigned char *ptrEnd, int Type);
+    // iType
+    //
+    #define TEST_SERIAL_CONTENT          0
+    #define SERIAL_LOADING_IN_OPERATION  1
+    #define USB_LOADING_IN_OPERATION     2
+#else
+    extern int fnHandleRecord(unsigned char *ptrLine, unsigned char *ptrEnd);
+#endif
+    // Return values
+    //
+    #define LINE_ACCEPTED                0
+    #define PROGRAMMING_ERROR            1
+    #define CORRUPTED_SREC               2
+    #define INVALID_SREC_HOLE            3
+    #define SREC_CS_ERROR                4
+    #define INVALID_APPLICATION_LOCATION 5
+    #define STOP_FLOW_CONTROL            6
+    #define PROGRAMMING_COMPLETE         7
 
 #define T_RESET                   1                                      // application timer events
 #define T_GO_TO_APP               2

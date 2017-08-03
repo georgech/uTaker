@@ -24,7 +24,7 @@
 
 ///////////////////////////////////////////////////////////////////////////
 //                                                                       // new users who would like to see just a blinking LED before enabling the project's many powerful features can set this
-//#define BLINKY                                                         // to give simplest scheduling of a single task called at 200ms rate that retriggers the watchdog and toggles the board's heartbeat LED
+#define BLINKY                                                           // to give simplest scheduling of a single task called at 200ms rate that retriggers the watchdog and toggles the board's heartbeat LED
 //                                                                       // 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -131,12 +131,13 @@
 
 //#define EMCRAFT_K61F150M                                               // K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - http://www.utasker.com/kinetis/EMCRAFT_K61F150M.html
 
-#define FRDM_K64F                                                        // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
+//#define FRDM_K64F                                                      // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
 //#define TWR_K64F120M                                                   // tower board http://www.utasker.com/kinetis/TWR-K64F120M.html
 //#define TEENSY_3_5                                                     // USB development board with K64FX512 - http://www.utasker.com/kinetis/TEENSY_3.5.html
 //#define FreeLON                                                        // K64 based with integrated LON
 //#define TWR_K65F180M                                                   // tower board http://www.utasker.com/kinetis/TWR-K65F180M.html
-//#define FRDM_K66F                                                      // freedom board http://www.utasker.com/kinetis/FRDM-K66F.html
+//#define K66FX1M0                                                       // development board with K66FX1M0
+#define FRDM_K66F                                                        // freedom board http://www.utasker.com/kinetis/FRDM-K66F.html
 //#define TEENSY_3_6                                                     // USB development board with K66FX1M0 - http://www.utasker.com/kinetis/TEENSY_3.6.html
 
 //#define TWR_K70F120M                                                   // K processors Cortex M4 with graphical LCD, Ethernet, USB, encryption, tamper - tower board http://www.utasker.com/kinetis/TWR-K70F120M.html
@@ -658,7 +659,7 @@
     #if !defined TWR_SER
         #define USB_HS_INTERFACE                                         // use HS interface rather than FS interface
     #endif
-#elif defined FRDM_K66F
+#elif defined FRDM_K66F || defined K66FX1M0
     #define TARGET_HW            "FRDM-K66F"
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((48 * 1024) * MEM_FACTOR) // large SRAM parts
     #define KINETIS_MAX_SPEED    180000000
@@ -666,7 +667,9 @@
     #define KINETIS_K60                                                  // specify the sub-family
     #define KINETIS_REVISION_2
     #define KINETIS_K66                                                  // extra sub-family type precision
-    #define USB_HS_INTERFACE                                             // use HS interface rather than FS interface
+    #if !defined K66FX1M0
+        #define USB_HS_INTERFACE                                         // use HS interface rather than FS interface
+    #endif
 #elif defined TEENSY_3_6
     #define TARGET_HW            "Teensy 3.6 (K66FX1M0)"
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((48 * 1024) * MEM_FACTOR) // large SRAM parts
@@ -722,7 +725,7 @@
 #endif
 #if !defined NO_FLASH_SUPPORT
     #define USE_PARAMETER_BLOCK                                          // enable a parameter block for storing and retrieving non-volatile information
-        #define USE_PAR_SWAP_BLOCK                                       // we support a backup block which can be restored if desired (it is recommended to use this together with USE_PARAMETER_BLOCK
+        #define USE_PAR_SWAP_BLOCK                                       // we support a backup block which can be restored if desired (it is recommended to use this together with USE_PARAMETER_BLOCK)
       //#define PARAMETER_NO_ALIGNMENT                                   // the driver doesn't need to respect byte write restrictions since the application does - this can improve memory utilisation when bytes writes are not supported by the hardware
   //#define USE_PARAMETER_AREA                                           // simple parameter area rather than parameter block
   //#define SPI_FILE_SYSTEM                                              // we have an external file system via SPI interface
@@ -884,7 +887,7 @@
   //#define SERIAL_SUPPORT_ESCAPE                                        // enable escape sequencing in driver
   //#define SERIAL_SUPPORT_SCAN                                          // serial receiver supports scanning of input buffer for a sequence
     #if !defined KINETIS_KL
-      //#define SUPPORT_HW_FLOW                                          // support RTS/CTS flow control and other possible modem signals
+        #define SUPPORT_HW_FLOW                                          // support RTS/CTS flow control and other possible modem signals
     #endif
   //#define UART_BREAK_SUPPORT                                           // support break control in the UART driver
   //#define SUPPORT_MIDI_BAUD_RATE                                       // support 31250 Baud rate standard setting
@@ -947,9 +950,9 @@
         #if defined USB_HOST_SUPPORT
             #define NUMBER_USB     (5 + 1)                               // physical queues (control plus 5 endpoints)
         #else                                                            // define one or more device classes (multiple classes creates a composite device)
-            #define USE_USB_CDC                                          // USB-CDC (use also for Modbus over USB)
-            #define USE_USB_MSD                                          // needs SD card to compile (or alternatives FLASH_FAT / SPI_FLASH_FAT / FAT_EMULATION)
-          //#define USE_USB_HID_MOUSE                                    // human interface device (mouse)
+          //#define USE_USB_CDC                                          // USB-CDC (use also for Modbus over USB)
+          //#define USE_USB_MSD                                          // needs SD card to compile (or alternatives FLASH_FAT / SPI_FLASH_FAT / FAT_EMULATION)
+            #define USE_USB_HID_MOUSE                                    // human interface device (mouse)
           //#define USE_USB_HID_KEYBOARD                                 // human interface device (keyboard)
               //#define USB_KEYBOARD_DELAY                               // enable inter-character delay control
           //#define USE_USB_HID_RAW                                      // human interface device (raw)
@@ -1197,8 +1200,8 @@
 
 // Ethernet
 //
-#if !defined DEVICE_WITHOUT_ETHERNET && !defined K70F150M_12M && !defined TEENSY_3_5 && !defined TEENSY_3_6
-    #define ETH_INTERFACE                                                // enable Ethernet interface driver
+#if !defined DEVICE_WITHOUT_ETHERNET && !defined K70F150M_12M && !defined TEENSY_3_5 && !defined TEENSY_3_6 && !defined K66FX1M
+  //#define ETH_INTERFACE                                                // enable Ethernet interface driver
 #elif defined TEENSY_3_1 || defined TEENSY_LC
   //#define ETH_INTERFACE                                                // enable external Ethernet interface driver
     #if defined ETH_INTERFACE
@@ -1736,7 +1739,7 @@
       //#define KITRONIX_GLCD_MODE                                       // use colour TFT in GLCD compatible mode (IDM_L35_B)
       //#define MB785_GLCD_MODE                                          // use colour TFT in GLCD compatible mode (STM321C-EVAL)
       //#define TFT2N0369_GLCD_MODE                                      // use colour TFT in GLCD compatible mode (TWR-LCD)
-        #define FT800_GLCD_MODE                                          // FTDI FT800 controller
+      //#define FT800_GLCD_MODE                                          // FTDI FT800 controller
             #define FT_800_ENABLE                                        // select the FT800 display type
           //#define FT_801_ENABLE                                        // select the FT801 display type
           //#define FT_810_ENABLE                                        // select the FT810 display type
@@ -1959,6 +1962,7 @@
     #undef CMSIS_DSP_CFFT
     #undef CRYPTOGRAPHY
     #undef SDCARD_SUPPORT
+    #undef FAT_EMULATION
     #undef USB_MSD_HOST
     #undef UTFAT_LFN_READ
     #undef UTFAT_WRITE

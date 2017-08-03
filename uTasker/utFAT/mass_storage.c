@@ -1931,7 +1931,7 @@ extern void fnMassStorage(TTASKTABLE *ptrTaskTable)
     while (++iDiskNumber < DISK_COUNT) {                                 // for each disk
     #endif
     #if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST
-    if (iMemoryOperation[iDiskNumber] & _READING_MEMORY) {               // reading
+    if ((iMemoryOperation[iDiskNumber] & _READING_MEMORY) != 0) {        // reading
         if ((iActionResult = _utReadDiskSector[iDiskNumber](&utDisks[iDiskNumber], 0, utDisks[iDiskNumber].ptrSectorData)) == CARD_BUSY_WAIT) {
             return;                                                      // still reading so keep waiting
         }
@@ -7346,7 +7346,11 @@ static void fnPrepareDetectInterrupt(void)
     interrupt_setup.int_port = SDCARD_DETECT_PORT;                       // the port used
     interrupt_setup.int_port_bits = SDCARD_DETECT_PIN;                   // the input connected
     interrupt_setup.int_priority = PRIORITY_SDCARD_DETECT_PORT_INT;      // port interrupt priority
+        #if defined SDCARD_DETECT_POLARITY_POSITIVE
+    interrupt_setup.int_port_sense = (IRQ_BOTH_EDGES | PULLDOWN_ON);     // interrupt on both edges
+        #else
     interrupt_setup.int_port_sense = (IRQ_BOTH_EDGES | PULLUP_ON);       // interrupt on both edges
+        #endif
     #elif defined _M5223X                                                // {55} Coldfire V2
     interrupt_setup.int_port_bit = SDCARD_DETECT_PIN;                    // the IRQ input connected
     interrupt_setup.int_priority = PRIORITY_SDCARD_DETECT_PORT_INT;      // port interrupt priority

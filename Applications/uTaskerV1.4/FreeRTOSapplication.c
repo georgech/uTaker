@@ -90,7 +90,7 @@ static void blinky(void *par)
 {
     while ((int)1 != (int)0) {
         fnToggleRedLED();
-        vTaskDelay(500/portTICK_RATE_MS);                                // wait for 500ms in order to flash the LED at 1Hz
+        vTaskDelay(750/portTICK_RATE_MS);                                // wait for 750ms in order to flash the LED at 1Hz
     }
 }
     #endif

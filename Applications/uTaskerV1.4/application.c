@@ -1486,7 +1486,7 @@ extern QUEUE_HANDLE fnSetNewSerialMode(unsigned char ucDriverMode)
         #endif
     #endif
     #if defined SUPPORT_HW_FLOW
-    tInterfaceParameters.Config |= RTS_CTS;                              // enable RTS/CTS operation (HW flow control)
+  //tInterfaceParameters.Config |= RTS_CTS;                              // enable RTS/CTS operation (HW flow control)
     #endif
     if ((SerialPortID = fnOpen(TYPE_TTY, ucDriverMode, &tInterfaceParameters)) != NO_ID_ALLOCATED) { // open or change the channel with defined configurations (initially inactive)
         fnDriver(SerialPortID, (TX_ON | RX_ON), 0);                      // enable rx and tx

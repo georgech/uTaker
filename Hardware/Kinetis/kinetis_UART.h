@@ -1244,7 +1244,7 @@ extern QUEUE_TRANSFER fnTxByteDMA(QUEUE_HANDLE Channel, unsigned char *ptrStart,
     return tx_length;
 }
 
-        #if defined SERIAL_SUPPORT_XON_XOFF
+        #if (defined SERIAL_SUPPORT_XON_XOFF || defined SUPPORT_HW_FLOW)
 extern QUEUE_TRANSFER fnAbortTxDMA(QUEUE_HANDLE channel, QUEQUE *ptrQueue)
 {
     return 0;
@@ -2785,7 +2785,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
     if (Channel >= (NUMBER_SERIAL)) {
         fnConfigExtSCI((QUEUE_HANDLE)(Channel - NUMBER_SERIAL), pars);   // pass on to external UART driver
         #if defined SUPPORT_HW_FLOW
-        if (pars->Config & RTS_CTS) {                                    // HW flow control defined so configure RTS/CTS pins
+        if ((pars->Config & RTS_CTS) != 0) {                             // HW flow control defined so configure RTS/CTS pins
             fnControlLine(Channel, (CONFIG_RTS_PIN | CONFIG_CTS_PIN), 0);
         }
         #endif
@@ -3005,7 +3005,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
     #endif
 
     #if defined SUPPORT_HW_FLOW
-    if (pars->Config & RTS_CTS) {                                        // HW flow control defined so configure RTS/CTS pins
+    if ((pars->Config & RTS_CTS) != 0) {                                 // HW flow control defined so configure RTS/CTS pins
         fnControlLine(Channel, (CONFIG_RTS_PIN | CONFIG_CTS_PIN), 0);
     }
     #endif

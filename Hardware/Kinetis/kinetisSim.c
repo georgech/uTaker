@@ -2980,40 +2980,40 @@ extern void fnSimPers(void)
     #endif
                     break;
                 case KE_PORTA_BIT2:
-                    if ((UART0_C2 & UART_C2_RE) && (SIM_PINSEL0 & SIM_PINSEL_UART0PS) && ((UART0_C1 & UART_C1_LOOPS) == 0)) { // UART0 rx enabled and mapped to PTA2 and PTA3 rather than PTB0 and PTB1 (and not in sigle-wire/loop back mode)
+                    if (((UART0_C2 & UART_C2_RE) != 0) && ((SIM_PINSEL0 & SIM_PINSEL_UART0PS) != 0) && ((UART0_C1 & UART_C1_LOOPS) == 0)) { // UART0 rx enabled and mapped to PTA2 and PTA3 rather than PTB0 and PTB1 (and not in sigle-wire/loop back mode)
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTA][iPin] = PA_2_UART0_RX;
                     }
-                    else if ((I2C0_C1 & I2C_IEN) && ((SIM_PINSEL0 & SIM_PINSEL_I2C0PS) == 0)) { // if I2C is enabled and I2C0 not mapped to PTB7 and PTB6 rather than PTA3 and PTA2
+                    else if (((I2C0_C1 & I2C_IEN) != 0) && ((SIM_PINSEL0 & SIM_PINSEL_I2C0PS) == 0)) { // if I2C is enabled and I2C0 not mapped to PTB7 and PTB6 rather than PTA3 and PTA2
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTA][iPin] = PA_2_I2C0_SDA;
                     }
-                    else if (KBI0_PE & 0x04) {                           // pin is enabled as keyboard interrupt
+                    else if ((KBI0_PE & 0x04) != 0) {                    // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTA][iPin] = PA_2_KBI0_P2;
                     }
                     break;
                 case KE_PORTA_BIT3:
-                    if ((UART0_C2 & UART_C2_TE) && (SIM_PINSEL0 & SIM_PINSEL_UART0PS)) { // UART0 tx enabled and mapped to PTA2 and PTA3 rather than PTB0 and PTB1
+                    if (((UART0_C2 & UART_C2_TE) != 0) && ((SIM_PINSEL0 & SIM_PINSEL_UART0PS) != 0)) { // UART0 tx enabled and mapped to PTA2 and PTA3 rather than PTB0 and PTB1
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTA][iPin] = PA_3_UART0_TX;
                     }
-                    else if ((I2C0_C1 & I2C_IEN) && (!(SIM_PINSEL0 & SIM_PINSEL_I2C0PS))) { // if I2C is enabled and I2C0 not mapped to PTB7 and PTB6 rather than PTA3 and PTA2
+                    else if (((I2C0_C1 & I2C_IEN) != 0) && ((SIM_PINSEL0 & SIM_PINSEL_I2C0PS) == 0)) { // if I2C is enabled and I2C0 not mapped to PTB7 and PTB6 rather than PTA3 and PTA2
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTA][iPin] = PA_3_I2C0_SCL;
                     }
-                    else if (KBI0_PE & 0x08) {                           // pin is enabled as keyboard interrupt
+                    else if ((KBI0_PE & 0x08) != 0) {                    // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTA][iPin] = PA_3_KBI0_P3;
                     }
                     break;
                 case KE_PORTA_BIT4:
-                    if (SIM_SOPT0 & SIM_SOPT_SWDE) {
+                    if ((SIM_SOPT0 & SIM_SOPT_SWDE) != 0) {
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTA][iPin] = PA_4_SWD_DIO;
                     }
     #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
-                    else if (KBI0_PE & 0x10) {                           // pin is enabled as keyboard interrupt
+                    else if ((KBI0_PE & 0x10) != 0) {                    // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTA][iPin] = PA_4_KBI0_P4;
                     }
@@ -3036,7 +3036,7 @@ extern void fnSimPers(void)
     #endif
                     }
     #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
-                    else if (KBI0_PE & 0x20) {                           // pin is enabled as keyboard interrupt
+                    else if ((KBI0_PE & 0x20) != 0) {                    // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTA][iPin] = PA_5_KBI0_P5;
                     }
@@ -3092,17 +3092,17 @@ extern void fnSimPers(void)
                         break;
                     }
     #endif
-                    if ((UART0_C2 & UART_C2_RE) && ((SIM_PINSEL0 & SIM_PINSEL_UART0PS) == 0) && ((UART0_C1 & UART_C1_LOOPS) == 0)) { // UART0 rx enabled and not mapped to PTA2 and PTA3 rather than PTB0 and PTB1 (and not in sigle-wire/loop back mode)
+                    if (((UART0_C2 & UART_C2_RE) != 0) && ((SIM_PINSEL0 & SIM_PINSEL_UART0PS) == 0) && ((UART0_C1 & UART_C1_LOOPS) == 0)) { // UART0 rx enabled and not mapped to PTA2 and PTA3 rather than PTB0 and PTB1 (and not in sigle-wire/loop back mode)
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTB][iPin - 8] = PB_0_UART0_RX;
                     }
     #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
-                    else if (KBI0_PE & 0x100) {                          // pin is enabled as keyboard interrupt
+                    else if ((KBI0_PE & 0x100) != 0) {                   // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTB][iPin - 8] = PB_0_KBI0_P8;
                     }
     #else
-                    else if (KBI0_PE & 0x10) {                           // pin is enabled as keyboard interrupt
+                    else if ((KBI0_PE & 0x10) != 0) {                    // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTB][iPin - 8] = PB_0_KBI0_P4;
                     }

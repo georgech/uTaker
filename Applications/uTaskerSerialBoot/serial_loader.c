@@ -53,7 +53,8 @@
 
 #include "config.h"
 
-#if defined SERIAL_INTERFACE || defined USE_USB_CDC || defined SUPPORT_GLCD || (defined USB_INTERFACE && defined HID_LOADER && defined KBOOT_HID_LOADER) || defined ETH_INTERFACE                    // {9}{16} remove srec/kboot loader when no serial interface but keep parts for Ethernet operation
+#if defined SERIAL_INTERFACE || defined USE_USB_CDC || defined SUPPORT_GLCD || (defined USB_INTERFACE && defined HID_LOADER && defined KBOOT_HID_LOADER) || defined ETH_INTERFACE // {9}{16} remove srec/kboot loader when no serial interface but keep parts for Ethernet operation
+    #define KEEP_SERIAL_TASK
 
 #if defined BLAZE_K22
     #include "widgets.h"                                                 // widgets and images used by the project
@@ -147,7 +148,14 @@
 #define KBOOT_SERIAL_PING                            0xa6
 #define KBOOT_SERIAL_PING_RESPONSE                   0xa7
 
+#endif
 
+#if (defined USB_MSD_DEVICE_LOADER && (defined USB_MSD_ACCEPTS_SREC_FILES || defined USB_MSD_ACCEPTS_HEX_FILES)) || ((defined SERIAL_INTERFACE || defined USE_USB_CDC) && !defined REMOVE_SREC_LOADING)
+    #define SREC_IHEX_REQUIRED
+    #if defined USB_MSD_ACCEPTS_HEX_FILES && !defined USB_MSD_ACCEPTS_SREC_FILES && !defined KEEP_SERIAL_TASK
+        #define EXCLUSIVE_INTEL_HEX_MODE
+    #endif
+#endif
 /* =================================================================== */
 /*                      local structure definitions                    */
 /* =================================================================== */
@@ -161,6 +169,7 @@ typedef struct
     unsigned char data[100];
 } SREC_TYP;
 
+#if defined KEEP_SERIAL_TASK
 /* =================================================================== */
 /*                 local function prototype declarations               */
 /* =================================================================== */
@@ -178,15 +187,6 @@ typedef struct
         static unsigned char *fnBlankCheck(void);
             static void fnPrintScreen(void);
         #if !defined REMOVE_SREC_LOADING                                 // {17}
-        static int  fnHandleRecord(unsigned char *ptrLine, unsigned char *ptrEnd);
-            #define LINE_ACCEPTED                0
-            #define PROGRAMMING_ERROR            1
-            #define CORRUPTED_SREC               2
-            #define INVALID_SREC_HOLE            3
-            #define SREC_CS_ERROR                4
-            #define INVALID_APPLICATION_LOCATION 5
-            #define STOP_FLOW_CONTROL            6
-            #define PROGRAMMING_COMPLETE         7
             #if defined INTERMEDIATE_PROG_BUFFER
             static int fnIntermediateWrite(unsigned char *ptrAddr, unsigned char *ucPtrData, int iDataCnt);
             static int fnFlashIntermediate(void);
@@ -225,14 +225,18 @@ typedef struct
 /*                      local variable definitions                     */
 /* =================================================================== */
 
-#if defined SERIAL_INTERFACE || defined USE_USB_CDC
-    #if (defined USB_INTERFACE && defined USB_MSD_DEVICE_LOADER && !defined USE_USB_MSD && !defined USB_MSD_HOST_LOADER) && ((defined HID_LOADER && defined KBOOT_HID_LOADER) || (!defined REMOVE_SREC_LOADING || defined KBOOT_LOADER || defined DEVELOPERS_LOADER)) // {9}{17}
-        #define ADD_FILE_OBJECT_AFTER_LOADING                            // {21}
-    #endif
+#endif
+#if defined SREC_IHEX_REQUIRED
     #if defined FLASH_ROW_SIZE && FLASH_ROW_SIZE > 0
         static unsigned char ucCodeStart[FLASH_ROW_SIZE] = {0};
     #else
         static unsigned char ucCodeStart[4] = {0};
+    #endif
+#endif
+#if defined KEEP_SERIAL_TASK
+#if defined SERIAL_INTERFACE || defined USE_USB_CDC
+    #if (defined USB_INTERFACE && defined USB_MSD_DEVICE_LOADER && !defined USE_USB_MSD && !defined USB_MSD_HOST_LOADER) && ((defined HID_LOADER && defined KBOOT_HID_LOADER) || (!defined REMOVE_SREC_LOADING || defined KBOOT_LOADER || defined DEVELOPERS_LOADER)) // {9}{17}
+        #define ADD_FILE_OBJECT_AFTER_LOADING                            // {21}
     #endif
     #if defined INTERMEDIATE_PROG_BUFFER && !defined REMOVE_SREC_LOADING && !defined KBOOT_LOADER && !defined DEVELOPERS_LOADER && !defined USE_USB_CDC // {17}
         static unsigned long ulOffset = 0;
@@ -265,12 +269,13 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
 #if defined SERIAL_INTERFACE || defined USE_USB_CDC
     static int iInputLength = 0;
     static QUEUE_HANDLE SerialPortID = NO_ID_ALLOCATED;                  // serial port handle
+    static unsigned char ucSerialInputMessage[RX_QUEUE_SIZE] = {0};
 #endif
 #if defined DEVELOPERS_LOADER                                            // {23}
     static unsigned char ucDevelopersDataLength = 0;
 #endif
     static int iAppState = STATE_INIT;                                   // task state
-    static unsigned char ucInputMessage[RX_QUEUE_SIZE] = {0};            // {3} reserve space for receiving messages
+    static unsigned char ucInputMessage[HEADER_LENGTH/*RX_QUEUE_SIZE*/] = {0}; // {3} reserve space for receiving messages (header length used since the serial interface queue is now independent)
     QUEUE_HANDLE PortIDInternal = ptrTaskTable->TaskID;                  // queue ID for task input
 
     if (STATE_INIT == iAppState) {
@@ -310,7 +315,9 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
     #elif !defined KBOOT_LOADER && !defined DEVELOPERS_LOADER            // {20}
         fnPrintScreen();
     #endif
+    #if defined SREC_IHEX_REQUIRED
         uMemset(ucCodeStart, 0xff, sizeof(ucCodeStart));                 // reset the contents of a flash buffer that will store the start of the code so that it can be programmed as final step
+    #endif
     #if defined INTERMEDIATE_PROG_BUFFER && !defined REMOVE_SREC_LOADING && !defined KBOOT_LOADER && !defined DEVELOPERS_LOADER // {17}
         uMemset(ucIntermediateBuffer, 0xff, sizeof(ucIntermediateBuffer)); // start with flushed buffer
     #endif
@@ -354,7 +361,7 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
                     iInputLength = 0;                                   // reset the message
                 }
 #endif
-#if defined SERIAL_INTERFACE && defined  INTERMEDIATE_PROG_BUFFER && !defined REMOVE_SREC_LOADING && !defined KBOOT_LOADER && !defined DEVELOPERS_LOADER // {17}
+#if defined SERIAL_INTERFACE && defined INTERMEDIATE_PROG_BUFFER && !defined REMOVE_SREC_LOADING && !defined KBOOT_LOADER && !defined DEVELOPERS_LOADER // {17}
                 else if (ucInputMessage[MSG_TIMER_EVENT] == T_COMMIT_BUFFER) {
                     if (fnFlashIntermediate() != 0) {                    // download has been temporarily suspended so write block to FLASH (without risk of rx overrun while programming)
                         iAppState = STATE_ERROR;
@@ -456,10 +463,10 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
 #endif
   //}
 #if defined SERIAL_INTERFACE || defined USE_USB_CDC
-    while (fnRead(SerialPortID, &ucInputMessage[iInputLength], 1) != 0) {// check UART input for reception
+    while (fnRead(SerialPortID, &ucSerialInputMessage[iInputLength], 1) != 0) { // check UART input for reception (one byte at a time)
     #if defined KBOOT_LOADER                                             // {20} each byte is received here
         if (iInputLength == 0) {                                         // waiting for the start of a message
-            if (ucInputMessage[0] == KBOOT_SERIAL_START_BYTE) {          // all packets begin with th start byte ('Z')
+            if (ucSerialInputMessage[0] == KBOOT_SERIAL_START_BYTE) {    // all packets begin with the start byte ('Z')
                 iInputLength = 1;                                        // start receiving the messaege
                 uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(0.1 * SEC), T_MESSAGE_TIMEOUT);
             }
@@ -467,7 +474,7 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
         else {                                                           // in reception
             uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(0.1 * SEC), T_MESSAGE_TIMEOUT);
             if (iInputLength == 1) {                                     // command byte
-                switch (ucInputMessage[1]) {
+                switch (ucSerialInputMessage[1]) {
                 case KBOOT_SERIAL_PING:                                  // 0xa6:
                     fnWrite(SerialPortID, (unsigned char *)ucPingResponse, sizeof(ucPingResponse)); // send a ping response back
                     break;
@@ -482,30 +489,30 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
                 iInputLength = 0;                                        // command completed
             }
             else if (iInputLength == 2) {                                // expecting command length
-                // The command length is now in ucInputMessage[2] so the expected length is known
+                // The command length is now in ucSerialInputMessage[2] so the expected length is known
                 //
                 iInputLength++;
             }
             else {                                                       // collecting message content
                 iInputLength++;
-                if (iInputLength == (ucInputMessage[2] + 6)) {           // expected reception complete
-                    unsigned short usCRC = fnCRC16(0, ucInputMessage, 4);
-                    usCRC = fnCRC16(usCRC, &ucInputMessage[6], ucInputMessage[2]);
+                if (iInputLength == (ucSerialInputMessage[2] + 6)) {     // expected reception complete
+                    unsigned short usCRC = fnCRC16(0, ucSerialInputMessage, 4);
+                    usCRC = fnCRC16(usCRC, &ucSerialInputMessage[6], ucSerialInputMessage[2]);
                     uTaskerStopTimer(OWN_TASK);
-                    if (usCRC != ((ucInputMessage[5] << 8) | (ucInputMessage[4]))) { // check the CRC of the reception frame
+                    if (usCRC != ((ucSerialInputMessage[5] << 8) | (ucSerialInputMessage[4]))) { // check the CRC of the reception frame
                         fnWrite(SerialPortID, (unsigned char *)ucNak, sizeof(ucNak)); // nak the reception
                     }
                     else {
                         fnWrite(SerialPortID, (unsigned char *)ucAck, sizeof(ucAck)); // acknowledge the reception
-                        if (ucInputMessage[1] == KBOOT_SERIAL_COMMAND) {
-                            ucInputMessage[2] = KBOOT_REPORT_ID_COMMAND_OUT; // for compatibility
+                        if (ucSerialInputMessage[1] == KBOOT_SERIAL_COMMAND) {
+                            ucSerialInputMessage[2] = KBOOT_REPORT_ID_COMMAND_OUT; // for compatibility
                         }
                         else {
-                            ucInputMessage[4] = ucInputMessage[2];       // shift the packet length to where the checksum is (for compatibility)
-                            ucInputMessage[5] = ucInputMessage[3];
-                            ucInputMessage[2] = KBOOT_REPORT_ID_DATA_OUT; // for compatibility
+                            ucSerialInputMessage[4] = ucSerialInputMessage[2]; // shift the packet length to where the checksum is (for compatibility)
+                            ucSerialInputMessage[5] = ucSerialInputMessage[3];
+                            ucSerialInputMessage[2] = KBOOT_REPORT_ID_DATA_OUT; // for compatibility
                         }
-                        if (fnHandleKboot(SerialPortID, KBOOT_UART, (KBOOT_PACKET *)&ucInputMessage[2]) != 0) { // generic kboot handling
+                        if (fnHandleKboot(SerialPortID, KBOOT_UART, (KBOOT_PACKET *)&ucSerialInputMessage[2]) != 0) { // generic kboot handling
                             uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(1 * SEC), T_RESET);
                         }
                     }
@@ -516,7 +523,7 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
     #elif defined DEVELOPERS_LOADER                                      // {23}
         switch (iAppState) {
         case STATE_ACTIVE:                                               // hook-up phase
-            if (ucInputMessage[0] == DEVELOPERS_ACK) {                   // the PC is synchronised
+            if (ucSerialInputMessage[0] == DEVELOPERS_ACK) {             // the PC is synchronised
                 fnSendDevelopers(SerialPortID, DEVELOPERS_ACK);          // confirm synchronisation
                 iAppState = STATE_DEVELOPERS_OPERATION;                  // operating state
                 uTaskerStopTimer(OWN_TASK);                              // stop initial hook-up timer
@@ -524,9 +531,9 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
             break;
         case STATE_DEVELOPERS_OPERATION:
         #if defined DEVELOPERS_LOADER_CRC
-            usCRC_Rx = usCRC_Tx = fnCRC16(0xffff, ucInputMessage, 1);    // reset CRC and process the command
+            usCRC_Rx = usCRC_Tx = fnCRC16(0xffff, ucSerialInputMessage, 1); // reset CRC and process the command
         #endif
-            switch (ucInputMessage[0]) {
+            switch (ucSerialInputMessage[0]) {
             case 'I':                                                    // ident command
                 {
                     unsigned char *ptrBoardName = (unsigned char *)cProcessorName;
@@ -605,11 +612,11 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
             if (++iInputLength >= 4)                                     // collect length of address
         #endif
             {                                                            // if address has been collected
-                unsigned long ulAddress = ((ucInputMessage[0] << 24) | (ucInputMessage[1] << 16) | (ucInputMessage[2] << 8) | (ucInputMessage[3]));
+                unsigned long ulAddress = ((ucSerialInputMessage[0] << 24) | (ucSerialInputMessage[1] << 16) | (ucSerialInputMessage[2] << 8) | (ucSerialInputMessage[3]));
                 iAppState = STATE_DEVELOPERS_OPERATION;                  // next operating state
                 iInputLength = 0;
         #if defined DEVELOPERS_LOADER_CRC
-                if (fnCRC16(usCRC_Rx, &ucInputMessage[0], 6) != 0) {     // process the address and CRC
+                if (fnCRC16(usCRC_Rx, &ucSerialInputMessage[0], 6) != 0) { // process the address and CRC
                     fnSendDevelopersAckNak(SerialPortID, DEVELOPERS_NAK);// return error
                     break;
                 }
@@ -623,7 +630,7 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
             break;
         case STATE_DEVELOPERS_WRITE:
             if (++iInputLength >= 5) {                                   // if address has been collected
-                ucDevelopersDataLength = ucInputMessage[4];
+                ucDevelopersDataLength = ucSerialInputMessage[4];
         #if defined DEVELOPERS_LOADER_CRC
                 ucDevelopersDataLength += 7;                             // expected length with CRC
         #else
@@ -634,11 +641,11 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
             break;
         case STATE_DEVELOPERS_WRITE_DATA:
             if (++iInputLength >= ucDevelopersDataLength) {              // if all data has been collected
-                unsigned long ulAddress = ((ucInputMessage[0] << 24) | (ucInputMessage[1] << 16) | (ucInputMessage[2] << 8) | (ucInputMessage[3]));
+                unsigned long ulAddress = ((ucSerialInputMessage[0] << 24) | (ucSerialInputMessage[1] << 16) | (ucSerialInputMessage[2] << 8) | (ucSerialInputMessage[3]));
                 iAppState = STATE_DEVELOPERS_OPERATION;                  // operating state
                 iInputLength = 0;
         #if defined DEVELOPERS_LOADER_CRC
-                if (fnCRC16(usCRC_Rx, &ucInputMessage[0], ucDevelopersDataLength) != 0) { // process the CRC of the content
+                if (fnCRC16(usCRC_Rx, &ucSerialInputMessage[0], ucDevelopersDataLength) != 0) { // process the CRC of the content
                     fnSendDevelopersAckNak(SerialPortID, DEVELOPERS_NAK);// return error
                     break;
                 }
@@ -647,11 +654,11 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
                 ucDevelopersDataLength -= 5;
         #endif
                 if (ulAddress == _UTASKER_APP_START_) {
-                    uMemcpy(ucCodeStart, &ucInputMessage[5], sizeof(ucCodeStart)); // backup start of code until complete code received
-                    fnWriteBytesFlash((unsigned char *)(ulAddress + sizeof(ucCodeStart)), (&ucInputMessage[5] + sizeof(ucCodeStart)), (MAX_FILE_LENGTH)(ucDevelopersDataLength - sizeof(ucCodeStart)));
+                    uMemcpy(ucCodeStart, &ucSerialInputMessage[5], sizeof(ucCodeStart)); // backup start of code until complete code received
+                    fnWriteBytesFlash((unsigned char *)(ulAddress + sizeof(ucCodeStart)), (&ucSerialInputMessage[5] + sizeof(ucCodeStart)), (MAX_FILE_LENGTH)(ucDevelopersDataLength - sizeof(ucCodeStart)));
                 }
                 else {
-                    fnWriteBytesFlash((unsigned char *)ulAddress, &ucInputMessage[5], ucDevelopersDataLength); // save the received block
+                    fnWriteBytesFlash((unsigned char *)ulAddress, &ucSerialInputMessage[5], ucDevelopersDataLength); // save the received block
                 }
                 fnSendDevelopersAckNak(SerialPortID, DEVELOPERS_ACK);    // confirm programming
         #if defined ADD_FILE_OBJECT_AFTER_LOADING
@@ -666,7 +673,7 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
             if (++iInputLength >= 2) {                                   // CRC collected
                 iAppState = STATE_DEVELOPERS_OPERATION;                  // operating state
                 iInputLength = 0;
-                if (fnCRC16(usCRC_Rx, &ucInputMessage[0], 2) != 0) {     // process the CRC of the content
+                if (fnCRC16(usCRC_Rx, &ucSerialInputMessage[0], 2) != 0) { // process the CRC of the content
                     fnSendDevelopersAckNak(SerialPortID, DEVELOPERS_NAK);// return error (note that the PC program doesn't actually wait for a response to the quit command)
                     break;
                 }
@@ -688,12 +695,12 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
             #endif
             {                                                            // if address and length have been collected
                 unsigned char ucProgramContent;
-                unsigned long ulAddress = ((ucInputMessage[0] << 24) | (ucInputMessage[1] << 16) | (ucInputMessage[2] << 8) | (ucInputMessage[3]));
-                int iLength = ucInputMessage[4];
+                unsigned long ulAddress = ((ucSerialInputMessage[0] << 24) | (ucSerialInputMessage[1] << 16) | (ucSerialInputMessage[2] << 8) | (ucSerialInputMessage[3]));
+                int iLength = ucSerialInputMessage[4];
                 iAppState = STATE_DEVELOPERS_OPERATION;                  // operating state
                 iInputLength = 0;
             #if defined DEVELOPERS_LOADER_CRC
-                if (fnCRC16(usCRC_Rx, &ucInputMessage[0], 7) != 0) {     // process the CRC of the content
+                if (fnCRC16(usCRC_Rx, &ucSerialInputMessage[0], 7) != 0) { // process the CRC of the content
                     fnSendDevelopersAckNak(SerialPortID, DEVELOPERS_NAK);// return error
                     break;
                 }
@@ -724,20 +731,20 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
         #endif
         }
     #else
-        if (ucInputMessage[iInputLength] == '\n') {                      // ignore
+        if (ucSerialInputMessage[iInputLength] == '\n') {                // ignore
             continue;
         }
         switch (iAppState) {
         case STATE_ACTIVE:
-            if (ucInputMessage[iInputLength] == '\r') {
+            if (ucSerialInputMessage[iInputLength] == '\r') {
                 int iLastLength = iInputLength;
                 iInputLength = 0;
                 if (iLastLength == 2) {
-                    if ((ucInputMessage[0] == 'd') || (ucInputMessage[0] == 'D')) {
+                    if ((ucSerialInputMessage[0] == 'd') || (ucSerialInputMessage[0] == 'D')) {
         #if defined SPI_SW_UPLOAD  
-                        if ((ucInputMessage[1] == 'u') || (ucInputMessage[1] == 'U')) 
+                        if ((ucSerialInputMessage[1] == 'u') || (ucSerialInputMessage[1] == 'U'))
         #else
-                        if ((ucInputMessage[1] == 'c') || (ucInputMessage[1] == 'C')) 
+                        if ((ucSerialInputMessage[1] == 'c') || (ucSerialInputMessage[1] == 'C'))
         #endif
                         {
         #if defined SPI_SW_UPLOAD  
@@ -750,11 +757,11 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
                         }
                     }
         #if !defined REMOVE_SREC_LOADING                                 // {17}
-                    else if ((ucInputMessage[0] == 'l') || (ucInputMessage[0] == 'L')) {
-                        if ((ucInputMessage[1] == 'd') || (ucInputMessage[1] == 'D')) {
+                    else if ((ucSerialInputMessage[0] == 'l') || (ucSerialInputMessage[0] == 'L')) {
+                        if ((ucSerialInputMessage[1] == 'd') || (ucSerialInputMessage[1] == 'D')) {
             #if defined EXCLUSIVE_INTEL_HEX_MODE                         // {29}
                             fnDebugMsg("\r\nPlease start iHEX download: ");
-            #elif defined SUPPORT_INTEL_HEX_MODE                         // {29}
+            #elif defined SUPPORT_INTEL_HEX_MODE || defined USB_MSD_ACCEPTS_HEX_FILES // {29}
                             fnDebugMsg("\r\nPlease start S-REC/iHex download: ");
             #else
                             fnDebugMsg("\r\nPlease start S-REC download: ");
@@ -768,8 +775,8 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
                     }
         #endif
         #if defined MEMORY_SWAP
-                    if ((ucInputMessage[0] == 's') || (ucInputMessage[0] == 'S')) {
-                        if ((ucInputMessage[1] == 'w') || (ucInputMessage[1] == 'W')) 
+                    if ((ucSerialInputMessage[0] == 's') || (ucSerialInputMessage[0] == 'S')) {
+                        if ((ucSerialInputMessage[1] == 'w') || (ucSerialInputMessage[1] == 'W'))
                         {
                             fnDebugMsg("\r\nSwap memory [y/n] ? > ");
                             iAppState = STATE_QUESTION_SWAP;
@@ -777,8 +784,8 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
                         }
                     }
         #else
-                    else if ((ucInputMessage[0] == 'g') || (ucInputMessage[0] == 'G')) {
-                        if ((ucInputMessage[1] == 'o') || (ucInputMessage[1] == 'O')) {
+                    else if ((ucSerialInputMessage[0] == 'g') || (ucSerialInputMessage[0] == 'G')) {
+                        if ((ucSerialInputMessage[1] == 'o') || (ucSerialInputMessage[1] == 'O')) {
                             fnDebugMsg("\r\nStarting Application\r\n\n");
                             uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(0.2 * SEC), T_GO_TO_APP);
                             iAppState = STATE_RESETTING;
@@ -787,16 +794,16 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
                     }
         #endif
         #if defined MASS_ERASE
-                    else if ((ucInputMessage[0] == 'm') || (ucInputMessage[0] == 'M')) {
-                        if ((ucInputMessage[1] == 'e') || (ucInputMessage[1] == 'E')) {
+                    else if ((ucSerialInputMessage[0] == 'm') || (ucSerialInputMessage[0] == 'M')) {
+                        if ((ucSerialInputMessage[1] == 'e') || (ucSerialInputMessage[1] == 'E')) {
                             fnDebugMsg("\r\nMass erase [y/n] ? > ");
                             iAppState = STATE_QUESTION_MASS_DELETE;
                             break;
                         }
                     }
         #endif
-                    else if ((ucInputMessage[0] == 'b') || (ucInputMessage[0] == 'B')) {
-                        if ((ucInputMessage[1] == 'c') || (ucInputMessage[1] == 'C')) {
+                    else if ((ucSerialInputMessage[0] == 'b') || (ucSerialInputMessage[0] == 'B')) {
+                        if ((ucSerialInputMessage[1] == 'c') || (ucSerialInputMessage[1] == 'C')) {
                             unsigned char *ptrFlash = fnBlankCheck();    // subroutine for blank check added
                             if (ptrFlash == 0) {                         // if the application area is blank
                                 fnDebugMsg(" EMPTY!\r\n> ");
@@ -815,7 +822,7 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
                 }
                 fnDebugMsg(" ??\r\n> ");
             }
-            else if (ucInputMessage[iInputLength] == '?') {              // interpret question mark as help request
+            else if (ucSerialInputMessage[iInputLength] == '?') {        // interpret question mark as help request
         #if defined RX_UART_TO_HOLD_LOADER
                 uTaskerStopTimer(OWN_TASK);                              // stop the hook-up timer
         #endif
@@ -823,8 +830,8 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
                 fnPrintScreen();
             }
             else {
-                fnWrite(SerialPortID, &ucInputMessage[iInputLength], 1); // echo input back
-                if (ucInputMessage[iInputLength++] == DELETE_KEY) {
+                fnWrite(SerialPortID, &ucSerialInputMessage[iInputLength], 1); // echo input back
+                if (ucSerialInputMessage[iInputLength++] == DELETE_KEY) {
                     if (iInputLength < 2) {
                         iInputLength = 0;
                     }
@@ -842,7 +849,7 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
         case STATE_QUESTION_SWAP:
         #endif
         case STATE_QUESTION_DELETE:
-            if ((ucInputMessage[0] == 'y') || (ucInputMessage[0] == 'Y')) {
+            if ((ucSerialInputMessage[0] == 'y') || (ucSerialInputMessage[0] == 'Y')) {
         #if defined MASS_ERASE
                 if (STATE_QUESTION_MASS_DELETE == iAppState) {
                     fnDebugMsg("\r\n!! Destroy FLASH and Loader - confirm [y/n] ? > ");
@@ -886,15 +893,20 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
             break;
         #if !defined REMOVE_SREC_LOADING                                 // {17}
         case STATE_LOADING:
-            if (ucInputMessage[iInputLength] == 0x03) {                  // ctrl + C to abort before, or during load
+            if (ucSerialInputMessage[iInputLength] == 0x03) {            // ctrl + C to abort before, or during load
                 fnDebugMsg(" Aborted!\r\n");
                 iInputLength = 0;
                 fnPrintScreen();
                 iAppState = STATE_ACTIVE;
                 break;
             }
-            if (ucInputMessage[iInputLength++] == '\r') {                // line received
-                switch (fnHandleRecord(ucInputMessage, (ucInputMessage + iInputLength))) {
+            if (ucSerialInputMessage[iInputLength++] == '\r') {          // line received
+            #if defined USB_MSD_ACCEPTS_SREC_FILES || defined USB_MSD_ACCEPTS_HEX_FILES
+                switch (fnHandleRecord(ucSerialInputMessage, (ucSerialInputMessage + iInputLength), SERIAL_LOADING_IN_OPERATION))
+            #else
+                switch (fnHandleRecord(ucSerialInputMessage, (ucSerialInputMessage + iInputLength)))
+            #endif
+                {
                 case CORRUPTED_SREC:
                     fnDebugMsg("\r\n\nRecord-error!! (Ctrl+r to reset)");
                     iAppState = STATE_ERROR;
@@ -940,7 +952,7 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
             }
             break;
         case STATE_ERROR:
-            if (ucInputMessage[iInputLength] == 0x12) {                  // CTRL + R
+            if (ucSerialInputMessage[iInputLength] == 0x12) {            // CTRL + R
                 uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(0.2 * SEC), T_RESET);
                 iAppState = STATE_RESETTING;
             }
@@ -1126,376 +1138,6 @@ static void fnPrintScreen(void)
     fnDebugMsg("go = start application\r\n> ");
     #endif
 }
-
-#if !defined REMOVE_SREC_LOADING && !defined KBOOT_LOADER                // {17}
-static unsigned char fnConvertByte(unsigned char ucASCII)
-{
-    unsigned char ucResult = (ucASCII - 0x30);
-    if (ucResult > 9) {
-        ucResult -= ('A' - '9' - 1);
-        if (ucResult > 15) {
-            ucResult -= ('a' - 'A');
-        }
-    }
-    return ucResult;
-}
-
-static int fnLoadTerminate(void)
-{
-        #if defined INTERMEDIATE_PROG_BUFFER
-    if (fnFlashIntermediate() != 0) {                                    // flash final intermediate buffer
-        return PROGRAMMING_ERROR;
-    }
-        #endif
-        #if defined FLASH_ROW_SIZE && FLASH_ROW_SIZE > 0
-    fnWriteBytesFlash(0, 0, 0);                                          // close any outstanding FLASH buffer
-        #endif
-        #if defined SPI_SW_UPLOAD
-            #if defined SPI_SW_UPLOAD_ENCRYPTED                          // {8}
-    ulHighestLocation -= FILE_HEADER;
-    if (fnWriteBytesFlash((unsigned char *)(SIZE_OF_FLASH + UPLOAD_OFFSET), (unsigned char *)&ulHighestLocation, sizeof(ulHighestLocation)) != 0) // write file length for compatibilty
-            #else
-    if (fnWriteBytesFlash((unsigned char *)(SIZE_OF_FLASH + UPLOAD_OFFSET), ucCodeStart, sizeof(ucCodeStart)) != 0) // write first bytes of code to validate it
-            #endif
-        #else
-            #if defined MEMORY_SWAP
-    if (fnWriteBytesFlash((unsigned char *)UTASKER_APP_START, ucCodeStart, sizeof(ucCodeStart)) != 0) // write first bytes of code to validate it
-            #else
-    if (fnWriteBytesFlash((unsigned char *)_UTASKER_APP_START_, ucCodeStart, sizeof(ucCodeStart)) != 0) // write first bytes of code to validate it
-            #endif
-        #endif
-    {
-        return PROGRAMMING_ERROR;
-    }
-        #if defined ADD_FILE_OBJECT_AFTER_LOADING                        // {9}
-    fileObjInfo.ptrShortFileName = "SOFTWARES19";                        // define a name for the file (with default time/date)
-    if (fnAddSREC_file(&fileObjInfo) != 0) {                             // {12}
-        return PROGRAMMING_ERROR;
-    }
-        #endif
-    return PROGRAMMING_COMPLETE;                                         // end of file
-}
-
-static int fnHandleRecord(unsigned char *ptrLine, unsigned char *ptrEnd)
-{
-    #define S_TYPE       0                                               // S-record states
-    #define S_LENGTH_1   1
-    #define S_LENGTH_2   2
-    #define S_ADDR_1     3
-    #define S_ADDR_2     4
-    #define S_ADDR_3     5
-    #define S_ADDR_4     6
-    #define S_ADDR_5     7
-    #define S_ADDR_6     8
-    #define S_ADDR_7     9
-    #define S_ADDR_8     10
-    #define S_DATA_1     11
-    #define S_CHECKSUM_1 200
-    #define S_CHECKSUM_2 201
-    #define S_LINE_END   202
-
-    #define S_IHEX       1000
-    #define S_I_ADDRESS  1001
-    #define S_I_TYPE     1002
-    #define S_I_DATA     1003
-
-    #define I_DATA_RECORD               0x00
-    #define I_END_OF_FILE               0x01
-    #define I_EXTENDED_SEGMENT_ADDRESS  0x02
-    #define I_START_SEGMENT_ADDRESS     0x03
-    #define I_EXTENDED_LINEAR_ADDRESS   0x04
-    #define I_START_LINEAR_ADDRESS      0x05
-
-    #if !defined INTERMEDIATE_PROG_BUFFER && (FLASH_ROW_SIZE && FLASH_ROW_SIZE > 0) // {24}
-    static unsigned long ulNextExpectedSREC = 0;
-    #endif
-    #if defined SPI_SW_UPLOAD_ENCRYPTED                                  // {8}
-    static unsigned long ulHighestLocation = 0;
-    #endif
-    #if defined EXCLUSIVE_INTEL_HEX_MODE || defined SUPPORT_INTEL_HEX_MODE // {29}
-    static unsigned long ulExtendedAddress = 0;
-    static unsigned long ulIntelOffset = 0;
-    #endif
-    SREC_TYP srec;
-    int iSREC_state;
-    int iDataCnt = 0;
-    unsigned char ucCheckSum = 0;
-    #if defined EXCLUSIVE_INTEL_HEX_MODE                                 // {29}
-    if (*ptrLine != ':') {                                               // each Intel Hex line must start with ':'
-        #if defined _GNU_TEMP_WORKAROUND                                 // {1}
-            ptrLine--;                                                   // after each restart after a pause the first 'S' is lost when compiled by AVR32 GCC - this simply accepts a line without the first letter and then works - reason however needs to be understood and solved correctly !!
-        #else
-            return CORRUPTED_SREC;
-        #endif
-    }
-    iSREC_state = S_IHEX;                                                // handle as Intel Hex
-    #else
-    if ((*ptrLine != 'S') && (*ptrLine != 's')) {                        // each S-record line must start with 'S'
-        #if defined SUPPORT_INTEL_HEX_MODE                               // {29}
-        if (*ptrLine != ':') {                                           // each Intel Hex line must start with ':'
-        #endif
-        #if defined _GNU_TEMP_WORKAROUND                                 // {1}
-            ptrLine--;                                                   // after each restart after a pause the first 'S' is lost when compiled by AVR32 GCC - this simply accepts a line without the first letter and then works - reason however needs to be understood and solved correctly !!
-        #else
-            return CORRUPTED_SREC;
-        #endif
-        #if defined SUPPORT_INTEL_HEX_MODE                               // {29}
-        }
-        else {
-            iSREC_state = S_IHEX;                                        // handle as Intel Hex
-        }
-        #endif
-    }
-    else {
-        iSREC_state = S_TYPE;                                            // handle as an S-record
-    }
-    #endif
-    while (++ptrLine < ptrEnd) {                                         // for each input character
-        switch (iSREC_state++) {
-    #if defined SUPPORT_INTEL_HEX_MODE || defined EXCLUSIVE_INTEL_HEX_MODE // {29}
-        case S_IHEX:                                                     // the byte count 
-            srec.csum = 0;
-            srec.len = fnConvertByte(*ptrLine++);
-            srec.len <<= 4;
-            srec.len |= fnConvertByte(*ptrLine);
-            ucCheckSum = (unsigned char)srec.len;
-            if ((ptrLine + (srec.len * 2) + 10) != ptrEnd) {             // check the validity of the length
-                return CORRUPTED_SREC;                                   // incorrect record length
-            }
-            srec.len *= 2;
-            break;
-        case S_I_ADDRESS:                                                // the address
-            srec.addr = fnConvertByte(*ptrLine++); 
-            srec.addr <<= 4;
-            srec.addr |= fnConvertByte(*ptrLine++);
-            srec.addr <<= 4;
-            srec.addr |= fnConvertByte(*ptrLine++); 
-            srec.addr <<= 4;
-            srec.addr |= fnConvertByte(*ptrLine);
-            ucCheckSum += (unsigned char)(srec.addr >> 8);
-            ucCheckSum += (unsigned char)srec.addr;
-            break;
-        case S_I_TYPE:                                                   // the type
-            srec.typ = fnConvertByte(*ptrLine++); 
-            srec.typ <<= 4;
-            srec.typ = fnConvertByte(*ptrLine);
-            if (srec.typ > I_START_LINEAR_ADDRESS) {
-                return CORRUPTED_SREC;
-            }
-            ucCheckSum += (unsigned char)srec.typ;
-            if (srec.typ == I_END_OF_FILE) {
-                iSREC_state = S_CHECKSUM_1;                              // this record has no data content to be collected
-            }
-            srec.typ |= 0x80;                                            // mark that the record is Intel Hex
-            break;
-    #endif
-    #if !defined EXCLUSIVE_INTEL_HEX_MODE                                // {29}
-        case S_TYPE:
-            srec.typ = *ptrLine;
-            if ((srec.typ == '0') || (srec.typ == '5')) {
-                return LINE_ACCEPTED;                                    // ignore S0 and S5
-            }
-            if ((srec.typ == '7') || (srec.typ == '8') || (srec.typ == '9')) { // end of file
-                return (fnLoadTerminate());
-            }
-            srec.addr = 0;
-            srec.csum = 0;
-            srec.len = 0;
-            break;
-        case S_LENGTH_1:
-        case S_LENGTH_2:
-            srec.len |= (fnConvertByte(*ptrLine) << ((S_ADDR_1 - iSREC_state) * 4));
-            break;
-        case S_ADDR_1:
-            ucCheckSum = (unsigned char)srec.len;
-            srec.len *= 2;
-            if (srec.typ == '1') {                                       // S1 record is composed of 2 byte data
-                iSREC_state += 4;
-                srec.len -= 6;                                           // length minus 2 bytes address and check sum
-            }
-            else if (srec.typ == '2') {                                  // S2 record is composed of 3 byte data
-                iSREC_state += 2;
-                srec.len -= 8;                                           // length minus 3 bytes address and check sum
-            }
-            else {
-                srec.len -= 10;                                          // length minus 4 bytes address and check sum
-            }
-        case S_ADDR_2:
-        case S_ADDR_3:
-        case S_ADDR_4:
-        case S_ADDR_5:
-        case S_ADDR_6:
-        case S_ADDR_7:
-        case S_ADDR_8:
-            srec.addr |= (fnConvertByte(*ptrLine) << ((S_DATA_1 - iSREC_state) * 4));
-            break;
-    #endif
-        case S_CHECKSUM_1:
-        case S_CHECKSUM_2:
-            srec.csum |= (fnConvertByte(*ptrLine) << ((S_LINE_END - iSREC_state) * 4));
-            break;
-        case S_LINE_END:
-            {
-                unsigned char *ptrData = srec.data;
-    #if !defined EXCLUSIVE_INTEL_HEX_MODE                                // {29}
-        #if defined SUPPORT_INTEL_HEX_MODE
-                if ((srec.typ & 0x80) == 0) {
-        #endif
-                    ucCheckSum += (unsigned char)(srec.addr >> 24);
-                    ucCheckSum += (unsigned char)(srec.addr >> 16);
-                    ucCheckSum += (unsigned char)(srec.addr >> 8);
-                    ucCheckSum += (unsigned char)(srec.addr);
-        #if defined SUPPORT_INTEL_HEX_MODE
-                }
-        #endif
-    #endif
-                ucCheckSum ^= 0xff;
-    #if defined EXCLUSIVE_INTEL_HEX_MODE                                 // {29}
-                ucCheckSum++;
-    #elif defined SUPPORT_INTEL_HEX_MODE                                 // {29}
-                if ((srec.typ & 0x80) != 0) {
-                    ucCheckSum++;
-                }
-    #endif
-                if (ucCheckSum != srec.csum) {
-                    return SREC_CS_ERROR;                                // check sum error
-                }
-                iDataCnt /= 2;
-        #if defined SUPPORT_INTEL_HEX_MODE                               // {29}
-                switch (srec.typ) {
-                case (0x80 + I_END_OF_FILE):
-                    return (fnLoadTerminate());
-                case (0x80 + I_EXTENDED_SEGMENT_ADDRESS):
-                    ulExtendedAddress = ((srec.data[0] << 12) | (srec.data[1] << 4)); // set the extended address
-                    ulIntelOffset = 0;
-                    return LINE_ACCEPTED;
-                case (0x80 + I_START_SEGMENT_ADDRESS):
-                    ulExtendedAddress = ((srec.data[0] << 12) | (srec.data[1] << 4)); // set the segment address
-                    ulIntelOffset += ((srec.data[2] << 8) | srec.data[3]); // set the offset
-                    return LINE_ACCEPTED;
-                case (0x80 + I_EXTENDED_LINEAR_ADDRESS):
-                    ulExtendedAddress = ((srec.data[0] << 24) | (srec.data[1] << 16)); // set the extended 
-                    ulIntelOffset = 0;
-                    return LINE_ACCEPTED;
-                case (0x80 + I_START_LINEAR_ADDRESS):
-                    return LINE_ACCEPTED;                                // the start address is not relevant for the loading operation
-                case (0x80 + I_DATA_RECORD):
-                    srec.addr += (ulExtendedAddress + ulIntelOffset);    // add the extended segment and offset to the data
-                default:                                                 // default to data record
-                    if (iDataCnt <= 0) {
-                        return CORRUPTED_SREC;
-                    }
-                    break;
-                }
-        #else
-                if (iDataCnt <= 0) {
-                    return CORRUPTED_SREC;
-                }
-        #endif
-        #if defined SPI_SW_UPLOAD_ENCRYPTED                              // {8} encrypted content has SREC address always starting at 0x00000000
-                srec.addr += FILE_HEADER;                                // save space for a file header compatible with boot loader
-                if ((unsigned char*)(srec.addr + iDataCnt) > (UTASKER_APP_END - UTASKER_APP_START)) { // ensure line doesn't write outside of intermediate space
-                    return INVALID_APPLICATION_LOCATION;
-                }
-        #else
-                if (srec.addr < (_UTASKER_APP_START_ + sizeof(ucCodeStart))) { // catch first bytes of application
-            #if (_UTASKER_APP_START_ != 0)
-                    if (srec.addr < _UTASKER_APP_START_){                // ensure line doesn't overwrite boot loader space
-                        return INVALID_APPLICATION_LOCATION;
-                    }
-            #endif
-                    while (srec.addr < (_UTASKER_APP_START_ + sizeof(ucCodeStart))) {
-            #if defined _RX6XX                                           // workaround for compiler problem
-                        volatile unsigned char *ptrBuffer = ucCodeStart;
-                        volatile unsigned long ulOffset = (srec.addr - _UTASKER_APP_START_);
-                        ptrBuffer += ulOffset;
-                        *ptrBuffer = *ptrData++;
-           #else
-                        ucCodeStart[srec.addr - _UTASKER_APP_START_] = *ptrData++; // save first code location contents
-           #endif
-                        srec.addr++;
-                        if (--iDataCnt == 0) {
-                            return LINE_ACCEPTED;                        // line programmed successfully
-                        }
-                    }
-                }
-                if ((unsigned char *)(srec.addr + iDataCnt) > UTASKER_APP_END) { // {26} ensure line doesn't write outside of application space
-                    return INVALID_APPLICATION_LOCATION;
-                }
-        #endif
-        #if defined ADD_FILE_OBJECT_AFTER_LOADING
-                if ((unsigned char *)srec.addr + iDataCnt > fileObjInfo.ptrLastAddress) { // {12} monitor the size of the software data
-                    fileObjInfo.ptrLastAddress = (unsigned char *)srec.addr + iDataCnt;
-                }
-        #endif
-        #if defined INTERMEDIATE_PROG_BUFFER
-            #if defined MEMORY_SWAP
-                return (fnIntermediateWrite((unsigned char *)(srec.addr + UTASKER_APP_START), ptrData, iDataCnt));
-            #else
-                return (fnIntermediateWrite((unsigned char *)srec.addr, ptrData, iDataCnt));
-            #endif
-        #else
-            #if FLASH_ROW_SIZE && FLASH_ROW_SIZE > 0                         // {24}
-                if (ulNextExpectedSREC != 0) {                               // if not first line to be programmed
-                    if (ulNextExpectedSREC != srec.addr) {                   // if the SREC address has jumped we ensure that any flash buffers are comitted if necessary
-                        if ((ulNextExpectedSREC & ~(FLASH_ROW_SIZE - 1)) != (srec.addr & ~(FLASH_ROW_SIZE - 1))) { // address moves to a new flash buffer
-                            fnWriteBytesFlash(0, 0, 0);                      // close any outstanding FLASH buffer
-                        }
-                    }
-                }
-            #endif
-            #if defined SPI_SW_UPLOAD
-                if (fnWriteBytesFlash((unsigned char *)(srec.addr + (SIZE_OF_FLASH + UPLOAD_OFFSET)), ptrData, iDataCnt) != 0) 
-            #else
-                #if defined MEMORY_SWAP
-                if (fnWriteBytesFlash((unsigned char *)(srec.addr + UTASKER_APP_START), ptrData, iDataCnt) != 0)
-                #else
-                if (fnWriteBytesFlash((unsigned char *)srec.addr, ptrData, iDataCnt) != 0)
-                #endif
-            #endif
-                {
-                    return PROGRAMMING_ERROR;
-                }
-            #if defined SPI_SW_UPLOAD
-                else {
-                    unsigned char ucCheckMemory[256];                    // 256 bytes temporary space - assuming that SREC lines are never longer than this
-                    fnGetParsFile((unsigned char *)(srec.addr + (SIZE_OF_FLASH + UPLOAD_OFFSET)), ucCheckMemory, (MAX_FILE_LENGTH)iDataCnt); // read back
-                    if (uMemcmp(ucCheckMemory, ptrData, iDataCnt) != 0) { // check that the written code matches
-                        return PROGRAMMING_ERROR;
-                    }
-                #if defined SPI_SW_UPLOAD_ENCRYPTED                      // {8}
-                    if ((srec.addr + iDataCnt) > ulHighestLocation) {    // monitor the highest address written to
-                        ulHighestLocation = (srec.addr + iDataCnt);
-                    }
-                #endif
-                }
-            #elif !(defined FLASH_ROW_SIZE && FLASH_ROW_SIZE > 0)        // {19} don't check when the flash driver may be holding off committing rows since uneven length lines can otherwise detect errors since values are not yet in flash
-                if (uMemcmp(fnGetFlashAdd((unsigned char*)srec.addr), ptrData, iDataCnt) != 0) { // check that the written code matches
-                    return PROGRAMMING_ERROR;
-                }
-            #elif FLASH_ROW_SIZE && FLASH_ROW_SIZE > 0                   // {24}
-                ulNextExpectedSREC = (srec.addr + iDataCnt);             // store the next expected address so that hole in the SREC can be detected
-            #endif
-        #endif
-            }
-            return LINE_ACCEPTED;                                        // {4} line programmed successfully
-        default:                                                         // collecting data
-            if (iDataCnt & 0x1) {
-                srec.data[iDataCnt/2] |= fnConvertByte(*ptrLine);
-                ucCheckSum += srec.data[iDataCnt/2];
-            }
-            else {
-                srec.data[iDataCnt/2] = (fnConvertByte(*ptrLine) << 4);
-            }
-            if (++iDataCnt >= srec.len) {
-                iSREC_state = S_CHECKSUM_1;
-            }
-            break;
-        }
-    }
-    return CORRUPTED_SREC;                                               // line too short
-}
-#endif
 
 #if defined INTERMEDIATE_PROG_BUFFER && !defined REMOVE_SREC_LOADING && !defined KBOOT_LOADER // {17}
 static int fnIntermediateWrite(unsigned char *ptrAddr, unsigned char *ucPtrData, int iDataCnt)
@@ -1835,6 +1477,406 @@ extern int fnHandleKboot(QUEUE_HANDLE hInterface, int iInterfaceType, KBOOT_PACK
         break;
     }
     return iReturn;
+}
+#endif
+
+#if defined SREC_IHEX_REQUIRED
+    #if !defined KBOOT_LOADER
+static unsigned char fnConvertByte(unsigned char ucASCII)
+{
+    unsigned char ucResult = (ucASCII - 0x30);
+    if (ucResult > 9) {
+        ucResult -= ('A' - '9' - 1);
+        if (ucResult > 15) {
+            ucResult -= ('a' - 'A');
+        }
+    }
+    return ucResult;
+}
+
+#if defined USB_MSD_ACCEPTS_SREC_FILES || defined USB_MSD_ACCEPTS_HEX_FILES
+    static int fnLoadTerminate(int iType)
+#else
+    static int fnLoadTerminate(void)
+#endif
+{
+        #if defined INTERMEDIATE_PROG_BUFFER
+    if (fnFlashIntermediate() != 0) {                                    // flash final intermediate buffer
+        return PROGRAMMING_ERROR;
+    }
+        #endif
+        #if defined FLASH_ROW_SIZE && FLASH_ROW_SIZE > 0
+    fnWriteBytesFlash(0, 0, 0);                                          // close any outstanding FLASH buffer
+        #endif
+        #if defined SPI_SW_UPLOAD
+            #if defined SPI_SW_UPLOAD_ENCRYPTED                          // {8}
+    ulHighestLocation -= FILE_HEADER;
+    if (fnWriteBytesFlash((unsigned char *)(SIZE_OF_FLASH + UPLOAD_OFFSET), (unsigned char *)&ulHighestLocation, sizeof(ulHighestLocation)) != 0) // write file length for compatibilty
+            #else
+    if (fnWriteBytesFlash((unsigned char *)(SIZE_OF_FLASH + UPLOAD_OFFSET), ucCodeStart, sizeof(ucCodeStart)) != 0) // write first bytes of code to validate it
+            #endif
+        #else
+            #if defined MEMORY_SWAP
+    if (fnWriteBytesFlash((unsigned char *)UTASKER_APP_START, ucCodeStart, sizeof(ucCodeStart)) != 0) // write first bytes of code to validate it
+            #else
+    if (fnWriteBytesFlash((unsigned char *)_UTASKER_APP_START_, ucCodeStart, sizeof(ucCodeStart)) != 0) // write first bytes of code to validate it
+            #endif
+        #endif
+    {
+        return PROGRAMMING_ERROR;
+    }
+        #if defined USB_MSD_ACCEPTS_SREC_FILES || defined USB_MSD_ACCEPTS_HEX_FILES
+    if (iType == USB_LOADING_IN_OPERATION) {
+        return PROGRAMMING_COMPLETE;                                     // don't add a file name if programmed via USB since the usb device handling will do it
+    }
+        #endif
+        #if defined ADD_FILE_OBJECT_AFTER_LOADING                        // {9}
+    fileObjInfo.ptrShortFileName = "SOFTWARES19";                        // define a name for the file (with default time/date)
+    if (fnAddSREC_file(&fileObjInfo) != 0) {                             // {12}
+        return PROGRAMMING_ERROR;
+    }
+        #endif
+    return PROGRAMMING_COMPLETE;                                         // end of file
+}
+    #endif
+
+// SREC and/or Intel HEX input record handler
+//
+#if defined USB_MSD_ACCEPTS_SREC_FILES || defined USB_MSD_ACCEPTS_HEX_FILES
+    extern int fnHandleRecord(unsigned char *ptrLine, unsigned char *ptrEnd, int iType)
+#else
+    extern int fnHandleRecord(unsigned char *ptrLine, unsigned char *ptrEnd)
+#endif
+{
+    #define S_TYPE       0                                               // S-record states
+    #define S_LENGTH_1   1
+    #define S_LENGTH_2   2
+    #define S_ADDR_1     3
+    #define S_ADDR_2     4
+    #define S_ADDR_3     5
+    #define S_ADDR_4     6
+    #define S_ADDR_5     7
+    #define S_ADDR_6     8
+    #define S_ADDR_7     9
+    #define S_ADDR_8     10
+    #define S_DATA_1     11
+    #define S_CHECKSUM_1 200
+    #define S_CHECKSUM_2 201
+    #define S_LINE_END   202
+
+    #define S_IHEX       1000
+    #define S_I_ADDRESS  1001
+    #define S_I_TYPE     1002
+    #define S_I_DATA     1003
+
+    #define I_DATA_RECORD               0x00
+    #define I_END_OF_FILE               0x01
+    #define I_EXTENDED_SEGMENT_ADDRESS  0x02
+    #define I_START_SEGMENT_ADDRESS     0x03
+    #define I_EXTENDED_LINEAR_ADDRESS   0x04
+    #define I_START_LINEAR_ADDRESS      0x05
+
+    #if !defined INTERMEDIATE_PROG_BUFFER && (FLASH_ROW_SIZE && FLASH_ROW_SIZE > 0) // {24}
+    static unsigned long ulNextExpectedSREC = 0;
+    #endif
+    #if defined SPI_SW_UPLOAD_ENCRYPTED                                  // {8}
+    static unsigned long ulHighestLocation = 0;
+    #endif
+    #if defined EXCLUSIVE_INTEL_HEX_MODE || defined SUPPORT_INTEL_HEX_MODE || defined USB_MSD_ACCEPTS_HEX_FILES // {29}
+    static unsigned long ulExtendedAddress = 0;
+    static unsigned long ulIntelOffset = 0;
+    #endif
+    SREC_TYP srec;
+    int iSREC_state;
+    int iDataCnt = 0;
+    unsigned char ucCheckSum = 0;
+    #if defined EXCLUSIVE_INTEL_HEX_MODE                                 // {29}
+    if (*ptrLine != ':') {                                               // each Intel Hex line must start with ':'
+        #if defined _GNU_TEMP_WORKAROUND                                 // {1}
+            ptrLine--;                                                   // after each restart after a pause the first 'S' is lost when compiled by AVR32 GCC - this simply accepts a line without the first letter and then works - reason however needs to be understood and solved correctly !!
+        #else
+            return CORRUPTED_SREC;
+        #endif
+    }
+    iSREC_state = S_IHEX;                                                // handle as Intel Hex
+    #else
+    if ((*ptrLine != 'S') && (*ptrLine != 's')) {                        // each S-record line must start with 'S'
+        #if defined SUPPORT_INTEL_HEX_MODE || defined USB_MSD_ACCEPTS_HEX_FILES // {29}
+        if (*ptrLine != ':') {                                           // each Intel Hex line must start with ':'
+        #endif
+        #if defined _GNU_TEMP_WORKAROUND                                 // {1}
+            ptrLine--;                                                   // after each restart after a pause the first 'S' is lost when compiled by AVR32 GCC - this simply accepts a line without the first letter and then works - reason however needs to be understood and solved correctly !!
+        #else
+            return CORRUPTED_SREC;
+        #endif
+        #if defined SUPPORT_INTEL_HEX_MODE || defined USB_MSD_ACCEPTS_HEX_FILES // {29}
+        }
+        else {
+            iSREC_state = S_IHEX;                                        // handle as Intel Hex
+        }
+        #endif
+    }
+    else {
+        iSREC_state = S_TYPE;                                            // handle as an S-record
+    }
+    #endif
+    while (++ptrLine < ptrEnd) {                                         // for each input character
+        switch (iSREC_state++) {
+    #if defined SUPPORT_INTEL_HEX_MODE || defined EXCLUSIVE_INTEL_HEX_MODE || defined USB_MSD_ACCEPTS_HEX_FILES // {29}
+        case S_IHEX:                                                     // the byte count 
+            srec.csum = 0;
+            srec.len = fnConvertByte(*ptrLine++);
+            srec.len <<= 4;
+            srec.len |= fnConvertByte(*ptrLine);
+            ucCheckSum = (unsigned char)srec.len;
+            if ((ptrLine + (srec.len * 2) + 10) != ptrEnd) {             // check the validity of the length
+                return CORRUPTED_SREC;                                   // incorrect record length
+            }
+            srec.len *= 2;
+            break;
+        case S_I_ADDRESS:                                                // the address
+            srec.addr = fnConvertByte(*ptrLine++); 
+            srec.addr <<= 4;
+            srec.addr |= fnConvertByte(*ptrLine++);
+            srec.addr <<= 4;
+            srec.addr |= fnConvertByte(*ptrLine++); 
+            srec.addr <<= 4;
+            srec.addr |= fnConvertByte(*ptrLine);
+            ucCheckSum += (unsigned char)(srec.addr >> 8);
+            ucCheckSum += (unsigned char)srec.addr;
+            break;
+        case S_I_TYPE:                                                   // the type
+            srec.typ = fnConvertByte(*ptrLine++); 
+            srec.typ <<= 4;
+            srec.typ = fnConvertByte(*ptrLine);
+            if (srec.typ > I_START_LINEAR_ADDRESS) {
+                return CORRUPTED_SREC;
+            }
+            ucCheckSum += (unsigned char)srec.typ;
+            if (srec.typ == I_END_OF_FILE) {
+                iSREC_state = S_CHECKSUM_1;                              // this record has no data content to be collected
+            }
+            srec.typ |= 0x80;                                            // mark that the record is Intel Hex
+            break;
+    #endif
+    #if !defined EXCLUSIVE_INTEL_HEX_MODE                                // {29}
+        case S_TYPE:
+            srec.typ = *ptrLine;
+            if ((srec.typ == '0') || (srec.typ == '5')) {
+                return LINE_ACCEPTED;                                    // ignore S0 and S5
+            }
+            if ((srec.typ == '7') || (srec.typ == '8') || (srec.typ == '9')) { // end of file
+        #if defined USB_MSD_ACCEPTS_SREC_FILES || defined USB_MSD_ACCEPTS_HEX_FILES
+                return (fnLoadTerminate(iType));
+        #else
+                return (fnLoadTerminate());
+        #endif
+            }
+            srec.addr = 0;
+            srec.csum = 0;
+            srec.len = 0;
+            break;
+        case S_LENGTH_1:
+        case S_LENGTH_2:
+            srec.len |= (fnConvertByte(*ptrLine) << ((S_ADDR_1 - iSREC_state) * 4));
+            break;
+        case S_ADDR_1:
+            ucCheckSum = (unsigned char)srec.len;
+            srec.len *= 2;
+            if (srec.typ == '1') {                                       // S1 record is composed of 2 byte data
+                iSREC_state += 4;
+                srec.len -= 6;                                           // length minus 2 bytes address and check sum
+            }
+            else if (srec.typ == '2') {                                  // S2 record is composed of 3 byte data
+                iSREC_state += 2;
+                srec.len -= 8;                                           // length minus 3 bytes address and check sum
+            }
+            else {
+                srec.len -= 10;                                          // length minus 4 bytes address and check sum
+            }
+        case S_ADDR_2:
+        case S_ADDR_3:
+        case S_ADDR_4:
+        case S_ADDR_5:
+        case S_ADDR_6:
+        case S_ADDR_7:
+        case S_ADDR_8:
+            srec.addr |= (fnConvertByte(*ptrLine) << ((S_DATA_1 - iSREC_state) * 4));
+            break;
+    #endif
+        case S_CHECKSUM_1:
+        case S_CHECKSUM_2:
+            srec.csum |= (fnConvertByte(*ptrLine) << ((S_LINE_END - iSREC_state) * 4));
+            break;
+        case S_LINE_END:
+            {
+                unsigned char *ptrData = srec.data;
+    #if !defined EXCLUSIVE_INTEL_HEX_MODE                                // {29}
+        #if defined SUPPORT_INTEL_HEX_MODE || defined USB_MSD_ACCEPTS_HEX_FILES
+                if ((srec.typ & 0x80) == 0) {
+        #endif
+                    ucCheckSum += (unsigned char)(srec.addr >> 24);
+                    ucCheckSum += (unsigned char)(srec.addr >> 16);
+                    ucCheckSum += (unsigned char)(srec.addr >> 8);
+                    ucCheckSum += (unsigned char)(srec.addr);
+        #if defined SUPPORT_INTEL_HEX_MODE || defined USB_MSD_ACCEPTS_HEX_FILES
+                }
+        #endif
+    #endif
+                ucCheckSum ^= 0xff;
+    #if defined EXCLUSIVE_INTEL_HEX_MODE                                 // {29}
+                ucCheckSum++;
+    #elif defined SUPPORT_INTEL_HEX_MODE || defined USB_MSD_ACCEPTS_HEX_FILES // {29}
+                if ((srec.typ & 0x80) != 0) {
+                    ucCheckSum++;
+                }
+    #endif
+                if (ucCheckSum != srec.csum) {
+                    return SREC_CS_ERROR;                                // check sum error
+                }
+                iDataCnt /= 2;
+        #if defined SUPPORT_INTEL_HEX_MODE || defined USB_MSD_ACCEPTS_HEX_FILES // {29}
+                switch (srec.typ) {
+                case (0x80 + I_END_OF_FILE):
+            #if defined USB_MSD_ACCEPTS_SREC_FILES || defined USB_MSD_ACCEPTS_HEX_FILES
+                    return (fnLoadTerminate(iType));
+            #else
+                    return (fnLoadTerminate());
+            #endif
+                case (0x80 + I_EXTENDED_SEGMENT_ADDRESS):
+                    ulExtendedAddress = ((srec.data[0] << 12) | (srec.data[1] << 4)); // set the extended address
+                    ulIntelOffset = 0;
+                    return LINE_ACCEPTED;
+                case (0x80 + I_START_SEGMENT_ADDRESS):
+                    ulExtendedAddress = ((srec.data[0] << 12) | (srec.data[1] << 4)); // set the segment address
+                    ulIntelOffset += ((srec.data[2] << 8) | srec.data[3]); // set the offset
+                    return LINE_ACCEPTED;
+                case (0x80 + I_EXTENDED_LINEAR_ADDRESS):
+                    ulExtendedAddress = ((srec.data[0] << 24) | (srec.data[1] << 16)); // set the extended 
+                    ulIntelOffset = 0;
+                    return LINE_ACCEPTED;
+                case (0x80 + I_START_LINEAR_ADDRESS):
+                    return LINE_ACCEPTED;                                // the start address is not relevant for the loading operation
+                case (0x80 + I_DATA_RECORD):
+                    srec.addr += (ulExtendedAddress + ulIntelOffset);    // add the extended segment and offset to the data
+                default:                                                 // default to data record
+                    if (iDataCnt <= 0) {
+                        return CORRUPTED_SREC;
+                    }
+                    break;
+                }
+        #else
+                if (iDataCnt <= 0) {
+                    return CORRUPTED_SREC;
+                }
+        #endif
+        #if defined SPI_SW_UPLOAD_ENCRYPTED                              // {8} encrypted content has SREC address always starting at 0x00000000
+                srec.addr += FILE_HEADER;                                // save space for a file header compatible with boot loader
+                if ((unsigned char*)(srec.addr + iDataCnt) > (UTASKER_APP_END - UTASKER_APP_START)) { // ensure line doesn't write outside of intermediate space
+                    return INVALID_APPLICATION_LOCATION;
+                }
+        #else
+                if (srec.addr < (_UTASKER_APP_START_ + sizeof(ucCodeStart))) { // catch first bytes of application
+            #if (_UTASKER_APP_START_ != 0)
+                    if (srec.addr < _UTASKER_APP_START_){                // ensure line doesn't overwrite boot loader space
+                        return INVALID_APPLICATION_LOCATION;
+                    }
+            #endif
+                    while (srec.addr < (_UTASKER_APP_START_ + sizeof(ucCodeStart))) {
+            #if defined _RX6XX                                           // workaround for compiler problem
+                        volatile unsigned char *ptrBuffer = ucCodeStart;
+                        volatile unsigned long ulOffset = (srec.addr - _UTASKER_APP_START_);
+                        ptrBuffer += ulOffset;
+                        *ptrBuffer = *ptrData++;
+           #else
+                        ucCodeStart[srec.addr - _UTASKER_APP_START_] = *ptrData++; // save first code location contents
+           #endif
+                        srec.addr++;
+                        if (--iDataCnt == 0) {
+                            return LINE_ACCEPTED;                        // line was valid
+                        }
+                    }
+                }
+                if ((unsigned char *)(srec.addr + iDataCnt) > UTASKER_APP_END) { // {26} ensure line doesn't write outside of application space
+                    return INVALID_APPLICATION_LOCATION;
+                }
+        #endif
+        #if defined ADD_FILE_OBJECT_AFTER_LOADING
+                if ((unsigned char *)srec.addr + iDataCnt > fileObjInfo.ptrLastAddress) { // {12} monitor the size of the software data
+                    fileObjInfo.ptrLastAddress = (unsigned char *)srec.addr + iDataCnt;
+                }
+        #endif
+        #if defined USB_MSD_ACCEPTS_SREC_FILES || defined USB_MSD_ACCEPTS_HEX_FILES
+                if (iType == 0) {                                        // if the content is being tested for valididy don't program anything
+                    return LINE_ACCEPTED;                                // content is valid
+                }
+        #endif
+        #if defined INTERMEDIATE_PROG_BUFFER
+            #if defined MEMORY_SWAP
+                return (fnIntermediateWrite((unsigned char *)(srec.addr + UTASKER_APP_START), ptrData, iDataCnt));
+            #else
+                return (fnIntermediateWrite((unsigned char *)srec.addr, ptrData, iDataCnt));
+            #endif
+        #else
+            #if FLASH_ROW_SIZE && FLASH_ROW_SIZE > 0                         // {24}
+                if (ulNextExpectedSREC != 0) {                               // if not first line to be programmed
+                    if (ulNextExpectedSREC != srec.addr) {                   // if the SREC address has jumped we ensure that any flash buffers are comitted if necessary
+                        if ((ulNextExpectedSREC & ~(FLASH_ROW_SIZE - 1)) != (srec.addr & ~(FLASH_ROW_SIZE - 1))) { // address moves to a new flash buffer
+                            fnWriteBytesFlash(0, 0, 0);                      // close any outstanding FLASH buffer
+                        }
+                    }
+                }
+            #endif
+            #if defined SPI_SW_UPLOAD
+                if (fnWriteBytesFlash((unsigned char *)(srec.addr + (SIZE_OF_FLASH + UPLOAD_OFFSET)), ptrData, iDataCnt) != 0) 
+            #else
+                #if defined MEMORY_SWAP
+                if (fnWriteBytesFlash((unsigned char *)(srec.addr + UTASKER_APP_START), ptrData, iDataCnt) != 0)
+                #else
+                if (fnWriteBytesFlash((unsigned char *)srec.addr, ptrData, iDataCnt) != 0)
+                #endif
+            #endif
+                {
+                    return PROGRAMMING_ERROR;
+                }
+            #if defined SPI_SW_UPLOAD
+                else {
+                    unsigned char ucCheckMemory[256];                    // 256 bytes temporary space - assuming that SREC lines are never longer than this
+                    fnGetParsFile((unsigned char *)(srec.addr + (SIZE_OF_FLASH + UPLOAD_OFFSET)), ucCheckMemory, (MAX_FILE_LENGTH)iDataCnt); // read back
+                    if (uMemcmp(ucCheckMemory, ptrData, iDataCnt) != 0) { // check that the written code matches
+                        return PROGRAMMING_ERROR;
+                    }
+                #if defined SPI_SW_UPLOAD_ENCRYPTED                      // {8}
+                    if ((srec.addr + iDataCnt) > ulHighestLocation) {    // monitor the highest address written to
+                        ulHighestLocation = (srec.addr + iDataCnt);
+                    }
+                #endif
+                }
+            #elif !(defined FLASH_ROW_SIZE && FLASH_ROW_SIZE > 0)        // {19} don't check when the flash driver may be holding off committing rows since uneven length lines can otherwise detect errors since values are not yet in flash
+                if (uMemcmp(fnGetFlashAdd((unsigned char*)srec.addr), ptrData, iDataCnt) != 0) { // check that the written code matches
+                    return PROGRAMMING_ERROR;
+                }
+            #elif FLASH_ROW_SIZE && FLASH_ROW_SIZE > 0                   // {24}
+                ulNextExpectedSREC = (srec.addr + iDataCnt);             // store the next expected address so that holes in the SREC can be detected
+            #endif
+        #endif
+            }
+            return LINE_ACCEPTED;                                        // {4} line programmed successfully
+        default:                                                         // collecting data
+            if ((iDataCnt & 0x1) != 0) {
+                srec.data[iDataCnt/2] |= fnConvertByte(*ptrLine);
+                ucCheckSum += srec.data[iDataCnt/2];
+            }
+            else {
+                srec.data[iDataCnt/2] = (fnConvertByte(*ptrLine) << 4);
+            }
+            if (++iDataCnt >= srec.len) {
+                iSREC_state = S_CHECKSUM_1;
+            }
+            break;
+        }
+    }
+    return CORRUPTED_SREC;                                               // line too short
 }
 #endif
 

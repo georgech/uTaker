@@ -306,7 +306,7 @@ extern QUEUE_TRANSFER fnRead(QUEUE_HANDLE driver_id, unsigned char *input_buffer
 #if !defined _NO_CHECK_QUEUE_INPUT                                       // {12}
 // Get the number of waiting messages (can also be bytes) from any queue
 //
-extern QUEUE_TRANSFER fnMsgs(QUEUE_HANDLE driver_id )
+extern QUEUE_TRANSFER fnMsgs(QUEUE_HANDLE driver_id)
 {
     driver_id -= 1;
     return ((que_ids[driver_id].CallAddress)(que_ids[driver_id].qHandle, 0, 0, CALL_INPUT, driver_id));

@@ -912,6 +912,82 @@ extern void DONT_INLINE uMask_Interrupt(unsigned char ucMaskLevel) // {102}
 }
 #endif
 
+
+#if 0                                                                    // example of code that may be usable for Cortex-M0+ to disable all interrupts apart from specified ones
+#define NVIC_SET_REGISTERS  3
+
+static unsigned long _SYSTICK_CSR = 0;
+static unsigned long NVICIntSet[NVIC_SET_REGISTERS] = {0};
+
+#define DISABLEMASK_0_31    0xffffffff                                   // all to be disabled
+#define DISABLEMASK_32_63   0xfffffffe                                   // all to be disabled apart from IRQ32
+#define DISABLEMASK_64_95   0xffffffff                                   // all to be disabled
+#define DISABLEMASK_96_127  0xffffffff                                   // all to be disabled
+#define DISABLEMASK_128_159 0xffffffff                                   // all to be disabled
+#define DISABLEMASK_160_191 0xffffffff                                   // all to be disabled
+#define DISABLEMASK_192_223 0xffffffff                                   // all to be disabled
+#define DISABLEMASK_224_239 0xffffffff                                   // all to be disabled
+
+extern void fnDisableOtherInterrupts(void)
+{
+    _SYSTICK_CSR = (SYSTICK_CSR & SYSTICK_TICKINT);                      // save original systick interrupt mask
+    SYSTICK_CSR &= ~(SYSTICK_TICKINT);                                   // disable systick interrupt
+    NVICIntSet[0] = IRQ0_31_SER;                                         // save original NVIC interrupt flags
+    IRQ0_31_CER = DISABLEMASK_0_31;                                      // disable interrupts
+    NVICIntSet[1] = IRQ32_63_SER;
+    IRQ32_63_CER = DISABLEMASK_32_63;
+    #if NVIC_SET_REGISTERS > 2
+    NVICIntSet[2] = IRQ64_95_SER;
+    IRQ64_95_CER = DISABLEMASK_64_95;
+    #endif
+    #if NVIC_SET_REGISTERS > 3
+    NVICIntSet[3] = IRQ96_127_SER
+    IRQ96_127_CER = DISABLEMASK_96_127;
+    #endif
+    #if NVIC_SET_REGISTERS > 4
+    NVICIntSet[4] = IRQ128_159_SER
+    IRQ128_159_CER = DISABLEMASK_128_159;
+    #endif
+    #if NVIC_SET_REGISTERS > 5
+    NVICIntSet[5] = IRQ160_191_SER
+    IRQ160_191_CER = DISABLEMASK_160_191;
+    #endif
+    #if NVIC_SET_REGISTERS > 6
+    NVICIntSet[6] = IRQ192_223_SER
+    IRQ192_223_CER = DISABLEMASK_192_223;
+    #endif
+    #if NVIC_SET_REGISTERS > 7
+    NVICIntSet[7] = IRQ224_239_SER
+    IRQ224_239_CER = DISABLEMASK_224_239;
+    #endif
+}
+
+extern void fnReenableInterrupts(void)
+{
+    SYSTICK_CSR |= _SYSTICK_CSR;                                         // re-enable systick interrupt if it was previously enabled
+    IRQ0_31_SER = NVICIntSet[0];                                         // re-enable previously enabled interrupts
+    IRQ32_63_SER = NVICIntSet[1];
+    #if NVIC_SET_REGISTERS > 2
+    IRQ64_95_SER = NVICIntSet[2];
+    #endif
+    #if NVIC_SET_REGISTERS > 3
+    IRQ96_127_SER = NVICIntSet[3];
+    #endif
+    #if NVIC_SET_REGISTERS > 4
+    IRQ128_159_SER = NVICIntSet[4];
+    #endif
+    #if NVIC_SET_REGISTERS > 5
+    IRQ160_191_SER = NVICIntSet[5];
+    #endif
+    #if NVIC_SET_REGISTERS > 6
+    IRQ192_223_SER = NVICIntSet[6];
+    #endif
+    #if NVIC_SET_REGISTERS > 7
+    IRQ224_239_SER = NVICIntSet[7];
+    #endif
+}
+#endif
+
 // Function used to enter processor interrupts
 //
 extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void (*InterruptFunc)(void)) // {55}
@@ -2232,6 +2308,7 @@ static void _LowLevelInit(void)
 #if defined CLKOUT_AVAILABLE
   //fnClkout(BUS_CLOCK_OUT);                                             // select the clock to monitor on CLKOUT
   //fnClkout(INTERNAL_IRC48M_CLOCK_OUT);
+  //fnClkout(EXTERNAL_OSCILLATOR_CLOCK_OUT);
 #endif
 #if defined KINETIS_KL && defined ROM_BOOTLOADER && defined BOOTLOADER_ERRATA // {125}
     if ((RCM_MR & (RCM_MR_BOOTROM_BOOT_FROM_ROM_BOOTCFG0 | RCM_MR_BOOTROM_BOOT_FROM_ROM_FOPT7)) != 0) { // if the reset was via the ROM loader
