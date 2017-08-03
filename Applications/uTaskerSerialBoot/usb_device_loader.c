@@ -46,6 +46,7 @@
     20.11.2015 Add USB-CDC option to allow SREC loading via virtual COM  {31}
     02.08.2016 Limit the file object backup size to the root_file[] struct size {32}
     16.01.2017 Check valid file and display for delete if random data    {33}
+    03.08.2017 Add USB-MSD iHex/SREC content support                     {34}
 
 */
 
@@ -2971,7 +2972,7 @@ static int fnIsFirmware(unsigned char *ptrBuffer)
 }
     #endif
 
-    #if defined USB_MSD_ACCEPTS_SREC_FILES || defined USB_MSD_ACCEPTS_HEX_FILES
+    #if defined USB_MSD_ACCEPTS_SREC_FILES || defined USB_MSD_ACCEPTS_HEX_FILES // {34}
 static int fnStoreRecord(int iType, unsigned char *ptrBuffer)
 {
     static unsigned char ucInputBuffer[256] = {0};                       // intermediate buffer
@@ -3043,7 +3044,7 @@ static int fnCorrolateData(unsigned char ucDisk, unsigned char *ptrBuffer, unsig
         return MAC_HIDDEN_DATA_CONTENT;                                  // probably hidden MAC data
     }
     #endif
-    #if defined USB_MSD_ACCEPTS_SREC_FILES || defined USB_MSD_ACCEPTS_HEX_FILES
+    #if defined USB_MSD_ACCEPTS_SREC_FILES || defined USB_MSD_ACCEPTS_HEX_FILES // {34}
     if (LINE_ACCEPTED == fnStoreRecord(TEST_SERIAL_CONTENT, ptrBuffer)) {// check for valid SREC/iHEX content
       //fnDeleteApplication(ucDisk);                                     // delete the original firmware
         return FIRMWARE_START_SREC;                                      // start SREC/iHEX loading
@@ -3132,7 +3133,7 @@ static int _fnWriteSector(unsigned char ucDisk, unsigned char *ptrBuffer, unsign
     #endif
             }
             ptrProgAdd -= ulOffset[ucDisk];                              // adjust offset to align flash address to start of application if needed
-    #if defined USB_MSD_ACCEPTS_SREC_FILES || defined USB_MSD_ACCEPTS_HEX_FILES
+    #if defined USB_MSD_ACCEPTS_SREC_FILES || defined USB_MSD_ACCEPTS_HEX_FILES // {34}
             if (ucAcceptUploads[ucDisk] != FIRMWARE_START_CONTENT) {     // if not binary content
                 fnStoreRecord(USB_LOADING_IN_OPERATION, ptrBuffer);      // program the content according to its content type
             }

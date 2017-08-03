@@ -43,6 +43,7 @@
     20.11.2015 Allow operation on USB-CDC virtual COM                    {27}
     07.01.2016 Remove power from memory stick when jumping to the application {28}
     02.07.2016 Add Intel Hex mode                                        {29}
+    03.08.2017 Add USB-MSD iHex/SREC content support                     {30}
 
 */
 
@@ -901,7 +902,7 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
                 break;
             }
             if (ucSerialInputMessage[iInputLength++] == '\r') {          // line received
-            #if defined USB_MSD_ACCEPTS_SREC_FILES || defined USB_MSD_ACCEPTS_HEX_FILES
+            #if defined USB_MSD_ACCEPTS_SREC_FILES || defined USB_MSD_ACCEPTS_HEX_FILES // {30}
                 switch (fnHandleRecord(ucSerialInputMessage, (ucSerialInputMessage + iInputLength), SERIAL_LOADING_IN_OPERATION))
             #else
                 switch (fnHandleRecord(ucSerialInputMessage, (ucSerialInputMessage + iInputLength)))
@@ -1494,7 +1495,7 @@ static unsigned char fnConvertByte(unsigned char ucASCII)
     return ucResult;
 }
 
-#if defined USB_MSD_ACCEPTS_SREC_FILES || defined USB_MSD_ACCEPTS_HEX_FILES
+#if defined USB_MSD_ACCEPTS_SREC_FILES || defined USB_MSD_ACCEPTS_HEX_FILES // {30}
     static int fnLoadTerminate(int iType)
 #else
     static int fnLoadTerminate(void)
@@ -1525,7 +1526,7 @@ static unsigned char fnConvertByte(unsigned char ucASCII)
     {
         return PROGRAMMING_ERROR;
     }
-        #if defined USB_MSD_ACCEPTS_SREC_FILES || defined USB_MSD_ACCEPTS_HEX_FILES
+        #if defined USB_MSD_ACCEPTS_SREC_FILES || defined USB_MSD_ACCEPTS_HEX_FILES // {30}
     if (iType == USB_LOADING_IN_OPERATION) {
         return PROGRAMMING_COMPLETE;                                     // don't add a file name if programmed via USB since the usb device handling will do it
     }
@@ -1542,7 +1543,7 @@ static unsigned char fnConvertByte(unsigned char ucASCII)
 
 // SREC and/or Intel HEX input record handler
 //
-#if defined USB_MSD_ACCEPTS_SREC_FILES || defined USB_MSD_ACCEPTS_HEX_FILES
+#if defined USB_MSD_ACCEPTS_SREC_FILES || defined USB_MSD_ACCEPTS_HEX_FILES // {30}
     extern int fnHandleRecord(unsigned char *ptrLine, unsigned char *ptrEnd, int iType)
 #else
     extern int fnHandleRecord(unsigned char *ptrLine, unsigned char *ptrEnd)
@@ -1666,7 +1667,7 @@ static unsigned char fnConvertByte(unsigned char ucASCII)
                 return LINE_ACCEPTED;                                    // ignore S0 and S5
             }
             if ((srec.typ == '7') || (srec.typ == '8') || (srec.typ == '9')) { // end of file
-        #if defined USB_MSD_ACCEPTS_SREC_FILES || defined USB_MSD_ACCEPTS_HEX_FILES
+        #if defined USB_MSD_ACCEPTS_SREC_FILES || defined USB_MSD_ACCEPTS_HEX_FILES // {30}
                 return (fnLoadTerminate(iType));
         #else
                 return (fnLoadTerminate());
@@ -1738,7 +1739,7 @@ static unsigned char fnConvertByte(unsigned char ucASCII)
         #if defined SUPPORT_INTEL_HEX_MODE || defined USB_MSD_ACCEPTS_HEX_FILES // {29}
                 switch (srec.typ) {
                 case (0x80 + I_END_OF_FILE):
-            #if defined USB_MSD_ACCEPTS_SREC_FILES || defined USB_MSD_ACCEPTS_HEX_FILES
+            #if defined USB_MSD_ACCEPTS_SREC_FILES || defined USB_MSD_ACCEPTS_HEX_FILES // {30}
                     return (fnLoadTerminate(iType));
             #else
                     return (fnLoadTerminate());
@@ -1806,7 +1807,7 @@ static unsigned char fnConvertByte(unsigned char ucASCII)
                     fileObjInfo.ptrLastAddress = (unsigned char *)srec.addr + iDataCnt;
                 }
         #endif
-        #if defined USB_MSD_ACCEPTS_SREC_FILES || defined USB_MSD_ACCEPTS_HEX_FILES
+        #if defined USB_MSD_ACCEPTS_SREC_FILES || defined USB_MSD_ACCEPTS_HEX_FILES // {30}
                 if (iType == 0) {                                        // if the content is being tested for valididy don't program anything
                     return LINE_ACCEPTED;                                // content is valid
                 }

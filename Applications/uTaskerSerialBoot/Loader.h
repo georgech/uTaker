@@ -41,6 +41,7 @@
     12.07.2014 Add kboot global defines, which are shared by HID and UART modes {24}
     21.01.2015 Modify fnAddSREC_file() to pass additional information    {25}
     20.10.2015 Add fnJumpToValidApplication();                           {26}
+    03.08.2017 Add USB-MSD iHex/SREC content support                     {27}
 
 */
 
@@ -296,7 +297,7 @@
 extern void fnConfigureAndStartWebServer(void);
 extern void fnTransferTFTP(void);
 extern void fnSetBacklight(void);
-#if defined USB_MSD_ACCEPTS_SREC_FILES || defined USB_MSD_ACCEPTS_HEX_FILES
+#if defined USB_MSD_ACCEPTS_SREC_FILES || defined USB_MSD_ACCEPTS_HEX_FILES  // {27}
     extern int fnHandleRecord(unsigned char *ptrLine, unsigned char *ptrEnd, int Type);
     // iType
     //
