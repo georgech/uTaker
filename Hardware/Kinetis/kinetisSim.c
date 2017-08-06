@@ -59,6 +59,7 @@
     03.05.2017 Improve LPUART and UART rx DMA operation
     18.05.2017 Add optional logging of UART reception to a simulation file {43}
     13.07.2017 Define KL82 disabled ports                                {44}
+    04.08.2017 Add fnSetBitBandPeripheralValue() and fnClearBitBandPeripheralValue()
  
 */  
                           
@@ -9211,6 +9212,35 @@ extern void fnGetPenSamples(unsigned short *ptrX, unsigned short *ptrY)
     }
 }
 #endif
+
+// Calculate a bit-banded peripheral address back to its original register and bit - then set the bit in the register
+//
+extern void fnSetBitBandPeripheralValue(unsigned long *bit_band_address)
+{
+    unsigned long ulRegAddress;
+    unsigned long ulBit;
+    ulRegAddress = ((unsigned long)bit_band_address - 0x42000000);
+    ulBit = ((ulRegAddress / 4) % 32);
+    ulBit = (1 << ulBit);
+    ulRegAddress /= 32;
+    ulRegAddress &= ~0x3;
+    *(unsigned long *)ulRegAddress |= ulBit;
+}
+
+// Calculate a bit-banded peripheral address back to its original register and bit - then clear the bit in the register
+//
+extern void fnClearBitBandPeripheralValue(unsigned long *bit_band_address)
+{
+    unsigned long ulRegAddress;
+    unsigned long ulBit;
+    ulRegAddress = ((unsigned long)bit_band_address - 0x42000000);
+    ulBit = ((ulRegAddress / 4) % 32);
+    ulBit = (1 << ulBit);
+    ulRegAddress /= 32;
+    ulRegAddress &= ~0x3;
+    *(unsigned long *)ulRegAddress &= ~ulBit;
+}
+
 
 #if 1 //defined RUN_IN_FREE_RTOS
 extern unsigned long *fnGetRegisterAddress(unsigned long ulAddress)

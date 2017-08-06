@@ -1819,11 +1819,11 @@ static unsigned char fnConvertByte(unsigned char ucASCII)
                 return (fnIntermediateWrite((unsigned char *)srec.addr, ptrData, iDataCnt));
             #endif
         #else
-            #if FLASH_ROW_SIZE && FLASH_ROW_SIZE > 0                         // {24}
-                if (ulNextExpectedSREC != 0) {                               // if not first line to be programmed
-                    if (ulNextExpectedSREC != srec.addr) {                   // if the SREC address has jumped we ensure that any flash buffers are comitted if necessary
+            #if FLASH_ROW_SIZE && FLASH_ROW_SIZE > 0                     // {24}
+                if (ulNextExpectedSREC != 0) {                           // if not first line to be programmed
+                    if (ulNextExpectedSREC != srec.addr) {               // if the SREC address has jumped we ensure that any flash buffers are comitted if necessary
                         if ((ulNextExpectedSREC & ~(FLASH_ROW_SIZE - 1)) != (srec.addr & ~(FLASH_ROW_SIZE - 1))) { // address moves to a new flash buffer
-                            fnWriteBytesFlash(0, 0, 0);                      // close any outstanding FLASH buffer
+                            fnWriteBytesFlash(0, 0, 0);                  // close any outstanding FLASH buffer
                         }
                     }
                 }
@@ -1987,7 +1987,7 @@ extern void fnUserHWInit(void)
         #endif
         }
     }
-    // A non-forced boot mode start is guarantied to have empty application Flash from here
+    // A non-forced boot mode start is guaranteed to have empty application Flash from here
     //
     #elif !defined _WINDOWS
     _DELETE_BOOT_MAILBOX();                                              // {13}

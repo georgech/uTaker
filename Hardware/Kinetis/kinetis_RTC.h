@@ -179,7 +179,7 @@ extern int fnConfigureRTC(void *ptrSettings)
     switch (ptr_rtc_setup->command & ~(RTC_DISABLE | RTC_INITIALISATION | RTC_SET_UTC | RTC_INCREMENT)) { // {51}
     case RTC_TIME_SETTING:                                               // set time to RTC
     #if !defined SUPPORT_SW_RTC && !defined KINETIS_KE
-        POWER_UP(6, SIM_SCGC6_RTC);                                      // ensure the RTC is powered
+        POWER_UP_ATOMIC(6, SIM_SCGC6_RTC);                               // ensure the RTC is powered
         RTC_SR = 0;                                                      // temporarily disable RTC to avoid potential interrupt
     #endif
         if ((ptr_rtc_setup->command & RTC_SET_UTC) != 0) {               // {51} allow setting from UTC seconds value
@@ -263,7 +263,7 @@ extern int fnConfigureRTC(void *ptrSettings)
             return 0;                                                    // disable function rather than enable
         }
     #if defined KINETIS_KE && defined SUPPORT_RTC
-        POWER_UP(6, SIM_SCGC6_RTC);                                      // ensure the KE's RTC is powered
+        POWER_UP_ATOMIC(6, SIM_SCGC6_RTC);                               // ensure the KE's RTC is powered
         rtc_interrupt_handler[iIRQ] = ((INTERRUPT_SETUP *)ptrSettings)->int_handler; // enter the handling interrupt
         fnEnterInterrupt(irq_RTC_OVERFLOW_ID, PRIORITY_RTC, (void (*)(void))_rtc_handler); // enter interrupt handler
         #if defined RTC_USES_EXT_CLK
@@ -283,7 +283,7 @@ extern int fnConfigureRTC(void *ptrSettings)
     #elif defined SUPPORT_SW_RTC
         rtc_interrupt_handler[iIRQ] = ((INTERRUPT_SETUP *)ptrSettings)->int_handler; // enter the handling interrupt
     #else
-        POWER_UP(6, SIM_SCGC6_RTC);                                      // enable access and interrupts to the RTC
+        POWER_UP_ATOMIC(6, SIM_SCGC6_RTC);                               // enable access and interrupts to the RTC
         if ((RTC_SR & RTC_SR_TIF) != 0) {                                // if timer invalid
             RTC_SR = 0;                                                  // ensure stopped
             RTC_TSR = 0;                                                 // write to clear RTC_SR_TIF in status register when not yet enabled

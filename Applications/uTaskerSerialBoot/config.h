@@ -594,7 +594,7 @@
     #define KINETIS_K60                                                  // specify the sub-family
     #define KINETIS_REVISION_2
     #define KINETIS_K66                                                  // extra sub-family type precision
-    #define USB_HS_INTERFACE                                             // use HS interface rather than FS interface
+    #define USB_HS_INTERFACE                                             // use HS interface (USB1) rather than FS interface (USB0)
 #elif defined TEENSY_3_6
     #define TARGET_HW            "Teensy 3.6 (K66FX1M0)"
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((48 * 1024) * MEM_FACTOR) // large SRAM parts
@@ -751,13 +751,18 @@
                 #define MAX_FIRMWARE_NAME  64                            // longest firmware file name string buffer
                 #define EMULATED_FAT_FILE_DATE_CONTROL
             #endif
-          //#define USB_MSD_REJECTS_BINARY_FILES                         // default is to accept binary files
+            #define USB_MSD_REJECTS_BINARY_FILES                         // default is to accept binary files
           //#define USB_MSD_ACCEPTS_SREC_FILES                           // optionally accept SREC content
-          //#define USB_MSD_ACCEPTS_HEX_FILES                            // optionally accept Intel HEX content
+            #define USB_MSD_ACCEPTS_HEX_FILES                            // optionally accept Intel HEX content
         #endif
         #if defined USB_MSD_HOST_LOADER                                  // support loading from memory stick
+            #if defined USB_HS_INTERFACE
+              //#define NXP_MSD_HOST                                     // use NXP USB host interface for realisation
+            #endif
             #define USB_MSD_HOST                                         // requires USB-MSD support in the mass-storage module
-            #define USB_HOST_SUPPORT                                     // requires USB host driver support
+            #if !defined NXP_MSD_HOST
+                #define USB_HOST_SUPPORT                                 // requires USB host driver support
+            #endif
             #define SUPPORT_USB_SIMPLEX_HOST_ENDPOINTS                   // allow operation with memory sticks using bulk IN/OUT on the same endpoint
             #define RANDOM_NUMBER_GENERATOR                              // random numbers required for USB-MSD host tags
           //#define DELETE_SDCARD_FILE_AFTER_UPDATE

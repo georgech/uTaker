@@ -26,9 +26,9 @@
 
 #include "config.h"
 
-#if  (defined USB_INTERFACE && defined USB_MSD_HOST_LOADER && defined USB_HOST_SUPPORT)
+#if  (defined USB_INTERFACE && defined USB_MSD_HOST_LOADER && (defined USB_HOST_SUPPORT || defined NXP_MSD_HOST))
 
-extern void fnUSB_ResetCycle(void); // temp
+extern void fnUSB_ResetCycle(void);                                      // temporary
 
 /* =================================================================== */
 /*                          local definitions                          */
@@ -138,6 +138,30 @@ static void fnRequestLUN(void);
 static int fnSendMSD_host(unsigned char ucOpcode);
 static unsigned char fnDisplayDeviceInfo(void);
 
+#if defined NXP_MSD_HOST
+    typedef void *usb_host_handle;
+    typedef void *usb_host_configuration_handle;
+    typedef void *usb_device_handle;
+    typedef void *usb_host_class_handle;
+    typedef void *usb_host_interface_handle;
+    typedef struct _usb_host_msd_command_instance
+    {
+        usb_host_configuration_handle configHandle; /*!< configuration handle */
+        usb_device_handle deviceHandle;             /*!< device handle */
+        usb_host_class_handle classHandle;          /*!< class handle */
+        usb_host_interface_handle interfaceHandle;  /*!< interface handle */
+        unsigned char testUfiBuffer[512];                 /*!< test buffer */
+        unsigned char prevDeviceState;                    /*!< device attach/detach previous status */
+        unsigned char deviceState;                        /*!< device attach/detach status */
+        unsigned char runWaitState; /*!< application wait status, go to next run status when the wait status success */
+        unsigned char runState;     /*!< application run status */
+    } usb_host_msd_command_instance_t;
+    extern void USB_HostApplicationInit(void);
+    usb_host_handle g_HostHandle;
+    extern usb_host_msd_command_instance_t g_MsdCommandInstance;
+    extern void USB_HostEhciTaskFunction(void *hostHandle);
+    void USB_HostMsdTask(void *arg);
+#endif
 
 /* =================================================================== */
 /*                                task                                 */
@@ -159,8 +183,22 @@ extern void fnTaskUSB_host(TTASKTABLE *ptrTaskTable)
 #if defined USB_STRING_OPTION && defined USB_RUN_TIME_DEFINABLE_STRINGS  // if dynamic strings are supported, prepare a specific serial number ready for enumeration
         fnSetSerialNumberString(temp_pars->temp_parameters.cDeviceIDName); // construct a serial number string for USB use
 #endif
+#if defined NXP_MSD_HOST
+        MCG_C1 |= MCG_C1_IRCLKEN;                                        // 32kHz IRC enable
+        OSC0_CR |= OSC_CR_ERCLKEN;                                       // external reference clock enable
+        USB_HostApplicationInit();                                       // initialation
+        uTaskerStateChange(OWN_TASK, UTASKER_POLLING);                   // switch to polling mode
+        USB_control = 1;                                                 // dummy - to stop re-initialisation
+#else
         fnConfigureUSB();                                                // configure the USB host interface
+#endif
     }
+#if defined NXP_MSD_HOST
+    // Polling
+    //
+    USB_HostEhciTaskFunction(g_HostHandle);
+    USB_HostMsdTask(&g_MsdCommandInstance);
+#endif
 
     while (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH) != 0) { // check task input queue
         switch (ucInputMessage[MSG_SOURCE_TASK]) {                       // switch depending on source
@@ -238,7 +276,7 @@ extern void fnTaskUSB_host(TTASKTABLE *ptrTaskTable)
                 break;
             }                                                            // end interrupt event switch
             break;
-
+#if !defined NXP_MSD_HOST
         case TASK_USB:                                                   // USB interrupt handler is requesting us to perform work offline
             {
                 unsigned char ucEndpointConfiguration;
@@ -290,7 +328,7 @@ extern void fnTaskUSB_host(TTASKTABLE *ptrTaskTable)
                 break;
             }
             break;
-
+#endif
         default:
             break;
         }
@@ -608,6 +646,8 @@ static void fnDisplayUSB_string(unsigned char *ptr_string)
 
 static unsigned char fnDisplayDeviceInfo(void)
 {
+#if defined NXP_MSD_HOST
+#else
     USB_DEVICE_DESCRIPTOR *ptr_device_descriptor;
     USB_CONFIGURATION_DESCRIPTOR *ptr_config_desc;
     USB_INTERFACE_DESCRIPTOR *ptr_interface_desc;
@@ -724,6 +764,7 @@ static unsigned char fnDisplayDeviceInfo(void)
         fnDebugMsg("NON-SUPPORTED CLASS -");
         fnDebugHex(ptr_interface_desc->bInterfaceClass, (WITH_LEADIN | WITH_SPACE | WITH_CR_LF | sizeof(ptr_interface_desc->bInterfaceClass)));
     }
+#endif
     return 0;                                                            // not supported device
 }
 
@@ -824,6 +865,7 @@ static int fnSendMSD_host(unsigned char ucOpcode)
     return 0;
 }
 
+#if !defined NXP_MSD_HOST
 static void fnConfigureApplicationEndpoints(unsigned char ucActiveConfiguration)
 {
     USBTABLE tInterfaceParameters;                                       // table for passing information to driver
@@ -978,6 +1020,7 @@ extern int utDeleteMSDSector(UTDISK *ptr_utDisk, unsigned long ulSectorNumber)
     return (utWriteMSD((unsigned char *)ulTemp, ulSectorNumber));
 }
 #endif
+#endif
 
 // The USB interface is configured by opening the USB interface once for the default control endpoint 0,
 // followed by an open of each endpoint to be used (each endpoint has its own handle). Each endpoint can use an optional call-back
@@ -1014,3 +1057,31 @@ static void fnConfigureUSB(void)
 __PACK_OFF
 #endif
 
+#if defined NXP_MSD_HOST
+extern int DbgConsole_Printf(const char *fmt_s, ...)
+{
+    fnDebugMsg((CHAR *)fmt_s);
+    return 0;
+}
+
+extern void *USB_OsaMemoryAllocate(unsigned long length)
+{
+    return (uMalloc((MAX_MALLOC)length));
+}
+
+extern void USB_OsaMemoryFree(void *p)
+{
+}
+
+extern void fnStickReady(void)
+{
+    fnEventMessage(TASK_MASS_STORAGE, OWN_TASK, MOUNT_USB_MSD);          // initiate mounting the memory stick at the mass storage task
+}
+
+extern void fnStickRemoved(void)
+{
+    fnEventMessage(TASK_MASS_STORAGE, OWN_TASK, USB_MSD_REMOVED);        // inform utFAT that the stick has been removed
+}
+
+void *end = 0;                                                           // this is required by _sbrk() in the gcc library, although not used (dummy)
+#endif

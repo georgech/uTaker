@@ -1080,7 +1080,7 @@ extern void fnStartTick(void)
     MCG_C2 |= MCG_C2_IRCS;                                               // select fast internal reference clock
     LPTMR0_PSR = (LPTMR_PSR_PCS_MCGIRCLK | LPTMR_PSR_PBYP);
     #elif defined LPTMR_CLOCK_RTC_32kHz
-    POWER_UP(6, SIM_SCGC6_RTC);                                          // enable access and interrupts to the RTC
+    POWER_UP_ATOMIC(6, SIM_SCGC6_RTC);                                   // enable access and interrupts to the RTC
     if ((RTC_SR & RTC_SR_TIF) != 0) {                                    // if timer invalid
         RTC_SR = 0;                                                      // ensure stopped
         RTC_TSR = 0;                                                     // write to clear RTC_SR_TIF in status register when not yet enabled
@@ -1123,7 +1123,7 @@ extern void fnStartTick(void)
     #endif
     LPTMR0_CSR |= LPTMR_CSR_TEN;                                         // enable the low power timer
 #elif defined TICK_USES_RTC                                              // {100} use RTC to derive the tick interrupt from
-    POWER_UP(6, SIM_SCGC6_RTC);                                          // ensure the RTC is powered
+    POWER_UP_ATOMIC(6, SIM_SCGC6_RTC);                                   // ensure the RTC is powered
     fnEnterInterrupt(irq_RTC_OVERFLOW_ID, PRIORITY_RTC, (void (*)(void))_RealTimeInterrupt); // enter interrupt handler
     #if defined RTC_USES_EXT_CLK
     RTC_MOD = (unsigned long)((((unsigned long long)((unsigned long long)TICK_RESOLUTION * (unsigned long long)_EXTERNAL_CLOCK)/RTC_CLOCK_PRESCALER_1)/1000000) - 1); // set the match value
@@ -2429,9 +2429,9 @@ static void _LowLevelInit(void)
     MC_PMPROT = MC_PMPROT_LOW_POWER_LEVEL;                               // {117}
     #endif
     #if defined ERRATA_ID_8068 && !defined SUPPORT_RTC                   // if low power mode is to be used but the RTC will not be initialised clear the RTC invalid flag to avoid the low power mode being blocked when e8068 is present
-    POWER_UP(6, SIM_SCGC6_RTC);                                          // temporarily enable the RTC module
+    POWER_UP_ATOMIC(6, SIM_SCGC6_RTC);                                   // temporarily enable the RTC module
     RTC_TSR = 0;                                                         // clear the RTC invalid flag with a write of any value to RTC_TSR
-    POWER_DOWN(6, SIM_SCGC6_RTC);                                        // power down the RTC again
+    POWER_DOWN_ATOMIC(6, SIM_SCGC6_RTC);                                 // power down the RTC again
     #endif
 #endif
 #if defined _WINDOWS

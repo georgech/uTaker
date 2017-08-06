@@ -112,6 +112,16 @@ SECTIONS
 
   __data_load_end__ = __data_load_start__ + SIZEOF(.data);
 
+  __ARM_start__ = ALIGN(__data_load_end__ , 4);
+  .ARM.exidx ALIGN(__data_load_end__ , 4) :
+  {
+    __exidx_start = .;
+    *(.ARM.exidx* .gnu.linkonce.armexidx.*)
+    __exidx_end = .;
+  }
+  __ARM_end__ = __exidx_start + SIZEOF(.ARM.exidx);
+
+
   __FLASH_segment_used_end__ = ALIGN(__fast_load_start__ + SIZEOF(.fast) , 4) + SIZEOF(.data);
 
   . = ASSERT((__data_load_start__ + SIZEOF(.data)) >= __FLASH_segment_start__ && (__data_load_start__ + SIZEOF(.data)) <= (__FLASH_segment_end__) , "error: .data is too large to fit in FLASH memory segment");

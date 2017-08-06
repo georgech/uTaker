@@ -1092,12 +1092,12 @@
     #else
         #if defined DEBUG_MAC
             #define TX_BUFFER_SIZE   (48 * 1024)                         // allow large amount of debug output to be collected
-        #elif defined USB_HOST_SUPPORT
+        #elif defined USB_HOST_SUPPORT || defined NXP_MSD_HOST
             #define TX_BUFFER_SIZE   (1024)                              // the size of UART input and output buffers
         #else
             #define TX_BUFFER_SIZE   (512)                               // the size of UART input and output buffers
         #endif
-        #if defined _WINDOWS
+        #if defined _WINDOWS_
             #define RX_BUFFER_SIZE   (32000)                             // used for simulation to ensure that the rx buffer doesn't overflow
         #else
             #define RX_BUFFER_SIZE   (512)
@@ -1926,7 +1926,7 @@
     #define INIT_WATCHDOG_LED()    _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_LOW(C, (BLINK_LED), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH))
     #define TOGGLE_WATCHDOG_LED()  _TOGGLE_PORT(C, BLINK_LED)
     #define FORCE_BOOT()       (_READ_PORT_MASK(D, SWITCH_1) == 0)       // pull this input down to force boot loader mode (hold SW1 at reset)
-    #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(D, (SWITCH_1 || SWITCH_22), PORT_PS_UP_ENABLE)
+    #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(D, (SWITCH_1 | SWITCH_22), PORT_PS_UP_ENABLE)
 
     #define WATCHDOG_DISABLE()     (_READ_PORT_MASK(D, SWITCH_22) == 0)  // pull this input down to disable watchdog (hold SW22 at reset)
 #elif defined FRDM_K66F

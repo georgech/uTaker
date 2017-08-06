@@ -38,6 +38,7 @@
     05.01.2017 Add optional midi baud rate                               {207}
     07.01.2017 Add UART_TIMED_TRANSMISSION support for parts with DMA    {208}
     03.05.2017 Add free-running DMA reception mode (SERIAL_SUPPORT_DMA_RX_FREERUN) on LPUARTs and UARTs for KL parts based on modulo rx buffer {209}
+    06.08.2017 USe POWER_UP_ATOMIC() instead of POWER_UP() to enable clocks to UART modules (using bit-banding access)
 
 */
 
@@ -2418,7 +2419,7 @@ static void fnConfigLPUART(QUEUE_HANDLE Channel, TTYTABLE *pars, KINETIS_LPUART_
         ptrDMA += UART_DMA_TX_CHANNEL[Channel];
         ptrDMA->DMA_DSR_BCR = DMA_DSR_BCR_DONE;                          // clear the DONE flag and clear errors etc.
         ptrDMA->DMA_DAR = (unsigned long)&(lpuart_reg->LPUART_DATA);     // destination is the LPUART's data register
-        POWER_UP(6, SIM_SCGC6_DMAMUX0);                                  // enable DMA multiplexer
+        POWER_UP_ATOMIC(6, SIM_SCGC6_DMAMUX0);                           // enable DMA multiplexer
         fnEnterInterrupt((irq_DMA0_ID + UART_DMA_TX_CHANNEL[Channel]), UART_DMA_TX_INT_PRIORITY[Channel], (void (*)(void))_uart_tx_dma_Interrupt[Channel]); // enter DMA interrupt handler
         lpuart_reg->LPUART_CTRL &= ~(LPUART_CTRL_TIE | LPUART_CTRL_TCIE);// ensure tx interrupt is not enabled
         lpuart_reg->LPUART_BAUD |= LPUART_BAUD_TDMAE;                    // use DMA rather than interrupts for transmission
@@ -2438,7 +2439,7 @@ static void fnConfigLPUART(QUEUE_HANDLE Channel, TTYTABLE *pars, KINETIS_LPUART_
         fnEnterInterrupt((irq_DMA0_ID + UART_DMA_TX_CHANNEL[Channel]), UART_DMA_TX_INT_PRIORITY[Channel], (void (*)(void))_uart_tx_dma_Interrupt[Channel]); // enter DMA interrupt handler
         lpuart_reg->LPUART_CTRL &= ~(LPUART_CTRL_TIE | LPUART_CTRL_TCIE);// ensure tx interrupt is not enabled
         lpuart_reg->LPUART_BAUD |= LPUART_BAUD_TDMAE;                    // use DMA rather than interrupts for transmission
-        POWER_UP(6, SIM_SCGC6_DMAMUX0);                                  // enable DMA multiplexer 0
+        POWER_UP_ATOMIC(6, SIM_SCGC6_DMAMUX0);                           // enable DMA multiplexer 0
         *(unsigned char *)(DMAMUX0_BLOCK + UART_DMA_TX_CHANNEL[Channel]) = ((DMAMUX0_CHCFG_SOURCE_LPUART0_TX + (2 * (Channel - UARTS_AVAILABLE))) | DMAMUX_CHCFG_ENBL); // connect LPUART tx to DMA channel
         #endif
     }
@@ -2549,7 +2550,7 @@ _configDMA:
         ptrDMA += UART_DMA_TX_CHANNEL[Channel];
         ptrDMA->DMA_DSR_BCR = DMA_DSR_BCR_DONE;                          // clear the DONE flag and clear errors etc.
         ptrDMA->DMA_DAR = (unsigned long)&(uart_reg->UART_D);            // destination is the UART's data register
-        POWER_UP(6, SIM_SCGC6_DMAMUX0);                                  // enable DMA multiplexer 0
+        POWER_UP_ATOMIC(6, SIM_SCGC6_DMAMUX0);                           // enable DMA multiplexer 0
         fnEnterInterrupt((irq_DMA0_ID + UART_DMA_TX_CHANNEL[Channel]), UART_DMA_TX_INT_PRIORITY[Channel], (void (*)(void))_uart_tx_dma_Interrupt[Channel]); // enter DMA interrupt handler
         uart_reg->UART_C2 &= ~(UART_C2_TIE | UART_C2_TCIE);              // ensure tx interrupt is not enabled
             #if UARTS_AVAILABLE > 1
@@ -2584,7 +2585,7 @@ _configDMA:
         ptrDMA_TCD->DMA_TCD_CSR = (DMA_TCD_CSR_DREQ | DMA_TCD_CSR_INTMAJOR); // stop after the defined number of service requests and interrupt on completion
         fnEnterInterrupt((irq_DMA0_ID + UART_DMA_TX_CHANNEL[Channel]), UART_DMA_TX_INT_PRIORITY[Channel], (void (*)(void))_uart_tx_dma_Interrupt[Channel]); // enter DMA interrupt handler
         uart_reg->UART_C5 |= UART_C5_TDMAS;                              // use DMA rather than interrupts for transmission
-        POWER_UP(6, SIM_SCGC6_DMAMUX0);                                  // enable DMA multiplexer 0
+        POWER_UP_ATOMIC(6, SIM_SCGC6_DMAMUX0);                           // enable DMA multiplexer 0
             #if ((defined KINETIS_K21 || defined KINETIS_K22) && (UARTS_AVAILABLE > 4)) || defined KINETIS_K64
         if (Channel > 3) {                                               // channels 4 and 5 each share DMA source for TX and RX
             *(unsigned char *)(DMAMUX0_BLOCK + UART_DMA_TX_CHANNEL[Channel]) = ((DMAMUX_CHCFG_SOURCE_UART3_TX + (Channel - 3)) | DMAMUX_CHCFG_ENBL); // connect UART tx to DMA channel
@@ -2637,7 +2638,7 @@ _configDMA:
             #else
         uart_reg->UART_C5 |= UART_C5_RDMAS;                              // use DMA rather than interrupts for reception
             #endif
-        POWER_UP(6, SIM_SCGC6_DMAMUX0);                                  // enable DMA multiplexer 0
+        POWER_UP_ATOMIC(6, SIM_SCGC6_DMAMUX0);                           // enable DMA multiplexer 0
         *(unsigned char *)(DMAMUX0_BLOCK + UART_DMA_RX_CHANNEL[Channel]) = ((DMAMUX_CHCFG_SOURCE_UART0_RX + (2 * Channel)) | DMAMUX_CHCFG_ENBL); // connect UART rx to DMA channel
         ptrDMA_TCD->DMA_TCD_BITER_ELINK = ptrDMA_TCD->DMA_TCD_CITER_ELINK = pars->Rx_tx_sizes.RxQueueSize; // the length of the input buffer in use
         ptrDMA_TCD->DMA_TCD_SOFF = 0;                                    // source not increment
@@ -2811,11 +2812,11 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         case (0):
         #endif
         #if defined KINETIS_KL
-            POWER_UP(5, SIM_SCGC5_LPUART0);                              // power up LPUART 0
+            POWER_UP_ATOMIC(5, SIM_SCGC5_LPUART0);                       // power up LPUART 0
         #elif defined KINETIS_K80
-            POWER_UP(2, SIM_SCGC2_LPUART0);                              // power up LPUART 0
+            POWER_UP_ATOMIC(2, SIM_SCGC2_LPUART0);                       // power up LPUART 0
         #else
-            POWER_UP(6, SIM_SCGC6_LPUART0);                              // power up LPUART 0
+            POWER_UP_ATOMIC(6, SIM_SCGC6_LPUART0);                       // power up LPUART 0
         #endif
         #if defined LPUART_IRC48M                                        // use the IRC48M clock as UART clock
             #if defined KINETIS_WITH_MCG_LITE
@@ -2848,9 +2849,9 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         case (1):
             #endif
             #if defined KINETIS_KL
-            POWER_UP(5, SIM_SCGC5_LPUART1);                              // power up LPUART 1
+            POWER_UP_ATOMIC(5, SIM_SCGC5_LPUART1);                       // power up LPUART 1
             #else
-            POWER_UP(2, SIM_SCGC2_LPUART1);                              // power up LPUART 1
+            POWER_UP_ATOMIC(2, SIM_SCGC2_LPUART1);                       // power up LPUART 1
             #endif
             #if defined LPUART_IRC48M                                    // use the IRC48M clock as UART clock
                 #if defined KINETIS_WITH_MCG_LITE
@@ -2874,7 +2875,11 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
             #else
         case (2):
             #endif
-            POWER_UP(2, SIM_SCGC2_LPUART2);                              // power up LPUART 2
+            #if defined KINETIS_KL
+            POWER_UP_ATOMIC(5, SIM_SCGC2_LPUART2);                       // power up LPUART 1
+            #else
+            POWER_UP_ATOMIC(2, SIM_SCGC2_LPUART2);                       // power up LPUART 2
+            #endif
             #if defined LPUART_IRC48M                                    // use the IRC48M clock as UART clock
                 #if defined KINETIS_WITH_MCG_LITE
             MCG_MC |= MCG_MC_HIRCEN;                                     // ensure that the IRC48M is operating, even when the processor is not in HIRC mode
@@ -2897,7 +2902,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
             #else
         case (3):
             #endif
-            POWER_UP(2, SIM_SCGC2_LPUART3);                              // power up LPUART 3
+            POWER_UP_ATOMIC(2, SIM_SCGC2_LPUART3);                       // power up LPUART 3
             #if defined LPUART_IRC48M                                    // use the IRC48M clock as UART clock
                 #if defined KINETIS_WITH_MCG_LITE
             MCG_MC |= MCG_MC_HIRCEN;                                     // ensure that the IRC48M is operating, even when the processor is not in HIRC mode
@@ -2920,7 +2925,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
             #else
         case (4):
             #endif
-            POWER_UP(2, SIM_SCGC2_LPUART4);                              // power up LPUART 4
+            POWER_UP_ATOMIC(2, SIM_SCGC2_LPUART4);                       // power up LPUART 4
             #if defined LPUART_IRC48M                                    // use the IRC48M clock as UART clock
                 #if defined KINETIS_WITH_MCG_LITE
             MCG_MC |= MCG_MC_HIRCEN;                                     // ensure that the IRC48M is operating, even when the processor is not in HIRC mode
@@ -2954,7 +2959,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         switch (Channel) {
         #if UARTS_AVAILABLE > 0 && (LPUARTS_AVAILABLE < 1 || defined LPUARTS_PARALLEL)
         case 0:
-            POWER_UP(4, SIM_SCGC4_UART0);                                // power up UART 0
+            POWER_UP_ATOMIC(4, SIM_SCGC4_UART0);                         // power up UART 0
             #if defined KINETIS_KL
                 #if defined UART0_ClOCKED_FROM_MCGIRCLK                  // clocked from internal 4MHz RC clock
             SIM_SOPT2 |= (SIM_SOPT2_UART0SRC_MCGIRCLK);                  // enable UART0 clock source from MCGIRCLK
@@ -2972,27 +2977,27 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
         #if UARTS_AVAILABLE > 1 && (LPUARTS_AVAILABLE < 2 || defined LPUARTS_PARALLEL)
         case 1:
-            POWER_UP(4, SIM_SCGC4_UART1);                                // power up UART 1
+            POWER_UP_ATOMIC(4, SIM_SCGC4_UART1);                         // power up UART 1
             break;
         #endif
         #if (UARTS_AVAILABLE > 2 && (LPUARTS_AVAILABLE < 3 || defined LPUARTS_PARALLEL)) || (UARTS_AVAILABLE == 1 && LPUARTS_AVAILABLE == 2)
         case 2:
-            POWER_UP(4, SIM_SCGC4_UART2);                                // power up UART 2
+            POWER_UP_ATOMIC(4, SIM_SCGC4_UART2);                         // power up UART 2
             break;
         #endif
         #if UARTS_AVAILABLE > 3
         case 3:
-            POWER_UP(4, SIM_SCGC4_UART3);                                // power up UART 3
+            POWER_UP_ATOMIC(4, SIM_SCGC4_UART3);                         // power up UART 3
             break;
         #endif
         #if UARTS_AVAILABLE > 4
         case 4:
-            POWER_UP(1, SIM_SCGC1_UART4);                                // power up UART 4
+            POWER_UP_ATOMIC(1, SIM_SCGC1_UART4);                         // power up UART 4
             break;
         #endif
         #if UARTS_AVAILABLE > 5
         case 5:
-            POWER_UP(1, SIM_SCGC1_UART5);                                // power up UART 5
+            POWER_UP_ATOMIC(1, SIM_SCGC1_UART5);                         // power up UART 5
             break;
         #endif
         default:

@@ -112,6 +112,7 @@
     19.04.2017 Adjust USB FS crossbar master setting for K65 and K66     {95}
     08.05.2017 Correct K26, K65 and K66 HS USB base address              {96}
     20.05.2017 Add timer capture mode                                    {97}
+    04.08.2017 Add fnSetBitBandPeripheralValue() and fnClearBitBandPeripheralValue() prototypes, plus atomic bit-banding macros {98}
 
 */
 
@@ -148,6 +149,11 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
     #define SWAP_COMMAND_FAILURE          -1
     #define SWAP_ERASE_FAILURE            -2
 
+
+extern void fnSetBitBandPeripheralValue(unsigned long *bit_band_address);
+extern void fnClearBitBandPeripheralValue(unsigned long *bit_band_address);
+
+
 /* =================================================================== */
 /*                           struct packing control {66}               */
 /* =================================================================== */
@@ -179,6 +185,7 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
 
 #define CAST_POINTER_ARITHMETIC unsigned long                            // Kinetis uses 32 bit pointers
 
+#define BIT_BANDING_PERIPHERAL_ADDRESS(base, bit)    (0x42000000 + (((CAST_POINTER_ARITHMETIC)(base) - 0x40000000) * 32) + (4 * bit)) // bit banding address for the peripheral bit
 
 // Mask/errata management  
 //
@@ -8149,8 +8156,10 @@ typedef struct stKINETIS_ADMA2_BD
           #define SIM_PINSEL1_PWTIN1PS       0x00008000                  // PWTIN1 on PTH7 rather than PTB0
           #define SIM_PINSEL1_MSCANPS        0x00010000                  // CAN_TX on PTE7 rather than PTC7, CAN_RX on PTH2 rather than PTC6
         #define SIM_SCGC                     *(unsigned long *)(SIM_BLOCK + 0x14) // System Clock Gating Control Register
+        #define SIM_SCGC_ADDR                (unsigned long *)(SIM_BLOCK + 0x14)
     #else
         #define SIM_SCGC                     *(unsigned long *)(SIM_BLOCK + 0x0c) // System Clock Gating Control Register
+        #define SIM_SCGC_ADDR                (unsigned long *)(SIM_BLOCK + 0x14)
     #endif
       #define SIM_SCGC_RTC                   0x00000001
       #define SIM_SCGC_PIT                   0x00000002
@@ -8193,7 +8202,12 @@ typedef struct stKINETIS_ADMA2_BD
       #define SIM_SCGC4_SPI0                 SIM_SCGC_SPI0
       #define SIM_SCGC4_SPI1                 SIM_SCGC_SPI1
       #define SIM_SCGC6_RTC                  SIM_SCGC_RTC
-
+      // Bit-banding references
+      //
+      #define SIM_SCGC_SIM_SCGC6_RTC         BIT_BANDING_PERIPHERAL_ADDRESS((SIM_SCGC_ADDR), 0)
+      #define SIM_SCGC_SIM_SCGC4_UART0       BIT_BANDING_PERIPHERAL_ADDRESS((SIM_SCGC_ADDR), 20)
+      #define SIM_SCGC_SIM_SCGC4_UART1       BIT_BANDING_PERIPHERAL_ADDRESS((SIM_SCGC_ADDR), 21)
+      #define SIM_SCGC_SIM_SCGC4_UART2       BIT_BANDING_PERIPHERAL_ADDRESS((SIM_SCGC_ADDR), 22)
     #if (defined KINETIS_KE04 && (SIZE_OF_FLASH > (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
         #define SIM_UUIDL                    *(volatile unsigned long *)(SIM_BLOCK + 0x18) // Universally Unique Identifier Low Register (read-only)
         #define SIM_UUIDML                   *(volatile unsigned long *)(SIM_BLOCK + 0x1c) // Universally Unique Identifier Middle Low Register (read-only)
@@ -8482,9 +8496,13 @@ typedef struct stKINETIS_ADMA2_BD
           #endif
           #define SIM_SCGC1_UART4            0x00000400
           #define SIM_SCGC1_UART5            0x00000800
+          // Bit-banding references
+          //
+          #define SIM_SCGC1_SIM_SCGC1_UART4 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1028), 10)
+          #define SIM_SCGC1_SIM_SCGC1_UART5 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1028), 11)
         #define SIM_SCGC2                    *(volatile unsigned long *)(SIM_BLOCK + 0x102c) // System Clock Gating Control Register 2
           #define SIM_SCGC2_ENET             0x00000001
-          #if defined KINETIS_K66
+          #if defined KINETIS_K66 || defined KINETIS_K65
             #define SIM_SCGC2_LPUART0        0x00000010
             #define SIM_SCGC2_TPM1           0x00000200
             #define SIM_SCGC2_TPM2           0x00000400
@@ -8509,6 +8527,17 @@ typedef struct stKINETIS_ADMA2_BD
             #define SIM_SCGC2_QSPI           0x04000000
             #define SIM_SCGC2_FLEXIO         0x80000000
           #endif
+          // Bit-banding references
+          //
+          #if defined KINETIS_K66 || defined KINETIS_K65
+              #define SIM_SCGC2_SIM_SCGC2_LPUART0 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x102c), 4)
+          #elif defined KINETIS_K80
+              #define SIM_SCGC2_SIM_SCGC2_LPUART0 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x102c), 4)
+              #define SIM_SCGC2_SIM_SCGC2_LPUART1 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x102c), 5)
+              #define SIM_SCGC2_SIM_SCGC2_LPUART2 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x102c), 6)
+              #define SIM_SCGC2_SIM_SCGC2_LPUART3 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x102c), 7)
+              #define SIM_SCGC2_SIM_SCGC2_LPUART4 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x102c), 22)
+          #endif
         #define SIM_SCGC3                    *(volatile unsigned long *)(SIM_BLOCK + 0x1030)  // System Clock Gating Control Register 3
           #define SIM_SCGC3_RNGA             0x00000001                                       // {41}
           #define SIM_SCGC3_RNGB             0x00000001
@@ -8527,7 +8556,27 @@ typedef struct stKINETIS_ADMA2_BD
           #define SIM_SCGC3_FTM3             0x02000000
           #define SIM_SCGC3_ADC1             0x08000000
           #define SIM_SCGC3_ADC3             0x10000000
-          #define SIM_SCGC3_SLCD             0x40000000                                       // K40
+          #define SIM_SCGC3_SLCD             0x40000000
+          // Bit-banding references
+          //
+          #define SIM_SCGC3_SIM_SCGC3_RNGA       BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1030), 0)
+          #define SIM_SCGC3_SIM_SCGC3_RNGB       BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1030), 0)
+          #define SIM_SCGC3_SIM_SCGC3_TRNG       BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1030), 0)
+          #define SIM_SCGC3_SIM_SCGC3_USBHS      BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1030), 1)
+          #define SIM_SCGC3_SIM_SCGC3_USBHSPHY   BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1030), 2)
+          #define SIM_SCGC3_SIM_SCGC3_USBHSDCD   BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1030), 3)
+          #define SIM_SCGC3_SIM_SCGC3_FLEXCAN1   BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1030), 4)
+          #define SIM_SCGC3_SIM_SCGC3_NFC        BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1030), 8)
+          #define SIM_SCGC3_SIM_SCGC3_SPI2       BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1030), 12)
+          #define SIM_SCGC3_SIM_SCGC3_DDR        BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1030), 14)
+          #define SIM_SCGC3_SIM_SCGC3_SAI1       BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1030), 15)
+          #define SIM_SCGC3_SIM_SCGC3_SDHC       BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1030), 17)
+          #define SIM_SCGC3_SIM_SCGC3_LCDC       BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1030), 22)
+          #define SIM_SCGC3_SIM_SCGC3_FTM2       BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1030), 24)
+          #define SIM_SCGC3_SIM_SCGC3_FTM3       BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1030), 25)
+          #define SIM_SCGC3_SIM_SCGC3_ADC1       BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1030), 27)
+          #define SIM_SCGC3_SIM_SCGC3_ADC3       BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1030), 28)
+          #define SIM_SCGC3_SIM_SCGC3_SLCD       BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1030), 30)
     #endif
     #define SIM_SCGC4                        *(volatile unsigned long *)(SIM_BLOCK + 0x1034)  // System Clock Gating Control Register 4
       #if defined KINETIS_KL03
@@ -8547,13 +8596,19 @@ typedef struct stKINETIS_ADMA2_BD
           #define SIM_SCGC4_USBOTG           0x00040000
           #define SIM_SCGC4_CMP              0x00080000
           #define SIM_SCGC4_VREF             0x00100000
-        #if defined KINETIS_KL
-          #define SIM_SCGC4_SPI0             0x00400000
-          #define SIM_SCGC4_SPI1             0x00800000
-        #endif
-        #if !defined KINETIS_K80
-          #define SIM_SCGC4_LLWU             0x10000000
-        #endif
+          #if defined KINETIS_KL
+              #define SIM_SCGC4_SPI0         0x00400000
+              #define SIM_SCGC4_SPI1         0x00800000
+          #endif
+          #if !defined KINETIS_K80
+              #define SIM_SCGC4_LLWU         0x10000000
+          #endif
+          // Bit-banding references
+          //
+          #define SIM_SCGC4_SIM_SCGC4_UART0 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1034), 10)
+          #define SIM_SCGC4_SIM_SCGC4_UART1 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1034), 11)
+          #define SIM_SCGC4_SIM_SCGC4_UART2 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1034), 12)
+          #define SIM_SCGC4_SIM_SCGC4_UART3 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1034), 13)
       #endif
     #define SIM_SCGC5                        *(volatile unsigned long*)(SIM_BLOCK + 0x1038) // System Clock Gating Control Register 5
       #define SIM_SCGC5_LPTIMER              0x00000001
@@ -8581,17 +8636,30 @@ typedef struct stKINETIS_ADMA2_BD
               #define POWER_UP_LTC_MODULE()  POWER_UP(5, SIM_SCGC5_LTC);
           #endif
           #if LPUARTS_AVAILABLE > 0
-            #define SIM_SCGC5_LPUART0        0x00100000
+              #define SIM_SCGC5_LPUART0        0x00100000
           #endif
           #if LPUARTS_AVAILABLE > 1
-            #define SIM_SCGC5_LPUART1        0x00200000
+              #define SIM_SCGC5_LPUART1        0x00200000
           #endif
           #if LPUARTS_AVAILABLE > 2
-            #define SIM_SCGC5_LPUART3        0x00400000
+              #define SIM_SCGC5_LPUART2        0x00400000
           #endif
           #if defined KINETIS_KL82
-            #define SIM_SCGC5_QSPI0          0x04000000
-            #define SIM_SCGC5_FLEXIO0        0x80000000
+              #define SIM_SCGC5_QSPI0          0x04000000
+              #define SIM_SCGC5_FLEXIO0        0x80000000
+          #endif
+      #endif
+      #if defined KINETIS_KL
+          // Bit-banding references
+          //
+          #if LPUARTS_AVAILABLE > 0
+              #define SIM_SCGC5_SIM_SCGC5_LPUART0 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1038), 20)
+          #endif
+          #if LPUARTS_AVAILABLE > 1
+              #define SIM_SCGC5_SIM_SCGC5_LPUART1 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1038), 21)
+          #endif
+          #if LPUARTS_AVAILABLE > 2
+              #define SIM_SCGC5_SIM_SCGC5_LPUART2 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1038), 22)
           #endif
       #endif
     #define SIM_SCGC6                        *(volatile unsigned long *)(SIM_BLOCK + 0x103c) // System Clock Gating Control Register 6
@@ -8615,15 +8683,48 @@ typedef struct stKINETIS_ADMA2_BD
       #define SIM_SCGC6_PIT                  0x00800000
       #define SIM_SCGC6_FTM0                 0x01000000                      // TPM0 on KL/KE
       #define SIM_SCGC6_FTM1                 0x02000000                      // TPM1 on KL/KE
-    #if defined KINETIS_KL || defined KINETIS_KE || (defined KINETIS_K22 && (SIZE_OF_FLASH <= (512 * 1024)))
-      #define SIM_SCGC6_FTM2                 0x04000000                      // TPM2 on KL/KE
-    #endif
+      #if defined KINETIS_KL || defined KINETIS_KE || (defined KINETIS_K22 && (SIZE_OF_FLASH <= (512 * 1024)))
+          #define SIM_SCGC6_FTM2             0x04000000                      // TPM2 on KL/KE
+      #endif
       #define SIM_SCGC6_ADC0                 0x08000000
       #define SIM_SCGC6_ADC2                 0x10000000
       #define SIM_SCGC6_RTC                  0x20000000
-    #if defined KINETIS_KL
-      #define SIM_SCGC6_DAC0                 0x80000000
-    #endif
+      #if defined KINETIS_KL
+          #define SIM_SCGC6_DAC0             0x80000000
+      #endif
+      // Bit-banding references
+      //
+      #if !defined KINETIS_KE
+          #define SIM_SCGC6_SIM_SCGC6_FTFL   BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 0)
+      #endif
+      #define SIM_SCGC6_SIM_SCGC6_DMAMUX0    BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 1)
+      #define SIM_SCGC6_SIM_SCGC6_DMAMUX1    BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 2)
+      #define SIM_SCGC6_SIM_SCGC6_FLEXCAN0   BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 4)
+      #if defined DSPI_SPI
+          #define SIM_SCGC6_SIM_SCGC6_SPI0   BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 12)
+          #define SIM_SCGC6_SIM_SCGC6_SPI1   BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 13)
+      #endif
+      #if !defined KINETIS_KL && !defined KINETIS_K80
+          #define SIM_SCGC6_SIM_SCGC6_LPUART0 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 10)
+      #endif
+      #define SIM_SCGC6_SIM_SCGC6_SAI0       BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 15)
+      #define SIM_SCGC6_SIM_SCGC6_I2S        BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 15)
+      #define SIM_SCGC6_SIM_SCGC6_CRC        BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 18)
+      #define SIM_SCGC6_SIM_SCGC6_USBHS      BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 20)
+      #define SIM_SCGC6_SIM_SCGC6_USBDCD     BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 21)
+      #define SIM_SCGC6_SIM_SCGC6_PDB        BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 22)
+      #define SIM_SCGC6_SIM_SCGC6_PIT        BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 23)
+      #define SIM_SCGC6_SIM_SCGC6_FTM0       BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 24)
+      #define SIM_SCGC6_SIM_SCGC6_FTM1       BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 25)
+      #if defined KINETIS_KL || defined KINETIS_KE || (defined KINETIS_K22 && (SIZE_OF_FLASH <= (512 * 1024)))
+          #define SIM_SCGC6_SIM_SCGC6_FTM2   BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 26)
+      #endif
+      #define SIM_SCGC6_SIM_SCGC6_ADC0       BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 27)
+      #define SIM_SCGC6_SIM_SCGC6_ADC2       BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 28)
+      #define SIM_SCGC6_SIM_SCGC6_RTC        BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 29)
+      #if defined KINETIS_KL
+            #define SIM_SCGC6_SIM_SCGC6_DAC0 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 31)
+      #endif
     #define SIM_SCGC7                        *(volatile unsigned long*)(SIM_BLOCK + 0x1040) // System Clock Gating Control Register 7
       #if defined KINETIS_KV
           #define SIM_SCGC7_DMA              0x00000002
@@ -8758,64 +8859,75 @@ typedef struct stKINETIS_ADMA2_BD
     #define SIM_UIDMH                        *(volatile unsigned long *)(SIM_BLOCK + 0x1058) // Unique Identification Register Mid-High
     #define SIM_UIDML                        *(volatile unsigned long *)(SIM_BLOCK + 0x105c) // Unique Identification Register Mid-Low
     #define SIM_UIDL                         *(volatile unsigned long *)(SIM_BLOCK + 0x1060) // Unique Identification Register Low
-    #if defined KINETIS_KL && !defined KINETIS_KL82                          // {42}
+    #if defined KINETIS_KL && !defined KINETIS_KL82                      // {42}
         #define SIM_COPC                     *(unsigned long *)(SIM_BLOCK + 0x1100) // COP Control Register - all of the bits in this register can be written only once after a reset
-          #define SIM_COPC_COPW              0x00000001                      // COP windowed mode
-          #define SIM_COPC_COPCLKS_1K        0x00000000                      // COP source is 1kHz clock
-          #define SIM_COPC_COPCLKS_BUS       0x00000002                      // COP source is bus clock
-          #define SIM_COPC_COPT_DISABLED     0x00000000                      // COP disabled
-          #define SIM_COPC_COPT_SHORTEST     0x00000004                      // 2^13 cycles or 32ms timeout (LPO) - 2^5 for short timeout (when supported)
-          #define SIM_COPC_COPT_MEDIUM       0x00000008                      // 2^16 cycles or 256ms timeout (LPO) - 2^8 for short timeout (when supported)
-          #define SIM_COPC_COPT_LONGEST      0x0000000c                      // 2^18 cycles or 1.024s timeout (LPO) - 2^10 for short timeout (when supported)
+          #define SIM_COPC_COPW              0x00000001                  // COP windowed mode
+          #define SIM_COPC_COPCLKS_1K        0x00000000                  // COP source is 1kHz clock
+          #define SIM_COPC_COPCLKS_BUS       0x00000002                  // COP source is bus clock
+          #define SIM_COPC_COPT_DISABLED     0x00000000                  // COP disabled
+          #define SIM_COPC_COPT_SHORTEST     0x00000004                  // 2^13 cycles or 32ms timeout (LPO) - 2^5 for short timeout (when supported)
+          #define SIM_COPC_COPT_MEDIUM       0x00000008                  // 2^16 cycles or 256ms timeout (LPO) - 2^8 for short timeout (when supported)
+          #define SIM_COPC_COPT_LONGEST      0x0000000c                  // 2^18 cycles or 1.024s timeout (LPO) - 2^10 for short timeout (when supported)
           // Newer KL parts, whereby compatible with base devices
           //
-          #define SIM_COPC_COPCLKS_SHORT     0x00000000                      // COP configured for short timeout
-          #define SIM_COPC_COPCLKS_LONG      0x00000002                      // COP configured for long timeout
-          #define SIM_COPC_COPSTPEN          0x00000010                      // COP is enabled in stop modes
-          #define SIM_COPC_COPDBGEN          0x00000020                      // COP is enabled in debug mode
-          #define SIM_COPC_COPCLKSEL_1K      0x00000000                      // COP clock source selection - LPO(1kHz)
-          #define SIM_COPC_COPCLKSEL_MCGIRCLK 0x00000040                     // COP clock source selection - MCGIRCLK
-          #define SIM_COPC_COPCLKSEL_OSCERCLK 0x00000080                     // COP clock source selection - OSCERCLK
-          #define SIM_COPC_COPCLKSEL_BUS     0x000000c0                      // COP clock source selection - bus clock
+          #define SIM_COPC_COPCLKS_SHORT     0x00000000                  // COP configured for short timeout
+          #define SIM_COPC_COPCLKS_LONG      0x00000002                  // COP configured for long timeout
+          #define SIM_COPC_COPSTPEN          0x00000010                  // COP is enabled in stop modes
+          #define SIM_COPC_COPDBGEN          0x00000020                  // COP is enabled in debug mode
+          #define SIM_COPC_COPCLKSEL_1K      0x00000000                  // COP clock source selection - LPO(1kHz)
+          #define SIM_COPC_COPCLKSEL_MCGIRCLK 0x00000040                 // COP clock source selection - MCGIRCLK
+          #define SIM_COPC_COPCLKSEL_OSCERCLK 0x00000080                 // COP clock source selection - OSCERCLK
+          #define SIM_COPC_COPCLKSEL_BUS     0x000000c0                  // COP clock source selection - bus clock
         #define SIM_SRVCOP                  *(volatile unsigned long *)(SIM_BLOCK + 0x1104) // COP Control Register (write-only)
-          #define SIM_SRVCOP_1               0x00000055                      // to service the COP 0x55 is written, followed by 0xaa
+          #define SIM_SRVCOP_1               0x00000055                  // to service the COP 0x55 is written, followed by 0xaa
           #define SIM_SRVCOP_2               0x000000aa
     #elif defined KINETIS_K_FPU || (KINETIS_MAX_SPEED > 100000000)
         #define SIM_CLKDIV3                  *(unsigned long *)(SIM_BLOCK + 0x1064) // System Clock Divider Register 3
-            #define SIM_CLKDIV3_LCDCFRAC     0x0000ff00                      // LCDCFRAC clock divider fraction
-            #define SIM_CLKDIV3_LCDCDIV      0x0fff0000                      // LCDC clock divider fraction
+            #define SIM_CLKDIV3_LCDCFRAC     0x0000ff00                  // LCDCFRAC clock divider fraction
+            #define SIM_CLKDIV3_LCDCDIV      0x0fff0000                  // LCDC clock divider fraction
         #define SIM_CLKDIV4                  *(unsigned long *)(SIM_BLOCK + 0x1068) // System Clock Divider Register 4
-            #define SIM_CLKDIV4_TRACEFRAC    0x00000001                      // Trace Clock divider fraction
-            #define SIM_CLKDIV4_TRACEDIV     0x0000000e                      // Trace clock divider divisor
-            #define SIM_CLKDIV4_NFCFRAC      0x07000000                      // NCF clock divider fraction
-            #define SIM_CLKDIV4_NFCDIV       0xf8000000                      // NCF clock divider divisor
+            #define SIM_CLKDIV4_TRACEFRAC    0x00000001                  // Trace Clock divider fraction
+            #define SIM_CLKDIV4_TRACEDIV     0x0000000e                  // Trace clock divider divisor
+            #define SIM_CLKDIV4_NFCFRAC      0x07000000                  // NCF clock divider fraction
+            #define SIM_CLKDIV4_NFCDIV       0xf8000000                  // NCF clock divider divisor
         #define SIM_MCR                      *(volatile unsigned long *)(SIM_BLOCK + 0x106c) // Misc Control Register
-            #define SIM_MCR_DDRSREN          0x00000001                      // DDR self refresh enable
-            #define SIM_MCR_DDRS             0x00000002                      // DDR self refresh status (read-only)
-            #define SIM_MCR_DDRPEN           0x00000004                      // Pin enable for all DDR I/O
-            #define SIM_MCR_DDRDQSDIS        0x00000008                      // DDR_DQS analog circuit disable
-            #define SIM_MCR_DDRCFG_LPDDR_2   0x00000000                      // DDR configuration select - LPDDR half strength
-            #define SIM_MCR_DDRCFG_LPDDR     0x00000020                      // DDR configuration select - LPDDR full strength
-            #define SIM_MCR_DDRCFG_DDR2_2    0x00000040                      // DDR configuration select - DDR2 half strength
-            #define SIM_MCR_DDRCFG_DDR1      0x00000060                      // DDR configuration select - DDR1
-            #define SIM_MCR_DDRCFG_DDR2      0x000000c0                      // DDR configuration select - DDR2 full strength
-            #define SIM_MCR_RCRRSTEN         0x00000100                      // DDR RCR Special Reset Enable
-            #define SIM_MCR_RCRRST           0x00000200                      // DDR RCR Reset Status (read-only)
-            #define SIM_MCR_LCDSTART         0x00010000                      // start LCDC display
-            #define SIM_MCR_PDBLOOP          0x20000000                      // PDB loop mode
-            #define SIM_MCR_ULPICLKOBE       0x40000000                      // 60MHz ULPI clock (ULPI_CLK) output enable
-            #define SIM_MCR_TRACECLKDIS      0x80000000                      // Trace clock disable
+            #define SIM_MCR_DDRSREN          0x00000001                  // DDR self refresh enable
+            #define SIM_MCR_DDRS             0x00000002                  // DDR self refresh status (read-only)
+            #define SIM_MCR_DDRPEN           0x00000004                  // Pin enable for all DDR I/O
+            #define SIM_MCR_DDRDQSDIS        0x00000008                  // DDR_DQS analog circuit disable
+            #define SIM_MCR_DDRCFG_LPDDR_2   0x00000000                  // DDR configuration select - LPDDR half strength
+            #define SIM_MCR_DDRCFG_LPDDR     0x00000020                  // DDR configuration select - LPDDR full strength
+            #define SIM_MCR_DDRCFG_DDR2_2    0x00000040                  // DDR configuration select - DDR2 half strength
+            #define SIM_MCR_DDRCFG_DDR1      0x00000060                  // DDR configuration select - DDR1
+            #define SIM_MCR_DDRCFG_DDR2      0x000000c0                  // DDR configuration select - DDR2 full strength
+            #define SIM_MCR_RCRRSTEN         0x00000100                  // DDR RCR Special Reset Enable
+            #define SIM_MCR_RCRRST           0x00000200                  // DDR RCR Reset Status (read-only)
+            #define SIM_MCR_LCDSTART         0x00010000                  // start LCDC display
+            #define SIM_MCR_PDBLOOP          0x20000000                  // PDB loop mode
+            #define SIM_MCR_ULPICLKOBE       0x40000000                  // 60MHz ULPI clock (ULPI_CLK) output enable
+            #define SIM_MCR_TRACECLKDIS      0x80000000                  // Trace clock disable
     #endif
+#endif
+
+#if defined _WINDOWS                                                     // {98}
+    #define ATOMIC_SET_REGISTER(bit_band_address)   fnSetBitBandPeripheralValue((unsigned long *)(bit_band_address))
+    #define ATOMIC_CLEAR_REGISTER(bit_band_address) fnClearBitBandPeripheralValue((unsigned long *)(bit_band_address))
+#else
+    #define ATOMIC_SET_REGISTER(bit_band_address)   *(unsigned long *)bit_band_address = 1
+    #define ATOMIC_CLEAR_REGISTER(bit_band_address) *(unsigned long *)bit_band_address = 0
 #endif
 
 #if defined KINETIS_KE
     #define POWER_UP(reg, module)            SIM_SCGC |= (module)            // power up a module (apply clock to it)
     #define POWER_DOWN(reg, module)          SIM_SCGC &= ~(module)           // power down a module (disable clock to it)
     #define IS_POWERED_UP(reg, module)      (SIM_SCGC & (module))
+    #define POWER_UP_ATOMIC(reg, module)     ATOMIC_SET_REGISTER(SIM_SCGC_##module) // {98} power up a single module using bit-banding access (apply clock to it)
+    #define POWER_DOWN_ATOMIC(reg, module)   ATOMIC_CLEAR_REGISTER(SIM_SCGC_##module) // power down a single module using bit-banding access (disable clock to it)
 #else
-    #define POWER_UP(reg, module)            SIM_SCGC##reg |= (module)       // power up a module (apply clock to it)
-    #define POWER_DOWN(reg, module)          SIM_SCGC##reg &= ~(module)      // power down a module (disable clock to it)
-
+    #define POWER_UP(reg, module)            SIM_SCGC##reg |= (module)       // power up a module or multiple modules sharing a register (apply clock to it)
+    #define POWER_DOWN(reg, module)          SIM_SCGC##reg &= ~(module)      // power down a module or multiple modules sharing a register (disable clock to it)
+    #define POWER_UP_ATOMIC(reg, module)     ATOMIC_SET_REGISTER(SIM_SCGC##reg##_##module) // {98} power up a single module using bit-banding access (apply clock to it)
+    #define POWER_DOWN_ATOMIC(reg, module)   ATOMIC_CLEAR_REGISTER(SIM_SCGC##reg##_##module) // power down a single module using bit-banding access (disable clock to it)
     #if defined KINETIS_K_FPU
         #define SIM_SOPT1_SET(opt, enable)   SIM_SOPT1CGF |= (enable); SIM_SOPT1 |= (opt)
         #define SIM_SOPT1_CLR(opt, enable)   SIM_SOPT1CGF |= (enable); SIM_SOPT1 &= ~(opt)
@@ -8825,6 +8937,7 @@ typedef struct stKINETIS_ADMA2_BD
     #endif
     #define IS_POWERED_UP(reg, module)      (SIM_SCGC##reg & (module))
 #endif
+
 
 
 // Port Control and Interrupts

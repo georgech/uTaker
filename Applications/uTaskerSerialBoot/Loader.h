@@ -148,6 +148,8 @@
     #else
         #if defined FRDM_K64F && defined MEMORY_SWAP
             #define UTASKER_APP_START     (SIZE_OF_FLASH/2)              // second half of flash memory is used by the next application
+        #elif defined NXP_MSD_HOST                                       // if using NXP host stack the loader is larger in size
+            #define UTASKER_APP_START     (64 * 1024)                    // application starts at this address
         #else
             #define UTASKER_APP_START     (32 * 1024)                    // application starts at this address
         #endif
