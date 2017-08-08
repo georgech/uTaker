@@ -575,7 +575,7 @@
     #define KINETIS_REVISION_2
     #define KINETIS_K64                                                  // extra sub-family type precision
 #elif defined TWR_K65F180M
-  //#define TWR_SER                                                      // use TWR-SER serial board instead of OpenSDA virtual COM port
+    #define TWR_SER                                                      // use TWR-SER serial board instead of OpenSDA virtual COM port
     #define TARGET_HW            "TWR-K65F180M"
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((48 * 1024) * MEM_FACTOR) // large SRAM parts
     #define KINETIS_MAX_SPEED    180000000
@@ -695,7 +695,7 @@
       //#define DEVELOPERS_LOADER_PROTOCOL_VERSION_9                     // user protocol version 9 rather than obsolete Kinetis 8 (not completed at the moment)
         #define DEVELOPERS_LOADER_READ                                   // support reading back program
         #define DEVELOPERS_LOADER_CRC                                    // support CRC in communication
-  //#define REMOVE_SREC_LOADING                                          // disable SREC (and Intel Hex) loading but keep debug output and the command line menu
+    #define REMOVE_SREC_LOADING                                          // disable SREC (and Intel Hex) loading but keep debug output and the command line menu
     #if !defined REMOVE_SREC_LOADING
         #define SUPPORT_INTEL_HEX_MODE                                   // support Intel Hex mode together with SREC (auto-recognition)
       //#define EXCLUSIVE_INTEL_HEX_MODE                                 // loading mode is exclusively Intel Hex (use with or without SUPPORT_INTEL_HEX_MODE)
@@ -751,9 +751,9 @@
                 #define MAX_FIRMWARE_NAME  64                            // longest firmware file name string buffer
                 #define EMULATED_FAT_FILE_DATE_CONTROL
             #endif
-            #define USB_MSD_REJECTS_BINARY_FILES                         // default is to accept binary files
+          //#define USB_MSD_REJECTS_BINARY_FILES                         // default is to accept binary files
           //#define USB_MSD_ACCEPTS_SREC_FILES                           // optionally accept SREC content
-            #define USB_MSD_ACCEPTS_HEX_FILES                            // optionally accept Intel HEX content
+          //#define USB_MSD_ACCEPTS_HEX_FILES                            // optionally accept Intel HEX content
         #endif
         #if defined USB_MSD_HOST_LOADER                                  // support loading from memory stick
             #if defined USB_HS_INTERFACE
@@ -814,7 +814,7 @@
   //#define SPI_FLASH_FAT                                                // SPI flash
         #define SIMPLE_FLASH                                             // don't perform block management and wear-levelling
         #define FLASH_FAT_MANAGEMENT_ADDRESS     (SIZE_OF_FLASH)
-  //#define DELETE_SDCARD_FILE_AFTER_UPDATE                              // once new firmware has been copied form the SD card it will be automatically deleted from the card
+  //#define DELETE_SDCARD_FILE_AFTER_UPDATE                              // once new firmware has been copied from the SD card it will be automatically deleted from the card
     #if defined SERIAL_INTERFACE && !defined REMOVE_SREC_LOADING
         #define UTFAT_DISABLE_DEBUG_OUT                                  // disable general mass-storage output so that the SREC loader is not disturbed
     #endif
@@ -855,7 +855,7 @@
 #endif
 
 #if !defined DEVICE_WITHOUT_ETHERNET
-  //#define ETH_INTERFACE                                                // enable Ethernet interface driver
+    #define ETH_INTERFACE                                                // enable Ethernet interface driver
     #if defined FRDM_K64F
       //#define ENC424J600_INTERFACE                                     // 10/100 Ethernet connected via SPI (also ENC624J600 in larger package with more parallel modes)
       //#define USE_SIMULATION_INTERFACE                                 // work with a remote simulation interface (remove when not present)
@@ -891,7 +891,7 @@
         #if defined _WINDOWS
           //#define PSEUDO_LOOPBACK                                      // pseudo loop back when simulating - only for use with the simulator!! (this allows an application to send test frames to its own IP address)
         #endif
-      //#define USE_ZERO_CONFIG                                          // support IPv4 link-local and zero configuratio (autoIP)
+      //#define USE_ZERO_CONFIG                                          // support IPv4 link-local and zero configuration (autoIP)
         #if defined USE_ICMP                                             // specify ICMP support details
             #define ICMP_PING                                            // allow PING reply
           //#define ICMP_SEND_PING                                       // support PING transmission

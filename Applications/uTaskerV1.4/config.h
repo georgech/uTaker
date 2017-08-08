@@ -24,7 +24,7 @@
 
 ///////////////////////////////////////////////////////////////////////////
 //                                                                       // new users who would like to see just a blinking LED before enabling the project's many powerful features can set this
-#define BLINKY                                                           // to give simplest scheduling of a single task called at 200ms rate that retriggers the watchdog and toggles the board's heartbeat LED
+//#define BLINKY                                                         // to give simplest scheduling of a single task called at 200ms rate that retriggers the watchdog and toggles the board's heartbeat LED
 //                                                                       // 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -886,7 +886,7 @@
   //#define SERIAL_SUPPORT_ECHO                                          // enable echo mode in rx driver
   //#define SERIAL_SUPPORT_ESCAPE                                        // enable escape sequencing in driver
   //#define SERIAL_SUPPORT_SCAN                                          // serial receiver supports scanning of input buffer for a sequence
-    #if !defined KINETIS_KL
+    #if !defined KINETIS_KL && !defined KINETIS_KE
         #define SUPPORT_HW_FLOW                                          // support RTS/CTS flow control and other possible modem signals
     #endif
   //#define UART_BREAK_SUPPORT                                           // support break control in the UART driver
@@ -950,9 +950,9 @@
         #if defined USB_HOST_SUPPORT
             #define NUMBER_USB     (5 + 1)                               // physical queues (control plus 5 endpoints)
         #else                                                            // define one or more device classes (multiple classes creates a composite device)
-          //#define USE_USB_CDC                                          // USB-CDC (use also for Modbus over USB)
+            #define USE_USB_CDC                                          // USB-CDC (use also for Modbus over USB)
           //#define USE_USB_MSD                                          // needs SD card to compile (or alternatives FLASH_FAT / SPI_FLASH_FAT / FAT_EMULATION)
-            #define USE_USB_HID_MOUSE                                    // human interface device (mouse)
+          //#define USE_USB_HID_MOUSE                                    // human interface device (mouse)
           //#define USE_USB_HID_KEYBOARD                                 // human interface device (keyboard)
               //#define USB_KEYBOARD_DELAY                               // enable inter-character delay control
           //#define USE_USB_HID_RAW                                      // human interface device (raw)
@@ -1118,7 +1118,7 @@
 
 // utFAT
 //
-//#define SDCARD_SUPPORT                                                 // SD-card interface
+#define SDCARD_SUPPORT                                                   // SD-card interface
 //#define FLASH_FAT                                                      // FAT in internal flash
 //#define SPI_FLASH_FAT                                                  // FAT in external SPI flash
     #define SIMPLE_FLASH                                                 // don't perform block management and wear-leveling
@@ -1201,7 +1201,7 @@
 // Ethernet
 //
 #if !defined DEVICE_WITHOUT_ETHERNET && !defined K70F150M_12M && !defined TEENSY_3_5 && !defined TEENSY_3_6 && !defined K66FX1M
-  //#define ETH_INTERFACE                                                // enable Ethernet interface driver
+    #define ETH_INTERFACE                                                // enable Ethernet interface driver
 #elif defined TEENSY_3_1 || defined TEENSY_LC
   //#define ETH_INTERFACE                                                // enable external Ethernet interface driver
     #if defined ETH_INTERFACE

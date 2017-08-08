@@ -36,6 +36,7 @@
     17.01.2016 Add fnResetENET() when restarting Ethernet (for simulator){101}
     27.01.2016 Add _KSZ8051RNL                                           {102}
     08.03.2017 Add option to not initialise MII_RXER pin (NO_MII_RXER)   {103}
+    07.08.2017 Add option for MDIO on port A                             {104}
 
 */
 
@@ -654,6 +655,9 @@ extern void fnCheckEthLinkState(void)
     #if defined INTERRUPT_TASK_PHY
     unsigned char int_phy_message[HEADER_LENGTH];
     #endif
+    if (IS_POWERED_UP(2, SIM_SCGC2_ENET) == 0) {                         // ignore if the ethernet controller is not clocked
+        return;
+    }
     #if defined STOP_MII_CLOCK
     MSCR = (((ETHERNET_CONTROLLER_CLOCK/(2 * MII_MANAGEMENT_CLOCK_SPEED)) + 1) << 1); // enable PHY clock for reads
     #endif
@@ -925,19 +929,28 @@ extern int fnConfigEthernet(ETHTABLE *pars)
             #error Ethernet RMII operation requires a 50MHz external clock signal!!
         #endif
     #endif
-    POWER_UP(2, SIM_SCGC2_ENET);                                         // power up the Ethernet controller
+    POWER_UP_ATOMIC(2, SIM_SCGC2_ENET);                                  // power up the Ethernet controller
     #if defined MPU_AVAILABLE
     MPU_CESR = 0;                                                        // allow concurrent access to MPU controller
     #endif
     #if defined FORCE_PHY_CONFIG
     FNFORCE_PHY_CONFIG();                                                // drive configuration lines and reset
     #endif
-    #if defined ETHERNET_MDIO_WITH_PULLUPS
-    _CONFIG_PERIPHERAL(B, 0, (PB_0_MII0_MDIO | PORT_PS_UP_ENABLE));      // MII0_MDIO on PB.0 (alt. function 4) with pullup enabled
+    #if defined MDIO_ON_PORTA                                            // {104}
+        #if defined ETHERNET_MDIO_WITH_PULLUPS
+    _CONFIG_PERIPHERAL(A, 7, (PA_7_MII0_MDIO | PORT_PS_UP_ENABLE));      // MII0_MDIO on PB.0 (alt. function 4) with pullup enabled
+        #else
+    _CONFIG_PERIPHERAL(A, 7, PA_7_MII0_MDIO);                            // MII0_MDIO on PB.0 (alt. function 4)
+        #endif
+    _CONFIG_PERIPHERAL(A, 8, PA_8_MII0_MDC);                             // MII0_MDC on PB.1 (alt. function 4)
     #else
+        #if defined ETHERNET_MDIO_WITH_PULLUPS
+    _CONFIG_PERIPHERAL(B, 0, (PB_0_MII0_MDIO | PORT_PS_UP_ENABLE));      // MII0_MDIO on PB.0 (alt. function 4) with pullup enabled
+        #else
     _CONFIG_PERIPHERAL(B, 0, PB_0_MII0_MDIO);                            // MII0_MDIO on PB.0 (alt. function 4)
-    #endif
+        #endif
     _CONFIG_PERIPHERAL(B, 1, PB_1_MII0_MDC);                             // MII0_MDC on PB.1 (alt. function 4)
+    #endif
 
     #if defined JTAG_DEBUG_IN_USE_ERRATA_2541
     _CONFIG_PERIPHERAL(A, 5, (PORT_PS_DOWN_ENABLE));                     // pull the optional line down to 0V to avoid disturbing JTAG_TRST - not needed when using SWD for debugging 
@@ -951,10 +964,9 @@ extern int fnConfigEthernet(ETHTABLE *pars)
     _CONFIG_PERIPHERAL(A, 16, PA_16_MII0_TXD0);                          // MII0_TXD0 on PA.16 (alt. function 4)
     _CONFIG_PERIPHERAL(A, 17, PA_17_MII0_TXD1);                          // MII0_TXD1 on PA.17 (alt. function 4)
     #if defined ETHERNET_RMII && defined ETHERNET_RMII_CLOCK_INPUT       // {14}
-    // Add pin connection if it becomes available
-    //
         #if defined KINETIS_K65 || defined KINETIS_K66
-    _CONFIG_PERIPHERAL(E, 26,  PE_26_ENET_1588_CLKIN);
+    _CONFIG_PERIPHERAL(E, 26,  PE_26_ENET_1588_CLKIN);                   // select the pin function for external 50MHz clock input
+    SIM_SOPT2 |= (SIM_SOPT2_RMIISRC_ENET_1588_CLKIN);                    // select the EET_1588_CLKIN as clock source (rather than EXTAL)
         #endif
     #endif
     #if !defined ETHERNET_RMII                                           // additional signals used in MII mode
@@ -1099,7 +1111,7 @@ extern int fnConfigEthernet(ETHTABLE *pars)
         #endif
     #else
                 MSCR = 0;                                                // disable clock
-                POWER_DOWN(2, SIM_SCGC2_ENET);
+                POWER_DOWN_ATOMIC(2, SIM_SCGC2_ENET);
                 return -1;                                               // if the identifier is incorrect the phy isn't responding correctly - return error
     #endif
     #if defined SCAN_PHY_ADD || defined POLL_PHY

@@ -1263,9 +1263,9 @@
     #endif
     // See below for MII_MANAGEMENT_CLOCK_SPEED since it depends on the system clock (after #include "../../Hardware/Kinetis/kinetis.h")
     //
-#elif defined TWR_K60N512 || defined TWR_K60D100M || defined KINETIS_K52 || defined KINETIS_K61 || defined TWR_K64F120M || defined TWR_K65F180M || defined FRDM_K66F || defined KINETIS_K70
+#elif defined TWR_K60N512 || defined TWR_K60D100M || defined KINETIS_K52 || defined KINETIS_K61 || defined TWR_K64F120M || defined TWR_K65F180M || defined KINETIS_K70
   //#define JTAG_DEBUG_IN_USE_ERRATA_2541                                // pull the optional MII0_RXER line down to 0V to avoid disturbing JTAG_TRST - not needed when using SWD for debugging
-    #if defined TWR_K65F180M || defined FRDM_K66F
+    #if defined TWR_K65F180M
         #define ETHERNET_RMII_CLOCK_INPUT                                // the ENET_1588_CLKIN is used as clock since a 50MHz PHY clock is not available on EXTAL
     #endif
     #if defined TWR_SER2                                                 // {17}
@@ -1281,7 +1281,7 @@
         #define ETHERNET_RMII                                            // RMII mode of operation instead of MII
         #define FORCE_PHY_CONFIG                                         // activate forced configuration
         #define FNFORCE_PHY_CONFIG()
-        #if defined TWR_K65F180M || defined FRDM_K66F
+        #if defined TWR_K65F180M
             #define INTERRUPT_TASK_PHY     TASK_NETWORK_INDICATOR        // link status reported to this task (do not use together with LAN_REPORT_ACTIVITY)
             #define PHY_ADDRESS            0x00                          // address of external PHY on board
             #define PHY_INTERRUPT_PORT     PORTE
@@ -1303,14 +1303,20 @@
         #define FNRESETPHY()
     #endif
     #define MII_MANAGEMENT_CLOCK_SPEED     800000                        // reduced speed due to weak data line pull up resistor and long back-plane distance (warning - too low results in a divider overflow in MSCR)
-#elif defined FRDM_K64F || defined FreeLON
+#elif defined FRDM_K64F || defined FRDM_K66F || defined FreeLON
+    #if defined FRDM_K66F
+        #define ETHERNET_RMII_CLOCK_INPUT                                // the ENET_1588_CLKIN is used as clock since a 50MHz PHY clock is not available on EXTAL
+        #define MII_MANAGEMENT_CLOCK_SPEED    800000                     // due to weak pull-up we use a reduces clock speed
+    #else
+        #define MII_MANAGEMENT_CLOCK_SPEED    2500000                    // typ. 2.5MHz Speed
+    #endif
+    #define _KSZ8081RNA                                                  // the PHY used
     #define ETHERNET_RMII                                                // RMII mode of operation instead of MII
     #define FORCE_PHY_CONFIG                                             // activate forced configuration
     #define FNFORCE_PHY_CONFIG()   
     #define PHY_ADDRESS            0x00                                  // address of external PHY on board
     #define PHY_IDENTIFIER         0x00221560                            // MICREL KSZ8081RNA identifier
     #define FNRESETPHY()
-    #define MII_MANAGEMENT_CLOCK_SPEED    2500000                        // typ. 2.5MHz Speed
     #define ETHERNET_MDIO_WITH_PULLUPS                                   // there is no pull-up on the FRDM board so enable one at the MDIO input
     #if defined FreeLON
         #define INTERRUPT_TASK_PHY     TASK_NETWORK_INDICATOR            // link status reported to this task (do not use together with LAN_REPORT_ACTIVITY)
@@ -1320,7 +1326,6 @@
         #define PHY_POLL_LINK                                            // no interrupt line connected so poll the link state
         #define INTERRUPT_TASK_PHY     TASK_NETWORK_INDICATOR            // enable link state output messages
     #endif
-    #define _KSZ8081RNA
 #endif
 
 // If a design doesn't have the phy interrupt line connected, the following can be used to cause the network indicator task to poll the state of the link and synchronise the Ethernet controller accordingly
@@ -1382,7 +1387,7 @@
 #if defined KINETIS_KV || defined KINETIS_KL02 || defined KINETIS_K02    // device without RTC
     #define SUPPORT_SW_RTC                                               // support real time clock based purely on software
 #elif defined KINETIS_KE
-  //#define SUPPORT_RTC                                                  // support real time clock (do not use together with TICK_USES_RTC)
+    #define SUPPORT_RTC                                                  // support real time clock (do not use together with TICK_USES_RTC)
   //#define TICK_USES_RTC                                                // use RTC for TICK so that it continues to operate in stop based low power modes
     #if defined TICK_USES_RTC || defined SUPPORT_RTC
       //#define RTC_USES_EXT_CLK                                         // use the external clock as RTC clock source
@@ -2060,7 +2065,8 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
             #define FILE_GRANULARITY (1 * FLASH_GRANULARITY)              // each file a multiple of 4k
             #define FILE_SYSTEM_SIZE (SIZE_OF_FLASH - uFILE_START)
         #else
-            #define uFILE_START      (FLASH_START_ADDRESS + (144 * 1024))// FLASH location at 140k start {5}
+          //#define uFILE_START      (FLASH_START_ADDRESS + (144 * 1024))// FLASH location at 140k start {5}
+            #define uFILE_START      (FLASH_START_ADDRESS + (200 * 1024))// FLASH location at 140k start {5}
             #if defined KINETIS_K_FPU
                 #define FILE_GRANULARITY (1 * FLASH_GRANULARITY)         // each file a multiple of 4k
             #else

@@ -1987,7 +1987,7 @@
     #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(C, (SWITCH_1 | SWITCH_2), PORT_PS_UP_ENABLE) // configure as input
     #define WATCHDOG_DISABLE()     (_READ_PORT_MASK(C, SWITCH_2) == 0)   // pull this input down to disable watchdog (connect pin pad 23 to GND at reset)
     #define FORCE_BOOT()           (_READ_PORT_MASK(C, SWITCH_1) == 0)   // pull this input down to force boot loader mode (connect pin pad 22 to GND at reset)
-
+    #define RETAIN_LOADER_MODE()   (_READ_PORT_MASK(C, SWITCH_1) == 0)   // pull this input down to force boot loader mode (connect pin pad 22 to GND at reset)
     #define TOGGLE_WATCHDOG_LED()   _TOGGLE_PORT(C, BLINK_LED)
 
     #define SD_CONTROLLER_AVAILABLE                                      // use SDHC controller rather than SPI
@@ -3419,24 +3419,31 @@
             #define FORCE_PHY_CONFIG                                     // activate forced configuration
             #define FNFORCE_PHY_CONFIG()   
             #if defined TWR_K65F180M
+                #define MDIO_ON_PORTA                                    // MDIO connections on port A rather than on port B
                 #define INTERRUPT_TASK_PHY     TASK_NETWORK_INDICATOR    // link status reported to this task (do not use together with LAN_REPORT_ACTIVITY)
                 #define PHY_ADDRESS            0x00                      // address of external PHY on board
                 #define PHY_INTERRUPT_PORT     PORTE
                 #define PHY_INTERRUPT          PORTE_BIT28               // IRQ1 is used as PHY interrupt input (set J6 to position 7-8 on TWR-SER board) - this is connected to PTD15
                 #define ETHERNET_MDIO_WITH_PULLUPS                       // there is no pull-up on the tower board so enable one at the MDIO input
+                #define SUPPORT_PORT_INTERRUPTS                          // enable port interrupt for PHY interrupt
+                #define NO_PORT_INTERRUPTS_PORTA                         // disable port interrupt support on other ports
+                #define NO_PORT_INTERRUPTS_PORTB
+                #define NO_PORT_INTERRUPTS_PORTC
+                #define NO_PORT_INTERRUPTS_PORTD
+                #define NO_PORT_INTERRUPTS_PORTF
             #else
                 #define POLL_PHY               10000                     // PHY detection is unreliable on this board so allow this many attempts
                 #define PHY_ADDRESS            0x01                      // address of external PHY on board
               //#define PHY_INTERRUPT_PORT     PORTB
               //#define PHY_INTERRUPT          PORTB_BIT7                // IRQ4 is used as PHY interrupt input (set J6 to position 7-8 on TWR-SER board) - this is connected to PB.7
-                #define PHY_IDENTIFIER         0x00221512                // MICREL KSZ8041NL identifier
-                #define FNRESETPHY()
                 #if defined TWR_K53N512                                  // this tower board has a port output controlling the reset line on the elevator - it is set to an output driving '1' to avoid the PHY being held in reset
                     #define RESET_PHY
                     #define ASSERT_PHY_RST() _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_LOW(C, (RESETOUT), (RESETOUT), (PORT_SRE_SLOW | PORT_DSE_LOW))
                     #define CONFIG_PHY_STRAPS()                          // dummy
                 #endif
             #endif
+            #define PHY_IDENTIFIER         0x00221512                    // MICREL KSZ8041NL identifier
+            #define FNRESETPHY()
         #endif
         #if defined K60F150M_50M
             #define MII_MANAGEMENT_CLOCK_SPEED   2500000                 // 2.5MHz
@@ -3447,14 +3454,19 @@
                 #define MII_MANAGEMENT_CLOCK_SPEED   800000              // reduced speed due to weak data line pull up resistor and long back-plane distance (warning - too low results in a divider overflow in MSCR)
             #endif
         #endif
-    #elif defined FRDM_K64F && !defined NO_INTERNAL_ETHERNET
+    #elif (defined FRDM_K64F || defined FRDM_K66F) && !defined NO_INTERNAL_ETHERNET
+        #if defined FRDM_K66F
+            #define ETHERNET_RMII_CLOCK_INPUT                            // the ENET_1588_CLKIN is used as clock since a 50MHz PHY clock is not available on EXTAL
+            #define MII_MANAGEMENT_CLOCK_SPEED    800000                 // due to weak pull-up we use a reduces clock speed
+        #else
+            #define MII_MANAGEMENT_CLOCK_SPEED    2500000                // typ. 2.5MHz Speed
+        #endif
         #define ETHERNET_RMII                                            // RMII mode of operation instead of MII
         #define FORCE_PHY_CONFIG                                         // activate forced configuration
         #define FNFORCE_PHY_CONFIG()   
         #define PHY_ADDRESS            0x00                              // address of external PHY on board
         #define PHY_IDENTIFIER         0x00221560                        // MICREL KSZ8081RNA identifier
         #define FNRESETPHY()
-        #define MII_MANAGEMENT_CLOCK_SPEED    2500000                    // typ. 2.5MHz Speed
         #define ETHERNET_MDIO_WITH_PULLUPS                               // there is no pull-up on the FRDM board so enable one at the MDIO input
         #define PHY_POLL_LINK                                            // no interrupt line connected so poll the link state
         #define INTERRUPT_TASK_PHY     TASK_NETWORK_INDICATOR            // enable link state output messages
