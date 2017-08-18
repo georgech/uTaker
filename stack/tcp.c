@@ -1380,7 +1380,7 @@ _syn_frame_rpt:
                 }
 #endif
                 if (ptr_TCP->usRemport == tcp_frame->usSourcePort) {     // check that the source port corresponds
-                    if (!(uMemcmp(ptr_TCP->ucRemoteIP, source_IP_address, ipLength))) { // and the source IP
+                    if ((uMemcmp(ptr_TCP->ucRemoteIP, source_IP_address, ipLength)) == 0) { // and the source IP
                         return (ptr_TCP);                                // return pointer to the active socket
                     }
                 }

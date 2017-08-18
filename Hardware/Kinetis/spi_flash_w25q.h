@@ -21,6 +21,7 @@
     02.02.2017 Correct read for FIFO based SPI                           {1}
     01.03.2017 Correct write for FIFO based SPI                          {2}
     13.07.2017 Adapt chip select line control dependency                 {3}
+    19.08.2017 Correct chip select control of multiple SPI devices       {4}
 
     **********************************************************************/
 
@@ -29,6 +30,7 @@
 
 #if defined _SPI_DEFINES
     #if defined SPI_FLASH_MULTIPLE_CHIPS
+        #define __EXTENDED_CS     iChipSelect,                           // {4}
         static unsigned char fnCheckW25Qxx(int iChipSelect);
         static const STORAGE_AREA_ENTRY spi_flash_storage = {
             (void *)&default_flash,                                      // link to internal flash
@@ -38,6 +40,7 @@
             SPI_FLASH_DEVICE_COUNT                                       // multiple devices
         };
     #else
+        #define __EXTENDED_CS                                            // {4}
         static unsigned char fnCheckW25Qxx(void);
         static const STORAGE_AREA_ENTRY spi_flash_storage = {
             (void *)&default_flash,                                      // link to internal flash
@@ -172,7 +175,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         volatile unsigned char ucStatus;
         SPI_FLASH_Danger[iChipSelect] = 0;                               // device will no longer be busy after continuing
         do {
-            fnSPI_command(READ_STATUS_REGISTER_1, 0, _EXTENDED_CS &ucStatus, 1); // read busy status register
+            fnSPI_command(READ_STATUS_REGISTER_1, 0, __EXTENDED_CS &ucStatus, 1); // read busy status register
     #if defined MANAGED_FILES
             if (ucCommand == CHECK_SPI_FLASH_BUSY) {                     // pseudo request to see whether device is ready
                 if ((ucStatus & STATUS_BUSY) == 0) {
@@ -343,7 +346,7 @@ static unsigned char fnCheckW25Qxx(void)
     volatile unsigned char ucID[3];
     unsigned char ucReturnType = NO_SPI_FLASH_AVAILABLE;
     fnDelayLoop(10000);                                                  // the SPI Flash requires maximum 10ms after power has been applied until it can be read
-    fnSPI_command(READ_JEDEC_ID, 0, _EXTENDED_CS ucID, sizeof(ucID));
+    fnSPI_command(READ_JEDEC_ID, 0, __EXTENDED_CS ucID, sizeof(ucID));
     if (ucID[0] == MANUFACTURER_ID_WB) {                                 // Winbond memory part recognised
         switch (ucID[2]) {
         case DEVICE_ID_1_DATA_WB_FLASH_Q16M:

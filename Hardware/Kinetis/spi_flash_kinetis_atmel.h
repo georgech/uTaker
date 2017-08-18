@@ -19,6 +19,7 @@
     08.03.2014 Adapt for KL family compatibility (KL has neither FIFO nor automatic chip select control)
     22.11.2014 Add automatic power of 2s mode setting if the page size is defined for this {1}
     17.07.2017 Adapt chip select line control dependency                 {2}
+    19.08.2017 Correct chip select control of multiple SPI devices       {3}
 
 */ 
 
@@ -26,6 +27,7 @@
 
 #if defined _SPI_DEFINES
     #if defined SPI_FLASH_MULTIPLE_CHIPS
+        #define __EXTENDED_CS     iChipSelect,                           // {3}
         static unsigned char fnCheckAT45dbxxx(int iChipSelect);
         static const STORAGE_AREA_ENTRY spi_flash_storage = {
             (void *)&default_flash,                                      // link to internal flash
@@ -35,6 +37,7 @@
             SPI_FLASH_DEVICE_COUNT                                       // multiple devices
         };
     #else
+        #define __EXTENDED_CS                                            // {3}
         static unsigned char fnCheckAT45dbxxx(void);
         static const STORAGE_AREA_ENTRY spi_flash_storage = {
             (void *)&default_flash,                                      // link to internal flash
@@ -164,7 +167,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         volatile unsigned char ucStatus;
         SPI_FLASH_Danger[iChipSelect] = 0;                               // device will no longer be busy after continuing
         do {
-            fnSPI_command(READ_STATUS_REGISTER, 0, _EXTENDED_CS &ucStatus, 1); // read busy status register 
+            fnSPI_command(READ_STATUS_REGISTER, 0, __EXTENDED_CS &ucStatus, 1); // read busy status register 
         } while ((ucStatus & STATUS_READY) == 0);                        // until no longer busy
     }
 
@@ -438,7 +441,7 @@ static unsigned char fnCheckAT45dbxxx(void)
     fnDelayLoop(25000);                                                  // 25ms start up delay to ensure SPI FLASH ready
     #endif
 
-    fnSPI_command(READ_MANUFACTURER_ID, 0, _EXTENDED_CS ucID, sizeof(ucID));
+    fnSPI_command(READ_MANUFACTURER_ID, 0, __EXTENDED_CS ucID, sizeof(ucID));
     if (ucID[0] == MANUFACTURER_ID_ATMEL) {                              // ATMEL D-part recognised
         int iRtn;
         switch (ucID[1]) {
@@ -469,19 +472,19 @@ static unsigned char fnCheckAT45dbxxx(void)
         }
         if (iRtn != NO_SPI_FLASH_AVAILABLE) {
     #if SPI_FLASH_PAGE_LENGTH == 256 || SPI_FLASH_PAGE_LENGTH == 512 || SPI_FLASH_PAGE_LENGTH == 1024 // {1} the user wants to operate the device in power of 2s mode so check this and set if necessary
-            fnSPI_command(READ_STATUS_REGISTER, 0, _EXTENDED_CS ucID, 1);// read the status register
+            fnSPI_command(READ_STATUS_REGISTER, 0, __EXTENDED_CS ucID, 1); // read the status register
             if ((ucID[0] & 0x01) == 0) {                                 // not configured for power of 2s page size
                 static const unsigned char ucUnlock[3] = {0x2a, 0x80, 0xa6};
-                fnSPI_command(POWER_OF_TWOS, 0, _EXTENDED_CS (unsigned char *)ucUnlock, 3); // set the mode - this requires a power cycle to before use!!
+                fnSPI_command(POWER_OF_TWOS, 0, __EXTENDED_CS (unsigned char *)ucUnlock, 3); // set the mode - this requires a power cycle to before use!!
             }
     #else
-            fnSPI_command(READ_STATUS_REGISTER, 0, _EXTENDED_CS ucID, 1);// read the status register
+            fnSPI_command(READ_STATUS_REGISTER, 0, __EXTENDED_CS ucID, 1); // read the status register
     #endif
             return iRtn;
         }
     }
 
-    fnSPI_command(READ_STATUS_REGISTER, 0, _EXTENDED_CS ucID, 1);        // it is possibly a B-device so check the status register
+    fnSPI_command(READ_STATUS_REGISTER, 0, __EXTENDED_CS ucID, 1);       // it is possibly a B-device so check the status register
     switch (ucID[0] & 0x3c) {                                            // check part size field
     case STATUS_1MEG:
         return AT45DB011B; 

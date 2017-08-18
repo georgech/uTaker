@@ -973,7 +973,7 @@ static void fnLoaderForced(int iNoFirmware)
 {
     GLCD_TEXT_POSITION text_pos;
     uTaskerStopTimer(OWN_TASK);
-    uTaskerStateChange(TASK_USB, UTASKER_ACTIVATE);      // start the USB task to allow loading new code
+    uTaskerStateChange(TASK_USB, UTASKER_ACTIVATE);                      // start the USB task to allow loading new code
     text_pos.ucFont = FONT_NINE_DOT;
     text_pos.usX = 5;
     if (iNoFirmware != 0) {

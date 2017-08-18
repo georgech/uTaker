@@ -477,7 +477,11 @@ extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned char ucDmaT
             ptrDMA->DMA_DCR |= ulMod;                                    // the modulo setting
         }
     }
+    #if defined KINETIS_WITH_PCC
+    PCC_DMAMUX0 |= PCC_CGC;
+    #else
     POWER_UP(6, SIM_SCGC6_DMAMUX0);                                      // enable DMA multiplexer 0
+    #endif
     *(unsigned char *)(DMAMUX0_BLOCK + ucDMA_channel) = (ucDmaTriggerSource | DMAMUX_CHCFG_ENBL); // connect trigger to DMA channel
     ptrDMA->DMA_DCR |= (DMA_DCR_CS | DMA_DCR_EADREQ);                    // enable peripheral request - single cycle for each request (asynchronous requests enabled in stop mode)
     #else

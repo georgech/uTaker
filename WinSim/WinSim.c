@@ -89,6 +89,7 @@
     13.02.2017 Get endpoint size of Host from endpoint 0 (kinetis)       {72}
     28.02.2017 Increase UARTs from 6 to 8                                {73}
     18.05.2017 Add fnLogRx()                                             {74}
+    19.08.2017 Correct W25Q writes to multiple SPI chips                 {75}
   
 */   
 #include <windows.h>
@@ -2345,14 +2346,14 @@ extern unsigned char fnSimAT45DBXXX(int iSimType, unsigned char ucTxByte)// {16}
 #if defined SPI_FLASH_MULTIPLE_CHIPS
     int iCntCS = 0;
     unsigned long ulDeviceOffset = 0;
-    if (SPI_CS0_PORT & CS0_LINE) {                                       // {16}
+    if ((SPI_CS0_PORT & CS0_LINE) != 0) {                                // {16}
         ucChipCommand[0] = 0;
         iState[0] = 0;
     }
     else {
         iCntCS++;
     }
-    if (SPI_CS1_PORT & CS1_LINE) {
+    if ((SPI_CS1_PORT & CS1_LINE) != 0) {
         ucChipCommand[1] = 0;
         iState[1] = 0;
     }
@@ -2363,9 +2364,9 @@ extern unsigned char fnSimAT45DBXXX(int iSimType, unsigned char ucTxByte)// {16}
     }
     #if defined QSPI_CS2_LINE || defined CS2_LINE
         #if defined QSPI_CS2_LINE
-    if (SPI_CS2_PORT & QSPI_CS2_LINE) 
+    if ((SPI_CS2_PORT & QSPI_CS2_LINE) != 0)
         #else
-    if (SPI_CS2_PORT & CS2_LINE) 
+    if ((SPI_CS2_PORT & CS2_LINE) != 0)
         #endif
     {
         ucChipCommand[2] = 0;
@@ -2379,9 +2380,9 @@ extern unsigned char fnSimAT45DBXXX(int iSimType, unsigned char ucTxByte)// {16}
     #endif
     #if defined QSPI_CS3_LINE || defined CS3_LINE
         #if defined QSPI_CS3_LINE
-    if (SPI_CS3_PORT & QSPI_CS3_LINE) 
+    if ((SPI_CS3_PORT & QSPI_CS3_LINE) != 0) 
         #else
-    if (SPI_CS3_PORT & CS3_LINE) 
+    if ((SPI_CS3_PORT & CS3_LINE) != 0) 
         #endif
     {
         ucChipCommand[3] = 0;
@@ -2394,14 +2395,14 @@ extern unsigned char fnSimAT45DBXXX(int iSimType, unsigned char ucTxByte)// {16}
     }
     #endif
     if (iCntCS > 1) {
-        *(unsigned char *)(0) = 0;                                       // 2 CS selected at same time - serious error
+        _EXCEPTION("2 CS selected at same time - serious error");
     }
     else if (iCntCS == 0) {
         return 0xff;                                                     // chip not selected, return idle
     }
 #else
     #define ulDeviceOffset 0
-    if (SPI_CS0_PORT & CS0_LINE) {                                       // {16}
+    if ((SPI_CS0_PORT & CS0_LINE) != 0) {                                // {16}
         ucChipCommand[0] = 0;
         iState[0] = 0;
         return 0xff;                                                     // chip not selected, return idle
@@ -3242,8 +3243,9 @@ static void fnActionW25Q(int iSel, unsigned long ulDeviceOffset)
 {
     if ((ucChipCommand[iSel] == 2) && (WEL[iSel] != 0) && (iState[iSel] == 4)) { // page write to be performed
         unsigned long ulAdd = (ulAccessAddress[iSel] & ~0x000000ff);     // start address of present page
-        if (fnAddressAllowed(0, ulAdd)) {                                // check whether area is protected
+        if (fnAddressAllowed(iSel, ulAdd) != 0) {                        // check whether area is not protected
             int iOffset = 0;
+            ulAdd += (iSel * SPI_DATA_FLASH_0_SIZE);                     // {75} move to device offset when multiple SPI chips are used
             while (iOffset < 256) {
                 ucW25Q[ulAdd + iOffset] &= ucProgramBuffer[iSel][iOffset]; // set bits low in complete page
                 iOffset++;
@@ -3281,14 +3283,14 @@ extern unsigned char fnSimW25Qxx(int iSimType, unsigned char ucTxByte)
         #if defined SPI_FLASH_MULTIPLE_CHIPS
     int iCntCS = 0;
     unsigned long ulDeviceOffset = 0;
-    if (SPI_CS0_PORT & CS0_LINE) {
-        fnActionSST25(0, 0);
+    if ((SPI_CS0_PORT & CS0_LINE) != 0) {
+        fnActionW25Q(0, 0);
     }
     else {
         iCntCS++;
     }
-    if (SPI_CS1_PORT & CS1_LINE) {
-        fnActionSST25(1, SPI_DATA_FLASH_0_SIZE);
+    if ((SPI_CS1_PORT & CS1_LINE) != 0) {
+        fnActionW25Q(1, SPI_DATA_FLASH_0_SIZE);
     }
     else {
         iCntCS++;
@@ -3296,8 +3298,8 @@ extern unsigned char fnSimW25Qxx(int iSimType, unsigned char ucTxByte)
         ulDeviceOffset = SPI_DATA_FLASH_0_SIZE;
     }
             #if defined QSPI_CS2_LINE || defined CS2_LINE
-    if (SPI_CS2_PORT & CS2_LINE) {
-        fnActionSST25(2, (SPI_DATA_FLASH_0_SIZE + SPI_DATA_FLASH_1_SIZE));
+    if ((SPI_CS2_PORT & CS2_LINE) != 0) {
+        fnActionW25Q(2, (SPI_DATA_FLASH_0_SIZE + SPI_DATA_FLASH_1_SIZE));
     }
     else {
         iCntCS++;
@@ -3306,8 +3308,8 @@ extern unsigned char fnSimW25Qxx(int iSimType, unsigned char ucTxByte)
     }
             #endif
             #if defined QSPI_CS3_LINE || defined CS3_LINE
-    if (SPI_CS3_PORT & CS3_LINE) {
-        fnActionSST25(3, (SPI_DATA_FLASH_0_SIZE + SPI_DATA_FLASH_1_SIZE + SPI_DATA_FLASH_2_SIZE));
+    if ((SPI_CS3_PORT & CS3_LINE) != 0) {
+        fnActionW25Q(3, (SPI_DATA_FLASH_0_SIZE + SPI_DATA_FLASH_1_SIZE + SPI_DATA_FLASH_2_SIZE));
     }
     else {
         iCntCS++;
@@ -3316,7 +3318,7 @@ extern unsigned char fnSimW25Qxx(int iSimType, unsigned char ucTxByte)
     }
             #endif
     if (iCntCS > 1) {
-        *(unsigned char *)(0) = 0;                                       // 2 CS selected at same time - serious error
+        _EXCEPTION("2 CS selected at same time - serious error");
     }
     else if (iCntCS == 0) {
         return 0xff;                                                     // chip not selected, return idle

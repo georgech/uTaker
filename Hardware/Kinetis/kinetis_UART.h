@@ -458,7 +458,7 @@ static __interrupt void _SCI0_Interrupt(void)                            // UART
         #if defined SERIAL_SUPPORT_DMA                                   // {6}
     if ((UART0_C5 & UART_C5_TDMAS) == 0) {                               // if the transmitter is operating in DMA mode ignore transmission interrupt flags
         #endif
-        if ((ucState & (UART_S1_TDRE | UART_S1_TC)) & UART0_C2) {        // transmit buffer or transmit is empty and the corresponding interrupt is enabled
+        if (((ucState & (UART_S1_TDRE | UART_S1_TC)) & UART0_C2) != 0) { // transmit buffer or transmit is empty and the corresponding interrupt is enabled
             fnSciTxByte(0);                                              // transmit data empty interrupt - write next byte
         #if defined TRUE_UART_TX_2_STOPS && defined SUPPORT_LOW_POWER
             if (ucStops[0] != 0) {                                       // if the channel is working in true 2 stop bit mode it will always use the transmit complete interrupt and the peripheral idle control is performed in fnClearTxInt() instead
@@ -470,7 +470,7 @@ static __interrupt void _SCI0_Interrupt(void)                            // UART
     }
         #endif
         #if defined SUPPORT_LOW_POWER || ((defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE) // {96}
-    if ((UART0_C2 & UART_C2_TCIE) && (UART0_S1 & UART_S1_TC)) {          // transmit complete interrupt after final byte transmission together with low power operation
+    if (((UART0_C2 & UART_C2_TCIE) != 0) && ((UART0_S1 & UART_S1_TC) != 0)) { // transmit complete interrupt after final byte transmission together with low power operation
         UART0_C2 &= ~(UART_C2_TCIE);                                     // disable the interrupt
         ulPeripheralNeedsClock &= ~(UART0_TX_CLK_REQUIRED);              // confirmation that the final byte has been sent out on the line so the UART no longer needs a UART clock (stop mode doesn't needed to be blocked)
             #if (defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE
@@ -1813,7 +1813,7 @@ extern void fnTxOn(QUEUE_HANDLE Channel)
             #else
             _CONFIG_PERIPHERAL(B, 1, (PB_1_LPUART0_TX | UART_PULL_UPS)); // LPUART0_TX on PB1 (alt. function 2)
             #endif
-        #elif defined KINETIS_KL43 || defined KINETIS_KL27 || defined KINETIS_KL82 || defined KINETIS_K80
+        #elif defined KINETIS_KL43 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL82 || defined KINETIS_K80
             #if !defined KINETIS_K80 && defined LPUART0_ON_E
             _CONFIG_PERIPHERAL(E, 20, (PE_20_LPUART0_TX | UART_PULL_UPS)); // LPUART0_TX on PE20 (alt. function 4)
             #elif defined KINETIS_KL43 && defined LPUART0_ON_D
@@ -2110,7 +2110,7 @@ extern void fnRxOn(QUEUE_HANDLE Channel)
             #else
             _CONFIG_PERIPHERAL(B, 2, (PB_2_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PB2 (alt. function 2)
             #endif
-        #elif defined KINETIS_KL43 || defined KINETIS_KL27 || defined KINETIS_KL82 || defined KINETIS_K80
+        #elif defined KINETIS_KL43 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL82 || defined KINETIS_K80
             #if !defined KINETIS_K80 && defined LPUART0_ON_E
             _CONFIG_PERIPHERAL(E, 21, (PE_21_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PE21 (alt. function 4)
             #elif (defined KINETIS_KL43 || defined KINETIS_K80) && defined LPUART0_ON_D
@@ -2419,7 +2419,11 @@ static void fnConfigLPUART(QUEUE_HANDLE Channel, TTYTABLE *pars, KINETIS_LPUART_
         ptrDMA += UART_DMA_TX_CHANNEL[Channel];
         ptrDMA->DMA_DSR_BCR = DMA_DSR_BCR_DONE;                          // clear the DONE flag and clear errors etc.
         ptrDMA->DMA_DAR = (unsigned long)&(lpuart_reg->LPUART_DATA);     // destination is the LPUART's data register
+        #if defined KINETIS_WITH_PCC
+        PCC_DMAMUX0 |= PCC_CGC;
+        #else
         POWER_UP_ATOMIC(6, SIM_SCGC6_DMAMUX0);                           // enable DMA multiplexer
+        #endif
         fnEnterInterrupt((irq_DMA0_ID + UART_DMA_TX_CHANNEL[Channel]), UART_DMA_TX_INT_PRIORITY[Channel], (void (*)(void))_uart_tx_dma_Interrupt[Channel]); // enter DMA interrupt handler
         lpuart_reg->LPUART_CTRL &= ~(LPUART_CTRL_TIE | LPUART_CTRL_TCIE);// ensure tx interrupt is not enabled
         lpuart_reg->LPUART_BAUD |= LPUART_BAUD_TDMAE;                    // use DMA rather than interrupts for transmission
@@ -2811,7 +2815,15 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #else
         case (0):
         #endif
-        #if defined KINETIS_KL
+        #if defined KINETIS_WITH_PCC
+            #if defined LPUART_IRC48M
+            PCC_LPUART0 = (PCC_CGC | PCC_PCS_SCGFIRCLK);                 // clock from tha fast IRC clock
+            #elif defined LPUART_OSCERCLK
+            PCC_LPUART0 = (PCC_CGC | PCC_PCS_OSCCLK);                    // clock from the system oscillator bus clock
+            #else
+            PCC_LPUART0 = (PCC_CGC | PCC_PCS_SCGPCLK);                   // clock from the system PLL clock
+            #endif
+        #elif defined KINETIS_KL
             POWER_UP_ATOMIC(5, SIM_SCGC5_LPUART0);                       // power up LPUART 0
         #elif defined KINETIS_K80
             POWER_UP_ATOMIC(2, SIM_SCGC2_LPUART0);                       // power up LPUART 0
@@ -2819,6 +2831,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
             POWER_UP_ATOMIC(6, SIM_SCGC6_LPUART0);                       // power up LPUART 0
         #endif
         #if defined LPUART_IRC48M                                        // use the IRC48M clock as UART clock
+            #if !defined KINETIS_WITH_PCC
             #if defined KINETIS_WITH_MCG_LITE
             MCG_MC |= MCG_MC_HIRCEN;                                     // ensure that the IRC48M is operating, even when the processor is not in HIRC mode
             #endif
@@ -2826,6 +2839,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
             SIM_SOPT2 = ((SIM_SOPT2 & ~(SIM_SOPT2_LPUARTSRC_MGC)) | (SIM_SOPT2_LPUARTSRC_SEL | SIM_SOPT2_PLLFLLSEL_IRC48M)); // {3} select the 48MHz IRC48MHz clock as source for the LPUART
             #else
             SIM_SOPT2 = ((SIM_SOPT2 & ~(SIM_SOPT2_UART0SRC_MCGIRCLK)) | (SIM_SOPT2_UART0SRC_IRC48M | SIM_SOPT2_PLLFLLSEL_IRC48M)); // {3} select the 48MHz IRC48MHz clock as source for the LPUART
+            #endif
             #endif
         #elif defined LPUART_OSCERCLK                                    // clock the UART from the external clock
             SIM_SOPT2 |= (SIM_SOPT2_UART0SRC_OSCERCLK);
@@ -2848,12 +2862,15 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
             #else
         case (1):
             #endif
-            #if defined KINETIS_KL
+            #if defined KINETIS_WITH_PCC
+            PCC_LPUART0 |= PCC_CGC;
+            #elif defined KINETIS_KL
             POWER_UP_ATOMIC(5, SIM_SCGC5_LPUART1);                       // power up LPUART 1
             #else
             POWER_UP_ATOMIC(2, SIM_SCGC2_LPUART1);                       // power up LPUART 1
             #endif
             #if defined LPUART_IRC48M                                    // use the IRC48M clock as UART clock
+                #if !defined KINETIS_WITH_PCC
                 #if defined KINETIS_WITH_MCG_LITE
             MCG_MC |= MCG_MC_HIRCEN;                                     // ensure that the IRC48M is operating, even when the processor is not in HIRC mode
                 #endif
@@ -2861,6 +2878,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
             SIM_SOPT2 = ((SIM_SOPT2 & ~(SIM_SOPT2_LPUARTSRC_MGC)) | (SIM_SOPT2_LPUARTSRC_SEL | SIM_SOPT2_PLLFLLSEL_IRC48M)); // {202} select the 48MHz IRC48MHz clock as source for the LPUART
                 #else
             SIM_SOPT2 = ((SIM_SOPT2 & ~(SIM_SOPT2_UART1SRC_MCGIRCLK)) | (SIM_SOPT2_UART1SRC_IRC48M | SIM_SOPT2_PLLFLLSEL_IRC48M)); // {202} select the 48MHz IRC48MHz clock as source for the LPUART
+                #endif
                 #endif
             #elif defined LPUART_OSCERCLK                                // clock the UART from the external clock
             SIM_SOPT2 |= (SIM_SOPT2_UART1SRC_OSCERCLK);

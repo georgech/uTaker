@@ -44,6 +44,7 @@
     22.11.2016 Add TEENSY_3_5 and TEENSY_3_6
     02.02.2017 Add fnVirtualWakeupInterruptHandler()                     {13}
     12.02.2017 Add FRDM_KL82Z
+    10.08.2017 Add FRDM_KL28Z
 
 */
 
@@ -141,6 +142,13 @@ extern int fnPortState(CHAR cPortBit)
         return (((GPIOB_PDDR & GPIOB_PDOR & DEMO_LED_2) | (~GPIOB_PDDR & GPIOB_PDIR & DEMO_LED_2)) != 0);
     case '3':
         return (((GPIOA_PDDR & GPIOA_PDOR & DEMO_LED_3) | (~GPIOA_PDDR & GPIOA_PDIR & DEMO_LED_3)) != 0);
+#elif defined FRDM_KL28Z
+    case '1':
+        return (((GPIOC_PDDR & GPIOC_PDOR & DEMO_LED_1) | (~GPIOC_PDDR & GPIOC_PDIR & DEMO_LED_1)) != 0);
+    case '2':
+        return (((GPIOE_PDDR & GPIOE_PDOR & DEMO_LED_2) | (~GPIOE_PDDR & GPIOE_PDIR & DEMO_LED_2)) != 0);
+    case '3':
+        return (((GPIOE_PDDR & GPIOE_PDOR & DEMO_LED_3) | (~GPIOE_PDDR & GPIOE_PDIR & DEMO_LED_3)) != 0);
 #elif defined TWR_KL25Z48M                                               // {6}
     case '1':
         return (((GPIOA_PDDR & GPIOA_PDOR & DEMO_LED_1) | (~GPIOA_PDDR & GPIOA_PDIR & DEMO_LED_1)) != 0);
@@ -317,6 +325,13 @@ extern int fnPortInputConfig(CHAR cPortBit)
         return ((GPIOB_PDDR & DEMO_LED_2) == 0);
     case '3':
         return ((GPIOA_PDDR & DEMO_LED_3) == 0);
+#elif defined FRDM_KL28Z
+    case '1':
+        return ((GPIOC_PDDR & DEMO_LED_1) == 0);
+    case '2':
+        return ((GPIOE_PDDR & DEMO_LED_2) == 0);
+    case '3':
+        return ((GPIOE_PDDR & DEMO_LED_3) == 0);
 #elif defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined FRDM_KE02Z || defined FRDM_KE06Z || defined FRDM_KE02Z40M || defined K60F150M_50M || defined FRDM_KEAZN32Q64 || defined FRDM_KEAZ64Q64 || defined FRDM_KEAZ128Q80 || defined BLAZE_K22 // {9}
     case '1':
         return ((GPIOB_PDDR & DEMO_LED_1) == 0);
@@ -549,6 +564,18 @@ extern int fnConfigPort(CHAR cPortBit, CHAR cType)
             _CONFIG_PORT_INPUT(A, ulPortBit, PORT_PS_UP_ENABLE);         // set port bit to input (on port A)
             break;
         }
+#elif defined FRDM_KL28Z
+        switch (cPortBit) {
+        case 0:
+            _CONFIG_PORT_INPUT(C, ulPortBit, PORT_PS_UP_ENABLE);         // set port bit to input (on port C)
+            break;
+        case 1:
+            _CONFIG_PORT_INPUT(E, ulPortBit, PORT_PS_UP_ENABLE);         // set port bit to input (on port E)
+            break;
+        case 2:
+            _CONFIG_PORT_INPUT(E, ulPortBit, PORT_PS_UP_ENABLE);         // set port bit to input (on port E)
+            break;
+        }
 #elif defined TWR_KL25Z48M                                               // {6}
         switch (cPortBit) {
         case 0:
@@ -758,6 +785,18 @@ extern int fnConfigPort(CHAR cPortBit, CHAR cType)
             break;
         case 2:
             _CONFIG_PORT_OUTPUT(A, ulPortBit, PORT_SRE_SLOW);            // set port bit to output (on port A)
+            break;
+        }
+#elif defined FRDM_KL28Z
+        switch (cPortBit) {
+        case 0:
+            _CONFIG_PORT_OUTPUT(C, ulPortBit, PORT_SRE_SLOW);            // set port bit to output (on port C)
+            break;
+        case 1:
+            _CONFIG_PORT_OUTPUT(E, ulPortBit, PORT_SRE_SLOW);            // set port bit to output (on port E)
+            break;
+        case 2:
+            _CONFIG_PORT_OUTPUT(E, ulPortBit, PORT_SRE_SLOW);            // set port bit to output (on port E)
             break;
         }
 #elif defined TWR_KL25Z48M                                               // {6}
@@ -1427,6 +1466,30 @@ extern void fnSetPortOut(unsigned char ucPortOutputs, int iInitialisation)
     }
     else {
         _WRITE_PORT_MASK(A, (0), (DEMO_LED_3));
+    }
+#elif defined FRDM_KL28Z
+    if (iInitialisation != 0) {
+      //POWER_UP(5, (SIM_SCGC5_PORTC | SIM_SCGC5_PORTE));                // ensure ports are powered before writing initial values
+        PCC_PORTC |= PCC_CGC;
+        PCC_PORTE |= PCC_CGC;
+    }
+    if (ucPortOutputs & MAPPED_DEMO_LED_1) {
+        _WRITE_PORT_MASK(C, (DEMO_LED_1), (DEMO_LED_1));
+    }
+    else {
+        _WRITE_PORT_MASK(C, (0), (DEMO_LED_1));
+    }
+    if (ucPortOutputs & MAPPED_DEMO_LED_2) {
+        _WRITE_PORT_MASK(E, (DEMO_LED_2), (DEMO_LED_2));
+    }
+    else {
+        _WRITE_PORT_MASK(E, (0), (DEMO_LED_2));
+    }
+    if (ucPortOutputs & MAPPED_DEMO_LED_3) {
+        _WRITE_PORT_MASK(E, (DEMO_LED_3), (DEMO_LED_3));
+    }
+    else {
+        _WRITE_PORT_MASK(E, (0), (DEMO_LED_3));
     }
 #elif defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined FRDM_KE02Z || defined FRDM_KE06Z || defined FRDM_KE02Z40M || defined K60F150M_50M || defined TWR_K65F180M || defined FRDM_KEAZN32Q64 || defined FRDM_KEAZ64Q64 || defined FRDM_KEAZ128Q80 || defined BLAZE_K22 // {9}
     #if !defined KINETIS_KE

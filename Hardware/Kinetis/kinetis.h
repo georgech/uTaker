@@ -199,9 +199,22 @@ extern void fnClearBitBandPeripheralValue(unsigned long *bit_band_address);
 
 // ROM Bootoader
 //
-#if (defined KINETIS_KL03 || defined KINETIS_KL43 || defined KINETIS_KL27 || defined KINETIS_KL82) // devices with ROM bootloader
+#if (defined KINETIS_KL03 || defined KINETIS_KL43 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL82) // devices with ROM bootloader
     #define ROM_BOOTLOADER
 #endif
+
+// Peripheral Clock Control
+//
+#if defined KINETIS_KL28
+    #define KINETIS_WITH_PCC                                             // contains peripheral clock control module (rather than using SIM)
+#endif
+
+// Watchdog timer
+//
+#if defined KINETIS_KL28
+    #define KINETIS_WITH_WDOG32
+#endif
+
 
 // Clock setting/checking
 //
@@ -1008,7 +1021,7 @@ typedef struct stRESET_VECTOR
 #define MAX_SECTOR_PARS         ((FLASH_GRANULARITY - (2 * FLASH_ROW_SIZE))/FLASH_ROW_SIZE) // the number of user bytes fitting into first parameter block
 
 #define FLASH_START_ADDRESS     0                                        // up to 2Meg
-#if (defined KINETIS_KL && !defined KINETIS_KL28) || defined KINETIS_KE || defined KINETIS_KV10 // {42}
+#if defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_KV10 // {42}
     #define RAM_START_ADDRESS   (0x20000000 - (SIZE_OF_RAM/4))           // SRAM L is 1/4 of the RAM size and is anchored to end at 0x1ffffffff
                                                                          // SRAM H is 3/4 of the RAM size and is anchored to start at 0x20000000
 #elif defined KINETIS_K22 && defined KINETIS_K_FPU && (SIZE_OF_RAM == (48 * 1024))
@@ -1425,7 +1438,7 @@ typedef struct stRESET_VECTOR
     #define DMA_CHANNEL_COUNT        16
 #else
     #if defined KINETIS_KL
-        #if defined KINETIS_KL82                                         // temporary (KL82 has eDMA and is this an exception in the KL family)
+        #if defined KINETIS_KL82 || defined KINETIS_KL28                 // temporary (KL82 and KL28 have eDMA and are thus exceptions in the KL family) - need to move to eDMA!!
             #define DEVICE_WITHOUT_DMA
         #else
             #define DMA_CHANNEL_COUNT    4
@@ -2753,6 +2766,9 @@ typedef struct stVECTOR_TABLE
     #if defined I2S_AVAILABLE
         #define I2S0_BLOCK                     ((unsigned char *)(&kinetis.I2S_SAI[0])) // I2S0
     #endif
+    #if defined KINETIS_WITH_WDOG32
+        #define WDOG32_BLOCK                    ((unsigned char *)(&kinetis.WDOG32)) // WDOG32
+    #endif
     #if defined KINETIS_KE
         #define IRQ_BLOCK                      ((unsigned char *)(&kinetis.IRQ)) // external IRQ
     #endif
@@ -2840,23 +2856,27 @@ typedef struct stVECTOR_TABLE
         #define FLEXIO_BLOCK                   ((unsigned char *)(&kinetis.FLEXIO)) // FlexIO
     #endif
     #if defined LTC_AVAILABLE
-        #define LTC_BLOCK                      ((unsigned char *)(&kinetis.LTC))   // LTC
+        #define LTC_BLOCK                      ((unsigned char *)(&kinetis.LTC)) // LTC
     #endif
     #if defined KINETIS_K80
         #define QSPI_BLOCK                     ((unsigned char *)(&kinetis.QSPI)) // QuadSPI
     #endif
     #if !defined KINETIS_KL && !defined KINETIS_KE
-        #define EWM_BLOCK                      ((unsigned char *)(&kinetis.EWM)) // External Watchdog Monitor
+        #define EWM_BLOCK                      ((unsigned char *)(&kinetis.EWM)) // external watchdog monitor
+    #endif
+    #if defined KINETIS_WITH_PCC
+        #define PCC_BLOCK                      ((unsigned char *)(&kinetis.PCC)) // peripheral clock control
+        #define PCC2_BLOCK                     ((unsigned char *)(&kinetis.PCC2)) // second PCC
     #endif
     #if defined KINETIS_KE
-        #define INTERNAL_CLOCK_BLOCK           ((unsigned char *)(&kinetis.ICS)) // Internal clock source
+        #define INTERNAL_CLOCK_BLOCK           ((unsigned char *)(&kinetis.ICS)) // internal clock source
     #elif defined KINETIS_WITH_SCG
-        #define SCG_BLOCK                      ((unsigned char *)(&kinetis.SCG)) // System Clock Generator
+        #define SCG_BLOCK                      ((unsigned char *)(&kinetis.SCG)) // system clock generator
     #else
         #define MCG_BLOCK                      ((unsigned char *)(&kinetis.MCG)) // Multi-purpose Clock Generator
     #endif
-    #define OSC0_BLOCK                         ((unsigned char *)(&kinetis.OSC[0])) // Oscillator 0
-    #define OSC1_BLOCK                         ((unsigned char *)(&kinetis.OSC[1])) // Oscillator 1
+    #define OSC0_BLOCK                         ((unsigned char *)(&kinetis.OSC[0])) // oscillator 0
+    #define OSC1_BLOCK                         ((unsigned char *)(&kinetis.OSC[1])) // oscillator 1
     #define I2C0_BLOCK                         ((unsigned char *)(&kinetis.I2C[0])) // I2C0
     #if I2C_AVAILABLE > 1
         #define I2C1_BLOCK                     ((unsigned char *)(&kinetis.I2C[1])) // I2C1
@@ -3002,6 +3022,9 @@ typedef struct stVECTOR_TABLE
     #if defined I2S_AVAILABLE
         #define I2S0_BLOCK                     0x4002f000                // I2S0
     #endif
+    #if defined KINETIS_WITH_WDOG32
+        #define WDOG32_BLOCK                   0x40076000                // WDOG32
+    #endif
     #if !defined DSPI_SPI
         #define SPI0_BLOCK                     0x40076000                // SPI0
         #define SPI1_BLOCK                     0x40077000                // SPI1
@@ -3066,34 +3089,46 @@ typedef struct stVECTOR_TABLE
     #if defined KINETIS_KE 
         #define PORT_BLOCK                     0x40049000                // Port block
     #else
-        #define PORT0_BLOCK                    0x40049000                // Port Control and Interrupts
-        #define PORT1_BLOCK                    0x4004a000
-        #if PORTS_AVAILABLE > 2
-            #define PORT2_BLOCK                0x4004b000
-            #define PORT3_BLOCK                0x4004c000
-            #define PORT4_BLOCK                0x4004d000
-        #endif
-        #if PORTS_AVAILABLE > 5
-            #define PORT5_BLOCK                0x4004e000                // {1}
+        #if defined KINETIS_KL28
+            #define PORT0_BLOCK                0x4005a000                // Port Control and Interrupts
+            #define PORT1_BLOCK                0x4005b000
+            #define PORT2_BLOCK                0x4005c000
+            #define PORT3_BLOCK                0x4005d000
+            #define PORT4_BLOCK                0x4005e000
+        #else
+            #define PORT0_BLOCK                0x40049000                // Port Control and Interrupts
+            #define PORT1_BLOCK                0x4004a000
+            #if PORTS_AVAILABLE > 2
+                #define PORT2_BLOCK            0x4004b000
+                #define PORT3_BLOCK            0x4004c000
+                #define PORT4_BLOCK            0x4004d000
+            #endif
+            #if PORTS_AVAILABLE > 5
+                #define PORT5_BLOCK            0x4004e000                // {1}
+            #endif
         #endif
     #endif
     #if !defined KINETIS_KL || defined KINETIS_KL82
-        #define WDOG_BLOCK                     0x40052000                // Watchdog Timer
+        #define WDOG_BLOCK                     0x40052000                // watchdog timer
     #endif
     #if defined CHIP_HAS_FLEXIO
         #define FLEXIO_BLOCK                   0x4005f000                // FlexIO
     #endif
     #if !defined KINETIS_KL && !defined KINETIS_KE
-        #define EWM_BLOCK                      0x4005f000                // External Watchdog Monitor
+        #define EWM_BLOCK                      0x4005f000                // external watchdog monitor
+    #endif
+    #if defined KINETIS_WITH_PCC
+        #define PCC_BLOCK                      0x4007a000                // peripheral clock control
+        #define PCC2_BLOCK                     0x400fa000                // second PCC
     #endif
     #if defined KINETIS_KE
-        #define INTERNAL_CLOCK_BLOCK           0x40064000                // Internal clock source
+        #define INTERNAL_CLOCK_BLOCK           0x40064000                // internal clock source
     #elif defined KINETIS_WITH_SCG
-        #define SCG_BLOCK                      0x4007b000                // System Clock Generator
+        #define SCG_BLOCK                      0x4007b000                // system clock generator
     #else
-        #define MCG_BLOCK                      0x40064000                // Multi-purpose Clock Generator
+        #define MCG_BLOCK                      0x40064000                // multi-purpose clock generator
     #endif
-    #define OSC0_BLOCK                         0x40065000                // Oscillator 0
+    #define OSC0_BLOCK                         0x40065000                // oscillator 0
     #define I2C0_BLOCK                         0x40066000                // I2C0
     #if I2C_AVAILABLE > 1
         #define I2C1_BLOCK                     0x40067000                // I2C1
@@ -3105,16 +3140,16 @@ typedef struct stVECTOR_TABLE
         #define I2C3_BLOCK                     0x400e7000                // I2C3
     #endif
     #if LPUARTS_AVAILABLE > 0
-        #if defined KINETIS_KL
-            #define LPUART0_BLOCK              0x40054000                // LPUART0
-        #elif defined KINETIS_K80
+        #if defined KINETIS_K80 || defined KINETIS_KL28
             #define LPUART0_BLOCK              0x400c4000                // LPUART0
+        #elif defined KINETIS_KL
+            #define LPUART0_BLOCK              0x40054000                // LPUART0
         #else
             #define LPUART0_BLOCK              0x4002a000                // LPUART0
         #endif
     #endif
     #if LPUARTS_AVAILABLE > 1
-        #if defined KINETIS_K80
+        #if defined KINETIS_K80 || defined KINETIS_KL28
             #define LPUART1_BLOCK              0x400c5000                // LPUART1
         #else
             #define LPUART1_BLOCK              0x40055000                // LPUART1
@@ -8285,6 +8320,7 @@ typedef struct stKINETIS_ADMA2_BD
           //#define SIM_USBPHYCTL_USBVOUTTRG_3_662V 0x00700000           // for Freescale use only - not for customer use
             #define SIM_USBPHYCTL_USBDISILIM 0x00800000                  // disable current limitior for the USB voltage regulator
     #endif
+  #if !defined KINETIS_WITH_PCC
     #define SIM_SOPT2                        *(unsigned long *)(SIM_BLOCK + 0x1004) // System Options Register 2
       #if defined KINETIS_KL
         #define SIM_SOPT2_RTCCLKOUT_1Hz      0x00000000                  // RTC 1Hz clock is output on RTC_CLKOUT pin
@@ -8484,6 +8520,7 @@ typedef struct stKINETIS_ADMA2_BD
             #define SIM_SOPT9_TPM1CLKSEL     0x02000000                  // TPM1 external clock pin selection
             #define SIM_SOPT9_TPM2CLKSEL     0x04000000                  // TPM2 external clock pin selection
     #endif
+  #endif
     #define SIM_SDID                         *(volatile unsigned long *)(SIM_BLOCK + 0x1024) // System Device Identification Register (read-only)
         #define SIM_SDID_REVID_MASK          0x0000f000
         #define SIM_SDID_REVID_SHIFT         12
@@ -8594,6 +8631,7 @@ typedef struct stKINETIS_ADMA2_BD
           #define SIM_SCGC3_SIM_SCGC3_ADC3       BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1030), 28)
           #define SIM_SCGC3_SIM_SCGC3_SLCD       BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1030), 30)
     #endif
+  #if !defined KINETIS_WITH_PCC
     #define SIM_SCGC4                        *(volatile unsigned long *)(SIM_BLOCK + 0x1034)  // System Clock Gating Control Register 4
       #if defined KINETIS_KL03
           #define SIM_SCGC4_I2C0             0x00000040
@@ -8867,15 +8905,18 @@ typedef struct stKINETIS_ADMA2_BD
           #define SIM_CLKDIV2_USBDIV_7       0x0000000c
           #define SIM_CLKDIV2_USBDIV_8       0x0000000e
     #endif
+  #endif
     #define SIM_FCFG1                        *(volatile unsigned long *)(SIM_BLOCK + 0x104c) // FLASH Configuration Register 1
-    #define SIM_FCFG2                        *(volatile unsigned long *)(SIM_BLOCK + 0x1050) // FLASH Configuration Register 2
+    #define SIM_FCFG2                        *(volatile unsigned long *)(SIM_BLOCK + 0x1050) // FLASH Configuration Register 2 (read-only)
     #if !defined KINETIS_KL
-        #define SIM_UIDH                     *(volatile unsigned long *)(SIM_BLOCK + 0x1054) // Unique Identification Register High
+        #define SIM_UIDH                     *(volatile unsigned long *)(SIM_BLOCK + 0x1054) // Unique Identification Register High (read-only)
     #endif
-    #define SIM_UIDMH                        *(volatile unsigned long *)(SIM_BLOCK + 0x1058) // Unique Identification Register Mid-High
-    #define SIM_UIDML                        *(volatile unsigned long *)(SIM_BLOCK + 0x105c) // Unique Identification Register Mid-Low
-    #define SIM_UIDL                         *(volatile unsigned long *)(SIM_BLOCK + 0x1060) // Unique Identification Register Low
-    #if defined KINETIS_KL && !defined KINETIS_KL82                      // {42}
+    #define SIM_UIDMH                        *(volatile unsigned long *)(SIM_BLOCK + 0x1058) // Unique Identification Register Mid-High (read-only)
+    #define SIM_UIDML                        *(volatile unsigned long *)(SIM_BLOCK + 0x105c) // Unique Identification Register Mid-Low (read-only)
+    #define SIM_UIDL                         *(volatile unsigned long *)(SIM_BLOCK + 0x1060) // Unique Identification Register Low (read-only)
+    #if defined KINETIS_WITH_PCC
+        #define SIM_PCSR                     *(volatile unsigned long *)(SIM_BLOCK + 0x10ec) // peripheral clock status register (read-only)
+    #elif defined KINETIS_KL && !defined KINETIS_KL82                    // {42}
         #define SIM_COPC                     *(unsigned long *)(SIM_BLOCK + 0x1100) // COP Control Register - all of the bits in this register can be written only once after a reset
           #define SIM_COPC_COPW              0x00000001                  // COP windowed mode
           #define SIM_COPC_COPCLKS_1K        0x00000000                  // COP source is 1kHz clock
@@ -9516,7 +9557,7 @@ typedef struct stKINETIS_ADMA2_BD
         #define PA_3_LPUART0_TX          PORT_MUX_ALT4
         #define PB_4_LPUART0_RX          PORT_MUX_ALT3
         #define PB_3_LPUART0_TX          PORT_MUX_ALT3
-    #elif defined KINETIS_KL43 || defined KINETIS_KL27 || defined KINETIS_KL82 || defined KINETIS_K80
+    #elif defined KINETIS_KL43 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL82 || defined KINETIS_K80
         #if !defined KINETIS_K80
             #define PE_21_LPUART0_RX     PORT_MUX_ALT4
         #endif
@@ -10319,7 +10360,7 @@ typedef struct stKINETIS_ADMA2_BD
         #define WDOG_WINL                *(volatile unsigned char *)(WDOG_BLOCK + 0x07)  // Watchdog Timeout Value Register: Low
 
         #if defined _WINDOWS
-            #define REFRESH_WDOG()           WDOG_REFRESH = WDOG_REFRESH_SEQUENCE_1; WDOG_REFRESH = WDOG_REFRESH_SEQUENCE_2; WDOG_CNTH = 0; WDOG_CNTL = 0; // this sequence must be performed within 16 bus cycles (it should be protected against interrupt disturbing this)
+            #define REFRESH_WDOG()           WDOG_REFRESH = WDOG_REFRESH_SEQUENCE_1; WDOG_REFRESH = WDOG_REFRESH_SEQUENCE_2; WDOG_CNTH = 0; WDOG_CNTL = 0 // this sequence must be performed within 16 bus cycles (it should be protected against interrupt disturbing this)
         #else
             #define REFRESH_WDOG()           WDOG_REFRESH = WDOG_REFRESH_SEQUENCE_1; WDOG_REFRESH = WDOG_REFRESH_SEQUENCE_2 // this sequence must be performed within 16 bus cycles (it should be protected against interrupt disturbing this)
         #endif
@@ -10358,12 +10399,43 @@ typedef struct stKINETIS_ADMA2_BD
         #define WDOG_PRESC                   *(unsigned short *)(WDOG_BLOCK + 0x16)           // Watchdog Prescaler Register
 
         #if defined _WINDOWS
-            #define REFRESH_WDOG()           WDOG_REFRESH = WDOG_REFRESH_SEQUENCE_1; WDOG_REFRESH = WDOG_REFRESH_SEQUENCE_2; WDOG_TMROUTH = 0; WDOG_TMROUTL = 0; // this sequence must be performed within 20 bus cycles (it should be protected against interrupts disturbing it)
+            #define REFRESH_WDOG()           WDOG_REFRESH = WDOG_REFRESH_SEQUENCE_1; WDOG_REFRESH = WDOG_REFRESH_SEQUENCE_2; WDOG_TMROUTH = 0; WDOG_TMROUTL = 0 // this sequence must be performed within 20 bus cycles (it should be protected against interrupts disturbing it)
         #else
             #define REFRESH_WDOG()           WDOG_REFRESH = WDOG_REFRESH_SEQUENCE_1; WDOG_REFRESH = WDOG_REFRESH_SEQUENCE_2 // this sequence must be performed within 20 bus cycles (it should be protected against interrupt disturbing this)
         #endif
     #endif
     #define UNLOCK_WDOG()                    WDOG_UNLOCK = WDOG_UNLOCK_SEQUENCE_1; WDOG_UNLOCK = WDOG_UNLOCK_SEQUENCE_2 // this sequence must be performed within 20 bus cycles and the writes are possible for the WCT period (16 bus clocks for KE and 128 bus clocks for configuration)
+#endif
+
+#if defined KINETIS_WITH_WDOG32
+    #define WDOG0_CS                     *(volatile unsigned long *)(WDOG32_BLOCK + 0x00) // watchdog control and status register
+        #define WDOG_CS_STOP             0x00000001                      // watchdog enabled in chip stop mode
+        #define WDOG_CS_WAIT             0x00000002                      // watchdog enabled in chip wait mode
+        #define WDOG_CS_DBG              0x00000004                      // watchdog enabled in chip debug mode
+        #define WDOG_CS_TST              0x00000018                      // watchdog test mask
+        #define WDOG_CS_UPDATE           0x00000020                      // allow updates
+        #define WDOG_CS_INT              0x00000040                      // watchdog interrupt enable
+        #define WDOG_CS_EN               0x00000080                      // watchdog enable
+        #define WDOG_CS_CLK_BUS          0x00000000                      // watchdog clocked from bus clock
+        #define WDOG_CS_CLK_1kHz         0x00000100                      // watchdog clocked from internal low-power oscillator (LPOCLK)
+        #define WDOG_CS_CLK_32kHz        0x00000200                      // watchdog clocked from internal 32kHz ICSIRCLK oscillator
+        #define WDOG_CS_CLK_EXT          0x00000300                      // watchdog clocked from external clock source
+        #define WDOG_CS_PRES_256         0x00001000                      // prescaler of 256 enabled
+        #define WDOG_CS_CMD32EN          0x00002000                      // enable 32 bit unlock/refresh support
+        #define WDOG_CS_FLG              0x00004000                      // write '1' to clear
+        #define WDOG_CS_WIN              0x00008000                      // window mode enabled
+    #define WDOG0_CNT                    *(volatile unsigned long *)(WDOG32_BLOCK + 0x04) // watchdog counter register
+        #define WDOG_UNLOCK_SEQUENCE     0xd928c520                       // unlock and retrigger sequences must be performed with two writes within 16 bus clock
+        #define WDOG_REFRESH_SEQUENCE    0xb480a602
+    #define WDOG0_TOVAL                  *(volatile unsigned long *)(WDOG32_BLOCK + 0x08) // watchdog timeout value register
+    #define WDOG0_WIN                    *(volatile unsigned long *)(WDOG32_BLOCK + 0x0c) // watchdog window register
+
+        #define UNLOCK_WDOG()            WDOG0_CNT = WDOG_UNLOCK_SEQUENCE
+        #if defined _WINDOWS
+            #define REFRESH_WDOG()       WDOG0_CNT = WDOG_REFRESH_SEQUENCE; WDOG0_CNT = 0
+        #else
+            #define REFRESH_WDOG()       WDOG0_CNT = WDOG_REFRESH_SEQUENCE
+        #endif
 #endif
 
 
@@ -10423,6 +10495,69 @@ typedef struct stKINETIS_ADMA2_BD
 #define EWM_CMPL                         *(volatile unsigned short *)(EWM_BLOCK + 0x2)  // External Watchdog Monitor Compare Low Register
 #define EWM_CMPH                         *(volatile unsigned short *)(EWM_BLOCK + 0x3)  // External Watchdog Monitor Compare High Register
 
+#if defined KINETIS_WITH_PCC
+// Peripheral Clock Control
+//
+    #define PCC_DMA0                     *(volatile unsigned long *)(PCC_BLOCK + 0x020)
+        #define PCC_PR                   0x80000000                      // peripheral present flag (read-only)
+        #define PCC_CGC                  0x40000000                      // peripheral clock enabled flag
+        #define PCC_INUSE                0x20000000                      // peripheral in use flag
+        // Additional options on some peripherals only
+        //
+        #define PCC_PCS_MASK             0x07000000                      // peripheral clock source selection (only writable when CGC bit is disabled)
+        #define PCC_PCS_CLOCK_OFF        0x00000000                      // clock is off (or test clock is enabled)
+        #define PCC_PCS_OSCCLK           0x01000000                      // system oscillator bus clock
+        #define PCC_PCS_SCGIRCLK         0x02000000                      // slow IRC clock
+        #define PCC_PCS_SCGFIRCLK        0x03000000                      // fast IRC clock
+        #define PCC_PCS_SCGPCLK          0x06000000                      // system PLL clock
+        #define PCC_FRAC                 0x00000080                      // fractional clock divider
+        #define PCC_PDC_MASK             0x00000007                      // peripheral clock divide selection (only writable when CGC bit is disabled and INUSE is '0')
+        #define PCC_PDC_DIVIDE_1         0x00000000                      // divide by 1 (or pass-through)
+        #define PCC_PDC_DIVIDE_2         0x00000001                      // divide by 2
+        #define PCC_PDC_DIVIDE_3         0x00000002                      // divide by 3
+        #define PCC_PDC_DIVIDE_4         0x00000003                      // divide by 4
+        #define PCC_PDC_DIVIDE_5         0x00000004                      // divide by 5
+        #define PCC_PDC_DIVIDE_6         0x00000005                      // divide by 6
+        #define PCC_PDC_DIVIDE_7         0x00000006                      // divide by 7
+        #define PCC_PDC_DIVIDE_8         0x00000007                      // divide by 8
+    #define PCC_FLASH                    *(volatile unsigned long *)(PCC_BLOCK + 0x080)
+    #define PCC_DMAMUX0                  *(volatile unsigned long *)(PCC_BLOCK + 0x084)
+    #define PCC_INTMUX0                  *(volatile unsigned long *)(PCC_BLOCK + 0x090)
+    #define PCC_TPM2                     *(volatile unsigned long *)(PCC_BLOCK + 0x0b8)
+    #define PCC_LPIT0                    *(volatile unsigned long *)(PCC_BLOCK + 0x0c0)
+    #define PCC_LPTMR0                   *(volatile unsigned long *)(PCC_BLOCK + 0x0d0)
+    #define PCC_RTC                      *(volatile unsigned long *)(PCC_BLOCK + 0x0e0)
+    #define PCC_LPSPI2                   *(volatile unsigned long *)(PCC_BLOCK + 0x0f8)
+    #define PCC_LPI2C2                   *(volatile unsigned long *)(PCC_BLOCK + 0x108)
+    #define PCC_LPUART2                  *(volatile unsigned long *)(PCC_BLOCK + 0x118)
+    #define PCC_SAI0                     *(volatile unsigned long *)(PCC_BLOCK + 0x130)
+    #define PCC_EMVSIM0                  *(volatile unsigned long *)(PCC_BLOCK + 0x138)
+    #define PCC_USB0FS                   *(volatile unsigned long *)(PCC_BLOCK + 0x154)
+    #define PCC_PORTA                    *(volatile unsigned long *)(PCC_BLOCK + 0x168)
+    #define PCC_PORTB                    *(volatile unsigned long *)(PCC_BLOCK + 0x16c)
+    #define PCC_PORTC                    *(volatile unsigned long *)(PCC_BLOCK + 0x170)
+    #define PCC_PORTD                    *(volatile unsigned long *)(PCC_BLOCK + 0x174)
+    #define PCC_PORTE                    *(volatile unsigned long *)(PCC_BLOCK + 0x178)
+    #define PCC_TSI0                     *(volatile unsigned long *)(PCC_BLOCK + 0x188)
+    #define PCC_ADC0                     *(volatile unsigned long *)(PCC_BLOCK + 0x198)
+    #define PCC_DAC0                     *(volatile unsigned long *)(PCC_BLOCK + 0x1a8)
+    #define PCC_CMP0                     *(volatile unsigned long *)(PCC_BLOCK + 0x1b8)
+    #define PCC_VREF                     *(volatile unsigned long *)(PCC_BLOCK + 0x1c8)
+    #define PCC_CRC                      *(volatile unsigned long *)(PCC_BLOCK + 0x1e0)
+
+    #define PCC_TRNG                     *(volatile unsigned long *)(PCC2_BLOCK + 0x094)
+    #define PCC_TPM0                     *(volatile unsigned long *)(PCC2_BLOCK + 0x0b0)
+    #define PCC_TPM1                     *(volatile unsigned long *)(PCC2_BLOCK + 0x0b4)
+    #define PCC_LPTMR1                   *(volatile unsigned long *)(PCC2_BLOCK + 0x0d4)
+    #define PCC_LPSPI0                   *(volatile unsigned long *)(PCC2_BLOCK + 0x0f0)
+    #define PCC_LPSPI1                   *(volatile unsigned long *)(PCC2_BLOCK + 0x0f4)
+    #define PCC_LPI2C0                   *(volatile unsigned long *)(PCC2_BLOCK + 0x100)
+    #define PCC_LPI2C1                   *(volatile unsigned long *)(PCC2_BLOCK + 0x104)
+    #define PCC_LPUART0                  *(volatile unsigned long *)(PCC2_BLOCK + 0x110)
+    #define PCC_LPUART1                  *(volatile unsigned long *)(PCC2_BLOCK + 0x114)
+    #define PCC_FLEXIO0                  *(volatile unsigned long *)(PCC2_BLOCK + 0x128)
+    #define PCC_CMP1                     *(volatile unsigned long *)(PCC2_BLOCK + 0x1bc)
+#endif
 
 #if defined KINETIS_KE
     // Internal Clock Source
@@ -10692,7 +10827,7 @@ typedef struct stKINETIS_ADMA2_BD
   #define OSC_CR_OSCEN                   0x80                            // enable OSC module
 #else
   #define OSC_CR_SC16P                   0x01                            // add 16pF capacitor to oscillator load
-  #define OSC_CR_SC18P                   0x02                            // add 8pF capacitor to oscillator load
+  #define OSC_CR_SC8P                    0x02                            // add 8pF capacitor to oscillator load
   #define OSC_CR_SC4P                    0x04                            // add 4pF capacitor to oscillator load
   #define OSC_CR_SC2P                    0x08                            // add 2pF capacitor to oscillator load
   #define OSC_CR_EREFSTEN                0x20                            // external reference clock stays enabled in stop mode if ERCLKEN is set before entering stop mode
@@ -11200,10 +11335,24 @@ typedef struct stKINETIS_CAN_CONTROL
 } KINETIS_CAN_CONTROL;
 
 
-// UARTs
+// UART/LPUARTs
 //
 #if LPUARTS_AVAILABLE > 0                                                // {59} low power UART
-    #define LPUART0_BAUD                 *(unsigned long *)(LPUART0_BLOCK + 0x00) // LPUART 0 Baud Rate Register
+    #if defined KINETIS_KL28
+        #define LPUART0_VERID            *(volatile unsigned long *)(LPUART0_BLOCK + 0x00) // LPUART 0 version ID register (read-only)
+        #define LPUART0_PARAM            *(volatile unsigned long *)(LPUART0_BLOCK + 0x04) // LPUART 0 parameter register (read-only)
+        #define LPUART0_GLOBAL           *(unsigned long *)(LPUART0_BLOCK + 0x08) // LPUART 0 global register
+            #define LPUART_GLOBAL_RST    0x00000002                      // module in reset state
+        #define LPUART0_PINCFG           *(unsigned long *)(LPUART0_BLOCK + 0x0c) // LPUART 0 pin configuration register
+            #define LPUART_PINCFG_TRGSEL_NONE 0x00000000                 // no input trigger
+            #define LPUART_PINCFG_TRGSEL_RXD  0x00000001                 // input trigger is used instead of RXD pin input
+            #define LPUART_PINCFG_TRGSEL_CTS  0x00000002                 // input trigger is used instead of CTS pin input
+            #define LPUART_PINCFG_TRGSEL_TXDE 0x00000003                 // input trigger is used to modulate the TXD pin output
+        #define LPUART_OFFSET            0x10
+    #else
+        #define LPUART_OFFSET            0
+    #endif
+    #define LPUART0_BAUD                 *(unsigned long *)(LPUART0_BLOCK + LPUART_OFFSET + 0x00) // LPUART 0 baud rate register
         #define LPUART_BAUD_SBR          0x00001fff                      // baud rate modulo divisor mask
         #define LPUART_BAUD_SBNS_1       0x00000000                      // 1 stop bits
         #define LPUART_BAUD_SBNS_2       0x00002000                      // 2 stop bits
@@ -11223,7 +11372,7 @@ typedef struct stKINETIS_CAN_CONTROL
         #define LPUART_BAUD_M10          0x20000000                      // 10-bit mode select
         #define LPUART_BAUD_MAEN2        0x40000000                      // match address mode enable 2
         #define LPUART_BAUD_MAEN1        0x80000000                      // match address mode enable 1
-    #define LPUART0_STAT                 *(volatile unsigned long *)(LPUART0_BLOCK + 0x04) // LPUART 0 Status Register
+    #define LPUART0_STAT                 *(volatile unsigned long *)(LPUART0_BLOCK + LPUART_OFFSET + 0x04) // LPUART 0 Status Register
         #define LPUART_STAT_MA2F         0x00004000                      // match 2 flag (write '1' to clear)
         #define LPUART_STAT_MA1F         0x00008000                      // match 1 flag (write '1' to clear)
         #define LPUART_STAT_PF           0x00010000                      // parity error flag (write '1' to clear)
@@ -11242,7 +11391,7 @@ typedef struct stKINETIS_CAN_CONTROL
         #define LPUART_STAT_MSBF         0x20000000                      // MSB first
         #define LPUART_STAT_RXEDGIF      0x40000000                      // LPUART_RX pin active edge interrupt flag (write '1' to clear)
         #define LPUART_STAT_LBKDIF       0x80000000                      // LIN break detect interrupt flag (write '1' to clear)
-    #define LPUART0_CTRL                 *(volatile unsigned long *)(LPUART0_BLOCK + 0x08) // LPUART 0 Control Register
+    #define LPUART0_CTRL                 *(volatile unsigned long *)(LPUART0_BLOCK + LPUART_OFFSET + 0x08) // LPUART 0 Control Register
         #define LPUART_CTRL_PT_EVEN      0x00000000                      // parity even
         #define LPUART_CTRL_PT_ODD       0x00000001                      // parity odd
         #define LPUART_CTRL_PE           0x00000002                      // parity enable
@@ -11278,30 +11427,57 @@ typedef struct stKINETIS_CAN_CONTROL
         #define LPUART_CTRL_TXDIR        0x20000000                      // LPUART_TX pin direction in single-wire mode
         #define LPUART_CTRL_R9T8         0x40000000                      // receive bit 9 / transmit bit 8
         #define LPUART_CTRL_R8T9         0x80000000                      // receive bit 8 / transmit bit 9
-    #define LPUART0_DATA                 *(volatile unsigned long *)(LPUART0_BLOCK + 0x0c) // LPUART 0 Data Register
+    #define LPUART0_DATA                 *(volatile unsigned long *)(LPUART0_BLOCK + LPUART_OFFSET + 0x0c) // LPUART 0 Data Register
         #define LPUART_DATA_MASK         0x000003ff                      // data word mask
         #define LPUART_DATA_IDLINE       0x00000800                      // idle line
         #define LPUART_DATA_RXEMPT       0x00001000                      // receive buffer empty
         #define LPUART_DATA_FRETSC       0x00002000                      // frame error / transmit special character
         #define LPUART_DATA_PARITYE      0x00004000                      // the current received data word was received with a parity error
         #define LPUART_DATA_NOISY        0x00008000                      // the current received data word was received with noise
-    #define LPUART0_MATCH                *(unsigned long *)(LPUART0_BLOCK + 0x10) // LPUART 0 Match Address Register
+    #define LPUART0_MATCH                *(unsigned long *)(LPUART0_BLOCK + LPUART_OFFSET + 0x10) // LPUART 0 Match Address Register
         #define LPUART_MATCH_MA1_MASK    0x000003ff                      // match address 1 mask
         #define LPUART_MATCH_MA2_MASK    0x03ff0000                      // match address 2 mask
+    #if defined KINETIS_KL28
+        #define LPUART0_MODIR            *(unsigned long *)(LPUART0_BLOCK + 0x24) // LPUART 0 modem IrDA register
+        #define LPUART0_FIFO             *(unsigned long *)(LPUART0_BLOCK + 0x28) // LPUART 0 FIFO register
+        #define LPUART0_WATER            *(unsigned long *)(LPUART0_BLOCK + 0x2c) // LPUART 0 watermark register
+    #endif
 
     #if LPUARTS_AVAILABLE > 1
-        #define LPUART1_BAUD             *(unsigned long *)(LPUART1_BLOCK + 0x00) // LPUART 1 Baud Rate Register
-        #define LPUART1_STAT             *(volatile unsigned long *)(LPUART1_BLOCK + 0x04) // LPUART 1 Status Register
-        #define LPUART1_CTRL             *(volatile unsigned long *)(LPUART1_BLOCK + 0x08) // LPUART 1 Control Register
-        #define LPUART1_DATA             *(volatile unsigned long *)(LPUART1_BLOCK + 0x0c) // LPUART 1 Data Register
-        #define LPUART1_MATCH            *(unsigned long *)(LPUART1_BLOCK + 0x10) // LPUART 1 Match Address Register
+        #if defined KINETIS_KL28
+            #define LPUART1_VERID        *(volatile unsigned long *)(LPUART1_BLOCK + 0x00) // LPUART 1 version ID register (read-only)
+            #define LPUART1_PARAM        *(volatile unsigned long *)(LPUART1_BLOCK + 0x04) // LPUART 1 parameter register (read-only)
+            #define LPUART1_GLOBAL       *(unsigned long *)(LPUART1_BLOCK + 0x08) // LPUART 1 global register
+            #define LPUART1_PINCFG       *(unsigned long *)(LPUART1_BLOCK + 0x0c) // LPUART 1 pin configuration register
+        #endif
+        #define LPUART1_BAUD             *(unsigned long *)(LPUART1_BLOCK + LPUART_OFFSET + 0x00) // LPUART 1 Baud Rate Register
+        #define LPUART1_STAT             *(volatile unsigned long *)(LPUART1_BLOCK + LPUART_OFFSET + 0x04) // LPUART 1 Status Register
+        #define LPUART1_CTRL             *(volatile unsigned long *)(LPUART1_BLOCK + LPUART_OFFSET + 0x08) // LPUART 1 Control Register
+        #define LPUART1_DATA             *(volatile unsigned long *)(LPUART1_BLOCK + LPUART_OFFSET + 0x0c) // LPUART 1 Data Register
+        #define LPUART1_MATCH            *(unsigned long *)(LPUART1_BLOCK + LPUART_OFFSET + 0x10) // LPUART 1 Match Address Register
+        #if defined KINETIS_KL28
+            #define LPUART1_MODIR        *(unsigned long *)(LPUART1_BLOCK + 0x24) // LPUART 1 modem IrDA register
+            #define LPUART1_FIFO         *(unsigned long *)(LPUART1_BLOCK + 0x28) // LPUART 1 FIFO register
+            #define LPUART1_WATER        *(unsigned long *)(LPUART1_BLOCK + 0x2c) // LPUART 1 watermark register
+        #endif
     #endif
     #if LPUARTS_AVAILABLE > 2
-        #define LPUART2_BAUD             *(unsigned long *)(LPUART2_BLOCK + 0x00) // LPUART 2 Baud Rate Register
-        #define LPUART2_STAT             *(volatile unsigned long *)(LPUART2_BLOCK + 0x04) // LPUART 2 Status Register
-        #define LPUART2_CTRL             *(volatile unsigned long *)(LPUART2_BLOCK + 0x08) // LPUART 2 Control Register
-        #define LPUART2_DATA             *(volatile unsigned long *)(LPUART2_BLOCK + 0x0c) // LPUART 2 Data Register
-        #define LPUART2_MATCH            *(unsigned long *)(LPUART2_BLOCK + 0x10) // LPUART 2 Match Address Register
+        #if defined KINETIS_KL28
+            #define LPUART2_VERID        *(volatile unsigned long *)(LPUART2_BLOCK + 0x00) // LPUART 2 version ID register (read-only)
+            #define LPUART2_PARAM        *(volatile unsigned long *)(LPUART2_BLOCK + 0x04) // LPUART 2 parameter register (read-only)
+            #define LPUART2_GLOBAL       *(unsigned long *)(LPUART2_BLOCK + 0x08) // LPUART 2 global register
+            #define LPUART2_PINCFG       *(unsigned long *)(LPUART2_BLOCK + 0x0c) // LPUART 2 pin configuration register
+        #endif
+        #define LPUART2_BAUD             *(unsigned long *)(LPUART2_BLOCK + LPUART_OFFSET + 0x00) // LPUART 2 Baud Rate Register
+        #define LPUART2_STAT             *(volatile unsigned long *)(LPUART2_BLOCK + LPUART_OFFSET + 0x04) // LPUART 2 Status Register
+        #define LPUART2_CTRL             *(volatile unsigned long *)(LPUART2_BLOCK + LPUART_OFFSET + 0x08) // LPUART 2 Control Register
+        #define LPUART2_DATA             *(volatile unsigned long *)(LPUART2_BLOCK + LPUART_OFFSET + 0x0c) // LPUART 2 Data Register
+        #define LPUART2_MATCH            *(unsigned long *)(LPUART2_BLOCK + LPUART_OFFSET + 0x10) // LPUART 2 Match Address Register
+        #if defined KINETIS_KL28
+            #define LPUART2_MODIR        *(unsigned long *)(LPUART2_BLOCK + 0x24) // LPUART 2 modem IrDA register
+            #define LPUART2_FIFO         *(unsigned long *)(LPUART2_BLOCK + 0x28) // LPUART 2 FIFO register
+            #define LPUART2_WATER        *(unsigned long *)(LPUART2_BLOCK + 0x2c) // LPUART 2 watermark register
+        #endif
     #endif
     #if LPUARTS_AVAILABLE > 3
         #define LPUART3_BAUD             *(unsigned long *)(LPUART3_BLOCK + 0x00) // LPUART 3 Baud Rate Register
@@ -11320,11 +11496,22 @@ typedef struct stKINETIS_CAN_CONTROL
 
     typedef struct stKINETIS_LPUART_CONTROL
     {
+    #if defined KINETIS_KL28
+        volatile unsigned long  LPUART_VERID;
+        volatile unsigned long  LPUART_PARAM;
+        unsigned long  LPUART_GLOBAL;
+        unsigned long  LPUART_PINCFG;
+    #endif
         unsigned long LPUART_BAUD;
         volatile unsigned long LPUART_STAT;
         volatile unsigned long LPUART_CTRL;
         volatile unsigned long LPUART_DATA;
         unsigned long LPUART_MATCH;
+    #if defined KINETIS_KL28
+        unsigned long LPUART2_MODIR;
+        unsigned long LPUART2_FIFO;
+        unsigned long LPUART2_WATER;
+    #endif
     } KINETIS_LPUART_CONTROL;
 #endif
 
@@ -14047,6 +14234,10 @@ extern void fnSimPers(void);
     #define _CONFIG_PORT_OUTPUT(ref, pins, chars) GPIO##ref##_PIDR &= ~(pins); fnConnectGPIO(PORT##ref, pins, (PORT_MUX_GPIO | chars)); GPIO##ref##_PDDR |= (pins); _SIM_PORT_CHANGE; _SIM_PER_CHANGE
     #define _CONFIG_PORT_OUTPUT_FAST_LOW(ref, pins, chars)  _CONFIG_PORT_OUTPUT(ref, pins, chars)
     #define _CONFIG_PORT_OUTPUT_FAST_HIGH(ref, pins, chars) _CONFIG_PORT_OUTPUT(ref, pins, chars)
+#elif defined KINETIS_WITH_PCC
+    #define _CONFIG_PORT_OUTPUT(ref, pins, chars) PCC_PORT##ref |= PCC_CGC; fnConnectGPIO(PORT##ref, pins, (PORT_MUX_GPIO | chars)); GPIO##ref##_PDDR |= (pins); _SIM_PORT_CHANGE; _SIM_PER_CHANGE; _SIM_PER_CHANGE
+    #define _CONFIG_PORT_OUTPUT_FAST_LOW(ref, pins, chars)  PCC_PORT##ref |= PCC_CGC; PORT##ref##_GPCLR = (((pins) << 16) | (chars | PORT_MUX_GPIO)); GPIO##ref##_PDDR |= ((pins) & 0x0000ffff); _SIM_PORT_CHANGE; _SIM_PER_CHANGE
+    #define _CONFIG_PORT_OUTPUT_FAST_HIGH(ref, pins, chars) PCC_PORT##ref |= PCC_CGC; PORT##ref##_GPCHR = (((pins) & 0xffff0000) | chars | PORT_MUX_GPIO); GPIO##ref##_PDDR |= ((pins) & 0xffff0000); _SIM_PORT_CHANGE; _SIM_PER_CHANGE // {65}
 #else
     #define _CONFIG_PORT_OUTPUT(ref, pins, chars) SIM_SCGC5 |= SIM_SCGC5_PORT##ref; fnConnectGPIO(PORT##ref, pins, (PORT_MUX_GPIO | chars)); GPIO##ref##_PDDR |= (pins); _SIM_PORT_CHANGE; _SIM_PER_CHANGE; _SIM_PER_CHANGE
     #define _CONFIG_PORT_OUTPUT_FAST_LOW(ref, pins, chars)  SIM_SCGC5 |= SIM_SCGC5_PORT##ref; PORT##ref##_GPCLR = (((pins) << 16) | (chars | PORT_MUX_GPIO)); GPIO##ref##_PDDR |= ((pins) & 0x0000ffff); _SIM_PORT_CHANGE; _SIM_PER_CHANGE
@@ -14059,8 +14250,12 @@ extern void fnSimPers(void);
     #define _CONFIG_PORT_INPUT(ref, pins, chars) GPIO##ref##_PIDR &= ~(pins); GPIO##ref##_PDDR &= ~(pins); fnConnectGPIO(PORT##ref, pins, (PORT_MUX_GPIO | chars)); _SIM_PORT_CHANGE; _SIM_PER_CHANGE
     #define _CONFIG_PORT_INPUT_FAST_LOW(ref, pins, chars)  _CONFIG_PORT_INPUT(ref, pins, chars)
     #define _CONFIG_PORT_INPUT_FAST_HIGH(ref, pins, chars) _CONFIG_PORT_INPUT(ref, pins, chars)
+#elif defined KINETIS_WITH_PCC
+    #define _CONFIG_PORT_INPUT(ref, pins, chars)  PCC_PORT##ref |= PCC_CGC; GPIO##ref##_PDDR &= ~(pins); fnConnectGPIO(PORT##ref, pins, (PORT_MUX_GPIO | chars)); _SIM_PORT_CHANGE; _SIM_PER_CHANGE
+    #define _CONFIG_PORT_INPUT_FAST_LOW(ref, pins, chars)  PCC_PORT##ref |= PCC_CGC; GPIO##ref##_PDDR &= ~((pins) & 0x0000ffff); PORT##ref##_GPCLR = (((pins) << 16) | chars | PORT_MUX_GPIO);  _SIM_PORT_CHANGE; _SIM_PER_CHANGE
+    #define _CONFIG_PORT_INPUT_FAST_HIGH(ref, pins, chars) PCC_PORT##ref |= PCC_CGC; GPIO##ref##_PDDR &= ~((pins) & 0xffff0000); PORT##ref##_GPCHR = (((pins) & 0xffff0000) | chars | PORT_MUX_GPIO); _SIM_PORT_CHANGE; _SIM_PER_CHANGE
 #else
-    #define _CONFIG_PORT_INPUT(ref, pins, chars)  SIM_SCGC5 |= SIM_SCGC5_PORT##ref; GPIO##ref##_PDDR &= ~(pins);fnConnectGPIO(PORT##ref, pins, (PORT_MUX_GPIO | chars)); _SIM_PORT_CHANGE; _SIM_PER_CHANGE
+    #define _CONFIG_PORT_INPUT(ref, pins, chars)  SIM_SCGC5 |= SIM_SCGC5_PORT##ref; GPIO##ref##_PDDR &= ~(pins); fnConnectGPIO(PORT##ref, pins, (PORT_MUX_GPIO | chars)); _SIM_PORT_CHANGE; _SIM_PER_CHANGE
     #define _CONFIG_PORT_INPUT_FAST_LOW(ref, pins, chars)  SIM_SCGC5 |= SIM_SCGC5_PORT##ref; GPIO##ref##_PDDR &= ~((pins) & 0x0000ffff); PORT##ref##_GPCLR = (((pins) << 16) | chars | PORT_MUX_GPIO);  _SIM_PORT_CHANGE; _SIM_PER_CHANGE
     #define _CONFIG_PORT_INPUT_FAST_HIGH(ref, pins, chars) SIM_SCGC5 |= SIM_SCGC5_PORT##ref; GPIO##ref##_PDDR &= ~((pins) & 0xffff0000); PORT##ref##_GPCHR = (((pins) & 0xffff0000) | chars | PORT_MUX_GPIO); _SIM_PORT_CHANGE; _SIM_PER_CHANGE
 #endif
@@ -14069,6 +14264,8 @@ extern void fnSimPers(void);
 //
 #if defined KINETIS_KE
     #define _CONFIG_PERIPHERAL(port, pin, function) _SIM_PER_CHANGE      // dummy since the peripherals automatically configures their peripheral pins
+#elif defined KINETIS_WITH_PCC
+    #define _CONFIG_PERIPHERAL(port, pin, function) PCC_PORT##port |= PCC_CGC; PORT##port##_PCR##pin = function; _SIM_PER_CHANGE
 #else
     #define _CONFIG_PERIPHERAL(port, pin, function) SIM_SCGC5 |= SIM_SCGC5_PORT##port; PORT##port##_PCR##pin = function; _SIM_PER_CHANGE
 #endif

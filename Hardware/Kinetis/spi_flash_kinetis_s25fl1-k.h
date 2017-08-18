@@ -22,6 +22,7 @@
 
 #if defined _SPI_DEFINES
     #if defined SPI_FLASH_MULTIPLE_CHIPS
+        #define __EXTENDED_CS     iChipSelect,
         static unsigned char fnCheckS25FL1_K(int iChipSelect);
         static const STORAGE_AREA_ENTRY spi_flash_storage = {
             (void *)&default_flash,                                      // link to internal flash
@@ -31,6 +32,7 @@
             SPI_FLASH_DEVICE_COUNT                                       // multiple devices
         };
     #else
+        #define __EXTENDED_CS
         static unsigned char fnCheckS25FL1_K(void);
         static const STORAGE_AREA_ENTRY spi_flash_storage = {
             (void *)&default_flash,                                      // link to internal flash
@@ -137,11 +139,6 @@
 #define DANGER_PROGRAMMING       0x40000000
 #define WARNING_SUSPENDED        0x20000000
 
-#if defined SPI_FLASH_MULTIPLE_CHIPS
-    #define __EXTENDED_CS iChipSelect,
-#else
-    #define __EXTENDED_CS
-#endif
 
 // SPI FLASH hardware interface
 //

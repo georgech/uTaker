@@ -343,7 +343,12 @@ static void disable_watchdog(void)
         ACTIVATE_WATCHDOG();                                             // allow user configuration of internal watch dog timer
     }
     else {
-        #if defined KINETIS_KL && !defined KINETIS_KL82                  // {67}
+        #if defined KINETIS_WITH_WDOG32
+        UNLOCK_WDOG();                                                   // open a window to write to watchdog
+        WDOG0_CS = WDOG_CS_UPDATE;                                       // disable watchdog but allow updates
+        WDOG0_TOVAL = 0xffff;
+        WDOG0_WIN = 0;  
+        #elif defined KINETIS_KL && !defined KINETIS_KL82                // {67}
         SIM_COPC = SIM_COPC_COPT_DISABLED;                               // disable the COP
         #else
         UNLOCK_WDOG();                                                   // open a window to write to watchdog
@@ -1176,7 +1181,9 @@ extern void fnStartTick(void)
 //
 extern void fnRetriggerWatchdog(void)
 {
-#if defined KINETIS_KL && !defined KINETIS_KL82                          // {67}
+#if defined KINETIS_WITH_WDOG32
+    REFRESH_WDOG();
+#elif defined KINETIS_KL && !defined KINETIS_KL82                        // {67}
     if ((SIM_COPC & SIM_COPC_COPT_LONGEST) != 0) {                       // if the COP is enabled
         SIM_SRVCOP = SIM_SRVCOP_1;                                       // issue COP service sequence
         SIM_SRVCOP = SIM_SRVCOP_2;
@@ -1927,7 +1934,7 @@ extern void fnResetBoard(void)
 #endif
 }
 
-#if defined CLKOUT_AVAILABLE
+#if defined CLKOUT_AVAILABLE && !defined KINETIS_WITH_PCC
 extern int fnClkout(int iClockSource)                                    // {120}
 {
     unsigned long ulSIM_SOPT2 = (SIM_SOPT2 & ~(SIM_SOPT2_CLKOUTSEL_MASK)); // original control register value with clock source masked
@@ -2253,7 +2260,12 @@ static void _LowLevelInit(void)
         ACTIVATE_WATCHDOG();                                             // allow user configuration of internal watchdog timer
     }
     else {                                                               // disable the watchdog
-    #if defined KINETIS_KL && !defined KINETIS_KL82                      // {67}
+    #if defined KINETIS_WITH_WDOG32
+        UNLOCK_WDOG();                                                   // open a window to write to watchdog
+        WDOG0_CS = WDOG_CS_UPDATE;                                       // disable watchdog but allow updates
+        WDOG0_TOVAL = 0xffff;
+        WDOG0_WIN = 0;                                  
+    #elif defined KINETIS_KL && !defined KINETIS_KL82                    // {67}
         SIM_COPC = SIM_COPC_COPT_DISABLED;                               // disable the COP
     #else
         UNLOCK_WDOG();                                                   // open a window to write to watchdog
@@ -2332,7 +2344,9 @@ static void _LowLevelInit(void)
     #endif
         POWER_DOWN(5, (SIM_SCGC5_PORTA | SIM_SCGC5_PORTB | SIM_SCGC5_PORTC | SIM_SCGC5_PORTD | SIM_SCGC5_PORTE | SIM_SCGC5_LPUART0)); // power down ports and LPUART0
         POWER_DOWN(4, (SIM_SCGC4_I2C0 | SIM_SCGC4_SPI0));                // power down I2C0 and SPI0
+    #if !defined KINETIS_WITH_PCC
         SIM_SOPT2 = 0;                                                   // set default LPUART0 clock source 
+    #endif
         IRQ0_31_CER = 0xffffffff;                                        // disable and clear all possible pending interrupts
         IRQ32_63_CER = 0xffffffff;
         IRQ64_95_CER = 0xffffffff;

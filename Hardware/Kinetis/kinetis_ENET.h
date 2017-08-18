@@ -124,6 +124,10 @@
         #endif
         static unsigned char ucGroupHashes[MAX_MULTICAST_FILTERS] = {0};
     #endif
+    #if defined SCAN_PHY_ADD
+        static unsigned char ucPhyAddress = 1;                           // first address to test with - increments until a response is found and then is ued for all further communication
+        #define PHY_ADDRESS ucPhyAddress
+    #endif
     #if defined _WINDOWS
         static unsigned short usPhyMode = 0;
     #endif
@@ -662,7 +666,7 @@ extern void fnCheckEthLinkState(void)
     MSCR = (((ETHERNET_CONTROLLER_CLOCK/(2 * MII_MANAGEMENT_CLOCK_SPEED)) + 1) << 1); // enable PHY clock for reads
     #endif
     usInterrupt = fnMIIread(PHY_ADDRESS, PHY_INTERRUPT_REGISTER);        // read the cause(s) of the interrupt, which resets the bits
-    if (PHY_LINK_STATE_CHANGE & usInterrupt) {                           // a link state change has taken place
+    if ((PHY_LINK_STATE_CHANGE & usInterrupt) != 0) {                    // a link state change has taken place
         int iFullDuplex = 0;
         usInterrupt = fnMIIread(PHY_ADDRESS, PHY_LINK_STATUS_REG);       // check the details of link
         switch (usInterrupt & PHY_LINK_MASK) {        
@@ -692,7 +696,7 @@ extern void fnCheckEthLinkState(void)
             break;
     #endif
         }
-        if (((iFullDuplex != 0) && (RCR & DRT)) || ((iFullDuplex == 0) && ((TCR & FDEN) != 0))) { // only restart if duplex mode has changed
+        if (((iFullDuplex != 0) && ((RCR & DRT) != 0)) || ((iFullDuplex == 0) && ((TCR & FDEN) != 0))) { // only restart if duplex mode has changed
             ECR = 0;                                                     // disable FEC in order to modify duplex mode
             if (iFullDuplex != 0) {                                      // when using RMII it is important to synchronise the mode
                 TCR |= FDEN;
@@ -1261,7 +1265,7 @@ extern int fnConfigEthernet(ETHTABLE *pars)
         }
     }
     fnMIIwrite(PHY_ADDRESS, PHY_REG_CR, usMIIData);                      // command initial operating mode of PHY
-    #if defined _PHY_KSZ8863                                             // {43}
+    #if defined PHY_ADDRESS_2                                            // {43}
     fnMIIwrite(PHY_ADDRESS_2, PHY_REG_CR, usMIIData);                    // command initial operating mode of PHY (second port)
     #endif
     #if defined PHY_INTERRUPT                                            // enable PHY interrupt

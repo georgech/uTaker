@@ -32,7 +32,7 @@
 
 #define _TICK_RESOLUTION     TICK_UNIT_MS(50)                            // 50ms system tick period - max possible at 50MHz SYSTICK would be about 335ms !
 
-#define REMOVE_PORT_INITIALISATIONS                                      // remove port initialisation and use demonstration to ensure that port configuration and use doesn't conflict with specific application development (exception is blink LED)
+//#define REMOVE_PORT_INITIALISATIONS                                    // remove port initialisation and use demonstration to ensure that port configuration and use doesn't conflict with specific application development (exception is blink LED)
 //#define NO_PERIPHERAL_DEMONSTRATIONS                                   // disable peripheral demonstration code (ADC/I2C/CAN/port interrupts/etc.) so that they can't interfere with new application developments
 
 #define USE_MAINTENANCE                                                  // include the command line shell (on UART, USB-CDC and/or Telenet) with maintenance support for the application (remove to reduce project size for special tests or possibly running from limited RAM)
@@ -131,13 +131,13 @@
 
 //#define EMCRAFT_K61F150M                                               // K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - http://www.utasker.com/kinetis/EMCRAFT_K61F150M.html
 
-//#define FRDM_K64F                                                      // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
+#define FRDM_K64F                                                        // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
 //#define TWR_K64F120M                                                   // tower board http://www.utasker.com/kinetis/TWR-K64F120M.html
 //#define TEENSY_3_5                                                     // USB development board with K64FX512 - http://www.utasker.com/kinetis/TEENSY_3.5.html
 //#define FreeLON                                                        // K64 based with integrated LON
 //#define TWR_K65F180M                                                   // tower board http://www.utasker.com/kinetis/TWR-K65F180M.html
 //#define K66FX1M0                                                       // development board with K66FX1M0
-#define FRDM_K66F                                                        // freedom board http://www.utasker.com/kinetis/FRDM-K66F.html
+//#define FRDM_K66F                                                      // freedom board http://www.utasker.com/kinetis/FRDM-K66F.html
 //#define TEENSY_3_6                                                     // USB development board with K66FX1M0 - http://www.utasker.com/kinetis/TEENSY_3.6.html
 
 //#define TWR_K70F120M                                                   // K processors Cortex M4 with graphical LCD, Ethernet, USB, encryption, tamper - tower board http://www.utasker.com/kinetis/TWR-K70F120M.html
@@ -602,6 +602,7 @@
     #define KINETIS_REVISION_2
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((32 * 1024) * MEM_FACTOR) // we have the LAN buffers in HEAP and big RX/TX - a little more for USB
 #elif defined TWR_K60N512
+ // #define _PHY_KSZ8863                                                 // development board option with Micrel 2 port switch
   //#define TWR_SER2                                                     // use SER2 serial board instead of standard serial board
   //#define DEBUG_ON_VIRT_COM                                            // optionally set UART debug on virtual COM rather than the serial board
     #define TARGET_HW            "TWR-K60N512"
@@ -736,7 +737,7 @@
         #define FLASH_FILE_SYSTEM                                        // we have an internal file system in FLASH
     #endif
   //#define NVRAM                                                        // we have an external file system in non-volatile RAM
-    #define INTERNAL_USER_FILES                                          // allow user to specify program file content
+  //#define INTERNAL_USER_FILES                                          // allow user to specify program file content
   //#define EMBEDDED_USER_FILES                                          // use together with INTERNAL_USER_FILES to allow sending an embedded user file to the uFileSystem
     #if !defined NAND_FLASH_FAT && defined FLASH_FILE_SYSTEM
       //#define MANAGED_FILES                                            // use memory management when interfacing with uFileSystem in internal or external SPI memory
@@ -764,6 +765,7 @@
   //#define SPI_FLASH_W25Q                                               // use Winbond W25Q SPI flash rather than ATMEL
   //#define SPI_FLASH_SST25                                              // use SST SPI SPI flash rather than ATMEL
   //#define SPI_FLASH_ST                                                 // use ST SPI flash rather than ATMEL
+    #define SPI_FLASH_S25FL1_K                                           // use Spansion SPI flash rather than ATMEL
   //#define SPI_DATA_FLASH                                               // FLASH type is data flash supporting sub-sectors (relevant for ST types)
     #if defined SPI_FLASH_ST
         #if defined SPI_DATA_FLASH
@@ -1118,7 +1120,7 @@
 
 // utFAT
 //
-#define SDCARD_SUPPORT                                                   // SD-card interface
+//#define SDCARD_SUPPORT                                                 // SD-card interface
 //#define FLASH_FAT                                                      // FAT in internal flash
 //#define SPI_FLASH_FAT                                                  // FAT in external SPI flash
     #define SIMPLE_FLASH                                                 // don't perform block management and wear-leveling
@@ -1201,7 +1203,7 @@
 // Ethernet
 //
 #if !defined DEVICE_WITHOUT_ETHERNET && !defined K70F150M_12M && !defined TEENSY_3_5 && !defined TEENSY_3_6 && !defined K66FX1M
-    #define ETH_INTERFACE                                                // enable Ethernet interface driver
+  //#define ETH_INTERFACE                                                // enable Ethernet interface driver
 #elif defined TEENSY_3_1 || defined TEENSY_LC
   //#define ETH_INTERFACE                                                // enable external Ethernet interface driver
     #if defined ETH_INTERFACE

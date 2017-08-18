@@ -64,7 +64,9 @@ extern void fnNetworkIndicator(TTASKTABLE *ptrTaskTable)                 // task
 {
     QUEUE_HANDLE PortIDInternal = ptrTaskTable->TaskID;                  // queue ID for task input
     unsigned char ucInputMessage[HEADER_LENGTH];                         // reserve space for receiving messages
+    #if defined LAN_REPORT_ACTIVITY || defined INTERRUPT_TASK_PHY
     static unsigned char ucState = 0;                                    // state of the Ethernet connection leds
+    #endif
 
     while (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH) != 0) { // check input queue
         switch (ucInputMessage[MSG_SOURCE_TASK]) {

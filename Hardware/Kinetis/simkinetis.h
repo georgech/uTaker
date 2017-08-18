@@ -46,6 +46,8 @@
     09.12.2016 Add PWT                                                   {31}
     11.02.2017 Add system clock generator                                {32}
     14.02.2017 Add LTC                                                   {33}
+    11.08.2017 Add PCC support                                           {34}
+    11.08.2017 Add WDOG32                                                {35}
 
 */  
 
@@ -1463,6 +1465,16 @@ unsigned long I2S_MCR;
 } KINETIS_I2S;
 #endif
 
+#if defined KINETIS_WITH_WDOG32
+typedef struct st_KINETIS_WDOG32                                         // {35}
+{
+    unsigned long WDOG_CS;
+    unsigned long WDOG_CNT;
+    unsigned long WDOG_TOVAL;
+    unsigned long WDOG_WIN;
+} KINETIS_WDOG32;
+#endif
+
 #if defined PWT_AVAILABLE
 typedef struct st_KINETIS_PWT                                            // {31}
 {
@@ -1797,34 +1809,42 @@ typedef struct stKINETIS_SIM
     #else
         unsigned char ucRes0[0x1000];
     #endif
+    #if defined KINETIS_WITH_PCC
+        unsigned long ulRes1[8];
+    #else
     unsigned long SIM_SOPT2;
     unsigned long ulRes1;
     unsigned long SIM_SOPT4;
     unsigned long SIM_SOPT5;
-    #if defined KINETIS_KL
-        unsigned long ulRes1a;
-    #else
-        unsigned long SIM_SOPT6;
-    #endif
+        #if defined KINETIS_KL
+            unsigned long ulRes1a;
+        #else
+            unsigned long SIM_SOPT6;
+        #endif
     unsigned long SIM_SOPT7;
     unsigned long ulRes2[2];
-    unsigned long SIM_SDID;
-    #if defined KINETIS_KL
-        unsigned long ulRes2a[3];
-    #else
-        unsigned long SIM_SCGC1;
-        unsigned long SIM_SCGC2;
-        unsigned long SIM_SCGC3;
     #endif
-    unsigned long SIM_SCGC4;
-    unsigned long SIM_SCGC5;
-    unsigned long SIM_SCGC6;
-    unsigned long SIM_SCGC7;
-    unsigned long SIM_CLKDIV1;
-    #if defined KINETIS_KL && !defined KINETIS_KL82
-        unsigned long ulRes2b;
+    unsigned long SIM_SDID;
+    #if defined KINETIS_WITH_PCC
+        unsigned long ulRes2a[8];
     #else
-        unsigned long SIM_CLKDIV2;
+        #if defined KINETIS_KL
+            unsigned long ulRes2a[3];
+        #else
+            unsigned long SIM_SCGC1;
+            unsigned long SIM_SCGC2;
+            unsigned long SIM_SCGC3;
+        #endif
+        unsigned long SIM_SCGC4;
+        unsigned long SIM_SCGC5;
+        unsigned long SIM_SCGC6;
+        unsigned long SIM_SCGC7;
+        unsigned long SIM_CLKDIV1;
+        #if defined KINETIS_KL && !defined KINETIS_KL82
+            unsigned long ulRes2b;
+        #else
+            unsigned long SIM_CLKDIV2;
+        #endif
     #endif
     unsigned long SIM_FCFG1;
     unsigned long SIM_FCFG2;
@@ -1836,14 +1856,19 @@ typedef struct stKINETIS_SIM
     unsigned long SIM_UIDMH;
     unsigned long SIM_UIDML;
     unsigned long SIM_UIDL;
-    #if defined KINETIS_KL && !defined KINETIS_KL82                      // {15}
+    #if defined KINETIS_WITH_PCC
         unsigned long ulRes3[39];
-        unsigned long SIM_COPC;
-        unsigned long SIM_SRVCOPC;
-    #elif defined KINETIS_K_FPU || (KINETIS_MAX_SPEED > 100000000)
-        unsigned long SIM_CLKDIV3;
-        unsigned long SIM_CLKDIV4;
-        unsigned long SIM_MCR;
+        unsigned long SIM_PCSR;
+    #else
+        #if defined KINETIS_KL && !defined KINETIS_KL82                  // {15}
+            unsigned long ulRes3[34];
+            unsigned long SIM_COPC;
+            unsigned long SIM_SRVCOPC;
+        #elif defined KINETIS_K_FPU || (KINETIS_MAX_SPEED > 100000000)
+            unsigned long SIM_CLKDIV3;
+            unsigned long SIM_CLKDIV4;
+            unsigned long SIM_MCR;
+        #endif
     #endif
 #endif
 } KINETIS_SIM;
@@ -1953,6 +1978,81 @@ unsigned char EWM_SERV;
 unsigned char EWM_CMPL;
 unsigned char EWM_CMPH;
 } KINETIS_EWM;
+#endif
+
+#if defined KINETIS_WITH_PCC                                             // {34}
+typedef struct stKINETIS_PCC
+{
+    unsigned long ulRes0[8];
+    unsigned long PCC_DMA0;
+    unsigned long ulRes1[0x17];
+    unsigned long PCC_FLASH;
+    unsigned long PCC_DMAMUX0;
+    unsigned long ulRes2[2];
+    unsigned long PCC_INTMUX0;
+    unsigned long ulRes3[9];
+    unsigned long PCC_TPM2;
+    unsigned long ulRes4[1];
+    unsigned long PCC_LPIT0;
+    unsigned long ulRes5[3];
+    unsigned long PCC_LPTMR0;
+    unsigned long ulRes6[3];
+    unsigned long PCC_RTC;
+    unsigned long ulRes7[5];
+    unsigned long PCC_LPSPI2;
+    unsigned long ulRes8[3];
+    unsigned long PCC_LPI2C2;
+    unsigned long ulRes9[3];
+    unsigned long PCC_LPUART2;
+    unsigned long ulRes10[5];
+    unsigned long PCC_SAI0;
+    unsigned long ulRes11[1];
+    unsigned long PCC_EMVSIM0;
+    unsigned long ulRes12[6];
+    unsigned long PCC_USB0FS;
+    unsigned long ulRes13[4];
+    unsigned long PCC_PORTA;
+    unsigned long PCC_PORTB;
+    unsigned long PCC_PORTC;
+    unsigned long PCC_PORTD;
+    unsigned long PCC_PORTE;
+    unsigned long ulRes14[3];
+    unsigned long PCC_TSI0;
+    unsigned long ulRes15[3];
+    unsigned long PCC_ADC0;
+    unsigned long ulRes16[3];
+    unsigned long PCC_DAC0;
+    unsigned long ulRes17[3];
+    unsigned long PCC_CMP0;
+    unsigned long ulRes18[3];
+    unsigned long PCC_VREF;
+    unsigned long ulRes19[5];
+    unsigned long PCC_CRC;
+} KINETIS_PCC;
+
+typedef struct stKINETIS_PCC2
+{
+    unsigned long ulRes0[0x25];
+    unsigned long PCC_TRNG;
+    unsigned long ulRes1[6];
+    unsigned long PCC_TPM0;
+    unsigned long PCC_TPM1;
+    unsigned long ulRes2[7];
+    unsigned long PCC_LPTMR1;
+    unsigned long ulRes3[6];
+    unsigned long PCC_LPSPI0;
+    unsigned long PCC_LPSPI1;
+    unsigned long ulRes4[2];
+    unsigned long PCC_LPI2C0;
+    unsigned long PCC_LPI2C1;
+    unsigned long ulRes5[2];
+    unsigned long PCC_LPUART0;
+    unsigned long PCC_LPUART1;
+    unsigned long ulRes6[4];
+    unsigned long PCC_FLEXIO0;
+    unsigned long ulRes7[0x24];
+    unsigned long PCC_CMP1;
+} KINETIS_PCC2;
 #endif
 
 #if defined KINETIS_KE
@@ -2277,11 +2377,22 @@ typedef struct stKINETIS_UART
 
 typedef struct stKINETIS_LPUART
 {
+#if defined KINETIS_KL28
+    volatile unsigned long  LPUART_VERID;
+    volatile unsigned long  LPUART_PARAM;
+    unsigned long  LPUART_GLOBAL;
+    unsigned long  LPUART_PINCFG;
+#endif
     unsigned long LPUART_BAUD;
     volatile unsigned long LPUART_STAT;
     volatile unsigned long LPUART_CTRL;
     volatile unsigned long LPUART_DATA;
     unsigned long LPUART_MATCH;
+#if defined KINETIS_KL28
+    unsigned long LPUART2_MODIR;
+    unsigned long LPUART2_FIFO;
+    unsigned long LPUART2_WATER;
+#endif
 } KINETIS_LPUART;
 
 typedef struct stKINETIS_USB
@@ -3046,6 +3157,9 @@ typedef struct stKINETIS_PERIPH
 #if I2S_AVAILABLE > 0
     KINETIS_I2S        I2S_SAI[I2S_AVAILABLE];                           // {28}
 #endif
+#if defined KINETIS_WITH_WDOG32
+    KINETIS_WDOG32  WDOG32;                                              // {35}
+#endif
 #if defined PWT_AVAILABLE
     KINETIS_PWT        PWT;                                              // {31}
 #endif
@@ -3090,6 +3204,10 @@ typedef struct stKINETIS_PERIPH
 #endif
 #if !defined KINETIS_KL && !defined KINETIS_KE
     KINETIS_EWM        EWM;
+#endif
+#if defined KINETIS_WITH_PCC                                             // {34}
+    KINETIS_PCC        PCC;
+    KINETIS_PCC2       PCC2;
 #endif
 #if defined KINETIS_KE
     KINETIS_ICS        ICS;

@@ -60,6 +60,7 @@
     18.05.2017 Add optional logging of UART reception to a simulation file {43}
     13.07.2017 Define KL82 disabled ports                                {44}
     04.08.2017 Add fnSetBitBandPeripheralValue() and fnClearBitBandPeripheralValue()
+    11.08.2017 Add PCC support                                           {45}
  
 */  
                           
@@ -337,7 +338,11 @@ static void fnSetDevice(unsigned long *port_inits)
 #elif !defined KINETIS_KE && !defined KINETIS_KEA
     MC_SRSL = (MC_SRSL_POR | MC_SRSL_LVD);                               // mode control - reset status due to power on reset
 #endif
-#if defined KINETIS_KL && !defined KINETIS_KL82
+#if defined KINETIS_WITH_WDOG32
+    WDOG0_CS = (0xffff0000 | WDOG_CS_CMD32EN | WDOG_CS_CLK_1kHz | WDOG_CS_EN);
+    WDOG0_CNT = 0x00000002;
+    WDOG0_TOVAL = 0x00000400;
+#elif defined KINETIS_KL && !defined KINETIS_KL82
     SIM_COPC = SIM_COPC_COPT_LONGEST;                                    // COP (computer operating properly) rather than watchdog
 #elif defined KINETIS_KE
     WDOG_CS1 = WDOG_CS1_EN;
@@ -416,6 +421,45 @@ static void fnSetDevice(unsigned long *port_inits)
 #if !defined KINETIS_WITHOUT_PIT
     PIT_MCR = PIT_MCR_MDIS;                                              // PITs disabled
 #endif
+#if defined KINETIS_WITH_PCC                                             // {45}
+    PCC_DMA0    = PCC_PR;
+    PCC_FLASH   = (PCC_PR | PCC_CGC);
+    PCC_DMAMUX0 = PCC_PR;
+    PCC_INTMUX0 = PCC_PR;
+    PCC_TPM2    = PCC_PR;
+    PCC_LPIT0   = PCC_PR;
+    PCC_LPTMR0  = PCC_PR;
+    PCC_RTC     = PCC_PR;
+    PCC_LPSPI2  = PCC_PR;
+    PCC_LPI2C2  = PCC_PR;
+    PCC_LPUART2 = PCC_PR;
+    PCC_SAI0    = PCC_PR;
+    PCC_EMVSIM0 = PCC_PR;
+    PCC_USB0FS  = PCC_PR;
+    PCC_PORTA   = PCC_PR;
+    PCC_PORTB   = PCC_PR;
+    PCC_PORTC   = PCC_PR;
+    PCC_PORTD   = PCC_PR;
+    PCC_PORTE   = PCC_PR;
+    PCC_TSI0    = PCC_PR;
+    PCC_ADC0    = PCC_PR;
+    PCC_DAC0    = PCC_PR;
+    PCC_CMP0    = PCC_PR;
+    PCC_VREF    = PCC_PR;
+    PCC_CRC     = PCC_PR;
+    PCC_TRNG    = PCC_PR;
+    PCC_TPM0    = PCC_PR;
+    PCC_TPM1    = PCC_PR;
+    PCC_LPTMR1  = PCC_PR;
+    PCC_LPSPI0  = PCC_PR;
+    PCC_LPSPI1  = PCC_PR;
+    PCC_LPI2C0  = PCC_PR;
+    PCC_LPI2C1  = PCC_PR;
+    PCC_LPUART0 = PCC_PR;
+    PCC_LPUART1 = PCC_PR;
+    PCC_FLEXIO0 = PCC_PR;
+    PCC_CMP1    = PCC_PR;
+#endif
 #if defined KINETIS_KE
     SIM_SCGC = (SIM_SCGC_FLASH | SIM_SCGC_SWD);
     SIM_SOPT0 = (SIM_SOPT_NMIE | SIM_SOPT_RSTPE | SIM_SOPT_SWDE);        // PTB4 functions as NMI, PTA5 pin functions as RESET, PTA4 and PTC4 function as single wire debug
@@ -425,7 +469,7 @@ static void fnSetDevice(unsigned long *port_inits)
     SIM_SCGC6 = SIM_SCGC6_FTFL;
     SIM_SCGC7 = 0x00000100;
     SIM_CLKDIV1 = (SIM_CLKDIV1_BUS_2 | SIM_CLKDIV5_ADC_2);
-#else
+#elif !defined KINETIS_WITH_PCC
     SIM_SCGC6 = (0x40000000 | SIM_SCGC6_FTFL);
     #if defined KINETIS_HAS_IRC48M && !defined KINETIS_KL
     SIM_SOPT2 = (SIM_SOPT2_TRACECLKSEL);
@@ -2243,7 +2287,11 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
     case _PORTA:
         if ((~GPIOA_PDDR & ulBit) != 0) {                                // if configured as input
             unsigned long ulOriginal_port_state = ulPort_in_A;
-#if !defined KINETIS_KE
+#if defined KINETIS_WITH_PCC
+            if ((PCC_PORTA & PCC_CGC) == 0) {                            // ignore if port is not clocked
+                return;
+            }
+#elif !defined KINETIS_KE
             if ((SIM_SCGC5 & SIM_SCGC5_PORTA) == 0) {                    // ignore if port is not clocked
                 return;
             }
@@ -2295,7 +2343,11 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
     case _PORTB:
         if ((~GPIOB_PDDR & ulBit) != 0) {                                // if configured as input
             unsigned long ulOriginal_port_state = ulPort_in_B;
-    #if !defined KINETIS_KE
+    #if defined KINETIS_WITH_PCC
+            if ((PCC_PORTB & PCC_CGC) == 0) {                            // ignore if port is not clocked
+                return;
+            }
+    #elif !defined KINETIS_KE
             if ((SIM_SCGC5 & SIM_SCGC5_PORTB) == 0) {                    // ignore if port is not clocked
                 return;
             }
@@ -2348,7 +2400,11 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
     case _PORTC:
         if (~GPIOC_PDDR & ulBit) {                                       // if configured as input
             unsigned long ulOriginal_port_state = ulPort_in_C;
-    #if !defined KINETIS_KE
+    #if defined KINETIS_WITH_PCC
+            if ((PCC_PORTC & PCC_CGC) == 0) {                            // ignore if port is not clocked
+                return;
+            }
+    #elif !defined KINETIS_KE
             if ((SIM_SCGC5 & SIM_SCGC5_PORTC) == 0) {                    // ignore if port is not clocked
                 return;
             }
@@ -2401,9 +2457,15 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
     case _PORTD:
         if (~GPIOD_PDDR & ulBit) {                                       // if configured as input
             unsigned long ulOriginal_port_state = ulPort_in_D;
+    #if defined KINETIS_WITH_PCC
+            if ((PCC_PORTD & PCC_CGC) == 0) {                            // ignore if port is not clocked
+                return;
+            }
+    #elif !defined KINETIS_KE
             if (!(SIM_SCGC5 & SIM_SCGC5_PORTD)) {                        // ignore if port is not clocked
                 return;
             }
+    #endif
             if (iChange == TOGGLE_INPUT) {
                 ulPort_in_D ^= ulBit;                                    // set new pin state
                 ptrPCR += (31 - ucPortBit);
@@ -2440,9 +2502,15 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
     case _PORTE:
         if ((~GPIOE_PDDR & ulBit) != 0) {                                // if configured as input
             unsigned long ulOriginal_port_state = ulPort_in_E;
+    #if defined KINETIS_WITH_PCC
+            if ((PCC_PORTE & PCC_CGC) == 0) {                            // ignore if port is not clocked
+                return;
+            }
+    #elif !defined KINETIS_KE
             if ((SIM_SCGC5 & SIM_SCGC5_PORTE) == 0) {                    // ignore if port is not clocked
                 return;
             }
+    #endif
             if (iChange == TOGGLE_INPUT) {
                 ulPort_in_E ^= ulBit;                                    // set new pin state
                 ptrPCR += (31 - ucPortBit);
@@ -2813,9 +2881,12 @@ static void fnSetPinCharacteristics(int iPortRef, unsigned long ulHigh, unsigned
 extern void fnSimPorts(void)
 {
     unsigned long ulNewState;
-#if !defined KINETIS_KE
-    if ((SIM_SCGC5 & SIM_SCGC5_PORTA) != 0) {                            // if port is clocked
+#if defined KINETIS_WITH_PCC
+    if ((PCC_PORTA & PCC_CGC) != 0)                                      // if port is clocked
+#elif !defined KINETIS_KE
+    if ((SIM_SCGC5 & SIM_SCGC5_PORTA) != 0)                              // if port is clocked
 #endif
+    {
         ulNewState = (GPIOA_PDOR | GPIOA_PSOR);                          // set bits from set register
         ulNewState &= ~(GPIOA_PCOR);                                     // clear bits from clear register
         ulNewState ^= GPIOA_PTOR;                                        // toggle bits from toggle register
@@ -2832,9 +2903,12 @@ extern void fnSimPorts(void)
     GPIOA_PTOR = GPIOA_PSOR = GPIOA_PCOR = 0;                            // registers always read 0
 
 #if PORTS_AVAILABLE > 1
-    #if !defined KINETIS_KE
-    if ((SIM_SCGC5 & SIM_SCGC5_PORTB) != 0) {                            // if port is clocked
+    #if defined KINETIS_WITH_PCC
+    if ((PCC_PORTB & PCC_CGC) != 0)                                      // if port is clocked
+    #elif !defined KINETIS_KE
+    if ((SIM_SCGC5 & SIM_SCGC5_PORTB) != 0)                              // if port is clocked
     #endif
+    {
         ulNewState = (GPIOB_PDOR | GPIOB_PSOR);                          // set bits from set register
         ulNewState &= ~(GPIOB_PCOR);                                     // clear bits from clear register
         ulNewState ^= GPIOB_PTOR;                                        // toggle bits from toggle register
@@ -2851,9 +2925,12 @@ extern void fnSimPorts(void)
     GPIOB_PTOR = GPIOB_PSOR = GPIOB_PCOR = 0;                            // registers always read 0
 #endif
 #if PORTS_AVAILABLE > 2
-    #if !defined KINETIS_KE
-    if ((SIM_SCGC5 & SIM_SCGC5_PORTC) != 0) {                            // if port is clocked
+    #if defined KINETIS_WITH_PCC
+    if ((PCC_PORTC & PCC_CGC) != 0)                                      // if port is clocked
+    #elif !defined KINETIS_KE
+    if ((SIM_SCGC5 & SIM_SCGC5_PORTC) != 0)                              // if port is clocked
     #endif
+    {
         ulNewState = (GPIOC_PDOR | GPIOC_PSOR);                          // set bits from set register
         ulNewState &= ~(GPIOC_PCOR);                                     // clear bits from clear register
         ulNewState ^= GPIOC_PTOR;                                        // toggle bits from toggle register
@@ -2870,7 +2947,12 @@ extern void fnSimPorts(void)
     GPIOC_PTOR = GPIOC_PSOR = GPIOC_PCOR = 0;                            // registers always read 0
 #endif
 #if PORTS_AVAILABLE > 3
-    if ((SIM_SCGC5 & SIM_SCGC5_PORTD) != 0) {                            // if port is clocked
+    #if defined KINETIS_WITH_PCC
+    if ((PCC_PORTD & PCC_CGC) != 0)                                      // if port is clocked
+    #else
+    if ((SIM_SCGC5 & SIM_SCGC5_PORTD) != 0)                              // if port is clocked
+    #endif
+    {
         ulNewState = (GPIOD_PDOR | GPIOD_PSOR);                          // set bits from set register
         ulNewState &= ~(GPIOD_PCOR);                                     // clear bits from clear register
         ulNewState ^= GPIOD_PTOR;                                        // toggle bits from toggle register
@@ -2882,7 +2964,12 @@ extern void fnSimPorts(void)
     }
     GPIOD_PTOR = GPIOD_PSOR = GPIOD_PCOR = 0;                            // registers always read 0
 
-    if ((SIM_SCGC5 & SIM_SCGC5_PORTE) != 0) {                            // if port is clocked
+    #if defined KINETIS_WITH_PCC
+    if ((PCC_PORTD & PCC_CGC) != 0)                                      // if port is clocked
+    #else
+    if ((SIM_SCGC5 & SIM_SCGC5_PORTE) != 0)                              // if port is clocked
+    #endif
+    {
         ulNewState = (GPIOE_PDOR | GPIOE_PSOR);                          // set bits from set register
         ulNewState &= ~(GPIOE_PCOR);                                     // clear bits from clear register
         ulNewState ^= GPIOE_PTOR;                                        // toggle bits from toggle register
@@ -7032,7 +7119,22 @@ extern int fnSimTimers(void)
     }
     // Watchdog
     //
-#if defined KINETIS_KL && !defined KINETIS_KL82                          // {24}
+#if defined KINETIS_WITH_WDOG32
+    if ((WDOG0_CS & WDOG_CS_EN) != 0) {                                  // if the watchdog is enabled
+    #if TICK_RESOLUTION >= 1000
+        unsigned long ulCounter = (TICK_RESOLUTION/1000);                // assume 1000Hz LPO clock
+    #else
+        unsigned long ulCounter = 1;                                     // assume 1000Hz LPO clock
+    #endif
+        unsigned long ulWdogCnt = WDOG0_CNT;                             // present watchdog count value
+        unsigned long ulWdogTimeout = WDOG0_TOVAL;                       // timeout value
+        ulWdogCnt += ulCounter;                                          // next value
+        if (ulWdogCnt >= ulWdogTimeout) {
+            return RESET_CARD_WATCHDOG;                                  // watchdog reset
+        }
+        WDOG0_CNT = (unsigned short)ulWdogCnt;                           // new watchdog count value
+    }
+#elif defined KINETIS_KL && !defined KINETIS_KL82                        // {24}
     if ((SIM_COPC & SIM_COPC_COPT_LONGEST) != SIM_COPC_COPT_DISABLED) {  // check only when COP is enabled 
         if (SIM_SRVCOP == SIM_SRVCOP_2) {                                // assume retriggered
             ulCOPcounter = 0;
@@ -7164,7 +7266,7 @@ extern int fnSimTimers(void)
                     fnTriggerADC(0, 1);
         #endif
                 }
-    #else
+    #elif !defined KINETIS_WITH_PCC
                 switch ((SIM_SOPT7 & SIM_SOPT7_ADC0TRGSEL_CMP3)) {
                 case SIM_SOPT7_ADC0TRGSEL_PIT0:                          // if PIT0 is configured to trigger ADC0 conversion
         #if defined SUPPORT_ADC
@@ -7202,7 +7304,7 @@ extern int fnSimTimers(void)
                 PIT_CVAL1 -= ulCount;
                 PIT_TFLG1 = PIT_TFLG_TIF;                                // flag that a reload occurred
                 fnHandleDMA_triggers(DMAMUX0_DMA0_CHCFG_SOURCE_PIT1, 0); // handle DMA triggered on PIT1
-    #if !defined KINETIS_KE
+    #if !defined KINETIS_KE && !defined KINETIS_WITH_PCC
                 switch ((SIM_SOPT7 & SIM_SOPT7_ADC0TRGSEL_CMP3)) {
                 case SIM_SOPT7_ADC0TRGSEL_PIT1:                          // if PIT1 is configured to trigger ADC0 conversion
         #if defined SUPPORT_ADC
@@ -9303,7 +9405,9 @@ extern void fnUpdateOperatingDetails(void)
     ptrBuffer = uStrcpy(ptrBuffer, "k, BUS CLOCK = ");
     #endif
     #if defined KINETIS_KL
-        #if defined BUS_FLASH_CLOCK_SHARED
+        #if defined KINETIS_WITH_PCC
+    ulBusClockSpeed = (SYSTEM_CLOCK / 1);
+        #elif defined BUS_FLASH_CLOCK_SHARED
     ulBusClockSpeed = (SYSTEM_CLOCK/(((SIM_CLKDIV1 >> 16) & 0xf) + 1));
         #else
     ulBusClockSpeed = (MCGOUTCLK / (((SIM_CLKDIV1 >> 24) & 0xf) + 1));

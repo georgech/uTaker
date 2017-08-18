@@ -106,11 +106,11 @@
 //#define EMCRAFT_K61F150M                                               // K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - http://www.utasker.com/kinetis/EMCRAFT_K61F150M.html
 
 //#define FRDM_K64F                                                      // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
-//#define TWR_K64F120M                                                   // tower board http://www.utasker.com/kinetis/TWR-K64F120M.html
+#define TWR_K64F120M                                                     // tower board http://www.utasker.com/kinetis/TWR-K64F120M.html
 //#define TEENSY_3_5                                                     // USB development board with K64FX512 - http://www.utasker.com/kinetis/TEENSY_3.5.html
 //#define TWR_K65F180M                                                   // tower board http://www.utasker.com/kinetis/TWR-K65F180M.html
 //#define K66FX1M0                                                       // development board with K66FX1M0
-#define FRDM_K66F                                                        // freedom board http://www.utasker.com/kinetis/FRDM-K66F.html
+//#define FRDM_K66F                                                      // freedom board http://www.utasker.com/kinetis/FRDM-K66F.html
 //#define TEENSY_3_6                                                     // USB development board with K66FX1M0 - http://www.utasker.com/kinetis/TEENSY_3.6.html
 
 //#define TWR_K70F120M                                                   // K processors Cortex M4 with graphical LCD, Ethernet, USB, encryption, tamper - tower board http://www.utasker.com/kinetis/TWR-K70F120M.html
@@ -427,10 +427,10 @@
     #define KINETIS_REVISION_2
     #define DEVICE_WITHOUT_ETHERNET                                      // K20 doesn't have Ethernet controller
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((24 * 1024) * MEM_FACTOR)
-    #define SUPPORT_GLCD                                                 // enable the task for interfacing to a graphical LCD
+  //#define SUPPORT_GLCD                                                 // enable the task for interfacing to a graphical LCD
         #define TFT2N0369_GLCD_MODE                                      // use colour TFT in GLCD compatible mode (as base)
         #define ST7789S_GLCD_MODE                                        // adjustments for specific controller
-    #define SUPPORT_TOUCH_SCREEN                                         // with touch screen operation
+  //#define SUPPORT_TOUCH_SCREEN                                         // with touch screen operation
         #define TOUCH_FT6206                                             // FT6206 capacitative touch panel controller
             #define DONT_HANDLE_TOUCH_SCREEN_MOVEMENT                    // don't handle movement
     #define GLCD_BACKLIGHT_CONTROL                                       // PWM based backlight control
@@ -757,7 +757,7 @@
         #endif
         #if defined USB_MSD_HOST_LOADER                                  // support loading from memory stick
             #if defined USB_HS_INTERFACE
-              //#define NXP_MSD_HOST                                     // use NXP USB host interface for realisation
+                #define NXP_MSD_HOST                                     // use NXP USB host interface for realisation
             #endif
             #define USB_MSD_HOST                                         // requires USB-MSD support in the mass-storage module
             #if !defined NXP_MSD_HOST
@@ -877,8 +877,8 @@
     #define ETHERNET_RELEASE_AFTER_EVERY_FRAME                           // handle only one Ethernet reception frame at a time and allow other tasks to be scheduled in between
         #define ETHERNET_RELEASE_LIMIT  3                                // allow a maximum of three reception frames to be handled
 /**************** Configure TCP/IP services ******************************************************************/
-  //#define USE_IPV6                                                     // enable IPV6
-        #define USE_IPV6INV4                                             // support tunnelling IPv6 ind IPv4
+    #define USE_IPV6                                                     // enable IPv6
+      //#define USE_IPV6INV4                                             // support tunneling IPv6 ind IPv4
         #define USE_IPV6INV4_RELAY_DESTINATIONS 2                        // enable relaying to other nodes in the network - the number of destination in the IPv6 in IPv4 relay table
         #define MAX_HW_ADDRESS_LENGTH  MAC_LENGTH                        // set a variable maximum hardware address length - default is Ethernet MAC-48, 6 bytes
         #define NEIGHBOR_TABLE_ENTRIES 4                                 // the maximum entries in IPV6 neighbor table
