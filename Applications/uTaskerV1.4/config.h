@@ -131,13 +131,13 @@
 
 //#define EMCRAFT_K61F150M                                               // K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - http://www.utasker.com/kinetis/EMCRAFT_K61F150M.html
 
-#define FRDM_K64F                                                        // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
+//#define FRDM_K64F                                                      // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
 //#define TWR_K64F120M                                                   // tower board http://www.utasker.com/kinetis/TWR-K64F120M.html
 //#define TEENSY_3_5                                                     // USB development board with K64FX512 - http://www.utasker.com/kinetis/TEENSY_3.5.html
 //#define FreeLON                                                        // K64 based with integrated LON
 //#define TWR_K65F180M                                                   // tower board http://www.utasker.com/kinetis/TWR-K65F180M.html
 //#define K66FX1M0                                                       // development board with K66FX1M0
-//#define FRDM_K66F                                                      // freedom board http://www.utasker.com/kinetis/FRDM-K66F.html
+#define FRDM_K66F                                                        // freedom board http://www.utasker.com/kinetis/FRDM-K66F.html
 //#define TEENSY_3_6                                                     // USB development board with K66FX1M0 - http://www.utasker.com/kinetis/TEENSY_3.6.html
 
 //#define TWR_K70F120M                                                   // K processors Cortex M4 with graphical LCD, Ethernet, USB, encryption, tamper - tower board http://www.utasker.com/kinetis/TWR-K70F120M.html
@@ -602,7 +602,7 @@
     #define KINETIS_REVISION_2
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((32 * 1024) * MEM_FACTOR) // we have the LAN buffers in HEAP and big RX/TX - a little more for USB
 #elif defined TWR_K60N512
- // #define _PHY_KSZ8863                                                 // development board option with Micrel 2 port switch
+    #define _PHY_KSZ8863                                                 // development board option with Micrel 2 port switch
   //#define TWR_SER2                                                     // use SER2 serial board instead of standard serial board
   //#define DEBUG_ON_VIRT_COM                                            // optionally set UART debug on virtual COM rather than the serial board
     #define TARGET_HW            "TWR-K60N512"
@@ -944,7 +944,7 @@
 #if defined DEVICE_WITHOUT_USB
     #define NUMBER_USB     0                                             // no physical queue needed
 #else
-  //#define USB_INTERFACE                                                // enable USB driver interface
+    #define USB_INTERFACE                                                // enable USB driver interface
     #if defined USB_INTERFACE
       //#define MICROSOFT_OS_STRING_DESCRIPTOR                           // support MODs
       //#define USB_HOST_SUPPORT                                         // host rather than device
@@ -953,7 +953,7 @@
             #define NUMBER_USB     (5 + 1)                               // physical queues (control plus 5 endpoints)
         #else                                                            // define one or more device classes (multiple classes creates a composite device)
             #define USE_USB_CDC                                          // USB-CDC (use also for Modbus over USB)
-          //#define USE_USB_MSD                                          // needs SD card to compile (or alternatives FLASH_FAT / SPI_FLASH_FAT / FAT_EMULATION)
+            #define USE_USB_MSD                                          // needs SD card to compile (or alternatives FLASH_FAT / SPI_FLASH_FAT / FAT_EMULATION)
           //#define USE_USB_HID_MOUSE                                    // human interface device (mouse)
           //#define USE_USB_HID_KEYBOARD                                 // human interface device (keyboard)
               //#define USB_KEYBOARD_DELAY                               // enable inter-character delay control
@@ -1120,7 +1120,7 @@
 
 // utFAT
 //
-//#define SDCARD_SUPPORT                                                 // SD-card interface
+#define SDCARD_SUPPORT                                                   // SD-card interface
 //#define FLASH_FAT                                                      // FAT in internal flash
 //#define SPI_FLASH_FAT                                                  // FAT in external SPI flash
     #define SIMPLE_FLASH                                                 // don't perform block management and wear-leveling
@@ -1235,7 +1235,7 @@
         #define ETHERNET_RELEASE_LIMIT  3                                // allow a maximum of three reception frames to be handled
 
     #if defined ETH_INTERFACE && ((defined USB_CDC_RNDIS && defined NO_USB_ETHERNET_BRIDGING) || !defined USB_CDC_RNDIS)
-        #define IP_NETWORK_COUNT             2                           // number of networks
+        #define IP_NETWORK_COUNT             1                           // number of networks
             #define SECOND_NETWORK           1                           // reference to second network (after DEFAULT_NETWORK which is 0)
     #endif
     #if defined ENC424J600_INTERFACE
@@ -1270,6 +1270,22 @@
         #endif
         #define PPP_INTERFACE                defineInterface(PPP_IP_INTERFACE)
         #define PPP_INTERFACES               (PPP_INTERFACE)             // when multiple PPP interfaces exist, each one can be ORed to this mask
+    #elif defined _PHY_KSZ8863                                            // designs using KSZ8863 switch can use tail tagging to control the two switch ports independently
+        #define PHY_MULTI_PORT         4                                  // phy has multiple ports (switch, port 0, port 1, both)
+        #define PHY_TAIL_TAGGING                                          // enable tail tagging operation so that ports can operate as independent interfaces
+        #define PHY_MICREL_SMI                                            // enable smi interface to phy since it is required to control multi-port operation
+        #undef PHY_ADDRESS
+        #undef IP_INTERFACE_COUNT
+        #undef ETHERNET_INTERFACES
+        #define IP_INTERFACE_COUNT     PHY_MULTI_PORT                     // use phy as multiple interfaces
+        #define ETHERNET_INTERFACES    PHY_MULTI_PORT                     // all treated as ethernet interfaces
+        #define PHY1_IP_INTERFACE      (unsigned char)1
+        #define PHY2_IP_INTERFACE      (unsigned char)2
+        #define PHY12_IP_INTERFACE     (unsigned char)3
+        #define ETHERNET_INTERFACE     defineInterface(DEFAULT_IP_INTERFACE) // ethernet interface (switch) is default interface
+        #define PHY1_INTERFACE         defineInterface(PHY1_IP_INTERFACE) // phy port 1 interface is second interface
+        #define PHY2_INTERFACE         defineInterface(PHY2_IP_INTERFACE) // phy port 2 interface is third interface
+        #define PHY12_INTERFACE        defineInterface(PHY12_IP_INTERFACE) // phy both ports interface is fourth interface
     #else
         #if !defined IP_INTERFACE_COUNT
             #define IP_INTERFACE_COUNT   1                               // single interface available
@@ -1329,8 +1345,8 @@
         #endif
     #endif
     #if defined USE_IP || defined USE_IPV6
-        #define USE_UDP                                                  // enable UDP over IP - needs IP
-        #define USE_TCP                                                  // enable TCP over IP - needs IP
+      //#define USE_UDP                                                  // enable UDP over IP - needs IP
+      //#define USE_TCP                                                  // enable TCP over IP - needs IP
 
         #if defined USE_TCP                                              // specify TCP support details
           //#define T_TCP_PERIOD           (DELAY_LIMIT)(0.1 * SEC)      // user defined TCP polling resolution (allows higher resolution polling and the following user defined values rather than defaults)

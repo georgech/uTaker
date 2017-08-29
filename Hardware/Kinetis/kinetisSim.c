@@ -243,7 +243,7 @@ static const unsigned long ulDisabled[PORTS_AVAILABLE] = {
     0x00f73c38,                                                          // port C disabled default pins
     0x0000009d,                                                          // port D disabled default pins
     0x8700003f                                                           // port E disabled default pins
-    #elif defined KINETIS_KL27
+    #elif defined KINETIS_KL17 || defined KINETIS_KL27
     0x00003026,                                                          // port A disabled default pins
     0x000f0000,                                                          // port B disabled default pins
     0x00000c38,                                                          // port C disabled default pins
@@ -369,7 +369,7 @@ static void fnSetDevice(unsigned long *port_inits)
     SCG_SOSCCFG = 0x00000010;
     SCG_SIRCCSR = 0x03000005;
     SCG_SIRCCFG = 0x00000001;
-    #elif defined KINETIS_KL03 || defined KINETIS_KL43 || defined KINETIS_KL27
+    #elif defined KINETIS_WITH_MCG_LITE
     MCG_C1 = MCG_C1_CLKS_LIRC;
     MCG_C2 = MCG_C2_IRCS;
     MCG_S  = MCG_S_CLKST_LICR;
@@ -6881,11 +6881,16 @@ extern unsigned long fnSimDMA(char *argv[])
                 }
                 break;
         #endif
-        #if UARTS_AVAILABLE > 5
+        #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 5
             case DMA_UART5_TX_CHANNEL:                                   // handle UART DMA transmission on UART 5
-                if (UART5_C5 & UART_C5_TDMAS) {                          // if DMA operation is enabled
+            #if UARTS_AVAILABLE == 5
+                if (LPUART0_BAUD & LPUART_BAUD_TDMAE)                    // if DMA operation is enabled
+            #else
+                if (UART5_C5 & UART_C5_TDMAS)                            // if DMA operation is enabled
+            #endif
+                {
                     ptrCnt = (int *)argv[THROUGHPUT_UART5];
-                    if (*ptrCnt) {
+                    if (*ptrCnt != 0) {
                         if (--(*ptrCnt) == 0) {
                             iMasks |= ulChannel;                         // enough serial DMA transfers handled in this tick period
                         }
@@ -6897,7 +6902,11 @@ extern unsigned long fnSimDMA(char *argv[])
                             else {
                                 fnUART_Tx_int(5);                        // handle possible pending interrupt after DMA completion
                             }
+            #if UARTS_AVAILABLE == 5
+                            fnLogTx5((unsigned char)LPUART0_DATA);
+            #else
 	                        fnLogTx5(UART5_D);
+            #endif
                             ulNewActions |= SEND_COM_5;
                         }
                     }

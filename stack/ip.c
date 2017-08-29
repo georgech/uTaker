@@ -501,7 +501,7 @@ extern int fnHandleIPv4(ETHERNET_FRAME *frame)                           // {9}
     register unsigned char ucNetworkID;
     #endif
     #if IP_INTERFACE_COUNT > 1
-    register unsigned char Tx_handle = frame->Tx_handle;
+    register unsigned char Tx_handle = frame->Tx_handle;                 // the interface handle to send respones on
     #endif
     unsigned short tLen;
     unsigned char ucOptionsLength;
@@ -509,7 +509,7 @@ extern int fnHandleIPv4(ETHERNET_FRAME *frame)                           // {9}
     ARP_DETAILS arp_details;
     arp_details.ucType = ARP_TEMP_IP;
     #if IP_INTERFACE_COUNT > 1
-    arp_details.Tx_handle = Tx_handle;
+    arp_details.Tx_handle = Tx_handle;                                   // the interface handle to send arp respones on
     #endif
     #if defined ARP_VLAN_SUPPORT
     arp_details.usVLAN_ID = frame->usVLAN_ID;
@@ -551,14 +551,14 @@ extern int fnHandleIPv4(ETHERNET_FRAME *frame)                           // {9}
     }
     arp_details.ucNetworkID = frame->ucNetworkID = ucNetworkID;
     #endif
-    if ((uMemcmp(received_ip_packet->destination_IP_address, &network[_NETWORK_ID].ucOurIP[0], IPV4_LENGTH)) // check whether we are addressed (unicast address)
+    if ((uMemcmp(received_ip_packet->destination_IP_address, &network[_NETWORK_ID].ucOurIP[0], IPV4_LENGTH) != 0) // check whether we are addressed (unicast address)
     #if IP_NETWORK_COUNT > 1                                             // {23}
         && (frame->ucBroadcastResponse == 0)                             // user has defined that broadcast, or subnet broadcast should be responded to on one or more networks
     #else
-        #if defined SUPPORT_SUBNET_BROADCAST                             // {1}
-        && ((fnSubnetBroadcast(received_ip_packet->destination_IP_address, &network[_NETWORK_ID].ucOurIP[0], &network[_NETWORK_ID].ucNetMask[0], IPV4_LENGTH) == 0) && (uMemcmp(received_ip_packet->destination_IP_address, cucBroadcast, IPV4_LENGTH))) // {12}{13}
+        #if defined SUPPORT_SUBNET_BROADCAST                             // {1} check for subnet broadcast (but not global broadcast)
+        && ((fnSubnetBroadcast(received_ip_packet->destination_IP_address, &network[_NETWORK_ID].ucOurIP[0], &network[_NETWORK_ID].ucNetMask[0], IPV4_LENGTH) == 0) && (uMemcmp(received_ip_packet->destination_IP_address, cucBroadcast, IPV4_LENGTH) != 0)) // {12}{13}
         #else
-        && (uMemcmp(received_ip_packet->destination_IP_address, cucBroadcast, IPV4_LENGTH))
+        && (uMemcmp(received_ip_packet->destination_IP_address, cucBroadcast, IPV4_LENGTH) != 0) // check for non-broadcast
         #endif
     #endif
     #if defined USE_IGMP                                                 // {19}{20}

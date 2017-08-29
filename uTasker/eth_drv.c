@@ -25,6 +25,7 @@
     25.06.2014 Add request to see whether the transmitter is presently busy {9}
     22.08.2014 Add interrupt mask settings to block pre-emption when frame is being prepared {10}
     22.06.2015 Correct output buffer length check to allow maximum packet size exactly equal to the output buffer size {11}
+    24.08.2017 Only initialise the ethernet hardware when there is a specific function defined for it {12}
 
 */
 
@@ -278,8 +279,10 @@ extern QUEUE_HANDLE fnOpenETHERNET(ETHTABLE *pars, unsigned short driver_mode)
     }
 #if !defined ETH_INTERFACE || !defined ETHERNET_AVAILABLE || defined NO_INTERNAL_ETHERNET || (ETHERNET_INTERFACES > 1) || defined USB_CDC_RNDIS || defined USE_PPP
     que_ids[DriverID].ptrDriverFunctions = pars->ptrEthernetFunctions;
-    if (((ETHERNET_FUNCTIONS *)(pars->ptrEthernetFunctions))->fnConfigEthernet(pars) != 0) {
-        return NO_ID_ALLOCATED;
+    if (((ETHERNET_FUNCTIONS *)(pars->ptrEthernetFunctions))->fnConfigEthernet != 0) { // {12} if there is an initialisation function
+        if (((ETHERNET_FUNCTIONS *)(pars->ptrEthernetFunctions))->fnConfigEthernet(pars) != 0) {
+            return NO_ID_ALLOCATED;
+        }
     }
     while (iRxBuffers < ((ETHERNET_FUNCTIONS *)(pars->ptrEthernetFunctions))->fnGetQuantityRxBuf())
 #else
@@ -292,15 +295,15 @@ extern QUEUE_HANDLE fnOpenETHERNET(ETHTABLE *pars, unsigned short driver_mode)
                                                                          // allocate memory for the driver queue and set up structures
 #endif
     {
-        if (NO_MEMORY == (new_memory = ETH_DRV_MALLOC(sizeof(struct stETHERNETQue)))) {
+        if (NO_MEMORY == (new_memory = ETH_DRV_MALLOC(sizeof(struct stETHERNETQue)))) { // get ethernet input queue object memory
             return (NO_ID_ALLOCATED);                                    // failed, no memory
         }
-        if (ptEthQue != 0) {
+        if (ptEthQue != 0) {                                             // if the input queue has already been allocated
             ptEthQue->NextTTYbuffer = new_memory;
             ptEthQue = ptEthQue->NextTTYbuffer;
         }
         else {
-            que_ids[DriverID].input_buffer_control = new_memory;
+            que_ids[DriverID].input_buffer_control = new_memory;         // assign the ethernet queue object as input buffer control
             ptEthQue = (struct stETHERNETQue *)(que_ids[DriverID].input_buffer_control);
     #if defined _HW_SAM7X
             eth_rx_control = ptEthQue;
@@ -319,7 +322,7 @@ extern QUEUE_HANDLE fnOpenETHERNET(ETHTABLE *pars, unsigned short driver_mode)
         iRxBuffers++;
     }
                                                                          // define transmitter
-    if (NO_MEMORY == (new_memory = ETH_DRV_MALLOC(sizeof(struct stETHERNETQue)))) { // allocate memory for the driver queue and set up structures
+    if (NO_MEMORY == (new_memory = ETH_DRV_MALLOC(sizeof(struct stETHERNETQue)))) { // allocate memory for the driver output queue and set up structures
         return (NO_ID_ALLOCATED);                                        // failed, no memory
     }
     que_ids[DriverID].output_buffer_control = new_memory;

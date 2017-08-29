@@ -125,6 +125,7 @@
         static unsigned char ucGroupHashes[MAX_MULTICAST_FILTERS] = {0};
     #endif
     #if defined SCAN_PHY_ADD
+        #undef PHY_ADDRESS
         static unsigned char ucPhyAddress = 1;                           // first address to test with - increments until a response is found and then is ued for all further communication
         #define PHY_ADDRESS ucPhyAddress
     #endif
@@ -205,11 +206,12 @@ extern signed char fnEthernetEvent(unsigned char *ucEvent, ETHERNET_FRAME *rx_fr
         rx_frame->ptEth = (ETHERNET_FRAME_CONTENT *)ucEthernetInput;     // return pointer to the fixed linear input buffer
 #else
         if ((ptrRxBd->usBDControl & EMPTY_BUFFER) != 0) {
-            return -1;                                                   // nothing else waiting
+            return -1;                                                   // nothing waiting
         }
         else if (ptrRxBd->usBDLength == 0) {                             // zero length is invalid
             return -1;
         }
+        rx_frame->ptEth = (ETHERNET_FRAME_CONTENT *)fnLE_ENET_add(ptrRxBd->ptrBD_Data); // set pointer to reception content in the buffer descriptor
         if ((ptrRxBd->usBDControl & (TRUNCATED_FRAME | OVERRUN_FRAME)) != 0) { // corrupted reception
             if ((ptrRxBd->usBDControl & TRUNCATED_FRAME) == 0) {
     #if defined USE_IP_STATS
@@ -229,12 +231,11 @@ extern signed char fnEthernetEvent(unsigned char *ucEvent, ETHERNET_FRAME *rx_fr
     #endif
     #if defined PHY_TAIL_TAGGING                                         // {44}
             if (iTailTagging != 0) {                                     // if tail tagging is enabled
-                rx_frame->ptEth = (ETHERNET_FRAME_CONTENT *)fnLE_ENET_add(ptrRxBd->ptrBD_Data);
         #if defined _WINDOWS
-                rx_frame->ucRxPort = (unsigned char)iTailTagging;        // simulated frames arrive over this port
+                rx_frame->ucRxPort = (unsigned char)iTailTagging;        // simulate frames arrive over this particular port
         #else                                                            // in tail tagging mode the source port is read from the received trame
                 rx_frame->frame_size--;                                  // remove tail from the length
-                if (rx_frame->ptEth->ucData[rx_frame->frame_size - 14] & 0x01) {
+                if ((rx_frame->ptEth->ucData[rx_frame->frame_size - 14] & 0x01) != 0) {
                     rx_frame->ucRxPort = 2;                              // this Ethernet frame arrived over port 2
                 }
                 else {
@@ -247,7 +248,6 @@ extern signed char fnEthernetEvent(unsigned char *ucEvent, ETHERNET_FRAME *rx_fr
             }
     #endif
         }
-        rx_frame->ptEth = (ETHERNET_FRAME_CONTENT *)fnLE_ENET_add(ptrRxBd->ptrBD_Data);
     #if defined TEST_CRC_32_IEEE                                         // test option checking
         if (rx_frame->frame_size != 0) {
             unsigned long ulLength = rx_frame->frame_size;
@@ -1295,10 +1295,6 @@ extern int fnConfigEthernet(ETHTABLE *pars)
 
 
 #if defined _WINDOWS
-  //#if !defined USE_IP
-  //const unsigned char cucBroadcast[MAC_LENGTH] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff }; // used also for broadcast IP
-  //#endif
-
     #if defined USE_IPV6 || defined USE_IGMP
 static int fnIsHashMulticast(unsigned char *ucData)
 {
@@ -1449,14 +1445,14 @@ extern QUEUE_TRANSFER fnStartEthTx(QUEUE_TRANSFER DataLen, unsigned char *ptr_pu
 {
     #if defined PHY_TAIL_TAGGING                                         // {44}
     if (iTailTagging != 0) {
-        while (DataLen < 60) {                                           // when tail tagging we need to fill out short frames
-            *ptr_put++ = 0x00;                                           // pad with zeros if smaller than 60 [chip must send at least 60]
-            DataLen++;
-        }
+      //while (DataLen < 60) {                                           // when tail tagging we need to fill out short frames
+      //    *ptr_put++ = 0x00;                                           // pad with zeros if smaller than 60 [chip must send at least 60]
+      //    DataLen++;
+      //}
         #if !defined _WINDOWS
         ptrTxBd->usBDLength = fnLE_ENET_word(DataLen + 1);               // add tag to tail to specify which port to transmit over
         #endif
-        *ptr_put = ucTailTagPort;                                        // specify port for the frame to be output to
+      //*ptr_put = ucTailTagPort;                                        // specify port for the frame to be output to
     }
     else {
         ptrTxBd->usBDLength = fnLE_ENET_word(DataLen);                   // mark length of data to send (Kinetis automatically zero-pads transmission to minimum length)

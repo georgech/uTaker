@@ -733,7 +733,7 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
     }
 #endif
 
-    while (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH)) {      // check input queue
+    while (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH) != 0) { // check input queue
         switch (ucInputMessage[MSG_SOURCE_TASK]) {                       // switch depending on message source
         case TIMER_EVENT:
             switch (ucInputMessage[MSG_TIMER_EVENT]) {

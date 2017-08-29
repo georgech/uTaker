@@ -154,10 +154,10 @@ typedef unsigned short    LENGTH_CHUNK_COUNT;                            // http
         #define SOCKET_NUMBER_MASK   0x1f                                // single network and interface with up to 4 user functions (USOCKET can be single byte width)
     #else
         #if IP_INTERFACE_COUNT > 1
-            typedef signed char          USOCKET;                        // socket support from 0..63 (negative values are errors)
+            typedef signed short         USOCKET;                        // socket support from 0..63 (negative values are errors)
             #define SOCKET_NUMBER_MASK   0x1f                            // socket mask for 0..31
             #define INTERFACE_SHIFT      5                               // interface bit location
-            #define INTERFACE_MASK       0x03                            // two interfaces possible
+            #define INTERFACE_MASK       0x0f                            // four interfaces possible
         #else
             typedef signed char          USOCKET;                        // socket support from 0..127 (negative values are errors)
             #define SOCKET_NUMBER_MASK   0x7f                            // default when using a single network and interface (USOCKET can be single byte width)

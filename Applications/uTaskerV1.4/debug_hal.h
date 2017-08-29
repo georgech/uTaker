@@ -2210,7 +2210,7 @@ extern void fnShowLowPowerMode(void)
         case VLLS3_MODE:
             fnDebugMsg("11 = VLLS3");
             break;
-    #elif defined KINETIS_KL27
+    #elif defined KINETIS_KL17 || defined KINETIS_KL27
         case VLPR_MODE:
             fnDebugMsg("3 = VLPR");
             break;

@@ -1725,7 +1725,7 @@ static int iUART_File5 = 0;
 extern void fnLogTx5(unsigned char ucTxByte)                             // {56}
 {
 #if defined LOG_UART5
-	if (!iUART_File5) {
+	if (iUART_File5 == 0) {
     #if _VC80_UPGRADE<0x0600
 	    iUART_File5 = _open("UART5.txt", (_O_TRUNC  | _O_CREAT | _O_WRONLY), _S_IWRITE);
     #else

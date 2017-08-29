@@ -93,6 +93,7 @@
     #define RUN_IN_FREE_RTOS
   //#define memset(a,b,c) uMemset(a,b,c)                                 // allow FreeRTOS to use DMA bases memset() and memcpy() routines
   //#define memcpy(a,b,c) uMemcpy(a,b,c)
+    extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*InterruptFunc)(void));
     #define _EXCEPTION(x)        *(unsigned char *)0 = 0                 // generate exception when simulating
     #define TICK_UNIT_MS(T) (T * 1000)                                   // tick is defined in ms
     #define TICK_UNIT_US(T) (T)                                          // tick is defined in us

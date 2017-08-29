@@ -1033,7 +1033,7 @@ typedef struct stKINETIS_IRQ                                             // {24}
 #if !defined DSPI_SPI
 typedef struct stKINETIS_SPI
 {
-    #if defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL43 || defined KINETIS_KL46 // supporting 16 bit words
+    #if defined KINETIS_KL17 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL43 || defined KINETIS_KL46 // supporting 16 bit words
         unsigned char SPI_S;
         unsigned char SPI_BR;
         unsigned char SPI_C2;
@@ -2388,10 +2388,12 @@ typedef struct stKINETIS_LPUART
     volatile unsigned long LPUART_CTRL;
     volatile unsigned long LPUART_DATA;
     unsigned long LPUART_MATCH;
+#if defined KINETIS_KL28 || defined KINETIS_K66
+    unsigned long LPUART_MODIR;
+#endif
 #if defined KINETIS_KL28
-    unsigned long LPUART2_MODIR;
-    unsigned long LPUART2_FIFO;
-    unsigned long LPUART2_WATER;
+    unsigned long LPUART_FIFO;
+    unsigned long LPUART_WATER;
 #endif
 } KINETIS_LPUART;
 

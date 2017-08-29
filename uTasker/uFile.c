@@ -1207,7 +1207,7 @@ static MAX_FILE_LENGTH fnAppendFileLength(unsigned char *ptrFile)
         #if defined ONLY_INTERNAL_FLASH_STORAGE
             return fnAppendFileLength(ptrFile);                          // close with update of file length
         #else
-        if (!(fnGetStorageType((unsigned char *)ptrFile, 0) & EEPROM_CHARACTERISTICS)) { // if the initial sector of memory is not EEPROM type
+        if ((fnGetStorageType((unsigned char *)ptrFile, 0) & EEPROM_CHARACTERISTICS) == 0) { // if the initial sector of memory is not EEPROM type
             return fnAppendFileLength(ptrFile);                          // close with update of file length
         }
             #if defined SUPPORT_MIME_IDENTIFIER

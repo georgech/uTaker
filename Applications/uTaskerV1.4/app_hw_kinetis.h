@@ -1307,7 +1307,7 @@
             #define ETHERNET_MDIO_WITH_PULLUPS                           // there is no pull-up on the tower board so enable one at the MDIO input
         #elif defined _PHY_KSZ8863
             #define ALLOW_PHY_ERROR
-          //#define SCAN_PHY_ADD
+            #define SCAN_PHY_ADD
           //#define POLL_PHY               10000                         // PHY detection is unreliable on this board so allow this many attempts
           //#define PHY_POLL_LINK                                        // poll the link status since there is no interrupt connected
         #else
@@ -1352,16 +1352,9 @@
 //#define PHY_POLL_LINK
 //#define INTERRUPT_TASK_PHY     TASK_NETWORK_INDICATOR                  // link status reported to this task (do not use together with LAN_REPORT_ACTIVITY)
 
-// Designs using KSZ8863 switch can use tail tagging to control the two switch ports independently
-//
-//#define _PHY_KSZ8863
 #if defined _PHY_KSZ8863
-  //#define PHY_MULTI_PORT                                               // phy has multiple ports
-  //#define PHY_TAIL_TAGGING                                             // enable tail tagging operation
-  //#define PHY_MICREL_SMI                                               // enable smi interface to phy
-    #undef PHY_ADDRESS
-    #define PHY_ADDRESS          1 //  2                                     // use 0x02 since 0x01 may not correctly return the PHYID
-  //#define PHY_ADDRESS_2          1
+    #define PHY_ADDRESS            2                                     // use 0x02 since 0x01 may not correctly return the PHYID
+    #define PHY_ADDRESS_2          1
     #define PHY_IDENTIFIER         0x00221430                            // phy address 2
     #if !defined MII_MANAGEMENT_CLOCK_SPEED
         #define MII_MANAGEMENT_CLOCK_SPEED   2500000                     // 2.5MHz
@@ -2236,7 +2229,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define DEMO_UART        3                                       // use UART 3
         #define RFC2217_UART     0
     #endif
-    #if defined FRDM_KL03Z || defined FRDM_KL43Z || defined FRDM_KL27Z || defined FRDM_KL28Z || defined FRDM_KL82Z || defined CAPUCCINO_KL27 || defined TWR_KL43Z48M || defined FRDM_K22F || defined TWR_KV31F120M || defined TWR_K80F150M || defined FRDM_K82F
+    #if defined FRDM_KL03Z || defined FRDM_KL43Z || defined FRDM_KL27Z || defined FRDM_KL28Z || defined FRDM_KL82Z || defined CAPUCCINO_KL27 || defined TWR_KL43Z48M || defined FRDM_K22F || defined TWR_KV31F120M || defined TWR_K80F150M || defined FRDM_K82F || defined FRDM_K66F
         #define LPUART_IRC48M                                            // if the 48MHz clock is available clock the LPUART from it
       //#define LPUART_OSCERCLK                                          // clock the LPUART from the external clock
       //#define LPUART_MCGIRCLK                                          // clock the LPUART from MCGIRCLK (IRC8M/FCRDIV/LIRC_DIV2) - default if others are not defined

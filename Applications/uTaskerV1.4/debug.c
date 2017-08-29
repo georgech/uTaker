@@ -1735,7 +1735,7 @@ static void fnPingSuccess(USOCKET dummy_socket)
 static void fnPingTest(USOCKET dummy_socket)
 {
     unsigned char *ping_address;
-    #if defined ENC424J600_INTERFACE && (IP_INTERFACE_COUNT > 1)
+    #if (defined ENC424J600_INTERFACE || defined PHY_MULTI_PORT) && (IP_INTERFACE_COUNT > 1)
     if (dummy_socket >= IPv4_DUMMY_SOCKET)
     #else
     if ((dummy_socket & SOCKET_NUMBER_MASK) == IPv4_DUMMY_SOCKET)        // {50}
@@ -1780,7 +1780,7 @@ static void fnPingIPV6Success(USOCKET dummy_socket)
 static void fnPingV6Test(USOCKET dummy_socket)
 {
     unsigned char *ping_IPV6_address;
-    #if defined ENC424J600_INTERFACE && (IP_INTERFACE_COUNT > 1)
+    #if (defined ENC424J600_INTERFACE || defined PHY_MULTI_PORT) && (IP_INTERFACE_COUNT > 1)
     if (dummy_socket >= IPv6_DUMMY_SOCKET)
     #else
     if ((dummy_socket & SOCKET_NUMBER_MASK) == IPv6_DUMMY_SOCKET)        // {50}
@@ -2325,6 +2325,8 @@ static void fnDoIP(unsigned char ucType, CHAR *ptr_input)
         fnStrIP(ptr_input, ucTempIP);                                    // ping entered address
     #if defined ENC424J600_INTERFACE && (IP_INTERFACE_COUNT > 1)
         fnPingTest(ETHERNET_INTERFACE | ENC424J00_INTERFACE | IPv4_DUMMY_SOCKET); // ping on both Ethernet interfaces
+    #elif defined PHY_MULTI_PORT && (IP_INTERFACE_COUNT > 1)
+        fnPingTest(ETHERNET_INTERFACE | PHY1_INTERFACE | PHY2_INTERFACE | PHY12_INTERFACE | IPv4_DUMMY_SOCKET); // ping on all Ethernet interfaces
     #elif defined USE_PPP && defined ETH_INTERFACE
         fnPingTest(ETHERNET_INTERFACE | PPP_INTERFACE | IPv4_DUMMY_SOCKET); // ping on both Ethernet and PPP interfaces
     #else

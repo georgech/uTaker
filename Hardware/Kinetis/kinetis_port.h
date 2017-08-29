@@ -16,6 +16,7 @@
     27.10.2012 Reworked with new style and dedicated port strings, 121 pin completed
     21.04.2012 Added new K60 pin functions                               {1}
     17.11.2016 Add SPI1_SCK to K64 144 pin on PTD5                       {2}
+    22.08.2017 Add ULPI interface to >= 120MHz K60                       {3}
 
 */
 
@@ -822,12 +823,21 @@ static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][8] = {              // 144 
         {  "TSI0_CH4",     "PTA3",  "UART0_RTS", "FTM0_CH0",   "-",           "-",         "-",        "JTAG_TMS/SWD_DIO"  },
         {  "TSI0_CH5",     "PTA4",  "-",         "FTM0_CH1",   "-",           "-",         "-",        "NMI"               },
         {  "-",            "PTA5",  "-",         "FTM0_CH2",   "MII_RXER",    "CMP2_OUT",  "I2S0_RX_BCLK","JTAG_TRST"      },
+        #if KINETIS_MAX_SPEED >= 120000000                               // {3}
+        {  "ADC3_SE6a",    "PTA6",  "ULPI_CLK",  "FTM0_CH3",   "I2S1_RXD0",   "-",         "-",        "TRACE_CLKOUT" },
+        {  "ADC0_SE10",    "PTA7",  "ULPI_DIR",  "FTM0_CH4",   "I2S1_RX_BCLK","-",         "-",        "TRACE_D3" },
+        {  "ADC0_SE11",    "PTA8",  "ULPI_NXP",  "FTM1_CH0",   "I2S1_RX_FS",  "-",         "FTM1_QD_PHA","TRACE_D2" },
+        {  "ADC3_SE5a",    "PTA9",  "ULPI_STP",  "FTM1_CH1",   "MII_RXD3",    "-",         "FTM1_QD_PHB","TRACE_D1" },
+        {  "ADC3_SE4a",    "PTA10", "ULPI_DATA0","FTM2_CH0",   "MII_RXD2",    "-",         "FTM2_QD_PHA","TRACE_D0" },
+        {  "ADC3_SE15",    "PTA11", "ULPI_DATA1","FTM2_CH1",   "MII_RXCLK",   "-",         "FTM2_QD_PHB","-" },
+        #else
         {  "-",            "PTA6",  "-",         "FTM0_CH3",   "-",           "-",         "-",        "TRACE_CLKOUT"      },
         {  "ADC0_SE10",    "PTA7",  "-",         "FTM0_CH4",   "-",           "-",         "-",        "TRACE_D3"          },
         {  "ADC0_SE11",    "PTA8",  "-",         "FTM1_CH0",   "-",           "-",         "FTM1_QD_PHA","TRACE_D2"        },
         {  "-",            "PTA9",  "-",         "FTM1_CH1",   "MII_RXD3",    "-",         "FTM1_QD_PHB","TRACE_D1"        },
         {  "-",            "PTA10", "-",         "FTM2_CH0",   "MII_RXD2",    "-",         "FTM2_QD_PHA","TRACE_D0"        },
         {  "-",            "PTA11", "-",         "FTM2_CH1",   "MII_RXCLK",   "-",         "FTM2_QD_PHB","-"               },
+        #endif
         {  "CMP2_IN0",     "PTA12", "CAN0_TX",   "FTM1_CH0",   "MII_RXD1",    "-",         "I2S0_TXD", "FTM1_QD_PHA"       },
         {  "CMP2_IN1",     "PTA13/LLWU_P4","CAN0_RX","FTM1_CH1","MII_RXD0",   "-",         "I2S0_TX_FS","FTM1_QD_PHB"      }, // {1}
         {  "-",            "PTA14", "SPI0_PCS0", "UART0_TX",   "MII_CRS_DV",  "-",         "I2S0_RX_BCLK","-"              },
@@ -841,12 +851,21 @@ static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][8] = {              // 144 
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
+    #if !defined KINETIS_K64 && KINETIS_MAX_SPEED >= 120000000           // {3}
+        {  "CMP3_IN4",     "PTA24", "ULPI_DATA2","-",          "MII_TXD2",    "-",         "FB_A29",   "-"                 },
+        {  "CMP3_IN5",     "PTA25", "ULPI_DATA3","-",          "MII_TXCLK",   "-",         "FB_A28",   "-"                 },
+        {  "ADC2_SE15",    "PTA26", "ULPI_DATA4","-",          "MII_TXD3",    "-",         "FB_A27",   "-"                 },                
+        {  "ADC2_SE14",    "PTA27", "ULPI_DATA5","-",          "MII_CRS",     "-",         "FB_A26",   "-"                 },
+        {  "ADC2_SE13",    "PTA28", "ULPI_DATA6","-",          "MII_TXER",    "-",         "FB_A25",   "-"                 },
+        {  "ADC2_SE12",    "PTA29", "ULPI_DATA7","-",          "MII_COL",     "-",         "FB_A24",   "-"                 },
+    #else
         {  "-",            "PTA24", "-",         "-",          "MII_TXD2",    "-",         "FB_A29",   "-"                 },
         {  "-",            "PTA25", "-",         "-",          "MII_TXCLK",   "-",         "FB_A28",   "-"                 },
         {  "-",            "PTA26", "-",         "-",          "MII_TXD3",    "-",         "FB_A27",   "-"                 },                
         {  "-",            "PTA27", "-",         "-",          "MII_CRS",     "-",         "FB_A26",   "-"                 },
         {  "-",            "PTA28", "-",         "-",          "MII_TXER",    "-",         "FB_A25",   "-"                 },
         {  "-",            "PTA29", "-",         "-",          "MII_COL",     "-",         "FB_A24",   "-"                 },
+    #endif
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 }
     },
