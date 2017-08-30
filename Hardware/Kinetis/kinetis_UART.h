@@ -1258,6 +1258,7 @@ extern QUEUE_TRANSFER fnAbortTxDMA(QUEUE_HANDLE channel, QUEQUE *ptrQueue)
 /* =================================================================== */
 
     #if defined SERIAL_SUPPORT_DMA_RX
+        #if !defined KINETIS_KL
 static __interrupt void _uart0_rx_dma_Interrupt(void)
 {
     #if defined KINETIS_KL
@@ -1271,7 +1272,9 @@ static __interrupt void _uart0_rx_dma_Interrupt(void)
     #endif
     fnSciRxByte(0, 0);                                                   // tty block ready for read
 }
+        #endif
     #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 1
+        #if !defined KINETIS_KL
 static __interrupt void _uart1_rx_dma_Interrupt(void)
 {
         #if defined KINETIS_KL
@@ -1285,8 +1288,10 @@ static __interrupt void _uart1_rx_dma_Interrupt(void)
         #endif
     fnSciRxByte(0, 1);                                                   // tty block ready for read
 }
+        #endif
     #endif
     #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 2
+        #if !defined KINETIS_KL
 static __interrupt void _uart2_rx_dma_Interrupt(void)
 {
         #if defined KINETIS_KL
@@ -1300,6 +1305,7 @@ static __interrupt void _uart2_rx_dma_Interrupt(void)
         #endif
     fnSciRxByte(0, 2);                                                   // tty block ready for read
 }
+        #endif
     #endif
     #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 3
 static __interrupt void _uart3_rx_dma_Interrupt(void)
@@ -1335,6 +1341,7 @@ static __interrupt void _uart5_rx_dma_Interrupt(void)
 }
     #endif
 
+    #if !defined KINETIS_KL
 static void (*_uart_rx_dma_Interrupt[UARTS_AVAILABLE + LPUARTS_AVAILABLE])(void) = {
     _uart0_rx_dma_Interrupt,
     #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 1
@@ -1353,6 +1360,7 @@ static void (*_uart_rx_dma_Interrupt[UARTS_AVAILABLE + LPUARTS_AVAILABLE])(void)
     _uart5_rx_dma_Interrupt
     #endif
 };
+    #endif
 
     #if defined SERIAL_SUPPORT_DMA_RX_FREERUN && defined KINETIS_KL
 // Check the progress of the channel's free-running DMA reception and update the TTY character account accordingly

@@ -8666,10 +8666,24 @@ typedef struct stKINETIS_ADMA2_BD
           #endif
           // Bit-banding references
           //
+          #define SIM_SCGC4_SIM_SCGC4_EWM   BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1034), 1)
+          #define SIM_SCGC4_SIM_SCGC4_CMT   BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1034), 2)
+          #define SIM_SCGC4_SIM_SCGC4_I2C0  BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1034), 6)
+          #define SIM_SCGC4_SIM_SCGC4_I2C1  BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1034), 7)
           #define SIM_SCGC4_SIM_SCGC4_UART0 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1034), 10)
           #define SIM_SCGC4_SIM_SCGC4_UART1 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1034), 11)
           #define SIM_SCGC4_SIM_SCGC4_UART2 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1034), 12)
           #define SIM_SCGC4_SIM_SCGC4_UART3 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1034), 13)
+          #define SIM_SCGC4_SIM_SCGC4_USBOTG BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1034), 18)
+          #define SIM_SCGC4_SIM_SCGC4_CMP   BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1034), 19)
+          #define SIM_SCGC4_SIM_SCGC4_VREF  BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1034), 20)
+          #if defined KINETIS_KL
+              #define SIM_SCGC4_SIM_SCGC4_SPI0  BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1034), 22)
+              #define SIM_SCGC4_SIM_SCGC4_SPI1  BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1034), 23)
+          #endif
+          #if !defined KINETIS_K80
+              #define SIM_SCGC4_SIM_SCGC4_LLWU  BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1034), 28)
+          #endif
       #endif
     #define SIM_SCGC5                        *(volatile unsigned long*)(SIM_BLOCK + 0x1038) // System Clock Gating Control Register 5
       #define SIM_SCGC5_LPTIMER              0x00000001
@@ -8710,9 +8724,28 @@ typedef struct stKINETIS_ADMA2_BD
               #define SIM_SCGC5_FLEXIO0        0x80000000
           #endif
       #endif
-      #if defined KINETIS_KL
           // Bit-banding references
           //
+          #define SIM_SCGC5_SIM_SIM_SCGC5_LPTIMER BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1038), 0)
+          #define SIM_SCGC5_SIM_SIM_SCGC5_REGFILE BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1038), 1)
+          #define SIM_SCGC5_SIM_SIM_SCGC5_DRYICE BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1038), 2)
+          #define SIM_SCGC5_SIM_SCGC5_DRYICESECREG BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1038), 3)
+          #define SIM_SCGC5_SIM_SCGC5_LPTIMER1 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1038), 4)
+          #define SIM_SCGC5_SIM_SCGC5_TSI BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1038), 5)
+          #define SIM_SCGC5_SIM_SCGC5_PORTA BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1038), 9)
+          #define SIM_SCGC5_SIM_SCGC5_PORTB BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1038), 10)
+          #define SIM_SCGC5_SIM_SCGC5_PORTC BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1038), 11)
+          #define SIM_SCGC5_SIM_SCGC5_PORTD BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1038), 12)
+          #define SIM_SCGC5_SIM_SCGC5_PORTE BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1038), 13)
+      #if PORTS_AVAILABLE > 5
+          #define SIM_SCGC5_SIM_SCGC5_PORTF BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1038), 14)
+      #elif (defined KINETIS_KL46 || defined KINETIS_KL43)
+          #define SIM_SCGC5_SIM_SCGC5_SLCD BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1038), 19)
+      #elif defined KINETIS_KL82
+          #define SIM_SCGC5_SIM_SCGC5_EMVSIM0 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1038), 14)
+          #define SIM_SCGC5_SIM_SCGC5_EMVSIM1 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1038), 15)
+      #endif
+      #if defined KINETIS_KL
           #if LPUARTS_AVAILABLE > 0
               #define SIM_SCGC5_SIM_SCGC5_LPUART0 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1038), 20)
           #endif
@@ -8990,8 +9023,13 @@ typedef struct stKINETIS_ADMA2_BD
 #else
     #define POWER_UP(reg, module)            SIM_SCGC##reg |= (module)       // power up a module or multiple modules sharing a register (apply clock to it)
     #define POWER_DOWN(reg, module)          SIM_SCGC##reg &= ~(module)      // power down a module or multiple modules sharing a register (disable clock to it)
-    #define POWER_UP_ATOMIC(reg, module)     ATOMIC_SET_REGISTER(SIM_SCGC##reg##_##module) // {98} power up a single module using bit-banding access (apply clock to it)
-    #define POWER_DOWN_ATOMIC(reg, module)   ATOMIC_CLEAR_REGISTER(SIM_SCGC##reg##_##module) // power down a single module using bit-banding access (disable clock to it)
+    #if defined ARM_MATH_CM0PLUS                                             // bit-banding is not implemented in cortex-m0+
+        #define POWER_UP_ATOMIC(reg, module)   POWER_UP(reg, module)
+        #define POWER_DOWN_ATOMIC(reg, module) POWER_DOWN(reg, module)
+    #else
+        #define POWER_UP_ATOMIC(reg, module)     ATOMIC_SET_REGISTER(SIM_SCGC##reg##_##module) // {98} power up a single module using bit-banding access (apply clock to it)
+        #define POWER_DOWN_ATOMIC(reg, module)   ATOMIC_CLEAR_REGISTER(SIM_SCGC##reg##_##module) // power down a single module using bit-banding access (disable clock to it)
+    #endif
     #if defined KINETIS_K_FPU
         #define SIM_SOPT1_SET(opt, enable)   SIM_SOPT1CGF |= (enable); SIM_SOPT1 |= (opt)
         #define SIM_SOPT1_CLR(opt, enable)   SIM_SOPT1CGF |= (enable); SIM_SOPT1 &= ~(opt)

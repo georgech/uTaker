@@ -6563,7 +6563,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #if defined USE_MAINTENANCE && !defined REMOVE_PORT_INITIALISATIONS
         #define INIT_WATCHDOG_LED()                                      // let the port set up do this (the user can disable blinking)
     #else
-        #define INIT_WATCHDOG_LED() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(D, (BLINK_LED), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+        #define INIT_WATCHDOG_LED() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(E, (BLINK_LED), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH))
     #endif
 
     #define SHIFT_DEMO_LED_1        31                                    // since the port bits are spread out shift each to the lowest 4 bits
@@ -6601,8 +6601,8 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 
         // '0'          '1'            input state   center (x,   y)   0 = circle, radius, controlling port, controlling pin 
     #define KEYPAD_LED_DEFINITIONS  \
-        {RGB(0,255,0), RGB(40,40,40),  1, {185, 47,  191, 53  }, _PORTE, DEMO_LED_1}, \
-        {RGB(255,0,0), RGB(40,40,40),  1, {197, 67,  206, 74  }, _PORTD, DEMO_LED_2}
+        {RGB(255,0,0), RGB(40,40,40),  1, {197, 67,  206, 74  }, _PORTE, DEMO_LED_1}, \
+        {RGB(0,255,0), RGB(40,40,40),  1, {185, 47,  191, 53  }, _PORTD, DEMO_LED_2}
 
     #define BUTTON_KEY_DEFINITIONS  {SWITCH_1_PORT, SWITCH_1, {262, 20, 271, 29}}, \
                                     {SWITCH_3_PORT, SWITCH_3, {262, 164,271,174}}, \
@@ -6711,9 +6711,9 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define WATCHDOG_DISABLE()      (!_READ_PORT_MASK(A, SWITCH_4))      // pull this input down at reset to disable watchdog [hold SW4]
     #define ACTIVATE_WATCHDOG()     SIM_COPC = (SIM_COPC_COPCLKS_1K | SIM_COPC_COPT_LONGEST) // 1.024s watchdog timeout
     #if defined SUPPORT_SLCD
-        #define TOGGLE_WATCHDOG_LED()   _TOGGLE_PORT(A, BLINK_LED); if (IS_POWERED_UP(5, SIM_SCGC5_SLCD)) { TOGGLE_SLCD(24, 0x08); } // toggle LED and freescale logo in SLCD
+        #define TOGGLE_WATCHDOG_LED()  _TOGGLE_PORT(A, BLINK_LED); if (IS_POWERED_UP(5, SIM_SCGC5_SLCD)) { TOGGLE_SLCD(24, 0x08); } // toggle LED and freescale logo in SLCD
     #else
-        #define TOGGLE_WATCHDOG_LED()   _TOGGLE_PORT(A, BLINK_LED)
+        #define TOGGLE_WATCHDOG_LED()  _TOGGLE_PORT(A, BLINK_LED)
     #endif
 
     #define CONFIG_TEST_OUTPUT()                                         // we use DEMO_LED_2 which is configured by the user code (and can be disabled in parameters if required)
@@ -8500,7 +8500,7 @@ typedef unsigned long LCD_CONTROL_PORT_SIZE;
 #if defined SUPPORT_SLCD && (defined TWR_K40X256 || defined TWR_K40D100M || defined TWR_K53N512)
     #if defined TWR_K53N512
         #define CONFIGURE_SLCD()  MCG_C1 |= MCG_C1_IRCLKEN; \
-                                  POWER_UP(3, SIM_SCGC3_SLCD); \
+                                  POWER_UP_ATOMIC(3, SIM_SCGC3_SLCD); \
                                   LCD_GCR = (LCD_GCR_VSUPPLY_VLL3 | LCD_GCR_SOURCE | LCD_GCR_LCLK_4 | LCD_GCR_DUTY_4BP | LCD_GCR_ALTDIV_NONE); \
                                   LCD_PENL =  (SLCD_PIN_10 | SLCD_PIN_11 | SLCD_PIN_2 | SLCD_PIN_3 | SLCD_PIN_20 | SLCD_PIN_21 | SLCD_PIN_22 | SLCD_PIN_12 | SLCD_PIN_13 | SLCD_PIN_14 | SLCD_PIN_15); \
                                   LCD_PENH =  0x00000000; \
@@ -8511,7 +8511,7 @@ typedef unsigned long LCD_CONTROL_PORT_SIZE;
                                   LCD_GCR = (LCD_GCR_LCDEN | LCD_GCR_VSUPPLY_VLL3 | LCD_GCR_SOURCE | LCD_GCR_LCLK_4 | LCD_GCR_DUTY_4BP | LCD_GCR_ALTDIV_NONE)
     #else
         #define CONFIGURE_SLCD()  MCG_C1 |= MCG_C1_IRCLKEN; \
-                                  POWER_UP(3, SIM_SCGC3_SLCD); \
+                                  POWER_UP_ATOMIC(3, SIM_SCGC3_SLCD); \
                                   LCD_GCR = (LCD_GCR_VSUPPLY_VLL3 | LCD_GCR_SOURCE | LCD_GCR_LCLK_4 | LCD_GCR_DUTY_4BP | LCD_GCR_ALTDIV_NONE); \
                                   LCD_PENL = (SLCD_PIN_0 | SLCD_PIN_1 | SLCD_PIN_2 | SLCD_PIN_3 | SLCD_PIN_20 | SLCD_PIN_21 | SLCD_PIN_22 | SLCD_PIN_12 | SLCD_PIN_13 | SLCD_PIN_14 | SLCD_PIN_15); \
                                   LCD_PENH = 0x00000000; \
@@ -8533,7 +8533,7 @@ typedef unsigned long LCD_CONTROL_PORT_SIZE;
     #define SET_USB_SYMBOL()      SET_SLCD(23TO20, 0x100)                // control display of USB enumeration - set
 #elif defined SUPPORT_SLCD && (defined KWIKSTIK || defined KINETIS_K30 || defined KINETIS_K51)
     #define CONFIGURE_SLCD()      MCG_C1 |= MCG_C1_IRCLKEN; \
-                                  POWER_UP(3, SIM_SCGC3_SLCD); \
+                                  POWER_UP_ATOMIC(3, SIM_SCGC3_SLCD); \
                                   LCD_GCR = (LCD_GCR_CPSEL | LCD_GCR_RVEN | LCD_GCR_RVTRIM_MASK | LCD_GCR_LADJ_MASK | LCD_GCR_LCLK_0 | LCD_GCR_VSUPPLY_VLL3_EXT | LCD_GCR_SOURCE | LCD_GCR_DUTY_8BP | LCD_GCR_ALTDIV_NONE); \
                                   LCD_PENL = 0xfffffffe; \
                                   LCD_PENH = 0x0000ffff; \
@@ -8565,7 +8565,7 @@ typedef unsigned long LCD_CONTROL_PORT_SIZE;
     // SLCD configuration with clock from MCGIRCLK (2MHz) divided by 64
     //
     #define CONFIGURE_SLCD()      MCG_C1 |= MCG_C1_IRCLKEN; \
-                                  POWER_UP(5, SIM_SCGC5_SLCD); \
+                                  POWER_UP_ATOMIC(5, SIM_SCGC5_SLCD); \
                                   LCD_GCR = ((0x0b000000 & LCD_GCR_RVTRIM_MASK) | LCD_GCR_CPSEL | LCD_GCR_LADJ_MASK | LCD_GCR_VSUPPLY | LCD_GCR_ALTDIV_64 | LCD_GCR_SOURCE | LCD_GCR_LCLK_1 | LCD_GCR_DUTY_4BP); \
                                   LCD_AR = (LCD_AR_BRATE_MASK & 3); \
                                   LCD_BPENL = (SLCD_PIN_14 | SLCD_PIN_15); \
@@ -8594,7 +8594,7 @@ typedef unsigned long LCD_CONTROL_PORT_SIZE;
     // SLCD configuration with clock from MCGIRCLK (2MHz) divided by 64
     //
     #define CONFIGURE_SLCD()      MCG_C1 |= MCG_C1_IRCLKEN; \
-                                  POWER_UP(5, SIM_SCGC5_SLCD); \
+                                  POWER_UP_ATOMIC(5, SIM_SCGC5_SLCD); \
                                   LCD_GCR = (LCD_GCR_CPSEL | LCD_GCR_LADJ_MASK | LCD_GCR_ALTDIV_256 | LCD_GCR_SOURCE | LCD_GCR_LCLK_1 | LCD_GCR_DUTY_4BP); \
                                   LCD_BPENL = (SLCD_PIN_12 | SLCD_PIN_13 | SLCD_PIN_14 | SLCD_PIN_15); \
                                   LCD_BPENH = 0x00000000; \
@@ -8625,7 +8625,7 @@ typedef unsigned long LCD_CONTROL_PORT_SIZE;
     // Use MCGIRCLK (fast IRC) as SLCD source
     //
     #define CONFIGURE_SLCD()      MCG_C1 &= ~(MCG_C1_IREFS); MCG_C1 |= (MCG_C1_IRCLKEN | MCG_C1_IREFSTEN); \
-                                  POWER_UP(5, SIM_SCGC5_SLCD); \
+                                  POWER_UP_ATOMIC(5, SIM_SCGC5_SLCD); \
                                   LCD_GCR = (LCD_GCR_RVEN | (0x08000000 & LCD_GCR_RVTRIM_MASK) | LCD_GCR_CPSEL | LCD_GCR_LADJ_MASK | LCD_GCR_VSUPPLY | LCD_GCR_SOURCE | LCD_GCR_LCLK_1 | LCD_GCR_DUTY_4BP); \
                                   LCD_AR = (LCD_AR_BRATE_MASK & 3); \
                                   LCD_BPENL = (SLCD_PIN_19 | SLCD_PIN_18); \
@@ -8652,7 +8652,7 @@ typedef unsigned long LCD_CONTROL_PORT_SIZE;
     #define GLCD_Y  90
 
     #define CONFIGURE_SLCD()      MCG_C1 |= MCG_C1_IRCLKEN; \
-                                  POWER_UP(5, SIM_SCGC5_SLCD); \
+                                  POWER_UP_ATOMIC(5, SIM_SCGC5_SLCD); \
                                   LCD_GCR = (LCD_GCR_VSUPPLY | LCD_GCR_SOURCE | LCD_GCR_LCLK_4 | LCD_GCR_DUTY_4BP | LCD_GCR_ALTDIV_NONE); \
                                   LCD_BPENL = (SLCD_PIN_12 | SLCD_PIN_13 | SLCD_PIN_14 | SLCD_PIN_15); \
                                   LCD_BPENH = 0x00000000; \

@@ -1102,7 +1102,7 @@ extern void fnConfigUSB(QUEUE_HANDLE Channel, USBTABLE *pars)
         iIRC48M_workaround = 1;                                          // mark that we need to temporarily switch system clock source during the USB reset command
     }
     #endif
-    POWER_UP(4, SIM_SCGC4_USBOTG);                                       // power up the USB controller module
+    POWER_UP_ATOMIC(4, SIM_SCGC4_USBOTG);                                // power up the USB controller module
 
     if (ucEndpoints > NUMBER_OF_USB_ENDPOINTS) {                         // limit endpoint count
         ucEndpoints = NUMBER_OF_USB_ENDPOINTS;                           // limit to maximum available in device

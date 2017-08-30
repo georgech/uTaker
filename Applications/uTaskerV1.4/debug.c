@@ -5229,7 +5229,7 @@ static int fnDoDisk(unsigned char ucType, CHAR *ptrInput)
 static void fnDoFTP_flow_control(USOCKET uDataSocket, int iForceUpdate)
 {
     unsigned short usBufferSpace;
-    if (iFTP_data_state & FTP_DATA_STATE_PAUSE) {
+    if ((iFTP_data_state & FTP_DATA_STATE_PAUSE) != 0) {
         usBufferSpace = 0;                                               // signal no space to receive in order to pause reception
         uFtpClientDataSocket = uDataSocket;                              // save the data socket number
     }
@@ -5253,7 +5253,7 @@ static void fnDoFTP_flow_control(USOCKET uDataSocket, int iForceUpdate)
 //
 static int fnFTP_client_user_callback_handler(TCP_CLIENT_MESSAGE_BOX *ptrClientMessageBox)
 {
-    if (ptrClientMessageBox->iCallbackEvent & FTP_CLIENT_ERROR_FLAG) {   // error event code
+    if ((ptrClientMessageBox->iCallbackEvent & FTP_CLIENT_ERROR_FLAG) != 0) { // error event code
         fnDebugMsg("FTP ERROR:[");
         fnDebugHex(ptrClientMessageBox->iCallbackEvent, 2);
         fnDebugMsg("] ");
@@ -6221,7 +6221,7 @@ extern int fnCommandInput(unsigned char *ptrData, unsigned short usLen, int iSou
     }
 #endif
 #if defined USE_USB_HID_KEYBOARD && defined SUPPORT_FIFO_QUEUES
-    if (usUSB_state & ES_USB_KEYBOARD_MODE) {                            // {77} if the input is connected to the USB keyboard connection
+    if ((usUSB_state & ES_USB_KEYBOARD_MODE) != 0) {                     // {77} if the input is connected to the USB keyboard connection
         if (keyboardQueue != NO_ID_ALLOCATED) {                          // if there is a FIFO queue to put the input ino
             fnWrite(keyboardQueue, ptrData, usLen);                      // put the received input to the USB keyboard FIFO
     #if defined IN_COMPLETE_CALLBACK
@@ -6232,11 +6232,11 @@ extern int fnCommandInput(unsigned char *ptrData, unsigned short usLen, int iSou
     }
 #endif
 #if defined USE_FTP_CLIENT                                               // {37}
-    if (iFTP_data_state & (FTP_DATA_STATE_GETTING | FTP_DATA_STATE_PUTTING)) { // if getting or putting a file
+    if ((iFTP_data_state & (FTP_DATA_STATE_GETTING | FTP_DATA_STATE_PUTTING)) != 0) { // if getting or putting a file
     #if defined FTP_CLIENT_BUFFERED_SOCKET_MODE
         unsigned short usLengthToSend = usLen;                           // backup the buffer length
     #endif
-        while (usLen--) {
+        while (usLen-- != 0) {
             switch (*ptrData) {
             case ASCII_ETX:                                              // (ctrl + C) abort a get or terminate a put
                 fnTCP_close(uFtpClientDataSocket);
@@ -6255,8 +6255,8 @@ extern int fnCommandInput(unsigned char *ptrData, unsigned short usLen, int iSou
                 //
             default:
     #if defined FTP_SIMPLE_DATA_SOCKET
-                if (iFTP_data_state & FTP_DATA_STATE_PUTTING) {          // input is sent to FTP server when putting
-                    if (iFTP_data_state & FTP_DATA_STATE_SENDING) {
+                if ((iFTP_data_state & FTP_DATA_STATE_PUTTING) != 0) {   // input is sent to FTP server when putting
+                    if ((iFTP_data_state & FTP_DATA_STATE_SENDING) != 0) {
                         if (ucFTP_buffer_content[1] < FTP_TX_BUFFER_MAX) {
                             FTP_tx[1].ucTCP_Message[ucFTP_buffer_content[1]++] = *ptrData; // collect data in next buffer
                         }
@@ -6284,9 +6284,9 @@ extern int fnCommandInput(unsigned char *ptrData, unsigned short usLen, int iSou
     }
 #endif
 
-    while (usLen--) {
+    while (usLen-- != 0) {
         if (*ptrData == DELETE_KEY) {
-            if (ucDebugCnt) {
+            if (ucDebugCnt != 0) {
                 ucDebugCnt--;                                            // we delete it from our local buffer but not from display
                 fnDebugMsg((CHAR *)&cDeleteInput[1]);
             }
