@@ -1,5 +1,5 @@
 [DebugChecksum]
-Checksum=765730942
+Checksum=1000235571
 [DisAssemblyWindow]
 NumStates=_ 1
 State 1=_ 1
@@ -124,7 +124,7 @@ GOTILMAIN=_ "0"
 KEEPCPROGOPEN=_ "0"
 GOTILMAINDEFAULTON=_ "1"
 [FlashMemory]
-FlashEraseSelection=0 1   
+FlashEraseSelection=0 1      
 [Interrupts]
 Enabled=1
 [MemConfig]
@@ -164,9 +164,6 @@ ITMportsEnable=0
 ITMportsTermIO=0
 ITMportsLogFile=0
 ITMlogFile=$PROJ_DIR$\ITM.log
-[SfrWindow]
-Show=1 1
-Sort=4 0
 [PEMICRODriver]
 PEM_LeaveTargetRunning=0x00000000
 [struct_types]
@@ -222,26 +219,9 @@ Bp2=_ "STD_CODE" "0x00015CEE" 0 0 0 0 "" 0 "" 0
 Bp3=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12\Applications\uTaskerSerialBoot\usb_device_loader.c}.2709.40" 0 0 0 0 "" 0 "" 0
 Bp4=_ "STD_CODE" "0x00001388" 0 0 0 0 "" 0 "" 0
 Count=5
-[Trace1]
-Enabled=0
-ShowSource=1
-[Disassemble mode]
-mode=1
-[Breakpoints2]
-Bp0=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\..\..\Hardware\Kinetis\kinetis_USB_HS_Device.h}.362.17" 0 0 1 "" 0 "" 0
-Bp1=_ 0 "EMUL_CODE" "0x0000E612" 0 0 1 "" 0 "" 0
-Bp2=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\..\..\Hardware\Kinetis\kinetis_FLASH.h}.105.5" 0 0 1 "" 0 "" 0
-Count=3
-[Log file]
-LoggingEnabled=_ 0
-LogFile=_ ""
-Category=_ 0
-[TermIOLog]
-LoggingEnabled=_ 0
-LogFile=_ ""
-[Aliases]
-Count=0
-SuppressDialog=0
+[SfrWindow]
+Show=1 1
+Sort=4 0
 [DriverProfiling]
 Enabled=0
 Mode=1
@@ -252,3 +232,26 @@ Exclusions=
 Enabled=0
 [CallStackStripe]
 ShowTiming=1
+[Trace1]
+Enabled=0
+ShowSource=1
+[Log file]
+LoggingEnabled=_ 0
+LogFile=_ ""
+Category=_ 0
+[TermIOLog]
+LoggingEnabled=_ 0
+LogFile=_ ""
+[Disassemble mode]
+mode=1
+[Breakpoints2]
+Bp0=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\..\..\Hardware\Kinetis\kinetis_USB_HS_Device.h}.362.17" 0 0 1 "" 0 "" 0
+Bp1=_ 0 "EMUL_CODE" "0x0000E612" 0 0 1 "" 0 "" 0
+Bp2=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\..\..\Hardware\Kinetis\kinetis_FLASH.h}.105.5" 0 0 1 "" 0 "" 0
+Bp3=_ 0 "EMUL_CODE" "0x00000546" 0 0 1 "" 0 "" 0
+Bp4=_ 0 "EMUL_CODE" "0x00000A58" 0 0 1 "" 0 "" 0
+Bp5=_ 0 "EMUL_CODE" "0x0001C4A2" 0 0 1 "" 0 "" 0
+Count=6
+[Aliases]
+Count=0
+SuppressDialog=0

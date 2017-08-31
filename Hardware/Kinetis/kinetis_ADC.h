@@ -324,19 +324,19 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
                 unsigned char ucChannelConfig = 0;
                 if ((ptrADC_settings->int_adc_mode & ADC_CONFIGURE_ADC) != 0) { // main configuration is to be performed
                     if (ptrADC_settings->int_adc_controller == 0) {      // ADC0
-                        POWER_UP(6, SIM_SCGC6_ADC0);                     // enable clocks to module
+                        POWER_UP_ATOMIC(6, SIM_SCGC6_ADC0);              // enable clocks to module
                     }
     #if ADC_CONTROLLERS > 1
                     else if (ptrADC_settings->int_adc_controller == 1) {
-                        POWER_UP(3, SIM_SCGC3_ADC1);                     // enable clocks to module
+                        POWER_UP_ATOMIC(3, SIM_SCGC3_ADC1);              // enable clocks to module
                     }
         #if ADC_CONTROLLERS > 2
                     else if (ptrADC_settings->int_adc_controller == 2) {
-                        POWER_UP(6, SIM_SCGC6_ADC2);                     // enable clocks to module
+                        POWER_UP_ATOMIC(6, SIM_SCGC6_ADC2);              // enable clocks to module
                     }
             #if ADC_CONTROLLERS > 3
                     else if (ptrADC_settings->int_adc_controller == 3) {
-                        POWER_UP(3, SIM_SCGC3_ADC3);                     // enable clocks to module
+                        POWER_UP_ATOMIC(3, SIM_SCGC3_ADC3);              // enable clocks to module
                     }
             #endif
         #endif

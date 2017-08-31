@@ -1,5 +1,5 @@
 [DebugChecksum]
-Checksum=-411766074
+Checksum=970291361
 [DisAssemblyWindow]
 NumStates=_ 1
 State 1=_ 1
@@ -53,14 +53,15 @@ TypeViolation=1
 UnspecRange=1
 ActionState=1
 [Jet]
-JetConnSerialNo=00289
+JetConnSerialNo=97969900
 JetConnFoundProbes=
 DisableInterrupts=0
 MultiCoreRunAll=0
 OnlineReset=Software
-PrevWtdReset=Custom
+PrevWtdReset=System
+LeaveRunning=0
 [PlDriver]
-MemConfigValue=C:\Program Files (x86)\IAR Systems\Embedded Workbench 7.2_2\arm\CONFIG\debugger\Freescale\MK65FN2M0xxx18.ddf
+MemConfigValue=D:\Programs\IAR Systems\Embedded Workbench 7.5\arm\CONFIG\debugger\NXP\MK64FN1M0xxx12.ddf
 FirstRun=0
 [ArmDriver]
 EnableCache=1
@@ -87,23 +88,23 @@ FREQ_TRACELINK=_ "3"
 FREQ_LIGHTNING=_ "1"
 FREQ_OPENSDA=_ "0"
 RESET_DELAY=_ "0"
-PORT=_ "21"
-PORT_NAME_STRING=_ "PE5655870"
-interface_selection=_ "1"
+PORT=_ "181"
+PORT_NAME_STRING=_ "78D50E61"
+interface_selection=_ "7"
 SHOWDIALOG=_ "1"
 TraceLink_MaxBufferSize=_ "1"
 [PE_STORED_DEVICES]
-device0=_ "NXP_K6x_K64FN1M0M12"
-device1=_ "NXP_KL2x_KL27Z64M4"
-device2=_ "NXP_K2x_K22FN512M12"
-device3=_ "NXP_KEx_KEAZN8M4"
-device4=_ "NXP_K6x_K66FX1M0M18"
+device0=_ "NXP_KEx_KEAZN8M4"
+device1=_ "NXP_K6x_K66FX1M0M18"
+device2=_ "NXP_KL2x_KL28T512M7"
+device3=_ "NXP_K6x_K60N512M10"
+device4=_ "NXP_KL4x_KL43Z256M4"
 [PE_PEDEBUG]
-CURRENTDEVICE=_ "NXP_K6x_K66FX1M0M18"
+CURRENTDEVICE=_ "NXP_KL4x_KL43Z256M4"
 ERASE_PROGRAM_WITHOUT_ASKING=_ "1"
 CURRENTMODE=_ "4"
 [PE_DEVICE]
-CHIPMODE=_ "NXP_KEx_KEAZN8M4"
+CHIPMODE=_ "NXP_KL4x_KL43Z256M4"
 [PE_SETTINGS]
 MEMORYSTART1=_ "0"
 MEMORYSTART2=_ "0"
@@ -132,17 +133,6 @@ ItmLogPorts=0
 ItmLogFile=$PROJ_DIR$\ITM.log
 PowerForcePC=1
 PowerConnectPC=1
-[ETMTraceWindow]
-PortWidth=4
-PortMode=0
-CaptureDataValues=0
-CaptureDataAddresses=0
-CaptureDataRange=0
-DataFirst=0
-DataLast=-1
-StopWhen=0
-StallCPU=0
-NoPCCapture=0
 [PEMICRODriver]
 PEM_LeaveTargetRunning=0x00000000
 [struct_types]
@@ -157,12 +147,6 @@ Fmt5=unsigned long[4]	4	0
 [watch_formats]
 Fmt0={W}0:ulBlockWriteLength	4	0
 Fmt1={W}1:ulLastCapture	4	4
-[Breakpoints]
-Bp0=_ "STD_CODE" "0x00000B24" 0 0 0 0 "" 0 "" 0
-Bp1=_ "STD_CODE" "0x00000690" 0 0 0 0 "" 0 "" 0
-Bp2=_ "STD_CODE" "0x000005EE" 0 0 0 0 "" 0 "" 0
-Bp3=_ "STD_CODE" "0x00000622" 0 0 0 0 "" 0 "" 0
-Count=4
 [SWOTraceHWSettings]
 OverrideDefaultClocks=0
 CpuClock=120000000
@@ -180,18 +164,6 @@ ITMportsEnable=0
 ITMportsTermIO=0
 ITMportsLogFile=0
 ITMlogFile=$PROJ_DIR$\ITM.log
-[Trace2]
-Enabled=0
-ShowSource=0
-[SWOTraceWindow]
-PcSampling=0
-InterruptLogs=0
-ForcedTimeStamps=0
-EventCPI=0
-EventEXC=0
-EventFOLD=0
-EventLSU=0
-EventSLEEP=0
 [DataLog]
 LogEnabled=0
 GraphEnabled=0
@@ -220,16 +192,32 @@ ShowTimeLog=1
 SumEnabled=0
 ShowTimeSum=1
 SumSortOrder=0
+[ETMTraceWindow]
+PortWidth=4
+PortMode=0
+CaptureDataValues=0
+CaptureDataAddresses=0
+CaptureDataRange=0
+DataFirst=0
+DataLast=-1
+StopWhen=0
+StallCPU=0
+NoPCCapture=0
+[Trace2]
+Enabled=0
+ShowSource=0
+[SWOTraceWindow]
+ForcedPcSampling=0
+ForcedInterruptLogs=0
+ForcedItmLogs=0
+EventCPI=0
+EventEXC=0
+EventFOLD=0
+EventLSU=0
+EventSLEEP=0
 [Trace1]
 Enabled=0
 ShowSource=1
-[Log file]
-LoggingEnabled=_ 0
-LogFile=_ ""
-Category=_ 0
-[TermIOLog]
-LoggingEnabled=_ 0
-LogFile=_ ""
 [DriverProfiling]
 Enabled=0
 Mode=1
@@ -240,25 +228,33 @@ Exclusions=
 Enabled=0
 [CallStackStripe]
 ShowTiming=1
+[Breakpoints2]
+Bp0=_ 1 "EMUL_DATA" "0x40020000" 0 0 0 0 4294967295
+Bp1=_ 0 "EMUL_CODE" "0x00006350" 0 0 1 "" 0 "" 0
+Bp2=_ 0 "EMUL_CODE" "0x0000634E" 0 0 1 "" 0 "" 0
+Bp3=_ 0 "EMUL_CODE" "0x0000634C" 0 0 1 "" 0 "" 0
+Bp4=_ 0 "EMUL_CODE" "0x0000634A" 0 0 1 "" 0 "" 0
+Bp5=_ 0 "EMUL_CODE" "0x00006348" 0 0 1 "" 0 "" 0
+Bp6=_ 0 "EMUL_CODE" "0x0001F6F2" 0 0 1 "" 0 "" 0
+Count=7
 [Disassemble mode]
 mode=3
-[Breakpoints2]
-Bp0=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\..\..\Hardware\Kinetis\kinetis.c}.734.5" 0 0 1 "" 0 "" 0
-Bp1=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\..\..\FreeRTOS\Source\portable\IAR\ARM_CM4F\port.c}.395.2" 0 0 1 "" 0 "" 0
-Bp2=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\..\..\FreeRTOS\Source\timers.c}.757.3" 0 0 1 "" 0 "" 0
-Bp3=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\..\..\FreeRTOS\Source\timers.c}.562.21" 0 0 1 "" 0 "" 0
-Bp4=_ 0 "EMUL_CODE" "0x00001AC2" 0 0 1 "" 0 "" 0
-Bp5=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\..\..\FreeRTOS\Source\timers.c}.569.3" 0 0 1 "" 0 "" 0
-Bp6=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\..\..\FreeRTOS\Source\timers.c}.618.6" 0 0 1 "" 0 "" 0
-Bp7=_ 0 "EMUL_DATA" "0x1fff0000" 1 0 0 0 4294967295
-Bp8=_ 0 "EMUL_CODE" "0x00001B8E" 0 0 1 "" 0 "" 0
-Bp9=_ 0 "EMUL_CODE" "0x1C0028A2" 0 0 1 "" 0 "" 0
-Bp10=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\..\..\Hardware\Kinetis\spi_flash_w25q.h}.346.5" 0 0 1 "" 0 "" 0
-Bp11=_ 0 "EMUL_CODE" "0x0000045E" 0 0 1 "" 0 "" 0
-Bp12=_ 0 "EMUL_CODE" "0x00000C3C" 0 0 1 "" 0 "" 0
-Bp13=_ 0 "EMUL_CODE" "0x0000056E" 0 0 1 "" 0 "" 0
-Bp14=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\..\..\Hardware\Kinetis\kinetis.c}.363.5" 0 0 1 "" 0 "" 0
-Count=15
+[Breakpoints]
+Bp0=_ "STD_CODE" "0x00000B24" 0 0 0 0 "" 0 "" 0
+Bp1=_ "STD_CODE" "0x00000690" 0 0 0 0 "" 0 "" 0
+Bp2=_ "STD_CODE" "0x000005EE" 0 0 0 0 "" 0 "" 0
+Bp3=_ "STD_CODE" "0x00000622" 0 0 0 0 "" 0 "" 0
+Bp4=_ "STD_CODE" "0x000022D4" 0 0 0 0 "" 0 "" 0
+Bp5=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12_working\uTasker-GIT-Kinetis\Hardware\Kinetis\kinetis_DMA.h}.927.5" 0 0 0 0 "" 0 "" 0
+Bp6=_ "STD_CODE" "0x00002F20" 0 0 0 0 "" 0 "" 0
+Count=7
+[Log file]
+LoggingEnabled=_ 0
+LogFile=_ ""
+Category=_ 0
+[TermIOLog]
+LoggingEnabled=_ 0
+LogFile=_ ""
 [Aliases]
 Count=0
 SuppressDialog=0
