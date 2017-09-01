@@ -38,7 +38,8 @@
     05.01.2017 Add optional midi baud rate                               {207}
     07.01.2017 Add UART_TIMED_TRANSMISSION support for parts with DMA    {208}
     03.05.2017 Add free-running DMA reception mode (SERIAL_SUPPORT_DMA_RX_FREERUN) on LPUARTs and UARTs for KL parts based on modulo rx buffer {209}
-    06.08.2017 USe POWER_UP_ATOMIC() instead of POWER_UP() to enable clocks to UART modules (using bit-banding access)
+    06.08.2017 Use POWER_UP_ATOMIC() instead of POWER_UP() to enable clocks to UART modules (using bit-banding access)
+    01.09.2017 Correct clearing LPUART overrun flag                      {209}
 
 */
 
@@ -57,7 +58,7 @@
 /* =================================================================== */
 
     #if LPUARTS_AVAILABLE > 0 && UARTS_AVAILABLE > 0                     // device contains both UART and LPUART
-// For detaisl about UART/LPUART numbering conventions see http://www.utasker.com/kinetis/UART_LPUART.html
+// For details about UART/LPUART numbering conventions see http://www.utasker.com/kinetis/UART_LPUART.html
 //
 #define UART_TYPE_LPUART 0
 #define UART_TYPE_UART   1
@@ -272,7 +273,8 @@ static __interrupt void _LPSCI0_Interrupt(void)                          // LPUA
         #endif
         ulState = LPUART0_STAT;                                          // update the status register
         if ((ulState & LPUART_STAT_OR) != 0) {                           // if the overrun flag is set at this point it means that an overrun took place between reading the status register on entry to the interrupt and reading the data register
-            (void)LPUART0_DATA;                                          // read the data register in order to clear the overrun flag and allow the receiver to continue operating
+            LPUART0_STAT = ulState;                                      // {209} write the OR flag back to clear it and allow further operation
+        //(void)LPUART0_DATA;                                            // read the data register in order to clear the overrun flag and allow the receiver to continue operating
         }
     }
 
@@ -306,7 +308,8 @@ static __interrupt void _LPSCI1_Interrupt(void)                          // LPUA
         #endif
         ulState = LPUART1_STAT;                                          // update the status register
         if ((ulState & LPUART_STAT_OR) != 0) {                           // if the overrun flag is set at this point it means that an overrun took place between reading the status register on entry to the interrupt and reading the data register
-            (void )LPUART1_DATA;                                         // read the data register in order to clear the overrun flag and allow the receiver to continue operating
+            LPUART1_STAT = ulState;                                      // {209} write the OR flag back to clear it and allow further operation
+          //(void )LPUART1_DATA;                                         // read the data register in order to clear the overrun flag and allow the receiver to continue operating
         }
     }
 
@@ -340,7 +343,8 @@ static __interrupt void _LPSCI2_Interrupt(void)                          // LPUA
         #endif
         ulState = LPUART2_STAT;                                          // update the status register
         if ((ulState & LPUART_STAT_OR) != 0) {                           // if the overrun flag is set at this point it means that an overrun took place between reading the status register on entry to the interrupt and reading the data register
-            (void )LPUART2_DATA;                                         // read the data register in order to clear the overrun flag and allow the receiver to continue operating
+            LPUART2_STAT = ulState;                                      // {209} write the OR flag back to clear it and allow further operation
+          //(void )LPUART2_DATA;                                         // read the data register in order to clear the overrun flag and allow the receiver to continue operating
         }
     }
 
@@ -374,7 +378,8 @@ static __interrupt void _LPSCI3_Interrupt(void)                          // LPUA
         #endif
         ulState = LPUART3_STAT;                                          // update the status register
         if ((ulState & LPUART_STAT_OR) != 0) {                           // if the overrun flag is set at this point it means that an overrun took place between reading the status register on entry to the interrupt and reading the data register
-            (void )LPUART3_DATA;                                         // read the data register in order to clear the overrun flag and allow the receiver to continue operating
+            LPUART3_STAT = ulState;                                      // {209} write the OR flag back to clear it and allow further operation
+          //(void )LPUART3_DATA;                                         // read the data register in order to clear the overrun flag and allow the receiver to continue operating
         }
     }
 
@@ -408,7 +413,8 @@ static __interrupt void _LPSCI4_Interrupt(void)                          // LPUA
         #endif
         ulState = LPUART4_STAT;                                          // update the status register
         if ((ulState & LPUART_STAT_OR) != 0) {                           // if the overrun flag is set at this point it means that an overrun took place between reading the status register on entry to the interrupt and reading the data register
-            (void )LPUART4_DATA;                                         // read the data register in order to clear the overrun flag and allow the receiver to continue operating
+            LPUART4_STAT = ulState;                                      // {209} write the OR flag back to clear it and allow further operation
+          //(void )LPUART4_DATA;                                         // read the data register in order to clear the overrun flag and allow the receiver to continue operating
         }
     }
 
@@ -611,13 +617,13 @@ static __interrupt void _SCI3_Interrupt(void)                            // UART
         #if defined SERIAL_SUPPORT_DMA                                   // {8}
     if ((UART3_C5 & UART_C5_RDMAS) == 0) {                               // if the receiver is operating in DMA mode ignore reception interrupt flags
         #endif
-        if ((ucState & UART_S1_RDRF) & UART3_C2) {                       // reception interrupt flag is set and the reception interrupt is enabled
+        if (((ucState & UART_S1_RDRF) & UART3_C2) != 0) {                // reception interrupt flag is set and the reception interrupt is enabled
             fnUART3_HANDLER((unsigned char)(UART3_D & ucUART_mask[3]), 3); // receive data interrupt - read the byte (masked with character width)
         #if defined _WINDOWS
             UART3_S1 &= ~(UART_S1_RDRF);                                 // simulate reset of interrupt flag
         #endif
             ucState = UART3_S1;                                          // {92} update the status register
-            if (ucState & UART_S1_OR) {                                  // if the overrun flag is set at this point it means that an overrun took place between reading the status register on entry to the interrupt and reading the data register
+            if ((ucState & UART_S1_OR) != 0) {                           // if the overrun flag is set at this point it means that an overrun took place between reading the status register on entry to the interrupt and reading the data register
                 (void)UART3_D;                                           // read the data register in order to clear the overrun flag and allow the receiver to continue operating
             }
         }
@@ -627,7 +633,7 @@ static __interrupt void _SCI3_Interrupt(void)                            // UART
         #if defined SERIAL_SUPPORT_DMA                                   // {6}
     if ((UART3_C5 & UART_C5_TDMAS) == 0) {                               // if the transmitter is operating in DMA mode ignore transmission interrupt flags
         #endif
-        if ((ucState & (UART_S1_TDRE | UART_S1_TC)) & UART3_C2) {        // transmit buffer or transmit is empty and the corresponding interrupt is enabled
+        if (((ucState & (UART_S1_TDRE | UART_S1_TC)) & UART3_C2) != 0) { // transmit buffer or transmit is empty and the corresponding interrupt is enabled
             fnSciTxByte(3);                                              // transmit data empty interrupt - write next byte
         #if defined TRUE_UART_TX_2_STOPS && defined SUPPORT_LOW_POWER
             if (ucStops[3] != 0) {                                       // if the channel is working in true 2 stop bit mode it will always use the transmit complete interrupt and the peripheral idle control is performed in fnClearTxInt() instead
@@ -639,7 +645,7 @@ static __interrupt void _SCI3_Interrupt(void)                            // UART
     }
         #endif
         #if defined SUPPORT_LOW_POWER                                    // {96} transmitter using DMA
-    if ((UART3_C2 & UART_C2_TCIE) && (UART3_S1 & UART_S1_TC)) {          // transmit complete interrupt after final byte transmission together with low power operation
+    if (((UART3_C2 & UART_C2_TCIE) != 0) && ((UART3_S1 & UART_S1_TC) != 0)) { // transmit complete interrupt after final byte transmission together with low power operation
         UART3_C2 &= ~(UART_C2_TCIE);                                     // disable the interrupt
         ulPeripheralNeedsClock &= ~(UART3_TX_CLK_REQUIRED);              // confirmation that the final byte has been sent out on the line so the UART no longer needs a UART clock (stop mode doesn't needed to be blocked)
     }
@@ -659,13 +665,13 @@ static __interrupt void _SCI4_Interrupt(void)                            // UART
         #if defined SERIAL_SUPPORT_DMA                                   // {8}
     if ((UART4_C5 & UART_C5_RDMAS) == 0) {                               // if the receiver is operating in DMA mode ignore reception interrupt flags
         #endif
-        if ((ucState & UART_S1_RDRF) & UART4_C2) {                       // reception interrupt flag is set and the reception interrupt is enabled
+        if (((ucState & UART_S1_RDRF) & UART4_C2) != 0) {                // reception interrupt flag is set and the reception interrupt is enabled
             fnUART4_HANDLER((unsigned char)(UART4_D & ucUART_mask[4]), 4); // receive data interrupt - read the byte (masked with character width)
         #if defined _WINDOWS
             UART4_S1 &= ~(UART_S1_RDRF);                                 // simulate reset of interrupt flag
         #endif
             ucState = UART4_S1;                                          // {92} update the status register
-            if (ucState & UART_S1_OR) {                                  // if the overrun flag is set at this point it means that an overrun took place between reading the status register on entry to the interrupt and reading the data register
+            if ((ucState & UART_S1_OR) != 0) {                           // if the overrun flag is set at this point it means that an overrun took place between reading the status register on entry to the interrupt and reading the data register
                 (void)UART4_D;                                           // read the data register in order to clear the overrun flag and allow the receiver to continue operating
             }
         }
@@ -675,7 +681,7 @@ static __interrupt void _SCI4_Interrupt(void)                            // UART
         #if defined SERIAL_SUPPORT_DMA                                   // {6}
     if ((UART4_C5 & UART_C5_TDMAS) == 0) {                               // if the transmitter is operating in DMA mode ignore transmission interrupt flags
         #endif
-        if ((ucState & (UART_S1_TDRE | UART_S1_TC)) & UART4_C2) {        // transmit buffer or transmit is empty and the corresponding interrupt is enabled
+        if (((ucState & (UART_S1_TDRE | UART_S1_TC)) & UART4_C2) != 0) { // transmit buffer or transmit is empty and the corresponding interrupt is enabled
             fnSciTxByte(4);                                              // transmit data empty interrupt - write next byte
         #if defined TRUE_UART_TX_2_STOPS && defined SUPPORT_LOW_POWER
             if (ucStops[4] != 0) {                                       // if the channel is working in true 2 stop bit mode it will always use the transmit complete interrupt and the peripheral idle control is performed in fnClearTxInt() instead
@@ -687,7 +693,7 @@ static __interrupt void _SCI4_Interrupt(void)                            // UART
     }
         #endif
         #if defined SUPPORT_LOW_POWER                                    // {96} transmitter using DMA
-    if ((UART4_C2 & UART_C2_TCIE) && (UART4_S1 & UART_S1_TC)) {          // transmit complete interrupt after final byte transmission together with low power operation
+    if (((UART4_C2 & UART_C2_TCIE) != 0) && ((UART4_S1 & UART_S1_TC) != 0)) { // transmit complete interrupt after final byte transmission together with low power operation
         UART4_C2 &= ~(UART_C2_TCIE);                                     // disable the interrupt
         ulPeripheralNeedsClock &= ~(UART4_TX_CLK_REQUIRED);              // confirmation that the final byte has been sent out on the line so the UART no longer needs a UART clock (stop mode doesn't needed to be blocked)
     }
@@ -707,13 +713,13 @@ static __interrupt void _SCI5_Interrupt(void)                            // UART
         #if defined SERIAL_SUPPORT_DMA                                   // {8}
     if ((UART5_C5 & UART_C5_RDMAS) == 0) {                               // if the receiver is operating in DMA mode ignore reception interrupt flags
         #endif
-        if ((ucState & UART_S1_RDRF) & UART5_C2) {                       // reception interrupt flag is set and the reception interrupt is enabled
+        if (((ucState & UART_S1_RDRF) & UART5_C2) != 0) {                // reception interrupt flag is set and the reception interrupt is enabled
             fnUART5_HANDLER((unsigned char)(UART5_D & ucUART_mask[5]), 5); // receive data interrupt - read the byte (masked with character width)
         #if defined _WINDOWS
             UART5_S1 &= ~(UART_S1_RDRF);                                 // simulate reset of interrupt flag
         #endif
             ucState = UART5_S1;                                          // {92} update the status register
-            if (ucState & UART_S1_OR) {                                  // if the overrun flag is set at this point it means that an overrun took place between reading the status register on entry to the interrupt and reading the data register
+            if ((ucState & UART_S1_OR) != 0) {                           // if the overrun flag is set at this point it means that an overrun took place between reading the status register on entry to the interrupt and reading the data register
                 (void)UART5_D;                                           // read the data register in order to clear the overrun flag and allow the receiver to continue operating
             }
         }
@@ -723,7 +729,7 @@ static __interrupt void _SCI5_Interrupt(void)                            // UART
         #if defined SERIAL_SUPPORT_DMA                                   // {6}
     if ((UART5_C5 & UART_C5_TDMAS) == 0) {                               // if the transmitter is operating in DMA mode ignore transmission interrupt flags
         #endif
-        if ((ucState & (UART_S1_TDRE | UART_S1_TC)) & UART5_C2) {        // transmit buffer or transmit is empty and the corresponding interrupt is enabled
+        if (((ucState & (UART_S1_TDRE | UART_S1_TC)) & UART5_C2) != 0) { // transmit buffer or transmit is empty and the corresponding interrupt is enabled
             fnSciTxByte(5);                                              // transmit data empty interrupt - write next byte
         #if defined TRUE_UART_TX_2_STOPS && defined SUPPORT_LOW_POWER
             if (ucStops[5] != 0) {                                       // if the channel is working in true 2 stop bit mode it will always use the transmit complete interrupt and the peripheral idle control is performed in fnClearTxInt() instead
@@ -735,7 +741,7 @@ static __interrupt void _SCI5_Interrupt(void)                            // UART
     }
         #endif
         #if defined SUPPORT_LOW_POWER                                    // {96} transmitter using DMA
-    if ((UART5_C2 & UART_C2_TCIE) && (UART5_S1 & UART_S1_TC)) {          // transmit complete interrupt after final byte transmission together with low power operation
+    if (((UART5_C2 & UART_C2_TCIE) != 0) && ((UART5_S1 & UART_S1_TC) != 0)) { // transmit complete interrupt after final byte transmission together with low power operation
         UART5_C2 &= ~(UART_C2_TCIE);                                     // disable the interrupt
         ulPeripheralNeedsClock &= ~(UART5_TX_CLK_REQUIRED);              // confirmation that the final byte has been sent out on the line so the UART no longer needs a UART clock (stop mode doesn't needed to be blocked)
     }

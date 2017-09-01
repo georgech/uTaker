@@ -23,12 +23,15 @@
 #include "task.h"
 
 extern void fn_uTasker_main(void *);
-#if defined BLINKY
-    extern void fnInitialiseRedLED(void); 
+#if defined FREE_RTOS_UART
+unsigned char fnGetUART_Handle(void);
+#endif
+#if defined FREE_RTOS_BLINKY
+    extern void fnInitialiseRedLED(void);
     extern void fnToggleRedLED(void);
-
     static void blinky(void *par);
 #endif
+static void uart_task(void *pvParameters);
 static void prvSetupHardware(void);
 
 
@@ -52,14 +55,27 @@ extern void fnFreeRTOS_main(void)
 
     // Add further user tasks here
     //
-    #if defined BLINKY                                                   // if the blinky project is defined add a task flashing an LED
-    if (xTaskCreate(
+    #if defined FREE_RTOS_BLINKY
+    if (xTaskCreate(                                                     // FreeRTOS blinky
         blinky,                                                          // pointer to the task
         "Blinky",                                                        // task name for kernel awareness debugging
         configMINIMAL_STACK_SIZE,                                        // task stack size
         (void*)NULL,                                                     // optional task startup argument
         tskIDLE_PRIORITY,                                                // initial priority
-        0
+        NULL
+        ) != pdPASS) {
+        _EXCEPTION("FreeRTOS failed to initialise task");
+        return;                                                          // this only happens when there was a failure to initialise the task (usually not enough heap)
+    }
+    #endif
+    #if defined FREE_RTOS_UART
+    if (xTaskCreate(                                                     // FreeRTOS blinky
+        uart_task,                                                       // pointer to the task
+        "uart_task",                                                        // task name for kernel awareness debugging
+        configMINIMAL_STACK_SIZE,                                        // task stack size
+        (void*)NULL,                                                     // optional task startup argument
+        (configMAX_PRIORITIES - 1),                                      // initial priority
+        NULL
         ) != pdPASS) {
         _EXCEPTION("FreeRTOS failed to initialise task");
         return;                                                          // this only happens when there was a failure to initialise the task (usually not enough heap)
@@ -78,20 +94,43 @@ static void prvSetupHardware(void)
 {
     // Add FreeRTOS context hardware initialisation if required
     //
-    #if defined BLINKY
+#if defined FREE_RTOS_BLINKY
     fnInitialiseRedLED();
-    #endif
+#endif
 }
 
-    #if defined BLINKY
+#if defined FREE_RTOS_BLINKY
 // Blinky task
 //
 static void blinky(void *par)
 {
-    while ((int)1 != (int)0) {
+    while ((int)1 != (int)0) {                                           // forever loop
         fnToggleRedLED();
         vTaskDelay(750/portTICK_RATE_MS);                                // wait for 750ms in order to flash the LED at 1Hz
     }
 }
-    #endif
+#endif
+
+#if defined FREE_RTOS_UART
+static void uart_task(void *pvParameters)
+{
+    QUEUE_TRANSFER length = 0;
+    QUEUE_HANDLE uart_handle;
+    unsigned char dataByte;
+    vTaskDelay(500/portTICK_RATE_MS);                                    // wait for 500ms in order to allow uTasker to configure UART interfaces
+    uart_handle = fnGetUART_Handle();                                    // get the UART handle
+    fnDebugMsg("FreeRTOS Output\r\n");                                   // test a UART transmission
+    while ((int)1 != (int)0) {                                           // forever loop
+        length = fnRead(uart_handle, &dataByte, 1);                      // read a byte from the DMA input buffer (returns immediately)
+        if (length != 0) {                                               // if something is available
+            fnDebugMsg("Echo:");                                         // echo it back
+            fnWrite(uart_handle, &dataByte, 1);                          // send the byte back
+            fnDebugMsg("\r\n");                                          // with termination
+        }
+        else {                                                           // nothing in the input buffer
+            vTaskDelay(1);                                               // wait a single tick to allow other tasks to execute
+        }
+    }
+}
+#endif
 #endif

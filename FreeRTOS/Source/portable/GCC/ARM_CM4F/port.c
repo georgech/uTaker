@@ -936,11 +936,44 @@ void vPortSVCHandler( void )
 
 void vPortStartFirstTask( void )
 {
+    /* The MSP stack is not reset as, unlike on M3/4 parts, there is no vector
+    table offset register that can be used to locate the initial stack value.
+    Not all M0 parts have the application vector table at address 0. */
 #if defined _WINDOWS
+    extern void *pxCurrentTCB;
+    void (*ptrTask)(void *);
+    unsigned long r0;
+    unsigned long r1;
+    unsigned long r2;
+    unsigned long r3 = (unsigned long)pxCurrentTCB;
+    unsigned long r4;
+    unsigned long r5;
+    unsigned long lr;
+    unsigned long sp = *(unsigned long *)r3;
+    sp += 32;                                                            // discard up to r0
+    fnSetReg(14, sp);                                                    // prepare next stack pointer
+    r0 = 2;
+    fnSetReg(22, r0);                                                    // switch stack
+    r0 = *(unsigned long *)sp;                                           // pop r0-r5 (r0 holds parameter pointer)
+    sp += 4;
+    r1 = *(unsigned long *)sp;
+    sp += 4;
+    r2 = *(unsigned long *)sp;
+    sp += 4;
+    r3 = *(unsigned long *)sp;
+    sp += 4;
+    r4 = *(unsigned long *)sp;
+    sp += 4;
+    r5 = *(unsigned long *)sp;
+    sp += 4;
+    lr = r5;                                                             // link register value
+    r3 = *(unsigned long *)sp;                                           // pop return address
+    sp += 4;
+    r2 = *(unsigned long *)sp;
+    sp += 4;
+    ptrTask = (void(*)(void *))r3;
+    ptrTask((void *)r0);                                                 // jump to the task code
 #else
-	/* The MSP stack is not reset as, unlike on M3/4 parts, there is no vector
-	table offset register that can be used to locate the initial stack value.
-	Not all M0 parts have the application vector table at address 0. */
 	__asm volatile(
 	"	ldr	r2, pxCurrentTCBConst2	\n" /* Obtain location of pxCurrentTCB. */
 	"	ldr r3, [r2]				\n"
@@ -949,7 +982,7 @@ void vPortStartFirstTask( void )
 	"	msr psp, r0					\n" /* This is now the new top of stack to use in the task. */
 	"	movs r0, #2					\n" /* Switch to the psp stack. */
 	"	msr CONTROL, r0				\n"
-	"	isb							\n"
+	"	isb							\n" /* The isb instruction will guarantee that the subsequent instructions will be re-fetched, bypassing any pipeline */
 	"	pop {r0-r5}					\n" /* Pop the registers that are saved automatically. */
 	"	mov lr, r5					\n" /* lr is now in r5. */
 	"	pop {r3}					\n" /* Return address is now in r3. */
@@ -970,8 +1003,13 @@ void vPortStartFirstTask( void )
 BaseType_t xPortStartScheduler( void )
 {
 	/* Make PendSV, CallSV and SysTick the same priroity as the kernel. */
+#if defined _WINDOWS
+    *fnGetRegisterAddress(0xe000ed20) |= portNVIC_PENDSV_PRI;
+    *fnGetRegisterAddress(0xe000ed20) |= portNVIC_SYSTICK_PRI;
+#else
 	*(portNVIC_SYSPRI2) |= portNVIC_PENDSV_PRI;
 	*(portNVIC_SYSPRI2) |= portNVIC_SYSTICK_PRI;
+#endif
 
 	/* Start the timer that generates the tick ISR.  Interrupts are disabled
 	here already. */
@@ -1004,12 +1042,15 @@ void vPortEndScheduler( void )
 
 void vPortYield( void )
 {
+#if defined _WINDOWS
+    *fnGetRegisterAddress(0xe000ed04) = portNVIC_PENDSVSET; // pend a context switch
+    xPortPendSVHandler();
+#else
 	/* Set a PendSV to request a context switch. */
 	*( portNVIC_INT_CTRL ) = portNVIC_PENDSVSET;
 
 	/* Barriers are normally not required but do ensure the code is completely
 	within the specified behaviour for the architecture. */
-#if !defined _WINDOWS
 	__asm volatile( "dsb" );
 	__asm volatile( "isb" );
 #endif
@@ -1141,8 +1182,13 @@ uint32_t ulPreviousMask;
 void prvSetupTimerInterrupt( void )
 {
 	/* Configure SysTick to interrupt at the requested rate. */
+#if defined _WINDOWS
+    *fnGetRegisterAddress(0xe000ed20) = (configCPU_CLOCK_HZ / configTICK_RATE_HZ) - 1UL;
+    *fnGetRegisterAddress(0xe000e010) = portNVIC_SYSTICK_CLK | portNVIC_SYSTICK_INT | portNVIC_SYSTICK_ENABLE;
+#else
 	*(portNVIC_SYSTICK_LOAD) = ( configCPU_CLOCK_HZ / configTICK_RATE_HZ ) - 1UL;
 	*(portNVIC_SYSTICK_CTRL) = portNVIC_SYSTICK_CLK | portNVIC_SYSTICK_INT | portNVIC_SYSTICK_ENABLE;
+#endif
 }
 /*-----------------------------------------------------------*/
 

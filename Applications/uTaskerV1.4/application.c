@@ -152,7 +152,7 @@
 // The project includes a variety of quick tests which can be activated here
 /*****************************************************************************/
 
-//#define FREE_RUNNING_RX_DMA_RECEPTION                                  // {102} use the UART receiver in free-running DMA mode (requires SERIAL_SUPPORT_DMA_RX and SERIAL_SUPPORT_DMA_RX_FREERUN) - see videos https://youtu.be/dNZvvouiqis and https://youtu.be/GaoWE-tMRq4
+#define FREE_RUNNING_RX_DMA_RECEPTION                                    // {102} use the UART receiver in free-running DMA mode (requires SERIAL_SUPPORT_DMA_RX and SERIAL_SUPPORT_DMA_RX_FREERUN) - see videos https://youtu.be/dNZvvouiqis and https://youtu.be/GaoWE-tMRq4
 //#define RAM_TEST                                                       // {61} perform a RAM test on startup - if error found, stop
 //#define TEST_MSG_MODE                                                  // test UART in message mode
 //#define TEST_MSG_CNT_MODE                                              // test UART in message counter mode
@@ -1456,7 +1456,11 @@ extern QUEUE_HANDLE fnSetNewSerialMode(unsigned char ucDriverMode)
     tInterfaceParameters.ucSpeed = temp_pars->temp_parameters.ucSerialSpeed; // baud rate
     tInterfaceParameters.Rx_tx_sizes.RxQueueSize = RX_BUFFER_SIZE;       // input buffer size
     tInterfaceParameters.Rx_tx_sizes.TxQueueSize = TX_BUFFER_SIZE;       // output buffer size
+    #if defined RUN_IN_FREE_RTOS && defined FREE_RTOS_UART
+    tInterfaceParameters.Task_to_wake = 0;                               // don't schedule any task when characters/messages are received
+    #else
     tInterfaceParameters.Task_to_wake = OWN_TASK;                        // wake self when messages have been received
+    #endif
     #if defined SUPPORT_FLOW_HIGH_LOW
     tInterfaceParameters.ucFlowHighWater = temp_pars->temp_parameters.ucFlowHigh;// set the flow control high and low water levels in %
     tInterfaceParameters.ucFlowLowWater = temp_pars->temp_parameters.ucFlowLow;
@@ -1473,12 +1477,14 @@ extern QUEUE_HANDLE fnSetNewSerialMode(unsigned char ucDriverMode)
     #if defined SERIAL_SUPPORT_DMA
         #if defined FREE_RUNNING_RX_DMA_RECEPTION
             #if defined KINETIS_KL
-    tInterfaceParameters.ucDMAConfig = (UART_RX_DMA | UART_RX_MODULO);   // modulo aligned reception memory is required by kinetis KL parts in free-running DMA mode
-  //tInterfaceParameters.ucDMAConfig = (UART_RX_DMA | UART_RX_MODULO | UART_TX_DMA);   // modulo aligned reception memory is required by kinetis KL parts in free-running DMA mode
+    tInterfaceParameters.ucDMAConfig = (UART_RX_DMA | UART_RX_MODULO); // modulo aligned reception memory is required by kinetis KL parts in free-running DMA mode
+  //tInterfaceParameters.ucDMAConfig = (UART_RX_DMA | UART_RX_MODULO | UART_TX_DMA); // modulo aligned reception memory is required by kinetis KL parts in free-running DMA mode
             #else
     tInterfaceParameters.ucDMAConfig = (UART_RX_DMA);
             #endif
+            #if !(defined RUN_IN_FREE_RTOS && defined FREE_RTOS_UART)
     uTaskerStateChange(OWN_TASK, UTASKER_POLLING);                       // set the task to polling mode to regularly check the receive buffer
+            #endif
         #else
     tInterfaceParameters.ucDMAConfig = 0;
   //tInterfaceParameters.ucDMAConfig = UART_TX_DMA;                      // activate DMA on transmission
@@ -2606,23 +2612,22 @@ static void fnConfigureTelnetRFC2217Server(void)
 }
 #endif
 
-#if defined BLINKY && defined RUN_IN_FREE_RTOS
+#if defined RUN_IN_FREE_RTOS
+    #if defined FREE_RTOS_BLINKY
 extern void fnInitialiseRedLED(void)
 {
-    #if defined FRDM_K64F
-    _CONFIG_DRIVE_PORT_OUTPUT_VALUE(B, (LED_RED), (LED_RED), (PORT_SRE_SLOW | PORT_DSE_HIGH)); // initialise port output to drive the red LED on the FRDM-K64F
-    #else
     CONFIG_TEST_OUTPUT();
-    #endif
 }
 
 extern void fnToggleRedLED(void)
 {
-    #if defined FRDM_K64F
-    _TOGGLE_PORT(B, LED_RED);                                        // toggle red LED on FRDM-K64F
-    #else
     TOGGLE_TEST_OUTPUT();
+}
     #endif
+
+QUEUE_HANDLE fnGetUART_Handle(void)
+{
+    return SerialPortID;
 }
 #endif
 

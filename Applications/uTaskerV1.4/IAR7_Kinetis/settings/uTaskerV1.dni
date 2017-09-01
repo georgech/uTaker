@@ -1,5 +1,5 @@
 [DebugChecksum]
-Checksum=970291361
+Checksum=-838798222
 [DisAssemblyWindow]
 NumStates=_ 1
 State 1=_ 1
@@ -89,22 +89,22 @@ FREQ_LIGHTNING=_ "1"
 FREQ_OPENSDA=_ "0"
 RESET_DELAY=_ "0"
 PORT=_ "181"
-PORT_NAME_STRING=_ "78D50E61"
+PORT_NAME_STRING=_ "43603E57"
 interface_selection=_ "7"
 SHOWDIALOG=_ "1"
 TraceLink_MaxBufferSize=_ "1"
 [PE_STORED_DEVICES]
-device0=_ "NXP_KEx_KEAZN8M4"
-device1=_ "NXP_K6x_K66FX1M0M18"
-device2=_ "NXP_KL2x_KL28T512M7"
-device3=_ "NXP_K6x_K60N512M10"
-device4=_ "NXP_KL4x_KL43Z256M4"
+device0=_ "NXP_K6x_K66FX1M0M18"
+device1=_ "NXP_KL2x_KL28T512M7"
+device2=_ "NXP_K6x_K60N512M10"
+device3=_ "NXP_KL4x_KL43Z256M4"
+device4=_ "NXP_KL2x_KL27Z64M4"
 [PE_PEDEBUG]
-CURRENTDEVICE=_ "NXP_KL4x_KL43Z256M4"
+CURRENTDEVICE=_ "NXP_KL2x_KL27Z64M4"
 ERASE_PROGRAM_WITHOUT_ASKING=_ "1"
 CURRENTMODE=_ "4"
 [PE_DEVICE]
-CHIPMODE=_ "NXP_KL4x_KL43Z256M4"
+CHIPMODE=_ "NXP_KL2x_KL27Z64M4"
 [PE_SETTINGS]
 MEMORYSTART1=_ "0"
 MEMORYSTART2=_ "0"
@@ -237,17 +237,6 @@ Bp4=_ 0 "EMUL_CODE" "0x0000634A" 0 0 1 "" 0 "" 0
 Bp5=_ 0 "EMUL_CODE" "0x00006348" 0 0 1 "" 0 "" 0
 Bp6=_ 0 "EMUL_CODE" "0x0001F6F2" 0 0 1 "" 0 "" 0
 Count=7
-[Disassemble mode]
-mode=3
-[Breakpoints]
-Bp0=_ "STD_CODE" "0x00000B24" 0 0 0 0 "" 0 "" 0
-Bp1=_ "STD_CODE" "0x00000690" 0 0 0 0 "" 0 "" 0
-Bp2=_ "STD_CODE" "0x000005EE" 0 0 0 0 "" 0 "" 0
-Bp3=_ "STD_CODE" "0x00000622" 0 0 0 0 "" 0 "" 0
-Bp4=_ "STD_CODE" "0x000022D4" 0 0 0 0 "" 0 "" 0
-Bp5=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12_working\uTasker-GIT-Kinetis\Hardware\Kinetis\kinetis_DMA.h}.927.5" 0 0 0 0 "" 0 "" 0
-Bp6=_ "STD_CODE" "0x00002F20" 0 0 0 0 "" 0 "" 0
-Count=7
 [Log file]
 LoggingEnabled=_ 0
 LogFile=_ ""
@@ -255,6 +244,14 @@ Category=_ 0
 [TermIOLog]
 LoggingEnabled=_ 0
 LogFile=_ ""
+[Disassemble mode]
+mode=3
+[Breakpoints]
+Bp0=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12_working\uTasker-GIT-Kinetis\FreeRTOS\Source\tasks.c}.2763.2" 0 0 0 0 "" 0 "" 0
+Bp1=_ "STD_CODE" "0x00001842" 0 0 0 0 "" 0 "" 0
+Bp2=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12_working\uTasker-GIT-Kinetis\FreeRTOS\Source\portable\IAR\ARM_CM0\port.c}.198.2" 0 0 0 0 "" 0 "" 0
+Bp3=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12_working\uTasker-GIT-Kinetis\FreeRTOS\Source\timers.c}.631.1" 0 0 0 0 "" 0 "" 0
+Count=4
 [Aliases]
 Count=0
 SuppressDialog=0

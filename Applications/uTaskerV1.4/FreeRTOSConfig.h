@@ -88,12 +88,18 @@
 
 #if defined _FREE_RTOS_APPLICATION || defined INC_FREERTOS_H             // {1} FreeRTOS application files can use these additiona defines
     #include "config.h"
+    #define QUEUE_TRANSFER     unsigned short
+    #define QUEUE_HANDLE       unsigned char
+    #define CHAR               char
     #define UTASKER_STACK_SIZE          (4 * 1024)
     #define UTASKER_TASK_PRIORITY       0                                // 0 is lowest priority
     #define RUN_IN_FREE_RTOS
   //#define memset(a,b,c) uMemset(a,b,c)                                 // allow FreeRTOS to use DMA bases memset() and memcpy() routines
   //#define memcpy(a,b,c) uMemcpy(a,b,c)
     extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*InterruptFunc)(void));
+    extern QUEUE_TRANSFER fnDebugMsg(CHAR *ucToSend);
+    extern QUEUE_TRANSFER fnRead(QUEUE_HANDLE driver_id, unsigned char *input_buffer, QUEUE_TRANSFER nr_of_bytes); // read contents of input queue to a buffer
+    extern QUEUE_TRANSFER fnWrite(QUEUE_HANDLE driver_id, unsigned char *output_buffer, QUEUE_TRANSFER nr_of_bytes);
     #define _EXCEPTION(x)        *(unsigned char *)0 = 0                 // generate exception when simulating
     #define TICK_UNIT_MS(T) (T * 1000)                                   // tick is defined in ms
     #define TICK_UNIT_US(T) (T)                                          // tick is defined in us
@@ -115,6 +121,8 @@
     #if defined _WINDOWS && defined KINETIS_K_FPU
         #define __VFP_FP__                                               // processor has floating point support
     #endif
+    extern void vMainConfigureTimerForRunTimeStats(void);
+    extern unsigned long ulMainGetRunTimeCounterValue(void);
 #endif
 
 #define configUSE_PREEMPTION			1
@@ -164,15 +172,9 @@ FreeRTOS/Source/tasks.c for limitations. */
 #define configUSE_STATS_FORMATTING_FUNCTIONS	1
 
 /* Run time stats gathering definitions. */
-#ifdef __ICCARM__
-	/* The #ifdef just prevents this C specific syntax from being included in
-	assembly files. */
-	void vMainConfigureTimerForRunTimeStats( void );
-	unsigned long ulMainGetRunTimeCounterValue( void );
-#endif
 #define configGENERATE_RUN_TIME_STATS	1
 #define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS() vMainConfigureTimerForRunTimeStats()
-#define portGET_RUN_TIME_COUNTER_VALUE() ulMainGetRunTimeCounterValue()
+#define portGET_RUN_TIME_COUNTER_VALUE()         ulMainGetRunTimeCounterValue()
 
 /* Cortex-M specific definitions. */
 #ifdef __NVIC_PRIO_BITS

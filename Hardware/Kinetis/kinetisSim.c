@@ -9379,6 +9379,9 @@ extern void fnSetReg(int iRef, unsigned long ulValue)
     case 20:
         kinetis.CORTEX_M4_REGS.ulFAULTMASK = ulValue;
         break;
+    case 22:
+        kinetis.CORTEX_M4_REGS.ulCONTROL = ulValue;
+        break;
     }
 }
 #endif
