@@ -91,6 +91,8 @@
     07.01.2017 Add UART_TIMED_TRANSMISSION_MODE                          {72}
     16.02.2017 Add crypography AES defines                               {73}
     17.01.2017 Add DSP FFT defines                                       {74}
+    03.05.2017 Add UART_RX_MODULO and UART_TX_MODULO flags               {75}
+    09.05.2017 Add PAUSE_TX                                              {76}
 
 */
 
@@ -177,6 +179,7 @@
 #define CONFIG_CTS_PIN    0x1000                                         // {14}
 #define SET_RS485_MODE    0x2000                                         // {14}
 #define SET_RS485_NEG     0x4000                                         // {36}
+#define PAUSE_TX          0x8000                                         // {76}
 
 #define MODIFY_TX         0x1000
 #define MODIFY_RX         0x0000
@@ -261,6 +264,8 @@
 #define UART_RX_DMA_FULL_BUFFER      0x04                                // DMA complete when rx buffer full
 #define UART_RX_DMA_HALF_BUFFER      0x08                                // DMA complete when rx buffer half full
 #define UART_RX_DMA_BREAK            0x10                                // DMA complete when break detected
+#define UART_RX_MODULO               0x20                                // {75} reception memory must be moduo aligned
+#define UART_TX_MODULO               0x40                                // {75} transmission memory must be moduo aligned
 
 #define FLUSH_RX          0
 #define FLUSH_TX          1
@@ -614,14 +619,14 @@ typedef struct stSPITABLE {
 // Ethernet table structure used to configure an Ethernet interface
 //
 typedef struct stETHtable {
-#if !defined ETHERNET_AVAILABLE || defined NO_INTERNAL_ETHERNET || (ETHERNET_INTERFACES > 1) || (defined USB_CDC_RNDIS && defined USB_TO_TCP_IP)
+#if !defined ETHERNET_AVAILABLE || defined NO_INTERNAL_ETHERNET || (ETHERNET_INTERFACES > 1) || (defined USB_CDC_RNDIS && defined USB_TO_TCP_IP) || defined USE_PPP
     void *ptrEthernetFunctions;                                          // function table used when there is an external controller available
 #endif
     QUEUE_HANDLE   Channel;                                              // channel number 0, 1, ...
     unsigned short usMode;                                               // mode of operation
     unsigned short usSizeRx;                                             // size to set for Rx buffer
     unsigned short usSizeTx;                                             // size to set for Tx buffer
-    UTASK_TASK     Task_to_wake;                                         // 0 = don't wake any else first letter
+    UTASK_TASK     Task_to_wake;                                         // 0 = don't wake any, else first letter
 #if !defined USE_IPV6
     unsigned char  ucMAC[6];                                             // MAC address of device
 #endif
@@ -631,14 +636,14 @@ typedef struct stETHtable {
 
 typedef struct stETHERNET_FUNCTIONS {
     int (*fnConfigEthernet)(ETHTABLE *);                                 // configuration function for the Ethernet interface
-    int (*fnGetQuantityRxBuf)(void);
-    unsigned char *(*fnGetTxBufferAdd)(int);
-    int (*fnWaitTxFree)(void);
-    void (*fnPutInBuffer)(unsigned char *, unsigned char *, QUEUE_TRANSFER);
-    QUEUE_TRANSFER (*fnStartEthTx)(QUEUE_TRANSFER, unsigned char *);
-    void (*fnFreeEthernetBuffer)(int);
+    int (*fnGetQuantityRxBuf)(void);                                     // call-back used to get the number of available receive buffers
+    unsigned char *(*fnGetTxBufferAdd)(int);                             // call-back used to get a memory-mapped buffer address
+    int (*fnWaitTxFree)(void);                                           // call-back used to allow waiting on transmit buffer availability
+    void (*fnPutInBuffer)(unsigned char *, unsigned char *, QUEUE_TRANSFER); // call-back used to prepare transmit data to the output buffer
+    QUEUE_TRANSFER (*fnStartEthTx)(QUEUE_TRANSFER, unsigned char *);     // call-back used to release a prepared transmit buffer
+    void (*fnFreeEthernetBuffer)(int);                                   // call-back used to free a used reception buffer
 #if defined USE_IGMP
-    void (*fnModifyMulticastFilter)(QUEUE_TRANSFER, unsigned char *);
+    void (*fnModifyMulticastFilter)(QUEUE_TRANSFER, unsigned char *);    // call-back used to setup the multicast filter
 #endif
 } ETHERNET_FUNCTIONS;
 
@@ -814,7 +819,7 @@ typedef struct stUSBQUE
 //
 typedef struct stIDinfo
 {
-#if (!defined ETH_INTERFACE && (ETHERNET_INTERFACES == 1)) || !defined ETHERNET_AVAILABLE || defined NO_INTERNAL_ETHERNET || (ETHERNET_INTERFACES > 1) || defined USB_CDC_RNDIS
+#if (!defined ETH_INTERFACE && (ETHERNET_INTERFACES == 1)) || !defined ETHERNET_AVAILABLE || defined NO_INTERNAL_ETHERNET || (ETHERNET_INTERFACES > 1) || defined USB_CDC_RNDIS || defined USE_PPP
     void *ptrDriverFunctions;                                            // list of functions that are used to handle certain driver types
 #endif
     QUEUE_TRANSFER (*CallAddress)(QUEUE_HANDLE, unsigned char *, QUEUE_TRANSFER, unsigned char, QUEUE_HANDLE); // address of driver for all interraction

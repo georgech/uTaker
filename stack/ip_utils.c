@@ -36,7 +36,7 @@
     #define _fnBufferDec(x, y, z) fnDebugDec(x, y, z)                    // original decimal string routine
 #endif
 
-#if defined ETH_INTERFACE || defined USB_CDC_RNDIS
+#if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP
 // Convert an input string to a MAC address
 //
 extern CHAR *fnSetMAC(CHAR *ptr_input, unsigned char *ptrMac)

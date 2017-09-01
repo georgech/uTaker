@@ -65,7 +65,7 @@
 //#define FRDM_KL46Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL46Z.html
 //#define TWR_KL46Z48M                                                   // tower board http://www.utasker.com/kinetis/TWR-KL46Z48M.html
 
-//#define FRDM_KL82Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL82Z.html
+//#define FRDM_KL82Z                                                       // freedom board http://www.utasker.com/kinetis/FRDM-KL82Z.html
 
 //#define TWR_KM34Z50M                                                   // M processors Cortex M0+ (metrology) - tower board http://www.utasker.com/kinetis/TWR-KM34Z50M.html
 
@@ -105,12 +105,13 @@
 
 //#define EMCRAFT_K61F150M                                               // K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - http://www.utasker.com/kinetis/EMCRAFT_K61F150M.html
 
-#define FRDM_K64F                                                        // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
-//#define TWR_K64F120M                                                   // tower board http://www.utasker.com/kinetis/TWR-K64F120M.html
+//#define FRDM_K64F                                                      // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
+//#define TWR_K64F120M                                                     // tower board http://www.utasker.com/kinetis/TWR-K64F120M.html
 //#define TEENSY_3_5                                                     // USB development board with K64FX512 - http://www.utasker.com/kinetis/TEENSY_3.5.html
 //#define TWR_K65F180M                                                   // tower board http://www.utasker.com/kinetis/TWR-K65F180M.html
+//#define K66FX1M0                                                       // development board with K66FX1M0
 //#define FRDM_K66F                                                      // freedom board http://www.utasker.com/kinetis/FRDM-K66F.html
-//#define TEENSY_3_6                                                     // USB development board with K66FX1M0 - http://www.utasker.com/kinetis/TEENSY_3.6.html
+#define TEENSY_3_6                                                       // USB development board with K66FX1M0 - http://www.utasker.com/kinetis/TEENSY_3.6.html
 
 //#define TWR_K70F120M                                                   // K processors Cortex M4 with graphical LCD, Ethernet, USB, encryption, tamper - tower board http://www.utasker.com/kinetis/TWR-K70F120M.html
 //#define K70F150M_12M                                                   // development board with 150MHz K70 and 12MHz crystal
@@ -278,7 +279,11 @@
     #define KINETIS_KL
     #define KINETIS_KL82
     #define TARGET_HW       "FRDM-KL82Z"
-    #define OUR_HEAP_SIZE   (HEAP_REQUIREMENTS)((12 * 1024) * MEM_FACTOR)
+    #if defined _WINDOWS
+        #define OUR_HEAP_SIZE   (HEAP_REQUIREMENTS)((63 * 1024) * MEM_FACTOR) // use large heap so that large UART input buffer can be used when simulating in order to avoid reception overflows
+    #else
+        #define OUR_HEAP_SIZE   (HEAP_REQUIREMENTS)((12 * 1024) * MEM_FACTOR)
+    #endif
     #define DEVICE_WITHOUT_ETHERNET                                      // KL doesn't have Ethernet controller
 #elif defined TWR_KV10Z32
     #define TARGET_HW            "TWR-KV10Z32"
@@ -422,12 +427,12 @@
     #define KINETIS_REVISION_2
     #define DEVICE_WITHOUT_ETHERNET                                      // K20 doesn't have Ethernet controller
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((24 * 1024) * MEM_FACTOR)
-    #define SUPPORT_GLCD                                                 // enable the task for interfacing to a graphical LCD
-    #define TFT2N0369_GLCD_MODE                                          // use colour TFT in GLCD compatible mode (as base)
-    #define ST7789S_GLCD_MODE                                            // adjustments for specific controller
-    #define SUPPORT_TOUCH_SCREEN                                         // with touch screen operation
-    #define TOUCH_FT6206                                                 // FT6206 capacitative touch panel controller
-        #define DONT_HANDLE_TOUCH_SCREEN_MOVEMENT                        // don't handle movement
+  //#define SUPPORT_GLCD                                                 // enable the task for interfacing to a graphical LCD
+        #define TFT2N0369_GLCD_MODE                                      // use colour TFT in GLCD compatible mode (as base)
+        #define ST7789S_GLCD_MODE                                        // adjustments for specific controller
+  //#define SUPPORT_TOUCH_SCREEN                                         // with touch screen operation
+        #define TOUCH_FT6206                                             // FT6206 capacitative touch panel controller
+            #define DONT_HANDLE_TOUCH_SCREEN_MOVEMENT                    // don't handle movement
     #define GLCD_BACKLIGHT_CONTROL                                       // PWM based backlight control
         #define FIXED_BACKLIGHT_INTENSITY                                // don't use PWM but instead fixed on
     #define I2C_INTERFACE                                                // enable I2C driver for touch screen interface
@@ -459,6 +464,10 @@
   //#define EN_CHAR_LCD_DOT
   //#define MAX_BLINKING_OBJECTS   3                                     // the number of blinking objects to be supported - comment out when not required
     #define MAX_TEXT_LENGTH        64                                    // maximum text length when writing fonts
+
+    #if defined _NO_CHECK_QUEUE_INPUT
+        #undef _NO_CHECK_QUEUE_INPUT
+    #endif
 #elif defined TWR_K22F120M
     #define TARGET_HW       "TWR-K22F120M"
     #define KINETIS_K_FPU                                                // part with floating point unit
@@ -566,7 +575,7 @@
     #define KINETIS_REVISION_2
     #define KINETIS_K64                                                  // extra sub-family type precision
 #elif defined TWR_K65F180M
-  //#define TWR_SER                                                      // use TWR-SER serial board instead of OpenSDA virtual COM port
+    #define TWR_SER                                                      // use TWR-SER serial board instead of OpenSDA virtual COM port
     #define TARGET_HW            "TWR-K65F180M"
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((48 * 1024) * MEM_FACTOR) // large SRAM parts
     #define KINETIS_MAX_SPEED    180000000
@@ -577,7 +586,7 @@
     #if !defined TWR_SER
         #define USB_HS_INTERFACE                                         // use HS interface rather than FS interface
     #endif
-#elif defined FRDM_K66F
+#elif defined FRDM_K66F || defined K66FX1M0
     #define TARGET_HW            "FRDM-K66F"
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((48 * 1024) * MEM_FACTOR) // large SRAM parts
     #define KINETIS_MAX_SPEED    180000000
@@ -585,7 +594,7 @@
     #define KINETIS_K60                                                  // specify the sub-family
     #define KINETIS_REVISION_2
     #define KINETIS_K66                                                  // extra sub-family type precision
-    #define USB_HS_INTERFACE                                             // use HS interface rather than FS interface
+    #define USB_HS_INTERFACE                                             // use HS interface (USB1) rather than FS interface (USB0)
 #elif defined TEENSY_3_6
     #define TARGET_HW            "Teensy 3.6 (K66FX1M0)"
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((48 * 1024) * MEM_FACTOR) // large SRAM parts
@@ -683,12 +692,12 @@
 #if defined SERIAL_INTERFACE
   //#define KBOOT_LOADER                                                 // use KBOOT UART interface rather than SREC/iHex interface
   //#define DEVELOPERS_LOADER                                            // Freescale Developer's Bootloader (AN2295) compatible mode (rather than SREC/iHex)
-      //#define DEVELOPERS_LOADER_PROTOCOL_VERSION_9                     // user protocol version 9 rather than obselete Kinetis 8 (not completed at the moment)
+      //#define DEVELOPERS_LOADER_PROTOCOL_VERSION_9                     // user protocol version 9 rather than obsolete Kinetis 8 (not completed at the moment)
         #define DEVELOPERS_LOADER_READ                                   // support reading back program
         #define DEVELOPERS_LOADER_CRC                                    // support CRC in communication
     #define REMOVE_SREC_LOADING                                          // disable SREC (and Intel Hex) loading but keep debug output and the command line menu
     #if !defined REMOVE_SREC_LOADING
-      //#define SUPPORT_INTEL_HEX_MODE                                   // support Intel Hex mode together with SREC (auto-recognition)
+        #define SUPPORT_INTEL_HEX_MODE                                   // support Intel Hex mode together with SREC (auto-recognition)
       //#define EXCLUSIVE_INTEL_HEX_MODE                                 // loading mode is exclusively Intel Hex (use with or without SUPPORT_INTEL_HEX_MODE)
     #endif
   //#define SERIAL_STATS                                                 // keep statistics about serial interface use
@@ -717,10 +726,10 @@
 #if defined DEVICE_WITHOUT_USB
     #define NUMBER_USB     0                                             // no physical queue needed
 #else
-    #define USB_INTERFACE                                                // enable USB driver interface
+  //#define USB_INTERFACE                                                // enable USB driver interface
     #if defined USB_INTERFACE
       //#define USE_USB_CDC                                              // allow SREC/iHex loading via virtual COM
-        #define USB_MSD_DEVICE_LOADER                                    // USB-MSD device mode (the board appears as a hardware to the host)
+        #define USB_MSD_DEVICE_LOADER                                    // USB-MSD device mode (the board appears as a hard-drive to the host)
       //#define USB_MSD_HOST_LOADER                                      // USB-MSD host mode (the board operates as host and can read new code from a memory stick)
         #if defined USE_USB_CDC
             #undef SERIAL_INTERFACE                                      // remove the UART interface
@@ -742,10 +751,18 @@
                 #define MAX_FIRMWARE_NAME  64                            // longest firmware file name string buffer
                 #define EMULATED_FAT_FILE_DATE_CONTROL
             #endif
+          //#define USB_MSD_REJECTS_BINARY_FILES                         // default is to accept binary files
+          //#define USB_MSD_ACCEPTS_SREC_FILES                           // optionally accept SREC content
+            #define USB_MSD_ACCEPTS_HEX_FILES                            // optionally accept Intel HEX content
         #endif
         #if defined USB_MSD_HOST_LOADER                                  // support loading from memory stick
+            #if defined USB_HS_INTERFACE
+                #define NXP_MSD_HOST                                     // use NXP USB host interface for realisation
+            #endif
             #define USB_MSD_HOST                                         // requires USB-MSD support in the mass-storage module
-            #define USB_HOST_SUPPORT                                     // requires USB host driver support
+            #if !defined NXP_MSD_HOST
+                #define USB_HOST_SUPPORT                                 // requires USB host driver support
+            #endif
             #define SUPPORT_USB_SIMPLEX_HOST_ENDPOINTS                   // allow operation with memory sticks using bulk IN/OUT on the same endpoint
             #define RANDOM_NUMBER_GENERATOR                              // random numbers required for USB-MSD host tags
           //#define DELETE_SDCARD_FILE_AFTER_UPDATE
@@ -792,12 +809,15 @@
     #endif
 #endif
 
-#if !defined TWR_K20D50M && !defined FRDM_K20D50M && !defined FRDM_KL46Z && !defined FRDM_KL43Z && !defined TWR_KL46Z48M && !defined FRDM_KL26Z && !defined FRDM_KL27Z && !defined TWR_KL25Z48M && !defined FRDM_KL02Z && !defined FRDM_KL03Z && !defined FRDM_KL05Z && !defined FRDM_KE02Z && !defined FRDM_KE02Z40M && !defined FRDM_KE04Z && !defined TWR_K20D72M && !defined TWR_K21D50M && !defined TWR_K22F120M && !defined TWR_K24F120M && !defined K24FN1M0_120 && !defined FRDM_K22F && !defined TWR_KV10Z32 && !defined TWR_KV31F120M // boards have no SD card socket
-  //#define SDCARD_SUPPORT                                               // SD-card interface (only choose one of these options at a time)
+#if !defined TWR_K20D50M && !defined FRDM_K20D50M && !defined FRDM_KL46Z && !defined FRDM_KL43Z && !defined TWR_KL46Z48M && !defined FRDM_KL26Z && !defined FRDM_KL27Z && !defined TWR_KL25Z48M && !defined FRDM_KL02Z && !defined FRDM_KL03Z && !defined FRDM_KL05Z && !defined FRDM_KE02Z && !defined FRDM_KE02Z40M && !defined FRDM_KE04Z && !defined TWR_K20D72M && !defined TWR_K21D50M && !defined TWR_K22F120M && !defined TWR_K24F120M && !defined K24FN1M0_120 && !defined FRDM_K22F && !defined TWR_KV10Z32 && !defined TWR_KV31F120M && !defined K66FX1M0 // boards have no SD card socket
+    #define SDCARD_SUPPORT                                               // SD-card interface (only choose one of these options at a time)
   //#define SPI_FLASH_FAT                                                // SPI flash
-        #define SIMPLE_FLASH                                             // don't perform block management and wear-leveling
+        #define SIMPLE_FLASH                                             // don't perform block management and wear-levelling
         #define FLASH_FAT_MANAGEMENT_ADDRESS     (SIZE_OF_FLASH)
-  //#define DELETE_SDCARD_FILE_AFTER_UPDATE
+  //#define DELETE_SDCARD_FILE_AFTER_UPDATE                              // once new firmware has been copied from the SD card it will be automatically deleted from the card
+    #if defined SERIAL_INTERFACE && !defined REMOVE_SREC_LOADING
+        #define UTFAT_DISABLE_DEBUG_OUT                                  // disable general mass-storage output so that the SREC loader is not disturbed
+    #endif
     #if defined DELETE_SDCARD_FILE_AFTER_UPDATE || defined USE_USB_MSD
         #define UTFAT_WRITE
     #endif
@@ -835,7 +855,9 @@
 #endif
 
 #if !defined DEVICE_WITHOUT_ETHERNET
-  //#define ETH_INTERFACE                                                // enable Ethernet interface driver
+    #if !defined TEENSY_3_6
+        #define ETH_INTERFACE                                            // enable Ethernet interface driver
+    #endif
     #if defined FRDM_K64F
       //#define ENC424J600_INTERFACE                                     // 10/100 Ethernet connected via SPI (also ENC624J600 in larger package with more parallel modes)
       //#define USE_SIMULATION_INTERFACE                                 // work with a remote simulation interface (remove when not present)
@@ -857,8 +879,8 @@
     #define ETHERNET_RELEASE_AFTER_EVERY_FRAME                           // handle only one Ethernet reception frame at a time and allow other tasks to be scheduled in between
         #define ETHERNET_RELEASE_LIMIT  3                                // allow a maximum of three reception frames to be handled
 /**************** Configure TCP/IP services ******************************************************************/
-  //#define USE_IPV6                                                     // enable IPV6
-        #define USE_IPV6INV4                                             // support tunnelling IPv6 ind IPv4
+    #define USE_IPV6                                                     // enable IPv6
+      //#define USE_IPV6INV4                                             // support tunneling IPv6 ind IPv4
         #define USE_IPV6INV4_RELAY_DESTINATIONS 2                        // enable relaying to other nodes in the network - the number of destination in the IPv6 in IPv4 relay table
         #define MAX_HW_ADDRESS_LENGTH  MAC_LENGTH                        // set a variable maximum hardware address length - default is Ethernet MAC-48, 6 bytes
         #define NEIGHBOR_TABLE_ENTRIES 4                                 // the maximum entries in IPV6 neighbor table
@@ -871,7 +893,7 @@
         #if defined _WINDOWS
           //#define PSEUDO_LOOPBACK                                      // pseudo loop back when simulating - only for use with the simulator!! (this allows an application to send test frames to its own IP address)
         #endif
-      //#define USE_ZERO_CONFIG                                          // support IPv4 link-local and zero configuratio (autoIP)
+      //#define USE_ZERO_CONFIG                                          // support IPv4 link-local and zero configuration (autoIP)
         #if defined USE_ICMP                                             // specify ICMP support details
             #define ICMP_PING                                            // allow PING reply
           //#define ICMP_SEND_PING                                       // support PING transmission

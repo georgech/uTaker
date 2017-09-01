@@ -41,6 +41,7 @@
     12.07.2014 Add kboot global defines, which are shared by HID and UART modes {24}
     21.01.2015 Modify fnAddSREC_file() to pass additional information    {25}
     20.10.2015 Add fnJumpToValidApplication();                           {26}
+    03.08.2017 Add USB-MSD iHex/SREC content support                     {27}
 
 */
 
@@ -147,6 +148,8 @@
     #else
         #if defined FRDM_K64F && defined MEMORY_SWAP
             #define UTASKER_APP_START     (SIZE_OF_FLASH/2)              // second half of flash memory is used by the next application
+        #elif defined NXP_MSD_HOST                                       // if using NXP host stack the loader is larger in size
+            #define UTASKER_APP_START     (64 * 1024)                    // application starts at this address
         #else
             #define UTASKER_APP_START     (32 * 1024)                    // application starts at this address
         #endif
@@ -296,6 +299,26 @@
 extern void fnConfigureAndStartWebServer(void);
 extern void fnTransferTFTP(void);
 extern void fnSetBacklight(void);
+#if defined USB_MSD_ACCEPTS_SREC_FILES || defined USB_MSD_ACCEPTS_HEX_FILES  // {27}
+    extern int fnHandleRecord(unsigned char *ptrLine, unsigned char *ptrEnd, int Type);
+    // iType
+    //
+    #define TEST_SERIAL_CONTENT          0
+    #define SERIAL_LOADING_IN_OPERATION  1
+    #define USB_LOADING_IN_OPERATION     2
+#else
+    extern int fnHandleRecord(unsigned char *ptrLine, unsigned char *ptrEnd);
+#endif
+    // Return values
+    //
+    #define LINE_ACCEPTED                0
+    #define PROGRAMMING_ERROR            1
+    #define CORRUPTED_SREC               2
+    #define INVALID_SREC_HOLE            3
+    #define SREC_CS_ERROR                4
+    #define INVALID_APPLICATION_LOCATION 5
+    #define STOP_FLOW_CONTROL            6
+    #define PROGRAMMING_COMPLETE         7
 
 #define T_RESET                   1                                      // application timer events
 #define T_GO_TO_APP               2

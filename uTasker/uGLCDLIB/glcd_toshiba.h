@@ -18,7 +18,7 @@
 */
 
 
-#if !defined _GLCD_SAMSUNG && !defined OLED_GLCD_MODE && !defined TFT_GLCD_MODE && !defined NOKIA_GLCD_MODE & !defined CGLCD_GLCD_MODE && !defined KITRONIX_GLCD_MODE && !defined MB785_GLCD_MODE && !defined TFT2N0369_GLCD_MODE && !defined ST7565S_GLCD_MODE && !defined ST7789S_GLCD_MODE // {1}
+#if !defined _GLCD_SAMSUNG && !defined OLED_GLCD_MODE && !defined TFT_GLCD_MODE && !defined NOKIA_GLCD_MODE & !defined CGLCD_GLCD_MODE && !defined KITRONIX_GLCD_MODE && !defined MB785_GLCD_MODE && !defined TFT2N0369_GLCD_MODE && !defined ST7565S_GLCD_MODE && !defined ST7789S_GLCD_MODE && !defined FT800_GLCD_MODE // {1}
     #if !defined _GLCD_TOSHIBA_DEFINES
         #define GLCD_BUSY()                 ((fnReadGLCD_cmd() & 0x3) != 0x3) // LCD busy check
         #define X_BYTES	                    (GLCD_X/8)                   // the number of bytes holding the X-pixels
@@ -52,8 +52,7 @@
         #define _GLCD_TOSHIBA_DEFINES                                    // include only once
     #endif
 
-    #ifdef _GLCD_COMMANDS                                                // link in Toshiba specific interface commands
-
+    #if defined _GLCD_COMMANDS                                           // link in Toshiba specific interface commands
 
 // Read data from the GLCD. It is assumed that RD/WR lines are initially high and that the data bus is being driven
 // The data bus is driven again on exit and RD/WR lines set high again

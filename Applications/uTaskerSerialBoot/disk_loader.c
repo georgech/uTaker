@@ -178,7 +178,7 @@ extern void fnSD_loader(TTASKTABLE *ptrTaskTable)
         ptr_utDirectory = utAllocateDirectory(LOADING_DISK, 0);          // allocate a directory for use by this module associated with D: without path name string length
     }
     else {
-        while (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH)) {  // check input queue
+        while (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH) != 0) { // check input queue
             if (ucInputMessage[MSG_SOURCE_TASK] == TIMER_EVENT) {        // timer event
                 if (T_CHECK_CARD == ucInputMessage[MSG_TIMER_EVENT]) {   // check whether the disk is ready
                     const UTDISK *ptrDiskInfo = fnGetDiskInfo(LOADING_DISK);

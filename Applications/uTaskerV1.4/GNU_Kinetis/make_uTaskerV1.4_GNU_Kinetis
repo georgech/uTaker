@@ -19,28 +19,32 @@
 # 14.12.2016 Add Cortex M4 FPU settings and CMSIS FFT components
 # 13.01.2017 Add AES and crypto
 # 17.01.2017 Add dsp
+# 01.03.2017 Add FT_CoPro_Cmds
+# 09.05.2017 Add ppp.c
+# 03.07.2017 Add FreeRTOS files and application
 
 
 # Compiler flags (thumb mode - little endian)
 # (set to Cortex-M4 or Cortex-M0+ accordingly)
-#C_FLAGS = -mcpu=cortex-m0plus -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections
+C_FLAGS = -mcpu=cortex-m0plus -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections
 #C_FLAGS = -mcpu=cortex-m4 -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections 
-C_FLAGS = -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections 
+#C_FLAGS = -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections 
 #C_FLAGS = -mcpu=cortex-m7 -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections 
 
 
 # All objects (Hardware, application, uTasker, stack)
 #
-OBJS = Build/application.o Build/debug.o Build/webInterface.o Build/KeyScan.o Build/NetworkIndicator.o Build/usb_application.o Build/snmp_mib_handlers.o Build/FreeMaster.o Build/nRF24201.o \
+OBJS = Build/application.o Build/debug.o Build/webInterface.o Build/KeyScan.o Build/NetworkIndicator.o Build/usb_application.o Build/snmp_mib_handlers.o Build/FreeMaster.o Build/nRF24201.o Build/FreeRTOSapplication.o \
        Build/MODBUS.o Build/modbus_app.o \
        Build/mass_storage.o \
-       Build/GLCD.o Build/LCD.o \
+       Build/GLCD.o Build/LCD.o Build/FT_CoPro_Cmds.o  \
        Build/aes.o Build/w_aes.o Build/aes_cbc.o Build/cbc128.o Build/aes_core.o Build/mmcau_aes_functions.o \
        Build/arm_bitreversal2.o Build/arm_cfft_f32.o Build/arm_cfft_radix8_f32.o Build/arm_cmplx_mag_f32.o Build/arm_common_tables.o Build/arm_const_structs.o Build/arm_max_f32.o \
        Build/eth_drv.o Build/Driver.o Build/uMalloc.o Build/uTasker.o Build/Tty_drv.o Build/i2c_drv.o Build/USB_drv.o Build/uFile.o Build/Watchdog.o Build/GlobalTimer.o Build/time_keeper.o Build/low_power.o Build/can_drv.o \
        Build/Ethernet.o Build/arp.o Build/dhcp.o Build/dns.o Build/ftp.o Build/http.o Build/icmp.o Build/ip_utils.o Build/ip.o Build/pop3.o Build/smtp.o Build/snmp.o \
-       Build/tcp.o Build/telnet.o Build/tftp.o Build/udp.o Build/webutils.o Build/NetBIOS.o Build/zero_config.o Build/ftp_client.o Build/igmp.o \
-       Build/crypto.o Build/DSP.o
+       Build/tcp.o Build/telnet.o Build/tftp.o Build/udp.o Build/webutils.o Build/NetBIOS.o Build/zero_config.o Build/ftp_client.o Build/igmp.o Build/ppp.o \
+       Build/crypto.o Build/DSP.o \
+       Build/tasks.o Build/timers.o Build/queue.o Build/list.o Build/event_groups.o Build/croutine.o Build/port.o
 
 OBJS2 = Build/kinetis.o
 
@@ -53,7 +57,7 @@ DEPENDS = ../config.h ../app_hw_kinetis.h ../types.h ../TaskConfig.h ../../../uT
        ../../../Hardware/hardware.h ../../../Hardware/Kinetis/kinetis.h \
        ../../../uTasker/MODBUS/modbus.h \
        ../../../uTasker/utFAT/mass_storage.h \
-       ../../../uTasker/uGLCDLIB/glcd.h \
+       ../../../uTasker/uGLCDLIB/glcd.h ../../../uTasker/uGLCDLIB/FT_Gpu.h ../../../uTasker/uGLCDLIB/FT_CoPro_Cmds.h \
        ../../../stack/tcpip.h
 
 DEPENDS_CMSIS = ../config.h \
@@ -63,6 +67,16 @@ DEPENDS_CMSIS = ../config.h \
        ../../../Hardware/Kinetis/CMSIS_DSP/core_cm4.h \
        ../../../Hardware/Kinetis/CMSIS_DSP/cmsis_compiler.h \
        ../../../Hardware/Kinetis/CMSIS_DSP/cmsis_gcc.h
+
+FREERTOS_INC = ../../../FreeRTOS\Source\include
+FREERTOS_PORT_INC = ../../../FreeRTOS/Source/portable/GCC/ARM_CM4F
+
+DEPENDS_FREERTOS = $(FREERTOS_INC) \
+                   $(FREERTOS_PORT_INC) \
+                   ../config.h ../app_hw_kinetis.h ../FreeRTOSConfig.h
+
+FREERTOS_INCLUDE = -I$(FREERTOS_INC) \
+                   -I$(FREERTOS_PORT_INC)
 
 
 INC     = -I../ 
@@ -146,6 +160,10 @@ Build/FreeMaster.o: ../FreeMaster.c $(DEPENDS) ../application.h
 
 Build/nRF24201.o: ../nRF24201.c $(DEPENDS) ../application.h
 		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../nRF24201.c -o Build/nRF24201.o
+
+Build/FreeRTOSapplication.o: ../FreeRTOSapplication.c $(DEPENDS) $(DEPENDS_FREERTOS) ../application.h
+		$(CC) $(C_FLAGS) $(INC) $(FREERTOS_INCLUDE) $(OPTS) ../FreeRTOSapplication.c -o Build/FreeRTOSapplication.o
+
 
 
 
@@ -271,6 +289,8 @@ Build/ftp_client.o: ../../../stack/ftp_client.c $(DEPENDS)
 Build/igmp.o: ../../../stack/igmp.c $(DEPENDS)
 		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../stack/igmp.c -o Build/igmp.o
 
+Build/ppp.o: ../../../stack/ppp.c $(DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../stack/ppp.c -o Build/ppp.o
 
 
 # uGLCDLIB files
@@ -280,6 +300,9 @@ Build/GLCD.o: ../../../uTasker/uGLCDLIB/GLCD.c $(DEPENDS) ../application.h ../..
 
 Build/LCD.o: ../../../uTasker/uGLCDLIB/LCD.c $(DEPENDS) ../application.h
 		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../uTasker/uGLCDLIB/LCD.c -o Build/LCD.o
+
+Build/FT_CoPro_Cmds.o: ../../../uTasker/uGLCDLIB/FT_CoPro_Cmds.c $(DEPENDS) ../application.h
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../uTasker/uGLCDLIB/FT_CoPro_Cmds.c -o Build/FT_CoPro_Cmds.o
 
 # utFAT files
 #
@@ -347,20 +370,41 @@ Build/arm_const_structs.o: ../../../Hardware/Kinetis/CMSIS_DSP/arm_const_structs
 Build/arm_max_f32.o : ../../../Hardware/Kinetis/CMSIS_DSP/arm_max_f32.c $(DEPENDS_CMSIS)
 		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../Hardware/Kinetis/CMSIS_DSP/arm_max_f32.c -o Build/arm_max_f32.o
 
+# Free RTOS
+Build/tasks.o : ../../../FreeRTOS/Source/tasks.c $(DEPENDS_FREERTOS)
+		$(CC) $(C_FLAGS) $(INC) $(FREERTOS_INCLUDE) $(OPTS) ../../../FreeRTOS/Source/tasks.c -o Build/tasks.o
+
+Build/timers.o : ../../../FreeRTOS/Source/timers.c $(DEPENDS_FREERTOS)
+		$(CC) $(C_FLAGS) $(INC) $(FREERTOS_INCLUDE) $(OPTS) ../../../FreeRTOS/Source/timers.c -o Build/timers.o
+
+Build/queue.o : ../../../FreeRTOS/Source/queue.c $(DEPENDS_FREERTOS)
+		$(CC) $(C_FLAGS) $(INC) $(FREERTOS_INCLUDE) $(OPTS) ../../../FreeRTOS/Source/queue.c -o Build/queue.o
+
+Build/list.o : ../../../FreeRTOS/Source/list.c $(DEPENDS_FREERTOS)
+		$(CC) $(C_FLAGS) $(INC) $(FREERTOS_INCLUDE) $(OPTS) ../../../FreeRTOS/Source/list.c -o Build/list.o
+
+Build/event_groups.o : ../../../FreeRTOS/Source/event_groups.c $(DEPENDS_FREERTOS)
+		$(CC) $(C_FLAGS) $(INC) $(FREERTOS_INCLUDE) $(OPTS) ../../../FreeRTOS/Source/event_groups.c -o Build/event_groups.o
+
+Build/croutine.o : ../../../FreeRTOS/Source/croutine.c $(DEPENDS_FREERTOS)
+		$(CC) $(C_FLAGS) $(INC) $(FREERTOS_INCLUDE) $(OPTS) ../../../FreeRTOS/Source/croutine.c -o Build/croutine.o
+
+Build/port.o : ../../../FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c $(DEPENDS_FREERTOS)
+		$(CC) $(C_FLAGS) $(INC) $(FREERTOS_INCLUDE) $(OPTS) ../../../FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c -o Build/port.o
 
 
 # Link
 # Create output file and show its size
 # $(LINKER) $(C_FLAGS) -I../../uTaskerV1.4 -D _GNU -D _KINETIS -g -Os -Wl,-Map=uTaskerV1.4.map -nostartfiles -TK_1M_256.ld -o uTaskerV1.4.elf $(OBJS) $(OBJS2)
-uTaskerV1.4.elf: $(OBJS) $(OBJS2) K_2M_256.ld K_1M_256.ld K_1M_128.ld K_512_64.ld K_256_256.ld K_256_64.ld K_256_32.ld KL_128_96.ld KL_256_32.ld KL_128_16.ld KL_64_8.ld KL_32_4.ld KV_32_8.ld KV_512_96.ld KE_64_4.ld KE_128_16.ld KE_8_1.ld KEA_128_16.ld KEA_64_4.ld  KEA_32_4.ld KEA_8_1.ld
-	$(CC_LNK) $(C_FLAGS) -Os -g -TK_1M_256.ld -nostartfiles -Xlinker --gc-sections -lm -Wl,-Map,"uTaskerV1.4.map" -o "uTaskerV1.4.elf" $(OBJS) $(OBJS2)
+uTaskerV1.4.elf: $(OBJS) $(OBJS2) K_2M_256.ld K_1M_256.ld K_1M_128.ld K_512_64.ld K_256_256.ld K_256_64.ld K_256_32.ld K_128_24.ld KL_128_96.ld KL_256_32.ld KL_128_16.ld KL_64_8.ld KL_32_4.ld KV_32_8.ld KV_512_96.ld KE_64_4.ld KE_128_16.ld KE_8_1.ld KEA_128_16.ld KEA_64_4.ld  KEA_32_4.ld KEA_8_1.ld
+	$(CC_LNK) $(C_FLAGS) -Os -g -TKL_64_16.ld -nostartfiles -Xlinker --gc-sections -lm -Wl,-Map,"uTaskerV1.4.map" -o "uTaskerV1.4.elf" $(OBJS) $(OBJS2)
 	$(CC_OBJ) --only-section=.data --only-section=.init --only-section=.text --only-section=.rodata --only-section=.vectors --only-section=.f_config --output-target=srec uTaskerV1.4.elf uTaskerV1.4.srec
 	$(CC_OBJ) --only-section=.data --only-section=.init --only-section=.text --only-section=.rodata --only-section=.vectors --only-section=.f_config --output-target=ihex uTaskerV1.4.elf uTaskerV1.4.hex
 	$(CC_OBJ) --only-section=.data --only-section=.init --only-section=.text --only-section=.rodata --only-section=.vectors --only-section=.f_config --output-target=binary uTaskerV1.4.elf uTaskerV1.4.bin
 	$(CC_SIZE) uTaskerV1.4.elf
 
-uTaskerV1.4_BM.elf: $(OBJS) $(OBJS2_BM) K_2M_256_BM.ld K_1M_256_BM.ld K_1M_128_BM.ld K_512_64_BM.ld K_256_256_BM.ld K_256_64_BM.ld K_128_16_BM.ld KL_128_96_BM.ld KL_256_32_BM.ld KL_128_16_BM.ld KL_64_8_BM.ld KL_32_4_BM.ld KV_32_8_BM.ld KV_512_96_BM.ld KE_128_16_BM.ld KE_64_4_BM.ld KEA_128_16_BM.ld KEA_64_4_BM.ld KEA_32_4_BM.ld K_1M_128_Blaze.ld
-	$(CC_LNK) $(C_FLAGS) -Os -g -TK_1M_256_BM.ld -nostartfiles -Xlinker --gc-sections -lm -Wl,-Map=uTaskerV1.4_BM.map -o uTaskerV1.4_BM.elf $(OBJS) $(OBJS2_BM)
+uTaskerV1.4_BM.elf: $(OBJS) $(OBJS2_BM) K_2M_256_BM.ld K_1M_256_BM.ld K_1M_128_BM.ld K_512_64_BM.ld K_256_256_BM.ld K_256_64_BM.ld K_128_24_BM.ld K_128_16_BM.ld KL_128_96_BM.ld KL_256_32_BM.ld KL_128_16_BM.ld KL_64_8_BM.ld KL_32_4_BM.ld KV_32_8_BM.ld KV_512_96_BM.ld KE_128_16_BM.ld KE_64_4_BM.ld KEA_128_16_BM.ld KEA_64_4_BM.ld KEA_32_4_BM.ld K_1M_128_Blaze.ld
+	$(CC_LNK) $(C_FLAGS) -Os -g -TKL_64_16_BM.ld -nostartfiles -Xlinker --gc-sections -lm -Wl,-Map=uTaskerV1.4_BM.map -o uTaskerV1.4_BM.elf $(OBJS) $(OBJS2_BM)
 	$(CC_OBJ) --only-section=.data --only-section=.init --only-section=.text --only-section=.rodata --only-section=.vectors --output-target=srec uTaskerV1.4_BM.elf uTaskerV1.4_BM.srec
 	$(CC_OBJ) --only-section=.data --only-section=.init --only-section=.text --only-section=.rodata --only-section=.vectors --output-target=ihex uTaskerV1.4_BM.elf uTaskerV1.4_BM.hex
 	$(CC_OBJ) --only-section=.data --only-section=.init --only-section=.text --only-section=.rodata --only-section=.vectors --output-target=binary uTaskerV1.4_BM.elf uTaskerV1.4_BM.bin

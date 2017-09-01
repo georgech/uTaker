@@ -93,7 +93,7 @@ static QUEUE_TRANSFER entry_ssc(QUEUE_HANDLE channel, unsigned char *ptBuffer, Q
         if (Counter) {                                                   // modify driver state
                 if (Counter & RX_ON) {
 #if defined SSC_SUPPORT_DMA
-                    if (ptSSCQue->ucDMA_mode & UART_RX_DMA) {
+                    if ((ptSSCQue->ucDMA_mode & UART_RX_DMA) != 0) {
                         fnPrepareSSCRxDMA(channel, ptSSCQue->ssc_queue.put, ptSSCQue->ucWordsPerFrame);
 #if defined SSC_DMA_DOUBLE_BUF_RX
                         ptSSCQue->ssc_queue.put += (ptSSCQue->ucWordsPerFrame * ptSSCQue->ucBytesPerWord);
@@ -318,7 +318,7 @@ extern void fnSSCRxWord( unsigned long ulWord, QUEUE_HANDLE Channel )
 {
     SSCQUE *rx_ctl = rx_control[Channel];
 #if defined SSC_SUPPORT_DMA
-    if (rx_ctl->ucDMA_mode & UART_RX_DMA) {                              // new characters in the buffer - increment message count
+    if ((rx_ctl->ucDMA_mode & UART_RX_DMA) != 0) {                       // new characters in the buffer - increment message count
         QUEUE_TRANSFER transfer_length = (rx_ctl->ucWordsPerFrame * rx_ctl->ucBytesPerWord);
         rx_ctl->ssc_queue.put += transfer_length;
         if (rx_ctl->ssc_queue.put >= rx_ctl->ssc_queue.buffer_end) {

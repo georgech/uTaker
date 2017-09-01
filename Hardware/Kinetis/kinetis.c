@@ -58,9 +58,10 @@
     11.04.2016 Set registers to volatile to ensure no optimisation in fnDelayLoop() {124}
     25.11.2016 Add ROM bootloader errata workaround                      {125}
     31.01.2017 Add fnClearPending() and fnIsPending()                    {126}
+    02.03.2017 Add optional alternative memcpy DMA channel for use by interrupts {127}
+    12.05.2017 Allow detection of RNG type in case both revison 1 and revision 2 parts may be encountered {128}
 
 */
-
 
 /* =================================================================== */
 /*                           include files                             */
@@ -137,6 +138,12 @@
 /*                global function prototype declarations               */
 /* =================================================================== */
 
+#if defined RUN_IN_FREE_RTOS
+    extern void xPortPendSVHandler(void);                                // PendSV interrupt handler
+    extern void vPortSVCHandler(void);                                   // SCV interrupt handler
+    extern void xPortSysTickHandler(void);                               // FreeRTOS tick handler callback
+#endif
+
 /* =================================================================== */
 /*                 local function prototype declarations               */
 /* =================================================================== */
@@ -146,7 +153,6 @@ static void _LowLevelInit(void);
 #if defined SUPPORT_LOW_POWER
     static int fnPresentLP_mode(void);
 #endif
-
 
 /* =================================================================== */
 /*                             constants                               */
@@ -283,7 +289,7 @@ static int iInterruptLevel = 0;                                          // pres
             #define asm(x) _asm(x)
         #endif
         #if defined _COMPILE_GHS                                         // {110}
-            #define __disable_interrupt() asm("cpsid i")                 // __DI() intrinsics are not used becasue they are asm("cpsid if") which doesn't allow correct low power mode operation
+            #define __disable_interrupt() asm("cpsid i")                 // __DI() intrinsics are not used because they are asm("cpsid if") which doesn't allow correct low power mode operation
             #define __enable_interrupt()  asm("cpsie i")                 // __EI()
             #define __sleep_mode()        asm("wfi")
         #else
@@ -337,7 +343,12 @@ static void disable_watchdog(void)
         ACTIVATE_WATCHDOG();                                             // allow user configuration of internal watch dog timer
     }
     else {
-        #if defined KINETIS_KL && !defined KINETIS_KL82                  // {67}
+        #if defined KINETIS_WITH_WDOG32
+        UNLOCK_WDOG();                                                   // open a window to write to watchdog
+        WDOG0_CS = WDOG_CS_UPDATE;                                       // disable watchdog but allow updates
+        WDOG0_TOVAL = 0xffff;
+        WDOG0_WIN = 0;  
+        #elif defined KINETIS_KL && !defined KINETIS_KL82                // {67}
         SIM_COPC = SIM_COPC_COPT_DISABLED;                               // disable the COP
         #else
         UNLOCK_WDOG();                                                   // open a window to write to watchdog
@@ -371,6 +382,12 @@ static void disable_watchdog(void)
 /*                                main()                               */
 /* =================================================================== */
 
+#if !defined RUN_IN_FREE_RTOS && !defined _WINDOWS
+    static void fn_uTasker_main(void);
+#elif defined RUN_IN_FREE_RTOS && !defined _WINDOWS
+    extern void fnFreeRTOS_main(void);
+#endif
+
 // Main entry for the target code
 //
 extern int main(void)
@@ -391,10 +408,31 @@ extern int main(void)
 #if defined RANDOM_NUMBER_GENERATOR && !defined RND_HW_SUPPORT
     ptrSeed = RANDOM_SEED_LOCATION;                                      // {23}
 #endif
+    fnInitialiseHeap(ctOurHeap, HEAP_START_ADDRESS);                     // initialise heap
+#if defined RUN_IN_FREE_RTOS
+    fnFreeRTOS_main();                                                   // never return in normal situations
+    for (;;) {
+        // This only happens when there was a failure to initialise and start FreeRTOS (usually not enough heap)
+        //
+        _EXCEPTION("FreeRTOS failed to initialise");
+    }
+#else
+    fn_uTasker_main();                                                   // never return
+#endif
+    return 0;                                                            // we never return....
+}
+#endif                                                                   // end if not _WINDOWS
+
+#if defined RUN_IN_FREE_RTOS
+    extern void fn_uTasker_main(void *pars)
+#else
+    static void fn_uTasker_main(void)
+#endif
+{
 #if defined MULTISTART
     prtInfo = ptMultiStartTable;                                         // if the user has already set to alternative start configuration
     if (prtInfo == 0) {                                                  // no special start required
-_abort_multi:
+    _abort_multi:
         fnInitialiseHeap(ctOurHeap, HEAP_START_ADDRESS);                 // initialise heap
         uTaskerStart((UTASKTABLEINIT *)ctTaskTable, ctNodes, PHYSICAL_QUEUES); // start the operating system (and TICK interrupt)
         while ((prtInfo = (MULTISTART_TABLE *)uTaskerSchedule()) == 0) {}// schedule uTasker
@@ -404,7 +442,7 @@ _abort_multi:
         pucHeapStart = HEAP_START_ADDRESS;
         if (prtInfo->new_hw_init) {                                      // info to next task configuration available
             pucHeapStart = prtInfo->new_hw_init(JumpTable);              // get heap details from next configuration
-            if (!pucHeapStart) {
+            if (0 == pucHeapStart) {
                 goto _abort_multi;                                       // this can happen if the jump table version doesn't match - prefer to stay in boot mode than start an application which will crash
             }
         }
@@ -415,16 +453,14 @@ _abort_multi:
         while ((prtInfo = (MULTISTART_TABLE *)uTaskerSchedule()) == 0) {}// schedule uTasker
 
     } while (1);
-#else
-    fnInitialiseHeap(ctOurHeap, HEAP_START_ADDRESS);                     // initialise heap
+#elif !defined _WINDOWS || defined RUN_IN_FREE_RTOS
+  //fnInitialiseHeap(ctOurHeap, HEAP_START_ADDRESS);                     // initialise heap
     uTaskerStart((UTASKTABLEINIT *)ctTaskTable, ctNodes, PHYSICAL_QUEUES); // start the operating system (and TICK interrupt)
-    while (1) {
+    while ((int)1 != (int)0) {
         uTaskerSchedule();                                               // schedule uTasker
     }
 #endif
-    return 0;                                                            // we never return....
 }
-#endif                                                                   // end if not _WINDOWS
 
 #if defined _COMPILE_KEIL
 // Keil demands the use of a __main() call to correctly initialise variables - it then calls main()
@@ -441,14 +477,20 @@ extern void _init(void)
     #if defined RND_HW_SUPPORT
 extern void fnInitialiseRND(unsigned short *usSeedValue)
 {
-    #if defined RANDOM_NUMBER_GENERATOR_B                                // {64}
+    #if defined RANDOM_NUMBER_GENERATOR_B                                // {64} support revison 1 types
     POWER_UP(3, SIM_SCGC3_RNGB);                                         // power up RNGB
-    RNG_CR = (RNG_CR_FUFMODE_TE | RNG_CR_AR);                            // automatic reseed mode and generate a bus error on FIFO underrun
+        #if defined RANDOM_NUMBER_GENERATOR_A                            // {128} support revison 2 types too
+    if (((SIM_SDID & SIM_SDID_REVID_MASK) >> SIM_SDID_REVID_SHIFT) > 0) {// if from revision 2 part is detected (clock enable is compatible)
+        RNGA_CR = (RNGA_CR_INTM | RNGA_CR_HA | RNGA_CR_GO);              // start first conversion in RNGA module
+        return;
+    }
+        #endif
+    RNG_CR = (RNG_CR_FUFMODE_TE | RNG_CR_AR);                            // automatic re-seed mode and generate a bus error on FIFO underrun
     RNG_CMD = (RNG_CMD_GS | RNG_CMD_CI | RNG_CMD_CE);                    // start the initial seed process
                                                                          // the initial seeding takes some time but we don't wait for it to complete here - if it hasn't completed when we first need a value we will wait for it then
     #else
     POWER_UP(3, SIM_SCGC3_RNGA);                                         // power up RNGA
-    RNG_CR = (RNG_CR_INTM | RNG_CR_HA | RNG_CR_GO);                      // start first conversion
+    RNGA_CR = (RNGA_CR_INTM | RNGA_CR_HA | RNGA_CR_GO);                  // start first conversion
     #endif
 }
 
@@ -457,31 +499,44 @@ extern void fnInitialiseRND(unsigned short *usSeedValue)
 extern unsigned short fnGetRndHW(void)
 {
     unsigned long ulRandomNumber;
-    #if defined RANDOM_NUMBER_GENERATOR_B                                // {64}
-    while ((RNG_SR & RNG_SR_BUSY) != 0) {}                               // wait for the RNGB to become ready (it may be seeding)
-    while ((RNG_SR & RNG_SR_FIFO_LVL_MASK) == 0) {                       // wait for at least one output word to become available
-        #if defined _WINDOWS
-        RNG_OUT = rand();
-        RNG_SR |= 0x00000100;                                            // put one result in the FIFO
-        #endif
+    #if defined _WINDOWS
+    if (IS_POWERED_UP(3, SIM_SCGC3_RNGB) == 0) {
+        _EXCEPTION("Warning: RNG being used before initialised!!!");
     }
-    ulRandomNumber = RNG_OUT;                                            // read from the FIFO
-        #if defined _WINDOWS
-    RNG_SR &= ~RNG_SR_FIFO_LVL_MASK;
-        #endif
-    #else                                                                // RNGA
-    while (!(RNG_SR & RNG_SR_OREG_LVL)) {                                // wait for an output to become available
-        #if defined _WINDOWS
-        RNG_SR |= RNG_SR_OREG_LVL;
-        RNG_OR = rand();
-        #endif
-    }
-        #if defined _WINDOWS
-    RNG_SR &= ~RNG_SR_OREG_LVL;
-        #endif
-    ulRandomNumber = RNG_OR;                                             // read output value that has been generated
     #endif
+    #if defined RANDOM_NUMBER_GENERATOR_B                                // {64} support revison 1 types
+        #if defined RANDOM_NUMBER_GENERATOR_A                            // {128} support revison 2 types too
+    if (((SIM_SDID & SIM_SDID_REVID_MASK) >> SIM_SDID_REVID_SHIFT)== 0) {// if not from revision 2 part
+        #endif
+        while ((RNG_SR & RNG_SR_BUSY) != 0) {}                           // wait for the RNGB to become ready (it may be seeding)
+        while ((RNG_SR & RNG_SR_FIFO_LVL_MASK) == 0) {                   // wait for at least one output word to become available
+        #if defined _WINDOWS
+            RNG_OUT = rand();
+            RNG_SR |= 0x00000100;                                        // put one result in the FIFO
+        #endif
+        }
+        ulRandomNumber = RNG_OUT;                                        // read from the FIFO
+        #if defined _WINDOWS
+        RNG_SR &= ~RNG_SR_FIFO_LVL_MASK;
+        #endif
+        return (unsigned short)(ulRandomNumber);                         // return 16 bits of output
+        #if defined RANDOM_NUMBER_GENERATOR_A
+    }
+        #endif
+    #endif
+    #if defined RANDOM_NUMBER_GENERATOR_A                                // RNGA
+    while ((RNGA_SR & RNGA_SR_OREG_LVL) == 0) {                          // wait for an output to become available
+        #if defined _WINDOWS
+        RNGA_SR |= RNGA_SR_OREG_LVL;
+        RNGA_OR = rand();
+        #endif
+    }
+        #if defined _WINDOWS
+    RNGA_SR &= ~RNGA_SR_OREG_LVL;
+        #endif
+    ulRandomNumber = RNGA_OR;                                            // read output value that has been generated
     return (unsigned short)(ulRandomNumber);                             // return 16 bits of output
+    #endif
 }
     #else
 // How the random number seed is set depends on the hardware possibilities available.
@@ -529,20 +584,20 @@ extern void fnDelayLoop(unsigned long ulDelay_us)
     do {
     #if !defined _WINDOWS
         while ((ulPresentSystick = SYSTICK_CURRENT) > ulMatch) {         // wait until a us period has expired
-            if (SYSTICK_CSR & SYSTICK_COUNTFLAG) {                       // if we missed a reload
+            if ((SYSTICK_CSR & SYSTICK_COUNTFLAG) != 0) {                // if we missed a reload
                 (void)SYSTICK_CSR;
                 break;                                                   // assume a us period expired
             }
         }
         ulMatch = (ulPresentSystick - CORE_US);
     #endif
-    } while (--_ulDelay_us);
+    } while (--_ulDelay_us != 0);
 #else
     volatile register unsigned long _ulDelay_us = ulDelay_us;            // {124} ensure that the compiler puts the variable in a register rather than work with it on the stack
     volatile register unsigned long ul_us;
-    while (_ulDelay_us--) {                                              // for each us required        
+    while (_ulDelay_us-- != 0) {                                         // for each us required        
         ul_us = (CORE_CLOCK/8000000);                                    // tuned but may be slightly compiler dependent - interrupt processing may increase delay
-        while (ul_us--) {}                                               // simple loop tuned to perform us timing
+        while (ul_us-- != 0) {}                                          // simple loop tuned to perform us timing
     }
 #endif
 }
@@ -701,13 +756,22 @@ INITHW void fnInitHW(void)                                               // perf
     #if !defined KINETIS_KL && !defined KINETIS_KE                       // {80}
         unsigned long *ptr_eDMAdes = (unsigned long *)eDMA_DESCRIPTORS;
         KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS; // {9}
-        ptrDMA_TCD += DMA_MEMCPY_CHANNEL;
+        ptrDMA_TCD += DMA_MEMCPY_CHANNEL;                                // the DMA channel used for memory copy DMA
         while (ptr_eDMAdes < eDMA_DESCRIPTORS_END) {
             *ptr_eDMAdes++ = 0;                                          // clear out DMA descriptors after reset
         }
         ptrDMA_TCD->DMA_TCD_SOFF = 4;                                    // {87} source increment one long word for uMemcpy()
         ptrDMA_TCD->DMA_TCD_DOFF = 4;                                    // destination increment one long word
         ptrDMA_TCD->DMA_TCD_BITER_ELINK = 1;
+        ptrDMA_TCD->DMA_TCD_ATTR = (DMA_TCD_ATTR_DSIZE_32 | DMA_TCD_ATTR_SSIZE_32); // {87} default transfer sizes long words
+        #if defined DMA_MEMCPY_CHANNEL_ALT                               // {127}
+        ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
+        ptrDMA_TCD += DMA_MEMCPY_CHANNEL_ALT;                            // move to the alternate channel (may be used by interrupts)
+        ptrDMA_TCD->DMA_TCD_SOFF = 4;                                    // source increment one long word for uMemcpy()
+        ptrDMA_TCD->DMA_TCD_DOFF = 4;                                    // destination increment one long word
+        ptrDMA_TCD->DMA_TCD_BITER_ELINK = 1;
+        ptrDMA_TCD->DMA_TCD_ATTR = (DMA_TCD_ATTR_DSIZE_32 | DMA_TCD_ATTR_SSIZE_32); // default transfer sizes long words
+        #endif
         #if defined DMA_CHANNEL_0_PRIORITY                               // user defined channel priorities
         _SET_DMA_CHANNEL_PRIORITY(0, DMA_CHANNEL_0_PRIORITY);            // DMA priority, whereby channel can suspend a lower priority channel
         _SET_DMA_CHANNEL_PRIORITY(1, DMA_CHANNEL_1_PRIORITY);            // all channel priorities are set before use since it can be dangerous to change them later when DMA operations could take place during the process
@@ -727,12 +791,17 @@ INITHW void fnInitHW(void)                                               // perf
         _SET_DMA_CHANNEL_PRIORITY(15, DMA_CHANNEL_15_PRIORITY);
         _SET_DMA_CHANNEL_CHARACTERISTIC(DMA_MEMCPY_CHANNEL, (DMA_DCHPRI_ECP | DMA_DCHPRI_DPA)); // can be pre-empted by higher priority channel - it is expected that this channel will normally have priority 0
         #else                                                            // leave default channel priority (equal to the corresponding channel number)
-        _SET_DMA_CHANNEL_PRIORITY(DMA_MEMCPY_CHANNEL, (/*DMA_DCHPRI_ECP | */DMA_DCHPRI_DPA | 0)); // lowest DMA priority and can be pre-empted by higher priority channel
+        _SET_DMA_CHANNEL_PRIORITY(DMA_MEMCPY_CHANNEL, (DMA_DCHPRI_DPA | 0)); // lowest DMA priority and can be pre-empted by higher priority channel
             #if DMA_MEMCPY_CHANNEL != 0
         _SET_DMA_CHANNEL_PRIORITY(0, (DMA_MEMCPY_CHANNEL));              // no two priorities may ever be the same when the controller is used - switch priorities to avoid
             #endif
+            #if defined DMA_MEMCPY_CHANNEL_ALT                           // {127}
+        _SET_DMA_CHANNEL_PRIORITY(DMA_MEMCPY_CHANNEL_ALT, (DMA_DCHPRI_DPA | 1)); // second lowest DMA priority and can be pre-empted by higher priority channel
+                #if DMA_MEMCPY_CHANNEL_ALT != 1
+        _SET_DMA_CHANNEL_PRIORITY(1, (DMA_MEMCPY_CHANNEL_ALT));          // no two priorities may ever be the same when the controller is used - switch priorities to avoid
+                #endif
+            #endif
         #endif
-        ptrDMA_TCD->DMA_TCD_ATTR = (DMA_TCD_ATTR_DSIZE_32 | DMA_TCD_ATTR_SSIZE_32); // {87} default transfer sizes long words
     #endif
     }
 #endif
@@ -755,7 +824,7 @@ INITHW void fnInitHW(void)                                               // perf
   //#endif
   //}
 #endif
-    fnUserHWInit();                                                      // allow the user to initialise hardware specific things - note that heap can not be used by this routine
+    fnUserHWInit();                                                      // allow the user to initialise hardware specific things - note that heap cannot be used by this routine
 #if defined _WINDOWS
     fnSimPorts();                                                        // ensure port states are recognised
 #endif
@@ -779,6 +848,7 @@ INITHW void fnInitHW(void)                                               // perf
 /*                    General Interrupt Control                        */
 /* =================================================================== */
 
+
 // Routine to disable interrupts during critical region
 //
 extern void uDisable_Interrupt(void)
@@ -786,9 +856,16 @@ extern void uDisable_Interrupt(void)
 #if defined _WINDOWS
     kinetis.CORTEX_M4_REGS.ulPRIMASK = INTERRUPT_MASKED;                 // mark that interrupts are masked
 #else
+    #if defined SYSTEM_NO_DISABLE_LEVEL
+    uMask_Interrupt(SYSTEM_NO_DISABLE_LEVEL << __NVIC_PRIORITY_SHIFT);   // interrupts with higher priorities are not disabled
+    #else
     __disable_interrupt();                                               // disable interrupts to core
+    #endif
 #endif
     iInterruptLevel++;                                                   // monitor the level of disable nesting
+    if (iInterruptLevel > 1) {
+        iInterruptLevel = iInterruptLevel; // WHY??
+    }
 }
 
 // Routine to re-enable interrupts on leaving a critical region (IAR uses intrinsic function)
@@ -796,7 +873,7 @@ extern void uDisable_Interrupt(void)
 extern void uEnable_Interrupt(void)
 {
 #if defined _WINDOWS
-    if (iInterruptLevel == 0) {
+    if (iInterruptLevel == 0) {                                          // it is expected that this routine is only called when interrupts are presently disabled
         // A routine is enabling interrupt although they are presently off. This may not be a serious error but it is unexpected so best check why...
         //
         _EXCEPTION("Unsymmetrical use of interrupt disable/enable detected!!");
@@ -804,9 +881,17 @@ extern void uEnable_Interrupt(void)
 #endif
     if ((--iInterruptLevel) == 0) {                                      // only when no more interrupt nesting,
 #if defined _WINDOWS
-        kinetis.CORTEX_M4_REGS.ulPRIMASK = 0;                            // mark that interrupts are not masked
+        extern void fnExecutePendingInterrupts(int iRecursive);
+        kinetis.CORTEX_M4_REGS.ulPRIMASK = 0;                            // unmask global interrupts
+    #if defined RUN_IN_FREE_RTOS
+        fnExecutePendingInterrupts(0);                                   // pending interrupts that were blocked by the main mask can be executed now
+    #endif
 #else
+    #if defined SYSTEM_NO_DISABLE_LEVEL
+        uMask_Interrupt(LOWEST_PRIORITY_PREEMPT_LEVEL);                  // allow all interrupts again
+    #else
         __enable_interrupt();                                            // enable processor interrupts
+    #endif
 #endif
     }
 }
@@ -814,11 +899,96 @@ extern void uEnable_Interrupt(void)
 // Routine to change interrupt level mask
 //
 #if !defined _COMPILE_KEIL
-extern void uMask_Interrupt(unsigned char ucMaskLevel)                    // {102}
+    #if defined _GNU
+        #define DONT_INLINE __attribute__((noinline))
+    #else
+        #define DONT_INLINE
+    #endif
+extern void DONT_INLINE uMask_Interrupt(unsigned char ucMaskLevel) // {102}
 {
-    #if !defined KINETIS_KL && !defined KINETIS_KE && !defined KINETIS_KV && !defined _WINDOWS
+    #if !defined ARM_MATH_CM0PLUS                                         // mask not supported by Cortex-m0+
+        #if defined _WINDOWS
+    kinetis.CORTEX_M4_REGS.ulBASEPRI = ucMaskLevel;                       // value 0 has no effect - non-zero defines the base priority for exception processing (the processor does not process any exception with a priority value greater than or equal to BASEPRI))
+        #else
     asm("msr basepri, r0");                                               // modify the base priority to block interrupts with a lower priority than this level
     asm("bx lr");                                                         // return
+        #endif
+    #endif
+}
+#endif
+
+
+#if 0                                                                    // example of code that may be usable for Cortex-M0+ to disable all interrupts apart from specified ones
+#define NVIC_SET_REGISTERS  3
+
+static unsigned long _SYSTICK_CSR = 0;
+static unsigned long NVICIntSet[NVIC_SET_REGISTERS] = {0};
+
+#define DISABLEMASK_0_31    0xffffffff                                   // all to be disabled
+#define DISABLEMASK_32_63   0xfffffffe                                   // all to be disabled apart from IRQ32
+#define DISABLEMASK_64_95   0xffffffff                                   // all to be disabled
+#define DISABLEMASK_96_127  0xffffffff                                   // all to be disabled
+#define DISABLEMASK_128_159 0xffffffff                                   // all to be disabled
+#define DISABLEMASK_160_191 0xffffffff                                   // all to be disabled
+#define DISABLEMASK_192_223 0xffffffff                                   // all to be disabled
+#define DISABLEMASK_224_239 0xffffffff                                   // all to be disabled
+
+extern void fnDisableOtherInterrupts(void)
+{
+    _SYSTICK_CSR = (SYSTICK_CSR & SYSTICK_TICKINT);                      // save original systick interrupt mask
+    SYSTICK_CSR &= ~(SYSTICK_TICKINT);                                   // disable systick interrupt
+    NVICIntSet[0] = IRQ0_31_SER;                                         // save original NVIC interrupt flags
+    IRQ0_31_CER = DISABLEMASK_0_31;                                      // disable interrupts
+    NVICIntSet[1] = IRQ32_63_SER;
+    IRQ32_63_CER = DISABLEMASK_32_63;
+    #if NVIC_SET_REGISTERS > 2
+    NVICIntSet[2] = IRQ64_95_SER;
+    IRQ64_95_CER = DISABLEMASK_64_95;
+    #endif
+    #if NVIC_SET_REGISTERS > 3
+    NVICIntSet[3] = IRQ96_127_SER
+    IRQ96_127_CER = DISABLEMASK_96_127;
+    #endif
+    #if NVIC_SET_REGISTERS > 4
+    NVICIntSet[4] = IRQ128_159_SER
+    IRQ128_159_CER = DISABLEMASK_128_159;
+    #endif
+    #if NVIC_SET_REGISTERS > 5
+    NVICIntSet[5] = IRQ160_191_SER
+    IRQ160_191_CER = DISABLEMASK_160_191;
+    #endif
+    #if NVIC_SET_REGISTERS > 6
+    NVICIntSet[6] = IRQ192_223_SER
+    IRQ192_223_CER = DISABLEMASK_192_223;
+    #endif
+    #if NVIC_SET_REGISTERS > 7
+    NVICIntSet[7] = IRQ224_239_SER
+    IRQ224_239_CER = DISABLEMASK_224_239;
+    #endif
+}
+
+extern void fnReenableInterrupts(void)
+{
+    SYSTICK_CSR |= _SYSTICK_CSR;                                         // re-enable systick interrupt if it was previously enabled
+    IRQ0_31_SER = NVICIntSet[0];                                         // re-enable previously enabled interrupts
+    IRQ32_63_SER = NVICIntSet[1];
+    #if NVIC_SET_REGISTERS > 2
+    IRQ64_95_SER = NVICIntSet[2];
+    #endif
+    #if NVIC_SET_REGISTERS > 3
+    IRQ96_127_SER = NVICIntSet[3];
+    #endif
+    #if NVIC_SET_REGISTERS > 4
+    IRQ128_159_SER = NVICIntSet[4];
+    #endif
+    #if NVIC_SET_REGISTERS > 5
+    IRQ160_191_SER = NVICIntSet[5];
+    #endif
+    #if NVIC_SET_REGISTERS > 6
+    IRQ192_223_SER = NVICIntSet[6];
+    #endif
+    #if NVIC_SET_REGISTERS > 7
+    IRQ224_239_SER = NVICIntSet[7];
     #endif
 }
 #endif
@@ -877,6 +1047,8 @@ extern int fnIsPending(int iInterruptID)                                 // {126
 /*                                 TICK                                */
 /* =================================================================== */
 
+// Tick interrupt
+//
 static __interrupt void _RealTimeInterrupt(void)
 {
 #if defined TICK_USES_LPTMR                                              // {94} tick interrupt from low power timer
@@ -889,11 +1061,13 @@ static __interrupt void _RealTimeInterrupt(void)
     INT_CONT_STATE_REG &= ~(PENDSTSET | PENDSTCLR);
     #endif
 #endif
+#if defined RUN_IN_FREE_RTOS && !defined _WINDOWS
+    xPortSysTickHandler();
+#endif
     uDisable_Interrupt();                                                // ensure tick handler cannot be interrupted
         fnRtmkSystemTick();                                              // operating system tick
     uEnable_Interrupt();
 }
-
 
 // Routine to initialise the tick interrupt (uses Cortex M4/M0+ SysTick timer, RTC or low power timer)
 //
@@ -911,7 +1085,7 @@ extern void fnStartTick(void)
     MCG_C2 |= MCG_C2_IRCS;                                               // select fast internal reference clock
     LPTMR0_PSR = (LPTMR_PSR_PCS_MCGIRCLK | LPTMR_PSR_PBYP);
     #elif defined LPTMR_CLOCK_RTC_32kHz
-    POWER_UP(6, SIM_SCGC6_RTC);                                          // enable access and interrupts to the RTC
+    POWER_UP_ATOMIC(6, SIM_SCGC6_RTC);                                   // enable access and interrupts to the RTC
     if ((RTC_SR & RTC_SR_TIF) != 0) {                                    // if timer invalid
         RTC_SR = 0;                                                      // ensure stopped
         RTC_TSR = 0;                                                     // write to clear RTC_SR_TIF in status register when not yet enabled
@@ -954,7 +1128,7 @@ extern void fnStartTick(void)
     #endif
     LPTMR0_CSR |= LPTMR_CSR_TEN;                                         // enable the low power timer
 #elif defined TICK_USES_RTC                                              // {100} use RTC to derive the tick interrupt from
-    POWER_UP(6, SIM_SCGC6_RTC);                                          // ensure the RTC is powered
+    POWER_UP_ATOMIC(6, SIM_SCGC6_RTC);                                   // ensure the RTC is powered
     fnEnterInterrupt(irq_RTC_OVERFLOW_ID, PRIORITY_RTC, (void (*)(void))_RealTimeInterrupt); // enter interrupt handler
     #if defined RTC_USES_EXT_CLK
     RTC_MOD = (unsigned long)((((unsigned long long)((unsigned long long)TICK_RESOLUTION * (unsigned long long)_EXTERNAL_CLOCK)/RTC_CLOCK_PRESCALER_1)/1000000) - 1); // set the match value
@@ -1007,9 +1181,11 @@ extern void fnStartTick(void)
 //
 extern void fnRetriggerWatchdog(void)
 {
-#if defined KINETIS_KL && !defined KINETIS_KL82                          // {67}
+#if defined KINETIS_WITH_WDOG32
+    REFRESH_WDOG();
+#elif defined KINETIS_KL && !defined KINETIS_KL82                        // {67}
     if ((SIM_COPC & SIM_COPC_COPT_LONGEST) != 0) {                       // if the COP is enabled
-        SIM_SRVCOP = SIM_SRVCOP_1;                                       // issue COP service sequency
+        SIM_SRVCOP = SIM_SRVCOP_1;                                       // issue COP service sequence
         SIM_SRVCOP = SIM_SRVCOP_2;
     }
 #elif defined KINETIS_KE
@@ -1032,11 +1208,11 @@ extern void fnRetriggerWatchdog(void)
 /* =================================================================== */
 /*                                 DMA                                 */
 /* =================================================================== */
-    #if defined SUPPORT_ADC || (defined SUPPORT_DAC && (DAC_CONTROLLERS > 0)) || (defined SUPPORT_TIMER && defined SUPPORT_PWM_MODULE && (FLEX_TIMERS_AVAILABLE > 0))
+  //#if defined SUPPORT_ADC || (defined SUPPORT_DAC && (DAC_CONTROLLERS > 0)) || (defined SUPPORT_TIMER && defined SUPPORT_PWM_MODULE && (FLEX_TIMERS_AVAILABLE > 0))
 #define _DMA_SHARED_CODE
     #include "kinetis_DMA.h"                                             // include driver code for peripheral/buffer DMA
 #undef _DMA_SHARED_CODE
-    #endif
+  //#endif
 #define _DMA_MEM_TO_MEM
     #include "kinetis_DMA.h"                                             // include memory-memory transfer code 
 #undef _DMA_MEM_TO_MEM
@@ -1126,6 +1302,438 @@ extern void fnRetriggerWatchdog(void)
 #undef _LPTMR_CODE
 #endif
 
+#if defined SUPPORT_TIMER && (FLEX_TIMERS_AVAILABLE > 0) && (defined SUPPORT_PWM_MODULE || defined SUPPORT_CAPTURE)
+// Timer pin configuration that can be used by PWM outputs or capture inputs
+//
+static void fnConfigTimerPin(int iTimer, int iChannel, unsigned long ulCharacteristics)
+{
+    switch (iTimer) {
+    case 0:                                                              // timer 0
+                    switch (iChannel) {                                  // configure appropriate pin for the timer signal
+                    case 0:                                              // timer 0, channel 0
+    #if defined KINETIS_KE
+        #if defined FTM0_0_ON_B
+                        SIM_PINSEL0 |= SIM_PINSEL_FTM0PS0;
+                        _CONFIG_PERIPHERAL(B, 2, (PB_2_FTM0_CH0 | ulCharacteristics)); // FTM0_CH0 on PB.2 (alt. function 3)
+        #else
+                        SIM_PINSEL0 &= ~SIM_PINSEL_FTM0PS0;
+                        _CONFIG_PERIPHERAL(A, 0, (PA_0_FTM0_CH0 | ulCharacteristics)); // FTM0_CH0 on PA.0 (alt. function 2)
+        #endif
+    #elif (defined KINETIS_KL02 || defined KINETIS_KL03) && defined TPM0_0_ON_A
+                    _CONFIG_PERIPHERAL(A, 6,(PA_6_TPM0_CH0 | ulCharacteristics)); // TPM0_CH0 on PA.6 (alt. function 2)
+    #elif defined KINETIS_KL02 || defined KINETIS_KL03 || defined KINETIS_KL04 || defined KINETIS_KL05
+                        _CONFIG_PERIPHERAL(B, 11,(PB_11_TPM0_CH0 | ulCharacteristics)); // TPM0_CH0 on PB.11 (alt. function 2)
+    #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL43) && defined TPM0_0_ON_D
+                        _CONFIG_PERIPHERAL(D, 0, (PD_0_FTM0_CH0 | ulCharacteristics)); // FTM0_CH0 on PD.0 (alt. function 4)
+    #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL43) && defined TPM0_0_ON_E
+                        _CONFIG_PERIPHERAL(E, 24, (PE_24_TPM0_CH0 | ulCharacteristics)); // TPM0_CH0 on PE.24 (alt. function 3)
+    #elif defined FTM0_0_ON_C
+                        _CONFIG_PERIPHERAL(C, 1, (PC_1_FTM0_CH0 | ulCharacteristics)); // FTM0_CH0 on PC.1 (alt. function 4)
+    #else
+                        _CONFIG_PERIPHERAL(A, 3, (PA_3_FTM0_CH0 | ulCharacteristics)); // FTM0_CH0 on PA.3 (alt. function 3)
+    #endif
+                        break;
+                    case 1:                                              // timer 0, channel 1
+    #if defined KINETIS_KE
+        #if defined FTM0_1_ON_B
+                        SIM_PINSEL0 |= SIM_PINSEL_FTM0PS1;
+                        _CONFIG_PERIPHERAL(B, 3, (PB_3_FTM0_CH1 | ulCharacteristics)); // FTM0_CH1 on PB.3 (alt. function 3)
+        #else
+                        SIM_PINSEL0 &= ~SIM_PINSEL_FTM0PS1;
+                        _CONFIG_PERIPHERAL(A, 1, (PA_1_FTM0_CH1 | ulCharacteristics)); // FTM0_CH1 on PA.1 (alt. function 2)
+        #endif
+    #elif (defined KINETIS_KL02 || defined KINETIS_KL03) && defined TPM0_1_ON_A
+                        _CONFIG_PERIPHERAL(A, 5, (PA_5_TPM0_CH1 | ulCharacteristics)); // TPM0_CH1 on PA.5 (alt. function 2)
+    #elif defined KINETIS_KL02 || defined KINETIS_KL03 || defined KINETIS_KL04 || defined KINETIS_KL05
+                        _CONFIG_PERIPHERAL(B, 10,(PB_10_TPM0_CH1 | ulCharacteristics)); // TPM0_CH1 on PB.10 (alt. function 2)
+    #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL43) && defined TPM0_1_ON_D
+                        _CONFIG_PERIPHERAL(D, 1, (PD_1_FTM0_CH1 | ulCharacteristics)); // FTM0_CH1 on PD.1 (alt. function 4)
+    #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL43) && defined TPM0_1_ON_E
+                        _CONFIG_PERIPHERAL(E, 25, (PE_25_TPM0_CH1 | ulCharacteristics)); // TPM0_CH1 on PE.25 (alt. function 3)
+    #elif defined FTM0_1_ON_C
+                        _CONFIG_PERIPHERAL(C, 2, (PC_2_FTM0_CH1 | ulCharacteristics)); // FTM0_CH1 on PC.2 (alt. function 4)
+    #else
+                        _CONFIG_PERIPHERAL(A, 4, (PA_4_FTM0_CH1 | ulCharacteristics)); // FTM0_CH1 on PA.4 (alt. function 3)
+    #endif
+                        break;
+    #if !defined KINETIS_KL02 && !defined KINETIS_KL03 && !defined KINETIS_KE
+                    case 2:                                              // timer 0, channel 2
+        #if defined KINETIS_KL04 || defined KINETIS_KL05
+                        _CONFIG_PERIPHERAL(B, 9, (PB_9_TPM0_CH2 | ulCharacteristics)); // TPM0_CH2 on PB.9 (alt. function 2)
+        #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL43) && defined TPM0_2_ON_D
+                        _CONFIG_PERIPHERAL(D, 2, (PD_2_FTM0_CH2 | ulCharacteristics)); // FTM0_CH2 on PD.2 (alt. function 4)
+        #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL43) && defined TPM0_2_ON_E
+                        _CONFIG_PERIPHERAL(E, 29, (PE_29_TPM0_CH2 | ulCharacteristics)); // TPM0_CH2 on PE.29 (alt. function 3)
+        #elif defined FTM0_2_ON_C
+                        _CONFIG_PERIPHERAL(C, 3, (PC_3_FTM0_CH2 | ulCharacteristics)); // FTM0_CH2 on PC.3 (alt. function 4)
+        #else
+                        _CONFIG_PERIPHERAL(A, 5, (PA_5_FTM0_CH2 | ulCharacteristics)); // FTM0_CH2 on PA.5 (alt. function 3)
+        #endif
+                        break;
+                    case 3:                                              // timer 0, channel 3
+        #if defined KINETIS_KL04 || defined KINETIS_KL05
+                        _CONFIG_PERIPHERAL(B, 8, (PB_8_TPM0_CH3 | ulCharacteristics)); // TPM0_CH3 on PB.8 (alt. function 2)
+        #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL43) && defined TPM0_3_ON_D
+                        _CONFIG_PERIPHERAL(D, 3, (PD_3_FTM0_CH3 | ulCharacteristics)); // FTM0_CH3 on PD.3 (alt. function 4)
+        #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL43) && defined TPM0_3_ON_E
+                        _CONFIG_PERIPHERAL(E, 30, (PE_30_TPM0_CH3 | ulCharacteristics)); // TPM0_CH3 on PE.30 (alt. function 3)
+        #elif (defined FTM0_3_ON_C && (defined KINETIS_K64  || defined KINETIS_KL43))
+                        _CONFIG_PERIPHERAL(C, 4, (PC_4_FTM0_CH3 | ulCharacteristics)); // FTM0_CH3 on PC.4 (alt. function 4)
+        #else
+                        _CONFIG_PERIPHERAL(A, 6, (PA_6_FTM0_CH3 | ulCharacteristics)); // FTM0_CH3 on PA.6 (alt. function 3)
+        #endif
+                        break;
+                    case 4:                                              // timer 0, channel 4
+        #if defined KINETIS_KL04 || defined KINETIS_KL05
+                        _CONFIG_PERIPHERAL(A, 6, (PA_6_TPM0_CH4 | ulCharacteristics)); // TPM0_CH4 on PA.6 (alt. function 2)
+        #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL43) && defined TPM0_4_ON_E
+                        _CONFIG_PERIPHERAL(E, 31, (PE_31_TPM0_CH4 | ulCharacteristics)); // TPM0_CH4 on PE.31 (alt. function 3)
+        #elif defined FTM0_4_ON_D
+                        _CONFIG_PERIPHERAL(D, 4, (PD_4_FTM0_CH4 | ulCharacteristics)); // FTM0_CH4 on PD.4 (alt. function 4)
+        #else
+                        _CONFIG_PERIPHERAL(A, 7, (PA_7_FTM0_CH4 | ulCharacteristics)); // FTM0_CH4 on PA.7 (alt. function 3)
+        #endif
+                        break;
+                    case 5:                                              // timer 0, channel 5
+        #if defined KINETIS_KL04 || defined KINETIS_KL05
+                        _CONFIG_PERIPHERAL(A, 5, (PA_5_TPM0_CH5 | ulCharacteristics)); // TPM0_CH5 on PA.5 (alt. function 2)
+        #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27) && defined TPM0_5_ON_E
+                        _CONFIG_PERIPHERAL(E, 26, (PE_26_TPM0_CH5 | ulCharacteristics)); // TPM0_CH5 on PE.26 (alt. function 3)
+        #elif defined FTM0_5_ON_D
+                        _CONFIG_PERIPHERAL(D, 5, (PD_5_FTM0_CH5 | ulCharacteristics)); // FTM0_CH5 on PD.5 (alt. function 4)
+        #else
+                        _CONFIG_PERIPHERAL(A, 0, (PA_0_FTM0_CH5 | ulCharacteristics)); // FTM0_CH5 on PA.0 (alt. function 3)
+        #endif
+                        break;
+        #if !(defined KINETIS_KL04 || defined KINETIS_KL05)
+                    case 6:                                              // timer 0, channel 6
+            #if defined FTM0_6_ON_D
+                        _CONFIG_PERIPHERAL(D, 6, (PD_6_FTM0_CH6 | ulCharacteristics)); // FTM0_CH6 on PD.6 (alt. function 4)
+            #else
+                        _CONFIG_PERIPHERAL(A, 1, (PA_1_FTM0_CH6 | ulCharacteristics)); // FTM0_CH6 on PA.1 (alt. function 3)
+            #endif
+                        break;
+                    case 7:                                              // timer 0, channel 7
+            #if defined FTM0_7_ON_D
+                        _CONFIG_PERIPHERAL(D, 7, (PD_7_FTM0_CH7 | ulCharacteristics)); // FTM0_CH7 on PD.7 (alt. function 4)
+            #else
+                        _CONFIG_PERIPHERAL(A, 6, (PA_6_FTM0_CH7 | ulCharacteristics)); // FTM0_CH7 on PA.6 (alt. function 3)
+            #endif
+                        break;
+        #endif
+    #endif
+                    default:
+    #if defined _WINDOWS
+                        _EXCEPTION("Invalid timer channel!!");
+    #endif
+                        return;                                          // invalid channel
+                    }
+        break;
+
+    #if FLEX_TIMERS_AVAILABLE > 1
+    case 1:                                                              // timer 1
+                    switch (iChannel) {                                  // configure appropriate pin for the timer signal
+                    case 0:                                              // timer 1, channel 0
+        #if defined KINETIS_KE
+            #if defined FTM1_0_ON_H
+                        SIM_PINSEL0 |= SIM_PINSEL_FTM1PS0;
+                        _CONFIG_PERIPHERAL(H, 2, (PH_2_FTM1_CH0 | ulCharacteristics)); // FTM1_CH0 on PH.2 (alt. function 4)
+            #else
+                        SIM_PINSEL0 &= ~SIM_PINSEL_FTM1PS0;
+                        _CONFIG_PERIPHERAL(C, 4, (PC_4_FTM1_CH0 | ulCharacteristics)); // FTM1_CH0 on PC.4
+            #endif
+        #elif (defined KINETIS_KL02 || defined KINETIS_KL03) && defined TPM1_0_ALT_2
+                        _CONFIG_PERIPHERAL(B, 7, (PB_7_TPM1_CH0 | ulCharacteristics)); // TPM1_CH0 on PB.7 (alt. function 2)
+        #elif (defined KINETIS_KL02 || defined KINETIS_KL03 || defined KINETIS_KL04 || defined KINETIS_KL05) && defined TPM1_0_ALT
+                        _CONFIG_PERIPHERAL(A, 12, (PA_12_TPM1_CH0 | ulCharacteristics)); // TPM1_CH0 on PA.12 (alt. function 2)
+        #elif defined KINETIS_KL02 || defined KINETIS_KL03 || defined KINETIS_KL04 || defined KINETIS_KL05
+                        _CONFIG_PERIPHERAL(A, 0, (PA_0_TPM1_CH0 | ulCharacteristics)); // TPM1_CH0 on PA.0 (alt. function 2)
+        #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL43) && defined TPM1_0_ON_E
+                        _CONFIG_PERIPHERAL(E, 20, (PE_20_TPM1_CH0 | ulCharacteristics)); // TPM1_CH0 on PE.20 (alt. function 3)
+        #elif defined FTM1_0_ON_B
+                        _CONFIG_PERIPHERAL(B, 0, (PB_0_FTM1_CH0 | ulCharacteristics)); // FTM1_CH0 on PB.0 (alt. function 3)
+        #elif defined FTM1_0_ALT_A
+                        _CONFIG_PERIPHERAL(A, 12, (PA_12_FTM1_CH0 | ulCharacteristics)); // FTM1_CH0 on PA.12 (alt. function 3)
+        #else
+                        _CONFIG_PERIPHERAL(A, 8, (PA_8_FTM1_CH0 | ulCharacteristics)); // FTM1_CH0 on PA.8 (alt. function 3)
+        #endif
+                        break;
+                    case 1:                                              // timer 1, channel 1
+        #if defined KINETIS_KE
+            #if defined FTM1_1_ON_E
+                        SIM_PINSEL0 |= SIM_PINSEL_FTM1PS1;
+                        _CONFIG_PERIPHERAL(E, 7, (PE_7_FTM1_CH1 | ulCharacteristics)); // FTM1_CH1 on PE.7 (alt. function 4)
+            #else
+                        SIM_PINSEL0 &= ~SIM_PINSEL_FTM1PS1;
+                        _CONFIG_PERIPHERAL(C, 5, (PC_5_FTM1_CH1 | ulCharacteristics)); // FTM1_CH1 on PC.5
+            #endif
+        #elif (defined KINETIS_KL02 || defined KINETIS_KL03) && defined TPM1_1_ALT_2
+                        _CONFIG_PERIPHERAL(B, 6, (PB_6_TPM1_CH0 | ulCharacteristics)); // TPM1_CH0 on PB.6 (alt. function 2)
+        #elif defined KINETIS_KL02 || defined KINETIS_KL03 || defined KINETIS_KL04 || defined KINETIS_KL05 && defined FTM1_1_ALT
+                        _CONFIG_PERIPHERAL(B, 13, (PB_13_TPM1_CH1 | ulCharacteristics)); // TPM1_CH1 on PB.13 (alt. function 2)
+        #elif defined KINETIS_KL02 || defined KINETIS_KL03 || defined KINETIS_KL04 || defined KINETIS_KL05
+                        _CONFIG_PERIPHERAL(B, 5, (PB_5_TPM1_CH1 | ulCharacteristics)); // TPM1_CH1 on PB.5 (alt. function 2)
+        #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL43) && defined TPM1_1_ON_E
+                        _CONFIG_PERIPHERAL(E, 21, (PE_21_TPM1_CH1 | ulCharacteristics)); // TPM1_CH1 on PE.21 (alt. function 3)
+        #elif defined FTM1_1_ON_B
+                        _CONFIG_PERIPHERAL(B, 1, (PB_1_FTM1_CH1 | ulCharacteristics)); // FTM1_CH1 on PB.1 (alt. function 3)
+        #elif defined FTM1_1_ALT_A
+                        _CONFIG_PERIPHERAL(A, 13, (PA_13_FTM1_CH1 | ulCharacteristics)); // FTM1_CH1 on PA.13 (alt. function 3)
+        #else
+                        _CONFIG_PERIPHERAL(A, 9, (PA_9_FTM1_CH1 | ulCharacteristics)); // FTM1_CH1 on PA.9 (alt. function 3)
+        #endif
+                        break;
+                    default:
+                        _EXCEPTION("Invalid timer channel!!");
+                        return;                                              // invalid channel
+                    }
+        break;
+    #endif
+    #if FLEX_TIMERS_AVAILABLE > 2
+    case 2:                                                              // timer 2
+                    switch (iChannel) {                                  // configure appropriate pin for the timer signal
+                    case 0:                                              // timer 2, channel 0
+        #if defined KINETIS_KE
+            #if defined FTM2_0_ON_H
+                        SIM_PINSEL0 |= SIM_PINSEL_FTM1PS1;
+                        _CONFIG_PERIPHERAL(H, 0, (PH_0_FTM2_CH0 | ulCharacteristics)); // FTM2_CH0 on PH.0 (alt. function 2)
+            #elif defined FTM2_0_ON_F
+                        _CONFIG_PERIPHERAL(F, 0, (PF_0_FTM2_CH0 | ulCharacteristics)); // FTM2_CH0 on PF.0 (alt. function 2)
+            #else
+                        SIM_PINSEL0 &= ~SIM_PINSEL_FTM1PS1;
+                        _CONFIG_PERIPHERAL(C, 0, (PC_0_FTM2_CH0 | ulCharacteristics)); // FTM2_CH0 on PC.0 (alt. function 2)
+            #endif
+        #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27) && defined TPM2_0_ON_E
+                        _CONFIG_PERIPHERAL(E, 22, (PE_22_TPM2_CH0 | ulCharacteristics)); // TPM2_CH0 on PE.22 (alt. function 3)
+        #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27) && defined FTM2_0_ON_B_LOW
+                        _CONFIG_PERIPHERAL(B, 2,  (PB_2_FTM2_CH0 | ulCharacteristics)); // FTM2_CH0 on PB.2 (alt. function 3)
+        #elif defined FTM2_0_ON_B
+                        _CONFIG_PERIPHERAL(B, 18, (PB_18_FTM2_CH0 | ulCharacteristics)); // FTM2_CH0 on PB.18 (alt. function 3)
+        #else
+                        _CONFIG_PERIPHERAL(A, 10, (PA_10_FTM2_CH0 | ulCharacteristics)); // FTM2_CH0 on PA.10 (alt. function 3)
+        #endif
+                        break;
+                    case 1:                                              // timer 2, channel 1
+        #if defined KINETIS_KE
+            #if defined FTM2_1_ON_H
+                #if defined KINETIS_KE06
+                        SIM_PINSEL1 |= SIM_PINSEL1_FTM2PS0_PTH0;
+                        SIM_PINSEL1 &= ~SIM_PINSEL1_FTM2PS0_PTF0;
+                #else
+                        SIM_PINSEL0 |= SIM_PINSEL_FTM2PS1;
+                #endif
+                        _CONFIG_PERIPHERAL(H, 1, (PH_1_FTM2_CH1 | ulCharacteristics)); // FTM2_CH1 on PH.1 (alt. function 2)
+            #elif defined FTM2_1_ON_F
+                        SIM_PINSEL1 &= ~SIM_PINSEL1_FTM2PS0_PTH0;
+                        SIM_PINSEL1 |= SIM_PINSEL1_FTM2PS0_PTF0;
+                        _CONFIG_PERIPHERAL(F, 1, (PF_1_FTM2_CH1 | ulCharacteristics)); // FTM2_CH1 on PF.1 (alt. function 2)
+            #else
+                #if ((defined KINETIS_KE04 && (SIZE_OF_FLASH > (8 * 1024))) || defined KINETIS_KE06) || defined KINETIS_KEA64 || defined KINETIS_KEA128
+                        SIM_PINSEL1 &= ~(SIM_PINSEL1_FTM2PS0_PTH0 | SIM_PINSEL1_FTM2PS0_PTF0);
+                #else
+                        SIM_PINSEL0 &= ~SIM_PINSEL_FTM2PS1;
+                #endif
+                        _CONFIG_PERIPHERAL(C, 1, (PC_1_FTM2_CH1 | ulCharacteristics)); // FTM2_CH1 on PC.1 (alt. function 2)
+            #endif
+        #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27) && defined TPM2_1_ON_E
+                        _CONFIG_PERIPHERAL(E, 23, (PE_23_TPM2_CH1 | ulCharacteristics)); // TPM2_CH1 on PE.23 (alt. function 3)
+        #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27) && defined FTM2_1_ON_B_LOW
+                        _CONFIG_PERIPHERAL(B, 3,  (PB_3_FTM2_CH1 | ulCharacteristics)); // FTM2_CH1 on PB.3 (alt. function 3)
+        #elif defined FTM2_1_ON_B
+                        _CONFIG_PERIPHERAL(B, 19, (PB_19_FTM2_CH1 | ulCharacteristics)); // FTM2_CH1 on PB.19 (alt. function 3)
+        #else
+                        _CONFIG_PERIPHERAL(A, 11, (PA_11_FTM2_CH1 | ulCharacteristics)); // FTM2_CH1 on PA.11 (alt. function 3)
+        #endif
+                        break;
+        #if defined KINETIS_KE
+                    case 2:                                              // timer 2, channel 2
+            #if defined FTM2_2_ON_D
+                #if defined KINETIS_KE06
+                        SIM_PINSEL1 |= SIM_PINSEL1_FTM2PS2_PTD0;
+                        SIM_PINSEL1 &= ~SIM_PINSEL1_FTM2PS2_PTG4;
+                #else
+                        SIM_PINSEL0 |= SIM_PINSEL_FTM2PS2;
+                #endif
+                        _CONFIG_PERIPHERAL(D, 0, (PD_0_FTM2_CH2 | ulCharacteristics)); // FTM2_CH2 on PD.0 (alt. function 2)
+            #elif defined FTM2_2_ON_G
+                        SIM_PINSEL1 |= (SIM_PINSEL1_FTM2PS2_PTD0 | SIM_PINSEL1_FTM2PS2_PTG4);
+                        _CONFIG_PERIPHERAL(G, 4, (PG_4_FTM2_CH2 | ulCharacteristics)); // FTM2_CH2 on PG.4 (alt. function 2)
+            #else
+                #if ((defined KINETIS_KE04 && (SIZE_OF_FLASH > (8 * 1024))) || defined KINETIS_KE06) || defined KINETIS_KEA64 || defined KINETIS_KEA128
+                        SIM_PINSEL1 &= ~(SIM_PINSEL1_FTM2PS2_PTD0 | SIM_PINSEL1_FTM2PS2_PTG4);
+                #else
+                        SIM_PINSEL0 &= ~SIM_PINSEL_FTM2PS2;
+                #endif
+                        _CONFIG_PERIPHERAL(C, 2, (PC_2_FTM2_CH2 | ulCharacteristics)); // FTM2_CH2 on PC.2 (alt. function 1)
+            #endif
+                        break;
+                    case 3:                                              // timer 2, channel 3
+            #if defined FTM2_3_ON_D
+                #if defined KINETIS_KE06
+                        SIM_PINSEL1 |= SIM_PINSEL1_FTM2PS3_PTD1;
+                        SIM_PINSEL1 &= ~SIM_PINSEL1_FTM2PS3_PTG5;
+                #else
+                        SIM_PINSEL0 |= SIM_PINSEL_FTM2PS3;
+                #endif
+                        _CONFIG_PERIPHERAL(D, 1, (PD_1_FTM2_CH3 | ulCharacteristics)); // FTM2_CH3 on PD.1 (alt. function 2)
+            #elif defined FTM2_3_ON_G
+                        SIM_PINSEL1 &= ~(SIM_PINSEL1_FTM2PS3_PTD1);
+                        SIM_PINSEL1 |= SIM_PINSEL1_FTM2PS3_PTG5;
+                        _CONFIG_PERIPHERAL(G, 5, (PG_5_FTM2_CH3 | ulCharacteristics)); // FTM2_CH3 on PG.5 (alt. function 2)
+            #else
+                    #if ((defined KINETIS_KE04 && (SIZE_OF_FLASH > (8 * 1024))) || defined KINETIS_KE06) || defined KINETIS_KEA64 ||  defined KINETIS_KEA128
+                        SIM_PINSEL1 &= ~(SIM_PINSEL1_FTM2PS3_PTD1 | SIM_PINSEL1_FTM2PS3_PTG5);
+                    #else
+                        SIM_PINSEL0 &= ~SIM_PINSEL_FTM2PS3;
+                    #endif
+                        _CONFIG_PERIPHERAL(C, 3, (PC_3_FTM2_CH3 | ulCharacteristics)); // FTM2_CH3 on PC.3 (alt. function 1)
+            #endif
+                        break;
+                    case 4:                                                  // timer 2, channel 4
+            #if defined FTM2_4_ON_G
+                        SIM_PINSEL1 |= SIM_PINSEL1_FTM2PS4;
+                        _CONFIG_PERIPHERAL(G, 6, (PG_6_FTM2_CH4 | ulCharacteristics)); // FTM2_CH4 on PG.6 (alt. function 2)
+            #else
+                #if defined KINETIS_KE06
+                        SIM_PINSEL1 &= ~SIM_PINSEL1_FTM2PS4;
+                #endif
+                        _CONFIG_PERIPHERAL(B, 4, (PB_4_FTM2_CH4 | ulCharacteristics)); // FTM2_CH4 on PB.4 (alt. function 1)
+            #endif
+                        break;
+                    case 5:                                                  // timer 2, channel 5
+            #if defined FTM2_5_ON_G
+                        SIM_PINSEL1 |= SIM_PINSEL1_FTM2PS5;
+                        _CONFIG_PERIPHERAL(G, 7, (PG_7_FTM2_CH5 | ulCharacteristics)); // FTM2_CH5 on PG.7 (alt. function 2)
+            #else
+                #if defined KINETIS_KE06
+                        SIM_PINSEL1 &= ~SIM_PINSEL1_FTM2PS5;
+                #endif
+                        _CONFIG_PERIPHERAL(B, 5, (PB_5_FTM2_CH5 | ulCharacteristics)); // FTM2_CH5 on PB.5 (alt. function 1)
+            #endif
+                        break;
+        #endif
+                    default:
+                        _EXCEPTION("Invalid timer channel!!");
+                        return;                                          // invalid channel
+                    }
+        break;
+    #endif
+    #if FLEX_TIMERS_AVAILABLE > 3
+    case 3:                                                              // timer 3
+                    switch (iChannel) {                                  // configure appropriate pin for the timer signal
+                    case 0:                                              // timer 3, channel 0
+        #if defined FTM3_0_ON_D
+                        _CONFIG_PERIPHERAL(D, 0, (PD_0_FTM3_CH0 | ulCharacteristics)); // FTM3_CH0 on PD.0 (alt. function 4)
+        #else
+                        _CONFIG_PERIPHERAL(E, 5, (PE_5_FTM3_CH0 | ulCharacteristics)); // FTM3_CH0 on PE.5 (alt. function 6)
+        #endif
+                        break;
+                    case 1:                                              // timer 3, channel 1
+        #if defined FTM3_1_ON_D
+                        _CONFIG_PERIPHERAL(D, 1, (PD_1_FTM3_CH1 | ulCharacteristics)); // FTM3_CH1 on PD.1 (alt. function 4)
+        #else
+                        _CONFIG_PERIPHERAL(E, 6, (PE_6_FTM3_CH1 | ulCharacteristics)); // FTM3_CH1 on PE.6 (alt. function 6)
+        #endif
+                        break;
+                    case 2:                                              // timer 3, channel 2
+        #if defined FTM3_2_ON_D
+                        _CONFIG_PERIPHERAL(D, 2, (PD_2_FTM3_CH2 | ulCharacteristics)); // FTM3_CH2 on PD.2 (alt. function 4)
+        #else
+                        _CONFIG_PERIPHERAL(E, 7, (PE_7_FTM3_CH2 | ulCharacteristics)); // FTM3_CH2 on PE.7 (alt. function 6)
+        #endif
+                        break;
+                    case 3:                                              // timer 3, channel 3
+        #if defined FTM3_3_ON_D
+                        _CONFIG_PERIPHERAL(D, 3, (PD_3_FTM3_CH3 | ulCharacteristics)); // FTM3_CH3 on PD.3 (alt. function 4)
+        #else
+                        _CONFIG_PERIPHERAL(E, 8, (PE_8_FTM3_CH3 | ulCharacteristics)); // FTM3_CH3 on PE.8 (alt. function 6)
+        #endif
+                        break;
+                    case 4:                                              // timer 3, channel 4
+        #if defined FTM3_4_ON_C
+                        _CONFIG_PERIPHERAL(C, 8, (PC_8_FTM3_CH4 | ulCharacteristics)); // FTM3_CH4 on PC.8 (alt. function 3)
+        #else
+                        _CONFIG_PERIPHERAL(E, 9, (PE_9_FTM3_CH4 | ulCharacteristics)); // FTM3_CH4 on PE.9 (alt. function 6)
+        #endif
+                        break;
+                    case 5:                                              // timer 3, channel 5
+        #if defined FTM3_5_ON_C
+                        _CONFIG_PERIPHERAL(C, 9, (PC_9_FTM3_CH5 | ulCharacteristics)); // FTM3_CH5 on PC.9 (alt. function 3)
+        #else
+                        _CONFIG_PERIPHERAL(E, 10, (PE_10_FTM3_CH5 | ulCharacteristics)); // FTM3_CH5 on PE.10 (alt. function 6)
+        #endif
+                        break;
+                    case 6:                                              // timer 3, channel 6
+        #if defined FTM3_6_ON_C
+                        _CONFIG_PERIPHERAL(C, 10, (PC_10_FTM3_CH6 | ulCharacteristics)); // FTM3_CH6 on PC.10 (alt. function 3)
+        #else
+                        _CONFIG_PERIPHERAL(E, 11, (PE_11_FTM3_CH6 | ulCharacteristics)); // FTM3_CH6 on PE.11 (alt. function 6)
+        #endif
+                        break;
+                    case 7:                                              // timer 3, channel 7
+        #if defined FTM3_7_ON_C
+                        _CONFIG_PERIPHERAL(C, 11, (PC_11_FTM3_CH7 | ulCharacteristics)); // FTM3_CH7 on PC.11 (alt. function 3)
+        #else
+                        _CONFIG_PERIPHERAL(E, 12, (PE_5_FTM3_CH7 | ulCharacteristics)); // FTM3_CH7 on PE.12 (alt. function 6)
+        #endif
+                        break;
+                    default:
+                        _EXCEPTION("Invalid timer channel!!");
+                        return;                                          // invalid channel
+                    }
+        break;
+    #endif
+    #if (FLEX_TIMERS_AVAILABLE > 4) &&  defined TPMS_AVAILABLE
+    case 4:                                                              // timer 4
+                    switch (iChannel) {                                  // configure appropriate pin for the timer signal
+                    case 0:                                              // TPM 4, channel 0
+        #if defined TPM1_0_ON_B
+                        _CONFIG_PERIPHERAL(B, 0, (PB_0_TPM1_CH0 | ulCharacteristics)); // TPM1_CH0 on PB.0 (alt. function 6)
+        #elif defined TPM1_0_ON_A_HIGH
+                        _CONFIG_PERIPHERAL(A, 12, (PA_12_TPM1_CH0 | ulCharacteristics)); // TPM1_CH0 on PA.12 (alt. function 7)
+        #else
+                        _CONFIG_PERIPHERAL(A, 8, (PA_8_TPM1_CH0 | ulCharacteristics)); // TPM1_CH0 on PA.8 (alt. function 6)
+        #endif
+                        break;
+                    case 1:                                              // TPM 1, channel 1
+        #if defined TPM1_1_ON_B
+                        _CONFIG_PERIPHERAL(B, 1, (PB_1_TPM1_CH1 | ulCharacteristics)); // TPM1_CH1 on PB.1 (alt. function 6)
+        #elif defined TPM1_1_ON_A_HIGH
+                        _CONFIG_PERIPHERAL(A, 13, (PA_13_TPM1_CH1 | ulCharacteristics)); // TPM1_CH1 on PA.13 (alt. function 7)
+        #else
+                        _CONFIG_PERIPHERAL(A, 9, (PA_9_TPM1_CH1 | ulCharacteristics)); // TPM1_CH1 on PA.9 (alt. function 6)
+        #endif
+                        break;
+                    default:
+                        _EXCEPTION("Invalid timer channel!!");
+                        return;                                          // invalid channel
+                    }
+        break;
+    case 5:
+                    switch (iChannel) {                                  // configure appropriate pin for the timer signal
+                    case 0:                                              // TPM 2, channel 0
+        #if defined TPM2_0_ON_B
+                        _CONFIG_PERIPHERAL(B, 18, (PB_18_TPM2_CH0 | ulCharacteristics)); // TPM2_CH0 on PB.18 (alt. function 6)
+        #else
+                        _CONFIG_PERIPHERAL(A, 10, (PA_10_TPM2_CH0 | ulCharacteristics)); // TPM2_CH0 on PA.10 (alt. function 6)
+        #endif
+                        break;
+                    case 1:                                              // TPM 2, channel 1
+        #if defined TPM2_1_ON_B
+                        _CONFIG_PERIPHERAL(B, 19, (PB_19_TPM2_CH1 | ulCharacteristics)); // TPM2_CH1 on PB.19 (alt. function 6)
+        #else
+                        _CONFIG_PERIPHERAL(A, 11, (PA_11_TPM2_CH1 | ulCharacteristics)); // TPM2_CH1 on PA.11 (alt. function 6)
+        #endif
+                        break;
+                    default:
+                        _EXCEPTION("Invalid timer channel!!");
+                        return;                                          // invalid channel
+                    }
+        break;
+    #endif
+    }
+}
+#endif
 
 #if defined SUPPORT_TIMER && (FLEX_TIMERS_AVAILABLE > 0)                 // {72} basic timer support based on FlexTimer
 /* =================================================================== */
@@ -1326,7 +1934,7 @@ extern void fnResetBoard(void)
 #endif
 }
 
-#if defined CLKOUT_AVAILABLE
+#if defined CLKOUT_AVAILABLE && !defined KINETIS_WITH_PCC
 extern int fnClkout(int iClockSource)                                    // {120}
 {
     unsigned long ulSIM_SOPT2 = (SIM_SOPT2 & ~(SIM_SOPT2_CLKOUTSEL_MASK)); // original control register value with clock source masked
@@ -1568,13 +2176,15 @@ static void irq_debug_monitor(void)
 {
 }
 
-static void irq_pend_sv(void)
-{
-}
-
+    #if !defined RUN_IN_FREE_RTOS
 static void irq_SVCall(void)
 {
 }
+
+static void irq_pend_sv(void)
+{
+}
+    #endif
 #endif
 #if !defined _MINIMUM_IRQ_INITIALISATION || defined NMI_IN_FLASH         // {123}
 static void irq_NMI(void)
@@ -1650,7 +2260,12 @@ static void _LowLevelInit(void)
         ACTIVATE_WATCHDOG();                                             // allow user configuration of internal watchdog timer
     }
     else {                                                               // disable the watchdog
-    #if defined KINETIS_KL && !defined KINETIS_KL82                      // {67}
+    #if defined KINETIS_WITH_WDOG32
+        UNLOCK_WDOG();                                                   // open a window to write to watchdog
+        WDOG0_CS = WDOG_CS_UPDATE;                                       // disable watchdog but allow updates
+        WDOG0_TOVAL = 0xffff;
+        WDOG0_WIN = 0;                                  
+    #elif defined KINETIS_KL && !defined KINETIS_KL82                    // {67}
         SIM_COPC = SIM_COPC_COPT_DISABLED;                               // disable the COP
     #else
         UNLOCK_WDOG();                                                   // open a window to write to watchdog
@@ -1675,17 +2290,15 @@ static void _LowLevelInit(void)
 #if defined USER_STARTUP_CODE                                            // {1} allow user defined start-up code immediately after the watchdog configuration and before clock configuration to be defined
     USER_STARTUP_CODE;
 #endif
-#if !defined ERRATA_E2644_SOLVED && !defined KINETIS_FLEX
+#if defined ERRATA_ID_2644 && !defined KINETIS_FLEX
     FMC_PFB0CR &= ~(BANK_DPE | BANKIPE);                                 // disable speculation logic
     FMC_PFB1CR &= ~(BANK_DPE | BANKIPE);
 #endif
-#if !defined ERRATE_E2647_SOLVED && !defined KINETIS_FLEX && (SIZE_OF_FLASH > (256 * 1024))
+#if defined ERRATA_ID_2647 && !defined KINETIS_FLEX && (SIZE_OF_FLASH > (256 * 1024))
     FMC_PFB0CR &= ~(BANKDCE | BANKICE | BANKSEBE);                       // disable cache
     FMC_PFB1CR &= ~(BANKDCE | BANKICE | BANKSEBE);
 #endif
     // Configure clock generator
-    //
-    // - initially the processor is in FEI (FLL Engaged Internal) - Kinetis K presently running from 20..25MHz internal clock (32.768kHz IRC x 640 FLL factor; 20.97MHz)
     //
 #if defined KINETIS_KE
     #include "kinetis_KE_CLOCK.h"                                        // KE and KEA clock configuration
@@ -1706,6 +2319,8 @@ static void _LowLevelInit(void)
 #endif
 #if defined CLKOUT_AVAILABLE
   //fnClkout(BUS_CLOCK_OUT);                                             // select the clock to monitor on CLKOUT
+  //fnClkout(INTERNAL_IRC48M_CLOCK_OUT);
+  //fnClkout(EXTERNAL_OSCILLATOR_CLOCK_OUT);
 #endif
 #if defined KINETIS_KL && defined ROM_BOOTLOADER && defined BOOTLOADER_ERRATA // {125}
     if ((RCM_MR & (RCM_MR_BOOTROM_BOOT_FROM_ROM_BOOTCFG0 | RCM_MR_BOOTROM_BOOT_FROM_ROM_FOPT7)) != 0) { // if the reset was via the ROM loader
@@ -1719,15 +2334,19 @@ static void _LowLevelInit(void)
             PORTB_PCR0 = PORT_PS_UP_ENABLE;
             PORTB_PCR1 = PORT_PS_UP_ENABLE;
         }
+    #if PORTS_AVAILABLE > 2
         if (IS_POWERED_UP(5, SIM_SCGC5_PORTC) != 0) {
             PORTC_PCR4 = PORT_PS_UP_ENABLE;
             PORTC_PCR5 = PORT_PS_UP_ENABLE;
             PORTC_PCR6 = PORT_PS_UP_ENABLE;
             PORTC_PCR7 = PORT_PS_UP_ENABLE;
         }
+    #endif
         POWER_DOWN(5, (SIM_SCGC5_PORTA | SIM_SCGC5_PORTB | SIM_SCGC5_PORTC | SIM_SCGC5_PORTD | SIM_SCGC5_PORTE | SIM_SCGC5_LPUART0)); // power down ports and LPUART0
         POWER_DOWN(4, (SIM_SCGC4_I2C0 | SIM_SCGC4_SPI0));                // power down I2C0 and SPI0
+    #if !defined KINETIS_WITH_PCC
         SIM_SOPT2 = 0;                                                   // set default LPUART0 clock source 
+    #endif
         IRQ0_31_CER = 0xffffffff;                                        // disable and clear all possible pending interrupts
         IRQ32_63_CER = 0xffffffff;
         IRQ64_95_CER = 0xffffffff;
@@ -1758,8 +2377,14 @@ static void _LowLevelInit(void)
     ptrVect->ptrBusFault      = irq_bus_fault;
     ptrVect->ptrUsageFault    = irq_usage_fault;
     ptrVect->ptrDebugMonitor  = irq_debug_monitor;
+        #if defined RUN_IN_FREE_RTOS
+    ptrVect->ptrPendSV        = xPortPendSVHandler;                      // FreeRTOS's PendSV handler
+    ptrVect->ptrSVCall        = vPortSVCHandler;                         // FreeRTOS's SCV handler
+    ptrVect->reset_vect.ptrResetSP = (void *)(RAM_START_ADDRESS + (SIZE_OF_RAM - NON_INITIALISED_RAM_SIZE)); // the stack pointer value will be taken from the vector base area so enter it in SRAM
+        #else
     ptrVect->ptrPendSV        = irq_pend_sv;
     ptrVect->ptrSVCall        = irq_SVCall;
+        #endif
     processor_ints = (void (**)(void))&ptrVect->processor_interrupts;    // fill all processor specific interrupts with a default handler
     do {
         *processor_ints = irq_default;
@@ -1818,9 +2443,9 @@ static void _LowLevelInit(void)
     MC_PMPROT = MC_PMPROT_LOW_POWER_LEVEL;                               // {117}
     #endif
     #if defined ERRATA_ID_8068 && !defined SUPPORT_RTC                   // if low power mode is to be used but the RTC will not be initialised clear the RTC invalid flag to avoid the low power mode being blocked when e8068 is present
-    POWER_UP(6, SIM_SCGC6_RTC);                                          // temporarily enable the RTC module
+    POWER_UP_ATOMIC(6, SIM_SCGC6_RTC);                                   // temporarily enable the RTC module
     RTC_TSR = 0;                                                         // clear the RTC invalid flag with a write of any value to RTC_TSR
-    POWER_DOWN(6, SIM_SCGC6_RTC);                                        // power down the RTC again
+    POWER_DOWN_ATOMIC(6, SIM_SCGC6_RTC);                                 // power down the RTC again
     #endif
 #endif
 #if defined _WINDOWS
@@ -1837,7 +2462,7 @@ static void _LowLevelInit(void)
 //
 extern void start_application(unsigned long app_link_location)
 {
-    #if defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_KV   // {67} cortex-M0+ assembler code
+    #if defined ARM_MATH_CM0PLUS                                         // {67} cortex-M0+ assembler code
         #if !defined _WINDOWS
     asm(" ldr r1, [r0,#0]");                                             // get the stack pointer value from the program's reset vector
     asm(" mov sp, r1");                                                  // copy the value to the stack pointer
@@ -1853,6 +2478,35 @@ extern void start_application(unsigned long app_link_location)
 }
 #endif
 
+#if 1 /*defined RUN_IN_FREE_RTOS || defined _WINDOWS*/ // to satisfy FreeRTOS callbacks - even when FreeRTOS not linked
+extern void *pvPortMalloc(int iSize)
+{
+    return uMalloc((MAX_MALLOC)iSize);                                   // use uMalloc() which assumes that memory is never freed
+}
+extern void vPortFree(void *free)
+{
+    _EXCEPTION("Unexpected free call!!");
+}
+extern void vApplicationStackOverflowHook(void)
+{
+}
+extern void vApplicationTickHook(void)                                   // FreeRTOS tick interrupt
+{
+}
+extern void vMainConfigureTimerForRunTimeStats(void)
+{
+}
+extern unsigned long ulMainGetRunTimeCounterValue(void)
+{
+    return uTaskerSystemTick;
+}
+extern void vApplicationIdleHook(void)
+{
+}
+extern void prvSetupHardware(void)
+{
+}
+#endif
 
 // The initial stack pointer and PC value - this is usually linked at address 0x00000000 (or to application start location when working with a boot loader)
 //
@@ -1948,7 +2602,12 @@ const _RESET_VECTOR __vector_table
     0,
     0,
     0,
-    #if defined _MINIMUM_IRQ_INITIALISATION
+    #if defined RUN_IN_FREE_RTOS
+    vPortSVCHandler,                                                     // FreeRTOS's SCV handler
+    irq_debug_monitor,
+    0,
+    xPortPendSVHandler,                                                  // FreeRTOS's PendSV handler
+    #elif defined _MINIMUM_IRQ_INITIALISATION
     irq_default,
     irq_default,
     0,
@@ -1994,9 +2653,21 @@ const _RESET_VECTOR __vector_table
     irq_default,                                                         // 14
     irq_default,                                                         // 15
     irq_default,                                                         // 16
+    #if defined SUPPORT_TIMER && (FLEX_TIMERS_AVAILABLE > 0)
+	_flexTimerInterrupt_0,                                               // 17
+    #else
     irq_default,                                                         // 17
+    #endif
+    #if defined SUPPORT_TIMER && (FLEX_TIMERS_AVAILABLE > 1)
+	_flexTimerInterrupt_1,                                               // 18
+    #else
     irq_default,                                                         // 18
+    #endif
+	#if defined SUPPORT_TIMER && (FLEX_TIMERS_AVAILABLE > 0)
+	_flexTimerInterrupt_2,                                               // 19
+    #else
     irq_default,                                                         // 19
+    #endif
     #if defined SUPPORT_RTC && defined KINETIS_KE
     _rtc_handler,                                                        // 20
     irq_default,                                                         // 21
@@ -2008,21 +2679,37 @@ const _RESET_VECTOR __vector_table
     irq_default,                                                         // 21
     #endif
     #if (defined SUPPORT_PITS || defined USB_HOST_SUPPORT) && !defined KINETIS_WITHOUT_PIT
-    _PIT_Interrupt,                                                      // 22
+        #if defined KINETIS_KL
+	_PIT_Interrupt,                                                      // 22
+	irq_default,                                                         // 23
+        #else
+	_PIT0_Interrupt,                                                     // 22
+	_PIT1_Interrupt,                                                     // 23
+        #endif
     #else
     irq_default,                                                         // 22
+	irq_default,                                                         // 23
     #endif
-    irq_default,                                                         // 23
     #if defined USB_INTERFACE
     _usb_otg_isr,                                                        // 24
     #else
+        #if defined KINETIS_KE && defined SUPPORT_KEYBOARD_INTERRUPTS && (KBIS_AVAILABLE > 0)
+    _KBI0_isr,                                                           // 24
+        #else
     irq_default,                                                         // 24
+        #endif
     #endif
+        #if defined KINETIS_KE && defined SUPPORT_KEYBOARD_INTERRUPTS && (KBIS_AVAILABLE > 1)
+    _KBI1_isr,                                                           // 25
+        #else
     irq_default,                                                         // 25
+        #endif
     irq_default,                                                         // 26
     irq_default,                                                         // 27
     #if defined TICK_USES_LPTMR
     _RealTimeInterrupt,                                                  // 28
+    #elif defined SUPPORT_LPTMR && !defined TICK_USES_LPTMR && !defined KINETIS_KE
+    _LPTMR_periodic,                                                     // 28 warning that only periodic interrupt is supported (not single-shot)
     #else
     irq_default,                                                         // 28
     #endif

@@ -218,30 +218,28 @@ extern QUEUE_HANDLE fnOpenI2C(I2CTABLE *pars)
 {
     QUEUE_HANDLE DriverID;
 
-    if ((pars->Channel > NUMBER_I2C) || (NO_ID_ALLOCATED != fnSearchID (entry_I2C, pars->Channel))) {
+    if ((pars->Channel > NUMBER_I2C) || (NO_ID_ALLOCATED != fnSearchID(entry_I2C, pars->Channel))) {
         return (NO_ID_ALLOCATED);                                        // no hardware for this channel or else already open
     }
 
-    if (NO_ID_ALLOCATED == (DriverID = fnSearchID (0, 0))) {             // get next free ID
+    if (NO_ID_ALLOCATED == (DriverID = fnSearchID(0, 0))) {              // get next free ID
         return (NO_ID_ALLOCATED);                                        // no free IDs available
     }
-    --DriverID;                                                          // convert to array offset
-
                                                                          // configure the new driver and its queue(s)
     if (NO_MEMORY == fnAllocateQueue(&pars->Rx_tx_sizes, pars->Channel, entry_I2C, sizeof(I2CQue))) {
         return (NO_ID_ALLOCATED);                                        // not enough memory for the queues
     }
 
-    if ((I2C_rx_control[pars->Channel] = (I2CQue *)(que_ids[DriverID].input_buffer_control)) != 0) { // {2}
-        I2C_rx_control[pars->Channel]->wake_task = pars->Task_to_wake;
+    if ((I2C_rx_control[pars->Channel] = (I2CQue *)(que_ids[DriverID - 1].input_buffer_control)) != 0) { // {2} save a pointer to the input buffer control structure for fast access
+        I2C_rx_control[pars->Channel]->wake_task = pars->Task_to_wake;   // set the default owner task if the queue exists
     }
 
-    if ((I2C_tx_control[pars->Channel] = (I2CQue *)(que_ids[DriverID].output_buffer_control)) != 0) { // {2}
-        I2C_tx_control[pars->Channel]->wake_task = pars->Task_to_wake;
+    if ((I2C_tx_control[pars->Channel] = (I2CQue *)(que_ids[DriverID - 1].output_buffer_control)) != 0) { // {2} save a pointer to the output buffer control structure for fast access
+        I2C_tx_control[pars->Channel]->wake_task = pars->Task_to_wake;   // set the default owner task if the queue exists
     }
 
-    fnConfigI2C(pars);                                                   // configure the hardware
+    fnConfigI2C(pars);                                                   // configure the I2C hardware
 
-    return (DriverID + 1);
+    return (DriverID );                                                  // return the I2C interface handle
 }
 #endif

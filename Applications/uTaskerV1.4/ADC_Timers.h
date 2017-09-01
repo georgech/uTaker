@@ -36,6 +36,8 @@
     04.01.2016 Add KL support for ping-pong buffer operation             {21}
     05.01.2016 Clear PWM interrupt entry                                 {22}
     08.01.2017 Add TIMED_UART_TX_TEST                                    {23}
+    22.04.2017 Add ADC_TRIGGER_TPM and TEST_STEPPER options
+    20.05.2017 Add Kinetis timer capture test                            {24}
 
     The file is otherwise not specifically linked in to the project since it is included by application.c when needed.
 
@@ -45,8 +47,9 @@
     #define _ADC_TIMER_CONFIG
 
     #if defined SUPPORT_ADC                                              // if HW support is enabled
-      //#define TEST_ADC                                                 // enable test of ADC operation
+        #define TEST_ADC                                                 // enable test of ADC operation
       //#define TEST_AD_DA                                               // {14} enable test of reading ADC and writing (after delay) to DAC
+          //#define ADC_TRIGGER_TPM                                      // use TPM module rather than PIT for ADC trigger (valid for KL parts)
           //#define VOICE_RECORDER                                       // {15} needs TEST_AD_DA and mass-storage and saves sampled input to SD card
       //#define INTERNAL_TEMP                                            // {2} read also internal temperature (Luminary Micro)
 
@@ -59,14 +62,16 @@
           //#define _SAM7X_ADC_TEST6                                     // test zero crossing, high and low triggers
         #endif
     #endif
+
     #if defined SUPPORT_DAC
       //#define TEST_DMA_DAC                                             // test generating a signal using DMA to DAC (based on timer trigger)
-            #define GENERATE_SINE
+          //#define GENERATE_SINE
             #if defined GENERATE_SINE
-                #include <math.h>                                        // this may need libm.a explicitly inked (depending on IDE and compiler used)
+                #include <math.h>                                        // this may need libm.a explicitly linked (depending on IDE and compiler used)
             #endif
     #endif
-    #if (defined SUPPORT_PIT1 || defined SUPPORT_PITS) && !defined KINETIS_WITHOUT_PIT // periodic interrupt
+
+    #if (defined SUPPORT_PIT1 || defined SUPPORT_PITS) && !defined KINETIS_WITHOUT_PIT // M522xx nd Kinetis periodic interrupt timer
       //#define TEST_PIT                                                 // test a user defined periodic interrupt
           //#define TEST_PIT_SINGLE_SHOT                                 // test single-shot PIT
             #define TEST_PIT_PERIODIC                                    // test periodic PIT
@@ -76,35 +81,35 @@
                 #define TIMED_UART  1                                    // the UART to use
         #endif
     #endif
-    #if defined SUPPORT_LPTMR                                            // {18}
-      //#define TEST_LPTMR_PERIODIC                                      // test a user defined periodic interrupt
+    #if defined SUPPORT_LPTMR                                            // Kinetis low power timer {18}
+        #define TEST_LPTMR_PERIODIC                                      // test a user defined periodic interrupt
       //#define TEST_LPTMR_SINGLE_SHOT                                   // test a user defined single-shot interrupt
     #endif
     #if defined SUPPORT_DMA_TIMER                                        // M522XX DMA timers
-      //#define TEST_DMA_TIMER                                           // test a user defined periodic interrupt
+      //#define TEST_DMA_TIMER      ulCnt                                // test a user defined periodic interrupt
     #endif
-    #if defined SUPPORT_PWM_MODULE                                       // {9}
-      //#define TEST_TIMER
-      //#define TEST_PWM
-    #endif
-    #if defined SUPPORT_GENERAL_PURPOSE_TIMER                            // general purpose timers
+    #if defined SUPPORT_GENERAL_PURPOSE_TIMER                            // M522XX general purpose timers
       //#define TEST_GPT                                                 // test general purpose timer operation
         #define GPT_CAPTURES     5                                       // when testing captures, collect this many values
     #endif
-    #if defined SUPPORT_TIMER                                            // standard timers
-      //#define TEST_TIMER                                               // test a user defined timer interrupt
+    #if defined SUPPORT_TIMER || defined SUPPORT_PWM_MODULE              // standard timers
+      //#define TEST_TIMER                                               // enable timer test(s)
         #if defined TEST_TIMER
-          //#define TEST_SINGLE_SHOT_TIMER                               // test single-shot mode
-            #define TEST_PERIODIC_TIMER                                  // test periodic interrupt mode
-          //#define TEST_ADC_TIMER                                       // test periodic ADC trigger mode (Luminary)
-          //#define TEST_PWM                                             // {1} test generating PWM output from timer
-          //#define TEST_CAPTURE                                         // {6} test timer capture mode
+            #if defined SUPPORT_PWM_MODULE                               // {9}
+                #define TEST_PWM                                         // {1} test generating PWM output from timer
+              //#define TEST_STEPPER                                     // test generating stepper motor frequency patterns (use together with PWM)
+            #endif
+            #if defined SUPPORT_TIMER
+              //#define TEST_SINGLE_SHOT_TIMER                           // test single-shot mode
+              //#define TEST_PERIODIC_TIMER                              // test periodic interrupt mode
+              //#define TEST_ADC_TIMER                                   // test periodic ADC trigger mode (Luminary)
+              //#define TEST_CAPTURE                                     // {6} test timer capture mode
+            #endif
         #endif
     #endif
-    #if defined SUPPORT_RIT
-        #define RIT_TEST                                                 // {7} LPC17XX repetitive interrupt timer
+    #if defined SUPPORT_RIT                                              // {7} LPC17XX repetitive interrupt timer
+        #define RIT_TEST
     #endif
-
     #if defined VOICE_RECORDER                                           // {15}
         // RIFF WAVE header
         //
@@ -200,7 +205,7 @@
         #endif
         static signed short sADC_buffer[AD_DA_BUFFER_LENGTH] = {0};      // 16 bit samples
     #elif defined TEST_AD_DA && (defined KINETIS_KL || defined KINETIS_KE)
-      //static signed short *ptrADC_buffer = 0;                          // pointer to aligned buffer - 16 bit samples 
+        static signed short *ptrADC_buffer = 0;                          // pointer to aligned buffer - 16 bit samples 
     #endif
     #if defined TEST_GPT
         static unsigned long ulCaptureList[GPT_CAPTURES];                // make space for capture values
@@ -322,7 +327,7 @@
                 }
         #if defined TEST_AD_DA                                           // {14}
                 else if ((ADC_TRIGGER_1 == ucInputMessage[MSG_INTERRUPT_EVENT]) || (ADC_TRIGGER_2 == ucInputMessage[MSG_INTERRUPT_EVENT])) {
-            #if !(defined VOICE_RECORDER && defined SDCARD_SUPPORT || defined KINETIS_KE) // {15}
+            #if !((defined VOICE_RECORDER && defined SDCARD_SUPPORT) || defined KINETIS_KE) // {15}
                     int i;
             #endif
             #if defined KINETIS_KE
@@ -627,7 +632,7 @@ static void adc_level_change_high(ADC_INTERRUPT_RESULT *adc_result)
     #if defined _KINETIS
     fnInterruptMessage(OWN_TASK, (unsigned char)(ADC_TRIGGER));
     #else
-    if (!adc_result) {
+    if (adc_result == 0) {
         fnInterruptMessage(OWN_TASK, (unsigned char)(ADC_TRIGGER));
         return;
     }
@@ -685,46 +690,60 @@ static void _pdb_interrupt(void)
 }
     #endif
 
-// Configure the PDB/LPTMR/PIT to generate ADC triggers (ADC channels must already be configured previous to starting the timer)
+// Configure the PDB/LPTMR/PIT/PTM to generate ADC triggers (ADC channels must already be configured previous to starting the timer)
 //
 static void fnStart_ADC_Trigger(void)
 {
     #if defined KINETIS_KL || defined KINETIS_KE                         // the KL devices do not have a PDB so the PIT is used instead to trigger the ADC/DAC
-        PIT_SETUP pit_setup;                                             // interrupt configuration parameters
-        pit_setup.int_type = PIT_INTERRUPT;
-        pit_setup.int_handler = 0;                                       // no interrupt used since the PIT triggers ADC/DAC only
-        pit_setup.int_priority = PIT0_INTERRUPT_PRIORITY;
-        pit_setup.count_delay = PIT_US_DELAY(125);                       // 8kHz period
-        pit_setup.ucPIT = 0;                                             // use PIT0 since it is the only one that can trigger DAC conversions
-        pit_setup.mode = (PIT_PERIODIC | PIT_RETRIGGER | PIT_TRIGGER_ADC0_A); // periodically trigger ADC0 channel A (PIT0 trigger was defined in ADC configuration) - uses retrigger in case the PIT was running previously
-        fnConfigureInterrupt((void *)&pit_setup);                        // configure PIT0
-    #else
-        PDB_SETUP pdb_setup;                                             // interrupt configuration parameters
-        pdb_setup.int_type = PDB_INTERRUPT;
-      //pdb_setup.int_handler = _pdb_interrupt;                          // interrupt on each PDB cycle match
-        pdb_setup.int_handler = 0;                                       // no interrupt
-        pdb_setup.int_priority = PRIORITY_PDB;    
-      //pdb_setup.pdb_mode = (PDB_PERIODIC_DMA | PDB_TRIGGER_ADC1_A);    // periodic DMA and trigger ADC1 - channel A
-        #if defined KWIKSTIK || defined TEENSY_3_1
-        pdb_setup.pdb_mode = (PDB_PERIODIC_INTERRUPT | PDB_TRIGGER_ADC0_A); // periodic interrupt and trigger ADC0 - channel A
+        #if defined ADC_TRIGGER_TPM                                      // ADC triggering from TPM 1 - channel 0 and 1 (these channels are the default ADC triggers for ADC 0 inputs A and B)
+    PWM_INTERRUPT_SETUP pwm_setup;
+    pwm_setup.int_type = PWM_INTERRUPT;
+    pwm_setup.pwm_mode = (PWM_SYS_CLK | PWM_PRESCALER_16 | PWM_CENTER_ALIGNED | PWM_DMA_PERIOD_ENABLE | PWM_NO_OUTPUT); // clock PWM timer from the system clock with /16 pre-scaler (don't use an output)
+    pwm_setup.int_handler = 0;                                           // no user interrupt call-back on PWM cycle
+    pwm_setup.pwm_frequency = PWM_FREQUENCY(1000, 16);                   // generate 1kHz on PWM output
+    pwm_setup.pwm_value = _PWM_PERCENT(1, pwm_setup.pwm_frequency);      // 1% PWM (high/low)
+    pwm_setup.pwm_reference = (_TIMER_1 | 0);                            // timer module 1, channel 0 (triggers ADC0 input A)
+    fnConfigureInterrupt((void *)&pwm_setup);
+    pwm_setup.pwm_value = _PWM_PERCENT(99, pwm_setup.pwm_frequency);     // 99% PWM (high/low)
+    pwm_setup.pwm_reference = (_TIMER_1 | 1);                            // timer module 1, channel 1 (triggers ADC0 input B)
+    fnConfigureInterrupt((void *)&pwm_setup);
         #else
-        pdb_setup.pdb_mode = (PDB_PERIODIC_INTERRUPT | PDB_TRIGGER_ADC1_A); // periodic interrupt and trigger ADC1 - channel A
+    PIT_SETUP pit_setup;                                                 // interrupt configuration parameters
+    pit_setup.int_type = PIT_INTERRUPT;
+    pit_setup.int_handler = 0;                                           // no interrupt used since the PIT triggers ADC/DAC only
+    pit_setup.int_priority = PIT0_INTERRUPT_PRIORITY;
+    pit_setup.count_delay = PIT_US_DELAY(125);                           // 8kHz period
+    pit_setup.ucPIT = 0;                                                 // use PIT0 since it is the only one that can trigger DAC conversions
+    pit_setup.mode = (PIT_PERIODIC | PIT_RETRIGGER | PIT_TRIGGER_ADC0_A);// periodically trigger ADC0 channel A (PIT0 trigger was defined in ADC configuration) - uses retrigger in case the PIT was running previously
+    fnConfigureInterrupt((void *)&pit_setup);                            // configure PIT0
         #endif
-      //pdb_setup.pdb_mode = PDB_MONO_TIMER_INTERRUPT;                   // single-shot timer interrupt
-        pdb_setup.prescaler = (PDB_PRESCALER_4 | PDB_MUL_1);             // pre-scaler values of 1, 2, 4, 8, 16, 32, 64 and 128 are possible (with multipliers of 1, 10, 20 or 40)
-        pdb_setup.period = PDB_FREQUENCY(4, 1, 8000);                    // frequency of PDB cycle is 8kHz
-        pdb_setup.int_match = 0;                                         // PDB interrupt/DMA at the start of the period so that it uses the old ADC value
-        pdb_setup.ch0_delay_0 = pdb_setup.period;                        // ADC0 channel A trigger occurs at end of the PDB period
-        pdb_setup.ch0_delay_1 = 0;
-        pdb_setup.ch1_delay_0 = pdb_setup.period;                        // ADC1 channel A trigger occurs at end of the PDB period
-        pdb_setup.ch1_delay_1 = 0;
-        #if defined SUPPORT_DAC
-        pdb_setup.pdb_mode &= ~PDB_PERIODIC_INTERRUPT;
-        pdb_setup.pdb_mode |= PDB_PERIODIC_DMA;                          // use DMA to trigger DAC data writes
-        pdb_setup.dac0_delay_0 = 0;
-        #endif
-        pdb_setup.pdb_trigger = PDB_TRIGGER_SW;                          // triggered by software (started immediately)
-        fnConfigureInterrupt((void *)&pdb_setup);                        // configure PDB interrupt
+    #else
+    PDB_SETUP pdb_setup;                                                 // interrupt configuration parameters
+    pdb_setup.int_type = PDB_INTERRUPT;
+    //pdb_setup.int_handler = _pdb_interrupt;                            // interrupt on each PDB cycle match
+    pdb_setup.int_handler = 0;                                           // no interrupt
+    pdb_setup.int_priority = PRIORITY_PDB;    
+    //pdb_setup.pdb_mode = (PDB_PERIODIC_DMA | PDB_TRIGGER_ADC1_A);      // periodic DMA and trigger ADC1 - channel A
+    #if defined KWIKSTIK || defined TEENSY_3_1
+    pdb_setup.pdb_mode = (PDB_PERIODIC_INTERRUPT | PDB_TRIGGER_ADC0_A);  // periodic interrupt and trigger ADC0 - channel A
+    #else
+    pdb_setup.pdb_mode = (PDB_PERIODIC_INTERRUPT | PDB_TRIGGER_ADC1_A);  // periodic interrupt and trigger ADC1 - channel A
+    #endif
+    //pdb_setup.pdb_mode = PDB_MONO_TIMER_INTERRUPT;                     // single-shot timer interrupt
+    pdb_setup.prescaler = (PDB_PRESCALER_4 | PDB_MUL_1);                 // pre-scaler values of 1, 2, 4, 8, 16, 32, 64 and 128 are possible (with multipliers of 1, 10, 20 or 40)
+    pdb_setup.period = PDB_FREQUENCY(4, 1, 8000);                        // frequency of PDB cycle is 8kHz
+    pdb_setup.int_match = 0;                                             // PDB interrupt/DMA at the start of the period so that it uses the old ADC value
+    pdb_setup.ch0_delay_0 = pdb_setup.period;                            // ADC0 channel A trigger occurs at end of the PDB period
+    pdb_setup.ch0_delay_1 = 0;
+    pdb_setup.ch1_delay_0 = pdb_setup.period;                            // ADC1 channel A trigger occurs at end of the PDB period
+    pdb_setup.ch1_delay_1 = 0;
+    #if defined SUPPORT_DAC
+    pdb_setup.pdb_mode &= ~PDB_PERIODIC_INTERRUPT;
+    pdb_setup.pdb_mode |= PDB_PERIODIC_DMA;                              // use DMA to trigger DAC data writes
+    pdb_setup.dac0_delay_0 = 0;
+    #endif
+    pdb_setup.pdb_trigger = PDB_TRIGGER_SW;                              // triggered by software (started immediately)
+    fnConfigureInterrupt((void *)&pdb_setup);                            // configure PDB interrupt
     #endif
 }
 #endif
@@ -741,6 +760,11 @@ static void fnConfigureADC(void)
     #if !defined DEVICE_WITHOUT_DMA
     adc_setup.dma_int_priority = 3;                                      // priority of DMA interrupt the user wants to set
     adc_setup.dma_int_handler = 0;                                       // no interrupt so that free-running circular buffer is used (when ADC_FULL_BUFFER_DMA_AUTO_REPEAT is not defined)
+        #if defined KINETIS_KL && defined TEST_AD_DA && defined ADC_TRIGGER_TPM
+    adc_setup.ucDmaTriggerSource = DMAMUX0_CHCFG_SOURCE_TPM1_OVERFLOW;   // trigger DMA TPM overflows
+        #else
+    adc_setup.ucDmaTriggerSource = 0;                                    // default trigger is the ADC conversion completion fo the channel in question
+        #endif
     #endif
     #if !defined KINETIS_KE
     adc_setup.pga_gain = PGA_GAIN_OFF;                                   // {13} PGA gain can be specified for certain inputs
@@ -788,7 +812,7 @@ static void fnConfigureADC(void)
             #endif
             #if !defined DEVICE_WITHOUT_DMA
                 #if defined KINETIS_KL                                   // {21}
-    adc_setup.ucDmaChannel = 1;                                          // DMA channel 1 used
+    adc_setup.ucDmaChannel = 2;                                          // DMA channel 2 used
                 #else
     adc_setup.ucDmaChannel = 6;                                          // DMA channel 6 used
                 #endif
@@ -803,24 +827,24 @@ static void fnConfigureADC(void)
                 #endif
             #else
                 #if defined KINETIS_KL                                   // {21}
-  //adc_setup.int_adc_mode = (ulCalibrate | ADC_LOOP_MODE | ADC_FULL_BUFFER_DMA | ADC_HALF_BUFFER_DMA | ADC_SELECT_INPUTS_A | ADC_CLOCK_BUS_DIV_2 | ADC_CLOCK_DIVIDE_4 | ADC_SAMPLE_ACTIVATE_LONG | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_ENDED | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE); // continuous conversion (DMA to buffer)
-    adc_setup.int_adc_mode = (ulCalibrate | ADC_FULL_BUFFER_DMA | ADC_HALF_BUFFER_DMA | ADC_SELECT_INPUTS_A | ADC_CLOCK_BUS_DIV_2 | ADC_CLOCK_DIVIDE_8 | ADC_SAMPLE_ACTIVATE_LONG | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_ENDED | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE | ADC_HW_TRIGGERED); // hardware triggering (DMA to buffer)
+  //adc_setup.int_adc_mode = (ulCalibrate | ADC_LOOP_MODE | ADC_FULL_BUFFER_DMA | ADC_HALF_BUFFER_DMA | ADC_SELECT_INPUTS_A | ADC_CLOCK_BUS_DIV_2 | ADC_CLOCK_DIVIDE_4 | ADC_SAMPLE_ACTIVATE_LONG | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_ENDED_INPUT | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE); // continuous conversion (DMA to buffer)
+    adc_setup.int_adc_mode = (ulCalibrate | ADC_FULL_BUFFER_DMA | ADC_HALF_BUFFER_DMA | ADC_SELECT_INPUTS_A | ADC_CLOCK_BUS_DIV_2 | ADC_CLOCK_DIVIDE_8 | ADC_SAMPLE_ACTIVATE_LONG | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_ENDED_INPUT | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE | ADC_HW_TRIGGERED); // hardware triggering (DMA to buffer)
     adc_setup.int_adc_mode |= ADC_FULL_BUFFER_DMA_AUTO_REPEAT;           // automated DMA (using interrupt) restart when not using modulo repetitions
-    adc_setup.dma_int_handler = 0;                                       // no user interrupt call-back
+    adc_setup.dma_int_handler = 0;                                       // no user DMA interrupt call-back
                 #else
-    adc_setup.int_adc_mode = (ulCalibrate | /*ADC_LOOP_MODE |*/ ADC_HALF_BUFFER_DMA | ADC_SELECT_INPUTS_A | ADC_CLOCK_BUS_DIV_2 | ADC_CLOCK_DIVIDE_8 | ADC_SAMPLE_ACTIVATE_LONG | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_ENDED | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE | ADC_HW_TRIGGERED); // hardware triggering example (DMA to buffer with interrupt on half-buffer completion) - requires PDB set up afterwards
+    adc_setup.int_adc_mode = (ulCalibrate | /*ADC_LOOP_MODE |*/ ADC_HALF_BUFFER_DMA | ADC_SELECT_INPUTS_A | ADC_CLOCK_BUS_DIV_2 | ADC_CLOCK_DIVIDE_8 | ADC_SAMPLE_ACTIVATE_LONG | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_ENDED_INPUT | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE | ADC_HW_TRIGGERED); // hardware triggering example (DMA to buffer with interrupt on half-buffer completion) - requires PDB set up afterwards
                 #endif
     adc_setup.int_adc_sample = (ADC_SAMPLE_LONG_PLUS_12 | ADC_SAMPLE_AVERAGING_8); // additional sampling clocks and hardware averaging
             #endif
-    adc_setup.int_adc_bit_b = 0;                                         // channel B is only valid when using HW triggered mode
+    adc_setup.int_adc_bit_b = ADC_TEMP_SENSOR;                           // input B is only valid when using HW triggered mode
         #elif defined KINETIS_KE
     adc_setup.int_adc_mode = (ADC_CLOCK_BUS_DIV_2 | ADC_CLOCK_DIVIDE_8 | ADC_SAMPLE_ACTIVATE_LONG | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE | ADC_SW_TRIGGERED | ADC_LOW_POWER_CONFIG); // single shot with interrupt on completion {12}
         #else
-    adc_setup.int_adc_mode = (ulCalibrate | ADC_SELECT_INPUTS_A | ADC_CLOCK_BUS_DIV_2 | ADC_CLOCK_DIVIDE_8 | ADC_SAMPLE_ACTIVATE_LONG | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_ENDED | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE | ADC_SW_TRIGGERED); // note that the first configuration should calibrate the ADC - single shot with interrupt on completion {12}
+    adc_setup.int_adc_mode = (ulCalibrate | ADC_SELECT_INPUTS_A | ADC_CLOCK_BUS_DIV_2 | ADC_CLOCK_DIVIDE_8 | ADC_SAMPLE_ACTIVATE_LONG | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_ENDED_INPUT | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE | ADC_SW_TRIGGERED); // note that the first configuration should calibrate the ADC - single shot with interrupt on completion {12}
     adc_setup.int_adc_sample = (ADC_SAMPLE_LONG_PLUS_12 | ADC_SAMPLE_AVERAGING_32); // additional sampling clocks
         #endif
     #endif
-     adc_setup.int_adc_result = 0;                                        // no result is requested
+    adc_setup.int_adc_result = 0;                                        // no result is requested
 #else
     adc_setup.int_handler = adc_level_change_high;                       // handling function
     adc_setup.int_priority = ADC_ERR_PRIORITY;                           // ADC interrupt priority
@@ -829,8 +853,8 @@ static void fnConfigureADC(void)
   //adc_setup.int_adc_int_type = (ADC_END_OF_SCAN_INT | ADC_SINGLE_SHOT_TRIGGER_INT); // use to test SYNCA trigger
     adc_setup.int_adc_offset = 0;                                        // no offset
     adc_setup.int_high_level_trigger = (unsigned short)(ADC_VOLT * 2);
-    adc_setup.int_adc_mode = (ADC_CONFIGURE_ADC | ADC_CONFIGURE_CHANNEL | ADC_SEQUENTIAL_MODE | ADC_SINGLE_ENDED | ADC_LOOP_MODE); // use to test single ended
-  //adc_setup.int_adc_mode = (ADC_CONFIGURE_ADC | ADC_CONFIGURE_CHANNEL | ADC_SEQUENTIAL_MODE | ADC_DIFFERENTIAL | ADC_LOOP_MODE); // use to test differential
+    adc_setup.int_adc_mode = (ADC_CONFIGURE_ADC | ADC_CONFIGURE_CHANNEL | ADC_SEQUENTIAL_MODE | ADC_SINGLE_ENDED_INPUT | ADC_LOOP_MODE); // use to test single ended
+  //adc_setup.int_adc_mode = (ADC_CONFIGURE_ADC | ADC_CONFIGURE_CHANNEL | ADC_SEQUENTIAL_MODE | ADC_DIFFERENTIAL_INPUT | ADC_LOOP_MODE); // use to test differential
   //adc_setup.int_adc_mode = (ADC_CONFIGURE_ADC | ADC_CONFIGURE_CHANNEL | ADC_SEQUENTIAL_MODE | ADC_TRIGGERED_MODE); // use to test SYNCA trigger
     adc_setup.int_adc_speed = (unsigned char)(ADC_SAMPLING_SPEED(5000000)); // 5MHz sampling (must be between 100kHz and 5MHz)
     adc_setup.int_adc_result = 0;                                        // no result is requested
@@ -854,10 +878,14 @@ static void fnConfigureADC(void)
         dac_setup.int_dac_controller = 0;                                // DAC 0
         #endif
         #if defined KINETIS_KL
-        dac_setup.ptrDAC_Buffer = (unsigned short *)ptrADC_buffer;
+        dac_setup.ptrDAC_Buffer = (unsigned short *)&sADC_buffer[0];
         dac_setup.ulDAC_buffer_length = (AD_DA_BUFFER_LENGTH * sizeof(unsigned short));
-        dac_setup.ucDmaChannel = 0;                                      // DMA channel 0 used (highest priority)
+        dac_setup.ucDmaChannel = 1;                                      // DMA channel 1 used
+            #if defined KINETIS_KL && defined ADC_TRIGGER_TPM
+        dac_setup.ucDmaTriggerSource = DMAMUX0_CHCFG_SOURCE_TPM1_OVERFLOW; // trigger DMA to DAC when TPM overflows
+            #else
         dac_setup.ucDmaTriggerSource = DMAMUX_CHCFG_SOURCE_ADC0;         // trigger DMA to DAC when ADC0 sample completes
+            #endif
         dac_setup.dac_mode |= DAC_HW_TRIGGER_MODE;                       // use HW trigger mode rather than SW triggered mode
         dac_setup.dac_mode |= DAC_FULL_BUFFER_DMA_AUTO_REPEAT;           // automated DMA restart (using interrupt) when not using modulo repetitions
         #else
@@ -1126,7 +1154,7 @@ static void fnConfigurePIT(void)
     int i;
     DAC_SETUP dac_setup;
     #endif
-    PIT_SETUP pit_setup;                                                 // interrupt configuration parameters
+    PIT_SETUP pit_setup;                                                 // PIT interrupt configuration parameters
     pit_setup.int_type = PIT_INTERRUPT;
     #if defined TEST_DMA_DAC                                             // {20}
     pit_setup.int_priority = PIT0_INTERRUPT_PRIORITY;                    // not used
@@ -1368,6 +1396,10 @@ static void fnConfigure_GPT(void)
     #if !((defined _KINETIS || defined _M5223X) && defined TEST_PWM)
 static void timer_int(void)
 {
+#if defined TEST_CAPTURE && defined _KINETIS                             // {24}
+    static volatile unsigned long ulLastCapture = 0;
+    ulLastCapture = CAPTURE_VALUE(0, 1);                                 // update the last capture value
+#endif
     TOGGLE_TEST_OUTPUT();
         #if defined TEST_SINGLE_SHOT_TIMER
     fnConfigure_Timer();
@@ -1456,14 +1488,65 @@ extern void fnSetColor(signed char x, signed char y)                     // {19}
     #endif
 
 
+#if defined TEST_STEPPER
+static const unsigned short rampFrequencyValue[] = {
+    PWM_FREQUENCY(4800, 16),                                             // 4800Hz
+    (PWM_FREQUENCY(4200, 16) - 1),                                       // 4200Hz
+    (PWM_FREQUENCY(3200, 16) - 1),                                       // 3200Hz
+    (PWM_FREQUENCY(1000, 16) - 1),                                       // 1000Hz
+    (PWM_FREQUENCY(100, 16) - 1),                                        // 100Hz
+    (PWM_FREQUENCY(800, 16) - 1),                                        // 800Hz
+    (PWM_FREQUENCY(1800, 16) - 1),                                       // 1800Hz
+    (PWM_FREQUENCY(20000, 16) - 1),                                      // 20kHz
+};
+
+#if defined FLEX_TIMERS_AVAILABLE_
+static const unsigned short rampCountValue[] = {                         // accumulated
+    10,                                                                  // 10 pulses at first frequency
+    18,                                                                  // 8 pulses at next frequency
+    22,
+    24,
+    25,
+    27,
+    33,
+    53,
+    0,                                                                   // end (dummy due to buffer delay)
+};
+#else
+static const unsigned short rampCountValue[] = {
+    (10 - 1),                                                            // 10 pulses at first frequency
+    (8 - 1),                                                             // 8 pulses at next frequency
+    (4 - 1),
+    (2 - 1), 
+    (1 - 1),
+    (2 - 1),
+    (6 - 1),
+    (20 - 1), 
+    0,                                                                   // end (dummy due to buffer delay)
+};
+#endif
+
+
+static void fnEndOfRamp(void)
+{
+    FTM0_SC = 0;                                                         // stop the PWM output when the sequence has completed
+}
+#endif  
+
+//static void PWM_IRQ(void)
+//{
+//    TOGGLE_TEST_OUTPUT();
+//}
+
 static void fnConfigure_Timer(void)
 {
 #if (defined _KINETIS || defined _M5223X) && defined TEST_PWM            // {9} Kinetis and Coldfire PWM
     PWM_INTERRUPT_SETUP pwm_setup;
     pwm_setup.int_type = PWM_INTERRUPT;
-    pwm_setup.pwm_mode = (PWM_SYS_CLK | PWM_PRESCALER_16);               // clock PWM timer from the system clock with /16 pre-scaler
+    pwm_setup.pwm_mode = (PWM_SYS_CLK | PWM_PRESCALER_16 | PWM_EDGE_ALIGNED); // clock PWM timer from the system clock with /16 pre-scaler
     pwm_setup.int_handler = 0;                                           // {22} no user interrupt call-back on PWM cycle
-    #if defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KE02Z || defined FRDM_KE04Z || defined FRDM_KE06Z
+  //pwm_setup.int_handler = PWM_IRQ;                                     // enable to generate an interrupt on each PWM cycle
+    #if defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KE02Z || defined FRDM_KE04Z || defined FRDM_KE06Z || defined FRDM_K22F
     pwm_setup.pwm_reference = (_TIMER_0 | 1);                            // timer module 0, channel 1
     #elif defined FRDM_KL05Z
     pwm_setup.pwm_reference = (_TIMER_0 | 0);                            // timer module 0, channel 0
@@ -1476,9 +1559,70 @@ static void fnConfigure_Timer(void)
     #else
     pwm_setup.pwm_reference = (_TIMER_0 | 3);                            // timer module 0, channel 3
     #endif
+    #if defined TEST_STEPPER
+    // Configure DMA trigger generator
+    //
+    #if defined FLEX_TIMERS_AVAILABLE_
+    pwm_setup.pwm_mode = (PWM_EXTERNAL_CLK | PWM_PRESCALER_0 | PWM_NO_OUTPUT | PWM_FULL_BUFFER_DMA | PWM_DMA_CHANNEL_ENABLE | PWM_DMA_CONTROL_FREQUENCY); // clock PWM timer from external clock (use channel DMA)
+    #else
+    pwm_setup.pwm_mode = (PWM_EXTERNAL_CLK | PWM_PRESCALER_0 | PWM_NO_OUTPUT | PWM_FULL_BUFFER_DMA | PWM_DMA_PERIOD_ENABLE | PWM_DMA_CONTROL_FREQUENCY); // clock PWM timer from external clock (use overflow DMA)
+    #endif
+    #if defined FRDM_K66F
+    pwm_setup.pwm_reference = (_TPM_TIMER_2 | 0);                        // TPM module 2, channel 0
+    #else
+    pwm_setup.pwm_reference = (_TIMER_1 | 0);                            // timer module 1, channel 0
+    #endif
+    #if defined FLEX_TIMERS_AVAILABLE_
+    pwm_setup.pwm_frequency = 0;                                         // cause maximum timer count to be used
+    #else
+    pwm_setup.pwm_frequency = rampCountValue[0];                         // set the input pulse count value until overflow
+    #endif
+    pwm_setup.pwm_value = rampCountValue[0];                             // first match value
+    pwm_setup.ucDmaChannel = 2;                                          // use DMA channel 2
+    pwm_setup.dma_int_priority = 0;
+    #if defined FLEX_TIMERS_AVAILABLE_
+    pwm_setup.ucDmaTriggerSource = DMAMUX0_CHCFG_SOURCE_FTM1_C0;         // load next value on own timer match
+    #elif defined FRDM_K66F
+    pwm_setup.ucDmaTriggerSource = DMAMUX0_CHCFG_SOURCE_TPM2_OVERFLOW;   // load next value on own timer overflow
+    #else
+    pwm_setup.ucDmaTriggerSource = DMAMUX0_CHCFG_SOURCE_TPM1_OVERFLOW;   // load next value on own timer overflow
+    #endif
+    #if defined FLEX_TIMERS_AVAILABLE_
+    pwm_setup.ptrPWM_Buffer = (unsigned short *)&rampCountValue[1];      // buffer controlling the DMA trigger points
+    #else
+    pwm_setup.ptrPWM_Buffer = (unsigned short *)&rampCountValue[2];      // buffer controlling the DMA trigger points
+    #endif
+    pwm_setup.ulPWM_buffer_length = (sizeof(rampCountValue) - sizeof(unsigned short));
+    pwm_setup.dma_int_handler = fnEndOfRamp;                             // call back on DMA termination
+    fnConfigureInterrupt((void *)&pwm_setup);                            // enter configuration for DMA trigger generation
+    #if !defined FLEX_TIMERS_AVAILABLE_
+        #if defined FRDM_K66F
+    FTM5_MOD = rampCountValue[1];                                        // prepare second value (buffered)
+        #else
+    FTM1_MOD = rampCountValue[1];                                        // prepare second value (buffered)
+        #endif
+    #endif
+    // Configure PWM output signal (this needs to be fed back to the clock input)
+    //
+    #if defined FLEX_TIMERS_AVAILABLE_
+    pwm_setup.pwm_mode = (PWM_SYS_CLK | PWM_PRESCALER_16 | PWM_FULL_BUFFER_DMA | PWM_DMA_CHANNEL_ENABLE | PWM_DMA_CONTROL_FREQUENCY);
+    #else
+    pwm_setup.pwm_mode = (PWM_SYS_CLK | PWM_PRESCALER_16 | PWM_FULL_BUFFER_DMA | PWM_DMA_PERIOD_ENABLE | PWM_DMA_CONTROL_FREQUENCY);
+    #endif
+    pwm_setup.pwm_reference = (_TIMER_0 | 2);                            // timer module 0, channel 2 (red LED in RGB LED)
+    pwm_setup.pwm_frequency = rampFrequencyValue[0];                     // set start frequency
+    pwm_setup.pwm_value = _PWM_PERCENT(50, PWM_FREQUENCY(20000, 16));    // 50% PWM (high/low) when the frequency is 20kHz
+    pwm_setup.ucDmaChannel = 1;                                          // use DMA channel 1
+    pwm_setup.ptrPWM_Buffer = (unsigned short *)&rampFrequencyValue[1];  // buffer controlling the frequencies
+    pwm_setup.ulPWM_buffer_length = (sizeof(rampFrequencyValue) - sizeof(unsigned short));
+    pwm_setup.dma_int_handler = 0;                                       // no callback on DMA termination
+    fnConfigureInterrupt((void *)&pwm_setup);                            // configure and start the PWM output
+    return;
+    #else
     pwm_setup.pwm_frequency = PWM_FREQUENCY(1000, 16);                   // generate 1000Hz on PWM output
     pwm_setup.pwm_value   = _PWM_PERCENT(20, pwm_setup.pwm_frequency);   // 20% PWM (high/low)
     fnConfigureInterrupt((void *)&pwm_setup);                            // enter configuration for PWM test
+    #endif
     #if defined FRDM_KL02Z || defined FRDM_KE02Z40M
     pwm_setup.pwm_reference = (_TIMER_1 | 0);                            // timer module 1, channel 0
     #elif defined FRDM_KL03Z
@@ -1495,8 +1639,21 @@ static void fnConfigure_Timer(void)
     pwm_setup.pwm_mode |= PWM_POLARITY;                                  // change polarity of second channel
     #endif
     pwm_setup.pwm_value  = _PWM_TENTH_PERCENT(706, pwm_setup.pwm_frequency); // 70.6% PWM (low/high) on different channel
-  //fnConfigureInterrupt((void *)&pwm_setup);
-    #if defined FRDM_KL02Z || defined FRDM_KE02Z40M
+    fnConfigureInterrupt((void *)&pwm_setup);
+    #if defined FRDM_K64F
+    pwm_setup.pwm_value = _PWM_TENTH_PERCENT(553, pwm_setup.pwm_frequency); // 55.3% PWM (low/high) on different channel
+    pwm_setup.pwm_reference = (_TIMER_0 | 1);
+    fnConfigureInterrupt((void *)&pwm_setup);
+    pwm_setup.pwm_value = _PWM_TENTH_PERCENT(249, pwm_setup.pwm_frequency); // 24.9% PWM (low/high) on different channel
+    pwm_setup.pwm_reference = (_TIMER_0 | 0);
+    fnConfigureInterrupt((void *)&pwm_setup);
+    pwm_setup.pwm_value = _PWM_TENTH_PERCENT(129, pwm_setup.pwm_frequency); // 12.9% PWM (low/high) on different channel
+    pwm_setup.pwm_reference = (_TIMER_0 | 4);
+    fnConfigureInterrupt((void *)&pwm_setup);
+    pwm_setup.pwm_value = _PWM_TENTH_PERCENT(20, pwm_setup.pwm_frequency); // 2.0% PWM (low/high) on different channel
+    pwm_setup.pwm_reference = (_TIMER_0 | 5);
+    fnConfigureInterrupt((void *)&pwm_setup);
+    #elif defined FRDM_KL02Z || defined FRDM_KE02Z40M
     pwm_setup.pwm_reference = (_TIMER_1 | 1);                            // timer module 1, channel 1 (red LED for FRDM-KL02Z and blue for FRDM-KE02Z40M)
     fnConfigureInterrupt((void *)&pwm_setup);
     #elif defined FRDM_KL25Z
@@ -1511,7 +1668,7 @@ static void fnConfigure_Timer(void)
     timer_setup.int_type = TIMER_INTERRUPT;
     timer_setup.int_priority = PRIORITY_TIMERS;
     timer_setup.int_handler = timer_int;
-    timer_setup.timer_reference = 2;                                     // timer channel 2
+    timer_setup.timer_reference = 2;                                     // timer 2
     #if defined _LM3SXXXX
         #if defined TEST_SINGLE_SHOT_TIMER
     timer_setup.timer_mode = (TIMER_SINGLE_SHOT | TIMER_US_VALUE/* | TIMER_16BIT_CHANNEL_B*/); // single shot timer
@@ -1519,7 +1676,7 @@ static void fnConfigure_Timer(void)
         #elif defined TEST_ADC_TIMER
     timer_setup.timer_mode = (TIMER_TRIGGER_ADC | TIMER_PERIODIC | TIMER_MS_VALUE); // period timer
     timer_setup.int_handler = 0;                                         // no interrupts - used together with ADC triggering
-    timer_setup.timer_value += 100;                                      // each subsequent delay increased by 100us
+    timer_setup.timer_value += 100;                                      // each subsequent delay increased by 100ms
         #elif defined TEST_PERIODIC_TIMER
     timer_setup.timer_mode = (TIMER_PERIODIC | TIMER_MS_VALUE);          // period timer interrupt
     timer_setup.timer_value += 100;                                      // each subsequent delay increased by 100us
@@ -1564,11 +1721,15 @@ static void fnConfigure_Timer(void)
     timer_setup.timer_value = TIMER_US_DELAY(TIMER_FREQUENCY_VALUE(1500));// generate 1500Hz on timer output
     timer_setup.pwm_value   = _PWM_PERCENT(50, TIMER_US_DELAY(TIMER_FREQUENCY_VALUE(1500))); // 50% PWM (high/low)
     #elif defined _KINETIS                                               // {16} Kinetis FlexTimer
-    timer_setup.timer_reference = 0;                                     // FlexTimer/TPM channel 0
+    timer_setup.timer_reference = 0;                                     // FlexTimer/TPM 0
         #if defined TEST_PERIODIC_TIMER
   //timer_setup.timer_mode = (TIMER_PERIODIC | TIMER_EXT_CLK_1);         // period timer interrupt using external clocksource 1
     timer_setup.timer_mode = (TIMER_PERIODIC);                           // period timer interrupt
     timer_setup.timer_value = TIMER_MS_DELAY(150);                       // 150ms periodic interrupt
+        #elif defined TEST_CAPTURE                                       // {24}
+    timer_setup.capture_channel = 1;                                     // channel 1
+    timer_setup.capture_prescaler = 128;                                 // 1, 2, ..128 possible
+    timer_setup.timer_mode = (TIMER_CAPTURE_FALLING);                    // capture interrupt on falling edge
         #else                                                            // single-shot
     timer_setup.timer_value += TIMER_US_DELAY(100);                      // each subsequent delay increased by 100us
         #endif

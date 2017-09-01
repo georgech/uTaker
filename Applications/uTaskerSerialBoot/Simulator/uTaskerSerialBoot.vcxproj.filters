@@ -36,6 +36,12 @@
     <Filter Include="uTasker\uGLCDLIB">
       <UniqueIdentifier>{4eff9c8f-b20c-4eca-9cba-07535712fe59}</UniqueIdentifier>
     </Filter>
+    <Filter Include="NXP">
+      <UniqueIdentifier>{d7893bcf-d015-44d8-9c0e-33b828394713}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="NXP\HS_USB_MSD_HOST_SDK2.2">
+      <UniqueIdentifier>{756869c1-8b7f-4926-af33-91e3c4b7e50e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\uTasker\Driver.c">
@@ -154,6 +160,45 @@
     </ClCompile>
     <ClCompile Include="..\..\..\uTasker\uGLCDLIB\LCD.c">
       <Filter>uTasker\uGLCDLIB</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\NXP\HS_USB_MSD_HOST_SDK2.2\app.c">
+      <Filter>NXP\HS_USB_MSD_HOST_SDK2.2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\NXP\HS_USB_MSD_HOST_SDK2.2\fsl_clock.c">
+      <Filter>NXP\HS_USB_MSD_HOST_SDK2.2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\NXP\HS_USB_MSD_HOST_SDK2.2\host_msd_command.c">
+      <Filter>NXP\HS_USB_MSD_HOST_SDK2.2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\NXP\HS_USB_MSD_HOST_SDK2.2\usb_host_devices.c">
+      <Filter>NXP\HS_USB_MSD_HOST_SDK2.2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\NXP\HS_USB_MSD_HOST_SDK2.2\usb_host_ehci.c">
+      <Filter>NXP\HS_USB_MSD_HOST_SDK2.2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\NXP\HS_USB_MSD_HOST_SDK2.2\usb_host_framework.c">
+      <Filter>NXP\HS_USB_MSD_HOST_SDK2.2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\NXP\HS_USB_MSD_HOST_SDK2.2\usb_host_hci.c">
+      <Filter>NXP\HS_USB_MSD_HOST_SDK2.2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\NXP\HS_USB_MSD_HOST_SDK2.2\usb_host_hub.c">
+      <Filter>NXP\HS_USB_MSD_HOST_SDK2.2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\NXP\HS_USB_MSD_HOST_SDK2.2\usb_host_hub_app.c">
+      <Filter>NXP\HS_USB_MSD_HOST_SDK2.2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\NXP\HS_USB_MSD_HOST_SDK2.2\usb_host_msd.c">
+      <Filter>NXP\HS_USB_MSD_HOST_SDK2.2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\NXP\HS_USB_MSD_HOST_SDK2.2\usb_host_msd_ufi.c">
+      <Filter>NXP\HS_USB_MSD_HOST_SDK2.2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\NXP\HS_USB_MSD_HOST_SDK2.2\usb_osa_bm.c">
+      <Filter>NXP\HS_USB_MSD_HOST_SDK2.2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\NXP\HS_USB_MSD_HOST_SDK2.2\usb_phy.c">
+      <Filter>NXP\HS_USB_MSD_HOST_SDK2.2</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -384,6 +429,102 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_MCG_LITE.h">
       <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\NXP\HS_USB_MSD_HOST_SDK2.2\board.h">
+      <Filter>NXP\HS_USB_MSD_HOST_SDK2.2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\NXP\HS_USB_MSD_HOST_SDK2.2\clock_config.h">
+      <Filter>NXP\HS_USB_MSD_HOST_SDK2.2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\NXP\HS_USB_MSD_HOST_SDK2.2\cmsis_gcc.h">
+      <Filter>NXP\HS_USB_MSD_HOST_SDK2.2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\NXP\HS_USB_MSD_HOST_SDK2.2\core_cm4.h">
+      <Filter>NXP\HS_USB_MSD_HOST_SDK2.2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\NXP\HS_USB_MSD_HOST_SDK2.2\core_cmFunc.h">
+      <Filter>NXP\HS_USB_MSD_HOST_SDK2.2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\NXP\HS_USB_MSD_HOST_SDK2.2\core_cmInstr.h">
+      <Filter>NXP\HS_USB_MSD_HOST_SDK2.2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\NXP\HS_USB_MSD_HOST_SDK2.2\core_cmSimd.h">
+      <Filter>NXP\HS_USB_MSD_HOST_SDK2.2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\NXP\HS_USB_MSD_HOST_SDK2.2\fsl_clock.h">
+      <Filter>NXP\HS_USB_MSD_HOST_SDK2.2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\NXP\HS_USB_MSD_HOST_SDK2.2\fsl_common.h">
+      <Filter>NXP\HS_USB_MSD_HOST_SDK2.2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\NXP\HS_USB_MSD_HOST_SDK2.2\fsl_device_registers.h">
+      <Filter>NXP\HS_USB_MSD_HOST_SDK2.2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\NXP\HS_USB_MSD_HOST_SDK2.2\fsl_gpio.h">
+      <Filter>NXP\HS_USB_MSD_HOST_SDK2.2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\NXP\HS_USB_MSD_HOST_SDK2.2\fsl_sysmpu.h">
+      <Filter>NXP\HS_USB_MSD_HOST_SDK2.2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\NXP\HS_USB_MSD_HOST_SDK2.2\host_msd_command.h">
+      <Filter>NXP\HS_USB_MSD_HOST_SDK2.2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\NXP\HS_USB_MSD_HOST_SDK2.2\MK66F18.h">
+      <Filter>NXP\HS_USB_MSD_HOST_SDK2.2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\NXP\HS_USB_MSD_HOST_SDK2.2\MK66F18_features.h">
+      <Filter>NXP\HS_USB_MSD_HOST_SDK2.2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\NXP\HS_USB_MSD_HOST_SDK2.2\pin_mux.h">
+      <Filter>NXP\HS_USB_MSD_HOST_SDK2.2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\NXP\HS_USB_MSD_HOST_SDK2.2\system_MK66F18.h">
+      <Filter>NXP\HS_USB_MSD_HOST_SDK2.2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\NXP\HS_USB_MSD_HOST_SDK2.2\usb.h">
+      <Filter>NXP\HS_USB_MSD_HOST_SDK2.2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\NXP\HS_USB_MSD_HOST_SDK2.2\usb_host.h">
+      <Filter>NXP\HS_USB_MSD_HOST_SDK2.2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\NXP\HS_USB_MSD_HOST_SDK2.2\usb_host_config.h">
+      <Filter>NXP\HS_USB_MSD_HOST_SDK2.2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\NXP\HS_USB_MSD_HOST_SDK2.2\usb_host_devices.h">
+      <Filter>NXP\HS_USB_MSD_HOST_SDK2.2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\NXP\HS_USB_MSD_HOST_SDK2.2\usb_host_ehci.h">
+      <Filter>NXP\HS_USB_MSD_HOST_SDK2.2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\NXP\HS_USB_MSD_HOST_SDK2.2\usb_host_framework.h">
+      <Filter>NXP\HS_USB_MSD_HOST_SDK2.2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\NXP\HS_USB_MSD_HOST_SDK2.2\usb_host_hci.h">
+      <Filter>NXP\HS_USB_MSD_HOST_SDK2.2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\NXP\HS_USB_MSD_HOST_SDK2.2\usb_host_hub.h">
+      <Filter>NXP\HS_USB_MSD_HOST_SDK2.2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\NXP\HS_USB_MSD_HOST_SDK2.2\usb_host_hub_app.h">
+      <Filter>NXP\HS_USB_MSD_HOST_SDK2.2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\NXP\HS_USB_MSD_HOST_SDK2.2\usb_host_msd.h">
+      <Filter>NXP\HS_USB_MSD_HOST_SDK2.2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\NXP\HS_USB_MSD_HOST_SDK2.2\usb_misc.h">
+      <Filter>NXP\HS_USB_MSD_HOST_SDK2.2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\NXP\HS_USB_MSD_HOST_SDK2.2\usb_osa.h">
+      <Filter>NXP\HS_USB_MSD_HOST_SDK2.2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\NXP\HS_USB_MSD_HOST_SDK2.2\usb_osa_bm.h">
+      <Filter>NXP\HS_USB_MSD_HOST_SDK2.2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\NXP\HS_USB_MSD_HOST_SDK2.2\usb_phy.h">
+      <Filter>NXP\HS_USB_MSD_HOST_SDK2.2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\NXP\HS_USB_MSD_HOST_SDK2.2\usb_spec.h">
+      <Filter>NXP\HS_USB_MSD_HOST_SDK2.2</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

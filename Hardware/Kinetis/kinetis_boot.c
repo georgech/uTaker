@@ -18,6 +18,11 @@
     18.06.2014 Implement fnFlashRoutine() as assemble code to avoid possibility of compilers in-lining it {3}
     27.01.2015 Add Green Hills project support (_COMPILE_GHS)            {4}
     18.04.2016 Add clock configuration options RUN_FROM_HIRC, RUN_FROM_HIRC_FLL and RUN_FROM_HIRC_PLL {5}
+    13.07.2017 Add w25q (winbond) and s25fl1-k (spansion) SPI Flash support {6}
+    13.07.2017 Use standard SPI Flash interface                          {7}
+    13.07.2017 Use standard clock configuration                          {8}
+    17.07.2017 Use standard port configuration                           {9}
+    26.07.2017 Add Cortex-m0+ assembler code                             {10}
 
     */
 
@@ -50,6 +55,18 @@
     #endif
 #endif
 
+#if !defined ONLY_INTERNAL_FLASH_STORAGE
+    static const STORAGE_AREA_ENTRY default_flash = {                    // {7}
+        0,                                                               // end of list
+        (unsigned char *)(FLASH_START_ADDRESS),                          // start address of internal flash
+        (unsigned char *)(FLASH_START_ADDRESS + (SIZE_OF_FLASH - 1)),    // end of internal flash
+        _STORAGE_INTERNAL_FLASH,                                         // type
+        0                                                                // not multiple devices
+    };
+
+    STORAGE_AREA_ENTRY *UserStorageListPtr = (STORAGE_AREA_ENTRY *)&default_flash; // default entry
+#endif
+
 #if defined SPI_SW_UPLOAD
     #define SPI_FLASH_DEVICE_COUNT 1
     static int SPI_FLASH_Danger[SPI_FLASH_DEVICE_COUNT] = {0};           // signal that the FLASH status should be checked before using since there is a danger that it is still busy
@@ -65,7 +82,6 @@ extern void __iar_program_start(void);                                   // IAR 
 //
 static void disable_watchdog(void)
 {
-    UNLOCK_WDOG();                                                       // enable watchdog modification
     CONFIGURE_WATCHDOG();                                                // allow user configuration of internal watch dog timer
     #if defined USER_STARTUP_CODE                                        // {2} allow user defined start-up code immediately after the watchdog configuration and before clock configuration to be defined
     USER_STARTUP_CODE;
@@ -108,7 +124,7 @@ extern void fnDelayLoop(unsigned long ulDelay_us)
     volatile int i_us;
     while (ulDelay_us--) {                                               // for each us required
         i_us = (CORE_CLOCK/8300000);
-        while (i_us--) {}                                                // simple loop tuned to perform us timing
+        while (i_us-- != 0) {}                                           // simple loop tuned to perform us timing
     }
 }
 
@@ -119,7 +135,7 @@ extern void *uMemset(void *ptrTo, unsigned char ucValue, size_t Size)
     void *buffer = ptrTo;
     unsigned char *ptr = (unsigned char *)ptrTo;
 
-    while (Size--) {
+    while (Size-- != 0) {
         *ptr++ = ucValue;
     }
 
@@ -142,40 +158,27 @@ extern void *uMemcpy(void *ptrTo, const void *ptrFrom, size_t Size)
 }
 
 
-#if defined FLASH_ROUTINES || defined FLASH_FILE_SYSTEM || defined USE_PARAMETER_BLOCK || defined SUPPORT_PROGRAM_ONCE
 /* =================================================================== */
-/*                           FLASH driver                              */
+/*                              GPIO                                   */
 /* =================================================================== */
-    #include "kinetis_FLASH.h"                                           // include FLASH driver code
-#endif
+#define _PORT_MUX_CODE
+    #include "kinetis_PORTS.h"                                           // {9}
+#undef _PORT_MUX_CODE
+
+
 
 #if defined SPI_SW_UPLOAD
-    #if defined SPI_FLASH_SST25
-static unsigned char *fnGetSPI_FLASH_address(unsigned char *ucDestination)
-{
-    ucDestination -= (SPI_FLASH_START);                                  // location relative to the start of the SPI FLASH chip address
-    return ucDestination;
-}
-    #else
-// Return the page number and optionally the address offset in the page
-//
-static unsigned short fnGetSPI_FLASH_location(unsigned char *ptrSector, unsigned short *usPageOffset)
-{
-    unsigned short usPageNumber;
-    ptrSector -= (SPI_FLASH_START);                                      // location relative to the start of the SPI FLASH chip address
-
-    usPageNumber = (unsigned short)(((CAST_POINTER_ARITHMETIC)ptrSector)/SPI_FLASH_PAGE_LENGTH); // the page the address is in
-    if (usPageOffset != 0) {
-        *usPageOffset = (unsigned short)((CAST_POINTER_ARITHMETIC)ptrSector - (usPageNumber * SPI_FLASH_PAGE_LENGTH)); // offset in the page
-    }
-    return usPageNumber;
-}
-    #endif
-
+/* =================================================================== */
+/*                        SPI FLASH driver                             */
+/* =================================================================== */
+    #define _SPI_DEFINES
     #define _SPI_FLASH_INTERFACE                                         // insert manufacturer dependent code
         #include "spi_flash_kinetis_atmel.h"
         #include "spi_flash_kinetis_stmicro.h"
         #include "spi_flash_kinetis_sst25.h"
+        #include "spi_flash_w25q.h"                                      // {6}
+        #include "spi_flash_kinetis_s25fl1-k.h"
+    #undef _SPI_DEFINES
     #undef _SPI_FLASH_INTERFACE
 
 // Power up the SPI interface, configure the pins used and select the mode and speed
@@ -188,12 +191,21 @@ extern int fnConfigSPIFileSystem(void)
         #include "spi_flash_kinetis_atmel.h"
         #include "spi_flash_kinetis_stmicro.h"
         #include "spi_flash_kinetis_sst25.h"
+        #include "spi_flash_w25q.h"                                      // {6}
+        #include "spi_flash_kinetis_s25fl1-k.h"
     #undef _CHECK_SPI_CHIPS
     if (NO_SPI_FLASH_AVAILABLE == ucSPI_FLASH_Type[0]) {                 // if no SPI Flash detected
         return 1;
     }
     return 0;
 }
+#endif
+
+#if defined FLASH_ROUTINES || defined FLASH_FILE_SYSTEM || defined USE_PARAMETER_BLOCK || defined SUPPORT_PROGRAM_ONCE
+/* =================================================================== */
+/*                           FLASH driver                              */
+/* =================================================================== */
+    #include "kinetis_FLASH.h"                                           // include FLASH driver code
 #endif
 
 extern int uFileErase(unsigned char *ptrFile, MAX_FILE_LENGTH FileLength)
@@ -203,33 +215,7 @@ extern int uFileErase(unsigned char *ptrFile, MAX_FILE_LENGTH FileLength)
 
 extern void fnGetPars(unsigned char *ParLocation, unsigned char *ptrValue, MAX_FILE_LENGTH Size)
 {
-#if defined SPI_SW_UPLOAD
-    if (ParLocation >= uFILE_SYSTEM_END) {                               // get from SPI FLASH
-    #if defined SPI_FLASH_SST25
-        ParLocation = fnGetSPI_FLASH_address(ParLocation);
-    #else
-        unsigned short usPageNumber;
-        unsigned short usPageOffset;
-        usPageNumber = fnGetSPI_FLASH_location(ParLocation, &usPageOffset);
-    #endif
-
-    #if defined SPI_FLASH_ST
-        fnSPI_command(READ_DATA_BYTES, (unsigned long)((unsigned long)(usPageNumber << 8) | (usPageOffset)), ptrValue, Size);
-    #elif defined SPI_FLASH_SST25
-        fnSPI_command(READ_DATA_BYTES, (unsigned long)ParLocation, ptrValue, Size);
-    #else
-        #if SPI_FLASH_PAGE_LENGTH >= 1024
-        fnSPI_command(CONTINUOUS_ARRAY_READ, (unsigned long)((unsigned long)(usPageNumber << 11) | (usPageOffset)), ptrValue, Size);
-        #elif SPI_FLASH_PAGE_LENGTH >= 512
-        fnSPI_command(CONTINUOUS_ARRAY_READ, (unsigned long)((unsigned long)(usPageNumber << 10) | (usPageOffset)), ptrValue, Size);
-        #else
-        fnSPI_command(CONTINUOUS_ARRAY_READ, (unsigned long)((unsigned long)(usPageNumber << 9) | (usPageOffset)), ptrValue, Size);
-        #endif
-    #endif
-        return;
-    }
-#endif
-    uMemcpy(ptrValue, fnGetFlashAdd(ParLocation), Size);                 // the processor uses a file system in FLASH with no access restrictions so we can simply copy the data
+    fnGetParsFile(ParLocation, ptrValue, Size);                          // {7}
 }
 
 
@@ -249,9 +235,18 @@ extern void fnResetBoard(void)
 //
 extern void start_application(unsigned long app_link_location)
 {
-    #if !defined _WINDOWS
-    asm(" ldr sp, [r0,#0]");
-    asm(" ldr pc, [r0,#4]");
+    #if defined ARM_MATH_CM0PLUS                                         // {10} cortex-M0+ assembler code
+        #if !defined _WINDOWS
+    asm(" ldr r1, [r0,#0]");                                             // get the stack pointer value from the program's reset vector
+    asm(" mov sp, r1");                                                  // copy the value to the stack pointer
+    asm(" ldr r0, [r0,#4]");                                             // get the program counter value from the program's reset vector
+    asm(" blx r0");                                                      // jump to the start address
+        #endif
+    #else                                                                // cortex-M3/M4 assembler code
+        #if !defined _WINDOWS
+    asm(" ldr sp, [r0,#0]");                                             // load the stack pointer value from the program's reset vector
+    asm(" ldr pc, [r0,#4]");                                             // load the program counter value from the program's reset vector to cause operation to continue from there
+        #endif
     #endif
 }
 #endif
@@ -344,138 +339,34 @@ extern void
     int iIRC48M_USB_control = 0;
 #endif
 #if !defined _COMPILE_IAR
-    UNLOCK_WDOG();                                                       // enable watchdog modification
     CONFIGURE_WATCHDOG();                                                // allow user configuration of internal watch dog timer
     #if defined USER_STARTUP_CODE                                        // {2} allow user defined start-up code immediately after the watchdog configuration and before clock configuration to be defined
     USER_STARTUP_CODE;
     #endif
 #endif
-#if defined RUN_FROM_HIRC || defined RUN_FROM_HIRC_FLL || defined RUN_FROM_HIRC_PLL // 48MHz {5}
-    #if !defined KINETIS_K64 && defined SUPPORT_RTC && !defined RTC_USES_RTC_CLKIN && !defined RTC_USES_LPO_1kHz
-    MCG_C2 = MCG_C2_EREFS;                                               // request oscillator
-    OSC0_CR |= (OSC_CR_ERCLKEN | OSC_CR_EREFSTEN);                       // enable the external reference clock and keep it enabled in stop mode
-    #endif
-  //MCG_MC = MCG_MC_HIRCEN;                                              // this is optional and would allow the HIRC to run even when the processor is not working in HIRC mode
-    #if defined MCG_C1_CLKS_HIRC
-    MCG_C1 = MCG_C1_CLKS_HIRC;                                           // select HIRC clock source
-    while ((MCG_S & MCG_S_CLKST_MASK) != MCG_S_CLKST_HICR) {             // wait until the source is selected
-        #if defined _WINDOWS
-        MCG_S &= ~MCG_S_CLKST_MASK;
-        MCG_S |= MCG_S_CLKST_HICR;
-        #endif
-    }
-    SIM_CLKDIV1 = (((SYSTEM_CLOCK_DIVIDE - 1) << 28) | ((BUS_CLOCK_DIVIDE - 1) << 16)); // prepare bus clock divides
-    #else
-    MCG_C7 = MCG_C7_OSCSEL_IRC48MCLK;                                    // route the IRC48M clock to the external reference clock input (this enables IRC48M)
-    SIM_CLKDIV1 = (((SYSTEM_CLOCK_DIVIDE - 1) << 28) | ((BUS_CLOCK_DIVIDE - 1) << 24) | ((FLEX_CLOCK_DIVIDE - 1) << 20) | ((FLASH_CLOCK_DIVIDE - 1) << 16)); // prepare bus clock divides
-    MCG_C1 = (MCG_C1_IREFS | MCG_C1_CLKS_EXTERN_CLK);                    // switch IRC48M reference to MCGOUTCLK
-    while ((MCG_S & MCG_S_CLKST_MASK) != MCG_S_CLKST_EXTERN_CLK) {       // wait until the new source is valid (move to FBI using IRC48M external source is complete)
-        #if defined _WINDOWS
-        MCG_S &= ~MCG_S_CLKST_MASK;
-        MCG_S |= MCG_S_CLKST_EXTERN_CLK;
-        #endif
-        #if (defined KINETIS_K64 || (defined KINETIS_K24 && (SIZE_OF_FLASH == (1024 * 1024)))) // older K64 devices require the IRC48M to be switched on by the USB module
-        if (++iIRC48M_USB_control >= IRC48M_TIMEOUT) {                   // if the switch-over is taking too long it means that the clock needs to be enabled in the USB controller
-            POWER_UP(4, SIM_SCGC4_USBOTG);                               // power up the USB controller module
-            USB_CLK_RECOVER_IRC_EN = (USB_CLK_RECOVER_IRC_EN_REG_EN | USB_CLK_RECOVER_IRC_EN_IRC_EN); // the IRC48M is only usable when enabled via the USB module
-        }
-        #endif
-    }
-        #if defined RUN_FROM_HIRC_FLL
-    MCG_C2 = (MCG_C2_IRCS | MCG_C2_RANGE_8M_32M);                        // select a high frquency range values so that the FLL input divide range is increased
-    MCG_C1 = (MCG_C1_CLKS_PLL_FLL | MCG_C1_FRDIV_1280);                  // switch FLL input to the external clock source with correct divide value, and select the FLL output for MCGOUTCLK
-    while ((MCG_S & MCG_S_CLKST_MASK) != MCG_S_CLKST_FLL) {              // wait for the output to be set
-        #if defined _WINDOWS
-        MCG_S &= ~MCG_S_CLKST_MASK;
-        MCG_S |= MCG_S_CLKST_FLL;
-        #endif
-    }
-    MCG_C4 = ((MCG_C4 & ~(MCG_C4_DMX32 | MCG_C4_HIGH_RANGE)) | (_FLL_VALUE)); // adjust FLL factor to obtain the required operating frequency
-        #elif defined RUN_FROM_HIRC_PLL                                  // we are presently running directly from the IRC48MCLK and have also determined whether a K64 is an older or newer device (with IRC48M independent from the USB module)
-    MCG_C1 = (MCG_C1_CLKS_EXTERN_CLK | MCG_C1_FRDIV_1280);               // switch the external clock source also to the FLL to satisfy the PBE state requirement
-    MCG_C5 = ((CLOCK_DIV - 1) | MCG_C5_PLLSTEN0);                        // PLL remains enabled in normal stop modes
-    MCG_C6 = ((CLOCK_MUL - MCG_C6_VDIV0_LOWEST) | MCG_C6_PLLS);          // complete PLL configuration and move to PBE
-    while ((MCG_S & MCG_S_PLLST) == 0) {                                 // loop until the PLLS clock source becomes valid
-            #if defined _WINDOWS
-        MCG_S |= MCG_S_PLLST;
-            #endif
-    }
-    while ((MCG_S & MCG_S_LOCK) == 0) {                                  // loop until PLL locks
-            #if defined _WINDOWS
-        MCG_S |= MCG_S_LOCK;
-            #endif
-    }
-    MCG_C1 = (MCG_C1_CLKS_PLL_FLL | MCG_C1_FRDIV_1024);                  // finally move from PBE to PEE mode - switch to PLL clock
-    while ((MCG_S & MCG_S_CLKST_MASK) != MCG_S_CLKST_PLL) {              // loop until the PLL clock is selected
-            #if defined _WINDOWS
-        MCG_S &= ~MCG_S_CLKST_MASK;
-        MCG_S |= MCG_S_CLKST_PLL;
-            #endif
-    }
-        #else
-    MCG_C2 |= MCG_C2_LP;                                                 // set bypass to disable FLL and complete move to BLPE (in which PLL is also always disabled)
-        #endif
-    #endif
+    // Configure clock generator                                         {8}
+    //
+#if defined KINETIS_KE
+    #include "kinetis_KE_CLOCK.h"                                        // KE and KEA clock configuration
+#elif defined RUN_FROM_HIRC || defined RUN_FROM_HIRC_FLL || defined RUN_FROM_HIRC_PLL // 48MHz
+    #include "kinetis_HIRC.h"                                            // high speed internal clock
+#elif defined KINETIS_WITH_MCG_LITE
+    #include "kinetis_MCG_LITE.h"                                        // MCG LITE clock configuration
+#elif defined KINETIS_KL
+    #include "kinetis_KL_CLOCK.h"                                        // KL clock configuration
+#elif defined KINETIS_KV
+    #include "kinetis_KV_CLOCK.h"                                        // KV clock configuration
+#elif defined KINETIS_KW
+    #include "kinetis_KW_CLOCK.h"                                        // KW clock configuration
+#elif defined KINETIS_KM
+    #include "kinetis_KM_CLOCK.h"                                        // KM clock configuration
 #else
-    #if defined EXTERNAL_CLOCK                                           // first move from state FEI to state FBE (presently running from about 25MHz internal clock)
-    MCG_C2 = (MCG_C2_RANGE_8M_32M);                                      // don't use oscillator
-    MCG_C1 = (MCG_C1_CLKS_EXTERN_CLK | MCG_C1_FRDIV_1024);               // switch to external input clock (the FLL input clock is set to as close to its input range as possible, although this is not necessary since the FLL will not be used)
-    #else
-        #if CRYSTAL_FREQUENCY > 8000000
-    MCG_C2 = (MCG_C2_RANGE_8M_32M | MCG_C2_HGO | MCG_C2_EREFS);          // select crystal oscillator
-        #elif CRYSTAL_FREQUENCY >= 1000000
-    MCG_C2 = (MCG_C2_RANGE_1M_8M | MCG_C2_HGO | MCG_C2_EREFS);           // select crystal oscillator
-        #else                                                                // assumed to be 32kHz crystal
-    MCG_C2 = (MCG_C2_RANGE_32K_40K | MCG_C2_HGO | MCG_C2_EREFS);         // select crystal oscillator
-        #endif
-    MCG_C1 = (MCG_C1_CLKS_EXTERN_CLK | MCG_C1_FRDIV_256);                // switch to external source (the FLL input clock is set to as close to its input range as possible, although this is not absolutely necessary since the FLL will not be used) this is accurate for 8MHz clock but hasn't been tested for other values
-    while (!(MCG_S & MCG_S_OSCINIT)) {                                   // loop until the crystal source has been selected
-        #if defined _WINDOWS
-        MCG_S |= MCG_S_OSCINIT;
-        #endif
-    }
-    #endif
-    while (MCG_S & MCG_S_IREFST) {                                       // loop until the FLL source is no longer the internal reference clock
-    #if defined _WINDOWS
-        MCG_S &= ~MCG_S_IREFST;
-    #endif
-    }
-    while ((MCG_S & MCG_S_CLKST_MASK) != MCG_S_CLKST_EXTERN_CLK) {       // loop until the external reference clock source is valid
-    #if defined _WINDOWS
-        MCG_S &= ~MCG_S_CLKST_MASK;
-        MCG_S |= MCG_S_CLKST_EXTERN_CLK;
-    #endif
-    }    
-    MCG_C5 = (CLOCK_DIV - 1);                                            // now move from state FBE to state PBE
-    MCG_C6 = ((CLOCK_MUL - 24) | MCG_C6_PLLS);
-    while ((MCG_S & MCG_S_PLLST) == 0) {                                 // loop until the PLLS clock source becomes valid
-    #if defined _WINDOWS
-        MCG_S |= MCG_S_PLLST;
-    #endif
-    }
-    while ((MCG_S & MCG_S_LOCK) == 0) {                                  // loop until PLL locks
-    #if defined _WINDOWS
-        MCG_S |= MCG_S_LOCK;
-    #endif
-    }
-    SIM_CLKDIV1 = (((SYSTEM_CLOCK_DIVIDE - 1) << 28) | ((BUS_CLOCK_DIVIDE - 1) << 24) | ((FLEX_CLOCK_DIVIDE - 1) << 20) | ((FLASH_CLOCK_DIVIDE - 1) << 16)); // prepare bus clock divides
-    MCG_C1 = (MCG_C1_CLKS_PLL_FLL | MCG_C1_FRDIV_1024);                  // finally move from PBE to PEE mode - switch to PLL clock
-    while ((MCG_S & MCG_S_CLKST_MASK) != MCG_S_CLKST_PLL) {              // loop until the PLL clock is selected
-    #if defined _WINDOWS
-        MCG_S &= ~MCG_S_CLKST_MASK;
-        MCG_S |= MCG_S_CLKST_PLL;
-    #endif
-    }   
+    #include "kinetis_K_CLOCK.h"                                         // K clock configuration
 #endif
 #if defined (_GNU) || defined _CODE_WARRIOR
     __init_gnu_data();                                                   // initialise variables
 #elif defined _COMPILE_KEIL
     _keil_ram_size(1);                                                   // initialise variables
-#endif
-#if defined _WINDOWS                                                     // check that the size of the interrupt vectors has not grown beyond that what is expected (increase its space in the script file if necessary!!)
-    if (VECTOR_SIZE > CHECK_VECTOR_SIZE) {
-        _EXCEPTION("Check the vector table size setting!!");
-    }
 #endif
 #if !defined _WINDOWS
     uTaskerBoot();                                                       // call the boot loader

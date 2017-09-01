@@ -37,6 +37,9 @@
     04.01.2017 Don't adjust the RC clock setting when the processor is running from it {206}
     05.01.2017 Add optional midi baud rate                               {207}
     07.01.2017 Add UART_TIMED_TRANSMISSION support for parts with DMA    {208}
+    03.05.2017 Add free-running DMA reception mode (SERIAL_SUPPORT_DMA_RX_FREERUN) on LPUARTs and UARTs for KL parts based on modulo rx buffer {209}
+    06.08.2017 Use POWER_UP_ATOMIC() instead of POWER_UP() to enable clocks to UART modules (using bit-banding access)
+    01.09.2017 Correct clearing LPUART overrun flag                      {209}
 
 */
 
@@ -55,9 +58,11 @@
 /* =================================================================== */
 
     #if LPUARTS_AVAILABLE > 0 && UARTS_AVAILABLE > 0                     // device contains both UART and LPUART
+// For details about UART/LPUART numbering conventions see http://www.utasker.com/kinetis/UART_LPUART.html
+//
 #define UART_TYPE_LPUART 0
 #define UART_TYPE_UART   1
-static const unsigned char uart_type[LPUARTS_AVAILABLE + UARTS_AVAILABLE] = {
+static const unsigned char uart_type[LPUARTS_AVAILABLE + UARTS_AVAILABLE] = {  // UART type reference of each channel
         #if defined LPUARTS_PARALLEL
     UART_TYPE_UART,                                                      // UART0
             #if UARTS_AVAILABLE > 1
@@ -84,7 +89,7 @@ static const unsigned char uart_type[LPUARTS_AVAILABLE + UARTS_AVAILABLE] = {
             #if LPUARTS_AVAILABLE > 3
     UART_TYPE_LPUART,                                                    // LPUART3
             #endif
-    UART_TYPE_UART,                                                      // UART(LPUART)
+    UART_TYPE_UART,                                                      // UART
         #endif
 };
     #endif
@@ -178,7 +183,10 @@ static unsigned char ucUART_mask[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {0};
     static unsigned char ucStops[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {0};
 #endif
 #if defined SERIAL_INTERFACE && defined SERIAL_SUPPORT_DMA_RX && defined SERIAL_SUPPORT_DMA_RX_FREERUN // {15}
-    unsigned short usDMA_progress[UARTS_AVAILABLE];
+    static unsigned long ulDMA_progress[UARTS_AVAILABLE + LPUARTS_AVAILABLE];
+    #if defined KINETIS_KL                                               // {209}
+    static QUEUE_TRANSFER RxModulo[UARTS_AVAILABLE + LPUARTS_AVAILABLE];
+    #endif
 #endif
 #if defined SUPPORT_HW_FLOW && (defined KINETIS_KE || defined KINETIS_KL)
     static unsigned char ucRTS_neg[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {0};
@@ -265,7 +273,8 @@ static __interrupt void _LPSCI0_Interrupt(void)                          // LPUA
         #endif
         ulState = LPUART0_STAT;                                          // update the status register
         if ((ulState & LPUART_STAT_OR) != 0) {                           // if the overrun flag is set at this point it means that an overrun took place between reading the status register on entry to the interrupt and reading the data register
-            (void)LPUART0_DATA;                                          // read the data register in order to clear the overrun flag and allow the receiver to continue operating
+            LPUART0_STAT = ulState;                                      // {209} write the OR flag back to clear it and allow further operation
+        //(void)LPUART0_DATA;                                            // read the data register in order to clear the overrun flag and allow the receiver to continue operating
         }
     }
 
@@ -299,7 +308,8 @@ static __interrupt void _LPSCI1_Interrupt(void)                          // LPUA
         #endif
         ulState = LPUART1_STAT;                                          // update the status register
         if ((ulState & LPUART_STAT_OR) != 0) {                           // if the overrun flag is set at this point it means that an overrun took place between reading the status register on entry to the interrupt and reading the data register
-            (void )LPUART1_DATA;                                         // read the data register in order to clear the overrun flag and allow the receiver to continue operating
+            LPUART1_STAT = ulState;                                      // {209} write the OR flag back to clear it and allow further operation
+          //(void )LPUART1_DATA;                                         // read the data register in order to clear the overrun flag and allow the receiver to continue operating
         }
     }
 
@@ -333,7 +343,8 @@ static __interrupt void _LPSCI2_Interrupt(void)                          // LPUA
         #endif
         ulState = LPUART2_STAT;                                          // update the status register
         if ((ulState & LPUART_STAT_OR) != 0) {                           // if the overrun flag is set at this point it means that an overrun took place between reading the status register on entry to the interrupt and reading the data register
-            (void )LPUART2_DATA;                                         // read the data register in order to clear the overrun flag and allow the receiver to continue operating
+            LPUART2_STAT = ulState;                                      // {209} write the OR flag back to clear it and allow further operation
+          //(void )LPUART2_DATA;                                         // read the data register in order to clear the overrun flag and allow the receiver to continue operating
         }
     }
 
@@ -367,7 +378,8 @@ static __interrupt void _LPSCI3_Interrupt(void)                          // LPUA
         #endif
         ulState = LPUART3_STAT;                                          // update the status register
         if ((ulState & LPUART_STAT_OR) != 0) {                           // if the overrun flag is set at this point it means that an overrun took place between reading the status register on entry to the interrupt and reading the data register
-            (void )LPUART3_DATA;                                         // read the data register in order to clear the overrun flag and allow the receiver to continue operating
+            LPUART3_STAT = ulState;                                      // {209} write the OR flag back to clear it and allow further operation
+          //(void )LPUART3_DATA;                                         // read the data register in order to clear the overrun flag and allow the receiver to continue operating
         }
     }
 
@@ -401,7 +413,8 @@ static __interrupt void _LPSCI4_Interrupt(void)                          // LPUA
         #endif
         ulState = LPUART4_STAT;                                          // update the status register
         if ((ulState & LPUART_STAT_OR) != 0) {                           // if the overrun flag is set at this point it means that an overrun took place between reading the status register on entry to the interrupt and reading the data register
-            (void )LPUART4_DATA;                                         // read the data register in order to clear the overrun flag and allow the receiver to continue operating
+            LPUART4_STAT = ulState;                                      // {209} write the OR flag back to clear it and allow further operation
+          //(void )LPUART4_DATA;                                         // read the data register in order to clear the overrun flag and allow the receiver to continue operating
         }
     }
 
@@ -451,7 +464,7 @@ static __interrupt void _SCI0_Interrupt(void)                            // UART
         #if defined SERIAL_SUPPORT_DMA                                   // {6}
     if ((UART0_C5 & UART_C5_TDMAS) == 0) {                               // if the transmitter is operating in DMA mode ignore transmission interrupt flags
         #endif
-        if ((ucState & (UART_S1_TDRE | UART_S1_TC)) & UART0_C2) {        // transmit buffer or transmit is empty and the corresponding interrupt is enabled
+        if (((ucState & (UART_S1_TDRE | UART_S1_TC)) & UART0_C2) != 0) { // transmit buffer or transmit is empty and the corresponding interrupt is enabled
             fnSciTxByte(0);                                              // transmit data empty interrupt - write next byte
         #if defined TRUE_UART_TX_2_STOPS && defined SUPPORT_LOW_POWER
             if (ucStops[0] != 0) {                                       // if the channel is working in true 2 stop bit mode it will always use the transmit complete interrupt and the peripheral idle control is performed in fnClearTxInt() instead
@@ -463,7 +476,7 @@ static __interrupt void _SCI0_Interrupt(void)                            // UART
     }
         #endif
         #if defined SUPPORT_LOW_POWER || ((defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE) // {96}
-    if ((UART0_C2 & UART_C2_TCIE) && (UART0_S1 & UART_S1_TC)) {          // transmit complete interrupt after final byte transmission together with low power operation
+    if (((UART0_C2 & UART_C2_TCIE) != 0) && ((UART0_S1 & UART_S1_TC) != 0)) { // transmit complete interrupt after final byte transmission together with low power operation
         UART0_C2 &= ~(UART_C2_TCIE);                                     // disable the interrupt
         ulPeripheralNeedsClock &= ~(UART0_TX_CLK_REQUIRED);              // confirmation that the final byte has been sent out on the line so the UART no longer needs a UART clock (stop mode doesn't needed to be blocked)
             #if (defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE
@@ -551,13 +564,13 @@ static __interrupt void _SCI2_Interrupt(void)                            // UART
             #endif
     {                                                                    // if the receiver is operating in DMA mode ignore reception interrupt flags
         #endif
-        if ((ucState & UART_S1_RDRF) & UART2_C2) {                       // reception interrupt flag is set and the reception interrupt is enabled
+        if (((ucState & UART_S1_RDRF) & UART2_C2) != 0) {                // reception interrupt flag is set and the reception interrupt is enabled
             fnUART2_HANDLER((unsigned char)(UART2_D & ucUART_mask[2]), 2); // receive data interrupt - read the byte (masked with character width)
         #if defined _WINDOWS
             UART2_S1 &= ~(UART_S1_RDRF);                                 // simulate reset of interrupt flag
         #endif
             ucState = UART2_S1;                                          // {92} update the status register
-            if (ucState & UART_S1_OR) {                                  // if the overrun flag is set at this point it means that an overrun took place between reading the status register on entry to the interrupt and reading the data register
+            if ((ucState & UART_S1_OR) != 0) {                           // if the overrun flag is set at this point it means that an overrun took place between reading the status register on entry to the interrupt and reading the data register
                 (void)UART2_D;                                           // read the data register in order to clear the overrun flag and allow the receiver to continue operating
             }
         }
@@ -572,7 +585,7 @@ static __interrupt void _SCI2_Interrupt(void)                            // UART
             #endif
     {                                                                    // if the transmitter is operating in DMA mode ignore transmission interrupt flags
         #endif
-        if ((ucState & (UART_S1_TDRE | UART_S1_TC)) & UART2_C2) {        // transmit buffer or transmit is empty and the corresponding interrupt is enabled
+        if ((ucState & ((UART_S1_TDRE | UART_S1_TC)) & UART2_C2) != 0) { // transmit buffer or transmit is empty and the corresponding interrupt is enabled
             fnSciTxByte(2);                                              // transmit data empty interrupt - write next byte
         #if defined TRUE_UART_TX_2_STOPS && defined SUPPORT_LOW_POWER
             if (ucStops[2] != 0) {                                       // if the channel is working in true 2 stop bit mode it will always use the transmit complete interrupt and the peripheral idle control is performed in fnClearTxInt() instead
@@ -584,7 +597,7 @@ static __interrupt void _SCI2_Interrupt(void)                            // UART
     }
         #endif
         #if defined SUPPORT_LOW_POWER                                    // {96} transmitter using DMA
-    if ((UART2_C2 & UART_C2_TCIE) && (UART2_S1 & UART_S1_TC)) {          // transmit complete interrupt after final byte transmission together with low power operation
+    if ((((UART2_C2 & UART_C2_TCIE) != 0) && (UART2_S1 & UART_S1_TC)) != 0) { // transmit complete interrupt after final byte transmission together with low power operation
         UART2_C2 &= ~(UART_C2_TCIE);                                     // disable the interrupt
         ulPeripheralNeedsClock &= ~(UART2_TX_CLK_REQUIRED);              // confirmation that the final byte has been sent out on the line so the UART no longer needs a UART clock (stop mode doesn't needed to be blocked)
     }
@@ -604,13 +617,13 @@ static __interrupt void _SCI3_Interrupt(void)                            // UART
         #if defined SERIAL_SUPPORT_DMA                                   // {8}
     if ((UART3_C5 & UART_C5_RDMAS) == 0) {                               // if the receiver is operating in DMA mode ignore reception interrupt flags
         #endif
-        if ((ucState & UART_S1_RDRF) & UART3_C2) {                       // reception interrupt flag is set and the reception interrupt is enabled
+        if (((ucState & UART_S1_RDRF) & UART3_C2) != 0) {                // reception interrupt flag is set and the reception interrupt is enabled
             fnUART3_HANDLER((unsigned char)(UART3_D & ucUART_mask[3]), 3); // receive data interrupt - read the byte (masked with character width)
         #if defined _WINDOWS
             UART3_S1 &= ~(UART_S1_RDRF);                                 // simulate reset of interrupt flag
         #endif
             ucState = UART3_S1;                                          // {92} update the status register
-            if (ucState & UART_S1_OR) {                                  // if the overrun flag is set at this point it means that an overrun took place between reading the status register on entry to the interrupt and reading the data register
+            if ((ucState & UART_S1_OR) != 0) {                           // if the overrun flag is set at this point it means that an overrun took place between reading the status register on entry to the interrupt and reading the data register
                 (void)UART3_D;                                           // read the data register in order to clear the overrun flag and allow the receiver to continue operating
             }
         }
@@ -620,7 +633,7 @@ static __interrupt void _SCI3_Interrupt(void)                            // UART
         #if defined SERIAL_SUPPORT_DMA                                   // {6}
     if ((UART3_C5 & UART_C5_TDMAS) == 0) {                               // if the transmitter is operating in DMA mode ignore transmission interrupt flags
         #endif
-        if ((ucState & (UART_S1_TDRE | UART_S1_TC)) & UART3_C2) {        // transmit buffer or transmit is empty and the corresponding interrupt is enabled
+        if (((ucState & (UART_S1_TDRE | UART_S1_TC)) & UART3_C2) != 0) { // transmit buffer or transmit is empty and the corresponding interrupt is enabled
             fnSciTxByte(3);                                              // transmit data empty interrupt - write next byte
         #if defined TRUE_UART_TX_2_STOPS && defined SUPPORT_LOW_POWER
             if (ucStops[3] != 0) {                                       // if the channel is working in true 2 stop bit mode it will always use the transmit complete interrupt and the peripheral idle control is performed in fnClearTxInt() instead
@@ -632,7 +645,7 @@ static __interrupt void _SCI3_Interrupt(void)                            // UART
     }
         #endif
         #if defined SUPPORT_LOW_POWER                                    // {96} transmitter using DMA
-    if ((UART3_C2 & UART_C2_TCIE) && (UART3_S1 & UART_S1_TC)) {          // transmit complete interrupt after final byte transmission together with low power operation
+    if (((UART3_C2 & UART_C2_TCIE) != 0) && ((UART3_S1 & UART_S1_TC) != 0)) { // transmit complete interrupt after final byte transmission together with low power operation
         UART3_C2 &= ~(UART_C2_TCIE);                                     // disable the interrupt
         ulPeripheralNeedsClock &= ~(UART3_TX_CLK_REQUIRED);              // confirmation that the final byte has been sent out on the line so the UART no longer needs a UART clock (stop mode doesn't needed to be blocked)
     }
@@ -652,13 +665,13 @@ static __interrupt void _SCI4_Interrupt(void)                            // UART
         #if defined SERIAL_SUPPORT_DMA                                   // {8}
     if ((UART4_C5 & UART_C5_RDMAS) == 0) {                               // if the receiver is operating in DMA mode ignore reception interrupt flags
         #endif
-        if ((ucState & UART_S1_RDRF) & UART4_C2) {                       // reception interrupt flag is set and the reception interrupt is enabled
+        if (((ucState & UART_S1_RDRF) & UART4_C2) != 0) {                // reception interrupt flag is set and the reception interrupt is enabled
             fnUART4_HANDLER((unsigned char)(UART4_D & ucUART_mask[4]), 4); // receive data interrupt - read the byte (masked with character width)
         #if defined _WINDOWS
             UART4_S1 &= ~(UART_S1_RDRF);                                 // simulate reset of interrupt flag
         #endif
             ucState = UART4_S1;                                          // {92} update the status register
-            if (ucState & UART_S1_OR) {                                  // if the overrun flag is set at this point it means that an overrun took place between reading the status register on entry to the interrupt and reading the data register
+            if ((ucState & UART_S1_OR) != 0) {                           // if the overrun flag is set at this point it means that an overrun took place between reading the status register on entry to the interrupt and reading the data register
                 (void)UART4_D;                                           // read the data register in order to clear the overrun flag and allow the receiver to continue operating
             }
         }
@@ -668,7 +681,7 @@ static __interrupt void _SCI4_Interrupt(void)                            // UART
         #if defined SERIAL_SUPPORT_DMA                                   // {6}
     if ((UART4_C5 & UART_C5_TDMAS) == 0) {                               // if the transmitter is operating in DMA mode ignore transmission interrupt flags
         #endif
-        if ((ucState & (UART_S1_TDRE | UART_S1_TC)) & UART4_C2) {        // transmit buffer or transmit is empty and the corresponding interrupt is enabled
+        if (((ucState & (UART_S1_TDRE | UART_S1_TC)) & UART4_C2) != 0) { // transmit buffer or transmit is empty and the corresponding interrupt is enabled
             fnSciTxByte(4);                                              // transmit data empty interrupt - write next byte
         #if defined TRUE_UART_TX_2_STOPS && defined SUPPORT_LOW_POWER
             if (ucStops[4] != 0) {                                       // if the channel is working in true 2 stop bit mode it will always use the transmit complete interrupt and the peripheral idle control is performed in fnClearTxInt() instead
@@ -680,7 +693,7 @@ static __interrupt void _SCI4_Interrupt(void)                            // UART
     }
         #endif
         #if defined SUPPORT_LOW_POWER                                    // {96} transmitter using DMA
-    if ((UART4_C2 & UART_C2_TCIE) && (UART4_S1 & UART_S1_TC)) {          // transmit complete interrupt after final byte transmission together with low power operation
+    if (((UART4_C2 & UART_C2_TCIE) != 0) && ((UART4_S1 & UART_S1_TC) != 0)) { // transmit complete interrupt after final byte transmission together with low power operation
         UART4_C2 &= ~(UART_C2_TCIE);                                     // disable the interrupt
         ulPeripheralNeedsClock &= ~(UART4_TX_CLK_REQUIRED);              // confirmation that the final byte has been sent out on the line so the UART no longer needs a UART clock (stop mode doesn't needed to be blocked)
     }
@@ -700,13 +713,13 @@ static __interrupt void _SCI5_Interrupt(void)                            // UART
         #if defined SERIAL_SUPPORT_DMA                                   // {8}
     if ((UART5_C5 & UART_C5_RDMAS) == 0) {                               // if the receiver is operating in DMA mode ignore reception interrupt flags
         #endif
-        if ((ucState & UART_S1_RDRF) & UART5_C2) {                       // reception interrupt flag is set and the reception interrupt is enabled
+        if (((ucState & UART_S1_RDRF) & UART5_C2) != 0) {                // reception interrupt flag is set and the reception interrupt is enabled
             fnUART5_HANDLER((unsigned char)(UART5_D & ucUART_mask[5]), 5); // receive data interrupt - read the byte (masked with character width)
         #if defined _WINDOWS
             UART5_S1 &= ~(UART_S1_RDRF);                                 // simulate reset of interrupt flag
         #endif
             ucState = UART5_S1;                                          // {92} update the status register
-            if (ucState & UART_S1_OR) {                                  // if the overrun flag is set at this point it means that an overrun took place between reading the status register on entry to the interrupt and reading the data register
+            if ((ucState & UART_S1_OR) != 0) {                           // if the overrun flag is set at this point it means that an overrun took place between reading the status register on entry to the interrupt and reading the data register
                 (void)UART5_D;                                           // read the data register in order to clear the overrun flag and allow the receiver to continue operating
             }
         }
@@ -716,7 +729,7 @@ static __interrupt void _SCI5_Interrupt(void)                            // UART
         #if defined SERIAL_SUPPORT_DMA                                   // {6}
     if ((UART5_C5 & UART_C5_TDMAS) == 0) {                               // if the transmitter is operating in DMA mode ignore transmission interrupt flags
         #endif
-        if ((ucState & (UART_S1_TDRE | UART_S1_TC)) & UART5_C2) {        // transmit buffer or transmit is empty and the corresponding interrupt is enabled
+        if (((ucState & (UART_S1_TDRE | UART_S1_TC)) & UART5_C2) != 0) { // transmit buffer or transmit is empty and the corresponding interrupt is enabled
             fnSciTxByte(5);                                              // transmit data empty interrupt - write next byte
         #if defined TRUE_UART_TX_2_STOPS && defined SUPPORT_LOW_POWER
             if (ucStops[5] != 0) {                                       // if the channel is working in true 2 stop bit mode it will always use the transmit complete interrupt and the peripheral idle control is performed in fnClearTxInt() instead
@@ -728,7 +741,7 @@ static __interrupt void _SCI5_Interrupt(void)                            // UART
     }
         #endif
         #if defined SUPPORT_LOW_POWER                                    // {96} transmitter using DMA
-    if ((UART5_C2 & UART_C2_TCIE) && (UART5_S1 & UART_S1_TC)) {          // transmit complete interrupt after final byte transmission together with low power operation
+    if (((UART5_C2 & UART_C2_TCIE) != 0) && ((UART5_S1 & UART_S1_TC) != 0)) { // transmit complete interrupt after final byte transmission together with low power operation
         UART5_C2 &= ~(UART_C2_TCIE);                                     // disable the interrupt
         ulPeripheralNeedsClock &= ~(UART5_TX_CLK_REQUIRED);              // confirmation that the final byte has been sent out on the line so the UART no longer needs a UART clock (stop mode doesn't needed to be blocked)
     }
@@ -742,7 +755,7 @@ static __interrupt void _SCI5_Interrupt(void)                            // UART
 //
 extern int fnTxByte(QUEUE_HANDLE Channel, unsigned char ucTxByte)
 {
-    KINETIS_UART_CONTROL *uart_reg = fnSelectChannel(Channel);
+    KINETIS_UART_CONTROL *uart_reg = (KINETIS_UART_CONTROL *)fnSelectChannel(Channel);
     #if NUMBER_EXTERNAL_SERIAL > 0
     if (Channel >= NUMBER_SERIAL) {
         fnExtSCI_send((QUEUE_HANDLE)(Channel - NUMBER_SERIAL), ucTxByte);// pass on to the external interface for transmission
@@ -773,7 +786,7 @@ extern int fnTxByte(QUEUE_HANDLE Channel, unsigned char ucTxByte)
         #endif
     #endif
     #if UARTS_AVAILABLE > 0
-        if ((uart_reg->UART_S1 & UART_S1_TDRE) == 0) {
+        if ((uart_reg->UART_S1 & UART_S1_TDRE) == 0) {                   // check whether transmit buffer is presently empty
             return 1;                                                    // UART transmitter is presently active
         }
         #if defined SUPPORT_LOW_POWER                                    // {96}
@@ -814,7 +827,7 @@ extern void fnClearTxInt(QUEUE_HANDLE Channel)
         return;
     }
     #endif
-    uart_reg = fnSelectChannel(Channel);
+    uart_reg = (KINETIS_UART_CONTROL *)fnSelectChannel(Channel);
     #if defined SERIAL_SUPPORT_DMA                                       // {6}
         #if defined KINETIS_KL && (UARTS_AVAILABLE > 1)
     if (Channel == 0) {
@@ -1238,7 +1251,7 @@ extern QUEUE_TRANSFER fnTxByteDMA(QUEUE_HANDLE Channel, unsigned char *ptrStart,
     return tx_length;
 }
 
-        #if defined SERIAL_SUPPORT_XON_XOFF
+        #if (defined SERIAL_SUPPORT_XON_XOFF || defined SUPPORT_HW_FLOW)
 extern QUEUE_TRANSFER fnAbortTxDMA(QUEUE_HANDLE channel, QUEQUE *ptrQueue)
 {
     return 0;
@@ -1250,37 +1263,55 @@ extern QUEUE_TRANSFER fnAbortTxDMA(QUEUE_HANDLE channel, QUEQUE *ptrQueue)
 /*                LPUART/UART Rx DMA interrupt handlers                */
 /* =================================================================== */
 
-     #if defined SERIAL_SUPPORT_DMA_RX
+    #if defined SERIAL_SUPPORT_DMA_RX
+        #if !defined KINETIS_KL
 static __interrupt void _uart0_rx_dma_Interrupt(void)
 {
-    #if defined _WINDOWS
-    DMA_INT &= ~(DMA_INT_INT0 << UART_DMA_RX_CHANNEL[0]);                // clear the interrupt request
+    #if defined KINETIS_KL
+    // To do...
     #else
+        #if defined _WINDOWS
+    DMA_INT &= ~(DMA_INT_INT0 << UART_DMA_RX_CHANNEL[0]);                // clear the interrupt request
+        #else
     DMA_INT = (DMA_INT_INT0 << UART_DMA_RX_CHANNEL[0]);                  // clear the interrupt request
+        #endif
     #endif
     fnSciRxByte(0, 0);                                                   // tty block ready for read
 }
+        #endif
     #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 1
+        #if !defined KINETIS_KL
 static __interrupt void _uart1_rx_dma_Interrupt(void)
 {
-        #if defined _WINDOWS
-    DMA_INT &= ~(DMA_INT_INT0 << UART_DMA_RX_CHANNEL[1]);                // clear the interrupt request
+        #if defined KINETIS_KL
+        // To do...
         #else
+            #if defined _WINDOWS
+    DMA_INT &= ~(DMA_INT_INT0 << UART_DMA_RX_CHANNEL[1]);                // clear the interrupt request
+            #else
     DMA_INT = (DMA_INT_INT0 << UART_DMA_RX_CHANNEL[1]);                  // clear the interrupt request
+            #endif
         #endif
     fnSciRxByte(0, 1);                                                   // tty block ready for read
 }
+        #endif
     #endif
     #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 2
+        #if !defined KINETIS_KL
 static __interrupt void _uart2_rx_dma_Interrupt(void)
 {
-        #if defined _WINDOWS
-    DMA_INT &= ~(DMA_INT_INT0 << UART_DMA_RX_CHANNEL[2]);                // clear the interrupt request
+        #if defined KINETIS_KL
+    // To do...
         #else
+            #if defined _WINDOWS
+    DMA_INT &= ~(DMA_INT_INT0 << UART_DMA_RX_CHANNEL[2]);                // clear the interrupt request
+            #else
     DMA_INT = (DMA_INT_INT0 << UART_DMA_RX_CHANNEL[2]);                  // clear the interrupt request
+            #endif
         #endif
     fnSciRxByte(0, 2);                                                   // tty block ready for read
 }
+        #endif
     #endif
     #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 3
 static __interrupt void _uart3_rx_dma_Interrupt(void)
@@ -1316,6 +1347,7 @@ static __interrupt void _uart5_rx_dma_Interrupt(void)
 }
     #endif
 
+    #if !defined KINETIS_KL
 static void (*_uart_rx_dma_Interrupt[UARTS_AVAILABLE + LPUARTS_AVAILABLE])(void) = {
     _uart0_rx_dma_Interrupt,
     #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 1
@@ -1334,40 +1366,104 @@ static void (*_uart_rx_dma_Interrupt[UARTS_AVAILABLE + LPUARTS_AVAILABLE])(void)
     _uart5_rx_dma_Interrupt
     #endif
 };
+    #endif
 
-// The Kinetis buffer has been set up to run continuously in circular buffer mode. This routine therefore doesn't use the length passed
+    #if defined SERIAL_SUPPORT_DMA_RX_FREERUN && defined KINETIS_KL
+// Check the progress of the channel's free-running DMA reception and update the TTY character account accordingly
+// - retrigger the DMA max. count on each check so that it never terminates
+//
+static void fnCheckFreerunningDMA_reception(int channel, QUEQUE *tty_queue) // {209}
+{
+    unsigned long ulDMA_rx;
+    KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
+    ptrDMA += UART_DMA_RX_CHANNEL[channel];                              // set the DMA channel that the UART channel is using
+    ulDMA_rx = ptrDMA->DMA_DAR;                                          // snap-shot of DMA reception progress
+    if (ulDMA_progress[channel] <= ulDMA_rx) {
+        tty_queue->chars += (QUEUE_TRANSFER)(ulDMA_rx - ulDMA_progress[channel]); // add the extra number of characters received by DMA since last check
+    }
+    else {
+        tty_queue->chars += (QUEUE_TRANSFER)(RxModulo[channel] - (ulDMA_progress[channel] - ulDMA_rx)); // add the extra number of characters received by DMA since last check
+    }
+    ulDMA_progress[channel] = ulDMA_rx;                                  // remember this check state for future comparisons
+    ptrDMA->DMA_DSR_BCR |= (0xffff0);                                    // retrigger maximum DMA transfer at each poll
+}
+    #endif
+    #if defined KINETIS_KL
+// Configure KL DMA for reception to a free-running modulo buffer and then enable reception (also configuring the RXD input)
+//
+static void fnEnableRxAndDMA(int channel, unsigned long buffer_length, unsigned long buffer_address, void *uart_data_reg) // {209}
+{
+    RxModulo[channel] = (QUEUE_TRANSFER)buffer_length;                   // this must be modulo 2 (16, 32, 64, 128...256k)
+    ulDMA_progress[channel] = buffer_address;                            // destination must be modulo aligned
+    fnConfigDMA_buffer(UART_DMA_RX_CHANNEL[channel], (DMAMUX_CHCFG_SOURCE_UART0_RX + (2 * channel)), buffer_length, uart_data_reg, (void *)buffer_address, (DMA_DIRECTION_INPUT | DMA_BYTES), 0, 0);
+    fnDMA_BufferReset(UART_DMA_RX_CHANNEL[channel], DMA_BUFFER_START);   // enable DMA operation
+    fnRxOn(channel);                                                     // configure receiver pin and enable reception and its interrupt/DMA
+}
+    #endif
+
+// The Kinetis buffer has been set up to run continuously in circular buffer mode and this routine is used to enable the receiver and DMA on first call and optionally to later poll teh DMA transfer state
 //
 extern void fnPrepareRxDMA(QUEUE_HANDLE channel, unsigned char *ptrStart, QUEUE_TRANSFER rx_length)
 {
-        #if defined SERIAL_SUPPORT_DMA_RX
-    KINETIS_UART_CONTROL *uart_reg = fnSelectChannel(channel);
-    if ((uart_reg->UART_C2 & (UART_C2_RE)) == 0) {                       // if receiver not yet enabled
+    KINETIS_UART_CONTROL *uart_reg = fnSelectChannel(channel);           // select the UART/LPUART channel register set
+    #if LPUARTS_AVAILABLE > 0                                            // if the device has LPUART(s)
+        #if UARTS_AVAILABLE > 0                                          // if also UARTs
+    if (uart_type[channel] == UART_TYPE_LPUART) {                        // LPUART channel
+        #endif
+        #if defined KINETIS_KL                                           // {209}
+        if ((((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_CTRL & LPUART_CTRL_RE) == 0) { // if receiver not yet enabled
+            fnEnableRxAndDMA(channel, rx_length, (unsigned long)ptrStart, (void *)&(((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_DATA)); // configure DMA and reception, including configuring the RXD input
+        }
+            #if defined SERIAL_SUPPORT_DMA_RX_FREERUN
+        else if (rx_length == 0) {                                       // call to update DMA progress
+            fnCheckFreerunningDMA_reception(channel, (QUEQUE *)ptrStart);
+        }
+            #endif
+        #endif
+        return;
+        #if UARTS_AVAILABLE > 0                                          // if also UARTs
+    }
+        #endif
+    #endif                                                               // end LPUART support
+
+    #if (UARTS_AVAILABLE > 0)                                            // if UARTs are available
+    // UART channel
+    //
+    if ((uart_reg->UART_C2 & UART_C2_RE) == 0) {                         // if receiver not yet enabled
+        #if defined KINETIS_KL                                           // {209}
+        fnEnableRxAndDMA(channel, rx_length, (unsigned long)ptrStart, (void *)&(uart_reg->UART_D)); // configure DMA and reception, including configuring the RXD input
+        #else
         KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
         ptrDMA_TCD += UART_DMA_RX_CHANNEL[channel];
         ptrDMA_TCD->DMA_TCD_DADDR = (unsigned long)ptrStart;             // destination is the input tty buffer
         DMA_ERQ |= (DMA_ERQ_ERQ0 << UART_DMA_RX_CHANNEL[channel]);       // enable request source
         fnRxOn(channel);                                                 // configure receiver pin and enable reception and its interrupt/DMA
+        #endif
     }
-            #if defined SERIAL_SUPPORT_DMA_RX_FREERUN                    // {15}
+        #if defined SERIAL_SUPPORT_DMA_RX_FREERUN                        // {15}
     else if (rx_length == 0) {                                           // call to update DMA progress
-        unsigned short usDMA_rx;
+            #if defined KINETIS_KL                                       // {209}
+        fnCheckFreerunningDMA_reception(channel, (QUEQUE *)ptrStart);
+            #else
         QUEQUE *tty_queue = (QUEQUE *)ptrStart;
+        unsigned short usDMA_rx;
         KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
         ptrDMA_TCD += UART_DMA_RX_CHANNEL[channel];
         usDMA_rx = ptrDMA_TCD->DMA_TCD_CITER_ELINK;                      // snap-shot of DMA reception progress
-        if (usDMA_progress[channel] >= usDMA_rx) {
-            tty_queue->chars += (usDMA_progress[channel] - usDMA_rx);    // the extra number of characters received by DMA since last check
+        if (ulDMA_progress[channel] >= usDMA_rx) {
+            tty_queue->chars += (QUEUE_TRANSFER)(ulDMA_progress[channel] - usDMA_rx); // the extra number of characters received by DMA since last check
         }
         else {
-            tty_queue->chars += usDMA_progress[channel];
-            tty_queue->chars += (ptrDMA_TCD->DMA_TCD_BITER_ELINK - usDMA_rx ); // the extra number of characters received by DMA since last check
+            tty_queue->chars += (QUEUE_TRANSFER)ulDMA_progress[channel];
+            tty_queue->chars += (ptrDMA_TCD->DMA_TCD_BITER_ELINK - usDMA_rx); // the extra number of characters received by DMA since last check
         }
-        usDMA_progress[channel] = usDMA_rx;                              // remember the check state
-    }
+        ulDMA_progress[channel] = usDMA_rx;                              // remember the check state
             #endif
-        #endif
+    }
+        #endif                                                           // endif SERIAL_SUPPORT_DMA_RX_FREERUN
+    #endif                                                               // endif (UARTS_AVAILABLE > 0)
 }
-    #endif
+    #endif                                                               // endif SERIAL_SUPPORT_DMA_RX
 
     #if defined UART_EXTENDED_MODE
 extern unsigned char fnGetMultiDropByte(QUEUE_HANDLE Channel)            // dummy
@@ -1380,22 +1476,31 @@ extern unsigned char fnGetMultiDropByte(QUEUE_HANDLE Channel)            // dumm
 extern void fnControlLine(QUEUE_HANDLE channel, unsigned short usModifications, UART_MODE_CONFIG OperatingMode)
 {
         #if NUMBER_EXTERNAL_SERIAL > 0
-    if (channel >= NUMBER_SERIAL) {       
+    if (channel >= NUMBER_SERIAL) {
         fnSetRTS(channel, 0);                                            // prepare to drive the RTS line in negated state
         return;
     }
         #endif
         #if !defined KINETIS_KE && !defined KINETIS_KL
     KINETIS_UART_CONTROL *uart_reg = fnSelectChannel(channel);
-    unsigned char ucMode;
+    unsigned long ulMode;
     if (uart_reg == 0) {
         return;                                                          // invalid channel
     }
-    ucMode = (uart_reg->UART_MODEM & ~(UART_MODEM_TXRTSE | UART_MODEM_TXRTSPOL)); // read the original modem configuration
+            #if defined LPUART_WITH_RTS_CTS
+    if (uart_type[channel] == UART_TYPE_LPUART) {                        // if this is a LPUART with RTS/CTS control
+        ulMode = (((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_MODIR &= ~(LPUART_MODIR_TXRTSE | LPUART_MODIR_TXRTSPOL)); // read the original modem configuration
+    }
+    else {
+        ulMode = (uart_reg->UART_MODEM & ~(UART_MODEM_TXRTSE | UART_MODEM_TXRTSPOL)); // read the original modem configuration
+    }
+            #else
+    ulMode = (uart_reg->UART_MODEM & ~(UART_MODEM_TXRTSE | UART_MODEM_TXRTSPOL)); // read the original modem configuration
+            #endif
         #endif
 
     if ((usModifications & (CONFIG_RTS_PIN | CONFIG_CTS_PIN)) != 0) {
-        if ((usModifications & CONFIG_RTS_PIN) != 0) {
+        if ((usModifications & CONFIG_RTS_PIN) != 0) {                   // if the caller wants to modify the RTS pin configuration
             switch (channel) {
             case 0:                                                      // configure the UART0_RTS pin
                 #if defined KINETIS_KE || defined KINETIS_KL             // {200} families without RTS/CTS modem support
@@ -1407,6 +1512,14 @@ extern void fnControlLine(QUEUE_HANDLE channel, unsigned short usModifications, 
                     _CONFIGURE_RTS_0_LOW();                              // configure RTS output and set to '0'
                     ucRTS_neg[0] = 1;                                    // inverted RTS mode
                 }
+                #elif defined KINETIS_K02
+                    #if defined UART0_A_LOW
+                _CONFIG_PERIPHERAL(A, 3, (PA_3_UART0_RTS | UART_PULL_UPS)); // UART0_RX on PA1 (alt. function 2)
+                    #elif defined UART0_ON_D
+                _CONFIG_PERIPHERAL(D, 4, (PD_4_UART0_RTS | UART_PULL_UPS)); // UART0_RX on PD6 (alt. function 3)
+                    #else
+                _CONFIG_PERIPHERAL(B, 2, (PB_2_UART0_RTS | UART_PULL_UPS)); // UART0_RX on PB16 (alt. function 3)
+                    #endif
                 #elif defined UART0_A_LOW
                 _CONFIG_PERIPHERAL(A, 3, (PA_3_UART0_RTS | UART_PULL_UPS)); // UART0_RTS on PA3 (alt. function 2)
                 #elif defined UART0_ON_B
@@ -1510,23 +1623,42 @@ extern void fnControlLine(QUEUE_HANDLE channel, unsigned short usModifications, 
                 #elif defined UART5_ON_D
                 _CONFIG_PERIPHERAL(D, 10, (PD_10_UART5_RTS | UART_PULL_UPS)); // UART5_RTS on PD10 (alt. function 3)
                 #else
+                    #if UARTS_AVAILABLE == 5
+                        #if defined LPUART0_ON_A
+                _CONFIG_PERIPHERAL(A, 3, (PA_3_LPUART0_RTS | UART_PULL_UPS)); // LPUART0_RTS on PA3 (alt. function 5)
+                        #elif defined LPUART0_ON_D
+                _CONFIG_PERIPHERAL(D, 10, (PD_10_LPUART0_RTS | UART_PULL_UPS)); // LPUART0_RTS on PD10 (alt. function 5)
+                        #else
+                _CONFIG_PERIPHERAL(E, 11, (PE_11_LPUART0_RTS | UART_PULL_UPS)); // LPUART0_RTS on PE11 (alt. function 5)
+                        #endif
+                    #else
                 _CONFIG_PERIPHERAL(E, 11, (PE_11_UART5_RTS | UART_PULL_UPS)); // UART5_RTS on PE11 (alt. function 3)
+                    #endif
                 #endif
                 break;
             #endif
             }
             #if !defined KINETIS_KE && !defined KINETIS_KL
-            if (usModifications & SET_RS485_MODE) {                      // Kinetis supports automatic control of the RTS line which is used in RS485 mode
-                ucMode |= UART_MODEM_TXRTSE;                             // enable automatic RTS control
+            if ((usModifications & SET_RS485_MODE) != 0) {               // kinetis supports automatic control of the RTS line which is used in RS485 mode
+                ulMode |= UART_MODEM_TXRTSE;                             // enable automatic RTS control
                 if ((usModifications & SET_RS485_NEG) == 0) {            // the polarity of the RTS line is inverted
-                    ucMode |= UART_MODEM_TXRTSPOL;                       // positive RTS polarity
+                    ulMode |= UART_MODEM_TXRTSPOL;                       // positive RTS polarity
                 } 
             }
-            uart_reg->UART_MODEM = ucMode;                               // set the modem mode
+                #if defined LPUART_WITH_RTS_CTS
+            if (uart_type[channel] == UART_TYPE_LPUART) {                // if this is a LPUART with RTS/CTS control
+                ((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_MODIR = ulMode;
+            }
+            else {
+                uart_reg->UART_MODEM = (unsigned char)ulMode;            // set the modem mode
+            }
+                #else
+            uart_reg->UART_MODEM = (unsigned char)ulMode;                // set the modem mode
+                #endif
             #endif
         }
             #if !defined KINETIS_KE && !defined KINETIS_KL
-        if (usModifications & CONFIG_CTS_PIN) {                          // configure CTS for HW flow control
+        if ((usModifications & CONFIG_CTS_PIN) != 0) {                   // configure CTS for HW flow control
             switch (channel) {
             case 0:                                                      // configure the UART0_CTS pin
             #if defined UART0_A_LOW
@@ -1583,7 +1715,17 @@ extern void fnControlLine(QUEUE_HANDLE channel, unsigned short usModifications, 
                 #if defined UART5_ON_D
                 _CONFIG_PERIPHERAL(D, 11, (PD_11_UART5_CTS | UART_PULL_UPS)); // UART5_CTS on PD11 (alt. function 3)
                 #else
+                    #if UARTS_AVAILABLE == 5
+                        #if defined LPUART0_ON_A
+                _CONFIG_PERIPHERAL(A, 0, (PA_0_LPUART0_CTS | UART_PULL_UPS)); // LPUART0_CTS on PA0 (alt. function 5)
+                        #elif defined LPUART0_ON_D
+                _CONFIG_PERIPHERAL(D, 11, (PD_11_LPUART0_CTS | UART_PULL_UPS)); // LPUART0_CTS on PD11 (alt. function 5)
+                        #else
+                _CONFIG_PERIPHERAL(E, 10, (PE_10_LPUART0_CTS | UART_PULL_UPS)); // LPUART0_CTS on PE10 (alt. function 5)
+                        #endif
+                    #else
                 _CONFIG_PERIPHERAL(E, 10, (PE_10_UART5_CTS | UART_PULL_UPS)); // UART5_CTS on PE10 (alt. function 3)
+                    #endif
                 #endif
                 break;
             #endif
@@ -1592,7 +1734,7 @@ extern void fnControlLine(QUEUE_HANDLE channel, unsigned short usModifications, 
             #endif
     }
         #if defined KINETIS_KE || defined KINETIS_KL                     // {200}
-        if (((usModifications & (SET_RTS)) && (ucRTS_neg[0] == 0)) || ((usModifications & (CLEAR_RTS)) && (ucRTS_neg[0] != 0))) { // assert RTS output signal by setting output to '0' (or inverted negate)
+        if ((((usModifications & (SET_RTS)) != 0) && (ucRTS_neg[0] == 0)) || (((usModifications & (CLEAR_RTS)) != 0) && (ucRTS_neg[0] != 0))) { // assert RTS output signal by setting output to '0' (or inverted negate)
             switch (channel) {
             case 0:
                 _SET_RTS_0_LOW();
@@ -1624,7 +1766,7 @@ extern void fnControlLine(QUEUE_HANDLE channel, unsigned short usModifications, 
             #endif
             }
         }
-        if (((usModifications & (CLEAR_RTS)) && (ucRTS_neg[0] == 0)) || ((usModifications & (SET_RTS)) && (ucRTS_neg[0] != 0))) {    // negate RTS output signal by setting output to '0' (or inverted assert)
+        if ((((usModifications & (CLEAR_RTS)) != 0) && (ucRTS_neg[0] == 0)) || (((usModifications & (SET_RTS)) != 0) && (ucRTS_neg[0] != 0))) { // negate RTS output signal by setting output to '0' (or inverted assert)
             switch (channel) {
             case 0:
                 _SET_RTS_0_HIGH();
@@ -1657,14 +1799,34 @@ extern void fnControlLine(QUEUE_HANDLE channel, unsigned short usModifications, 
             }
         }
         #else
-    if ((ucMode & UART_MODEM_TXRTSE) == 0) {                             // control the polarity of the RTS line when not in RS485 mode
-        if (usModifications & (SET_RTS)) {                               // assert RTS output signal
+    if ((ulMode & UART_MODEM_TXRTSE) == 0) {                             // control the polarity of the RTS line when not in RS485 mode
+        if ((usModifications & (SET_RTS)) != 0) {                        // assert RTS output signal
+            #if defined LPUART_WITH_RTS_CTS
+            if (uart_type[channel] == UART_TYPE_LPUART) {                // if this is a LPUART with RTS/CTS control
+                ((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_MODIR |= LPUART_MODIR_RXRTSE; // RTS is asserted as long as the receive FIFO has space to receive
+            }
+            else {
+                //uart_reg->UART_MODEM |= UART_MODEM_TXRTSPOL;
+                uart_reg->UART_MODEM |= UART_MODEM_RXRTSE;               // {7} RTS is asserted as long as the receive FIFO has space to receive
+            }
+            #else
           //uart_reg->UART_MODEM |= UART_MODEM_TXRTSPOL;
             uart_reg->UART_MODEM |= UART_MODEM_RXRTSE;                   // {7} RTS is asserted as long as the receive FIFO has space to receive
+            #endif
         }
-        if (usModifications & (CLEAR_RTS)) {                             // negate RTS output signal
+        if ((usModifications & (CLEAR_RTS)) != 0) {                      // negate RTS output signal
+            #if defined LPUART_WITH_RTS_CTS
+            if (uart_type[channel] == UART_TYPE_LPUART) {                // if this is a LPUART with RTS/CTS control
+                ((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_MODIR &= ~LPUART_MODIR_RXRTSE; // disable control of RTS by receiver space which negates the RTS line
+            }
+            else {
+                //uart_reg->UART_MODEM &= ~UART_MODEM_TXRTSPOL;
+                uart_reg->UART_MODEM &= ~UART_MODEM_RXRTSE;              // {7} disable control of RTS by receiver space which negates the RTS line
+            }
+            #else
           //uart_reg->UART_MODEM &= ~UART_MODEM_TXRTSPOL;
             uart_reg->UART_MODEM &= ~UART_MODEM_RXRTSE;                  // {7} disable control of RTS by receiver space which negates the RTS line
+            #endif
         }
     }
         #endif
@@ -1677,13 +1839,31 @@ extern QUEUE_TRANSFER fnControlLineInterrupt(QUEUE_HANDLE channel, unsigned shor
         #if !defined KINETIS_KE && !defined KINETIS_KL
     KINETIS_UART_CONTROL *uart_reg = fnSelectChannel(channel);
 
-    if (usModifications & ENABLE_CTS_CHANGE) {
+    if ((usModifications & ENABLE_CTS_CHANGE) != 0) {
+            #if defined LPUART_WITH_RTS_CTS
+        if (uart_type[channel] == UART_TYPE_LPUART) {                    // if this is a LPUART with RTS/CTS control
+            ((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_MODIR |= LPUART_MODIR_TXCTSE; // enable CTS line to automatically stop the transmitter when negated (HW flow control)
+        }
+        else {
+            uart_reg->UART_MODEM |= UART_MODEM_TXCTSE;                    // enable CTS line to automatically stop the transmitter when negated (HW flow control)
+        }
+            #else
         uart_reg->UART_MODEM |= UART_MODEM_TXCTSE;                       // enable CTS line to automatically stop the transmitter when negated (HW flow control)
+            #endif
     }
-    if (usModifications & DISABLE_CTS_CHANGE) {
+    if ((usModifications & DISABLE_CTS_CHANGE) != 0) {
+            #if defined LPUART_WITH_RTS_CTS
+        if (uart_type[channel] == UART_TYPE_LPUART) {                    // if this is a LPUART with RTS/CTS control
+            ((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_MODIR &= ~LPUART_MODIR_TXCTSE; // disable CTS line flow control
+        }
+        else {
+            uart_reg->UART_MODEM &= ~UART_MODEM_TXCTSE;                  // disable CTS line flow control
+        }
+            #else
         uart_reg->UART_MODEM &= ~UART_MODEM_TXCTSE;                      // disable CTS line flow control
+            #endif
     }
-    return SET_CTS;                                                      // the state of the CTS line can not be read but report that it is asserted since flow control is performed by hardware
+    return SET_CTS;                                                      // the state of the CTS line cannot be read but report that it is asserted since flow control is performed by hardware
         #else
     return 0;
         #endif
@@ -1723,7 +1903,7 @@ extern void fnTxOn(QUEUE_HANDLE Channel)
             #else
             _CONFIG_PERIPHERAL(B, 1, (PB_1_LPUART0_TX | UART_PULL_UPS)); // LPUART0_TX on PB1 (alt. function 2)
             #endif
-        #elif defined KINETIS_KL43 || defined KINETIS_KL27 || defined KINETIS_KL82 || defined KINETIS_K80
+        #elif defined KINETIS_KL43 || defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL82 || defined KINETIS_K80
             #if !defined KINETIS_K80 && defined LPUART0_ON_E
             _CONFIG_PERIPHERAL(E, 20, (PE_20_LPUART0_TX | UART_PULL_UPS)); // LPUART0_TX on PE20 (alt. function 4)
             #elif defined KINETIS_KL43 && defined LPUART0_ON_D
@@ -1756,7 +1936,7 @@ extern void fnTxOn(QUEUE_HANDLE Channel)
             #else
         case (1):                                                        // LPUART 1
             #endif
-            #if defined KINETIS_KL43 || defined KINETIS_KL27 || defined KINETIS_K80
+            #if defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL43 || defined KINETIS_K80
                 #if defined LPUART1_ON_E
                 _CONFIG_PERIPHERAL(E, 0, (PE_0_LPUART1_TX | UART_PULL_UPS)); // LPUART1_TX on PE0 (alt. function 3)
                 #elif defined LPUART1_ON_C
@@ -1897,7 +2077,12 @@ extern void fnTxOn(QUEUE_HANDLE Channel)
         #if (UARTS_AVAILABLE > 2 && (LPUARTS_AVAILABLE < 3 || defined LPUARTS_PARALLEL)) || (UARTS_AVAILABLE == 1 && LPUARTS_AVAILABLE == 2)
     case 2:                                                              // configure the UART Tx 2 pin
             #if defined KINETIS_KE
+                #if defined UART2_ON_I
+        SIM_PINSEL1 |= (SIM_PINSEL1_UART2PS);                            // UART2_TX on PI1
+        _CONFIG_PERIPHERAL(I, 1, (PI_1_UART2_TX | UART_PULL_UPS));
+                #else
         _CONFIG_PERIPHERAL(D, 7, (PD_7_UART2_TX | UART_PULL_UPS));       // UART2_TX on PD7 (alt. function 2)
+                #endif
             #else
                 #if (defined KINETIS_K61 || defined KINETIS_K70 || defined KINETIS_K21 || defined KINETIS_KL || defined KINETIS_KV31 || defined KINETIS_KW2X || defined KINETIS_K26 || defined KINETIS_K65) && defined UART2_ON_E // {25}
         _CONFIG_PERIPHERAL(E, 16, (PE_16_UART2_TX | UART_PULL_UPS));     // UART2_TX on PE16 (alt. function 3)
@@ -2015,7 +2200,7 @@ extern void fnRxOn(QUEUE_HANDLE Channel)
             #else
             _CONFIG_PERIPHERAL(B, 2, (PB_2_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PB2 (alt. function 2)
             #endif
-        #elif defined KINETIS_KL43 || defined KINETIS_KL27 || defined KINETIS_KL82 || defined KINETIS_K80
+        #elif defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL43 || defined KINETIS_KL82 || defined KINETIS_K80
             #if !defined KINETIS_K80 && defined LPUART0_ON_E
             _CONFIG_PERIPHERAL(E, 21, (PE_21_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PE21 (alt. function 4)
             #elif (defined KINETIS_KL43 || defined KINETIS_K80) && defined LPUART0_ON_D
@@ -2050,7 +2235,7 @@ extern void fnRxOn(QUEUE_HANDLE Channel)
             #else
         case (1):                                                        // LPUART 1
             #endif
-            #if defined KINETIS_KL43 || defined KINETIS_KL27 || defined KINETIS_K80
+            #if defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL43 || defined KINETIS_K80
                 #if defined LPUART1_ON_E
             _CONFIG_PERIPHERAL(E, 1, (PE_1_LPUART1_RX | UART_PULL_UPS)); // LPUART1_RX on PE1 (alt. function 3)
                 #elif defined LPUART1_ON_C
@@ -2115,7 +2300,7 @@ extern void fnRxOn(QUEUE_HANDLE Channel)
             break;
         #endif
         }
-        ((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_CTRL |= (LPUART_CTRL_RIE | LPUART_CTRL_RE); // enable LPUART receiver and reception interrupt
+        ((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_CTRL |= (LPUART_CTRL_RIE | LPUART_CTRL_RE); // enable LPUART receiver and reception interrupt (or DMA)
         #if defined KINETIS_KE
         _SIM_PER_CHANGE;
         #endif
@@ -2194,7 +2379,12 @@ extern void fnRxOn(QUEUE_HANDLE Channel)
         #if (UARTS_AVAILABLE > 2 && LPUARTS_AVAILABLE < 3) || (UARTS_AVAILABLE == 1 && LPUARTS_AVAILABLE == 2)
     case 2:                                                              // configure the UART Rx 2 pin
             #if defined KINETIS_KE
-        _CONFIG_PERIPHERAL(D, 6, (PD_6_UART2_RX | UART_PULL_UPS));       // UART2_RX on PD6 (alt. function 2)
+                #if defined UART2_ON_I
+        SIM_PINSEL1 |= (SIM_PINSEL1_UART2PS);                            // UART2_RX on PI0
+        _CONFIG_PERIPHERAL(I, 0, (PI_0_UART2_RX | UART_PULL_UPS));
+                #else
+        _CONFIG_PERIPHERAL(D, 6, (PD_6_UART2_RX | UART_PULL_UPS));       // UART2_RX on PD6
+                #endif
             #else
                 #if (defined KINETIS_K61 || defined KINETIS_K70 || defined KINETIS_K21 || defined KINETIS_KL || defined KINETIS_KV31 || defined KINETIS_KW2X || defined KINETIS_K26 || defined KINETIS_K65) && defined UART2_ON_E // {25}
         _CONFIG_PERIPHERAL(E, 17, (PE_17_UART2_RX | UART_PULL_UPS));     // UART2_RX on PE17 (alt. function 3)
@@ -2319,7 +2509,11 @@ static void fnConfigLPUART(QUEUE_HANDLE Channel, TTYTABLE *pars, KINETIS_LPUART_
         ptrDMA += UART_DMA_TX_CHANNEL[Channel];
         ptrDMA->DMA_DSR_BCR = DMA_DSR_BCR_DONE;                          // clear the DONE flag and clear errors etc.
         ptrDMA->DMA_DAR = (unsigned long)&(lpuart_reg->LPUART_DATA);     // destination is the LPUART's data register
-        POWER_UP(6, SIM_SCGC6_DMAMUX0);                                  // enable DMA multiplexer 0
+        #if defined KINETIS_WITH_PCC
+        PCC_DMAMUX0 |= PCC_CGC;
+        #else
+        POWER_UP_ATOMIC(6, SIM_SCGC6_DMAMUX0);                           // enable DMA multiplexer
+        #endif
         fnEnterInterrupt((irq_DMA0_ID + UART_DMA_TX_CHANNEL[Channel]), UART_DMA_TX_INT_PRIORITY[Channel], (void (*)(void))_uart_tx_dma_Interrupt[Channel]); // enter DMA interrupt handler
         lpuart_reg->LPUART_CTRL &= ~(LPUART_CTRL_TIE | LPUART_CTRL_TCIE);// ensure tx interrupt is not enabled
         lpuart_reg->LPUART_BAUD |= LPUART_BAUD_TDMAE;                    // use DMA rather than interrupts for transmission
@@ -2339,12 +2533,21 @@ static void fnConfigLPUART(QUEUE_HANDLE Channel, TTYTABLE *pars, KINETIS_LPUART_
         fnEnterInterrupt((irq_DMA0_ID + UART_DMA_TX_CHANNEL[Channel]), UART_DMA_TX_INT_PRIORITY[Channel], (void (*)(void))_uart_tx_dma_Interrupt[Channel]); // enter DMA interrupt handler
         lpuart_reg->LPUART_CTRL &= ~(LPUART_CTRL_TIE | LPUART_CTRL_TCIE);// ensure tx interrupt is not enabled
         lpuart_reg->LPUART_BAUD |= LPUART_BAUD_TDMAE;                    // use DMA rather than interrupts for transmission
-        POWER_UP(6, SIM_SCGC6_DMAMUX0);                                  // enable DMA multiplexer 0
+        POWER_UP_ATOMIC(6, SIM_SCGC6_DMAMUX0);                           // enable DMA multiplexer 0
         *(unsigned char *)(DMAMUX0_BLOCK + UART_DMA_TX_CHANNEL[Channel]) = ((DMAMUX0_CHCFG_SOURCE_LPUART0_TX + (2 * (Channel - UARTS_AVAILABLE))) | DMAMUX_CHCFG_ENBL); // connect LPUART tx to DMA channel
         #endif
     }
     else {                                                               // interrupt driven transmitter
         lpuart_reg->LPUART_BAUD &= ~LPUART_BAUD_TDMAE;                   // disable tx DMA so that tx interrupt mode can be used
+    }
+    #endif
+    #if defined SERIAL_SUPPORT_DMA_RX                                    // {209}
+    if ((pars->ucDMAConfig & UART_RX_DMA) != 0) {
+        lpuart_reg->LPUART_CTRL &= ~(LPUART_CTRL_RIE);                   // ensure rx interrupt is not enabled
+        lpuart_reg->LPUART_BAUD |= LPUART_BAUD_RDMAE;                    // use DMA rather than interrupts for reception
+    }
+    else {
+        lpuart_reg->LPUART_BAUD &= ~LPUART_BAUD_RDMAE;                   // disable rx DMA so that rx interrupt mode can be used
     }
     #endif
 }
@@ -2441,7 +2644,7 @@ _configDMA:
         ptrDMA += UART_DMA_TX_CHANNEL[Channel];
         ptrDMA->DMA_DSR_BCR = DMA_DSR_BCR_DONE;                          // clear the DONE flag and clear errors etc.
         ptrDMA->DMA_DAR = (unsigned long)&(uart_reg->UART_D);            // destination is the UART's data register
-        POWER_UP(6, SIM_SCGC6_DMAMUX0);                                  // enable DMA multiplexer 0
+        POWER_UP_ATOMIC(6, SIM_SCGC6_DMAMUX0);                           // enable DMA multiplexer 0
         fnEnterInterrupt((irq_DMA0_ID + UART_DMA_TX_CHANNEL[Channel]), UART_DMA_TX_INT_PRIORITY[Channel], (void (*)(void))_uart_tx_dma_Interrupt[Channel]); // enter DMA interrupt handler
         uart_reg->UART_C2 &= ~(UART_C2_TIE | UART_C2_TCIE);              // ensure tx interrupt is not enabled
             #if UARTS_AVAILABLE > 1
@@ -2453,7 +2656,7 @@ _configDMA:
             uart_reg->UART_C2 |= (UART_C2_TIE);                          // enable the tx dma request (DMA not yet enabled) rather than interrupt mode
         }
             #else
-                #if defined KINETIS_KL43                                 // the UART in the KL43 behaves like one in the K devies with respect to needing the interrupt enabled for DMA to be triggered
+                #if defined K_STYLE_UART2                                // the UART in some KL parts behave like one in the K devices with respect to needing the interrupt enabled for DMA to be triggered
         uart_reg->UART_C2 |= (UART_C2_TIE);                              // enable the tx dma request (DMA not yet enabled) rather than interrupt mode
                 #endif
         uart_reg->UART_C5 |= UART_C5_TDMAS;                              // use DMA rather than interrupts for transmission
@@ -2476,7 +2679,7 @@ _configDMA:
         ptrDMA_TCD->DMA_TCD_CSR = (DMA_TCD_CSR_DREQ | DMA_TCD_CSR_INTMAJOR); // stop after the defined number of service requests and interrupt on completion
         fnEnterInterrupt((irq_DMA0_ID + UART_DMA_TX_CHANNEL[Channel]), UART_DMA_TX_INT_PRIORITY[Channel], (void (*)(void))_uart_tx_dma_Interrupt[Channel]); // enter DMA interrupt handler
         uart_reg->UART_C5 |= UART_C5_TDMAS;                              // use DMA rather than interrupts for transmission
-        POWER_UP(6, SIM_SCGC6_DMAMUX0);                                  // enable DMA multiplexer 0
+        POWER_UP_ATOMIC(6, SIM_SCGC6_DMAMUX0);                           // enable DMA multiplexer 0
             #if ((defined KINETIS_K21 || defined KINETIS_K22) && (UARTS_AVAILABLE > 4)) || defined KINETIS_K64
         if (Channel > 3) {                                               // channels 4 and 5 each share DMA source for TX and RX
             *(unsigned char *)(DMAMUX0_BLOCK + UART_DMA_TX_CHANNEL[Channel]) = ((DMAMUX_CHCFG_SOURCE_UART3_TX + (Channel - 3)) | DMAMUX_CHCFG_ENBL); // connect UART tx to DMA channel
@@ -2504,6 +2707,18 @@ _configDMA:
     }
         #if defined SERIAL_SUPPORT_DMA_RX
     if ((pars->ucDMAConfig & UART_RX_DMA) != 0) {                        // {8}
+            #if defined KINETIS_KL                                       // {209}
+                #if (UARTS_AVAILABLE > 1)
+        if (Channel == 0) {
+            uart_reg->UART_C5 |= UART_C5_RDMAS;                          // use DMA rather than interrupts for reception
+        }
+        else {
+            uart_reg->UART_MA1_C4 |= UART_C4_RDMAS;                      // use DMA rather than interrupts for reception
+        }
+                #else
+        uart_reg->UART_C5 |= UART_C5_RDMAS;                              // use DMA rather than interrupts for reception
+                #endif
+            #else
         KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
         ptrDMA_TCD += UART_DMA_RX_CHANNEL[Channel];                      // set the DMA channel register
         fnEnterInterrupt((irq_DMA0_ID + UART_DMA_RX_CHANNEL[Channel]), UART_DMA_RX_INT_PRIORITY[Channel], (void (*)(void))_uart_rx_dma_Interrupt[Channel]); // enter DMA interrupt handler
@@ -2517,7 +2732,7 @@ _configDMA:
             #else
         uart_reg->UART_C5 |= UART_C5_RDMAS;                              // use DMA rather than interrupts for reception
             #endif
-        POWER_UP(6, SIM_SCGC6_DMAMUX0);                                  // enable DMA multiplexer 0
+        POWER_UP_ATOMIC(6, SIM_SCGC6_DMAMUX0);                           // enable DMA multiplexer 0
         *(unsigned char *)(DMAMUX0_BLOCK + UART_DMA_RX_CHANNEL[Channel]) = ((DMAMUX_CHCFG_SOURCE_UART0_RX + (2 * Channel)) | DMAMUX_CHCFG_ENBL); // connect UART rx to DMA channel
         ptrDMA_TCD->DMA_TCD_BITER_ELINK = ptrDMA_TCD->DMA_TCD_CITER_ELINK = pars->Rx_tx_sizes.RxQueueSize; // the length of the input buffer in use
         ptrDMA_TCD->DMA_TCD_SOFF = 0;                                    // source not increment
@@ -2537,11 +2752,12 @@ _configDMA:
             #if defined SERIAL_SUPPORT_DMA_RX_FREERUN
         else {
             ptrDMA_TCD->DMA_TCD_CSR = 0;                                 // continuous
-            usDMA_progress[Channel] = ptrDMA_TCD->DMA_TCD_BITER_ELINK;
+            ulDMA_progress[Channel] = ptrDMA_TCD->DMA_TCD_BITER_ELINK;
         }
             #endif
         ptrDMA_TCD->DMA_TCD_SLAST = 0;                                   // {56} no change to address when the buffer has filled
         ptrDMA_TCD->DMA_TCD_DLASTSGA = (-pars->Rx_tx_sizes.RxQueueSize); // when the buffer has been filled set the destination back to the start of it
+            #endif
     }
     else {                                                               // interrupt driven receiver
             #if defined KINETIS_KL && (UARTS_AVAILABLE > 1)
@@ -2617,7 +2833,7 @@ static void _fnConfigSimSCI(QUEUE_HANDLE Channel, TTYTABLE *pars, unsigned short
         ulBaudRate = (unsigned long)((float)ulSpecialClock/((float)usDivider)/16);
     }
     else {
-        #if defined KINETIS_KL43 || defined KINETIS_KL27
+        #if defined K_STYLE_UART2
         ulBaudRate = (unsigned long)((float)ulBusClock/((float)usDivider + (((float)ucFraction)/32))/16);
         #else
         ulBaudRate = (unsigned long)((float)ulBusClock/((float)usDivider)/16);
@@ -2657,14 +2873,14 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
 {
     KINETIS_UART_CONTROL *uart_reg;
     unsigned short usDivider = 0;
-    #if (!defined KINETIS_KL && !defined KINETIS_KE && !defined KINETIS_K80) || defined KINETIS_KL43 || defined KINETIS_KL27
+    #if (!defined KINETIS_KL && !defined KINETIS_KE && !defined KINETIS_K80) || defined K_STYLE_UART2
     unsigned char ucFraction = 0;
     #endif
     #if NUMBER_EXTERNAL_SERIAL > 0
     if (Channel >= (NUMBER_SERIAL)) {
         fnConfigExtSCI((QUEUE_HANDLE)(Channel - NUMBER_SERIAL), pars);   // pass on to external UART driver
         #if defined SUPPORT_HW_FLOW
-        if (pars->Config & RTS_CTS) {                                    // HW flow control defined so configure RTS/CTS pins
+        if ((pars->Config & RTS_CTS) != 0) {                             // HW flow control defined so configure RTS/CTS pins
             fnControlLine(Channel, (CONFIG_RTS_PIN | CONFIG_CTS_PIN), 0);
         }
         #endif
@@ -2689,14 +2905,23 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #else
         case (0):
         #endif
-        #if defined KINETIS_KL
-            POWER_UP(5, SIM_SCGC5_LPUART0);                              // power up LPUART 0
+        #if defined KINETIS_WITH_PCC
+            #if defined LPUART_IRC48M
+            PCC_LPUART0 = (PCC_CGC | PCC_PCS_SCGFIRCLK);                 // clock from tha fast IRC clock
+            #elif defined LPUART_OSCERCLK
+            PCC_LPUART0 = (PCC_CGC | PCC_PCS_OSCCLK);                    // clock from the system oscillator bus clock
+            #else
+            PCC_LPUART0 = (PCC_CGC | PCC_PCS_SCGPCLK);                   // clock from the system PLL clock
+            #endif
+        #elif defined KINETIS_KL
+            POWER_UP_ATOMIC(5, SIM_SCGC5_LPUART0);                       // power up LPUART 0
         #elif defined KINETIS_K80
-            POWER_UP(2, SIM_SCGC2_LPUART0);                              // power up LPUART 0
+            POWER_UP_ATOMIC(2, SIM_SCGC2_LPUART0);                       // power up LPUART 0
         #else
-            POWER_UP(6, SIM_SCGC6_LPUART0);                              // power up LPUART 0
+            POWER_UP_ATOMIC(6, SIM_SCGC6_LPUART0);                       // power up LPUART 0
         #endif
         #if defined LPUART_IRC48M                                        // use the IRC48M clock as UART clock
+            #if !defined KINETIS_WITH_PCC
             #if defined KINETIS_WITH_MCG_LITE
             MCG_MC |= MCG_MC_HIRCEN;                                     // ensure that the IRC48M is operating, even when the processor is not in HIRC mode
             #endif
@@ -2704,6 +2929,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
             SIM_SOPT2 = ((SIM_SOPT2 & ~(SIM_SOPT2_LPUARTSRC_MGC)) | (SIM_SOPT2_LPUARTSRC_SEL | SIM_SOPT2_PLLFLLSEL_IRC48M)); // {3} select the 48MHz IRC48MHz clock as source for the LPUART
             #else
             SIM_SOPT2 = ((SIM_SOPT2 & ~(SIM_SOPT2_UART0SRC_MCGIRCLK)) | (SIM_SOPT2_UART0SRC_IRC48M | SIM_SOPT2_PLLFLLSEL_IRC48M)); // {3} select the 48MHz IRC48MHz clock as source for the LPUART
+            #endif
             #endif
         #elif defined LPUART_OSCERCLK                                    // clock the UART from the external clock
             SIM_SOPT2 |= (SIM_SOPT2_UART0SRC_OSCERCLK);
@@ -2726,12 +2952,15 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
             #else
         case (1):
             #endif
-            #if defined KINETIS_KL
-            POWER_UP(5, SIM_SCGC5_LPUART1);                              // power up LPUART 1
+            #if defined KINETIS_WITH_PCC
+            PCC_LPUART0 |= PCC_CGC;
+            #elif defined KINETIS_KL
+            POWER_UP_ATOMIC(5, SIM_SCGC5_LPUART1);                       // power up LPUART 1
             #else
-            POWER_UP(2, SIM_SCGC2_LPUART1);                              // power up LPUART 1
+            POWER_UP_ATOMIC(2, SIM_SCGC2_LPUART1);                       // power up LPUART 1
             #endif
             #if defined LPUART_IRC48M                                    // use the IRC48M clock as UART clock
+                #if !defined KINETIS_WITH_PCC
                 #if defined KINETIS_WITH_MCG_LITE
             MCG_MC |= MCG_MC_HIRCEN;                                     // ensure that the IRC48M is operating, even when the processor is not in HIRC mode
                 #endif
@@ -2739,6 +2968,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
             SIM_SOPT2 = ((SIM_SOPT2 & ~(SIM_SOPT2_LPUARTSRC_MGC)) | (SIM_SOPT2_LPUARTSRC_SEL | SIM_SOPT2_PLLFLLSEL_IRC48M)); // {202} select the 48MHz IRC48MHz clock as source for the LPUART
                 #else
             SIM_SOPT2 = ((SIM_SOPT2 & ~(SIM_SOPT2_UART1SRC_MCGIRCLK)) | (SIM_SOPT2_UART1SRC_IRC48M | SIM_SOPT2_PLLFLLSEL_IRC48M)); // {202} select the 48MHz IRC48MHz clock as source for the LPUART
+                #endif
                 #endif
             #elif defined LPUART_OSCERCLK                                // clock the UART from the external clock
             SIM_SOPT2 |= (SIM_SOPT2_UART1SRC_OSCERCLK);
@@ -2753,7 +2983,11 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
             #else
         case (2):
             #endif
-            POWER_UP(2, SIM_SCGC2_LPUART2);                              // power up LPUART 2
+            #if defined KINETIS_KL
+            POWER_UP_ATOMIC(5, SIM_SCGC2_LPUART2);                       // power up LPUART 1
+            #else
+            POWER_UP_ATOMIC(2, SIM_SCGC2_LPUART2);                       // power up LPUART 2
+            #endif
             #if defined LPUART_IRC48M                                    // use the IRC48M clock as UART clock
                 #if defined KINETIS_WITH_MCG_LITE
             MCG_MC |= MCG_MC_HIRCEN;                                     // ensure that the IRC48M is operating, even when the processor is not in HIRC mode
@@ -2776,7 +3010,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
             #else
         case (3):
             #endif
-            POWER_UP(2, SIM_SCGC2_LPUART3);                              // power up LPUART 3
+            POWER_UP_ATOMIC(2, SIM_SCGC2_LPUART3);                       // power up LPUART 3
             #if defined LPUART_IRC48M                                    // use the IRC48M clock as UART clock
                 #if defined KINETIS_WITH_MCG_LITE
             MCG_MC |= MCG_MC_HIRCEN;                                     // ensure that the IRC48M is operating, even when the processor is not in HIRC mode
@@ -2799,7 +3033,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
             #else
         case (4):
             #endif
-            POWER_UP(2, SIM_SCGC2_LPUART4);                              // power up LPUART 4
+            POWER_UP_ATOMIC(2, SIM_SCGC2_LPUART4);                       // power up LPUART 4
             #if defined LPUART_IRC48M                                    // use the IRC48M clock as UART clock
                 #if defined KINETIS_WITH_MCG_LITE
             MCG_MC |= MCG_MC_HIRCEN;                                     // ensure that the IRC48M is operating, even when the processor is not in HIRC mode
@@ -2833,7 +3067,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         switch (Channel) {
         #if UARTS_AVAILABLE > 0 && (LPUARTS_AVAILABLE < 1 || defined LPUARTS_PARALLEL)
         case 0:
-            POWER_UP(4, SIM_SCGC4_UART0);                                // power up UART 0
+            POWER_UP_ATOMIC(4, SIM_SCGC4_UART0);                         // power up UART 0
             #if defined KINETIS_KL
                 #if defined UART0_ClOCKED_FROM_MCGIRCLK                  // clocked from internal 4MHz RC clock
             SIM_SOPT2 |= (SIM_SOPT2_UART0SRC_MCGIRCLK);                  // enable UART0 clock source from MCGIRCLK
@@ -2851,27 +3085,27 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
         #if UARTS_AVAILABLE > 1 && (LPUARTS_AVAILABLE < 2 || defined LPUARTS_PARALLEL)
         case 1:
-            POWER_UP(4, SIM_SCGC4_UART1);                                // power up UART 1
+            POWER_UP_ATOMIC(4, SIM_SCGC4_UART1);                         // power up UART 1
             break;
         #endif
         #if (UARTS_AVAILABLE > 2 && (LPUARTS_AVAILABLE < 3 || defined LPUARTS_PARALLEL)) || (UARTS_AVAILABLE == 1 && LPUARTS_AVAILABLE == 2)
         case 2:
-            POWER_UP(4, SIM_SCGC4_UART2);                                // power up UART 2
+            POWER_UP_ATOMIC(4, SIM_SCGC4_UART2);                         // power up UART 2
             break;
         #endif
         #if UARTS_AVAILABLE > 3
         case 3:
-            POWER_UP(4, SIM_SCGC4_UART3);                                // power up UART 3
+            POWER_UP_ATOMIC(4, SIM_SCGC4_UART3);                         // power up UART 3
             break;
         #endif
         #if UARTS_AVAILABLE > 4
         case 4:
-            POWER_UP(1, SIM_SCGC1_UART4);                                // power up UART 4
+            POWER_UP_ATOMIC(1, SIM_SCGC1_UART4);                         // power up UART 4
             break;
         #endif
         #if UARTS_AVAILABLE > 5
         case 5:
-            POWER_UP(1, SIM_SCGC1_UART5);                                // power up UART 5
+            POWER_UP_ATOMIC(1, SIM_SCGC1_UART5);                         // power up UART 5
             break;
         #endif
         default:
@@ -2884,7 +3118,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
     #endif
 
     #if defined SUPPORT_HW_FLOW
-    if (pars->Config & RTS_CTS) {                                        // HW flow control defined so configure RTS/CTS pins
+    if ((pars->Config & RTS_CTS) != 0) {                                 // HW flow control defined so configure RTS/CTS pins
         fnControlLine(Channel, (CONFIG_RTS_PIN | CONFIG_CTS_PIN), 0);
     }
     #endif
@@ -3047,7 +3281,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         if (Channel >= UARTS_AVAILABLE) {                                // LPUART using its own special clock
             switch (pars->ucSpeed) {              
             case SERIAL_BAUD_300:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)SPECIAL_LPUART_CLOCK/(float)(16 * 300)) + (float)0.5) * (float)2)/2); // best divider for 300
         #else
                 ucFraction = (unsigned char)((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)300) - (int)(BUS_CLOCK/16/300)) * 32)); // calculate fraction
@@ -3055,7 +3289,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
                 break;
             case SERIAL_BAUD_600:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)SPECIAL_LPUART_CLOCK/(float)(16 * 600)) + (float)0.5) * (float)2)/2); // best divider for 600
         #else
                 ucFraction = (unsigned char)((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)600) - (int)(SPECIAL_LPUART_CLOCK/16/600)) * 32)); // calculate fraction
@@ -3063,7 +3297,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
                 break;
             case SERIAL_BAUD_1200:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)SPECIAL_LPUART_CLOCK/(float)(16 * 1200)) + (float)0.5) * (float)2)/2); // best divider for 1200
         #else
                 ucFraction = (unsigned char)((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)1200) - (int)(SPECIAL_LPUART_CLOCK/16/1200)) * 32)); // calculate fraction
@@ -3071,7 +3305,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
                 break;
             case SERIAL_BAUD_2400:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)SPECIAL_LPUART_CLOCK/(float)(16 * 2400)) + (float)0.5) * (float)2)/2); // best divider for 2400
         #else
                 ucFraction = (unsigned char)((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)2400) - (int)(SPECIAL_LPUART_CLOCK/16/2400)) * 32)); // calculate fractio
@@ -3079,7 +3313,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
                 break;
             case SERIAL_BAUD_4800:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)SPECIAL_LPUART_CLOCK/(float)(16 * 4800)) + (float)0.5) * (float)2)/2); // best divider for 4800
         #else
                 ucFraction = (unsigned char)((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)4800) - (int)(SPECIAL_LPUART_CLOCK/16/4800)) * 32)); // calculate fraction
@@ -3087,7 +3321,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
                 break;
             case SERIAL_BAUD_9600:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)SPECIAL_LPUART_CLOCK/(float)(16 * 9600)) + (float)0.5) * (float)2)/2); // best divider for 9600
         #else
                 ucFraction = (unsigned char)((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)9600) - (int)(SPECIAL_LPUART_CLOCK/16/9600)) * 32)); // calculate fraction
@@ -3095,7 +3329,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
                 break;
             case SERIAL_BAUD_14400:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)SPECIAL_LPUART_CLOCK/(float)(16 * 14400)) + (float)0.5) * (float)2)/2); // best divider for 14400
         #else
                 ucFraction = (unsigned char)((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)14400) - (int)(SPECIAL_LPUART_CLOCK/16/14400)) * 32)); // calculate fraction
@@ -3104,7 +3338,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
                 break;
             default:                                                     // if not valid value set this speed
             case SERIAL_BAUD_19200:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)SPECIAL_LPUART_CLOCK/(float)(16 * 19200)) + (float)0.5) * (float)2)/2); // best divider for 19200
         #else
                 ucFraction = (unsigned char)((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)19200) - (int)(SPECIAL_LPUART_CLOCK/16/19200)) * 32)); // calculate fraction
@@ -3113,7 +3347,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
                 break;
         #if defined SUPPORT_MIDI_BAUD_RATE
             case SERIAL_BAUD_31250:                                      // {207} set 31250
-            #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+            #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)SPECIAL_LPUART_CLOCK/(float)(16 * 31250)) + (float)0.5) * (float)2)/2); // best divider for 31250
             #else
                 ucFraction = (unsigned char)((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)31250) - (int)(SPECIAL_LPUART_CLOCK/16/ 31250)) * 32)); // calculate fraction
@@ -3122,7 +3356,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
                 break;
         #endif
             case SERIAL_BAUD_38400:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)SPECIAL_LPUART_CLOCK/(float)(16 * 38400)) + (float)0.5) * (float)2)/2); // best divider for 38400
         #else
                 ucFraction = (unsigned char)((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)38400) - (int)(SPECIAL_LPUART_CLOCK/16/38400)) * 32)); // calculate fraction
@@ -3130,7 +3364,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
                 break;
             case SERIAL_BAUD_57600:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)SPECIAL_LPUART_CLOCK/(float)(16 * 57600)) + (float)0.5) * (float)2)/2); // best divider for 57600
         #else
                 ucFraction = (unsigned char)((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)57600) - (int)(SPECIAL_LPUART_CLOCK/16/57600)) * 32)); // calculate fraction
@@ -3138,7 +3372,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
                 break;
             case SERIAL_BAUD_115200:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)SPECIAL_LPUART_CLOCK/(float)(16 * 115200)) + (float)0.5) * (float)2)/2); // best divider for 115200
         #else
                 ucFraction = (unsigned char)((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)115200) - (int)(SPECIAL_LPUART_CLOCK/16/115200)) * 32)); // calculate fraction
@@ -3146,7 +3380,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
                 break;
             case SERIAL_BAUD_230400:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)SPECIAL_LPUART_CLOCK/(float)(16 * 230400)) + (float)0.5) * (float)2)/2); // best divider for 230400
         #else
                 ucFraction = (unsigned char)((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)230400) - (int)(SPECIAL_LPUART_CLOCK/16/230400)) * 32)); // calculate fraction
@@ -3154,7 +3388,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
                 break;
             case SERIAL_BAUD_250K:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)SPECIAL_LPUART_CLOCK/(float)(16 * 250000)) + (float)0.5) * (float)2)/2); // best divider for 250000
         #else
                 ucFraction = (unsigned char)((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)250000) - (int)(SPECIAL_LPUART_CLOCK/16/ 250000)) * 32)); // calculate fraction
@@ -3165,10 +3399,10 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         }
         else {
     #endif
-    #if (UARTS_AVAILABLE > 2) || (defined KINETIS_K02 || defined KINETIS_KL43 || defined KINETIS_KL27) || (defined KINETIS_KV && UARTS_AVAILABLE > 1)
+    #if (UARTS_AVAILABLE > 2) || (defined KINETIS_KEA8 || defined KINETIS_K02 || defined K_STYLE_UART2) || (defined KINETIS_KV && UARTS_AVAILABLE > 1)
             switch (pars->ucSpeed) {
             case SERIAL_BAUD_300:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)BUS_CLOCK/(float)(16 * 300)) + (float)0.5) * (float)2)/2); // best divider for 300
         #else
                 ucFraction = (unsigned char)((float)((((float)BUS_CLOCK/(float)16/(float)300) - (int)(BUS_CLOCK/16/300)) * 32)); // calculate fraction
@@ -3176,7 +3410,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
                 break;
             case SERIAL_BAUD_600:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)BUS_CLOCK/(float)(16 * 600)) + (float)0.5) * (float)2)/2); // best divider for 600
         #else
                 ucFraction = (unsigned char)((float)((((float)BUS_CLOCK/(float)16/(float)600) - (int)(BUS_CLOCK/16/600)) * 32)); // calculate fraction
@@ -3184,7 +3418,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
                 break;
             case SERIAL_BAUD_1200:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)BUS_CLOCK/(float)(16 * 1200)) + (float)0.5) * (float)2)/2); // best divider for 1200
         #else
                 ucFraction = (unsigned char)((float)((((float)BUS_CLOCK/(float)16/(float)1200) - (int)(BUS_CLOCK/16/1200)) * 32)); // calculate fraction
@@ -3192,7 +3426,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
                 break;
             case SERIAL_BAUD_2400:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)BUS_CLOCK/(float)(16 * 2400)) + (float)0.5) * (float)2)/2); // best divider for 2400
         #else
                 ucFraction = (unsigned char)((float)((((float)BUS_CLOCK/(float)16/(float)2400) - (int)(BUS_CLOCK/16/2400)) * 32)); // calculate fractio
@@ -3200,7 +3434,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
                 break;
             case SERIAL_BAUD_4800:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)BUS_CLOCK/(float)(16 * 4800)) + (float)0.5) * (float)2)/2); // best divider for 4800
         #else
                 ucFraction = (unsigned char)((float)((((float)BUS_CLOCK/(float)16/(float)4800) - (int)(BUS_CLOCK/16/4800)) * 32)); // calculate fraction
@@ -3208,7 +3442,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
                 break;
             case SERIAL_BAUD_9600:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)BUS_CLOCK/(float)(16 * 9600)) + (float)0.5) * (float)2)/2); // best divider for 9600
         #else
                 ucFraction = (unsigned char)((float)((((float)BUS_CLOCK/(float)16/(float)9600) - (int)(BUS_CLOCK/16/9600)) * 32)); // calculate fraction
@@ -3216,7 +3450,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
                 break;
             case SERIAL_BAUD_14400:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)BUS_CLOCK/(float)(16 * 14400)) + (float)0.5) * (float)2)/2); // best divider for 14400
         #else
                 ucFraction = (unsigned char)((float)((((float)BUS_CLOCK/(float)16/(float)14400) - (int)(BUS_CLOCK/16/14400)) * 32)); // calculate fraction
@@ -3225,7 +3459,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
                 break;
             default:                                                     // if not valid value set this speed
             case SERIAL_BAUD_19200:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)BUS_CLOCK/(float)(16 * 19200)) + (float)0.5) * (float)2)/2); // best divider for 19200
         #else
                 ucFraction = (unsigned char)((float)((((float)BUS_CLOCK/(float)16/(float)19200) - (int)(BUS_CLOCK/16/19200)) * 32)); // calculate fraction
@@ -3234,7 +3468,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
                 break;
         #if defined SUPPORT_MIDI_BAUD_RATE
             case SERIAL_BAUD_31250:                                      // {207} set 31250
-            #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+            #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)BUS_CLOCK/(float)(16 * 31250)) + (float)0.5) * (float)2)/2); // best divider for 31250
             #else
                 ucFraction = (unsigned char)((float)((((float)BUS_CLOCK/(float)16/(float)31250) - (int)(BUS_CLOCK/16/ 31250)) * 32)); // calculate fraction
@@ -3243,7 +3477,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
                 break;
         #endif
             case SERIAL_BAUD_38400:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)BUS_CLOCK/(float)(16 * 38400)) + (float)0.5) * (float)2)/2); // best divider for 38400
         #else
                 ucFraction = (unsigned char)((float)((((float)BUS_CLOCK/(float)16/(float)38400) - (int)(BUS_CLOCK/16/38400)) * 32)); // calculate fraction
@@ -3251,7 +3485,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
                 break;
             case SERIAL_BAUD_57600:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)BUS_CLOCK/(float)(16 * 57600)) + (float)0.5) * (float)2)/2); // best divider for 57600
         #else
                 ucFraction = (unsigned char)((float)((((float)BUS_CLOCK/(float)16/(float)57600) - (int)(BUS_CLOCK/16/57600)) * 32)); // calculate fraction
@@ -3259,7 +3493,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
                 break;
             case SERIAL_BAUD_115200:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)BUS_CLOCK/(float)(16 * 115200)) + (float)0.5) * (float)2)/2); // best divider for 115200
         #else
                 ucFraction = (unsigned char)((float)((((float)BUS_CLOCK/(float)16/(float)115200) - (int)(BUS_CLOCK/16/115200)) * 32)); // calculate fraction
@@ -3267,7 +3501,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
                 break;
             case SERIAL_BAUD_230400:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)BUS_CLOCK/(float)(16 * 230400)) + (float)0.5) * (float)2)/2); // best divider for 230400
         #else
                 ucFraction = (unsigned char)((float)((((float)BUS_CLOCK/(float)16/(float)230400) - (int)(BUS_CLOCK/16/230400)) * 32)); // calculate fraction
@@ -3275,7 +3509,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
                 break;
             case SERIAL_BAUD_250K:
-        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined KINETIS_KL43 && !defined KINETIS_KL27
+        #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)BUS_CLOCK/(float)(16 * 250000)) + (float)0.5) * (float)2)/2); // best divider for 250000
         #else
                 ucFraction = (unsigned char)((float)((((float)BUS_CLOCK/(float)16/(float)250000) - (int)(BUS_CLOCK/16/250000)) * 32)); // calculate fraction
@@ -3308,7 +3542,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #if UARTS_AVAILABLE > 0
     }
     else {
-            #if (!defined KINETIS_KL && !defined KINETIS_KE) || defined KINETIS_KL43 || defined KINETIS_KL27
+            #if (!defined KINETIS_KL && !defined KINETIS_KE) || defined K_STYLE_UART2
         uart_reg->UART_C4  = ucFraction;
             #endif
         fnConfigUART(Channel, pars, uart_reg, usDivider);                // configure the UART
@@ -3322,7 +3556,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
     #endif
 
     #if defined _WINDOWS
-        #if (!defined KINETIS_KL && !defined KINETIS_KE && !defined KINETIS_K80) || defined KINETIS_KL43 || defined KINETIS_KL27
+        #if (!defined KINETIS_KL && !defined KINETIS_KE && !defined KINETIS_K80) || defined K_STYLE_UART2
     _fnConfigSimSCI(Channel, pars, usDivider, ucFraction, BUS_CLOCK, SPECIAL_UART_CLOCK); // open a serial port on PC if desired
         #else
     _fnConfigSimSCI(Channel, pars, usDivider, 0, BUS_CLOCK, SPECIAL_UART_CLOCK); // open a serial port on PC if desired

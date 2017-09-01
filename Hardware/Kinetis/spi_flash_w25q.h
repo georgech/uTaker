@@ -19,6 +19,9 @@
 
     15.01.2016 Added SPI_FLASH_W25Q128 and control of final SPI byte for Kinetis parts with FIFO based SPI CS
     02.02.2017 Correct read for FIFO based SPI                           {1}
+    01.03.2017 Correct write for FIFO based SPI                          {2}
+    13.07.2017 Adapt chip select line control dependency                 {3}
+    19.08.2017 Correct chip select control of multiple SPI devices       {4}
 
     **********************************************************************/
 
@@ -27,6 +30,7 @@
 
 #if defined _SPI_DEFINES
     #if defined SPI_FLASH_MULTIPLE_CHIPS
+        #define __EXTENDED_CS     iChipSelect,                           // {4}
         static unsigned char fnCheckW25Qxx(int iChipSelect);
         static const STORAGE_AREA_ENTRY spi_flash_storage = {
             (void *)&default_flash,                                      // link to internal flash
@@ -36,6 +40,7 @@
             SPI_FLASH_DEVICE_COUNT                                       // multiple devices
         };
     #else
+        #define __EXTENDED_CS                                            // {4}
         static unsigned char fnCheckW25Qxx(void);
         static const STORAGE_AREA_ENTRY spi_flash_storage = {
             (void *)&default_flash,                                      // link to internal flash
@@ -57,7 +62,7 @@
         #else
     ucSPI_FLASH_Type[0] = fnCheckW25Qxx();                               // flag whether the SPI FLASH device is connected
         #endif
-    if (ucSPI_FLASH_Type[0] < W25Q10) {                             // we expect at least this part to be available
+    if (ucSPI_FLASH_Type[0] < W25Q10) {                                  // we expect at least this part to be available
         POWER_DOWN_SPI_FLASH_INTERFACE();                                // power down SPI 
     }
     else {
@@ -67,9 +72,7 @@
             ucSPI_FLASH_Type[i] = fnCheckW25Qxx(i);
         }
         #endif
-        #if !defined BOOT_LOADER                                         // the boot loader doesn't use storage lists
         UserStorageListPtr = (STORAGE_AREA_ENTRY *)&spi_flash_storage;   // insert spi flash as storage medium
-        #endif
     }
 #endif
 
@@ -172,7 +175,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         volatile unsigned char ucStatus;
         SPI_FLASH_Danger[iChipSelect] = 0;                               // device will no longer be busy after continuing
         do {
-            fnSPI_command(READ_STATUS_REGISTER_1, 0, _EXTENDED_CS &ucStatus, 1); // read busy status register
+            fnSPI_command(READ_STATUS_REGISTER_1, 0, __EXTENDED_CS &ucStatus, 1); // read busy status register
     #if defined MANAGED_FILES
             if (ucCommand == CHECK_SPI_FLASH_BUSY) {                     // pseudo request to see whether device is ready
                 if ((ucStatus & STATUS_BUSY) == 0) {
@@ -194,7 +197,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
 
     SET_SPI_FLASH_MODE();
 
-    #if defined KINETIS_KL || defined MANUAL_FLASH_CS_CONTROL
+    #if !defined DSPI_SPI || defined MANUAL_FLASH_CS_CONTROL             // {3} control chip select line when no automation is available or when specifically preferred
     ASSERT_CS_LINE(ulChipSelectLine);                                    // assert the chip select line
     #endif
 
@@ -235,15 +238,15 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     #if defined _WINDOWS
         fnSimW25Qxx(W25Q_WRITE, (unsigned char)SPI_TX_BYTE);             // simulate the SPI FLASH device
     #endif
-    #if defined KINETIS_KL
+  //#if !defined DSPI_SPI                                                // {2}
         WAIT_SPI_RECEPTION_END();                                        // wait until the command has been sent
         (void)READ_SPI_FLASH_DATA();                                     // discard the received byte
-    #endif
-    #if defined KINETIS_KL || defined MANUAL_FLASH_CS_CONTROL
-        NEGATE_CS_LINE(ulChipSelectLine);                                  negate the chip select line
+  //#endif
+    #if !defined DSPI_SPI || defined MANUAL_FLASH_CS_CONTROL             // {3} control chip select line when no automation is available or when specifically preferred
+        NEGATE_CS_LINE(ulChipSelectLine);                                //  negate the chip select line
     #endif
     #if defined _WINDOWS
-        #if !defined KINETIS_KL
+        #if defined DSPI_SPI
         if ((SPI_TX_BYTE & SPI_PUSHR_EOQ) != 0) {                        // check that the CS has been negated
             SPI_TX_BYTE &= ~(ulChipSelectLine);
         }
@@ -268,7 +271,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     #if defined _WINDOWS
         fnSimW25Qxx(W25Q_WRITE, (unsigned char)SPI_TX_BYTE);             // simulate the SPI FLASH device
     #endif
-    #if defined KINETIS_KL
+    #if !defined DSPI_SPI
         WAIT_SPI_RECEPTION_END();                                        // wait until the command has been sent
         (void)READ_SPI_FLASH_DATA();                                     // discard the received byte
     #endif
@@ -296,26 +299,33 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         }
     }
     else {
+        WAIT_SPI_RECEPTION_END();                                        // wait until tx byte has been sent
+        (void)READ_SPI_FLASH_DATA();                                     // {2} discard
+        CLEAR_RECEPTION_FLAG();                                          // {2} clear the receive flag
         while (DataLength-- != 0) {                                      // while data bytes to be written
             if (DataLength == 0) {                                       // final byte
                 WRITE_SPI_CMD0_LAST(*ucData++);                          // send data (final byte)
+    #if defined _WINDOWS
+                fnSimW25Qxx(W25Q_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
+    #endif
             }
             else {
                 WRITE_SPI_CMD0(*ucData++);                               // send data
-            }
     #if defined _WINDOWS
-            fnSimW25Qxx(W25Q_WRITE, (unsigned char)SPI_TX_BYTE);         // simulate the SPI FLASH device
+                fnSimW25Qxx(W25Q_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
     #endif
+            }
             WAIT_SPI_RECEPTION_END();                                    // wait until tx byte has been sent
+            (void)READ_SPI_FLASH_DATA();                                 // {2} discard
+            CLEAR_RECEPTION_FLAG();                                      // {2} clear the receive flag
         }
-        WAIT_SPI_RECEPTION_END();                                        // wait until last byte has been completely received before negating the CS line
     }
 
-    #if defined KINETIS_KL || defined MANUAL_FLASH_CS_CONTROL
+    #if !defined DSPI_SPI || defined MANUAL_FLASH_CS_CONTROL             // {3} control chip select line when no automation is available or when specifically preferred
     NEGATE_CS_LINE(ulChipSelectLine);                                    // negate the chip select line
     #endif
     #if defined _WINDOWS
-        #if !defined KINETIS_KL
+        #if defined DSPI_SPI
     if ((SPI_TX_BYTE & SPI_PUSHR_EOQ) != 0) {                            // check that the CS has been negated
         SPI_TX_BYTE &= ~(ulChipSelectLine);
     }
@@ -336,7 +346,7 @@ static unsigned char fnCheckW25Qxx(void)
     volatile unsigned char ucID[3];
     unsigned char ucReturnType = NO_SPI_FLASH_AVAILABLE;
     fnDelayLoop(10000);                                                  // the SPI Flash requires maximum 10ms after power has been applied until it can be read
-    fnSPI_command(READ_JEDEC_ID, 0, _EXTENDED_CS ucID, sizeof(ucID));
+    fnSPI_command(READ_JEDEC_ID, 0, __EXTENDED_CS ucID, sizeof(ucID));
     if (ucID[0] == MANUFACTURER_ID_WB) {                                 // Winbond memory part recognised
         switch (ucID[2]) {
         case DEVICE_ID_1_DATA_WB_FLASH_Q16M:

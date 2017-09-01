@@ -436,6 +436,91 @@ SET PATH=%PATH%;D:\Freescale\KDS_v3\Toolchain\bin
 in case KDS V3 is installed on drive D: in the directory Freescale.
 
 
+Development updates:
+- 23.1.2017 Temporary FAT16 file read workaround added (allows FAT16 formatted memory stick firmware updates when the FAT16 has 4096 byte cluster size, which was previously failing to recognise the file content)
+- 23.1.2017 Update fnGetUSB_string_entry() parameter type
+- 30.1.2017 Add OpenSSL 1.0.2 file redistribution for AES
+- 30.1.2017 Add WolfSSL 3.9.6 file redistribution for AES according to terms of GNU General Public License
+- 30.1.2017 DSP and AES modifications for reases according to
+http://www.utasker.com/docs/uTasker/uTasker_DSP.pdf
+http://www.utasker.com/docs/uTasker/uTasker_Cryptography.pdf
+- 30.1.2017 Add KL05 DAC output configuration
+- 3.2.2017 Add low power cycling mode
+- 3.2.2017 Adapt to us TICK support
+- 13.2.2017 Add KL82 support and allow USB host operation with shared endpoints
+- 13.2.2017 Add FRDM-KL82Z target for serial loader and application
+
+- 24.4.2017
+New Graphical LCD Co-processor support
+- FTDI FT800 support added, including FT800 emulation in the uTasker environment and non-blocking application interface which remains almost compatible with the FTDI reference examples. (Emulator may require VS 2012 compatibility - set platform tool set to v110 with VS 2012 installation present. Copy \WinSim\LCD\FT800\ft8xxemu.dll into the simulator's build directory in case it can't be found by the PC when the simulator is run).
+
+USB-Host improvements
+- USB-MSD host: Add USB_MSD_REMOVED event on memory stick removal.
+-- utFAT handles USB_MSD_REMOVED when memory stick is removed
+
+- USB host:
+-- In host mode reset previous string reception length counter when reception completes with a zero length frame.
+-- Use USB_DEVICE_TIMEOUT in host mode to repeat a get descriptor request.
+
+- USB host driver:
+-- Reset ulNextRxData0 in host mode when non-0 endpoint are re-used.
+-- Add optional USB event logging for operation analysis.
+-- Add setup frame response timeout and repetition in host mode.
+-- Temporarily disable USB operation on host mode reset to ensure that state change flags can be reliably reset.
+
+Easy configuration of a minimal test configuration
+- Add "BLINKEY" configuration to allow a minimal configuration that blinks just an LED (and services the watchdog) with a single define.
+
+Verified Teensy 3.6 operation
+- Teeny 3.6 operation corrected and confirmed.
+
+TCP/IP
+- Add RFC 2217 (Telnet com port control option) mode to the Telnet module with application reference.
+
+Various
+- Increase UART support from maximum 6 to maximum 8.
+- Add LTC (low power trusted cryptography) AES support.
+- uTaskerConvert.exe updated to allow its use without requiring local DLLs to be present.
+- ADC: Allow alternative DMA trigger sources.
+
+- PWM: Add PWM_NO_OUTPUT option to allow PWM channel operation without connecting to an output.
+-- Add DMA based frequency control option (eg. for stepper motors).
+-- ADC_Timers.h adds options to trigger ADC conversion from TPMs and also to perform DMA based stepper motor type controls.
+
+- Memory to memory DMA
+-- Set the DMA_TCD_CITER_ELINK value earlier to protect initial part of code from interrupts.
+-- Add optional alternative DMA channel for use by interrupts when the main one is in use.
+
+-CAN
+-- Set CAN clock before entering freeze mode but write further setting after moving to freeze mode.
+
+
+- 3.5.2017 Add free-running DMA reception mode (SERIAL_SUPPORT_DMA_RX_FREERUN) on LPUARTs and UARTs for KL parts based on modulo rx buffer
+- 10.5.2017 Add SLIP mode to PPP (in development)
+- 12.5.2017 Add optional Ethernet error flag and update new SLIP (in PPP) development support
+- 15.5.2017 REMOVE_PORT_INITIALISATIONS and NO_PERIPHERAL_DEMONSTRATIONS added to config.h to allow projects to be set up without potential demonstration disturbance.
+LWIP PPP temporarily added as experimental PPP layer.
+- 20.5.2017 Added FlexTimer/TPM capture interface
+- 3.7.2017 Added FreeRTOS option (uTasker OS, Target + FreeRTOS OS can operate together). FreeRTOSv9.0.0 essentially included.
+- 4.7.2017 Add MCUXpresso support
+- 14.7.2017 utFATV2.04: flexible renaming files and directories between directories successfully tested.
+- 3.8.2017 Add optional iHex and SREC content support for USB-MSD loader (binary can also be disabled if desired)
+- 31.8.2017 Reference Bitbanding for cortex-M4 and BME (bit manipulation engine) for cortex-m0+ devices added (Used by POWER_UP_ATOMIC() macro for initial testing)
+- 1.9.2017 Added FreeRTOS UART demonstration (using uTasker UART drivers)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

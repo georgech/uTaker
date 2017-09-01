@@ -324,7 +324,7 @@ extern int fnFTP_client_dir(CHAR *ptrPath, int iAction)
 }
 
 // Command a data transfer, which can be a get, put or append type
-// - a valid <path name and> file name must be given and the mode can be defined to be either ascii or binary
+// - a valid path name and file name must be given and the mode can be defined to be either ascii or binary
 //
 extern int fnFTP_client_transfer(CHAR *ptrFilePath, int iMode)
 {
@@ -332,10 +332,10 @@ extern int fnFTP_client_transfer(CHAR *ptrFilePath, int iMode)
     if (ucFTP_client_state != FTP_CLIENT_STATE_LOGGED_IN) {              // the control connection must be in idle state to start
         return SOCKET_STATE_INVALID;
     }
-    if (iMode & (FTP_DO_PUT | FTP_DO_APPEND)) {                          // not get
-        if (iMode & FTP_DO_APPEND) {                                     // append
+    if ((iMode & (FTP_DO_PUT | FTP_DO_APPEND)) != 0) {                   // not get
+        if ((iMode & FTP_DO_APPEND) != 0) {                              // append
             fnEnterPath(ptrFilePath, "APPE");
-            if (iMode & FTP_TRANSFER_ASCII) {                            // append in ascii mode
+            if ((iMode & FTP_TRANSFER_ASCII) != 0) {                     // append in ascii mode
                 ucMessage = FTP_CLIENT_MSG_SET_ASCII_APP;                // set to ASCII type before appening data
             }
             else {
@@ -344,7 +344,7 @@ extern int fnFTP_client_transfer(CHAR *ptrFilePath, int iMode)
         }
         else {                                                           // put
             fnEnterPath(ptrFilePath, "STOR");
-            if (iMode & FTP_TRANSFER_ASCII) {                            // put in ascii mode
+            if ((iMode & FTP_TRANSFER_ASCII) != 0) {                     // put in ascii mode
                 ucMessage = FTP_CLIENT_MSG_SET_ASCII_PUT;                // set to ASCII type before sending data
             }
             else {                                                       // send in binary mode
@@ -354,7 +354,7 @@ extern int fnFTP_client_transfer(CHAR *ptrFilePath, int iMode)
     }
     else {                                                               // get
         fnEnterPath(ptrFilePath, "RETR");
-        if (iMode & FTP_TRANSFER_ASCII) {                                // get in ascii mode
+        if ((iMode & FTP_TRANSFER_ASCII) != 0) {                         // get in ascii mode
             ucMessage = FTP_CLIENT_MSG_SET_ASCII_GET;                    // set to ASCII type before retrieving data
         }
         else {                                                           // get in binary mode

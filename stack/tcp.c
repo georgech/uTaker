@@ -899,7 +899,7 @@ extern QUEUE_TRANSFER fnSendBufTCP(USOCKET TCP_socket, unsigned char *ptrBuf, un
                 if (tcp_tx->ucPutFrame-- == 0) {
                     tcp_tx->ucPutFrame = (WINDOWING_BUFFERS-1);
                 }
-                if ((iRepeatSimple) || (tcp_tx->tx_window[tcp_tx->ucPutFrame].ucNegotiate & TCP_CONTENT_NEGOTIATION)) {
+                if ((iRepeatSimple != 0) || ((tcp_tx->tx_window[tcp_tx->ucPutFrame].ucNegotiate & TCP_CONTENT_NEGOTIATION) != 0)) {
                     tcp_tx->tx_window[tcp_tx->ucPutFrame].usWindowTimeout = 1; // repeat as soon as possible if necessary
                     iRepeatSimple++;
                 }
@@ -1380,7 +1380,7 @@ _syn_frame_rpt:
                 }
 #endif
                 if (ptr_TCP->usRemport == tcp_frame->usSourcePort) {     // check that the source port corresponds
-                    if (!(uMemcmp(ptr_TCP->ucRemoteIP, source_IP_address, ipLength))) { // and the source IP
+                    if ((uMemcmp(ptr_TCP->ucRemoteIP, source_IP_address, ipLength)) == 0) { // and the source IP
                         return (ptr_TCP);                                // return pointer to the active socket
                     }
                 }
@@ -1627,7 +1627,7 @@ extern void fnHandleTCP(ETHERNET_FRAME *ptrRx_frame)                     // {41}
     rx_tcp_packet.ulSeqNr                <<= 8;
     rx_tcp_packet.ulSeqNr                 |= *tcp_data++;
 
-#if defined _WINDOWS
+#if defined _WINDOWS                                                     // use as breakpoint location to stop on a known sequence number
     if (rx_tcp_packet.ulSeqNr == 0x18aa1716) {
         rx_tcp_packet.ulSeqNr = rx_tcp_packet.ulSeqNr;
     }

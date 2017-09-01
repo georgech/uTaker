@@ -23,7 +23,7 @@
     OSC0_CR |= (OSC_CR_ERCLKEN | OSC_CR_EREFSTEN);                       // enable the external reference clock and keep it enabled in stop mode
     #endif
   //MCG_MC = MCG_MC_HIRCEN;                                              // this is optional and would allow the HIRC to run even when the processor is not working in HIRC mode
-    #if defined MCG_C1_CLKS_HIRC
+    #if defined MCG_C1_CLKS_HIRC                                         // processor with MCG-Lite module
     SIM_CLKDIV1 = (((SYSTEM_CLOCK_DIVIDE - 1) << 28) | ((BUS_CLOCK_DIVIDE - 1) << 16)); // prepare bus clock divides
     MCG_C1 = MCG_C1_CLKS_HIRC;                                           // select HIRC clock source
     while ((MCG_S & MCG_S_CLKST_MASK) != MCG_S_CLKST_HICR) {             // wait until the source is selected

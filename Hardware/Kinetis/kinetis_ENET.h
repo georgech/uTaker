@@ -35,6 +35,8 @@
     11.06.2015 Modify the handling of link-down with _KSZ8081RNA         {100}
     17.01.2016 Add fnResetENET() when restarting Ethernet (for simulator){101}
     27.01.2016 Add _KSZ8051RNL                                           {102}
+    08.03.2017 Add option to not initialise MII_RXER pin (NO_MII_RXER)   {103}
+    07.08.2017 Add option for MDIO on port A                             {104}
 
 */
 
@@ -122,6 +124,11 @@
         #endif
         static unsigned char ucGroupHashes[MAX_MULTICAST_FILTERS] = {0};
     #endif
+    #if defined SCAN_PHY_ADD
+        #undef PHY_ADDRESS
+        static unsigned char ucPhyAddress = 1;                           // first address to test with - increments until a response is found and then is ued for all further communication
+        #define PHY_ADDRESS ucPhyAddress
+    #endif
     #if defined _WINDOWS
         static unsigned short usPhyMode = 0;
     #endif
@@ -199,11 +206,12 @@ extern signed char fnEthernetEvent(unsigned char *ucEvent, ETHERNET_FRAME *rx_fr
         rx_frame->ptEth = (ETHERNET_FRAME_CONTENT *)ucEthernetInput;     // return pointer to the fixed linear input buffer
 #else
         if ((ptrRxBd->usBDControl & EMPTY_BUFFER) != 0) {
-            return -1;                                                   // nothing else waiting
+            return -1;                                                   // nothing waiting
         }
         else if (ptrRxBd->usBDLength == 0) {                             // zero length is invalid
             return -1;
         }
+        rx_frame->ptEth = (ETHERNET_FRAME_CONTENT *)fnLE_ENET_add(ptrRxBd->ptrBD_Data); // set pointer to reception content in the buffer descriptor
         if ((ptrRxBd->usBDControl & (TRUNCATED_FRAME | OVERRUN_FRAME)) != 0) { // corrupted reception
             if ((ptrRxBd->usBDControl & TRUNCATED_FRAME) == 0) {
     #if defined USE_IP_STATS
@@ -223,12 +231,11 @@ extern signed char fnEthernetEvent(unsigned char *ucEvent, ETHERNET_FRAME *rx_fr
     #endif
     #if defined PHY_TAIL_TAGGING                                         // {44}
             if (iTailTagging != 0) {                                     // if tail tagging is enabled
-                rx_frame->ptEth = (ETHERNET_FRAME_CONTENT *)fnLE_ENET_add(ptrRxBd->ptrBD_Data);
         #if defined _WINDOWS
-                rx_frame->ucRxPort = (unsigned char)iTailTagging;        // simulated frames arrive over this port
+                rx_frame->ucRxPort = (unsigned char)iTailTagging;        // simulate frames arrive over this particular port
         #else                                                            // in tail tagging mode the source port is read from the received trame
                 rx_frame->frame_size--;                                  // remove tail from the length
-                if (rx_frame->ptEth->ucData[rx_frame->frame_size - 14] & 0x01) {
+                if ((rx_frame->ptEth->ucData[rx_frame->frame_size - 14] & 0x01) != 0) {
                     rx_frame->ucRxPort = 2;                              // this Ethernet frame arrived over port 2
                 }
                 else {
@@ -241,7 +248,6 @@ extern signed char fnEthernetEvent(unsigned char *ucEvent, ETHERNET_FRAME *rx_fr
             }
     #endif
         }
-        rx_frame->ptEth = (ETHERNET_FRAME_CONTENT *)fnLE_ENET_add(ptrRxBd->ptrBD_Data);
     #if defined TEST_CRC_32_IEEE                                         // test option checking
         if (rx_frame->frame_size != 0) {
             unsigned long ulLength = rx_frame->frame_size;
@@ -256,7 +262,7 @@ extern signed char fnEthernetEvent(unsigned char *ucEvent, ETHERNET_FRAME *rx_fr
                 CRC_CRC = *ptr++;                                        // process long world
                 ulLength -= 4;                                           // by bytes at a time - the CRC calculation requires 2 clock cycles
             }
-        #if defined ERRATE_E2776_SOLVED || defined _WINDOWS
+        #if !defined ERRATA_ID_2776 || defined _WINDOWS
             if (ulLength != 0) {                                         // remaining bytes that didn't fit into a long word
                 unsigned char *ptrByte = (unsigned char *)ptr;
                 CRC_CRC_HU = *ptrByte++;                                 // write bytes starting with MSB
@@ -653,11 +659,14 @@ extern void fnCheckEthLinkState(void)
     #if defined INTERRUPT_TASK_PHY
     unsigned char int_phy_message[HEADER_LENGTH];
     #endif
+    if (IS_POWERED_UP(2, SIM_SCGC2_ENET) == 0) {                         // ignore if the ethernet controller is not clocked
+        return;
+    }
     #if defined STOP_MII_CLOCK
     MSCR = (((ETHERNET_CONTROLLER_CLOCK/(2 * MII_MANAGEMENT_CLOCK_SPEED)) + 1) << 1); // enable PHY clock for reads
     #endif
     usInterrupt = fnMIIread(PHY_ADDRESS, PHY_INTERRUPT_REGISTER);        // read the cause(s) of the interrupt, which resets the bits
-    if (PHY_LINK_STATE_CHANGE & usInterrupt) {                           // a link state change has taken place
+    if ((PHY_LINK_STATE_CHANGE & usInterrupt) != 0) {                    // a link state change has taken place
         int iFullDuplex = 0;
         usInterrupt = fnMIIread(PHY_ADDRESS, PHY_LINK_STATUS_REG);       // check the details of link
         switch (usInterrupt & PHY_LINK_MASK) {        
@@ -687,7 +696,7 @@ extern void fnCheckEthLinkState(void)
             break;
     #endif
         }
-        if (((iFullDuplex != 0) && (RCR & DRT)) || ((iFullDuplex == 0) && ((TCR & FDEN) != 0))) { // only restart if duplex mode has changed
+        if (((iFullDuplex != 0) && ((RCR & DRT) != 0)) || ((iFullDuplex == 0) && ((TCR & FDEN) != 0))) { // only restart if duplex mode has changed
             ECR = 0;                                                     // disable FEC in order to modify duplex mode
             if (iFullDuplex != 0) {                                      // when using RMII it is important to synchronise the mode
                 TCR |= FDEN;
@@ -924,23 +933,32 @@ extern int fnConfigEthernet(ETHTABLE *pars)
             #error Ethernet RMII operation requires a 50MHz external clock signal!!
         #endif
     #endif
-    POWER_UP(2, SIM_SCGC2_ENET);                                         // power up the Ethernet controller
+    POWER_UP_ATOMIC(2, SIM_SCGC2_ENET);                                  // power up the Ethernet controller
     #if defined MPU_AVAILABLE
     MPU_CESR = 0;                                                        // allow concurrent access to MPU controller
     #endif
     #if defined FORCE_PHY_CONFIG
     FNFORCE_PHY_CONFIG();                                                // drive configuration lines and reset
     #endif
-    #if defined ETHERNET_MDIO_WITH_PULLUPS
-    _CONFIG_PERIPHERAL(B, 0, (PB_0_MII0_MDIO | PORT_PS_UP_ENABLE));      // MII0_MDIO on PB.0 (alt. function 4) with pullup enabled
+    #if defined MDIO_ON_PORTA                                            // {104}
+        #if defined ETHERNET_MDIO_WITH_PULLUPS
+    _CONFIG_PERIPHERAL(A, 7, (PA_7_MII0_MDIO | PORT_PS_UP_ENABLE));      // MII0_MDIO on PB.0 (alt. function 4) with pullup enabled
+        #else
+    _CONFIG_PERIPHERAL(A, 7, PA_7_MII0_MDIO);                            // MII0_MDIO on PB.0 (alt. function 4)
+        #endif
+    _CONFIG_PERIPHERAL(A, 8, PA_8_MII0_MDC);                             // MII0_MDC on PB.1 (alt. function 4)
     #else
+        #if defined ETHERNET_MDIO_WITH_PULLUPS
+    _CONFIG_PERIPHERAL(B, 0, (PB_0_MII0_MDIO | PORT_PS_UP_ENABLE));      // MII0_MDIO on PB.0 (alt. function 4) with pullup enabled
+        #else
     _CONFIG_PERIPHERAL(B, 0, PB_0_MII0_MDIO);                            // MII0_MDIO on PB.0 (alt. function 4)
-    #endif
+        #endif
     _CONFIG_PERIPHERAL(B, 1, PB_1_MII0_MDC);                             // MII0_MDC on PB.1 (alt. function 4)
+    #endif
 
     #if defined JTAG_DEBUG_IN_USE_ERRATA_2541
     _CONFIG_PERIPHERAL(A, 5, (PORT_PS_DOWN_ENABLE));                     // pull the optional line down to 0V to avoid disturbing JTAG_TRST - not needed when using SWD for debugging 
-    #else
+    #elif !defined NO_MII_RXER                                           // {103}
     _CONFIG_PERIPHERAL(A, 5, PA_5_MII0_RXER);                            // MII0_RXER on PA.5 (alt. function 4)
     #endif
     _CONFIG_PERIPHERAL(A, 12, PA_12_MII0_RXD1);                          // MII0_RXD1 on PA.12 (alt. function 4)
@@ -950,10 +968,9 @@ extern int fnConfigEthernet(ETHTABLE *pars)
     _CONFIG_PERIPHERAL(A, 16, PA_16_MII0_TXD0);                          // MII0_TXD0 on PA.16 (alt. function 4)
     _CONFIG_PERIPHERAL(A, 17, PA_17_MII0_TXD1);                          // MII0_TXD1 on PA.17 (alt. function 4)
     #if defined ETHERNET_RMII && defined ETHERNET_RMII_CLOCK_INPUT       // {14}
-    // Add pin connection if it becomes available
-    //
         #if defined KINETIS_K65 || defined KINETIS_K66
-    _CONFIG_PERIPHERAL(E, 26,  PE_26_ENET_1588_CLKIN);
+    _CONFIG_PERIPHERAL(E, 26,  PE_26_ENET_1588_CLKIN);                   // select the pin function for external 50MHz clock input
+    SIM_SOPT2 |= (SIM_SOPT2_RMIISRC_ENET_1588_CLKIN);                    // select the EET_1588_CLKIN as clock source (rather than EXTAL)
         #endif
     #endif
     #if !defined ETHERNET_RMII                                           // additional signals used in MII mode
@@ -999,7 +1016,7 @@ extern int fnConfigEthernet(ETHTABLE *pars)
     #if defined _WINDOWS
     EIR = 0;
     if ((PALR & 0x01000000) != 0) {                                      // {29}
-        _EXCEPTION("Check that the own MAC address doesn't set the multicast bit!!");
+        _EXCEPTION("Check that the own MAC address doesn't set the multicast bit!!"); // delete the file FLASH_kinetis.h after changing processor types to start with default parameters again
     }
     #endif
     OPD = PAUSE_DURATION;
@@ -1098,7 +1115,7 @@ extern int fnConfigEthernet(ETHTABLE *pars)
         #endif
     #else
                 MSCR = 0;                                                // disable clock
-                POWER_DOWN(2, SIM_SCGC2_ENET);
+                POWER_DOWN_ATOMIC(2, SIM_SCGC2_ENET);
                 return -1;                                               // if the identifier is incorrect the phy isn't responding correctly - return error
     #endif
     #if defined SCAN_PHY_ADD || defined POLL_PHY
@@ -1248,7 +1265,7 @@ extern int fnConfigEthernet(ETHTABLE *pars)
         }
     }
     fnMIIwrite(PHY_ADDRESS, PHY_REG_CR, usMIIData);                      // command initial operating mode of PHY
-    #if defined _PHY_KSZ8863                                             // {43}
+    #if defined PHY_ADDRESS_2                                            // {43}
     fnMIIwrite(PHY_ADDRESS_2, PHY_REG_CR, usMIIData);                    // command initial operating mode of PHY (second port)
     #endif
     #if defined PHY_INTERRUPT                                            // enable PHY interrupt
@@ -1278,10 +1295,6 @@ extern int fnConfigEthernet(ETHTABLE *pars)
 
 
 #if defined _WINDOWS
-  //#if !defined USE_IP
-  //const unsigned char cucBroadcast[MAC_LENGTH] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff }; // used also for broadcast IP
-  //#endif
-
     #if defined USE_IPV6 || defined USE_IGMP
 static int fnIsHashMulticast(unsigned char *ucData)
 {
@@ -1432,14 +1445,14 @@ extern QUEUE_TRANSFER fnStartEthTx(QUEUE_TRANSFER DataLen, unsigned char *ptr_pu
 {
     #if defined PHY_TAIL_TAGGING                                         // {44}
     if (iTailTagging != 0) {
-        while (DataLen < 60) {                                           // when tail tagging we need to fill out short frames
-            *ptr_put++ = 0x00;                                           // pad with zeros if smaller than 60 [chip must send at least 60]
-            DataLen++;
-        }
+      //while (DataLen < 60) {                                           // when tail tagging we need to fill out short frames
+      //    *ptr_put++ = 0x00;                                           // pad with zeros if smaller than 60 [chip must send at least 60]
+      //    DataLen++;
+      //}
         #if !defined _WINDOWS
         ptrTxBd->usBDLength = fnLE_ENET_word(DataLen + 1);               // add tag to tail to specify which port to transmit over
         #endif
-        *ptr_put = ucTailTagPort;                                        // specify port for the frame to be output to
+      //*ptr_put = ucTailTagPort;                                        // specify port for the frame to be output to
     }
     else {
         ptrTxBd->usBDLength = fnLE_ENET_word(DataLen);                   // mark length of data to send (Kinetis automatically zero-pads transmission to minimum length)

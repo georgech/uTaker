@@ -1,0 +1,3 @@
+Original files from the FreeRTOSv9.0.0 download with demos and non-Kinetis ports removed.
+The original GCC port files have been modified to allow the uTasker simulator to use them when simulating the compete operation - if the original ones are used the GCC target operates normally but the simulator will not be able to build/operate.
+No other FreeRTOS files need to be changed whatsoever to use then together with the uTasker project.

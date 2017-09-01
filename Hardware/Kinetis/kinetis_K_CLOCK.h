@@ -31,7 +31,6 @@
     #define MCG_C2_FREQ_RANGE     MCG_C2_RANGE_32K_40K
 #endif
 
-
 #if !defined RUN_FROM_DEFAULT_CLOCK && !defined EXTERNAL_CLOCK           // no configuration performed - remain in default clocked mode
     #if CRYSTAL_FREQUENCY == 8000000
         #define MCG_C1_FRDIV_VALUE    MCG_C1_FRDIV_256
@@ -53,10 +52,11 @@
 #endif
 
 
-
+// Initially the processor is in FEI (FLL engaged internal) - running from 20..25MHz internal clock (32.768kHz IRC x 640 FLL factor; 20.97MHz)
+//
 #if defined RUN_FROM_DEFAULT_CLOCK                                       // no configuration performed - remain in default clocked mode
     SIM_CLKDIV1 = (((SYSTEM_CLOCK_DIVIDE - 1) << 28) | ((BUS_CLOCK_DIVIDE - 1) << 24) | ((FLEX_CLOCK_DIVIDE - 1) << 20) | ((FLASH_CLOCK_DIVIDE - 1) << 16)); // prepare bus clock divides
-    #if defined FLL_FACTOR
+    #if defined FLL_FACTOR                                               // if a different FLL multiplication factor is defined
     MCG_C4 = ((MCG_C4 & ~(MCG_C4_DMX32 | MCG_C4_HIGH_RANGE)) | (_FLL_VALUE)); // adjust FLL factor to obtain the required operating frequency
     #endif
 #elif defined KINETIS_K22 && defined RUN_FROM_LIRC
@@ -77,7 +77,7 @@
     MCG_C7 = MCG_C7_OSCSEL_IRC48MCLK;                                    // route the IRC48M clock to the external reference clock input (this enables IRC48M)
         #endif
         #if defined RUN_FROM_RTC_FLL
-    POWER_UP(6, SIM_SCGC6_RTC);                                          // enable access to the RTC
+    POWER_UP_ATOMIC(6, SIM_SCGC6_RTC);                                   // enable access to the RTC
     MCG_C7 = MCG_C7_OSCSEL_32K;                                          // select the RTC clock as external clock input to the FLL
     RTC_CR = (RTC_CR_OSCE);                                              // enable RTC oscillator and output the 32.768kHz output clock so that it can be used by the MCG (the first time that it starts it can have a startup/stabilisation time but this is not critical for the FLL usage)
     MCG_C1 = ((MCG_C1_CLKS_PLL_FLL | MCG_C1_FRDIV_RANGE0_1) & ~MCG_C1_IREFS); // switch the FLL input to the undivided external clock source (RTC)
@@ -173,6 +173,9 @@
         MCG_S2 |= MCG_S2_LOCK1;
                 #endif
     }
+        #endif
+        #if defined PERIPHERAL_CLOCK_DIVIDE_VALUE                        // configure the optional peripheral clock divide early since it shouldn't be changed once LPUARTs or TPU have started using it
+    SIM_CLKDIV3 = PERIPHERAL_CLOCK_DIVIDE_VALUE;
         #endif
     #endif
 #endif

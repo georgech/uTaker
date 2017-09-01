@@ -66,7 +66,7 @@ NETWORK_PARAMETERS network[IP_NETWORK_COUNT] = {                         // fixe
     { 192, 168, 0, 1 },                                                  // ucDefGW - Our default gateway
     { 192, 168, 0, 1 },                                                  // ucDNS_server - Our default DNS server
     #if defined USE_IPV6
-    { _IP6_ADD_DIGIT(0x2001), _IP6_ADD_DIGIT(0x0470), _IP6_ADD_DIGIT(0x0026), _IP6_ADD_DIGIT(0x0105), _IP6_ADD_DIGIT(0x0000), _IP6_ADD_DIGIT(0x0000), _IP6_ADD_DIGIT(0x0000), _IP6_ADD_DIGIT(0x0030) }, // default global IPV6 address
+    { _IP6_ADD_DIGIT(0x2001), _IP6_ADD_DIGIT(0x0470), _IP6_ADD_DIGIT(0x0026), _IP6_ADD_DIGIT(0x0105), _IP6_ADD_DIGIT(0x0000), _IP6_ADD_DIGIT(0x0000), _IP6_ADD_DIGIT(0x0000), _IP6_ADD_DIGIT(0x0030) }, // default global IPv6 address
     #endif
     },
 };

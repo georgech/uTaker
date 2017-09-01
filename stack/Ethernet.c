@@ -34,6 +34,7 @@
     16.04.2014 Extend IGMP counters and IP statistics to multiple networks {18}
     05.12.2015 Add ETHERNET_FILTERED_BRIDGING support                    {19}
     15.03.2016 Allow IPv4 broadcast/multicast reception to be handled on multiple networks {20}
+    12.05.2017 Add optional Ethernet error flags support                 {21}
 
 */
 
@@ -44,7 +45,7 @@
 
 #include "config.h"
 
-#if defined ETH_INTERFACE || defined USB_CDC_RNDIS
+#if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP
 
 #if defined _WINDOWS
     extern void fnOpenDefaultHostAdapter(void);
@@ -93,6 +94,12 @@
     static void fnModifyMulticastFilterENC424J600(QUEUE_TRANSFER action, unsigned char *ptrIP);
         #endif
 #endif
+#if defined PHY_MULTI_PORT && (PHY_MULTI_PORT > 1) && defined PHY_TAIL_TAGGING
+    static QUEUE_TRANSFER fnStartEthTx0(QUEUE_TRANSFER DataLen, unsigned char *ptr_put);
+    static QUEUE_TRANSFER fnStartEthTx1(QUEUE_TRANSFER DataLen, unsigned char *ptr_put);
+    static QUEUE_TRANSFER fnStartEthTx2(QUEUE_TRANSFER DataLen, unsigned char *ptr_put);
+    static QUEUE_TRANSFER fnStartEthTx12(QUEUE_TRANSFER DataLen, unsigned char *ptr_put);
+#endif
 
 
 /* =================================================================== */
@@ -110,7 +117,11 @@
         fnGetTxBufferAdd,
         fnWaitTxFree,
         fnPutInBuffer,
+        #if defined PHY_MULTI_PORT && (PHY_MULTI_PORT > 1) && defined PHY_TAIL_TAGGING
+        fnStartEthTx0,
+        #else
         fnStartEthTx,
+        #endif
         fnFreeEthernetBuffer,
         #if defined USE_IGMP
         fnModifyMulticastFilter,
@@ -129,6 +140,11 @@
         #if defined USE_IGMP
         fnModifyMulticastFilterENC424J600,
         #endif
+    };
+    #endif
+    #if defined PHY_MULTI_PORT && (PHY_MULTI_PORT > 1) && defined PHY_TAIL_TAGGING
+    static const QUEUE_TRANSFER(*tail_tag_tx[3])(QUEUE_TRANSFER, unsigned char *) = { // call-back used to release a prepared transmit buffer
+        fnStartEthTx1, fnStartEthTx2, fnStartEthTx12
     };
     #endif
 #endif
@@ -166,8 +182,11 @@ extern void fnTaskEthernet(TTASKTABLE *ptrTaskTable)
 
     if (Ethernet_handle[ETHERNET_IP_INTERFACE] == NO_ID_ALLOCATED) {
         ETHTABLE ethernet;                                               // configuration structure to be passed to the Ethernet configuration
-#if (defined ETHERNET_AVAILABLE && !defined NO_INTERNAL_ETHERNET && (ETHERNET_INTERFACES > 1)) || defined USB_CDC_RNDIS
-        ethernet.ptrEthernetFunctions = (void *)&InternalEthernetFunctions; // enter the Ethernet function list for the defult internal controller
+#if defined PHY_MULTI_PORT && (PHY_MULTI_PORT > 1)
+        ETHERNET_FUNCTIONS *EthernetPhyFunctions;
+#endif
+#if (defined ETHERNET_AVAILABLE && !defined NO_INTERNAL_ETHERNET && (ETHERNET_INTERFACES > 1)) || defined USB_CDC_RNDIS  || defined USE_PPP
+        ethernet.ptrEthernetFunctions = (void *)&InternalEthernetFunctions; // enter the Ethernet function list for the default internal controller
 #endif
 #if defined REMOTE_SIMULATION_INTERFACE                                  // when being uses as simulation extension node
         if (RemoteSimUDPSocket < 0) {                                    // if the USD socket has not yet been configured
@@ -219,6 +238,21 @@ extern void fnTaskEthernet(TTASKTABLE *ptrTaskTable)
     #else
         #define ENC424J600_INTERFACE_REFERENCE 0                         // external Ethernet controller is the default one
     #endif
+    #if defined PHY_MULTI_PORT && (PHY_MULTI_PORT > 1) && defined PHY_TAIL_TAGGING              
+        do {
+            EthernetPhyFunctions = uMalloc(sizeof(ETHERNET_FUNCTIONS));
+            uMemcpy(EthernetPhyFunctions, &InternalEthernetFunctions, sizeof(InternalEthernetFunctions)); // share the ethernet driver
+            EthernetPhyFunctions->fnConfigEthernet = 0;                  // but without re-initialisation of the hardware
+            EthernetPhyFunctions->fnStartEthTx = (QUEUE_TRANSFER(*)(QUEUE_TRANSFER, unsigned char *))tail_tag_tx[ethernet.Channel]; // enter the appropriate tail tagging transmission routine
+            ethernet.ptrEthernetFunctions = (void *)EthernetPhyFunctions;
+            (ethernet.Channel)++;
+            Ethernet_handle[ethernet.Channel] = fnOpen(TYPE_ETHERNET, FOR_I_O, &ethernet); // allocate further ethernet handles
+        #if IP_INTERFACE_COUNT > 1
+            fnEnterInterfaceHandle(ethernet.Channel, Ethernet_handle[ethernet.Channel], (DEFAULT_INTERFACE_CHARACTERISTICS));
+        #endif
+        } while (ethernet.Channel < (PHY_MULTI_PORT - 1));
+        fnSetTailTagMode(1);                                             // enable tail-tagging mode -> to incorporate in driver
+    #endif
     #if defined ENC424J600_INTERFACE && (!defined ETHERNET_AVAILABLE || defined NO_INTERNAL_ETHERNET || (IP_INTERFACE_COUNT > 1)) && !defined REMOTE_SIMULATION_INTERFACE
         ethernet.ptrEthernetFunctions = (void *)&ENC424J600EthernetFunctions;
         ethernet.Channel = ENC424J600_INTERFACE_REFERENCE;
@@ -237,7 +271,7 @@ extern void fnTaskEthernet(TTASKTABLE *ptrTaskTable)
     #endif
 #endif
 #if defined _WINDOWS
-    fnOpenDefaultHostAdapter();
+        fnOpenDefaultHostAdapter();                                      // open the interface for simulation use
 #endif
     }
 #if !defined ETHERNET_RELEASE_AFTER_EVERY_FRAME                          // {8}
@@ -248,9 +282,12 @@ extern void fnTaskEthernet(TTASKTABLE *ptrTaskTable)
 #elif defined ENC424J600_INTERFACE && (!defined ETHERNET_AVAILABLE || defined NO_INTERNAL_ETHERNET || ETHERNET_INTERFACES > 1) && !defined REMOTE_SIMULATION_INTERFACE
             while ((cEthernetBuffer = fnEthernetMuxEvent(&rx_frame, &iEthernetInterface)) >= 0) // check for reception on multiple interface types
 #else
-            while ((cEthernetBuffer = fnEthernetEvent((unsigned char *)&ucEMAC_RX_INTERRUPT, &rx_frame)) >= 0) // check the Ethernet interface for frame reception
+            while ((cEthernetBuffer = fnEthernetEvent((unsigned char *)&ucEMAC_RX_INTERRUPT, &rx_frame)) >= 0) // check the ethernet interface for frame reception
 #endif
             {
+#if defined PHY_MULTI_PORT && (PHY_MULTI_PORT > 1) && defined PHY_TAIL_TAGGING
+                iEthernetInterface = rx_frame.ucRxPort;                  // the interface handling the reception
+#endif
                 fnHandleEthernetFrame(&rx_frame, Ethernet_handle[iEthernetInterface]);
                 fnFreeBuffer(Ethernet_handle[iEthernetInterface], cEthernetBuffer); // free up the reception buffer since we have completed working with it
 #if defined ETHERNET_RELEASE_AFTER_EVERY_FRAME                           // {6}
@@ -278,6 +315,9 @@ extern int fnHandleEthernetFrame(ETHERNET_FRAME *ptr_rx_frame, QUEUE_HANDLE inte
 {
 #if defined ETHERNET_BRIDGING                                            // {12}
     int iBridgeFrame;                                                    // flag for bridging option
+#endif
+#if defined ETH_ERROR_FLAGS                                              // {21}
+    ptr_rx_frame->ucErrorFlags = 0;                                      // initially no errors to report for this receptionETH_ERROR_FLAGS
 #endif
 #if defined IP_RX_CHECKSUM_OFFLOAD                                       // {7} the reception has flagged a corrupted frame
     if (ptr_rx_frame->frame_size == 0) {                                 // reception is invalid IPv4/v6 frame so discard
@@ -364,7 +404,7 @@ extern int fnHandleEthernetFrame(ETHERNET_FRAME *ptr_rx_frame, QUEUE_HANDLE inte
             && (ptr_rx_frame->ptEth->ethernet_frame_type[1] != (unsigned char)PROTOCOL_RARP) 
     #endif
             || (fnProcessARP(ptr_rx_frame) == 0)) {                      // if (R)ARP, handle it
-            if (fnHandleIPv4(ptr_rx_frame) != 0) {                       // if IPv4 handle it
+            if (fnHandleIPv4(ptr_rx_frame) != 0) {                       // if IPv4 (with matching address for the network) handle it
     #if defined USE_IPV6
                 ptr_rx_frame->ucIPV6_Protocol = 0;                       // {10} not IPv6
                 ptr_rx_frame->ucIPV4_Protocol = ptr_rx_frame->ptEth->ucData[IPV4_PROTOCOL_OFFSET]; // IPv4 protocol
@@ -442,7 +482,7 @@ _bridge_ethernet_buffer:
 #if defined USE_IP
 static void fnHandleIP_protocol(unsigned char ucNextProtocol, ETHERNET_FRAME *ptrRx_frame)
 {
-    switch (ucNextProtocol) {
+    switch (ucNextProtocol) {                                            // switch depending on the IP frame's protocol
     #if defined USE_ICMP
     case IP_ICMP:
         fnHandleICMP(ptrRx_frame);                                       // handle ICMP reception
@@ -645,6 +685,60 @@ extern void fnDeleteEthernetStats(int iNetworkReference)
     uMemset(&EthernetStats[iNetworkReference], 0, sizeof(EthernetStats[iNetworkReference]));
 }
 #endif
+
+
+#if defined PHY_MULTI_PORT && (PHY_MULTI_PORT > 1) && defined PHY_TAIL_TAGGING
+// Release prepared ethernet transmission on switch
+//
+static QUEUE_TRANSFER fnStartEthTx0(QUEUE_TRANSFER DataLen, unsigned char *ptr_put)
+{
+    while (DataLen < 60) {                                               // when tail tagging we need to fill out short frames
+        *ptr_put++ = 0x00;                                               // pad with zeros if smaller than 60 [chip must send at least 60]
+        DataLen++;
+    }
+    *ptr_put = 0;                                                        // specify port for the frame to be output to  
+    return (fnStartEthTx(DataLen, ptr_put));
+}
+
+// Release prepared ethernet transmission on port 1
+//
+static QUEUE_TRANSFER fnStartEthTx1(QUEUE_TRANSFER DataLen, unsigned char *ptr_put)
+{
+    while (DataLen < 60) {                                               // when tail tagging we need to fill out short frames
+        *ptr_put++ = 0x00;                                               // pad with zeros if smaller than 60 [chip must send at least 60]
+        DataLen++;
+    }
+    *ptr_put = 1;                                                        // specify port for the frame to be output to  
+    return (fnStartEthTx(DataLen, ptr_put));
+}
+
+// Release prepared ethernet transmission on port 2
+//
+static QUEUE_TRANSFER fnStartEthTx2(QUEUE_TRANSFER DataLen, unsigned char *ptr_put)
+{
+    while (DataLen < 60) {                                               // when tail tagging we need to fill out short frames
+        *ptr_put++ = 0x00;                                               // pad with zeros if smaller than 60 [chip must send at least 60]
+        DataLen++;
+    }
+    *ptr_put = 2;                                                        // specify port for the frame to be output to  
+    return (fnStartEthTx(DataLen, ptr_put));
+}
+
+// Release prepared ethernet transmission on both ports 1 and 2
+//
+static QUEUE_TRANSFER fnStartEthTx12(QUEUE_TRANSFER DataLen, unsigned char *ptr_put)
+{
+    while (DataLen < 60) {                                               // when tail tagging we need to fill out short frames
+        *ptr_put++ = 0x00;                                               // pad with zeros if smaller than 60 [chip must send at least 60]
+        DataLen++;
+    }
+    *ptr_put = 3;                                                        // specify port for the frame to be output to  
+    return (fnStartEthTx(DataLen, ptr_put));
+}
+#endif
+
+
+
 
 #if defined SUPPORT_VLAN && defined SUPPORT_DYNAMIC_VLAN                 // {14}
 // Remove the VLAN content from a VLAN frame

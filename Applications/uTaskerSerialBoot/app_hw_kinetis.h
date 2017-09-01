@@ -15,7 +15,7 @@
     *********************************************************************
     22.01.2012 Add SD card loader support to Kwikstik
     03.03.2012 Add TWR_K70F120M and TWR_K53N512 support
-    20.04.2012 Add TWR_K20N50M
+    20.04.2012 Add TWR_K20D50M
     26.10.2012 Change READ_SPI_DATA() to use volatile access (avoid loss due to optimisation) {1}
     18.12.2013 Use SD card detect input to force boot loader mode        {2}
     18.12.2013 Use UART for debug messages when SD card loader is used together with the UART loader {3}
@@ -34,6 +34,7 @@
     09.05.2015 Add TRK_KEA128, TRK_KEA64
     06.01.2016 Add TWR_K80F150M and FRDM_K82F
     13.11.2016 Add FRDM_KEAZN32Q64, FRDM_KEAZ64Q64 and FRDM_KEAZ128Q80
+    26.07.2017 Add DMA channel and priority configuration                {12}
 
     Application specific hardware configuration
 
@@ -42,7 +43,7 @@
 #if defined _KINETIS && !defined __APP_HW_KINETIS__
 #define __APP_HW_KINETIS__
 
-#if defined KINETIS_K_FPU || defined K02F100M || defined TWR_K20N50M || defined tinyK20 || defined FRDM_K20D50M || defined TWR_K21D50M || defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_K64 || defined FRDM_K22F || defined KINETIS_KV || defined KINETIS_KW2X // newer devices have these errate solved
+#if defined KINETIS_K_FPU || defined K02F100M || defined TWR_K20D50M || defined tinyK20 || defined FRDM_K20D50M || defined TWR_K21D50M || defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_K64 || defined FRDM_K22F || defined KINETIS_KV || defined KINETIS_KW2X // newer devices have these errate solved
     #define ERRATA_E2583_SOLVED                                          // in early silicon the CAN controllers only work when the OSC is enabled (enable if the chip revision used doesn't suffer from the problem)
     #define ERRATA_E2644_SOLVED                                          // early devices without flex memory doesn't support speculation logic and this should be disabled
     #define ERRATE_E2647_SOLVED                                          // early 512k and 384k flash-only devices don't support cache aliasing and this needs to be disabled
@@ -118,7 +119,7 @@
   //#define USB_CRYSTAL_LESS                                             // use 48MHz IRC as USB source (according to Freescale AN4905 - only possible in device mode)
     #define USB_CLOCK_GENERATED_INTERNALLY                               // use USB clock from internal source rather than external pin - 120MHz is suitable from PLL
   //#define SUPPORT_SWAP_BLOCK                                           // support flash swap block
-#elif defined TWR_K65F180M || defined K26FN2_180 || defined FRDM_K66F || defined TEENSY_3_6 || defined FRDM_KL82Z
+#elif defined TWR_K65F180M || defined K26FN2_180 || defined FRDM_K66F || defined K66FX1M0 || defined TEENSY_3_6 || defined FRDM_KL82Z
   //#define RUN_FROM_DEFAULT_CLOCK                                       // default mode is FLL Engaged Internal - the 32kHz IRC is multiplied by FLL factor of 640 to obtain 20.9715MHz nominal frequency (20MHz..25MHz)
   //#define RUN_FROM_HIRC                                                // clock directly from internal 48MHz RC clock
   //#define RUN_FROM_HIRC_PLL                                            // use 48MHz RC clock as input to the PLL
@@ -162,11 +163,11 @@
         #endif
         #define OSC_LOW_GAIN_MODE
         #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
-      //#define USE_HIGH_SPEED_RUN_MODE
+      //#define USE_HIGH_SPEED_RUN_MODE                                  // note that flash programming is not possible in high speed run mode and so it is not used by the serial loader
         #if defined USE_HIGH_SPEED_RUN_MODE
             #if defined FRDM_KL82Z
                 #define CLOCK_MUL        16                              // the PLL multiplication factor to achieve operating frequency of 96MHz (x16 to x47 possible) [PLL output range 90..180MHz - VCO is PLL * 2]
-            #elif defined FRDM_K66F
+            #elif defined FRDM_K66F || defined K66FX1M0
                 #define CLOCK_MUL        30                              // the PLL multiplication factor to achieve operating frequency of 180MHz (x16 to x47 possible) [PLL output range 90..180MHz - VCO is PLL * 2]
             #else
                 #define CLOCK_MUL        45                              // the PLL multiplication factor to achieve operating frequency of 180MHz (x16 to x47 possible) [PLL output range 90..180MHz - VCO is PLL * 2]
@@ -183,8 +184,10 @@
         #else
             #if defined FRDM_KL82Z
                 #define CLOCK_MUL        24                              // the PLL multiplication factor to achieve operating frequency of 144MHz (x16 to x47 possible) [PLL output range 90..180MHz - VCO is PLL * 2]
-            #else
+            #elif defined TEENSY_3_6 || defined TWR_K65F180M || defined K66FX1M0
                 #define CLOCK_MUL        30                              // the PLL multiplication factor to achieve operating frequency of 120MHz (x16 to x47 possible) [PLL output range 90..180MHz - VCO is PLL * 2]
+            #else
+                #define CLOCK_MUL        20                              // the PLL multiplication factor to achieve operating frequency of 120MHz (x16 to x47 possible) [PLL output range 90..180MHz - VCO is PLL * 2]
             #endif
             #if defined FRDM_KL82Z
                 #define SYSTEM_CLOCK_DIVIDE  2                           // 144/2 to give 72MHz
@@ -194,7 +197,7 @@
             #else
                 #define BUS_CLOCK_DIVIDE     2                           // 120/2 to give 60MHz (max. 60MHz)
                 #define FLEX_CLOCK_DIVIDE    2                           // 120/2 to give 60MHz (max. 60MHz)
-                #define FLASH_CLOCK_DIVIDE   5                           // 120/7 to give 24MHz (max. 28MHz)
+                #define FLASH_CLOCK_DIVIDE   5                           // 120/5 to give 24MHz (max. 28MHz)
             #endif            
         #endif
     #endif
@@ -311,7 +314,7 @@
 #elif defined TWR_K60N512 || defined TWR_K60D100M || defined TWR_K53N512
     #define EXTERNAL_CLOCK       50000000                                // this must be 50MHz in order to use Ethernet in RMII mode
     #define _EXTERNAL_CLOCK      EXTERNAL_CLOCK
-    #ifdef USB_INTERFACE                                                 // when using USB generate 96MHz clock so that a 48Mhz clock can be generated from it
+    #if defined USB_INTERFACE                                            // when using USB generate 96MHz clock so that a 48Mhz clock can be generated from it
         #define CLOCK_DIV        25                                      // input must be divided to 2MHz..4MHz range (/1 to /25 possible - /1 to /8 for FPU parts)
         #define CLOCK_MUL        48                                      // the PLL multiplication factor to achieve operating frequency of 100MHz (x24 to x55 possible)
     #else
@@ -379,7 +382,7 @@
     #define RUN_FROM_HIRC                                                // clock from internal 48MHz RC clock
   //#define RUN_FROM_LIRC                                                // clock from internal 8MHz RC clock
     #define USB_CRYSTAL_LESS                                             // use 48MHz IRC as USB source (according to Freescale AN4905 - only possible in device mode) - rather than external pin
-#elif defined TWR_K20N50M || defined FRDM_K20D50M || defined TWR_K21D50M || defined tinyK20 || defined FRDM_KL46Z || defined TWR_KL46Z48M || defined FRDM_KL25Z || defined FRDM_KL26Z || defined TWR_KL25Z48M // {4}{5}{6}{7}
+#elif defined TWR_K20D50M || defined FRDM_K20D50M || defined TWR_K21D50M || defined tinyK20 || defined FRDM_KL46Z || defined TWR_KL46Z48M || defined FRDM_KL25Z || defined FRDM_KL26Z || defined TWR_KL25Z48M // {4}{5}{6}{7}
     #if defined FRDM_K20D50M || defined TWR_KL46Z48M || defined FRDM_KL25Z || defined FRDM_KL26Z || defined TWR_KL25Z48M || defined TWR_K21D50M || defined tinyK20
         #define OSC_LOW_GAIN_MODE                                        // oscillator without feedback resistor or load capacitors so use low gain mode
     #endif
@@ -613,7 +616,7 @@
     #define PACKAGE_TYPE        PACKAGE_MAPBGA
     #define SIZE_OF_FLASH       (512 * 1024)                             // 512 program FLASH
     #define SIZE_OF_RAM         (256 * 1024)                             // 256k SRAM
-#elif defined TWR_K65F180M || defined K26FN2_180 || defined FRDM_K66F
+#elif defined TWR_K65F180M || defined K26FN2_180 || defined FRDM_K66F || defined K66FX1M0
     #define MASK_0N65N
     #if defined FRDM_K66F
         #define PIN_COUNT       PIN_COUNT_144_PIN                        // 144 pin package
@@ -720,7 +723,7 @@
     #define PIN_COUNT           PIN_COUNT_121_PIN                        // MAPBGA121
     #define SIZE_OF_FLASH       (512 * 1024)                             // 512k program Flash
     #define SIZE_OF_RAM         (64 * 1024)                              // 64k SRAM
-#elif defined TWR_K20N50M || defined FRDM_K20D50M                        // TWR_K20N50M and FRDM_K20D50M
+#elif defined TWR_K20D50M || defined FRDM_K20D50M                        // TWR_K20D50M and FRDM_K20D50M
     #define KINETIS_FLEX                                                 // X part with flex memory rather than N part with program Flash only
   //#define PIN_COUNT           PIN_COUNT_32_PIN
   //#define PIN_COUNT           PIN_COUNT_48_PIN
@@ -1064,7 +1067,7 @@
         #define LOADER_UART           4                                  // use UART 4
     #elif defined TWR_K70F120M || defined TWR_KL46Z48M || defined TWR_K21D50M || defined TWR_KL43Z48M || defined TRK_KEA128 || defined TRK_KEA64 || defined KL25_TEST_BOARD || defined TWR_K65F180M || defined K26FN2_180 || defined FRDM_KEAZN32Q64 || defined FRDM_KEAZ64Q64 || defined FRDM_KEAZ128Q80 || defined TEENSY_3_5 || defined TEENSY_3_6
         #define LOADER_UART           2                                  // the serial interface used by the serial loader
-    #elif defined TWR_K20N50M || defined TWR_K80F150M || defined tinyK20 || defined TWR_K20D72M || defined FRDM_KE02Z || defined FRDM_KE02Z40M || defined FRDM_KE06Z || defined FRDM_K22F || defined TWR_K22F120M || defined TWR_K24F120M || defined K24FN1M0_120 || defined TWR_K64F120M || defined TWR_KW21D256 || defined TWR_KW24D512 || defined BLAZE_K22
+    #elif defined TWR_K20D50M || defined TWR_K80F150M || defined tinyK20 || defined TWR_K20D72M || defined FRDM_KE02Z || defined FRDM_KE02Z40M || defined FRDM_KE06Z || defined FRDM_K22F || defined TWR_K22F120M || defined TWR_K24F120M || defined K24FN1M0_120 || defined TWR_K64F120M || defined TWR_KW21D256 || defined TWR_KW24D512 || defined BLAZE_K22
         #define LOADER_UART           1                                  // the serial interface used by the serial loader
     #elif defined K02F100M || defined FRDM_K20D50M || defined FRDM_KL46Z || defined FRDM_KL43Z || defined FRDM_KL25Z || defined FRDM_KL26Z || defined FRDM_KL27Z || defined TEENSY_LC || defined TWR_KL25Z48M || defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined TEENSY_3_1 || defined FRDM_K64F || defined FRDM_KE04Z || defined TWR_KV10Z32 || defined TWR_KV31F120M || defined TWR_KV58F220M || defined FRDM_KL82Z || defined FRDM_K66F || ((defined TWR_K40X256 || defined TWR_K40D100M) && defined DEBUG_ON_VIRT_COM)
         #define LOADER_UART           0                                  // the serial interface used by the serial loader
@@ -1089,7 +1092,7 @@
     #else
         #if defined DEBUG_MAC
             #define TX_BUFFER_SIZE   (48 * 1024)                         // allow large amount of debug output to be collected
-        #elif defined USB_HOST_SUPPORT
+        #elif defined USB_HOST_SUPPORT || defined NXP_MSD_HOST
             #define TX_BUFFER_SIZE   (1024)                              // the size of UART input and output buffers
         #else
             #define TX_BUFFER_SIZE   (512)                               // the size of UART input and output buffers
@@ -1255,6 +1258,77 @@
     #define PRIORITY_EMAC              1
 #endif
 
+// Define DMA channel use (channels and priorities must be unique for used peripherals) - {12}
+//
+#if defined irq_DMA4_ID
+    #define DMA_UART0_TX_CHANNEL   3                                     // use this DMA channel when using UART 0 for transmission driven by DMA
+    #define DMA_UART1_TX_CHANNEL   4                                     // use this DMA channel when using UART 1 for transmission driven by DMA
+    #define DMA_UART2_TX_CHANNEL   5                                     // use this DMA channel when using UART 2 for transmission driven by DMA
+    #define DMA_UART3_TX_CHANNEL   6                                     // use this DMA channel when using UART 3 for transmission driven by DMA
+    #define DMA_UART4_TX_CHANNEL   7                                     // use this DMA channel when using UART 4 for transmission driven by DMA
+    #define DMA_UART5_TX_CHANNEL   8                                     // use this DMA channel when using UART 5 for transmission driven by DMA
+
+    #define DMA_UART0_RX_CHANNEL   9                                     // use this DMA channel when using UART 0 for reception driven by DMA
+    #define DMA_UART1_RX_CHANNEL   10                                    // use this DMA channel when using UART 1 for reception driven by DMA
+    #define DMA_UART2_RX_CHANNEL   11                                    // use this DMA channel when using UART 2 for reception driven by DMA
+    #define DMA_UART3_RX_CHANNEL   12                                    // use this DMA channel when using UART 3 for reception driven by DMA
+    #define DMA_UART4_RX_CHANNEL   13                                    // use this DMA channel when using UART 4 for reception driven by DMA
+    #define DMA_UART5_RX_CHANNEL   14                                    // use this DMA channel when using UART 5 for reception driven by DMA
+
+    #define DMA_UART0_TX_INT_PRIORITY  (PRIORITY_DMA3)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+    #define DMA_UART1_TX_INT_PRIORITY  (PRIORITY_DMA4)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+    #define DMA_UART2_TX_INT_PRIORITY  (PRIORITY_DMA5)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+    #define DMA_UART3_TX_INT_PRIORITY  (PRIORITY_DMA6)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+    #define DMA_UART4_TX_INT_PRIORITY  (PRIORITY_DMA7)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+    #define DMA_UART5_TX_INT_PRIORITY  (PRIORITY_DMA8)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+
+    #define DMA_UART0_RX_INT_PRIORITY  (PRIORITY_DMA9)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+    #define DMA_UART1_RX_INT_PRIORITY  (PRIORITY_DMA10)                  // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+    #define DMA_UART2_RX_INT_PRIORITY  (PRIORITY_DMA11)                  // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+    #define DMA_UART3_RX_INT_PRIORITY  (PRIORITY_DMA12)                  // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+    #define DMA_UART4_RX_INT_PRIORITY  (PRIORITY_DMA13)                  // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+    #define DMA_UART5_RX_INT_PRIORITY  (PRIORITY_DMA14)                  // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+
+    #define DMA_MEMCPY_CHANNEL_ALT 14                                    // alternative DMA channel to use if DMA based memory to memory operations are already in progress
+    #define DMA_MEMCPY_CHANNEL     15                                    // use this DMA channel when memory to memory operations are performed (this should have lowest priority and can be stalled by higher priority channels)
+#elif defined KINETIS_KL
+    #define DMA_UART0_TX_CHANNEL   0                                     // use this DMA channel when using UART 0 for transmission driven by DMA
+    #define DMA_UART1_TX_CHANNEL   1                                     // use this DMA channel when using UART 1 for transmission driven by DMA
+    #define DMA_UART2_TX_CHANNEL   2                                     // use this DMA channel when using UART 2 for transmission driven by DMA
+
+    #define DMA_UART0_RX_CHANNEL   2                                     // use this DMA channel when using UART 0 for transmission driven by DMA
+    #define DMA_UART1_RX_CHANNEL   0                                     // use this DMA channel when using UART 1 for transmission driven by DMA
+    #define DMA_UART2_RX_CHANNEL   1                                     // use this DMA channel when using UART 2 for transmission driven by DMA
+
+    #define DMA_UART0_TX_INT_PRIORITY  (PRIORITY_DMA0)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+    #define DMA_UART1_TX_INT_PRIORITY  (PRIORITY_DMA1)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+    #define DMA_UART2_TX_INT_PRIORITY  (PRIORITY_DMA2)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+
+    #define DMA_UART0_RX_INT_PRIORITY  (PRIORITY_DMA0)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+    #define DMA_UART1_RX_INT_PRIORITY  (PRIORITY_DMA1)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+    #define DMA_UART2_RX_INT_PRIORITY  (PRIORITY_DMA2)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+
+    #define DMA_MEMCPY_CHANNEL     3                                     // use lowest priority DMA channel
+#else                                                                    // parts with 4 DMA channels
+    #define DMA_UART0_TX_CHANNEL   1                                     // use this DMA channel when using UART 0 for transmission driven by DMA
+    #define DMA_UART1_TX_CHANNEL   2                                     // use this DMA channel when using UART 1 for transmission driven by DMA
+    #define DMA_UART2_TX_CHANNEL   3                                     // use this DMA channel when using UART 2 for transmission driven by DMA
+
+    #define DMA_UART0_RX_CHANNEL   3                                     // use this DMA channel when using UART 0 for transmission driven by DMA
+    #define DMA_UART1_RX_CHANNEL   1                                     // use this DMA channel when using UART 1 for transmission driven by DMA
+    #define DMA_UART2_RX_CHANNEL   2                                     // use this DMA channel when using UART 2 for transmission driven by DMA
+
+    #define DMA_UART0_TX_INT_PRIORITY  (PRIORITY_DMA1)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+    #define DMA_UART1_TX_INT_PRIORITY  (PRIORITY_DMA2)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+    #define DMA_UART2_TX_INT_PRIORITY  (PRIORITY_DMA3)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+
+    #define DMA_UART0_RX_INT_PRIORITY  (PRIORITY_DMA2)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+    #define DMA_UART1_RX_INT_PRIORITY  (PRIORITY_DMA0)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+    #define DMA_UART2_RX_INT_PRIORITY  (PRIORITY_DMA1)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+
+    #define DMA_MEMCPY_CHANNEL     0
+#endif
+
 
 #define SDCARD_SIM_SIZE   SDCARD_SIZE_2G                                 // the size of SD card when simulating
 //#define _NO_SD_CARD_INSERTED                                           // simulate no SD card inserted
@@ -1365,13 +1439,13 @@
         #define SET_SD_CS_HIGH()                                         // dummy for compatibility
         #define SET_SD_CS_LOW()                                          // dummy for compatibility
         #if defined TWR_K60N512 || defined TWR_K60D100M
-            #ifdef _WINDOWS
+            #if defined _WINDOWS
                 #define POWER_UP_SD_CARD()    _CONFIG_PORT_INPUT(E, (WRITE_PROTECT_INPUT), (PORT_PS_UP_ENABLE)); SDHC_SYSCTL |= SDHC_SYSCTL_INITA; SDHC_SYSCTL &= ~SDHC_SYSCTL_INITA; // apply power to the SD card if appropriate (we use this to send 80 clocks - self-clearing bit)
             #else
                 #define POWER_UP_SD_CARD()    _CONFIG_PORT_INPUT(E, (WRITE_PROTECT_INPUT), (PORT_PS_UP_ENABLE)); SDHC_SYSCTL |= SDHC_SYSCTL_INITA; while (SDHC_SYSCTL & SDHC_SYSCTL_INITA) {}; // apply power to the SD card if appropriate (we use this to send 80 clocks)
             #endif
         #else
-            #ifdef _WINDOWS
+            #if defined _WINDOWS
                 #define POWER_UP_SD_CARD()    SDHC_SYSCTL |= SDHC_SYSCTL_INITA; SDHC_SYSCTL &= ~SDHC_SYSCTL_INITA; // apply power to the SD card if appropriate (we use this to send 80 clocks - self-clearing bit)
             #else
                 #define POWER_UP_SD_CARD()    SDHC_SYSCTL |= SDHC_SYSCTL_INITA; while (SDHC_SYSCTL & SDHC_SYSCTL_INITA) {}; // apply power to the SD card if appropriate (we use this to send 80 clocks)
@@ -1402,7 +1476,7 @@
         // Set maximum speed
         //
         #define SET_SPI_SD_INTERFACE_FULL_SPEED() SPI1_MCR |= SPI_MCR_HALT; SPI1_CTAR0 = (SPI_CTAR_FMSZ_8 | SPI_CTAR_CPOL | SPI_CTAR_CPHA | SPI_CTAR_BR_2); SPI1_MCR &= ~SPI_MCR_HALT;
-        #ifdef _WINDOWS
+        #if defined _WINDOWS
             #define WRITE_SPI_CMD(byte)     SPI1_SR &= ~(SPI_SR_RFDF); SPI1_PUSHR = (byte | SPI_PUSHR_PCS_NONE | SPI_PUSHR_CTAS_CTAR0); SPI1_POPR = _fnSimSD_write((unsigned char)byte)
             #define WAIT_TRANSMISSON_END() while (!(SPI1_SR & (SPI_SR_RFDF))) { SPI1_SR |= (SPI_SR_RFDF); }
             #define READ_SPI_DATA()        (unsigned char)SPI1_POPR
@@ -1447,6 +1521,11 @@
     #define WATCHDOG_DISABLE()     (_READ_PORT_MASK(A, SWITCH_3) == 0)   // pull this input down to disable watchdog (hold S3 at reset)
     #define FORCE_BOOT()           (_READ_PORT_MASK(A, SWITCH_2) == 0)   // pull this input down to force boot loader mode (hold S2 at reset)
     #define TOGGLE_WATCHDOG_LED()  _TOGGLE_PORT(A, BLINK_LED)
+
+    #define USB_HOST_POWER_CONFIG()
+    #define USB_HOST_POWER_ON()
+    #define USB_HOST_POWER_OFF()
+    #define RETAIN_LOADER_MODE()   (_READ_PORT_MASK(A, SWITCH_3) == 0) 
 #elif defined TWR_K21F120M
     #define BLINK_LED              (PORTD_BIT4)
     #define SWITCH_2               (PORTC_BIT7)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
@@ -1465,7 +1544,7 @@
     #if defined SDCARD_SUPPORT
         #define FORCE_BOOT()       ((_READ_PORT_MASK(C, SWITCH_3) == 0) || (_READ_PORT_MASK(C, SDCARD_DETECT) == 0)) // pull this input down to force boot loader mode (hold SW2 at reset) or with inserted SD card
     #else
-        #define FORCE_BOOT()       (_READ_PORT_MASK(C, SWITCH_3) == 0)       // pull this input down to force boot loader mode (hold SW2 at reset)
+        #define FORCE_BOOT()       (_READ_PORT_MASK(C, SWITCH_3) == 0)   // pull this input down to force boot loader mode (hold SW2 at reset)
     #endif
     #define RETAIN_LOADER_MODE() (_READ_PORT_MASK(C, SWITCH_3) == 0)
 
@@ -1475,7 +1554,7 @@
     #define SET_SD_CS_HIGH()                                             // dummy with SDHC controller
     #define SET_SD_CS_LOW()                                              // dummy with SDHC controller
 
-    #ifdef _WINDOWS
+    #if defined _WINDOWS
         #define POWER_UP_SD_CARD()    SDHC_SYSCTL |= SDHC_SYSCTL_INITA; SDHC_SYSCTL &= ~SDHC_SYSCTL_INITA; // apply power to the SD card if appropriate (we use this to send 80 clocks - self-clearing bit)
     #else
         #define POWER_UP_SD_CARD()    SDHC_SYSCTL |= SDHC_SYSCTL_INITA; while (SDHC_SYSCTL & SDHC_SYSCTL_INITA) {}; // apply power to the SD card if appropriate (we use this to send 80 clocks)
@@ -1512,12 +1591,12 @@
     #endif
     #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(C, (SWITCH_2), PORT_PS_UP_ENABLE); _CONFIG_PORT_INPUT_FAST_LOW(B, (SWITCH_3), PORT_PS_UP_ENABLE); // configure as input
 
-    #define WATCHDOG_DISABLE()     (!_READ_PORT_MASK(B, SWITCH_3))       // pull this input down to disable watchdog (hold SW3 at reset)
+    #define WATCHDOG_DISABLE()     (_READ_PORT_MASK(B, SWITCH_3) == 0)   // pull this input down to disable watchdog (hold SW3 at reset)
     #if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT
-        #define FORCE_BOOT()       ((!_READ_PORT_MASK(C, SWITCH_2)) || (_READ_PORT_MASK(B, SDCARD_DETECT))) // pull this input down to force boot loader mode (hold SW2 at reset) or with inserted SD card
-        #define RETAIN_LOADER_MODE()   (!_READ_PORT_MASK(C, SWITCH_2))
+        #define FORCE_BOOT()       ((_READ_PORT_MASK(C, SWITCH_2) == 0) || (_READ_PORT_MASK(B, SDCARD_DETECT))) // pull this input down to force boot loader mode (hold SW2 at reset) or with inserted SD card
+        #define RETAIN_LOADER_MODE()   (_READ_PORT_MASK(C, SWITCH_2) == 0)
     #else
-        #define FORCE_BOOT()       (!_READ_PORT_MASK(C, SWITCH_2))       // pull this input down to force boot loader mode (hold SW2 at reset)
+        #define FORCE_BOOT()       (_READ_PORT_MASK(C, SWITCH_2) == 0)   // pull this input down to force boot loader mode (hold SW2 at reset)
     #endif
 
     #define TOGGLE_WATCHDOG_LED()   _TOGGLE_PORT(A, BLINK_LED)
@@ -1729,10 +1808,10 @@
     #define INIT_WATCHDOG_LED() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(D, (BLINK_LED), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH))
 
     #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(C, (SWITCH_1 | SWITCH_2), PORT_PS_UP_ENABLE) // use fast access version (beware that this can only operate on half of the 32 bits at a time)
-    #define WATCHDOG_DISABLE()      (!_READ_PORT_MASK(C, SWITCH_2))      // pull this input down to disable watchdog (hold SW2 at reset)
+    #define WATCHDOG_DISABLE()      (_READ_PORT_MASK(C, SWITCH_2) == 0)  // pull this input down to disable watchdog (hold SW2 at reset)
     #define TOGGLE_WATCHDOG_LED()   _TOGGLE_PORT(D, BLINK_LED)
 
-    #define FORCE_BOOT()           (!_READ_PORT_MASK(C, SWITCH_1))       // pull this input down to force boot loader mode (hold SW1 at reset)
+    #define FORCE_BOOT()           (_READ_PORT_MASK(C, SWITCH_1) == 0)   // pull this input down to force boot loader mode (hold SW1 at reset)
 #elif defined TWR_K22F120M
     #define LED_GREEN              (PORTD_BIT4)                          // green LED - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
     #define LED_BLUE               (PORTD_BIT7)                          // blue LED - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
@@ -1825,7 +1904,7 @@
     #define SET_SD_CS_HIGH()                                             // dummy with SDHC controller
     #define SET_SD_CS_LOW()                                              // dummy with SDHC controller
 
-    #ifdef _WINDOWS
+    #if defined _WINDOWS
         #define POWER_UP_SD_CARD()  SDHC_SYSCTL |= SDHC_SYSCTL_INITA; SDHC_SYSCTL &= ~SDHC_SYSCTL_INITA; // apply power to the SD card if appropriate (we use this to send 80 clocks - self-clearing bit)
     #else
         #define POWER_UP_SD_CARD()  SDHC_SYSCTL |= SDHC_SYSCTL_INITA; while (SDHC_SYSCTL & SDHC_SYSCTL_INITA) {}; // apply power to the SD card if appropriate (we use this to send 80 clocks)
@@ -1835,6 +1914,21 @@
     #define SDHC_SYSCTL_SPEED_SLOW  (SDHC_SYSCTL_SDCLKFS_64 | SDHC_SYSCTL_DVS_5) // 375kHz when 120MHz clock
     #define SDHC_SYSCTL_SPEED_FAST  (SDHC_SYSCTL_SDCLKFS_2 | SDHC_SYSCTL_DVS_3) // 20MHz when 120MHz clock
     #define SET_SPI_SD_INTERFACE_FULL_SPEED() fnSetSD_clock(SDHC_SYSCTL_SPEED_FAST); SDHC_PROCTL |= SDHC_PROCTL_DTW_4BIT
+#elif defined K66FX1M0
+    #define LED_GREEN          (PORTC_BIT5)                              // green LED - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+    #define LED_BLUE           (PORTE_BIT0)                              // blue LED - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+
+    #define SWITCH_1           (PORTD_BIT11)                             // switch 1 - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+    #define SWITCH_22          (PORTD_BIT15)                             // switch 22 - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+
+    #define BLINK_LED          (LED_GREEN)
+
+    #define INIT_WATCHDOG_LED()    _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_LOW(C, (BLINK_LED), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+    #define TOGGLE_WATCHDOG_LED()  _TOGGLE_PORT(C, BLINK_LED)
+    #define FORCE_BOOT()       (_READ_PORT_MASK(D, SWITCH_1) == 0)       // pull this input down to force boot loader mode (hold SW1 at reset)
+    #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(D, (SWITCH_1 | SWITCH_22), PORT_PS_UP_ENABLE)
+
+    #define WATCHDOG_DISABLE()     (_READ_PORT_MASK(D, SWITCH_22) == 0)  // pull this input down to disable watchdog (hold SW22 at reset)
 #elif defined FRDM_K66F
     #define LED_GREEN          (PORTE_BIT6)                              // green LED - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
     #define LED_RED            (PORTC_BIT9)                              // red LED - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
@@ -1846,17 +1940,16 @@
 
     #define BLINK_LED          (LED_GREEN)
 
-    #define INIT_WATCHDOG_LED()    _CONFIG_DRIVE_PORT_OUTPUT_VALUE(E, (BLINK_LED), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+    #define INIT_WATCHDOG_LED()    _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_LOW(E, (BLINK_LED), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH)); _CONFIG_PORT_INPUT_FAST_LOW(D, (SWITCH_2), PORT_PS_UP_ENABLE); _CONFIG_PORT_INPUT_FAST_LOW(D, (SDCARD_DETECT), PORT_PS_DOWN_ENABLE);
     #define TOGGLE_WATCHDOG_LED()  _TOGGLE_PORT(E, BLINK_LED)
     #if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT
-        #define FORCE_BOOT()       (_READ_PORT_MASK(D, (SWITCH_2 | SDCARD_DETECT)) != (SWITCH_2 | SDCARD_DETECT)) // pull this input down to force boot loader mode (hold SW2 at reset) or with inserted SD card
+        #define FORCE_BOOT()       (_READ_PORT_MASK(D, (SWITCH_2 | SDCARD_DETECT)) != (SWITCH_2)) // pull this input down to force boot loader mode (hold SW2 at reset) or with inserted SD card (positive logic)
         #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT(A, (SWITCH_3), PORT_PS_UP_ENABLE) // configure as input
     #else
         #define FORCE_BOOT()       (_READ_PORT_MASK(D, SWITCH_2) == 0)   // pull this input down to force boot loader mode (hold SW2 at reset)
         #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(A, (SWITCH_3), PORT_PS_UP_ENABLE) // configure as input
     #endif
     #define RETAIN_LOADER_MODE()   (_READ_PORT_MASK(D, SWITCH_2) == 0)
-
     #define WATCHDOG_DISABLE()     (_READ_PORT_MASK(A, SWITCH_3) == 0)   // pull this input down to disable watchdog (hold SW3 at reset)
 
     #define USB_HOST_POWER_CONFIG()
@@ -1868,7 +1961,7 @@
     #define SET_SD_CS_HIGH()                                             // dummy with SDHC controller
     #define SET_SD_CS_LOW()                                              // dummy with SDHC controller
 
-    #ifdef _WINDOWS
+    #if defined _WINDOWS
         #define POWER_UP_SD_CARD()  SDHC_SYSCTL |= SDHC_SYSCTL_INITA; SDHC_SYSCTL &= ~SDHC_SYSCTL_INITA; // apply power to the SD card if appropriate (we use this to send 80 clocks - self-clearing bit)
     #else
         #define POWER_UP_SD_CARD()  SDHC_SYSCTL |= SDHC_SYSCTL_INITA; while (SDHC_SYSCTL & SDHC_SYSCTL_INITA) {}; // apply power to the SD card if appropriate (we use this to send 80 clocks)
@@ -1886,15 +1979,11 @@
 
     #define BLINK_LED          (LED_RED)
 
-    #if !defined USE_MAINTENANCE
-        #define INIT_WATCHDOG_LED() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, (BLINK_LED), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH))
-    #else
-        #define INIT_WATCHDOG_LED()                                      // configured according to user parameters
-    #endif
+    #define INIT_WATCHDOG_LED()     _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, (BLINK_LED), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH))
     #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(C, (SWITCH_1 | SWITCH_2), PORT_PS_UP_ENABLE) // configure as input
     #define WATCHDOG_DISABLE()     (_READ_PORT_MASK(C, SWITCH_2) == 0)   // pull this input down to disable watchdog (connect pin pad 23 to GND at reset)
     #define FORCE_BOOT()           (_READ_PORT_MASK(C, SWITCH_1) == 0)   // pull this input down to force boot loader mode (connect pin pad 22 to GND at reset)
-
+    #define RETAIN_LOADER_MODE()   (_READ_PORT_MASK(C, SWITCH_1) == 0)   // pull this input down to force boot loader mode (connect pin pad 22 to GND at reset)
     #define TOGGLE_WATCHDOG_LED()   _TOGGLE_PORT(C, BLINK_LED)
 
     #define SD_CONTROLLER_AVAILABLE                                      // use SDHC controller rather than SPI
@@ -1902,7 +1991,7 @@
         #define SET_SD_CS_HIGH()                                         // dummy with SDHC controller
         #define SET_SD_CS_LOW()                                          // dummy with SDHC controller
 
-        #ifdef _WINDOWS
+        #if defined _WINDOWS
             #define POWER_UP_SD_CARD()  SDHC_SYSCTL |= SDHC_SYSCTL_INITA; SDHC_SYSCTL &= ~SDHC_SYSCTL_INITA; // apply power to the SD card if appropriate (we use this to send 80 clocks - self-clearing bit)
         #else
             #define POWER_UP_SD_CARD()  SDHC_SYSCTL |= SDHC_SYSCTL_INITA; while (SDHC_SYSCTL & SDHC_SYSCTL_INITA) {}; // apply power to the SD card if appropriate (we use this to send 80 clocks)
@@ -1949,7 +2038,7 @@
     #define SET_SD_CS_HIGH()                                             // dummy with SDHC controller
     #define SET_SD_CS_LOW()                                              // dummy with SDHC controller
 
-    #ifdef _WINDOWS
+    #if defined _WINDOWS
         #define POWER_UP_SD_CARD()    SDHC_SYSCTL |= SDHC_SYSCTL_INITA; SDHC_SYSCTL &= ~SDHC_SYSCTL_INITA; // apply power to the SD card if appropriate (we use this to send 80 clocks - self-clearing bit)
     #else
         #define POWER_UP_SD_CARD()    SDHC_SYSCTL |= SDHC_SYSCTL_INITA; while (SDHC_SYSCTL & SDHC_SYSCTL_INITA) {}; // apply power to the SD card if appropriate (we use this to send 80 clocks)
@@ -1993,7 +2082,7 @@
     #define SET_SD_CS_HIGH()                                             // dummy with SDHC controller
     #define SET_SD_CS_LOW()                                              // dummy with SDHC controller
 
-    #ifdef _WINDOWS
+    #if defined _WINDOWS
         #define POWER_UP_SD_CARD()  SDHC_SYSCTL |= SDHC_SYSCTL_INITA; SDHC_SYSCTL &= ~SDHC_SYSCTL_INITA; // apply power to the SD card if appropriate (we use this to send 80 clocks - self-clearing bit)
     #else
         #define POWER_UP_SD_CARD()  SDHC_SYSCTL |= SDHC_SYSCTL_INITA; while (SDHC_SYSCTL & SDHC_SYSCTL_INITA) {}; // apply power to the SD card if appropriate (we use this to send 80 clocks)
@@ -2050,7 +2139,7 @@
     // Set maximum speed
     //
     #define SET_SPI_SD_INTERFACE_FULL_SPEED() SPI0_MCR |= SPI_MCR_HALT; SPI0_CTAR0 = (SPI_CTAR_FMSZ_8 | SPI_CTAR_CPOL | SPI_CTAR_CPHA | SPI_CTAR_BR_2); SPI0_MCR &= ~SPI_MCR_HALT;
-    #ifdef _WINDOWS
+    #if defined _WINDOWS
         #define WRITE_SPI_CMD(byte)    SPI0_SR &= ~(SPI_SR_RFDF); SPI0_PUSHR = (byte | SPI_PUSHR_PCS_NONE | SPI_PUSHR_CTAS_CTAR0); SPI0_POPR = _fnSimSD_write((unsigned char)byte)
         #define WAIT_TRANSMISSON_END() while (!(SPI0_SR & (SPI_SR_RFDF))) { SPI0_SR |= (SPI_SR_RFDF); }
         #define READ_SPI_DATA()        (unsigned char)SPI0_POPR
@@ -2134,7 +2223,7 @@
         #define DEL_USB_SYMBOL()                                         // control display of USB enumeration - clear
         #define SET_USB_SYMBOL()                                         // control display of USB enumeration - set
 
-      //#define START_ON_INTERRUPT                                       // enable optional detection of a push button interrupt to restart update check and to jump to the [new] application)
+        #define START_ON_INTERRUPT                                       // enable optional detection of a push button interrupt to restart update check and to jump to the [new] application)
         #if defined START_ON_INTERRUPT
             #define BUTTON_PORT            PORTD;                        // the port that the interrupt button is on
             #define BUTTON_INPUT           SWITCH_2                      // the port pin that the interrupt button is on
@@ -2153,7 +2242,7 @@
         #endif
         #define NO_PORT_INTERRUPTS_PORTE                                 // remove port interrupt support from port E
     #endif
-#elif defined TWR_K20N50M || defined TWR_K20D72M
+#elif defined TWR_K20D50M || defined TWR_K20D72M
     #define DEMO_LED_1             (PORTC_BIT7)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
     #define DEMO_LED_2             (PORTC_BIT8)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
     #define DEMO_LED_3             (PORTC_BIT9)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
@@ -2187,7 +2276,7 @@
     // Set maximum speed
     //
     #define SET_SPI_SD_INTERFACE_FULL_SPEED() SPI0_MCR |= SPI_MCR_HALT; SPI0_CTAR0 = (SPI_CTAR_FMSZ_8 | SPI_CTAR_CPOL | SPI_CTAR_CPHA | SPI_CTAR_BR_2); SPI0_MCR &= ~SPI_MCR_HALT;
-    #ifdef _WINDOWS
+    #if defined _WINDOWS
         #define WRITE_SPI_CMD(byte)    SPI0_SR &= ~(SPI_SR_RFDF); SPI0_PUSHR = (byte | SPI_PUSHR_PCS_NONE | SPI_PUSHR_CTAS_CTAR0); SPI0_POPR = _fnSimSD_write((unsigned char)byte)
         #define WAIT_TRANSMISSON_END() while (!(SPI0_SR & (SPI_SR_RFDF))) { SPI0_SR |= (SPI_SR_RFDF); }
         #define READ_SPI_DATA()        (unsigned char)SPI0_POPR
@@ -2247,7 +2336,7 @@
     // Set maximum speed
     //
     #define SET_SPI_SD_INTERFACE_FULL_SPEED() SPI0_MCR |= SPI_MCR_HALT; SPI0_CTAR0 = (SPI_CTAR_FMSZ_8 | SPI_CTAR_CPOL | SPI_CTAR_CPHA | SPI_CTAR_BR_2); SPI0_MCR &= ~SPI_MCR_HALT;
-    #ifdef _WINDOWS
+    #if defined _WINDOWS
         #define WRITE_SPI_CMD(byte)    SPI0_SR &= ~(SPI_SR_RFDF); SPI0_PUSHR = (byte | SPI_PUSHR_PCS_NONE | SPI_PUSHR_CTAS_CTAR0); SPI0_POPR = _fnSimSD_write((unsigned char)byte)
         #define WAIT_TRANSMISSON_END() while ((SPI0_SR & (SPI_SR_RFDF)) == 0) { SPI0_SR |= (SPI_SR_RFDF); }
         #define READ_SPI_DATA()        (unsigned char)SPI0_POPR
@@ -2458,7 +2547,7 @@
     // Set maximum speed
     //
     #define SET_SPI_SD_INTERFACE_FULL_SPEED() SPI1_BR = (SPI_BR_SPPR_PRE_1 | SPI_BR_SPR_DIV_2)
-    #ifdef _WINDOWS
+    #if defined _WINDOWS
         #define WRITE_SPI_CMD(byte)    SPI1_D = (byte); SPI1_D = _fnSimSD_write((unsigned char)byte)
         #define WAIT_TRANSMISSON_END() while (!(SPI1_S & (SPI_S_SPRF))) { SPI1_S |= (SPI_S_SPRF); }
         #define READ_SPI_DATA()        (unsigned char)SPI1_D
@@ -2889,7 +2978,7 @@
     #if defined SD_CONTROLLER_AVAILABLE                                  // use SDHC controller rather than SPI
         #define SET_SD_CS_HIGH()
         #define SET_SD_CS_LOW()
-        #ifdef _WINDOWS
+        #if defined _WINDOWS
             #define POWER_UP_SD_CARD()  _CONFIG_DRIVE_PORT_OUTPUT_VALUE(E, PORTE_BIT6, 0, (PORT_SRE_SLOW | PORT_DSE_LOW)); _CONFIG_PORT_INPUT(E, (WRITE_PROTECT_INPUT), (PORT_PS_UP_ENABLE)); SDHC_SYSCTL |= SDHC_SYSCTL_INITA; SDHC_SYSCTL &= ~SDHC_SYSCTL_INITA; // apply power to the SD card if appropriate (we use this to send 80 clocks - self-clearing bit)
         #else
             #define POWER_UP_SD_CARD()  _CONFIG_DRIVE_PORT_OUTPUT_VALUE(E, PORTE_BIT6, 0, (PORT_SRE_SLOW | PORT_DSE_LOW)); _CONFIG_PORT_INPUT(E, (WRITE_PROTECT_INPUT), (PORT_PS_UP_ENABLE)); SDHC_SYSCTL |= SDHC_SYSCTL_INITA; while (SDHC_SYSCTL & SDHC_SYSCTL_INITA) {}; // apply power to the SD card if appropriate (we use this to send 80 clocks)
@@ -2914,7 +3003,7 @@
         // Set maximum speed
         //
         #define SET_SPI_SD_INTERFACE_FULL_SPEED() SPI1_MCR |= SPI_MCR_HALT; SPI1_CTAR0 = (SPI_CTAR_FMSZ_8 | SPI_CTAR_CPOL | SPI_CTAR_CPHA | SPI_CTAR_BR_2); SPI1_MCR &= ~SPI_MCR_HALT;
-        #ifdef _WINDOWS
+        #if defined _WINDOWS
             #define WRITE_SPI_CMD(byte)     SPI1_SR &= ~(SPI_SR_RFDF); SPI1_PUSHR = (byte | SPI_PUSHR_PCS_NONE | SPI_PUSHR_CTAS_CTAR0); SPI1_POPR = _fnSimSD_write((unsigned char)byte)
             #define WAIT_TRANSMISSON_END() while (!(SPI1_SR & (SPI_SR_RFDF))) { SPI1_SR |= (SPI_SR_RFDF); }
             #define READ_SPI_DATA()        (unsigned char)SPI1_POPR
@@ -2964,7 +3053,7 @@
         #define SDCARD_DETECT             PORTE_BIT28                    // SD card detect input
         #define WRITE_PROTECT_INPUT       PORTC_BIT9
         #define GET_SDCARD_WP_STATE()    (_READ_PORT_MASK(C, WRITE_PROTECT_INPUT)) // when the input is read as '1' the card is protected from writes
-        #ifdef _WINDOWS
+        #if defined _WINDOWS
             #define POWER_UP_SD_CARD()    _CONFIG_PORT_INPUT(C, (WRITE_PROTECT_INPUT), (PORT_PS_UP_ENABLE)); SDHC_SYSCTL |= SDHC_SYSCTL_INITA; SDHC_SYSCTL &= ~SDHC_SYSCTL_INITA; // apply power to the SD card if appropriate (we use this to send 80 clocks - self-clearing bit)
         #else
             #define POWER_UP_SD_CARD()    _CONFIG_PORT_INPUT(C, (WRITE_PROTECT_INPUT), (PORT_PS_UP_ENABLE)); SDHC_SYSCTL |= SDHC_SYSCTL_INITA; while (SDHC_SYSCTL & SDHC_SYSCTL_INITA) {}; // apply power to the SD card if appropriate (we use this to send 80 clocks)
@@ -2973,7 +3062,7 @@
         #define SDCARD_DETECT             PORTA_BIT16                    // SD card detect input
         #define WRITE_PROTECT_INPUT       PORTE_BIT27                    // SD card write protection switch input
         #define GET_SDCARD_WP_STATE()    (_READ_PORT_MASK(E, WRITE_PROTECT_INPUT)) // when the input is read as '1' the card is protected from writes
-        #ifdef _WINDOWS
+        #if defined _WINDOWS
             #define POWER_UP_SD_CARD()    _CONFIG_PORT_INPUT(E, (WRITE_PROTECT_INPUT), (PORT_PS_UP_ENABLE)); SDHC_SYSCTL |= SDHC_SYSCTL_INITA; SDHC_SYSCTL &= ~SDHC_SYSCTL_INITA; // apply power to the SD card if appropriate (we use this to send 80 clocks - self-clearing bit)
         #else
             #define POWER_UP_SD_CARD()    _CONFIG_PORT_INPUT(E, (WRITE_PROTECT_INPUT), (PORT_PS_UP_ENABLE)); SDHC_SYSCTL |= SDHC_SYSCTL_INITA; while (SDHC_SYSCTL & SDHC_SYSCTL_INITA) {}; // apply power to the SD card if appropriate (we use this to send 80 clocks)
@@ -3080,7 +3169,7 @@
     #define WRITE_PROTECT_INPUT     0
     #define SET_SD_CS_HIGH()
     #define SET_SD_CS_LOW()
-    #ifdef _WINDOWS
+    #if defined _WINDOWS
         #define POWER_UP_SD_CARD() _CONFIG_PORT_INPUT(A, (SDCARD_DETECT), (PORT_PS_UP_ENABLE)); SDHC_SYSCTL |= SDHC_SYSCTL_INITA; SDHC_SYSCTL &= ~SDHC_SYSCTL_INITA; // apply power to the SD card if appropriate (we use this to send 80 clocks - self-clearing bit)
     #else
         #define POWER_UP_SD_CARD() _CONFIG_PORT_INPUT(A, (SDCARD_DETECT), (PORT_PS_UP_ENABLE)); SDHC_SYSCTL |= SDHC_SYSCTL_INITA; while (SDHC_SYSCTL & SDHC_SYSCTL_INITA) {}; // apply power to the SD card if appropriate (we use this to send 80 clocks)
@@ -3262,12 +3351,12 @@
     #define FORCE_PAYLOAD_ICMPV6_TX                                      // calculate value since the automatic offloading doesn't do it
     #define FORCE_PAYLOAD_ICMPV6_RX                                      // perform checksum in software since the automatic offloading doesn't do it
 
-    #ifdef USE_BUFFERED_TCP                                              // if using a buffer for TCP to allow interractive data applications (like TELNET)
+    #if defined USE_BUFFERED_TCP                                         // if using a buffer for TCP to allow interractive data applications (like TELNET)
         #define TCP_BUFFER            2800                               // size of TCP buffer (with USE_BUFFERED_TCP) - generous with Kinetis
         #define TCP_BUFFER_FRAME      1400                               // allow this max. TCP frame size
     #endif
 
-    #ifdef USE_HTTP
+    #if defined USE_HTTP
         #define HTTP_BUFFER_LENGTH    1400                               // we send frames with this maximum amount of payload data - generous with Kinetis
     #endif
 
@@ -3326,24 +3415,31 @@
             #define FORCE_PHY_CONFIG                                     // activate forced configuration
             #define FNFORCE_PHY_CONFIG()   
             #if defined TWR_K65F180M
+                #define MDIO_ON_PORTA                                    // MDIO connections on port A rather than on port B
                 #define INTERRUPT_TASK_PHY     TASK_NETWORK_INDICATOR    // link status reported to this task (do not use together with LAN_REPORT_ACTIVITY)
                 #define PHY_ADDRESS            0x00                      // address of external PHY on board
                 #define PHY_INTERRUPT_PORT     PORTE
                 #define PHY_INTERRUPT          PORTE_BIT28               // IRQ1 is used as PHY interrupt input (set J6 to position 7-8 on TWR-SER board) - this is connected to PTD15
                 #define ETHERNET_MDIO_WITH_PULLUPS                       // there is no pull-up on the tower board so enable one at the MDIO input
+                #define SUPPORT_PORT_INTERRUPTS                          // enable port interrupt for PHY interrupt
+                #define NO_PORT_INTERRUPTS_PORTA                         // disable port interrupt support on other ports
+                #define NO_PORT_INTERRUPTS_PORTB
+                #define NO_PORT_INTERRUPTS_PORTC
+                #define NO_PORT_INTERRUPTS_PORTD
+                #define NO_PORT_INTERRUPTS_PORTF
             #else
                 #define POLL_PHY               10000                     // PHY detection is unreliable on this board so allow this many attempts
                 #define PHY_ADDRESS            0x01                      // address of external PHY on board
               //#define PHY_INTERRUPT_PORT     PORTB
               //#define PHY_INTERRUPT          PORTB_BIT7                // IRQ4 is used as PHY interrupt input (set J6 to position 7-8 on TWR-SER board) - this is connected to PB.7
-                #define PHY_IDENTIFIER         0x00221512                // MICREL KSZ8041NL identifier
-                #define FNRESETPHY()
                 #if defined TWR_K53N512                                  // this tower board has a port output controlling the reset line on the elevator - it is set to an output driving '1' to avoid the PHY being held in reset
                     #define RESET_PHY
                     #define ASSERT_PHY_RST() _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_LOW(C, (RESETOUT), (RESETOUT), (PORT_SRE_SLOW | PORT_DSE_LOW))
                     #define CONFIG_PHY_STRAPS()                          // dummy
                 #endif
             #endif
+            #define PHY_IDENTIFIER         0x00221512                    // MICREL KSZ8041NL identifier
+            #define FNRESETPHY()
         #endif
         #if defined K60F150M_50M
             #define MII_MANAGEMENT_CLOCK_SPEED   2500000                 // 2.5MHz
@@ -3354,14 +3450,19 @@
                 #define MII_MANAGEMENT_CLOCK_SPEED   800000              // reduced speed due to weak data line pull up resistor and long back-plane distance (warning - too low results in a divider overflow in MSCR)
             #endif
         #endif
-    #elif defined FRDM_K64F && !defined NO_INTERNAL_ETHERNET
+    #elif (defined FRDM_K64F || defined FRDM_K66F) && !defined NO_INTERNAL_ETHERNET
+        #if defined FRDM_K66F
+            #define ETHERNET_RMII_CLOCK_INPUT                            // the ENET_1588_CLKIN is used as clock since a 50MHz PHY clock is not available on EXTAL
+            #define MII_MANAGEMENT_CLOCK_SPEED    800000                 // due to weak pull-up we use a reduces clock speed
+        #else
+            #define MII_MANAGEMENT_CLOCK_SPEED    2500000                // typ. 2.5MHz Speed
+        #endif
         #define ETHERNET_RMII                                            // RMII mode of operation instead of MII
         #define FORCE_PHY_CONFIG                                         // activate forced configuration
         #define FNFORCE_PHY_CONFIG()   
         #define PHY_ADDRESS            0x00                              // address of external PHY on board
         #define PHY_IDENTIFIER         0x00221560                        // MICREL KSZ8081RNA identifier
         #define FNRESETPHY()
-        #define MII_MANAGEMENT_CLOCK_SPEED    2500000                    // typ. 2.5MHz Speed
         #define ETHERNET_MDIO_WITH_PULLUPS                               // there is no pull-up on the FRDM board so enable one at the MDIO input
         #define PHY_POLL_LINK                                            // no interrupt line connected so poll the link state
         #define INTERRUPT_TASK_PHY     TASK_NETWORK_INDICATOR            // enable link state output messages

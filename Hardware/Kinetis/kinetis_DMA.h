@@ -20,6 +20,8 @@
     04.01.2016 Added automatic DMA half- and full-buffer handling for KL devices {1}
     05.02.2016 Protect KL memcpy DMA before clearing the DONE flag       {2}
     25.04.2016 Correct buffer wrap direction for K parts                 {3}
+    02.03.2017 Set the DMA_TCD_CITER_ELINK value earlier to protect initial part of code from interrupts {4}
+    02.03.2017 Add optional alternative DMA channel for use by interrupts when the main one is in use {5}
 
 */
 
@@ -452,21 +454,34 @@ extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned char ucDmaT
             if ((ulBufLength != 16) && (ulBufLength != 32) && (ulBufLength != 64) && (ulBufLength != 128) && (ulBufLength != 256) && (ulBufLength != 512) && (ulBufLength != 1024) && (ulBufLength != (2 * 1024)) && (ulBufLength != (4 * 1024)) && (ulBufLength != (8 * 1024)) && (ulBufLength != (16 * 1024)) && (ulBufLength != (32 * 1024)) && (ulBufLength != (64 * 1024)) && (ulBufLength != (128 * 1024)) && (ulBufLength != (256 * 1024))) {
                 _EXCEPTION("Invalid circular buffer size!!");
             }
-            if ((unsigned long)ptrBufSource & (ulBufLength - 1)) {
-                _EXCEPTION("Circular buffer not-aligned!!");
+            if ((ulRules & DMA_FIXED_ADDRESSES) == 0) {
+                if ((ulRules & DMA_DIRECTION_OUTPUT) != 0) {
+                    if ((unsigned long)ptrBufSource & (ulBufLength - 1)) {
+                        _EXCEPTION("Circular source buffer not-aligned!!");
+                    }
+                }
+                else {
+                    if ((unsigned long)ptrBufDest & (ulBufLength - 1)) {
+                        _EXCEPTION("Circular destination buffer not-aligned!!");
+                    }
+                }
             }
     #endif
             while (ulBufLength < (256 * 1024)) {                         // calculate the modulo value required for the source
                 ulBufLength *= 2;
                 ulMod -= DMA_DCR_SMOD_16;
             }
-            if ((ulRules & DMA_DIRECTION_OUTPUT) != 0) {                 // if the buffer is the destination
+            if ((ulRules & DMA_DIRECTION_OUTPUT) == 0) {                 // if the buffer is the destination
                 ulMod >>= 4;                                             // move to destination MOD field
             }
             ptrDMA->DMA_DCR |= ulMod;                                    // the modulo setting
         }
     }
+    #if defined KINETIS_WITH_PCC
+    PCC_DMAMUX0 |= PCC_CGC;
+    #else
     POWER_UP(6, SIM_SCGC6_DMAMUX0);                                      // enable DMA multiplexer 0
+    #endif
     *(unsigned char *)(DMAMUX0_BLOCK + ucDMA_channel) = (ucDmaTriggerSource | DMAMUX_CHCFG_ENBL); // connect trigger to DMA channel
     ptrDMA->DMA_DCR |= (DMA_DCR_CS | DMA_DCR_EADREQ);                    // enable peripheral request - single cycle for each request (asynchronous requests enabled in stop mode)
     #else
@@ -528,9 +543,16 @@ extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned char ucDmaT
     *(unsigned char *)(DMAMUX0_BLOCK + ucDMA_channel) = (ucDmaTriggerSource | DMAMUX_CHCFG_ENBL); // connect trigger source to DMA channel
     #endif
     #if defined _WINDOWS                                                 // simulator checks to help detect incorrect usage
+        #if defined DMA_MEMCPY_CHANNEL
     if (DMA_MEMCPY_CHANNEL == ucDMA_channel) {
         _EXCEPTION("Warning - peripheral DMA is using the channel reserved for DMA based uMemcpy()!!");
     }
+        #endif
+        #if defined DMA_MEMCPY_CHANNEL_ALT                               // {5}
+    if (DMA_MEMCPY_CHANNEL_ALT == ucDMA_channel) {
+        _EXCEPTION("Warning - peripheral DMA is using the alternative channel reserved for DMA based uMemcpy()!!");
+    }
+        #endif
     if (DMAMUX0_DMA0_CHCFG_SOURCE_PIT0 == ucDmaTriggerSource) {
         if (ucDMA_channel != 0) {
             _EXCEPTION("PIT0 trigger only operates on DMA channel 0!!");
@@ -562,7 +584,7 @@ extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned char ucDmaT
         }
     }
     #endif
-    // Note that the DMA channel has not been activated yet - tp do this fnDMA_BufferReset(channel_number, DMA_BUFFER_START); is performed
+    // Note that the DMA channel has not been activated yet - to do this fnDMA_BufferReset(channel_number, DMA_BUFFER_START); is performed
     //
 }
 #endif
@@ -643,14 +665,21 @@ extern void *uMemcpy(void *ptrTo, const void *ptrFrom, size_t Size)      // {9}
     #else
         KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
         ptrDMA_TCD += DMA_MEMCPY_CHANNEL;
+        #if defined DMA_MEMCPY_CHANNEL_ALT                               // {5}
+        if (ptrDMA_TCD->DMA_TCD_CITER_ELINK != 0) {                      // if the main channel is already in use
+            ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
+            ptrDMA_TCD += DMA_MEMCPY_CHANNEL_ALT;                        // move to the alternate channel (may be used by interrupts)
+        }
+        #endif
         if (ptrDMA_TCD->DMA_TCD_CITER_ELINK == 0) {                      // if not already in use
             unsigned long ulTransfer;
-            while (((unsigned long)buffer) & 0x3) {                      // {87} move to a long word boundary for source
+            while ((((unsigned long)buffer) & 0x3) != 0) {               // {87} move to a long word boundary for source
                 *ptr++ = *buffer++;
                 Size--;
             }
+            ptrDMA_TCD->DMA_TCD_CITER_ELINK = 1;                         // {4} one main loop iteration - this protects the DMA channel from interrupt routines that may also want to use the function
             if (((unsigned long)ptr & 0x3) != 0) {                       // if the destination is not also long word aligned
-                if ((unsigned long)ptr & 0x1) {                          // not short word aligned
+                if (((unsigned long)ptr & 0x1) != 0) {                   // not short word aligned
                     ulTransfer = Size;
                     ptrDMA_TCD->DMA_TCD_DOFF = 1;                        // destination has to be byte aligned
                     ptrDMA_TCD->DMA_TCD_SOFF = 1;                        // source has to be byte aligned
@@ -666,7 +695,7 @@ extern void *uMemcpy(void *ptrTo, const void *ptrFrom, size_t Size)      // {9}
             else {
                 ulTransfer = (Size & ~0x3);                              // ensure length is suitable for long words
             }
-            ptrDMA_TCD->DMA_TCD_CITER_ELINK = 1;                         // one main loop iteration - this protects the DMA channel from interrupt routines that may also want to use the function
+          //ptrDMA_TCD->DMA_TCD_CITER_ELINK = 1;                         // {4} one main loop iteration - this protects the DMA channel from interrupt routines that may also want to use the function
             ptrDMA_TCD->DMA_TCD_SADDR = (unsigned long)buffer;           // set source for copy
             ptrDMA_TCD->DMA_TCD_DADDR = (unsigned long)ptr;              // set destination for copy
             ptrDMA_TCD->DMA_TCD_NBYTES_ML = ulTransfer;                  // set number of bytes to be copied
@@ -696,7 +725,7 @@ _do_simple_copy:
 #endif
     // Normal memcpy() solution
     //
-    while (Size--) {
+    while (Size-- != 0) {
         *ptr++ = *buffer++;                                              // copy from input buffer to output buffer
     }
     return ptrTo;                                                        // return pointer to original buffer according to memcpy() declaration
@@ -713,6 +742,12 @@ extern void *uReverseMemcpy(void *ptrTo, const void *ptrFrom, size_t Size)
     if (Size >= SMALLEST_DMA_COPY) {                                     // if large enough to be worthwhile
         KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
         ptrDMA_TCD += DMA_MEMCPY_CHANNEL;
+        #if defined DMA_MEMCPY_CHANNEL_ALT                               // {5}
+        if (ptrDMA_TCD->DMA_TCD_CITER_ELINK != 0) {                      // if the main channel is already in use
+            ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
+            ptrDMA_TCD += DMA_MEMCPY_CHANNEL_ALT;                        // move to the alternate channel (may be used by interrupts)
+        }
+        #endif
         if (ptrDMA_TCD->DMA_TCD_CITER_ELINK == 0) {                      // if not already in use
             register unsigned char *ptrEndTo = ((unsigned char *)ptrTo + Size);
             register unsigned char *ptrEndFrom = ((unsigned char *)ptrFrom + Size);
@@ -721,14 +756,15 @@ extern void *uReverseMemcpy(void *ptrTo, const void *ptrFrom, size_t Size)
             unsigned long ulTransfer;
             ptr = (ptrEndTo - 4);                                        // move to final long word
             buffer = (ptrEndFrom - 4);                                   // move to final long word
-            while (((unsigned long)buffer) & 0x3) {                      // {87} move to a long word boundary for source
+            while ((((unsigned long)buffer) & 0x3) != 0) {               // {87} move to a long word boundary for source
                 iFillEnd++;
                 ptr--;
                 buffer--;
                 Size--;
             }
+            ptrDMA_TCD->DMA_TCD_CITER_ELINK = 1;                         // {4} one main loop iteration - this protects the DMA channel from interrupt routines that may also want to use the function
             if (((unsigned long)ptr & 0x3) != 0) {                       // if the destination is not also long word aligned
-                if ((unsigned long)ptr & 0x1) {                          // not short word aligned
+                if (((unsigned long)ptr & 0x1) != 0) {                   // not short word aligned
                     ptr += (iFillEnd + 3);
                     buffer += (iFillEnd + 3);
                     Size += iFillEnd;
@@ -772,7 +808,7 @@ extern void *uReverseMemcpy(void *ptrTo, const void *ptrFrom, size_t Size)
                 iFillEnd--;
             }
 
-            ptrDMA_TCD->DMA_TCD_CITER_ELINK = 1;                         // one main loop iteration - this protects the DMA channel from interrupt routines that may also want to use the function
+          //ptrDMA_TCD->DMA_TCD_CITER_ELINK = 1;                         // {4} one main loop iteration - this protects the DMA channel from interrupt routines that may also want to use the function
             ptrDMA_TCD->DMA_TCD_SADDR = (unsigned long)buffer;           // set source for copy
             ptrDMA_TCD->DMA_TCD_DADDR = (unsigned long)ptr;              // set destination for copy
             ptrDMA_TCD->DMA_TCD_NBYTES_ML = ulTransfer;                  // set number of bytes to be copied
@@ -786,7 +822,7 @@ extern void *uReverseMemcpy(void *ptrTo, const void *ptrFrom, size_t Size)
 
             while ((ptrDMA_TCD->DMA_TCD_CSR & DMA_TCD_CSR_DONE) == 0) { fnSimulateDMA(DMA_MEMCPY_CHANNEL); } // wait until completed
 
-            while (Size--) {                                             // {87} complete any remaining bytes
+            while (Size-- != 0) {                                        // {87} complete any remaining bytes
                 *ptr-- = *buffer--;
             }
 
@@ -802,7 +838,7 @@ extern void *uReverseMemcpy(void *ptrTo, const void *ptrFrom, size_t Size)
     ptr += Size;                                                         // move to the end of the buffers
     buffer += Size;
 
-    while (Size--) {
+    while (Size-- != 0) {
         *(--ptr) = *(--buffer);                                          // copy backwards
     }
     return ptrTo;                                                        // return pointer to original buffer according to memcpy() declaration
@@ -840,7 +876,7 @@ extern void *uMemset(void *ptrTo, unsigned char ucValue, size_t Size)    // {9}
         #endif
             ptr += ulTransfer;                                           // move the destination pointer to beyond the transfer
             Size -= ulTransfer;                                          // bytes remaining
-            while (Size--) {                                             // {87} complete any remaining bytes
+            while (Size-- != 0) {                                        // {87} complete any remaining bytes
                 *ptr++ = ucValue;
             }
             while ((ptrDMA->DMA_DSR_BCR & DMA_DSR_BCR_DONE) == 0) { fnSimulateDMA(DMA_MEMCPY_CHANNEL); } // wait until completed
@@ -851,10 +887,16 @@ extern void *uMemset(void *ptrTo, unsigned char ucValue, size_t Size)    // {9}
     #else
         KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
         ptrDMA_TCD += DMA_MEMCPY_CHANNEL;
+        #if defined DMA_MEMCPY_CHANNEL_ALT                               // {5}
+        if (ptrDMA_TCD->DMA_TCD_CITER_ELINK != 0) {                      // if the main channel is already in use
+            ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
+            ptrDMA_TCD += DMA_MEMCPY_CHANNEL_ALT;                        // move to the alternate channel (may be used by interrupts)
+        }
+        #endif
         if (ptrDMA_TCD->DMA_TCD_CITER_ELINK == 0) {                      // if not already in use
             volatile unsigned long ulToCopy = (ucValue | (ucValue << 8) | (ucValue << 16) | (ucValue << 24));
             unsigned long ulTransfer;
-            while (((unsigned long)ptr) & 0x3) {                         // {87} move to a long word boundary
+            while ((((unsigned long)ptr) & 0x3) != 0) {                  // {87} move to a long word boundary
                 *ptr++ = ucValue;
                 Size--;
             }
@@ -868,7 +910,7 @@ extern void *uMemset(void *ptrTo, unsigned char ucValue, size_t Size)    // {9}
 
             ptr += ulTransfer;                                           // move the destination pointer to beyond the transfer
             Size -= ulTransfer;                                          // bytes remaining
-            while (Size--) {                                             // {87} complete any remaining bytes
+            while (Size-- != 0) {                                        // {87} complete any remaining bytes
                 *ptr++ = ucValue;
             }
 
@@ -882,7 +924,7 @@ extern void *uMemset(void *ptrTo, unsigned char ucValue, size_t Size)    // {9}
 
     // SW memset method
     //
-    while (Size--) {
+    while (Size-- != 0) {
         *ptr++ = ucValue;                                                // set the value to each location
     }
     return ptrTo;                                                        // return pointer to original buffer according to memset() declaration

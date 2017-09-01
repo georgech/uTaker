@@ -7,7 +7,7 @@
 
     www.uTasker.com    Skype: M_J_Butcher
     
-    ---------------------------------------------------------------------
+    ---------------------------------------------------------------------L
     File:      config.h
     Project:   uTaskerV1.4 project
     ---------------------------------------------------------------------
@@ -21,19 +21,25 @@
 #if !defined __CONFIG__
     #define __CONFIG__
 
-#if !defined _ASSEMBLER_CONFIG                                           // remove all following when used for assembler configuration
 
-/////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
 //                                                                       // new users who would like to see just a blinking LED before enabling the project's many powerful features can set this
-//#define BLINKEY                                                        // it give simplest scheduling of a single task called at 200ms rate that retriggers the watchdog and toggles respective the board's heartbeat LED
+//#define BLINKY                                                         // to give simplest scheduling of a single task called at 200ms rate that retriggers the watchdog and toggles the board's heartbeat LED
 //                                                                       // 
-/////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
+
+//#define RUN_IN_FREE_RTOS                                               // use uTasker in a FreeRTOS task to benefit from both worlds!
+  //#define FREE_RTOS_UART                                               // demonstrate UART usage by FreeRTOS task
+  //#define FREE_RTOS_BLINKY                                             // allow a FreeRTOS blinky task to operate
 
 #define _TICK_RESOLUTION     TICK_UNIT_MS(50)                            // 50ms system tick period - max possible at 50MHz SYSTICK would be about 335ms !
 
+#define REMOVE_PORT_INITIALISATIONS                                      // remove port initialisation and use demonstration to ensure that port configuration and use doesn't conflict with specific application development (exception is blink LED)
+  #define NO_PERIPHERAL_DEMONSTRATIONS                                   // disable peripheral demonstration code (ADC/I2C/CAN/port interrupts/etc.) so that they can't interfere with new application developments
+
 #define USE_MAINTENANCE                                                  // include the command line shell (on UART, USB-CDC and/or Telenet) with maintenance support for the application (remove to reduce project size for special tests or possibly running from limited RAM)
     #define PREVIOUS_COMMAND_BUFFERS  4                                  // allow the up-arrow to retrieve this many past commands
-    #define MEMORY_DEBUGGER                                              // memory debugger interface (read, write and fill)
+    #define MEMORY_DEBUGGER                                              // memory and storage debugger interface (read, write, fill and erase)
 
 //#define MONITOR_PERFORMANCE                                            // support measuring duration of tasks and idle phases (based on a hardware timer)
 //#define _APPLICATION_VALIDATION                                        // support application validation
@@ -49,7 +55,6 @@
 #else
     #define MEM_FACTOR 1.0
 #endif
-
 
 // Major hardware dependent settings for this project (choice of board - select only one at a time)
 //
@@ -74,7 +79,7 @@
 //#define FRDM_KL26Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL26Z.html
 //#define rcARM_KL26                                                     // development board with KL26
 //#define TEENSY_LC                                                      // USB development board with KL26Z64 - http://www.utasker.com/kinetis/TEENSY_LC.html
-//#define FRDM_KL27Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL27Z.html
+#define FRDM_KL27Z                                                       // freedom board http://www.utasker.com/kinetis/FRDM-KL27Z.html
 //#define CAPUCCINO_KL27                                                 // http://www.utasker.com/kinetis/Capuccino-KL27.html
 //#define TWR_KL28Z72M                                                   // tower board http://www.utasker.com/kinetis/FRDM-KL28Z72M
 //#define FRDM_KL28Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL28Z.html
@@ -128,11 +133,12 @@
 
 //#define EMCRAFT_K61F150M                                               // K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - http://www.utasker.com/kinetis/EMCRAFT_K61F150M.html
 
-#define FRDM_K64F                                                        // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
+//#define FRDM_K64F                                                        // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
 //#define TWR_K64F120M                                                   // tower board http://www.utasker.com/kinetis/TWR-K64F120M.html
 //#define TEENSY_3_5                                                     // USB development board with K64FX512 - http://www.utasker.com/kinetis/TEENSY_3.5.html
 //#define FreeLON                                                        // K64 based with integrated LON
 //#define TWR_K65F180M                                                   // tower board http://www.utasker.com/kinetis/TWR-K65F180M.html
+//#define K66FX1M0                                                       // development board with K66FX1M0
 //#define FRDM_K66F                                                      // freedom board http://www.utasker.com/kinetis/FRDM-K66F.html
 //#define TEENSY_3_6                                                     // USB development board with K66FX1M0 - http://www.utasker.com/kinetis/TEENSY_3.6.html
 
@@ -189,7 +195,7 @@
 #elif defined TRK_KEA8
     #define TARGET_HW            "TRK-KEA8"
     #define KINETIS_MAX_SPEED    48000000
-    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((2 * 1024) * MEM_FACTOR)
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((560) * MEM_FACTOR)
     #define KINETIS_KE
     #define KINETIS_KEA
     #define KINETIS_KEA8
@@ -247,7 +253,7 @@
     #define KINETIS_KL02
     #define DEVICE_WITHOUT_CAN                                           // KL doesn't have CAN controller
     #define DEVICE_WITHOUT_ETHERNET                                      // KL doesn't have Ethernet controller
-    #define DEVICE_WITHOUT_USB                                           // KL00 doesn't have USB
+    #define DEVICE_WITHOUT_USB                                           // KL02 doesn't have USB
 #elif defined FRDM_KL03Z
     #define TARGET_HW            "FRDM-KL03Z Kinetis"
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((1.0 * 1024) * MEM_FACTOR)
@@ -256,7 +262,8 @@
     #define KINETIS_KL03
     #define DEVICE_WITHOUT_CAN                                           // KL doesn't have CAN controller
     #define DEVICE_WITHOUT_ETHERNET                                      // KL doesn't have Ethernet controller
-    #define DEVICE_WITHOUT_USB                                           // KL00 doesn't have USB
+    #define DEVICE_WITHOUT_USB                                           // KL02 doesn't have USB
+    #define INTERRUPT_VECTORS_IN_FLASH                                   // save some memory by keeping interrupt vectors in SRAM
 #elif defined FRDM_KL05Z
     #define TARGET_HW            "FRDM_KL05Z Kinetis"
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((2 * 1024) * MEM_FACTOR)
@@ -264,7 +271,7 @@
     #define KINETIS_KL05
     #define DEVICE_WITHOUT_CAN                                           // KL doesn't have CAN controller
     #define DEVICE_WITHOUT_ETHERNET                                      // KL doesn't have Ethernet controller
-    #define DEVICE_WITHOUT_USB                                           // KL00 doesn't have USB
+    #define DEVICE_WITHOUT_USB                                           // KL05 doesn't have USB
 #elif defined TWR_KL25Z48M
     #define TARGET_HW            "TWR-KL25Z48M Kinetis"
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((10 * 1024) * MEM_FACTOR)
@@ -300,6 +307,12 @@
     #define DEVICE_WITHOUT_CAN                                           // KL doesn't have CAN controller
     #define DEVICE_WITHOUT_ETHERNET                                      // KL doesn't have Ethernet controller
     #define SPI_LCD                                                      // optional SPI_LCD
+#elif defined TEENSY_LC
+    #define KINETIS_KL
+    #define KINETIS_KL26
+    #define TARGET_HW            "Teensy LC"
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((5.0 * 1024) * MEM_FACTOR)
+    #define DEVICE_WITHOUT_ETHERNET                                      // KL doesn't have Ethernet controller
 #elif defined FRDM_KL27Z
     #define TARGET_HW            "FRDM-KL27Z"
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((10 * 1024) * MEM_FACTOR)
@@ -314,11 +327,12 @@
     #define KINETIS_KL27
     #define DEVICE_WITHOUT_CAN                                           // KL doesn't have CAN controller
     #define DEVICE_WITHOUT_ETHERNET                                      // KL doesn't have Ethernet controller
-#elif defined TEENSY_LC
+#elif defined FRDM_KL28Z
+    #define TARGET_HW            "FRDM-KL28Z"
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((20 * 1024) * MEM_FACTOR)
     #define KINETIS_KL
-    #define KINETIS_KL26
-    #define TARGET_HW            "Teensy LC"
-    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((5.0 * 1024) * MEM_FACTOR)
+    #define KINETIS_KL28
+    #define DEVICE_WITHOUT_CAN                                           // KL doesn't have CAN controller
     #define DEVICE_WITHOUT_ETHERNET                                      // KL doesn't have Ethernet controller
 #elif defined TWR_KL46Z48M
     #define TARGET_HW            "TWR-KL46Z48M"
@@ -467,7 +481,7 @@
     #define KINETIS_REVISION_2
     #define TARGET_HW            "Kinetis K20FX512-120"
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((32 * 1024) * MEM_FACTOR)
-    #define DEVICE_WITHOUT_ETHERNET                                      // K20 doesn't have Ethernet controller
+    #define DEVICE_WITHOUT_ETHERNET                                      // K21 doesn't have Ethernet controller
 #elif defined TWR_K21F120M
     #define KINETIS_K_FPU                                                // part with floating point unit
     #define TARGET_HW            "TWR-K21F120M Kinetis"
@@ -475,7 +489,7 @@
     #define KINETIS_K20                                                  // specify the sub-family
     #define KINETIS_K21                                                  // extra sub-family type precision
     #define KINETIS_REVISION_2
-    #define DEVICE_WITHOUT_ETHERNET                                      // K20 doesn't have Ethernet controller
+    #define DEVICE_WITHOUT_ETHERNET                                      // K21 doesn't have Ethernet controller
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((24 * 1024) * MEM_FACTOR)
 #elif defined TWR_K22F120M
     #define TARGET_HW            "TWR-K22F120M"
@@ -484,7 +498,8 @@
     #define KINETIS_K22                                                  // extra sub-family type precision
     #define KINETIS_REVISION_2
     #define KINETIS_MAX_SPEED    120000000
-    #define DEVICE_WITHOUT_ETHERNET                                      // K20 doesn't have Ethernet controller
+    #define DEVICE_WITHOUT_ETHERNET                                      // K22 doesn't have Ethernet controller
+    #define DEVICE_WITHOUT_CAN                                           // this K22 doesn't have CAN controller
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((24 * 1024) * MEM_FACTOR)
 #elif defined FRDM_K22F
     #define TARGET_HW            "FRDM-K22F"
@@ -493,7 +508,7 @@
     #define KINETIS_K20                                                  // specify the sub-family
     #define KINETIS_K22                                                  // extra sub-family type precision
     #define KINETIS_REVISION_2
-    #define DEVICE_WITHOUT_CAN                                           // K22 doesn't have CAN controller
+    #define DEVICE_WITHOUT_CAN                                           // this K22 doesn't have CAN controller
     #define DEVICE_WITHOUT_ETHERNET                                      // K20 doesn't have Ethernet controller
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((24 * 1024) * MEM_FACTOR)
 #elif defined BLAZE_K22
@@ -544,7 +559,11 @@
     #define TARGET_HW            "TWR-K60F120M Kinetis"
     #define KINETIS_K_FPU                                                // part with floating point unit
   //#define TWR_SER2                                                     // use SER2 serial board instead of standard serial board
+    #if defined TWR_SER2
+        #define USB_HS_INTERFACE                                         // use HS interface rather than FS interface
+    #endif
     #define KINETIS_K60                                                  // specify the sub-family
+    #define KINETIS_MAX_SPEED    120000000
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((36 * 1024) * MEM_FACTOR) // we have the LAN buffers in HEAP and big RX/TX - a little more for USB
 #elif defined K60F150M_50M
     #define TARGET_HW            "K60F150M_50M"
@@ -585,6 +604,7 @@
     #define KINETIS_REVISION_2
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((32 * 1024) * MEM_FACTOR) // we have the LAN buffers in HEAP and big RX/TX - a little more for USB
 #elif defined TWR_K60N512
+    #define _PHY_KSZ8863                                                 // development board option with Micrel 2 port switch
   //#define TWR_SER2                                                     // use SER2 serial board instead of standard serial board
   //#define DEBUG_ON_VIRT_COM                                            // optionally set UART debug on virtual COM rather than the serial board
     #define TARGET_HW            "TWR-K60N512"
@@ -642,7 +662,7 @@
     #if !defined TWR_SER
         #define USB_HS_INTERFACE                                         // use HS interface rather than FS interface
     #endif
-#elif defined FRDM_K66F
+#elif defined FRDM_K66F || defined K66FX1M0
     #define TARGET_HW            "FRDM-K66F"
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((48 * 1024) * MEM_FACTOR) // large SRAM parts
     #define KINETIS_MAX_SPEED    180000000
@@ -650,7 +670,9 @@
     #define KINETIS_K60                                                  // specify the sub-family
     #define KINETIS_REVISION_2
     #define KINETIS_K66                                                  // extra sub-family type precision
-    #define USB_HS_INTERFACE                                             // use HS interface rather than FS interface
+    #if !defined K66FX1M0
+        #define USB_HS_INTERFACE                                         // use HS interface rather than FS interface
+    #endif
 #elif defined TEENSY_3_6
     #define TARGET_HW            "Teensy 3.6 (K66FX1M0)"
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((48 * 1024) * MEM_FACTOR) // large SRAM parts
@@ -674,7 +696,7 @@
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((30 * 1024) * MEM_FACTOR)
 #elif defined TWR_K70F120M
     #define TARGET_HW            "TWR-K70F120M"
-    #define TWR_SER2                                                     // use SER2 serial board instead of standard serial board (used also when HS USB is enabled)
+  //#define TWR_SER2                                                     // use SER2 serial board instead of standard serial board (used also when HS USB is enabled)
     #define KINETIS_K70                                                  // specify the sub-family
     #define KINETIS_K_FPU                                                // part with floating point unit
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((30 * 1024) * MEM_FACTOR)
@@ -706,7 +728,7 @@
 #endif
 #if !defined NO_FLASH_SUPPORT
     #define USE_PARAMETER_BLOCK                                          // enable a parameter block for storing and retrieving non-volatile information
-        #define USE_PAR_SWAP_BLOCK                                       // we support a backup block which can be restored if desired (it is recommended to use this together with USE_PARAMETER_BLOCK
+        #define USE_PAR_SWAP_BLOCK                                       // we support a backup block which can be restored if desired (it is recommended to use this together with USE_PARAMETER_BLOCK)
       //#define PARAMETER_NO_ALIGNMENT                                   // the driver doesn't need to respect byte write restrictions since the application does - this can improve memory utilisation when bytes writes are not supported by the hardware
   //#define USE_PARAMETER_AREA                                           // simple parameter area rather than parameter block
   //#define SPI_FILE_SYSTEM                                              // we have an external file system via SPI interface
@@ -717,7 +739,7 @@
         #define FLASH_FILE_SYSTEM                                        // we have an internal file system in FLASH
     #endif
   //#define NVRAM                                                        // we have an external file system in non-volatile RAM
-    #define INTERNAL_USER_FILES                                          // allow user to specify program file content
+  //#define INTERNAL_USER_FILES                                          // allow user to specify program file content
   //#define EMBEDDED_USER_FILES                                          // use together with INTERNAL_USER_FILES to allow sending an embedded user file to the uFileSystem
     #if !defined NAND_FLASH_FAT && defined FLASH_FILE_SYSTEM
       //#define MANAGED_FILES                                            // use memory management when interfacing with uFileSystem in internal or external SPI memory
@@ -742,9 +764,10 @@
 #if defined FLASH_FILE_SYSTEM && defined SPI_FILE_SYSTEM                 // when a file system is located in SPI flash
     // Specify the SPI flash type used
     //
-    #define SPI_FLASH_W25Q                                               // use Winbond W25Q SPI flash rather than ATMEL
+  //#define SPI_FLASH_W25Q                                               // use Winbond W25Q SPI flash rather than ATMEL
   //#define SPI_FLASH_SST25                                              // use SST SPI SPI flash rather than ATMEL
   //#define SPI_FLASH_ST                                                 // use ST SPI flash rather than ATMEL
+    #define SPI_FLASH_S25FL1_K                                           // use Spansion SPI flash rather than ATMEL
   //#define SPI_DATA_FLASH                                               // FLASH type is data flash supporting sub-sectors (relevant for ST types)
     #if defined SPI_FLASH_ST
         #if defined SPI_DATA_FLASH
@@ -847,7 +870,7 @@
 // Serial interface (UART)
 //
 #define SERIAL_INTERFACE                                                 // enable serial interface driver
-#if defined SERIAL_INTERFACE
+#if !defined BLINKY && defined SERIAL_INTERFACE
   //#define FREEMASTER_UART                                              // UART for run-time debugging use
   //#define UART_EXTENDED_MODE                                           // required for 9-bit mode
       //#define SERIAL_MULTIDROP_TX                                      // enable 9-bit support in the transmission direction
@@ -859,16 +882,16 @@
       //#define SUPPORT_MSG_MODE_EXTRACT                                 // allow extracting messages using a number of reads rather than one single read
     #define WAKE_BLOCKED_TX                                              // allow a blocked transmitter to continue after an interrupt event
       //#define WAKE_BLOCKED_TX_BUFFER_LEVEL                             // define specific level in output buffer for wake to occur
-    #define SUPPORT_FLUSH                                                // support rx flush
-    #define SERIAL_SUPPORT_XON_XOFF                                      // enable XON/XOFF support in driver
+  //#define SUPPORT_FLUSH                                                // support rx flush
+  //#define SERIAL_SUPPORT_XON_XOFF                                      // enable XON/XOFF support in driver
     #define HIGH_WATER_MARK   20                                         // stop flow control when the input buffer has less than this space (if variable settings are required, use SUPPORT_FLOW_HIGH_LOW define)
     #define LOW_WATER_MARK    20                                         // restart when the input buffer content falls below this value
-    #define SUPPORT_FLOW_HIGH_LOW                                        // allow flow control levels to be configured (in % of buffer size)
-    #define SERIAL_SUPPORT_ECHO                                          // enable echo mode in rx driver
-    #define SERIAL_SUPPORT_ESCAPE                                        // enable escape sequencing in driver
+  //#define SUPPORT_FLOW_HIGH_LOW                                        // allow flow control levels to be configured (in % of buffer size)
+  //#define SERIAL_SUPPORT_ECHO                                          // enable echo mode in rx driver
+  //#define SERIAL_SUPPORT_ESCAPE                                        // enable escape sequencing in driver
   //#define SERIAL_SUPPORT_SCAN                                          // serial receiver supports scanning of input buffer for a sequence
-    #if !defined KINETIS_KL
-      //#define SUPPORT_HW_FLOW                                          // support RTS/CTS flow control and other possible modem signals
+    #if !defined KINETIS_KL && !defined KINETIS_KE
+        #define SUPPORT_HW_FLOW                                          // support RTS/CTS flow control and other possible modem signals
     #endif
   //#define UART_BREAK_SUPPORT                                           // support break control in the UART driver
   //#define SUPPORT_MIDI_BAUD_RATE                                       // support 31250 Baud rate standard setting
@@ -880,6 +903,8 @@
     #define LOG_UART3                                                    // activate this option to log all data sent to UART 3 to a file called "UART3.txt"
     #define LOG_UART4                                                    // activate this option to log all data sent to UART 4 to a file called "UART4.txt"
     #define LOG_UART5                                                    // activate this option to log all data sent to UART 5 to a file called "UART5.txt"
+
+    #define LOG_UART_RX                                                  // log UART receptions to simulation files "UARTx.sim"
 
     #if defined USE_MODBUS
         #define MODBUS_RTU                                               // support binary RTU mode
@@ -903,6 +928,10 @@
         #define MODBUS_SUPPORT_SERIAL_LINE_DIAGNOSTICS                   // support serial line diagnostics
         #define MODBUS_CRC_FROM_LOOKUP_TABLE                             // MODBUS RTU cyclic redundancy check performed with help of loop up table (requires 512 bytes FLASH table, but faster than calculation loop)
     #endif
+
+  //#define USE_PPP                                                      // allow TCP/IP on serial
+      //#define USE_SLIP                                                 // use slip rather than PPP
+      //#define USE_SLIP_DIAL_OUT                                        // dial-out
 #else
     #define NUMBER_SERIAL              0                                 // no physical queue needed
     #define NUMBER_EXTERNAL_SERIAL     0
@@ -917,7 +946,7 @@
 #if defined DEVICE_WITHOUT_USB
     #define NUMBER_USB     0                                             // no physical queue needed
 #else
-    #define USB_INTERFACE                                                // enable USB driver interface
+  //#define USB_INTERFACE                                                // enable USB driver interface
     #if defined USB_INTERFACE
       //#define MICROSOFT_OS_STRING_DESCRIPTOR                           // support MODs
       //#define USB_HOST_SUPPORT                                         // host rather than device
@@ -952,7 +981,7 @@
                 #define NUMBER_USB_AUDIO  0
             #endif
             #if defined USE_USB_MSD
-              //#define FAT_EMULATION                                    // support FAT emulation (full mass-storage not required by USB-MSD)
+                #define FAT_EMULATION                                    // support FAT emulation (full mass-storage not required by USB-MSD)
                 #if defined FAT_EMULATION
                     #define NUMBER_USB_MSD 1                             // single MSD LUM (set to 2 for SD card and emulated drive)
                     #define EMULATED_FAT_LUMS         1                  // the number of logical units on emulated drive
@@ -964,6 +993,7 @@
                     #if defined EMULATED_FAT_FILE_NAME_CONTROL
                         #define FAT_EMULATION_LFN                        // allow long file names to be used for emulated files
                             #define UTFAT_LFN_WRITE_PATCH                // use Linux workaround to avoid patent issues
+                            #define RANDOM_NUMBER_GENERATOR              // random number generator required
                     #endif
                 #else
                     #define NUMBER_USB_MSD 1                             // single MSB LUM
@@ -1032,8 +1062,8 @@
         #endif
         #if defined USB_HOST_SUPPORT
           //#define USB_MSD_HOST                                         // works together with mass-storage for a USB memory stick as disk E
-            #define USB_CDC_HOST                                         // supports CDC device
-                #define SUPPORT_USB_SIMPLEX_HOST_ENDPOINTS               // allow operation with devices using bulk IN/OUT on the same endpoint
+            #define USB_CDC_HOST                                         // supports CDC device (can be used together with MSD host)
+                #define SUPPORT_USB_SIMPLEX_HOST_ENDPOINTS               // allow operation with devices using bulk IN/OUT on the same endpoint (this should normally always be set)
         #endif
         #if defined USB_HS_INTERFACE || defined USB_HOST_SUPPORT || defined USE_USB_AUDIO || defined USB_CDC_RNDIS // since RNDIS makes intensive use of enpoint 0 for status and control it makes snese to use the largest size possible (assuming at least full-speed operation)
             #define ENDPOINT_0_SIZE         64                           // high speed devices should use 64 bytes (and hosts use full size endpoint size)
@@ -1064,6 +1094,7 @@
 //
 //#define I2C_INTERFACE
 #if defined I2C_INTERFACE
+    #define NUMBER_I2C       I2C_AVAILABLE                               // I2C interfaces available
   //#define I2C_SLAVE_MODE                                               // support slave mode
         #define I2C_SLAVE_TX_BUFFER                                      // support preparing slave transmissions with fnWrite()
         #define I2C_SLAVE_RX_BUFFER                                      // support slave reception buffer for fnRead()
@@ -1096,7 +1127,7 @@
 //#define SPI_FLASH_FAT                                                  // FAT in external SPI flash
     #define SIMPLE_FLASH                                                 // don't perform block management and wear-leveling
 #if defined TWR_K60F120M || defined TWR_K70F120M || defined EMCRAFT_K70F120M // NAND flash available so utFAT can be operated in it
-    #define NAND_FLASH_FAT                                               // NAND flash requires SDCARD_SUPPORT to also be active but takes priority over SD card
+  //#define NAND_FLASH_FAT                                               // NAND flash requires SDCARD_SUPPORT to also be active but takes priority over SD card
         #define VERIFY_NAND                                              // development help functions
 #endif
 #if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST
@@ -1115,7 +1146,7 @@
             #define FLEXFLASH_DATA                                       // use FlexNMV in data mode
             #define FLASH_FAT_MANAGEMENT_ADDRESS    (256 * 1024)         // physical address where the used flash starts
         #elif defined FRDM_KL25Z
-            #define FLASH_FAT_MANAGEMENT_ADDRESS    (54 * 1024)          // physical address where the used flash starts
+            #define FLASH_FAT_MANAGEMENT_ADDRESS    (64 * 1024)          // physical address where the used flash starts
         #else
             #define FLASH_FAT_MANAGEMENT_ADDRESS    (128 * 1024)         // physical address where the used flash starts
         #endif
@@ -1127,7 +1158,7 @@
     #define SD_CARD_RETRY_INTERVAL       5                               // attempt SD card initialisation at 5s intervals
     #define UT_DIRECTORIES_AVAILABLE     DISK_COUNT                      // this many directories objects are available for allocation (just one per disk for application interface)
     #define UTMANAGED_FILE_COUNT         10                              // allow this many managed files at one time
-    #define UTFAT_LFN_READ                                               // enable long file name read support
+    #define UTFAT_LFN_READ                                               // enable long file name read support (remove for no long file name support)
     #define STR_EQUIV_ON                                                 // ensure that this routine is available
     #if defined UTFAT_LFN_READ
         #define MAX_UTFAT_FILE_NAME      (100)                           // the maximum file name length supported - maximum 255
@@ -1141,6 +1172,7 @@
         #define UTFAT_LFN_DELETE                                         // support deleting files with long file names (cleaning up all LFN directory entries)
         #define UTFAT_LFN_WRITE                                          // support writing long file names
         #define UTFAT_LFN_WRITE_PATCH                                    // patch long file writes to potentially avoid possible patent issues
+        #define RANDOM_NUMBER_GENERATOR                                  // random number generator required
             #define SFN_ENTRY_CACHE_SIZE 20                              // short file name cache used to speed up SFN alias collision searching when writing LFNs
       //#define UTFAT_SAFE_DELETE                                        // delete operation removes all information (name and content details are removed from disk - no undelete possible)
         #define UTFAT_UNDELETE                                           // undelete a file or directory
@@ -1172,7 +1204,7 @@
 
 // Ethernet
 //
-#if !defined DEVICE_WITHOUT_ETHERNET && !defined K70F150M_12M && !defined TEENSY_3_5 && !defined TEENSY_3_6
+#if !defined DEVICE_WITHOUT_ETHERNET && !defined K70F150M_12M && !defined TEENSY_3_5 && !defined TEENSY_3_6 && !defined K66FX1M
   //#define ETH_INTERFACE                                                // enable Ethernet interface driver
 #elif defined TEENSY_3_1 || defined TEENSY_LC
   //#define ETH_INTERFACE                                                // enable external Ethernet interface driver
@@ -1180,7 +1212,7 @@
         #define ENC424J600_INTERFACE                                     // using ENC424J600
     #endif
 #endif
-#if defined ETH_INTERFACE || defined USB_CDC_RNDIS
+#if (defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP) && !defined BLINKY
     #define MAC_DELIMITER  '-'                                           // used for display and entry of mac addresses
     #define IPV6_DELIMITER ':'                                           // used for display and entry of IPV6 addresses
     #define NUMBER_LAN     1                                             // one physical interface needed for LAN
@@ -1205,7 +1237,7 @@
         #define ETHERNET_RELEASE_LIMIT  3                                // allow a maximum of three reception frames to be handled
 
     #if defined ETH_INTERFACE && ((defined USB_CDC_RNDIS && defined NO_USB_ETHERNET_BRIDGING) || !defined USB_CDC_RNDIS)
-        #define IP_NETWORK_COUNT             2                           // number of networks
+        #define IP_NETWORK_COUNT             1                           // number of networks
             #define SECOND_NETWORK           1                           // reference to second network (after DEFAULT_NETWORK which is 0)
     #endif
     #if defined ENC424J600_INTERFACE
@@ -1227,9 +1259,38 @@
             #define USER_WRITE_HANDLERS  1                               // if application is handling some interface handles the quantity needs to be entered
         #endif
         #define ENC424J600_NETWORK       DEFAULT_NETWORK                 // the ENC424J600 interface is on the default network
+    #elif defined USE_PPP
+        #if defined ETH_INTERFACE
+            #define IP_INTERFACE_COUNT       2                           // two interfaces available (PPP and Ethernet)
+            #define ETHERNET_INTERFACES      1
+            #define ETHERNET_IP_INTERFACE    DEFAULT_IP_INTERFACE
+            #define PPP_IP_INTERFACE         (unsigned char)1
+            #define ETHERNET_INTERFACE       defineInterface(ETHERNET_IP_INTERFACE) // ethernet interface is default interface
+        #else
+            #define IP_INTERFACE_COUNT       1                           // one interface available
+            #define PPP_IP_INTERFACE         DEFAULT_IP_INTERFACE
+        #endif
+        #define PPP_INTERFACE                defineInterface(PPP_IP_INTERFACE)
+        #define PPP_INTERFACES               (PPP_INTERFACE)             // when multiple PPP interfaces exist, each one can be ORed to this mask
+    #elif defined _PHY_KSZ8863                                            // designs using KSZ8863 switch can use tail tagging to control the two switch ports independently
+        #define PHY_MULTI_PORT         4                                  // phy has multiple ports (switch, port 0, port 1, both)
+        #define PHY_TAIL_TAGGING                                          // enable tail tagging operation so that ports can operate as independent interfaces
+        #define PHY_MICREL_SMI                                            // enable smi interface to phy since it is required to control multi-port operation
+        #undef PHY_ADDRESS
+        #undef IP_INTERFACE_COUNT
+        #undef ETHERNET_INTERFACES
+        #define IP_INTERFACE_COUNT     PHY_MULTI_PORT                     // use phy as multiple interfaces
+        #define ETHERNET_INTERFACES    PHY_MULTI_PORT                     // all treated as ethernet interfaces
+        #define PHY1_IP_INTERFACE      (unsigned char)1
+        #define PHY2_IP_INTERFACE      (unsigned char)2
+        #define PHY12_IP_INTERFACE     (unsigned char)3
+        #define ETHERNET_INTERFACE     defineInterface(DEFAULT_IP_INTERFACE) // ethernet interface (switch) is default interface
+        #define PHY1_INTERFACE         defineInterface(PHY1_IP_INTERFACE) // phy port 1 interface is second interface
+        #define PHY2_INTERFACE         defineInterface(PHY2_IP_INTERFACE) // phy port 2 interface is third interface
+        #define PHY12_INTERFACE        defineInterface(PHY12_IP_INTERFACE) // phy both ports interface is fourth interface
     #else
         #if !defined IP_INTERFACE_COUNT
-            #define IP_INTERFACE_COUNT       1                           // single interface available
+            #define IP_INTERFACE_COUNT   1                               // single interface available
         #endif
         #define ETHERNET_INTERFACE  defineInterface(DEFAULT_IP_INTERFACE)// ethernet interface is default interface
     #endif
@@ -1259,9 +1320,11 @@
         #define ARP_IGNORE_FOREIGN_ENTRIES                               // only add used addresses to ARP table
       //#define RESTRICTED_GATEWAY_INTERFACE                             // used only when multiple interfaces are available, in which case the user must supply fnRestrictGatewayInterface() to decide which interfaces are included in gateway ARP re-resolves (when not used all interfaces are used in a single network environment or only the original interface in a multi-network environment)
         #define USE_ICMP                                                 // enable ICMP
-        #define USE_IGMP                                                 // enable IGMP (must be enabled for level 2 hosts that handle multicast IP datagram reception and thus need to have full IP multicasting support)
+      //#define USE_IGMP                                                 // enable IGMP (must be enabled for level 2 hosts that handle multicast IP datagram reception and thus need to have full IP multicasting support)
             #if defined ENC424J600_INTERFACE && (ETHERNET_INTERFACES > 1)
                 #define IGMP_ALL_HOSTS_INTERFACES   (ETHERNET_INTERFACE | ENC424J00_INTERFACE) // interfaces that IGMP is to work on (enabling the all-host group on all required interfaces - only needed when IP_INTERFACE_COUNT > 1)
+            #elif defined USE_PPP && (ETHERNET_INTERFACES > 0)
+                #define IGMP_ALL_HOSTS_INTERFACES   (ETHERNET_INTERFACE | PPP_INTERFACE) // interfaces that IGMP is to work on (enabling the all-host group on all required interfaces - only needed when IP_INTERFACE_COUNT > 1)
             #elif defined RNDIS_IP_INTERFACE && (ETHERNET_INTERFACES > 1)
                 #define IGMP_ALL_HOSTS_INTERFACES   (ETHERNET_INTERFACE | RNDIS_IP_INTERFACE) // interfaces that IGMP is to work on (enabling the all-host group on all required interfaces - only needed when IP_INTERFACE_COUNT > 1)
             #else
@@ -1284,8 +1347,8 @@
         #endif
     #endif
     #if defined USE_IP || defined USE_IPV6
-        #define USE_UDP                                                  // enable UDP over IP - needs IP
-        #define USE_TCP                                                  // enable TCP over IP - needs IP
+      //#define USE_UDP                                                  // enable UDP over IP - needs IP
+      //#define USE_TCP                                                  // enable TCP over IP - needs IP
 
         #if defined USE_TCP                                              // specify TCP support details
           //#define T_TCP_PERIOD           (DELAY_LIMIT)(0.1 * SEC)      // user defined TCP polling resolution (allows higher resolution polling and the following user defined values rather than defaults)
@@ -1314,6 +1377,7 @@
           //#define USE_POP3                                             // enable POP3 Email - needs TCP
             #define USE_HTTP                                             // support embedded Web server - needs TCP
             #define USE_TELNET                                           // enable TELNET support
+              //#define TELNET_RFC2217_SUPPORT                           // support TELNET COM port control options
           //#define USE_TELNET_CLIENT                                    // enable TELNET client support
           //#define USE_TIME_SERVER                                      // enable time server support - presently demo started in application
                 #define NUMBER_OF_TIME_SERVERS 3                         // number of time servers that are used
@@ -1357,13 +1421,13 @@
 
             #define USE_DHCP_CLIENT                                      // enable DHCP client  - needs UDP - IPCONFIG default zero - needs >= 1k Ethernet RX buffers (set random number also)
                 #define DHCP_HOST_NAME                                   // we send our host name as DHCP option - the application must supply fnGetDHCP_host_name()
-            #define USE_DHCP_SERVER                                      // enable DHCP server
-            #define USE_mDNS_SERVER                                      // enable mDNS server - needs UDP and IGMP
+          //#define USE_DHCP_SERVER                                      // enable DHCP server
+          //#define USE_mDNS_SERVER                                      // enable mDNS server - needs UDP and IGMP
           //#define USE_DNS                                              // enable DNS - needs UDP
                 #define DNS_SERVER_OWN_ADDRESS                           // command line menu allows DNS server address to be set, otherwise it uses the default gateway
           //#define USE_TFTP                                             // enable TFTP - needs UDP
             #define USE_NETBIOS                                          // enable NetBIOS - needs UDP
-          //#define USE_SNMP
+            #define USE_SNMP
                 #define SUPPORT_SNMPV2C                                  // SNMPV2c as well as SNMPV1
                 #define SNMP_MANAGER_COUNT        3                      // the number of managers supported
                 #define SNMP_TRAP_QUEUE_LENGTH    8                      // traps that can be queued to each manager
@@ -1595,7 +1659,7 @@
         #define MODBUS_TCP_SERVERS       0
         #define MODBUS_TCP_MASTERS       0
     #endif
-    #if!defined MODBUS_SERIAL_INTERFACES
+    #if !defined MODBUS_SERIAL_INTERFACES
         #define MODBUS_SERIAL_INTERFACES 0
     #endif
     #define NUMBER_MODBUS_QUEUES  (MODBUS_SERIAL_INTERFACES + MODBUS_TCP_SERVERS + MODBUS_TCP_MASTERS) // reserve one queue for each serial MODBUS port and each MODBUS tcp socket
@@ -1611,7 +1675,7 @@
 
 #define PHYSICAL_QUEUES   (NUMBER_SERIAL + NUMBER_EXTERNAL_SERIAL + NUMBER_LAN + NUMBER_I2C + NUMBER_CAN + NUMBER_USB + NUMBER_MODBUS_QUEUES + NUMBER_FIFO_QUEUES) // the number of physical queues in the system
 
-#define RANDOM_NUMBER_GENERATOR                                          // support a random number generator (useful for DHCP and possibly DNS)
+//#define RANDOM_NUMBER_GENERATOR                                        // support a random number generator (useful for DHCP and possibly DNS)
 
 // Cryptography
 //
@@ -1622,8 +1686,9 @@
     #define CRYPTO_AES                                                   // use AES cypher
         #define MBEDTLS_AES_ROM_TABLES                                   // mbedTLS uses ROM tables for AES rather than calculating sbox and tables (costs 8k Flash, saves 8.5k RAM, loses about 70% performance)
         #define OPENSSL_AES_FULL_LOOP_UNROLL                             // unroll loops for improved performance (costs 4k Flash, gains about 20% performance)
-        #define NATIVE_AES_CAU                                           // use uTasker mmCAU - only possible when the device has mmCAU - simulation requires a SW library to be enabled for alternate use
-      //#define AES_DISABLE_CAU                                          // force software implementation by disabling any available crypto accelerator (used mainly for testing CAU efficiency increase)
+      //#define NATIVE_AES_CAU                                           // use uTasker mmCAU (LTC) - only possible when the device has mmCAU (LTC) - simulation requires a SW library to be enabled for alternate use
+          //#define AES_DISABLE_CAU                                      // force software implementation by disabling any available crypto accelerator (used mainly for testing CAU efficiency increase)
+          //#define AES_DISABLE_LTC                                      // LTC has priority of CAU unless it is disabled (less devices support LTC - LP Trusted Cryptography)
 
 // Signal Processing (DSP)
 //
@@ -1694,6 +1759,17 @@
       //#define KITRONIX_GLCD_MODE                                       // use colour TFT in GLCD compatible mode (IDM_L35_B)
       //#define MB785_GLCD_MODE                                          // use colour TFT in GLCD compatible mode (STM321C-EVAL)
       //#define TFT2N0369_GLCD_MODE                                      // use colour TFT in GLCD compatible mode (TWR-LCD)
+      //#define FT800_GLCD_MODE                                          // FTDI FT800 controller
+            #define FT_800_ENABLE                                        // select the FT800 display type
+          //#define FT_801_ENABLE                                        // select the FT801 display type
+          //#define FT_810_ENABLE                                        // select the FT810 display type
+          //#define FT_811_ENABLE                                        // select the FT811 display type
+          //#define FT_812_ENABLE                                        // select the FT812 display type
+          //#define FT_813_ENABLE                                        // select the FT813 display type
+            #if defined FT_810_ENABLE || defined FT_811_ENABLE || defined FT_812_ENABLE || defined FT_813_ENABLE
+                #define FT_81X_ENABLE
+            #endif
+            #define FT800_EMULATOR                                       // enable FTDI emulator (valid for all types and needs to be on to build with visual studio)
         #if defined TWR_K70F120M || defined K70F150M_12M
             #define TWR_LCD_RGB_GLCD_MODE                                // use colour TFT in GLCD compatible mode (TWR-LCD-RGB)
             #define TFT_GLCD_MODE                                        // use a TFT in GLCD compatible mode (only use together with LCD controller)
@@ -1706,6 +1782,10 @@
         #define GLCD_Y             240                                   // vertical resolution of the GLCD in pixels
         #undef BIG_PIXEL
         #define CGLCD_PIXEL_SIZE   1                                     // for each CGLCD pixel use 2 physical pixels in x and y directions - also reduces GLCD memory requirements
+    #elif defined FT800_GLCD_MODE
+        #define GLCD_X             320                                   // horizontal resolution of the GLCD in pixels
+        #define GLCD_Y             240                                   // vertical resolution of the GLCD in pixels
+        #define CGLCD_PIXEL_SIZE   1                                     // for each CGLCD pixel use 1 physical pixels in x and y directions
     #elif defined OLED_GLCD_MODE
         #define GLCD_X             128                                   // horizontal resolution of the GLCD in pixels
         #define GLCD_Y             96                                    // vertical resolution of the GLCD in pixels
@@ -1862,8 +1942,10 @@
     #define GLOBAL_TIMER_TASK
 #elif defined USE_IGMP && ((defined USE_IGMP_V2 || defined USE_IGMP_V3) || (IGMP_MAX_HOSTS > 1))
     #define GLOBAL_TIMER_TASK
+#elif defined USE_DHCP_CLIENT && (IP_NETWORK_COUNT > 1)
+    #define GLOBAL_TIMER_TASK
 #else
-    #define GLOBAL_TIMER_TASK                                            // enable a task for global timer tasks
+  //#define GLOBAL_TIMER_TASK                                            // enable a task for global timer tasks
 #endif
 #if defined GLOBAL_TIMER_TASK
     #if defined USE_IGMP && (IGMP_MAX_HOSTS > 1)
@@ -1876,18 +1958,21 @@
 // Low Power
 //
 #if !((defined K70F150M_12M || defined TWR_K70F120M || defined TWR_K60F120M || defined K60F150M_50M) && defined USB_INTERFACE) // don't use low power mode due to errata e7166
-    #define SUPPORT_LOW_POWER                                            // a low power task supervises power reduction when possible
-        #define LOW_POWER_CYCLING_MODE                                   // allow low power cycle loop with a "Virtual Wake-up Interrupt Handler" - see video https://youtu.be/v4UnfcDiaE4
+    #if !defined RUN_IN_FREE_RTOS
+      //#define SUPPORT_LOW_POWER                                        // a low power task supervises power reduction when possible
+          //#define LOW_POWER_CYCLING_MODE                               // allow low power cycle loop with a "Virtual Wake-up Interrupt Handler" - see video https://youtu.be/v4UnfcDiaE4
+    #endif
 #endif
 
-#define SUPPORT_DOUBLE_QUEUE_WRITES                                      // allow double queue writes to improve efficiency of long queue copies
+//#define SUPPORT_DOUBLE_QUEUE_WRITES                                    // allow double queue writes to improve efficiency of long queue copies
 //#define MULTISTART                                                     // enable a board to user multiple task configurations
 //#define PERIODIC_TIMER_EVENT                                           // delayed and periodic tasks are schedule with timer events if enabled (otherwise they are simply scheduled)
 
 
-#if defined BLINKEY                                                      // if the BLINKEY operation is defined we ensure that the following are disabled to give simplest configuration
+#if defined BLINKY                                                       // if the BLINKY operation is defined we ensure that the following are disabled to give simplest configuration
     #undef USE_MAINTENANCE
     #undef USB_INTERFACE
+    #undef USB_HOST_SUPPORT
     #undef SERIAL_INTERFACE
     #undef I2C_INTERFACE
     #undef CAN_INTERFACE
@@ -1899,6 +1984,11 @@
     #undef CMSIS_DSP_CFFT
     #undef CRYPTOGRAPHY
     #undef SDCARD_SUPPORT
+    #undef FAT_EMULATION
+    #undef USB_MSD_HOST
+    #undef UTFAT_LFN_READ
+    #undef UTFAT_WRITE
+    #undef UTFAT_EXPERT_FUNCTIONS
     #undef FLASH_FAT
     #undef SPI_FLASH_FAT
     #undef FLASH_FILE_SYSTEM
@@ -1907,34 +1997,37 @@
     #undef INTERNAL_USER_FILES
     #undef ACTIVE_FILE_SYSTEM
     #undef MANAGED_FILES
+    #undef UTMANAGED_FILE_COUNT
     #undef GLOBAL_TIMER_TASK
     #undef USE_MODBUS
     #undef QUICK_DEV_TASKS
     #define NO_FLASH_SUPPORT
 #endif
 
-// Project includes are set here for all files in the correct order
-//
-#include "types.h"                                                       // project specific type settings (include the hardware configuration headers)
-#if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST || defined MANAGED_FILES || defined FAT_EMULATION
-    #include "../../uTasker/utFAT/mass_storage.h"
-#endif
-#include "../../stack/tcpip.h"                                           // TCP/IP stack and web utilities
-#include "../../uTasker/driver.h"                                        // driver and general formatting routines
-#include "../../Hardware/hardware.h"                                     // general hardware
-#include "../../uTasker/uTasker.h"                                       // operating system defines
-#if defined USE_MODBUS
-    #include "../../uTasker/MODBUS/modbus.h"
-#endif
-#include "TaskConfig.h"                                                  // the specific task configuration
-#include "application.h"                                                 // general project specific include
-#include "../../uTasker/uGLCDLIB/glcd.h"                                 // LCD
-#if defined _WINDOWS
-    #include "../../WinSim/WinSim.h"
+#if !defined _FREE_RTOS_APPLICATION && !defined INC_FREERTOS_H
+    // Project includes are set here for all files in the correct order
+    //
+    #include "types.h"                                                   // project specific type settings (include the hardware configuration headers)
+    #if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST || defined MANAGED_FILES || defined FAT_EMULATION
+        #include "../../uTasker/utFAT/mass_storage.h"
+    #endif
+    #include "../../stack/tcpip.h"                                       // TCP/IP stack and web utilities
+    #include "../../uTasker/driver.h"                                    // driver and general formatting routines
+    #include "../../Hardware/hardware.h"                                 // general hardware
+    #include "../../uTasker/uTasker.h"                                   // operating system defines
+    #if defined USE_MODBUS
+        #include "../../uTasker/MODBUS/modbus.h"
+    #endif
+    #include "TaskConfig.h"                                              // the specific task configuration
+    #include "application.h"                                             // general project specific include
+    #include "../../uTasker/uGLCDLIB/glcd.h"                             // LCD
+    #if defined _WINDOWS
+        #include "../../WinSim/WinSim.h"
+    #endif
 #endif
 
 #if defined OPSYS_CONFIG                                                 // this is only used by the hardware module
-    #if defined ETH_INTERFACE || defined USB_CDC_RNDIS                   // if we support Ethernet we define some constants for its (TCP/IP) use
+    #if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP// if we support Ethernet we define some constants for its (TCP/IP) use
         const unsigned char cucNullMACIP[MAC_LENGTH] = { 0, 0, 0, 0, 0, 0 };
         const unsigned char cucBroadcast[MAC_LENGTH] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff }; // used also for broadcast IP
     #endif
@@ -1972,5 +2065,4 @@
 
 #define PLAIN_TEXTCONTENT(x) (x == MIME_TXT)                             // list of content types considered as plain text
 
-#endif
 #endif

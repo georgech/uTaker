@@ -20,7 +20,8 @@
     18.07.2015 Add USB_SIMPLEX_ENDPOINTS suport to HS device             {1}
     05.10.2015 fnGetUSB_HW() modification for compatibility with host mode
     23.12.2015 Add zero copy OUT endpoint buffer option                  {2}
-    07.02.2016 Set length to 8 when receiving setup frames (to avoid old lengths form OUTs on the endpoint form being kept) {3}
+    07.02.2016 Set length to 8 when receiving setup frames (to avoid old lengths from OUTs on the endpoint from being kept) {3}
+    08.05.2017 Correct internal HS USB 12MHz oscillator setting          {4}
 
 */
 #if defined USB_HS_INTERFACE
@@ -92,7 +93,7 @@ static int fnProcessInput(int iEndpoint_ref, USB_HW *usb_hardware, unsigned char
         return MAINTAIN_OWNERSHIP;
     case STALL_ENDPOINT:                                                 // send stall
         if (iEndpoint_ref == 0) {                                        // check whether control 0 endpoint
-            ptEndpointBD->usb_bd_tx_even.ulUSB_BDControl = (OWN | BDT_STALL);// force stall handshake on both control 0 buffers
+            ptEndpointBD->usb_bd_tx_even.ulUSB_BDControl = (OWN | BDT_STALL); // force stall handshake on both control 0 buffers
             ptEndpointBD->usb_bd_tx_odd.ulUSB_BDControl  = (OWN | BDT_STALL);
             fnSetUSBEndpointState(iEndpoint_ref, USB_ENDPOINT_STALLED);       
             _SIM_USB(USB_SIM_STALL, iEndpoint_ref, usb_hardware);
@@ -782,7 +783,7 @@ extern void fnConfigUSB(QUEUE_HANDLE Channel, USBTABLE *pars)
         #elif _EXTERNAL_CLOCK == 16000000
         USBPHY_PLL_SIC = (USBPHY_PLL_SIC_PLL_POWER | USBPHY_PLL_SIC_PLL_ENABLE | USBPHY_PLL_SIC_PLL_BYPASS | USBPHY_PLL_SIC_PLL_DIV_SEL_16MHz); // power up PLL to run at 480MHz from 16MHz clock input
         #elif _EXTERNAL_CLOCK == 12000000
-        USBPHY_PLL_SIC = (USBPHY_PLL_SIC_PLL_POWER | USBPHY_PLL_SIC_PLL_ENABLE | USBPHY_PLL_SIC_PLL_BYPASS | USBPHY_PLL_SIC_PLL_DIV_SEL_16MHz); // power up PLL to run at 480MHz from 12MHz clock input
+        USBPHY_PLL_SIC = (USBPHY_PLL_SIC_PLL_POWER | USBPHY_PLL_SIC_PLL_ENABLE | USBPHY_PLL_SIC_PLL_BYPASS | USBPHY_PLL_SIC_PLL_DIV_SEL_12MHz); // {4} power up PLL to run at 480MHz from 12MHz clock input
         #else
             #error "USB PLL requires an external reference of 12MHz, 16MHz or 24MHz!"
         #endif

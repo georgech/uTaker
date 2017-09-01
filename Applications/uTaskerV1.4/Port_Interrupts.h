@@ -33,7 +33,7 @@
     #if !defined K70F150M_12M && !defined TWR_K53N512 && !defined TWR_K40X256 && !defined TWR_K40D100M && !defined KWIKSTIK
       //#define IRQ_TEST                                                 // test IRQ port interrupts
       //#define DMA_PORT_MIRRORING                                       // demonstrate using DMA to control one or more output ports to follow an input port
-        #if defined SUPPORT_LOW_POWER
+        #if defined SUPPORT_LOW_POWER && defined IRQ_TEST
           //#define WAKEUP_TEST                                          // test wake-up port interrupts (wake-up from kinetis low leakage mode)
         #endif
     #endif
@@ -72,13 +72,33 @@
                         break;
                     }
     #else 
+        #if !(defined TRK_KEA8 && defined SUPPORT_LOW_POWER)
                     fnDebugMsg("IRQ_");
+        #endif
                     switch (ucInputMessage[MSG_INTERRUPT_EVENT]) {
                     case IRQ1_EVENT:
                         fnDebugMsg("1");
                         break;
                     case IRQ4_EVENT:
+        #if defined TRK_KEA8 && defined SUPPORT_LOW_POWER
+                        switch (fnGetLowPowerMode()) {
+                        case STOP_MODE:
+                            fnSetLowPowerMode(RUN_MODE);
+                            fnDebugMsg("RUN");
+                            break;
+                        case RUN_MODE:
+                            fnSetLowPowerMode(WAIT_MODE);
+                            fnDebugMsg("WAIT");
+                            break;
+                        default:
+                            fnSetLowPowerMode(STOP_MODE);
+                            fnDebugMsg("STOP");
+                            break;
+                        }
+                        fnDebugMsg(" mode\r\n");
+        #else
                         fnDebugMsg("4");
+        #endif
         #if defined CAN_INTERFACE && defined TEST_CAN
                         fnSendCAN(1);                                    // {4}
         #endif
@@ -117,7 +137,6 @@ static void test_irq_1(void)
 }
     #endif
 
-
 static void test_irq_4(void)
 {
     fnInterruptMessage(OWN_TASK, IRQ4_EVENT);
@@ -154,6 +173,7 @@ static void test_irq_11(void)
 }
     #endif
 
+
 // Configure several IRQ inputs to demonstrate port change/wakeup interrupts
 //
 static void fnInitIRQ(void)
@@ -174,6 +194,13 @@ static void fnInitIRQ(void)
             #else
     interrupt_setup.int_port_bits  = PORTC_BIT12;                        // the IRQ input connected (SWITCH_3 on FRDM-KL46Z)
             #endif
+        #elif defined TRK_KEA8
+    // Keyboard
+    //
+    interrupt_setup.int_type       = KEYBOARD_INTERRUPT;                 // define keyboard interrupt rather than IRQ
+    interrupt_setup.int_priority   = PRIORITY_KEYBOARD_INT;              // interrupt priority level
+    interrupt_setup.int_port       = KE_PORTC;                           // the port that the interrupt input is on (KE_PORTA, KE_PORTB, KE_PORTC and KE_PORTD are the same)
+    interrupt_setup.int_port_bits  = (KE_PORTC_BIT4);                    // the IRQ input connected (switch 1)
         #elif defined FRDM_KE02Z || defined FRDM_KE02Z40M || defined TRK_KEA64 || defined TRK_KEA128 || defined FRDM_KEAZN32Q64 || defined FRDM_KEAZN64Q64 || defined FRDM_KEAZN128Q80
     // Keyboard
     //
@@ -189,19 +216,19 @@ static void fnInitIRQ(void)
         #elif defined FRDM_KE04Z || defined FRDM_KE06Z
     // Keyboard
     //
-    interrupt_setup.int_type       = KEYBOARD_INTERRUPT;                 // define keyboard interrupt rather than IRQ
+  //interrupt_setup.int_type       = KEYBOARD_INTERRUPT;                 // define keyboard interrupt rather than IRQ
     interrupt_setup.int_priority   = PRIORITY_KEYBOARD_INT;              // interrupt priority level
   //interrupt_setup.int_port       = KE_PORTD;                           // the port that the interrupt input is on (KE_PORTA, KE_PORTB, KE_PORTC and KE_PORTD are the same)
     interrupt_setup.int_port       = KE_PORTH;                           // the port that the interrupt input is on (KE_PORTE, KE_PORTF, KE_PORTG and KE_PORTH are the same)
     interrupt_setup.int_port_bits  = (KE_PORTH_BIT6 | KE_PORTH_BIT7);    // the IRQs input connected
     // IRQ
     //
-  //interrupt_setup.int_priority   = PRIORITY_PORT_IRQ_INT;              // interrupt priority level
-  //interrupt_setup.int_port       = KE_PORTA;                           // the port that the interrupt input is on (when using PTA5 as IRQ SIM_SOPT_KE_DEFAULT must be configured to disable the reset function on the pin)
-  //interrupt_setup.int_port_bits  = KE_PORTA_BIT5;                      // the IRQ input connected
+    interrupt_setup.int_priority   = PRIORITY_PORT_IRQ_INT;              // interrupt priority level
+    interrupt_setup.int_port       = KE_PORTA;                           // the port that the interrupt input is on (when using PTA5 as IRQ SIM_SOPT_KE_DEFAULT must be configured to disable the reset function on the pin)
+    interrupt_setup.int_port_bits  = KE_PORTA_BIT5;                      // the IRQ input connected
     //
-  //interrupt_setup.int_port       = KE_PORTI;                           // the port that the interrupt input is on
-  //interrupt_setup.int_port_bits  = KE_PORTI_BIT6;                      // the IRQ input connected
+    interrupt_setup.int_port       = KE_PORTI;                           // the port that the interrupt input is on
+    interrupt_setup.int_port_bits  = KE_PORTI_BIT6;                      // the IRQ input connected
         #elif defined TWR_K24F120M || defined TWR_K64F120M || defined FRDM_K64F || defined TWR_K21F120M || defined TWR_K22F120M || defined TEENSY_3_1 || defined TWR_K21D50M
             #if defined WAKEUP_TEST
     interrupt_setup.int_type       = WAKEUP_INTERRUPT;                   // configure as wake-up interrupt
@@ -245,6 +272,12 @@ static void fnInitIRQ(void)
     interrupt_setup.int_port       = PORTC;                              // the port that the interrupt input is on
             #if defined FRDM_K22F || defined FRDM_KL27Z
     interrupt_setup.int_port_bits  = PORTC_BIT1;                         // the IRQ input connected (SW2 on FRDM-K22F) LLWU_P6 (SW3 on FRDM-KL27Z)
+                #if defined FRDM_KL27Z
+    interrupt_setup.int_port_sense = (IRQ_FALLING_EDGE | PULLUP_ON);     // interrupt is to be falling edge sensitive
+    fnConfigureInterrupt((void *)&interrupt_setup);                      // configure interrupt
+    interrupt_setup.int_port_bits = PORTC_BIT4;
+    interrupt_setup.int_handler = test_irq_4;
+                #endif
             #elif defined TWR_K53N512 || defined TWR_K40D100M
     interrupt_setup.int_port_bits  = PORTC_BIT5;                         // the IRQ input connected (SW1 on TWR-K53N512 and TWR-K40D100M) LLWU_P9
             #else
@@ -262,7 +295,7 @@ static void fnInitIRQ(void)
     interrupt_setup.int_port_bits  = PORTA_BIT16;                        // J2-9 on FRDM-KL25Z
     interrupt_setup.int_priority   = PRIORITY_PORT_A_INT;                // interrupt priority level
             #endif
-        #elif defined FRDM_KL03
+        #elif defined FRDM_KL03Z
             #if defined WAKEUP_TEST
     interrupt_setup.int_type       = WAKEUP_INTERRUPT;                   // configure as wake-up interrupt
     interrupt_setup.int_port_bits  = SWITCH_2;                           // PTB0
@@ -289,6 +322,8 @@ static void fnInitIRQ(void)
                 #endif
             #elif defined TWR_KV31F120M
     interrupt_setup.int_port_bits  = PORTA_BIT4;                         // the IRQ input connected (SWITCH_3 on TWR_KV31F120M)
+            #elif defined FRDM_K66F
+    interrupt_setup.int_port_bits = PORTA_BIT10;                         // the IRQ input connected (SW3 on FRDM-K66F)
             #else
     interrupt_setup.int_port_bits  = PORTA_BIT19;                        // the IRQ input connected (SWITCH_1 on TWR_K60N512)
             #endif
@@ -302,11 +337,13 @@ static void fnInitIRQ(void)
         // Configure the DMA trigger from the UART input pin change to toggle an alternative port so that the input signal is mirrored to that output without CPU intervention
         //
         static const unsigned long ulOutput = PORTC_BIT16;               // the output to be mirrored to
-        fnConfigDMA_buffer(9, DMAMUX0_CHCFG_SOURCE_PORTB, sizeof(ulOutput), (void *)&ulOutput, (void *)&(((GPIO_REGS *)GPIOC_ADD)->PTOR), (DMA_FIXED_ADDRESSES | DMA_LONG_WORDS), 0, 0); // use DMA channel 9 without and interrupts (free-runnning)
+        fnConfigDMA_buffer(9, DMAMUX0_CHCFG_SOURCE_PORTB, sizeof(ulOutput), (void *)&ulOutput, (void *)&(((GPIO_REGS *)GPIOC_ADD)->PTOR), (DMA_FIXED_ADDRESSES | DMA_LONG_WORDS), 0, 0); // use DMA channel 9 without any interrupts (free-runnning)
     }
         #else
-    #if defined FRDM_KL25Z || defined FRDM_KL05Z
+    #if defined FRDM_KL25Z || defined FRDM_KL05Z || defined FRDM_KL27Z
     interrupt_setup.int_port_sense = (IRQ_FALLING_EDGE | PULLUP_ON | ENABLE_PORT_MODE); // set the pin to port mode - this is needed if the pin is disabled by default otherwise the pull-up/LLWU functions won't work
+    #elif defined TRK_KEA8
+    interrupt_setup.int_port_sense = (IRQ_RISING_EDGE | PULLUP_DOWN_OFF);// interrupt is to be rising edge sensitive
     #else
     interrupt_setup.int_port_sense = (IRQ_FALLING_EDGE | PULLUP_ON);     // interrupt is to be falling edge sensitive
     #endif
@@ -323,6 +360,9 @@ static void fnInitIRQ(void)
             #elif defined TWR_K64F120M || defined FRDM_K64F
     interrupt_setup.int_port       = PORTA;                              // the port that the interrupt input is on
     interrupt_setup.int_port_bits  = PORTA_BIT4;                         // (SWITCH_3 on TWR_K24F120M and FRDM-K64F) LLWU_P3
+            #elif defined FRDM_K66F
+    interrupt_setup.int_port       = PORTD;                              // the port that the interrupt input is on
+    interrupt_setup.int_port_bits  = PORTD_BIT11;                        // SW2 on FRDM-K66F
             #elif defined TEENSY_3_1
     interrupt_setup.int_port       = PORTD;                              // the port that the interrupt input is on
     interrupt_setup.int_port_bits  = PORTD_BIT4;                         // (pin 6) LLWU_P14
@@ -500,7 +540,6 @@ static void fnInitIRQ(void)
     fnConfigureInterrupt((void *)&interrupt_setup);                      // configure test interrupt
         #endif
     #endif
-
     #if defined FRDM_K64F_ && defined WAKEUP_TEST                        // configure all K64 LLWU pins
     interrupt_setup.int_type       = PORT_INTERRUPT;                     // identifier to configure port interrupt
     interrupt_setup.int_port_sense = (IRQ_FALLING_EDGE | PULLUP_ON/* | ENABLE_PORT_MODE*/);

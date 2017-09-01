@@ -123,6 +123,8 @@
     10.02.2016 Add return value to fnDecode64()                          {100}
     11.02 2016 Parameters for fnStartHTTP() modified                     {101}
     05.11.2016 Add pseudo flag TCP_FLAG_FIN_RECEIVED                     {102}
+    16.02.2017 Add RFC 2217 (Telnet com port control option) mode        {103}
+    10.05.2017 Add optional Ethernet frame ucErrorFlags field            {104}
 
 */
 
@@ -230,14 +232,22 @@ typedef struct _PACK stETHERNET_FRAME                                    // {1}
 #if defined PHY_TAIL_TAGGING                                             // {76}
     unsigned char           ucRxPort;                                    // the source port of the receive frame
 #endif
+#if defined ETH_ERROR_FLAGS
+    unsigned char           ucErrorFlags;                                // {104}
+#endif
 } ETHERNET_FRAME;
+
+#define ETH_ERROR_INVALID_IPv4                0x01                       // not IPv4, or corrupted IPv4 content
+#define ETH_ERROR_INVALID_IPv4_CHECKSUM       0x02                       // IPv4 type but with bad IP checksum
+#define ETH_ERROR_INVALID_ARP_RARP            0x04                       // not ARP/RARP
 
 #define INTERFACE_NO_RX_CS_OFFLOADING         0x01                       // force receive IP checksum calculation
 #define INTERFACE_NO_TX_CS_OFFLOADING         0x02                       // force transmit IP checksum calculation in all cases
 #define INTERFACE_NO_TX_PAYLOAD_CS_OFFLOADING 0x04                       // force transmit IP checksum calculation when payload is involved
 #define INTERFACE_NO_MAC_FILTERING            0x08                       // the interface operate in promiscuous mode so MAC filtering may be required in software
+#define INTERFACE_NO_MAC_ETHERNET_II          0x10                       // the interface uses IP without MAC (eg. PPP)
 
-#define INTERFACE_RX_PAYLOAD_CS_FRAGS         0x10                       // used only locally - do not set as interface characteristic
+#define INTERFACE_RX_PAYLOAD_CS_FRAGS         0x40                       // used only locally - do not set as interface characteristic
 #define INTERFACE_CALC_TCP_IPv6               0x80                       // used only locally - do not set as interface characteristic
 
 #define VLAN_UNTAG_TX_FRAME   0x10                                       // force transmission to be untagged
@@ -1216,6 +1226,10 @@ __PACK_OFF
 #define TELNET_NEW_ENVIRONMENT_OPTION  39
 #define TELNET_TN3270E                 40
 
+#define TELNET_RFC2217_COM_PORT_OPTION 44                                // {103}
+
+
+
 
 // Telnet commands
 //
@@ -1229,7 +1243,50 @@ __PACK_OFF
 #define TELNET_RAW_RX_IAC_OFF          7
 #define TELNET_RAW_TX_IAC_ON           8
 #define TELNET_RAW_TX_IAC_OFF          9
-#define TELNET_RESET_MODE              10
+#define TELNET_RFC2217_ON              10                                // {103}
+#define TELNET_RFC2217_OFF             11
+#define TELNET_RESET_MODE              12
+
+// RFC 2217 commands
+//
+#define SET_SIGNATURE_SERVER           0
+#define SET_SIGNATURE_CLIENT           100
+
+#define SET_BAUDRATE_SERVER            1
+#define SET_BAUDRATE_CLIENT            101
+
+#define SET_DATASIZE_SERVER            2
+#define SET_DATASIZE_CLIENT            102
+
+#define SET_PARITY_SERVER              3
+#define SET_PARITY_CLIENT              103
+
+#define SET_STOPSIZE_SERVER            4
+#define SET_STOPSIZE_CLIENT            104
+
+#define SET_CONTROL_SERVER             5
+#define SET_CONTROL_CLIENT             105
+
+#define NOTIFY_LINESTATE_SERVER        6
+#define NOTIFY_LINESTATE_CLIENT        106
+
+#define NOTIFY_MODEMSTATE_SERVER       7
+#define NOTIFY_MODEMSTATE_CLIENT       107
+
+#define FLOWCONTROL_SUSPEND_SERVER     8
+#define FLOWCONTROL_SUSPEND_CLIENT     108
+
+#define FLOWCONTROL_RESUME_SERVER      9
+#define FLOWCONTROL_RESUME_CLIENT      109
+
+#define SET_LINESTATE_MASK_SERVER      10
+#define SET_LINESTATE_MASK_CLIENT      110
+
+#define SET_MODEMSTATE_MASK_SERVER     11
+#define SET_MODEMSTATE_MASK_CLIENT     111
+
+#define PURGE_DATA_SERVER              12
+#define PURGE_DATA_CLIENT              112
 
 // Telnet modes
 //
@@ -1247,6 +1304,7 @@ __PACK_OFF
 #define TELNET_STUFF_TX_IAC            0x0400
 #define TELNET_SEARCH_RX_IAC           0x0800
 #define TELNET_CLIENT_NO_NEGOTIATION   0x1000
+#define TELNET_RFC2217_ACTIVE          0x2000                            // {103}
 
 typedef struct stTELNET_CLIENT_DETAILS                                   // {91}
 {
@@ -1262,11 +1320,100 @@ typedef struct stTELNET_CLIENT_DETAILS                                   // {91}
 } TELNET_CLIENT_DETAILS;
 
 
+#define RFC2217_PARITY_NONE                      1
+#define RFC2217_PARITY_ODD                       2
+#define RFC2217_PARITY_EVEN                      3
+#define RFC2217_PARITY_MARK                      4
+#define RFC2217_PARITY_SPACE                     5
+
+#define RFC2217_STOPS_ONE                        1
+#define RFC2217_STOPS_TWO                        2
+#define RFC2217_STOPS_1_5                        3
+
+#define RFC2217_REQUEST_FLOW_CONTROL             0
+#define RFC2217_NO_FLOW_CONTROL                  1
+#define RFC2217_XON_XOFF_FLOW_CONTROL            2
+#define RFC2217_HARDWARE_FLOW_CONTROL            3
+#define RFC2217_REQUEST_BREAK_STATE              4
+#define RFC2217_SET_BREAK_STATE_ON               5
+#define RFC2217_SET_BREAK_STATE_OFF              6
+#define RFC2217_REQUEST_DTR_STATE                7
+#define RFC2217_SET_DTR_STATE_ON                 8
+#define RFC2217_SET_DTR_STATE_OFF                9
+#define RFC2217_REQUEST_RTS_STATE                10
+#define RFC2217_SET_RTS_STATE_ON                 11
+#define RFC2217_SET_RTS_STATE_OFF                12
+#define RFC2217_REQUEST_FLOW_CONTROL_INBOUND     13
+#define RFC2217_NO_FLOW_CONTROL_INBOUND          14
+#define RFC2217_XON_XOFF_FLOW_CONTROL_INBOUND    15
+#define RFC2217_HARDWARE_FLOW_CONTROL_INBOUND    16
+#define RFC2217_USE_DCD_FLOW_CONTROL             17
+#define RFC2217_USE_DTR_FLOW_CONTROL             18
+#define RFC2217_USE_DSR_FLOW_CONTROL             19
+
+#define RFC2217_LINE_STATE_MASK_DATA_READY                         0x01
+#define RFC2217_LINE_STATE_MASK_OVERRUN_ERROR                      0x02
+#define RFC2217_LINE_STATE_MASK_PARITY_ERROR                       0x04
+#define RFC2217_LINE_STATE_MASK_FRAMING_ERROR                      0x08
+#define RFC2217_LINE_STATE_MASK_BREAK_DETECT_ERROR                 0x10
+#define RFC2217_LINE_STATE_MASK_TRANSFER_HOLDING_REGISTER_EMPTY    0x20
+#define RFC2217_LINE_STATE_MASK_TRANSFER_SHIFT_REGISTER_EMPTY      0x40
+#define RFC2217_LINE_STATE_MASK_TIMEOUT_ERROR                      0x80
+
+#define RFC2217_LINE_STATE_MASK_DELTA_CLEAR_TO_SEND                0x01
+#define RFC2217_LINE_STATE_MASK_DELTA_DATA_SET_READY               0x02
+#define RFC2217_LINE_STATE_MASK_TRAINING_EDGE_RING_DETECTOR        0x04
+#define RFC2217_LINE_STATE_MASK_DELTA_RECEIVE_LINE_SIGNAL_DETECT   0x08
+#define RFC2217_LINE_STATE_MASK_CLEAR_TO_SEND_SIGNAL_STATE         0x10
+#define RFC2217_LINE_STATE_MASK_DATA_SET_READY_SIGAL_STATE         0x20
+#define RFC2217_LINE_STATE_MASK_RING_INDICATOR                     0x40
+#define RFC2217_LINE_STATE_MASK_CARRIER_DETECT                     0x80
+
+#define RFC2217_PURGE_ACCESS_SERVER_RECEIVE_DATA_BUFFER    1
+#define RFC2217_PURGE_ACCESS_SERVER_TRANSMIT_DATA_BUFFER   2
+#define RFC2217_PURGE_ACCESS_SERVER_TX_RX_DATA_BUFFERS     3
+
+typedef struct stRFC2217_UART_SETTINGS                                   // {103}
+{
+    unsigned long ulBaudRate;
+    QUEUE_HANDLE  uartID;
+    unsigned char ucDataSize;                                            // 5, 6, 7 or 8
+    unsigned char ucParity;
+    unsigned char ucStopBits;
+    unsigned char ucFlowControl;
+} RFC2217_UART_SETTINGS;
+
+#define RFC2217_CONNECTION_OPENED    1
+#define RFC2217_SETTINGS_CHANGED     2
+#define RFC2217_CONNECTION_CLOSED    3
+
+typedef struct stRFC2217_INSTANCE                                        // {103}
+{
+    int     iInstanceState;
+    USOCKET Telnet_RFC2217_socket;
+    int    (*RFC2217_callback)(int, RFC2217_UART_SETTINGS *);
+    unsigned char ucLineStateMask;
+    unsigned char ucModemStateMast;
+    RFC2217_UART_SETTINGS uart_settings;
+    RFC2217_UART_SETTINGS uart_settings_original;
+} RFC2217_INSTANCE;
+
+typedef struct stRFC2217_SESSION_CONFIG                                   // {103}
+{
+    int(*RFC2217_userCallback)(int, RFC2217_UART_SETTINGS *);
+    unsigned short usPortNumber;
+    unsigned short usIdleTimeout;
+    RFC2217_UART_SETTINGS uart_settings;
+} RFC2217_SESSION_CONFIG;
+
 typedef struct stTELNET                                                  // {8} don't force packed
 {
     int (*fnApp)(USOCKET, unsigned char, unsigned char *, unsigned short);
 #if defined USE_TELNET_CLIENT                                            // {91}
     TELNET_CLIENT_DETAILS *ptrTelnetClientDetails;                       // pointer to client characteristics
+#endif
+#if defined TELNET_RFC2217_SUPPORT                                       // {103}
+    RFC2217_INSTANCE *ptrRFC2217_Instance;                               // pointer to an RFC2217 session instance
 #endif
     unsigned short usTelnetMode;
     unsigned short usTelnetPortNumber;
@@ -1783,7 +1930,7 @@ typedef struct _PACK stETH_IP_ENCAPSULATION_HEADER                       // fixe
 #define SNMP_AGENT_PORT            161
 #define SNMP_MANAGER_PORT          162
 #define mDNS_PORT                  5353
-#define ETHERNET_IP_PORT           44818                                 // 0xaf12 at least 2 sockets expected
+#define ETHERNET_IP_PORT           44818                                 // 0xaf12 - at least 2 sockets expected
 
 // TCP ports
 //
@@ -1795,7 +1942,9 @@ typedef struct _PACK stETH_IP_ENCAPSULATION_HEADER                       // fixe
 #define HTTP_SERVERPORT            80
 #define POP_PORT                   110
 #define HTTPS_SERVERPORT           443
-//#define ETHERNET_IP_PORT         44818                                 // used by UDP and TCP
+//#define ETHERNET_IP_PORT         44818                                 // used by both UDP and TCP
+#define MQTT_PORT                  1883
+#define MQTTS_PORT                 8883
 
 
 // Cipher suites
@@ -2028,7 +2177,7 @@ extern int  fnStartTFTP_client(void (*Callback)(unsigned short, CHAR *), unsigne
 #else
     #define FGEN_PROTO unsigned char (*fnGenerator)(unsigned char *)
 #endif
-extern int fnStart_mDNS(USOCKET network_interface);                      // {}
+extern int fnStart_mDNS(USOCKET network_interface);
 
 typedef struct stHTTP_FUNCTION_SET                                       // {101}
 {
@@ -2081,6 +2230,9 @@ extern void fnStopTelnet(USOCKET TelnetSocket);
 extern int  fnTelnet(USOCKET Telnet_socket, int iCommand);
 extern int  fnCheckTelnetBinaryTx(USOCKET Socket);
 extern USOCKET fnConnectTELNET(TELNET_CLIENT_DETAILS *ptrTelnetClientDetails); // {91}
+#if defined TELNET_RFC2217_SUPPORT
+    extern USOCKET fnTelnetRF2217(RFC2217_SESSION_CONFIG *ptrConfig);
+#endif
 
 extern void fnStartFtp(unsigned short usFTPTimeout, unsigned char ucFTP_operating_mode);
     #define FTP_AUTHENTICATE       0x01                                  // require authentication rather than accepting anonymous login

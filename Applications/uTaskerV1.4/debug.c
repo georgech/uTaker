@@ -108,6 +108,7 @@
     17.01.2015 Add file hide and write-protect commands                  {83}
     12.12.2016 Add CMSIS CFFT and AES                                    {84}
     02.02.2017 Add low power cycling control                             {85} - see video https://youtu.be/v4UnfcDiaE4
+    05.07.2017 Modify SD card sector write interface                     {86}
 
 */
 
@@ -126,7 +127,7 @@
 /*                          local definitions                          */
 /* =================================================================== */
 
-//#define TEST_SDCARD_SECTOR_WRITE                                       // {44} activate to allow sector writes to be tested
+#define TEST_SDCARD_SECTOR_WRITE                                         // {44} activate to allow sector writes to be tested
 //#define TEST_I2C_INTERFACE                                             // activate to enable special I2C tests via menu
 //#define DEVELOP_PHY_CONTROL                                            // {33} activate to enable PHY register dump and writes to individual register addresses
                                                                          // note that STOP_MII_CLOCK should not be enabled when using this (kinetis)
@@ -135,7 +136,7 @@
     #define TEST_CMSIS_CFFT                                              // {84} enable test of CMSIS CFFT
 #endif
 #if !defined KINETIS_KE && !defined KINETIS_KL
-    #define EZPORT_CLONER                                                // {55}
+  //#define EZPORT_CLONER                                                // {55}
         #define EZPORT_CLONER_SKIP_REGIONS                               // cloner leaves defined areas blank
 #endif
 //#define LOW_MEMORY                                                     // remove utFAT print and sector display to save stack space when calling other utFAT interface routines
@@ -181,8 +182,8 @@
 
     #define STALL_CRITICAL          (TX_BUFFER_SIZE/2)                   // when the Windows TCP implementation sees that the window is less than half the maximum windows size we have advertised it will perform a delay of about 5s.
 
-    #define I2C_WRITE_ADDRESS       0xd0
-    #define I2C_READ_ADDRESS        0xd1
+    #define I2C_WRITE_ADDRESS       0xa4
+    #define I2C_READ_ADDRESS        0xa5
 
     #define UT_PATH_LENGTH          256                                  // length of maximum directory string
 
@@ -617,8 +618,10 @@ typedef struct stCLONER_SKIP_REGION
     #if defined USE_TELNET_CLIENT
         static int fnTELNETClientListener(USOCKET Socket, unsigned char ucEvent, unsigned char *ucIp_Data, unsigned short usPortLen);
     #endif
+    #if !defined REMOVE_PORT_INITIALISATIONS
     static void fnSetPortBit(unsigned short usBit, int iSetClr);
     static int  fnConfigOutputPort(CHAR cPortBit);
+    #endif
 #endif
 
 /* =================================================================== */
@@ -651,7 +654,7 @@ static const DEBUG_COMMAND tMainCommand[] = {
 
 static const DEBUG_COMMAND tLANCommand[] = {
     {"up",                "go to main menu",                       DO_HELP,          DO_HELP_UP },
-#if defined ETH_INTERFACE || defined USB_CDC_RNDIS
+#if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP
     #if IP_NETWORK_COUNT > 1
     {"net",               "Set network reference (0 default)",     DO_IP,            DO_SET_NETWORK },
     #endif
@@ -756,12 +759,12 @@ static const DEBUG_COMMAND tIOCommand[] = {
     {"se",                "Storage Erase [address] [len-hex]",     DO_HARDWARE,      DO_STORAGE_ERASE }, // {74}
     #endif
 #endif
-//  {"set_user",          "Set output mode [0..3] [<d>|<u>]",      DO_HARDWARE,      DO_SET_USER_OUTPUT },
-//  {"get_user",          "Get output mode [0..3]",                DO_HARDWARE,      DO_GET_USER_OUTPUT },
+#if !defined REMOVE_PORT_INITIALISATIONS
     {"set_ddr",           "Set port type [1..4] [<i>|<o>",         DO_HARDWARE,      DO_DDR },
     {"get_ddr",           "Get data direction [1..4]",             DO_HARDWARE,      DO_GET_DDR },
     {"read_port",         "Read port input [1..4]",                DO_HARDWARE,      DO_INPUT },
     {"write_port",        "Set port output [1..4] [0/1]",          DO_HARDWARE,      DO_OUTPUT },
+#endif
 #if defined GLCD_BACKLIGHT_CONTROL                                       // {75}
     {"sbl",               "Show backlight",                        DO_HARDWARE,      DO_GET_BACKLIGHT },
     {"blight",            "Set backlight [0..100]%",               DO_HARDWARE,      DO_SET_BACKLIGHT },
@@ -785,7 +788,12 @@ static const DEBUG_COMMAND tIOCommand[] = {
     {"ez_clone",          "Clone software",                        DO_HARDWARE,      DO_EZCLONE },
     {"ez_s_clone",        "Securely Clone software",               DO_HARDWARE,      DO_EZSCLONE },
 #endif
+#if defined PWM_MEASUREMENT_DEVELOPMENT
     { "test",             "Temp test",                             DO_HARDWARE,      75 },
+#endif
+#if defined SUPPORT_LPTMR
+    { "lp_cnt",           "Read LPTMR CNT",                        DO_HARDWARE,      76 },
+#endif
 #if defined USE_PARAMETER_BLOCK
     {"save",              "Save port setting as default",          DO_HARDWARE,      DO_SAVE_PORT },
 #endif
@@ -795,7 +803,7 @@ static const DEBUG_COMMAND tIOCommand[] = {
 
 static const DEBUG_COMMAND tADMINCommand[] = {
     {"up",                "go to main menu",                       DO_HELP,          DO_HELP_UP },
-#if defined ETH_INTERFACE || defined USB_CDC_RNDIS
+#if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP
     {"set_ftp",           "[enable/disable] FTP server",           DO_SERVER,        DO_ENABLE_FTP },
     {"set_telnet",        "[enable/disable] Telnet service",       DO_SERVER,        DO_ENABLE_TELNET },
     {"set_web",           "[enable/disable] WEB server",           DO_SERVER,        DO_ENABLE_WEB_SERVER },
@@ -841,7 +849,7 @@ static const DEBUG_COMMAND tADMINCommand[] = {
 
 static const DEBUG_COMMAND tStatCommand[] = {
     {"up",                "go to main menu",                       DO_HELP,          DO_HELP_UP },
-#if defined ETH_INTERFACE || defined USB_CDC_RNDIS
+#if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP
     {"ipstat",            "Show Ethernet statistics",              DO_IP,            DO_SHOW_ETHERNET_STATS },
     {"r_ipstat",          "Reset Ethernet statistics",             DO_IP,            DO_RESET_ETHERNET_STATS },
 #endif
@@ -903,87 +911,87 @@ static const DEBUG_COMMAND tI2CCommand[] = {
 };
 
 static const DEBUG_COMMAND tDiskCommand[] = {                            // {17}
-    {"up",                "go to main menu",                       DO_HELP,          DO_HELP_UP },
+    {"up",                "go to main menu",                       DO_HELP,          DO_HELP_UP},
 #if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST // {81}
     #if DISK_COUNT > 1
-    {"disk",              "select disk [C/D/E]",                   DO_DISK,          DO_DISK_NUMBER },
+    {"disk",              "select disk [C/D/E]",                   DO_DISK,          DO_DISK_NUMBER},
     #endif
-    {"info",              "utFAT/card info",                       DO_DISK,          DO_INFO },
-    {"dir",               "[path] show directory content",         DO_DISK,          DO_DIR },
+    {"info",              "utFAT/card info",                       DO_DISK,          DO_INFO},
+    {"dir",               "[path] show directory content",         DO_DISK,          DO_DIR},
     #if defined UTFAT_UNDELETE || defined UTFAT_EXPERT_FUNCTIONS         // {60}
-    {"dird",              "[path] show deleted directory content", DO_DISK,          DO_DIR_DELETED },
+    {"dird",              "[path] show deleted directory content", DO_DISK,          DO_DIR_DELETED},
     #endif
     #if defined UTFAT_EXPERT_FUNCTIONS                                   // {60}
-    {"dirh",              "[path] show hidden content",            DO_DISK,          DO_DIR_HIDDEN },
-  //{"dirc",              "[path] show corrupted directory content", DO_DISK,        DO_DIR_CORRUPTED },
-    {"infof",             "[path] show file info",                 DO_DISK,          DO_INFO_FILE },
-    {"infod",             "[path] show deleted info",              DO_DISK,          DO_INFO_DELETED },
+    {"dirh",              "[path] show hidden content",            DO_DISK,          DO_DIR_HIDDEN},
+  //{"dirc",              "[path] show corrupted directory content", DO_DISK,        DO_DIR_CORRUPTED},
+    {"infof",             "[path] show file info",                 DO_DISK,          DO_INFO_FILE},
+    {"infod",             "[path] show deleted info",              DO_DISK,          DO_INFO_DELETED},
     #endif
-    {"cd",                "[path] change dir. (.. for up)",        DO_DISK,          DO_CHANGE_DIR },
+    {"cd",                "[path] change dir. (.. for up)",        DO_DISK,          DO_CHANGE_DIR},
     #if defined UTFAT_WRITE                                              // {45}
-    {"file" ,             "[path] new empty file",                 DO_DISK,          DO_NEW_FILE },
-    {"write",             "[path] test write to file",             DO_DISK,          DO_WRITE_FILE },
-    {"mkdir" ,            "new empty dir",                         DO_DISK,          DO_NEW_DIR },
-    {"rename" ,           "[from] [to] rename",                    DO_DISK,          DO_RENAME },
-    {"trunc" ,            "truncate to [length] [path]",           DO_DISK,          DO_TEST_TRUNCATE }, // {59}
+    {"file" ,             "[path] new empty file",                 DO_DISK,          DO_NEW_FILE},
+    {"write",             "[path] test write to file",             DO_DISK,          DO_WRITE_FILE},
+    {"mkdir" ,            "new empty dir",                         DO_DISK,          DO_NEW_DIR},
+    {"rename" ,           "[from] [to] rename",                    DO_DISK,          DO_RENAME},
+    {"trunc" ,            "truncate to [length] [path]",           DO_DISK,          DO_TEST_TRUNCATE}, // {59}
         #if defined UTFAT_EXPERT_FUNCTIONS                               // {83}
-    {"hide",              "[path] file/dir to hide",               DO_DISK,          DO_WRITE_HIDE },
-    {"unhide",            "[path] file/dir to un-hide",            DO_DISK,          DO_WRITE_UNHIDE },
-    {"prot",              "[path] file/dir to write-protect",      DO_DISK,          DO_SET_PROTECT },
-    {"unprot",            "[path] file/dir to un-protet",          DO_DISK,          DO_REMOVE_PROTECT },
+    {"hide",              "[path] file/dir to hide",               DO_DISK,          DO_WRITE_HIDE},
+    {"unhide",            "[path] file/dir to un-hide",            DO_DISK,          DO_WRITE_UNHIDE},
+    {"prot",              "[path] file/dir to write-protect",      DO_DISK,          DO_SET_PROTECT},
+    {"unprot",            "[path] file/dir to un-protet",          DO_DISK,          DO_REMOVE_PROTECT},
         #endif
     #endif
     #if !defined LOW_MEMORY
     {"print",             "[path] print file content",             DO_DISK,          DO_PRINT_FILE },
     #endif
-  //{"root",              "set root dir",                          DO_DISK,          DO_ROOT }, {19}
+  //{"root",              "set root dir",                          DO_DISK,          DO_ROOT}, {19}
     #if defined UTFAT_WRITE                                              // {45}
-    {"del",               "[path] delete file or dir.",            DO_DISK,          DO_DELETE },
+    {"del",               "[path] delete file or dir.",            DO_DISK,          DO_DELETE},
         #if defined UTFAT_SAFE_DELETE                                    // {60}
-    {"dels",              "[path] safe delete file or dir.",       DO_DISK,          DO_DELETE_SAFE },
+    {"dels",              "[path] safe delete file or dir.",       DO_DISK,          DO_DELETE_SAFE},
         #endif
         #if defined UTFAT_UNDELETE && defined UTFAT_WRITE                // {60}
-    {"undel",             "undelete [name]",                       DO_DISK,          DO_UNDELETE },
+    {"undel",             "undelete [name]",                       DO_DISK,          DO_UNDELETE},
         #endif
         #if defined UTFAT_FORMATTING
-    {"format",            "[-16/12] [label] format (unformatted) disk",DO_DISK,      DO_FORMAT }, // {26}
+    {"format",            "[-16/12] [label] format (unformatted) disk",DO_DISK,      DO_FORMAT}, // {26}
         #endif
         #if defined UTFAT_FULL_FORMATTING
-    {"fformat",           "[-16/12] [label] full format (unformatted) disk",DO_DISK, DO_FORMAT_FULL }, // {26}   
+    {"fformat",           "[-16/12] [label] full format (unformatted) disk",DO_DISK, DO_FORMAT_FULL}, // {26}   
         #endif
         #if defined UTFAT_FORMATTING
-    {"re-format",         "[-16/12] [label] reformat disk!!!!!",      DO_DISK,       DO_REFORMAT }, // {26} 
+    {"re-format",         "[-16/12] [label] reformat disk!!!!!",      DO_DISK,       DO_REFORMAT}, // {26} 
         #endif
         #if defined UTFAT_FULL_FORMATTING
     {"re-fformat",        "[-16/12] [label] full reformat disk!!!!!", DO_DISK,       DO_REFORMAT_FULL },// {26}
         #endif
     #endif
         #if !defined LOW_MEMORY
-    {"sect",              "[hex no.] display sector",              DO_DISK,          DO_DISPLAY_SECTOR },
+    {"sect",              "[hex no.] display sector",              DO_DISK,          DO_DISPLAY_SECTOR},
         #endif
     #if defined UTFAT_WRITE
         #if defined NAND_FLASH_FAT
-    {"secti",             "[hex number] display sector info",      DO_DISK,          DO_DISPLAY_SECTOR_INFO },
-    {"del-remap",         "delete remapping table!!",              DO_DISK,          DO_DELETE_REMAP_INFO },
-    {"del-FAT",           "delete FAT",                            DO_DISK,          DO_DELETE_FAT },
-    {"page",              "[hex number] display physical page",    DO_DISK,          DO_DISPLAY_PAGE },
+    {"secti",             "[hex number] display sector info",      DO_DISK,          DO_DISPLAY_SECTOR_INFO},
+    {"del-remap",         "delete remapping table!!",              DO_DISK,          DO_DELETE_REMAP_INFO},
+    {"del-FAT",           "delete FAT",                            DO_DISK,          DO_DELETE_FAT},
+    {"page",              "[hex number] display physical page",    DO_DISK,          DO_DISPLAY_PAGE},
             #if defined VERIFY_NAND
-    {"tnand",             "write test patterns to NAND",           DO_DISK,          DO_TEST_NAND },
-    {"vnand",             "verify test patterns in NAND",          DO_DISK,          DO_VERIFY_NAND },
+    {"tnand",             "write test patterns to NAND",           DO_DISK,          DO_TEST_NAND},
+    {"vnand",             "verify test patterns in NAND",          DO_DISK,          DO_VERIFY_NAND},
             #endif
         #elif defined TEST_SDCARD_SECTOR_WRITE
-    {"sectw",             "[hex no.] [patt.] [cnt]",               DO_DISK,          DO_WRITE_SECTOR }, // {44}
+    {"sectw",             "[hex no.] [offset] [val] [cnt]",        DO_DISK,          DO_WRITE_SECTOR}, // {44}{86}
             #if defined UTFAT_MULTIPLE_BLOCK_WRITE
-    {"sectmw",            "multi-block [dito]",                    DO_DISK,          DO_WRITE_MULTI_SECTOR },
+    {"sectmw",            "multi-block [dito]",                    DO_DISK,          DO_WRITE_MULTI_SECTOR},
                 #if defined UTFAT_PRE_ERASE
-    {"sectmwp",           "multi-block with pre-erase [dito]",     DO_DISK,          DO_WRITE_MULTI_SECTOR_PRE },
+    {"sectmwp",           "multi-block with pre-erase [dito]",     DO_DISK,          DO_WRITE_MULTI_SECTOR_PRE},
                 #endif
             #endif
         #endif
     #endif
-    {"help",              "Display menu specific help",            DO_HELP,          DO_MAIN_HELP },
+    {"help",              "Display menu specific help",            DO_HELP,          DO_MAIN_HELP},
 #endif
-    {"quit",              "Leave command mode",                    DO_TELNET,        DO_TELNET_QUIT },
+    {"quit",              "Leave command mode",                    DO_TELNET,        DO_TELNET_QUIT},
 };
 
 static const DEBUG_COMMAND tFTP_TELNET_Command[] = {                     // {37}
@@ -1096,7 +1104,7 @@ static const MENUS ucMenus[] = {
 #endif
 };
 
-#if defined EZPORT_CLONER_SKIP_REGIONS
+#if defined EZPORT_CLONER && defined EZPORT_CLONER_SKIP_REGIONS
     static const CLONER_SKIP_REGION ulSkipRegion[] = {
         {PARAMETER_BLOCK_START, (FLASH_START_ADDRESS + SIZE_OF_FLASH)},
         {0}                                                              // end of list
@@ -1395,7 +1403,7 @@ extern void fnDebug(TTASKTABLE *ptrTaskTable)
             }
 #endif
             break;
-#if defined ETH_INTERFACE || defined USB_CDC_RNDIS
+#if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP
         case TASK_ARP:
             fnRead(PortIDInternal, ucInputMessage, ucInputMessage[MSG_CONTENT_LENGTH]);  // read the contents
             if (ucInputMessage[0] == ARP_RESOLUTION_SUCCESS) {
@@ -1637,7 +1645,7 @@ static void fnDoFlash(unsigned char ucType, CHAR *ptrInput)
         }
         break;
     case DO_REJECT_CHANGES:
-    #if defined ETH_INTERFACE || defined USB_CDC_RNDIS
+    #if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP
         uMemcpy(&temp_pars->temp_network[0], &network[0], sizeof(network)); // reverse all changes in the network settings
     #endif
         uMemcpy(&temp_pars->temp_parameters, parameters, sizeof(PARS));
@@ -1727,7 +1735,7 @@ static void fnPingSuccess(USOCKET dummy_socket)
 static void fnPingTest(USOCKET dummy_socket)
 {
     unsigned char *ping_address;
-    #if defined ENC424J600_INTERFACE && (IP_INTERFACE_COUNT > 1)
+    #if (defined ENC424J600_INTERFACE || defined PHY_MULTI_PORT) && (IP_INTERFACE_COUNT > 1)
     if (dummy_socket >= IPv4_DUMMY_SOCKET)
     #else
     if ((dummy_socket & SOCKET_NUMBER_MASK) == IPv4_DUMMY_SOCKET)        // {50}
@@ -1772,7 +1780,7 @@ static void fnPingIPV6Success(USOCKET dummy_socket)
 static void fnPingV6Test(USOCKET dummy_socket)
 {
     unsigned char *ping_IPV6_address;
-    #if defined ENC424J600_INTERFACE && (IP_INTERFACE_COUNT > 1)
+    #if (defined ENC424J600_INTERFACE || defined PHY_MULTI_PORT) && (IP_INTERFACE_COUNT > 1)
     if (dummy_socket >= IPv6_DUMMY_SOCKET)
     #else
     if ((dummy_socket & SOCKET_NUMBER_MASK) == IPv6_DUMMY_SOCKET)        // {50}
@@ -2008,7 +2016,7 @@ static int fnEnableDisableServers(CHAR *ptr_input, unsigned short usOption) // {
     return 0;
 }
 
-#if defined ETH_INTERFACE || defined USB_CDC_RNDIS
+#if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP
 static int fnShowServerEnabled(const CHAR *cText, unsigned char ucOption)
 {
     fnDebugMsg((CHAR *)cText);
@@ -2148,7 +2156,7 @@ static void fnDoSerial(unsigned char ucType, CHAR *ptr_input)
 }
 #endif
 
-#if defined ETH_INTERFACE || defined USB_CDC_RNDIS
+#if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP
     #if defined USE_IP_STATS
 static const CHAR cIPStatTypes[TOTAL_OTHER_EVENTS + 1][19] = {
     {"Total Rx frames"},
@@ -2317,6 +2325,10 @@ static void fnDoIP(unsigned char ucType, CHAR *ptr_input)
         fnStrIP(ptr_input, ucTempIP);                                    // ping entered address
     #if defined ENC424J600_INTERFACE && (IP_INTERFACE_COUNT > 1)
         fnPingTest(ETHERNET_INTERFACE | ENC424J00_INTERFACE | IPv4_DUMMY_SOCKET); // ping on both Ethernet interfaces
+    #elif defined PHY_MULTI_PORT && (IP_INTERFACE_COUNT > 1)
+        fnPingTest(ETHERNET_INTERFACE | PHY1_INTERFACE | PHY2_INTERFACE | PHY12_INTERFACE | IPv4_DUMMY_SOCKET); // ping on all Ethernet interfaces
+    #elif defined USE_PPP && defined ETH_INTERFACE
+        fnPingTest(ETHERNET_INTERFACE | PPP_INTERFACE | IPv4_DUMMY_SOCKET); // ping on both Ethernet and PPP interfaces
     #else
         fnPingTest(IPv4_DUMMY_SOCKET);                                   // {50} execute using dummy IPv4 socket
     #endif
@@ -2478,7 +2490,7 @@ static void fnDoIP(unsigned char ucType, CHAR *ptr_input)
         }
         break; 
 #endif
-#if defined ETH_INTERFACE || defined USB_CDC_RNDIS
+#if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP
     case DO_SET_MAC:                                                     // set device's MAC address
         if (((uMemcmp(&network[ucPresentNetwork].ucOurMAC[0], cucNullMACIP, MAC_LENGTH))) || ((fnSetMAC(ptr_input, &temp_pars->temp_network[ucPresentNetwork].ucOurMAC[0])) == 0)) {                                       // interpret MAC address input and save this
             fnDebugMsg("MAC may not be modified!!\r\n");                 // we are only allowed to save the new address once
@@ -2926,7 +2938,7 @@ static void fnDoAdmin(unsigned char ucType, CHAR *ptrInput)
     }
 }
 
-#if defined ETH_INTERFACE || defined USB_CDC_RNDIS
+#if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP
 static void fnShowSec(void)
 {
     fnDebugMsg("\r\nSecurity settings\r\n");
@@ -2945,7 +2957,7 @@ static void fnShowSec(void)
 static void fnDoServer(unsigned char ucType, CHAR *ptrInput)
 {
     switch (ucType) {
-#if defined ETH_INTERFACE || defined USB_CDC_RNDIS
+#if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP
     #if defined USE_TELNET
     case DO_ENABLE_TELNET:
         if (fnEnableDisableServers(ptrInput, ACTIVE_TELNET_SERVER)) {
@@ -2973,7 +2985,7 @@ static void fnDoServer(unsigned char ucType, CHAR *ptrInput)
             return;
         }
         break;
-#if defined ETH_INTERFACE || defined USB_CDC_RNDIS
+#if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP
     case DO_ENABLE_WEB_SERVER:
         if (fnEnableDisableServers(ptrInput, ACTIVE_WEB_SERVER)) {
             return;
@@ -3060,7 +3072,7 @@ static int fnJumpWhiteSpace(CHAR **ptrptrInput)
     return (*ptrInput == 0);
 }
 
-
+#if !defined REMOVE_PORT_INITIALISATIONS
 static int fnSetPort(unsigned char ucType, CHAR *ptrInput)               // modify the port type
 {
     unsigned char ucBit;
@@ -3075,6 +3087,7 @@ static int fnSetPort(unsigned char ucType, CHAR *ptrInput)               // modi
     }
     return 0;
 }
+#endif
 
 #if defined MONITOR_PERFORMANCE                                          // {25}
 static void fnDisplayTaskUse(CHAR cTask)
@@ -3700,20 +3713,7 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
     #endif
 #endif
     case DO_DISPLAY_MEMORY_USE:                                          // memory use display
-        {
-            STACK_REQUIREMENTS stackUsed;                                // {79}
-            fnDebugMsg("\n\rSystem memory use:\n\r");
-            fnDebugMsg(    "==================\n\r");
-            fnDebugMsg("Free heap = ");
-            fnDebugHex(fnHeapFree(), (2 | WITH_LEADIN));
-            fnDebugMsg(" from ");
-            fnDebugHex(fnHeapAvailable(), (2 | WITH_LEADIN));
-            fnDebugMsg("\n\rUnused stack = ");
-            fnDebugHex(fnStackFree(&stackUsed), (2 | WITH_LEADIN));      // {79}
-            fnDebugMsg(" (");
-            fnDebugHex(stackUsed, (2 | WITH_LEADIN));                    // {79}
-            fnDebugMsg(")\n\r");
-        }
+        fnDisplayMemoryUsage();
         break;
 
 #if defined MONITOR_PERFORMANCE                                          // {25}
@@ -3735,21 +3735,7 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
             fnDebugMsg(cUpTime);
         }
         return;
-
-//    case DO_GET_USER_OUTPUT:                                           // display whether default or user - removed {2}
-//        if ((*ptrInput < '0') || (*ptrInput > '3')) {
-//            fnDebugMsg("Bad port number\r\n");
-//            break;
-//        }
-//        fnDebugMsg("\r\nPort use: ");
-//        if (!fnPortInputConfig(*ptrInput)) {
-//            fnDebugMsg("USER\r\n");
-//        }
-//        else {
-//            fnDebugMsg("DEFAULT\r\n");
-//        }
-//        break;
-
+#if !defined REMOVE_PORT_INITIALISATIONS
       case DO_GET_DDR:                                                   // get present ddr setting {2}
           if ((*ptrInput < '1') || (*ptrInput > '4')) {
               fnDebugMsg("Bad port number\r\n");
@@ -3794,6 +3780,7 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
               fnSetPortOut(ucPresentPort, 0);                            // set new port state
           }
           break;
+#endif
 #if defined TEST_CMSIS_CFFT                                              // {84}
       case DO_FFT:
           fnTestFFT((int)fnDecStrHex(ptrInput));
@@ -3871,17 +3858,12 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
           break;
 #endif
 
-//    case DO_SET_USER_OUTPUT:                                           // set either default or user - removed {2}
-//        if (fnConfigPort(*ptrInput, *(ptrInput+2)) < 0) {
-//            fnDebugMsg("Error in input\r\n");
-//            return;
-//        }
-//        break;
-#if defined USE_PARAMETER_BLOCK
+#if !defined REMOVE_PORT_INITIALISATIONS
+    #if defined USE_PARAMETER_BLOCK
       case DO_SAVE_PORT:
           fnSavePorts();
           break;
-#endif
+    #endif
 
       case DO_INPUT:                                                     // read an input bit {2}
             if ((*ptrInput < '1') || (*ptrInput > '4')) {
@@ -3899,10 +3881,11 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
 
       case DO_DDR:                                                       // set port direction (and use)
           if (fnSetPort(ucType, ptrInput)) {                             // modify the port
-              fnDebugMsg("\r\n??\r\n#");                                 // signal input not recognised and send prompt in command mode
+              fnDebugMsg("\r\n??");                                      // signal input not recognised
               return;
           }
           break;
+#endif
 #if defined MEMORY_DEBUGGER
     case DO_MEM_DISPLAY:
     #if !defined NO_FLASH_SUPPORT
@@ -4259,8 +4242,18 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
           break;
 #endif
 #if defined PWM_MEASUREMENT_DEVELOPMENT
-        case 75: // temp
+        case 75:                                                         // temp
             fnMeasurePWM(PORTC, PORTC_BIT4);                             // test measuring a PWM input on this input
+            break;
+#endif
+#if defined SUPPORT_LPTMR
+        case 76:                                                         // temp
+            {
+            unsigned long ulCnt;
+            LPTMR0_CNR = 0;                                              // write any value to the counter register so that it puts its present counter value into a temporay register
+            ulCnt = LPTMR0_CNR;                                          // read the value form the temporary reguster
+            fnDebugHex(ulCnt, (WITH_LEADIN | WITH_CR_LF | sizeof(ulCnt)));
+            }
             break;
 #endif
     }
@@ -4888,28 +4881,41 @@ static int fnDoDisk(unsigned char ucType, CHAR *ptrInput)
     case DO_WRITE_MULTI_SECTOR_PRE:
         #endif
     #endif
-    case DO_WRITE_SECTOR:
+    case DO_WRITE_SECTOR:                                                // {86} write a number of bytes to a sector at a specified offset in the sector
         {
             unsigned long ulSectorNumber = fnHexStrHex(ptrInput);        // the sector number
-            int i;
-            unsigned char ucPattern = 0x00;
-            unsigned char ucTestPattern[512];
-            unsigned char ucSectorCount = 1;
-            if (fnJumpWhiteSpace(&ptrInput) == 0) {
-                ucPattern = (unsigned char)fnHexStrHex(ptrInput);
+            unsigned short usOffset = 0;
+            unsigned char  ucPattern = 0x00;
+            unsigned long  ulBuffer[512/sizeof(unsigned long)];
+            unsigned char *ptrStart = (unsigned char *)ulBuffer;
+            unsigned short usByteCount = 1;
+            unsigned short usThisWriteLength;
+            if (fnJumpWhiteSpace(&ptrInput) == 0) {                      // move over the input to the next parameter
+                usOffset = (unsigned short)fnDecStrHex(ptrInput);
+                if (fnJumpWhiteSpace(&ptrInput) == 0) {                  // move over the input to the next parameter
+                    ucPattern = (unsigned char)fnHexStrHex(ptrInput);
+                    if (fnJumpWhiteSpace(&ptrInput) == 0) {
+                        usByteCount = (unsigned short)fnDecStrHex(ptrInput);
+                        if (usByteCount == 0) {
+                            usByteCount = 1;
+                        }
+                    }
+                }
+                usOffset %= 512;
             }
-            for (i = 0; i < sizeof(ucTestPattern); i++) {                // generate the test pattern starting with the defined value
-                ucTestPattern[i] = ucPattern++;
+            if (fnReadSector(ucPresentDisk, (unsigned char *)ulBuffer, ulSectorNumber) != 0) { // read the present sector content
+                fnDebugMsg(" FAILED to read!!\r\n");
+                break;
             }
-            fnDebugMsg("Writing sector(s) ");
+            ptrStart += usOffset;
+            usThisWriteLength = usByteCount;
+            if ((usOffset + usByteCount) > 512) {                        // limit to a single sector
+                usThisWriteLength = (512 - usOffset);
+            }
+            uMemset(ptrStart, ucPattern, usThisWriteLength);             // modify the sector content in the buffer
+            fnDebugMsg("Writing sector ");
             fnDebugHex(ulSectorNumber, (WITH_LEADIN | sizeof(ulSectorNumber)));
             TOGGLE_TEST_OUTPUT();                                        // enable measurement of the write time
-            if (fnJumpWhiteSpace(&ptrInput) == 0) {
-                ucSectorCount = (unsigned char)fnHexStrHex(ptrInput);
-                if (ucSectorCount == 0) {
-                    ucSectorCount = 1;
-                }
-            }
     #if defined UTFAT_MULTIPLE_BLOCK_WRITE
             if (ucType == DO_WRITE_MULTI_SECTOR) {
                 fnPrepareBlockWrite(ucPresentDisk, ucSectorCount, 0);    // multiple sector write but without pre-delete
@@ -4921,18 +4927,13 @@ static int fnDoDisk(unsigned char ucType, CHAR *ptrInput)
             }
         #endif
     #endif
-else {
-//fnPrepareBlockWrite(ucPresentDisk, 0, 0); // test abort
-}
-            do {
-                if (fnWriteSector(ucPresentDisk, ucTestPattern, ulSectorNumber) != UTFAT_SUCCESS) {
-                    fnDebugMsg(" Sector write error!\n\r");
-                }
-                else {
-                    fnDebugMsg(" - OK\n\r");                             // sector write successful
-                }
-                ulSectorNumber++;
-            } while (--ucSectorCount != 0);
+          //fnPrepareBlockWrite(ucPresentDisk, 0, 0); // test abort
+            if (fnWriteSector(ucPresentDisk, (unsigned char *)ulBuffer, ulSectorNumber) != UTFAT_SUCCESS) { // write the modified sector back
+                fnDebugMsg(" Sector write error!\n\r");
+            }
+            else {
+                fnDebugMsg(" - OK\n\r");                                 // sector write successful
+            }
             TOGGLE_TEST_OUTPUT();
         }
         break;
@@ -5228,7 +5229,7 @@ else {
 static void fnDoFTP_flow_control(USOCKET uDataSocket, int iForceUpdate)
 {
     unsigned short usBufferSpace;
-    if (iFTP_data_state & FTP_DATA_STATE_PAUSE) {
+    if ((iFTP_data_state & FTP_DATA_STATE_PAUSE) != 0) {
         usBufferSpace = 0;                                               // signal no space to receive in order to pause reception
         uFtpClientDataSocket = uDataSocket;                              // save the data socket number
     }
@@ -5252,7 +5253,7 @@ static void fnDoFTP_flow_control(USOCKET uDataSocket, int iForceUpdate)
 //
 static int fnFTP_client_user_callback_handler(TCP_CLIENT_MESSAGE_BOX *ptrClientMessageBox)
 {
-    if (ptrClientMessageBox->iCallbackEvent & FTP_CLIENT_ERROR_FLAG) {   // error event code
+    if ((ptrClientMessageBox->iCallbackEvent & FTP_CLIENT_ERROR_FLAG) != 0) { // error event code
         fnDebugMsg("FTP ERROR:[");
         fnDebugHex(ptrClientMessageBox->iCallbackEvent, 2);
         fnDebugMsg("] ");
@@ -6089,7 +6090,7 @@ static int fnTestTCP(USOCKET Socket, unsigned char ucTestCase)
             for (i = 0; i < 26; i++) {
                 test_buffer[i] = 'a' + i;
             }
-            while (fnSendBufTCP(Socket, 0, 26, TCP_BUF_CHECK)) {         // while space in output buffer              
+            while (fnSendBufTCP(Socket, 0, 26, TCP_BUF_CHECK) != 0) {    // while space in output buffer              
                 iSent += fnSendBufTCP(Socket, test_buffer, 26, (TCP_BUF_SEND | TCP_BUF_SEND_REPORT_COPY));
             }
             return iSent;
@@ -6149,7 +6150,6 @@ static int fnFastRxTestAck(USOCKET Socket)
     }
     iCnt++;
     return iRtn;
-
 }
 #endif
 
@@ -6221,7 +6221,7 @@ extern int fnCommandInput(unsigned char *ptrData, unsigned short usLen, int iSou
     }
 #endif
 #if defined USE_USB_HID_KEYBOARD && defined SUPPORT_FIFO_QUEUES
-    if (usUSB_state & ES_USB_KEYBOARD_MODE) {                            // {77} if the input is connected to the USB keyboard connection
+    if ((usUSB_state & ES_USB_KEYBOARD_MODE) != 0) {                     // {77} if the input is connected to the USB keyboard connection
         if (keyboardQueue != NO_ID_ALLOCATED) {                          // if there is a FIFO queue to put the input ino
             fnWrite(keyboardQueue, ptrData, usLen);                      // put the received input to the USB keyboard FIFO
     #if defined IN_COMPLETE_CALLBACK
@@ -6232,11 +6232,11 @@ extern int fnCommandInput(unsigned char *ptrData, unsigned short usLen, int iSou
     }
 #endif
 #if defined USE_FTP_CLIENT                                               // {37}
-    if (iFTP_data_state & (FTP_DATA_STATE_GETTING | FTP_DATA_STATE_PUTTING)) { // if getting or putting a file
+    if ((iFTP_data_state & (FTP_DATA_STATE_GETTING | FTP_DATA_STATE_PUTTING)) != 0) { // if getting or putting a file
     #if defined FTP_CLIENT_BUFFERED_SOCKET_MODE
         unsigned short usLengthToSend = usLen;                           // backup the buffer length
     #endif
-        while (usLen--) {
+        while (usLen-- != 0) {
             switch (*ptrData) {
             case ASCII_ETX:                                              // (ctrl + C) abort a get or terminate a put
                 fnTCP_close(uFtpClientDataSocket);
@@ -6255,8 +6255,8 @@ extern int fnCommandInput(unsigned char *ptrData, unsigned short usLen, int iSou
                 //
             default:
     #if defined FTP_SIMPLE_DATA_SOCKET
-                if (iFTP_data_state & FTP_DATA_STATE_PUTTING) {          // input is sent to FTP server when putting
-                    if (iFTP_data_state & FTP_DATA_STATE_SENDING) {
+                if ((iFTP_data_state & FTP_DATA_STATE_PUTTING) != 0) {   // input is sent to FTP server when putting
+                    if ((iFTP_data_state & FTP_DATA_STATE_SENDING) != 0) {
                         if (ucFTP_buffer_content[1] < FTP_TX_BUFFER_MAX) {
                             FTP_tx[1].ucTCP_Message[ucFTP_buffer_content[1]++] = *ptrData; // collect data in next buffer
                         }
@@ -6284,9 +6284,9 @@ extern int fnCommandInput(unsigned char *ptrData, unsigned short usLen, int iSou
     }
 #endif
 
-    while (usLen--) {
+    while (usLen-- != 0) {
         if (*ptrData == DELETE_KEY) {
-            if (ucDebugCnt) {
+            if (ucDebugCnt != 0) {
                 ucDebugCnt--;                                            // we delete it from our local buffer but not from display
                 fnDebugMsg((CHAR *)&cDeleteInput[1]);
             }
@@ -6502,27 +6502,28 @@ extern void fnResetChanges(void)
     }
     fnGetOurParameters(1);                                               // get original parameters from FLASH, but preserve DHCP defined values
     #if defined SERIAL_INTERFACE && defined DEMO_UART                    // {10}
-    if (iActions & CHANGE_SERIAL_SETTINGS) {
+    if ((iActions & CHANGE_SERIAL_SETTINGS) != 0) {
         fnSetNewSerialMode(MODIFY_CONFIG);                               // return settings to interface
     }
     #endif
-    if (CHANGE_WEB_SERVER & iActions) {
+    if ((CHANGE_WEB_SERVER & iActions) != 0) {
     #if defined USE_HTTP
         fnConfigureAndStartWebServer();
     #endif
     }
-    if (CHANGE_FTP_SERVER & iActions) {
+    if ((CHANGE_FTP_SERVER & iActions) != 0) {
         fnConfigureFtpServer(FTP_TIMEOUT);                               // {3}
     }
     #if defined USE_TELNET
-    if (CHANGE_TELNET_SERVER & iActions) {
+    if ((CHANGE_TELNET_SERVER & iActions) != 0) {
         fnConfigureTelnetServer();
     }
     #endif
 }
 #endif
 
-#if defined USE_PARAMETER_BLOCK
+#if !defined REMOVE_PORT_INITIALISATIONS
+    #if defined USE_PARAMETER_BLOCK
 // Save port setup to flash
 //
 extern void fnSavePorts(void)
@@ -6547,8 +6548,7 @@ extern void fnSavePorts(void)
     temp_pars->temp_parameters.usUserDefinedOutputs = usTempUserDefinedOutputs;
     fnSaveNewPars(SAVE_NEW_PARAMETERS);                                  // save these settings as default
 }
-#endif
-
+    #endif
 
 // Set all port bits to new state
 // The ARM processors tend to use set and clear registers to perform the job
@@ -6563,8 +6563,6 @@ static void fnSetUserPortOut(unsigned short usPortOutputs)
     }
     temp_pars->temp_parameters.usUserDefinedOutputs = usPortOutputs;     // backup the new setting
 }
-
-
 
 // Initialise ports to input/output
 //
@@ -6593,7 +6591,7 @@ extern void fnInitialisePorts(void)
     }
     fnSetUserPortOut(temp_pars->temp_parameters.usUserDefinedOutputs);   // set all user outputs to default states
 }
-
+#endif
 
 #if defined USE_USB_CDC && defined ACTIVE_FILE_SYSTEM                    // {8}
     typedef struct stUPLOAD_HEADER                                       // the start of a uTasker boot binary file
@@ -6904,12 +6902,28 @@ extern int fnCommandInput(unsigned char *ptrData, unsigned short usLen, int iSou
     #endif
 #endif
 
+extern void fnDisplayMemoryUsage(void)
+{
+    STACK_REQUIREMENTS stackUsed;                                // {79}
+    fnDebugMsg("\n\rSystem memory use:\n\r");
+    fnDebugMsg("==================\n\r");
+    fnDebugMsg("Free heap = ");
+    fnDebugHex(fnHeapFree(), (2 | WITH_LEADIN));
+    fnDebugMsg(" from ");
+    fnDebugHex(fnHeapAvailable(), (2 | WITH_LEADIN));
+    fnDebugMsg("\n\rUnused stack = ");
+    fnDebugHex(fnStackFree(&stackUsed), (2 | WITH_LEADIN));      // {79}
+    fnDebugMsg(" (");
+    fnDebugHex(stackUsed, (2 | WITH_LEADIN));                    // {79}
+    fnDebugMsg(")\n\r");
+}
+
 #if defined USE_PARAMETER_BLOCK
 // When this routine is called, the parameter block is set to a new valid block and the old block is deleted
 //
 extern int fnSaveNewPars(int iTemp)
 {
-    #if defined ETH_INTERFACE || defined USB_CDC_RNDIS
+    #if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP
     // Network variables
     //
     if (iTemp == SAVE_NEW_PARAMETERS_CHECK_CRITICAL) {                   // we check to see whether network parameters have been changed
@@ -6922,7 +6936,7 @@ extern int fnSaveNewPars(int iTemp)
     fnDelPar(INVALIDATE_PARAMETER_BLOCK);                                // delete parameter block before continuing
     iTemp = SAVE_NEW_PARAMETERS;
     #endif
-    #if defined ETH_INTERFACE || defined USB_CDC_RNDIS
+    #if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP
     fnSetPar((unsigned short)(PAR_NETWORK | TEMPORARY_PARAM_SET), (unsigned char *)&temp_pars->temp_network[DEFAULT_NETWORK], sizeof(temp_pars->temp_network)); // network parameters
     #endif
 

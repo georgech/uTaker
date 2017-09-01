@@ -13,6 +13,7 @@
   <PropertyGroup Label="Globals">
     <ProjectName>uTaskerKinetis</ProjectName>
     <ProjectGuid>{F08CCFCE-B19A-4F3C-9FA7-CF907BB6F36F}</ProjectGuid>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'" Label="Configuration">
@@ -49,6 +50,9 @@
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</LinkIncremental>
     <PostBuildEventUseInBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">false</PostBuildEventUseInBuild>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">
+    <ReferencePath>$(ReferencePath)</ReferencePath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">
     <Midl>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -81,9 +85,9 @@
       <AdditionalIncludeDirectories>..\..\..\WinSim\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>odbc32.lib;odbccp32.lib;wpcap.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>odbc32.lib;odbccp32.lib;wpcap.lib;ft8xxemu.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Lib;.\..\..\..\WinSim\LCD\FT800;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>.\uTasker___Win32_uTasker_Kinetis_plus_GCC_build/uTaskerV1-4.pdb</ProgramDatabaseFile>
       <SubSystem>Windows</SubSystem>
@@ -135,9 +139,9 @@ Build_Kinetis.bat
       <AdditionalIncludeDirectories>..\..\..\WinSim\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>odbc32.lib;odbccp32.lib;wpcap.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>odbc32.lib;odbccp32.lib;wpcap.lib;ft8xxemu.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Lib;.\..\..\..\WinSim\LCD\FT800;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>.\uTasker___Win32_uTasker_Kinetis_build/uTaskerV1-4.pdb</ProgramDatabaseFile>
       <SubSystem>Windows</SubSystem>
@@ -157,6 +161,34 @@ Build_Kinetis.bat
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\FreeRTOS\Source\croutine.c">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);;..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
+    </ClCompile>
+    <ClCompile Include="..\..\..\FreeRTOS\Source\event_groups.c">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);;..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
+    </ClCompile>
+    <ClCompile Include="..\..\..\FreeRTOS\Source\list.c">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);;..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
+    </ClCompile>
+    <ClCompile Include="..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F\port.c">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
+    </ClCompile>
+    <ClCompile Include="..\..\..\FreeRTOS\Source\queue.c">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);;..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
+    </ClCompile>
+    <ClCompile Include="..\..\..\FreeRTOS\Source\tasks.c">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);;..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
+    </ClCompile>
+    <ClCompile Include="..\..\..\FreeRTOS\Source\timers.c">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);;..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
+    </ClCompile>
     <ClCompile Include="..\..\..\Hardware\Kinetis\CMSIS_DSP\arm_cfft_f32.c" />
     <ClCompile Include="..\..\..\Hardware\Kinetis\CMSIS_DSP\arm_cfft_radix8_f32.c" />
     <ClCompile Include="..\..\..\Hardware\Kinetis\CMSIS_DSP\arm_cmplx_mag_f32.c" />
@@ -168,6 +200,19 @@ Build_Kinetis.bat
     <ClCompile Include="..\..\..\Hardware\Kinetis\kinetis_ports.cpp" />
     <ClCompile Include="..\..\..\stack\ftp_client.c" />
     <ClCompile Include="..\..\..\stack\igmp.c" />
+    <ClCompile Include="..\..\..\stack\PPP\auth.c" />
+    <ClCompile Include="..\..\..\stack\PPP\chap.c" />
+    <ClCompile Include="..\..\..\stack\PPP\chpms.c" />
+    <ClCompile Include="..\..\..\stack\PPP\fsm.c" />
+    <ClCompile Include="..\..\..\stack\PPP\ipcp.c" />
+    <ClCompile Include="..\..\..\stack\PPP\lcp.c" />
+    <ClCompile Include="..\..\..\stack\PPP\lwppp.c" />
+    <ClCompile Include="..\..\..\stack\PPP\magic.c" />
+    <ClCompile Include="..\..\..\stack\PPP\md5.c" />
+    <ClCompile Include="..\..\..\stack\PPP\pap.c" />
+    <ClCompile Include="..\..\..\stack\PPP\ppp_oe.c" />
+    <ClCompile Include="..\..\..\stack\PPP\randm.c" />
+    <ClCompile Include="..\..\..\stack\PPP\vj.c" />
     <ClCompile Include="..\..\..\stack\SSL\mbedtls-1.3.10\aes.c" />
     <ClCompile Include="..\..\..\stack\SSL\openssl-1.0.2\aes_cbc.c" />
     <ClCompile Include="..\..\..\stack\SSL\openssl-1.0.2\aes_core.c" />
@@ -178,6 +223,7 @@ Build_Kinetis.bat
     <ClCompile Include="..\..\..\uTasker\DSP.c" />
     <ClCompile Include="..\..\..\uTasker\i2c_drv.c" />
     <ClCompile Include="..\..\..\uTasker\time_keeper.c" />
+    <ClCompile Include="..\..\..\uTasker\uGLCDLIB\FT_CoPro_Cmds.c" />
     <ClCompile Include="..\..\..\WinSim\Komodo\komodo.c" />
     <ClCompile Include="..\..\..\WinSim\serial_dev.c" />
     <ClCompile Include="..\application.c">
@@ -193,6 +239,10 @@ Build_Kinetis.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\FreeMaster.c" />
+    <ClCompile Include="..\FreeRTOSapplication.c">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
+    </ClCompile>
     <ClCompile Include="..\KeyScan.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -497,6 +547,14 @@ Build_Kinetis.bat
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\FreeRTOS\Source\include\croutine.h" />
+    <ClInclude Include="..\..\..\FreeRTOS\Source\include\event_groups.h" />
+    <ClInclude Include="..\..\..\FreeRTOS\Source\include\FreeRTOS.h" />
+    <ClInclude Include="..\..\..\FreeRTOS\Source\include\list.h" />
+    <ClInclude Include="..\..\..\FreeRTOS\Source\include\queue.h" />
+    <ClInclude Include="..\..\..\FreeRTOS\Source\include\task.h" />
+    <ClInclude Include="..\..\..\FreeRTOS\Source\include\timers.h" />
+    <ClInclude Include="..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F\portmacro.h" />
     <ClInclude Include="..\..\..\Hardware\Kinetis\CMSIS_DSP\arm_common_tables.h" />
     <ClInclude Include="..\..\..\Hardware\Kinetis\CMSIS_DSP\arm_const_structs.h" />
     <ClInclude Include="..\..\..\Hardware\Kinetis\CMSIS_DSP\arm_math.h" />
@@ -561,6 +619,63 @@ Build_Kinetis.bat
     <ClInclude Include="..\..\..\Hardware\Kinetis\spi_flash_kinetis_stmicro.h" />
     <ClInclude Include="..\..\..\Hardware\Kinetis\spi_flash_w25q.h" />
     <ClInclude Include="..\..\..\Hardware\Kinetis\spi_sc16IS7xx.h" />
+    <ClInclude Include="..\..\..\stack\PPP\arch\cc.h" />
+    <ClInclude Include="..\..\..\stack\PPP\arch\perf.h" />
+    <ClInclude Include="..\..\..\stack\PPP\arch\sys_arch.h" />
+    <ClInclude Include="..\..\..\stack\PPP\auth.h" />
+    <ClInclude Include="..\..\..\stack\PPP\chap.h" />
+    <ClInclude Include="..\..\..\stack\PPP\chpms.h" />
+    <ClInclude Include="..\..\..\stack\PPP\fsl_debug_console.h" />
+    <ClInclude Include="..\..\..\stack\PPP\fsl_os_abstraction.h" />
+    <ClInclude Include="..\..\..\stack\PPP\fsl_os_abstraction_bm.h" />
+    <ClInclude Include="..\..\..\stack\PPP\fsm.h" />
+    <ClInclude Include="..\..\..\stack\PPP\ipcp.h" />
+    <ClInclude Include="..\..\..\stack\PPP\lcp.h" />
+    <ClInclude Include="..\..\..\stack\PPP\lwipopts.h" />
+    <ClInclude Include="..\..\..\stack\PPP\lwip\api.h" />
+    <ClInclude Include="..\..\..\stack\PPP\lwip\api_msg.h" />
+    <ClInclude Include="..\..\..\stack\PPP\lwip\arch.h" />
+    <ClInclude Include="..\..\..\stack\PPP\lwip\debug.h" />
+    <ClInclude Include="..\..\..\stack\PPP\lwip\def.h" />
+    <ClInclude Include="..\..\..\stack\PPP\lwip\dhcp.h" />
+    <ClInclude Include="..\..\..\stack\PPP\lwip\dns.h" />
+    <ClInclude Include="..\..\..\stack\PPP\lwip\err.h" />
+    <ClInclude Include="..\..\..\stack\PPP\lwip\icmp.h" />
+    <ClInclude Include="..\..\..\stack\PPP\lwip\inet.h" />
+    <ClInclude Include="..\..\..\stack\PPP\lwip\init.h" />
+    <ClInclude Include="..\..\..\stack\PPP\lwip\ip.h" />
+    <ClInclude Include="..\..\..\stack\PPP\lwip\ip_addr.h" />
+    <ClInclude Include="..\..\..\stack\PPP\lwip\mem.h" />
+    <ClInclude Include="..\..\..\stack\PPP\lwip\memp.h" />
+    <ClInclude Include="..\..\..\stack\PPP\lwip\memp_std.h" />
+    <ClInclude Include="..\..\..\stack\PPP\lwip\netbuf.h" />
+    <ClInclude Include="..\..\..\stack\PPP\lwip\netdb.h" />
+    <ClInclude Include="..\..\..\stack\PPP\lwip\netif.h" />
+    <ClInclude Include="..\..\..\stack\PPP\lwip\netifapi.h" />
+    <ClInclude Include="..\..\..\stack\PPP\lwip\opt.h" />
+    <ClInclude Include="..\..\..\stack\PPP\lwip\pbuf.h" />
+    <ClInclude Include="..\..\..\stack\PPP\lwip\raw.h" />
+    <ClInclude Include="..\..\..\stack\PPP\lwip\sio.h" />
+    <ClInclude Include="..\..\..\stack\PPP\lwip\snmp.h" />
+    <ClInclude Include="..\..\..\stack\PPP\lwip\snmp_asn1.h" />
+    <ClInclude Include="..\..\..\stack\PPP\lwip\snmp_msg.h" />
+    <ClInclude Include="..\..\..\stack\PPP\lwip\snmp_structs.h" />
+    <ClInclude Include="..\..\..\stack\PPP\lwip\sockets.h" />
+    <ClInclude Include="..\..\..\stack\PPP\lwip\stats.h" />
+    <ClInclude Include="..\..\..\stack\PPP\lwip\sys.h" />
+    <ClInclude Include="..\..\..\stack\PPP\lwip\tcp.h" />
+    <ClInclude Include="..\..\..\stack\PPP\lwip\tcpip.h" />
+    <ClInclude Include="..\..\..\stack\PPP\lwip\tcp_impl.h" />
+    <ClInclude Include="..\..\..\stack\PPP\lwip\timers.h" />
+    <ClInclude Include="..\..\..\stack\PPP\lwip\udp.h" />
+    <ClInclude Include="..\..\..\stack\PPP\magic.h" />
+    <ClInclude Include="..\..\..\stack\PPP\md5.h" />
+    <ClInclude Include="..\..\..\stack\PPP\pap.h" />
+    <ClInclude Include="..\..\..\stack\PPP\ppp.h" />
+    <ClInclude Include="..\..\..\stack\PPP\pppdebug.h" />
+    <ClInclude Include="..\..\..\stack\PPP\ppp_impl.h" />
+    <ClInclude Include="..\..\..\stack\PPP\randm.h" />
+    <ClInclude Include="..\..\..\stack\PPP\vj.h" />
     <ClInclude Include="..\..\..\stack\SSL\mbedtls-1.3.10\aes.h" />
     <ClInclude Include="..\..\..\stack\SSL\openssl-1.0.2\aes.h" />
     <ClInclude Include="..\..\..\stack\SSL\openssl-1.0.2\aes_locl.h" />
@@ -575,6 +690,8 @@ Build_Kinetis.bat
     <ClInclude Include="..\..\..\stack\SSL\wolfssl-3.9.6\types.h" />
     <ClInclude Include="..\..\..\stack\SSL\wolfssl-3.9.6\visibility.h" />
     <ClInclude Include="..\..\..\stack\SSL\wolfssl-3.9.6\wc_port.h" />
+    <ClInclude Include="..\..\..\uTasker\uGLCDLIB\FT_CoPro_Cmds.h" />
+    <ClInclude Include="..\..\..\uTasker\uGLCDLIB\FT_Gpu.h" />
     <ClInclude Include="..\..\..\utasker\uglcdlib\glcd_st7565s.h" />
     <ClInclude Include="..\..\..\uTasker\utFAT\NAND_driver.h" />
     <ClInclude Include="..\..\..\WinSim\Komodo\komodo.h" />
@@ -588,6 +705,7 @@ Build_Kinetis.bat
     <ClInclude Include="..\config.h" />
     <ClInclude Include="..\..\..\uTasker\driver.h" />
     <ClInclude Include="..\debug_hal.h" />
+    <ClInclude Include="..\FreeRTOSConfig.h" />
     <ClInclude Include="..\i2c_tests.h" />
     <ClInclude Include="..\Port_Interrupts.h" />
     <ClInclude Include="..\slcd_time.h" />
@@ -642,9 +760,7 @@ Build_Kinetis.bat
     <CustomBuildStep Include="..\..\..\Hardware\SAM7X\startup_keil.s">
       <FileType>Document</FileType>
     </CustomBuildStep>
-    <None Include="..\..\..\Hardware\Kinetis\CMSIS_DSP\arm_bitreversal2.S">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
-    </None>
+    <None Include="..\..\..\Hardware\Kinetis\CMSIS_DSP\arm_bitreversal2.S" />
     <None Include="..\..\..\Hardware\Kinetis\Crypto\mmcau_aes_functions.S">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
     </None>

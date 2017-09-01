@@ -17,6 +17,7 @@
     This file contains SPI FLASH specific code for all chips that are supported.
     It is declared as a header so that projects do not need to specify that it is not to be compiled.
     Its goal is to improve overall readability of the hardware interface.
+    19.08.2017 Correct chip select control of multiple SPI devices       {1}
 
 */
 
@@ -24,6 +25,7 @@
 
 #if defined _SPI_DEFINES
     #if defined SPI_FLASH_MULTIPLE_CHIPS
+        #define __EXTENDED_CS     iChipSelect,                           // {1}
         static unsigned char fnCheckSST25xxx(int iChipSelect);
         static const STORAGE_AREA_ENTRY spi_flash_storage = {
             (void *)&default_flash,                                      // link to internal flash
@@ -33,6 +35,7 @@
             SPI_FLASH_DEVICE_COUNT                                       // multiple devices
         };
     #else
+        #define __EXTENDED_CS                                            // {1}
         static unsigned char fnCheckSST25xxx(void);
         static const STORAGE_AREA_ENTRY spi_flash_storage = {
             (void *)&default_flash,                                      // link to internal flash
@@ -63,9 +66,7 @@
             ucSPI_FLASH_Type[i] = fnCheckSST25xxx(i);
         }
         #endif
-        #if !defined BOOT_LOADER                                         // the boot loader doesn't use storage lists
         UserStorageListPtr = (STORAGE_AREA_ENTRY *)&spi_flash_storage;   // insert spi flash as storage medium
-        #endif
     }
 #endif
 
@@ -153,7 +154,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         volatile unsigned char ucStatus;
         SPI_FLASH_Danger[iChipSelect] = 0;                               // device will no longer be busy after continuing
         do {
-            fnSPI_command(READ_STATUS_REGISTER, 0, _EXTENDED_CS &ucStatus, 1); // read busy status register
+            fnSPI_command(READ_STATUS_REGISTER, 0, __EXTENDED_CS &ucStatus, 1); // read busy status register
         } while (ucStatus & STATUS_BUSY);                                // until no longer busy
     }
 
@@ -360,7 +361,7 @@ static unsigned char fnCheckSST25xxx(void)
 {
     volatile unsigned char ucID[3];
     unsigned char ucReturnType = NO_SPI_FLASH_AVAILABLE;
-    fnSPI_command(READ_MANUFACTURER_ID, 0, _EXTENDED_CS ucID, sizeof(ucID));
+    fnSPI_command(READ_MANUFACTURER_ID, 0, __EXTENDED_CS ucID, sizeof(ucID));
     if ((ucID[0] == MANUFACTURER_ID_SST) && (ucID[1] == DEVICE_TYPE)) {  // SST memory part recognised
         switch (ucID[2]) {
         case DEVICE_ID_1_DATA_SST_FLASH_4M:
@@ -380,7 +381,7 @@ static unsigned char fnCheckSST25xxx(void)
         }
     }
     else {                                                               // try requesting the ID since it may be an A-version
-        fnSPI_command(READ_ID, 0, _EXTENDED_CS ucID, 2);
+        fnSPI_command(READ_ID, 0, __EXTENDED_CS ucID, 2);
         if (ucID[0] == MANUFACTURER_ID_SST) {
             switch (ucID[1]) {
             case DEVICE_ID_DATA_SST_FLASH_A_1M:
@@ -398,8 +399,8 @@ static unsigned char fnCheckSST25xxx(void)
         }
     }
     ucID[0] = 0;
-    fnSPI_command(ENABLE_WRITE_STATUS_REG, 0, _EXTENDED_CS 0, 0);        // sequence to write status register to remove protection - first enable status register write
-    fnSPI_command(WRITE_STATUS_REGISTER, 0, _EXTENDED_CS ucID, 1);       // now write to status register
+    fnSPI_command(ENABLE_WRITE_STATUS_REG, 0, __EXTENDED_CS 0, 0);        // sequence to write status register to remove protection - first enable status register write
+    fnSPI_command(WRITE_STATUS_REGISTER, 0, __EXTENDED_CS ucID, 1);       // now write to status register
     return ucReturnType;
 }
 #endif

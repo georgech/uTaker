@@ -17,6 +17,8 @@
     22.07.2014 Add clock source selection to TPM                         {2}
     04.01.2017 Don't adjust the RC clock setting when the processor is running from it {3}
     26.01.2017 Add external clock selection for KL parts                 {4}
+    26.04.2017 Add KL82 TPM clock input selection                        {5}
+    20.05.2017 Add capture mode to Kinetis                               {6}
 
 */
 
@@ -66,8 +68,33 @@ static void (*_flexTimerInterrupt[FLEX_TIMERS_AVAILABLE])(void) = {
 //
 static void fnHandleFlexTimer(FLEX_TIMER_MODULE *ptrFlexTimer, int iFlexTimerReference)
 {
-    if ((ptrFlexTimer->FTM_SC & FTM_SC_TOF) != 0) {                      // flag will always be set but it has to be read at '1' before it can be reset
-        if (usFlexTimerMode[iFlexTimerReference] & FLEX_TIMER_PERIODIC) {// if the timer is being used in periodic mode
+#if defined SUPPORT_CAPTURE
+    if ((usFlexTimerMode[iFlexTimerReference] & FTM_SC_TOIE) == 0) {     // capture mode rather than timer overflow mode
+        if ((ptrFlexTimer->FTM_channel[0].FTM_CSC & (FTM_CSC_CHIE | FTM_CSC_CHF)) == (FTM_CSC_CHIE | FTM_CSC_CHF)) { // if the channel interrupt is enabled and its event flag set
+            ptrFlexTimer->FTM_channel[0].FTM_CSC = ptrFlexTimer->FTM_channel[0].FTM_CSC; // clear the interrupt - this allows the next capture event to be released
+        }
+        else if ((ptrFlexTimer->FTM_channel[1].FTM_CSC & (FTM_CSC_CHIE | FTM_CSC_CHF)) == (FTM_CSC_CHIE | FTM_CSC_CHF)) { // if the channel interrupt is enabled and its event flag set
+            ptrFlexTimer->FTM_channel[1].FTM_CSC = ptrFlexTimer->FTM_channel[1].FTM_CSC; // clear the interrupt - this allows the next capture event to be released
+        }
+        if (iFlexTimerReference == 0) {
+            if ((ptrFlexTimer->FTM_channel[2].FTM_CSC & (FTM_CSC_CHIE | FTM_CSC_CHF)) == (FTM_CSC_CHIE | FTM_CSC_CHF)) { // if the channel interrupt is enabled and its event flag set
+                ptrFlexTimer->FTM_channel[2].FTM_CSC = ptrFlexTimer->FTM_channel[2].FTM_CSC; // clear the interrupt - this allows the next capture event to be released
+            }
+            else if ((ptrFlexTimer->FTM_channel[3].FTM_CSC & (FTM_CSC_CHIE | FTM_CSC_CHF)) == (FTM_CSC_CHIE | FTM_CSC_CHF)) { // if the channel interrupt is enabled and its event flag set
+                ptrFlexTimer->FTM_channel[3].FTM_CSC = ptrFlexTimer->FTM_channel[3].FTM_CSC; // clear the interrupt - this allows the next capture event to be released
+            }
+            else if ((ptrFlexTimer->FTM_channel[3].FTM_CSC & (FTM_CSC_CHIE | FTM_CSC_CHF)) == (FTM_CSC_CHIE | FTM_CSC_CHF)) { // if the channel interrupt is enabled and its event flag set
+                ptrFlexTimer->FTM_channel[4].FTM_CSC = ptrFlexTimer->FTM_channel[4].FTM_CSC; // clear the interrupt - this allows the next capture event to be released
+            }
+            else if ((ptrFlexTimer->FTM_channel[3].FTM_CSC & (FTM_CSC_CHIE | FTM_CSC_CHF)) == (FTM_CSC_CHIE | FTM_CSC_CHF)) { // if the channel interrupt is enabled and its event flag set
+                ptrFlexTimer->FTM_channel[5].FTM_CSC = ptrFlexTimer->FTM_channel[5].FTM_CSC; // clear the interrupt - this allows the next capture event to be released
+            }
+        }
+    }
+    else
+#endif
+    if ((ptrFlexTimer->FTM_SC & FTM_SC_TOF) != 0) {                     // flag will always be set but it has to be read at '1' before it can be reset
+        if ((usFlexTimerMode[iFlexTimerReference] & FLEX_TIMER_PERIODIC) != 0) {// if the timer is being used in periodic mode
             ptrFlexTimer->FTM_SC = (usFlexTimerMode[iFlexTimerReference] & FTM_SC_USED_MASK); // reset interrupt and allow the FlexTimer to continue running for periodic interrupts
         }
         else {
@@ -177,7 +204,11 @@ static __interrupt void _flexTimerInterrupt_3(void)
                 ptrFlexTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_0;         // KL and KE parts actually use the TPM which is however very similar to the FlexTimer
     #if defined KINETIS_KL
                 iInterruptID = irq_TPM0_ID;
+        #if defined KINETIS_KL82                                         // {5}
+                ulExtSelect = SIM_SOPT9_TPM0CLKSEL;
+        #else
                 ulExtSelect = SIM_SOPT4_FTM0CLKSEL;
+        #endif
     #else
                 iInterruptID = irq_FTM0_ID;
     #endif
@@ -192,7 +223,11 @@ static __interrupt void _flexTimerInterrupt_3(void)
                 ptrFlexTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_1;         // KL and KE parts actually use the TPM which is however very similar to the FlexTimer
         #if defined KINETIS_KL
                 iInterruptID = irq_TPM1_ID;
+            #if defined KINETIS_KL82                                     // {5}
+                ulExtSelect = SIM_SOPT9_TPM1CLKSEL;
+            #else
                 ulExtSelect = SIM_SOPT4_FTM1CLKSEL;
+            #endif
         #else
                 iInterruptID = irq_FTM1_ID;
         #endif
@@ -216,7 +251,11 @@ static __interrupt void _flexTimerInterrupt_3(void)
                 ptrFlexTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_2;         // KL and KE parts actually use the TPM which is however very similar to the FlexTimer
         #if defined KINETIS_KL
                 iInterruptID = irq_TPM2_ID;
+            #if defined KINETIS_KL82                                     // {5}
+                ulExtSelect = SIM_SOPT9_TPM2CLKSEL;
+            #else
                 ulExtSelect = SIM_SOPT4_FTM2CLKSEL;
+            #endif
         #else
                 iInterruptID = irq_FTM2_ID;
         #endif
@@ -245,14 +284,52 @@ static __interrupt void _flexTimerInterrupt_3(void)
     #if !defined KINETIS_KL && !defined KINETIS_KE
             ptrFlexTimer->FTM_CNTIN = 0;                                 // counter start value
     #endif
-            while (ulDelay > 0xffff) {                                   // calculate the prescaler setting
-                if (iPrescaler >= 7) {
-                    ulDelay = 0xffff;                                    // set maximum delay
+    #if defined SUPPORT_CAPTURE
+            if ((ptrTimerSetup->timer_mode & TIMER_CAPTURE_RISING_FALLING) != 0) { // {6} if capture mode is required
+                unsigned long ulCharacteristics = PORT_PS_UP_ENABLE;
+                unsigned long ulEdge;
+                iPrescaler = ptrTimerSetup->capture_prescaler;           // the capture clock prescaler
+                ulDelay = 0xffff;                                        // set maximum count value so that the timer free-runs
+                switch (ptrTimerSetup->timer_mode & TIMER_CAPTURE_RISING_FALLING) {
+                case TIMER_CAPTURE_RISING_FALLING:
+                    ulEdge = (FTM_CSC_ELSA | FTM_CSC_ELSB);              // capture on rising and falling edges
+                    break;
+                case TIMER_CAPTURE_RISING:
+                    ulCharacteristics = PORT_PS_DOWN_ENABLE;
+                    ulEdge = FTM_CSC_ELSA;                               // capture on rising edge
+                    break;
+              //case TIMER_CAPTURE_FALLING:
+                default:
+                    ulEdge = FTM_CSC_ELSB;                               // capture on falling edge
                     break;
                 }
-                iPrescaler++;
-                ulDelay /= 2;
+        #if defined KINETIS_KL && defined _WINDOWS
+                if (ptrTimerSetup->capture_channel > 3) {
+                    _EXCEPTION("Invalid capture channel");
+                }
+        #endif
+                fnConfigTimerPin(iTimerReference, ptrTimerSetup->capture_channel, ulCharacteristics);
+                ptrFlexTimer->FTM_channel[ptrTimerSetup->capture_channel].FTM_CSC = ulEdge; // program the edge sensitivity of the capture input
+        #if defined KINETIS_KL
+                ptrFlexTimer->FTM_CONF |= (FTM_CONF_TRGSEL0 << ptrTimerSetup->capture_channel); // enable trigger source
+        #else
+                _EXCEPTION("Mode not available");
+        #endif
             }
+            else {
+    #endif
+                while (ulDelay > 0xffff) {                               // calculate the prescaler setting
+                    if (iPrescaler >= 7) {
+                        ulDelay = 0xffff;                                // set maximum delay
+                        break;
+                    }
+                    iPrescaler++;
+                    ulDelay /= 2;
+                }
+    #if defined SUPPORT_CAPTURE
+            }
+    #endif
+            iPrescaler &= 0x7f;
             usFlexTimerMode[iTimerReference] = (unsigned short)iPrescaler;
             if ((ptrTimerSetup->timer_mode & TIMER_PERIODIC) != 0) {     // if periodic operation required
                 usFlexTimerMode[iTimerReference] |= FLEX_TIMER_PERIODIC; // mark that periodic mode is being used
@@ -262,12 +339,29 @@ static __interrupt void _flexTimerInterrupt_3(void)
             if ((ptrTimerSetup->timer_mode & (TIMER_EXT_CLK_0 | TIMER_EXT_CLK_1)) != 0) { // {4} the external clock source is to be used
                 usFlexTimerMode[iTimerReference] |= (FTM_SC_CLKS_EXT | FTM_SC_TOIE | FTM_SC_TOF); // select external clock (which should be half the speed of the module's clock due to synchronisation requirements)
                 if ((ptrTimerSetup->timer_mode & (TIMER_EXT_CLK_1)) != 0) {
+        #if defined KINETIS_KL82                                         // {5}
+                    SIM_SOPT9 |= ulExtSelect;                            // select CLKIN1 source to this timer
+        #else
                     SIM_SOPT4 |= ulExtSelect;                            // select CLKIN1 source to this timer
+        #endif
+        #if defined KINETIS_KL03
+                    _CONFIG_PERIPHERAL(B, 6, (PB_6_TPM_CLKIN1 | PORT_PS_UP_ENABLE)); // TPM_CLKIN1 on PB.6 (alt. function 3)
+        #else
                     _CONFIG_PERIPHERAL(E, 30, (PE_30_TPM_CLKIN1 | PORT_PS_UP_ENABLE)); // TPM_CLKIN1 on PE.30 (alt. function 4)
+        #endif
                 }
                 else {
+        #if defined KINETIS_KL82                                         // {5}
+                    SIM_SOPT9 &= ~(ulExtSelect);                         // select CLKIN0 source to this timer
+        #else
                     SIM_SOPT4 &= ~(ulExtSelect);                         // select CLKIN0 source to this timer
+        #endif
+        #if defined KINETIS_KL03
+                    _CONFIG_PERIPHERAL(A, 12, (PA_12_TPM_CLKIN0 | PORT_PS_UP_ENABLE)); // TPM_CLKIN0 on PA.12 (alt. function 3)
+                  //_CONFIG_PERIPHERAL(A, 1, (PA_1_TPM_CLKIN0 | PORT_PS_UP_ENABLE)); // TPM_CLKIN0 on PA.1 (alt. function 2)
+        #else
                     _CONFIG_PERIPHERAL(E, 29, (PE_29_TPM_CLKIN0 | PORT_PS_UP_ENABLE)); // TPM_CLKIN0 on PE.29 (alt. function 4)
+        #endif
                 }
             }
             else {
@@ -278,7 +372,16 @@ static __interrupt void _flexTimerInterrupt_3(void)
     #endif
             if ((_flexTimerHandler[iTimerReference] = ptrTimerSetup->int_handler) != 0) { // enter the user interrupt handler
                 fnEnterInterrupt(iInterruptID, ptrTimerSetup->int_priority, _flexTimerInterrupt[iTimerReference]); // enter flex timer interrupt handler
-                usFlexTimerMode[iTimerReference] |= FTM_SC_TOIE;         // enable interrupt
+    #if defined SUPPORT_CAPTURE
+                if ((ptrTimerSetup->timer_mode & TIMER_CAPTURE_RISING_FALLING) != 0) {
+                    ptrFlexTimer->FTM_channel[ptrTimerSetup->capture_channel].FTM_CSC |= FTM_CSC_CHIE; // enable channel interrupt
+                }
+                else {
+    #endif
+                    usFlexTimerMode[iTimerReference] |= FTM_SC_TOIE;     // enable timer overflow interrupt
+    #if defined SUPPORT_CAPTURE
+                }
+    #endif
             }
     #if !defined DEVICE_WITHOUT_DMA
             if ((ptrTimerSetup->timer_mode & TIMER_DMA_TRIGGER) != 0) {  // when DMA required

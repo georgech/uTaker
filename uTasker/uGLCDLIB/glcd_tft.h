@@ -379,7 +379,7 @@ static void fnTouchInterrupt(void)
         adc_setup.int_adc_bit = ADC_SE4_SINGLE;                          // Y input to be measured
         adc_setup.pga_gain = PGA_GAIN_OFF;
         adc_setup.int_adc_offset = 0;
-        adc_setup.int_adc_mode = (ulCalibrate | ADC_SELECT_INPUTS_A | ADC_CLOCK_BUS_DIV_2 | ADC_CLOCK_DIVIDE_8 | ADC_SAMPLE_ACTIVATE_LONG | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_ENDED | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE | ADC_SW_TRIGGERED); // note that the first configuration should calibrate the ADC - single shot with interrupt on completion
+        adc_setup.int_adc_mode = (ulCalibrate | ADC_SELECT_INPUTS_A | ADC_CLOCK_BUS_DIV_2 | ADC_CLOCK_DIVIDE_8 | ADC_SAMPLE_ACTIVATE_LONG | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_ENDED_INPUT | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE | ADC_SW_TRIGGERED); // note that the first configuration should calibrate the ADC - single shot with interrupt on completion
         adc_setup.int_adc_sample = (ADC_SAMPLE_LONG_PLUS_12 | ADC_SAMPLE_AVERAGING_32); // additional sampling clocks
         adc_setup.int_adc_result = 0;                                    // no result is requested
         ulCalibrate = 0;                                                 // calibration performed only once
@@ -414,7 +414,7 @@ static void fnTouchInterrupt(void)
         adc_setup.int_adc_bit = ADC_SE5_SINGLE;                          // X input to be measured
         adc_setup.pga_gain = PGA_GAIN_OFF;
         adc_setup.int_adc_offset = 0;
-        adc_setup.int_adc_mode = (ADC_SELECT_INPUTS_A | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_ENDED | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE | ADC_SW_TRIGGERED);
+        adc_setup.int_adc_mode = (ADC_SELECT_INPUTS_A | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_ENDED_INPUT | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE | ADC_SW_TRIGGERED);
         adc_setup.int_adc_result = 0;                                    // no result is requested
     #else
         adc_setup.int_adc_single_ended_inputs = (ADC_CHANNEL_1);         // ADC channel 1 as single ended inputs (only one channel should be selected in SW mode

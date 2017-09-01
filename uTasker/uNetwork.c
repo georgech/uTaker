@@ -123,7 +123,7 @@ extern QUEUE_TRANSFER fnDistributedTx(unsigned char *output_buffer, QUEUE_TRANSF
     unsigned char  ucType = NO_ACK_REQ;
 #endif
 
-    if ((!Ethernet_handle[0]) || (!OurNetworkNumber)) {                  // trying to send before network ready...
+    if ((Ethernet_handle[0] == 0) || (OurNetworkNumber == 0)) {          // trying to send before network ready...
         return 0;
     }
     if (output_buffer[MSG_DESTINATION_NODE] == GLOBAL_MESSAGE) {

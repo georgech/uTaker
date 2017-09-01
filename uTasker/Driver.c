@@ -93,7 +93,7 @@ static QUEUE_TRANSFER entry_que(QUEUE_HANDLE channel, unsigned char *ptBuffer, Q
 /*                      local variable definitions                     */
 /* =================================================================== */
 
-static QUEUE_HANDLE NrQueues = 0;
+static QUEUE_HANDLE NrQueues = 0;                                        // the number of queues available (determined during initialisation)
 
 /* =================================================================== */
 /*                      local function definitions                     */
@@ -145,23 +145,23 @@ extern QUEUE_HANDLE fnAllocateQueue(QUEUE_DIMENSIONS *ptrQueueDimensions, QUEUE_
     }
 
     if (NO_ID_ALLOCATED != (NewHandle = fnSearchID (0, 0))) {            // get the next free queue handle
-        IDINFO *ptQueID = &que_ids[NewHandle - 1];
+        IDINFO *ptQueID = &que_ids[NewHandle - 1];                       // set pointer to the new queue entry
 
-        if ((ptrQueueDimensions->RxQueueSize) != 0) {
+        if ((ptrQueueDimensions->RxQueueSize) != 0) {                    // if a reception buffer is required by the queue
             if (NO_MEMORY != (ptQueID->input_buffer_control = (void *)QUEUE_MALLOC(FullCntLength))) { // get input queue control block memory
     #if defined USB_INTERFACE && defined USB_DMA_RX && defined USB_RAM_START // {18}
                 if ((entry_add != entry_usb) && (NO_MEMORY == fnAllocateBuffer(ptQueID->input_buffer_control, ptrQueueDimensions->RxQueueSize))) { //  allocated actual rx buffer in memory
                     return NO_ID_ALLOCATED;
                 }
     #else
-                if (NO_MEMORY == fnAllocateBuffer(ptQueID->input_buffer_control, ptrQueueDimensions->RxQueueSize)) { // now allocated actual rx buffer in memory
+                if (NO_MEMORY == fnAllocateBuffer(ptQueID->input_buffer_control, ptrQueueDimensions->RxQueueSize)) { // now allocate actual rx buffer in memory
                     return NO_ID_ALLOCATED;
                 }
     #endif
             }
         }
 
-        if ((ptrQueueDimensions->TxQueueSize) != 0) {
+        if ((ptrQueueDimensions->TxQueueSize) != 0) {                    // if a transmission buffer is required by the queue
             if (NO_MEMORY != (ptQueID->output_buffer_control = (void *)QUEUE_MALLOC(FullCntLength))) { // get input queue control block memory
     #if defined USB_INTERFACE && defined USB_DMA_TX && defined USB_RAM_START
                 if (entry_add == entry_usb) {
@@ -173,17 +173,17 @@ extern QUEUE_HANDLE fnAllocateQueue(QUEUE_DIMENSIONS *ptrQueueDimensions, QUEUE_
                     return NO_ID_ALLOCATED;
                 }
     #else
-                if (NO_MEMORY == fnAllocateBuffer(ptQueID->output_buffer_control, ptrQueueDimensions->TxQueueSize)) { // now allocated actual tx buffer in memory
+                if (NO_MEMORY == fnAllocateBuffer(ptQueID->output_buffer_control, ptrQueueDimensions->TxQueueSize)) { // now allocate actual tx buffer in memory
                     return NO_ID_ALLOCATED;
                 }
     #endif
             }
         }
 
-        ptQueID->CallAddress = entry_add;
-        ptQueID->qHandle = channel_handle;
+        ptQueID->CallAddress = entry_add;                                // enter the queue's handler
+        ptQueID->qHandle = channel_handle;                               // enter the queue's channel number
     }
-    return NewHandle;
+    return NewHandle;                                                    // return the new queue's handle
 }
 
 
@@ -213,7 +213,7 @@ extern QUEUE_HANDLE fnOpen(unsigned char type_of_driver, unsigned char driver_mo
         return (fnOpenCAN((CANTABLE*)pars, driver_mode));
 #endif
 
-#if defined ETH_INTERFACE || (defined USB_CDC_RNDIS && defined USB_TO_TCP_IP)
+#if defined ETH_INTERFACE || (defined USB_CDC_RNDIS && defined USB_TO_TCP_IP) || defined USE_PPP
     case TYPE_ETHERNET:
         return(fnOpenETHERNET((ETHTABLE*)pars, driver_mode));
 #endif
@@ -306,7 +306,7 @@ extern QUEUE_TRANSFER fnRead(QUEUE_HANDLE driver_id, unsigned char *input_buffer
 #if !defined _NO_CHECK_QUEUE_INPUT                                       // {12}
 // Get the number of waiting messages (can also be bytes) from any queue
 //
-extern QUEUE_TRANSFER fnMsgs(QUEUE_HANDLE driver_id )
+extern QUEUE_TRANSFER fnMsgs(QUEUE_HANDLE driver_id)
 {
     driver_id -= 1;
     return ((que_ids[driver_id].CallAddress)(que_ids[driver_id].qHandle, 0, 0, CALL_INPUT, driver_id));
@@ -717,16 +717,16 @@ extern QUEUE_TRANSFER entry_que(QUEUE_HANDLE channel, unsigned char *ptBuffer, Q
 extern QUEUE_HANDLE fnSearchID(QUEUE_TRANSFER (*SearchAddress)(QUEUE_HANDLE, unsigned char *, QUEUE_TRANSFER, unsigned char, QUEUE_HANDLE), QUEUE_HANDLE channel_mask)
 {
     IDINFO *pIDtables = que_ids;                                         // initialise pointer to start of ID table
-    QUEUE_HANDLE TheID = 0;
+    QUEUE_HANDLE TheID = 0;                                              // index
 
-    while (TheID < NrQueues) {
-        if ((pIDtables->CallAddress == SearchAddress) && (pIDtables->qHandle == channel_mask)) {
-            return (TheID + 1);
+    while (TheID < NrQueues) {                                           // check through the queue list
+        if ((pIDtables->CallAddress == SearchAddress) && (pIDtables->qHandle == channel_mask)) { // if the matching queue is found
+            return (TheID + 1);                                          // return the matching queue's handle
         }
         TheID++;
         ++pIDtables;
     }
-    return (NO_ID_ALLOCATED);
+    return (NO_ID_ALLOCATED);                                            // queue list has been searched but no matching entry was found
 }
 
 // Return the physical channel number from a handle

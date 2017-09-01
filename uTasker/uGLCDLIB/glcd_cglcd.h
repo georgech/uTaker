@@ -18,10 +18,11 @@
     09.08.2010 Add CGLCD_PIXEL_SIZE to control effective size            {3}
     29.08.2010 Add touch screen operation                                {4}
     09.11.2010 Change EIB to EBI (AVR32 external bus interface naming)
+    19.02.2017 Add FT800                                                 {5}
 
 */
 
-#if (defined CGLCD_GLCD_MODE || defined KITRONIX_GLCD_MODE || defined MB785_GLCD_MODE || defined TFT2N0369_GLCD_MODE || defined ST7789S_GLCD_MODE) && !defined _GLCD_SAMSUNG && !defined OLED_GLCD_MODE && !defined TFT_GLCD_MODE && !defined NOKIA_GLCD_MODE
+#if (defined CGLCD_GLCD_MODE || defined KITRONIX_GLCD_MODE || defined MB785_GLCD_MODE || defined TFT2N0369_GLCD_MODE || defined FT800_GLCD_MODE || defined ST7789S_GLCD_MODE) && !defined _GLCD_SAMSUNG && !defined OLED_GLCD_MODE && !defined TFT_GLCD_MODE && !defined NOKIA_GLCD_MODE
     #if !defined _GLCD_CGLCD_DEFINES
 
         #define MAX_GLCD_READY              100
@@ -45,7 +46,14 @@
 
         #define WRITE_DATA_INC              0xc0
 
-        #define GLCD_BUSY()                 0
+        #if defined FT800_GLCD_MODE
+            #define NO_YIELD                0
+            #define FIFO_WRITE_YIELD        1
+            #define SWAP_YIELD              2
+            #define GLCD_BUSY()             (((ft800_host.iCoProcessorWait == FIFO_WRITE_YIELD) && ((Ft_Gpu_Hal_Rd16(0, REG_CMD_READ) != Ft_Gpu_Hal_Rd16(0, REG_CMD_WRITE)))) || ((ft800_host.iCoProcessorWait == SWAP_YIELD) && ((Ft_Gpu_Hal_Rd8(0, REG_DLSWAP) != DLSWAP_DONE))))
+        #else
+            #define GLCD_BUSY()             0
+        #endif
 
         #define NWE_SETUP                   20                           // NWE setup time in ns
         #define NCS_WR_SETUP                0                            // NCS write setup time in ns
@@ -82,7 +90,7 @@
             static void fnCommandGlcd_1(unsigned char ucCommand, unsigned char ucParameter);
             static void fnCommandGlcd_2(unsigned char ucCommand, unsigned short usParameter);
             static void fnWriteGLCD_data_pair(unsigned short usBytePair);
-        #elif defined KITRONIX_GLCD_MODE || defined TFT2N0369_GLCD_MODE || defined ST7789S_GLCD_MODE
+        #elif defined KITRONIX_GLCD_MODE || defined TFT2N0369_GLCD_MODE || defined FT800_GLCD_MODE || defined ST7789S_GLCD_MODE
             #if defined ST7789S_GLCD_MODE
                 static void fnCommandGlcd_1(unsigned char ucCommand);
                 static void fnDataGlcd_1(unsigned char ucData);
@@ -93,11 +101,16 @@
 	                    #define fnCommandGlcd_1(command) CollectCommand(1, (command))
                         #define fnCommandGlcd_2(command, data) CollectCommand(1, (command)); CollectCommand(0, (data))
                         #define fnWriteGLCD_data_pair(data) CollectCommand(0, (data));
+
                 #else
                         #define fnCommandGlcd_1(command)       *((volatile unsigned short*)GLCD_COMMAND_ADDR) = (command)
                         #define fnCommandGlcd_2(command, data) *((volatile unsigned short*)GLCD_COMMAND_ADDR) = (command); *((volatile unsigned short*)GLCD_DATA_ADDR) = (data)
                         #define fnWriteGLCD_data_pair(data)    *((volatile unsigned short*)GLCD_DATA_ADDR) = (data)
                 #endif
+            #elif defined FT800_GLCD_MODE                                // {5}
+    	        #define fnCommandGlcd_1(command)                         // dummy for compatibility
+                #define fnCommandGlcd_2(command, data)
+                #define fnWriteGLCD_data_pair(data)
             #else
                 static void fnCommandGlcd_1(unsigned char ucCommand);
                 static void fnCommandGlcd_2(unsigned char ucCommand, unsigned short usParameter);
@@ -871,7 +884,311 @@ static void fnSetWindow(unsigned short x1, unsigned short y1, unsigned short x2,
 #endif
 
 
-#if defined KITRONIX_GLCD_MODE || defined TFT2N0369_GLCD_MODE || defined ST7789S_GLCD_MODE
+#if defined KITRONIX_GLCD_MODE || defined TFT2N0369_GLCD_MODE || defined ST7789S_GLCD_MODE || defined FT800_GLCD_MODE
+
+#if defined FT800_GLCD_MODE
+    #if defined _WINDOWS
+        extern void _FT8XXEMU_cs(int cs);                                // FT800 emulation interface prototypes
+        extern unsigned char _FT8XXEMU_transfer(unsigned char data);
+    #endif
+
+extern void Ft_Gpu_HostCommand(void *host, unsigned char ucCommand)
+{
+    WRITE_LCD_SPI_CMD0_FIRST(ucCommand);                                 // assert the CS line and send the command
+    WRITE_LCD_SPI_CMD0(0);                                               // send three further dummy bytes
+    WRITE_LCD_SPI_CMD0(0);
+    WRITE_LCD_SPI_CMD0_LAST(0);                                          // remove the CS line after final byte
+    FLUSH_LCD_SPI_RX(4);                                                 // ensure that the activity has terminated before quitting so that further reads/writes can't disturb
+}
+
+extern unsigned char Ft_Gpu_Hal_Rd8(void *host, unsigned long ulReg)
+{
+    unsigned char value;
+    WRITE_LCD_SPI_CMD0_FIRST((unsigned char)(ulReg >> 16));              // assert the CS line and send the most significant byte of the address
+    WRITE_LCD_SPI_CMD0((unsigned char)(ulReg >> 8));
+    WRITE_LCD_SPI_CMD0((unsigned char)ulReg);
+    WRITE_LCD_SPI_CMD0(0);
+    FLUSH_LCD_SPI_RX(4);                                                 // we are not interested in the data returned from the first 4 bytes
+    READ_LCD_SPI_CMD0_LAST(0, value);                                    // read a byte and remove the CS line afterwards
+    return value;
+}
+
+extern void Ft_Gpu_Hal_Wr8(void *host, unsigned long ulReg, unsigned char ucData)
+{
+    WRITE_LCD_SPI_CMD0_FIRST((unsigned char)((ulReg >> 16) | 0x80));     // assert the CS line and send the most significant byte of the address (for write)
+    WRITE_LCD_SPI_CMD0((unsigned char)(ulReg >> 8));
+    WRITE_LCD_SPI_CMD0((unsigned char)(ulReg));
+    WRITE_LCD_SPI_CMD0_LAST((unsigned char)(ucData));                    // send the data byte and negate the chip select line
+    FLUSH_LCD_SPI_RX(4);                                                 // ensure that the activity has terminated before quitting so that further reads/writes can't disturb
+}
+
+extern void Ft_Gpu_Hal_Wr16(void *host, unsigned long ulReg, unsigned short usData)
+{
+    WRITE_LCD_SPI_CMD0_FIRST((unsigned char)((ulReg >> 16) | 0x80));     // assert the CS line and send the most significant byte of the address (for write)
+    WRITE_LCD_SPI_CMD0((unsigned char)(ulReg >> 8));
+    WRITE_LCD_SPI_CMD0((unsigned char)(ulReg));
+    WRITE_LCD_SPI_CMD0((unsigned char)(usData));                         // send the least significant data bytes first
+    FLUSH_LCD_SPI_RX(3);                                                 // wait for 3 bytes to be sent/received
+    WRITE_LCD_SPI_CMD0_LAST((unsigned char)(usData >> 8));               // send the most significant data byte and negate the chip select line
+    FLUSH_LCD_SPI_RX(2);                                                 // ensure that the activity has terminated before quitting so that further reads/writes can't disturb
+}
+
+extern unsigned short Ft_Gpu_Hal_Rd16(void *host, unsigned long ulReg)
+{
+    unsigned char ucValue1, ucValue2;
+    WRITE_LCD_SPI_CMD0_FIRST((unsigned char)(ulReg >> 16));              // assert the CS line and send the most significant byte of the address
+    WRITE_LCD_SPI_CMD0((unsigned char)(ulReg >> 8));
+    WRITE_LCD_SPI_CMD0((unsigned char)ulReg);
+    WRITE_LCD_SPI_CMD0(0);
+    FLUSH_LCD_SPI_RX(4);                                                 // we are not interested in the data returned from the first 4 bytes
+    READ_LCD_SPI_CMD0(0, ucValue1);                                      // read a byte
+    READ_LCD_SPI_CMD0_LAST(0, ucValue2);                                 // read a byte and remove the CS line afterwards
+    return (ucValue1 | (ucValue2 << 8));                                 // return the read 16 bit value
+}
+
+extern void Ft_Gpu_Hal_Wr32(void *host, unsigned long ulReg, unsigned long ulValue)
+{
+    WRITE_LCD_SPI_CMD0_FIRST((unsigned char)((ulReg >> 16) | 0x80));     // assert the CS line and send the most significant byte of the address
+    WRITE_LCD_SPI_CMD0((unsigned char)(ulReg >> 8));
+    WRITE_LCD_SPI_CMD0((unsigned char)ulReg);
+    WRITE_LCD_SPI_CMD0((unsigned char)ulValue);                          // least significant data byte first
+    FLUSH_LCD_SPI_RX(3);                                                 // wait until 3 bytes have been sent/received
+    WRITE_LCD_SPI_CMD0((unsigned char)(ulValue >> 8));
+    FLUSH_LCD_SPI_RX(1);                                                 // wait for one further byte to be sent/received
+    WRITE_LCD_SPI_CMD0((unsigned char)(ulValue >> 16));
+    FLUSH_LCD_SPI_RX(1);                                                 // wait for one further byte to be sent/received
+    WRITE_LCD_SPI_CMD0_LAST((unsigned char)(ulValue >> 24));             // send most significant byte and negate the chip select line
+    FLUSH_LCD_SPI_RX(2);                                                 // ensure that the activity has terminated before quitting so that further reads/writes can't disturb
+}
+
+extern unsigned long Ft_Gpu_Hal_Rd32(void *host, unsigned long ulReg)
+{
+    unsigned char ucValue1, ucValue2, ucValue3, ucValue4;
+    WRITE_LCD_SPI_CMD0_FIRST((unsigned char)(ulReg >> 16));              // assert the CS line and send the most significant byte of the address
+    WRITE_LCD_SPI_CMD0((unsigned char)(ulReg >> 8));
+    WRITE_LCD_SPI_CMD0((unsigned char)ulReg);
+    WRITE_LCD_SPI_CMD0(0);
+    FLUSH_LCD_SPI_RX(4);                                                 // we are not interested in the data returned from the first 4 bytes
+    READ_LCD_SPI_CMD0(0, ucValue1);                                      // read a byte
+    READ_LCD_SPI_CMD0(0, ucValue2);                                      // read a byte
+    READ_LCD_SPI_CMD0(0, ucValue3);                                      // read a byte
+    READ_LCD_SPI_CMD0_LAST(0, ucValue4);                                 // read the final byte and remove the CS line afterwards
+    return (ucValue1 | (ucValue2 << 8) | (ucValue3 << 16) | (ucValue4 << 24)); // return the read 32 bit value
+}
+
+extern void Ft_Gpu_Hal_RdMem(void *host, unsigned long ulReg, unsigned char *buffer, unsigned long length)
+{
+    WRITE_LCD_SPI_CMD0_FIRST((unsigned char)(ulReg >> 16));              // assert the CS line and send the most significant byte of the address
+    WRITE_LCD_SPI_CMD0((unsigned char)(ulReg >> 8));
+    WRITE_LCD_SPI_CMD0((unsigned char)ulReg);
+    WRITE_LCD_SPI_CMD0(0);
+    FLUSH_LCD_SPI_RX(4);                                                 // we are not interested in the data returned from the first 4 bytes
+    while (length > 1) {
+        READ_LCD_SPI_CMD0(0, *buffer);                                   // read a byte
+        buffer++;
+        length--;
+    }
+    READ_LCD_SPI_CMD0_LAST(0, *buffer);                                  // read the final byte and remove the CS line afterwards
+}
+
+extern void Ft_Gpu_Hal_WrMem(void *host, unsigned long ulReg, const unsigned char *ptrData, unsigned long ulDataLength)
+{
+    WRITE_LCD_SPI_CMD0_FIRST((unsigned char)((ulReg >> 16) | 0x80));     // assert the CS line and send the most significant byte of the address (for write)
+    WRITE_LCD_SPI_CMD0((unsigned char)(ulReg >> 8));
+    WRITE_LCD_SPI_CMD0((unsigned char)(ulReg));
+    FLUSH_LCD_SPI_RX(2);                                                 // wait for two bytes to be sent/received
+    while (ulDataLength > 1) {
+        WRITE_LCD_SPI_CMD0((unsigned char)(*ptrData));                   // send the data bytes
+        FLUSH_LCD_SPI_RX(1);
+        ptrData++;
+        ulDataLength--;
+    }
+    WRITE_LCD_SPI_CMD0_LAST((unsigned char)(*ptrData));                  // send the final data byte and negate the chip select line
+    FLUSH_LCD_SPI_RX(2);                                                 // ensure that the activity has terminated before quitting so that further reads/writes can't disturb
+}
+
+extern int SAMAPP_GPU_DLSwap(unsigned char DL_Swap_Type)
+{
+    #define SWAP_MAX   500
+    volatile int iYield = 0;
+    unsigned char Swap_Type = DLSWAP_FRAME;
+
+    if (DL_Swap_Type == DLSWAP_LINE) {
+        Swap_Type = DLSWAP_LINE;
+    }
+
+    Ft_Gpu_Hal_Wr8(0, REG_DLSWAP, Swap_Type);                            // perform a new DL swap
+
+    while (Ft_Gpu_Hal_Rd8(0, REG_DLSWAP) != DLSWAP_DONE) {               // wait until the swap has completed
+        if (++iYield > SWAP_MAX) {
+            iLCD_State = STATE_LCD_WRITING;
+            ft800_host.iCoProcessorWait = SWAP_YIELD;                    // mark that the co-processor is busy and we yield until it is ready again
+            uTaskerStateChange(OWN_TASK, UTASKER_GO);                    // poll the co-processor state and inform on completion
+            return 1;
+        }
+    }
+    return 0;
+}
+
+extern void Ft_App_WrCoCmd_Buffer(Ft_Gpu_Hal_Context_t *phost, unsigned long cmd)
+{
+   /* Copy the command instruction into buffer */
+   ft_uint32_t *pBuffcmd =(ft_uint32_t*)&Ft_CmdBuffer[Ft_CmdBuffer_Index];
+   *pBuffcmd = cmd;
+   /* Increment the command index */
+   Ft_CmdBuffer_Index += FT_CMD_SIZE;
+}
+
+extern void Ft_App_WrCoStr_Buffer(Ft_Gpu_Hal_Context_t *phost, const unsigned char *s)
+{
+    unsigned short length = 0;
+    length = (unsigned short)(uStrlen((const CHAR *)s) + 1);             // last for the null termination
+    uStrcpy((CHAR *)&Ft_CmdBuffer[Ft_CmdBuffer_Index], (const CHAR *)s);
+    Ft_CmdBuffer_Index += ((length + 3) & ~3);                           // increment the length and long-word align
+}
+
+extern int Ft_App_Flush_Co_Buffer(Ft_Gpu_Hal_Context_t *phost)
+{ 
+    if (Ft_CmdBuffer_Index > 0) {
+        if (Ft_Gpu_Hal_WrCmdBuf(0, Ft_CmdBuffer, Ft_CmdBuffer_Index) != 0) {
+            return 1;
+        }
+    }
+    Ft_CmdBuffer_Index = 0;
+    return 0;
+}
+
+extern void Ft_App_WrDlCmd_Buffer(Ft_Gpu_Hal_Context_t *phost, unsigned long cmd)
+{
+   /* Copy the command instruction into buffer */
+   unsigned long *pBuffcmd = (unsigned long *)&Ft_DlBuffer[Ft_DlBuffer_Index];
+   *pBuffcmd = cmd;
+
+   /* Increment the command index */
+   Ft_DlBuffer_Index += FT_CMD_SIZE;
+}
+
+extern void Ft_App_Flush_DL_Buffer(Ft_Gpu_Hal_Context_t *phost)
+{
+   if (Ft_DlBuffer_Index > 0) {
+     Ft_Gpu_Hal_WrMem(0, RAM_DL, Ft_DlBuffer, Ft_DlBuffer_Index);
+   }
+   Ft_DlBuffer_Index = 0;
+}
+
+extern void Ft_Gpu_Hal_Updatecmdfifo(Ft_Gpu_Hal_Context_t *host, unsigned long count)
+{
+    ft800_host.ft_cmd_fifo_wp  = (ft800_host.ft_cmd_fifo_wp + count) & 4095;
+
+	//4 byte alignment
+    ft800_host.ft_cmd_fifo_wp = (ft800_host.ft_cmd_fifo_wp + 3) & 0xffc;
+	Ft_Gpu_Hal_Wr16(0,REG_CMD_WRITE, ft800_host.ft_cmd_fifo_wp);
+}
+
+extern unsigned short Ft_Gpu_Cmdfifo_Freespace(Ft_Gpu_Hal_Context_t *host)
+{
+    unsigned short fullness, retval;
+    //ft800_host.ft_cmd_fifo_wp = Ft_Gpu_Hal_Rd16(host,REG_CMD_WRITE);
+    fullness = ((ft800_host.ft_cmd_fifo_wp - Ft_Gpu_Hal_Rd16(0,REG_CMD_READ)) & 4095);
+    retval = ((FT_CMD_FIFO_SIZE - 4) - fullness);
+    return (retval);
+}
+
+extern void Ft_Gpu_Hal_CheckCmdBuffer(Ft_Gpu_Hal_Context_t *host, unsigned long count)
+{
+    unsigned short getfreespace;
+    do {
+        getfreespace = Ft_Gpu_Cmdfifo_Freespace(0);
+    } while (getfreespace < count);
+}
+
+
+extern int Ft_Gpu_Hal_WrCmdBuf(Ft_Gpu_Hal_Context_t *host, unsigned char *buffer, unsigned long count)
+{
+    unsigned long length = 0;
+    unsigned long availablefreesize;
+    do {                
+        availablefreesize = Ft_Gpu_Cmdfifo_Freespace(0);
+        if (count > availablefreesize) {
+            length = availablefreesize;
+        }
+        else {
+            length = count;
+        }
+      //Ft_Gpu_Hal_CheckCmdBuffer(0, length);                            // this is not necessary since the free space has been checked already
+        Ft_Gpu_Hal_WrMem(0, (ft800_host.ft_cmd_fifo_wp + RAM_CMD), buffer, length);
+        Ft_Gpu_Hal_Updatecmdfifo(0, length);
+        if (Ft_Gpu_Hal_WaitCmdfifo_empty(0) != 0) {
+            ft800_host.buffer = buffer;                                  // the buffer being written
+            ft800_host.count = count;                                    // length remaining
+            ft800_host.length = length;                                  // stalled length
+            return 1;
+        }
+        count -= length;
+        buffer += length;
+    } while (count > 0);
+    return 0;
+}
+
+extern int Ft_Gpu_Hal_WaitCmdfifo_empty(Ft_Gpu_Hal_Context_t *host)
+{
+    if (ft800_host.iCoProcessorWait != NO_YIELD) {
+        _EXCEPTION("Don't call if we have already yielded!!");
+        return -1;                                                       // not yet completed
+    }
+    else {
+        #define MAX_YIELD_TIME    500
+        volatile int iYield = 0;
+        while (Ft_Gpu_Hal_Rd16(0, REG_CMD_READ) != Ft_Gpu_Hal_Rd16(0, REG_CMD_WRITE)) {
+            if (++iYield > MAX_YIELD_TIME) {
+                iLCD_State = STATE_LCD_WRITING;
+                ft800_host.iCoProcessorWait = FIFO_WRITE_YIELD;          // mark that the co-processor is busy and we yield until it is ready again
+                uTaskerStateChange(OWN_TASK, UTASKER_GO);                // poll the co-processor state and inform on completion
+                return 1;                                                // not yet completed
+            }
+        }
+        ft800_host.ft_cmd_fifo_wp = Ft_Gpu_Hal_Rd16(0, REG_CMD_WRITE);
+        return 0;                                                        // completed
+    }
+}
+
+#if 0
+extern void Ft_GpuEmu_SPII2C_csHigh(void)
+{
+    // To remove...
+   // _EXCEPTION("Should never be called!!!");
+    _FT8XXEMU_cs(0);
+}
+
+void  Ft_GpuEmu_SPII2C_StartRead(unsigned long ulAddress)
+{
+    // To remove...
+   //  _EXCEPTION("Should never be called!!!");   
+     _FT8XXEMU_cs(1);
+    _FT8XXEMU_transfer((unsigned char)(ulAddress >> 16));
+    _FT8XXEMU_transfer((unsigned char)(ulAddress >> 8));
+    _FT8XXEMU_transfer((unsigned char)ulAddress);
+    _FT8XXEMU_transfer((unsigned char)0);                                // dummy byte read
+}
+
+void  Ft_GpuEmu_SPII2C_StartWrite(unsigned long ulAddress)
+{
+//    _EXCEPTION("Should never be called!!!");
+    // To remove...
+    _FT8XXEMU_cs(1);
+    _FT8XXEMU_transfer((unsigned char)(ulAddress >> 16) | 0x80);
+    _FT8XXEMU_transfer((unsigned char)(ulAddress >> 8));
+    _FT8XXEMU_transfer((unsigned char)ulAddress);
+}
+
+unsigned char Ft_GpuEmu_SPII2C_transfer(unsigned char data)
+{
+ //   _EXCEPTION("Should never be called!!!");
+    // To remove
+	return _FT8XXEMU_transfer(data);
+}
+#endif
+#endif
 
 #if defined ST7789S_GLCD_MODE
     #if defined _WINDOWS
@@ -935,7 +1252,7 @@ static void fnWriteGLCD_data_pair(unsigned short usData)
     CollectCommand(0, *((volatile unsigned short *)GLCD_DATA_ADDR));     // pass the data to the LCD simulator
 #endif
 }
-#elif !defined TFT2N0369_GLCD_MODE && !defined ST7789S_GLCD_MODE
+#elif !defined TFT2N0369_GLCD_MODE && !defined ST7789S_GLCD_MODE && !defined FT800_GLCD_MODE
 // Write a 16 bit word to the graphic memory in the LCD. It is expected that the display has been commanded to graphic mode
 //
 static void fnWriteGLCD_data_pair(unsigned short usBytePair)
@@ -1025,7 +1342,7 @@ static void fnSetWindow(unsigned short x1, unsigned short y1, unsigned short x2,
 
 #if defined SUPPORT_TOUCH_SCREEN && !defined TOUCH_FT6206                // {4}
 
-#if defined TFT2N0369_GLCD_MODE                                          // Freescale Tower LCD
+#if defined TFT2N0369_GLCD_MODE                                          // Freescale/NXP Tower LCD
     static void fnY_ready(ADC_INTERRUPT_RESULT *res);
     #define TOUCH_X_DRIVE_PLUS   PORT_AN_BIT6
     #define TOUCH_X_DRIVE_MINUS  PORT_AN_BIT4
@@ -1056,7 +1373,7 @@ static void fnSetWindow(unsigned short x1, unsigned short y1, unsigned short x2,
     #define PEN_DOWN_DEBOUNCE    6
 #endif
 
-#if defined TFT2N0369_GLCD_MODE                                          // Freescale Tower LCD
+#if defined TFT2N0369_GLCD_MODE                                          // Freescale/NXP Tower LCD
     static ADC_RESULTS    Results;                                       // buffer for results
 #else
     static unsigned short usResults[4];                                  // buffer for results
@@ -1068,7 +1385,7 @@ static void fnSetWindow(unsigned short x1, unsigned short y1, unsigned short x2,
 
 // 2..4ms touch screen interrupt (from ADC result)
 //
-#if defined TFT2N0369_GLCD_MODE                                          // Freescale Tower LCD
+#if defined TFT2N0369_GLCD_MODE                                          // Freescale/NXP Tower LCD
 static void fnTouchInterrupt(ADC_INTERRUPT_RESULT *res)
 #else
 static void fnTouchInterrupt(void)                                       // new x and y samples ready
@@ -1085,7 +1402,7 @@ static void fnTouchInterrupt(void)                                       // new 
     unsigned char ucMemoryContent, ucNewContent;
 #endif
 #if defined TOUCH_FT6206
-#elif defined TFT2N0369_GLCD_MODE                                        // Freescale Tower LCD
+#elif defined TFT2N0369_GLCD_MODE                                        // Freescale/NXP Tower LCD
     ADC_RESULTS  samples;
     _CLEARBITS(AN, (TOUCH_X_DRIVE_PLUS | TOUCH_X_DRIVE_MINUS | TOUCH_Y_DRIVE_PLUS | TOUCH_Y_DRIVE_MINUS));
     PANPAR &= ~(TOUCH_X_DRIVE_PLUS | TOUCH_X_DRIVE_MINUS);               // set as GPIO - momentarily driving 0
@@ -1211,7 +1528,7 @@ static void fnTouchInterrupt(void)                                       // new 
 #endif
 }
 
-#if !defined TFT2N0369_GLCD_MODE && !defined ST7789S_GLCD_MODE           // not Freescale Tower LCD
+#if !defined TFT2N0369_GLCD_MODE && !defined ST7789S_GLCD_MODE && !defined FT800_GLCD_MODE // not Freescale/NXP Tower LCD
 static void fnX_stabilise(void)
 {
     ADC_SETUP adc_setup; 
@@ -1231,7 +1548,7 @@ static void fnX_stabilise(void)
 }
 #endif
 
-#if defined TFT2N0369_GLCD_MODE                                          // Freescale Tower LCD
+#if defined TFT2N0369_GLCD_MODE                                          // Freescale/NXP Tower LCD
 static void fnY_ready(ADC_INTERRUPT_RESULT *res)
 #else
 static void fnY_ready(void)
@@ -1239,7 +1556,7 @@ static void fnY_ready(void)
 {
 #if !defined TOUCH_FT6206
     ADC_SETUP adc_setup; 
-#if defined TFT2N0369_GLCD_MODE                                          // Freescale Tower LCD
+#if defined TFT2N0369_GLCD_MODE                                          // Freescale/NXP Tower LCD
     #if defined M52259_TOWER
     static unsigned char ucIntensityInput = (PORT_TA_BIT0 | PORT_TA_BIT1);
     #endif
@@ -1296,7 +1613,7 @@ static void fnY_ready(void)
 #endif
 }
 
-#if !defined TFT2N0369_GLCD_MODE && !defined ST7789S_GLCD_MODE           // not Freescale Tower LCD
+#if !defined TFT2N0369_GLCD_MODE && !defined ST7789S_GLCD_MODE && !defined FT800_GLCD_MODE // not Freescale/NXP Tower LCD
 static void fnY_stabilise(void)
 {
     ADC_SETUP adc_setup;                                                 // Luminary Micro IDM_L35_B
@@ -1350,7 +1667,7 @@ static void fnStartTouch(void)
         fnConfigureInterrupt((void *)&interrupt_setup);                  // configure touch screen interrupt
         TOUCHRESET_H();                                                  // negate the reset line to the touch screen controller (it will report via the interrupt when it is ready (about 300ms later)
     }
-    #elif defined TFT2N0369_GLCD_MODE                                    // Freescale Tower LCD
+    #elif defined TFT2N0369_GLCD_MODE                                    // Freescale/NXP Tower LCD
     ADC_SETUP adc_setup; 
     adc_setup.int_type = ADC_INTERRUPT;                                  // identifier when configuring
     adc_setup.int_handler = fnY_ready;
@@ -1359,7 +1676,7 @@ static void fnStartTouch(void)
     adc_setup.int_adc_int_type = ADC_END_OF_SCAN_INT;
     adc_setup.int_adc_offset = 0;                                        // no offset
     adc_setup.int_high_level_trigger = 0;
-    adc_setup.int_adc_mode = (ADC_CONFIGURE_ADC | ADC_CONFIGURE_CHANNEL | ADC_AUTO_POWER_DOWN_MODE | ADC_SEQUENTIAL_MODE | ADC_SINGLE_ENDED | ADC_SINGLE_SHOT_MODE);
+    adc_setup.int_adc_mode = (ADC_CONFIGURE_ADC | ADC_CONFIGURE_CHANNEL | ADC_AUTO_POWER_DOWN_MODE | ADC_SEQUENTIAL_MODE | ADC_SINGLE_ENDED_INPUT | ADC_SINGLE_SHOT_MODE);
     adc_setup.int_adc_speed = (unsigned char)(ADC_SAMPLING_SPEED(650000));// 650kHz sampling - slowest possible at 80MHz (must be between 100kHz and 5MHz)
     fnConfigureInterrupt((void *)&adc_setup);                            // configure ADC and channel 4
     adc_setup.int_adc_bit = 5;
@@ -1781,6 +2098,103 @@ static void fnStartTouch(void)
         #if defined GLCD_BACKLIGHT_CONTROL
             fnSetBacklight();
         #endif
+    #elif defined GLCD_INIT && defined FT800_GLCD_MODE                   // {5}
+            GLCD_RST_H();                                                // release the reset line (this is in fact the power down line on the FT800 - not needed by emulator)
+            uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(0.050 * SEC), E_INIT_DELAY); // 50ms delay to allow the display to become ready
+            iLCD_State = STATE_INITIALISING;
+            return;
+        case STATE_INITIALISING:
+            #define FT_GPU_ACTIVE_M      0x00
+            #define FT_GPU_EXTERNAL_OSC  0x44
+            #define FT_GPU_PLL_48M       0x62
+            #define FT_GPU_CORE_RESET    0x68
+            Ft_Gpu_HostCommand(0, FT_GPU_ACTIVE_M);                      // access address 0 to wake up the device
+            uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(0.020 * SEC), E_INIT_DELAY); // 20ms delay for display to complete initialisation
+            iLCD_State = STATE_INITIALISING_1;
+            return;
+        case STATE_INITIALISING_1:
+            Ft_Gpu_HostCommand(0, FT_GPU_EXTERNAL_OSC);                  // set the clock to external clock
+            uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(0.010 * SEC), E_INIT_DELAY); // 10ms delay
+            iLCD_State = STATE_INITIALISING_2;
+            return;
+        case STATE_INITIALISING_2:
+            Ft_Gpu_HostCommand(0, FT_GPU_PLL_48M);                       // switch the PLL output to 48MHz
+            uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(0.010 * SEC), E_INIT_DELAY); // 10ms delay
+            iLCD_State = STATE_INITIALISING_3;
+            return;
+        case STATE_INITIALISING_3:
+            Ft_Gpu_HostCommand(0, FT_GPU_CORE_RESET);                    // perform a core reset
+            iLCD_State = STATE_INITIALISING_4;
+            // Fall though intentionally
+            //
+        case STATE_INITIALISING_4:
+			if (Ft_Gpu_Hal_Rd8(0, REG_ID) != 0x7c) {                     // read register ID to check if FT800 is ready
+                uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(0.020 * SEC), E_INIT_DELAY); // 20ms delay before trying again
+                return;
+            }
+            #define DLSWAP_FRAME         2UL
+            #define RESISTANCE_THRESHOLD (1200)
+        #if defined FT_800_ENABLE
+            Ft_Gpu_Hal_Wr16(0, REG_HCYCLE, 408);                         // 320 x 240
+            Ft_Gpu_Hal_Wr16(0, REG_HOFFSET, 70);
+            Ft_Gpu_Hal_Wr16(0, REG_HSYNC0, 0);
+            Ft_Gpu_Hal_Wr16(0, REG_HSYNC1, 10);
+            Ft_Gpu_Hal_Wr16(0, REG_VCYCLE, 263);
+            Ft_Gpu_Hal_Wr16(0, REG_VOFFSET, 13);
+            Ft_Gpu_Hal_Wr16(0, REG_VSYNC0, 0);
+            Ft_Gpu_Hal_Wr16(0, REG_VSYNC1, 2);
+            Ft_Gpu_Hal_Wr8(0,  REG_SWIZZLE, 2);
+            Ft_Gpu_Hal_Wr8(0,  REG_PCLK_POL, 8);
+            Ft_Gpu_Hal_Wr8(0,  REG_PCLK, 8);
+            Ft_Gpu_Hal_Wr16(0, REG_HSIZE, GLCD_X);
+            Ft_Gpu_Hal_Wr16(0, REG_VSIZE, GLCD_Y);
+        #else
+            Ft_Gpu_Hal_Wr16(0, REG_HCYCLE, 928);                         // original reference
+            Ft_Gpu_Hal_Wr16(0, REG_HOFFSET, 88);
+            Ft_Gpu_Hal_Wr16(0, REG_HSYNC0, 0);
+            Ft_Gpu_Hal_Wr16(0, REG_HSYNC1, 48);
+            Ft_Gpu_Hal_Wr16(0, REG_VCYCLE, 525);
+            Ft_Gpu_Hal_Wr16(0, REG_VOFFSET, 32);
+            Ft_Gpu_Hal_Wr16(0, REG_VSYNC0, 0);
+            Ft_Gpu_Hal_Wr16(0, REG_VSYNC1, 3);
+            Ft_Gpu_Hal_Wr8(0,  REG_SWIZZLE, 0);
+            Ft_Gpu_Hal_Wr8(0,  REG_PCLK_POL, 1);
+            Ft_Gpu_Hal_Wr8(0,  REG_PCLK, 5);
+            Ft_Gpu_Hal_Wr16(0, REG_HSIZE, 800);
+            Ft_Gpu_Hal_Wr16(0, REG_VSIZE, 480);
+            Ft_Gpu_Hal_Wr16(0, REG_CSPREAD, 0);
+            Ft_Gpu_Hal_Wr16(0, REG_DITHER, 1);
+        #endif
+            Ft_Gpu_Hal_Wr8(0, REG_GPIO_DIR, (0x83 | Ft_Gpu_Hal_Rd8(0, REG_GPIO_DIR))); // set the display enable to '1'
+            Ft_Gpu_Hal_Wr8(0, REG_GPIO, (0x083 | Ft_Gpu_Hal_Rd8(0, REG_GPIO)));
+            Ft_Gpu_Hal_Wr16(0, REG_TOUCH_RZTHRESH,RESISTANCE_THRESHOLD);
+
+            /*It is optional to clear the screen here*/
+            {
+                /* Boot up for FT800 followed by graphics primitive sample cases */
+                /* Initial boot up DL - make the back ground green color */
+                const unsigned char FT_DLCODE_BOOTUP[12] = 
+                {
+                0,255,0,2,                                               // GPU instruction CLEAR_COLOR_RGB
+                7,0,0,38,                                                // GPU instruction CLEAR
+                0,0,0,0,                                                 // GPU instruction DISPLAY
+                };
+                Ft_Gpu_Hal_WrMem(0, RAM_DL, FT_DLCODE_BOOTUP,sizeof(FT_DLCODE_BOOTUP));
+                Ft_Gpu_Hal_Wr8(0, REG_DLSWAP, DLSWAP_FRAME);
+            }
+            uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(0.120 * SEC), E_INIT_DELAY); // 120ms delay
+            iLCD_State = STATE_INITIALISING_5;
+            break;
+        case STATE_INITIALISING_5:
+        #if defined SUPPORT_TOUCH_SCREEN
+            fnStartTouch();
+        #endif
+        #if defined GLCD_BACKLIGHT_CONTROL
+            fnSetBacklight();
+        #endif
+            fnEventMessage(LCD_PARTNER_TASK, TASK_LCD, E_LCD_INITIALISED);
+            iLCD_State = STATE_LCD_READY;
+            break;
     #elif defined GLCD_INIT && defined TFT2N0369_GLCD_MODE
             GLCD_RST_H();                                                // release the reset line
             uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(0.003 * SEC), E_INIT_DELAY); // 3ms delay for display to complete initialisation

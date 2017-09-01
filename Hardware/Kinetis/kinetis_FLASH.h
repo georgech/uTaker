@@ -27,6 +27,7 @@
     29.12.2014 Add KE02 EEPROM support                                   {109}
     10.03.2015 Correct KE/KEA flash configuration layout                 {122}
     12.01.2015 Perform write enable for SPI_FLASH_S25FL1_K (for KL/KE driver compatibility) {200}
+    19.08.2017 Correct calculation of start address of preceding multiple memory device {201}
 
 */
 
@@ -228,7 +229,7 @@ static int fnFlashNow(unsigned char ucCommand, unsigned long *ptrWord, unsigned 
     #endif
         FTFL_FCCOB1 = (unsigned char)(((CAST_POINTER_ARITHMETIC)ptrWord) >> 16); // set address in flash
     #if defined FLEXFLASH_DATA                                           // {82} if working with FlashNMV in data flash mode
-        if ((CAST_POINTER_ARITHMETIC)ptrWord & FLEXNVM_START_ADDRESS) {
+        if (((CAST_POINTER_ARITHMETIC)ptrWord & FLEXNVM_START_ADDRESS) != 0) {
             FTFL_FCCOB1 |= 0x80;                                         // set address A23 so that the write/erase is in FlexNVM
             iNoInterruptDisable = 1;                                     // this command may execute without interrupts being disabled
         }
@@ -368,7 +369,7 @@ static int fnFlashNow(unsigned char ucCommand, unsigned long *ptrWord, unsigned 
             #endif
             }
             else {
-                _EXCEPTION("OTP location already programmed and can not be modified!!!");
+                _EXCEPTION("OTP location already programmed and cannot be modified!!!");
                 return FTFL_STAT_FPVIOL;                                 // signal programming error
             }
         }
@@ -826,7 +827,7 @@ extern unsigned char fnGetStorageType(unsigned char *memory_pointer, ACCESS_DETA
                 unsigned long ulDeviceRangeLength = ((unsigned long)((ptrStorageList->ptrMemoryEnd - ptrStorageList->ptrMemoryStart) + 1)/ptrStorageList->ucDeviceCount);
                 unsigned char *ptrStart = ptrStorageList->ptrMemoryStart;
                 unsigned char *ptrEnd = (ptrStorageList->ptrMemoryStart + ulDeviceRangeLength);                
-                while (ptrEnd < memory_pointer) {
+                while (ptrEnd <= memory_pointer) {                       // {201}
                     ptrStart += ulDeviceRangeLength;
                     ptrEnd += ulDeviceRangeLength;
                     ptrAccessDetails->ucDeviceNumber++;                  // the device number that the access is in
@@ -1088,7 +1089,7 @@ extern int fnSwapMemory(int iCheck)
     #define FLASH_SWAP_INDICATOR_ADDRESS    ((FLASH_START_ADDRESS + (SIZE_OF_FLASH/2)) - 32) // final sector in the first half of flash memory used as flash swap indicator
     unsigned long ulCommand;
     while (1) {
-        ulCommand = ((SWAP_CONTROL_CODE_REPORT_SWAP_STATUS << 24) | 0x00ffffff); // note that the unused bytes in the command are set to 0xff so that it is clear whether they are changed by the operation (failed operatios may otherwise not be detectable)
+        ulCommand = ((SWAP_CONTROL_CODE_REPORT_SWAP_STATUS << 24) | 0x00ffffff); // note that the unused bytes in the command are set to 0xff so that it is clear whether they are changed by the operation (failed operations may otherwise not be detectable)
         if (fnFlashNow(FCMD_SWAP, (unsigned long *)FLASH_SWAP_INDICATOR_ADDRESS, &ulCommand) != 0) { // get the swap state
             return SWAP_COMMAND_FAILURE;                                 // error
         }
@@ -1229,7 +1230,7 @@ extern int fnGetParameters(unsigned char ucValidBlock, unsigned short usParamete
     ptrPar += usParameterReference;                                      // {10} move to double-long word location
         #endif
 
-    while (usLength--) {
+    while (usLength-- != 0) {
         fnGetParsFile((unsigned char *)ptrPar, ucValue++, 1);
         ptrPar += (PARAMETER_STATUS_SIZE/2);
     }
@@ -1255,12 +1256,12 @@ extern int fnSetParameters(unsigned char ucValidBlock, unsigned short usParamete
     int iBlockUse = 0;
     unsigned long ulValidCheck[PARAMETER_STATUS_SIZE/2];
 
-    if (TEMP_PARS & ucValidBlock) {
+    if ((TEMP_PARS & ucValidBlock) != 0) {
         ucValidBlock &= ~TEMP_PARS;
         iBlockUse = 1;
     }
 
-    if (ucValidBlock & BLOCK_INVALID) {                                  // no valid parameter blocks have been found so we can use the first for saving the data.
+    if ((ucValidBlock & BLOCK_INVALID) != 0) {                           // no valid parameter blocks have been found so we can use the first for saving the data.
         fnDeleteParBlock((unsigned char *)PARAMETER_BLOCK_1);            // we delete it to be sure it is fresh
     #if defined USE_PAR_SWAP_BLOCK
         fnDeleteParBlock((unsigned char *)PARAMETER_BLOCK_2);

@@ -21,6 +21,10 @@
     01.12.2015 Allow control endpoint to operate with reversed data toggle (required to receive fast multi-frame OUTs belonging to a SETUP block) {1}
     23.12.2015 Add zero copy OUT endpoint buffer option                  {2}
     12.02.2017 Add KL82 support and allow USB host operation with shared endpoints {3}
+    24.03.2017 Reset ulNextRxData0 in host mode when non-0 endpoint are re-used {4}
+    12.04.2017 Add optional USB event logging for operation analysis     {5}
+    12.04.2017 Add setup frame response timeout and repetition in host mode {6}
+    12.04.2017 Temporarily disable USB operation on host mode reset to ensure that state change flags can be reliably reset {7}
 
 */
 
@@ -45,11 +49,14 @@
 #if defined USB_HOST_SUPPORT
     #define __USB_HOST_MODE()         ((usb_hardware.ucModeType & USB_HOST_MODE) != 0)
     #define __USB_DEVICE_MODE()       ((usb_hardware.ucModeType & USB_HOST_MODE) == 0)
+    #define SETUP_ACK_DELAY_MS        10                                 // an ACK to a setup is expected within 10ms
 #else
     #define __USB_HOST_MODE()         (0)
     #define __USB_DEVICE_MODE()       (1)
-    #define USB_DEVICE_SUPPORT                                           // enable device only support if host support hasn't specifically defined
+    #define USB_DEVICE_SUPPORT                                           // enable device only support if host support hasn't specifically been defined
 #endif
+
+#define fnGetEndPointCtr(iEndPoint) (unsigned char *)(ENDPT0_ADD + ((iEndPoint) * sizeof(unsigned long)))
 
 /* =================================================================== */
 /*                       local structure definitions                   */
@@ -82,14 +89,29 @@ static void fnUSB_reset(int iError);
 /*                                USB                                  */
 /* =================================================================== */
 
+//#define USB_LOG_SIZE    100                                            // {5} enable USB activity log when this exists and is set to a non-zero value
 
-#define fnGetEndPointCtr(iEndPoint) (unsigned char *)(ENDPT0_ADD + ((iEndPoint) * sizeof(unsigned long)))
+#if defined USB_LOG_SIZE && (USB_LOG_SIZE > 0)
+    volatile CHAR usb_log[USB_LOG_SIZE * 2] = { 0 };
+    volatile unsigned long ulLogLength = 0;
+
+    static void usb_monitor(const CHAR *reference, unsigned char ucData)
+    {
+        if (ulLogLength >= (2 * USB_LOG_SIZE)) {
+            return;
+        }
+        usb_log[ulLogLength++] = *reference;
+        usb_log[ulLogLength++] = (CHAR)ucData;
+    }
+#else
+    #define usb_monitor(x, y)                                            // remove activity log
+#endif
 
 #if defined USB_HOST_SUPPORT
 static int fnSendToken(unsigned char ucPID)
 {
     while ((CTL & TXSUSPEND_TOKENBUSY) != 0) {                           // wait if there is already a token in progress
-        if ((INT_STAT & USB_RST) != 0) {                                 // reset state detected
+        if ((INT_STAT & USB_RST) != 0) {                                 // reset state detected during wait for token to complete
             CTL &= ~TXSUSPEND_TOKENBUSY;                                 // abort present token transaction
             return -1;                                                   // quit
         }
@@ -157,30 +179,29 @@ static void usb_reset_timeout(void)
     usb_hardware.ptrEndpoint = &usb_endpoints[0];
     usb_hardware.ucHostEndpointActive = 0;
     usb_hardware.ucBufferUsage = 0;                                      // reset to even reception and even transmit buffers
-    usb_hardware.ptr_ulUSB_Rx_BDControl = &ptEndpointBD->usb_bd_rx_even.ulUSB_BDControl; // first reception is to the even buffer
+    usb_hardware.ptr_ulUSB_Rx_BDControl = &ptEndpointBD->usb_bd_rx_even.ulUSB_BDControl; // first reception after a bus reset is to the even buffer
     usb_hardware.ptr_ulUSB_Alt_Rx_BDControl = &ptEndpointBD->usb_bd_rx_odd.ulUSB_BDControl; // the alternate buffer is the odd buffer
     usb_hardware.ptr_ulUSB_BDControl = &ptEndpointBD->usb_bd_tx_even.ulUSB_BDControl; // first transmission is from even buffer (DATA0)
     usb_hardware.ptrTxDatBuffer = usb_hardware.ptrUSB_BD_EvenData = &ptEndpointBD->usb_bd_tx_even.ptrUSB_BD_Data;
     if ((ADDR & LS_EN) != 0) {
-        usb_hardware.ucDeviceSpeed = USB_DEVICE_SPEED_LOW;
+        usb_hardware.ucDeviceSpeed = USB_DEVICE_SPEED_LOW;               // attached device is a low speed device
     }
     else {
-        usb_hardware.ucDeviceSpeed = USB_DEVICE_SPEED_FULL;
+        usb_hardware.ucDeviceSpeed = USB_DEVICE_SPEED_FULL;              // attached device is a full-speed device
     }
     fnUSB_HostDelay(usb_start, PIT_MS_DELAY(40));                        // short wait to allow slow devices to become ready
-  //fnUSB_handle_frame(USB_DEVICE_DETECTED, 0, 0, &usb_hardware);        // generic handler routine which will always request a setup frame to be sent
+  //fnUSB_handle_frame(USB_DEVICE_DETECTED, 0, 0, &usb_hardware);        // generic handler routine which will always request a setup frame to be sent (this is called after a delay to avoid problems with some devices that need some time to become ready)
 }
 
-// SETUP was sent but not acknowledged within timeout period
+// SETUP was sent but not responded to within timeout period
 //
-/*
-static void usb_timeout(void)
+static void usb_timeout(void)                                            // {6}
 {
-    CTL |= USB_RESET;                                                    // send reset to USB bus for a minimum of 10ms
-    fnUSB_HostDelay(usb_reset_timeout, PIT_MS_DELAY(15));
-    fnUSB_reset(1);                                                      // reset to try again
-    fnUSB_handle_frame(USB_DEVICE_TIMEOUT, 0, 0, &usb_hardware); 
-}*/
+    uEnable_Interrupt();                                                 // don't block interrupts when stopping IN polling
+        fnHostEndpoint(0, IN_POLLING, 0);                                // stop active IN polling (this will usually cause a NAK result to be flagged on the present rx buffer, which is freed by the USB interrupt being called in the process (hence the need to allow nested interrupt and the USB interrupt having higher priority than the timer interrupt)
+    uDisable_Interrupt();
+    fnUSB_handle_frame(USB_DEVICE_TIMEOUT, 0, 0, &usb_hardware);         // report the error so that the generic enumeration can repeat
+}
 
 extern int fnHostEndpoint(unsigned char ucEndpoint, int iCommand, int iEvent)
 {
@@ -335,7 +356,7 @@ extern void fnUnhaltEndpoint(unsigned char ucEndpoint)
     KINETIS_USB_ENDPOINT_BD *ptEndpointBD = ptrBDT;
     unsigned char *ptrEndPointCtr = fnGetEndPointCtr(ucEndpoint & ~IN_ENDPOINT);
     ptEndpointBD += (ucEndpoint & ~IN_ENDPOINT);
-    if (ucEndpoint & IN_ENDPOINT) {
+    if ((ucEndpoint & IN_ENDPOINT) != 0) {
         usb_endpoints[ucEndpoint & ~IN_ENDPOINT].ulNextTxData0 &= ~DATA_1;
         ptEndpointBD->usb_bd_tx_even.ulUSB_BDControl = 0;
         ptEndpointBD->usb_bd_tx_odd.ulUSB_BDControl  = 0;
@@ -358,14 +379,18 @@ static void fnUSB_HostDelay(void (*timeout_handler)(void), unsigned long ulDelay
 {
     PIT_SETUP pit_setup;                                                 // interrupt configuration parameters
     pit_setup.int_type = PIT_INTERRUPT;
-    pit_setup.int_handler = timeout_handler;
-    pit_setup.int_priority = USB_PIT_INTERRUPT_PRIORITY;
-    pit_setup.count_delay = ulDelay;                                     // delay
-    pit_setup.mode = PIT_SINGLE_SHOT;                                    // one-shot interrupt
     pit_setup.ucPIT = USB_HOST_PIT_CHANNEL;
+    if (ulDelay == 0) {
+        pit_setup.mode = PIT_STOP;                                       // stop the timer
+    }
+    else {
+        pit_setup.mode = PIT_SINGLE_SHOT;                                // one-shot interrupt
+        pit_setup.int_handler = timeout_handler;
+        pit_setup.int_priority = USB_PIT_INTERRUPT_PRIORITY;
+        pit_setup.count_delay = ulDelay;                                 // delay
+    }
     fnConfigureInterrupt((void *)&pit_setup);                            // enter interrupt
 }
-
 
 extern void fnUSB_ResetCycle(void)
 {
@@ -410,7 +435,7 @@ extern void fnHostReleaseBuffer(int iEndpoint, unsigned char ucTransferType, USB
 {
     if (ucTransferType == SETUP_PID) {
         fnSendToken((unsigned char)((SETUP_PID << 4) | iEndpoint));      // release the setup frame on the corresponding endpoint
-      //fnUSB_HostDelay(usb_timeout, PIT_MS_DELAY(10));                  // monitor the successful transmission
+        fnUSB_HostDelay(usb_timeout, PIT_MS_DELAY(SETUP_ACK_DELAY_MS));  // {6} monitor the successful setup transaction by using a hardware timer to detect a timeout when the device doesn't respond to subsequent IN token polling (there is no way to detced when the device doesn't ack the SETUP itself)
     }
     else if (ucTransferType == OUT_PID) {                                // OUT
         fnSendToken((unsigned char)((OUT_PID << 4) | iEndpoint));        // release the data frame on the corresponding endpoint
@@ -425,7 +450,12 @@ extern void fnHostReleaseBuffer(int iEndpoint, unsigned char ucTransferType, USB
 
 static void fnUSB_reset(int iError)
 {
-    INT_STAT = (USB_RST | SLEEP | RESUME_EN | USB_ERROR);                // reset flags
+    #if defined USB_HOST_SUPPORT                                         // {7}
+    if ((CTL & HOST_MODE_EN) != 0) {
+        CTL &= ~(USB_EN_SOF_EN);                                         // it is required to temporarily disable the USB operation otherwise the reset and attach flags cannot be reset
+    }
+    #endif
+    INT_STAT = (USB_RST | SLEEP | RESUME_EN | USB_ERROR | ATTACH);       // reset flags
     CTL |= ODD_RST;                                                      // reset all odd BDTs which specifies the even bank
     INT_ENB &= ~(RESUME_EN | SLEEP_EN);                                  // disable resume and suspend interrupts
     usb_endpoints[0].ulEndpointSize &= ~ALTERNATE_TX_BUFFER;
@@ -442,6 +472,9 @@ static void fnUSB_reset(int iError)
                 
     #if defined USB_HOST_SUPPORT
     if ((CTL & HOST_MODE_EN) != 0) {                                     // if a reset was detected in host mode it means that the device was removed
+        if (iError != 0) {
+            return;
+        }
         fnUSB_handle_frame(USB_DEVICE_REMOVED, 0, 0, &usb_hardware);     // generic handler routine
         INT_ENB = ATTACH_EN;                                             // enable an interrupt on the attach of a device
         return;
@@ -473,12 +506,15 @@ extern unsigned long fnUSB_error_counters(int iValue)                    // {71}
 static __interrupt void _usb_otg_isr(void)
 {
     unsigned char ucUSB_Int_status;
+
+    usb_monitor("I", 0);                                                 // record activity for optional analysis purposes
     
-    while ((ucUSB_Int_status = (unsigned char)(INT_STAT & INT_ENB)) != 0) { // read present status     
+    while ((ucUSB_Int_status = (unsigned char)(INT_STAT & INT_ENB)) != 0) { // read present status
+        usb_monitor("S", ucUSB_Int_status);                              // record activity for optional analysis purposes
         if ((ucUSB_Int_status & ~TOK_DNE) != 0) {                        // check first for bus state changes
     #if defined USB_HOST_SUPPORT
             if ((ATTACH & ucUSB_Int_status) != 0) {                      // device has been attached
-                INT_STAT = ATTACH;                                       // reset flag
+              //INT_STAT = ATTACH;                                       // reset flag
                 INT_ENB  = 0;                                            // disable further interrupts
                 fnUSB_HostDelay(usb_possible_attach, PIT_MS_DELAY(50));  // wait a short time before checking whether this was a real attach
             }
@@ -532,6 +568,7 @@ static __interrupt void _usb_otg_isr(void)
                 int iLastTxEven = 0;
                 if ((CTL & HOST_MODE_EN) != 0) {                         // if in host mode
     #if defined USB_HOST_SUPPORT
+                    usb_monitor("D", STAT);                              // record activity for optional analysis purposes
                     iEndpoint_ref = usb_hardware.ucHostEndpointActive;   // the presently active host endpoint
                     usb_hardware.ptrEndpoint = &usb_endpoints[iEndpoint_ref];
                     if ((usb_hardware.ucBufferUsage & TX_TRANSACTION) == 0) { // if the last transmission on the fixed endpoint 0 was in the even buffer
@@ -571,7 +608,6 @@ static __interrupt void _usb_otg_isr(void)
                 else {
                     if (INITIATE_IN_TOKEN == iHostDo) {                  // if IN token polling is to be initiated
                         fnSendToken((unsigned char)((IN_PID << 4) | usb_hardware.ucHostEndpointActive)); // start transmission of IN token on the appropriate endpoint
-                      //fnUSB_HostDelay(usb_timeout, PIT_MS_DELAY(10));  // monitor the response reception
                     }
                 }
     #endif
@@ -580,10 +616,12 @@ static __interrupt void _usb_otg_isr(void)
     #if defined USB_DEVICE_SUPPORT
                 usb_hardware.ulRxControl &= (CONTROL_DATA_TOGGLE_REVERSED); // {1} reset all but the reversed data toggle flag
     #endif
+                usb_monitor("R", STAT);                                  // record activity for optional analysis purposes
                 if ((STAT & ODD_BANK) != 0) {                            // check whether odd or even bank and update local flag
                     ptUSB_BD = &ptEndpointBD->usb_bd_rx_odd;             // received data in odd buffer
                     if ((CTL & HOST_MODE_EN) != 0) {                     // host always receives on endpoint 0
     #if defined USB_HOST_SUPPORT
+                        fnUSB_HostDelay(0, 0);                           // stop SETUP transmission monitoring timer since the device has responded
                         usb_hardware.ptr_ulUSB_Rx_BDControl = &ptEndpointBD->usb_bd_rx_even.ulUSB_BDControl; // next reception will be in the even buffer
                         usb_hardware.ptr_ulUSB_Alt_Rx_BDControl = &ptEndpointBD->usb_bd_rx_odd.ulUSB_BDControl;
                         usb_hardware.ucBufferUsage &= ~(ODD_BANK);       // next reception will be in the even buffer
@@ -599,6 +637,7 @@ static __interrupt void _usb_otg_isr(void)
                     ptUSB_BD = &ptEndpointBD->usb_bd_rx_even;            // data in even buffer
                     if ((CTL & HOST_MODE_EN) != 0) {                     // host always receives on endpoint 0
     #if defined USB_HOST_SUPPORT
+                        fnUSB_HostDelay(0, 0);                           // stop SETUP transmission monitoring timer since the device has responded
                         usb_hardware.ptr_ulUSB_Rx_BDControl = &ptEndpointBD->usb_bd_rx_odd.ulUSB_BDControl; // next reception will be in the odd buffer
                         usb_hardware.ptr_ulUSB_Alt_Rx_BDControl = &ptEndpointBD->usb_bd_rx_even.ulUSB_BDControl;
                         usb_hardware.ucBufferUsage |= ODD_BANK;          // next reception will be in the odd buffer
@@ -730,6 +769,7 @@ static __interrupt void _usb_otg_isr(void)
     #endif      
         }
     }
+    usb_monitor("E", 0);                                                 // record activity for optional analysis purposes
 }
 
 // Set the transmit control and buffer to next active one and check whether it is free
@@ -830,7 +870,7 @@ extern void fnActivateHWEndpoint(unsigned char ucEndpointType, unsigned char ucE
         endpoint_config |= (EP_HSHK);                                    // bulk/control/interrupt endpoint - handshake enabled
     }
         #if defined USB_HOST_SUPPORT
-    if (usb_hardware.ucModeType & USB_HOST_MODE) {
+    if ((usb_hardware.ucModeType & USB_HOST_MODE) != 0) {
         ucEndpointType ^= IN_ENDPOINT;                                   // in host mode reverse the direction of the trasnmission/reception
     }
         #endif
@@ -849,7 +889,12 @@ extern void fnActivateHWEndpoint(unsigned char ucEndpointType, unsigned char ucE
         endpoint_config |= EP_RX_ENABLE;                                 // enable reception on this endpoint
         ulControlContent |= SET_FRAME_LENGTH(usEndpointLength);          // set endpoint rx size                                     
         ptrEndpointBDT->usb_bd_rx_odd.ulUSB_BDControl = (ulControlContent | OWN); // odd buffer for DATA1 frames
-        ulControlContent &= ~DATA_1;                                     // even buffer for DATA 0 frames
+        ulControlContent &= ~DATA_1;                                     // even buffer for DATA0 frames
+        #if defined USB_HOST_SUPPORT
+        if ((usb_hardware.ucModeType & USB_HOST_MODE) != 0) {            // {4}
+            usb_endpoints[ucEndpointRef].ulNextRxData0 = 0;              // all endpoints initially receive DATA0
+        }
+        #endif
         ptrEndpointBDT->usb_bd_rx_even.ulUSB_BDControl = (ulControlContent | OWN); // allow endpoints to receive
         usb_endpoints[ucEndpointRef].ulEndpointSize = ulControlContent;
     }
@@ -938,7 +983,7 @@ extern int fnConsumeUSB_out(unsigned char ucEndpointRef)
     KINETIS_USB_BD *ptUSB_BD;                                             // specific BD
     KINETIS_USB_ENDPOINT_BD *ptEndpointBD = ptrBDT;                       // start of BDT
     ptEndpointBD += ucEndpointRef;
-    if (usb_endpoints[ucEndpointRef].ulNextRxData0 & DATA_1) {
+    if ((usb_endpoints[ucEndpointRef].ulNextRxData0 & DATA_1) != 0) {
         ptUSB_BD = &ptEndpointBD->usb_bd_rx_even;
         ulBuffer = 0;
     }
@@ -946,7 +991,7 @@ extern int fnConsumeUSB_out(unsigned char ucEndpointRef)
         ptUSB_BD = &ptEndpointBD->usb_bd_rx_odd;
         ulBuffer = DATA_1;
     }
-    if (ptUSB_BD->ulUSB_BDControl & OWN) {                               // no data available
+    if ((ptUSB_BD->ulUSB_BDControl & OWN) != 0) {                        // no data available
         return USB_BUFFER_NO_DATA;
     }
     usLength = GET_FRAME_LENGTH();                                       // the number of bytes waiting in the buffer
@@ -1057,7 +1102,7 @@ extern void fnConfigUSB(QUEUE_HANDLE Channel, USBTABLE *pars)
         iIRC48M_workaround = 1;                                          // mark that we need to temporarily switch system clock source during the USB reset command
     }
     #endif
-    POWER_UP(4, SIM_SCGC4_USBOTG);                                       // power up the USB controller module
+    POWER_UP_ATOMIC(4, SIM_SCGC4_USBOTG);                                // power up the USB controller module
 
     if (ucEndpoints > NUMBER_OF_USB_ENDPOINTS) {                         // limit endpoint count
         ucEndpoints = NUMBER_OF_USB_ENDPOINTS;                           // limit to maximum available in device
@@ -1180,7 +1225,7 @@ extern void fnConfigUSB(QUEUE_HANDLE Channel, USBTABLE *pars)
     CTL = 0;                                                             // reset complete
                                                                          
     ENDPT0 = 0;                                                          // configure endpoint 0 - the only one used during enumeration: USB then in default state
-    while (ENDPT0 & EP_TX_ENABLE) {}                                     // wait for tx disable to complete
+    while ((ENDPT0 & EP_TX_ENABLE) != 0) {}                              // wait for tx disable to complete
                                                                          // configure rx side of endpoint
     if ((pars->usConfig & USB_HOST_MODE) != 0) {                         // host mode
         ucEP0_size = 64;                                                 // full size endpoint 0 since it is used by the host for all transmission/reception

@@ -34,6 +34,7 @@
     03.08.2011 Add return value to CollectCommand() and return LCD RAM content on address write {17}
     13.08.2013 Add ST7565S_GLCD_MODE                                     {18}
     15.03.2015 Introduce faster bitmap based LCD                         {19}
+    19.02.2017 Add FT800 emulation                                       {20}
 
     */
 
@@ -48,7 +49,7 @@
 #include "lcd.h"
 
 
-#if defined SUPPORT_LCD || defined SUPPORT_GLCD || defined SUPPORT_OLED || defined SUPPORT_TFT || defined GLCD_COLOR || defined SLCD_FILE // {16}
+#if (defined SUPPORT_LCD || defined SUPPORT_GLCD || defined SUPPORT_OLED || defined SUPPORT_TFT || defined GLCD_COLOR || defined SLCD_FILE) && !(defined FT800_EMULATOR && defined FT800_GLCD_MODE)  // {16}
 
 #if defined SLCD_FILE
     static void fnLoadSLCD(void);

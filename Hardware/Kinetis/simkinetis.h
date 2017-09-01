@@ -45,6 +45,9 @@
     02.06.2016 Add ACMP and CMP                                          {30}
     09.12.2016 Add PWT                                                   {31}
     11.02.2017 Add system clock generator                                {32}
+    14.02.2017 Add LTC                                                   {33}
+    11.08.2017 Add PCC support                                           {34}
+    11.08.2017 Add WDOG32                                                {35}
 
 */  
 
@@ -52,136 +55,164 @@ extern void fnSimulateSLCD(void);
 
 typedef struct stKINETIS_CORTEX_M4
 {
-unsigned long ulRes1;
-const unsigned long INT_CONT_TYPE;
-unsigned long ulRes2[2];
-unsigned long SYSTICK_CSR;
-unsigned long SYSTICK_RELOAD;
-volatile unsigned long SYSTICK_CURRENT;
-const unsigned long SYSTICK_CALIB;
-unsigned long ulRes3[56];
-unsigned long IRQ0_31_SER;   
-unsigned long IRQ32_63_SER;  
-unsigned long IRQ64_95_SER;  
-unsigned long IRQ96_127_SER; 
-unsigned long IRQ128_159_SER;
-unsigned long IRQ160_191_SER;
-unsigned long IRQ192_223_SER;
-unsigned long IRQ224_239_SER;
-unsigned long ulRes4[24];
-unsigned long IRQ0_31_CER;
-unsigned long IRQ32_63_CER;  
-unsigned long IRQ64_95_CER;
-unsigned long IRQ96_127_CER;
-unsigned long IRQ128_159_CER;
-unsigned long IRQ160_191_CER;
-unsigned long IRQ192_223_CER;
-unsigned long IRQ224_239_CER;
-unsigned long ulRes5[24];
-unsigned long IRQ0_31_SPR;
-unsigned long IRQ32_63_SPR;
-unsigned long IRQ64_95_SPR;
-unsigned long IRQ96_127_SPR;
-unsigned long IRQ128_159_SPR;
-unsigned long IRQ160_191_SPR;
-unsigned long IRQ192_223_SPR;
-unsigned long IRQ224_239_SPR;
-unsigned long ulRes6[24];
-unsigned long IRQ0_31_CPR;
-unsigned long IRQ32_63_CPR;
-unsigned long IRQ64_95_CPR;
-unsigned long IRQ96_127_CPR;
-unsigned long IRQ128_159_CPR;
-unsigned long IRQ160_191_CPR;
-unsigned long IRQ192_223_CPR;
-unsigned long IRQ224_239_CPR;
-unsigned long ulRes7[24];
-unsigned long IRQ0_31_ABR;
-unsigned long IRQ32_63_ABR;
-unsigned long IRQ64_95_ABR;
-unsigned long IRQ96_127_ABR;
-unsigned long IRQ128_159_ABR;
-unsigned long IRQ160_191_ABR;
-unsigned long IRQ192_223_ABR;
-unsigned long IRQ224_239_ABR;
-unsigned long ulRes8[56];
-unsigned long IRQ0_3_PRIORITY_REGISTER;
-unsigned long IRQ4_7_PRIORITY_REGISTER;
-unsigned long IRQ8_11_PRIORITY_REGISTER;
-unsigned long IRQ12_15_PRIORITY_REGISTER;
-unsigned long IRQ16_19_PRIORITY_REGISTER;
-unsigned long IRQ20_23_PRIORITY_REGISTER;
-unsigned long IRQ24_27_PRIORITY_REGISTER;
-unsigned long IRQ28_31_PRIORITY_REGISTER;
-unsigned long IRQ32_35_PRIORITY_REGISTER;
-unsigned long IRQ36_39_PRIORITY_REGISTER;
-unsigned long IRQ40_43_PRIORITY_REGISTER;
-unsigned long IRQ44_47_PRIORITY_REGISTER;
-unsigned long IRQ48_51_PRIORITY_REGISTER;
-unsigned long IRQ52_55_PRIORITY_REGISTER;
-unsigned long IRQ56_59_PRIORITY_REGISTER;
-unsigned long IRQ60_63_PRIORITY_REGISTER;
-unsigned long IRQ64_67_PRIORITY_REGISTER;
-unsigned long IRQ68_71_PRIORITY_REGISTER;
-unsigned long IRQ72_75_PRIORITY_REGISTER;
-unsigned long IRQ76_79_PRIORITY_REGISTER;
-unsigned long IRQ80_83_PRIORITY_REGISTER;
-unsigned long IRQ84_87_PRIORITY_REGISTER;
-unsigned long IRQ88_91_PRIORITY_REGISTER;
-unsigned long IRQ92_95_PRIORITY_REGISTER;
-unsigned long IRQ96_99_PRIORITY_REGISTER;
-unsigned long IRQ100_103_PRIORITY_REGISTER;
-unsigned long IRQ104_107_PRIORITY_REGISTER;
-unsigned long IRQ108_111_PRIORITY_REGISTER;
-unsigned long IRQ112_115_PRIORITY_REGISTER;
-unsigned long IRQ116_119_PRIORITY_REGISTER;
-unsigned long IRQ120_123_PRIORITY_REGISTER;
-unsigned long IRQ124_127_PRIORITY_REGISTER;
-unsigned long IRQ128_131_PRIORITY_REGISTER;
-unsigned long IRQ132_135_PRIORITY_REGISTER;
-unsigned long IRQ136_139_PRIORITY_REGISTER;
-unsigned long IRQ140_143_PRIORITY_REGISTER;
-unsigned long IRQ144_147_PRIORITY_REGISTER;
-unsigned long IRQ148_151_PRIORITY_REGISTER;
-unsigned long IRQ152_155_PRIORITY_REGISTER;
-unsigned long IRQ156_159_PRIORITY_REGISTER;
-unsigned long IRQ160_163_PRIORITY_REGISTER;
-unsigned long IRQ164_167_PRIORITY_REGISTER;
-unsigned long IRQ168_171_PRIORITY_REGISTER;
-unsigned long IRQ172_175_PRIORITY_REGISTER;
-unsigned long IRQ176_179_PRIORITY_REGISTER;
-unsigned long IRQ180_183_PRIORITY_REGISTER;
-unsigned long IRQ184_187_PRIORITY_REGISTER;
-unsigned long IRQ188_191_PRIORITY_REGISTER;
-unsigned long IRQ192_195_PRIORITY_REGISTER;
-unsigned long IRQ196_199_PRIORITY_REGISTER;
-unsigned long IRQ200_203_PRIORITY_REGISTER;
-unsigned long IRQ204_207_PRIORITY_REGISTER;
-unsigned long IRQ208_211_PRIORITY_REGISTER;
-unsigned long IRQ212_215_PRIORITY_REGISTER;
-unsigned long IRQ216_219_PRIORITY_REGISTER;
-unsigned long IRQ220_223_PRIORITY_REGISTER;
-unsigned long IRQ224_227_PRIORITY_REGISTER;
-unsigned long IRQ228_231_PRIORITY_REGISTER;
-unsigned long IRQ232_235_PRIORITY_REGISTER;
-unsigned long IRQ236_239_PRIORITY_REGISTER;
-unsigned long ulRes9[516];
-unsigned long CPUID_BASE_REGISTER;
-unsigned long INT_CONT_STATE_REG;
-unsigned long VECTOR_TABLE_OFFSET_REG;
-unsigned long APPLICATION_INT_RESET_CTR_REG;
-unsigned long SYSTEM_CONTROL_REGISTER;
-unsigned long CONFIGURATION_CONTROL_REGISTER;
-unsigned long SYSTEM_HANDLER_4_7_PRIORITY_REGISTER;                      // {14}
-unsigned long SYSTEM_HANDLER_8_11_PRIORITY_REGISTER;
-unsigned long SYSTEM_HANDLER_12_15_PRIORITY_REGISTER;
-unsigned long ulRes10[25];
-unsigned long CPACR;
+    unsigned long ulRes1;
+    const unsigned long INT_CONT_TYPE;
+    unsigned long ulRes2[2];
+    unsigned long SYSTICK_CSR;
+    unsigned long SYSTICK_RELOAD;
+    volatile unsigned long SYSTICK_CURRENT;
+    const unsigned long SYSTICK_CALIB;
+    unsigned long ulRes3[56];
+    unsigned long IRQ0_31_SER;   
+    unsigned long IRQ32_63_SER;  
+    unsigned long IRQ64_95_SER;  
+    unsigned long IRQ96_127_SER; 
+    unsigned long IRQ128_159_SER;
+    unsigned long IRQ160_191_SER;
+    unsigned long IRQ192_223_SER;
+    unsigned long IRQ224_239_SER;
+    unsigned long ulRes4[24];
+    unsigned long IRQ0_31_CER;
+    unsigned long IRQ32_63_CER;  
+    unsigned long IRQ64_95_CER;
+    unsigned long IRQ96_127_CER;
+    unsigned long IRQ128_159_CER;
+    unsigned long IRQ160_191_CER;
+    unsigned long IRQ192_223_CER;
+    unsigned long IRQ224_239_CER;
+    unsigned long ulRes5[24];
+    unsigned long IRQ0_31_SPR;
+    unsigned long IRQ32_63_SPR;
+    unsigned long IRQ64_95_SPR;
+    unsigned long IRQ96_127_SPR;
+    unsigned long IRQ128_159_SPR;
+    unsigned long IRQ160_191_SPR;
+    unsigned long IRQ192_223_SPR;
+    unsigned long IRQ224_239_SPR;
+    unsigned long ulRes6[24];
+    unsigned long IRQ0_31_CPR;
+    unsigned long IRQ32_63_CPR;
+    unsigned long IRQ64_95_CPR;
+    unsigned long IRQ96_127_CPR;
+    unsigned long IRQ128_159_CPR;
+    unsigned long IRQ160_191_CPR;
+    unsigned long IRQ192_223_CPR;
+    unsigned long IRQ224_239_CPR;
+    unsigned long ulRes7[24];
+    unsigned long IRQ0_31_ABR;
+    unsigned long IRQ32_63_ABR;
+    unsigned long IRQ64_95_ABR;
+    unsigned long IRQ96_127_ABR;
+    unsigned long IRQ128_159_ABR;
+    unsigned long IRQ160_191_ABR;
+    unsigned long IRQ192_223_ABR;
+    unsigned long IRQ224_239_ABR;
+    unsigned long ulRes8[56];
+    unsigned long IRQ0_3_PRIORITY_REGISTER;
+    unsigned long IRQ4_7_PRIORITY_REGISTER;
+    unsigned long IRQ8_11_PRIORITY_REGISTER;
+    unsigned long IRQ12_15_PRIORITY_REGISTER;
+    unsigned long IRQ16_19_PRIORITY_REGISTER;
+    unsigned long IRQ20_23_PRIORITY_REGISTER;
+    unsigned long IRQ24_27_PRIORITY_REGISTER;
+    unsigned long IRQ28_31_PRIORITY_REGISTER;
+    unsigned long IRQ32_35_PRIORITY_REGISTER;
+    unsigned long IRQ36_39_PRIORITY_REGISTER;
+    unsigned long IRQ40_43_PRIORITY_REGISTER;
+    unsigned long IRQ44_47_PRIORITY_REGISTER;
+    unsigned long IRQ48_51_PRIORITY_REGISTER;
+    unsigned long IRQ52_55_PRIORITY_REGISTER;
+    unsigned long IRQ56_59_PRIORITY_REGISTER;
+    unsigned long IRQ60_63_PRIORITY_REGISTER;
+    unsigned long IRQ64_67_PRIORITY_REGISTER;
+    unsigned long IRQ68_71_PRIORITY_REGISTER;
+    unsigned long IRQ72_75_PRIORITY_REGISTER;
+    unsigned long IRQ76_79_PRIORITY_REGISTER;
+    unsigned long IRQ80_83_PRIORITY_REGISTER;
+    unsigned long IRQ84_87_PRIORITY_REGISTER;
+    unsigned long IRQ88_91_PRIORITY_REGISTER;
+    unsigned long IRQ92_95_PRIORITY_REGISTER;
+    unsigned long IRQ96_99_PRIORITY_REGISTER;
+    unsigned long IRQ100_103_PRIORITY_REGISTER;
+    unsigned long IRQ104_107_PRIORITY_REGISTER;
+    unsigned long IRQ108_111_PRIORITY_REGISTER;
+    unsigned long IRQ112_115_PRIORITY_REGISTER;
+    unsigned long IRQ116_119_PRIORITY_REGISTER;
+    unsigned long IRQ120_123_PRIORITY_REGISTER;
+    unsigned long IRQ124_127_PRIORITY_REGISTER;
+    unsigned long IRQ128_131_PRIORITY_REGISTER;
+    unsigned long IRQ132_135_PRIORITY_REGISTER;
+    unsigned long IRQ136_139_PRIORITY_REGISTER;
+    unsigned long IRQ140_143_PRIORITY_REGISTER;
+    unsigned long IRQ144_147_PRIORITY_REGISTER;
+    unsigned long IRQ148_151_PRIORITY_REGISTER;
+    unsigned long IRQ152_155_PRIORITY_REGISTER;
+    unsigned long IRQ156_159_PRIORITY_REGISTER;
+    unsigned long IRQ160_163_PRIORITY_REGISTER;
+    unsigned long IRQ164_167_PRIORITY_REGISTER;
+    unsigned long IRQ168_171_PRIORITY_REGISTER;
+    unsigned long IRQ172_175_PRIORITY_REGISTER;
+    unsigned long IRQ176_179_PRIORITY_REGISTER;
+    unsigned long IRQ180_183_PRIORITY_REGISTER;
+    unsigned long IRQ184_187_PRIORITY_REGISTER;
+    unsigned long IRQ188_191_PRIORITY_REGISTER;
+    unsigned long IRQ192_195_PRIORITY_REGISTER;
+    unsigned long IRQ196_199_PRIORITY_REGISTER;
+    unsigned long IRQ200_203_PRIORITY_REGISTER;
+    unsigned long IRQ204_207_PRIORITY_REGISTER;
+    unsigned long IRQ208_211_PRIORITY_REGISTER;
+    unsigned long IRQ212_215_PRIORITY_REGISTER;
+    unsigned long IRQ216_219_PRIORITY_REGISTER;
+    unsigned long IRQ220_223_PRIORITY_REGISTER;
+    unsigned long IRQ224_227_PRIORITY_REGISTER;
+    unsigned long IRQ228_231_PRIORITY_REGISTER;
+    unsigned long IRQ232_235_PRIORITY_REGISTER;
+    unsigned long IRQ236_239_PRIORITY_REGISTER;
+    unsigned long ulRes9[516];
+    unsigned long CPUID_BASE_REGISTER;
+    unsigned long INT_CONT_STATE_REG;
+    unsigned long VECTOR_TABLE_OFFSET_REG;
+    unsigned long APPLICATION_INT_RESET_CTR_REG;
+    unsigned long SYSTEM_CONTROL_REGISTER;
+    unsigned long CONFIGURATION_CONTROL_REGISTER;
+    unsigned long SYSTEM_HANDLER_4_7_PRIORITY_REGISTER;                  // {14}
+    unsigned long SYSTEM_HANDLER_8_11_PRIORITY_REGISTER;
+    unsigned long SYSTEM_HANDLER_12_15_PRIORITY_REGISTER;
+    unsigned long ulRes10[25];
+    unsigned long CPACR;
+#if defined KINETIS_K_FPU
+    unsigned long ulRes11[106];
+    unsigned long FPCCR;
+#endif
 } KINETIS_CORTEX_M4;
 
 typedef struct stKINETIS_CORTEX_M4_REGS
 {
-unsigned long ulPRIMASK;
+    unsigned long ulR0;                                                  // low registers
+    unsigned long ulR1;
+    unsigned long ulR2;
+    unsigned long ulR3;
+    unsigned long ulR4;
+    unsigned long ulR5;
+    unsigned long ulR6;
+    unsigned long ulR7;
+    unsigned long ulR8;                                                  // high registers
+    unsigned long ulR9;
+    unsigned long ulR10;
+    unsigned long ulR11;
+    unsigned long ulR12;
+    unsigned long ulR13_SP;                                              // stack pointer
+    unsigned long ulPSP;                                                 // banked versions of stack pointer
+    unsigned long ulMSP;
+    unsigned long ulR14_LR;                                              // link register
+    unsigned long ulR15_PC;                                              // program counter
+    // Special registers
+    //
+    unsigned long ulPSR;                                                 // program status register
+    unsigned long ulPRIMASK;
+    unsigned long ulFAULTMASK;
+    unsigned long ulBASEPRI;
+    unsigned long ulCONTROL;                                             // control
 } KINETIS_CORTEX_M4_REGS;
 
 #define INTERRUPT_MASKED 0x00000001
@@ -999,10 +1030,10 @@ typedef struct stKINETIS_IRQ                                             // {24}
 } KINETIS_IRQ;
 #endif
 
-#if defined KINETIS_KL || defined KINETIS_KE
+#if !defined DSPI_SPI
 typedef struct stKINETIS_SPI
 {
-    #if defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL43 || defined KINETIS_KL46 // supporting 16 bit words
+    #if defined KINETIS_KL17 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL43 || defined KINETIS_KL46 // supporting 16 bit words
         unsigned char SPI_S;
         unsigned char SPI_BR;
         unsigned char SPI_C2;
@@ -1434,6 +1465,16 @@ unsigned long I2S_MCR;
 } KINETIS_I2S;
 #endif
 
+#if defined KINETIS_WITH_WDOG32
+typedef struct st_KINETIS_WDOG32                                         // {35}
+{
+    unsigned long WDOG_CS;
+    unsigned long WDOG_CNT;
+    unsigned long WDOG_TOVAL;
+    unsigned long WDOG_WIN;
+} KINETIS_WDOG32;
+#endif
+
 #if defined PWT_AVAILABLE
 typedef struct st_KINETIS_PWT                                            // {31}
 {
@@ -1642,6 +1683,7 @@ unsigned long LPTMR_CNR;
 } KINETIS_LPTMR;
 #endif
 
+#if !defined CROSSBAR_SWITCH_LITE
 typedef struct stKINETIS_AXBS                                            // {18}
 {
 unsigned long AXBS_PRS0;
@@ -1692,6 +1734,7 @@ unsigned long AXBS_MGPCR6;
 unsigned long ulResm6[63];
 unsigned long AXBS_MGPCR7;
 } KINETIS_AXBS;
+#endif
 
 typedef struct stKINETIS_TSI
 {
@@ -1766,34 +1809,42 @@ typedef struct stKINETIS_SIM
     #else
         unsigned char ucRes0[0x1000];
     #endif
+    #if defined KINETIS_WITH_PCC
+        unsigned long ulRes1[8];
+    #else
     unsigned long SIM_SOPT2;
     unsigned long ulRes1;
     unsigned long SIM_SOPT4;
     unsigned long SIM_SOPT5;
-    #if defined KINETIS_KL
-        unsigned long ulRes1a;
-    #else
-        unsigned long SIM_SOPT6;
-    #endif
+        #if defined KINETIS_KL
+            unsigned long ulRes1a;
+        #else
+            unsigned long SIM_SOPT6;
+        #endif
     unsigned long SIM_SOPT7;
     unsigned long ulRes2[2];
-    unsigned long SIM_SDID;
-    #if defined KINETIS_KL
-        unsigned long ulRes2a[3];
-    #else
-        unsigned long SIM_SCGC1;
-        unsigned long SIM_SCGC2;
-        unsigned long SIM_SCGC3;
     #endif
-    unsigned long SIM_SCGC4;
-    unsigned long SIM_SCGC5;
-    unsigned long SIM_SCGC6;
-    unsigned long SIM_SCGC7;
-    unsigned long SIM_CLKDIV1;
-    #if defined KINETIS_KL && !defined KINETIS_KL82
-        unsigned long ulRes2b;
+    unsigned long SIM_SDID;
+    #if defined KINETIS_WITH_PCC
+        unsigned long ulRes2a[8];
     #else
-        unsigned long SIM_CLKDIV2;
+        #if defined KINETIS_KL
+            unsigned long ulRes2a[3];
+        #else
+            unsigned long SIM_SCGC1;
+            unsigned long SIM_SCGC2;
+            unsigned long SIM_SCGC3;
+        #endif
+        unsigned long SIM_SCGC4;
+        unsigned long SIM_SCGC5;
+        unsigned long SIM_SCGC6;
+        unsigned long SIM_SCGC7;
+        unsigned long SIM_CLKDIV1;
+        #if defined KINETIS_KL && !defined KINETIS_KL82
+            unsigned long ulRes2b;
+        #else
+            unsigned long SIM_CLKDIV2;
+        #endif
     #endif
     unsigned long SIM_FCFG1;
     unsigned long SIM_FCFG2;
@@ -1805,14 +1856,19 @@ typedef struct stKINETIS_SIM
     unsigned long SIM_UIDMH;
     unsigned long SIM_UIDML;
     unsigned long SIM_UIDL;
-    #if defined KINETIS_KL && !defined KINETIS_KL82                      // {15}
+    #if defined KINETIS_WITH_PCC
         unsigned long ulRes3[39];
-        unsigned long SIM_COPC;
-        unsigned long SIM_SRVCOPC;
-    #elif defined KINETIS_K_FPU || (KINETIS_MAX_SPEED > 100000000)
-        unsigned long SIM_CLKDIV3;
-        unsigned long SIM_CLKDIV4;
-        unsigned long SIM_MCR;
+        unsigned long SIM_PCSR;
+    #else
+        #if defined KINETIS_KL && !defined KINETIS_KL82                  // {15}
+            unsigned long ulRes3[34];
+            unsigned long SIM_COPC;
+            unsigned long SIM_SRVCOPC;
+        #elif defined KINETIS_K_FPU || (KINETIS_MAX_SPEED > 100000000)
+            unsigned long SIM_CLKDIV3;
+            unsigned long SIM_CLKDIV4;
+            unsigned long SIM_MCR;
+        #endif
     #endif
 #endif
 } KINETIS_SIM;
@@ -1820,7 +1876,7 @@ typedef struct stKINETIS_SIM
 #if defined KINETIS_KE
     typedef struct stKINETIS_KE_PORT
     {
-    #if (defined KINETIS_KE04 && (SIZE_OF_FLASH > (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA
+    #if (defined KINETIS_KE04 && (SIZE_OF_FLASH > (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
         unsigned long PORT_IOFLT0;
         unsigned long PORT_IOFLT1;
         unsigned long PORT_PUE0;
@@ -1922,6 +1978,81 @@ unsigned char EWM_SERV;
 unsigned char EWM_CMPL;
 unsigned char EWM_CMPH;
 } KINETIS_EWM;
+#endif
+
+#if defined KINETIS_WITH_PCC                                             // {34}
+typedef struct stKINETIS_PCC
+{
+    unsigned long ulRes0[8];
+    unsigned long PCC_DMA0;
+    unsigned long ulRes1[0x17];
+    unsigned long PCC_FLASH;
+    unsigned long PCC_DMAMUX0;
+    unsigned long ulRes2[2];
+    unsigned long PCC_INTMUX0;
+    unsigned long ulRes3[9];
+    unsigned long PCC_TPM2;
+    unsigned long ulRes4[1];
+    unsigned long PCC_LPIT0;
+    unsigned long ulRes5[3];
+    unsigned long PCC_LPTMR0;
+    unsigned long ulRes6[3];
+    unsigned long PCC_RTC;
+    unsigned long ulRes7[5];
+    unsigned long PCC_LPSPI2;
+    unsigned long ulRes8[3];
+    unsigned long PCC_LPI2C2;
+    unsigned long ulRes9[3];
+    unsigned long PCC_LPUART2;
+    unsigned long ulRes10[5];
+    unsigned long PCC_SAI0;
+    unsigned long ulRes11[1];
+    unsigned long PCC_EMVSIM0;
+    unsigned long ulRes12[6];
+    unsigned long PCC_USB0FS;
+    unsigned long ulRes13[4];
+    unsigned long PCC_PORTA;
+    unsigned long PCC_PORTB;
+    unsigned long PCC_PORTC;
+    unsigned long PCC_PORTD;
+    unsigned long PCC_PORTE;
+    unsigned long ulRes14[3];
+    unsigned long PCC_TSI0;
+    unsigned long ulRes15[3];
+    unsigned long PCC_ADC0;
+    unsigned long ulRes16[3];
+    unsigned long PCC_DAC0;
+    unsigned long ulRes17[3];
+    unsigned long PCC_CMP0;
+    unsigned long ulRes18[3];
+    unsigned long PCC_VREF;
+    unsigned long ulRes19[5];
+    unsigned long PCC_CRC;
+} KINETIS_PCC;
+
+typedef struct stKINETIS_PCC2
+{
+    unsigned long ulRes0[0x25];
+    unsigned long PCC_TRNG;
+    unsigned long ulRes1[6];
+    unsigned long PCC_TPM0;
+    unsigned long PCC_TPM1;
+    unsigned long ulRes2[7];
+    unsigned long PCC_LPTMR1;
+    unsigned long ulRes3[6];
+    unsigned long PCC_LPSPI0;
+    unsigned long PCC_LPSPI1;
+    unsigned long ulRes4[2];
+    unsigned long PCC_LPI2C0;
+    unsigned long PCC_LPI2C1;
+    unsigned long ulRes5[2];
+    unsigned long PCC_LPUART0;
+    unsigned long PCC_LPUART1;
+    unsigned long ulRes6[4];
+    unsigned long PCC_FLEXIO0;
+    unsigned long ulRes7[0x24];
+    unsigned long PCC_CMP1;
+} KINETIS_PCC2;
 #endif
 
 #if defined KINETIS_KE
@@ -2227,10 +2358,10 @@ typedef struct stKINETIS_UART
         unsigned char UART_RWFIFO;
         unsigned char UART_RCFIFI;
         unsigned char ucRes1;
-    #elif defined KINETIS_KL43
+    #elif defined K_STYLE_UART2
         unsigned char ucRes1[12];
     #endif
-    #if (!defined KINETIS_KL && !defined KINETIS_KE) || defined KINETIS_KL43
+    #if (!defined KINETIS_KL && !defined KINETIS_KE) || defined K_STYLE_UART2
         unsigned char UART_C7816;
         unsigned char UART_IE7816;
         unsigned char UART_IS7816;
@@ -2246,11 +2377,24 @@ typedef struct stKINETIS_UART
 
 typedef struct stKINETIS_LPUART
 {
+#if defined KINETIS_KL28
+    volatile unsigned long  LPUART_VERID;
+    volatile unsigned long  LPUART_PARAM;
+    unsigned long  LPUART_GLOBAL;
+    unsigned long  LPUART_PINCFG;
+#endif
     unsigned long LPUART_BAUD;
     volatile unsigned long LPUART_STAT;
     volatile unsigned long LPUART_CTRL;
     volatile unsigned long LPUART_DATA;
     unsigned long LPUART_MATCH;
+#if defined KINETIS_KL28 || defined KINETIS_K66
+    unsigned long LPUART_MODIR;
+#endif
+#if defined KINETIS_KL28
+    unsigned long LPUART_FIFO;
+    unsigned long LPUART_WATER;
+#endif
 } KINETIS_LPUART;
 
 typedef struct stKINETIS_USB
@@ -2428,13 +2572,14 @@ unsigned char MC_PMCTRL;
     unsigned long RNG_ESR;
     unsigned long RNG_OUT;
     } KINETIS_RNGB;
-    #else
+    #endif
+    #if defined RANDOM_NUMBER_GENERATOR_A
     typedef struct stKINETIS_RNGA
     {
-    unsigned long RNG_CR;
-    unsigned long RNG_SR;
-    unsigned long RNG_ER;
-    unsigned long RNG_OR;
+    unsigned long RNGA_CR;
+    unsigned long RNGA_SR;
+    unsigned long RNGA_ER;
+    unsigned long RNGA_OR;
     } KINETIS_RNGA;
     #endif
 #endif
@@ -2606,13 +2751,20 @@ typedef struct stKINETIS_MCM                                             // {11}
 unsigned long ulRes0[2];
 unsigned short MCM_PLASC;
 unsigned short MCM_PLAMC;
-unsigned long MCM_CR;
-unsigned long MCM_ISR;
-unsigned long MCM_ETBCC;
-unsigned long MCM_ETBRL;
-unsigned long MCM_ETBCNT;
-unsigned long ulRes1[4];
-unsigned long MCM_PID;
+#if defined KINETIS_K02
+    unsigned long MCM_PLACR;
+    unsigned long MCM_ISCR;
+    unsigned long ulRes1[12];
+    unsigned long MCM_CPO;
+#else
+    unsigned long MCM_CR;
+    unsigned long MCM_ISR;
+    unsigned long MCM_ETBCC;
+    unsigned long MCM_ETBRL;
+    unsigned long MCM_ETBCNT;
+    unsigned long ulRes1[4];
+    unsigned long MCM_PID;
+#endif
 } KINETIS_MCM;
 
 #if defined CAU_V1_AVAILABLE || defined CAU_V2_AVAILABLE
@@ -2754,6 +2906,72 @@ unsigned long FLEXIO_TIMCMP1;
 unsigned long FLEXIO_TIMCMP2;
 unsigned long FLEXIO_TIMCMP3;
 } KINETIS_FLEXIO;
+#endif
+
+#if defined LTC_AVAILABLE                                                // {33}
+typedef struct stKINETIS_LTC
+{
+unsigned long LTC0_MD_MDPK;
+unsigned long ulRes0;
+unsigned long LTC0_KS;
+unsigned long LTC0_DS;
+unsigned long ulRes1;
+unsigned long LTC0_ICVS;
+unsigned long ulRes2[5];
+unsigned long LTC0_COM;
+unsigned long LTC0_CTL;
+unsigned long ulRes3[2];
+unsigned long LTC0_CW;
+unsigned long ulRes4;
+unsigned long LTC0_STA;
+unsigned long LTC0_ESTA;
+unsigned long ulRes5[2];
+unsigned long LTC0_AADSZ;
+unsigned long ulRes6;
+unsigned long LTC0_IVS;
+unsigned long ulRes7;
+unsigned long LTC0_DPAMS;
+unsigned long ulRes8[5];
+unsigned long LTC0_PKASZ;
+unsigned long ulRes9;
+unsigned long LTC0_PKBSZ;
+unsigned long ulRes10;
+unsigned long LTC0_PKNSZ;
+unsigned long ulRes11;
+unsigned long LTC0_PKESZ;
+unsigned long ulRes12[26];
+unsigned long LTC0_CTX_0;
+unsigned long LTC0_CTX_1;
+unsigned long LTC0_CTX_2;
+unsigned long LTC0_CTX_3;
+unsigned long LTC0_CTX_4;
+unsigned long LTC0_CTX_5;
+unsigned long LTC0_CTX_6;
+unsigned long LTC0_CTX_7;
+unsigned long LTC0_CTX_8;
+unsigned long LTC0_CTX_9;
+unsigned long LTC0_CTX_10;
+unsigned long LTC0_CTX_11;
+unsigned long LTC0_CTX_12;
+unsigned long LTC0_CTX_13;
+unsigned long LTC0_CTX_14;
+unsigned long LTC0_CTX_15;
+unsigned long ulRes13[49];
+unsigned long LTC0_KEY_0;
+unsigned long LTC0_KEY_1;
+unsigned long LTC0_KEY_2;
+unsigned long LTC0_KEY_3;
+unsigned long LTC0_KEY_4;
+unsigned long LTC0_KEY_5;
+unsigned long LTC0_KEY_6;
+unsigned long LTC0_KEY_7;
+unsigned long ulRes14[361];
+unsigned long LTC0_FIFOSTA;
+unsigned long ulRes15[8];
+unsigned long LTC0_IFIFO;
+unsigned long ulRes16[4];
+unsigned long LTC0_OFIFO;
+} KINETIS_LTC;
 #endif
 
 #if defined KINETIS_K80
@@ -2902,21 +3120,24 @@ typedef struct stKINETIS_PERIPH
 #if defined KINETIS_KE
     KINETIS_IRQ        IRQ;                                              // {24}
 #endif
+#if defined DSPI_SPI
+    KINETIS_DSPI       DSPI[SPI_AVAILABLE];
+#else
+    KINETIS_SPI        SPI[SPI_AVAILABLE];
+#endif
 #if defined KINETIS_KL || defined KINETIS_KE
-    KINETIS_SPI        SPI[2];
-  #if defined KINETIS_KE
+    #if defined KINETIS_KE
     KINETIS_KBI        KBI[2];                                           // {22}
     #if defined MSCAN_CAN_INTERFACE
     KINETIS_MSCAN      MSCAN;                                            // {27}
     #endif
-  #endif
+    #endif
 #else
     #if defined KINETIS_K20 && (KINETIS_MAX_SPEED == 72000000)
     KINETIS_CAN        CAN[1];
     #else
     KINETIS_CAN        CAN[2];
     #endif
-    KINETIS_DSPI       DSPI[3];
     KINETIC_CRC        CRC;                                              // {6}
 #endif
 #if defined LLWU_AVAILABLE
@@ -2938,6 +3159,9 @@ typedef struct stKINETIS_PERIPH
 #if I2S_AVAILABLE > 0
     KINETIS_I2S        I2S_SAI[I2S_AVAILABLE];                           // {28}
 #endif
+#if defined KINETIS_WITH_WDOG32
+    KINETIS_WDOG32  WDOG32;                                              // {35}
+#endif
 #if defined PWT_AVAILABLE
     KINETIS_PWT        PWT;                                              // {31}
 #endif
@@ -2958,7 +3182,7 @@ typedef struct stKINETIS_PERIPH
 #if !defined KINETIS_KE
     KINETIS_LPTMR      LPTMR;                                            // {20}
 #endif
-#if !defined KINETIS_KE && !defined KINETIS_KL
+#if !defined KINETIS_KE && !defined KINETIS_KL && !defined CROSSBAR_SWITCH_LITE
     KINETIS_AXBS       AXBS;                                             // {19}
 #endif
     KINETIS_TSI        TSI;
@@ -2974,11 +3198,18 @@ typedef struct stKINETIS_PERIPH
 #if defined CHIP_HAS_FLEXIO                                              // {23}
     KINETIS_FLEXIO     FLEXIO;
 #endif
+#if defined LTC_AVAILABLE
+    KINETIS_LTC        LTC;                                              // {33}
+#endif
 #if defined KINETIS_K80
     KINETIS_QSPI       QSPI;                                             // {29}
 #endif
 #if !defined KINETIS_KL && !defined KINETIS_KE
     KINETIS_EWM        EWM;
+#endif
+#if defined KINETIS_WITH_PCC                                             // {34}
+    KINETIS_PCC        PCC;
+    KINETIS_PCC2       PCC2;
 #endif
 #if defined KINETIS_KE
     KINETIS_ICS        ICS;
@@ -3011,9 +3242,10 @@ typedef struct stKINETIS_PERIPH
     KINETIS_VREF       VREF;
 #endif
 #if defined RNG_AVAILABLE
-    #if !defined RANDOM_NUMBER_GENERATOR_B                               // {13}
+    #if defined RANDOM_NUMBER_GENERATOR_A                               // {13}
     KINETIS_RNGA       RNGA;
-    #else
+    #endif
+    #if defined RANDOM_NUMBER_GENERATOR_B
     KINETIS_RNGB       RNGB;
     #endif
 #endif

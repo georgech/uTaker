@@ -16,6 +16,7 @@
     18.02.2014 Correct fnConvertSecondsTime() calculation                {69}
     19.08.2015 Use uMemset() to initialise strcture to avoid GCC using memset() {1}
     15.09.2015 Add dusk and dawn calculations                            {2}
+    14.03.2017 Simplify fnDiv2Time()                                     {3}
 
 */
           
@@ -1030,18 +1031,13 @@ static void fnAdditionTime(SNTP_TIME *result, SNTP_TIME *input, SNTP_TIME *add)
     result->ulFraction = ulFraction;
 }
 
-static void fnDiv2Time(SNTP_TIME *result, SNTP_TIME *input)
+static void fnDiv2Time(SNTP_TIME *result, SNTP_TIME *input)              // {3}
 {
-    register unsigned long ulIntermediateSeconds;
-    ulIntermediateSeconds = (input->ulSeconds/2);
-    result->ulFraction = (input->ulFraction/2);
-    if ((ulIntermediateSeconds * 2) != input->ulSeconds) {
-        result->ulFraction += 0x80000000;                                // add half to the fraction result
-        if (result->ulFraction < 0x80000000) {                           // check for overrun
-            ulIntermediateSeconds++;
-        }
+    result->ulFraction /= 2;                                             // halve the fraction
+    if ((input->ulSeconds & 0x01) != 0) {                                // uneven second count
+        result->ulFraction += 0x80000000;                                // add half to the fraction result to compensate
     }
-    result->ulSeconds = ulIntermediateSeconds;
+    result->ulSeconds = (input->ulSeconds/2);                            // halve the full seconds
 }
 
 // An answer has been received from a SNTP server
@@ -1192,7 +1188,7 @@ extern void fnAdjustLocalTime(unsigned char ucNewTimeZone, int iSNTP_active)
 
 extern void fnStartSNTP(DELAY_LIMIT syncDelay)
 {
-    if (temp_pars->temp_parameters.usServers[DEFAULT_NETWORK] & ACTIVE_SNTP) {
+    if ((temp_pars->temp_parameters.usServers[DEFAULT_NETWORK] & ACTIVE_SNTP) != 0) {
         if (SNTP_Socket < 0) {
             if ((SNTP_Socket = fnGetUDP_socket(TOS_MINIMISE_DELAY, fnSNTP_client, (UDP_OPT_SEND_CS | UDP_OPT_CHECK_CS))) >= 0) {
                 fnBindSocket(SNTP_Socket, SNTP_PORT);                    // bind socket

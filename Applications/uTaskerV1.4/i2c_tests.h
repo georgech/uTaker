@@ -31,7 +31,8 @@
         #define TEST_I2C_SLAVE                                           // test behaving as I2C slave
             #define OUR_SLAVE_ADDRESS   0xd0
     #endif
-    #define TEST_I2C                                                     // test I2C EEPROM
+  //#define TEST_I2C                                                     // test I2C EEPROM
+      //#define EEPROM_M24256                                            // EEPROM with two byte addressing
   //#define TEST_I2C_INTENSIVE                                           // intensive transmitter test
   //#define TEST_DS1307                                                  // test DS1307 RTC via I2C bus
   //#define TEST_SENSIRION                                               // test reading temperature and humidity 
@@ -41,15 +42,20 @@
       //#define INTERRUPT_ON_READY                                       // enable tap detection and interrupt
     #endif
   //#define TEST_MMA7660F                                                // test monitoring the 3-axis accelerometer
-  //#define TEST_FXOS8700                                                // test monitoring the 6-axis sensor
+    #define TEST_FXOS8700                                                // test monitoring the 6-axis sensor
     #if defined TEST_FXOS8700
       //#define FXOS8700_14BIT_RES
     #endif
   //#define DISPLAY_ACCELEROMETER_VALUES                                 // print values to debug output irrespective of debug setting
 
     #if defined TEST_I2C
-        #define ADD_EEPROM_READ           0xa5                           // read address of I2C EEPROM
-        #define ADD_EEPROM_WRITE          0xa4                           // write address of I2C EEPROM
+        #if defined EEPROM_M24256                                        // pin E0, E1 and E2 at '1'
+            #define ADD_EEPROM_READ      0xaf                            // read address of I2C EEPROM (M24256) - if accessing its identification page it would be 0xb1
+            #define ADD_EEPROM_WRITE     0xae                            // write address of I2C EEPROM
+        #else
+            #define ADD_EEPROM_READ      0xa5                            // read address of I2C EEPROM (24C01)
+            #define ADD_EEPROM_WRITE     0xa4                            // write address of I2C EEPROM
+        #endif
     #endif
     #if defined TEST_DS1307
         #define ADDRTC_READ               0xd1                           // read address of DS1307
@@ -386,8 +392,12 @@ static void fnConfigI2C_Interface(void)
         iAppState |= STATE_POLLING;                                      // mark test running
         uTaskerStateChange(OWN_TASK, UTASKER_GO);                        // set to polling mode
             #else
+            #if defined EEPROM_M24256
+        static const unsigned char ucSetEEPROMAddress0[] = { ADD_EEPROM_WRITE, 0, 0 }; // command to set address to read to 0x0000
+            #else
         static const unsigned char ucSetEEPROMAddress0[] = {ADD_EEPROM_WRITE, 0}; // command to set address to read to 0
-        static const unsigned char ucReadEEPROM[] = {16, ADD_EEPROM_READ, OWN_TASK}; // command to start a read of 16 bytes with the task scheduled when the read has completed
+                #endif
+        static const unsigned char ucReadEEPROM[] = { 16, ADD_EEPROM_READ, OWN_TASK }; // command to start a read of 16 bytes with the task scheduled when the read has completed
         fnWrite(I2CPortID, (unsigned char *)ucSetEEPROMAddress0, sizeof(ucSetEEPROMAddress0)); // write the EEPROM address to read
         fnRead(I2CPortID, (unsigned char *)ucReadEEPROM, 0);             // start the read process of 16 bytes
             #endif	
@@ -465,16 +475,21 @@ static void acc_data_ready(void)
         }
     #else
         while ((Length = fnRead(I2CPortID, ucInputMessage, MEDIUM_MESSAGE)) != 0) {
+        #if defined EEPROM_M24256
+            static const unsigned char ucSetWriteEEPROM2[] = { ADD_EEPROM_WRITE,   0, 62,   2, 3, 4, 5, 6, 7, 8, 9, 10 }; // prepare write of multiple bytes to address 62 (to show page write)
+        #else
             static const unsigned char ucSetWriteEEPROM1[] = {ADD_EEPROM_WRITE, 3, 5}; // prepare write of one byte to address 3
             static const unsigned char ucSetWriteEEPROM2[] = {ADD_EEPROM_WRITE, 5, 3, 4, 5, 6, 7, 8, 9, 10}; // prepare write of multiple bytes to address 5
-
+        #endif
             int x = 0;
             while (x < Length) {                                         // display received bytes
                 fnDebugHex(ucInputMessage[x++], (WITH_LEADIN | WITH_SPACE | 1));
             }
             fnDebugMsg("\r\n");
                                                                          // now change the contents using different writes
+        #if !defined EEPROM_M24256                                       // since a stop cndition is required for the write to begin, queued multiple writes can't be performed due to the fact that the result in repeated starts
             fnWrite(I2CPortID, (unsigned char *)&ucSetWriteEEPROM1, sizeof(ucSetWriteEEPROM1)); // start single byte write
+        #endif
             fnWrite(I2CPortID, (unsigned char *)&ucSetWriteEEPROM2, sizeof(ucSetWriteEEPROM2)); // start page write
         }
     #endif

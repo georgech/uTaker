@@ -54,6 +54,18 @@
     <Filter Include="TCP/IP\OpenSSL">
       <UniqueIdentifier>{2e7c4f70-af0c-4e3d-b1d8-0535fa3674af}</UniqueIdentifier>
     </Filter>
+    <Filter Include="TCP/IP\PPP">
+      <UniqueIdentifier>{ce5bdfad-5223-4050-b57e-62db7a870bba}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FreeRTOS">
+      <UniqueIdentifier>{f8c09f92-81a5-4362-bf32-419e0d842a35}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FreeRTOS\portable">
+      <UniqueIdentifier>{f9c79aa4-bf51-431e-a092-839e0b5f0663}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FreeRTOS\include">
+      <UniqueIdentifier>{a094671f-7e9c-4069-80f2-8f4ee4e5f64b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\application.c">
@@ -289,6 +301,72 @@
     </ClCompile>
     <ClCompile Include="..\..\..\stack\SSL\openssl-1.0.2\aes_core.c">
       <Filter>TCP/IP\OpenSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\uTasker\uGLCDLIB\FT_CoPro_Cmds.c">
+      <Filter>uTasker\uGLCDLIB</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\PPP\auth.c">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\PPP\chap.c">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\PPP\chpms.c">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\PPP\fsm.c">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\PPP\ipcp.c">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\PPP\lcp.c">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\PPP\lwppp.c">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\PPP\magic.c">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\PPP\md5.c">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\PPP\pap.c">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\PPP\ppp_oe.c">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\PPP\randm.c">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\PPP\vj.c">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\FreeRTOS\Source\tasks.c">
+      <Filter>FreeRTOS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\FreeRTOS\Source\list.c">
+      <Filter>FreeRTOS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\FreeRTOS\Source\timers.c">
+      <Filter>FreeRTOS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\FreeRTOS\Source\queue.c">
+      <Filter>FreeRTOS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\FreeRTOS\Source\event_groups.c">
+      <Filter>FreeRTOS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\FreeRTOS\Source\croutine.c">
+      <Filter>FreeRTOS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FreeRTOSapplication.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F\port.c">
+      <Filter>FreeRTOS\portable</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -577,14 +655,8 @@
     <ClInclude Include="..\..\..\stack\SSL\mbedtls-1.3.10\aes.h">
       <Filter>TCP/IP\mbedtls</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\uTasker\driver.h">
-      <Filter>uTasker</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\uTasker\usb.h">
       <Filter>uTasker</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Stack\tcpip.h">
-      <Filter>TCP/IP</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\stack\SSL\wolfssl-3.9.6\aes.h">
       <Filter>TCP/IP\wolfSSL</Filter>
@@ -649,6 +721,216 @@
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_HIRC.h">
       <Filter>Hardware\Kinetis</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\uTasker\uGLCDLIB\FT_CoPro_Cmds.h">
+      <Filter>uTasker\uGLCDLIB</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\uTasker\uGLCDLIB\FT_Gpu.h">
+      <Filter>uTasker\uGLCDLIB</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\auth.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\chap.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\chpms.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\fsm.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\ipcp.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\lcp.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\magic.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\md5.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\pap.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\ppp.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\ppp_impl.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\pppdebug.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\randm.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\vj.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\arch\cc.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\arch\perf.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\arch\sys_arch.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\lwip\api.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\lwip\api_msg.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\lwip\arch.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\lwip\debug.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\lwip\def.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\lwip\dhcp.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\lwip\dns.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\lwip\err.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\lwip\icmp.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\lwip\inet.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\lwip\init.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\lwip\ip.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\lwip\ip_addr.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\lwip\mem.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\lwip\memp.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\lwip\memp_std.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\lwip\netbuf.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\lwip\netdb.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\lwip\netif.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\lwip\netifapi.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\lwip\opt.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\lwip\pbuf.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\lwip\raw.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\lwip\sio.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\lwip\snmp.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\lwip\snmp_asn1.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\lwip\snmp_msg.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\lwip\snmp_structs.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\lwip\sockets.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\lwip\stats.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\lwip\sys.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\lwip\tcp.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\lwip\tcp_impl.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\lwip\tcpip.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\lwip\timers.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\lwip\udp.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\fsl_debug_console.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\fsl_os_abstraction.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\fsl_os_abstraction_bm.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\PPP\lwipopts.h">
+      <Filter>TCP/IP\PPP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Stack\tcpip.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FreeRTOSConfig.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\FreeRTOS\Source\include\FreeRTOS.h">
+      <Filter>FreeRTOS\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\FreeRTOS\Source\include\task.h">
+      <Filter>FreeRTOS\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\FreeRTOS\Source\include\croutine.h">
+      <Filter>FreeRTOS\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\FreeRTOS\Source\include\event_groups.h">
+      <Filter>FreeRTOS\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\FreeRTOS\Source\include\list.h">
+      <Filter>FreeRTOS\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\FreeRTOS\Source\include\queue.h">
+      <Filter>FreeRTOS\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\FreeRTOS\Source\include\timers.h">
+      <Filter>FreeRTOS\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F\portmacro.h">
+      <Filter>FreeRTOS\portable</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\uTasker\driver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="cursor1.cur">
@@ -668,11 +950,11 @@
       <Filter>WinSim\Resource Files</Filter>
     </None>
     <None Include="..\GNU_Kinetis\Build_Kinetis.bat" />
-    <None Include="..\..\..\Hardware\Kinetis\CMSIS_DSP\arm_bitreversal2.S">
-      <Filter>Hardware\Kinetis\CMSIS_DSP</Filter>
-    </None>
     <None Include="..\..\..\Hardware\Kinetis\Crypto\mmcau_aes_functions.S">
       <Filter>Hardware\Kinetis\Crypto</Filter>
+    </None>
+    <None Include="..\..\..\Hardware\Kinetis\CMSIS_DSP\arm_bitreversal2.S">
+      <Filter>Hardware\Kinetis\CMSIS_DSP</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

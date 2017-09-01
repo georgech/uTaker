@@ -19,7 +19,7 @@
     29.08.2014 Correct creating additional directory clusters            {3}
     03.09.2014 Remove fnCreateFile(), fnSetFileLocation() and fnInsertLFN_name() parameter {4}
     03.09.2014 Reset any deleted location markers when moving to next paragraph {5}
-    06.10.2014 Correct brackets in fnExtractLongFileName()               {6} [uFATV2.01]
+    06.10.2014 Correct brackets in fnExtractLongFileName()               {6} [utFATV2.01]
     30.11.2014 Add SPI_FLASH_FAT (run utFAT in external SPI based flash)
     03.12.2014 Don't display hidden files unless the HIDDEN_TYPE_LISTING flag is set and expert functions enabled {7}
     04.12.2014 Add FLASH_FAT (run utFAT in internal flash)
@@ -27,10 +27,13 @@
     13.12.2014 Ensure that the sector buffer is synchronised when writes are made using fnWriteSector() {9}
     22.01.2015 Add option to return a file's creation time and date in its file object {10}
     06.10.2015 Only when LFN is disabled: Corrected _utOpenDirectory() directory location returned when opening to write new files, plus reuse deleted directory space when possible {11}
-    30.10.2015 Added emulated FAT support (FAT_EMULATION)                {12} [uFATV2.02]
+    30.10.2015 Added emulated FAT support (FAT_EMULATION)                {12} [utFATV2.02]
     16.11.2015 Ensure that EMULATED_FAT_LUMS is available                {13}
     17.01.2016 Add utFileAttribute() - allows changing file attributes (not directories) {14}
-    17.01.2016 Reset long file name counter when skipping hidden files   {15} [uFATV2.03]
+    17.01.2016 Reset long file name counter when skipping hidden files   {15} [utFATV2.03]
+    24.04.2017 Handle USB_MSD_REMOVED when memory stick is removed       {16}
+    09.07.2017 Allow renaming a file to a different directory location   {17}
+    14.07.2017 Avoid matching directories when not complete path handled {18} [utFAT2.04]
 
 */
 
@@ -834,7 +837,7 @@ static int utReadDiskSector(UTDISK *ptr_utDisk, unsigned long ulSectorNumber, vo
         if ((ptr_utDisk->usDiskFlags & HIGH_CAPACITY_SD_CARD) == 0) {
             ulSectorNumber *= 512;                                       // convert the sector number to byte address
         }
-        SET_SD_CS_LOW();
+        SET_SD_CS_LOW();                                                // assert the chip select line
         iMemoryOperation[DISK_SDCARD] |= _READING_MEMORY;
         ulSector = ulSectorNumber;
     case _READING_MEMORY:
@@ -842,14 +845,14 @@ static int utReadDiskSector(UTDISK *ptr_utDisk, unsigned long ulSectorNumber, vo
             unsigned char ucResult;
             while ((iActionResult = fnSendSD_command(fnCreateCommand(READ_SINGLE_BLOCK_CMD17, ulSector), &ucResult, 0)) == CARD_BUSY_WAIT) {}
             if (iActionResult < 0) {
-                SET_SD_CS_HIGH();
+                SET_SD_CS_HIGH();                                        // negate the chip select line
                 iMemoryOperation[DISK_SDCARD] &= ~_READING_MEMORY;       // read operation has completed
                 return iActionResult;
             }
             if (ucResult == 0) {
                 iActionResult = fnGetSector(ptrBuf);                     // read a single sector to the buffer
             }
-            SET_SD_CS_HIGH();
+            SET_SD_CS_HIGH();                                            // negate the chip select line
             iMemoryOperation[DISK_SDCARD] &= ~_READING_MEMORY;           // read operation has completed
         }
         break;
@@ -1928,7 +1931,7 @@ extern void fnMassStorage(TTASKTABLE *ptrTaskTable)
     while (++iDiskNumber < DISK_COUNT) {                                 // for each disk
     #endif
     #if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST
-    if (iMemoryOperation[iDiskNumber] & _READING_MEMORY) {               // reading
+    if ((iMemoryOperation[iDiskNumber] & _READING_MEMORY) != 0) {        // reading
         if ((iActionResult = _utReadDiskSector[iDiskNumber](&utDisks[iDiskNumber], 0, utDisks[iDiskNumber].ptrSectorData)) == CARD_BUSY_WAIT) {
             return;                                                      // still reading so keep waiting
         }
@@ -3005,7 +3008,7 @@ extern void fnMassStorage(TTASKTABLE *ptrTaskTable)
         #endif
     #endif                                                               // end #if defined SDCARD_SUPPORT || defined USB_MSD_HOST
 
-    // Interrupt and timer events are onyl valid for the SD card interface
+    // Interrupt and timer events are only valid for the SD card interface
     //
     while (fnRead(ptrTaskTable->TaskID, ucInputMessage, HEADER_LENGTH)) {// check task input queue
         switch (ucInputMessage[MSG_SOURCE_TASK]) {
@@ -3078,6 +3081,12 @@ extern void fnMassStorage(TTASKTABLE *ptrTaskTable)
                     uTaskerStateChange(OWN_TASK, UTASKER_ACTIVATE);      // schedule the task to start mounting
                     fnDebugMsg("Mem-Stick mounting...\r\n");
                 }
+            }
+            else if (ucInputMessage[0] == USB_MSD_REMOVED) {             // {16} the memory stick has been removed so the disk can be unmounted
+                utDisks[DISK_E].usDiskFlags = DISK_NOT_PRESENT;
+                iMemoryState[DISK_E] = SD_STATE_STARTING;
+                iMemoryOperation[DISK_E] = _IDLE_MEMORY;
+                fnDebugMsg("Mem-Stick unmounted\r\n");
             }
             break;
     #endif
@@ -3177,7 +3186,7 @@ static int fnGetSector(unsigned char *ptrBuf)
         WRITE_SPI_CMD(0xff);
         WAIT_TRANSMISSON_END();                                          // wait until transmission complete
         *ptrBuf++ = READ_SPI_DATA();
-    } while (--iLength);
+    } while (--iLength != 0);
     WRITE_SPI_CMD(0xff);                                                 // read and discard two CRC bytes
     WAIT_TRANSMISSON_END();                                              // wait until transmission complete
     ucResponse = READ_SPI_DATA();
@@ -4504,7 +4513,7 @@ static int _utOpenDirectory(OPEN_FILE_BLOCK *ptrOpenBlock, UTDIRECTORY *ptrDirOb
                             uMemcpy(&DeletedFile, ptrDiskLocation, sizeof(DeletedFile)); // save the deleted file object location in the present directory
                         }
     #endif
-                        break;                                       // continue by jumping the deleted entry
+                        break;                                           // continue by jumping the deleted entry
 #endif
                     default:
                         if (
@@ -4526,8 +4535,10 @@ static int _utOpenDirectory(OPEN_FILE_BLOCK *ptrOpenBlock, UTDIRECTORY *ptrDirOb
 #endif
                                 return UTFAT_PATH_IS_FILE;               // not a directory so can not be traced further
                             }
-                            if ((ptrOpenBlock->iQualifiedPathType != 0) && (ptrOpenBlock->usDirFlags & UTDIR_DIR_AS_FILE)) { // if a directory is to be treated as a file, its location is preserved rather than moving to its content
-                                return UTFAT_SUCCESS;                    // file matched
+                            if ((ptrOpenBlock->iQualifiedPathType != 0) && ((ptrOpenBlock->usDirFlags & UTDIR_DIR_AS_FILE) != 0)) { // if a directory is to be treated as a file, its location is preserved rather than moving to its content
+                                if (*ptrLocalDirPath == 0) {             // {18} only match the end of a path
+                                    return UTFAT_SUCCESS;                // file matched
+                                }
                             }
                             ptrDiskLocation->directory_location.ulCluster = ptrOpenBlock->ulCluster; // move to the new directory
                             ptrDiskLocation->directory_location.ulSector = ((ptrOpenBlock->ulCluster * ptr_utDisk->utFAT.ucSectorsPerCluster) + ptr_utDisk->ulVirtualBaseAddress); // section referenced to logical base address
@@ -4536,7 +4547,7 @@ static int _utOpenDirectory(OPEN_FILE_BLOCK *ptrOpenBlock, UTDIRECTORY *ptrDirOb
                                 if (ROOT_DIRECTORY_RELOCATE == ptrOpenBlock->iRootDirectory) {
                                     return UTFAT_PATH_IS_ROOT_REF;       // directory path successfully found but relative to root
                                 }
-                                if (ROOT_DIRECTORY_SETTING & ptrOpenBlock->iRootDirectory) { // successfully found (virtual) root set set the location
+                                if ((ROOT_DIRECTORY_SETTING & ptrOpenBlock->iRootDirectory) != 0) { // successfully found (virtual) root set set the location
                                     uMemcpy(&ptrDirObject->root_disk_location, &ptrDirObject->private_disk_location, sizeof(ptrDirObject->root_disk_location)); // this is the first open, which is setting the virtual root as seen by the user
                                     uMemcpy(&ptrDirObject->public_disk_location, &ptrDirObject->private_disk_location, sizeof(ptrDirObject->public_disk_location));
                                 }
@@ -4655,13 +4666,13 @@ static int _fnHandlePath(OPEN_FILE_BLOCK *ptrOpenBlock, const CHAR *ptrDirPath, 
                     if ((iReturn = utOpenDirectory(ptrDirPath, ptrDirObject)) != UTFAT_SUCCESS) { // continue downward search from the new location
                         ptrOpenBlock->usDirFlags = 0;
                     }
-                    else if (ptrOpenBlock->usDirFlags & UTDIR_ALLOW_MODIFY_PATH) {
+                    else if ((ptrOpenBlock->usDirFlags & UTDIR_ALLOW_MODIFY_PATH) != 0) {
                         CHAR *ptrStart = &ptrDirObject->ptrDirectoryPath[usPathTerminator];                        
                         usPathTerminator += (uStrcpy(ptrStart, (ptrDirPath - 1)) - ptrStart);
                         return UTFAT_SUCCESS_PATH_MODIFIED;
                     }
                 }
-                if (ptrOpenBlock->usDirFlags & UTDIR_ALLOW_MODIFY_PATH) {// if path modification allowed
+                if ((ptrOpenBlock->usDirFlags & UTDIR_ALLOW_MODIFY_PATH) != 0) {// if path modification allowed
                     ptrDirObject->usRelativePathLocation = usPathTerminator;
                     return UTFAT_SUCCESS_PATH_MODIFIED;
                 }
@@ -4669,7 +4680,7 @@ static int _fnHandlePath(OPEN_FILE_BLOCK *ptrOpenBlock, const CHAR *ptrDirPath, 
                 return iReturn;
             }
             else {
-                if (ptrOpenBlock->usDirFlags & UTDIR_ALLOW_MODIFY_PATH) {// if path modification allowed
+                if ((ptrOpenBlock->usDirFlags & UTDIR_ALLOW_MODIFY_PATH) != 0) {// if path modification allowed
                     ptrDirObject->ptrDirectoryPath[3] = 0;
                     ptrDirObject->usRelativePathLocation = 3;
                     uMemcpy(&ptrDirObject->public_disk_location, &ptrDirObject->root_disk_location, sizeof(ptrDirObject->private_disk_location)); // synchronise to root location
@@ -4736,12 +4747,12 @@ static int _fnHandlePath(OPEN_FILE_BLOCK *ptrOpenBlock, const CHAR *ptrDirPath, 
         }
     }
 
-    if (ptrOpenBlock->usDirFlags & (UTDIR_TEST_FULL_PATH | UTDIR_TEST_FULL_PATH_TEMP | UTDIR_TEST_REL_PATH | UTDIR_REFERENCED)) {
-        if (ptrOpenBlock->usDirFlags & UTDIR_TEST_FULL_PATH) {           // set temporary root directory
+    if ((ptrOpenBlock->usDirFlags & (UTDIR_TEST_FULL_PATH | UTDIR_TEST_FULL_PATH_TEMP | UTDIR_TEST_REL_PATH | UTDIR_REFERENCED)) != 0) {
+        if ((ptrOpenBlock->usDirFlags & UTDIR_TEST_FULL_PATH) != 0) {    // set temporary root directory
             uMemcpy(&ptrDirObject->public_disk_location, &ptrDirObject->root_disk_location, sizeof(ptrDirObject->private_disk_location)); // {102a} synchronise to root location
         }
         else if ((ptrOpenBlock->usDirFlags & UTDIR_TEST_FULL_PATH_TEMP) == 0) {
-            if (ptrOpenBlock->iRootDirectory & (ROOT_DIRECTORY_RELOCATE | ROOT_DIRECTORY_SET)) {
+            if ((ptrOpenBlock->iRootDirectory & (ROOT_DIRECTORY_RELOCATE | ROOT_DIRECTORY_SET)) != 0) {
                 uMemcpy(&ptrDirObject->public_disk_location, &ptrDirObject->root_disk_location, sizeof(ptrDirObject->public_disk_location)); // synchronise to root
                 if (ptrOpenBlock->iRootDirectory == ROOT_DIRECTORY_SET) {
                     return UTFAT_PATH_IS_ROOT;                           // inform that the location is root
@@ -4754,10 +4765,10 @@ static int _fnHandlePath(OPEN_FILE_BLOCK *ptrOpenBlock, const CHAR *ptrDirPath, 
         ptrOpenBlock->ptrDiskLocation = &ptrDirObject->public_disk_location;        
     }
     else {
-        ptrOpenBlock->ptrDiskLocation = &ptrDirObject->private_disk_location; // work with the private disk location pointer so that its adsolute base location is set
+        ptrOpenBlock->ptrDiskLocation = &ptrDirObject->private_disk_location; // work with the private disk location pointer so that its absolute base location is set
         uMemcpy(&ptrDirObject->public_disk_location, &ptrDirObject->private_disk_location, sizeof(ptrDirObject->private_disk_location)); // synchronise to present location
     }
-    if (ptrOpenBlock->iRootDirectory & (ROOT_DIRECTORY_REFERENCE | ROOT_DIRECTORY_SET)) { // if root directory reference
+    if ((ptrOpenBlock->iRootDirectory & (ROOT_DIRECTORY_REFERENCE | ROOT_DIRECTORY_SET)) != 0) { // if root directory reference
         return UTFAT_SUCCESS;                                            // ready to work with root directory or referenced directory
     }
     ptrOpenBlock->iContinue = 1;                                         // the function has done its work and requires that the caller function continues to complete
@@ -5357,7 +5368,7 @@ static unsigned long fnAllocateCluster(UTDISK *ptr_utDisk, unsigned long ulPrese
 
 static int fnCommitInfoChanges(UTDISK *ptr_utDisk)
 {
-    if (ptr_utDisk->usDiskFlags & WRITEBACK_INFO_FLAG) {                 // info sector content has changed
+    if ((ptr_utDisk->usDiskFlags & WRITEBACK_INFO_FLAG) != 0) {          // info sector content has changed
         INFO_SECTOR_FAT32 info_Sector;
         unsigned long ulInfoSector_Location = ptr_utDisk->utFileInfo.ulInfoSector;
         unsigned char ucDriveNumber = ptr_utDisk->ucDriveNumber;
@@ -5428,7 +5439,7 @@ static int fnCreateNameParagraph(const CHAR **pptrDirectoryPath, CHAR cDirectory
             else {
                 if ((unsigned char)cInputCharacter <= '~') {
                     ucCharacterCharacteristics = ucCharacterTable[cInputCharacter - '!'];
-                    if (ucCharacterCharacteristics & (_CHAR_REJECT | _CHAR_REJECT_NON_JAP)) {
+                    if ((ucCharacterCharacteristics & (_CHAR_REJECT | _CHAR_REJECT_NON_JAP)) != 0) {
                         if ((iEvenByte == 0) || (!(ucCharacterCharacteristics & _CHAR_REJECT_NON_JAP))) { // don't apply these to second byte of Japanese characters
     #if defined UTFAT_LFN_WRITE || (defined FAT_EMULATION && defined FAT_EMULATION_LFN)
                             if (ucCharacterCharacteristics & _CHAR_ACCEPT_LFN) {
@@ -5444,7 +5455,7 @@ static int fnCreateNameParagraph(const CHAR **pptrDirectoryPath, CHAR cDirectory
                         }
                     }
                     else if (iEvenByte == 0) {                           // don't apply to second byte of Japanese characters
-                        if (ucCharacterCharacteristics & _CHAR_CAPITAL) {
+                        if ((ucCharacterCharacteristics & _CHAR_CAPITAL) != 0) { // if the complete input uses capitals we allow small file names to be used
                             if (iSeparatorFound != 1) {
                                 cDirectoryName[11] &= ~0x08;
                             }
@@ -5452,9 +5463,9 @@ static int fnCreateNameParagraph(const CHAR **pptrDirectoryPath, CHAR cDirectory
                                 cDirectoryName[11] &= ~0x10;
                             }
                         }
-                        else if (ucCharacterCharacteristics & _CHAR_SMALL) {
+                        else if ((ucCharacterCharacteristics & _CHAR_SMALL) != 0) {
     #if defined UTFAT_LFN_WRITE || (defined FAT_EMULATION && defined FAT_EMULATION_LFN)
-                            iLFN_force = FULLY_QUALIFIED_LONG_NAME_SFNM; // if this name is to be created it must be a long file name type due the fact that it has small letters in the name (if it is to be searched for it may still mathc with a SFN)
+                            iLFN_force = FULLY_QUALIFIED_LONG_NAME_SFNM; // if this name is to be created it must be a long file name type due the fact that it has small letters in the name (if it is to be searched for it may still match with a SFN)
     #endif
                             cInputCharacter -= ('a' - 'A');              // convert to upper case
                             if (iSeparatorFound != 1) {
@@ -5576,6 +5587,25 @@ static void fnCreateSFN_alias(CHAR cFileName[12])
     #endif
 #endif
 
+#if defined UTFAT_WRITE                                                  // {17}
+// Read the present (SFN) file object to a buffer and mark the original as deleted
+//
+static int fnBackupFreeFileObject(OPEN_FILE_BLOCK *ptr_openBlock, DIR_ENTRY_STRUCTURE_FAT32 *ptr_file_object)
+{
+    DIR_ENTRY_STRUCTURE_FAT32 *ptrDirectoryEntry;
+    if (fnLoadSector(ptr_openBlock->ptr_utDisk, ptr_openBlock->ptrDiskLocation->directory_location.ulSector) != UTFAT_SUCCESS) { // load the sector containing the file objext
+        return UTFAT_DISK_READ_ERROR;
+    }
+    ptrDirectoryEntry = (DIR_ENTRY_STRUCTURE_FAT32 *)ptr_openBlock->ptr_utDisk->ptrSectorData; // the directory entry in the sector buffer
+    ptrDirectoryEntry += ptr_openBlock->ptrDiskLocation->ucDirectoryEntry; // move to the present entry
+    uMemcpy(ptr_file_object, ptrDirectoryEntry, sizeof(DIR_ENTRY_STRUCTURE_FAT32)); // backup the original file object
+    ptrDirectoryEntry->DIR_Name[0] = DIR_NAME_FREE;                      // free the original object
+    ptr_openBlock->ptr_utDisk->usDiskFlags |= WRITEBACK_BUFFER_FLAG;     // mark that the original sector content must be committed
+    return UTFAT_SUCCESS;
+}
+#endif
+
+
 #if (defined UTFAT_LFN_READ && defined UTFAT_LFN_WRITE) || (defined FAT_EMULATION && defined FAT_EMULATION_LFN && defined EMULATED_FAT_FILE_NAME_CONTROL)
 // Verify that a long file name entry is possible or else move to a location that is possible, which may be the end of the present directory
 //
@@ -5625,8 +5655,12 @@ static int fnInsertLFN_name(OPEN_FILE_BLOCK *ptr_openBlock, UTFILE *ptr_utFile, 
     #if defined FAT_EMULATION_LFN                                        // {12}
     if (ptr_utFile != 0) {
     #endif
+
     #if defined UTFAT_LFN_READ && defined UTFAT_LFN_WRITE
-        if ((iRename != 0) && (ptr_utFile->lfn_file_location.directory_location.ulSector != 0) && (ptr_utFile->ucLFN_entries >= ucEntryLength)) { // renamed file is LFN and so its space can be used if large enough
+        if ((iRename != 0) && (ptr_openBlock->present_location.directory_location.ulSector != ptr_utFile->lfn_file_location.directory_location.ulSector)) { // {17} renaming a file to different disk location
+            iRename = 2;                                                 // we are still renaming but we must force a copy of the original file object to the new file opject location
+        }
+        if ((iRename == 1) && (ptr_utFile->lfn_file_location.directory_location.ulSector != 0) && (ptr_utFile->ucLFN_entries >= ucEntryLength)) { // {17} renamed file is LFN and so its space can be used if large enough
             uMemcpy(ptrDiskLocation, &ptr_utFile->lfn_file_location, sizeof(DISK_LOCATION)); // set the start of the original long file name
             if (ptr_utFile->ucLFN_entries != ucEntryLength) {            // if a location past the original start is to be used move to it
                 ptr_utFile->ucLFN_entries -= ucEntryLength;
@@ -5646,17 +5680,12 @@ static int fnInsertLFN_name(OPEN_FILE_BLOCK *ptr_openBlock, UTFILE *ptr_utFile, 
                 i++;                                                     // try larger holes
             }
             if (iRename != 0) {                                          // the renamed file must be relocated (original details transferred then destroyed)
-                if (fnLoadSector(ptr_utDisk, ptrDiskLocation->directory_location.ulSector) != UTFAT_SUCCESS) {
+                if (fnBackupFreeFileObject(ptr_openBlock, &original_file_object) != UTFAT_SUCCESS) { // {17} use new function to backup and free the original file object
                     return UTFAT_DISK_READ_ERROR;
                 }
-                ptrDirectoryEntry = (DIR_ENTRY_STRUCTURE_FAT32 *)ptr_utDisk->ptrSectorData; // the directory entry in the sector buffer
-                ptrDirectoryEntry += ptrDiskLocation->ucDirectoryEntry;  // move to the present entry
-                uMemcpy(&original_file_object, ptrDirectoryEntry, sizeof(original_file_object)); // backup the origional file object
-                ptrDirectoryEntry->DIR_Name[0] = DIR_NAME_FREE;          // free the original object
-                ptr_utDisk->usDiskFlags |= WRITEBACK_BUFFER_FLAG;        // mark that the original sector content must be committed
-                iFileObjectMoved = 1;
+                iFileObjectMoved = 1;                                    // mark that we need to return the original file object since it will be moved to a new location
             }
-            if (i >= DELETED_ENTRY_COUNT) {                              // no reuse is possible in the existing directory area so the renamed file must be moved to the end of the present directory
+            if ((i >= DELETED_ENTRY_COUNT) || (iRename == 2)) {          // {17} no reuse is possible in the existing directory area so the renamed file must be moved to the end of the present directory
                 uMemcpy(ptrDiskLocation, &ptr_openBlock->DirectoryEndLocation, sizeof(DISK_LOCATION)); // move to the new LFN location which is extending the directory
             }
             else {
@@ -5677,7 +5706,7 @@ static int fnInsertLFN_name(OPEN_FILE_BLOCK *ptr_openBlock, UTFILE *ptr_utFile, 
     #endif
     ucEntryLength |= 0x40;                                               // mark first entry
     i = -1;
-    while (1) {                                                          // for each character in the LFN
+    while ((int)1 != (int)0) {                                           // for each character in the LFN
         if (iNameLength >= 13) {                                         // pad end when the LFN doesn't fill an entry
             ucNextCharacter = *ptrReverseLFN;
             ucNextCharacterExtension = 0;                                // only english character set supported
@@ -5865,6 +5894,7 @@ static int fnSetFileLocation(UTFILE *ptr_utFile, OPEN_FILE_BLOCK *ptr_openBlock,
 //
 static int fnCreateFile(OPEN_FILE_BLOCK *ptr_openBlock, UTFILE *ptr_utFile, /*const CHAR *ptrFilePath, */unsigned long ulAccessMode) // {4}
 {
+    DIR_ENTRY_STRUCTURE_FAT32 original_file_object;
     int iReturn;
     int iRename = ((ulAccessMode & _RENAME_EXISTING) != 0);              // check whether renaming existing file
     unsigned long ulFreeCluster = 0;
@@ -5876,12 +5906,29 @@ static int fnCreateFile(OPEN_FILE_BLOCK *ptr_openBlock, UTFILE *ptr_utFile, /*co
     if (iReturn != UTFAT_SUCCESS) {
         return iReturn;                                                  // presumed error
     }
+    #if defined UTFAT_LFN_READ
+    if (ptr_openBlock->iQualifiedPathType < FULLY_QUALIFIED_LONG_NAME_SFNM) { // {17} the new file is using a short file name (long file names will already have been handled)
+    #endif
+        if ((iRename != 0) && (ptr_openBlock->DirectoryEndLocation.directory_location.ulSector != ptr_utFile->private_disk_location.directory_location.ulSector)) { // {17} if the directory is being changed
+          //ptr_openBlock->ptrDiskLocation = &ptr_openBlock->DirectoryEndLocation; // the end of the file objects in the destination directory
+            if (fnBackupFreeFileObject(ptr_openBlock, &original_file_object) != UTFAT_SUCCESS) { // {17} use new function to backup and free the original file object
+                return UTFAT_DISK_READ_ERROR;
+            }
+            ptr_openBlock->ptrDiskLocation = &ptr_openBlock->DirectoryEndLocation; // the end of the file objects in the destination directory
+            iRename = 2;                                                 // the original file object needs to be copied to the new location
+        }
+    #if defined UTFAT_LFN_READ
+    }
+    #endif
     ptrDiskLocation = ptr_openBlock->ptrDiskLocation;                    // this is location in the directory where the new/renamed file (SFN or SFN alias) is to be placed
-    if (fnLoadSector(ptr_utDisk, ptrDiskLocation->directory_location.ulSector) != UTFAT_SUCCESS) {
+    if (fnLoadSector(ptr_utDisk, ptrDiskLocation->directory_location.ulSector) != UTFAT_SUCCESS) { // ensure that the sector containing the file object is loaded
         return UTFAT_DISK_READ_ERROR;
     }
     ptrFoundEntry = (DIR_ENTRY_STRUCTURE_FAT32 *)ptr_utDisk->ptrSectorData; // the directory entry in the sector buffer
     ptrFoundEntry += ptrDiskLocation->ucDirectoryEntry;                  // move to the present directory entry
+    if (iRename == 2) {                                                  // {17}
+        uMemcpy(ptrFoundEntry, &original_file_object, sizeof(DIR_ENTRY_STRUCTURE_FAT32)); // copy the original file object content
+    }
 
     uMemcpy(ptrFoundEntry->DIR_Name, ptr_openBlock->cShortFileName, 11); // add the short file name
     ptrFoundEntry->DIR_NTRes = ptr_openBlock->cShortFileName[11];
@@ -5895,7 +5942,7 @@ static int fnCreateFile(OPEN_FILE_BLOCK *ptr_openBlock, UTFILE *ptr_utFile, /*co
             fnAddEntry(ptrFoundEntry, ulFreeCluster, DIR_ATTR_ARCHIVE);
         }
     }
-    while (_utCommitSectorData[ucDrive](ptr_utDisk, ptr_utDisk->ptrSectorData, ptrDiskLocation->directory_location.ulSector) == CARD_BUSY_WAIT) {} // force writeback to finalise the operation
+    while (_utCommitSectorData[ucDrive](ptr_utDisk, ptr_utDisk->ptrSectorData, ptrDiskLocation->directory_location.ulSector) == CARD_BUSY_WAIT) {} // force write-back to finalise the operation
     ptr_utDisk->usDiskFlags &= ~WRITEBACK_BUFFER_FLAG;                   // the disk is up to date with the buffer
     if (iRename == 0) {                                                  // if creating and not renaming
         if (ptr_utFile != 0) {                                           // file and not directory
@@ -6140,7 +6187,7 @@ static int _utOpenFile(const CHAR *ptrFilePath, UTFILE *ptr_utFile, unsigned lon
     OPEN_FILE_BLOCK openBlock;
     uMemset(&openBlock, 0, sizeof(openBlock));                           // initialise open file block
 
-    if (ulAccessMode & UTFAT_OPEN_FOR_RENAME) {
+    if ((ulAccessMode & UTFAT_OPEN_FOR_RENAME) != 0) {
         ptr_utFile->ptr_utDirObject->usDirectoryFlags |= (UTDIR_DIR_AS_FILE | UTDIR_REFERENCED | UTDIR_SET_START); // opens for renames are set to allow directories to be handled as files 
     }
     else {
@@ -6152,7 +6199,7 @@ static int _utOpenFile(const CHAR *ptrFilePath, UTFILE *ptr_utFile, unsigned lon
         return iReturn;                                                  // return with code
     }
 #if defined UTFAT_EXPERT_FUNCTIONS
-    if (ulAccessMode & UTFAT_DISPLAY_INFO) {
+    if ((ulAccessMode & UTFAT_DISPLAY_INFO) != 0) {
         openBlock.usDirFlags |= UTDIR_DIR_AS_FILE;                       // handle directories as files
     }
 #endif
@@ -6162,7 +6209,7 @@ static int _utOpenFile(const CHAR *ptrFilePath, UTFILE *ptr_utFile, unsigned lon
         uMemcpy(&ptr_utFile->private_disk_location, &ptr_utFile->ptr_utDirObject->public_disk_location, sizeof(ptr_utFile->private_disk_location)); // copy the referenced directory details
         uMemcpy(&ptr_utFile->private_file_location, &ptr_utFile->ptr_utDirObject->public_file_location, sizeof(ptr_utFile->private_file_location)); // copy the referenced file start details
         uMemcpy(&ptr_utFile->public_file_location, &ptr_utFile->ptr_utDirObject->public_file_location, sizeof(ptr_utFile->public_file_location)); // copy the referenced file start details
-        if (ptr_utFile->ptr_utDirObject->ptrEntryStructure->DIR_Attr & DIR_ATTR_READ_ONLY) { // {10}
+        if ((ptr_utFile->ptr_utDirObject->ptrEntryStructure->DIR_Attr & DIR_ATTR_READ_ONLY) != 0) { // {10}
             ulAccessMode &= ~(UTFAT_OPEN_FOR_DELETE | UTFAT_OPEN_FOR_WRITE); // the file is read-only so remove possible delete and write modes
         }
         ptr_utFile->ulFileMode = ulAccessMode;
@@ -6178,18 +6225,18 @@ static int _utOpenFile(const CHAR *ptrFilePath, UTFILE *ptr_utFile, unsigned lon
         ptr_utFile->ucLFN_entries = openBlock.ucLFN_entries;
 #endif
 #if defined UTFAT_WRITE
-        if (ulAccessMode & UTFAT_TRUNCATE) {                             // the file is to be overwritten so delete its content
+        if ((ulAccessMode & UTFAT_TRUNCATE) != 0) {                      // the file is to be overwritten so delete its content
             fnDeleteFileContent(ptr_utFile, &utDisks[ptr_utFile->ucDrive], REUSE_CLUSTERS); // delete the content and set the file length to zero
             ptr_utFile->ulFileSize = 0;
         }
-        else if (UTFAT_APPEND & ulAccessMode) {
+        else if ((UTFAT_APPEND & ulAccessMode) != 0) {
             if ((iReturn = utSeek(ptr_utFile, 0, UTFAT_SEEK_END)) != UTFAT_SUCCESS) { // seek to the end of the file so that writes cause append
                 return iReturn;
             }
         }
 #endif
 #if defined UTFAT_EXPERT_FUNCTIONS
-        if (ulAccessMode & UTFAT_DISPLAY_INFO) {
+        if ((ulAccessMode & UTFAT_DISPLAY_INFO) != 0) {
             fnDisplayFileInfo(1, ptrFilePath, ptr_utFile, &openBlock);
         }
 #endif
@@ -6214,7 +6261,7 @@ static int _utOpenFile(const CHAR *ptrFilePath, UTFILE *ptr_utFile, unsigned lon
         ptr_utFile->ucLFN_entries = openBlock.ucLFN_entries;
 #endif
 #if defined UTFAT_EXPERT_FUNCTIONS
-        if (ulAccessMode & UTFAT_DISPLAY_INFO) {
+        if ((ulAccessMode & UTFAT_DISPLAY_INFO) != 0) {
             fnDisplayFileInfo(0, ptrFilePath, ptr_utFile, &openBlock);
         }
 #endif
@@ -6308,7 +6355,7 @@ extern int utRenameFile(const CHAR *ptrFilePath, UTFILE *ptr_utFile)
     DISK_LOCATION file_location;
     OPEN_FILE_BLOCK openBlock;
 
-    if (ptr_utDisk->usDiskFlags & WRITE_PROTECTED_SD_CARD) {
+    if ((ptr_utDisk->usDiskFlags & WRITE_PROTECTED_SD_CARD) != 0) {
         return UTFAT_DISK_WRITE_PROTECTED;                               // can't rename anything on a write protected disk
     }
     if ((ptr_utFile->ulFileMode & (UTFAT_OPEN_FOR_RENAME | UTFAT_OPEN_FOR_DELETE)) == 0) { // if the file is neither open for rename or write don't allow a rename
@@ -7299,7 +7346,11 @@ static void fnPrepareDetectInterrupt(void)
     interrupt_setup.int_port = SDCARD_DETECT_PORT;                       // the port used
     interrupt_setup.int_port_bits = SDCARD_DETECT_PIN;                   // the input connected
     interrupt_setup.int_priority = PRIORITY_SDCARD_DETECT_PORT_INT;      // port interrupt priority
+        #if defined SDCARD_DETECT_POLARITY_POSITIVE
+    interrupt_setup.int_port_sense = (IRQ_BOTH_EDGES | PULLDOWN_ON);     // interrupt on both edges
+        #else
     interrupt_setup.int_port_sense = (IRQ_BOTH_EDGES | PULLUP_ON);       // interrupt on both edges
+        #endif
     #elif defined _M5223X                                                // {55} Coldfire V2
     interrupt_setup.int_port_bit = SDCARD_DETECT_PIN;                    // the IRQ input connected
     interrupt_setup.int_priority = PRIORITY_SDCARD_DETECT_PORT_INT;      // port interrupt priority

@@ -46,7 +46,7 @@ static __interrupt void _LPTMR_single(void)
             LPTMR_SETUP *lptmr_setup = (LPTMR_SETUP *)ptrSettings;
             POWER_UP(5, SIM_SCGC5_LPTIMER);                              // ensure that the timer can be accessed
             LPTMR0_CSR = 0;                                              // reset the timer and ensure no pending interrupts
-            if (lptmr_setup->mode & LPTMR_STOP) {
+            if ((lptmr_setup->mode & LPTMR_STOP) != 0) {
                 POWER_DOWN(5, SIM_SCGC5_LPTIMER);
                 return;
             }
@@ -69,7 +69,7 @@ static __interrupt void _LPTMR_single(void)
             #endif
         #endif
             if ((LPTMR_interrupt_handler = lptmr_setup->int_handler) != 0) { // enter the user's interrupt handler
-                if (lptmr_setup->mode & LPTMR_PERIODIC) {                // periodic mode
+                if ((lptmr_setup->mode & LPTMR_PERIODIC) != 0) {         // periodic mode
                     fnEnterInterrupt(irq_LPT_ID, lptmr_setup->int_priority, (void (*)(void))_LPTMR_periodic); // enter interrupt handler
                 }
                 else {                                                   // single-shot mode
@@ -78,10 +78,10 @@ static __interrupt void _LPTMR_single(void)
                 LPTMR0_CSR |= LPTMR_CSR_TIE;                             // enable timer interrupt
             }
             LPTMR0_CMR = lptmr_setup->count_delay;                       // set the match value
-            if (lptmr_setup->mode & LPTMR_TRIGGER_ADC0_A) {              // if the LPTMR is to trigger ADC 0 A conversion
+            if ((lptmr_setup->mode & LPTMR_TRIGGER_ADC0_A) != 0) {       // if the LPTMR is to trigger ADC 0 A conversion
                 SIM_SOPT7 = (SIM_SOPT7_ADC0TRGSEL_LPTMR0 | SIM_SOPT7_ADC0PRETRGSEL_A | SIM_SOPT7_ADC0ALTTRGEN);
             }
-            else if (lptmr_setup->mode & LPTMR_TRIGGER_ADC0_B) {         // if the LPTMR is to trigger ADC 0 B conversion
+            else if ((lptmr_setup->mode & LPTMR_TRIGGER_ADC0_B) != 0) {  // if the LPTMR is to trigger ADC 0 B conversion
                 SIM_SOPT7 = (SIM_SOPT7_ADC0TRGSEL_LPTMR0 | SIM_SOPT7_ADC0PRETRGSEL_B | SIM_SOPT7_ADC0ALTTRGEN);
             }
             LPTMR0_CSR |= LPTMR_CSR_TEN;                                 // enable the timer

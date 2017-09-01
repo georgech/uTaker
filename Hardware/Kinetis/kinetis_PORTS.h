@@ -19,6 +19,7 @@
     11.12.2015 Add port F                                                {2}
     11.12.2015 Add DMA trigger option                                    {3}
     11.12.2015 Add keep peripheral setting option                        {4}
+    31.07.2017 Add IRQ_DISABLE_INT support                               {5}
 
 */
 
@@ -37,34 +38,34 @@ extern void fnConnectGPIO(int iPortRef, unsigned long ulPortBits, unsigned long 
         *ptrPullup &= ~ulPortBits;
     }
     if (iPortRef == 0) {                                                 // KE ports A, B, C and D
-        if (ulPortBits & KE_PORTB_BIT4) {
+        if ((ulPortBits & KE_PORTB_BIT4) != 0) {
             ulHighDrive |= 0x01;
         }
-        if (ulPortBits & KE_PORTB_BIT5) {
+        if ((ulPortBits & KE_PORTB_BIT5) != 0) {
             ulHighDrive |= 0x02;
         }
-        if (ulPortBits & KE_PORTD_BIT0) {
+        if ((ulPortBits & KE_PORTD_BIT0) != 0) {
             ulHighDrive |= 0x04;
         }
-        if (ulPortBits & KE_PORTD_BIT1) {
+        if ((ulPortBits & KE_PORTD_BIT1) != 0) {
             ulHighDrive |= 0x08;
         }
     }
     else {                                                               // KE ports E, F, G and H
-        if (ulPortBits & KE_PORTE_BIT0) {
+        if ((ulPortBits & KE_PORTE_BIT0) != 0) {
             ulHighDrive |= 0x10;
         }
-        if (ulPortBits & KE_PORTE_BIT1) {
+        if ((ulPortBits & KE_PORTE_BIT1) != 0) {
             ulHighDrive |= 0x20;
         }
-        if (ulPortBits & KE_PORTH_BIT0) {
+        if ((ulPortBits & KE_PORTH_BIT0) != 0) {
             ulHighDrive |= 0x40;
         }
-        if (ulPortBits & KE_PORTH_BIT1) {
+        if ((ulPortBits & KE_PORTH_BIT1) != 0) {
             ulHighDrive |= 0x80;
         }
     }
-    if (ulCharacteristics & PORT_DSE_HIGH) {                             // if high drive strength is requested filter the pins that support it and set the approriate control bit(s)
+    if ((ulCharacteristics & PORT_DSE_HIGH) != 0) {                      // if high drive strength is requested filter the pins that support it and set the approriate control bit(s)
         PORT_HDRVE |= ulHighDrive;
     }
     else {
@@ -87,7 +88,7 @@ extern void fnConnectGPIO(int iPortRef, unsigned long ulPortBits, unsigned long 
         ulMask = (PORT_MUX_MASK | PORT_DSE_HIGH | PORT_ODE | PORT_PFE | PORT_SRE_SLOW | PORT_PS_UP_ENABLE);
     }
     while (ulPortBits != 0) {                                            // for each specified pin
-        if (ulPortBits & ulBit) {
+        if ((ulPortBits & ulBit) != 0) {
             *ptrPCR = ((*ptrPCR & ~ulMask) | ulCharacteristics);         // {115} set the GPIO characteristics for each port pin
             ulPortBits &= ~(ulBit);                                      // pin has been set
         }
@@ -122,7 +123,7 @@ static void (*gpio_handlers_A[PORT_WIDTH])(void) = {0};                  // a ha
     #if !defined NO_PORT_INTERRUPTS_PORTB && (defined irq_PORTB_ID || defined irq_PORTBCD_E_ID) // {1} if port B support has not been removed
 static void (*gpio_handlers_B[PORT_WIDTH])(void) = {0};                  // a handler for each possible port B pin
     #endif
-    #if (PORTS_AVAILABLE > 2) && !defined NO_PORT_INTERRUPTS_PORTC       // if port C support has not been removed
+    #if (PORTS_AVAILABLE > 2) && (defined irq_PORTC_ID || defined irq_PORTC_D_ID || defined irq_PORTBCD_E_ID) && !defined NO_PORT_INTERRUPTS_PORTC  // if port C support has not been removed
 static void (*gpio_handlers_C[PORT_WIDTH])(void) = {0};                  // a handler for each possible port C pin
     #endif
     #if (PORTS_AVAILABLE > 3) && !defined NO_PORT_INTERRUPTS_PORTD       // if port D support has not been removed
@@ -229,7 +230,7 @@ static __interrupt void _portBCD_E_isr(void)                             // {1}
         ulPortBit = 0x00000001;
         iInterrupt = 0;
         while (ulSources != 0) {
-            if (ulSources & ulPortBit) {                                 // pending interrupt detected on this input
+            if ((ulSources & ulPortBit) != 0) {                          // pending interrupt detected on this input
                 register unsigned long ulInterruptType = ((*(unsigned long *)(PORT3_BLOCK + (iInterrupt * sizeof(unsigned long)))) & PORT_IRQC_INT_MASK);
                 uDisable_Interrupt();                                    // ensure interrupts remain blocked when user callback operates
                     gpio_handlers_D[iInterrupt]();                       // call the application handler (this is expected to clear level sensitive input sources)
@@ -439,7 +440,7 @@ static __interrupt void _port_E_isr(void)
         ulPortBit = 0x00000001;
         iInterrupt = 0;
         while (ulSources != 0) {
-            if (ulSources & ulPortBit) {                                 // pending interrupt detected on this input
+            if ((ulSources & ulPortBit) != 0) {                          // pending interrupt detected on this input
                 register unsigned long ulInterruptType = ((*(unsigned long *)(PORT4_BLOCK + (iInterrupt * sizeof(unsigned long)))) & PORT_IRQC_INT_MASK);
                 uDisable_Interrupt();                                    // ensure interrupts remain blocked when user callback operates
                     gpio_handlers_E[iInterrupt]();                       // call the application handler (this is expected to clear level sensitive input sources)
@@ -539,7 +540,7 @@ static void fnEnterPortInterruptHandler(INTERRUPT_SETUP *port_interrupt, unsigne
                 }
                 break;
     #endif
-    #if (PORTS_AVAILABLE > 2) && (defined irq_PORTC_ID || defined irq_PORTC_D_ID || defined irq_PORTBCD_E_ID) &&  !defined NO_PORT_INTERRUPTS_PORTC // if port C support has not been removed
+    #if (PORTS_AVAILABLE > 2) && (defined irq_PORTC_ID || defined irq_PORTC_D_ID || defined irq_PORTBCD_E_ID) && !defined NO_PORT_INTERRUPTS_PORTC // if port C support has not been removed
             case PORTC:
                 gpio_handlers_C[port_bit] = port_interrupt->int_handler; // {26} enter the application handler
                 if (gpio_handlers_C[port_bit] != 0) {
@@ -697,31 +698,33 @@ static void fnEnterPortInterruptHandler(INTERRUPT_SETUP *port_interrupt, unsigne
         #endif
     #else                                                                // else use port control interrupt module
             unsigned long ulCharacteristics = 0;                         // default is to disable interrupts
-            if ((port_interrupt->int_port_sense & IRQ_LOW_LEVEL) != 0) {
-                ulCharacteristics = PORT_IRQC_LOW_LEVEL;
-            }
-            else if ((port_interrupt->int_port_sense & IRQ_HIGH_LEVEL) != 0) {
-                ulCharacteristics = PORT_IRQC_HIGH_LEVEL;
-            }
-            else if ((port_interrupt->int_port_sense & IRQ_RISING_EDGE) != 0) {
-                if ((port_interrupt->int_port_sense & IRQ_FALLING_EDGE) != 0) {
-                    ulCharacteristics = PORT_IRQC_BOTH;
+            if ((port_interrupt->int_port_sense & IRQ_DISABLE_INT) == 0) { // {5} if the interrupt is not being disabled
+                if ((port_interrupt->int_port_sense & IRQ_LOW_LEVEL) != 0) {
+                    ulCharacteristics = PORT_IRQC_LOW_LEVEL;
                 }
-                else {
-                    ulCharacteristics = PORT_IRQC_RISING;
+                else if ((port_interrupt->int_port_sense & IRQ_HIGH_LEVEL) != 0) {
+                    ulCharacteristics = PORT_IRQC_HIGH_LEVEL;
                 }
-            }
-            else if ((port_interrupt->int_port_sense & IRQ_FALLING_EDGE) != 0) {
-                ulCharacteristics = PORT_IRQC_FALLING;
+                else if ((port_interrupt->int_port_sense & IRQ_RISING_EDGE) != 0) {
+                    if ((port_interrupt->int_port_sense & IRQ_FALLING_EDGE) != 0) {
+                        ulCharacteristics = PORT_IRQC_BOTH;
+                    }
+                    else {
+                        ulCharacteristics = PORT_IRQC_RISING;
+                    }
+                }
+                else if ((port_interrupt->int_port_sense & IRQ_FALLING_EDGE) != 0) {
+                    ulCharacteristics = PORT_IRQC_FALLING;
+                }
+                if ((port_interrupt->int_port_sense & PORT_DMA_MODE) != 0) { // {3} if DMA is required rather than interrupt
+                    ulCharacteristics &= ~(PORT_IRQC_LOW_LEVEL);         // DMA transfer rather that an interrupt
+                }
             }
             if ((port_interrupt->int_port_sense & PULLUP_ON) != 0) {
-                ulCharacteristics |= (PORT_PS_UP_ENABLE);
+                ulCharacteristics |= (PORT_PS_UP_ENABLE);                // enable pull-up resistor on the input
             }
             else if ((port_interrupt->int_port_sense & PULLDOWN_ON) != 0) {
-                ulCharacteristics |= (PORT_PS_DOWN_ENABLE);
-            }
-            if ((port_interrupt->int_port_sense & PORT_DMA_MODE) != 0) { // {3} if DMA is required rather than interrupt
-                ulCharacteristics &= ~(PORT_IRQC_LOW_LEVEL);             // DMA transfer rather that an interrupt
+                ulCharacteristics |= (PORT_PS_DOWN_ENABLE);              // enable pull-down resistor on the input
             }
             fnEnterPortInterruptHandler(port_interrupt, ulCharacteristics); // configure the interrupt and port bits according to the interrupt requirements
     #endif

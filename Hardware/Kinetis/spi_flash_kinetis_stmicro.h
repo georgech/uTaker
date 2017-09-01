@@ -17,6 +17,7 @@
     This file contains SPI FLASH specific code for all chips that are supported.
     It is declared as a header so that projects do not need to specify that it is not to be compiled.
     Its goal is to improve overall readability of the hardware interface.
+    19.08.2017 Correct chip select control of multiple SPI devices       {1}
 
 */
 
@@ -24,6 +25,7 @@
 
 #if defined _SPI_DEFINES
     #if defined SPI_FLASH_MULTIPLE_CHIPS
+        #define __EXTENDED_CS     iChipSelect,                           // {1}
         static unsigned char fnCheckSTM25Pxxx(int iChipSelect);
         static const STORAGE_AREA_ENTRY spi_flash_storage = {
             (void *)&default_flash,                                      // link to internal flash
@@ -33,6 +35,7 @@
             SPI_FLASH_DEVICE_COUNT                                       // multiple devices
         };
     #else
+        #define __EXTENDED_CS                                            // {1}
         static unsigned char fnCheckSTM25Pxxx(void);
         static const STORAGE_AREA_ENTRY spi_flash_storage = {
             (void *)&default_flash,                                      // link to internal flash
@@ -63,9 +66,7 @@
             ucSPI_FLASH_Type[i] = fnCheckSTM25Pxxx(i);
         }
         #endif
-        #if !defined BOOT_LOADER                                         // the boot loader doesn't use storage lists
         UserStorageListPtr = (STORAGE_AREA_ENTRY *)&spi_flash_storage;   // insert spi flash as storage medium
-        #endif
     }
 #endif
 
@@ -134,7 +135,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         volatile unsigned char ucStatus;
         SPI_FLASH_Danger[iChipSelect] = 0;                               // device will no longer be busy after continuing
         do {
-            fnSPI_command(READ_STATUS_REGISTER, 0, _EXTENDED_CS &ucStatus, 1); // read busy status register 
+            fnSPI_command(READ_STATUS_REGISTER, 0, __EXTENDED_CS &ucStatus, 1); // read busy status register 
         } while ((ucStatus & STATUS_BUSY) != 0);                         // until no longer busy
     }
 
@@ -331,7 +332,7 @@ static unsigned char fnCheckSTM25Pxxx(void)
     fnDelayLoop(15000);                                                  // start up delay to ensure SPI FLASH ready
 		#endif
 
-    fnSPI_command(READ_MANUFACTURER_ID, 0, _EXTENDED_CS ucID, sizeof(ucID));
+    fnSPI_command(READ_MANUFACTURER_ID, 0, __EXTENDED_CS ucID, sizeof(ucID));
     if (ucID[0] == MANUFACTURER_ID_ST) {
         switch (ucID[2]) {
         case (DEVICE_ID_1_DATA_ST_FLASH_512K):                           // 512kBit / 64kByte

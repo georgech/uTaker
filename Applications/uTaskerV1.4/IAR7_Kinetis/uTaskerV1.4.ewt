@@ -3471,6 +3471,54 @@
     </settings>
   </configuration>
   <group>
+    <name>FreeRTOS</name>
+    <group>
+      <name>portableM0</name>
+      <file>
+        <name>$PROJ_DIR$\..\..\..\FreeRTOS\Source\portable\IAR\ARM_CM0\port.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\..\FreeRTOS\Source\portable\IAR\ARM_CM0\portasm.s</name>
+        <configuration>
+          <name>Flash</name>
+        </configuration>
+      </file>
+    </group>
+    <group>
+      <name>portableM4F</name>
+      <file>
+        <name>$PROJ_DIR$\..\..\..\FreeRTOS\Source\portable\IAR\ARM_CM4F\port.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\..\FreeRTOS\Source\portable\IAR\ARM_CM4F\portasm.s</name>
+        <configuration>
+          <name>Flash</name>
+        </configuration>
+      </file>
+    </group>
+    <file>
+      <name>$PROJ_DIR$\..\..\..\FreeRTOS\Source\croutine.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\..\FreeRTOS\Source\event_groups.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\..\FreeRTOS\Source\list.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\..\FreeRTOS\Source\queue.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\..\FreeRTOS\Source\tasks.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\..\FreeRTOS\Source\timers.c</name>
+    </file>
+    <configuration>
+      <name>Flash</name>
+    </configuration>
+  </group>
+  <group>
     <name>Hardware</name>
     <file>
       <name>$PROJ_DIR$\..\..\..\Hardware\Kinetis\kinetis.c</name>
@@ -3685,6 +3733,12 @@
   </file>
   <file>
     <name>$PROJ_DIR$\..\debug.c</name>
+  </file>
+  <file>
+    <name>$PROJ_DIR$\..\FreeRTOSapplication.c</name>
+    <configuration>
+      <name>Flash</name>
+    </configuration>
   </file>
   <file>
     <name>$PROJ_DIR$\..\KeyScan.c</name>

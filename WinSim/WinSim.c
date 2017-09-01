@@ -87,7 +87,10 @@
     24.12.2016 Add I2C data injection                                    {71}
     02.02.2017 Adapt for us tick resolution
     13.02.2017 Get endpoint size of Host from endpoint 0 (kinetis)       {72}
- 
+    28.02.2017 Increase UARTs from 6 to 8                                {73}
+    18.05.2017 Add fnLogRx()                                             {74}
+    19.08.2017 Correct W25Q writes to multiple SPI chips                 {75}
+  
 */   
 #include <windows.h>
 #include "conio.h"
@@ -152,12 +155,18 @@ static unsigned long  ulChannel4Speed;                                   // {56}
 static UART_MODE_CONFIG Channel4Config;
 static unsigned long  ulChannel5Speed;
 static UART_MODE_CONFIG Channel5Config;
+static unsigned long  ulChannel6Speed;                                   // {73}
+static UART_MODE_CONFIG Channel6Config;
+static unsigned long  ulChannel7Speed;
+static UART_MODE_CONFIG Channel7Config;
 static int iChannel0Speed = 0;                                           // {10}
 static int iChannel1Speed = 0;
 static int iChannel2Speed = 0;
 static int iChannel3Speed = 0;                                           // {12}
 static int iChannel4Speed = 0;                                           // {56}
 static int iChannel5Speed = 0;
+static int iChannel6Speed = 0;                                           // {73}
+static int iChannel7Speed = 0;
                                                  
 static int iI2C_Channel0Speed = 0;                                       // {9}
 static int iI2C_Channel1Speed = 0;
@@ -206,6 +215,10 @@ static unsigned long  ulCom4Len = 0;                                     // {56}
 static unsigned char  ucCom4Data[UART_BUFFER_LENGTH];
 static unsigned long  ulCom5Len = 0;                                     // {56}
 static unsigned char  ucCom5Data[UART_BUFFER_LENGTH];
+static unsigned long  ulCom6Len = 0;                                     // {73}
+static unsigned char  ucCom6Data[UART_BUFFER_LENGTH];
+static unsigned long  ulCom7Len = 0;
+static unsigned char  ucCom7Data[UART_BUFFER_LENGTH];
 
 #if NUMBER_EXTERNAL_SERIAL > 0                                           // {49}
     static unsigned long  ulExtCom0Len = 0;
@@ -221,6 +234,9 @@ static unsigned char  ucCom5Data[UART_BUFFER_LENGTH];
 static int  fnSimulateActions(char *argv[]);
 static void fnCloseAll(void);
 extern void RealTimeInterrupt(void);
+#if defined RUN_IN_FREE_RTOS
+    extern void fnFreeRTOS_main(void);
+#endif
 
 #if defined ETH_INTERFACE                                                // {13}
     #if LOSE_ACKS > 0
@@ -264,7 +280,14 @@ extern int main(int argc, char *argv[])
         fnSetProjectDetails(++argv);
 	    fnInitHW();                                                      // initialise hardware  
         fnSimPorts();                                                    // ensure simulator is aware of any hardware port initialisations
-#if defined MULTISTART
+#if defined RUN_IN_FREE_RTOS
+        {
+            DWORD ThreadIDRead;                                          // start the FreeRTOS main loop in a thread since it never returns
+            fnInitialiseHeap(ctOurHeap, fnGetHeapStart());               // create heap
+            HANDLE hThreadRead = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)fnFreeRTOS_main, (LPVOID)0, 0, (LPDWORD)&ThreadIDRead);
+        }
+#else
+    #if defined MULTISTART
         if (ptMultiStartTable == 0) {                                    // normal startup
 _abort_multi:
             fnInitialiseHeap(ctOurHeap, fnGetHeapStart());               // create standard heap
@@ -275,11 +298,11 @@ _abort_multi:
         }
         else {                                                           // start using information from the application table
             if (ptMultiStartTable->new_hw_init) {
-    #if defined DYNAMIC_MULTISTART
+        #if defined DYNAMIC_MULTISTART
                 pucHeapStart = ptMultiStartTable->new_hw_init(JumpTable, &ptMultiStartTable, OurConfigNr);
-    #else
+        #else
                 pucHeapStart = ptMultiStartTable->new_hw_init(JumpTable);
-    #endif
+        #endif
                 if (pucHeapStart == 0) {
                     goto _abort_multi;                                   // this can happen if the jump table version doesn't match - prefer to stay in boot mode than start an application which will crash
                 }
@@ -291,11 +314,12 @@ _abort_multi:
                                                                          // re-start the operating system
             uTaskerStart((UTASKTABLEINIT *)ptMultiStartTable->ptTaskTable, ptMultiStartTable->ptNodesTable, PHYSICAL_QUEUES);
         }
-#else
+    #else
         fnInitialiseHeap(ctOurHeap, fnGetHeapStart());                   // create heap
 	    uTaskerStart((UTASKTABLEINIT *)ctTaskTable, ctNodes, PHYSICAL_QUEUES); // start the operating system
-#endif
+    #endif
         iRun = 5;
+#endif
         iInitialised = 1;
         break;
 
@@ -318,10 +342,25 @@ _abort_multi:
 #endif
 
     case TICK_CALL:
+
+
+//EnterCriticalSection(ptrcs); // protect from task switching
+
         if (iReset = fnSimTimers()) {                                    // simulate timers and check for watchdog timer
             iOpSysActive = 0;                                            // {36}
+
+
+//LeaveCriticalSection(ptrcs);
+
+
+
             return iReset;                                               // reset commanded or Watchdog fired
         }
+
+//LeaveCriticalSection(ptrcs);
+
+
+
         RealTimeInterrupt();                                             // simulate a timer tick
         iRun = 10;                                                       // allow the scheduler to run a few times to handle inter-task events
         iSimulate = 1;                                                   // flag that simulation flags should be handled
@@ -413,7 +452,13 @@ _abort_multi:
         fnSimulateModemChange(4, *(unsigned long *)argv[0], *(unsigned long *)argv[1]);
         break;
     case MODEM_COM_5:                                                    // {56}
-        fnSimulateModemChange(4, *(unsigned long *)argv[0], *(unsigned long *)argv[1]);
+        fnSimulateModemChange(5, *(unsigned long *)argv[0], *(unsigned long *)argv[1]);
+        break;
+    case MODEM_COM_6:                                                    // {73}
+        fnSimulateModemChange(6, *(unsigned long *)argv[0], *(unsigned long *)argv[1]);
+        break;
+    case MODEM_COM_7:                                                    // {73}
+        fnSimulateModemChange(7, *(unsigned long *)argv[0], *(unsigned long *)argv[1]);
         break;
     #if NUMBER_EXTERNAL_SERIAL > 0                                       //  {49}
     case MODEM_EXT_COM_0:
@@ -755,10 +800,12 @@ _abort_multi:
     if (iRun != 0) {
         do {
             if (iWinPcapSending == 0) {
-    #if defined MULTISTART
+    #if !defined RUN_IN_FREE_RTOS
+        #if defined MULTISTART
                 ptrNewstart =
-    #endif
+        #endif
                 uTaskerSchedule();                                       // let the tasker run a few more times to allow internal message passing to be processed and free running tasks to run a while
+    #endif
                 fnSimPorts();
     #if defined MULTISTART
                 if (ptrNewstart != 0) {
@@ -1073,51 +1120,55 @@ static int fnSimulateActions(char *argv[])
     int iReturn = 0;
     unsigned char *ucDo;
     char *argv2[13];
-    int iThroughPut[13];
+    int iThroughPut[16];
 
-    iThroughPut[0] = (iChannel0Speed + 1);                                   // start with internal UARTs 0..5
-    iThroughPut[1] = (iChannel1Speed + 1);
-    iThroughPut[2] = (iChannel2Speed + 1);
-    iThroughPut[3] = (iChannel3Speed + 1);
-    iThroughPut[4] = (iChannel4Speed + 1);
-    iThroughPut[5] = (iChannel5Speed + 1);
+    iThroughPut[THROUGHPUT_UART0] = (iChannel0Speed + 1);                // start with internal UARTs 0..5
+    iThroughPut[THROUGHPUT_UART1] = (iChannel1Speed + 1);
+    iThroughPut[THROUGHPUT_UART2] = (iChannel2Speed + 1);
+    iThroughPut[THROUGHPUT_UART3] = (iChannel3Speed + 1);
+    iThroughPut[THROUGHPUT_UART4] = (iChannel4Speed + 1);
+    iThroughPut[THROUGHPUT_UART5] = (iChannel5Speed + 1);
+    iThroughPut[THROUGHPUT_UART6] = (iChannel6Speed + 1);                // {73}
+    iThroughPut[THROUGHPUT_UART7] = (iChannel7Speed + 1);
 
-    iThroughPut[6] = iI2C_Channel0Speed;                                 // {9} - followed by 3 I2C interfaces
-    iThroughPut[7] = iI2C_Channel1Speed;
-    iThroughPut[8] = iI2C_Channel2Speed;                                 // {28}
-    iThroughPut[9] = iI2C_Channel3Speed;
+    iThroughPut[THROUGHPUT_I2C0] = iI2C_Channel0Speed;                   // {9} - followed by 4 I2C interfaces
+    iThroughPut[THROUGHPUT_I2C1] = iI2C_Channel1Speed;
+    iThroughPut[THROUGHPUT_I2C2] = iI2C_Channel2Speed;                   // {28}
+    iThroughPut[THROUGHPUT_I2C3] = iI2C_Channel3Speed;
 
 #if NUMBER_EXTERNAL_SERIAL > 0                                           // {49} - then 4 external UARTs
-    iThroughPut[10] = iExtChannel0Speed+1;
-    iThroughPut[11] = iExtChannel1Speed+1;
-    iThroughPut[12] = iExtChannel2Speed+1;
-    iThroughPut[13] = iExtChannel3Speed+1;
+    iThroughPut[THROUGHPUT_EXT_UART0] = iExtChannel0Speed+1;
+    iThroughPut[THROUGHPUT_EXT_UART1] = iExtChannel1Speed+1;
+    iThroughPut[THROUGHPUT_EXT_UART2] = iExtChannel2Speed+1;
+    iThroughPut[THROUGHPUT_EXT_UART3] = iExtChannel3Speed+1;
 #endif
                                                                          // limit the number of serial tx interrupts to that which is possible in the TICK period
-    argv2[0] = (char *)&iThroughPut[0];                                  // {10}
-    argv2[1] = (char *)&iThroughPut[1];
-    argv2[2] = (char *)&iThroughPut[2];
-    argv2[3] = (char *)&iThroughPut[3];
-    argv2[4] = (char *)&iThroughPut[4];
-    argv2[5] = (char *)&iThroughPut[5];
-    argv2[6] = (char *)&iThroughPut[6];                                  // {28}
-    argv2[7] = (char *)&iThroughPut[7];
-    argv2[8] = (char *)&iThroughPut[8];
-    argv2[9] = (char *)&iThroughPut[9];
+    argv2[THROUGHPUT_UART0] = (char *)&iThroughPut[THROUGHPUT_UART0];    // {10}
+    argv2[THROUGHPUT_UART1] = (char *)&iThroughPut[THROUGHPUT_UART1];
+    argv2[THROUGHPUT_UART2] = (char *)&iThroughPut[THROUGHPUT_UART2];
+    argv2[THROUGHPUT_UART3] = (char *)&iThroughPut[THROUGHPUT_UART3];
+    argv2[THROUGHPUT_UART4] = (char *)&iThroughPut[THROUGHPUT_UART4];
+    argv2[THROUGHPUT_UART5] = (char *)&iThroughPut[THROUGHPUT_UART5];
+    argv2[THROUGHPUT_UART6] = (char *)&iThroughPut[THROUGHPUT_UART6];
+    argv2[THROUGHPUT_UART7] = (char *)&iThroughPut[THROUGHPUT_UART7];
+    argv2[THROUGHPUT_I2C0] = (char *)&iThroughPut[THROUGHPUT_I2C0];      // {28}
+    argv2[THROUGHPUT_I2C1] = (char *)&iThroughPut[THROUGHPUT_I2C1];
+    argv2[THROUGHPUT_I2C2] = (char *)&iThroughPut[THROUGHPUT_I2C2];
+    argv2[THROUGHPUT_I2C3] = (char *)&iThroughPut[THROUGHPUT_I2C3];
 #if NUMBER_EXTERNAL_SERIAL > 0                                           // {49}
-    argv2[10] = (char *)&iThroughPut[9];
-    argv2[11] = (char *)&iThroughPut[10];
-    argv2[12] = (char *)&iThroughPut[11];
-    argv2[13] = (char *)&iThroughPut[12];
+    argv2[THROUGHPUT_EXT_UART0] = (char *)&iThroughPut[THROUGHPUT_EXT_UART0];
+    argv2[THROUGHPUT_EXT_UART1] = (char *)&iThroughPut[THROUGHPUT_EXT_UART1];
+    argv2[THROUGHPUT_EXT_UART2] = (char *)&iThroughPut[THROUGHPUT_EXT_UART2];
+    argv2[THROUGHPUT_EXT_UART3] = (char *)&iThroughPut[THROUGHPUT_EXT_UART3];
 #endif
 
-    while (iInts & ~iMasks) {                                            // process any interrupts which we want to simulate here
+    while ((iInts & ~iMasks) != 0) {                                     // process any interrupts which we want to simulate here
         ulActions |= fnSimInts(argv2);
     }
     iMasks = 0;
 
 #if defined SERIAL_INTERFACE || defined SSC_INTERFACE                    // {47}
-    while (iDMA & ~iMasks) {                                             // {11}
+    while ((iDMA & ~iMasks) != 0) {                                      // {11} process DMA transfers we want to simulate here
         ulActions |= fnSimDMA(argv2);
     }
     iMasks = 0;
@@ -1134,7 +1185,7 @@ static int fnSimulateActions(char *argv[])
             ucDo = fnInsertValue(ucDo, Channel0Config, sizeof(Channel0Config));
             iReturn = 1;
         }
-        if (ulActions_2 & OPEN_COM_1) {
+        if ((ulActions_2 & OPEN_COM_1) != 0) {
             ucDo = fnGetNextDoPlace(argv);
             *ucDo++ = OPEN_PC_COM1;                                      // we inform that we want UART 1 COM to be opened for us
             *ucDo++ = (unsigned char)(1 + sizeof(ulChannel1Speed) + sizeof(Channel1Config)); // length of command and data
@@ -1142,7 +1193,7 @@ static int fnSimulateActions(char *argv[])
             ucDo = fnInsertValue(ucDo, Channel1Config, sizeof(Channel1Config));
             iReturn = 1;
         }
-        if (ulActions_2 & OPEN_COM_2) {
+        if ((ulActions_2 & OPEN_COM_2) != 0) {
             ucDo = fnGetNextDoPlace(argv);
             *ucDo++ = OPEN_PC_COM2;                                      // we inform that we want UART 2 COM to be opened for us
             *ucDo++ = (unsigned char)(1 + sizeof(ulChannel2Speed) + sizeof(Channel2Config)); // length of command and data
@@ -1150,7 +1201,7 @@ static int fnSimulateActions(char *argv[])
             ucDo = fnInsertValue(ucDo, Channel2Config, sizeof(Channel2Config));
             iReturn = 1;
         }
-        if (ulActions_2 & OPEN_COM_3) {                                  // {12}
+        if ((ulActions_2 & OPEN_COM_3) != 0) {                           // {12}
             ucDo = fnGetNextDoPlace(argv);
             *ucDo++ = OPEN_PC_COM3;                                      // we inform that we want UART 3 COM to be opened for us
             *ucDo++ = (unsigned char)(1 + sizeof(ulChannel3Speed) + sizeof(Channel3Config)); // length of command and data
@@ -1158,7 +1209,7 @@ static int fnSimulateActions(char *argv[])
             ucDo = fnInsertValue(ucDo, Channel3Config, sizeof(Channel3Config));
             iReturn = 1;
         }
-        if (ulActions_2 & OPEN_COM_4) {                                  // {56}
+        if ((ulActions_2 & OPEN_COM_4) != 0) {                           // {56}
             ucDo = fnGetNextDoPlace(argv);
             *ucDo++ = OPEN_PC_COM4;                                      // we inform that we want UART 4 COM to be opened for us
             *ucDo++ = (unsigned char)(1 + sizeof(ulChannel4Speed) + sizeof(Channel4Config)); // length of command and data
@@ -1166,12 +1217,28 @@ static int fnSimulateActions(char *argv[])
             ucDo = fnInsertValue(ucDo, Channel4Config, sizeof(Channel4Config));
             iReturn = 1;
         }
-        if (ulActions_2 & OPEN_COM_5) {                                  // {56}
+        if ((ulActions_2 & OPEN_COM_5) != 0) {                           // {56}
             ucDo = fnGetNextDoPlace(argv);
             *ucDo++ = OPEN_PC_COM5;                                      // we inform that we want UART 5 COM to be opened for us
             *ucDo++ = (unsigned char)(1 + sizeof(ulChannel5Speed) + sizeof(Channel5Config)); // length of command and data
             ucDo = fnInsertValue(ucDo, ulChannel5Speed, sizeof(ulChannel5Speed));
             ucDo = fnInsertValue(ucDo, Channel5Config, sizeof(Channel5Config));
+            iReturn = 1;
+        }
+        if ((ulActions_2 & OPEN_COM_6) != 0) {                           // {73}
+            ucDo = fnGetNextDoPlace(argv);
+            *ucDo++ = OPEN_PC_COM6;                                      // we inform that we want UART 6 COM to be opened for us
+            *ucDo++ = (unsigned char)(1 + sizeof(ulChannel6Speed) + sizeof(Channel6Config)); // length of command and data
+            ucDo = fnInsertValue(ucDo, ulChannel6Speed, sizeof(ulChannel6Speed));
+            ucDo = fnInsertValue(ucDo, Channel6Config, sizeof(Channel6Config));
+            iReturn = 1;
+        }
+        if ((ulActions_2 & OPEN_COM_7) != 0) {                           // {73}
+            ucDo = fnGetNextDoPlace(argv);
+            *ucDo++ = OPEN_PC_COM7;                                      // we inform that we want UART 7 COM to be opened for us
+            *ucDo++ = (unsigned char)(1 + sizeof(ulChannel7Speed) + sizeof(Channel7Config)); // length of command and data
+            ucDo = fnInsertValue(ucDo, ulChannel7Speed, sizeof(ulChannel7Speed));
+            ucDo = fnInsertValue(ucDo, Channel7Config, sizeof(Channel7Config));
             iReturn = 1;
         }
 #if NUMBER_EXTERNAL_SERIAL > 0                                           // {49}
@@ -1252,7 +1319,7 @@ static int fnSimulateActions(char *argv[])
         }
     #endif
 #endif
-        if (ulActions_2 & PORT_CHANGE) {
+        if ((ulActions_2 & PORT_CHANGE) != 0) {
             int iPorts = 0;
             ucDo = fnGetNextDoPlace(argv);
             *ucDo++ = DISPLAY_PORT_CHANGE;                               // we inform that we may want to display a port change
@@ -1275,7 +1342,7 @@ static int fnSimulateActions(char *argv[])
         ulActions_2 = 0;
     }
 
-    if (ulActions) {                                                     // we have some actions to be performed by windows
+    if (ulActions != 0) {                                                // we have some actions to be performed by windows
         if (ulActions & (ASSERT_RTS_COM_0 | NEGATE_RTS_COM_0 | ASSERT_RTS_COM_1 | NEGATE_RTS_COM_1 | ASSERT_RTS_COM_2 | NEGATE_RTS_COM_2 | ASSERT_RTS_COM_3 | NEGATE_RTS_COM_3)) { // {41} if a RTS line change
             if (ulActions & ASSERT_RTS_COM_0) {                          // {7}
                 ucDo = fnGetNextDoPlace(argv);
@@ -1342,7 +1409,7 @@ static int fnSimulateActions(char *argv[])
                 iReturn = 1;
             }
         }
-        if (ulActions & SEND_COM_0) {
+        if ((ulActions & SEND_COM_0) != 0) {
             ucDo = fnGetNextDoPlace(argv);
             *ucDo++ = SEND_PC_COM0;                                      // we inform that we want to send a message over UART 0 COM
             *ucDo++ = (unsigned char)(sizeof(ulCom0Len) + sizeof(unsigned char *) + 1);
@@ -1351,7 +1418,7 @@ static int fnSimulateActions(char *argv[])
             iReturn = 1;
             ulCom0Len = 0;
         }
-        if (ulActions & SEND_COM_1) {
+        if ((ulActions & SEND_COM_1) != 0) {
             ucDo = fnGetNextDoPlace(argv);
             *ucDo++ = SEND_PC_COM1;                                      // we inform that we want to send a message over UART 1 COM
             *ucDo++ = (unsigned char)(sizeof(ulCom1Len) + sizeof(unsigned char *) + 1);
@@ -1369,7 +1436,7 @@ static int fnSimulateActions(char *argv[])
             iReturn = 1;
             ulCom2Len = 0;
         }
-        if (ulActions & SEND_COM_3) {                                    // {12}
+        if ((ulActions & SEND_COM_3) != 0) {                             // {12}
             ucDo = fnGetNextDoPlace(argv);
             *ucDo++ = SEND_PC_COM3;                                      // we inform that we want to send a message over UART 2 COM
             *ucDo++ = (unsigned char)(sizeof(ulCom3Len) + sizeof(unsigned char *) + 1);
@@ -1378,7 +1445,7 @@ static int fnSimulateActions(char *argv[])
             iReturn = 1;
             ulCom3Len = 0;
         }
-        if (ulActions & SEND_COM_4) {                                    // {56}
+        if ((ulActions & SEND_COM_4) != 0) {                             // {56}
             ucDo = fnGetNextDoPlace(argv);
             *ucDo++ = SEND_PC_COM4;                                      // we inform that we want to send a message over UART 2 COM
             *ucDo++ = (unsigned char)(sizeof(ulCom4Len) + sizeof(unsigned char *) + 1);
@@ -1387,7 +1454,7 @@ static int fnSimulateActions(char *argv[])
             iReturn = 1;
             ulCom4Len = 0;
         }
-        if (ulActions & SEND_COM_5) {                                    // {56}
+        if ((ulActions & SEND_COM_5) != 0) {                             // {56}
             ucDo = fnGetNextDoPlace(argv);
             *ucDo++ = SEND_PC_COM5;                                      // we inform that we want to send a message over UART 2 COM
             *ucDo++ = (unsigned char)(sizeof(ulCom5Len) + sizeof(unsigned char *) + 1);
@@ -1395,6 +1462,24 @@ static int fnSimulateActions(char *argv[])
             ucDo = fnInsertValue(ucDo, (unsigned long)&ucCom5Data, sizeof(unsigned char *));
             iReturn = 1;
             ulCom5Len = 0;
+        }
+        if ((ulActions & SEND_COM_6) != 0) {                             // {73}
+            ucDo = fnGetNextDoPlace(argv);
+            *ucDo++ = SEND_PC_COM6;                                      // we inform that we want to send a message over UART 2 COM
+            *ucDo++ = (unsigned char)(sizeof(ulCom6Len) + sizeof(unsigned char *) + 1);
+            ucDo = fnInsertValue(ucDo, ulCom6Len, sizeof(ulCom6Len));
+            ucDo = fnInsertValue(ucDo, (unsigned long)&ucCom6Data, sizeof(unsigned char *));
+            iReturn = 1;
+            ulCom6Len = 0;
+        }
+        if ((ulActions & SEND_COM_7) != 0) {
+            ucDo = fnGetNextDoPlace(argv);
+            *ucDo++ = SEND_PC_COM7;                                      // we inform that we want to send a message over UART 2 COM
+            *ucDo++ = (unsigned char)(sizeof(ulCom7Len) + sizeof(unsigned char *) + 1);
+            ucDo = fnInsertValue(ucDo, ulCom7Len, sizeof(ulCom7Len));
+            ucDo = fnInsertValue(ucDo, (unsigned long)&ucCom7Data, sizeof(unsigned char *));
+            iReturn = 1;
+            ulCom7Len = 0;
         }
         if (ulActions & SET_BREAK_COM_0) {
             ucDo = fnGetNextDoPlace(argv);
@@ -1437,6 +1522,51 @@ static int fnSimulateActions(char *argv[])
     return iReturn; 
 }
 
+#if defined SERIAL_INTERFACE && defined LOG_UART_RX                      // {74}
+    #if !defined NUMBER_EXTERNAL_SERIAL
+        #define NUMBER_EXTERNAL_SERIAL 0
+    #endif
+static int iUART_Rx_File[NUMBER_SERIAL + NUMBER_EXTERNAL_SERIAL] = { 0 };
+static unsigned long ulLastRx[NUMBER_SERIAL + NUMBER_EXTERNAL_SERIAL] = { 0 };
+extern void fnLogRx(int iPort, unsigned char *ptrDebugIn, unsigned short usLen)
+{
+    CHAR rxData[(1024 * 3) + 32];
+    CHAR *ptrBuffer;
+    unsigned long ulDiffMS;
+    if (iUART_Rx_File[iPort] == 0) {
+        CHAR fileName[] = "UART0.sim";
+        fileName[4] = ('0' + iPort);
+        #if _VC80_UPGRADE<0x0600
+        iUART_Rx_File[iPort] = _open(fileName, (_O_TRUNC | _O_CREAT | _O_WRONLY), _S_IWRITE);
+        #else
+        _sopen_s(&iUART_Rx_File[iPort], fileName, (_O_TRUNC | _O_CREAT | _O_WRONLY), _SH_DENYWR, _S_IWRITE);
+        #endif
+        ulLastRx[iPort] = uTaskerSystemTick;
+    }
+    if (usLen > 1024) {
+        usLen = 1024;
+    }
+    rxData[0] = '+';
+    ulDiffMS = (uTaskerSystemTick - ulLastRx[iPort]);                    // difference in ticks since last reception
+    ulLastRx[iPort] = uTaskerSystemTick;
+    ulDiffMS *= (1000/SEC);
+    ptrBuffer = fnBufferDec(ulDiffMS, 0, &rxData[1]);
+    *ptrBuffer++ = ' ';
+    *ptrBuffer++ = 'U';
+    *ptrBuffer++ = 'A';
+    *ptrBuffer++ = 'R';
+    *ptrBuffer++ = 'T';
+    *ptrBuffer++ = '-';
+    *ptrBuffer++ = ('0' + iPort);
+    *ptrBuffer++ = ' ';
+    while (usLen-- != 0) {
+        ptrBuffer = fnBufferHex(*ptrDebugIn++, (WITH_SPACE | sizeof(unsigned char)), ptrBuffer);
+    }
+    *ptrBuffer++ = '\r';
+    *ptrBuffer++ = '\n';
+    _write(iUART_Rx_File[iPort], rxData, (ptrBuffer - rxData));
+}
+#endif
 
 static int iUART_File0 = 0;
 extern void fnLogTx0(unsigned char ucTxByte)
@@ -1595,7 +1725,7 @@ static int iUART_File5 = 0;
 extern void fnLogTx5(unsigned char ucTxByte)                             // {56}
 {
 #if defined LOG_UART5
-	if (!iUART_File5) {
+	if (iUART_File5 == 0) {
     #if _VC80_UPGRADE<0x0600
 	    iUART_File5 = _open("UART5.txt", (_O_TRUNC  | _O_CREAT | _O_WRONLY), _S_IWRITE);
     #else
@@ -1618,6 +1748,68 @@ extern void fnLogTx5(unsigned char ucTxByte)                             // {56}
     }
     else {
         _write(iUART_File5, &ucTxByte, 1);
+    }
+#endif
+}
+
+static int iUART_File6 = 0;
+extern void fnLogTx6(unsigned char ucTxByte)                             // {73}
+{
+#if defined LOG_UART6
+	if (iUART_File6 == 0) {
+    #if _VC80_UPGRADE<0x0600
+	    iUART_File6 = _open("UART6.txt", (_O_TRUNC  | _O_CREAT | _O_WRONLY), _S_IWRITE);
+    #else
+	    _sopen_s(&iUART_File6, "UART6.txt", (_O_TRUNC  | _O_CREAT | _O_WRONLY), _SH_DENYWR, _S_IWRITE);
+    #endif
+	}
+#endif
+
+    if (ulCom6Len >= UART_BUFFER_LENGTH) {
+        return;
+    }
+
+    ucCom6Data[ulCom6Len++] = ucTxByte;
+
+#if defined LOG_UART6
+    if ((((ucTxByte < 0x20) && (ucTxByte != 0x0d) && (ucTxByte != 0x0a)) || (ucTxByte > 0x7f))) {
+        signed char buf[] = "[0xXX]";
+        fnBufferHex(ucTxByte, (CODE_CAPITALS | NO_TERMINATOR| 1), &buf[3]);
+        _write(iUART_File6, buf, 6);
+    }
+    else {
+        _write(iUART_File6, &ucTxByte, 1);
+    }
+#endif
+}
+
+static int iUART_File7 = 0;
+extern void fnLogTx7(unsigned char ucTxByte)
+{
+#if defined LOG_UART7
+	if (iUART_File7 == 0) {
+    #if _VC80_UPGRADE<0x0600
+	    iUART_File7 = _open("UART7.txt", (_O_TRUNC  | _O_CREAT | _O_WRONLY), _S_IWRITE);
+    #else
+	    _sopen_s(&iUART_File7, "UART7.txt", (_O_TRUNC  | _O_CREAT | _O_WRONLY), _SH_DENYWR, _S_IWRITE);
+    #endif
+	}
+#endif
+
+    if (ulCom7Len >= UART_BUFFER_LENGTH) {
+        return;
+    }
+
+    ucCom7Data[ulCom7Len++] = ucTxByte;
+
+#if defined LOG_UART7
+    if ((((ucTxByte < 0x20) && (ucTxByte != 0x0d) && (ucTxByte != 0x0a)) || (ucTxByte > 0x7f))) {
+        signed char buf[] = "[0xXX]";
+        fnBufferHex(ucTxByte, (CODE_CAPITALS | NO_TERMINATOR| 1), &buf[3]);
+        _write(iUART_File7, buf, 6);
+    }
+    else {
+        _write(iUART_File7, &ucTxByte, 1);
     }
 #endif
 }
@@ -2154,14 +2346,14 @@ extern unsigned char fnSimAT45DBXXX(int iSimType, unsigned char ucTxByte)// {16}
 #if defined SPI_FLASH_MULTIPLE_CHIPS
     int iCntCS = 0;
     unsigned long ulDeviceOffset = 0;
-    if (SPI_CS0_PORT & CS0_LINE) {                                       // {16}
+    if ((SPI_CS0_PORT & CS0_LINE) != 0) {                                // {16}
         ucChipCommand[0] = 0;
         iState[0] = 0;
     }
     else {
         iCntCS++;
     }
-    if (SPI_CS1_PORT & CS1_LINE) {
+    if ((SPI_CS1_PORT & CS1_LINE) != 0) {
         ucChipCommand[1] = 0;
         iState[1] = 0;
     }
@@ -2172,9 +2364,9 @@ extern unsigned char fnSimAT45DBXXX(int iSimType, unsigned char ucTxByte)// {16}
     }
     #if defined QSPI_CS2_LINE || defined CS2_LINE
         #if defined QSPI_CS2_LINE
-    if (SPI_CS2_PORT & QSPI_CS2_LINE) 
+    if ((SPI_CS2_PORT & QSPI_CS2_LINE) != 0)
         #else
-    if (SPI_CS2_PORT & CS2_LINE) 
+    if ((SPI_CS2_PORT & CS2_LINE) != 0)
         #endif
     {
         ucChipCommand[2] = 0;
@@ -2188,9 +2380,9 @@ extern unsigned char fnSimAT45DBXXX(int iSimType, unsigned char ucTxByte)// {16}
     #endif
     #if defined QSPI_CS3_LINE || defined CS3_LINE
         #if defined QSPI_CS3_LINE
-    if (SPI_CS3_PORT & QSPI_CS3_LINE) 
+    if ((SPI_CS3_PORT & QSPI_CS3_LINE) != 0) 
         #else
-    if (SPI_CS3_PORT & CS3_LINE) 
+    if ((SPI_CS3_PORT & CS3_LINE) != 0) 
         #endif
     {
         ucChipCommand[3] = 0;
@@ -2203,14 +2395,14 @@ extern unsigned char fnSimAT45DBXXX(int iSimType, unsigned char ucTxByte)// {16}
     }
     #endif
     if (iCntCS > 1) {
-        *(unsigned char *)(0) = 0;                                       // 2 CS selected at same time - serious error
+        _EXCEPTION("2 CS selected at same time - serious error");
     }
     else if (iCntCS == 0) {
         return 0xff;                                                     // chip not selected, return idle
     }
 #else
     #define ulDeviceOffset 0
-    if (SPI_CS0_PORT & CS0_LINE) {                                       // {16}
+    if ((SPI_CS0_PORT & CS0_LINE) != 0) {                                // {16}
         ucChipCommand[0] = 0;
         iState[0] = 0;
         return 0xff;                                                     // chip not selected, return idle
@@ -3051,8 +3243,9 @@ static void fnActionW25Q(int iSel, unsigned long ulDeviceOffset)
 {
     if ((ucChipCommand[iSel] == 2) && (WEL[iSel] != 0) && (iState[iSel] == 4)) { // page write to be performed
         unsigned long ulAdd = (ulAccessAddress[iSel] & ~0x000000ff);     // start address of present page
-        if (fnAddressAllowed(0, ulAdd)) {                                // check whether area is protected
+        if (fnAddressAllowed(iSel, ulAdd) != 0) {                        // check whether area is not protected
             int iOffset = 0;
+            ulAdd += (iSel * SPI_DATA_FLASH_0_SIZE);                     // {75} move to device offset when multiple SPI chips are used
             while (iOffset < 256) {
                 ucW25Q[ulAdd + iOffset] &= ucProgramBuffer[iSel][iOffset]; // set bits low in complete page
                 iOffset++;
@@ -3090,14 +3283,14 @@ extern unsigned char fnSimW25Qxx(int iSimType, unsigned char ucTxByte)
         #if defined SPI_FLASH_MULTIPLE_CHIPS
     int iCntCS = 0;
     unsigned long ulDeviceOffset = 0;
-    if (SPI_CS0_PORT & CS0_LINE) {
-        fnActionSST25(0, 0);
+    if ((SPI_CS0_PORT & CS0_LINE) != 0) {
+        fnActionW25Q(0, 0);
     }
     else {
         iCntCS++;
     }
-    if (SPI_CS1_PORT & CS1_LINE) {
-        fnActionSST25(1, SPI_DATA_FLASH_0_SIZE);
+    if ((SPI_CS1_PORT & CS1_LINE) != 0) {
+        fnActionW25Q(1, SPI_DATA_FLASH_0_SIZE);
     }
     else {
         iCntCS++;
@@ -3105,8 +3298,8 @@ extern unsigned char fnSimW25Qxx(int iSimType, unsigned char ucTxByte)
         ulDeviceOffset = SPI_DATA_FLASH_0_SIZE;
     }
             #if defined QSPI_CS2_LINE || defined CS2_LINE
-    if (SPI_CS2_PORT & CS2_LINE) {
-        fnActionSST25(2, (SPI_DATA_FLASH_0_SIZE + SPI_DATA_FLASH_1_SIZE));
+    if ((SPI_CS2_PORT & CS2_LINE) != 0) {
+        fnActionW25Q(2, (SPI_DATA_FLASH_0_SIZE + SPI_DATA_FLASH_1_SIZE));
     }
     else {
         iCntCS++;
@@ -3115,8 +3308,8 @@ extern unsigned char fnSimW25Qxx(int iSimType, unsigned char ucTxByte)
     }
             #endif
             #if defined QSPI_CS3_LINE || defined CS3_LINE
-    if (SPI_CS3_PORT & CS3_LINE) {
-        fnActionSST25(3, (SPI_DATA_FLASH_0_SIZE + SPI_DATA_FLASH_1_SIZE + SPI_DATA_FLASH_2_SIZE));
+    if ((SPI_CS3_PORT & CS3_LINE) != 0) {
+        fnActionW25Q(3, (SPI_DATA_FLASH_0_SIZE + SPI_DATA_FLASH_1_SIZE + SPI_DATA_FLASH_2_SIZE));
     }
     else {
         iCntCS++;
@@ -3125,14 +3318,14 @@ extern unsigned char fnSimW25Qxx(int iSimType, unsigned char ucTxByte)
     }
             #endif
     if (iCntCS > 1) {
-        *(unsigned char *)(0) = 0;                                       // 2 CS selected at same time - serious error
+        _EXCEPTION("2 CS selected at same time - serious error");
     }
     else if (iCntCS == 0) {
         return 0xff;                                                     // chip not selected, return idle
     }
         #else
         #define ulDeviceOffset 0
-    if (SPI_CS0_PORT & CS0_LINE) {                                       // CS0 line negated
+    if ((SPI_CS0_PORT & CS0_LINE) != 0) {                                // CS0 line negated
         fnActionW25Q(0, 0);
         return 0xff;                                                     // chip not selected, return idle
     }
