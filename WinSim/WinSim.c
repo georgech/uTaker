@@ -776,6 +776,10 @@ _abort_multi:
         }
         break;
     #if defined USB_HOST_SUPPORT                                         // {29}
+    case SIM_TEST_HIGHSPEED_DEVICE:
+        iHostMode = 1;
+        fnSimulateUSB(0, 0, 0, 0, USB_HIGHSPEED_ATTACH_CMD);             // low speed device attach
+        break;
     case SIM_TEST_LOWSPEED_DEVICE:
         iHostMode = 1;
         fnSimulateUSB(0, 0, 0, 0, USB_LOWSPEED_ATTACH_CMD);              // low speed device attach

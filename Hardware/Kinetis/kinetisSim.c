@@ -5781,27 +5781,52 @@ extern int fnSimulateUSB(int iDevice, int iEndPoint, unsigned char ucPID, unsign
 #endif
     KINETIS_USB_ENDPOINT_BD *ptrBDT = (KINETIS_USB_ENDPOINT_BD *)((BDT_PAGE_01 << 8) + (BDT_PAGE_02 << 16) + (BDT_PAGE_03 << 24)); // address of buffer descriptors in RAM
 #if defined USB_HS_INTERFACE                                             // {12}
-    if (USBHS_USBCMD & USBHS_USBCMD_RS) {                                // if the high speed USB controller is in the running state
+    if ((USBHS_USBCMD & USBHS_USBCMD_RS) != 0) {                         // if the high speed USB controller is in the running state
         if (ptrDebugIn == 0) {                                           // bus state changes
             USBHS_USBSTS = 0;
-            if (usLenEvent & USB_RESET_CMD) {
+            if ((usLenEvent & USB_RESET_CMD) != 0) {
                 USBHS_USBSTS |= (USBHS_USBINTR_URE);                     // set USB reset interrupt flag
                 USBHS_PORTSC1 = USBHS_PORTSC1_PR;
                 memset(ucHSRxBank,   0, sizeof(ucHSRxBank));             // default is even bank
                 memset(ucHSTxBuffer, 0, sizeof(ucHSTxBuffer));           // default is even buffer
             }
-            if (usLenEvent & USB_SLEEP_CMD) {
+            if ((usLenEvent & USB_SLEEP_CMD) != 0) {
                 USBHS_PORTSC1 |= USBHS_PORTSC1_SUSP;
                 USBHS_USBSTS |= USBHS_USBINTR_SLE;
             }
-            if (usLenEvent & USB_RESUME_CMD) {
+            if ((usLenEvent & USB_RESUME_CMD) != 0) {
                 USBHS_PORTSC1 &= ~USBHS_PORTSC1_SUSP;
                 USBHS_USBSTS |= USBHS_USBINTR_PCE;
             }
-            if (usLenEvent & USB_IN_SUCCESS) {
+            if ((usLenEvent & USB_IN_SUCCESS) != 0) {
                 USBHS_EPCOMPLETE |= (USBHS_EPCOMPLETE_ETCE0 << iEndPoint); // transmission complete
                 USBHS_USBSTS |= USBHS_USBINTR_UE;                        // transfer complete status
             }
+    #if defined USB_HOST_SUPPORT
+            if ((USB_HIGHSPEED_ATTACH_CMD & usLenEvent) != 0) {
+                USBHS_PORTSC1 |= (USBHS_PORTSC1_PSPD_HS);
+                if ((USBHS_PORTSC1 & USBHS_PORTSC1_CSC) == 0) {          // if not connected
+                    USBHS_PORTSC1 |= (USBHS_PORTSC1_CCS | USBHS_PORTSC1_CSC); // change connection status to connectd
+                }
+                USBHS_USBSTS |= USBHS_USBINTR_PCE;
+            }
+            else if ((USB_FULLSPEED_ATTACH_CMD & usLenEvent) != 0) {
+                USBHS_PORTSC1 &= ~(USBHS_PORTSC1_PSPD_HS);
+                USBHS_PORTSC1 |= (USBHS_PORTSC1_PSPD_FS);
+                if ((USBHS_PORTSC1 & USBHS_PORTSC1_CSC) == 0) {          // if not connected
+                    USBHS_PORTSC1 |= (USBHS_PORTSC1_CCS | USBHS_PORTSC1_CSC); // change connection status to connectd
+                }
+                USBHS_USBSTS |= USBHS_USBINTR_PCE;
+            }
+            else if ((USB_LOWSPEED_ATTACH_CMD & usLenEvent) != 0) {
+                USBHS_PORTSC1 &= ~(USBHS_PORTSC1_PSPD_HS);
+                USBHS_PORTSC1 |= (USBHS_PORTSC1_PSPD_LS);
+                if ((USBHS_PORTSC1 & USBHS_PORTSC1_CSC) == 0) {          // if not connected
+                    USBHS_PORTSC1 |= (USBHS_PORTSC1_CCS | USBHS_PORTSC1_CSC); // change connection status to connectd
+                }
+                USBHS_USBSTS |= USBHS_USBINTR_PCE;
+            }
+    #endif
         }
         else {
             KINETIS_USBHS_ENDPOINT_QUEUE_HEADER *ptrQueueHeader = (KINETIS_USBHS_ENDPOINT_QUEUE_HEADER *)USBHS_EPLISTADDR + (2 * iEndPoint); // endpoint's reception queue header
@@ -7223,6 +7248,13 @@ extern int fnSimTimers(void)
             ulCounter /= (((WDOG_PRESC >> 8) & 0x7) + 1);                // {28} respect LPO clock presecaler
         }        
         if ((ulWatchdogCount + ulCounter) >= ulWatchdogTimeout) {
+            if ((WDOG_STCTRLH & WDOG_STCTRLH_IRQRSTEN) != 0) {           // if an interrupt is enabled we first call it
+                WDOG_STCTRLL |= WDOG_STCTRLL_INTFLG;
+                if (fnGenInt(irq_WDOG_ID) != 0) {                        // if watchdog interrupt is not disabled
+                    VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                    ptrVect->processor_interrupts.irq_WDOG();            // call the interrupt handler
+                }
+            }
             return RESET_CARD_WATCHDOG;                                  // watchdog reset
         }
         else {

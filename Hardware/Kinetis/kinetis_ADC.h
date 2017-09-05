@@ -459,7 +459,7 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
                         else if ((ptrADC_settings->int_adc_mode & ADC_LOOP_MODE) == 0) { // single shot mode {4}
     #endif
                             if (ptrADC_settings->int_handler != 0) {     // if single-shot conversion handler entered
-                                _ADC_Interrupt_handler[ptrADC_settings->int_adc_controller] = ptrADC_settings->int_handler; // enter the interrupt hanlder function
+                                _ADC_Interrupt_handler[ptrADC_settings->int_adc_controller] = ptrADC_settings->int_handler; // enter the interrupt handler function
                                 fnEnterInterrupt(irq_ADC_ID, ptrADC_settings->int_priority, (void (*)(void))_ADC_Interrupt[ptrADC_settings->int_adc_controller]);
                                 ucChannelConfig |= ADC_SC1A_AIEN;        // enable interrupt on end of conversion
                                 if (ptrADC_settings->int_adc_int_type & (ADC_LOW_LIMIT_INT | ADC_HIGH_LIMIT_INT)) { // {1} if a level is defined

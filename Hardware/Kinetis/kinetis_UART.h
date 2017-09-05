@@ -39,7 +39,7 @@
     07.01.2017 Add UART_TIMED_TRANSMISSION support for parts with DMA    {208}
     03.05.2017 Add free-running DMA reception mode (SERIAL_SUPPORT_DMA_RX_FREERUN) on LPUARTs and UARTs for KL parts based on modulo rx buffer {209}
     06.08.2017 Use POWER_UP_ATOMIC() instead of POWER_UP() to enable clocks to UART modules (using bit-banding access)
-    01.09.2017 Correct clearing LPUART overrun flag                      {209}
+    01.09.2017 Correct clearing LPUART overrun flag                      {210}
 
 */
 
@@ -273,8 +273,8 @@ static __interrupt void _LPSCI0_Interrupt(void)                          // LPUA
         #endif
         ulState = LPUART0_STAT;                                          // update the status register
         if ((ulState & LPUART_STAT_OR) != 0) {                           // if the overrun flag is set at this point it means that an overrun took place between reading the status register on entry to the interrupt and reading the data register
-            LPUART0_STAT = ulState;                                      // {209} write the OR flag back to clear it and allow further operation
-        //(void)LPUART0_DATA;                                            // read the data register in order to clear the overrun flag and allow the receiver to continue operating
+            LPUART0_STAT = ulState;                                      // {210} write the OR flag back to clear it and allow further operation
+          //(void)LPUART0_DATA;                                          // read the data register in order to clear the overrun flag and allow the receiver to continue operating
         }
     }
 
@@ -308,7 +308,7 @@ static __interrupt void _LPSCI1_Interrupt(void)                          // LPUA
         #endif
         ulState = LPUART1_STAT;                                          // update the status register
         if ((ulState & LPUART_STAT_OR) != 0) {                           // if the overrun flag is set at this point it means that an overrun took place between reading the status register on entry to the interrupt and reading the data register
-            LPUART1_STAT = ulState;                                      // {209} write the OR flag back to clear it and allow further operation
+            LPUART1_STAT = ulState;                                      // {210} write the OR flag back to clear it and allow further operation
           //(void )LPUART1_DATA;                                         // read the data register in order to clear the overrun flag and allow the receiver to continue operating
         }
     }
@@ -343,7 +343,7 @@ static __interrupt void _LPSCI2_Interrupt(void)                          // LPUA
         #endif
         ulState = LPUART2_STAT;                                          // update the status register
         if ((ulState & LPUART_STAT_OR) != 0) {                           // if the overrun flag is set at this point it means that an overrun took place between reading the status register on entry to the interrupt and reading the data register
-            LPUART2_STAT = ulState;                                      // {209} write the OR flag back to clear it and allow further operation
+            LPUART2_STAT = ulState;                                      // {210} write the OR flag back to clear it and allow further operation
           //(void )LPUART2_DATA;                                         // read the data register in order to clear the overrun flag and allow the receiver to continue operating
         }
     }
@@ -378,7 +378,7 @@ static __interrupt void _LPSCI3_Interrupt(void)                          // LPUA
         #endif
         ulState = LPUART3_STAT;                                          // update the status register
         if ((ulState & LPUART_STAT_OR) != 0) {                           // if the overrun flag is set at this point it means that an overrun took place between reading the status register on entry to the interrupt and reading the data register
-            LPUART3_STAT = ulState;                                      // {209} write the OR flag back to clear it and allow further operation
+            LPUART3_STAT = ulState;                                      // {210} write the OR flag back to clear it and allow further operation
           //(void )LPUART3_DATA;                                         // read the data register in order to clear the overrun flag and allow the receiver to continue operating
         }
     }
@@ -413,7 +413,7 @@ static __interrupt void _LPSCI4_Interrupt(void)                          // LPUA
         #endif
         ulState = LPUART4_STAT;                                          // update the status register
         if ((ulState & LPUART_STAT_OR) != 0) {                           // if the overrun flag is set at this point it means that an overrun took place between reading the status register on entry to the interrupt and reading the data register
-            LPUART4_STAT = ulState;                                      // {209} write the OR flag back to clear it and allow further operation
+            LPUART4_STAT = ulState;                                      // {210} write the OR flag back to clear it and allow further operation
           //(void )LPUART4_DATA;                                         // read the data register in order to clear the overrun flag and allow the receiver to continue operating
         }
     }

@@ -119,6 +119,7 @@
 #define SIM_USB_OUT          82
 #define SIM_TEST_LOWSPEED_DEVICE   83                                    // {22}
 #define SIM_TEST_FULLSPEED_DEVICE  84
+#define SIM_TEST_HIGHSPEED_DEVICE  85
 
 #define MODEM_COM_0          100                                         // {4}
 #define MODEM_COM_1          101
@@ -454,6 +455,7 @@ extern void fnUpdateIPConfig(void);
       #define USB_FULLSPEED_ATTACH_CMD  0x0080
       #define USB_STALL_SUCCESS         0x0100                           // {22}
       #define USB_SOF_EVENT             0x0200
+      #define USB_HIGHSPEED_ATTACH_CMD  0x0400
     extern void fnSimUSB(int iType, int iEndpoint, USB_HW *ptrUSB_HW);
       #define USB_SIM_TX           1
       #define USB_SIM_RESET        2

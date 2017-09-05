@@ -10453,6 +10453,8 @@ typedef struct stKINETIS_ADMA2_BD
           #define WDOG_STCTRLH_BYTESEL_3     0x3000
           #define WDOG_STCTRLH_DISTESTWDOG   0x4000
         #define WDOG_STCTRLL                 *(volatile unsigned short *)(WDOG_BLOCK + 0x02)  // watchdog status and control register: low
+           #define WDOG_STCTRLL_INTFLG       0x8000                      // write '1' to clear
+           #define WDOG_STCTRLL_RES1         0x0001                      // (0x0001 is reserved bit that is '1')
         #define WDOG_TOVALH                  *(unsigned short *)(WDOG_BLOCK + 0x04)           // watchdog time-out value register: high
         #define WDOG_TOVALL                  *(unsigned short *)(WDOG_BLOCK + 0x06)           // watchdog time-out value register: low
         #define WDOG_WINH                    *(unsigned short *)(WDOG_BLOCK + 0x08)           // watchdog window register: high
@@ -12159,8 +12161,11 @@ typedef struct stUSB_END_POINT
 #define USB_FIFO_BUFFER_DEPTH  2                                         // Kinetis has two rx and tx buffers per endpoint
 
 #if defined HS_USB_AVAILABLE                                             // {25}
-
-#define NUMBER_OF_USBHS_ENDPOINTS 4                                      // Kinetis support 4 high speed end points
+    #if defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66
+        #define NUMBER_OF_USBHS_ENDPOINTS 8                              // 8 high speed end points available
+    #else
+        #define NUMBER_OF_USBHS_ENDPOINTS 4                              // Kinetis supports 4 high speed end points
+    #endif
 
 typedef struct stUSB_HS_TRANSFER_OVERLAY
 {
@@ -12467,9 +12472,9 @@ typedef struct stUSB_HW
   #define USBHS_PORTSC1_WKOC     0x00400000                              // wake on over-current enable
   #define USBHS_PORTSC1_PHCD     0x00800000                              // phy low power suspend
   #define USBHS_PORTSC1_PFSC     0x01000000                              // port force full-speed contact
-  #define USBHS_PORTSC1_PSPD_FS  0x04000000                              // port speed - full speed (read-only
-  #define USBHS_PORTSC1_PSPD_LS  0x08000000                              // port speed - low speed (read-only
-  #define USBHS_PORTSC1_PSPD_HS  0x0c000000                              // port speed - high speed (read-only
+  #define USBHS_PORTSC1_PSPD_FS  0x04000000                              // port speed - full speed (read-only)
+  #define USBHS_PORTSC1_PSPD_LS  0x08000000                              // port speed - low speed (read-only)
+  #define USBHS_PORTSC1_PSPD_HS  0x0c000000                              // port speed - high speed (read-only)
   #define USBHS_PORTSC1_PTS_ULPI 0x80000000                              // port transceiver select ULPI
 #define USBHS_OTGSC          *(volatile unsigned long *)(USBHS_BASE_ADD + 0x1a4) // On-the-Go Status and Control Register
 #define USBHS_USBMODE        *(volatile unsigned long *)(USBHS_BASE_ADD + 0x1a8) // USB Mode Register

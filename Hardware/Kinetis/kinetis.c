@@ -60,6 +60,7 @@
     31.01.2017 Add fnClearPending() and fnIsPending()                    {126}
     02.03.2017 Add optional alternative memcpy DMA channel for use by interrupts {127}
     12.05.2017 Allow detection of RNG type in case both revison 1 and revision 2 parts may be encountered {128}
+    05.09.2017 Add watchdog interrupt (needs WDOG_STCTRLH_IRQRSTEN set in the watchdog configuration) {129}
 
 */
 
@@ -2239,6 +2240,16 @@ extern void __init_gnu_data(void)
 }
 #endif
 
+#if defined WDOG_STCTRLL                                                 // {129} watchdog interrupt
+static void wdog_irq(void)
+{
+    WDOG_STCTRLL = (WDOG_STCTRLL_INTFLG | WDOG_STCTRLL_RES1);            // clear interrupt flag
+    #if defined _WINDOWS
+    WDOG_STCTRLL = 0;
+    #endif
+    *BOOT_MAIL_BOX = 0x9876;                                             // set a pattern to the boot mailbox to show that the watchdog interrupt took place
+}
+#endif
 
 // Perform very low level initialisation - called by the start-up code
 //
@@ -2453,6 +2464,9 @@ static void _LowLevelInit(void)
 #endif
 #if defined SET_POWER_MODE
     SET_POWER_MODE();                                                    // {93}
+#endif
+ #if defined WDOG_STCTRLL                                                // {129}
+    fnEnterInterrupt(irq_WDOG_ID, 0, wdog_irq);                          // test WDOG interrupt (highest priority)
 #endif
 }
 
