@@ -345,10 +345,10 @@ static unsigned char  ucCollectingMode = 0xff;
     static unsigned short usMSDBulkOutEndpointSize = 0;
     #endif
     #if defined USB_CDC_HOST                                             // {37}
-    static unsigned char ucCDCBulkOutEndpoint = 0;
-    static unsigned short usCDCBulkOutEndpointSize = 0;
-    static unsigned char ucCDCBulkInEndpoint = 0;
-    static unsigned short usCDCBulkInEndpointSize = 0;
+    static unsigned char ucCDCBulkOutEndpoint[USB_CDC_COUNT] = {0};
+    static unsigned short usCDCBulkOutEndpointSize[USB_CDC_COUNT] = {0};
+    static unsigned char ucCDCBulkInEndpoint[USB_CDC_COUNT] = {0};
+    static unsigned short usCDCBulkInEndpointSize[USB_CDC_COUNT] = {0};
     #endif
 #endif
 
@@ -790,7 +790,7 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
     #endif
     #if defined USB_CDC_HOST
                 if ((ulDeviceType & USB_HOST_CDC_ACTIVE) != 0) {         // {44}
-                    fnDriver(USBPortID_comms[FIRST_CDC_INTERFACE], (RX_ON), 0); // {43} enable IN polling
+                    fnDriver(USBPortID_comms[FIRST_CDC_INTERFACE], (RX_ON), 0); // {43} enable IN polling on first interface
                 }
     #endif
 #endif
@@ -3070,7 +3070,7 @@ static void fnDisplayUSB_string(unsigned char *ptr_string)
     }
 }
 
-static void fnDisplayEndpoint(USB_ENDPOINT_DESCRIPTOR *ptr_endpoint_desc)
+static void fnDisplayEndpoint(USB_ENDPOINT_DESCRIPTOR *ptr_endpoint_desc, int iInterfaceRef)
 {
     unsigned short usEndpointLength = (ptr_endpoint_desc->wMaxPacketSize[0] | (ptr_endpoint_desc->wMaxPacketSize[1] << 8));
     unsigned char ucEndpointNumber = (ptr_endpoint_desc->bEndpointAddress & ~(IN_ENDPOINT));
@@ -3093,7 +3093,7 @@ static void fnDisplayEndpoint(USB_ENDPOINT_DESCRIPTOR *ptr_endpoint_desc)
         fnDebugMsg("??");
         break;
     }
-    if (ptr_endpoint_desc->bEndpointAddress & IN_ENDPOINT) {
+    if ((ptr_endpoint_desc->bEndpointAddress & IN_ENDPOINT) != 0) {
         fnDebugMsg(" IN");
         if (ptr_endpoint_desc->bmAttributes == ENDPOINT_BULK) {
 #if defined USB_MSD_HOST                                                 // it is expected that MSD has only one bulk IN endpoint
@@ -3101,8 +3101,8 @@ static void fnDisplayEndpoint(USB_ENDPOINT_DESCRIPTOR *ptr_endpoint_desc)
             usMSDBulkInEndpointSize = usEndpointLength;                  // the length of the IN endpoint
 #endif
 #if defined USB_CDC_HOST                                                 // it is expected that CDC has only one bulk IN endpoint
-            ucCDCBulkInEndpoint = ucEndpointNumber;                      // the endpoint that is to be used as IN endpoint
-            usCDCBulkInEndpointSize = usEndpointLength;                  // the length of the IN endpoint
+            ucCDCBulkInEndpoint[iInterfaceRef] = ucEndpointNumber;       // the endpoint that is to be used as IN endpoint
+            usCDCBulkInEndpointSize[iInterfaceRef] = usEndpointLength;   // the length of the IN endpoint
 #endif
         }
     }
@@ -3114,8 +3114,8 @@ static void fnDisplayEndpoint(USB_ENDPOINT_DESCRIPTOR *ptr_endpoint_desc)
             usMSDBulkOutEndpointSize = usEndpointLength;                 // the length of the OUT endpoint
 #endif
 #if defined USB_CDC_HOST                                                 // it is expected that CDC has only one bulk OUT endpoint
-            ucCDCBulkOutEndpoint = ucEndpointNumber;                     // the endpoint that is to be used as OUT endpoint
-            usCDCBulkOutEndpointSize = usEndpointLength;                 // the length of the OUT endpoint
+            ucCDCBulkOutEndpoint[iInterfaceRef] = ucEndpointNumber;      // the endpoint that is to be used as OUT endpoint
+            usCDCBulkOutEndpointSize[iInterfaceRef] = usEndpointLength;  // the length of the OUT endpoint
 #endif
         }
     }
@@ -3131,11 +3131,15 @@ static void fnDisplayEndpoint(USB_ENDPOINT_DESCRIPTOR *ptr_endpoint_desc)
 
 static unsigned char fnDisplayDeviceInfo(unsigned long *ptrDeviceType)
 {
+    #if defined USB_CDC_HOST
+    int iCDC_reference = 0;
+    #endif
     USB_DEVICE_DESCRIPTOR *ptr_device_descriptor;
     USB_CONFIGURATION_DESCRIPTOR *ptr_config_desc;
     USB_INTERFACE_DESCRIPTOR *ptr_interface_desc;
     unsigned char *ptr_string;
     unsigned short usVendor_product;
+    int iTotalInterfaces;
     ptr_device_descriptor = (USB_DEVICE_DESCRIPTOR *)fnGetDeviceInfo(REQUEST_USB_DEVICE_DESCRIPTOR);
     ptr_config_desc = (USB_CONFIGURATION_DESCRIPTOR *)fnGetDeviceInfo(REQUEST_USB_CONFIG_DESCRIPTOR);
     fnDebugMsg("USB");
@@ -3174,7 +3178,7 @@ static unsigned char fnDisplayDeviceInfo(unsigned long *ptrDeviceType)
     }
     #endif
 
-    if (ptr_config_desc->bmAttributes & SELF_POWERED) {
+    if ((ptr_config_desc->bmAttributes & SELF_POWERED) != 0) {
         fnDebugMsg("\r\nSelf-powered device");
     }
     else {
@@ -3183,7 +3187,8 @@ static unsigned char fnDisplayDeviceInfo(unsigned long *ptrDeviceType)
         fnDebugMsg("mA)");
     }
     fnDebugMsg(" with ");
-    fnDebugDec(ptr_config_desc->bNumInterface, 1);
+    iTotalInterfaces = ptr_config_desc->bNumInterface;
+    fnDebugDec(iTotalInterfaces, 1);
     fnDebugMsg(" interface(s)\r\n");
     #if defined USB_MSD_HOST
     ptr_interface_desc = (USB_INTERFACE_DESCRIPTOR *)(ptr_config_desc + 1);
@@ -3196,8 +3201,8 @@ static unsigned char fnDisplayDeviceInfo(unsigned long *ptrDeviceType)
         fnDebugHex(ptr_interface_desc->bInterfaceProtocol, (WITH_SPACE | WITH_LEADIN | WITH_CR_LF | sizeof(ptr_interface_desc->bInterfaceProtocol)));
         fnDebugMsg("Endpoints:\r\n");
         ptr_endpoint_desc = (USB_ENDPOINT_DESCRIPTOR *)(ptr_interface_desc + 1);
-        while (iEndpoints--) {
-            fnDisplayEndpoint(ptr_endpoint_desc);
+        while (iEndpoints-- != 0) {
+            fnDisplayEndpoint(ptr_endpoint_desc, 0);
             ptr_endpoint_desc++;
         }
         *ptrDeviceType = USB_HOST_MSD_ACTIVE;                            // MSD device detected (not composite)
@@ -3206,39 +3211,64 @@ static unsigned char fnDisplayDeviceInfo(unsigned long *ptrDeviceType)
     #endif
     #if defined USB_CDC_HOST                                             // {37}
     ptr_interface_desc = (USB_INTERFACE_DESCRIPTOR *)(ptr_config_desc + 1);
-    if (ptr_interface_desc->bDescriptorType == DESCRIPTOR_TYPE_INTERFACE_ASSOCIATION) { // handle an optional interface association descriptor
-        USB_INTERFACE_ASSOCIATION_DESCRIPTOR *ptr_interface_association_desc = (USB_INTERFACE_ASSOCIATION_DESCRIPTOR *)ptr_interface_desc;
-        fnDebugMsg("Interface count = ");
-        fnDebugDec(ptr_interface_association_desc->bInterfaceCount, WITH_CR_LF);
-        ptr_interface_desc = (USB_INTERFACE_DESCRIPTOR *)(ptr_interface_association_desc + 1);
-    }
-    if ((ptr_interface_desc->bDescriptorType == DESCRIPTOR_TYPE_INTERFACE) && (ptr_interface_desc->bInterfaceClass == USB_CLASS_COMMUNICATION_CONTROL)) { // communication class
-        ptr_interface_desc = (USB_INTERFACE_DESCRIPTOR *)(ptr_interface_desc + 1);
-        while (ptr_interface_desc->bDescriptorType == CS_INTERFACE) {    // move over class interfaces
-            USB_CDC_FUNCTIONAL_DESCRIPTOR_UNION *ptr_functional_des_union = (USB_CDC_FUNCTIONAL_DESCRIPTOR_UNION *)ptr_interface_desc;
-            ptr_interface_desc = (USB_INTERFACE_DESCRIPTOR *)(((unsigned char *)ptr_functional_des_union) + ptr_functional_des_union->bLength);
+    while ((int)1 != (int)0) {
+        if (ptr_interface_desc->bDescriptorType == DESCRIPTOR_TYPE_INTERFACE_ASSOCIATION) { // handle an optional interface association descriptor
+            USB_INTERFACE_ASSOCIATION_DESCRIPTOR *ptr_interface_association_desc = (USB_INTERFACE_ASSOCIATION_DESCRIPTOR *)ptr_interface_desc;
+            fnDebugMsg("Interface count = ");
+            fnDebugDec(ptr_interface_association_desc->bInterfaceCount, WITH_CR_LF);
+            ptr_interface_desc = (USB_INTERFACE_DESCRIPTOR *)(ptr_interface_association_desc + 1);
         }
-        if (DESCRIPTOR_TYPE_ENDPOINT == ptr_interface_desc->bDescriptorType) {
-            USB_ENDPOINT_DESCRIPTOR *ptr_endpoint_desc = (USB_ENDPOINT_DESCRIPTOR *)ptr_interface_desc;
-            fnDisplayEndpoint(ptr_endpoint_desc);
-            ptr_interface_desc = (USB_INTERFACE_DESCRIPTOR *)(ptr_endpoint_desc + 1);
+        if (ptr_interface_desc->bDescriptorType == DESCRIPTOR_TYPE_INTERFACE) { // interface descriptor
+            iTotalInterfaces--;                                          // interfaces still remaining
+            if (ptr_interface_desc->bInterfaceClass == USB_CLASS_COMMUNICATION_CONTROL) { // communication class
+                ptr_interface_desc = (USB_INTERFACE_DESCRIPTOR *)(ptr_interface_desc + 1);
+                while (ptr_interface_desc->bDescriptorType == CS_INTERFACE) { // move over class interfaces
+                    USB_CDC_FUNCTIONAL_DESCRIPTOR_UNION *ptr_functional_des_union = (USB_CDC_FUNCTIONAL_DESCRIPTOR_UNION *)ptr_interface_desc;
+                    ptr_interface_desc = (USB_INTERFACE_DESCRIPTOR *)(((unsigned char *)ptr_functional_des_union) + ptr_functional_des_union->bLength);
+                }
+                if (DESCRIPTOR_TYPE_ENDPOINT == ptr_interface_desc->bDescriptorType) {
+                    USB_ENDPOINT_DESCRIPTOR *ptr_endpoint_desc = (USB_ENDPOINT_DESCRIPTOR *)ptr_interface_desc;
+                    fnDisplayEndpoint(ptr_endpoint_desc, iCDC_reference);
+                    ptr_interface_desc = (USB_INTERFACE_DESCRIPTOR *)(ptr_endpoint_desc + 1);
+                }
+                if (ptr_interface_desc->bDescriptorType == DESCRIPTOR_TYPE_INTERFACE) {
+                    iTotalInterfaces--;                                  // interfaces still remaining
+                    ptr_interface_desc = (USB_INTERFACE_DESCRIPTOR *)(ptr_interface_desc + 1);
+                }
+                if (DESCRIPTOR_TYPE_ENDPOINT == ptr_interface_desc->bDescriptorType) {
+                    USB_ENDPOINT_DESCRIPTOR *ptr_endpoint_desc = (USB_ENDPOINT_DESCRIPTOR *)ptr_interface_desc;
+                    fnDisplayEndpoint(ptr_endpoint_desc, iCDC_reference);
+                    ptr_interface_desc = (USB_INTERFACE_DESCRIPTOR *)(ptr_endpoint_desc + 1);
+                }
+                if (DESCRIPTOR_TYPE_ENDPOINT == ptr_interface_desc->bDescriptorType) {
+                    USB_ENDPOINT_DESCRIPTOR *ptr_endpoint_desc = (USB_ENDPOINT_DESCRIPTOR *)ptr_interface_desc;
+                    fnDisplayEndpoint(ptr_endpoint_desc, iCDC_reference);
+                    ptr_interface_desc = (USB_INTERFACE_DESCRIPTOR *)(ptr_endpoint_desc + 1);
+                }
+                *ptrDeviceType = USB_HOST_CDC_ACTIVE;                    // CDC device detected (not composite)
+                fnDebugMsg("CDC class\r\n");
+                if (iTotalInterfaces <= 0) {                             // if all interfaces have been accounted for
+                    return (ptr_config_desc->bConfigurationValue);       // the valid configuration to be enabled
+                }
+                iCDC_reference++;                                        // move to next possible CDC interface
+            }
+            else {
+                if (iTotalInterfaces <= 0) {                             // if all interfaces have been accounted for
+                    return (ptr_config_desc->bConfigurationValue);       // the valid configuration to be enabled
+                }
+                fnDebugMsg("Discaded class");
+                fnDebugHex(ptr_interface_desc->bInterfaceClass, (sizeof(ptr_interface_desc->bInterfaceClass) | WITH_LEADIN | WITH_SPACE | WITH_CR_LF));
+                // Discard unsupported class
+                //
+                while ((int)1 != (int)0) {
+                    USB_CDC_FUNCTIONAL_DESCRIPTOR_UNION *ptr_functional_des_union = (USB_CDC_FUNCTIONAL_DESCRIPTOR_UNION *)ptr_interface_desc;
+                    ptr_interface_desc = (USB_INTERFACE_DESCRIPTOR *)(((unsigned char *)ptr_functional_des_union) + ptr_functional_des_union->bLength);
+                    if ((ptr_interface_desc->bDescriptorType == DESCRIPTOR_TYPE_INTERFACE) || (ptr_interface_desc->bDescriptorType == DESCRIPTOR_TYPE_INTERFACE_ASSOCIATION)) {
+                        break;
+                    }
+                }
+            }
         }
-        if (ptr_interface_desc->bDescriptorType == DESCRIPTOR_TYPE_INTERFACE) {
-            ptr_interface_desc = (USB_INTERFACE_DESCRIPTOR *)(ptr_interface_desc + 1);
-        }
-        if (DESCRIPTOR_TYPE_ENDPOINT == ptr_interface_desc->bDescriptorType) {
-            USB_ENDPOINT_DESCRIPTOR *ptr_endpoint_desc = (USB_ENDPOINT_DESCRIPTOR *)ptr_interface_desc;
-            fnDisplayEndpoint(ptr_endpoint_desc);
-            ptr_interface_desc = (USB_INTERFACE_DESCRIPTOR *)(ptr_endpoint_desc + 1);
-        }
-        if (DESCRIPTOR_TYPE_ENDPOINT == ptr_interface_desc->bDescriptorType) {
-            USB_ENDPOINT_DESCRIPTOR *ptr_endpoint_desc = (USB_ENDPOINT_DESCRIPTOR *)ptr_interface_desc;
-            fnDisplayEndpoint(ptr_endpoint_desc);
-            ptr_interface_desc = (USB_INTERFACE_DESCRIPTOR *)(ptr_endpoint_desc + 1);
-        }
-        *ptrDeviceType = USB_HOST_CDC_ACTIVE;                            // CDC device detected (not composite)
-        fnDebugMsg("CDC class\r\n");
-        return (ptr_config_desc->bConfigurationValue);                   // the valid configuration to be enabled
     }
     #endif
     fnDebugMsg("NON-SUPPORTED CLASS -");
@@ -3270,20 +3300,36 @@ static void fnConfigureApplicationEndpoints(unsigned char ucActiveConfiguration)
     #endif
     #if defined USB_CDC_HOST                                             // {37}
     if ((ulDeviceType & USB_HOST_CDC_ACTIVE) != 0) {                     // {44}
-        if (NO_ID_ALLOCATED == USBPortID_comms[FIRST_CDC_INTERFACE]) {
+        if ((NO_ID_ALLOCATED == USBPortID_comms[FIRST_CDC_INTERFACE]) && (ucCDCBulkOutEndpoint[0] != 0)) {
             tInterfaceParameters.owner_task = OWN_TASK;                  // wake usb task on receptions
-            tInterfaceParameters.Endpoint = ucCDCBulkOutEndpoint;        // set USB endpoints to act as an input/output pair - transmitter (OUT)
-            tInterfaceParameters.Paired_RxEndpoint = ucCDCBulkInEndpoint;// receiver (IN)
-            tInterfaceParameters.usEndpointSize = usCDCBulkOutEndpointSize; // endpoint queue size (2 buffers of this size will be created for reception)
+            tInterfaceParameters.Endpoint = ucCDCBulkOutEndpoint[0];     // set USB endpoints to act as an input/output pair - transmitter (OUT)
+            tInterfaceParameters.Paired_RxEndpoint = ucCDCBulkInEndpoint[0]; // receiver (IN)
+            tInterfaceParameters.usEndpointSize = usCDCBulkOutEndpointSize[0]; // endpoint queue size (2 buffers of this size will be created for reception)
             tInterfaceParameters.usb_callback = 0;                       // no call-back since we use rx buffer - the same task is owner
             tInterfaceParameters.usConfig = 0;
             tInterfaceParameters.queue_sizes.RxQueueSize = 512;          // optional input queue (used only when no call-back defined)
             tInterfaceParameters.queue_sizes.TxQueueSize = 1024;         // additional tx buffer
         #if defined WAKE_BLOCKED_USB_TX
-            tInterfaceParameters.low_water_level = (tInterfaceParameters.queue_sizes.TxQueueSize / 2); // TX_FREE event on half buffer empty
+            tInterfaceParameters.low_water_level = (tInterfaceParameters.queue_sizes.TxQueueSize/2); // TX_FREE event on half buffer empty
         #endif
             USBPortID_comms[FIRST_CDC_INTERFACE] = fnOpen(TYPE_USB, 0, &tInterfaceParameters); // open the endpoints with defined configurations (initially inactive)
         }
+        #if (USB_CDC_COUNT > 1)
+        if ((NO_ID_ALLOCATED == USBPortID_comms[FIRST_CDC_INTERFACE + 1]) && (ucCDCBulkOutEndpoint[1] != 0)) {
+            tInterfaceParameters.owner_task = OWN_TASK;                  // wake usb task on receptions
+            tInterfaceParameters.Endpoint = ucCDCBulkOutEndpoint[1];     // set USB endpoints to act as an input/output pair - transmitter (OUT)
+            tInterfaceParameters.Paired_RxEndpoint = ucCDCBulkInEndpoint[1]; // receiver (IN)
+            tInterfaceParameters.usEndpointSize = usCDCBulkOutEndpointSize[1]; // endpoint queue size (2 buffers of this size will be created for reception)
+          //tInterfaceParameters.usb_callback = 0;                       // no call-back since we use rx buffer - the same task is owner
+          //tInterfaceParameters.usConfig = 0;
+            tInterfaceParameters.queue_sizes.RxQueueSize = 512;          // optional input queue (used only when no call-back defined)
+            tInterfaceParameters.queue_sizes.TxQueueSize = 1024;         // additional tx buffer
+        #if defined WAKE_BLOCKED_USB_TX
+            tInterfaceParameters.low_water_level = (tInterfaceParameters.queue_sizes.TxQueueSize/2); // TX_FREE event on half buffer empty
+        #endif
+            USBPortID_comms[FIRST_CDC_INTERFACE + 1] = fnOpen(TYPE_USB, 0, &tInterfaceParameters); // open the endpoints with defined configurations (initially inactive)
+        }
+        #endif
     }
     #endif
     fnSetUSBConfigState(USB_CONFIG_ACTIVATE, ucActiveConfiguration);     // now activate the configuration

@@ -24,14 +24,14 @@
 
 extern void fn_uTasker_main(void *);
 #if defined FREE_RTOS_UART
-unsigned char fnGetUART_Handle(void);
+    extern unsigned char fnGetUART_Handle(void);
+    static void uart_task(void *pvParameters);
 #endif
 #if defined FREE_RTOS_BLINKY
     extern void fnInitialiseRedLED(void);
     extern void fnToggleRedLED(void);
     static void blinky(void *par);
 #endif
-static void uart_task(void *pvParameters);
 static void prvSetupHardware(void);
 
 

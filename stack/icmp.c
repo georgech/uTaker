@@ -114,6 +114,23 @@ static void fnInsertPingChecksum(ETHERNET_FRAME *ptrRx_frame, ICMP_ERROR *ptrICP
         ptrICP_frame->ucICMPCheckSum[1] = (unsigned char)(usCheckSum);
     }
     #else
+        #if defined PHY_TAIL_TAGGING
+    if (ptrRx_frame->ucRxPort == 1) {
+        ptrICP_frame->ucICMPCheckSum[0] = 0xfe;
+        ptrICP_frame->ucICMPCheckSum[1] = 0xff;
+        return;
+    }
+    else if (ptrRx_frame->ucRxPort == 2) {
+        ptrICP_frame->ucICMPCheckSum[0] = 0xfd;
+        ptrICP_frame->ucICMPCheckSum[1] = 0xff;
+        return;
+    }
+    else if (ptrRx_frame->ucRxPort == 3) {
+        ptrICP_frame->ucICMPCheckSum[0] = 0xfc;
+        ptrICP_frame->ucICMPCheckSum[1] = 0xff;
+        return;
+    }
+        #endif
     ptrICP_frame->ucICMPCheckSum[0] = 0;                                 // checksum set to 0 (it will be filled out automatically by the controller when transmitted)
     ptrICP_frame->ucICMPCheckSum[1] = 0;
     #endif

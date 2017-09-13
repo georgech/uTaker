@@ -143,7 +143,7 @@
     };
     #endif
     #if defined PHY_MULTI_PORT && (PHY_MULTI_PORT > 1) && defined PHY_TAIL_TAGGING
-    static const QUEUE_TRANSFER(*tail_tag_tx[3])(QUEUE_TRANSFER, unsigned char *) = { // call-back used to release a prepared transmit buffer
+    static QUEUE_TRANSFER(*tail_tag_tx[3])(QUEUE_TRANSFER, unsigned char *) = { // call-back used to release a prepared transmit buffer
         fnStartEthTx1, fnStartEthTx2, fnStartEthTx12
     };
     #endif

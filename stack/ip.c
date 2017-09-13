@@ -139,20 +139,18 @@ extern unsigned short fnCalcIP_CS(unsigned short cs, unsigned char *dat, unsigne
     unsigned char cs_l = (unsigned char)(cs);
     unsigned char cs_h = (unsigned char)(cs >> 8);                       // prime check sum initial value
 
-    while (usLen--) {
+    while (usLen-- != 0) {
         if ((cs_h += *dat) < *dat) {                                     // process MSB
-            if ( ++cs_l == 0 ) {
+            if (++cs_l == 0) {
                 cs_h++;
             }
         }
-
         if (0 == usLen--) {
             break;
         }
         dat++;
-
         if ((cs_l += *dat) < *dat) {                                     // process LSB
-            if ( ++cs_h == 0 ) {
+            if (++cs_h == 0) {
                 cs_l++;
             }
         }

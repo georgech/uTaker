@@ -114,6 +114,7 @@
     20.05.2017 Add timer capture mode                                    {97}
     04.08.2017 Add fnSetBitBandPeripheralValue() and fnClearBitBandPeripheralValue() prototypes, plus atomic bit-banding macros {98}
     31.08.2017 Add BME (bit manipulation engine) for cortex-m0+ devices  {99}
+    12.09.2017 Added INTMUX support and extended KL28 and KL82           {100}
 
 */
 
@@ -219,7 +220,6 @@ extern void fnClearBitBandPeripheralValue(unsigned long *bit_band_address);
     #define KINETIS_WITH_WDOG32
 #endif
 
-
 // Clock setting/checking
 //
 #if defined KINETIS_KL28                                                 // devices with SCG (system clock generator)
@@ -299,6 +299,14 @@ extern void fnClearBitBandPeripheralValue(unsigned long *bit_band_address);
             #endif
             #if ((_EXTERNAL_CLOCK/CLOCK_DIV) < 8000000) || ((_EXTERNAL_CLOCK/CLOCK_DIV) > 16000000)
                 #error PLL input frequency must be between 8MHz and 16MHz
+            #endif
+            #if defined _EXTERNAL_CLOCK_OSC1
+                #if ((_EXTERNAL_CLOCK_OSC1/CLOCK_DIV_OSC1) < 8000000) || ((_EXTERNAL_CLOCK_OSC1/CLOCK_DIV_OSC1) > 16000000)
+                    #error PLL OSC1 input frequency must be between 8MHz and 16Mhz
+                #endif
+                #if (((_EXTERNAL_CLOCK_OSC1 / CLOCK_DIV_OSC1) * CLOCK_MUL_OSC1) != ((_EXTERNAL_CLOCK_OSC1 / CLOCK_DIV_OSC1) * CLOCK_MUL_OSC1))
+                    #error OSC0/CLK0 and OSC1 must come out to the same frequency
+                #endif
             #endif
         #endif
         #if defined CLOCK_DIV_1                                          // {53}
@@ -1095,6 +1103,12 @@ typedef struct stRESET_VECTOR
     #define ETHERNET_AVAILABLE
 #endif
 
+// INTMUX
+//
+#if defined KINETIS_KL28 || defined KINETIS_KL82                         // {100$
+    #define INTMUX0_AVAILABLE
+#endif
+
 // LTC (LP Trusted Cryptography)
 //
 #if defined KINETIS_K82 || defined KINETIS_KL82
@@ -1169,7 +1183,7 @@ typedef struct stRESET_VECTOR
 #if defined KINETIS_K80
     #define LPUARTS_AVAILABLE       5
 #elif defined KINETIS_KL28 || defined KINETIS_KL82
-    #define LPUARTS_AVAILABLE       2                                    // provisional since 3 are available but need muxed interrupt
+    #define LPUARTS_AVAILABLE       3
 #elif defined KINETIS_KL03
     #define LPUARTS_AVAILABLE       1
 #elif defined KINETIS_KV31 || defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66
@@ -1496,7 +1510,7 @@ typedef struct stPROCESSOR_IRQ
     void  (*irq_KBI1)(void);                                             // 25
     void  (*reserved26)(void);                                           // 26
     void  (*irq_ICS)(void);                                              // 27
-    void  (*irq_WDOG)(void);                                             // 28
+    void  (*irq_WDOG0)(void);                                            // 28
 #elif defined KINETIS_KV && !defined KINETIS_KV30 && !defined KINETIS_KV50
     void  (*irq_DMA0)(void);                                             // 0
     void  (*irq_DMA1)(void);                                             // 1
@@ -1521,74 +1535,189 @@ typedef struct stPROCESSOR_IRQ
     void  (*irq_CMP0)(void);                                             // 20
     void  (*irq_CMP1)(void);                                             // 21
     void  (*reserved22)(void);                                           // 22
-    void  (*irq_WDOG_EWM)(void);                                         // 23
+    void  (*irq_WDOG0)(void);                                            // 23
     void  (*reserved24)(void);                                           // 24
     void  (*irq_DAC0)(void);                                             // 25
     void  (*reserved26)(void);                                           // 26
     void  (*irq_MCG)(void);                                              // 27
-    void  (*irq_LPT)(void);                                              // 28
+    void  (*irq_LPTMR0)(void);                                           // 28
     void  (*irq_PDB)(void);                                              // 29
     void  (*irq_PORTA)(void);                                            // 30
     void  (*irq_PORTB_C_D_E)(void);                                      // 31 single interrupt vector for ports B, C, D and E
 #elif defined KINETIS_KL                                                 // {42}
-    #if defined DEVICE_WITHOUT_DMA
-        void  (*reserved0)(void);                                        // 0
-        void  (*reserved1)(void);                                        // 1
-        void  (*reserved2)(void);                                        // 2
-        void  (*reserved3)(void);                                        // 3
-    #else
-        void  (*irq_DMA0)(void);                                         // 0
-        void  (*irq_DMA1)(void);                                         // 1
-        void  (*irq_DMA2)(void);                                         // 2
-        void  (*irq_DMA3)(void);                                         // 3
-    #endif
-    void  (*reserved4)(void);                                            // 4
-    void  (*irq_FTFA)(void);                                             // 5 (command complete and read collision combined)
-    void  (*irq_LOW_VOLTAGE)(void);                                      // 6 low voltage detect, low-voltage warning
-    void  (*irq_LL_wakeup)(void);                                        // 7
-    void  (*irq_I2C0)(void);                                             // 8
-    void  (*irq_I2C1)(void);                                             // 9
-    void  (*irq_SPI0)(void);                                             // 10
-    void  (*irq_SPI1)(void);                                             // 11
-    #if LPUARTS_AVAILABLE > 0
+    #if defined KINETIS_KL28
+        void  (*irq_DMA0_0_4)(void);                                     // 0
+        void  (*irq_DMA0_1_5)(void);                                     // 1
+        void  (*irq_DMA0_2_6)(void);                                     // 2
+        void  (*irq_DMA0_3_7)(void);                                     // 3
+        void  (*irq_DMA0_ERROR)(void);                                   // 4
+        void  (*irq_FLEXIO)(void);                                       // 5
+        void  (*irq_TPM0)(void);                                         // 6
+        void  (*irq_TPM1)(void);                                         // 7
+        void  (*irq_TPM2)(void);                                         // 8
+        void  (*irq_LPIT)(void);                                         // 9
+        void  (*irq_LPSPI0)(void);                                       // 10
+        void  (*irq_LPSPI1)(void);                                       // 11
         void  (*irq_LPUART0)(void);                                      // 12 status and error
-    #else
-        void  (*irq_UART0)(void);                                        // 12 status and error
-    #endif
-    #if LPUARTS_AVAILABLE > 1
         void  (*irq_LPUART1)(void);                                      // 13 status and error
+        void  (*irq_LPI2C0)(void);                                       // 14
+        void  (*irq_LPI2C1)(void);                                       // 15
+        void  (*reserved0)(void);                                        // 16
+        void  (*irq_PORTA)(void);                                        // 17
+        void  (*irq_PORTB)(void);                                        // 18
+        void  (*irq_PORTC)(void);                                        // 19
+        void  (*irq_PORTD)(void);                                        // 20
+        void  (*irq_PORTE)(void);                                        // 21
+        void  (*irq_LL_wakeup)(void);                                    // 22
+        void  (*irq_SAI0)(void);                                         // 23
+        void  (*irq_USB_OTG)(void);                                      // 24
+        void  (*irq_ADC0)(void);                                         // 25
+        void  (*irq_LPTMR0)(void);                                       // 26
+        void  (*irq_RTC_SECONDS)(void);                                  // 27
+        void  (*irq_INTMUX0_0)(void);                                    // 28
+        void  (*irq_INTMUX0_1)(void);                                    // 29
+        void  (*irq_INTMUX0_2)(void);                                    // 30
+        void  (*irq_INTMUX0_3)(void);                                    // 31
+        void  (*irq_LPTMR1)(void);                                       // 32 - extended using INTMUX0
+        void  (*reserved1)(void);                                        // 33
+        void  (*reserved2)(void);                                        // 34
+        void  (*reserved3)(void);                                        // 35
+        void  (*irq_LPSPI2)(void);                                       // 36
+        void  (*irq_LPUART2)(void);                                      // 37
+        void  (*irq_EMVSIM0)(void);                                      // 38
+        void  (*irq_LPI2C2)(void);                                       // 39
+        void  (*irq_TSI)(void);                                          // 40
+        void  (*irq_PMC)(void);                                          // 41
+        void  (*irq_FTFA)(void);                                         // 42
+        void  (*irq_SCG)(void);                                          // 43
+        void  (*irq_WDOG0)(void);                                        // 44
+        void  (*irq_DAC0)(void);                                         // 45
+        void  (*irq_TRNG0)(void);                                        // 46
+        void  (*irq_RCM)(void);                                          // 47
+        void  (*irq_CMP0)(void);                                         // 48
+        void  (*irq_CMP1)(void);                                         // 49
+        void  (*irq_RTC_Alarm)(void);                                    // 50
+    #elif defined KINETIS_KL82
+        void  (*irq_DMA0_0_4)(void);                                     // 0
+        void  (*irq_DMA0_1_5)(void);                                     // 1
+        void  (*irq_DMA0_2_6)(void);                                     // 2
+        void  (*irq_DMA0_3_7)(void);                                     // 3
+        void  (*irq_DMA0_ERROR)(void);                                   // 4
+        void  (*irq_FLEXIO)(void);                                       // 5
+        void  (*irq_TPM0)(void);                                         // 6
+        void  (*irq_TPM1)(void);                                         // 7
+        void  (*irq_TPM2)(void);                                         // 8
+        void  (*irq_PIT)(void);                                          // 9 single interrupt vector for all channels
+        void  (*irq_SPI0)(void);                                         // 10
+        void  (*irq_EMVSIM0)(void);                                      // 11
+        void  (*irq_LPUART0)(void);                                      // 12 status and error
+        void  (*irq_LPUART1)(void);                                      // 13 status and error
+        void  (*irq_I2C0)(void);                                         // 14
+        void  (*irq_QSPI0)(void);                                        // 15
+        void  (*reserved0)(void);                                        // 16
+        void  (*irq_PORTA)(void);                                        // 17
+        void  (*irq_PORTB)(void);                                        // 18
+        void  (*irq_PORTC)(void);                                        // 19
+        void  (*irq_PORTD)(void);                                        // 20
+        void  (*irq_PORTE)(void);                                        // 21
+        void  (*irq_LL_wakeup)(void);                                    // 22
+        void  (*irq_LTC0)(void);                                         // 23
+        void  (*irq_USB_OTG)(void);                                      // 24
+        void  (*irq_ADC0)(void);                                         // 25
+        void  (*irq_LPTMR0)(void);                                       // 26
+        void  (*irq_RTC_SECONDS)(void);                                  // 27
+        void  (*irq_INTMUX0_0)(void);                                    // 28
+        void  (*irq_INTMUX0_1)(void);                                    // 29
+        void  (*irq_INTMUX0_2)(void);                                    // 30
+        void  (*irq_INTMUX0_3)(void);                                    // 31
+        void  (*irq_LPTMR1)(void);                                       // 32 - extended using INTMUX0
+        void  (*reserved1)(void);                                        // 33
+        void  (*reserved2)(void);                                        // 34
+        void  (*reserved3)(void);                                        // 35
+        void  (*irq_SPI1)(void);                                         // 36
+        void  (*irq_LPUART2)(void);                                      // 37
+        void  (*irq_EMVSIM1)(void);                                      // 38
+        void  (*irq_I2C1)(void);                                         // 39
+        void  (*irq_TSI)(void);                                          // 40
+        void  (*irq_PMC)(void);                                          // 41
+        void  (*irq_FTFA)(void);                                         // 42
+        void  (*irq_MCG)(void);                                          // 43
+        void  (*irq_WDOG0)(void);                                        // 44
+        void  (*irq_DAC0)(void);                                         // 45
+        void  (*irq_TRNG0)(void);                                        // 46
+        void  (*reserved4)(void);                                        // 47
+        void  (*irq_CMP0)(void);                                         // 48
+        void  (*reserved5)(void);                                        // 49
+        void  (*irq_RTC_Alarm)(void);                                    // 50
+        void  (*reserved6)(void);                                        // 51
+        void  (*reserved7)(void);                                        // 52
+        void  (*reserved8)(void);                                        // 53
+        void  (*reserved9)(void);                                        // 54
+        void  (*reserved10)(void);                                       // 55
+        void  (*irq_DMA0_4)(void);                                       // 56
+        void  (*irq_DMA0_5)(void);                                       // 57
+        void  (*irq_DMA0_6)(void);                                       // 58
+        void  (*irq_DMA0_7)(void);                                       // 59
     #else
-        void  (*irq_UART1)(void);                                        // 13 status and error
+        #if defined DEVICE_WITHOUT_DMA
+            void  (*reserved0)(void);                                    // 0
+            void  (*reserved1)(void);                                    // 1
+            void  (*reserved2)(void);                                    // 2
+            void  (*reserved3)(void);                                    // 3
+        #else
+            void  (*irq_DMA0)(void);                                     // 0
+            void  (*irq_DMA1)(void);                                     // 1
+            void  (*irq_DMA2)(void);                                     // 2
+            void  (*irq_DMA3)(void);                                     // 3
+        #endif
+        void  (*reserved4)(void);                                        // 4
+        void  (*irq_FTFA)(void);                                         // 5 (command complete and read collision combined)
+        void  (*irq_LOW_VOLTAGE)(void);                                  // 6 low voltage detect, low-voltage warning
+        void  (*irq_LL_wakeup)(void);                                    // 7
+        void  (*irq_I2C0)(void);                                         // 8
+        void  (*irq_I2C1)(void);                                         // 9
+        void  (*irq_SPI0)(void);                                         // 10
+        void  (*irq_SPI1)(void);                                         // 11
+        #if LPUARTS_AVAILABLE > 0
+            void  (*irq_LPUART0)(void);                                  // 12 status and error
+        #else
+            void  (*irq_UART0)(void);                                    // 12 status and error
+        #endif
+        #if LPUARTS_AVAILABLE > 1
+            void  (*irq_LPUART1)(void);                                  // 13 status and error
+        #else
+            void  (*irq_UART1)(void);                                    // 13 status and error
+        #endif
+        void  (*irq_UART2)(void);                                        // 14 status and error
+        void  (*irq_ADC0)(void);                                         // 15
+        void  (*irq_CMP0)(void);                                         // 16
+        void  (*irq_TPM0)(void);                                         // 17
+        void  (*irq_TPM1)(void);                                         // 18
+        void  (*irq_TPM2)(void);                                         // 19
+        #if defined KINETIS_KL02
+            void  (*reserved20)(void);                                   // 20
+            void  (*reserved21)(void);                                   // 21
+        #else
+            void  (*irq_RTC_ALARM)(void);                                // 20
+            void  (*irq_RTC_SECONDS)(void);                              // 21
+        #endif
+        void  (*irq_PIT)(void);                                          // 22 single interrupt vector for all channels
+        void  (*irq_I2S0)(void);                                         // 23 single interrupt vector for all sources
+        void  (*irq_USB_OTG)(void);                                      // 24
+        void  (*irq_DAC0)(void);                                         // 25
+        void  (*irq_TSI)(void);                                          // 26
+        void  (*irq_MCG)(void);                                          // 27
+        void  (*irq_LPTMR0)(void);                                       // 28
+        void  (*irq_SLCD)(void);                                         // 29
+        void  (*irq_PORTA)(void);                                        // 30
+        #if (PORTS_AVAILABLE == 2)
+        void  (*irq_PORTB)(void);                                        // 31
+        #elif (defined KINETIS_KL17 || defined KINETIS_KL27) && (SIZE_OF_FLASH <= (64 * 1024))
+        void  (*irq_PORTBCD_E)(void);                                    // 31 single interrupt vector for ports B, C, D and E
+        #else
+        void  (*irq_PORTC_D)(void);                                      // 31 single interrupt vector for ports C and D
+        #endif
     #endif
-    void  (*irq_UART2)(void);                                            // 14 status and error
-    void  (*irq_ADC0)(void);                                             // 15
-    void  (*irq_CMP0)(void);                                             // 16
-    void  (*irq_TPM0)(void);                                             // 17
-    void  (*irq_TPM1)(void);                                             // 18
-    void  (*irq_TPM2)(void);                                             // 19
-    #if defined KINETIS_KL02
-        void  (*reserved20)(void);                                       // 20
-        void  (*reserved21)(void);                                       // 21
-    #else
-        void  (*irq_RTC_ALARM)(void);                                    // 20
-        void  (*irq_RTC_SECONDS)(void);                                  // 21
-    #endif
-    void  (*irq_PIT)(void);                                              // 22 single interrupt vector for all channels
-    void  (*irq_I2S0)(void);                                             // 23 single interrupt vector for all sources
-    void  (*irq_USB_OTG)(void);                                          // 24
-    void  (*irq_DAC0)(void);                                             // 25
-    void  (*irq_TSI)(void);                                              // 26
-    void  (*irq_MCG)(void);                                              // 27
-    void  (*irq_LPT)(void);                                              // 28
-    void  (*irq_SLCD)(void);                                             // 29
-    void  (*irq_PORTA)(void);                                            // 30
-  #if (PORTS_AVAILABLE == 2)
-    void  (*irq_PORTB)(void);                                            // 31
-  #elif (defined KINETIS_KL17 || defined KINETIS_KL27) && (SIZE_OF_FLASH <= (64 * 1024))
-    void  (*irq_PORTBCD_E)(void);                                        // 31 single interrupt vector for ports B, C, D and E
-  #else
-    void  (*irq_PORTC_D)(void);                                          // 31 single interrupt vector for ports C and D
-  #endif
 #elif defined KINETIS_K21                                                // {44}
     void  (*irq_DMA0)(void);                                             // 0
     void  (*irq_DMA1)(void);                                             // 1
@@ -1612,7 +1741,7 @@ typedef struct stPROCESSOR_IRQ
     void  (*irq_FLASH_RC)(void);                                         // 19
     void  (*irq_LOW_VOLTAGE)(void);                                      // 20
     void  (*irq_LL_wakeup)(void);                                        // 21
-    void  (*irq_WDOG)(void);                                             // 22
+    void  (*irq_WDOG0)(void);                                            // 22
     void  (*irq_RNGB)(void);                                             // 23
     void  (*irq_I2C0)(void);                                             // 24
     void  (*irq_I2C1)(void);                                             // 25
@@ -1652,7 +1781,7 @@ typedef struct stPROCESSOR_IRQ
     void  (*reserved55)(void);                                           // 55
     void  (*irq_DAC0)(void);                                             // 56
     void  (*irq_MCG)(void);                                              // 57
-    void  (*irq_LPT)(void);                                              // 58
+    void  (*irq_LPTMR0)(void);                                           // 58
     void  (*irq_PORTA)(void);                                            // 59
     void  (*irq_PORTB)(void);                                            // 60
     void  (*irq_PORTC)(void);                                            // 61
@@ -1689,7 +1818,7 @@ typedef struct stPROCESSOR_IRQ
     void  (*irq_FLASH_RC)(void);                                         // 7
     void  (*irq_LOW_VOLTAGE)(void);                                      // 8
     void  (*irq_LL_wakeup)(void);                                        // 9
-    void  (*irq_WDOG)(void);                                             // 10
+    void  (*irq_WDOG0)(void);                                            // 10
     void  (*irq_I2C0)(void);                                             // 11
     void  (*irq_SPI0)(void);                                             // 12
     void  (*irq_I2S0_TX)(void);                                          // 13
@@ -1718,7 +1847,7 @@ typedef struct stPROCESSOR_IRQ
     void  (*irq_USB_CD)(void);                                           // 36
     void  (*irq_TSI)(void);                                              // 37
     void  (*irq_MCG)(void);                                              // 38
-    void  (*irq_LPT)(void);                                              // 39
+    void  (*irq_LPTMR0)(void);                                           // 39
     void  (*irq_PORTA)(void);                                            // 40
     void  (*irq_PORTB)(void);                                            // 41
     void  (*irq_PORTC)(void);                                            // 42
@@ -1763,7 +1892,7 @@ typedef struct stPROCESSOR_IRQ
     void  (*irq_FLASH_RC)(void);                                         // 19
     void  (*irq_LOW_VOLTAGE)(void);                                      // 20
     void  (*irq_LL_wakeup)(void);                                        // 21
-    void  (*irq_WDOG)(void);                                             // 22
+    void  (*irq_WDOG0)(void);                                            // 22
     #if defined RNG_AVAILABLE
         void  (*irq_RNG)(void);                                          // 23
     #else
@@ -1812,7 +1941,7 @@ typedef struct stPROCESSOR_IRQ
         void  (*irq_res_55)(void);
         void  (*irq_DAC0)(void);                                         // 56
         void  (*irq_MCG)(void);                                          // 57
-        void  (*irq_LPT)(void);                                          // 58
+        void  (*irq_LPTMR0)(void);                                       // 58
         void  (*irq_PORTA)(void);                                        // 59
         void  (*irq_PORTB)(void);                                        // 60
         void  (*irq_PORTC)(void);                                        // 61
@@ -1919,7 +2048,7 @@ typedef struct stPROCESSOR_IRQ
         void  (*irq_res_55)(void);
         void  (*irq_DAC0)(void);                                         // 56
         void  (*irq_MCG)(void);                                          // 57
-        void  (*irq_LPT)(void);                                          // 58
+        void  (*irq_LPTMR0)(void);                                       // 58
         void  (*irq_PORTA)(void);                                        // 59
         void  (*irq_PORTB)(void);                                        // 60
         void  (*irq_PORTC)(void);                                        // 61
@@ -2081,7 +2210,7 @@ typedef struct stPROCESSOR_IRQ
         void  (*irq_DAC1)(void);                                         // 82
         void  (*irq_TSI)(void);                                          // 83
         void  (*irq_MCG)(void);                                          // 84
-        void  (*irq_LPT)(void);                                          // 85
+        void  (*irq_LPTMR0)(void);                                       // 85
         void  (*reserved86)(void);                                       // 86
         void  (*irq_PORTA)(void);                                        // 87
         void  (*irq_PORTB)(void);                                        // 88
@@ -2204,10 +2333,76 @@ typedef struct stVECTOR_TABLE
     #define irq_DAC0_ID                   25                             // 25
 
     #define irq_MCG_ID                    27                             // 27
-    #define irq_LPT_ID                    28                             // 28
+    #define irq_LPTMR0_ID                 28                             // 28
     #define irq_PDB_ID                    29                             // 29
     #define irq_PORTA_ID                  30                             // 30
     #define irq_PORTB_C_D_E_ID            31                             // 31 (ports B, C, D and E share an interrupt)
+#elif defined KINETIS_KL28
+    #define irq_DMA0_0_4_ID               0                              // 0
+    #define irq_DMA0_1_5_ID               1                              // 1
+    #define irq_DMA0_2_6_ID               2                              // 2
+    #define irq_DMA0_3_7_ID               3                              // 3
+    #define irq_DMA0_ERROR_ID             4                              // 4
+    #define irq_FLEXIO_ID                 5                              // 5
+    #define irq_TPM0_ID                   6                              // 6
+    #define irq_TPM1_ID                   7                              // 7
+    #define irq_TPM2_ID                   8                              // 8
+    #define irq_LPIT_ID                   9                              // 9
+    #define irq_LPSPI0_ID                 10                             // 10
+    #define irq_LPSPI1_ID                 11                             // 11
+    #define irq_LPUART0_ID                12                             // 12
+    #define irq_LPUART1_ID                13                             // 13
+    #define irq_LPI2C0_ID                 14                             // 14
+    #define irq_LPI2C1_ID                 15                             // 15
+
+    #define irq_PORTA_ID                  17                             // 17 (port A)
+    #define irq_PORTB_ID                  18                             // 18 (port B)
+    #define irq_PORTC_ID                  19                             // 19 (port C)
+    #define irq_PORTD_ID                  20                             // 20 (port D)
+    #define irq_PORTE_ID                  21                             // 21 (port E)
+    #define irq_LL_wakeup_ID              22                             // 22
+    #define irq_SAI0_ID                   23                             // 23
+    #define irq_USB_OTG_ID                24                             // 24
+    #define irq_ADC0_ID                   25                             // 25
+    #define irq_LPTMR0_ID                 26                             // 26
+    #define irq_RTC_SECONDS_ID            27                             // 27
+    #define irq_INTMUX0_0_ID              28                             // 28
+    #define irq_INTMUX0_1_ID              29                             // 29
+    #define irq_INTMUX0_2_ID              30                             // 30
+    #define irq_INTMUX0_3_ID              31                             // 31
+#elif defined KINETIS_KL82
+    #define irq_DMA0_0_4_ID               0                              // 0
+    #define irq_DMA0_1_5_ID               1                              // 1
+    #define irq_DMA0_2_6_ID               2                              // 2
+    #define irq_DMA0_3_7_ID               3                              // 3
+    #define irq_DMA0_ERROR_ID             4                              // 4
+    #define irq_FLEXIO_ID                 5                              // 5
+    #define irq_TPM0_ID                   6                              // 6
+    #define irq_TPM1_ID                   7                              // 7
+    #define irq_TPM2_ID                   8                              // 8
+    #define irq_PIT_ID                    9                              // 9
+    #define irq_SPI0_ID                   10                             // 10
+    #define irq_EVMSIM0_ID                11                             // 11
+    #define irq_LPUART0_ID                12                             // 12
+    #define irq_LPUART1_ID                13                             // 13
+    #define irq_I2C0_ID                   14                             // 14
+    #define irq_QSPI0_ID                  15                             // 15
+
+    #define irq_PORTA_ID                  17                             // 17 (port A)
+    #define irq_PORTB_ID                  18                             // 18 (port B)
+    #define irq_PORTC_ID                  19                             // 19 (port C)
+    #define irq_PORTD_ID                  20                             // 20 (port D)
+    #define irq_PORTE_ID                  21                             // 21 (port E)
+    #define irq_LL_wakeup_ID              22                             // 22
+    #define irq_LTC0_ID                   23                             // 23
+    #define irq_USB_OTG_ID                24                             // 24
+    #define irq_ADC0_ID                   25                             // 25
+    #define irq_LPTMR0_ID                 26                             // 26
+    #define irq_RTC_SECONDS_ID            27                             // 27
+    #define irq_INTMUX0_0_ID              28                             // 28
+    #define irq_INTMUX0_1_ID              29                             // 29
+    #define irq_INTMUX0_2_ID              30                             // 30
+    #define irq_INTMUX0_3_ID              31                             // 31
 #elif defined KINETIS_KL                                                 // {42}
     #if !defined DEVICE_WITHOUT_DMA
         #define irq_DMA0_ID               0                              // 0
@@ -2248,7 +2443,7 @@ typedef struct stVECTOR_TABLE
         #define irq_TSI_ID                26                             // 26
         #define irq_MCG_ID                27                             // 27
     #endif
-    #define irq_LPT_ID                    28                             // 28
+    #define irq_LPTMR0_ID                 28                             // 28
     #define irq_SLCD_ID                   29                             // 29
     #define irq_PORTA_ID                  30                             // 30 (port A)
   #if (PORTS_AVAILABLE == 2)
@@ -2321,7 +2516,7 @@ typedef struct stVECTOR_TABLE
 
     #define irq_DAC0_ID                   56                             // 56
     #define irq_MCG_ID                    57                             // 57
-    #define irq_LPT_ID                    58                             // 58
+    #define irq_LPTMR0_ID                 58                             // 58
     #define irq_PORTA_ID                  59                             // 59
     #define irq_PORTB_ID                  60                             // 60
     #define irq_PORTC_ID                  61                             // 61
@@ -2387,7 +2582,7 @@ typedef struct stVECTOR_TABLE
     #define irq_USB_CD_ID                 36                             // 36
     #define irq_TSI_ID                    37                             // 37
     #define irq_MCG_ID                    38                             // 38
-    #define irq_LPT_ID                    39                             // 39
+    #define irq_LPTMR0_ID                 39                             // 39
     #define irq_PORTA_ID                  40                             // 40
     #define irq_PORTB_ID                  41                             // 41
     #define irq_PORTC_ID                  42                             // 43
@@ -2457,7 +2652,7 @@ typedef struct stVECTOR_TABLE
 
         #define irq_DAC0_ID               56                             // 56
         #define irq_MCG_ID                57                             // 57
-        #define irq_LPT_ID                58                             // 58
+        #define irq_LPTMR0_ID             58                             // 58
         #define irq_PORTA_ID              59                             // 59
         #define irq_PORTB_ID              60                             // 60
         #define irq_PORTC_ID              61                             // 61
@@ -2520,7 +2715,7 @@ typedef struct stVECTOR_TABLE
 
         #define irq_DAC0_ID               56                             // 56
         #define irq_MCG_ID                57                             // 57
-        #define irq_LPT_ID                58                             // 58
+        #define irq_LPTMR0_ID             58                             // 58
         #define irq_PORTA_ID              59                             // 59
         #define irq_PORTB_ID              60                             // 60
         #define irq_PORTC_ID              61                             // 61
@@ -2644,7 +2839,7 @@ typedef struct stVECTOR_TABLE
         #define irq_DAC1_ID               82                             // 82
         #define irq_TSI_ID                83                             // 83
         #define irq_MCG_ID                84                             // 84
-        #define irq_LPT_ID                85                             // 85
+        #define irq_LPTMR0_ID             85                             // 85
 
         #define irq_PORTA_ID              87                             // 87
         #define irq_PORTB_ID              88                             // 88
@@ -2686,7 +2881,7 @@ typedef struct stVECTOR_TABLE
 #define VECTOR_SIZE                      (sizeof(VECTOR_TABLE))
 
 #if defined KINETIS_KE                                                   // {42}
-    #define LAST_PROCESSOR_IRQ     irq_WDOG
+    #define LAST_PROCESSOR_IRQ     irq_WDOG0
     #define CHECK_VECTOR_SIZE                180                         // (16 + 28 + 1) = 45) * 4 - adequate for this processor [0xb4]
 #elif defined KINETIS_K02 || defined KINETIS_KW2X
     #define LAST_PROCESSOR_IRQ     irq_SOFTWARE
@@ -2697,6 +2892,12 @@ typedef struct stVECTOR_TABLE
 #elif defined KINETIS_KV
     #define LAST_PROCESSOR_IRQ     irq_PORTB_C_D_E
     #define CHECK_VECTOR_SIZE                192                         // (16 + 31 + 1) = 48) * 4 - adequate for this processor [0xc0]
+#elif defined KINETIS_KL28
+    #define LAST_PROCESSOR_IRQ     irq_RTC_Alarm
+    #define CHECK_VECTOR_SIZE                268                         // (16 + 31 + 19 + 1) = 67) * 4 - adequate for this processor [0x10c]
+#elif defined KINETIS_KL82
+    #define LAST_PROCESSOR_IRQ     irq_DMA0_7
+    #define CHECK_VECTOR_SIZE                304                         // (16 + 31 + 28) = 76) * 4 - adequate for this processor [0x130]
 #elif defined KINETIS_KL                                                 // {42}
   #if (PORTS_AVAILABLE == 2)
     #define LAST_PROCESSOR_IRQ     irq_PORTB
@@ -2750,9 +2951,12 @@ typedef struct stVECTOR_TABLE
 // Peripheral Register Blocks
 //
 #if defined _WINDOWS
-    #if defined KINETIS_KL                                                  // {48}
+    #if defined KINETIS_KL                                               // {48}
         #if !defined DEVICE_WITHOUT_DMA
             #define DMA_BLOCK                  ((unsigned char *)(&kinetis.DMA)) // DMA Controller
+        #endif
+        #if defined INTMUX0_AVAILABLE                                    // {100}
+            #define INTMUX0_BLOCK              ((unsigned char *)(&kinetis.INTMUX)) // INTMUX0
         #endif
     #else
         #define eDMA_BLOCK                     ((unsigned char *)(&kinetis.eDMA)) // eDMA Controller
@@ -3007,6 +3211,9 @@ typedef struct stVECTOR_TABLE
         #if !defined DEVICE_WITHOUT_DMA
             #define DMA_BLOCK                  0x40008100                // DMA Controller
         #endif
+        #if defined INTMUX0_AVAILABLE                                    // {100}
+            #define INTMUX0_BLOCK              0x40024000                // INTMUX0
+        #endif
     #else
         #define eDMA_BLOCK                     0x40008000                // eDMA Controller
         #define eDMA_DESCRIPTORS               0x40009000                // eDMA Descriptor Memory
@@ -3163,7 +3370,13 @@ typedef struct stVECTOR_TABLE
         #endif
     #endif
     #if LPUARTS_AVAILABLE > 2
-        #define LPUART2_BLOCK                 0x400c6000                 // LPUART2
+        #if defined KINETIS_KL28
+            #define LPUART2_BLOCK              0x40046000                 // LPUART2
+        #elif defined KINETIS_KL82
+            #define LPUART2_BLOCK              0x40056000                 // LPUART2
+        #else
+            #define LPUART2_BLOCK              0x400c6000                 // LPUART2
+        #endif
     #endif
     #if LPUARTS_AVAILABLE > 3
         #define LPUART3_BLOCK                 0x400c7000                 // LPUART3
@@ -4144,6 +4357,70 @@ typedef struct stKINETIS_DMA_TDC
 #define DMA_NO_MODULO             0x00000080
 
 extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned char ucDmaTriggerSource, unsigned long ulBufLength, void *ptrBufSource, void *ptrBufDest, unsigned long ulRules, void(*int_handler)(void), int int_priority);
+
+
+// INTMUX                                                                {100}
+//
+#if defined INTMUX0_AVAILABLE
+    #define INTMUX0_CH0_CSR       *(volatile unsigned long *)(INTMUX0_BLOCK + 0x00) // channel 0 control status register
+        #define INTMUX_CSR_RST    0x00000001                             // perform a software reset on this channel
+        #define INTMUX_CSR_OR     0x00000002                             // logically OR all enabled interrupt inputs
+        #define INTMUX_CSR_AND    0x00000002                             // logically AND all enabled interrupt inputs
+        #define INTMUX_CSR_IRQN_MASK  0x00000030                         // channel input number (read-only)
+        #define INTMUX_CSR_CHIN_MASK  0x00000f00                         // channel instance number (read-only)
+        #define INTMUX_CSR_IRQP   0x80000000                             // channel request pending (read-only)
+    #define INTMUX0_CH0_VEC       *(volatile unsigned long *)(INTMUX0_BLOCK + 0x04) // channel 0 vector number register (read-only)
+    #define INTMUX0_CH0_IER_31_0  *(volatile unsigned long *)(INTMUX0_BLOCK + 0x10) // channel 0 interrupt enable register
+    #define INTMUX0_CH0_IPR_31_0  *(volatile unsigned long *)(INTMUX0_BLOCK + 0x20) // channel 0 interrupt pending register (read-only)
+
+    #define INTMUX0_CH1_CSR       *(volatile unsigned long *)(INTMUX0_BLOCK + 0x40) // channel 1 control status register
+    #define INTMUX0_CH1_VEC       *(volatile unsigned long *)(INTMUX0_BLOCK + 0x44) // channel 1 vector number register (read-only)
+    #define INTMUX0_CH1_IER_31_0  *(volatile unsigned long *)(INTMUX0_BLOCK + 0x50) // channel 1 interrupt enable register
+    #define INTMUX0_CH1_IPR_31_0  *(volatile unsigned long *)(INTMUX0_BLOCK + 0x60) // channel 1 interrupt pending register (read-only)
+
+    #define INTMUX0_CH2_CSR       *(volatile unsigned long *)(INTMUX0_BLOCK + 0x80) // channel 2 control status register
+    #define INTMUX0_CH2_VEC       *(volatile unsigned long *)(INTMUX0_BLOCK + 0x84) // channel 2 vector number register (read-only)
+    #define INTMUX0_CH2_IER_31_0  *(volatile unsigned long *)(INTMUX0_BLOCK + 0x90) // channel 2 interrupt enable register
+    #define INTMUX0_CH2_IPR_31_0  *(volatile unsigned long *)(INTMUX0_BLOCK + 0xa0) // channel 2 interrupt pending register (read-only)
+
+    #define INTMUX0_CH3_CSR       *(volatile unsigned long *)(INTMUX0_BLOCK + 0xc0) // channel 3 control status register
+    #define INTMUX0_CH3_VEC       *(volatile unsigned long *)(INTMUX0_BLOCK + 0xc4) // channel 3 vector number register (read-only)
+    #define INTMUX0_CH3_IER_31_0  *(volatile unsigned long *)(INTMUX0_BLOCK + 0xd0) // channel 3 interrupt enable register
+    #define INTMUX0_CH3_IPR_31_0  *(volatile unsigned long *)(INTMUX0_BLOCK + 0xe0) // channel 3 interrupt pending register (read-only)
+
+    // INTMUX0 Peripheral interrupt assignments
+    //
+    #define INTMUX0_PERIPHERAL_LPTMR1    0
+    #define INTMUX0_PERIPHERAL_SPI1      4
+    #define INTMUX0_PERIPHERAL_LPUART2   5
+    #define INTMUX0_PERIPHERAL_EMVSIM2   6
+    #define INTMUX0_PERIPHERAL_I2C1      7
+    #define INTMUX0_PERIPHERAL_TSI0      8
+    #define INTMUX0_PERIPHERAL_PMC       9
+    #define INTMUX0_PERIPHERAL_FTFA      10
+    #define INTMUX0_PERIPHERAL_MCG       11
+    #define INTMUX0_PERIPHERAL_WDOG0_EWM 12
+    #define INTMUX0_PERIPHERAL_DAC0      13
+    #define INTMUX0_PERIPHERAL_TRNG0     14
+    #define INTMUX0_PERIPHERAL_CMP0      16
+    #define INTMUX0_PERIPHERAL_RTC_ALARM 18
+    #define INTMUX0_PERIPHERAL_DMA0_4    24
+    #define INTMUX0_PERIPHERAL_DMA0_5    25
+    #define INTMUX0_PERIPHERAL_DMA0_6    26
+    #define INTMUX0_PERIPHERAL_DMA0_7    27
+
+typedef struct stKINETIS_INTMUX
+{
+    unsigned long INTMUX_CHn_CSR;
+    unsigned long INTMUX_CHn_VEC;
+    unsigned long ulRes0[2];
+    unsigned long INTMUX_CHn_IER_31_0;
+    unsigned long ulRes1[3];
+    unsigned long INTMUX_CHn_IPR_31_0;
+    unsigned long ulRes2[7];
+} KINETIS_INTMUX;
+#endif
+
 
 #if !defined KINETIS_KL
 // FlexBus Module
@@ -8374,10 +8651,22 @@ typedef struct stKINETIS_ADMA2_BD
         #define SIM_SOPT2_UART0SRC_OSCERCLK  0x08000000                  // UART0 clock source OSCERCLK
         #define SIM_SOPT2_UART0SRC_MCGIRCLK  0x0c000000                  // UART0 clock source MCGIRCLK
         #define SIM_SOPT2_UART1SRC_DISABLED  0x00000000                  // UART1 clock source disabled
-        #define SIM_SOPT2_UART1SRC_MCG       0x10000000                  // UART1 clock MCGFLL or MCGPLLCLK/2
-        #define SIM_SOPT2_UART1SRC_IRC48M    0x10000000                  // UART1 clock IRC48M (for KL03 and KL43)
-        #define SIM_SOPT2_UART1SRC_OSCERCLK  0x20000000                  // UART1 clock source OSCERCLK
-        #define SIM_SOPT2_UART1SRC_MCGIRCLK  0x30000000                  // UART1 clock source MCGIRCLK
+        #if defined KINETIS_KL82
+            #define SIM_SOPT2_UART1SRC_MCG       SIM_SOPT2_UART0SRC_MCG  // one field used for all LPUARTs
+            #define SIM_SOPT2_UART1SRC_IRC48M    SIM_SOPT2_UART0SRC_IRC48M
+            #define SIM_SOPT2_UART1SRC_OSCERCLK  SIM_SOPT2_UART0SRC_OSCERCLK
+            #define SIM_SOPT2_UART1SRC_MCGIRCLK  SIM_SOPT2_UART0SRC_MCGIRCLK
+            #define SIM_SOPT2_UART2SRC_MCG       SIM_SOPT2_UART0SRC_MCG  // one field used for all LPUARTs
+            #define SIM_SOPT2_UART2SRC_IRC48M    SIM_SOPT2_UART0SRC_IRC48M
+            #define SIM_SOPT2_UART2SRC_OSCERCLK  SIM_SOPT2_UART0SRC_OSCERCLK
+            #define SIM_SOPT2_UART2SRC_MCGIRCLK  SIM_SOPT2_UART0SRC_MCGIRCLK
+            #define SIM_SOPT2_UART2SRC_DISABLED  0x00000000
+        #else
+            #define SIM_SOPT2_UART1SRC_MCG       0x10000000              // UART1 clock MCGFLL or MCGPLLCLK/2
+            #define SIM_SOPT2_UART1SRC_IRC48M    0x10000000              // UART1 clock IRC48M (for KL03 and KL43)
+            #define SIM_SOPT2_UART1SRC_OSCERCLK  0x20000000              // UART1 clock source OSCERCLK
+            #define SIM_SOPT2_UART1SRC_MCGIRCLK  0x30000000              // UART1 clock source MCGIRCLK
+        #endif
       #else
         #define SIM_SOPT2_CLKOUTSEL_MASK     0x000000e0
         #if defined KINETIS_WITH_USBPHY
@@ -8764,6 +9053,7 @@ typedef struct stKINETIS_ADMA2_BD
       #define SIM_SCGC6_FTFL                 0x00000001
       #define SIM_SCGC6_DMAMUX0              0x00000002
       #define SIM_SCGC6_DMAMUX1              0x00000004
+      #define SIM_SCGC6_INTMUX0              0x00000010                  // {100}
       #define SIM_SCGC6_FLEXCAN0             0x00000010
       #if defined DSPI_SPI
           #define SIM_SCGC6_SPI0             0x00001000
@@ -8797,6 +9087,7 @@ typedef struct stKINETIS_ADMA2_BD
       #endif
       #define SIM_SCGC6_SIM_SCGC6_DMAMUX0    BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 1)
       #define SIM_SCGC6_SIM_SCGC6_DMAMUX1    BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 2)
+      #define SIM_SCGC6_SIM_SCGC6_INTMUX0    BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 4)
       #define SIM_SCGC6_SIM_SCGC6_FLEXCAN0   BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 4)
       #if defined DSPI_SPI
           #define SIM_SCGC6_SIM_SCGC6_SPI0   BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 12)
@@ -10324,6 +10615,9 @@ typedef struct stKINETIS_ADMA2_BD
     #define PC_5_I2S0_RXD0               PORT_MUX_ALT4
 #endif
 #if defined KINETIS_KL
+    #if defined KINETIS_KL03
+        #define PA_0_ADC0_SE15           PORT_MUX_ALT0                   // warning: this changes the default SWD_CLK configuration, losing any debug support!
+    #endif
     #if defined KINETIS_KL05
         #define PB_1_DAC0_OUT            PORT_MUX_ALT0
     #else

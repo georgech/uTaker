@@ -576,7 +576,7 @@ _abort_multi:
             if (ptrData == 0) {                                          // not a specific injection so check whether there is queued data
                 static int fnGetQueuedUSB(int *iEndpoint, unsigned short *usLength, unsigned char **ptrData);
                 if (fnGetQueuedUSB(&iEndpoint, &usLength, &ptrData) != 0) {
-                    break;;
+                    break;
                 }
             }
             if ((iEndpoint & USB_SETUP_FLAG) != 0) {                     // {30} identify that a setup frame is being simulated

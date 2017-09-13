@@ -1,10 +1,10 @@
 /* KL_128_96.icf - for target in Flash        */
-/* 128k Flash / 16k RAM                       */
+/* 128k Flash / 96k RAM                       */
 define symbol __ICFEDIT_intvec_start__ = 0x00000000;
 /*-Memory Regions-*/
 define symbol __ICFEDIT_region_ROM_start__ = 0x00000000;
 define symbol __ICFEDIT_region_ROM_end__   = 0x0001FFFF;
-define symbol __ICFEDIT_region_RAM_start__ = 0x1fffa0c0;
+define symbol __ICFEDIT_region_RAM_start__ = 0x1fffa130;
 define symbol __ICFEDIT_region_RAM_end__   = 0x20011FFF;
 /*-Sizes-*/
 define symbol __ICFEDIT_size_cstack__ = 0x0;

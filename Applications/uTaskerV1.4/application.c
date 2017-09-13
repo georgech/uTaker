@@ -973,7 +973,7 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
         fnEchoInput(ucInputMessage, ucLength);
     }
         #else
-    while (fnMsgs(SerialPortID)) {
+    while (fnMsgs(SerialPortID) != 0) {
         Length = fnRead(SerialPortID, ucInputMessage, MEDIUM_MESSAGE);
         fnEchoInput(ucInputMessage, Length);
     }
@@ -2624,11 +2624,12 @@ extern void fnToggleRedLED(void)
     TOGGLE_TEST_OUTPUT();
 }
     #endif
-
+    #if defined FREE_RTOS_UART
 QUEUE_HANDLE fnGetUART_Handle(void)
 {
     return SerialPortID;
 }
+    #endif
 #endif
 
 // The user has the chance to configure things very early after startup (Note - heap not yet available!)

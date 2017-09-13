@@ -270,7 +270,7 @@ typedef struct stTIME_BLOCK_S
         unsigned char  ucEEPROM[32 * 1024];
     } EEPROM_M24256;
 
-    static EEPROM_M24256 simM24256 = { (32 * 1024), 0xae, 64, 0 };
+    static EEPROM_M24256 simM24256 = {(32 * 1024), 0xae, 64, 0};
 
     typedef struct stDS3640_DATA
     {     

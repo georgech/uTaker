@@ -454,7 +454,7 @@ static __interrupt void _SCI0_Interrupt(void)                            // UART
             UART0_S1 &= ~(UART_S1_RDRF);                                 // simulate reset of interrupt flag
             #endif
             ucState = UART0_S1;                                          // {92} update the status register
-            if (ucState & UART_S1_OR) {                                  // if the overrun flag is set at this point it means that an overrun took place between reading the status register on entry to the interrupt and reading the data register
+            if ((ucState & UART_S1_OR) != 0) {                           // if the overrun flag is set at this point it means that an overrun took place between reading the status register on entry to the interrupt and reading the data register
                 (void)UART0_D;                                           // read the data register in order to clear the overrun flag and allow the receiver to continue operating
             }
         }
@@ -512,7 +512,7 @@ static __interrupt void _SCI1_Interrupt(void)                            // UART
             UART1_S1 &= ~(UART_S1_RDRF);                                 // simulate reset of interrupt flag
         #endif
             ucState = UART1_S1;                                          // {92} update the status register
-            if (ucState & UART_S1_OR) {                                  // if the overrun flag is set at this point it means that an overrun took place between reading the status register on entry to the interrupt and reading the data register
+            if ((ucState & UART_S1_OR) !=  0) {                          // if the overrun flag is set at this point it means that an overrun took place between reading the status register on entry to the interrupt and reading the data register
                 (void)UART1_D;                                           // read the data register in order to clear the overrun flag and allow the receiver to continue operating
             }
         }
@@ -1963,7 +1963,11 @@ extern void fnTxOn(QUEUE_HANDLE Channel)
             _CONFIG_PERIPHERAL(D, 3, (PD_3_LPUART2_TX | UART_PULL_UPS)); // LPUART2_TX on PD3 (alt. function 3)
                 #endif
             #endif
+            #if !defined irq_LPUART2_ID
+            fnEnterInterrupt((irq_INTMUX0_0_ID + PRIORITY_LPUART2), PRIORITY_LPUART2, _LPSCI2_Interrupt); // enter LPUART2 interrupt handler based on INTMUX
+            #else
             fnEnterInterrupt(irq_LPUART2_ID, PRIORITY_LPUART2, _LPSCI2_Interrupt); // enter LPUART2 interrupt handler
+            #endif
             break;
         #endif
         #if LPUARTS_AVAILABLE > 3
@@ -2262,7 +2266,11 @@ extern void fnRxOn(QUEUE_HANDLE Channel)
             _CONFIG_PERIPHERAL(D, 2, (PD_2_LPUART2_RX | UART_PULL_UPS)); // LPUART2_RX on PD2 (alt. function 3)
                 #endif
             #endif
+            #if !defined irq_LPUART2_ID
+            fnEnterInterrupt((irq_INTMUX0_0_ID + (PRIORITY_LPUART2 * 32) + INTMUX0_PERIPHERAL_LPUART2), PRIORITY_LPUART2, _LPSCI2_Interrupt); // enter LPUART2 interrupt handler based on INTMUX
+            #else
             fnEnterInterrupt(irq_LPUART2_ID, PRIORITY_LPUART2, _LPSCI2_Interrupt); // enter LPUART2 interrupt handler
+            #endif
             break;
         #endif
         #if LPUARTS_AVAILABLE > 3
@@ -2984,7 +2992,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         case (2):
             #endif
             #if defined KINETIS_KL
-            POWER_UP_ATOMIC(5, SIM_SCGC2_LPUART2);                       // power up LPUART 1
+            POWER_UP_ATOMIC(5, SIM_SCGC5_LPUART2);                       // power up LPUART 2
             #else
             POWER_UP_ATOMIC(2, SIM_SCGC2_LPUART2);                       // power up LPUART 2
             #endif
@@ -2995,12 +3003,12 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
                 #if defined KINETIS_K80
             SIM_SOPT2 = ((SIM_SOPT2 & ~(SIM_SOPT2_LPUARTSRC_MGC)) | (SIM_SOPT2_LPUARTSRC_SEL | SIM_SOPT2_PLLFLLSEL_IRC48M)); // select the 48MHz IRC48MHz clock as source for the LPUART
                 #else
-            SIM_SOPT2 = ((SIM_SOPT2 & ~(SIM_SOPT2_UART1SRC_MCGIRCLK)) | (SIM_SOPT2_UART1SRC_IRC48M | SIM_SOPT2_PLLFLLSEL_IRC48M)); // select the 48MHz IRC48MHz clock as source for the LPUART
+            SIM_SOPT2 = ((SIM_SOPT2 & ~(SIM_SOPT2_UART2SRC_MCGIRCLK)) | (SIM_SOPT2_UART2SRC_IRC48M | SIM_SOPT2_PLLFLLSEL_IRC48M)); // select the 48MHz IRC48MHz clock as source for the LPUART
                 #endif
             #elif defined LPUART_OSCERCLK                                // clock the UART from the external clock
-            SIM_SOPT2 |= (SIM_SOPT2_UART1SRC_OSCERCLK);
+            SIM_SOPT2 |= (SIM_SOPT2_UART2SRC_OSCERCLK);
             #else                                                        // clock the UART from MCGIRCLK (IRC8M/FCRDIV/LIRC_DIV2)
-            SIM_SOPT2 |= (SIM_SOPT2_UART1SRC_MCGIRCLK);
+            SIM_SOPT2 |= (SIM_SOPT2_UART2SRC_MCGIRCLK);
             #endif
             break;
         #endif

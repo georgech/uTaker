@@ -393,7 +393,7 @@ static void fnConfigI2C_Interface(void)
         uTaskerStateChange(OWN_TASK, UTASKER_GO);                        // set to polling mode
             #else
             #if defined EEPROM_M24256
-        static const unsigned char ucSetEEPROMAddress0[] = { ADD_EEPROM_WRITE, 0, 0 }; // command to set address to read to 0x0000
+        static const unsigned char ucSetEEPROMAddress0[] = {ADD_EEPROM_WRITE, 0, 0}; // command to set address to read to 0x0000
             #else
         static const unsigned char ucSetEEPROMAddress0[] = {ADD_EEPROM_WRITE, 0}; // command to set address to read to 0
                 #endif
@@ -476,7 +476,7 @@ static void acc_data_ready(void)
     #else
         while ((Length = fnRead(I2CPortID, ucInputMessage, MEDIUM_MESSAGE)) != 0) {
         #if defined EEPROM_M24256
-            static const unsigned char ucSetWriteEEPROM2[] = { ADD_EEPROM_WRITE,   0, 62,   2, 3, 4, 5, 6, 7, 8, 9, 10 }; // prepare write of multiple bytes to address 62 (to show page write)
+            static const unsigned char ucSetWriteEEPROM2[] = {ADD_EEPROM_WRITE,  0, 62,  2, 3, 4, 5, 6, 7, 8, 9, 10 }; // prepare write of multiple bytes to address 62 (to show page write)
         #else
             static const unsigned char ucSetWriteEEPROM1[] = {ADD_EEPROM_WRITE, 3, 5}; // prepare write of one byte to address 3
             static const unsigned char ucSetWriteEEPROM2[] = {ADD_EEPROM_WRITE, 5, 3, 4, 5, 6, 7, 8, 9, 10}; // prepare write of multiple bytes to address 5

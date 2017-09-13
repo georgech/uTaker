@@ -61,6 +61,7 @@
     13.07.2017 Define KL82 disabled ports                                {44}
     04.08.2017 Add fnSetBitBandPeripheralValue() and fnClearBitBandPeripheralValue()
     11.08.2017 Add PCC support                                           {45}
+    12.09.2017 Added INTMUX support and LPUART2 using its interrupts     {46}
  
 */  
                           
@@ -572,6 +573,10 @@ static void fnSetDevice(unsigned long *port_inits)
     UART2_WP7816T0 = 0x0a;
     UART2_WF7816 = 0x01;
     #endif
+#elif LPUARTS_AVAILABLE > 2
+    LPUART2_BAUD = (LPUART_BAUD_OSR_16 | 0x00000004);
+    LPUART2_STAT = (LPUART_STAT_TDRE | LPUART_STAT_TC);
+    LPUART2_DATA = (LPUART_DATA_RXEMPT);
 #endif
 #if UARTS_AVAILABLE > 3
     UART3_BDL    = 0x04;   
@@ -714,6 +719,12 @@ static void fnSetDevice(unsigned long *port_inits)
     DMA_DCHPRI14   = 14;
     DMA_DCHPRI15   = 15;
     #endif
+#endif
+#if defined INTMUX0_AVAILABLE                                            // {46}
+    INTMUX0_CH0_CSR = 0x000;
+    INTMUX0_CH1_CSR = 0x100;
+    INTMUX0_CH2_CSR = 0x200;
+    INTMUX0_CH3_CSR = 0x300;
 #endif
 #if defined KINETIS_KE
     ADC0_SC1 = ADC_SC1A_ADCH_OFF;
@@ -1002,6 +1013,37 @@ extern unsigned char fnMapPortBit(unsigned long ulRealBit)
 extern void RealTimeInterrupt(void)
 {
 }
+
+#if defined INTMUX0_AVAILABLE                                            // {46}
+static void fnCallINTMUX(int iChannel, int iPeripheralReference, unsigned char *ptrVectLocation)
+{
+    VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+    KINETIS_INTMUX *ptrINTMUX = (KINETIS_INTMUX *)INTMUX0_BLOCK;;
+    ptrINTMUX += iChannel;
+    if ((ptrINTMUX->INTMUX_CHn_IER_31_0 & (1 << iPeripheralReference)) != 0) {
+        ptrINTMUX->INTMUX_CHn_IPR_31_0 |= (1 << iPeripheralReference);
+        ptrINTMUX->INTMUX_CHn_CSR |= (INTMUX_CSR_IRQP);                  // interrupt pending
+        ptrINTMUX->INTMUX_CHn_VEC = (ptrVectLocation - (unsigned char *)ptrVect); // calculate the vector offset location
+        switch (iChannel) {
+        case 0:
+            ptrVect->processor_interrupts.irq_INTMUX0_0();               // call the interrupt handler
+            break;
+        case 1:
+            ptrVect->processor_interrupts.irq_INTMUX0_1();               // call the interrupt handler
+            break;
+        case 2:
+            ptrVect->processor_interrupts.irq_INTMUX0_2();               // call the interrupt handler
+            break;
+        case 3:
+            ptrVect->processor_interrupts.irq_INTMUX0_3();               // call the interrupt handler
+            break;
+        default:
+            _EXCEPTION("Invalid INTMUX0 channel!");
+            break;
+        }
+    }
+}
+#endif
 
 static int fnGenInt(int iIrqID)
 {
@@ -2897,9 +2939,7 @@ extern void fnSimPorts(void)
             fnSetPinCharacteristics(_PORTA, PORTA_GPCHR, PORTA_GPCLR);
         }
 #endif
-#if !defined KINETIS_KE
     }
-#endif
     GPIOA_PTOR = GPIOA_PSOR = GPIOA_PCOR = 0;                            // registers always read 0
 
 #if PORTS_AVAILABLE > 1
@@ -2919,9 +2959,7 @@ extern void fnSimPorts(void)
             fnSetPinCharacteristics(_PORTB, PORTB_GPCHR, PORTB_GPCLR);
         }
     #endif
-    #if !defined KINETIS_KE
     }
-    #endif
     GPIOB_PTOR = GPIOB_PSOR = GPIOB_PCOR = 0;                            // registers always read 0
 #endif
 #if PORTS_AVAILABLE > 2
@@ -2941,9 +2979,7 @@ extern void fnSimPorts(void)
             fnSetPinCharacteristics(_PORTC, PORTC_GPCHR, PORTC_GPCLR);
         }
     #endif
-    #if !defined KINETIS_KE
     }
-    #endif
     GPIOC_PTOR = GPIOC_PSOR = GPIOC_PCOR = 0;                            // registers always read 0
 #endif
 #if PORTS_AVAILABLE > 3
@@ -5023,9 +5059,18 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
             #endif
                         }
                         else {
-                            if (fnGenInt(irq_LPUART2_ID) != 0) {             // if LPUART2 interrupt is not disabled
+            #if !defined irq_LPUART2_ID
+                            if (fnGenInt(irq_INTMUX0_0_ID + PRIORITY_LPUART2) != 0) // {46}
+            #else
+                            if (fnGenInt(irq_LPUART2_ID) != 0)
+            #endif
+                            {                                            // if LPUART2 interrupt is not disabled
                                 VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+            #if !defined irq_LPUART2_ID
+                                fnCallINTMUX(PRIORITY_LPUART2, INTMUX0_PERIPHERAL_LPUART2, (unsigned char *)&ptrVect->processor_interrupts.irq_LPUART2);
+            #else
                                 ptrVect->processor_interrupts.irq_LPUART2(); // call the interrupt handler
+            #endif
                             }
                         }
                     }
@@ -5375,12 +5420,34 @@ static void fnUART_Tx_int(int iChannel)
             #else
         case 1:
             #endif
-            if (LPUART1_CTRL & LPUART_CTRL_TE) {                             // if transmitter enabled
+            if ((LPUART1_CTRL & LPUART_CTRL_TE) != 0) {                      // if transmitter enabled
                 LPUART1_STAT |= (LPUART_STAT_TDRE | LPUART_STAT_TC);         // set interrupt cause
-                if (LPUART1_CTRL & LPUART1_STAT) {                           // if transmit interrupt type enabled
+                if ((LPUART1_CTRL & LPUART1_STAT) != 0) {                    // if transmit interrupt type enabled
                     if (fnGenInt(irq_LPUART1_ID) != 0) {                     // if LPUART1 interrupt is not disabled
                         VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                         ptrVect->processor_interrupts.irq_LPUART1();         // call the interrupt handler
+                    }
+                }
+            }
+            break;
+        #endif
+        #if (LPUARTS_AVAILABLE > 2) && (UARTS_AVAILABLE == 0)
+        case 2:
+            if ((LPUART2_CTRL & LPUART_CTRL_TE) != 0) {                      // if transmitter enabled
+                LPUART2_STAT |= (LPUART_STAT_TDRE | LPUART_STAT_TC);         // set interrupt cause
+                if ((LPUART2_CTRL & LPUART2_STAT) != 0) {                    // if transmit interrupt type enabled
+            #if !defined irq_LPUART2_ID
+                    if (fnGenInt(irq_INTMUX0_0_ID + PRIORITY_LPUART2) != 0)  // {46}
+            #else
+                    if (fnGenInt(irq_LPUART2_ID) != 0)
+            #endif
+                    {                                                        // if LPUART2 interrupt is not disabled
+                        VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+            #if !defined irq_LPUART2_ID
+                        fnCallINTMUX(PRIORITY_LPUART2, INTMUX0_PERIPHERAL_LPUART2, (unsigned char *)&ptrVect->processor_interrupts.irq_LPUART2);
+            #else
+                        ptrVect->processor_interrupts.irq_LPUART2(); // call the interrupt handler
+            #endif
                     }
                 }
             }
@@ -6266,10 +6333,33 @@ static const unsigned char ucDeviceDescriptor[] = {                      // cons
 };
 
 static const unsigned char ucConfigDescriptor[] = {                      // constant configuration descriptor (example of CDC)
+#if 0                                                                    // CDC with two interfaces
+    0x09, 0x02, 0x8D, 0x00, 0x04, 0x01, 0x04, 0xC0, 0x00, 0x08, 0x0B, 0x00, 0x02, 0x02,
+    0x02, 0x00, 0x00, 0x09, 0x04, 0x00, 0x00, 0x01, 0x02, 0x02, 0x00, 0x05, 0x05, 0x24,
+    0x00, 0x10, 0x01, 0x05, 0x24, 0x01, 0x01, 0x00, 0x04, 0x24, 0x02, 0x02, 0x05, 0x24,
+    0x06, 0x00, 0x01, 0x07, 0x05, 0x82, 0x03, 0x40, 0x00, 0x0A, 0x09, 0x04, 0x01, 0x00,
+    0x02, 0x0A, 0x00, 0x00, 0x05, 0x07, 0x05, 0x01, 0x02, 0x40, 0x00, 0x00, 0x07, 0x05,
+    0x81, 0x02, 0x40, 0x00, 0x00, 0x08, 0x0B, 0x02, 0x02, 0x02, 0x02, 0x00, 0x00, 0x09,
+    0x04, 0x02, 0x00, 0x01, 0x02, 0x02, 0x00, 0x05, 0x05, 0x24, 0x00, 0x10, 0x01, 0x05,
+    0x24, 0x01, 0x01, 0x00, 0x04, 0x24, 0x02, 0x02, 0x05, 0x24, 0x06, 0x00, 0x01, 0x07,
+    0x05, 0x84, 0x03, 0x40, 0x00, 0x0A, 0x09, 0x04, 0x03, 0x00, 0x02, 0x0A, 0x00, 0x00,
+    0x05, 0x07, 0x05, 0x03, 0x02, 0x40, 0x00, 0x00, 0x07, 0x05, 0x83, 0x02, 0x40, 0x00,
+    0x00
+#elif 1                                                                  // CDC + MSD composite
+    0x09, 0x02, 0x79, 0x00, 0x04, 0x01, 0x00, 0xC0, 0xE8, 0x08, 0x0B, 0x00, 0x02, 0x02,
+    0x03, 0x00, 0x02, 0x09, 0x04, 0x00, 0x00, 0x01, 0x02, 0x02, 0x00, 0x00, 0x05, 0x24,
+    0x00, 0x10, 0x01, 0x05, 0x24, 0x01, 0x01, 0x01, 0x04, 0x24, 0x02, 0x06, 0x05, 0x24,
+    0x06, 0x00, 0x01, 0x07, 0x05, 0x85, 0x03, 0x10, 0x00, 0x0A, 0x09, 0x04, 0x01, 0x00,
+    0x02, 0x0A, 0x00, 0x00, 0x00, 0x07, 0x05, 0x83, 0x02, 0x10, 0x00, 0x00, 0x07, 0x05,
+    0x04, 0x02, 0x10, 0x00, 0x00, 0x09, 0x04, 0x02, 0x00, 0x02, 0xFF, 0xFF, 0xFF, 0x04,
+    0x07, 0x05, 0x81, 0x02, 0x40, 0x00, 0x00, 0x07, 0x05, 0x02, 0x02, 0x40, 0x00, 0x00,
+    0x09, 0x04, 0x03, 0x00, 0x02, 0x08, 0x06, 0x50, 0x00, 0x07, 0x05, 0x86, 0x02, 0x40,
+    0x00, 0x00, 0x07, 0x05, 0x07, 0x02, 0x40, 0x00, 0x00
+#else
     0x09, 0x02, 0x4b, 0x00, 0x02, 0x01, 0x04, 0xc0, 0x00,                // configuration descriptor
     0x08, 0x0b, 0x00, 0x02, 0x02, 0x00, 0x00, 0x00,                      // interface association descriptor
     0x09, 0x04, 0x00, 0x00, 0x01, 0x02, 0x02, 0x00, 0x05,                // interface descriptor
-    0x05, 0x24, 0x00, 0x00, 0x02,                                        // class descriptor
+    0x05, 0x24, 0x00, 0x00, 0x02,                             §           // class descriptor
     0x05, 0x24, 0x01, 0x01, 0x00,                                        // class descriptor
     0x04, 0x24, 0x02, 0x02,                                              // class descriptor
     0x05, 0x24, 0x06, 0x00, 0x01,                                        // class descriptor
@@ -6277,6 +6367,7 @@ static const unsigned char ucConfigDescriptor[] = {                      // cons
     0x09, 0x04, 0x01, 0x00, 0x02, 0x0a, 0x00, 0x00, 0x05,                // interface descriptor
     0x07, 0x05, 0x02, 0x02, 0x20, 0x00, 0x00,                            // bulk OUT endpoint - 32 bytes on endpoint 2
     0x07, 0x05, 0x82, 0x02, 0x20, 0x00, 0x00,                            // bulk OUT endpoint - 32 bytes on endpoint 2
+#endif
 };
 #endif
 
@@ -7092,7 +7183,7 @@ static void fnTriggerADC(int iADC, int iHW_trigger)
     #endif
     #if ADC_CONTROLLERS > 2
     case 2:                                                              // ADC2
-        if ((SIM_SCGC6 & SIM_SCGC6_ADC2) && ((ADC2_SC1A & ADC_SC1A_ADCH_OFF) != ADC_SC1A_ADCH_OFF)) { // ADC2 powered up and operating
+        if ((IS_POWERED_UP(6, SIM_SCGC6_ADC2)) && ((ADC2_SC1A & ADC_SC1A_ADCH_OFF) != ADC_SC1A_ADCH_OFF)) { // ADC2 powered up and operating
             if ((ADC2_SC2 & ADC_SC2_ADTRG_HW) == 0) {                    // software trigger mode
                 fnSimADC(2);                                             // perform ADC conversion
                 if ((ADC2_SC1A & ADC_SC1A_COCO) != 0) {                  // {40} if conversion has completed
@@ -7110,7 +7201,7 @@ static void fnTriggerADC(int iADC, int iHW_trigger)
     #endif
     #if ADC_CONTROLLERS > 3
     case 3:                                                              // ADC3
-        if ((SIM_SCGC3 & SIM_SCGC3_ADC3) && ((ADC3_SC1A & ADC_SC1A_ADCH_OFF) != ADC_SC1A_ADCH_OFF)) { // ADC3 powered up and operating
+        if ((IS_POWERED_UP(3, SIM_SCGC3_ADC3)) && ((ADC3_SC1A & ADC_SC1A_ADCH_OFF) != ADC_SC1A_ADCH_OFF)) { // ADC3 powered up and operating
             if ((ADC3_SC2 & ADC_SC2_ADTRG_HW) == 0) {                    // software trigger mode
                 fnSimADC(3);                                             // perform ADC conversion
                 if ((ADC3_SC1A & ADC_SC1A_COCO) != 0) {                  // {40} if conversion has completed
@@ -7250,9 +7341,19 @@ extern int fnSimTimers(void)
         if ((ulWatchdogCount + ulCounter) >= ulWatchdogTimeout) {
             if ((WDOG_STCTRLH & WDOG_STCTRLH_IRQRSTEN) != 0) {           // if an interrupt is enabled we first call it
                 WDOG_STCTRLL |= WDOG_STCTRLL_INTFLG;
-                if (fnGenInt(irq_WDOG_ID) != 0) {                        // if watchdog interrupt is not disabled
+    #if !defined irq_WDOG_ID
+                if (fnGenInt(irq_INTMUX0_0_ID) != 0)                     // {46}
+    #else
+                if (fnGenInt(irq_WDOG_ID) != 0)
+    #endif
+                {                                                        // if watchdog interrupt is not disabled
                     VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-                    ptrVect->processor_interrupts.irq_WDOG();            // call the interrupt handler
+    #if !defined irq_WDOG_ID
+                    fnCallINTMUX(0, INTMUX0_PERIPHERAL_WDOG0_EWM, (unsigned char *)&ptrVect->processor_interrupts.irq_WDOG0);
+                    ptrVect->processor_interrupts.irq_INTMUX0_0();       // call the interrupt handler (watchdo alwasy on INTMUX0- with highest priority)
+    #else
+                    ptrVect->processor_interrupts.irq_WDOG0();           // call the interrupt handler
+    #endif
                 }
             }
             return RESET_CARD_WATCHDOG;                                  // watchdog reset
@@ -7434,7 +7535,7 @@ extern int fnSimTimers(void)
     #endif
     }
 #endif
-#if !defined KINETIS_WITHOUT_RTC && !defined KINETIS_KE
+#if defined SUPPORT_RTC && !defined KINETIS_WITHOUT_RTC && !defined KINETIS_KE
     if ((RTC_SR & RTC_SR_TCE) != 0) {                                    // RTC is enabled
         if ((RTC_SR & RTC_SR_TIF) == 0) {                                // if invalid flag not set
             unsigned long ulCounter;
@@ -7471,7 +7572,7 @@ extern int fnSimTimers(void)
                 if (RTC_TAR == RTC_TSR) {                                // alarm match
                     RTC_TSR = (RTC_TSR + 1);
                     RTC_SR |= RTC_SR_TAF;
-                    if (RTC_IER & RTC_IER_TAIE) {                        // interrupt on alarm enabled
+                    if ((RTC_IER & RTC_IER_TAIE) != 0) {                 // interrupt on alarm enabled
                         if (fnGenInt(irq_RTC_ALARM_ID) != 0) {           // if RTC interrupt is not disabled
                             VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                             ptrVect->processor_interrupts.irq_RTC_ALARM(); // call the interrupt handler
@@ -7479,7 +7580,7 @@ extern int fnSimTimers(void)
                     }
                 }
                 else {
-                    RTC_TSR = (RTC_TSR + 1);
+                    RTC_TSR = (RTC_TSR + 1);                             // increment the seconds count value
                 }
             }
         }
@@ -7657,9 +7758,9 @@ extern int fnSimTimers(void)
                     }
                 }
                 if ((LPTMR0_CSR & LPTMR_CSR_TIE) != 0) {                 // if LPTMR interrupt is enabled
-                    if (fnGenInt(irq_LPT_ID) != 0) {                     // if LPTMR interrupt is not disabled
+                    if (fnGenInt(irq_LPTMR0_ID) != 0) {                  // if LPTMR interrupt is not disabled
                         VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-                        ptrVect->processor_interrupts.irq_LPT();         // call the interrupt handler
+                        ptrVect->processor_interrupts.irq_LPTMR0();      // call the interrupt handler
                     }
                 }
             }

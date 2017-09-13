@@ -36,6 +36,15 @@
     #define USB_HS_MALLOC_ALIGN(x, y) uMallocAlign((MAX_MALLOC)(x), (y))
 #endif
 
+#if defined USB_HOST_SUPPORT
+    #define __USB_HOST_MODE()         ((usb_hardware.ucModeType & USB_HOST_MODE) != 0)
+    #define __USB_DEVICE_MODE()       ((usb_hardware.ucModeType & USB_HOST_MODE) == 0)
+    #define SETUP_ACK_DELAY_MS        10                                 // an ACK to a setup is expected within 10ms
+#else
+    #define __USB_HOST_MODE()         (0)
+    #define __USB_DEVICE_MODE()       (1)
+    #define USB_DEVICE_SUPPORT                                           // enable device only support if host support hasn't specifically been defined
+#endif
 
 /* =================================================================== */
 /*                       local structure definitions                   */
@@ -151,7 +160,18 @@ static void fnUSBHS_init(unsigned char ucEndpoints)
     static KINETIS_USBHS_ENDPOINT_QUEUE_HEADER *ptrEndpointQueueHeader = 0;
     int i;
 
-    USBHS_USBMODE = (USBHS_USBMODE_CM_DEVICE | USBHS_USBMODE_ES_LITTLE | USBHS_USBMODE_SLOM/* | USBHS_USBMODE_SDIS*/); // note that stream is disabled so that single rx buffering is possible (this may reduce OUT speed but is simpler, especially when using for software uploading where the speed is limited by flash programming anyway)
+    if (__USB_HOST_MODE()) {
+    #if defined USB_HOST_SUPPORT
+        USBHS_USBMODE = (USBHS_USBMODE_CM_HOST | USBHS_USBMODE_ES_LITTLE | USBHS_USBMODE_SLOM/* | USBHS_USBMODE_SDIS*/); // note that stream is disabled so that single rx buffering is possible (this may reduce OUT speed but is simpler, especially when using for software uploading where the speed is limited by flash programming anyway)
+        // Host mode
+        //
+        USBHS_PORTSC1 = USBHS_PORTSC1_PP; // ??
+        USBHS_GPTIMER0LD = (100 * 1000 - 1); /* 100ms ?? */
+    #endif
+    }
+    else {                                                               // device mode
+        USBHS_USBMODE = (USBHS_USBMODE_CM_DEVICE | USBHS_USBMODE_ES_LITTLE | USBHS_USBMODE_SLOM/* | USBHS_USBMODE_SDIS*/); // note that stream is disabled so that single rx buffering is possible (this may reduce OUT speed but is simpler, especially when using for software uploading where the speed is limited by flash programming anyway)
+    }
     USBHS_EPSETUPSR = 0xffffffff;                                        // clear endpoint setup register (write '1' to clear each flag)
     #if defined _WINDOWS
     USBHS_EPSETUPSR = 0;
@@ -467,7 +487,7 @@ static __interrupt void _usb_otg_isr(void)
     unsigned char ucUSB_Int_status; 
     
     while ((ucUSB_Int_status = (unsigned char)(INT_STAT & INT_ENB)) != 0) { // read present status
-        if (ucUSB_Int_status & ~TOK_DNE) {
+        if ((ucUSB_Int_status & ~TOK_DNE) != 0) {
             uDisable_Interrupt();                                        // ensure interrupts remain blocked when putting messages to queue
             if (ucUSB_Int_status & USB_RST) {                            // reset detected - D+ and D- in SE0 (single ended logic 0) state for > 2.5us
                 INT_STAT = (USB_RST | SLEEP | RESUME_EN | USB_ERROR);    // reset flags
@@ -515,7 +535,7 @@ static __interrupt void _usb_otg_isr(void)
             INT_STAT &= (~(ucUSB_Int_status & ~TOK_DNE) | ATTACH);       // leave ATTACH status in the register
     #endif
         }
-        if (ucUSB_Int_status & TOK_DNE) {                                // current processed token complete
+        if ((ucUSB_Int_status & TOK_DNE) != 0) {                         // current processed token complete
             KINETIS_USB_ENDPOINT_BD *ptEndpointBD = ptrBDT;              // start of BDT
             KINETIS_USB_BD *ptUSB_BD;                                    // specific BD
             int iEndpoint_ref = (STAT >> END_POINT_SHIFT);               // the endpoint belonging to this event
@@ -536,7 +556,7 @@ static __interrupt void _usb_otg_isr(void)
                 ADDR = usb_hardware.ucUSBAddress;                        // program the address to be used 
             }
             else {                                                       // receive packet
-                if (STAT & ODD_BANK) {                                   // check whether odd or even bank and update local flag
+                if ((STAT & ODD_BANK) != 0) {                            // check whether odd or even bank and update local flag
                     ptUSB_BD = &ptEndpointBD->usb_bd_rx_odd;             // received data in odd buffer
                     usb_hardware.ulRxControl = DATA_1;
                 }
@@ -564,13 +584,13 @@ static __interrupt void _usb_otg_isr(void)
                             ulDataToggle = RX_DATA_TOGGLE;
                         }
 
-                        if (*fnGetEndPointCtr(iEndpoint_ref) & EP_CTL_DIS) {
+                        if ((*fnGetEndPointCtr(iEndpoint_ref) & EP_CTL_DIS) != 0) {
                              fnProcessInput(iEndpoint_ref, &usb_hardware, USB_OUT_FRAME, ptUSB_BD, ptEndpointBD); // non-control endpoint
                         }
                         else {                                           // control endpoint
                             fnProcessInput(iEndpoint_ref, &usb_hardware, USB_CONTROL_OUT_FRAME, ptUSB_BD, ptEndpointBD);
                         }
-                        if (ulDataToggle) {                              // synchronise the data toggle to detect repeated data
+                        if (ulDataToggle != 0) {                         // synchronise the data toggle to detect repeated data
                             usb_endpoints[iEndpoint_ref].ulNextRxData0 &= ~(RX_DATA_TOGGLE);
                         }
                         else {
@@ -765,7 +785,7 @@ extern void fnConfigUSB(QUEUE_HANDLE Channel, USBTABLE *pars)
     FMC_PFAPR |= FMC_FPAPR_USB_HS;                                       // allow USBHS controller to read from Flash
 
     #if defined KINETIS_WITH_USBPHY                                      // device with integrated HS PHY
-        POWER_UP(3, SIM_SCGC3_USBHS);                                    // power up the USB HS controller module
+        POWER_UP_ATOMIC(3, SIM_SCGC3_USBHS);                             // power up the USB HS controller module
         // Requirements for operation are:
         // - VREGIN0 or VREGIN1 connected to 5V so that 3.3V USB is valid
         // - 32kHz slow clock is enabled
@@ -774,7 +794,7 @@ extern void fnConfigUSB(QUEUE_HANDLE Channel, USBTABLE *pars)
         MCG_C1 |= MCG_C1_IRCLKEN;                                        // 32kHz IRC enable
         OSC0_CR |= OSC_CR_ERCLKEN;                                       // external reference clock enable
         SIM_SOPT2 |= SIM_SOPT2_USBREGEN;                                 // enable USB PHY PLL regulator
-        POWER_UP(3, SIM_SCGC3_USBHSPHY);                                 // enable clocks to PHY
+        POWER_UP_ATOMIC(3, SIM_SCGC3_USBHSPHY);                          // enable clocks to PHY
         SIM_USBPHYCTL = (SIM_USBPHYCTL_USBVOUTTRG_3_310V | SIM_USBPHYCTL_USBVREGSEL); // 3.310V source VREG_IN1 (in case both are powered)
         USBPHY_TRIM_OVERRIDE_EN = 0x0000001f;                            // override IFR values
         USBPHY_CTRL = (USBPHY_CTRL_ENUTMILEVEL2 | USBPHY_CTRL_ENUTMILEVEL3); // release PHY from reset and enable its clock
@@ -831,8 +851,63 @@ extern void fnConfigUSB(QUEUE_HANDLE Channel, USBTABLE *pars)
     if (ucEndpoints > NUMBER_OF_USBHS_ENDPOINTS) {                       // limit endpoint count
         ucEndpoints = NUMBER_OF_USBHS_ENDPOINTS;                         // limit to maximum available in device
     }
+    #if defined USB_HOST_SUPPORT
+    if ((pars->usConfig & USB_HOST_MODE) != 0) {                         // host mode
+        usb_hardware.ucModeType = USB_HOST_MODE;                         // mark that we are in host mode
+    }
+    #endif
 
     usb_endpoints = uMalloc((MAX_MALLOC)(sizeof(USB_END_POINT) * ucEndpoints)); // get endpoint control structures
     fnUSBHS_init(ucEndpoints);
 }
+
+#if defined USB_HOST_SUPPORT
+extern void fnHostReleaseBuffer(int iEndpoint, unsigned char ucTransferType, USB_HW *ptrUSB_HW)
+{
+    /*
+    if (ucTransferType == SETUP_PID) {
+        fnSendToken((unsigned char)((SETUP_PID << 4) | iEndpoint));      // release the setup frame on the corresponding endpoint
+        fnUSB_HostDelay(usb_timeout, PIT_MS_DELAY(SETUP_ACK_DELAY_MS));  // {6} monitor the successful setup transaction by using a hardware timer to detect a timeout when the device doesn't respond to subsequent IN token polling (there is no way to detced when the device doesn't ack the SETUP itself)
+    }
+    else if (ucTransferType == OUT_PID) {                                // OUT
+        fnSendToken((unsigned char)((OUT_PID << 4) | iEndpoint));        // release the data frame on the corresponding endpoint
+    }
+    else {
+        _EXCEPTION("Token to be added!!");
+    }
+    ptrUSB_HW->ucHostEndpointActive = (unsigned char)iEndpoint;          // remember the endpoint that the host is presently transmitting data on
+    */
+}
+
+extern void fnResetDataToggle(int iEndpoint, USB_HW *ptrUSB_HW)
+{
+    //usb_endpoints[iEndpoint].ulNextRxData0 &= ~(DATA_1);                 // next IN reception from the endpoint will be changed to DATA 0
+}
+
+extern int fnHostEndpoint(unsigned char ucEndpoint, int iCommand, int iEvent)
+{
+    /*
+    switch (iCommand) {
+    case IN_POLLING:
+        if (iEvent != 0) {                                               // enable continuous IN polling
+            fnSendToken((unsigned char)((IN_PID << 4) | ucEndpoint));    // start IN polling on this endpoint (the new endpoint is set as active)
+        }
+        else {                                                           // disable IN polling
+            if ((CTL & TXSUSPEND_TOKENBUSY) != 0) {                      // if a token is in progress
+                if ((TOKEN >> 4) == IN_PID) {                            // IN token in progress
+                    ENDPT0 |= RETRY_DIS;                                 // disable retries so that the IN polling stops
+                    while ((CTL & TXSUSPEND_TOKENBUSY) != 0) {           // wait until the present token has terminated
+    #if defined _WINDOWS
+                        fnSimInts(0);                                    // allow USB interrupts to be handled
+                        CTL &= ~(TXSUSPEND_TOKENBUSY);
+    #endif
+                    }
+                    ENDPT0 &= ~(RETRY_DIS);
+                }
+            }
+        }
+    }*/
+    return 0;
+}
+#endif
 #endif

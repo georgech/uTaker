@@ -81,7 +81,7 @@
         #define CLOCK_MUL        32                                      // the PLL multiplication factor to achieve operating frequency of 100MHz (x24 to x55 possible)
     #endif
     #define USB_CLOCK_GENERATED_INTERNALLY                               // use USB clock from internal source rather than external pin
-#elif defined EMCRAFT_K61F150M                                           // {9}
+#elif defined EMCRAFT_K61F150M || defined K61FN1_50M                     // {9}
     #define EXTERNAL_CLOCK       50000000                                // this must be 50MHz in order to use Ethernet in RMII mode
     #define _EXTERNAL_CLOCK      EXTERNAL_CLOCK
     #define CLOCK_DIV            5                                       // input must be divided to 8MHz..16MHz range (/1 to /8 for FPU parts)
@@ -92,7 +92,7 @@
     #define CLOCK_DIV_1          5                                       // input must be divided to 8MHz..16MHz range (/1 to /8 for FPU parts)
     #define CLOCK_MUL_1          24                                      // PLL1 multiplication factor to achieve operating frequency of 120MHz [suitable for FS USB] (x16 to x47 possible - divided by 2 at VCC output)
     #define USB_CLOCK_GENERATED_INTERNALLY                               // use USB clock from internal source rather than external pin
-#elif defined FRDM_K64F || defined TWR_K64F120M || defined FreeLON || defined TEENSY_3_5 // {26}
+#elif defined FRDM_K64F || defined TWR_K64F120M || defined FreeLON || defined TEENSY_3_5 || defined HEXIWEAR_K64F // {26}
     #define MASK_1N83J
   //#define RUN_FROM_DEFAULT_CLOCK                                       // default mode is FLL Engaged Internal - the 32kHz IRC is multiplied by FLL factor of 640 to obtain 20.9715MHz nominal frequency (20MHz..25MHz)
   //#define RUN_FROM_HIRC                                                // clock directly from internal 48MHz RC clock
@@ -132,6 +132,14 @@
         #define OSC_LOW_GAIN_MODE
         #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
         #define CLOCK_DIV            4                                   // input must be divided to 2MHz..4MHz range (/1 to /24)
+        #define CLOCK_MUL            30                                  // the PLL multiplication factor to achieve operating frequency of 120MHz (x24 to x55 possible)
+        #define FLEX_CLOCK_DIVIDE    3                                   // 120/3 to give 40MHz
+        #define FLASH_CLOCK_DIVIDE   5                                   // 120/5 to give 24MHz
+    #elif defined HEXIWEAR_K64F
+        #define CRYSTAL_FREQUENCY    12000000                            // 12 MHz crystal
+        #define OSC_LOW_GAIN_MODE
+        #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
+        #define CLOCK_DIV            3                                   // input must be divided to 2MHz..4MHz range (/1 to /24)
         #define CLOCK_MUL            30                                  // the PLL multiplication factor to achieve operating frequency of 120MHz (x24 to x55 possible)
         #define FLEX_CLOCK_DIVIDE    3                                   // 120/3 to give 40MHz
         #define FLASH_CLOCK_DIVIDE   5                                   // 120/5 to give 24MHz
@@ -617,7 +625,7 @@
         #define CLOCK_DIV            256                                 // input must be divided to 31.25kHz..39.06525kHz range (/1, 2, 4, 8, 16, 32, 64, 128, 256, 512 or 1024 possible)
                                                                          // this input is multiplied by 1024 to 32MHz..40MHz at the FLL output
     #endif
-    #define SYSTEM_CLOCK_DIVIDE  4                                       // divide the FLL output to give the system clock (maximum 20MHz) (/1, 2, 4, 8, 16, 32, 64 or 128 possible)
+    #define SYSTEM_CLOCK_DIVIDE  2                                       // divide the FLL output to give the system clock (maximum 20MHz) (/1, 2, 4, 8, 16, 32, 64 or 128 possible)
     #define BUS_CLOCK_DIVIDE     1                                       // divide by 1 or 2 to give bus and flash clock (maximum 20MHz)
 #elif defined FRDM_KE04Z || defined FRDM_KEAZN32Q64
     #define CRYSTAL_FREQUENCY    8000000                                 // 8 MHz crystal
@@ -896,6 +904,11 @@
   //#define PIN_COUNT           PIN_COUNT_144_PIN                        // 144 LQFP/MAPBGA pin package
     #define PACKAGE_TYPE        PACKAGE_LQFP
   //#define PACKAGE_TYPE        PACKAGE_MAPBGA
+    #define SIZE_OF_FLASH       (1024 * 1024)                            // 1M FLASH
+    #define SIZE_OF_RAM         (256 * 1024)                             // 256k SRAM
+#elif defined HEXIWEAR_K64F
+    #define PIN_COUNT           PIN_COUNT_144_PIN                        // 144 LQFP/MAPBGA pin package
+    #define PACKAGE_TYPE        PACKAGE_MAPBGA
     #define SIZE_OF_FLASH       (1024 * 1024)                            // 1M FLASH
     #define SIZE_OF_RAM         (256 * 1024)                             // 256k SRAM
 #elif defined TEENSY_3_5
@@ -1216,6 +1229,12 @@
     #define PHY_IDENTIFIER         0x00221555                            // MICREL KSZ8031NL identifier
     #define FNRESETPHY()
     #define MII_MANAGEMENT_CLOCK_SPEED    2500000                        // typ. 2,5MHz Speed
+#elif defined K61FN1_50M
+    #define ETHERNET_RMII                                                // RMII mode of operation instead of MII
+    #define FNFORCE_PHY_CONFIG()                                         // dummy
+    #define FNRESETPHY()                                                 // dummy
+    #define SCAN_PHY_ADD
+    #define MII_MANAGEMENT_CLOCK_SPEED   2500000                         // 2.5MHz
 #elif defined EMCRAFT_K70F120M || defined EMCRAFT_K61F150M               // {9}
   //#define JTAG_DEBUG_IN_USE_ERRATA_2541                                // pull the optional MII0_RXER line down to 0V to avoid disturbing JTAG_TRST - not needed when using SWD for debugging 
     #define ETHERNET_RMII                                                // RMII mode of operation instead of MII
@@ -2146,7 +2165,11 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 #else
     #define KINETIS_FLASH_CONFIGURATION_BACKDOOR_KEY       {BACKDOOR_KEY_0, BACKDOOR_KEY_1, BACKDOOR_KEY_2, BACKDOOR_KEY_3, BACKDOOR_KEY_4, BACKDOOR_KEY_5, BACKDOOR_KEY_6, BACKDOOR_KEY_7}
     #define KINETIS_FLASH_CONFIGURATION_PROGRAM_PROTECTION (0xffffffff)  // PROT[31:24]:PROT[23:16]:PROT[15:8]:PROT[7:0] - no protection when all are '1'
-    #define KINETIS_FLASH_CONFIGURATION_SECURITY           (FTFL_FSEC_SEC_UNSECURE | FTFL_FSEC_FSLACC_GRANTED | FTFL_FSEC_MEEN_ENABLED | FTFL_FSEC_KEYEN_ENABLED)
+    #if defined K61FN1_50M
+        #define KINETIS_FLASH_CONFIGURATION_SECURITY       0xfe          // avoid potential problem with debugger not operating correctly when this value is not at default
+    #else
+        #define KINETIS_FLASH_CONFIGURATION_SECURITY       (FTFL_FSEC_SEC_UNSECURE | FTFL_FSEC_FSLACC_GRANTED | FTFL_FSEC_MEEN_ENABLED | FTFL_FSEC_KEYEN_ENABLED)
+    #endif
     #if defined KINETIS_KL || defined KINETIS_KV
         #if defined ROM_BOOTLOADER
             #if !defined FRDM_KL28Z
@@ -2170,7 +2193,11 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
                 #define KINETIS_FLASH_CONFIGURATION_NONVOL_OPTION  (FTFL_FOPT_EZPORT_ENABLED | FTFL_FOPT_LPBOOT_NORMAL | FTFL_FOPT_NMI_DISABLED)
             #endif
         #else
-            #define KINETIS_FLASH_CONFIGURATION_NONVOL_OPTION  (FTFL_FOPT_EZPORT_ENABLED | FTFL_FOPT_LPBOOT_NORMAL | FTFL_FOPT_NMI_ENABLED)
+            #if defined K61FN1_50M
+                #define KINETIS_FLASH_CONFIGURATION_NONVOL_OPTION 0xff   // avoid potential problem with debugger not operating correctly when this value is not at default
+            #else
+                #define KINETIS_FLASH_CONFIGURATION_NONVOL_OPTION  (FTFL_FOPT_EZPORT_ENABLED | FTFL_FOPT_LPBOOT_NORMAL | FTFL_FOPT_NMI_ENABLED)
+            #endif
         #endif
     #endif
 #endif
@@ -2201,13 +2228,13 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #elif defined FRDM_K82F || defined TRINAMIC_LANDUNGSBRUECKE || defined K66FX1M0
         #define DEMO_UART    4                                           // use UART 4
         #define RFC2217_UART 0
-    #elif defined TWR_K70F120M || defined EMCRAFT_K70F120M || defined EMCRAFT_K61F150M || defined TRK_KEA128 || defined TRK_KEA64 || defined TWR_KL46Z48M || defined TWR_KL43Z48M || defined TWR_K21D50M || defined TWR_K65F180M || defined FRDM_KEAZN32Q64 || defined FRDM_KEAZ64Q64 || defined FRDM_KEAZ128Q80 || defined TEENSY_3_5 || defined TEENSY_3_6 // {9}{23}
+    #elif defined TWR_K70F120M || defined EMCRAFT_K70F120M || defined EMCRAFT_K61F150M || defined K61FN1_50M || defined TRK_KEA128 || defined TRK_KEA64 || defined TWR_KL46Z48M || defined TWR_KL43Z48M || defined TWR_K21D50M || defined TWR_K65F180M || defined FRDM_KEAZN32Q64 || defined FRDM_KEAZ64Q64 || defined FRDM_KEAZ128Q80 || defined TEENSY_3_5 || defined TEENSY_3_6 // {9}{23}
         #define DEMO_UART    2                                           // use UART 2
         #define RFC2217_UART 0
     #elif defined TWR_K20D50M || defined TWR_K80F150M || defined tinyK20 || defined TWR_K20D72M || defined NET_K60 || defined FRDM_KE02Z || defined FRDM_KE02Z40M || defined FRDM_KE06Z || defined FRDM_K22F || defined TWR_K22F120M || defined TWR_K24F120M || defined TWR_K64F120M || defined TWR_KW21D256 || defined TWR_KW24D512 || defined rcARM_KL26 || defined BLAZE_K22 // {2}{16}{25}{30}
         #define DEMO_UART    1                                           // use UART 1
         #define RFC2217_UART 0
-    #elif defined K02F100M || defined FRDM_K20D50M || defined FRDM_KL46Z || defined FRDM_KL43Z || defined FRDM_KL25Z || defined FRDM_KL26Z || defined FRDM_KL27Z || defined FRDM_KL28Z || defined FRDM_KL82Z || defined CAPUCCINO_KL27 || defined TEENSY_LC || defined TWR_KL25Z48M || defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined TRK_KEA8 || defined TEENSY_3_1 || defined FRDM_KE04Z || defined FRDM_K64F || defined FRDM_K66F || defined TWR_KV10Z32  || defined TWR_KV31F120M || ((defined TWR_K40X256 || defined TWR_K40D100M) && defined DEBUG_ON_VIRT_COM) || defined FreeLON // {21}{22}{24}{25}
+    #elif defined K02F100M || defined FRDM_K20D50M || defined FRDM_KL46Z || defined FRDM_KL43Z || defined FRDM_KL25Z || defined FRDM_KL26Z || defined FRDM_KL27Z || defined FRDM_KL28Z || defined FRDM_KL82Z || defined CAPUCCINO_KL27 || defined TEENSY_LC || defined TWR_KL25Z48M || defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined TRK_KEA8 || defined TEENSY_3_1 || defined FRDM_KE04Z || defined FRDM_K64F || defined FRDM_K66F || defined TWR_KV10Z32  || defined TWR_KV31F120M || ((defined TWR_K40X256 || defined TWR_K40D100M) && defined DEBUG_ON_VIRT_COM) || defined FreeLON || defined HEXIWEAR_K64F // {21}{22}{24}{25}
         #define DEMO_UART    0                                           // use UART 0
         #define RFC2217_UART 1
     #elif defined NET_KBED                                               // {16}
@@ -2285,7 +2312,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #elif defined rcARM_KL26
         #define UART1_ON_C                                               // UART1-RX on PTC3
         #define UART1_ON_A_TX                                            // UART1-TX on PTA19 (override)
-    #elif defined FRDM_K20D50M || defined TWR_K20D50M || defined TEENSY_3_1 || defined FRDM_KE04Z || defined FRDM_K64F || defined FRDM_K66F || defined TWR_KV10Z32 || defined TWR_KV31F120M || defined FreeLON // {21}{26}
+    #elif defined FRDM_K20D50M || defined TWR_K20D50M || defined TEENSY_3_1 || defined FRDM_KE04Z || defined FRDM_K64F || defined FRDM_K66F || defined TWR_KV10Z32 || defined TWR_KV31F120M || defined FreeLON || defined HEXIWEAR_K64F // {21}{26}
         #define UART0_ON_B                                               // alternative UART0 pin mapping
         #if defined FRDM_K20D50M
             #define UART1_ON_C
@@ -2311,7 +2338,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #elif defined TWR_K70F120M || defined TWR_K65F180M
         #define UART2_ON_E                                               // alternative UART2 pin mapping on port E (default is on port D)
         #define UART3_ON_F                                               // alternative UART2 pin mapping on port F
-    #elif defined EMCRAFT_K70F120M || defined EMCRAFT_K61F150M || defined TWR_K21D50M || defined TWR_KL46Z48M // {9}{23}
+    #elif defined EMCRAFT_K70F120M || defined EMCRAFT_K61F150M || defined K61FN1_50M || defined TWR_K21D50M || defined TWR_KL46Z48M // {9}{23}
         #if defined TWR_K21D50M
             #define UART1_ON_C                                           // alternative UART1 pin mapping on port C (default is on port E)
         #endif
@@ -2917,6 +2944,14 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define PRIORITY_RTC               3
     #define PRIORITY_PORT_IRQ_INT      3
     #define PRIORITY_KEYBOARD_INT      3
+    #if defined KINETIS_KL28 || defined KINETIS_KL82                     // devices with INTMUX to extend the number of interrupts possible
+        #define PRIORITY_INTMUX0_0_INT      0
+        #define PRIORITY_INTMUX0_1_INT      1
+        #define PRIORITY_INTMUX0_2_INT      2
+        #define PRIORITY_INTMUX0_3_INT      3
+
+        #define PRIORITY_LPUART2            PRIORITY_INTMUX0_1_INT
+    #endif
 #else
     // Define interrupt priorities in the system (kinetis supports 0..15 - 0 is highest priority and 15 is lowest priority)
     //
@@ -3865,6 +3900,61 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 
     #define LCD_PWRDN_N            (PORTC_BIT5)                          // power down LCD - J1-15 on FRDM-K64F
     #endif
+#elif defined HEXIWEAR_K64F
+    #define RGB_G                  (PORTD_BIT0)                          // green LED - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+    #define RGB_R                  (PORTC_BIT8)                          // red LED - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+    #define RGB_B                  (PORTC_BIT9)                          // blue LED - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+
+    #define VIBRO                  (PORTB_BIT9)
+
+    #define SWITCH_T1              (PORTA_BIT12)                         // docking station push button switches (I2S_TXD)
+    #define SWITCH_T2              (PORTA_BIT13)                         // docking station push button switches(I2S_TX_FS)
+    #define SWITCH_T3              (PORTA_BIT14)                         // docking station push button switches(I2S_RX_BCLK)
+
+
+    #define DEMO_LED_1             (RGB_G)
+    #define DEMO_LED_2             (RGB_R)
+    #define DEMO_LED_3             (RGB_B)
+    #define DEMO_LED_4             (VIBRO)
+
+    #define BLINK_LED              (DEMO_LED_1)
+
+    #if defined USE_MAINTENANCE && !defined REMOVE_PORT_INITIALISATIONS
+        #define INIT_WATCHDOG_LED()                                     // let the port set up do this (the user can disable blinking)
+        #define CONFIG_TEST_OUTPUT()                                    // we use DEMO_LED_2 which is configured by the user code (and can be disabled in parameters if required)
+    #else
+        #define INIT_WATCHDOG_LED()  _CONFIG_DRIVE_PORT_OUTPUT_VALUE(D, (RGB_G), (0), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+        #define CONFIG_TEST_OUTPUT() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, (RGB_R), (RGB_R), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+    #endif
+
+    #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(A, SWITCH_T2, PORT_PS_UP_ENABLE)
+    #define WATCHDOG_DISABLE()      (_READ_PORT_MASK(A, SWITCH_T2) == 0) // pull this input down to disable watchdog (hold docking station switch T2 down at reset)
+    #define ACTIVATE_WATCHDOG()     UNLOCK_WDOG(); WDOG_TOVALL = (2000/5); WDOG_TOVALH = 0; WDOG_STCTRLH = (WDOG_STCTRLH_STNDBYEN | WDOG_STCTRLH_WAITEN | WDOG_STCTRLH_STOPEN | WDOG_STCTRLH_WDOGEN) // watchdog enabled to generate reset on 2s timeout (no further updates allowed)
+    #define TOGGLE_WATCHDOG_LED()   _TOGGLE_PORT(D, RGB_G)
+
+    #define TOGGLE_TEST_OUTPUT()    _TOGGLE_PORT(C, DEMO_LED_2)
+    #define SET_TEST_OUTPUT()       _SETBITS(C, DEMO_LED_2)
+    #define CLEAR_TEST_OUTPUT()     _CLEARBITS(C, DEMO_LED_2)
+
+    #define SHIFT_DEMO_LED_1        0                                    // since the port bits are spread out shift each to the lowest 2 bits
+    #define SHIFT_DEMO_LED_2        7
+    #define SHIFT_DEMO_LED_3        7
+    #define SHIFT_DEMO_LED_4        6
+
+    #define MAPPED_DEMO_LED_1       (DEMO_LED_1 >> SHIFT_DEMO_LED_1)
+    #define MAPPED_DEMO_LED_2       (DEMO_LED_2 >> SHIFT_DEMO_LED_2)
+    #define MAPPED_DEMO_LED_3       (DEMO_LED_3 >> SHIFT_DEMO_LED_3)
+    #define MAPPED_DEMO_LED_4       (DEMO_LED_4 >> SHIFT_DEMO_LED_4)
+
+    #define MULTICOLOUR_LEDS        {0, 2}                               // single LED made up of entries 0, 1 and 2
+
+        // '0'          '1'           input state   center (x,   y)   0 = circle, radius, controlling port, controlling pin 
+    #define KEYPAD_LED_DEFINITIONS  \
+        {RGB(255, 0,  0  ), RGB(0,0,0),  1, {346, 382, 0, 7 }, _PORTC, RGB_R}, \
+        {RGB(0,   255,0  ), RGB(0,0,0),  1, {346, 382, 0, 7 }, _PORTD, RGB_G}, \
+        {RGB(0,   0,  255), RGB(0,0,0),  1, {346, 382, 0, 7 }, _PORTC, RGB_B},
+
+    #define KEYPAD "KeyPads/hexiwear.bmp"
 #elif defined EMCRAFT_K70F120M || defined EMCRAFT_K61F150M               // {9}
     #define LED_DS3                (PORTE_BIT11)                         // LED on mother board - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
     #define LED_DS4                (PORTE_BIT12)                         // LED on mother board - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
@@ -3913,6 +4003,39 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define MOUSE_DOWN()           0
     #define MOUSE_LEFT()           0
     #define MOUSE_RIGHT()          0
+#elif defined K61FN1_50M
+    #define DEMO_LED_1             (PORTB_BIT19)
+    #define DEMO_LED_2             (PORTB_BIT18)
+    #define DEMO_LED_3             (PORTB_BIT7)
+    #define DEMO_LED_4             (PORTA_BIT19)
+
+    #define BLINK_LED              (DEMO_LED_1)
+
+    #if defined USE_MAINTENANCE && !defined REMOVE_PORT_INITIALISATIONS
+        #define INIT_WATCHDOG_LED()                                      // let the port set up do this (the user can disable blinking)
+    #else
+        #define INIT_WATCHDOG_LED() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(B, (BLINK_LED | DEMO_LED_2), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+    #endif
+
+    #define INIT_WATCHDOG_DISABLE() 
+    #define WATCHDOG_DISABLE()      1 
+    #define ACTIVATE_WATCHDOG()     UNLOCK_WDOG(); WDOG_TOVALL = (2000/5); WDOG_TOVALH = 0; WDOG_STCTRLH = (WDOG_STCTRLH_STNDBYEN | WDOG_STCTRLH_WAITEN | WDOG_STCTRLH_STOPEN | WDOG_STCTRLH_WDOGEN) // watchdog enabled to generate reset on 2s timeout (no further updates allowed)
+    #define TOGGLE_WATCHDOG_LED()   _TOGGLE_PORT(B, BLINK_LED)
+
+    #define CONFIG_TEST_OUTPUT()                                         // we use DEMO_LED_2 which is configured by the user code (and can be disabled in parameters if required)
+    #define TOGGLE_TEST_OUTPUT()    _TOGGLE_PORT(B, DEMO_LED_2)
+    #define SET_TEST_OUTPUT()       _SETBITS(B, DEMO_LED_2)
+    #define CLEAR_TEST_OUTPUT()     _CLEARBITS(B, DEMO_LED_2)
+
+    #define SHIFT_DEMO_LED_1        19                                   // since the port bits are spread out shift each to the lowest 2 bits
+    #define SHIFT_DEMO_LED_2        17
+    #define SHIFT_DEMO_LED_3        5
+    #define SHIFT_DEMO_LED_4        16
+
+    #define MAPPED_DEMO_LED_1       (DEMO_LED_1 >> SHIFT_DEMO_LED_1)
+    #define MAPPED_DEMO_LED_2       (DEMO_LED_2 >> SHIFT_DEMO_LED_2)
+    #define MAPPED_DEMO_LED_3       (DEMO_LED_3 >> SHIFT_DEMO_LED_3)
+    #define MAPPED_DEMO_LED_4       (DEMO_LED_4 >> SHIFT_DEMO_LED_4)
 #elif defined TWR_K60N512 || defined TWR_K60D100M || defined TWR_K60F120M// tower kit
     #define DEMO_LED_1             (PORTA_BIT11)                         // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
     #define DEMO_LED_2             (PORTA_BIT28)                         // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
@@ -5650,10 +5773,10 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define SWITCH_2               (KE_PORTH_BIT4)                        // SW2 if the port is changed (eg. A to D) the port macros will require appropriate adjustment too
     #define SWITCH_3               (KE_PORTH_BIT3)                        // SW3 if the port is changed (eg. A to D) the port macros will require appropriate adjustment too
 
-    #define INIT_WATCHDOG_LED()    _CONFIG_DRIVE_PORT_OUTPUT_VALUE(B, (BLINK_LED), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+    #define INIT_WATCHDOG_LED()    _CONFIG_DRIVE_PORT_OUTPUT_VALUE(B, (BLINK_LED | DEMO_LED_2), (BLINK_LED | DEMO_LED_2), (PORT_SRE_SLOW | PORT_DSE_HIGH))
     #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT(B, (SWITCH_2 | SWITCH_3), PORT_PS_UP_ENABLE) // configure as inputs
 
-    #define WATCHDOG_DISABLE()     (!_READ_PORT_MASK(B, SWITCH_2))       // pull this input down to disable watchdog (hold SW2 at reset)
+    #define WATCHDOG_DISABLE()     (_READ_PORT_MASK(B, SWITCH_2) == 0)   // pull this input down to disable watchdog (hold SW2 at reset)
 
     #define TOGGLE_WATCHDOG_LED()  _TOGGLE_PORT(B, BLINK_LED)
 
@@ -5669,9 +5792,6 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define MAPPED_DEMO_LED_3      (DEMO_LED_3 >> SHIFT_DEMO_LED_3)
     #define MAPPED_DEMO_LED_4      (DEMO_LED_4 >> SHIFT_DEMO_LED_4)
 
-    #define MEASURE_LOW_POWER_ON()    _SETBITS(B, DEMO_LED_2)            // signal when the processor is in sleep mode
-    #define MEASURE_LOW_POWER_OFF()   _CLEARBITS(B, DEMO_LED_2)          // signal when the processor is in active mode
-
     #define MULTICOLOUR_LEDS        {0, 2}                               // single LED made up of entries 0, 1 and 2 [green/red/blue]
 
         // '0'          '1'       input state   center (x,   y)   0 = circle, radius, controlling port, controlling pin 
@@ -5685,10 +5805,13 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 
     #define KEYPAD "KeyPads/FRDM_KE06Z.bmp"
 
-    #define CONFIG_TEST_OUTPUT()
-    #define TOGGLE_TEST_OUTPUT()
-    #define SET_TEST_OUTPUT()
-    #define CLEAR_TEST_OUTPUT()
+    #define CONFIG_TEST_OUTPUT()    _CONFIG_DRIVE_PORT_OUTPUT_VALUE(B, (DEMO_LED_2), (DEMO_LED_2), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+    #define TOGGLE_TEST_OUTPUT()    _TOGGLE_PORT(B, DEMO_LED_2)
+    #define SET_TEST_OUTPUT()       _SETBITS(B, DEMO_LED_2)
+    #define CLEAR_TEST_OUTPUT()     _CLEARBITS(B, DEMO_LED_2)
+
+    #define MEASURE_LOW_POWER_ON()  SET_TEST_OUTPUT()                    // signal when the processor is in sleep mode
+    #define MEASURE_LOW_POWER_OFF() CLEAR_TEST_OUTPUT()                  // signal when the processor is in active mode
 #elif defined FRDM_KE04Z
     #define DEMO_LED_1             (KE_PORTC_BIT4)                       // (green LED - PTC4) if the port is changed (eg. A to D) the port macros will require appropriate adjustment too
     #define DEMO_LED_2             (KE_PORTC_BIT5)                       // (red LED - PTC5) if the port is changed (eg. A to D) the port macros will require appropriate adjustment too
@@ -9278,7 +9401,7 @@ typedef unsigned long LCD_CONTROL_PORT_SIZE;
 #elif !defined NET_KBED
     // LEDs
     //
-    #if defined EMCRAFT_K70F120M || defined EMCRAFT_K61F150M           // {9}
+    #if defined EMCRAFT_K70F120M || defined EMCRAFT_K61F150M || defined K61FN1_50M // {9}
                                         // '0'            '1'     input state   center (x,   y)   0 = circle, radius, controlling port, controlling pin 
         #define KEYPAD_LED_DEFINITIONS  {RGB(200,200,200),RGB(0,255,0), 0, {368, 223, 376, 236 }, _PORTE, DEMO_LED_1}, \
                                         {RGB(200,200,200),RGB(0,255,0), 0, {368, 242, 376, 254 }, _PORTE, DEMO_LED_2}

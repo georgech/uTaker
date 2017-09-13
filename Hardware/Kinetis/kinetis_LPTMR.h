@@ -70,10 +70,10 @@ static __interrupt void _LPTMR_single(void)
         #endif
             if ((LPTMR_interrupt_handler = lptmr_setup->int_handler) != 0) { // enter the user's interrupt handler
                 if ((lptmr_setup->mode & LPTMR_PERIODIC) != 0) {         // periodic mode
-                    fnEnterInterrupt(irq_LPT_ID, lptmr_setup->int_priority, (void (*)(void))_LPTMR_periodic); // enter interrupt handler
+                    fnEnterInterrupt(irq_LPTMR0_ID, lptmr_setup->int_priority, (void (*)(void))_LPTMR_periodic); // enter interrupt handler
                 }
                 else {                                                   // single-shot mode
-                    fnEnterInterrupt(irq_LPT_ID, lptmr_setup->int_priority, (void (*)(void))_LPTMR_single); // enter interrupt handler
+                    fnEnterInterrupt(irq_LPTMR0_ID, lptmr_setup->int_priority, (void (*)(void))_LPTMR_single); // enter interrupt handler
                 }
                 LPTMR0_CSR |= LPTMR_CSR_TIE;                             // enable timer interrupt
             }

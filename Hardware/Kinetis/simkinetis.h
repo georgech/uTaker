@@ -48,6 +48,7 @@
     14.02.2017 Add LTC                                                   {33}
     11.08.2017 Add PCC support                                           {34}
     11.08.2017 Add WDOG32                                                {35}
+    12.09.2017 Added INTMUX support                                      {36}
 
 */  
 
@@ -238,6 +239,40 @@ typedef struct stKINETIS_CORTEX_M4_REGS
     unsigned long DMA_DSR_BCR3;
     unsigned long DMA_DCR3;
     } KINETIS_KL_DMA;
+    #endif
+
+    #if defined INTMUX0_AVAILABLE                                        // {36}
+    typedef struct stKINETIS_KL_INTMUX
+    {
+    unsigned long INTMUX_CH0_CSR;
+    unsigned long INTMUX_CH0_VEC;
+    unsigned long ulRes0[2];
+    unsigned long INTMUX_CH0_IER_31_0;
+    unsigned long ulRes1[3];
+    unsigned long INTMUX_CH0_IPR_31_0;
+    unsigned long ulRes2[7];
+    unsigned long INTMUX_CH1_CSR;
+    unsigned long INTMUX_CH1_VEC;
+    unsigned long ulRes3[2];
+    unsigned long INTMUX_CH1_IER_31_0;
+    unsigned long ulRes4[3];
+    unsigned long INTMUX_CH1_IPR_31_0;
+    unsigned long ulRes5[7];
+    unsigned long INTMUX_CH2_CSR;
+    unsigned long INTMUX_CH2_VEC;
+    unsigned long ulRes6[2];
+    unsigned long INTMUX_CH2_IER_31_0;
+    unsigned long ulRes7[3];
+    unsigned long INTMUX_CH2_IPR_31_0;
+    unsigned long ulRes8[7];
+    unsigned long INTMUX_CH3_CSR;
+    unsigned long INTMUX_CH3_VEC;
+    unsigned long ulRes9[2];
+    unsigned long INTMUX_CH3_IER_31_0;
+    unsigned long ulRes10[3];
+    unsigned long INTMUX_CH3_IPR_31_0;
+    unsigned long ulRes11[7];
+    } KINETIS_KL_INTMUX;
     #endif
 #else
     typedef struct stKINETIS_eDMA
@@ -3105,6 +3140,9 @@ typedef struct stKINETIS_PERIPH
 #if defined KINETIS_KL
     #if !defined DEVICE_WITHOUT_DMA
     KINETIS_KL_DMA     DMA;                                              // {18}
+    #endif
+    #if defined INTMUX0_AVAILABLE                                        // {36}
+    KINETIS_KL_INTMUX  INTMUX;
     #endif
 #else
     KINETIS_eDMA       eDMA;

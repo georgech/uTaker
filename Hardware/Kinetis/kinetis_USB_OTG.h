@@ -16,7 +16,6 @@
     28.03.2013 Add USB HS support                                        {33}
     05.03.2014 Add USB error counters and clear errors in the USB interrupt routine {71}
     28.05.2014 Move re-enable of USB SIE token processing to after input handling to avoid sporadic SETUP frame loss {83}
-    21.06.2014 Adjust FlexTimer/TPM use of FTM_SC_TOF to clear interrupt correctly {89}
     30.10.2014 Add optional crystal-less USB clock for K64, K63, K22 and K24 {104}
     01.12.2015 Allow control endpoint to operate with reversed data toggle (required to receive fast multi-frame OUTs belonging to a SETUP block) {1}
     23.12.2015 Add zero copy OUT endpoint buffer option                  {2}
@@ -1029,7 +1028,7 @@ extern void fnConfigUSB(QUEUE_HANDLE Channel, USBTABLE *pars)
     QUEUE_HANDLE i2c_handle;
     #endif
     #if !defined KINETIS_KL
-    FMC_PFAPR |= FMC_FPAPR_USB_FS;                                       // allow USB controller to read from Flash
+    FMC_PFAPR |= FMC_FPAPR_USB_FS;                                       // allow USB controller to read from flash
     #endif
     #if !defined KINETIS_KL82                                            // {3} KL82 doesn't have regulator control
     SIM_SOPT1_SET(SIM_SOPT1_USBREGEN, SIM_SOPT1CFG_URWE);                // ensure USB regulator is enabled

@@ -61,6 +61,7 @@
     02.03.2017 Add optional alternative memcpy DMA channel for use by interrupts {127}
     12.05.2017 Allow detection of RNG type in case both revison 1 and revision 2 parts may be encountered {128}
     05.09.2017 Add watchdog interrupt (needs WDOG_STCTRLH_IRQRSTEN set in the watchdog configuration) {129}
+    12.09.2017 Added INTMUX support                                      {130}
 
 */
 
@@ -994,6 +995,70 @@ extern void fnReenableInterrupts(void)
 }
 #endif
 
+#if defined INTMUX0_AVAILABLE                                            // {130}
+
+// Dispatch INTMUX0 source interrupt handler
+//
+static void fnDispatchINTMUX(unsigned long ulInterruptOffset)
+{
+    if (ulInterruptOffset != 0) {                                        // ignore spurious interrupts since they are not latched in the INTMUX
+        void(*ptrIRQ)(void);
+        unsigned char *ptrVect = (unsigned char *)VECTOR_TABLE_OFFSET_REG; // vector table
+        ptrVect += ulInterruptOffset;                                    // move to the offset
+        ptrIRQ = (void(*)(void ))*(unsigned long *)ptrVect;              // load the handler address
+        ptrIRQ();                                                        // call the interrupt handler
+    }
+}
+
+// INTMUX0 channel 0 interrupt
+//
+static void fnINTMUX0(void)
+{
+    fnDispatchINTMUX(INTMUX0_CH0_VEC);                                   // get the highest priority pending interrupt on this channel
+    #if defined _WINDOWS                                                 // assume that the interrupt source was cleared
+    INTMUX0_CH0_IPR_31_0 = 0;
+    INTMUX0_CH0_CSR &= ~(INTMUX_CSR_IRQP);
+    INTMUX0_CH0_VEC = 0;
+    #endif
+}
+
+// INTMUX0 channel 1 interrupt
+//
+static void fnINTMUX1(void)
+{
+    fnDispatchINTMUX(INTMUX0_CH1_VEC);                                   // get the highest priority pending interrupt on this channel
+    #if defined _WINDOWS                                                 // assume that the interrupt source was cleared
+    INTMUX0_CH1_IPR_31_0 = 0;
+    INTMUX0_CH1_CSR &= ~(INTMUX_CSR_IRQP);
+    INTMUX0_CH1_VEC = 0;
+    #endif
+}
+
+// INTMUX0 channel 2 interrupt
+//
+static void fnINTMUX2(void)
+{
+    fnDispatchINTMUX(INTMUX0_CH2_VEC);                                   // get the highest priority pending interrupt on this channel
+    #if defined _WINDOWS                                                 // assume that the interrupt source was cleared
+    INTMUX0_CH2_IPR_31_0 = 0;
+    INTMUX0_CH2_CSR &= ~(INTMUX_CSR_IRQP);
+    INTMUX0_CH2_VEC = 0;
+    #endif
+}
+
+// INTMUX0 channel 3 interrupt
+//
+static void fnINTMUX3(void)
+{
+    fnDispatchINTMUX(INTMUX0_CH3_VEC);                                   // get the highest priority pending interrupt on this channel
+    #if defined _WINDOWS                                                 // assume that the interrupt source was cleared
+    INTMUX0_CH3_IPR_31_0 = 0;
+    INTMUX0_CH3_CSR &= ~(INTMUX_CSR_IRQP);
+    INTMUX0_CH3_VEC = 0;
+    #endif
+}
+#endif
+
 // Function used to enter processor interrupts
 //
 extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void (*InterruptFunc)(void)) // {55}
@@ -1010,10 +1075,42 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void (*
     unsigned long ulState2 = IRQ64_95_SER;
     IRQ0_31_SER = IRQ32_63_SER = IRQ64_95_SER = IRQ0_31_CER = IRQ32_63_CER = IRQ64_95_CER = 0; // reset registers
 #endif
+#if defined INTMUX0_AVAILABLE                                            // {130}
+    if (iInterruptID >= irq_INTMUX0_0_ID) {
+        KINETIS_INTMUX *ptrINTMUX = (KINETIS_INTMUX *)INTMUX0_BLOCK;
+        int iPeripheralSource = (iInterruptID - irq_INTMUX0_0_ID - (ucPriority * 32));
+        POWER_UP_ATOMIC(6, SIM_SCGC6_INTMUX0);                           // power up the INTMUX0 module
+        ptrINTMUX += ucPriority;                                         // moved to the channel to be used
+        ptrINTMUX->INTMUX_CHn_IER_31_0 |= (1 << iPeripheralSource);      // enable the peripheral source interrupt to the INTMUX module
+    #if !defined INTERRUPT_VECTORS_IN_FLASH
+        processor_ints = (void(**)(void))&ptrVect->processor_interrupts; // first processor interrupt location in the vector table
+        processor_ints += (irq_INTMUX0_3_ID + 1 + iPeripheralSource);    // move the pointer to the location used by this interrupt number
+        *processor_ints = InterruptFunc;                                 // enter the interrupt handler into the (extended) vector table
+    #endif
+        switch (ucPriority) {
+        case 0:
+            InterruptFunc = fnINTMUX0;
+            break;
+        case 1:
+            InterruptFunc = fnINTMUX1;
+            break;
+        case 2:
+            InterruptFunc = fnINTMUX2;
+            break;
+        case 3:
+            InterruptFunc = fnINTMUX3;
+            break;
+        default:
+            _EXCEPTION("Illegal Cortex-m0+ interrupt priority!");
+            break;
+        }
+        iInterruptID = (irq_INTMUX0_0_ID + ucPriority);
+    }
+#endif
 #if !defined INTERRUPT_VECTORS_IN_FLASH
     processor_ints = (void (**)(void))&ptrVect->processor_interrupts;    // first processor interrupt location in the vector table
     processor_ints += iInterruptID;                                      // move the pointer to the location used by this interrupt number
-    *processor_ints = InterruptFunc;                                     // enter the interrupt handler into the vector tale
+    *processor_ints = InterruptFunc;                                     // enter the interrupt handler into the vector table
 #endif
     ptrPriority += iInterruptID;                                         // move to the priority location used by this interrupt
     *ptrPriority = (ucPriority << __NVIC_PRIORITY_SHIFT);                // {48} define the interrupt's priority (16 levels for K and 4 levels for KE/KL)
@@ -1119,7 +1216,7 @@ extern void fnStartTick(void)
             #endif
         #endif
     #endif
-    fnEnterInterrupt(irq_LPT_ID, LPTMR0_INTERRUPT_PRIORITY, (void (*)(void))_RealTimeInterrupt); // enter interrupt handler
+    fnEnterInterrupt(irq_LPTMR0_ID, LPTMR0_INTERRUPT_PRIORITY, (void (*)(void))_RealTimeInterrupt); // enter interrupt handler
     LPTMR0_CSR |= LPTMR_CSR_TIE;                                         // enable timer interrupt
     LPTMR0_CMR = LPTMR_US_DELAY((TICK_RESOLUTION));                      // TICK period
     #if defined _WINDOWS
@@ -1145,7 +1242,7 @@ extern void fnStartTick(void)
     }
     #endif
 #else                                                                    // use systick to derive the tick interrupt from
-    #define REQUIRED_US ((1000000/(TICK_RESOLUTION)))                    // the TICK frequency we require in MHz
+    #define REQUIRED_US (1000000/(TICK_RESOLUTION))                      // the TICK frequency we require in MHz
     #define TICK_DIVIDE (((CORE_CLOCK + REQUIRED_US/2)/REQUIRED_US) - 1) // the divide ratio required (for systick)
 
     #if TICK_DIVIDE > 0x00ffffff
@@ -2466,7 +2563,11 @@ static void _LowLevelInit(void)
     SET_POWER_MODE();                                                    // {93}
 #endif
  #if defined WDOG_STCTRLL                                                // {129}
+    #if !defined irq_WDOG_ID
+    fnEnterInterrupt((irq_INTMUX0_0_ID + INTMUX0_PERIPHERAL_WDOG0_EWM), 0, wdog_irq);// test WDOG interrupt (highest priority) - based on INTMUX
+    #else
     fnEnterInterrupt(irq_WDOG_ID, 0, wdog_irq);                          // test WDOG interrupt (highest priority)
+    #endif
 #endif
 }
 
@@ -2661,11 +2762,15 @@ const _RESET_VECTOR __vector_table
     _SCI0_Interrupt,                                                     // 12 UART 0
         #endif
     #else
-    irq_default,                                                         // 12
+        irq_default,                                                     // 12
     #endif
     irq_default,                                                         // 13
     irq_default,                                                         // 14
-    irq_default,                                                         // 15
+    #if defined SUPPORT_ADC
+        _ADC_Interrupt_0,                                                // 15 ADC0
+    #else
+        irq_default,                                                     // 15
+    #endif
     irq_default,                                                         // 16
     #if defined SUPPORT_TIMER && (FLEX_TIMERS_AVAILABLE > 0)
 	_flexTimerInterrupt_0,                                               // 17

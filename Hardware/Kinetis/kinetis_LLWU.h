@@ -170,7 +170,7 @@ static void fnHandleWakeupSources(volatile unsigned char *prtFlagRegister, int i
                 case MODULE_LPTMR0:
         #if defined TICK_USES_LPTMR
                     _RealTimeInterrupt();                                // call the TICK interrupt handler to clear the interrupt source
-                    fnClearPending(irq_LPT_ID);                          // {1} clear pending interrupt at LPTMR so that it is not taken (even though the source has been cleared)
+                    fnClearPending(irq_LPTMR0_ID);                       // {1} clear pending interrupt at LPTMR so that it is not taken (even though the source has been cleared)
         #else
                     LPTMR0_CSR = LPTMR0_CSR;                             // clear pending interrupt
         #endif

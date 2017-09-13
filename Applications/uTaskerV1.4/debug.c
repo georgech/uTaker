@@ -182,8 +182,11 @@
 
     #define STALL_CRITICAL          (TX_BUFFER_SIZE/2)                   // when the Windows TCP implementation sees that the window is less than half the maximum windows size we have advertised it will perform a delay of about 5s.
 
-    #define I2C_WRITE_ADDRESS       0xa4
     #define I2C_READ_ADDRESS        0xa5
+    #define I2C_WRITE_ADDRESS       0xa4
+  //#define I2C_READ_ADDRESS        0xaf                                 // the I2C device address to test
+  //#define I2C_WRITE_ADDRESS       0xae
+      //#define I2C_TWO_BYTE_ADDRESS                                     // when addressing I2C device internal registers use two bytes (16 bit addressing)
 
     #define UT_PATH_LENGTH          256                                  // length of maximum directory string
 
@@ -4380,21 +4383,38 @@ static void fnDoI2C(unsigned char ucType, CHAR *ptrInput)                // I2C 
     #if defined TEST_I2C_INTERFACE
     case DO_I2C_WRITE:                                                   // write a value to a specified I2C address
         {
+        #if defined I2C_TWO_BYTE_ADDRESS
+            #define I2C_DATA_POSITION 3
+            unsigned short usAddress;
+        #else
+            #define I2C_DATA_POSITION 2
+        #endif
             QUEUE_TRANSFER length;
-            unsigned char ucTest[257]; // = {I2C_WRITE_ADDRESS, 0, 0};
+            unsigned char ucTest[257];                                   // = {I2C_WRITE_ADDRESS, 0, 0};
             ucTest[0] = I2C_WRITE_ADDRESS;
+        #if defined I2C_TWO_BYTE_ADDRESS
+            usAddress = (unsigned short)fnHexStrHex(ptrInput);           // the address
+            ucTest[1] = (unsigned char)(usAddress >> 8);
+            ucTest[2] = (unsigned char)(usAddress);
+        #else
             ucTest[1] = (unsigned char)fnHexStrHex(ptrInput);            // the address
+        #endif
             if (fnJumpWhiteSpace(&ptrInput) != 0) {
                 fnDebugMsg("Data missing\r\n");
                 return;
             }
-            ucTest[2] = (unsigned char)fnHexStrHex(ptrInput);            // the data
+            ucTest[I2C_DATA_POSITION] = (unsigned char)fnHexStrHex(ptrInput); // the data value
             if (fnJumpWhiteSpace(&ptrInput) == 0) {
-                int iRepeat = 1;
+                int iRepeat = (I2C_DATA_POSITION - 1);
                 length = (unsigned char)fnDecStrHex(ptrInput);           // repetition length for data
                 if (length == 0) {
-                    length = 1;
+                    length = (I2C_DATA_POSITION - 1);
                 }
+        #if defined I2C_TWO_BYTE_ADDRESS
+                else {
+                    length++;
+                }
+        #endif
                 while (iRepeat++ < length) {
                     ucTest[iRepeat + 1] = (ucTest[iRepeat] + 1);
                 }
@@ -4405,22 +4425,35 @@ static void fnDoI2C(unsigned char ucType, CHAR *ptrInput)                // I2C 
             }
             fnWrite(I2CPortID, ucTest, length);
             fnDebugMsg("Written value ");
-            fnDebugHex(ucTest[2], (WITH_LEADIN | sizeof(ucTest[2])));
+            fnDebugHex(ucTest[I2C_DATA_POSITION], (WITH_LEADIN | sizeof(ucTest[2])));
             fnDebugMsg(" to address ");
+        #if defined I2C_TWO_BYTE_ADDRESS
+            fnDebugHex(usAddress, (WITH_LEADIN | WITH_CR_LF | sizeof(usAddress)));
+        #else
             fnDebugHex(ucTest[1], (WITH_LEADIN | WITH_CR_LF | sizeof(ucTest[1])));
+        #endif
         }
         break;
 
     case DO_I2C_READ_PLUS_WRITE:
     case DO_I2C_READ:                                                    // read values from an I2C address
         {
-            unsigned char ucSetAddress[2];// = {I2C_WRITE_ADDRESS, 0};
-            unsigned char ucTest[3];// = {1, I2C_READ_ADDRESS, OWN_TASK};
+        #if defined I2C_TWO_BYTE_ADDRESS
+            unsigned short usAddress;
+        #endif
+            unsigned char ucSetAddress[I2C_DATA_POSITION];               // = {I2C_WRITE_ADDRESS, 0, (0)};
+            unsigned char ucTest[3];                                     // = {1, I2C_READ_ADDRESS, OWN_TASK};
             ucSetAddress[0] = I2C_WRITE_ADDRESS;
+        #if defined I2C_TWO_BYTE_ADDRESS
+            usAddress = (unsigned short)fnHexStrHex(ptrInput);           // the address
+            ucSetAddress[1] = (unsigned char)(usAddress >> 8);
+            ucSetAddress[2] = (unsigned char)(usAddress);
+        #else
             ucSetAddress[1] = (unsigned char)fnHexStrHex(ptrInput);      // the address
-            fnWrite(I2CPortID, (unsigned char *)ucSetAddress, sizeof(ucSetAddress));
+        #endif
+            fnWrite(I2CPortID, (unsigned char *)ucSetAddress, sizeof(ucSetAddress)); // write the address to be read from
             if (fnJumpWhiteSpace(&ptrInput) == 0) {
-                ucTest[0] = (unsigned char)fnDecStrHex(ptrInput);        // the length               
+                ucTest[0] = (unsigned char)fnDecStrHex(ptrInput);        // the length to be read           
             }
             else {
                 ucTest[0] = 1;
@@ -4437,13 +4470,17 @@ static void fnDoI2C(unsigned char ucType, CHAR *ptrInput)                // I2C 
             }
             fnDebugDec(ucTest[0], sizeof(ucTest[1]));
             fnDebugMsg(" bytes from address ");
+        #if defined I2C_TWO_BYTE_ADDRESS
+            fnDebugHex(usAddress, (WITH_LEADIN | WITH_CR_LF | sizeof(usAddress)));
+        #else
             fnDebugHex(ucSetAddress[1], (WITH_LEADIN | WITH_CR_LF | sizeof(ucSetAddress[1])));
+        #endif
         }
         break;
 
     case DO_I2C_READ_NO_ADDRESS:
         {
-            unsigned char ucTest[3];// = {1, I2C_READ_ADDRESS, OWN_TASK};
+            unsigned char ucTest[3];                                     // = {1, I2C_READ_ADDRESS, OWN_TASK};
             ucTest[0] = (unsigned char)fnDecStrHex(ptrInput);            // the length
             if (ucTest[0] == 0) {
                 fnDebugMsg("Invalid length\n\r");
@@ -4463,7 +4500,6 @@ static void fnDoI2C(unsigned char ucType, CHAR *ptrInput)                // I2C 
 #endif
 
 #if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST // {17}{81}
-
 
 static void fnDisplayDiskSize(unsigned long ulSectors, unsigned short usBytesPerSector) // {43}
 {

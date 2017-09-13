@@ -37,6 +37,7 @@
     27.01.2016 Add _KSZ8051RNL                                           {102}
     08.03.2017 Add option to not initialise MII_RXER pin (NO_MII_RXER)   {103}
     07.08.2017 Add option for MDIO on port A                             {104}
+    07.09.2017 Optionally manage MDIO clock in tail-tagging routine      {105}
 
 */
 
@@ -145,6 +146,9 @@
 extern void fnSetTailTagMode(int iPort)
 {
     if (iPort != iTailTagging) {                                         // only react to changes
+    #if defined STOP_MII_CLOCK                                           // {105}
+        MSCR = (((ETHERNET_CONTROLLER_CLOCK / (2 * MII_MANAGEMENT_CLOCK_SPEED)) + 1) << 1); // enable PHY clock for reads
+    #endif
         iTailTagging = iPort;                                            // enable/disable tail tagging (the enabled value controls frame reception when simulating)
     #if defined USE_IP
         fnDeleteArp();                                                   // delete ARP table when changing mode
@@ -164,6 +168,9 @@ extern void fnSetTailTagMode(int iPort)
             _fnMIIwrite(0, 0x21, 0x07);
             _fnMIIwrite(0, 0x31, 0x07);                                  // disable the processor as sniffer port (non-promiscuous) since we return to normal switch mode
         }
+    #if defined STOP_MII_CLOCK                                           // {105}
+        MSCR = 0;                                                        // disable PHY clock after use
+    #endif
     }
 }
 
@@ -204,6 +211,10 @@ extern signed char fnEthernetEvent(unsigned char *ucEvent, ETHERNET_FRAME *rx_fr
             return -1;                                                   // nothing (else) waiting
         }
         rx_frame->ptEth = (ETHERNET_FRAME_CONTENT *)ucEthernetInput;     // return pointer to the fixed linear input buffer
+    #if IP_INTERFACE_COUNT > 1
+        rx_frame->ucInterface = (ETHERNET_INTERFACE >> INTERFACE_SHIFT); // {30}
+        rx_frame->ucInterfaceHandling = DEFAULT_INTERFACE_CHARACTERISTICS; // handling that this interface needs
+    #endif
 #else
         if ((ptrRxBd->usBDControl & EMPTY_BUFFER) != 0) {
             return -1;                                                   // nothing waiting
@@ -211,6 +222,10 @@ extern signed char fnEthernetEvent(unsigned char *ucEvent, ETHERNET_FRAME *rx_fr
         else if (ptrRxBd->usBDLength == 0) {                             // zero length is invalid
             return -1;
         }
+    #if IP_INTERFACE_COUNT > 1
+        rx_frame->ucInterface = (ETHERNET_INTERFACE >> INTERFACE_SHIFT); // {30}
+        rx_frame->ucInterfaceHandling = DEFAULT_INTERFACE_CHARACTERISTICS; // handling that this interface needs
+    #endif
         rx_frame->ptEth = (ETHERNET_FRAME_CONTENT *)fnLE_ENET_add(ptrRxBd->ptrBD_Data); // set pointer to reception content in the buffer descriptor
         if ((ptrRxBd->usBDControl & (TRUNCATED_FRAME | OVERRUN_FRAME)) != 0) { // corrupted reception
             if ((ptrRxBd->usBDControl & TRUNCATED_FRAME) == 0) {
@@ -232,14 +247,23 @@ extern signed char fnEthernetEvent(unsigned char *ucEvent, ETHERNET_FRAME *rx_fr
     #if defined PHY_TAIL_TAGGING                                         // {44}
             if (iTailTagging != 0) {                                     // if tail tagging is enabled
         #if defined _WINDOWS
-                rx_frame->ucRxPort = (unsigned char)iTailTagging;        // simulate frames arrive over this particular port
+                if (iTailTagging == 2) {
+                    rx_frame->ucRxPort = 2;                              // simulate frames arrive over this particular port
+                    rx_frame->ucInterface = (PHY2_INTERFACE >> INTERFACE_SHIFT); // simulate frames arrive over this particular port
+                }
+                else {
+                    rx_frame->ucRxPort = 1;                              // simulate frames arrive over this particular port
+                    rx_frame->ucInterface = (PHY1_INTERFACE >> INTERFACE_SHIFT); // simulate frames arrive over this particular port
+                }
         #else                                                            // in tail tagging mode the source port is read from the received trame
                 rx_frame->frame_size--;                                  // remove tail from the length
                 if ((rx_frame->ptEth->ucData[rx_frame->frame_size - 14] & 0x01) != 0) {
                     rx_frame->ucRxPort = 2;                              // this Ethernet frame arrived over port 2
+                    rx_frame->ucInterface = (PHY2_INTERFACE >> INTERFACE_SHIFT);
                 }
                 else {
                     rx_frame->ucRxPort = 1;                              // this Ethernet frame arrived over port 1
+                    rx_frame->ucInterface = (PHY1_INTERFACE >> INTERFACE_SHIFT);
                 }
         #endif
             }
@@ -325,10 +349,6 @@ extern signed char fnEthernetEvent(unsigned char *ucEvent, ETHERNET_FRAME *rx_fr
         #endif
         }
     #endif
-#endif
-#if IP_INTERFACE_COUNT > 1
-        rx_frame->ucInterface = (ETHERNET_INTERFACE >> INTERFACE_SHIFT); // {30}
-        rx_frame->ucInterfaceHandling = DEFAULT_INTERFACE_CHARACTERISTICS; // handling that this interface needs
 #endif
 #if defined LAN_REPORT_ACTIVITY
         fnWrite(INTERNAL_ROUTE, (unsigned char *)EMAC_int_message, HEADER_LENGTH); // inform the task of event
@@ -606,6 +626,11 @@ static unsigned short fnMIIread(unsigned char _mpadr, unsigned char _mradr)
 
     while ((EIR & MII) == 0) {                                           // wait until the read has completed
 #if defined _WINDOWS
+    #if defined STOP_MII_CLOCK
+        if (MSCR == 0) {
+            _EXCEPTION("Trying to read from PHY without clock enabled!");
+        }
+    #endif
         EIR |= MII;
 #endif
     };
@@ -754,15 +779,20 @@ static void fnMIIwrite(unsigned char _mpadr, unsigned char _mradr, unsigned shor
 #if defined PHY_MICREL_SMI
     if (_mpadr == 0) {                                                   // {19}
         MMFR = ((MII_TA | MII_ST) | (_mradr << 18) | _mwdata);           // command SMI write to given SMI register
-	}
-	else {
+    }
+    else {
         MMFR = (MII_WRITE | (_mpadr << 23) | (_mradr << 18) | _mwdata);  // command write to given address
-	}
+    }
 #else
     MMFR = (MII_WRITE | (_mpadr << 23) | (_mradr << 18) | _mwdata);
 #endif
     while ((EIR & MII) == 0) {                                           // wait until the write has completed
 #if defined _WINDOWS
+    #if defined STOP_MII_CLOCK
+        if (MSCR == 0) {
+            _EXCEPTION("Trying to write to PHY without clock enabled!");
+        }
+    #endif
         EIR |= MII;
 #endif
     };

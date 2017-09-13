@@ -45,6 +45,7 @@
     02.02.2017 Add fnVirtualWakeupInterruptHandler()                     {13}
     12.02.2017 Add FRDM_KL82Z
     10.08.2017 Add FRDM_KL28Z
+    07.09.2017 Add HEXIWEAR_K64F
 
 */
 
@@ -74,6 +75,15 @@ extern int fnPortState(CHAR cPortBit)
         return (((GPIOC_PDDR & GPIOC_PDOR & DEMO_LED_2) | (~GPIOC_PDDR & GPIOC_PDIR & DEMO_LED_2)) != 0);
     case '3':
         return (((GPIOB_PDDR & GPIOB_PDOR & DEMO_LED_3) | (~GPIOB_PDDR & GPIOB_PDIR & DEMO_LED_3)) != 0);
+    case '4':
+        return (((GPIOB_PDDR & GPIOB_PDOR & DEMO_LED_4) | (~GPIOB_PDDR & GPIOB_PDIR & DEMO_LED_4)) != 0);
+#elif defined HEXIWEAR_K64F
+    case '1':
+        return (((GPIOD_PDDR & GPIOE_PDOR & DEMO_LED_1) | (~GPIOD_PDDR & GPIOE_PDIR & DEMO_LED_1)) != 0);
+    case '2':
+        return (((GPIOC_PDDR & GPIOC_PDOR & DEMO_LED_2) | (~GPIOC_PDDR & GPIOC_PDIR & DEMO_LED_2)) != 0);
+    case '3':
+        return (((GPIOC_PDDR & GPIOB_PDOR & DEMO_LED_3) | (~GPIOC_PDDR & GPIOB_PDIR & DEMO_LED_3)) != 0);
     case '4':
         return (((GPIOB_PDDR & GPIOB_PDOR & DEMO_LED_4) | (~GPIOB_PDDR & GPIOB_PDIR & DEMO_LED_4)) != 0);
 #elif defined TWR_K21D50M || defined tinyK20 || defined TWR_K21F120M || defined TWR_K22F120M || defined TWR_K24F120M || defined TWR_KW21D256 || defined TWR_KW24D512 || defined rcARM_KL26
@@ -203,6 +213,15 @@ extern int fnPortState(CHAR cPortBit)
         return (((GPIOE_PDDR & GPIOE_PDOR & DEMO_LED_3) | (~GPIOE_PDDR & GPIOE_PDIR & DEMO_LED_3)) != 0);
     case '4':
         return (((GPIOE_PDDR & GPIOE_PDOR & DEMO_LED_4) | (~GPIOE_PDDR & GPIOE_PDIR & DEMO_LED_4)) != 0);
+#elif defined K61FN1_50M
+    case '1':
+        return (((GPIOB_PDDR & GPIOE_PDOR & DEMO_LED_1) | (~GPIOB_PDDR & GPIOE_PDIR & DEMO_LED_1)) != 0);
+    case '2':
+        return (((GPIOB_PDDR & GPIOE_PDOR & DEMO_LED_2) | (~GPIOB_PDDR & GPIOE_PDIR & DEMO_LED_2)) != 0);
+    case '3':
+        return (((GPIOB_PDDR & GPIOE_PDOR & DEMO_LED_3) | (~GPIOB_PDDR & GPIOE_PDIR & DEMO_LED_3)) != 0);
+    case '4':
+        return (((GPIOA_PDDR & GPIOE_PDOR & DEMO_LED_4) | (~GPIOA_PDDR & GPIOE_PDIR & DEMO_LED_4)) != 0);
 #elif defined FRDM_K22F || defined TRINAMIC_LANDUNGSBRUECKE
     case '1':
         return (((GPIOA_PDDR & GPIOA_PDOR & DEMO_LED_1) | (~GPIOA_PDDR & GPIOA_PDIR & DEMO_LED_1)) != 0);
@@ -268,6 +287,15 @@ extern int fnPortInputConfig(CHAR cPortBit)
         return ((GPIOC_PDDR & DEMO_LED_2) == 0);
     case '3':
         return ((GPIOB_PDDR & DEMO_LED_3) == 0);
+    case '4':
+        return ((GPIOB_PDDR & DEMO_LED_4) == 0);
+#elif defined HEXIWEAR_K64F
+    case '1':
+        return ((GPIOD_PDDR & DEMO_LED_1) == 0);
+    case '2':
+        return ((GPIOC_PDDR & DEMO_LED_2) == 0);
+    case '3':
+        return ((GPIOC_PDDR & DEMO_LED_3) == 0);
     case '4':
         return ((GPIOB_PDDR & DEMO_LED_4) == 0);
 #elif defined TWR_K21D50M || defined tinyK20 || defined TWR_K21F120M || defined TWR_K22F120M || defined TWR_K24F120M || defined TWR_KW21D256 || defined TWR_KW24D512 || defined rcARM_KL26
@@ -398,6 +426,15 @@ extern int fnPortInputConfig(CHAR cPortBit)
         return ((GPIOE_PDDR & DEMO_LED_3) == 0);
     case '4':
         return ((GPIOE_PDDR & DEMO_LED_4) == 0);
+#elif defined K61FN1_50M
+    case '1':
+        return ((GPIOB_PDDR & DEMO_LED_1) == 0);
+    case '2':
+        return ((GPIOB_PDDR & DEMO_LED_2) == 0);
+    case '3':
+        return ((GPIOB_PDDR & DEMO_LED_3) == 0);
+    case '4':
+        return ((GPIOA_PDDR & DEMO_LED_4) == 0);
 #elif defined FRDM_K22F || defined TRINAMIC_LANDUNGSBRUECKE
     case '1':
         return ((GPIOA_PDDR & DEMO_LED_1) == 0);
@@ -453,6 +490,19 @@ extern int fnConfigPort(CHAR cPortBit, CHAR cType)
             _CONFIG_PORT_INPUT(B, ulPortBit, PORT_PS_UP_ENABLE);         // set port bit to input (on port B)
             break;
         }
+#elif defined HEXIWEAR_K64F
+        switch (cPortBit) {
+        case 0:
+            _CONFIG_PORT_INPUT(D, ulPortBit, PORT_PS_UP_ENABLE);         // set port bit to input (on port D)
+            break;
+        case 1:
+        case 2:
+            _CONFIG_PORT_INPUT(C, ulPortBit, PORT_PS_UP_ENABLE);         // set port bit to input (on port C)
+            break;
+        case 3:
+            _CONFIG_PORT_INPUT(B, ulPortBit, PORT_PS_UP_ENABLE);         // set port bit to input (on port B)
+            break;
+        }
 #elif defined FRDM_K22F || defined TRINAMIC_LANDUNGSBRUECKE
         switch (cPortBit) {
         case 0:
@@ -473,6 +523,17 @@ extern int fnConfigPort(CHAR cPortBit, CHAR cType)
         case 2:
         case 3:
             _CONFIG_PORT_INPUT(B, ulPortBit, PORT_PS_UP_ENABLE);         // set port bit to input (on port B)
+            break;
+        }
+#elif defined K61FN1_50M
+        switch (cPortBit) {
+        case 0:
+        case 1:
+        case 2:
+            _CONFIG_PORT_INPUT(B, ulPortBit, PORT_PS_UP_ENABLE);         // set port bit to input (on port B)
+            break;
+        case 3:
+            _CONFIG_PORT_INPUT(A, ulPortBit, PORT_PS_UP_ENABLE);         // set port bit to input (on port A)
             break;
         }
 #elif defined TWR_KV31F120M
@@ -676,6 +737,19 @@ extern int fnConfigPort(CHAR cPortBit, CHAR cType)
             _CONFIG_PORT_OUTPUT(B, ulPortBit, PORT_SRE_SLOW);            // set port bit to output (on port B)
             break;
         }
+#elif defined HEXIWEAR_K64F
+        switch (cPortBit) {
+        case 0:
+            _CONFIG_PORT_OUTPUT(D, ulPortBit, PORT_SRE_SLOW);            // set port bit to output (on port D)
+            break;
+        case 1:
+        case 2:
+            _CONFIG_PORT_OUTPUT(C, ulPortBit, PORT_SRE_SLOW);            // set port bit to output (on port C)
+            break;
+        case 3:
+            _CONFIG_PORT_OUTPUT(B, ulPortBit, PORT_SRE_SLOW);            // set port bit to output (on port B)
+            break;
+        }
 #elif defined FRDM_K22F || defined TRINAMIC_LANDUNGSBRUECKE
         switch (cPortBit) {
         case 0:
@@ -696,6 +770,17 @@ extern int fnConfigPort(CHAR cPortBit, CHAR cType)
         case 2:
         case 3:
             _CONFIG_PORT_OUTPUT(B, ulPortBit, PORT_SRE_SLOW);            // set port bit to output (on port B)
+            break;
+        }
+#elif defined K61FN1_50M
+        switch (cPortBit) {
+        case 0:
+        case 1:
+        case 2:
+            _CONFIG_PORT_OUTPUT(B, ulPortBit, PORT_SRE_SLOW);            // set port bit to output (on port B)
+            break;
+        case 3:
+            _CONFIG_PORT_OUTPUT(A, ulPortBit, PORT_SRE_SLOW);            // set port bit to output (on port A)
             break;
         }
 #elif defined TWR_KV31F120M
@@ -854,6 +939,17 @@ extern int fnConfigPort(CHAR cPortBit, CHAR cType)
             break;
         case 2:
             _CONFIG_PORT_OUTPUT(E, ulPortBit, PORT_SRE_SLOW);            // set port bit to output (on port E)
+            break;
+        case 3:
+            _CONFIG_PORT_OUTPUT(A, ulPortBit, PORT_SRE_SLOW);            // set port bit to output (on port A)
+            break;
+        }
+#elif defined K61FN1_50M
+        switch (cPortBit) {
+        case 0:
+        case 1:
+        case 2:
+            _CONFIG_PORT_OUTPUT(B, ulPortBit, PORT_SRE_SLOW);            // set port bit to output (on port B)
             break;
         case 3:
             _CONFIG_PORT_OUTPUT(A, ulPortBit, PORT_SRE_SLOW);            // set port bit to output (on port A)
@@ -1220,6 +1316,34 @@ extern void fnSetPortOut(unsigned char ucPortOutputs, int iInitialisation)
     }
     else {
         _WRITE_PORT_MASK(B, (0), (DEMO_LED_3));
+    }
+    if ((ucPortOutputs & MAPPED_DEMO_LED_4) != 0) {
+        _WRITE_PORT_MASK(B, (DEMO_LED_4), (DEMO_LED_4));
+    }
+    else {
+        _WRITE_PORT_MASK(B, (0), (DEMO_LED_4));
+    }
+#elif defined HEXIWEAR_K64F
+    if (iInitialisation != 0) {
+        POWER_UP(5, (SIM_SCGC5_PORTD | SIM_SCGC5_PORTB | SIM_SCGC5_PORTC)); // ensure ports are powered before writing initial values
+    }
+    if ((ucPortOutputs & MAPPED_DEMO_LED_1) != 0) {
+        _WRITE_PORT_MASK(D, (DEMO_LED_1), (DEMO_LED_1));
+    }
+    else {
+        _WRITE_PORT_MASK(D, (0), (DEMO_LED_1));
+    }
+    if ((ucPortOutputs & MAPPED_DEMO_LED_2) != 0) {
+        _WRITE_PORT_MASK(C, (DEMO_LED_2), (DEMO_LED_2));
+    }
+    else {
+        _WRITE_PORT_MASK(C, (0), (DEMO_LED_2));
+    }
+    if ((ucPortOutputs & MAPPED_DEMO_LED_3) != 0) {
+        _WRITE_PORT_MASK(C, (DEMO_LED_3), (DEMO_LED_3));
+    }
+    else {
+        _WRITE_PORT_MASK(C, (0), (DEMO_LED_3));
     }
     if ((ucPortOutputs & MAPPED_DEMO_LED_4) != 0) {
         _WRITE_PORT_MASK(B, (DEMO_LED_4), (DEMO_LED_4));
@@ -1658,6 +1782,27 @@ extern void fnSetPortOut(unsigned char ucPortOutputs, int iInitialisation)
     }
     _WRITE_PORT_MASK(C, ulPortOutputSetting, (DEMO_LED_1 | DEMO_LED_2 | DEMO_LED_3));
     _WRITE_PORT_MASK(B, ulPortOutputSetting, (DEMO_LED_4));
+#elif defined K61FN1_50M
+    unsigned long ulPortOutputSetting = 0;
+    if (iInitialisation != 0) {
+        POWER_UP(5, (SIM_SCGC5_PORTA | SIM_SCGC5_PORTB));                // ensure ports are powered before writing initial values
+    }
+    if ((ucPortOutputs & MAPPED_DEMO_LED_1) != 0) {
+        ulPortOutputSetting |= DEMO_LED_1;
+    }
+    if ((ucPortOutputs & MAPPED_DEMO_LED_2) != 0) {
+        ulPortOutputSetting |= DEMO_LED_2;
+    }
+    if ((ucPortOutputs & MAPPED_DEMO_LED_3) != 0) {
+        ulPortOutputSetting |= DEMO_LED_3;
+    }
+    if ((ucPortOutputs & MAPPED_DEMO_LED_4) != 0) {
+        _SETBITS(A, DEMO_LED_4);
+    }
+    else {
+        _CLEARBITS(A, DEMO_LED_4);
+    }
+    _WRITE_PORT_MASK(B, ulPortOutputSetting, (DEMO_LED_1 | DEMO_LED_2 | DEMO_LED_3));
 #elif defined EMCRAFT_K70F120M || defined EMCRAFT_K61F150M || defined TWR_K64F120M
     unsigned long ulPortOutputSetting = 0;
     if (iInitialisation != 0) {
@@ -1680,25 +1825,25 @@ extern void fnSetPortOut(unsigned char ucPortOutputs, int iInitialisation)
     if (iInitialisation != 0) {
         POWER_UP(5, (SIM_SCGC5_PORTA | SIM_SCGC5_PORTC | SIM_SCGC5_PORTE)); // ensure ports are powered before writing initial values
     }
-    if (ucPortOutputs & MAPPED_DEMO_LED_1) {
+    if ((ucPortOutputs & MAPPED_DEMO_LED_1) != 0) {
         _WRITE_PORT_MASK(E, (DEMO_LED_1), (DEMO_LED_1));
     }
     else {
         _WRITE_PORT_MASK(E, (0), (DEMO_LED_1));
     }
-    if (ucPortOutputs & MAPPED_DEMO_LED_2) {
+    if ((ucPortOutputs & MAPPED_DEMO_LED_2) != 0) {
         _WRITE_PORT_MASK(C, (DEMO_LED_2), (DEMO_LED_2));
     }
     else {
         _WRITE_PORT_MASK(C, (0), (DEMO_LED_2));
     }
-    if (ucPortOutputs & MAPPED_DEMO_LED_3) {
+    if ((ucPortOutputs & MAPPED_DEMO_LED_3) != 0) {
         _WRITE_PORT_MASK(A, (DEMO_LED_3), (DEMO_LED_3));
     }
     else {
         _WRITE_PORT_MASK(A, (0), (DEMO_LED_3));
     }
-    if (ucPortOutputs & MAPPED_DEMO_LED_4) {
+    if ((ucPortOutputs & MAPPED_DEMO_LED_4) != 0) {
         _WRITE_PORT_MASK(A, (DEMO_LED_4), (DEMO_LED_4));
     }
     else {
@@ -2320,7 +2465,7 @@ extern int fnVirtualWakeupInterruptHandler(int iDeepSleep)               // {13}
     LPTMR0_CSR = LPTMR0_CSR;                                             // clear pending interrupt at LPTMR (wakeup source)
     WRITE_ONE_TO_CLEAR(*(volatile unsigned char *)(LLWU_FLAG_ADDRESS + 2), MODULE_LPTMR0); // reset the wakeup flag (write '1' to clear)
     fnClearPending(irq_LL_wakeup_ID);
-    fnClearPending(irq_LPT_ID);
+    fnClearPending(irq_LPTMR0_ID);
     if (++iLowPowerLoopMode > (DELAY_LIMIT)(0.2 * SEC)) {                // take over basic tick operation to retrigger the watchog every 200ms
         fnRetriggerWatchdog();
         iLowPowerLoopMode = LOW_POWER_CYCLING_ENABLED;

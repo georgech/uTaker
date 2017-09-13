@@ -166,6 +166,11 @@ static unsigned char fnSetADC_channel(unsigned char ucADC_channel, int iDiffMode
             _CONFIG_PERIPHERAL(B, 0, PB_0_ADC0_SE8);                     // ensure that the ADC pin is configured
             break;
         #endif
+        #if defined KINETIS_KL03
+        case ADC_SE15_SINGLE:
+            _CONFIG_PERIPHERAL(A, 0, PA_0_ADC0_SE15);                    // ensure that the ADC pin is configured (warning: this changes the default SWD_CLK configuration, losing any debug support!)
+            break;
+        #endif
         }
         return (ucADC_channel);
     }
@@ -462,7 +467,7 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
                                 _ADC_Interrupt_handler[ptrADC_settings->int_adc_controller] = ptrADC_settings->int_handler; // enter the interrupt handler function
                                 fnEnterInterrupt(irq_ADC_ID, ptrADC_settings->int_priority, (void (*)(void))_ADC_Interrupt[ptrADC_settings->int_adc_controller]);
                                 ucChannelConfig |= ADC_SC1A_AIEN;        // enable interrupt on end of conversion
-                                if (ptrADC_settings->int_adc_int_type & (ADC_LOW_LIMIT_INT | ADC_HIGH_LIMIT_INT)) { // {1} if a level is defined
+                                if ((ptrADC_settings->int_adc_int_type & (ADC_LOW_LIMIT_INT | ADC_HIGH_LIMIT_INT)) != 0) { // {1} if a level is defined
     #if defined KINETIS_KE
                                     ucChannelConfig = ADC_SC1A_ADCO;     // enable continuous conversion
     #else

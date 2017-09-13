@@ -7,12 +7,12 @@
 MEMORY
 {
     FLASH (rx) : ORIGIN = 0x00000000, LENGTH = 0x00020000
-    SRAM (wx)  : ORIGIN = 0x1fffa0c0, LENGTH = 0x00018000-0xc0           /* vector size 0xc0 (192 bytes) */
+    SRAM (wx)  : ORIGIN = 0x1fffa0c0, LENGTH = 0x00018000-0x130           /* vector size 0x130 (304 bytes) */
 }
 
 SECTIONS
 {
-  __SRAM_segment_start__   = 0x1fffa0c0;
+  __SRAM_segment_start__   = 0x1fffa130;
   __SRAM_segment_end__     = 0x20011fff;
   __Vector_segment_start__ = 0x00000000;
   __Vector_segment_end__   = 0x00000008;

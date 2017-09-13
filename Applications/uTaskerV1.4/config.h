@@ -30,14 +30,14 @@
 
 //#define RUN_IN_FREE_RTOS                                               // use uTasker in a FreeRTOS task to benefit from both worlds!
   //#define FREE_RTOS_UART                                               // demonstrate UART usage by FreeRTOS task
-  //#define FREE_RTOS_BLINKY                                             // allow a FreeRTOS blinky task to operate
+    #define FREE_RTOS_BLINKY                                             // allow a FreeRTOS blinky task to operate
 
 #define _TICK_RESOLUTION     TICK_UNIT_MS(50)                            // 50ms system tick period - max possible at 50MHz SYSTICK would be about 335ms !
 
-#define REMOVE_PORT_INITIALISATIONS                                      // remove port initialisation and use demonstration to ensure that port configuration and use doesn't conflict with specific application development (exception is blink LED)
-  #define NO_PERIPHERAL_DEMONSTRATIONS                                   // disable peripheral demonstration code (ADC/I2C/CAN/port interrupts/etc.) so that they can't interfere with new application developments
+//#define REMOVE_PORT_INITIALISATIONS                                    // remove port initialisation and use demonstration to ensure that port configuration and use doesn't conflict with specific application development (exception is blink LED)
+  //#define NO_PERIPHERAL_DEMONSTRATIONS                                 // disable peripheral demonstration code (ADC/I2C/CAN/port interrupts/etc.) so that they can't interfere with new application developments
 
-#define USE_MAINTENANCE                                                  // include the command line shell (on UART, USB-CDC and/or Telenet) with maintenance support for the application (remove to reduce project size for special tests or possibly running from limited RAM)
+#define USE_MAINTENANCE                                                  // include the command line shell (on UART, USB-CDC and/or Telnet) with maintenance support for the application (remove to reduce project size for special tests or possibly running from limited RAM)
     #define PREVIOUS_COMMAND_BUFFERS  4                                  // allow the up-arrow to retrieve this many past commands
     #define MEMORY_DEBUGGER                                              // memory and storage debugger interface (read, write, fill and erase)
 
@@ -79,7 +79,7 @@
 //#define FRDM_KL26Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL26Z.html
 //#define rcARM_KL26                                                     // development board with KL26
 //#define TEENSY_LC                                                      // USB development board with KL26Z64 - http://www.utasker.com/kinetis/TEENSY_LC.html
-#define FRDM_KL27Z                                                       // freedom board http://www.utasker.com/kinetis/FRDM-KL27Z.html
+//#define FRDM_KL27Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL27Z.html
 //#define CAPUCCINO_KL27                                                 // http://www.utasker.com/kinetis/Capuccino-KL27.html
 //#define TWR_KL28Z72M                                                   // tower board http://www.utasker.com/kinetis/FRDM-KL28Z72M
 //#define FRDM_KL28Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL28Z.html
@@ -102,6 +102,7 @@
 
 //#define TWR_KW21D256                                                   // W processors Cortex M0+/M4 (wireless connectivity) - tower board http://www.utasker.com/kinetis/TWR-KW21D256.html
 //#define TWR_KW24D512                                                   // tower board http://www.utasker.com/kinetis/TWR-KW24D512.html
+//#define HEXIWEAR_KW40Z                                                 // hexiwear - wearable development kit for IoT (KW40Z160 support wireless processor) http://www.hexiwear.com/
 
 //#define K02F100M                                                       // development board with 100MHz K02F
 //#define FRDM_K20D50M                                                   // K processors Cortex M4 (performance and integration) with USB - freedom board http://www.utasker.com/kinetis/FRDM-K20D50M.html
@@ -132,9 +133,11 @@
 //#define NET_K60                                                        // http://www.utasker.com/kinetis/ELZET80_NET-K60.html
 
 //#define EMCRAFT_K61F150M                                               // K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - http://www.utasker.com/kinetis/EMCRAFT_K61F150M.html
+//#define K61FN1_50M                                                     // board with 150MHz K61 and 50MHz clock (HS USB and KSZ8863 ethernet switch)
 
-//#define FRDM_K64F                                                        // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
+#define FRDM_K64F                                                        // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
 //#define TWR_K64F120M                                                   // tower board http://www.utasker.com/kinetis/TWR-K64F120M.html
+//#define HEXIWEAR_K64F                                                  // hexiwear - wearable development kit for IoT (K64FN1M0VDC12 main processor) http://www.hexiwear.com/
 //#define TEENSY_3_5                                                     // USB development board with K64FX512 - http://www.utasker.com/kinetis/TEENSY_3.5.html
 //#define FreeLON                                                        // K64 based with integrated LON
 //#define TWR_K65F180M                                                   // tower board http://www.utasker.com/kinetis/TWR-K65F180M.html
@@ -187,7 +190,7 @@
 #elif defined FRDM_KE06Z
     #define TARGET_HW            "FRDM-KE06Z"
     #define KINETIS_MAX_SPEED    48000000
-    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((3 * 1024) * MEM_FACTOR)
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((10 * 1024) * MEM_FACTOR)
     #define KINETIS_KE
     #define KINETIS_KE06
     #define DEVICE_WITHOUT_ETHERNET                                      // KE doesn't have Ethernet controller
@@ -604,7 +607,7 @@
     #define KINETIS_REVISION_2
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((32 * 1024) * MEM_FACTOR) // we have the LAN buffers in HEAP and big RX/TX - a little more for USB
 #elif defined TWR_K60N512
-    #define _PHY_KSZ8863                                                 // development board option with Micrel 2 port switch
+  //#define _PHY_KSZ8863                                                 // development board option with Micrel 2 port switch
   //#define TWR_SER2                                                     // use SER2 serial board instead of standard serial board
   //#define DEBUG_ON_VIRT_COM                                            // optionally set UART debug on virtual COM rather than the serial board
     #define TARGET_HW            "TWR-K60N512"
@@ -617,6 +620,14 @@
     #define KINETIS_K61                                                  // extra sub-family type precision
     #define TARGET_HW            "EMCRAFT-K61F150M"
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((30 * 1024) * MEM_FACTOR)
+#elif defined K61FN1_50M
+    #define _PHY_KSZ8863                                                 // development board option with Micrel 2 port switch
+    #define KINETIS_K_FPU                                                // part with floating point unit
+    #define KINETIS_MAX_SPEED    150000000                               // 150MHz part
+    #define KINETIS_K60                                                  // specify the sub-family
+    #define KINETIS_K61                                                  // extra sub-family type precision
+    #define TARGET_HW            "K61FN1-50M"
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((30 * 1024) * MEM_FACTOR)
 #elif defined FreeLON
     #define TARGET_HW            "FreeLON"
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((48 * 1024) * MEM_FACTOR) // large SRAM parts
@@ -627,6 +638,14 @@
     #define KINETIS_K64                                                  // extra sub-family type precision
 #elif defined FRDM_K64F
     #define TARGET_HW            "FRDM-K64F"
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((48 * 1024) * MEM_FACTOR) // large SRAM parts
+    #define KINETIS_MAX_SPEED    120000000
+    #define KINETIS_K_FPU                                                // part with floating point unit
+    #define KINETIS_K60                                                  // specify the sub-family
+    #define KINETIS_REVISION_2
+    #define KINETIS_K64                                                  // extra sub-family type precision
+#elif defined HEXIWEAR_K64F
+    #define TARGET_HW            "HEXIWEAR-K64F"
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((48 * 1024) * MEM_FACTOR) // large SRAM parts
     #define KINETIS_MAX_SPEED    120000000
     #define KINETIS_K_FPU                                                // part with floating point unit
@@ -955,7 +974,7 @@
             #define NUMBER_USB     (5 + 1)                               // physical queues (control plus 5 endpoints)
         #else                                                            // define one or more device classes (multiple classes creates a composite device)
             #define USE_USB_CDC                                          // USB-CDC (use also for Modbus over USB)
-          //#define USE_USB_MSD                                          // needs SD card to compile (or alternatives FLASH_FAT / SPI_FLASH_FAT / FAT_EMULATION)
+            #define USE_USB_MSD                                          // needs SD card to compile (or alternatives FLASH_FAT / SPI_FLASH_FAT / FAT_EMULATION)
           //#define USE_USB_HID_MOUSE                                    // human interface device (mouse)
           //#define USE_USB_HID_KEYBOARD                                 // human interface device (keyboard)
               //#define USB_KEYBOARD_DELAY                               // enable inter-character delay control
@@ -1013,7 +1032,7 @@
                 #if defined USB_CDC_RNDIS
                     #define USB_CDC_RNDIS_COUNT       1                  // the number of RNDIS virtual network interfaces
                     #define USB_CDC_VCOM_COUNT        1                  // the number of CDC virtual COM ports in composite device
-                    #define USB_CDC_COUNT             (USB_CDC_VCOM_COUNT + USB_CDC_RNDIS_COUNT) // number of USB-CDC interfaces
+                    #define USB_CDC_COUNT             (USB_CDC_VCOM_COUNT + USB_CDC_RNDIS_COUNT) // number of USB-CDC deviceinterfaces
                     #if !defined DEVICE_WITHOUT_ETHERNET
                         #define USB_TO_ETHERNET                          // allow RNDIS to Ethernet operation (this doesn't need the TCP/IP stack but does activate the Ethernet driver)
                         #if defined USB_TO_ETHERNET
@@ -1035,7 +1054,7 @@
                         #define SUPPORT_FIFO_QUEUES
                     #endif
                 #else
-                    #define USB_CDC_COUNT             1                  // number of USB-CDC interfaces
+                    #define USB_CDC_COUNT             1                  // number of USB-CDC device interfaces
                 #endif
                 #if defined USE_MAINTENANCE && (USB_CDC_COUNT > 1)
                     #define MODBUS_USB_INTERFACE_BASE 1                  // MODBUS USB interface follows maintenance
@@ -1057,13 +1076,14 @@
             #endif
         #endif
 
-        #if defined TWR_K70F120M || defined EMCRAFT_K61F150M
+        #if defined TWR_K70F120M || defined EMCRAFT_K61F150M || defined K61FN1_50M
             #define USB_HS_INTERFACE                                     // use HS interface rather than FS interface (needs external ULPI transceiver) - use with TWR_SER2 and secondary elevator (not dummy elevator)
         #endif
         #if defined USB_HOST_SUPPORT
           //#define USB_MSD_HOST                                         // works together with mass-storage for a USB memory stick as disk E
             #define USB_CDC_HOST                                         // supports CDC device (can be used together with MSD host)
                 #define SUPPORT_USB_SIMPLEX_HOST_ENDPOINTS               // allow operation with devices using bulk IN/OUT on the same endpoint (this should normally always be set)
+                #define USB_CDC_COUNT  2                                 // support up to 2 virtual com host interfaces
         #endif
         #if defined USB_HS_INTERFACE || defined USB_HOST_SUPPORT || defined USE_USB_AUDIO || defined USB_CDC_RNDIS // since RNDIS makes intensive use of enpoint 0 for status and control it makes snese to use the largest size possible (assuming at least full-speed operation)
             #define ENDPOINT_0_SIZE         64                           // high speed devices should use 64 bytes (and hosts use full size endpoint size)
@@ -1130,7 +1150,7 @@
   //#define NAND_FLASH_FAT                                               // NAND flash requires SDCARD_SUPPORT to also be active but takes priority over SD card
         #define VERIFY_NAND                                              // development help functions
 #endif
-#if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST
+#if (defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST) && !defined BLINKY
     #if defined SPI_FLASH_FAT
         #undef ONLY_INTERNAL_FLASH_STORAGE                               // allow multiple flash storage support
     #endif
@@ -1204,8 +1224,8 @@
 
 // Ethernet
 //
-#if !defined DEVICE_WITHOUT_ETHERNET && !defined K70F150M_12M && !defined TEENSY_3_5 && !defined TEENSY_3_6 && !defined K66FX1M
-  //#define ETH_INTERFACE                                                // enable Ethernet interface driver
+#if !defined DEVICE_WITHOUT_ETHERNET && !defined K70F150M_12M && !defined TEENSY_3_5 && !defined TEENSY_3_6 && !defined K66FX1M && !defined HEXIWEAR_K64F && !defined HEXIWEAR_KW40Z
+    #define ETH_INTERFACE                                                // enable Ethernet interface driver
 #elif defined TEENSY_3_1 || defined TEENSY_LC
   //#define ETH_INTERFACE                                                // enable external Ethernet interface driver
     #if defined ETH_INTERFACE
