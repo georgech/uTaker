@@ -1,5 +1,5 @@
 [DebugChecksum]
-Checksum=-838798222
+Checksum=1403168920
 [DisAssemblyWindow]
 NumStates=_ 1
 State 1=_ 1
@@ -89,22 +89,22 @@ FREQ_LIGHTNING=_ "1"
 FREQ_OPENSDA=_ "0"
 RESET_DELAY=_ "0"
 PORT=_ "181"
-PORT_NAME_STRING=_ "43603E57"
+PORT_NAME_STRING=_ "632A2E62"
 interface_selection=_ "7"
 SHOWDIALOG=_ "1"
 TraceLink_MaxBufferSize=_ "1"
 [PE_STORED_DEVICES]
-device0=_ "NXP_K6x_K66FX1M0M18"
-device1=_ "NXP_KL2x_KL28T512M7"
-device2=_ "NXP_K6x_K60N512M10"
-device3=_ "NXP_KL4x_KL43Z256M4"
-device4=_ "NXP_KL2x_KL27Z64M4"
+device0=_ "NXP_KL2x_KL27Z64M4"
+device1=_ "NXP_K2x_K22FN512M12"
+device2=_ "NXP_K6x_K61FN1M0M15"
+device3=_ "NXP_KL0x_KL03Z32M4"
+device4=_ "NXP_KEx_KE06Z128M4"
 [PE_PEDEBUG]
-CURRENTDEVICE=_ "NXP_KL2x_KL27Z64M4"
+CURRENTDEVICE=_ "NXP_KEx_KE06Z128M4"
 ERASE_PROGRAM_WITHOUT_ASKING=_ "1"
 CURRENTMODE=_ "4"
 [PE_DEVICE]
-CHIPMODE=_ "NXP_KL2x_KL27Z64M4"
+CHIPMODE=_ "NXP_KL0x_KL03Z32M4"
 [PE_SETTINGS]
 MEMORYSTART1=_ "0"
 MEMORYSTART2=_ "0"
@@ -135,18 +135,6 @@ PowerForcePC=1
 PowerConnectPC=1
 [PEMICRODriver]
 PEM_LeaveTargetRunning=0x00000000
-[struct_types]
-Fmt0=TTIMETABLE-taskDelay	4	0
-[array_types]
-Fmt0=signed short[16]	4	0
-Fmt1=unsigned long[10]	4	0
-Fmt2=unsigned long[20]	4	0
-Fmt3=unsigned long[2]	4	0
-Fmt4=unsigned long[32]	4	0
-Fmt5=unsigned long[4]	4	0
-[watch_formats]
-Fmt0={W}0:ulBlockWriteLength	4	0
-Fmt1={W}1:ulLastCapture	4	4
 [SWOTraceHWSettings]
 OverrideDefaultClocks=0
 CpuClock=120000000
@@ -215,9 +203,42 @@ EventEXC=0
 EventFOLD=0
 EventLSU=0
 EventSLEEP=0
+[struct_types]
+Fmt0=TTIMETABLE-taskDelay	4	0
+[array_types]
+Fmt0=signed short[16]	4	0
+Fmt1=unsigned long[10]	4	0
+Fmt2=unsigned long[20]	4	0
+Fmt3=unsigned long[2]	4	0
+Fmt4=unsigned long[32]	4	0
+Fmt5=unsigned long[4]	4	0
+[watch_formats]
+Fmt0={W}0:ulBlockWriteLength	4	0
+Fmt1={W}1:ulLastCapture	4	4
+[Breakpoints]
+Bp0=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12_master\uTasker\Tty_drv.c}.264.17" 0 0 0 0 "" 0 "" 0
+Bp1=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12_master\uTasker\Tty_drv.c}.245.9" 0 0 0 0 "" 0 "" 0
+Bp2=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12_master\uTasker\Tty_drv.c}.539.5" 1 0 0 0 "" 0 "" 0
+Count=3
 [Trace1]
 Enabled=0
 ShowSource=1
+[Disassemble mode]
+mode=3
+[Breakpoints2]
+Bp0=_ 0 "EMUL_CODE" "0x00001450" 0 0 1 "" 0 "" 0
+Bp1=_ 1 "EMUL_CODE" "0x00001470" 0 0 1 "" 0 "" 0
+Count=2
+[Log file]
+LoggingEnabled=_ 0
+LogFile=_ ""
+Category=_ 0
+[TermIOLog]
+LoggingEnabled=_ 0
+LogFile=_ ""
+[Aliases]
+Count=0
+SuppressDialog=0
 [DriverProfiling]
 Enabled=0
 Mode=1
@@ -228,30 +249,3 @@ Exclusions=
 Enabled=0
 [CallStackStripe]
 ShowTiming=1
-[Breakpoints2]
-Bp0=_ 1 "EMUL_DATA" "0x40020000" 0 0 0 0 4294967295
-Bp1=_ 0 "EMUL_CODE" "0x00006350" 0 0 1 "" 0 "" 0
-Bp2=_ 0 "EMUL_CODE" "0x0000634E" 0 0 1 "" 0 "" 0
-Bp3=_ 0 "EMUL_CODE" "0x0000634C" 0 0 1 "" 0 "" 0
-Bp4=_ 0 "EMUL_CODE" "0x0000634A" 0 0 1 "" 0 "" 0
-Bp5=_ 0 "EMUL_CODE" "0x00006348" 0 0 1 "" 0 "" 0
-Bp6=_ 0 "EMUL_CODE" "0x0001F6F2" 0 0 1 "" 0 "" 0
-Count=7
-[Log file]
-LoggingEnabled=_ 0
-LogFile=_ ""
-Category=_ 0
-[TermIOLog]
-LoggingEnabled=_ 0
-LogFile=_ ""
-[Disassemble mode]
-mode=3
-[Breakpoints]
-Bp0=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12_working\uTasker-GIT-Kinetis\FreeRTOS\Source\tasks.c}.2763.2" 0 0 0 0 "" 0 "" 0
-Bp1=_ "STD_CODE" "0x00001842" 0 0 0 0 "" 0 "" 0
-Bp2=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12_working\uTasker-GIT-Kinetis\FreeRTOS\Source\portable\IAR\ARM_CM0\port.c}.198.2" 0 0 0 0 "" 0 "" 0
-Bp3=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12_working\uTasker-GIT-Kinetis\FreeRTOS\Source\timers.c}.631.1" 0 0 0 0 "" 0 "" 0
-Count=4
-[Aliases]
-Count=0
-SuppressDialog=0

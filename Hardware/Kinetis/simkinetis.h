@@ -3218,7 +3218,7 @@ typedef struct stKINETIS_PERIPH
     KINETIS_RTC        RTC;
 #endif
 #if !defined KINETIS_KE
-    KINETIS_LPTMR      LPTMR;                                            // {20}
+    KINETIS_LPTMR      LPTMR[LPTMR_AVAILABLE];                           // {20}
 #endif
 #if !defined KINETIS_KE && !defined KINETIS_KL && !defined CROSSBAR_SWITCH_LITE
     KINETIS_AXBS       AXBS;                                             // {19}

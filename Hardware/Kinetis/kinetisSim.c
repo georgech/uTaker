@@ -4760,14 +4760,14 @@ static void fnPortInterrupt(int iPort, unsigned long ulNewState, unsigned long u
 
 static void fnInterruptI2C(int irq_I2C_ID)
 {
-    if (fnGenInt(irq_I2C_ID) != 0) {                                     // if I2C interrupt is not disabled
+    if (fnGenInt(irq_I2C_ID) != 0){                                     // if I2C interrupt is not disabled
         VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
         switch (irq_I2C_ID) {
         case irq_I2C0_ID:
             ptrVect->processor_interrupts.irq_I2C0();                    // call the interrupt handler
             break;
     #if I2C_AVAILABLE > 1
-        case irq_I2C1_ID:
+        case irq_I2C1_EXTENDED_ID:
             ptrVect->processor_interrupts.irq_I2C1();                    // call the interrupt handler
             break;
     #endif
@@ -4797,7 +4797,11 @@ extern void fnSimulateI2C(int iPort, unsigned char *ptrDebugIn, unsigned short u
     #if I2C_AVAILABLE > 1
     case 1:
         ptrI2C = (KINETIS_I2C_CONTROL *)I2C1_BLOCK;
+        #if !defined irq_I2C1_ID
+        iI2C_irq = irq_I2C1_EXTENDED_ID;
+        #else
         iI2C_irq = irq_I2C1_ID;
+        #endif
         break;
     #endif
     #if I2C_AVAILABLE > 2
@@ -5060,14 +5064,14 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                         }
                         else {
             #if !defined irq_LPUART2_ID
-                            if (fnGenInt(irq_INTMUX0_0_ID + PRIORITY_LPUART2) != 0) // {46}
+                            if (fnGenInt(irq_INTMUX0_0_ID + INTMUX_LPUART2) != 0) // {46}
             #else
                             if (fnGenInt(irq_LPUART2_ID) != 0)
             #endif
                             {                                            // if LPUART2 interrupt is not disabled
                                 VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
             #if !defined irq_LPUART2_ID
-                                fnCallINTMUX(PRIORITY_LPUART2, INTMUX0_PERIPHERAL_LPUART2, (unsigned char *)&ptrVect->processor_interrupts.irq_LPUART2);
+                                fnCallINTMUX(INTMUX_LPUART2, INTMUX0_PERIPHERAL_LPUART2, (unsigned char *)&ptrVect->processor_interrupts.irq_LPUART2);
             #else
                                 ptrVect->processor_interrupts.irq_LPUART2(); // call the interrupt handler
             #endif
@@ -5437,14 +5441,14 @@ static void fnUART_Tx_int(int iChannel)
                 LPUART2_STAT |= (LPUART_STAT_TDRE | LPUART_STAT_TC);         // set interrupt cause
                 if ((LPUART2_CTRL & LPUART2_STAT) != 0) {                    // if transmit interrupt type enabled
             #if !defined irq_LPUART2_ID
-                    if (fnGenInt(irq_INTMUX0_0_ID + PRIORITY_LPUART2) != 0)  // {46}
+                    if (fnGenInt(irq_INTMUX0_0_ID + INTMUX_LPUART2) != 0)    // {46}
             #else
                     if (fnGenInt(irq_LPUART2_ID) != 0)
             #endif
                     {                                                        // if LPUART2 interrupt is not disabled
                         VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
             #if !defined irq_LPUART2_ID
-                        fnCallINTMUX(PRIORITY_LPUART2, INTMUX0_PERIPHERAL_LPUART2, (unsigned char *)&ptrVect->processor_interrupts.irq_LPUART2);
+                        fnCallINTMUX(INTMUX_LPUART2, INTMUX0_PERIPHERAL_LPUART2, (unsigned char *)&ptrVect->processor_interrupts.irq_LPUART2);
             #else
                         ptrVect->processor_interrupts.irq_LPUART2(); // call the interrupt handler
             #endif
@@ -5753,16 +5757,23 @@ extern unsigned long fnSimInts(char *argv[])
             else {
 		        iInts &= ~I2C_INT1;                                      // interrupt has been handled
                 if ((I2C1_C1 & I2C_IEN) != 0) {                          // if I2C interrupt enabled
-                    if (fnGenInt(irq_I2C1_ID) != 0) {                    // if I2C interrupt is not disabled
+        #if !defined irq_I2C1_ID
+        #else
+                    if (fnGenInt(irq_I2C1_ID) != 0)
+        #endif
+                    {                                                    // if I2C interrupt is not disabled
                         VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+        #if !defined irq_I2C1_ID
+                        fnCallINTMUX(INTMUX_I2C1, INTMUX0_PERIPHERAL_I2C1, (unsigned char *)&ptrVect->processor_interrupts.irq_I2C1);
+        #else
                         ptrVect->processor_interrupts.irq_I2C1();       // call the interrupt handler
+        #endif
                     }
                 }
             }
         }
 	}
 #endif
-
 #if NUMBER_I2C > 2
     if (((iInts & I2C_INT2) != 0) && (argv != 0)) {
         ptrCnt = (int *)argv[THROUGHPUT_I2C2];
@@ -5782,7 +5793,6 @@ extern unsigned long fnSimInts(char *argv[])
         }
 	}
 #endif
-
 #if NUMBER_I2C > 3
     if (((iInts & I2C_INT3) != 0) && (argv != 0)) {
         ptrCnt = (int *)argv[THROUGHPUT_I2C3];
@@ -7349,8 +7359,7 @@ extern int fnSimTimers(void)
                 {                                                        // if watchdog interrupt is not disabled
                     VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
     #if !defined irq_WDOG_ID
-                    fnCallINTMUX(0, INTMUX0_PERIPHERAL_WDOG0_EWM, (unsigned char *)&ptrVect->processor_interrupts.irq_WDOG0);
-                    ptrVect->processor_interrupts.irq_INTMUX0_0();       // call the interrupt handler (watchdo alwasy on INTMUX0- with highest priority)
+                    fnCallINTMUX(INTMUX_WDOG0, INTMUX0_PERIPHERAL_WDOG0_EWM, (unsigned char *)&ptrVect->processor_interrupts.irq_WDOG0);
     #else
                     ptrVect->processor_interrupts.irq_WDOG0();           // call the interrupt handler
     #endif
@@ -7573,9 +7582,18 @@ extern int fnSimTimers(void)
                     RTC_TSR = (RTC_TSR + 1);
                     RTC_SR |= RTC_SR_TAF;
                     if ((RTC_IER & RTC_IER_TAIE) != 0) {                 // interrupt on alarm enabled
-                        if (fnGenInt(irq_RTC_ALARM_ID) != 0) {           // if RTC interrupt is not disabled
+    #if !defined irq_LPUART2_ID
+                        if (fnGenInt(irq_INTMUX0_0_ID + INTMUX_RTC_ALARM) != 0) // {46}
+    #else
+                        if (fnGenInt(irq_RTC_ALARM_ID) != 0)            // if RTC interrupt is not disabled
+    #endif
+                        {
                             VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+    #if !defined irq_LPUART2_ID
+                            fnCallINTMUX(INTMUX_RTC_ALARM, INTMUX0_PERIPHERAL_RTC_ALARM, (unsigned char *)&ptrVect->processor_interrupts.irq_RTC_Alarm);
+    #else
                             ptrVect->processor_interrupts.irq_RTC_ALARM(); // call the interrupt handler
+    #endif
                         }
                     }
                 }
@@ -7716,7 +7734,7 @@ extern int fnSimTimers(void)
         }
     }
 #elif defined SUPPORT_LPTMR                                              // {35}
-    if (((SIM_SCGC5 & SIM_SCGC5_LPTIMER) != 0) && ((LPTMR0_CSR & LPTMR_CSR_TEN) != 0)) { // if the low power timer is enabled and running
+    if (((SIM_SCGC5 & SIM_SCGC5_LPTIMER0) != 0) && ((LPTMR0_CSR & LPTMR_CSR_TEN) != 0)) { // if the low power timer is enabled and running
         unsigned long ulCount = 0;                                       // count in a tick period
         switch (LPTMR0_PSR & LPTMR_PSR_PCS_OSC0ERCLK) {
         case LPTMR_PSR_PCS_LPO:
@@ -7773,6 +7791,74 @@ extern int fnSimTimers(void)
         }
         LPTMR0_CNR = ulCount;
     }
+    #if LPTMR_AVAILABLE > 1
+        if (((SIM_SCGC5 & SIM_SCGC5_LPTIMER1) != 0) && ((LPTMR1_CSR & LPTMR_CSR_TEN) != 0)) { // if the low power timer is enabled and running
+        unsigned long ulCount = 0;                                       // count in a tick period
+        switch (LPTMR1_PSR & LPTMR_PSR_PCS_OSC0ERCLK) {
+        case LPTMR_PSR_PCS_LPO:
+    #if TICK_RESOLUTION >= 1000
+            ulCount = (TICK_RESOLUTION/1000);                            // counts in a tick interval
+    #else
+            ulCount = 1;
+    #endif
+            break;
+        case LPTMR_PSR_PCS_MCGIRCLK:
+            if ((MCG_C2 & MCG_C2_IRCS) != 0) {
+                ulCount = (TICK_RESOLUTION * (4000000/1000000));
+            }
+            else {
+                ulCount = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)35000)/1000000);
+            }
+            break;
+        case LPTMR_PSR_PCS_ERCLK32K:
+            ulCount = ((TICK_RESOLUTION * 32768)/1000000);               // counts in a tick interval
+            break;
+        case LPTMR_PSR_PCS_OSC0ERCLK:
+    #if defined _EXTERNAL_CLOCK
+            ulCount = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)_EXTERNAL_CLOCK)/1000000); // external clocks in a tick period (assuming no pre-scaler)
+    #else
+            _EXCEPTION("no external clock defined so this selection should not be used");
+    #endif
+            break;
+        }
+        if ((LPTMR1_PSR & LPTMR_PSR_PBYP) == 0) {                        // if the prescaler bypass hasn't been disabled
+            ulCount >>= (((LPTMR1_PSR & LPTMR_PSR_PRESCALE_MASK) >> LPTMR_PSR_PRESCALE_SHIFT) + 1);
+        }
+        if (LPTMR1_CNR <= LPTMR1_CMR) {                                  // timer count has not yet reached the match value
+            ulCount = (LPTMR1_CNR + ulCount);                            // the next count value
+            if (ulCount > LPTMR1_CMR) {
+                if ((LPTMR1_CSR & LPTMR_CSR_TFC_FREERUN) == 0) {
+                    ulCount = (ulCount - LPTMR1_CMR);
+                    if (ulCount > LPTMR1_CMR) {
+                        ulCount = LPTMR1_CMR;
+                    }
+                }
+                if ((LPTMR1_CSR & LPTMR_CSR_TIE) != 0) {                 // if LPTMR interrupt is enabled
+        #if !defined irq_LPTMR1_ID
+                    if (fnGenInt(irq_INTMUX0_0_ID + INTMUX_LPTMR1) != 0)
+        #else
+                    if (fnGenInt(irq_LPTMR1_ID) != 0)
+        #endif
+                    {                                                    // if LPTMR interrupt is not disabled
+                        VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+        #if !defined irq_LPTMR1_ID
+                        fnCallINTMUX(INTMUX_LPTMR1, INTMUX0_PERIPHERAL_LPTMR1, (unsigned char *)&ptrVect->processor_interrupts.irq_LPTMR1);
+        #else
+                        ptrVect->processor_interrupts.irq_LPTMR1();      // call the interrupt handler
+        #endif
+                    }
+                }
+            }
+        }
+        else {
+            ulCount = (LPTMR1_CNR + ulCount);
+        }
+        if (ulCount > 0xffff) {
+            ulCount = (ulCount - 0xffff);
+        }
+        LPTMR1_CNR = ulCount;
+    }
+    #endif
 #endif
 #if !defined KINETIS_KL && !defined KINETIS_KE                           // {24}
     if (((SIM_SCGC6 & SIM_SCGC6_PDB) != 0) && ((PDB0_SC & PDB_SC_PDBEN) != 0)) { // {16} PDB powered and enabled

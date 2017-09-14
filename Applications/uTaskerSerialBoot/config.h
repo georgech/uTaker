@@ -48,7 +48,7 @@
 //#define FRDM_KE02Z                                                     // E processors Cortex-M0+ (5V robust) - freedom board http://www.utasker.com/kinetis/FRDM-KE02Z.html
 //#define FRDM_KE02Z40M                                                  // freedom board http://www.utasker.com/kinetis/FRDM-KE02Z40M.html
 //#define FRDM_KE04Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KE04Z.html
-//#define FRDM_KE06Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KE06Z.html
+#define FRDM_KE06Z                                                       // freedom board http://www.utasker.com/kinetis/FRDM-KE06Z.html
 
 //#define FRDM_KL02Z                                                     // L processors Cortex-M0+ (ultra-low power) basic - freedom board http://www.utasker.com/kinetis/FRDM-KL02Z.html
 //#define FRDM_KL03Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL03Z.html
@@ -75,6 +75,7 @@
 
 //#define TWR_KW21D256                                                   // W processors Cortex M0+/M4 (wireless connectivity) - tower board http://www.utasker.com/kinetis/TWR-KW21D256.html
 //#define TWR_KW24D512                                                   // tower board http://www.utasker.com/kinetis/TWR-KW24D512.html
+//#define HEXIWEAR_KW40Z                                                 // hexiwear - wearable development kit for IoT (KW40Z160 support wireless processor) http://www.hexiwear.com/
 
 //#define K02F100M                                                       // development board with 100MHz K02F
 //#define FRDM_K20D50M                                                   // K processors Cortex M4 (performance and integration) with USB - freedom board http://www.utasker.com/kinetis/FRDM-K20D50M.html
@@ -106,12 +107,13 @@
 //#define EMCRAFT_K61F150M                                               // K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - http://www.utasker.com/kinetis/EMCRAFT_K61F150M.html
 
 //#define FRDM_K64F                                                      // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
-//#define TWR_K64F120M                                                     // tower board http://www.utasker.com/kinetis/TWR-K64F120M.html
+//#define TWR_K64F120M                                                   // tower board http://www.utasker.com/kinetis/TWR-K64F120M.html
+//#define HEXIWEAR_K64F                                                  // hexiwear - wearable development kit for IoT (K64FN1M0VDC12 main processor) http://www.hexiwear.com/
 //#define TEENSY_3_5                                                     // USB development board with K64FX512 - http://www.utasker.com/kinetis/TEENSY_3.5.html
 //#define TWR_K65F180M                                                   // tower board http://www.utasker.com/kinetis/TWR-K65F180M.html
 //#define K66FX1M0                                                       // development board with K66FX1M0
 //#define FRDM_K66F                                                      // freedom board http://www.utasker.com/kinetis/FRDM-K66F.html
-#define TEENSY_3_6                                                       // USB development board with K66FX1M0 - http://www.utasker.com/kinetis/TEENSY_3.6.html
+//#define TEENSY_3_6                                                     // USB development board with K66FX1M0 - http://www.utasker.com/kinetis/TEENSY_3.6.html
 
 //#define TWR_K70F120M                                                   // K processors Cortex M4 with graphical LCD, Ethernet, USB, encryption, tamper - tower board http://www.utasker.com/kinetis/TWR-K70F120M.html
 //#define K70F150M_12M                                                   // development board with 150MHz K70 and 12MHz crystal
@@ -726,7 +728,7 @@
 #if defined DEVICE_WITHOUT_USB
     #define NUMBER_USB     0                                             // no physical queue needed
 #else
-  //#define USB_INTERFACE                                                // enable USB driver interface
+    #define USB_INTERFACE                                                // enable USB driver interface
     #if defined USB_INTERFACE
       //#define USE_USB_CDC                                              // allow SREC/iHex loading via virtual COM
         #define USB_MSD_DEVICE_LOADER                                    // USB-MSD device mode (the board appears as a hard-drive to the host)
@@ -760,7 +762,7 @@
                 #define NXP_MSD_HOST                                     // use NXP USB host interface for realisation
             #endif
             #define USB_MSD_HOST                                         // requires USB-MSD support in the mass-storage module
-            #if !defined NXP_MSD_HOST
+            #if !defined NXP_MSD_HOST || defined _WINDOWS
                 #define USB_HOST_SUPPORT                                 // requires USB host driver support
             #endif
             #define SUPPORT_USB_SIMPLEX_HOST_ENDPOINTS                   // allow operation with memory sticks using bulk IN/OUT on the same endpoint
@@ -810,7 +812,7 @@
 #endif
 
 #if !defined TWR_K20D50M && !defined FRDM_K20D50M && !defined FRDM_KL46Z && !defined FRDM_KL43Z && !defined TWR_KL46Z48M && !defined FRDM_KL26Z && !defined FRDM_KL27Z && !defined TWR_KL25Z48M && !defined FRDM_KL02Z && !defined FRDM_KL03Z && !defined FRDM_KL05Z && !defined FRDM_KE02Z && !defined FRDM_KE02Z40M && !defined FRDM_KE04Z && !defined TWR_K20D72M && !defined TWR_K21D50M && !defined TWR_K22F120M && !defined TWR_K24F120M && !defined K24FN1M0_120 && !defined FRDM_K22F && !defined TWR_KV10Z32 && !defined TWR_KV31F120M && !defined K66FX1M0 // boards have no SD card socket
-    #define SDCARD_SUPPORT                                               // SD-card interface (only choose one of these options at a time)
+  //#define SDCARD_SUPPORT                                               // SD-card interface (only choose one of these options at a time)
   //#define SPI_FLASH_FAT                                                // SPI flash
         #define SIMPLE_FLASH                                             // don't perform block management and wear-levelling
         #define FLASH_FAT_MANAGEMENT_ADDRESS     (SIZE_OF_FLASH)

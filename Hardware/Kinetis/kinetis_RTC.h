@@ -134,8 +134,9 @@ static void fnRestoreRTC(int iResync)
 }
 
 
+        #if defined SUPPORT_LOW_POWER
 // The processor is to be set to a low leakage mode with no interrupt support, in which the RTC will be clocked with 1kHz rather than 32.768kHz
-// If there is an alarm programmed to wake the processor its alarm time must be compensated accordingly
+// If there is an alarm programmed to wake the processor its alarm time must be compensated accordingly (called from kinetis_low_power.h)
 //
 static void fnSlowRTC(void)
 {
@@ -166,6 +167,7 @@ static void fnSlowRTC(void)
         RTC_SR = RTC_SR_TCE;                                             // allow the RTC operation to continue
     }
 }
+        #endif
     #endif
 
 
@@ -307,7 +309,11 @@ extern int fnConfigureRTC(void *ptrSettings)
         #if defined KINETIS_KL && defined RTC_USES_LPO_1kHz
             *RTC_ALARM_LOCATION = rtc_alarm;
         #endif
+        #if !defined irq_RTC_ALARM_ID
+            fnEnterInterrupt((irq_INTMUX0_0_ID + INTMUX_RTC_ALARM), INTMUX0_PERIPHERAL_RTC_ALARM, _rtc_alarm_handler); // enter RTC alarm interrupt handler based on INTMUX
+        #else
             fnEnterInterrupt(irq_RTC_ALARM_ID, PRIORITY_RTC, _rtc_alarm_handler);
+        #endif
             RTC_IER |= RTC_IER_TAIE;                                     // enable alarm interrupt
         }
         else {

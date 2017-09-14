@@ -1964,7 +1964,7 @@ extern void fnTxOn(QUEUE_HANDLE Channel)
                 #endif
             #endif
             #if !defined irq_LPUART2_ID
-            fnEnterInterrupt((irq_INTMUX0_0_ID + PRIORITY_LPUART2), PRIORITY_LPUART2, _LPSCI2_Interrupt); // enter LPUART2 interrupt handler based on INTMUX
+            fnEnterInterrupt((irq_INTMUX0_0_ID + INTMUX_LPUART2), INTMUX0_PERIPHERAL_LPUART2, _LPSCI2_Interrupt); // enter LPUART2 interrupt handler based on INTMUX
             #else
             fnEnterInterrupt(irq_LPUART2_ID, PRIORITY_LPUART2, _LPSCI2_Interrupt); // enter LPUART2 interrupt handler
             #endif
@@ -2267,7 +2267,7 @@ extern void fnRxOn(QUEUE_HANDLE Channel)
                 #endif
             #endif
             #if !defined irq_LPUART2_ID
-            fnEnterInterrupt((irq_INTMUX0_0_ID + (PRIORITY_LPUART2 * 32) + INTMUX0_PERIPHERAL_LPUART2), PRIORITY_LPUART2, _LPSCI2_Interrupt); // enter LPUART2 interrupt handler based on INTMUX
+            fnEnterInterrupt((irq_INTMUX0_0_ID + INTMUX_LPUART2), INTMUX0_PERIPHERAL_LPUART2, _LPSCI2_Interrupt); // enter LPUART2 interrupt handler based on INTMUX
             #else
             fnEnterInterrupt(irq_LPUART2_ID, PRIORITY_LPUART2, _LPSCI2_Interrupt); // enter LPUART2 interrupt handler
             #endif

@@ -4250,12 +4250,12 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
             break;
 #endif
 #if defined SUPPORT_LPTMR
-        case 76:                                                         // temp
+        case 76:                                                         // temp test to check technique for reading value of counter
             {
-            unsigned long ulCnt;
-            LPTMR0_CNR = 0;                                              // write any value to the counter register so that it puts its present counter value into a temporay register
-            ulCnt = LPTMR0_CNR;                                          // read the value form the temporary reguster
-            fnDebugHex(ulCnt, (WITH_LEADIN | WITH_CR_LF | sizeof(ulCnt)));
+                unsigned long ulCnt;
+                LPTMR0_CNR = 0;                                          // write any value to the counter register so that it puts its present counter value into a temporay register
+                ulCnt = LPTMR0_CNR;                                      // read the value from the temporary register
+                fnDebugHex(ulCnt, (WITH_LEADIN | WITH_CR_LF | sizeof(ulCnt)));
             }
             break;
 #endif

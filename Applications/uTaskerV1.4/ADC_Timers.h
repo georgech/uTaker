@@ -1096,14 +1096,19 @@ static void fnConfigureLPTMR(void)
     LPTMR_SETUP lptmr_setup;                                             // interrupt configuration parameters
     lptmr_setup.int_type = LPTMR_INTERRUPT;
     lptmr_setup.int_handler = low_power_timer_int;                       // test a single shot timer
-    lptmr_setup.int_priority = LPTMR0_INTERRUPT_PRIORITY;
     lptmr_setup.count_delay = LPTMR_US_DELAY(3245);                      // 3245us delay
     #if defined TEST_LPTMR_PERIODIC
     lptmr_setup.mode = LPTMR_PERIODIC;                                   // periodic interrupt
     #else
     lptmr_setup.mode = LPTMR_SINGLE_SHOT;                                // one-shot interrupt
     #endif
+    #if defined KINETIS_KL82
+    lptmr_setup.int_priority = LPTMR1_INTERRUPT_PRIORITY;
+    lptmr_setup.ucTimer = 1;                                             // user low power timer 1
+    #else
+    lptmr_setup.int_priority = LPTMR0_INTERRUPT_PRIORITY;
     lptmr_setup.ucTimer = 0;                                             // user low power timer 0
+    #endif
     fnConfigureInterrupt((void *)&lptmr_setup);                          // enter interrupt for LPTMR test
 }
 #endif

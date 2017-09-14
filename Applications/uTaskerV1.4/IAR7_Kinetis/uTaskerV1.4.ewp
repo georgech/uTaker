@@ -89,7 +89,7 @@
         </option>
         <option>
           <name>OGChipSelectEditMenu</name>
-          <state>MKL27Z64xxx4	NXP MKL27Z64xxx4</state>
+          <state>MKL82Z128xxx7	NXP MKL82Z128xxx7</state>
         </option>
         <option>
           <name>GenLowLevelInterface</name>
@@ -149,7 +149,7 @@
         </option>
         <option>
           <name>GFPUDeviceSlave</name>
-          <state>MKL27Z64xxx4	NXP MKL27Z64xxx4</state>
+          <state>MKL82Z128xxx7	NXP MKL82Z128xxx7</state>
         </option>
         <option>
           <name>FPU2</name>
@@ -729,7 +729,7 @@
         </option>
         <option>
           <name>IlinkIcfFile</name>
-          <state>$PROJ_DIR$\settings\KL_64_16.icf</state>
+          <state>$PROJ_DIR$\settings\KL_128_96.icf</state>
         </option>
         <option>
           <name>IlinkIcfFileSlave</name>

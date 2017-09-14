@@ -886,7 +886,11 @@ extern void fnConfigI2C(I2CTABLE *pars)
     else if (pars->Channel == 1) {                                       // I2C channel 1
         POWER_UP(4, SIM_SCGC4_I2C1);                                     // enable clock to module
         ptrI2C = (KINETIS_I2C_CONTROL *)I2C1_BLOCK;
+        #if !defined irq_I2C1_ID
+        fnEnterInterrupt((irq_INTMUX0_0_ID + INTMUX_I2C1), INTMUX0_PERIPHERAL_I2C1, _I2C_Interrupt_1); // enter I2C1 interrupt handler based on INTMUX
+        #else
         fnEnterInterrupt(irq_I2C1_ID, PRIORITY_I2C1, _I2C_Interrupt_1);  // enter I2C1 interrupt handler
+        #endif
         #if defined KINETIS_KE                                           // initially configure as inputs with pull-up
             #if defined I2C1_ON_H
         _CONFIG_PORT_INPUT(B, (KE_PORTH_BIT3 | KE_PORTH_BIT4), (PORT_ODE | PORT_PS_UP_ENABLE));

@@ -1078,33 +1078,37 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void (*
 #if defined INTMUX0_AVAILABLE                                            // {130}
     if (iInterruptID >= irq_INTMUX0_0_ID) {
         KINETIS_INTMUX *ptrINTMUX = (KINETIS_INTMUX *)INTMUX0_BLOCK;
-        int iPeripheralSource = (iInterruptID - irq_INTMUX0_0_ID - (ucPriority * 32));
+        int iChannel = (iInterruptID - irq_INTMUX0_0_ID);
         POWER_UP_ATOMIC(6, SIM_SCGC6_INTMUX0);                           // power up the INTMUX0 module
-        ptrINTMUX += ucPriority;                                         // moved to the channel to be used
-        ptrINTMUX->INTMUX_CHn_IER_31_0 |= (1 << iPeripheralSource);      // enable the peripheral source interrupt to the INTMUX module
+        ptrINTMUX += iChannel;                                           // moved to the channel to be used
+        ptrINTMUX->INTMUX_CHn_IER_31_0 |= (1 << ucPriority);             // enable the peripheral source interrupt to the INTMUX module
     #if !defined INTERRUPT_VECTORS_IN_FLASH
         processor_ints = (void(**)(void))&ptrVect->processor_interrupts; // first processor interrupt location in the vector table
-        processor_ints += (irq_INTMUX0_3_ID + 1 + iPeripheralSource);    // move the pointer to the location used by this interrupt number
+        processor_ints += (irq_INTMUX0_3_ID + 1 + ucPriority);           // move the pointer to the location used by this interrupt number
         *processor_ints = InterruptFunc;                                 // enter the interrupt handler into the (extended) vector table
     #endif
-        switch (ucPriority) {
+        iInterruptID = (irq_INTMUX0_0_ID + iChannel);
+        switch (iChannel) {
         case 0:
             InterruptFunc = fnINTMUX0;
+            ucPriority = PRIORITY_INTMUX0_0_INT;
             break;
         case 1:
             InterruptFunc = fnINTMUX1;
+            ucPriority = PRIORITY_INTMUX0_1_INT;
             break;
         case 2:
             InterruptFunc = fnINTMUX2;
+            ucPriority = PRIORITY_INTMUX0_2_INT;
             break;
         case 3:
             InterruptFunc = fnINTMUX3;
+            ucPriority = PRIORITY_INTMUX0_3_INT;
             break;
         default:
-            _EXCEPTION("Illegal Cortex-m0+ interrupt priority!");
+            _EXCEPTION("Illegal INTMUX0 channel!");
             break;
         }
-        iInterruptID = (irq_INTMUX0_0_ID + ucPriority);
     }
 #endif
 #if !defined INTERRUPT_VECTORS_IN_FLASH
@@ -2564,7 +2568,7 @@ static void _LowLevelInit(void)
 #endif
  #if defined WDOG_STCTRLL                                                // {129}
     #if !defined irq_WDOG_ID
-    fnEnterInterrupt((irq_INTMUX0_0_ID + INTMUX0_PERIPHERAL_WDOG0_EWM), 0, wdog_irq);// test WDOG interrupt (highest priority) - based on INTMUX
+    fnEnterInterrupt((irq_INTMUX0_0_ID + INTMUX_WDOG0), INTMUX0_PERIPHERAL_WDOG0_EWM, wdog_irq);// test WDOG interrupt - based on INTMUX
     #else
     fnEnterInterrupt(irq_WDOG_ID, 0, wdog_irq);                          // test WDOG interrupt (highest priority)
     #endif

@@ -409,6 +409,12 @@ _abort_multi:
     case RX_COM5:                                                        // {56}
         fnSimulateSerialIn(5, (unsigned char*)argv[1], *(unsigned short *)argv[0]);
         break;
+    case RX_COM6:
+        fnSimulateSerialIn(6, (unsigned char*)argv[1], *(unsigned short *)argv[0]);
+        break;
+    case RX_COM7:
+        fnSimulateSerialIn(7, (unsigned char*)argv[1], *(unsigned short *)argv[0]);
+        break;
 #if NUMBER_EXTERNAL_SERIAL > 0                                           //  {49}
     case RX_EXT_COM0:                                                    // external UART inputs  (there may be less available)
         fnSimulateSerialIn(NUMBER_SERIAL, (unsigned char*)argv[1], *(unsigned short *)argv[0]);

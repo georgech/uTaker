@@ -220,6 +220,16 @@ extern void fnClearBitBandPeripheralValue(unsigned long *bit_band_address);
     #define KINETIS_WITH_WDOG32
 #endif
 
+// Low power timer
+//
+#if defined KINETIS_KL28 || defined KINETIS_KL82
+    #define LPTMR_AVAILABLE     2
+#elif defined KINETIS_KE
+    #define LPTMR_AVAILABLE     0
+#else
+    #define LPTMR_AVAILABLE     1
+#endif
+
 // Clock setting/checking
 //
 #if defined KINETIS_KL28                                                 // devices with SCG (system clock generator)
@@ -1245,7 +1255,7 @@ typedef struct stRESET_VECTOR
     #else
         #define I2C_AVAILABLE            3
     #endif
-#elif defined KINETIS_KL02 || defined KINETIS_KL25 || defined KINETIS_KL43 || defined KINETIS_KL46 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128 || defined KINETIS_KV31 || defined KINETIS_KL27 || defined KINETIS_KW2X
+#elif defined KINETIS_KL02 || defined KINETIS_KL25 || defined KINETIS_KL43 || defined KINETIS_KL46 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128 || defined KINETIS_KV31 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL82 || defined KINETIS_KW2X
     #define I2C_AVAILABLE                2
 #elif (KINETIS_MAX_SPEED  <= 50000000) || defined KINETIS_KV || defined KINETIS_K02
     #define I2C_AVAILABLE                1
@@ -1578,7 +1588,7 @@ typedef struct stPROCESSOR_IRQ
         void  (*irq_INTMUX0_1)(void);                                    // 29
         void  (*irq_INTMUX0_2)(void);                                    // 30
         void  (*irq_INTMUX0_3)(void);                                    // 31
-        void  (*irq_LPTMR1)(void);                                       // 32 - extended using INTMUX0
+        void  (*irq_LPTMR1)(void);                                       // 32 - extended using INTMUX0 (lower interrupt vector numbers have higher priority in each INTMUX0 channel)
         void  (*reserved1)(void);                                        // 33
         void  (*reserved2)(void);                                        // 34
         void  (*reserved3)(void);                                        // 35
@@ -1630,7 +1640,7 @@ typedef struct stPROCESSOR_IRQ
         void  (*irq_INTMUX0_1)(void);                                    // 29
         void  (*irq_INTMUX0_2)(void);                                    // 30
         void  (*irq_INTMUX0_3)(void);                                    // 31
-        void  (*irq_LPTMR1)(void);                                       // 32 - extended using INTMUX0
+        void  (*irq_LPTMR1)(void);                                       // 32 - extended using INTMUX0 (lower interrupt vector numbers have higher priority in each INTMUX0 channel)
         void  (*reserved1)(void);                                        // 33
         void  (*reserved2)(void);                                        // 34
         void  (*reserved3)(void);                                        // 35
@@ -2370,6 +2380,22 @@ typedef struct stVECTOR_TABLE
     #define irq_INTMUX0_1_ID              29                             // 29
     #define irq_INTMUX0_2_ID              30                             // 30
     #define irq_INTMUX0_3_ID              31                             // 31
+    #define irq_LPTMR1_EXTENDED_ID        32                             // 32 - extended using INTMUX0 (lower interrupt vector numbers have higher priority in each INTMUX0 channel)
+    #define irq_LPSPI2_EXTENDED_ID        36                             // 36
+    #define irq_LPUART2_EXTENDED_ID       37                             // 37
+    #define irq_EMVSIM0_EXTENDED_ID       38                             // 38
+    #define irq_LPI2C1_EXTENDED_ID        39                             // 39
+    #define irq_TSI_EXTENDED_ID           40                             // 40
+    #define irq_PMC_EXTENDED_ID           41                             // 41
+    #define irq_FTFA_EXTENDED_ID          42                             // 42
+    #define irq_SCG_EXTENDED_ID           43                             // 43
+    #define irq_WDOG0_EXTENDED_ID         44                             // 44
+    #define irq_DAC0_EXTENDED_ID          45                             // 45
+    #define irq_TRNG0_EXTENDED_ID         46                             // 46
+    #define irq_RCM_EXTENDED_ID           47                             // 47
+    #define irq_CMP0_EXTENDED_ID          48                             // 48
+    #define irq_CMP1_EXTENDED_ID          49                             // 49
+    #define irq_RTC_Alarm_EXTENDED_ID     50                             // 50
 #elif defined KINETIS_KL82
     #define irq_DMA0_0_4_ID               0                              // 0
     #define irq_DMA0_1_5_ID               1                              // 1
@@ -2403,6 +2429,28 @@ typedef struct stVECTOR_TABLE
     #define irq_INTMUX0_1_ID              29                             // 29
     #define irq_INTMUX0_2_ID              30                             // 30
     #define irq_INTMUX0_3_ID              31                             // 31
+    #define irq_LPTMR1_EXTENDED_ID        32                             // 32 - extended using INTMUX0 (lower interrupt vector numbers have higher priority in each INTMUX0 channel)
+
+    #define irq_SPI1_EXTENDED_ID          36                             // 36
+    #define irq_LPUART2_EXTENDED_ID       37                             // 37
+    #define irq_EMVSIM1_EXTENDED_ID       38                             // 38
+    #define irq_I2C1_EXTENDED_ID          39                             // 39
+    #define irq_TSI_EXTENDED_ID           40                             // 40
+    #define irq_PMC_EXTENDED_ID           41                             // 41
+    #define irq_FTFA_EXTENDED_ID          42                             // 42
+    #define irq_MCG_EXTENDED_ID           43                             // 43
+    #define irq_WDOG0_EXTENDED_ID         44                             // 44
+    #define irq_DAC0_EXTENDED_ID          45                             // 45
+    #define irq_TRNG0_EXTENDED_ID         46                             // 46
+
+    #define irq_CMP0_EXTENDED_ID          48                             // 48
+
+    #define irq_RTC_Alarm_EXTENDED_ID     50                             // 50
+
+    #define irq_DMA0_4_EXTENDED_ID        56                             // 56
+    #define irq_DMA0_5_EXTENDED_ID        57                             // 57
+    #define irq_DMA0_6_EXTENDED_ID        58                             // 58
+    #define irq_DMA0_7_EXTENDED_ID        59                             // 59
 #elif defined KINETIS_KL                                                 // {42}
     #if !defined DEVICE_WITHOUT_DMA
         #define irq_DMA0_ID               0                              // 0
@@ -3039,7 +3087,10 @@ typedef struct stVECTOR_TABLE
         #define RTC_BLOCK                      ((unsigned char *)(&kinetis.RTC)) // RTC
     #endif
     #if !defined KINETIS_KE
-        #define LPTMR_BLOCK                    ((unsigned char *)(&kinetis.LPTMR)) // {51} Low Power Timer
+        #define LPTMR_BLOCK_0                  ((unsigned char *)(&kinetis.LPTMR[0])) // {51} Low Power Timer
+        #if LPTMR_AVAILABLE > 1
+            #define LPTMR_BLOCK_1              ((unsigned char *)(&kinetis.LPTMR[1]))
+        #endif
     #endif
     #if !defined KINETIS_KE && !defined KINETIS_KL
         #define AXBS_BLOCK                     ((unsigned char *)(&kinetis.AXBS)) // {50} Crossbar Switch
@@ -3289,7 +3340,15 @@ typedef struct stVECTOR_TABLE
         #define RTC_BLOCK                      0x4003d000                // RTC
     #endif
     #if !defined KINETIS_KE
-        #define LPTMR_BLOCK                    0x40040000                // {51} Low Power Timer
+        #if defined KINETIS_KL28
+            #define LPTMR_BLOCK_0              0x40034000
+            #define LPTMR_BLOCK_1              0x400b5000
+        #else
+            #define LPTMR_BLOCK_0              0x40040000                // {51} Low Power Timer
+            #if LPTMR_AVAILABLE > 1
+                #define LPTMR_BLOCK_1          0x40044000
+            #endif
+        #endif
     #endif
     #if !defined KINETIS_KE && !defined KINETIS_KL
         #define AXBS_BLOCK                     0x40004000                // {50} Crossbar Switch
@@ -4420,6 +4479,11 @@ typedef struct stKINETIS_INTMUX
     unsigned long ulRes2[7];
 } KINETIS_INTMUX;
 #endif
+
+#define INPUT_TO_INTMUX0_CHANNEL_0        0
+#define INPUT_TO_INTMUX0_CHANNEL_1        1
+#define INPUT_TO_INTMUX0_CHANNEL_2        2
+#define INPUT_TO_INTMUX0_CHANNEL_3        3
 
 
 #if !defined KINETIS_KL
@@ -7949,7 +8013,7 @@ typedef struct stKINETIS_ADMA2_BD
 
 // Low Power Timer [this module continues running through warm resets]   {51}
 //
-#define LPTMR0_CSR                       *(volatile unsigned long *)(LPTMR_BLOCK + 0x0) // Low Power Timer 0 Control Status Register
+#define LPTMR0_CSR                       *(volatile unsigned long *)(LPTMR_BLOCK_0 + 0x0) // Low Power Timer 0 Control Status Register
   #define LPTMR_CSR_TEN                  0x00000001                      // timer enable (set only after configuring other bits in this register)
   #define LPTMR_CSR_TMS_TIME_COUNTER     0x00000000                      // time counter mode
   #define LPTMR_CSR_TMS_PULSE_COUNTER    0x00000002                      // pulse counter mode
@@ -7963,7 +8027,7 @@ typedef struct stKINETIS_ADMA2_BD
   #define LPTMR_CSR_TPS_3                0x00000030                      // timer pin select - input 3
   #define LPTMR_CSR_TIE                  0x00000040                      // timer interrupt enable
   #define LPTMR_CSR_TCF                  0x00000080                      // timer compare flag - (write '1' to clear) set when the compare register matches and then one more increment has taken place
-#define LPTMR0_PSR                       *(unsigned long *)(LPTMR_BLOCK + 0x4) // Low Power Timer 0 Prescaler Register
+#define LPTMR0_PSR                       *(unsigned long *)(LPTMR_BLOCK_0 + 0x4) // Low Power Timer 0 Prescaler Register
   #define LPTMR_PSR_PCS_MCGIRCLK         0x00000000                      // prescale clock select 0 (internal reference 30..40kHz or 4MHz)
   #define LPTMR_PSR_PCS_LPO              0x00000001                      // prescale clock select 1 (1kHz)
   #define LPTMR_PSR_PCS_ERCLK32K         0x00000002                      // prescale clock select 2 (30..40kHz external reference 32kHz)
@@ -8008,8 +8072,24 @@ typedef struct stKINETIS_ADMA2_BD
         #error Illegal low power timer prescale value (2, 4, 8, .. 65536 possible)!!
       #endif
     #endif
-#define LPTMR0_CMR                       *(volatile unsigned long *)(LPTMR_BLOCK + 0x8) // Low Power Timer 0 Compare Register (16 bits) - this register can only be altered once the timer is set active  when the timer compare flag is set
-#define LPTMR0_CNR                       *(volatile unsigned long *)(LPTMR_BLOCK + 0xc) // Low Power Timer 0 Counter Register (16 bits read-only) - to read the counter value write any value to this register and immediately read back
+#define LPTMR0_CMR                       *(volatile unsigned long *)(LPTMR_BLOCK_0 + 0x8) // Low Power Timer 0 Compare Register (16 bits) - this register can only be altered once the timer is set active  when the timer compare flag is set
+#define LPTMR0_CNR                       *(volatile unsigned long *)(LPTMR_BLOCK_0 + 0xc) // Low Power Timer 0 Counter Register (16 bits read-only) - to read the counter value write any value to this register and immediately read back
+
+#if LPTMR_AVAILABLE > 1
+    #define LPTMR1_CSR                   *(volatile unsigned long *)(LPTMR_BLOCK_1 + 0x0) // Low Power Timer 1 Control Status Register
+    #define LPTMR1_PSR                   *(unsigned long *)(LPTMR_BLOCK_1 + 0x4) // Low Power Timer 1 Prescaler Register
+    #define LPTMR1_CMR                   *(volatile unsigned long *)(LPTMR_BLOCK_1 + 0x8) // Low Power Timer 1 Compare Register (16 bits) - this register can only be altered once the timer is set active  when the timer compare flag is set
+    #define LPTMR1_CNR                   *(volatile unsigned long *)(LPTMR_BLOCK_1 + 0xc) // Low Power Timer 1 Counter Register (16 bits read-only) - to read the counter value write any value to this register and immediately read back
+#endif
+
+typedef struct stKINETIS_LPTMR_CTL
+{
+    volatile unsigned long LPTMR_CSR;
+    unsigned long LPTMR_PSR;
+    volatile unsigned long LPTMR_CMR;
+    volatile unsigned long LPTMR_CNR;
+} KINETIS_LPTMR_CTR;
+
 
 #if !defined KINETIS_KL && !defined KINETIS_KE && !defined CROSSBAR_SWITCH_LITE
 // Crossbar Switch                                                       {50}
@@ -8987,7 +9067,7 @@ typedef struct stKINETIS_ADMA2_BD
           #define SIM_SCGC5_BME_AND          (volatile unsigned long *)(SIM_BLOCK + 0x1038 + BME_AND_OFFSET)
           #define SIM_SCGC5_BME_XOR          (volatile unsigned long *)(SIM_BLOCK + 0x1038 + BME_XOR_OFFSET)
       #endif
-      #define SIM_SCGC5_LPTIMER              0x00000001
+      #define SIM_SCGC5_LPTIMER0             0x00000001
       #define SIM_SCGC5_REGFILE              0x00000002
       #define SIM_SCGC5_DRYICE               0x00000004
       #define SIM_SCGC5_DRYICESECREG         0x00000008
@@ -9027,7 +9107,7 @@ typedef struct stKINETIS_ADMA2_BD
       #endif
           // Bit-banding references
           //
-          #define SIM_SCGC5_SIM_SIM_SCGC5_LPTIMER BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1038), 0)
+          #define SIM_SCGC5_SIM_SIM_SCGC5_LPTIMER0 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1038), 0)
           #define SIM_SCGC5_SIM_SIM_SCGC5_REGFILE BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1038), 1)
           #define SIM_SCGC5_SIM_SIM_SCGC5_DRYICE BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1038), 2)
           #define SIM_SCGC5_SIM_SCGC5_DRYICESECREG BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1038), 3)

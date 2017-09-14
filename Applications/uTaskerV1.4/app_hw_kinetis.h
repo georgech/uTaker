@@ -1392,7 +1392,7 @@
 #endif
 
 #if !defined KINETIS_KE
-  //#define SUPPORT_LPTMR                                                // {28} support low power timer
+    #define SUPPORT_LPTMR                                                // {28} support low power timer
     #if defined SUPPORT_LPTMR
       //#define TICK_USES_LPTMR                                          // use low power timer for TICK so that it continues to operate in stop based low power modes
         //Select the clock used by the low power timer - if the timer if to continue running in low power modes the clock chosen should continue to run in that mode too
@@ -1431,7 +1431,7 @@
             #define RTC_CLOCK_PRESCALER_2  100                           // 128, 256, 512, 1024, 2048, 100 or 1000 (valid for bus clock or 1kHz LPO clock)
     #endif
 #else
-  //#define SUPPORT_RTC                                                  // support real time clock
+    #define SUPPORT_RTC                                                  // support real time clock
     #define ALARM_TASK   TASK_APPLICATION                                // alarm is handled by the application task (handled by time keeper if not defined)
     #if defined TWR_KL46Z48M || defined TWR_KL43Z48M
         #define RTC_USES_RTC_CLKIN                                       // TWR-KL46Z48M and TWR-KL43Z48M have a 32kHz oscillator supplying an accurate clock and the OpenSDA interface supplies a clock on the FRDM-KL46Z as long as the debug interface is powered (not possible with P&E debugger version)
@@ -2907,6 +2907,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define PRIORITY_DMA1              2
     #define PRIORITY_DMA0              2
     #define LPTMR0_INTERRUPT_PRIORITY  3
+    #define LPTMR1_INTERRUPT_PRIORITY  2
     #define PRIORITY_PORT_A_INT        1
     #define PRIORITY_PORT_B_INT        1
     #define PRIORITY_PORT_C_INT        1
@@ -2945,12 +2946,17 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define PRIORITY_PORT_IRQ_INT      3
     #define PRIORITY_KEYBOARD_INT      3
     #if defined KINETIS_KL28 || defined KINETIS_KL82                     // devices with INTMUX to extend the number of interrupts possible
-        #define PRIORITY_INTMUX0_0_INT      0
-        #define PRIORITY_INTMUX0_1_INT      1
-        #define PRIORITY_INTMUX0_2_INT      2
-        #define PRIORITY_INTMUX0_3_INT      3
-
-        #define PRIORITY_LPUART2            PRIORITY_INTMUX0_1_INT
+        #define PRIORITY_INTMUX0_0_INT      0                            // priority of extended interrupts using INTMUX0 chnnel 0
+        #define PRIORITY_INTMUX0_1_INT      1                            // priority of extended interrupts using INTMUX0 chnnel 1
+        #define PRIORITY_INTMUX0_2_INT      2                            // priority of extended interrupts using INTMUX0 chnnel 2
+        #define PRIORITY_INTMUX0_3_INT      3                            // priority of extended interrupts using INTMUX0 chnnel 3
+        // Peripheral extended interrupt connections to INTMUX0 channels (multiple sources can be connected to each INTMUX0 channel - they are ORed and the lowest vector number has priority when more than one input is asserted)
+        //
+        #define INTMUX_WDOG0                INPUT_TO_INTMUX0_CHANNEL_0   // the WDOG extended interrupt is connected to INTMUX0 channel 0 (inherits INTMUX0 channel 0's priority)
+        #define INTMUX_LPTMR1               INPUT_TO_INTMUX0_CHANNEL_0   // the LPTMR1 extended interrupt is connected to INTMUX0 channel 0 (inherits INTMUX0 channel 0's priority)
+        #define INTMUX_LPUART2              INPUT_TO_INTMUX0_CHANNEL_1   // the LPUART2 extended interrupt is connected to INTMUX0 channel 1 (inherits INTMUX0 channel 1's priority)
+        #define INTMUX_I2C1                 INPUT_TO_INTMUX0_CHANNEL_2   // the I2C1 extended interrupt is connected to INTMUX0 channel 2 (inherits INTMUX0 channel 2's priority)
+        #define INTMUX_RTC_ALARM            INPUT_TO_INTMUX0_CHANNEL_3   // the RTC alarm extended interrupt is connected to INTMUX0 channel 3 (inherits INTMUX0 channel 3's priority)
     #endif
 #else
     // Define interrupt priorities in the system (kinetis supports 0..15 - 0 is highest priority and 15 is lowest priority)

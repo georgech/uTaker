@@ -3902,7 +3902,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
         fnDoEthereal(0, 0);                                              // {18} if we are playing back ethereal files, inject frames here
 #endif
 #if defined USB_INTERFACE
-        fnInjectUSB(0,0,0);                                              // inject any queued USB data
+        fnInjectUSB(0, 0, 0);                                            // inject any queued USB data
 #endif
     }
 

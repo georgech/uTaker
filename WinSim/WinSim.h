@@ -87,18 +87,20 @@
 #define RX_COM3              5                                           // {11}
 #define RX_COM4              6
 #define RX_COM5              7 
-#define RX_ETHERNET          8
-#define EXITING_CALL         9
-#define KEY_CHANGE           10
-#define INPUT_TOGGLE         11
-#define INITIALISE_OP_SYS_2  12 
-#define RX_SPI0              13                                          // {7}
-#define RX_SPI1              14
-#define INPUT_TOGGLE_NEG     15                                          // {15}
-#define RX_EXT_COM0          16
-#define RX_EXT_COM1          17
-#define RX_EXT_COM2          18
-#define RX_EXT_COM3          19
+#define RX_COM6              8
+#define RX_COM7              9
+#define RX_ETHERNET          10
+#define EXITING_CALL         11
+#define KEY_CHANGE           12
+#define INPUT_TOGGLE         13
+#define INITIALISE_OP_SYS_2  14 
+#define RX_SPI0              15                                          // {7}
+#define RX_SPI1              16
+#define INPUT_TOGGLE_NEG     17                                          // {15}
+#define RX_EXT_COM0          18
+#define RX_EXT_COM1          19
+#define RX_EXT_COM2          20
+#define RX_EXT_COM3          21
 
 #define SIM_TEST_RX_0        50
 #define SIM_TEST_RX_1        51
