@@ -348,7 +348,7 @@
         // - beware that the header delivers rules for subsequent parts of this header file but also accepts some rules from previous parts,
         // therefore its position should only be moved after careful consideration of its consequences
         //
-        #include "types.h"                                                       // project specific type settings and the processor header at this location
+        #include "types.h"                                               // project specific type settings and the processor header at this location
 
         // FLASH configuration settings
         //

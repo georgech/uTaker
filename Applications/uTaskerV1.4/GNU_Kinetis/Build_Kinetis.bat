@@ -1,7 +1,7 @@
 SET PATH=%PATH%;D:\Freescale\KDS_v3\Toolchain\bin
 SET PATH=%PATH%;../../../Tools
 make -f make_uTaskerV1.4_GNU_Kinetis all
-uTaskerCombine "../../uTaskerBoot/GNU_Kinetis/uTaskerBoot.bin" uTaskerV1.4_BM.bin 0x8080 uTaskerBM.bin uTaskerBM.hex
+uTaskerCombine "../../uTaskerBoot/GNU_Kinetis/uTaskerBoot.bin" uTaskerV1.4_BM.bin 0x1000 uTaskerBM.bin uTaskerBM.hex
 uTaskerCombine "../../uTaskerSerialBoot/GNU_Kinetis/uTaskerSerialBoot.bin" uTaskerV1.4_BM.bin 0x8080 uTaskerSA.bin
 uTaskerConvert.exe uTaskerV1.4_BM.bin z_Upload.bin -0x1234 -a748b6531124
 rem arm-none-eabi-objcopy --input-target=ihex --output-target=binary software.hex application.bin
