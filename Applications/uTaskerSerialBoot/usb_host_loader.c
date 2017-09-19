@@ -135,7 +135,11 @@ static unsigned short usBlockCount = 0;
     static void fnSetSerialNumberString(CHAR *ptrSerialNumber);
 #endif
 
-#if !defined NXP_MSD_HOST
+#if defined NXP_MSD_HOST
+    #if defined _WINDOWS
+    static void fnConfigureUSB(void);                                        // routine to open and configure USB interface
+    #endif
+#else
     static void fnConfigureUSB(void);                                        // routine to open and configure USB interface
     static void fnConfigureApplicationEndpoints(unsigned char ucConfiguration);
     static void fnRequestLUN(void);
@@ -193,9 +197,12 @@ extern void fnTaskUSB_host(TTASKTABLE *ptrTaskTable)
 #if defined NXP_MSD_HOST
         MCG_C1 |= MCG_C1_IRCLKEN;                                        // 32kHz IRC enable
         OSC0_CR |= OSC_CR_ERCLKEN;                                       // external reference clock enable
-        USB_HostApplicationInit();                                       // initialation
+        USB_HostApplicationInit();                                       // initialisation
         uTaskerStateChange(OWN_TASK, UTASKER_POLLING);                   // switch to polling mode
         USB_control = 1;                                                 // dummy - to stop re-initialisation
+    #if defined _WINDOWS                                                 // temp development
+        fnConfigureUSB();                                                // configure the USB host interface
+    #endif
 #else
         fnConfigureUSB();                                                // configure the USB host interface
 #endif
@@ -1026,7 +1033,9 @@ extern int utDeleteMSDSector(UTDISK *ptr_utDisk, unsigned long ulSectorNumber)
     return (utWriteMSD((unsigned char *)ulTemp, ulSectorNumber));
 }
 #endif
+#endif
 
+#if !defined NXP_MSD_HOST || defined _WINDOWS
 // The USB interface is configured by opening the USB interface once for the default control endpoint 0,
 // followed by an open of each endpoint to be used (each endpoint has its own handle). Each endpoint can use an optional call-back
 // or can define a task to be woken on OUT frames. Transmission can use direct memory method or else an output buffer (size defined by open),
@@ -1040,7 +1049,11 @@ static void fnConfigureUSB(void)
     //
     tInterfaceParameters.Endpoint = 0;                                   // set USB default control endpoint for configuration
     tInterfaceParameters.usConfig = USB_HOST_MODE;                       // configure host mode of operation
+    #if defined NXP_MSD_HOST
+    tInterfaceParameters.usb_callback = 0;
+    #else
     tInterfaceParameters.usb_callback = control_callback;                // call-back for control endpoint to enable class exchanges to be handled
+    #endif
     tInterfaceParameters.queue_sizes.TxQueueSize = 0;                    // no tx buffering on control endpoint
     tInterfaceParameters.queue_sizes.RxQueueSize = 0;                    // no rx buffering on control endpoint
     #if defined _KINETIS                                                 // {18}{25}{26}{29}{30}
@@ -1061,10 +1074,25 @@ static void fnConfigureUSB(void)
 }
 __PACK_OFF
 #endif
-
 #endif
 
 #if defined NXP_MSD_HOST
+    #if defined _WINDOWS
+extern void *fnGetuTaskerPhyAdd(void)
+{
+    return ((void *)(&kinetis.USBHSPHY));
+}
+
+extern void *fnGetuTaskerHSUSBAdd(void)
+{
+    return ((void *)(&kinetis.USBHS));
+}
+
+extern void *fnGetuTaskerSIMAdd(void)
+{
+    return ((void *)(&kinetis.SIM));
+}
+    #endif
 extern int DbgConsole_Printf(const char *fmt_s, ...)
 {
     fnDebugMsg((CHAR *)fmt_s);

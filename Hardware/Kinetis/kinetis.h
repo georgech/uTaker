@@ -1293,6 +1293,10 @@ typedef struct stRESET_VECTOR
 //
 #if defined KINETIS_KV || defined KINETIS_KL02 || defined KINETIS_K02
     #define KINETIS_WITHOUT_RTC
+#elif defined KINETIS_KL82
+    #define KINETIS_WITH_RTC_CRYSTAL
+#elif !defined KINETIS_KL && !defined KINETIS_KE
+    #define KINETIS_WITH_RTC_CRYSTAL
 #endif
 
 // PWT configuration
@@ -7956,7 +7960,7 @@ typedef struct stKINETIS_ADMA2_BD
     #define RTC_CNT             *(volatile unsigned long *)(RTC_BLOCK + 0x8) // RTC Counter Register (16 bits) (read-only)
 #else
     #define RTC_TSR             *(volatile unsigned long *)(RTC_BLOCK + 0x000) // RTC Time Seconds Register
-    #define RTC_TPR             *(unsigned long *)(RTC_BLOCK + 0x004)    // RTC Time Prescaler Register
+    #define RTC_TPR             *(volatile unsigned long *)(RTC_BLOCK + 0x004) // RTC Time Prescaler Register
       #define RTC_TPR_MASK      0x0000ffff
     #define RTC_TAR             *(unsigned long *)(RTC_BLOCK + 0x008)    // RTC Time Alarm Register
     #define RTC_TCR             *(unsigned long *)(RTC_BLOCK + 0x00c)    // RTC Time Compensation Register
@@ -8654,7 +8658,7 @@ typedef struct stKINETIS_LPTMR_CTL
       #endif
           #define SIM_SOPT1_OSC32KSEL_MASK       0x000c0000
           #define SIM_SOPT1_OSC32KSEL_SYS_OSC    0x00000000              // OSC32KCLK
-        #if defined KINETIS_KL
+        #if defined KINETIS_KL && !defined KINETIS_WITH_RTC_CRYSTAL
           #define SIM_SOPT1_OSC32KSEL_RTC_CLKIN  0x00080000              // RTC_CLKIN input as source for RTC and LPTMR
         #else
           #define SIM_SOPT1_OSC32KSEL_32k        0x00080000              // 32kHz oscillator
@@ -10076,6 +10080,10 @@ typedef struct stKINETIS_LPTMR_CTL
 #endif
 #define PB_3_I2C0_SDA                    PORT_MUX_ALT2
 #define PB_2_I2C0_SCL                    PORT_MUX_ALT2
+#if defined KINETIS_KL82
+    #define PD_3_I2C0_SDA                PORT_MUX_ALT7
+    #define PD_2_I2C0_SCL                PORT_MUX_ALT7
+#endif
 #define PD_9_I2C0_SDA                    PORT_MUX_ALT2
 #define PD_8_I2C0_SCL                    PORT_MUX_ALT2
 #if defined KINETIS_K64 || defined KINETIS_KL17 || defined KINETIS_K24 || defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL43 || defined KINETIS_KL46

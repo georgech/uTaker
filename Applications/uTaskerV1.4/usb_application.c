@@ -1258,7 +1258,7 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
         fnHandleFreeMaster(USBPortID_comms[FIRST_CDC_INTERFACE], ucInputMessage, Length);  // handle the received data
     }
 #elif ((defined USE_USB_CDC && (USB_CDC_VCOM_COUNT > 0)) && defined USE_MAINTENANCE) || defined USB_CDC_HOST // USB-CDC with command line interface
-    while (fnMsgs(USBPortID_comms[FIRST_CDC_INTERFACE]) != 0) {          // reception from OUT endpoint on first CDC interface
+    while (fnMsgs(USBPortID_comms[FIRST_CDC_INTERFACE]) != 0) {          // while reception from OUT endpoint on first CDC interface
     #if defined USB_CDC_HOST
         fnDriver(USBPortID_comms[FIRST_CDC_INTERFACE], (RX_ON), 0);      // enable IN polling again so that further data can be received
     #endif
@@ -1290,15 +1290,25 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
         else {
             Length = fnRead(USBPortID_comms[FIRST_CDC_INTERFACE], ucInputMessage, LARGE_MESSAGE); // read the content
         }
-    #else
-        Length = fnRead(USBPortID_comms[FIRST_CDC_INTERFACE], ucInputMessage, LARGE_MESSAGE); // read the content
+    #else                                                                // no maintenance interface
+        if (fnWrite(SerialPortID, 0, MEDIUM_MESSAGE) != 0) {             // check that there is space for a block of data
+            Length = fnRead(USBPortID_comms[FIRST_CDC_INTERFACE], ucInputMessage, MEDIUM_MESSAGE); // read the content
+            fnWrite(SerialPortID, ucInputMessage, Length);               // send input to serial port
+        }
+        else {
+            fnDriver(SerialPortID, MODIFY_WAKEUP, (MODIFY_TX | OWN_TASK)); // we want to be woken when the queue is free again
+            break;                                                       // leave present USB data in the input buffer until we have enough serial output buffer space
+                                                                         // the TX_FREE event is not explicitly handled since it is used to wake a next check of the buffer progress
+        }
     #endif
     #if defined USB_CDC_HOST
-        fnDriver(USBPortID_comms[FIRST_CDC_INTERFACE], (RX_OFF), 0);     // pause IN polling so that we can sent
+      //fnDriver(USBPortID_comms[FIRST_CDC_INTERFACE], (RX_OFF), 0);     // pause IN polling so that we can send
     #endif
+    #if !defined USB_CDC_HOST
         fnWrite(USBPortID_comms[FIRST_CDC_INTERFACE], ucInputMessage, Length); // echo input
+    #endif
     #if defined USB_CDC_HOST
-        fnDriver(USBPortID_comms[FIRST_CDC_INTERFACE], (RX_ON), 0);      // enable IN polling again so that further data can be received
+      //fnDriver(USBPortID_comms[FIRST_CDC_INTERFACE], (RX_ON), 0);      // enable IN polling again so that further data can be received
     #endif
     #if !defined USB_CDC_HOST
         if (usUSB_state == ES_NO_CONNECTION) {
@@ -3256,7 +3266,7 @@ static unsigned char fnDisplayDeviceInfo(unsigned long *ptrDeviceType)
                 if (iTotalInterfaces <= 0) {                             // if all interfaces have been accounted for
                     return (ptr_config_desc->bConfigurationValue);       // the valid configuration to be enabled
                 }
-                fnDebugMsg("Discaded class");
+                fnDebugMsg("Discarded class");
                 fnDebugHex(ptr_interface_desc->bInterfaceClass, (sizeof(ptr_interface_desc->bInterfaceClass) | WITH_LEADIN | WITH_SPACE | WITH_CR_LF));
                 // Discard unsupported class
                 //

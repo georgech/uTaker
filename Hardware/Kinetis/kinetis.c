@@ -2320,7 +2320,7 @@ extern void __init_gnu_data(void)
     const unsigned char *ptrFlash = &__data_load_start__;
     ulInitDataLength = (&__data_end__ - &__data_start__);
     ptrData = &__data_start__;
-    while (ulInitDataLength--) {                                         // initialise data
+    while (ulInitDataLength-- != 0) {                                    // initialise data
         *ptrData++ = *ptrFlash++;
     }
 
@@ -2328,14 +2328,14 @@ extern void __init_gnu_data(void)
     ptrFlash = &__text_load_start__;
     if (ptrFlash != ptrData) {                                           // if a move is required
         ulInitDataLength = (&__text_end__ - &__text_start__);
-        while (ulInitDataLength--) {                                     // initialise text
+        while (ulInitDataLength-- != 0) {                                // initialise text
             *ptrData++ = *ptrFlash++;
         }
     }
     #endif
     ptrData = &__bss_start__;
     ulInitDataLength = (&__bss_end__ - &__bss_start__);
-    while (ulInitDataLength--) {                                         // initialise bss
+    while (ulInitDataLength-- != 0) {                                    // initialise bss
         *ptrData++ = 0;
     }
 }
@@ -2504,7 +2504,7 @@ static void _LowLevelInit(void)
             break;
         }
         processor_ints++;
-    } while (1);
+    } while ((int)1 != (int)0);
     #else
         #if defined NMI_IN_FLASH                                         // {123}
     ptrVect->ptrNMI           = irq_NMI;

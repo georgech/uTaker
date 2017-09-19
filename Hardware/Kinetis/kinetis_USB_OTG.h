@@ -1227,7 +1227,7 @@ extern void fnConfigUSB(QUEUE_HANDLE Channel, USBTABLE *pars)
     while ((ENDPT0 & EP_TX_ENABLE) != 0) {}                              // wait for tx disable to complete
                                                                          // configure rx side of endpoint
     if ((pars->usConfig & USB_HOST_MODE) != 0) {                         // host mode
-        ucEP0_size = 64;                                                 // full size endpoint 0 since it is used by the host for all transmission/reception
+        ucEP0_size = 64;                                                 // full size endpoint 0 since it is used by the host for all transmission/reception (note that high speed would need 1024 bytes to be able to opeate with max. HS isochronous length)
     }
     else {
         ucEP0_size = ENDPOINT_0_SIZE;                                    // device's endpoint 0 size

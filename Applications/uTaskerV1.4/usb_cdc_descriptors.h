@@ -22,8 +22,8 @@
 #if defined INCLUDE_USB_DEFINES
     #define USB_PRODUCT_RELEASE_NUMBER      0x0100                       // V1.0 (binary coded decimal)
     #if defined USB_HS_INTERFACE
-        #define CDC_DATA_ENDPOINT_SIZE      512                          // maximum high speed bulk endpoint size
-        #define RNDIS_DATA_ENDPOINT_SIZE    512                          // maximum high speed bulk endpoint size
+        #define CDC_DATA_ENDPOINT_SIZE      512                          // maximum high speed bulk endpoint size (if the enumeration is with a FS device 64 will be the maximum)
+        #define RNDIS_DATA_ENDPOINT_SIZE    512                          // maximum high speed bulk endpoint size (if the enumeration is with a FS device 64 will be the maximum)
     #else
         #define CDC_DATA_ENDPOINT_SIZE      64                           // maximum full speed bulk endpoint size
         #define RNDIS_DATA_ENDPOINT_SIZE    64                           // maximum full speed bulk endpoint size

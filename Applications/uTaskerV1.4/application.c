@@ -121,6 +121,8 @@
     09.07.2016 Handle DHCP as Ethernet messages (previously interrupt events) {100}
     24.04.2017 Add RFC2217 interface                                     {101}
     03.05.2017 Add FREE_RUNNING_RX_DMA_RECEPTION option                  {102}
+    14.09.2017 Display target hardware on startup                        {103}
+    18.09.2017 Add simulation option for checking bare-minimum operation compatibility {104}
 
 */
 
@@ -152,7 +154,7 @@
 // The project includes a variety of quick tests which can be activated here
 /*****************************************************************************/
 
-#define FREE_RUNNING_RX_DMA_RECEPTION                                    // {102} use the UART receiver in free-running DMA mode (requires SERIAL_SUPPORT_DMA_RX and SERIAL_SUPPORT_DMA_RX_FREERUN) - see videos https://youtu.be/dNZvvouiqis and https://youtu.be/GaoWE-tMRq4
+//#define FREE_RUNNING_RX_DMA_RECEPTION                                  // {102} use the UART receiver in free-running DMA mode (requires SERIAL_SUPPORT_DMA_RX and SERIAL_SUPPORT_DMA_RX_FREERUN) - see videos https://youtu.be/dNZvvouiqis and https://youtu.be/GaoWE-tMRq4
 //#define RAM_TEST                                                       // {61} perform a RAM test on startup - if error found, stop
 //#define TEST_MSG_MODE                                                  // test UART in message mode
 //#define TEST_MSG_CNT_MODE                                              // test UART in message counter mode
@@ -171,6 +173,7 @@
 #if defined SUPPORT_RTC
   //#define RTC_TEST                                                     // test RTC function
 #endif
+//#define CHECK_BM_LOADER_COMPATIBILITY                                  // {104} simulation aid for testing bare-minimum loader compatibility
 
 #define STATE_INIT                0x00                                   // task states
 #define STATE_ACTIVE              0x01
@@ -580,6 +583,26 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
 #if defined SERIAL_INTERFACE && defined DEMO_UART
         HEAP_REQUIREMENTS OS_heap = (fnHeapAvailable() - fnHeapFree());  // the amount of heap allocated before the application starts working
 #endif
+#if defined CHECK_BM_LOADER_COMPATIBILITY && defined ACTIVE_FILE_SYSTEM && defined _WINDOWS // {104}
+        #define MAX_SIZE_OF_BM_APPLICATION    (40 * 1024)
+        unsigned char temp[MAX_SIZE_OF_BM_APPLICATION];
+        MAX_FILE_LENGTH size = (sizeof(temp) - 1);
+        MEMORY_RANGE_POINTER fileSystemStart = uOpenFile("0.bin");       // verify upload location - modify to suit
+        MEMORY_RANGE_POINTER upload_location = uOpenFile("g.bin");       // verify upload location - modify to suit
+        uMemcpy(temp, fnGetFlashAdd(FLASH_START_ADDRESS), sizeof(temp)); // copy the code at the start of flash to temp RAM buffer [put the upload file to test into the simulation folder with the name FLASH_xxx.ini, where xxx is the name of the target processor]
+        while (temp[size] == 0xff) {                                     // 0xff assumed to be beyond program content
+            if (size == 0) {
+                break;
+            }
+            size--;
+        }
+        if (size != 0) {                                                 // if not blank
+            unsigned char ucMimeType = MIME_BINARY;
+            fnEraseFlashSector(upload_location, (MAX_FILE_LENGTH)(MAX_SIZE_OF_BM_APPLICATION)); // ensure that the upload area is erased
+            uFileWrite(upload_location, temp, (size + 1));               // write the code to the upload file (thsi saves it in the correct file format)
+            uFileCloseMime(upload_location, &ucMimeType);                // close file as binary type
+        }
+#endif
       //float fTest = fnFloatStrFloat("1235.0123");                      // test floating point input
       //fTest = fnFloatStrFloat("-0.000123");
       //fTest = fnFloatStrFloat("-456.123");
@@ -643,7 +666,9 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
             return;                                                      // if the serial port could not be opened we quit
         }
         DebugHandle = SerialPortID;                                      // assign our serial interface as debug port
-        fnDebugMsg(WELCOME_MESSAGE_UART);
+        fnDebugMsg("\r\n\nHello, world... ");
+        fnDebugMsg(TARGET_HW);                                           // {103}
+        fnDebugMsg("\r\n");
         fnDebugMsg("OS Heap use = ");
         fnDebugHex(OS_heap, (WITH_LEADIN | sizeof(HEAP_REQUIREMENTS)));
         fnDebugMsg(" from ");

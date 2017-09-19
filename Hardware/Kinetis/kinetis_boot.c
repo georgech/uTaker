@@ -226,7 +226,7 @@ extern void fnResetBoard(void)
 {
     APPLICATION_INT_RESET_CTR_REG = (VECTKEY | SYSRESETREQ);             // request Cortex core reset, which will cause the software reset bit to be set in the mode controller for recognistion after restart
 #if !defined _WINDOWS
-    while (1) {}
+    while ((int)1 != (int)0) {}
 #endif
 }
 

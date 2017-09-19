@@ -99,6 +99,9 @@ static __interrupt void _LPTMR1_single(void)
             MCG_C2 |= MCG_C2_IRCS;                                       // select fast internal reference clock
             ptrLPTMR->LPTMR_PSR = (LPTMR_PSR_PCS_MCGIRCLK | LPTMR_PSR_PBYP);
         #elif defined LPTMR_CLOCK_EXTERNAL_32kHz
+            #if defined KINETIS_WITH_RTC_CRYSTAL                             // devices with RTC crystal oscillator circuity
+            RTC_CR &= ~(RTC_CR_CLKO);                                        // allow RTC to supply its clock to other peripherals
+            #endif
             ptrLPTMR->LPTMR_PSR = (LPTMR_PSR_PCS_ERCLK32K | LPTMR_PSR_PBYP);
         #else                                                            // LPTMR_CLOCK_OSCERCLK
             OSC0_CR |= (OSC_CR_ERCLKEN | OSC_CR_EREFSTEN);               // enable the external reference clock and keep it enabled in stop mode

@@ -20,8 +20,9 @@
     24.06.2015 Always re-synchronise the variable counters to the RTC counter when fnRestoreRTC() is used {1}
     24.06.2015 Synchronise the variable counters to the RTC counter when KL devices are used without LPO {2}
     02.07.2015 Allow setting alarm directly from local UTC value         {3}
-    24.02.2016 Correct stop watch interrupt by removing redundent flag   {4}
+    24.02.2016 Correct stop watch interrupt by removing redundant flag   {4}
     13.06.2017 Synchronise prescaler when setting new time               {5}
+    18.09.2017 Use new dependency KINETIS_WITH_RTC_CRYSTAL               {6}
 
 */
 
@@ -289,7 +290,7 @@ extern int fnConfigureRTC(void *ptrSettings)
         if ((RTC_SR & RTC_SR_TIF) != 0) {                                // if timer invalid
             RTC_SR = 0;                                                  // ensure stopped
             RTC_TSR = 0;                                                 // write to clear RTC_SR_TIF in status register when not yet enabled
-        #if !defined KINETIS_KL
+        #if defined KINETIS_WITH_RTC_CRYSTAL                             // {6} devices with RTC crystal oscillator circuity
             #if !defined RUN_FROM_RTC_FLL                                // the RTC oscillator will always be enabled in the clock initialisation
             RTC_CR = (RTC_CR_OSCE | RTC_CR_CLKO);                        // enable oscillator but don't supply clock to other peripherals
             #endif
@@ -337,7 +338,7 @@ extern int fnConfigureRTC(void *ptrSettings)
                 fnConvertSecondsTime(0, *RTC_SECONDS_LOCATION);          // take the present seconds count value, convert and set to time and date
             }
     #elif defined KINETIS_KL                                             // {77}
-        #if defined RTC_USES_RTC_CLKIN
+        #if defined RTC_USES_RTC_CLKIN && !defined KINETIS_WITH_RTC_CRYSTAL // {6} external clock oscillator input on dedicated pin
             #if defined KINETIS_KL05
             _CONFIG_PERIPHERAL(A, 5,  (PA_5_RTC_CLKIN));                 // ensure the port is clocked and select pin function
             #else
@@ -345,7 +346,7 @@ extern int fnConfigureRTC(void *ptrSettings)
             #endif
             SIM_SOPT1 = ((SIM_SOPT1 & ~SIM_SOPT1_OSC32KSEL_MASK) | SIM_SOPT1_OSC32KSEL_RTC_CLKIN); // select external clock source
             fnConvertSecondsTime(0, RTC_TSR);                            // {2} take the present seconds count value, convert and set to time and date
-        #elif defined RTC_USES_LPO_1kHz
+        #elif defined RTC_USES_LPO_1kHz                                  // clock the RTC from the 1kHz LPI clock source
             SIM_SOPT1 = ((SIM_SOPT1 & ~SIM_SOPT1_OSC32KSEL_MASK) | SIM_SOPT1_OSC32KSEL_LPO_1kHz); // select 1kHz clock as source
             if (((RCM_SRS0 & (RCM_SRS0_POR | RCM_SRS0_LVD)) != 0) || (*RTC_VALID_LOCATION != RTC_VALID_PATTERN)) { // power on reset
             #if defined _WINDOWS
@@ -364,6 +365,9 @@ extern int fnConfigureRTC(void *ptrSettings)
             }
         #else                                                            // use 32kHz oscillator (OSC32KCLK)
             SIM_SOPT1 = (SIM_SOPT1 & ~SIM_SOPT1_OSC32KSEL_MASK);         // select the clock source
+            #if defined KINETIS_WITH_RTC_CRYSTAL                         // {6}
+            SIM_SOPT1 |= SIM_SOPT1_OSC32KSEL_32k;                        // select the 32kHz RTC oscillator clock as input
+            #endif
             fnConvertSecondsTime(0, RTC_TSR);                            // {2} take the present seconds count value, convert and set to time and date
         #endif
     #else

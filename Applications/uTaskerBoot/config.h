@@ -79,7 +79,8 @@
 
     #if defined _KINETIS                                                 // {20}
       //#define FRDM_KL25Z
-        #define FRDM_KL27Z
+      //#define FRDM_KL27Z
+        #define CAPUCCINO_KL27                                           // KL27 with 256k flash / 32k SRAM
       //#define FRDM_KL82Z
       //#define KINETIS_K40
       //#define KINETIS_K60
@@ -172,7 +173,7 @@
             #define uFILE_START        (0)
             #define FILE_SYSTEM_SIZE   (SIZE_OF_FLASH)                   // 128k reserved for file system
             #define FILE_GRANULARITY   (1 * FLASH_GRANULARITY)           // each file a multiple of 1k
-        #elif defined FRDM_KL27Z
+        #elif defined FRDM_KL27Z || defined CAPUCCINO_KL27
             #define KINETIS_KL
             #define KINETIS_KL27
             #define OSC_LOW_GAIN_MODE
@@ -185,23 +186,21 @@
             #define BUS_CLOCK_DIVIDE     2                               // bus and flash clock divider value (1..8)
             #define USB_CRYSTAL_LESS                                     // use 48MHz HIRC as USB source (according to Freescale AN4905 - only possible in device mode) - rather than external pin
             #define ERRATE_1N87M
-          //#define PIN_COUNT           PIN_COUNT_32_PIN
-          //#define PIN_COUNT           PIN_COUNT_36_PIN
-          //#define PIN_COUNT           PIN_COUNT_48_PIN
-            #define PIN_COUNT           PIN_COUNT_64_PIN                 // 64 pin package
-            #define PACKAGE_TYPE        PACKAGE_LQFP                     // LQFP
-          //#define PACKAGE_TYPE        PACKAGE_QFN
-          //#define PACKAGE_TYPE        PACKAGE_MAPBGA
-          //#define SIZE_OF_FLASH       (32 * 1024)                      // 32k program Flash
-            #define SIZE_OF_FLASH       (64 * 1024)                      // 64k program Flash
-          //#define SIZE_OF_FLASH       (128 * 1024)                     // 128k program Flash
-          //#define SIZE_OF_FLASH       (256 * 1024)                     // 256k program Flash
-          //#define SIZE_OF_RAM         (4 * 1024)                       // 4k SRAM
-          //#define SIZE_OF_RAM         (8 * 1024)                       // 8k SRAM
-            #define SIZE_OF_RAM         (16 * 1024)                      // 16k SRAM
-          //#define SIZE_OF_RAM         (32 * 1024)                      // 32k SRAM
-            #define FILE_SYSTEM_SIZE    (SIZE_OF_FLASH/2)                // half of the flash reserved for file system
-            #define uFILE_START         (SIZE_OF_FLASH/2)                // FLASH location at half of the flash
+            #if defined CAPUCCINO_KL27
+                #define PIN_COUNT           PIN_COUNT_32_PIN
+               #define PACKAGE_TYPE         PACKAGE_QFN
+                #define SIZE_OF_FLASH       (256 * 1024)                 // 256k program Flash
+                #define SIZE_OF_RAM         (32 * 1024)                  // 32k SRAM
+                #define uFILE_START         (FLASH_START_ADDRESS + (214 * 1024)) // FLASH location at 0x35800 start
+                #define FILE_SYSTEM_SIZE    (40 * 1024)                  // 40k application accepted
+            #else
+                #define PIN_COUNT           PIN_COUNT_64_PIN             // 64 pin package
+                #define PACKAGE_TYPE        PACKAGE_LQFP                 // LQFP
+                #define SIZE_OF_FLASH       (64 * 1024)                  // 64k program Flash
+                #define SIZE_OF_RAM         (16 * 1024)                  // 16k SRAM
+                #define FILE_SYSTEM_SIZE    (SIZE_OF_FLASH/2)            // half of the flash reserved for file system
+                #define uFILE_START         (SIZE_OF_FLASH/2)            // FLASH location at half of the flash
+            #endif
             #define FILE_GRANULARITY    (1 * FLASH_GRANULARITY)          // each file a multiple of 1k
         #elif defined FRDM_KL82Z
           //#define RUN_FROM_DEFAULT_CLOCK                               // default mode is FLL Engaged Internal - the 32kHz IRC is multiplied by FLL factor of 640 to obtain 20.9715MHz nominal frequency (20MHz..25MHz)

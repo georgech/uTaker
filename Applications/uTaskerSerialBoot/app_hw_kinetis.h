@@ -63,7 +63,7 @@
 
 // Define clock settings
 //
-#if defined FRDM_K64F || defined TWR_K64F120M || defined K24FN1M0_120 || defined TEENSY_3_5 // {9}
+#if defined FRDM_K64F || defined TWR_K64F120M || defined K24FN1M0_120 || defined TEENSY_3_5 || defined HEXIWEAR_K64F // {9}
     #if !defined K24FN1M0_120
         #define MASK_1N83J                                               // chip mask errata to be respected
     #endif
@@ -105,6 +105,14 @@
         #define OSC_LOW_GAIN_MODE
         #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
         #define CLOCK_DIV            4                                   // input must be divided to 2MHz..4MHz range (/1 to /24)
+        #define CLOCK_MUL            30                                  // the PLL multiplication factor to achieve operating frequency of 120MHz (x24 to x55 possible)
+        #define FLEX_CLOCK_DIVIDE    3                                   // 120/3 to give 40MHz
+        #define FLASH_CLOCK_DIVIDE   5                                   // 120/5 to give 24MHz
+    #elif defined HEXIWEAR_K64F
+        #define CRYSTAL_FREQUENCY    12000000                            // 12 MHz crystal
+        #define OSC_LOW_GAIN_MODE
+        #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
+        #define CLOCK_DIV            3                                   // input must be divided to 2MHz..4MHz range (/1 to /24)
         #define CLOCK_MUL            30                                  // the PLL multiplication factor to achieve operating frequency of 120MHz (x24 to x55 possible)
         #define FLEX_CLOCK_DIVIDE    3                                   // 120/3 to give 40MHz
         #define FLASH_CLOCK_DIVIDE   5                                   // 120/5 to give 24MHz
@@ -610,6 +618,11 @@
   //#define PACKAGE_TYPE        PACKAGE_MAPBGA
     #define SIZE_OF_FLASH       (1024 * 1024)                            // 1M FLASH
     #define SIZE_OF_RAM         (256 * 1024)                             // 256k SRAM
+#elif defined HEXIWEAR_K64F
+    #define PIN_COUNT           PIN_COUNT_144_PIN                        // 144 LQFP/MAPBGA pin package
+    #define PACKAGE_TYPE        PACKAGE_MAPBGA
+    #define SIZE_OF_FLASH       (1024 * 1024)                            // 1M FLASH
+    #define SIZE_OF_RAM         (256 * 1024)                             // 256k SRAM
 #elif defined TEENSY_3_5
     #define KINETIS_FLEX                                                 // X part with flex memory rather than N part with program Flash only
     #define PIN_COUNT           PIN_COUNT_144_PIN                        // 144 LQFP/MAPBGA pin package
@@ -1069,7 +1082,7 @@
         #define LOADER_UART           2                                  // the serial interface used by the serial loader
     #elif defined TWR_K20D50M || defined TWR_K80F150M || defined tinyK20 || defined TWR_K20D72M || defined FRDM_KE02Z || defined FRDM_KE02Z40M || defined FRDM_KE06Z || defined FRDM_K22F || defined TWR_K22F120M || defined TWR_K24F120M || defined K24FN1M0_120 || defined TWR_K64F120M || defined TWR_KW21D256 || defined TWR_KW24D512 || defined BLAZE_K22
         #define LOADER_UART           1                                  // the serial interface used by the serial loader
-    #elif defined K02F100M || defined FRDM_K20D50M || defined FRDM_KL46Z || defined FRDM_KL43Z || defined FRDM_KL25Z || defined FRDM_KL26Z || defined FRDM_KL27Z || defined TEENSY_LC || defined TWR_KL25Z48M || defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined TEENSY_3_1 || defined FRDM_K64F || defined FRDM_KE04Z || defined TWR_KV10Z32 || defined TWR_KV31F120M || defined TWR_KV58F220M || defined FRDM_KL82Z || defined FRDM_K66F || ((defined TWR_K40X256 || defined TWR_K40D100M) && defined DEBUG_ON_VIRT_COM)
+    #elif defined K02F100M || defined FRDM_K20D50M || defined FRDM_KL46Z || defined FRDM_KL43Z || defined FRDM_KL25Z || defined FRDM_KL26Z || defined FRDM_KL27Z || defined TEENSY_LC || defined TWR_KL25Z48M || defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined TEENSY_3_1 || defined FRDM_K64F || defined FRDM_KE04Z || defined TWR_KV10Z32 || defined TWR_KV31F120M || defined TWR_KV58F220M || defined FRDM_KL82Z || defined FRDM_K66F || defined HEXIWEAR_K64F || ((defined TWR_K40X256 || defined TWR_K40D100M) && defined DEBUG_ON_VIRT_COM)
         #define LOADER_UART           0                                  // the serial interface used by the serial loader
     #else
         #define LOADER_UART           3                                  // the serial interface used by the serial loader
@@ -1105,7 +1118,7 @@
     #endif
 
   //#define UART0_A_LOW                                                  // alternative UART0 pin mapping
-    #if defined FRDM_K20D50M || defined TEENSY_3_1 || defined TEENSY_LC || defined FRDM_K64F || defined TWR_KV10Z32 || defined TWR_KV31F120M || defined TWR_KV58F220M || defined FRDM_K66F // {4}{9}
+    #if defined FRDM_K20D50M || defined TEENSY_3_1 || defined TEENSY_LC || defined FRDM_K64F || defined TWR_KV10Z32 || defined TWR_KV31F120M || defined TWR_KV58F220M || defined FRDM_K66F || defined HEXIWEAR_K64F // {4}{9}
         #define UART0_ON_B                                               // alternative UART0 pin mapping
     #elif defined FRDM_KL46Z || defined FRDM_KL43Z || defined FRDM_KL25Z || defined FRDM_KL26Z || defined FRDM_KL27Z // {5}{7}
         #define UART0_A_LOW
@@ -2110,6 +2123,24 @@
     #define USB_HOST_POWER_CONFIG()
     #define USB_HOST_POWER_ON()                                          // the FRDM-K64F doesn't have a USB power supply that can be controlled, instead jumper J21 can be manually shorted so that the 5V power from the OpenSDA circuit is connected (use carefully since there is no protection!)
     #define USB_HOST_POWER_OFF()
+#elif defined HEXIWEAR_K64F
+    #define RGB_G                  (PORTD_BIT0)                          // green LED - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+    #define RGB_R                  (PORTC_BIT8)                          // red LED - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+    #define RGB_B                  (PORTC_BIT9)                          // blue LED - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+
+    #define SWITCH_T1              (PORTA_BIT12)                         // docking station push button switches (I2S_TXD)
+    #define SWITCH_T2              (PORTA_BIT13)                         // docking station push button switches(I2S_TX_FS)
+    #define SWITCH_T3              (PORTA_BIT14)                         // docking station push button switches(I2S_RX_BCLK)
+
+    #define BLINK_LED              (RGB_G)
+
+    #define INIT_WATCHDOG_LED()    _CONFIG_DRIVE_PORT_OUTPUT_VALUE(D, (RGB_G), (0), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+
+    #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(A, (SWITCH_T1 | SWITCH_T2), PORT_PS_UP_ENABLE)
+    #define WATCHDOG_DISABLE()      (_READ_PORT_MASK(A, SWITCH_T2) == 0) // pull this input down to disable watchdog (hold docking station switch T2 down at reset)
+    #define TOGGLE_WATCHDOG_LED()   _TOGGLE_PORT(D, RGB_G)
+
+    #define FORCE_BOOT()           (_READ_PORT_MASK(A, SWITCH_T1) == 0)  // pull this input down to force boot loader mode (hold docking station switch T1 down at reset)
 #elif defined TWR_K21D50M
     #define BLINK_LED              (PORTD_BIT4)
     #define SWITCH_2               (PORTC_BIT7)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too

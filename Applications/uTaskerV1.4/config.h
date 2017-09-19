@@ -80,7 +80,7 @@
 //#define rcARM_KL26                                                     // development board with KL26
 //#define TEENSY_LC                                                      // USB development board with KL26Z64 - http://www.utasker.com/kinetis/TEENSY_LC.html
 //#define FRDM_KL27Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL27Z.html
-//#define CAPUCCINO_KL27                                                 // http://www.utasker.com/kinetis/Capuccino-KL27.html
+#define CAPUCCINO_KL27                                                   // http://www.utasker.com/kinetis/Capuccino-KL27.html
 //#define TWR_KL28Z72M                                                   // tower board http://www.utasker.com/kinetis/FRDM-KL28Z72M
 //#define FRDM_KL28Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL28Z.html
 //#define FRDM_KL43Z                                                     // L processors Cortex-M0+ (ultra-low power) with USB and segment LCD - freedom board http://www.utasker.com/kinetis/FRDM-KL43Z.html
@@ -89,7 +89,7 @@
 //#define TWR_KL46Z48M                                                   // tower board http://www.utasker.com/kinetis/TWR-KL46Z48M.html
 
 //#define TWR_KL82Z72M                                                   // tower board http://www.utasker.com/kinetis/FRDM-KL82Z72M
-#define FRDM_KL82Z                                                       // freedom board http://www.utasker.com/kinetis/FRDM-KL82Z.html
+//#define FRDM_KL82Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL82Z.html
 
 //#define TWR_KM34Z50M                                                   // M processors Cortex M0+ (metrology) - tower board http://www.utasker.com/kinetis/TWR-KM34Z50M.html
 //#define TWR_KM34Z75M                                                   // tower board http://www.utasker.com/kinetis/TWR-KM34Z75M.html
@@ -965,7 +965,7 @@
 #if defined DEVICE_WITHOUT_USB
     #define NUMBER_USB     0                                             // no physical queue needed
 #else
-  //#define USB_INTERFACE                                                // enable USB driver interface
+    #define USB_INTERFACE                                                // enable USB driver interface
     #if defined USB_INTERFACE
       //#define MICROSOFT_OS_STRING_DESCRIPTOR                           // support MODs
       //#define USB_HOST_SUPPORT                                         // host rather than device
@@ -974,7 +974,7 @@
             #define NUMBER_USB     (5 + 1)                               // physical queues (control plus 5 endpoints)
         #else                                                            // define one or more device classes (multiple classes creates a composite device)
             #define USE_USB_CDC                                          // USB-CDC (use also for Modbus over USB)
-            #define USE_USB_MSD                                          // needs SD card to compile (or alternatives FLASH_FAT / SPI_FLASH_FAT / FAT_EMULATION)
+          //#define USE_USB_MSD                                          // needs SD card to compile (or alternatives FLASH_FAT / SPI_FLASH_FAT / FAT_EMULATION)
           //#define USE_USB_HID_MOUSE                                    // human interface device (mouse)
           //#define USE_USB_HID_KEYBOARD                                 // human interface device (keyboard)
               //#define USB_KEYBOARD_DELAY                               // enable inter-character delay control
@@ -1083,7 +1083,7 @@
           //#define USB_MSD_HOST                                         // works together with mass-storage for a USB memory stick as disk E
             #define USB_CDC_HOST                                         // supports CDC device (can be used together with MSD host)
                 #define SUPPORT_USB_SIMPLEX_HOST_ENDPOINTS               // allow operation with devices using bulk IN/OUT on the same endpoint (this should normally always be set)
-                #define USB_CDC_COUNT  2                                 // support up to 2 virtual com host interfaces
+                #define USB_CDC_COUNT  1                                 // support up to this many virtual com host interfaces
         #endif
         #if defined USB_HS_INTERFACE || defined USB_HOST_SUPPORT || defined USE_USB_AUDIO || defined USB_CDC_RNDIS // since RNDIS makes intensive use of enpoint 0 for status and control it makes snese to use the largest size possible (assuming at least full-speed operation)
             #define ENDPOINT_0_SIZE         64                           // high speed devices should use 64 bytes (and hosts use full size endpoint size)
@@ -1112,7 +1112,7 @@
 
 // I2C
 //
-#define I2C_INTERFACE
+//#define I2C_INTERFACE
 #if defined I2C_INTERFACE
     #define NUMBER_I2C       I2C_AVAILABLE                               // I2C interfaces available
   //#define I2C_SLAVE_MODE                                               // support slave mode

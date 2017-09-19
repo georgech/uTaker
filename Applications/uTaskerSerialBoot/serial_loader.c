@@ -227,7 +227,7 @@ typedef struct
 /* =================================================================== */
 
 #endif
-#if defined SREC_IHEX_REQUIRED
+#if defined SREC_IHEX_REQUIRED || (defined DEVELOPERS_LOADER && defined SERIAL_INTERFACE)
     #if defined FLASH_ROW_SIZE && FLASH_ROW_SIZE > 0
         static unsigned char ucCodeStart[FLASH_ROW_SIZE] = {0};
     #else

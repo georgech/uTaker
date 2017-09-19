@@ -1,5 +1,5 @@
 [DebugChecksum]
-Checksum=-1731574442
+Checksum=140805050
 [DisAssemblyWindow]
 NumStates=_ 1
 State 1=_ 1
@@ -215,6 +215,24 @@ SumSortOrder=0
 [SfrWindow]
 Show=1 1
 Sort=4 0
+[Breakpoints]
+Bp0=_ "STD_CODE" "0x00001754" 0 0 0 0 "" 0 "" 0
+Bp1=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12\Applications\uTaskerSerialBoot\serial_loader.c}.1891.5" 0 0 0 0 "" 0 "" 0
+Bp2=_ "STD_CODE" "0x00015CEE" 0 0 0 0 "" 0 "" 0
+Bp3=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12\Applications\uTaskerSerialBoot\usb_device_loader.c}.2709.40" 0 0 0 0 "" 0 "" 0
+Bp4=_ "STD_CODE" "0x00001388" 0 0 0 0 "" 0 "" 0
+Bp5=_ "STD_CODE" "0x00001C88" 1 0 0 0 "" 0 "" 0
+Count=6
+[Trace1]
+Enabled=0
+ShowSource=1
+[Log file]
+LoggingEnabled=_ 0
+LogFile=_ ""
+Category=_ 0
+[TermIOLog]
+LoggingEnabled=_ 0
+LogFile=_ ""
 [DriverProfiling]
 Enabled=0
 Mode=1
@@ -225,33 +243,15 @@ Exclusions=
 Enabled=0
 [CallStackStripe]
 ShowTiming=1
-[Trace1]
-Enabled=0
-ShowSource=1
+[Disassemble mode]
+mode=1
 [Breakpoints2]
 Bp0=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\..\..\Hardware\Kinetis\kinetis_USB_HS_Device.h}.362.17" 0 0 1 "" 0 "" 0
 Bp1=_ 0 "EMUL_CODE" "0x0000E612" 0 0 1 "" 0 "" 0
-Bp2=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\..\..\Hardware\Kinetis\kinetis_FLASH.h}.105.5" 0 0 1 "" 0 "" 0
+Bp2=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\..\..\Hardware\Kinetis\kinetis_FLASH.h}.106.5" 0 0 1 "" 0 "" 0
 Bp3=_ 0 "EMUL_CODE" "0x00000546" 0 0 1 "" 0 "" 0
 Bp4=_ 0 "EMUL_CODE" "0x00000A58" 0 0 1 "" 0 "" 0
 Bp5=_ 0 "EMUL_CODE" "0x0001C4A2" 0 0 1 "" 0 "" 0
-Count=6
-[Log file]
-LoggingEnabled=_ 0
-LogFile=_ ""
-Category=_ 0
-[TermIOLog]
-LoggingEnabled=_ 0
-LogFile=_ ""
-[Disassemble mode]
-mode=1
-[Breakpoints]
-Bp0=_ "STD_CODE" "0x00001754" 0 0 0 0 "" 0 "" 0
-Bp1=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12\Applications\uTaskerSerialBoot\serial_loader.c}.1891.5" 0 0 0 0 "" 0 "" 0
-Bp2=_ "STD_CODE" "0x00015CEE" 0 0 0 0 "" 0 "" 0
-Bp3=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12\Applications\uTaskerSerialBoot\usb_device_loader.c}.2709.40" 0 0 0 0 "" 0 "" 0
-Bp4=_ "STD_CODE" "0x00001388" 0 0 0 0 "" 0 "" 0
-Bp5=_ "STD_CODE" "0x00001C88" 1 0 0 0 "" 0 "" 0
 Count=6
 [Aliases]
 Count=0

@@ -616,6 +616,17 @@ static void fnConfigI2C_pins(QUEUE_HANDLE Channel, int iMaster)          // {2}
         }
         _CONFIG_PERIPHERAL(B, 1,  (PB_1_I2C0_SDA | PORT_ODE | PORT_PS_UP_ENABLE)); // I2C0_SDA on PB1 (alt. function 2)
         _CONFIG_PERIPHERAL(B, 0,  (PB_0_I2C0_SCL | PORT_ODE | PORT_PS_UP_ENABLE)); // I2C0_SCL on PB0 (alt. function 2)
+    #elif defined KINETIS_KL82 && defined I2C0_ON_D_LOW
+        if (iMaster != 0) {
+            while (_READ_PORT_MASK(D, PORTD_BIT3) == 0) {                // if the SDA line is low we clock the SCL line to free it
+                _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_LOW(D, PORTD_BIT2, 0, (PORT_ODE | PORT_PS_UP_ENABLE)); // set output '0'
+                fnDelayLoop(10);
+                _CONFIG_PORT_INPUT_FAST_LOW(D, PORTD_BIT2, (PORT_ODE | PORT_PS_UP_ENABLE));
+                fnDelayLoop(10);
+            }
+        }
+        _CONFIG_PERIPHERAL(D, 3,  (PD_3_I2C0_SDA | PORT_ODE | PORT_PS_UP_ENABLE)); // I2C0_SDA on PD3 (alt. function 7)
+        _CONFIG_PERIPHERAL(D, 2,  (PD_2_I2C0_SCL | PORT_ODE | PORT_PS_UP_ENABLE)); // I2C0_SCL on PD2 (alt. function 7)
     #elif defined I2C0_ON_D
         if (iMaster != 0) {
             while (_READ_PORT_MASK(D, PORTD_BIT9) == 0) {                // if the SDA line is low we clock the SCL line to free it
@@ -872,6 +883,8 @@ extern void fnConfigI2C(I2CTABLE *pars)
         _CONFIG_PORT_INPUT_FAST_LOW(B, (PORTB_BIT3 | PORTB_BIT4), (PORT_ODE | PORT_PS_UP_ENABLE));
     #elif defined I2C0_B_LOW
         _CONFIG_PORT_INPUT_FAST_LOW(B, (PORTB_BIT1 | PORTB_BIT0), (PORT_ODE | PORT_PS_UP_ENABLE));
+    #elif defined KINETIS_KL82 && defined I2C0_ON_D_LOW
+        _CONFIG_PORT_INPUT_FAST_LOW(D, (PORTD_BIT3 | PORTD_BIT2), (PORT_ODE | PORT_PS_UP_ENABLE));
     #elif defined I2C0_ON_D
         _CONFIG_PORT_INPUT_FAST_LOW(D, (PORTD_BIT9 | PORTD_BIT8), (PORT_ODE | PORT_PS_UP_ENABLE));
     #elif (defined KINETIS_K64 || defined KINETIS_KL17 || defined KINETIS_K24 || defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL43 || defined KINETIS_KL46) && defined I2C0_ON_E

@@ -4187,7 +4187,7 @@ extern void fnSimPers(void)
             }
     #if defined ERRATA_ID_3402
             if ((iPort == XTAL0_PORT) && (iPin == XTAL0_PIN)) {
-                if (OSC0_CR & OSC_CR_ERCLKEN) {                          // if OSC is enabled the XTAL pin is overridden by the oscillator functions
+                if ((OSC0_CR & OSC_CR_ERCLKEN) != 0) {                   // if OSC is enabled the XTAL pin is overridden by the oscillator functions
                     ucPortFunctions[iPort][iPin] = 0;
                     ulPeripherals[iPort] |= ulBit;
                 }
@@ -7559,7 +7559,7 @@ extern int fnSimTimers(void)
                 ulCounter = 1;
     #endif
                 break;
-    #if defined KINETIS_KL
+    #if defined KINETIS_KL && !defined KINETIS_WITH_RTC_CRYSTAL
             case SIM_SOPT1_OSC32KSEL_RTC_CLKIN:                          // 32kHz clock input assumed
     #else
             case SIM_SOPT1_OSC32KSEL_32k:
@@ -7582,14 +7582,14 @@ extern int fnSimTimers(void)
                     RTC_TSR = (RTC_TSR + 1);
                     RTC_SR |= RTC_SR_TAF;
                     if ((RTC_IER & RTC_IER_TAIE) != 0) {                 // interrupt on alarm enabled
-    #if !defined irq_LPUART2_ID
+    #if !defined irq_LPUART2_ID && defined INTMUX0_AVAILABLE
                         if (fnGenInt(irq_INTMUX0_0_ID + INTMUX_RTC_ALARM) != 0) // {46}
     #else
                         if (fnGenInt(irq_RTC_ALARM_ID) != 0)            // if RTC interrupt is not disabled
     #endif
                         {
                             VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-    #if !defined irq_LPUART2_ID
+    #if !defined irq_LPUART2_ID && defined INTMUX0_AVAILABLE
                             fnCallINTMUX(INTMUX_RTC_ALARM, INTMUX0_PERIPHERAL_RTC_ALARM, (unsigned char *)&ptrVect->processor_interrupts.irq_RTC_Alarm);
     #else
                             ptrVect->processor_interrupts.irq_RTC_ALARM(); // call the interrupt handler

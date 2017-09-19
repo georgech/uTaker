@@ -1391,8 +1391,8 @@
     #undef LAN_REPORT_ACTIVITY
 #endif
 
-#if !defined KINETIS_KE
-    #define SUPPORT_LPTMR                                                // {28} support low power timer
+#if LPTMR_AVAILABLE > 0                                                  // if the device has a LPTMR (Kenetis E don't have LPTMR)
+  //#define SUPPORT_LPTMR                                                // {28} support low power timer
     #if defined SUPPORT_LPTMR
       //#define TICK_USES_LPTMR                                          // use low power timer for TICK so that it continues to operate in stop based low power modes
         //Select the clock used by the low power timer - if the timer if to continue running in low power modes the clock chosen should continue to run in that mode too
@@ -1435,7 +1435,7 @@
     #define ALARM_TASK   TASK_APPLICATION                                // alarm is handled by the application task (handled by time keeper if not defined)
     #if defined TWR_KL46Z48M || defined TWR_KL43Z48M
         #define RTC_USES_RTC_CLKIN                                       // TWR-KL46Z48M and TWR-KL43Z48M have a 32kHz oscillator supplying an accurate clock and the OpenSDA interface supplies a clock on the FRDM-KL46Z as long as the debug interface is powered (not possible with P&E debugger version)
-    #elif defined KINETIS_KL && !defined FRDM_KL03Z && !defined FRDM_KL27Z && !defined FRDM_KL28Z // FRDM-KL03Z, FRDM-KL27Z and FRDM-KL28Z have 32kHz crystals which are used as preference
+    #elif defined KINETIS_KL && !defined FRDM_KL03Z && !defined FRDM_KL27Z && !defined FRDM_KL28Z && !defined FRDM_KL82Z // FRDM-KL03Z, FRDM-KL27Z, FRDM-KL28Z and FRDM-KL82Z have 32kHz crystals which are used as preference
         #define RTC_USES_LPO_1kHz                                        // use the 1kHz LPO clock as RTC source (not high accuracy)
       //#define RTC_USES_RTC_CLKIN                                       // 32.768kHz input on RTC_CLKIN
     #endif
@@ -2100,10 +2100,14 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #else
           //#define uFILE_START      (FLASH_START_ADDRESS + (144 * 1024))// FLASH location at 140k start {5}
             #define uFILE_START      (FLASH_START_ADDRESS + (200 * 1024))// FLASH location at 140k start {5}
-            #if defined KINETIS_K_FPU
+            #if FLASH_GRANULARITY == (4 * 1024)
                 #define FILE_GRANULARITY (1 * FLASH_GRANULARITY)         // each file a multiple of 4k
-            #else
+            #elif FLASH_GRANULARITY == (2 * 1024)
                 #define FILE_GRANULARITY (2 * FLASH_GRANULARITY)         // each file a multiple of 4k
+            #elif FLASH_GRANULARITY == (512)
+                #define FILE_GRANULARITY (8 * FLASH_GRANULARITY)         // each file a multiple of 4k
+            #else
+                #define FILE_GRANULARITY (4 * FLASH_GRANULARITY)         // each file a multiple of 4k
             #endif
             #if SIZE_OF_FLASH >= (512 * 1025) 
                 #define FILE_SYSTEM_SIZE (372 * 1024)                    // 372k reserved for file system {5}
@@ -2208,7 +2212,6 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 // Serial interfaces
 //
 #if defined SERIAL_INTERFACE
-    #define WELCOME_MESSAGE_UART   "\r\n\nHello, world... KINETIS\r\n"
     #define NUMBER_EXTERNAL_SERIAL 0                                     // when set to 2 or 4 then one or two SC16IS7XX can be connected for further UARTs via SPI
     #if NUMBER_EXTERNAL_SERIAL > 0
         #define EXT_UART_SC16IS7XX
@@ -2719,6 +2722,8 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
       //#define I2C0_B_LOW
     #elif defined FRDM_KL27Z
         #define I2C1_ON_D
+    #elif defined FRDM_KL82Z
+        #define I2C0_ON_D_LOW
     #else
       //#define I2C0_B_LOW                                               // alternative I2C pin location
         #define I2C0_ON_D

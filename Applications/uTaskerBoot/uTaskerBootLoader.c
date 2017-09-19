@@ -165,7 +165,7 @@
         #else
             #define UTASKER_APP_START      0x1000                        // internal FLASH solution requires one FLASH block for the boot code (slightly larger than 2k)
             #define UPLOAD_FILE_LOCATION   (unsigned char *)uFILE_START  // location in internal FLASH
-            #define UTASK_APP_LENGTH       FILE_SYSTEM_SIZE              // 128k
+            #define UTASK_APP_LENGTH       FILE_SYSTEM_SIZE
         #endif
 
         static const unsigned char ucKey[] = {0xa7, 0x48, 0xb6, 0x53, 0x11, 0x24};
@@ -517,9 +517,7 @@ extern MAIN_FUNCTION_TYPE uTaskerBoot(void)
     main_call();                                                         // call code
     #endif
 #elif defined _HW_AVR32 || defined _RX6XX || defined _KINETIS || defined _LM3SXXXX || defined _LPC17XX || (defined _M5223X && (defined _GNU || defined _COMPILE_IAR)) // {14}{17}{19}{20}{21}
-    #if !defined _WINDOWS
     start_application(UTASKER_CODE_START);                               // jump to the application
-    #endif
 #endif
 #if defined _COMPILE_KEIL || ((defined _LPC23XX || defined _LPC17XX || defined _HW_AVR32 || defined _HW_SAM7X) && defined _GNU)
     return 0;
@@ -858,14 +856,14 @@ static int fnCheckNewCode(UPLOAD_HEADER *file_header)
         }
     }
 #else
-    if (!file_header->ulCodeLength || (file_header->ulCodeLength > UTASK_APP_LENGTH)) { // ignore zero contents or if too large
+    if ((file_header->ulCodeLength == 0) || (file_header->ulCodeLength > UTASK_APP_LENGTH)) { // ignore zero contents or if too large
         return 0; 
     }
 #endif
     file_length = (MAX_FILE_LENGTH)file_header->ulCodeLength;            // finally check the check sum of the code
     usBlockSize = BLOCK_SIZE;                                            // check in blocks of this size
     usCRC = 0;
-    while (file_length) {
+    while (file_length != 0) {
         if (file_length < BLOCK_SIZE) {
             usBlockSize = (unsigned short)file_length;
         }
