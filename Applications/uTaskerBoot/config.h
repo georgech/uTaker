@@ -344,6 +344,12 @@
             #define FLASH_CLOCK_DIVIDE   4                               // 1 to 16
         #endif
 
+        // Include the hardware header here
+        // - beware that the header delivers rules for subsequent parts of this header file but also accepts some rules from previous parts,
+        // therefore its position should only be moved after careful consideration of its consequences
+        //
+        #include "types.h"                                                       // project specific type settings and the processor header at this location
+
         // FLASH configuration settings
         //
         #define BACKDOOR_KEY_0     0
@@ -829,8 +835,6 @@
 
 /**********************************************************************************************************/
 
-
-#include "types.h"                                                       // project specific type settings
 #include "../../uTasker\uTasker.h"
 #include "../../uTasker\driver.h"
 #include "../../stack\tcpip.h"
