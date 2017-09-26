@@ -1048,8 +1048,16 @@ extern void fnConfigUSB(QUEUE_HANDLE Channel, USBTABLE *pars)
         SIM_SOPT2 |= (SIM_SOPT2_USBSRC | SIM_SOPT2_PLLFLLSEL | SIM_SOPT2_USBFSRC_MCGPLLCLK); // set the source to MCGPLLCLK
         #endif
     #elif defined KINETIS_HAS_IRC48M && defined USB_CRYSTAL_LESS         // {104}
-        #define USB_CLOCK_SOURCE   48000000
+        #if defined KINETIS_WITH_PCC
+            #define USB_CLOCK_SOURCE  (FIRC_CLK)
+            #if USB_CLOCK_SOURCE != 48000000
+                #error "USB clock must be 48MHz in order to use crystal-less mode"
+            #endif
+        PCC_USB0FS = PCC_PCS_SCGFIRCLK;                                  // set the source to fast IRC
+        #else
+            #define USB_CLOCK_SOURCE   48000000
         SIM_SOPT2 |= (SIM_SOPT2_USBSRC | SIM_SOPT2_PLLFLLSEL_IRC48M);    // set the source to IRC48M
+        #endif
     #else
         #define USB_CLOCK_SOURCE   MCGPLLCLK                             // fixed clock source for USB
         SIM_SOPT2 |= (SIM_SOPT2_USBSRC | SIM_SOPT2_PLLFLLSEL);           // set the source to MCGPLLCLK
@@ -1101,7 +1109,11 @@ extern void fnConfigUSB(QUEUE_HANDLE Channel, USBTABLE *pars)
         iIRC48M_workaround = 1;                                          // mark that we need to temporarily switch system clock source during the USB reset command
     }
     #endif
+    #if defined KINETIS_WITH_PCC
+    PCC_USB0FS |= PCC_CGC;
+    #else
     POWER_UP_ATOMIC(4, SIM_SCGC4_USBOTG);                                // power up the USB controller module
+    #endif
 
     if (ucEndpoints > NUMBER_OF_USB_ENDPOINTS) {                         // limit endpoint count
         ucEndpoints = NUMBER_OF_USB_ENDPOINTS;                           // limit to maximum available in device

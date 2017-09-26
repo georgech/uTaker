@@ -48,7 +48,8 @@
     14.02.2017 Add LTC                                                   {33}
     11.08.2017 Add PCC support                                           {34}
     11.08.2017 Add WDOG32                                                {35}
-    12.09.2017 Added INTMUX support                                      {36}
+    12.09.2017 Add INTMUX support                                        {36}
+    26.09.2017 Add LPIT support                                          {37}
 
 */  
 
@@ -1559,18 +1560,45 @@ unsigned long PDB_PO1DLY;
 unsigned long PDB_PO2DLY;
 } KINETIS_PDB;
 
-
+#if defined LPITS_AVAILABLE                                              // {37}
+typedef struct stKINETIS_LPIT
+{
+unsigned long LPIT_VERID;
+unsigned long LPIT_PARAM;
+unsigned long LPIT_MCR;
+unsigned long LPIT_MSR;
+unsigned long LPIT_MIER;
+unsigned long LPIT_SETTEN;
+unsigned long LPIT_CLRTEN;
+unsigned long ulRes0;
+unsigned long LPIT_TVAL0;
+unsigned long LPIT_CVAL0;
+unsigned long LPIT_TCTRL0;
+unsigned long ulRes1;
+unsigned long LPIT_TVAL1;
+unsigned long LPIT_CVAL1;
+unsigned long LPIT_TCTRL1;
+unsigned long ulRes2;
+unsigned long LPIT_TVAL2;
+unsigned long LPIT_CVAL2;
+unsigned long LPIT_TCTRL2;
+unsigned long ulRes3;
+unsigned long LPIT_TVAL3;
+unsigned long LPIT_CVAL3;
+unsigned long LPIT_TCTRL3;
+} KINETIS_LPIT;
+#else
 typedef struct stKINETIS_PIT
 {
 unsigned long PIT_MCR;
-#if defined KINETIS_KL
+    #if defined KINETIS_KL
     unsigned long ulRes0[55];
     unsigned long PIT_LTMR64H;
     unsigned long PIT_LTMR64L;
     unsigned long ulRes1[6];
-#else
+    #else
     unsigned long ulRes0[63];
-#endif
+    #endif
 unsigned long PIT_LDVAL0;
 unsigned long PIT_CVAL0;
 unsigned long PIT_TCTRL0;
@@ -1579,7 +1607,7 @@ unsigned long PIT_LDVAL1;
 unsigned long PIT_CVAL1;
 unsigned long PIT_TCTRL1;
 unsigned long PIT_TFLG1;
-#if !defined KINETIS_KL                                                  // {15}
+    #if PITS_AVAILABLE > 2                                               // {15}
     unsigned long PIT_LDVAL2;
     unsigned long PIT_CVAL2;
     unsigned long PIT_TCTRL2;
@@ -1588,8 +1616,9 @@ unsigned long PIT_TFLG1;
     unsigned long PIT_CVAL3;
     unsigned long PIT_TCTRL3;
     unsigned long PIT_TFLG3;
-#endif
+    #endif
 } KINETIS_PIT;
+#endif
 
 
 typedef struct stKINETIS_FTM
@@ -3207,7 +3236,11 @@ typedef struct stKINETIS_PERIPH
     KINETIS_PDB        PDB;                                              // {12}
 #endif
 #if !defined KINETIS_WITHOUT_PIT
+    #if defined LPITS_AVAILABLE                                          // {37}
+    KINETIS_LPIT       LPIT;
+    #else
     KINETIS_PIT        PIT;
+    #endif
 #endif
     KINETIS_FTM        FTM[FLEX_TIMERS_AVAILABLE];
     KINETIS_ADC        ADC0;

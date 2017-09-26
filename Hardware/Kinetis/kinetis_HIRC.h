@@ -13,16 +13,39 @@
     ---------------------------------------------------------------------
     Copyright (C) M.J.Butcher Consulting 2004..2017
     *********************************************************************
+    26.07.2017 Add SCG support for fast IRC clocking                     {1}
 
 */
 
     // 48MHz HIRC
     //
     #if !defined KINETIS_K64 && defined SUPPORT_RTC && !defined RTC_USES_RTC_CLKIN && !defined RTC_USES_LPO_1kHz
+        #if defined KINETIS_WITH_SCG                                     // {1}
+    // After a reset in RUN mode the processor will be in SIRC mode (8MHz internal RC)
+    // - we now move to FIRC
+    //
+    SCG_RCCR = (SCG_RCCR_SCS_FIRC_CLK | ((SYSTEM_CLOCK_DIVIDE - 1) << SCG_RCCR_DIVCORE_SHIFT) | ((BUS_CLOCK_DIVIDE - 1) << SCG_RCCR_DIVSLOW_SHIFT)); // prepare the run mode clock source
+            #if defined RUN_FROM_HIRC_60MHz
+    SCG_FIRCCFG = SCG_FIRCCFG_RANGE_60MHz;                               // 60MHz
+            #elif defined RUN_FROM_HIRC_56MHz
+    SCG_FIRCCFG = SCG_FIRCCFG_RANGE_56MHz;                               // 56MHz
+            #elif defined RUN_FROM_HIRC_52MHz
+    SCG_FIRCCFG = SCG_FIRCCFG_RANGE_52MHz;                               // 52MHz
+            #else
+    SCG_FIRCCFG = SCG_FIRCCFG_RANGE_48MHz;                               // 48MHz
+            #endif
+    SCG_FIRCCSR = SCG_FIRCCSR_FIRCEN;                                    // enable the fast IRC
+    while ((SCG_FIRCCSR & (SCG_FIRCCSR_FIRCSEL | SCG_FIRCCSR_FIRCVLD)) != (SCG_FIRCCSR_FIRCSEL | SCG_FIRCCSR_FIRCVLD)) { // wait until the source has been selected and is valid
+            #if defined _WINDOWS
+        SCG_FIRCCSR |= (SCG_FIRCCSR_FIRCSEL | SCG_FIRCCSR_FIRCVLD);
+            #endif
+    }
+        #else
     MCG_C2 = MCG_C2_EREFS;                                               // request oscillator
     OSC0_CR |= (OSC_CR_ERCLKEN | OSC_CR_EREFSTEN);                       // enable the external reference clock and keep it enabled in stop mode
-    #endif
   //MCG_MC = MCG_MC_HIRCEN;                                              // this is optional and would allow the HIRC to run even when the processor is not working in HIRC mode
+        #endif
+    #endif
     #if defined MCG_C1_CLKS_HIRC                                         // processor with MCG-Lite module
     SIM_CLKDIV1 = (((SYSTEM_CLOCK_DIVIDE - 1) << 28) | ((BUS_CLOCK_DIVIDE - 1) << 16)); // prepare bus clock divides
     MCG_C1 = MCG_C1_CLKS_HIRC;                                           // select HIRC clock source

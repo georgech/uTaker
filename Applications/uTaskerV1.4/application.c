@@ -312,7 +312,7 @@ const PARS cParameters = {
         (/*ACTIVE_DHCP + */ACTIVE_LOGIN + ACTIVE_FTP_SERVER /*+ ACTIVE_FTP_LOGIN*/ + ACTIVE_SNTP + ACTIVE_TIME_SERVER + ACTIVE_WEB_SERVER + ACTIVE_TELNET_SERVER + SMTP_LOGIN), // active servers (ACTIVE_DHCP and ACTIVE_FTP_LOGIN disabled)
 #endif
     },
-#if defined FRDM_KL03Z                                                   // this board has a capacitor connected to the LPUART0_RX pin so can not use fast speeds
+#if defined FRDM_KL03Z                                                   // this board has a capacitor connected to the LPUART0_RX pin so cannot use fast speeds
     SERIAL_BAUD_115200,
   //SERIAL_BAUD_19200,                                                   // baud rate of serial interface
 #else

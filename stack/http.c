@@ -31,7 +31,7 @@
     07.01.2008 Simulator flag iFetchingInternalMemory reset on completion (no longer in driver) {15}
     08.01.2008 Rework dynamic insertion parameter solution                             {16}
     09.01.2008 Allow frame length increase when inserting strings                      {17}
-    11.01.2008 Improvement when generated frames can not grow more                     {18}
+    11.01.2008 Improvement when generated frames cannot grow more                      {18}
     12.01.2008 Additional management information to aid dynamic generation             {19}
     12.01.2008 Optionally pass HTTP session information to fnInsertValue()             {20}
     12.01.2008 Apply INSERT_SHORT_STRINGS support always (define removed)
@@ -1834,7 +1834,7 @@ static unsigned short fnWebParGen(unsigned char ptrBuffer[], HTTP *http_session,
     while (1) {                           
         unsigned short usUnacked = (http_session->usUnacked + usFrameLength); // backup the original total content length
         unsigned short usOriginalLength = usFrameLength;                 // backup the original frame length
-        unsigned short usThisLength;                                     // {18} allow loop quit when buffer can not grow any more 
+        unsigned short usThisLength;                                     // {18} allow loop quit when buffer cannot grow any more 
         usFrameLength -= usContentShrink;
         http_session->usUnacked = usContentShrink;                       // for compatibility with fnWebParGenerator (the length to be processed) - it will be changed accoring to inserts made
         usFrameLength += (usThisLength = fnWebParGenerator(&ptrBuffer[usFrameLength], http_session, &ptrBuffer[usTx_window])); // parse the raw data contents {13}
@@ -1848,7 +1848,7 @@ static unsigned short fnWebParGen(unsigned char ptrBuffer[], HTTP *http_session,
     #endif
         if ((usContentShrink == 0) || (usThisLength == 0) || ((usFrameLength + usContentShrink) >= usTx_window)
     #if defined HTTP_DYNAMIC_CONTENT
-            || (http_session->ucDynamicFlags & QUIT_FRAME_DURING_GENERATION) // when a frame buffer can not accept more dynamic chunks quit immediately
+            || (http_session->ucDynamicFlags & QUIT_FRAME_DURING_GENERATION) // when a frame buffer cannot accept more dynamic chunks quit immediately
     #endif
             ) {                                                          // frame buffer completely full (or shrunk content will have no room)
     #if defined HTTP_DYNAMIC_CONTENT

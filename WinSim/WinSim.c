@@ -269,7 +269,7 @@ extern int main(int argc, char *argv[])
     EnterCriticalSection(ptrcs);                                         // protect from task switching
     if (iOpSysActive != 0) {                                             // {35}
         LeaveCriticalSection(ptrcs);
-        return WAIT_WHILE_BUSY;                                          // event can not be handled at the moment so it should wait
+        return WAIT_WHILE_BUSY;                                          // event cannot be handled at the moment so it should wait
     }
     iOpSysActive = 1;                                                    // {36} flag that the simulator is busy
     LeaveCriticalSection(ptrcs);

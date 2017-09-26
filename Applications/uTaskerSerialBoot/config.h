@@ -15,6 +15,8 @@
     *********************************************************************
     02.02.2017 Adapt for us tick resolution (_TICK_RESOLUTION)
 
+    See this video for details of building the serial loader with KDS: https://youtu.be/bilc_4Cr7eo
+    See this video for details of building and using the serial loader's Ethernet loading method: https://youtu.be/g71PGlQy6eI
 
 */
 

@@ -725,7 +725,7 @@ static void fnCreateBadBlocktable(void)
 
 // This routine checks the 4 values that have been passed to it and returns the value that is most likely the correct one
 // It expects that all 4 are the same, but will accept one or two erros and still return the one that occurs twice (redundancy)
-// Two different values in the four input values is an error since the correct one can not be determined
+// Two different values in the four input values is an error since the correct one cannot be determined
 //
 static unsigned short fnGetBestBlock(unsigned short usBlock[4], int *iSingleErrors, int *DoubleErrors)
 {

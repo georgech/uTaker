@@ -172,7 +172,7 @@ static void fnI2C_Handler(KINETIS_I2C_CONTROL *ptrI2C, int iChannel)     // gene
             //
             if (ptrI2C->I2C_F != 0) {                                    // if master mode is in operation
                 ptrI2C->I2C_FLT = 0;                                     // disable further start/stop interrupts
-                fnSendSlaveAddress(ptrTxControl, iChannel, ptrI2C);      // a repeated start has just been sent so we now continue with the slave address (this can not be prepared before the repeated start has been sent)
+                fnSendSlaveAddress(ptrTxControl, iChannel, ptrI2C);      // a repeated start has just been sent so we now continue with the slave address (this cannot be prepared before the repeated start has been sent)
             }
             return;
         }
@@ -899,7 +899,7 @@ extern void fnConfigI2C(I2CTABLE *pars)
     else if (pars->Channel == 1) {                                       // I2C channel 1
         POWER_UP(4, SIM_SCGC4_I2C1);                                     // enable clock to module
         ptrI2C = (KINETIS_I2C_CONTROL *)I2C1_BLOCK;
-        #if !defined irq_I2C1_ID
+        #if !defined irq_I2C1_ID && defined INTMUX0_AVAILABLE
         fnEnterInterrupt((irq_INTMUX0_0_ID + INTMUX_I2C1), INTMUX0_PERIPHERAL_I2C1, _I2C_Interrupt_1); // enter I2C1 interrupt handler based on INTMUX
         #else
         fnEnterInterrupt(irq_I2C1_ID, PRIORITY_I2C1, _I2C_Interrupt_1);  // enter I2C1 interrupt handler

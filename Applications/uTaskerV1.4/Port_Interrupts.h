@@ -510,24 +510,24 @@ static void fnInitIRQ(void)
     interrupt_setup.int_type     = PORT_INTERRUPT;                       // identifier when configuring
         #if !defined TEST_DS1307 && !(defined _M5225X && !defined INTERRUPT_TASK_PHY) // uses this input for RTC or PHY
     interrupt_setup.int_handler  = test_irq_1;                           // handling function
-    interrupt_setup.int_priority = (INTERRUPT_LEVEL_1);                  // interrupt priority level (this can not be modified for IRQ1..IRQ7 so the value is not really relevant)
+    interrupt_setup.int_priority = (INTERRUPT_LEVEL_1);                  // interrupt priority level (this cannot be modified for IRQ1..IRQ7 so the value is not really relevant)
     interrupt_setup.int_port_bit = 1;                                    // the IRQ input connected
     interrupt_setup.int_port_sense = IRQ_BOTH_EDGES;                     // interrupt on this edge
     fnConfigureInterrupt((void *)&interrupt_setup);                      // configure test interrupt
         #endif
-    interrupt_setup.int_priority = (INTERRUPT_LEVEL_4);                  // interrupt priority level (this can not be modified for IRQ1..IRQ7 so the value is not really relevant)
+    interrupt_setup.int_priority = (INTERRUPT_LEVEL_4);                  // interrupt priority level (this cannot be modified for IRQ1..IRQ7 so the value is not really relevant)
     interrupt_setup.int_handler  = test_irq_4;                           // handling function
     interrupt_setup.int_port_bit = 4;                                    // the IRQ input connected
     interrupt_setup.int_port_sense = IRQ_RISING_EDGE;                    // interrupt on this edge
     fnConfigureInterrupt((void *)&interrupt_setup);                      // configure test interrupt
         #if !defined M52259DEMO                                          // this board uses the pin for PHY communication
-    interrupt_setup.int_priority = (INTERRUPT_LEVEL_5);                  // interrupt priority level (this can not be modified for IRQ1..IRQ7 so the value is not really relevant)
+    interrupt_setup.int_priority = (INTERRUPT_LEVEL_5);                  // interrupt priority level (this cannot be modified for IRQ1..IRQ7 so the value is not really relevant)
     interrupt_setup.int_handler  = test_irq_5;                           // handling function
     interrupt_setup.int_port_bit = 5;                                    // the IRQ input connected
     interrupt_setup.int_port_sense = IRQ_RISING_EDGE;                    // interrupt on this edge
     fnConfigureInterrupt((void *)&interrupt_setup);                      // configure test interrupt
         #endif
-    interrupt_setup.int_priority = (INTERRUPT_LEVEL_7);                  // interrupt priority level (this can not be modified for IRQ1..IRQ7 so the value is not really relevant)
+    interrupt_setup.int_priority = (INTERRUPT_LEVEL_7);                  // interrupt priority level (this cannot be modified for IRQ1..IRQ7 so the value is not really relevant)
     interrupt_setup.int_handler  = test_nmi_7;                           // {2} handling function
     interrupt_setup.int_port_bit = 7;                                    // the NMI input connected
     interrupt_setup.int_port_sense = IRQ_FALLING_EDGE;                   // interrupt on this edge

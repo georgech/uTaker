@@ -206,7 +206,7 @@
     #define ERRATA_ID_2756                                               // PMC: static low power modes including STOP, VLPS, LLS, VLLSx are higher than specified
     #define ERRATA_ID_2706                                               // PMC: VLLS3 and VLLS2 recovery time is longer than specified
     #define ERRATA_ID_2542                                               // PMC: Very Low Power Run (VLPR) and Very Low Power Wait (VLPW) power modes are not supported
-    #define ERRATA_ID_2541                                               // PORT: JTAG debug connectivity can not be achieved when using the RMII_RXER/MII_RXER alternate pin function on port pin PTA5 to connect to an Ethernet PHY
+    #define ERRATA_ID_2541                                               // PORT: JTAG debug connectivity cannot be achieved when using the RMII_RXER/MII_RXER alternate pin function on port pin PTA5 to connect to an Ethernet PHY
     #define ERRATA_ID_2578                                               // RTC: do not set RTC Update Mode via the RTC_CR[UM] bit
     #define ERRATA_ID_2573                                               // RTC: RTC interrupt is gated by the RTC_SR[TCE] bit - the interrupt will not assert on VBAT POR, VBAT power down, or when TCE = 0
     #define ERRATA_ID_2575                                               // RTC: Time Alarm Flag is cleared whenever the Seconds Counter increments and the Seconds Counter does not equal the Alarm Register

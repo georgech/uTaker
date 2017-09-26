@@ -487,7 +487,7 @@
   //#define RUN_FROM_LIRC                                                // clock from internal 8MHz RC clock
 
     #define USB_CRYSTAL_LESS                                             // use 48MHz IRC as USB source (according to Freescale AN4905 - only possible in device mode) - rather than external pin
-#elif defined FRDM_KL43Z || defined FRDM_KL27Z || defined CAPUCCINO_KL27 || defined FRDM_KL28Z
+#elif defined FRDM_KL43Z || defined FRDM_KL27Z || defined CAPUCCINO_KL27
     #define OSC_LOW_GAIN_MODE
     #define CRYSTAL_FREQUENCY    32768                                   // 32kHz crystal
   //#define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
@@ -496,6 +496,21 @@
       //#define RUN_FROM_LIRC_2M                                         // clock from internal 2MHz RC clock
     #define SYSTEM_CLOCK_DIVIDE  1                                       // system clock divider value (1..16)
     #define BUS_CLOCK_DIVIDE     2                                       // bus and flash clock divider value (1..8)
+
+    #define USB_CRYSTAL_LESS                                             // use 48MHz HIRC as USB source (according to Freescale AN4905 - only possible in device mode) - rather than external pin
+#elif defined FRDM_KL28Z
+    #define OSC_LOW_GAIN_MODE
+    #define CRYSTAL_FREQUENCY    32768                                   // 32kHz crystal
+  //#define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
+    #define RUN_FROM_HIRC                                                // clock from fast internal RC clock
+      //#define RUN_FROM_HIRC_48MHz                                      // fast IRC trimmed to 48MHz
+      //#define RUN_FROM_HIRC_52MHz                                      // fast IRC trimmed to 52MHz
+      //#define RUN_FROM_HIRC_56MHz                                      // fast IRC trimmed to 56MHz
+      //#define RUN_FROM_HIRC_60MHz                                      // fast IRC trimmed to 60MHz
+  //#define RUN_FROM_LIRC                                                // clock from internal 8MHz RC clock
+      //#define RUN_FROM_LIRC_2M                                         // clock from internal 2MHz RC clock
+    #define SYSTEM_CLOCK_DIVIDE  1                                       // system clock divider value (1..16)
+    #define BUS_CLOCK_DIVIDE     2                                       // bus and flash clock divider value (1..16)
 
     #define USB_CRYSTAL_LESS                                             // use 48MHz HIRC as USB source (according to Freescale AN4905 - only possible in device mode) - rather than external pin
 #elif defined TWR_K20D50M || defined TWR_K21D50M || defined FRDM_K20D50M || defined tinyK20 || defined FRDM_KL46Z || defined TWR_KL46Z48M || defined FRDM_KL25Z || defined FRDM_KL26Z || defined TWR_KL25Z48M // {2}{22}{23}{24}
@@ -1488,6 +1503,9 @@
     #if PITS_AVAILABLE > 2                                               // PIT3 is used to monitor task durations
         #define INITIALISE_MONITOR_TIMER()        POWER_UP(6, SIM_SCGC6_PIT); PIT_MCR = 0; LOAD_PIT(3, 0xffffffff); PIT_TCTRL3 = PIT_TCTRL_TEN
         #define EXECUTION_DURATION()              (0xffffffff - PIT_CVAL3); LOAD_PIT(3, 0xffffffff); PIT_TCTRL3 = PIT_TCTRL_TEN // read the elapsed count value and reset the counter back to 0xffffffff
+    #elif defined LPITS_AVAILABLE && (LPIT_CHANNELS > 2)
+        #define INITIALISE_MONITOR_TIMER()        _EXCEPTION("To do")
+        #define EXECUTION_DURATION()              _EXCEPTION("To do")
     #else                                                                // PIT0 is used to monitor task durations
         #define INITIALISE_MONITOR_TIMER()        POWER_UP(6, SIM_SCGC6_PIT); PIT_MCR = 0; LOAD_PIT(0, 0xffffffff); PIT_TCTRL0 = PIT_TCTRL_TEN
         #define EXECUTION_DURATION()              (0xffffffff - PIT_CVAL0); LOAD_PIT(0, 0xffffffff); PIT_TCTRL0 = PIT_TCTRL_TEN // read the elapsed count value and reset the counter back to 0xffffffff
@@ -2259,10 +2277,12 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define DEMO_UART        3                                       // use UART 3
         #define RFC2217_UART     0
     #endif
-    #if defined FRDM_KL03Z || defined FRDM_KL43Z || defined FRDM_KL27Z || defined FRDM_KL28Z || defined FRDM_KL82Z || defined CAPUCCINO_KL27 || defined TWR_KL43Z48M || defined FRDM_K22F || defined TWR_KV31F120M || defined TWR_K80F150M || defined FRDM_K82F || defined FRDM_K66F
+    #if defined FRDM_KL03Z || defined FRDM_KL43Z || defined FRDM_KL27Z || defined FRDM_KL82Z || defined CAPUCCINO_KL27 || defined TWR_KL43Z48M || defined FRDM_K22F || defined TWR_KV31F120M || defined TWR_K80F150M || defined FRDM_K82F || defined FRDM_K66F
         #define LPUART_IRC48M                                            // if the 48MHz clock is available clock the LPUART from it
       //#define LPUART_OSCERCLK                                          // clock the LPUART from the external clock
       //#define LPUART_MCGIRCLK                                          // clock the LPUART from MCGIRCLK (IRC8M/FCRDIV/LIRC_DIV2) - default if others are not defined
+    #elif defined FRDM_KL28Z
+        #define LPUART_FIRC                                              // clock LPUARTs from the fast internal RC oscillator
     #endif
     #if defined RUN_FROM_LIRC
         #define UART0_ClOCKED_FROM_MCGIRCLK
@@ -2301,7 +2321,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define TX_BUFFER_SIZE   (256)                                   // the size of RS232 input and output buffers
         #define RX_BUFFER_SIZE   (32)
     #else
-        #define TX_BUFFER_SIZE   (QUEUE_TRANSFER)(1.5 * 1024)            // the size of RS232 input and output buffers
+        #define TX_BUFFER_SIZE   (QUEUE_TRANSFER)(512 * 1024)            // the size of RS232 input and output buffers
         #define RX_BUFFER_SIZE   (128)
     #endif
   //#define TRUE_UART_TX_2_STOPS                                         // allow true 2 stop bit transmission timing on devices without this UART controller support
@@ -2567,8 +2587,11 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 //#define SUPPORT_I2S_SAI                                                // support I2S/SAI
 
 #if !defined KINETIS_KL02
-  //#define SUPPORT_PITS                                                 // support PITs
-    #define SUPPORT_PIT_DMA_PORT_TOGGLE                                  // PIT driver supports triggering port toggles
+    #define SUPPORT_PITS                                                 // support PITs
+  //#define SUPPORT_PIT_DMA_PORT_TOGGLE                                  // PIT driver supports triggering port toggles
+    #if defined LPITS_AVAILABLE
+        #define CLOCK_LPIT_FROM_FIRC                                     // clock the LPIT from the fast internal RC oscillator
+    #endif
 #endif
 #if defined MODBUS_RTU && !defined SUPPORT_PITS
     #define SUPPORT_PITS                                                 // support PITs
@@ -2950,7 +2973,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define PRIORITY_RTC               3
     #define PRIORITY_PORT_IRQ_INT      3
     #define PRIORITY_KEYBOARD_INT      3
-    #if defined KINETIS_KL28 || defined KINETIS_KL82                     // devices with INTMUX to extend the number of interrupts possible
+    #if defined KINETIS_KL28 || defined KINETIS_KL82                     // devices with INTMUX to extend the number of interrupts possible - see this video for an explanation of the INTMUX module operation https://youtu.be/zKa5BoOhBrg
         #define PRIORITY_INTMUX0_0_INT      0                            // priority of extended interrupts using INTMUX0 chnnel 0
         #define PRIORITY_INTMUX0_1_INT      1                            // priority of extended interrupts using INTMUX0 chnnel 1
         #define PRIORITY_INTMUX0_2_INT      2                            // priority of extended interrupts using INTMUX0 chnnel 2
@@ -5718,7 +5741,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 
     #define TOGGLE_WATCHDOG_LED()  _TOGGLE_PORT(B, BLINK_LED)
 
-    #define ACTIVATE_WATCHDOG()    UNLOCK_WDOG(); WDOG_CS2 = (WDOG_CS2_CLK_1kHz | WDOG_CS2_FLG); WDOG_TOVAL = BIG_SHORT_WORD(2000); WDOG_WIN = 0; WDOG_CS1 = (/*WDOG_CS1_UPDATE | */WDOG_CS1_EN); // enable watchdog with 2s timeout
+    #define ACTIVATE_WATCHDOG()    UNLOCK_WDOG(); WDOG_CS2 = (WDOG_CS2_CLK_1kHz | WDOG_CS2_FLG); WDOG_TOVAL = BIG_SHORT_WORD(2000); WDOG_WIN = 0; WDOG_CS1 = (/*WDOG_CS1_UPDATE | */WDOG_CS1_INT | WDOG_CS1_EN); // enable watchdog with 2s timeout
 
     #define SHIFT_DEMO_LED_1       (((3 * 8) + 1) - 0)                   // since the port bits are spread out shift each to the lowest 4 bits
     #define SHIFT_DEMO_LED_2       (((3 * 8) + 0) - 1)
@@ -8346,7 +8369,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #if !defined KINETIS_KL && !defined KINETIS_KE
             #define SD_CONTROLLER_AVAILABLE                              // use SDHC controller rather than SPI
             #if defined KWIKSTIK_V3_V4
-                #error "SD card can not be used on the KWIKSTIK revisions 3 or 4 due to a incorrect wiring - only possible on rev. 5"
+                #error "SD card cannot be used on the KWIKSTIK revisions 3 or 4 due to an incorrect wiring - only possible on rev. 5"
             #endif
         #endif
         #define WRITE_PROTECT_INPUT            PORTE_BIT27

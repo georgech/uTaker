@@ -114,7 +114,8 @@
     20.05.2017 Add timer capture mode                                    {97}
     04.08.2017 Add fnSetBitBandPeripheralValue() and fnClearBitBandPeripheralValue() prototypes, plus atomic bit-banding macros {98}
     31.08.2017 Add BME (bit manipulation engine) for cortex-m0+ devices  {99}
-    12.09.2017 Added INTMUX support and extended KL28 and KL82           {100}
+    12.09.2017 Add INTMUX support and extended KL28 and KL82             {100}
+    26.09.2017 Add LPIT                                                  {101}
 
 */
 
@@ -554,11 +555,20 @@ extern void fnClearBitBandPeripheralValue(unsigned long *bit_band_address);
             #endif
         #endif
     #elif defined KINETIS_WITH_SCG
-        #define MCGOUTCLK              48000000 // temp
-#define DIVCORE 1
-#define DIVSLOW 3
-        #define DIVCORE_CLK            (MCGOUTCLK/DIVCORE)
-        #define DIVSLOW_CLK            (DIVCORE_CLK/DIVSLOW) // flash and bus clock
+        #if defined RUN_FROM_HIRC                                        // high speed IRC
+            #if defined RUN_FROM_HIRC_60MHz
+                #define MCGOUTCLK              60000000
+            #elif defined RUN_FROM_HIRC_56MHz
+                #define MCGOUTCLK              56000000
+            #elif defined RUN_FROM_HIRC_52MHz
+                #define MCGOUTCLK              52000000
+            #else
+                #define MCGOUTCLK              48000000
+            #endif
+        #endif
+        #define FIRC_CLK               (MCGOUTCLK)
+        #define DIVCORE_CLK            (MCGOUTCLK/SYSTEM_CLOCK_DIVIDE)   // core, DMA and USB clock
+        #define DIVSLOW_CLK            (DIVCORE_CLK/BUS_CLOCK_DIVIDE)    // flash and bus clock
     #elif defined KINETIS_WITH_MCG_LITE
         #if defined RUN_FROM_HIRC
             #define MCGOUTCLK          48000000
@@ -1115,8 +1125,8 @@ typedef struct stRESET_VECTOR
 
 // INTMUX
 //
-#if defined KINETIS_KL28 || defined KINETIS_KL82                         // {100$
-    #define INTMUX0_AVAILABLE
+#if defined KINETIS_KL28 || defined KINETIS_KL82                         // {100}
+    #define INTMUX0_AVAILABLE                                            // see this video for an explanation of the INTMUX module operation https://youtu.be/zKa5BoOhBrg
 #endif
 
 // LTC (LP Trusted Cryptography)
@@ -1284,9 +1294,15 @@ typedef struct stRESET_VECTOR
 #if defined KINETIS_KL02 || defined KINETIS_KL03 || defined KINETIS_KV10
     #define KINETIS_WITHOUT_PIT
 #elif defined KINETIS_KL || defined KINETIS_KE
-    #define PITS_AVAILABLE  2
+    #if defined KINETIS_KL28
+        #define LPITS_AVAILABLE     1
+        #define LPIT_CHANNELS       4
+        #define LPIT_INPUT_TRIGGERS 4
+    #else
+        #define PITS_AVAILABLE      2
+    #endif
 #else
-    #define PITS_AVAILABLE  4
+    #define PITS_AVAILABLE          4
 #endif
 
 // RTC configuration
@@ -1569,7 +1585,7 @@ typedef struct stPROCESSOR_IRQ
         void  (*irq_TPM0)(void);                                         // 6
         void  (*irq_TPM1)(void);                                         // 7
         void  (*irq_TPM2)(void);                                         // 8
-        void  (*irq_LPIT)(void);                                         // 9
+        void  (*irq_LPIT0)(void);                                        // 9
         void  (*irq_LPSPI0)(void);                                       // 10
         void  (*irq_LPSPI1)(void);                                       // 11
         void  (*irq_LPUART0)(void);                                      // 12 status and error
@@ -2361,7 +2377,7 @@ typedef struct stVECTOR_TABLE
     #define irq_TPM0_ID                   6                              // 6
     #define irq_TPM1_ID                   7                              // 7
     #define irq_TPM2_ID                   8                              // 8
-    #define irq_LPIT_ID                   9                              // 9
+    #define irq_LPIT0_ID                  9                              // 9
     #define irq_LPSPI0_ID                 10                             // 10
     #define irq_LPSPI1_ID                 11                             // 11
     #define irq_LPUART0_ID                12                             // 12
@@ -3076,7 +3092,11 @@ typedef struct stVECTOR_TABLE
         #define PDB_BLOCK                      ((unsigned char *)(&kinetis.PDB)) // {31} PDB
     #endif
     #if !defined KINETIS_WITHOUT_PIT
-        #define PIT_BLOCK                      ((unsigned char *)(&kinetis.PIT)) // PITs
+        #if defined LPITS_AVAILABLE
+            #define LPIT0_BLOCK                ((unsigned char *)(&kinetis.LPIT)) // {101} LPITs
+        #else
+            #define PIT_BLOCK                  ((unsigned char *)(&kinetis.PIT)) // PITs
+        #endif
     #endif
     #define FTM_BLOCK_0                        ((unsigned char *)(&kinetis.FTM[0])) // FlexTimer 0 (TPM0 in KL/KE)
     #define FTM_BLOCK_1                        ((unsigned char *)(&kinetis.FTM[1])) // FlexTimer 1 (TPM1 in KL/KE)
@@ -3329,7 +3349,11 @@ typedef struct stVECTOR_TABLE
         #define PDB_BLOCK                      0x40036000                // PDB {31}
     #endif
     #if !defined KINETIS_WITHOUT_PIT
-        #define PIT_BLOCK                      0x40037000                // PITs
+        #if defined LPITS_AVAILABLE
+            #define LPIT0_BLOCK                0x40030000                // {101} LPITs
+        #else
+            #define PIT_BLOCK                  0x40037000                // PITs
+        #endif
     #endif
     #define FTM_BLOCK_0                        0x40038000                // FlexTimer 0 (TPM0 in KL/KE)
     #define FTM_BLOCK_1                        0x40039000                // FlexTimer 1 (TPM1 in KL/KE)
@@ -6465,54 +6489,115 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
 
 // PIT Timers
 //
-#define PIT_MCR             *(volatile unsigned long *)(PIT_BLOCK + 0x000) // PIT Module Control Register
-  #define PIT_MCR_FRZ       0x00000001                                   // timers are stopped in debug mode
-  #define PIT_MCR_MDIS      0x00000002                                   // clock for PIT timers is disabled
-#if defined KINETIS_KL                                                   // {47}
-    #define PIT_LTMR64H     *(volatile unsigned long *)(PIT_BLOCK + 0x0e0) // PIT Upper Lifetime Timer Register (read-only)
-    #define PIT_LTMR64L     *(volatile unsigned long *)(PIT_BLOCK + 0x0e4) // PIT Lower Lifetime Timer Register (read-only)
-#endif
-#define PIT_CTL_ADD         (unsigned long *)(PIT_BLOCK + 0x100)
-#define PIT_LDVAL0          *(unsigned long *)(PIT_BLOCK + 0x100)        // PIT 0 Timer Load Value Register
-#define PIT_CVAL0           *(volatile unsigned long *)(PIT_BLOCK + 0x104) // PIT 0 Current Timer Value Register
-#define PIT_TCTRL0          *(volatile unsigned long *)(PIT_BLOCK + 0x108) // {5} PIT 0 Timer Control Register
-  #define PIT_TCTRL_TEN     0x00000001                                   // timer enable
-  #define PIT_TCTRL_TIE     0x00000002                                   // timer interrupt enable
-#if defined KINETIS_KL                                                   // {47}
-    #define PIT_TCTRL_CHN   0x00000004                                   // chain mode
-#endif
-#define PIT_TFLG0           *(volatile unsigned long *)(PIT_BLOCK + 0x10c) // PIT 0 Timer Flag Register
-  #define PIT_TFLG_TIF      0x00000001                                   // time out has occurred (write 1 to clear)
-#define PIT_LDVAL1          *(unsigned long *)(PIT_BLOCK + 0x110)        // PIT 1 Timer Load Value Register
-#define PIT_CVAL1           *(volatile unsigned long *)(PIT_BLOCK + 0x114) // PIT 1 Current Timer Value Register
-#define PIT_TCTRL1          *(volatile unsigned long *)(PIT_BLOCK + 0x118) // {5} PIT 1 Timer Control Register
-#define PIT_TFLG1           *(volatile unsigned long *)(PIT_BLOCK + 0x11c) // PIT 1 Timer Flag Register
-#if PITS_AVAILABLE == 4
-    #define PIT_LDVAL2      *(unsigned long *)(PIT_BLOCK + 0x120)        // PIT 2 Timer Load Value Register
-    #define PIT_CVAL2       *(volatile unsigned long *)(PIT_BLOCK + 0x124) // PIT 2 Current Timer Value Register
-    #define PIT_TCTRL2      *(volatile unsigned long *)(PIT_BLOCK + 0x128) // {5} PIT 2 Timer Control Register
-    #define PIT_TFLG2       *(volatile unsigned long *)(PIT_BLOCK + 0x12c) // PIT 2 Timer Flag Register
-    #define PIT_LDVAL3      *(unsigned long *)(PIT_BLOCK + 0x130)        // PIT 3 Timer Load Value Register
-    #define PIT_CVAL3       *(volatile unsigned long *)(PIT_BLOCK + 0x134) // PIT 3 Current Timer Value Register
-    #define PIT_TCTRL3      *(volatile unsigned long *)(PIT_BLOCK + 0x138) // {5} PIT 3 Timer Control Register
-    #define PIT_TFLG3       *(volatile unsigned long *)(PIT_BLOCK + 0x13c) // PIT 3 Timer Flag Register
-#endif
+#if defined LPITS_AVAILABLE                                              // {101}
+    #define LPIT0_VERID         *(volatile unsigned long *)(LPIT0_BLOCK + 0x000) // LPIT0 version ID register (read-only)
+    #define LPIT0_PARAM         *(volatile unsigned long *)(LPIT0_BLOCK + 0x004) // LPIT0 parameter register (read-only)
+    #define LPIT0_MCR           *(unsigned long *)(LPIT0_BLOCK + 0x008)  // LPIT0 module control register
+        #define LPIT_MCR_M_CEN   0x00000001                              // module clock enable (MSR, SETTEN, CLRTEN, TCTRL and TVAL registers cannot be written when not set - hard-fault)
+        #define LPIT_MCR_SW_RST  0x00000002                              // timer channels and registers are held in reset state
+        #define LPIT_MCR_DOZE_EN 0x00000004                              // timer channels continue to run in doze mode 
+        #define LPIT_MCR_DBG_EN  0x00000008                              // timer channels continue to run in debug mode
+    #define LPIT0_MSR           *(volatile unsigned long *)(LPIT0_BLOCK + 0x00c) // LPIT0 module status register
+        #define LPIT_MSR_TIF0   0x00000001                               // channel 0 timer interrupt flag (write '1' to clear)
+        #define LPIT_MSR_TIF1   0x00000002                               // channel 1 timer interrupt flag (write '1' to clear)
+        #define LPIT_MSR_TIF2   0x00000004                               // channel 2 timer interrupt flag (write '1' to clear)
+        #define LPIT_MSR_TIF3   0x00000008                               // channel 3 timer interrupt flag (write '1' to clear)
+    #define LPIT0_MIER          *(unsigned long *)(LPIT0_BLOCK + 0x010)  // LPIT0 module interrupt enable register
+        #define LPIT_MIER_TIE0  0x00000001                               // channel 0 timer interrupt enable
+        #define LPIT_MIER_TIE1  0x00000002                               // channel 1 timer interrupt enable
+        #define LPIT_MIER_TIE2  0x00000004                               // channel 2 timer interrupt enable
+        #define LPIT_MIER_TIE3  0x00000008                               // channel 3 timer interrupt enable
+    #define LPIT0_SETTEN        *(volatile unsigned long *)(LPIT0_BLOCK + 0x014) // LPIT0 set timer enable register
+        #define LPIT_SETTEN_SET_T_EN_0  0x00000001                       // channel 0 timer enable (write '1' to set, write '0' has no effect)
+        #define LPIT_SETTEN_SET_T_EN_1  0x00000002                       // channel 1 timer enable (write '1' to set, write '0' has no effect)
+        #define LPIT_SETTEN_SET_T_EN_2  0x00000004                       // channel 2 timer enable (write '1' to set, write '0' has no effect)
+        #define LPIT_SETTEN_SET_T_EN_3  0x00000008                       // channel 3 timer enable (write '1' to set, write '0' has no effect)
+    #define LPIT0_CLRTEN        *(volatile unsigned long *)(LPIT0_BLOCK + 0x018) // LPIT0 clear timer enable register
+        #define LPIT_CLTTEN_CLR_T_EN_0  0x00000001                       // channel 0 timer disable (write '1' to set, write '0' has no effect)
+        #define LPIT_CLTTEN_CLR_T_EN_1  0x00000002                       // channel 1 timer disable (write '1' to set, write '0' has no effect)
+        #define LPIT_CLTTEN_CLR_T_EN_2  0x00000004                       // channel 2 timer disable (write '1' to set, write '0' has no effect)
+        #define LPIT_CLTTEN_CLR_T_EN_3  0x00000008                       // channel 3 timer disable (write '1' to set, write '0' has no effect)
+    #define PIT_CTL_ADD         (unsigned long *)(LPIT0_BLOCK + 0x020)
+    #define LPIT0_TVAL0         *(volatile unsigned long *)(LPIT0_BLOCK + 0x020) // LPIT0 timer value register 0
+    #define LPIT0_CVAL0         *(volatile unsigned long *)(LPIT0_BLOCK + 0x024) // LPIT0 current timer value register 0
+    #define LPIT0_TCTRL0        *(volatile unsigned long *)(LPIT0_BLOCK + 0x028) // LPIT0 timer control register 0
+        #define LPIT_TCTRL_T_EN     0x00000001                           // timer channel enabled
+        #define LPIT_TCTRL_CHAIN    0x00000002                           // channel chaining enabled (timer decrements on previous channel's timeout)
+        #define LPIT_TCTRL_MODE_32  0x00000000                           // 32-bit periodic counter
+        #define LPIT_TCTRL_MODE_16  0x00000004                           // dual 16-bit periodic counter
+        #define LPIT_TCTRL_MODE_ACC 0x00000008                           // 32-bit trigger accumulator
+        #define LPIT_TCTRL_MODE_CAP 0x0000000c                           // 32-bit trigger input capture
+        #define LPIT_TCTRL_TSOT     0x00010000                           // timer start on trigger
+        #define LPIT_TCTRL_TSOI     0x00020000                           // timer stop on interrupts
+        #define LPIT_TCTRL_TROT     0x00040000                           // timer reload on trigger
+        #define LPIT_TCTRL_TRG_SRC  0x00800000                           // trigger source selected is internal trigger (rather than external one)
+        #define LPIT_TCTRL_TRG_SEL  0x0f000000                           // 
+    #define LPIT0_TVAL1         *(volatile unsigned long *)(LPIT0_BLOCK + 0x030) // LPIT0 timer value register 1
+    #define LPIT0_CVAL1         *(volatile unsigned long *)(LPIT0_BLOCK + 0x034) // LPIT0 current timer value register 1
+    #define LPIT0_TCTRL1        *(volatile unsigned long *)(LPIT0_BLOCK + 0x038) // LPIT0 timer control register 1
+    #define LPIT0_TVAL2         *(volatile unsigned long *)(LPIT0_BLOCK + 0x040) // LPIT0 timer value register 2
+    #define LPIT0_CVAL2         *(volatile unsigned long *)(LPIT0_BLOCK + 0x044) // LPIT0 current timer value register 2
+    #define LPIT0_TCTRL2        *(volatile unsigned long *)(LPIT0_BLOCK + 0x048) // LPIT0 timer control register 2
+    #define LPIT0_TVAL3         *(volatile unsigned long *)(LPIT0_BLOCK + 0x050) // LPIT0 timer value register 3
+    #define LPIT0_CVAL3         *(volatile unsigned long *)(LPIT0_BLOCK + 0x054) // LPIT0 current timer value register 3
+    #define LPIT0_TCTRL3        *(volatile unsigned long *)(LPIT0_BLOCK + 0x058) // LPIT0 timer control register 3
 
-typedef struct stKINETIS_PIT_CTL                                         // PIT channel control struct
-{
-    unsigned long PIT_LDVAL;
-    volatile unsigned long PIT_CVAL;
-    volatile unsigned long PIT_TCTRL;                                    // {5}
-    volatile unsigned long PIT_TFLG;
-} KINETIS_PIT_CTL;
-
-
-
-#if defined _WINDOWS
-    #define LOAD_PIT(x, load_val)    PIT_LDVAL##x = (load_val); PIT_CVAL##x = (load_val)
+    typedef struct stKINETIS_PIT_CTL                                     // LPIT channel control struct
+    {
+        unsigned long PIT_LDVAL;
+        volatile unsigned long PIT_CVAL;
+        volatile unsigned long PIT_TCTRL;
+        unsigned long ulRes0;
+    } KINETIS_PIT_CTL;
 #else
-    #define LOAD_PIT(x, load_val)    PIT_TCTRL##x = 0; PIT_LDVAL##x = (load_val)
+    #define PIT_MCR             *(volatile unsigned long *)(PIT_BLOCK + 0x000) // PIT module control register
+      #define PIT_MCR_FRZ       0x00000001                                   // timers are stopped in debug mode
+      #define PIT_MCR_MDIS      0x00000002                                   // clock for PIT timers is disabled
+    #if defined KINETIS_KL                                                   // {47}
+        #define PIT_LTMR64H     *(volatile unsigned long *)(PIT_BLOCK + 0x0e0) // PIT Upper Lifetime Timer Register (read-only)
+        #define PIT_LTMR64L     *(volatile unsigned long *)(PIT_BLOCK + 0x0e4) // PIT Lower Lifetime Timer Register (read-only)
+    #endif
+    #define PIT_CTL_ADD         (unsigned long *)(PIT_BLOCK + 0x100)
+    #define PIT_LDVAL0          *(unsigned long *)(PIT_BLOCK + 0x100)        // PIT 0 Timer Load Value Register
+    #define PIT_CVAL0           *(volatile unsigned long *)(PIT_BLOCK + 0x104) // PIT 0 Current Timer Value Register
+    #define PIT_TCTRL0          *(volatile unsigned long *)(PIT_BLOCK + 0x108) // {5} PIT 0 Timer Control Register
+      #define PIT_TCTRL_TEN     0x00000001                                   // timer enable
+      #define PIT_TCTRL_TIE     0x00000002                                   // timer interrupt enable
+    #if defined KINETIS_KL                                                   // {47}
+        #define PIT_TCTRL_CHN   0x00000004                                   // chain mode
+    #endif
+    #define PIT_TFLG0           *(volatile unsigned long *)(PIT_BLOCK + 0x10c) // PIT 0 Timer Flag Register
+      #define PIT_TFLG_TIF      0x00000001                                   // time out has occurred (write 1 to clear)
+    #define PIT_LDVAL1          *(unsigned long *)(PIT_BLOCK + 0x110)        // PIT 1 Timer Load Value Register
+    #define PIT_CVAL1           *(volatile unsigned long *)(PIT_BLOCK + 0x114) // PIT 1 Current Timer Value Register
+    #define PIT_TCTRL1          *(volatile unsigned long *)(PIT_BLOCK + 0x118) // {5} PIT 1 Timer Control Register
+    #define PIT_TFLG1           *(volatile unsigned long *)(PIT_BLOCK + 0x11c) // PIT 1 Timer Flag Register
+    #if PITS_AVAILABLE == 4
+        #define PIT_LDVAL2      *(unsigned long *)(PIT_BLOCK + 0x120)        // PIT 2 Timer Load Value Register
+        #define PIT_CVAL2       *(volatile unsigned long *)(PIT_BLOCK + 0x124) // PIT 2 Current Timer Value Register
+        #define PIT_TCTRL2      *(volatile unsigned long *)(PIT_BLOCK + 0x128) // {5} PIT 2 Timer Control Register
+        #define PIT_TFLG2       *(volatile unsigned long *)(PIT_BLOCK + 0x12c) // PIT 2 Timer Flag Register
+        #define PIT_LDVAL3      *(unsigned long *)(PIT_BLOCK + 0x130)        // PIT 3 Timer Load Value Register
+        #define PIT_CVAL3       *(volatile unsigned long *)(PIT_BLOCK + 0x134) // PIT 3 Current Timer Value Register
+        #define PIT_TCTRL3      *(volatile unsigned long *)(PIT_BLOCK + 0x138) // {5} PIT 3 Timer Control Register
+        #define PIT_TFLG3       *(volatile unsigned long *)(PIT_BLOCK + 0x13c) // PIT 3 Timer Flag Register
+    #endif
+
+    typedef struct stKINETIS_PIT_CTL                                     // PIT channel control struct
+    {
+        unsigned long PIT_LDVAL;
+        volatile unsigned long PIT_CVAL;
+        volatile unsigned long PIT_TCTRL;                                // {5}
+        volatile unsigned long PIT_TFLG;
+    } KINETIS_PIT_CTL;
+
+    #if defined _WINDOWS
+        #define LOAD_PIT(x, load_val)    PIT_LDVAL##x = (load_val); PIT_CVAL##x = (load_val)
+    #else
+        #define LOAD_PIT(x, load_val)    PIT_TCTRL##x = 0; PIT_LDVAL##x = (load_val)
+    #endif
 #endif
+
 
 
 // FlexTimer (or TPM in KL/KE parts)
@@ -11065,21 +11150,183 @@ typedef struct stKINETIS_LPTMR_CTL
     //
     #define SCG_VERID                    *(unsigned long *)(SCG_BLOCK + 0x000) // version ID register (read-only)
     #define SCG_PARAM                    *(unsigned long *)(SCG_BLOCK + 0x004) // parameter register (read-only)
+        #define SCG_PARAM_CLKPRES_SOSC   0x00000001                      // SOSC is present
+        #define SCG_PARAM_CLKPRES_SIRC   0x00000002                      // SIRC is present
+        #define SCG_PARAM_CLKPRES_FIRC   0x00000004                      // FIRC is present
+        #define SCG_PARAM_CLKPRES_SPLL   0x00000040                      // SPLL is present
+        #define SCG_PARAM_DIVPRES_DIVSLOW 0x08000000                     // DIVSLOW is present
+        #define SCG_PARAM_DIVPRES_DIVCORE 0x80000000                     // DIVCORE is present
     #define SCG_CSR                      *(volatile unsigned long *)(SCG_BLOCK + 0x010) // clock status register (read-only)
+        #define SCG_CSR_DIVSLOW_MASK     0x000f0000                      // 0..15 (1..16) possible
+        #define SCG_CSR_DIVSLOW_SHIFT    0
+        #define SCG_CSR_DIVCORE_MASK     0x000f0000                      // 0..15 (1..16) possible
+        #define SCG_CSR_DIVCORE_SHIFT    16
+        #define SCG_CSR_SCS_SOSC_CLK     0x01000000                      // system clock generated by system oscillator
+        #define SCG_CSR_SCS_SIRC_CLK     0x02000000                      // system clock generated by slow IRC
+        #define SCG_CSR_SCS_FIRC_CLK     0x03000000                      // system clock generated by fast IRC
+        #define SCG_CSR_SCS_SPLL_CLK     0x06000000                      // system clock generated by PLL
     #define SCG_RCCR                     *(unsigned long *)(SCG_BLOCK + 0x014) // run clock control register
+        #define SCG_RCCR_DIVSLOW_MASK    0x000f0000                      // 0..15 (1..16) possible
+        #define SCG_RCCR_DIVSLOW_SHIFT   0
+        #define SCG_RCCR_DIVCORE_MASK    0x000f0000                      // 0..15 (1..16) possible
+        #define SCG_RCCR_DIVCORE_SHIFT   16
+        #define SCG_RCCR_SCS_SOSC_CLK    0x01000000                      // run mode system clock generated by system oscillator
+        #define SCG_RCCR_SCS_SIRC_CLK    0x02000000                      // run mode system clock generated by slow IRC
+        #define SCG_RCCR_SCS_FIRC_CLK    0x03000000                      // run mode system clock generated by fast IRC
+        #define SCG_RCCR_SCS_SPLL_CLK    0x06000000                      // run mode system clock generated by PLL
     #define SCG_VCCR                     *(unsigned long *)(SCG_BLOCK + 0x018) // VLPR clock control register
+        #define SCG_VCCR_DIVSLOW_MASK    0x000f0000                      // 0..15 (1..16) possible
+        #define SCG_VCCR_DIVSLOW_SHIFT   0
+        #define SCG_VCCR_DIVCORE_MASK    0x000f0000                      // 0..15 (1..16) possible
+        #define SCG_VCCR_DIVCORE_SHIFT   16
+        #define SCG_VCCR_SCS_SOSC_CLK    0x01000000                      // VLPR mode system clock generated by system oscillator
+        #define SCG_VCCR_SCS_SIRC_CLK    0x02000000                      // VLPR mode system clock generated by slow IRC
+        #define SCG_VCCR_SCS_FIRC_CLK    0x03000000                      // VLPR mode system clock generated by fast IRC
+        #define SCG_VCCR_SCS_SPLL_CLK    0x06000000                      // VLPR mode system clock generated by PLL
     #define SCG_HCCR                     *(unsigned long *)(SCG_BLOCK + 0x01c) // HSRUN clock control register
+        #define SCG_HCCR_DIVSLOW_MASK    0x000f0000                      // 0..15 (1..16) possible
+        #define SCG_HCCR_DIVSLOW_SHIFT   0
+        #define SCG_HCCR_DIVCORE_MASK    0x000f0000                      // 0..15 (1..16) possible
+        #define SCG_HCCR_DIVCORE_SHIFT   16
+        #define SCG_HCCR_SCS_SOSC_CLK    0x01000000                      // high speed run mode system clock generated by system oscillator
+        #define SCG_HCCR_SCS_SIRC_CLK    0x02000000                      // high speed run mode system clock generated by slow IRC
+        #define SCG_HCCR_SCS_FIRC_CLK    0x03000000                      // high speed run mode system clock generated by fast IRC
+        #define SCG_HCCR_SCS_SPLL_CLK    0x06000000                      // high speed run mode system clock generated by PLL
     #define SCG_CLKOUTCNFG               *(unsigned long *)(SCG_BLOCK + 0x020) // SCG_CLKOUT configuration register
+        #define SCG_CLKOUTCNFG_SCG_SLOW  0x00000000                      // slow clock selected for CLKOUT pin
+        #define SCG_CLKOUTCNFG_SOSC_CLK  0x01000000                      // SOSC_CLK selected for CLKOUT pin
+        #define SCG_CLKOUTCNFG_SIRC_CLK  0x02000000                      // slow IRC selected for CLKOUT pin
+        #define SCG_CLKOUTCNFG_FIRC_CLK  0x03000000                      // fast IRC clock selected for CLKOUT pin
+        #define SCG_CLKOUTCNFG_SPLL_CLK  0x06000000                      // PLL clock selected for CLKOUT pin
     #define SCG_SOSCCSR                  *(volatile unsigned long *)(SCG_BLOCK + 0x100) // system OSC control status register
-    #define SCG_SOSCDIV                  *(unsigned long *)(SCG_BLOCK + 0x104) // system OSC divide register
+        #define SCG_SOSCCSR_SOSCEN       0x00000001                      // system oscillator enable
+        #define SCG_SOSCCSR_SOSCSTEN     0x00000002                      // system oscillator stop enable
+        #define SCG_SOSCCSR_SOSCLPEN     0x00000004                      // system oscillator low power (VLP modes) enable
+        #define SCG_SOSCCSR_SOSCERCLKEN  0x00000008                      // system OSC 3V ERCLK is enabled when SYSOSC is enabled
+        #define SCG_SOSCCSR_SOSCEM       0x00010000                      // system OSC clock monitor enable
+        #define SCG_SOSCCSR_SOSCECMRE    0x00020000                      // system OSC clock monitor reset enable (reset if error is detected)
+        #define SCG_SOSCCSR_LK           0x00800000                      // lock register (this register cannot be written again)
+        #define SCG_SOSCCSR_SOSCVLD      0x01000000                      // system OSC valid (set after 4096 counts) (read-only)
+        #define SCG_SOSCCSR_SOSCSEL      0x02000000                      // system OSC selected (read-only)
+        #define SCG_SOSCCSR_SOSCERR      0x04000000                      // system OSC clock error (write '1' to clear)
+    #define SCG_SOSCDIV                  *(unsigned long *)(SCG_BLOCK + 0x104) // system OSC divide register (changes should be made when OSC is disabled in order to avoid glitches to output divide clock)
+        #define SCG_SOSCDIV_SOSCDIV1_DISABLED 0x00000000                 // system OSC clock divide 1 disabled
+        #define SCG_SOSCDIV_SOSCDIV1_1   0x00000001                      // system OSC clock divide 1 - divide by 1
+        #define SCG_SOSCDIV_SOSCDIV1_2   0x00000002                      // system OSC clock divide 1 - divide by 2
+        #define SCG_SOSCDIV_SOSCDIV1_4   0x00000003                      // system OSC clock divide 1 - divide by 4
+        #define SCG_SOSCDIV_SOSCDIV1_8   0x00000004                      // system OSC clock divide 1 - divide by 8
+        #define SCG_SOSCDIV_SOSCDIV1_16  0x00000005                      // system OSC clock divide 1 - divide by 16
+        #define SCG_SOSCDIV_SOSCDIV1_32  0x00000006                      // system OSC clock divide 1 - divide by 32
+        #define SCG_SOSCDIV_SOSCDIV1_64  0x00000007                      // system OSC clock divide 1 - divide by 64
+        #define SCG_SOSCDIV_SOSCDIV2_DISABLED 0x00000000                 // system OSC clock divide 2 disabled
+        #define SCG_SOSCDIV_SOSCDIV2_1   0x00000100                      // system OSC clock divide 2 - divide by 1
+        #define SCG_SOSCDIV_SOSCDIV2_2   0x00000200                      // system OSC clock divide 2 - divide by 2
+        #define SCG_SOSCDIV_SOSCDIV2_4   0x00000300                      // system OSC clock divide 2 - divide by 4
+        #define SCG_SOSCDIV_SOSCDIV2_8   0x00000400                      // system OSC clock divide 2 - divide by 8
+        #define SCG_SOSCDIV_SOSCDIV2_16  0x00000500                      // system OSC clock divide 2 - divide by 16
+        #define SCG_SOSCDIV_SOSCDIV2_32  0x00000600                      // system OSC clock divide 2 - divide by 32
+        #define SCG_SOSCDIV_SOSCDIV2_64  0x00000700                      // system OSC clock divide 2 - divide by 64
+        #define SCG_SOSCDIV_SOSCDIV3_DISABLED 0x00000000                 // system OSC clock divide 3 disabled
+        #define SCG_SOSCDIV_SOSCDIV3_1   0x00010000                      // system OSC clock divide 3 - divide by 1
+        #define SCG_SOSCDIV_SOSCDIV3_2   0x00020000                      // system OSC clock divide 3 - divide by 2
+        #define SCG_SOSCDIV_SOSCDIV3_4   0x00030000                      // system OSC clock divide 3 - divide by 4
+        #define SCG_SOSCDIV_SOSCDIV3_8   0x00040000                      // system OSC clock divide 3 - divide by 8
+        #define SCG_SOSCDIV_SOSCDIV3_16  0x00050000                      // system OSC clock divide 3 - divide by 16
+        #define SCG_SOSCDIV_SOSCDIV3_32  0x00060000                      // system OSC clock divide 3 - divide by 32
+        #define SCG_SOSCDIV_SOSCDIV3_64  0x00070000                      // system OSC clock divide 3 - divide by 64
     #define SCG_SOSCCFG                  *(unsigned long *)(SCG_BLOCK + 0x108) // system oscillator configuration register
+        #define SCG_SOSCCFG_EREFS        0x00000004                      // select internal crystal oscillator, rather than external oscillator input
+        #define SCG_SOSCCFG_HGO          0x00000008                      // high gain oscillator select
+        #define SCG_SOSCCFG_RANGE_LOW    0x00000010                      // system OSC range select - 32kHz..40kHz
+        #define SCG_SOSCCFG_RANGE_MED    0x00000020                      // system OSC range select - 1MHz..8MHz
+        #define SCG_SOSCCFG_RANGE_HIGH   0x00000030                      // system OSC range select - 8MHz..32MHz
+        #define SCG_SOSCCFG_SC16P        0x00000100                      // oscillator 16pF capacitor load
+        #define SCG_SOSCCFG_SC8P         0x00000200                      // oscillator 8pF capacitor load
+        #define SCG_SOSCCFG_SC4P         0x00000400                      // oscillator 4pF capacitor load
+        #define SCG_SOSCCFG_SC2P         0x00000800                      // oscillator 2pF capacitor load
     #define SCG_SIRCCSR                  *(volatile unsigned long *)(SCG_BLOCK + 0x200) // slow IRC control status register
+        #define SCG_SIRCCSR_SIRCEN       0x00000001                      // slow IRC is enabled
+        #define SCG_SIRCCSR_SIRCSTEN     0x00000002                      // slow IRC is enabled in stop modes
+        #define SCG_SIRCCSR_SIRLPEN      0x00000003                      // slow IRC is enabled in VLP modes
+        #define SCG_SIRCCSR_LK           0x00008000                      // lock register (this register cannot be written again)
+        #define SCG_SIRCCSR_SIRCVLD      0x00010000                      // slow IRC is enabled and the output clock is valid (read-only)
+        #define SCG_SIRCCSR_SIRCSEL      0x00020000                      // slow IRC is the system clock (read-only)
     #define SCG_SIRCDIV                  *(unsigned long *)(SCG_BLOCK + 0x204) // slow IRC divide register
+        #define SCG_SIRCDIV_SIRCDIV1_DISABLED 0x00000000                 // slow IRC clock divide 1 disabled
+        #define SCG_SIRCDIV_SIRCDIV1_1   0x00000001                      // slow IRC clock divide 1 - divide by 1
+        #define SCG_SIRCDIV_SIRCDIV1_2   0x00000002                      // slow IRC clock divide 1 - divide by 2
+        #define SCG_SIRCDIV_SIRCDIV1_4   0x00000003                      // slow IRC clock divide 1 - divide by 4
+        #define SCG_SIRCDIV_SIRCDIV1_8   0x00000004                      // slow IRC clock divide 1 - divide by 8
+        #define SCG_SIRCDIV_SIRCDIV1_16  0x00000005                      // slow IRC clock divide 1 - divide by 16
+        #define SCG_SIRCDIV_SIRCDIV1_32  0x00000006                      // slow IRC clock divide 1 - divide by 32
+        #define SCG_SIRCDIV_SIRCDIV1_64  0x00000007                      // slow IRC clock divide 1 - divide by 64
+        #define SCG_SIRCDIV_SIRCDIV2_DISABLED 0x00000000                 // slow IRC clock divide 2 disabled
+        #define SCG_SIRCDIV_SIRCDIV2_1   0x00000100                      // slow IRC clock divide 2 - divide by 1
+        #define SCG_SIRCDIV_SIRCDIV2_2   0x00000200                      // slow IRC clock divide 2 - divide by 2
+        #define SCG_SIRCDIV_SIRCDIV2_4   0x00000300                      // slow IRC clock divide 2 - divide by 4
+        #define SCG_SIRCDIV_SIRCDIV2_8   0x00000400                      // slow IRC clock divide 2 - divide by 8
+        #define SCG_SIRCDIV_SIRCDIV2_16  0x00000500                      // slow IRC clock divide 2 - divide by 16
+        #define SCG_SIRCDIV_SIRCDIV2_32  0x00000600                      // slow IRC clock divide 2 - divide by 32
+        #define SCG_SIRCDIV_SIRCDIV2_64  0x00000700                      // slow IRC clock divide 2 - divide by 64
+        #define SCG_SIRCDIV_SIRCDIV3_DISABLED 0x00000000                 // slow IRC clock divide 3 disabled
+        #define SCG_SIRCDIV_SIRCDIV3_1   0x00010000                      // slow IRC clock divide 3 - divide by 1
+        #define SCG_SIRCDIV_SIRCDIV3_2   0x00020000                      // slow IRC clock divide 3 - divide by 2
+        #define SCG_SIRCDIV_SIRCDIV3_4   0x00030000                      // slow IRC clock divide 3 - divide by 4
+        #define SCG_SIRCDIV_SIRCDIV3_8   0x00040000                      // slow IRC clock divide 3 - divide by 8
+        #define SCG_SIRCDIV_SIRCDIV3_16  0x00050000                      // slow IRC clock divide 3 - divide by 16
+        #define SCG_SIRCDIV_SIRCDIV3_32  0x00060000                      // slow IRC clock divide 3 - divide by 32
+        #define SCG_SIRCDIV_SIRCDIV3_64  0x00070000                      // slow IRC clock divide 3 - divide by 64
     #define SCG_SIRCCFG                  *(unsigned long *)(SCG_BLOCK + 0x208) // slow IRC configuration register
+        #define SCG_SIRCCFG_RANGE        0x00000001                      // slow IRC high range clock (8MHz), rather than low range (2MHz)
     #define SCG_FIRCCSR                  *(volatile unsigned long *)(SCG_BLOCK + 0x300) // fast IRC control status register
+        #define SCG_FIRCCSR_FIRCEN       0x00000001                      // fast IRC enable
+        #define SCG_FIRCCSR_FIRCSTEN     0x00000002                      // fast IRC stop enable
+        #define SCG_FIRCCSR_FIRCLPEN     0x00000004                      // fast IRC low power (VLP modes) enable
+        #define SCG_FIRCCSR_FIRCREGOFF   0x00000008                      // fast IRC regulator disable
+        #define SCG_FIRCCSR_FIRCTREN     0x00010000                      // enable trimming fast IRC to an external clock source
+        #define SCG_FIRCCSR_FIRCTRUP     0x00020000                      // enable fast IRC trim updates
+        #define SCG_FIRCCSR_LK           0x00800000                      // lock register (this register cannot be written again)
+        #define SCG_FIRCCSR_FIRCVLD      0x01000000                      // fast IRC valid (read-only)
+        #define SCG_FIRCCSR_FIRCSEL      0x02000000                      // fast IRC selected (read-only)
+        #define SCG_FIRCCSR_FIRCERR      0x04000000                      // fast IRC clock error (write '1' to clear)
     #define SCG_FIRCDIV                  *(unsigned long *)(SCG_BLOCK + 0x304) // fast IRC divide register
+        #define SCG_FIRCDIV_FIRCDIV1_DISABLED 0x00000000                 // fast IRC clock divide 1 disabled
+        #define SCG_FIRCDIV_FIRCDIV1_1   0x00000001                      // fast IRC clock divide 1 - divide by 1
+        #define SCG_FIRCDIV_FIRCDIV1_2   0x00000002                      // fast IRC clock divide 1 - divide by 2
+        #define SCG_FIRCDIV_FIRCDIV1_4   0x00000003                      // fast IRC clock divide 1 - divide by 4
+        #define SCG_FIRCDIV_FIRCDIV1_8   0x00000004                      // fast IRC clock divide 1 - divide by 8
+        #define SCG_FIRCDIV_FIRCDIV1_16  0x00000005                      // fast IRC clock divide 1 - divide by 16
+        #define SCG_FIRCDIV_FIRCDIV1_32  0x00000006                      // fast IRC clock divide 1 - divide by 32
+        #define SCG_FIRCDIV_FIRCDIV1_64  0x00000007                      // fast IRC clock divide 1 - divide by 64
+        #define SCG_FIRCDIV_FIRCDIV2_DISABLED 0x00000000                 // fast IRC clock divide 2 disabled
+        #define SCG_FIRCDIV_FIRCDIV2_1   0x00000100                      // fast IRC clock divide 2 - divide by 1
+        #define SCG_FIRCDIV_FIRCDIV2_2   0x00000200                      // fast IRC clock divide 2 - divide by 2
+        #define SCG_FIRCDIV_FIRCDIV2_4   0x00000300                      // fast IRC clock divide 2 - divide by 4
+        #define SCG_FIRCDIV_FIRCDIV2_8   0x00000400                      // fast IRC clock divide 2 - divide by 8
+        #define SCG_FIRCDIV_FIRCDIV2_16  0x00000500                      // fast IRC clock divide 2 - divide by 16
+        #define SCG_FIRCDIV_FIRCDIV2_32  0x00000600                      // fast IRC clock divide 2 - divide by 32
+        #define SCG_FIRCDIV_FIRCDIV2_64  0x00000700                      // fast IRC clock divide 2 - divide by 64
+        #define SCG_FIRCDIV_FIRCDIV3_DISABLED 0x00000000                 // fast IRC clock divide 3 disabled
+        #define SCG_FIRCDIV_FIRCDIV3_1   0x00010000                      // fast IRC clock divide 3 - divide by 1
+        #define SCG_FIRCDIV_FIRCDIV3_2   0x00020000                      // fast IRC clock divide 3 - divide by 2
+        #define SCG_FIRCDIV_FIRCDIV3_4   0x00030000                      // fast IRC clock divide 3 - divide by 4
+        #define SCG_FIRCDIV_FIRCDIV3_8   0x00040000                      // fast IRC clock divide 3 - divide by 8
+        #define SCG_FIRCDIV_FIRCDIV3_16  0x00050000                      // fast IRC clock divide 3 - divide by 16
+        #define SCG_FIRCDIV_FIRCDIV3_32  0x00060000                      // fast IRC clock divide 3 - divide by 32
+        #define SCG_FIRCDIV_FIRCDIV3_64  0x00070000                      // fast IRC clock divide 3 - divide by 64
     #define SCG_FIRCCFG                  *(unsigned long *)(SCG_BLOCK + 0x308) // fast IRC configuration register
+        #define SCG_FIRCCFG_RANGE_48MHz  0x00000000                      // fast IRC is trimmed to 48MHz
+        #define SCG_FIRCCFG_RANGE_52MHz  0x00000001                      // fast IRC is trimmed to 52MHz
+        #define SCG_FIRCCFG_RANGE_56MHz  0x00000002                      // fast IRC is trimmed to 56MHz
+        #define SCG_FIRCCFG_RANGE_60MHz  0x00000003                      // fast IRC is trimmed to 60MHz
     #define SCG_FIRCTCFG                 *(unsigned long *)(SCG_BLOCK + 0x30c) // fast IRC trim configuration register
+        #define SCG_FIRCTCFG_TRIMSRC_USB0 0x00000001                     // 1kHz USB0 start of frame is used as trim source
+        #define SCG_FIRCTCFG_TRIMDIV_1   0x00000000                      // fast IRC trim pre-divide 1
+        #define SCG_FIRCTCFG_TRIMDIV_128 0x00000100                      // fast IRC trim pre-divide 128
+        #define SCG_FIRCTCFG_TRIMDIV_256 0x00000200                      // fast IRC trim pre-divide 256
+        #define SCG_FIRCTCFG_TRIMDIV_512 0x00000300                      // fast IRC trim pre-divide 512
+        #define SCG_FIRCTCFG_TRIMDIV_1K  0x00000400                      // fast IRC trim pre-divide 1k
+        #define SCG_FIRCTCFG_TRIMDIV_2K  0x00000500                      // fast IRC trim pre-divide 2k
     #define SCG_FIRCSTAT                 *(volatile unsigned long *)(SCG_BLOCK + 0x318) // fast IRC status register
     #define SCG_SPPLCCSR                 *(volatile unsigned long *)(SCG_BLOCK + 0x600) // system PPL control status register
     #define SCG_SPPLCDIV                 *(unsigned long *)(SCG_BLOCK + 0x604) // system PLL divide register
@@ -11289,7 +11536,7 @@ typedef struct stKINETIS_LPTMR_CTL
 #endif
 
 #if defined ERRATA_ID_3402 && !defined KINETIS_KL
-    #define XTAL0_PORT                   _PORTA                          // when the OSC is enabled the XTAL port pin is forced to default function and can not be used as GPIO
+    #define XTAL0_PORT                   _PORTA                          // when the OSC is enabled the XTAL port pin is forced to default function and cannot be used as GPIO
     #define XTAL0_PIN                    19
 #endif
 

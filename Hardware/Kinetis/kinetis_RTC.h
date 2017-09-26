@@ -182,7 +182,11 @@ extern int fnConfigureRTC(void *ptrSettings)
     switch (ptr_rtc_setup->command & ~(RTC_DISABLE | RTC_INITIALISATION | RTC_SET_UTC | RTC_INCREMENT)) { // {51}
     case RTC_TIME_SETTING:                                               // set time to RTC
     #if !defined SUPPORT_SW_RTC && !defined KINETIS_KE
+        #if defined KINETIS_WITH_PCC
+        PCC_RTC |= PCC_CGC;
+        #else
         POWER_UP_ATOMIC(6, SIM_SCGC6_RTC);                               // ensure the RTC is powered
+        #endif
         RTC_SR = 0;                                                      // temporarily disable RTC to avoid potential interrupt
     #endif
         if ((ptr_rtc_setup->command & RTC_SET_UTC) != 0) {               // {51} allow setting from UTC seconds value
@@ -286,7 +290,11 @@ extern int fnConfigureRTC(void *ptrSettings)
     #elif defined SUPPORT_SW_RTC
         rtc_interrupt_handler[iIRQ] = ((INTERRUPT_SETUP *)ptrSettings)->int_handler; // enter the handling interrupt
     #else
+        #if defined KINETIS_WITH_PCC
+        PCC_RTC |= PCC_CGC;
+        #else
         POWER_UP_ATOMIC(6, SIM_SCGC6_RTC);                               // enable access and interrupts to the RTC
+        #endif
         if ((RTC_SR & RTC_SR_TIF) != 0) {                                // if timer invalid
             RTC_SR = 0;                                                  // ensure stopped
             RTC_TSR = 0;                                                 // write to clear RTC_SR_TIF in status register when not yet enabled
@@ -310,7 +318,7 @@ extern int fnConfigureRTC(void *ptrSettings)
         #if defined KINETIS_KL && defined RTC_USES_LPO_1kHz
             *RTC_ALARM_LOCATION = rtc_alarm;
         #endif
-        #if !defined irq_RTC_ALARM_ID
+        #if !defined irq_RTC_ALARM_ID && defined INTMUX0_AVAILABLE
             fnEnterInterrupt((irq_INTMUX0_0_ID + INTMUX_RTC_ALARM), INTMUX0_PERIPHERAL_RTC_ALARM, _rtc_alarm_handler); // enter RTC alarm interrupt handler based on INTMUX
         #else
             fnEnterInterrupt(irq_RTC_ALARM_ID, PRIORITY_RTC, _rtc_alarm_handler);

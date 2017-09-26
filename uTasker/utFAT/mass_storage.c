@@ -4533,7 +4533,7 @@ static int _utOpenDirectory(OPEN_FILE_BLOCK *ptrOpenBlock, UTDIRECTORY *ptrDirOb
                                     }
                                 }
 #endif
-                                return UTFAT_PATH_IS_FILE;               // not a directory so can not be traced further
+                                return UTFAT_PATH_IS_FILE;               // not a directory so cannot be traced further
                             }
                             if ((ptrOpenBlock->iQualifiedPathType != 0) && ((ptrOpenBlock->usDirFlags & UTDIR_DIR_AS_FILE) != 0)) { // if a directory is to be treated as a file, its location is preserved rather than moving to its content
                                 if (*ptrLocalDirPath == 0) {             // {18} only match the end of a path
@@ -4729,7 +4729,7 @@ static int _fnHandlePath(OPEN_FILE_BLOCK *ptrOpenBlock, const CHAR *ptrDirPath, 
 #endif
         ptrDirObject->private_disk_location.ucDirectoryEntry = 0;        // reset the entry index
         uMemcpy(&ptrDirObject->root_disk_location, &ptrDirObject->private_disk_location, sizeof(ptrDirObject->root_disk_location)); // enter the fixed root location
-        uMemcpy(&ptrDirObject->public_disk_location, &ptrDirObject->private_disk_location, sizeof(ptrDirObject->root_disk_location)); // ensure that the public entry can not be used with invalid value
+        uMemcpy(&ptrDirObject->public_disk_location, &ptrDirObject->private_disk_location, sizeof(ptrDirObject->root_disk_location)); // ensure that the public entry cannot be used with invalid value
         ptrDirObject->usDirectoryFlags = (UTDIR_ALLOCATED | UTDIR_VALID | UTDIR_REFERENCED);// the entry is now valid
         ptrOpenBlock->iRootDirectory |= ROOT_DIRECTORY_SETTING;          // mark that the (virtual) root has been set
         if (ptrDirObject->ptrDirectoryPath != 0) {                       // if a root path is being used and root is to be set, set also for virtual root location 
@@ -4887,7 +4887,7 @@ extern int utReadFile(UTFILE *ptr_utFile, void *ptrBuffer, unsigned short usRead
             if (fnGetManagedFileCache(ptr_utFile->public_file_location.ulSector, ptrBuffer, usAccessOffset, usAccessLength) == 0) { // attempt to get the data form a managed file's data cache
         #endif
     #endif
-                if ((usAccessOffset != 0) || (usAccessLength != 512)) {  // only load partical data if a complete sector can not be read directly to the user's buffer
+                if ((usAccessOffset != 0) || (usAccessLength != 512)) {  // only load partical data if a complete sector cannot be read directly to the user's buffer
                     if (fnLoadPartialData(ptr_utDisk, ptr_utFile->public_file_location.ulSector, (unsigned char *)ptrBuffer, usAccessOffset, usAccessLength) != UTFAT_SUCCESS) { // read directly to buffer
                         return UTFAT_DISK_READ_ERROR;
                     }

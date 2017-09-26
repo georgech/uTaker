@@ -145,7 +145,7 @@ extern void fnTftp(TTASKTABLE *ptrTaskTable)
                 break;
 
             case ARP_RESOLUTION_FAILED:                                  // IP address could not be resolved...
-                fnTFTP_error(TFTP_ARP_RESOLUTION_FAILED,0);              // the user should quit since ARP can not resolve the target address
+                fnTFTP_error(TFTP_ARP_RESOLUTION_FAILED,0);              // the user should quit since ARP cannot resolve the target address
                 break;
             }
             

@@ -61,7 +61,8 @@
     13.07.2017 Define KL82 disabled ports                                {44}
     04.08.2017 Add fnSetBitBandPeripheralValue() and fnClearBitBandPeripheralValue()
     11.08.2017 Add PCC support                                           {45}
-    12.09.2017 Added INTMUX support and LPUART2 using its interrupts     {46}
+    12.09.2017 Add INTMUX support and LPUART2 using its interrupts       {46}
+    26.09.2017 Add LPIT support                                          {47}
  
 */  
                           
@@ -361,14 +362,15 @@ static void fnSetDevice(unsigned long *port_inits)
 #endif
 #if defined KINETIS_KL                                                   // {24}
     #if defined KINETIS_WITH_SCG
-    SCG_VERID = 0x00000040;
-    SCG_CSR = 0x02000001;
-    SCG_RCCR = 0x02000001;
-    SCG_VCCR = 0x02000001;
-    SCG_HCCR = 0x02000001;
-    SCG_CLKOUTCNFG = 0x02000000;
-    SCG_SOSCCFG = 0x00000010;
-    SCG_SIRCCSR = 0x03000005;
+    SCG_VERID = 0x01000000;
+    SCG_PARAM = (SCG_PARAM_CLKPRES_SOSC | SCG_PARAM_CLKPRES_SIRC | SCG_PARAM_CLKPRES_FIRC | SCG_PARAM_CLKPRES_SPLL | SCG_PARAM_DIVPRES_DIVSLOW | SCG_PARAM_DIVPRES_DIVCORE);
+    SCG_CSR = (SCG_CSR_SCS_SIRC_CLK | ((1 - 1) << SCG_CSR_DIVCORE_SHIFT) | ((2 - 1) << SCG_CSR_DIVSLOW_SHIFT));
+    SCG_RCCR = (SCG_RCCR_SCS_SIRC_CLK | ((1 - 1) << SCG_RCCR_DIVCORE_SHIFT) | ((2 - 1) << SCG_RCCR_DIVSLOW_SHIFT));
+    SCG_VCCR = (SCG_VCCR_SCS_SIRC_CLK | ((1 - 1) << SCG_VCCR_DIVCORE_SHIFT) | ((2 - 1) << SCG_VCCR_DIVSLOW_SHIFT));
+    SCG_HCCR = (SCG_HCCR_SCS_SIRC_CLK | ((1 - 1) << SCG_HCCR_DIVCORE_SHIFT) | ((2 - 1) << SCG_HCCR_DIVSLOW_SHIFT));
+    SCG_CLKOUTCNFG = SCG_CLKOUTCNFG_SIRC_CLK;
+    SCG_SOSCCFG = SCG_SOSCCFG_RANGE_LOW;
+    SCG_SIRCCSR = (SCG_SIRCCSR_SIRCEN | SCG_SIRCCSR_SIRLPEN | SCG_SIRCCSR_SIRCEN | SCG_SIRCCSR_SIRCEN);
     SCG_SIRCCFG = 0x00000001;
     #elif defined KINETIS_WITH_MCG_LITE
     MCG_C1 = MCG_C1_CLKS_LIRC;
@@ -420,7 +422,16 @@ static void fnSetDevice(unsigned long *port_inits)
     MPU_RGD15_WORD1 = 0x0000001f;
 #endif
 #if !defined KINETIS_WITHOUT_PIT
+    #if defined LPITS_AVAILABLE                                          // {47}
+    LPIT0_VERID = 0x01000000;
+    LPIT0_PARAM = (LPIT_CHANNELS | (LPIT_INPUT_TRIGGERS << 8));
+    LPIT0_CVAL0 = 0xffffffff;
+    LPIT0_CVAL1 = 0xffffffff;
+    LPIT0_CVAL2 = 0xffffffff;
+    LPIT0_CVAL3 = 0xffffffff;
+    #else
     PIT_MCR = PIT_MCR_MDIS;                                              // PITs disabled
+    #endif
 #endif
 #if defined KINETIS_WITH_PCC                                             // {45}
     PCC_DMA0    = PCC_PR;
@@ -5063,7 +5074,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
             #endif
                         }
                         else {
-            #if !defined irq_LPUART2_ID
+            #if !defined irq_LPUART2_ID && defined INTMUX0_AVAILABLE
                             if (fnGenInt(irq_INTMUX0_0_ID + INTMUX_LPUART2) != 0) // {46}
             #else
                             if (fnGenInt(irq_LPUART2_ID) != 0)
@@ -5440,7 +5451,7 @@ static void fnUART_Tx_int(int iChannel)
             if ((LPUART2_CTRL & LPUART_CTRL_TE) != 0) {                      // if transmitter enabled
                 LPUART2_STAT |= (LPUART_STAT_TDRE | LPUART_STAT_TC);         // set interrupt cause
                 if ((LPUART2_CTRL & LPUART2_STAT) != 0) {                    // if transmit interrupt type enabled
-            #if !defined irq_LPUART2_ID
+            #if !defined irq_LPUART2_ID && defined INTMUX0_AVAILABLE
                     if (fnGenInt(irq_INTMUX0_0_ID + INTMUX_LPUART2) != 0)    // {46}
             #else
                     if (fnGenInt(irq_LPUART2_ID) != 0)
@@ -7329,7 +7340,14 @@ extern int fnSimTimers(void)
         unsigned long ulWdogTimeout = ((WDOG_TOVALH << 8) | WDOG_TOVALL);// timeout value
         ulWdogCnt += ulCounter;                                          // next value
         if (ulWdogCnt >= ulWdogTimeout) {
-          //return RESET_CARD_WATCHDOG;                                  // watchdog reset
+            if ((WDOG_CS1 & WDOG_CS1_INT) != 0) {                        // if an interrupt is enabled we first call it
+                WDOG_CS2 |= WDOG_CS2_FLG;                                // set iterrupt flag
+                if (fnGenInt(irq_WDOG_ID) != 0) {                        // if watchdog interrupt is not disabled
+                    VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                    ptrVect->processor_interrupts.irq_WDOG0();           // call the interrupt handler (the wathdog unconditionally resets after 128 bus clocks)
+                }
+            }
+            return RESET_CARD_WATCHDOG;                                  // watchdog reset
         }
         WDOG_CNTH = (unsigned char)(ulWdogCnt >> 8);                     // new watchdog count value
         WDOG_CNTL = (unsigned char)(ulWdogCnt);
@@ -7351,7 +7369,7 @@ extern int fnSimTimers(void)
         if ((ulWatchdogCount + ulCounter) >= ulWatchdogTimeout) {
             if ((WDOG_STCTRLH & WDOG_STCTRLH_IRQRSTEN) != 0) {           // if an interrupt is enabled we first call it
                 WDOG_STCTRLL |= WDOG_STCTRLL_INTFLG;
-    #if !defined irq_WDOG_ID
+    #if !defined irq_WDOG_ID && defined INTMUX0_AVAILABLE
                 if (fnGenInt(irq_INTMUX0_0_ID) != 0)                     // {46}
     #else
                 if (fnGenInt(irq_WDOG_ID) != 0)
@@ -7399,6 +7417,106 @@ extern int fnSimTimers(void)
     }
 
 #if !defined KINETIS_WITHOUT_PIT
+    #if defined LPITS_AVAILABLE                                          // {47}
+    if (((PCC_LPIT0 & PCC_CGC) != 0) && ((LPIT0_MCR & (LPIT_MCR_M_CEN | LPIT_MCR_SW_RST)) == LPIT_MCR_M_CEN)) { // if the LPIT is enabled and not in reset state
+        unsigned long ulCount;
+        switch (PCC_LPIT0 & PCC_PCS_MASK) {
+        case PCC_PCS_SCGFIRCLK:
+            ulCount = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)FIRC_CLK) / 1000000); // count in a tick period
+            break;
+        case PCC_PCS_OSCCLK:
+        case PCC_PCS_SCGIRCLK:
+        case PCC_PCS_SCGPCLK:
+            _EXCEPTION("To do!");
+            break;
+        case PCC_PCS_CLOCK_OFF:
+        default:
+            _EXCEPTION("No LPIT clock!");
+            break;
+
+        }
+        if ((LPIT0_TCTRL0 & LPIT_TCTRL_T_EN) != 0) {                     // if channel 0 is enabled
+            if (LPIT0_CVAL0 <= ulCount) {
+                ulCount -= LPIT0_CVAL0;
+                LPIT0_CVAL0 = LPIT0_TVAL0;                               // reload
+                if (ulCount < LPIT0_TVAL0) {
+                    LPIT0_CVAL0 -= ulCount;
+                }
+                LPIT0_MSR |= LPIT_MSR_TIF0;                              // flag that a reload occurred
+                fnHandleDMA_triggers(DMAMUX0_DMA0_CHCFG_SOURCE_PIT0, 0); // handle DMA triggered on PIT0
+                if ((LPIT0_MIER & LPIT_MIER_TIE0) != 0) {                // if PIT interrupt is enabled
+                    if (fnGenInt(irq_LPIT0_ID) != 0) {                   // if general PIT interrupt is not disabled
+                        VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                        ptrVect->processor_interrupts.irq_LPIT0();       // call the shared interrupt handler
+                    }
+                }
+            }
+            else {
+                LPIT0_CVAL0 -= ulCount;
+            }
+        }
+        if ((LPIT0_TCTRL1 & LPIT_TCTRL_T_EN) != 0) {                     // if channel 1 is enabled
+            if (LPIT0_CVAL1 <= ulCount) {
+                ulCount -= LPIT0_CVAL1;
+                LPIT0_CVAL1 = LPIT0_TVAL1;                               // reload
+                if (ulCount < LPIT0_TVAL1) {
+                    LPIT0_CVAL1 -= ulCount;
+                }
+                LPIT0_MSR |= LPIT_MSR_TIF1;                              // flag that a reload occurred
+                fnHandleDMA_triggers(DMAMUX0_DMA0_CHCFG_SOURCE_PIT1, 0); // handle DMA triggered on PIT1
+                if ((LPIT0_MIER & LPIT_MIER_TIE1) != 0) {                // if PIT interrupt is enabled
+                    if (fnGenInt(irq_LPIT0_ID) != 0) {                   // if general PIT interrupt is not disabled
+                        VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                        ptrVect->processor_interrupts.irq_LPIT0();       // call the shared interrupt handler
+                    }
+                }
+            }
+            else {
+                LPIT0_CVAL1 -= ulCount;
+            }
+        }
+        if ((LPIT0_TCTRL2 & LPIT_TCTRL_T_EN) != 0) {                     // if channel 2 is enabled
+            if (LPIT0_CVAL2 <= ulCount) {
+                ulCount -= LPIT0_CVAL2;
+                LPIT0_CVAL2 = LPIT0_TVAL2;                               // reload
+                if (ulCount < LPIT0_TVAL2) {
+                    LPIT0_CVAL2 -= ulCount;
+                }
+                LPIT0_MSR |= LPIT_MSR_TIF2;                              // flag that a reload occurred
+                fnHandleDMA_triggers(DMAMUX0_DMA0_CHCFG_SOURCE_PIT2, 0); // handle DMA triggered on PIT3
+                if ((LPIT0_MIER & LPIT_MIER_TIE2) != 0) {                // if PIT interrupt is enabled
+                    if (fnGenInt(irq_LPIT0_ID) != 0) {                   // if general PIT interrupt is not disabled
+                        VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                        ptrVect->processor_interrupts.irq_LPIT0();       // call the shared interrupt handler
+                    }
+                }
+            }
+            else {
+                LPIT0_CVAL2 -= ulCount;
+            }
+        }
+        if ((LPIT0_TCTRL3 & LPIT_TCTRL_T_EN) != 0) {                     // if channel 3 is enabled
+            if (LPIT0_CVAL3 <= ulCount) {
+                ulCount -= LPIT0_CVAL3;
+                LPIT0_CVAL3 = LPIT0_TVAL3;                               // reload
+                if (ulCount < LPIT0_TVAL3) {
+                    LPIT0_CVAL3 -= ulCount;
+                }
+                LPIT0_MSR |= LPIT_MSR_TIF3;                              // flag that a reload occurred
+                fnHandleDMA_triggers(DMAMUX0_DMA0_CHCFG_SOURCE_PIT3, 0); // handle DMA triggered on PIT3
+                if ((LPIT0_MIER & LPIT_MIER_TIE3) != 0) {                // if PIT interrupt is enabled
+                    if (fnGenInt(irq_LPIT0_ID) != 0) {                   // if general PIT interrupt is not disabled
+                        VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                        ptrVect->processor_interrupts.irq_LPIT0();       // call the shared interrupt handler
+                    }
+                }
+            }
+            else {
+                LPIT0_CVAL3 -= ulCount;
+            }
+        }
+    }
+    #else
     if ((PIT_MCR & PIT_MCR_MDIS) == 0) {                                 // if PIT module is not disabled
         if ((PIT_TCTRL0 & PIT_TCTRL_TEN) != 0) {                         // if PIT0 is enabled
             unsigned long ulCount = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)BUS_CLOCK)/1000000); // count in a tick period
@@ -7543,6 +7661,7 @@ extern int fnSimTimers(void)
         }
     #endif
     }
+    #endif
 #endif
 #if defined SUPPORT_RTC && !defined KINETIS_WITHOUT_RTC && !defined KINETIS_KE
     if ((RTC_SR & RTC_SR_TCE) != 0) {                                    // RTC is enabled
@@ -7834,7 +7953,7 @@ extern int fnSimTimers(void)
                     }
                 }
                 if ((LPTMR1_CSR & LPTMR_CSR_TIE) != 0) {                 // if LPTMR interrupt is enabled
-        #if !defined irq_LPTMR1_ID
+        #if !defined irq_LPTMR1_ID && defined INTMUX0_AVAILABLE
                     if (fnGenInt(irq_INTMUX0_0_ID + INTMUX_LPTMR1) != 0)
         #else
                     if (fnGenInt(irq_LPTMR1_ID) != 0)
@@ -9636,8 +9755,8 @@ extern void fnUpdateOperatingDetails(void)
     ptrBuffer = uStrcpy(ptrBuffer, "k, BUS CLOCK = ");
     #endif
     #if defined KINETIS_KL
-        #if defined KINETIS_WITH_PCC
-    ulBusClockSpeed = (SYSTEM_CLOCK / 1);
+        #if defined KINETIS_WITH_SCG
+    ulBusClockSpeed = (DIVSLOW_CLK);                                     // flash and bus clock
         #elif defined BUS_FLASH_CLOCK_SHARED
     ulBusClockSpeed = (SYSTEM_CLOCK/(((SIM_CLKDIV1 >> 16) & 0xf) + 1));
         #else
@@ -9665,7 +9784,7 @@ extern void fnUpdateOperatingDetails(void)
         ulBusClockSpeed /= 2;
     }
         #else
-    if (SIM_BUSDIV & SIM_BUSDIVBUSDIV) {
+    if ((SIM_BUSDIV & SIM_BUSDIVBUSDIV) != 0) {
         ulBusClockSpeed = (SYSTEM_CLOCK/2);
     }
     else {

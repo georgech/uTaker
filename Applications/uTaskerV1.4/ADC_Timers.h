@@ -1141,7 +1141,7 @@ static void test_timer_int(void)
     pit_setup.int_handler = test_timer_int;
     pit_setup.int_priority = PIT1_INTERRUPT_PRIORITY;
     #if defined SUPPORT_PITS
-    pit_setup.ucPIT = 1;                                                 // use PIT1
+    pit_setup.ucPIT = 0;                                                 // use PIT0
     #endif
     fnConfigureInterrupt((void *)&pit_setup);                            // enter interrupt for PIT1 test
 }

@@ -282,7 +282,7 @@ static __interrupt void _CAN1_IMEU_Interrupt(void)
 // The choice of clock source is user-defined but this routine tries to achieve best settings using highest time quanta resolution. 
 //
 // There are up to 25 time quanta in a CAN bit time and the bit frequency is equal to the clock frequency divided by the quanta number (8..25 time quanta range)
-// There is always a single time quanta at the start of a bit period called the SYNC_SEG which can not be changed (transitions are expected to occur on the bus during this period)
+// There is always a single time quanta at the start of a bit period called the SYNC_SEG which cannot be changed (transitions are expected to occur on the bus during this period)
 // The sampling occurs after time segment 1, which is made up of a propagation segment (1..8 time quanta) plus a phase buffer segment 1 (1..8 time quanta),
 // followed by time segment 2, made up of phase buffer segment 2 (2..8 time quanta)
 //

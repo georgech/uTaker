@@ -314,16 +314,16 @@ extern int fnVerifyUser(CHAR *cDecodedUser, unsigned char ucCheckUser)   // {1}
     }
 
     *cPass++ = '&';                                                      // terminate
-    if (!(HTML_PASS_CHECK & ucCheckUser)) {
+    if ((HTML_PASS_CHECK & ucCheckUser) == 0) {
         cPass = cDecodedUser;
     }
-    if (DO_CHECK_USER_NAME & ucCheckUser) {                              // {1}
+    if ((DO_CHECK_USER_NAME & ucCheckUser) != 0) {                       // {1}
         if (fnCheckPass(POINTER_USER_NAME, cDecodedUser)) {
             return CREDENTIALS_REQUIRED;                                 // return if user name match not valid {4}
         }
     }
-    if (DO_CHECK_PASSWORD & ucCheckUser) {                               // {1}
-        if (fnCheckPass(POINTER_USER_PASS, cPass)) {
+    if ((DO_CHECK_PASSWORD & ucCheckUser) != 0) {                        // {1}
+        if (fnCheckPass(POINTER_USER_PASS, cPass) != 0) {
             return CREDENTIALS_REQUIRED;                                 // return if user password is not good {4}
         }
     }

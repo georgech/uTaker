@@ -816,7 +816,7 @@ static int fnWriteText(GLCD_TEXT_POSITION *text_position, unsigned char ucLen, Q
 {
     CHAR cNewText[MAX_TEXT_LENGTH];                                      // space for the maximum expected text string plus a null terminator
     unsigned char ucLength = ucLen;
-    if (ucLength > MAX_TEXT_LENGTH) {                                    // ensure text can not overwrite buffer end
+    if (ucLength > MAX_TEXT_LENGTH) {                                    // ensure text cannot overwrite buffer end
         ucLength = MAX_TEXT_LENGTH;
     }
     fnRead(PortIDInternal, (unsigned char *)cNewText, ucLength);

@@ -60,7 +60,7 @@
     31.01.2017 Add fnClearPending() and fnIsPending()                    {126}
     02.03.2017 Add optional alternative memcpy DMA channel for use by interrupts {127}
     12.05.2017 Allow detection of RNG type in case both revison 1 and revision 2 parts may be encountered {128}
-    05.09.2017 Add watchdog interrupt (needs WDOG_STCTRLH_IRQRSTEN set in the watchdog configuration) {129}
+    05.09.2017 Add watchdog interrupt (needs WDOG_STCTRLH_IRQRSTEN or WDOG_CS1_INT set in the watchdog configuration) {129}
     12.09.2017 Added INTMUX support                                      {130}
 
 */
@@ -1079,7 +1079,11 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void (*
     if (iInterruptID >= irq_INTMUX0_0_ID) {
         KINETIS_INTMUX *ptrINTMUX = (KINETIS_INTMUX *)INTMUX0_BLOCK;
         int iChannel = (iInterruptID - irq_INTMUX0_0_ID);
+    #if defined KINETIS_WITH_PCC
+        PCC_INTMUX0 |= PCC_CGC;
+    #else
         POWER_UP_ATOMIC(6, SIM_SCGC6_INTMUX0);                           // power up the INTMUX0 module
+    #endif
         ptrINTMUX += iChannel;                                           // moved to the channel to be used
         ptrINTMUX->INTMUX_CHn_IER_31_0 |= (1 << ucPriority);             // enable the peripheral source interrupt to the INTMUX module
     #if !defined INTERRUPT_VECTORS_IN_FLASH
@@ -2341,12 +2345,19 @@ extern void __init_gnu_data(void)
 }
 #endif
 
-#if defined WDOG_STCTRLL                                                 // {129} watchdog interrupt
+#if defined WDOG_STCTRLL || defined WDOG_CS1                             // {129} watchdog interrupt
 static void wdog_irq(void)
 {
+    #if defined WDOG_STCTRLL
     WDOG_STCTRLL = (WDOG_STCTRLL_INTFLG | WDOG_STCTRLL_RES1);            // clear interrupt flag
-    #if defined _WINDOWS
+        #if defined _WINDOWS
     WDOG_STCTRLL = 0;
+        #endif
+    #elif defined WDOG_CS1
+    WDOG_CS2 |= WDOG_CS2_FLG;                                            // clear interrupt flag
+        #if defined _WINDOWS
+    WDOG_CS2 &= ~WDOG_CS2_FLG;
+        #endif
     #endif
     *BOOT_MAIL_BOX = 0x9876;                                             // set a pattern to the boot mailbox to show that the watchdog interrupt took place
 }
@@ -2566,8 +2577,8 @@ static void _LowLevelInit(void)
 #if defined SET_POWER_MODE
     SET_POWER_MODE();                                                    // {93}
 #endif
- #if defined WDOG_STCTRLL                                                // {129}
-    #if !defined irq_WDOG_ID
+ #if defined WDOG_STCTRLL || defined WDOG_CS1                            // {129}
+    #if !defined irq_WDOG_ID && defined INTMUX0_AVAILABLE
     fnEnterInterrupt((irq_INTMUX0_0_ID + INTMUX_WDOG0), INTMUX0_PERIPHERAL_WDOG0_EWM, wdog_irq);// test WDOG interrupt - based on INTMUX
     #else
     fnEnterInterrupt(irq_WDOG_ID, 0, wdog_irq);                          // test WDOG interrupt (highest priority)

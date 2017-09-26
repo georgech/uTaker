@@ -716,7 +716,7 @@ static int fnTELNETListener(USOCKET Socket, unsigned char ucEvent, unsigned char
 
         iReturn |= TELNET_session->fnApp(Socket, TCP_EVENT_ACK, 0, 0);   // let application also handle ack
 
-        if (iReturn & APP_REQUEST_CLOSE) {                               // if application request a close
+        if ((iReturn & APP_REQUEST_CLOSE) != 0) {                        // if application request a close
             fnTCP_close(Socket);                                         // terminate the connection
             return APP_REQUEST_CLOSE;
         }

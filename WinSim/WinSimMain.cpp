@@ -4771,7 +4771,7 @@ static void fnSetComPort(HANDLE m_hComm, DWORD dwBaud, UART_MODE_CONFIG Mode) //
 
     GetCommState(m_hComm, &dcb);                                         // get the present com port settings
 
-    if (dwBaud < 250) {                                                  // often the speed can not be set accurately enough for windows to understand it - se we help out a bit here
+    if (dwBaud < 250) {                                                  // often the speed cannot be set accurately enough for windows to understand it - se we help out a bit here
         dwBaud = 110;
     }
     else if (dwBaud <400) {

@@ -282,7 +282,7 @@ static void fnStartNewTimer(TIMER_BLOCK *ptrNewTimer)
       //    RemainingTime = (uTaskerSystemTick - RemainingTime);
       //}
         UTASK_TICK RemainingTime;                                        // {9}
-        uDisable_Interrupt();                                            // ensure that the tick can not increment while doing the following
+        uDisable_Interrupt();                                            // ensure that the tick cannot increment while doing the following
             RemainingTime = uTaskerRemainingTime(OWN_TASK);              // {8} get the time remaining before the timer fires - if this is 0 it means that it has fired and is waiting to be handled
             if (RemainingTime > ptrNewTimer->TimerDelay) {               // the new timer value is shorter that the next firing time
               //fnReduceSWTimers(ptrNewTimer, (unsigned char)(NextFire - (unsigned char)RemainingTime)); {6}

@@ -43,9 +43,11 @@
     13.07.2017 Add w25q (windbond) spi flash option and a target for the FRDM-KL82Z
     17.07.2017 Add target for the FRDM-KL25Z
 
-*/
+    See this video for details of buiding and checking the "Bare-Minimum" boot loader: https://youtu.be/lm3M-ZlaFLQ
 
-#ifndef __CONFIG__
+    */
+
+#if !defined __CONFIG__
 #define __CONFIG__
 
 #define NO_STATUS_BAR                                                    // don't use status bar in simulator (to avoid string function requirements)

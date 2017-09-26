@@ -115,14 +115,14 @@ static __interrupt void _LPTMR1_single(void)
             if (lptmr_setup->ucTimer != 0) {
                 if ((LPTMR_interrupt_handler[1] = lptmr_setup->int_handler) != 0) { // enter the user's interrupt handler
                     if ((lptmr_setup->mode & LPTMR_PERIODIC) != 0) {     // periodic mode
-            #if !defined irq_LPTMR1_ID
+            #if !defined irq_LPTMR1_ID && defined INTMUX0_AVAILABLE
                         fnEnterInterrupt((irq_INTMUX0_0_ID + INTMUX_LPTMR1), INTMUX0_PERIPHERAL_LPTMR1, (void(*)(void))_LPTMR1_periodic); // enter interrupt handler
             #else
                         fnEnterInterrupt(irq_LPTMR1_ID, lptmr_setup->int_priority, (void(*)(void))_LPTMR1_periodic); // enter interrupt handler
             #endif
                     }
                     else {                                               // single-shot mode
-            #if !defined irq_LPTMR1_ID
+            #if !defined irq_LPTMR1_ID && defined INTMUX0_AVAILABLE
                         fnEnterInterrupt((irq_INTMUX0_0_ID + INTMUX_LPTMR1), INTMUX0_PERIPHERAL_LPTMR1, (void(*)(void))_LPTMR1_single); // enter interrupt handler
             #else
                         fnEnterInterrupt(irq_LPTMR1_ID, lptmr_setup->int_priority, (void(*)(void))_LPTMR1_single); // enter interrupt handler

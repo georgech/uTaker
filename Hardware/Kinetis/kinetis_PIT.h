@@ -23,11 +23,23 @@
     13.07.2016 Test workaround for potential race state that can cause a hard fault to occur when PIT interrupt disables module while it is being enabled by user code {6}
     22.01.2017 Enable PIT DMA support with SUPPORT_PIT_DMA_PORT_TOGGLE   {7}
     03.02.2017 Check channel's interrupt flag before clearing it (KL)    {8}
+    26.09.2017 Add LPIT support                                          {9}
 
 */
 
 #if defined _PIT_CODE
 
+#if defined LPITS_AVAILABLE                                              // {9}
+    #define _PITS_AVAILABLE  LPIT_CHANNELS
+    #define irq_PIT_ID       irq_LPIT0_ID
+    #if defined CLOCK_LPIT_FROM_FIRC                                     // clock the LPIT from the fast internal RC oscillator
+        #define LPIT0_CLOCK_SOURCE    PCC_PCS_SCGFIRCLK                  // the LPIT is clocked by the fast IRC clock source (FIRCDIV3_CLK)
+    #else
+        #error "None-supported LPIT clock source!"
+    #endif
+#else
+    #define _PITS_AVAILABLE  PITS_AVAILABLE
+#endif
 /* =================================================================== */
 /*                 local function prototype declarations               */
 /* =================================================================== */
@@ -38,7 +50,7 @@ static void fnDisablePIT(int iPIT);
 /*                      local variable definitions                     */
 /* =================================================================== */
 
-static void (*pit_interrupt_handler[PITS_AVAILABLE])(void) = {0};        // user callback for each PIT
+static void (*pit_interrupt_handler[_PITS_AVAILABLE])(void) = {0};       // user callback for each PIT
 static unsigned char ucPITmodes = 0;                                     // PIT mode containing flags for all PITs
 
 /* =================================================================== */
@@ -51,8 +63,30 @@ static unsigned char ucPITmodes = 0;                                     // PIT 
 static __interrupt void _PIT_Interrupt(void)
 {
     int iChannel = 0;
-    KINETIS_PIT_CTL *ptrCtl = (KINETIS_PIT_CTL *)PIT_CTL_ADD;            // set PIT control structure pointer to first PIT
+    #if !defined LPITS_AVAILABLE
+    KINETIS_PIT_CTL *ptrCtl = (KINETIS_PIT_CTL *)PIT_CTL_ADD;            // set PIT control structure pointer to first PIT channel
+    #endif
     do {
+    #if defined LPITS_AVAILABLE                                          // {9}
+        if ((LPIT0_MIER & (LPIT_MIER_TIE0 << iChannel)) != 0) {          // interrupt is enabled on this channel
+            if ((LPIT0_MSR & (LPIT_MSR_TIF0 << iChannel)) != 0) {        // interrupt is pending on this channel
+        #if defined _WINDOWS
+                LPIT0_MSR &= ~(LPIT_MSR_TIF0 << iChannel);               // clear pending interrupt
+        #else
+                LPIT0_MSR = (LPIT_MSR_TIF0 << iChannel);                 // clear pending interrupt
+        #endif
+                if ((ucPITmodes & (PIT_PERIODIC << (iChannel * 2))) == 0) { // if not periodic mode (single-shot usage)
+                    fnDisablePIT(iChannel);                              // stop PIT operation and power down when no other activity
+                }
+                uDisable_Interrupt();
+                    pit_interrupt_handler[iChannel]();                   // call handling function
+                uEnable_Interrupt();
+                if ((PCC_LPIT0 & PCC_CGC) == 0) {                        // if the PIT module has been powered down we return rather than checking further channels
+                    return;
+                }
+            }
+        }
+    #else
         if ((ptrCtl->PIT_TCTRL & (PIT_TCTRL_TIE | PIT_TCTRL_TEN)) == (PIT_TCTRL_TIE | PIT_TCTRL_TEN)) { // if the channel and its interrupt are enabled
             if ((ptrCtl->PIT_TFLG & PIT_TFLG_TIF) != 0) {                // {8} if this channel's interrupt has fired
                 WRITE_ONE_TO_CLEAR(ptrCtl->PIT_TFLG, PIT_TFLG_TIF);      // clear pending interrupts
@@ -68,7 +102,8 @@ static __interrupt void _PIT_Interrupt(void)
             }
         }
         ptrCtl++;                                                        // move to next PIT control structure
-    } while (++iChannel < PITS_AVAILABLE);                               // for each PIT channel that may be interrupting
+    #endif
+    } while (++iChannel < _PITS_AVAILABLE);                              // for each PIT channel that may be interrupting
 }
     #else
 // Common interrupt handler for all PITs
@@ -123,9 +158,14 @@ static void fnDisablePIT(int iPIT)
         ucPITmodes &= ~((PIT_SINGLE_SHOT | PIT_PERIODIC) << (iPIT * 2)); // clear the PIT's mode flags
     #if !defined PIT_TIMER_USED_BY_PERFORMANCE_MONITOR                   // don't power the PITs down if one is being used for performance monitoring
         if (ucPITmodes == 0) {                                           // if no PITs are in use power down the PIT module
+        #if defined LPITS_AVAILABLE                                      // {9}
+            LPIT0_MCR = 0;                                               // disable clocks to module since no more timers are active
+            PCC_LPIT0 = 0;
+        #else
             POWER_UP(6, SIM_SCGC6_PIT);                                  // {2} ensure that the module is powered up for the next operation
             PIT_MCR = PIT_MCR_MDIS;                                      // disable clocks to module since no more timers are active
             POWER_DOWN(6, SIM_SCGC6_PIT);                                // power down the PIT module
+        #endif
         }
     #endif
     uEnable_Interrupt();
@@ -141,7 +181,7 @@ static void fnDisablePIT(int iPIT)
         PIT_SETUP *PIT_settings = (PIT_SETUP *)ptrSettings;
         KINETIS_PIT_CTL *ptrCtl = (KINETIS_PIT_CTL *)PIT_CTL_ADD;
         unsigned long ulCommand;
-        if (PIT_settings->ucPIT >= PITS_AVAILABLE) {
+        if (PIT_settings->ucPIT >= _PITS_AVAILABLE) {
     #if defined _WINDOWS
             _EXCEPTION("Invalid PIT channel!");
     #endif
@@ -154,15 +194,26 @@ static void fnDisablePIT(int iPIT)
       //POWER_UP(6, SIM_SCGC6_PIT);                                      // {6}{5} ensure the PIT module is powered up
         pit_interrupt_handler[PIT_settings->ucPIT] = PIT_settings->int_handler; // enter the user handler
         uDisable_Interrupt();                                            // {2} protect the mode variable during modification
+    #if defined KINETIS_WITH_PCC
+            if ((PCC_LPIT0 & PCC_CGC) == 0) {                            // if presently powered down
+                PCC_LPIT0 = LPIT0_CLOCK_SOURCE;                          // set LPIT's clock source
+                PCC_LPIT0 = (PCC_CGC | LPIT0_CLOCK_SOURCE);              // power up the LPIT module
+            }
+    #else
             POWER_UP(6, SIM_SCGC6_PIT);                                  // {5}{6} ensure the PIT module is powered up
+    #endif
             ucPITmodes = ((ucPITmodes & ~((PIT_SINGLE_SHOT | PIT_PERIODIC) << (PIT_settings->ucPIT * 2))) | ((PIT_settings->mode & (PIT_SINGLE_SHOT | PIT_PERIODIC)) << (PIT_settings->ucPIT * 2))); // {5} [the variable protects from power downs from this point]
         uEnable_Interrupt();
-        ptrCtl += PIT_settings->ucPIT;                                   // set the PIT to be configured
+        ptrCtl += PIT_settings->ucPIT;                                   // set the PIT (channel) to be configured
       //POWER_UP(6, SIM_SCGC6_PIT);                                      // {2} ensure the PIT module is powered up
   //#if defined ERRATA_ID_7914
       //(void)PIT_MCR;                                                   // dummy read of PIT_MCR to guaranty a minimum delay of two bus cycles after enabling the clock gate and not losing next write
   //#endif
+    #if defined LPITS_AVAILABLE                                          // {9}
+        LPIT0_MCR = (LPIT_MCR_M_CEN);                                    // ensure the PIT module is clocked (when enabled for the first time 4 clock cycles are required to allow for clock synchronisation and reset assertion)
+    #else
         PIT_MCR = 0;                                                     // ensure the PIT module is clocked
+    #endif
         if (PIT_settings->int_handler != 0) {                            // if an interrupt is required
     #if defined KINETIS_KL                                               // {3} KL devices have a single interrupt from the PIT channels
             fnEnterInterrupt(irq_PIT_ID, PIT_settings->int_priority, _PIT_Interrupt); // ensure that the handler for the PIT module is entered
@@ -184,39 +235,61 @@ static void fnDisablePIT(int iPIT)
         #endif
             }
     #endif
-            ulCommand = (PIT_TCTRL_TEN | PIT_TCTRL_TIE);
+    #if defined LPITS_AVAILABLE                                          // {9}
+        #if defined _WINDOWS
+            LPIT0_MSR &= ~(LPIT_MSR_TIF0 << PIT_settings->ucPIT);        // clear interrupt flag
+        #else
+            LPIT0_MSR = (LPIT_MSR_TIF0 << PIT_settings->ucPIT);          // clear interrupt flag
+        #endif
+            LPIT0_MIER |= (LPIT_MIER_TIE0 << PIT_settings->ucPIT);       // enable interrupt
+    #else
+            ulCommand = (PIT_TCTRL_TEN | PIT_TCTRL_TIE);                 // PIT to be enabled with interrupt
+    #endif
         }
         else {
+    #if defined LPITS_AVAILABLE
+            LPIT0_MIER &= ~(LPIT_MIER_TIE0 << PIT_settings->ucPIT);      // disable interrupt
+    #else
             ulCommand = (PIT_TCTRL_TEN);                                 // no interrupt used
+    #endif
         }
         if ((PIT_settings->mode & (PIT_SINGLE_SHOT | PIT_RETRIGGER)) != 0) { // single shot always behaves as retriggerable - periodic change at next timeout by default but can be forced with PIT_RETRIGGER
             ptrCtl->PIT_TCTRL = 0;                                       // {1} disable PIT so that it can be retriggered if needed
         }
         ptrCtl->PIT_LDVAL = PIT_settings->count_delay;                   // load interval value
+    #if defined LPITS_AVAILABLE                                          // {9}
+        if ((PIT_settings->mode & PIT_SINGLE_SHOT) != 0) {
+            ulCommand = (LPIT_TCTRL_MODE_32 | LPIT_TCTRL_TSOI | LPIT_TCTRL_T_EN); // enable timer and stop timer on interrupt
+        }
+        else {
+            ulCommand = (LPIT_TCTRL_MODE_32 | LPIT_TCTRL_T_EN);          // enable timer
+        }
+    #else
         ptrCtl->PIT_TFLG  = PIT_TFLG_TIF;                                // clear pending interrupts
         if ((PIT_settings->mode & PIT_TRIGGER_ADC0_A) != 0) {            // if the PIT output TIF is to trigger ADC0 conversion on channel A
-    #if defined KINETIS_KE
+        #if defined KINETIS_KE
             SIM_SOPT0 |= SIM_SOPT_ADHWT_PIT0;                            // trigger ADC on PIT0 overflow
-    #else
+        #else
             SIM_SOPT7 = ((SIM_SOPT7_ADC0TRGSEL_PIT0 + PIT_settings->ucPIT) | SIM_SOPT7_ADC0PRETRGSEL_A | SIM_SOPT7_ADC0ALTTRGEN); // trigger ADC0 channel A
-    #endif
+        #endif
         }
         else if ((PIT_settings->mode & PIT_TRIGGER_ADC0_B) != 0) {       // if the PIT output TIF is to trigger ADC0 conversion on channel B
-    #if defined KINETIS_KE
+        #if defined KINETIS_KE
             SIM_SOPT0 |= SIM_SOPT_ADHWT_PIT0;                            // trigger ADC on PIT0 overflow
-    #else
+        #else
             SIM_SOPT7 = ((SIM_SOPT7_ADC0TRGSEL_PIT0 + PIT_settings->ucPIT) | SIM_SOPT7_ADC0PRETRGSEL_B | SIM_SOPT7_ADC0ALTTRGEN); // trigger ADC0 channel B
-    #endif
+        #endif
         }
-    #if !defined DEVICE_WITHOUT_DMA && defined SUPPORT_PIT_DMA_PORT_TOGGLE // {7}
+        #if !defined DEVICE_WITHOUT_DMA && defined SUPPORT_PIT_DMA_PORT_TOGGLE // {7}
         if ((PIT_settings->mode & PIT_OUTPUT_DMA_TRIG) != 0) {           // if the PIT is to trigger a port toggle by DMA
             // Note that PIT channel number must match with the DMA channel (hardware requirement) and the DMA channel is chosen here to match the PIT
             //
-            static unsigned long ulPortBits[PITS_AVAILABLE] = {0};
+            static unsigned long ulPortBits[_PITS_AVAILABLE] = {0};
             ulPortBits[PIT_settings->ucPIT] = PIT_settings->ulPortBits;  // the port bit(s) to be toggled
             fnConfigDMA_buffer(PIT_settings->ucPIT, (DMAMUX0_DMA0_CHCFG_SOURCE_PIT0 + PIT_settings->ucPIT), sizeof(ulPortBits[PIT_settings->ucPIT]), &ulPortBits[PIT_settings->ucPIT], (unsigned long *)(GPIO_BLOCK + (0x040 * PIT_settings->ucPortRef) + 0x00c), (DMA_DIRECTION_OUTPUT | DMA_LONG_WORDS | DMA_FIXED_ADDRESSES | DMA_NO_MODULO), 0, 0); // source is the port bit and destination is the GPIO toggle register (DMA_FIXED_ADDRESSES and DMA_NO_MODULO are used only by KL parts)
             fnDMA_BufferReset(PIT_settings->ucPIT, DMA_BUFFER_START);
         }
+        #endif
     #endif
         ptrCtl->PIT_TCTRL = ulCommand;                                   // start PIT with interrupt enabled, when handler defined
     #if defined _WINDOWS

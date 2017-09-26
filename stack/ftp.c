@@ -20,7 +20,7 @@
     03.06.2007 Activate passive mode (see define FTP_PASV_SUPPORT)
     03.06.2007 Pass FTP timeout when starting FTP server plus operating mode {5}
     03.06.2007 Added clean QUIT handling                                 {6}
-    06.06.2007 Changed empty directory display file to include -r at beginning - without this FireFTP can not work correctly (it doesn't display anthing though) {7}
+    06.06.2007 Changed empty directory display file to include -r at beginning - without this FireFTP cannot work correctly (it doesn't display anthing though) {7}
     03.09.2007 Add optional retrigger of control socket idle timer on data port activity (DATA_PORT_TRIGGERS_CONTROL) {8}
     17.11.2007 Correct dependency FTP_SUPPORTS_DELETE rather than FTP_SUPPORTS_NAME_DISPLAY {9}
     17.11.2007 Add define FILE_NAMES_PER_FTP_FRAME to correct operation without file names and adapt for compatibility {10}
@@ -636,7 +636,7 @@ static int fnFTPListener(USOCKET Socket, unsigned char ucEvent, unsigned char *u
                     if (ptr_utDirectory->usDirectoryFlags & UTDIR_VALID) {
                       //utFile.ptr_utDirObject = ptr_utDirectory;
                         if (utOpenFile(fnStringTerminate(ucIp_Data + 5), &utFile, ptr_utDirectory, (UTFAT_OPEN_FOR_WRITE | UTFAT_CREATE | UTFAT_TRUNCATE)) != UTFAT_PATH_IS_FILE) { // {31}{34} open a file referenced to the directory object
-                            return (fnSendFTP(MSG_FTP_DENIED, ptrFtp));  // file can not be created, overwritten
+                            return (fnSendFTP(MSG_FTP_DENIED, ptrFtp));  // file cannot be created or overwritten
                         }
                     }
                     else {

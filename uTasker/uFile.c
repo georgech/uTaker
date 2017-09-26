@@ -156,7 +156,7 @@
 #endif
 
 #if defined MANAGED_FILES                                                // {24}
-// When managed files are in operation the FLASH driver will return MEDIA_BUSY if writes can not yet be performed.
+// When managed files are in operation the FLASH driver will return MEDIA_BUSY if writes cannot yet be performed.
 // This module waits for the write to complete by recalling if necessary
 //
 static int _fnWriteBytesFlash(unsigned char *ucDestination, unsigned char *ucData, MAX_FILE_LENGTH Length)

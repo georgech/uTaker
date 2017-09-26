@@ -5964,13 +5964,13 @@ static int fnDoDebug(CHAR *ptr_input, unsigned short usInputLen, int iSource)
 
     if (iSource == SOURCE_SERIAL) {
         if ((usData_state == ES_NO_CONNECTION) || (usData_state & ES_SERIAL_SUSPENDED)) {
-            return 0;                                                    // we can not treat commands
+            return 0;                                                    // we cannot treat commands
         }
     }
 #if defined USE_USB_CDC                                                  // {8}
     else if (iSource == SOURCE_USB) {
         if (usUSB_state == ES_NO_CONNECTION) {
-            return 0;                                                    // we can not treat commands
+            return 0;                                                    // we cannot treat commands
         }
     }
 #endif
@@ -6235,6 +6235,71 @@ extern CHAR *fnSkipWhiteSpace(CHAR *ptr_input)
     return (ptr_input);
 }
 
+#if defined USE_TELNET_LOGIN
+static unsigned char fnCheckUserPass(CHAR *ptrData, unsigned char ucInputLength)
+{
+    switch (ucPasswordState) {
+    case TELNET_LOGIN:
+    case START_PASSWORD:
+        // The user has just entered the present user name and password in the form "user:pass"
+        *(ptrData + ucInputLength) = '&';                                // terminate input in the form we require
+        if (fnVerifyUser(ptrData, (DO_CHECK_USER_NAME | DO_CHECK_PASSWORD | HTML_PASS_CHECK)) != 0) {
+            fnDebugMsg("\n\rError - false user details!\n\r");
+            if (usTelnet_state == ES_NETWORK_LOGIN){
+                fnTelnet(Telnet_socket, LEAVE_ECHO_MODE);
+                usTelnet_state = ES_TERMINATE_CONNECTION;                // quit an active Telnet session
+            }
+            else {
+                fnGotoNextState(ES_NO_CONNECTION);
+            }
+            return PASSWORD_IDLE;
+        }
+        if (ucPasswordState == TELNET_LOGIN) {                           // the user has successfully logged in
+            fnLoginSuccess();
+            return PASSWORD_IDLE;
+        }
+        fnDebugMsg("\n\rPlease enter new user name (4..8 characters): ");
+        return ENTER_USER_NAME;
+
+    case ENTER_USER_NAME:
+        if ((ucInputLength < 4) || (ucInputLength > 8)) {
+            fnDebugMsg("\n\rError - invalid length\n\r");
+            return PASSWORD_IDLE;
+        }
+        uMemcpy(temp_pars->temp_parameters.cUserName, ptrData, ucInputLength);
+        if (ucInputLength < 8) {
+            temp_pars->temp_parameters.cUserName[ucInputLength] = '&';
+        }
+        fnDebugMsg("\n\rPlease enter new password (4..8 characters): ");
+        return ENTER_NEW_PASSWORD;
+
+    case ENTER_NEW_PASSWORD:
+        if ((ucInputLength < 4) || (ucInputLength > 8)) {
+            fnDebugMsg("\n\rError - invalid length\n\r");
+            return PASSWORD_IDLE;
+        }
+        uMemcpy(temp_pars->temp_parameters.cUserPass, ptrData, ucInputLength);
+        if (ucInputLength < 8) {
+            temp_pars->temp_parameters.cUserPass[ucInputLength] = '&';
+        }
+        fnDebugMsg("\n\rPlease confirm the new password: ");
+        return CONFIRM_NEW_PASS;
+
+    case CONFIRM_NEW_PASS:
+        *(ptrData + ucInputLength) = '&';                                // Terminate input in the form we require
+        if (!fnCheckPass(temp_pars->temp_parameters.cUserPass, ptrData)) {
+            fnDebugMsg("\n\rNew user data set\n\r");
+            fnSaveNewPars(SAVE_NEW_PARAMETERS);
+        }
+        else {
+            fnDebugMsg("\n\rError - false password!\n\r");
+        }
+        break;
+    }
+    return PASSWORD_IDLE;
+}
+#endif
+
 
 extern int fnCommandInput(unsigned char *ptrData, unsigned short usLen, int iSource)
 {
@@ -6391,6 +6456,13 @@ extern int fnCommandInput(unsigned char *ptrData, unsigned short usLen, int iSou
         cDebugIn[iDebugBufferIndex][ucDebugCnt] = *ptrData;
         if (*ptrData == '\r') {
             cDebugIn[iDebugBufferIndex][ucDebugCnt] = '\n';
+#if defined USE_TELNET_LOGIN
+            if ((ucPasswordState != PASSWORD_IDLE) && ((usTelnet_state != ES_NETWORK_LOGIN) || (iSource == SOURCE_NETWORK))) {
+                ucPasswordState = fnCheckUserPass(cDebugIn[iDebugBufferIndex], ucDebugCnt);
+                ucDebugCnt = 0;
+                return 1;                                                // we will always send something so report that a transmission has been started
+            }
+#endif
             fnSaveDebugHandle(iSource);                                  // save present debug handle and set appropriate
             fnDoDebug(cDebugIn[iDebugBufferIndex], (unsigned char)(ucDebugCnt + 1), iSource); // treat debug messages
             fnRestoreDebugHandle();                                      // return the present debug output
@@ -6438,7 +6510,13 @@ extern int fnInitiateLogin(unsigned short usNextState)
 #endif
     default:                                                             // network login
         usTelnet_state = ES_NETWORK_LOGIN;
+#if defined USE_TELNET_LOGIN
+        ucPasswordState = TELNET_LOGIN;                                  // we request login before continuing
+        fnDebugMsg("\n\rWelcome to the Telnet server.\n\rPlease enter user name and password (user:pass): ");
+        return DO_PASSWORD_ENTRY;
+#else
         break;
+#endif
     }
     fnLoginSuccess();                                                    // no login - go directly to connected state
     return DIRECT_LOGIN;
@@ -7047,9 +7125,9 @@ extern void fnSetNewValue(int iType, CHAR *ptr_input)                    // {6}
 extern void fnConfigureFtpServer(unsigned short usTimeout)               // {3}{6}
 {
 #if defined USE_FTP
-    if (temp_pars->temp_parameters.usServers[DEFAULT_NETWORK] & ACTIVE_FTP_SERVER) { // should the FTP server be started?
+    if ((temp_pars->temp_parameters.usServers[DEFAULT_NETWORK] & ACTIVE_FTP_SERVER) != 0) { // should the FTP server be started?
         unsigned char ucFTP_mode = 0;
-        if (temp_pars->temp_parameters.usServers[DEFAULT_NETWORK] & ACTIVE_FTP_LOGIN) {
+        if ((temp_pars->temp_parameters.usServers[DEFAULT_NETWORK] & ACTIVE_FTP_LOGIN) != 0) {
             ucFTP_mode = FTP_AUTHENTICATE;
         }
         fnStartFtp(usTimeout, ucFTP_mode);                               // start the FTP server

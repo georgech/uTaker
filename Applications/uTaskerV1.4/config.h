@@ -1081,7 +1081,7 @@
         #endif
         #if defined USB_HOST_SUPPORT
           //#define USB_MSD_HOST                                         // works together with mass-storage for a USB memory stick as disk E
-            #define USB_CDC_HOST                                         // supports CDC device (can be used together with MSD host)
+            #define USB_CDC_HOST                                         // supports CDC device (can be used together with MSD host) - see https://youtu.be/XhISV1czIo4 for a demonstration of CDC communication betwen a host and a device target
                 #define SUPPORT_USB_SIMPLEX_HOST_ENDPOINTS               // allow operation with devices using bulk IN/OUT on the same endpoint (this should normally always be set)
                 #define USB_CDC_COUNT  1                                 // support up to this many virtual com host interfaces
         #endif
@@ -1142,7 +1142,7 @@
 
 // utFAT
 //
-#define SDCARD_SUPPORT                                                   // SD-card interface
+//#define SDCARD_SUPPORT                                                 // SD-card interface
 //#define FLASH_FAT                                                      // FAT in internal flash
 //#define SPI_FLASH_FAT                                                  // FAT in external SPI flash
     #define SIMPLE_FLASH                                                 // don't perform block management and wear-leveling
@@ -1373,7 +1373,7 @@
         #if defined USE_TCP                                              // specify TCP support details
           //#define T_TCP_PERIOD           (DELAY_LIMIT)(0.1 * SEC)      // user defined TCP polling resolution (allows higher resolution polling and the following user defined values rather than defaults)
             #if defined T_TCP_PERIOD
-                #define TCP_DEF_RETRIES              7                   // packets will be retransmitted this amount of times
+                #define TCP_DEF_RETRIES              7                   // packets will be re-transmitted this amount of times
                 #define TCP_CON_ATTEMPTS             7                   // connection attempts will stop after this amount of tries
                 #define USER_TCP_SYN_RETRY_MS        600                 // TCP connection repetition timer (ms)
                 #define USER_TCP_STANDARD_RETRY_MS   400                 // standard TCP transmission repetition timer (ms)
@@ -1397,6 +1397,7 @@
           //#define USE_POP3                                             // enable POP3 Email - needs TCP
             #define USE_HTTP                                             // support embedded Web server - needs TCP
             #define USE_TELNET                                           // enable TELNET support
+                #define USE_TELNET_LOGIN
               //#define TELNET_RFC2217_SUPPORT                           // support TELNET COM port control options
           //#define USE_TELNET_CLIENT                                    // enable TELNET client support
           //#define USE_TIME_SERVER                                      // enable time server support - presently demo started in application

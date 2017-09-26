@@ -432,7 +432,7 @@ typedef struct stMODBUS_CALLBACKS
     int ( *user_function_call )( int iType, MODBUS_RX_FUNCTION *);       // called to process a user defined function
 } MODBUS_CALLBACKS;
 
-#define MODBUS_APP_FUNCTION_ERROR   -1                                   // function can not be handled
+#define MODBUS_APP_FUNCTION_ERROR   -1                                   // function cannot be handled
 #define MODBUS_APP_DELAYED_RESPONSE -2                                   // application needs to to prepare response and will inform later
 #define MODBUS_APP_GATEWAY_FUNCTION -3
 
