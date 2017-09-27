@@ -2164,7 +2164,9 @@ extern unsigned char fnAddResetCause(CHAR *ptrBuffer)
 {
     const CHAR *ptrStr;
 #if !defined KINETIS_KE                                                  // {11}
+    #if !defined KINETIS_KL
     static const CHAR cJtag[]          = "JTAG";
+    #endif
     static const CHAR cWakeupOther[]   = "Wakeup";
     static const CHAR cWakeup[]        = "Wakeup reset";
 #endif
@@ -2211,9 +2213,11 @@ extern unsigned char fnAddResetCause(CHAR *ptrBuffer)
     }
 #elif defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000) // {7}
     static const CHAR cHostDebug[]     = "Host debugger";
+    #if !defined KINETIS_KL
     static const CHAR cEZPORT[]        = "EZPORT";
+    static const CHAR cTamper[] = "tamper";
+    #endif
     static const CHAR cPerFailure[]    = "peripheral failure";
-    static const CHAR cTamper[]        = "tamper";
 
     if ((RCM_SRS0 & RCM_SRS0_POR) != 0) {                                // power on reset
         ptrStr = cPowerOn;
@@ -2238,9 +2242,11 @@ extern unsigned char fnAddResetCause(CHAR *ptrBuffer)
     else if ((RCM_SRS0 & RCM_SRS0_PIN) != 0) {                           // reset pin
         ptrStr = cResetInput;
     }
+    #if !defined KINETIS_KL
     else if ((RCM_SRS1 & RCM_SRS1_JTAG) != 0) {                          // jtag
         ptrStr = cJtag;
     }
+    #endif
     else if ((RCM_SRS1 & RCM_SRS1_LOCKUP) != 0) {                        // core lockup
         ptrStr = cLockup;
     }
@@ -2250,15 +2256,19 @@ extern unsigned char fnAddResetCause(CHAR *ptrBuffer)
     else if ((RCM_SRS1 & RCM_SRS1_MDM_AP) != 0) {                        // host debugger
         ptrStr = cHostDebug;
     }
+    #if !defined KINETIS_KL
     else if ((RCM_SRS1 & RCM_SRS1_EZPT) != 0) {                          // EZPORT reset
         ptrStr = cEZPORT;
     }
+    #endif
     else if ((RCM_SRS1 & RCM_SRS1_SACKERR) != 0) {                       // peripheral failed to acknowledge attempt to enter stop mode
         ptrStr = cPerFailure;
     }
+    #if !defined KINETIS_KL
     else if ((RCM_SRS1 & RCM_SRS1_TAMPER) != 0) {                        // tamper detect
         ptrStr = cTamper;
     }
+    #endif
     else {                                                               // unexpected
         ptrStr = cUnknown;
     }

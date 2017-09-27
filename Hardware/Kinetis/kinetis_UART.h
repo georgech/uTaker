@@ -1220,7 +1220,6 @@ extern QUEUE_TRANSFER fnTxByteDMA(QUEUE_HANDLE Channel, unsigned char *ptrStart,
                 #endif
     }
             #endif
-
     DMA_ERQ |= (DMA_ERQ_ERQ0 << UART_DMA_TX_CHANNEL[Channel]);           // enable request source
         #endif 
         #if defined _WINDOWS                                             // simulation

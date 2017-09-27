@@ -3365,7 +3365,11 @@ typedef struct stVECTOR_TABLE
         #define ADC2_BLOCK                     0x4003c000                // ADC2
     #endif
     #if !defined KINETIS_KL02
-        #define RTC_BLOCK                      0x4003d000                // RTC
+        #if defined KINETIS_KL28
+            #define RTC_BLOCK                  0x40038000                // RTC
+        #else
+            #define RTC_BLOCK                  0x4003d000                // RTC
+        #endif
     #endif
     #if !defined KINETIS_KE
         #if defined KINETIS_KL28
@@ -3384,6 +3388,8 @@ typedef struct stVECTOR_TABLE
     #define TSI_BLOCK                          0x40045000                // Touch Sense Input Module
     #if defined KINETIS_KE
         #define SIM_BLOCK                      0x40048000                // System Integration Module
+    #elif defined KINETIS_KL28
+        #define SIM_BLOCK                      0x40074000                // System Integration Module
     #else
         #define SIM_BLOCK                      0x40047000                // System Integration Module
     #endif
@@ -3489,7 +3495,11 @@ typedef struct stVECTOR_TABLE
     #if UARTS_AVAILABLE > 5
         #define UART5_BLOCK                    0x400eb000
     #endif
-    #define USB_BASE_ADD                       0x40072000                // USB-OTG Controller
+    #if defined KINETIS_KL28
+        #define USB_BASE_ADD                   0x40055000                // USB-OTG Controller
+    #else
+        #define USB_BASE_ADD                   0x40072000                // USB-OTG Controller
+    #endif
     #if defined KINETIS_KE                                               // {85}
         #define ACMP0_BLOCK                    0x40073000                // Analogue comparator 0
         #define ACMP1_BLOCK                    0x40074000                // Analogue comparator 1
@@ -8736,11 +8746,11 @@ typedef struct stKINETIS_LPTMR_CTL
 #else
     #if !defined KINETIS_KL02
         #define SIM_SOPT1                        *(unsigned long *)(SIM_BLOCK + 0x0000) // System Options Register 1 - this register is only reset at power cycles
-      #if defined KINETIS_K22
+        #if defined KINETIS_K22
           #define SIM_SOPT1_OSC32KOUT_MASK       0x00030000
           #define SIM_SOPT1_OSC32KOUT_PTE0       0x00010000
           #define SIM_SOPT1_OSC32KOUT_PTE26      0x00020000
-      #endif
+        #endif
           #define SIM_SOPT1_OSC32KSEL_MASK       0x000c0000
           #define SIM_SOPT1_OSC32KSEL_SYS_OSC    0x00000000              // OSC32KCLK
         #if defined KINETIS_KL && !defined KINETIS_WITH_RTC_CRYSTAL
@@ -8749,11 +8759,11 @@ typedef struct stKINETIS_LPTMR_CTL
           #define SIM_SOPT1_OSC32KSEL_32k        0x00080000              // 32kHz oscillator
         #endif
           #define SIM_SOPT1_OSC32KSEL_LPO_1kHz   0x000c0000              // LPO 1kHz clock
-      #if !defined KINETIS_KL82
+        #if !defined KINETIS_KL82
           #define SIM_SOPT1_USBVSTBY             0x20000000
           #define SIM_SOPT1_USBSTBY              0x40000000
           #define SIM_SOPT1_USBREGEN             0x80000000
-      #endif
+        #endif
     #endif
     #if defined KINETIS_K_FPU || (defined KINETIS_KL && !defined KINETIS_KL82) // {42}]
         #define SIM_SOPT1CGF                 *(volatile unsigned long *)(SIM_BLOCK + 0x0004) // System Options 1 Configuration Register
@@ -12720,7 +12730,11 @@ typedef struct stKINETIS_UART_CONTROL
     #define USB_CLK_RECOVER_IRC_EN     *(volatile unsigned char *)(USB_BASE_ADD + 0x144) // IRC48M Oscillator Enable Register
       #define USB_CLK_RECOVER_IRC_EN_REG_EN 0x01                        // IRC48M regulator enable
       #define USB_CLK_RECOVER_IRC_EN_IRC_EN 0x02                        // IRC48M module enable
-    #define USB_CLK_RECOVER_INT_STATUS *(volatile unsigned char *)(USB_BASE_ADD + 0x15c) // Clock Recovery Separeted Interrupt Status (write '1' to clear)
+    #if defined KINETIS_KL28
+      #define USB_CLK_RECOVER_INT_EN *(volatile unsigned char *)(USB_BASE_ADD + 0x154) // clock recovery combined interrupt enable
+        #define USB_CLK_RECOVER_INT_EN_OVF_ERROR_EN 0x10                 // enble overflow error interrupt
+    #endif
+    #define USB_CLK_RECOVER_INT_STATUS *(volatile unsigned char *)(USB_BASE_ADD + 0x15c) // clock recovery separeted interrupt status (write '1' to clear)
       #define USB_CLK_RECOVER_INT_STATUS_OVF_ERROR 0x10
 #endif
 
@@ -13417,14 +13431,14 @@ typedef struct stUSB_HW
 #if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000) // {43}
     // System Mode Controller
     //
-    #define SMC_PMPROT       *(volatile unsigned char *)(SMC_BASE_ADD + 0x0) // Power Mode Protection Register (write-once)
+    #define SMC_PMPROT       *(volatile unsigned char *)(SMC_BASE_ADD + 0x0) // power mode protection register (write-once)
       #define SMC_PMPROT_AVLLS 0x02                                      // allow very low-leakage stop mode (VLLSx)
       #define SMC_PMPROT_ALLS  0x08                                      // allow low-leakage stop mode (LLS)
       #define SMC_PMPROT_AVLP  0x20                                      // allow very low power modes (VLPR, VLPW and VLPS are allowed)
       #if defined HIGH_SPEED_RUN_MODE_AVAILABLE
         #define SMC_PMPROT_AHSRUN  0x80                                  // allow high speed run mode (HSRUN)
       #endif
-    #define SMC_PMCTRL       *(volatile unsigned char *)(SMC_BASE_ADD + 0x1) // Power Mode Control Register
+    #define SMC_PMCTRL       *(volatile unsigned char *)(SMC_BASE_ADD + 0x1) // power mode control register
       #define SMC_PMCTRL_STOPM_NORMAL 0x00                               // stop mode control - normal stop
       #define SMC_PMCTRL_STOPM_VLPS   0x02                               // stop mode control - very low power stop (VLPS)
       #define SMC_PMCTRL_STOPM_LLS    0x03                               // stop mode control - low-leakage stop (LLS)
@@ -13467,34 +13481,60 @@ typedef struct stUSB_HW
 
     // Reset Control Module
     //
-    #define RCM_SRS0         *(volatile unsigned char *)(RCM_BASE_ADD + 0x00) // System Reset Status Register 0 (read-only)
-      #define RCM_SRS0_WAKEUP 0x01                                       // reset caused by LLWU wakeup source
-      #define RCM_SRS0_LVD    0x02                                       // reset caused by low voltage trip or power on reset
-      #define RCM_SRS0_LOC    0x04                                       // reset caused by loss of external clock
-      #define RCM_SRS0_WDOG   0x20                                       // reset caused by watchdog timeout
-      #define RCM_SRS0_PIN    0x40                                       // reset caused by external reset pin
-      #define RCM_SRS0_POR    0x80                                       // power on reset
-    #define RCM_SRS1         *(volatile unsigned char *)(RCM_BASE_ADD + 0x01) // system reset status register 1 (read-only)
-      #define RCM_SRS1_JTAG  0x01                                        // reset caused by JTAG
-      #define RCM_SRS1_LOCKUP 0x02                                       // reset caused by core lockup
-      #define RCM_SRS1_SW    0x04                                        // reset caused by software
-      #define RCM_SRS1_MDM_AP 0x08                                       // reset caused by host debugger reset
-      #define RCM_SRS1_EZPT  0x10                                        // reset caused by EZPORT reset command
-      #define RCM_SRS1_SACKERR 0x20                                      // reset caused by peripheral failure to acknowledge attempt to enter stop mode
-      #define RCM_SRS1_TAMPER 0x80                                       // reset caused by tamper detect
-    #define RCM_RPFC         *(unsigned char *)(RCM_BASE_ADD + 0x04)     // system pin filter control register
-    #define RCM_RPFW         *(unsigned char *)(RCM_BASE_ADD + 0x05)     // reset pin filter width register
-#if defined ROM_BOOTLOADER
-    #define RCM_FM           *(unsigned char *)(RCM_BASE_ADD + 0x06)     // force mode register (only reset by power cycle)
-      #define RCM_FM_ROM_RCM_MR1  0x02                                   // force boot form ROM with RCM_MR[1] set for subseqeunt resets
-      #define RCM_FM_ROM_RCM_MR2  0x04                                   // force boot form ROM with RCM_MR[2] set for subseqeunt resets
-#endif
-    #define RCM_MR           *(volatile unsigned char *)(RCM_BASE_ADD + 0x07) // mode register (read-only)
-      #if defined ROM_BOOTLOADER
-          #define RCM_MR_BOOTROM_BOOT_FROM_FLASH               0x00      // the last reset was a boot from flash
-          #define RCM_MR_BOOTROM_BOOT_FROM_ROM_BOOTCFG0        0x02      // the last reset was a boot from ROM due to BOOTCFG0 assertion
-          #define RCM_MR_BOOTROM_BOOT_FROM_ROM_FOPT7           0x04      // the last reset was a boot from ROM due to FOPT[7] configuration
-      #endif
+    #if defined KINETIS_KL28
+        #define RCM_VERID        *(volatile unsigned long *)(RCM_BASE_ADD + 0x00) // version ID register (read-only)
+        #define RCM_PARAM        *(volatile unsigned long *)(RCM_BASE_ADD + 0x04) // parameter register (read-only)
+        #define RCM_SRS          *(volatile unsigned long *)(RCM_BASE_ADD + 0x08) // system reset status register (read-only)
+            #define RCM_SRS0_WAKEUP 0x00000001                           // reset caused by LLWU wakeup source
+            #define RCM_SRS0_LVD    0x00000002                           // reset caused by low voltage trip or power on reset
+            #define RCM_SRS0_LOC    0x00000004                           // reset caused by loss of external clock
+            #define RCM_SRS0_WDOG   0x00000020                           // reset caused by watchdog timeout
+            #define RCM_SRS0_PIN    0x00000040                           // reset caused by external reset pin
+            #define RCM_SRS0_POR    0x00000080                           // power on reset
+            #define RCM_SRS1_LOCKUP 0x00000200                           // reset caused by core lockup event
+            #define RCM_SRS1_SW     0x00000400                           // reset caused by software reset command
+            #define RCM_SRS1_MDM_AP 0x00000800                           // reset caused by host debugger setting reset request bit
+            #define RCM_SRS1_SACKERR 0x00002000                          // reset caused by stop acknowledge error
+        #define RCM_RPC          *(unsigned long *)(RCM_BASE_ADD + 0x0c) // reset pin control register
+        #define RCM_MR           *(volatile unsigned long *)(RCM_BASE_ADD + 0x10) // mode register (write '1' to clear)
+            #define RCM_MR_BOOTROM_BOOT_FROM_FLASH               0x00    // the last reset was a boot from flash
+            #define RCM_MR_BOOTROM_BOOT_FROM_ROM_BOOTCFG0        0x02    // the last reset was a boot from ROM due to BOOTCFG0 assertion
+            #define RCM_MR_BOOTROM_BOOT_FROM_ROM_FOPT7           0x04    // the last reset was a boot from ROM due to FOPT[7] configuration
+        #define RCM_FM           *(unsigned long *)(RCM_BASE_ADD + 0x14)// force mode register
+        #define RCM_SSRS         *(volatile unsigned long *)(RCM_BASE_ADD + 0x18)// sticky system reset status register (wite '1' to clear)
+        #define RCM_SRIE         *(unsigned long *)(RCM_BASE_ADD + 0x1c)// system reset interrupt enable register
+        #define RCM_SRS0    RCM_SRS                                     // for compatibilty
+        #define RCM_SRS1    RCM_SRS                                     // for compatibilty
+    #else
+        #define RCM_SRS0         *(volatile unsigned char *)(RCM_BASE_ADD + 0x00) // System Reset Status Register 0 (read-only)
+            #define RCM_SRS0_WAKEUP 0x01                                 // reset caused by LLWU wakeup source
+            #define RCM_SRS0_LVD    0x02                                 // reset caused by low voltage trip or power on reset
+            #define RCM_SRS0_LOC    0x04                                 // reset caused by loss of external clock
+            #define RCM_SRS0_WDOG   0x20                                 // reset caused by watchdog timeout
+            #define RCM_SRS0_PIN    0x40                                 // reset caused by external reset pin
+            #define RCM_SRS0_POR    0x80                                 // power on reset
+        #define RCM_SRS1         *(volatile unsigned char *)(RCM_BASE_ADD + 0x01) // system reset status register 1 (read-only)
+            #define RCM_SRS1_JTAG   0x01                                 // reset caused by JTAG
+            #define RCM_SRS1_LOCKUP 0x02                                 // reset caused by core lockup
+            #define RCM_SRS1_SW     0x04                                 // reset caused by software
+            #define RCM_SRS1_MDM_AP 0x08                                 // reset caused by host debugger reset
+            #define RCM_SRS1_EZPT   0x10                                 // reset caused by EZPORT reset command
+            #define RCM_SRS1_SACKERR 0x20                                // reset caused by peripheral failure to acknowledge attempt to enter stop mode
+            #define RCM_SRS1_TAMPER 0x80                                 // reset caused by tamper detect
+        #define RCM_RPFC         *(unsigned char *)(RCM_BASE_ADD + 0x04) // system pin filter control register
+        #define RCM_RPFW         *(unsigned char *)(RCM_BASE_ADD + 0x05) // reset pin filter width register
+        #if defined ROM_BOOTLOADER
+            #define RCM_FM         *(unsigned char *)(RCM_BASE_ADD + 0x06) // force mode register (only reset by power cycle)
+                #define RCM_FM_ROM_RCM_MR1  0x02                         // force boot form ROM with RCM_MR[1] set for subseqeunt resets
+                #define RCM_FM_ROM_RCM_MR2  0x04                         // force boot form ROM with RCM_MR[2] set for subseqeunt resets
+        #endif
+        #define RCM_MR           *(volatile unsigned char *)(RCM_BASE_ADD + 0x07) // mode register (read-only)
+        #if defined ROM_BOOTLOADER
+            #define RCM_MR_BOOTROM_BOOT_FROM_FLASH               0x00    // the last reset was a boot from flash
+            #define RCM_MR_BOOTROM_BOOT_FROM_ROM_BOOTCFG0        0x02    // the last reset was a boot from ROM due to BOOTCFG0 assertion
+            #define RCM_MR_BOOTROM_BOOT_FROM_ROM_FOPT7           0x04    // the last reset was a boot from ROM due to FOPT[7] configuration
+        #endif
+    #endif
 #elif !defined KINETIS_KE && !defined KINETIS_KEA
     // Mode Control
     //

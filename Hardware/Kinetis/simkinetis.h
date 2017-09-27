@@ -2553,7 +2553,13 @@ unsigned char USB_USBTRC0;
     unsigned char USB_CLK_RECOVER_CTRL;
     unsigned char ucRes44[3];
     unsigned char USB_CLK_RECOVER_IRC_EN;
+    #if defined KINETIS_KL28
+    unsigned char ucRes45[15];
+    unsigned char USB_CLK_RECOVER_INT_EN;
+    unsigned char ucRes46[7];
+    #else
     unsigned char ucRes45[23];
+    #endif
     unsigned char USB_CLK_RECOVER_INT_STATUS;
 #endif
 } KINETIS_USB;
@@ -2583,17 +2589,28 @@ unsigned char MC_PMCTRL;
 
     typedef struct stKINETIS_RCM                                         // {5}
     {
-    unsigned char RCM_SRS0;
-    unsigned char RCM_SRS1;
-    unsigned char ucRes0[2];
-    unsigned char RCM_RPFC;
-    unsigned char RCM_RPFW;
-    #if defined ROM_BOOTLOADER
-    unsigned char RCM_FM;
+    #if defined KINETIS_KL28
+        unsigned long RCM_VERID;
+        unsigned long RCM_PARAM;
+        unsigned long RCM_SRS;
+        unsigned long RCM_RPC;
+        unsigned long RCM_MR;
+        unsigned long RCM_FM;
+        unsigned long RCM_SSRS;
+        unsigned long RCM_SRIE;
     #else
-    unsigned char ucRes1;
+        unsigned char RCM_SRS0;
+        unsigned char RCM_SRS1;
+        unsigned char ucRes0[2];
+        unsigned char RCM_RPFC;
+        unsigned char RCM_RPFW;
+        #if defined ROM_BOOTLOADER
+            unsigned char RCM_FM;
+        #else
+            unsigned char ucRes1;
+        #endif
+        unsigned char RCM_MR;
     #endif
-    unsigned char RCM_MR;
     } KINETIS_RCM;
 #endif
 

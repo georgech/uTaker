@@ -664,7 +664,6 @@ static void send_next_byte(QUEUE_HANDLE channel, TTYQUE *ptTTYQue)       // inte
 #if defined SERIAL_SUPPORT_ESCAPE
         int iBlock = 0;
 #endif
-
         if (ptTTYQue->tty_queue.chars == 0) {                            // are there more to send?
             ptTTYQue->ucState &= ~TX_ACTIVE;                             // transmission of a block has terminated
             fnClearTxInt(channel);                                       // clear interrupt

@@ -1163,6 +1163,9 @@ extern void fnConfigUSB(QUEUE_HANDLE Channel, USBTABLE *pars)
     }
     if ((pars->usConfig & USB_HOST_MODE) == 0) {                         // only USB device can use crystal-less mode
     #if defined KINETIS_HAS_IRC48M && defined USB_CRYSTAL_LESS           // {104}
+        #if defined USB_CLK_RECOVER_INT_EN
+        USB_CLK_RECOVER_INT_EN = 0;                                      // disable the clock synchronisation overflow error interrupt which is enabled by default
+        #endif
         USB_CLK_RECOVER_IRC_EN = USB_CLK_RECOVER_IRC_EN_IRC_EN;          // enable 48MHz IRC clock and clock recovery (this may have been disabled by the USB reset command)
         USB_CLK_RECOVER_CTRL = USB_CLK_RECOVER_CTRL_CLOCK_RECOVER_EN;
     #endif

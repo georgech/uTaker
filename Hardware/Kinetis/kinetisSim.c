@@ -326,10 +326,17 @@ static void fnSetDevice(unsigned long *port_inits)
 #endif
 
 #if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000) // {26}
-    #if defined KINETIS_KL && defined RTC_USES_LPO_1kHz
-    RCM_SRS0 = RCM_SRS0_PIN;                                             // simulate external reset
+    #if defined KINETIS_KL28
+    RCM_VERID = 0x03000003;
+    RCM_PARAM = 0x00002eef;
+    RCM_SRS = 0x00000082;
+    RCM_SSRS = 0x00000082;
     #else
+        #if defined KINETIS_KL && defined RTC_USES_LPO_1kHz
+    RCM_SRS0 = RCM_SRS0_PIN;                                             // simulate external reset
+        #else
     RCM_SRS0 = (RCM_SRS0_POR | RCM_SRS0_LVD);                            // reset control module - reset status due to power on reset
+        #endif
     #endif
     #if defined KINETIS_KL || defined KINETIS_K22
     SMC_STOPCTRL = SMC_STOPCTRL_VLLSM_VLLS3;
@@ -545,6 +552,9 @@ static void fnSetDevice(unsigned long *port_inits)
     REV = 0x33;
     ADD_INFO = IEHOST;
     OTG_INT_STAT = MSEC_1;
+    #if defined KINETIS_KL28
+    USB_CLK_RECOVER_INT_EN = USB_CLK_RECOVER_INT_EN_OVF_ERROR_EN;
+    #endif
 #endif
 #if (LPUARTS_AVAILABLE > 0)
     LPUART0_BAUD = (LPUART_BAUD_OSR_16 | 0x00000004);
@@ -3012,7 +3022,7 @@ extern void fnSimPorts(void)
     GPIOD_PTOR = GPIOD_PSOR = GPIOD_PCOR = 0;                            // registers always read 0
 
     #if defined KINETIS_WITH_PCC
-    if ((PCC_PORTD & PCC_CGC) != 0)                                      // if port is clocked
+    if ((PCC_PORTE & PCC_CGC) != 0)                                      // if port is clocked
     #else
     if ((SIM_SCGC5 & SIM_SCGC5_PORTE) != 0)                              // if port is clocked
     #endif

@@ -1,32 +1,48 @@
 "--endian=little" 
 
-"--cpu=Cortex-M4" 
+"--cpu=Cortex-M0+" 
 
-"--fpu=VFPv4_SP" 
+"--fpu=None" 
 
 "-p" 
 
-"D:\Programs\IAR Systems\Embedded Workbench 7.5\arm\CONFIG\debugger\NXP\MK64FN1M0xxx12.ddf" 
+"D:\Programs\IAR Systems\Embedded Workbench 7.5\arm\CONFIG\debugger\NXP\MKL28Z512xxx7.ddf" 
 
 "--drv_verify_download" 
 
 "--semihosting=none" 
 
-"--device=MK64FN1M0xxx12" 
+"--device=MKL28Z512xxx7" 
 
-"--drv_communication=USB0" 
+"--drv_mtb_regbase=0xF0000000" 
 
-"--drv_interface_speed=auto" 
+"--drv_mtb_dwtregbase=0xF0001000" 
 
-"--jlink_initial_speed=32" 
+"--drv_mtb_minramaddr=0x20000000" 
 
-"--jlink_reset_strategy=0,0" 
+"--drv_mtb_maxramaddr=0x20017FFF" 
+
+"--multicore_nr_of_cores=1" 
+
+"--jet_probe=cmsisdap" 
+
+"--jet_standard_reset=4,0,0" 
+
+"--reset_style=\"0,-,0,Disabled__no_reset_\"" 
+
+"--reset_style=\"1,-,0,Software\"" 
+
+"--reset_style=\"2,-,0,Hardware\"" 
+
+"--reset_style=\"4,-,1,System\"" 
+
+"--reset_style=\"5,ResetAndDisableWatchdog,0,Custom\"" 
 
 "--drv_interface=SWD" 
 
-"--drv_catch_exceptions=0x000" 
+"--drv_catch_exceptions=0xff0" 
 
-"--drv_swo_clock_setup=120000000,0,2000000" 
+"--jet_board_cfg=D:\Programs\IAR Systems\Embedded Workbench 7.5\arm\config\debugger\NXP\L5K.ProbeConfig" 
 
 
 
