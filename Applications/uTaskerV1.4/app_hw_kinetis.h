@@ -2311,17 +2311,14 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #endif
     #endif
 
-    #if defined FRDM_KE04Z || defined TRK_KEA8
-        #define TX_BUFFER_SIZE   (128)                                   // the size of demo RS232 input and output buffers
-        #define RX_BUFFER_SIZE   (8)
-    #elif defined FRDM_KL03Z
-        #define TX_BUFFER_SIZE   (128)                                   // the size of demo RS232 input and output buffers
+    #if defined FRDM_KE04Z || defined TRK_KEA8 || defined FRDM_KL03Z
+        #define TX_BUFFER_SIZE   (QUEUE_TRANSFER)(128)                   // the size of demo RS232 input and output buffers
         #define RX_BUFFER_SIZE   (8)
     #elif defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined FRDM_KE02Z || defined TRK_KEA64 || defined FRDM_KE02Z40M || defined TEENSY_LC // {25}{30} these devices have small RAM size
-        #define TX_BUFFER_SIZE   (256)                                   // the size of RS232 input and output buffers
+        #define TX_BUFFER_SIZE   (QUEUE_TRANSFER)(256)                   // the size of RS232 input and output buffers
         #define RX_BUFFER_SIZE   (32)
     #else
-        #define TX_BUFFER_SIZE   (QUEUE_TRANSFER)(512 * 1024)            // the size of RS232 input and output buffers
+        #define TX_BUFFER_SIZE   (QUEUE_TRANSFER)(512)                   // the size of RS232 input and output buffers
         #define RX_BUFFER_SIZE   (128)
     #endif
   //#define TRUE_UART_TX_2_STOPS                                         // allow true 2 stop bit transmission timing on devices without this UART controller support
