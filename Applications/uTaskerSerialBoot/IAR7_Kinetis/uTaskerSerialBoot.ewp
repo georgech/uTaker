@@ -89,7 +89,7 @@
         </option>
         <option>
           <name>OGChipSelectEditMenu</name>
-          <state>MK64FN1M0xxx12	NXP MK64FN1M0xxx12</state>
+          <state>MKL28Z512xxx7	NXP MKL28Z512xxx7</state>
         </option>
         <option>
           <name>GenLowLevelInterface</name>
@@ -128,7 +128,7 @@
         <option>
           <name>GBECoreSlave</name>
           <version>24</version>
-          <state>39</state>
+          <state>35</state>
         </option>
         <option>
           <name>OGUseCmsis</name>
@@ -145,21 +145,21 @@
         <option>
           <name>CoreVariant</name>
           <version>24</version>
-          <state>39</state>
+          <state>35</state>
         </option>
         <option>
           <name>GFPUDeviceSlave</name>
-          <state>MK64FN1M0xxx12	NXP MK64FN1M0xxx12</state>
+          <state>MKL28Z512xxx7	NXP MKL28Z512xxx7</state>
         </option>
         <option>
           <name>FPU2</name>
           <version>0</version>
-          <state>4</state>
+          <state>0</state>
         </option>
         <option>
           <name>NrRegs</name>
           <version>0</version>
-          <state>1</state>
+          <state>0</state>
         </option>
         <option>
           <name>NEON</name>
@@ -168,7 +168,7 @@
         <option>
           <name>GFPUCoreSlave2</name>
           <version>24</version>
-          <state>39</state>
+          <state>35</state>
         </option>
       </data>
     </settings>
@@ -727,7 +727,7 @@
         </option>
         <option>
           <name>IlinkIcfFile</name>
-          <state>$PROJ_DIR$\settings\K_1M_256.icf</state>
+          <state>$PROJ_DIR$\settings\KL_512_128.icf</state>
         </option>
         <option>
           <name>IlinkIcfFileSlave</name>

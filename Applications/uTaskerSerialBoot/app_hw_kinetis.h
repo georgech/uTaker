@@ -383,13 +383,28 @@
     #define RUN_FROM_HIRC                                                // clock from internal 48MHz RC clock
   //#define RUN_FROM_LIRC                                                // clock from internal 8MHz RC clock
     #define USB_CRYSTAL_LESS                                             // use 48MHz IRC as USB source (according to Freescale AN4905 - only possible in device mode) - rather than external pin
-#elif defined FRDM_KL43Z || defined FRDM_KL27Z || defined FRDM_KL28Z
+#elif defined FRDM_KL43Z || defined FRDM_KL27Z
     #define OSC_LOW_GAIN_MODE
     #define CRYSTAL_FREQUENCY    32768                                   // 32kHz crystal
     #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
     #define RUN_FROM_HIRC                                                // clock from internal 48MHz RC clock
   //#define RUN_FROM_LIRC                                                // clock from internal 8MHz RC clock
     #define USB_CRYSTAL_LESS                                             // use 48MHz IRC as USB source (according to Freescale AN4905 - only possible in device mode) - rather than external pin
+#elif defined FRDM_KL28Z
+    #define OSC_LOW_GAIN_MODE
+    #define CRYSTAL_FREQUENCY    32768                                   // 32kHz crystal
+  //#define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
+    #define RUN_FROM_HIRC                                                // clock from fast internal RC clock
+      //#define RUN_FROM_HIRC_48MHz                                      // fast IRC trimmed to 48MHz
+      //#define RUN_FROM_HIRC_52MHz                                      // fast IRC trimmed to 52MHz
+      //#define RUN_FROM_HIRC_56MHz                                      // fast IRC trimmed to 56MHz
+      //#define RUN_FROM_HIRC_60MHz                                      // fast IRC trimmed to 60MHz
+  //#define RUN_FROM_LIRC                                                // clock from internal 8MHz RC clock
+      //#define RUN_FROM_LIRC_2M                                         // clock from internal 2MHz RC clock
+    #define SYSTEM_CLOCK_DIVIDE  1                                       // system clock divider value (1..16)
+    #define BUS_CLOCK_DIVIDE     2                                       // bus and flash clock divider value (1..16)
+
+    #define USB_CRYSTAL_LESS                                             // use 48MHz HIRC as USB source (according to Freescale AN4905 - only possible in device mode) - rather than external pin
 #elif defined TWR_K20D50M || defined FRDM_K20D50M || defined TWR_K21D50M || defined tinyK20 || defined FRDM_KL46Z || defined TWR_KL46Z48M || defined FRDM_KL25Z || defined FRDM_KL26Z || defined TWR_KL25Z48M // {4}{5}{6}{7}
     #if defined FRDM_K20D50M || defined TWR_KL46Z48M || defined FRDM_KL25Z || defined FRDM_KL26Z || defined TWR_KL25Z48M || defined TWR_K21D50M || defined tinyK20
         #define OSC_LOW_GAIN_MODE                                        // oscillator without feedback resistor or load capacitors so use low gain mode
@@ -1034,10 +1049,14 @@
     #define KINETIS_FLASH_CONFIGURATION_PROGRAM_PROTECTION (0xffffffff)  // PROT[31:24]:PROT[23:16]:PROT[15:8]:PROT[7:0] - no protection when all are '1'
     #define KINETIS_FLASH_CONFIGURATION_SECURITY           (FTFL_FSEC_SEC_UNSECURE | FTFL_FSEC_FSLACC_GRANTED | FTFL_FSEC_MEEN_ENABLED | FTFL_FSEC_KEYEN_ENABLED)
     #if defined KINETIS_KL || defined KINETIS_KV
-        #if defined KINETIS_KL03 || defined KINETIS_KL43 || defined KINETIS_KL27
-            #define BOOTLOADER_ERRATA
-            #if defined TWR_KL43Z48M || defined FRDM_KL43Z || defined FRDM_KL03Z || defined FRDM_KL27Z
-                #define KINETIS_FLASH_CONFIGURATION_NONVOL_OPTION  (FTFL_FOPT_LPBOOT_CLK_DIV_0 | FTFL_FOPT_RESET_PIN_ENABLED | FTFL_FOPT_BOOTSRC_SEL_FLASH | FTFL_FOPT_BOOTPIN_OPT_DISABLE | FTFL_FOPT_NMI_DISABLED)
+        #if defined ROM_BOOTLOADER
+            #if !defined FRDM_KL28Z
+                #define BOOTLOADER_ERRATA
+            #endif
+            #if defined TWR_KL43Z48M || defined FRDM_KL43Z || defined FRDM_KL03Z || defined FRDM_KL27Z || defined FRDM_KL28Z || defined FRDM_KL82Z || defined CAPUCCINO_KL27
+                #define KINETIS_FLASH_CONFIGURATION_NONVOL_OPTION  (FTFL_FOPT_LPBOOT_CLK_DIV_0 | FTFL_FOPT_RESET_PIN_ENABLED | FTFL_FOPT_BOOTSRC_SEL_FLASH | FTFL_FOPT_BOOTPIN_OPT_DISABLE | FTFL_FOPT_NMI_DISABLED) // never use boot ROM
+              //#define KINETIS_FLASH_CONFIGURATION_NONVOL_OPTION  (FTFL_FOPT_LPBOOT_CLK_DIV_0 | FTFL_FOPT_RESET_PIN_ENABLED | FTFL_FOPT_BOOTSRC_SEL_FLASH | FTFL_FOPT_BOOTPIN_OPT_ENABLE | FTFL_FOPT_NMI_DISABLED) // use boot ROM if NMI is held low at reset
+              //#define KINETIS_FLASH_CONFIGURATION_NONVOL_OPTION (FTFL_FOPT_BOOTSRC_SEL_ROM | FTFL_FOPT_BOOTPIN_OPT_DISABLE | FTFL_FOPT_FAST_INIT | FTFL_FOPT_LPBOOT_CLK_DIV_0 | FTFL_FOPT_RESET_PIN_ENABLED | FTFL_FOPT_NMI_DISABLED) // always use boot ROM
             #else
                 #define KINETIS_FLASH_CONFIGURATION_NONVOL_OPTION  (FTFL_FOPT_LPBOOT_CLK_DIV_0 | FTFL_FOPT_RESET_PIN_ENABLED | FTFL_FOPT_BOOTSRC_SEL_FLASH | FTFL_FOPT_BOOTPIN_OPT_DISABLE | FTFL_FOPT_NMI_ENABLED)
             #endif
@@ -1082,7 +1101,7 @@
         #define LOADER_UART           2                                  // the serial interface used by the serial loader
     #elif defined TWR_K20D50M || defined TWR_K80F150M || defined tinyK20 || defined TWR_K20D72M || defined FRDM_KE02Z || defined FRDM_KE02Z40M || defined FRDM_KE06Z || defined FRDM_K22F || defined TWR_K22F120M || defined TWR_K24F120M || defined K24FN1M0_120 || defined TWR_K64F120M || defined TWR_KW21D256 || defined TWR_KW24D512 || defined BLAZE_K22
         #define LOADER_UART           1                                  // the serial interface used by the serial loader
-    #elif defined K02F100M || defined FRDM_K20D50M || defined FRDM_KL46Z || defined FRDM_KL43Z || defined FRDM_KL25Z || defined FRDM_KL26Z || defined FRDM_KL27Z || defined TEENSY_LC || defined TWR_KL25Z48M || defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined TEENSY_3_1 || defined FRDM_K64F || defined FRDM_KE04Z || defined TWR_KV10Z32 || defined TWR_KV31F120M || defined TWR_KV58F220M || defined FRDM_KL82Z || defined FRDM_K66F || defined HEXIWEAR_K64F || ((defined TWR_K40X256 || defined TWR_K40D100M) && defined DEBUG_ON_VIRT_COM)
+    #elif defined K02F100M || defined FRDM_K20D50M || defined FRDM_KL46Z || defined FRDM_KL43Z || defined FRDM_KL25Z || defined FRDM_KL26Z || defined FRDM_KL27Z || defined FRDM_KL28Z || defined TEENSY_LC || defined TWR_KL25Z48M || defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined TEENSY_3_1 || defined FRDM_K64F || defined FRDM_KE04Z || defined TWR_KV10Z32 || defined TWR_KV31F120M || defined TWR_KV58F220M || defined FRDM_KL82Z || defined FRDM_K66F || defined HEXIWEAR_K64F || ((defined TWR_K40X256 || defined TWR_K40D100M) && defined DEBUG_ON_VIRT_COM)
         #define LOADER_UART           0                                  // the serial interface used by the serial loader
     #else
         #define LOADER_UART           3                                  // the serial interface used by the serial loader
@@ -1091,6 +1110,8 @@
         #define LPUART_IRC48M                                            // if the 48MHz clock is available clock the UART from it
       //#define LPUART_OSCERCLK                                          // clock the UART from the external clock
       //#define LPUART_MCGIRCLK                                          // clock the UART from MCGIRCLK (IRC8M/FCRDIV/LIRC_DIV2) - default if others are not defined
+    #elif defined FRDM_KL28Z
+        #define LPUART_FIRC                                              // clock LPUARTs from the fast internal RC oscillator
     #endif
 
     #if defined FRDM_KE04Z                                               // small RAM size (1k)
@@ -1124,7 +1145,7 @@
         #define UART0_A_LOW
     #elif ((defined TWR_K40X256 || defined TWR_K40D100M) && defined DEBUG_ON_VIRT_COM)
         #define UART0_ON_D                                               // alternative UART0 pin mapping
-    #elif defined FRDM_KL82Z
+    #elif defined FRDM_KL82Z || defined FRDM_KL28Z
         #define LPUART0_ON_B                                             // alternative LPUART0 pin mapping
     #endif
   //#define UART0_ON_D                                                   // alternative UART0 pin mapping
@@ -1161,7 +1182,7 @@
 #endif
 
 
-#if defined KINETIS_KL || defined KINETIS_KE
+#if defined ARM_MATH_CM0PLUS
     // Define interrupt priorities in the system (kinetis KE and KL support 0..3 - 0 is highest priority and 3 is lowest priority)
     //
     #define SYSTICK_PRIORITY           3                                 // lowest priority
@@ -1233,6 +1254,20 @@
     #define PRIORITY_PORT_C_INT        1
     #define PRIORITY_PORT_D_INT        1
     #define PRIORITY_PORT_E_INT        1
+
+    #if defined KINETIS_KL28 || defined KINETIS_KL82                     // devices with INTMUX to extend the number of interrupts possible - see this video for an explanation of the INTMUX module operation https://youtu.be/zKa5BoOhBrg
+        #define PRIORITY_INTMUX0_0_INT      0                            // priority of extended interrupts using INTMUX0 chnnel 0
+        #define PRIORITY_INTMUX0_1_INT      1                            // priority of extended interrupts using INTMUX0 chnnel 1
+        #define PRIORITY_INTMUX0_2_INT      2                            // priority of extended interrupts using INTMUX0 chnnel 2
+        #define PRIORITY_INTMUX0_3_INT      3                            // priority of extended interrupts using INTMUX0 chnnel 3
+        // Peripheral extended interrupt connections to INTMUX0 channels (multiple sources can be connected to each INTMUX0 channel - they are ORed and the lowest vector number has priority when more than one input is asserted)
+        //
+        #define INTMUX_WDOG0                INPUT_TO_INTMUX0_CHANNEL_0   // the WDOG extended interrupt is connected to INTMUX0 channel 0 (inherits INTMUX0 channel 0's priority)
+        #define INTMUX_LPTMR1               INPUT_TO_INTMUX0_CHANNEL_0   // the LPTMR1 extended interrupt is connected to INTMUX0 channel 0 (inherits INTMUX0 channel 0's priority)
+        #define INTMUX_LPUART2              INPUT_TO_INTMUX0_CHANNEL_1   // the LPUART2 extended interrupt is connected to INTMUX0 channel 1 (inherits INTMUX0 channel 1's priority)
+        #define INTMUX_I2C1                 INPUT_TO_INTMUX0_CHANNEL_2   // the I2C1 extended interrupt is connected to INTMUX0 channel 2 (inherits INTMUX0 channel 2's priority)
+        #define INTMUX_RTC_ALARM            INPUT_TO_INTMUX0_CHANNEL_3   // the RTC alarm extended interrupt is connected to INTMUX0 channel 3 (inherits INTMUX0 channel 3's priority)
+    #endif
 #else
     // Define interrupt priorities in the system (kinetis support 0..15 - 0 is highest priority and 15 is lowest priority)
     //
@@ -1348,7 +1383,7 @@
 
 // Ports
 //
-#if defined FRDM_K82F || defined FRDM_KL28Z
+#if defined FRDM_K82F
     #define LED_RED                PORTC_BIT8
     #define LED_GREEN              PORTC_BIT9
     #define LED_BLUE               PORTC_BIT10
@@ -1368,6 +1403,25 @@
     #define USB_HOST_POWER_CONFIG() _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_LOW(C, (USB_HOST_POWER_ENABLE), (0), (PORT_SRE_SLOW | PORT_DSE_HIGH))
     #define USB_HOST_POWER_ON()     _SETBITS(C, USB_HOST_POWER_ENABLE)
     #define USB_HOST_POWER_OFF()    _CLEARBITS(C, USB_HOST_POWER_ENABLE)
+#elif defined FRDM_KL28Z
+    #define LED_GREEN              (PORTC_BIT4)
+    #define LED_RED                (PORTE_BIT29)
+    #define LED_BLUE               (PORTE_BIT31)
+    #define BLINK_LED              LED_GREEN
+    #define SWITCH_2               (PORTA_BIT4)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+    #define SWITCH_3               (PORTE_BIT4)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+
+    #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(A, SWITCH_2, PORT_PS_UP_ENABLE) // use fast access version (beware that this can only operate on half of the 32 bits at a time)
+    #define WATCHDOG_DISABLE()     (_READ_PORT_MASK(A, SWITCH_2) == 0)   // hold SW2 at reset to disable the watchdog
+    #define FORCE_BOOT()           (_READ_PORT_MASK(E, SWITCH_3) == 0)   // hold SW3 at reset to force loader mode
+    #define RETAIN_LOADER_MODE()   (_READ_PORT_MASK(E, SWITCH_3) == 0)   // keep SW3 held down to retain loader mode after SD card or memory stick has been checked
+
+    #define INIT_WATCHDOG_LED()    _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, (BLINK_LED), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH)); _CONFIG_PORT_INPUT_FAST_LOW(E, SWITCH_3, PORT_PS_UP_ENABLE)
+    #define TOGGLE_WATCHDOG_LED()  _TOGGLE_PORT(C, BLINK_LED)
+
+    #define USB_HOST_POWER_CONFIG() 
+    #define USB_HOST_POWER_ON()
+    #define USB_HOST_POWER_OFF()
 #elif defined FRDM_KL82Z
     #define LED_RED                PORTC_BIT1
     #define LED_GREEN              PORTC_BIT2
@@ -3270,7 +3324,9 @@
 
 #define _DELETE_BOOT_MAILBOX()     *(BOOT_MAIL_BOX) = 0
 
-#if defined KINETIS_KL && !defined KINETIS_KL82                          // {5} KL has COP and not watchdog
+#if defined KINETIS_WITH_WDOG32
+    #define ACTIVATE_WATCHDOG()     UNLOCK_WDOG(); WDOG0_TOVAL = 2000; WDOG0_WIN = 0; WDOG0_CS = (WDOG_CS_CLK_1kHz | WDOG_CS_FLG | WDOG_CS_CMD32EN | WDOG_CS_EN); // enable watchdog with 2s timeout
+#elif defined KINETIS_KL && !defined KINETIS_KL82                        // {5} KL has COP and not watchdog
     #define ACTIVATE_WATCHDOG()    SIM_COPC = (SIM_COPC_COPCLKS_1K | SIM_COPC_COPT_LONGEST) // 1.024s watchdog timeout
 #elif defined KINETIS_KE
     #define ACTIVATE_WATCHDOG()    UNLOCK_WDOG(); WDOG_CS2 = (WDOG_CS2_CLK_1kHz | WDOG_CS2_FLG); WDOG_TOVAL = BIG_SHORT_WORD(2000); WDOG_WIN = 0; WDOG_CS1 = (WDOG_CS1_UPDATE | WDOG_CS1_EN); // enable watchdog with 2s timeout (allow updates later if required)
@@ -3291,12 +3347,11 @@
         #if defined KINETIS_KL82
             #define RESET_PERIPHERALS()SYSTICK_CSR = 0; \
                                        POWER_DOWN(4, (SIM_SCGC4_UART0 | SIM_SCGC4_UART1 | SIM_SCGC4_UART2 | SIM_SCGC4_UART3 | SIM_SCGC4_USBOTG)); \
-                                       IRQ0_31_CER  = 0xffffffff; \
-                                       IRQ32_63_CER = 0xffffffff; \
-                                       IRQ64_95_CER = 0xffffffff; \
-                                       IRQ0_31_CPR  = 0xffffffff; \
-                                       IRQ32_63_CPR = 0xffffffff; \
-                                       IRQ64_95_CPR = 0xffffffff
+                                       IRQ0_31_CER  = 0xffffffff
+        #elif defined FRDM_KL28Z
+            #define RESET_PERIPHERALS()SYSTICK_CSR = 0; \
+            PCC_LPUART0 = 0; \
+            IRQ0_31_CER = 0xffffffff
         #else
             #define RESET_PERIPHERALS()SYSTICK_CSR = 0; \
                                        POWER_DOWN(4, (SIM_SCGC4_UART0 | SIM_SCGC4_UART1 | SIM_SCGC4_UART2 | SIM_SCGC4_UART3 | SIM_SCGC4_USBOTG)); \

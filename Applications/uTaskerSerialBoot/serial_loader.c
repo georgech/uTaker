@@ -1591,6 +1591,7 @@ static unsigned char fnConvertByte(unsigned char ucASCII)
     int iSREC_state;
     int iDataCnt = 0;
     unsigned char ucCheckSum = 0;
+    srec.csum = 0;                                                       // quieten compiler warning by initialising
     #if defined EXCLUSIVE_INTEL_HEX_MODE                                 // {29}
     if (*ptrLine != ':') {                                               // each Intel Hex line must start with ':'
         #if defined _GNU_TEMP_WORKAROUND                                 // {1}

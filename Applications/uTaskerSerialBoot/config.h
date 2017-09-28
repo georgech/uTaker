@@ -61,13 +61,13 @@
 //#define FRDM_KL26Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL26Z.html
 //#define TEENSY_LC                                                      // USB development board with KL26Z64 - http://www.utasker.com/kinetis/TEENSY_LC.html
 //#define FRDM_KL27Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL27Z.html
-//#define FRDM_KL28Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL28Z.html
+#define FRDM_KL28Z                                                       // freedom board http://www.utasker.com/kinetis/FRDM-KL28Z.html
 //#define FRDM_KL43Z                                                     // L processors Cortex-M0+ (ultra-low power) with USB and segment LCD - freedom board http://www.utasker.com/kinetis/FRDM-KL43Z.html
 //#define TWR_KL43Z48M                                                   // tower board http://www.utasker.com/kinetis/TWR-KL43Z48M.html
 //#define FRDM_KL46Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL46Z.html
 //#define TWR_KL46Z48M                                                   // tower board http://www.utasker.com/kinetis/TWR-KL46Z48M.html
 
-//#define FRDM_KL82Z                                                       // freedom board http://www.utasker.com/kinetis/FRDM-KL82Z.html
+//#define FRDM_KL82Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL82Z.html
 
 //#define TWR_KM34Z50M                                                   // M processors Cortex M0+ (metrology) - tower board http://www.utasker.com/kinetis/TWR-KM34Z50M.html
 
@@ -108,7 +108,7 @@
 
 //#define EMCRAFT_K61F150M                                               // K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - http://www.utasker.com/kinetis/EMCRAFT_K61F150M.html
 
-#define FRDM_K64F                                                        // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
+//#define FRDM_K64F                                                      // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
 //#define TWR_K64F120M                                                   // tower board http://www.utasker.com/kinetis/TWR-K64F120M.html
 //#define HEXIWEAR_K64F                                                  // hexiwear - wearable development kit for IoT (K64FN1M0VDC12 main processor) http://www.hexiwear.com/
 //#define TEENSY_3_5                                                     // USB development board with K64FX512 - http://www.utasker.com/kinetis/TEENSY_3.5.html
@@ -703,7 +703,7 @@
 #endif
 #if defined SERIAL_INTERFACE
   //#define KBOOT_LOADER                                                 // use KBOOT UART interface rather than SREC/iHex interface
-    #define DEVELOPERS_LOADER                                            // Freescale Developer's Bootloader (AN2295) compatible mode (rather than SREC/iHex)
+  //#define DEVELOPERS_LOADER                                            // Freescale Developer's Bootloader (AN2295) compatible mode (rather than SREC/iHex)
       //#define DEVELOPERS_LOADER_PROTOCOL_VERSION_9                     // user protocol version 9 rather than obsolete Kinetis 8 (not completed at the moment)
         #define DEVELOPERS_LOADER_READ                                   // support reading back program
         #define DEVELOPERS_LOADER_CRC                                    // support CRC in communication
@@ -765,7 +765,7 @@
             #endif
           //#define USB_MSD_REJECTS_BINARY_FILES                         // default is to accept binary files
           //#define USB_MSD_ACCEPTS_SREC_FILES                           // optionally accept SREC content
-            #define USB_MSD_ACCEPTS_HEX_FILES                            // optionally accept Intel HEX content
+          //#define USB_MSD_ACCEPTS_HEX_FILES                            // optionally accept Intel HEX content
         #endif
         #if defined USB_MSD_HOST_LOADER                                  // support loading from memory stick
             #if defined USB_HS_INTERFACE
@@ -822,7 +822,7 @@
 #endif
 
 #if !defined TWR_K20D50M && !defined FRDM_K20D50M && !defined FRDM_KL46Z && !defined FRDM_KL43Z && !defined TWR_KL46Z48M && !defined FRDM_KL26Z && !defined FRDM_KL27Z && !defined TWR_KL25Z48M && !defined FRDM_KL02Z && !defined FRDM_KL03Z && !defined FRDM_KL05Z && !defined FRDM_KE02Z && !defined FRDM_KE02Z40M && !defined FRDM_KE04Z && !defined TWR_K20D72M && !defined TWR_K21D50M && !defined TWR_K22F120M && !defined TWR_K24F120M && !defined K24FN1M0_120 && !defined FRDM_K22F && !defined TWR_KV10Z32 && !defined TWR_KV31F120M && !defined K66FX1M0 // boards have no SD card socket
-    #define SDCARD_SUPPORT                                               // SD-card interface (only choose one of these options at a time)
+  //#define SDCARD_SUPPORT                                               // SD-card interface (only choose one of these options at a time)
   //#define SPI_FLASH_FAT                                                // SPI flash
         #define SIMPLE_FLASH                                             // don't perform block management and wear-levelling
         #define FLASH_FAT_MANAGEMENT_ADDRESS     (SIZE_OF_FLASH)

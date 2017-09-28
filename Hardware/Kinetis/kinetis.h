@@ -194,7 +194,7 @@ extern void fnClearBitBandPeripheralValue(unsigned long *bit_band_address);
 //
 #include "kinetis_errata.h"                                              // {61}
 
-#if defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_KV
+#if defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_KV10
     #define ARM_MATH_CM0PLUS                                             // cortex-M0+ to be used
     #define BME_OR_OFFSET    0x8000000                                   // {99} kinetis cortex-m0+ includes a bit manipulation engine
     #define BME_AND_OFFSET   0x4000000

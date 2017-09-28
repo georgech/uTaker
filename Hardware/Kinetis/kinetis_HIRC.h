@@ -17,10 +17,9 @@
 
 */
 
-    // 48MHz HIRC
-    //
-    #if !defined KINETIS_K64 && defined SUPPORT_RTC && !defined RTC_USES_RTC_CLKIN && !defined RTC_USES_LPO_1kHz
-        #if defined KINETIS_WITH_SCG                                     // {1}
+// 48MHz HIRC
+//
+#if defined KINETIS_WITH_SCG                                             // {1}
     // After a reset in RUN mode the processor will be in SIRC mode (8MHz internal RC)
     // - we now move to FIRC
     //
@@ -34,22 +33,22 @@
             #else
     SCG_FIRCCFG = SCG_FIRCCFG_RANGE_48MHz;                               // 48MHz
             #endif
-    #if defined USB_INTERFACE
+            #if defined USB_INTERFACE
     SCG_FIRCDIV = (SCG_FIRCDIV_FIRCDIV3_1 | SCG_FIRCDIV_FIRCDIV1_1);     // enable FIRC output for use by various peripherals, including USB (configured before enabling the FIRC to avoid clock glitches))
-    #else
+            #else
     SCG_FIRCDIV = SCG_FIRCDIV_FIRCDIV3_1;                                // enable FIRC output for use by various peripherals (configured before enabling the FIRC to avoid clock glitches)
-    #endif
+            #endif
     SCG_FIRCCSR = SCG_FIRCCSR_FIRCEN;                                    // enable the fast IRC
     while ((SCG_FIRCCSR & (SCG_FIRCCSR_FIRCSEL | SCG_FIRCCSR_FIRCVLD)) != (SCG_FIRCCSR_FIRCSEL | SCG_FIRCCSR_FIRCVLD)) { // wait until the source has been selected and is valid
             #if defined _WINDOWS
         SCG_FIRCCSR |= (SCG_FIRCCSR_FIRCSEL | SCG_FIRCCSR_FIRCVLD);
             #endif
     }
-        #else
+#else
+    #if !defined KINETIS_K64 && defined SUPPORT_RTC && !defined RTC_USES_RTC_CLKIN && !defined RTC_USES_LPO_1kHz
     MCG_C2 = MCG_C2_EREFS;                                               // request oscillator
     OSC0_CR |= (OSC_CR_ERCLKEN | OSC_CR_EREFSTEN);                       // enable the external reference clock and keep it enabled in stop mode
   //MCG_MC = MCG_MC_HIRCEN;                                              // this is optional and would allow the HIRC to run even when the processor is not working in HIRC mode
-        #endif
     #endif
     #if defined MCG_C1_CLKS_HIRC                                         // processor with MCG-Lite module
     SIM_CLKDIV1 = (((SYSTEM_CLOCK_DIVIDE - 1) << 28) | ((BUS_CLOCK_DIVIDE - 1) << 16)); // prepare bus clock divides
@@ -60,7 +59,6 @@
         MCG_S |= MCG_S_CLKST_HICR;
         #endif
     }
-    #elif defined KINETIS_WITH_SCG
     #else
     MCG_C7 = MCG_C7_OSCSEL_IRC48MCLK;                                    // route the IRC48M clock to the external reference clock input (this enables IRC48M)
     SIM_CLKDIV1 = (((SYSTEM_CLOCK_DIVIDE - 1) << 28) | ((BUS_CLOCK_DIVIDE - 1) << 24) | ((FLEX_CLOCK_DIVIDE - 1) << 20) | ((FLASH_CLOCK_DIVIDE - 1) << 16)); // prepare bus clock divides
@@ -112,3 +110,4 @@
     MCG_C2 |= MCG_C2_LP;                                                 // set bypass to disable FLL and complete move to BLPE (in which PLL is also always disabled)
         #endif
     #endif
+#endif

@@ -223,15 +223,6 @@ EventEXC=0
 EventFOLD=0
 EventLSU=0
 EventSLEEP=0
-[Disassemble mode]
-mode=3
-[Breakpoints2]
-Bp0=_ 0 "EMUL_CODE" "0x00001450" 0 0 1 "" 0 "" 0
-Bp1=_ 0 "EMUL_CODE" "0x00001470" 0 0 1 "" 0 "" 0
-Bp2=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\..\..\uTasker\uTasker.c}.407.13" 0 0 1 "" 0 "" 0
-Bp3=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\..\..\Hardware\Kinetis\kinetis_USB_OTG.h}.1025.19" 0 0 1 "" 0 "" 0
-Bp4=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\..\..\Hardware\Kinetis\kinetis_PIT.h}.182.26" 0 0 1 "" 0 "" 0
-Count=5
 [DriverProfiling]
 Enabled=0
 Mode=1
@@ -249,6 +240,15 @@ Category=_ 0
 [TermIOLog]
 LoggingEnabled=_ 0
 LogFile=_ ""
+[Disassemble mode]
+mode=3
+[Breakpoints2]
+Bp0=_ 0 "EMUL_CODE" "0x00001450" 0 0 1 "" 0 "" 0
+Bp1=_ 0 "EMUL_CODE" "0x00001470" 0 0 1 "" 0 "" 0
+Bp2=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\..\..\uTasker\uTasker.c}.407.13" 0 0 1 "" 0 "" 0
+Bp3=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\..\..\Hardware\Kinetis\kinetis_USB_OTG.h}.1025.19" 0 0 1 "" 0 "" 0
+Bp4=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\..\..\Hardware\Kinetis\kinetis_PIT.h}.182.26" 0 0 1 "" 0 "" 0
+Count=5
 [Aliases]
 Count=0
 SuppressDialog=0

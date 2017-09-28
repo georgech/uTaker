@@ -2902,7 +2902,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define DMA_MEMCPY_CHANNEL     0
 #endif
 
-#if defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_KV10
+#if defined ARM_MATH_CM0PLUS
     // Define interrupt priorities in the system (kinetis KE and KL support 0..3 - 0 is highest priority and 3 is lowest priority)
     //
     #define SYSTICK_PRIORITY           3                                 // lowest priority

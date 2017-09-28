@@ -108,7 +108,7 @@ static __interrupt void _LPTMR1_single(void)
             #if defined LPTMR_PRESCALE
             ptrLPTMR->LPTMR_PSR = (LPTMR_PSR_PCS_OSC0ERCLK | (LPTMR_PRESCALE_VALUE << LPTMR_PSR_PRESCALE_SHIFT)); // program prescaler
             #else
-            ptrLPTMR->PTMR_PSR = (LPTMR_PSR_PCS_OSC0ERCLK | LPTMR_PSR_PBYP);
+            ptrLPTMR->LPTMR_PSR = (LPTMR_PSR_PCS_OSC0ERCLK | LPTMR_PSR_PBYP);
             #endif
         #endif
         #if LPTMR_AVAILABLE > 1
