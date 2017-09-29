@@ -746,7 +746,7 @@ INITHW void fnInitHW(void)                                               // perf
     fnInitIP();                                                          // initialise IP routines to run from SRAM
     #endif
 #endif
-#if !defined DEVICE_WITHOUT_DMA && !defined KINETIS_KL
+#if !defined DEVICE_WITHOUT_DMA && (!defined KINETIS_KL || defined eDMA_SHARES_INTERRUPTS)
     #if defined DEVICE_WITH_TWO_DMA_GROUPS
     DMA_CR = (DMA_CR_GRP0PRI_0 | DMA_CR_GRP1PRI_1);                      // set the two DMA groups to non-conflicting priorities
     #else
@@ -755,7 +755,7 @@ INITHW void fnInitHW(void)                                               // perf
 #endif
 #if defined DMA_MEMCPY_SET && !defined DEVICE_WITHOUT_DMA                // set the eDMA registers to a known zero state
     {
-    #if !defined KINETIS_KL && !defined KINETIS_KE                       // {80}
+    #if (!defined KINETIS_KL || defined eDMA_SHARES_INTERRUPTS)          // {80}
         unsigned long *ptr_eDMAdes = (unsigned long *)eDMA_DESCRIPTORS;
         KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS; // {9}
         ptrDMA_TCD += DMA_MEMCPY_CHANNEL;                                // the DMA channel used for memory copy DMA

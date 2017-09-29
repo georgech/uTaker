@@ -4223,8 +4223,8 @@ extern void fnSimPers(void)
 
 extern int fnSimulateDMA(int channel)                                    // {3}
 {
-#if !defined DEVICE_WITHOUT_DMA && !defined KINETIS_KL82
-#if defined KINETIS_KL                                                   // {32}
+#if !defined DEVICE_WITHOUT_DMA
+#if defined KINETIS_KL && !defined DEVICE_WITH_eDMA                      // {32}
     KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
     ptrDMA += channel;
     if (((ptrDMA->DMA_DCR & (DMA_DCR_START | DMA_DCR_ERQ)) != 0) && ((ptrDMA->DMA_DSR_BCR & DMA_DSR_BCR_BCR_MASK) != 0)) { // sw commanded start or source request (ignore is no count value remaining)
@@ -4412,7 +4412,7 @@ extern int fnSimulateDMA(int channel)                                    // {3}
         _EXCEPTION("Warning - the simulator doesn't simulate DMA channels above 15 at the moment!!");
     }
     #else
-    if (channel > 3) {
+    if (channel >= DMA_CHANNEL_COUNT) {
         _EXCEPTION("Warning - invalid DMA channel being used!!");
     }
     #endif
@@ -4493,20 +4493,45 @@ extern int fnSimulateDMA(int channel)                                    // {3}
 
             if (interrupt != 0) {                                        // if possible interrupt to generate
                 DMA_INT |= (DMA_INT_INT0 << channel);
-                if (fnGenInt(irq_DMA0_ID + channel) != 0) {              // if DMA channel interrupt is not disabled
+    #if defined eDMA_SHARES_INTERRUPTS
+                if (fnGenInt(irq_DMA0_0_4_ID + (channel%(DMA_CHANNEL_COUNT/2))) != 0)
+    #else
+                if (fnGenInt(irq_DMA0_ID + channel) != 0)
+    #endif
+                {                                                        // if DMA channel interrupt is not disabled
                     VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                     switch (channel) {
                     case 0:
+    #if defined eDMA_SHARES_INTERRUPTS
+                    case 4:
+                        ptrVect->processor_interrupts.irq_DMA0_0_4();    // call the interrupt handler for DMA channel 0/4
+    #else
                         ptrVect->processor_interrupts.irq_DMA0();        // call the interrupt handler for DMA channel 0
+    #endif
                         break;
                     case 1:
+    #if defined eDMA_SHARES_INTERRUPTS
+                    case 5:
+                        ptrVect->processor_interrupts.irq_DMA0_1_5();    // call the interrupt handler for DMA channel 1/5
+    #else
                         ptrVect->processor_interrupts.irq_DMA1();        // call the interrupt handler for DMA channel 1
+    #endif
                         break;
                     case 2:
+    #if defined eDMA_SHARES_INTERRUPTS
+                    case 6:
+                        ptrVect->processor_interrupts.irq_DMA0_2_6();    // call the interrupt handler for DMA channel 2/6
+    #else
                         ptrVect->processor_interrupts.irq_DMA2();        // call the interrupt handler for DMA channel 2
+    #endif
                         break;
                     case 3:
+    #if defined eDMA_SHARES_INTERRUPTS
+                    case 7:
+                        ptrVect->processor_interrupts.irq_DMA0_3_7();    // call the interrupt handler for DMA channel 3/7
+    #else
                         ptrVect->processor_interrupts.irq_DMA3();        // call the interrupt handler for DMA channel 3
+    #endif
                         break;
     #if defined irq_DMA4_ID
                     case 4:
@@ -4586,6 +4611,7 @@ static void fnHandleDMA_triggers(int iTriggerSource, int iDMAmux)
                     _EXCEPTION("PIT0 trigger only operates on DMA channel 0!!");
                 }
             }
+        #if !defined KINETIS_KL28 && !defined KINETIS_KL82               // not yet supported
             else if ((DMAMUX0_DMA0_CHCFG_SOURCE_PIT1 & ~(DMAMUX_CHCFG_TRIG)) == (unsigned char)iTriggerSource) {
                 if (iChannel != 1) {
                     _EXCEPTION("PIT1 trigger only operates on DMA channel 1!!");
@@ -4601,6 +4627,7 @@ static void fnHandleDMA_triggers(int iTriggerSource, int iDMAmux)
                     _EXCEPTION("PIT3 trigger only operates on DMA channel 3!!");
                 }
             }
+        #endif
     #endif
     #if !defined KINETIS_KL
             if ((DMA_ERQ & (DMA_ERQ_ERQ0 << iChannel)) != 0) {           // if the DMA channel is enabled
@@ -4982,7 +5009,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
         #if !defined DEVICE_WITHOUT_DMA                                  // if the device supports DMA
                         if ((LPUART0_BAUD & LPUART_BAUD_RDMAE) != 0) {   // if the LPUART is operating in DMA reception mode
             #if defined SERIAL_SUPPORT_DMA
-                #if defined KINETIS_KL
+                #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA
                             KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
                             ptrDMA += DMA_UART0_RX_CHANNEL;
                             if ((ptrDMA->DMA_DCR & DMA_DCR_ERQ) != 0) { // if source enabled
@@ -5028,7 +5055,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
             #if !defined DEVICE_WITHOUT_DMA                              // if the device supports DMA
                         if ((LPUART1_BAUD & LPUART_BAUD_RDMAE) != 0) {   // if the UART is operating in DMA reception mode
                 #if defined SERIAL_SUPPORT_DMA
-                    #if defined KINETIS_KL
+                    #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA
                             KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
                             ptrDMA += DMA_UART1_RX_CHANNEL;
                             if ((ptrDMA->DMA_DCR & DMA_DCR_ERQ) != 0) {  // if source enabled
@@ -5036,11 +5063,11 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                                 LPUART1_STAT &= ~LPUART_STAT_RDRF;       // remove interrupt cause
                             }
                     #else
-                            if ((DMA_ERQ & (DMA_ERQ_ERQ0 << DMA_LPUART1_RX_CHANNEL)) != 0) { // if source enabled
+                            if ((DMA_ERQ & (DMA_ERQ_ERQ0 << DMA_UART1_RX_CHANNEL)) != 0) { // if source enabled
                                 KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
-                                ptrDMA_TCD += DMA_LPUART1_RX_CHANNEL;
+                                ptrDMA_TCD += DMA_UART1_RX_CHANNEL;
                                 ptrDMA_TCD->DMA_TCD_CSR |= (DMA_TCD_CSR_ACTIVE); // trigger
-                                fnSimulateDMA(DMA_LPUART1_RX_CHANNEL);   // trigger DMA transfer on the UART's channel
+                                fnSimulateDMA(DMA_UART1_RX_CHANNEL);     // trigger DMA transfer on the UART's channel
                                 LPUART1_STAT &= ~LPUART_STAT_RDRF;       // remove interrupt cause
                             }
                     #endif
@@ -6928,7 +6955,7 @@ extern unsigned long fnSimDMA(char *argv[])
         #endif
         #if ((UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 2)
             case DMA_UART2_TX_CHANNEL:                                   // handle UART DMA transmission on UART 2
-            #if defined KINETIS_KL && !defined K_STYLE_UART2
+            #if defined KINETIS_KL && (!defined K_STYLE_UART2 && !((LPUARTS_AVAILABLE == 3 && (UARTS_AVAILABLE == 0))))
                 if ((UART2_C4 & UART_C4_TDMAS) != 0)
             #elif LPUARTS_AVAILABLE > 2 && !defined LPUARTS_PARALLEL
                 if ((LPUART2_BAUD & LPUART_BAUD_TDMAE) != 0)             // if DMA operation is enabled
@@ -7453,7 +7480,7 @@ extern int fnSimTimers(void)
                     LPIT0_CVAL0 -= ulCount;
                 }
                 LPIT0_MSR |= LPIT_MSR_TIF0;                              // flag that a reload occurred
-                fnHandleDMA_triggers(DMAMUX0_DMA0_CHCFG_SOURCE_PIT0, 0); // handle DMA triggered on PIT0
+                fnHandleDMA_triggers(DMAMUX0_DMA0_CHCFG_SOURCE_PIT0, 0); // handle DMA triggered on LPIT0
                 if ((LPIT0_MIER & LPIT_MIER_TIE0) != 0) {                // if PIT interrupt is enabled
                     if (fnGenInt(irq_LPIT0_ID) != 0) {                   // if general PIT interrupt is not disabled
                         VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
@@ -7473,7 +7500,9 @@ extern int fnSimTimers(void)
                     LPIT0_CVAL1 -= ulCount;
                 }
                 LPIT0_MSR |= LPIT_MSR_TIF1;                              // flag that a reload occurred
-                fnHandleDMA_triggers(DMAMUX0_DMA0_CHCFG_SOURCE_PIT1, 0); // handle DMA triggered on PIT1
+        #if !defined KINETIS_KL28 && !defined KINETIS_KL82               // not yet supported
+                fnHandleDMA_triggers(DMAMUX0_DMA0_CHCFG_SOURCE_PIT1, 0); // handle DMA triggered on LPIT1
+        #endif
                 if ((LPIT0_MIER & LPIT_MIER_TIE1) != 0) {                // if PIT interrupt is enabled
                     if (fnGenInt(irq_LPIT0_ID) != 0) {                   // if general PIT interrupt is not disabled
                         VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
@@ -7493,7 +7522,6 @@ extern int fnSimTimers(void)
                     LPIT0_CVAL2 -= ulCount;
                 }
                 LPIT0_MSR |= LPIT_MSR_TIF2;                              // flag that a reload occurred
-                fnHandleDMA_triggers(DMAMUX0_DMA0_CHCFG_SOURCE_PIT2, 0); // handle DMA triggered on PIT3
                 if ((LPIT0_MIER & LPIT_MIER_TIE2) != 0) {                // if PIT interrupt is enabled
                     if (fnGenInt(irq_LPIT0_ID) != 0) {                   // if general PIT interrupt is not disabled
                         VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
@@ -7513,7 +7541,6 @@ extern int fnSimTimers(void)
                     LPIT0_CVAL3 -= ulCount;
                 }
                 LPIT0_MSR |= LPIT_MSR_TIF3;                              // flag that a reload occurred
-                fnHandleDMA_triggers(DMAMUX0_DMA0_CHCFG_SOURCE_PIT3, 0); // handle DMA triggered on PIT3
                 if ((LPIT0_MIER & LPIT_MIER_TIE3) != 0) {                // if PIT interrupt is enabled
                     if (fnGenInt(irq_LPIT0_ID) != 0) {                   // if general PIT interrupt is not disabled
                         VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
@@ -7582,7 +7609,9 @@ extern int fnSimTimers(void)
                 PIT_CVAL1 = PIT_LDVAL1;                                  // reload
                 PIT_CVAL1 -= ulCount;
                 PIT_TFLG1 = PIT_TFLG_TIF;                                // flag that a reload occurred
+    #if !defined KINETIS_KL28 && !defined KINETIS_KL82                   // not yet supported
                 fnHandleDMA_triggers(DMAMUX0_DMA0_CHCFG_SOURCE_PIT1, 0); // handle DMA triggered on PIT1
+    #endif
     #if !defined KINETIS_KE && !defined KINETIS_WITH_PCC
                 switch ((SIM_SOPT7 & SIM_SOPT7_ADC0TRGSEL_CMP3)) {
                 case SIM_SOPT7_ADC0TRGSEL_PIT1:                          // if PIT1 is configured to trigger ADC0 conversion

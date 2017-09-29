@@ -1489,8 +1489,10 @@ typedef struct stRESET_VECTOR
     #define DMA_CHANNEL_COUNT        16
 #else
     #if defined KINETIS_KL
-        #if defined KINETIS_KL82 || defined KINETIS_KL28                 // temporary (KL82 and KL28 have eDMA and are thus exceptions in the KL family) - need to move to eDMA!!
-            #define DEVICE_WITHOUT_DMA
+        #if defined KINETIS_KL82 || defined KINETIS_KL28                 // KL82 and KL28 have eDMA and are thus exceptions in the KL family
+            #define DEVICE_WITH_eDMA
+            #define eDMA_SHARES_INTERRUPTS                               // DMA channel 4 shares an interrupt vector with channel 0, 5 with 1, 6 with 2 and 7 with 3
+            #define DMA_CHANNEL_COUNT    8
         #else
             #define DMA_CHANNEL_COUNT    4
         #endif
@@ -3019,22 +3021,22 @@ typedef struct stVECTOR_TABLE
 // Peripheral Register Blocks
 //
 #if defined _WINDOWS
-    #if defined KINETIS_KL                                               // {48}
+    #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA                  // {48}
         #if !defined DEVICE_WITHOUT_DMA
             #define DMA_BLOCK                  ((unsigned char *)(&kinetis.DMA)) // DMA Controller
-        #endif
-        #if defined INTMUX0_AVAILABLE                                    // {100}
-            #define INTMUX0_BLOCK              ((unsigned char *)(&kinetis.INTMUX)) // INTMUX0
         #endif
     #else
         #define eDMA_BLOCK                     ((unsigned char *)(&kinetis.eDMA)) // eDMA Controller
         #define eDMA_DESCRIPTORS               ((unsigned char *)(&kinetis.eDMADES)) // eDMA Descriptor Memory
-        #define FLEXBUS_ADD                    ((unsigned char *)(&kinetis.FB))// FlexBus
+    #endif
+    #if defined INTMUX0_AVAILABLE                                        // {100}
+        #define INTMUX0_BLOCK                  ((unsigned char *)(&kinetis.INTMUX)) // INTMUX0
     #endif
     #if defined MPU_AVAILABLE
         #define MPU_BLOCK                      ((unsigned char *)(&kinetis.MPU)) // Memory Protection Unit
     #endif
     #if !defined KINETIS_KL
+        #define FLEXBUS_ADD                    ((unsigned char *)(&kinetis.FB)) // FlexBus
         #define FMC_BLOCK                      ((unsigned char *)(&kinetis.FMC)) // Flash Memory Controller
     #endif
     #define FTFL_BLOCK                         ((unsigned char *)(&kinetis.FTFL)) // Flash Memory Module
@@ -3282,17 +3284,16 @@ typedef struct stVECTOR_TABLE
         #define MMCAU_BLOCK                    ((unsigned char *)(&kinetis.MMCAU)) // {45} Memory-Mapped Cryptographic Accelerator Unit
     #endif
 #else
-    #if defined KINETIS_KL                                               // {48}
+    #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA                  // {48}
         #if !defined DEVICE_WITHOUT_DMA
             #define DMA_BLOCK                  0x40008100                // DMA Controller
-        #endif
-        #if defined INTMUX0_AVAILABLE                                    // {100}
-            #define INTMUX0_BLOCK              0x40024000                // INTMUX0
         #endif
     #else
         #define eDMA_BLOCK                     0x40008000                // eDMA Controller
         #define eDMA_DESCRIPTORS               0x40009000                // eDMA Descriptor Memory
-        #define FLEXBUS_ADD                    0x4000c000                // FlexBus
+    #endif
+    #if defined INTMUX0_AVAILABLE                                        // {100}
+        #define INTMUX0_BLOCK                  0x40024000                // INTMUX0
     #endif
     #if defined MPU_AVAILABLE
         #define MPU_BLOCK                      0x4000d000                // Memory Protection Unit
@@ -3301,6 +3302,7 @@ typedef struct stVECTOR_TABLE
         #define SDRAMC_BLOCK                   0x4000f000                // SDRAM Controller
     #endif
     #if !defined KINETIS_KL && !defined KINETIS_KE
+        #define FLEXBUS_ADD                    0x4000c000                // FlexBus
         #define FMC_BLOCK                      0x4001f000                // Flash Memory Controller
     #endif
     #define FTFL_BLOCK                         0x40020000                // Flash Memory Module
@@ -3617,7 +3619,7 @@ typedef struct stVECTOR_TABLE
 #endif
 
 
-#if defined KINETIS_KL                                                   // {48}
+#if defined KINETIS_KL && !defined DEVICE_WITH_eDMA                      // {48}
   #if !defined DEVICE_WITHOUT_DMA
 // DMA Controller
 //
@@ -5033,7 +5035,7 @@ typedef struct stKINETIS_INTMUX
       #endif
       #define FTFL_STAT_CCIF     0x80                                    // command complete interrupt flag (write '1' to clear)
     #define FTFL_FCNFG          *(unsigned char *)(FTFL_BLOCK + 0x01)    // Flash Configuration Register
-    #define FTFL_FSEC           *(volatile unsigned char *)(FTFL_BLOCK + 0x02) // Flash Security Register (read-only)
+    #define FTFL_FSEC           *(volatile unsigned char *)(FTFL_BLOCK + 0x02) // flash security register (read-only)
       #define FTFL_FSEC_SEC_SECURE       0x00                            // MCU security status is secure
       #define FTFL_FSEC_SEC_UNSECURE     0x02                            // MCU security status is unsecure (standard shipping state of new devices)
       #define FTFL_FSEC_SEC_MASK         0x03
@@ -5043,7 +5045,7 @@ typedef struct stKINETIS_INTMUX
       #define FTFL_FSEC_MEEN_ENABLED     0x30                            // mass erase is enabled
       #define FTFL_FSEC_KEYEN_ENABLED    0x80                            // backdoor key access enabled
       #define FTFL_FSEC_KEYEN_DISABLED   0xc0                            // backdoor key access disabled
-    #define FTFL_FOPT           *(volatile unsigned char *)(FTFL_BLOCK + 0x03) // Flash Option Register (read-only)
+    #define FTFL_FOPT           *(volatile unsigned char *)(FTFL_BLOCK + 0x03) // flash option register (read-only)
     #if defined KINETIS_KL || defined KINETIS_KV
       #define FTFL_FOPT_LPBOOT_CLK_DIV_8  0x00
       #define FTFL_FOPT_LPBOOT_CLK_DIV_4  0x01
@@ -5198,156 +5200,220 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
 //
 #define DMAMUX0_CHCFG_ADD   (unsigned char *)(DMAMUX0_BLOCK + 0x00)
 #define DMAMUX0_CHCFG0     *(unsigned char *)(DMAMUX0_BLOCK + 0x00)      // Channel 0 Configuration Register
-  #define DMAMUX_CHCFG_SOURCE_DISABLED       0                           // 0x00
-#if defined KINETIS_K66
-  #define DMAMUX_CHCFG_SOURCE_TSI0           1                           // 0x01 TSI0
-#endif
-  #define DMAMUX_CHCFG_SOURCE_UART0_RX       2                           // 0x02 UART0 RX - DMAMUX_CHCFG_xx are available on DMA MUX 0 and on DMA MUX 1 (when available)
-  #define DMAMUX_CHCFG_SOURCE_UART0_TX       3                           // 0x03 UART0 TX
-  #define DMAMUX_CHCFG_SOURCE_UART1_RX       4                           // 0x04 UART1 RX
-  #define DMAMUX_CHCFG_SOURCE_UART1_TX       5                           // 0x05 UART1 TX
-  #define DMAMUX_CHCFG_SOURCE_UART2_RX       6                           // 0x06 UART2 RX
-  #define DMAMUX_CHCFG_SOURCE_UART2_TX       7                           // 0x07 UART2 TX
-  #define DMAMUX_CHCFG_SOURCE_UART3_RX       8                           // 0x08 UART3 RX
-  #define DMAMUX_CHCFG_SOURCE_UART3_TX       9                           // 0x09 UART3 TX
-#if defined KINETIS_K21 || defined KINETIS_K22 || defined KINETIS_K24 || defined KINETIS_K64 || defined KINETIS_K66 || defined KINETIS_K80 || defined KINETIS_KV30
-  #define DMAMUX_CHCFG_SOURCE_UART4_TX       10                          // 0x0a UART4 TX or RX
-  #define DMAMUX_CHCFG_SOURCE_UART5_TX       11                          // 0x0b UART5 TX or RX
-  #define DMAMUX_CHCFG_SOURCE_I2S0_RX        12                          // 0x0c I2S0 RX
-  #define DMAMUX_CHCFG_SOURCE_I2S0_TX        13                          // 0x0d I2S0 TX
-  #define DMAMUX_CHCFG_SOURCE_SPI0_RX        14                          // 0x0e SPI0 RX
-  #define DMAMUX_CHCFG_SOURCE_SPI0_TX        15                          // 0x0f SPI0 TX
-    #if defined KINETIS_K66 || defined KINETIS_K80
-  #define DMAMUX_CHCFG_SOURCE_SPI1_RX        16                          // 0x10 SPI1 RX
-  #define DMAMUX_CHCFG_SOURCE_SPI1_TX        17                          // 0x11 SPI2 TX
-  #define DMAMUX0_CHCFG_SOURCE_I2C0_3        18                          // 0x12 I2C0 (or I2C3)
-  #define DMAMUX0_CHCFG_SOURCE_I2C1_2        19                          // 0x13 I2C1 (or I2C2)
-    #else
-  #define DMAMUX_CHCFG_SOURCE_SPI1_TX        16                          // 0x10 SPI1 TX or RX
-  #define DMAMUX_CHCFG_SOURCE_SPI2_TX        17                          // 0x11 SPI2 TX or RX
-  #define DMAMUX0_CHCFG_SOURCE_I2C0          18                          // 0x12 I2C0 - DMAMUX0_CHCFG_xx are only available on DMA MUX 0
-  #define DMAMUX0_CHCFG_SOURCE_I2C1_2        19                          // 0x13 I2C1 (or I2C2)
+  #define DMAMUX_CHCFG_SOURCE_DISABLED           0                       // 0x00
+#if defined KINETIS_KL82 || defined KINETIS_KL28
+    #define DMAMUX0_CHCFG_SOURCE_FLEXIO0_SHIFT0  1                       // 0x01 FlexIO shifter 0
+    #define DMAMUX0_CHCFG_SOURCE_FLEXIO0_SHIFT1  2                       // 0x02 FlexIO shifter 1
+    #define DMAMUX0_CHCFG_SOURCE_FLEXIO0_SHIFT2  3                       // 0x03 FlexIO shifter 2
+    #define DMAMUX0_CHCFG_SOURCE_FLEXIO0_SHIFT3  4                       // 0x04 FlexIO shifter 3
+    #define DMAMUX0_CHCFG_SOURCE_FLEXIO0_SHIFT4  5                       // 0x05 FlexIO shifter 4
+    #define DMAMUX0_CHCFG_SOURCE_FLEXIO0_SHIFT5  6                       // 0x06 FlexIO shifter 5
+    #define DMAMUX0_CHCFG_SOURCE_FLEXIO0_SHIFT6  7                       // 0x07 FlexIO shifter 6
+    #define DMAMUX0_CHCFG_SOURCE_FLEXIO0_SHIFT7  8                       // 0x08 FlexIO shifter 7
+    #define DMAMUX0_CHCFG_SOURCE_LPI2C0_RX       9                       // 0x09 LPI2C0 receive
+    #define DMAMUX0_CHCFG_SOURCE_LPI2C0_TX       10                      // 0x0a LPI2C0 transmit
+    #define DMAMUX0_CHCFG_SOURCE_LPI2C1_RX       11                      // 0x0b LPI2C1 receive
+    #define DMAMUX0_CHCFG_SOURCE_LPI2C1_TX       12                      // 0x0c LPI2C1 transmit
+    #define DMAMUX0_CHCFG_SOURCE_LPI2C2_RX       13                      // 0x0d LPI2C2 receive
+    #define DMAMUX0_CHCFG_SOURCE_LPI2C2_TX       14                      // 0x0e LPI2C2 transmit
+    #define DMAMUX0_CHCFG_SOURCE_LPUART0_RX      15                      // 0x0f LPUART0 RX
+    #define DMAMUX0_CHCFG_SOURCE_LPUART0_TX      16                      // 0x10 LPUART0 TX
+    #define DMAMUX0_CHCFG_SOURCE_LPUART1_RX      17                      // 0x11 LPUART1 RX
+    #define DMAMUX0_CHCFG_SOURCE_LPUART1_TX      18                      // 0x12 LPUART1 TX
+    #define DMAMUX0_CHCFG_SOURCE_LPUART2_RX      19                      // 0x13 LPUART2 RX
+    #define DMAMUX0_CHCFG_SOURCE_LPUART2_TX      20                      // 0x14 LPUART2 TX
+    #define DMAMUX0_CHCFG_SOURCE_LPSPI0_RX       21                      // 0x15 LPSPI0 RX
+    #define DMAMUX0_CHCFG_SOURCE_LPSPI0_TX       22                      // 0x16 LPSPI0 TX
+    #define DMAMUX0_CHCFG_SOURCE_LPSPI1_RX       23                      // 0x17 LPSPI1 RX
+    #define DMAMUX0_CHCFG_SOURCE_LPSPI1_TX       24                      // 0x18 LPSPI1 TX
+    #define DMAMUX0_CHCFG_SOURCE_LPSPI2_RX       25                      // 0x19 LPSPI2 RX
+    #define DMAMUX0_CHCFG_SOURCE_LPSPI2_TX       26                      // 0x1a LPSPI2 TX
+    #define DMAMUX0_CHCFG_SOURCE_TPM0_C0         27                      // 0x1b TPM0 channel 0
+    #define DMAMUX0_CHCFG_SOURCE_TPM0_C1         28                      // 0x1c TPM0 channel 1
+    #define DMAMUX0_CHCFG_SOURCE_TPM0_C2         29                      // 0x1d TPM0 channel 2
+    #define DMAMUX0_CHCFG_SOURCE_TPM0_C3         30                      // 0x1e TPM0 channel 3
+    #define DMAMUX0_CHCFG_SOURCE_TPM0_C4         31                      // 0x1f TPM0 channel 4
+    #define DMAMUX0_CHCFG_SOURCE_TPM0_C5         32                      // 0x20 TPM0 channel 5
+
+    #define DMAMUX0_CHCFG_SOURCE_TPM0_OV         35                      // 0x23 TPM0 overflow
+    #define DMAMUX0_CHCFG_SOURCE_TPM1_C0         36                      // 0x24 TPM1 channel 0
+    #define DMAMUX0_CHCFG_SOURCE_TPM1_C1         37                      // 0x25 TPM1 channel 1
+    #define DMAMUX0_CHCFG_SOURCE_TPM1_OV         38                      // 0x26 TPM1 overflow
+    #define DMAMUX0_CHCFG_SOURCE_TPM2_C0         39                      // 0x27 TPM2 channel 0
+    #define DMAMUX0_CHCFG_SOURCE_TPM2_C1         40                      // 0x28 TPM2 channel 1
+    #define DMAMUX0_CHCFG_SOURCE_TPM2_OV         41                      // 0x29 TPM2 overflow
+
+    #define DMAMUX0_CHCFG_SOURCE_EMVSIM_RX       43                      // 0x2b EMVSIM receive
+    #define DMAMUX0_CHCFG_SOURCE_EMVSIM_TX       44                      // 0x2c EMVSIM transmit
+    #define DMAMUX0_CHCFG_SOURCE_SAI_RX          45                      // 0x2d EMVSIM receive
+    #define DMAMUX0_CHCFG_SOURCE_SAI_TX          46                      // 0x2e EMVSIM transmit
+    #define DMAMUX0_CHCFG_SOURCE_PORTA           47                      // 0x2f port A
+    #define DMAMUX0_CHCFG_SOURCE_PORTB           48                      // 0x30 port B
+    #define DMAMUX0_CHCFG_SOURCE_PORTC           49                      // 0x31 port C
+    #define DMAMUX0_CHCFG_SOURCE_PORTD           50                      // 0x32 port D
+    #define DMAMUX0_CHCFG_SOURCE_PORTE           51                      // 0x33 port E
+    #define DMAMUX0_CHCFG_SOURCE_ADC0            52                      // 0x34 ADC0 conversion complete
+
+    #define DMAMUX0_CHCFG_SOURCE_DAC0            54                      // 0x35 DAC0
+
+    #define DMAMUX0_CHCFG_SOURCE_CMP0            56                      // 0x37 CMP0
+    #define DMAMUX0_CHCFG_SOURCE_CMP1            57                      // 0x38 CMP1
+
+    #define DMAMUX_CHCFG_SOURCE_TSI0             60                      // 0x3b TSI0
+    #define DMAMUX_CHCFG_SOURCE_LPTMR0           61                      // 0x3c LPTMR0
+    #define DMAMUX_CHCFG_SOURCE_LPTMR1           62                      // 0x3d LPTMR1
+    #define DMAMUX0_CHCFG_SOURCE_DMAMUX0        (63 | DMAMUX_CHCFG_TRIG) // 0x3e DMA MUX - always enabled
+#else
+    #if defined KINETIS_K66
+      #define DMAMUX_CHCFG_SOURCE_TSI0           1                       // 0x01 TSI0
     #endif
-  #define DMAMUX_CHCFG_SOURCE_FTM0_C0        20                          // 0x14 FTM0 channel 0
-  #define DMAMUX_CHCFG_SOURCE_FTM0_C1        21                          // 0x15 FTM0 channel 1
-  #define DMAMUX_CHCFG_SOURCE_FTM0_C2        22                          // 0x16 FTM0 channel 2
-  #define DMAMUX_CHCFG_SOURCE_FTM0_C3        23                          // 0x17 FTM0 channel 3
-  #define DMAMUX_CHCFG_SOURCE_FTM0_C4        24                          // 0x18 FTM0 channel 4
-  #define DMAMUX_CHCFG_SOURCE_FTM0_C5        25                          // 0x19 FTM0 channel 5
-  #define DMAMUX_CHCFG_SOURCE_FTM0_C6        26                          // 0x1a FTM0 channel 6
-  #define DMAMUX_CHCFG_SOURCE_FTM0_C7        27                          // 0x1b FTM0 channel 7
-  #define DMAMUX0_CHCFG_SOURCE_FTM1_C0       28                          // 0x1c FTM1 channel 0
-  #define DMAMUX0_CHCFG_SOURCE_FTM1_C1       29                          // 0x1d FTM1 channel 1
-  #define DMAMUX0_CHCFG_SOURCE_FTM2_C0       30                          // 0x1e FTM2 channel 0
-  #define DMAMUX0_CHCFG_SOURCE_FTM2_C1       31                          // 0x1f FTM2 channel 1
-  #define DMAMUX_CHCFG_SOURCE_FTM3_C0        32                          // 0x20 FTM0 channel 0
-  #define DMAMUX_CHCFG_SOURCE_FTM3_C1        33                          // 0x21 FTM0 channel 1
-  #define DMAMUX_CHCFG_SOURCE_FTM3_C2        34                          // 0x22 FTM0 channel 2
-  #define DMAMUX_CHCFG_SOURCE_FTM3_C3        35                          // 0x23 FTM0 channel 3
-  #define DMAMUX_CHCFG_SOURCE_FTM3_C4        36                          // 0x24 FTM0 channel 4
-  #define DMAMUX_CHCFG_SOURCE_FTM3_C5        37                          // 0x25 FTM0 channel 5
-  #define DMAMUX_CHCFG_SOURCE_FTM3_C6        38                          // 0x26 FTM0 channel 6
-  #define DMAMUX_CHCFG_SOURCE_FTM3_C7        39                          // 0x27 FTM0 channel 7
-#else
-  #define DMAMUX_CHCFG_SOURCE_UART4_RX       10                          // 0x0a UART4 RX
-  #define DMAMUX_CHCFG_SOURCE_UART4_TX       11                          // 0x0b UART4 TX
-  #define DMAMUX_CHCFG_SOURCE_UART5_RX       12                          // 0x0c UART5 RX
-  #define DMAMUX_CHCFG_SOURCE_UART5_TX       13                          // 0x0d UART5 TX
-  #define DMAMUX_CHCFG_SOURCE_I2S0_RX        14                          // 0x0e I2S0 RX
-  #define DMAMUX_CHCFG_SOURCE_I2S0_TX        15                          // 0x0f I2S0 TX
-  #define DMAMUX_CHCFG_SOURCE_SPI0_RX        16                          // 0x10 SPI0 RX
-  #define DMAMUX_CHCFG_SOURCE_SPI0_TX        17                          // 0x11 SPI0 TX
-  #define DMAMUX_CHCFG_SOURCE_SPI1_RX        18                          // 0x12 SPI1 RX
-  #define DMAMUX_CHCFG_SOURCE_SPI1_TX        19                          // 0x13 SPI1 TX
-  #define DMAMUX_CHCFG_SOURCE_SPI2_RX        20                          // 0x14 SPI2 RX
-  #define DMAMUX_CHCFG_SOURCE_SPI2_TX        21                          // 0x15 SPI2 TX
-  #define DMAMUX0_CHCFG_SOURCE_I2C0          22                          // 0x16 I2C0 - DMAMUX0_CHCFG_xx are only available on DMA MUX 0
-  #define DMAMUX0_CHCFG_SOURCE_I2C1_2        23                          // 0x17 I2C1 (or I2C2)
-  #define DMAMUX_CHCFG_SOURCE_FTM0_C0        24                          // 0x18 FTM0/TPM0 channel 0
-  #define DMAMUX_CHCFG_SOURCE_FTM0_C1        25                          // 0x19 FTM0/TPM0 channel 1
-  #define DMAMUX_CHCFG_SOURCE_FTM0_C2        26                          // 0x1a FTM0/TPM0 channel 2
-  #define DMAMUX_CHCFG_SOURCE_FTM0_C3        27                          // 0x1b FTM0/TPM0 channel 3
-  #define DMAMUX_CHCFG_SOURCE_FTM0_C4        28                          // 0x1c FTM0/TPM0 channel 4
-  #define DMAMUX_CHCFG_SOURCE_FTM0_C5        29                          // 0x1d FTM0/TPM0 channel 5
-  #define DMAMUX_CHCFG_SOURCE_FTM0_C6        30                          // 0x1e FTM0/TPM0 channel 6
-  #define DMAMUX_CHCFG_SOURCE_FTM0_C7        31                          // 0x1f FTM0/TPM0 channel 7
-  #define DMAMUX0_CHCFG_SOURCE_FTM1_C0       32                          // 0x20 FTM1/TPM1 channel 0
-  #define DMAMUX0_CHCFG_SOURCE_FTM1_C1       33                          // 0x21 FTM1/TPM1 channel 1
-  #define DMAMUX0_CHCFG_SOURCE_FTM2_C0       34                          // 0x22 FTM2/TPM2 channel 0
-  #define DMAMUX0_CHCFG_SOURCE_FTM2_C1       35                          // 0x23 FTM2/TPM2 channel 1
-  #define DMAMUX_CHCFG_SOURCE_IEEE1588_T0    36                          // 0x24 IEEE 1588 timer 0 (alternative)
-  #define DMAMUX0_CHCFG_SOURCE_FTM3_C1       36                          // 0x24 FTM3 channel 1
-  #define DMAMUX_CHCFG_SOURCE_IEEE1588_T1    37                          // 0x25 IEEE 1588 timer 1 (alternative)
-  #define DMAMUX0_CHCFG_SOURCE_FTM3_C2       37                          // 0x25 FTM3 channel 2
-  #define DMAMUX_CHCFG_SOURCE_IEEE1588_T2    38                          // 0x26 IEEE 1588 timer 2 (alternative)
-  #define DMAMUX0_CHCFG_SOURCE_FTM3_C3       38                          // 0x26 FTM3 channel 3
-  #define DMAMUX_CHCFG_SOURCE_IEEE1588_T3    39                          // 0x27 IEEE 1588 timer 3 (alternative)
- #endif
-  #define DMAMUX_CHCFG_SOURCE_ADC0           40                          // 0x28 ADC0
-  #define DMAMUX_CHCFG_SOURCE_ADC1           41                          // 0x29 ADC1
-  #define DMAMUX0_CHCFG_SOURCE_CMP0          42                          // 0x2a CMP0
-  #define DMAMUX0_CHCFG_SOURCE_CMP1          43                          // 0x2b CMP1
-  #define DMAMUX0_CHCFG_SOURCE_CMP2          44                          // 0x2c CMP2
-  #define DMAMUX_CHCFG_SOURCE_DAC0           45                          // 0x2d DAC0
-  #define DMAMUX_CHCFG_SOURCE_DAC1           46                          // 0x2e DAC1
-  #define DMAMUX0_CHCFG_SOURCE_CMT           47                          // 0x2f CMT
-  #define DMAMUX0_CHCFG_SOURCE_PDB           48                          // 0x30 PDB
-  #define DMAMUX0_CHCFG_SOURCE_PORTA         49                          // 0x31 port A
-  #define DMAMUX0_CHCFG_SOURCE_PORTB         50                          // 0x32 port B
-  #define DMAMUX0_CHCFG_SOURCE_PORTC         51                          // 0x33 port C
-  #define DMAMUX0_CHCFG_SOURCE_PORTD         52                          // 0x34 port D
-  #define DMAMUX0_CHCFG_SOURCE_PORTE         53                          // 0x35 port E
-#if defined KINETIS_K64 || defined KINETIS_K66
-  #define DMAMUX_CHCFG_SOURCE_IEEE1588_T0    54                          // 0x36 IEEE 1588 timer 0
-  #define DMAMUX_CHCFG_SOURCE_IEEE1588_T1    55                          // 0x37 IEEE 1588 timer 1 (or)
-  #define DMAMUX0_CHCFG_SOURCE_TPM1_OVERFLOW 55                          // 0x37 TPM1 overflow
-  #define DMAMUX_CHCFG_SOURCE_IEEE1588_T2    56                          // 0x38 IEEE 1588 timer 2 (or)
-  #define DMAMUX0_CHCFG_SOURCE_TPM2_OVERFLOW 56                          // 0x38 TPM2 overflow
-  #define DMAMUX_CHCFG_SOURCE_IEEE1588_T3    57                          // 0x39 IEEE 1588 timer 3
-#elif defined KINETIS_KL
-  #define DMAMUX0_CHCFG_SOURCE_TPM0_OVERFLOW 54                          // 0x36 TPM0 overflow
-  #define DMAMUX0_CHCFG_SOURCE_TPM1_OVERFLOW 55                          // 0x37 TPM1 overflow
-  #define DMAMUX0_CHCFG_SOURCE_TPM2_OVERFLOW 56                          // 0x38 TPM2 overflow
-  #define DMAMUX0_CHCFG_SOURCE_TSI           57                          // 0x39 TSI
-#elif !defined KINETIS_K21
-  #define DMAMUX0_CHCFG_SOURCE_FTM3_C4       54                          // 0x36 FTM3 channel 4
-  #define DMAMUX0_CHCFG_SOURCE_FTM3_C5       55                          // 0x37 FTM3 channel 5
-  #define DMAMUX0_CHCFG_SOURCE_FTM3_C6       56                          // 0x38 FTM3 channel 6
-  #define DMAMUX0_CHCFG_SOURCE_FTM3_C7       57                          // 0x39 FTM3 channel 7
-#endif
-#if defined KINETIS_K80
-  #define DMAMUX0_CHCFG_SOURCE_SPI2_RX       (58)                        // 0x3a SPI2 RX
-  #define DMAMUX0_CHCFG_SOURCE_SPI2_TX       (59)                        // 0x3b SPI2 TX
-  #define DMAMUX0_CHCFG_SOURCE_DMAMUX0       (60 | DMAMUX_CHCFG_TRIG)    // 0x3c DMA MUX - always enabled
-  #define DMAMUX0_CHCFG_SOURCE_DMAMUX1       (61 | DMAMUX_CHCFG_TRIG)    // 0x3d DMA MUX - always enabled
-  #define DMAMUX0_CHCFG_SOURCE_DMAMUX2       (62 | DMAMUX_CHCFG_TRIG)    // 0x3e DMA MUX - always enabled
-  #define DMAMUX0_CHCFG_SOURCE_DMAMUX3       (63 | DMAMUX_CHCFG_TRIG)    // 0x3f DMA MUX - always enable
-  // For compatibility
-  //
-  #define DMAMUX0_CHCFG_SOURCE_LPUART0_RX    DMAMUX_CHCFG_SOURCE_UART0_RX
-  #define DMAMUX0_CHCFG_SOURCE_LPUART0_TX    DMAMUX_CHCFG_SOURCE_UART0_TX
-  #define DMAMUX0_CHCFG_SOURCE_LPUART1_RX    DMAMUX_CHCFG_SOURCE_UART1_RX
-  #define DMAMUX0_CHCFG_SOURCE_LPUART1_TX    DMAMUX_CHCFG_SOURCE_UART1_TX
-  #define DMAMUX0_CHCFG_SOURCE_LPUART2_RX    DMAMUX_CHCFG_SOURCE_UART2_RX
-  #define DMAMUX0_CHCFG_SOURCE_LPUART2_TX    DMAMUX_CHCFG_SOURCE_UART2_TX
-  #define DMAMUX0_CHCFG_SOURCE_LPUART3_RX    DMAMUX_CHCFG_SOURCE_UART3_RX
-  #define DMAMUX0_CHCFG_SOURCE_LPUART3_TX    DMAMUX_CHCFG_SOURCE_UART3_TX
-  #define DMAMUX0_CHCFG_SOURCE_LPUART4_RX    DMAMUX_CHCFG_SOURCE_UART4_RX
-  #define DMAMUX0_CHCFG_SOURCE_LPUART4_TX    DMAMUX_CHCFG_SOURCE_UART4_TX
-#elif LPUARTS_AVAILABLE > 0
-  #define DMAMUX0_CHCFG_SOURCE_LPUART0_RX    58                          // 0x3a LPUART0 RX
-  #define DMAMUX0_CHCFG_SOURCE_LPUART0_TX    59                          // 0x3b LPUART0 TX
-  #define DMAMUX0_CHCFG_SOURCE_DMAMUX0       (60 | DMAMUX_CHCFG_TRIG)    // 0x3c DMA MUX - always enabled
-  #define DMAMUX0_CHCFG_SOURCE_DMAMUX1       (61 | DMAMUX_CHCFG_TRIG)    // 0x3d DMA MUX - always enabled
-  #define DMAMUX0_CHCFG_SOURCE_DMAMUX2       (62 | DMAMUX_CHCFG_TRIG)    // 0x3e DMA MUX - always enabled
-  #define DMAMUX0_CHCFG_SOURCE_DMAMUX3       (63 | DMAMUX_CHCFG_TRIG)    // 0x3f DMA MUX - always enabled
-#else
-  #define DMAMUX0_CHCFG_SOURCE_DMAMUX0       (58 | DMAMUX_CHCFG_TRIG)    // 0x3a DMA MUX - always enabled
-  #define DMAMUX0_CHCFG_SOURCE_DMAMUX1       (59 | DMAMUX_CHCFG_TRIG)    // 0x3b DMA MUX - always enabled
-  #define DMAMUX0_CHCFG_SOURCE_DMAMUX2       (60 | DMAMUX_CHCFG_TRIG)    // 0x3c DMA MUX - always enabled
-  #define DMAMUX0_CHCFG_SOURCE_DMAMUX3       (61 | DMAMUX_CHCFG_TRIG)    // 0x3d DMA MUX - always enabled
-  #define DMAMUX0_CHCFG_SOURCE_DMAMUX4       (62 | DMAMUX_CHCFG_TRIG)    // 0x3e DMA MUX - always enabled
-  #define DMAMUX0_CHCFG_SOURCE_DMAMUX5       (63 | DMAMUX_CHCFG_TRIG)    // 0x3f DMA MUX - always enabled
+      #define DMAMUX_CHCFG_SOURCE_UART0_RX       2                       // 0x02 UART0 RX - DMAMUX_CHCFG_xx are available on DMA MUX 0 and on DMA MUX 1 (when available)
+      #define DMAMUX_CHCFG_SOURCE_UART0_TX       3                       // 0x03 UART0 TX
+      #define DMAMUX_CHCFG_SOURCE_UART1_RX       4                       // 0x04 UART1 RX
+      #define DMAMUX_CHCFG_SOURCE_UART1_TX       5                       // 0x05 UART1 TX
+      #define DMAMUX_CHCFG_SOURCE_UART2_RX       6                       // 0x06 UART2 RX
+      #define DMAMUX_CHCFG_SOURCE_UART2_TX       7                       // 0x07 UART2 TX
+      #define DMAMUX_CHCFG_SOURCE_UART3_RX       8                       // 0x08 UART3 RX
+      #define DMAMUX_CHCFG_SOURCE_UART3_TX       9                       // 0x09 UART3 TX
+    #if defined KINETIS_K21 || defined KINETIS_K22 || defined KINETIS_K24 || defined KINETIS_K64 || defined KINETIS_K66 || defined KINETIS_K80 || defined KINETIS_KV30
+      #define DMAMUX_CHCFG_SOURCE_UART4_TX       10                      // 0x0a UART4 TX or RX
+      #define DMAMUX_CHCFG_SOURCE_UART5_TX       11                      // 0x0b UART5 TX or RX
+      #define DMAMUX_CHCFG_SOURCE_I2S0_RX        12                      // 0x0c I2S0 RX
+      #define DMAMUX_CHCFG_SOURCE_I2S0_TX        13                      // 0x0d I2S0 TX
+      #define DMAMUX_CHCFG_SOURCE_SPI0_RX        14                      // 0x0e SPI0 RX
+      #define DMAMUX_CHCFG_SOURCE_SPI0_TX        15                      // 0x0f SPI0 TX
+        #if defined KINETIS_K66 || defined KINETIS_K80
+      #define DMAMUX_CHCFG_SOURCE_SPI1_RX        16                      // 0x10 SPI1 RX
+      #define DMAMUX_CHCFG_SOURCE_SPI1_TX        17                      // 0x11 SPI2 TX
+      #define DMAMUX0_CHCFG_SOURCE_I2C0_3        18                      // 0x12 I2C0 (or I2C3)
+      #define DMAMUX0_CHCFG_SOURCE_I2C1_2        19                      // 0x13 I2C1 (or I2C2)
+        #else
+      #define DMAMUX_CHCFG_SOURCE_SPI1_TX        16                      // 0x10 SPI1 TX or RX
+      #define DMAMUX_CHCFG_SOURCE_SPI2_TX        17                      // 0x11 SPI2 TX or RX
+      #define DMAMUX0_CHCFG_SOURCE_I2C0          18                      // 0x12 I2C0 - DMAMUX0_CHCFG_xx are only available on DMA MUX 0
+      #define DMAMUX0_CHCFG_SOURCE_I2C1_2        19                      // 0x13 I2C1 (or I2C2)
+        #endif
+      #define DMAMUX_CHCFG_SOURCE_FTM0_C0        20                      // 0x14 FTM0 channel 0
+      #define DMAMUX_CHCFG_SOURCE_FTM0_C1        21                      // 0x15 FTM0 channel 1
+      #define DMAMUX_CHCFG_SOURCE_FTM0_C2        22                      // 0x16 FTM0 channel 2
+      #define DMAMUX_CHCFG_SOURCE_FTM0_C3        23                      // 0x17 FTM0 channel 3
+      #define DMAMUX_CHCFG_SOURCE_FTM0_C4        24                      // 0x18 FTM0 channel 4
+      #define DMAMUX_CHCFG_SOURCE_FTM0_C5        25                      // 0x19 FTM0 channel 5
+      #define DMAMUX_CHCFG_SOURCE_FTM0_C6        26                      // 0x1a FTM0 channel 6
+      #define DMAMUX_CHCFG_SOURCE_FTM0_C7        27                      // 0x1b FTM0 channel 7
+      #define DMAMUX0_CHCFG_SOURCE_FTM1_C0       28                      // 0x1c FTM1 channel 0
+      #define DMAMUX0_CHCFG_SOURCE_FTM1_C1       29                      // 0x1d FTM1 channel 1
+      #define DMAMUX0_CHCFG_SOURCE_FTM2_C0       30                      // 0x1e FTM2 channel 0
+      #define DMAMUX0_CHCFG_SOURCE_FTM2_C1       31                      // 0x1f FTM2 channel 1
+      #define DMAMUX_CHCFG_SOURCE_FTM3_C0        32                      // 0x20 FTM0 channel 0
+      #define DMAMUX_CHCFG_SOURCE_FTM3_C1        33                      // 0x21 FTM0 channel 1
+      #define DMAMUX_CHCFG_SOURCE_FTM3_C2        34                      // 0x22 FTM0 channel 2
+      #define DMAMUX_CHCFG_SOURCE_FTM3_C3        35                      // 0x23 FTM0 channel 3
+      #define DMAMUX_CHCFG_SOURCE_FTM3_C4        36                      // 0x24 FTM0 channel 4
+      #define DMAMUX_CHCFG_SOURCE_FTM3_C5        37                      // 0x25 FTM0 channel 5
+      #define DMAMUX_CHCFG_SOURCE_FTM3_C6        38                      // 0x26 FTM0 channel 6
+      #define DMAMUX_CHCFG_SOURCE_FTM3_C7        39                      // 0x27 FTM0 channel 7
+    #else
+      #define DMAMUX_CHCFG_SOURCE_UART4_RX       10                      // 0x0a UART4 RX
+      #define DMAMUX_CHCFG_SOURCE_UART4_TX       11                      // 0x0b UART4 TX
+      #define DMAMUX_CHCFG_SOURCE_UART5_RX       12                      // 0x0c UART5 RX
+      #define DMAMUX_CHCFG_SOURCE_UART5_TX       13                      // 0x0d UART5 TX
+      #define DMAMUX_CHCFG_SOURCE_I2S0_RX        14                      // 0x0e I2S0 RX
+      #define DMAMUX_CHCFG_SOURCE_I2S0_TX        15                      // 0x0f I2S0 TX
+      #define DMAMUX_CHCFG_SOURCE_SPI0_RX        16                      // 0x10 SPI0 RX
+      #define DMAMUX_CHCFG_SOURCE_SPI0_TX        17                      // 0x11 SPI0 TX
+      #define DMAMUX_CHCFG_SOURCE_SPI1_RX        18                      // 0x12 SPI1 RX
+      #define DMAMUX_CHCFG_SOURCE_SPI1_TX        19                      // 0x13 SPI1 TX
+      #define DMAMUX_CHCFG_SOURCE_SPI2_RX        20                      // 0x14 SPI2 RX
+      #define DMAMUX_CHCFG_SOURCE_SPI2_TX        21                      // 0x15 SPI2 TX
+      #define DMAMUX0_CHCFG_SOURCE_I2C0          22                      // 0x16 I2C0 - DMAMUX0_CHCFG_xx are only available on DMA MUX 0
+      #define DMAMUX0_CHCFG_SOURCE_I2C1_2        23                      // 0x17 I2C1 (or I2C2)
+      #define DMAMUX_CHCFG_SOURCE_FTM0_C0        24                      // 0x18 FTM0/TPM0 channel 0
+      #define DMAMUX_CHCFG_SOURCE_FTM0_C1        25                      // 0x19 FTM0/TPM0 channel 1
+      #define DMAMUX_CHCFG_SOURCE_FTM0_C2        26                      // 0x1a FTM0/TPM0 channel 2
+      #define DMAMUX_CHCFG_SOURCE_FTM0_C3        27                      // 0x1b FTM0/TPM0 channel 3
+      #define DMAMUX_CHCFG_SOURCE_FTM0_C4        28                      // 0x1c FTM0/TPM0 channel 4
+      #define DMAMUX_CHCFG_SOURCE_FTM0_C5        29                      // 0x1d FTM0/TPM0 channel 5
+      #define DMAMUX_CHCFG_SOURCE_FTM0_C6        30                      // 0x1e FTM0/TPM0 channel 6
+      #define DMAMUX_CHCFG_SOURCE_FTM0_C7        31                      // 0x1f FTM0/TPM0 channel 7
+      #define DMAMUX0_CHCFG_SOURCE_FTM1_C0       32                      // 0x20 FTM1/TPM1 channel 0
+      #define DMAMUX0_CHCFG_SOURCE_FTM1_C1       33                      // 0x21 FTM1/TPM1 channel 1
+      #define DMAMUX0_CHCFG_SOURCE_FTM2_C0       34                      // 0x22 FTM2/TPM2 channel 0
+      #define DMAMUX0_CHCFG_SOURCE_FTM2_C1       35                      // 0x23 FTM2/TPM2 channel 1
+      #define DMAMUX_CHCFG_SOURCE_IEEE1588_T0    36                      // 0x24 IEEE 1588 timer 0 (alternative)
+      #define DMAMUX0_CHCFG_SOURCE_FTM3_C1       36                      // 0x24 FTM3 channel 1
+      #define DMAMUX_CHCFG_SOURCE_IEEE1588_T1    37                      // 0x25 IEEE 1588 timer 1 (alternative)
+      #define DMAMUX0_CHCFG_SOURCE_FTM3_C2       37                      // 0x25 FTM3 channel 2
+      #define DMAMUX_CHCFG_SOURCE_IEEE1588_T2    38                      // 0x26 IEEE 1588 timer 2 (alternative)
+      #define DMAMUX0_CHCFG_SOURCE_FTM3_C3       38                      // 0x26 FTM3 channel 3
+      #define DMAMUX_CHCFG_SOURCE_IEEE1588_T3    39                      // 0x27 IEEE 1588 timer 3 (alternative)
+     #endif
+      #define DMAMUX_CHCFG_SOURCE_ADC0           40                      // 0x28 ADC0
+      #define DMAMUX_CHCFG_SOURCE_ADC1           41                      // 0x29 ADC1
+      #define DMAMUX0_CHCFG_SOURCE_CMP0          42                      // 0x2a CMP0
+      #define DMAMUX0_CHCFG_SOURCE_CMP1          43                      // 0x2b CMP1
+      #define DMAMUX0_CHCFG_SOURCE_CMP2          44                      // 0x2c CMP2
+      #define DMAMUX_CHCFG_SOURCE_DAC0           45                      // 0x2d DAC0
+      #define DMAMUX_CHCFG_SOURCE_DAC1           46                      // 0x2e DAC1
+      #define DMAMUX0_CHCFG_SOURCE_CMT           47                      // 0x2f CMT
+      #define DMAMUX0_CHCFG_SOURCE_PDB           48                      // 0x30 PDB
+      #define DMAMUX0_CHCFG_SOURCE_PORTA         49                      // 0x31 port A
+      #define DMAMUX0_CHCFG_SOURCE_PORTB         50                      // 0x32 port B
+      #define DMAMUX0_CHCFG_SOURCE_PORTC         51                      // 0x33 port C
+      #define DMAMUX0_CHCFG_SOURCE_PORTD         52                      // 0x34 port D
+      #define DMAMUX0_CHCFG_SOURCE_PORTE         53                      // 0x35 port E
+    #if defined KINETIS_K64 || defined KINETIS_K66
+      #define DMAMUX_CHCFG_SOURCE_IEEE1588_T0    54                      // 0x36 IEEE 1588 timer 0
+      #define DMAMUX_CHCFG_SOURCE_IEEE1588_T1    55                      // 0x37 IEEE 1588 timer 1 (or)
+      #define DMAMUX0_CHCFG_SOURCE_TPM1_OVERFLOW 55                      // 0x37 TPM1 overflow
+      #define DMAMUX_CHCFG_SOURCE_IEEE1588_T2    56                      // 0x38 IEEE 1588 timer 2 (or)
+      #define DMAMUX0_CHCFG_SOURCE_TPM2_OVERFLOW 56                      // 0x38 TPM2 overflow
+      #define DMAMUX_CHCFG_SOURCE_IEEE1588_T3    57                      // 0x39 IEEE 1588 timer 3
+    #elif defined KINETIS_KL
+      #define DMAMUX0_CHCFG_SOURCE_TPM0_OVERFLOW 54                      // 0x36 TPM0 overflow
+      #define DMAMUX0_CHCFG_SOURCE_TPM1_OVERFLOW 55                      // 0x37 TPM1 overflow
+      #define DMAMUX0_CHCFG_SOURCE_TPM2_OVERFLOW 56                      // 0x38 TPM2 overflow
+      #define DMAMUX0_CHCFG_SOURCE_TSI           57                      // 0x39 TSI
+    #elif !defined KINETIS_K21
+      #define DMAMUX0_CHCFG_SOURCE_FTM3_C4       54                      // 0x36 FTM3 channel 4
+      #define DMAMUX0_CHCFG_SOURCE_FTM3_C5       55                      // 0x37 FTM3 channel 5
+      #define DMAMUX0_CHCFG_SOURCE_FTM3_C6       56                      // 0x38 FTM3 channel 6
+      #define DMAMUX0_CHCFG_SOURCE_FTM3_C7       57                      // 0x39 FTM3 channel 7
+    #endif
+    #if defined KINETIS_K80
+      #define DMAMUX0_CHCFG_SOURCE_SPI2_RX       (58)                    // 0x3a SPI2 RX
+      #define DMAMUX0_CHCFG_SOURCE_SPI2_TX       (59)                    // 0x3b SPI2 TX
+      #define DMAMUX0_CHCFG_SOURCE_DMAMUX0       (60 | DMAMUX_CHCFG_TRIG)// 0x3c DMA MUX - always enabled
+      #define DMAMUX0_CHCFG_SOURCE_DMAMUX1       (61 | DMAMUX_CHCFG_TRIG)// 0x3d DMA MUX - always enabled
+      #define DMAMUX0_CHCFG_SOURCE_DMAMUX2       (62 | DMAMUX_CHCFG_TRIG)// 0x3e DMA MUX - always enabled
+      #define DMAMUX0_CHCFG_SOURCE_DMAMUX3       (63 | DMAMUX_CHCFG_TRIG)// 0x3f DMA MUX - always enable
+      // For compatibility
+      //
+      #define DMAMUX0_CHCFG_SOURCE_LPUART0_RX    DMAMUX_CHCFG_SOURCE_UART0_RX
+      #define DMAMUX0_CHCFG_SOURCE_LPUART0_TX    DMAMUX_CHCFG_SOURCE_UART0_TX
+      #define DMAMUX0_CHCFG_SOURCE_LPUART1_RX    DMAMUX_CHCFG_SOURCE_UART1_RX
+      #define DMAMUX0_CHCFG_SOURCE_LPUART1_TX    DMAMUX_CHCFG_SOURCE_UART1_TX
+      #define DMAMUX0_CHCFG_SOURCE_LPUART2_RX    DMAMUX_CHCFG_SOURCE_UART2_RX
+      #define DMAMUX0_CHCFG_SOURCE_LPUART2_TX    DMAMUX_CHCFG_SOURCE_UART2_TX
+      #define DMAMUX0_CHCFG_SOURCE_LPUART3_RX    DMAMUX_CHCFG_SOURCE_UART3_RX
+      #define DMAMUX0_CHCFG_SOURCE_LPUART3_TX    DMAMUX_CHCFG_SOURCE_UART3_TX
+      #define DMAMUX0_CHCFG_SOURCE_LPUART4_RX    DMAMUX_CHCFG_SOURCE_UART4_RX
+      #define DMAMUX0_CHCFG_SOURCE_LPUART4_TX    DMAMUX_CHCFG_SOURCE_UART4_TX
+    #elif LPUARTS_AVAILABLE > 0
+      #define DMAMUX0_CHCFG_SOURCE_LPUART0_RX    58                      // 0x3a LPUART0 RX
+      #define DMAMUX0_CHCFG_SOURCE_LPUART0_TX    59                      // 0x3b LPUART0 TX
+      #define DMAMUX0_CHCFG_SOURCE_DMAMUX0       (60 | DMAMUX_CHCFG_TRIG)// 0x3c DMA MUX - always enabled
+      #define DMAMUX0_CHCFG_SOURCE_DMAMUX1       (61 | DMAMUX_CHCFG_TRIG)// 0x3d DMA MUX - always enabled
+      #define DMAMUX0_CHCFG_SOURCE_DMAMUX2       (62 | DMAMUX_CHCFG_TRIG)// 0x3e DMA MUX - always enabled
+      #define DMAMUX0_CHCFG_SOURCE_DMAMUX3       (63 | DMAMUX_CHCFG_TRIG)// 0x3f DMA MUX - always enabled
+    #else
+      #define DMAMUX0_CHCFG_SOURCE_DMAMUX0       (58 | DMAMUX_CHCFG_TRIG)// 0x3a DMA MUX - always enabled
+      #define DMAMUX0_CHCFG_SOURCE_DMAMUX1       (59 | DMAMUX_CHCFG_TRIG)// 0x3b DMA MUX - always enabled
+      #define DMAMUX0_CHCFG_SOURCE_DMAMUX2       (60 | DMAMUX_CHCFG_TRIG)// 0x3c DMA MUX - always enabled
+      #define DMAMUX0_CHCFG_SOURCE_DMAMUX3       (61 | DMAMUX_CHCFG_TRIG)// 0x3d DMA MUX - always enabled
+      #define DMAMUX0_CHCFG_SOURCE_DMAMUX4       (62 | DMAMUX_CHCFG_TRIG)// 0x3e DMA MUX - always enabled
+      #define DMAMUX0_CHCFG_SOURCE_DMAMUX5       (63 | DMAMUX_CHCFG_TRIG)// 0x3f DMA MUX - always enabled
+    #endif
 #endif
   #define DMAMUX0_DMA0_CHCFG_SOURCE_PIT0    (DMAMUX0_CHCFG_SOURCE_DMAMUX0)
   #define DMAMUX0_DMA0_CHCFG_SOURCE_PIT1    (DMAMUX0_CHCFG_SOURCE_DMAMUX1)
@@ -5358,11 +5424,13 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
 #define DMAMUX0_CHCFG1     *(unsigned char *)(DMAMUX0_BLOCK + 0x01)      // Channel 1 Configuration Register
 #define DMAMUX0_CHCFG2     *(unsigned char *)(DMAMUX0_BLOCK + 0x02)      // Channel 2 Configuration Register
 #define DMAMUX0_CHCFG3     *(unsigned char *)(DMAMUX0_BLOCK + 0x03)      // Channel 3 Configuration Register
-#if !defined KINETIS_KL
+#if DMA_CHANNEL_COUNT > 4
     #define DMAMUX0_CHCFG4     *(unsigned char *)(DMAMUX0_BLOCK + 0x04)  // Channel 4 Configuration Register
     #define DMAMUX0_CHCFG5     *(unsigned char *)(DMAMUX0_BLOCK + 0x05)  // Channel 5 Configuration Register
     #define DMAMUX0_CHCFG6     *(unsigned char *)(DMAMUX0_BLOCK + 0x06)  // Channel 6 Configuration Register
     #define DMAMUX0_CHCFG7     *(unsigned char *)(DMAMUX0_BLOCK + 0x07)  // Channel 7 Configuration Register
+#endif
+#if DMA_CHANNEL_COUNT > 8
     #define DMAMUX0_CHCFG8     *(unsigned char *)(DMAMUX0_BLOCK + 0x08)  // Channel 8 Configuration Register
     #define DMAMUX0_CHCFG9     *(unsigned char *)(DMAMUX0_BLOCK + 0x09)  // Channel 9 Configuration Register
     #define DMAMUX0_CHCFG10    *(unsigned char *)(DMAMUX0_BLOCK + 0x0a)  // Channel 10 Configuration Register

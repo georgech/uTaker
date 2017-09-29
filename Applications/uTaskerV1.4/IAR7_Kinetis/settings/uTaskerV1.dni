@@ -1,5 +1,5 @@
 [DebugChecksum]
-Checksum=1220450866
+Checksum=1569552810
 [DisAssemblyWindow]
 NumStates=_ 1
 State 1=_ 1
@@ -180,26 +180,11 @@ ShowTimeLog=1
 SumEnabled=0
 ShowTimeSum=1
 SumSortOrder=0
-[struct_types]
-Fmt0=TTIMETABLE-taskDelay	4	0
-[array_types]
-Fmt0=signed short[16]	4	0
-Fmt1=unsigned long[10]	4	0
-Fmt2=unsigned long[20]	4	0
-Fmt3=unsigned long[2]	4	0
-Fmt4=unsigned long[32]	4	0
-Fmt5=unsigned long[4]	4	0
-[watch_formats]
-Fmt0={W}0:ulBlockWriteLength	4	0
-Fmt1={W}1:ulLastCapture	4	4
 [Breakpoints]
 Bp0=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12_master\uTasker\Tty_drv.c}.264.17" 0 0 0 0 "" 0 "" 0
 Bp1=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12_master\uTasker\Tty_drv.c}.245.9" 0 0 0 0 "" 0 "" 0
 Bp2=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12_master\uTasker\Tty_drv.c}.539.5" 1 0 0 0 "" 0 "" 0
 Count=3
-[Trace1]
-Enabled=0
-ShowSource=1
 [ETMTraceWindow]
 PortWidth=4
 PortMode=0
@@ -223,6 +208,28 @@ EventEXC=0
 EventFOLD=0
 EventLSU=0
 EventSLEEP=0
+[struct_types]
+Fmt0=TTIMETABLE-taskDelay	4	0
+[array_types]
+Fmt0=signed short[16]	4	0
+Fmt1=unsigned long[10]	4	0
+Fmt2=unsigned long[20]	4	0
+Fmt3=unsigned long[2]	4	0
+Fmt4=unsigned long[32]	4	0
+Fmt5=unsigned long[4]	4	0
+[watch_formats]
+Fmt0={W}0:ulBlockWriteLength	4	0
+Fmt1={W}1:ulLastCapture	4	4
+[Trace1]
+Enabled=0
+ShowSource=1
+[Log file]
+LoggingEnabled=_ 0
+LogFile=_ ""
+Category=_ 0
+[TermIOLog]
+LoggingEnabled=_ 0
+LogFile=_ ""
 [DriverProfiling]
 Enabled=0
 Mode=1
@@ -233,22 +240,12 @@ Exclusions=
 Enabled=0
 [CallStackStripe]
 ShowTiming=1
-[Log file]
-LoggingEnabled=_ 0
-LogFile=_ ""
-Category=_ 0
-[TermIOLog]
-LoggingEnabled=_ 0
-LogFile=_ ""
 [Disassemble mode]
 mode=3
 [Breakpoints2]
-Bp0=_ 0 "EMUL_CODE" "0x00001450" 0 0 1 "" 0 "" 0
-Bp1=_ 0 "EMUL_CODE" "0x00001470" 0 0 1 "" 0 "" 0
-Bp2=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\..\..\uTasker\uTasker.c}.407.13" 0 0 1 "" 0 "" 0
-Bp3=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\..\..\Hardware\Kinetis\kinetis_USB_OTG.h}.1025.19" 0 0 1 "" 0 "" 0
-Bp4=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\..\..\Hardware\Kinetis\kinetis_PIT.h}.182.26" 0 0 1 "" 0 "" 0
-Count=5
+Bp0=_ 0 "EMUL_CODE" "0x000014CC" 0 0 1 "" 0 "" 0
+Bp1=_ 0 "EMUL_CODE" "0x00001518" 0 0 1 "" 0 "" 0
+Count=2
 [Aliases]
 Count=0
 SuppressDialog=0

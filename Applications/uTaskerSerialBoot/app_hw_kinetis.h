@@ -393,9 +393,9 @@
 #elif defined FRDM_KL28Z
     #define OSC_LOW_GAIN_MODE
     #define CRYSTAL_FREQUENCY    32768                                   // 32kHz crystal
-  //#define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
+    #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
     #define RUN_FROM_HIRC                                                // clock from fast internal RC clock
-      //#define RUN_FROM_HIRC_48MHz                                      // fast IRC trimmed to 48MHz
+        #define RUN_FROM_HIRC_48MHz                                      // fast IRC trimmed to 48MHz
       //#define RUN_FROM_HIRC_52MHz                                      // fast IRC trimmed to 52MHz
       //#define RUN_FROM_HIRC_56MHz                                      // fast IRC trimmed to 56MHz
       //#define RUN_FROM_HIRC_60MHz                                      // fast IRC trimmed to 60MHz

@@ -1,14 +1,14 @@
 "D:\Programs\IAR Systems\Embedded Workbench 7.5\arm\bin\armproc.dll" 
 
-"D:\Programs\IAR Systems\Embedded Workbench 7.5\arm\bin\armJET.dll" 
+"D:\Programs\IAR Systems\Embedded Workbench 7.5\arm\bin\armjlink2.dll" 
 
 "D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12_master\Applications\uTaskerSerialBoot\IAR7_Kinetis\FLASH\Exe\uTaskerSerialBoot.out" 
 
 --plugin "D:\Programs\IAR Systems\Embedded Workbench 7.5\arm\bin\armbat.dll" 
 
---device_macro "D:\Programs\IAR Systems\Embedded Workbench 7.5\arm\config\debugger\NXP\KLxxZ7.dmac" 
+--device_macro "D:\Programs\IAR Systems\Embedded Workbench 7.5\arm\config\debugger\NXP\KL8xZ7.dmac" 
 
---flash_loader "D:\Programs\IAR Systems\Embedded Workbench 7.5\arm\config\flashloader\NXP\FlashKLxxZ7512KROM.board" 
+--flash_loader "D:\Programs\IAR Systems\Embedded Workbench 7.5\arm\config\flashloader\NXP\FlashKL8xZ7128KROM.board" 
 
 
 

@@ -33,6 +33,12 @@
 #define DMA_TRANSFER_FIRST_BUFFER  0x00
 #define DMA_TRANSFER_SECOND_BUFFER 0x04
 
+#if defined eDMA_SHARES_INTERRUPTS
+    #define _DMA_CHANNEL_COUNT         (DMA_CHANNEL_COUNT/2)
+#else
+    #define _DMA_CHANNEL_COUNT         DMA_CHANNEL_COUNT
+#endif
+
 
 /* =================================================================== */
 /*                 local function prototype declarations               */
@@ -42,40 +48,40 @@ static __interrupt void _DMA_Interrupt_0(void);
 static __interrupt void _DMA_Interrupt_1(void);
 static __interrupt void _DMA_Interrupt_2(void);
 static __interrupt void _DMA_Interrupt_3(void);
-#if DMA_CHANNEL_COUNT > 4
+#if _DMA_CHANNEL_COUNT > 4
     static __interrupt void _DMA_Interrupt_4(void);
 #endif
-#if DMA_CHANNEL_COUNT > 5
+#if _DMA_CHANNEL_COUNT > 5
     static __interrupt void _DMA_Interrupt_5(void);
 #endif
-#if DMA_CHANNEL_COUNT > 6
+#if _DMA_CHANNEL_COUNT > 6
     static __interrupt void _DMA_Interrupt_6(void);
 #endif
-#if DMA_CHANNEL_COUNT > 7
+#if _DMA_CHANNEL_COUNT > 7
     static __interrupt void _DMA_Interrupt_7(void);
 #endif
-#if DMA_CHANNEL_COUNT > 8
+#if _DMA_CHANNEL_COUNT > 8
     static __interrupt void _DMA_Interrupt_8(void);
 #endif
-#if DMA_CHANNEL_COUNT > 9
+#if _DMA_CHANNEL_COUNT > 9
     static __interrupt void _DMA_Interrupt_9(void);
 #endif
-#if DMA_CHANNEL_COUNT > 10
+#if _DMA_CHANNEL_COUNT > 10
     static __interrupt void _DMA_Interrupt_10(void);
 #endif
-#if DMA_CHANNEL_COUNT > 11
+#if _DMA_CHANNEL_COUNT > 11
     static __interrupt void _DMA_Interrupt_11(void);
 #endif
-#if DMA_CHANNEL_COUNT > 12
+#if _DMA_CHANNEL_COUNT > 12
     static __interrupt void _DMA_Interrupt_12(void);
 #endif
-#if DMA_CHANNEL_COUNT > 13
+#if _DMA_CHANNEL_COUNT > 13
     static __interrupt void _DMA_Interrupt_13(void);
 #endif
-#if DMA_CHANNEL_COUNT > 14
+#if _DMA_CHANNEL_COUNT > 14
     static __interrupt void _DMA_Interrupt_14(void);
 #endif
-#if DMA_CHANNEL_COUNT > 15
+#if _DMA_CHANNEL_COUNT > 15
     static __interrupt void _DMA_Interrupt_15(void);
 #endif
 
@@ -83,45 +89,45 @@ static __interrupt void _DMA_Interrupt_3(void);
 /*                             constants                               */
 /* =================================================================== */
 
-static const unsigned char *_DMA_Interrupt[DMA_CHANNEL_COUNT] = {
+static const unsigned char *_DMA_Interrupt[_DMA_CHANNEL_COUNT] = {
     (unsigned char *)_DMA_Interrupt_0,
     (unsigned char *)_DMA_Interrupt_1,
     (unsigned char *)_DMA_Interrupt_2,
     (unsigned char *)_DMA_Interrupt_3,
-#if DMA_CHANNEL_COUNT > 4
+#if _DMA_CHANNEL_COUNT > 4
     (unsigned char *)_DMA_Interrupt_4,
 #endif
-#if DMA_CHANNEL_COUNT > 5
+#if _DMA_CHANNEL_COUNT > 5
     (unsigned char *)_DMA_Interrupt_5,
 #endif
-#if DMA_CHANNEL_COUNT > 6
+#if _DMA_CHANNEL_COUNT > 6
     (unsigned char *)_DMA_Interrupt_6,
 #endif
-#if DMA_CHANNEL_COUNT > 7
+#if _DMA_CHANNEL_COUNT > 7
     (unsigned char *)_DMA_Interrupt_7,
 #endif
-#if DMA_CHANNEL_COUNT > 8
+#if _DMA_CHANNEL_COUNT > 8
     (unsigned char *)_DMA_Interrupt_8,
 #endif
-#if DMA_CHANNEL_COUNT > 9
+#if _DMA_CHANNEL_COUNT > 9
     (unsigned char *)_DMA_Interrupt_9,
 #endif
-#if DMA_CHANNEL_COUNT > 10
+#if _DMA_CHANNEL_COUNT > 10
     (unsigned char *)_DMA_Interrupt_10,
 #endif
-#if DMA_CHANNEL_COUNT > 11
+#if _DMA_CHANNEL_COUNT > 11
     (unsigned char *)_DMA_Interrupt_11,
 #endif
-#if DMA_CHANNEL_COUNT > 12
+#if _DMA_CHANNEL_COUNT > 12
     (unsigned char *)_DMA_Interrupt_12,
 #endif
-#if DMA_CHANNEL_COUNT > 13
+#if _DMA_CHANNEL_COUNT > 13
     (unsigned char *)_DMA_Interrupt_13,
 #endif
-#if DMA_CHANNEL_COUNT > 14
+#if _DMA_CHANNEL_COUNT > 14
     (unsigned char *)_DMA_Interrupt_14,
 #endif
-#if DMA_CHANNEL_COUNT > 15
+#if _DMA_CHANNEL_COUNT > 15
     (unsigned char *)_DMA_Interrupt_15,
 #endif
 };
@@ -147,7 +153,7 @@ static void (*_DMA_handler[DMA_CHANNEL_COUNT])(void) = {0};              // user
 
 static void _DMA_Handler(int iChannel)
 {
-    #if defined KINETIS_KL
+    #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA
     KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
     ptrDMA += iChannel;                                                  // move to the use DMA channel
         #if defined _WINDOWS
@@ -201,102 +207,146 @@ static void _DMA_Handler(int iChannel)
 
 static __interrupt void _DMA_Interrupt_0(void)
 {
+#if defined eDMA_SHARES_INTERRUPTS
+    // Channel 0 and _DMA_CHANNEL_COUNT interrupts are shared
+    //
+    if ((DMA_INT & DMA_INT_INT0) != 0) {                                 // if DMA channel 0 request is pending
+        _DMA_Handler(0);
+    }
+    if ((DMA_INT & (DMA_INT_INT0 << _DMA_CHANNEL_COUNT)) != 0) {         // if DMA channel 0 shared channel request is pending
+        _DMA_Handler(_DMA_CHANNEL_COUNT);
+    }
+#else
     _DMA_Handler(0);
+#endif
 }
 
 static __interrupt void _DMA_Interrupt_1(void)
 {
+#if defined eDMA_SHARES_INTERRUPTS
+    // Channel 1 and (_DMA_CHANNEL_COUNT + 1) interrupts are shared
+    //
+    if ((DMA_INT & DMA_INT_INT1) != 0) {                                 // if DMA channel 1 request is pending
+        _DMA_Handler(1);
+    }
+    if ((DMA_INT & (DMA_INT_INT0 << (_DMA_CHANNEL_COUNT + 1))) != 0) {   // if DMA channel 1 shared channel request is pending
+        _DMA_Handler(_DMA_CHANNEL_COUNT + 1);
+    }
+#else
     _DMA_Handler(1);
+#endif
 }
 
 static __interrupt void _DMA_Interrupt_2(void)
 {
+#if defined eDMA_SHARES_INTERRUPTS
+    // Channel 2 and (_DMA_CHANNEL_COUNT + 2) interrupts are shared
+    //
+    if ((DMA_INT & DMA_INT_INT2) != 0) {                                 // if DMA channel 2 request is pending
+        _DMA_Handler(2);
+    }
+    if ((DMA_INT & (DMA_INT_INT0 << (_DMA_CHANNEL_COUNT + 2))) != 0) {   // if DMA channel 2 shared channel request is pending
+        _DMA_Handler(_DMA_CHANNEL_COUNT + 2);
+    }
+#else
     _DMA_Handler(2);
+#endif
 }
 
 static __interrupt void _DMA_Interrupt_3(void)
 {
-    _DMA_Handler(3);
+#if defined eDMA_SHARES_INTERRUPTS
+    // Channel 3 and (_DMA_CHANNEL_COUNT + 3) interrupts are shared
+    //
+    if ((DMA_INT & DMA_INT_INT3) != 0) {                                 // if DMA channel 3 request is pending
+        _DMA_Handler(3);
+    }
+    if ((DMA_INT & (DMA_INT_INT0 << (_DMA_CHANNEL_COUNT + 3))) != 0) {   // if DMA channel 3 shared channel request is pending
+        _DMA_Handler(_DMA_CHANNEL_COUNT + 3);
+    }
+#else
+    _DMA_Handler(2);
+#endif
 }
 
-#if DMA_CHANNEL_COUNT > 4
+#if _DMA_CHANNEL_COUNT > 4
 static __interrupt void _DMA_Interrupt_4(void)
 {
     _DMA_Handler(4);
 }
 #endif
 
-#if DMA_CHANNEL_COUNT > 5
+#if _DMA_CHANNEL_COUNT > 5
 static __interrupt void _DMA_Interrupt_5(void)
 {
     _DMA_Handler(5);
 }
 #endif
 
-#if DMA_CHANNEL_COUNT > 6
+#if _DMA_CHANNEL_COUNT > 6
 static __interrupt void _DMA_Interrupt_6(void)
 {
     _DMA_Handler(6);
 }
 #endif
 
-#if DMA_CHANNEL_COUNT > 7
+#if _DMA_CHANNEL_COUNT > 7
 static __interrupt void _DMA_Interrupt_7(void)
 {
     _DMA_Handler(7);
 }
 #endif
 
-#if DMA_CHANNEL_COUNT > 8
+#if _DMA_CHANNEL_COUNT > 8
 static __interrupt void _DMA_Interrupt_8(void)
 {
     _DMA_Handler(8);
 }
 #endif
 
-#if DMA_CHANNEL_COUNT > 9
+#if _DMA_CHANNEL_COUNT > 9
 static __interrupt void _DMA_Interrupt_9(void)
 {
     _DMA_Handler(9);
 }
 #endif
 
-#if DMA_CHANNEL_COUNT > 10
+#if _DMA_CHANNEL_COUNT > 10
 static __interrupt void _DMA_Interrupt_10(void)
 {
     _DMA_Handler(10);
 }
 #endif
 
-#if DMA_CHANNEL_COUNT > 11
+#if _DMA_CHANNEL_COUNT > 11
 static __interrupt void _DMA_Interrupt_11(void)
 {
     _DMA_Handler(11);
 }
 #endif
 
-#if DMA_CHANNEL_COUNT > 12
+#if _DMA_CHANNEL_COUNT > 12
 static __interrupt void _DMA_Interrupt_12(void)
 {
     _DMA_Handler(12);
 }
 #endif
 
-#if DMA_CHANNEL_COUNT > 13
+#if _DMA_CHANNEL_COUNT > 13
 static __interrupt void _DMA_Interrupt_13(void)
 {
     _DMA_Handler(13);
 }
 #endif
 
-#if DMA_CHANNEL_COUNT > 14
+#if _DMA_CHANNEL_COUNT > 14
 static __interrupt void _DMA_Interrupt_14(void)
 {
     _DMA_Handler(14);
 }
 #endif
 
-#if DMA_CHANNEL_COUNT > 15
+#if _DMA_CHANNEL_COUNT > 15
 static __interrupt void _DMA_Interrupt_15(void)
 {
     _DMA_Handler(15);
@@ -305,7 +355,7 @@ static __interrupt void _DMA_Interrupt_15(void)
 
 extern void fnDMA_BufferReset(int iChannel, int iAction)
 {
-    #if defined KINETIS_KL
+    #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA
     KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
     ptrDMA += iChannel;
     if (iAction == DMA_BUFFER_START) {
@@ -388,7 +438,7 @@ extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned char ucDmaT
 {
     unsigned char ucSize = (unsigned char)(ulRules & 0x07);              // transfer size 1, 2 or 4 bytes
 
-    #if defined KINETIS_KL
+    #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA
     KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
         #if defined _WINDOWS
     if (ucDMA_channel >= DMA_CHANNEL_COUNT) {
@@ -484,9 +534,9 @@ extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned char ucDmaT
     #endif
     *(unsigned char *)(DMAMUX0_BLOCK + ucDMA_channel) = (ucDmaTriggerSource | DMAMUX_CHCFG_ENBL); // connect trigger to DMA channel
     ptrDMA->DMA_DCR |= (DMA_DCR_CS | DMA_DCR_EADREQ);                    // enable peripheral request - single cycle for each request (asynchronous requests enabled in stop mode)
-    #else
+    #else                                                                // eDMA
     KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
-    ptrDMA_TCD += ucDMA_channel;
+    ptrDMA_TCD += ucDMA_channel;                                         // set to the channel registers to be used
     if ((DMA_FIXED_ADDRESSES & ulRules) != 0) {                          // if both source and destination addresses are fixed
         ptrDMA_TCD->DMA_TCD_SOFF = 0;                                    // source not incremented
         ptrDMA_TCD->DMA_TCD_DOFF = 0;                                    // destination not incremented
@@ -530,7 +580,11 @@ extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned char ucDmaT
         else {
             ptrDMA_TCD->DMA_TCD_CSR = (DMA_TCD_CSR_INTMAJOR);            // interrupt when the transmit buffer is full
         }
-        fnEnterInterrupt((irq_DMA0_ID + ucDMA_channel), int_priority, (void (*)(void))_DMA_Interrupt[ucDMA_channel]); // enter DMA interrupt handler on ful/half buffer completion
+        #if defined eDMA_SHARES_INTERRUPTS                               // interrupts are shared between channel 0 and _DMA_CHANNEL_COUNT, 1 and _DMA_CHANNEL_COUNT + 1, etc.
+        fnEnterInterrupt((irq_DMA0_0_4_ID + (ucDMA_channel%_DMA_CHANNEL_COUNT)), int_priority, (void(*)(void))_DMA_Interrupt[ucDMA_channel%_DMA_CHANNEL_COUNT]); // enter DMA interrupt handler on full/half buffer completion
+        #else
+        fnEnterInterrupt((irq_DMA0_ID + ucDMA_channel), int_priority, (void(*)(void))_DMA_Interrupt[ucDMA_channel]); // enter DMA interrupt handler on full/half buffer completion
+        #endif
     }
     else {
         ptrDMA_TCD->DMA_TCD_CSR = 0;                                     // free-running mode without any interrupt
@@ -539,7 +593,11 @@ extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned char ucDmaT
   //ptrDMA_TCD->DMA_TCD_DLASTSGA = 0;                                    // {3} no destination displacement on transmit buffer completion
   //ptrDMA_TCD->DMA_TCD_SLAST = (-(signed long)(ulBufLength));           // {3} when the buffer has been transmitted set the destination back to the start of it
     ptrDMA_TCD->DMA_TCD_BITER_ELINK = ptrDMA_TCD->DMA_TCD_CITER_ELINK = (signed short)(ulBufLength/ucSize); // the number of service requests to be performed each cycle
-    POWER_UP(6, SIM_SCGC6_DMAMUX0);                                      // enable DMA multiplexer 0
+    #if defined KINETIS_WITH_PCC
+    PCC_DMAMUX0 |= PCC_CGC;
+    #else
+    POWER_UP_ATOMIC(6, SIM_SCGC6_DMAMUX0);                               // enable DMA multiplexer 0
+    #endif
     *(unsigned char *)(DMAMUX0_BLOCK + ucDMA_channel) = (ucDmaTriggerSource | DMAMUX_CHCFG_ENBL); // connect trigger source to DMA channel
     #endif
     #if defined _WINDOWS                                                 // simulator checks to help detect incorrect usage
@@ -563,6 +621,7 @@ extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned char ucDmaT
         }
         #endif
     }
+        #if !defined KINETIS_KL28 && !defined KINETIS_KL82               // not yet supported
     else if (DMAMUX0_DMA0_CHCFG_SOURCE_PIT1 == ucDmaTriggerSource) {
         if (ucDMA_channel != 1) {
             _EXCEPTION("PIT1 trigger only operates on DMA channel 1!!");
@@ -583,6 +642,7 @@ extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned char ucDmaT
             _EXCEPTION("PIT3 trigger only operates on DMA channel 3!!");
         }
     }
+        #endif
     #endif
     // Note that the DMA channel has not been activated yet - to do this fnDMA_BufferReset(channel_number, DMA_BUFFER_START); is performed
     //
@@ -616,7 +676,7 @@ extern void *uMemcpy(void *ptrTo, const void *ptrFrom, size_t Size)      // {9}
     #endif
 
     if (Size >= SMALLEST_DMA_COPY) {                                     // if large enough to be worthwhile
-    #if defined KINETIS_KL                                               // {80}
+    #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA                  // {80}
         KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
         ptrDMA += DMA_MEMCPY_CHANNEL;
         if (ptrDMA->DMA_DCR == 0) {                                      // if not already in use
@@ -852,7 +912,7 @@ extern void *uMemset(void *ptrTo, unsigned char ucValue, size_t Size)    // {9}
     register unsigned char *ptr = (unsigned char *)ptrTo;
 
     if (Size >= SMALLEST_DMA_COPY) {                                     // if large enough to be worthwhile 
-    #if defined KINETIS_KL                                               // {80}
+    #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA                  // {80}
         KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
         ptrDMA += DMA_MEMCPY_CHANNEL;
         if (ptrDMA->DMA_DCR == 0) {                                      // if not already in use
