@@ -69,13 +69,15 @@
 //#define FRDM_KE02Z40M                                                  // freedom board http://www.utasker.com/kinetis/FRDM-KE02Z40M.html
 //#define FRDM_KE04Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KE04Z.html
 //#define FRDM_KE06Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KE06Z.html
+//#define FRDM_KE15Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KE15Z.html
 
 //#define FRDM_KL02Z                                                     // L processors Cortex-M0+ (ultra-low power) basic - freedom board http://www.utasker.com/kinetis/FRDM-KL02Z.html
 //#define FRDM_KL03Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL03Z.html
-//#define FRDM_KL05Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL05Z.html
+#define FRDM_KL05Z                                                       // freedom board http://www.utasker.com/kinetis/FRDM-KL05Z.html
 
 //#define FRDM_KL25Z                                                     // L processors Cortex-M0+ (ultra-low power) with USB - freedom board http://www.utasker.com/kinetis/FRDM-KL25Z.html
 //#define TWR_KL25Z48M                                                   // tower board http://www.utasker.com/kinetis/TWR-KL25Z48M.html
+//#define RD_KL25_AGMP01                                                 // KL25 baed 10-axis data logger tool kit http://www.utasker.com/kinetis/RD-KL25-AGMP01.html
 //#define FRDM_KL26Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL26Z.html
 //#define rcARM_KL26                                                     // development board with KL26
 //#define TEENSY_LC                                                      // USB development board with KL26Z64 - http://www.utasker.com/kinetis/TEENSY_LC.html
@@ -89,7 +91,7 @@
 //#define TWR_KL46Z48M                                                   // tower board http://www.utasker.com/kinetis/TWR-KL46Z48M.html
 
 //#define TWR_KL82Z72M                                                   // tower board http://www.utasker.com/kinetis/FRDM-KL82Z72M
-#define FRDM_KL82Z                                                       // freedom board http://www.utasker.com/kinetis/FRDM-KL82Z.html
+//#define FRDM_KL82Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL82Z.html
 
 //#define TWR_KM34Z50M                                                   // M processors Cortex M0+ (metrology) - tower board http://www.utasker.com/kinetis/TWR-KM34Z50M.html
 //#define TWR_KM34Z75M                                                   // tower board http://www.utasker.com/kinetis/TWR-KM34Z75M.html
@@ -193,6 +195,14 @@
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((10 * 1024) * MEM_FACTOR)
     #define KINETIS_KE
     #define KINETIS_KE06
+    #define DEVICE_WITHOUT_ETHERNET                                      // KE doesn't have Ethernet controller
+    #define DEVICE_WITHOUT_USB                                           // KE doesn't have USB
+#elif defined FRDM_KE15Z
+    #define TARGET_HW            "FRDM-KE15Z"
+    #define KINETIS_MAX_SPEED    48000000
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((10 * 1024) * MEM_FACTOR)
+    #define KINETIS_KE
+    #define KINETIS_KE15
     #define DEVICE_WITHOUT_ETHERNET                                      // KE doesn't have Ethernet controller
     #define DEVICE_WITHOUT_USB                                           // KE doesn't have USB
 #elif defined TRK_KEA8
@@ -1119,7 +1129,7 @@
 
 // I2C
 //
-//#define I2C_INTERFACE
+#define I2C_INTERFACE
 #if defined I2C_INTERFACE
     #define NUMBER_I2C       I2C_AVAILABLE                               // I2C interfaces available
   //#define I2C_SLAVE_MODE                                               // support slave mode

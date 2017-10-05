@@ -9,6 +9,7 @@
 # 24.03.2015 Add kinetis hardware peripheral headers as dependencies
 # 11.07.2015 Add usb_application.c
 # 23.10.2015 Add usb_host_loader, rename usb_loader.c to usb_device_loader.c, rename SDLoader.c to disk_loader.c rename Loader.c to serial_loader.c, and use new kinetis_USB_OTG.h
+# 05.10.2017 Add Modbus package
 
 
 # Compiler flags (thumb mode - little endian)
@@ -23,6 +24,7 @@ C_FLAGS = -mcpu=cortex-m0plus -mthumb -mlittle-endian -mthumb -Wall -Wstrict-pro
 #
 OBJS = Build/serial_loader.o Build/usb_device_loader.o Build/disk_loader.o Build/usb_host_loader.o Build/usb_application.o Build/webInterface.o \
        Build/mass_storage.o \
+       Build/MODBUS.o Build/modbus_app.o \
        Build/GLCD.o \
        Build/kinetis.o \
        Build/eth_drv.o Build/Driver.o Build/uMalloc.o Build/uTasker.o Build/Tty_drv.o Build/i2c_drv.o Build/USB_drv.o Build/uFile.o Build/Watchdog.o \
@@ -34,6 +36,7 @@ OBJS = Build/serial_loader.o Build/usb_device_loader.o Build/disk_loader.o Build
 #
 DEPENDS = ../config.h ../app_hw_kinetis.h ../Loader.h ../types.h ../TaskConfig.h ../../../uTasker/driver.h  ../../../uTasker/uTasker.h \
        ../../../uTasker/utFAT/mass_storage.h \
+       ../../../uTasker/MODBUS/modbus.h \
        ../../../uTasker/uGLCDLIB/glcd.h \
 	   ../../../stack/tcpip.h \
        ../../../Hardware/hardware.h ../../../Hardware/Kinetis/kinetis.h
@@ -196,6 +199,16 @@ Build/GLCD.o: ../../../uTasker/uGLCDLIB/GLCD.c $(DEPENDS) ../../../uTasker/uGLCD
 #
 Build/mass_storage.o: ../../../uTasker/utFAT/mass_storage.c $(DEPENDS)
 		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../uTasker/utFAT/mass_storage.c -o Build/mass_storage.o
+
+# Special packages
+##################
+
+# MODBUS
+Build/MODBUS.o: ../../../uTasker/MODBUS/MODBUS.c $(DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../uTasker/MODBUS/MODBUS.c -o Build/MODBUS.o
+
+Build/modbus_app.o: ../modbus_app.c $(DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../modbus_app.c -o Build/modbus_app.o
 
 
 # Link

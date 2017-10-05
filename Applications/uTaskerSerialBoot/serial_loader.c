@@ -44,6 +44,7 @@
     07.01.2016 Remove power from memory stick when jumping to the application {28}
     02.07.2016 Add Intel Hex mode                                        {29}
     03.08.2017 Add USB-MSD iHex/SREC content support                     {30}
+    05.10.2017 Add modbus loading support (takes precedance over serial) {31}
 
 */
 
@@ -151,7 +152,7 @@
 
 #endif
 
-#if (defined USB_MSD_DEVICE_LOADER && (defined USB_MSD_ACCEPTS_SREC_FILES || defined USB_MSD_ACCEPTS_HEX_FILES)) || ((defined SERIAL_INTERFACE || defined USE_USB_CDC) && !defined REMOVE_SREC_LOADING)
+#if (defined USB_MSD_DEVICE_LOADER && (defined USB_MSD_ACCEPTS_SREC_FILES || defined USB_MSD_ACCEPTS_HEX_FILES)) || (((defined SERIAL_INTERFACE && !defined USE_MODBUS) || defined USE_USB_CDC) && !defined REMOVE_SREC_LOADING)
     #define SREC_IHEX_REQUIRED
     #if defined USB_MSD_ACCEPTS_HEX_FILES && !defined USB_MSD_ACCEPTS_SREC_FILES && !defined KEEP_SERIAL_TASK
         #define EXCLUSIVE_INTEL_HEX_MODE
@@ -193,7 +194,7 @@ typedef struct
             static int fnFlashIntermediate(void);
             #endif
         #endif
-    #elif defined REMOVE_SREC_LOADING
+    #elif defined REMOVE_SREC_LOADING && !defined USE_MODBUS
         static unsigned char *fnBlankCheck(void);
         static void fnPrintScreen(void);
     #endif
@@ -267,7 +268,7 @@ typedef struct
 //
 extern void fnApplication(TTASKTABLE *ptrTaskTable)
 {
-#if defined SERIAL_INTERFACE || defined USE_USB_CDC
+#if (defined SERIAL_INTERFACE && !defined USE_MODBUS) || defined USE_USB_CDC
     static int iInputLength = 0;
     static QUEUE_HANDLE SerialPortID = NO_ID_ALLOCATED;                  // serial port handle
     static unsigned char ucSerialInputMessage[RX_QUEUE_SIZE] = {0};
@@ -283,6 +284,8 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
 #if defined USE_USB_CDC
         SerialPortID = USBPortID_comms;                                  // use the USB-CDC handle
         DebugHandle = USBPortID_comms;
+#elif defined USE_MODBUS                                                 // {31}
+        fnInitModbus();                                                  // initialise MODBUS
 #elif defined SERIAL_INTERFACE
         TTYTABLE tInterfaceParameters;                                   // table for passing information to driver
         tInterfaceParameters.Channel = LOADER_UART;                      // set UART channel for serial use
@@ -457,13 +460,13 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
             }
 #endif
         }
-#if defined SERIAL_INTERFACE && defined INTERMEDIATE_PROG_BUFFER
-        if (iAppState & STATE_PAUSING) {                                 // never read further input if pausing
+#if !defined USE_MODBUS && defined SERIAL_INTERFACE && defined INTERMEDIATE_PROG_BUFFER
+        if ((iAppState & STATE_PAUSING) != 0) {                         // never read further input if pausing
             return;
         }
 #endif
   //}
-#if defined SERIAL_INTERFACE || defined USE_USB_CDC
+#if (defined SERIAL_INTERFACE && !defined USE_MODBUS) || defined USE_USB_CDC
     while (fnRead(SerialPortID, &ucSerialInputMessage[iInputLength], 1) != 0) { // check UART input for reception (one byte at a time)
     #if defined KBOOT_LOADER                                             // {20} each byte is received here
         if (iInputLength == 0) {                                         // waiting for the start of a message
@@ -1093,7 +1096,7 @@ static void fnCommittProgramStart(void)
 }
 #endif
 
-#if (defined SERIAL_INTERFACE || defined USE_USB_CDC) && !defined KBOOT_LOADER && !defined DEVELOPERS_LOADER
+#if ((defined SERIAL_INTERFACE && !defined USE_MODBUS) || defined USE_USB_CDC) && !defined KBOOT_LOADER && !defined DEVELOPERS_LOADER
 static void fnPrintScreen(void)
 {
     #if defined SHOW_APP_DETAILS                                         // {6}
@@ -1882,7 +1885,7 @@ static unsigned char fnConvertByte(unsigned char ucASCII)
 }
 #endif
 
-#if ((defined SERIAL_INTERFACE || defined USE_USB_CDC) && !defined KBOOT_LOADER && !defined DEVELOPERS_LOADER) || defined USB_INTERFACE // {9}
+#if (((defined SERIAL_INTERFACE && !defined USE_MODBUS) || defined USE_USB_CDC) && !defined KBOOT_LOADER && !defined DEVELOPERS_LOADER) || defined USB_INTERFACE // {9}
 static unsigned char *fnBlankCheck(void)
 {
     #if defined SPI_SW_UPLOAD                                            // {5}

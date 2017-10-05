@@ -35,6 +35,7 @@
     06.01.2016 Add TWR_K80F150M and FRDM_K82F
     13.11.2016 Add FRDM_KEAZN32Q64, FRDM_KEAZ64Q64 and FRDM_KEAZ128Q80
     26.07.2017 Add DMA channel and priority configuration                {12}
+    05.10.2017 Add modbus configuration                                  {13}
 
     Application specific hardware configuration
 
@@ -1106,6 +1107,7 @@
     #else
         #define LOADER_UART           3                                  // the serial interface used by the serial loader
     #endif
+    #define MODBUS_UART_0    (LOADER_UART)                               // modbus uses the serial interface
     #if defined FRDM_KL03Z || defined FRDM_KL43Z || defined TWR_KL43Z48M || defined FRDM_KL27Z || defined FRDM_KL82Z || defined TWR_K80F150M || defined FRDM_K82F
         #define LPUART_IRC48M                                            // if the 48MHz clock is available clock the UART from it
       //#define LPUART_OSCERCLK                                          // clock the UART from the external clock
@@ -1170,6 +1172,12 @@
       //#define UART1_ON_A                                               // alternative UART1 pin mapping
       //#define UART2_ON_E_HIGH                                          // alternative UART2 pin mapping
       //#define UART2_ON_D_HIGH                                          // alternative UART2 pin mapping
+    #endif
+
+    #if !defined DEVICE_WITHOUT_DMA
+        #define SERIAL_SUPPORT_DMA                                       // enable UART DMA support
+      //#define SERIAL_SUPPORT_DMA_RX                                    // enable also DMA on receiver (used less that transmit DMA)
+      //#define SERIAL_SUPPORT_DMA_RX_FREERUN                            // support free-running reception mode
     #endif
 #else
     #define TX_BUFFER_SIZE   (256)
@@ -2679,6 +2687,21 @@
     #define RETAIN_LOADER_MODE()   (_READ_PORT_MASK(A, SWITCH_1) == 0)
 
     #define TOGGLE_WATCHDOG_LED()   _TOGGLE_PORT(B, BLINK_LED)
+
+    #define _CONFIGURE_RTS_0_HIGH() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, (PORTC_BIT7), (PORTC_BIT7), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+    #define _CONFIGURE_RTS_0_LOW()  _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, (PORTC_BIT7), (0), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+    #define _SET_RTS_0_HIGH()       _SETBITS(C, PORTC_BIT7)
+    #define _SET_RTS_0_LOW()        _CLEARBITS(C, PORTC_BIT7)
+
+    #define _CONFIGURE_RTS_1_HIGH()
+    #define _CONFIGURE_RTS_1_LOW()
+    #define _SET_RTS_1_HIGH()
+    #define _SET_RTS_1_LOW()
+
+    #define _CONFIGURE_RTS_2_HIGH()
+    #define _CONFIGURE_RTS_2_LOW()
+    #define _SET_RTS_2_HIGH()
+    #define _SET_RTS_2_LOW()
 #elif defined TEENSY_LC
     #define BLINK_LED              (PORTC_BIT5)                          // (green LED) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
     #define SWITCH_1               (PORTB_BIT0)                          // (pin 16) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
@@ -3320,6 +3343,32 @@
         #define _DISPLAY_OVERSIZE_CONTENT()
     #endif
 #endif
+
+#define _TIMER_INTERRUPT_SETUP     PIT_SETUP                             // {13} use PIT for modbus RTU timing
+
+#if defined MODBUS_RTU && !defined SUPPORT_PITS
+    #define SUPPORT_PITS                                                 // support PITs
+#endif
+
+#define MODBUS0_PIT_TIMER_CHANNEL  0
+#define MODBUS1_PIT_TIMER_CHANNEL  1
+#define MODBUS2_PIT_TIMER_CHANNEL  2
+#define MODBUS3_PIT_TIMER_CHANNEL  3
+
+#define MODBUS0_PIT_INTERRUPT_PRIORITY  PIT0_INTERRUPT_PRIORITY
+#define MODBUS1_PIT_INTERRUPT_PRIORITY  PIT1_INTERRUPT_PRIORITY
+#define MODBUS2_PIT_INTERRUPT_PRIORITY  PIT2_INTERRUPT_PRIORITY
+#define MODBUS3_PIT_INTERRUPT_PRIORITY  PIT3_INTERRUPT_PRIORITY
+
+#if defined USE_MODBUS
+    #if defined KINETIS_KL || defined KINETIS_KE
+        #define UART_FRAME_END_COMPLETE                                  // make use of the end of character interrupt to inform of real end of frame
+    #else
+        #define AUTO_RS485_RTS_SUPPORT                                   // the Kinetis allows automatic RS485 RTS control on all UARTs
+    #endif
+#endif
+
+#undef UART_FRAME_COMPLETE                                               // this can be disabled if not specifically needed for other purposes to MODBUS RS485 mode
 
 
 #define _DELETE_BOOT_MAILBOX()     *(BOOT_MAIL_BOX) = 0

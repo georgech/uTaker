@@ -14,6 +14,7 @@
     Copyright (C) M.J.Butcher Consulting 2004..2017
     *********************************************************************
     02.02.2017 Adapt for us tick resolution (_TICK_RESOLUTION)
+    05.10.2017 Add modbus configuration
 
     See this video for details of building the serial loader with KDS: https://youtu.be/bilc_4Cr7eo
     See this video for details of building and using the serial loader's Ethernet loading method: https://youtu.be/g71PGlQy6eI
@@ -60,8 +61,8 @@
 //#define TWR_KL25Z48M                                                   // tower board http://www.utasker.com/kinetis/TWR-KL25Z48M.html
 //#define FRDM_KL26Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL26Z.html
 //#define TEENSY_LC                                                      // USB development board with KL26Z64 - http://www.utasker.com/kinetis/TEENSY_LC.html
-//#define FRDM_KL27Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL27Z.html
-#define FRDM_KL28Z                                                       // freedom board http://www.utasker.com/kinetis/FRDM-KL28Z.html
+#define FRDM_KL27Z                                                       // freedom board http://www.utasker.com/kinetis/FRDM-KL27Z.html
+//#define FRDM_KL28Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL28Z.html
 //#define FRDM_KL43Z                                                     // L processors Cortex-M0+ (ultra-low power) with USB and segment LCD - freedom board http://www.utasker.com/kinetis/FRDM-KL43Z.html
 //#define TWR_KL43Z48M                                                   // tower board http://www.utasker.com/kinetis/TWR-KL43Z48M.html
 //#define FRDM_KL46Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL46Z.html
@@ -698,33 +699,121 @@
 
 /**************** Configure driver services *******************************************************************/
 
+// Configure MODBUS extension package
+//
+//#define USE_MODBUS                                                     // activate MODBUS support in the project
+#if defined USE_MODBUS
+    #undef _NO_CHECK_QUEUE_INPUT
+    #define SUPPORT_FLUSH
+    #define USE_MODBUS_SLAVE                                             // slave capability supported
+      #define NO_SLAVE_MODBUS_READ_COILS                                 // disable specific slave public function support
+      #define NO_SLAVE_MODBUS_READ_DISCRETE_INPUTS
+    //#define NO_SLAVE_MODBUS_READ_HOLDING_REGISTERS
+    //#define NO_SLAVE_MODBUS_READ_INPUT_REGISTERS
+      #define NO_SLAVE_MODBUS_WRITE_SINGLE_COIL
+    //#define NO_SLAVE_MODBUS_WRITE_SINGLE_REGISTER
+      #define NO_SLAVE_MODBUS_READ_EXCEPTION_STATUS
+      #define NO_SLAVE_MODBUS_DIAGNOSTICS
+      #define NO_SLAVE_MODBUS_DIAG_SUB_RETURN_QUERY_DATA
+      #define NO_SLAVE_MODBUS_DIAG_SUB_RESTART_COMS
+      #define NO_SLAVE_MODBUS_DIAG_SUB_RETURN_DIAG_REG
+      #define NO_SLAVE_MODBUS_DIAG_SUB_CHANGE_ASCII_DELIM
+      #define NO_SLAVE_MODBUS_DIAG_SUB_FORCE_LISTEN_ONLY
+      #define NO_SLAVE_MODBUS_DIAG_SUB_CLEAR_DISGNOSTICS
+      #define NO_SLAVE_MODBUS_DIAG_SUB_RTN_BUS_MSG_CNT
+      #define NO_SLAVE_MODBUS_DIAG_SUB_RTN_BUS_COM_ERR_CNT
+      #define NO_SLAVE_MODBUS_DIAG_SUB_RTN_BUS_EXC_ERR_CNT
+      #define NO_SLAVE_MODBUS_DIAG_SUB_RTN_SLAVE_MSG_CNT
+      #define NO_SLAVE_MODBUS_DIAG_SUB_RTN_SLAVE_NO_RSP_CNT
+      #define NO_SLAVE_MODBUS_DIAG_SUB_RTN_SLAVE_NAK_CNT
+      #define NO_SLAVE_MODBUS_DIAG_SUB_RTN_SLAVE_BSY_CNT
+      #define NO_SLAVE_MODBUS_DIAG_SUB_RTN_BUS_CHR_ORUN_CNT
+      #define NO_SLAVE_MODBUS_DIAG_SUB_CLEAR_ORUN_AND_FLG
+      #define NO_SLAVE_MODBUS_GET_COMM_EVENT_COUNTER
+      #define NO_SLAVE_MODBUS_GET_COMM_EVENT_LOG
+      #define NO_SLAVE_MODBUS_WRITE_MULTIPLE_COILS
+    //#define NO_SLAVE_MODBUS_WRITE_MULTIPLE_REGISTERS
+      #define NO_SLAVE_MODBUS_REPORT_SLAVE_ID
+      #define NO_SLAVE_MODBUS_MASK_WRITE_REGISTER
+      #define NO_SLAVE_MODBUS_READ_WRITE_MULTIPLE_REGISTER
+      #define NO_SLAVE_MODBUS_READ_FIFO_QUEUE
+      #define NOTIFY_ONLY_COIL_CHANGES                                   // notify user of individual coil changes only
+    //#define USE_MODBUS_MASTER                                          // master capability supported (either slave or master required)
+      #define NO_MASTER_MODBUS_READ_COILS                                // disable specific master public function support
+      #define NO_MASTER_MODBUS_READ_DISCRETE_INPUTS
+      #define NO_MASTER_MODBUS_READ_HOLDING_REGISTERS
+      #define NO_MASTER_MODBUS_READ_INPUT_REGISTERS
+      #define NO_MASTER_MODBUS_WRITE_SINGLE_COIL
+      #define NO_MASTER_MODBUS_WRITE_SINGLE_REGISTER
+      #define NO_MASTER_MODBUS_READ_EXCEPTION_STATUS
+      #define NO_MASTER_MODBUS_DIAGNOSTICS                               // shared by all sub-functions
+      #define NO_MASTER_MODBUS_GET_COMM_EVENT_COUNTER
+      #define NO_MASTER_MODBUS_GET_COMM_EVENT_LOG
+      #define NO_MASTER_MODBUS_WRITE_MULTIPLE_COILS
+      #define NO_MASTER_MODBUS_WRITE_MULTIPLE_REGISTERS
+      #define NO_MASTER_MODBUS_REPORT_SLAVE_ID
+      #define NO_MASTER_MODBUS_MASK_WRITE_REGISTER
+      #define NO_MASTER_MODBUS_READ_WRITE_MULTIPLE_REGISTER
+      #define NO_MASTER_MODBUS_READ_FIFO_QUEUE
+    #if defined USE_MODBUS_MASTER
+      //#define MODBUS_GATE_WAY_ROUTING                                  // configurable routing from slave gateways (requires master functionality)
+      //#define MODBUS_GATE_WAY_QUEUE                                    // support queuing of MODBUS transmissions - advisable for gateways
+            #define SUPPORT_FIFO_QUEUES
+            #define MODBUS_DELAYED_RESPONSE                              // allow slave parameter interface to delay request responses - for example to prepare latest data from external location
+            #define MAX_QUEUED_REQUEST_LENGTH    8                       // longest request data length that needs to be saved when requests are delayed
+    #endif
+#endif
+
+
 #if !defined K70F150M_12M && !defined KWIKSTIK && !(defined TEENSY_3_1 && defined SPECIAL_VERSION) && !defined BLAZE_K22
     #define SERIAL_INTERFACE                                             // enable serial interface driver
 #endif
 #if defined SERIAL_INTERFACE
-  //#define KBOOT_LOADER                                                 // use KBOOT UART interface rather than SREC/iHex interface
-  //#define DEVELOPERS_LOADER                                            // Freescale Developer's Bootloader (AN2295) compatible mode (rather than SREC/iHex)
-      //#define DEVELOPERS_LOADER_PROTOCOL_VERSION_9                     // user protocol version 9 rather than obsolete Kinetis 8 (not completed at the moment)
-        #define DEVELOPERS_LOADER_READ                                   // support reading back program
-        #define DEVELOPERS_LOADER_CRC                                    // support CRC in communication
-    #define REMOVE_SREC_LOADING                                          // disable SREC (and Intel Hex) loading but keep debug output and the command line menu
-    #if !defined REMOVE_SREC_LOADING
-        #define SUPPORT_INTEL_HEX_MODE                                   // support Intel Hex mode together with SREC (auto-recognition)
-      //#define EXCLUSIVE_INTEL_HEX_MODE                                 // loading mode is exclusively Intel Hex (use with or without SUPPORT_INTEL_HEX_MODE)
+    #if defined USE_MODBUS
+        #define MODBUS_RTU                                               // support binary RTU mode
+      //#define MODBUS_ASCII                                             // support ASCII mode
+        #define STRICT_MODBUS_SERIAL_MODE                                // automatically adjust the character length according to mode
+        #define MODBUS_SERIAL_INTERFACES      1
+      //#define MODBUS_SHARED_SERIAL_INTERFACES   3                      // number of slave interfaces sharing UARTs
+        #define MODBUS_RS485_SUPPORT                                     // support RTS control for RS485 transmission
+      //#define FAST_MODBUS_RTU                                          // speeds of greater than 19200 use calculated RTU times rather than recommended fixed values
+        #if defined MODBUS_RS485_SUPPORT
+            #if !defined SUPPORT_HW_FLOW
+                #define SUPPORT_HW_FLOW                                  // ensure that HW flow control is enabled when RS485 support required
+                #define LOW_WATER_MARK    20                             // 20% low water mark
+                #define HIGH_WATER_MARK   80                             // 80% high water mark
+            #endif
+            #define UART_FRAME_COMPLETE                                  // the UART driver informs of frame completion - activated when RS485 mode is required
+        #endif
+      //#define MODBUS_SUPPORT_SERIAL_LINE_FUNCTIONS                     // support the serial line function at the slave
+      //#define MODBUS_SUPPORT_SERIAL_LINE_DIAGNOSTICS                   // support serial line diagnostics
+      //#define MODBUS_CRC_FROM_LOOKUP_TABLE                             // MODBUS RTU cyclic redundancy check performed with help of loop up table (requires 512 bytes FLASH table, but faster than calculation loop)
+        #define REMOVE_SREC_LOADING
+    #else
+      //#define KBOOT_LOADER                                             // use KBOOT UART interface rather than SREC/iHex interface
+      //#define DEVELOPERS_LOADER                                        // Freescale Developer's Bootloader (AN2295) compatible mode (rather than SREC/iHex)
+          //#define DEVELOPERS_LOADER_PROTOCOL_VERSION_9                 // user protocol version 9 rather than obsolete Kinetis 8 (not completed at the moment)
+            #define DEVELOPERS_LOADER_READ                               // support reading back program
+            #define DEVELOPERS_LOADER_CRC                                // support CRC in communication
+        #define REMOVE_SREC_LOADING                                      // disable SREC (and Intel Hex) loading but keep debug output and the command line menu
+        #if !defined REMOVE_SREC_LOADING
+            #define SUPPORT_INTEL_HEX_MODE                               // support Intel Hex mode together with SREC (auto-recognition)
+          //#define EXCLUSIVE_INTEL_HEX_MODE                             // loading mode is exclusively Intel Hex (use with or without SUPPORT_INTEL_HEX_MODE)
+        #endif
+      //#define SERIAL_STATS                                             // keep statistics about serial interface use
+      //#define SUPPORT_MSG_MODE                                         // enable terminator recognition (MSG_MODE)
+      //#define SUPPORT_MSG_CNT                                          // enable the message counter mode (MSG_MODE_RX_CNT) - requires also SUPPORT_MSG_MODE
+      //#define WAKE_BLOCKED_TX                                          // allow a blocked transmitter to continue after an interrupt event
+      //#define SUPPORT_FLUSH                                            // support rx flush
+        #define SERIAL_SUPPORT_XON_XOFF                                  // enable XON/XOFF support in driver
+        #define HIGH_WATER_MARK   20                                     // stop flow control when the input buffer has less than this space (if variable settings are required, use SUPPORT_FLOW_HIGH_LOW define)
+        #define LOW_WATER_MARK    20                                     // restart when the input buffer content falls below this value
+      //#define SUPPORT_FLOW_HIGH_LOW                                    // allow flow control levels to be configured (in % of buffer size)
+      //#define SERIAL_SUPPORT_ECHO                                      // enable echo mode in rx driver
+      //#define SERIAL_SUPPORT_ESCAPE                                    // enable escape sequencing in driver
+      //#define SERIAL_SUPPORT_SCAN                                      // serial receiver supports scanning of input buffer for a sequence
+      //#define SUPPORT_HW_FLOW                                          // support RTS/CTS flow control and other possible modem signals
     #endif
-  //#define SERIAL_STATS                                                 // keep statistics about serial interface use
-  //#define SUPPORT_MSG_MODE                                             // enable terminator recognition (MSG_MODE)
-  //#define SUPPORT_MSG_CNT                                              // enable the message counter mode (MSG_MODE_RX_CNT) - requires also SUPPORT_MSG_MODE
-  //#define WAKE_BLOCKED_TX                                              // allow a blocked transmitter to continue after an interrupt event
-  //#define SUPPORT_FLUSH                                                // support rx flush
-    #define SERIAL_SUPPORT_XON_XOFF                                      // enable XON/XOFF support in driver
-    #define HIGH_WATER_MARK   20                                         // stop flow control when the input buffer has less than this space (if variable settings are required, use SUPPORT_FLOW_HIGH_LOW define)
-    #define LOW_WATER_MARK    20                                         // restart when the input buffer content falls below this value
-  //#define SUPPORT_FLOW_HIGH_LOW                                        // allow flow control levels to be configured (in % of buffer size)
-  //#define SERIAL_SUPPORT_ECHO                                          // enable echo mode in rx driver
-  //#define SERIAL_SUPPORT_ESCAPE                                        // enable escape sequencing in driver
-  //#define SERIAL_SUPPORT_SCAN                                          // serial receiver supports scanning of input buffer for a sequence
-  //#define SUPPORT_HW_FLOW                                              // support RTS/CTS flow control and other possible modem signals
 
     #define LOG_UART0                                                    // activate this option to log all data sent to UART 0 to a file called "UART0.txt"
     #define LOG_UART1                                                    // activate this option to log all data sent to UART 1 to a file called "UART1.txt"
@@ -738,7 +827,7 @@
 #if defined DEVICE_WITHOUT_USB
     #define NUMBER_USB     0                                             // no physical queue needed
 #else
-    #define USB_INTERFACE                                                // enable USB driver interface
+  //#define USB_INTERFACE                                                // enable USB driver interface
     #if defined USB_INTERFACE
       //#define USE_USB_CDC                                              // allow SREC/iHex loading via virtual COM
         #define USB_MSD_DEVICE_LOADER                                    // USB-MSD device mode (the board appears as a hard-drive to the host)
@@ -1188,6 +1277,9 @@
 #include "../../stack/tcpip.h"                                           // TCP/IP stack and web utilities
 #include "../../Hardware/hardware.h"                                     // general hardware
 #include "../../uTasker/uTasker.h"                                       // operating system defines
+    #if defined USE_MODBUS
+        #include "../../uTasker/MODBUS/modbus.h"
+    #endif
 #include "TaskConfig.h"                                                  // the specific task configuration
 #include "Loader.h"                                                      // general project specific include
 #if defined SUPPORT_GLCD
@@ -1197,15 +1289,12 @@
   #include "../../WinSim/WinSim.h"
 #endif
 
-
-
 #if defined OPSYS_CONFIG                                                 // this is only set in the hardware module
     #if defined ETH_INTERFACE                                            // if we support Ethernet we define some constants for its (TCP/IP) use
         const unsigned char cucNullMACIP[MAC_LENGTH] = { 0, 0, 0, 0, 0, 0 };
         const unsigned char cucBroadcast[MAC_LENGTH] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff }; // used also for broadcast IP
     #endif
 #endif
-
 
 #endif
 #endif

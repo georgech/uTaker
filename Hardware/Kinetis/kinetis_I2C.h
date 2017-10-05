@@ -860,9 +860,17 @@ extern void fnConfigI2C(I2CTABLE *pars)
     KINETIS_I2C_CONTROL *ptrI2C;
     unsigned char ucSpeed;
     if (pars->Channel == 0) {                                            // I2C channel 0
-        POWER_UP(4, SIM_SCGC4_I2C0);                                     // enable clock to module
+    #if defined KINETIS_WITH_PCC
+        PCC_DMAMUX0 |= PCC_LPI2C0;
+    #else
+        POWER_UP_ATOMIC(4, SIM_SCGC4_I2C0);                              // enable clock to module
+    #endif
         ptrI2C = (KINETIS_I2C_CONTROL *)I2C0_BLOCK;
+    #if defined irq_LPI2C0_ID
+        fnEnterInterrupt(irq_LPI2C0_ID, PRIORITY_I2C0, _I2C_Interrupt_0); // enter I2C0 interrupt handler
+    #else
         fnEnterInterrupt(irq_I2C0_ID, PRIORITY_I2C0, _I2C_Interrupt_0);  // enter I2C0 interrupt handler
+    #endif
     #if defined KINETIS_KE && defined I2C0_B                             // initially configure as inputs with pull-up
         _CONFIG_PORT_INPUT(A, (KE_PORTB_BIT6 | KE_PORTB_BIT7), (PORT_ODE | PORT_PS_UP_ENABLE));
     #elif defined KINETIS_KE
@@ -897,7 +905,11 @@ extern void fnConfigI2C(I2CTABLE *pars)
     }
     #if I2C_AVAILABLE > 1
     else if (pars->Channel == 1) {                                       // I2C channel 1
-        POWER_UP(4, SIM_SCGC4_I2C1);                                     // enable clock to module
+        #if defined KINETIS_WITH_PCC
+        PCC_DMAMUX0 |= PCC_LPI2C1;
+        #else
+        POWER_UP_ATOMIC(4, SIM_SCGC4_I2C1);                              // enable clock to module
+        #endif
         ptrI2C = (KINETIS_I2C_CONTROL *)I2C1_BLOCK;
         #if !defined irq_I2C1_ID && defined INTMUX0_AVAILABLE
         fnEnterInterrupt((irq_INTMUX0_0_ID + INTMUX_I2C1), INTMUX0_PERIPHERAL_I2C1, _I2C_Interrupt_1); // enter I2C1 interrupt handler based on INTMUX

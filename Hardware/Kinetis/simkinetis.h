@@ -3199,7 +3199,6 @@ typedef struct stKINETIS_PERIPH
 #endif
 #if !defined KINETIS_KL && !defined KINETIS_KE
     KINETIS_FB         FB;
-    KINETIS_FMC        FMC;
 #endif
 #if defined KINETIS_KE
     KINETIS_IRQ        IRQ;                                              // {24}
@@ -3251,6 +3250,7 @@ typedef struct stKINETIS_PERIPH
 #endif
 #if !defined KINETIS_KL                                                  // {15}
     KINETIS_PDB        PDB;                                              // {12}
+    KINETIS_FMC        FMC;
 #endif
 #if !defined KINETIS_WITHOUT_PIT
     #if defined LPITS_AVAILABLE                                          // {37}

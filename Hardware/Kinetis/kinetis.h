@@ -252,11 +252,11 @@ extern void fnClearBitBandPeripheralValue(unsigned long *bit_band_address);
         #elif (PERIPHERAL_CLOCK_DIVIDE == 3)                             // divide by 3.5
             #define PERIPHERAL_CLOCK_DIVIDE_VALUE ((7 << 1) | 0x1)
         #else
-            #error Invalid peripheral divide value - integer must be 0,1,2 or 3 when used with a fraction (0.5)
+            #error Invalid peripheral divide value - integer must be 0, 1, 2 or 3 when used with a fraction (0.5)
         #endif
     #else
         #if (PERIPHERAL_CLOCK_DIVIDE < 1) || (PERIPHERAL_CLOCK_DIVIDE < 8)
-            #error Invalid peripheral divide value - must be 1,2,3,4,5,6,7 or 8
+            #error Invalid peripheral divide value - must be 1, 2, 3, 4, 5, 6, 7 or 8
         #endif
         #define PERIPHERAL_CLOCK_DIVIDE_VALUE ((PERIPHERAL_CLOCK_DIVIDE - 1) << 1)
     #endif
@@ -1462,7 +1462,7 @@ typedef struct stRESET_VECTOR
     #if defined KINETIS_KEA8
         #define PORTS_AVAILABLE 1
         #define PORTS_AVAILABLE_8_BIT  3
-    #elif defined KINETIS_KE06 || defined KINETIS_KEA
+    #elif defined KINETIS_KE06 || defined KINETIS_KE15 || defined KINETIS_KEA
         #define PORTS_AVAILABLE 3
         #define PORTS_AVAILABLE_8_BIT  9
     #elif (defined KINETIS_KE04 && (SIZE_OF_FLASH <= (8 * 1024)))
@@ -15916,67 +15916,67 @@ extern int  fnIsPending(int iInterruptID);                               // {90}
 #define IRQ192_223_ABR              *(volatile unsigned long*)(CORTEX_M4_BLOCK + 0x318)// NVIC IRQ192..223 Active Bit Register (read only)
 #define IRQ224_239_ABR              *(volatile unsigned long*)(CORTEX_M4_BLOCK + 0x31c)// NVIC IRQ224..239 Active Bit Register (read only)
 
-#define IRQ0_3_PRIORITY_REGISTER_ADD (unsigned char *)(CORTEX_M4_BLOCK + 0x400)
-#define IRQ0_3_PRIORITY_REGISTER    *(unsigned long *)(CORTEX_M4_BLOCK + 0x400)        // NVIC IRQ0..3     Priority Register
-#define IRQ4_7_PRIORITY_REGISTER    *(unsigned long *)(CORTEX_M4_BLOCK + 0x404)        // NVIC IRQ4..7     Priority Register
-#define IRQ8_11_PRIORITY_REGISTER   *(unsigned long *)(CORTEX_M4_BLOCK + 0x408)        // NVIC IRQ8..11    Priority Register
-#define IRQ12_15_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x40c)        // NVIC IRQ12..15   Priority Register
-#define IRQ16_19_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x410)        // NVIC IRQ16..19   Priority Register
-#define IRQ20_23_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x414)        // NVIC IRQ20..23   Priority Register
-#define IRQ24_27_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x418)        // NVIC IRQ24..27   Priority Register
-#define IRQ28_31_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x41c)        // NVIC IRQ28..31   Priority Register
-#define IRQ32_35_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x420)        // NVIC IRQ32..35   Priority Register
-#define IRQ36_39_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x424)        // NVIC IRQ36..39   Priority Register
-#define IRQ40_43_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x428)        // NVIC IRQ40..43   Priority Register
-#define IRQ44_47_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x42c)        // NVIC IRQ44..47   Priority Register
-#define IRQ48_51_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x430)        // NVIC IRQ48..51   Priority Register
-#define IRQ52_55_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x434)        // NVIC IRQ52..55   Priority Register
-#define IRQ56_59_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x438)        // NVIC IRQ56..59   Priority Register
-#define IRQ60_63_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x43c)        // NVIC IRQ60..63   Priority Register
-#define IRQ64_67_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x440)        // NVIC IRQ64..67   Priority Register
-#define IRQ68_71_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x444)        // NVIC IRQ68..71   Priority Register
-#define IRQ72_75_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x448)        // NVIC IRQ72..75   Priority Register
-#define IRQ76_79_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x44c)        // NVIC IRQ76..79   Priority Register
-#define IRQ80_83_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x450)        // NVIC IRQ80..83   Priority Register
-#define IRQ84_87_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x454)        // NVIC IRQ84..87   Priority Register
-#define IRQ88_91_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x458)        // NVIC IRQ88..91   Priority Register
-#define IRQ92_95_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x45c)        // NVIC IRQ92..95   Priority Register
-#define IRQ96_99_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x460)        // NVIC IRQ96..99   Priority Register
-#define IRQ100_103_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x464)      // NVIC IRQ100..103   Priority Register
-#define IRQ104_107_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x468)      // NVIC IRQ104..107   Priority Register
-#define IRQ108_111_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x46c)      // NVIC IRQ108..111   Priority Register
-#define IRQ112_115_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x470)      // NVIC IRQ112..115   Priority Register
-#define IRQ116_119_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x474)      // NVIC IRQ116..119   Priority Register
-#define IRQ120_123_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x478)      // NVIC IRQ120..123   Priority Register
-#define IRQ124_127_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x47c)      // NVIC IRQ124..127   Priority Register
-#define IRQ128_131_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x480)      // NVIC IRQ128..131   Priority Register
-#define IRQ132_135_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x484)      // NVIC IRQ132..135   Priority Register
-#define IRQ136_139_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x488)      // NVIC IRQ136..139   Priority Register
-#define IRQ140_143_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x48c)      // NVIC IRQ140..143   Priority Register
-#define IRQ144_147_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x490)      // NVIC IRQ144..147   Priority Register
-#define IRQ148_151_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x494)      // NVIC IRQ148..151   Priority Register
-#define IRQ152_155_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x498)      // NVIC IRQ152..155   Priority Register
-#define IRQ156_159_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x49c)      // NVIC IRQ156..159   Priority Register
-#define IRQ160_163_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x4a0)      // NVIC IRQ160..163   Priority Register
-#define IRQ164_167_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x4a4)      // NVIC IRQ164..167   Priority Register
-#define IRQ168_171_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x4a8)      // NVIC IRQ168..171   Priority Register
-#define IRQ172_175_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x4ac)      // NVIC IRQ172..175   Priority Register
-#define IRQ176_179_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x4b0)      // NVIC IRQ176..179   Priority Register
-#define IRQ180_183_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x4b4)      // NVIC IRQ180..183   Priority Register
-#define IRQ184_187_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x4b8)      // NVIC IRQ184..187   Priority Register
-#define IRQ188_191_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x4bc)      // NVIC IRQ188..191   Priority Register
-#define IRQ192_195_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x4c0)      // NVIC IRQ192..195   Priority Register
-#define IRQ196_199_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x4c4)      // NVIC IRQ196..199   Priority Register
-#define IRQ200_203_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x4c8)      // NVIC IRQ200..203   Priority Register
-#define IRQ204_207_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x4cc)      // NVIC IRQ204..207   Priority Register
-#define IRQ208_211_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x4d0)      // NVIC IRQ208..211   Priority Register
-#define IRQ212_215_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x4d4)      // NVIC IRQ212..215   Priority Register
-#define IRQ216_219_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x4d8)      // NVIC IRQ216..219   Priority Register
-#define IRQ220_223_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x4dc)      // NVIC IRQ220..223   Priority Register
-#define IRQ224_227_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x4e0)      // NVIC IRQ224..227   Priority Register
-#define IRQ228_231_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x4e4)      // NVIC IRQ228..231   Priority Register
-#define IRQ232_235_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x4e8)      // NVIC IRQ232..235   Priority Register
-#define IRQ236_239_PRIORITY_REGISTER  *(unsigned long *)(CORTEX_M4_BLOCK + 0x4ec)      // NVIC IRQ236..239   Priority Register
+#define IRQ0_3_PRIORITY_REGISTER_ADD (volatile unsigned char *)(CORTEX_M4_BLOCK + 0x400)
+#define IRQ0_3_PRIORITY_REGISTER    *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x400) // NVIC IRQ0..3     Priority Register
+#define IRQ4_7_PRIORITY_REGISTER    *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x404) // NVIC IRQ4..7     Priority Register
+#define IRQ8_11_PRIORITY_REGISTER   *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x408) // NVIC IRQ8..11    Priority Register
+#define IRQ12_15_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x40c) // NVIC IRQ12..15   Priority Register
+#define IRQ16_19_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x410) // NVIC IRQ16..19   Priority Register
+#define IRQ20_23_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x414) // NVIC IRQ20..23   Priority Register
+#define IRQ24_27_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x418) // NVIC IRQ24..27   Priority Register
+#define IRQ28_31_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x41c) // NVIC IRQ28..31   Priority Register
+#define IRQ32_35_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x420) // NVIC IRQ32..35   Priority Register
+#define IRQ36_39_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x424) // NVIC IRQ36..39   Priority Register
+#define IRQ40_43_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x428) // NVIC IRQ40..43   Priority Register
+#define IRQ44_47_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x42c) // NVIC IRQ44..47   Priority Register
+#define IRQ48_51_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x430) // NVIC IRQ48..51   Priority Register
+#define IRQ52_55_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x434) // NVIC IRQ52..55   Priority Register
+#define IRQ56_59_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x438) // NVIC IRQ56..59   Priority Register
+#define IRQ60_63_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x43c) // NVIC IRQ60..63   Priority Register
+#define IRQ64_67_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x440) // NVIC IRQ64..67   Priority Register
+#define IRQ68_71_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x444) // NVIC IRQ68..71   Priority Register
+#define IRQ72_75_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x448) // NVIC IRQ72..75   Priority Register
+#define IRQ76_79_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x44c) // NVIC IRQ76..79   Priority Register
+#define IRQ80_83_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x450) // NVIC IRQ80..83   Priority Register
+#define IRQ84_87_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x454) // NVIC IRQ84..87   Priority Register
+#define IRQ88_91_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x458) // NVIC IRQ88..91   Priority Register
+#define IRQ92_95_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x45c) // NVIC IRQ92..95   Priority Register
+#define IRQ96_99_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x460) // NVIC IRQ96..99   Priority Register
+#define IRQ100_103_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x464) // NVIC IRQ100..103   Priority Register
+#define IRQ104_107_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x468) // NVIC IRQ104..107   Priority Register
+#define IRQ108_111_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x46c) // NVIC IRQ108..111   Priority Register
+#define IRQ112_115_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x470) // NVIC IRQ112..115   Priority Register
+#define IRQ116_119_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x474) // NVIC IRQ116..119   Priority Register
+#define IRQ120_123_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x478) // NVIC IRQ120..123   Priority Register
+#define IRQ124_127_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x47c) // NVIC IRQ124..127   Priority Register
+#define IRQ128_131_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x480) // NVIC IRQ128..131   Priority Register
+#define IRQ132_135_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x484) // NVIC IRQ132..135   Priority Register
+#define IRQ136_139_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x488) // NVIC IRQ136..139   Priority Register
+#define IRQ140_143_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x48c) // NVIC IRQ140..143   Priority Register
+#define IRQ144_147_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x490) // NVIC IRQ144..147   Priority Register
+#define IRQ148_151_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x494) // NVIC IRQ148..151   Priority Register
+#define IRQ152_155_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x498) // NVIC IRQ152..155   Priority Register
+#define IRQ156_159_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x49c) // NVIC IRQ156..159   Priority Register
+#define IRQ160_163_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x4a0) // NVIC IRQ160..163   Priority Register
+#define IRQ164_167_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x4a4) // NVIC IRQ164..167   Priority Register
+#define IRQ168_171_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x4a8) // NVIC IRQ168..171   Priority Register
+#define IRQ172_175_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x4ac) // NVIC IRQ172..175   Priority Register
+#define IRQ176_179_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x4b0) // NVIC IRQ176..179   Priority Register
+#define IRQ180_183_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x4b4) // NVIC IRQ180..183   Priority Register
+#define IRQ184_187_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x4b8) // NVIC IRQ184..187   Priority Register
+#define IRQ188_191_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x4bc) // NVIC IRQ188..191   Priority Register
+#define IRQ192_195_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x4c0) // NVIC IRQ192..195   Priority Register
+#define IRQ196_199_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x4c4) // NVIC IRQ196..199   Priority Register
+#define IRQ200_203_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x4c8) // NVIC IRQ200..203   Priority Register
+#define IRQ204_207_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x4cc) // NVIC IRQ204..207   Priority Register
+#define IRQ208_211_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x4d0) // NVIC IRQ208..211   Priority Register
+#define IRQ212_215_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x4d4) // NVIC IRQ212..215   Priority Register
+#define IRQ216_219_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x4d8) // NVIC IRQ216..219   Priority Register
+#define IRQ220_223_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x4dc) // NVIC IRQ220..223   Priority Register
+#define IRQ224_227_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x4e0) // NVIC IRQ224..227   Priority Register
+#define IRQ228_231_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x4e4) // NVIC IRQ228..231   Priority Register
+#define IRQ232_235_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x4e8) // NVIC IRQ232..235   Priority Register
+#define IRQ236_239_PRIORITY_REGISTER  *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x4ec) // NVIC IRQ236..239   Priority Register
 
 #define CPUID_BASE_REGISTER           *(unsigned long *)(CORTEX_M4_BLOCK + 0xd00)      // (read only)
 #define INT_CONT_STATE_REG            *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0xd04) // Interrupt Control State Register

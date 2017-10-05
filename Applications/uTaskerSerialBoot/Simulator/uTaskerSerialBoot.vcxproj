@@ -217,6 +217,7 @@ Build_Kinetis.bat
     <ClCompile Include="..\..\..\stack\webutils.c" />
     <ClCompile Include="..\..\..\uTasker\eth_drv.c" />
     <ClCompile Include="..\..\..\uTasker\i2c_drv.c" />
+    <ClCompile Include="..\..\..\uTasker\MODBUS\MODBUS.c" />
     <ClCompile Include="..\..\..\uTasker\uGLCDLIB\GLCD.c" />
     <ClCompile Include="..\..\..\uTasker\uGLCDLIB\LCD.c" />
     <ClCompile Include="..\..\..\uTasker\USB_drv.c" />
@@ -308,6 +309,7 @@ Build_Kinetis.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\modbus_app.c" />
     <ClCompile Include="..\serial_loader.c" />
     <ClCompile Include="..\usb_application.c" />
     <ClCompile Include="..\usb_device_loader.c" />
@@ -498,6 +500,7 @@ Build_Kinetis.bat
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\..\stack\tcpip.h" />
+    <ClInclude Include="..\..\..\uTasker\MODBUS\modbus.h" />
     <ClInclude Include="..\..\..\uTasker\uGLCDLIB\glcd.h" />
     <ClInclude Include="..\..\..\uTasker\uGLCDLIB\glcd_cglcd.h" />
     <ClInclude Include="..\..\..\uTasker\uGLCDLIB\glcd_fonts.h" />

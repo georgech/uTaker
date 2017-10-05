@@ -58,6 +58,7 @@
     22.11.2016 Add TEENSY_3_5 and TEENSY_3_6
     24.04.2017 Add FT800 interface configuration (tested on FRDM-K64F)   {31}
     14.05.2017 Add FRDM_KL28Z
+    29.09.2017 Add FRDM_KE15Z
 
     Application specific hardware configuration
 */
@@ -620,7 +621,7 @@
                                                                          // this input is multiplied by 1280 to 40MHz..50MHz at the FLL output
         #define BUS_CLOCK_DIVIDE 2                                       // divide by 1 or 2 to give bus and flash clock (maximum 24MHz)
     #endif
-#elif defined FRDM_KE06Z                                                 // {30}
+#elif defined FRDM_KE06Z || defined FRDM_KE15Z                           // {30}
     #define CRYSTAL_FREQUENCY    8000000                                 // 8 MHz crystal
   //#define RUN_FROM_EXTERNAL_CLOCK                                      // run directly from external 8MHz clock (without FLL)
     #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
@@ -1094,7 +1095,7 @@
     #define SIZE_OF_FLASH       (64 * 1024)                              // 64k program Flash
   //#define SIZE_OF_RAM         (2 * 1024)
     #define SIZE_OF_RAM         (4 * 1024)                               // 4k SRAM
-#elif defined FRDM_KE06Z || defined TRK_KEA128 || defined FRDM_KEAZ128Q80 // {30}
+#elif defined FRDM_KE06Z || defined TRK_KEA128 || defined FRDM_KEAZ128Q80 || defined FRDM_KE15Z // {30}
   //#define PIN_COUNT           PIN_COUNT_44_PIN                         // 44 pin LQFP
   //#define PIN_COUNT           PIN_COUNT_64_PIN                         // 64 pin (L)QFP
     #define PIN_COUNT           PIN_COUNT_80_PIN                         // 80 pin LQFP
@@ -2099,7 +2100,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
             #define uFILE_START      (FLASH_START_ADDRESS + (63 * 1024)) // FLASH location at 62k start
             #define FILE_GRANULARITY (1 * FLASH_GRANULARITY)             // each file a multiple of 1k
             #define FILE_SYSTEM_SIZE (2 * 1024)                          // 4k reserved for file system
-        #elif defined FRDM_KL25Z || defined FRDM_KL26Z || defined FRDM_KL82Z || defined TWR_KL82Z72M || defined TWR_KL25Z48M || defined FRDM_KE06Z || defined TRK_KEA128 || defined rcARM_KL26 || defined FRDM_KEAZ128Q80 // {21}{24}{30}
+        #elif defined FRDM_KL25Z || defined FRDM_KL26Z || defined FRDM_KL82Z || defined TWR_KL82Z72M || defined TWR_KL25Z48M || defined FRDM_KE06Z || defined TRK_KEA128 || defined rcARM_KL26 || defined FRDM_KEAZ128Q80 || defined FRDM_KE15Z // {21}{24}{30}
             #define uFILE_START      (FLASH_START_ADDRESS + (100 * 1024))// FLASH location at 100k start
             #define FILE_GRANULARITY (2 * FLASH_GRANULARITY)             // each file a multiple of 2k
             #define FILE_SYSTEM_SIZE (28 * 1024)                         // 28k reserved for file system
@@ -2252,7 +2253,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #elif defined TWR_K70F120M || defined EMCRAFT_K70F120M || defined EMCRAFT_K61F150M || defined K61FN1_50M || defined TRK_KEA128 || defined TRK_KEA64 || defined TWR_KL46Z48M || defined TWR_KL43Z48M || defined TWR_K21D50M || defined TWR_K65F180M || defined FRDM_KEAZN32Q64 || defined FRDM_KEAZ64Q64 || defined FRDM_KEAZ128Q80 || defined TEENSY_3_5 || defined TEENSY_3_6 // {9}{23}
         #define DEMO_UART    2                                           // use UART 2
         #define RFC2217_UART 0
-    #elif defined TWR_K20D50M || defined TWR_K80F150M || defined tinyK20 || defined TWR_K20D72M || defined NET_K60 || defined FRDM_KE02Z || defined FRDM_KE02Z40M || defined FRDM_KE06Z || defined FRDM_K22F || defined TWR_K22F120M || defined TWR_K24F120M || defined TWR_K64F120M || defined TWR_KW21D256 || defined TWR_KW24D512 || defined rcARM_KL26 || defined BLAZE_K22 // {2}{16}{25}{30}
+    #elif defined TWR_K20D50M || defined TWR_K80F150M || defined tinyK20 || defined TWR_K20D72M || defined NET_K60 || defined FRDM_KE02Z || defined FRDM_KE02Z40M || defined FRDM_KE06Z || defined FRDM_K22F || defined TWR_K22F120M || defined TWR_K24F120M || defined TWR_K64F120M || defined TWR_KW21D256 || defined TWR_KW24D512 || defined rcARM_KL26 || defined BLAZE_K22 || defined FRDM_KE15Z // {2}{16}{25}{30}
         #define DEMO_UART    1                                           // use UART 1
         #define RFC2217_UART 0
     #elif defined K02F100M || defined FRDM_K20D50M || defined FRDM_KL46Z || defined FRDM_KL43Z || defined FRDM_KL25Z || defined FRDM_KL26Z || defined FRDM_KL27Z || defined FRDM_KL28Z || defined FRDM_KL82Z || defined TWR_KL82Z72M ||defined CAPUCCINO_KL27 || defined TEENSY_LC || defined TWR_KL25Z48M || defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined TRK_KEA8 || defined TEENSY_3_1 || defined FRDM_KE04Z || defined FRDM_K64F || defined FRDM_K66F || defined TWR_KV10Z32  || defined TWR_KV31F120M || ((defined TWR_K40X256 || defined TWR_K40D100M) && defined DEBUG_ON_VIRT_COM) || defined FreeLON || defined HEXIWEAR_K64F // {21}{22}{24}{25}
@@ -2733,7 +2734,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #elif defined FRDM_KL02Z || defined FRDM_KL03Z
       //#define I2C0_A_0
       //#define I2C1_A_1
-    #elif defined FRDM_KE06Z
+    #elif defined FRDM_KE06Z || defined FRDM_KE15Z
       //#define I2C0_B
       //#define I2C1_ON_H
     #elif defined FRDM_KE02Z || defined FRDM_KE02Z40M
@@ -5793,7 +5794,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define _CONFIGURE_RTS_0_LOW()
     #define _SET_RTS_0_HIGH()
     #define _SET_RTS_0_LOW()
-#elif defined FRDM_KE06Z                                                 // {30}
+#elif defined FRDM_KE06Z || defined FRDM_KE15Z                           // {30}
     #define DEMO_LED_1             (KE_PORTG_BIT6)                       // (green LED - PTG6) if the port is changed (eg. A to D) the port macros will require appropriate adjustment too
     #define DEMO_LED_2             (KE_PORTG_BIT5)                       // (red LED - PTG5) if the port is changed (eg. A to D) the port macros will require appropriate adjustment too
     #define DEMO_LED_3             (KE_PORTG_BIT7)                       // (blue LED - PTG7) if the port is changed (eg. A to D) the port macros will require appropriate adjustment too
@@ -5834,7 +5835,11 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define BUTTON_KEY_DEFINITIONS  {_PORTH, (KE_PORTH_BIT4 >> (3 * 8)), {289, 31,  305, 39 }}, \
                                     {_PORTH, (KE_PORTH_BIT3 >> (3 * 8)), {289, 48,  305, 59 }}
 
-    #define KEYPAD "KeyPads/FRDM_KE06Z.bmp"
+    #if defined FRDM_KE15Z
+        #define KEYPAD "KeyPads/FRDM_KE15Z.bmp"
+    #else
+        #define KEYPAD "KeyPads/FRDM_KE06Z.bmp"
+    #endif
 
     #define CONFIG_TEST_OUTPUT()    _CONFIG_DRIVE_PORT_OUTPUT_VALUE(B, (DEMO_LED_2), (DEMO_LED_2), (PORT_SRE_SLOW | PORT_DSE_HIGH))
     #define TOGGLE_TEST_OUTPUT()    _TOGGLE_PORT(B, DEMO_LED_2)
@@ -6270,6 +6275,23 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define WAVE_DISK_START_STOP_INT_PORT        PORTC
     #define WAVE_DISK_START_STOP_INT_BIT         SWITCH_2
     #define RECORDER_WAVE_FILE_NAME              "FRDM_KL27Z.wav"
+
+    // RTS control (eg. for Modbus RS485 control)
+    //
+    #define _CONFIGURE_RTS_0_HIGH() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, (PORTC_BIT3), (PORTC_BIT3), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+    #define _CONFIGURE_RTS_0_LOW()  _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, (PORTC_BIT3), (0), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+    #define _SET_RTS_0_HIGH()       _SETBITS(C, PORTC_BIT3)
+    #define _SET_RTS_0_LOW()        _CLEARBITS(C, PORTC_BIT3)
+
+    #define _CONFIGURE_RTS_1_HIGH() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(B, (PORTB_BIT19), (PORTB_BIT19), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+    #define _CONFIGURE_RTS_1_LOW()  _CONFIG_DRIVE_PORT_OUTPUT_VALUE(B, (PORTB_BIT19), (0), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+    #define _SET_RTS_1_HIGH()       _SETBITS(B, PORTB_BIT19)
+    #define _SET_RTS_1_LOW()        _CLEARBITS(B, PORTB_BIT19)
+
+    #define _CONFIGURE_RTS_2_HIGH() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(B, (PORTB_BIT18), (PORTB_BIT18), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+    #define _CONFIGURE_RTS_2_LOW()  _CONFIG_DRIVE_PORT_OUTPUT_VALUE(B, (PORTB_BIT18), (0), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+    #define _SET_RTS_2_HIGH()       _SETBITS(B, PORTB_BIT18)
+    #define _SET_RTS_2_LOW()        _CLEARBITS(B, PORTB_BIT18)
 #elif defined FRDM_KL28Z
     #define DEMO_LED_1             (PORTC_BIT4)                          // (green LED) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
     #define DEMO_LED_2             (PORTE_BIT29)                         // (red LED) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
@@ -7924,7 +7946,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
             #define GET_SDCARD_WP_STATE()     (!_READ_PORT_MASK(C, WRITE_PROTECT_INPUT)) // when the input is read as '0' the card is protected from writes
         #endif
         #define POWER_DOWN_SD_CARD()                                     // remove power from SD card interface
-    #elif defined FRDM_KE02Z || defined FRDM_KE02Z40M || defined FRDM_KE06Z || defined FRDM_KE04Z || defined TRK_KEA128 || defined TRK_KEA64 || defined TRK_KEA8 || defined FRDM_KEAZN32Q64 || defined FRDM_KEAZ64Q64 || defined FRDM_KEAZ128Q80
+    #elif defined FRDM_KE02Z || defined FRDM_KE02Z40M || defined FRDM_KE06Z || defined FRDM_KE04Z || defined TRK_KEA128 || defined TRK_KEA64 || defined TRK_KEA8 || defined FRDM_KEAZN32Q64 || defined FRDM_KEAZ64Q64 || defined FRDM_KEAZ128Q80 || defined FRDM_KE15Z
         // Configure to suit special connection SPI mode at between 100k and 400k (SPI0)
         // - SPI0_CS   PTE-3 (J9-7) [VDD J9-4 / 0V J9-14]
         // - SPI0_SCK  PTE-0 (J9-1)

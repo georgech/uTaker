@@ -42,10 +42,11 @@
     21.01.2015 Modify fnAddSREC_file() to pass additional information    {25}
     20.10.2015 Add fnJumpToValidApplication();                           {26}
     03.08.2017 Add USB-MSD iHex/SREC content support                     {27}
+    05.10.2017 Add modbus loading                                        {28}
 
 */
 
-#define SOFTWARE_VERSION              "V1.3"
+#define SOFTWARE_VERSION              "V1.4"
 
 #define MY_PROJECT_NAME               "uTasker loader project"
 
@@ -378,6 +379,9 @@ extern void fnJumpToValidApplication(int iResetPeripherals);             // {26}
 
 #if defined USE_USB_CDC
     extern QUEUE_HANDLE USBPortID_comms;                                 // USB CDC handle
+#endif
+#if defined USE_MODBUS                                                   // {28}
+    extern void fnInitModbus(void);
 #endif
 
 // Global KBOOT defines, shared by HID and UART modes                    {24}

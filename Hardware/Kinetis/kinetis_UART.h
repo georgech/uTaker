@@ -281,10 +281,17 @@ static __interrupt void _LPSCI0_Interrupt(void)                          // LPUA
     if (((ulState & LPUART_STAT_TDRE) & LPUART0_CTRL) != 0) {            // transmit buffer is empty and the transmit interrupt is enabled
         fnSciTxByte(LPUART0_CH_NUMBER);                                  // transmit data empty interrupt - write next byte, if waiting
     }
-        #if defined SUPPORT_LOW_POWER
-    if (((LPUART0_STAT & LPUART_STAT_TC) & LPUART0_CTRL) != 0) {         // transmit complete interrupt after final byte transmission together with low power operation
+        #if defined SUPPORT_LOW_POWER || ((defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE)
+    if ((LPUART0_STAT & LPUART_STAT_TC) & LPUART0_CTRL) {                // transmit complete interrupt after final byte transmission together with low power operation
         LPUART0_CTRL &= ~(LPUART_CTRL_TCIE);                             // disable the interrupt
+            #if defined SUPPORT_LOW_POWER
         ulPeripheralNeedsClock &= ~(UART0_TX_CLK_REQUIRED << LPUART0_CH_NUMBER); // confirmation that the final byte has been sent out on the line so the UART no longer needs a UART clock (stop mode doesn't needed to be blocked)
+            #endif
+            #if (defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE
+        if (ucReportEndOfFrame[0] != 0) {                                // if the end of frame call-back is enabled
+            fnUARTFrameTermination(0);
+        }
+            #endif
     }
         #endif
 }
@@ -316,10 +323,17 @@ static __interrupt void _LPSCI1_Interrupt(void)                          // LPUA
     if (((ulState & LPUART_STAT_TDRE) & LPUART1_CTRL) != 0) {            // transmit buffer is empty and the transmit interrupt is enabled
         fnSciTxByte(LPUART1_CH_NUMBER);                                  // transmit data empty interrupt - write next byte, if waiting
     }
-        #if defined SUPPORT_LOW_POWER
-    if (((LPUART1_STAT & LPUART_STAT_TC) & LPUART1_CTRL) != 0) {         // transmit complete interrupt after final byte transmission together with low power operation
+        #if defined SUPPORT_LOW_POWER || ((defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE)
+    if ((LPUART1_STAT & LPUART_STAT_TC) & LPUART1_CTRL) {                // transmit complete interrupt after final byte transmission together with low power operation
         LPUART1_CTRL &= ~(LPUART_CTRL_TCIE);                             // disable the interrupt
+            #if defined SUPPORT_LOW_POWER
         ulPeripheralNeedsClock &= ~(UART0_TX_CLK_REQUIRED << LPUART1_CH_NUMBER); // confirmation that the final byte has been sent out on the line so the UART no longer needs a UART clock (stop mode doesn't needed to be blocked)
+            #endif
+            #if (defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE
+        if (ucReportEndOfFrame[1] != 0) {                                // if the end of frame call-back is enabled
+            fnUARTFrameTermination(1);
+        }
+            #endif
     }
         #endif
 }
@@ -351,10 +365,17 @@ static __interrupt void _LPSCI2_Interrupt(void)                          // LPUA
     if (((ulState & LPUART_STAT_TDRE) & LPUART2_CTRL) != 0) {            // transmit buffer is empty and the transmit interrupt is enabled
         fnSciTxByte(LPUART2_CH_NUMBER);                                  // transmit data empty interrupt - write next byte, if waiting
     }
-        #if defined SUPPORT_LOW_POWER
-    if (((LPUART2_STAT & LPUART_STAT_TC) & LPUART2_CTRL) != 0) {         // transmit complete interrupt after final byte transmission together with low power operation
+        #if defined SUPPORT_LOW_POWER || ((defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE)
+    if ((LPUART2_STAT & LPUART_STAT_TC) & LPUART2_CTRL) {                // transmit complete interrupt after final byte transmission together with low power operation
         LPUART2_CTRL &= ~(LPUART_CTRL_TCIE);                             // disable the interrupt
+            #if defined SUPPORT_LOW_POWER
         ulPeripheralNeedsClock &= ~(UART0_TX_CLK_REQUIRED << LPUART2_CH_NUMBER); // confirmation that the final byte has been sent out on the line so the UART no longer needs a UART clock (stop mode doesn't needed to be blocked)
+            #endif
+            #if (defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE
+        if (ucReportEndOfFrame[2] != 0) {                                // if the end of frame call-back is enabled
+            fnUARTFrameTermination(2);
+        }
+            #endif
     }
         #endif
 }
@@ -386,10 +407,17 @@ static __interrupt void _LPSCI3_Interrupt(void)                          // LPUA
     if (((ulState & LPUART_STAT_TDRE) & LPUART3_CTRL) != 0) {            // transmit buffer is empty and the transmit interrupt is enabled
         fnSciTxByte(LPUART3_CH_NUMBER);                                  // transmit data empty interrupt - write next byte, if waiting
     }
-        #if defined SUPPORT_LOW_POWER
-    if (((LPUART3_STAT & LPUART_STAT_TC) & LPUART3_CTRL) != 0) {         // transmit complete interrupt after final byte transmission together with low power operation
+        #if defined SUPPORT_LOW_POWER || ((defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE)
+    if ((LPUART3_STAT & LPUART_STAT_TC) & LPUART3_CTRL) {                // transmit complete interrupt after final byte transmission together with low power operation
         LPUART3_CTRL &= ~(LPUART_CTRL_TCIE);                             // disable the interrupt
+            #if defined SUPPORT_LOW_POWER
         ulPeripheralNeedsClock &= ~(UART0_TX_CLK_REQUIRED << LPUART3_CH_NUMBER); // confirmation that the final byte has been sent out on the line so the UART no longer needs a UART clock (stop mode doesn't needed to be blocked)
+            #endif
+            #if (defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE
+        if (ucReportEndOfFrame[3] != 0) {                                // if the end of frame call-back is enabled
+            fnUARTFrameTermination(3);
+        }
+            #endif
     }
         #endif
 }
@@ -421,10 +449,17 @@ static __interrupt void _LPSCI4_Interrupt(void)                          // LPUA
     if (((ulState & LPUART_STAT_TDRE) & LPUART4_CTRL) != 0) {            // transmit buffer is empty and the transmit interrupt is enabled
         fnSciTxByte(LPUART4_CH_NUMBER);                                  // transmit data empty interrupt - write next byte, if waiting
     }
-        #if defined SUPPORT_LOW_POWER
-    if (((LPUART4_STAT & LPUART_STAT_TC) & LPUART4_CTRL) != 0) {         // transmit complete interrupt after final byte transmission together with low power operation
+        #if defined SUPPORT_LOW_POWER || ((defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE)
+    if ((LPUART4_STAT & LPUART_STAT_TC) & LPUART4_CTRL) {                // transmit complete interrupt after final byte transmission together with low power operation
         LPUART4_CTRL &= ~(LPUART_CTRL_TCIE);                             // disable the interrupt
+            #if defined SUPPORT_LOW_POWER
         ulPeripheralNeedsClock &= ~(UART0_TX_CLK_REQUIRED << LPUART4_CH_NUMBER); // confirmation that the final byte has been sent out on the line so the UART no longer needs a UART clock (stop mode doesn't needed to be blocked)
+            #endif
+            #if (defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE
+        if (ucReportEndOfFrame[4] != 0) {                                // if the end of frame call-back is enabled
+            fnUARTFrameTermination(4);
+        }
+            #endif
     }
         #endif
 }
@@ -478,7 +513,9 @@ static __interrupt void _SCI0_Interrupt(void)                            // UART
         #if defined SUPPORT_LOW_POWER || ((defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE) // {96}
     if (((UART0_C2 & UART_C2_TCIE) != 0) && ((UART0_S1 & UART_S1_TC) != 0)) { // transmit complete interrupt after final byte transmission together with low power operation
         UART0_C2 &= ~(UART_C2_TCIE);                                     // disable the interrupt
+            #if defined SUPPORT_LOW_POWER
         ulPeripheralNeedsClock &= ~(UART0_TX_CLK_REQUIRED);              // confirmation that the final byte has been sent out on the line so the UART no longer needs a UART clock (stop mode doesn't needed to be blocked)
+            #endif
             #if (defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE
         if (ucReportEndOfFrame[0] != 0) {                                // if the end of frame call-back is enabled
             fnUARTFrameTermination(0);                                   // {200}
@@ -866,7 +903,7 @@ extern void fnClearTxInt(QUEUE_HANDLE Channel)
 
     #if LPUARTS_AVAILABLE > 0
         #if UARTS_AVAILABLE > 0
-    if (uart_type[Channel] == UART_TYPE_LPUART) {
+    if (uart_type[Channel] == UART_TYPE_LPUART) {                        // the channel is a LPUART
         #endif
         #if defined SUPPORT_LOW_POWER                                    // {96} no more transmissions are required
         ((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_CTRL |= (LPUART_CTRL_TCIE); // enable LPUART transmit complete interrupt to signal when the complete last character has been sent
@@ -939,6 +976,14 @@ static __interrupt void _uart0_tx_dma_Interrupt(void)
         UART0_C2 |= UART_C2_TCIE;                                        // enable the UART transmit complete flag interrupt to detect transmission completion
         #endif
     }
+    #elif defined KINETIS_KL && defined UART_FRAME_END_COMPLETE
+    if (ucReportEndOfFrame[0] != 0) {                                    // if an end of frame interrupt is required
+        #if LPUARTS_AVAILABLE > 0 && !defined LPUARTS_PARALLEL
+        LPUART0_CTRL |= LPUART_CTRL_TCIE;                                // enable LPUART transmit complete interrupt to signal when the complete last character has been sent
+        #else
+        UART0_C2 |= UART_C2_TCIE;                                        // enable UART transmit complete interrupt to signal when the complete last character has been sent
+        #endif
+    }
     #endif
 }
     #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 1
@@ -975,7 +1020,17 @@ static __interrupt void _uart1_tx_dma_Interrupt(void)
         UART1_C2 |= UART_C2_TCIE;                                        // enable the transmit complete flag interrupt to detect transmission completion
             #endif
     }
+    #elif defined KINETIS_KL && defined UART_FRAME_END_COMPLETE
+    if (ucReportEndOfFrame[1] != 0) {                                    // if an end of frame interrupt is required
+        #if LPUARTS_AVAILABLE > 1 && !defined LPUARTS_PARALLEL
+        LPUART1_CTRL |= LPUART_CTRL_TCIE;                                // enable LPUART transmit complete interrupt to signal when the complete last character has been sent
+        #elif LPUARTS_AVAILABLE == 1 && !defined LPUARTS_PARALLEL
+        UART0_C2 |= UART_C2_TCIE;                                        // enable UART transmit complete interrupt to signal when the complete last character has been sent
+        #else
+        UART1_C2 |= UART_C2_TCIE;                                        // enable UART transmit complete interrupt to signal when the complete last character has been sent
         #endif
+    }
+    #endif
 }
     #endif
 
@@ -1013,7 +1068,17 @@ static __interrupt void _uart2_tx_dma_Interrupt(void)
         UART2_C2 |= UART_C2_TCIE;                                        // enable the transmit complete flag interrupt to detect transmission completion
             #endif
     }
+    #elif defined KINETIS_KL && defined UART_FRAME_END_COMPLETE
+    if (ucReportEndOfFrame[2] != 0) {                                    // if an end of frame interrupt is required
+        #if LPUARTS_AVAILABLE > 2 && !defined LPUARTS_PARALLEL
+        LPUART2_CTRL |= LPUART_CTRL_TCIE;                                // enable LPUART transmit complete interrupt to signal when the complete last character has been sent
+        #elif LPUARTS_AVAILABLE == 2 && defined LPUARTS_PARALLEL
+        UART0_C2 |= UART_C2_TCIE;                                        // enable UART transmit complete interrupt to signal when the complete last character has been sent
+        #else
+        UART2_C2 |= UART_C2_TCIE;                                        // enable UART transmit complete interrupt to signal when the complete last character has been sent
         #endif
+    }
+    #endif
 }
     #endif
     #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 3
@@ -1046,7 +1111,17 @@ static __interrupt void _uart3_tx_dma_Interrupt(void)
         UART3_C2 |= UART_C2_TCIE;                                        // enable the transmit complete flag interrupt to detect transmission completion
             #endif
     }
+    #elif defined KINETIS_KL && defined UART_FRAME_END_COMPLETE
+    if (ucReportEndOfFrame[3] != 0) {                                    // if an end of frame interrupt is required
+        #if LPUARTS_AVAILABLE > 3 && !defined LPUARTS_PARALLEL
+        LPUART3_CTRL |= LPUART_CTRL_TCIE;                                // enable LPUART transmit complete interrupt to signal when the complete last character has been sent
+        #elif LPUARTS_AVAILABLE == 3 && !defined LPUARTS_PARALLEL
+        UART0_C2 |= UART_C2_TCIE;                                        // enable UART transmit complete interrupt to signal when the complete last character has been sent
+        #else
+        UART3_C2 |= UART_C2_TCIE;                                        // enable UART transmit complete interrupt to signal when the complete last character has been sent
         #endif
+    }
+    #endif
 }
     #endif
     #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 4
@@ -1070,7 +1145,15 @@ static __interrupt void _uart4_tx_dma_Interrupt(void)
         UART4_C2 |= UART_C2_TCIE;                                        // enable the transmit complete flag interrupt to detect transmission completion
             #endif
     }
+    #elif defined KINETIS_KL && defined UART_FRAME_END_COMPLETE
+    if (ucReportEndOfFrame[4] != 0) {                                    // if an end of frame interrupt is required
+        #if LPUARTS_AVAILABLE > 3 && !defined LPUARTS_PARALLEL
+        LPUART4_CTRL |= LPUART_CTRL_TCIE;                                // enable LPUART transmit complete interrupt to signal when the complete last character has been sent
+        #else
+        UART4_C2 |= UART_C2_TCIE;                                        // enable UART transmit complete interrupt to signal when the complete last character has been sent
         #endif
+    }
+    #endif
 }
     #endif
     #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 5
@@ -1094,7 +1177,15 @@ static __interrupt void _uart5_tx_dma_Interrupt(void)
         UART5_C2 |= UART_C2_TCIE;                                        // enable the transmit complete flag interrupt to detect transmission completion
             #endif
     }
+    #elif defined KINETIS_KL && defined UART_FRAME_END_COMPLETE
+    if (ucReportEndOfFrame[5] != 0) {                                    // if an end of frame interrupt is required
+        #if LPUARTS_AVAILABLE == 1
+        LPUART0_CTRL |= LPUART_CTRL_TCIE;                                // enable LPUART transmit complete interrupt to signal when the complete last character has been sent
+        #else
+        UART5_C2 |= UART_C2_TCIE;                                        // enable UART transmit complete interrupt to signal when the complete last character has been sent
         #endif
+    }
+    #endif
 }
     #endif
 
@@ -2563,6 +2654,11 @@ static void fnConfigLPUART(QUEUE_HANDLE Channel, TTYTABLE *pars, KINETIS_LPUART_
     }
     else {
         lpuart_reg->LPUART_BAUD &= ~LPUART_BAUD_RDMAE;                   // disable rx DMA so that rx interrupt mode can be used
+    }
+    #endif
+    #if defined KINETIS_KL && defined UART_FRAME_END_COMPLETE
+    if ((pars->Config & INFORM_ON_FRAME_TRANSMISSION) != 0) {
+        ucReportEndOfFrame[Channel] = 1;                                 // we want to work with a frame completion interrupt
     }
     #endif
 }

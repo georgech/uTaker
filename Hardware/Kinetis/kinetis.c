@@ -1074,6 +1074,15 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void (*
     unsigned long ulState1 = IRQ32_63_SER;
     unsigned long ulState2 = IRQ64_95_SER;
     IRQ0_31_SER = IRQ32_63_SER = IRQ64_95_SER = IRQ0_31_CER = IRQ32_63_CER = IRQ64_95_CER = 0; // reset registers
+    #if defined ARM_MATH_CM0PLUS
+    if (ucPriority >= 4) {
+        _EXCEPTION("Invalid Cortex-M0+ priority being used!!");
+    }
+    #else
+    if (ucPriority >= 16) {
+        _EXCEPTION("Invalid Cortex-M4 priority being used!!");
+    }
+    #endif
 #endif
 #if defined INTMUX0_AVAILABLE                                            // {130}
     if (iInterruptID >= irq_INTMUX0_0_ID) {

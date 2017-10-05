@@ -214,7 +214,7 @@ const UTASK_TASK ctNodes[] = {                                           // we u
 #if (defined USE_SNTP || defined USE_TIME_SERVER || defined USE_TIME_SERVER || defined SUPPORT_RTC || defined SUPPORT_SW_RTC) && !defined BLINKY // {12}
     TASK_TIME_KEEPER,
 #endif
-#if defined QUICK_DEV_TASKS
+#if defined QUICK_DEV_TASKS && !defined BLINKY
     TASK_DEV_1,
     TASK_DEV_2,
     TASK_DEV_3,
@@ -317,7 +317,7 @@ const UTASKTABLEINIT ctTaskTable[] = {
 #if (defined USE_SNTP || defined USE_TIME_SERVER || defined USE_TIME_SERVER || defined SUPPORT_RTC || defined SUPPORT_SW_RTC) && !defined BLINKY // {12}
     {"keeper",    fnTimeKeeper, SMALL_QUEUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP}, // time keeper task
 #endif
-#if defined QUICK_DEV_TASKS
+#if defined QUICK_DEV_TASKS && !defined BLINKY
     {"1",    fnQuickTask1, MEDIUM_QUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP}, // quick development  tasks
     {"2",    fnQuickTask2, MEDIUM_QUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP},
     {"3",    fnQuickTask3, MEDIUM_QUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP},

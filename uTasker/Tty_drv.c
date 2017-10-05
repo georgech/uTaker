@@ -1111,7 +1111,7 @@ extern void fnRTS_change(QUEUE_HANDLE Channel, int iState)
     else {                                                               // line has just gone inactive - we are not allowed to transmit
         tx_ctl->ucState |= TX_WAIT;                                      // block transmission
     #if defined SERIAL_SUPPORT_DMA
-        if (tx_ctl->ucDMA_mode & UART_TX_DMA) {
+        if ((tx_ctl->ucDMA_mode & UART_TX_DMA) != 0) {
             fnAbortDMA_transmission(Channel, tx_ctl);                    // abort DMA transmission
         }
     #endif

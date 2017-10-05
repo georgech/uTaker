@@ -17,6 +17,7 @@
     22.01.2012 Add SD card support                                       {2}
     15.04.2014 Add web server upload support                             {3}
     04.06.2014 Add network indicator task option for PHY polling         {4}
+    05.10.2017 Add modbus task                                           {5}
 
 */
  
@@ -34,6 +35,7 @@
 #define TASK_USB                'u'                                      // USB device task
 #define TASK_USB_HOST           'H'                                      // USB host task
 #define TASK_MASS_STORAGE       'M'                                      // mass storage task
+#define TASK_MODBUS             'm'                                      // MODBUS task
 #define TASK_SD_LOADER          'S'                                      // SD loader
 #define TASK_NETWORK_INDICATOR  'N'                                      // task displaying network activity
 #define TASK_LCD                'L'                                      // application LCD task
@@ -55,6 +57,7 @@ extern void fnMassStorage(TTASKTABLE *);
 extern void fnSD_loader(TTASKTABLE *);                                   // {2}
 extern void fnNetworkIndicator(TTASKTABLE *);
 extern void fnLCD(TTASKTABLE *);
+extern void fnMODBUS(TTASKTABLE *);                                      // {13}
 
 
 
@@ -100,6 +103,9 @@ const UTASK_TASK ctNodes[] = {                                           // we u
 #if defined USB_INTERFACE
     TASK_USB_HOST,                                                       // USB host task
     TASK_USB,                                                            // USB device task
+#endif
+#if defined USE_MODBUS
+    TASK_MODBUS,                                                         // {13} MODBUS task
 #endif
 #if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined USB_MSD_HOST_LOADER // {2}
     TASK_MASS_STORAGE,                                                   // mass storage task
@@ -149,6 +155,9 @@ const UTASKTABLEINIT ctTaskTable[] = {
 #endif
 #if defined USE_TCP                                                      // {3}
     { "TCP",       fnTaskTCP,      MEDIUM_QUE,  (DELAY_LIMIT)(0.10 * SEC), 0, UTASKER_STOP}, // TCP task checks periodically state of session timeouts (controlled by task itself)
+#endif
+#if defined USE_MODBUS
+    { "mod",       fnMODBUS,     MEDIUM_QUE,  (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP }, // {13} MODBUS task  
 #endif
 #if defined SERIAL_INTERFACE || defined ETH_INTERFACE || defined USE_USB_CDC || defined SUPPORT_GLCD
     { "app",       fnApplication,  MEDIUM_QUE,  (DELAY_LIMIT)((0.10 * SEC) + (PHY_POWERUP_DELAY)), 0, UTASKER_STOP}, // Application - start after Ethernet to be sure we have Ethernet handle

@@ -134,7 +134,7 @@ extern int fnPortState(CHAR cPortBit)
         return (((GPIOE_PDDR & GPIOE_PDOR & DEMO_LED_2) | (~GPIOE_PDDR & GPIOE_PDIR & DEMO_LED_2)) != 0);
     case '3':
         return (((GPIOD_PDDR & GPIOD_PDOR & DEMO_LED_3) | (~GPIOD_PDDR & GPIOD_PDIR & DEMO_LED_3)) != 0);
-#elif defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined FRDM_KE02Z || defined FRDM_KE06Z || defined FRDM_KE02Z40M || defined K60F150M_50M || defined FRDM_KEAZN32Q64 || defined FRDM_KEAZ64Q64 || defined FRDM_KEAZ128Q80 || defined BLAZE_K22 // {9}
+#elif defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined FRDM_KE02Z || defined FRDM_KE06Z || defined FRDM_KE02Z40M || defined K60F150M_50M || defined FRDM_KEAZN32Q64 || defined FRDM_KEAZ64Q64 || defined FRDM_KEAZ128Q80 || defined BLAZE_K22 || defined FRDM_KE15Z // {9}
     case '1':
         return (((GPIOB_PDDR & GPIOB_PDOR & DEMO_LED_1) | (~GPIOB_PDDR & GPIOB_PDIR & DEMO_LED_1)) != 0);
     case '2':
@@ -360,7 +360,7 @@ extern int fnPortInputConfig(CHAR cPortBit)
         return ((GPIOE_PDDR & DEMO_LED_2) == 0);
     case '3':
         return ((GPIOE_PDDR & DEMO_LED_3) == 0);
-#elif defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined FRDM_KE02Z || defined FRDM_KE06Z || defined FRDM_KE02Z40M || defined K60F150M_50M || defined FRDM_KEAZN32Q64 || defined FRDM_KEAZ64Q64 || defined FRDM_KEAZ128Q80 || defined BLAZE_K22 // {9}
+#elif defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined FRDM_KE02Z || defined FRDM_KE06Z || defined FRDM_KE02Z40M || defined K60F150M_50M || defined FRDM_KEAZN32Q64 || defined FRDM_KEAZ64Q64 || defined FRDM_KEAZ128Q80 || defined BLAZE_K22 || defined FRDM_KE15Z // {9}
     case '1':
         return ((GPIOB_PDDR & DEMO_LED_1) == 0);
     case '2':
@@ -569,7 +569,7 @@ extern int fnConfigPort(CHAR cPortBit, CHAR cType)
         else {
             _CONFIG_PORT_INPUT(C, ulPortBit, PORT_PS_UP_ENABLE);         // set port bit to input (on port C)
         }
-#elif defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined FRDM_KE02Z || defined FRDM_KE06Z || defined FRDM_KE02Z40M || defined K60F150M_50M || defined FRDM_KEAZN32Q64 || defined FRDM_KEAZ64Q64 || defined FRDM_KEAZ128Q80 || defined BLAZE_K22 // {9}
+#elif defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined FRDM_KE02Z || defined FRDM_KE06Z || defined FRDM_KE02Z40M || defined K60F150M_50M || defined FRDM_KEAZN32Q64 || defined FRDM_KEAZ64Q64 || defined FRDM_KEAZ128Q80 || defined BLAZE_K22 || defined FRDM_KE15Z // {9}
         #if defined BLAZE_K22
         if (cPortBit == 4) {
             _CONFIG_PORT_INPUT(C, ulPortBit, PORT_PS_UP_ENABLE);         // set port bit to input (on port C)
@@ -816,7 +816,7 @@ extern int fnConfigPort(CHAR cPortBit, CHAR cType)
         else {
             _CONFIG_PORT_OUTPUT(C, ulPortBit, PORT_SRE_SLOW);            // set port bit to output (on port C)
         }
-#elif defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined FRDM_KE02Z || defined FRDM_KE06Z || defined FRDM_KE02Z40M || defined K60F150M_50M || defined FRDM_KEAZN32Q64 || defined FRDM_KEAZ64Q64 || defined FRDM_KEAZ128Q80 || defined BLAZE_K22 // {9}
+#elif defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined FRDM_KE02Z || defined FRDM_KE06Z || defined FRDM_KE02Z40M || defined K60F150M_50M || defined FRDM_KEAZN32Q64 || defined FRDM_KEAZ64Q64 || defined FRDM_KEAZ128Q80 || defined BLAZE_K22 || defined FRDM_KE15Z // {9}
     #if defined BLAZE_K22
         if (cPortBit == 4) {
             _CONFIG_PORT_OUTPUT(C, ulPortBit, PORT_SRE_SLOW);            // set port bit to output (on port C)
@@ -994,7 +994,7 @@ extern int fnConfigPort(CHAR cPortBit, CHAR cType)
 //
 static void fnSetPortBit(unsigned short usBit, int iSetClr)
 {
-#if !defined FRDM_KL02Z && !defined tinyK20 && !defined FRDM_KL03Z && !defined FRDM_KL05Z && !defined FRDM_KE02Z && !defined FRDM_KE06Z && !defined FRDM_KE02Z40M && !defined TRK_KEA128 && !defined TRK_KEA64 && !defined TRK_KEA8 && !defined FRDM_KE04Z && !defined FRDM_K22F && !defined K70F150M_12M && !defined TWR_KL43Z48M && !defined TWR_KV31F120M && !defined TWR_KW21D256 && !defined TWR_KW24D512 && !defined K20FX512_120 && !defined K60F150M_50M && !defined TWR_K65F180M && !defined FRDM_K66F && !defined FRDM_K82F && !defined BLAZE_K22 && !defined FRDM_KEAZN32Q64 && !defined FRDM_KEAZ64Q64 && !defined FRDM_KEAZ128Q80 && !defined TEENSY_3_5 && !defined TEENSY_3_6 && !defined FRDM_KL82Z && !defined TWR_KL82Z72M && !defined TRINAMIC_LANDUNGSBRUECKE // {9}
+#if !defined FRDM_KL02Z && !defined tinyK20 && !defined FRDM_KL03Z && !defined FRDM_KL05Z && !defined FRDM_KE02Z && !defined FRDM_KE06Z && !defined FRDM_KE02Z40M && !defined TRK_KEA128 && !defined TRK_KEA64 && !defined TRK_KEA8 && !defined FRDM_KE04Z && !defined FRDM_K22F && !defined K70F150M_12M && !defined TWR_KL43Z48M && !defined TWR_KV31F120M && !defined TWR_KW21D256 && !defined TWR_KW24D512 && !defined K20FX512_120 && !defined K60F150M_50M && !defined TWR_K65F180M && !defined FRDM_K66F && !defined FRDM_K82F && !defined BLAZE_K22 && !defined FRDM_KEAZN32Q64 && !defined FRDM_KEAZ64Q64 && !defined FRDM_KEAZ128Q80 && !defined TEENSY_3_5 && !defined TEENSY_3_6 && !defined FRDM_KL82Z && !defined TWR_KL82Z72M && !defined TRINAMIC_LANDUNGSBRUECKE && !defined FRDM_KE15Z // {9}
     if (iSetClr != 0) {
         switch (usBit) {
         case 0x0001:
@@ -1106,7 +1106,7 @@ static void fnSetPortBit(unsigned short usBit, int iSetClr)
 //
 extern int fnUserPortState(CHAR cPortBit)
 {
-#if !defined FRDM_KL02Z && !defined tinyK20 && !defined FRDM_KL03Z && !defined FRDM_KL05Z && !defined FRDM_KE02Z && !defined FRDM_KE04Z && !defined FRDM_KE06Z && !defined FRDM_KE02Z40M&& !defined TRK_KEA128 && !defined TRK_KEA64 && !defined TRK_KEA8 && !defined FRDM_K22F && !defined K70F150M_12M && !defined TWR_KL43Z48M && !defined TWR_KV31F120M && !defined TWR_KW21D256 && !defined TWR_KW24D512 && !defined K20FX512_120 && !defined K60F150M_50M && !defined TWR_K65F180M && !defined FRDM_K66F && !defined FRDM_K82F && !defined BLAZE_K22 && !defined FRDM_KEAZN32Q64 && !defined FRDM_KEAZ64Q64 && !defined FRDM_KEAZ128Q80 && !defined TEENSY_3_5 && !defined TEENSY_3_6 && !defined FRDM_KL82Z && !defined TWR_KL82Z72M && !defined TRINAMIC_LANDUNGSBRUECKE // {9}
+#if !defined FRDM_KL02Z && !defined tinyK20 && !defined FRDM_KL03Z && !defined FRDM_KL05Z && !defined FRDM_KE02Z && !defined FRDM_KE04Z && !defined FRDM_KE06Z && !defined FRDM_KE02Z40M&& !defined TRK_KEA128 && !defined TRK_KEA64 && !defined TRK_KEA8 && !defined FRDM_K22F && !defined K70F150M_12M && !defined TWR_KL43Z48M && !defined TWR_KV31F120M && !defined TWR_KW21D256 && !defined TWR_KW24D512 && !defined K20FX512_120 && !defined K60F150M_50M && !defined TWR_K65F180M && !defined FRDM_K66F && !defined FRDM_K82F && !defined BLAZE_K22 && !defined FRDM_KEAZN32Q64 && !defined FRDM_KEAZ64Q64 && !defined FRDM_KEAZ128Q80 && !defined TEENSY_3_5 && !defined TEENSY_3_6 && !defined FRDM_KL82Z && !defined TWR_KL82Z72M && !defined TRINAMIC_LANDUNGSBRUECKE && !defined FRDM_KE15Z // {9}
     switch (cPortBit) {
     case 'a':
         return ((USER_PORT_1 & USER_PORT_1_BIT) != 0);
@@ -1151,7 +1151,7 @@ extern int fnUserPortState(CHAR cPortBit)
 //
 static int fnConfigOutputPort(CHAR cPortBit)
 {
-#if !defined FRDM_KL02Z && !defined tinyK20 && !defined FRDM_KL03Z && !defined FRDM_KL05Z && !defined FRDM_KE02Z && !defined FRDM_KE04Z && !defined FRDM_KE06Z && !defined FRDM_KE02Z40M && !defined TRK_KEA128 && !defined TRK_KEA64 && !defined TRK_KEA8 && !defined FRDM_K22F && !defined K70F150M_12M && !defined TWR_KL43Z48M && !defined TWR_KV31F120M && !defined TWR_KW21D256 && !defined TWR_KW24D512 && !defined K20FX512_120 && !defined K60F150M_50M && !defined TWR_K65F180M && !defined FRDM_K66F && !defined FRDM_K82F && !defined BLAZE_K22 && !defined FRDM_KEAZN32Q64 && !defined FRDM_KEAZ64Q64 && !defined FRDM_KEAZ128Q80 && !defined TEENSY_3_5 && !defined TEENSY_3_6 && ! defined FRDM_KL82Z && !defined TWR_KL82Z72M && !defined TRINAMIC_LANDUNGSBRUECKE // {9}
+#if !defined FRDM_KL02Z && !defined tinyK20 && !defined FRDM_KL03Z && !defined FRDM_KL05Z && !defined FRDM_KE02Z && !defined FRDM_KE04Z && !defined FRDM_KE06Z && !defined FRDM_KE02Z40M && !defined TRK_KEA128 && !defined TRK_KEA64 && !defined TRK_KEA8 && !defined FRDM_K22F && !defined K70F150M_12M && !defined TWR_KL43Z48M && !defined TWR_KV31F120M && !defined TWR_KW21D256 && !defined TWR_KW24D512 && !defined K20FX512_120 && !defined K60F150M_50M && !defined TWR_K65F180M && !defined FRDM_K66F && !defined FRDM_K82F && !defined BLAZE_K22 && !defined FRDM_KEAZN32Q64 && !defined FRDM_KEAZ64Q64 && !defined FRDM_KEAZ128Q80 && !defined TEENSY_3_5 && !defined TEENSY_3_6 && ! defined FRDM_KL82Z && !defined TWR_KL82Z72M && !defined TRINAMIC_LANDUNGSBRUECKE && !defined FRDM_KE15Z // {9}
     switch (cPortBit) {
     case 'a':
         _CONFIG_OUTPUT_PORT_1();        
@@ -1212,7 +1212,7 @@ static int fnConfigOutputPort(CHAR cPortBit)
 //
 extern int fnTogglePortOut(CHAR cPortBit)
 {
-#if !defined FRDM_KL02Z && !defined tinyK20 && !defined FRDM_KL03Z && !defined FRDM_KL05Z && !defined FRDM_KE02Z && !defined FRDM_KE04Z && !defined FRDM_KE06Z && !defined FRDM_KE02Z40M && !defined TRK_KEA128 && !defined TRK_KEA64 && !defined TRK_KEA8 && !defined FRDM_K22F && !defined K70F150M_12M && !defined TWR_KL43Z48M && !defined TWR_KV31F120M && !defined TWR_KW21D256 && !defined TWR_KW24D512 && !defined K20FX512_120 && !defined K60F150M_50M && !defined FRDM_K82F && !defined BLAZE_K22 && !defined FRDM_KEAZN32Q64 && !defined FRDM_KEAZ64Q64 && !defined FRDM_KEAZ128Q80 && !defined FRDM_K66F && !defined TRINAMIC_LANDUNGSBRUECKE // {9}
+#if !defined FRDM_KL02Z && !defined tinyK20 && !defined FRDM_KL03Z && !defined FRDM_KL05Z && !defined FRDM_KE02Z && !defined FRDM_KE04Z && !defined FRDM_KE06Z && !defined FRDM_KE02Z40M && !defined TRK_KEA128 && !defined TRK_KEA64 && !defined TRK_KEA8 && !defined FRDM_K22F && !defined K70F150M_12M && !defined TWR_KL43Z48M && !defined TWR_KV31F120M && !defined TWR_KW21D256 && !defined TWR_KW24D512 && !defined K20FX512_120 && !defined K60F150M_50M && !defined FRDM_K82F && !defined BLAZE_K22 && !defined FRDM_KEAZN32Q64 && !defined FRDM_KEAZ64Q64 && !defined FRDM_KEAZ128Q80 && !defined FRDM_K66F && !defined TRINAMIC_LANDUNGSBRUECKE && !defined FRDM_KE15Z // {9}
     switch (cPortBit) {
     case 'a':
         USER_TOGGLE_PORT_1 = USER_PORT_1_BIT;
@@ -1615,7 +1615,7 @@ extern void fnSetPortOut(unsigned char ucPortOutputs, int iInitialisation)
     else {
         _WRITE_PORT_MASK(E, (0), (DEMO_LED_3));
     }
-#elif defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined FRDM_KE02Z || defined FRDM_KE06Z || defined FRDM_KE02Z40M || defined K60F150M_50M || defined TWR_K65F180M || defined FRDM_KEAZN32Q64 || defined FRDM_KEAZ64Q64 || defined FRDM_KEAZ128Q80 || defined BLAZE_K22 // {9}
+#elif defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined FRDM_KE02Z || defined FRDM_KE06Z || defined FRDM_KE02Z40M || defined K60F150M_50M || defined TWR_K65F180M || defined FRDM_KEAZN32Q64 || defined FRDM_KEAZ64Q64 || defined FRDM_KEAZ128Q80 || defined BLAZE_K22 || defined FRDM_KE15Z // {9}
     #if !defined KINETIS_KE
     if (iInitialisation != 0) {
         POWER_UP(5, (SIM_SCGC5_PORTB));                                  // ensure port is powered before writing initial values

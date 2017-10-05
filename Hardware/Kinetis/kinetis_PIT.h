@@ -265,7 +265,7 @@ static void fnDisablePIT(int iPIT)
             ulCommand = (LPIT_TCTRL_MODE_32 | LPIT_TCTRL_T_EN);          // enable timer
         }
     #else
-        ptrCtl->PIT_TFLG  = PIT_TFLG_TIF;                                // clear pending interrupts
+        WRITE_ONE_TO_CLEAR(ptrCtl->PIT_TFLG, PIT_TFLG_TIF);              // clear possible pending interrupt
         if ((PIT_settings->mode & PIT_TRIGGER_ADC0_A) != 0) {            // if the PIT output TIF is to trigger ADC0 conversion on channel A
         #if defined KINETIS_KE
             SIM_SOPT0 |= SIM_SOPT_ADHWT_PIT0;                            // trigger ADC on PIT0 overflow

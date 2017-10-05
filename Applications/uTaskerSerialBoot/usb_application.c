@@ -606,7 +606,7 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
     }
     while (fnMsgs(USBPortID_host) != 0) {                                // reception from host IN endpoint
 #if defined _WINDOWS
-//utWriteMSD(ucInputMessage, 123); // quick test
+    //utWriteMSD(ucInputMessage, 123);                                   // quick test
 #endif
         Length = fnRead(USBPortID_host, ucInputMessage, 64);             // read the content (up to 64 bytes content each time)
         switch (iUSB_MSD_OpCode) {

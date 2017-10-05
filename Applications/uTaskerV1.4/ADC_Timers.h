@@ -72,9 +72,9 @@
     #endif
 
     #if (defined SUPPORT_PIT1 || defined SUPPORT_PITS) && !defined KINETIS_WITHOUT_PIT // M522xx nd Kinetis periodic interrupt timer
-      //#define TEST_PIT                                                 // test a user defined periodic interrupt
-          //#define TEST_PIT_SINGLE_SHOT                                 // test single-shot PIT
-            #define TEST_PIT_PERIODIC                                    // test periodic PIT
+        #define TEST_PIT                                                 // test a user defined periodic interrupt
+            #define TEST_PIT_SINGLE_SHOT                                 // test single-shot PIT
+          //#define TEST_PIT_PERIODIC                                    // test periodic PIT
           //#define TEST_PIT_DMA_GPIO                                    // use PIT to toggle port output (requires SUPPORT_PIT_DMA_PORT_TOGGLE to be enabled)
         #if defined SERIAL_INTERFACE && defined UART_TIMED_TRANSMISSION
             #define TIMED_UART_TX_TEST                                   // {23} demonstrate sending timed UART transmissions from a message
@@ -1202,6 +1202,7 @@ static void fnConfigurePIT(void)
     pit_setup.int_handler = test_timer_int;                              // test a single shot timer
     pit_setup.count_delay = PIT_US_DELAY(3245);                          // 3245us delay
     pit_setup.mode = PIT_SINGLE_SHOT;                                    // one-shot interrupt
+    pit_setup.int_priority = PIT0_INTERRUPT_PRIORITY;
     #elif defined TEST_PIT_PERIODIC && defined _KINETIS                  // {10}
     pit_setup.mode = PIT_PERIODIC;
         #if defined TEST_PIT_DMA_GPIO

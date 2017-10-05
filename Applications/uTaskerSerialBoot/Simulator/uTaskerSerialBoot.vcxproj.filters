@@ -42,6 +42,9 @@
     <Filter Include="NXP\HS_USB_MSD_HOST_SDK2.2">
       <UniqueIdentifier>{756869c1-8b7f-4926-af33-91e3c4b7e50e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="uTasker\MODBUS">
+      <UniqueIdentifier>{38363d42-4f15-4c4b-a187-b9403c68ba36}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\uTasker\Driver.c">
@@ -199,6 +202,12 @@
     </ClCompile>
     <ClCompile Include="..\..\..\NXP\HS_USB_MSD_HOST_SDK2.2\usb_phy.c">
       <Filter>NXP\HS_USB_MSD_HOST_SDK2.2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\uTasker\MODBUS\MODBUS.c">
+      <Filter>uTasker\MODBUS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\modbus_app.c">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -525,6 +534,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\NXP\HS_USB_MSD_HOST_SDK2.2\usb_spec.h">
       <Filter>NXP\HS_USB_MSD_HOST_SDK2.2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\uTasker\MODBUS\modbus.h">
+      <Filter>uTasker\MODBUS</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -46,6 +46,7 @@
     27.08.2015 Add RTS control to Kinetis KE and KL devices, using UART_FRAME_END_COMPLETE option {V1.27}
     10.09.2015 Protect against attempting to access single non-existing register content at address 0 {V1.28}
     18.03.2016 Correct fnPostFunction() parameters when NOTIFY_ONLY_COIL_CHANGES is used {V1.29}
+    04.10.2017 Allow Kinetis KE/KL parts to manually control RTS in RTU mode {V1.30}
 
 */
 
@@ -701,9 +702,9 @@ extern int fnInitialiseMODBUS_port(unsigned char ucMODBUSport, const MODBUS_CONF
         }
         fnDriver(SerialHandle[ucMODBUSport], (TX_ON | RX_ON), 0);        // enable rx and tx
         #if defined MODBUS_RS485_SUPPORT                                 // {V1.10}
-        if (ptrMODBUS_pars->ucModbusSerialPortMode[ucMODBUSport] & (MODBUS_RS485_NEGATIVE | MODBUS_RS485_POSITIVE)) {
+        if ((ptrMODBUS_pars->ucModbusSerialPortMode[ucMODBUSport] & (MODBUS_RS485_NEGATIVE | MODBUS_RS485_POSITIVE)) != 0) {
             unsigned short usMode;
-            if (ptrMODBUS_pars->ucModbusSerialPortMode[ucMODBUSport] & MODBUS_RS485_POSITIVE) {
+            if ((ptrMODBUS_pars->ucModbusSerialPortMode[ucMODBUSport] & MODBUS_RS485_POSITIVE) != 0) {
                 usMode = (MODIFY_CONTROL | CONFIG_RTS_PIN | SET_RS485_MODE);
                 ucAssertRTS[ucMODBUSport] = (MODIFY_CONTROL | CLEAR_RTS);
                 ucNegateRTS[ucMODBUSport] = (MODIFY_CONTROL | SET_RTS);
@@ -3181,7 +3182,7 @@ extern int fnMODBUS_transmit(MODBUS_RX_FUNCTION *modbus_rx_function, unsigned ch
             if (fnGetUARTChannel(modbus_rx_function->ucMODBUSport) != 1) { // only control RTS line manually USART1 is not used (which has automatic control)
                 fnDriver(SerialHandle[modbus_rx_function->ucMODBUSport], ucAssertRTS[modbus_rx_function->ucMODBUSport], 0); // assert RTS line ready for transmission
             }
-        #elif !defined _KINETIS                                          // {V1.21}
+        #elif !defined _KINETIS || (defined KINETIS_KE || defined KINETIS_KL) // {V1.21}{V1.30}
             #if NUMBER_EXTERNAL_SERIAL > 0                               // {V1.16}
             if (fnGetUARTChannel(modbus_rx_function->ucMODBUSport) < NUMBER_SERIAL) {              // not required when using external UART (assumes that this supports automatic control)
                 fnDriver(SerialHandle[modbus_rx_function->ucMODBUSport], ucAssertRTS[modbus_rx_function->ucMODBUSport], 0); // assert RTS line ready for transmission
@@ -3213,7 +3214,7 @@ extern int fnMODBUS_transmit(MODBUS_RX_FUNCTION *modbus_rx_function, unsigned ch
         unsigned char ucNewDelimiter = END_OF_MESSAGE_DELIMITER(modbus_rx_function->ucMODBUSport);
     #endif
     #if defined MODBUS_RS485_SUPPORT                                     // {V1.10}
-        if (ptrMODBUS_pars->ucModbusSerialPortMode[modbus_rx_function->ucMODBUSport] & (MODBUS_RS485_NEGATIVE | MODBUS_RS485_POSITIVE)) {
+        if ((ptrMODBUS_pars->ucModbusSerialPortMode[modbus_rx_function->ucMODBUSport] & (MODBUS_RS485_NEGATIVE | MODBUS_RS485_POSITIVE)) != 0) {
         #if defined _HW_SAM7X
             if (fnGetUARTChannel(modbus_rx_function->ucMODBUSport) == 2) { // only control RTS line manually when DBGU UART is used, with no automatic control
                 fnDriver(SerialHandle[modbus_rx_function->ucMODBUSport], ucAssertRTS[modbus_rx_function->ucMODBUSport], 0); // assert RTS line ready for transmission

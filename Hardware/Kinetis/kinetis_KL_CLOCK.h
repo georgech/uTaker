@@ -43,9 +43,9 @@
     #elif CRYSTAL_FREQUENCY == 4000000
         #define MCG_C1_FRDIV_VALUE    MCG_C1_FRDIV_128
     #elif CRYSTAL_FREQUENCY == 32768
-        #if !defined FLL_FACTOR
+      //#if !defined FLL_FACTOR
            #define MCG_C1_FRDIV_VALUE MCG_C1_FRDIV_RANGE0_1
-        #endif
+      //#endif
     #else
         #error crystal speed support needs to be added!
     #endif

@@ -4808,16 +4808,32 @@ static void fnPortInterrupt(int iPort, unsigned long ulNewState, unsigned long u
 
 static void fnInterruptI2C(int irq_I2C_ID)
 {
-    if (fnGenInt(irq_I2C_ID) != 0){                                     // if I2C interrupt is not disabled
+    if (fnGenInt(irq_I2C_ID) != 0){                                      // if I2C interrupt is not disabled
         VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
         switch (irq_I2C_ID) {
+    #if defined irq_LPI2C0_ID                                            // low power I2C
+        case irq_LPI2C0_ID:
+            ptrVect->processor_interrupts.irq_LPI2C0();                  // call the interrupt handler
+            break;
+    #else
         case irq_I2C0_ID:
             ptrVect->processor_interrupts.irq_I2C0();                    // call the interrupt handler
             break;
+    #endif
     #if I2C_AVAILABLE > 1
+        #if defined irq_LPI2C0_ID                                        // low power I2C
+        case irq_LPI2C1_ID:
+            ptrVect->processor_interrupts.irq_LPI2C1();                  // call the interrupt handler
+            break;
+        #elif defined irq_I2C1_EXTENDED_ID
         case irq_I2C1_EXTENDED_ID:
             ptrVect->processor_interrupts.irq_I2C1();                    // call the interrupt handler
             break;
+        #else
+        case irq_I2C1_ID:
+            ptrVect->processor_interrupts.irq_I2C1();                    // call the interrupt handler
+            break;
+        #endif
     #endif
     #if I2C_AVAILABLE > 2
         case irq_I2C2_ID:
@@ -4840,12 +4856,18 @@ extern void fnSimulateI2C(int iPort, unsigned char *ptrDebugIn, unsigned short u
     switch (iPort) {
     case 0:
         ptrI2C = (KINETIS_I2C_CONTROL *)I2C0_BLOCK;
+    #if defined irq_LPI2C0_ID
+        iI2C_irq = irq_LPI2C0_ID;
+    #else
         iI2C_irq = irq_I2C0_ID;
+    #endif
         break;
     #if I2C_AVAILABLE > 1
     case 1:
         ptrI2C = (KINETIS_I2C_CONTROL *)I2C1_BLOCK;
-        #if !defined irq_I2C1_ID
+        #if defined irq_LPI2C1_ID
+        iI2C_irq = irq_LPI2C1_ID;
+        #elif !defined irq_I2C1_ID
         iI2C_irq = irq_I2C1_EXTENDED_ID;
         #else
         iI2C_irq = irq_I2C1_ID;
@@ -5785,9 +5807,18 @@ extern unsigned long fnSimInts(char *argv[])
 		        iInts &= ~I2C_INT0;                                      // interrupt has been handled
 		        iInts &= ~I2C_INT0;
                 if ((I2C0_C1 & I2C_IEN) != 0) {                          // if I2C interrupt enabled
-                    if (fnGenInt(irq_I2C0_ID) != 0) {                    // if I2C interrupt is not disabled
+    #if defined irq_LPI2C0_ID
+                    if (fnGenInt(irq_LPI2C0_ID) != 0)
+    #else
+                    if (fnGenInt(irq_I2C0_ID) != 0)
+    #endif
+                    {                                                    // if I2C interrupt is not disabled
                         VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+    #if defined irq_LPI2C0_ID
+                        ptrVect->processor_interrupts.irq_LPI2C0();      // call the interrupt handler
+    #else
                         ptrVect->processor_interrupts.irq_I2C0();        // call the interrupt handler
+    #endif
                     }
                 }
             }
@@ -5811,7 +5842,9 @@ extern unsigned long fnSimInts(char *argv[])
         #endif
                     {                                                    // if I2C interrupt is not disabled
                         VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-        #if !defined irq_I2C1_ID
+        #if defined irq_LPI2C1_ID
+                        ptrVect->processor_interrupts.irq_LPI2C1();      // call the interrupt handler
+        #elif !defined irq_I2C1_ID
                         fnCallINTMUX(INTMUX_I2C1, INTMUX0_PERIPHERAL_I2C1, (unsigned char *)&ptrVect->processor_interrupts.irq_I2C1);
         #else
                         ptrVect->processor_interrupts.irq_I2C1();       // call the interrupt handler
