@@ -240,43 +240,79 @@ static const char *cPinNumber[PORTS_AVAILABLE + 1][PORT_WIDTH][2] = {
     },
     { 
         // MAPBGA196, MAPBGA256                                          dedicated ADC pins
-        {  "-",       "-",   },                                          // ADC0_DP0
-        {  "-",       "-",   },                                          // ADC0_DM0
-        {  "-",       "-",   },                                          // ADC0_DP1
-        {  "-",       "-",   },                                          // ADC0_DM1
-        {  "N1",      "R1",  },                                          // PGA0_DP
-        {  "N2",      "R2",  },                                          // PGA0_DM
-        {  "-",       "-",   },                                          // ADC0_DP3
-        {  "-",       "-",   },                                          // ADC0_DM3
-        {  "-",       "-",   },                                          // ADC1_DP0
-        {  "-",       "-",   },                                          // ADC1_DM0
-        {  "-",       "-",   },                                          // ADC1_DP1
-        {  "-",       "-",   },                                          // ADC1_DM1
-        {  "P1",      "T1",  },                                          // PGA1_DP
-        {  "P2",      "T2",  },                                          // PGA1_DM
-        {  "-",       "-",   },                                          // ADC1_DP3
-        {  "-",       "-",   },                                          // ADC1_DM3
-        {  "-",       "-",   },                                          // ADC2_DP0
-        {  "-",       "-",   },                                          // ADC2_DM0
-        {  "-",       "-",   },                                          // ADC2_DP1
-        {  "-",       "-",   },                                          // ADC2_DM1
-        {  "L1",      "N1",  },                                          // PGA2_DP
-        {  "L2",      "N2",  },                                          // PGA2_DM
-        {  "-",       "-",   },                                          // ADC2_DP3
-        {  "-",       "-",   },                                          // ADC2_DM3
-        {  "-",       "-",   },                                          // ADC3_DP0
-        {  "-",       "-",   },                                          // ADC3_DM0
-        {  "-",       "-",   },                                          // ADC3_DP1
-        {  "-",       "-",   },                                          // ADC3_DM1
-        {  "M1",      "P1",  },                                          // PGA3_DP
-        {  "M2",      "P2",  },                                          // PGA3_DM / ADC1_DM1 / ADC2_DM3 / ADC3_DM0
-        {  "-",       "-",   },                                          // ADC3_DP3
-        {  "-",       "-",   },                                          // ADC3_DM3
+        {  "-",       "H7",  },                                          // VDDINT
+        {  "-",       "M1",  },                                          // USB0_DP
+        {  "-",       "M2",  },                                          // USB0_DM
+        {  "-",       "L1",  },                                          // VOUT33
+        {  "-",       "L3",  },                                          // VREGIN
+        {  "-",       "N1",  },                                          // PGA2_DP/ADC2_DP0/ADC3_DP3/ADC0_DP1
+        {  "-",       "N2",  },                                          // PGA2_DM/ADC2_DM0/ADC3_DM3/ADC0_DM1
+        {  "-",       "P1",  },                                          // PGA3_DP/ADC3_DP0/ADC2_DP3/ADC1_DP1
+        {  "-",       "P2",  },                                          // PGA3_DM/ADC3_DM0/ADC2_DM3/ADC1_DM1
+        {  "-",       "R1",  },                                          // PGA0_DP/ADC0_DP0/ADC1_DP3
+        {  "-",       "R2",  },                                          // PGA0_DM/ADC0_DM0/ADC1_DM3
+        {  "-",       "T1",  },                                          // PGA1_DP/ADC1_DP0/ADC0_DP3
+        {  "-",       "T2",  },                                          // PGA1_DM/ADC1_DM0/ADC0_DM3
+        {  "-",       "P4",  },                                          // VREFH
+        {  "-",       "M4",  },                                          // VREFL
+        {  "-",       "P3",  },                                          // ADC1_SE16/CMP2_IN2/ADC0_SE22
+        {  "-",       "N3",  },                                          // ADC0_SE16/CMP1_IN2/ADC0_SE21
+        {  "-",       "T3",  },                                          // VREF_OUT/CMP1_IN5/CMP0_IN5/ADC1_SE18
+        {  "-",       "R3",  },                                          // DAC0_OUT/CMP1_IN3/ADC0_SE23
+        {  "-",       "R4",  },                                          // DAC1_OUT/CMP0_IN4/CMP2/IN3/ADC1_SE23
+        {  "-",       "M5",  },                                          // TAMPER0/RTC_WAKEUP_B
+        {  "-",       "L5",  },                                          // TAMPER1
+        {  "-",       "L6",  },                                          // TAMPER2
+        {  "-",       "R5",  },                                          // TAMPER3
+        {  "-",       "P6",  },                                          // TAMPER4
+        {  "-",       "R6",  },                                          // TAMPER5
+        {  "-",       "T6",  },                                          // XTAL32
+        {  "-",       "T5",  },                                          // EXTAL32
+        {  "-",       "P5",  },                                          // VBAT
+        {  "-",       "N6",  },                                          // TAMPER6
+        {  "-",       "M6",  },                                          // TAMPER7
+        {  "-",       "H10", },                                          // VDDINT
     }
 };
 
-static int ADC_DEDICATED_CHANNEL[PORT_WIDTH] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ADC_DM1_SINGLE, 0, 0};
-static int ADC_DEDICATED_MODULE[PORT_WIDTH] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0};
+#define _DEDICATED_PINS
+static CHAR *cDedicated[PORT_WIDTH] = {                                  // dedicated pin functions
+    "VDDINT",
+    "USB0_DP",
+    "USB0_DM",
+    "VOUT33",
+    "VREGIN",
+    "PGA2_DP/ADC2_DP0/ADC3_DP3/ADC0_DP1",
+    "PGA2_DM/ADC2_DM0/ADC3_DM3/ADC0_DM1",
+    "PGA3_DP/ADC3_DP0/ADC2_DP3/ADC1_DP1",
+    "PGA3_DM/ADC3_DM0/ADC2_DM3/ADC1_DM1",
+    "PGA0_DP/ADC0_DP0/ADC1_DP3",
+    "PGA0_DM/ADC0_DM0/ADC1_DM3",
+    "PGA1_DP/ADC1_DP0/ADC0_DP3",
+    "PGA1_DM/ADC1_DM0/ADC0_DM3",
+    "VREFH",
+    "VREFL",
+    "ADC1_SE16/CMP2_IN2/ADC0_SE22",
+    "ADC0_SE16/CMP1_IN2/ADC0_SE21",
+    "VREF_OUT/CMP1_IN5/CMP0_IN5/ADC1_SE18",
+    "DAC0_OUT/CMP1_IN3/ADC0_SE23",
+    "DAC1_OUT/CMP0_IN4/CMP2/IN3/ADC1_SE23",
+    "TAMPER0/RTC_WAKEUP_B",
+    "TAMPER1",
+    "TAMPER2",
+    "TAMPER3",
+    "TAMPER4",
+    "TAMPER5",
+    "XTAL32",
+    "EXTAL32",
+    "VBAT",
+    "TAMPER6",
+    "TAMPER7",
+    "VDDINT"
+};
+
+static int ADC_DEDICATED_CHANNEL[PORT_WIDTH] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ADC_SE23_SINGLE, ADC_SE23_SINGLE, ADC_SE18_SINGLE, ADC_SE21_SINGLE, ADC_SE22_SINGLE, 0, 0, ADC_DM3_SINGLE, ADC_DP3_SINGLE, ADC_DM3_SINGLE, ADC_DP3_SINGLE, ADC_DM1_SINGLE, ADC_DP1_SINGLE, ADC_DM1_SINGLE, ADC_DP1_SINGLE, 0, 0, 0, 0, 0};
+static int ADC_DEDICATED_MODULE[PORT_WIDTH]  = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,               0,               1,               0,               0,               0, 0, 0,              0,              1,              1,              1,              1,              0,              0,              0, 0, 0, 0, 0};
 static int ADC_MUX_CHANNEL[PORTS_AVAILABLE][PORT_WIDTH] = {0};
 
 

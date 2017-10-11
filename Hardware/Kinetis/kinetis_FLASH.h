@@ -1322,7 +1322,7 @@ extern int fnSetParameters(unsigned char ucValidBlock, unsigned short usParamete
         #if (FLASH_ROW_SIZE == 8)                                        // {10}
         ulValidCheck[1] = 0xffffffff;
         #endif
-        while (usLength--) {
+        while (usLength-- != 0) {
         #if defined _WINDOWS || defined _LITTLE_ENDIAN
             ulValidCheck[0] = (0xffffff00 | *ucValue++);
         #else

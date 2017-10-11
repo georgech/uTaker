@@ -37,7 +37,7 @@
 //#define REMOVE_PORT_INITIALISATIONS                                    // remove port initialisation and use demonstration to ensure that port configuration and use doesn't conflict with specific application development (exception is blink LED)
   //#define NO_PERIPHERAL_DEMONSTRATIONS                                 // disable peripheral demonstration code (ADC/I2C/CAN/port interrupts/etc.) so that they can't interfere with new application developments
 
-//#define USE_MAINTENANCE                                                // include the command line shell (on UART, USB-CDC and/or Telnet) with maintenance support for the application (remove to reduce project size for special tests or possibly running from limited RAM)
+#define USE_MAINTENANCE                                                  // include the command line shell (on UART, USB-CDC and/or Telnet) with maintenance support for the application (remove to reduce project size for special tests or possibly running from limited RAM)
     #define PREVIOUS_COMMAND_BUFFERS  4                                  // allow the up-arrow to retrieve this many past commands
     #define MEMORY_DEBUGGER                                              // memory and storage debugger interface (read, write, fill and erase)
 
@@ -73,7 +73,7 @@
 
 //#define FRDM_KL02Z                                                     // L processors Cortex-M0+ (ultra-low power) basic - freedom board http://www.utasker.com/kinetis/FRDM-KL02Z.html
 //#define FRDM_KL03Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL03Z.html
-#define FRDM_KL05Z                                                       // freedom board http://www.utasker.com/kinetis/FRDM-KL05Z.html
+//#define FRDM_KL05Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL05Z.html
 
 //#define FRDM_KL25Z                                                     // L processors Cortex-M0+ (ultra-low power) with USB - freedom board http://www.utasker.com/kinetis/FRDM-KL25Z.html
 //#define TWR_KL25Z48M                                                   // tower board http://www.utasker.com/kinetis/TWR-KL25Z48M.html
@@ -137,7 +137,7 @@
 //#define EMCRAFT_K61F150M                                               // K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - http://www.utasker.com/kinetis/EMCRAFT_K61F150M.html
 //#define K61FN1_50M                                                     // board with 150MHz K61 and 50MHz clock (HS USB and KSZ8863 ethernet switch)
 
-//#define FRDM_K64F                                                      // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
+#define FRDM_K64F                                                        // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
 //#define TWR_K64F120M                                                   // tower board http://www.utasker.com/kinetis/TWR-K64F120M.html
 //#define HEXIWEAR_K64F                                                  // hexiwear - wearable development kit for IoT (K64FN1M0VDC12 main processor) http://www.hexiwear.com/
 //#define TEENSY_3_5                                                     // USB development board with K64FX512 - http://www.utasker.com/kinetis/TEENSY_3.5.html
@@ -199,7 +199,7 @@
     #define DEVICE_WITHOUT_USB                                           // KE doesn't have USB
 #elif defined FRDM_KE15Z
     #define TARGET_HW            "FRDM-KE15Z"
-    #define KINETIS_MAX_SPEED    48000000
+    #define KINETIS_MAX_SPEED    72000000
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((10 * 1024) * MEM_FACTOR)
     #define KINETIS_KE
     #define KINETIS_KE15
@@ -1654,11 +1654,11 @@
           //#define HTTP_POST_DEFINES_PAGE                               // return the user file as specified by the file name in a POST, rather than special uFile name
             #define SUPPORT_HTTP_CONTINUE                                // respond to Expect: 100-continue to start a posting sequence without any delay (useful when working with cURL)
             #define X_WWW_FORM_URLENCODED                                // this encoding is also understood as plain text post (used in addition to PLAIN_TEXT_POST)
-            #define AUTO_ASCII_PLAIN_TEXT_DECODE                         // automatically decode any ASCII characters send as "%xx" - this require '%' to be avoided in post content! (Suggested for use with Chrome)
+            #define AUTO_ASCII_PLAIN_TEXT_DECODE                         // automatically decode any ASCII characters send as "%xx" - this require '%' to be avoided in post content! (suggested for use with Chrome)
             #define SUPPORT_HTTP_POST_TO_APPLICATION                     // allow application to handle posted data rather than always saving to file
             #define SUPPORT_DELAY_WEB_SERVING                            // enable delayed web page serving defined by the application
 
-          //#define SUPPORT_WEBSOCKET                                    // support WebSocket protocol to allow two-way communication between a web server process and web brower application
+          //#define SUPPORT_WEBSOCKET                                    // support WebSocket protocol to allow two-way communication between a web server process and web browser application
             #define NO_OF_HTTPS_SESSIONS       0                         // this many parallel HTTPS sockets are reserved for this many parallel sessions
             #define NO_OF_HTTP_SESSIONS        4                         // this many parallel HTTP sockets are reserved for this many parallel sessions
             #define HTTP_AUTHENTICATION                                  // activate basic authentication

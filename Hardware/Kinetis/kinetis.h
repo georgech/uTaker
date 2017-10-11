@@ -211,13 +211,13 @@ extern void fnClearBitBandPeripheralValue(unsigned long *bit_band_address);
 
 // Peripheral Clock Control
 //
-#if defined KINETIS_KL28
+#if defined KINETIS_KL28 || defined KINETIS_KE15
     #define KINETIS_WITH_PCC                                             // contains peripheral clock control module (rather than using SIM)
 #endif
 
 // Watchdog timer
 //
-#if defined KINETIS_KL28
+#if defined KINETIS_KL28 || defined KINETIS_KE15
     #define KINETIS_WITH_WDOG32
 #endif
 
@@ -225,7 +225,7 @@ extern void fnClearBitBandPeripheralValue(unsigned long *bit_band_address);
 //
 #if defined KINETIS_KL28 || defined KINETIS_KL82
     #define LPTMR_AVAILABLE     2
-#elif defined KINETIS_KE
+#elif defined KINETIS_KE && !defined KINETIS_KE15
     #define LPTMR_AVAILABLE     0
 #else
     #define LPTMR_AVAILABLE     1
@@ -233,7 +233,7 @@ extern void fnClearBitBandPeripheralValue(unsigned long *bit_band_address);
 
 // Clock setting/checking
 //
-#if defined KINETIS_KL28                                                 // devices with SCG (system clock generator)
+#if defined KINETIS_KL28 || defined KINETIS_KE15                         // devices with SCG (system clock generator)
     #define KINETIS_WITH_SCG                                             // {91}
 #elif (defined KINETIS_KL03 || defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL43) // devices with MCG-Lite
     #define KINETIS_WITH_MCG_LITE
@@ -273,7 +273,7 @@ extern void fnClearBitBandPeripheralValue(unsigned long *bit_band_address);
     #endif
 #endif
 
-#if (defined KINETIS_K22 && !defined KINETIS_FLEX && ((SIZE_OF_FLASH >= (128 * 1024)) && (SIZE_OF_FLASH <= (512 * 1024)))) || defined KINETIS_K80 || defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_KL28 || defined KINETIS_KL82
+#if (defined KINETIS_K22 && !defined KINETIS_FLEX && ((SIZE_OF_FLASH >= (128 * 1024)) && (SIZE_OF_FLASH <= (512 * 1024)))) || defined KINETIS_K80 || defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_KL28 || defined KINETIS_KL82 || defined KINETIS_KE15
     #define HIGH_SPEED_RUN_MODE_AVAILABLE
 #endif
 
@@ -344,7 +344,7 @@ extern void fnClearBitBandPeripheralValue(unsigned long *bit_band_address);
             #error PLL input frequency must be between 2MHz and 4MHz
         #endif
     #endif
-#elif defined KINETIS_KE                                                 // {42}
+#elif defined KINETIS_KE && !defined KINETIS_KE15                        // {42}
     #if (defined KINETIS_KEA && KINETIS_MAX_SPEED <= 40000000) || defined KINETIS_KE02 // {80}
         #define ICSIRCLK        31250                                    // trimmed internal 31.25kHz clock
     #else
@@ -503,6 +503,7 @@ extern void fnClearBitBandPeripheralValue(unsigned long *bit_band_address);
             #endif
         #endif
     #endif
+#elif defined KINETIS_KE15
 #elif !defined RUN_FROM_DEFAULT_CLOCK                                    // default is K-series
     #if (CLOCK_DIV < 1) || (CLOCK_DIV > 25)
         #error input divide must be between 1 and 25
@@ -538,7 +539,7 @@ extern void fnClearBitBandPeripheralValue(unsigned long *bit_band_address);
 
 // Clock definitions
 //
-#if !defined KINETIS_KE
+#if !defined KINETIS_KE || defined KINETIS_KE15
     #if (defined KINETIS_K_FPU || (KINETIS_MAX_SPEED > 100000000) || defined KINETIS_KL82) && !defined KINETIS_K21 && !defined KINETIS_K22 && !defined KINETIS_K24 && !defined KINETIS_K64 && !defined KINETIS_KV30
         #if defined FLL_FACTOR
             #if defined RUN_FROM_HIRC_FLL
@@ -839,7 +840,7 @@ extern void fnClearBitBandPeripheralValue(unsigned long *bit_band_address);
             #error flash clock may not be faster than the bus clock!
         #endif
     #endif
-#elif defined KINETIS_KE
+#elif defined KINETIS_KE && !defined KINETIS_KE15
     #if defined RUN_FROM_EXTERNAL_CLOCK
         #define ICSOUT_CLOCK   ((_EXTERNAL_CLOCK)/SYSTEM_CLOCK_DIVIDE)
     #elif defined RUN_FROM_DEFAULT_CLOCK
@@ -1040,7 +1041,7 @@ typedef struct stRESET_VECTOR
     #define FLEXRAM_MAX_SECTION_COPY_SIZE (2 * 1024)
 #endif
 
-#if defined KINETIS_K26 || defined KINETIS_KL28 || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_K80 || defined KINETIS_K02 || defined KINETIS_K63 || (defined KINETIS_K22 && ((SIZE_OF_FLASH == (512 * 1024)) || (SIZE_OF_FLASH == (128 * 1024)))) || defined KINETIS_K24 || defined KINETIS_KL43 || defined KINETIS_KL03 || defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL82 || defined KINETIS_KV30
+#if defined KINETIS_K26 || defined KINETIS_KL28 || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_K80 || defined KINETIS_K02 || defined KINETIS_K63 || (defined KINETIS_K22 && ((SIZE_OF_FLASH == (512 * 1024)) || (SIZE_OF_FLASH == (128 * 1024)))) || defined KINETIS_K24 || defined KINETIS_KL43 || defined KINETIS_KL03 || defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL82 || defined KINETIS_KV30 || defined KINETIS_KE15
     #define KINETIS_HAS_IRC48M                                           // device has IRC48M which can be used for crystal-less USB
 #endif
 
@@ -1151,7 +1152,7 @@ typedef struct stRESET_VECTOR
 
 // UART configuration
 //
-#if defined KINETIS_KL03 || defined KINETIS_KL28 || defined KINETIS_KL82 || defined KINETIS_K80  // devices with exclusively LPUARTs
+#if defined KINETIS_KL03 || defined KINETIS_KL28 || defined KINETIS_KL82 || defined KINETIS_K80 || defined KINETIS_KE15 // devices exclusively with LPUARTs
     #define UARTS_AVAILABLE         0
 #elif defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66
     #define UARTS_AVAILABLE         5
@@ -1202,7 +1203,7 @@ typedef struct stRESET_VECTOR
 //
 #if defined KINETIS_K80
     #define LPUARTS_AVAILABLE       5
-#elif defined KINETIS_KL28 || defined KINETIS_KL82
+#elif defined KINETIS_KL28 || defined KINETIS_KL82 || defined KINETIS_KE15
     #define LPUARTS_AVAILABLE       3
 #elif defined KINETIS_KL03
     #define LPUARTS_AVAILABLE       1
@@ -1294,7 +1295,7 @@ typedef struct stRESET_VECTOR
 #if defined KINETIS_KL02 || defined KINETIS_KL03 || defined KINETIS_KV10
     #define KINETIS_WITHOUT_PIT
 #elif defined KINETIS_KL || defined KINETIS_KE
-    #if defined KINETIS_KL28
+    #if defined KINETIS_KL28 || defined KINETIS_KE15
         #define LPITS_AVAILABLE     1
         #define LPIT_CHANNELS       4
         #define LPIT_INPUT_TRIGGERS 4
@@ -1458,11 +1459,11 @@ typedef struct stRESET_VECTOR
 #if (defined KINETIS_KE || defined KINETIS_KL || defined KINETIS_KV10) && !defined KINETIS_KL17 && !defined KINETIS_KL27 && !defined KINETIS_KL43 && !defined KINETIS_KL46 // fast GPIO alias avaiable
     #define FGPIO_AVAILABLE
 #endif
-#if defined KINETIS_KE
+#if defined KINETIS_KE && !defined KINETIS_KE15
     #if defined KINETIS_KEA8
         #define PORTS_AVAILABLE 1
         #define PORTS_AVAILABLE_8_BIT  3
-    #elif defined KINETIS_KE06 || defined KINETIS_KE15 || defined KINETIS_KEA
+    #elif defined KINETIS_KE06 || defined KINETIS_KEA
         #define PORTS_AVAILABLE 3
         #define PORTS_AVAILABLE_8_BIT  9
     #elif (defined KINETIS_KE04 && (SIZE_OF_FLASH <= (8 * 1024)))
@@ -1513,7 +1514,40 @@ typedef struct stRESET_VECTOR
 //
 typedef struct stPROCESSOR_IRQ
 {
-#if defined KINETIS_KE                                                   // {42}
+#if defined KINETIS_KE15
+        void  (*irq_DMA0_0_4)(void);                                     // 0
+        void  (*irq_DMA0_1_5)(void);                                     // 1
+        void  (*irq_DMA0_2_6)(void);                                     // 2
+        void  (*irq_DMA0_3_7)(void);                                     // 3
+        void  (*irq_DMA0_ERROR)(void);                                   // 4
+        void  (*irq_Flash)(void);                                        // 5
+        void  (*irq_PMC)(void);                                          // 6
+        void  (*irq_PORTA_E)(void);                                      // 7
+        void  (*irq_LPI2C0)(void);                                       // 8
+        void  (*irq_LPI2C1)(void);                                       // 9
+        void  (*irq_LPSPI0)(void);                                       // 10
+        void  (*irq_LPSPI1)(void);                                       // 11
+        void  (*irq_LPUART0)(void);                                      // 12 status and error
+        void  (*irq_LPUART1)(void);                                      // 13 status and error
+        void  (*irq_LPUART2)(void);                                      // 14 status and error
+        void  (*irq_ADC0)(void);                                         // 15
+        void  (*CMP0)(void);                                             // 16
+        void  (*irq_FTM0)(void);                                         // 17
+        void  (*irq_FTM1)(void);                                         // 18
+        void  (*irq_FTM2)(void);                                         // 19
+        void  (*irq_RTC)(void);                                          // 20 single interrupt for all sources
+        void  (*irq_CMP1)(void);                                         // 21
+        void  (*irq_LPIT0)(void);                                        // 22
+        void  (*irq_FlexIO)(void);                                       // 23
+        void  (*irq_TSI)(void);                                          // 24
+        void  (*irq_PDB0)(void);                                         // 25
+        void  (*irq_PORTB_C_D)(void);                                    // 26
+        void  (*irq_SCG)(void);                                          // 27
+        void  (*irq_WDOG0)(void);                                        // 28
+        void  (*irq_LPTMR_PWT)(void);                                    // 29
+        void  (*irq_ADC1)(void);                                         // 30
+        void  (*irq_RCM)(void);                                          // 31
+#elif defined KINETIS_KE                                                 // {42}
     void  (*reserved0)(void);                                            // 0
     void  (*reserved1)(void);                                            // 1
     void  (*reserved2)(void);                                            // 2
@@ -2306,10 +2340,42 @@ typedef struct stVECTOR_TABLE
 } VECTOR_TABLE;
 
 
-
 // Interrupt sources
 //
-#if defined KINETIS_KE                                                   // {42}
+#if defined KINETIS_KE15
+    #define irq_DMA0_0_4_ID               0                              // 0
+    #define irq_DMA0_1_5_ID               1                              // 1
+    #define irq_DMA0_2_6_ID               2                              // 2
+    #define irq_DMA0_3_7_ID               3                              // 3
+    #define irq_DMA0_ERROR_ID             4                              // 4
+    #define irq_FLASH_ID                  5                              // 5
+    #define irq_PMC_ID                    6                              // 6
+    #define irq_PORT_A_E_ID               7                              // 7
+    #define irq_LPI2C0_ID                 8                              // 8
+    #define irq_LPI2C1_ID                 9                              // 9
+    #define irq_LPSPI0_ID                 10                             // 10
+    #define irq_LPSPI1_ID                 11                             // 11
+    #define irq_LPUART0_ID                12                             // 12
+    #define irq_LPUART1_ID                13                             // 13
+    #define irq_LPUART2_ID                14                             // 14
+    #define irq_ADC0_ID                   15                             // 15
+    #define irq_CMP0_ID                   16                             // 16
+    #define irq_FTM0_ID                   17                             // 17
+    #define irq_FTM1_ID                   18                             // 18
+    #define irq_FTM2_ID                   19                             // 19
+    #define irq_RTC_ID                    20                             // 20
+    #define irq_CMP1_ID                   21                             // 21
+    #define irq_LPIT0_ID                  22                             // 22
+    #define irq_FLEXIO_ID                 23                             // 23
+    #define irq_TSI_ID                    24                             // 24
+    #define irq_PDB0_ID                   25                             // 25
+    #define irq_PORT_B_C_D_ID             26                             // 26
+    #define irq_SCG_ID                    27                             // 27
+    #define irq_WDOG0_ID                  28                             // 28
+    #define irq_LPTMR_PWT_ID              29                             // 29
+    #define irq_ADC1_ID                   30                             // 30
+    #define irq_RCM_ID                    31                             // 31
+#elif defined KINETIS_KE                                                 // {42}
     #define irq_FTMRH_ID                  5                              // 5
     #define irq_PMC_ID                    6                              // 6
     #define irq_IRQ_ID                    7                              // 7
@@ -2950,7 +3016,10 @@ typedef struct stVECTOR_TABLE
 
 #define VECTOR_SIZE                      (sizeof(VECTOR_TABLE))
 
-#if defined KINETIS_KE                                                   // {42}
+#if defined KINETIS_KE15
+    #define LAST_PROCESSOR_IRQ     irq_RCM
+    #define CHECK_VECTOR_SIZE                192                         // (16 + 31 + 1) = 48) * 4 - adequate for this processor [0xc0]
+#elif defined KINETIS_KE                                                 // {42}
     #define LAST_PROCESSOR_IRQ     irq_WDOG0
     #define CHECK_VECTOR_SIZE                180                         // (16 + 28 + 1) = 45) * 4 - adequate for this processor [0xb4]
 #elif defined KINETIS_K02 || defined KINETIS_KW2X
@@ -3123,7 +3192,7 @@ typedef struct stVECTOR_TABLE
     #endif
     #define TSI_BLOCK                          ((unsigned char *)(&kinetis.TSI)) // Touch Sense Input Module
     #define SIM_BLOCK                          ((unsigned char *)(&kinetis.SIM)) // System Integration Module
-    #if defined KINETIS_KE
+    #if defined KINETIS_KE && !defined KINETIS_KE15
         #define PORT_BLOCK                     ((unsigned char *)(&kinetis.PORT)) // Port block
     #else
         #define PORT0_BLOCK                    ((unsigned char *)(&kinetis.PORT[0])) // Port Control and Interrupts
@@ -3156,7 +3225,7 @@ typedef struct stVECTOR_TABLE
         #define PCC_BLOCK                      ((unsigned char *)(&kinetis.PCC)) // peripheral clock control
         #define PCC2_BLOCK                     ((unsigned char *)(&kinetis.PCC2)) // second PCC
     #endif
-    #if defined KINETIS_KE
+    #if defined KINETIS_KE && !defined KINETIS_WITH_SCG
         #define INTERNAL_CLOCK_BLOCK           ((unsigned char *)(&kinetis.ICS)) // internal clock source
     #elif defined KINETIS_WITH_SCG
         #define SCG_BLOCK                      ((unsigned char *)(&kinetis.SCG)) // system clock generator
@@ -3395,7 +3464,7 @@ typedef struct stVECTOR_TABLE
     #else
         #define SIM_BLOCK                      0x40047000                // System Integration Module
     #endif
-    #if defined KINETIS_KE 
+    #if defined KINETIS_KE && !defined KINETIS_KE15 
         #define PORT_BLOCK                     0x40049000                // Port block
     #else
         #if defined KINETIS_KL28
@@ -9601,7 +9670,7 @@ typedef struct stKINETIS_LPTMR_CTL
 
 // Port Control and Interrupts
 //
-#if defined KINETIS_KE
+#if defined KINETIS_KE && !defined KINETIS_KE15
     #if (defined KINETIS_KE04 && (SIZE_OF_FLASH > (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
         #define PORT_IOFLT0              *(unsigned long *)(PORT_BLOCK + 0x00) // Port Filter Register 0
         #define PORT_IOFLT1              *(unsigned long *)(PORT_BLOCK + 0x04) // Port Filter Register 0
@@ -10939,7 +11008,7 @@ typedef struct stKINETIS_LPTMR_CTL
     #define PC_3_DEFAULT                 PC_3_ADC0_SE11
 #endif
 
-#if !defined KINETIS_KL || defined KINETIS_KL82                          // {42}
+#if (!defined KINETIS_KL && !defined KINETIS_WITH_WDOG32) || defined KINETIS_KL82 // {42}
     // Watchdog
     //
     #if defined KINETIS_KE
@@ -11176,7 +11245,7 @@ typedef struct stKINETIS_LPTMR_CTL
     #define PCC_CMP1                     *(volatile unsigned long *)(PCC2_BLOCK + 0x1bc)
 #endif
 
-#if defined KINETIS_KE
+#if defined KINETIS_KE && !defined KINETIS_WITH_SCG
     // Internal Clock Source
     //
     #define ICS_C1                       *(volatile unsigned char *)(INTERNAL_CLOCK_BLOCK + 0x0) // ICS Control Register 1
@@ -14608,7 +14677,7 @@ typedef struct stDAC_REGS                                                // {23}
 #define GPIOA_PTOR                       *(volatile unsigned long*)(GPIO_BLOCK + 0x00c)   // Port A Toggle Output Register (write-only - always reads 0)
 #define GPIOA_PDIR                       *(volatile unsigned long*)(GPIO_BLOCK + 0x010)   // Port A Data Input Register (read-only)
 #define GPIOA_PDDR                       *(volatile unsigned long*)(GPIO_BLOCK + 0x014)   // Port A Data Direction Register
-#if defined KINETIS_KE
+#if defined KINETIS_KE && !defined KINETIS_KE15
     #define GPIOA_PIDR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x018)   // Port A Input Disable Register
 #endif
 #if PORTS_AVAILABLE > 1
@@ -14619,7 +14688,7 @@ typedef struct stDAC_REGS                                                // {23}
     #define GPIOB_PTOR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x04c)   // Port B Toggle Output Register (write-only - always reads 0)
     #define GPIOB_PDIR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x050)   // Port B Data Input Register (read-only)
     #define GPIOB_PDDR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x054)   // Port B Data Direction Register
-    #if defined KINETIS_KE
+    #if defined KINETIS_KE && !defined KINETIS_KE15
         #define GPIOB_PIDR               *(volatile unsigned long*)(GPIO_BLOCK + 0x058)   // Port B Input Disable Register
     #endif
 #endif
@@ -14631,7 +14700,7 @@ typedef struct stDAC_REGS                                                // {23}
     #define GPIOC_PTOR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x08c)   // Port C Toggle Output Register (write-only - always reads 0)
     #define GPIOC_PDIR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x090)   // Port C Data Input Register (read-only)
     #define GPIOC_PDDR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x094)   // Port C Data Direction Register
-    #if defined KINETIS_KE
+    #if defined KINETIS_KE && !defined KINETIS_KE15
         #define GPIOC_PIDR               *(volatile unsigned long*)(GPIO_BLOCK + 0x098)   // Port C Input Disable Register
     #endif
 #endif
@@ -14744,7 +14813,7 @@ typedef struct stGPIO_RGS
     } FGPIO_REGS;
 #endif
 
-#if defined KINETIS_KE
+#if defined KINETIS_KE && !defined KINETIS_KE15
   #define PORT_WIDTH                     8                               // 8 bit ports according to KE convention
 
   #define KE_PORTA                       0
@@ -15057,14 +15126,14 @@ extern void fnSimPers(void);
 
 // Configure pins as output, including enabling clock to specified port eg. _CONFIG_PORT_OUTPUT(A, PORTA_BIT16, (PORT_SRE_FAST | PORT_DSE_LOW));
 //
-#if defined KINETIS_KE
-    #define _CONFIG_PORT_OUTPUT(ref, pins, chars) GPIO##ref##_PIDR &= ~(pins); fnConnectGPIO(PORT##ref, pins, (PORT_MUX_GPIO | chars)); GPIO##ref##_PDDR |= (pins); _SIM_PORT_CHANGE; _SIM_PER_CHANGE
-    #define _CONFIG_PORT_OUTPUT_FAST_LOW(ref, pins, chars)  _CONFIG_PORT_OUTPUT(ref, pins, chars)
-    #define _CONFIG_PORT_OUTPUT_FAST_HIGH(ref, pins, chars) _CONFIG_PORT_OUTPUT(ref, pins, chars)
-#elif defined KINETIS_WITH_PCC
+#if defined KINETIS_WITH_PCC
     #define _CONFIG_PORT_OUTPUT(ref, pins, chars) PCC_PORT##ref |= PCC_CGC; fnConnectGPIO(PORT##ref, pins, (PORT_MUX_GPIO | chars)); GPIO##ref##_PDDR |= (pins); _SIM_PORT_CHANGE; _SIM_PER_CHANGE; _SIM_PER_CHANGE
     #define _CONFIG_PORT_OUTPUT_FAST_LOW(ref, pins, chars)  PCC_PORT##ref |= PCC_CGC; PORT##ref##_GPCLR = (((pins) << 16) | (chars | PORT_MUX_GPIO)); GPIO##ref##_PDDR |= ((pins) & 0x0000ffff); _SIM_PORT_CHANGE; _SIM_PER_CHANGE
     #define _CONFIG_PORT_OUTPUT_FAST_HIGH(ref, pins, chars) PCC_PORT##ref |= PCC_CGC; PORT##ref##_GPCHR = (((pins) & 0xffff0000) | chars | PORT_MUX_GPIO); GPIO##ref##_PDDR |= ((pins) & 0xffff0000); _SIM_PORT_CHANGE; _SIM_PER_CHANGE // {65}
+#elif defined KINETIS_KE
+    #define _CONFIG_PORT_OUTPUT(ref, pins, chars) GPIO##ref##_PIDR &= ~(pins); fnConnectGPIO(PORT##ref, pins, (PORT_MUX_GPIO | chars)); GPIO##ref##_PDDR |= (pins); _SIM_PORT_CHANGE; _SIM_PER_CHANGE
+    #define _CONFIG_PORT_OUTPUT_FAST_LOW(ref, pins, chars)  _CONFIG_PORT_OUTPUT(ref, pins, chars)
+    #define _CONFIG_PORT_OUTPUT_FAST_HIGH(ref, pins, chars) _CONFIG_PORT_OUTPUT(ref, pins, chars)
 #else
     #define _CONFIG_PORT_OUTPUT(ref, pins, chars) SIM_SCGC5 |= SIM_SCGC5_PORT##ref; fnConnectGPIO(PORT##ref, pins, (PORT_MUX_GPIO | chars)); GPIO##ref##_PDDR |= (pins); _SIM_PORT_CHANGE; _SIM_PER_CHANGE; _SIM_PER_CHANGE
     #define _CONFIG_PORT_OUTPUT_FAST_LOW(ref, pins, chars)  SIM_SCGC5 |= SIM_SCGC5_PORT##ref; PORT##ref##_GPCLR = (((pins) << 16) | (chars | PORT_MUX_GPIO)); GPIO##ref##_PDDR |= ((pins) & 0x0000ffff); _SIM_PORT_CHANGE; _SIM_PER_CHANGE
@@ -15073,14 +15142,14 @@ extern void fnSimPers(void);
 
 // Configure pins as Input, including enabling clock to specified port eg. _CONFIG_PORT_INPUT(A, PORTA_BIT4, PORT_PS_UP_ENABLE);
 //
-#if defined KINETIS_KE
-    #define _CONFIG_PORT_INPUT(ref, pins, chars) GPIO##ref##_PIDR &= ~(pins); GPIO##ref##_PDDR &= ~(pins); fnConnectGPIO(PORT##ref, pins, (PORT_MUX_GPIO | chars)); _SIM_PORT_CHANGE; _SIM_PER_CHANGE
-    #define _CONFIG_PORT_INPUT_FAST_LOW(ref, pins, chars)  _CONFIG_PORT_INPUT(ref, pins, chars)
-    #define _CONFIG_PORT_INPUT_FAST_HIGH(ref, pins, chars) _CONFIG_PORT_INPUT(ref, pins, chars)
-#elif defined KINETIS_WITH_PCC
+#if defined KINETIS_WITH_PCC
     #define _CONFIG_PORT_INPUT(ref, pins, chars)  PCC_PORT##ref |= PCC_CGC; GPIO##ref##_PDDR &= ~(pins); fnConnectGPIO(PORT##ref, pins, (PORT_MUX_GPIO | chars)); _SIM_PORT_CHANGE; _SIM_PER_CHANGE
     #define _CONFIG_PORT_INPUT_FAST_LOW(ref, pins, chars)  PCC_PORT##ref |= PCC_CGC; GPIO##ref##_PDDR &= ~((pins) & 0x0000ffff); PORT##ref##_GPCLR = (((pins) << 16) | chars | PORT_MUX_GPIO);  _SIM_PORT_CHANGE; _SIM_PER_CHANGE
     #define _CONFIG_PORT_INPUT_FAST_HIGH(ref, pins, chars) PCC_PORT##ref |= PCC_CGC; GPIO##ref##_PDDR &= ~((pins) & 0xffff0000); PORT##ref##_GPCHR = (((pins) & 0xffff0000) | chars | PORT_MUX_GPIO); _SIM_PORT_CHANGE; _SIM_PER_CHANGE
+#elif defined KINETIS_KE
+    #define _CONFIG_PORT_INPUT(ref, pins, chars) GPIO##ref##_PIDR &= ~(pins); GPIO##ref##_PDDR &= ~(pins); fnConnectGPIO(PORT##ref, pins, (PORT_MUX_GPIO | chars)); _SIM_PORT_CHANGE; _SIM_PER_CHANGE
+    #define _CONFIG_PORT_INPUT_FAST_LOW(ref, pins, chars)  _CONFIG_PORT_INPUT(ref, pins, chars)
+    #define _CONFIG_PORT_INPUT_FAST_HIGH(ref, pins, chars) _CONFIG_PORT_INPUT(ref, pins, chars)
 #else
     #define _CONFIG_PORT_INPUT(ref, pins, chars)  SIM_SCGC5 |= SIM_SCGC5_PORT##ref; GPIO##ref##_PDDR &= ~(pins); fnConnectGPIO(PORT##ref, pins, (PORT_MUX_GPIO | chars)); _SIM_PORT_CHANGE; _SIM_PER_CHANGE
     #define _CONFIG_PORT_INPUT_FAST_LOW(ref, pins, chars)  SIM_SCGC5 |= SIM_SCGC5_PORT##ref; GPIO##ref##_PDDR &= ~((pins) & 0x0000ffff); PORT##ref##_GPCLR = (((pins) << 16) | chars | PORT_MUX_GPIO);  _SIM_PORT_CHANGE; _SIM_PER_CHANGE
@@ -15089,10 +15158,10 @@ extern void fnSimPers(void);
 
 // Configure a peripheral function eg. _CONFIG_PERIPHERAL(B, 2, (PB_2_FTM0_CH0 | PORT_SRE_FAST | PORT_DSE_HIGH));
 //
-#if defined KINETIS_KE
-    #define _CONFIG_PERIPHERAL(port, pin, function) _SIM_PER_CHANGE      // dummy since the peripherals automatically configures their peripheral pins
-#elif defined KINETIS_WITH_PCC
+#if defined KINETIS_WITH_PCC
     #define _CONFIG_PERIPHERAL(port, pin, function) PCC_PORT##port |= PCC_CGC; PORT##port##_PCR##pin = function; _SIM_PER_CHANGE
+#elif defined KINETIS_KE
+    #define _CONFIG_PERIPHERAL(port, pin, function) _SIM_PER_CHANGE      // dummy since the peripherals automatically configures their peripheral pins
 #else
     #define _CONFIG_PERIPHERAL(port, pin, function) SIM_SCGC5 |= SIM_SCGC5_PORT##port; PORT##port##_PCR##pin = function; _SIM_PER_CHANGE
 #endif
@@ -15132,14 +15201,15 @@ extern void fnSimPers(void);
 // Configure outputs, including enabling clock to specified port, and then set a value to them - this device sets the value and then drives
 // eg. _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, (PORTC_BIT13), (PORTC_BIT13), (PORT_SRE_SLOW | PORT_DSE_HIGH))
 //
-#if defined KINETIS_KE
-    #define _CONFIG_DRIVE_PORT_OUTPUT_VALUE(ref, pins, value, chars) GPIO##ref##_PIDR &= ~(pins); GPIO##ref##_PDOR = ((GPIO##ref##_PDOR & ~(pins)) | (value)); fnConnectGPIO(PORT##ref, pins, (PORT_MUX_GPIO | chars)); GPIO##ref##_PDDR |= (pins); _SIM_PORT_CHANGE; _SIM_PER_CHANGE
-    #define _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_LOW(ref, pins, value, chars) _CONFIG_DRIVE_PORT_OUTPUT_VALUE(ref, pins, value, chars)
-    #define _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_HIGH(ref, pins, value, chars) _CONFIG_DRIVE_PORT_OUTPUT_VALUE(ref, pins, value, chars)
-#elif defined KINETIS_WITH_PCC
+#if defined KINETIS_WITH_PCC
     #define _CONFIG_DRIVE_PORT_OUTPUT_VALUE(ref, pins, value, chars) PCC_PORT##ref |= PCC_CGC; fnConnectGPIO(PORT##ref, pins, (PORT_MUX_GPIO | chars)); GPIO##ref##_PDOR = ((GPIO##ref##_PDOR & ~(pins)) | (value)); GPIO##ref##_PDDR |= (pins); _SIM_PORT_CHANGE; _SIM_PER_CHANGE
     #define _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_LOW(ref, pins, value, chars) PCC_PORT##ref |= PCC_CGC; PORT##ref##_GPCLR = (((pins) << 16) | (chars | PORT_MUX_GPIO)); GPIO##ref##_PDOR = ((GPIO##ref##_PDOR & ~((pins) & 0x0000ffff)) | ((value) & 0x0000ffff)); GPIO##ref##_PDDR |= ((pins) & 0x0000ffff); _SIM_PORT_CHANGE; _SIM_PER_CHANGE // {12}
     #define _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_HIGH(ref, pins, value, chars) PCC_PORT##ref |= PCC_CGC; PORT##ref##_GPCHR = (((pins) & 0xffff0000) | (chars | PORT_MUX_GPIO)); GPIO##ref##_PDOR = ((GPIO##ref##_PDOR & ~((pins) & 0xffff0000)) | ((value) & 0xffff0000)); GPIO##ref##_PDDR |= ((pins) & 0xffff0000); _SIM_PORT_CHANGE; _SIM_PER_CHANGE // {12}{39}
+
+#elif defined KINETIS_KE
+    #define _CONFIG_DRIVE_PORT_OUTPUT_VALUE(ref, pins, value, chars) GPIO##ref##_PIDR &= ~(pins); GPIO##ref##_PDOR = ((GPIO##ref##_PDOR & ~(pins)) | (value)); fnConnectGPIO(PORT##ref, pins, (PORT_MUX_GPIO | chars)); GPIO##ref##_PDDR |= (pins); _SIM_PORT_CHANGE; _SIM_PER_CHANGE
+    #define _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_LOW(ref, pins, value, chars) _CONFIG_DRIVE_PORT_OUTPUT_VALUE(ref, pins, value, chars)
+    #define _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_HIGH(ref, pins, value, chars) _CONFIG_DRIVE_PORT_OUTPUT_VALUE(ref, pins, value, chars)
 #else
     #define _CONFIG_DRIVE_PORT_OUTPUT_VALUE(ref, pins, value, chars) SIM_SCGC5 |= SIM_SCGC5_PORT##ref; fnConnectGPIO(PORT##ref, pins, (PORT_MUX_GPIO | chars)); GPIO##ref##_PDOR = ((GPIO##ref##_PDOR & ~(pins)) | (value)); GPIO##ref##_PDDR |= (pins); _SIM_PORT_CHANGE; _SIM_PER_CHANGE
     #define _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_LOW(ref, pins, value, chars) SIM_SCGC5 |= SIM_SCGC5_PORT##ref; PORT##ref##_GPCLR = (((pins) << 16) | (chars | PORT_MUX_GPIO)); GPIO##ref##_PDOR = ((GPIO##ref##_PDOR & ~((pins) & 0x0000ffff)) | ((value) & 0x0000ffff)); GPIO##ref##_PDDR |= ((pins) & 0x0000ffff); _SIM_PORT_CHANGE; _SIM_PER_CHANGE // {12}

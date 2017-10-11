@@ -646,7 +646,7 @@ static void adc_level_change_high(ADC_INTERRUPT_RESULT *adc_result)
 }
 
 #if defined _KINETIS && (ADC_CONTROLLERS > 1)
-static void adc_ready_1(ADC_INTERRUPT_RESULT *adc_result)
+static void adc_range(ADC_INTERRUPT_RESULT *adc_result)
 {
     #if defined _KINETIS
     fnInterruptMessage(OWN_TASK, (unsigned char)(ADC_TRIGGER_1));
@@ -776,10 +776,10 @@ static void fnConfigureADC(void)
     adc_setup.int_adc_offset = 0;                                        // no offset
     #if defined TWR_K20D50M || defined TWR_K20D72M || defined TWR_K21D50M
     adc_setup.int_adc_bit = ADC_DM3_SINGLE;                              // ADC DM3 single-ended
-    adc_setup.int_handler = adc_ready_1;                                 // handling function
+    adc_setup.int_handler = adc_range;                                   // handling function
     #elif defined TEENSY_3_1
     adc_setup.int_adc_bit = ADC_DP3_SINGLE;                              // ADC DM3 single-ended - pad A12
-    adc_setup.int_handler = adc_ready_1;                                 // handling function
+    adc_setup.int_handler = adc_range;                                   // handling function
     #elif defined FRDM_KE02Z40M || defined FRDM_KE06Z
     adc_setup.int_adc_bit = ADC_SE12_SINGLE;                             // thermistor positive terminal
     #elif defined FRDM_KL43Z
@@ -931,11 +931,11 @@ static void fnConfigureADC(void)
     adc_setup.int_adc_controller = 1;                                    // ADC controller 1
     adc_setup.int_adc_bit = ADC_DM1_SINGLE;                              // ADC DM1 single-ended
   //adc_setup.int_adc_int_type = (ADC_LOW_LIMIT_INT);                    // interrupt type (trigger only when lower than the defined level)
-  //adc_setup.int_adc_int_type = (ADC_HIGH_LIMIT_INT);                   // interrupt type (trigger only when higherthan the defined level)
+  //adc_setup.int_adc_int_type = (ADC_HIGH_LIMIT_INT);                   // interrupt type (trigger only when higher than the defined level)
     adc_setup.int_adc_int_type = (ADC_LOW_LIMIT_INT | ADC_HIGH_LIMIT_INT); // interrupt type (trigger only when lower or higher than defined levels)
     adc_setup.int_low_level_trigger = (unsigned short)(ADC_VOLT * 1.3);  // the low level trigger threshold represented as input voltage (note: setting low threshold higher than the high threshold causes a trigger inside the range rather than outside of it)
     adc_setup.int_high_level_trigger = (unsigned short)(ADC_VOLT * 2.6); // the high level trigger threshold represented as input voltage
-    adc_setup.int_handler = adc_ready_1;                                 // handling function
+    adc_setup.int_handler = adc_range;                                   // handling function
     fnConfigureInterrupt((void *)&adc_setup);                            // start operation now
     #endif
 #else

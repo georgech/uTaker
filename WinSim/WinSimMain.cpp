@@ -272,7 +272,7 @@ unsigned long *pPixels = 0;
     #define _EXTERNAL_PORT_COUNT   0
 #endif
 #if defined _KINETIS
-    #if defined KINETIS_KE
+    #if defined KINETIS_KE && !defined KINETIS_KE15
         #define _PORTS_AVAILABLE PORTS_AVAILABLE_8_BIT                   // 8 bit ports
     #else
         #define _PORTS_AVAILABLE (PORTS_AVAILABLE + 1)                   // add dedicated ADC port
@@ -1356,7 +1356,7 @@ static void fnDisplayPorts(HDC hdc)
             }
             ulBit >>= 1;
         }
-#if defined _KINETIS && !defined KINETIS_KE
+#if defined _KINETIS && (!defined KINETIS_KE || defined KINETIS_KE15)
         if (i == PORTS_AVAILABLE) {                                      // handle dedicated ADC inputs
             int b;
             cPorts[0] = 'A';

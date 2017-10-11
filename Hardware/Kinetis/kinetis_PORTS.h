@@ -28,7 +28,7 @@
 //
 extern void fnConnectGPIO(int iPortRef, unsigned long ulPortBits, unsigned long ulCharacteristics)
 {
-    #if defined KINETIS_KE
+    #if defined KINETIS_KE && !defined KINETIS_KE15
     unsigned long ulHighDrive = 0;
     unsigned long *ptrPullup = (PORT_PUEL_ADD + iPortRef);
     if (ulCharacteristics & PORT_PS_UP_ENABLE) {

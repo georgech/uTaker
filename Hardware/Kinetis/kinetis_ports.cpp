@@ -127,12 +127,12 @@ extern void fnSetPortDetails(char *cPortDetails, int iPort, int iBit, unsigned l
         STRCPY(cPortDetails, "Port E");
         break;
 #endif
-#if defined KINETIS_KE || (PORTS_AVAILABLE > 5)
+#if (defined KINETIS_KE && !defined KINETIS_KE15) || (PORTS_AVAILABLE > 5)
     case _PORTF:
         STRCPY(cPortDetails, "Port F");
         break;
 #endif
-#if defined KINETIS_KE
+#if (defined KINETIS_KE && !defined KINETIS_KE15)
     case _PORTG:
         STRCPY(cPortDetails, "Port G");
         break;
@@ -273,7 +273,7 @@ extern unsigned long fnGetPortMask(int iPortNumber)
     unsigned long ulPortMask = 0x00000000;
     unsigned long ulMaskBit = 0x00000001;
     int i;
-    #if defined KINETIS_KE
+    #if defined KINETIS_KE && !defined KINETIS_KE15
     if (iPortNumber >= PORTS_AVAILABLE_8_BIT)
     #else
     if (iPortNumber >= (PORTS_AVAILABLE + 1))
@@ -303,10 +303,10 @@ extern "C" int fnGetADC_sim_channel(int iPort, int iBit)
         if (ADC_DEDICATED_MODULE[iBit] == 0) {                           // not assigned
             return -1;                                                   // not ADC function
         }
-        return (((ADC_DEDICATED_MODULE[iBit] - 1) * ADC_CHANNELS) + ADC_DEDICATED_CHANNEL[iBit]);
+        return ((ADC_DEDICATED_MODULE[iBit] * ADC_CHANNELS) + ADC_DEDICATED_CHANNEL[iBit]);
     }
     else {                                                               // multiplexed port
-    #if defined KINETIS_KE
+    #if defined KINETIS_KE && !defined KINETIS_KE15
         if (ADC_MUX_CHANNEL[iPort][7 - iBit] == 0) {
             return -1;                                                   // not ADC function
         }
@@ -325,7 +325,7 @@ static void fnAddVoltage(int iPort, char *cPortDetails, int iBit)
 {
     #if defined _PIN_COUNT
     char cBuf[BUF1SIZE];
-        #if defined KINETIS_KE
+        #if defined KINETIS_KE && !defined KINETIS_KE15
     signed int iAdc = fnGetADC_sim_channel(iPort, (7 - iBit));
         #else
     signed int iAdc = fnGetADC_sim_channel(iPort, (31 - iBit));

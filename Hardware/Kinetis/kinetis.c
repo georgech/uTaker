@@ -2432,13 +2432,13 @@ static void _LowLevelInit(void)
 #endif
     // Configure clock generator
     //
-#if defined KINETIS_KE
+#if defined KINETIS_KE && !defined KINETIS_KE15
     #include "kinetis_KE_CLOCK.h"                                        // KE and KEA clock configuration
 #elif defined RUN_FROM_HIRC || defined RUN_FROM_HIRC_FLL || defined RUN_FROM_HIRC_PLL // 48MHz
     #include "kinetis_HIRC.h"                                            // high speed internal clock
 #elif defined KINETIS_WITH_MCG_LITE
     #include "kinetis_MCG_LITE.h"                                        // MCG LITE clock configuration
-#elif defined KINETIS_KL
+#elif defined KINETIS_KL || defined KINETIS_KE15
     #include "kinetis_KL_CLOCK.h"                                        // KL clock configuration
 #elif defined KINETIS_KV
     #include "kinetis_KV_CLOCK.h"                                        // KV clock configuration

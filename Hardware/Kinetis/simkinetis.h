@@ -1937,7 +1937,7 @@ typedef struct stKINETIS_SIM
 #endif
 } KINETIS_SIM;
 
-#if defined KINETIS_KE
+#if defined KINETIS_KE && !defined KINETIS_KE15
     typedef struct stKINETIS_KE_PORT
     {
     #if (defined KINETIS_KE04 && (SIZE_OF_FLASH > (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
@@ -2119,7 +2119,7 @@ typedef struct stKINETIS_PCC2
 } KINETIS_PCC2;
 #endif
 
-#if defined KINETIS_KE
+#if defined KINETIS_KE && !defined KINETIS_WITH_SCG
     typedef struct stKINETIS_ICS
     {
     unsigned char ICS_C1;
@@ -3275,7 +3275,7 @@ typedef struct stKINETIS_PERIPH
 #endif
     KINETIS_TSI        TSI;
     KINETIS_SIM        SIM;
-#if defined KINETIS_KE
+#if defined KINETIS_KE && !defined KINETIS_KE15
     KINETIS_KE_PORT    PORT;
 #else
     KINETIS_PORT       PORT[PORTS_AVAILABLE];
@@ -3299,7 +3299,7 @@ typedef struct stKINETIS_PERIPH
     KINETIS_PCC        PCC;
     KINETIS_PCC2       PCC2;
 #endif
-#if defined KINETIS_KE
+#if defined KINETIS_KE && !defined KINETIS_WITH_SCG
     KINETIS_ICS        ICS;
 #elif defined KINETIS_WITH_SCG                                           // {32}
     KINETIS_SCG        SCG;
@@ -3376,7 +3376,7 @@ typedef struct stKINETIS_PERIPH
 
 extern KINETIS_PERIPH kinetis;
 
-#if defined KINETIS_KE
+#if defined KINETIS_KE && !defined KINETIS_KE15
     #define _PORTS_AVAILABLE_   PORTS_AVAILABLE_8_BIT
 #else
     #define _PORTS_AVAILABLE_   PORTS_AVAILABLE

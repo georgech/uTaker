@@ -515,8 +515,8 @@ static __interrupt void _fec_misc(void)
 #if defined _WINDOWS
     EIR &= ~(BABR | BABT | GRA | EBERR | LC | RL | UN);
 #endif
-    if (ulSources & EBERR) {                                             // the operation will be stopped if there is a DMA error
-        fnRestartEthernet();        
+    if ((ulSources & EBERR) != 0) {                                      // the operation will be stopped if there is a DMA error
+        fnRestartEthernet();                                             // restart the ethernet controller in order to continue
     }
 }
 

@@ -621,7 +621,7 @@
                                                                          // this input is multiplied by 1280 to 40MHz..50MHz at the FLL output
         #define BUS_CLOCK_DIVIDE 2                                       // divide by 1 or 2 to give bus and flash clock (maximum 24MHz)
     #endif
-#elif defined FRDM_KE06Z || defined FRDM_KE15Z                           // {30}
+#elif defined FRDM_KE06Z                                                 // {30}
     #define CRYSTAL_FREQUENCY    8000000                                 // 8 MHz crystal
   //#define RUN_FROM_EXTERNAL_CLOCK                                      // run directly from external 8MHz clock (without FLL)
     #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
@@ -633,6 +633,19 @@
     #else
         #define BUS_CLOCK_DIVIDE 2                                       // divide by 1 or 2 to give bus and flash clock (maximum 20MHz)
     #endif
+#elif defined FRDM_KE15Z
+    #define OSC_LOW_GAIN_MODE
+    #define CRYSTAL_FREQUENCY    8000000                                 // 8MHz crystal
+  //#define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
+    #define RUN_FROM_HIRC                                                // clock from fast internal RC clock
+      //#define RUN_FROM_HIRC_48MHz                                      // fast IRC trimmed to 48MHz
+      //#define RUN_FROM_HIRC_52MHz                                      // fast IRC trimmed to 52MHz
+      //#define RUN_FROM_HIRC_56MHz                                      // fast IRC trimmed to 56MHz
+      //#define RUN_FROM_HIRC_60MHz                                      // fast IRC trimmed to 60MHz
+  //#define RUN_FROM_LIRC                                                // clock from internal 8MHz RC clock
+      //#define RUN_FROM_LIRC_2M                                         // clock from internal 2MHz RC clock
+    #define SYSTEM_CLOCK_DIVIDE  1                                       // system clock divider value (1..16)
+    #define BUS_CLOCK_DIVIDE     2                                       // bus and flash clock divider value (1..16)
 #elif defined FRDM_KE02Z                                                 // {25}
   //#define RUN_FROM_DEFAULT_CLOCK                                       // default mode is FLL Engaged Internal - the 31.25kHz IRC is multiplied by FLL factor of 1024 to obtain 32MHz nominal frequency
     #if !defined RUN_FROM_DEFAULT_CLOCK
@@ -1095,7 +1108,7 @@
     #define SIZE_OF_FLASH       (64 * 1024)                              // 64k program Flash
   //#define SIZE_OF_RAM         (2 * 1024)
     #define SIZE_OF_RAM         (4 * 1024)                               // 4k SRAM
-#elif defined FRDM_KE06Z || defined TRK_KEA128 || defined FRDM_KEAZ128Q80 || defined FRDM_KE15Z // {30}
+#elif defined FRDM_KE06Z || defined TRK_KEA128 || defined FRDM_KEAZ128Q80// {30}
   //#define PIN_COUNT           PIN_COUNT_44_PIN                         // 44 pin LQFP
   //#define PIN_COUNT           PIN_COUNT_64_PIN                         // 64 pin (L)QFP
     #define PIN_COUNT           PIN_COUNT_80_PIN                         // 80 pin LQFP
@@ -1103,6 +1116,13 @@
     #define SIZE_OF_FLASH       (128 * 1024)                             // 128k Flash
   //#define SIZE_OF_RAM         (8 * 1024)
     #define SIZE_OF_RAM         (16 * 1024)                              // 16k SRAM
+#elif defined FRDM_KE15Z
+  //#define PIN_COUNT           PIN_COUNT_64_PIN                         // 64 pin LQFP
+    #define PIN_COUNT           PIN_COUNT_100_PIN                        // 100 pin LQFP
+  //#define SIZE_OF_FLASH       (128 * 1024)
+    #define SIZE_OF_FLASH       (256 * 1024)                             // 256k Flash
+  //#define SIZE_OF_RAM         (16 * 1024)
+    #define SIZE_OF_RAM         (32 * 1024)                              // 32k SRAM
 #elif defined FRDM_KE04Z
   //#define PIN_COUNT           PIN_COUNT_16_PIN                         // 16 pin TSSOP
   //#define PIN_COUNT           PIN_COUNT_20_PIN                         // 20 pin SOIC
@@ -2468,7 +2488,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 
 // ADC
 //
-//#define SUPPORT_ADC                                                    // {1}
+#define SUPPORT_ADC                                                      // {1}
 #define ADC_REFERENCE_VOLTAGE                      3300                  // ADC uses 3.3V reference
 #define ADC_SIM_STEP_SIZE                          200                   // 200mV steps when simulating
 
@@ -5794,7 +5814,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define _CONFIGURE_RTS_0_LOW()
     #define _SET_RTS_0_HIGH()
     #define _SET_RTS_0_LOW()
-#elif defined FRDM_KE06Z || defined FRDM_KE15Z                           // {30}
+#elif defined FRDM_KE06Z                                                 // {30}
     #define DEMO_LED_1             (KE_PORTG_BIT6)                       // (green LED - PTG6) if the port is changed (eg. A to D) the port macros will require appropriate adjustment too
     #define DEMO_LED_2             (KE_PORTG_BIT5)                       // (red LED - PTG5) if the port is changed (eg. A to D) the port macros will require appropriate adjustment too
     #define DEMO_LED_3             (KE_PORTG_BIT7)                       // (blue LED - PTG7) if the port is changed (eg. A to D) the port macros will require appropriate adjustment too
@@ -5835,16 +5855,62 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define BUTTON_KEY_DEFINITIONS  {_PORTH, (KE_PORTH_BIT4 >> (3 * 8)), {289, 31,  305, 39 }}, \
                                     {_PORTH, (KE_PORTH_BIT3 >> (3 * 8)), {289, 48,  305, 59 }}
 
-    #if defined FRDM_KE15Z
-        #define KEYPAD "KeyPads/FRDM_KE15Z.bmp"
-    #else
-        #define KEYPAD "KeyPads/FRDM_KE06Z.bmp"
-    #endif
+    #define KEYPAD "KeyPads/FRDM_KE06Z.bmp"
 
     #define CONFIG_TEST_OUTPUT()    _CONFIG_DRIVE_PORT_OUTPUT_VALUE(B, (DEMO_LED_2), (DEMO_LED_2), (PORT_SRE_SLOW | PORT_DSE_HIGH))
     #define TOGGLE_TEST_OUTPUT()    _TOGGLE_PORT(B, DEMO_LED_2)
     #define SET_TEST_OUTPUT()       _SETBITS(B, DEMO_LED_2)
     #define CLEAR_TEST_OUTPUT()     _CLEARBITS(B, DEMO_LED_2)
+
+    #define MEASURE_LOW_POWER_ON()  SET_TEST_OUTPUT()                    // signal when the processor is in sleep mode
+    #define MEASURE_LOW_POWER_OFF() CLEAR_TEST_OUTPUT()                  // signal when the processor is in active mode
+#elif defined FRDM_KE15Z
+    #define DEMO_LED_1             (PORTD_BIT16)                         // (green LED) if the port is changed (eg. A to D) the port macros will require appropriate adjustment too
+    #define DEMO_LED_2             (PORTD_BIT0)                          // (red LED) if the port is changed (eg. A to D) the port macros will require appropriate adjustment too
+    #define DEMO_LED_3             (PORTD_BIT15)                         // (blue LED) if the port is changed (eg. A to D) the port macros will require appropriate adjustment too
+    #define DEMO_LED_4             0
+
+    #define BLINK_LED              DEMO_LED_1
+
+    #define SWITCH_2               (PORTB_BIT11)                          // SW2 if the port is changed (eg. A to D) the port macros will require appropriate adjustment too
+    #define SWITCH_3               (PORTD_BIT3)                           // SW3 if the port is changed (eg. A to D) the port macros will require appropriate adjustment too
+
+    #define INIT_WATCHDOG_LED()    _CONFIG_DRIVE_PORT_OUTPUT_VALUE(D, (BLINK_LED | DEMO_LED_2), (BLINK_LED | DEMO_LED_2), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+    #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT(B, (SWITCH_2), PORT_PS_UP_ENABLE) // configure as inputs
+
+    #define WATCHDOG_DISABLE()     (_READ_PORT_MASK(B, SWITCH_2) == 0)   // pull this input down to disable watchdog (hold SW2 at reset)
+
+    #define TOGGLE_WATCHDOG_LED()  _TOGGLE_PORT(D, BLINK_LED)
+
+    #define ACTIVATE_WATCHDOG()     UNLOCK_WDOG(); WDOG0_TOVAL = 2000; WDOG0_WIN = 0; WDOG0_CS = (WDOG_CS_CLK_1kHz | WDOG_CS_FLG | WDOG_CS_CMD32EN | WDOG_CS_EN); // enable watchdog with 2s timeout
+
+    #define SHIFT_DEMO_LED_1       16                                    // since the port bits are spread out shift each to the lowest 4 bits
+    #define SHIFT_DEMO_LED_2       1
+    #define SHIFT_DEMO_LED_3       13
+    #define SHIFT_DEMO_LED_4       0
+
+    #define MAPPED_DEMO_LED_1      (DEMO_LED_1 >> SHIFT_DEMO_LED_1)
+    #define MAPPED_DEMO_LED_2      (DEMO_LED_2 << SHIFT_DEMO_LED_2)
+    #define MAPPED_DEMO_LED_3      (DEMO_LED_3 >> SHIFT_DEMO_LED_3)
+    #define MAPPED_DEMO_LED_4      (DEMO_LED_4 >> SHIFT_DEMO_LED_4)
+
+    #define MULTICOLOUR_LEDS        {0, 2}                               // single LED made up of entries 0, 1 and 2 [green/red/blue]
+
+        // '0'          '1'       input state   center (x,   y)   0 = circle, radius, controlling port, controlling pin 
+    #define KEYPAD_LED_DEFINITIONS  \
+        {RGB(0,255,0), RGB(0,0,0),     1, {425, 158, 0,   8   }, (_PORTD), PORTD_BIT16}, \
+        {RGB(255,0,0), RGB(0,0,0),     1, {425, 168, 0,   8   }, (_PORTD), PORTD_BIT0}, \
+        {RGB(0,0,255), RGB(0,0,0),     1, {425, 168, 0,   8   }, (_PORTD), PORTD_BIT15}
+
+    #define BUTTON_KEY_DEFINITIONS  {_PORTB, (PORTB_BIT11), {460, 301, 479, 317 }}, \
+                                    {_PORTD, (PORTD_BIT3),  {461, 22,  480, 35  }}
+
+    #define KEYPAD "KeyPads/FRDM_KE15Z.bmp"
+
+    #define CONFIG_TEST_OUTPUT()    _CONFIG_DRIVE_PORT_OUTPUT_VALUE(D, (DEMO_LED_2), (DEMO_LED_2), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+    #define TOGGLE_TEST_OUTPUT()    _TOGGLE_PORT(D, DEMO_LED_2)
+    #define SET_TEST_OUTPUT()       _SETBITS(D, DEMO_LED_2)
+    #define CLEAR_TEST_OUTPUT()     _CLEARBITS(D, DEMO_LED_2)
 
     #define MEASURE_LOW_POWER_ON()  SET_TEST_OUTPUT()                    // signal when the processor is in sleep mode
     #define MEASURE_LOW_POWER_OFF() CLEAR_TEST_OUTPUT()                  // signal when the processor is in active mode
@@ -9547,5 +9613,12 @@ typedef unsigned long LCD_CONTROL_PORT_SIZE;
     #define fnFPGA_RD_ID()        	       *((volatile unsigned char*)FPGA_ADDR + 0xff)
 
     #define fnFPGA_RD(addr)                *((volatile unsigned char*)FPGA_ADDR + addr)
+#endif
+
+#if defined BLINKY                                                       // remove peripheral support when BLINKY is used
+    #undef SUPPORT_PITS
+    #undef SUPPORT_KEYBOARD_INTERRUPTS
+    #undef SUPPORT_RTC
+    #undef SUPPORT_PORT_INTERRUPTS
 #endif
 #endif                                                                   // end of file

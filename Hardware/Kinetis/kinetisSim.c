@@ -97,7 +97,7 @@ static unsigned long ulPort_in_A, ulPort_in_B, ulPort_in_C, ulPort_in_D, ulPort_
     static unsigned long ulPort_in_F;
 #endif
 
-#if defined KINETIS_KE
+#if defined KINETIS_KE && !defined KINETIS_KE15
     static unsigned char ucPortFunctions[PORTS_AVAILABLE_8_BIT][PORT_WIDTH] = {0};
 #else
     static unsigned char ucPortFunctions[PORTS_AVAILABLE][PORT_WIDTH] = {0};
@@ -218,7 +218,13 @@ static const unsigned long ulDisabled[PORTS_AVAILABLE] = {
     0x000ff030,                                                          // port C disabled default pins
     0x0000ff9d,                                                          // port D disabled default pins
     0x1c001ff0                                                           // port E disabled default pins
-#elif defined KINETIS_KE                                                 // not used by KE
+#elif defined KINETIS_KE15
+    0x0003ff00,                                                          // port A disabled default pins
+    0x00038f00,                                                          // port B disabled default pins
+    0x00003f00,                                                          // port C disabled default pins
+    0x0003fd00,                                                          // port D disabled default pins
+    0x0001f080                                                           // port E disabled default pins
+#elif defined KINETIS_KE                                                 // not used by most KE
     0x00000000,
     #if PORTS_AVAILABLE > 1
     0x00000000
@@ -367,8 +373,7 @@ static void fnSetDevice(unsigned long *port_inits)
     WDOG_UNLOCK = 0xd928;
     WDOG_PRESC = 0x0400;
 #endif
-#if defined KINETIS_KL                                                   // {24}
-    #if defined KINETIS_WITH_SCG
+#if defined KINETIS_WITH_SCG
     SCG_VERID = 0x01000000;
     SCG_PARAM = (SCG_PARAM_CLKPRES_SOSC | SCG_PARAM_CLKPRES_SIRC | SCG_PARAM_CLKPRES_FIRC | SCG_PARAM_CLKPRES_SPLL | SCG_PARAM_DIVPRES_DIVSLOW | SCG_PARAM_DIVPRES_DIVCORE);
     SCG_CSR = (SCG_CSR_SCS_SIRC_CLK | ((1 - 1) << SCG_CSR_DIVCORE_SHIFT) | ((2 - 1) << SCG_CSR_DIVSLOW_SHIFT));
@@ -379,7 +384,8 @@ static void fnSetDevice(unsigned long *port_inits)
     SCG_SOSCCFG = SCG_SOSCCFG_RANGE_LOW;
     SCG_SIRCCSR = (SCG_SIRCCSR_SIRCEN | SCG_SIRCCSR_SIRLPEN | SCG_SIRCCSR_SIRCEN | SCG_SIRCCSR_SIRCEN);
     SCG_SIRCCFG = 0x00000001;
-    #elif defined KINETIS_WITH_MCG_LITE
+#elif defined KINETIS_KL                                                 // {24}
+    #if defined KINETIS_WITH_MCG_LITE
     MCG_C1 = MCG_C1_CLKS_LIRC;
     MCG_C2 = MCG_C2_IRCS;
     MCG_S  = MCG_S_CLKST_LICR;
@@ -393,7 +399,6 @@ static void fnSetDevice(unsigned long *port_inits)
     ICS_S = ICS_S_IREFST;
 #else
     EWM_CMPH = 0xff;                                                     // external watchdog monitor
-
     MCG_C1 = MCG_C1_IREFS;                                               // multi-purpose clock generator
     MCG_C2 = MCG_C2_LOCRE0;
     MCG_S  = MCG_S_IREFST;
@@ -515,7 +520,7 @@ static void fnSetDevice(unsigned long *port_inits)
     PORTA_PCR3 = (PORT_PS_UP_ENABLE | PORT_DSE_HIGH | PORT_MUX_ALT7);
     PORTA_PCR4 = (PORT_PS_UP_ENABLE | PORT_DSE_HIGH | PORT_MUX_ALT7);
     #endif
-#elif defined KINETIS_KE
+#elif defined KINETIS_KE && !defined KINETIS_KE15
     GPIOA_PIDR = 0xffffffff;                                             // port input disable registers
     #if PORTS_AVAILABLE > 1
     GPIOB_PIDR = 0xffffffff;
@@ -1117,13 +1122,13 @@ static int fnGenInt(int iIrqID)
 //
 extern unsigned long fnGetPresentPortState(int portNr)
 {
-#if defined KINETIS_KE
+#if defined KINETIS_KE && !defined KINETIS_KE15
     int iShift;
 #else
     #define iShift 0
 #endif
     portNr--;
-#if defined KINETIS_KE
+#if defined KINETIS_KE && !defined KINETIS_KE15
     iShift = ((portNr % 4) * 8);
     portNr /= 4;                                                         // convert 8 bit port to 32 bit port
 #endif
@@ -1173,13 +1178,13 @@ extern unsigned long fnGetPresentPortDir(int portNr)
     unsigned long ulConnectedGPIO;
     unsigned long ulCheckedPin;
     unsigned long ulBit = 0x00000001;
-#if defined KINETIS_KE
+#if defined KINETIS_KE && !defined KINETIS_KE15
     int iShift;
 #else
     unsigned long *ptrPCR = (unsigned long *)PORT0_BLOCK;
 #endif
     portNr--;
-#if defined KINETIS_KE
+#if defined KINETIS_KE && !defined KINETIS_KE15
     iShift = ((portNr % 4) * 8);
     portNr /= 4;                                                         // convert 8 bit port to 32 bit port
 #else
@@ -1229,7 +1234,7 @@ extern unsigned long fnGetPresentPortDir(int portNr)
         return 0;
     }
     while (ulCheckedPin != 0) {
-#if !defined KINETIS_KE
+#if !defined KINETIS_KE || defined KINETIS_KE15
         if ((*ptrPCR & PORT_MUX_MASK) != PORT_MUX_GPIO) {                // only connected port bits are considered as outputs
             ulConnectedGPIO &= ~ulBit;
         }
@@ -1244,11 +1249,11 @@ extern unsigned long fnGetPresentPortDir(int portNr)
 
 extern unsigned long fnGetPresentPortPeriph(int portNr)
 {
-#if defined KINETIS_KE
+#if defined KINETIS_KE && !defined KINETIS_KE15
     int iShift;
 #endif
     portNr--;
-#if defined KINETIS_KE
+#if defined KINETIS_KE && !defined KINETIS_KE15
     iShift = ((portNr % 4) * 8);
     portNr /= 4;                                                         // convert 8 bit port to 32 bit port
 #endif
@@ -1351,7 +1356,7 @@ extern int fnPortChanges(int iForce)
     return iRtn;
 }
 
-#if defined KINETIS_KE
+#if defined KINETIS_KE && !defined KINETIS_KE15
 static void fnHandleIRQ(int iPort, unsigned long ulNewState, unsigned long ulChangedBit, unsigned long *ptrPortConfig)
 {
     switch (iPort) {                                                     // check ports that have potential interrupt functions
@@ -2329,7 +2334,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
 #if defined KINETIS_KL
     static unsigned long ulTSI[61] = {0};
 #endif
-#if defined KINETIS_KE
+#if defined KINETIS_KE && !defined KINETIS_KE15
     unsigned long ulBit;
 #else
     unsigned long ulBit = (0x80000000 >> ucPortBit);
@@ -2525,7 +2530,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
                 return;
             }
     #elif !defined KINETIS_KE
-            if (!(SIM_SCGC5 & SIM_SCGC5_PORTD)) {                        // ignore if port is not clocked
+            if ((SIM_SCGC5 & SIM_SCGC5_PORTD) == 0) {                    // ignore if port is not clocked
                 return;
             }
     #endif
@@ -2955,7 +2960,7 @@ extern void fnSimPorts(void)
         ulNewState ^= GPIOA_PTOR;                                        // toggle bits from toggle register
         GPIOA_PDOR = ulNewState;
         GPIOA_PDIR = ((ulPort_in_A & ~GPIOA_PDDR) | (GPIOA_PDOR & GPIOA_PDDR)); // input state {10}
-#if !defined KINETIS_KE
+#if !defined KINETIS_KE || defined KINETIS_KE15
         if ((PORTA_GPCLR != 0) || (PORTA_GPCHR != 0)) {
             fnSetPinCharacteristics(_PORTA, PORTA_GPCHR, PORTA_GPCLR);
         }
@@ -2975,7 +2980,7 @@ extern void fnSimPorts(void)
         ulNewState ^= GPIOB_PTOR;                                        // toggle bits from toggle register
         GPIOB_PDOR = ulNewState;
         GPIOB_PDIR = ((ulPort_in_B & ~GPIOB_PDDR) | (GPIOB_PDOR & GPIOB_PDDR)); // input state {10}
-    #if !defined KINETIS_KE
+    #if !defined KINETIS_KE || defined KINETIS_KE15
         if ((PORTB_GPCLR != 0) || (PORTB_GPCHR != 0)) {
             fnSetPinCharacteristics(_PORTB, PORTB_GPCHR, PORTB_GPCLR);
         }
@@ -2995,7 +3000,7 @@ extern void fnSimPorts(void)
         ulNewState ^= GPIOC_PTOR;                                        // toggle bits from toggle register
         GPIOC_PDOR = ulNewState;
         GPIOC_PDIR = ((ulPort_in_C & ~GPIOC_PDDR) | (GPIOC_PDOR & GPIOC_PDDR)); // input state {10}
-    #if !defined KINETIS_KE
+    #if !defined KINETIS_KE || defined KINETIS_KE15
         if ((PORTC_GPCLR != 0) || (PORTC_GPCHR != 0)) {
             fnSetPinCharacteristics(_PORTC, PORTC_GPCHR, PORTC_GPCLR);
         }
@@ -3060,18 +3065,18 @@ extern void fnSimPers(void)
 {
     int iPort = 0;
     int iPin = 0;
-#if !defined KINETIS_KE
+#if !defined KINETIS_KE || defined KINETIS_KE15
     unsigned long *ptrPortPin;
 #endif
     unsigned long ulBit;
     for (iPort = 0; iPort < PORTS_AVAILABLE; iPort++) {
-#if !defined KINETIS_KE
+#if !defined KINETIS_KE || defined KINETIS_KE15
         ptrPortPin = (unsigned long *)(PORT0_BLOCK + (iPort * sizeof(KINETIS_PORT)));
 #endif
         ulPeripherals[iPort] = 0;
         ulBit = 0x00000001;
         for (iPin = 0; iPin < 32; iPin++) {
-#if defined KINETIS_KE
+#if defined KINETIS_KE && !defined KINETIS_KE15
             // KE devices' peripheral functions are selected by the various peripherals that can use the pins. Each peripheral pin function has a priority and so the the one with highest is valid in case of multiple enabled peripherals on a pin
             // Peripheral can also have pin multiplexing options
             //
@@ -4649,7 +4654,7 @@ static void fnHandleDMA_triggers(int iTriggerSource, int iDMAmux)
 //
 static void fnPortInterrupt(int iPort, unsigned long ulNewState, unsigned long ulChangedBit, unsigned long *ptrPortConfig)
 {
-#if defined KINETIS_KE
+#if defined KINETIS_KE && !defined KINETIS_KE15
     if ((SIM_SCGC_IRQ & SIM_SCGC) != 0) {                                // if the IRQ module is enabled
         fnHandleIRQ(iPort, ulNewState, ulChangedBit, ptrPortConfig);
     }
@@ -4701,10 +4706,15 @@ static void fnPortInterrupt(int iPort, unsigned long ulNewState, unsigned long u
         return;
     }
     *ptrPortConfig |= PORT_ISF;
+    #if defined irq_PORTA_ID
     iPortInterruptSource = (irq_PORTA_ID + iPort);
+    #endif
     switch (iPort) {
     case _PORTA:
-        PORTA_ISFR |= ulChangedBit;         
+        PORTA_ISFR |= ulChangedBit;
+    #if defined irq_PORT_A_E_ID
+        iPortInterruptSource = irq_PORT_A_E_ID;
+    #endif
         break;
     #if PORTS_AVAILABLE > 1
     case _PORTB:
@@ -4739,6 +4749,8 @@ static void fnPortInterrupt(int iPort, unsigned long ulNewState, unsigned long u
         PORTE_ISFR |= ulChangedBit;
         #if defined irq_PORTBCD_E_ID                                     // shared port B/C/D/E
         iPortInterruptSource = irq_PORTBCD_E_ID;
+        #elif defined irq_PORT_A_E_ID
+        iPortInterruptSource = irq_PORT_A_E_ID;
         #endif
         break;
     #endif
@@ -4752,7 +4764,11 @@ static void fnPortInterrupt(int iPort, unsigned long ulNewState, unsigned long u
         VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
         switch (iPort) {
         case _PORTA:
+    #if defined irq_PORT_A_E_ID
+            ptrVect->processor_interrupts.irq_PORTA_E();                 // call port interrupt handler
+    #else
             ptrVect->processor_interrupts.irq_PORTA();                   // call port interrupt handler
+    #endif
             break;
         case _PORTB:
     #if defined irq_PORTBCD_E_ID                                         // shared port B/C/D/E interrupt vector
@@ -4787,6 +4803,8 @@ static void fnPortInterrupt(int iPort, unsigned long ulNewState, unsigned long u
         case _PORTE:
         #if defined irq_PORTE_ID
             ptrVect->processor_interrupts.irq_PORTE();                   // call port interrupt handler
+        #elif defined irq_PORT_A_E_ID                                    // shared port A and E interrupt vector
+            ptrVect->processor_interrupts.irq_PORTA_E();                 // call port interrupt handler
         #elif defined irq_PORTBCD_E_ID                                   // shared port B/C/D/E interrupt vector
             ptrVect->processor_interrupts.irq_PORTBCD_E();               // call port interrupt handler
         #endif
@@ -7795,7 +7813,7 @@ extern int fnSimTimers(void)
         }
     }
 #endif
-#if defined KINETIS_KE
+#if defined KINETIS_KE && !defined KINETIS_KE15
     if ((SIM_SCGC & SIM_SCGC_RTC) != 0) {
         unsigned long ulCount = 0;
         switch (RTC_SC & RTC_SC_RTCLKS_BUS) {                            // RTC clock source
