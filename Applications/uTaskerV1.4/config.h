@@ -24,7 +24,7 @@
 
 ///////////////////////////////////////////////////////////////////////////
 //                                                                       // new users who would like to see just a blinking LED before enabling the project's many powerful features can set this
-//#define BLINKY                                                         // to give simplest scheduling of a single task called at 200ms rate that retriggers the watchdog and toggles the board's heartbeat LED
+#define BLINKY                                                           // to give simplest scheduling of a single task called at 200ms rate that retriggers the watchdog and toggles the board's heartbeat LED
 //                                                                       // 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -69,7 +69,7 @@
 //#define FRDM_KE02Z40M                                                  // freedom board http://www.utasker.com/kinetis/FRDM-KE02Z40M.html
 //#define FRDM_KE04Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KE04Z.html
 //#define FRDM_KE06Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KE06Z.html
-//#define FRDM_KE15Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KE15Z.html
+#define FRDM_KE15Z                                                       // freedom board http://www.utasker.com/kinetis/FRDM-KE15Z.html
 
 //#define FRDM_KL02Z                                                     // L processors Cortex-M0+ (ultra-low power) basic - freedom board http://www.utasker.com/kinetis/FRDM-KL02Z.html
 //#define FRDM_KL03Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL03Z.html
@@ -81,7 +81,7 @@
 //#define FRDM_KL26Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL26Z.html
 //#define rcARM_KL26                                                     // development board with KL26
 //#define TEENSY_LC                                                      // USB development board with KL26Z64 - http://www.utasker.com/kinetis/TEENSY_LC.html
-#define FRDM_KL27Z                                                       // freedom board http://www.utasker.com/kinetis/FRDM-KL27Z.html
+//#define FRDM_KL27Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL27Z.html
 //#define CAPUCCINO_KL27                                                 // http://www.utasker.com/kinetis/Capuccino-KL27.html
 //#define TWR_KL28Z72M                                                   // tower board http://www.utasker.com/kinetis/FRDM-KL28Z72M
 //#define FRDM_KL28Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL28Z.html

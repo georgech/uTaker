@@ -5882,7 +5882,9 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 
     #define TOGGLE_WATCHDOG_LED()  _TOGGLE_PORT(D, BLINK_LED)
 
-    #define ACTIVATE_WATCHDOG()     UNLOCK_WDOG(); WDOG0_TOVAL = 2000; WDOG0_WIN = 0; WDOG0_CS = (WDOG_CS_CLK_1kHz | WDOG_CS_FLG | WDOG_CS_CMD32EN | WDOG_CS_EN); // enable watchdog with 2s timeout
+    // Note that the LPO is 128kHz rather tha the typical 1kHz - therefore the 256 prescaler is used and the seconds value divided by 2
+    //
+    #define ACTIVATE_WATCHDOG()     UNLOCK_WDOG(); WDOG0_TOVAL = (2000/2); WDOG0_WIN = 0; WDOG0_CS = (WDOG_CS_CLK_1kHz | WDOG_CS_PRES_256 | WDOG_CS_FLG | WDOG_CS_UPDATE | WDOG_CS_CMD32EN | WDOG_CS_EN); // enable watchdog with 2s timeout (allow updates)
 
     #define SHIFT_DEMO_LED_1       16                                    // since the port bits are spread out shift each to the lowest 4 bits
     #define SHIFT_DEMO_LED_2       1

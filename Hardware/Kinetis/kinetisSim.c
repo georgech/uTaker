@@ -446,8 +446,42 @@ static void fnSetDevice(unsigned long *port_inits)
     #endif
 #endif
 #if defined KINETIS_WITH_PCC                                             // {45}
-    PCC_DMA0    = PCC_PR;
-    PCC_FLASH   = (PCC_PR | PCC_CGC);
+    #if defined KINETIS_KE15
+    PCC_DMA0 = (PCC_PR | PCC_CGC);
+    PCC_FLASH = (PCC_PR | PCC_CGC);
+    PCC_DMAMUX0 = PCC_PR;
+    PCC_ADC1 = (PCC_PR | PCC_CGC);
+    PCC_LPSPI0 = PCC_PR;
+    PCC_LPSPI1 = PCC_PR;
+    PCC_CRC = PCC_PR;
+    PCC_PDB0 = PCC_PR;
+    PCC_LPIT0 = PCC_PR;
+    PCC_FLEXTMR0 = PCC_PR;
+    PCC_FLEXTMR1 = PCC_PR;
+    PCC_FLEXTMR2 = PCC_PR;
+    PCC_ADC0 = (PCC_PR | PCC_CGC);
+    PCC_RTC = PCC_PR;
+    PCC_LPTMR0 = PCC_PR;
+    PCC_TSI = PCC_PR;
+    PCC_PORTA = PCC_PR;
+    PCC_PORTB = PCC_PR;
+    PCC_PORTC = PCC_PR;
+    PCC_PORTD = PCC_PR;
+    PCC_PORTE = PCC_PR;
+    PCC_PWT = PCC_PR;
+    PCC_FLEXIO = PCC_PR;
+    PCC_OSC32 = PCC_PR;
+    PCC_EWM = PCC_PR;
+    PCC_LPI2C0 = PCC_PR;
+    PCC_LPI2C1 = PCC_PR;
+    PCC_LPUART0 = PCC_PR;
+    PCC_LPUART1 = PCC_PR;
+    PCC_LPUART2 = PCC_PR;
+    PCC_CMP0 = PCC_PR;
+    PCC_CMP1 = PCC_PR;
+    #else
+    PCC_DMA0 = PCC_PR;
+    PCC_FLASH = (PCC_PR | PCC_CGC);
     PCC_DMAMUX0 = PCC_PR;
     PCC_INTMUX0 = PCC_PR;
     PCC_TPM2    = PCC_PR;
@@ -483,6 +517,7 @@ static void fnSetDevice(unsigned long *port_inits)
     PCC_LPUART1 = PCC_PR;
     PCC_FLEXIO0 = PCC_PR;
     PCC_CMP1    = PCC_PR;
+    #endif
 #endif
 #if defined KINETIS_KE
     SIM_SCGC = (SIM_SCGC_FLASH | SIM_SCGC_SWD);
@@ -7356,12 +7391,23 @@ extern int fnSimTimers(void)
 #if defined KINETIS_WITH_WDOG32
     if ((WDOG0_CS & WDOG_CS_EN) != 0) {                                  // if the watchdog is enabled
     #if TICK_RESOLUTION >= 1000
-        unsigned long ulCounter = (TICK_RESOLUTION/1000);                // assume 1000Hz LPO clock
+        #if defined KINETIS_KE15
+        unsigned long ulCounter = ((128 * TICK_RESOLUTION)/1000);        // assume 128000Hz LPO clock
+        #else
+        unsigned long ulCounter = (TICK_RESOLUTION / 1000);              // assume 1000Hz LPO clock
+        #endif
     #else
+        #if defined KINETIS_KE15
+        unsigned long ulCounter = 128;                                   // assume 128000Hz LPO clock
+        #else
         unsigned long ulCounter = 1;                                     // assume 1000Hz LPO clock
+        #endif
     #endif
         unsigned long ulWdogCnt = WDOG0_CNT;                             // present watchdog count value
         unsigned long ulWdogTimeout = WDOG0_TOVAL;                       // timeout value
+        if ((WDOG0_CS & WDOG_CS_PRES_256) != 0) {                        // if the fixed 256 prescaler is enabled
+            ulCounter /= 256;
+        }
         ulWdogCnt += ulCounter;                                          // next value
         if (ulWdogCnt >= ulWdogTimeout) {
             return RESET_CARD_WATCHDOG;                                  // watchdog reset
@@ -9844,10 +9890,10 @@ extern void fnUpdateOperatingDetails(void)
     #else
     ptrBuffer = uStrcpy(ptrBuffer, "k, BUS CLOCK = ");
     #endif
-    #if defined KINETIS_KL
-        #if defined KINETIS_WITH_SCG
+    #if defined KINETIS_WITH_SCG
     ulBusClockSpeed = (DIVSLOW_CLK);                                     // flash and bus clock
-        #elif defined BUS_FLASH_CLOCK_SHARED
+    #elif defined KINETIS_KL
+        #if defined BUS_FLASH_CLOCK_SHARED
     ulBusClockSpeed = (SYSTEM_CLOCK/(((SIM_CLKDIV1 >> 16) & 0xf) + 1));
         #else
     ulBusClockSpeed = (MCGOUTCLK / (((SIM_CLKDIV1 >> 24) & 0xf) + 1));

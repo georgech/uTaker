@@ -3222,13 +3222,17 @@ typedef struct stVECTOR_TABLE
         #define EWM_BLOCK                      ((unsigned char *)(&kinetis.EWM)) // external watchdog monitor
     #endif
     #if defined KINETIS_WITH_PCC
-        #define PCC_BLOCK                      ((unsigned char *)(&kinetis.PCC)) // peripheral clock control
-        #define PCC2_BLOCK                     ((unsigned char *)(&kinetis.PCC2)) // second PCC
+        #if defined KINETIS_KE15
+            #define PCC_BLOCK                   ((unsigned char *)(&kinetis.PCC)) // peripheral clock control
+        #else
+            #define PCC_BLOCK                   ((unsigned char *)(&kinetis.PCC)) // peripheral clock control
+            #define PCC2_BLOCK                  ((unsigned char *)(&kinetis.PCC2)) // second PCC
+        #endif
     #endif
-    #if defined KINETIS_KE && !defined KINETIS_WITH_SCG
-        #define INTERNAL_CLOCK_BLOCK           ((unsigned char *)(&kinetis.ICS)) // internal clock source
-    #elif defined KINETIS_WITH_SCG
+    #if defined KINETIS_WITH_SCG
         #define SCG_BLOCK                      ((unsigned char *)(&kinetis.SCG)) // system clock generator
+    #elif defined KINETIS_KE
+        #define INTERNAL_CLOCK_BLOCK           ((unsigned char *)(&kinetis.ICS)) // internal clock source
     #else
         #define MCG_BLOCK                      ((unsigned char *)(&kinetis.MCG)) // Multi-purpose Clock Generator
     #endif
@@ -3383,7 +3387,11 @@ typedef struct stVECTOR_TABLE
         #define I2S0_BLOCK                     0x4002f000                // I2S0
     #endif
     #if defined KINETIS_WITH_WDOG32
-        #define WDOG32_BLOCK                   0x40076000                // WDOG32
+        #if defined KINETIS_KE15
+            #define WDOG32_BLOCK               0x40052000                // WDOG32
+        #else
+            #define WDOG32_BLOCK               0x40076000                // WDOG32
+        #endif
     #endif
     #if !defined DSPI_SPI
         #define SPI0_BLOCK                     0x40076000                // SPI0
@@ -3496,13 +3504,21 @@ typedef struct stVECTOR_TABLE
         #define EWM_BLOCK                      0x4005f000                // external watchdog monitor
     #endif
     #if defined KINETIS_WITH_PCC
-        #define PCC_BLOCK                      0x4007a000                // peripheral clock control
-        #define PCC2_BLOCK                     0x400fa000                // second PCC
+        #if defined KINETIS_KE15
+            #define PCC_BLOCK                   0x40065000                // peripheral clock control
+        #else
+            #define PCC_BLOCK                   0x4007a000                // peripheral clock control
+            #define PCC2_BLOCK                  0x400fa000                // second PCC
+        #endif
     #endif
-    #if defined KINETIS_KE
+    #if defined KINETIS_WITH_SCG
+        #if defined KINETIS_KE15
+            #define SCG_BLOCK                  0x40064000                // system clock generator
+        #else
+            #define SCG_BLOCK                  0x4007b000                // system clock generator
+        #endif
+    #elif defined KINETIS_KE
         #define INTERNAL_CLOCK_BLOCK           0x40064000                // internal clock source
-    #elif defined KINETIS_WITH_SCG
-        #define SCG_BLOCK                      0x4007b000                // system clock generator
     #else
         #define MCG_BLOCK                      0x40064000                // multi-purpose clock generator
     #endif
@@ -11208,41 +11224,73 @@ typedef struct stKINETIS_LPTMR_CTL
         #define PCC_PDC_DIVIDE_8         0x00000007                      // divide by 8
     #define PCC_FLASH                    *(volatile unsigned long *)(PCC_BLOCK + 0x080)
     #define PCC_DMAMUX0                  *(volatile unsigned long *)(PCC_BLOCK + 0x084)
-    #define PCC_INTMUX0                  *(volatile unsigned long *)(PCC_BLOCK + 0x090)
-    #define PCC_TPM2                     *(volatile unsigned long *)(PCC_BLOCK + 0x0b8)
-    #define PCC_LPIT0                    *(volatile unsigned long *)(PCC_BLOCK + 0x0c0)
-    #define PCC_LPTMR0                   *(volatile unsigned long *)(PCC_BLOCK + 0x0d0)
-    #define PCC_RTC                      *(volatile unsigned long *)(PCC_BLOCK + 0x0e0)
-    #define PCC_LPSPI2                   *(volatile unsigned long *)(PCC_BLOCK + 0x0f8)
-    #define PCC_LPI2C2                   *(volatile unsigned long *)(PCC_BLOCK + 0x108)
-    #define PCC_LPUART2                  *(volatile unsigned long *)(PCC_BLOCK + 0x118)
-    #define PCC_SAI0                     *(volatile unsigned long *)(PCC_BLOCK + 0x130)
-    #define PCC_EMVSIM0                  *(volatile unsigned long *)(PCC_BLOCK + 0x138)
-    #define PCC_USB0FS                   *(volatile unsigned long *)(PCC_BLOCK + 0x154)
-    #define PCC_PORTA                    *(volatile unsigned long *)(PCC_BLOCK + 0x168)
-    #define PCC_PORTB                    *(volatile unsigned long *)(PCC_BLOCK + 0x16c)
-    #define PCC_PORTC                    *(volatile unsigned long *)(PCC_BLOCK + 0x170)
-    #define PCC_PORTD                    *(volatile unsigned long *)(PCC_BLOCK + 0x174)
-    #define PCC_PORTE                    *(volatile unsigned long *)(PCC_BLOCK + 0x178)
-    #define PCC_TSI0                     *(volatile unsigned long *)(PCC_BLOCK + 0x188)
-    #define PCC_ADC0                     *(volatile unsigned long *)(PCC_BLOCK + 0x198)
-    #define PCC_DAC0                     *(volatile unsigned long *)(PCC_BLOCK + 0x1a8)
-    #define PCC_CMP0                     *(volatile unsigned long *)(PCC_BLOCK + 0x1b8)
-    #define PCC_VREF                     *(volatile unsigned long *)(PCC_BLOCK + 0x1c8)
-    #define PCC_CRC                      *(volatile unsigned long *)(PCC_BLOCK + 0x1e0)
+    #if defined KINETIS_KE15
+        #define PCC_ADC1                 *(volatile unsigned long *)(PCC_BLOCK + 0x09c)
+        #define PCC_LPSPI0               *(volatile unsigned long *)(PCC_BLOCK + 0x0b0)
+        #define PCC_LPSPI1               *(volatile unsigned long *)(PCC_BLOCK + 0x0b4)
+        #define PCC_CRC                  *(volatile unsigned long *)(PCC_BLOCK + 0x0c8)
+        #define PCC_PDB0                 *(volatile unsigned long *)(PCC_BLOCK + 0x0d8)
+        #define PCC_LPIT0                *(volatile unsigned long *)(PCC_BLOCK + 0x0dc)
+        #define PCC_FLEXTMR0             *(volatile unsigned long *)(PCC_BLOCK + 0x0e0)
+        #define PCC_FLEXTMR1             *(volatile unsigned long *)(PCC_BLOCK + 0x0e4)
+        #define PCC_FLEXTMR2             *(volatile unsigned long *)(PCC_BLOCK + 0x0e8)
+        #define PCC_ADC0                 *(volatile unsigned long *)(PCC_BLOCK + 0x0ec)
+        #define PCC_RTC                  *(volatile unsigned long *)(PCC_BLOCK + 0x0f4)
+        #define PCC_LPTMR0               *(volatile unsigned long *)(PCC_BLOCK + 0x100)
+        #define PCC_TSI                  *(volatile unsigned long *)(PCC_BLOCK + 0x114)
+        #define PCC_PORTA                *(volatile unsigned long *)(PCC_BLOCK + 0x124)
+        #define PCC_PORTB                *(volatile unsigned long *)(PCC_BLOCK + 0x128)
+        #define PCC_PORTC                *(volatile unsigned long *)(PCC_BLOCK + 0x12c)
+        #define PCC_PORTD                *(volatile unsigned long *)(PCC_BLOCK + 0x130)
+        #define PCC_PORTE                *(volatile unsigned long *)(PCC_BLOCK + 0x134)
+        #define PCC_PWT                  *(volatile unsigned long *)(PCC_BLOCK + 0x158)
+        #define PCC_FLEXIO               *(volatile unsigned long *)(PCC_BLOCK + 0x168)
+        #define PCC_OSC32                *(volatile unsigned long *)(PCC_BLOCK + 0x180)
+        #define PCC_EWM                  *(volatile unsigned long *)(PCC_BLOCK + 0x184)
+        #define PCC_LPI2C0               *(volatile unsigned long *)(PCC_BLOCK + 0x198)
+        #define PCC_LPI2C1               *(volatile unsigned long *)(PCC_BLOCK + 0x19c)
+        #define PCC_LPUART0              *(volatile unsigned long *)(PCC_BLOCK + 0x1a8)
+        #define PCC_LPUART1              *(volatile unsigned long *)(PCC_BLOCK + 0x1ac)
+        #define PCC_LPUART2              *(volatile unsigned long *)(PCC_BLOCK + 0x1b0)
+        #define PCC_CMP0                 *(volatile unsigned long *)(PCC_BLOCK + 0x1cc)
+        #define PCC_CMP1                 *(volatile unsigned long *)(PCC_BLOCK + 0x1d0)
+    #else
+        #define PCC_INTMUX0              *(volatile unsigned long *)(PCC_BLOCK + 0x090)
+        #define PCC_TPM2                 *(volatile unsigned long *)(PCC_BLOCK + 0x0b8)
+        #define PCC_LPIT0                *(volatile unsigned long *)(PCC_BLOCK + 0x0c0)
+        #define PCC_LPTMR0               *(volatile unsigned long *)(PCC_BLOCK + 0x0d0)
+        #define PCC_RTC                  *(volatile unsigned long *)(PCC_BLOCK + 0x0e0)
+        #define PCC_LPSPI2               *(volatile unsigned long *)(PCC_BLOCK + 0x0f8)
+        #define PCC_LPI2C2               *(volatile unsigned long *)(PCC_BLOCK + 0x108)
+        #define PCC_LPUART2              *(volatile unsigned long *)(PCC_BLOCK + 0x118)
+        #define PCC_SAI0                 *(volatile unsigned long *)(PCC_BLOCK + 0x130)
+        #define PCC_EMVSIM0              *(volatile unsigned long *)(PCC_BLOCK + 0x138)
+        #define PCC_USB0FS               *(volatile unsigned long *)(PCC_BLOCK + 0x154)
+        #define PCC_PORTA                *(volatile unsigned long *)(PCC_BLOCK + 0x168)
+        #define PCC_PORTB                *(volatile unsigned long *)(PCC_BLOCK + 0x16c)
+        #define PCC_PORTC                *(volatile unsigned long *)(PCC_BLOCK + 0x170)
+        #define PCC_PORTD                *(volatile unsigned long *)(PCC_BLOCK + 0x174)
+        #define PCC_PORTE                *(volatile unsigned long *)(PCC_BLOCK + 0x178)
+        #define PCC_TSI0                 *(volatile unsigned long *)(PCC_BLOCK + 0x188)
+        #define PCC_ADC0                 *(volatile unsigned long *)(PCC_BLOCK + 0x198)
+        #define PCC_DAC0                 *(volatile unsigned long *)(PCC_BLOCK + 0x1a8)
+        #define PCC_CMP0                 *(volatile unsigned long *)(PCC_BLOCK + 0x1b8)
+        #define PCC_VREF                 *(volatile unsigned long *)(PCC_BLOCK + 0x1c8)
+        #define PCC_CRC                  *(volatile unsigned long *)(PCC_BLOCK + 0x1e0)
 
-    #define PCC_TRNG                     *(volatile unsigned long *)(PCC2_BLOCK + 0x094)
-    #define PCC_TPM0                     *(volatile unsigned long *)(PCC2_BLOCK + 0x0b0)
-    #define PCC_TPM1                     *(volatile unsigned long *)(PCC2_BLOCK + 0x0b4)
-    #define PCC_LPTMR1                   *(volatile unsigned long *)(PCC2_BLOCK + 0x0d4)
-    #define PCC_LPSPI0                   *(volatile unsigned long *)(PCC2_BLOCK + 0x0f0)
-    #define PCC_LPSPI1                   *(volatile unsigned long *)(PCC2_BLOCK + 0x0f4)
-    #define PCC_LPI2C0                   *(volatile unsigned long *)(PCC2_BLOCK + 0x100)
-    #define PCC_LPI2C1                   *(volatile unsigned long *)(PCC2_BLOCK + 0x104)
-    #define PCC_LPUART0                  *(volatile unsigned long *)(PCC2_BLOCK + 0x110)
-    #define PCC_LPUART1                  *(volatile unsigned long *)(PCC2_BLOCK + 0x114)
-    #define PCC_FLEXIO0                  *(volatile unsigned long *)(PCC2_BLOCK + 0x128)
-    #define PCC_CMP1                     *(volatile unsigned long *)(PCC2_BLOCK + 0x1bc)
+        #define PCC_TRNG                 *(volatile unsigned long *)(PCC2_BLOCK + 0x094)
+        #define PCC_TPM0                 *(volatile unsigned long *)(PCC2_BLOCK + 0x0b0)
+        #define PCC_TPM1                 *(volatile unsigned long *)(PCC2_BLOCK + 0x0b4)
+        #define PCC_LPTMR1               *(volatile unsigned long *)(PCC2_BLOCK + 0x0d4)
+        #define PCC_LPSPI0               *(volatile unsigned long *)(PCC2_BLOCK + 0x0f0)
+        #define PCC_LPSPI1               *(volatile unsigned long *)(PCC2_BLOCK + 0x0f4)
+        #define PCC_LPI2C0               *(volatile unsigned long *)(PCC2_BLOCK + 0x100)
+        #define PCC_LPI2C1               *(volatile unsigned long *)(PCC2_BLOCK + 0x104)
+        #define PCC_LPUART0              *(volatile unsigned long *)(PCC2_BLOCK + 0x110)
+        #define PCC_LPUART1              *(volatile unsigned long *)(PCC2_BLOCK + 0x114)
+        #define PCC_FLEXIO0              *(volatile unsigned long *)(PCC2_BLOCK + 0x128)
+        #define PCC_CMP1                 *(volatile unsigned long *)(PCC2_BLOCK + 0x1bc)
+    #endif
 #endif
 
 #if defined KINETIS_KE && !defined KINETIS_WITH_SCG
@@ -11475,9 +11523,17 @@ typedef struct stKINETIS_LPTMR_CTL
         #define SCG_FIRCTCFG_TRIMDIV_1K  0x00000400                      // fast IRC trim pre-divide 1k
         #define SCG_FIRCTCFG_TRIMDIV_2K  0x00000500                      // fast IRC trim pre-divide 2k
     #define SCG_FIRCSTAT                 *(volatile unsigned long *)(SCG_BLOCK + 0x318) // fast IRC status register
-    #define SCG_SPPLCCSR                 *(volatile unsigned long *)(SCG_BLOCK + 0x600) // system PPL control status register
-    #define SCG_SPPLCDIV                 *(unsigned long *)(SCG_BLOCK + 0x604) // system PLL divide register
-    #define SCG_SPPLCFG                  *(unsigned long *)(SCG_BLOCK + 0x608) // system PLL configuration register
+    #if defined KINETIS_KE15
+        #define SCG_LPFLLCSR             *(volatile unsigned long *)(SCG_BLOCK + 0x500) // low power FFL control status register
+        #define SCG_LPFLLDIV             *(unsigned long *)(SCG_BLOCK + 0x504) // low power FFL divide register
+        #define SCG_LPFLLCFG             *(unsigned long *)(SCG_BLOCK + 0x508) // low power FFL configuration register
+        #define SCG_LPFLLTCFG            *(unsigned long *)(SCG_BLOCK + 0x50c) // low power FFL trim configuration register
+        #define SCG_LPFLLSTAT            *(volatile unsigned long *)(SCG_BLOCK + 0x514) // low power FFL status register
+    #else
+        #define SCG_SPPLCCSR             *(volatile unsigned long *)(SCG_BLOCK + 0x600) // system PPL control status register
+        #define SCG_SPPLCDIV             *(unsigned long *)(SCG_BLOCK + 0x604) // system PLL divide register
+        #define SCG_SPPLCFG              *(unsigned long *)(SCG_BLOCK + 0x608) // system PLL configuration register
+    #endif
 #else
     // Multi-purpose Clock Generator
     //
