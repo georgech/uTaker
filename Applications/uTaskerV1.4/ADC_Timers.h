@@ -47,7 +47,7 @@
     #define _ADC_TIMER_CONFIG
 
     #if defined SUPPORT_ADC                                              // if HW support is enabled
-        #define TEST_ADC                                                 // enable test of ADC operation
+      //#define TEST_ADC                                                 // enable test of ADC operation
       //#define TEST_AD_DA                                               // {14} enable test of reading ADC and writing (after delay) to DAC
           //#define ADC_TRIGGER_TPM                                      // use TPM module rather than PIT for ADC trigger (valid for KL parts)
           //#define VOICE_RECORDER                                       // {15} needs TEST_AD_DA and mass-storage and saves sampled input to SD card
@@ -72,9 +72,9 @@
     #endif
 
     #if (defined SUPPORT_PIT1 || defined SUPPORT_PITS) && !defined KINETIS_WITHOUT_PIT // M522xx nd Kinetis periodic interrupt timer
-        #define TEST_PIT                                                 // test a user defined periodic interrupt
-            #define TEST_PIT_SINGLE_SHOT                                 // test single-shot PIT
-          //#define TEST_PIT_PERIODIC                                    // test periodic PIT
+      //#define TEST_PIT                                                 // test a user defined periodic interrupt (choose one of the following if enabled)
+          //#define TEST_PIT_SINGLE_SHOT                                 // test single-shot PIT
+            #define TEST_PIT_PERIODIC                                    // test periodic PIT
           //#define TEST_PIT_DMA_GPIO                                    // use PIT to toggle port output (requires SUPPORT_PIT_DMA_PORT_TOGGLE to be enabled)
         #if defined SERIAL_INTERFACE && defined UART_TIMED_TRANSMISSION
             #define TIMED_UART_TX_TEST                                   // {23} demonstrate sending timed UART transmissions from a message

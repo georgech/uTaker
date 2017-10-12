@@ -25,13 +25,15 @@
     The file is otherwise not specifically linked in to the project since it
     is included by application.c when needed.
 
+    See the following video showing port interrupt operation in a KL27: https://youtu.be/CubinvMuTwU
+
 */
 
 #if !defined _PORT_INTS_CONFIG
     #define _PORT_INTS_CONFIG
 
     #if !defined K70F150M_12M && !defined TWR_K53N512 && !defined TWR_K40X256 && !defined TWR_K40D100M && !defined KWIKSTIK
-      //#define IRQ_TEST                                                 // test IRQ port interrupts
+        #define IRQ_TEST                                                 // test IRQ port interrupts
       //#define DMA_PORT_MIRRORING                                       // demonstrate using DMA to control one or more output ports to follow an input port
         #if defined SUPPORT_LOW_POWER && defined IRQ_TEST
           //#define WAKEUP_TEST                                          // test wake-up port interrupts (wake-up from kinetis low leakage mode)

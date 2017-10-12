@@ -81,7 +81,7 @@
 //#define FRDM_KL26Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL26Z.html
 //#define rcARM_KL26                                                     // development board with KL26
 //#define TEENSY_LC                                                      // USB development board with KL26Z64 - http://www.utasker.com/kinetis/TEENSY_LC.html
-//#define FRDM_KL27Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL27Z.html
+#define FRDM_KL27Z                                                       // freedom board http://www.utasker.com/kinetis/FRDM-KL27Z.html
 //#define CAPUCCINO_KL27                                                 // http://www.utasker.com/kinetis/Capuccino-KL27.html
 //#define TWR_KL28Z72M                                                   // tower board http://www.utasker.com/kinetis/FRDM-KL28Z72M
 //#define FRDM_KL28Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL28Z.html
@@ -137,7 +137,7 @@
 //#define EMCRAFT_K61F150M                                               // K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - http://www.utasker.com/kinetis/EMCRAFT_K61F150M.html
 //#define K61FN1_50M                                                     // board with 150MHz K61 and 50MHz clock (HS USB and KSZ8863 ethernet switch)
 
-#define FRDM_K64F                                                        // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
+//#define FRDM_K64F                                                      // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
 //#define TWR_K64F120M                                                   // tower board http://www.utasker.com/kinetis/TWR-K64F120M.html
 //#define HEXIWEAR_K64F                                                  // hexiwear - wearable development kit for IoT (K64FN1M0VDC12 main processor) http://www.hexiwear.com/
 //#define TEENSY_3_5                                                     // USB development board with K64FX512 - http://www.utasker.com/kinetis/TEENSY_3.5.html
@@ -982,7 +982,7 @@
 #if defined DEVICE_WITHOUT_USB
     #define NUMBER_USB     0                                             // no physical queue needed
 #else
-  //#define USB_INTERFACE                                                // enable USB driver interface
+    #define USB_INTERFACE                                                // enable USB driver interface
     #if defined USB_INTERFACE
       //#define MICROSOFT_OS_STRING_DESCRIPTOR                           // support MODs
       //#define USB_HOST_SUPPORT                                         // host rather than device
@@ -1129,7 +1129,7 @@
 
 // I2C
 //
-#define I2C_INTERFACE
+//#define I2C_INTERFACE
 #if defined I2C_INTERFACE
     #define NUMBER_I2C       I2C_AVAILABLE                               // I2C interfaces available
   //#define I2C_SLAVE_MODE                                               // support slave mode

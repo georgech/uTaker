@@ -2705,7 +2705,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 #undef UART_FRAME_COMPLETE                                               // this can be disabled if not specifically needed for other purposes to MODBUS RS485 mode
 
 
-#define SUPPORT_PORT_INTERRUPTS                                          // support code for port interrupts (IRQ for KE/KEA devices)
+#define SUPPORT_PORT_INTERRUPTS                                          // support code for port interrupts (IRQ for KE/KEA devices) - see the following video showing port interrupt operation in a KL27: https://youtu.be/CubinvMuTwU
     #if defined FRDM_KL03Z
         #define NO_PORT_INTERRUPTS_PORTA                                 // remove port interrupt support from port A
         #define NO_PORT_INTERRUPTS_PORTB                                 // remove port interrupt support from port B

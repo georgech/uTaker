@@ -9297,7 +9297,7 @@ typedef struct stKINETIS_LPTMR_CTL
               #define SIM_SCGC4_SIM_SCGC4_LLWU  BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1034), 28)
           #endif
       #endif
-    #define SIM_SCGC5                        *(volatile unsigned long*)(SIM_BLOCK + 0x1038) // System Clock Gating Control Register 5
+    #define SIM_SCGC5                        *(volatile unsigned long*)(SIM_BLOCK + 0x1038) // system clock gating control register 5
      #if defined ARM_MATH_CM0PLUS
           #define SIM_SCGC5_BME_OR           (volatile unsigned long *)(SIM_BLOCK + 0x1038 + BME_OR_OFFSET)
           #define SIM_SCGC5_BME_AND          (volatile unsigned long *)(SIM_BLOCK + 0x1038 + BME_AND_OFFSET)
@@ -9360,7 +9360,7 @@ typedef struct stKINETIS_LPTMR_CTL
           #define SIM_SCGC5_SIM_SCGC5_EMVSIM0 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1038), 14)
           #define SIM_SCGC5_SIM_SCGC5_EMVSIM1 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1038), 15)
       #endif
-    #define SIM_SCGC6                        *(volatile unsigned long *)(SIM_BLOCK + 0x103c) // System Clock Gating Control Register 6
+    #define SIM_SCGC6                        *(volatile unsigned long *)(SIM_BLOCK + 0x103c) // system clock gating control register 6
      #if defined ARM_MATH_CM0PLUS
           #define SIM_SCGC6_BME_OR           (volatile unsigned long *)(SIM_BLOCK + 0x103c + BME_OR_OFFSET)
           #define SIM_SCGC6_BME_AND          (volatile unsigned long *)(SIM_BLOCK + 0x103c + BME_AND_OFFSET)
@@ -9381,14 +9381,14 @@ typedef struct stKINETIS_LPTMR_CTL
       #define SIM_SCGC6_SAI0                 0x00008000
       #define SIM_SCGC6_I2S                  0x00008000
       #define SIM_SCGC6_CRC                  0x00040000
-      #define SIM_SCGC6_USBHS                0x00100000                      // {25}
+      #define SIM_SCGC6_USBHS                0x00100000                  // {25}
       #define SIM_SCGC6_USBDCD               0x00200000
       #define SIM_SCGC6_PDB                  0x00400000
       #define SIM_SCGC6_PIT                  0x00800000
-      #define SIM_SCGC6_FTM0                 0x01000000                      // TPM0 on KL/KE
-      #define SIM_SCGC6_FTM1                 0x02000000                      // TPM1 on KL/KE
+      #define SIM_SCGC6_FTM0                 0x01000000                  // TPM0 on KL/KE
+      #define SIM_SCGC6_FTM1                 0x02000000                  // TPM1 on KL/KE
       #if defined KINETIS_KL || defined KINETIS_KE || (defined KINETIS_K22 && (SIZE_OF_FLASH <= (512 * 1024)))
-          #define SIM_SCGC6_FTM2             0x04000000                      // TPM2 on KL/KE
+          #define SIM_SCGC6_FTM2             0x04000000                  // TPM2 on KL/KE
       #endif
       #define SIM_SCGC6_ADC0                 0x08000000
       #define SIM_SCGC6_ADC2                 0x10000000
