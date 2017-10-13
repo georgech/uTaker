@@ -72,7 +72,7 @@
     #endif
 
     #if (defined SUPPORT_PIT1 || defined SUPPORT_PITS) && !defined KINETIS_WITHOUT_PIT // M522xx nd Kinetis periodic interrupt timer
-      //#define TEST_PIT                                                 // test a user defined periodic interrupt (choose one of the following if enabled)
+        #define TEST_PIT                                                 // test a user defined periodic interrupt (choose one of the following if enabled)
           //#define TEST_PIT_SINGLE_SHOT                                 // test single-shot PIT
             #define TEST_PIT_PERIODIC                                    // test periodic PIT
           //#define TEST_PIT_DMA_GPIO                                    // use PIT to toggle port output (requires SUPPORT_PIT_DMA_PORT_TOGGLE to be enabled)

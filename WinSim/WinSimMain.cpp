@@ -4415,7 +4415,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             }
     #endif
 #endif
-            if (fnToggleInput(LOWORD(lParam), HIWORD(lParam), POSSIBLE_PORT)) {
+            if (fnToggleInput(LOWORD(lParam), HIWORD(lParam), POSSIBLE_PORT) != 0) {
                 fnToggleInput(LOWORD(lParam), HIWORD(lParam), PORT_LOCATION);
             }
             else if (iLastPort != iPrevPort) {                           // {36} check whether mouse moves away from port area

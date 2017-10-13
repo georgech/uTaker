@@ -22,7 +22,7 @@
     31.07.2017 Add IRQ_DISABLE_INT support                               {5}
     12.10.2017 When shared port interrupts are handed, skip checking ports that are not powered up {6}
 
-    See the following video showing port interrupt operation in a KL27: https://youtu.be/CubinvMuTwU
+    See the following video showing port interrupt operation on a KL27: https://youtu.be/CubinvMuTwU
 
 */
 

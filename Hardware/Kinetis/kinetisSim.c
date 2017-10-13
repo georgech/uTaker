@@ -519,7 +519,7 @@ static void fnSetDevice(unsigned long *port_inits)
     PCC_CMP1    = PCC_PR;
     #endif
 #endif
-#if defined KINETIS_KE
+#if defined KINETIS_KE && !defined KINETIS_KE15
     SIM_SCGC = (SIM_SCGC_FLASH | SIM_SCGC_SWD);
     SIM_SOPT0 = (SIM_SOPT_NMIE | SIM_SOPT_RSTPE | SIM_SOPT_SWDE);        // PTB4 functions as NMI, PTA5 pin functions as RESET, PTA4 and PTC4 function as single wire debug
 #elif defined KINETIS_KV
@@ -740,7 +740,7 @@ static void fnSetDevice(unsigned long *port_inits)
     QuadSPI0_LCKCR  = 0x00000002;
 #endif
 #if !defined KINETIS_KL02
-    #if !defined KINETIS_KE
+    #if !defined KINETIS_KE || defined KINETIS_WITH_SRTC
         #if defined SUPPORT_RTC                                          // RTC
     RTC_SR      = 0;                                                     // assume running
         #else
@@ -751,7 +751,7 @@ static void fnSetDevice(unsigned long *port_inits)
     #endif
     #if defined KINETIS_KL
     SIM_SOPT1   = SIM_SOPT1_OSC32KSEL_LPO_1kHz;                          // assume retained over reset
-    #elif !defined KINETIS_KE
+    #elif !defined KINETIS_KE || defined KINETIS_WITH_SRTC
     RTC_RAR     = (RTC_RAR_TSRW | RTC_RAR_TPRW | RTC_RAR_TARW| RTC_RAR_TCRW | RTC_RAR_CRW | RTC_RAR_SRW | RTC_RAR_LRW | RTC_RAR_IERW);
     #endif
     #if !defined KINETIS_KL && !defined KINETIS_KE && !defined CROSSBAR_SWITCH_LITE
@@ -2382,8 +2382,8 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
         return;                                                          // if ADC we do not handle digital functions
     }
 #endif
-#if defined KINETIS_KE                                                   // KE uses byte terminology but physically hve long word ports
-    ulBit = (0x80000000 >> (ucPortBit + ((3 - (ucPort % 4)) * 8))); // convert to long word port representation
+#if defined KINETIS_KE && !defined KINETIS_KE15                          // KE uses byte terminology but physically hve long word ports
+    ulBit = (0x80000000 >> (ucPortBit + ((3 - (ucPort % 4)) * 8)));      // convert to long word port representation
     ucPort /= 4;
 #endif
     switch (ucPort) {
@@ -2401,7 +2401,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
 #endif
             if (iChange == TOGGLE_INPUT) {
                 ulPort_in_A ^= ulBit;                                    // set new pin state
-#if !defined KINETIS_KE
+#if !(defined KINETIS_KE && !defined KINETIS_KE15)
                 ptrPCR += (31 - ucPortBit);
 #endif
               //if ((*ptrPCR & PORT_MUX_ALT7) != PORT_MUX_GPIO) {        // {19} ignore register state if not connected
@@ -2412,7 +2412,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
             }
             else if (iChange == SET_INPUT) {
                 ulPort_in_A |= ulBit;
-#if !defined KINETIS_KE
+#if !(defined KINETIS_KE && !defined KINETIS_KE15)
                 ptrPCR += (31 - ucPortBit);
 #endif
               //if ((*ptrPCR & PORT_MUX_ALT7) != PORT_MUX_GPIO) {        // {19} ignore register state if not connected
@@ -2422,7 +2422,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
             }
             else {
                 ulPort_in_A &= ~ulBit;
-#if !defined KINETIS_KE
+#if !(defined KINETIS_KE && !defined KINETIS_KE15)
                 ptrPCR += (31 - ucPortBit);
 #endif
               //if ((*ptrPCR & PORT_MUX_ALT7) != PORT_MUX_GPIO) {        // {19} ignore register state if not connected
@@ -2434,7 +2434,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
 #if defined SUPPORT_LLWU && defined LLWU_AVAILABLE
                 fnWakeupInterrupt(_PORTA, ulPort_in_A, ulBit, ucPortBit);// handle wakeup events on the pin
 #endif
-#if defined KINETIS_KE
+#if defined KINETIS_KE && !defined KINETIS_KE15
                 fnPortInterrupt(_PORTA, ulPort_in_A, ulBit, 0);          // handle interrupts on the pin
 #else
                 fnPortInterrupt(_PORTA, ulPort_in_A, ulBit, ptrPCR);     // handle interrupts and DMA on the pin
@@ -2446,18 +2446,12 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
     case _PORTB:
         if ((~GPIOB_PDDR & ulBit) != 0) {                                // if configured as input
             unsigned long ulOriginal_port_state = ulPort_in_B;
-    #if defined KINETIS_WITH_PCC
-            if ((PCC_PORTB & PCC_CGC) == 0) {                            // ignore if port is not clocked
+            if (IS_POWERED_UP(5, PORTB) == 0) {                          // ignore if port is not clocked
                 return;
             }
-    #elif !defined KINETIS_KE
-            if ((SIM_SCGC5 & SIM_SCGC5_PORTB) == 0) {                    // ignore if port is not clocked
-                return;
-            }
-    #endif
             if (iChange == TOGGLE_INPUT) {
                 ulPort_in_B ^= ulBit;                                    // set new pin state
-    #if !defined KINETIS_KE
+    #if !(defined KINETIS_KE && !defined KINETIS_KE15)
                 ptrPCR += (31 - ucPortBit);
     #endif
               //if ((*ptrPCR & PORT_MUX_ALT7) != PORT_MUX_GPIO) {        // {19} ignore register state if not connected
@@ -2468,7 +2462,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
             }
             else if (iChange == SET_INPUT) {
                 ulPort_in_B |= ulBit;
-    #if !defined KINETIS_KE
+    #if !(defined KINETIS_KE && !defined KINETIS_KE)
                 ptrPCR += (31 - ucPortBit);
     #endif
               //if ((*ptrPCR & PORT_MUX_ALT7) != PORT_MUX_GPIO) {        // {19} ignore register state if not connected
@@ -2478,7 +2472,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
             }
             else {
                 ulPort_in_B &= ~ulBit;
-    #if !defined KINETIS_KE
+    #if !(defined KINETIS_KE && !defined KINETIS_KE)
                 ptrPCR += (31 - ucPortBit);
     #endif
               //if ((*ptrPCR & PORT_MUX_ALT7) != PORT_MUX_GPIO) {        // {19} ignore register state if not connected
@@ -2490,7 +2484,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
     #if defined SUPPORT_LLWU && defined LLWU_AVAILABLE
                 fnWakeupInterrupt(_PORTB, ulPort_in_B, ulBit, ucPortBit);// handle wakeup events on the pin
     #endif
-    #if defined KINETIS_KE
+    #if defined KINETIS_KE && !defined KINETIS_KE15
                 fnPortInterrupt(_PORTB, ulPort_in_B, ulBit, 0);          // handle interrupts on the pin
     #else
                 fnPortInterrupt(_PORTB, ulPort_in_B, ulBit, ptrPCR);     // handle interrupts and DMA on the pin
@@ -2514,7 +2508,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
     #endif
             if (iChange == TOGGLE_INPUT) {
                 ulPort_in_C ^= ulBit;                                    // set new pin state
-    #if !defined KINETIS_KE
+    #if !(defined KINETIS_KE && !defined KINETIS_KE)
                 ptrPCR += (31 - ucPortBit);
     #endif
               //if ((*ptrPCR & PORT_MUX_ALT7) != PORT_MUX_GPIO) {        // {19} ignore register state if not connected
@@ -2525,7 +2519,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
             }
             else if (iChange == SET_INPUT) {
                 ulPort_in_C |= ulBit;
-    #if !defined KINETIS_KE
+    #if !(defined KINETIS_KE && !defined KINETIS_KE)
                 ptrPCR += (31 - ucPortBit);
     #endif
               //if ((*ptrPCR & PORT_MUX_ALT7) != PORT_MUX_GPIO) {        // {19} ignore register state if not connected
@@ -2535,7 +2529,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
             }
             else {
                 ulPort_in_C &= ~ulBit;
-    #if !defined KINETIS_KE
+    #if !(defined KINETIS_KE && !defined KINETIS_KE)
                 ptrPCR += (31 - ucPortBit);
     #endif
               //if ((*ptrPCR & PORT_MUX_ALT7) != PORT_MUX_GPIO) {        // {19} ignore register state if not connected
@@ -2547,7 +2541,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
     #if defined LLWU_AVAILABLE && defined SUPPORT_LLWU
                 fnWakeupInterrupt(_PORTC, ulPort_in_C, ulBit, ucPortBit);// handle wakeup events on the pin
     #endif
-    #if defined KINETIS_KE
+    #if defined KINETIS_KE && !defined KINETIS_KE15
                 fnPortInterrupt(_PORTC, ulPort_in_C, ulBit, 0);          // handle interrupts on the pin
     #else
                 fnPortInterrupt(_PORTC, ulPort_in_C, ulBit, ptrPCR);     // handle interrupts and DMA on the pin
@@ -2947,16 +2941,16 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
 static void fnSetPinCharacteristics(int iPortRef, unsigned long ulHigh, unsigned long ulLow)
 {
     unsigned long ulBit = 0x00010000;
-#if !defined KINETIS_KE
+#if !(defined KINETIS_KE && !defined KINETIS_KE)
     unsigned long *ptrPCR = (unsigned long *)(PORT0_BLOCK + (iPortRef * 0x1000));
 #endif
     while (ulBit != 0) {
         if ((ulLow & ulBit) != 0) {
-#if !defined KINETIS_KE
+#if !(defined KINETIS_KE && !defined KINETIS_KE)
             *ptrPCR = (ulLow & 0x0000ffff);
 #endif
         }
-#if !defined KINETIS_KE
+#if !(defined KINETIS_KE && !defined KINETIS_KE)
         ptrPCR++;
 #endif
         ulBit <<= 1;
@@ -2964,16 +2958,16 @@ static void fnSetPinCharacteristics(int iPortRef, unsigned long ulHigh, unsigned
     ulBit = 0x00010000;
     while (ulBit != 0) {
         if ((ulHigh & ulBit) != 0) {
-#if !defined KINETIS_KE
+#if !(defined KINETIS_KE && !defined KINETIS_KE)
             *ptrPCR = (ulHigh & 0x0000ffff);
 #endif
         }
-#if !defined KINETIS_KE
+#if !(defined KINETIS_KE && !defined KINETIS_KE)
         ptrPCR++;
 #endif
         ulBit <<= 1;
     }
-#if !defined KINETIS_KE
+#if !(defined KINETIS_KE && !defined KINETIS_KE)
     *ptrPCR++ = 0;                                                       // clear the PORTx_GPCLR and PORTx_GPCHR registers, which read always 0
     *ptrPCR = 0;
 #endif
@@ -4754,7 +4748,9 @@ static void fnPortInterrupt(int iPort, unsigned long ulNewState, unsigned long u
     #if PORTS_AVAILABLE > 1
     case _PORTB:
         PORTB_ISFR |= ulChangedBit;
-        #if defined irq_PORTBCD_E_ID                                     // shared port B/C/D/E
+        #if defined irq_PORT_B_C_D_ID                                    // shared port B/C/D
+        iPortInterruptSource = irq_PORT_B_C_D_ID;
+        #elif defined irq_PORTBCD_E_ID                                   // shared port B/C/D/E
         iPortInterruptSource = irq_PORTBCD_E_ID;
         #endif
         break;
@@ -4806,7 +4802,9 @@ static void fnPortInterrupt(int iPort, unsigned long ulNewState, unsigned long u
     #endif
             break;
         case _PORTB:
-    #if defined irq_PORTBCD_E_ID                                         // shared port B/C/D/E interrupt vector
+    #if defined irq_PORT_B_C_D_ID                                        // shared port B/C/D interrupt vector
+            ptrVect->processor_interrupts.irq_PORTB_C_D();               // call port interrupt handler
+    #elif defined irq_PORTBCD_E_ID                                       // shared port B/C/D/E interrupt vector
             ptrVect->processor_interrupts.irq_PORTBCD_E();               // call port interrupt handler
     #elif defined irq_PORTB_ID
             ptrVect->processor_interrupts.irq_PORTB();                   // call port interrupt handler
@@ -7245,7 +7243,7 @@ extern void fnInitInternalRTC(char *argv[])
 
     ulKinetisTime = ((RTC_YEAR - 1970) * 365);                           // years since reference time, represented in days without respecting leap years
     while (ulLeapYears <= RTC_YEAR) {                                    // {11}
-        if (LEAP_YEAR(ulLeapYears)) {                                    // count leap years
+        if (LEAP_YEAR(ulLeapYears) != 0) {                               // count leap years
             if (ulLeapYears == RTC_YEAR) {                               // presently in a leap year
                 if ((RTC_MONTH > 2) && (RTC_DOM > 28)) {                 // {27} past February 28 so count extra leap day in this year
                     ulKinetisTime++;
@@ -7267,7 +7265,7 @@ extern void fnInitInternalRTC(char *argv[])
     ulKinetisTime += RTC_MIN;                                            // add minutes in present hour
     ulKinetisTime *= 60;                                                 // convert minutes to seconds
     ulKinetisTime += RTC_SEC;                                            // add seconds in present minute
-    #if !defined KINETIS_WITHOUT_RTC && !defined KINETIS_KE
+    #if !defined KINETIS_WITHOUT_RTC && !(defined KINETIS_KE && !defined KINETIS_WITH_SRTC)
         #if defined KINETIS_KL && defined RTC_USES_LPO_1kHz
     RTC_TSR = ulKinetisTime;                                             // set the initial seconds count value (since 1970)
     *RTC_SECONDS_LOCATION = ulKinetisTime;                               // set time information to non-initialised ram
@@ -7526,7 +7524,8 @@ extern int fnSimTimers(void)
         }
     }
 #endif
-
+    // SysTick
+    //
     if ((SYSTICK_CSR & SYSTICK_ENABLE) != 0) {                           // SysTick is enabled
         unsigned long ulTickCount = 0;
         if ((SYSTICK_CSR & SYSTICK_CORE_CLOCK) != 0) {
@@ -7549,7 +7548,8 @@ extern int fnSimTimers(void)
             }
         }
     }
-
+    // PIT
+    //
 #if !defined KINETIS_WITHOUT_PIT
     #if defined LPITS_AVAILABLE                                          // {47}
     if (((PCC_LPIT0 & PCC_CGC) != 0) && ((LPIT0_MCR & (LPIT_MCR_M_CEN | LPIT_MCR_SW_RST)) == LPIT_MCR_M_CEN)) { // if the LPIT is enabled and not in reset state
@@ -7799,29 +7799,52 @@ extern int fnSimTimers(void)
     }
     #endif
 #endif
-#if defined SUPPORT_RTC && !defined KINETIS_WITHOUT_RTC && !defined KINETIS_KE
+    // RTC
+    //
+#if defined SUPPORT_RTC && !defined KINETIS_WITHOUT_RTC && !(defined KINETIS_KE && !defined KINETIS_WITH_SRTC)
     if ((RTC_SR & RTC_SR_TCE) != 0) {                                    // RTC is enabled
         if ((RTC_SR & RTC_SR_TIF) == 0) {                                // if invalid flag not set
             unsigned long ulCounter;
+    #if defined KINETIS_KE15
+            if ((RTC_CR & RTC_CR_LPOS_LPO) != 0) {
+        #if TICK_RESOLUTION >= 1000
+                ulCounter = ((TICK_RESOLUTION/1000));                    // approximately 1kHz clock pulses in a TICK period (128kHz LPO divided by 128)
+        #else
+                ulCounter = 1;
+        #endif
+            }
+            else {
+                switch (SIM_CHIPCTL & SIM_CHIPCTL_RTC32CLKSEL_MASK) {
+                case SIM_CHIPCTL_RTC32CLKSEL_OSC32:                      // RTC32CLK input selected from OSC32 clock output
+                case SIM_CHIPCTL_RTC32CLKSEL_RTC_CLKIN:                  // RTC32CLK input selected from RTC_CLKIN pin
+                    ulCounter = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)32768) / 1000000); // 32kHz clock pulses in a TICK period
+                    break;
+                default:
+                    _EXCEPTION("Invalid RTC clock selection!");
+                    break;
+                }
+            }
+    #else
             switch (SIM_SOPT1 & SIM_SOPT1_OSC32KSEL_MASK) {
             case SIM_SOPT1_OSC32KSEL_SYS_OSC:
                 ulCounter = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)32000)/1000000); // approximately 32kHz clock pulses in a TICK period
                 break;
             case SIM_SOPT1_OSC32KSEL_LPO_1kHz:
-    #if TICK_RESOLUTION >= 1000
+        #if TICK_RESOLUTION >= 1000
                 ulCounter = ((TICK_RESOLUTION/1000));                    // approximately 1kHz clock pulses in a TICK period
-    #else
+        #else
                 ulCounter = 1;
-    #endif
+        #endif
                 break;
-    #if defined KINETIS_KL && !defined KINETIS_WITH_RTC_CRYSTAL
+        #if defined KINETIS_KL && !defined KINETIS_WITH_RTC_CRYSTAL
             case SIM_SOPT1_OSC32KSEL_RTC_CLKIN:                          // 32kHz clock input assumed
-    #else
+        #else
             case SIM_SOPT1_OSC32KSEL_32k:
-    #endif
+        #endif
                 ulCounter = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)32768)/1000000); // 32kHz clock pulses in a TICK period
                 break;
             }
+    #endif
             RTC_TPR += ulCounter;
             if (RTC_TPR >= 32768) {
                 RTC_TPR = (RTC_TPR - 32768);                             // handle second overflow
@@ -7988,7 +8011,8 @@ extern int fnSimTimers(void)
             RTC_CNT = ulCount;
         }
     }
-#elif defined SUPPORT_LPTMR                                              // {35}
+#endif
+#if defined SUPPORT_LPTMR                                                // {35}
     if (((SIM_SCGC5 & SIM_SCGC5_LPTIMER0) != 0) && ((LPTMR0_CSR & LPTMR_CSR_TEN) != 0)) { // if the low power timer is enabled and running
         unsigned long ulCount = 0;                                       // count in a tick period
         switch (LPTMR0_PSR & LPTMR_PSR_PCS_OSC0ERCLK) {
@@ -8226,7 +8250,6 @@ extern int fnSimTimers(void)
         iPDB = 0;
     }
 #endif
-
 #if defined SUPPORT_ADC                                                  // {2}
     fnTriggerADC(0, 0);                                                  // handle software triggered ADC0
     #if ADC_CONTROLLERS > 1

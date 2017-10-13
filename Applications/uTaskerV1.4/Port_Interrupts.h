@@ -25,7 +25,7 @@
     The file is otherwise not specifically linked in to the project since it
     is included by application.c when needed.
 
-    See the following video showing port interrupt operation in a KL27: https://youtu.be/CubinvMuTwU
+    See the following video showing port interrupt operation on a KL27: https://youtu.be/CubinvMuTwU
 
 */
 
@@ -297,12 +297,16 @@ static void fnInitIRQ(void)
     interrupt_setup.int_port_bits  = PORTA_BIT16;                        // J2-9 on FRDM-KL25Z
     interrupt_setup.int_priority   = PRIORITY_PORT_A_INT;                // interrupt priority level
             #endif
-        #elif defined FRDM_KL03Z
+        #elif defined FRDM_KL03Z || defined FRDM_KE15Z
             #if defined WAKEUP_TEST
     interrupt_setup.int_type       = WAKEUP_INTERRUPT;                   // configure as wake-up interrupt
     interrupt_setup.int_port_bits  = SWITCH_2;                           // PTB0
             #else
+                #if defined FRDM_KE15Z
+    interrupt_setup.int_port_bits  = SWITCH_2;                           // SW2 (PTB11) on FRDM-KL03Z
+                #else
     interrupt_setup.int_port_bits  = PORTB_BIT7;                         // J1-6 on FRDM-KL03Z
+                #endif
             #endif
     interrupt_setup.int_priority   = PRIORITY_PORT_B_INT;                // interrupt priority level
     interrupt_setup.int_port       = PORTB;                              // the port that the interrupt input is on

@@ -1843,7 +1843,26 @@ typedef struct stKINETIS_TSI
 
 typedef struct stKINETIS_SIM
 {
-#if defined KINETIS_KE
+#if defined KINETIS_KE15
+    unsigned long ulRes0;
+    unsigned long SIM_CHIPCTL;
+    unsigned long ulRes1;
+    unsigned long SIM_FTMOPT0;
+    unsigned long ulRes2[2];
+    unsigned long SIM_ADCOPT;
+    unsigned long SIM_FTMOPT1;
+    unsigned long ulRes3;
+    unsigned long SIM_SDID;
+    unsigned long ulRes4[9];
+    unsigned long SIM_FCFG1;
+    unsigned long SIM_FCFG2;
+    unsigned long SIM_UIDH;
+    unsigned long SIM_UIDMH;
+    unsigned long SIM_UIDML;
+    unsigned long SIM_UIDL;
+    unsigned long ulRes5[2];
+    unsigned long SIM_MISCTRL;
+#elif defined KINETIS_KE
     unsigned long SIM_SRSID;
     unsigned long SIM_SOPT0;
     #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
@@ -2630,7 +2649,7 @@ unsigned char MC_PMPROT;
 unsigned char MC_PMCTRL;
 } KINETIS_MC;
 
-#if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000) // {16}
+#if defined KINETIS_K_FPU || defined KINETIS_KL ||defined KINETIS_KE15 ||  defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000) // {16}
 
     typedef struct stKINETIS_SMC                                         // {21}
     {
@@ -3374,7 +3393,7 @@ typedef struct stKINETIS_PERIPH
     KINETIS_LPUART     LPUART[LPUARTS_AVAILABLE];
 #endif
     KINETIS_USB        USB;
-#if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000) // {16}
+#if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_KE15 || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000) // {16}
     KINETIS_SMC        SMC;                                              // {21}
     KINETIS_RCM        RCM;                                              // {5}
 #elif !defined KINETIS_KE && !defined KINETIS_KEA

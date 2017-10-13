@@ -1547,7 +1547,7 @@ typedef struct stPROCESSOR_IRQ
         void  (*irq_FTM0)(void);                                         // 17
         void  (*irq_FTM1)(void);                                         // 18
         void  (*irq_FTM2)(void);                                         // 19
-        void  (*irq_RTC)(void);                                          // 20 single interrupt for all sources
+        void  (*irq_RTC_ALARM)(void);                                    // 20 single interrupt for all sources
         void  (*irq_CMP1)(void);                                         // 21
         void  (*irq_LPIT0)(void);                                        // 22
         void  (*irq_FlexIO)(void);                                       // 23
@@ -3296,7 +3296,7 @@ typedef struct stVECTOR_TABLE
         #define UART5_BLOCK                    ((unsigned char *)(&kinetis.UART[5]))
     #endif
     #define USB_BASE_ADD                       ((unsigned char *)(&kinetis.USB)) // USB-OTG Controller
-    #if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000) // {43}
+    #if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_KE15 || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000) // {43}
         #define SMC_BASE_ADD                   ((unsigned char *)(&kinetis.SMC)) // System Mode Controller
         #define RCM_BASE_ADD                   ((unsigned char *)(&kinetis.RCM)) // Reset Control Module
     #elif !defined KINETIS_KE && !defined KINETIS_KEA
@@ -3627,7 +3627,7 @@ typedef struct stVECTOR_TABLE
         #define LLWU_BLOCK                     0x4007c000                // {62} Low-Leakage Wakeup Unit
     #endif
     #define PMC_BLOCK                          0x4007d000                // Power Management Controller
-    #if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000) // {43}
+    #if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_KE15 || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000) // {43}
         #define SMC_BASE_ADD                   0x4007e000                // System Mode Controller
         #define RCM_BASE_ADD                   0x4007f000                // Reset Control Module
     #elif !defined KINETIS_KE && !defined KINETIS_KEA
@@ -8233,15 +8233,25 @@ typedef struct stKINETIS_ADMA2_BD
       #define RTC_CR_WPE        0x00000002                               // wakeup pin enable
       #define RTC_CR_SUP        0x00000004                               // allow non-supervisor mode write accesses to RTC
       #define RTC_CR_UM         0x00000008                               // update mode - registers can be written when locked under limited conditions
-      #if defined KINETIS_KL
+      #if defined KINETIS_KL || defined KINETIS_KE15
         #define RTC_CR_WPS      0x00000010                               // wakeup pin select
+      #endif
+      #if defined KINETIS_KE15
+        #define RTC_CR_CPS_PRE  0x00000000                               // clock pin select - prescale output clock (as selected by TSIC) is output on RTC_CLOKOUT
+        #define RTC_CR_CPS_32k  0x00000020                               // clock pin select - RTC32 crystal clock is output on RTC_CLOKOUT
+        #define RTC_CR_LPOS_32k 0x00000000                               // LPO select - RTC prescaler increments using 32kHz input
+        #define RTC_CR_LPOS_LPO 0x00000080                               // LPO select - RTC prescaler increments using LPO (1kHz form 128kHz LPO/128)
       #endif
       #define RTC_CR_OSCE       0x00000100                               // 32.768 kHz oscillator is enabled (wait oscillator startup time before enabling time counting)
       #define RTC_CR_CLKO       0x00000200                               // don't output 32.768 kHz clock to other peripherals
-      #define RTC_CR_SC16P      0x00000400                               // enable 16pF load
-      #define RTC_CR_SC8P       0x00000800                               // enable 8pF load
-      #define RTC_CR_SC4P       0x00001000                               // enable 4pF load
-      #define RTC_CR_SC2P       0x00002000                               // enable 2pF load
+      #if defined KINETIS_KE15
+        #define RTC_CR_CPE      0x01000000                               // RTC_CLKOUT enable
+      #else
+        #define RTC_CR_SC16P    0x00000400                               // enable 16pF load
+        #define RTC_CR_SC8P     0x00000800                               // enable 8pF load
+        #define RTC_CR_SC4P     0x00001000                               // enable 4pF load
+        #define RTC_CR_SC2P     0x00002000                               // enable 2pF load
+      #endif
     #define RTC_SR              *(volatile unsigned long *)(RTC_BLOCK + 0x014) // RTC Status Register
       #define RTC_SR_TIF        0x00000001                               // time invalid flag (set on VBAT power up or software reset)
       #define RTC_SR_TOF        0x00000002                               // time overflow flag
@@ -8701,8 +8711,39 @@ typedef struct stKINETIS_LPTMR_CTL
 
 // System Integration Module
 //
-#if defined KINETIS_KE
-    #define SIM_SRSID                        *(volatile unsigned long *)(SIM_BLOCK + 0x00)  // System Reset Status and ID Register 1 (read-only)
+#if defined KINETIS_KE15
+    #define SIM_CHIPCTL                      *(unsigned long *)(SIM_BLOCK + 0x04)  // chip control register
+        #define SIM_CHIPCTL_ADC_INTERLEAVE_OFF  0x00000000               // no interleave channel
+        #define SIM_CHIPCTL_ADC_INTERLEAVE_PTB0 0x00000001               // PTB0 to ADC0_SE4 and ADC1_SE14
+        #define SIM_CHIPCTL_ADC_INTERLEAVE_PTB1 0x00000002               // PTB1 to ADC0_SE5 and ADC1_SE15
+        #define SIM_CHIPCTL_CLKOUTDIV_1      0x00000000                  // CLKOUT divider ration - divide 1
+        #define SIM_CHIPCTL_CLKOUTDIV_2      0x00000010                  // CLKOUT divider ration - divide 2
+        #define SIM_CHIPCTL_CLKOUTDIV_4      0x00000020                  // CLKOUT divider ration - divide 4
+        #define SIM_CHIPCTL_CLKOUTDIV_8      0x00000030                  // CLKOUT divider ration - divide 8
+        #define SIM_CHIPCTL_CLKOUTSEL_OFF    0x00000000                  // no clock seleted to CLKOUT pin
+        #define SIM_CHIPCTL_CLKOUTSEL_SCGCLKOUT 0x00000040               // select clock defined by SCG_CLKOUTCFG to CLKOUT pin (SIRC/FIRC/SOSC/LPFLL)
+        #define SIM_CHIPCTL_CLKOUTSEL_RTC    0x00000080                  // select RTC oscillator to CLKOUT pin
+        #define SIM_CHIPCTL_CLKOUTSEL_LPO    0x000000c0                  // select 128kHz LPO to CLKOUT pin
+        #define SIM_CHIPCTL_PDB_BB_SEL       0x00002000                  // PDB back-to-back select
+        #define SIM_CHIPCTL_PWTCLKSEL_TCLK0  0x00000000                  // PWT alternative clock is from TCLK0 pin
+        #define SIM_CHIPCTL_PWTCLKSEL_TCLK1  0x00010000                  // PWT alternative clock is from TCLK1 pin
+        #define SIM_CHIPCTL_PWTCLKSEL_TCLK2  0x00020000                  // PWT alternative clock is from TCLK2 pin
+        #define SIM_CHIPCTL_RTC32CLKSEL_MASK 0x000c0000
+        #define SIM_CHIPCTL_RTC32CLKSEL_OSC32 0x00000000                 // RTC32CLK input selected from OSC32 clock output
+        #define SIM_CHIPCTL_RTC32CLKSEL_RTC_CLKIN 0x00040000             // RTC32CLK input selected from RTC_CLKIN pin
+    #define SIM_FTMOPT0                      *(unsigned long *)(SIM_BLOCK + 0x0c)  // FTM option register 0
+    #define SIM_ADCOPT                       *(unsigned long *)(SIM_BLOCK + 0x18)  // ADC option register 
+    #define SIM_FTMOPT1                      *(unsigned long *)(SIM_BLOCK + 0x1c)  // FTM option register 1
+    #define SIM_SDID                         *(volatile unsigned long *)(SIM_BLOCK + 0x24)  // system device identification register (read-only)
+    #define SIM_FCFG1                        *(volatile unsigned long *)(SIM_BLOCK + 0x4c)  // flash configuration register 1 (read-only)
+    #define SIM_FCFG2                        *(volatile unsigned long *)(SIM_BLOCK + 0x50)  // flash configuration register 2 (read-only)
+    #define SIM_UIDH                         *(volatile unsigned long *)(SIM_BLOCK + 0x54)  // unique identification register high (read-only)
+    #define SIM_UIDMH                        *(volatile unsigned long *)(SIM_BLOCK + 0x58)  // unique identification register mid high (read-only)
+    #define SIM_UIDML                        *(volatile unsigned long *)(SIM_BLOCK + 0x5c)  // unique identification register mid low (read-only)
+    #define SIM_UIDL                         *(volatile unsigned long *)(SIM_BLOCK + 0x60)  // unique identification register low (read-only)
+    #define SIM_MISCTRL                      *(unsigned long *)(SIM_BLOCK + 0x6c)  // miscellaneous control register
+#elif defined KINETIS_KE
+    #define SIM_SRSID                        *(volatile unsigned long *)(SIM_BLOCK + 0x00)  // system reset status and ID register 1 (read-only)
       #define SIM_SRSID_LVD                  0x00000002                  // reset due to low voltage detection
       #define SIM_SRSID_LOC                  0x00000004                  // reset caused by internal clock source module
       #define SIM_SRSID_WDOG                 0x00000020                  // reset caused by watchdog timeout
@@ -13655,7 +13696,7 @@ typedef struct stUSB_HW
 
 
 
-#if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000) // {43}
+#if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_KE15 || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000) // {43}
     // System Mode Controller
     //
     #define SMC_PMPROT       *(volatile unsigned char *)(SMC_BASE_ADD + 0x0) // power mode protection register (write-once)
@@ -13708,7 +13749,7 @@ typedef struct stUSB_HW
 
     // Reset Control Module
     //
-    #if defined KINETIS_KL28
+    #if defined KINETIS_KL28 || defined KINETIS_KE15
         #define RCM_VERID        *(volatile unsigned long *)(RCM_BASE_ADD + 0x00) // version ID register (read-only)
         #define RCM_PARAM        *(volatile unsigned long *)(RCM_BASE_ADD + 0x04) // parameter register (read-only)
         #define RCM_SRS          *(volatile unsigned long *)(RCM_BASE_ADD + 0x08) // system reset status register (read-only)
