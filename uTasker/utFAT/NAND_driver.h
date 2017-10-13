@@ -1360,8 +1360,8 @@ static void fnInitNAND(void)
 #elif defined _KINETIS                                                   // {2} configure the pins for the 8/16 bit NAND
     SIM_CLKDIV4 |= (4 << 27);                                            // set the fractional clock divider (note that 
     MPU_CESR = 0;                                                        // allow concurrent access to MPU controller
-    POWER_UP(7, SIM_SCGC7_FLEXBUS);                                      // ensure FlexBus is enabled
-    POWER_UP(3, SIM_SCGC3_NFC);                                          // ensure NAND controller is enabled
+    POWER_UP_ATOMIC(7, FLEXBUS);                                         // ensure FlexBus is enabled
+    POWER_UP_ATOMIC(3, NFC);                                             // ensure NAND controller is enabled
     _CONFIG_PERIPHERAL(C, 16, (PC_16_NFC_RB | PORT_PS_UP_ENABLE));       // NFC_RB on PC16 (alt. function 6) with pull-up enabled
     _CONFIG_PERIPHERAL(C, 17, PC_17_NFC_CE0);                            // NFC_CE0 on PC17 (alt. function 6)
     _CONFIG_PERIPHERAL(C, 11, PC_11_NFC_WE);                             // NFC_WE on PC11 (alt. function 5)

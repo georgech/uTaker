@@ -175,7 +175,7 @@ static __interrupt void _PWM_Interrupt_5(void)
     #endif
             switch (ucFlexTimer) {
             case 0:
-                POWER_UP(6, SIM_SCGC6_FTM0);                             // ensure that the FlexTimer module is powered up
+                POWER_UP_ATOMIC(6, FTM0);                                // ensure that the FlexTimer module is powered up
     #if defined KINETIS_KL
                 iInterruptID = irq_TPM0_ID;
     #else
@@ -188,7 +188,7 @@ static __interrupt void _PWM_Interrupt_5(void)
                 break;
     #if FLEX_TIMERS_AVAILABLE > 1
             case 1:
-                POWER_UP(6, SIM_SCGC6_FTM1);                             // ensure that the FlexTimer module is powered up
+                POWER_UP_ATOMIC(6, FTM1);                                // ensure that the FlexTimer module is powered up
         #if defined KINETIS_KL
                 iInterruptID = irq_TPM1_ID;
         #else
@@ -203,9 +203,9 @@ static __interrupt void _PWM_Interrupt_5(void)
     #if FLEX_TIMERS_AVAILABLE > 2
             case 2:
         #if defined KINETIS_KL
-                POWER_UP(6, SIM_SCGC6_FTM2);
+                POWER_UP_ATOMIC(6, FTM2);                                // ensure that the FlexTimer module is powered up
         #else
-                POWER_UP(3, SIM_SCGC3_FTM2);                             // ensure that the FlexTimer module is powered up
+                POWER_UP_ATOMIC(3, FTM2);                                // ensure that the FlexTimer module is powered up
         #endif
                 ptrFlexTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_2;
         #if defined KINETIS_KE
@@ -223,7 +223,7 @@ static __interrupt void _PWM_Interrupt_5(void)
     #endif
     #if FLEX_TIMERS_AVAILABLE > 3
             case 3:
-                POWER_UP(3, SIM_SCGC3_FTM3);                             // ensure that the FlexTimer module is powered up
+                POWER_UP_ATOMIC(3, FTM3);                                // ensure that the FlexTimer module is powered up
         #if defined KINETIS_KL
                 iInterruptID = irq_TPM3_ID;
         #else
@@ -237,7 +237,7 @@ static __interrupt void _PWM_Interrupt_5(void)
     #endif
     #if FLEX_TIMERS_AVAILABLE > 4 && defined TPMS_AVAILABLE
             case 4:
-                POWER_UP(2, SIM_SCGC2_TPM1);                             // ensure that the TPM module is powered up
+                POWER_UP_ATOMIC(2, TPM1);                                // ensure that the TPM module is powered up
                 iInterruptID = irq_FTM1_ID;
                 iTPM_type = 1;
                 ptrFlexTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_4;
@@ -247,7 +247,7 @@ static __interrupt void _PWM_Interrupt_5(void)
                 break;
 
             case 5:
-                POWER_UP(2, SIM_SCGC2_TPM2);                             // ensure that the TPM module is powered up
+                POWER_UP_ATOMIC(2, TPM2);                                // ensure that the TPM module is powered up
                 iInterruptID = irq_FTM2_ID;
                 ptrFlexTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_5;
                 iTPM_type = 1;

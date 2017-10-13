@@ -154,7 +154,7 @@
     #endif
   //#define USB_CRYSTAL_LESS                                             // use 48MHz IRC as USB source (according to Freescale AN4905 - only possible in device mode)
   //#define USB_CLOCK_GENERATED_INTERNALLY                               // use USB clock from internal source rather than external pin - 120MHz is suitable from PLL
-#elif defined TWR_K65F180M || defined FRDM_K66F || defined K66FX1M0 || defined TEENSY_3_6 || defined FRDM_KL82Z || defined TWR_KL82Z72M
+#elif defined TWR_K65F180M || defined FRDM_K66F || defined K66FX1M0 || defined TEENSY_3_6 || defined FRDM_KL82Z || defined TWR_KL82Z72M || defined FRDM_K28F
   //#define RUN_FROM_DEFAULT_CLOCK                                       // default mode is FLL Engaged Internal - the 32kHz IRC is multiplied by FLL factor of 640 to obtain 20.9715MHz nominal frequency (20MHz..25MHz)
   //#define RUN_FROM_HIRC                                                // clock directly from internal 48MHz RC clock
   //#define RUN_FROM_HIRC_PLL                                            // use 48MHz RC clock as input to the PLL
@@ -189,7 +189,7 @@
         #define FLEX_CLOCK_DIVIDE    3                                   // 120/3 to give 40MHz
         #define FLASH_CLOCK_DIVIDE   5                                   // 120/5 to give 24MHz
     #else
-        #if defined FRDM_K66F || defined FRDM_KL82Z || defined TWR_KL82Z72M
+        #if defined FRDM_K66F || defined FRDM_KL82Z || defined TWR_KL82Z72M || defined FRDM_K28F
             #define CRYSTAL_FREQUENCY    12000000                        // 12 MHz crystal
             #define CLOCK_DIV            1                               // input must be divided to 8MHz..16MHz range (/1 to /8)
         #else
@@ -202,7 +202,7 @@
         #if defined USE_HIGH_SPEED_RUN_MODE                              // high speed run mode allow faster operation but can't program/erase flash
             #if defined FRDM_KL82Z || defined TWR_KL82Z72M
                 #define CLOCK_MUL        16                              // the PLL multiplication factor to achieve operating frequency of 96MHz (x16 to x47 possible) [PLL output range 90..180MHz - VCO is PLL * 2]
-            #elif defined FRDM_K66F || defined TWR_K65F180M || defined K66FX1M0
+            #elif defined FRDM_K66F || defined TWR_K65F180M || defined K66FX1M0 || defined FRDM_K28F
                 #define CLOCK_MUL        30                              // the PLL multiplication factor to achieve operating frequency of 180MHz (x16 to x47 possible) [PLL output range 90..180MHz - VCO is PLL * 2]
             #else
                 #define CLOCK_MUL        45                              // the PLL multiplication factor to achieve operating frequency of 180MHz (x16 to x47 possible) [PLL output range 90..180MHz - VCO is PLL * 2]
@@ -217,7 +217,7 @@
                 #define FLASH_CLOCK_DIVIDE   7                           // 180/7 to give 25.714MHz (max. 28MHz)
             #endif
         #else                                                            // run mode has no functional restrictions but can't operate as fast as high speed run mode
-            #if defined FRDM_KL82Z || defined TWR_KL82Z72M
+            #if defined FRDM_KL82Z || defined TWR_KL82Z72M || defined FRDM_K28F
                 #define CLOCK_MUL        24                              // the PLL multiplication factor to achieve operating frequency of 144MHz (x16 to x47 possible) [PLL output range 90..180MHz - VCO is PLL * 2]
             #elif defined TEENSY_3_6 || defined TWR_K65F180M || defined K66FX1M0
                 #define CLOCK_MUL        30                              // the PLL multiplication factor to achieve operating frequency of 120MHz (x16 to x47 possible) [PLL output range 90..180MHz - VCO is PLL * 2]
@@ -229,6 +229,10 @@
                 #define BUS_CLOCK_DIVIDE     6                           // 144/6 to give 24MHz (max. 24MHz)
                 #define QSPI_CLOCK_DIVIDE    2                           // 144/2 to give 72MHz (max. 72MHz)
                 #define FLASH_CLOCK_DIVIDE   6                           // 144/6 to give 24MHz (max. 24MHz)
+            #elif defined FRDM_K28F
+                #define BUS_CLOCK_DIVIDE     2                           // 150/3 to give 50MHz
+                #define FLEX_CLOCK_DIVIDE    3                           // 150/3 to give 50MHz
+                #define FLASH_CLOCK_DIVIDE   6                           // 150/6 to give 25MHz
             #else
                 #define BUS_CLOCK_DIVIDE     2                           // 120/2 to give 60MHz (max. 60MHz)
                 #define FLEX_CLOCK_DIVIDE    2                           // 120/2 to give 60MHz (max. 60MHz)
@@ -514,7 +518,7 @@
     #define BUS_CLOCK_DIVIDE     2                                       // bus and flash clock divider value (1..16)
 
     #define USB_CRYSTAL_LESS                                             // use 48MHz HIRC as USB source (according to Freescale AN4905 - only possible in device mode) - rather than external pin
-#elif defined TWR_K20D50M || defined TWR_K21D50M || defined FRDM_K20D50M || defined tinyK20 || defined FRDM_KL46Z || defined TWR_KL46Z48M || defined FRDM_KL25Z || defined FRDM_KL26Z || defined TWR_KL25Z48M // {2}{22}{23}{24}
+#elif defined TWR_K20D50M || defined TWR_K21D50M || defined FRDM_K20D50M || defined tinyK20 || defined FRDM_KL46Z || defined TWR_KL46Z48M || defined FRDM_KL25Z || defined FRDM_KL26Z || defined TWR_KL25Z48M || defined RD_KL25_AGMP01 // {2}{22}{23}{24}
     #if defined FRDM_K20D50M || defined tinyK20 || defined TWR_KL46Z48M || defined FRDM_KL25Z || defined FRDM_KL26Z || defined TWR_KL25Z48M || defined TWR_K21D50M
         #define OSC_LOW_GAIN_MODE                                        // oscillator without feedback resistor or load capacitors so use low gain mode
     #endif
@@ -524,7 +528,7 @@
     #define CRYSTAL_FREQUENCY    8000000                                 // 8 MHz crystal
     #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
     #define CLOCK_DIV            4                                       // input must be divided to 2MHz..4MHz range (/1 to /25 possible)
-    #if defined FRDM_KL46Z || defined TWR_KL46Z48M || defined FRDM_KL25Z || defined FRDM_KL26Z || defined TWR_KL25Z48M
+    #if defined FRDM_KL46Z || defined TWR_KL46Z48M || defined FRDM_KL25Z || defined FRDM_KL26Z || defined TWR_KL25Z48M || defined RD_KL25_AGMP01
         #define CLOCK_MUL        48                                      // the PLL multiplication factor to achieve MCGPLLCLK operating frequency of 98MHz (x24 to x55 possible) (MCGPLLCLK/2 is 48MHz - required by USB)
         #define SYSTEM_CLOCK_DIVIDE 2                                    // divide (1,2,3..16 possible) to get core clock of 48MHz
         #define BUS_CLOCK_DIVIDE    2                                    // divide from core clock for bus and flash clock (1,2,3..8 possible) 24MHz
@@ -946,7 +950,7 @@
     #define KINETIS_FLEX                                                 // X part with flex memory rather than N part with program Flash only
     #define SIZE_OF_FLASH       (512 * 1024)                             // 1M FLASH
     #define SIZE_OF_RAM         (256 * 1024)                             // 256k SRAM
-#elif defined TWR_K65F180M || defined FRDM_K66F || defined K66FX1M0
+#elif defined TWR_K65F180M || defined FRDM_K66F || defined K66FX1M0 || defined FRDM_K28F
     #define MASK_0N65N
     #if defined FRDM_K66F || defined K66FX1M0
         #define PIN_COUNT       PIN_COUNT_144_PIN                        // 144 pin package
@@ -956,20 +960,21 @@
     #define PACKAGE_TYPE        PACKAGE_MAPBGA
   //#define PACKAGE_TYPE        PACKAGE_WLCSP
   //#define KINETIS_FLEX                                                 // X part with flex memory rather than N part with program Flash only
-    #define SIZE_OF_FLASH       (2 * 1024 * 1024)                        // 2M FLASH
-    #define SIZE_OF_RAM         (256 * 1024)                             // 256k SRAM
-
-//*
-    #undef SIZE_OF_FLASH
-    #define SIZE_OF_FLEXFLASH   (256 * 1024)
-    #define SIZE_OF_EEPROM      (4 * 1024)                               // 4k EEPROM
-    #define FLEXFLASH_DATA
-    #if defined FLEXFLASH_DATA
-        #define SIZE_OF_FLASH   ((256 * 1024) + SIZE_OF_FLEXFLASH)       // 256k program FLASH plus data flash
+    #if defined FRDM_K28F
+        #define SIZE_OF_FLASH       (2 * 1024 * 1024)                    // 2M FLASH
+        #define SIZE_OF_RAM         (1024 * 1024)                        // 1M SRAM
     #else
-        #define SIZE_OF_FLASH   (256 * 1024)                             // 256k program FLASH
+        #define SIZE_OF_FLASH       (2 * 1024 * 1024)                    // 2M FLASH
+        #define SIZE_OF_RAM         (256 * 1024)                         // 256k SRAM
     #endif
-//*/
+
+    #if defined KINETIS_FLEX
+        #undef SIZE_OF_FLASH
+        #define SIZE_OF_FLEXFLASH   (256 * 1024)
+        #define SIZE_OF_EEPROM      (4 * 1024)                           // 4k EEPROM
+        #define FLEXFLASH_DATA
+        #define SIZE_OF_FLASH   ((256 * 1024) + SIZE_OF_FLEXFLASH)   // 256k program FLASH plus data flash
+    #endif
 #elif defined TEENSY_3_6
     #define MASK_0N65N
     #define PIN_COUNT           PIN_COUNT_144_PIN                        // 169 pin package
@@ -1007,7 +1012,7 @@
     #define PIN_COUNT           PIN_COUNT_100_PIN                        // 48 pin package
     #define SIZE_OF_FLASH       (512 * 1024)                             // 512k program Flash
     #define SIZE_OF_RAM         (96 * 1024)                              // 96k SRAM
-#elif defined FRDM_KL25Z || defined TWR_KL25Z48M                         // {24}
+#elif defined FRDM_KL25Z || defined TWR_KL25Z48M || defined RD_KL25_AGMP01 // {24}
     #define MASK_2N97F
   //#define PIN_COUNT           PIN_COUNT_32_PIN
   //#define PIN_COUNT           PIN_COUNT_48_PIN
@@ -1522,13 +1527,13 @@
 
 #if defined MONITOR_PERFORMANCE
     #if PITS_AVAILABLE > 2                                               // PIT3 is used to monitor task durations
-        #define INITIALISE_MONITOR_TIMER()        POWER_UP(6, SIM_SCGC6_PIT); PIT_MCR = 0; LOAD_PIT(3, 0xffffffff); PIT_TCTRL3 = PIT_TCTRL_TEN
+        #define INITIALISE_MONITOR_TIMER()        POWER_UP_ATOMIC(6, PIT); PIT_MCR = 0; LOAD_PIT(3, 0xffffffff); PIT_TCTRL3 = PIT_TCTRL_TEN
         #define EXECUTION_DURATION()              (0xffffffff - PIT_CVAL3); LOAD_PIT(3, 0xffffffff); PIT_TCTRL3 = PIT_TCTRL_TEN // read the elapsed count value and reset the counter back to 0xffffffff
     #elif defined LPITS_AVAILABLE && (LPIT_CHANNELS > 2)
         #define INITIALISE_MONITOR_TIMER()        _EXCEPTION("To do")
         #define EXECUTION_DURATION()              _EXCEPTION("To do")
     #else                                                                // PIT0 is used to monitor task durations
-        #define INITIALISE_MONITOR_TIMER()        POWER_UP(6, SIM_SCGC6_PIT); PIT_MCR = 0; LOAD_PIT(0, 0xffffffff); PIT_TCTRL0 = PIT_TCTRL_TEN
+        #define INITIALISE_MONITOR_TIMER()        POWER_UP_ATOMIC(6, PIT); PIT_MCR = 0; LOAD_PIT(0, 0xffffffff); PIT_TCTRL0 = PIT_TCTRL_TEN
         #define EXECUTION_DURATION()              (0xffffffff - PIT_CVAL0); LOAD_PIT(0, 0xffffffff); PIT_TCTRL0 = PIT_TCTRL_TEN // read the elapsed count value and reset the counter back to 0xffffffff
     #endif
     #define PIT_TIMER_USED_BY_PERFORMANCE_MONITOR                        // since a PIT timer is used for the monitoring function don't allow PITS to be powered down
@@ -1552,7 +1557,7 @@
     #define SPI_TX_BYTE                     SPI0_PUSHR                   // for simulator
     #define SPI_RX_BYTE                     SPI0_POPR                    // for simulator
 
-    #define POWER_UP_SPI_FLASH_INTERFACE()  POWER_UP(6, SIM_SCGC6_SPI0)
+    #define POWER_UP_SPI_FLASH_INTERFACE()  POWER_UP_ATOMIC(6, SPI0)
     #if defined SPI_FLASH_S25FL1_K                                       // use CS0 on PTC4 (no reset signal)
         #define CONFIGURE_SPI_FLASH_INTERFACE() _CONFIG_PERIPHERAL(C, 4, (PC_4_SPI0_PCS0 | PORT_SRE_FAST | PORT_DSE_HIGH));\
                                                 _CONFIG_PERIPHERAL(C, 5, (PC_5_SPI0_SCK | PORT_SRE_FAST | PORT_DSE_HIGH));\
@@ -1592,7 +1597,7 @@
     #define SPI_TX_BYTE                     SPI0_PUSHR                   // for simulator
     #define SPI_RX_BYTE                     SPI0_POPR                    // for simulator
 
-    #define POWER_UP_SPI_FLASH_INTERFACE()  POWER_UP(6, SIM_SCGC6_SPI0)
+    #define POWER_UP_SPI_FLASH_INTERFACE()  POWER_UP_ATOMIC(6, SPI0)
     #if defined NET_K60
         #define CONFIGURE_SPI_FLASH_INTERFACE() _CONFIG_PERIPHERAL(C, 4, (PC_4_SPI0_PCS0 | PORT_SRE_FAST | PORT_DSE_HIGH));\
                                                 _CONFIG_PERIPHERAL(C, 5, (PC_5_SPI0_SCK | PORT_SRE_FAST | PORT_DSE_HIGH));\
@@ -1632,7 +1637,7 @@
     #define SPI_TX_BYTE                     SPI1_PUSHR                   // for simulator
     #define SPI_RX_BYTE                     SPI1_POPR                    // for simulator
 
-    #define POWER_UP_SPI_FLASH_INTERFACE()  POWER_UP(6, SIM_SCGC6_SPI1)
+    #define POWER_UP_SPI_FLASH_INTERFACE()  POWER_UP_ATOMIC(6, SPI1)
     #define CONFIGURE_SPI_FLASH_INTERFACE() _CONFIG_PERIPHERAL(B, 10, (PB_10_SPI1_PCS0 | PORT_SRE_FAST | PORT_DSE_HIGH)); \
                                             _CONFIG_PERIPHERAL(B, 11, (PB_11_SPI1_SCK | PORT_SRE_FAST | PORT_DSE_HIGH)); \
                                             _CONFIG_PERIPHERAL(B, 16, (PB_16_SPI1_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); \
@@ -1671,7 +1676,7 @@
     #define SPI_TX_BYTE                     SPI0_D                       // for simulator
     #define SPI_RX_BYTE                     SPI0_D                       // for simulator
 
-    #define POWER_UP_SPI_FLASH_INTERFACE()  POWER_UP(4, SIM_SCGC4_SPI0); _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, PORTC_BIT1, PORTC_BIT1, (PORT_SRE_FAST | PORT_DSE_HIGH))
+    #define POWER_UP_SPI_FLASH_INTERFACE()  POWER_UP_ATOMIC(4, SPI0); _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, PORTC_BIT1, PORTC_BIT1, (PORT_SRE_FAST | PORT_DSE_HIGH))
     #define CONFIGURE_SPI_FLASH_INTERFACE() _CONFIG_PERIPHERAL(C, 5, PC_5_SPI0_SCK); \
                                             _CONFIG_PERIPHERAL(C, 6, (PC_6_SPI0_MOSI | PORT_SRE_FAST | PORT_DSE_HIGH)); \
                                             _CONFIG_PERIPHERAL(C, 7, (PC_7_SPI0_MISO | PORT_PS_UP_ENABLE)); \
@@ -1715,7 +1720,7 @@
     #define SPI_TX_BYTE                     SPI1_D                       // for simulator
     #define SPI_RX_BYTE                     SPI1_D                       // for simulator
 
-    #define POWER_UP_SPI_FLASH_INTERFACE()  POWER_UP(4, SIM_SCGC4_SPI1)
+    #define POWER_UP_SPI_FLASH_INTERFACE()  POWER_UP_ATOMIC(4, SPI1)
     #define CONFIGURE_SPI_FLASH_INTERFACE() _CONFIG_PERIPHERAL(E, 2, PE_2_SPI1_SCK); \
                                             _CONFIG_PERIPHERAL(E, 1, (PE_1_SPI1_MOSI | PORT_SRE_FAST | PORT_DSE_HIGH)); \
                                             _CONFIG_PERIPHERAL(E, 3, (PE_3_SPI1_MISO | PORT_PS_UP_ENABLE)); \
@@ -1758,7 +1763,7 @@
     #define SPI_TX_BYTE                     SPI1_D                       // for simulator
     #define SPI_RX_BYTE                     SPI1_D                       // for simulator
 
-    #define POWER_UP_SPI_FLASH_INTERFACE()  POWER_UP(4, SIM_SCGC4_SPI1)
+    #define POWER_UP_SPI_FLASH_INTERFACE()  POWER_UP_ATOMIC(4, SPI1)
     #define CONFIGURE_SPI_FLASH_INTERFACE() _CONFIG_PERIPHERAL(E, 2, PE_2_SPI1_SCK); \
                                             _CONFIG_PERIPHERAL(E, 1, (PE_1_SPI1_MOSI | PORT_SRE_FAST | PORT_DSE_HIGH)); \
                                             _CONFIG_PERIPHERAL(E, 3, (PE_3_SPI1_MISO | PORT_PS_UP_ENABLE)); \
@@ -1798,7 +1803,7 @@
     #define SPI_TX_BYTE                     SPI1_PUSHR                   // for simulator
     #define SPI_RX_BYTE                     SPI1_POPR                    // for simulator
 
-    #define POWER_UP_SPI_FLASH_INTERFACE()  POWER_UP(6, SIM_SCGC6_SPI1)
+    #define POWER_UP_SPI_FLASH_INTERFACE()  POWER_UP_ATOMIC(6, SPI1)
     #define CONFIGURE_SPI_FLASH_INTERFACE() _CONFIG_PERIPHERAL(E, 5, (PE_5_SPI1_PCS0 | PORT_SRE_FAST | PORT_DSE_HIGH)); \
                                             _CONFIG_PERIPHERAL(E, 1, PE_1_SPI1_SCK); \
                                             _CONFIG_PERIPHERAL(E, 2, (PE_2_SPI1_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); \
@@ -1818,8 +1823,8 @@
     #define SET_SPI_FLASH_MODE()                                         // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
     #define REMOVE_SPI_FLASH_MODE()                                      // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
 #elif defined KINETIS_K80 && defined QSPI_FILE_SYSTEM                    // interface using QSPI
-    #define POWER_UP_SPI_FLASH_INTERFACE()     POWER_UP(2, SIM_SCGC2_QSPI);
-    #define POWER_DOWN_SPI_FLASH_INTERFACE()   POWER_DOWN(2, SIM_SCGC2_QSPI);
+    #define POWER_UP_SPI_FLASH_INTERFACE()     POWER_UP_ATOMIC(2, QSPI);
+    #define POWER_DOWN_SPI_FLASH_INTERFACE()   POWER_DOWN(2, QSPI);
     #define CONFIGURE_SPI_FLASH_INTERFACE() \
         _CONFIG_PERIPHERAL(E, 0, (PE_0_QSPI0A_DATA3)); \
         _CONFIG_PERIPHERAL(E, 1, (PE_1_QSPI0A_SCLK)); \
@@ -1917,7 +1922,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define SPI_TX_BYTE                     SPI2_PUSHR                   // for simulator
     #define SPI_RX_BYTE                     SPI2_POPR                    // for simulator
 
-    #define POWER_UP_SPI_FLASH_INTERFACE()  POWER_UP(3, SIM_SCGC3_SPI2)
+    #define POWER_UP_SPI_FLASH_INTERFACE()  POWER_UP_ATOMIC(3, SPI2)
     #define CONFIGURE_SPI_FLASH_INTERFACE() _CONFIG_PERIPHERAL(D, 11, (PD_11_SPI2_PCS0 | PORT_SRE_FAST | PORT_DSE_HIGH));\
                                             _CONFIG_PERIPHERAL(D, 12, (PD_12_SPI2_SCK | PORT_SRE_FAST | PORT_DSE_HIGH));\
                                             _CONFIG_PERIPHERAL(D, 13, (PD_13_SPI2_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH));\
@@ -2196,7 +2201,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 #define BACKDOOR_KEY_7     0
 
 
-#if defined KINETIS_KE
+#if defined FLASH_CONTROLLER_FTMRE
     #define KINETIS_FLASH_CONFIGURATION_BACKDOOR_KEY       {BACKDOOR_KEY_0, BACKDOOR_KEY_1, BACKDOOR_KEY_2, BACKDOOR_KEY_3, BACKDOOR_KEY_4, BACKDOOR_KEY_5, BACKDOOR_KEY_6, BACKDOOR_KEY_7}
     #define KINETIS_FLASH_CONFIGURATION_PROGRAM_PROTECTION (KE_NO_FLASH_PROTECTION)
     #define KINETIS_FLASH_CONFIGURATION_SECURITY           (FTMRH_FSEC_SEC_UNSECURE | FTMRH_FSEC_KEYEN_ENABLED)
@@ -2302,7 +2307,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define LPUART_IRC48M                                            // if the 48MHz clock is available clock the LPUART from it
       //#define LPUART_OSCERCLK                                          // clock the LPUART from the external clock
       //#define LPUART_MCGIRCLK                                          // clock the LPUART from MCGIRCLK (IRC8M/FCRDIV/LIRC_DIV2) - default if others are not defined
-    #elif defined FRDM_KL28Z
+    #elif defined FRDM_KL28Z || defined FRDM_KE15Z
         #define LPUART_FIRC                                              // clock LPUARTs from the fast internal RC oscillator
     #endif
     #if defined RUN_FROM_LIRC
@@ -2936,6 +2941,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define PRIORITY_UART5             2
     #define PRIORITY_LPUART0           2
     #define PRIORITY_LPUART1           2
+    #define PRIORITY_LPUART2           2
     #define PRIORITY_DMA15             2
     #define PRIORITY_DMA14             2
     #define PRIORITY_DMA13             2
@@ -3435,7 +3441,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define SET_SPI_SD_INTERFACE_FULL_SPEED() fnSetSD_clock(SDHC_SYSCTL_SPEED_FAST); SDHC_PROCTL |= SDHC_PROCTL_DTW_4BIT
     #else
         #define SPI1_CS0             PORTE_BIT4
-        #define INITIALISE_SPI_SD_INTERFACE() POWER_UP(6, SIM_SCGC6_SPI1); \
+        #define INITIALISE_SPI_SD_INTERFACE() POWER_UP_ATOMIC(6, SPI1); \
             _CONFIG_PERIPHERAL(E, 2, PE_2_SPI1_SCK); \
             _CONFIG_PERIPHERAL(E, 3, (PE_3_SPI1_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); \
             _CONFIG_PERIPHERAL(E, 1, (PE_1_SPI1_SIN | PORT_PS_UP_ENABLE)); \
@@ -3492,7 +3498,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define MOUSE_DOWN()           0                                     // not used
     #define MOUSE_LEFT()           0                                     // not used
     #define MOUSE_RIGHT()          0                                     // not used
-#elif defined FRDM_K66F || defined K66FX1M0
+#elif defined FRDM_K66F || defined K66FX1M0 || defined FRDM_K28F
     #define LED_GREEN          (PORTE_BIT6)                              // green LED - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
     #define LED_RED            (PORTC_BIT9)                              // red LED - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
     #define LED_BLUE           (PORTA_BIT11)                             // blue LED - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
@@ -3572,7 +3578,11 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define BUTTON_KEY_DEFINITIONS  {_PORTD, SWITCH_2,   {286,   6, 299,  14 }}, \
                                     {_PORTA, SWITCH_3,   {286, 183, 299, 190 }},
 
-    #define KEYPAD "KeyPads/FRDM_K66F.bmp"
+    #if defined FRDM_K28F
+        #define KEYPAD "KeyPads/FRDM_K28F.bmp"
+    #else
+        #define KEYPAD "KeyPads/FRDM_K66F.bmp"
+    #endif
 
     #define MULTICOLOUR_LEDS        {0, 2}                               // single LED made up of entries 0, 1 and 2
 
@@ -3724,7 +3734,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define SET_SPI_SD_INTERFACE_FULL_SPEED() fnSetSD_clock(SDHC_SYSCTL_SPEED_FAST); SDHC_PROCTL |= SDHC_PROCTL_DTW_4BIT
     #else
         #define SPI1_CS0             PORTE_BIT4
-        #define INITIALISE_SPI_SD_INTERFACE() POWER_UP(6, SIM_SCGC6_SPI1); \
+        #define INITIALISE_SPI_SD_INTERFACE() POWER_UP_ATOMIC(6, SPI1); \
             _CONFIG_PERIPHERAL(E, 2, PE_2_SPI1_SCK); \
             _CONFIG_PERIPHERAL(E, 3, (PE_3_SPI1_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); \
             _CONFIG_PERIPHERAL(E, 1, (PE_1_SPI1_SIN | PORT_PS_UP_ENABLE)); \
@@ -5410,7 +5420,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
                                  _CONFIG_PERIPHERAL(B, 0,  PB_0_SPI0_SCK); \
                                  _CONFIG_PERIPHERAL(A, 7, (PA_7_SPI0_MOSI | PORT_SRE_FAST | PORT_DSE_HIGH)); \
                                  _CONFIG_PERIPHERAL(A, 6, (PA_6_SPI0_MISO | PORT_PS_UP_ENABLE)); \
-                                  POWER_UP(4, SIM_SCGC4_SPI0); \
+                                  POWER_UP_ATOMIC(4, SPI0); \
                                   SPI0_C1 = (/*SPI_C1_CPHA | SPI_C1_CPOL | */SPI_C1_MSTR | SPI_C1_SPE); \
                                   SPI0_BR = (SPI_BR_SPPR_PRE_1 | SPI_BR_SPR_DIV_4); \
                                   (unsigned char)SPI0_S; (unsigned char)SPI0_D
@@ -6103,7 +6113,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         {RGB(255,255,0), RGB(0,0,0),   1, {373, 283, 382, 289 }, _PORTA, DEMO_LED_4}
 
     #define KEYPAD "KeyPads/TWR-KL25Z48M.bmp"
-#elif defined FRDM_KL25Z                                                 // {24}
+#elif defined FRDM_KL25Z || defined RD_KL25_AGMP01                       // {24}
     #define DEMO_LED_1             (PORTB_BIT19)                         // (green LED) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
     #define DEMO_LED_2             (PORTD_BIT1)                          // (blue LED) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
     #define DEMO_LED_3             (PORTB_BIT18)                         // (red LED) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
@@ -6205,13 +6215,24 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 
     #define MULTICOLOUR_LEDS        {0, 2}                               // single LED made up of entries 0, 1 and 2 [green/red/blue]
 
+
+#if defined RD_KL25_AGMP01
+    #define KEYPAD "KeyPads/RD-KL25-AGMP01.bmp"
+
+        // '0'          '1'               input state   center (x,   y)   0 = circle, radius, controlling port, controlling pin 
+    #define KEYPAD_LED_DEFINITIONS  \
+        {RGB(0,255,0), RGB(40,40,40),     1, {85, 121, 0,   10  }, _PORTB, BLINK_LED}, \
+        {RGB(0,0,255), RGB(20,20,20),     1, {85, 121, 0,   10  }, _PORTD, PORTD_BIT1}, \
+        {RGB(255,0,0), RGB(20,20,20),     1, {85, 121, 0,   10  }, _PORTB, PORTB_BIT18}
+#else
+    #define KEYPAD "KeyPads/FRDM_KL25Z.bmp"
+
         // '0'          '1'               input state   center (x,   y)   0 = circle, radius, controlling port, controlling pin 
     #define KEYPAD_LED_DEFINITIONS  \
         {RGB(0,255,0), RGB(40,40,40),     1, {320, 210, 0,   8   }, _PORTB, BLINK_LED}, \
         {RGB(0,0,255), RGB(20,20,20),     1, {320, 210, 0,   8   }, _PORTD, PORTD_BIT1}, \
         {RGB(255,0,0), RGB(20,20,20),     1, {320, 210, 0,   8   }, _PORTB, PORTB_BIT18}
-
-    #define KEYPAD "KeyPads/FRDM_KL25Z.bmp"
+#endif
 
     // Accelerometer interrupt configuration
     //
@@ -6764,7 +6785,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define WATCHDOG_DISABLE()      (_READ_PORT_MASK(A, SWITCH_3) == 0)  // hold switch 3 down at reset to disable watchdog
     #define ACTIVATE_WATCHDOG()     SIM_COPC = (SIM_COPC_COPCLKS_1K | SIM_COPC_COPT_LONGEST) // 1.024s watchdog timeout
     #if defined SUPPORT_SLCD && !defined SUPPORT_RTC
-        #define TOGGLE_WATCHDOG_LED()  _TOGGLE_PORT(A, BLINK_LED); if (IS_POWERED_UP(5, SIM_SCGC5_SLCD)) { TOGGLE_SLCD(44, 0x01); } // toggle LED and blink LCD ":"
+        #define TOGGLE_WATCHDOG_LED()  _TOGGLE_PORT(A, BLINK_LED); if (IS_POWERED_UP(5, SLCD)) { TOGGLE_SLCD(44, 0x01); } // toggle LED and blink LCD ":"
     #else
         #define TOGGLE_WATCHDOG_LED()  _TOGGLE_PORT(A, BLINK_LED)
     #endif
@@ -6824,7 +6845,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define WATCHDOG_DISABLE()      (_READ_PORT_MASK(C, SWITCH_3) == 0) // hold switch 3 down at reset to disable watchdog
     #define ACTIVATE_WATCHDOG()     SIM_COPC = (SIM_COPC_COPCLKS_1K | SIM_COPC_COPT_LONGEST) // 1.024s watchdog timeout
     #if defined SUPPORT_SLCD && !defined SUPPORT_RTC
-        #define TOGGLE_WATCHDOG_LED()  _TOGGLE_PORT(E, BLINK_LED); if (IS_POWERED_UP(5, SIM_SCGC5_SLCD)) { TOGGLE_SLCD(44, 0x01); } // toggle LED and blink LCD ":"
+        #define TOGGLE_WATCHDOG_LED()  _TOGGLE_PORT(E, BLINK_LED); if (IS_POWERED_UP(5, SLCD)) { TOGGLE_SLCD(44, 0x01); } // toggle LED and blink LCD ":"
     #else
         #define TOGGLE_WATCHDOG_LED()  _TOGGLE_PORT(E, BLINK_LED)
     #endif
@@ -6884,7 +6905,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define WATCHDOG_DISABLE()      (_READ_PORT_MASK(C, SWITCH_3) == 0)  // pull this input down at reset to disable watchdog
     #define ACTIVATE_WATCHDOG()     SIM_COPC = (SIM_COPC_COPCLKS_1K | SIM_COPC_COPT_LONGEST) // 1.024s watchdog timeout
     #if defined SUPPORT_SLCD && !defined SUPPORT_RTC
-        #define TOGGLE_WATCHDOG_LED()  _TOGGLE_PORT(D, BLINK_LED); if (IS_POWERED_UP(5, SIM_SCGC5_SLCD)) { TOGGLE_SLCD(11, 0x01); } // toggle LED and blink LCD ":"
+        #define TOGGLE_WATCHDOG_LED()  _TOGGLE_PORT(D, BLINK_LED); if (IS_POWERED_UP(5, SLCD)) { TOGGLE_SLCD(11, 0x01); } // toggle LED and blink LCD ":"
     #else
         #define TOGGLE_WATCHDOG_LED()  _TOGGLE_PORT(D, BLINK_LED)
     #endif
@@ -6955,7 +6976,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define WATCHDOG_DISABLE()      (!_READ_PORT_MASK(A, SWITCH_4))      // pull this input down at reset to disable watchdog [hold SW4]
     #define ACTIVATE_WATCHDOG()     SIM_COPC = (SIM_COPC_COPCLKS_1K | SIM_COPC_COPT_LONGEST) // 1.024s watchdog timeout
     #if defined SUPPORT_SLCD
-        #define TOGGLE_WATCHDOG_LED()  _TOGGLE_PORT(A, BLINK_LED); if (IS_POWERED_UP(5, SIM_SCGC5_SLCD)) { TOGGLE_SLCD(24, 0x08); } // toggle LED and freescale logo in SLCD
+        #define TOGGLE_WATCHDOG_LED()  _TOGGLE_PORT(A, BLINK_LED); if (IS_POWERED_UP(5, SLCD)) { TOGGLE_SLCD(24, 0x08); } // toggle LED and freescale logo in SLCD
     #else
         #define TOGGLE_WATCHDOG_LED()  _TOGGLE_PORT(A, BLINK_LED)
     #endif
@@ -7187,7 +7208,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define WATCHDOG_DISABLE()      (!_READ_PORT_MASK(E, PORTE_BIT0))    // right side rear connector - short pins 4 and 2 together to disable watchdog
     #define ACTIVATE_WATCHDOG()     UNLOCK_WDOG(); WDOG_TOVALL = (2000/5); WDOG_TOVALH = 0; WDOG_STCTRLH = (WDOG_STCTRLH_STNDBYEN | WDOG_STCTRLH_WAITEN | WDOG_STCTRLH_STOPEN | WDOG_STCTRLH_WDOGEN) // watchdog enabled to generate reset on 2s timeout (no further updates allowed)
     #if defined SUPPORT_SLCD
-        #define TOGGLE_WATCHDOG_LED()   if (IS_POWERED_UP(3, SIM_SCGC3_SLCD)) { TOGGLE_SLCD(3TO0, 0x1000); } // blink freescale logo in the SLCD
+        #define TOGGLE_WATCHDOG_LED()   if (IS_POWERED_UP(3, SLCD)) { TOGGLE_SLCD(3TO0, 0x1000); } // blink freescale logo in the SLCD
     #else
         #define TOGGLE_WATCHDOG_LED()
     #endif
@@ -7237,7 +7258,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define WATCHDOG_DISABLE()      (!_READ_PORT_MASK(C, SWITCH_1))      // pull this input down to disable watchdog (hold SW1 at reset)
     #define ACTIVATE_WATCHDOG()     UNLOCK_WDOG(); WDOG_TOVALL = (2000/5); WDOG_TOVALH = 0; WDOG_STCTRLH = (WDOG_STCTRLH_STNDBYEN | WDOG_STCTRLH_WAITEN | WDOG_STCTRLH_STOPEN | WDOG_STCTRLH_WDOGEN) // watchdog enabled to generate reset on 2s timeout (no further updates allowed)
     #if defined SUPPORT_SLCD
-        #define TOGGLE_WATCHDOG_LED() _TOGGLE_PORT(C, BLINK_LED); if (IS_POWERED_UP(3, SIM_SCGC3_SLCD)) { TOGGLE_SLCD(15TO12, 0x8000000); } // blink freescale logo in the SLCD
+        #define TOGGLE_WATCHDOG_LED() _TOGGLE_PORT(C, BLINK_LED); if (IS_POWERED_UP(3, SLCD)) { TOGGLE_SLCD(15TO12, 0x8000000); } // blink freescale logo in the SLCD
     #else
         #define TOGGLE_WATCHDOG_LED() _TOGGLE_PORT(C, BLINK_LED);
     #endif
@@ -7761,7 +7782,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
             // Configure to suit SD card SPI mode on SPI1
             //
             #define SPI1_CS0       PORTB_BIT10
-            #define INITIALISE_SPI_SD_INTERFACE() POWER_UP(6, SIM_SCGC6_SPI1); \
+            #define INITIALISE_SPI_SD_INTERFACE() POWER_UP_ATOMIC(6, SPI1); \
             _CONFIG_PERIPHERAL(B, 11, PB_11_SPI1_SCK); _CONFIG_PERIPHERAL(B, 16, (PB_16_SPI1_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); _CONFIG_PERIPHERAL(B, 17, (PB_17_SPI1_SIN | PORT_PS_UP_ENABLE)); \
             _CONFIG_DRIVE_PORT_OUTPUT_VALUE(B, SPI1_CS0, SPI1_CS0, (PORT_SRE_FAST | PORT_DSE_HIGH)); \
             SPI1_CTAR0 = (SPI_CTAR_ASC_6 | SPI_CTAR_FMSZ_8 | SPI_CTAR_CPHA | SPI_CTAR_CPOL | SPI_CTAR_BR_128); SPI1_MCR = (SPI_MCR_DIS_TXF | SPI_MCR_DIS_RXF | SPI_MCR_MSTR | SPI_MCR_DCONF_SPI | SPI_MCR_CLR_RXF | SPI_MCR_CLR_TXF | SPI_MCR_PCSIS_CS0 | SPI_MCR_PCSIS_CS1 | SPI_MCR_PCSIS_CS2 | SPI_MCR_PCSIS_CS3 | SPI_MCR_PCSIS_CS4 | SPI_MCR_PCSIS_CS5)
@@ -7791,7 +7812,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
             // Configure to suit SD card SPI mode on SPI2
             //
             #if defined KBED_FPGA	                                    // FPGA version has other CD pin access
-                #define INITIALISE_SPI_SD_INTERFACE() POWER_UP(3, SIM_SCGC3_SPI2); \
+                #define INITIALISE_SPI_SD_INTERFACE() POWER_UP_ATOMIC(3, SPI2); \
             	_CONFIG_PERIPHERAL(D, 12, PD_12_SPI2_SCK); _CONFIG_PERIPHERAL(D, 13, (PD_13_SPI2_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); _CONFIG_PERIPHERAL(D, 14, (PD_14_SPI2_SIN | PORT_PS_UP_ENABLE)); \
             	_CONFIG_DRIVE_PORT_OUTPUT_VALUE(D, SPI2_CS1, SPI2_CS1, (PORT_SRE_FAST | PORT_DSE_HIGH)); \
             	SPI2_CTAR0 = (SPI_CTAR_ASC_6 | SPI_CTAR_FMSZ_8 | SPI_CTAR_CPHA | SPI_CTAR_CPOL | SPI_CTAR_BR_128); SPI2_MCR = (SPI_MCR_DIS_TXF | SPI_MCR_DIS_RXF | SPI_MCR_MSTR | SPI_MCR_DCONF_SPI | SPI_MCR_CLR_RXF | SPI_MCR_CLR_TXF | SPI_MCR_PCSIS_CS0 | SPI_MCR_PCSIS_CS1 | SPI_MCR_PCSIS_CS2 | SPI_MCR_PCSIS_CS3 | SPI_MCR_PCSIS_CS4 | SPI_MCR_PCSIS_CS5)
@@ -7802,7 +7823,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
                 #define SDCARD_DETECT_PORT     PORTB                     // interrupt is on this port
                 #define SDCARD_DETECT_PIN      SD_CARD_DETECTION         // interrupt pin
 
-                #define INITIALISE_SPI_SD_INTERFACE() POWER_UP(3, SIM_SCGC3_SPI2); \
+                #define INITIALISE_SPI_SD_INTERFACE() POWER_UP_ATOMIC(3, SPI2); \
             	_CONFIG_PORT_INPUT(B, (SD_CARD_DETECTION), (PORT_PS_UP_ENABLE)); \
             	_CONFIG_PERIPHERAL(D, 12, PD_12_SPI2_SCK); _CONFIG_PERIPHERAL(D, 13, (PD_13_SPI2_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); _CONFIG_PERIPHERAL(D, 14, (PD_14_SPI2_SIN | PORT_PS_UP_ENABLE)); \
             	_CONFIG_DRIVE_PORT_OUTPUT_VALUE(D, SPI2_CS1, SPI2_CS1, (PORT_SRE_FAST | PORT_DSE_HIGH)); \
@@ -7835,7 +7856,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         // Configure to suit SD card SPI mode on SPI2 
         //
         #define SPI2_CS0          PORTB_BIT20
-        #define INITIALISE_SPI_SD_INTERFACE() POWER_UP(3, SIM_SCGC3_SPI2); \
+        #define INITIALISE_SPI_SD_INTERFACE() POWER_UP_ATOMIC(3, SPI2); \
         _CONFIG_PERIPHERAL(B, 21, PB_21_SPI2_SCK); _CONFIG_PERIPHERAL(B, 22, (PB_22_SPI2_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); _CONFIG_PERIPHERAL(B, 23, (PB_23_SPI2_SIN | PORT_PS_UP_ENABLE)); \
         _CONFIG_DRIVE_PORT_OUTPUT_VALUE(B, SPI2_CS0, SPI2_CS0, (PORT_SRE_FAST | PORT_DSE_HIGH)); \
         SPI2_CTAR0 = (SPI_CTAR_ASC_6 | SPI_CTAR_FMSZ_8 | SPI_CTAR_CPHA | SPI_CTAR_CPOL | SPI_CTAR_BR_128); SPI2_MCR = (SPI_MCR_DIS_TXF | SPI_MCR_DIS_RXF | SPI_MCR_MSTR | SPI_MCR_DCONF_SPI | SPI_MCR_CLR_RXF | SPI_MCR_CLR_TXF | SPI_MCR_PCSIS_CS0 | SPI_MCR_PCSIS_CS1 | SPI_MCR_PCSIS_CS2 | SPI_MCR_PCSIS_CS3 | SPI_MCR_PCSIS_CS4 | SPI_MCR_PCSIS_CS5)
@@ -7899,7 +7920,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
             //
             #define SPI_CS1_0                  PORTE_BIT4
             #if defined TWR_K60F120M || defined TWR_K70F120M || defined TWR_K80F150M // swap SIN and SOUT pins for compatibility with SDHC connection
-                #define INITIALISE_SPI_SD_INTERFACE() POWER_UP(6, SIM_SCGC6_SPI1); \
+                #define INITIALISE_SPI_SD_INTERFACE() POWER_UP_ATOMIC(6, SPI1); \
                 _CONFIG_PORT_INPUT(E, (WRITE_PROTECT_INPUT | SD_CARD_DETECTION), (PORT_PS_UP_ENABLE)); \
                 _CONFIG_PORT_INPUT(E, (PORTE_BIT0), (PORT_NO_PULL)); \
                 _CONFIG_PERIPHERAL(E, 2, PE_2_SPI1_SCK); \
@@ -7907,7 +7928,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
                 _CONFIG_DRIVE_PORT_OUTPUT_VALUE(E, SPI_CS1_0, SPI_CS1_0, (PORT_SRE_FAST | PORT_DSE_HIGH)); \
                 SPI1_CTAR0 = (SPI_CTAR_ASC_6 | SPI_CTAR_FMSZ_8 | SPI_CTAR_CPHA | SPI_CTAR_CPOL | SPI_CTAR_BR_128); SPI1_MCR = (SPI_MCR_DIS_TXF | SPI_MCR_DIS_RXF | SPI_MCR_MSTR | SPI_MCR_DCONF_SPI | SPI_MCR_CLR_RXF | SPI_MCR_CLR_TXF | SPI_MCR_PCSIS_CS0 | SPI_MCR_PCSIS_CS1 | SPI_MCR_PCSIS_CS2 | SPI_MCR_PCSIS_CS3 | SPI_MCR_PCSIS_CS4 | SPI_MCR_PCSIS_CS5)
             #else
-                #define INITIALISE_SPI_SD_INTERFACE() POWER_UP(6, SIM_SCGC6_SPI1); \
+                #define INITIALISE_SPI_SD_INTERFACE() POWER_UP_ATOMIC(6, SPI1); \
                 _CONFIG_PORT_INPUT(E, (WRITE_PROTECT_INPUT | SD_CARD_DETECTION), (PORT_PS_UP_ENABLE)); \
                 _CONFIG_PORT_INPUT(E, (PORTE_BIT0), (PORT_NO_PULL)); \
                 _CONFIG_PERIPHERAL(E, 2, PE_2_SPI1_SCK); \
@@ -7985,7 +8006,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
             // Configure to suit SD card SPI mode at between 100k and 400k
             //
             #define SPI_CS1_0                  PORTE_BIT4
-            #define INITIALISE_SPI_SD_INTERFACE() POWER_UP(6, SIM_SCGC6_SPI1); \
+            #define INITIALISE_SPI_SD_INTERFACE() POWER_UP_ATOMIC(6, SPI1); \
             _CONFIG_PORT_INPUT(E, (WRITE_PROTECT_INPUT), (PORT_PS_UP_ENABLE)); \
             _CONFIG_PORT_INPUT(E, (PORTE_BIT0), (PORT_NO_PULL)); \
             _CONFIG_PERIPHERAL(E, 2, PE_2_SPI1_SCK); _CONFIG_PERIPHERAL(E, 1, (PE_1_SPI1_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); _CONFIG_PERIPHERAL(E, 3, (PE_3_SPI1_SIN | PORT_PS_UP_ENABLE)); \
@@ -8022,7 +8043,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         // - SPI0_MISO PTE-2 (J9-5)
         //
         #define SPI_CS1_0              PORTE_BIT3
-        #define INITIALISE_SPI_SD_INTERFACE() POWER_UP(4, SIM_SCGC4_SPI0); \
+        #define INITIALISE_SPI_SD_INTERFACE() POWER_UP_ATOMIC(4, SPI0); \
         SIM_PINSEL0 |= SIM_PINSEL_SPI0PS; \
         _CONFIG_PERIPHERAL(E, 0, (PE_0_SPI0_SCK)); \
         _CONFIG_PERIPHERAL(E, 1, (PE_1_SPI0_MOSI | PORT_SRE_FAST | PORT_DSE_HIGH)); \
@@ -8056,7 +8077,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         // Configure to suit special connection SPI mode at between 100k and 400k (SPI0)
         //
         #define SPI_CS1_0              PORTA_BIT2
-        #define INITIALISE_SPI_SD_INTERFACE() POWER_UP(4, SIM_SCGC4_SPI0); \
+        #define INITIALISE_SPI_SD_INTERFACE() POWER_UP_ATOMIC(4, SPI0); \
         _CONFIG_PERIPHERAL(C, 5, PC_5_SPI0_SCK); \
         _CONFIG_PERIPHERAL(C, 6, (PC_6_SPI0_MOSI | PORT_SRE_FAST | PORT_DSE_HIGH)); \
         _CONFIG_PERIPHERAL(C, 7, (PC_7_SPI0_MISO | PORT_PS_UP_ENABLE)); \
@@ -8094,7 +8115,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
             #define SPI_CS1_0             PORTC_BIT1
             #define SDCARD_DETECT_PIN     PORTC_BIT0                     // '1' when SD card is inserted
         #endif
-        #define INITIALISE_SPI_SD_INTERFACE() POWER_UP(6, SIM_SCGC6_SPI0); \
+        #define INITIALISE_SPI_SD_INTERFACE() POWER_UP_ATOMIC(6, SPI0); \
         _CONFIG_PERIPHERAL(C, 5, PC_5_SPI0_SCK | PORT_SRE_FAST | PORT_DSE_HIGH); \
         _CONFIG_PERIPHERAL(C, 6, (PC_6_SPI0_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); \
         _CONFIG_PERIPHERAL(C, 7, (PC_7_SPI0_SIN | PORT_PS_UP_ENABLE)); \
@@ -8140,7 +8161,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         // Configure to suit special connection SPI mode at between 100k and 400k (SPI0)
         //
         #define SPI_CS1_0              PORTC_BIT4
-        #define INITIALISE_SPI_SD_INTERFACE() POWER_UP(4, SIM_SCGC4_SPI0); \
+        #define INITIALISE_SPI_SD_INTERFACE() POWER_UP_ATOMIC(4, SPI0); \
         _CONFIG_PERIPHERAL(C, 5, PC_5_SPI0_SCK); \
         _CONFIG_PERIPHERAL(C, 6, (PC_6_SPI0_MOSI | PORT_SRE_FAST | PORT_DSE_HIGH)); \
         _CONFIG_PERIPHERAL(C, 7, (PC_7_SPI0_MISO | PORT_PS_UP_ENABLE)); \
@@ -8174,7 +8195,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         //
         #define SD_CARD_DETECTION      PORTB_BIT3
         #define SPI_CS1_0              PORTD_BIT0
-        #define INITIALISE_SPI_SD_INTERFACE() POWER_UP(4, SIM_SCGC4_SPI1); \
+        #define INITIALISE_SPI_SD_INTERFACE() POWER_UP_ATOMIC(4, SPI1); \
         _CONFIG_PORT_INPUT_FAST_LOW(B, (SD_CARD_DETECTION), PORT_PS_UP_ENABLE); \
         _CONFIG_PERIPHERAL(C, 3, PC_3_SPI1_SCK); \
         _CONFIG_PERIPHERAL(B, 16, (PB_16_SPI1_MOSI | PORT_SRE_FAST | PORT_DSE_HIGH)); \
@@ -8215,7 +8236,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         // - SPI0_MISO PTD-3 (J2-10)
         //
         #define SPI_CS1_0              PORTB_BIT2
-        #define INITIALISE_SPI_SD_INTERFACE() POWER_UP(4, SIM_SCGC4_SPI0); \
+        #define INITIALISE_SPI_SD_INTERFACE() POWER_UP_ATOMIC(4, SPI0); \
         _CONFIG_PERIPHERAL(D, 1, PD_1_SPI0_SCK); \
         _CONFIG_PERIPHERAL(D, 2, (PD_2_SPI0_MOSI | PORT_SRE_FAST | PORT_DSE_HIGH)); \
         _CONFIG_PERIPHERAL(D, 3, (PD_3_SPI0_MISO | PORT_PS_UP_ENABLE)); \
@@ -8252,7 +8273,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         // - SPI1_MISO PTD-7 (J2-19)
         //
         #define SPI_CS1_0              PORTD_BIT4
-        #define INITIALISE_SPI_SD_INTERFACE() POWER_UP(4, SIM_SCGC4_SPI1); \
+        #define INITIALISE_SPI_SD_INTERFACE() POWER_UP_ATOMIC(4, SPI1); \
         _CONFIG_PERIPHERAL(D, 5, PD_5_SPI1_SCK); \
         _CONFIG_PERIPHERAL(D, 6, (PD_6_SPI1_MOSI | PORT_SRE_FAST | PORT_DSE_HIGH)); \
         _CONFIG_PERIPHERAL(D, 7, (PD_7_SPI1_MISO | PORT_PS_UP_ENABLE)); \
@@ -8289,7 +8310,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         // - SPI1_MISO PTD-7 (J2-10)
         //
         #define SPI_CS1_0              PORTD_BIT4
-        #define INITIALISE_SPI_SD_INTERFACE() POWER_UP(4, SIM_SCGC4_SPI1); \
+        #define INITIALISE_SPI_SD_INTERFACE() POWER_UP_ATOMIC(4, SPI1); \
         _CONFIG_PERIPHERAL(D, 5, PD_5_SPI1_SCK); \
         _CONFIG_PERIPHERAL(D, 6, (PD_6_SPI1_MOSI | PORT_SRE_FAST | PORT_DSE_HIGH)); \
         _CONFIG_PERIPHERAL(D, 7, (PD_7_SPI1_MISO | PORT_PS_UP_ENABLE)); \
@@ -8322,7 +8343,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         // Configure to suit SD card SPI mode at between 100k and 400k - use SPI0
         //
         #define SPI_CS1_0                  PORTC_BIT4
-        #define INITIALISE_SPI_SD_INTERFACE() POWER_UP(6, SIM_SCGC6_SPI0); \
+        #define INITIALISE_SPI_SD_INTERFACE() POWER_UP_ATOMIC(6, SPI0); \
         _CONFIG_PERIPHERAL(D, 1, PD_1_SPI0_SCK); _CONFIG_PERIPHERAL(D, 2, (PD_2_SPI0_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); _CONFIG_PERIPHERAL(D, 3, (PD_3_SPI0_SIN | PORT_PS_UP_ENABLE)); \
         _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, SPI_CS1_0, SPI_CS1_0, (PORT_SRE_FAST | PORT_DSE_HIGH)); \
         SPI0_CTAR0 = (SPI_CTAR_ASC_6 | SPI_CTAR_FMSZ_8 | SPI_CTAR_CPHA | SPI_CTAR_CPOL | SPI_CTAR_BR_128); SPI0_MCR = (SPI_MCR_DIS_TXF | SPI_MCR_DIS_RXF | SPI_MCR_MSTR | SPI_MCR_DCONF_SPI | SPI_MCR_CLR_RXF | SPI_MCR_CLR_TXF | SPI_MCR_PCSIS_CS0 | SPI_MCR_PCSIS_CS1 | SPI_MCR_PCSIS_CS2 | SPI_MCR_PCSIS_CS3 | SPI_MCR_PCSIS_CS4 | SPI_MCR_PCSIS_CS5)
@@ -8361,7 +8382,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         //
         #if defined TEENSY_3_1
             #define SPI_CS1_0             PORTA_BIT13
-            #define INITIALISE_SPI_SD_INTERFACE() POWER_UP(6, SIM_SCGC6_SPI0); \
+            #define INITIALISE_SPI_SD_INTERFACE() POWER_UP_ATOMIC(6, SPI0); \
             _CONFIG_PERIPHERAL(C, 5, PC_5_SPI0_SCK | PORT_SRE_FAST | PORT_DSE_HIGH); \
             _CONFIG_PERIPHERAL(C, 6, (PC_6_SPI0_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); \
             _CONFIG_PERIPHERAL(C, 7, (PC_7_SPI0_SIN | PORT_PS_UP_ENABLE)); \
@@ -8377,7 +8398,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
             #define SET_SD_CS_HIGH()     _SETBITS(A, SPI_CS1_0)          // negate the CS line of the SD card to be read
         #else                                                            // TWR_K20D72M
             #define SPI_CS1_0            PORTD_BIT4
-            #define INITIALISE_SPI_SD_INTERFACE() POWER_UP(6, SIM_SCGC6_SPI0); \
+            #define INITIALISE_SPI_SD_INTERFACE() POWER_UP_ATOMIC(6, SPI0); \
             _CONFIG_PERIPHERAL(D, 1, PD_1_SPI0_SCK); _CONFIG_PERIPHERAL(D, 2, (PD_2_SPI0_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); _CONFIG_PERIPHERAL(D, 3, (PD_3_SPI0_SIN | PORT_PS_UP_ENABLE)); \
             _CONFIG_DRIVE_PORT_OUTPUT_VALUE(D, SPI_CS1_0, SPI_CS1_0, (PORT_SRE_FAST | PORT_DSE_HIGH)); \
             SPI0_CTAR0 = (SPI_CTAR_ASC_6 | SPI_CTAR_FMSZ_8 | SPI_CTAR_CPHA | SPI_CTAR_CPOL | SPI_CTAR_BR_128); SPI0_MCR = (SPI_MCR_DIS_TXF | SPI_MCR_DIS_RXF | SPI_MCR_MSTR | SPI_MCR_DCONF_SPI | SPI_MCR_CLR_RXF | SPI_MCR_CLR_TXF | SPI_MCR_PCSIS_CS0 | SPI_MCR_PCSIS_CS1 | SPI_MCR_PCSIS_CS2 | SPI_MCR_PCSIS_CS3 | SPI_MCR_PCSIS_CS4 | SPI_MCR_PCSIS_CS5)
@@ -8483,7 +8504,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
             // Configure to suit SD card SPI mode at between 100k and 400k
             //
             #define SPI_CS1_0                  PORTE_BIT4
-            #define INITIALISE_SPI_SD_INTERFACE() POWER_UP(6, SIM_SCGC6_SPI1); \
+            #define INITIALISE_SPI_SD_INTERFACE() POWER_UP_ATOMIC(6, SPI1); \
             _CONFIG_PORT_INPUT(E, (WRITE_PROTECT_INPUT), (PORT_PS_UP_ENABLE)); \
             _CONFIG_PORT_INPUT(E, (PORTE_BIT0), (PORT_NO_PULL)); \
             _CONFIG_PERIPHERAL(E, 2, PE_2_SPI1_SCK); _CONFIG_PERIPHERAL(E, 1, (PE_1_SPI1_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); _CONFIG_PERIPHERAL(E, 3, (PE_3_SPI1_SIN | PORT_PS_UP_ENABLE)); \
@@ -8744,7 +8765,7 @@ typedef unsigned long LCD_CONTROL_PORT_SIZE;
 #if defined SUPPORT_SLCD && (defined TWR_K40X256 || defined TWR_K40D100M || defined TWR_K53N512)
     #if defined TWR_K53N512
         #define CONFIGURE_SLCD()  MCG_C1 |= MCG_C1_IRCLKEN; \
-                                  POWER_UP_ATOMIC(3, SIM_SCGC3_SLCD); \
+                                  POWER_UP_ATOMIC(3, SLCD); \
                                   LCD_GCR = (LCD_GCR_VSUPPLY_VLL3 | LCD_GCR_SOURCE | LCD_GCR_LCLK_4 | LCD_GCR_DUTY_4BP | LCD_GCR_ALTDIV_NONE); \
                                   LCD_PENL =  (SLCD_PIN_10 | SLCD_PIN_11 | SLCD_PIN_2 | SLCD_PIN_3 | SLCD_PIN_20 | SLCD_PIN_21 | SLCD_PIN_22 | SLCD_PIN_12 | SLCD_PIN_13 | SLCD_PIN_14 | SLCD_PIN_15); \
                                   LCD_PENH =  0x00000000; \
@@ -8755,7 +8776,7 @@ typedef unsigned long LCD_CONTROL_PORT_SIZE;
                                   LCD_GCR = (LCD_GCR_LCDEN | LCD_GCR_VSUPPLY_VLL3 | LCD_GCR_SOURCE | LCD_GCR_LCLK_4 | LCD_GCR_DUTY_4BP | LCD_GCR_ALTDIV_NONE)
     #else
         #define CONFIGURE_SLCD()  MCG_C1 |= MCG_C1_IRCLKEN; \
-                                  POWER_UP_ATOMIC(3, SIM_SCGC3_SLCD); \
+                                  POWER_UP_ATOMIC(3, SLCD); \
                                   LCD_GCR = (LCD_GCR_VSUPPLY_VLL3 | LCD_GCR_SOURCE | LCD_GCR_LCLK_4 | LCD_GCR_DUTY_4BP | LCD_GCR_ALTDIV_NONE); \
                                   LCD_PENL = (SLCD_PIN_0 | SLCD_PIN_1 | SLCD_PIN_2 | SLCD_PIN_3 | SLCD_PIN_20 | SLCD_PIN_21 | SLCD_PIN_22 | SLCD_PIN_12 | SLCD_PIN_13 | SLCD_PIN_14 | SLCD_PIN_15); \
                                   LCD_PENH = 0x00000000; \
@@ -8777,7 +8798,7 @@ typedef unsigned long LCD_CONTROL_PORT_SIZE;
     #define SET_USB_SYMBOL()      SET_SLCD(23TO20, 0x100)                // control display of USB enumeration - set
 #elif defined SUPPORT_SLCD && (defined KWIKSTIK || defined KINETIS_K30 || defined KINETIS_K51)
     #define CONFIGURE_SLCD()      MCG_C1 |= MCG_C1_IRCLKEN; \
-                                  POWER_UP_ATOMIC(3, SIM_SCGC3_SLCD); \
+                                  POWER_UP_ATOMIC(3, SLCD); \
                                   LCD_GCR = (LCD_GCR_CPSEL | LCD_GCR_RVEN | LCD_GCR_RVTRIM_MASK | LCD_GCR_LADJ_MASK | LCD_GCR_LCLK_0 | LCD_GCR_VSUPPLY_VLL3_EXT | LCD_GCR_SOURCE | LCD_GCR_DUTY_8BP | LCD_GCR_ALTDIV_NONE); \
                                   LCD_PENL = 0xfffffffe; \
                                   LCD_PENH = 0x0000ffff; \
@@ -8809,7 +8830,7 @@ typedef unsigned long LCD_CONTROL_PORT_SIZE;
     // SLCD configuration with clock from MCGIRCLK (2MHz) divided by 64
     //
     #define CONFIGURE_SLCD()      MCG_C1 |= MCG_C1_IRCLKEN; \
-                                  POWER_UP_ATOMIC(5, SIM_SCGC5_SLCD); \
+                                  POWER_UP_ATOMIC(5, SLCD); \
                                   LCD_GCR = ((0x0b000000 & LCD_GCR_RVTRIM_MASK) | LCD_GCR_CPSEL | LCD_GCR_LADJ_MASK | LCD_GCR_VSUPPLY | LCD_GCR_ALTDIV_64 | LCD_GCR_SOURCE | LCD_GCR_LCLK_1 | LCD_GCR_DUTY_4BP); \
                                   LCD_AR = (LCD_AR_BRATE_MASK & 3); \
                                   LCD_BPENL = (SLCD_PIN_14 | SLCD_PIN_15); \
@@ -8838,7 +8859,7 @@ typedef unsigned long LCD_CONTROL_PORT_SIZE;
     // SLCD configuration with clock from MCGIRCLK (2MHz) divided by 64
     //
     #define CONFIGURE_SLCD()      MCG_C1 |= MCG_C1_IRCLKEN; \
-                                  POWER_UP_ATOMIC(5, SIM_SCGC5_SLCD); \
+                                  POWER_UP_ATOMIC(5, SLCD); \
                                   LCD_GCR = (LCD_GCR_CPSEL | LCD_GCR_LADJ_MASK | LCD_GCR_ALTDIV_256 | LCD_GCR_SOURCE | LCD_GCR_LCLK_1 | LCD_GCR_DUTY_4BP); \
                                   LCD_BPENL = (SLCD_PIN_12 | SLCD_PIN_13 | SLCD_PIN_14 | SLCD_PIN_15); \
                                   LCD_BPENH = 0x00000000; \
@@ -8869,7 +8890,7 @@ typedef unsigned long LCD_CONTROL_PORT_SIZE;
     // Use MCGIRCLK (fast IRC) as SLCD source
     //
     #define CONFIGURE_SLCD()      MCG_C1 &= ~(MCG_C1_IREFS); MCG_C1 |= (MCG_C1_IRCLKEN | MCG_C1_IREFSTEN); \
-                                  POWER_UP_ATOMIC(5, SIM_SCGC5_SLCD); \
+                                  POWER_UP_ATOMIC(5, SLCD); \
                                   LCD_GCR = (LCD_GCR_RVEN | (0x08000000 & LCD_GCR_RVTRIM_MASK) | LCD_GCR_CPSEL | LCD_GCR_LADJ_MASK | LCD_GCR_VSUPPLY | LCD_GCR_SOURCE | LCD_GCR_LCLK_1 | LCD_GCR_DUTY_4BP); \
                                   LCD_AR = (LCD_AR_BRATE_MASK & 3); \
                                   LCD_BPENL = (SLCD_PIN_19 | SLCD_PIN_18); \
@@ -8896,7 +8917,7 @@ typedef unsigned long LCD_CONTROL_PORT_SIZE;
     #define GLCD_Y  90
 
     #define CONFIGURE_SLCD()      MCG_C1 |= MCG_C1_IRCLKEN; \
-                                  POWER_UP_ATOMIC(5, SIM_SCGC5_SLCD); \
+                                  POWER_UP_ATOMIC(5, SLCD); \
                                   LCD_GCR = (LCD_GCR_VSUPPLY | LCD_GCR_SOURCE | LCD_GCR_LCLK_4 | LCD_GCR_DUTY_4BP | LCD_GCR_ALTDIV_NONE); \
                                   LCD_BPENL = (SLCD_PIN_12 | SLCD_PIN_13 | SLCD_PIN_14 | SLCD_PIN_15); \
                                   LCD_BPENH = 0x00000000; \
@@ -8968,7 +8989,7 @@ typedef unsigned long LCD_CONTROL_PORT_SIZE;
         #define MAX_GLCD_WRITE_BURST   1024                              // the maximum number of writes to the GLCD before the task yields
     #endif
 #elif defined NET_KBED	                                                 // {16} optional ST7565S 128x64 GLCD via SPI 
-    #define CONFIGURE_GLCD()   POWER_UP(6, SIM_SCGC6_SPI1);\
+    #define CONFIGURE_GLCD()   POWER_UP_ATOMIC(6, SPI1);\
                                _CONFIG_PERIPHERAL(B, 10, (PB_10_SPI1_PCS0 | PORT_SRE_FAST | PORT_DSE_HIGH));\
                                _CONFIG_PERIPHERAL(B, 11, (PB_11_SPI1_SCK | PORT_SRE_FAST | PORT_DSE_HIGH));\
                                _CONFIG_PERIPHERAL(B, 16, (PB_16_SPI1_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH));\
@@ -9001,7 +9022,7 @@ typedef unsigned long LCD_CONTROL_PORT_SIZE;
     #define SPI_GLCD_CS        PORTD_BIT4                                   // the chip select line controlling the GLCD
     #define SPI_GLCD_A0        PORTE_BIT1                                   // the A0 line, used to control data and commands
     #define SPI_GLCD_RESET     PORTE_BIT0                                   // the reset line to the GLCD
-    #define CONFIGURE_GLCD()   POWER_UP(4, SIM_SCGC4_SPI0);\
+    #define CONFIGURE_GLCD()   POWER_UP_ATOMIC(4, SPI0);\
                                _CONFIG_PERIPHERAL(D, 1, (PD_1_SPI0_SCK | PORT_SRE_FAST | PORT_DSE_HIGH));\
                                _CONFIG_PERIPHERAL(D, 2, (PD_2_SPI0_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH));\
                                _CONFIG_PERIPHERAL(D, 3, PD_3_SPI0_SIN);\
@@ -9055,10 +9076,10 @@ typedef unsigned long LCD_CONTROL_PORT_SIZE;
     // the 8 bit data appears at AD0..AD7
     //
     #define CONFIGURE_GLCD()        BACK_LIGHT_MIN_INTENSITY(); \
-                                    if (IS_POWERED_UP(6, SIM_SCGC6_FTM0) != 0) {FTM0_SC = 0;} \
+                                    if (IS_POWERED_UP(6, FTM0) != 0) {FTM0_SC = 0;} \
                                     _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_LOW(A, GLCD_RESET_LINE, 0, (PORT_SRE_SLOW | PORT_DSE_LOW)); \
                                     _CONFIG_DRIVE_PORT_OUTPUT_VALUE(B, (TSI_RESET_LINE), (0), (PORT_SRE_FAST | PORT_DSE_LOW)); \
-                                    POWER_UP(7, SIM_SCGC7_FLEXBUS); \
+                                    POWER_UP_ATOMIC(7, FLEXBUS); \
                                     SIM_SOPT2 |= SIM_SOPT2_FBSL_ALL; \
                                     _CONFIG_PERIPHERAL(B, 17, (PB_17_FB_AD16 | PORT_DSE_HIGH | PORT_PS_DOWN_ENABLE)); \
                                     _CONFIG_PERIPHERAL(C, 11, (PC_11_FB_RW | PORT_DSE_HIGH | PORT_PS_DOWN_ENABLE)); \
@@ -9173,7 +9194,7 @@ typedef unsigned long LCD_CONTROL_PORT_SIZE;
   #if 1
     #define FLUSH_LCD_SPI_FIFO_AND_FLAGS()      SPI0_MCR |= (SPI_MCR_CLR_RXF); SPI0_SR = (SPI_SR_EOQF | SPI_SR_TFUF | SPI_SR_TFFF | SPI_SR_RFOF | SPI_SR_RFDF)
 
-    #define CONFIGURE_GLCD()          POWER_UP(6, SIM_SCGC6_SPI0);\
+    #define CONFIGURE_GLCD()          POWER_UP_ATOMIC(6, SPI0);\
                                       _CONFIG_PERIPHERAL(D, 0, (PD_0_SPI0_PCS0 | PORT_SRE_FAST | PORT_DSE_HIGH));\
                                       _CONFIG_PERIPHERAL(D, 1, (PD_1_SPI0_SCK | PORT_SRE_FAST | PORT_DSE_HIGH));\
                                       _CONFIG_PERIPHERAL(D, 2, (PD_2_SPI0_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH));\
@@ -9219,7 +9240,7 @@ typedef unsigned long LCD_CONTROL_PORT_SIZE;
 	#define FT800_SPI_CTAR_ASC			0x000000200			//time sck ->cs disable (time after sck)
 	#define FT800_SPI_CTAR_DT			0x000000020			//time cs min. disabled (required 0)
 
-    #define CONFIGURE_GLCD()          POWER_UP(6, SIM_SCGC6_SPI1);\
+    #define CONFIGURE_GLCD()          POWER_UP_ATOMIC(6, SPI1);\
                                       _CONFIG_PORT_OUTPUT(A, PORTA_BIT2,PORT_SRE_FAST);_CLEARBITS(A, PORTA_BIT2);\
                                       _CONFIG_PERIPHERAL(E, 4, (PE_4_SPI1_PCS0 | PORT_SRE_FAST | PORT_DSE_HIGH));\
                                       _CONFIG_PERIPHERAL(E, 2, (PE_2_SPI1_SCK | PORT_SRE_FAST | PORT_DSE_HIGH));\
@@ -9397,7 +9418,7 @@ typedef unsigned long LCD_CONTROL_PORT_SIZE;
 
                                                                          // power up the touch sense input module; select TSI channels on the ports
                                                                          // enable TSI channels
-            #define INIT_KEY_SCAN()     POWER_UP(5, SIM_SCGC5_TSI); _CONFIG_PERIPHERAL(B, 0,  PB_0_TSI_CH0); _CONFIG_PERIPHERAL(B, 1,  PB_1_TSI_CH6); \
+            #define INIT_KEY_SCAN()     POWER_UP_ATOMIC(5, TSI); _CONFIG_PERIPHERAL(B, 0,  PB_0_TSI_CH0); _CONFIG_PERIPHERAL(B, 1,  PB_1_TSI_CH6); \
                                         TSI0_PEN = (TSI_PEN_PEN0 | TSI_PEN_PEN6); \
                                         TSI0_SCANC = (TSI_SCANC_SMOD_CONTINUOUS | TSI_SCANC_AMCLKS_BUS_CLK | TSI_SCANC_AMPSC_128); \
                                         TSI0_GENCS = (TSI_GENCS_STM_SW_TRIG | TSI_GENCS_SWTS | TSI_GENCS_TSIEN | TSI_GENCS_PS_32);
@@ -9419,7 +9440,7 @@ typedef unsigned long LCD_CONTROL_PORT_SIZE;
             #define READ_KEY_INPUTS()   fnReadTouchSensorInputs()
 
                                                                          // power up the touch sense input module; select TSI channels on the ports and prepare operating mode; start first measurement
-            #define INIT_KEY_SCAN()     POWER_UP(5, SIM_SCGC5_TSI); _CONFIG_PERIPHERAL(B, 16,  PB_16_TSI_CH9); _CONFIG_PERIPHERAL(B, 17,  PB_17_TSI_CH10); \
+            #define INIT_KEY_SCAN()     POWER_UP_ATOMIC(5, TSI); _CONFIG_PERIPHERAL(B, 16,  PB_16_TSI_CH9); _CONFIG_PERIPHERAL(B, 17,  PB_17_TSI_CH10); \
                                         TSI0_GENCS = (TSI_GENCS_EOSF | TSI_GENCS_STM_SW | TSI_GENCS_NSCN_32 | TSI_GENCS_TSIEN | TSI_GENCS_PS_DIV_1 | TSI_GENCS_EXTCHRG_32uA | TSI_GENCS_DVOLT_1_03 | TSI_GENCS_REFCHRG_32uA | TSI_GENCS_MODE_CAPACITIVE); \
                                         TSI0_DATA = (TSI0_DATA_SWTS | TSI0_DATA_TSICH_9)
             #define FIRST_TSI_INPUT     TSI0_DATA_TSICH_9                // alternate between channels 9 and 10
@@ -9443,7 +9464,7 @@ typedef unsigned long LCD_CONTROL_PORT_SIZE;
             #define READ_KEY_INPUTS()   fnReadTouchSensorInputs()
 
                                                                          // power up the touch sense input module; select TSI channels on the ports and prepare operating mode; start first measurement
-            #define INIT_KEY_SCAN()     POWER_UP(5, SIM_SCGC5_TSI); _CONFIG_PERIPHERAL(B, 16,  PB_16_TSI_CH9); _CONFIG_PERIPHERAL(B, 17,  PB_17_TSI_CH10);  _CONFIG_PERIPHERAL(B, 18,  PB_18_TSI_CH11); \
+            #define INIT_KEY_SCAN()     POWER_UP_ATOMIC(5, TSI); _CONFIG_PERIPHERAL(B, 16,  PB_16_TSI_CH9); _CONFIG_PERIPHERAL(B, 17,  PB_17_TSI_CH10);  _CONFIG_PERIPHERAL(B, 18,  PB_18_TSI_CH11); \
                                         TSI0_GENCS = (TSI_GENCS_EOSF | TSI_GENCS_STM_SW | TSI_GENCS_NSCN_32 | TSI_GENCS_TSIEN | TSI_GENCS_PS_DIV_1 | TSI_GENCS_EXTCHRG_32uA | TSI_GENCS_DVOLT_1_03 | TSI_GENCS_REFCHRG_32uA | TSI_GENCS_MODE_CAPACITIVE); \
                                         TSI0_DATA = (TSI0_DATA_SWTS | TSI0_DATA_TSICH_9)
             #define FIRST_TSI_INPUT     TSI0_DATA_TSICH_9                // alternate between channels 9, 10 and 11
@@ -9473,7 +9494,7 @@ typedef unsigned long LCD_CONTROL_PORT_SIZE;
 
                                                                          // power up the touch sense input module; select TSI channels on the ports
                                                                          // enable TSI channels
-            #define INIT_KEY_SCAN()     POWER_UP(5, SIM_SCGC5_TSI); _CONFIG_PERIPHERAL(B, 3,  PB_3_TSI_CH8); _CONFIG_PERIPHERAL(A, 4,  PA_4_TSI_CH5); _CONFIG_PERIPHERAL(B, 2,  PB_2_TSI_CH7); _CONFIG_PERIPHERAL(B, 16,  PB_16_TSI_CH9); \
+            #define INIT_KEY_SCAN()     POWER_UP_ATOMIC(5, TSI); _CONFIG_PERIPHERAL(B, 3,  PB_3_TSI_CH8); _CONFIG_PERIPHERAL(A, 4,  PA_4_TSI_CH5); _CONFIG_PERIPHERAL(B, 2,  PB_2_TSI_CH7); _CONFIG_PERIPHERAL(B, 16,  PB_16_TSI_CH9); \
                                         TSI0_PEN = (TSI_PEN_PEN5 | TSI_PEN_PEN7 | TSI_PEN_PEN8 | TSI_PEN_PEN9); \
                                         TSI0_SCANC = (TSI_SCANC_SMOD_CONTINUOUS | TSI_SCANC_AMCLKS_BUS_CLK | TSI_SCANC_AMPSC_128); \
                                         TSI0_GENCS = (TSI_GENCS_STM_SW_TRIG | TSI_GENCS_SWTS | TSI_GENCS_TSIEN | TSI_GENCS_PS_32);
@@ -9622,5 +9643,7 @@ typedef unsigned long LCD_CONTROL_PORT_SIZE;
     #undef SUPPORT_KEYBOARD_INTERRUPTS
     #undef SUPPORT_RTC
     #undef SUPPORT_PORT_INTERRUPTS
+    #undef SUPPORT_ADC
+    #undef SUPPORT_LLWU
 #endif
 #endif                                                                   // end of file

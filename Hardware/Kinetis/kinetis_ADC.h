@@ -273,20 +273,28 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
     #endif
             if ((ADC_DISABLE_ADC & ptrADC_settings->int_adc_mode) != 0) {
                 if (ptrADC_settings->int_adc_controller == 0) {
+    #if defined KINETIS_WITH_PCC
+                    PCC_ADC0 &= ~(PCC_CGC);                              // disable clocks to module
+    #else
                     POWER_DOWN(6, SIM_SCGC6_ADC0);                       // disable clocks to module
+    #endif
                 }
     #if ADC_CONTROLLERS > 1
                 else if (ptrADC_settings->int_adc_controller == 1) {
-                    POWER_DOWN(3, SIM_SCGC3_ADC1);
+        #if defined KINETIS_WITH_PCC
+                    PCC_ADC1 &= ~(PCC_CGC);                              // disable clocks to module
+        #else
+                    POWER_DOWN(3, SIM_SCGC3_ADC1);                       // disable clocks to module
+        #endif
                 }
         #if ADC_CONTROLLERS > 2
                 else if (ptrADC_settings->int_adc_controller == 2) {
-                    POWER_DOWN(6, SIM_SCGC6_ADC2);
+                    POWER_DOWN(6, SIM_SCGC6_ADC2);                       // disable clocks to module
                 }
         #endif
         #if ADC_CONTROLLERS > 3
                 else if (ptrADC_settings->int_adc_controller == 3) {
-                    POWER_DOWN(3, SIM_SCGC3_ADC3);
+                    POWER_DOWN(3, SIM_SCGC3_ADC3);                       // disable clocks to module
                 }
         #endif
     #endif
@@ -329,19 +337,19 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
                 unsigned char ucChannelConfig = 0;
                 if ((ptrADC_settings->int_adc_mode & ADC_CONFIGURE_ADC) != 0) { // main configuration is to be performed
                     if (ptrADC_settings->int_adc_controller == 0) {      // ADC0
-                        POWER_UP_ATOMIC(6, SIM_SCGC6_ADC0);              // enable clocks to module
+                        POWER_UP_ATOMIC(6, ADC0);                        // enable clocks to module
                     }
     #if ADC_CONTROLLERS > 1
                     else if (ptrADC_settings->int_adc_controller == 1) {
-                        POWER_UP_ATOMIC(3, SIM_SCGC3_ADC1);              // enable clocks to module
+                        POWER_UP_ATOMIC(3, ADC1);                        // enable clocks to module
                     }
         #if ADC_CONTROLLERS > 2
                     else if (ptrADC_settings->int_adc_controller == 2) {
-                        POWER_UP_ATOMIC(6, SIM_SCGC6_ADC2);              // enable clocks to module
+                        POWER_UP_ATOMIC(6, ADC2);                        // enable clocks to module
                     }
             #if ADC_CONTROLLERS > 3
                     else if (ptrADC_settings->int_adc_controller == 3) {
-                        POWER_UP_ATOMIC(3, SIM_SCGC3_ADC3);              // enable clocks to module
+                        POWER_UP_ATOMIC(3, ADC3);                        // enable clocks to module
                     }
             #endif
         #endif
@@ -456,7 +464,7 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
                                 ulDMA_rules |= DMA_HALF_BUFFER_INTERRUPT;
                             }
                             if (ucTriggerSource == 0) {                  // {5} if the default is defined
-                                ucTriggerSource = (DMAMUX_CHCFG_SOURCE_ADC0 + ptrADC_settings->int_adc_controller);
+                                ucTriggerSource = (DMAMUX0_CHCFG_SOURCE_ADC0 + ptrADC_settings->int_adc_controller);
                             }
                             fnConfigDMA_buffer(ptrADC_settings->ucDmaChannel, ucTriggerSource, ptrADC_settings->ulADC_buffer_length, ptrADC_result, ptrADC_settings->ptrADC_Buffer, ulDMA_rules, ptrADC_settings->dma_int_handler, ptrADC_settings->dma_int_priority); // source is the ADC result register and destination is the ADC buffer
                             fnDMA_BufferReset(ptrADC_settings->ucDmaChannel, DMA_BUFFER_START);
@@ -518,27 +526,27 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
     #if defined _WINDOWS
                 switch (ptrADC_settings->int_adc_controller) {
                 case 0:
-                    if (IS_POWERED_UP(6, SIM_SCGC6_ADC0) == 0) {
+                    if (IS_POWERED_UP(6, ADC0) == 0) {
                         _EXCEPTION("Trying to read from ADC0 that is not powered up!");
                     }
                     break;
         #if ADC_CONTROLLERS > 1
                 case 1:
-                    if (IS_POWERED_UP(3, SIM_SCGC3_ADC1) == 0) {
+                    if (IS_POWERED_UP(3, ADC1) == 0) {
                         _EXCEPTION("Trying to read from ADC1 that is not powered up!");
                     }
                     break;
         #endif
         #if ADC_CONTROLLERS > 2
                 case 2:
-                    if (IS_POWERED_UP(6, SIM_SCGC6_ADC2) == 0) {
+                    if (IS_POWERED_UP(6, ADC2) == 0) {
                         _EXCEPTION("Trying to read from ADC2 that is not powered up!");
                     }
                     break;
         #endif
         #if ADC_CONTROLLERS > 3
                 case 3:
-                    if (IS_POWERED_UP(3, SIM_SCGC3_ADC3) == 0) {
+                    if (IS_POWERED_UP(3, ADC3) == 0) {
                         _EXCEPTION("Trying to read from ADC3 that is not powered up!");
                     }
                     break;

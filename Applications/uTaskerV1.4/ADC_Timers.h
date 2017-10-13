@@ -888,7 +888,7 @@ static void fnConfigureADC(void)
             #if defined KINETIS_KL && defined ADC_TRIGGER_TPM
         dac_setup.ucDmaTriggerSource = DMAMUX0_CHCFG_SOURCE_TPM1_OVERFLOW; // trigger DMA to DAC when TPM overflows
             #else
-        dac_setup.ucDmaTriggerSource = DMAMUX_CHCFG_SOURCE_ADC0;         // trigger DMA to DAC when ADC0 sample completes
+        dac_setup.ucDmaTriggerSource = DMAMUX0_CHCFG_SOURCE_ADC0;        // trigger DMA to DAC when ADC0 sample completes
             #endif
         dac_setup.dac_mode |= DAC_HW_TRIGGER_MODE;                       // use HW trigger mode rather than SW triggered mode
         dac_setup.dac_mode |= DAC_FULL_BUFFER_DMA_AUTO_REPEAT;           // automated DMA restart (using interrupt) when not using modulo repetitions
@@ -918,7 +918,7 @@ static void fnConfigureADC(void)
         pwm_setup.dma_int_priority = 0;
         pwm_setup.dma_int_handler = 0;                                   // no user interrupt call-back on DMA transfer completion
         pwm_setup.ucDmaChannel = 0;                                      // DMA channel 0 used (highest priority)
-        pwm_setup.ucDmaTriggerSource = DMAMUX_CHCFG_SOURCE_ADC0;
+        pwm_setup.ucDmaTriggerSource = DMAMUX0_CHCFG_SOURCE_ADC0;
         pwm_setup.ptrPWM_Buffer = (unsigned short *)sADC_buffer;         // PWM buffer to be used (use the ADC buffer to create a digital delay line)
         pwm_setup.ulPWM_buffer_length = (AD_DA_BUFFER_LENGTH * sizeof(unsigned short)); // physical length of the buffer
         fnConfigureInterrupt((void *)&pwm_setup);

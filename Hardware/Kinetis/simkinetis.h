@@ -1391,7 +1391,7 @@ unsigned long USBPHY_TRIM_OVERRIDE_EN_TOG;
 
 typedef struct stKINETIS_FTFL
 {
-#if defined KINETIS_KE
+#if defined FLASH_CONTROLLER_FTMRE
     #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
         unsigned char ucRes0;
         unsigned char FTMRH_FCCOBIX;
@@ -1716,7 +1716,7 @@ typedef struct stKINETIS_ADC
 
 typedef struct stKINETIS_RTC
 {
-#if defined KINETIS_KE
+#if defined KINETIS_KE && !defined KINETIS_WITH_SRTC
     unsigned long RTC_SC;
     unsigned long RTC_MOD;
     unsigned long RTC_CNT;
@@ -3321,7 +3321,7 @@ typedef struct stKINETIS_PERIPH
 #if ADC_CONTROLLERS > 2                                                  // {2}
     KINETIS_ADC        ADC2;
 #endif
-#if !defined KINETIS_KL02
+#if !defined KINETIS_WITHOUT_RTC
     KINETIS_RTC        RTC;
 #endif
 #if !defined KINETIS_KE

@@ -40,7 +40,7 @@ extern void fnDoLowPower(void)
         else {                                                           // there is no active transmission so we check that there is no reception starting and enable reception wakeup interrupts
     #if defined SERIAL_INTERFACE 
         #if UARTS_AVAILABLE > 0 && LPUARTS_AVAILABLE < 1
-            if (IS_POWERED_UP(4, SIM_SCGC4_UART0)) {                     // if UART0 is enabled
+            if (IS_POWERED_UP(4, UART0)) {                               // if UART0 is enabled
                 UART0_S2 |= UART_S2_RXEDGIF;                             // clear edge flag
                 UART0_BDH |= UART_BDH_RXEDGIE;                           // enable wakeup on RxD falling edge
                 if ((UART0_S2 & UART_S2_RAF) != 0) {                     // if the receiver active flag is set it means that reception has already started so we don't enter stop mode
@@ -49,11 +49,11 @@ extern void fnDoLowPower(void)
             }
         #elif LPUARTS_AVAILABLE > 0
             #if defined KINETIS_KL
-            if (IS_POWERED_UP(5, SIM_SCGC5_LPUART0))                     // if LPUART0 is enabled
+            if (IS_POWERED_UP(5, LPUART0))                               // if LPUART0 is enabled
             #elif defined KINETIS_K80
-            if (IS_POWERED_UP(2, SIM_SCGC2_LPUART0))                     // if LPUART0 is enabled
+            if (IS_POWERED_UP(2, LPUART0))                               // if LPUART0 is enabled
             #else
-            if (IS_POWERED_UP(6, SIM_SCGC6_LPUART0))                     // if LPUART0 is enabled
+            if (IS_POWERED_UP(6, LPUART0))                               // if LPUART0 is enabled
             #endif
             {
                 LPUART0_STAT |= LPUART_STAT_RXEDGIF;                     // clear edge flag
@@ -64,7 +64,7 @@ extern void fnDoLowPower(void)
             }
         #endif
         #if UARTS_AVAILABLE > 1 && LPUARTS_AVAILABLE < 2
-            if (IS_POWERED_UP(4, SIM_SCGC4_UART1)) {                     // if UART1 is enabled
+            if (IS_POWERED_UP(4, UART1)) {                               // if UART1 is enabled
                 UART1_S2 |= UART_S2_RXEDGIF;                             // clear edge flag
                 UART1_BDH |= UART_BDH_RXEDGIE;                           // enable wakeup on RxD falling edge
                 if ((UART1_S2 & UART_S2_RAF) != 0) {                     // if the receiver active flag is set it means that reception has already started so we don't enter stop mode
@@ -73,9 +73,9 @@ extern void fnDoLowPower(void)
             }
         #elif LPUARTS_AVAILABLE > 1
             #if defined KINETIS_KL
-            if (IS_POWERED_UP(5, SIM_SCGC5_LPUART1))                     // if LPUART1 is enabled
+            if (IS_POWERED_UP(5, LPUART1))                               // if LPUART1 is enabled
             #else
-            if (IS_POWERED_UP(2, SIM_SCGC2_LPUART1))                     // if LPUART1 is enabled
+            if (IS_POWERED_UP(2, LPUART1))                               // if LPUART1 is enabled
             #endif
             {
                 LPUART1_STAT |= LPUART_STAT_RXEDGIF;                     // clear edge flag
@@ -86,7 +86,7 @@ extern void fnDoLowPower(void)
             }
         #endif
         #if (UARTS_AVAILABLE > 2 && LPUARTS_AVAILABLE < 3) || (UARTS_AVAILABLE == 1 && LPUARTS_AVAILABLE == 2)
-            if (IS_POWERED_UP(4, SIM_SCGC4_UART2)) {                     // if UART2 is enabled
+            if (IS_POWERED_UP(4, UART2)) {                               // if UART2 is enabled
                 UART2_S2 |= UART_S2_RXEDGIF;                             // clear edge flag
                 UART2_BDH |= UART_BDH_RXEDGIE;                           // enable wakeup on RxD falling edge
                 if ((UART2_S2 & UART_S2_RAF) != 0) {                     // if the receiver active flag is set it means that reception has already started so we don't enter stop mode
@@ -95,7 +95,7 @@ extern void fnDoLowPower(void)
             }
         #endif
         #if UARTS_AVAILABLE > 3
-            if (IS_POWERED_UP(4, SIM_SCGC4_UART3)) {                     // if UART3 is enabled
+            if (IS_POWERED_UP(4, UART3)) {                               // if UART3 is enabled
                 UART3_S2 |= UART_S2_RXEDGIF;                             // clear edge flag
                 UART3_BDH |= UART_BDH_RXEDGIE;                           // enable wakeup on RxD falling edge
                 if ((UART3_S2 & UART_S2_RAF) != 0) {                     // if the receiver active flag is set it means that reception has already started so we don't enter stop mode
@@ -104,7 +104,7 @@ extern void fnDoLowPower(void)
             }
         #endif
         #if UARTS_AVAILABLE > 4
-            if (IS_POWERED_UP(1, SIM_SCGC1_UART4)) {                     // if UART4 is enabled
+            if (IS_POWERED_UP(1, UART4)) {                               // if UART4 is enabled
                 UART4_S2 |= UART_S2_RXEDGIF;                             // clear edge flag
                 UART4_BDH |= UART_BDH_RXEDGIE;                           // enable wakeup on RxD falling edge
                 if ((UART4_S2 & UART_S2_RAF) != 0) {                     // if the receiver active flag is set it means that reception has already started so we don't enter stop mode
@@ -113,7 +113,7 @@ extern void fnDoLowPower(void)
             }
         #endif
         #if UARTS_AVAILABLE > 5
-            if (IS_POWERED_UP(1, SIM_SCGC1_UART5)) {                     // if UART5 is enabled
+            if (IS_POWERED_UP(1, UART5)) {                               // if UART5 is enabled
                 UART5_S2 |= UART_S2_RXEDGIF;                             // clear edge flag
                 UART5_BDH |= UART_BDH_RXEDGIE;                           // enable wakeup on RxD falling edge
                 if ((UART5_S2 & UART_S2_RAF) != 0) {                     // if the receiver active flag is set it means that reception has already started so we don't enter stop mode
@@ -179,52 +179,52 @@ extern void fnDoLowPower(void)
     SYSTEM_CONTROL_REGISTER = ulDeepSleepMode;                           // ensure present stop mode has been returned (we may have used wait mode instead due to present peripheral activity)
     #if defined SERIAL_INTERFACE
         #if UARTS_AVAILABLE > 0 && LPUARTS_AVAILABLE < 1
-    if (IS_POWERED_UP(4, SIM_SCGC4_UART0) != 0) {                        // if UART0 is enabled
+    if (IS_POWERED_UP(4, UART0) != 0) {                                  // if UART0 is enabled
         UART0_BDH &= ~(UART_BDH_RXEDGIE);                                // disable edge interrupt on RxD since we never want to handle the actual interrupt (used just for waking)
     }
         #elif LPUARTS_AVAILABLE > 0
             #if defined KINETIS_KL
-    if (IS_POWERED_UP(5, SIM_SCGC5_LPUART0) != 0)                        // if LPUART0 is enabled
+    if (IS_POWERED_UP(5, LPUART0) != 0)                                  // if LPUART0 is enabled
         #elif defined KINETIS_K80
-    if (IS_POWERED_UP(2, SIM_SCGC2_LPUART0) != 0)                        // if LPUART0 is enabled
+    if (IS_POWERED_UP(2, LPUART0) != 0)                                  // if LPUART0 is enabled
         #else
-    if (IS_POWERED_UP(6, SIM_SCGC6_LPUART0) != 0)                        // if LPUART0 is enabled
+    if (IS_POWERED_UP(6, LPUART0) != 0)                                  // if LPUART0 is enabled
             #endif
     {
         LPUART0_BAUD &= ~LPUART_BAUD_RXEDGIE;                            // disable edge interrupt on RxD since we never want to handle the actual interrupt (used just for waking)
     }
         #endif
         #if UARTS_AVAILABLE > 1 && LPUARTS_AVAILABLE < 2
-    if (IS_POWERED_UP(4, SIM_SCGC4_UART1) != 0) {                        // if UART1 is enabled
+    if (IS_POWERED_UP(4, UART1) != 0) {                                  // if UART1 is enabled
         UART1_BDH &= ~(UART_BDH_RXEDGIE);                                // disable edge interrupt on RxD since we never want to handle the actual interrupt (used just for waking)
     }
         #elif LPUARTS_AVAILABLE > 1
             #if defined KINETIS_KL
-    if (IS_POWERED_UP(5, SIM_SCGC5_LPUART1) != 0)                        // if LPUART1 is enabled
+    if (IS_POWERED_UP(5, LPUART1) != 0)                                  // if LPUART1 is enabled
             #else
-    if (IS_POWERED_UP(2, SIM_SCGC2_LPUART1) != 0)                        // if LPUART1 is enabled
+    if (IS_POWERED_UP(2, LPUART1) != 0)                                  // if LPUART1 is enabled
             #endif
     {
         LPUART1_BAUD &= ~LPUART_BAUD_RXEDGIE;                            // disable edge interrupt on RxD since we never want to handle the actual interrupt (used just for waking)
     }
         #endif
         #if (UARTS_AVAILABLE > 2 && LPUARTS_AVAILABLE < 3) || (UARTS_AVAILABLE == 1 && LPUARTS_AVAILABLE == 2)
-    if (IS_POWERED_UP(4, SIM_SCGC4_UART2) != 0) {                        // if UART2 is enabled
+    if (IS_POWERED_UP(4, UART2) != 0) {                                  // if UART2 is enabled
         UART2_BDH &= ~(UART_BDH_RXEDGIE);                                // disable edge interrupt on RxD since we never want to handle the actual interrupt (used just for waking)
     }
         #endif
         #if UARTS_AVAILABLE > 3
-    if (IS_POWERED_UP(4, SIM_SCGC4_UART3) != 0) {                        // if UART3 is enabled
+    if (IS_POWERED_UP(4, UART3) != 0) {                                  // if UART3 is enabled
         UART3_BDH &= ~(UART_BDH_RXEDGIE);                                // disable edge interrupt on RxD since we never want to handle the actual interrupt (used just for waking)
     }
         #endif
         #if UARTS_AVAILABLE > 4
-    if (IS_POWERED_UP(1, SIM_SCGC1_UART4) != 0) {                        // if UART4 is enabled
+    if (IS_POWERED_UP(1, UART4) != 0) {                                  // if UART4 is enabled
         UART4_BDH &= ~(UART_BDH_RXEDGIE);                                // disable edge interrupt on RxD since we never want to handle the actual interrupt (used just for waking)
     }
         #endif
         #if UARTS_AVAILABLE > 5
-    if (IS_POWERED_UP(1, SIM_SCGC1_UART5) != 0) {                        // if UART5 is enabled
+    if (IS_POWERED_UP(1, UART5) != 0) {                                  // if UART5 is enabled
         UART5_BDH &= ~(UART_BDH_RXEDGIE);                                // disable edge interrupt on RxD since we never want to handle the actual interrupt (used just for waking)
     }
         #endif

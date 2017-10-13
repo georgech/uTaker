@@ -60,20 +60,20 @@
             switch (ptrDAC_settings->int_dac_controller) {
             case 0:
     #if defined KINETIS_KL
-                POWER_UP(6, SIM_SCGC6_DAC0);                             // ensure the DAC 0 is powered up
+                POWER_UP_ATOMIC(6, DAC0);                                // ensure the DAC 0 is powered up
         #if defined KINETIS_KL05
                 _CONFIG_PERIPHERAL(B, 1, PB_1_DAC0_OUT);                 // ensure that the DAC output pin is configured
         #else
                 _CONFIG_PERIPHERAL(E, 30, PE_30_DAC0_OUT);               // ensure that the DAC output pin is configured
         #endif
     #else
-                POWER_UP(2, SIM_SCGC2_DAC0);                             // ensure the DAC 0 is powered up
+                POWER_UP_ATOMIC(2, DAC0);                                // ensure DAC 0 is powered up
     #endif
                 ptrDAC_regs = (DAC_REGS *)DAC0_BASE_ADD;
                 break;
     #if DAC_CONTROLLERS > 1
             case 1:
-                POWER_UP(2, SIM_SCGC2_DAC1);                             // ensure the DAC 1 is powered up
+                POWER_UP_ATOMIC(2, DAC1);                                // ensure DAC 1 is powered up
                 ptrDAC_regs = (DAC_REGS *)DAC1_BASE_ADD;
                 break;
     #endif

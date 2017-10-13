@@ -61,7 +61,7 @@ static void irq_i2S0_error(void)
             // SAI (I2S) initialisation -- I2S type protocol, 16 bit, mono
             //
             if ((ptrI2S_SAIsetup->I2S_SAI_mode & I2S_SAI_CONFIG_TX) != 0) {
-                POWER_UP(6, SIM_SCGC6_SAI0);                             // ensure that the clock is enabled to the module
+                POWER_UP_ATOMIC(6, SAI0);                                // ensure that the clock is enabled to the module
                 // Transmitter
                 //
                 _CONFIG_PERIPHERAL(B, 18,  (PB_18_I2S0_TX_BCLK | PORT_DSE_HIGH | PORT_SRE_FAST)); // configure the used I2S pins
@@ -101,7 +101,7 @@ static void irq_i2S0_error(void)
                 }
             }
             else if ((ptrI2S_SAIsetup->I2S_SAI_mode & I2S_SAI_CONFIG_RX) != 0) { // receiver configuration
-                POWER_UP(6, SIM_SCGC6_SAI0);                             // ensure that the clock is enabled to the module
+                POWER_UP_ATOMIC(6, SAI0);                                // ensure that the clock is enabled to the module
                 ptrSAI->I2S_RCSR = (I2S_RCSR_SR | I2S_RCSR_FR);          // software and FIFO reset
 
                 _CONFIG_PERIPHERAL(C, 5,   (PC_5_I2S0_RXD0 | PORT_DSE_HIGH | PORT_SRE_FAST));

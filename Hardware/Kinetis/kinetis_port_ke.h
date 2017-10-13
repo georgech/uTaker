@@ -13,7 +13,7 @@
     ---------------------------------------------------------------------
     Copyright (C) M.J.Butcher Consulting 2004..2017
     *********************************************************************
-    Supports KEA08, KEA64, KEA128, KE02, KE04 and KE06
+    Supports KEA08, KEA64, KEA128, KE02, KE04, KE06 and KE15 (part complete)
 
 */
 
@@ -1090,8 +1090,8 @@ static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][8] = {
         {  "PTC3",         "KBI0_P19",     "FTM2_CH3",       "-",          "ADC0_SE11",   "-",            "-",                 "-"           }, // PTC3
         {  "PTC4",         "KBI0_P20",     "RTC_CLKOUT",     "FTM1_CH0",   "ACMP0_IN2",   "SWD_CLK",      "-",                 "-"           }, // PTC4 (SWD_CLK default)
         {  "PTC5",         "KBI0_P21",     "-",              "FTM1_CH1",   "-",           "RTC_CLKOUT",   "-",                 "-"           }, // PTC5
-        {  "PTC6",         "KBI0_P22",     "UART1_RX",       "-",          "-",           "CAN0_RX",      "-",                 "-"           }, // PTC6
-        {  "PTC7",         "KBI0_P23",     "UART1_TX",       "-",          "-",           "CAN0_TX",      "-",                 "-"           }, // PTC7
+        {  "ADC1_SE4/TSI0_CH15","PTC6",    "LPUART1_RX",     "-",          "-",           "-",            "-",                 "-"           }, // PTC6
+        {  "ADC1_SE5/TSI0_CH16","PTC7",    "LPUART1_TX",     "-",          "-",           "-",            "-",                 "-"           }, // PTC7
         {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTC8
         {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTC9
         {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTC10

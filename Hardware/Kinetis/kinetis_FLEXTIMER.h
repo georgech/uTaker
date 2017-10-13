@@ -197,10 +197,10 @@ static __interrupt void _flexTimerInterrupt_3(void)
             switch (iTimerReference) {                                   // FlexTimer to be used
             case 0:
                 if ((ptrTimerSetup->timer_mode & TIMER_STOP) != 0) {
-                    POWER_DOWN(6, SIM_SCGC6_FTM0);
+                    POWER_DOWN(6, FTM0);
                     return;
                 }
-                POWER_UP(6, SIM_SCGC6_FTM0);                             // ensure that the FlexTimer module is powered up
+                POWER_UP_ATOMIC(6, FTM0);                                // ensure that the FlexTimer module is powered up
                 ptrFlexTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_0;         // KL and KE parts actually use the TPM which is however very similar to the FlexTimer
     #if defined KINETIS_KL
                 iInterruptID = irq_TPM0_ID;
@@ -216,10 +216,10 @@ static __interrupt void _flexTimerInterrupt_3(void)
     #if FLEX_TIMERS_AVAILABLE > 1
             case 1:
                 if ((ptrTimerSetup->timer_mode & TIMER_STOP) != 0) {
-                    POWER_DOWN(6, SIM_SCGC6_FTM1);
+                    POWER_DOWN(6, FTM1);
                     return;
                 }
-                POWER_UP(6, SIM_SCGC6_FTM1);                             // ensure that the FlexTimer module is powered up
+                POWER_UP_ATOMIC(6, FTM1);                                // ensure that the FlexTimer module is powered up
                 ptrFlexTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_1;         // KL and KE parts actually use the TPM which is however very similar to the FlexTimer
         #if defined KINETIS_KL
                 iInterruptID = irq_TPM1_ID;
@@ -244,9 +244,9 @@ static __interrupt void _flexTimerInterrupt_3(void)
                     return;
                 }
         #if defined KINETIS_KL
-                POWER_UP(6, SIM_SCGC6_FTM2);
+                POWER_UP_ATOMIC(6, FTM2);                                // ensure that the FlexTimer module is powered up
         #else
-                POWER_UP(3, SIM_SCGC3_FTM2);                             // ensure that the FlexTimer module is powered up
+                POWER_UP_ATOMIC(3, FTM2);                                // ensure that the FlexTimer module is powered up
         #endif
                 ptrFlexTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_2;         // KL and KE parts actually use the TPM which is however very similar to the FlexTimer
         #if defined KINETIS_KL
@@ -264,10 +264,10 @@ static __interrupt void _flexTimerInterrupt_3(void)
     #if FLEX_TIMERS_AVAILABLE > 3
             case 3:
                 if ((ptrTimerSetup->timer_mode & TIMER_STOP) != 0) {
-                    POWER_DOWN(3, SIM_SCGC3_FTM3); 
+                    POWER_DOWN(3, FTM3); 
                     return;
                 }
-                POWER_UP(3, SIM_SCGC3_FTM3);                             // ensure that the FlexTimer module is powered up
+                POWER_UP_ATOMIC(3, FTM3);                                // ensure that the FlexTimer module is powered up
                 ptrFlexTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_3;
                 iInterruptID = irq_FTM3_ID;
                 break;

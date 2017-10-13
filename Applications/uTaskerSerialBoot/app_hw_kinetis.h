@@ -1036,7 +1036,7 @@
 //  #define KINETIS_FLASH_CONFIGURATION_SECURITY           (0xfe)
 //  #define KINETIS_FLASH_CONFIGURATION_NONVOL_OPTION      (0xff)
 //#endif
-#if defined KINETIS_KE
+#if defined FLASH_CONTROLLER_FTMRE
     #define KINETIS_FLASH_CONFIGURATION_BACKDOOR_KEY       {BACKDOOR_KEY_0, BACKDOOR_KEY_1, BACKDOOR_KEY_2, BACKDOOR_KEY_3, BACKDOOR_KEY_4, BACKDOOR_KEY_5, BACKDOOR_KEY_6, BACKDOOR_KEY_7}
     #define KINETIS_FLASH_CONFIGURATION_PROGRAM_PROTECTION (KE_NO_FLASH_PROTECTION)
     #define KINETIS_FLASH_CONFIGURATION_SECURITY           (FTMRH_FSEC_SEC_UNSECURE | FTMRH_FSEC_KEYEN_ENABLED)
@@ -1204,6 +1204,7 @@
     #define PRIORITY_UART5             2
     #define PRIORITY_LPUART0           2
     #define PRIORITY_LPUART1           2
+    #define PRIORITY_LPUART2           2
     #define PRIORITY_DMA15             2
     #define PRIORITY_DMA14             2
     #define PRIORITY_DMA13             2
@@ -1538,7 +1539,7 @@
         // Configure to suit SD card SPI mode at between 100k and 400k
         //
         #define SPI_CS1_0                  PORTE_BIT4
-        #define INITIALISE_SPI_SD_INTERFACE() POWER_UP(6, SIM_SCGC6_SPI1); \
+        #define INITIALISE_SPI_SD_INTERFACE() POWER_UP_ATOMIC(6, SPI1); \
         _CONFIG_PORT_INPUT(E, (WRITE_PROTECT_INPUT), (PORT_PS_UP_ENABLE)); \
         _CONFIG_PORT_INPUT(E, (PORTE_BIT0), (PORT_NO_PULL)); \
         _CONFIG_PERIPHERAL(E, 2, PE_2_SPI1_SCK); _CONFIG_PERIPHERAL(E, 1, (PE_1_SPI1_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); _CONFIG_PERIPHERAL(E, 3, (PE_3_SPI1_SIN | PORT_PS_UP_ENABLE)); \
@@ -1679,7 +1680,7 @@
     // Configure to suit SD card SPI mode at between 100k and 400k
     //
     #define SPI_CS1_0              PORTC_BIT4
-    #define INITIALISE_SPI_SD_INTERFACE() POWER_UP(6, SIM_SCGC6_SPI0); \
+    #define INITIALISE_SPI_SD_INTERFACE() POWER_UP_ATOMIC(6, SPI0); \
     _CONFIG_PERIPHERAL(D, 1, PD_1_SPI0_SCK); _CONFIG_PERIPHERAL(D, 2, (PD_2_SPI0_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); _CONFIG_PERIPHERAL(D, 3, (PD_3_SPI0_SIN | PORT_PS_UP_ENABLE)); \
     _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, SPI_CS1_0, SPI_CS1_0, (PORT_SRE_FAST | PORT_DSE_HIGH)); \
     SPI0_CTAR0 = (SPI_CTAR_ASC_6 | SPI_CTAR_FMSZ_8 | SPI_CTAR_CPHA | SPI_CTAR_CPOL | SPI_CTAR_BR_128); SPI0_MCR = (SPI_MCR_DIS_TXF | SPI_MCR_DIS_RXF | SPI_MCR_MSTR | SPI_MCR_DCONF_SPI | SPI_MCR_CLR_RXF | SPI_MCR_CLR_TXF | SPI_MCR_PCSIS_CS0 | SPI_MCR_PCSIS_CS1 | SPI_MCR_PCSIS_CS2 | SPI_MCR_PCSIS_CS3 | SPI_MCR_PCSIS_CS4 | SPI_MCR_PCSIS_CS5)
@@ -1820,7 +1821,7 @@
 
     #define FTM_DEBUG_BEHAVIOUR       FTM_CONF_BDMMODE_3                 // allow timer to continue operating when debugging
     #define _GLCD_BACKLIGHT_PWM_FREQUENCY  PWM_FREQUENCY(1000, 16)       // 1000Hz PWM with divide by 16 prescaler
-    #define BACK_LIGHT_INTENSITY()    POWER_UP(6, SIM_SCGC6_FTM0); \
+    #define BACK_LIGHT_INTENSITY()    POWER_UP_ATOMIC(6, FTM0); \
                                       _CONFIG_PERIPHERAL(A, 5, (PA_5_FTM0_CH2 | PORT_SRE_FAST | PORT_DSE_HIGH)); \
                                       FTM0_CONF = FTM_DEBUG_BEHAVIOUR; \
                                       FTM0_C2SC = FTM_CSC_MS_ELS_PWM_HIGH_TRUE_PULSES; \
@@ -1833,10 +1834,10 @@
     // the 8 bit data appears at AD0..AD7
     //
     #define CONFIGURE_GLCD()        BACK_LIGHT_MIN_INTENSITY(); \
-                                    if (IS_POWERED_UP(6, SIM_SCGC6_FTM0) != 0) {FTM0_SC = 0;} \
+                                    if (IS_POWERED_UP(6, FTM0) != 0) {FTM0_SC = 0;} \
                                     _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_LOW(A, GLCD_RESET_LINE, 0, (PORT_SRE_SLOW | PORT_DSE_LOW)); \
                                     _CONFIG_DRIVE_PORT_OUTPUT_VALUE(B, (TSI_RESET_LINE), (0), (PORT_SRE_FAST | PORT_DSE_LOW)); \
-                                    POWER_UP(7, SIM_SCGC7_FLEXBUS); \
+                                    POWER_UP_ATOMIC(7, FLEXBUS); \
                                     SIM_SOPT2 |= SIM_SOPT2_FBSL_ALL; \
                                     _CONFIG_PERIPHERAL(B, 17, (PB_17_FB_AD16 | PORT_DSE_HIGH | PORT_PS_DOWN_ENABLE)); \
                                     _CONFIG_PERIPHERAL(C, 11, (PC_11_FB_RW | PORT_DSE_HIGH | PORT_PS_DOWN_ENABLE)); \
@@ -1911,7 +1912,7 @@
     // Configure to suit SD card SPI mode at between 100k and 400k
     //
     #define SPI_CS1_0              PORTC_BIT4
-    #define INITIALISE_SPI_SD_INTERFACE() POWER_UP(6, SIM_SCGC6_SPI0); \
+    #define INITIALISE_SPI_SD_INTERFACE() POWER_UP_ATOMIC(6, SPI0); \
     _CONFIG_PERIPHERAL(D, 1, PD_1_SPI0_SCK); _CONFIG_PERIPHERAL(D, 2, (PD_2_SPI0_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); _CONFIG_PERIPHERAL(D, 3, (PD_3_SPI0_SIN | PORT_PS_UP_ENABLE)); \
     _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, SPI_CS1_0, SPI_CS1_0, (PORT_SRE_FAST | PORT_DSE_HIGH)); \
     SPI0_CTAR0 = (SPI_CTAR_ASC_6 | SPI_CTAR_FMSZ_8 | SPI_CTAR_CPHA | SPI_CTAR_CPOL | SPI_CTAR_BR_128); SPI0_MCR = (SPI_MCR_DIS_TXF | SPI_MCR_DIS_RXF | SPI_MCR_MSTR | SPI_MCR_DCONF_SPI | SPI_MCR_CLR_RXF | SPI_MCR_CLR_TXF | SPI_MCR_PCSIS_CS0 | SPI_MCR_PCSIS_CS1 | SPI_MCR_PCSIS_CS2 | SPI_MCR_PCSIS_CS3 | SPI_MCR_PCSIS_CS4 | SPI_MCR_PCSIS_CS5)
@@ -2220,7 +2221,7 @@
     // Configure to suit SD card SPI mode at between 100k and 400k (SPI0)
     //
     #define SPI_CS1_0                  PORTC_BIT4
-    #define INITIALISE_SPI_SD_INTERFACE() POWER_UP(6, SIM_SCGC6_SPI0); \
+    #define INITIALISE_SPI_SD_INTERFACE() POWER_UP_ATOMIC(6, SPI0); \
     _CONFIG_PORT_INPUT(E, (PORTE_BIT0), (PORT_NO_PULL)); \
     _CONFIG_PERIPHERAL(C, 5, PC_5_SPI0_SCK); _CONFIG_PERIPHERAL(C, 6, (PC_6_SPI0_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); _CONFIG_PERIPHERAL(C, 7, (PC_7_SPI0_SIN | PORT_PS_UP_ENABLE)); \
     _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, SPI_CS1_0, SPI_CS1_0, (PORT_SRE_FAST | PORT_DSE_HIGH)); \
@@ -2280,7 +2281,7 @@
 
     #if defined SDCARD_SUPPORT
         #define SPI_CS1_0             PORTA_BIT13
-        #define INITIALISE_SPI_SD_INTERFACE() POWER_UP(6, SIM_SCGC6_SPI0); \
+        #define INITIALISE_SPI_SD_INTERFACE() POWER_UP_ATOMIC(6, SPI0); \
         _CONFIG_PERIPHERAL(C, 5, PC_5_SPI0_SCK | PORT_SRE_FAST | PORT_DSE_HIGH); \
         _CONFIG_PERIPHERAL(C, 6, (PC_6_SPI0_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); \
         _CONFIG_PERIPHERAL(C, 7, (PC_7_SPI0_SIN | PORT_PS_UP_ENABLE)); \
@@ -2357,7 +2358,7 @@
     // Configure to suit SD card SPI mode at between 100k and 400k (SPI0)
     //
     #define SPI_CS1_0                  PORTC_BIT4
-    #define INITIALISE_SPI_SD_INTERFACE() POWER_UP(6, SIM_SCGC6_SPI0); \
+    #define INITIALISE_SPI_SD_INTERFACE() POWER_UP_ATOMIC(6, SPI0); \
     _CONFIG_PORT_INPUT(E, (PORTE_BIT0), (PORT_NO_PULL)); \
     _CONFIG_PERIPHERAL(C, 5, PC_5_SPI0_SCK); _CONFIG_PERIPHERAL(C, 6, (PC_6_SPI0_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); _CONFIG_PERIPHERAL(C, 7, (PC_7_SPI0_SIN | PORT_PS_UP_ENABLE)); \
     _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, SPI_CS1_0, SPI_CS1_0, (PORT_SRE_FAST | PORT_DSE_HIGH)); \
@@ -2417,7 +2418,7 @@
     // Configure to suit SD card SPI mode at between 100k and 400k (SPI0)
     //
     #define SPI_CS1_0                  PORTC_BIT1
-    #define INITIALISE_SPI_SD_INTERFACE() POWER_UP(6, SIM_SCGC6_SPI0); \
+    #define INITIALISE_SPI_SD_INTERFACE() POWER_UP_ATOMIC(6, SPI0); \
     _CONFIG_PORT_INPUT(E, (PORTE_BIT0), (PORT_NO_PULL)); \
     _CONFIG_PERIPHERAL(C, 5, PC_5_SPI0_SCK); _CONFIG_PERIPHERAL(C, 6, (PC_6_SPI0_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); _CONFIG_PERIPHERAL(C, 7, (PC_7_SPI0_SIN | PORT_PS_UP_ENABLE)); \
     _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, SPI_CS1_0, SPI_CS1_0, (PORT_SRE_FAST | PORT_DSE_HIGH)); \
@@ -2626,7 +2627,7 @@
     // - SPI1_MISO PTD-7 (J2-19)
     //
     #define SPI_CS1_0              PORTD_BIT4
-    #define INITIALISE_SPI_SD_INTERFACE() POWER_UP(4, SIM_SCGC4_SPI1); \
+    #define INITIALISE_SPI_SD_INTERFACE() POWER_UP_ATOMIC(4, SPI1); \
     _CONFIG_PERIPHERAL(D, 5, PD_5_SPI1_SCK); \
     _CONFIG_PERIPHERAL(D, 6, (PD_6_SPI1_MOSI | PORT_SRE_FAST | PORT_DSE_HIGH)); \
     _CONFIG_PERIPHERAL(D, 7, (PD_7_SPI1_MISO | PORT_PS_UP_ENABLE)); \
@@ -2804,7 +2805,7 @@
     // SLCD configuration with clock from MCGIRCLK (2MHz) divided by 64
     //
     #define CONFIGURE_SLCD()       MCG_C1 |= MCG_C1_IRCLKEN; \
-                                   POWER_UP(5, SIM_SCGC5_SLCD); \
+                                   POWER_UP_ATOMIC(5, SLCD); \
                                    LCD_GCR = ((0x0b000000 & LCD_GCR_RVTRIM_MASK) | LCD_GCR_CPSEL | LCD_GCR_LADJ_MASK | LCD_GCR_VSUPPLY | LCD_GCR_ALTDIV_64 | LCD_GCR_SOURCE | LCD_GCR_LCLK_1 | LCD_GCR_DUTY_4BP); \
                                    LCD_AR = (LCD_AR_BRATE_MASK & 3); \
                                    LCD_BPENL = (SLCD_PIN_14 | SLCD_PIN_15); \
@@ -2860,7 +2861,7 @@
     // SLCD configuration with clock from MCGIRCLK (2MHz) divided by 64
     //
     #define CONFIGURE_SLCD()       MCG_C1 |= MCG_C1_IRCLKEN; \
-                                   POWER_UP(5, SIM_SCGC5_SLCD); \
+                                   POWER_UP_ATOMIC(5, SLCD); \
                                    LCD_GCR = ((0x0b000000 & LCD_GCR_RVTRIM_MASK) | LCD_GCR_CPSEL | LCD_GCR_LADJ_MASK | LCD_GCR_VSUPPLY | LCD_GCR_ALTDIV_64 | LCD_GCR_SOURCE | LCD_GCR_LCLK_1 | LCD_GCR_DUTY_4BP); \
                                    LCD_AR = (LCD_AR_BRATE_MASK & 3); \
                                    LCD_BPENL = (SLCD_PIN_14 | SLCD_PIN_15); \
@@ -2902,7 +2903,7 @@
     // SLCD configuration with clock from MCGIRCLK (8MHz) divided by 256
     //
     #define CONFIGURE_SLCD()       MCG_C1 |= MCG_C1_IRCLKEN; \
-                                   POWER_UP(5, SIM_SCGC5_SLCD); \
+                                   POWER_UP_ATOMIC(5, SLCD); \
                                    LCD_GCR = (LCD_GCR_CPSEL | LCD_GCR_LADJ_MASK | LCD_GCR_ALTDIV_256 | LCD_GCR_SOURCE | LCD_GCR_LCLK_1 | LCD_GCR_DUTY_4BP); \
                                    LCD_BPENL = (SLCD_PIN_12 | SLCD_PIN_13 | SLCD_PIN_14 | SLCD_PIN_15); \
                                    LCD_BPENH = 0x00000000; \
@@ -2939,7 +2940,7 @@
     #define GLCD_Y  95
 
     #define CONFIGURE_SLCD()       MCG_C1 |= MCG_C1_IRCLKEN; \
-                                   POWER_UP(5, SIM_SCGC5_SLCD); \
+                                   POWER_UP_ATOMIC(5, SLCD); \
                                    LCD_GCR = (LCD_GCR_RVEN | (0x08000000 & LCD_GCR_RVTRIM_MASK) | LCD_GCR_CPSEL | LCD_GCR_LADJ_MASK | LCD_GCR_VSUPPLY | LCD_GCR_SOURCE | LCD_GCR_LCLK_1 | LCD_GCR_DUTY_4BP); \
                                    LCD_AR = (LCD_AR_BRATE_MASK & 3); \
                                    LCD_BPENL = (SLCD_PIN_19 | SLCD_PIN_18); \
@@ -2980,7 +2981,7 @@
     #define GLCD_Y  90
 
     #define CONFIGURE_SLCD()       MCG_C1 |= MCG_C1_IRCLKEN; \
-                                   POWER_UP(5, SIM_SCGC5_SLCD); \
+                                   POWER_UP_ATOMIC(5, SLCD); \
                                    LCD_GCR = (LCD_GCR_VSUPPLY | LCD_GCR_SOURCE | LCD_GCR_LCLK_4 | LCD_GCR_DUTY_4BP | LCD_GCR_ALTDIV_NONE); \
                                    LCD_BPENL = (SLCD_PIN_12 | SLCD_PIN_13 | SLCD_PIN_14 | SLCD_PIN_15); \
                                    LCD_BPENH = 0x00000000; \
@@ -3057,7 +3058,7 @@
     #define GLCD_Y  260
 
     #define CONFIGURE_SLCD()       MCG_C1 |= MCG_C1_IRCLKEN; \
-                                   POWER_UP(3, SIM_SCGC3_SLCD); \
+                                   POWER_UP_ATOMIC(3, SLCD); \
                                    LCD_GCR = (LCD_GCR_CPSEL | LCD_GCR_RVEN | LCD_GCR_RVTRIM_MASK | LCD_GCR_LADJ_MASK | LCD_GCR_LCLK_0 | LCD_GCR_VSUPPLY_VLL3_EXT | LCD_GCR_SOURCE | LCD_GCR_DUTY_8BP | LCD_GCR_ALTDIV_NONE); \
                                    LCD_PENL = 0xfffffffe; \
                                    LCD_PENH = 0x0000ffff; \
@@ -3098,7 +3099,7 @@
         // Configure to suit SD card SPI mode at between 100k and 400k
         //
         #define SPI_CS1_0                  PORTD_BIT15
-        #define INITIALISE_SPI_SD_INTERFACE() POWER_UP(6, SIM_SCGC6_SPI1); \
+        #define INITIALISE_SPI_SD_INTERFACE() POWER_UP_ATOMIC(6, SPI1); \
         _CONFIG_PORT_INPUT(E, (WRITE_PROTECT_INPUT), (PORT_PS_UP_ENABLE)); \
         _CONFIG_PORT_INPUT(E, (PORTE_BIT0), (PORT_NO_PULL)); \
         _CONFIG_PERIPHERAL(E, 2, PE_2_SPI1_SCK); _CONFIG_PERIPHERAL(E, 1, (PE_1_SPI1_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); _CONFIG_PERIPHERAL(E, 3, (PE_3_SPI1_SIN | PORT_PS_UP_ENABLE)); \
@@ -3195,7 +3196,7 @@
 
     #if defined TWR_K53N512
         #define CONFIGURE_SLCD()   MCG_C1 |= MCG_C1_IRCLKEN; \
-                                   POWER_UP(3, SIM_SCGC3_SLCD); \
+                                   POWER_UP_ATOMIC(3, SLCD); \
                                    LCD_GCR = (LCD_GCR_VSUPPLY_VLL3 | LCD_GCR_SOURCE | LCD_GCR_LCLK_4 | LCD_GCR_DUTY_4BP | LCD_GCR_ALTDIV_NONE); \
                                    LCD_PENL =  (SLCD_PIN_10 | SLCD_PIN_11 | SLCD_PIN_2 | SLCD_PIN_3 | SLCD_PIN_20 | SLCD_PIN_21 | SLCD_PIN_22 | SLCD_PIN_12 | SLCD_PIN_13 | SLCD_PIN_14 | SLCD_PIN_15); \
                                    LCD_PENH =  0x00000000; \
@@ -3206,7 +3207,7 @@
                                    LCD_GCR = (LCD_GCR_LCDEN | LCD_GCR_VSUPPLY_VLL3 | LCD_GCR_SOURCE | LCD_GCR_LCLK_4 | LCD_GCR_DUTY_4BP | LCD_GCR_ALTDIV_NONE)
     #else
         #define CONFIGURE_SLCD()   MCG_C1 |= MCG_C1_IRCLKEN; \
-                                   POWER_UP(3, SIM_SCGC3_SLCD); \
+                                   POWER_UP_ATOMIC(3, SLCD); \
                                    LCD_GCR = (LCD_GCR_VSUPPLY_VLL3 | LCD_GCR_SOURCE | LCD_GCR_LCLK_4 | LCD_GCR_DUTY_4BP | LCD_GCR_ALTDIV_NONE); \
                                    LCD_PENL = (SLCD_PIN_0 | SLCD_PIN_1 | SLCD_PIN_2 | SLCD_PIN_3 | SLCD_PIN_20 | SLCD_PIN_21 | SLCD_PIN_22 | SLCD_PIN_12 | SLCD_PIN_13 | SLCD_PIN_14 | SLCD_PIN_15); \
                                    LCD_PENH = 0x00000000; \
@@ -3763,7 +3764,7 @@
     #define SPI_TX_BYTE                     SPI0_PUSHR                   // for simulator
     #define SPI_RX_BYTE                     SPI0_POPR                    // for simulator
 
-    #define POWER_UP_SPI_FLASH_INTERFACE()  POWER_UP(6, SIM_SCGC6_SPI0)
+    #define POWER_UP_SPI_FLASH_INTERFACE()  POWER_UP_ATOMIC(6, SPI0)
     #if defined NET_K60
         #define CONFIGURE_SPI_FLASH_INTERFACE() _CONFIG_PERIPHERAL(C, 4, (PC_4_SPI0_PCS0 | PORT_SRE_FAST | PORT_DSE_HIGH));\
                                                 _CONFIG_PERIPHERAL(C, 5, (PC_5_SPI0_SCK | PORT_SRE_FAST | PORT_DSE_HIGH));\

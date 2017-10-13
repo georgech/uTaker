@@ -527,11 +527,7 @@ extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned char ucDmaT
             ptrDMA->DMA_DCR |= ulMod;                                    // the modulo setting
         }
     }
-    #if defined KINETIS_WITH_PCC
-    PCC_DMAMUX0 |= PCC_CGC;
-    #else
-    POWER_UP(6, SIM_SCGC6_DMAMUX0);                                      // enable DMA multiplexer 0
-    #endif
+    POWER_UP_ATOMIC(6, DMAMUX0);                                         // enable DMA multiplexer 0
     *(unsigned char *)(DMAMUX0_BLOCK + ucDMA_channel) = (ucDmaTriggerSource | DMAMUX_CHCFG_ENBL); // connect trigger to DMA channel
     ptrDMA->DMA_DCR |= (DMA_DCR_CS | DMA_DCR_EADREQ);                    // enable peripheral request - single cycle for each request (asynchronous requests enabled in stop mode)
     #else                                                                // eDMA
@@ -593,11 +589,7 @@ extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned char ucDmaT
   //ptrDMA_TCD->DMA_TCD_DLASTSGA = 0;                                    // {3} no destination displacement on transmit buffer completion
   //ptrDMA_TCD->DMA_TCD_SLAST = (-(signed long)(ulBufLength));           // {3} when the buffer has been transmitted set the destination back to the start of it
     ptrDMA_TCD->DMA_TCD_BITER_ELINK = ptrDMA_TCD->DMA_TCD_CITER_ELINK = (signed short)(ulBufLength/ucSize); // the number of service requests to be performed each cycle
-    #if defined KINETIS_WITH_PCC
-    PCC_DMAMUX0 |= PCC_CGC;
-    #else
-    POWER_UP_ATOMIC(6, SIM_SCGC6_DMAMUX0);                               // enable DMA multiplexer 0
-    #endif
+    POWER_UP_ATOMIC(6, DMAMUX0);                                         // enable DMA multiplexer 0
     *(unsigned char *)(DMAMUX0_BLOCK + ucDMA_channel) = (ucDmaTriggerSource | DMAMUX_CHCFG_ENBL); // connect trigger source to DMA channel
     #endif
     #if defined _WINDOWS                                                 // simulator checks to help detect incorrect usage

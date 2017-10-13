@@ -1279,7 +1279,7 @@ extern void fnSetPortOut(unsigned char ucPortOutputs, int iInitialisation)
     unsigned long ulPortOutputSetting = 0;
     #if !defined FRDM_KE04Z && !defined TRK_KEA128
     if (iInitialisation != 0) {
-        POWER_UP(5, SIM_SCGC5_PORTA);                                    // ensure port is powered before writing initial values
+        POWER_UP_ATOMIC(5, PORTA);                                       // ensure port is powered before writing initial values
     }
     #endif
     if ((ucPortOutputs & MAPPED_DEMO_LED_1) != 0) {
@@ -1438,7 +1438,7 @@ extern void fnSetPortOut(unsigned char ucPortOutputs, int iInitialisation)
 #elif defined TWR_K21D50M || defined tinyK20 || defined TWR_K21F120M || defined TWR_K22F120M || defined TWR_K24F120M || defined TWR_KW21D256 || defined TWR_KW24D512
     unsigned long ulPortOutputSetting = 0;
     if (iInitialisation != 0) {
-        POWER_UP(5, SIM_SCGC5_PORTD);                                    // ensure port is powered before writing initial values
+        POWER_UP_ATOMIC(5, PORTD);                                       // ensure port is powered before writing initial values
     }
     if (ucPortOutputs & MAPPED_DEMO_LED_1) {
         ulPortOutputSetting |= DEMO_LED_1;
@@ -1456,7 +1456,7 @@ extern void fnSetPortOut(unsigned char ucPortOutputs, int iInitialisation)
 #elif defined TWR_K20D50M || defined TWR_K20D72M || defined TEENSY_3_1 || defined TEENSY_LC || defined FRDM_K82F || defined TEENSY_3_5 || defined TEENSY_3_6 || defined FRDM_KL82Z || defined TWR_KL82Z72M
     unsigned long ulPortOutputSetting = 0;
     if (iInitialisation != 0) {
-        POWER_UP(5, SIM_SCGC5_PORTC);                                    // ensure port is powered before writing initial values
+        POWER_UP_ATOMIC(5, PORTC);                                       // ensure port is powered before writing initial values
     }
     #if !((defined TEENSY_3_1 || defined TEENSY_LC) && defined ENC424J600_INTERFACE)
     if ((ucPortOutputs & MAPPED_DEMO_LED_1) != 0) {
@@ -1618,9 +1618,9 @@ extern void fnSetPortOut(unsigned char ucPortOutputs, int iInitialisation)
 #elif defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined FRDM_KE02Z || defined FRDM_KE06Z || defined FRDM_KE02Z40M || defined K60F150M_50M || defined TWR_K65F180M || defined FRDM_KEAZN32Q64 || defined FRDM_KEAZ64Q64 || defined FRDM_KEAZ128Q80 || defined BLAZE_K22 || defined FRDM_KE15Z // {9}
     #if !defined KINETIS_KE
     if (iInitialisation != 0) {
-        POWER_UP(5, (SIM_SCGC5_PORTB));                                  // ensure port is powered before writing initial values
+        POWER_UP_ATOMIC(5, PORT));                                       // ensure port is powered before writing initial values
         #if defined BLAZE_K22
-        POWER_UP(5, (SIM_SCGC5_PORTC));
+        POWER_UP_ATOMIC(5, PORTC);                                       // ensure port is powered before writing initial val
         #endif
     }
     #endif
@@ -1766,7 +1766,7 @@ extern void fnSetPortOut(unsigned char ucPortOutputs, int iInitialisation)
 #elif defined TWR_K40X256 || defined TWR_K53N512 || defined TWR_K40D100M
     unsigned long ulPortOutputSetting = 0;
     if (iInitialisation != 0) {
-        POWER_UP(5, (SIM_SCGC5_PORTB | SIM_SCGC5_PORTC));                // ensure port is powered before writing initial values
+        POWER_UP(5, (SIM_SCGC5_PORTB | SIM_SCGC5_PORTC));                // ensure ports are powered before writing initial values
     }
     if (ucPortOutputs & MAPPED_DEMO_LED_1) {
         ulPortOutputSetting |= DEMO_LED_1;
@@ -1806,18 +1806,18 @@ extern void fnSetPortOut(unsigned char ucPortOutputs, int iInitialisation)
 #elif defined EMCRAFT_K70F120M || defined EMCRAFT_K61F150M || defined TWR_K64F120M
     unsigned long ulPortOutputSetting = 0;
     if (iInitialisation != 0) {
-        POWER_UP(5, SIM_SCGC5_PORTE);                                    // ensure port is powered before writing initial values
+        POWER_UP_ATOMIC(5, PORTE);                                       // ensure port is powered before writing initial values
     }
-    if (ucPortOutputs & MAPPED_DEMO_LED_1) {
+    if ((ucPortOutputs & MAPPED_DEMO_LED_1) != 0) {
         ulPortOutputSetting |= DEMO_LED_1;
     }
-    if (ucPortOutputs & MAPPED_DEMO_LED_2) {
+    if ((ucPortOutputs & MAPPED_DEMO_LED_2) != 0) {
         ulPortOutputSetting |= DEMO_LED_2;
     }
-    if (ucPortOutputs & MAPPED_DEMO_LED_3) {
+    if ((ucPortOutputs & MAPPED_DEMO_LED_3) != 0) {
         ulPortOutputSetting |= DEMO_LED_3;
     }
-    if (ucPortOutputs & MAPPED_DEMO_LED_4) {
+    if ((ucPortOutputs & MAPPED_DEMO_LED_4) != 0) {
         ulPortOutputSetting |= DEMO_LED_4;
     }
     _WRITE_PORT_MASK(E, ulPortOutputSetting, (DEMO_LED_1 | DEMO_LED_2 | DEMO_LED_3 | DEMO_LED_4));

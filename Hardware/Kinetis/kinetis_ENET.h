@@ -276,7 +276,7 @@ extern signed char fnEthernetEvent(unsigned char *ucEvent, ETHERNET_FRAME *rx_fr
         if (rx_frame->frame_size != 0) {
             unsigned long ulLength = rx_frame->frame_size;
             unsigned long *ptr = (unsigned long *)rx_frame->ptEth;
-            POWER_UP(6, SIM_SCGC6_CRC);                                  // power up the CRC module
+            POWER_UP_ATOMIC(6, CRC);                                     // power up the CRC module
             CRC_CTRL = (CRC_CTRL_TCRC_32 | CRC_CTRL_TOTR_BITS_BYTES | CRC_CTRL_TOT_BITS_BYTES | CRC_CTRL_FXOR); // mode required for CRC-32 IEEE compatibility
             CRC_GPOLY = 0x04c11db7;                                      // set the polynomial
             CRC_CTRL = (CRC_CTRL_TCRC_32 | CRC_CTRL_WAS | CRC_CTRL_TOTR_BITS_BYTES | CRC_CTRL_TOT_BITS_BYTES | CRC_CTRL_FXOR); // enable write of seed
@@ -684,7 +684,7 @@ extern void fnCheckEthLinkState(void)
     #if defined INTERRUPT_TASK_PHY
     unsigned char int_phy_message[HEADER_LENGTH];
     #endif
-    if (IS_POWERED_UP(2, SIM_SCGC2_ENET) == 0) {                         // ignore if the ethernet controller is not clocked
+    if (IS_POWERED_UP(2, ENET) == 0) {                                   // ignore if the ethernet controller is not clocked
         return;
     }
     #if defined STOP_MII_CLOCK
@@ -963,7 +963,7 @@ extern int fnConfigEthernet(ETHTABLE *pars)
             #error Ethernet RMII operation requires a 50MHz external clock signal!!
         #endif
     #endif
-    POWER_UP_ATOMIC(2, SIM_SCGC2_ENET);                                  // power up the Ethernet controller
+    POWER_UP_ATOMIC(2, ENET);                                            // power up the Ethernet controller
     #if defined MPU_AVAILABLE
     MPU_CESR = 0;                                                        // allow concurrent access to MPU controller
     #endif
@@ -1145,7 +1145,7 @@ extern int fnConfigEthernet(ETHTABLE *pars)
         #endif
     #else
                 MSCR = 0;                                                // disable clock
-                POWER_DOWN_ATOMIC(2, SIM_SCGC2_ENET);
+                POWER_DOWN_ATOMIC(2, ENET);
                 return -1;                                               // if the identifier is incorrect the phy isn't responding correctly - return error
     #endif
     #if defined SCAN_PHY_ADD || defined POLL_PHY

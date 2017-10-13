@@ -2034,6 +2034,8 @@ extern void fnTxOn(QUEUE_HANDLE Channel)
                 #elif !defined KINETIS_K80
                 _CONFIG_PERIPHERAL(A, 19, (PA_19_LPUART1_TX | UART_PULL_UPS)); // LPUART1_TX on PA19 (alt. function 3)
                 #endif
+            #elif defined KINETIS_KE15
+            _CONFIG_PERIPHERAL(C, 7, (PC_7_LPUART1_TX | UART_PULL_UPS)); // LPUART1_RX on PC7 (alt. function 2)
             #endif
             fnEnterInterrupt(irq_LPUART1_ID, PRIORITY_LPUART1, _LPSCI1_Interrupt); // enter LPUART1 interrupt handler
             break;
@@ -2337,6 +2339,8 @@ extern void fnRxOn(QUEUE_HANDLE Channel)
                 #elif !defined KINETIS_K80
             _CONFIG_PERIPHERAL(A, 18, (PA_18_LPUART1_RX | UART_PULL_UPS)); // LPUART1_RX on PA18 (alt. function 3)
                 #endif
+            #elif defined KINETIS_KE15
+            _CONFIG_PERIPHERAL(C, 6, (PC_6_LPUART1_RX | UART_PULL_UPS)); // LPUART1_RX on PC6 (alt. function 2)
             #endif
             fnEnterInterrupt(irq_LPUART1_ID, PRIORITY_LPUART1, _LPSCI1_Interrupt); // enter LPUART1 interrupt handler
             break;
@@ -2607,11 +2611,7 @@ static void fnConfigLPUART(QUEUE_HANDLE Channel, TTYTABLE *pars, KINETIS_LPUART_
         ptrDMA += UART_DMA_TX_CHANNEL[Channel];
         ptrDMA->DMA_DSR_BCR = DMA_DSR_BCR_DONE;                          // clear the DONE flag and clear errors etc.
         ptrDMA->DMA_DAR = (unsigned long)&(lpuart_reg->LPUART_DATA);     // destination is the LPUART's data register
-        #if defined KINETIS_WITH_PCC
-        PCC_DMAMUX0 |= PCC_CGC;
-        #else
-        POWER_UP_ATOMIC(6, SIM_SCGC6_DMAMUX0);                           // enable DMA multiplexer
-        #endif
+        POWER_UP_ATOMIC(6, DMAMUX0);                                     // enable DMA multiplexer
         fnEnterInterrupt((irq_DMA0_ID + UART_DMA_TX_CHANNEL[Channel]), UART_DMA_TX_INT_PRIORITY[Channel], (void (*)(void))_uart_tx_dma_Interrupt[Channel]); // enter DMA interrupt handler
         lpuart_reg->LPUART_CTRL &= ~(LPUART_CTRL_TIE | LPUART_CTRL_TCIE);// ensure tx interrupt is not enabled
         lpuart_reg->LPUART_BAUD |= LPUART_BAUD_TDMAE;                    // use DMA rather than interrupts for transmission
@@ -2635,11 +2635,7 @@ static void fnConfigLPUART(QUEUE_HANDLE Channel, TTYTABLE *pars, KINETIS_LPUART_
             #endif
         lpuart_reg->LPUART_CTRL &= ~(LPUART_CTRL_TIE | LPUART_CTRL_TCIE);// ensure tx interrupt is not enabled
         lpuart_reg->LPUART_BAUD |= LPUART_BAUD_TDMAE;                    // use DMA rather than interrupts for transmission
-            #if defined KINETIS_WITH_PCC
-        PCC_DMAMUX0 |= PCC_CGC;
-            #else
-        POWER_UP_ATOMIC(6, SIM_SCGC6_DMAMUX0);                           // enable DMA multiplexer 0
-            #endif
+        POWER_UP_ATOMIC(6, DMAMUX0);                                     // enable DMA multiplexer 0
         *(unsigned char *)(DMAMUX0_BLOCK + UART_DMA_TX_CHANNEL[Channel]) = ((DMAMUX0_CHCFG_SOURCE_LPUART0_TX + (2 * (Channel - UARTS_AVAILABLE))) | DMAMUX_CHCFG_ENBL); // connect LPUART tx to DMA channel
         #endif
     }
@@ -2755,7 +2751,7 @@ _configDMA:
         ptrDMA += UART_DMA_TX_CHANNEL[Channel];
         ptrDMA->DMA_DSR_BCR = DMA_DSR_BCR_DONE;                          // clear the DONE flag and clear errors etc.
         ptrDMA->DMA_DAR = (unsigned long)&(uart_reg->UART_D);            // destination is the UART's data register
-        POWER_UP_ATOMIC(6, SIM_SCGC6_DMAMUX0);                           // enable DMA multiplexer 0
+        POWER_UP_ATOMIC(6, DMAMUX0);                                     // enable DMA multiplexer 0
         fnEnterInterrupt((irq_DMA0_ID + UART_DMA_TX_CHANNEL[Channel]), UART_DMA_TX_INT_PRIORITY[Channel], (void (*)(void))_uart_tx_dma_Interrupt[Channel]); // enter DMA interrupt handler
         uart_reg->UART_C2 &= ~(UART_C2_TIE | UART_C2_TCIE);              // ensure tx interrupt is not enabled
             #if UARTS_AVAILABLE > 1
@@ -2790,7 +2786,7 @@ _configDMA:
         ptrDMA_TCD->DMA_TCD_CSR = (DMA_TCD_CSR_DREQ | DMA_TCD_CSR_INTMAJOR); // stop after the defined number of service requests and interrupt on completion
         fnEnterInterrupt((irq_DMA0_ID + UART_DMA_TX_CHANNEL[Channel]), UART_DMA_TX_INT_PRIORITY[Channel], (void (*)(void))_uart_tx_dma_Interrupt[Channel]); // enter DMA interrupt handler
         uart_reg->UART_C5 |= UART_C5_TDMAS;                              // use DMA rather than interrupts for transmission
-        POWER_UP_ATOMIC(6, SIM_SCGC6_DMAMUX0);                           // enable DMA multiplexer 0
+        POWER_UP_ATOMIC(6, DMAMUX0);                                     // enable DMA multiplexer 0
             #if ((defined KINETIS_K21 || defined KINETIS_K22) && (UARTS_AVAILABLE > 4)) || defined KINETIS_K64
         if (Channel > 3) {                                               // channels 4 and 5 each share DMA source for TX and RX
             *(unsigned char *)(DMAMUX0_BLOCK + UART_DMA_TX_CHANNEL[Channel]) = ((DMAMUX_CHCFG_SOURCE_UART3_TX + (Channel - 3)) | DMAMUX_CHCFG_ENBL); // connect UART tx to DMA channel
@@ -2843,7 +2839,7 @@ _configDMA:
             #else
         uart_reg->UART_C5 |= UART_C5_RDMAS;                              // use DMA rather than interrupts for reception
             #endif
-        POWER_UP_ATOMIC(6, SIM_SCGC6_DMAMUX0);                           // enable DMA multiplexer 0
+        POWER_UP_ATOMIC(6, DMAMUX0);                                     // enable DMA multiplexer 0
         *(unsigned char *)(DMAMUX0_BLOCK + UART_DMA_RX_CHANNEL[Channel]) = ((DMAMUX_CHCFG_SOURCE_UART0_RX + (2 * Channel)) | DMAMUX_CHCFG_ENBL); // connect UART rx to DMA channel
         ptrDMA_TCD->DMA_TCD_BITER_ELINK = ptrDMA_TCD->DMA_TCD_CITER_ELINK = pars->Rx_tx_sizes.RxQueueSize; // the length of the input buffer in use
         ptrDMA_TCD->DMA_TCD_SOFF = 0;                                    // source not increment
@@ -2935,9 +2931,7 @@ extern void fnStopBreak(QUEUE_HANDLE channel)                            // {205
 static void _fnConfigSimSCI(QUEUE_HANDLE Channel, TTYTABLE *pars, unsigned short usDivider, unsigned char ucFraction, unsigned long ulBusClock, unsigned long ulSpecialClock)
 {
     unsigned long ulBaudRate;
-    #if defined KINETIS_KE
-    ulBaudRate = (unsigned long)((float)ulBusClock/((float)usDivider)/16);// theoretical baud rate
-    #elif defined KINETIS_KL || defined KINETIS_K80
+    #if defined KINETIS_KL || defined KINETIS_K80 || defined KINETIS_KE15
         #if LPUARTS_AVAILABLE > 0
             #if UARTS_AVAILABLE > 0
     if (uart_type[Channel] == UART_TYPE_LPUART) {
@@ -2961,6 +2955,8 @@ static void _fnConfigSimSCI(QUEUE_HANDLE Channel, TTYTABLE *pars, unsigned short
         ulBaudRate = (unsigned long)((float)ulBusClock/((float)usDivider)/16);
     }
         #endif
+    #elif defined KINETIS_KE
+    ulBaudRate = (unsigned long)((float)ulBusClock/((float)usDivider)/16);// theoretical baud rate
     #else
         #if defined KINETIS_KV10
     if (Channel < 1)                                                     // UART 0 is clocked from the core clock
@@ -2999,7 +2995,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
     }
     #endif
     uart_reg = (KINETIS_UART_CONTROL *)fnSelectChannel(Channel);         // select the register set for use by this channel
-    #if LPUARTS_AVAILABLE > 0                                            // if the device has low power UART
+    #if LPUARTS_AVAILABLE > 0                                            // if the device has low power UART(s)
         #if defined KINETIS_WITH_PCC                                     // same LPUART clock source for all used LPUARTs
             #if defined LPUART_FIRC                                      // use the fast internal RC clock as UART clock
                 #define SPECIAL_LPUART_CLOCK  (FIRC_CLK)                 // 48MHz, 52MHz, 56MHz or 60MHz, depending on system clock configuration
@@ -3017,10 +3013,10 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
                 #define SPECIAL_LPUART_CLOCK  (MCGIRCLK)
             #endif
         #endif
-        #if UARTS_AVAILABLE > 0                                          // if also UART
+        #if UARTS_AVAILABLE > 0                                          // if LPUART(s) and also UART(s)
     if (uart_type[Channel] == UART_TYPE_LPUART) {
         #endif
-        switch (Channel) {
+        switch (Channel) {                                               // the UART channel
         #if defined LPUARTS_PARALLEL
         case (UARTS_AVAILABLE):                                          // first LPUART
         #else
@@ -3036,11 +3032,11 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
             #endif
         #else
             #if defined KINETIS_KL
-            POWER_UP_ATOMIC(5, SIM_SCGC5_LPUART0);                       // power up LPUART 0
+            POWER_UP_ATOMIC(5, LPUART0);                                 // power up LPUART 0
             #elif defined KINETIS_K80
-            POWER_UP_ATOMIC(2, SIM_SCGC2_LPUART0);                       // power up LPUART 0
+            POWER_UP_ATOMIC(2, LPUART0);                                 // power up LPUART 0
             #else
-            POWER_UP_ATOMIC(6, SIM_SCGC6_LPUART0);                       // power up LPUART 0
+            POWER_UP_ATOMIC(6, LPUART0);                                 // power up LPUART 0
             #endif
             #if defined LPUART_IRC48M                                    // use the IRC48M clock as UART clock
                 #if defined KINETIS_WITH_MCG_LITE
@@ -3074,7 +3070,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         case (1):                                                        // LPUART 1
             #endif
             #if defined KINETIS_WITH_PCC
-                #if defined LPUART0_FIRC
+                #if defined LPUART_FIRC
             PCC_LPUART1 = (PCC_CGC | PCC_PCS_SCGFIRCLK);                 // clock from the fast IRC clock (we assume that the FIRC has been configured for use as system clock)
                 #elif defined LPUART_OSCERCLK
             PCC_LPUART1 = (PCC_CGC | PCC_PCS_OSCCLK);                    // clock from the system oscillator bus clock
@@ -3083,9 +3079,9 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
                 #endif
             #else
                 #if defined KINETIS_KL
-            POWER_UP_ATOMIC(5, SIM_SCGC5_LPUART1);                       // power up LPUART 1
+            POWER_UP_ATOMIC(5, LPUART1);                                 // power up LPUART 1
                 #else
-            POWER_UP_ATOMIC(2, SIM_SCGC2_LPUART1);                       // power up LPUART 1
+            POWER_UP_ATOMIC(2, LPUART1);                                 // power up LPUART 1
                 #endif
                 #if defined LPUART_IRC48M                                // use the IRC48M clock as UART clock
                     #if defined KINETIS_WITH_MCG_LITE
@@ -3120,9 +3116,9 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
                 #endif
             #else
                 #if defined KINETIS_KL
-            POWER_UP_ATOMIC(5, SIM_SCGC5_LPUART2);                       // power up LPUART 2
+            POWER_UP_ATOMIC(5, LPUART2);                                 // power up LPUART 2
                 #else
-            POWER_UP_ATOMIC(2, SIM_SCGC2_LPUART2);                       // power up LPUART 2
+            POWER_UP_ATOMIC(2, LPUART2);                                 // power up LPUART 2
                 #endif
                 #if defined LPUART_IRC48M                                // use the IRC48M clock as UART clock
                     #if defined KINETIS_WITH_MCG_LITE
@@ -3147,7 +3143,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
             #else
         case (3):                                                        // LPUART 3
             #endif
-            POWER_UP_ATOMIC(2, SIM_SCGC2_LPUART3);                       // power up LPUART 3
+            POWER_UP_ATOMIC(2, LPUART3);                                 // power up LPUART 3
             #if defined LPUART_IRC48M                                    // use the IRC48M clock as UART clock
                 #if defined KINETIS_WITH_MCG_LITE
             MCG_MC |= MCG_MC_HIRCEN;                                     // ensure that the IRC48M is operating, even when the processor is not in HIRC mode
@@ -3170,7 +3166,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
             #else
         case (4):                                                        // LPUART 4
             #endif
-            POWER_UP_ATOMIC(2, SIM_SCGC2_LPUART4);                       // power up LPUART 4
+            POWER_UP_ATOMIC(2, LPUART4);                                 // power up LPUART 4
             #if defined LPUART_IRC48M                                    // use the IRC48M clock as UART clock
                 #if defined KINETIS_WITH_MCG_LITE
             MCG_MC |= MCG_MC_HIRCEN;                                     // ensure that the IRC48M is operating, even when the processor is not in HIRC mode
@@ -3194,7 +3190,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #if UARTS_AVAILABLE > 0 
     }
         #else
-            #define SPECIAL_UART_CLOCK SPECIAL_LPUART_CLOCK
+            #define SPECIAL_UART_CLOCK   (SPECIAL_LPUART_CLOCK)
         #endif
         #if UARTS_AVAILABLE > 0
     else {
@@ -3204,7 +3200,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         switch (Channel) {
         #if UARTS_AVAILABLE > 0 && (LPUARTS_AVAILABLE < 1 || defined LPUARTS_PARALLEL)
         case 0:
-            POWER_UP_ATOMIC(4, SIM_SCGC4_UART0);                         // power up UART 0
+            POWER_UP_ATOMIC(4, UART0);                                   // power up UART 0
             #if defined KINETIS_KL
                 #if defined UART0_ClOCKED_FROM_MCGIRCLK                  // clocked from internal 4MHz RC clock
             SIM_SOPT2 |= (SIM_SOPT2_UART0SRC_MCGIRCLK);                  // enable UART0 clock source from MCGIRCLK
@@ -3222,27 +3218,27 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
         #if UARTS_AVAILABLE > 1 && (LPUARTS_AVAILABLE < 2 || defined LPUARTS_PARALLEL)
         case 1:
-            POWER_UP_ATOMIC(4, SIM_SCGC4_UART1);                         // power up UART 1
+            POWER_UP_ATOMIC(4, UART1);                                   // power up UART 1
             break;
         #endif
         #if (UARTS_AVAILABLE > 2 && (LPUARTS_AVAILABLE < 3 || defined LPUARTS_PARALLEL)) || (UARTS_AVAILABLE == 1 && LPUARTS_AVAILABLE == 2)
         case 2:
-            POWER_UP_ATOMIC(4, SIM_SCGC4_UART2);                         // power up UART 2
+            POWER_UP_ATOMIC(4, UART2);                                   // power up UART 2
             break;
         #endif
         #if UARTS_AVAILABLE > 3
         case 3:
-            POWER_UP_ATOMIC(4, SIM_SCGC4_UART3);                         // power up UART 3
+            POWER_UP_ATOMIC(4, UART3);                                   // power up UART 3
             break;
         #endif
         #if UARTS_AVAILABLE > 4
         case 4:
-            POWER_UP_ATOMIC(1, SIM_SCGC1_UART4);                         // power up UART 4
+            POWER_UP_ATOMIC(1, UART4);                                   // power up UART 4
             break;
         #endif
         #if UARTS_AVAILABLE > 5
         case 5:
-            POWER_UP_ATOMIC(1, SIM_SCGC1_UART5);                         // power up UART 5
+            POWER_UP_ATOMIC(1, UART5);                                   // power up UART 5
             break;
         #endif
         default:
@@ -3260,7 +3256,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
     }
     #endif
 
-    #if (((SYSTEM_CLOCK != BUS_CLOCK) || defined KINETIS_KL || (LPUARTS_AVAILABLE > 0 && UARTS_AVAILABLE > 0))) && !defined KINETIS_KE
+    #if (((SYSTEM_CLOCK != BUS_CLOCK) || defined KINETIS_KL || defined KINETIS_KE15 || (LPUARTS_AVAILABLE > 0 && UARTS_AVAILABLE > 0))) && !(defined KINETIS_KE && !defined KINETIS_KE15)
         #if defined KINETIS_KL || defined KINETIS_K80
             #if LPUARTS_AVAILABLE == 0
                 #if defined UART0_ClOCKED_FROM_MCGIRCLK                  // clocked from internal 4MHz RC clock
@@ -3294,7 +3290,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
     {
         switch (pars->ucSpeed) {           
         case SERIAL_BAUD_300:
-        #if defined KINETIS_KL || defined KINETIS_K80
+        #if defined KINETIS_KL || defined KINETIS_K80 || defined KINETIS_KE15
             usDivider = (((SPECIAL_UART_CLOCK/8/300) + 1)/2);            // {201} set 300
         #else
             ucFraction = (unsigned char)((float)((((float)SPECIAL_UART_CLOCK/(float)16/(float)300) - (int)(SPECIAL_UART_CLOCK/16/300)) * 32)); // calculate fraction
@@ -3302,7 +3298,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
             break;
         case SERIAL_BAUD_600:
-        #if defined KINETIS_KL || defined KINETIS_K80
+        #if defined KINETIS_KL || defined KINETIS_K80 || defined KINETIS_KE15
             usDivider = (((SPECIAL_UART_CLOCK/8/600) + 1)/2);            // {201} set 600
         #else
             ucFraction = (unsigned char)((float)((((float)SPECIAL_UART_CLOCK/(float)16/(float)600) - (int)(SPECIAL_UART_CLOCK/16/600)) * 32)); // calculate fraction
@@ -3310,7 +3306,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
             break;
         case SERIAL_BAUD_1200:
-        #if defined KINETIS_KL || defined KINETIS_K80
+        #if defined KINETIS_KL || defined KINETIS_K80 || defined KINETIS_KE15
             usDivider = (((SPECIAL_UART_CLOCK/8/1200) + 1)/2);           // {201} set 1200
         #else
             ucFraction = (unsigned char)((float)((((float)SPECIAL_UART_CLOCK/(float)16/(float)1200) - (int)(SPECIAL_UART_CLOCK/16/1200)) * 32)); // calculate fraction
@@ -3318,7 +3314,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
             break;
         case SERIAL_BAUD_2400:
-        #if defined KINETIS_KL || defined KINETIS_K80
+        #if defined KINETIS_KL || defined KINETIS_K80 || defined KINETIS_KE15
             usDivider = (((SPECIAL_UART_CLOCK/8/2400) + 1)/2);           // {201} set 2400
         #else
             ucFraction = (unsigned char)((float)((((float)SPECIAL_UART_CLOCK/(float)16/(float)2400) - (int)(SPECIAL_UART_CLOCK/16/2400)) * 32)); // calculate fraction
@@ -3326,7 +3322,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
             break;
         case SERIAL_BAUD_4800:
-        #if defined KINETIS_KL || defined KINETIS_K80
+        #if defined KINETIS_KL || defined KINETIS_K80 || defined KINETIS_KE15
             usDivider = (((SPECIAL_UART_CLOCK/8/4800) + 1)/2);           // {201} set 4800
         #else
             ucFraction = (unsigned char)((float)((((float)SPECIAL_UART_CLOCK/(float)16/(float)4800) - (int)(SPECIAL_UART_CLOCK/16/4800)) * 32)); // calculate fraction
@@ -3334,7 +3330,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
             break;
         case SERIAL_BAUD_9600:
-        #if defined KINETIS_KL || defined KINETIS_K80
+        #if defined KINETIS_KL || defined KINETIS_K80 || defined KINETIS_KE15
             usDivider = (((SPECIAL_UART_CLOCK/8/19600) + 1)/2);          // {201} set 9600
         #else
             ucFraction = (unsigned char)((float)((((float)SPECIAL_UART_CLOCK/(float)16/(float)9600) - (int)(SPECIAL_UART_CLOCK/16/9600)) * 32)); // calculate fraction
@@ -3342,7 +3338,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
             break;
         case SERIAL_BAUD_14400:
-        #if defined KINETIS_KL || defined KINETIS_K80
+        #if defined KINETIS_KL || defined KINETIS_K80 || defined KINETIS_KE15
             usDivider = (((SPECIAL_UART_CLOCK/8/14400) + 1)/2);          // {201} set 14400
         #else
             ucFraction = (unsigned char)((float)((((float)SPECIAL_UART_CLOCK/(float)16/(float)14400) - (int)(SPECIAL_UART_CLOCK/16/14400)) * 32)); // calculate fraction
@@ -3351,7 +3347,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
             break;
         default:                                                         // if not valid value set this speed
         case SERIAL_BAUD_19200:
-        #if defined KINETIS_KL || defined KINETIS_K80
+        #if defined KINETIS_KL || defined KINETIS_K80 || defined KINETIS_KE15
             usDivider = (((SPECIAL_UART_CLOCK/8/19200) + 1)/2);          // {201} set 19200
         #else
             ucFraction = (unsigned char)((float)((((float)SPECIAL_UART_CLOCK/(float)16/(float)19200) - (int)(SPECIAL_UART_CLOCK/16/19200)) * 32)); // calculate fraction
@@ -3360,7 +3356,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
             break;
         #if defined SUPPORT_MIDI_BAUD_RATE
         case SERIAL_BAUD_31250:                                          // {207} set 31250
-            #if defined KINETIS_KL || defined KINETIS_K80
+            #if defined KINETIS_KL || defined KINETIS_K80 || defined KINETIS_KE15
             usDivider = (((SPECIAL_UART_CLOCK/8/31250) + 1)/2);
             #else
             ucFraction = (unsigned char)((float)((((float)SPECIAL_UART_CLOCK/(float)16/(float)31250) - (int)(SPECIAL_UART_CLOCK/16/31250)) * 32)); // calculate fraction
@@ -3369,7 +3365,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
             break;
         #endif
         case SERIAL_BAUD_38400:
-        #if defined KINETIS_KL || defined KINETIS_K80
+        #if defined KINETIS_KL || defined KINETIS_K80 || defined KINETIS_KE15
             usDivider = (((SPECIAL_UART_CLOCK/8/38400) + 1)/2);          // {201} set 38400
         #else
             ucFraction = (unsigned char)((float)((((float)SPECIAL_UART_CLOCK/(float)16/(float)38400) - (int)(SPECIAL_UART_CLOCK/16/38400)) * 32)); // calculate fraction
@@ -3377,7 +3373,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
             break;
         case SERIAL_BAUD_57600:
-        #if defined KINETIS_KL || defined KINETIS_K80
+        #if defined KINETIS_KL || defined KINETIS_K80 || defined KINETIS_KE15
             usDivider = (((SPECIAL_UART_CLOCK/8/57600) + 1)/2);          // {201} set 57600
         #else
             ucFraction = (unsigned char)((float)((((float)SPECIAL_UART_CLOCK/(float)16/(float)57600) - (int)(SPECIAL_UART_CLOCK/16/57600)) * 32)); // calculate fraction
@@ -3385,7 +3381,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
             break;
         case SERIAL_BAUD_115200:
-        #if defined KINETIS_KL || defined KINETIS_K80
+        #if defined KINETIS_KL || defined KINETIS_K80 || defined KINETIS_KE15
             usDivider = (((SPECIAL_UART_CLOCK/8/115200) + 1)/2);         // {201} set 115200
         #else
             ucFraction = (unsigned char)((float)((((float)SPECIAL_UART_CLOCK/(float)16/(float)115200) - (int)(SPECIAL_UART_CLOCK/16/115200)) * 32)); // calculate fraction
@@ -3393,7 +3389,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
             break;
         case SERIAL_BAUD_230400:
-        #if defined KINETIS_KL || defined KINETIS_K80
+        #if defined KINETIS_KL || defined KINETIS_K80 || defined KINETIS_KE15
             usDivider = (((SPECIAL_UART_CLOCK/8/230400) + 1)/2);         // {201} set 230400
         #else
             ucFraction = (unsigned char)((float)((((float)SPECIAL_UART_CLOCK/(float)16/(float)230400) - (int)(SPECIAL_UART_CLOCK/16/230400)) * 32)); // calculate fraction
@@ -3401,7 +3397,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
             break;
         case SERIAL_BAUD_250K:
-        #if defined KINETIS_KL || defined KINETIS_K80
+        #if defined KINETIS_KL || defined KINETIS_K80 || defined KINETIS_KE15
             usDivider = (((SPECIAL_UART_CLOCK/8/250000) + 1)/2);         // set 250000
         #else
             ucFraction = (unsigned char)((float)((((float)SPECIAL_UART_CLOCK/(float)16/(float)250000) - (int)(SPECIAL_UART_CLOCK/16/250000)) * 32)); // calculate fraction
@@ -3411,7 +3407,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         }
     }
     else {
-    #else
+    #elif !defined SPECIAL_UART_CLOCK
         #define SPECIAL_UART_CLOCK    (SYSTEM_CLOCK)
     #endif
     #if (UARTS_AVAILABLE > 2 && LPUARTS_AVAILABLE > 0 && defined LPUARTS_PARALLEL) // UARTs above channel 1 use bus clock but LPUARTs use their own special clock
@@ -3658,7 +3654,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
     #if UARTS_AVAILABLE > 2 && LPUARTS_AVAILABLE > 0 && defined LPUARTS_PARALLEL
         }
     #endif
-    #if (((SYSTEM_CLOCK != BUS_CLOCK) || defined KINETIS_KL || (LPUARTS_AVAILABLE > 0 && UARTS_AVAILABLE > 0))) && !defined KINETIS_KE
+    #if (((SYSTEM_CLOCK != BUS_CLOCK) || defined KINETIS_KL || defined KINETIS_KE15 || (LPUARTS_AVAILABLE > 0 && UARTS_AVAILABLE > 0))) && !(defined KINETIS_KE && !defined KINETIS_KE15)
     }
     #endif
 

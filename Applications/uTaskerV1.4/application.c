@@ -2677,7 +2677,7 @@ extern void fnUserHWInit(void)
     #if (defined SPECIAL_LCD_DEMO || defined SUPPORT_GLCD) && !defined SUPPORT_TFT && !defined TFT_GLCD_MODE // {38} configure GLCD ports and drive RST line if required
     CONFIGURE_GLCD();
         #if defined BLAZE_K22_
-    if (IS_POWERED_UP(4, SIM_SCGC4_USBOTG) != 0) {                       // if the USB controller has been left powered up by the Blaze boot loader
+    if (IS_POWERED_UP(4, USBOTG) != 0) {                                 // if the USB controller has been left powered up by the Blaze boot loader
         USB_USBTRC0 |= USB_USBTRC0_USBRESET;                             // command a reset of the USB controller
         while ((USB_USBTRC0 & USB_USBTRC0_USBRESET) != 0) {              // wait for the reset to complete
             #if defined _WINDOWS

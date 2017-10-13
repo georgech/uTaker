@@ -911,7 +911,7 @@ static int fnRemoteSimUDP_Listner(USOCKET SocketNr, unsigned char ucEvent, unsig
     // Development with FRDM_K64F
     //
     #if defined FRDM_K64F
-        #define CONFIGURE_ENC424J600_SPI_MODE() POWER_UP(6, SIM_SCGC6_SPI0); \
+        #define CONFIGURE_ENC424J600_SPI_MODE() POWER_UP_ATOMIC(6, SPI0); \
                                      _CONFIG_PERIPHERAL(D, 0, (PD_0_SPI0_PCS0 | PORT_DSE_HIGH | PORT_PS_UP_ENABLE | PORT_SRE_FAST)); \
                                      _CONFIG_PERIPHERAL(D, 2, (PD_2_SPI0_SOUT | PORT_DSE_HIGH | PORT_PS_UP_ENABLE | PORT_SRE_FAST)); \
                                      _CONFIG_PERIPHERAL(D, 3, (PD_3_SPI0_SIN | PORT_PS_UP_ENABLE)); \
@@ -923,7 +923,7 @@ static int fnRemoteSimUDP_Listner(USOCKET SocketNr, unsigned char ucEvent, unsig
         #define ASSERT_ENC424J600_CS_LINE()  _CLEARBITS(C, ENC424J600_CS)
         #define NEGATE_ENC424J600_CS_LINE()  _SETBITS(C, ENC424J600_CS)
 
-        #define CONFIGURE_ENC424J600_SPI_MODE() POWER_UP(4, SIM_SCGC4_SPI0); \
+        #define CONFIGURE_ENC424J600_SPI_MODE() POWER_UP_ATOMIC(4, SPI0); \
                                      _CONFIG_PERIPHERAL(C, 5, PC_5_SPI0_SCK); \
                                      _CONFIG_PERIPHERAL(C, 6, (PC_6_SPI0_MOSI | PORT_SRE_FAST | PORT_DSE_HIGH)); \
                                      _CONFIG_PERIPHERAL(C, 7, (PC_7_SPI0_MISO | PORT_PS_UP_ENABLE)); \
@@ -953,7 +953,7 @@ static int fnRemoteSimUDP_Listner(USOCKET SocketNr, unsigned char ucEvent, unsig
         #define RETURN_SPI()         SPI0_C1 = Original_SPI0_C1; \
                                      SPI0_BR = Original_SPI0_BR;
     #else
-        #define CONFIGURE_ENC424J600_SPI_MODE() POWER_UP(6, SIM_SCGC6_SPI0); \
+        #define CONFIGURE_ENC424J600_SPI_MODE() POWER_UP_ATOMIC(6, SPI0); \
                                      _CONFIG_PERIPHERAL(C, 4, (PC_4_SPI0_PCS0 | PORT_DSE_HIGH | PORT_PS_UP_ENABLE | PORT_SRE_FAST)); \
                                      _CONFIG_PERIPHERAL(C, 5, PC_5_SPI0_SCK | PORT_SRE_FAST | PORT_DSE_HIGH); \
                                      _CONFIG_PERIPHERAL(C, 6, (PC_6_SPI0_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); \

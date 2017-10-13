@@ -734,7 +734,7 @@ static void fnInitLCD_Controller(void)
 
     #if defined GLCD_INIT
         #if defined _KINETIS
-            POWER_UP(3, SIM_SCGC3_LCDC);                                 // power up the LCD controller
+            POWER_UP_ATOMIC(3, LCDC);                                    // power up the LCD controller
             fnInitLCD_Controller();                                      // initialise the LCD controller
         #else
             POWER_UP(PCEMC | PCLCD);                                     // power up the External Memory Controller and enable LCD controller clock

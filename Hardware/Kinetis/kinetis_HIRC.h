@@ -70,7 +70,7 @@
         #endif
         #if (defined KINETIS_K64 || (defined KINETIS_K24 && (SIZE_OF_FLASH == (1024 * 1024)))) // older K64 devices require the IRC48M to be switched on by the USB module
         if (++iIRC48M_USB_control >= IRC48M_TIMEOUT) {                   // if the switch-over is taking too long it means that the clock needs to be enabled in the USB controller
-            POWER_UP(4, SIM_SCGC4_USBOTG);                               // power up the USB controller module
+            POWER_UP_ATOMIC(4, USBOTG);                                  // power up the USB controller module
             USB_CLK_RECOVER_IRC_EN = (USB_CLK_RECOVER_IRC_EN_REG_EN | USB_CLK_RECOVER_IRC_EN_IRC_EN); // the IRC48M is only usable when enabled via the USB module
         }
         #endif

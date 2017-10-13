@@ -38,7 +38,7 @@ static void (*rtc_interrupt_handler[6])(void) = {0};                     // RTC 
 //
 static __interrupt void _rtc_handler(void)
 {
-    #if !defined irq_RTC_SECONDS_ID && !defined KINETIS_KE && !defined SUPPORT_SW_RTC // {75}
+    #if !defined irq_RTC_SECONDS_ID && !(defined KINETIS_KE && !defined KINETIS_WITH_SRTC) && !defined SUPPORT_SW_RTC // {75}
     register unsigned long ulNewSeconds = RTC_TSR;                       // the present seconds count value
     RTC_TAR = ulNewSeconds;                                              // set timer alarm interrupt to next second which also resets the alarm source
     #endif
@@ -49,7 +49,7 @@ static __interrupt void _rtc_handler(void)
     *RTC_SECONDS_LOCATION = RTC_TSR;                                     // update the count and pre-scaler value in non-initialised ram
     *RTC_PRESCALER_LOCATION = (unsigned short)RTC_TPR;
     #endif
-    #if defined SUPPORT_SW_RTC || defined KINETIS_KE
+    #if defined SUPPORT_SW_RTC || (defined KINETIS_KE && !defined KINETIS_WITH_SRTC)
     unsigned long ulNewSeconds = *RTC_SECONDS_LOCATION;
     ulNewSeconds++;
     *RTC_SECONDS_LOCATION = ulNewSeconds;                                // increment the seconds count in non-initialised ram
@@ -96,7 +96,7 @@ static void fnRestoreRTC(int iResync)
     unsigned long ulLostSeconds = 0;
     unsigned long ulMissedCounts;
     if (iResync != 0) {
-        if ((IS_POWERED_UP(6, SIM_SCGC6_RTC) == 0) || ((RTC_SR & RTC_SR_TCE) == 0)) { // if the RTC is not enabled or not presently running we ignore any further checks
+        if ((IS_POWERED_UP(6, RTC) == 0) || ((RTC_SR & RTC_SR_TCE) == 0)) { // if the RTC is not enabled or not presently running we ignore any further checks
             return;
         }
         RTC_SR = 0;                                                      // suspend RTC counting during synchronisation
@@ -141,7 +141,7 @@ static void fnRestoreRTC(int iResync)
 //
 static void fnSlowRTC(void)
 {
-    if ((IS_POWERED_UP(6, SIM_SCGC6_RTC) != 0) && ((RTC_SR & RTC_SR_TCE) != 0) && (RTC_TAR != 0)) { // if the RTC is not enabled or not presently running we ignore any further checks
+    if ((IS_POWERED_UP(6, RTC) != 0) && ((RTC_SR & RTC_SR_TCE) != 0) && (RTC_TAR != 0)) { // if the RTC is not enabled or not presently running we ignore any further checks
         unsigned long ulAlarmDelay;
         RTC_SR = 0;                                                      // suspend RTC counting during adjustment
         if (RTC_TAR != 0) {                                              // if alarm still hasn't fired before disabing RTC
@@ -181,30 +181,26 @@ extern int fnConfigureRTC(void *ptrSettings)
     RTC_SETUP *ptr_rtc_setup = (RTC_SETUP *)ptrSettings;
     switch (ptr_rtc_setup->command & ~(RTC_DISABLE | RTC_INITIALISATION | RTC_SET_UTC | RTC_INCREMENT)) { // {51}
     case RTC_TIME_SETTING:                                               // set time to RTC
-    #if !defined SUPPORT_SW_RTC && !defined KINETIS_KE
-        #if defined KINETIS_WITH_PCC
-        PCC_RTC |= PCC_CGC;
-        #else
-        POWER_UP_ATOMIC(6, SIM_SCGC6_RTC);                               // ensure the RTC is powered
-        #endif
+    #if !defined SUPPORT_SW_RTC && !(defined KINETIS_KE && !defined KINETIS_WITH_SRTC)
+        POWER_UP_ATOMIC(6, RTC);                                         // ensure the RTC is powered
         RTC_SR = 0;                                                      // temporarily disable RTC to avoid potential interrupt
     #endif
         if ((ptr_rtc_setup->command & RTC_SET_UTC) != 0) {               // {51} allow setting from UTC seconds value
             fnConvertSecondsTime(0, ptr_rtc_setup->ulLocalUTC);          // convert to time for internal use
-    #if defined SUPPORT_SW_RTC || defined KINETIS_KE
+    #if defined SUPPORT_SW_RTC || (defined KINETIS_KE && !defined KINETIS_WITH_SRTC)
             *RTC_SECONDS_LOCATION = ptr_rtc_setup->ulLocalUTC;           // directly set the seconds value
     #else
             RTC_TSR = ptr_rtc_setup->ulLocalUTC;                         // directly set the seconds value
     #endif
         }
         else {
-    #if defined SUPPORT_SW_RTC || defined KINETIS_KE
+    #if defined SUPPORT_SW_RTC || (defined KINETIS_KE && !defined KINETIS_WITH_SRTC)
             *RTC_SECONDS_LOCATION = fnConvertTimeSeconds(ptr_rtc_setup, 1); // set the present time and date as seconds since 1970 (Unix epoch)
     #else
             RTC_TSR = fnConvertTimeSeconds(ptr_rtc_setup, 1);            // set the present time and date as seconds since 1970 (Unix epoch)
     #endif
         }
-    #if !defined SUPPORT_SW_RTC && !defined KINETIS_KE
+    #if !defined SUPPORT_SW_RTC && !(defined KINETIS_KE && !defined KINETIS_WITH_SRTC)
         #if !defined irq_RTC_SECONDS_ID                                  // {75}
         RTC_TAR = RTC_TSR;                                               // set next second interrupt alarm match
         #endif
@@ -269,8 +265,8 @@ extern int fnConfigureRTC(void *ptrSettings)
             rtc_interrupts &= ~(0x01 << iIRQ);                           // disable interrupt
             return 0;                                                    // disable function rather than enable
         }
-    #if defined KINETIS_KE && defined SUPPORT_RTC
-        POWER_UP_ATOMIC(6, SIM_SCGC6_RTC);                               // ensure the KE's RTC is powered
+    #if defined KINETIS_KE && !defined KINETIS_WITH_SRTC && defined SUPPORT_RTC
+        POWER_UP_ATOMIC(6, RTC);                                         // ensure the KE's RTC is powered
         rtc_interrupt_handler[iIRQ] = ((INTERRUPT_SETUP *)ptrSettings)->int_handler; // enter the handling interrupt
         fnEnterInterrupt(irq_RTC_OVERFLOW_ID, PRIORITY_RTC, (void (*)(void))_rtc_handler); // enter interrupt handler
         #if defined RTC_USES_EXT_CLK
@@ -290,11 +286,7 @@ extern int fnConfigureRTC(void *ptrSettings)
     #elif defined SUPPORT_SW_RTC
         rtc_interrupt_handler[iIRQ] = ((INTERRUPT_SETUP *)ptrSettings)->int_handler; // enter the handling interrupt
     #else
-        #if defined KINETIS_WITH_PCC
-        PCC_RTC |= PCC_CGC;
-        #else
-        POWER_UP_ATOMIC(6, SIM_SCGC6_RTC);                               // enable access and interrupts to the RTC
-        #endif
+        POWER_UP_ATOMIC(6, RTC);                                         // enable access and interrupts to the RTC
         if ((RTC_SR & RTC_SR_TIF) != 0) {                                // if timer invalid
             RTC_SR = 0;                                                  // ensure stopped
             RTC_TSR = 0;                                                 // write to clear RTC_SR_TIF in status register when not yet enabled
@@ -329,13 +321,13 @@ extern int fnConfigureRTC(void *ptrSettings)
             fnEnterInterrupt(irq_RTC_SECONDS_ID, PRIORITY_RTC, _rtc_handler);
             RTC_IER = RTC_IER_TSIE;                                      // enable seconds interrupt
         }
-    #elif !defined SUPPORT_SW_RTC && !defined KINETIS_KE
+    #elif !defined SUPPORT_SW_RTC && !(defined KINETIS_KE && !defined KINETIS_WITH_SRTC)
         RTC_TAR = (RTC_TSR);                                             // set timer alarm interrupt at next second
         fnEnterInterrupt(irq_RTC_ALARM_ID, PRIORITY_RTC, _rtc_handler);
         RTC_IER = RTC_IER_TAIE;                                          // enable alarm interrupt
     #endif
         if ((ptr_rtc_setup->command & RTC_INITIALISATION) != 0) {
-    #if defined SUPPORT_SW_RTC ||defined KINETIS_KE
+    #if defined SUPPORT_SW_RTC || (defined KINETIS_KE && !defined KINETIS_WITH_SRTC)
             if (*RTC_VALID_LOCATION != RTC_VALID_PATTERN) {              // power on reset
                 *RTC_SECONDS_LOCATION = 0;                               // update the count and pre-scaler value in non-initialised ram
                 *RTC_PRESCALER_LOCATION = 0;
@@ -382,7 +374,7 @@ extern int fnConfigureRTC(void *ptrSettings)
             fnConvertSecondsTime(0, RTC_TSR);                            // take the present seconds count value, convert and set to time and date
     #endif
         }
-    #if !defined SUPPORT_SW_RTC && !defined KINETIS_KE
+    #if !defined SUPPORT_SW_RTC && !(defined KINETIS_KE && !defined KINETIS_WITH_SRTC)
         RTC_SR = RTC_SR_TCE;                                             // enable counter
     #endif
         break;

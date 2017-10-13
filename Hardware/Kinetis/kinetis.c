@@ -480,7 +480,7 @@ extern void _init(void)
 extern void fnInitialiseRND(unsigned short *usSeedValue)
 {
     #if defined RANDOM_NUMBER_GENERATOR_B                                // {64} support revison 1 types
-    POWER_UP(3, SIM_SCGC3_RNGB);                                         // power up RNGB
+    POWER_UP_ATOMIC(3, RNGB);                                            // power up RNGB
         #if defined RANDOM_NUMBER_GENERATOR_A                            // {128} support revison 2 types too
     if (((SIM_SDID & SIM_SDID_REVID_MASK) >> SIM_SDID_REVID_SHIFT) > 0) {// if from revision 2 part is detected (clock enable is compatible)
         RNGA_CR = (RNGA_CR_INTM | RNGA_CR_HA | RNGA_CR_GO);              // start first conversion in RNGA module
@@ -491,7 +491,7 @@ extern void fnInitialiseRND(unsigned short *usSeedValue)
     RNG_CMD = (RNG_CMD_GS | RNG_CMD_CI | RNG_CMD_CE);                    // start the initial seed process
                                                                          // the initial seeding takes some time but we don't wait for it to complete here - if it hasn't completed when we first need a value we will wait for it then
     #else
-    POWER_UP(3, SIM_SCGC3_RNGA);                                         // power up RNGA
+    POWER_UP_ATOMIC(3, RNGA);                                            // power up RNGA
     RNGA_CR = (RNGA_CR_INTM | RNGA_CR_HA | RNGA_CR_GO);                  // start first conversion
     #endif
 }
@@ -502,7 +502,7 @@ extern unsigned short fnGetRndHW(void)
 {
     unsigned long ulRandomNumber;
     #if defined _WINDOWS
-    if (IS_POWERED_UP(3, SIM_SCGC3_RNGB) == 0) {
+    if (IS_POWERED_UP(3, RNGB) == 0) {
         _EXCEPTION("Warning: RNG being used before initialised!!!");
     }
     #endif
@@ -1091,7 +1091,7 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void (*
     #if defined KINETIS_WITH_PCC
         PCC_INTMUX0 |= PCC_CGC;
     #else
-        POWER_UP_ATOMIC(6, SIM_SCGC6_INTMUX0);                           // power up the INTMUX0 module
+        POWER_UP_ATOMIC(6, INTMUX0);                                     // power up the INTMUX0 module
     #endif
         ptrINTMUX += iChannel;                                           // moved to the channel to be used
         ptrINTMUX->INTMUX_CHn_IER_31_0 |= (1 << ucPriority);             // enable the peripheral source interrupt to the INTMUX module
@@ -1189,7 +1189,7 @@ static __interrupt void _RealTimeInterrupt(void)
 extern void fnStartTick(void)
 {
 #if defined TICK_USES_LPTMR                                              // {94} use the low power timer to derive the tick interrupt from
-    POWER_UP(5, SIM_SCGC5_LPTIMER);                                      // ensure that the timer can be accessed
+    POWER_UP_ATOMIC(5, LPTIMER);                                         // ensure that the timer can be accessed
     LPTMR0_CSR = LPTMR_CSR_TCF;                                          // reset the timer and ensure no pending interrupts
     #if defined LPTMR_CLOCK_LPO                                          // define the low power clock speed for calculations
     LPTMR0_PSR = (LPTMR_PSR_PCS_LPO | LPTMR_PSR_PBYP);
@@ -1200,7 +1200,7 @@ extern void fnStartTick(void)
     MCG_C2 |= MCG_C2_IRCS;                                               // select fast internal reference clock
     LPTMR0_PSR = (LPTMR_PSR_PCS_MCGIRCLK | LPTMR_PSR_PBYP);
     #elif defined LPTMR_CLOCK_RTC_32kHz
-    POWER_UP_ATOMIC(6, SIM_SCGC6_RTC);                                   // enable access and interrupts to the RTC
+    POWER_UP_ATOMIC(6, RTC);                                             // enable access and interrupts to the RTC
     if ((RTC_SR & RTC_SR_TIF) != 0) {                                    // if timer invalid
         RTC_SR = 0;                                                      // ensure stopped
         RTC_TSR = 0;                                                     // write to clear RTC_SR_TIF in status register when not yet enabled
@@ -1243,7 +1243,7 @@ extern void fnStartTick(void)
     #endif
     LPTMR0_CSR |= LPTMR_CSR_TEN;                                         // enable the low power timer
 #elif defined TICK_USES_RTC                                              // {100} use RTC to derive the tick interrupt from
-    POWER_UP_ATOMIC(6, SIM_SCGC6_RTC);                                   // ensure the RTC is powered
+    POWER_UP_ATOMIC(6, RTC);                                             // ensure the RTC is powered
     fnEnterInterrupt(irq_RTC_OVERFLOW_ID, PRIORITY_RTC, (void (*)(void))_RealTimeInterrupt); // enter interrupt handler
     #if defined RTC_USES_EXT_CLK
     RTC_MOD = (unsigned long)((((unsigned long long)((unsigned long long)TICK_RESOLUTION * (unsigned long long)_EXTERNAL_CLOCK)/RTC_CLOCK_PRESCALER_1)/1000000) - 1); // set the match value
@@ -2117,7 +2117,7 @@ static void fnConfigureSDRAM(void)
     MT46H32M16LFBF-5                                                        default
     MT46H32M16LFBF-6                                                        (compatible)
 */
-    POWER_UP(3, SIM_SCGC3_DDR);                                          // power up the DDR controller
+    POWER_UP_ATOMIC(3, DDR);                                             // power up the DDR controller
 
     // The DDR controller requires MCGDDRCLK2, which is generated by PLL1 ({90} moved to _LowLevelInit() so that it can be shared by FS USB)
     //
@@ -2458,16 +2458,16 @@ static void _LowLevelInit(void)
     if ((RCM_MR & (RCM_MR_BOOTROM_BOOT_FROM_ROM_BOOTCFG0 | RCM_MR_BOOTROM_BOOT_FROM_ROM_FOPT7)) != 0) { // if the reset was via the ROM loader
         // PORT clock gate, pin mux and peripheral registers are not reset to default values on ROM exit
         //
-        if (IS_POWERED_UP(5, SIM_SCGC5_PORTA) != 0) {
+        if (IS_POWERED_UP(5, PORTA) != 0) {
             PORTA_PCR1 = PORT_PS_UP_ENABLE;                              // set LPUART0, I2C0 and SPI0 ports back to defaults
             PORTA_PCR2 = PORT_PS_UP_ENABLE;
         }
-        if (IS_POWERED_UP(5, SIM_SCGC5_PORTB) != 0) {
+        if (IS_POWERED_UP(5, PORTB) != 0) {
             PORTB_PCR0 = PORT_PS_UP_ENABLE;
             PORTB_PCR1 = PORT_PS_UP_ENABLE;
         }
     #if PORTS_AVAILABLE > 2
-        if (IS_POWERED_UP(5, SIM_SCGC5_PORTC) != 0) {
+        if (IS_POWERED_UP(5, PORTC) != 0) {
             PORTC_PCR4 = PORT_PS_UP_ENABLE;
             PORTC_PCR5 = PORT_PS_UP_ENABLE;
             PORTC_PCR6 = PORT_PS_UP_ENABLE;
@@ -2575,9 +2575,9 @@ static void _LowLevelInit(void)
     MC_PMPROT = MC_PMPROT_LOW_POWER_LEVEL;                               // {117}
     #endif
     #if defined ERRATA_ID_8068 && !defined SUPPORT_RTC                   // if low power mode is to be used but the RTC will not be initialised clear the RTC invalid flag to avoid the low power mode being blocked when e8068 is present
-    POWER_UP_ATOMIC(6, SIM_SCGC6_RTC);                                   // temporarily enable the RTC module
+    POWER_UP_ATOMIC(6, RTC);                                             // temporarily enable the RTC module
     RTC_TSR = 0;                                                         // clear the RTC invalid flag with a write of any value to RTC_TSR
-    POWER_DOWN_ATOMIC(6, SIM_SCGC6_RTC);                                 // power down the RTC again
+    POWER_DOWN_ATOMIC(6, RTC);                                           // power down the RTC again
     #endif
 #endif
 #if defined _WINDOWS
@@ -2921,7 +2921,7 @@ const KINETIS_FLASH_CONFIGURATION __flash_config
 #endif
 = {
     KINETIS_FLASH_CONFIGURATION_BACKDOOR_KEY,
-    #if defined KINETIS_KE                                               // {122}
+    #if defined KINETIS_KE && !defined KINETIS_KE15                      // {122}
     0xffffffff,                                                          // reserved - must be 0xffffffff
     KINETIS_FLASH_CONFIGURATION_EEPROM_PROT,
     KINETIS_FLASH_CONFIGURATION_PROGRAM_PROTECTION,

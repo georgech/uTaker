@@ -411,7 +411,7 @@ extern void fnInitCAN(CANTABLE *pars)
     #endif
     #if NUMBER_OF_CAN_INTERFACES > 1
     if (pars->Channel != 0) {                                            // enable clock to the specific module
-        POWER_UP(3, SIM_SCGC3_FLEXCAN1);
+        POWER_UP_ATOMIC(3, FLEXCAN1);
         ptrCAN_control = (KINETIS_CAN_CONTROL *)CAN1_BASE_ADD;
         ptrMessageBuffer = MBUFF0_ADD_1;                                 // the first of 16 message buffers in the FlexCan module
         #if defined CAN1_ON_PE
@@ -424,7 +424,7 @@ extern void fnInitCAN(CANTABLE *pars)
     }
     else {
     #endif
-        POWER_UP(6, SIM_SCGC6_FLEXCAN0);
+        POWER_UP_ATOMIC(6, FLEXCAN0);
         ptrCAN_control = (KINETIS_CAN_CONTROL *)CAN0_BASE_ADD;
         ptrMessageBuffer = MBUFF0_ADD_0;                                 // the first of 16 message buffers in the FlexCan module
     #if defined CAN0_ON_PB

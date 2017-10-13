@@ -32,7 +32,7 @@ static __interrupt void _LPTMR0_periodic(void)
 static __interrupt void _LPTMR0_single(void)
 {
     LPTMR0_CSR = 0;                                                      // clear pending interrupt and stop the timer
-    POWER_DOWN_ATOMIC(5, SIM_SCGC5_LPTIMER0);                            // power down the timer
+    POWER_DOWN_ATOMIC(5, LPTIMER0);                                      // power down the timer
     uDisable_Interrupt();
         LPTMR_interrupt_handler[0]();                                    // call handling function
     uEnable_Interrupt();
@@ -50,7 +50,7 @@ static __interrupt void _LPTMR1_periodic(void)
 static __interrupt void _LPTMR1_single(void)
 {
     LPTMR1_CSR = 0;                                                      // clear pending interrupt and stop the timer
-    POWER_DOWN_ATOMIC(5, SIM_SCGC5_LPTIMER1);                            // power down the timer
+    POWER_DOWN_ATOMIC(5, LPTIMER1);                                      // power down the timer
     uDisable_Interrupt();
         LPTMR_interrupt_handler[1]();                                    // call handling function
     uEnable_Interrupt();
@@ -66,12 +66,12 @@ static __interrupt void _LPTMR1_single(void)
             KINETIS_LPTMR_CTR *ptrLPTMR;
     #if LPTMR_AVAILABLE > 1
             if (lptmr_setup->ucTimer != 0) {
-                POWER_UP_ATOMIC(5, SIM_SCGC5_LPTIMER1);                  // ensure that the timer can be accessed
+                POWER_UP_ATOMIC(5, LPTIMER1);                            // ensure that the timer can be accessed
                 ptrLPTMR = (KINETIS_LPTMR_CTR *)LPTMR_BLOCK_1;
             }
             else {
     #endif
-                POWER_UP_ATOMIC(5, SIM_SCGC5_LPTIMER0);                  // ensure that the timer can be accessed
+                POWER_UP_ATOMIC(5, LPTIMER0);                            // ensure that the timer can be accessed
                 ptrLPTMR = (KINETIS_LPTMR_CTR *)LPTMR_BLOCK_0;
     #if LPTMR_AVAILABLE > 1
             }
@@ -80,11 +80,11 @@ static __interrupt void _LPTMR1_single(void)
             if ((lptmr_setup->mode & LPTMR_STOP) != 0) {                 // stop timer
     #if LPTMR_AVAILABLE > 1
                 if (lptmr_setup->ucTimer != 0) {
-                    POWER_DOWN_ATOMIC(5, SIM_SCGC5_LPTIMER1);
+                    POWER_DOWN_ATOMIC(5, LPTIMER1);
                 }
                 else {
     #endif
-                    POWER_DOWN_ATOMIC(5, SIM_SCGC5_LPTIMER0);
+                    POWER_DOWN_ATOMIC(5, LPTIMER0);
     #if LPTMR_AVAILABLE > 1
                 }
     #endif

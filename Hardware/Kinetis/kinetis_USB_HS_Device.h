@@ -785,7 +785,7 @@ extern void fnConfigUSB(QUEUE_HANDLE Channel, USBTABLE *pars)
     FMC_PFAPR |= FMC_FPAPR_USB_HS;                                       // allow USBHS controller to read from Flash
 
     #if defined KINETIS_WITH_USBPHY                                      // device with integrated HS PHY
-        POWER_UP_ATOMIC(3, SIM_SCGC3_USBHS);                             // power up the USB HS controller module
+        POWER_UP_ATOMIC(3, USBHS);                                       // power up the USB HS controller module
         // Requirements for operation are:
         // - VREGIN0 or VREGIN1 connected to 5V so that 3.3V USB is valid
         // - 32kHz slow clock is enabled
@@ -794,7 +794,7 @@ extern void fnConfigUSB(QUEUE_HANDLE Channel, USBTABLE *pars)
         MCG_C1 |= MCG_C1_IRCLKEN;                                        // 32kHz IRC enable
         OSC0_CR |= OSC_CR_ERCLKEN;                                       // external reference clock enable
         SIM_SOPT2 |= SIM_SOPT2_USBREGEN;                                 // enable USB PHY PLL regulator
-        POWER_UP_ATOMIC(3, SIM_SCGC3_USBHSPHY);                          // enable clocks to PHY
+        POWER_UP_ATOMIC(3, USBHSPHY);                                    // enable clocks to PHY
         SIM_USBPHYCTL = (SIM_USBPHYCTL_USBVOUTTRG_3_310V | SIM_USBPHYCTL_USBVREGSEL); // 3.310V source VREG_IN1 (in case both are powered)
         USBPHY_TRIM_OVERRIDE_EN = 0x0000001f;                            // override IFR values
         USBPHY_CTRL = (USBPHY_CTRL_ENUTMILEVEL2 | USBPHY_CTRL_ENUTMILEVEL3); // release PHY from reset and enable its clock
@@ -833,7 +833,7 @@ extern void fnConfigUSB(QUEUE_HANDLE Channel, USBTABLE *pars)
         }
         USBPHY_TX |= (1 << 24);                                          // reserved??
     #else
-        POWER_UP(6, SIM_SCGC6_USBHS);                                    // power up the USB HS controller module
+        POWER_UP_ATOMIC(6, USBHS);                                       // power up the USB HS controller module
         _CONFIG_PERIPHERAL(A, 7,  PA_7_ULPI_DIR);                        // ULPI_DIR on PA.7    (alt. function 2)
         _CONFIG_PERIPHERAL(A, 8,  PA_8_ULPI_NXT);                        // ULPI_NXT on PA.8    (alt. function 2)
         _CONFIG_PERIPHERAL(A, 10, PA_10_ULPI_DATA0);                     // ULPI_DATA0 on PA.10 (alt. function 2)

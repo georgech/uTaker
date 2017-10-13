@@ -68,7 +68,7 @@
 #else
     #if defined EXTERNAL_CLOCK                                           // first move from state FEI to state FBE
         #if defined RUN_FROM_RTC_FLL
-    POWER_UP_ATOMIC(6, SIM_SCGC6_RTC);                                   // enable access to the RTC
+    POWER_UP_ATOMIC(6, RTC);                                             // enable access to the RTC
     MCG_C7 = MCG_C7_OSCSEL_32K;                                          // select the RTC clock as external clock input to the FLL
     RTC_CR = (RTC_CR_OSCE);                                              // enable RTC oscillator and output the 32.768kHz output clock so that it can be used by the MCG (the first time that it starts it can have a startup/stabilisation time but this is not critical for the FLL usage)
     MCG_C1 = ((MCG_C1_CLKS_PLL_FLL | MCG_C1_FRDIV_RANGE0_1) & ~MCG_C1_IREFS); // switch the FLL input to the undivided external clock source (RTC)

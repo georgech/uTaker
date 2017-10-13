@@ -3303,7 +3303,7 @@ static void fnMeasurePWM(int iPortRef, unsigned long ulPortBit)
     ptrDMA_TCD->DMA_TCD_SLAST = ptrDMA_TCD->DMA_TCD_DLASTSGA = 0;        // no change to address when the buffer has filled
     ptrDMA_TCD->DMA_TCD_NBYTES_ML = sizeof(unsigned long);               // each request starts a single long word transfer
     ptrDMA_TCD->DMA_TCD_CSR = (DMA_TCD_CSR_ACTIVE);                      // set active
-    POWER_UP(6, SIM_SCGC6_DMAMUX0);                                      // enable DMA multiplexer 0
+    POWER_UP_ATOMIC(6, DMAMUX0);                                         // enable DMA multiplexer 0
     *ptrDMAMUX = ((DMAMUX0_CHCFG_SOURCE_PORTA + iPortRef) | DMAMUX_CHCFG_ENBL); // trigger DMA channel on port changes
 
     // Set measurement time (at least 3 edges must be collected)

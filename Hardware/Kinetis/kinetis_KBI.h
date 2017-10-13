@@ -170,7 +170,7 @@ static void _KBI1_isr(void)                                              // KE k
                     ulPins &= ~(ulBit);
                     switch (_KBI[port_interrupt->int_port][iBitNumber] & _KBI_CONTROLLER_MASK) { // get the KBI controller that the pin is assigned to
                     case _KBI_0:
-                        POWER_UP(0, SIM_SCGC_KBI0);                      // ensure the module is powered
+                        POWER_UP_ATOMIC(0, KBI0);                        // ensure the module is powered
                         KBI_enables[0] |= (1 << (_KBI[port_interrupt->int_port][iBitNumber] & _KBI_PIN_REF_MASK));
     #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                         KBI_handlers[0][iBitNumber] = port_interrupt->int_handler; // enter the user handler for the individual pin
@@ -181,7 +181,7 @@ static void _KBI1_isr(void)                                              // KE k
                         break;
     #if KBIS_AVAILABLE > 1
                     case _KBI_1:
-                        POWER_UP(0, SIM_SCGC_KBI1);                      // ensure the module is powered
+                        POWER_UP_ATOMIC(0, KBI1);                       // ensure the module is powered
                         KBI_enables[1] |= (1 << (_KBI[port_interrupt->int_port][iBitNumber] & _KBI_PIN_REF_MASK));
         #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                         KBI_handlers[1][iBitNumber] = port_interrupt->int_handler; // enter the user handler for the individual pin

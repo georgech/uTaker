@@ -104,7 +104,7 @@ extern void fnConnectGPIO(int iPortRef, unsigned long ulPortBits, unsigned long 
 #endif
 
 #if defined _PORT_INTERRUPT_CODE
-    #if defined KINETIS_KE                                               // KE uses external interrupt
+    #if defined KINETIS_KE && !defined KINETIS_KE15                      // KE uses external interrupt
 static void (*IRQ_handler)(void) = 0;                                    // handler for IRQ
 
 static __interrupt void _IRQ_isr(void)
@@ -120,26 +120,26 @@ static __interrupt void _IRQ_isr(void)
     }
 }
     #else
-    #if !defined NO_PORT_INTERRUPTS_PORTA                                // if port A support has not been removed
+    #if !defined NO_PORT_INTERRUPTS_PORTA && (defined irq_PORT_A_E_ID || defined irq_PORTA_ID) // if port A is available abd support has not been removed
 static void (*gpio_handlers_A[PORT_WIDTH])(void) = {0};                  // a handler for each possible port A pin
     #endif
-    #if !defined NO_PORT_INTERRUPTS_PORTB && (defined irq_PORTB_ID || defined irq_PORTBCD_E_ID) // {1} if port B support has not been removed
+    #if !defined NO_PORT_INTERRUPTS_PORTB && (defined irq_PORTB_ID || defined irq_PORTBCD_E_ID || defined irq_PORT_B_C_D_ID) // {1} if port B support has not been removed
 static void (*gpio_handlers_B[PORT_WIDTH])(void) = {0};                  // a handler for each possible port B pin
     #endif
-    #if (PORTS_AVAILABLE > 2) && (defined irq_PORTC_ID || defined irq_PORTC_D_ID || defined irq_PORTBCD_E_ID) && !defined NO_PORT_INTERRUPTS_PORTC  // if port C support has not been removed
+    #if (PORTS_AVAILABLE > 2) && (defined irq_PORTC_ID || defined irq_PORTC_D_ID || defined irq_PORTBCD_E_ID || defined irq_PORT_B_C_D_ID) && !defined NO_PORT_INTERRUPTS_PORTC  // if port C support has not been removed
 static void (*gpio_handlers_C[PORT_WIDTH])(void) = {0};                  // a handler for each possible port C pin
     #endif
-    #if (PORTS_AVAILABLE > 3) && !defined NO_PORT_INTERRUPTS_PORTD       // if port D support has not been removed
+    #if (PORTS_AVAILABLE > 3) && (defined irq_PORT_B_C_D_ID || defined irq_PORTBCD_E_ID || defined irq_PORTD_ID) && !defined NO_PORT_INTERRUPTS_PORTD // if port D support has not been removed
 static void (*gpio_handlers_D[PORT_WIDTH])(void) = {0};                  // a handler for each possible port D pin
     #endif
-    #if (PORTS_AVAILABLE > 4) && !defined NO_PORT_INTERRUPTS_PORTE && (defined irq_PORTE_ID || defined irq_PORTBCD_E_ID) // {1} if port E support has not been removed
+    #if (PORTS_AVAILABLE > 4) && !defined NO_PORT_INTERRUPTS_PORTE && (defined irq_PORTE_ID || defined irq_PORTBCD_E_ID || defined irq_PORT_A_E_ID) // {1} if port E support has not been removed
 static void (*gpio_handlers_E[PORT_WIDTH])(void) = {0};                  // a handler for each possible port E pin
     #endif
     #if (PORTS_AVAILABLE > 5) && !defined NO_PORT_INTERRUPTS_PORTE && defined irq_PORTF_ID// {2} if port F support has not been removed
 static void (*gpio_handlers_F[PORT_WIDTH])(void) = {0};                  // a handler for each possible port F pin
     #endif
 
-    #if !defined NO_PORT_INTERRUPTS_PORTA                                // if port A support has not been removed
+    #if !defined NO_PORT_INTERRUPTS_PORTA && defined irq_PORTA_ID        // if port A support has not been removed
 // Interrupt routine called to handle port A input interrupts (dedicated to port A)
 //
 static __interrupt void _port_A_isr(void)
@@ -170,7 +170,158 @@ static __interrupt void _port_A_isr(void)
         }
     }
 }
+     #endif
+     #if !defined NO_PORT_INTERRUPTS_PORTA && !defined NO_PORT_INTERRUPTS_PORTE && defined irq_PORT_A_E_ID
+// Interrupt routine called to handle port A or E shared interrupt interrupts
+//
+static __interrupt void _port_A_E_isr(void)                              // single interrupt shared by ports A and E
+{
+    unsigned long ulSources;
+    unsigned long ulPortBit;
+    int iInterrupt;
+        #if !defined NO_PORT_INTERRUPTS_PORTA                            // if the user hasn't disabled support on port A
+    if (IS_POWERED_UP(5, PORTA) != 0) {                                  // if the port is not powered we skip checking it as a potential source
+        while ((ulSources = PORTA_ISFR) != 0) {                          // read which pins are generating interrupts on port A
+            PORTA_ISFR = ulSources;                                      // reset the edge sensitive ones that will be handled
+            ulPortBit = 0x00000001;
+            iInterrupt = 0;
+            while (ulSources != 0) {
+                if ((ulSources & ulPortBit) != 0) {                      // pending interrupt detected on this input
+                    register unsigned long ulInterruptType = ((*(unsigned long *)(PORT0_BLOCK + (iInterrupt * sizeof(unsigned long)))) & PORT_IRQC_INT_MASK);
+                    uDisable_Interrupt();                                // ensure interrupts remain blocked when user callback operates
+                        gpio_handlers_A[iInterrupt]();                   // call the application handler (this is expected to clear level sensitive input sources)
+                        if ((ulInterruptType == PORT_IRQC_HIGH_LEVEL) || (ulInterruptType == PORT_IRQC_LOW_LEVEL)) { // if level sensitive type
+                            PORTA_ISFR = ulPortBit;                      // attempt to clear the level sensitive interrupt after the user has serviced it
+                        }
+                        ulSources &= ~ulPortBit;                         // clear the processed port pin interrupt
+            #if defined _WINDOWS
+                        PORTA_ISFR &= ~ulPortBit;
+            #endif
+                    uEnable_Interrupt();
+                }
+                ulPortBit <<= 1;
+                iInterrupt++;
+            }
+        }
+    }
+        #endif
+        #if !defined NO_PORT_INTERRUPTS_PORTE                            // if the user hasn't disabled support on port E
+    if (IS_POWERED_UP(5, PORTE) != 0) {                                  // if the port is not powered we skip checking it as a potential source
+        while ((ulSources = PORTE_ISFR) != 0) {                          // read which pins are generating interrupts on port E
+            PORTE_ISFR = ulSources;                                      // reset the edge sensitive ones that will be handled
+            ulPortBit = 0x00000001;
+            iInterrupt = 0;
+            while (ulSources != 0) {
+                if ((ulSources & ulPortBit) != 0) {                      // pending interrupt detected on this input
+                    register unsigned long ulInterruptType = ((*(unsigned long *)(PORT4_BLOCK + (iInterrupt * sizeof(unsigned long)))) & PORT_IRQC_INT_MASK);
+                    uDisable_Interrupt();                                // ensure interrupts remain blocked when user callback operates
+                        gpio_handlers_E[iInterrupt]();                   // call the application handler (this is expected to clear level sensitive input sources)
+                        if ((ulInterruptType == PORT_IRQC_HIGH_LEVEL) || (ulInterruptType == PORT_IRQC_LOW_LEVEL)) { // if level sensitive type
+                            PORTE_ISFR = ulPortBit;                      // attempt to clear the level sensitive interrupt after the user has serviced it
+                        }
+                        ulSources &= ~ulPortBit;                         // clear the processed port pin interrupt
+            #if defined _WINDOWS
+                        PORTE_ISFR &= ~ulPortBit;
+            #endif
+                    uEnable_Interrupt();
+                }
+                ulPortBit <<= 1;
+                iInterrupt++;
+            }
+        }
+    }
+        #endif
+}
     #endif
+     #if !defined NO_PORT_INTERRUPTS_PORTB && !defined NO_PORT_INTERRUPTS_PORTC && !defined NO_PORT_INTERRUPTS_PORTD && defined irq_PORT_B_C_D_ID
+// Interrupt routine called to handle port B, C or D shared interrupt interrupts
+//
+static __interrupt void _portB_C_D_isr(void)                              // single interrupt shared by ports B, C and D
+{
+    unsigned long ulSources;
+    unsigned long ulPortBit;
+    int iInterrupt;
+        #if !defined NO_PORT_INTERRUPTS_PORTB                            // if the user hasn't disabled support on port B
+    if (IS_POWERED_UP(5, PORTB) != 0) {                                  // if the port is not powered we skip checking it as a potential source
+        while ((ulSources = PORTB_ISFR) != 0) {                          // read which pins are generating interrupts on port A
+            PORTB_ISFR = ulSources;                                      // reset the edge sensitive ones that will be handled
+            ulPortBit = 0x00000001;
+            iInterrupt = 0;
+            while (ulSources != 0) {
+                if ((ulSources & ulPortBit) != 0) {                      // pending interrupt detected on this input
+                    register unsigned long ulInterruptType = ((*(unsigned long *)(PORT1_BLOCK + (iInterrupt * sizeof(unsigned long)))) & PORT_IRQC_INT_MASK);
+                    uDisable_Interrupt();                                // ensure interrupts remain blocked when user callback operates
+                        gpio_handlers_B[iInterrupt]();                   // call the application handler (this is expected to clear level sensitive input sources)
+                        if ((ulInterruptType == PORT_IRQC_HIGH_LEVEL) || (ulInterruptType == PORT_IRQC_LOW_LEVEL)) { // if level sensitive type
+                            PORTB_ISFR = ulPortBit;                      // attempt to clear the level sensitive interrupt after the user has serviced it
+                        }
+                        ulSources &= ~ulPortBit;                         // clear the processed port pin interrupt
+            #if defined _WINDOWS
+                        PORTB_ISFR &= ~ulPortBit;
+            #endif
+                    uEnable_Interrupt();
+                }
+                ulPortBit <<= 1;
+                iInterrupt++;
+            }
+        }
+    }
+        #endif
+        #if !defined NO_PORT_INTERRUPTS_PORTC                            // if the user hasn't disabled support on port C
+    if (IS_POWERED_UP(5, PORTC) != 0) {                                  // if the port is not powered we skip checking it as a potential source
+        while ((ulSources = PORTC_ISFR) != 0) {                          // read which pins are generating interrupts on port E
+            PORTC_ISFR = ulSources;                                      // reset the edge sensitive ones that will be handled
+            ulPortBit = 0x00000001;
+            iInterrupt = 0;
+            while (ulSources != 0) {
+                if ((ulSources & ulPortBit) != 0) {                      // pending interrupt detected on this input
+                    register unsigned long ulInterruptType = ((*(unsigned long *)(PORT2_BLOCK + (iInterrupt * sizeof(unsigned long)))) & PORT_IRQC_INT_MASK);
+                    uDisable_Interrupt();                                // ensure interrupts remain blocked when user callback operates
+                        gpio_handlers_C[iInterrupt]();                   // call the application handler (this is expected to clear level sensitive input sources)
+                        if ((ulInterruptType == PORT_IRQC_HIGH_LEVEL) || (ulInterruptType == PORT_IRQC_LOW_LEVEL)) { // if level sensitive type
+                            PORTC_ISFR = ulPortBit;                      // attempt to clear the level sensitive interrupt after the user has serviced it
+                        }
+                        ulSources &= ~ulPortBit;                         // clear the processed port pin interrupt
+            #if defined _WINDOWS
+                        PORTC_ISFR &= ~ulPortBit;
+            #endif
+                    uEnable_Interrupt();
+                }
+                ulPortBit <<= 1;
+                iInterrupt++;
+            }
+        }
+    }
+        #endif
+        #if !defined NO_PORT_INTERRUPTS_PORTD                            // if the user hasn't disabled support on port D
+    if (IS_POWERED_UP(5, PORTD) != 0) {                                  // if the port is not powered we skip checking it as a potential source
+        while ((ulSources = PORTD_ISFR) != 0) {                          // read which pins are generating interrupts on port E
+            PORTD_ISFR = ulSources;                                      // reset the edge sensitive ones that will be handled
+            ulPortBit = 0x00000001;
+            iInterrupt = 0;
+            while (ulSources != 0) {
+                if ((ulSources & ulPortBit) != 0) {                      // pending interrupt detected on this input
+                    register unsigned long ulInterruptType = ((*(unsigned long *)(PORT3_BLOCK + (iInterrupt * sizeof(unsigned long)))) & PORT_IRQC_INT_MASK);
+                    uDisable_Interrupt();                                // ensure interrupts remain blocked when user callback operates
+                        gpio_handlers_D[iInterrupt]();                   // call the application handler (this is expected to clear level sensitive input sources)
+                        if ((ulInterruptType == PORT_IRQC_HIGH_LEVEL) || (ulInterruptType == PORT_IRQC_LOW_LEVEL)) { // if level sensitive type
+                            PORTD_ISFR = ulPortBit;                      // attempt to clear the level sensitive interrupt after the user has serviced it
+                        }
+                        ulSources &= ~ulPortBit;                         // clear the processed port pin interrupt
+            #if defined _WINDOWS
+                        PORTD_ISFR &= ~ulPortBit;
+            #endif
+                    uEnable_Interrupt();
+                }
+                ulPortBit <<= 1;
+                iInterrupt++;
+            }
+        }
+    }
+        #endif
+}
+    #endif
+
     #if defined irq_PORTBCD_E_ID
 // Interrupt routine called to handle port B, C, D or E shared interrupt interrupts
 //
@@ -180,7 +331,7 @@ static __interrupt void _portBCD_E_isr(void)                             // {1} 
     unsigned long ulPortBit;
     int iInterrupt;
     #if !defined NO_PORT_INTERRUPTS_PORTB                                // if the user hasn't disabled support on port B
-    if (IS_POWERED_UP(5, SIM_SCGC5_PORTB) != 0) {                        // {6} if the port is not powered we skip checking it as a potential source
+    if (IS_POWERED_UP(5, PORTB) != 0) {                                  // {6} if the port is not powered we skip checking it as a potential source
         while ((ulSources = PORTB_ISFR) != 0) {                          // read which pins are generating interrupts on port B
             PORTB_ISFR = ulSources;                                      // reset the edge sensitive ones that will be handled
             ulPortBit = 0x00000001;
@@ -206,7 +357,7 @@ static __interrupt void _portBCD_E_isr(void)                             // {1} 
     }
     #endif
     #if !defined NO_PORT_INTERRUPTS_PORTC                                // if the user hasn't disabled support on port C
-    if (IS_POWERED_UP(5, SIM_SCGC5_PORTB) != 0) {                        // {6} if the port is not powered we skip checking it as a potential source
+    if (IS_POWERED_UP(5, PORTB) != 0) {                                  // {6} if the port is not powered we skip checking it as a potential source
         while ((ulSources = PORTC_ISFR) != 0) {                          // read which pins are generating interrupts on port C
             PORTC_ISFR = ulSources;                                      // reset the edge sensitive ones that will be handled
             ulPortBit = 0x00000001;
@@ -232,7 +383,7 @@ static __interrupt void _portBCD_E_isr(void)                             // {1} 
     }
     #endif
     #if !defined NO_PORT_INTERRUPTS_PORTD                                // if the user hasn't disabled support on port D
-    if (IS_POWERED_UP(5, SIM_SCGC5_PORTD) != 0) {                        // {6} if the port is not powered we skip checking it as a potential source
+    if (IS_POWERED_UP(5, PORTD) != 0) {                                  // {6} if the port is not powered we skip checking it as a potential source
         while ((ulSources = PORTD_ISFR) != 0) {                          // read which pins are generating interrupts on port D
             PORTD_ISFR = ulSources;                                      // reset the edge sensitive ones that will be handled
             ulPortBit = 0x00000001;
@@ -258,7 +409,7 @@ static __interrupt void _portBCD_E_isr(void)                             // {1} 
     }
     #endif
     #if !defined NO_PORT_INTERRUPTS_PORTE                                // if the user hasn't disabled support on port E
-    if (IS_POWERED_UP(5, SIM_SCGC5_PORTE) != 0) {                        // {6} if the port is not powered we skip checking it as a potential source
+    if (IS_POWERED_UP(5, PORTE) != 0) {                                  // {6} if the port is not powered we skip checking it as a potential source
         while ((ulSources = PORTE_ISFR) != 0) {                          // read which pins are generating interrupts on port E
             PORTE_ISFR = ulSources;                                      // reset the edge sensitive ones that will be handled
             ulPortBit = 0x00000001;
@@ -357,7 +508,7 @@ static __interrupt void _portC_D_isr(void)                               // {1} 
     unsigned long ulSources;
     unsigned long ulPortBit;
     int iInterrupt;
-    if (IS_POWERED_UP(5, SIM_SCGC5_PORTC) != 0) {                        // {6} if the port is not powered we skip checking it as a potential source
+    if (IS_POWERED_UP(5, PORTC) != 0) {                                  // {6} if the port is not powered we skip checking it as a potential source
         while ((ulSources = PORTC_ISFR) != 0) {                          // read which pins are generating interrupts on port C
             PORTC_ISFR = ulSources;                                      // reset the edge sensitive ones that will be handled
             ulPortBit = 0x00000001;
@@ -382,7 +533,7 @@ static __interrupt void _portC_D_isr(void)                               // {1} 
         }
     }
     #if !defined NO_PORT_INTERRUPTS_PORTD
-    if (IS_POWERED_UP(5, SIM_SCGC5_PORTD) != 0) {                        // {6} if the port is not powered we skip checking it as a potential source
+    if (IS_POWERED_UP(5, PORTD) != 0) {                                  // {6} if the port is not powered we skip checking it as a potential source
         while ((ulSources = PORTD_ISFR) != 0) {                          // read which pins are generating interrupts on port D
             PORTD_ISFR = ulSources;                                      // reset the edge sensitive ones that will be handled
             ulPortBit = 0x00000001;
@@ -519,11 +670,15 @@ static void fnEnterPortInterruptHandler(INTERRUPT_SETUP *port_interrupt, unsigne
     while (ulPortBits != 0) {
         if ((ulPortBits & ulBit) != 0) {
             switch (ucPortRef) {
-    #if !defined NO_PORT_INTERRUPTS_PORTA                                // if port A support has not been removed
+    #if !defined NO_PORT_INTERRUPTS_PORTA && (defined irq_PORTA_ID || defined irq_PORT_A_E_ID) // if port A support has not been removed
             case PORTA:
                 gpio_handlers_A[port_bit] = port_interrupt->int_handler; // {26} enter the application handler
                 if (gpio_handlers_A[port_bit] != 0) {
+        #if defined irq_PORT_A_E_ID
+                    fnEnterInterrupt(irq_PORT_A_E_ID, port_interrupt->int_priority, _port_A_E_isr); // ensure that the handler for this port is entered
+        #else
                     fnEnterInterrupt(irq_PORTA_ID, port_interrupt->int_priority, _port_A_isr); // ensure that the handler for this port is entered
+        #endif
                 }
                 if ((port_interrupt->int_port_sense & PORT_KEEP_PERIPHERAL) != 0) { // {4} if the interrupt/DMA is being added to a peripheral function
                     volatile unsigned long *ptrPCR = (volatile unsigned long *)(PORT0_BLOCK);
@@ -535,11 +690,13 @@ static void fnEnterPortInterruptHandler(INTERRUPT_SETUP *port_interrupt, unsigne
                 }
                 break;
     #endif
-    #if !defined NO_PORT_INTERRUPTS_PORTB && (defined irq_PORTB_ID || defined irq_PORTBCD_E_ID) // {1} if port B support has not been removed
+    #if !defined NO_PORT_INTERRUPTS_PORTB && (defined irq_PORTB_ID || defined irq_PORTBCD_E_ID || defined irq_PORT_B_C_D_ID) // {1} if port B support has not been removed
             case PORTB:
                 gpio_handlers_B[port_bit] = port_interrupt->int_handler; // {26} enter the application handler
                 if (gpio_handlers_B[port_bit] != 0) {
-        #if defined irq_PORTBCD_E_ID                                     // {1} devices whith shared B, C, D and E port interrupts
+        #if defined irq_PORT_B_C_D_ID
+                    fnEnterInterrupt(irq_PORT_B_C_D_ID, port_interrupt->int_priority, _portB_C_D_isr); // ensure that the handler for this port is entered
+        #elif defined irq_PORTBCD_E_ID                                   // {1} devices whith shared B, C, D and E port interrupts
                     fnEnterInterrupt(irq_PORTBCD_E_ID, port_interrupt->int_priority, _portBCD_E_isr); // ensure that the handler for this port is entered
         #else
                     fnEnterInterrupt(irq_PORTB_ID, port_interrupt->int_priority, _port_B_isr); // ensure that the handler for this port is entered
@@ -555,11 +712,13 @@ static void fnEnterPortInterruptHandler(INTERRUPT_SETUP *port_interrupt, unsigne
                 }
                 break;
     #endif
-    #if (PORTS_AVAILABLE > 2) && (defined irq_PORTC_ID || defined irq_PORTC_D_ID || defined irq_PORTBCD_E_ID) && !defined NO_PORT_INTERRUPTS_PORTC // if port C support has not been removed
+    #if (PORTS_AVAILABLE > 2) && (defined irq_PORTC_ID || defined irq_PORTC_D_ID || defined irq_PORTBCD_E_ID || defined irq_PORT_B_C_D_ID) && !defined NO_PORT_INTERRUPTS_PORTC // if port C support has not been removed
             case PORTC:
                 gpio_handlers_C[port_bit] = port_interrupt->int_handler; // {26} enter the application handler
                 if (gpio_handlers_C[port_bit] != 0) {
-        #if defined irq_PORTC_ID
+        #if defined irq_PORT_B_C_D
+                    fnEnterInterrupt(irq_PORTB_C_D_ID, port_interrupt->int_priority, _portB_C_D_isr); // ensure that the handler for this port is entered
+        #elif defined irq_PORTC_ID
                     fnEnterInterrupt(irq_PORTC_ID, port_interrupt->int_priority, _port_C_isr); // ensure that the handler for this port is entered
         #elif defined irq_PORTC_D_ID                                     // devices with shared C and D port interrupts
                     fnEnterInterrupt(irq_PORTC_D_ID, port_interrupt->int_priority, _portC_D_isr); // ensure that the handler for this port is entered
@@ -577,11 +736,13 @@ static void fnEnterPortInterruptHandler(INTERRUPT_SETUP *port_interrupt, unsigne
                 }
                 break;
     #endif
-    #if (PORTS_AVAILABLE > 3) && !defined NO_PORT_INTERRUPTS_PORTD       // if port D support has not been removed
+    #if (PORTS_AVAILABLE > 3) && (defined irq_PORTD_ID || defined irq_PORTC_D_ID || defined irq_PORTBCD_E_ID || defined irq_PORT_B_C_D_ID) && !defined NO_PORT_INTERRUPTS_PORTD       // if port D support has not been removed
             case PORTD:
                 gpio_handlers_D[port_bit] = port_interrupt->int_handler; // {26} enter the application handler
                 if (gpio_handlers_D[port_bit] != 0) {
-        #if defined irq_PORTD_ID
+        #if defined irq_PORT_B_C_D_ID
+                    fnEnterInterrupt(irq_PORT_B_C_D_ID, port_interrupt->int_priority, _portB_C_D_isr); // ensure that the handler for this port is entered
+        #elif defined irq_PORTD_ID
                     fnEnterInterrupt(irq_PORTD_ID, port_interrupt->int_priority, _port_D_isr); // ensure that the handler for this port is entered
         #elif defined irq_PORTC_D_ID                                     // device sharing port C and port D interrupts
                     fnEnterInterrupt(irq_PORTC_D_ID, port_interrupt->int_priority, _portC_D_isr); // ensure that the handler for this port is entered
@@ -599,11 +760,13 @@ static void fnEnterPortInterruptHandler(INTERRUPT_SETUP *port_interrupt, unsigne
                 }
                 break;
     #endif
-    #if (PORTS_AVAILABLE > 4) && !defined NO_PORT_INTERRUPTS_PORTE && (defined irq_PORTE_ID || defined irq_PORTBCD_E_ID) // {1} if port E support has not been removed
+    #if (PORTS_AVAILABLE > 4) && !defined NO_PORT_INTERRUPTS_PORTE && (defined irq_PORTE_ID || defined irq_PORTBCD_E_ID || defined irq_PORT_A_E_ID) // {1} if port E support has not been removed
             case PORTE:
                 gpio_handlers_E[port_bit] = port_interrupt->int_handler; // {26} enter the application handler
                 if (gpio_handlers_E[port_bit] != 0) {
-        #if defined irq_PORTBCD_E_ID                                     // {1} devices with shared B, C, D and E port interrupts
+        #if defined irq_PORT_A_E_ID
+                    fnEnterInterrupt(irq_PORT_A_E_ID, port_interrupt->int_priority, _port_A_E_isr); // ensure that the handler for this port is entered
+        #elif defined irq_PORTBCD_E_ID                                     // {1} devices with shared B, C, D and E port interrupts
                     fnEnterInterrupt(irq_PORTBCD_E_ID, port_interrupt->int_priority, _portBCD_E_isr); // ensure that the handler for this port is entered
         #else
                     fnEnterInterrupt(irq_PORTE_ID, port_interrupt->int_priority, _port_E_isr); // ensure that the handler for this port is entered
@@ -654,11 +817,11 @@ static void fnEnterPortInterruptHandler(INTERRUPT_SETUP *port_interrupt, unsigne
 #if defined _PORT_INT_CONFIG_CODE
         {
             INTERRUPT_SETUP *port_interrupt = (INTERRUPT_SETUP *)ptrSettings;
-    #if defined KINETIS_KE                                               // KE uses external interrupt
+    #if defined KINETIS_KE && !defined KINETIS_KE15                      // KE uses external interrupt
         #if ((defined KINETIS_KE04 && (SIZE_OF_FLASH > (8 * 1024))) || defined KINETIS_KE06)
             unsigned char ucPortPin = SIM_PINSEL_IRQPS_PTA5;             // default IRQ input
         #endif
-            POWER_UP_ATOMIC(0, SIM_SCGC_IRQ);                            // enable clocks to the external interrupt module
+            POWER_UP_ATOMIC(0, IRQ);                                     // enable clocks to the external interrupt module
         #if ((defined KINETIS_KE04 && (SIZE_OF_FLASH > (8 * 1024))) || defined KINETIS_KE06)
             if (port_interrupt->int_port == KE_PORTA) {
               //SIM_SOPT0 &= ~(SIM_SOPT_RSTPE);                          // remove reset function so that IRQ function can be selected (PTA5) - this is a "write-once" field so will not actually work as such; the value must be configured in SIM_SOPT_KE_DEFAULT if this input is to be used

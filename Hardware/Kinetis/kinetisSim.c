@@ -663,7 +663,7 @@ static void fnSetDevice(unsigned long *port_inits)
     UART5_WP7816T0 = 0x0a;
     UART5_WF7816 = 0x01;
 #endif
-#if defined KINETIS_KE
+#if defined FLASH_CONTROLLER_FTMRE
     FTMRH_FSTAT = FTMRH_STAT_CCIF;
     FTMRH_FSEC  = KINETIS_FLASH_CONFIGURATION_SECURITY;
     FTMRH_FPROT = KINETIS_FLASH_CONFIGURATION_DATAFLASH_PROT;
@@ -7292,11 +7292,11 @@ static void fnTriggerADC(int iADC, int iHW_trigger)
 {
     switch (iADC) {
     case 0:                                                              // ADC0
-        if (IS_POWERED_UP(6, SIM_SCGC6_ADC0) && ((ADC0_SC1A & ADC_SC1A_ADCH_OFF) != ADC_SC1A_ADCH_OFF)) { // ADC0 powered up and operating
+        if (IS_POWERED_UP(6, ADC0) && ((ADC0_SC1A & ADC_SC1A_ADCH_OFF) != ADC_SC1A_ADCH_OFF)) { // ADC0 powered up and operating
             if ((iHW_trigger != 0) || ((ADC0_SC2 & ADC_SC2_ADTRG_HW) == 0)) { // hardware or software trigger
                 fnSimADC(0);                                             // perform ADC conversion
                 if ((ADC0_SC1A & ADC_SC1A_COCO) != 0) {                  // {40} if conversion has completed
-                    fnHandleDMA_triggers(DMAMUX_CHCFG_SOURCE_ADC0, 0);   // handle DMA triggered on ADC0 conversion
+                    fnHandleDMA_triggers(DMAMUX0_CHCFG_SOURCE_ADC0, 0);  // handle DMA triggered on ADC0 conversion
                     if ((ADC0_SC1A & ADC_SC1A_AIEN) != 0) {              // end of conversion interrupt enabled
                         if (fnGenInt(irq_ADC0_ID) != 0) {                // if ADC0 interrupt is not disabled
                             VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
@@ -7309,11 +7309,11 @@ static void fnTriggerADC(int iADC, int iHW_trigger)
         break;
     #if ADC_CONTROLLERS > 1
     case 1:                                                              // ADC1
-        if (IS_POWERED_UP(3, SIM_SCGC3_ADC1) && ((ADC1_SC1A & ADC_SC1A_ADCH_OFF) != ADC_SC1A_ADCH_OFF)) { // ADC1 powered up and operating
+        if (IS_POWERED_UP(3, ADC1) && ((ADC1_SC1A & ADC_SC1A_ADCH_OFF) != ADC_SC1A_ADCH_OFF)) { // ADC1 powered up and operating
             if ((ADC1_SC2 & ADC_SC2_ADTRG_HW) == 0) {                    // software trigger mode
                 fnSimADC(1);                                             // perform ADC conversion
                 if ((ADC1_SC1A & ADC_SC1A_COCO) != 0) {                  // {40} if conversion has completed
-                    fnHandleDMA_triggers(DMAMUX_CHCFG_SOURCE_ADC1, 0);   // handle DMA triggered on ADC1 conversion
+                    fnHandleDMA_triggers(DMAMUX0_CHCFG_SOURCE_ADC1, 0);  // handle DMA triggered on ADC1 conversion
                     if ((ADC1_SC1A & ADC_SC1A_AIEN) != 0) {              // end of conversion interrupt enabled
                         if (fnGenInt(irq_ADC1_ID) != 0) {                // if ADC1 interrupt is not disabled
                             VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
@@ -7327,7 +7327,7 @@ static void fnTriggerADC(int iADC, int iHW_trigger)
     #endif
     #if ADC_CONTROLLERS > 2
     case 2:                                                              // ADC2
-        if ((IS_POWERED_UP(6, SIM_SCGC6_ADC2)) && ((ADC2_SC1A & ADC_SC1A_ADCH_OFF) != ADC_SC1A_ADCH_OFF)) { // ADC2 powered up and operating
+        if ((IS_POWERED_UP(6, ADC2)) && ((ADC2_SC1A & ADC_SC1A_ADCH_OFF) != ADC_SC1A_ADCH_OFF)) { // ADC2 powered up and operating
             if ((ADC2_SC2 & ADC_SC2_ADTRG_HW) == 0) {                    // software trigger mode
                 fnSimADC(2);                                             // perform ADC conversion
                 if ((ADC2_SC1A & ADC_SC1A_COCO) != 0) {                  // {40} if conversion has completed
@@ -7345,7 +7345,7 @@ static void fnTriggerADC(int iADC, int iHW_trigger)
     #endif
     #if ADC_CONTROLLERS > 3
     case 3:                                                              // ADC3
-        if ((IS_POWERED_UP(3, SIM_SCGC3_ADC3)) && ((ADC3_SC1A & ADC_SC1A_ADCH_OFF) != ADC_SC1A_ADCH_OFF)) { // ADC3 powered up and operating
+        if ((IS_POWERED_UP(3, ADC3)) && ((ADC3_SC1A & ADC_SC1A_ADCH_OFF) != ADC_SC1A_ADCH_OFF)) { // ADC3 powered up and operating
             if ((ADC3_SC2 & ADC_SC2_ADTRG_HW) == 0) {                    // software trigger mode
                 fnSimADC(3);                                             // perform ADC conversion
                 if ((ADC3_SC1A & ADC_SC1A_COCO) != 0) {                  // {40} if conversion has completed
@@ -7859,7 +7859,7 @@ extern int fnSimTimers(void)
         }
     }
 #endif
-#if defined KINETIS_KE && !defined KINETIS_KE15
+#if defined KINETIS_KE && !defined KINETIS_WITH_SRTC
     if ((SIM_SCGC & SIM_SCGC_RTC) != 0) {
         unsigned long ulCount = 0;
         switch (RTC_SC & RTC_SC_RTCLKS_BUS) {                            // RTC clock source
@@ -8240,7 +8240,7 @@ extern int fnSimTimers(void)
     #endif
 #endif
 #if defined SUPPORT_TIMER                                                // {29}
-    if (IS_POWERED_UP(6, SIM_SCGC6_FTM0) &&((FTM0_SC & (FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)) != 0)) { // if the FlexTimer is powered and clocked
+    if (IS_POWERED_UP(6, FTM0) &&((FTM0_SC & (FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)) != 0)) { // if the FlexTimer is powered and clocked
     #if defined KINETIS_KL
         unsigned long ulCountIncrease;
         switch (SIM_SOPT2 & SIM_SOPT2_TPMSRC_MCGIRCLK) {                 // {38}
@@ -8306,7 +8306,7 @@ extern int fnSimTimers(void)
         }
     }
     #if FLEX_TIMERS_AVAILABLE > 1
-    if (IS_POWERED_UP(6, SIM_SCGC6_FTM1) && ((FTM1_SC & (FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)) != 0)) { // if the FlexTimer is powered and clocked
+    if (IS_POWERED_UP(6, FTM1) && ((FTM1_SC & (FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)) != 0)) { // if the FlexTimer is powered and clocked
         #if defined KINETIS_KL
         unsigned long ulCountIncrease;
         switch (SIM_SOPT2 & SIM_SOPT2_TPMSRC_MCGIRCLK) {                 // {38}
@@ -8388,7 +8388,7 @@ extern int fnSimTimers(void)
         #if defined KINETIS_KL
     if ((SIM_SCGC6 & SIM_SCGC6_FTM2) &&((FTM2_SC & (FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)) != 0))  // if the timer/PWM module is powered and clocked
         #else
-    if (IS_POWERED_UP(3, SIM_SCGC3_FTM2) &&((FTM2_SC & FTM_SC_CLKS_EXT) != 0))  // if the FlexTimer is powered and clocked
+    if (IS_POWERED_UP(3, FTM2) &&((FTM2_SC & FTM_SC_CLKS_EXT) != 0))  // if the FlexTimer is powered and clocked
         #endif
     {
         #if defined KINETIS_KL

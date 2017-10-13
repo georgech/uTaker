@@ -38,7 +38,7 @@ extern void fnSetSD_clock(unsigned long ulSpeed)
 //
 extern void fnInitSDCardInterface(void)
 {
-    POWER_UP_ATOMIC(3, SIM_SCGC3_SDHC);                                  // power up the SDHC controller
+    POWER_UP_ATOMIC(3, SDHC);                                            // power up the SDHC controller
 
     // Configure the pins for the hardware
     //

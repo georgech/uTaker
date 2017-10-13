@@ -116,6 +116,7 @@
     31.08.2017 Add BME (bit manipulation engine) for cortex-m0+ devices  {99}
     12.09.2017 Add INTMUX support and extended KL28 and KL82             {100}
     26.09.2017 Add LPIT                                                  {101}
+    12.10.2017 Modified POWER_UP_ATOMIC(), POWER_DOWN_ATOMIC() and IS_POWERED_UP() macros to be compatible with PCC {102}
 
 */
 
@@ -1020,15 +1021,23 @@ typedef struct stRESET_VECTOR
 #endif
 } RESET_VECTOR;
 
-
+// Flash memory
+//
 #if (defined KINETIS_K_FPU && ((!defined KINETIS_K02 && !defined KINETIS_K22 && !(defined KINETIS_K24 && (SIZE_OF_FLASH == (256 * 1024))) && !defined KINETIS_K80 && !defined KINETIS_KV30) || defined KINETIS_FLEX || (SIZE_OF_FLASH >= (1024 * 1024)))) // exceptions are K22 FN512 and K22 FN256
     #define PHRASE_PROGRAMMING_METHOD                                    // use phrase programming (aligned 8 byte block) rather than long word programming
+#endif
+
+#if defined KINETIS_KE15
+    #define FLASH_CONTROLLER_FTFE                                        // FTFE type rather than standard KE type
+    #define FLASH_CONTROLLER_FTFE_EXTENDED                               // FTFE type with extended features
+#elif defined KINETIS_KE || defined KINETIS_KEA
+    #define FLASH_CONTROLLER_FTMRE                                       // FTMRE type
 #endif
 
 #if defined PHRASE_PROGRAMMING_METHOD
     #define FLASH_GRANULARITY   (4 * 1024)                               // smallest sector which can be erased independently
     #define FLEXRAM_MAX_SECTION_COPY_SIZE (1 * 1024)
-#elif defined KINETIS_KL82
+#elif defined KINETIS_KL82 || defined KINETIS_KE15
     #define FLASH_GRANULARITY   (2 * 1024)                               // smallest sector which can be erased independently
 #elif defined KINETIS_K24 || defined KINETIS_K80                         // K24 and K80 without phrase programming still uses 4k sectors
     #define FLASH_GRANULARITY   (4 * 1024)                               // smallest sector which can be erased independently
@@ -1312,6 +1321,9 @@ typedef struct stRESET_VECTOR
     #define KINETIS_WITHOUT_RTC
 #elif defined KINETIS_KL82
     #define KINETIS_WITH_RTC_CRYSTAL
+#elif defined KINETIS_KE15
+    #define KINETIS_WITH_RTC_CRYSTAL
+    #define KINETIS_WITH_SRTC                                            // SRTC rather than standard KE type
 #elif !defined KINETIS_KL && !defined KINETIS_KE
     #define KINETIS_WITH_RTC_CRYSTAL
 #endif
@@ -1401,7 +1413,7 @@ typedef struct stRESET_VECTOR
 
 // KBI configuration
 //
-#if defined KINETIS_KE
+#if defined KINETIS_KE && !defined KINETIS_KE15
     #define KBIS_AVAILABLE 2
     #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
         #define KBI_WIDTH  32
@@ -2363,7 +2375,7 @@ typedef struct stVECTOR_TABLE
     #define irq_FTM0_ID                   17                             // 17
     #define irq_FTM1_ID                   18                             // 18
     #define irq_FTM2_ID                   19                             // 19
-    #define irq_RTC_ID                    20                             // 20
+    #define irq_RTC_ALARM_ID              20                             // 20
     #define irq_CMP1_ID                   21                             // 21
     #define irq_LPIT0_ID                  22                             // 22
     #define irq_FLEXIO_ID                 23                             // 23
@@ -3178,7 +3190,7 @@ typedef struct stVECTOR_TABLE
     #if ADC_CONTROLLERS > 2
         #define ADC2_BLOCK                     ((unsigned char *)(&kinetis.ADC2)) // ADC2
     #endif
-    #if !defined KINETIS_KL02
+    #if !defined KINETIS_WITHOUT_RTC
         #define RTC_BLOCK                      ((unsigned char *)(&kinetis.RTC)) // RTC
     #endif
     #if !defined KINETIS_KE
@@ -3429,7 +3441,11 @@ typedef struct stVECTOR_TABLE
     #endif
     #if !defined KINETIS_WITHOUT_PIT
         #if defined LPITS_AVAILABLE
-            #define LPIT0_BLOCK                0x40030000                // {101} LPITs
+            #if defined KINETIS_KE15
+                #define LPIT0_BLOCK            0x40037000
+            #else
+                #define LPIT0_BLOCK            0x40030000                // {101} LPITs
+            #endif
         #else
             #define PIT_BLOCK                  0x40037000                // PITs
         #endif
@@ -3443,7 +3459,7 @@ typedef struct stVECTOR_TABLE
     #if ADC_CONTROLLERS > 2
         #define ADC2_BLOCK                     0x4003c000                // ADC2
     #endif
-    #if !defined KINETIS_KL02
+    #if !defined KINETIS_WITHOUT_RTC
         #if defined KINETIS_KL28
             #define RTC_BLOCK                  0x40038000                // RTC
         #else
@@ -5008,7 +5024,7 @@ typedef struct stKINETIS_INTMUX
 
 // Flash Memory Module
 //
-#if defined KINETIS_KE
+#if defined FLASH_CONTROLLER_FTMRE
     #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
         #define FTMRH_FCCOBIX       *(unsigned char *)(FTFL_BLOCK + 0x1) // Flash CCOB Index Register
         #define FTMRH_FSEC          *(volatile unsigned char *)(FTFL_BLOCK + 0x2) // Flash Security Register (read-only)
@@ -5433,8 +5449,8 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
       #define DMAMUX0_CHCFG_SOURCE_FTM3_C3       38                      // 0x26 FTM3 channel 3
       #define DMAMUX_CHCFG_SOURCE_IEEE1588_T3    39                      // 0x27 IEEE 1588 timer 3 (alternative)
      #endif
-      #define DMAMUX_CHCFG_SOURCE_ADC0           40                      // 0x28 ADC0
-      #define DMAMUX_CHCFG_SOURCE_ADC1           41                      // 0x29 ADC1
+      #define DMAMUX0_CHCFG_SOURCE_ADC0          40                      // 0x28 ADC0
+      #define DMAMUX0_CHCFG_SOURCE_ADC1          41                      // 0x29 ADC1
       #define DMAMUX0_CHCFG_SOURCE_CMP0          42                      // 0x2a CMP0
       #define DMAMUX0_CHCFG_SOURCE_CMP1          43                      // 0x2b CMP1
       #define DMAMUX0_CHCFG_SOURCE_CMP2          44                      // 0x2c CMP2
@@ -8179,7 +8195,7 @@ typedef struct stKINETIS_ADMA2_BD
 
 // RTC
 //
-#if defined KINETIS_KE
+#if defined KINETIS_KE && !defined KINETIS_WITH_SRTC
     #define RTC_SC              *(volatile unsigned long *)(RTC_BLOCK + 0x0) // RTC Status and Copntrol Register
       #define RTC_SC_RTCO       0x00000010                               // RTC counter output enable
       #define RTC_SC_RTIE       0x00000040                               // RTC interrupt enable
@@ -8840,7 +8856,7 @@ typedef struct stKINETIS_LPTMR_CTL
       #define SIM_SCGC_KBI0                  0x01000000
       #define SIM_SCGC_KBI1                  0x02000000
       #define SIM_SCGC_IRQ                   0x08000000
-      #define SIM_SCGC_ADC                   0x20000000
+      #define SIM_SCGC_ADC0                  0x20000000
       #define SIM_SCGC_ACMP0                 0x40000000
       #define SIM_SCGC_ACMP1                 0x80000000
 
@@ -8857,7 +8873,7 @@ typedef struct stKINETIS_LPTMR_CTL
       #define SIM_SCGC6_FTM0                 SIM_SCGC_FM0
       #define SIM_SCGC6_FTM1                 SIM_SCGC_FM1
       #define SIM_SCGC3_FTM2                 SIM_SCGC_FM2
-      #define SIM_SCGC6_ADC0                 SIM_SCGC_ADC
+      #define SIM_SCGC6_ADC0                 SIM_SCGC_ADC0
       #define SIM_SCGC4_SPI0                 SIM_SCGC_SPI0
       #define SIM_SCGC4_SPI1                 SIM_SCGC_SPI1
       #define SIM_SCGC6_RTC                  SIM_SCGC_RTC
@@ -9188,7 +9204,7 @@ typedef struct stKINETIS_LPTMR_CTL
           #if defined KINETIS_K80
             #if defined LTC_AVAILABLE
               #define SIM_SCGC2_LTC          0x00020000
-              #define POWER_UP_LTC_MODULE()  POWER_UP(2, SIM_SCGC2_LTC);
+              #define POWER_UP_LTC_MODULE()  POWER_UP_ATOMIC(2, LTC);
             #endif
             #define SIM_SCGC2_EMVSIM0        0x00100000
             #define SIM_SCGC2_EMVSIM1        0x00200000
@@ -9341,7 +9357,7 @@ typedef struct stKINETIS_LPTMR_CTL
       #if defined KINETIS_KL
           #if defined LTC_AVAILABLE
               #define SIM_SCGC5_LTC          0x00020000
-              #define POWER_UP_LTC_MODULE()  POWER_UP(5, SIM_SCGC5_LTC);
+              #define POWER_UP_LTC_MODULE()  POWER_UP_ATOMIC(5, LTC);
           #endif
           #if LPUARTS_AVAILABLE > 0
               #define SIM_SCGC5_LPUART0        0x00100000
@@ -9647,30 +9663,43 @@ typedef struct stKINETIS_LPTMR_CTL
 #endif
 
 #if defined KINETIS_KE
-    #define POWER_UP(reg, module)            SIM_SCGC |= (module)        // power up a module (apply clock to it)
-    #define POWER_DOWN(reg, module)          SIM_SCGC &= ~(module)       // power down a module (disable clock to it)
-    #define IS_POWERED_UP(reg, module)      (SIM_SCGC & (module))
-    #if defined _WINDOWS                                                 // {99}
-        #define POWER_UP_ATOMIC(reg, module)     *(SIM_SCGC_BME_OR - (BME_OR_OFFSET/sizeof(unsigned long))) |= (module)
-        #define POWER_DOWN_ATOMIC(reg, module)   *(SIM_SCGC_BME_AND - (BME_AND_OFFSET/sizeof(unsigned long))) &= ~(module)
+    #define POWER_UP(reg, module)              SIM_SCGC |= (module)      // power up a module (apply clock to it)
+    #define POWER_DOWN(reg, module)            SIM_SCGC &= ~(module)     // power down a module (disable clock to it)
+    #if defined KINETIS_WITH_PCC                                         // {102}
+        #define POWER_UP_ATOMIC(reg, module)   PCC_##module |= PCC_CGC
+        #define POWER_DOWN_ATOMIC(reg, module) PCC_##module &= ~(PCC_CGC)
+        #define IS_POWERED_UP(reg, module)     ((PCC_##module & PCC_CGC) != 0)
     #else
-        #define POWER_UP_ATOMIC(reg, module)     *SIM_SCGC_BME_OR = (module) // bit-banding is not implemented in cortex-m0+ but instead it has BME (bit manipulation engine)
-        #define POWER_DOWN_ATOMIC(reg, module)   *SIM_SCGC_BME_AND = ~(module)
+        #if defined _WINDOWS                                             // {99}
+            #define POWER_UP_ATOMIC(reg, module)     *(SIM_SCGC_BME_OR - (BME_OR_OFFSET/sizeof(unsigned long))) |= (SIM_SCGC_##module)
+            #define POWER_DOWN_ATOMIC(reg, module)   *(SIM_SCGC_BME_AND - (BME_AND_OFFSET/sizeof(unsigned long))) &= ~(SIM_SCGC_##module)
+        #else
+            #define POWER_UP_ATOMIC(reg, module)     *SIM_SCGC_BME_OR = (SIM_SCGC_##module) // bit-banding is not implemented in cortex-m0+ but instead it has BME (bit manipulation engine)
+            #define POWER_DOWN_ATOMIC(reg, module)   *SIM_SCGC_BME_AND = ~(SIM_SCGC_##module)
+        #endif
+        #define IS_POWERED_UP(reg, module)  ((SIM_SCGC & (SIM_SCGC_##module)) != 0) // {102}
     #endif
 #else
-    #define POWER_UP(reg, module)            SIM_SCGC##reg |= (module)   // power up a module or multiple modules sharing a register (apply clock to it)
-    #define POWER_DOWN(reg, module)          SIM_SCGC##reg &= ~(module)  // power down a module or multiple modules sharing a register (disable clock to it)
-    #if defined ARM_MATH_CM0PLUS                                         // {99} bit-banding is not implemented in cortex-m0+ but instead it has BME (bit manipulation engine)
-        #if defined _WINDOWS
-            #define POWER_UP_ATOMIC(reg, module)   *(SIM_SCGC##reg##_BME_OR - (BME_OR_OFFSET/sizeof(unsigned long))) |= (module)
-            #define POWER_DOWN_ATOMIC(reg, module) *(SIM_SCGC##reg##_BME_AND - (BME_AND_OFFSET/sizeof(unsigned long))) &= ~(module)
-        #else
-            #define POWER_UP_ATOMIC(reg, module)   *SIM_SCGC##reg##_BME_OR = (module)
-            #define POWER_DOWN_ATOMIC(reg, module) *SIM_SCGC##reg##_BME_AND = ~(module)
-        #endif
+    #define POWER_UP(reg, module)              SIM_SCGC##reg |= (module) // power up a module or multiple modules sharing a register (apply clock to it)
+    #define POWER_DOWN(reg, module)            SIM_SCGC##reg &= ~(module)// power down a module or multiple modules sharing a register (disable clock to it)
+    #if defined KINETIS_WITH_PCC                                         // {102}
+        #define POWER_UP_ATOMIC(reg, module)   PCC_##module |= PCC_CGC
+        #define POWER_DOWN_ATOMIC(reg, module) PCC_##module &= ~(PCC_CGC)
+        #define IS_POWERED_UP(reg, module)     ((PCC_##module & PCC_CGC) != 0)
     #else
-        #define POWER_UP_ATOMIC(reg, module)   ATOMIC_SET_REGISTER(SIM_SCGC##reg##_##module) // {98} power up a single module using bit-banding access (apply clock to it)
-        #define POWER_DOWN_ATOMIC(reg, module) ATOMIC_CLEAR_REGISTER(SIM_SCGC##reg##_##module) // power down a single module using bit-banding access (disable clock to it)
+        #if defined ARM_MATH_CM0PLUS                                     // {99} bit-banding is not implemented in cortex-m0+ but instead it has BME (bit manipulation engine)
+            #if defined _WINDOWS
+                #define POWER_UP_ATOMIC(reg, module)   *(SIM_SCGC##reg##_BME_OR - (BME_OR_OFFSET/sizeof(unsigned long))) |= (SIM_SCGC##reg##_##module)
+                #define POWER_DOWN_ATOMIC(reg, module) *(SIM_SCGC##reg##_BME_AND - (BME_AND_OFFSET/sizeof(unsigned long))) &= ~(SIM_SCGC##reg##_##module)
+            #else
+                #define POWER_UP_ATOMIC(reg, module)   *SIM_SCGC##reg##_BME_OR = (SIM_SCGC##reg##_##module)
+                #define POWER_DOWN_ATOMIC(reg, module) *SIM_SCGC##reg##_BME_AND = ~(SIM_SCGC##reg##_##module)
+            #endif
+        #else                                                            // cortex-m4
+            #define POWER_UP_ATOMIC(reg, module)   ATOMIC_SET_REGISTER(SIM_SCGC##reg##_##SIM_SCGC##reg##_##module) // {98}{102} power up a single module using bit-banding access (apply clock to it)
+            #define POWER_DOWN_ATOMIC(reg, module) ATOMIC_CLEAR_REGISTER(SIM_SCGC##reg##_##module) // {102} power down a single module using bit-banding access (disable clock to it)
+        #endif
+        #define IS_POWERED_UP(reg, module)    ((SIM_SCGC##reg & (SIM_SCGC##reg##_##module)) != 0) // {102}
     #endif
     #if defined KINETIS_K_FPU
         #define SIM_SOPT1_SET(opt, enable)   SIM_SOPT1CGF |= (enable); SIM_SOPT1 |= (opt)
@@ -9679,7 +9708,6 @@ typedef struct stKINETIS_LPTMR_CTL
         #define SIM_SOPT1_SET(opt, enable)   SIM_SOPT1 |= (opt)
         #define SIM_SOPT1_CLR(opt, enable)   SIM_SOPT1 &= ~(opt)
     #endif
-    #define IS_POWERED_UP(reg, module)      (SIM_SCGC##reg & (module))
 #endif
 
 
@@ -10279,7 +10307,7 @@ typedef struct stKINETIS_LPTMR_CTL
     #define PE_10_LPUART0_CTS            PORT_MUX_ALT5
 #endif
 #if LPUARTS_AVAILABLE > 1
-    #if defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL43
+    #if defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL43 || defined KINETIS_K80
         #define PC_3_LPUART1_RX          PORT_MUX_ALT3
         #define PC_4_LPUART1_TX          PORT_MUX_ALT3
         #if !defined KINETIS_K80
@@ -10288,6 +10316,9 @@ typedef struct stKINETIS_LPTMR_CTL
         #endif
         #define PE_1_LPUART1_RX          PORT_MUX_ALT3
         #define PE_0_LPUART1_TX          PORT_MUX_ALT3
+    #elif defined KINETIS_KE15
+        #define PC_6_LPUART1_RX          PORT_MUX_ALT2
+        #define PC_7_LPUART1_TX          PORT_MUX_ALT2
     #endif
 #endif
 #if LPUARTS_AVAILABLE > 2
@@ -11238,6 +11269,7 @@ typedef struct stKINETIS_LPTMR_CTL
         #define PCC_RTC                  *(volatile unsigned long *)(PCC_BLOCK + 0x0f4)
         #define PCC_LPTMR0               *(volatile unsigned long *)(PCC_BLOCK + 0x100)
         #define PCC_TSI                  *(volatile unsigned long *)(PCC_BLOCK + 0x114)
+        #define PCC_PORT_ADDR             (volatile unsigned long *)(PCC_BLOCK + 0x124)
         #define PCC_PORTA                *(volatile unsigned long *)(PCC_BLOCK + 0x124)
         #define PCC_PORTB                *(volatile unsigned long *)(PCC_BLOCK + 0x128)
         #define PCC_PORTC                *(volatile unsigned long *)(PCC_BLOCK + 0x12c)
@@ -11266,6 +11298,7 @@ typedef struct stKINETIS_LPTMR_CTL
         #define PCC_SAI0                 *(volatile unsigned long *)(PCC_BLOCK + 0x130)
         #define PCC_EMVSIM0              *(volatile unsigned long *)(PCC_BLOCK + 0x138)
         #define PCC_USB0FS               *(volatile unsigned long *)(PCC_BLOCK + 0x154)
+        #define PCC_PORT_ADDR             (volatile unsigned long *)(PCC_BLOCK + 0x168)
         #define PCC_PORTA                *(volatile unsigned long *)(PCC_BLOCK + 0x168)
         #define PCC_PORTB                *(volatile unsigned long *)(PCC_BLOCK + 0x16c)
         #define PCC_PORTC                *(volatile unsigned long *)(PCC_BLOCK + 0x170)
@@ -11291,6 +11324,7 @@ typedef struct stKINETIS_LPTMR_CTL
         #define PCC_FLEXIO0              *(volatile unsigned long *)(PCC2_BLOCK + 0x128)
         #define PCC_CMP1                 *(volatile unsigned long *)(PCC2_BLOCK + 0x1bc)
     #endif
+    #define PCC_USBOTG                   PCC_USB0FS                      // for compatibility
 #endif
 
 #if defined KINETIS_KE && !defined KINETIS_WITH_SCG

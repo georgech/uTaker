@@ -1105,15 +1105,11 @@ extern void fnConfigUSB(QUEUE_HANDLE Channel, USBTABLE *pars)
     MPU_CESR = 0;                                                        // allow concurrent access to MPU controller
     #endif
     #if (defined KINETIS_K64 || (defined KINETIS_K24 && (SIZE_OF_FLASH == (1024 * 1024)))) && (defined RUN_FROM_HIRC_PLL || defined RUN_FROM_HIRC)
-    if (IS_POWERED_UP(4, SIM_SCGC4_USBOTG)) {                            // if the USB module is already powered up it means that it has to be enabled to turn on the IRC48M
+    if (IS_POWERED_UP(4, USBOTG)) {                                      // if the USB module is already powered up it means that it has to be enabled to turn on the IRC48M
         iIRC48M_workaround = 1;                                          // mark that we need to temporarily switch system clock source during the USB reset command
     }
     #endif
-    #if defined KINETIS_WITH_PCC
-    PCC_USB0FS |= PCC_CGC;
-    #else
-    POWER_UP_ATOMIC(4, SIM_SCGC4_USBOTG);                                // power up the USB controller module
-    #endif
+    POWER_UP_ATOMIC(4, USBOTG);                                          // power up the USB controller module
 
     if (ucEndpoints > NUMBER_OF_USB_ENDPOINTS) {                         // limit endpoint count
         ucEndpoints = NUMBER_OF_USB_ENDPOINTS;                           // limit to maximum available in device

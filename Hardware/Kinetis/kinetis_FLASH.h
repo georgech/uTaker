@@ -28,6 +28,7 @@
     10.03.2015 Correct KE/KEA flash configuration layout                 {122}
     12.01.2015 Perform write enable for SPI_FLASH_S25FL1_K (for KL/KE driver compatibility) {200}
     19.08.2017 Correct calculation of start address of preceding multiple memory device {201}
+    13.10.2017 Replaces KINETIS_KE dependancy by FLASH_CONTROLLER_FTMRE dependancy
 
 */
 
@@ -53,7 +54,7 @@
 /* =================================================================== */
 
 #if (defined FLASH_ROUTINES || defined ACTIVE_FILE_SYSTEM  || defined USE_PARAMETER_BLOCK || defined INTERNAL_USER_FILES) && defined _WINDOWS
-    extern int iFetchingInternalMemory = _ACCESS_NOT_IN_CODE;
+    int iFetchingInternalMemory = _ACCESS_NOT_IN_CODE;
 #endif
 
 
@@ -87,7 +88,7 @@ static unsigned short fnFlashRoutine[] = {                               // to a
 #if defined _WINDOWS
 static int fnFlashProtected(unsigned long *ptrWord)
 {
-    #if !defined KINETIS_KE
+    #if !defined FLASH_CONTROLLER_FTMRE
     unsigned long ulProtectionBlock = (1 << (((CAST_POINTER_ARITHMETIC)ptrWord) % (SIZE_OF_FLASH / 32)));
     if ((FTFL_FPROT3_0 & ulProtectionBlock) == 0) {
         return 1;                                                        // the area is protected
@@ -100,7 +101,7 @@ static int fnFlashProtected(unsigned long *ptrWord)
 static int fnFlashNow(unsigned char ucCommand, unsigned long *ptrWord, unsigned long *ptr_ulWord)
 {
     static void (*fnRAM_code)(volatile unsigned char *) = 0;
-    #if defined FLEXFLASH_DATA || (defined KINETIS_KE && (defined SIZE_OF_EEPROM && SIZE_OF_EEPROM > 0)) // {82}{109}
+    #if defined FLEXFLASH_DATA || (defined FLASH_CONTROLLER_FTMRE && (defined SIZE_OF_EEPROM && SIZE_OF_EEPROM > 0)) // {82}{109}
     int iNoInterruptDisable = 0;                                         // the default is to protect programming from interrupts
     #endif
     if (fnRAM_code == 0) {                                               // the first time this is used it will load the program to SRAM
@@ -117,7 +118,7 @@ static int fnFlashNow(unsigned char ucCommand, unsigned long *ptrWord, unsigned 
         ptrThumb2 = (unsigned char *)usProgSpace;
         ptrThumb2++;                                                     // create a thumb 2 call
         fnRAM_code = (void(*)(volatile unsigned char *))(ptrThumb2);
-    #if defined KINETIS_KE                                               // set the flash programming clock to 1MHz once after a reset
+    #if defined FLASH_CONTROLLER_FTMRE                                   // set the flash programming clock to 1MHz once after a reset [most KE and KEA parts]
         #if BUS_CLOCK < 8000000
         _EXCEPTION("Bus clock must be at least 800kHz to program flash!");
         #elif BUS_CLOCK <= 1600000                                       // recommended values depending on bus clock
@@ -185,7 +186,7 @@ static int fnFlashNow(unsigned char ucCommand, unsigned long *ptrWord, unsigned 
     }
     #endif
 
-    #if defined KINETIS_KE
+    #if defined FLASH_CONTROLLER_FTMRE                                   // most KE and KEA parts
     FTMRH_FCCOBIX = 0;                                                   // reset the command index
         #if (defined SIZE_OF_EEPROM && SIZE_OF_EEPROM > 0)               // {109}
     if (ptrWord >= (unsigned long *)(SIZE_OF_FLASH - SIZE_OF_EEPROM)) {  // is the access a write/erase in EEPROM
@@ -213,7 +214,7 @@ static int fnFlashNow(unsigned char ucCommand, unsigned long *ptrWord, unsigned 
     #if defined USE_SECTION_PROGRAMMING                                  // {105}
     case FCMD_PROGRAM_SECTOR:
     #endif
-    #if (defined KINETIS_KE && (defined SIZE_OF_EEPROM && SIZE_OF_EEPROM > 0)) // {109}
+    #if (defined FLASH_CONTROLLER_FTMRE && (defined SIZE_OF_EEPROM && SIZE_OF_EEPROM > 0)) // {109} (most KE and KEA parts)
     case FCMD_PROGRAM_EEPROM:
     case FCMD_ERASE_EEPROM_SECTOR:
     #endif
@@ -234,13 +235,13 @@ static int fnFlashNow(unsigned char ucCommand, unsigned long *ptrWord, unsigned 
             iNoInterruptDisable = 1;                                     // this command may execute without interrupts being disabled
         }
     #endif
-    #if defined KINETIS_KE
+    #if defined FLASH_CONTROLLER_FTMRE
         FTMRH_FCCOBIX = 1;                                               // set the command index
     #endif
         FTFL_FCCOB2 = (unsigned char)(((CAST_POINTER_ARITHMETIC)ptrWord) >> 8);
         FTFL_FCCOB3 = (unsigned char)((CAST_POINTER_ARITHMETIC)ptrWord);
         if (FCMD_PROGRAM == ucCommand) {                                 // program long-word aligned value (or phrase)
-    #if defined KINETIS_KE
+    #if defined FLASH_CONTROLLER_FTMRE
             FTMRH_FCCOBIX = 2;                                           // set the command index
             FTMRH_FCCOBHI = (unsigned char)(*ptr_ulWord >> 8);
             FTMRH_FCCOBLO = (unsigned char)(*ptr_ulWord);
@@ -263,7 +264,7 @@ static int fnFlashNow(unsigned char ucCommand, unsigned long *ptrWord, unsigned 
     #endif
     #if (FLASH_ROW_SIZE == 8)                                            // {10} write second long word
             ptr_ulWord++;
-        #if defined KINETIS_KE
+        #if defined FLASH_CONTROLLER_FTMRE
             FTMRH_FCCOBIX = 4;                                           // set the command index
             FTMRH_FCCOBHI = (unsigned char)(*ptr_ulWord >> 8);
             FTMRH_FCCOBLO = (unsigned char)(*ptr_ulWord);
@@ -281,7 +282,7 @@ static int fnFlashNow(unsigned char ucCommand, unsigned long *ptrWord, unsigned 
         #endif
     #endif
         }
-    #if (defined KINETIS_KE && (defined SIZE_OF_EEPROM && SIZE_OF_EEPROM > 0)) // {109}
+    #if (defined FLASH_CONTROLLER_FTMRE && (defined SIZE_OF_EEPROM && SIZE_OF_EEPROM > 0)) // {109}
         else if (FCMD_PROGRAM_EEPROM == ucCommand) {                     // if programming to EEPROM write a single byte
             FTMRH_FCCOBIX = 2;                                           // set the command index
             FTMRH_FCCOBLO = *(unsigned char *)ptr_ulWord;
@@ -377,7 +378,7 @@ static int fnFlashNow(unsigned char ucCommand, unsigned long *ptrWord, unsigned 
         break;
     #endif
     }
-    #if defined FLEXFLASH_DATA || (defined KINETIS_KE && (defined SIZE_OF_EEPROM && SIZE_OF_EEPROM > 0)) // {82}{109} if working with FlashNMV in data flash mode or EEPROM
+    #if defined FLEXFLASH_DATA || (defined FLASH_CONTROLLER_FTMRE && (defined SIZE_OF_EEPROM && SIZE_OF_EEPROM > 0)) // {82}{109} if working with FlashNMV in data flash mode or EEPROM
     if (iNoInterruptDisable == 0) {
         uDisable_Interrupt();                                            // protect this region from interrupts
     }
@@ -389,7 +390,7 @@ static int fnFlashNow(unsigned char ucCommand, unsigned long *ptrWord, unsigned 
     #else
     fnRAM_code((volatile unsigned char *)FLASH_STATUS_REGISTER);         // execute the command from SRAM
     #endif
-    #if defined FLEXFLASH_DATA || (defined KINETIS_KE && (defined SIZE_OF_EEPROM && SIZE_OF_EEPROM > 0)) // {82}{109} if working with FlashNMV in data flash mode or EEPROM
+    #if defined FLEXFLASH_DATA || (defined FLASH_CONTROLLER_FTMRE && (defined SIZE_OF_EEPROM && SIZE_OF_EEPROM > 0)) // {82}{109} if working with FlashNMV in data flash mode or EEPROM
     if (iNoInterruptDisable == 0) {
         uEnable_Interrupt();                                             // safe to accept interrupts again
     }
@@ -530,7 +531,7 @@ static int fnWriteInternalFlash(ACCESS_DETAILS *ptrAccessDetails, unsigned char 
         ptrOpenBuffer = (unsigned char *)((CAST_POINTER_ARITHMETIC)ptrOpenBuffer & ~(FLASH_ROW_SIZE - 1));
     }
     else {
-        #if (defined KINETIS_KE && (defined SIZE_OF_EEPROM && SIZE_OF_EEPROM > 0)) // {109}
+        #if (defined FLASH_CONTROLLER_FTMRE && (defined SIZE_OF_EEPROM && SIZE_OF_EEPROM > 0)) // {109}
         if ((unsigned char *)ptrAccessDetails->ulOffset >= (unsigned char *)(SIZE_OF_FLASH - SIZE_OF_EEPROM)) { // is the address in EEPROM
             ulBufferOffset = ptrAccessDetails->ulOffset;
         }
@@ -544,7 +545,7 @@ static int fnWriteInternalFlash(ACCESS_DETAILS *ptrAccessDetails, unsigned char 
         #endif
     }
     do {                                                                 // handle each byte to be programmed
-        #if (defined KINETIS_KE && (defined SIZE_OF_EEPROM && SIZE_OF_EEPROM > 0)) // {109}
+        #if (defined FLASH_CONTROLLER_FTMRE && (defined SIZE_OF_EEPROM && SIZE_OF_EEPROM > 0)) // {109}
         if ((unsigned char *)ulBufferOffset >= (unsigned char *)(SIZE_OF_FLASH - SIZE_OF_EEPROM)) { // is the address in EEPROM
             if ((fnFlashNow(FCMD_PROGRAM_EEPROM, (unsigned long *)ulBufferOffset, (unsigned long *)ucData)) != 0) { // program single bytes
                 return -1;                                               // error
@@ -857,7 +858,7 @@ extern unsigned char fnGetStorageType(unsigned char *memory_pointer, ACCESS_DETA
 //
 extern int fnEraseFlashSector(unsigned char *ptrSector, MAX_FILE_LENGTH Length)
 {
-#if (defined KINETIS_KE && (defined SIZE_OF_EEPROM && SIZE_OF_EEPROM > 0)) // {109}
+#if (defined FLASH_CONTROLLER_FTMRE && (defined SIZE_OF_EEPROM && SIZE_OF_EEPROM > 0)) // {109}
     unsigned short _FLASH_GRANULARITY = FLASH_GRANULARITY;               // assume program flash granularity
 #else
     #define _FLASH_GRANULARITY FLASH_GRANULARITY
@@ -931,7 +932,7 @@ extern int fnEraseFlashSector(unsigned char *ptrSector, MAX_FILE_LENGTH Length)
         Length -= AccessDetails.BlockLength;
     } while (1);
     #else                                                                // case when only internal Flash is available
-        #if (defined KINETIS_KE && (defined SIZE_OF_EEPROM && SIZE_OF_EEPROM > 0)) // {109}
+        #if (defined FLASH_CONTROLLER_FTMRE && (defined SIZE_OF_EEPROM && SIZE_OF_EEPROM > 0)) // {109}
     if (ptrSector >= (unsigned char *)(SIZE_OF_FLASH - SIZE_OF_EEPROM)) {// is the sector in EEPROM
         _FLASH_GRANULARITY = KE_EEPROM_GRANULARITY;                      // set EEPROM granularity
     }
@@ -1072,7 +1073,7 @@ extern void fnGetParsFile(unsigned char *ParLocation, unsigned char *ptrValue, M
     if (ParLocation >= (unsigned char *)(SIZE_OF_FLASH - SIZE_OF_FLEXFLASH)) { // is the access a read from FlexNVM
         ParLocation += (FLEXNVM_START_ADDRESS - (SIZE_OF_FLASH - SIZE_OF_FLEXFLASH)); // convert to FlexNVM physical address
     }
-            #elif (defined KINETIS_KE && (defined SIZE_OF_EEPROM && SIZE_OF_EEPROM > 0)) // {109}
+            #elif (defined FLASH_CONTROLLER_FTMRE && (defined SIZE_OF_EEPROM && SIZE_OF_EEPROM > 0)) // {109}
     if (ParLocation >= (unsigned char *)(SIZE_OF_FLASH - SIZE_OF_EEPROM)) { // is the access a read from EEPROM
         ParLocation += (KE_EEPROM_START_ADDRESS - (SIZE_OF_FLASH - SIZE_OF_EEPROM)); // convert to EEPROM physical address
     }

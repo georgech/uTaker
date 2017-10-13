@@ -298,7 +298,11 @@ static __interrupt void _wakeup_isr(void)
                         _EXCEPTION("Invalid port!!");
                         return;
                     }
-                    POWER_UP(5, (SIM_SCGC5_PORTA << wakeup_interrupt->int_port)); // ensure that the port is powered
+    #if defined KINETIS_WITH_PCC
+                    *(PCC_PORT_ADDR + wakeup_interrupt->int_port) |= PCC_CGC; // ensure that the particular port is powered
+    #else
+                    POWER_UP(5, (SIM_SCGC5_PORTA << wakeup_interrupt->int_port)); // ensure that the particular port is powered
+    #endif
                     if ((ENABLE_PORT_MODE & wakeup_interrupt->int_port_sense) != 0) {
                         ulCharacteristics &= ~(PORT_PSEUDO_FLAG_SET_ONLY_PULLS);
                         ulCharacteristics |= (PORT_MUX_GPIO);

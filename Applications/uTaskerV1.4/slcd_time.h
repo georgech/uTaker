@@ -825,11 +825,11 @@ static void _rtc_second_interrupt(void)                                  // seco
     rtc_setup.command = RTC_GET_TIME;
     fnConfigureRTC(&rtc_setup);                                          // get the present time
 #if defined KINETIS_KL
-    if (IS_POWERED_UP(5, SIM_SCGC5_SLCD)) {                              // display time as long as the SLCD has been enabled
+    if (IS_POWERED_UP(5, SLCD)) {                                        // display time as long as the SLCD has been enabled
         fnTimeDisplay(rtc_setup.ucHours, rtc_setup.ucMinutes, rtc_setup.ucSeconds);
     }
 #else
-    if (IS_POWERED_UP(3, SIM_SCGC3_SLCD)) {                              // display time as long as the SLCD has been enabled
+    if (IS_POWERED_UP(3, SLCD)) {                                        // display time as long as the SLCD has been enabled
         fnTimeDisplay(rtc_setup.ucHours, rtc_setup.ucMinutes, rtc_setup.ucSeconds);
     }
 #endif
