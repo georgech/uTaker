@@ -1297,7 +1297,9 @@ extern void fnStartTick(void)
 extern void fnRetriggerWatchdog(void)
 {
 #if defined KINETIS_WITH_WDOG32
-    REFRESH_WDOG();
+    if ((WDOG0_CS & WDOG_CS_EN) != 0) {
+        REFRESH_WDOG();
+    }
 #elif defined KINETIS_KL && !defined KINETIS_KL82                        // {67}
     if ((SIM_COPC & SIM_COPC_COPT_LONGEST) != 0) {                       // if the COP is enabled
         SIM_SRVCOP = SIM_SRVCOP_1;                                       // issue COP service sequence

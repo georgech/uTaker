@@ -206,7 +206,7 @@ extern void fnClearBitBandPeripheralValue(unsigned long *bit_band_address);
 
 // ROM Bootoader
 //
-#if (defined KINETIS_KL03 || defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL43 || defined KINETIS_KL82) // devices with ROM bootloader
+#if (defined KINETIS_KL03 || defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL43 || defined KINETIS_KL82 || defined KINETIS_KE15) // devices with ROM bootloader
     #define ROM_BOOTLOADER
 #endif
 
@@ -1030,6 +1030,8 @@ typedef struct stRESET_VECTOR
 //
 #if (defined KINETIS_K_FPU && ((!defined KINETIS_K02 && !defined KINETIS_K22 && !(defined KINETIS_K24 && (SIZE_OF_FLASH == (256 * 1024))) && !defined KINETIS_K80 && !defined KINETIS_KV30) || defined KINETIS_FLEX || (SIZE_OF_FLASH >= (1024 * 1024)))) // exceptions are K22 FN512 and K22 FN256
     #define PHRASE_PROGRAMMING_METHOD                                    // use phrase programming (aligned 8 byte block) rather than long word programming
+#elif defined KINETIS_KE15
+    #define PHRASE_PROGRAMMING_METHOD                                    // use phrase programming (aligned 8 byte block) rather than long word programming
 #endif
 
 #if defined KINETIS_KE15
@@ -1039,11 +1041,11 @@ typedef struct stRESET_VECTOR
     #define FLASH_CONTROLLER_FTMRE                                       // FTMRE type
 #endif
 
-#if defined PHRASE_PROGRAMMING_METHOD
+#if defined KINETIS_KL82 || defined KINETIS_KE15
+    #define FLASH_GRANULARITY   (2 * 1024)                               // smallest sector which can be erased independently
+#elif defined PHRASE_PROGRAMMING_METHOD
     #define FLASH_GRANULARITY   (4 * 1024)                               // smallest sector which can be erased independently
     #define FLEXRAM_MAX_SECTION_COPY_SIZE (1 * 1024)
-#elif defined KINETIS_KL82 || defined KINETIS_KE15
-    #define FLASH_GRANULARITY   (2 * 1024)                               // smallest sector which can be erased independently
 #elif defined KINETIS_K24 || defined KINETIS_K80                         // K24 and K80 without phrase programming still uses 4k sectors
     #define FLASH_GRANULARITY   (4 * 1024)                               // smallest sector which can be erased independently
 #elif defined KINETIS_KE
@@ -5142,7 +5144,7 @@ typedef struct stKINETIS_INTMUX
       #define FTFL_STAT_MGSTAT0  0x01                                    // error detected during sequence (read-only)
       #define FTFL_STAT_FPVIOL   0x10                                    // Flash protection violation flag (write '1' to clear)
       #define FTFL_STAT_ACCERR   0x20                                    // Flash access error flag (write '1' to clear)
-      #if defined KINETIS_K64 || defined KINETIS_K22
+      #if defined KINETIS_K64 || defined KINETIS_K22 || defined KINETIS_KE15
         #define FTFL_STAT_RDCOLERR 0x40                                  // Read collision error flag (write '1' to clear)
       #endif
       #define FTFL_STAT_CCIF     0x80                                    // command complete interrupt flag (write '1' to clear)
@@ -5158,11 +5160,22 @@ typedef struct stKINETIS_INTMUX
       #define FTFL_FSEC_KEYEN_ENABLED    0x80                            // backdoor key access enabled
       #define FTFL_FSEC_KEYEN_DISABLED   0xc0                            // backdoor key access disabled
     #define FTFL_FOPT           *(volatile unsigned char *)(FTFL_BLOCK + 0x03) // flash option register (read-only)
-    #if defined KINETIS_KL || defined KINETIS_KV
+    #if defined KINETIS_KE15
+      #define FTFL_FOPT_LPBOOT_CLK_DIV_2  0x00
+      #define FTFL_FOPT_LPBOOT_CLK_DIV_1  0x01
+      #define FTFL_FOPT_NMI_DISABLED      0x00
+      #define FTFL_FOPT_NMI_ENABLED       0x04
+      #define FTFL_FOPT_BOOTPIN_OPT_ENABLE  0x00                       // boot from ROM if the BOOTCFG0 input is asserted
+      #define FTFL_FOPT_BOOTPIN_OPT_DISABLE 0x02                       // BOOTCFG0 input is not used
+      #define FTFL_FOPT_BOOTSRC_SEL_FLASH 0x00                         // boot from flash
+      #define FTFL_FOPT_BOOTSRC_SEL_ROM 0x80                           // boot from ROM
+      #define FTFL_FOPT_RESET_PIN_DISABLED 0x00
+      #define FTFL_FOPT_RESET_PIN_ENABLED 0x08
+    #elif defined KINETIS_KL || defined KINETIS_KV
       #define FTFL_FOPT_LPBOOT_CLK_DIV_8  0x00
       #define FTFL_FOPT_LPBOOT_CLK_DIV_4  0x01
       #define FTFL_FOPT_LPBOOT_CLK_DIV_2  0x10
-      #define FTFL_FOPT_LPBOOT_CLK_DIV_0  0x11
+      #define FTFL_FOPT_LPBOOT_CLK_DIV_1  0x11
       #if defined ROM_BOOTLOADER
         #define FTFL_FOPT_BOOTPIN_OPT_ENABLE  0x00                       // boot from ROM if the BOOTCFG0 input is asserted
         #define FTFL_FOPT_BOOTPIN_OPT_DISABLE 0x02                       // BOOTCFG0 input is not used
@@ -5172,6 +5185,7 @@ typedef struct stKINETIS_INTMUX
       #define FTFL_FOPT_NMI_DISABLED      0x00
       #define FTFL_FOPT_NMI_ENABLED       0x04
       #define FTFL_FOPT_RESET_PIN_ENABLED 0x08
+      #define FTFL_FOPT_RESET_PIN_DISABLED 0x00
       #define FTFL_FOPT_FAST_INIT         0x20
     #else
       #define FTFL_FOPT_LPBOOT_LOW_POWER  0x00

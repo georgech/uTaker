@@ -1018,22 +1018,22 @@ static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][8] = {
         // GPIO            ALT 1           ALT 2             ALT3          ALT4           ALT5            ALT6                 ALT 7         (GPIO has lowest priority, ALT7 has highest)
         {  "ADC0_SE0/ACMP0_IN0/TSI0_CH17","PTA0","FTM2_CH1", "LPI2C0_SCLS","FXIO_D2",     "FTM2_QD_PHA",  "LPUART0_CTS",       "TRGMUX_OUT3" }, // PTA0
         {  "ADC0_SE1/ACMP0_IN1/TSI0_CH18","PTA1","FTM1_CH1", "LPI2C0_SDAS","FXIO_D3",     "FTM1_QD_PHA",  "LPUART0_RTS",       "TRGMUX_OUT0" }, // PTA1
-        {  "PTA2",         "KBI0_P2",      "UART0_RX",       "I2C0_SDA",   "-",           "-",            "-",                 "-"           }, // PTA2 (true open-drain output when operating as output)
-        {  "PTA3",         "KBI0_P3",      "UART0_TX",       "I2C0_SCL",   "-",           "-",            "-",                 "-"           }, // PTA3 (true open-drain output when operating as output)
-        {  "PTA4",         "KBI0_P4",      "-",              "ACMP0_OUT",  "SWD_DIO",     "-",            "-",                 "-"           }, // PTA4 (SWD_DIO default)
-        {  "PTA5",         "KBI0_P5",      "IRQ",            "TCLK0",      "RESET_b",     "-",            "-",                 "-"           }, // PTA5 (RESET default)
-        {  "PTA6",         "KBI0_P6",      "FTM2_FLT1",      "ACMP1_IN0",  "ADC0_SE2" ,   "-",            "-",                 "-"           }, // PTA6
-        {  "PTA7",         "KBI0_P7",      "FTM2_FLT2",      "ACMP1_IN1",  "ADC0_SE3",    "-",            "-",                 "-"           }, // PTA7
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTA8
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTA9
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTA10
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTA11
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTA12
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTA13
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTA14
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTA15
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTA16
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTA17
+        {  "ADC1_SE0",     "PTA2",         "-",              "LPI2C0_SDA", "EWM_OUT_b",   "-",            "LPUART0_RX",        "-"           }, // PTA2
+        {  "ADC1_SE1",     "PTA3",         "-",              "LPI2C0_SCL", "EWM_IN",      "-",            "LPUART0_TX",        "-"           }, // PTA2
+        {  "-",            "PTA4",         "-",              "-",          "ACMP0_OUT",   "EWM_OUT_b",    "-",                 "SWD_DIO"     }, // PTA4 (SWD_DIO default)
+        {  "-",            "PTA5",         "-",              "TCLK1",      "-",           "-",            "-",                 "RESET_b"     }, // PTA5 (RESET default)
+        {  "ADC0_SE2/ACMP1_IN0","PTA6",    "FTM0_FLT1",      "LPSPI1_PCS1","-" ,          "-",            "LPUART1_CTS",       "-"           }, // PTA6
+        {  "ADC0_SE3/ACMP1_IN1","PTA7",    "FTM0_FLT2",      "-",          "RTC_CLKIN",   "-",            "LPUART1_RTS",       "-"           }, // PTA7
+        {  "-",            "PTA8",         "-",              "-",          "FXIO_D6",     "-",            "-",                 "-"           }, // PTA8
+        {  "-",            "PTA9",         "-",              "-",          "FXIO_D7",     "-",            "FTM1_FLT3",         "-"           }, // PTA9
+        {  "-",            "PTA10",        "-",              "LPUART0_TX", "FXIO_D0",     "-",            "-",                 "-"           }, // PTA10
+        {  "-",            "PTA11",        "-",              "LPUART0_RX", "FXIO_D1",     "-",            "-",                 "-"           }, // PTA11
+        {  "-",            "PTA12",        "-",              "-",          "LPI2C1_SDAS","-",             "-",                 "-"           }, // PTA12
+        {  "-",            "PTA13",        "-",              "-",          "LPI2C1_SCLS", "-",            "-",                 "-"           }, // PTA13
+        {  "-",            "PTA14",        "FTM0_FLT0",      "-",          "EMW_IN",      "-",            "-",                 "-"           }, // PTA14
+        {  "-",            "PTA15",        "FTM1_CH2",       "LPSPI0_PCS3","-",           "-",            "-",                 "-"           }, // PTA15
+        {  "-",            "PTA16",        "FTM1_CH3",       "LPSPI0_PCS2","-",           "-",            "-",                 "-"           }, // PTA16
+        {  "-",            "PTA17",        "FTM0_CH6",       "-",          "EWM_OUT_b",   "-",            "-",                 "-"           }, // PTA17
         {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTA18
         {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTA19
         {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTA20
@@ -1050,24 +1050,24 @@ static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][8] = {
         {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTA31
     },
     {
-        {  "PTB0",         "KBI0_P8",      "UART0_RX",       "PWT_IN1",    "ADC0_SE4",    "-",            "-",                 "-"           }, // PTB0
-        {  "PTB1",         "KBI0_P9",      "UART0_TX",       "-",          "ADC0_SE5",    "-",            "-",                 "-"           }, // PTB1
-        {  "PTB2",         "KBI0_P6",      "SPI0_SCK",       "FTM0_CH0",   "ADC0_SE6",    "-",            "-",                 "-"           }, // PTB2
-        {  "PTB3",         "KBI0_P7",      "SPI0_MOSI",      "FTM0_CH1",   "ADC0_SE7",    "-",            "-",                 "-"           }, // PTB3
-        {  "PTB4",         "KBI0_P12",     "FTM2_CH4",       "SPI0_MISO",  "ACMP1_IN2",   "NMI_b",        "-",                 "-"           }, // PTB4 (NMI default) (high current drive pin when operated as an output)
-        {  "PTB5",         "KBI0_P13",     "FTM2_CH5",       "SPI0_PCS",   "ACMP1_OUT",   "-",            "-",                 "-"           }, // PTB5 (high current drive pin when operated as an output)
-        {  "PTB6",         "KBI0_P14",     "I2C0_SDA",       "-",          "-",           "-",            "XTAL",              "-"           }, // PTB6
-        {  "PTB7",         "KBI0_P15",     "I2C0_SCL",       "-",          "-",           "-",            "EXTAL",             "-"           }, // PTB7
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTB8
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTB9
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTB10
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTB11
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTB12
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTB13
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTB14
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTB15
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTB16
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTB17
+        {  "ADC0_SE4",     "PTB0",         "LPUART0_RX",     "LPSPI0_PCS0","LPTMR0_ALT3", "PWT_IN3",      "-",                 "-"           }, // PTB0
+        {  "ADC0_SE5",     "PTB1",         "LPUART0_TX",     "LPSPI0_SOUT","TCLK0",       "-",            "-",                 "-"           }, // PTB1
+        {  "ADC0_SE6/TSI0_CH20","PTB2",    "FTM1_CH0",       "LPSPI0_SCK", "FTM1_QD_PHB", "-",            "TRGMUX_IN3",        "-"           }, // PTB2
+        {  "ADC0_SE7/TSI0_CH21","PTB3",    "FTM1_CH1",       "LPSPI0_SIN", "FTM1_QD_PHA", "-",            "TRGMUX_IN2",        "-"           }, // PTB3
+        {  "ACMP1_IN2/TSI0_CH8","PTB4",    "FTM0_CH4",       "LPSPI0_SOUT","-",           "-",            "TRGMUX_IN1",        "-"           }, // PTB4
+        {  "TSI0_CH9",     "PTB5",         "FTM0_CH5",       "LPSPI0_PCS1","-",           "-",            "TRGMUX_IN0",        "ACMP1_OUT"   }, // PTB5
+        {  "XTAL",         "PTB6",         "LPI2C0_SDA",     "-",          "-",           "-",            "-",                 "-"           }, // PTB6
+        {  "EXTAL",        "PTB7",         "LPI2C0_SCL",     "-",          "-",           "-",            "-",                 "-"           }, // PTB7
+        {  "-",            "PTB8",         "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTB8
+        {  "-",            "PTB9",         "-",              "I2C0_SCLS",  "-",           "-",            "-",                 "-"           }, // PTB9
+        {  "-",            "PTB10",        "-",              "I2C0_SDAS",  "-",           "-",            "-",                 "-"           }, // PTB10
+        {  "-",            "PTB11",        "-",              "I2C0_HREQ",  "-",           "-",            "-",                 "-"           }, // PTB11
+        {  "ADC1_SE7",     "PTB12",        "FTM0_CH0",       "-",          "-",           "-",            "-",                 "-"           }, // PTB12
+        {  "ADC1_SE8",     "PTB13",        "FTM0_CH1",       "-",          "-",           "-",            "-",                 "-"           }, // PTB13
+        {  "ADC1_SE9",     "PTB14",        "FTM0_CH2",       "LPSPI1_SCK", "-",           "-",            "-",                 "-"           }, // PTB14
+        {  "-",            "PTB15",        "FTM0_CH3",       "LPSPI1_SIN", "-",           "-",            "-",                 "-"           }, // PTB15
+        {  "-",            "PTB16",        "FTM0_CH4",       "LPSPI1_SOUT","-",           "-",            "-",                 "-"           }, // PTB16
+        {  "-",            "PTB17",        "FTM0_CH5",       "LPSPI1_PCS3","-",           "-",            "-",                 "-"           }, // PTB17
         {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTB18
         {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTB19
         {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTB20
@@ -1084,24 +1084,24 @@ static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][8] = {
         {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTB31
     },
     {
-        {  "PTC0",         "KBI1_P28",     "FTM2_CH0",       "-",          "ADC0_SE8",    "-",            "-",                 "-"           }, // PTC0
-        {  "PTC1",         "KBI0_P17",     "FTM2_CH1",       "-",          "ADC0_SE9",    "-",            "-",                 "-"           }, // PTC1
-        {  "PTC2",         "KBI0_P18",     "FTM2_CH2",       "-",          "ADC0_SE10",   "-",            "-",                 "-"           }, // PTC2
-        {  "PTC3",         "KBI0_P19",     "FTM2_CH3",       "-",          "ADC0_SE11",   "-",            "-",                 "-"           }, // PTC3
-        {  "PTC4",         "KBI0_P20",     "RTC_CLKOUT",     "FTM1_CH0",   "ACMP0_IN2",   "SWD_CLK",      "-",                 "-"           }, // PTC4 (SWD_CLK default)
-        {  "PTC5",         "KBI0_P21",     "-",              "FTM1_CH1",   "-",           "RTC_CLKOUT",   "-",                 "-"           }, // PTC5
+        {  "ADC0_SE8/ACMP1_IN4/TSI0_CH22","PTC0","FTM0_CH0", "-",          "-",           "-",            "-",                 "-"           }, // PTC0
+        {  "ADC0_SE9/ACMP1_IN3/TSI0_CH23","PTC1","FTM0_CH1", "-",          "-",           "-",            "-",                 "-"           }, // PTC1
+        {  "ADC0_SE10/ACMP0_IN5/XTAL32","PTC2","FTM0_CH2",   "-",          "-",           "-",            "-",                 "-"           }, // PTC2
+        {  "ADC0_SE11/ACMP0_IN4/EXTAL32","PTC3","FTM0_CH3",  "-",          "-",           "-",            "-",                 "-"           }, // PTC3
+        {  "ACMP0_IN2",    "PTC4",         "FTM1_CH0",       "RTC_CLKOUT", "-",           "EWM_IN",       "FTM1_QD_PHB",       "SWD_CLK"     }, // PTC4 (SWD_CLK default)
+        {  "TSI0_CH12",    "PTC5",         "FTM2_CH0",       "RTC_CLKOUT", "LPI2C1_HREQ", "-",            "FTM2_QD_PHB",       "-"           }, // PTC5
         {  "ADC1_SE4/TSI0_CH15","PTC6",    "LPUART1_RX",     "-",          "-",           "-",            "-",                 "-"           }, // PTC6
         {  "ADC1_SE5/TSI0_CH16","PTC7",    "LPUART1_TX",     "-",          "-",           "-",            "-",                 "-"           }, // PTC7
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTC8
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTC9
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTC10
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTC11
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTC12
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTC13
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTC14
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTC15
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTC16
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTC17
+        {  "-",            "PTC8",         "LPUART1_RX",     "-",          "-",           "-",            "LPUART0_CTS",       "-"           }, // PTC8
+        {  "-",            "PTC9",         "LPUART1_TX",     "-",          "-",           "-",            "LPUART0_RTS",       "-"           }, // PTC9
+        {  "-",            "PTC10",        "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTC10
+        {  "-",            "PTC11",        "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTC11
+        {  "-",            "PTC12",        "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTC12
+        {  "-",            "PTC13",        "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTC13
+        {  "ADC0_SE12",    "PTC14",        "FTM1_CH2",       "-",          "-",           "-",            "-",                 "-"           }, // PTC14
+        {  "ADC0_SE13",    "PTC15",        "FTM1_CH3",       "-",          "-",           "-",            "-",                 "-"           }, // PTC15
+        {  "ADC0_SE14",    "PTC16",        "FTM1_FLT2",      "-",          "LPI2C1_SDAS", "-",            "-",                 "-"           }, // PTC16
+        {  "ADC0_SE15",    "PTC17",        "FTM1_FLT3",      "-",          "LPI2C1_SCLS", "-",            "-",                 "-"           }, // PTC17
         {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTC18
         {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTC19
         {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTC20
@@ -1118,24 +1118,24 @@ static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][8] = {
         {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTC31
     },
     {
-        {  "PTD0",         "KBI0_P24",     "FTM2_CH2",       "SPI1_SCK",   "-",           "-",            "-",                 "-"           }, // PTD0 (high current drive pin when operated as an output)
-        {  "PTD1",         "KBI0_P25",     "FTM2_CH3",       "SPI1_MOSI",  "-",           "-",            "-",                 "-"           }, // PTD1 (high current drive pin when operated as an output)
-        {  "PTD2",         "KBI0_P26",     "SPI1_MISO",      "-",          "-",           "-",            "-",                 "-"           }, // PTD2
-        {  "PTD3",         "KBI0_P27",     "SPI1_PCS0",      "-",          "-",           "-",            "-",                 "-"           }, // PTD3
-        {  "PTD4",         "KBI0_P28",     "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTD4
-        {  "PTD5",         "KBI0_P29",     "PWT_IN0",        "-",          "-",           "-",            "-",                 "-"           }, // PTD5
-        {  "PTD6",         "KBI0_P30",     "UART2_RX",       "-",          "-",           "-",            "-",                 "-"           }, // PTD6
-        {  "PTD7",         "KBI0_P31",     "UART2_TX",       "-",          "-",           "-",            "-",                 "-"           }, // PTD7
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTD8
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTD9
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTD10
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTD11
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTD12
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTD13
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTD14
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTD15
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTD16
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTD17
+        {  "TSI0_CH4",     "PTD0",         "FTM0_CH2",       "LPSPI1_SCK", "FTM2_CH0",    "-",            "FXIO_D0",           "TRGMUX_OUT1" }, // PTD0
+        {  "TSI0_CH5",     "PTD1",         "FTM0_CH3",       "LPSPI1_SIN", "FTM2_CH1",    "-",            "FXIO_D1",           "TRGMUX_OUT2" }, // PTD1
+        {  "ADC1_SE2",     "PTD2",         "-",              "LPSPI1_SOUT","FXIO_D4",     "-",            "TRGMUX_IN5",        "-"           }, // PTD2
+        {  "ADC1_SE3",     "PTD3",         "-",              "LPSPI1_PCS0","FXIO_D5",     "-",            "TRGMUX_IN4",        "NMI_b"       }, // PTD3
+        {  "ADC1_SE6",     "PTD4",         "FTM0_FLT3",      "-",          "-",           "-",            "-",                 "-"           }, // PTD4
+        {  "TSI0_CH6",     "PTD5",         "FTM2_CH3",       "LPTMR0_ALT2","-",           "PWT_IN2",      "TRGMUX_IN7",        "-"           }, // PTD5
+        {  "TSI0_CH7",     "PTD6",         "LPUART2_RX",     "-",          "FTM2_FLT2",   "-",            "-",                 "-"           }, // PTD6
+        {  "TSI0_CH10",    "PTD7",         "LPUART2_TX",     "-",          "FTM2_FLT3",   "-",            "-",                 "-"           }, // PTD7
+        {  "-",            "PTD8",         "LPI2C1_SDA",     "-",          "FTM2_FLT2",   "-",            "-",                 "-"           }, // PTD8
+        {  "ACMP1_IN5",    "PTD9",         "LPI2C1_SCL",     "-",          "FTM2_FLT3",   "-",            "-",                 "-"           }, // PTD9
+        {  "-",            "PTD10",        "FTM2_CH0",       "FTM2_QD_PHB","-",           "-",            "-",                 "-"           }, // PTD10
+        {  "-",            "PTD11",        "FTM2_CH1",       "FTM2_QD_PHA","-",           "-",            "LPUART2_CTS",       "-"           }, // PTD11
+        {  "-",            "PTD12",        "FTM2_CH2",       "LPI2C1_HREQ","-",           "-",            "LPUART2_RTS",       "-"           }, // PTD12
+        {  "-",            "PTD13",        "-",              "-",          "-",           "-",            "-",                 "RTC_CLKOUT"  }, // PTD13
+        {  "-",            "PTD14",        "-",              "-",          "-",           "-",            "-",                 "CLKOUT"      }, // PTD14
+        {  "-",            "PTD15",        "FTM0_CH0",       "-",          "-",           "-",            "-",                 "-"           }, // PTD15
+        {  "-",            "PTD16",        "FTM0_CH1",       "-",          "-",           "-",            "-",                 "-"           }, // PTD16
+        {  "-",            "PTD17",        "FTM0_FLT2",      "LPUART2_RX", "-",           "-",            "-",                 "-"           }, // PTD17
         {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTD18
         {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTD19
         {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTD20
@@ -1152,23 +1152,23 @@ static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][8] = {
         {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTD31
     },
     {
-        {  "PTE0",         "KBI1_P0",      "SPI0_SCK",       "TCLK1",      "I2C1_SDA",    "-",            "-",                 "-"           }, // PTE0 (high current drive pin when operated as an output)
-        {  "PTE1",         "KBI1_P1",      "SPI0_MOSI",      "-",          "I2C1_SCL",    "-",            "-",                 "-"           }, // PTE1 (high current drive pin when operated as an output)
-        {  "PTE2",         "KBI1_P2",      "SPI0_MISO",      "PWT_IN0",    "-",           "-",            "-",                 "-"           }, // PTE2
-        {  "PTE3",         "KBI1_P3",      "SPI0_PCS0",      "-",          "-",           "-",            "-",                 "-"           }, // PTE3
-        {  "PTE4",         "KBI1_P4",      "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTE4
-        {  "PTE5",         "KBI1_P5",      "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTE5
-        {  "PTE6",         "KBI1_P6",      "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTE6
-        {  "PTE7",         "KBI1_P7",      "TCLK2",          "-",          "FTM1_CH1",    "CAN0_TX",      "-",                 "-"           }, // PTE7
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTE8
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTE9
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTE10
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTE11
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTE12
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTE13
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTE14
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTE15
-        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTE16
+        {  "TSI0_CH13",    "PTE0",         "LPSPI0_SCK",     "TCLK1",      "LPI2C1_SDA",  "-",            "FTM1_FLT2",         "-"           }, // PTE0
+        {  "TSI0_CH14",    "PTE1",         "LPSPI0_SIN",     "LPI2C0_HREQ","LPI2C1_SCL",  "-",            "-",                 "-"           }, // PTE1
+        {  "ADC1_SE10/TSI0_CH19","PTE2",   "LPSPI0_SOUT",    "LPTMR0_ALT3","-",           "PWT_IN3",      "LPUART1_CTS",       "-"           }, // PTE2
+        {  "TSI0_CH24",    "PTE3",         "FTM0_FLT0",      "LPUART2_RTS","-",           "-",            "TRGMUX_IN6",        "-"           }, // PTE3
+        {  "TSI0_CH1",     "PTE4",         "BUSOUT",         "FTM2_QD_PHB","FTM2_CH2",    "-",            "FXIO_D6",           "EWM_OUT_b"   }, // PTE4
+        {  "TSI0_CH0",     "PTE5",         "TCLK2",          "FTM2_QD_PHA","FTM2_CH3",    "-",            "FXIO_D7",           "EWM_IN"      }, // PTE5
+        {  "ADC1_SE11",    "PTE6",         "LPSPI0_PCS2",    "-",          "-",           "-",            "LPUART1_RTS",       "-"           }, // PTE6
+        {  "-",            "PTE7",         "FTM0_CH7",       "-",          "-",           "-",            "-",                 "-"           }, // PTE7
+        {  "ACMP0_IN3/TSI0_CH11","PTE8",   "FTM0_CH6",       "-",          "-",           "-",            "-",                 "-"           }, // PTE8
+        {  "DAC0_OUT",     "PTE9",         "FTM0_CH7",       "LPUART2_CTS","-",           "-",            "-",                 "-"           }, // PTE9
+        {  "TSI0_CH2",     "PTE10",        "CLKOUT",         "-",          "-",           "-",            "FXIO_D4",           "TRGMUX_OUT4" }, // PTE10
+        {  "TSI0_CH3",     "PTE11",        "PWT_IN1",        "LPTMR0_ALT1","-",           "-",            "FXIO_D5",           "TRGMUX_OUT5" }, // PTE11
+        {  "-",            "PTE12",        "FTM0_FLT3",      "LPUART2_TX", "-",           "-",            "-",                 "-"           }, // PTE12
+        {  "-",            "PTE13",        "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTE13
+        {  "-",            "PTE14",        "FTM0_FLT1",      "-",          "-",           "-",            "-",                 "-"           }, // PTE14
+        {  "-",            "PTE15",        "-",              "-",          "-",           "-",            "FXIO_D2",           "TRGMUX_OUT6" }, // PTE15
+        {  "-",            "PTE16",        "-",              "-",          "-",           "-",            "FXIO_D3",           "TRGMUX_OUT7" }, // PTE16
         {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTE17
         {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTE18
         {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTE19

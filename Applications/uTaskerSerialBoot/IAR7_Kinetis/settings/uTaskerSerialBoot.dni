@@ -1,5 +1,5 @@
 [DebugChecksum]
-Checksum=-1630047618
+Checksum=1986838952
 [DisAssemblyWindow]
 NumStates=_ 1
 State 1=_ 1
@@ -41,7 +41,7 @@ TracePortSize=0x00000004
 CStepIntDis=_ 0
 LeaveTargetRunning=_ 0
 [PlDriver]
-MemConfigValue=D:\Programs\IAR Systems\Embedded Workbench 7.5\arm\CONFIG\debugger\NXP\MKL28Z512xxx7.ddf
+MemConfigValue=D:\Programs\IAR Systems\Embedded Workbench 7.5\arm\CONFIG\debugger\NXP\MKE15Z256xxx7.ddf
 FirstRun=0
 [Jet]
 DisableInterrupts=0
@@ -56,8 +56,8 @@ EnableCache=1
 [SWOManager]
 SamplingDivider=8192
 OverrideClock=0
-CpuClock=7471205
-SwoClock=2097267
+CpuClock=5066578
+SwoClock=0
 DataLogMode=0
 ItmPortsEnabled=63
 ItmTermIOPorts=1
@@ -226,6 +226,12 @@ EventEXC=0
 EventFOLD=0
 EventLSU=0
 EventSLEEP=0
+[Disassemble mode]
+mode=1
+[Breakpoints2]
+Bp0=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\..\..\Hardware\Kinetis\kinetis_FLASH.h}.1010.5" 0 0 1 "" 0 "" 0
+Bp1=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\serial_loader.c}.1974.5" 0 0 1 "" 0 "" 0
+Count=2
 [DriverProfiling]
 Enabled=0
 Mode=1
@@ -243,10 +249,6 @@ Category=_ 0
 [TermIOLog]
 LoggingEnabled=_ 0
 LogFile=_ ""
-[Disassemble mode]
-mode=1
-[Breakpoints2]
-Count=0
 [Aliases]
 Count=0
 SuppressDialog=0
