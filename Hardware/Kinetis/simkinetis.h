@@ -2517,7 +2517,7 @@ typedef struct stKINETIS_UART
 
 typedef struct stKINETIS_LPUART
 {
-#if defined KINETIS_KL28
+#if defined KINETIS_KL28 || defined KINETIS_KE15
     volatile unsigned long  LPUART_VERID;
     volatile unsigned long  LPUART_PARAM;
     unsigned long  LPUART_GLOBAL;
@@ -2528,10 +2528,10 @@ typedef struct stKINETIS_LPUART
     volatile unsigned long LPUART_CTRL;
     volatile unsigned long LPUART_DATA;
     unsigned long LPUART_MATCH;
-#if defined KINETIS_KL28 || defined KINETIS_K66
+#if defined LPUART_WITH_RTS_CTS
     unsigned long LPUART_MODIR;
 #endif
-#if defined KINETIS_KL28
+#if defined KINETIS_KL28 || defined KINETIS_KE15
     unsigned long LPUART_FIFO;
     unsigned long LPUART_WATER;
 #endif

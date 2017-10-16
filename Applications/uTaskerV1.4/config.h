@@ -24,7 +24,7 @@
 
 ///////////////////////////////////////////////////////////////////////////
 //                                                                       // new users who would like to see just a blinking LED before enabling the project's many powerful features can set this
-//#define BLINKY                                                         // to give simplest scheduling of a single task called at 200ms rate that retriggers the watchdog and toggles the board's heartbeat LED
+#define BLINKY                                                           // to give simplest scheduling of a single task called at 200ms rate that retriggers the watchdog and toggles the board's heartbeat LED
 //                                                                       // 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -65,11 +65,13 @@
 //#define FRDM_KEAZ64Q64                                                 // freedom board http://www.utasker.com/kinetis/FRDM-KEAZ64Q64.html
 //#define FRDM_KEAZ128Q80                                                // freedom board http://www.utasker.com/kinetis/FRDM-KEAZ128Q80.html
 
-//#define FRDM_KE02Z                                                     // E processors Cortex-M0+ (5V robust) - freedom board http://www.utasker.com/kinetis/FRDM-KE02Z.html
+//#define FRDM_KE02Z                                                     // E processors Cortex-M0+/M4 (5V robust) - freedom board http://www.utasker.com/kinetis/FRDM-KE02Z.html
 //#define FRDM_KE02Z40M                                                  // freedom board http://www.utasker.com/kinetis/FRDM-KE02Z40M.html
 //#define FRDM_KE04Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KE04Z.html
 //#define FRDM_KE06Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KE06Z.html
 //#define FRDM_KE15Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KE15Z.html
+//#define TWR_KE18F                                                      // tower board http://www.utasker.com/kinetis/TWR-KE18F.html
+//#define HVP_KE18F                                                      // tower board http://www.utasker.com/kinetis/HVP-KE18F.html
 
 //#define FRDM_KL02Z                                                     // L processors Cortex-M0+ (ultra-low power) basic - freedom board http://www.utasker.com/kinetis/FRDM-KL02Z.html
 //#define FRDM_KL03Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL03Z.html
@@ -201,6 +203,22 @@
 #elif defined FRDM_KE15Z
     #define TARGET_HW            "FRDM-KE15Z"
     #define KINETIS_MAX_SPEED    72000000
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((10 * 1024) * MEM_FACTOR)
+    #define KINETIS_KE
+    #define KINETIS_KE15
+    #define DEVICE_WITHOUT_ETHERNET                                      // KE doesn't have Ethernet controller
+    #define DEVICE_WITHOUT_USB                                           // KE doesn't have USB
+#elif defined TWR_KE18F
+    #define TARGET_HW            "TWR-KE18F"
+    #define KINETIS_MAX_SPEED    168000000
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((10 * 1024) * MEM_FACTOR)
+    #define KINETIS_KE
+    #define KINETIS_KE15
+    #define DEVICE_WITHOUT_ETHERNET                                      // KE doesn't have Ethernet controller
+    #define DEVICE_WITHOUT_USB                                           // KE doesn't have USB
+#elif defined HVP_KE18F
+    #define TARGET_HW            "HVP-KE18F"
+    #define KINETIS_MAX_SPEED    168000000
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((10 * 1024) * MEM_FACTOR)
     #define KINETIS_KE
     #define KINETIS_KE15

@@ -34,9 +34,9 @@
     SCG_FIRCCFG = SCG_FIRCCFG_RANGE_48MHz;                               // 48MHz
             #endif
             #if defined USB_INTERFACE
-    SCG_FIRCDIV = (SCG_FIRCDIV_FIRCDIV3_1 | SCG_FIRCDIV_FIRCDIV1_1);     // enable FIRC output for use by various peripherals, including USB (configured before enabling the FIRC to avoid clock glitches))
+    SCG_FIRCDIV = ((SCG_CDIV_1 << PERIPHERAL_CLOCK_DIV_SHIFT) | SCG_FIRCDIV_FIRCDIV1_1); // enable FIRC output for use by various peripherals, including USB (configured before enabling the FIRC to avoid clock glitches))
             #else
-    SCG_FIRCDIV = SCG_FIRCDIV_FIRCDIV3_1;                                // enable FIRC output for use by various peripherals (configured before enabling the FIRC to avoid clock glitches)
+    SCG_FIRCDIV = (SCG_CDIV_1 << PERIPHERAL_CLOCK_DIV_SHIFT);            // enable FIRC output for use by various peripherals (configured before enabling the FIRC to avoid clock glitches)
             #endif
     SCG_FIRCCSR = SCG_FIRCCSR_FIRCEN;                                    // enable the fast IRC
     while ((SCG_FIRCCSR & (SCG_FIRCCSR_FIRCSEL | SCG_FIRCCSR_FIRCVLD)) != (SCG_FIRCCSR_FIRCSEL | SCG_FIRCCSR_FIRCVLD)) { // wait until the source has been selected and is valid

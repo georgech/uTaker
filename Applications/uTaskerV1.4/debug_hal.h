@@ -2215,7 +2215,7 @@ extern unsigned char fnAddResetCause(CHAR *ptrBuffer)
     }
 #elif defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_KE15 || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000) // {7}
     static const CHAR cHostDebug[]     = "Host debugger";
-    #if !defined KINETIS_KL
+    #if !defined KINETIS_KL && !defined KINETIS_KE
     static const CHAR cEZPORT[]        = "EZPORT";
     static const CHAR cTamper[] = "tamper";
     #endif

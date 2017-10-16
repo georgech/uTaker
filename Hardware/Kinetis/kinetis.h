@@ -236,6 +236,11 @@ extern void fnClearBitBandPeripheralValue(unsigned long *bit_band_address);
 //
 #if defined KINETIS_KL28 || defined KINETIS_KE15                         // devices with SCG (system clock generator)
     #define KINETIS_WITH_SCG                                             // {91}
+    #if defined KINETIS_KL28
+        #define PERIPHERAL_CLOCK_DIV_3                                   // the KL28 uses DIV3 a its peripheral clock
+    #elif defined KINETIS_KE15
+        #define PERIPHERAL_CLOCK_DIV_2                                   // the KE15 uses DIV2 a its peripheral clock
+    #endif
 #elif (defined KINETIS_KL03 || defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL43) // devices with MCG-Lite
     #define KINETIS_WITH_MCG_LITE
 #elif (defined KINETIS_KL02 || defined KINETIS_KL05)                     // devices with no PLL in MCG
@@ -541,22 +546,7 @@ extern void fnClearBitBandPeripheralValue(unsigned long *bit_band_address);
 // Clock definitions
 //
 #if !defined KINETIS_KE || defined KINETIS_KE15
-    #if (defined KINETIS_K_FPU || (KINETIS_MAX_SPEED > 100000000) || defined KINETIS_KL82) && !defined KINETIS_K21 && !defined KINETIS_K22 && !defined KINETIS_K24 && !defined KINETIS_K64 && !defined KINETIS_KV30
-        #if defined FLL_FACTOR
-            #if defined RUN_FROM_HIRC_FLL
-                #define MCGOUTCLK      ((48000000/1536) * FLL_FACTOR)    // 48MHz/1536 IRC multiplied by the FLL factor
-            #else
-                #define MCGOUTCLK      (35000 * FLL_FACTOR)              // 32kHz IRC multiplied by the FLL factor
-            #endif
-        #elif defined RUN_FROM_HIRC
-            #define MCGOUTCLK          48000000
-        #else
-            #define MCGOUTCLK          (((_EXTERNAL_CLOCK/CLOCK_DIV) * CLOCK_MUL)/2) // up to 120MHz/150MHz (PLL0 clock output)
-            #if defined CLOCK_DIV_1                                      // {53}
-                #define MCGPLL1CLK     (((_EXTERNAL_CLOCK/CLOCK_DIV_1) * CLOCK_MUL_1)/2) // up to 120MHz/150MHz (PLL1 clock output)
-            #endif
-        #endif
-    #elif defined KINETIS_WITH_SCG
+    #if defined KINETIS_WITH_SCG
         #if defined RUN_FROM_HIRC                                        // high speed IRC
             #if defined RUN_FROM_HIRC_60MHz
                 #define MCGOUTCLK              60000000
@@ -571,6 +561,21 @@ extern void fnClearBitBandPeripheralValue(unsigned long *bit_band_address);
         #define FIRC_CLK               (MCGOUTCLK)
         #define DIVCORE_CLK            (MCGOUTCLK/SYSTEM_CLOCK_DIVIDE)   // core, DMA and USB clock
         #define DIVSLOW_CLK            (DIVCORE_CLK/BUS_CLOCK_DIVIDE)    // flash and bus clock
+    #elif (defined KINETIS_K_FPU || (KINETIS_MAX_SPEED > 100000000) || defined KINETIS_KL82) && !defined KINETIS_K21 && !defined KINETIS_K22 && !defined KINETIS_K24 && !defined KINETIS_K64 && !defined KINETIS_KV30
+        #if defined FLL_FACTOR
+            #if defined RUN_FROM_HIRC_FLL
+                #define MCGOUTCLK      ((48000000/1536) * FLL_FACTOR)    // 48MHz/1536 IRC multiplied by the FLL factor
+            #else
+                #define MCGOUTCLK      (35000 * FLL_FACTOR)              // 32kHz IRC multiplied by the FLL factor
+            #endif
+        #elif defined RUN_FROM_HIRC
+            #define MCGOUTCLK          48000000
+        #else
+            #define MCGOUTCLK          (((_EXTERNAL_CLOCK/CLOCK_DIV) * CLOCK_MUL)/2) // up to 120MHz/150MHz (PLL0 clock output)
+            #if defined CLOCK_DIV_1                                      // {53}
+                #define MCGPLL1CLK     (((_EXTERNAL_CLOCK/CLOCK_DIV_1) * CLOCK_MUL_1)/2) // up to 120MHz/150MHz (PLL1 clock output)
+            #endif
+        #endif
     #elif defined KINETIS_WITH_MCG_LITE
         #if defined RUN_FROM_HIRC
             #define MCGOUTCLK          48000000
@@ -1231,7 +1236,7 @@ typedef struct stRESET_VECTOR
 #else
     #define LPUARTS_AVAILABLE       0
 #endif
-#if defined KINETIS_KL28 || defined KINETIS_K66
+#if defined KINETIS_KL28 || defined KINETIS_K66 || defined KINETIS_KE15
     #define LPUART_WITH_RTS_CTS
 #endif
 
@@ -3550,7 +3555,9 @@ typedef struct stVECTOR_TABLE
         #define I2C3_BLOCK                     0x400e7000                // I2C3
     #endif
     #if LPUARTS_AVAILABLE > 0
-        #if defined KINETIS_K80 || defined KINETIS_KL28
+        #if defined KINETIS_KE15
+            #define LPUART0_BLOCK              0x4006a000                // LPUART0
+        #elif defined KINETIS_K80 || defined KINETIS_KL28
             #define LPUART0_BLOCK              0x400c4000                // LPUART0
         #elif defined KINETIS_KL
             #define LPUART0_BLOCK              0x40054000                // LPUART0
@@ -3559,14 +3566,18 @@ typedef struct stVECTOR_TABLE
         #endif
     #endif
     #if LPUARTS_AVAILABLE > 1
-        #if defined KINETIS_K80 || defined KINETIS_KL28
+        #if defined KINETIS_KE15
+            #define LPUART1_BLOCK              0x4006b000                // LPUART0
+        #elif defined KINETIS_K80 || defined KINETIS_KL28
             #define LPUART1_BLOCK              0x400c5000                // LPUART1
         #else
             #define LPUART1_BLOCK              0x40055000                // LPUART1
         #endif
     #endif
     #if LPUARTS_AVAILABLE > 2
-        #if defined KINETIS_KL28
+        #if defined KINETIS_KE15
+            #define LPUART2_BLOCK              0x4006c000                // LPUART0
+        #elif defined KINETIS_KL28
             #define LPUART2_BLOCK              0x40046000                 // LPUART2
         #elif defined KINETIS_KL82
             #define LPUART2_BLOCK              0x40056000                 // LPUART2
@@ -11418,6 +11429,20 @@ typedef struct stKINETIS_LPTMR_CTL
 #elif defined KINETIS_WITH_SCG                                           // {91}
     // System Clock Generator
     //
+    #define SCG_CDIV_DISABLED            0x00000000                      // clock divide disabled
+    #define SCG_CDIV_1                   0x00000001                      // clock divide - divide by 1
+    #define SCG_CDIV_2                   0x00000002                      // clock divide - divide by 2
+    #define SCG_CDIV_4                   0x00000003                      // clock divide - divide by 4
+    #define SCG_CDIV_8                   0x00000004                      // clock divide - divide by 8
+    #define SCG_CDIV_16                  0x00000005                      // clock divide - divide by 16
+    #define SCG_CDIV_32                  0x00000006                      // clock divide - divide by 32
+    #define SCG_CDIV_64                  0x00000007                      // clock divide - divide by 64
+    #if defined PERIPHERAL_CLOCK_DIV_3
+        #define PERIPHERAL_CLOCK_DIV_SHIFT   16
+    #elif defined PERIPHERAL_CLOCK_DIV_2
+        #define PERIPHERAL_CLOCK_DIV_SHIFT   8
+    #endif
+
     #define SCG_VERID                    *(unsigned long *)(SCG_BLOCK + 0x000) // version ID register (read-only)
     #define SCG_PARAM                    *(unsigned long *)(SCG_BLOCK + 0x004) // parameter register (read-only)
         #define SCG_PARAM_CLKPRES_SOSC   0x00000001                      // SOSC is present
@@ -12317,7 +12342,7 @@ typedef struct stKINETIS_CAN_CONTROL
 // UART/LPUARTs
 //
 #if LPUARTS_AVAILABLE > 0                                                // {59} low power UART
-    #if defined KINETIS_KL28
+    #if defined KINETIS_KL28 || defined KINETIS_KE15
         #define LPUART0_VERID            *(volatile unsigned long *)(LPUART0_BLOCK + 0x00) // LPUART 0 version ID register (read-only)
         #define LPUART0_PARAM            *(volatile unsigned long *)(LPUART0_BLOCK + 0x04) // LPUART 0 parameter register (read-only)
         #define LPUART0_GLOBAL           *(unsigned long *)(LPUART0_BLOCK + 0x08) // LPUART 0 global register
@@ -12430,13 +12455,13 @@ typedef struct stKINETIS_CAN_CONTROL
             #define LPUART_MODIR_TNP_4   0x00030000                      // transmitter narrow pulse 4/OSR
             #define LPUART_MODIR_IREN    0x00040000                      // infrared enable
     #endif
-    #if defined KINETIS_KL28
+    #if defined KINETIS_KL28 || defined KINETIS_KE15
         #define LPUART0_FIFO             *(unsigned long *)(LPUART0_BLOCK + 0x28) // LPUART 0 FIFO register
         #define LPUART0_WATER            *(unsigned long *)(LPUART0_BLOCK + 0x2c) // LPUART 0 watermark register
     #endif
 
     #if LPUARTS_AVAILABLE > 1
-        #if defined KINETIS_KL28
+        #if defined KINETIS_KL28 || defined KINETIS_KE15
             #define LPUART1_VERID        *(volatile unsigned long *)(LPUART1_BLOCK + 0x00) // LPUART 1 version ID register (read-only)
             #define LPUART1_PARAM        *(volatile unsigned long *)(LPUART1_BLOCK + 0x04) // LPUART 1 parameter register (read-only)
             #define LPUART1_GLOBAL       *(unsigned long *)(LPUART1_BLOCK + 0x08) // LPUART 1 global register
@@ -12447,14 +12472,16 @@ typedef struct stKINETIS_CAN_CONTROL
         #define LPUART1_CTRL             *(volatile unsigned long *)(LPUART1_BLOCK + LPUART_OFFSET + 0x08) // LPUART 1 Control Register
         #define LPUART1_DATA             *(volatile unsigned long *)(LPUART1_BLOCK + LPUART_OFFSET + 0x0c) // LPUART 1 Data Register
         #define LPUART1_MATCH            *(unsigned long *)(LPUART1_BLOCK + LPUART_OFFSET + 0x10) // LPUART 1 Match Address Register
-        #if defined KINETIS_KL28
+        #if defined LPUART_WITH_RTS_CTS
             #define LPUART1_MODIR        *(unsigned long *)(LPUART1_BLOCK + 0x24) // LPUART 1 modem IrDA register
+        #endif
+        #if defined KINETIS_KL28 || defined KINETIS_KE15
             #define LPUART1_FIFO         *(unsigned long *)(LPUART1_BLOCK + 0x28) // LPUART 1 FIFO register
             #define LPUART1_WATER        *(unsigned long *)(LPUART1_BLOCK + 0x2c) // LPUART 1 watermark register
         #endif
     #endif
     #if LPUARTS_AVAILABLE > 2
-        #if defined KINETIS_KL28
+        #if defined KINETIS_KL28 || defined KINETIS_KE15
             #define LPUART2_VERID        *(volatile unsigned long *)(LPUART2_BLOCK + 0x00) // LPUART 2 version ID register (read-only)
             #define LPUART2_PARAM        *(volatile unsigned long *)(LPUART2_BLOCK + 0x04) // LPUART 2 parameter register (read-only)
             #define LPUART2_GLOBAL       *(unsigned long *)(LPUART2_BLOCK + 0x08) // LPUART 2 global register
@@ -12465,8 +12492,10 @@ typedef struct stKINETIS_CAN_CONTROL
         #define LPUART2_CTRL             *(volatile unsigned long *)(LPUART2_BLOCK + LPUART_OFFSET + 0x08) // LPUART 2 Control Register
         #define LPUART2_DATA             *(volatile unsigned long *)(LPUART2_BLOCK + LPUART_OFFSET + 0x0c) // LPUART 2 Data Register
         #define LPUART2_MATCH            *(unsigned long *)(LPUART2_BLOCK + LPUART_OFFSET + 0x10) // LPUART 2 Match Address Register
-        #if defined KINETIS_KL28
+        #if defined LPUART_WITH_RTS_CTS
             #define LPUART2_MODIR        *(unsigned long *)(LPUART2_BLOCK + 0x24) // LPUART 2 modem IrDA register
+        #endif
+        #if defined KINETIS_KL28 || defined KINETIS_KE15
             #define LPUART2_FIFO         *(unsigned long *)(LPUART2_BLOCK + 0x28) // LPUART 2 FIFO register
             #define LPUART2_WATER        *(unsigned long *)(LPUART2_BLOCK + 0x2c) // LPUART 2 watermark register
         #endif
@@ -12488,7 +12517,7 @@ typedef struct stKINETIS_CAN_CONTROL
 
     typedef struct stKINETIS_LPUART_CONTROL
     {
-    #if defined KINETIS_KL28
+    #if defined KINETIS_KL28 || defined KINETIS_KE15
         volatile unsigned long  LPUART_VERID;
         volatile unsigned long  LPUART_PARAM;
         unsigned long  LPUART_GLOBAL;
@@ -12499,10 +12528,10 @@ typedef struct stKINETIS_CAN_CONTROL
         volatile unsigned long LPUART_CTRL;
         volatile unsigned long LPUART_DATA;
         unsigned long LPUART_MATCH;
-    #if defined KINETIS_K66 || defined KINETIS_KL28
+    #if defined KINETIS_K66 || defined KINETIS_KL28 || defined KINETIS_KE15
         unsigned long LPUART_MODIR;
     #endif
-    #if defined KINETIS_KL28
+    #if defined KINETIS_KL28 || defined KINETIS_KE15
         unsigned long LPUART_FIFO;
         unsigned long LPUART_WATER;
     #endif

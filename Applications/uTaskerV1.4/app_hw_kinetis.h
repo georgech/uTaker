@@ -637,7 +637,7 @@
     #else
         #define BUS_CLOCK_DIVIDE 2                                       // divide by 1 or 2 to give bus and flash clock (maximum 20MHz)
     #endif
-#elif defined FRDM_KE15Z
+#elif defined FRDM_KE15Z || defined TWR_KE18F || defined HVP_KE18F
     #define OSC_LOW_GAIN_MODE
     #define CRYSTAL_FREQUENCY    8000000                                 // 8MHz crystal
   //#define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
@@ -1121,7 +1121,7 @@
     #define SIZE_OF_FLASH       (128 * 1024)                             // 128k Flash
   //#define SIZE_OF_RAM         (8 * 1024)
     #define SIZE_OF_RAM         (16 * 1024)                              // 16k SRAM
-#elif defined FRDM_KE15Z
+#elif defined FRDM_KE15Z || defined TWR_KE18F || defined HVP_KE18F
   //#define PIN_COUNT           PIN_COUNT_64_PIN                         // 64 pin LQFP
     #define PIN_COUNT           PIN_COUNT_100_PIN                        // 100 pin LQFP
   //#define SIZE_OF_FLASH       (128 * 1024)
@@ -1460,7 +1460,7 @@
 
 #if defined KINETIS_KV || defined KINETIS_KL02 || defined KINETIS_K02    // device without RTC
     #define SUPPORT_SW_RTC                                               // support real time clock based purely on software
-#elif defined KINETIS_KE
+#elif defined KINETIS_KE && !defined KINETIS_KE15
     #define SUPPORT_RTC                                                  // support real time clock (do not use together with TICK_USES_RTC)
   //#define TICK_USES_RTC                                                // use RTC for TICK so that it continues to operate in stop based low power modes
     #if defined TICK_USES_RTC || defined SUPPORT_RTC
@@ -5874,7 +5874,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 
     #define MEASURE_LOW_POWER_ON()  SET_TEST_OUTPUT()                    // signal when the processor is in sleep mode
     #define MEASURE_LOW_POWER_OFF() CLEAR_TEST_OUTPUT()                  // signal when the processor is in active mode
-#elif defined FRDM_KE15Z
+#elif defined FRDM_KE15Z || defined TWR_KE18F || defined HVP_KE18F
     #define DEMO_LED_1             (PORTD_BIT16)                         // (green LED) if the port is changed (eg. A to D) the port macros will require appropriate adjustment too
     #define DEMO_LED_2             (PORTD_BIT0)                          // (red LED) if the port is changed (eg. A to D) the port macros will require appropriate adjustment too
     #define DEMO_LED_3             (PORTD_BIT15)                         // (blue LED) if the port is changed (eg. A to D) the port macros will require appropriate adjustment too
@@ -5914,18 +5914,24 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         {RGB(255,0,0), RGB(0,0,0),     1, {425, 168, 0,   8   }, (_PORTD), PORTD_BIT0}, \
         {RGB(0,0,255), RGB(0,0,0),     1, {425, 168, 0,   8   }, (_PORTD), PORTD_BIT15}
 
-    #define BUTTON_KEY_DEFINITIONS  {_PORTB, (PORTB_BIT11), {460, 301, 479, 317 }}, \
-                                    {_PORTD, (PORTD_BIT3),  {461, 22,  480, 35  }}
+    #define BUTTON_KEY_DEFINITIONS  {_PORTD, (PORTD_BIT3), {460, 301, 479, 317 }}, \
+                                    {_PORTB, (PORTB_BIT11),  {461, 22,  480, 35  }}
 
-    #define KEYPAD "KeyPads/FRDM_KE15Z.bmp"
+    #if defined TWR_KE18F
+        #define KEYPAD "KeyPads/TWR_KE18F.bmp"
+    #elif defined HVP_KE18F
+        #define KEYPAD "KeyPads/HVP_KE18F.bmp"
+    #else
+        #define KEYPAD "KeyPads/FRDM_KE15Z.bmp"
+    #endif
 
     #define CONFIG_TEST_OUTPUT()    _CONFIG_DRIVE_PORT_OUTPUT_VALUE(D, (DEMO_LED_2), (DEMO_LED_2), (PORT_SRE_SLOW | PORT_DSE_HIGH))
     #define TOGGLE_TEST_OUTPUT()    _TOGGLE_PORT(D, DEMO_LED_2)
     #define SET_TEST_OUTPUT()       _SETBITS(D, DEMO_LED_2)
     #define CLEAR_TEST_OUTPUT()     _CLEARBITS(D, DEMO_LED_2)
 
-    #define MEASURE_LOW_POWER_ON()  SET_TEST_OUTPUT()                    // signal when the processor is in sleep mode
-    #define MEASURE_LOW_POWER_OFF() CLEAR_TEST_OUTPUT()                  // signal when the processor is in active mode
+    #define MEASURE_LOW_POWER_ON()                                       // signal when the processor is in sleep mode
+    #define MEASURE_LOW_POWER_OFF()                                      // signal when the processor is in active mode
 #elif defined FRDM_KE04Z
     #define DEMO_LED_1             (KE_PORTC_BIT4)                       // (green LED - PTC4) if the port is changed (eg. A to D) the port macros will require appropriate adjustment too
     #define DEMO_LED_2             (KE_PORTC_BIT5)                       // (red LED - PTC5) if the port is changed (eg. A to D) the port macros will require appropriate adjustment too

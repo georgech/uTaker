@@ -358,7 +358,7 @@ static void fnInitIRQ(void)
         #if defined DMA_PORT_MIRRORING && defined FRDM_K64F              // {7}
     interrupt_setup.int_port_sense = (IRQ_FALLING_EDGE | PULLUP_ON);     // interrupt is to be falling edge sensitive
         #endif
-        #if (PORTS_AVAILABLE > 4) && (!defined KINETIS_KL || defined TEENSY_LC) && !defined TWR_K22F120M && !defined TWR_K20D50M && !defined TWR_K20D72M && !defined TWR_K53N512 && !defined TWR_K40D100M && !defined TWR_K21D50M && !defined TWR_K21F120M
+        #if (PORTS_AVAILABLE > 4) && (!defined KINETIS_KL || defined TEENSY_LC) && !defined TWR_K22F120M && !defined TWR_K20D50M && !defined TWR_K20D72M && !defined TWR_K53N512 && !defined TWR_K40D100M && !defined TWR_K21D50M && !defined TWR_K21F120M  && !defined FRDM_KE15Z
     interrupt_setup.int_handler    = test_irq_5;                         // handling function
             #if defined TWR_K24F120M
     interrupt_setup.int_port       = PORTA;                              // the port that the interrupt input is on
