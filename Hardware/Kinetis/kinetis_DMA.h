@@ -22,6 +22,7 @@
     25.04.2016 Correct buffer wrap direction for K parts                 {3}
     02.03.2017 Set the DMA_TCD_CITER_ELINK value earlier to protect initial part of code from interrupts {4}
     02.03.2017 Add optional alternative DMA channel for use by interrupts when the main one is in use {5}
+    19.10.2017 Add DMA_SINGLE_CYCLE option to allow a single buffer transfer and stopping automatically {6}
 
 */
 
@@ -571,10 +572,10 @@ extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned char ucDmaT
     _DMA_handler[ucDMA_channel] = int_handler;                           // user interrupt callback
     if (int_handler != 0) {                                              // if there is a buffer interrupt handler at the end of DMA buffer operation
         if ((ulRules & DMA_HALF_BUFFER_INTERRUPT) != 0) {
-            ptrDMA_TCD->DMA_TCD_CSR = (DMA_TCD_CSR_INTMAJOR | DMA_TCD_CSR_INTHALF); // interrupt when the transmit buffer is half full (and when full)
+            ptrDMA_TCD->DMA_TCD_CSR = (DMA_TCD_CSR_INTMAJOR | DMA_TCD_CSR_INTHALF); // interrupt when the transmit/receive buffer is half full (and when full)
         }
         else {
-            ptrDMA_TCD->DMA_TCD_CSR = (DMA_TCD_CSR_INTMAJOR);            // interrupt when the transmit buffer is full
+            ptrDMA_TCD->DMA_TCD_CSR = (DMA_TCD_CSR_INTMAJOR);            // interrupt when the transmit/receive buffer is full
         }
         #if defined eDMA_SHARES_INTERRUPTS                               // interrupts are shared between channel 0 and _DMA_CHANNEL_COUNT, 1 and _DMA_CHANNEL_COUNT + 1, etc.
         fnEnterInterrupt((irq_DMA0_0_4_ID + (ucDMA_channel%_DMA_CHANNEL_COUNT)), int_priority, (void(*)(void))_DMA_Interrupt[ucDMA_channel%_DMA_CHANNEL_COUNT]); // enter DMA interrupt handler on full/half buffer completion
@@ -584,6 +585,9 @@ extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned char ucDmaT
     }
     else {
         ptrDMA_TCD->DMA_TCD_CSR = 0;                                     // free-running mode without any interrupt
+    }
+    if ((ulRules & DMA_SINGLE_CYCLE) != 0) {                             // {6}
+        ptrDMA_TCD->DMA_TCD_CSR |= DMA_TCD_CSR_DREQ;                     // stop the DMA activity once the transfer completes
     }
     ptrDMA_TCD->DMA_TCD_DADDR = (unsigned long)ptrBufDest;               // destination
   //ptrDMA_TCD->DMA_TCD_DLASTSGA = 0;                                    // {3} no destination displacement on transmit buffer completion

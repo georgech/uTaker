@@ -4663,7 +4663,7 @@ static void fnHandleDMA_triggers(int iTriggerSource, int iDMAmux)
             }
         #endif
     #endif
-    #if !defined KINETIS_KL
+    #if !defined KINETIS_KL || defined DEVICE_WITH_eDMA
             if ((DMA_ERQ & (DMA_ERQ_ERQ0 << iChannel)) != 0) {           // if the DMA channel is enabled
                 KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
                 ptrDMA_TCD += iChannel;

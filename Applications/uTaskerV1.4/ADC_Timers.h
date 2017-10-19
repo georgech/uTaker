@@ -71,7 +71,7 @@
             #endif
     #endif
 
-    #if (defined SUPPORT_PIT1 || defined SUPPORT_PITS) && !defined KINETIS_WITHOUT_PIT // M522xx nd Kinetis periodic interrupt timer
+    #if (defined SUPPORT_PIT1 || defined SUPPORT_PITS) && !defined KINETIS_WITHOUT_PIT // M522xx and Kinetis periodic interrupt timer
       //#define TEST_PIT                                                 // test a user defined periodic interrupt (choose one of the following if enabled)
           //#define TEST_PIT_SINGLE_SHOT                                 // test single-shot PIT
             #define TEST_PIT_PERIODIC                                    // test periodic PIT
@@ -93,7 +93,7 @@
         #define GPT_CAPTURES     5                                       // when testing captures, collect this many values
     #endif
     #if defined SUPPORT_TIMER || defined SUPPORT_PWM_MODULE              // standard timers
-      //#define TEST_TIMER                                               // enable timer test(s)
+        #define TEST_TIMER                                               // enable timer test(s)
         #if defined TEST_TIMER
             #if defined SUPPORT_PWM_MODULE                               // {9}
                 #define TEST_PWM                                         // {1} test generating PWM output from timer

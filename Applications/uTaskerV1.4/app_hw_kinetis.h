@@ -1482,7 +1482,7 @@
     #endif
 #endif
 
-//#define SUPPORT_TIMER                                                  // support hardware timer interrupt configuration (FlexTimer or TPM)
+#define SUPPORT_TIMER                                                    // support hardware timer interrupt configuration (FlexTimer or TPM)
   //#define SUPPORT_CAPTURE                                              // support capture mode of operation
 
 #if defined KINETIS_KL || defined KINETIS_K66

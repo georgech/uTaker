@@ -732,7 +732,8 @@
     #define KINETIS_K60                                                  // specify the sub-family
     #define KINETIS_REVISION_2
     #define KINETIS_K66                                                  // extra sub-family type precision
-    #define USB_HS_INTERFACE                                         // use HS interface rather than FS interface
+    #define USB_HS_INTERFACE                                             // use HS interface rather than FS interface
+    #define DEVICE_WITHOUT_ETHERNET                                      // K20 doesn't have Ethernet controller
 #elif defined FRDM_K66F || defined K66FX1M0 
     #define TARGET_HW            "FRDM-K66F"
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((48 * 1024) * MEM_FACTOR) // large SRAM parts
@@ -1408,7 +1409,7 @@
             #define IGMP_MAX_PROCESSES 4                                 // the maximum number of processes in each host group
         #if defined _WINDOWS
           //#define PSEUDO_LOOPBACK                                      // pseudo loop back when simulating - this allows an application to send test frames to its own IP address
-            #define PSEUDO_BROADCAST_LOOPBACK                            // pseduo broadcast loop back when simulating - this allows an application to send broadcasts to other networks sharing its interface
+            #define PSEUDO_BROADCAST_LOOPBACK                            // pseudo broadcast loop back when simulating - this allows an application to send broadcasts to other networks sharing its interface
         #endif
       //#define USE_ZERO_CONFIG                                          // support IPv4 link-local and zero configuration (autoIP)
         #if defined USE_ICMP                                             // specify ICMP support details

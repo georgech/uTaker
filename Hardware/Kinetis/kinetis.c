@@ -1325,11 +1325,9 @@ extern void fnRetriggerWatchdog(void)
 /* =================================================================== */
 /*                                 DMA                                 */
 /* =================================================================== */
-  //#if defined SUPPORT_ADC || (defined SUPPORT_DAC && (DAC_CONTROLLERS > 0)) || (defined SUPPORT_TIMER && defined SUPPORT_PWM_MODULE && (FLEX_TIMERS_AVAILABLE > 0))
 #define _DMA_SHARED_CODE
     #include "kinetis_DMA.h"                                             // include driver code for peripheral/buffer DMA
 #undef _DMA_SHARED_CODE
-  //#endif
 #define _DMA_MEM_TO_MEM
     #include "kinetis_DMA.h"                                             // include memory-memory transfer code 
 #undef _DMA_MEM_TO_MEM

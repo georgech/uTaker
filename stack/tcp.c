@@ -2181,7 +2181,7 @@ static void fnPollTCP(void)
                                 if (ptr_TCP->usTransmitTimer != 0) {     // no transmission timeout timeout yet
                                     ptr_TCP->usTransmitTimer--;          // count down
                                 }
-                                else {                                   // persist timer fired while waiting of a winow update from peer with closed receive window
+                                else {                                   // persist timer fired while waiting of a window update from peer with closed receive window
                                     ptr_TCP->event_listener(Socket, TCP_EVENT_REGENERATE, 0, 0); // regenerate zero data size - to be understood as probe request
                                 }
                             }

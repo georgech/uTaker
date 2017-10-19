@@ -3873,6 +3873,7 @@ typedef struct stVECTOR_TABLE
   #define DMA_ES_ECX        0x00010000                                   // transfer cancelled
   #define DMA_ES_VLD        0x80000000                                   // at least one error bit is set
 
+#define DMA_ERQ_ADDR        (unsigned long *)(eDMA_BLOCK + 0x00c)
 #define DMA_ERQ             *(unsigned long *)(eDMA_BLOCK + 0x00c)       // DMA Enable Request Register
   #define DMA_ERQ_ERQ0      0x00000001                                   // enable DMA request on channel 0
   #define DMA_ERQ_ERQ1      0x00000002                                   // enable DMA request on channel 1
@@ -4568,6 +4569,7 @@ typedef struct stKINETIS_DMA_TDC
 #define DMA_DIRECTION_OUTPUT      0x00000020
 #define DMA_FIXED_ADDRESSES       0x00000040
 #define DMA_NO_MODULO             0x00000080
+#define DMA_SINGLE_CYCLE          0x00000100
 
 extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned char ucDmaTriggerSource, unsigned long ulBufLength, void *ptrBufSource, void *ptrBufDest, unsigned long ulRules, void(*int_handler)(void), int int_priority);
 
@@ -6035,18 +6037,19 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
   #define SPI_CTAR_DBR     0x80000000                                    // double baud rate
 #define SPI0_CTAR0_SLAVE    *(volatile unsigned long *)(DSPI0_BLOCK + 0x0c) // SPI0 Clock and Transfer Attributes Register in Slave Mode
 #define SPI0_CTAR1          *(volatile unsigned long *)(DSPI0_BLOCK + 0x10) // SPI0 Clock and Transfer Attributes Register in Master Mode
+#define SPI0_SR_ADDR        (unsigned long *)(DSPI0_BLOCK + 0x2c)
 #define SPI0_SR             *(volatile unsigned long *)(DSPI0_BLOCK + 0x2c) // SPI0 Status Register (flags cleared by writing them with 1)
   #define SPI_SR_POPNXTPTR  0x0000000f                                   // pop next pointer
   #define SPI_SR_RXCTR      0x000000f0                                   // rx FIFO counter (number of entries waiting to be read)
   #define SPI_SR_TXNXTPTR   0x00000f00                                   // transmit next pointer
   #define SPI_SR_TXCTR      0x0000f000                                   // tx FIFO counter
-  #define SPI_SR_RFDF       0x00020000                                   // rx drain flag - RxFIFO is not empty
-  #define SPI_SR_RFOF       0x00080000                                   // receive FIFO overflow flag
+  #define SPI_SR_RFDF       0x00020000                                   // rx drain flag - RxFIFO is not empty (write '1' to clear)
+  #define SPI_SR_RFOF       0x00080000                                   // receive FIFO overflow flag (write '1' to clear)
   #define SPI_SR_TFFF       0x02000000                                   // transmit FIFO fill flag - FIFO is not full
-  #define SPI_SR_TFUF       0x08000000                                   // transmit FIFO underflow flag
-  #define SPI_SR_EOQF       0x10000000                                   // end of queue flag
+  #define SPI_SR_TFUF       0x08000000                                   // transmit FIFO underflow flag (write '1' to clear)
+  #define SPI_SR_EOQF       0x10000000                                   // end of queue flag (write '1' to clear)
   #define SPI_SR_TXRXS      0x40000000                                   // DSPI is in running state
-  #define SPI_SR_TCF        0x80000000                                   // transfer complete
+  #define SPI_SR_TCF        0x80000000                                   // transfer complete (write '1' to clear)
 #define SPI0_RSER           *(volatile unsigned long *)(DSPI0_BLOCK + 0x30) // SPI0 DMA/Interrupt Request Select and Enable Register
   #define SPI_SRER_RFDF_DIRS 0x00010000                                  // receive FIFO drain DMA request select
   #define SPI_SRER_RFDF_RE  0x00020000                                   // receive FIFO drain interrupt request enable
@@ -6056,6 +6059,7 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
   #define SPI_SRER_TFUF_RE  0x08000000                                   // transmit FIFO underflow interrupt request enable
   #define SPI_SRER_EOQF_RE  0x10000000                                   // DSPI finished interrupt request enable
   #define SPI_SRER_TCF_RE   0x80000000                                   // transmission complete interrupt request enable
+#define SPI0_PUSHR_ADDR     (volatile unsigned long *)(DSPI0_BLOCK + 0x34)
 #define SPI0_PUSHR          *(volatile unsigned long *)(DSPI0_BLOCK + 0x34) // {22} SPI0 PUSH TX FIFO Register in Master Mode
   #define SPI_PUSHR_PCS_NONE 0x00000000                                  // {64} no CS used
   #define SPI_PUSHR_PCS0    0x00010000                                   // negate CS0
@@ -6070,6 +6074,7 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
   #define SPI_PUSHR_CTAS_CTAR1 0x10000000                                // clock and transfer attributes select - use CTAR1
   #define SPI_PUSHR_CONT    0x80000000                                   // keep CS asserted between transfers
 #define SPI0_PUSHR_SLAVE    *(volatile unsigned long *)(DSPI0_BLOCK + 0x34) // SPI0 PUSH TX FIFO Register in Slave Mode
+#define SPI0_POPR_ADDR      (volatile unsigned long *)(DSPI0_BLOCK + 0x38)
 #define SPI0_POPR           *(volatile unsigned long *)(DSPI0_BLOCK + 0x38) // SPI0 POP RX FIFO Register (read-only)
 #define SPI0_TXFR0          *(volatile unsigned long *)(DSPI0_BLOCK + 0x3c) // SPI0 Transmit FIFO Registers (read-only)
 #define SPI0_TXFR1          *(volatile unsigned long *)(DSPI0_BLOCK + 0x40) // SPI0 Transmit FIFO Registers (read-only)
@@ -6085,10 +6090,13 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
         #define SPI1_CTAR0          *(volatile unsigned long *)(DSPI1_BLOCK + 0x0c) // SPI1 Clock and Transfer Attributes Register in Master Mode
         #define SPI1_CTAR0_SLAVE    *(volatile unsigned long *)(DSPI1_BLOCK + 0x0c) // SPI1 Clock and Transfer Attributes Register in Slave Mode
         #define SPI1_CTAR1          *(volatile unsigned long *)(DSPI1_BLOCK + 0x10) // SPI1 Clock and Transfer Attributes Register in Master Mode
+        #define SPI1_SR_ADDR        (unsigned long *)(DSPI1_BLOCK + 0x2c)
         #define SPI1_SR             *(volatile unsigned long *)(DSPI1_BLOCK + 0x2c) // SPI1 Status Register
         #define SPI1_RSER           *(volatile unsigned long *)(DSPI1_BLOCK + 0x30) // SPI1 DMA/Interrupt Request Select and Enable Register
+        #define SPI1_PUSHR_ADDR     (volatile unsigned long *)(DSPI1_BLOCK + 0x34)
         #define SPI1_PUSHR          *(volatile unsigned long *)(DSPI1_BLOCK + 0x34) // {22} SPI1 PUSH TX FIFO Register in Master Mode
         #define SPI1_PUSHR_SLAVE    *(volatile unsigned long *)(DSPI1_BLOCK + 0x34) // SPI1 PUSH TX FIFO Register in Slave Mode
+        #define SPI1_POPR_ADDR      (volatile unsigned long *)(DSPI1_BLOCK + 0x38)
         #define SPI1_POPR           *(volatile unsigned long *)(DSPI1_BLOCK + 0x38) // SPI1 POP RX FIFO Register (read-only)
         #define SPI1_TXFR0          *(volatile unsigned long *)(DSPI1_BLOCK + 0x3c) // SPI1 Transmit FIFO Registers (write-only)
         #define SPI1_TXFR1          *(volatile unsigned long *)(DSPI1_BLOCK + 0x40) // SPI1 Transmit FIFO Registers (write-only)
@@ -6105,10 +6113,13 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
         #define SPI2_CTAR0          *(volatile unsigned long *)(DSPI2_BLOCK + 0x0c) // SPI2 Clock and Transfer Attributes Register in Master Mode
         #define SPI2_CTAR0_SLAVE    *(volatile unsigned long *)(DSPI2_BLOCK + 0x0c) // SPI2 Clock and Transfer Attributes Register in Slave Mode
         #define SPI2_CTAR1          *(volatile unsigned long *)(DSPI2_BLOCK + 0x10) // SPI2 Clock and Transfer Attributes Register in Master Mode
+        #define SPI2_SR_ADDR        (unsigned long *)(DSPI2_BLOCK + 0x2c)
         #define SPI2_SR             *(volatile unsigned long *)(DSPI2_BLOCK + 0x2c) // SPI2 Status Register
         #define SPI2_RSER           *(volatile unsigned long *)(DSPI2_BLOCK + 0x30) // SPI2 DMA/Interrupt Request Select and Enable Register
+        #define SPI2_PUSHR_ADDR     (volatile unsigned long *)(DSPI2_BLOCK + 0x34)
         #define SPI2_PUSHR          *(volatile unsigned long *)(DSPI2_BLOCK + 0x34) // {22} SPI2 PUSH TX FIFO Register in Master Mode
         #define SPI2_PUSHR_SLAVE    *(volatile unsigned long *)(DSPI2_BLOCK + 0x34) // SPI2 PUSH TX FIFO Register in Slave Mode
+        #define SPI2_POPR_ADDR      (volatile unsigned long *)(DSPI2_BLOCK + 0x38)
         #define SPI2_POPR           *(volatile unsigned long *)(DSPI2_BLOCK + 0x38) // SPI2 POP RX FIFO Register (read-only)
         #define SPI2_TXFR0          *(volatile unsigned long *)(DSPI2_BLOCK + 0x3c) // SPI2 Transmit FIFO Registers (write-only)
         #define SPI2_TXFR1          *(volatile unsigned long *)(DSPI2_BLOCK + 0x40) // SPI2 Transmit FIFO Registers (write-only)
