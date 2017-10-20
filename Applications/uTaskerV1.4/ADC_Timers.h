@@ -47,7 +47,7 @@
     #define _ADC_TIMER_CONFIG
 
     #if defined SUPPORT_ADC                                              // if HW support is enabled
-      //#define TEST_ADC                                                 // enable test of ADC operation
+        #define TEST_ADC                                                 // enable test of ADC operation
       //#define TEST_AD_DA                                               // {14} enable test of reading ADC and writing (after delay) to DAC
           //#define ADC_TRIGGER_TPM                                      // use TPM module rather than PIT for ADC trigger (valid for KL parts)
           //#define VOICE_RECORDER                                       // {15} needs TEST_AD_DA and mass-storage and saves sampled input to SD card

@@ -3221,7 +3221,8 @@ static unsigned long ulLastPortBit = 0;
 static void _PWM_Interrupt(void)
 {
     volatile unsigned long *ptrPCR = (volatile unsigned long *)(PORT0_BLOCK + (iLastPortRef * 0x1000));
-    DMA_ERQ &= ~(DMA_ERQ_ERQ0 << PWM_MEASUREMENT_DMA_CHANNEL);           // disable further DMA operation
+    ATOMIC_PERIPHERAL_BIT_REF_CLEAR(DMA_ERQ, PWM_MEASUREMENT_DMA_CHANNEL); // disable further DMA operation
+  //DMA_ERQ &= ~(DMA_ERQ_ERQ0 << PWM_MEASUREMENT_DMA_CHANNEL);
     while (ulLastPortBit != 0) {
         if ((ulLastPortBit & 0x1) != 0) {
             *ptrPCR &= ~PORT_IRQC_DMA_BOTH;                              // disable DMA on last input
@@ -3325,27 +3326,32 @@ static void fnMeasurePWM(int iPortRef, unsigned long ulPortBit)
         switch (iPortRef) {
         case PORTA:
             iInputState1 = (_READ_PORT_MASK(A, ulPortBit) != 0);             // read initial input state
-            DMA_ERQ |= (DMA_ERQ_ERQ0 << PWM_MEASUREMENT_DMA_CHANNEL);        // enable request source
+            ATOMIC_PERIPHERAL_BIT_REF_SET(DMA_ERQ, PWM_MEASUREMENT_DMA_CHANNEL); // enable request source
+          //DMA_ERQ |= (DMA_ERQ_ERQ0 << PWM_MEASUREMENT_DMA_CHANNEL);        
             iInputState2 = (_READ_PORT_MASK(A, ulPortBit) != 0);             // read new input state
             break;
         case PORTB:
             iInputState1 = (_READ_PORT_MASK(B, ulPortBit) != 0);             // read initial input state
-            DMA_ERQ |= (DMA_ERQ_ERQ0 << PWM_MEASUREMENT_DMA_CHANNEL);        // enable request source
+            ATOMIC_PERIPHERAL_BIT_REF_SET(DMA_ERQ, PWM_MEASUREMENT_DMA_CHANNEL); // enable request source
+          //DMA_ERQ |= (DMA_ERQ_ERQ0 << PWM_MEASUREMENT_DMA_CHANNEL);
             iInputState2 = (_READ_PORT_MASK(B, ulPortBit) != 0);             // read new input state
             break;
         case PORTC:
             iInputState1 = (_READ_PORT_MASK(C, ulPortBit) != 0);             // read initial input state
-            DMA_ERQ |= (DMA_ERQ_ERQ0 << PWM_MEASUREMENT_DMA_CHANNEL);        // enable request source
+            ATOMIC_PERIPHERAL_BIT_REF_SET(DMA_ERQ, PWM_MEASUREMENT_DMA_CHANNEL); // enable request source
+          //DMA_ERQ |= (DMA_ERQ_ERQ0 << PWM_MEASUREMENT_DMA_CHANNEL);
             iInputState2 = (_READ_PORT_MASK(C, ulPortBit) != 0);             // read new input state
             break;
         case PORTD:
             iInputState1 = (_READ_PORT_MASK(D, ulPortBit) != 0);             // read initial input state
-            DMA_ERQ |= (DMA_ERQ_ERQ0 << PWM_MEASUREMENT_DMA_CHANNEL);        // enable request source
+            ATOMIC_PERIPHERAL_BIT_REF_SET(DMA_ERQ, PWM_MEASUREMENT_DMA_CHANNEL); // enable request source
+          //DMA_ERQ |= (DMA_ERQ_ERQ0 << PWM_MEASUREMENT_DMA_CHANNEL);        // enable request source
             iInputState2 = (_READ_PORT_MASK(D, ulPortBit) != 0);             // read new input state
             break;
         case PORTE:
             iInputState1 = (_READ_PORT_MASK(E, ulPortBit) != 0);             // read initial input state
-            DMA_ERQ |= (DMA_ERQ_ERQ0 << PWM_MEASUREMENT_DMA_CHANNEL);        // enable request source
+            ATOMIC_PERIPHERAL_BIT_REF_SET(DMA_ERQ, PWM_MEASUREMENT_DMA_CHANNEL); // enable request source
+          //DMA_ERQ |= (DMA_ERQ_ERQ0 << PWM_MEASUREMENT_DMA_CHANNEL);        // enable request source
             iInputState2 = (_READ_PORT_MASK(E, ulPortBit) != 0);             // read new input state
             break;
         }

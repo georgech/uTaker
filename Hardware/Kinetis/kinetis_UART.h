@@ -40,6 +40,7 @@
     03.05.2017 Add free-running DMA reception mode (SERIAL_SUPPORT_DMA_RX_FREERUN) on LPUARTs and UARTs for KL parts based on modulo rx buffer {209}
     06.08.2017 Use POWER_UP_ATOMIC() instead of POWER_UP() to enable clocks to UART modules (using bit-banding access)
     01.09.2017 Correct clearing LPUART overrun flag                      {210}
+    19.10.2017 Use ATOMIC_PERIPHERAL_BIT_REF_SET() and ATOMIC_PERIPHERAL_BIT_REF_CLEAR() to enable/disable DMA_ERQ (interrupt and DMA safe)
 
 */
 
@@ -1311,7 +1312,8 @@ extern QUEUE_TRANSFER fnTxByteDMA(QUEUE_HANDLE Channel, unsigned char *ptrStart,
                 #endif
     }
             #endif
-    DMA_ERQ |= (DMA_ERQ_ERQ0 << UART_DMA_TX_CHANNEL[Channel]);           // enable request source
+    ATOMIC_PERIPHERAL_BIT_REF_SET(DMA_ERQ, UART_DMA_TX_CHANNEL[Channel]);// enable request source
+  //DMA_ERQ |= (DMA_ERQ_ERQ0 << UART_DMA_TX_CHANNEL[Channel]);           
         #endif 
         #if defined _WINDOWS                                             // simulation
             #if LPUARTS_AVAILABLE > 0
@@ -1526,7 +1528,8 @@ extern void fnPrepareRxDMA(QUEUE_HANDLE channel, unsigned char *ptrStart, QUEUE_
         KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
         ptrDMA_TCD += UART_DMA_RX_CHANNEL[channel];
         ptrDMA_TCD->DMA_TCD_DADDR = (unsigned long)ptrStart;             // destination is the input tty buffer
-        DMA_ERQ |= (DMA_ERQ_ERQ0 << UART_DMA_RX_CHANNEL[channel]);       // enable request source
+        ATOMIC_PERIPHERAL_BIT_REF_SET(DMA_ERQ, UART_DMA_RX_CHANNEL[channel]); // enable request source
+      //DMA_ERQ |= (DMA_ERQ_ERQ0 << UART_DMA_RX_CHANNEL[channel]);       
         fnRxOn(channel);                                                 // configure receiver pin and enable reception and its interrupt/DMA
         #endif
     }
@@ -3272,7 +3275,9 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
                 #endif
     if (Channel == 0)                                                    // UART 0 is clocked from a selectable source
             #else
-                #define SPECIAL_UART_CLOCK  SPECIAL_LPUART_CLOCK
+                #if !defined SPECIAL_UART_CLOCK
+                    #define SPECIAL_UART_CLOCK  SPECIAL_LPUART_CLOCK
+                #endif
     if (Channel < LPUARTS_AVAILABLE)                                     // LPUART is clocked from a selectable source
             #endif
         #else

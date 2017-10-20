@@ -23,6 +23,7 @@
     02.03.2017 Set the DMA_TCD_CITER_ELINK value earlier to protect initial part of code from interrupts {4}
     02.03.2017 Add optional alternative DMA channel for use by interrupts when the main one is in use {5}
     19.10.2017 Add DMA_SINGLE_CYCLE option to allow a single buffer transfer and stopping automatically {6}
+    19.10.2017 Use ATOMIC_PERIPHERAL_BIT_REF_SET() and ATOMIC_PERIPHERAL_BIT_REF_CLEAR() to enable/disable DMA_ERQ (interrupt and DMA safe)
 
 */
 
@@ -386,7 +387,8 @@ extern void fnDMA_BufferReset(int iChannel, int iAction)
     #else
     switch (iAction) {
     case DMA_BUFFER_START:
-        DMA_ERQ |= (DMA_ERQ_ERQ0 << iChannel);                           // just enable
+        ATOMIC_PERIPHERAL_BIT_REF_SET(DMA_ERQ, iChannel);                // just enable the channel's operation
+      //DMA_ERQ |= (DMA_ERQ_ERQ0 << iChannel);           
         break;
     case DMA_BUFFER_RESET:                                               // reset the DMA back to the start of the present buffer
     case DMA_BUFFER_RESTART:                                             // reset and start again
@@ -394,7 +396,8 @@ extern void fnDMA_BufferReset(int iChannel, int iAction)
             int iSize = 1;                                               // default is single byte size
             unsigned long ulBufferLength;
             KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
-            DMA_ERQ &= ~(DMA_ERQ_ERQ0 << iChannel);                      // disable DMA operation
+            ATOMIC_PERIPHERAL_BIT_REF_CLEAR(DMA_ERQ, iChannel);          // disable DMA operation on the channel
+          //DMA_ERQ &= ~(DMA_ERQ_ERQ0 << iChannel);            
             ptrDMA_TCD += iChannel;
             if (ptrDMA_TCD->DMA_TCD_DLASTSGA == 0) {                     // input buffer needs to be reset
                 if ((ptrDMA_TCD->DMA_TCD_ATTR & DMA_TCD_ATTR_SSIZE_16) != 0) {
@@ -420,7 +423,8 @@ extern void fnDMA_BufferReset(int iChannel, int iAction)
             }
             ptrDMA_TCD->DMA_TCD_BITER_ELINK = ptrDMA_TCD->DMA_TCD_CITER_ELINK = (signed short)(ulBufferLength/ iSize); // set the cycle length
             if (iAction != DMA_BUFFER_RESET) {                           // if not a buffer reset without continued operation
-                DMA_ERQ |= (DMA_ERQ_ERQ0 << iChannel);                   // restart DMA from the start of the buffer
+                ATOMIC_PERIPHERAL_BIT_REF_SET(DMA_ERQ, iChannel);        // restart DMA from the start of the buffer
+              //DMA_ERQ |= (DMA_ERQ_ERQ0 << iChannel);
             }
         }
         break;

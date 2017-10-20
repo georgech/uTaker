@@ -37,7 +37,7 @@
 //#define REMOVE_PORT_INITIALISATIONS                                    // remove port initialisation and use demonstration to ensure that port configuration and use doesn't conflict with specific application development (exception is blink LED)
   //#define NO_PERIPHERAL_DEMONSTRATIONS                                 // disable peripheral demonstration code (ADC/I2C/CAN/port interrupts/etc.) so that they can't interfere with new application developments
 
-#define USE_MAINTENANCE                                                  // include the command line shell (on UART, USB-CDC and/or Telnet) with maintenance support for the application (remove to reduce project size for special tests or possibly running from limited RAM)
+//#define USE_MAINTENANCE                                                // include the command line shell (on UART, USB-CDC and/or Telnet) with maintenance support for the application (remove to reduce project size for special tests or possibly running from limited RAM)
     #define PREVIOUS_COMMAND_BUFFERS  4                                  // allow the up-arrow to retrieve this many past commands
     #define MEMORY_DEBUGGER                                              // memory and storage debugger interface (read, write, fill and erase)
 
@@ -1018,7 +1018,7 @@
 #if defined DEVICE_WITHOUT_USB
     #define NUMBER_USB     0                                             // no physical queue needed
 #else
-    #define USB_INTERFACE                                                // enable USB driver interface
+  //#define USB_INTERFACE                                                // enable USB driver interface
     #if defined USB_INTERFACE
       //#define MICROSOFT_OS_STRING_DESCRIPTOR                           // support MODs
       //#define USB_HOST_SUPPORT                                         // host rather than device
@@ -1278,7 +1278,7 @@
 // Ethernet
 //
 #if !defined DEVICE_WITHOUT_ETHERNET && !defined K70F150M_12M && !defined TEENSY_3_5 && !defined TEENSY_3_6 && !defined K66FX1M && !defined HEXIWEAR_K64F && !defined HEXIWEAR_KW40Z
-    #define ETH_INTERFACE                                                // enable Ethernet interface driver
+  //#define ETH_INTERFACE                                                // enable Ethernet interface driver
 #elif defined TEENSY_3_1 || defined TEENSY_LC
   //#define ETH_INTERFACE                                                // enable external Ethernet interface driver
     #if defined ETH_INTERFACE

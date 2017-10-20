@@ -4437,7 +4437,7 @@ extern int fnSimulateDMA(int channel)                                    // {3}
         }
         return 0;
     }
-#elif !defined KINETIS_KE
+#elif !defined KINETIS_KE || defined DEVICE_WITH_eDMA
     KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
     ptrDMA_TCD += channel;
 
@@ -9849,6 +9849,19 @@ extern void fnClearBitBandPeripheralValue(unsigned long *bit_band_address)
     *(unsigned long *)ulRegAddress &= ~ulBit;
 }
 
+// Calculate a bit-banded peripheral address back to its original register and bit - then check the bit in the register
+//
+extern int fnCheckBitBandPeripheralValue(unsigned long *bit_band_address)
+{
+    unsigned long ulRegAddress;
+    unsigned long ulBit;
+    ulRegAddress = ((unsigned long)bit_band_address - 0x42000000);
+    ulBit = ((ulRegAddress / 4) % 32);
+    ulBit = (1 << ulBit);
+    ulRegAddress /= 32;
+    ulRegAddress &= ~0x3;
+    return ((*(unsigned long *)ulRegAddress & ulBit) != 0);
+}
 
 #if 1 //defined RUN_IN_FREE_RTOS
 extern unsigned long *fnGetRegisterAddress(unsigned long ulAddress)

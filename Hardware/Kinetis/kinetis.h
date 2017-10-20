@@ -117,6 +117,7 @@
     12.09.2017 Add INTMUX support and extended KL28 and KL82             {100}
     26.09.2017 Add LPIT                                                  {101}
     12.10.2017 Modified POWER_UP_ATOMIC(), POWER_DOWN_ATOMIC() and IS_POWERED_UP() macros to be compatible with PCC {102}
+    19.10.2017 ATOMIC_PERIPHERAL_BIT_REF_SET(), ATOMIC_PERIPHERAL_BIT_REF_CLEAR() and ATOMIC_PERIPHERAL_BIT_REF_CHECK() macros {103} - see video https://youtu.be/FZnkZ1h_EAQ
 
 */
 
@@ -156,6 +157,7 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
 
 extern void fnSetBitBandPeripheralValue(unsigned long *bit_band_address);
 extern void fnClearBitBandPeripheralValue(unsigned long *bit_band_address);
+extern int  fnCheckBitBandPeripheralValue(unsigned long *bit_band_address);
 
 
 /* =================================================================== */
@@ -189,7 +191,7 @@ extern void fnClearBitBandPeripheralValue(unsigned long *bit_band_address);
 
 #define CAST_POINTER_ARITHMETIC unsigned long                            // Kinetis uses 32 bit pointers
 
-#define BIT_BANDING_PERIPHERAL_ADDRESS(base, bit)    (0x42000000 + (((CAST_POINTER_ARITHMETIC)(base) - 0x40000000) * 32) + (4 * bit)) // bit banding address for the peripheral bit
+#define BIT_BANDING_PERIPHERAL_ADDRESS(base, bit)    ((0x42000000 + (((CAST_POINTER_ARITHMETIC)(base) - 0x40000000) * 32)) + (4 * bit)) // bit banding address for the peripheral bit
 
 // Mask/errata management  
 //
@@ -1502,20 +1504,18 @@ typedef struct stRESET_VECTOR
 
 // DMA configuration
 //
-#if defined KINETIS_KE || defined KINETIS_KL02 || defined KINETIS_KL03   // devices that don't support DMA
+#if defined KINETIS_KE15 || defined KINETIS_KL82 || defined KINETIS_KL28
+    #define DEVICE_WITH_eDMA
+    #define eDMA_SHARES_INTERRUPTS                                       // DMA channel 4 shares an interrupt vector with channel 0, 5 with 1, 6 with 2 and 7 with 3
+    #define DMA_CHANNEL_COUNT    8
+#elif defined KINETIS_KE || defined KINETIS_KL02 || defined KINETIS_KL03 // devices that don't support DMA
     #define DEVICE_WITHOUT_DMA
 #elif defined KINETIS_K_FPU && !defined KINETIS_K21 && !defined KINETIS_K22 && !defined KINETIS_K24 && !defined KINETIS_K64 && !defined KINETIS_KV30
     #define DEVICE_WITH_TWO_DMA_GROUPS
     #define DMA_CHANNEL_COUNT        16
 #else
     #if defined KINETIS_KL
-        #if defined KINETIS_KL82 || defined KINETIS_KL28                 // KL82 and KL28 have eDMA and are thus exceptions in the KL family
-            #define DEVICE_WITH_eDMA
-            #define eDMA_SHARES_INTERRUPTS                               // DMA channel 4 shares an interrupt vector with channel 0, 5 with 1, 6 with 2 and 7 with 3
-            #define DMA_CHANNEL_COUNT    8
-        #else
-            #define DMA_CHANNEL_COUNT    4
-        #endif
+        #define DMA_CHANNEL_COUNT    4
     #elif defined KINETIS_K22 && (SIZE_OF_FLASH == (128 * 1024))
         #define DMA_CHANNEL_COUNT    4
     #else
@@ -3873,8 +3873,11 @@ typedef struct stVECTOR_TABLE
   #define DMA_ES_ECX        0x00010000                                   // transfer cancelled
   #define DMA_ES_VLD        0x80000000                                   // at least one error bit is set
 
-#define DMA_ERQ_ADDR        (unsigned long *)(eDMA_BLOCK + 0x00c)
-#define DMA_ERQ             *(unsigned long *)(eDMA_BLOCK + 0x00c)       // DMA Enable Request Register
+#define DMA_ERQ_ADDR        (volatile unsigned long *)(eDMA_BLOCK + 0x00c)
+#define DMA_ERQ             *(volatile unsigned long *)(eDMA_BLOCK + 0x00c) // DMA Enable Request Register
+#define DMA_ERQ_BME_OR      (volatile unsigned long *)(eDMA_BLOCK + 0x00c + BME_OR_OFFSET)
+#define DMA_ERQ_BME_AND     (volatile unsigned long *)(eDMA_BLOCK + 0x00c + BME_AND_OFFSET)
+#define DMA_ERQ_BME_XOR     (volatile unsigned long *)(eDMA_BLOCK + 0x00c + BME_XOR_OFFSET)
   #define DMA_ERQ_ERQ0      0x00000001                                   // enable DMA request on channel 0
   #define DMA_ERQ_ERQ1      0x00000002                                   // enable DMA request on channel 1
   #define DMA_ERQ_ERQ2      0x00000004                                   // enable DMA request on channel 2
@@ -9734,9 +9737,11 @@ typedef struct stKINETIS_LPTMR_CTL
 #if defined _WINDOWS                                                     // {98}
     #define ATOMIC_SET_REGISTER(bit_band_address)   fnSetBitBandPeripheralValue((unsigned long *)(bit_band_address))
     #define ATOMIC_CLEAR_REGISTER(bit_band_address) fnClearBitBandPeripheralValue((unsigned long *)(bit_band_address))
+    #define ATOMIC_CHECK_REGISTER(bit_band_address) (fnCheckBitBandPeripheralValue((unsigned long *)(bit_band_address)) != 0)
 #else
     #define ATOMIC_SET_REGISTER(bit_band_address)   *(unsigned long *)bit_band_address = 1
     #define ATOMIC_CLEAR_REGISTER(bit_band_address) *(unsigned long *)bit_band_address = 0
+    #define ATOMIC_CHECK_REGISTER(bit_band_address) (*(unsigned long *)bit_band_address != 0)
 #endif
 
 #if defined KINETIS_KE
@@ -9773,18 +9778,33 @@ typedef struct stKINETIS_LPTMR_CTL
                 #define POWER_DOWN_ATOMIC(reg, module) *SIM_SCGC##reg##_BME_AND = ~(SIM_SCGC##reg##_##module)
             #endif
         #else                                                            // cortex-m4
-            #define POWER_UP_ATOMIC(reg, module)   ATOMIC_SET_REGISTER(SIM_SCGC##reg##_##SIM_SCGC##reg##_##module) // {98}{102} power up a single module using bit-banding access (apply clock to it)
+            #define POWER_UP_ATOMIC(reg, module)   ATOMIC_SET_REGISTER(SIM_SCGC##reg##_SIM_SCGC##reg##_##module) // {98}{102} power up a single module using bit-banding access (apply clock to it)
             #define POWER_DOWN_ATOMIC(reg, module) ATOMIC_CLEAR_REGISTER(SIM_SCGC##reg##_##module) // {102} power down a single module using bit-banding access (disable clock to it)
         #endif
-        #define IS_POWERED_UP(reg, module)    ((SIM_SCGC##reg & (SIM_SCGC##reg##_##module)) != 0) // {102}
+        #define IS_POWERED_UP(reg, module)     ((SIM_SCGC##reg & (SIM_SCGC##reg##_##module)) != 0) // {102}
     #endif
     #if defined KINETIS_K_FPU
-        #define SIM_SOPT1_SET(opt, enable)   SIM_SOPT1CGF |= (enable); SIM_SOPT1 |= (opt)
-        #define SIM_SOPT1_CLR(opt, enable)   SIM_SOPT1CGF |= (enable); SIM_SOPT1 &= ~(opt)
+        #define SIM_SOPT1_SET(opt, enable)     SIM_SOPT1CGF |= (enable); SIM_SOPT1 |= (opt)
+        #define SIM_SOPT1_CLR(opt, enable)     SIM_SOPT1CGF |= (enable); SIM_SOPT1 &= ~(opt)
     #elif !defined KINETIS_KL02
-        #define SIM_SOPT1_SET(opt, enable)   SIM_SOPT1 |= (opt)
-        #define SIM_SOPT1_CLR(opt, enable)   SIM_SOPT1 &= ~(opt)
+        #define SIM_SOPT1_SET(opt, enable)     SIM_SOPT1 |= (opt)
+        #define SIM_SOPT1_CLR(opt, enable)     SIM_SOPT1 &= ~(opt)
     #endif
+#endif
+
+#if defined ARM_MATH_CM4                                                 // {103}
+    #define ATOMIC_PERIPHERAL_BIT_REF_SET(reg, bit_ref)    ATOMIC_SET_REGISTER(BIT_BANDING_PERIPHERAL_ADDRESS((reg##_ADDR), bit_ref))
+    #define ATOMIC_PERIPHERAL_BIT_REF_CLEAR(reg, bit_ref)  ATOMIC_CLEAR_REGISTER(BIT_BANDING_PERIPHERAL_ADDRESS((reg##_ADDR), bit_ref))
+    #define ATOMIC_PERIPHERAL_BIT_REF_CHECK(reg, bit_ref)  ATOMIC_CHECK_REGISTER(BIT_BANDING_PERIPHERAL_ADDRESS((reg##_ADDR), bit_ref))
+#else
+    #if defined _WINDOWS
+        #define ATOMIC_PERIPHERAL_BIT_REF_SET(reg, bit_ref)   *(reg##_BME_OR - (BME_OR_OFFSET/sizeof(unsigned long))) |= (1 << bit_ref)
+        #define ATOMIC_PERIPHERAL_BIT_REF_CLEAR(reg, bit_ref) *(reg##_BME_AND - (BME_AND_OFFSET/sizeof(unsigned long))) &= ~(1 << bit_ref)
+    #else
+        #define ATOMIC_PERIPHERAL_BIT_REF_SET(reg, bit_ref)   *reg##_BME_OR = (1 << bit_ref)
+        #define ATOMIC_PERIPHERAL_BIT_REF_CLEAR(reg, bit_ref) *reg##_BME_AND = ~(1 << bit_ref)
+    #endif
+    #define ATOMIC_PERIPHERAL_BIT_REF_CHECK(reg, bit_ref)  ((reg & (1 << bit_ref)) != 0)
 #endif
 
 
