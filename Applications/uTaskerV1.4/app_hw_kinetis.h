@@ -1482,7 +1482,7 @@
     #endif
 #endif
 
-//#define SUPPORT_TIMER                                                  // support hardware timer interrupt configuration (FlexTimer or TPM)
+#define SUPPORT_TIMER                                                    // support hardware timer interrupt configuration (FlexTimer or TPM)
   //#define SUPPORT_CAPTURE                                              // support capture mode of operation
 
 #if defined KINETIS_KL || defined KINETIS_K66
@@ -2483,8 +2483,8 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 
 // DAC
 //
-#if !defined KINETIS_KE                                                  // KE devices have no DAC
-  //#define SUPPORT_DAC                                                  // {15} enable general DAC support
+#if defined DAC_CONTROLLERS && (DAC_CONTROLLERS > 0)                     // if the device has a DAC
+    #define SUPPORT_DAC                                                  // {15} enable general DAC support
     #if defined SUPPORT_DAC
         #define SUPPORT_DAC0                                             // enable DAC controller 0 support
       //#define SUPPORT_DAC1                                             // enable DAC controller 1 support
@@ -2604,7 +2604,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 
 
 #if !defined KINETIS_KL && !defined KINETIS_KE
-  //#define SUPPORT_PDB                                                  // {19} support programmable delay block (can be used as timer and/or for triggering ADC/DAC)
+    #define SUPPORT_PDB                                                  // {19} support programmable delay block (can be used as timer and/or for triggering ADC/DAC)
 #endif
 
 //#define SUPPORT_I2S_SAI                                                // support I2S/SAI

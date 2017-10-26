@@ -155,7 +155,7 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
     #define SWAP_ERASE_FAILURE            -2
 
 
-extern void fnSetBitBandPeripheralValue(unsigned long *bit_band_address);
+extern void fnSetBitBandPeripheralValue(unsigned long *bit_band_address); // simulation routines allowing big-banded addresses to be checked
 extern void fnClearBitBandPeripheralValue(unsigned long *bit_band_address);
 extern int  fnCheckBitBandPeripheralValue(unsigned long *bit_band_address);
 
@@ -191,19 +191,19 @@ extern int  fnCheckBitBandPeripheralValue(unsigned long *bit_band_address);
 
 #define CAST_POINTER_ARITHMETIC unsigned long                            // Kinetis uses 32 bit pointers
 
-#define BIT_BANDING_PERIPHERAL_ADDRESS(base, bit)    ((0x42000000 + (((CAST_POINTER_ARITHMETIC)(base) - 0x40000000) * 32)) + (4 * bit)) // bit banding address for the peripheral bit
-
 // Mask/errata management  
 //
 #include "kinetis_errata.h"                                              // {61}
 
 #if defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_KV10
     #define ARM_MATH_CM0PLUS                                             // cortex-M0+ to be used
-    #define BME_OR_OFFSET    0x8000000                                   // {99} kinetis cortex-m0+ includes a bit manipulation engine
+    #define BME_OR_OFFSET    0x8000000                                   // {99} kinetis cortex-m0+ includes a bit manipulation engine and doesn't include bit-banding support
     #define BME_AND_OFFSET   0x4000000
     #define BME_XOR_OFFSET   0xc000000
 #else
     #define ARM_MATH_CM4                                                 // cortex-M4 to be used
+    #define BIT_BANDING_PERIPHERAL_ADDRESS(base, bit)    ((0x42000000 + (((CAST_POINTER_ARITHMETIC)(base) - 0x40000000) * 32)) + (4 * bit)) // bit banding address for a peripheral bit
+    #define BIT_BANDING_SRAM_ADDRESS(base, bit)          ((0x22000000 + (((CAST_POINTER_ARITHMETIC)(base) - 0x20000000) * 32)) + (4 * bit)) // bit banding address for an SRAM bit
 #endif
 
 // ROM Bootoader
@@ -214,7 +214,7 @@ extern int  fnCheckBitBandPeripheralValue(unsigned long *bit_band_address);
 
 // Peripheral Clock Control
 //
-#if defined KINETIS_KL28 || defined KINETIS_KE15
+#if defined KINETIS_KL28 || defined KINETIS_KE15 || defined KINETIS_KE18
     #define KINETIS_WITH_PCC                                             // contains peripheral clock control module (rather than using SIM)
 #endif
 
@@ -1156,7 +1156,7 @@ typedef struct stRESET_VECTOR
 
 // CAU configuration
 //
-#if defined KINETIS_K21 || defined KINETIS_K26 || defined KINETIS_K60 || defined KINETIS_K61 || defined KINETIS_K70 || defined KINETIS_K80
+#if defined KINETIS_K21 || defined KINETIS_K26 || defined KINETIS_K60 || defined KINETIS_K61 || defined KINETIS_K70 || defined KINETIS_K80 || defined KINETIS_KL28
     #define CAU_V2_AVAILABLE
 #elif (defined KINETIS_K24 && (SIZE_OF_FLASH == (1 * 1024 * 1024))) || defined  KINETIS_K64
     #define CAU_V1_AVAILABLE
@@ -1347,6 +1347,8 @@ typedef struct stRESET_VECTOR
 #if defined KINETIS_K66 || defined KINETIS_K80
     #define FLEX_TIMERS_AVAILABLE   6                                    // 4 flex timers plus 2 TPMs
     #define TPMS_AVAILABLE          2                                    // TPM in addition to flex timers
+#elif defined KINETIS_KE18
+    #define FLEX_TIMERS_AVAILABLE   4
 #elif defined KINETIS_K22 && (SIZE_OF_FLASH == (128 * 1024))
     #define FLEX_TIMERS_AVAILABLE   3
 #elif defined KINETIS_K61 || defined KINETIS_K64 || defined KINETIS_K70 || ((defined KINETIS_K10 || defined KINETIS_K60 || defined KINETIS_K21 || defined KINETIS_K22 || defined KINETIS_K24 || defined KINETIS_KV30) && (KINETIS_MAX_SPEED > 100000000))
@@ -1361,6 +1363,8 @@ typedef struct stRESET_VECTOR
 //
 #if defined KINETIS_K61 || defined KINETIS_K70 || (((defined KINETIS_K60 && !defined KINETIS_K64 && !defined KINETIS_K65 && !defined KINETIS_K66) || (defined KINETIS_K20 && !defined KINETIS_K26 && !defined KINETIS_K21 && !defined KINETIS_K22 && !defined KINETIS_K24)) && (KINETIS_MAX_SPEED > 100000000))
     #define ADC_CONTROLLERS         4
+#elif defined KINETIS_KE18
+    #define ADC_CONTROLLERS         3
 #elif defined KINETIS_K80 || defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_K02 || ((defined KINETIS_K20 || defined KINETIS_K21) && (KINETIS_MAX_SPEED < 72000000))
     #define ADC_CONTROLLERS         1
 #else
@@ -1371,6 +1375,8 @@ typedef struct stRESET_VECTOR
 //
 #if defined KINETIS_K60 || defined KINETIS_K61 || defined KINETIS_K64 || defined KINETIS_K70 || defined KINETIS_KV31 || (defined KINETIS_K24 && (SIZE_OF_FLASH == (1024 * 1024)))
     #define DAC_CONTROLLERS         2
+#elif defined KINETIS_KE18
+    #define DAC_CONTROLLERS         1
 #elif defined KINETIS_KE || defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL03 || defined KINETIS_KL02
     #define DAC_CONTROLLERS         0
 #else
@@ -1398,7 +1404,9 @@ typedef struct stRESET_VECTOR
 
 // Comparator configuration
 //
-#if defined KINETIS_K24 && (SIZE_OF_FLASH == (1024 * 1024))
+#if defined KINETIS_KE18
+    #define NUMBER_OF_COMPARATORS 3
+#elif defined KINETIS_K24 && (SIZE_OF_FLASH == (1024 * 1024))
     #define NUMBER_OF_COMPARATORS 3
 #else
     #define NUMBER_OF_COMPARATORS 2
@@ -3527,7 +3535,7 @@ typedef struct stVECTOR_TABLE
         #define EWM_BLOCK                      0x4005f000                // external watchdog monitor
     #endif
     #if defined KINETIS_WITH_PCC
-        #if defined KINETIS_KE15
+        #if defined KINETIS_KE15 || defined KINETIS_KE18
             #define PCC_BLOCK                   0x40065000                // peripheral clock control
         #else
             #define PCC_BLOCK                   0x4007a000                // peripheral clock control
@@ -3695,7 +3703,7 @@ typedef struct stVECTOR_TABLE
         #define EMAC_BASE_ADD                  0x400c0000                // Ethernet Controller
     #endif
     #if (DAC_CONTROLLERS > 0)
-        #if defined KINETIS_KL
+        #if defined KINETIS_KL || defined KINETIS_KE18
             #define DAC0_BASE_ADD              0x4003f000                // {52} DAC0
         #else
             #define DAC0_BASE_ADD              0x400cc000                // DAC0
@@ -3721,7 +3729,11 @@ typedef struct stVECTOR_TABLE
 
     #define MCM_BLOCK                          0xe0080000                // {29} Miscellaneous Control Module
     #if defined CAU_V1_AVAILABLE || defined CAU_V2_AVAILABLE
-        #define MMCAU_BLOCK                    0xe0081000                // {45} Memory-Mapped Cryptographic Accelerator Unit
+        #if defined KINETIS_KL28
+            #define MMCAU_BLOCK                0xf0005000                // Memory-Mapped Cryptographic Accelerator Unit
+        #else
+            #define MMCAU_BLOCK                0xe0081000                // {45} Memory-Mapped Cryptographic Accelerator Unit
+        #endif
     #endif
     #if defined FGPIO_AVAILABLE
         #if defined KINETIS_KV || defined KINETIS_KE || defined KINETIS_KL02 || defined KINETIS_KL03 || defined KINETIS_KL16
@@ -10731,7 +10743,7 @@ typedef struct stKINETIS_LPTMR_CTL
 #define PF_27_GLCD_D23                   PORT_MUX_ALT7
 #define PD_11_GLCD_GLCD_CONTRAST         PORT_MUX_ALT7
                                                                          // FlexTimer 0
-#if defined KINETIS_KE
+#if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18
     #define PB_2_FTM0_CH0                PORT_MUX_ALT3
     #define PA_0_FTM0_CH0                PORT_MUX_ALT2
     #define PB_3_FTM0_CH1                PORT_MUX_ALT3
@@ -11350,6 +11362,9 @@ typedef struct stKINETIS_LPTMR_CTL
         #define PCC_PDC_DIVIDE_6         0x00000005                      // divide by 6
         #define PCC_PDC_DIVIDE_7         0x00000006                      // divide by 7
         #define PCC_PDC_DIVIDE_8         0x00000007                      // divide by 8
+    #if defined KINETIS_KE18
+        #define PCC_MPU                  *(volatile unsigned long *)(PCC_BLOCK + 0x034)
+    #endif
     #define PCC_FLASH                    *(volatile unsigned long *)(PCC_BLOCK + 0x080)
     #define PCC_DMAMUX0                  *(volatile unsigned long *)(PCC_BLOCK + 0x084)
     #if defined KINETIS_KE15
@@ -11383,6 +11398,44 @@ typedef struct stKINETIS_LPTMR_CTL
         #define PCC_LPUART2              *(volatile unsigned long *)(PCC_BLOCK + 0x1b0)
         #define PCC_CMP0                 *(volatile unsigned long *)(PCC_BLOCK + 0x1cc)
         #define PCC_CMP1                 *(volatile unsigned long *)(PCC_BLOCK + 0x1d0)
+    #elif defined KINETIS_KE18
+        #define PCC_CAN0                 *(volatile unsigned long *)(PCC_BLOCK + 0x090)
+        #define PCC_CAN1                 *(volatile unsigned long *)(PCC_BLOCK + 0x094)
+        #define PCC_FLEXTMR3             *(volatile unsigned long *)(PCC_BLOCK + 0x098)
+        #define PCC_ADC1                 *(volatile unsigned long *)(PCC_BLOCK + 0x09c)
+        #define PCC_LPSPI0               *(volatile unsigned long *)(PCC_BLOCK + 0x0b0)
+        #define PCC_LPSPI1               *(volatile unsigned long *)(PCC_BLOCK + 0x0b4)
+        #define PCC_PDB1                 *(volatile unsigned long *)(PCC_BLOCK + 0x0c4)
+        #define PCC_CRC                  *(volatile unsigned long *)(PCC_BLOCK + 0x0c8)
+        #define PCC_PDB2                 *(volatile unsigned long *)(PCC_BLOCK + 0x0cc)
+        #define PCC_PDB0                 *(volatile unsigned long *)(PCC_BLOCK + 0x0d8)
+        #define PCC_LPIT0                *(volatile unsigned long *)(PCC_BLOCK + 0x0dc)
+        #define PCC_FLEXTMR0             *(volatile unsigned long *)(PCC_BLOCK + 0x0e0)
+        #define PCC_FLEXTMR1             *(volatile unsigned long *)(PCC_BLOCK + 0x0e4)
+        #define PCC_FLEXTMR2             *(volatile unsigned long *)(PCC_BLOCK + 0x0e8)
+        #define PCC_ADC0                 *(volatile unsigned long *)(PCC_BLOCK + 0x0ec)
+        #define PCC_ADC2                 *(volatile unsigned long *)(PCC_BLOCK + 0x0f0)
+        #define PCC_RTC                  *(volatile unsigned long *)(PCC_BLOCK + 0x0f4)
+        #define PCC_DAC0                 *(volatile unsigned long *)(PCC_BLOCK + 0x0fc)
+        #define PCC_LPTMR0               *(volatile unsigned long *)(PCC_BLOCK + 0x100)
+        #define PCC_PORT_ADDR             (volatile unsigned long *)(PCC_BLOCK + 0x124)
+        #define PCC_PORTA                *(volatile unsigned long *)(PCC_BLOCK + 0x124)
+        #define PCC_PORTB                *(volatile unsigned long *)(PCC_BLOCK + 0x128)
+        #define PCC_PORTC                *(volatile unsigned long *)(PCC_BLOCK + 0x12c)
+        #define PCC_PORTD                *(volatile unsigned long *)(PCC_BLOCK + 0x130)
+        #define PCC_PORTE                *(volatile unsigned long *)(PCC_BLOCK + 0x134)
+        #define PCC_PWT                  *(volatile unsigned long *)(PCC_BLOCK + 0x158)
+        #define PCC_FLEXIO               *(volatile unsigned long *)(PCC_BLOCK + 0x168)
+        #define PCC_OSC32                *(volatile unsigned long *)(PCC_BLOCK + 0x180)
+        #define PCC_EWM                  *(volatile unsigned long *)(PCC_BLOCK + 0x184)
+        #define PCC_LPI2C0               *(volatile unsigned long *)(PCC_BLOCK + 0x198)
+        #define PCC_LPI2C1               *(volatile unsigned long *)(PCC_BLOCK + 0x19c)
+        #define PCC_LPUART0              *(volatile unsigned long *)(PCC_BLOCK + 0x1a8)
+        #define PCC_LPUART1              *(volatile unsigned long *)(PCC_BLOCK + 0x1ac)
+        #define PCC_LPUART2              *(volatile unsigned long *)(PCC_BLOCK + 0x1b0)
+        #define PCC_CMP0                 *(volatile unsigned long *)(PCC_BLOCK + 0x1cc)
+        #define PCC_CMP1                 *(volatile unsigned long *)(PCC_BLOCK + 0x1d0)
+        #define PCC_CMP2                 *(volatile unsigned long *)(PCC_BLOCK + 0x1d4)
     #else
         #define PCC_INTMUX0              *(volatile unsigned long *)(PCC_BLOCK + 0x090)
         #define PCC_TPM2                 *(volatile unsigned long *)(PCC_BLOCK + 0x0b8)
@@ -11422,6 +11475,10 @@ typedef struct stKINETIS_LPTMR_CTL
         #define PCC_CMP1                 *(volatile unsigned long *)(PCC2_BLOCK + 0x1bc)
     #endif
     #define PCC_USBOTG                   PCC_USB0FS                      // for compatibility
+    #define PCC_FTM0                     PCC_FLEXTMR0
+    #define PCC_FTM1                     PCC_FLEXTMR1
+    #define PCC_FTM2                     PCC_FLEXTMR2
+    #define PCC_FTM3                     PCC_FLEXTMR3
 #endif
 
 #if defined KINETIS_KE && !defined KINETIS_WITH_SCG
@@ -14744,80 +14801,92 @@ typedef struct stUSB_HW
 // DAC                                                                   {23}
 //
 #if DAC_CONTROLLERS > 0
-    #define DAC0_DAT0L                   *(volatile unsigned char *)(DAC0_BASE_ADD + 0x00) // Data Low Register
-    #define DAC0_DAT0H                   *(volatile unsigned char *)(DAC0_BASE_ADD + 0x01) // Data High Register
-    #define DAC0_DAT1L                   *(volatile unsigned char *)(DAC0_BASE_ADD + 0x02) // Data Low Register
-    #define DAC0_DAT1H                   *(volatile unsigned char *)(DAC0_BASE_ADD + 0x03) // Data High Register
-    #if !defined KINETIS_KL                                              // {52}
-        #define DAC0_DAT2L               *(volatile unsigned char *)(DAC0_BASE_ADD + 0x04) // Data Low Register
-        #define DAC0_DAT2H               *(volatile unsigned char *)(DAC0_BASE_ADD + 0x05) // Data High Register
-        #define DAC0_DAT3L               *(volatile unsigned char *)(DAC0_BASE_ADD + 0x06) // Data Low Register
-        #define DAC0_DAT3H               *(volatile unsigned char *)(DAC0_BASE_ADD + 0x07) // Data High Register
-        #define DAC0_DAT4L               *(volatile unsigned char *)(DAC0_BASE_ADD + 0x08) // Data Low Register
-        #define DAC0_DAT4H               *(volatile unsigned char *)(DAC0_BASE_ADD + 0x09) // Data High Register
-        #define DAC0_DAT5L               *(volatile unsigned char *)(DAC0_BASE_ADD + 0x0a) // Data Low Register
-        #define DAC0_DAT5H               *(volatile unsigned char *)(DAC0_BASE_ADD + 0x0b) // Data High Register
-        #define DAC0_DAT6L               *(volatile unsigned char *)(DAC0_BASE_ADD + 0x0c) // Data Low Register
-        #define DAC0_DAT6H               *(volatile unsigned char *)(DAC0_BASE_ADD + 0x0d) // Data High Register
-        #define DAC0_DAT7L               *(volatile unsigned char *)(DAC0_BASE_ADD + 0x0e) // Data Low Register
-        #define DAC0_DAT7H               *(volatile unsigned char *)(DAC0_BASE_ADD + 0x0f) // Data High Register
-        #define DAC0_DAT8L               *(volatile unsigned char *)(DAC0_BASE_ADD + 0x10) // Data Low Register
-        #define DAC0_DAT8H               *(volatile unsigned char *)(DAC0_BASE_ADD + 0x11) // Data High Register
-        #define DAC0_DAT9L               *(volatile unsigned char *)(DAC0_BASE_ADD + 0x12) // Data Low Register
-        #define DAC0_DAT9H               *(volatile unsigned char *)(DAC0_BASE_ADD + 0x13) // Data High Register
-        #define DAC0_DAT10L              *(volatile unsigned char *)(DAC0_BASE_ADD + 0x14) // Data Low Register
-        #define DAC0_DAT10H              *(volatile unsigned char *)(DAC0_BASE_ADD + 0x15) // Data High Register
-        #define DAC0_DAT11L              *(volatile unsigned char *)(DAC0_BASE_ADD + 0x16) // Data Low Register
-        #define DAC0_DAT11H              *(volatile unsigned char *)(DAC0_BASE_ADD + 0x17) // Data High Register
-        #define DAC0_DAT12L              *(volatile unsigned char *)(DAC0_BASE_ADD + 0x18) // Data Low Register
-        #define DAC0_DAT12H              *(volatile unsigned char *)(DAC0_BASE_ADD + 0x19) // Data High Register
-        #define DAC0_DAT13L              *(volatile unsigned char *)(DAC0_BASE_ADD + 0x1a) // Data Low Register
-        #define DAC0_DAT13H              *(volatile unsigned char *)(DAC0_BASE_ADD + 0x1b) // Data High Register
-        #define DAC0_DAT14L              *(volatile unsigned char *)(DAC0_BASE_ADD + 0x1c) // Data Low Register
-        #define DAC0_DAT14H              *(volatile unsigned char *)(DAC0_BASE_ADD + 0x1d) // Data High Register
-        #define DAC0_DAT15L              *(volatile unsigned char *)(DAC0_BASE_ADD + 0x1e) // Data Low Register
-        #define DAC0_DAT15H              *(volatile unsigned char *)(DAC0_BASE_ADD + 0x1f) // Data High Register
+    #if defined KINETIS_KE18
+        #define DAC0_DAT0                    *(volatile unsigned long *)(DAC0_BASE_ADD + 0x00) // data register 0
+        #define DAC0_DAT1                    *(volatile unsigned long *)(DAC0_BASE_ADD + 0x04) // data register 1
+        #define DAC0_DAT2                    *(volatile unsigned long *)(DAC0_BASE_ADD + 0x08) // data register 2
+        #define DAC0_DAT3                    *(volatile unsigned long *)(DAC0_BASE_ADD + 0x0c) // data register 3
+        #define DAC0_DAT4                    *(volatile unsigned long *)(DAC0_BASE_ADD + 0x10) // data register 4
+        #define DAC0_DAT5                    *(volatile unsigned long *)(DAC0_BASE_ADD + 0x14) // data register 5
+        #define DAC0_DAT6                    *(volatile unsigned long *)(DAC0_BASE_ADD + 0x18) // data register 6
+        #define DAC0_DAT7                    *(volatile unsigned long *)(DAC0_BASE_ADD + 0x1c) // data register 7
+        #define DAC0_STATCTRL                *(volatile unsigned long *)(DAC0_BASE_ADD + 0x20) // data status and control register
+    #else
+        #define DAC0_DAT0L                   *(volatile unsigned char *)(DAC0_BASE_ADD + 0x00) // Data Low Register
+        #define DAC0_DAT0H                   *(volatile unsigned char *)(DAC0_BASE_ADD + 0x01) // Data High Register
+        #define DAC0_DAT1L                   *(volatile unsigned char *)(DAC0_BASE_ADD + 0x02) // Data Low Register
+        #define DAC0_DAT1H                   *(volatile unsigned char *)(DAC0_BASE_ADD + 0x03) // Data High Register
+        #if !defined KINETIS_KL                                              // {52}
+            #define DAC0_DAT2L               *(volatile unsigned char *)(DAC0_BASE_ADD + 0x04) // Data Low Register
+            #define DAC0_DAT2H               *(volatile unsigned char *)(DAC0_BASE_ADD + 0x05) // Data High Register
+            #define DAC0_DAT3L               *(volatile unsigned char *)(DAC0_BASE_ADD + 0x06) // Data Low Register
+            #define DAC0_DAT3H               *(volatile unsigned char *)(DAC0_BASE_ADD + 0x07) // Data High Register
+            #define DAC0_DAT4L               *(volatile unsigned char *)(DAC0_BASE_ADD + 0x08) // Data Low Register
+            #define DAC0_DAT4H               *(volatile unsigned char *)(DAC0_BASE_ADD + 0x09) // Data High Register
+            #define DAC0_DAT5L               *(volatile unsigned char *)(DAC0_BASE_ADD + 0x0a) // Data Low Register
+            #define DAC0_DAT5H               *(volatile unsigned char *)(DAC0_BASE_ADD + 0x0b) // Data High Register
+            #define DAC0_DAT6L               *(volatile unsigned char *)(DAC0_BASE_ADD + 0x0c) // Data Low Register
+            #define DAC0_DAT6H               *(volatile unsigned char *)(DAC0_BASE_ADD + 0x0d) // Data High Register
+            #define DAC0_DAT7L               *(volatile unsigned char *)(DAC0_BASE_ADD + 0x0e) // Data Low Register
+            #define DAC0_DAT7H               *(volatile unsigned char *)(DAC0_BASE_ADD + 0x0f) // Data High Register
+            #define DAC0_DAT8L               *(volatile unsigned char *)(DAC0_BASE_ADD + 0x10) // Data Low Register
+            #define DAC0_DAT8H               *(volatile unsigned char *)(DAC0_BASE_ADD + 0x11) // Data High Register
+            #define DAC0_DAT9L               *(volatile unsigned char *)(DAC0_BASE_ADD + 0x12) // Data Low Register
+            #define DAC0_DAT9H               *(volatile unsigned char *)(DAC0_BASE_ADD + 0x13) // Data High Register
+            #define DAC0_DAT10L              *(volatile unsigned char *)(DAC0_BASE_ADD + 0x14) // Data Low Register
+            #define DAC0_DAT10H              *(volatile unsigned char *)(DAC0_BASE_ADD + 0x15) // Data High Register
+            #define DAC0_DAT11L              *(volatile unsigned char *)(DAC0_BASE_ADD + 0x16) // Data Low Register
+            #define DAC0_DAT11H              *(volatile unsigned char *)(DAC0_BASE_ADD + 0x17) // Data High Register
+            #define DAC0_DAT12L              *(volatile unsigned char *)(DAC0_BASE_ADD + 0x18) // Data Low Register
+            #define DAC0_DAT12H              *(volatile unsigned char *)(DAC0_BASE_ADD + 0x19) // Data High Register
+            #define DAC0_DAT13L              *(volatile unsigned char *)(DAC0_BASE_ADD + 0x1a) // Data Low Register
+            #define DAC0_DAT13H              *(volatile unsigned char *)(DAC0_BASE_ADD + 0x1b) // Data High Register
+            #define DAC0_DAT14L              *(volatile unsigned char *)(DAC0_BASE_ADD + 0x1c) // Data Low Register
+            #define DAC0_DAT14H              *(volatile unsigned char *)(DAC0_BASE_ADD + 0x1d) // Data High Register
+            #define DAC0_DAT15L              *(volatile unsigned char *)(DAC0_BASE_ADD + 0x1e) // Data Low Register
+            #define DAC0_DAT15H              *(volatile unsigned char *)(DAC0_BASE_ADD + 0x1f) // Data High Register
+        #endif
+        #define DAC0_SR                      *(volatile unsigned char*)(DAC0_BASE_ADD + 0x20) // DAC0 Status Register
+          #define DAC_SR_DACBFPBF            0x01                        // DAC buffer read pointer is equal to the DACBFUP
+          #define DAC_SR_DACBFRPTF           0x02                        // DAC buffer read pointer is zero
+          #if !defined KINETIS_KL
+              #define DAC_SR_DACBFWMF        0x04                        // DAC buffer read pointer has reached the watermark level
+          #endif
+        #define DAC0_C0                      *(unsigned char*)(DAC0_BASE_ADD + 0x21) // DAC0 Control Register
+          #define DAC_C0_DACBBIEN            0x01                        // DAC buffer read pointer bottom flag interrupt enable
+          #define DAC_C0_DACBTIEN            0x02                        // DAC buffer read pointer top flag interrupt enable
+         #if !defined KINETIS_KL
+          #define DAC_C0_DACBWIEN            0x04                        // DAC watermark interrupt enable
+         #endif
+          #define DAC_C0_LPEN_HIGH_POWER     0x00                        // DAC high power mode
+          #define DAC_C0_LPEN_LOW_POWER      0x08                        // DAC low power mode
+          #define DAC_C0_DACSWTRG            0x10                        // (write-only) DAC software trigger valid
+          #define DAC_C0_DACTRGSET_HW        0x00                        // DAC hardware trigger select
+          #define DAC_C0_DACTRGSET_SW        0x20                        // DAC software trigger select
+         #if defined KINETIS_KL
+          #define DAC_C0_DACRFS_VREF         0x00                        // DAC reference voltage select - DACREF_1
+          #define DAC_C0_DACRFS_VREF2        0x40                        // DAC reference voltage select - DACREF_2
+         #else
+          #define DAC_C0_DACRFS_VREF         0x00                        // DAC reference voltage select - VREF
+          #define DAC_C0_DACRFS_VDDA         0x40                        // DAC reference voltage select - VDDA
+         #endif
+          #define DAC_C0_DACEN               0x80                        // DAC enable
+        #define DAC0_C1                      *(unsigned char*)(DAC0_BASE_ADD + 0x22) // DAC0 Control Register 1
+          #define DAC_C1_DACBFEN             0x01                        // DAC buffer enable
+          #define DAC_C1_DACBFMD_NORMAL      0x00                        // DAC buffer work mode select - normal mode
+         #if !defined KINETIS_KL
+          #define DAC_C1_DACBFMD_SWING       0x02                        // DAC buffer work mode select - swing mode
+         #endif
+          #define DAC_C1_DACBFMD_ONE_TIME_SCAN  0x04                     // DAC buffer work mode select - one-time scan mode
+         #if !defined KINETIS_KL
+          #define DAC_C1_DACBFWM_1_WORD      0x00                        // DAC watermark select - 1 word
+          #define DAC_C1_DACBFWM_2_WORDS     0x08                        // DAC watermark select - 2 words
+          #define DAC_C1_DACBFWM_3_WORDS     0x10                        // DAC watermark select - 3 words
+          #define DAC_C1_DACBFWM_4_WORDS     0x18                        // DAC watermark select - 4 words
+         #endif
+          #define DAC_C1_DMAEN               0x80                        // DMA enable select
+        #define DAC0_C2                      *(volatile unsigned char*)(DAC0_BASE_ADD + 0x23) // DAC0 Control Register 2
     #endif
-    #define DAC0_SR                      *(volatile unsigned char*)(DAC0_BASE_ADD + 0x20) // DAC0 Status Register
-      #define DAC_SR_DACBFPBF            0x01                            // DAC buffer read pointer is equal to the DACBFUP
-      #define DAC_SR_DACBFRPTF           0x02                            // DAC buffer read pointer is zero
-     #if !defined KINETIS_KL
-      #define DAC_SR_DACBFWMF            0x04                            // DAC buffer read pointer has reached the watermark level
-     #endif
-    #define DAC0_C0                      *(unsigned char*)(DAC0_BASE_ADD + 0x21) // DAC0 Control Register
-      #define DAC_C0_DACBBIEN            0x01                            // DAC buffer read pointer bottom flag interrupt enable
-      #define DAC_C0_DACBTIEN            0x02                            // DAC buffer read pointer top flag interrupt enable
-     #if !defined KINETIS_KL
-      #define DAC_C0_DACBWIEN            0x04                            // DAC watermark interrupt enable
-     #endif
-      #define DAC_C0_LPEN_HIGH_POWER     0x00                            // DAC high power mode
-      #define DAC_C0_LPEN_LOW_POWER      0x08                            // DAC low power mode
-      #define DAC_C0_DACSWTRG            0x10                            // (write-only) DAC software trigger valid
-      #define DAC_C0_DACTRGSET_HW        0x00                            // DAC hardware trigger select
-      #define DAC_C0_DACTRGSET_SW        0x20                            // DAC software trigger select
-     #if defined KINETIS_KL
-      #define DAC_C0_DACRFS_VREF         0x00                            // DAC reference voltage select - DACREF_1
-      #define DAC_C0_DACRFS_VREF2        0x40                            // DAC reference voltage select - DACREF_2
-     #else
-      #define DAC_C0_DACRFS_VREF         0x00                            // DAC reference voltage select - VREF
-      #define DAC_C0_DACRFS_VDDA         0x40                            // DAC reference voltage select - VDDA
-     #endif
-      #define DAC_C0_DACEN               0x80                            // DAC enable
-    #define DAC0_C1                      *(unsigned char*)(DAC0_BASE_ADD + 0x22) // DAC0 Control Register 1
-      #define DAC_C1_DACBFEN             0x01                            // DAC buffer enable
-      #define DAC_C1_DACBFMD_NORMAL      0x00                            // DAC buffer work mode select - normal mode
-     #if !defined KINETIS_KL
-      #define DAC_C1_DACBFMD_SWING       0x02                            // DAC buffer work mode select - swing mode
-     #endif
-      #define DAC_C1_DACBFMD_ONE_TIME_SCAN  0x04                         // DAC buffer work mode select - one-time scan mode
-     #if !defined KINETIS_KL
-      #define DAC_C1_DACBFWM_1_WORD      0x00                            // DAC watermark select - 1 word
-      #define DAC_C1_DACBFWM_2_WORDS     0x08                            // DAC watermark select - 2 words
-      #define DAC_C1_DACBFWM_3_WORDS     0x10                            // DAC watermark select - 3 words
-      #define DAC_C1_DACBFWM_4_WORDS     0x18                            // DAC watermark select - 4 words
-     #endif
-      #define DAC_C1_DMAEN               0x80                            // DMA enable select
-    #define DAC0_C2                      *(volatile unsigned char*)(DAC0_BASE_ADD + 0x23) // DAC0 Control Register 2
 #endif
 #if DAC_CONTROLLERS > 1
     #define DAC1_DAT0L                   *(volatile unsigned char *)(DAC1_BASE_ADD + 0x00) // Data Low Register

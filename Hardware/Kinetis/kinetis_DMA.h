@@ -142,7 +142,7 @@ static const unsigned char *_DMA_Interrupt[_DMA_CHANNEL_COUNT] = {
 // - either a complete or a half (not KL) buffer has been completed
 //
 static void (*_DMA_handler[DMA_CHANNEL_COUNT])(void) = {0};              // user DMA interrupt handlers
-#if defined KINETIS_KL
+#if defined KINETIS_KL && !defined DEVICE_WITH_eDMA
     static unsigned long ulRepeatLength[DMA_CHANNEL_COUNT] = {0};        // {1}
     static unsigned char ucDirectionOutput[DMA_CHANNEL_COUNT] = {DMA_TRANSFER_INPUT};
     static unsigned char *ptrStart[DMA_CHANNEL_COUNT] = {0};

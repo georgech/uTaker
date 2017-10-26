@@ -764,6 +764,7 @@ Build_Kinetis.bat
     <None Include="..\..\..\Hardware\Kinetis\Crypto\mmcau_aes_functions.S">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
     </None>
+    <None Include="..\..\..\Hardware\Kinetis\Crypto\mmcau_aes_functions_M0.S" />
     <None Include="..\..\..\Hardware\Kinetis\kinetis_asm.s" />
     <None Include="..\GNU_Kinetis\Build_Kinetis.bat" />
     <None Include="..\GNU_Kinetis\make_uTaskerV1.4_GNU_Kinetis" />

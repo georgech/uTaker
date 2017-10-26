@@ -40,6 +40,7 @@
     20.05.2017 Add Kinetis timer capture test                            {24}
 
     The file is otherwise not specifically linked in to the project since it is included by application.c when needed.
+    The reason for ADC and timer configurations in a single file is that a HW timer is very often used togther with and ADC.
 
 */
 
@@ -47,8 +48,8 @@
     #define _ADC_TIMER_CONFIG
 
     #if defined SUPPORT_ADC                                              // if HW support is enabled
-        #define TEST_ADC                                                 // enable test of ADC operation
-      //#define TEST_AD_DA                                               // {14} enable test of reading ADC and writing (after delay) to DAC
+      //#define TEST_ADC                                                 // enable test of ADC operation
+        #define TEST_AD_DA                                               // {14} enable test of reading ADC and writing (after delay) to DAC
           //#define ADC_TRIGGER_TPM                                      // use TPM module rather than PIT for ADC trigger (valid for KL parts)
           //#define VOICE_RECORDER                                       // {15} needs TEST_AD_DA and mass-storage and saves sampled input to SD card
       //#define INTERNAL_TEMP                                            // {2} read also internal temperature (Luminary Micro)
@@ -197,7 +198,7 @@
             #define ADC_SAMPLES_LM3SXXXX (ADC_CHANNELS_LM3S * ADC_SEQUENCES)  // 2 x all channel sample sequences (3 with temperature)
             static unsigned short usADC_samples[ADC_SAMPLES_LM3SXXXX];
         #endif
-    #elif defined TEST_AD_DA && !defined KINETIS_KE                      // {14}
+    #elif defined TEST_AD_DA && (defined DAC_CONTROLLERS && (DAC_CONTROLLERS > 0)) // {14}
         #if defined KINETIS_KL
             #define AD_DA_BUFFER_LENGTH    (256)                         // buffer for 31.25ms at 8k bytes/s
         #else
@@ -763,7 +764,7 @@ static void fnConfigureADC(void)
         #if defined KINETIS_KL && defined TEST_AD_DA && defined ADC_TRIGGER_TPM
     adc_setup.ucDmaTriggerSource = DMAMUX0_CHCFG_SOURCE_TPM1_OVERFLOW;   // trigger DMA TPM overflows
         #else
-    adc_setup.ucDmaTriggerSource = 0;                                    // default trigger is the ADC conversion completion fo the channel in question
+    adc_setup.ucDmaTriggerSource = 0;                                    // default trigger is the ADC conversion completion of the channel in question
         #endif
     #endif
     #if !defined KINETIS_KE
@@ -807,7 +808,11 @@ static void fnConfigureADC(void)
                 #if (ADC_CONTROLLERS > 1)
     adc_setup.int_adc_controller = 1;                                    // ADC controller 1
                 #endif
+                #if defined FRDM_K66F || defined TEENSY_3_6
+    adc_setup.int_adc_bit = ADC_DM0_SINGLE;
+                #else
     adc_setup.int_adc_bit = ADC_DM1_SINGLE;                              // potentiometer on K60/K70 tower boards
+                #endif
     adc_setup.int_handler = 0;                                           // no interrupt
             #endif
             #if !defined DEVICE_WITHOUT_DMA

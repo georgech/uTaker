@@ -2068,7 +2068,13 @@ typedef struct stKINETIS_PCC
 {
     unsigned long ulRes0[8];
     unsigned long PCC_DMA0;
+    #if defined KINETIS_KE15
+    unsigned long ulRes1[4];
+    unsigned long PCC_MPU;
+    unsigned long ulRes1a[0x12];
+    #else
     unsigned long ulRes1[0x17];
+    #endif
     unsigned long PCC_FLASH;
     unsigned long PCC_DMAMUX0;
     #if defined KINETIS_KE15
@@ -2114,6 +2120,54 @@ typedef struct stKINETIS_PCC
         unsigned long ulRes14[6];
         unsigned long PCC_CMP0;
         unsigned long PCC_CMP1;
+    #elif defined KINETIS_KE18
+        unsigned long ulRes2[2];
+        unsigned long PCC_CAN0;
+        unsigned long PCC_CAN1;
+        unsigned long PCC_FLEXTMR3;
+        unsigned long PCC_ADC1;
+        unsigned long PCC_LPSPI0;
+        unsigned long PCC_LPSPI1;
+        unsigned long ulRes3[3];
+        unsigned long PCC_PDB1;
+        unsigned long PCC_CRC;
+        unsigned long PCC_PDB2;
+        unsigned long ulRes4[2];
+        unsigned long PCC_PDB0;
+        unsigned long PCC_LPIT0;
+        unsigned long PCC_FLEXTMR0;
+        unsigned long PCC_FLEXTMR1;
+        unsigned long PCC_FLEXTMR2;
+        unsigned long PCC_ADC0;
+        unsigned long PCC_ADC2;
+        unsigned long PCC_RTC;
+        unsigned long ulRes6[1];
+        unsigned long PCC_DAC0;
+        unsigned long PCC_LPTMR0;
+        unsigned long ulRes7[8];
+        unsigned long PCC_PORTA;
+        unsigned long PCC_PORTB;
+        unsigned long PCC_PORTC;
+        unsigned long PCC_PORTD;
+        unsigned long PCC_PORTE;
+        unsigned long ulRes9[8];
+        unsigned long PCC_PWT;
+        unsigned long ulRes10[3];
+        unsigned long PCC_FLEXIO;
+        unsigned long ulRes11[5];
+        unsigned long PCC_OSC32;
+        unsigned long PCC_EWM;
+        unsigned long ulRes12[4];
+        unsigned long PCC_LPI2C0;
+        unsigned long PCC_LPI2C1;
+        unsigned long ulRes13[2];
+        unsigned long PCC_LPUART0;
+        unsigned long PCC_LPUART1;
+        unsigned long PCC_LPUART2;
+        unsigned long ulRes14[6];
+        unsigned long PCC_CMP0;
+        unsigned long PCC_CMP1;
+        unsigned long PCC_CMP2;
     #else
         unsigned long ulRes2[2];
         unsigned long PCC_INTMUX0;
@@ -2158,7 +2212,7 @@ typedef struct stKINETIS_PCC
     #endif
 } KINETIS_PCC;
 
-    #if !defined KINETIS_KE15
+    #if !defined KINETIS_KE
 typedef struct stKINETIS_PCC2
 {
     unsigned long ulRes0[0x25];
@@ -2844,46 +2898,58 @@ unsigned long ENET_TCCR3;
 
 typedef struct stKINETIS_DAC
 {
-unsigned char DAC_DAT0L;
-unsigned char DAC_DAT0H;
-unsigned char DAC_DAT1L;
-unsigned char DAC_DAT1H;
-#if defined KINETIS_KL
-    unsigned char ucRes0[28];
+#if defined KINETIS_KE18
+    unsigned long DAC0_DAT0;
+    unsigned long DAC0_DAT1;
+    unsigned long DAC0_DAT2;
+    unsigned long DAC0_DAT3;
+    unsigned long DAC0_DAT4;
+    unsigned long DAC0_DAT5;
+    unsigned long DAC0_DAT6;
+    unsigned long DAC0_DAT7;
+    unsigned long DAC0_STATCTRL;
 #else
-    unsigned char DAC_DAT2L;
-    unsigned char DAC_DAT2H;
-    unsigned char DAC_DAT3L;
-    unsigned char DAC_DAT3H;
-    unsigned char DAC_DAT4L;
-    unsigned char DAC_DAT4H;
-    unsigned char DAC_DAT5L;
-    unsigned char DAC_DAT5H;
-    unsigned char DAC_DAT6L;
-    unsigned char DAC_DAT6H;
-    unsigned char DAC_DAT7L;
-    unsigned char DAC_DAT7H;
-    unsigned char DAC_DAT8L;
-    unsigned char DAC_DAT8H;
-    unsigned char DAC_DAT9L;
-    unsigned char DAC_DAT9H;
-    unsigned char DAC_DAT10L;
-    unsigned char DAC_DAT10H;
-    unsigned char DAC_DAT11L;
-    unsigned char DAC_DAT11H;
-    unsigned char DAC_DAT12L;
-    unsigned char DAC_DAT12H;
-    unsigned char DAC_DAT13L;
-    unsigned char DAC_DAT13H;
-    unsigned char DAC_DAT14L;
-    unsigned char DAC_DAT14H;
-    unsigned char DAC_DAT15L;
-    unsigned char DAC_DAT15H;
+    unsigned char DAC_DAT0L;
+    unsigned char DAC_DAT0H;
+    unsigned char DAC_DAT1L;
+    unsigned char DAC_DAT1H;
+    #if defined KINETIS_KL
+        unsigned char ucRes0[28];
+    #else
+        unsigned char DAC_DAT2L;
+        unsigned char DAC_DAT2H;
+        unsigned char DAC_DAT3L;
+        unsigned char DAC_DAT3H;
+        unsigned char DAC_DAT4L;
+        unsigned char DAC_DAT4H;
+        unsigned char DAC_DAT5L;
+        unsigned char DAC_DAT5H;
+        unsigned char DAC_DAT6L;
+        unsigned char DAC_DAT6H;
+        unsigned char DAC_DAT7L;
+        unsigned char DAC_DAT7H;
+        unsigned char DAC_DAT8L;
+        unsigned char DAC_DAT8H;
+        unsigned char DAC_DAT9L;
+        unsigned char DAC_DAT9H;
+        unsigned char DAC_DAT10L;
+        unsigned char DAC_DAT10H;
+        unsigned char DAC_DAT11L;
+        unsigned char DAC_DAT11H;
+        unsigned char DAC_DAT12L;
+        unsigned char DAC_DAT12H;
+        unsigned char DAC_DAT13L;
+        unsigned char DAC_DAT13H;
+        unsigned char DAC_DAT14L;
+        unsigned char DAC_DAT14H;
+        unsigned char DAC_DAT15L;
+        unsigned char DAC_DAT15H;
+    #endif
+    unsigned char DAC_SR;
+    unsigned char DAC_C0;
+    unsigned char DAC_C1;
+    unsigned char DAC_C2;
 #endif
-unsigned char DAC_SR;
-unsigned char DAC_C0;
-unsigned char DAC_C1;
-unsigned char DAC_C2;
 } KINETIS_DAC;
 
 

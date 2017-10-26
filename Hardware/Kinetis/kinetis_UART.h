@@ -184,8 +184,8 @@ static unsigned char ucUART_mask[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {0};
     static unsigned char ucStops[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {0};
 #endif
 #if defined SERIAL_INTERFACE && defined SERIAL_SUPPORT_DMA_RX && defined SERIAL_SUPPORT_DMA_RX_FREERUN // {15}
-    static unsigned long ulDMA_progress[UARTS_AVAILABLE + LPUARTS_AVAILABLE];
-    #if defined KINETIS_KL                                               // {209}
+    static unsigned long ulDMA_progress[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {0};
+    #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA                  // {209}
     static QUEUE_TRANSFER RxModulo[UARTS_AVAILABLE + LPUARTS_AVAILABLE];
     #endif
 #endif
@@ -1522,7 +1522,7 @@ extern void fnPrepareRxDMA(QUEUE_HANDLE channel, unsigned char *ptrStart, QUEUE_
     // UART channel
     //
     if ((uart_reg->UART_C2 & UART_C2_RE) == 0) {                         // if receiver not yet enabled
-        #if defined KINETIS_KL                                           // {209}
+        #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA              // {209}
         fnEnableRxAndDMA(channel, rx_length, (unsigned long)ptrStart, (void *)&(uart_reg->UART_D)); // configure DMA and reception, including configuring the RXD input
         #else
         KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
@@ -1535,7 +1535,7 @@ extern void fnPrepareRxDMA(QUEUE_HANDLE channel, unsigned char *ptrStart, QUEUE_
     }
         #if defined SERIAL_SUPPORT_DMA_RX_FREERUN                        // {15}
     else if (rx_length == 0) {                                           // call to update DMA progress
-            #if defined KINETIS_KL                                       // {209}
+            #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA          // {209}
         fnCheckFreerunningDMA_reception(channel, (QUEQUE *)ptrStart);
             #else
         QUEQUE *tty_queue = (QUEQUE *)ptrStart;

@@ -78,11 +78,11 @@ static __interrupt void _pdb_Interrupt(void)
         #endif
     #endif
             PDB0_CH0S = 0;                                               // reset error status
-            if (ptr_pdb_setup->pdb_mode & PDB_PERIODIC_DMA) {
+            if ((ptr_pdb_setup->pdb_mode & PDB_PERIODIC_DMA) != 0) {
                 ulMode |= (PDB_SC_DMAEN | PDB_SC_CONT);                  // continuous mode with DMA
             }
             else {
-                if (ptr_pdb_setup->pdb_mode & PDB_PERIODIC_INTERRUPT) {
+                if ((ptr_pdb_setup->pdb_mode & PDB_PERIODIC_INTERRUPT) != 0) {
                     ulMode |= PDB_SC_CONT;                               // continuous mode with optional interrupt
                 }
                 else {

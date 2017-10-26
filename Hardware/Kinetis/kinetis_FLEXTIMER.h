@@ -101,25 +101,25 @@ static void fnHandleFlexTimer(FLEX_TIMER_MODULE *ptrFlexTimer, int iFlexTimerRef
             ptrFlexTimer->FTM_SC = FTM_SC_TOF;                           // stop further activity (single-shot mode)
             switch (iFlexTimerReference) {                               // power down the FlexTimer after single-shot use
             case 0:
-                POWER_DOWN(6, SIM_SCGC6_FTM0);
+                POWER_DOWN_ATOMIC(6, FTM0);
                 break;
     #if FLEX_TIMERS_AVAILABLE > 1
             case 1:
-                POWER_DOWN(6, SIM_SCGC6_FTM1);
+                POWER_DOWN_ATOMIC(6, FTM1);
                 break;
     #endif
     #if FLEX_TIMERS_AVAILABLE > 2
             case 2:
         #if defined KINETIS_KL
-                POWER_DOWN(6, SIM_SCGC6_FTM2);
+                POWER_DOWN_ATOMIC(6, FTM2);
         #else
-                POWER_DOWN(3, SIM_SCGC3_FTM2);
+                POWER_DOWN_ATOMIC(3, FTM2);
         #endif
                 break;
     #endif
     #if FLEX_TIMERS_AVAILABLE > 3
             case 3:
-                POWER_DOWN(3, SIM_SCGC3_FTM3);
+                POWER_DOWN_ATOMIC(3, FTM3);
                 break;
     #endif
             }
@@ -237,9 +237,9 @@ static __interrupt void _flexTimerInterrupt_3(void)
             case 2:
                 if ((ptrTimerSetup->timer_mode & TIMER_STOP) != 0) {
         #if defined KINETIS_KL
-                    POWER_DOWN(6, SIM_SCGC6_FTM2);
+                    POWER_DOWN_ATOMIC(6, FTM2);
         #else
-                    POWER_DOWN(3, SIM_SCGC3_FTM2); 
+                    POWER_DOWN_ATOMIC(3, FTM2);
         #endif
                     return;
                 }
@@ -264,7 +264,7 @@ static __interrupt void _flexTimerInterrupt_3(void)
     #if FLEX_TIMERS_AVAILABLE > 3
             case 3:
                 if ((ptrTimerSetup->timer_mode & TIMER_STOP) != 0) {
-                    POWER_DOWN_ATOMIC(3, FTM3); 
+                    POWER_DOWN_ATOMIC(3, FTM3);
                     return;
                 }
                 POWER_UP_ATOMIC(3, FTM3);                                // ensure that the FlexTimer module is powered up

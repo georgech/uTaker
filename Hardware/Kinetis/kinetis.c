@@ -1325,12 +1325,12 @@ extern void fnRetriggerWatchdog(void)
 /* =================================================================== */
 /*                                 DMA                                 */
 /* =================================================================== */
-#define _DMA_SHARED_CODE
-    #include "kinetis_DMA.h"                                             // include driver code for peripheral/buffer DMA
-#undef _DMA_SHARED_CODE
-#define _DMA_MEM_TO_MEM
-    #include "kinetis_DMA.h"                                             // include memory-memory transfer code 
-#undef _DMA_MEM_TO_MEM
+    #define _DMA_SHARED_CODE
+        #include "kinetis_DMA.h"                                         // include driver code for peripheral/buffer DMA
+    #undef _DMA_SHARED_CODE
+    #define _DMA_MEM_TO_MEM
+        #include "kinetis_DMA.h"                                         // include memory-memory transfer code 
+    #undef _DMA_MEM_TO_MEM
 #endif
 
 #if (defined ETH_INTERFACE && defined ETHERNET_AVAILABLE && !defined NO_INTERNAL_ETHERNET)
@@ -1426,7 +1426,7 @@ static void fnConfigTimerPin(int iTimer, int iChannel, unsigned long ulCharacter
     case 0:                                                              // timer 0
                     switch (iChannel) {                                  // configure appropriate pin for the timer signal
                     case 0:                                              // timer 0, channel 0
-    #if defined KINETIS_KE
+    #if defined KINETIS_KE && (!defined KINETIS_KE15 && !defined KINETIS_KE18)
         #if defined FTM0_0_ON_B
                         SIM_PINSEL0 |= SIM_PINSEL_FTM0PS0;
                         _CONFIG_PERIPHERAL(B, 2, (PB_2_FTM0_CH0 | ulCharacteristics)); // FTM0_CH0 on PB.2 (alt. function 3)
@@ -1449,7 +1449,7 @@ static void fnConfigTimerPin(int iTimer, int iChannel, unsigned long ulCharacter
     #endif
                         break;
                     case 1:                                              // timer 0, channel 1
-    #if defined KINETIS_KE
+    #if defined KINETIS_KE && (!defined KINETIS_KE15 && !defined KINETIS_KE18)
         #if defined FTM0_1_ON_B
                         SIM_PINSEL0 |= SIM_PINSEL_FTM0PS1;
                         _CONFIG_PERIPHERAL(B, 3, (PB_3_FTM0_CH1 | ulCharacteristics)); // FTM0_CH1 on PB.3 (alt. function 3)
@@ -1549,7 +1549,7 @@ static void fnConfigTimerPin(int iTimer, int iChannel, unsigned long ulCharacter
     case 1:                                                              // timer 1
                     switch (iChannel) {                                  // configure appropriate pin for the timer signal
                     case 0:                                              // timer 1, channel 0
-        #if defined KINETIS_KE
+        #if defined KINETIS_KE && (!defined KINETIS_KE15 && !defined KINETIS_KE18)
             #if defined FTM1_0_ON_H
                         SIM_PINSEL0 |= SIM_PINSEL_FTM1PS0;
                         _CONFIG_PERIPHERAL(H, 2, (PH_2_FTM1_CH0 | ulCharacteristics)); // FTM1_CH0 on PH.2 (alt. function 4)
@@ -1574,7 +1574,7 @@ static void fnConfigTimerPin(int iTimer, int iChannel, unsigned long ulCharacter
         #endif
                         break;
                     case 1:                                              // timer 1, channel 1
-        #if defined KINETIS_KE
+        #if defined KINETIS_KE && (!defined KINETIS_KE15 && !defined KINETIS_KE18)
             #if defined FTM1_1_ON_E
                         SIM_PINSEL0 |= SIM_PINSEL_FTM1PS1;
                         _CONFIG_PERIPHERAL(E, 7, (PE_7_FTM1_CH1 | ulCharacteristics)); // FTM1_CH1 on PE.7 (alt. function 4)
@@ -1608,7 +1608,7 @@ static void fnConfigTimerPin(int iTimer, int iChannel, unsigned long ulCharacter
     case 2:                                                              // timer 2
                     switch (iChannel) {                                  // configure appropriate pin for the timer signal
                     case 0:                                              // timer 2, channel 0
-        #if defined KINETIS_KE
+        #if defined KINETIS_KE && (!defined KINETIS_KE15 && !defined KINETIS_KE18)
             #if defined FTM2_0_ON_H
                         SIM_PINSEL0 |= SIM_PINSEL_FTM1PS1;
                         _CONFIG_PERIPHERAL(H, 0, (PH_0_FTM2_CH0 | ulCharacteristics)); // FTM2_CH0 on PH.0 (alt. function 2)
@@ -1629,7 +1629,7 @@ static void fnConfigTimerPin(int iTimer, int iChannel, unsigned long ulCharacter
         #endif
                         break;
                     case 1:                                              // timer 2, channel 1
-        #if defined KINETIS_KE
+        #if defined KINETIS_KE && (!defined KINETIS_KE15 && !defined KINETIS_KE18)
             #if defined FTM2_1_ON_H
                 #if defined KINETIS_KE06
                         SIM_PINSEL1 |= SIM_PINSEL1_FTM2PS0_PTH0;
@@ -1660,7 +1660,7 @@ static void fnConfigTimerPin(int iTimer, int iChannel, unsigned long ulCharacter
                         _CONFIG_PERIPHERAL(A, 11, (PA_11_FTM2_CH1 | ulCharacteristics)); // FTM2_CH1 on PA.11 (alt. function 3)
         #endif
                         break;
-        #if defined KINETIS_KE
+        #if defined KINETIS_KE && (!defined KINETIS_KE15 && !defined KINETIS_KE18)
                     case 2:                                              // timer 2, channel 2
             #if defined FTM2_2_ON_D
                 #if defined KINETIS_KE06
