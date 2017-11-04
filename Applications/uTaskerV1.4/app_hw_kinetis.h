@@ -354,7 +354,7 @@
         #endif
         #define USB_CLOCK_GENERATED_INTERNALLY                           // use USB clock from internal source rather than external pin
     #endif
-#elif defined TWR_KV31F120M
+#elif defined TWR_KV31F120M || defined TWR_KV46F150M || defined TWR_KV58F220M
   //#define RUN_FROM_DEFAULT_CLOCK                                       // default mode is FLL Engaged Internal - the 32kHz IRC is multiplied by FLL factor of 640 to obtain 20.9715MHz nominal frequency (20MHz..25MHz)
     #if !defined RUN_FROM_DEFAULT_CLOCK
         #define OSC_LOW_GAIN_MODE
@@ -1007,11 +1007,18 @@
   //#define PACKAGE_TYPE        PACKAGE_QFN
     #define SIZE_OF_FLASH       (32 * 1024)                              // 32k program Flash
     #define SIZE_OF_RAM         (8 * 1024)                               // 8k SRAM
-#elif defined TWR_KV31F120M
+#elif defined TWR_KV31F120M || defined TWR_KV46F150M
   //#define PIN_COUNT           PIN_COUNT_64_PIN
-    #define PIN_COUNT           PIN_COUNT_100_PIN                        // 48 pin package
+    #define PIN_COUNT           PIN_COUNT_100_PIN                        // 100 pin package
     #define SIZE_OF_FLASH       (512 * 1024)                             // 512k program Flash
     #define SIZE_OF_RAM         (96 * 1024)                              // 96k SRAM
+#elif defined TWR_KV58F220M
+    #define PIN_COUNT           PIN_COUNT_144_PIN
+  //#define PIN_COUNT           PIN_COUNT_100_PIN                        // 100 pin package
+    #define PACKAGE_TYPE        PACKAGE_BGA                              // BGA
+  //#define PACKAGE_TYPE        PACKAGE_LQFP                             // LQFP
+    #define SIZE_OF_FLASH       (1024 * 1024)                            // 1M program Flash
+    #define SIZE_OF_RAM         (64 * 1024)                              // 64k SRAM (4 blocks of this size in total)
 #elif defined FRDM_KL25Z || defined TWR_KL25Z48M || defined RD_KL25_AGMP01 // {24}
     #define MASK_2N97F
   //#define PIN_COUNT           PIN_COUNT_32_PIN
@@ -7070,7 +7077,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         {RGB(255,0,0),   RGB(20,20,20), 1, {376, 163, 389, 167 }, _PORTD, DEMO_LED_8}, \
 
     #define KEYPAD "KeyPads/TWR_KV10Z32.bmp"
-#elif defined TWR_KV31F120M
+#elif defined TWR_KV31F120M || defined TWR_KV46F150M || defined TWR_KV58F220M
     #define DEMO_LED_1             (PORTD_BIT7)                          // (green LED) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
     #define DEMO_LED_2             (PORTB_BIT19)                         // (orange LED) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
     #define DEMO_LED_3             (PORTE_BIT0)                          // (red LED) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
@@ -7131,7 +7138,13 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 
     #define MULTICOLOUR_LEDS        {4, 6}                               // single LED made up of entries 4, 5 and 6
 
-    #define KEYPAD "KeyPads/TWR_KV31.bmp"
+    #if defined TWR_KV58F220M
+        #define KEYPAD "KeyPads/TWR_KV58F220M.bmp"
+    #elif defined TWR_KV46F150M
+        #define KEYPAD "KeyPads/TWR_KV46F150M.bmp"
+    #else
+        #define KEYPAD "KeyPads/TWR_KV31.bmp"
+    #endif
 #elif defined TWR_KW21D256 || defined TWR_KW24D512
     #define DEMO_LED_1             (PORTD_BIT4)                          // (blue LED) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
     #define DEMO_LED_2             (PORTD_BIT5)                          // (blue LED) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too

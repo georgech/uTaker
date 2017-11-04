@@ -50,6 +50,7 @@
     11.08.2017 Add WDOG32                                                {35}
     12.09.2017 Add INTMUX support                                        {36}
     26.09.2017 Add LPIT support                                          {37}
+    04.11.2017 Add true random number generator registers                {38}
 
 */  
 
@@ -2783,8 +2784,7 @@ unsigned char MC_PMCTRL;
     unsigned long RNG_ESR;
     unsigned long RNG_OUT;
     } KINETIS_RNGB;
-    #endif
-    #if defined RANDOM_NUMBER_GENERATOR_A
+    #elif defined RANDOM_NUMBER_GENERATOR_A
     typedef struct stKINETIS_RNGA
     {
     unsigned long RNGA_CR;
@@ -2792,6 +2792,57 @@ unsigned char MC_PMCTRL;
     unsigned long RNGA_ER;
     unsigned long RNGA_OR;
     } KINETIS_RNGA;
+    #elif defined TRUE_RANDOM_NUMBER_GENERATOR                           // {38}
+    typedef struct stKINETIS_TRNG
+    {
+        unsigned long TRNG0_MCTL;
+        unsigned long TRNG0_SCMISC;
+        unsigned long TRNG0_PKRRNG;
+        unsigned long TRNG0_PKRMAX_PKRSQ;
+        unsigned long TRNG0_SDCTL;
+        unsigned long TRNG0_SBLIM_TOTSAM;
+        unsigned long TRNG0_FRQMIN;
+        unsigned long TRNG0_FRQMAX_FRQCNT;
+        unsigned long TRNG0_SCML_SCMC;
+        unsigned long TRNG0_SCR1L_SCR1C;
+        unsigned long TRNG0_SCR2L;
+        unsigned long TRNG0_SCR3L;
+        unsigned long TRNG0_SCR4L;
+        unsigned long TRNG0_SCR5L;
+        unsigned long TRNG0_SCR6L;
+        unsigned long TRNG0_STATUS;
+        unsigned long TRNG0_ENT0;
+        unsigned long TRNG0_ENT1;
+        unsigned long TRNG0_ENT2;
+        unsigned long TRNG0_ENT3;
+        unsigned long TRNG0_ENT4;
+        unsigned long TRNG0_ENT5;
+        unsigned long TRNG0_ENT6;
+        unsigned long TRNG0_ENT7;
+        unsigned long TRNG0_ENT8;
+        unsigned long TRNG0_ENT9;
+        unsigned long TRNG0_ENT10;
+        unsigned long TRNG0_ENT11;
+        unsigned long TRNG0_ENT12;
+        unsigned long TRNG0_ENT13;
+        unsigned long TRNG0_ENT14;
+        unsigned long TRNG0_ENT15;
+        unsigned long TRNG0_PKRCNT10;
+        unsigned long TRNG0_PKRCNT32;
+        unsigned long TRNG0_PKRCNT54;
+        unsigned long TRNG0_PKRCNT76;
+        unsigned long TRNG0_PKRCNT98;
+        unsigned long TRNG0_PKRCNTBA;
+        unsigned long TRNG0_PKRCNTDC;
+        unsigned long TRNG0_PKRCNTFE;
+        unsigned long TRNG0_SEC_CFG;
+        unsigned long TRNG0_INT_CTRL;
+        unsigned long TRNG0_INT_MASK;
+        unsigned long TRNG0_INT_STATUS;
+        unsigned long ulReso[0x10];
+        unsigned long TRNG0_VID1;
+        unsigned long TRNG0_VID2;
+    } KINETIS_TRNG;
     #endif
 #endif
 
@@ -3474,11 +3525,12 @@ typedef struct stKINETIS_PERIPH
     KINETIS_VREF       VREF;
 #endif
 #if defined RNG_AVAILABLE
-    #if defined RANDOM_NUMBER_GENERATOR_A                               // {13}
+    #if defined RANDOM_NUMBER_GENERATOR_A                                // {13}
     KINETIS_RNGA       RNGA;
-    #endif
-    #if defined RANDOM_NUMBER_GENERATOR_B
+    #elif defined RANDOM_NUMBER_GENERATOR_B
     KINETIS_RNGB       RNGB;
+    #elif defined TRUE_RANDOM_NUMBER_GENERATOR                           // {38}
+    KINETIS_TRNG       TRNG;
     #endif
 #endif
 #if defined SDRAM_CONTROLLER_AVAILABLE

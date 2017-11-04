@@ -118,6 +118,7 @@
     26.09.2017 Add LPIT                                                  {101}
     12.10.2017 Modified POWER_UP_ATOMIC(), POWER_DOWN_ATOMIC() and IS_POWERED_UP() macros to be compatible with PCC {102}
     19.10.2017 ATOMIC_PERIPHERAL_BIT_REF_SET(), ATOMIC_PERIPHERAL_BIT_REF_CLEAR() and ATOMIC_PERIPHERAL_BIT_REF_CHECK() macros {103} - see video https://youtu.be/FZnkZ1h_EAQ
+    04.11.2017 Add true random number generator registers                {103}
 
 */
 
@@ -200,6 +201,10 @@ extern int  fnCheckBitBandPeripheralValue(unsigned long *bit_band_address);
     #define BME_OR_OFFSET    0x8000000                                   // {99} kinetis cortex-m0+ includes a bit manipulation engine and doesn't include bit-banding support
     #define BME_AND_OFFSET   0x4000000
     #define BME_XOR_OFFSET   0xc000000
+#elif defined KINETIS_KV50                                               // cortex-M7
+    #define ARM_MATH_CM7
+    #define BIT_BANDING_PERIPHERAL_ADDRESS(base, bit)    ((0x42000000 + (((CAST_POINTER_ARITHMETIC)(base) - 0x40000000) * 32)) + (4 * bit)) // bit banding address for a peripheral bit
+    #define BIT_BANDING_SRAM_ADDRESS(base, bit)          ((0x22000000 + (((CAST_POINTER_ARITHMETIC)(base) - 0x20000000) * 32)) + (4 * bit)) // bit banding address for an SRAM bit
 #else
     #define ARM_MATH_CM4                                                 // cortex-M4 to be used
     #define BIT_BANDING_PERIPHERAL_ADDRESS(base, bit)    ((0x42000000 + (((CAST_POINTER_ARITHMETIC)(base) - 0x40000000) * 32)) + (4 * bit)) // bit banding address for a peripheral bit
@@ -1063,6 +1068,8 @@ typedef struct stRESET_VECTOR
     #define KINETIS_HAS_IRC48M                                           // device has IRC48M which can be used for crystal-less USB
 #endif
 
+// Flash
+//
 #define FLASH_LINE_SIZE         8                                        // lines made up of 8 bytes to avoid file header problems with the FLASH characteristics
 #if defined PHRASE_PROGRAMMING_METHOD || defined KINETIS_KE
     #define FLASH_ROW_SIZE      8                                        // FLASH writes are performed on this many bytes at a time (the faster devices, and KE, use 8 byte phrases)
@@ -1071,8 +1078,20 @@ typedef struct stRESET_VECTOR
 #endif
 #define MAX_SECTOR_PARS         ((FLASH_GRANULARITY - (2 * FLASH_ROW_SIZE))/FLASH_ROW_SIZE) // the number of user bytes fitting into first parameter block
 
-#define FLASH_START_ADDRESS     0                                        // up to 2Meg
-#if defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_KV10 // {42}
+#if defined KINETIS_KV50
+    #define FLASH_START_ADDRESS     0x10000000                           // up to 1Meg (code flash)
+#else
+    #define FLASH_START_ADDRESS     0x00000000                           // up to 2Meg
+#endif
+
+// SRAM
+//
+#if defined KINETIS_KV50
+    #define RAM_START_ADDRESS    0x00000000                              // ITCM ram (M7 mainly and backdoor access for DMA and ethernet)
+    #define RAM_START_ADDRESS_1  0x20000000                              // D0TCM ram (M7 mainly and backdoor access for DMA and ethernet)
+    #define RAM_START_ADDRESS_2  0x20010000                              // D1TCM ram (M7 mainly and backdoor access for DMA and ethernet)
+    #define RAM_START_ADDRESS_3  0x2f000000                              // OCRAM (all masters)
+#elif defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_KV10   // {42}
     #define RAM_START_ADDRESS   (0x20000000 - (SIZE_OF_RAM/4))           // SRAM L is 1/4 of the RAM size and is anchored to end at 0x1ffffffff
                                                                          // SRAM H is 3/4 of the RAM size and is anchored to start at 0x20000000
 #elif defined KINETIS_K22 && defined KINETIS_K_FPU && (SIZE_OF_RAM == (48 * 1024))
@@ -1456,9 +1475,9 @@ typedef struct stRESET_VECTOR
 
 // RNG configuration
 //
-#if defined KINETIS_K60 || defined KINETIS_K70 || defined KINETIS_K80 || defined KINETIS_K52 || defined KINETIS_K53 || defined KINETIS_K24
-    #define RNG_AVAILABLE
-    #if defined KINETIS_K80
+#if defined KINETIS_K60 || defined KINETIS_K70 || defined KINETIS_K80 || defined KINETIS_K52 || defined KINETIS_K53 || defined KINETIS_K24 || defined KINETIS_KL82
+    #define RNG_AVAILABLE                                                // hardware based random number generator available
+    #if defined KINETIS_K80 || defined KINETIS_KL82
         #define TRUE_RANDOM_NUMBER_GENERATOR                             // true random number generator is available
     #elif defined KINETIS_REVISION_2 || defined KINETIS_K70
         #define RANDOM_NUMBER_GENERATOR_A                                // random number generator A is available
@@ -3332,6 +3351,9 @@ typedef struct stVECTOR_TABLE
     #if defined RNG_AVAILABLE
         #define RNGA_BASE_ADD                  ((unsigned char *)(&kinetis.RNGA)) // {41} Random Number Generator A
         #define RNGB_BASE_ADD                  ((unsigned char *)(&kinetis.RNGB)) // Random Number Generator B
+        #if defined TRUE_RANDOM_NUMBER_GENERATOR                                  // {103}
+            #define TRNG0_BASE_ADD             ((unsigned char *)(&kinetis.TRNG)) // True Random Number Generator
+        #endif
     #endif
     #if defined KINETIS_K70 || (defined KINETIS_K60 && defined KINETIS_K_FPU)
         #define NFC_RAM_0                      ((unsigned char *)(&kinetis.NFC_buf[0])) // {27}
@@ -3660,6 +3682,13 @@ typedef struct stVECTOR_TABLE
             #define RNGA_BASE_ADD              0x40029000
         #else
             #define RNGA_BASE_ADD              0x400a0000                // {41}
+        #endif
+        #if defined TRUE_RANDOM_NUMBER_GENERATOR                         // {103}
+            #if defined KINETIS_KL82
+                #define TRNG0_BASE_ADD         0x40025000                // True Random Number Generator
+            #else
+                #define TRNG0_BASE_ADD         0x400a0000                // True Random Number Generator
+            #endif
         #endif
     #endif
     #if NUMBER_OF_CAN_INTERFACES > 1
@@ -5355,10 +5384,12 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
     #define DMAMUX0_CHCFG_SOURCE_FLEXIO0_SHIFT7  8                       // 0x08 FlexIO shifter 7
     #define DMAMUX0_CHCFG_SOURCE_LPI2C0_RX       9                       // 0x09 LPI2C0 receive
     #define DMAMUX0_CHCFG_SOURCE_LPI2C0_TX       10                      // 0x0a LPI2C0 transmit
-    #define DMAMUX0_CHCFG_SOURCE_LPI2C1_RX       11                      // 0x0b LPI2C1 receive
-    #define DMAMUX0_CHCFG_SOURCE_LPI2C1_TX       12                      // 0x0c LPI2C1 transmit
-    #define DMAMUX0_CHCFG_SOURCE_LPI2C2_RX       13                      // 0x0d LPI2C2 receive
-    #define DMAMUX0_CHCFG_SOURCE_LPI2C2_TX       14                      // 0x0e LPI2C2 transmit
+    #if defined KINETIS_KL28
+        #define DMAMUX0_CHCFG_SOURCE_LPI2C1_RX   11                      // 0x0b LPI2C1 receive
+        #define DMAMUX0_CHCFG_SOURCE_LPI2C1_TX   12                      // 0x0c LPI2C1 transmit
+        #define DMAMUX0_CHCFG_SOURCE_LPI2C2_RX   13                      // 0x0d LPI2C2 receive
+        #define DMAMUX0_CHCFG_SOURCE_LPI2C2_TX   14                      // 0x0e LPI2C2 transmit
+    #endif
     #define DMAMUX0_CHCFG_SOURCE_LPUART0_RX      15                      // 0x0f LPUART0 RX
     #define DMAMUX0_CHCFG_SOURCE_LPUART0_TX      16                      // 0x10 LPUART0 TX
     #define DMAMUX0_CHCFG_SOURCE_LPUART1_RX      17                      // 0x11 LPUART1 RX
@@ -5386,10 +5417,15 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
     #define DMAMUX0_CHCFG_SOURCE_TPM2_C1         40                      // 0x28 TPM2 channel 1
     #define DMAMUX0_CHCFG_SOURCE_TPM2_OV         41                      // 0x29 TPM2 overflow
 
-    #define DMAMUX0_CHCFG_SOURCE_EMVSIM_RX       43                      // 0x2b EMVSIM receive
-    #define DMAMUX0_CHCFG_SOURCE_EMVSIM_TX       44                      // 0x2c EMVSIM transmit
-    #define DMAMUX0_CHCFG_SOURCE_SAI_RX          45                      // 0x2d EMVSIM receive
-    #define DMAMUX0_CHCFG_SOURCE_SAI_TX          46                      // 0x2e EMVSIM transmit
+    #define DMAMUX0_CHCFG_SOURCE_EMVSIM0_RX      43                      // 0x2b EMVSIM0 receive
+    #define DMAMUX0_CHCFG_SOURCE_EMVSIM0_TX      44                      // 0x2c EMVSIM0 transmit
+    #if defined KINETIS_KL82
+        #define DMAMUX0_CHCFG_SOURCE_EMVSIM1_RX  45                      // 0x2d EMVSIM1 receive
+        #define DMAMUX0_CHCFG_SOURCE_EMVSIM1_TX  46                      // 0x2e EMVSIM1 transmit
+    #else
+        #define DMAMUX0_CHCFG_SOURCE_SAI_RX      45                      // 0x2d EMVSIM receive
+        #define DMAMUX0_CHCFG_SOURCE_SAI_TX      46                      // 0x2e EMVSIM transmit
+    #endif
     #define DMAMUX0_CHCFG_SOURCE_PORTA           47                      // 0x2f port A
     #define DMAMUX0_CHCFG_SOURCE_PORTB           48                      // 0x30 port B
     #define DMAMUX0_CHCFG_SOURCE_PORTC           49                      // 0x31 port C
@@ -5398,14 +5434,26 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
     #define DMAMUX0_CHCFG_SOURCE_ADC0            52                      // 0x34 ADC0 conversion complete
 
     #define DMAMUX0_CHCFG_SOURCE_DAC0            54                      // 0x35 DAC0
-
+    #if defined KINETIS_KL82
+        #define DMAMUX0_LTC0_RAM                 55                      // 0x36 LTC0 PKHA RAM read
+    #endif
     #define DMAMUX0_CHCFG_SOURCE_CMP0            56                      // 0x37 CMP0
-    #define DMAMUX0_CHCFG_SOURCE_CMP1            57                      // 0x38 CMP1
-
-    #define DMAMUX_CHCFG_SOURCE_TSI0             60                      // 0x3b TSI0
-    #define DMAMUX_CHCFG_SOURCE_LPTMR0           61                      // 0x3c LPTMR0
-    #define DMAMUX_CHCFG_SOURCE_LPTMR1           62                      // 0x3d LPTMR1
-    #define DMAMUX0_CHCFG_SOURCE_DMAMUX0        (63 | DMAMUX_CHCFG_TRIG) // 0x3e DMA MUX - always enabled
+    #if defined KINETIS_KL28
+        #define DMAMUX0_CHCFG_SOURCE_CMP1        57                      // 0x38 CMP1
+    #endif
+    #if defined KINETIS_KL82
+        #define DMAMUX0_LTC0_FIFO_IN             58                      // 0x3a LTC0 FIFO input
+        #define DMAMUX0_LTC0_FIFO_OUT            59                      // 0x3b LTC0 FIFO output
+        #define DMAMUX0_CHCFG_SOURCE_DMAMUX0    (60 | DMAMUX_CHCFG_TRIG) // 0x3c DMA MUX - always enabled
+        #define DMAMUX0_CHCFG_SOURCE_DMAMUX1    (61 | DMAMUX_CHCFG_TRIG) // 0x3d DMA MUX - always enabled
+        #define DMAMUX0_CHCFG_SOURCE_DMAMUX2    (62 | DMAMUX_CHCFG_TRIG) // 0x3e DMA MUX - always enabled
+        #define DMAMUX0_CHCFG_SOURCE_DMAMUX3    (63 | DMAMUX_CHCFG_TRIG) // 0x3f DMA MUX - always enabled
+    #else
+        #define DMAMUX_CHCFG_SOURCE_TSI0         60                      // 0x3b TSI0
+        #define DMAMUX_CHCFG_SOURCE_LPTMR0       61                      // 0x3c LPTMR0
+        #define DMAMUX_CHCFG_SOURCE_LPTMR1       62                      // 0x3d LPTMR1
+        #define DMAMUX0_CHCFG_SOURCE_DMAMUX0    (63 | DMAMUX_CHCFG_TRIG) // 0x3e DMA MUX - always enabled
+    #endif
 #else
     #if defined KINETIS_K66
       #define DMAMUX_CHCFG_SOURCE_TSI0           1                       // 0x01 TSI0
@@ -5529,7 +5577,7 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
       #define DMAMUX0_CHCFG_SOURCE_DMAMUX0       (60 | DMAMUX_CHCFG_TRIG)// 0x3c DMA MUX - always enabled
       #define DMAMUX0_CHCFG_SOURCE_DMAMUX1       (61 | DMAMUX_CHCFG_TRIG)// 0x3d DMA MUX - always enabled
       #define DMAMUX0_CHCFG_SOURCE_DMAMUX2       (62 | DMAMUX_CHCFG_TRIG)// 0x3e DMA MUX - always enabled
-      #define DMAMUX0_CHCFG_SOURCE_DMAMUX3       (63 | DMAMUX_CHCFG_TRIG)// 0x3f DMA MUX - always enable
+      #define DMAMUX0_CHCFG_SOURCE_DMAMUX3       (63 | DMAMUX_CHCFG_TRIG)// 0x3f DMA MUX - always enabled
       // For compatibility
       //
       #define DMAMUX0_CHCFG_SOURCE_LPUART0_RX    DMAMUX_CHCFG_SOURCE_UART0_RX
@@ -9495,6 +9543,7 @@ typedef struct stKINETIS_LPTMR_CTL
       #define SIM_SCGC6_DMAMUX1              0x00000004
       #define SIM_SCGC6_INTMUX0              0x00000010                  // {100}
       #define SIM_SCGC6_FLEXCAN0             0x00000010
+      #define SIM_SCGC6_TRNG0                0x00000020
       #if defined DSPI_SPI
           #define SIM_SCGC6_SPI0             0x00001000
           #define SIM_SCGC6_SPI1             0x00002000
@@ -9517,6 +9566,7 @@ typedef struct stKINETIS_LPTMR_CTL
       #define SIM_SCGC6_ADC0                 0x08000000
       #define SIM_SCGC6_ADC2                 0x10000000
       #define SIM_SCGC6_RTC                  0x20000000
+      #define SIM_SCGC6_RTC_RF               0x40000000
       #if defined KINETIS_KL
           #define SIM_SCGC6_DAC0             0x80000000
       #endif
@@ -11105,6 +11155,7 @@ typedef struct stKINETIS_LPTMR_CTL
     #if defined KINETIS_KL03
         #define PA_4_CLKOUT              PORT_MUX_ALT5
         #define PA_12_CLKOUT             PORT_MUX_ALT5
+        #define PB_13_RTC_CLKOUT         PORT_MUX_ALT3
     #elif defined KINETIS_KL05
         #define PA_15_CLKOUT             PORT_MUX_ALT3
     #else
@@ -14090,8 +14141,66 @@ typedef struct stUSB_HW
       #define RNG_ESR_SATE       0x00000008                              // statistical test error
       #define RNG_ESR_STE        0x00000004                              // self test error
       #define RNG_ESR_OSCE       0x00000002                              // RNG oscillator error
-      #define RNG_ESR_LFE        0x00000001                              // LFSR (linear feedback shioft register) failure
+      #define RNG_ESR_LFE        0x00000001                              // LFSR (linear feedback shift register) failure
     #define RNG_OUT              *(volatile unsigned long *)(RNGB_BASE_ADD + 0x14) // RNGB Output FIFO Register (read-only)
+#endif
+#if defined TRUE_RANDOM_NUMBER_GENERATOR                                // {103}
+    #define TRNG0_MCTL           *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x00) // TRNG0 miscellaneous control
+    #define TRNG0_SCMISC         *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x04) // TRNG0 statistical check miscellaneous
+    #define TRNG0_PKRRNG         *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x08) // TRNG0 poker range
+    #define TRNG0_PKRMAX         *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x0c) // TRNG0 poker maximum limit
+    #define TRNG0_PKRSQ          *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x0c) // TRNG0 poker square calculation result (read-only)
+    #define TRNG0_SDCTL          *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x10) // TRNG0 seed control
+    #define TRNG0_SBLIM          *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x14) // TRNG0 sparse bit limit
+    #define TRNG0_TOTSAM         *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x14) // TRNG0 total samples (read-only)
+    #define TRNG0_FRQMIN         *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x18) // TRNG0 frequency count minimum limit
+    #define TRNG0_FRQMAX         *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x1c) // TRNG0 frequency count maximum limit
+    #define TRNG0_FRQCNT         *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x1c) // TRNG0 frequency count (read-only)
+    #define TRNG0_SCML           *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x20) // TRNG0 statistical check monobit limit
+    #define TRNG0_SCMC           *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x20) // TRNG0 statistical check monobit count (read-only)
+    #define TRNG0_SCR1L          *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x24) // TRNG0 statistical check run length 1 limit
+    #define TRNG0_SCR1C          *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x24) // TRNG0 statistical check run length 1 count (read-only)
+    #define TRNG0_SCR2L          *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x28) // TRNG0 statistical check run length 2 limit
+    #define TRNG0_SCR2C          *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x28) // TRNG0 statistical check run length 2 count (read-only)
+    #define TRNG0_SCR3L          *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x2c) // TRNG0 statistical check run length 3 limit
+    #define TRNG0_SCR3C          *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x2c) // TRNG0 statistical check run length 3 count (read-only)
+    #define TRNG0_SCR4L          *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x30) // TRNG0 statistical check run length 4 limit
+    #define TRNG0_SCR4C          *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x30) // TRNG0 statistical check run length 4 count (read-only)
+    #define TRNG0_SCR5L          *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x34) // TRNG0 statistical check run length 5 limit
+    #define TRNG0_SCR5C          *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x34) // TRNG0 statistical check run length 5 count (read-only)
+    #define TRNG0_SCR6L          *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x38) // TRNG0 statistical check run length 6 limit
+    #define TRNG0_SCR6C          *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x38) // TRNG0 statistical check run length 6 count (read-only)
+    #define TRNG0_STATUS         *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x3c) // TRNG0 status (read-only)
+    #define TRNG0_ENT0           *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x40) // TRNG0 entropy read 0 (read-only)
+    #define TRNG0_ENT1           *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x44) // TRNG0 entropy read 1 (read-only)
+    #define TRNG0_ENT2           *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x48) // TRNG0 entropy read 2 (read-only)
+    #define TRNG0_ENT3           *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x4c) // TRNG0 entropy read 3 (read-only)
+    #define TRNG0_ENT4           *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x50) // TRNG0 entropy read 4 (read-only)
+    #define TRNG0_ENT5           *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x54) // TRNG0 entropy read 5 (read-only)
+    #define TRNG0_ENT6           *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x58) // TRNG0 entropy read 6 (read-only)
+    #define TRNG0_ENT7           *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x5c) // TRNG0 entropy read 7 (read-only)
+    #define TRNG0_ENT8           *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x60) // TRNG0 entropy read 8 (read-only)
+    #define TRNG0_ENT9           *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x64) // TRNG0 entropy read 9 (read-only)
+    #define TRNG0_ENT10          *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x68) // TRNG0 entropy read 10 (read-only)
+    #define TRNG0_ENT11          *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x6c) // TRNG0 entropy read 11 (read-only)
+    #define TRNG0_ENT12          *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x70) // TRNG0 entropy read 12 (read-only)
+    #define TRNG0_ENT13          *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x74) // TRNG0 entropy read 13 (read-only)
+    #define TRNG0_ENT14          *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x78) // TRNG0 entropy read 14 (read-only)
+    #define TRNG0_ENT15          *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x7c) // TRNG0 entropy read 15 (read-only)
+    #define TRNG0_PKRCNT10       *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x80) // TRNG0 statistical check poker count 1 and 0 (read-only)
+    #define TRNG0_PKRCNT32       *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x84) // TRNG0 statistical check poker count 3 and 2 (read-only)
+    #define TRNG0_PKRCNT54       *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x88) // TRNG0 statistical check poker count 5 and 4 (read-only)
+    #define TRNG0_PKRCNT76       *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x8c) // TRNG0 statistical check poker count 7 and 6 (read-only)
+    #define TRNG0_PKRCNT98       *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x90) // TRNG0 statistical check poker count 9 and 8 (read-only)
+    #define TRNG0_PKRCNTBA       *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x94) // TRNG0 statistical check poker count b and a (read-only)
+    #define TRNG0_PKRCNTDC       *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x98) // TRNG0 statistical check poker count d and c (read-only)
+    #define TRNG0_PKRCNTFE       *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x9c) // TRNG0 statistical check poker count f and e (read-only)
+    #define TRNG0_SEC_CFG        *(volatile unsigned long *)(TRNG0_BASE_ADD + 0xa0) // TRNG0 security configuration
+    #define TRNG0_INT_CTRL       *(volatile unsigned long *)(TRNG0_BASE_ADD + 0xa4) // TRNG0 interrupt control
+    #define TRNG0_INT_MASK       *(volatile unsigned long *)(TRNG0_BASE_ADD + 0xa8) // TRNG0 mask
+    #define TRNG0_INT_STATUS     *(volatile unsigned long *)(TRNG0_BASE_ADD + 0xac) // TRNG0 interrupt status
+    #define TRNG0_VID1           *(volatile unsigned long *)(TRNG0_BASE_ADD + 0xf0) // TRNG0 version ID (MS)
+    #define TRNG0_VID2           *(volatile unsigned long *)(TRNG0_BASE_ADD + 0xf4) // TRNG0 version ID (LS)
 #endif
 
 // Segment LCD Controller
@@ -15437,7 +15546,7 @@ extern void fnSimPers(void);
 #elif defined KINETIS_KE
     #define _CONFIG_PERIPHERAL(port, pin, function) _SIM_PER_CHANGE      // dummy since the peripherals automatically configures their peripheral pins
 #else
-    #define _CONFIG_PERIPHERAL(port, pin, function) SIM_SCGC5 |= SIM_SCGC5_PORT##port; PORT##port##_PCR##pin = function; _SIM_PER_CHANGE
+    #define _CONFIG_PERIPHERAL(port, pin, function) POWER_UP_ATOMIC(5, PORT##port); PORT##port##_PCR##pin = function; _SIM_PER_CHANGE
 #endif
 
 // Write to a port with a mask eg. eg. _WRITE_PORT_MASK(C, 0x1234,  0x0000ffff)

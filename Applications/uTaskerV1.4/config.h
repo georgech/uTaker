@@ -98,11 +98,11 @@
 //#define TWR_KM34Z50M                                                   // M processors Cortex M0+ (metrology) - tower board http://www.utasker.com/kinetis/TWR-KM34Z50M.html
 //#define TWR_KM34Z75M                                                   // tower board http://www.utasker.com/kinetis/TWR-KM34Z75M.html
 
-//#define TWR_KV10Z32                                                    // V processors Cortex M0+/M4 (M0+ - motor control and power conversion - low dynamic control) - tower board http://www.utasker.com/kinetis/TWR-KV10Z32.html
+//#define TWR_KV10Z32                                                    // V processors Cortex M0+/M4/M7 (M0+ - motor control and power conversion - low dynamic control) - tower board http://www.utasker.com/kinetis/TWR-KV10Z32.html
 //#define TWR_KV11Z75M                                                   // tower board http://www.utasker.com/kinetis/TWR-KV11Z75M.html
 //#define TWR_KV31F120M                                                  // (M4 - high dynamic control) - tower board http://www.utasker.com/kinetis/TWR-KV31F120M.html
 //#define TWR_KV46F150M                                                  // tower board http://www.utasker.com/kinetis/TWR-KV46F150M.html
-//#define TWR_KV58F220M                                                  // tower board http://www.utasker.com/kinetis/TWR-KV58F220M.html
+//#define TWR_KV58F220M                                                  // (M7 - power conversion) tower board http://www.utasker.com/kinetis/TWR-KV58F220M.html
 
 //#define TWR_KW21D256                                                   // W processors Cortex M0+/M4 (wireless connectivity) - tower board http://www.utasker.com/kinetis/TWR-KW21D256.html
 //#define TWR_KW24D512                                                   // tower board http://www.utasker.com/kinetis/TWR-KW24D512.html
@@ -403,7 +403,7 @@
     #define DEVICE_WITHOUT_USB
     #define DEVICE_WITHOUT_CAN
     #define DEVICE_WITHOUT_ETHERNET
-#elif defined TWR_KV31F120M
+#elif defined TWR_KV31F120M || defined TWR_KV46F150M
     #define TARGET_HW            "TWR-KV31F120M"
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((32 * 1024) * MEM_FACTOR)
     #define KINETIS_MAX_SPEED    120000000
@@ -414,6 +414,16 @@
     #define DEVICE_WITHOUT_USB
     #define DEVICE_WITHOUT_CAN
     #define DEVICE_WITHOUT_ETHERNET
+    #define KINETIS_REVISION_2
+#elif defined TWR_KV58F220M
+    #define TARGET_HW            "TWR-KV58F220M"
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((32 * 1024) * MEM_FACTOR)
+    #define KINETIS_MAX_SPEED    220000000
+    #define KINETIS_K_FPU                                                // part with floating point unit
+    #define KINETIS_KV
+    #define KINETIS_KV50                                                 // specify the sub-family type
+    #define KINETIS_KV58
+    #define DEVICE_WITHOUT_USB
     #define KINETIS_REVISION_2
 #elif defined TWR_KL43Z48M
     #define TARGET_HW            "TWR-KL43Z48M"
@@ -1779,6 +1789,11 @@
         #define CMSIS_DSP_FFT_1024                                       // enable 1024 point FFT
       //#define CMSIS_DSP_FFT_2048                                       // enable 2048 point FFT
       //#define CMSIS_DSP_FFT_4096                                       // enable 4096 point FFT
+#endif
+
+#define USE_CMSIS_SIN_COS                                                // use CMSIS sin/cos function for fast single-precision floating point operation
+#if defined USE_CMSIS_SIN_COS
+    extern void arm_sin_cos_f32(float theta, float *pSinVal, float *pCosVal);
 #endif
 
 // Character LCD

@@ -1511,8 +1511,8 @@ extern QUEUE_HANDLE fnSetNewSerialMode(unsigned char ucDriverMode)
     uTaskerStateChange(OWN_TASK, UTASKER_POLLING);                       // set the task to polling mode to regularly check the receive buffer
             #endif
         #else
-  //tInterfaceParameters.ucDMAConfig = 0;
-    tInterfaceParameters.ucDMAConfig = UART_TX_DMA;                      // activate DMA on transmission
+    tInterfaceParameters.ucDMAConfig = 0;
+  //tInterfaceParameters.ucDMAConfig = UART_TX_DMA;                      // activate DMA on transmission
   //tInterfaceParameters.ucDMAConfig = (UART_RX_DMA | UART_RX_DMA_HALF_BUFFER | UART_RX_DMA_FULL_BUFFER | UART_RX_DMA_BREAK));
         #endif
     #endif

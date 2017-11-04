@@ -66,7 +66,7 @@
 
     #if defined SUPPORT_DAC
       //#define TEST_DMA_DAC                                             // test generating a signal using DMA to DAC (based on timer trigger)
-          //#define GENERATE_SINE
+            #define GENERATE_SINE
             #if defined GENERATE_SINE
                 #include <math.h>                                        // this may need libm.a explicitly linked (depending on IDE and compiler used)
             #endif
@@ -94,7 +94,7 @@
         #define GPT_CAPTURES     5                                       // when testing captures, collect this many values
     #endif
     #if defined SUPPORT_TIMER || defined SUPPORT_PWM_MODULE              // standard timers
-        #define TEST_TIMER                                               // enable timer test(s)
+      //#define TEST_TIMER                                               // enable timer test(s)
         #if defined TEST_TIMER
             #if defined SUPPORT_PWM_MODULE                               // {9}
                 #define TEST_PWM                                         // {1} test generating PWM output from timer
@@ -1176,7 +1176,7 @@ static void fnConfigurePIT(void)
     pit_setup.mode = (PIT_PERIODIC);                                     // periodic DMA trigger
     pit_setup.int_handler = 0;                                           // no interrupt since the PIT will be used for triggering DMA
         #if defined KINETIS_KL
-    ptrTestBuffer = uMallocAlign((LENGTH_OF_TEST_BUFFER * sizeof(unsigned short)), (LENGTH_OF_TEST_BUFFER * sizeof(unsigned short)));
+    ptrTestBuffer = uMallocAlign((LENGTH_OF_TEST_BUFFER * sizeof(unsigned short)), (LENGTH_OF_TEST_BUFFER * sizeof(unsigned short))); // modulo aligned buffer
         #else
     ptrTestBuffer = uMalloc(LENGTH_OF_TEST_BUFFER * sizeof(unsigned short));
         #endif
@@ -1187,10 +1187,22 @@ static void fnConfigurePIT(void)
         #if !defined PI
             #define PI           (double)3.14159265
         #endif
-        #define ANGLE_STEP   (double)((double)(2 * PI)/(double)LENGTH_OF_TEST_BUFFER);
-        double angle = 0;
+        #if defined USE_CMSIS_SIN_COS
+            float fSineValue;
+            #define ANGLE_STEP   (float)((double)(2 * PI)/(double)LENGTH_OF_TEST_BUFFER);
+            float angle = 0;
+        #else
+            #define ANGLE_STEP   (double)((double)(2 * PI)/(double)LENGTH_OF_TEST_BUFFER);
+            double angle = 0;
+        #endif
         for (i = 0; i < LENGTH_OF_TEST_BUFFER; i++) {                    // prepare a sine wave
+        #if defined USE_CMSIS_SIN_COS
+            arm_sin_cos_f32(angle, &fSineValue, 0);
+            fSineValue *= (float)0x7ff;                                  // 12 bit scaling
+            ptrTestBuffer[i] = (unsigned short)((signed short)fSineValue + (0xfff/2)); // half-scale DC offset added
+        #else
             ptrTestBuffer[i] = (unsigned short)((sin(angle) * 0x7ff) + (0xfff/2));
+        #endif
             angle += ANGLE_STEP;
         }
     }

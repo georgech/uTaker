@@ -490,9 +490,18 @@ extern void fnInitialiseRND(unsigned short *usSeedValue)
     RNG_CR = (RNG_CR_FUFMODE_TE | RNG_CR_AR);                            // automatic re-seed mode and generate a bus error on FIFO underrun
     RNG_CMD = (RNG_CMD_GS | RNG_CMD_CI | RNG_CMD_CE);                    // start the initial seed process
                                                                          // the initial seeding takes some time but we don't wait for it to complete here - if it hasn't completed when we first need a value we will wait for it then
-    #else
+    #elif defined RANDOM_NUMBER_GENERATOR_A
     POWER_UP_ATOMIC(3, RNGA);                                            // power up RNGA
     RNGA_CR = (RNGA_CR_INTM | RNGA_CR_HA | RNGA_CR_GO);                  // start first conversion
+    #elif defined TRUE_RANDOM_NUMBER_GENERATOR
+        #if defined SIM_SCGC3
+    POWER_UP_ATOMIC(3, TRNG0);                                           // power up TRNG0
+        #else
+    POWER_UP_ATOMIC(6, TRNG0);                                           // power up TRNG0
+        #endif
+    // To do...
+    // reset module to program mode, set user configuration (optionally lock the registers from further change), start first conversion
+    //
     #endif
 }
 
@@ -500,13 +509,13 @@ extern void fnInitialiseRND(unsigned short *usSeedValue)
 //
 extern unsigned short fnGetRndHW(void)
 {
+    #if defined RANDOM_NUMBER_GENERATOR_B                                // {64} support revison 1 types
     unsigned long ulRandomNumber;
-    #if defined _WINDOWS
+        #if defined _WINDOWS
     if (IS_POWERED_UP(3, RNGB) == 0) {
         _EXCEPTION("Warning: RNG being used before initialised!!!");
     }
-    #endif
-    #if defined RANDOM_NUMBER_GENERATOR_B                                // {64} support revison 1 types
+        #endif
         #if defined RANDOM_NUMBER_GENERATOR_A                            // {128} support revison 2 types too
     if (((SIM_SDID & SIM_SDID_REVID_MASK) >> SIM_SDID_REVID_SHIFT)== 0) {// if not from revision 2 part
         #endif
@@ -527,6 +536,12 @@ extern unsigned short fnGetRndHW(void)
         #endif
     #endif
     #if defined RANDOM_NUMBER_GENERATOR_A                                // RNGA
+    unsigned long ulRandomNumber;
+        #if defined _WINDOWS
+    if (IS_POWERED_UP(3, RNGA) == 0) {
+        _EXCEPTION("Warning: RNGA being used before initialised!!!");
+    }
+        #endif
     while ((RNGA_SR & RNGA_SR_OREG_LVL) == 0) {                          // wait for an output to become available
         #if defined _WINDOWS
         RNGA_SR |= RNGA_SR_OREG_LVL;
@@ -538,6 +553,22 @@ extern unsigned short fnGetRndHW(void)
         #endif
     ulRandomNumber = RNGA_OR;                                            // read output value that has been generated
     return (unsigned short)(ulRandomNumber);                             // return 16 bits of output
+    #endif
+    #if defined TRUE_RANDOM_NUMBER_GENERATOR
+        #if defined _WINDOWS
+            #if defined SIM_SCGC3
+    if (IS_POWERED_UP(3, TRNG0) == 0)
+            #else
+    if (IS_POWERED_UP(6, TRNG0) == 0)
+            #endif
+    {
+        _EXCEPTION("Warning: TRNG0 being used before initialised!!!");
+    }
+        #endif
+    // To do...
+    //
+    _EXCEPTION("TRNG0 not yet implemented!");
+    return 0;
     #endif
 }
     #else
@@ -1074,15 +1105,6 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void (*
     unsigned long ulState1 = IRQ32_63_SER;
     unsigned long ulState2 = IRQ64_95_SER;
     IRQ0_31_SER = IRQ32_63_SER = IRQ64_95_SER = IRQ0_31_CER = IRQ32_63_CER = IRQ64_95_CER = 0; // reset registers
-    #if defined ARM_MATH_CM0PLUS
-    if (ucPriority >= 4) {
-        _EXCEPTION("Invalid Cortex-M0+ priority being used!!");
-    }
-    #else
-    if (ucPriority >= 16) {
-        _EXCEPTION("Invalid Cortex-M4 priority being used!!");
-    }
-    #endif
 #endif
 #if defined INTMUX0_AVAILABLE                                            // {130}
     if (iInterruptID >= irq_INTMUX0_0_ID) {
@@ -1123,6 +1145,17 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void (*
             break;
         }
     }
+#endif
+#if defined _WINDOWS                                                     // check for valid interrupt priority range
+    #if defined ARM_MATH_CM0PLUS
+    if (ucPriority >= 4) {
+        _EXCEPTION("Invalid Cortex-M0+ priority being used!!");
+    }
+    #else
+    if (ucPriority >= 16) {
+        _EXCEPTION("Invalid Cortex-M4 priority being used!!");
+    }
+    #endif
 #endif
 #if !defined INTERRUPT_VECTORS_IN_FLASH
     processor_ints = (void (**)(void))&ptrVect->processor_interrupts;    // first processor interrupt location in the vector table
@@ -2072,8 +2105,12 @@ extern int fnClkout(int iClockSource)                                    // {120
         ulSIM_SOPT2 |= SIM_SOPT2_CLKOUTSEL_IRC48M;
         break;
     #endif
-    case FLEXBUS_CLOCK_OUT:
     case RTC_CLOCK_OUT:
+    #if defined KINETIS_KL03
+        _CONFIG_PERIPHERAL(B, 13, (PB_13_RTC_CLKOUT | PORT_SRE_SLOW | PORT_DSE_LOW)); // configure the RTC_CLKOUT pin
+        return 0;
+    #endif
+    case FLEXBUS_CLOCK_OUT:
     default:
         return -1;                                                       // invalid clock source
     }
@@ -2453,6 +2490,7 @@ static void _LowLevelInit(void)
   //fnClkout(BUS_CLOCK_OUT);                                             // select the clock to monitor on CLKOUT
   //fnClkout(INTERNAL_IRC48M_CLOCK_OUT);
   //fnClkout(EXTERNAL_OSCILLATOR_CLOCK_OUT);
+  //fnClkout(RTC_CLOCK_OUT);
 #endif
 #if defined KINETIS_KL && defined ROM_BOOTLOADER && defined BOOTLOADER_ERRATA // {125}
     if ((RCM_MR & (RCM_MR_BOOTROM_BOOT_FROM_ROM_BOOTCFG0 | RCM_MR_BOOTROM_BOOT_FROM_ROM_FOPT7)) != 0) { // if the reset was via the ROM loader

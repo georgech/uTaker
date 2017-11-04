@@ -63,6 +63,7 @@
     11.08.2017 Add PCC support                                           {45}
     12.09.2017 Add INTMUX support and LPUART2 using its interrupts       {46}
     26.09.2017 Add LPIT support                                          {47}
+    04.11.2017 Add true rando number generator registers initialisation  {48}
  
 */  
                           
@@ -740,19 +741,21 @@ static void fnSetDevice(unsigned long *port_inits)
     QuadSPI0_LCKCR  = 0x00000002;
 #endif
 #if !defined KINETIS_KL02
-    #if !defined KINETIS_KE || defined KINETIS_WITH_SRTC
-        #if defined SUPPORT_RTC                                          // RTC
+    #if !defined KINETIS_WITHOUT_RTC
+        #if !defined KINETIS_KE || defined KINETIS_WITH_SRTC
+            #if defined SUPPORT_RTC                                      // RTC
     RTC_SR      = 0;                                                     // assume running
-        #else
+            #else
     RTC_SR      = RTC_SR_TIF;
-        #endif
+            #endif
     RTC_LR      = (RTC_LR_TCL | RTC_LR_CRL | RTC_LR_SRL | RTC_LR_LRL);
     RTC_IER     = (RTC_IER_TIIE | RTC_IER_TOIE | RTC_IER_TAIE);
-    #endif
-    #if defined KINETIS_KL
+        #endif
+        #if defined KINETIS_KL
     SIM_SOPT1   = SIM_SOPT1_OSC32KSEL_LPO_1kHz;                          // assume retained over reset
-    #elif !defined KINETIS_KE || defined KINETIS_WITH_SRTC
+        #elif !defined KINETIS_KE || defined KINETIS_WITH_SRTC
     RTC_RAR     = (RTC_RAR_TSRW | RTC_RAR_TPRW | RTC_RAR_TARW| RTC_RAR_TCRW | RTC_RAR_CRW | RTC_RAR_SRW | RTC_RAR_LRW | RTC_RAR_IERW);
+        #endif
     #endif
     #if !defined KINETIS_KL && !defined KINETIS_KE && !defined CROSSBAR_SWITCH_LITE
     AXBS_CRS0 = 0x76543210;                                              // {34} default crossbar switch settings
@@ -844,9 +847,26 @@ static void fnSetDevice(unsigned long *port_inits)
     #if defined RANDOM_NUMBER_GENERATOR_B                                // {64}
     RNG_VER     = (RNG_VER_RNGB | 0x00000280);
     RNG_SR      = (RNG_SR_FIFO_SIZE_5 | RNG_SR_RS | RNG_SR_SLP | 0x00000001);
-    #endif
-    #if defined RANDOM_NUMBER_GENERATOR_A
+    #elif defined RANDOM_NUMBER_GENERATOR_A
     RNGA_SR     = (RNGA_SR_OREG_SIZE);
+    #elif defined TRUE_RANDOM_NUMBER_GENERATOR                           // {48}
+    TRNG0_MCTL = 0x00012001;
+    TRNG0_SCMISC = 0x00010022;
+    TRNG0_PKRRNG = 0x000009a3;
+    TRNG0_PKRMAX = 0x00006920;
+    TRNG0_SDCTL = 0x0c8009c4;
+    TRNG0_SBLIM = 0x0000003f;
+    TRNG0_FRQMIN = 0x00000640;
+    TRNG0_FRQMAX = 0x00006400;
+    TRNG0_SCML = 0x010c0568;
+    TRNG0_SCR1L = 0x00b20195;
+    TRNG0_SCR2L = 0x007a00dc;
+    TRNG0_SCR3L = 0x0058007d;
+    TRNG0_SCR4L = 0x0040004b;
+    TRNG0_SCR5L = 0x002e002f;
+    TRNG0_SCR6L = 0x002e002f;
+    TRNG0_INT_CTRL = 0xffffffff;
+    TRNG0_VID1 = 0x00300100;
     #endif
 #endif
     MCM_PLASC  = 0x001f;                                                  // {15}

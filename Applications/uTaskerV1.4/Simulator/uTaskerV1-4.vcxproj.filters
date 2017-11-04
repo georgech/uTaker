@@ -368,6 +368,9 @@
     <ClCompile Include="..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F\port.c">
       <Filter>FreeRTOS\portable</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\Hardware\Kinetis\CMSIS_DSP\arm_sin_cos_f32.c">
+      <Filter>Hardware\Kinetis\CMSIS_DSP</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\ADC_Timers.h">

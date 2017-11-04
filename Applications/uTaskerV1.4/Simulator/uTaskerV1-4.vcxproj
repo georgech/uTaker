@@ -195,6 +195,7 @@ Build_Kinetis.bat
     <ClCompile Include="..\..\..\Hardware\Kinetis\CMSIS_DSP\arm_common_tables.c" />
     <ClCompile Include="..\..\..\Hardware\Kinetis\CMSIS_DSP\arm_const_structs.c" />
     <ClCompile Include="..\..\..\Hardware\Kinetis\CMSIS_DSP\arm_max_f32.c" />
+    <ClCompile Include="..\..\..\Hardware\Kinetis\CMSIS_DSP\arm_sin_cos_f32.c" />
     <ClCompile Include="..\..\..\Hardware\Kinetis\kinetis.c" />
     <ClCompile Include="..\..\..\Hardware\Kinetis\kinetisSim.c" />
     <ClCompile Include="..\..\..\Hardware\Kinetis\kinetis_ports.cpp" />
