@@ -2362,7 +2362,7 @@ extern void fnShowLowPowerMode(void)
             fnDebugMsg("9 = VLLS1");
             break;
         case VLLS2_MODE:
-            fnDebugMsg("10 = VLLS1");
+            fnDebugMsg("10 = VLLS2");
             break;
         case VLLS3_MODE:
             fnDebugMsg("11 = VLLS3");

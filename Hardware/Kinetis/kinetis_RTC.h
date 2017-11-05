@@ -23,6 +23,7 @@
     24.02.2016 Correct stop watch interrupt by removing redundant flag   {4}
     13.06.2017 Synchronise prescaler when setting new time               {5}
     18.09.2017 Use new dependency KINETIS_WITH_RTC_CRYSTAL               {6}
+    05.11.2017 Clear pending RTC alarm interrupt on initialisation (this tends to be pending after each power on reset or after a wake-up) {7}
 
 */
 
@@ -303,7 +304,7 @@ extern int fnConfigureRTC(void *ptrSettings)
         rtc_interrupts |= (0x01 << iIRQ);                                // flag interrupt(s) enabled
     #if defined irq_RTC_SECONDS_ID && !defined SUPPORT_SW_RTC            // {75} use the seconds interrupt rather than the alarm interrupt when available
         if (2 == iIRQ) {                                                 // alarm being set
-            if (RTC_TSR > rtc_alarm) {                                   // avoid setting match value in the past since it won't fire
+            if (RTC_TSR > rtc_alarm) {                                   // avoid setting match value in the past since it won't (ever) fire
                 rtc_alarm = RTC_TSR;                                     // set to next second value
             }
             RTC_TAR = rtc_alarm;                                         // set timer alarm interrupt match (write to RTC_TAR resets a pending alarm flag)
@@ -313,7 +314,7 @@ extern int fnConfigureRTC(void *ptrSettings)
         #if !defined irq_RTC_ALARM_ID && defined INTMUX0_AVAILABLE
             fnEnterInterrupt((irq_INTMUX0_0_ID + INTMUX_RTC_ALARM), INTMUX0_PERIPHERAL_RTC_ALARM, _rtc_alarm_handler); // enter RTC alarm interrupt handler based on INTMUX
         #else
-            fnEnterInterrupt(irq_RTC_ALARM_ID, PRIORITY_RTC, _rtc_alarm_handler);
+            fnEnterInterrupt(irq_RTC_ALARM_ID, PRIORITY_RTC, _rtc_alarm_handler); // enter the alarm interrupt handler
         #endif
             RTC_IER |= RTC_IER_TAIE;                                     // enable alarm interrupt
         }
@@ -327,6 +328,15 @@ extern int fnConfigureRTC(void *ptrSettings)
         RTC_IER = RTC_IER_TAIE;                                          // enable alarm interrupt
     #endif
         if ((ptr_rtc_setup->command & RTC_INITIALISATION) != 0) {
+    #if defined irq_RTC_ALARM_ID
+        #if irq_RTC_ALARM_ID < 32                                            // {7} clear pending alarm interrupt at initialisation
+            IRQ0_31_CPR = (1 << irq_RTC_ALARM_ID);
+        #elif irq_RTC_ALARM_ID < 64
+            IRQ32_63_CPR = (1 << (irq_RTC_ALARM_ID - 32));
+        #else
+            IRQ64_95_CPR = (1 << (irq_RTC_ALARM_ID - 64));
+        #endif
+    #endif
     #if defined SUPPORT_SW_RTC || (defined KINETIS_KE && !defined KINETIS_WITH_SRTC)
             if (*RTC_VALID_LOCATION != RTC_VALID_PATTERN) {              // power on reset
                 *RTC_SECONDS_LOCATION = 0;                               // update the count and pre-scaler value in non-initialised ram

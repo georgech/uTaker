@@ -625,13 +625,13 @@ static void fnInitIRQ(void)
     interrupt_setup.int_port_bits  = (PORTE_BIT1 | PORTE_BIT2 | PORTE_BIT4);
     fnConfigureInterrupt((void *)&interrupt_setup);                      // configure wakeup pins on this port
     #endif
-    #if defined WAKEUP_TEST && defined FRDM_K22F
+    #if defined WAKEUP_TEST && defined SUPPORT_LPTMR && defined FRDM_K22F
     interrupt_setup.int_type = WAKEUP_INTERRUPT;
     interrupt_setup.int_port = PORT_MODULE;                              // define a wakeup interrupt on a module
     interrupt_setup.int_port_bits = (MODULE_LPTMR0);                     // wakeup on low power timer match
     interrupt_setup.int_handler = 0;                                     // no handler since it will be serviced by the tick interrupt
     fnConfigureInterrupt((void *)&interrupt_setup);                      // configure interrupt
-    #elif (defined FRDM_K64F || defined FRDM_KL25Z || defined FRDM_KL27Z || defined CAPUCCINO_KL27 || defined FRDM_KL26Z || defined FRDM_KL43Z || defined TWR_KL43Z48M || defined FRDM_KL05Z) && defined WAKEUP_TEST && defined SUPPORT_RTC
+    #elif (defined FRDM_K64F || defined FRDM_K22F || defined FRDM_KL25Z || defined FRDM_KL27Z || defined CAPUCCINO_KL27 || defined FRDM_KL26Z || defined FRDM_KL43Z || defined TWR_KL43Z48M || defined FRDM_KL05Z) && defined WAKEUP_TEST && defined SUPPORT_RTC
     interrupt_setup.int_type = WAKEUP_INTERRUPT;
     interrupt_setup.int_port = PORT_MODULE;                              // define a wakeup interrupt on a module
     interrupt_setup.int_port_bits = (MODULE_RTC_ALARM);                  // wakeup on RTC alarm interrupts

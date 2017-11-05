@@ -123,6 +123,8 @@
     03.05.2017 Add FREE_RUNNING_RX_DMA_RECEPTION option                  {102}
     14.09.2017 Display target hardware on startup                        {103}
     18.09.2017 Add simulation option for checking bare-minimum operation compatibility {104}
+    05.11.2017 Remove temporary RTC workaround due to pending alarm interrupt {105}
+    05.11.2017 Add QUICK_DEV_TASKS                                       {106}
 
 */
 
@@ -618,10 +620,10 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
         #else
         fnStartRTC(0);                                                   // start the RTC if it isn't yet operating
         #endif
-        #if defined KINETIS_KL && !defined _WINDOWS
-        if ((RCM_SRS0 & (RCM_SRS0_POR | RCM_SRS0_LVD)) != 0) {           // power on reset/low voltage detector
-            fnResetBoard();                                              // temp fix for first alarm that otherwise immediately fires
-        }
+        #if defined KINETIS_KL && !defined _WINDOWS                      // {105} removed since solved in the RTC driver
+      //if ((RCM_SRS0 & (RCM_SRS0_POR | RCM_SRS0_LVD)) != 0) {           // power on reset/low voltage detector
+      //    fnResetBoard();                                              // temp fix for first alarm that otherwise immediately fires
+      //}
         #endif
     #endif
 #endif
@@ -639,6 +641,9 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
             iAppState = STATE_ACTIVE;                                    // not validating, so start work
             fnValidatedInit();
         }
+#if defined QUICK_DEV_TASKS
+        uTaskerStateChange(TASK_DEV_1, UTASKER_ACTIVATE);                // {106}
+#endif
 #if defined FAT_EMULATION                                                // {98}
         fnPrepareEmulatedFAT();
 #endif
@@ -2662,52 +2667,73 @@ QUEUE_HANDLE fnGetUART_Handle(void)
 extern void fnUserHWInit(void)
 {
     CONFIG_TEST_OUTPUT();                                                // allow user configuration of a test output
-    #if defined USB_HOST_SUPPORT
+#if defined USB_HOST_SUPPORT
     USB_HOST_POWER_CONFIG();                                             // configure USB host power supply to default (off) state
-    #endif
-    #if defined SC16IS7XX_CLOCK_FROM_TIMER
+#endif
+#if defined SC16IS7XX_CLOCK_FROM_TIMER
     CONFIG_SC16IS7XX_CLOCK();
-    #endif
-    #if defined LAN_REPORT_ACTIVITY
+#endif
+#if defined LAN_REPORT_ACTIVITY
     CONFIGURE_LAN_LEDS();                                                // configure and drive ports
-    #endif
-    #if defined SUPPORT_KEY_SCAN
+#endif
+#if defined SUPPORT_KEY_SCAN
     INIT_KEY_SCAN();                                                     // general initialisation for key scan
-    #endif
-    #if (defined SPECIAL_LCD_DEMO || defined SUPPORT_GLCD) && !defined SUPPORT_TFT && !defined TFT_GLCD_MODE // {38} configure GLCD ports and drive RST line if required
+#endif
+#if (defined SPECIAL_LCD_DEMO || defined SUPPORT_GLCD) && !defined SUPPORT_TFT && !defined TFT_GLCD_MODE // {38} configure GLCD ports and drive RST line if required
     CONFIGURE_GLCD();
-        #if defined BLAZE_K22_
+    #if defined BLAZE_K22_
     if (IS_POWERED_UP(4, USBOTG) != 0) {                                 // if the USB controller has been left powered up by the Blaze boot loader
         USB_USBTRC0 |= USB_USBTRC0_USBRESET;                             // command a reset of the USB controller
         while ((USB_USBTRC0 & USB_USBTRC0_USBRESET) != 0) {              // wait for the reset to complete
-            #if defined _WINDOWS
+        #if defined _WINDOWS
             USB_USBTRC0 = 0;
-            #endif
+        #endif
         }
         POWER_DOWN(4, SIM_SCGC4_USBOTG);                                 // power down the USB controller
      }
-        #endif
     #endif
-    #if defined MB785_GLCD_MODE && defined SDCARD_SUPPORT
+#endif
+#if defined MB785_GLCD_MODE && defined SDCARD_SUPPORT
     CONFIGURE_SDCARD_DETECT_INPUT();                                     // {69}
-    #endif
-    #if defined ETH_INTERFACE
-        #if defined M52259EVB                                            // this board has a DP83640 PHY, which requires a 167ms powerup stabilisation delay. The reset is help low for this period. It is released when configuring the Ethernet connection.
+#endif
+#if defined ETH_INTERFACE
+    #if defined M52259EVB                                                // this board has a DP83640 PHY, which requires a 167ms powerup stabilisation delay. The reset is help low for this period. It is released when configuring the Ethernet connection.
     RESET_RCR |= FRCRSTOUT;                                              // assert RSTO
-        #elif defined RESET_PHY
+    #elif defined RESET_PHY
     ASSERT_PHY_RST();                                                    // immediately set PHY to reset state
     CONFIG_PHY_STRAPS();                                                 // configure the required strap options - the reset line will be de-asserted during the Ethernet configuration
-        #endif
     #endif
-    #if defined RAM_TEST                                                 // {61}
+#endif
+#if defined RAM_TEST                                                     // {61}
     if (fnRAM_test(0, (SIZE_OF_RAM/RAM_BLOCK_SIZE)) != (unsigned long *)0xffffffff) { // test code of a complete RAM area
         // The return address was the address in RAM that failed
         //
         while (1) {}                                                     // serious error found in RAM - stop here
     }
-    #endif
-    #if defined nRF24L01_INTERFACE
+#endif
+#if defined nRF24L01_INTERFACE
     fnPrepare_nRF24L01_signals();
-    #endif
+#endif
 }
 
+#if defined QUICK_DEV_TASKS && !defined BLINKY                           // {106}
+// When QUICK_DEV_TASKS is enabled these 4 development tasks are added so that new task based developments can be easily started
+// - the task configuration table and task names can later be reworked in TaskConfig.h to finalise new projects
+// - the first task will be started when the application runs and can be used to start others if desired
+//
+extern void fnQuickTask1(TTASKTABLE *ptrTaskTable)
+{
+}
+
+extern void fnQuickTask2(TTASKTABLE *ptrTaskTable)
+{
+}
+
+extern void fnQuickTask3(TTASKTABLE *ptrTaskTable)
+{
+}
+
+extern void fnQuickTask4(TTASKTABLE *ptrTaskTable)
+{
+}
+#endif
