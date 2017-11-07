@@ -184,7 +184,9 @@ static unsigned char ucUART_mask[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {0};
     static unsigned char ucStops[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {0};
 #endif
 #if defined SERIAL_INTERFACE && defined SERIAL_SUPPORT_DMA_RX && defined SERIAL_SUPPORT_DMA_RX_FREERUN // {15}
+    #if !defined KINETIS_KL || (defined KINETIS_KL && !defined DEVICE_WITH_eDMA)
     static unsigned long ulDMA_progress[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {0};
+    #endif
     #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA                  // {209}
     static QUEUE_TRANSFER RxModulo[UARTS_AVAILABLE + LPUARTS_AVAILABLE];
     #endif
@@ -1460,7 +1462,7 @@ static void (*_uart_rx_dma_Interrupt[UARTS_AVAILABLE + LPUARTS_AVAILABLE])(void)
 };
     #endif
 
-    #if defined SERIAL_SUPPORT_DMA_RX_FREERUN && defined KINETIS_KL && !defined DEVICE_WITH_eDMA
+    #if defined SERIAL_SUPPORT_DMA_RX_FREERUN && (defined KINETIS_KL && !defined DEVICE_WITH_eDMA)
 // Check the progress of the channel's free-running DMA reception and update the TTY character account accordingly
 // - retrigger the DMA max. count on each check so that it never terminates
 //
@@ -1497,7 +1499,9 @@ static void fnEnableRxAndDMA(int channel, unsigned long buffer_length, unsigned 
 //
 extern void fnPrepareRxDMA(QUEUE_HANDLE channel, unsigned char *ptrStart, QUEUE_TRANSFER rx_length)
 {
+    #if (UARTS_AVAILABLE > 0) || ((LPUARTS_AVAILABLE > 0) && (defined KINETIS_KL && !defined DEVICE_WITH_eDMA))
     KINETIS_UART_CONTROL *uart_reg = fnSelectChannel(channel);           // select the UART/LPUART channel register set
+    #endif
     #if LPUARTS_AVAILABLE > 0                                            // if the device has LPUART(s)
         #if UARTS_AVAILABLE > 0                                          // if also UARTs
     if (uart_type[channel] == UART_TYPE_LPUART) {                        // LPUART channel

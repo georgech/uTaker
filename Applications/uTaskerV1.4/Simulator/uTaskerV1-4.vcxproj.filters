@@ -959,9 +959,6 @@
     <None Include="..\..\..\Hardware\Kinetis\CMSIS_DSP\arm_bitreversal2.S">
       <Filter>Hardware\Kinetis\CMSIS_DSP</Filter>
     </None>
-    <None Include="..\..\..\Hardware\Kinetis\Crypto\mmcau_aes_functions_M0.S">
-      <Filter>Hardware\Kinetis\Crypto</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="uTasker.rc">

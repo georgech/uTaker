@@ -700,8 +700,8 @@ static unsigned short fnInsertIP_checksum(unsigned char *ptrData, unsigned char 
         unsigned short usCheckSum = fnCalcIP_CS(0, (ptrData - 10), 10); 
         usCheckSum = fnCalcIP_CS(usCheckSum, &network[ucNetworkID].ucOurIP[0], IPV4_LENGTH);
         usCheckSum = fnCalcIP_CS(usCheckSum, prIP_to, IPV4_LENGTH);
-        usCheckSum = ~usCheckSum;                                            // we do not support options after the IP addresses !!
-        *ptrData++  = (unsigned char)((usCheckSum) >> 8);                    // insert the checksum value
+        usCheckSum = ~usCheckSum;                                        // we do not support options after the IP addresses !!
+        *ptrData++  = (unsigned char)((usCheckSum) >> 8);                // insert the checksum value
         *ptrData    = (unsigned char)(usCheckSum);
         return usCheckSum;
     }

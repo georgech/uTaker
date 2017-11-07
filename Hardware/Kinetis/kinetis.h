@@ -9196,8 +9196,16 @@ typedef struct stKINETIS_LPTMR_CTL
         #endif
             #define SIM_SOPT2_USBSRC         0x00040000                  // usb clock source is MCGPLLCLK/MCGFLLCLK (or IRC48M) clock divided by the USB fractional divider rather than USB_CLKIN
         #if defined KINETIS_K80
-            #define SIM_SOPT2_FLEXIOSRC      0x00c00000                  // 
-            #define SIM_SOPT2_TPMSRC         0x03000000                  //
+            #define SIM_SOPT2_FLEXIOSRC      0x00c00000                  // flexIO module clock sorce select
+                #define SIM_SOPT2_FLEXIOSRC_DISABLED 0x00000000          // flexIO clock disabled
+                #define SIM_SOPT2_FLEXIOSRC_ALT      0x00400000          // clock for flexIO selected from SOPT2[PLLFLLSEL]
+                #define SIM_SOPT2_FLEXIOSRC_OSCERCLK 0x00800000          // flexIO clock from external/oscillator clock
+                #define SIM_SOPT2_FLEXIOSRC_MCGIRCLK 0x00c00000          // flexIO clock from MCGIRCLK
+            #define SIM_SOPT2_TPMSRC         0x03000000                  // TPM source clock select
+                #define SIM_SOPT2_TPMSRC_DISABLED 0x00000000             // TPM clock disabled
+                #define SIM_SOPT2_TPMSRC_ALT      0x01000000             // clock for TPM selected from SOPT2[PLLFLLSEL]
+                #define SIM_SOPT2_TPMSRC_OSCERCLK 0x02000000             // TPM clock from external/oscillator clock
+                #define SIM_SOPT2_TPMSRC_MCGIRCLK 0x03000000             // TPM clock from MCGIRCLK
             #define SIM_SOPT2_LPUARTSRC_SEL  0x04000000                  // LPUARTs clock source - source selected by PLLFLLSEL
             #define SIM_SOPT2_LPUARTSRC_OSC  0x08000000                  // LPUARTs clock source - OSCERCLK
             #define SIM_SOPT2_LPUARTSRC_MGC  0x0c000000                  // LPUARTs clock source - MCGIRCLK
@@ -9295,10 +9303,10 @@ typedef struct stKINETIS_LPTMR_CTL
       #define SIM_SOPT7_ADC0PRETRGSEL_A      0x00000000                  // ADC pretrigger select - pretrigger A
       #define SIM_SOPT7_ADC0PRETRGSEL_B      0x00000010                  // ADC pretrigger select - pretrigger B
       #define SIM_SOPT7_ADC0ALTTRGEN         0x00000080                  // ADC alternate trigger enable
-    #if defined KINETIS_K66
+    #if defined KINETIS_K66 || defined KINETIS_K80
         #define SIM_SOPT8                    *(unsigned long*)(SIM_BLOCK + 0x101c) // System Options Register 8
     #endif
-    #if defined KINETIS_KL82 || defined KINETIS_K65 || defined KINETIS_K66
+    #if defined KINETIS_K80 || defined KINETIS_KL82 || defined KINETIS_K65 || defined KINETIS_K66
         #define SIM_SOPT9                    *(unsigned long*)(SIM_BLOCK + 0x1020) // System Options Register 9
         #if defined KINETIS_KL82
             #define SIM_SOPT9_TPM0CLKSEL     0x01000000                  // TPM0 external clock pin selection
@@ -9380,7 +9388,7 @@ typedef struct stKINETIS_LPTMR_CTL
         #define SIM_SCGC3                    *(volatile unsigned long *)(SIM_BLOCK + 0x1030)  // System Clock Gating Control Register 3
           #define SIM_SCGC3_RNGA             0x00000001                                       // {41}
           #define SIM_SCGC3_RNGB             0x00000001
-          #define SIM_SCGC3_TRNG             0x00000001
+          #define SIM_SCGC3_TRNG0            0x00000001
           #define SIM_SCGC3_USBHS            0x00000002
           #define SIM_SCGC3_USBHSPHY         0x00000004
           #define SIM_SCGC3_USBHSDCD         0x00000008
@@ -9400,7 +9408,7 @@ typedef struct stKINETIS_LPTMR_CTL
           //
           #define SIM_SCGC3_SIM_SCGC3_RNGA       BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1030), 0)
           #define SIM_SCGC3_SIM_SCGC3_RNGB       BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1030), 0)
-          #define SIM_SCGC3_SIM_SCGC3_TRNG       BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1030), 0)
+          #define SIM_SCGC3_SIM_SCGC3_TRNG0      BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1030), 0)
           #define SIM_SCGC3_SIM_SCGC3_USBHS      BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1030), 1)
           #define SIM_SCGC3_SIM_SCGC3_USBHSPHY   BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1030), 2)
           #define SIM_SCGC3_SIM_SCGC3_USBHSDCD   BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1030), 3)
@@ -10839,7 +10847,11 @@ typedef struct stKINETIS_LPTMR_CTL
     #define PD_6_FTM0_CH6                PORT_MUX_ALT4
     #define PA_1_FTM0_CH6                PORT_MUX_ALT3
     #define PD_7_FTM0_CH7                PORT_MUX_ALT4
-    #define PA_6_FTM0_CH7                PORT_MUX_ALT3
+    #if defined KINETIS_K80
+        #define PA_2_FTM0_CH7            PORT_MUX_ALT3
+    #else
+        #define PA_6_FTM0_CH7            PORT_MUX_ALT3
+    #endif
 #endif
 
 #if defined KINETIS_KL02                                                 // TPM0
@@ -10918,7 +10930,7 @@ typedef struct stKINETIS_LPTMR_CTL
 #define PE_5_FTM3_CH7                    PORT_MUX_ALT6
 #define PC_11_FTM3_CH7                   PORT_MUX_ALT3
 
-#if defined KINETIS_K66
+#if defined KINETIS_K66 || defined KINETIS_K80
     #define PB_0_TPM1_CH0                PORT_MUX_ALT6
     #define PA_12_TPM1_CH0               PORT_MUX_ALT7
     #define PA_8_TPM1_CH0                PORT_MUX_ALT6
@@ -10935,7 +10947,7 @@ typedef struct stKINETIS_LPTMR_CTL
 #define PA_19_FTM_CLKIN1                 PORT_MUX_ALT4
 
 #define PB_16_FTM_CLKIN0                 PORT_MUX_ALT4
-#if defined KINETIS_K66
+#if defined KINETIS_K66 || defined KINETIS_K80
     #define PC_12_FTM_CLKIN0             PORT_MUX_ALT4
     #define PA_18_TPM_CLKIN0             PORT_MUX_ALT7
     #define PB_16_TPM_CLKIN0             PORT_MUX_ALT7
@@ -12691,12 +12703,12 @@ typedef struct stKINETIS_CAN_CONTROL
     } KINETIS_LPUART_CONTROL;
 #endif
 
-#define UART0_BDH                        *(volatile unsigned char *)(UART0_BLOCK + 0x00) // UART 0 Baud Rate Register: High (write order BDH followed by BDL)
+#define UART0_BDH                        *(volatile unsigned char *)(UART0_BLOCK + 0x00) // UART 0 baud rate register: high (write order BDH followed by BDL)
   #define UART_BDH_RXEDGIE               0x40                            // rxd input active edge interrupt enable
   #define UART_BDH_LBKDIE                0x80                            // lin break detect interrupt enable
-#define UART0_BDL                        *(volatile unsigned char *)(UART0_BLOCK + 0x01) // UART 0 Baud Rate Register: Low
-#define UART0_C1                         *(unsigned char *)(UART0_BLOCK + 0x02) // UART 0 Control Register 1
-  #define UART_C1_PARITY_DISABLED        0x00
+#define UART0_BDL                        *(volatile unsigned char *)(UART0_BLOCK + 0x01) // UART 0 baud rate register: low
+#define UART0_C1                         *(unsigned char *)(UART0_BLOCK + 0x02) // UART 0 control register 1
+  #define UART_C1_PARITY_DISABLED        0x00                            // no parity used
   #define UART_C1_PT_EVEN                0x00                            // parity type even
   #define UART_C1_PT_ODD                 0x01                            // parity type odd
   #define UART_C1_PE                     0x02                            // parity enable
@@ -12764,13 +12776,13 @@ typedef struct stKINETIS_CAN_CONTROL
       #define UART_MODEM_TXRTSE          0x02                            // transmit request-to-send enable
       #define UART_MODEM_TXRTSPOL        0x04                            // transmit request-to-send polarity
       #define UART_MODEM_RXRTSE          0x08                            // receiver request-to-send enable
-    #define UART0_IR                     *(unsigned char *)(UART0_BLOCK + 0x0e)          // UART 0 Infrared Register
+    #define UART0_IR                     *(unsigned char *)(UART0_BLOCK + 0x0e) // UART 0 Infrared Register
       #define UART_IR_TNP_3_16           0x00                            // 3/16 narrow pulse
       #define UART_IR_TNP_1_16           0x01                            // 1/16 narrow pulse
       #define UART_IR_TNP_1_32           0x02                            // 1/32 narrow pulse
       #define UART_IR_TNP_1_4            0x03                            // 1/4 narrow pulse
       #define UART_IR_IREN               0x04                            // infrared enable
-    #define UART0_PFIFO                  *(unsigned char *)(UART0_BLOCK + 0x10)           // UART 0 FIFO Parameters
+    #define UART0_PFIFO                  *(volatile unsigned char *)(UART0_BLOCK + 0x10) // UART 0 FIFO Parameters
       #define UART_PFIFO_RXFIFOSIZE_1    0x00                            // receive FIFO/buffer depth = 1 dataword
       #define UART_PFIFO_RXFIFOSIZE_4    0x01                            // receive FIFO/buffer depth = 4 datawords
       #define UART_PFIFO_RXFIFOSIZE_8    0x02                            // receive FIFO/buffer depth = 8 datawords
@@ -12834,25 +12846,25 @@ typedef struct stKINETIS_CAN_CONTROL
     #define UART1_C5                     *(unsigned char*)(UART1_BLOCK + 0x0b)            // UART 1 Control Register 5
 #endif
 #if !defined KINETIS_KL && !defined KINETIS_KE
-    #define UART1_ED                     *(volatile unsigned char*)(UART1_BLOCK + 0x0c)   // UART 1 Extended Data Register (read-only)
-    #define UART1_MODEM                  *(unsigned char*)(UART1_BLOCK + 0x0d)            // UART 1 Modem Register
-    #define UART1_IR                     *(unsigned char*)(UART1_BLOCK + 0x0e)            // UART 1 Infrared Register
-    #define UART1_PFIFO                  *(unsigned char*)(UART1_BLOCK + 0x10)            // UART 1 FIFO Parameters
-    #define UART1_CFIFO                  *(unsigned char*)(UART1_BLOCK + 0x11)            // UART 1 FIFO Control Register
-    #define UART1_SFIFO                  *(volatile unsigned char*)(UART1_BLOCK + 0x12)   // UART 1 FIFO Status Register
-    #define UART1_TWFIFO                 *(unsigned char*)(UART1_BLOCK + 0x13)            // UART 1 FIFO Transmit Watermark
-    #define UART1_TCFIFI                 *(volatile unsigned char*)(UART1_BLOCK + 0x14)   // UART 1 FIFO Transmit Count (read-only)
-    #define UART1_RWFIFO                 *(unsigned char*)(UART1_BLOCK + 0x15)            // UART 1 FIFO Receive Watermark
-    #define UART1_RCFIFI                 *(volatile unsigned char*)(UART1_BLOCK + 0x16)   // UART 1 FIFO Receive Count (read-only)
-    #define UART1_C7816                  *(unsigned char*)(UART1_BLOCK + 0x18)            // UART 1 7816 Control Register
-    #define UART1_IE7816                 *(unsigned char*)(UART1_BLOCK + 0x19)            // UART 1 7816 Interrupt Enable Register
-    #define UART1_IS7816                 *(volatile unsigned char*)(UART1_BLOCK + 0x1a)   // UART 1 7816 Interrupt Status Register
-    #define UART1_WP7816T0               *(unsigned char*)(UART1_BLOCK + 0x1b)            // UART 1 7816 Wait Parameter Register T0/T1
-    #define UART1_WP7816T1               *(unsigned char*)(UART1_BLOCK + 0x1b)            // UART 1 7816 Wait Parameter Register T0/T1
-    #define UART1_WN7816                 *(unsigned char*)(UART1_BLOCK + 0x1c)            // UART 1 7816 Wait N Register
-    #define UART1_WF7816                 *(unsigned char*)(UART1_BLOCK + 0x1d)            // UART 1 7816 Wait FD Register
-    #define UART1_ET7816                 *(unsigned char*)(UART1_BLOCK + 0x1e)            // UART 1 7816 Error Threshold Register
-    #define UART1_TL7816                 *(unsigned char*)(UART1_BLOCK + 0x1f)            // UART 1 7816 Transmit Length Register
+    #define UART1_ED                     *(volatile unsigned char*)(UART1_BLOCK + 0x0c)   // UART 1 extended data register (read-only)
+    #define UART1_MODEM                  *(unsigned char*)(UART1_BLOCK + 0x0d)            // UART 1 modem register
+    #define UART1_IR                     *(unsigned char*)(UART1_BLOCK + 0x0e)            // UART 1 infrared register
+    #define UART1_PFIFO                  *(volatile unsigned char*)(UART1_BLOCK + 0x10)   // UART 1 FIFO parameters
+    #define UART1_CFIFO                  *(unsigned char*)(UART1_BLOCK + 0x11)            // UART 1 FIFO control register
+    #define UART1_SFIFO                  *(volatile unsigned char*)(UART1_BLOCK + 0x12)   // UART 1 FIFO status register
+    #define UART1_TWFIFO                 *(unsigned char*)(UART1_BLOCK + 0x13)            // UART 1 FIFO transmit watermark
+    #define UART1_TCFIFI                 *(volatile unsigned char*)(UART1_BLOCK + 0x14)   // UART 1 FIFO transmit count (read-only)
+    #define UART1_RWFIFO                 *(unsigned char*)(UART1_BLOCK + 0x15)            // UART 1 FIFO receive watermark
+    #define UART1_RCFIFI                 *(volatile unsigned char*)(UART1_BLOCK + 0x16)   // UART 1 FIFO receive count (read-only)
+    #define UART1_C7816                  *(unsigned char*)(UART1_BLOCK + 0x18)            // UART 1 7816 control register
+    #define UART1_IE7816                 *(unsigned char*)(UART1_BLOCK + 0x19)            // UART 1 7816 interrupt enable register
+    #define UART1_IS7816                 *(volatile unsigned char*)(UART1_BLOCK + 0x1a)   // UART 1 7816 interrupt status register
+    #define UART1_WP7816T0               *(unsigned char*)(UART1_BLOCK + 0x1b)            // UART 1 7816 wait parameter register T0/T1
+    #define UART1_WP7816T1               *(unsigned char*)(UART1_BLOCK + 0x1b)            // UART 1 7816 wait parameter register T0/T1
+    #define UART1_WN7816                 *(unsigned char*)(UART1_BLOCK + 0x1c)            // UART 1 7816 wait N register
+    #define UART1_WF7816                 *(unsigned char*)(UART1_BLOCK + 0x1d)            // UART 1 7816 wait FD register
+    #define UART1_ET7816                 *(unsigned char*)(UART1_BLOCK + 0x1e)            // UART 1 7816 error threshold register
+    #define UART1_TL7816                 *(unsigned char*)(UART1_BLOCK + 0x1f)            // UART 1 7816 transmit length register
 #endif
 
 #define UART2_BDH                        *(volatile unsigned char *)(UART2_BLOCK + 0x00)  // UART 2 Baud Rate Registers: High
@@ -12866,16 +12878,16 @@ typedef struct stKINETIS_CAN_CONTROL
 #if defined KINETIS_KL && !defined K_STYLE_UART2
     #define UART2_C4                     *(unsigned char*)(UART2_BLOCK + 0x08)            // UART 2 Control Register 4
 #elif !defined KINETIS_KE
-    #define UART2_MA1                    *(unsigned char*)(UART2_BLOCK + 0x08)            // UART 2 Match Address Registers 1
-    #define UART2_MA2                    *(unsigned char*)(UART2_BLOCK + 0x09)            // UART 2 Match Address Registers 2
-    #define UART2_C4                     *(unsigned char*)(UART2_BLOCK + 0x0a)            // UART 2 Control Register 4
-    #define UART2_C5                     *(unsigned char*)(UART2_BLOCK + 0x0b)            // UART 2 Control Register 5
+    #define UART2_MA1                    *(unsigned char*)(UART2_BLOCK + 0x08)            // UART 2 match address registers 1
+    #define UART2_MA2                    *(unsigned char*)(UART2_BLOCK + 0x09)            // UART 2 match address registers 2
+    #define UART2_C4                     *(unsigned char*)(UART2_BLOCK + 0x0a)            // UART 2 control register 4
+    #define UART2_C5                     *(unsigned char*)(UART2_BLOCK + 0x0b)            // UART 2 control register 5
 #endif
 #if !defined KINETIS_KL && !defined KINETIS_KE
     #define UART2_ED                     *(volatile unsigned char*)(UART2_BLOCK + 0x0c)   // UART 2 Extended Data Register (read-only)
     #define UART2_MODEM                  *(unsigned char*)(UART2_BLOCK + 0x0d)            // UART 2 Modem Register
     #define UART2_IR                     *(unsigned char*)(UART2_BLOCK + 0x0e)            // UART 2 Infrared Register
-    #define UART2_PFIFO                  *(unsigned char*)(UART2_BLOCK + 0x10)            // UART 2 FIFO Parameters
+    #define UART2_PFIFO                  *(volatile unsigned char*)(UART2_BLOCK + 0x10)   // UART 2 FIFO Parameters
     #define UART2_CFIFO                  *(unsigned char*)(UART2_BLOCK + 0x11)            // UART 2 FIFO Control Register
     #define UART2_SFIFO                  *(volatile unsigned char*)(UART2_BLOCK + 0x12)   // UART 2 FIFO Status Register
     #define UART2_TWFIFO                 *(unsigned char*)(UART2_BLOCK + 0x13)            // UART 2 FIFO Transmit Watermark
@@ -12915,7 +12927,7 @@ typedef struct stKINETIS_CAN_CONTROL
     #define UART3_ED                     *(volatile unsigned char*)(UART3_BLOCK + 0x0c)   // UART 3 Extended Data Register (read-only)
     #define UART3_MODEM                  *(unsigned char*)(UART3_BLOCK + 0x0d)            // UART 3 Modem Register
     #define UART3_IR                     *(unsigned char*)(UART3_BLOCK + 0x0e)            // UART 3 Infrared Register
-    #define UART3_PFIFO                  *(unsigned char*)(UART3_BLOCK + 0x10)            // UART 3 FIFO Parameters
+    #define UART3_PFIFO                  *(volatile unsigned char*)(UART3_BLOCK + 0x10)   // UART 3 FIFO Parameters
     #define UART3_CFIFO                  *(unsigned char*)(UART3_BLOCK + 0x11)            // UART 3 FIFO Control Register
     #define UART3_SFIFO                  *(volatile unsigned char*)(UART3_BLOCK + 0x12)   // UART 3 FIFO Status Register
     #define UART3_TWFIFO                 *(unsigned char*)(UART3_BLOCK + 0x13)            // UART 3 FIFO Transmit Watermark
@@ -12953,7 +12965,7 @@ typedef struct stKINETIS_CAN_CONTROL
     #define UART4_ED                     *(volatile unsigned char*)(UART4_BLOCK + 0x0c)   // UART 4 Extended Data Register (read-only)
     #define UART4_MODEM                  *(unsigned char*)(UART4_BLOCK + 0x0d)            // UART 4 Modem Register
     #define UART4_IR                     *(unsigned char*)(UART4_BLOCK + 0x0e)            // UART 4 Infrared Register
-    #define UART4_PFIFO                  *(unsigned char*)(UART4_BLOCK + 0x10)            // UART 4 FIFO Parameters
+    #define UART4_PFIFO                  *(volatile unsigned char*)(UART4_BLOCK + 0x10)   // UART 4 FIFO Parameters
     #define UART4_CFIFO                  *(unsigned char*)(UART4_BLOCK + 0x11)            // UART 4 FIFO Control Register
     #define UART4_SFIFO                  *(volatile unsigned char*)(UART4_BLOCK + 0x12)   // UART 4 FIFO Status Register
     #define UART4_TWFIFO                 *(unsigned char*)(UART4_BLOCK + 0x13)            // UART 4 FIFO Transmit Watermark
@@ -12991,7 +13003,7 @@ typedef struct stKINETIS_CAN_CONTROL
     #define UART5_ED                     *(volatile unsigned char*)(UART5_BLOCK + 0x0c)   // UART 5 Extended Data Register (read-only)
     #define UART5_MODEM                  *(unsigned char*)(UART5_BLOCK + 0x0d)            // UART 5 Modem Register
     #define UART5_IR                     *(unsigned char*)(UART5_BLOCK + 0x0e)            // UART 5 Infrared Register
-    #define UART5_PFIFO                  *(unsigned char*)(UART5_BLOCK + 0x10)            // UART 5 FIFO Parameters
+    #define UART5_PFIFO                  *(volatile unsigned char*)(UART5_BLOCK + 0x10)   // UART 5 FIFO Parameters
     #define UART5_CFIFO                  *(unsigned char*)(UART5_BLOCK + 0x11)            // UART 5 FIFO Control Register
     #define UART5_SFIFO                  *(volatile unsigned char*)(UART5_BLOCK + 0x12)   // UART 5 FIFO Status Register
     #define UART5_TWFIFO                 *(unsigned char*)(UART5_BLOCK + 0x13)            // UART 5 FIFO Transmit Watermark
@@ -13035,7 +13047,7 @@ typedef struct stKINETIS_UART_CONTROL
     unsigned char UART_MODEM;
     unsigned char UART_IR;
     unsigned char ucRes0;
-    unsigned char UART_PFIFO;
+    volatile unsigned char UART_PFIFO;
     volatile unsigned char UART_CFIFO;
     volatile unsigned char UART_SFIFO;
     unsigned char UART_TWFIFO;

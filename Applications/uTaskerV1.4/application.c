@@ -125,6 +125,7 @@
     18.09.2017 Add simulation option for checking bare-minimum operation compatibility {104}
     05.11.2017 Remove temporary RTC workaround due to pending alarm interrupt {105}
     05.11.2017 Add QUICK_DEV_TASKS                                       {106}
+    06.11.2017 Add reset cause to start-up message                       {107}
 
 */
 
@@ -673,7 +674,9 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
         DebugHandle = SerialPortID;                                      // assign our serial interface as debug port
         fnDebugMsg("\r\n\nHello, world... ");
         fnDebugMsg(TARGET_HW);                                           // {103}
-        fnDebugMsg("\r\n");
+        fnDebugMsg(" [");
+        fnAddResetCause(0);                                              // {107}
+        fnDebugMsg("]\r\n");
         fnDebugMsg("OS Heap use = ");
         fnDebugHex(OS_heap, (WITH_LEADIN | sizeof(HEAP_REQUIREMENTS)));
         fnDebugMsg(" from ");
