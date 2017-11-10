@@ -1047,7 +1047,7 @@ typedef struct stRESET_VECTOR
     #define FLASH_CONTROLLER_FTFE_EXTENDED                               // FTFE type with extended features
 #elif defined KINETIS_KE || defined KINETIS_KEA
     #define FLASH_CONTROLLER_FTMRE                                       // FTMRE type
-#if defined KINETIS_KE02 || (defined KINETIS_KEA && (defined SIZE_OF_EEPROM && (SIZE_OF_EEPROM == 256)))
+    #if defined KINETIS_KE02 || (defined KINETIS_KEA && (defined SIZE_OF_EEPROM && (SIZE_OF_EEPROM == 256)))
         #define KINETIS_KE_EEPROM                                        // parts with 256 bytes of EEPROM
     #endif
 #endif

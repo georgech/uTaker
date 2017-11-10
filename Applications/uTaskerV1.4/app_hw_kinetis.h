@@ -1110,19 +1110,11 @@
   //#define PIN_COUNT           PIN_COUNT_32_PIN                         // 32 pin LQFP
     #define PIN_COUNT           PIN_COUNT_64_PIN                         // 64 pin LQFP
     #define SIZE_OF_EEPROM      (256)
-    #define SIZE_OF_FLASH       ((32 * 1024) + SIZE_OF_EEPROM)           // 32k program Flash
-  //#define SIZE_OF_FLASH       ((64 * 1024) + SIZE_OF_EEPROM)
+    #define SIZE_OF_FLASH       (32 * 1024)                              // 32k program Flash
+  //#define SIZE_OF_FLASH       (64 * 1024)
   //#define SIZE_OF_RAM         (2 * 1024)
     #define SIZE_OF_RAM         (4 * 1024)                               // 4k SRAM
-#elif defined FRDM_KEAZ64Q64
-  //#define PIN_COUNT           PIN_COUNT_32_PIN                         // 32 pin LQFP
-    #define PIN_COUNT           PIN_COUNT_64_PIN                         // 64 pin LQFP
-    #define SIZE_OF_EEPROM      (256)
-  //#define SIZE_OF_FLASH       ((32 * 1024) + SIZE_OF_EEPROM)
-    #define SIZE_OF_FLASH       ((64 * 1024) + SIZE_OF_EEPROM)           // 64k program Flash
-  //#define SIZE_OF_RAM         (2 * 1024)
-    #define SIZE_OF_RAM         (4 * 1024)                               // 4k SRAM
-#elif defined TRK_KEA64
+#elif defined TRK_KEA64 || defined FRDM_KEAZ64Q64
   //#define PIN_COUNT           PIN_COUNT_32_PIN                         // 32 pin LQFP
     #define PIN_COUNT           PIN_COUNT_64_PIN                         // 64 pin LQFP
   //#define SIZE_OF_FLASH       (32 * 1024)
@@ -1162,9 +1154,9 @@
   //#define PIN_COUNT           PIN_COUNT_44_PIN                         // 44 pin LQFP
     #define PIN_COUNT           PIN_COUNT_64_PIN                         // 64 pin QFP
     #define SIZE_OF_EEPROM      (256)
-  //#define SIZE_OF_FLASH       ((16 * 1024) + SIZE_OF_EEPROM)
-  //#define SIZE_OF_FLASH       ((32 * 1024) + SIZE_OF_EEPROM)
-    #define SIZE_OF_FLASH       ((64 * 1024) + SIZE_OF_EEPROM)           // 64k program Flash
+  //#define SIZE_OF_FLASH       (16 * 1024)
+  //#define SIZE_OF_FLASH       (32 * 1024)
+    #define SIZE_OF_FLASH       (64 * 1024)                              // 64k program Flash
   //#define SIZE_OF_RAM         (2 * 1024)
     #define SIZE_OF_RAM         (4 * 1024)                               // 4k SRAM
 #elif defined FRDM_KL03Z
@@ -5765,7 +5757,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define DEMO_LED_1             (KE_PORTH_BIT1)                       // (green LED - PTC1) if the port is changed (eg. A to D) the port macros will require appropriate adjustment too
     #define DEMO_LED_2             (KE_PORTH_BIT0)                       // (red LED - PTC0) if the port is changed (eg. A to D) the port macros will require appropriate adjustment too
     #define DEMO_LED_3             (KE_PORTE_BIT7)                       // (blue LED - PTC2) if the port is changed (eg. A to D) the port macros will require appropriate adjustment too
-    #define DEMO_LED_4             (0)                                   //  if the port is changed (eg. A to D) the port macros will require appropriate adjustment too
+    #define DEMO_LED_4             (0)                                   // if the port is changed (eg. A to D) the port macros will require appropriate adjustment too
 
     #define BLINK_LED              DEMO_LED_1
 

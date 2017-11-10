@@ -189,8 +189,8 @@ static int fnFlashNow(unsigned char ucCommand, unsigned long *ptrWord, unsigned 
     #if defined FLASH_CONTROLLER_FTMRE                                   // most KE and KEA parts
     FTMRH_FCCOBIX = 0;                                                   // reset the command index
         #if defined KINETIS_KE_EEPROM && (defined SIZE_OF_EEPROM && SIZE_OF_EEPROM > 0) // {109}
-    if (ptrWord >= (unsigned long *)(SIZE_OF_FLASH - SIZE_OF_EEPROM)) {  // is the access a write/erase in EEPROM
-        ptrWord += ((KE_EEPROM_START_ADDRESS - (SIZE_OF_FLASH - SIZE_OF_EEPROM))/sizeof(unsigned long)); // convert to EEPROM physical address
+    if (ptrWord >= (unsigned long *)(SIZE_OF_FLASH)) {                   // is the access a write/erase in EEPROM
+        ptrWord += ((KE_EEPROM_START_ADDRESS - (SIZE_OF_FLASH))/sizeof(unsigned long)); // convert to EEPROM physical address
         if (FCMD_ERASE_FLASH_SECTOR == ucCommand) {
             ucCommand = FCMD_ERASE_EEPROM_SECTOR;                        // modify the command to the EEPROM sector erase command
         }
@@ -532,7 +532,7 @@ static int fnWriteInternalFlash(ACCESS_DETAILS *ptrAccessDetails, unsigned char 
     }
     else {
         #if (defined FLASH_CONTROLLER_FTMRE && (defined SIZE_OF_EEPROM && SIZE_OF_EEPROM > 0)) // {109}
-        if ((unsigned char *)ptrAccessDetails->ulOffset >= (unsigned char *)(SIZE_OF_FLASH - SIZE_OF_EEPROM)) { // is the address in EEPROM
+        if ((unsigned char *)ptrAccessDetails->ulOffset >= (unsigned char *)(SIZE_OF_FLASH)) { // is the address in EEPROM
             ulBufferOffset = ptrAccessDetails->ulOffset;
         }
         else {
@@ -546,7 +546,7 @@ static int fnWriteInternalFlash(ACCESS_DETAILS *ptrAccessDetails, unsigned char 
     }
     do {                                                                 // handle each byte to be programmed
         #if (defined FLASH_CONTROLLER_FTMRE && defined KINETIS_KE_EEPROM && (defined SIZE_OF_EEPROM && SIZE_OF_EEPROM > 0)) // {109}
-        if ((unsigned char *)ulBufferOffset >= (unsigned char *)(SIZE_OF_FLASH - SIZE_OF_EEPROM)) { // is the address in EEPROM
+        if ((unsigned char *)ulBufferOffset >= (unsigned char *)(SIZE_OF_FLASH)) { // is the address in EEPROM
             if ((fnFlashNow(FCMD_PROGRAM_EEPROM, (unsigned long *)ulBufferOffset, (unsigned long *)ucData)) != 0) { // program single bytes
                 return -1;                                               // error
             }
@@ -933,7 +933,7 @@ extern int fnEraseFlashSector(unsigned char *ptrSector, MAX_FILE_LENGTH Length)
     } while (1);
     #else                                                                // case when only internal Flash is available
         #if (defined FLASH_CONTROLLER_FTMRE && (defined SIZE_OF_EEPROM && SIZE_OF_EEPROM > 0)) // {109}
-    if (ptrSector >= (unsigned char *)(SIZE_OF_FLASH - SIZE_OF_EEPROM)) {// is the sector in EEPROM
+    if (ptrSector >= (unsigned char *)(SIZE_OF_FLASH)) {                 // is the sector in EEPROM
         _FLASH_GRANULARITY = KE_EEPROM_GRANULARITY;                      // set EEPROM granularity
     }
         #endif
@@ -1074,8 +1074,8 @@ extern void fnGetParsFile(unsigned char *ParLocation, unsigned char *ptrValue, M
         ParLocation += (FLEXNVM_START_ADDRESS - (SIZE_OF_FLASH - SIZE_OF_FLEXFLASH)); // convert to FlexNVM physical address
     }
             #elif (defined FLASH_CONTROLLER_FTMRE && (defined SIZE_OF_EEPROM && SIZE_OF_EEPROM > 0)) // {109}
-    if (ParLocation >= (unsigned char *)(SIZE_OF_FLASH - SIZE_OF_EEPROM)) { // is the access a read from EEPROM
-        ParLocation += (KE_EEPROM_START_ADDRESS - (SIZE_OF_FLASH - SIZE_OF_EEPROM)); // convert to EEPROM physical address
+    if (ParLocation >= (unsigned char *)(SIZE_OF_FLASH)) { // is the access a read from EEPROM
+        ParLocation += (KE_EEPROM_START_ADDRESS - (SIZE_OF_FLASH)); // convert to EEPROM physical address
     }
             #endif
     uMemcpy(ptrValue, fnGetFlashAdd(ParLocation), Size);                 // directly copy memory since this must be a pointer to code (embedded file)

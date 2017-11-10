@@ -997,7 +997,12 @@ static void fnSetDevice(unsigned long *port_inits)
 #endif
 }
 
-unsigned char ucFLASH[SIZE_OF_FLASH + PROGRAM_ONCE_AREA_SIZE];           // {7} internal memory plus program-once flash content
+#if defined SIZE_OF_EEPROM  && (SIZE_OF_EEPROM == 256)                   // KE and KEA parts with EEPROM
+    #define SIZE_OF_SIM_FLASH (SIZE_OF_FLASH + SIZE_OF_EEPROM)
+#else
+    #define SIZE_OF_SIM_FLASH (SIZE_OF_FLASH + PROGRAM_ONCE_AREA_SIZE)   // {7} internal memory plus program-once flash content
+#endif
+unsigned char ucFLASH[SIZE_OF_SIM_FLASH];
 
 extern void fnInitialiseDevice(void *port_inits)
 {
@@ -1009,12 +1014,12 @@ extern void fnInitialiseDevice(void *port_inits)
 extern void fnDeleteFlashSector(unsigned char *ptrSector)
 {
 #if (defined KINETIS_KE && defined KINETIS_KE_EEPROM && (defined SIZE_OF_EEPROM && SIZE_OF_EEPROM > 0))
-    if (ptrSector >= &ucFLASH[SIZE_OF_FLASH - SIZE_OF_EEPROM] ) {
+    if (ptrSector >= &ucFLASH[SIZE_OF_FLASH]) {                          // access is in EEPROM memory
         uMemset(ptrSector, 0xff, KE_EEPROM_GRANULARITY);
         return;
     }
 #endif
-    uMemset(ptrSector, 0xff, FLASH_GRANULARITY);
+    uMemset(ptrSector, 0xff, FLASH_GRANULARITY);                         // access in data flash
 }
 
 
@@ -1056,11 +1061,11 @@ extern unsigned char *fnGetFlashAdd(unsigned char *ucAdd)
     }
 #elif defined KINETIS_KE && defined KINETIS_KE_EEPROM && (defined SIZE_OF_EEPROM && SIZE_OF_EEPROM > 0)
     if (ucAdd >= (unsigned char *)KE_EEPROM_START_ADDRESS) {             // access may be in EEPROM area
-        ucAdd -= (KE_EEPROM_START_ADDRESS - (SIZE_OF_FLASH - SIZE_OF_EEPROM)); // move to contiguous simulation flash area
+        ucAdd -= (KE_EEPROM_START_ADDRESS - SIZE_OF_FLASH);              // move to contiguous simulation flash area
     }
 #endif
     ucSimulatedFlash = ucAdd + (unsigned long)ucFLASH - (unsigned long)FLASH_START_ADDRESS;
-    if (ucSimulatedFlash >= &ucFLASH[SIZE_OF_FLASH/* - PROGRAM_ONCE_AREA_SIZE*/]) { // {21} check flash bounds
+    if (ucSimulatedFlash >= &ucFLASH[SIZE_OF_SIM_FLASH/* - PROGRAM_ONCE_AREA_SIZE*/]) { // {21} check flash bounds
         _EXCEPTION("Attempted access outside of internal Flash bounds!!!");
     }
     return (ucSimulatedFlash);                                           // location in simulated internal FLASH memory
