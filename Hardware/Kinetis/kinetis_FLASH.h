@@ -28,7 +28,7 @@
     10.03.2015 Correct KE/KEA flash configuration layout                 {122}
     12.01.2015 Perform write enable for SPI_FLASH_S25FL1_K (for KL/KE driver compatibility) {200}
     19.08.2017 Correct calculation of start address of preceding multiple memory device {201}
-    13.10.2017 Replaces KINETIS_KE dependancy by FLASH_CONTROLLER_FTMRE dependancy
+    13.10.2017 Replace KINETIS_KE dependancy by FLASH_CONTROLLER_FTMRE dependancy
 
 */
 

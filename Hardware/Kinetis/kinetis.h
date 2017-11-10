@@ -8980,9 +8980,9 @@ typedef struct stKINETIS_LPTMR_CTL
       #define SIM_SCGC_RTC                   0x00000001
       #define SIM_SCGC_PIT                   0x00000002
       #define SIM_SCGC_PWT                   0x00000010
-      #define SIM_SCGC_FM0                   0x00000020
-      #define SIM_SCGC_FM1                   0x00000040
-      #define SIM_SCGC_FM2                   0x00000080
+      #define SIM_SCGC_FTM0                  0x00000020
+      #define SIM_SCGC_FTM1                  0x00000040
+      #define SIM_SCGC_FTM2                  0x00000080
       #define SIM_SCGC_CRC                   0x00000400
       #define SIM_SCGC_FLASH                 0x00001000
       #define SIM_SCGC_SWD                   0x00002000
