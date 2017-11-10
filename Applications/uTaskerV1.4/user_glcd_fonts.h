@@ -21,7 +21,7 @@
 
 */ 
 
-#ifdef USER_SPECIAL_FONT_NINE_DOT
+#if defined USER_SPECIAL_FONT_NINE_DOT
 
 		// 'è' charwidth: 8 
 		0x20, 	//  [  *     ]  

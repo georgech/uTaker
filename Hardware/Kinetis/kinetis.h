@@ -119,6 +119,7 @@
     12.10.2017 Modified POWER_UP_ATOMIC(), POWER_DOWN_ATOMIC() and IS_POWERED_UP() macros to be compatible with PCC {102}
     19.10.2017 ATOMIC_PERIPHERAL_BIT_REF_SET(), ATOMIC_PERIPHERAL_BIT_REF_CLEAR() and ATOMIC_PERIPHERAL_BIT_REF_CHECK() macros {103} - see video https://youtu.be/FZnkZ1h_EAQ
     04.11.2017 Add true random number generator registers                {103}
+    10.11.2016 Set bit-banding addresses as volatile to avoid potential optimisations (GCC) from causing hard-faults {104}
 
 */
 
@@ -9809,9 +9810,9 @@ typedef struct stKINETIS_LPTMR_CTL
     #define ATOMIC_CLEAR_REGISTER(bit_band_address) fnClearBitBandPeripheralValue((unsigned long *)(bit_band_address))
     #define ATOMIC_CHECK_REGISTER(bit_band_address) (fnCheckBitBandPeripheralValue((unsigned long *)(bit_band_address)) != 0)
 #else
-    #define ATOMIC_SET_REGISTER(bit_band_address)   *(unsigned long *)bit_band_address = 1
-    #define ATOMIC_CLEAR_REGISTER(bit_band_address) *(unsigned long *)bit_band_address = 0
-    #define ATOMIC_CHECK_REGISTER(bit_band_address) (*(unsigned long *)bit_band_address != 0)
+    #define ATOMIC_SET_REGISTER(bit_band_address)   *(volatile unsigned long *)bit_band_address = 1 // {104}
+    #define ATOMIC_CLEAR_REGISTER(bit_band_address) *(volatile unsigned long *)bit_band_address = 0
+    #define ATOMIC_CHECK_REGISTER(bit_band_address) (*(volatile unsigned long *)bit_band_address != 0)
 #endif
 
 #if defined KINETIS_KE

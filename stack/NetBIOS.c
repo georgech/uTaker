@@ -20,7 +20,7 @@
 
 #include "config.h"
 
-#ifdef USE_NETBIOS
+#if defined USE_NETBIOS
 
 // We support NetBIOS over UDP since this is the usual method.
 // NetBIOS is described in rfc1001 (concepts and methods) and rfc1002 (detailed specifications).

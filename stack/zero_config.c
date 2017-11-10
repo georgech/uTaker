@@ -22,7 +22,7 @@
 
 #include "config.h"
 
-#ifdef USE_ZERO_CONFIG
+#if defined USE_ZERO_CONFIG
 
 /* =================================================================== */
 /*                          local definitions                          */
@@ -115,7 +115,7 @@ extern void fnZeroConfig(TTASKTABLE *ptrTaskTable)
 //
 static void fnRandomise(DELAY_LIMIT ZeroConfigTimeout, unsigned char ucTimerEvent)
 {
-    #ifdef RANDOM_NUMBER_GENERATOR
+    #if defined RANDOM_NUMBER_GENERATOR
     DELAY_LIMIT random_sec = (unsigned short)(((unsigned long)fnRandom() * (1 * SEC)) / 0x10000);
     if (random_sec > (DELAY_LIMIT)(0.5 * SEC)) {
         ZeroConfigTimeout -= ((DELAY_LIMIT)(1 * SEC) - random_sec);      // decrease of 0..0.5s
@@ -140,7 +140,7 @@ static void fnRandomise(DELAY_LIMIT ZeroConfigTimeout, unsigned char ucTimerEven
 //
 static void fnGenerateLinkLocalIP4V_address(void)
 {
-    #ifdef RANDOM_NUMBER_GENERATOR                                       // random number generator is recommended when zero-configuration is used
+    #if defined RANDOM_NUMBER_GENERATOR                                  // random number generator is recommended when zero-configuration is used
     unsigned short usIP_rand = fnRandom();
     usIP_rand ^= (network[DEFAULT_NETWORK].ucOurMAC[4] | network[DEFAULT_NETWORK].ucOurMAC[5]); // add additional entropy
     #else
@@ -270,7 +270,7 @@ static void fnStateEventZeroConfig(unsigned char ucEvent)
         break;
     #endif
     }
-    #ifdef _WINDOWS
+    #if defined _WINDOWS
     fnUpdateIPConfig();                                                  // update display in simulator
     #endif
 }

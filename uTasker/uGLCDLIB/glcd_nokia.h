@@ -122,29 +122,29 @@
         #define _GLCD_NOKIA_DEFINES                                      // include only once
     #endif
 
-    #ifdef _GLCD_COMMANDS                                                // link in Nokia specific interface commands
+    #if defined _GLCD_COMMANDS                                            // link in Nokia specific interface commands
 
 static void WriteSpiCommand(unsigned int data)
 {
     data = (data & ~0x0100);
         #if defined _HW_SAM7X
     while((SPI_SR_0 & SPI_TXEMPTY) == 0) {                               // wait for the transfer to complete
-            #ifdef _WINDOWS
+            #if defined _WINDOWS
         SPI_SR_0 |= (SPI_RDRF | SPI_TXEMPTY);                            // simulate tx and rx interrupt flags being set
             #endif
     }
     SPI_TDR_0 = data;
-            #ifdef _WINDOWS
+            #if defined _WINDOWS
     CollectCommand(((SPI_TDR_0 & 0x100) != 0), (unsigned char)SPI_TDR_0);
             #endif
         #elif defined _LPC23XX || defined _LPC17XX
     while ((SSP0SR & SSP_TFE) == 0) {                                    // wait for the transfer to complete
-            #ifdef _WINDOWS
+            #if defined _WINDOWS
         SSP0SR |= (SSP_TFE);
             #endif
     }
     SSP0DR = data;
-            #ifdef _WINDOWS
+            #if defined _WINDOWS
     CollectCommand(((SSP0DR & 0x100) != 0), (unsigned char)SSP0DR);
             #endif
         #endif
@@ -155,22 +155,22 @@ static void WriteSpiData(unsigned int data)
     data |= 0x0100;
         #if defined _HW_SAM7X
     while((SPI_SR_0 & SPI_TXEMPTY) == 0) {                               // wait for the transfer to complete
-            #ifdef _WINDOWS
+            #if defined _WINDOWS
         SPI_SR_0 |= (SPI_RDRF | SPI_TXEMPTY);                            // simulate tx and rx interrupt flags being set
             #endif
     }
     SPI_TDR_0 = data;
-            #ifdef _WINDOWS
+            #if defined _WINDOWS
     CollectCommand(((SPI_TDR_0 & 0x100) != 0), (unsigned char)SPI_TDR_0);
             #endif
         #elif defined _LPC23XX || defined _LPC17XX
     while ((SSP0SR & SSP_TFE) == 0) {                                    // wait for the transfer to complete
-            #ifdef _WINDOWS
+            #if defined _WINDOWS
         SSP0SR |= (SSP_TFE);
             #endif
     }
     SSP0DR = data;
-            #ifdef _WINDOWS
+            #if defined _WINDOWS
     CollectCommand(((SSP0DR & 0x100) != 0), (unsigned char)SSP0DR);
             #endif
         #endif

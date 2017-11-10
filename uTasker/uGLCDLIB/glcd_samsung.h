@@ -59,7 +59,7 @@
         #define _GLCD_SAMSUNG_DEFINES                                    // include only once
     #endif
 
-    #ifdef _GLCD_COMMANDS                                                // link in Samsung specific interface commands
+    #if defined _GLCD_COMMANDS                                           // link in Samsung specific interface commands
 
 // Read a byte from the GLCD interface
 // It is assumed that RD/WR or RWn lines are initially high and that the data

@@ -161,7 +161,7 @@ extern unsigned short fnCalcIP_CS(unsigned short cs, unsigned char *dat, unsigne
 #endif
 
 #if defined USE_IP
-    #ifdef RUN_LOOPS_IN_RAM
+    #if defined RUN_LOOPS_IN_RAM
 extern void fnInitIP(void)                                               // {2}
 {
     #if defined _WINDOWS
@@ -961,7 +961,7 @@ extern signed short fnSendIPV6(unsigned char *prIP_to, unsigned char ucProtType,
     int iExternal = 0;
     unsigned short i;
     unsigned char  ucData[(ETH_HEADER_LEN + sizeof(IP_PACKET_V6))];      // space for temporary Ethernet II and IPV6 header (no options supported)
-        #ifdef USE_IP            
+        #if defined USE_IP            
     if (uMemcmp(prIP_to, ucLinkLocalIPv6Address[DEFAULT_NETWORK], IPV6_SUBNET_LENGTH) != 0) { // if not in the IPv6 local subnet use the IPV4 gateway instead
         ARP_TAB *ptrARP;   
         if ((ptrARP = fnGetIP_ARP(&network[DEFAULT_NETWORK].ucDefGW[0], Owner, cSocket)) == 0) { // see whether IPV4 gateway is in ARP table
@@ -1016,7 +1016,7 @@ extern signed short fnSendIPV6(unsigned char *prIP_to, unsigned char ucProtType,
         dat[2] = 0;
         dat[3] = 0;
         #endif
-        #ifdef USE_IP_STATS
+        #if defined USE_IP_STATS
         fnTxStats(IP_ICMPV6, DEFAULT_NETWORK);                           // count ICMPV6 transmissions
         #endif
     }

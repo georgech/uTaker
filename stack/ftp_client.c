@@ -24,7 +24,7 @@
 
 #include "config.h"
 
-#ifdef USE_FTP_CLIENT
+#if defined USE_FTP_CLIENT
 
 /* =================================================================== */
 /*                          local definitions                          */
@@ -909,7 +909,7 @@ static int fnFTP_Data_Listener(USOCKET Socket, unsigned char ucEvent, unsigned c
     case TCP_EVENT_ACK:
         {
             int iReturn = 0;
-    #ifdef FTP_CLIENT_BUFFERED_SOCKET_MODE
+    #if defined FTP_CLIENT_BUFFERED_SOCKET_MODE
             if (fnSendBufTCP(Socket, 0, 0, TCP_BUF_NEXT)) {              // send next buffered (if waiting)
                 iReturn = APP_SENT_DATA;                                 // mark that data has been transmitted
             }
@@ -942,9 +942,9 @@ static int fnFTP_Data_Listener(USOCKET Socket, unsigned char ucEvent, unsigned c
         return (fnFTP_client_user_callback(&callback_message_box));      // pass on the received data to the user
 
     case TCP_EVENT_REGENERATE:                                           // we must repeat the last data buffer we sent
-    #ifdef FTP_CLIENT_BUFFERED_SOCKET_MODE
+    #if defined FTP_CLIENT_BUFFERED_SOCKET_MODE
         if (fnSendBufTCP(Socket, 0, 0, TCP_BUF_REP) != 0) {              // repeat send buffered
-        #ifdef SUPPORT_PEER_WINDOW 
+        #if defined SUPPORT_PEER_WINDOW 
             fnSendBufTCP(Socket, 0, 0, (TCP_BUF_NEXT | TCP_BUF_KICK_NEXT)); // kick off any following data as long as windowing allows it
         #endif
             return APP_SENT_DATA;

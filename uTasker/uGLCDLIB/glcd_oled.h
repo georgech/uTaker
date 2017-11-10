@@ -156,7 +156,7 @@ static const unsigned char g_pucRIT128x96x4Init[] =
         #define _GLCD_OLED_DEFINES                                       // include only once
     #endif
 
-    #ifdef _GLCD_COMMANDS                                                // link in OLED specific interface commands
+    #if defined _GLCD_COMMANDS                                           // link in OLED specific interface commands
 
 //*****************************************************************************
 //
@@ -188,7 +188,7 @@ static void fnSendSPI_Command(const unsigned char *pucBuffer, unsigned long ulCo
         // Write the next byte to the controller.
         //
         WRITE_SPI_CMD(*pucBuffer);
-#ifdef _WINDOWS
+#if defined _WINDOWS
         CollectCommand(0, (unsigned char)SSIDR_0);
 #endif
         pucBuffer++;
@@ -224,7 +224,7 @@ static void fnSend_SPI_data(const unsigned char *pucBuffer, unsigned long ulCoun
         // Write the next byte to the controller.
         //
         WRITE_SPI_DATA(*pucBuffer);
-#ifdef _WINDOWS
+#if defined _WINDOWS
         CollectCommand(1, *pucBuffer);
 #endif
         pucBuffer++;
@@ -313,7 +313,7 @@ static void RIT128x96x4Init(unsigned long ulFrequency)
 
     #endif
 
-    #ifdef GLCD_INIT
+    #if defined GLCD_INIT
             CONFIGURE_OLED_DC();                                         // configure the data/command line
             ACTIVATE_OLED_POWER();                                       // apply power to the OLED (+15V)
             CONFIGURE_SPI();                                             // configure and enable the SPI interface ready for OLED communication

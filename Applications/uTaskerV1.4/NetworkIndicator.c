@@ -153,7 +153,7 @@ extern void fnNetworkIndicator(TTASKTABLE *ptrTaskTable)                 // task
             break;
 
         default:
-    #ifdef SUPPORT_FLUSH
+    #if defined SUPPORT_FLUSH
             fnFlush(PortIDInternal, FLUSH_RX);                           // flush unexpected messages
     #endif
             break;

@@ -201,6 +201,7 @@ Build_Kinetis.bat
     <ClCompile Include="..\..\..\Hardware\Kinetis\kinetis_ports.cpp" />
     <ClCompile Include="..\..\..\stack\ftp_client.c" />
     <ClCompile Include="..\..\..\stack\igmp.c" />
+    <ClCompile Include="..\..\..\stack\mqtt.c" />
     <ClCompile Include="..\..\..\stack\PPP\auth.c" />
     <ClCompile Include="..\..\..\stack\PPP\chap.c" />
     <ClCompile Include="..\..\..\stack\PPP\chpms.c" />

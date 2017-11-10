@@ -3437,7 +3437,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define SET_SD_CS_HIGH()                                         // dummy with SDHC controller
         #define SET_SD_CS_LOW()                                          // dummy with SDHC controller
 
-        #ifdef _WINDOWS
+        #if defined _WINDOWS
             #define POWER_UP_SD_CARD()  SDHC_SYSCTL |= SDHC_SYSCTL_INITA; SDHC_SYSCTL &= ~SDHC_SYSCTL_INITA; // apply power to the SD card if appropriate (we use this to send 80 clocks - self-clearing bit)
         #else
             #define POWER_UP_SD_CARD()  SDHC_SYSCTL |= SDHC_SYSCTL_INITA; while (SDHC_SYSCTL & SDHC_SYSCTL_INITA) {}; // apply power to the SD card if appropriate (we use this to send 80 clocks)
@@ -3560,7 +3560,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define SET_SD_CS_HIGH()                                         // dummy with SDHC controller
         #define SET_SD_CS_LOW()                                          // dummy with SDHC controller
 
-        #ifdef _WINDOWS
+        #if defined _WINDOWS
             #define POWER_UP_SD_CARD()  SDHC_SYSCTL |= SDHC_SYSCTL_INITA; SDHC_SYSCTL &= ~SDHC_SYSCTL_INITA; // apply power to the SD card if appropriate (we use this to send 80 clocks - self-clearing bit)
         #else
             #define POWER_UP_SD_CARD()  SDHC_SYSCTL |= SDHC_SYSCTL_INITA; while (SDHC_SYSCTL & SDHC_SYSCTL_INITA) {}; // apply power to the SD card if appropriate (we use this to send 80 clocks)
@@ -3649,7 +3649,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define SET_SD_CS_HIGH()                                         // dummy with SDHC controller
         #define SET_SD_CS_LOW()                                          // dummy with SDHC controller
 
-        #ifdef _WINDOWS
+        #if defined _WINDOWS
             #define POWER_UP_SD_CARD()  SDHC_SYSCTL |= SDHC_SYSCTL_INITA; SDHC_SYSCTL &= ~SDHC_SYSCTL_INITA; // apply power to the SD card if appropriate (we use this to send 80 clocks - self-clearing bit)
         #else
             #define POWER_UP_SD_CARD()  SDHC_SYSCTL |= SDHC_SYSCTL_INITA; while (SDHC_SYSCTL & SDHC_SYSCTL_INITA) {}; // apply power to the SD card if appropriate (we use this to send 80 clocks)
@@ -3730,7 +3730,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define SET_SD_CS_HIGH()                                         // dummy with SDHC controller
         #define SET_SD_CS_LOW()                                          // dummy with SDHC controller
 
-        #ifdef _WINDOWS
+        #if defined _WINDOWS
             #define POWER_UP_SD_CARD()  SDHC_SYSCTL |= SDHC_SYSCTL_INITA; SDHC_SYSCTL &= ~SDHC_SYSCTL_INITA; // apply power to the SD card if appropriate (we use this to send 80 clocks - self-clearing bit)
         #else
             #define POWER_UP_SD_CARD()  SDHC_SYSCTL |= SDHC_SYSCTL_INITA; while (SDHC_SYSCTL & SDHC_SYSCTL_INITA) {}; // apply power to the SD card if appropriate (we use this to send 80 clocks)
@@ -8476,7 +8476,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define SD_CARD_DETECTION          PORTA_BIT11
         #define SET_SD_CS_HIGH()
         #define SET_SD_CS_LOW()
-        #ifdef _WINDOWS
+        #if defined _WINDOWS
             #define POWER_UP_SD_CARD()     _CONFIG_PORT_INPUT(A, (SD_CARD_DETECTION), (PORT_PS_UP_ENABLE)); SDHC_SYSCTL |= SDHC_SYSCTL_INITA; SDHC_SYSCTL &= ~SDHC_SYSCTL_INITA; // apply power to the SD card if appropriate (we use this to send 80 clocks - self-clearing bit)
         #else
             #define POWER_UP_SD_CARD()     _CONFIG_PORT_INPUT(A, (SD_CARD_DETECTION), (PORT_PS_UP_ENABLE)); SDHC_SYSCTL |= SDHC_SYSCTL_INITA; while (SDHC_SYSCTL & SDHC_SYSCTL_INITA) {}; // apply power to the SD card if appropriate (we use this to send 80 clocks)

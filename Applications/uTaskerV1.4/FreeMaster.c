@@ -1137,7 +1137,7 @@ static void FMSTR_SendError(QUEUE_HANDLE FreeMasterPort, FMSTR_BCHR nErrCode);
 * CAN-related constants
 ******************************************************************************/
 
-#ifdef FMSTR_CAN_EXTID 
+#if defined FMSTR_CAN_EXTID 
 #if FMSTR_CAN_EXTID != 0x80000000U
 #error FMSTR_CAN_EXTID must be defined as 0x80000000
 #undef FMSTR_CAN_EXTID 
@@ -1225,7 +1225,7 @@ void FMSTR_ProcessCanTx(void);
 * Potentialy unused variable declaration
 *****************************************************************************************/
 
-#ifdef  _lint
+#if defined  _lint
 #define FMSTR_UNUSED(sym) /*lint -esym(715,sym) -esym(818,sym) -esym(529,sym) -e{960} */
 #else
 #define FMSTR_UNUSED(sym) ((sym),0)
@@ -1566,7 +1566,7 @@ void FMSTR_ProcessCanTx(void);
 
 #if defined FMSTR_USE_PIPES
 
-    #ifdef FMSTR_PIPES_EXPERIMENTAL
+    #if defined FMSTR_PIPES_EXPERIMENTAL
     #warning The "pipes" feature is now in experimental code phase. Not yet tested on this platform.
     #endif        
 
@@ -3184,7 +3184,7 @@ FMSTR_U16 FMSTR_StrLen(FMSTR_ADDR nAddr)
     const FMSTR_U8* pStr;
     FMSTR_U16 nLen = 0U;
 
-    #ifdef __HCS12X__
+    #if defined __HCS12X__
     /* convert from logical to global if needed */
     nAddr = FMSTR_FixHcs12xAddr(nAddr);
     #endif

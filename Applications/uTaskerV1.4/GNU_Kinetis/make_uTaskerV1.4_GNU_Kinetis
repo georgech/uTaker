@@ -25,9 +25,10 @@
 # 21.10.2017 Add conditional mmcau_aes_functions.S/mmcau_aes_functions_M0.S depending on M4 or M0+ build
 # 26.10.2017 Add arm_sin_cos_f32
 # 07.11.2017 Modified method of including assember files requiring core specification
+# 10.11.2017 Add mqtt.c
 
 #
-# When changing the project target check that the C_FLAGS selection (just elow) and the linker script file (at bottom) matche the processor being used
+# When changing the project target check that the C_FLAGS selection (just elow) and the linker script file (at bottom) matches the processor being used
 #
 
 
@@ -49,7 +50,7 @@ OBJS = Build/application.o Build/debug.o Build/webInterface.o Build/KeyScan.o Bu
        Build/arm_bitreversal2.o Build/arm_cfft_f32.o Build/arm_cfft_radix8_f32.o Build/arm_cmplx_mag_f32.o Build/arm_common_tables.o Build/arm_const_structs.o Build/arm_max_f32.o Build/arm_sin_cos_f32.o \
        Build/eth_drv.o Build/Driver.o Build/uMalloc.o Build/uTasker.o Build/Tty_drv.o Build/i2c_drv.o Build/USB_drv.o Build/uFile.o Build/Watchdog.o Build/GlobalTimer.o Build/time_keeper.o Build/low_power.o Build/can_drv.o \
        Build/Ethernet.o Build/arp.o Build/dhcp.o Build/dns.o Build/ftp.o Build/http.o Build/icmp.o Build/ip_utils.o Build/ip.o Build/pop3.o Build/smtp.o Build/snmp.o \
-       Build/tcp.o Build/telnet.o Build/tftp.o Build/udp.o Build/webutils.o Build/NetBIOS.o Build/zero_config.o Build/ftp_client.o Build/igmp.o Build/ppp.o \
+       Build/tcp.o Build/telnet.o Build/tftp.o Build/udp.o Build/webutils.o Build/NetBIOS.o Build/zero_config.o Build/ftp_client.o Build/igmp.o Build/ppp.o Build/mqtt.o \
        Build/crypto.o Build/DSP.o Build/mmcau_aes_functions.o \
        Build/tasks.o Build/timers.o Build/queue.o Build/list.o Build/event_groups.o Build/croutine.o Build/port.o
 
@@ -305,6 +306,8 @@ Build/igmp.o: ../../../stack/igmp.c $(DEPENDS)
 Build/ppp.o: ../../../stack/ppp.c $(DEPENDS)
 		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../stack/ppp.c -o Build/ppp.o
 
+Build/mqtt.o: ../../../stack/mqtt.c $(DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../stack/mqtt.c -o Build/mqtt.o
 
 # uGLCDLIB files
 #

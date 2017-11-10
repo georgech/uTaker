@@ -445,7 +445,7 @@ extern void fnUpdateIPConfig(void);
 
 // USB interface
 //
-#ifdef USB_INTERFACE
+#if defined USB_INTERFACE
     extern int fnSimulateUSB(int iDevice, int iEndPoint, unsigned char ucPID, unsigned char *ptrDebugIn, unsigned short usLenEvent);
       #define USB_RESET_CMD             0x0001
       #define USB_SLEEP_CMD             0x0002

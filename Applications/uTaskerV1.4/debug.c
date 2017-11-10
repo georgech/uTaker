@@ -109,6 +109,7 @@
     12.12.2016 Add CMSIS CFFT and AES                                    {84}
     02.02.2017 Add low power cycling control                             {85} - see video https://youtu.be/v4UnfcDiaE4
     05.07.2017 Modify SD card sector write interface                     {86}
+    10.11.2017 Add MQTT client commands                                  {87}
 
 */
 
@@ -127,9 +128,9 @@
 /*                          local definitions                          */
 /* =================================================================== */
 
-#define TEST_SDCARD_SECTOR_WRITE                                         // {44} activate to allow sector writes to be tested
+//#define TEST_SDCARD_SECTOR_WRITE                                       // {44} activate to allow sector writes to be tested
 //#define TEST_I2C_INTERFACE                                             // activate to enable special I2C tests via menu
-//#define DEVELOP_PHY_CONTROL                                            // {33} activate to enable PHY register dump and writes to individual register addresses
+#define DEVELOP_PHY_CONTROL                                              // {33} activate to enable PHY register dump and writes to individual register addresses
                                                                          // note that STOP_MII_CLOCK should not be enabled when using this (kinetis)
 //#define _DEBUG_CAN                                                     // support dumping CAN register details for debugging purpose
 #if defined CMSIS_DSP_CFFT
@@ -227,7 +228,7 @@
     #define DO_MENU_HELP_OLED       13
     #define DO_MENU_HELP_I2C        14
     #define DO_MENU_HELP_DISK       15                                   // {17}
-    #define DO_MENU_HELP_FTP_TELNET 16                                   // {37}
+    #define DO_MENU_HELP_FTP_TELNET_MQTT 16                              // {37}
     #define DO_MENU_HELP_CAN        17                                   // {38}
     #define DO_MENU_HELP_ADVANCED   18                                   // {84}
     #define DO_HELP_UP              19                                   // go up menu tree
@@ -454,10 +455,7 @@
     #define DO_SET_PROTECT          35                                   // specific command to set file/directory write-protection
     #define DO_REMOVE_PROTECT       36                                   // specific command to remove file/directory write-protection
 
-
-
-
-#define DO_FTP_TELNET             12
+#define DO_FTP_TELNET_MQTT        12
     #define DO_SHOW_FTP_CONFIG      0                                    // specific ftp client command to show settings
     #define DO_FTP_SET_PORT         1                                    // specific ftp client command to set command port number
     #define DO_FTP_SERVER_IP        2                                    // specific ftp client command to set default server IP address
@@ -492,6 +490,8 @@
     #define DO_TELNET_SET_PORT      66
     #define DO_TELNET_CONNECT       67
     #define DO_TELNET_SET_NEGOTIATION 68
+
+    #define DO_MQTT_CONNECT         69
 
 #define DO_CAN                    13
     #define DO_SEND_CAN_DEFAULT     0                                    // specific CAN command to send a message to the default destination
@@ -646,7 +646,7 @@ static const DEBUG_COMMAND tMainCommand[] = {
     {"6",                 "Go to USB menu",                        DO_HELP,          DO_MENU_HELP_USB },
     {"7",                 "Go to I2C menu",                        DO_HELP,          DO_MENU_HELP_I2C },
     {"8",                 "Go to utFAT disk interface",            DO_HELP,          DO_MENU_HELP_DISK }, // {17}
-    {"9",                 "FTP/TELNET client commands",            DO_HELP,          DO_MENU_HELP_FTP_TELNET }, // {37}
+    {"9",                 "FTP/TELNET/MQTT client commands",       DO_HELP,          DO_MENU_HELP_FTP_TELNET_MQTT }, // {37}
     {"a",                 "CAN commands",                          DO_HELP,          DO_MENU_HELP_CAN }, // {38}
 #if defined CMSIS_DSP_CFFT || defined CRYPTOGRAPHY                       // {84}
     {"b",                 "Advanced commands",                     DO_HELP,          DO_MENU_HELP_ADVANCED },
@@ -1000,48 +1000,54 @@ static const DEBUG_COMMAND tDiskCommand[] = {                            // {17}
 static const DEBUG_COMMAND tFTP_TELNET_Command[] = {                     // {37}
     {"up",                "go to main menu",                       DO_HELP,          DO_HELP_UP },
 #if defined USE_FTP_CLIENT
-    {"show_config",       "Show FTP client settings",              DO_FTP_TELNET,    DO_SHOW_FTP_CONFIG },
-    {"ftp_port",          "Set default FTP command port",          DO_FTP_TELNET,    DO_FTP_SET_PORT },
-    {"ftp_ip",            "Set default FTP server IP",             DO_FTP_TELNET,    DO_FTP_SERVER_IP },
-    {"ftp_user",          "Set default FTP user name",             DO_FTP_TELNET,    DO_FTP_USER_NAME },    
-    {"ftp_pass",          "Set default FTP user password",         DO_FTP_TELNET,    DO_FTP_USER_PASS }, 
-    {"ftp_psv",           "<enable/disable> passive mode",         DO_FTP_TELNET,    DO_FTP_PASSIVE },
-    {"ftp_tout",          "Set FTP connection idle timeout",       DO_FTP_TELNET,    DO_FTP_SET_IDLE_TIMEOUT },
+    {"show_config",       "Show FTP client settings",              DO_FTP_TELNET_MQTT, DO_SHOW_FTP_CONFIG },
+    {"ftp_port",          "Set default FTP command port",          DO_FTP_TELNET_MQTT, DO_FTP_SET_PORT },
+    {"ftp_ip",            "Set default FTP server IP",             DO_FTP_TELNET_MQTT, DO_FTP_SERVER_IP },
+    {"ftp_user",          "Set default FTP user name",             DO_FTP_TELNET_MQTT, DO_FTP_USER_NAME },
+    {"ftp_pass",          "Set default FTP user password",         DO_FTP_TELNET_MQTT, DO_FTP_USER_PASS },
+    {"ftp_psv",           "<enable/disable> passive mode",         DO_FTP_TELNET_MQTT, DO_FTP_PASSIVE },
+    {"ftp_tout",          "Set FTP connection idle timeout",       DO_FTP_TELNET_MQTT, DO_FTP_SET_IDLE_TIMEOUT },
 
-    {"ftp_con",           "Connect to FTP server",                 DO_FTP_TELNET,    DO_FTP_CONNECT },
+    {"ftp_con",           "Connect to FTP server",                 DO_FTP_TELNET_MQTT, DO_FTP_CONNECT },
     #if defined USE_IPV6                                                 // {48}
-    {"ftp_con6",          "Connect to FTP server over IPv6",       DO_FTP_TELNET,    DO_FTP_CONNECT_IPV6 },
+    {"ftp_con6",          "Connect to FTP server over IPv6",       DO_FTP_TELNET_MQTT, DO_FTP_CONNECT_IPV6 },
     #endif
-    {"ftp_path",          "Set directory location",                DO_FTP_TELNET,    DO_FTP_PATH },
-    {"ftp_dir",           "Directory listing [path]",              DO_FTP_TELNET,    DO_FTP_DIR },
-    {"ftp_mkd",           "Make directory <path/dir>",             DO_FTP_TELNET,    DO_FTP_MKDIR },
-    {"ftp_get",           "Get binary file <path/file>",           DO_FTP_TELNET,    DO_FTP_GET },
-    {"ftp_get_a",         "Get ASCII file <path/file>",            DO_FTP_TELNET,    DO_FTP_GETA },
-    {"ftp_put",           "Put binary file <path/file>",           DO_FTP_TELNET,    DO_FTP_PUT },
-    {"ftp_put_a",         "Put ASCII file <path/file>",            DO_FTP_TELNET,    DO_FTP_PUTA },
-    {"ftp_app",           "Append to binary file <path/file>",     DO_FTP_TELNET,    DO_FTP_APP },
-    {"ftp_app_a",         "Append to ASCII file <path/file>",      DO_FTP_TELNET,    DO_FTP_APPA },
-    {"ftp_ren",           "Rename file or dir. <path/dir> <path/dir>", DO_FTP_TELNET,DO_FTP_RENAME },
-    {"ftp_del",           "Delete file <path/file>",               DO_FTP_TELNET,    DO_FTP_DEL },
-    {"ftp_remove",        "Delete an empty dir. <path/dir>",       DO_FTP_TELNET,    DO_FTP_REMOVE_DIR },
-    {"ftp_dis",           "Disconnect from FTP server",            DO_FTP_TELNET,    DO_FTP_DISCONNECT },
+    {"ftp_path",          "Set directory location",                DO_FTP_TELNET_MQTT, DO_FTP_PATH },
+    {"ftp_dir",           "Directory listing [path]",              DO_FTP_TELNET_MQTT, DO_FTP_DIR },
+    {"ftp_mkd",           "Make directory <path/dir>",             DO_FTP_TELNET_MQTT, DO_FTP_MKDIR },
+    {"ftp_get",           "Get binary file <path/file>",           DO_FTP_TELNET_MQTT, DO_FTP_GET },
+    {"ftp_get_a",         "Get ASCII file <path/file>",            DO_FTP_TELNET_MQTT, DO_FTP_GETA },
+    {"ftp_put",           "Put binary file <path/file>",           DO_FTP_TELNET_MQTT, DO_FTP_PUT },
+    {"ftp_put_a",         "Put ASCII file <path/file>",            DO_FTP_TELNET_MQTT, DO_FTP_PUTA },
+    {"ftp_app",           "Append to binary file <path/file>",     DO_FTP_TELNET_MQTT, DO_FTP_APP },
+    {"ftp_app_a",         "Append to ASCII file <path/file>",      DO_FTP_TELNET_MQTT, DO_FTP_APPA },
+    {"ftp_ren",           "Rename file or dir. <path/dir> <path/dir>", DO_FTP_TELNET_MQTT,DO_FTP_RENAME },
+    {"ftp_del",           "Delete file <path/file>",               DO_FTP_TELNET_MQTT, DO_FTP_DEL },
+    {"ftp_remove",        "Delete an empty dir. <path/dir>",       DO_FTP_TELNET_MQTT, DO_FTP_REMOVE_DIR },
+    {"ftp_dis",           "Disconnect from FTP server",            DO_FTP_TELNET_MQTT, DO_FTP_DISCONNECT },
     #if defined USE_PARAMETER_BLOCK    
     {"save",              "Save configuration to FLASH",           DO_FLASH,         DO_SAVE_PARS },
     #endif
-    #if !defined USE_TELNET_CLIENT
+    #if !defined USE_TELNET_CLIENT && !defined USE_MQTT_CLIENT
     {"help",              "Display menu specific help",            DO_HELP,          DO_MAIN_HELP },
     #endif
 #endif
 #if defined USE_TELNET_CLIENT                                            // {72}
     #if defined TELNET_CLIENT_COUNT && (TELNET_CLIENT_COUNT > 1)
-    {"tel_int",           "Set TELNET interface [num]",            DO_FTP_TELNET,    DO_TELNET_SET_INTERFACE },
+    {"tel_int",           "Set TELNET interface [num]",            DO_FTP_TELNET_MQTT, DO_TELNET_SET_INTERFACE },
     #endif
-    {"tel_port",          "Set TELNET [port]",                     DO_FTP_TELNET,    DO_TELNET_SET_PORT },
-    {"tel_con",           "Connect to TELNET server [ip]",         DO_FTP_TELNET,    DO_TELNET_CONNECT },
-    {"tel_echo",          "Set echo mode [1/0]",                   DO_FTP_TELNET,    DO_TELNET_SET_ECHO },
-    {"tel_neg",           "Disable negotiation [1/0]",             DO_FTP_TELNET,    DO_TELNET_SET_NEGOTIATION },
-    {"show_tel",          "Show TELNET config",                    DO_FTP_TELNET,    DO_TELNET_SHOW },
-    #if !defined USE_FTP_CLIENT
+    {"tel_port",          "Set TELNET [port]",                     DO_FTP_TELNET_MQTT, DO_TELNET_SET_PORT },
+    {"tel_con",           "Connect to TELNET server [ip]",         DO_FTP_TELNET_MQTT, DO_TELNET_CONNECT },
+    {"tel_echo",          "Set echo mode [1/0]",                   DO_FTP_TELNET_MQTT, DO_TELNET_SET_ECHO },
+    {"tel_neg",           "Disable negotiation [1/0]",             DO_FTP_TELNET_MQTT, DO_TELNET_SET_NEGOTIATION },
+    {"show_tel",          "Show TELNET config",                    DO_FTP_TELNET_MQTT, DO_TELNET_SHOW },
+    #if !defined USE_FTP_CLIENT && ! defined USE_MQTT_CLIENT
+    {"help",              "Display menu specific help",            DO_HELP,          DO_MAIN_HELP },
+    #endif
+#endif
+#if defined USE_MQTT_CLIENT                                              // {87}
+    { "mqtt_con",         "Connect to MQTT broker [ip]",           DO_FTP_TELNET_MQTT, DO_MQTT_CONNECT },
+    #if !defined USE_FTP_CLIENT && ! defined USE_TELNET_CLIENT
     {"help",              "Display menu specific help",            DO_HELP,          DO_MAIN_HELP },
     #endif
 #endif
@@ -5516,8 +5522,28 @@ static void fnDisplayTelnetMode(unsigned short usMode, unsigned short usFlags)
 }
 #endif
 
-#if defined USE_FTP_CLIENT || defined USE_TELNET_CLIENT                  // {72}
-static void fnDoFTP_TELNET(unsigned char ucType, CHAR *ptrInput)
+#if defined USE_MQTT_CLIENT
+static CHAR *fnMQTT_callback(unsigned char ucEvent, unsigned char *ptrCHAR)
+{
+    switch (ucEvent) {
+    case MQTT_CLIENT_IDENTIFIER:
+        return temp_pars->temp_parameters.cDeviceIDName;                 // supply a string to be used as MQTT device identifier - this should be unique and normally contain only characters 0..9, a..z, A..Z (normally up to 23 bytes)
+    case MQTT_CONNACK_RECEIVED:
+        fnDebugMsg("MQTT connected\r\n");
+        break;
+    case MQTT_SUBACK_RECEIVED:
+        fnDebugMsg("MQTT subscribed\r\n");
+        return ("abcd");
+    case MQTT_PUBLISH_RECEIVED:
+        fnDebugMsg("MQTT published\r\n");
+        break;
+    }
+    return 0;
+}
+#endif
+
+#if defined USE_FTP_CLIENT || defined USE_TELNET_CLIENT || defined USE_MQTT_CLIENT // {72}{87}
+static void fnDoFTP_TELNET_MQTT(unsigned char ucType, CHAR *ptrInput)
 {
     switch (ucType) {
     #if defined USE_FTP_CLIENT
@@ -5677,7 +5703,26 @@ static void fnDoFTP_TELNET(unsigned char ucType, CHAR *ptrInput)
             }
         }
         break;
-   #endif
+    #endif
+    #if defined USE_MQTT_CLIENT
+    case DO_MQTT_CONNECT:
+        {
+            unsigned char ucDestinationIP[IPV4_LENGTH] = {0};
+            if (fnStrIP(ptrInput, ucDestinationIP) != 0) {
+                fnDebugMsg("MQTT client ");
+                if (fnConnectMQTT(ucDestinationIP, fnMQTT_callback) == 0) {
+                    fnDebugMsg("connecting...");
+                }
+                else {
+                    fnDebugMsg("can't connect");
+                }
+            }
+            else {
+                fnDebugMsg("Invalid IP");
+            }
+        }
+        break;
+    #endif
     }
 }
 #endif
@@ -5864,7 +5909,7 @@ static int fnDoCommand(unsigned char ucFunction, unsigned char ucType, CHAR *ptr
             ucMenu = MENU_HELP_DISK;                                     // set SD-card disk menu
             return (fnDisplayHelp(0));                                   // large menu may require special handling
         }
-        else if (DO_MENU_HELP_FTP_TELNET == ucType) {                    // {37}
+        else if (DO_MENU_HELP_FTP_TELNET_MQTT == ucType) {               // {37}
             ucMenu = MENU_HELP_FTP;                                      // set FTP/TELNET client menu
             return (fnDisplayHelp(0));                                   // large menu may require special handling
         }
@@ -5906,9 +5951,9 @@ static int fnDoCommand(unsigned char ucFunction, unsigned char ucType, CHAR *ptr
     case DO_TELNET:
         fnDoTelnet(ucType, ptrInput);
         break;
-#if defined USE_FTP_CLIENT || defined USE_TELNET_CLIENT                  // {37}{72}
-    case DO_FTP_TELNET:                                                  // FTP/TELNET client group
-        fnDoFTP_TELNET(ucType, ptrInput);
+#if defined USE_FTP_CLIENT || defined USE_TELNET_CLIENT || defined USE_MQTT_CLIENT // {37}{72}
+    case DO_FTP_TELNET_MQTT:                                             // FTP/TELNET/MQTT client group
+        fnDoFTP_TELNET_MQTT(ucType, ptrInput);
         break;
 #endif
 #if defined CAN_INTERFACE                                                // {38}

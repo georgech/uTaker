@@ -61,28 +61,28 @@
     #define STRCAT strcat
 #endif
 
-#ifdef _HW_NE64
+#if defined _HW_NE64
     #if defined SPI_FILE_SYSTEM && !defined FLASH_FILE_SYSTEM            // {5}
        #define FLASH_FILE  "M95XXX_NE64.ini"
     #else
        #define FLASH_FILE  "FLASH_NE64.ini"
     #endif
 #endif
-#ifdef _HW_SAM7X
+#if defined _HW_SAM7X
     #if defined SPI_FILE_SYSTEM && !defined FLASH_FILE_SYSTEM            // {5}
         #define FLASH_FILE  "M95XXX_SAM7X.ini"
     #else
         #define FLASH_FILE  "FLASH_SAM7X.ini"
     #endif
 #endif
-#ifdef _HW_SAM3X                                                        // {20}
+#if defined _HW_SAM3X                                                    // {20}
     #if defined SPI_FILE_SYSTEM && !defined FLASH_FILE_SYSTEM
         #define FLASH_FILE  "M95XXX_SAM3.ini"
     #else
         #define FLASH_FILE  "FLASH_SAM3.ini"
     #endif
 #endif
-#ifdef _HW_AVR32                                                         // {9}
+#if defined _HW_AVR32                                                    // {9}
     #if defined SPI_FILE_SYSTEM && !defined FLASH_FILE_SYSTEM
         #define FLASH_FILE  "M95XXX_AVR32.ini"
     #else
@@ -96,41 +96,41 @@
         #define FLASH_FILE  "FLASH_M5223X.ini"
     #endif
 #endif
-#ifdef _STR91XF
+#if defined _STR91XF
     #if defined SPI_FILE_SYSTEM && !defined FLASH_FILE_SYSTEM            // {5}
         #define FLASH_FILE  "M95XXX_STR91XF.ini"
     #else
         #define FLASH_FILE  "FLASH_STR91XF.ini"
     #endif
 #endif
-#ifdef _LPC23XX
+#if defined _LPC23XX
     #if defined SPI_FILE_SYSTEM && !defined FLASH_FILE_SYSTEM            // {5}
         #define FLASH_FILE  "M95XXX_LPC23XX.ini"
     #else
         #define FLASH_FILE  "FLASH_LPC23XX.ini"
     #endif
 #endif
-#ifdef _LPC17XX                                                          // {12}
+#if defined _LPC17XX                                                     // {12}
     #define FLASH_FILE  "FLASH_LPC17XX.ini"
 #endif
-#ifdef _KINETIS                                                          // {17}
+#if defined _KINETIS                                                     // {17}
     #define FLASH_FILE  "FLASH_KINETIS.ini"
 #endif
-#ifdef _LM3SXXXX                                                         // {4}
+#if defined _LM3SXXXX                                                    // {4}
     #if defined SPI_FILE_SYSTEM && !defined FLASH_FILE_SYSTEM            // {5}
         #define FLASH_FILE  "M95XXX_LM3SXXXX.ini"
     #else
         #define FLASH_FILE  "FLASH_LM3SXXXX.ini"
     #endif
 #endif
-#ifdef _STM32                                                            // {14}
+#if defined _STM32                                                       // {14}
     #if defined SPI_FILE_SYSTEM && !defined FLASH_FILE_SYSTEM
         #define FLASH_FILE  "M95XXX_STM32.ini"
     #else
         #define FLASH_FILE  "FLASH_STM32.ini"
     #endif
 #endif
-#ifdef _RX6XX                                                            // {16}
+#if defined _RX6XX                                                       // {16}
     #define FLASH_FILE  "FLASH_RX6XX.ini"
 #endif
 
@@ -264,7 +264,7 @@ extern void fnPrimeFileSystem(void)
 	    _close(iFileIni);   
     }
 #endif
-#ifdef BATTERY_BACKED_RAM                                                // {10}
+#if defined BATTERY_BACKED_RAM                                           // {10}
     #if _VC80_UPGRADE < 0x0600
 	iFileIni = _open(BAT_BACK_FILE, (_O_BINARY | _O_RDWR));
     #else
@@ -376,7 +376,7 @@ extern void fnSaveFlashToFile(void)
 	    _close(iFileIni);
     }
 #endif
-#ifdef _USER_MEMORY_SAVE                                                 // {15}
+#if defined _USER_MEMORY_SAVE                                            // {15}
     fnSaveUserData();
 #endif
 }

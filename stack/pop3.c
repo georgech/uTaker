@@ -8,7 +8,7 @@
     www.uTasker.com    Skype: M_J_Butcher
 
     ---------------------------------------------------------------------
-    File:      POP3.c
+    File:      pop3.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
     Copyright (C) M.J.Butcher Consulting 2004..2017
@@ -19,7 +19,7 @@
 #include "config.h"
 
 
-#ifdef USE_POP3
+#if defined USE_POP3
 
 
 #define OWN_TASK     TASK_POP3
@@ -72,17 +72,17 @@ extern void fnPOP3(TTASKTABLE *ptrTaskTable)
     QUEUE_HANDLE PortIDInternal = ptrTaskTable->TaskID;                  // queue ID for task input
     unsigned char ucInputMessage[SMALL_QUEUE];                           // reserve space for receiving messages
 
-    if (!ucPOP_state) {
+    if (0 == ucPOP_state) {
         ucPOP_state = POP_STATE_CLOSED;
     }
     else {
-        if ( fnRead( PortIDInternal, ucInputMessage, HEADER_LENGTH )) {  // check input queue
-            if (ucInputMessage[ MSG_SOURCE_TASK ] == TIMER_EVENT) {
-                if (ucInputMessage[ MSG_TIMER_EVENT ] == E_POP_TIMEOUT) {
+        if (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH) != 0) {// check input queue
+            if (ucInputMessage[MSG_SOURCE_TASK] == TIMER_EVENT) {
+                if (E_POP_TIMEOUT == ucInputMessage[MSG_TIMER_EVENT]) {
                     fnPOP_error(ERROR_POP3_TIMEOUT);
                 }
                 else {                                                   // assume E_POP_POLL_TIME
-                    if (uMemcmp(ucPOP3_ip_address, cucNullMACIP, IPV4_LENGTH)) {
+                    if (uMemcmp(ucPOP3_ip_address, cucNullMACIP, IPV4_LENGTH) != 0) {
                         fnConnectPOP3(ucPOP3_ip_address);                // check our mailbox to see whether we have post
                     }
                 }
@@ -101,7 +101,9 @@ extern int fnConnectPOP3(unsigned char *ucIP)
         }
     }
 
-    if (ucPOP_state != POP_STATE_CLOSED) return ERROR_POP3_IN_USE;       // called while already active
+    if (ucPOP_state != POP_STATE_CLOSED) {
+        return ERROR_POP3_IN_USE;                                        // called while already active
+    }
 
     uMemcpy(ipPOP3, ucIP, IPV4_LENGTH);                                  // save the address of the POP3 server we want to connect to
     fnSetNextPOP_state(POP_STATE_OPEN_REQUESTED);
@@ -158,7 +160,9 @@ static int fnSetNextPOP_state(unsigned char ucNextState)
 //
 static int fnPOP3Listener(USOCKET Socket, unsigned char ucEvent, unsigned char *ucIp_Data, unsigned short usPortLen)
 {
-    if (Socket != POP_TCP_socket) return APP_REJECT;                     // ignore if not our socket 
+    if (Socket != POP_TCP_socket) {
+        return APP_REJECT;                                               // ignore if not our socket 
+    }
 
     switch (ucEvent) {
     case TCP_EVENT_ARP_RESOLUTION_FAILED:
@@ -189,9 +193,12 @@ static int fnPOP3Listener(USOCKET Socket, unsigned char ucEvent, unsigned char *
         return (fnRegenerate() > 0);
 
     case TCP_EVENT_DATA:                                                 // we have new receive data
-        if (ucUnacked) return -1;                                        // ignore if we have unacked data
-        if (usPortLen < 3) return -1;                                    // If the length is too short ignore it
-
+        if (ucUnacked) {
+            return -1;                                                   // ignore if we have unacked data
+        }
+        if (usPortLen < 3) {
+            return -1;                                                   // if the length is too short ignore it
+        }
         return (fnHandleData(ucIp_Data, usPortLen));                     // interpret the data
 
     case TCP_EVENT_CONREQ:                                               // we do not accept connection requests
@@ -301,13 +308,13 @@ static CHAR *fnSearch(CHAR *ptrData, const CHAR *ptrSearched, unsigned short *us
     unsigned short usLength = *usDataLeft;
     const CHAR *ptrSearching = ptrSearched;
 
-    while (usLength--) {
+    while (usLength-- != 0) {
         if (*ptrData++ != *ptrSearching) {
             usMatch = 0;
             ptrSearching = ptrSearched;
         }
         else {
-            if (!(*(++ptrSearching)) && usMatch) {
+            if ((*(++ptrSearching)) && usMatch) {
                 *usDataLeft = usLength;
                 return (ptrData);                                        // return position of following charcaters
             }
@@ -385,11 +392,11 @@ static int fnHandleData(unsigned char *ptrData, unsigned short usDataLength)
                             }
                             ptrEnd++;
                         }
-                        if (!(ptr = fnUserCallback(POP3_RX_SUBJECT, (unsigned char *)ptr))) {
+                        if ((ptr = fnUserCallback(POP3_RX_SUBJECT, (unsigned char *)ptr)) == 0) {
                             return (fnSetNextPOP_state(POP_STATE_QUIT_SENT)); // application doesn't accept the subject so quite
                         }
                     }
-                    if (!ptr) {
+                    if (0 == ptr) {
                         return 0;
                     }
                 }

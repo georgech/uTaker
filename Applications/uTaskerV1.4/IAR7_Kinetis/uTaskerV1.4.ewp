@@ -3583,6 +3583,9 @@
       <name>$PROJ_DIR$\..\..\..\stack\ip_utils.c</name>
     </file>
     <file>
+      <name>$PROJ_DIR$\..\..\..\stack\mqtt.c</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\..\..\..\stack\NetBIOS.c</name>
     </file>
     <file>

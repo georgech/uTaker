@@ -453,7 +453,7 @@ extern void fnHandleICMPV6(ETHERNET_FRAME *ptrRxFrame)
     case ICMPV6_TYPE_NEIGHBOR_ADVERTISEMENT:
         fnEnterIPV6Neighbor(frame_cont->ethernet_source_MAC, (unsigned char *)ptrDiscoveryFrame->ipv6.source_IP_address, (MAC_LENGTH | RESOLVED_ADDRESS));
         return;                                                          // no need to refresh neighbor table
-    #ifdef ICMP_SEND_PING
+    #if defined ICMP_SEND_PING
     case ICMPV6_TYPE_ECHO_REPLY:
         {
             ICMPV6_ECHO_REQUEST *ptrAnswer = (ICMPV6_ECHO_REQUEST *)&ptrDiscoveryFrame->icmpv6;
@@ -473,7 +473,7 @@ extern void fnHandleICMPV6(ETHERNET_FRAME *ptrRxFrame)
     fnEnterIPV6Neighbor(ptrRxFrame->ptEth->ethernet_source_MAC, (unsigned char *)ptrDiscoveryFrame->ipv6.source_IP_address, (REFRESH_ADDRESS | MAC_LENGTH));
 }
 
-    #ifdef ICMP_SEND_PING
+    #if defined ICMP_SEND_PING
 // Send an IPV6 ping request
 //
 extern int fnSendV6Ping(unsigned char *ping_address, unsigned char ucttl, UTASK_TASK OwnerTask, USOCKET Socket)

@@ -25,7 +25,7 @@
 #include "config.h"
 
 
-#ifdef USE_TFTP
+#if defined USE_TFTP
 
 
 #define OWN_TASK          TASK_TFTP
@@ -71,7 +71,7 @@ typedef struct stUDP_TFTP_ERR
     CHAR           cErrorStr[sizeof(tftp_error_message)];
 } UDP_TFTP_ERR;
 
-#ifdef SUB_FILE_SIZE                                                     // {4}
+#if defined SUB_FILE_SIZE                                                // {4}
     #define SUBFILE_WRITE  ,ucSubFileInProgress
     #define SUB_FILE_ON    ,SUB_FILE_TYPE
 #else
@@ -91,10 +91,10 @@ static unsigned short  tftp_block_number;
 static MAX_FILE_LENGTH tftp_transfer_length;
 static MAX_FILE_LENGTH tfpt_write_length;
 static unsigned char   ucBlockRepeats;
-#ifdef SUPPORT_MIME_IDENTIFIER
+#if defined SUPPORT_MIME_IDENTIFIER
    static unsigned char ucMimeType;
 #endif
-#ifdef SUB_FILE_SIZE                                                     // {4}
+#if defined SUB_FILE_SIZE                                                // {4}
     static unsigned char ucSubFileInProgress = 0;
 #endif
 
@@ -109,7 +109,7 @@ static void fnSendTFTP_block(int iRepeat);
 
 
 static const CHAR cOctet[]    = "octet";
-#ifdef SUPPORT_NET_ASCII
+#if defined SUPPORT_NET_ASCII
     static const CHAR cNetAscii[] = "netascii";
 #endif
 
@@ -198,10 +198,10 @@ extern int fnStartTFTP_client(void (*Callback)(unsigned short, CHAR *), unsigned
         tftp_file_pointer += FILE_HEADER;                                // set to first data location
     }
     else {
-#ifdef SUPPORT_MIME_IDENTIFIER
+#if defined SUPPORT_MIME_IDENTIFIER
         ucMimeType = fnGetMimeType(cFile);                               // get the type of file being transfered
 #endif
-#ifdef SUB_FILE_SIZE                                                     // {4}
+#if defined SUB_FILE_SIZE                                                // {4}
         ucSubFileInProgress = fnGetFileType(cFile);                      // get file characteristics so that it is later handled correctly
 #endif
     }
@@ -220,7 +220,7 @@ static unsigned char fnGetFileMode(CHAR *Data, unsigned short usDataLength)
             if (uStrEquiv(cOctet, Data) > 0) {                           // {1}
                 return (TFTP_OCTET_MODE);
             }
-#ifdef SUPPORT_NET_ASCII
+#if defined SUPPORT_NET_ASCII
             else if (uStrEquiv(cNetAscii, Data) > 0) {                   // {1}
                 return (TFTP_NET_ASCII_MODE);
             }
@@ -278,11 +278,11 @@ static void fnSendTFTP_read_write(unsigned char ucReadWrite, CHAR *cFile)
     tftp_frame.ucUDP_Message[0] = (unsigned char)(usOpCode >> 8);        // add op code    
     tftp_frame.ucUDP_Message[1] = (unsigned char)(usOpCode);
     ptrMessage = uStrcpy((CHAR *)&tftp_frame.ucUDP_Message[2], cFile);   // add the file name
-#ifdef STRING_OPTIMISATION                                               // {3}
+#if defined STRING_OPTIMISATION                                          // {3}
     ptrMessage++;
 #endif
     ptrMessage = uStrcpy(ptrMessage, cOctet);                            // add the mode (only octet mode supported)
-#ifdef STRING_OPTIMISATION                                               // {3}
+#if defined STRING_OPTIMISATION                                          // {3}
     ptrMessage++;
 #endif
     fnSendUDP(TFTPSocket, tftp_client_ip, tftp_client_port, (unsigned char *)&tftp_frame.tUDP_Header, (unsigned short)(ptrMessage - (CHAR *)tftp_frame.ucUDP_Message), OWN_TASK);
@@ -368,10 +368,10 @@ static int fnTFTPListner(USOCKET tftp_socket, unsigned char ucEvent, unsigned ch
         tftp_block_number = 0;
         tftp_next_file = tftp_file_pointer = uOpenFile((CHAR *)ucData);
         tfpt_write_length = 0;
-#ifdef SUPPORT_MIME_IDENTIFIER
+#if defined SUPPORT_MIME_IDENTIFIER
         ucMimeType = fnGetMimeType((CHAR *)ucData);                      // get the type of file being saved
 #endif
-#ifdef SUB_FILE_SIZE                                                     // {4}
+#if defined SUB_FILE_SIZE                                                // {4}
         ucSubFileInProgress = fnGetFileType((CHAR *)ucData);             // get file characteristics so that it is later handled correctly
 #endif
         if (usOpCode == TFTP_OPCODE_WRQ) {
@@ -402,7 +402,7 @@ static int fnTFTPListner(USOCKET tftp_socket, unsigned char ucEvent, unsigned ch
             }
             if (usOpCode == (tftp_block_number + 1)) {                   // check that block is the next
                 if ((tftp_next_file) && ((tftp_file_pointer + usDataLen) >= tftp_next_file)) { // we need to ensure any files in the write space have been deleted
-#ifdef SUPPORT_MIME_IDENTIFIER
+#if defined SUPPORT_MIME_IDENTIFIER
                     unsigned char ucMimeType;
 #endif
                     tftp_transfer_length = uGetFileLength(tftp_next_file); // the length of existing file
@@ -414,7 +414,7 @@ static int fnTFTPListner(USOCKET tftp_socket, unsigned char ucEvent, unsigned ch
                             uFileErase(tftp_next_file, tftp_transfer_length);// clear the next file in the way                                                                         
                         }
                     }
-#ifdef SUPPORT_MIME_IDENTIFIER
+#if defined SUPPORT_MIME_IDENTIFIER
                     tftp_next_file = uOpenNextMimeFile(tftp_next_file, &tftp_transfer_length, &ucMimeType SUBFILE_WRITE); // {5} since we don't know the length of data which we are to receive we have to monitor the files which may be in the way and also the maximum length possible
 #else
                     tftp_next_file = uOpenNextFile(tftp_next_file, &tftp_transfer_length SUBFILE_WRITE); // since we don't know the length of data which we are to receive we have to monitor the files which may be in the way and also the maximum length possible
@@ -424,7 +424,7 @@ static int fnTFTPListner(USOCKET tftp_socket, unsigned char ucEvent, unsigned ch
                 if (((tfpt_write_length + usDataLen + FILE_HEADER) < tfpt_write_length) || (tftp_file_pointer >= ((unsigned char *)(uFILE_START + FILE_SYSTEM_SIZE - FILE_HEADER)) - usDataLen - tfpt_write_length)) {
                     // If there is no more space in FLASH we close the file, delete its contents and inform of an error
                     // This can be because the write is reaching the end of the physical memory or because the file size is increasing to beyond the maximum supported size
-#ifdef SUPPORT_MIME_IDENTIFIER
+#if defined SUPPORT_MIME_IDENTIFIER
                     tftp_transfer_length = uFileCloseMime(tftp_file_pointer, &ucMimeType); // close complete received file
 #else
                     tftp_transfer_length = uFileClose(tftp_file_pointer); // close complete received file
@@ -437,7 +437,7 @@ static int fnTFTPListner(USOCKET tftp_socket, unsigned char ucEvent, unsigned ch
                     break;
                 }
                 if (TFTP_STATE_CHECKING & ucTFTP_state) {                // if comparing file content
-#ifdef SUPPORT_FILE_COMPARE
+#if defined SUPPORT_FILE_COMPARE
                     if (uCompareFile((tftp_file_pointer + tfpt_write_length + FILE_HEADER), ucData, usDataLen)) {
                         fnSendTFTP_error(TFTP_DISK_FULL);                // stop present transfer (with error message)
                         fnTFTP_error(TFTP_FILE_NOT_EQUAL, 0);            // inform the application that the file content is different
@@ -450,7 +450,7 @@ static int fnTFTPListner(USOCKET tftp_socket, unsigned char ucEvent, unsigned ch
                 }
                 tfpt_write_length += usDataLen;                          // length of data written
                 if (usDataLen < FULL_TFTP_FRAME) {                       // have we just received the last frame?
-#ifdef SUPPORT_MIME_IDENTIFIER
+#if defined SUPPORT_MIME_IDENTIFIER
                     uFileCloseMime(tftp_file_pointer, &ucMimeType);      // close complete received file
 #else
                     uFileClose(tftp_file_pointer);                       // close complete received file

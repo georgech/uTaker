@@ -32,6 +32,7 @@
     11.02.2015 Added task TASK_TIME_KEEPER                               {12}
     18.11.2015 Add USB host task                                         {13}
     18.04.2017 Add BLINKY configuration
+    10.11.2017 Add MQTT task                                             {14}
 
 */
  
@@ -67,6 +68,7 @@
 #define TASK_MASS_STORAGE       'M'                                      // {5} mass storage task
 #define TASK_ZERO_CONFIG        'z'                                      // {7} zero config task
 #define TASK_TIME_KEEPER        'k'                                      // {12} time keeper task (RTC/SNTP)
+#define TASK_MQTT               'Q'                                      // {14}
 
 #define TASK_DEV_1              '1'
 #define TASK_DEV_2              '2'
@@ -108,6 +110,7 @@ extern void fnMODBUS(TTASKTABLE *);
 extern void fnMassStorage(TTASKTABLE *);                                 // {5}
 extern void fnZeroConfig(TTASKTABLE *);                                  // {7}
 extern void fnTimeKeeper(TTASKTABLE *ptrTaskTable);                      // {12}
+extern void fnMQTT(TTASKTABLE *ptrTaskTable);                            // {14}
 #if defined QUICK_DEV_TASKS
     extern void fnQuickTask1(TTASKTABLE *ptrTaskTable);
     extern void fnQuickTask2(TTASKTABLE *ptrTaskTable);
@@ -168,6 +171,9 @@ const UTASK_TASK ctNodes[] = {                                           // we u
 #endif
 #if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined MANAGED_FILES || defined USB_MSD_HOST
     TASK_MASS_STORAGE,                                                   // {5} mass storage task
+#endif
+#if defined USE_MQTT_CLIENT || defined USE_MQTT_SERVER
+    TASK_MQTT,                                                           // {14} MQTT client/server task
 #endif
 #if defined USE_DHCP_CLIENT
     TASK_DHCP,                                                           // DHCP task
@@ -262,6 +268,9 @@ const UTASKTABLEINIT ctTaskTable[] = {
 #endif
 #if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined MANAGED_FILES || defined USB_MSD_HOST
     {"MassSt",    fnMassStorage,  MEDIUM_QUE,  (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP}, // mass storage task
+#endif
+#if defined USE_MQTT_CLIENT || defined USE_MQTT_SERVER                   // {14}
+    {"Q-mqtt",    fnMQTT,       SMALL_QUEUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP },
 #endif
 #if defined USE_DHCP_CLIENT
     {"DHCP",      fnDHCP,       SMALL_QUEUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP}, // delay only for timer queue space

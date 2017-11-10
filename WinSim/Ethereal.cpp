@@ -20,7 +20,7 @@
 
 #include "config.h"
 
-#ifdef ETH_INTERFACE
+#if defined ETH_INTERFACE
 #include "WinSim.h"
 #include "Fcntl.h"
 #include "io.h"

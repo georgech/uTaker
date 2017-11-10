@@ -285,7 +285,7 @@ static __interrupt void _LPSCI0_Interrupt(void)                          // LPUA
         fnSciTxByte(LPUART0_CH_NUMBER);                                  // transmit data empty interrupt - write next byte, if waiting
     }
         #if defined SUPPORT_LOW_POWER || ((defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE)
-    if ((LPUART0_STAT & LPUART_STAT_TC) & LPUART0_CTRL) {                // transmit complete interrupt after final byte transmission together with low power operation
+    if (((LPUART0_STAT & LPUART_STAT_TC) & LPUART0_CTRL) != 0) {         // transmit complete interrupt after final byte transmission together with low power operation
         LPUART0_CTRL &= ~(LPUART_CTRL_TCIE);                             // disable the interrupt
             #if defined SUPPORT_LOW_POWER
         ulPeripheralNeedsClock &= ~(UART0_TX_CLK_REQUIRED << LPUART0_CH_NUMBER); // confirmation that the final byte has been sent out on the line so the UART no longer needs a UART clock (stop mode doesn't needed to be blocked)
@@ -319,7 +319,7 @@ static __interrupt void _LPSCI1_Interrupt(void)                          // LPUA
         ulState = LPUART1_STAT;                                          // update the status register
         if ((ulState & LPUART_STAT_OR) != 0) {                           // if the overrun flag is set at this point it means that an overrun took place between reading the status register on entry to the interrupt and reading the data register
             LPUART1_STAT = ulState;                                      // {210} write the OR flag back to clear it and allow further operation
-          //(void )LPUART1_DATA;                                         // read the data register in order to clear the overrun flag and allow the receiver to continue operating
+          //(void)LPUART1_DATA;                                          // read the data register in order to clear the overrun flag and allow the receiver to continue operating
         }
     }
 
@@ -327,7 +327,7 @@ static __interrupt void _LPSCI1_Interrupt(void)                          // LPUA
         fnSciTxByte(LPUART1_CH_NUMBER);                                  // transmit data empty interrupt - write next byte, if waiting
     }
         #if defined SUPPORT_LOW_POWER || ((defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE)
-    if ((LPUART1_STAT & LPUART_STAT_TC) & LPUART1_CTRL) {                // transmit complete interrupt after final byte transmission together with low power operation
+    if (((LPUART1_STAT & LPUART_STAT_TC) & LPUART1_CTRL) != 0) {         // transmit complete interrupt after final byte transmission together with low power operation
         LPUART1_CTRL &= ~(LPUART_CTRL_TCIE);                             // disable the interrupt
             #if defined SUPPORT_LOW_POWER
         ulPeripheralNeedsClock &= ~(UART0_TX_CLK_REQUIRED << LPUART1_CH_NUMBER); // confirmation that the final byte has been sent out on the line so the UART no longer needs a UART clock (stop mode doesn't needed to be blocked)
@@ -361,7 +361,7 @@ static __interrupt void _LPSCI2_Interrupt(void)                          // LPUA
         ulState = LPUART2_STAT;                                          // update the status register
         if ((ulState & LPUART_STAT_OR) != 0) {                           // if the overrun flag is set at this point it means that an overrun took place between reading the status register on entry to the interrupt and reading the data register
             LPUART2_STAT = ulState;                                      // {210} write the OR flag back to clear it and allow further operation
-          //(void )LPUART2_DATA;                                         // read the data register in order to clear the overrun flag and allow the receiver to continue operating
+          //(void)LPUART2_DATA;                                          // read the data register in order to clear the overrun flag and allow the receiver to continue operating
         }
     }
 
@@ -369,7 +369,7 @@ static __interrupt void _LPSCI2_Interrupt(void)                          // LPUA
         fnSciTxByte(LPUART2_CH_NUMBER);                                  // transmit data empty interrupt - write next byte, if waiting
     }
         #if defined SUPPORT_LOW_POWER || ((defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE)
-    if ((LPUART2_STAT & LPUART_STAT_TC) & LPUART2_CTRL) {                // transmit complete interrupt after final byte transmission together with low power operation
+    if (((LPUART2_STAT & LPUART_STAT_TC) & LPUART2_CTRL) != 0) {         // transmit complete interrupt after final byte transmission together with low power operation
         LPUART2_CTRL &= ~(LPUART_CTRL_TCIE);                             // disable the interrupt
             #if defined SUPPORT_LOW_POWER
         ulPeripheralNeedsClock &= ~(UART0_TX_CLK_REQUIRED << LPUART2_CH_NUMBER); // confirmation that the final byte has been sent out on the line so the UART no longer needs a UART clock (stop mode doesn't needed to be blocked)
@@ -411,7 +411,7 @@ static __interrupt void _LPSCI3_Interrupt(void)                          // LPUA
         fnSciTxByte(LPUART3_CH_NUMBER);                                  // transmit data empty interrupt - write next byte, if waiting
     }
         #if defined SUPPORT_LOW_POWER || ((defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE)
-    if ((LPUART3_STAT & LPUART_STAT_TC) & LPUART3_CTRL) {                // transmit complete interrupt after final byte transmission together with low power operation
+    if (((LPUART3_STAT & LPUART_STAT_TC) & LPUART3_CTRL) != 0) {         // transmit complete interrupt after final byte transmission together with low power operation
         LPUART3_CTRL &= ~(LPUART_CTRL_TCIE);                             // disable the interrupt
             #if defined SUPPORT_LOW_POWER
         ulPeripheralNeedsClock &= ~(UART0_TX_CLK_REQUIRED << LPUART3_CH_NUMBER); // confirmation that the final byte has been sent out on the line so the UART no longer needs a UART clock (stop mode doesn't needed to be blocked)
@@ -453,7 +453,7 @@ static __interrupt void _LPSCI4_Interrupt(void)                          // LPUA
         fnSciTxByte(LPUART4_CH_NUMBER);                                  // transmit data empty interrupt - write next byte, if waiting
     }
         #if defined SUPPORT_LOW_POWER || ((defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE)
-    if ((LPUART4_STAT & LPUART_STAT_TC) & LPUART4_CTRL) {                // transmit complete interrupt after final byte transmission together with low power operation
+    if (((LPUART4_STAT & LPUART_STAT_TC) & LPUART4_CTRL) != 0) {         // transmit complete interrupt after final byte transmission together with low power operation
         LPUART4_CTRL &= ~(LPUART_CTRL_TCIE);                             // disable the interrupt
             #if defined SUPPORT_LOW_POWER
         ulPeripheralNeedsClock &= ~(UART0_TX_CLK_REQUIRED << LPUART4_CH_NUMBER); // confirmation that the final byte has been sent out on the line so the UART no longer needs a UART clock (stop mode doesn't needed to be blocked)
@@ -817,7 +817,7 @@ extern int fnTxByte(QUEUE_HANDLE Channel, unsigned char ucTxByte)
         #if defined _WINDOWS
         ucTxLast[Channel] = (unsigned char)((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_DATA; // back up the data written so that it can't get lost when rx data uses the simulated register
         ((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_STAT &= ~LPUART_STAT_TDRE; // mark transmitter presently not empty
-        iInts |= (CHANNEL_0_SERIAL_INT << Channel);
+        iInts |= (CHANNEL_0_SERIAL_INT << Channel);                      // flag that an interrupt is expected on this LPUART channel
         #endif
         ((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_CTRL |= (LPUART_CTRL_TIE); // enable the LPUART transmission interrupt
         #if UARTS_AVAILABLE > 0
@@ -888,8 +888,8 @@ extern void fnClearTxInt(QUEUE_HANDLE Channel)
         }
     }
     else {
-        if (uart_reg->UART_C5 & UART_C5_TDMAS) {                        // if the transmitter is operating in DMA mode
-            return;                                                     // leave the transmitter interrupt enabled since it is used by the DMA request, which is not enabled before a transfer starts
+        if ((uart_reg->UART_C5 & UART_C5_TDMAS) != 0) {                  // if the transmitter is operating in DMA mode
+            return;                                                      // leave the transmitter interrupt enabled since it is used by the DMA request, which is not enabled before a transfer starts
         }
     }
             #else
@@ -898,7 +898,7 @@ extern void fnClearTxInt(QUEUE_HANDLE Channel)
     }
             #endif
         #else
-    if (uart_reg->UART_C5 & UART_C5_TDMAS) {                             // if the transmitter is operating in DMA mode
+    if ((uart_reg->UART_C5 & UART_C5_TDMAS) != 0) {                      // if the transmitter is operating in DMA mode
         return;                                                          // leave the transmitter interrupt enabled since it is used by the DMA request, which is not enabled before a transfer starts
     }
         #endif
@@ -2640,7 +2640,7 @@ static void fnConfigLPUART(QUEUE_HANDLE Channel, TTYTABLE *pars, KINETIS_LPUART_
             #else
         fnEnterInterrupt((irq_DMA0_ID + UART_DMA_TX_CHANNEL[Channel]), UART_DMA_TX_INT_PRIORITY[Channel], (void (*)(void))_uart_tx_dma_Interrupt[Channel]); // enter DMA interrupt handler
             #endif
-        lpuart_reg->LPUART_CTRL &= ~(LPUART_CTRL_TIE | LPUART_CTRL_TCIE);// ensure tx interrupt is not enabled
+        lpuart_reg->LPUART_CTRL &= ~(LPUART_CTRL_TIE | LPUART_CTRL_TCIE);// ensure tx interrupts are not enabled
         lpuart_reg->LPUART_BAUD |= LPUART_BAUD_TDMAE;                    // use DMA rather than interrupts for transmission
         POWER_UP_ATOMIC(6, DMAMUX0);                                     // enable DMA multiplexer 0
         *(unsigned char *)(DMAMUX0_BLOCK + UART_DMA_TX_CHANNEL[Channel]) = ((DMAMUX0_CHCFG_SOURCE_LPUART0_TX + (2 * (Channel - UARTS_AVAILABLE))) | DMAMUX_CHCFG_ENBL); // connect LPUART tx to DMA channel

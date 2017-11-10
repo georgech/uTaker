@@ -371,6 +371,9 @@
     <ClCompile Include="..\..\..\Hardware\Kinetis\CMSIS_DSP\arm_sin_cos_f32.c">
       <Filter>Hardware\Kinetis\CMSIS_DSP</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\stack\mqtt.c">
+      <Filter>TCP/IP</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\ADC_Timers.h">

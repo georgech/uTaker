@@ -1029,7 +1029,7 @@
 #if defined DEVICE_WITHOUT_USB
     #define NUMBER_USB     0                                             // no physical queue needed
 #else
-  //#define USB_INTERFACE                                                // enable USB driver interface
+    #define USB_INTERFACE                                                // enable USB driver interface
     #if defined USB_INTERFACE
       //#define MICROSOFT_OS_STRING_DESCRIPTOR                           // support MODs
       //#define USB_HOST_SUPPORT                                         // host rather than device
@@ -1456,7 +1456,7 @@
             #define CONTROL_WINDOW_SIZE                                  // support variable windows size to quench reception
 
             #define USE_FTP                                              // enable FTP - needs TCP
-            #define USE_FTP_CLIENT                                       // enable FTP client - needs TCP
+          //#define USE_FTP_CLIENT                                       // enable FTP client - needs TCP
             #define USE_SMTP                                             // enable SMTP - needs TCP
           //#define USE_POP3                                             // enable POP3 Email - needs TCP
             #define USE_HTTP                                             // support embedded Web server - needs TCP
@@ -1467,6 +1467,8 @@
           //#define USE_TIME_SERVER                                      // enable time server support - presently demo started in application
                 #define NUMBER_OF_TIME_SERVERS 3                         // number of time servers that are used
             #define MODBUS_TCP                                           // support MODBUS TCP protocol
+            #define USE_MQTT_CLIENT                                      // enable MQTT (message queuing telemetry transport) client support
+          //#define USE_MQTT_SERVER                                      // enable MQTT (message queuing telemetry transport) server support
 
           //#define TEST_CLIENT_SERVER                                   // TCP client/server test (see debug.c)
             #define TEST_TCP_SERVER                                      // TCP server (see debug.c) - uses also a TELNET session
@@ -1640,6 +1642,12 @@
             #define SMTP_SOCKET 0                                        // no TCP socket needed
         #endif
 
+        #if defined USE_MQTT_CLIENT
+            #define MQTT_CLIENT_SOCKET 1
+        #else
+            #define MQTT_CLIENT_SOCKET 0
+        #endif
+
         #if defined USE_TELNET || defined USE_TELNET_CLIENT
             #define USE_BUFFERED_TCP                                     // always use buffered TCP for telnet
         #endif
@@ -1706,7 +1714,7 @@
             #define SUPPORT_DELAY_WEB_SERVING                            // enable delayed web page serving defined by the application
 
           //#define SUPPORT_WEBSOCKET                                    // support WebSocket protocol to allow two-way communication between a web server process and web browser application
-            #define NO_OF_HTTPS_SESSIONS       0                         // this many parallel HTTPS sockets are reserved for this many parallel sessions
+            #define NO_OF_HTTPS_SESSIONS       4                         // this many parallel HTTPS sockets are reserved for this many parallel sessions
             #define NO_OF_HTTP_SESSIONS        4                         // this many parallel HTTP sockets are reserved for this many parallel sessions
             #define HTTP_AUTHENTICATION                                  // activate basic authentication
             #define PROJECT_CREDENTIALS  "HTTP/1.0 401\r\nWWW-Authenticate: Basic realm=""uTasker""\r\n\r\n" // put project name here to spice up credential pop-up
@@ -1733,7 +1741,7 @@
 
         #define USER_NAME_AND_PASS                                       // routines for user name and password support
 
-        #define NO_OF_TCPSOCKETS (NO_OF_HTTP_SESSIONS + NO_OF_HTTPS_SESSIONS + FTP_SOCKETS + POP3_SOCKET + SMTP_SOCKET + NO_OF_TELNET_SESSIONS + TIME_SERVER_SOCKET + MODBUS_TCP_SOCKETS + FTP_CLIENT_SOCKETS + USER_TCP_SOCKETS) // reserve the number of TCP sockets necessary for our configuration
+        #define NO_OF_TCPSOCKETS (NO_OF_HTTP_SESSIONS + NO_OF_HTTPS_SESSIONS + FTP_SOCKETS + POP3_SOCKET + SMTP_SOCKET + NO_OF_TELNET_SESSIONS + TIME_SERVER_SOCKET + MODBUS_TCP_SOCKETS + FTP_CLIENT_SOCKETS + MQTT_CLIENT_SOCKET + USER_TCP_SOCKETS) // reserve the number of TCP sockets necessary for our configuration
     #endif
 #else                                                                    // else no LAN support
     #define NUMBER_LAN     0                                             // no physical queue needed
