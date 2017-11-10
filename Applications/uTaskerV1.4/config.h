@@ -63,7 +63,7 @@
 //#define TRK_KEA64                                                      // starterTRAK board http://www.utasker.com/kinetis/TRK-KEA64.html
 //#define TRK_KEA128                                                     // starterTRAK board http://www.utasker.com/kinetis/TRK-KEA128.html
 //#define FRDM_KEAZN32Q64                                                // freedom board http://www.utasker.com/kinetis/FRDM-KEAZN32Q64.html
-#define FRDM_KEAZ64Q64                                                   // freedom board http://www.utasker.com/kinetis/FRDM-KEAZ64Q64.html
+//#define FRDM_KEAZ64Q64                                                 // freedom board http://www.utasker.com/kinetis/FRDM-KEAZ64Q64.html
 //#define FRDM_KEAZ128Q80                                                // freedom board http://www.utasker.com/kinetis/FRDM-KEAZ128Q80.html
 
 //#define FRDM_KE02Z                                                     // E processors Cortex-M0+/M4 (5V robust) - freedom board http://www.utasker.com/kinetis/FRDM-KE02Z.html
@@ -141,7 +141,7 @@
 //#define EMCRAFT_K61F150M                                               // K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - http://www.utasker.com/kinetis/EMCRAFT_K61F150M.html
 //#define K61FN1_50M                                                     // board with 150MHz K61 and 50MHz clock (HS USB and KSZ8863 ethernet switch)
 
-//#define FRDM_K64F                                                      // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
+#define FRDM_K64F                                                        // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
 //#define TWR_K64F120M                                                   // tower board http://www.utasker.com/kinetis/TWR-K64F120M.html
 //#define HEXIWEAR_K64F                                                  // hexiwear - wearable development kit for IoT (K64FN1M0VDC12 main processor) http://www.hexiwear.com/
 //#define TEENSY_3_5                                                     // USB development board with K64FX512 - http://www.utasker.com/kinetis/TEENSY_3.5.html
@@ -267,6 +267,7 @@
     #define KINETIS_KE
     #define KINETIS_KEA
     #define KINETIS_KEA64
+    #define KINETIS_KEA_S9                                               // 64k part with EEPROM
     #define DEVICE_WITHOUT_ETHERNET                                      // KEA doesn't have Ethernet controller
     #define DEVICE_WITHOUT_USB                                           // KEA doesn't have USB
 #elif defined FRDM_KEAZ128Q80

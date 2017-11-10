@@ -1008,7 +1008,7 @@ extern void fnInitialiseDevice(void *port_inits)
 
 extern void fnDeleteFlashSector(unsigned char *ptrSector)
 {
-#if (defined KINETIS_KE && (defined SIZE_OF_EEPROM && SIZE_OF_EEPROM > 0))
+#if (defined KINETIS_KE && defined KINETIS_KE_EEPROM && (defined SIZE_OF_EEPROM && SIZE_OF_EEPROM > 0))
     if (ptrSector >= &ucFLASH[SIZE_OF_FLASH - SIZE_OF_EEPROM] ) {
         uMemset(ptrSector, 0xff, KE_EEPROM_GRANULARITY);
         return;
@@ -1054,7 +1054,7 @@ extern unsigned char *fnGetFlashAdd(unsigned char *ucAdd)
     if (ucAdd >= (unsigned char *)FLEXNVM_START_ADDRESS) {               // access may be in FlexNMV area
         ucAdd -= (FLEXNVM_START_ADDRESS - (SIZE_OF_FLASH - SIZE_OF_FLEXFLASH)); // move to contiguous simulation flash area
     }
-#elif defined KINETIS_KE && (defined SIZE_OF_EEPROM && SIZE_OF_EEPROM > 0)
+#elif defined KINETIS_KE && defined KINETIS_KE_EEPROM && (defined SIZE_OF_EEPROM && SIZE_OF_EEPROM > 0)
     if (ucAdd >= (unsigned char *)KE_EEPROM_START_ADDRESS) {             // access may be in EEPROM area
         ucAdd -= (KE_EEPROM_START_ADDRESS - (SIZE_OF_FLASH - SIZE_OF_EEPROM)); // move to contiguous simulation flash area
     }

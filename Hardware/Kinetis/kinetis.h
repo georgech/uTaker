@@ -1047,6 +1047,9 @@ typedef struct stRESET_VECTOR
     #define FLASH_CONTROLLER_FTFE_EXTENDED                               // FTFE type with extended features
 #elif defined KINETIS_KE || defined KINETIS_KEA
     #define FLASH_CONTROLLER_FTMRE                                       // FTMRE type
+#if defined KINETIS_KE02 || (defined KINETIS_KEA && (defined SIZE_OF_EEPROM && (SIZE_OF_EEPROM == 256)))
+        #define KINETIS_KE_EEPROM                                        // parts with 256 bytes of EEPROM
+    #endif
 #endif
 
 #if defined KINETIS_KL82 || defined KINETIS_KE15
@@ -5168,7 +5171,7 @@ typedef struct stKINETIS_INTMUX
       #define FCMD_VERIFY_BACKDOOR_ACCESS_KEY 0x0c
       #define FCMD_SET_USER_MARGIN_LEVEL      0x0d
       #define FCMD_SET_FACTORY_MARGIN_LEVEL   0x0e
-      #if defined KINETIS_KE02
+      #if defined KINETIS_KE_EEPROM
           #define FCMD_ERASE_VERIFY_EEPROM_SECTION 0x10
           #define FCMD_PROGRAM_EEPROM              0x11
           #define FCMD_ERASE_EEPROM_SECTOR         0x12

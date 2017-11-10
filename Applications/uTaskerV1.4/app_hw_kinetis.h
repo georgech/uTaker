@@ -1109,11 +1109,20 @@
 #elif defined FRDM_KEAZN32Q64
   //#define PIN_COUNT           PIN_COUNT_32_PIN                         // 32 pin LQFP
     #define PIN_COUNT           PIN_COUNT_64_PIN                         // 64 pin LQFP
-    #define SIZE_OF_FLASH       (32 * 1024)                              // 32k program Flash
-  //#define SIZE_OF_FLASH       (64 * 1024)
+    #define SIZE_OF_EEPROM      (256)
+    #define SIZE_OF_FLASH       ((32 * 1024) + SIZE_OF_EEPROM)           // 32k program Flash
+  //#define SIZE_OF_FLASH       ((64 * 1024) + SIZE_OF_EEPROM)
   //#define SIZE_OF_RAM         (2 * 1024)
     #define SIZE_OF_RAM         (4 * 1024)                               // 4k SRAM
-#elif defined TRK_KEA64 || defined FRDM_KEAZ64Q64
+#elif defined FRDM_KEAZ64Q64
+  //#define PIN_COUNT           PIN_COUNT_32_PIN                         // 32 pin LQFP
+    #define PIN_COUNT           PIN_COUNT_64_PIN                         // 64 pin LQFP
+    #define SIZE_OF_EEPROM      (256)
+  //#define SIZE_OF_FLASH       ((32 * 1024) + SIZE_OF_EEPROM)
+    #define SIZE_OF_FLASH       ((64 * 1024) + SIZE_OF_EEPROM)           // 64k program Flash
+  //#define SIZE_OF_RAM         (2 * 1024)
+    #define SIZE_OF_RAM         (4 * 1024)                               // 4k SRAM
+#elif defined TRK_KEA64
   //#define PIN_COUNT           PIN_COUNT_32_PIN                         // 32 pin LQFP
     #define PIN_COUNT           PIN_COUNT_64_PIN                         // 64 pin LQFP
   //#define SIZE_OF_FLASH       (32 * 1024)
@@ -1152,7 +1161,7 @@
   //#define PIN_COUNT           PIN_COUNT_32_PIN                         // 32 pin LQFP
   //#define PIN_COUNT           PIN_COUNT_44_PIN                         // 44 pin LQFP
     #define PIN_COUNT           PIN_COUNT_64_PIN                         // 64 pin QFP
-    #define SIZE_OF_EEPROM      256
+    #define SIZE_OF_EEPROM      (256)
   //#define SIZE_OF_FLASH       ((16 * 1024) + SIZE_OF_EEPROM)
   //#define SIZE_OF_FLASH       ((32 * 1024) + SIZE_OF_EEPROM)
     #define SIZE_OF_FLASH       ((64 * 1024) + SIZE_OF_EEPROM)           // 64k program Flash
