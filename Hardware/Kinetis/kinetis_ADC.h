@@ -337,6 +337,9 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
                 unsigned char ucChannelConfig = 0;
                 if ((ptrADC_settings->int_adc_mode & ADC_CONFIGURE_ADC) != 0) { // main configuration is to be performed
                     if (ptrADC_settings->int_adc_controller == 0) {      // ADC0
+    #if defined KINETIS_WITH_PCC
+                        PCC_ADC0 |= PCC_PCS_SCGFIRCLK;                   // clock the ADC module from the fast clock (this is not the ADC input clock source)
+    #endif
                         POWER_UP_ATOMIC(6, ADC0);                        // enable clocks to module
                     }
     #if ADC_CONTROLLERS > 1

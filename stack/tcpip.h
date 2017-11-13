@@ -2265,15 +2265,22 @@ extern int  fnVerifyUser(CHAR *cDecodedUser, unsigned char iCheckUser);
     #define HTML_PASS_CHECK        0x04
     #define FTP_PASS_CHECK         0x08
 
-extern int fnConnectMQTT(unsigned char *ucIP, CHAR *(*fnCallback)(unsigned char, unsigned char *));
+extern int fnConnectMQTT(unsigned char *ucIP, unsigned short(*fnCallback)(unsigned char, unsigned char *, unsigned char *));
+extern int fnDisconnectMQTT(void);
+extern int fnPublishMQTT(void);
 
 #define ERROR_MQTT_NOT_READY      -1
 #define ERROR_MQTT_IN_USE         -2
+#define ERROR_MQTT_HOST_CLOSED    -3
+#define ERROR_MQTT_ARP_FAIL       -4
 #define MQTT_CLIENT_IDENTIFIER     1
 #define MQTT_CONNACK_RECEIVED      2
 #define MQTT_SUBACK_RECEIVED       3
 #define MQTT_PUBLISH_RECEIVED      4
-#define MQTT_CONNECTION_CLOSED     15
+#define MQTT_PUBLISH_TOPIC         5
+#define MQTT_PUBLISH_DATA          6
+#define MQTT_PUBLISH_TOPIC_FILTER  7
+#define MQTT_CONNECTION_CLOSED     8
 
 
 

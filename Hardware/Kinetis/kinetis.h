@@ -120,6 +120,7 @@
     19.10.2017 ATOMIC_PERIPHERAL_BIT_REF_SET(), ATOMIC_PERIPHERAL_BIT_REF_CLEAR() and ATOMIC_PERIPHERAL_BIT_REF_CHECK() macros {103} - see video https://youtu.be/FZnkZ1h_EAQ
     04.11.2017 Add true random number generator registers                {103}
     10.11.2016 Set bit-banding addresses as volatile to avoid potential optimisations (GCC) from causing hard-faults {104}
+    13.11.2017 Add internal temperature sensor 25°C and slope reference values ADC_REFERENCE_VOLTAGE
 
 */
 
@@ -1171,6 +1172,12 @@ typedef struct stRESET_VECTOR
     #define INTMUX0_AVAILABLE                                            // see this video for an explanation of the INTMUX module operation https://youtu.be/zKa5BoOhBrg
 #endif
 
+// TRGMUX
+//
+#if defined KINETIS_KL28
+    #define TRGMUX_AVAILABLE
+#endif
+
 // LTC (LP Trusted Cryptography)
 //
 #if defined KINETIS_K82 || defined KINETIS_KL82
@@ -1393,6 +1400,9 @@ typedef struct stRESET_VECTOR
 #else
     #define ADC_CONTROLLERS         2
 #endif
+#define VTEMP_25_MV                 716                                  // typical internal temperature sensor reference voltage (in mV) (3.3V VDD/VREF and < 3MHz ADC clock speed)
+#define TEMP_SENSOR_SLOPE_UV        1620                                 // typical internal temperature sensor slope uV/°C (3.3V VDD/VREF and < 3MHz ADC clock speed)
+
 
 // DAC configuration
 //
@@ -3496,7 +3506,11 @@ typedef struct stVECTOR_TABLE
     #if defined KINETIS_KL || defined KINETIS_KE
         #define FTM_BLOCK_2                    0x4003a000                // FlexTimer 2 (TPM2 in KL/KE)
     #endif
-    #define ADC0_BLOCK                         0x4003b000                // ADC0
+    #if defined KINETIS_KL28
+        #define ADC0_BLOCK                     0x40066000                // ADC0
+    #else
+        #define ADC0_BLOCK                     0x4003b000                // ADC0
+    #endif
     #if ADC_CONTROLLERS > 2
         #define ADC2_BLOCK                     0x4003c000                // ADC2
     #endif
@@ -6471,25 +6485,56 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
 
 // Power management controller
 //
-#define PMC_LVDSC1          *(volatile unsigned char *)(PMC_BLOCK + 0x0) // low voltage detect status and control 1 register
-  #define PMC_LVDSC1_LVDV   0x01                                         // high trip point select
-  #define PMC_LVDSC1_LVDRE  0x10                                         // low voltage detect reset enable
-  #define PMC_LVDSC1_LVDIE  0x20                                         // low voltage detect interrupt enable
-  #define PMC_LVDSC1_LVDACK 0x40                                         // write '1' to clear LVDF
-  #define PMC_LVDSC1_LVDF   0x80                                         // low voltage detect flag (read-only)
-#define PMC_LVDSC2          *(volatile unsigned char *)(PMC_BLOCK + 0x1) // low voltage detect status and control 2 register
-  #define PMC_LVDSC2_LVWV_LOW  0x00                                      // low voltage warning voltage select - low
-  #define PMC_LVDSC2_LVWV_MID1 0x01                                      // low voltage warning voltage select - mid 1
-  #define PMC_LVDSC2_LVWV_MID2 0x02                                      // low voltage warning voltage select - mid 2
-  #define PMC_LVDSC2_LVWV_HIGH 0x03                                      // low voltage warning voltage select - high
-  #define PMC_LVDSC2_LVWIE     0x20                                      // low voltage warning interrupt enable
-  #define PMC_LVDSC2_LVWACK    0x40                                      // write '1' to clear LVWF
-  #define PMC_LVDSC1_LVWF      0x80                                      // low voltage warning flag (read-only)
-#define PMC_REGSC           *(volatile unsigned char *)(PMC_BLOCK + 0x2) // regulator status and control 1 register
-  #define PMC_REGSC_BGBE    0x01                                         // bandgap buffer enable
-  #define PMC_REGSC_REGONS  0x04                                         // regulator in run regulation status
-  #define PMC_REGSC_ACKISO  0x08                                         // acknowledge isolation
-  #define PMC_REGSC_BGEN    0x10                                         // bandgap enable in VLPx operation
+#if defined KINETIS_KL28
+    #define PMC_OFFSET 0x08
+#else
+    #define PMC_OFFSET 0x00
+#endif
+#if defined KINETIS_KL28
+    #define PMC_VERID           *(volatile unsigned long *)(PMC_BLOCK + 0x00) // version ID register (read-only)
+    #define PMC_PARAM           *(volatile unsigned long *)(PMC_BLOCK + 0x04) // parameter register (read-only)
+    #define PMC_LVDSC1          *(volatile unsigned long *)(PMC_BLOCK + 0x08) // low voltage detect status and control 1 register
+        #define PMC_LVDSC1_LVDV   0x01                                        // high trip point select
+        #define PMC_LVDSC1_LVDRE  0x10                                        // low voltage detect reset enable
+        #define PMC_LVDSC1_LVDIE  0x20                                        // low voltage detect interrupt enable
+        #define PMC_LVDSC1_LVDACK 0x40                                        // write '1' to clear LVDF
+        #define PMC_LVDSC1_LVDF   0x80                                        // low voltage detect flag (read-only)
+    #define PMC_LVDSC2          *(volatile unsigned long *)(PMC_BLOCK + 0x0c) // low voltage detect status and control 2 register
+        #define PMC_LVDSC2_LVWV_LOW  0x00                                     // low voltage warning voltage select - low
+        #define PMC_LVDSC2_LVWV_MID1 0x01                                     // low voltage warning voltage select - mid 1
+        #define PMC_LVDSC2_LVWV_MID2 0x02                                     // low voltage warning voltage select - mid 2
+        #define PMC_LVDSC2_LVWV_HIGH 0x03                                     // low voltage warning voltage select - high
+        #define PMC_LVDSC2_LVWIE     0x20                                     // low voltage warning interrupt enable
+        #define PMC_LVDSC2_LVWACK    0x40                                     // write '1' to clear LVWF
+        #define PMC_LVDSC1_LVWF      0x80                                     // low voltage warning flag (read-only)
+    #define PMC_REGSC           *(volatile unsigned char *)(PMC_BLOCK + 0x10) // regulator status and control 1 register
+        #define PMC_REGSC_BGBE    0x01                                        // bandgap buffer enable
+        #define PMC_REGSC_REGONS  0x04                                        // regulator in run regulation status
+        #define PMC_REGSC_ACKISO  0x08                                        // acknowledge isolation
+        #define PMC_REGSC_BGEN    0x10                                        // bandgap enable in VLPx operation
+        #define PMC_REGSC_VLPO    0x40                                        // VLPx option
+    #define PMC_HVDSC1          *(volatile unsigned char *)(PMC_BLOCK + 0x34) // high voltage detect status and control 1 register
+#else
+    #define PMC_LVDSC1          *(volatile unsigned char *)(PMC_BLOCK + 0x0) // low voltage detect status and control 1 register
+      #define PMC_LVDSC1_LVDV   0x01                                         // high trip point select
+      #define PMC_LVDSC1_LVDRE  0x10                                         // low voltage detect reset enable
+      #define PMC_LVDSC1_LVDIE  0x20                                         // low voltage detect interrupt enable
+      #define PMC_LVDSC1_LVDACK 0x40                                         // write '1' to clear LVDF
+      #define PMC_LVDSC1_LVDF   0x80                                         // low voltage detect flag (read-only)
+    #define PMC_LVDSC2          *(volatile unsigned char *)(PMC_BLOCK + 0x1) // low voltage detect status and control 2 register
+      #define PMC_LVDSC2_LVWV_LOW  0x00                                      // low voltage warning voltage select - low
+      #define PMC_LVDSC2_LVWV_MID1 0x01                                      // low voltage warning voltage select - mid 1
+      #define PMC_LVDSC2_LVWV_MID2 0x02                                      // low voltage warning voltage select - mid 2
+      #define PMC_LVDSC2_LVWV_HIGH 0x03                                      // low voltage warning voltage select - high
+      #define PMC_LVDSC2_LVWIE     0x20                                      // low voltage warning interrupt enable
+      #define PMC_LVDSC2_LVWACK    0x40                                      // write '1' to clear LVWF
+      #define PMC_LVDSC1_LVWF      0x80                                      // low voltage warning flag (read-only)
+    #define PMC_REGSC           *(volatile unsigned char *)(PMC_BLOCK + 0x2) // regulator status and control 1 register
+      #define PMC_REGSC_BGBE    0x01                                         // bandgap buffer enable
+      #define PMC_REGSC_REGONS  0x04                                         // regulator in run regulation status
+      #define PMC_REGSC_ACKISO  0x08                                         // acknowledge isolation
+      #define PMC_REGSC_BGEN    0x10                                         // bandgap enable in VLPx operation
+#endif
 
 #if defined LLWU_AVAILABLE
 // Low-Leakage Wakeup Unit
@@ -11540,6 +11585,10 @@ typedef struct stKINETIS_LPTMR_CTL
         #define PCC_LPUART1              *(volatile unsigned long *)(PCC2_BLOCK + 0x114)
         #define PCC_FLEXIO0              *(volatile unsigned long *)(PCC2_BLOCK + 0x128)
         #define PCC_CMP1                 *(volatile unsigned long *)(PCC2_BLOCK + 0x1bc)
+
+        #define PCC_FLEXTMR0             PCC_TPM0
+        #define PCC_FLEXTMR1             PCC_TPM1
+        #define PCC_FLEXTMR2             PCC_TPM2
     #endif
     #define PCC_USBOTG                   PCC_USB0FS                      // for compatibility
     #define PCC_FTM0                     PCC_FLEXTMR0
@@ -11614,9 +11663,9 @@ typedef struct stKINETIS_LPTMR_CTL
 
     #define SCG_VERID                    *(unsigned long *)(SCG_BLOCK + 0x000) // version ID register (read-only)
     #define SCG_PARAM                    *(unsigned long *)(SCG_BLOCK + 0x004) // parameter register (read-only)
-        #define SCG_PARAM_CLKPRES_SOSC   0x00000001                      // SOSC is present
-        #define SCG_PARAM_CLKPRES_SIRC   0x00000002                      // SIRC is present
-        #define SCG_PARAM_CLKPRES_FIRC   0x00000004                      // FIRC is present
+        #define SCG_PARAM_CLKPRES_SOSC   0x00000002                      // SOSC is present
+        #define SCG_PARAM_CLKPRES_SIRC   0x00000004                      // SIRC is present
+        #define SCG_PARAM_CLKPRES_FIRC   0x00000008                      // FIRC is present
         #define SCG_PARAM_CLKPRES_SPLL   0x00000040                      // SPLL is present
         #define SCG_PARAM_DIVPRES_DIVSLOW 0x08000000                     // DIVSLOW is present
         #define SCG_PARAM_DIVPRES_DIVCORE 0x80000000                     // DIVCORE is present

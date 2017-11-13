@@ -105,7 +105,7 @@ static unsigned long ulPort_in_A, ulPort_in_B, ulPort_in_C, ulPort_in_D, ulPort_
 #endif
 static unsigned long ulPeripherals[PORTS_AVAILABLE] = {0};
 #if defined SUPPORT_ADC
-    static unsigned short usADC_values[ADC_CHANNELS * ADC_CONTROLLERS];
+    static unsigned short usADC_values[ADC_CONTROLLERS][32] = {{0}};
     static void *ptrPorts[2] = {(void *)ucPortFunctions, (void *)usADC_values}; // {2}
 #endif
 #if defined RUN_IN_FREE_RTOS
@@ -324,6 +324,7 @@ static void fnSetDevice(unsigned long *port_inits)
 
 #if defined SUPPORT_ADC
     int i;
+    int j;
 #endif
 
 #if !defined KINETIS_KL
@@ -412,6 +413,11 @@ static void fnSetDevice(unsigned long *port_inits)
     #else
     SIM_SDID = 0x014a;                                                   // K60 ID (revision 1)
     #endif
+#endif
+#if defined KINETIS_KL28
+    PMC_VERID = 0x04000000;
+    PMC_PARAM = 0x00000003;
+    PMC_HVDSC1 = 0x00000001;
 #endif
     PMC_LVDSC1 = PMC_LVDSC1_LVDRE;                                       // low voltage detect reset enabled by default
     PMC_REGSC = PMC_REGSC_REGONS;                                        // regulator is in run regulation
@@ -988,8 +994,13 @@ static void fnSetDevice(unsigned long *port_inits)
 #endif
     fnSimPers();                                                         // synchronise peripheral states with default settings
 #if defined SUPPORT_ADC
-    for (i = 0; i < (ADC_CHANNELS * ADC_CONTROLLERS); i++) {
-        usADC_values[i] = (unsigned short)*port_inits++;                 // {2} prime initial ADC values
+    for (j = 0; j < ADC_CONTROLLERS; j++) {
+        for (i = 0; i < ADC_CHANNELS; i++) {
+            usADC_values[j][i] = (unsigned short)*port_inits++;          // {2} prime initial ADC values
+        }
+        usADC_values[j][ADC_TEMP_SENSOR] = (unsigned short)((VTEMP_25_MV * 0xffff) / ADC_REFERENCE_VOLTAGE); // 25°C
+        usADC_values[j][ADC_BANDGAP] = (unsigned short)((1800 / ADC_REFERENCE_VOLTAGE) * 0xffff); // 1.8V
+        usADC_values[j][ADC_VREFH] = 0xffff;
     }
     fnEnterHW_table(ptrPorts);                                           
 #else
@@ -2107,25 +2118,25 @@ static unsigned short fnConvertSimADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned sh
     case ADC_CFG1_MODE_16:                                               // conversion mode - single-ended 16 bit or differential 16 bit
         break;
     case ADC_CFG1_MODE_12:                                               // conversion mode - single-ended 12 bit or differential 13 bit
-        usStandardValue >>= 4;
-        if (ptrADC->ADC_SC1A & ADC_SC1A_DIFF) {                          // differential mode
-            if (usStandardValue & 0x0800) {
+        usStandardValue >>= 4;                                           // right aligned
+        if ((ptrADC->ADC_SC1A & ADC_SC1A_DIFF) != 0) {                   // differential mode
+            if ((usStandardValue & 0x0800) != 0) {
                 usStandardValue |= 0xf000;                               // sign extend
             }
         }
         break;
     case ADC_CFG1_MODE_10:                                               // conversion mode - single-ended 10 bit or differential 11 bit
-        usStandardValue >>= 6;
-        if (ptrADC->ADC_SC1A & ADC_SC1A_DIFF) {                          // differential mode
-            if (usStandardValue & 0x0200) {
+        usStandardValue >>= 6;                                           // right aligned
+        if ((ptrADC->ADC_SC1A & ADC_SC1A_DIFF) != 0) {                   // differential mode
+            if ((usStandardValue & 0x0200) != 0) {
                 usStandardValue |= 0xfc00;                               // sign extend
             }
         }
         break;
     case ADC_CFG1_MODE_8:                                                // conversion mode - single-ended 8 bit or differential 9 bit
-        usStandardValue >>= 8;
-        if (ptrADC->ADC_SC1A & ADC_SC1A_DIFF) {                          // differential mode
-            if (usStandardValue & 0x0080) {
+        usStandardValue >>= 8;                                           // right aligned
+        if ((ptrADC->ADC_SC1A & ADC_SC1A_DIFF) != 0) {                   // differential mode
+            if ((usStandardValue & 0x0080) != 0) {
                 usStandardValue |= 0xff00;                               // sign extend
             }
         }
@@ -2146,26 +2157,23 @@ static void fnSimADC(int iChannel)
     #if ADC_CONTROLLERS > 1
     else if (iChannel == 1) {
         ptrADC = (KINETIS_ADC_REGS *)ADC1_BLOCK;
-        iValue = ADC_CHANNELS;
     }
     #endif
     #if ADC_CONTROLLERS > 2
     else if (iChannel == 2) {
         ptrADC = (KINETIS_ADC_REGS *)ADC2_BLOCK;
-        iValue = (ADC_CHANNELS * 2);
     }
     #endif
     #if ADC_CONTROLLERS > 3
     else if (iChannel == 3) {
         ptrADC = (KINETIS_ADC_REGS *)ADC3_BLOCK;
-        iValue = (ADC_CHANNELS * 3);
     }
     #endif
     else {
         return;
     }
     iValue += (ptrADC->ADC_SC1A & ADC_SC1A_ADCH_OFF);                    // the input being converted
-    usADCvalue = fnConvertSimADCvalue(ptrADC, usADC_values[iValue]);     // convert the standard value to the format used by the present mode
+    usADCvalue = fnConvertSimADCvalue(ptrADC, usADC_values[iChannel][iValue]); // convert the standard value to the format used by the present mode
     if ((ptrADC->ADC_SC2 & ADC_SC2_ACFE) != 0) {                         // {40} if the compare function is enabled
     #if !defined KINETIS_KE
         if ((ptrADC->ADC_SC2 & ADC_SC2_ACREN) != 0) {                    // range enabled (uses CV1 and CV2)
@@ -2361,10 +2369,15 @@ extern int fnGetADC_sim_channel(int iPort, int iBit);
 static int fnHandleADCchange(int iChange, int iPort, unsigned char ucPortBit)
 {
     if ((iChange & (TOGGLE_INPUT | TOGGLE_INPUT_NEG | TOGGLE_INPUT_POS)) != 0) {
+        int iADC = 0;
         unsigned short usStepSize;
-        signed int iAdc = fnGetADC_sim_channel(iPort, (/*31 - */ucPortBit)); // {9}
-        if (iAdc < 0) {                                                  // {9} ignore if not valid ADC port
+        signed int iAdcChannel = fnGetADC_sim_channel(iPort, (/*31 - */ucPortBit)); // {9}
+        if (iAdcChannel < 0) {                                           // {9} ignore if not valid ADC port
             return -1;                                                   // not analoge input so ignore
+        }
+        while (iAdcChannel >= 32) {
+            iADC++;
+            iAdcChannel -= 32;
         }
         if ((TOGGLE_INPUT_ANALOG & iChange) != 0) {
             usStepSize = (0xffff/3);
@@ -2373,13 +2386,13 @@ static int fnHandleADCchange(int iChange, int iPort, unsigned char ucPortBit)
             usStepSize = ((ADC_SIM_STEP_SIZE * 0xffff) / ADC_REFERENCE_VOLTAGE);
         }
         if ((TOGGLE_INPUT_NEG & iChange) != 0) {                         // force a smaller voltage
-            if (usADC_values[iAdc] >= usStepSize) {
-                usADC_values[iAdc] -= usStepSize;                        // decrease the voltage on the pin
+            if (usADC_values[iADC][iAdcChannel] >= usStepSize) {
+                usADC_values[iADC][iAdcChannel] -= usStepSize;           // decrease the voltage on the pin
             }
         }
         else {
-            if ((usADC_values[iAdc] + usStepSize) <= 0xffff) {
-                usADC_values[iAdc] += usStepSize;                        // increase the voltage on the pin
+            if ((usADC_values[iADC][iAdcChannel] + usStepSize) <= 0xffff) {
+                usADC_values[iADC][iAdcChannel] += usStepSize;           // increase the voltage on the pin
             }
         }
     }

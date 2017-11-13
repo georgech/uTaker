@@ -48,8 +48,9 @@
     #define _ADC_TIMER_CONFIG
 
     #if defined SUPPORT_ADC                                              // if HW support is enabled
-      //#define TEST_ADC                                                 // enable test of ADC operation
-        #define TEST_AD_DA                                               // {14} enable test of reading ADC and writing (after delay) to DAC
+        #define TEST_ADC                                                 // enable test of ADC operation
+            #define ADC_INTERNAL_TEMPERATURE                             // force internal temperature channel to be used, when available
+      //#define TEST_AD_DA                                               // {14} enable test of reading ADC and writing (after delay) to DAC
           //#define ADC_TRIGGER_TPM                                      // use TPM module rather than PIT for ADC trigger (valid for KL parts)
           //#define VOICE_RECORDER                                       // {15} needs TEST_AD_DA and mass-storage and saves sampled input to SD card
       //#define INTERNAL_TEMP                                            // {2} read also internal temperature (Luminary Micro)
@@ -386,6 +387,17 @@
                     fnDebugMsg("ADC triggered:");
                     fnDebugHex(results.sADC_value[0], (WITH_SPACE | WITH_LEADIN | WITH_CR_LF | sizeof(results.sADC_value[0]))); // {4}
             #if defined _KINETIS                                         // {11}
+                #if defined ADC_INTERNAL_TEMPERATURE
+                    #define VTEMP_25_16BIT               ((VTEMP_25_MV * 0xffff) / ADC_REFERENCE_VOLTAGE)
+                    #define TEMP_SENSOR_SLOPE_100_16BIT  ((TEMP_SENSOR_SLOPE_UV * 0xffff)/(10 * ADC_REFERENCE_VOLTAGE))
+                    if (ADC_TRIGGER == ucInputMessage[MSG_INTERRUPT_EVENT]) { // convert the ADC reading to a temperature
+                        signed short ssDifference = (results.sADC_value[0] - (VTEMP_25_16BIT >> 4)); // convert references to 12 bit values
+                        signed long slTemperature100 = ((2500 - (ssDifference * (TEMP_SENSOR_SLOPE_100_16BIT >> 4))) + 50); // the approximate temperature *100, rounded up/down
+                        slTemperature100 /= 100;                         // rounded integer temperature value
+                        fnDebugDec(slTemperature100, DISPLAY_NEGATIVE);
+                        fnDebugMsg(" degC\r\n");
+                    }
+                #endif
                     uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(3.0 * SEC), E_NEXT_SAMPLE);
             #endif
                 }
@@ -646,6 +658,7 @@ static void adc_level_change_high(ADC_INTERRUPT_RESULT *adc_result)
     #endif
 }
 
+
 #if defined _KINETIS && (ADC_CONTROLLERS > 1)
 static void adc_range(ADC_INTERRUPT_RESULT *adc_result)
 {
@@ -775,18 +788,22 @@ static void fnConfigureADC(void)
     adc_setup.int_adc_controller = 0;                                    // ADC controller 0
     adc_setup.int_adc_int_type = (ADC_SINGLE_SHOT_TRIGGER_INT);          // interrupt type
     adc_setup.int_adc_offset = 0;                                        // no offset
-    #if defined TWR_K20D50M || defined TWR_K20D72M || defined TWR_K21D50M
-    adc_setup.int_adc_bit = ADC_DM3_SINGLE;                              // ADC DM3 single-ended
-    adc_setup.int_handler = adc_range;                                   // handling function
-    #elif defined TEENSY_3_1
-    adc_setup.int_adc_bit = ADC_DP3_SINGLE;                              // ADC DM3 single-ended - pad A12
-    adc_setup.int_handler = adc_range;                                   // handling function
-    #elif defined FRDM_KE02Z40M || defined FRDM_KE06Z
-    adc_setup.int_adc_bit = ADC_SE12_SINGLE;                             // thermistor positive terminal
-    #elif defined FRDM_KL43Z
-    adc_setup.int_adc_bit = ADC_SE23_SINGLE;
+    #if defined ADC_INTERNAL_TEMPERATURE
+        adc_setup.int_adc_bit = ADC_TEMP_SENSOR;                         // ADC internal temperature
     #else
-    adc_setup.int_adc_bit = ADC_TEMP_SENSOR;                             // ADC internal temperature
+        #if defined TWR_K20D50M || defined TWR_K20D72M || defined TWR_K21D50M
+        adc_setup.int_adc_bit = ADC_DM3_SINGLE;                          // ADC DM3 single-ended
+        adc_setup.int_handler = adc_range;                               // handling function
+        #elif defined TEENSY_3_1
+        adc_setup.int_adc_bit = ADC_DP3_SINGLE;                          // ADC DM3 single-ended - pad A12
+        adc_setup.int_handler = adc_range;                               // handling function
+        #elif defined FRDM_KE02Z40M || defined FRDM_KE06Z
+        adc_setup.int_adc_bit = ADC_SE12_SINGLE;                         // thermistor positive terminal
+        #elif defined FRDM_KL43Z
+        adc_setup.int_adc_bit = ADC_SE23_SINGLE;
+        #else
+        adc_setup.int_adc_bit = ADC_TEMP_SENSOR;                         // ADC internal temperature
+        #endif
     #endif
     #if defined TWR_K20D50M || defined TWR_K20D72M || defined TWR_K21D50M
     adc_setup.int_adc_mode = (ulCalibrate | ADC_SELECT_INPUTS_A | ADC_CLOCK_BUS_DIV_2 | ADC_CLOCK_DIVIDE_4 | ADC_SAMPLE_ACTIVATE_LONG | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_ENDED | ADC_SINGLE_SHOT_MODE | ADC_16_BIT_MODE | ADC_SW_TRIGGERED); // note that the first configuration should calibrate the ADC - single shot with interrupt on completion {12}
@@ -846,7 +863,9 @@ static void fnConfigureADC(void)
     adc_setup.int_adc_mode = (ADC_CLOCK_BUS_DIV_2 | ADC_CLOCK_DIVIDE_8 | ADC_SAMPLE_ACTIVATE_LONG | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE | ADC_SW_TRIGGERED | ADC_LOW_POWER_CONFIG); // single shot with interrupt on completion {12}
         #else
             #if defined KINETIS_KL82
-    adc_setup.int_adc_mode = (ulCalibrate | ADC_SELECT_INPUTS_A | ADC_CLOCK_BUS_DIV_2 | ADC_CLOCK_DIVIDE_4 | ADC_SAMPLE_ACTIVATE_LONG | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_ENDED_INPUT | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE | ADC_SW_TRIGGERED); // note that the first configuration should calibrate the ADC - single shot with interrupt on completion {12}
+    adc_setup.int_adc_mode = (ulCalibrate | ADC_SELECT_INPUTS_A | ADC_CLOCK_BUS_DIV_2 | ADC_CLOCK_DIVIDE_4 | ADC_SAMPLE_ACTIVATE_LONG | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_ENDED_INPUT | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE | ADC_SW_TRIGGERED); // note that the first configuration should calibrate the ADC - single shot with interrupt on completion
+            #elif defined KINETIS_KL28
+    adc_setup.int_adc_mode = (ulCalibrate | ADC_SELECT_INPUTS_A | ADC_CLOCK_ASYNCHRONOUS | ADC_SAMPLE_ACTIVATE_LONG | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_ENDED_INPUT | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE | ADC_SW_TRIGGERED); // note that the first configuration should calibrate the ADC - single shot with interrupt on completion
             #else
     adc_setup.int_adc_mode = (ulCalibrate | ADC_SELECT_INPUTS_A | ADC_CLOCK_BUS_DIV_2 | ADC_CLOCK_DIVIDE_8 | ADC_SAMPLE_ACTIVATE_LONG | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_ENDED_INPUT | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE | ADC_SW_TRIGGERED); // note that the first configuration should calibrate the ADC - single shot with interrupt on completion {12}
              #endif

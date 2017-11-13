@@ -25,7 +25,7 @@ if not "%~1" == "" goto debugFile
 
 @echo on 
 
-"D:\Programs\IAR Systems\Embedded Workbench 7.5\common\bin\cspybat" -f "D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12\Applications\uTaskerV1.4\IAR7_Kinetis\settings\uTaskerV1.Flash_BM.general.xcl" --backend -f "D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12\Applications\uTaskerV1.4\IAR7_Kinetis\settings\uTaskerV1.Flash_BM.driver.xcl" 
+"D:\Programs\IAR Systems\Embedded Workbench 7.5\common\bin\cspybat" -f "D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12_master\Applications\uTaskerV1.4\IAR7_Kinetis\settings\uTaskerV1.Flash_BM.general.xcl" --backend -f "D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12_master\Applications\uTaskerV1.4\IAR7_Kinetis\settings\uTaskerV1.Flash_BM.driver.xcl" 
 
 @echo off 
 goto end 
@@ -34,7 +34,7 @@ goto end
 
 @echo on 
 
-"D:\Programs\IAR Systems\Embedded Workbench 7.5\common\bin\cspybat" -f "D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12\Applications\uTaskerV1.4\IAR7_Kinetis\settings\uTaskerV1.Flash_BM.general.xcl" "--debug_file=%~1" --backend -f "D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12\Applications\uTaskerV1.4\IAR7_Kinetis\settings\uTaskerV1.Flash_BM.driver.xcl" 
+"D:\Programs\IAR Systems\Embedded Workbench 7.5\common\bin\cspybat" -f "D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12_master\Applications\uTaskerV1.4\IAR7_Kinetis\settings\uTaskerV1.Flash_BM.general.xcl" "--debug_file=%~1" --backend -f "D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12_master\Applications\uTaskerV1.4\IAR7_Kinetis\settings\uTaskerV1.Flash_BM.driver.xcl" 
 
 @echo off 
 :end

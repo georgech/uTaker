@@ -492,6 +492,8 @@
     #define DO_TELNET_SET_NEGOTIATION 68
 
     #define DO_MQTT_CONNECT         69
+    #define DO_MQTT_PUB             71
+    #define DO_MQTT_DISCONNECT      72
 
 #define DO_CAN                    13
     #define DO_SEND_CAN_DEFAULT     0                                    // specific CAN command to send a message to the default destination
@@ -1047,6 +1049,8 @@ static const DEBUG_COMMAND tFTP_TELNET_Command[] = {                     // {37}
 #endif
 #if defined USE_MQTT_CLIENT                                              // {87}
     { "mqtt_con",         "Connect to MQTT broker [ip]",           DO_FTP_TELNET_MQTT, DO_MQTT_CONNECT },
+    { "mqtt_pub",         "Publish next",                          DO_FTP_TELNET_MQTT, DO_MQTT_PUB },
+    { "mqtt_dis",         "Disconect from MQTT broker",            DO_FTP_TELNET_MQTT, DO_MQTT_DISCONNECT },
     #if !defined USE_FTP_CLIENT && ! defined USE_TELNET_CLIENT
     {"help",              "Display menu specific help",            DO_HELP,          DO_MAIN_HELP },
     #endif
@@ -5523,22 +5527,45 @@ static void fnDisplayTelnetMode(unsigned short usMode, unsigned short usFlags)
 #endif
 
 #if defined USE_MQTT_CLIENT
-static CHAR *fnMQTT_callback(unsigned char ucEvent, unsigned char *ptrCHAR)
+static unsigned short fnMQTT_callback(unsigned char ucEvent, unsigned char *ptrRef, unsigned char *ptrData)
 {
+    CHAR *ptrBuf = (CHAR *)ptrData;
     switch (ucEvent) {
     case MQTT_CLIENT_IDENTIFIER:
-        return temp_pars->temp_parameters.cDeviceIDName;                 // supply a string to be used as MQTT device identifier - this should be unique and normally contain only characters 0..9, a..z, A..Z (normally up to 23 bytes)
+        ptrBuf = uStrcpy(ptrBuf, temp_pars->temp_parameters.cDeviceIDName); // supply a string to be used as MQTT device identifier - this should be unique and normally contain only characters 0..9, a..z, A..Z (normally up to 23 bytes)
+        break;
     case MQTT_CONNACK_RECEIVED:
         fnDebugMsg("MQTT connected\r\n");
         break;
+    case MQTT_PUBLISH_TOPIC_FILTER:
+        ptrBuf = uStrcpy(ptrBuf, "subtopic");
+        break;
     case MQTT_SUBACK_RECEIVED:
         fnDebugMsg("MQTT subscribed\r\n");
-        return ("abcd");
+        ptrBuf = uStrcpy(ptrBuf, "ref1");
+        break;
     case MQTT_PUBLISH_RECEIVED:
         fnDebugMsg("MQTT published\r\n");
         break;
+    case MQTT_PUBLISH_TOPIC:
+        ptrBuf = uStrcpy(ptrBuf, "xyz/abc");
+        break;
+    case MQTT_PUBLISH_DATA:
+        {
+            static unsigned char ucDataCnt = 0;
+            int i = 0;
+            ptrBuf = uStrcpy(ptrBuf, "abcd");                            // add string content
+            while (i++ < 10) {                                           // plus some binary content
+                *ptrBuf++ = ucDataCnt++;
+            }
+        }
+        break;
+    case ERROR_MQTT_HOST_CLOSED:
+    case MQTT_CONNECTION_CLOSED:
+        fnDebugMsg("MQTT closed\r\n");
+        break;
     }
-    return 0;
+    return (unsigned short)((unsigned char *)ptrBuf - ptrData);
 }
 #endif
 
@@ -5711,15 +5738,31 @@ static void fnDoFTP_TELNET_MQTT(unsigned char ucType, CHAR *ptrInput)
             if (fnStrIP(ptrInput, ucDestinationIP) != 0) {
                 fnDebugMsg("MQTT client ");
                 if (fnConnectMQTT(ucDestinationIP, fnMQTT_callback) == 0) {
-                    fnDebugMsg("connecting...");
+                    fnDebugMsg("Connecting...");
                 }
                 else {
-                    fnDebugMsg("can't connect");
+                    fnDebugMsg("Can't connect!");
                 }
             }
             else {
                 fnDebugMsg("Invalid IP");
             }
+        }
+        break;
+    case DO_MQTT_PUB:
+        if (fnPublishMQTT() == 0) {
+            fnDebugMsg("Publishing...");
+        }
+        else {
+            fnDebugMsg("MQTT error!");
+        }
+        break;
+    case DO_MQTT_DISCONNECT:
+        if (fnDisconnectMQTT() == 0) {
+            fnDebugMsg("Disonnecting...");
+        }
+        else {
+            fnDebugMsg("Not connected!");
         }
         break;
     #endif

@@ -303,7 +303,7 @@ extern "C" int fnGetADC_sim_channel(int iPort, int iBit)
         if (ADC_DEDICATED_MODULE[iBit] == 0) {                           // not assigned
             return -1;                                                   // not ADC function
         }
-        return ((ADC_DEDICATED_MODULE[iBit] * ADC_CHANNELS) + ADC_DEDICATED_CHANNEL[iBit]);
+        return (((ADC_DEDICATED_MODULE[iBit] - 1) * 32) + ADC_DEDICATED_CHANNEL[iBit]);
     }
     else {                                                               // multiplexed port
     #if defined KINETIS_KE && !defined KINETIS_KE15
@@ -333,7 +333,7 @@ static void fnAddVoltage(int iPort, char *cPortDetails, int iBit)
     if (iAdc < 0) {
         return;
     }
-    if (iAdc < (ADC_CHANNELS * ADC_CONTROLLERS)) {                        // {6}
+    if (iAdc < (32 * ADC_CONTROLLERS)) {                                 // {6}
         SPRINTF(cBuf, " [%fV]", (((float)_ptrADC[iAdc]*((float)ADC_REFERENCE_VOLTAGE/(float)1000))/(float)0xffff));
         STRCAT(cPortDetails, cBuf);
     }

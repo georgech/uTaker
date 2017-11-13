@@ -1,5 +1,5 @@
 [DebugChecksum]
-Checksum=1986838952
+Checksum=-240978083
 [DisAssemblyWindow]
 NumStates=_ 1
 State 1=_ 1
@@ -90,19 +90,19 @@ FREQ_TRACELINK=_ "3"
 FREQ_LIGHTNING=_ "1"
 FREQ_OPENSDA=_ "3"
 RESET_DELAY=_ "0"
-PORT=_ "181"
-PORT_NAME_STRING=_ "632A2E62"
-interface_selection=_ "7"
+PORT=_ "21"
+PORT_NAME_STRING=_ "PE5655870"
+interface_selection=_ "1"
 SHOWDIALOG=_ "1"
 TraceLink_MaxBufferSize=_ "1"
 [PE_STORED_DEVICES]
-device0=_ "NXP_K2x_K22FN1M0M12"
-device1=_ "NXP_KL8x_KL82Z128M7"
-device2=_ "NXP_K6x_K66FX1M0M18"
-device3=_ "NXP_KL2x_KL25Z128M4"
-device4=_ "NXP_KEx_KE06Z128M4"
+device0=_ "NXP_KL8x_KL82Z128M7"
+device1=_ "NXP_K6x_K66FX1M0M18"
+device2=_ "NXP_KL2x_KL25Z128M4"
+device3=_ "NXP_KEx_KE06Z128M4"
+device4=_ "NXP_KL2x_KL28Z512M7"
 [PE_PEDEBUG]
-CURRENTDEVICE=_ "NXP_KEx_KE06Z128M4"
+CURRENTDEVICE=_ "NXP_KL2x_KL28Z512M7"
 ERASE_PROGRAM_WITHOUT_ASKING=_ "1"
 CURRENTMODE=_ "4"
 [PE_DEVICE]
@@ -192,14 +192,6 @@ SumSortOrder=0
 [SfrWindow]
 Show=1 1
 Sort=4 0
-[Breakpoints]
-Bp0=_ "STD_CODE" "0x00001754" 0 0 0 0 "" 0 "" 0
-Bp1=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12\Applications\uTaskerSerialBoot\serial_loader.c}.1891.5" 0 0 0 0 "" 0 "" 0
-Bp2=_ "STD_CODE" "0x00015CEE" 0 0 0 0 "" 0 "" 0
-Bp3=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12\Applications\uTaskerSerialBoot\usb_device_loader.c}.2709.40" 0 0 0 0 "" 0 "" 0
-Bp4=_ "STD_CODE" "0x00001388" 0 0 0 0 "" 0 "" 0
-Bp5=_ "STD_CODE" "0x00001C88" 1 0 0 0 "" 0 "" 0
-Count=6
 [Trace1]
 Enabled=0
 ShowSource=1
@@ -236,6 +228,20 @@ Exclusions=
 Enabled=0
 [CallStackStripe]
 ShowTiming=1
+[Breakpoints2]
+Bp0=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\..\..\Hardware\Kinetis\kinetis_FLASH.h}.1010.5" 0 0 1 "" 0 "" 0
+Bp1=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\serial_loader.c}.1974.5" 0 0 1 "" 0 "" 0
+Count=2
+[Disassemble mode]
+mode=1
+[Breakpoints]
+Bp0=_ "STD_CODE" "0x00001754" 0 0 0 0 "" 0 "" 0
+Bp1=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12\Applications\uTaskerSerialBoot\serial_loader.c}.1895.20" 0 0 0 0 "" 0 "" 0
+Bp2=_ "STD_CODE" "0x00015CEE" 0 0 0 0 "" 0 "" 0
+Bp3=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12\Applications\uTaskerSerialBoot\usb_device_loader.c}.2709.40" 0 0 0 0 "" 0 "" 0
+Bp4=_ "STD_CODE" "0x00001388" 0 0 0 0 "" 0 "" 0
+Bp5=_ "STD_CODE" "0x00001C88" 0 0 0 0 "" 0 "" 0
+Count=6
 [Log file]
 LoggingEnabled=_ 0
 LogFile=_ ""
@@ -243,12 +249,6 @@ Category=_ 0
 [TermIOLog]
 LoggingEnabled=_ 0
 LogFile=_ ""
-[Disassemble mode]
-mode=1
-[Breakpoints2]
-Bp0=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\..\..\Hardware\Kinetis\kinetis_FLASH.h}.1010.5" 0 0 1 "" 0 "" 0
-Bp1=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\serial_loader.c}.1974.5" 0 0 1 "" 0 "" 0
-Count=2
 [Aliases]
 Count=0
 SuppressDialog=0

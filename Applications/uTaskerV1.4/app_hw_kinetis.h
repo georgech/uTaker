@@ -1490,7 +1490,7 @@
     #endif
 #endif
 
-#define SUPPORT_TIMER                                                    // support hardware timer interrupt configuration (FlexTimer or TPM)
+//#define SUPPORT_TIMER                                                  // support hardware timer interrupt configuration (FlexTimer or TPM)
   //#define SUPPORT_CAPTURE                                              // support capture mode of operation
 
 #if defined KINETIS_KL || defined KINETIS_K66
@@ -2501,7 +2501,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 
 // ADC
 //
-//#define SUPPORT_ADC                                                    // {1}
+#define SUPPORT_ADC                                                      // {1}
 #define ADC_REFERENCE_VOLTAGE                      3300                  // ADC uses 3.3V reference
 #define ADC_SIM_STEP_SIZE                          200                   // 200mV steps when simulating
 

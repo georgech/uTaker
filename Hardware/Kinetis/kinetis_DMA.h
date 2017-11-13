@@ -621,7 +621,7 @@ extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned char ucDmaT
         }
         #endif
     }
-        #if !defined KINETIS_KL28 && !defined KINETIS_KL82               // not yet supported
+        #if !defined TRGMUX_AVAILABLE && !defined KINETIS_KL82               // not supported by KL82
     else if (DMAMUX0_DMA0_CHCFG_SOURCE_PIT1 == ucDmaTriggerSource) {
         if (ucDMA_channel != 1) {
             _EXCEPTION("PIT1 trigger only operates on DMA channel 1!!");

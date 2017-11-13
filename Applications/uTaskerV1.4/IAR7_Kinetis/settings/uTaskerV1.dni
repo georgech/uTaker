@@ -1,5 +1,5 @@
 [DebugChecksum]
-Checksum=1868027811
+Checksum=1668016328
 [DisAssemblyWindow]
 NumStates=_ 1
 State 1=_ 1
@@ -61,7 +61,7 @@ OnlineReset=Software
 PrevWtdReset=System
 LeaveRunning=0
 [PlDriver]
-MemConfigValue=D:\Programs\IAR Systems\Embedded Workbench 7.5\arm\CONFIG\debugger\NXP\MKE15Z256xxx7.ddf
+MemConfigValue=D:\Programs\IAR Systems\Embedded Workbench 7.5\arm\CONFIG\debugger\NXP\MKL28Z512xxx7.ddf
 FirstRun=0
 [ArmDriver]
 EnableCache=1
@@ -88,23 +88,23 @@ FREQ_TRACELINK=_ "3"
 FREQ_LIGHTNING=_ "1"
 FREQ_OPENSDA=_ "0"
 RESET_DELAY=_ "0"
-PORT=_ "181"
-PORT_NAME_STRING=_ "40B7DE09"
-interface_selection=_ "7"
+PORT=_ "21"
+PORT_NAME_STRING=_ "PE5655870"
+interface_selection=_ "1"
 SHOWDIALOG=_ "1"
 TraceLink_MaxBufferSize=_ "1"
 [PE_STORED_DEVICES]
-device0=_ "NXP_K6x_K61FN1M0M15"
-device1=_ "NXP_KEx_KE06Z128M4"
-device2=_ "NXP_KL2x_KL27Z64M4"
-device3=_ "NXP_KL0x_KL03Z32M4"
-device4=_ "NXP_K2x_K22FN512M12"
+device0=_ "NXP_KL2x_KL27Z64M4"
+device1=_ "NXP_KL0x_KL03Z32M4"
+device2=_ "NXP_K2x_K22FN512M12"
+device3=_ "NXP_KEx_S9KEAZN32M4"
+device4=_ "NXP_KL2x_KL28Z512M7"
 [PE_PEDEBUG]
-CURRENTDEVICE=_ "NXP_K2x_K22FN512M12"
+CURRENTDEVICE=_ "NXP_KL2x_KL28Z512M7"
 ERASE_PROGRAM_WITHOUT_ASKING=_ "1"
 CURRENTMODE=_ "4"
 [PE_DEVICE]
-CHIPMODE=_ "NXP_K2x_K22FN512M12"
+CHIPMODE=_ "NXP_KL2x_KL28Z512M7"
 [PE_SETTINGS]
 MEMORYSTART1=_ "0"
 MEMORYSTART2=_ "0"
@@ -203,14 +203,6 @@ EventEXC=0
 EventFOLD=0
 EventLSU=0
 EventSLEEP=0
-[Breakpoints]
-Bp0=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12_master\uTasker\Tty_drv.c}.264.17" 0 0 0 0 "" 0 "" 0
-Bp1=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12_master\uTasker\Tty_drv.c}.245.9" 0 0 0 0 "" 0 "" 0
-Bp2=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12_master\uTasker\Tty_drv.c}.539.5" 0 0 0 0 "" 0 "" 0
-Bp3=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12_master\Hardware\Kinetis\kinetis.c}.2079.5" 1 0 0 0 "" 0 "" 0
-Bp4=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12_master\Hardware\Kinetis\kinetis_RTC.h}.80.5" 1 0 0 0 "" 0 "" 0
-Bp5=_ "STD_CODE" "0x00001964" 0 0 0 0 "" 0 "" 0
-Count=6
 [struct_types]
 Fmt0=RTC_SETUP-ulLocalUTC	4	0
 Fmt1=TTIMETABLE-taskDelay	4	0
@@ -227,23 +219,6 @@ Fmt1={W}1:ulLastCapture	4	4
 [Trace1]
 Enabled=0
 ShowSource=1
-[Disassemble mode]
-mode=3
-[Breakpoints2]
-Bp0=_ 1 "EMUL_CODE" "0x00004E10" 0 0 1 "" 0 "" 0
-Bp1=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\..\..\Hardware\Kinetis\kinetis_ENET.h}.966.5" 0 0 1 "" 0 "" 0
-Bp2=_ 1 "EMUL_CODE" "0x00003EC4" 0 0 1 "" 0 "" 0
-Count=3
-[Log file]
-LoggingEnabled=_ 0
-LogFile=_ ""
-Category=_ 0
-[TermIOLog]
-LoggingEnabled=_ 0
-LogFile=_ ""
-[Aliases]
-Count=0
-SuppressDialog=0
 [DriverProfiling]
 Enabled=0
 Mode=1
@@ -254,3 +229,32 @@ Exclusions=
 Enabled=0
 [CallStackStripe]
 ShowTiming=1
+[Breakpoints2]
+Bp0=_ 0 "EMUL_CODE" "0x00004E10" 0 0 1 "" 0 "" 0
+Bp1=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\..\..\Hardware\Kinetis\kinetis_ENET.h}.966.5" 0 0 1 "" 0 "" 0
+Bp2=_ 0 "EMUL_CODE" "0x00003EC4" 0 0 1 "" 0 "" 0
+Count=3
+[Log file]
+LoggingEnabled=_ 0
+LogFile=_ ""
+Category=_ 0
+[TermIOLog]
+LoggingEnabled=_ 0
+LogFile=_ ""
+[Disassemble mode]
+mode=3
+[Breakpoints]
+Bp0=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12_master\uTasker\Tty_drv.c}.264.17" 0 0 0 0 "" 0 "" 0
+Bp1=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12_master\uTasker\Tty_drv.c}.245.9" 0 0 0 0 "" 0 "" 0
+Bp2=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12_master\uTasker\Tty_drv.c}.539.5" 0 0 0 0 "" 0 "" 0
+Bp3=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12_master\Hardware\Kinetis\kinetis_RTC.h}.183.5" 0 0 0 0 "" 0 "" 0
+Bp4=_ "STD_CODE" "0x00001964" 0 0 0 0 "" 0 "" 0
+Bp5=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12_master\Applications\uTaskerV1.4\application.c}.635.9" 0 0 0 0 "" 0 "" 0
+Bp6=_ "STD_CODE" "0x0000089C" 0 0 0 0 "" 0 "" 0
+Bp7=_ "STD_CODE" "0x00001B78" 0 0 0 0 "" 0 "" 0
+Bp8=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12_master\Hardware\Kinetis\kinetis_ADC.h}.414.25" 1 0 0 0 "" 0 "" 0
+Bp9=_ "STD_CODE" "0x00001B82" 0 0 0 0 "" 0 "" 0
+Count=10
+[Aliases]
+Count=0
+SuppressDialog=0

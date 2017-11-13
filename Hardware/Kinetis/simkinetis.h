@@ -1250,9 +1250,19 @@ typedef struct stKINETIS_LLWU                                            // {6}
 
 typedef struct stKINETIS_PMC
 {
-unsigned char PMC_LVDSC1;
-unsigned char PMC_LVDSC2;
-unsigned char PMC_REGSC;
+#if defined KINETIS_KL28
+    unsigned long PMC_VERID;
+    unsigned long PMC_PARAM;
+    unsigned long PMC_LVDSC1;
+    unsigned long PMC_LVDSC2;
+    unsigned long PMC_REGSC;
+    unsigned long ulRes0[8];
+    unsigned long PMC_HVDSC1;
+#else
+    unsigned char PMC_LVDSC1;
+    unsigned char PMC_LVDSC2;
+    unsigned char PMC_REGSC;
+#endif
 } 
 KINETIS_PMC;
 
@@ -2264,11 +2274,11 @@ typedef struct stKINETIS_PCC2
     unsigned long SCG_SOSCCSR;
     unsigned long SCG_SOSCDIV;
     unsigned long SCG_SOSCCFG;
-    unsigned long ulRes2[62];
+    unsigned long ulRes2[61];
     unsigned long SCG_SIRCCSR;
     unsigned long SCG_SIRCDIV;
     unsigned long SCG_SIRCCFG;
-    unsigned long ulRes3[62];
+    unsigned long ulRes3[61];
     unsigned long SCG_FIRCCSR;
     unsigned long SCG_FIRCDIV;
     unsigned long SCG_FIRCCFG;

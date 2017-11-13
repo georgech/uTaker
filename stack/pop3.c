@@ -185,6 +185,7 @@ static int fnPOP3Listener(USOCKET Socket, unsigned char ucEvent, unsigned char *
             return APP_REQUEST_CLOSE;
         }
         // fall through intentional
+        //
     case TCP_EVENT_CLOSED:
     case TCP_EVENT_CLOSE:
         return (fnSetNextPOP_state(POP_STATE_CLOSED));
@@ -193,7 +194,7 @@ static int fnPOP3Listener(USOCKET Socket, unsigned char ucEvent, unsigned char *
         return (fnRegenerate() > 0);
 
     case TCP_EVENT_DATA:                                                 // we have new receive data
-        if (ucUnacked) {
+        if (ucUnacked != 0) {
             return -1;                                                   // ignore if we have unacked data
         }
         if (usPortLen < 3) {
@@ -393,7 +394,7 @@ static int fnHandleData(unsigned char *ptrData, unsigned short usDataLength)
                             ptrEnd++;
                         }
                         if ((ptr = fnUserCallback(POP3_RX_SUBJECT, (unsigned char *)ptr)) == 0) {
-                            return (fnSetNextPOP_state(POP_STATE_QUIT_SENT)); // application doesn't accept the subject so quite
+                            return (fnSetNextPOP_state(POP_STATE_QUIT_SENT)); // application doesn't accept the subject so quit
                         }
                     }
                     if (0 == ptr) {
@@ -418,7 +419,7 @@ static int fnHandleData(unsigned char *ptrData, unsigned short usDataLength)
                 }
 
                 if (ucEvent == POP3_RX_MESSAGE_END) {
-                    return (fnSetNextPOP_state(POP_STATE_QUIT_SENT));    // Email has been completely received so we can close the connection
+                    return (fnSetNextPOP_state(POP_STATE_QUIT_SENT));    // email has been completely received so we can close the connection
                 }
             }
         }                                                                // else we assume '-' negative response                                                                         

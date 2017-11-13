@@ -51,6 +51,9 @@ typedef struct stMQTT_CONTROL_PACKET_HEADER {
 
 #define MQTT_CONTROL_PACKET_FLAG_RETAIN       0x01                       // only used by publish control packet - publish retain flag
 #define MQTT_CONTROL_PACKET_FLAG_QoS          0x06                       // only used by publish control packet - publish quality of service mask
+#define MQTT_CONTROL_PACKET_FLAG_QoS_0        0x00                       // publish quality of service level 0 (at most once delivery)
+#define MQTT_CONTROL_PACKET_FLAG_QoS_1        0x02                       // publish quality of service level 1 (at least once delivery)
+#define MQTT_CONTROL_PACKET_FLAG_QoS_2        0x04                       // publish quality of service level 2 (exactly once delivery)
 #define MQTT_CONTROL_PACKET_FLAG_DUP          0x08                       // only used by publish control packet - duplicate delivery of a publish control packet
 
 #define MQTT_PROTOCOL_LEVEL                   4                          // version 3.1.1
@@ -63,42 +66,51 @@ typedef struct stMQTT_CONTROL_PACKET_HEADER {
 #define MQTT_CONNECT_FLAG_USER_NAME_FLAG      0x80
 
 
-#define MQTT_STATE_CLOSED            0
-#define MQTT_STATE_OPEN_REQUESTED    1
-#define MQTT_STATE_OPEN_SENT         2
-#define MQTT_STATE_CONNECTION_OPENED 3
-#define MQTT_STATE_SUBSCRIBE         4
-#define MQTT_STATE_SUBSCRIBED        5
-#define MQTT_STATE_PUBLISH           6
+#define MQTT_STATE_CLOSED                     0x00
+#define MQTT_STATE_OPEN_REQUESTED             0x11
+#define MQTT_STATE_OPEN_SENT                  0x21
+#define MQTT_STATE_CONNECTION_OPENED          0x31
+#define MQTT_STATE_SUBSCRIBE                  0x41
+#define MQTT_STATE_SUBSCRIBED                 0x50
+#define MQTT_STATE_PUBLISH                    0x61
+#define MQTT_STATE_PUBLISH_RELEASE            0x71
+#define MQTT_STATE_CONNECTED_IDLE             0x80
+#define MQTT_STATE_CLOSING                    0x91
 
 
 static USOCKET        MQTT_TCP_socket = -1;
 static unsigned char  ucMQTT_ip_address[IPV4_LENGTH] = { 0 };
 static unsigned char  ucMQTT_state = MQTT_STATE_CLOSED;
+static unsigned short usPacketIdentifier = 1;
 
 static int  fnMQTTListener(signed char cSocket, unsigned char ucEvent, unsigned char *ucIp_Data, unsigned short usPortLen);
 static int  fnSetNextMQTT_state(unsigned char ucNextState);
 static void fnMQTT_error(unsigned char ucError);
 
-static unsigned char cucProtocolNameMQTT[] = { 0x00, 0x04,                // length
-                                               'M', 'Q', 'T', 'T'         // name
+static unsigned char cucProtocolNameMQTT[] = { 0x00, 0x04,               // length
+                                               'M', 'Q', 'T', 'T'        // name
 };
 
+#define PUBLISH_QoS_LEVEL          MQTT_CONTROL_PACKET_FLAG_QoS_2        // option
+//#define SUBSCRIBE_QoS_LEVEL        MQTT_CONTROL_PACKET_FLAG_QoS_2        // option
 
-#define MQTT_CLIENT_TIMEOUT        (DELAY_LIMIT)(20 * SEC)
+#define MQTT_CLIENT_TIMEOUT        (DELAY_LIMIT)(60 * SEC)
 #define E_MQTT_TIMEOUT             1
-#define E_MQTT_POLL_TIME           2
 
 
-static CHAR *(*fnUserCallback)(unsigned char, unsigned char*) = 0;
+static unsigned short (*fnUserCallback)(unsigned char, unsigned char *, unsigned char *) = 0;
 static unsigned short fnRegenerate(void);
 static int  fnHandleData(unsigned char *ptrData, unsigned short usDataLength);
 
 
 static unsigned char  ucUnacked = 0;
-static unsigned short usMsgCnt;
+static unsigned char  ucQueueFlags = 0;
+#define MQTT_QUEUE_CLOSE      0x01
+#define MQTT_QUEUE_PUBLISH    0x02
 
 
+// Not yet used
+//
 extern void fnMQTT(TTASKTABLE *ptrTaskTable)
 {    
     QUEUE_HANDLE PortIDInternal = ptrTaskTable->TaskID;                  // queue ID for task input
@@ -107,12 +119,7 @@ extern void fnMQTT(TTASKTABLE *ptrTaskTable)
     if (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH) != 0) {    // check input queue
         if (ucInputMessage[MSG_SOURCE_TASK] == TIMER_EVENT) {
             if (E_MQTT_TIMEOUT == ucInputMessage[MSG_TIMER_EVENT]) {
-              //fnMQTT_error(ERROR_POP3_TIMEOUT);
-            }
-            else {                                                   // assume E_POP_POLL_TIME
-                //  if (uMemcmp(ucMQTT_ip_address, cucNullMACIP, IPV4_LENGTH) != 0) {
-                //    fnConnectPOP3(ucPOP3_ip_address);                // check our mailbox to see whether we have post
-                //}
+              //fnMQTT_error(ERROR_MQTT_TIMEOUT);
             }
         }
     }
@@ -120,7 +127,7 @@ extern void fnMQTT(TTASKTABLE *ptrTaskTable)
 
 // The user calls this to initiate a connection to the MQTT server/broker
 //
-extern int fnConnectMQTT(unsigned char *ucIP, CHAR *(*fnCallback)(unsigned char, unsigned char *))
+extern int fnConnectMQTT(unsigned char *ucIP, unsigned short(*fnCallback)(unsigned char, unsigned char *, unsigned char *))
 {
     if (MQTT_TCP_socket < 0) {                                           // we have no socket - or called before initialisation complete    
         if ((MQTT_TCP_socket = fnGetTCP_Socket(TOS_MINIMISE_DELAY, TCP_DEFAULT_TIMEOUT, fnMQTTListener)) < 0) {
@@ -138,38 +145,64 @@ extern int fnConnectMQTT(unsigned char *ucIP, CHAR *(*fnCallback)(unsigned char,
     return 0;                                                            // OK    
 }
 
+// The user calls this to disconnect from the MQTT server/broker
+//
+extern int fnDisconnectMQTT(void)
+{
+    if ((MQTT_TCP_socket < 0) || (ucMQTT_state < MQTT_STATE_CONNECTION_OPENED)) { // we have no socket - or called when not connected
+        return ERROR_MQTT_NOT_READY;
+    }
+    ucQueueFlags = MQTT_QUEUE_CLOSE;
+    if ((ucMQTT_state & 0x01) == 0) {                                    // no busy with other commands (otherwise it will be exected at next possible opportunity)
+        fnSetNextMQTT_state(MQTT_STATE_CONNECTED_IDLE);
+    }
+    return 0;                                                            // OK    
+}
+
+extern int fnPublishMQTT(void)
+{
+    if ((MQTT_TCP_socket < 0) || (ucMQTT_state < MQTT_STATE_CONNECTION_OPENED)) { // we have no socket - or called when not connected
+        return ERROR_MQTT_NOT_READY;
+    }
+    ucQueueFlags |= MQTT_QUEUE_PUBLISH;
+    if ((ucMQTT_state & 0x01) == 0) {                                    // no busy with other commands (otherwise it will be exected at next possible opportunity)
+        fnSetNextMQTT_state(MQTT_STATE_PUBLISH);
+    }
+    return 0;                                                            // OK    
+}
 
 static int fnSetNextMQTT_state(unsigned char ucNextState)
 {
-    unsigned short ucSent = 0;
-
     switch (ucMQTT_state = ucNextState) {
       case MQTT_STATE_OPEN_REQUESTED:
-          fnTCP_close(MQTT_TCP_socket);                                   // release existing connection
-          if (fnTCP_Connect(MQTT_TCP_socket, ucMQTT_ip_address, MQTT_PORT, 0, 0) >= 0) {
+          fnTCP_close(MQTT_TCP_socket);                                  // release existing connection
+          if (fnTCP_Connect(MQTT_TCP_socket, ucMQTT_ip_address, MQTT_PORT, 0, 0) >= 0) { // start connection with MQTT broker
               ucMQTT_state = MQTT_STATE_OPEN_SENT;
               ucUnacked = 0;
-              return 1;
+              return 1;                                                  // connection request sent
           }
-          return 0;
-
-      case MQTT_STATE_CLOSED:
-          fnTCP_close(MQTT_TCP_socket);
-          uTaskerStopTimer(OWN_TASK);
+          break;
+      case MQTT_STATE_CLOSED:                                            // TCP connection has been closed
           ucUnacked = 0;
-          fnUserCallback(MQTT_CONNECTION_CLOSED, 0);
-          return APP_REQUEST_CLOSE;
-
+          ucQueueFlags = 0;
+          break;
       case MQTT_STATE_CONNECTION_OPENED:
       case MQTT_STATE_SUBSCRIBE:
       case MQTT_STATE_PUBLISH:
-          ucSent = fnRegenerate();                                       // send user name / password etc.
+      case MQTT_STATE_PUBLISH_RELEASE:
+          return (fnRegenerate() > 0);                                   // send or repeat transmission
+      case MQTT_STATE_CONNECTED_IDLE:
+          if ((ucQueueFlags & MQTT_QUEUE_CLOSE) != 0) {                  // if a close has been queued
+              ucQueueFlags = 0;
+              if (fnTCP_close(MQTT_TCP_socket) != 0) {                   // command close of data connection
+                  return APP_REQUEST_CLOSE;
+              }
+          }
           break;
       default:
           break;
     }
-  //uTaskerMonoTimer(OWN_TASK, MQTT_CLIENT_TIMEOUT, E_POP_TIMEOUT);      // monitor connection
-    return (ucSent > 0);
+    return (0);
 }
 
 // local listener to TCP MQTT port
@@ -182,35 +215,36 @@ static int fnMQTTListener(USOCKET Socket, unsigned char ucEvent, unsigned char *
 
     switch (ucEvent) {
     case TCP_EVENT_ARP_RESOLUTION_FAILED:
-        fnMQTT_error(ERROR_POP3_ARP_FAIL);                               // inform client of failure - couldn't resolve the address..
+        fnMQTT_error(ERROR_MQTT_ARP_FAIL);                               // inform client of failure - couldn't resolve the address..
         break;
 
-    case TCP_EVENT_CONNECTED:                                            // tehh broker has acepted the TCP connection request
+    case TCP_EVENT_CONNECTED:                                            // the broker has accepted the TCP connection request
         if (ucMQTT_state == MQTT_STATE_OPEN_SENT) {
             return (fnSetNextMQTT_state(MQTT_STATE_CONNECTION_OPENED));
         }
         break;
 
-    case TCP_EVENT_ACK:
-        ucUnacked = 0;
+    case TCP_EVENT_ACK:                                                  // last TCP transmission has been acknowledged
+        ucUnacked = 0;                                     
+        break;
+
+    case TCP_EVENT_CLOSE:                                                // broker is requesting a close
+        fnSetNextMQTT_state(MQTT_STATE_CLOSING);
         break;
 
     case TCP_EVENT_ABORT:
-        if (ucMQTT_state > MQTT_STATE_CLOSED) {
-            fnMQTT_error(ERROR_POP3_HOST_CLOSED);
-            return APP_REQUEST_CLOSE;
-        }
-        // Fall through intentional
-        //
+        fnMQTT_error(ERROR_MQTT_HOST_CLOSED);
+        break;
     case TCP_EVENT_CLOSED:
-    case TCP_EVENT_CLOSE:
-        return (fnSetNextMQTT_state(MQTT_STATE_CLOSED));
+        fnSetNextMQTT_state(MQTT_STATE_CLOSED);
+        fnUserCallback(MQTT_CONNECTION_CLOSED, 0, 0);
+        break;
 
-    case TCP_EVENT_REGENERATE:                                           // we must repeat
+    case TCP_EVENT_REGENERATE:                                           // we must repeat the previous transmission
         return (fnRegenerate() > 0);
 
     case TCP_EVENT_DATA:                                                 // we have new receive data
-        if (ucUnacked) {
+        if (ucUnacked != 0) {
             return -1;                                                   // ignore if we have unacked data
         }
         return (fnHandleData(ucIp_Data, usPortLen));                     // interpret the data
@@ -238,20 +272,44 @@ static unsigned short fnAddMQTT_remaining_length(unsigned char *ptrEnd, unsigned
 }
 
 
+
 #define MQTT_MESSAGE_LEN       128
+
+unsigned char *fnMQTTUserString(unsigned char *ptrMQTT_packet, unsigned char ucEvent, unsigned char *ptrReference)
+{
+    unsigned char *ptrStringLength = ptrMQTT_packet;
+    unsigned short usStringLength;
+    ptrMQTT_packet += 2;                                                 // leave space for the string length
+    usStringLength = fnUserCallback(ucEvent, ptrReference, ptrMQTT_packet); // request user to add the string
+    *ptrStringLength++ = (unsigned char)(usStringLength >> 8);           // insert the length before the string content
+    *ptrStringLength++ = (unsigned char)(usStringLength);
+    return (ptrMQTT_packet + usStringLength);
+}
+
+unsigned char *fnInsertPacketIdentfier(unsigned char *ptrMQTT_packet, unsigned char ucControlPacketType)
+{
+    *ptrMQTT_packet++ = (unsigned char)(usPacketIdentifier >> 8);
+    *ptrMQTT_packet++ = (unsigned char)(usPacketIdentifier);
+    return ptrMQTT_packet;
+}
+
+static void fnIncrementtPacketIdentfier(unsigned char ucControlPacketType)
+{
+    if (++usPacketIdentifier == 0) {                                     // avoid invalid value of zero
+        usPacketIdentifier = 1;
+    }
+}
+
 
 static unsigned short fnRegenerate(void)
 {
     unsigned char ucMQTTData[MIN_TCP_HLEN + MQTT_MESSAGE_LEN];
     unsigned short usDataLen = 5;                                        // general length of strings
     unsigned char *ptrMQTT_packet = (unsigned char *)&ucMQTTData[MIN_TCP_HLEN];
-    CHAR *ptrUserInfo;
     unsigned char *ptrRemainingLength;
-    unsigned char *ptrStringLength;
-    unsigned short usStringLength;
 
     switch (ucMQTT_state) {                                              // resent last packet
-    case MQTT_STATE_CONNECTION_OPENED:
+    case MQTT_STATE_CONNECTION_OPENED:                                   // client to broker after establishing the TCP connection
         // The TCP connection has been established so we now request an MQTT connection
         //
         *ptrMQTT_packet++ = (MQTT_CONTROL_PACKET_TYPE_CONNECT | 0);      // flags are not used by the connection connection request
@@ -264,72 +322,58 @@ static unsigned short fnRegenerate(void)
         *ptrMQTT_packet++ = 0;
         // Payload
         //
-        ptrUserInfo = fnUserCallback(MQTT_CLIENT_IDENTIFIER, 0);         // callback to get the client idetifier (should normally contain only 0..9, a..z, A..Z characters)
-        ptrStringLength = ptrMQTT_packet;
-        ptrMQTT_packet += 2;
-        ptrMQTT_packet = (unsigned char *)uStrcpy((CHAR *)ptrMQTT_packet, ptrUserInfo);
-        usStringLength = (ptrMQTT_packet - (ptrStringLength + 2));
-        *ptrStringLength++ = (unsigned char)(usStringLength >> 8);
-        *ptrStringLength++ = (unsigned char)(usStringLength);
-        usDataLen = fnAddMQTT_remaining_length(ptrMQTT_packet, (unsigned char *)&ucMQTTData[MIN_TCP_HLEN], MQTT_MESSAGE_LEN, ptrRemainingLength);
+        ptrMQTT_packet = fnMQTTUserString(ptrMQTT_packet, MQTT_CLIENT_IDENTIFIER, 0); // callback to get the client idetifier (should normally contain only 0..9, a..z, A..Z characters)
         break;
 
     case MQTT_STATE_SUBSCRIBE:
-        *ptrMQTT_packet++ = 0x82;     // temp cheat
-        *ptrMQTT_packet++ = 0x0d;
-        *ptrMQTT_packet++ = 0x00;
-        *ptrMQTT_packet++ = 0x01;
-        *ptrMQTT_packet++ = 0x00;
-        *ptrMQTT_packet++ = 0x08;
-        *ptrMQTT_packet++ = 0x73;
-        *ptrMQTT_packet++ = 0x75;
-        *ptrMQTT_packet++ = 0x62;
-        *ptrMQTT_packet++ = 0x74;
-        *ptrMQTT_packet++ = 0x6f;
-        *ptrMQTT_packet++ = 0x70;
-        *ptrMQTT_packet++ = 0x69;
-        *ptrMQTT_packet++ = 0x63;
-        *ptrMQTT_packet++ = 0x01;
-        usDataLen = 15;
+        *ptrMQTT_packet++ = (MQTT_CONTROL_PACKET_TYPE_SUBSCRIBE | MQTT_CONTROL_PACKET_FLAG_QoS_1); // the QoS is always 1 for a subscribe
+        ptrRemainingLength = ptrMQTT_packet++;                           // the location where the remaining length is to be added
+        ptrMQTT_packet = fnInsertPacketIdentfier(ptrMQTT_packet, (MQTT_CONTROL_PACKET_TYPE_SUBSCRIBE >> 4));
+        // Topic filter
+        //
+        ptrMQTT_packet = fnMQTTUserString(ptrMQTT_packet, MQTT_PUBLISH_TOPIC_FILTER, 0); // request the topic filter from the user
+        *ptrMQTT_packet++ = (MQTT_CONTROL_PACKET_FLAG_QoS_1 >> 1);
         break;
 
-    case MQTT_STATE_PUBLISH:
-        *ptrMQTT_packet++ = 0x34;     // temp cheat
-        *ptrMQTT_packet++ = 0x11;
-        *ptrMQTT_packet++ = 0x00;
-        *ptrMQTT_packet++ = 0x09;
-        *ptrMQTT_packet++ = 0x48;
-        *ptrMQTT_packet++ = 0x53;
-        *ptrMQTT_packet++ = 0x4c;
-        *ptrMQTT_packet++ = 0x55;
-        *ptrMQTT_packet++ = 0x2c;
-        *ptrMQTT_packet++ = 0x74;
-        *ptrMQTT_packet++ = 0x65;
-        *ptrMQTT_packet++ = 0x73;
-        *ptrMQTT_packet++ = 0x74;
-        *ptrMQTT_packet++ = 0x00;
-        *ptrMQTT_packet++ = 0x02;
-        *ptrMQTT_packet++ = 0x61;
-        *ptrMQTT_packet++ = 0x62;
-        *ptrMQTT_packet++ = 0x63;
-        *ptrMQTT_packet++ = 0x64;
-        usDataLen = 19;
+    case MQTT_STATE_PUBLISH:                                             // client to broker or broker to client - transport an application message
+        *ptrMQTT_packet++ = (MQTT_CONTROL_PACKET_TYPE_PUBLISH | PUBLISH_QoS_LEVEL);
+        ptrRemainingLength = ptrMQTT_packet++;                           // the location where the remaining length is to be added
+        // Topic name
+        //
+        ptrMQTT_packet = fnMQTTUserString(ptrMQTT_packet, MQTT_PUBLISH_TOPIC, 0); // request the topic from the user
+
+        // Packet identifier - only present when QoS 1 or 2 is used! Must be non-zero - the respone needs to match!
+        //
+    #if PUBLISH_QoS_LEVEL > MQTT_CONTROL_PACKET_FLAG_QoS_0
+        ptrMQTT_packet = fnInsertPacketIdentfier(ptrMQTT_packet, (MQTT_CONTROL_PACKET_TYPE_PUBLISH >> 4));
+    #endif
+
+        // Application data
+        //
+        ptrMQTT_packet += fnUserCallback(MQTT_PUBLISH_DATA, 0, ptrMQTT_packet); // request user to insert the message content - can be any format and length, including zero length
         break;
+    #if PUBLISH_QoS_LEVEL == MQTT_CONTROL_PACKET_FLAG_QoS_2
+    case MQTT_STATE_PUBLISH_RELEASE:
+        *ptrMQTT_packet++ = (MQTT_CONTROL_PACKET_TYPE_PUBREL | MQTT_CONTROL_PACKET_FLAG_QoS_1);
+        ptrRemainingLength = ptrMQTT_packet++;                           // the location where the remaining length is to be added
+        ptrMQTT_packet = fnInsertPacketIdentfier(ptrMQTT_packet, (MQTT_CONTROL_PACKET_TYPE_PUBLISH >> 4));
+        break;
+    #endif
     default:
         return 0;
     }
-
+    usDataLen = fnAddMQTT_remaining_length(ptrMQTT_packet, (unsigned char *)&ucMQTTData[MIN_TCP_HLEN], MQTT_MESSAGE_LEN, ptrRemainingLength);
     return (fnSendTCP(MQTT_TCP_socket, ucMQTTData, usDataLen, TCP_FLAG_PUSH) > 0); // send data
 }
 
-
-
+// Handle receptions from the broker
+//
 static int fnHandleData(unsigned char *ptrData, unsigned short usDataLength)
 {
     switch (ucMQTT_state) {
     case MQTT_STATE_CONNECTION_OPENED:
         if ((*ptrData & MQTT_CONTROL_PACKET_TYPE_MASK) == MQTT_CONTROL_PACKET_TYPE_CONNACK) { // the broker is accepting the MQTT connection
-            fnUserCallback(MQTT_CONNACK_RECEIVED, 0);                    // inform the user that the broker has accepted
+            fnUserCallback(MQTT_CONNACK_RECEIVED, 0, 0);                 // inform the user that the broker has accepted
             return (fnSetNextMQTT_state(MQTT_STATE_SUBSCRIBE));          // now subscribe
         }
         else {
@@ -337,12 +381,12 @@ static int fnHandleData(unsigned char *ptrData, unsigned short usDataLength)
         }
         break;
     case MQTT_STATE_SUBSCRIBE:
-        if ((*ptrData & MQTT_CONTROL_PACKET_TYPE_MASK) == MQTT_CONTROL_PACKET_TYPE_SUBACK) { // the broker is acceping the subscription
-            CHAR *message;
+        if ((*ptrData & MQTT_CONTROL_PACKET_TYPE_MASK) == MQTT_CONTROL_PACKET_TYPE_SUBACK) { // the broker is accepting the subscription
+            CHAR *message[10];
+            fnIncrementtPacketIdentfier((MQTT_CONTROL_PACKET_TYPE_SUBSCRIBE >> 4));
             fnSetNextMQTT_state(MQTT_STATE_SUBSCRIBED);
-            message = fnUserCallback(MQTT_SUBACK_RECEIVED, 0);           // inform the user that the broker has accepted
-            if (message != 0) {                                          // user wants to immediately publish a message
-                return (fnSetNextMQTT_state(MQTT_STATE_PUBLISH));
+            if (fnUserCallback(MQTT_SUBACK_RECEIVED, 0, (unsigned char *)message) != 0) { // inform the user that the broker has accepted
+                return (fnSetNextMQTT_state(MQTT_STATE_PUBLISH));        // user wants to immediately publish a message
             }
         }
         else {
@@ -350,16 +394,44 @@ static int fnHandleData(unsigned char *ptrData, unsigned short usDataLength)
         }
         break;
     case MQTT_STATE_PUBLISH:
-        if ((*ptrData & MQTT_CONTROL_PACKET_TYPE_MASK) == MQTT_CONTROL_PACKET_TYPE_PUBREC) { // the broker is acceping to publish
-            CHAR *message;
-            message = fnUserCallback(MQTT_PUBLISH_RECEIVED, 0);          // inform the user that the broker has accepted to publish
-            if (message != 0) {                                          // user wants to immediately publish a new message
-                return (fnSetNextMQTT_state(MQTT_STATE_PUBLISH));
+        if ((*ptrData & MQTT_CONTROL_PACKET_TYPE_MASK) == MQTT_CONTROL_PACKET_TYPE_PUBREC) { // the broker is accepting to publish
+            if (usDataLength == 4) {
+                if (((unsigned char)(usPacketIdentifier >> 8) == *(ptrData + 2)) && (((unsigned char)(usPacketIdentifier) == *(ptrData + 3)))) {
+    #if PUBLISH_QoS_LEVEL == MQTT_CONTROL_PACKET_FLAG_QoS_2
+                    return (fnSetNextMQTT_state(MQTT_STATE_PUBLISH_RELEASE)); // send the third packet of QoS 2 protocol exchange
+    #else
+                    CHAR *message[10];
+                    fnIncrementtPacketIdentfier((MQTT_CONTROL_PACKET_TYPE_PUBLISH >> 4));
+                    if (fnUserCallback(MQTT_PUBLISH_RECEIVED, 0, (unsigned char *)message) != 0) { // inform the user that the broker has accepted to publish
+                        return (fnSetNextMQTT_state(MQTT_STATE_PUBLISH));// user wants to immediately publish a new message
+                    }
+    #endif
+                }
             }
         }
         else {
 
         }
+        break;
+#if PUBLISH_QoS_LEVEL == MQTT_CONTROL_PACKET_FLAG_QoS_2
+    case MQTT_STATE_PUBLISH_RELEASE:
+        if ((*ptrData & MQTT_CONTROL_PACKET_TYPE_MASK) == MQTT_CONTROL_PACKET_TYPE_PUBCOMP) { // the broker is accepting to publish
+            if (usDataLength == 4) {
+                if (((unsigned char)(usPacketIdentifier >> 8) == *(ptrData + 2)) && (((unsigned char)(usPacketIdentifier) == *(ptrData + 3)))) {
+                    CHAR *message[10];
+                    fnIncrementtPacketIdentfier((MQTT_CONTROL_PACKET_TYPE_PUBLISH >> 4));
+                    if (fnUserCallback(MQTT_PUBLISH_RECEIVED, 0, (unsigned char *)message) != 0) { // inform the user that the broker has accepted to publish
+                        return (fnSetNextMQTT_state(MQTT_STATE_PUBLISH));// user wants to immediately publish a new message
+                    }
+                    fnSetNextMQTT_state(MQTT_STATE_CONNECTED_IDLE);
+                }
+            }
+        }
+        else {
+
+        }
+        break;
+#endif  
     }
     return 0;
 }
@@ -368,8 +440,6 @@ static int fnHandleData(unsigned char *ptrData, unsigned short usDataLength)
 static void fnMQTT_error(unsigned char ucError)
 {
     fnSetNextMQTT_state(MQTT_STATE_CLOSED);
-    fnUserCallback(ucError, 0);
+    fnUserCallback(ucError, 0, 0);
 }
-
 #endif
-
