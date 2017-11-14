@@ -779,7 +779,7 @@ INITHW void fnInitHW(void)                                               // perf
 #endif
 #if !defined DEVICE_WITHOUT_DMA && (!defined KINETIS_KL || defined DEVICE_WITH_eDMA)
     #if defined KINETIS_WITH_PCC
-    PCC_DMA0 = PCC_CGC;                                                  // power up the DMA module
+    POWER_UP_ATOMIC(0, DMA0);                                            // power up the DMA module
     #endif
     #if defined DEVICE_WITH_TWO_DMA_GROUPS
     DMA_CR = (DMA_CR_GRP0PRI_0 | DMA_CR_GRP1PRI_1);                      // set the two DMA groups to non-conflicting priorities

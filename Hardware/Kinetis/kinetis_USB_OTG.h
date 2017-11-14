@@ -1053,7 +1053,7 @@ extern void fnConfigUSB(QUEUE_HANDLE Channel, USBTABLE *pars)
             #if USB_CLOCK_SOURCE != 48000000
                 #error "USB clock must be 48MHz in order to use crystal-less mode"
             #endif
-        PCC_USB0FS = PCC_PCS_SCGFIRCLK;                                  // set the source to fast IRC
+        SELECT_PCC_PERIPHERAL_SOURCE(USB0FS, PCC_PCS_SCGFIRCLK);         // set the source to fast IRC
         #else
             #define USB_CLOCK_SOURCE   48000000
         SIM_SOPT2 |= (SIM_SOPT2_USBSRC | SIM_SOPT2_PLLFLLSEL_IRC48M);    // set the source to IRC48M

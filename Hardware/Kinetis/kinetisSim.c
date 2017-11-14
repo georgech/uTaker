@@ -9929,6 +9929,82 @@ extern int fnCheckBitBandPeripheralValue(unsigned long *bit_band_address)
     return ((*(unsigned long *)ulRegAddress & ulBit) != 0);
 }
 
+// Calculate the selected clock speed at a peripheral connected by PCC
+//
+extern unsigned long fnGetPCC_clock(int iReference)
+{
+    unsigned long ulClockSpeed = 0;
+    switch (iReference) {
+    case KINETIS_PERIPHERAL_ADC0:
+        if ((PCC_ADC0 & PCC_CGC) == 0) {
+            return 0;                                                    // clocks to the module are not enabled
+        }
+        switch (PCC_ADC0 & PCC_PCS_MASK) {
+        case PCC_PCS_CLOCK_OFF:
+            return 0;                                                    // no clock source is selected
+        case PCC_PCS_OSCCLK:                                             // system oscillator bus clock
+        case PCC_PCS_SCGIRCLK:                                           // slow IRC clock
+        case PCC_PCS_SCGFIRCLK:                                          // fast IRC clock
+            if ((SCG_FIRCCSR & SCG_FIRCCSR_FIRCEN) == 0) {               // check that the fast IRC is enabled
+                return 0;                                                // no clock source enabled
+            }
+            else {
+                unsigned long ulSourceDivider;
+                switch (SCG_FIRCCFG) {
+                case SCG_FIRCCFG_RANGE_60MHz:
+                    ulClockSpeed = 60000000;
+                    break;
+                case SCG_FIRCCFG_RANGE_56MHz:
+                    ulClockSpeed = 56000000;
+                    break;
+                case SCG_FIRCCFG_RANGE_52MHz:
+                    ulClockSpeed = 52000000;
+                    break;
+                case SCG_FIRCCFG_RANGE_48MHz:
+                    ulClockSpeed = 48000000;
+                    break;
+                default:
+                    _EXCEPTION("Invalid FIRC selected!");
+                    break;
+                }
+                ulSourceDivider = ((SCG_FIRCDIV >> PERIPHERAL_CLOCK_DIV_SHIFT) & 0x7);
+                switch (ulSourceDivider) {
+                case 0:
+                    return 0;                                            // peripheral clock source enabled
+                case 1:                                                  // divide by 1
+                    break;
+                case 2:                                                  // divide by 2
+                    ulClockSpeed /= 2;
+                    break;
+                case 3:                                                  // divide by 4
+                    ulClockSpeed /= 4;
+                    break;
+                case 4:                                                  // divide by 8
+                    ulClockSpeed /= 8;
+                    break;
+                case 5:                                                  // divide by 16
+                    ulClockSpeed /= 16;
+                    break;
+                case 6:                                                  // divide by 32
+                    ulClockSpeed /= 32;
+                    break;
+                case 7:                                                  // divide by 64
+                    ulClockSpeed /= 64;
+                    break;
+                }
+            }
+            break;
+        case PCC_PCS_SCGPCLK:                                            // system PLL clock
+            break;
+        default:
+            _EXCEPTION("Invalid clock source!");
+            break;
+        }
+        break;
+    }
+    return ulClockSpeed;
+}
+
 #if 1 //defined RUN_IN_FREE_RTOS
 extern unsigned long *fnGetRegisterAddress(unsigned long ulAddress)
 {

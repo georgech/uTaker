@@ -1352,6 +1352,14 @@
     #define PRIORITY_EMAC              1
 #endif
 
+// PCC clock matrix
+//
+#if defined KINETIS_WITH_PCC
+    #define LPUART0_PCC_SOURCE     PCC_PCS_SCGFIRCLK
+    #define LPUART1_PCC_SOURCE     PCC_PCS_SCGFIRCLK
+    #define LPUART2_PCC_SOURCE     PCC_PCS_SCGFIRCLK
+#endif
+
 // Define DMA channel use (channels and priorities must be unique for used peripherals) - {12}
 //
 #if defined irq_DMA4_ID

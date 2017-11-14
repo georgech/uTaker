@@ -274,7 +274,7 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
             if ((ADC_DISABLE_ADC & ptrADC_settings->int_adc_mode) != 0) {
                 if (ptrADC_settings->int_adc_controller == 0) {
     #if defined KINETIS_WITH_PCC
-                    PCC_ADC0 &= ~(PCC_CGC);                              // disable clocks to module
+                    PCC_ADC0 &= ~(PCC_CGC | PCC_PCS_MASK);               // disable clocks to module
     #else
                     POWER_DOWN(6, SIM_SCGC6_ADC0);                       // disable clocks to module
     #endif
@@ -282,7 +282,7 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
     #if ADC_CONTROLLERS > 1
                 else if (ptrADC_settings->int_adc_controller == 1) {
         #if defined KINETIS_WITH_PCC
-                    PCC_ADC1 &= ~(PCC_CGC);                              // disable clocks to module
+                    PCC_ADC1 &= ~(PCC_CGC | PCC_PCS_MASK);               // disable clocks to module
         #else
                     POWER_DOWN(3, SIM_SCGC3_ADC1);                       // disable clocks to module
         #endif
@@ -338,16 +338,28 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
                 if ((ptrADC_settings->int_adc_mode & ADC_CONFIGURE_ADC) != 0) { // main configuration is to be performed
                     if (ptrADC_settings->int_adc_controller == 0) {      // ADC0
     #if defined KINETIS_WITH_PCC
-                        PCC_ADC0 |= PCC_PCS_SCGFIRCLK;                   // clock the ADC module from the fast clock (this is not the ADC input clock source)
+                        if ((ptrADC_settings->int_adc_mode & ADC_CFG1_ADICLK_ASY) == ADC_CFG1_ADICLK_ALT) { // if the alternative clock source is selected
+                            SELECT_PCC_PERIPHERAL_SOURCE(ADC0, ADC0_PCC_SOURCE); // select the PCC clock used by ADC0
+                        }
     #endif
                         POWER_UP_ATOMIC(6, ADC0);                        // enable clocks to module
                     }
     #if ADC_CONTROLLERS > 1
                     else if (ptrADC_settings->int_adc_controller == 1) {
+        #if defined KINETIS_WITH_PCC
+                        if ((ptrADC_settings->int_adc_mode & ADC_CFG1_ADICLK_ASY) == ADC_CFG1_ADICLK_ALT) { // if the alternative clock source is selected
+                            SELECT_PCC_PERIPHERAL_SOURCE(ADC1, ADC1_PCC_SOURCE); // select the PCC clock used by ADC1
+                        }
+        #endif
                         POWER_UP_ATOMIC(3, ADC1);                        // enable clocks to module
                     }
         #if ADC_CONTROLLERS > 2
                     else if (ptrADC_settings->int_adc_controller == 2) {
+            #if defined KINETIS_WITH_PCC
+                        if ((ptrADC_settings->int_adc_mode & ADC_CFG1_ADICLK_ASY) == ADC_CFG1_ADICLK_ALT) { // if the alternative clock source is selected
+                            SELECT_PCC_PERIPHERAL_SOURCE(ADC2, ADC2_PCC_SOURCE); // select the PCC clock used by ADC1
+                        }
+            #endif
                         POWER_UP_ATOMIC(6, ADC2);                        // enable clocks to module
                     }
             #if ADC_CONTROLLERS > 3
@@ -358,15 +370,57 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
         #endif
     #endif
                     ptrADC->ADC_CFG1 = (0xff & ptrADC_settings->int_adc_mode);
-    #if defined _WINDOWS
+    #if defined _WINDOWS                                                 // simuation check of ADC clock speed range
                     // Check that the ADC frequency is set to a valid range
                     //
-                    if ((ptrADC->ADC_CFG1 & ADC_CFG1_ADICLK_ASY) <= ADC_CFG1_ADICLK_BUS2) { // clock derived from the bus clock
-                        unsigned long ulADC_clock = BUS_CLOCK;
-                        if ((ptrADC->ADC_CFG1 & ADC_CFG1_ADICLK_BUS2) != 0) {
-                            ulADC_clock /= 2;
+                    {
+                        unsigned long ulADC_clock = 0;
+                        switch (ptrADC->ADC_CFG1 & ADC_CFG1_ADICLK_ASY) {
+                        case ADC_CFG1_ADICLK_BUS:
+                            ulADC_clock = BUS_CLOCK;
+                            break;
+                        case ADC_CFG1_ADICLK_BUS2:
+                            ulADC_clock = (BUS_CLOCK / 2);
+                            break;
+                        case ADC_CFG1_ADICLK_ALT:
+        #if defined KINETIS_WITH_PCC
+                            if (ptrADC_settings->int_adc_controller == 0) {
+                                ulADC_clock = fnGetPCC_clock(KINETIS_PERIPHERAL_ADC0); // get the clock speed that is configured for ADC0 usage
+                            }
+            #if ADC_CONTROLLERS > 1
+                            else if (ptrADC_settings->int_adc_controller == 1) {
+                                ulADC_clock = fnGetPCC_clock(KINETIS_PERIPHERAL_ADC1); // get the clock speed that is configured for ADC1 usage
+                            }
+            #endif
+            #if ADC_CONTROLLERS > 2
+                            else if (ptrADC_settings->int_adc_controller == 2) {
+                                ulADC_clock = fnGetPCC_clock(KINETIS_PERIPHERAL_ADC2); // get the clock speed that is configured for ADC1 usage
+                            }
+            #endif
+        #else
+                            _EXCEPTION("Unsupported!");
+        #endif
+                            break;
+                        case ADC_CFG1_ADICLK_ASY:
+                            if ((ptrADC->ADC_CFG1 & ADC_CFG1_ADLPC) != 0) { // low power configuration is active (reduced power at the expense of the clock speed)
+                                if ((ptrADC->ADC_CFG1 & ADC_CFG1_ADLPC) != 0) { // high speed configuration
+                                    ulADC_clock = 4000000;               // 4.0MHz typical ADC clock speed (range 2.4MHz..6.1MHz)
+                                }
+                                else {                                   // normal conversion sequence
+                                    ulADC_clock = 2400000;               // 2.4MHz typical ADC clock speed (range 1.2MHz..3.9MHz)
+                                }
+                            }
+                            else {                                       // low power configuration is not active
+                                if ((ptrADC->ADC_CFG1 & ADC_CFG1_ADLPC) != 0) { // high speed configuration
+                                    ulADC_clock = 6200000;               // 6.2MHz typical ADC clock speed (range 4.4MHz..9.5MHz)
+                                }
+                                else {                                   // normal conversion sequence
+                                    ulADC_clock = 5200000;               // 5.2MHz typical ADC clock speed (range 3.0MHz..7.3MHz)
+                                }
+                            }
+                            break;
                         }
-                        ulADC_clock >>= ((ADC_CFG1_ADIV_8 & ptrADC->ADC_CFG1) >> 5);
+                        ulADC_clock >>= ((ADC_CFG1_ADIV_8 & ptrADC->ADC_CFG1) >> 5);                  
                         switch (ptrADC->ADC_CFG1 & ADC_CFG1_MODE_MASK) {
                         case ADC_CFG1_MODE_8:
                         case ADC_CFG1_MODE_10:

@@ -92,7 +92,6 @@ static unsigned char cucProtocolNameMQTT[] = { 0x00, 0x04,               // leng
 };
 
 #define PUBLISH_QoS_LEVEL          MQTT_CONTROL_PACKET_FLAG_QoS_2        // option
-//#define SUBSCRIBE_QoS_LEVEL        MQTT_CONTROL_PACKET_FLAG_QoS_2        // option
 
 #define MQTT_CLIENT_TIMEOUT        (DELAY_LIMIT)(60 * SEC)
 #define E_MQTT_TIMEOUT             1

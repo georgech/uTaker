@@ -32,11 +32,6 @@
 #if defined LPITS_AVAILABLE                                              // {9}
     #define _PITS_AVAILABLE  LPIT_CHANNELS
     #define irq_PIT_ID       irq_LPIT0_ID
-    #if defined CLOCK_LPIT_FROM_FIRC                                     // clock the LPIT from the fast internal RC oscillator
-        #define LPIT0_CLOCK_SOURCE    PCC_PCS_SCGFIRCLK                  // the LPIT is clocked by the fast IRC clock source (FIRCDIV3_CLK)
-    #else
-        #error "None-supported LPIT clock source!"
-    #endif
 #else
     #define _PITS_AVAILABLE  PITS_AVAILABLE
 #endif
@@ -196,8 +191,8 @@ static void fnDisablePIT(int iPIT)
         uDisable_Interrupt();                                            // {2} protect the mode variable during modification
     #if defined KINETIS_WITH_PCC
             if ((PCC_LPIT0 & PCC_CGC) == 0) {                            // if presently powered down
-                PCC_LPIT0 = LPIT0_CLOCK_SOURCE;                          // set LPIT's clock source
-                PCC_LPIT0 = (PCC_CGC | LPIT0_CLOCK_SOURCE);              // power up the LPIT module
+                SELECT_PCC_PERIPHERAL_SOURCE(LPIT0, LPIT0_PCC_SOURCE);   // select the clock source
+                POWER_UP_ATOMIC(0, LPIT0);                               // power up the LPIT module         
             }
     #else
             POWER_UP_ATOMIC(6, PIT);                                     // {5}{6} ensure the PIT module is powered up

@@ -3634,3 +3634,10 @@ extern KINETIS_PERIPH kinetis;
 #define PACKAGE_BGA             PACKAGE_MAPBGA
 #define PACKAGE_QFN             3
 #define PACKAGE_WLCSP           4
+
+// Simuation references for specific peripherals
+//
+#define KINETIS_PERIPHERAL_ADC0 0
+#define KINETIS_PERIPHERAL_ADC1 1
+#define KINETIS_PERIPHERAL_ADC2 2
+#define KINETIS_PERIPHERAL_ADC3 3

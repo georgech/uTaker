@@ -3003,14 +3003,8 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
     #endif
     uart_reg = (KINETIS_UART_CONTROL *)fnSelectChannel(Channel);         // select the register set for use by this channel
     #if LPUARTS_AVAILABLE > 0                                            // if the device has low power UART(s)
-        #if defined KINETIS_WITH_PCC                                     // same LPUART clock source for all used LPUARTs
-            #if defined LPUART_FIRC                                      // use the fast internal RC clock as UART clock
-                #define SPECIAL_LPUART_CLOCK  (FIRC_CLK)                 // 48MHz, 52MHz, 56MHz or 60MHz, depending on system clock configuration
-            #elif defined LPUART_OSCERCLK                                // clock the UART from the external clock
-                #define SPECIAL_LPUART_CLOCK  (_EXTERNAL_CLOCK)
-            #else
-                #define SPECIAL_LPUART_CLOCK  (MCGIRCLK)
-            #endif
+        #if defined KINETIS_WITH_PCC                                     // same LPUART clock source for all used LPUARTs assumed
+            #define SPECIAL_LPUART_CLOCK  (FIRC_CLK)                     // fast clock assumed - 48MHz, 52MHz, 56MHz or 60MHz, depending on system clock configuration
         #else
             #if defined LPUART_IRC48M                                    // use the IRC48M clock as UART clock
                 #define SPECIAL_LPUART_CLOCK  (48000000)
@@ -3030,13 +3024,8 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         case (0):                                                        // LPUART 0
         #endif
         #if defined KINETIS_WITH_PCC
-            #if defined LPUART_FIRC
-            PCC_LPUART0 = (PCC_CGC | PCC_PCS_SCGFIRCLK);                 // clock from the fast IRC clock (we assume that the FIRC has been configured for use as system clock)
-            #elif defined LPUART_OSCERCLK
-            PCC_LPUART0 = (PCC_CGC | PCC_PCS_OSCCLK);                    // clock from the system oscillator bus clock
-            #else
-            PCC_LPUART0 = (PCC_CGC | PCC_PCS_SCGPCLK);                   // clock from the system PLL clock
-            #endif
+            SELECT_PCC_PERIPHERAL_SOURCE(LPUART0, LPUART0_PCC_SOURCE);   // select the PCC clock used by LPUART0
+            POWER_UP_ATOMIC(5, LPUART0);
         #else
             #if defined KINETIS_KL
             POWER_UP_ATOMIC(5, LPUART0);                                 // power up LPUART 0
@@ -3077,13 +3066,8 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         case (1):                                                        // LPUART 1
             #endif
             #if defined KINETIS_WITH_PCC
-                #if defined LPUART_FIRC
-            PCC_LPUART1 = (PCC_CGC | PCC_PCS_SCGFIRCLK);                 // clock from the fast IRC clock (we assume that the FIRC has been configured for use as system clock)
-                #elif defined LPUART_OSCERCLK
-            PCC_LPUART1 = (PCC_CGC | PCC_PCS_OSCCLK);                    // clock from the system oscillator bus clock
-                #else
-            PCC_LPUART1 = (PCC_CGC | PCC_PCS_SCGPCLK);                   // clock from the system PLL clock
-                #endif
+            SELECT_PCC_PERIPHERAL_SOURCE(LPUART1, LPUART1_PCC_SOURCE);   // select the PCC clock used by LPUART1
+            POWER_UP_ATOMIC(5, LPUART1);
             #else
                 #if defined KINETIS_KL
             POWER_UP_ATOMIC(5, LPUART1);                                 // power up LPUART 1
@@ -3114,13 +3098,8 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         case (2):                                                        // LPUART 2
             #endif
             #if defined KINETIS_WITH_PCC
-                #if defined LPUART_FIRC
-            PCC_LPUART2 = (PCC_CGC | PCC_PCS_SCGFIRCLK);                 // clock from the fast IRC clock (we assume that the FIRC has been configured for use as system clock)
-                #elif defined LPUART_OSCERCLK
-            PCC_LPUART2 = (PCC_CGC | PCC_PCS_OSCCLK);                    // clock from the system oscillator bus clock
-                #else
-            PCC_LPUART2 = (PCC_CGC | PCC_PCS_SCGPCLK);                   // clock from the system PLL clock
-                #endif
+            SELECT_PCC_PERIPHERAL_SOURCE(LPUART2, LPUART2_PCC_SOURCE);   // select the PCC clock used by LPUART2
+            POWER_UP_ATOMIC(5, LPUART2);
             #else
                 #if defined KINETIS_KL
             POWER_UP_ATOMIC(5, LPUART2);                                 // power up LPUART 2

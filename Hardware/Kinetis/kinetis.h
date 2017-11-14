@@ -121,6 +121,7 @@
     04.11.2017 Add true random number generator registers                {103}
     10.11.2016 Set bit-banding addresses as volatile to avoid potential optimisations (GCC) from causing hard-faults {104}
     13.11.2017 Add internal temperature sensor 25°C and slope reference values ADC_REFERENCE_VOLTAGE
+    14.11.2017 New macro SELECT_PCC_PERIPHERAL_SOURCE()
 
 */
 
@@ -129,6 +130,12 @@
     #define _SIM_PER_CHANGE      fnSimPers()
     #define _EXCEPTION(x)        *(unsigned char *)0 = 0                 // generate exception when simulating
     #define _SIM_PORTS           fnSimPorts()
+
+    extern void fnSetBitBandPeripheralValue(unsigned long *bit_band_address); // simulation routines allowing big-banded addresses to be checked
+    extern void fnClearBitBandPeripheralValue(unsigned long *bit_band_address);
+    extern int  fnCheckBitBandPeripheralValue(unsigned long *bit_band_address);
+
+    extern unsigned long fnGetPCC_clock(int iReference);
 #else
     #if defined _COMPILE_IAR
         #include <intrinsics.h>                                          // for __disable_interrupt(), __enable_interrupt() and __sleep_mode(), etc.
@@ -157,10 +164,6 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
     #define SWAP_COMMAND_FAILURE          -1
     #define SWAP_ERASE_FAILURE            -2
 
-
-extern void fnSetBitBandPeripheralValue(unsigned long *bit_band_address); // simulation routines allowing big-banded addresses to be checked
-extern void fnClearBitBandPeripheralValue(unsigned long *bit_band_address);
-extern int  fnCheckBitBandPeripheralValue(unsigned long *bit_band_address);
 
 
 /* =================================================================== */
@@ -198,7 +201,7 @@ extern int  fnCheckBitBandPeripheralValue(unsigned long *bit_band_address);
 //
 #include "kinetis_errata.h"                                              // {61}
 
-#if defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_KV10
+#if defined KINETIS_KL || (defined KINETIS_KE && !defined KINETIS_KE18) || defined KINETIS_KV10
     #define ARM_MATH_CM0PLUS                                             // cortex-M0+ to be used
     #define BME_OR_OFFSET    0x8000000                                   // {99} kinetis cortex-m0+ includes a bit manipulation engine and doesn't include bit-banding support
     #define BME_AND_OFFSET   0x4000000
@@ -3934,9 +3937,9 @@ typedef struct stVECTOR_TABLE
 
 #define DMA_ERQ_ADDR        (volatile unsigned long *)(eDMA_BLOCK + 0x00c)
 #define DMA_ERQ             *(volatile unsigned long *)(eDMA_BLOCK + 0x00c) // DMA Enable Request Register
-#define DMA_ERQ_BME_OR      (volatile unsigned long *)(eDMA_BLOCK + 0x00c + BME_OR_OFFSET)
-#define DMA_ERQ_BME_AND     (volatile unsigned long *)(eDMA_BLOCK + 0x00c + BME_AND_OFFSET)
-#define DMA_ERQ_BME_XOR     (volatile unsigned long *)(eDMA_BLOCK + 0x00c + BME_XOR_OFFSET)
+    #define DMA_ERQ_BME_OR  (volatile unsigned long *)(eDMA_BLOCK + 0x00c + BME_OR_OFFSET)
+    #define DMA_ERQ_BME_AND (volatile unsigned long *)(eDMA_BLOCK + 0x00c + BME_AND_OFFSET)
+    #define DMA_ERQ_BME_XOR (volatile unsigned long *)(eDMA_BLOCK + 0x00c + BME_XOR_OFFSET)
   #define DMA_ERQ_ERQ0      0x00000001                                   // enable DMA request on channel 0
   #define DMA_ERQ_ERQ1      0x00000002                                   // enable DMA request on channel 1
   #define DMA_ERQ_ERQ2      0x00000004                                   // enable DMA request on channel 2
@@ -9016,14 +9019,14 @@ typedef struct stKINETIS_LPTMR_CTL
           #define SIM_PINSEL1_PWTIN1PS       0x00008000                  // PWTIN1 on PTH7 rather than PTB0
           #define SIM_PINSEL1_MSCANPS        0x00010000                  // CAN_TX on PTE7 rather than PTC7, CAN_RX on PTH2 rather than PTC6
         #define SIM_SCGC                     *(unsigned long *)(SIM_BLOCK + 0x14) // System Clock Gating Control Register
-        #define SIM_SCGC_BME_OR              (volatile unsigned long *)(SIM_BLOCK + 0x14 + BME_OR_OFFSET)
-        #define SIM_SCGC_BME_AND             (volatile unsigned long *)(SIM_BLOCK + 0x14 + BME_AND_OFFSET)
-        #define SIM_SCGC_BME_XOR             (volatile unsigned long *)(SIM_BLOCK + 0x14 + BME_XOR_OFFSET)
+            #define SIM_SCGC_BME_OR          (volatile unsigned long *)(SIM_BLOCK + 0x14 + BME_OR_OFFSET)
+            #define SIM_SCGC_BME_AND         (volatile unsigned long *)(SIM_BLOCK + 0x14 + BME_AND_OFFSET)
+            #define SIM_SCGC_BME_XOR         (volatile unsigned long *)(SIM_BLOCK + 0x14 + BME_XOR_OFFSET)
     #else
         #define SIM_SCGC                     *(unsigned long *)(SIM_BLOCK + 0x0c) // System Clock Gating Control Register
-        #define SIM_SCGC_BME_OR              (volatile unsigned long *)(SIM_BLOCK + 0x0c + BME_OR_OFFSET)
-        #define SIM_SCGC_BME_AND             (volatile unsigned long *)(SIM_BLOCK + 0x0c + BME_AND_OFFSET)
-        #define SIM_SCGC_BME_XOR             (volatile unsigned long *)(SIM_BLOCK + 0x0c + BME_XOR_OFFSET)
+            #define SIM_SCGC_BME_OR          (volatile unsigned long *)(SIM_BLOCK + 0x0c + BME_OR_OFFSET)
+            #define SIM_SCGC_BME_AND         (volatile unsigned long *)(SIM_BLOCK + 0x0c + BME_AND_OFFSET)
+            #define SIM_SCGC_BME_XOR         (volatile unsigned long *)(SIM_BLOCK + 0x0c + BME_XOR_OFFSET)
     #endif
       #define SIM_SCGC_RTC                   0x00000001
       #define SIM_SCGC_PIT                   0x00000002
@@ -9884,8 +9887,18 @@ typedef struct stKINETIS_LPTMR_CTL
     #define POWER_UP(reg, module)              SIM_SCGC##reg |= (module) // power up a module or multiple modules sharing a register (apply clock to it)
     #define POWER_DOWN(reg, module)            SIM_SCGC##reg &= ~(module)// power down a module or multiple modules sharing a register (disable clock to it)
     #if defined KINETIS_WITH_PCC                                         // {102}
-        #define POWER_UP_ATOMIC(reg, module)   PCC_##module |= PCC_CGC
-        #define POWER_DOWN_ATOMIC(reg, module) PCC_##module &= ~(PCC_CGC)
+        #if defined ARM_MATH_CM0PLUS
+            #if defined _WINDOWS
+                #define POWER_UP_ATOMIC(reg, module)   *(PCC_##module##_BME_OR - (BME_OR_OFFSET/sizeof(unsigned long))) |= (PCC_CGC)
+                #define POWER_DOWN_ATOMIC(reg, module) *(PCC_##module##_BME_AND - (BME_AND_OFFSET/sizeof(unsigned long))) &= ~(PCC_CGC)
+            #else
+                #define POWER_UP_ATOMIC(reg, module)   *PCC_##module##_BME_OR = (PCC_CGC)
+                #define POWER_DOWN_ATOMIC(reg, module) *(PCC_##module##_BME_AND - (BME_AND_OFFSET/sizeof(unsigned long))) = ~(PCC_CGC)
+            #endif
+        #else
+            #define POWER_UP_ATOMIC(reg, module)   PCC_##module |= PCC_CGC
+            #define POWER_DOWN_ATOMIC(reg, module) PCC_##module &= ~(PCC_CGC)
+        #endif
         #define IS_POWERED_UP(reg, module)     ((PCC_##module & PCC_CGC) != 0)
     #else
         #if defined ARM_MATH_CM0PLUS                                     // {99} bit-banding is not implemented in cortex-m0+ but instead it has BME (bit manipulation engine)
@@ -9926,6 +9939,9 @@ typedef struct stKINETIS_LPTMR_CTL
     #define ATOMIC_PERIPHERAL_BIT_REF_CHECK(reg, bit_ref)  ((reg & (1 << bit_ref)) != 0)
 #endif
 
+#if defined KINETIS_WITH_PCC
+    #define SELECT_PCC_PERIPHERAL_SOURCE(reg, clock_source)  PCC_##reg &= ~(PCC_PCS_MASK); PCC_##reg |= (clock_source)
+#endif
 
 
 // Port Control and Interrupts
@@ -11453,6 +11469,10 @@ typedef struct stKINETIS_LPTMR_CTL
 // Peripheral Clock Control
 //
     #define PCC_DMA0                     *(volatile unsigned long *)(PCC_BLOCK + 0x020)
+        #define PCC_DMA0_BME_OR          (volatile unsigned long *)(PCC_BLOCK + 0x020 + BME_OR_OFFSET)
+        #define PCC_DMA0_BME_AND         (volatile unsigned long *)(PCC_BLOCK + 0x020 + BME_AND_OFFSET)
+        #define PCC_DMA0_BME_XOR         (volatile unsigned long *)(PCC_BLOCK + 0x020 + BME_XOR_OFFSET)
+
         #define PCC_PR                   0x80000000                      // peripheral present flag (read-only)
         #define PCC_CGC                  0x40000000                      // peripheral clock enabled flag
         #define PCC_INUSE                0x20000000                      // peripheral in use flag
@@ -11479,19 +11499,40 @@ typedef struct stKINETIS_LPTMR_CTL
     #endif
     #define PCC_FLASH                    *(volatile unsigned long *)(PCC_BLOCK + 0x080)
     #define PCC_DMAMUX0                  *(volatile unsigned long *)(PCC_BLOCK + 0x084)
+        #define PCC_DMAMUX0_BME_OR       (volatile unsigned long *)(PCC_BLOCK + 0x084 + BME_OR_OFFSET)
+        #define PCC_DMAMUX0_BME_AND      (volatile unsigned long *)(PCC_BLOCK + 0x084 + BME_AND_OFFSET)
+        #define PCC_DMAMUX0_BME_XOR      (volatile unsigned long *)(PCC_BLOCK + 0x084 + BME_XOR_OFFSET)
     #if defined KINETIS_KE15
         #define PCC_ADC1                 *(volatile unsigned long *)(PCC_BLOCK + 0x09c)
+            #define PCC_ADC1_BME_OR      (volatile unsigned long *)(PCC_BLOCK + 0x09c + BME_OR_OFFSET)
+            #define PCC_ADC1_BME_AND     (volatile unsigned long *)(PCC_BLOCK + 0x09c + BME_AND_OFFSET)
+            #define PCC_ADC1_BME_XOR     (volatile unsigned long *)(PCC_BLOCK + 0x09c + BME_XOR_OFFSET)
         #define PCC_LPSPI0               *(volatile unsigned long *)(PCC_BLOCK + 0x0b0)
         #define PCC_LPSPI1               *(volatile unsigned long *)(PCC_BLOCK + 0x0b4)
         #define PCC_CRC                  *(volatile unsigned long *)(PCC_BLOCK + 0x0c8)
         #define PCC_PDB0                 *(volatile unsigned long *)(PCC_BLOCK + 0x0d8)
+            #define PCC_PDB0_BME_OR      (volatile unsigned long *)(PCC_BLOCK + 0x0d8 + BME_OR_OFFSET)
+            #define PCC_PDB0_BME_AND     (volatile unsigned long *)(PCC_BLOCK + 0x0d8 + BME_AND_OFFSET)
+            #define PCC_PDB0_BME_XOR     (volatile unsigned long *)(PCC_BLOCK + 0x0d8 + BME_XOR_OFFSET)
         #define PCC_LPIT0                *(volatile unsigned long *)(PCC_BLOCK + 0x0dc)
+            #define PCC_LPIT0_BME_OR     (volatile unsigned long *)(PCC_BLOCK + 0x0dc + BME_OR_OFFSET)
+            #define PCC_LPIT0_BME_AND    (volatile unsigned long *)(PCC_BLOCK + 0x0dc + BME_AND_OFFSET)
+            #define PCC_LPIT0_BME_XOR    (volatile unsigned long *)(PCC_BLOCK + 0x0dc + BME_XOR_OFFSET)
         #define PCC_FLEXTMR0             *(volatile unsigned long *)(PCC_BLOCK + 0x0e0)
         #define PCC_FLEXTMR1             *(volatile unsigned long *)(PCC_BLOCK + 0x0e4)
         #define PCC_FLEXTMR2             *(volatile unsigned long *)(PCC_BLOCK + 0x0e8)
         #define PCC_ADC0                 *(volatile unsigned long *)(PCC_BLOCK + 0x0ec)
+            #define PCC_ADC0_BME_OR      (volatile unsigned long *)(PCC_BLOCK + 0x0ec + BME_OR_OFFSET)
+            #define PCC_ADC0_BME_AND     (volatile unsigned long *)(PCC_BLOCK + 0x0ec + BME_AND_OFFSET)
+            #define PCC_ADC0_BME_XOR     (volatile unsigned long *)(PCC_BLOCK + 0x0ec + BME_XOR_OFFSET)
         #define PCC_RTC                  *(volatile unsigned long *)(PCC_BLOCK + 0x0f4)
+            #define PCC_RTC_BME_OR       (volatile unsigned long *)(PCC_BLOCK + 0x0f4 + BME_OR_OFFSET)
+            #define PCC_RTC_BME_AND      (volatile unsigned long *)(PCC_BLOCK + 0x0f4 + BME_AND_OFFSET)
+            #define PCC_RTC_BME_XOR      (volatile unsigned long *)(PCC_BLOCK + 0x0f4 + BME_XOR_OFFSET)
         #define PCC_LPTMR0               *(volatile unsigned long *)(PCC_BLOCK + 0x100)
+            #define PCC_LPTMR0_BME_OR    (volatile unsigned long *)(PCC_BLOCK + 0x100 + BME_OR_OFFSET)
+            #define PCC_LPTMR0_BME_AND   (volatile unsigned long *)(PCC_BLOCK + 0x100 + BME_AND_OFFSET)
+            #define PCC_LPTMR0_BME_XOR   (volatile unsigned long *)(PCC_BLOCK + 0x100 + BME_XOR_OFFSET)
         #define PCC_TSI                  *(volatile unsigned long *)(PCC_BLOCK + 0x114)
         #define PCC_PORT_ADDR             (volatile unsigned long *)(PCC_BLOCK + 0x124)
         #define PCC_PORTA                *(volatile unsigned long *)(PCC_BLOCK + 0x124)
@@ -11506,15 +11547,24 @@ typedef struct stKINETIS_LPTMR_CTL
         #define PCC_LPI2C0               *(volatile unsigned long *)(PCC_BLOCK + 0x198)
         #define PCC_LPI2C1               *(volatile unsigned long *)(PCC_BLOCK + 0x19c)
         #define PCC_LPUART0              *(volatile unsigned long *)(PCC_BLOCK + 0x1a8)
+            #define PCC_LPUART0_BME_OR   (volatile unsigned long *)(PCC_BLOCK + 0x1a8 + BME_OR_OFFSET)
+            #define PCC_LPUART0_BME_AND  (volatile unsigned long *)(PCC_BLOCK + 0x1a8 + BME_AND_OFFSET)
+            #define PCC_LPUART0_BME_XOR  (volatile unsigned long *)(PCC_BLOCK + 0x1a8 + BME_XOR_OFFSET)
         #define PCC_LPUART1              *(volatile unsigned long *)(PCC_BLOCK + 0x1ac)
+            #define PCC_LPUART1_BME_OR   (volatile unsigned long *)(PCC_BLOCK + 0x1ac + BME_OR_OFFSET)
+            #define PCC_LPUART1_BME_AND  (volatile unsigned long *)(PCC_BLOCK + 0x1ac + BME_AND_OFFSET)
+            #define PCC_LPUART1_BME_XOR  (volatile unsigned long *)(PCC_BLOCK + 0x1ac + BME_XOR_OFFSET)
         #define PCC_LPUART2              *(volatile unsigned long *)(PCC_BLOCK + 0x1b0)
+            #define PCC_LPUART2_BME_OR   (volatile unsigned long *)(PCC_BLOCK + 0x1b0 + BME_OR_OFFSET)
+            #define PCC_LPUART2_BME_AND  (volatile unsigned long *)(PCC_BLOCK + 0x1b0 + BME_AND_OFFSET)
+            #define PCC_LPUART2_BME_XOR  (volatile unsigned long *)(PCC_BLOCK + 0x1b0 + BME_XOR_OFFSET)
         #define PCC_CMP0                 *(volatile unsigned long *)(PCC_BLOCK + 0x1cc)
         #define PCC_CMP1                 *(volatile unsigned long *)(PCC_BLOCK + 0x1d0)
     #elif defined KINETIS_KE18
         #define PCC_CAN0                 *(volatile unsigned long *)(PCC_BLOCK + 0x090)
         #define PCC_CAN1                 *(volatile unsigned long *)(PCC_BLOCK + 0x094)
         #define PCC_FLEXTMR3             *(volatile unsigned long *)(PCC_BLOCK + 0x098)
-        #define PCC_ADC1                 *(volatile unsigned long *)(PCC_BLOCK + 0x09c)
+        #define PCC_ADC1                 *(volatile unsigned long *)(PCC_BLOCK + 0x09c))
         #define PCC_LPSPI0               *(volatile unsigned long *)(PCC_BLOCK + 0x0b0)
         #define PCC_LPSPI1               *(volatile unsigned long *)(PCC_BLOCK + 0x0b4)
         #define PCC_PDB1                 *(volatile unsigned long *)(PCC_BLOCK + 0x0c4)
@@ -11530,7 +11580,7 @@ typedef struct stKINETIS_LPTMR_CTL
         #define PCC_RTC                  *(volatile unsigned long *)(PCC_BLOCK + 0x0f4)
         #define PCC_DAC0                 *(volatile unsigned long *)(PCC_BLOCK + 0x0fc)
         #define PCC_LPTMR0               *(volatile unsigned long *)(PCC_BLOCK + 0x100)
-        #define PCC_PORT_ADDR             (volatile unsigned long *)(PCC_BLOCK + 0x124)
+        #define PCC_PORT_ADDR            (volatile unsigned long *)(PCC_BLOCK + 0x124)
         #define PCC_PORTA                *(volatile unsigned long *)(PCC_BLOCK + 0x124)
         #define PCC_PORTB                *(volatile unsigned long *)(PCC_BLOCK + 0x128)
         #define PCC_PORTC                *(volatile unsigned long *)(PCC_BLOCK + 0x12c)
@@ -11550,17 +11600,35 @@ typedef struct stKINETIS_LPTMR_CTL
         #define PCC_CMP2                 *(volatile unsigned long *)(PCC_BLOCK + 0x1d4)
     #else
         #define PCC_INTMUX0              *(volatile unsigned long *)(PCC_BLOCK + 0x090)
+            #define PCC_INTMUX0_BME_OR   (volatile unsigned long *)(PCC_BLOCK + 0x090 + BME_OR_OFFSET)
+            #define PCC_INTMUX0_BME_AND  (volatile unsigned long *)(PCC_BLOCK + 0x090 + BME_AND_OFFSET)
+            #define PCC_INTMUX0_BME_XOR  (volatile unsigned long *)(PCC_BLOCK + 0x090 + BME_XOR_OFFSET)
         #define PCC_TPM2                 *(volatile unsigned long *)(PCC_BLOCK + 0x0b8)
         #define PCC_LPIT0                *(volatile unsigned long *)(PCC_BLOCK + 0x0c0)
+            #define PCC_LPIT0_BME_OR     (volatile unsigned long *)(PCC_BLOCK + 0x0c0 + BME_OR_OFFSET)
+            #define PCC_LPIT0_BME_AND    (volatile unsigned long *)(PCC_BLOCK + 0x0c0 + BME_AND_OFFSET)
+            #define PCC_LPIT0_BME_XOR    (volatile unsigned long *)(PCC_BLOCK + 0x0c0 + BME_XOR_OFFSET)
         #define PCC_LPTMR0               *(volatile unsigned long *)(PCC_BLOCK + 0x0d0)
+            #define PCC_LPTMR0_BME_OR    (volatile unsigned long *)(PCC_BLOCK + 0x0d0 + BME_OR_OFFSET)
+            #define PCC_LPTMR0_BME_AND   (volatile unsigned long *)(PCC_BLOCK + 0x0d0 + BME_AND_OFFSET)
+            #define PCC_LPTMR0_BME_XOR   (volatile unsigned long *)(PCC_BLOCK + 0x0d0 + BME_XOR_OFFSET)
         #define PCC_RTC                  *(volatile unsigned long *)(PCC_BLOCK + 0x0e0)
+            #define PCC_RTC_BME_OR       (volatile unsigned long *)(PCC_BLOCK + 0x0e0 + BME_OR_OFFSET)
+            #define PCC_RTC_BME_AND      (volatile unsigned long *)(PCC_BLOCK + 0x0e0 + BME_AND_OFFSET)
+            #define PCC_RTC_BME_XOR      (volatile unsigned long *)(PCC_BLOCK + 0x0e0 + BME_XOR_OFFSET)
         #define PCC_LPSPI2               *(volatile unsigned long *)(PCC_BLOCK + 0x0f8)
         #define PCC_LPI2C2               *(volatile unsigned long *)(PCC_BLOCK + 0x108)
         #define PCC_LPUART2              *(volatile unsigned long *)(PCC_BLOCK + 0x118)
+            #define PCC_LPUART2_BME_OR   (volatile unsigned long *)(PCC_BLOCK + 0x118 + BME_OR_OFFSET)
+            #define PCC_LPUART2_BME_AND  (volatile unsigned long *)(PCC_BLOCK + 0x118 + BME_AND_OFFSET)
+            #define PCC_LPUART2_BME_XOR  (volatile unsigned long *)(PCC_BLOCK + 0x118 + BME_XOR_OFFSET)
         #define PCC_SAI0                 *(volatile unsigned long *)(PCC_BLOCK + 0x130)
         #define PCC_EMVSIM0              *(volatile unsigned long *)(PCC_BLOCK + 0x138)
         #define PCC_USB0FS               *(volatile unsigned long *)(PCC_BLOCK + 0x154)
-        #define PCC_PORT_ADDR             (volatile unsigned long *)(PCC_BLOCK + 0x168)
+            #define PCC_USB0FS_BME_OR    (volatile unsigned long *)(PCC_BLOCK + 0x154 + BME_OR_OFFSET)
+            #define PCC_USB0FS_BME_AND   (volatile unsigned long *)(PCC_BLOCK + 0x154 + BME_AND_OFFSET)
+            #define PCC_USB0FS_BME_XOR   (volatile unsigned long *)(PCC_BLOCK + 0x154 + BME_XOR_OFFSET)
+        #define PCC_PORT_ADDR            (volatile unsigned long *)(PCC_BLOCK + 0x168)
         #define PCC_PORTA                *(volatile unsigned long *)(PCC_BLOCK + 0x168)
         #define PCC_PORTB                *(volatile unsigned long *)(PCC_BLOCK + 0x16c)
         #define PCC_PORTC                *(volatile unsigned long *)(PCC_BLOCK + 0x170)
@@ -11568,7 +11636,13 @@ typedef struct stKINETIS_LPTMR_CTL
         #define PCC_PORTE                *(volatile unsigned long *)(PCC_BLOCK + 0x178)
         #define PCC_TSI0                 *(volatile unsigned long *)(PCC_BLOCK + 0x188)
         #define PCC_ADC0                 *(volatile unsigned long *)(PCC_BLOCK + 0x198)
+            #define PCC_ADC0_BME_OR      (volatile unsigned long *)(PCC_BLOCK + 0x198 + BME_OR_OFFSET)
+            #define PCC_ADC0_BME_AND     (volatile unsigned long *)(PCC_BLOCK + 0x198 + BME_AND_OFFSET)
+            #define PCC_ADC0_BME_XOR     (volatile unsigned long *)(PCC_BLOCK + 0x198 + BME_XOR_OFFSET)
         #define PCC_DAC0                 *(volatile unsigned long *)(PCC_BLOCK + 0x1a8)
+            #define PCC_DAC0_BME_OR      (volatile unsigned long *)(PCC_BLOCK + 0x1a8 + BME_OR_OFFSET)
+            #define PCC_DAC0_BME_AND     (volatile unsigned long *)(PCC_BLOCK + 0x1a8 + BME_AND_OFFSET)
+            #define PCC_DAC0_BME_XOR     (volatile unsigned long *)(PCC_BLOCK + 0x1a8 + BME_XOR_OFFSET)
         #define PCC_CMP0                 *(volatile unsigned long *)(PCC_BLOCK + 0x1b8)
         #define PCC_VREF                 *(volatile unsigned long *)(PCC_BLOCK + 0x1c8)
         #define PCC_CRC                  *(volatile unsigned long *)(PCC_BLOCK + 0x1e0)
@@ -11577,12 +11651,21 @@ typedef struct stKINETIS_LPTMR_CTL
         #define PCC_TPM0                 *(volatile unsigned long *)(PCC2_BLOCK + 0x0b0)
         #define PCC_TPM1                 *(volatile unsigned long *)(PCC2_BLOCK + 0x0b4)
         #define PCC_LPTMR1               *(volatile unsigned long *)(PCC2_BLOCK + 0x0d4)
+            #define PCC_LPTMR1_BME_OR    (volatile unsigned long *)(PCC2_BLOCK + 0x0d4 + BME_OR_OFFSET)
+            #define PCC_LPTMR1_BME_AND   (volatile unsigned long *)(PCC2_BLOCK + 0x0d4 + BME_AND_OFFSET)
+            #define PCC_LPTMR1_BME_XOR   (volatile unsigned long *)(PCC2_BLOCK + 0x0d4 + BME_XOR_OFFSET)
         #define PCC_LPSPI0               *(volatile unsigned long *)(PCC2_BLOCK + 0x0f0)
         #define PCC_LPSPI1               *(volatile unsigned long *)(PCC2_BLOCK + 0x0f4)
         #define PCC_LPI2C0               *(volatile unsigned long *)(PCC2_BLOCK + 0x100)
         #define PCC_LPI2C1               *(volatile unsigned long *)(PCC2_BLOCK + 0x104)
         #define PCC_LPUART0              *(volatile unsigned long *)(PCC2_BLOCK + 0x110)
+            #define PCC_LPUART0_BME_OR   (volatile unsigned long *)(PCC2_BLOCK + 0x110 + BME_OR_OFFSET)
+            #define PCC_LPUART0_BME_AND  (volatile unsigned long *)(PCC2_BLOCK + 0x110 + BME_AND_OFFSET)
+            #define PCC_LPUART0_BME_XOR  (volatile unsigned long *)(PCC2_BLOCK + 0x110 + BME_XOR_OFFSET)
         #define PCC_LPUART1              *(volatile unsigned long *)(PCC2_BLOCK + 0x114)
+            #define PCC_LPUART1_BME_OR   (volatile unsigned long *)(PCC2_BLOCK + 0x114 + BME_OR_OFFSET)
+            #define PCC_LPUART1_BME_AND  (volatile unsigned long *)(PCC2_BLOCK + 0x114 + BME_AND_OFFSET)
+            #define PCC_LPUART1_BME_XOR  (volatile unsigned long *)(PCC2_BLOCK + 0x114 + BME_XOR_OFFSET)
         #define PCC_FLEXIO0              *(volatile unsigned long *)(PCC2_BLOCK + 0x128)
         #define PCC_CMP1                 *(volatile unsigned long *)(PCC2_BLOCK + 0x1bc)
 
@@ -11591,6 +11674,9 @@ typedef struct stKINETIS_LPTMR_CTL
         #define PCC_FLEXTMR2             PCC_TPM2
     #endif
     #define PCC_USBOTG                   PCC_USB0FS                      // for compatibility
+        #define PCC_USBOTG_BME_OR        PCC_USB0FS_BME_OR
+        #define PCC_USBOTG_BME_AND       PCC_USB0FS_BME_AND
+        #define PCC_USBOTG_BME_XOR       PCC_USB0FS_BME_XOR
     #define PCC_FTM0                     PCC_FLEXTMR0
     #define PCC_FTM1                     PCC_FLEXTMR1
     #define PCC_FTM2                     PCC_FLEXTMR2

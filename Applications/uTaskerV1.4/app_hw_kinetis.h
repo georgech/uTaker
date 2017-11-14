@@ -2315,8 +2315,6 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define LPUART_IRC48M                                            // if the 48MHz clock is available clock the LPUART from it
       //#define LPUART_OSCERCLK                                          // clock the LPUART from the external clock
       //#define LPUART_MCGIRCLK                                          // clock the LPUART from MCGIRCLK (IRC8M/FCRDIV/LIRC_DIV2) - default if others are not defined
-    #elif defined FRDM_KL28Z || defined FRDM_KE15Z
-        #define LPUART_FIRC                                              // clock LPUARTs from the fast internal RC oscillator
     #endif
     #if defined RUN_FROM_LIRC
         #define UART0_ClOCKED_FROM_MCGIRCLK
@@ -2620,9 +2618,6 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 #if !defined KINETIS_KL02
     #define SUPPORT_PITS                                                 // support PITs
   //#define SUPPORT_PIT_DMA_PORT_TOGGLE                                  // PIT driver supports triggering port toggles
-    #if defined LPITS_AVAILABLE
-        #define CLOCK_LPIT_FROM_FIRC                                     // clock the LPIT from the fast internal RC oscillator
-    #endif
 #endif
 #if defined MODBUS_RTU && !defined SUPPORT_PITS
     #define SUPPORT_PITS                                                 // support PITs
@@ -3096,6 +3091,20 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 #endif
 
 #define ADC_ERR_PRIORITY           PRIORITY_ADC
+
+// PCC clock matrix
+//
+#if defined KINETIS_WITH_PCC
+    #define ADC0_PCC_SOURCE        PCC_PCS_SCGFIRCLK
+    #define ADC1_PCC_SOURCE        PCC_PCS_SCGFIRCLK
+    #define ADC2_PCC_SOURCE        PCC_PCS_SCGFIRCLK
+
+    #define LPUART0_PCC_SOURCE     PCC_PCS_SCGFIRCLK
+    #define LPUART1_PCC_SOURCE     PCC_PCS_SCGFIRCLK
+    #define LPUART2_PCC_SOURCE     PCC_PCS_SCGFIRCLK
+
+    #define LPIT0_PCC_SOURCE       PCC_PCS_SCGFIRCLK
+#endif
 
 // Ports
 //
