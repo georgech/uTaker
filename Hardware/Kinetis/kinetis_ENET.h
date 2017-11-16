@@ -964,6 +964,7 @@ extern int fnConfigEthernet(ETHTABLE *pars)
         #endif
     #endif
     POWER_UP_ATOMIC(2, ENET);                                            // power up the Ethernet controller
+
     #if defined MPU_AVAILABLE
     MPU_CESR = 0;                                                        // allow concurrent access to MPU controller
     #endif

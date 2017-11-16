@@ -9994,7 +9994,7 @@ typedef struct stKINETIS_LPTMR_CTL
             #endif
         #else                                                            // cortex-m4
             #define POWER_UP_ATOMIC(reg, module)   ATOMIC_SET_REGISTER(SIM_SCGC##reg##_SIM_SCGC##reg##_##module) // {98}{102} power up a single module using bit-banding access (apply clock to it)
-            #define POWER_DOWN_ATOMIC(reg, module) ATOMIC_CLEAR_REGISTER(SIM_SCGC##reg##_##module) // {102} power down a single module using bit-banding access (disable clock to it)
+            #define POWER_DOWN_ATOMIC(reg, module) ATOMIC_CLEAR_REGISTER(SIM_SCGC##reg##_SIM_SCGC##reg##_##module) // {102} power down a single module using bit-banding access (disable clock to it)
         #endif
         #define IS_POWERED_UP(reg, module)     ((SIM_SCGC##reg & (SIM_SCGC##reg##_##module)) != 0) // {102}
     #endif
