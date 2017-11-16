@@ -32,7 +32,7 @@ static __interrupt void _LPTMR0_periodic(void)
 static __interrupt void _LPTMR0_single(void)
 {
     LPTMR0_CSR = 0;                                                      // clear pending interrupt and stop the timer
-    POWER_DOWN_ATOMIC(5, LPTIMER0);                                      // power down the timer
+    POWER_DOWN_ATOMIC(5, LPTMR0);                                        // power down the timer
     uDisable_Interrupt();
         LPTMR_interrupt_handler[0]();                                    // call handling function
     uEnable_Interrupt();
@@ -50,7 +50,7 @@ static __interrupt void _LPTMR1_periodic(void)
 static __interrupt void _LPTMR1_single(void)
 {
     LPTMR1_CSR = 0;                                                      // clear pending interrupt and stop the timer
-    POWER_DOWN_ATOMIC(5, LPTIMER1);                                      // power down the timer
+    POWER_DOWN_ATOMIC(5, LPTMR1);                                        // power down the timer
     uDisable_Interrupt();
         LPTMR_interrupt_handler[1]();                                    // call handling function
     uEnable_Interrupt();
@@ -66,12 +66,12 @@ static __interrupt void _LPTMR1_single(void)
             KINETIS_LPTMR_CTR *ptrLPTMR;
     #if LPTMR_AVAILABLE > 1
             if (lptmr_setup->ucTimer != 0) {
-                POWER_UP_ATOMIC(5, LPTIMER1);                            // ensure that the timer can be accessed
+                POWER_UP_ATOMIC(5, LPTMR1);                              // ensure that the timer can be accessed
                 ptrLPTMR = (KINETIS_LPTMR_CTR *)LPTMR_BLOCK_1;
             }
             else {
     #endif
-                POWER_UP_ATOMIC(5, LPTIMER0);                            // ensure that the timer can be accessed
+                POWER_UP_ATOMIC(5, LPTMR0);                              // ensure that the timer can be accessed
                 ptrLPTMR = (KINETIS_LPTMR_CTR *)LPTMR_BLOCK_0;
     #if LPTMR_AVAILABLE > 1
             }
@@ -80,11 +80,11 @@ static __interrupt void _LPTMR1_single(void)
             if ((lptmr_setup->mode & LPTMR_STOP) != 0) {                 // stop timer
     #if LPTMR_AVAILABLE > 1
                 if (lptmr_setup->ucTimer != 0) {
-                    POWER_DOWN_ATOMIC(5, LPTIMER1);
+                    POWER_DOWN_ATOMIC(5, LPTMR1);
                 }
                 else {
     #endif
-                    POWER_DOWN_ATOMIC(5, LPTIMER0);
+                    POWER_DOWN_ATOMIC(5, LPTMR0);
     #if LPTMR_AVAILABLE > 1
                 }
     #endif
@@ -99,8 +99,8 @@ static __interrupt void _LPTMR1_single(void)
             MCG_C2 |= MCG_C2_IRCS;                                       // select fast internal reference clock
             ptrLPTMR->LPTMR_PSR = (LPTMR_PSR_PCS_MCGIRCLK | LPTMR_PSR_PBYP);
         #elif defined LPTMR_CLOCK_EXTERNAL_32kHz
-            #if defined KINETIS_WITH_RTC_CRYSTAL                             // devices with RTC crystal oscillator circuity
-            RTC_CR &= ~(RTC_CR_CLKO);                                        // allow RTC to supply its clock to other peripherals
+            #if defined KINETIS_WITH_RTC_CRYSTAL                         // devices with RTC crystal oscillator circuity
+            RTC_CR &= ~(RTC_CR_CLKO);                                    // allow RTC to supply its clock to other peripherals
             #endif
             ptrLPTMR->LPTMR_PSR = (LPTMR_PSR_PCS_ERCLK32K | LPTMR_PSR_PBYP);
         #else                                                            // LPTMR_CLOCK_OSCERCLK
@@ -146,12 +146,14 @@ static __interrupt void _LPTMR1_single(void)
             }
         #endif
             ptrLPTMR->LPTMR_CMR = lptmr_setup->count_delay;              // set the match value
+        #if !defined TRGMUX_AVAILABLE
             if ((lptmr_setup->mode & LPTMR_TRIGGER_ADC0_A) != 0) {       // if the LPTMR is to trigger ADC 0 A conversion
                 SIM_SOPT7 = (SIM_SOPT7_ADC0TRGSEL_LPTMR0 | SIM_SOPT7_ADC0PRETRGSEL_A | SIM_SOPT7_ADC0ALTTRGEN);
             }
             else if ((lptmr_setup->mode & LPTMR_TRIGGER_ADC0_B) != 0) {  // if the LPTMR is to trigger ADC 0 B conversion
                 SIM_SOPT7 = (SIM_SOPT7_ADC0TRGSEL_LPTMR0 | SIM_SOPT7_ADC0PRETRGSEL_B | SIM_SOPT7_ADC0ALTTRGEN);
             }
+        #endif
             ptrLPTMR->LPTMR_CSR |= LPTMR_CSR_TEN;                        // enable the timer
         }
 #endif

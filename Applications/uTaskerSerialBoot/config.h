@@ -775,7 +775,7 @@
 
 
 #if !defined K70F150M_12M && !defined KWIKSTIK && !(defined TEENSY_3_1 && defined SPECIAL_VERSION) && !defined BLAZE_K22
-    #define SERIAL_INTERFACE                                             // enable serial interface driver
+  //#define SERIAL_INTERFACE                                             // enable serial interface driver
 #endif
 #if defined SERIAL_INTERFACE
     #if defined USE_MODBUS

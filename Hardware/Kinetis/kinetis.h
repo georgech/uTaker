@@ -1361,7 +1361,7 @@ typedef struct stRESET_VECTOR
 //
 #if defined KINETIS_KV || defined KINETIS_KL02 || defined KINETIS_K02
     #define KINETIS_WITHOUT_RTC
-#elif defined KINETIS_KL82
+#elif defined KINETIS_KL82 || defined KINETIS_KL28
     #define KINETIS_WITH_RTC_CRYSTAL
 #elif defined KINETIS_KE15
     #define KINETIS_WITH_RTC_CRYSTAL
@@ -8457,7 +8457,11 @@ typedef struct stKINETIS_ADMA2_BD
   #define LPTMR_CSR_TIE                  0x00000040                      // timer interrupt enable
   #define LPTMR_CSR_TCF                  0x00000080                      // timer compare flag - (write '1' to clear) set when the compare register matches and then one more increment has taken place
 #define LPTMR0_PSR                       *(unsigned long *)(LPTMR_BLOCK_0 + 0x4) // Low Power Timer 0 Prescaler Register
-  #define LPTMR_PSR_PCS_MCGIRCLK         0x00000000                      // prescale clock select 0 (internal reference 30..40kHz or 4MHz)
+  #if defined KINETIS_WITH_SCG
+      #define LPTMR_PSR_PCS_SIRCCLK      0x00000000                      // prescale clock select 0 (slow internal clock)
+  #else
+      #define LPTMR_PSR_PCS_MCGIRCLK     0x00000000                      // prescale clock select 0 (internal reference 30..40kHz or 4MHz)
+  #endif
   #define LPTMR_PSR_PCS_LPO              0x00000001                      // prescale clock select 1 (1kHz)
   #define LPTMR_PSR_PCS_ERCLK32K         0x00000002                      // prescale clock select 2 (30..40kHz external reference 32kHz)
   #define LPTMR_PSR_PCS_OSC0ERCLK        0x00000003                      // prescale clock select 3 (external oscillator reference)
@@ -9535,11 +9539,11 @@ typedef struct stKINETIS_LPTMR_CTL
           #define SIM_SCGC5_BME_AND          (volatile unsigned long *)(SIM_BLOCK + 0x1038 + BME_AND_OFFSET)
           #define SIM_SCGC5_BME_XOR          (volatile unsigned long *)(SIM_BLOCK + 0x1038 + BME_XOR_OFFSET)
       #endif
-      #define SIM_SCGC5_LPTIMER0             0x00000001
+      #define SIM_SCGC5_LPTMR0               0x00000001
       #define SIM_SCGC5_REGFILE              0x00000002
       #define SIM_SCGC5_DRYICE               0x00000004
       #define SIM_SCGC5_DRYICESECREG         0x00000008
-      #define SIM_SCGC5_LPTIMER1             0x00000010
+      #define SIM_SCGC5_LPTMR1               0x00000010
       #define SIM_SCGC5_TSI                  0x00000020
       #define SIM_SCGC5_PORTA                0x00000200
       #define SIM_SCGC5_PORTB                0x00000400
@@ -9575,11 +9579,11 @@ typedef struct stKINETIS_LPTMR_CTL
       #endif
           // Bit-banding references
           //
-          #define SIM_SCGC5_SIM_SIM_SCGC5_LPTIMER0 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1038), 0)
+          #define SIM_SCGC5_SIM_SIM_SCGC5_LPTMR0 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1038), 0)
           #define SIM_SCGC5_SIM_SIM_SCGC5_REGFILE BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1038), 1)
           #define SIM_SCGC5_SIM_SIM_SCGC5_DRYICE BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1038), 2)
           #define SIM_SCGC5_SIM_SCGC5_DRYICESECREG BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1038), 3)
-          #define SIM_SCGC5_SIM_SCGC5_LPTIMER1 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1038), 4)
+          #define SIM_SCGC5_SIM_SCGC5_LPTMR1 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1038), 4)
           #define SIM_SCGC5_SIM_SCGC5_TSI BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1038), 5)
           #define SIM_SCGC5_SIM_SCGC5_PORTA BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1038), 9)
           #define SIM_SCGC5_SIM_SCGC5_PORTB BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1038), 10)
@@ -11669,6 +11673,8 @@ typedef struct stKINETIS_LPTMR_CTL
         #define PCC_FLEXIO0              *(volatile unsigned long *)(PCC2_BLOCK + 0x128)
         #define PCC_CMP1                 *(volatile unsigned long *)(PCC2_BLOCK + 0x1bc)
 
+        // For compatibility
+        //
         #define PCC_FLEXTMR0             PCC_TPM0
         #define PCC_FLEXTMR1             PCC_TPM1
         #define PCC_FLEXTMR2             PCC_TPM2

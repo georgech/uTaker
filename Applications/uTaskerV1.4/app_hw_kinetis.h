@@ -506,7 +506,7 @@
 #elif defined FRDM_KL28Z
     #define OSC_LOW_GAIN_MODE
     #define CRYSTAL_FREQUENCY    32768                                   // 32kHz crystal
-  //#define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
+    #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
     #define RUN_FROM_HIRC                                                // clock from fast internal RC clock
       //#define RUN_FROM_HIRC_48MHz                                      // fast IRC trimmed to 48MHz
       //#define RUN_FROM_HIRC_52MHz                                      // fast IRC trimmed to 52MHz
@@ -1440,32 +1440,6 @@
     #undef LAN_REPORT_ACTIVITY
 #endif
 
-#if LPTMR_AVAILABLE > 0                                                  // if the device has a LPTMR (Kenetis E don't have LPTMR)
-  //#define SUPPORT_LPTMR                                                // {28} support low power timer
-    #if defined SUPPORT_LPTMR
-      //#define TICK_USES_LPTMR                                          // use low power timer for TICK so that it continues to operate in stop based low power modes
-        //Select the clock used by the low power timer - if the timer if to continue running in low power modes the clock chosen should continue to run in that mode too
-        //
-      //#define LPTMR_CLOCK_LPO                                          // clock the low power timer from LPO (1kHz)
-      //#define LPTMR_CLOCK_INTERNAL_30_40kHz                            // clock the low power timer from the 30..40kHz internal reference
-      //#define LPTMR_CLOCK_INTERNAL_4MHz                                // clock the low power timer from the 4MHz internal reference
-        #define LPTMR_CLOCK_EXTERNAL_32kHz                               // clock the low power timer from external 32kHz reference
-      //#define LPTMR_CLOCK_OSCERCLK                                     // clock the low power timer from the external reference
-        #if defined FRDM_K64F || defined FreeLON
-          //#define LPTMR_PRESCALE   64                                  // when using the external oscillator add this pre-scaler value to the low power timer input
-            #undef LPTMR_CLOCK_OSCERCLK
-            #define LPTMR_CLOCK_LPO                                      // run the low power timer from the 1kHz low power clock
-        #elif defined FRDM_KL02Z
-            #undef LPTMR_CLOCK_OSCERCLK
-            #define LPTMR_CLOCK_EXTERNAL_32kHz                           // run the low power timer from the 32kHz oscillator
-        #elif defined FRDM_KL46Z
-            #define LPTMR_PRESCALE   32                                  // when using the external oscillator add this pre-scaler value to the low power timer input
-        #elif defined LPTMR_CLOCK_EXTERNAL_32kHz && defined FRDM_K22F    // use the RTC oscillator as ERCLK32k source
-            #define LPTMR_CLOCK_RTC_32kHz
-        #endif
-    #endif
-#endif
-
 #if defined KINETIS_KV || defined KINETIS_KL02 || defined KINETIS_K02    // device without RTC
     #define SUPPORT_SW_RTC                                               // support real time clock based purely on software
 #elif defined KINETIS_KE && !defined KINETIS_KE15
@@ -1514,6 +1488,32 @@
 // therefore its position should only be moved after careful consideration of its consequences
 //
 #include "../../Hardware/Kinetis/kinetis.h"                              // include the Kinetis processor header at this location
+
+#if LPTMR_AVAILABLE > 0                                                  // if the device has a LPTMR (Kenetis E don't have LPTMR)
+    #define SUPPORT_LPTMR                                                // {28} support low power timer
+    #if defined SUPPORT_LPTMR
+      //#define TICK_USES_LPTMR                                          // use low power timer for TICK so that it continues to operate in stop based low power modes
+        //Select the clock used by the low power timer - if the timer if to continue running in low power modes the clock chosen should continue to run in that mode too
+        //
+      //#define LPTMR_CLOCK_LPO                                          // clock the low power timer from LPO (1kHz)
+      //#define LPTMR_CLOCK_INTERNAL_30_40kHz                            // clock the low power timer from the 30..40kHz internal reference
+      //#define LPTMR_CLOCK_INTERNAL_4MHz                                // clock the low power timer from the 4MHz internal reference
+        #define LPTMR_CLOCK_EXTERNAL_32kHz                               // clock the low power timer from external 32kHz reference
+      //#define LPTMR_CLOCK_OSCERCLK                                     // clock the low power timer from the external reference
+        #if defined FRDM_K64F || defined FreeLON
+          //#define LPTMR_PRESCALE   64                                  // when using the external oscillator add this pre-scaler value to the low power timer input
+            #undef LPTMR_CLOCK_OSCERCLK
+            #define LPTMR_CLOCK_LPO                                      // run the low power timer from the 1kHz low power clock
+        #elif defined FRDM_KL02Z
+            #undef LPTMR_CLOCK_OSCERCLK
+            #define LPTMR_CLOCK_EXTERNAL_32kHz                           // run the low power timer from the 32kHz oscillator
+        #elif defined FRDM_KL46Z
+            #define LPTMR_PRESCALE   32                                  // when using the external oscillator add this pre-scaler value to the low power timer input
+        #elif defined LPTMR_CLOCK_EXTERNAL_32kHz && defined FRDM_K22F    // use the RTC oscillator as ERCLK32k source
+            #define LPTMR_CLOCK_RTC_32kHz
+        #endif
+    #endif
+#endif
 
 #if defined RNG_AVAILABLE
     #define RND_HW_SUPPORT                                               // enable the use of the hardware resources in this chip

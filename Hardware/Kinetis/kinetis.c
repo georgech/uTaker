@@ -1225,7 +1225,7 @@ static __interrupt void _RealTimeInterrupt(void)
 extern void fnStartTick(void)
 {
 #if defined TICK_USES_LPTMR                                              // {94} use the low power timer to derive the tick interrupt from
-    POWER_UP_ATOMIC(5, LPTIMER);                                         // ensure that the timer can be accessed
+    POWER_UP_ATOMIC(5, LPTMR0);                                          // ensure that the timer can be accessed
     LPTMR0_CSR = LPTMR_CSR_TCF;                                          // reset the timer and ensure no pending interrupts
     #if defined LPTMR_CLOCK_LPO                                          // define the low power clock speed for calculations
     LPTMR0_PSR = (LPTMR_PSR_PCS_LPO | LPTMR_PSR_PBYP);

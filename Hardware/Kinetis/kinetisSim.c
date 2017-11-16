@@ -8079,24 +8079,30 @@ extern int fnSimTimers(void)
     }
 #endif
 #if defined SUPPORT_LPTMR                                                // {35}
-    if (((SIM_SCGC5 & SIM_SCGC5_LPTIMER0) != 0) && ((LPTMR0_CSR & LPTMR_CSR_TEN) != 0)) { // if the low power timer is enabled and running
+    if (((IS_POWERED_UP(5, LPTMR0)) != 0) && ((LPTMR0_CSR & LPTMR_CSR_TEN) != 0)) { // if the low power timer is enabled and running
         unsigned long ulCount = 0;                                       // count in a tick period
         switch (LPTMR0_PSR & LPTMR_PSR_PCS_OSC0ERCLK) {
-        case LPTMR_PSR_PCS_LPO:
+        case LPTMR_PSR_PCS_LPO:                                          // LPO source
     #if TICK_RESOLUTION >= 1000
             ulCount = (TICK_RESOLUTION/1000);                            // counts in a tick interval
     #else
             ulCount = 1;
     #endif
             break;
+    #if defined KINETIS_WITH_SCG
+        case LPTMR_PSR_PCS_SIRCCLK:
+            _EXCEPTION("To add");
+            break;
+    #else
         case LPTMR_PSR_PCS_MCGIRCLK:
-            if ((MCG_C2 & MCG_C2_IRCS) != 0) {
+            if ((MCG_C2 & MCG_C2_IRCS) != 0) {                           // using 4MHz RC
                 ulCount = (TICK_RESOLUTION * (4000000/1000000));
             }
             else {
-                ulCount = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)35000)/1000000);
+                ulCount = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)35000)/1000000); // using 35kHz RC
             }
             break;
+    #endif
         case LPTMR_PSR_PCS_ERCLK32K:
             ulCount = ((TICK_RESOLUTION * 32768)/1000000);               // counts in a tick interval
             break;
@@ -8137,7 +8143,7 @@ extern int fnSimTimers(void)
         LPTMR0_CNR = ulCount;
     }
     #if LPTMR_AVAILABLE > 1
-        if (((SIM_SCGC5 & SIM_SCGC5_LPTIMER1) != 0) && ((LPTMR1_CSR & LPTMR_CSR_TEN) != 0)) { // if the low power timer is enabled and running
+        if (((IS_POWERED_UP(5, LPTMR1)) != 0) && ((LPTMR1_CSR & LPTMR_CSR_TEN) != 0)) { // if the low power timer is enabled and running
         unsigned long ulCount = 0;                                       // count in a tick period
         switch (LPTMR1_PSR & LPTMR_PSR_PCS_OSC0ERCLK) {
         case LPTMR_PSR_PCS_LPO:
@@ -8147,6 +8153,11 @@ extern int fnSimTimers(void)
             ulCount = 1;
     #endif
             break;
+    #if defined KINETIS_WITH_SCG
+        case LPTMR_PSR_PCS_SIRCCLK:
+            _EXCEPTION("To add");
+            break;
+    #else
         case LPTMR_PSR_PCS_MCGIRCLK:
             if ((MCG_C2 & MCG_C2_IRCS) != 0) {
                 ulCount = (TICK_RESOLUTION * (4000000/1000000));
@@ -8155,6 +8166,7 @@ extern int fnSimTimers(void)
                 ulCount = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)35000)/1000000);
             }
             break;
+    #endif
         case LPTMR_PSR_PCS_ERCLK32K:
             ulCount = ((TICK_RESOLUTION * 32768)/1000000);               // counts in a tick interval
             break;
