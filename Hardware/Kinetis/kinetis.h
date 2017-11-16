@@ -11608,6 +11608,9 @@ typedef struct stKINETIS_LPTMR_CTL
             #define PCC_INTMUX0_BME_AND  (volatile unsigned long *)(PCC_BLOCK + 0x090 + BME_AND_OFFSET)
             #define PCC_INTMUX0_BME_XOR  (volatile unsigned long *)(PCC_BLOCK + 0x090 + BME_XOR_OFFSET)
         #define PCC_TPM2                 *(volatile unsigned long *)(PCC_BLOCK + 0x0b8)
+            #define PCC_TPM2_BME_OR      (volatile unsigned long *)(PCC_BLOCK + 0x0b8 + BME_OR_OFFSET)
+            #define PCC_TPM2_BME_AND     (volatile unsigned long *)(PCC_BLOCK + 0x0b8 + BME_AND_OFFSET)
+            #define PCC_TPM2_BME_XOR     (volatile unsigned long *)(PCC_BLOCK + 0x0b8 + BME_XOR_OFFSET)
         #define PCC_LPIT0                *(volatile unsigned long *)(PCC_BLOCK + 0x0c0)
             #define PCC_LPIT0_BME_OR     (volatile unsigned long *)(PCC_BLOCK + 0x0c0 + BME_OR_OFFSET)
             #define PCC_LPIT0_BME_AND    (volatile unsigned long *)(PCC_BLOCK + 0x0c0 + BME_AND_OFFSET)
@@ -11653,7 +11656,13 @@ typedef struct stKINETIS_LPTMR_CTL
 
         #define PCC_TRNG                 *(volatile unsigned long *)(PCC2_BLOCK + 0x094)
         #define PCC_TPM0                 *(volatile unsigned long *)(PCC2_BLOCK + 0x0b0)
+            #define PCC_TPM0_BME_OR      (volatile unsigned long *)(PCC2_BLOCK + 0x0b0 + BME_OR_OFFSET)
+            #define PCC_TPM0_BME_AND     (volatile unsigned long *)(PCC2_BLOCK + 0x0b0 + BME_AND_OFFSET)
+            #define PCC_TPM0_BME_XOR     (volatile unsigned long *)(PCC2_BLOCK + 0x0b0 + BME_XOR_OFFSET)
         #define PCC_TPM1                 *(volatile unsigned long *)(PCC2_BLOCK + 0x0b4)
+            #define PCC_TPM1_BME_OR      (volatile unsigned long *)(PCC2_BLOCK + 0x0b4 + BME_OR_OFFSET)
+            #define PCC_TPM1_BME_AND     (volatile unsigned long *)(PCC2_BLOCK + 0x0b4 + BME_AND_OFFSET)
+            #define PCC_TPM1_BME_XOR     (volatile unsigned long *)(PCC2_BLOCK + 0x0b4 + BME_XOR_OFFSET)
         #define PCC_LPTMR1               *(volatile unsigned long *)(PCC2_BLOCK + 0x0d4)
             #define PCC_LPTMR1_BME_OR    (volatile unsigned long *)(PCC2_BLOCK + 0x0d4 + BME_OR_OFFSET)
             #define PCC_LPTMR1_BME_AND   (volatile unsigned long *)(PCC2_BLOCK + 0x0d4 + BME_AND_OFFSET)
@@ -11676,8 +11685,17 @@ typedef struct stKINETIS_LPTMR_CTL
         // For compatibility
         //
         #define PCC_FLEXTMR0             PCC_TPM0
+            #define PCC_FTM0_BME_OR      PCC_TPM0_BME_OR
+            #define PCC_FTM0_BME_AND     PCC_TPM0_BME_AND
+            #define PCC_FTM0_BME_XOR     PCC_TPM0_BME_XOR
         #define PCC_FLEXTMR1             PCC_TPM1
+            #define PCC_FTM1_BME_OR      PCC_TPM1_BME_OR
+            #define PCC_FTM1_BME_AND     PCC_TPM1_BME_AND
+            #define PCC_FTM1_BME_XOR     PCC_TPM1_BME_XOR
         #define PCC_FLEXTMR2             PCC_TPM2
+            #define PCC_FTM2_BME_OR      PCC_TPM2_BME_OR
+            #define PCC_FTM2_BME_AND     PCC_TPM2_BME_AND
+            #define PCC_FTM2_BME_XOR     PCC_TPM2_BME_XOR
     #endif
     #define PCC_USBOTG                   PCC_USB0FS                      // for compatibility
         #define PCC_USBOTG_BME_OR        PCC_USB0FS_BME_OR

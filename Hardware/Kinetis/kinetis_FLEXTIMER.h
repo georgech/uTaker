@@ -175,8 +175,12 @@ static __interrupt void _flexTimerInterrupt_3(void)
             register int iPrescaler = 0;
             FLEX_TIMER_MODULE *ptrFlexTimer;
     #if defined KINETIS_KL
+        #if !defined KINETIS_WITH_PCC
             unsigned long ulExtSelect;
-        #if defined TPM_CLOCKED_FROM_MCGIRCLK                            // {2}
+        #endif
+        #if defined KINETIS_WITH_PCC
+            _EXCEPTION("To do");
+        #elif defined TPM_CLOCKED_FROM_MCGIRCLK                          // {2}
             #if !defined RUN_FROM_LIRC                                   // {3} if the processor is running from the the internal clock we don't adjust settings here
             MCG_C1 |= (MCG_C1_IRCLKEN | MCG_C1_IREFSTEN);                // enable internal reference clock and allow it to continue running in stop modes
                 #if defined USE_FAST_INTERNAL_CLOCK
@@ -204,10 +208,12 @@ static __interrupt void _flexTimerInterrupt_3(void)
                 ptrFlexTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_0;         // KL and KE parts actually use the TPM which is however very similar to the FlexTimer
     #if defined KINETIS_KL
                 iInterruptID = irq_TPM0_ID;
-        #if defined KINETIS_KL82                                         // {5}
+        #if !defined KINETIS_WITH_PCC
+            #if defined KINETIS_KL82                                     // {5}
                 ulExtSelect = SIM_SOPT9_TPM0CLKSEL;
-        #else
+            #else
                 ulExtSelect = SIM_SOPT4_FTM0CLKSEL;
+            #endif
         #endif
     #else
                 iInterruptID = irq_FTM0_ID;
@@ -223,10 +229,12 @@ static __interrupt void _flexTimerInterrupt_3(void)
                 ptrFlexTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_1;         // KL and KE parts actually use the TPM which is however very similar to the FlexTimer
         #if defined KINETIS_KL
                 iInterruptID = irq_TPM1_ID;
-            #if defined KINETIS_KL82                                     // {5}
+            #if !defined KINETIS_WITH_PCC
+                #if defined KINETIS_KL82                                 // {5}
                 ulExtSelect = SIM_SOPT9_TPM1CLKSEL;
-            #else
+                #else
                 ulExtSelect = SIM_SOPT4_FTM1CLKSEL;
+                #endif
             #endif
         #else
                 iInterruptID = irq_FTM1_ID;
@@ -251,10 +259,12 @@ static __interrupt void _flexTimerInterrupt_3(void)
                 ptrFlexTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_2;         // KL and KE parts actually use the TPM which is however very similar to the FlexTimer
         #if defined KINETIS_KL
                 iInterruptID = irq_TPM2_ID;
-            #if defined KINETIS_KL82                                     // {5}
+            #if !defined KINETIS_WITH_PCC
+                #if defined KINETIS_KL82                                 // {5}
                 ulExtSelect = SIM_SOPT9_TPM2CLKSEL;
-            #else
+                #else
                 ulExtSelect = SIM_SOPT4_FTM2CLKSEL;
+                #endif
             #endif
         #else
                 iInterruptID = irq_FTM2_ID;
@@ -339,10 +349,12 @@ static __interrupt void _flexTimerInterrupt_3(void)
             if ((ptrTimerSetup->timer_mode & (TIMER_EXT_CLK_0 | TIMER_EXT_CLK_1)) != 0) { // {4} the external clock source is to be used
                 usFlexTimerMode[iTimerReference] |= (FTM_SC_CLKS_EXT | FTM_SC_TOIE | FTM_SC_TOF); // select external clock (which should be half the speed of the module's clock due to synchronisation requirements)
                 if ((ptrTimerSetup->timer_mode & (TIMER_EXT_CLK_1)) != 0) {
-        #if defined KINETIS_KL82                                         // {5}
+        #if !defined KINETIS_WITH_PCC
+            #if defined KINETIS_KL82                                     // {5}
                     SIM_SOPT9 |= ulExtSelect;                            // select CLKIN1 source to this timer
-        #else
+            #else
                     SIM_SOPT4 |= ulExtSelect;                            // select CLKIN1 source to this timer
+            #endif
         #endif
         #if defined KINETIS_KL03
                     _CONFIG_PERIPHERAL(B, 6, (PB_6_TPM_CLKIN1 | PORT_PS_UP_ENABLE)); // TPM_CLKIN1 on PB.6 (alt. function 3)
@@ -351,10 +363,12 @@ static __interrupt void _flexTimerInterrupt_3(void)
         #endif
                 }
                 else {
-        #if defined KINETIS_KL82                                         // {5}
+        #if !defined KINETIS_WITH_PCC
+            #if defined KINETIS_KL82                                     // {5}
                     SIM_SOPT9 &= ~(ulExtSelect);                         // select CLKIN0 source to this timer
-        #else
+            #else
                     SIM_SOPT4 &= ~(ulExtSelect);                         // select CLKIN0 source to this timer
+            #endif
         #endif
         #if defined KINETIS_KL03
                     _CONFIG_PERIPHERAL(A, 12, (PA_12_TPM_CLKIN0 | PORT_PS_UP_ENABLE)); // TPM_CLKIN0 on PA.12 (alt. function 3)

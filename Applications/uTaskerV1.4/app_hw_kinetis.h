@@ -1490,7 +1490,7 @@
 #include "../../Hardware/Kinetis/kinetis.h"                              // include the Kinetis processor header at this location
 
 #if LPTMR_AVAILABLE > 0                                                  // if the device has a LPTMR (Kenetis E don't have LPTMR)
-    #define SUPPORT_LPTMR                                                // {28} support low power timer
+  //#define SUPPORT_LPTMR                                                // {28} support low power timer
     #if defined SUPPORT_LPTMR
       //#define TICK_USES_LPTMR                                          // use low power timer for TICK so that it continues to operate in stop based low power modes
         //Select the clock used by the low power timer - if the timer if to continue running in low power modes the clock chosen should continue to run in that mode too

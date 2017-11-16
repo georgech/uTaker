@@ -155,7 +155,9 @@ static __interrupt void _PWM_Interrupt_5(void)
             unsigned char ucFlexTimer = (ptrPWM_settings->pwm_reference >> _TIMER_MODULE_SHIFT);
             FLEX_TIMER_MODULE *ptrFlexTimer;
     #if defined KINETIS_KL
-        #if defined TPM_CLOCKED_FROM_MCGIRCLK                            // {1}
+        #if defined KINETIS_WITH_PCC
+            _EXCEPTION("To do");
+        #elif defined TPM_CLOCKED_FROM_MCGIRCLK                          // {1}
             #if !defined RUN_FROM_LIRC                                   // {5} if the processor is running from the the internal clock we don't change settings here
             MCG_C1 |= (MCG_C1_IRCLKEN | MCG_C1_IREFSTEN);                // enable internal reference clock and allow it to continue running in stop modes
                 #if defined USE_FAST_INTERNAL_CLOCK
@@ -304,7 +306,7 @@ static __interrupt void _PWM_Interrupt_5(void)
                     _CONFIG_PERIPHERAL(A, 19, (PA_19_FTM_CLKIN1 | PORT_PS_UP_ENABLE)); // FTM_CKLIN1 on PA.19 (alt. function 4)
         #endif
     #else
-        #if !defined KINETIS_KE && !defined KINETIS_KL82
+        #if !defined KINETIS_KE && !defined KINETIS_KL82 && !defined KINETIS_KL28
                     SIM_SOPT4 &= ~(SIM_SOPT4_FTM0CLKSEL << ucChannel);   // select CLKIN0 to FTM
         #endif
         #if defined KINETIS_KL02 && defined TPMCLKIN0_ALT

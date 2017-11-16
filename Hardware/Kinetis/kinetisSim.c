@@ -8341,8 +8341,11 @@ extern int fnSimTimers(void)
     #endif
 #endif
 #if defined SUPPORT_TIMER                                                // {29}
-    if (IS_POWERED_UP(6, FTM0) &&((FTM0_SC & (FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)) != 0)) { // if the FlexTimer is powered and clocked
-    #if defined KINETIS_KL
+    if (IS_POWERED_UP(6, FTM0) &&((FTM0_SC & (FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)) != 0)) { // if the TPM/FlexTimer is powered and clocked
+    #if defined KINETIS_WITH_PCC
+        unsigned long ulCountIncrease = 0;
+        _EXCEPTION("To do!");
+    #elif defined KINETIS_KL
         unsigned long ulCountIncrease;
         switch (SIM_SOPT2 & SIM_SOPT2_TPMSRC_MCGIRCLK) {                 // {38}
         case SIM_SOPT2_TPMSRC_MCGIRCLK:
@@ -8407,8 +8410,11 @@ extern int fnSimTimers(void)
         }
     }
     #if FLEX_TIMERS_AVAILABLE > 1
-    if (IS_POWERED_UP(6, FTM1) && ((FTM1_SC & (FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)) != 0)) { // if the FlexTimer is powered and clocked
-        #if defined KINETIS_KL
+    if (IS_POWERED_UP(6, FTM1) && ((FTM1_SC & (FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)) != 0)) { // if the TPM/FlexTimer is powered and clocked
+        #if defined KINETIS_WITH_PCC
+        unsigned long ulCountIncrease = 0;
+        _EXCEPTION("To do!");
+        #elif defined KINETIS_KL
         unsigned long ulCountIncrease;
         switch (SIM_SOPT2 & SIM_SOPT2_TPMSRC_MCGIRCLK) {                 // {38}
         case SIM_SOPT2_TPMSRC_MCGIRCLK:
@@ -8471,7 +8477,7 @@ extern int fnSimTimers(void)
             }
         #endif
         }
-        #if defined KINETIS_KL && defined SUPPORT_ADC
+        #if defined KINETIS_KL && defined SUPPORT_ADC && !defined KINETIS_WITH_PCC
         // Check for ADC triggers
         //
         if ((SIM_SOPT7 & SIM_SOPT7_ADC0ALTTRGEN) == 0) {                 // if the default hardware trigger source is used
@@ -8492,7 +8498,10 @@ extern int fnSimTimers(void)
     if (IS_POWERED_UP(3, FTM2) &&((FTM2_SC & FTM_SC_CLKS_EXT) != 0))  // if the FlexTimer is powered and clocked
         #endif
     {
-        #if defined KINETIS_KL
+        #if defined KINETIS_WITH_PCC
+        unsigned long ulCountIncrease = 0;
+        _EXCEPTION("To do!");
+        #elif defined KINETIS_KL
         unsigned long ulCountIncrease;
         switch (SIM_SOPT2 & SIM_SOPT2_TPMSRC_MCGIRCLK) {                 // {38}
         case SIM_SOPT2_TPMSRC_MCGIRCLK:
@@ -9941,6 +9950,7 @@ extern int fnCheckBitBandPeripheralValue(unsigned long *bit_band_address)
     return ((*(unsigned long *)ulRegAddress & ulBit) != 0);
 }
 
+#if defined KINETIS_WITH_PCC
 // Calculate the selected clock speed at a peripheral connected by PCC
 //
 extern unsigned long fnGetPCC_clock(int iReference)
@@ -10016,6 +10026,7 @@ extern unsigned long fnGetPCC_clock(int iReference)
     }
     return ulClockSpeed;
 }
+#endif
 
 #if 1 //defined RUN_IN_FREE_RTOS
 extern unsigned long *fnGetRegisterAddress(unsigned long ulAddress)
