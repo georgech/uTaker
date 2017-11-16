@@ -929,6 +929,14 @@ static void fnSetDevice(unsigned long *port_inits)
     FTM1_MODE = FTM_MODE_WPDIS;
     FTM2_MODE = FTM_MODE_WPDIS;
 #endif
+#if defined KINETIS_KL28
+    FTM0_VERID = 0x05000007;
+    FTM0_PARAM = 0x00101006;
+    FTM1_VERID = 0x05000007;
+    FTM1_PARAM = 0x00101006;
+    FTM2_VERID = 0x05000007;
+    FTM2_PARAM = 0x00101006;
+#endif
 #if defined SDRAM_CONTROLLER_AVAILABLE
     NFC_CMD1  = 0x30ff0000;                                              // {1} NAND flash controller
     NFC_CMD2  = 0x007ee000;
@@ -8343,8 +8351,7 @@ extern int fnSimTimers(void)
 #if defined SUPPORT_TIMER                                                // {29}
     if (IS_POWERED_UP(6, FTM0) &&((FTM0_SC & (FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)) != 0)) { // if the TPM/FlexTimer is powered and clocked
     #if defined KINETIS_WITH_PCC
-        unsigned long ulCountIncrease = 0;
-        _EXCEPTION("To do!");
+        unsigned long ulCountIncrease = fnGetPCC_clock(KINETIS_PERIPHERAL_FTM0); // get the speed of the clock used by this module
     #elif defined KINETIS_KL
         unsigned long ulCountIncrease;
         switch (SIM_SOPT2 & SIM_SOPT2_TPMSRC_MCGIRCLK) {                 // {38}
@@ -8412,8 +8419,7 @@ extern int fnSimTimers(void)
     #if FLEX_TIMERS_AVAILABLE > 1
     if (IS_POWERED_UP(6, FTM1) && ((FTM1_SC & (FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)) != 0)) { // if the TPM/FlexTimer is powered and clocked
         #if defined KINETIS_WITH_PCC
-        unsigned long ulCountIncrease = 0;
-        _EXCEPTION("To do!");
+        unsigned long ulCountIncrease = fnGetPCC_clock(KINETIS_PERIPHERAL_FTM1); // get the speed of the clock used by this module
         #elif defined KINETIS_KL
         unsigned long ulCountIncrease;
         switch (SIM_SOPT2 & SIM_SOPT2_TPMSRC_MCGIRCLK) {                 // {38}
@@ -8499,8 +8505,7 @@ extern int fnSimTimers(void)
         #endif
     {
         #if defined KINETIS_WITH_PCC
-        unsigned long ulCountIncrease = 0;
-        _EXCEPTION("To do!");
+        unsigned long ulCountIncrease = fnGetPCC_clock(KINETIS_PERIPHERAL_FTM2); // get the speed of the clock used by this module
         #elif defined KINETIS_KL
         unsigned long ulCountIncrease;
         switch (SIM_SOPT2 & SIM_SOPT2_TPMSRC_MCGIRCLK) {                 // {38}
@@ -8567,8 +8572,10 @@ extern int fnSimTimers(void)
     }
     #endif
     #if FLEX_TIMERS_AVAILABLE > 3
-    if (((SIM_SCGC3 & SIM_SCGC3_FTM3) != 0) && ((FTM3_SC & (FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)) != 0)) { // if the FlexTimer is powered and clocked
-        #if defined KINETIS_KL
+    if (((IS_POWERED_UP(3, FTM3)) != 0) && ((FTM3_SC & (FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)) != 0)) { // if the FlexTimer is powered and clocked
+        #if defined KINETIS_WITH_PCC
+        unsigned long ulCountIncrease = fnGetPCC_clock(KINETIS_PERIPHERAL_FTM3); // get the speed of the clock used by this module
+        #elif defined KINETIS_KL
         unsigned long ulCountIncrease;
         switch ((SIM_SOPT2 & SIM_SOPT2_TPMSRC_MCGIRCLK) != 0) {          // {38}
         case SIM_SOPT2_TPMSRC_MCGIRCLK:
@@ -9951,78 +9958,116 @@ extern int fnCheckBitBandPeripheralValue(unsigned long *bit_band_address)
 }
 
 #if defined KINETIS_WITH_PCC
+
+static unsigned long fnGetPCC_source(unsigned long ulPCC_setting)
+{
+    unsigned long ulClockSpeed = 0;
+    if ((ulPCC_setting & PCC_CGC) == 0) {
+        return 0;                                                        // clocks to the module are not enabled
+    }
+    switch (ulPCC_setting & PCC_PCS_MASK) {
+    case PCC_PCS_CLOCK_OFF:
+        return 0;                                                        // no clock source is selected
+    case PCC_PCS_SCGPCLK:                                                // system PLL clock
+    case PCC_PCS_OSCCLK:                                                 // system oscillator bus clock
+    case PCC_PCS_SCGIRCLK:                                               // slow IRC clock
+        _EXCEPTION("To add!");
+        break;
+    case PCC_PCS_SCGFIRCLK:                                              // fast IRC clock
+        if ((SCG_FIRCCSR & SCG_FIRCCSR_FIRCEN) == 0) {                   // check that the fast IRC is enabled
+            return 0;                                                    // no clock source enabled
+        }
+        else {
+            unsigned long ulSourceDivider;
+            switch (SCG_FIRCCFG) {
+            case SCG_FIRCCFG_RANGE_60MHz:
+                ulClockSpeed = 60000000;
+                break;
+            case SCG_FIRCCFG_RANGE_56MHz:
+                ulClockSpeed = 56000000;
+                break;
+            case SCG_FIRCCFG_RANGE_52MHz:
+                ulClockSpeed = 52000000;
+                break;
+            case SCG_FIRCCFG_RANGE_48MHz:
+                ulClockSpeed = 48000000;
+                break;
+            default:
+                _EXCEPTION("Invalid FIRC selected!");
+                break;
+            }
+            ulSourceDivider = ((SCG_FIRCDIV >> PERIPHERAL_CLOCK_DIV_SHIFT) & 0x7);
+            switch (ulSourceDivider) {
+            case 0:
+                return 0;                                            // peripheral clock source enabled
+            case 1:                                                  // divide by 1
+                break;
+            case 2:                                                  // divide by 2
+                ulClockSpeed /= 2;
+                break;
+            case 3:                                                  // divide by 4
+                ulClockSpeed /= 4;
+                break;
+            case 4:                                                  // divide by 8
+                ulClockSpeed /= 8;
+                break;
+            case 5:                                                  // divide by 16
+                ulClockSpeed /= 16;
+                break;
+            case 6:                                                  // divide by 32
+                ulClockSpeed /= 32;
+                break;
+            case 7:                                                  // divide by 64
+                ulClockSpeed /= 64;
+                break;
+            }
+        }
+        break;
+    default:
+        _EXCEPTION("Invalid clock source!");
+        break;
+    }
+    return ulClockSpeed;
+}
+
 // Calculate the selected clock speed at a peripheral connected by PCC
 //
 extern unsigned long fnGetPCC_clock(int iReference)
 {
     unsigned long ulClockSpeed = 0;
     switch (iReference) {
+    #if defined PCC_ADC0
     case KINETIS_PERIPHERAL_ADC0:
-        if ((PCC_ADC0 & PCC_CGC) == 0) {
-            return 0;                                                    // clocks to the module are not enabled
-        }
-        switch (PCC_ADC0 & PCC_PCS_MASK) {
-        case PCC_PCS_CLOCK_OFF:
-            return 0;                                                    // no clock source is selected
-        case PCC_PCS_OSCCLK:                                             // system oscillator bus clock
-        case PCC_PCS_SCGIRCLK:                                           // slow IRC clock
-        case PCC_PCS_SCGFIRCLK:                                          // fast IRC clock
-            if ((SCG_FIRCCSR & SCG_FIRCCSR_FIRCEN) == 0) {               // check that the fast IRC is enabled
-                return 0;                                                // no clock source enabled
-            }
-            else {
-                unsigned long ulSourceDivider;
-                switch (SCG_FIRCCFG) {
-                case SCG_FIRCCFG_RANGE_60MHz:
-                    ulClockSpeed = 60000000;
-                    break;
-                case SCG_FIRCCFG_RANGE_56MHz:
-                    ulClockSpeed = 56000000;
-                    break;
-                case SCG_FIRCCFG_RANGE_52MHz:
-                    ulClockSpeed = 52000000;
-                    break;
-                case SCG_FIRCCFG_RANGE_48MHz:
-                    ulClockSpeed = 48000000;
-                    break;
-                default:
-                    _EXCEPTION("Invalid FIRC selected!");
-                    break;
-                }
-                ulSourceDivider = ((SCG_FIRCDIV >> PERIPHERAL_CLOCK_DIV_SHIFT) & 0x7);
-                switch (ulSourceDivider) {
-                case 0:
-                    return 0;                                            // peripheral clock source enabled
-                case 1:                                                  // divide by 1
-                    break;
-                case 2:                                                  // divide by 2
-                    ulClockSpeed /= 2;
-                    break;
-                case 3:                                                  // divide by 4
-                    ulClockSpeed /= 4;
-                    break;
-                case 4:                                                  // divide by 8
-                    ulClockSpeed /= 8;
-                    break;
-                case 5:                                                  // divide by 16
-                    ulClockSpeed /= 16;
-                    break;
-                case 6:                                                  // divide by 32
-                    ulClockSpeed /= 32;
-                    break;
-                case 7:                                                  // divide by 64
-                    ulClockSpeed /= 64;
-                    break;
-                }
-            }
-            break;
-        case PCC_PCS_SCGPCLK:                                            // system PLL clock
-            break;
-        default:
-            _EXCEPTION("Invalid clock source!");
-            break;
-        }
-        break;
+        return fnGetPCC_source(PCC_ADC0);
+    #endif
+    #if defined PCC_ADC1
+    case KINETIS_PERIPHERAL_ADC1:
+        return fnGetPCC_source(PCC_ADC1);
+    #endif
+    #if defined PCC_ADC2
+    case KINETIS_PERIPHERAL_ADC2:
+        return fnGetPCC_source(PCC_ADC2);
+    #endif
+    #if defined PCC_ADC3
+    case KINETIS_PERIPHERAL_ADC3:
+        return fnGetPCC_source(PCC_ADC3);
+    #endif
+    #if defined PCC_FTM0
+    case KINETIS_PERIPHERAL_FTM0:
+        return fnGetPCC_source(PCC_FTM0);
+    #endif
+    #if defined PCC_FTM1
+    case KINETIS_PERIPHERAL_FTM1:
+        return fnGetPCC_source(PCC_FTM1);
+    #endif
+    #if defined PCC_FTM2
+    case KINETIS_PERIPHERAL_FTM2:
+        return fnGetPCC_source(PCC_FTM2);
+    #endif
+    #if defined PCC_FTM3
+    case KINETIS_PERIPHERAL_FTM3:
+        return fnGetPCC_source(PCC_FTM3);
+    #endif
     }
     return ulClockSpeed;
 }

@@ -1634,9 +1634,18 @@ unsigned long PIT_TFLG1;
 
 typedef struct stKINETIS_FTM
 {
+#if defined KINETIS_KL28
+    unsigned long FTM_VERID;
+    unsigned long FTM_PARAM;
+    unsigned long FTM_GLOBAL;
+    unsigned long ulRes_0;
+#endif
 unsigned long FTM_SC;
 unsigned long FTM_CNT;
 unsigned long FTM_MOD;
+#if defined KINETIS_KL28
+    unsigned long FTM_STATUS;
+#endif
 unsigned long FTM_C0SC;
 unsigned long FTM_C0V;
 unsigned long FTM_C1SC;
@@ -1650,9 +1659,21 @@ unsigned long FTM_C4V;
 unsigned long FTM_C5SC;
 unsigned long FTM_C5V;
 #if defined KINETIS_KL || defined KINETIS_KE
-    unsigned long ulRes0[6];
-    unsigned long FTM_STATUS;
-    unsigned long ulRes1[12];
+    #if defined KINETIS_KL28
+        unsigned long ulRes0[5];
+        unsigned long FTM_COMBINE;
+        unsigned long ulRes1;
+        unsigned long FTM_TRIG;
+        unsigned long FTM_POL;
+        unsigned long ulRes2;
+        unsigned long FTM_FILTER;
+        unsigned long ulRes3;
+        unsigned long FTM_QDCTRL;
+    #else
+        unsigned long ulRes0[6];
+        unsigned long FTM_STATUS;
+        unsigned long ulRes1[12];
+    #endif
     unsigned long FTM_CONF;
 #else
     unsigned long FTM_C6SC;
@@ -3641,3 +3662,7 @@ extern KINETIS_PERIPH kinetis;
 #define KINETIS_PERIPHERAL_ADC1 1
 #define KINETIS_PERIPHERAL_ADC2 2
 #define KINETIS_PERIPHERAL_ADC3 3
+#define KINETIS_PERIPHERAL_FTM0 4
+#define KINETIS_PERIPHERAL_FTM1 5
+#define KINETIS_PERIPHERAL_FTM2 6
+#define KINETIS_PERIPHERAL_FTM3 7

@@ -1464,7 +1464,7 @@
     #endif
 #endif
 
-//#define SUPPORT_TIMER                                                  // support hardware timer interrupt configuration (FlexTimer or TPM)
+#define SUPPORT_TIMER                                                    // support hardware timer interrupt configuration (FlexTimer or TPM)
   //#define SUPPORT_CAPTURE                                              // support capture mode of operation
 
 #if defined KINETIS_KL || defined KINETIS_K66
@@ -3104,6 +3104,11 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define LPUART2_PCC_SOURCE     PCC_PCS_SCGFIRCLK
 
     #define LPIT0_PCC_SOURCE       PCC_PCS_SCGFIRCLK
+
+    #define FTM0_PCC_SOURCE        PCC_PCS_SCGFIRCLK
+    #define FTM1_PCC_SOURCE        PCC_PCS_SCGFIRCLK
+    #define FTM2_PCC_SOURCE        PCC_PCS_SCGFIRCLK
+    #define FTM3_PCC_SOURCE        PCC_PCS_SCGFIRCLK
 #endif
 
 // Ports

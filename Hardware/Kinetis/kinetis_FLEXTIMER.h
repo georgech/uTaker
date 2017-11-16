@@ -177,33 +177,38 @@ static __interrupt void _flexTimerInterrupt_3(void)
     #if defined KINETIS_KL
         #if !defined KINETIS_WITH_PCC
             unsigned long ulExtSelect;
-        #endif
-        #if defined KINETIS_WITH_PCC
-            _EXCEPTION("To do");
-        #elif defined TPM_CLOCKED_FROM_MCGIRCLK                          // {2}
-            #if !defined RUN_FROM_LIRC                                   // {3} if the processor is running from the the internal clock we don't adjust settings here
+            #if defined TPM_CLOCKED_FROM_MCGIRCLK                        // {2}
+                #if !defined RUN_FROM_LIRC                               // {3} if the processor is running from the the internal clock we don't adjust settings here
             MCG_C1 |= (MCG_C1_IRCLKEN | MCG_C1_IREFSTEN);                // enable internal reference clock and allow it to continue running in stop modes
-                #if defined USE_FAST_INTERNAL_CLOCK
+                    #if defined USE_FAST_INTERNAL_CLOCK
             MCG_SC = 0;                                                  // remove fast IRC divider
             MCG_C2 |= MCG_C2_IRCS;                                       // select fast internal reference clock (4MHz)
-                #else
+                    #else
             MCG_C2 &= ~MCG_C2_IRCS;                                      // select slow internal reference clock (32kHz)
+                    #endif
                 #endif
-            #endif
             SIM_SOPT2 |= SIM_SOPT2_TPMSRC_MCGIRCLK;                      // use MCGIRCLK as timer clock source
-        #elif defined TPM_CLOCKED_FROM_OSCERCLK
+            #elif defined TPM_CLOCKED_FROM_OSCERCLK
             OSC0_CR |= (OSC_CR_ERCLKEN | OSC_CR_EREFSTEN);               // enable the external reference clock and keep it enabled in stop mode
             SIM_SOPT2 |= (SIM_SOPT2_TPMSRC_OSCERCLK);                    // use OSCERCLK as timer clock source
-        #else
+            #else
             SIM_SOPT2 |= (SIM_SOPT2_PLLFLLSEL | SIM_SOPT2_TPMSRC_MCG);   // use MCGPLLCLK/2 (or MCGFLL if FLL is used)
+            #endif
         #endif
     #endif
-            switch (iTimerReference) {                                   // FlexTimer to be used
+            switch (iTimerReference) {                                   // FlexTimer/TPM to be used
             case 0:
                 if ((ptrTimerSetup->timer_mode & TIMER_STOP) != 0) {
+    #if defined KINETIS_WITH_PCC
+                    PCC_FTM0 = 0;                                        // disable clocks to module
+    #else
                     POWER_DOWN_ATOMIC(6, FTM0);
+    #endif
                     return;
                 }
+    #if defined KINETIS_WITH_PCC
+                SELECT_PCC_PERIPHERAL_SOURCE(FTM0, FTM0_PCC_SOURCE);     // select the PCC clock used by FlexTimer/TPM 0
+    #endif
                 POWER_UP_ATOMIC(6, FTM0);                                // ensure that the FlexTimer module is powered up
                 ptrFlexTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_0;         // KL and KE parts actually use the TPM which is however very similar to the FlexTimer
     #if defined KINETIS_KL
@@ -222,9 +227,16 @@ static __interrupt void _flexTimerInterrupt_3(void)
     #if FLEX_TIMERS_AVAILABLE > 1
             case 1:
                 if ((ptrTimerSetup->timer_mode & TIMER_STOP) != 0) {
+        #if defined KINETIS_WITH_PCC
+                    PCC_FTM1 = 0;                                        // disable clocks to module
+        #else
                     POWER_DOWN_ATOMIC(6, FTM1);
+        #endif
                     return;
                 }
+        #if defined KINETIS_WITH_PCC
+                SELECT_PCC_PERIPHERAL_SOURCE(FTM1, FTM1_PCC_SOURCE);     // select the PCC clock used by FlexTimer/TPM 1
+        #endif
                 POWER_UP_ATOMIC(6, FTM1);                                // ensure that the FlexTimer module is powered up
                 ptrFlexTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_1;         // KL and KE parts actually use the TPM which is however very similar to the FlexTimer
         #if defined KINETIS_KL
@@ -244,13 +256,20 @@ static __interrupt void _flexTimerInterrupt_3(void)
     #if FLEX_TIMERS_AVAILABLE > 2
             case 2:
                 if ((ptrTimerSetup->timer_mode & TIMER_STOP) != 0) {
-        #if defined KINETIS_KL
-                    POWER_DOWN_ATOMIC(6, FTM2);
+        #if defined KINETIS_WITH_PCC
+                    PCC_FTM2 = 0;                                        // disable clocks to module
         #else
+            #if defined KINETIS_KL
+                    POWER_DOWN_ATOMIC(6, FTM2);
+            #else
                     POWER_DOWN_ATOMIC(3, FTM2);
+            #endif
         #endif
                     return;
                 }
+        #if defined KINETIS_WITH_PCC
+                SELECT_PCC_PERIPHERAL_SOURCE(FTM2, FTM2_PCC_SOURCE);     // select the PCC clock used by FlexTimer/TPM 2
+        #endif
         #if defined KINETIS_KL
                 POWER_UP_ATOMIC(6, FTM2);                                // ensure that the FlexTimer module is powered up
         #else
@@ -274,9 +293,16 @@ static __interrupt void _flexTimerInterrupt_3(void)
     #if FLEX_TIMERS_AVAILABLE > 3
             case 3:
                 if ((ptrTimerSetup->timer_mode & TIMER_STOP) != 0) {
+        #if defined KINETIS_WITH_PCC
+                    PCC_FTM3 = 0;                                        // disable clocks to module
+        #else
                     POWER_DOWN_ATOMIC(3, FTM3);
+        #endif
                     return;
                 }
+        #if defined KINETIS_WITH_PCC
+                SELECT_PCC_PERIPHERAL_SOURCE(FTM3, FTM3_PCC_SOURCE);     // select the PCC clock used by FlexTimer/TPM 3
+        #endif
                 POWER_UP_ATOMIC(3, FTM3);                                // ensure that the FlexTimer module is powered up
                 ptrFlexTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_3;
                 iInterruptID = irq_FTM3_ID;
@@ -328,7 +354,7 @@ static __interrupt void _flexTimerInterrupt_3(void)
             }
             else {
     #endif
-                while (ulDelay > 0xffff) {                               // calculate the prescaler setting
+                while (ulDelay > 0xffff) {                               // calculate the optimal prescaler setting
                     if (iPrescaler >= 7) {
                         ulDelay = 0xffff;                                // set maximum delay
                         break;

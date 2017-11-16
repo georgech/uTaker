@@ -3504,10 +3504,16 @@ typedef struct stVECTOR_TABLE
             #define PIT_BLOCK                  0x40037000                // PITs
         #endif
     #endif
-    #define FTM_BLOCK_0                        0x40038000                // FlexTimer 0 (TPM0 in KL/KE)
-    #define FTM_BLOCK_1                        0x40039000                // FlexTimer 1 (TPM1 in KL/KE)
-    #if defined KINETIS_KL || defined KINETIS_KE
-        #define FTM_BLOCK_2                    0x4003a000                // FlexTimer 2 (TPM2 in KL/KE)
+    #if defined KINETIS_KL28
+        #define FTM_BLOCK_0                    0x400ac000                // FlexTimer 0 (TPM0 in KL/KE)
+        #define FTM_BLOCK_1                    0x400ad000                // FlexTimer 1 (TPM1 in KL/KE)
+        #define FTM_BLOCK_2                    0x4002e000                // FlexTimer 2 (TPM2 in KL/KE)
+    #else
+        #define FTM_BLOCK_0                    0x40038000                // FlexTimer 0 (TPM0 in KL/KE)
+        #define FTM_BLOCK_1                    0x40039000                // FlexTimer 1 (TPM1 in KL/KE)
+        #if defined KINETIS_KL || defined KINETIS_KE
+            #define FTM_BLOCK_2                0x4003a000                // FlexTimer 2 (TPM2 in KL/KE)
+        #endif
     #endif
     #if defined KINETIS_KL28
         #define ADC0_BLOCK                     0x40066000                // ADC0
@@ -6928,11 +6934,19 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
     #endif
 #endif
 
-
-
 // FlexTimer (or TPM in KL/KE parts)
 //
-#define FTM0_SC             *(volatile unsigned long *)(FTM_BLOCK_0 + 0x000) // FTM0 Status and Control
+#if defined KINETIS_KL28
+    #define FTM0_VERID      *(volatile unsigned long *)(FTM_BLOCK_0 + 0x000) // FTM0 version ID register (read-only)
+    #define FTM0_PARAM      *(volatile unsigned long *)(FTM_BLOCK_0 + 0x004) // FTM0 parameter register (read-only)
+    #define FTM0_GLOBAL     *(volatile unsigned long *)(FTM_BLOCK_0 + 0x008) // FTM0 global register
+    #define FTM_OFFSET_0    0x10
+    #define FTM_OFFSET_1    0x14
+#else
+    #define FTM_OFFSET_0    0
+    #define FTM_OFFSET_1    0
+#endif
+#define FTM0_SC             *(volatile unsigned long *)(FTM_BLOCK_0 + FTM_OFFSET_0 + 0x000) // FTM0 status and control
   #define FTM_SC_PS_1       0x00000000                                   // clock prescaler / 1
   #define FTM_SC_PS_2       0x00000001                                   // clock prescaler / 2
   #define FTM_SC_PS_4       0x00000002                                   // clock prescaler / 4
@@ -6957,9 +6971,12 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
   #define FTM_SC_USED_MASK  0x00000fff                                   // mask of non-reserved bits in the register
   #define FLEX_TIMER_SINGLE_SHOT 0x0000                                  // pseudo bits for mode control
   #define FLEX_TIMER_PERIODIC    0x1000
-#define FTM0_CNT            *(volatile unsigned long *)(FTM_BLOCK_0 + 0x004) // FTM0 Counter (16 bit)
-#define FTM0_MOD            *(unsigned long *)(FTM_BLOCK_0 + 0x008)      // FTM0 Modulo (16 bit)
-#define FTM0_C0SC           *(volatile unsigned long *)(FTM_BLOCK_0 + 0x00c) // FTM0 Channel 0 and Control
+#define FTM0_CNT            *(volatile unsigned long *)(FTM_BLOCK_0 + FTM_OFFSET_0 + 0x004) // FTM0 counter (16 bit)
+#define FTM0_MOD            *(unsigned long *)(FTM_BLOCK_0 + FTM_OFFSET_0 + 0x008) // FTM0 modulo (16 bit)
+#if defined KINETIS_KL28
+    #define FTM0_STATUS     *(volatile unsigned long *)(FTM_BLOCK_0 + 0x01c) // FTM0 capture and compare status
+#endif
+#define FTM0_C0SC           *(volatile unsigned long *)(FTM_BLOCK_0 + FTM_OFFSET_1 + 0x00c) // FTM0 channel 0 and control
   #define FTM_CSC_DMA       0x00000001                                   // enable DMA transfers
   #define FTM_CSC_ELSA      0x00000004                                   // edge or level select select A (only writable when MODE[WPDIS] is set)
   #define FTM_CSC_ELSB      0x00000008                                   // edge or level select select B (only writable when MODE[WPDIS] is set)
@@ -6971,20 +6988,28 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
   #define FTM_CSC_MS_ELS_PWM_HIGH_TRUE_PULSES (FTM_CSC_MSB | FTM_CSC_ELSB) // PWM - high-true pulses (clear output on match)
   #define FTM_CSC_MS_ELS_PWM_LOW_TRUE_PULSES  (FTM_CSC_MSB | FTM_CSC_ELSA) // PWM - low-true pulses (set output on match)
 
-#define FTM0_C0V            *(volatile unsigned long *)(FTM_BLOCK_0 + 0x010) // FTM0 Channel 0 Value (16 bit)
-#define FTM0_C1SC           *(volatile unsigned long *)(FTM_BLOCK_0 + 0x014) // FTM0 Channel 1 and Control
-#define FTM0_C1V            *(volatile unsigned long *)(FTM_BLOCK_0 + 0x018) // FTM0 Channel 1 Value (16 bit)
-#define FTM0_C2SC           *(volatile unsigned long *)(FTM_BLOCK_0 + 0x01c) // FTM0 Channel 2 and Control
-#define FTM0_C2V            *(volatile unsigned long *)(FTM_BLOCK_0 + 0x020) // FTM0 Channel 2 Value (16 bit)
-#define FTM0_C3SC           *(volatile unsigned long *)(FTM_BLOCK_0 + 0x024) // FTM0 Channel 3 and Control
-#define FTM0_C3V            *(volatile unsigned long *)(FTM_BLOCK_0 + 0x028) // FTM0 Channel 3 Value (16 bit)
-#define FTM0_C4SC           *(volatile unsigned long *)(FTM_BLOCK_0 + 0x02c) // FTM0 Channel 4 and Control
-#define FTM0_C4V            *(volatile unsigned long *)(FTM_BLOCK_0 + 0x030) // FTM0 Channel 4 Value (16 bit)
-#define FTM0_C5SC           *(volatile unsigned long *)(FTM_BLOCK_0 + 0x034) // FTM0 Channel 5 and Control
-#define FTM0_C5V            *(volatile unsigned long *)(FTM_BLOCK_0 + 0x038) // FTM0 Channel 5 Value (16 bit)
+#define FTM0_C0V            *(volatile unsigned long *)(FTM_BLOCK_0 + FTM_OFFSET_1 + 0x010) // FTM0 channel 0 value (16 bit)
+#define FTM0_C1SC           *(volatile unsigned long *)(FTM_BLOCK_0 + FTM_OFFSET_1 + 0x014) // FTM0 channel 1 and control
+#define FTM0_C1V            *(volatile unsigned long *)(FTM_BLOCK_0 + FTM_OFFSET_1 + 0x018) // FTM0 channel 1 value (16 bit)
+#define FTM0_C2SC           *(volatile unsigned long *)(FTM_BLOCK_0 + FTM_OFFSET_1 + 0x01c) // FTM0 channel 2 and control
+#define FTM0_C2V            *(volatile unsigned long *)(FTM_BLOCK_0 + FTM_OFFSET_1 + 0x020) // FTM0 channel 2 value (16 bit)
+#define FTM0_C3SC           *(volatile unsigned long *)(FTM_BLOCK_0 + FTM_OFFSET_1 + 0x024) // FTM0 channel 3 and control
+#define FTM0_C3V            *(volatile unsigned long *)(FTM_BLOCK_0 + FTM_OFFSET_1 + 0x028) // FTM0 channel 3 value (16 bit)
+#define FTM0_C4SC           *(volatile unsigned long *)(FTM_BLOCK_0 + FTM_OFFSET_1 + 0x02c) // FTM0 channel 4 and control
+#define FTM0_C4V            *(volatile unsigned long *)(FTM_BLOCK_0 + FTM_OFFSET_1 + 0x030) // FTM0 channel 4 value (16 bit)
+#define FTM0_C5SC           *(volatile unsigned long *)(FTM_BLOCK_0 + FTM_OFFSET_1 + 0x034) // FTM0 channel 5 and control
+#define FTM0_C5V            *(volatile unsigned long *)(FTM_BLOCK_0 + FTM_OFFSET_1 + 0x038) // FTM0 channel 5 value (16 bit)
 #if defined KINETIS_KL || defined KINETIS_KE
-    #define FTM0_STATUS         *(volatile unsigned long *)(FTM_BLOCK_0 + 0x050) // FTM0 Capture and Compare Status
-    #define FTM0_CONF           *(unsigned long *)(FTM_BLOCK_0 + 0x084)      // FTM0 Configuration
+    #if defined KINETIS_KL28
+        #define FTM0_COMBINE    *(unsigned long *)(FTM_BLOCK_0 + 0x064)      // FTM0 combine channel register
+        #define FTM0_TRIG       *(unsigned long *)(FTM_BLOCK_0 + 0x06c)      // FTM0 channel trigger register
+        #define FTM0_POL        *(unsigned long *)(FTM_BLOCK_0 + 0x070)      // FTM0 channel polarity register
+        #define FTM0_FILTER     *(unsigned long *)(FTM_BLOCK_0 + 0x078)      // FTM0 filter control register
+        #define FTM0_QDCTRL     *(unsigned long *)(FTM_BLOCK_0 + 0x080)      // FTM0 quadrature decoder control and status register
+    #else
+        #define FTM0_STATUS     *(volatile unsigned long *)(FTM_BLOCK_0 + 0x050) // FTM0 Capture and Compare Status
+    #endif
+    #define FTM0_CONF           *(unsigned long *)(FTM_BLOCK_0 + 0x084)      // FTM0 configuration
       #define FTM_CONF_DOZEEN   0x00000020                                   // FTM doze enable
       #define FTM_CONF_BDMMODE_0  0x00000000                                 // FTM counter stops in bdm mode
       #define FTM_CONF_BDMMODE_3  0x000000c0                                 // FTM counter continues in bdm mode
@@ -7001,13 +7026,13 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
       #define FTM_CONF_TRGSEL2  0x04000000                                   // channel 2 pin input capture (change only when TPM is disabled)
       #define FTM_CONF_TRGSEL3  0x08000000                                   // channel 3 pin input capture (change only when TPM is disabled)
 #else
-    #define FTM0_C6SC           *(volatile unsigned long *)(FTM_BLOCK_0 + 0x03c) // FTM0 Channel 6 and Control
-    #define FTM0_C6V            *(volatile unsigned long *)(FTM_BLOCK_0 + 0x040) // FTM0 Channel 6 Value (16 bit)
-    #define FTM0_C7SC           *(volatile unsigned long *)(FTM_BLOCK_0 + 0x044) // FTM0 Channel 7 and Control
-    #define FTM0_C7V            *(volatile unsigned long *)(FTM_BLOCK_0 + 0x048) // FTM0 Channel 7 Value (16 bit)
-    #define FTM0_CNTIN          *(volatile unsigned long *)(FTM_BLOCK_0 + 0x04c) // FTM0 Counter Initial Value (16 bit)
-    #define FTM0_STATUS         *(volatile unsigned long *)(FTM_BLOCK_0 + 0x050) // FTM0 Capture and Compare Status
-    #define FTM0_MODE           *(volatile unsigned long *)(FTM_BLOCK_0 + 0x054) // FTM0 Features Mode Selection
+    #define FTM0_C6SC           *(volatile unsigned long *)(FTM_BLOCK_0 + 0x03c) // FTM0 channel 6 and control
+    #define FTM0_C6V            *(volatile unsigned long *)(FTM_BLOCK_0 + 0x040) // FTM0 channel 6 value (16 bit)
+    #define FTM0_C7SC           *(volatile unsigned long *)(FTM_BLOCK_0 + 0x044) // FTM0 channel 7 and control
+    #define FTM0_C7V            *(volatile unsigned long *)(FTM_BLOCK_0 + 0x048) // FTM0 channel 7 value (16 bit)
+    #define FTM0_CNTIN          *(volatile unsigned long *)(FTM_BLOCK_0 + 0x04c) // FTM0 counter initial value (16 bit)
+    #define FTM0_STATUS         *(volatile unsigned long *)(FTM_BLOCK_0 + 0x050) // FTM0 capture and compare status
+    #define FTM0_MODE           *(volatile unsigned long *)(FTM_BLOCK_0 + 0x054) // FTM0 features mode selection
       #define FTM_MODE_FTMEN    0x00000001                                   // FTM enable (can only be written when WPDIS is '1')
       #define FTM_MODE_INIT     0x00000002                                   // initialise the channels output (always read as '0')
       #define FTM_MODE_WPDIS    0x00000004                                   // write protection disable (read-only - opposite polarity to WPEN)
@@ -7018,13 +7043,13 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
       #define FTM_MODE_FAULT_MAN  0x00000040                                 // fault control enabled for all channels (manual fault clearing)
       #define FTM_MODE_FAULT_AUTO 0x00000060                                 // fault control enabled for all channels (automatic fault clearing)
       #define FTM_MODE_FAULTIE  0x00000080                                   // fault interrupt enable
-    #define FTM0_SYNC           *(unsigned long *)(FTM_BLOCK_0 + 0x058)      // FTM0 Synchronisation
-    #define FTM0_OUTINIT        *(unsigned long *)(FTM_BLOCK_0 + 0x05c)      // FTM0 Initial State for Channels Output
-    #define FTM0_OUTMASK        *(unsigned long *)(FTM_BLOCK_0 + 0x060)      // FTM0 Output Mask
-    #define FTM0_COMBINE        *(unsigned long *)(FTM_BLOCK_0 + 0x064)      // FTM0 Function for Linked Channels
-    #define FTM0_DEADTIME       *(unsigned long *)(FTM_BLOCK_0 + 0x068)      // FTM0 Deadtime Insertion Control
-    #define FTM0_EXTTRIG        *(unsigned long *)(FTM_BLOCK_0 + 0x06c)      // FTM0 External Trigger
-    #define FTM0_POL            *(unsigned long *)(FTM_BLOCK_0 + 0x070)      // FTM0 Channels Polarity
+    #define FTM0_SYNC           *(unsigned long *)(FTM_BLOCK_0 + 0x058)      // FTM0 synchronisation
+    #define FTM0_OUTINIT        *(unsigned long *)(FTM_BLOCK_0 + 0x05c)      // FTM0 initial state for channels output
+    #define FTM0_OUTMASK        *(unsigned long *)(FTM_BLOCK_0 + 0x060)      // FTM0 output mask
+    #define FTM0_COMBINE        *(unsigned long *)(FTM_BLOCK_0 + 0x064)      // FTM0 function for linked channels
+    #define FTM0_DEADTIME       *(unsigned long *)(FTM_BLOCK_0 + 0x068)      // FTM0 deadtime insertion control
+    #define FTM0_EXTTRIG        *(unsigned long *)(FTM_BLOCK_0 + 0x06c)      // FTM0 external trigger
+    #define FTM0_POL            *(unsigned long *)(FTM_BLOCK_0 + 0x070)      // FTM0 channels polarity
       #define FTM_POL_POL0_LOW 0x00000001                                    // active low
       #define FTM_POL_POL1_LOW 0x00000002                                    // active low
       #define FTM_POL_POL2_LOW 0x00000004                                    // active low
@@ -7033,11 +7058,11 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
       #define FTM_POL_POL5_LOW 0x00000020                                    // active low
       #define FTM_POL_POL6_LOW 0x00000040                                    // active low
       #define FTM_POL_POL7_LOW 0x00000080                                    // active low
-    #define FTM0_FMS            *(unsigned long *)(FTM_BLOCK_0 + 0x074)      // FTM0 Fault Mode Status
-    #define FTM0_FILTER         *(unsigned long *)(FTM_BLOCK_0 + 0x078)      // FTM0 Input Capture Filter Control
-    #define FTM0_FLTCTRL        *(unsigned long *)(FTM_BLOCK_0 + 0x07c)      // FTM0 Fault Control
-    #define FTM0_QDCTRL         *(unsigned long *)(FTM_BLOCK_0 + 0x080)      // FTM0 Quadrature Decoder Control and Status
-    #define FTM0_CONF           *(unsigned long *)(FTM_BLOCK_0 + 0x084)      // FTM0 Configuration
+    #define FTM0_FMS            *(unsigned long *)(FTM_BLOCK_0 + 0x074)      // FTM0 fault mode status
+    #define FTM0_FILTER         *(unsigned long *)(FTM_BLOCK_0 + 0x078)      // FTM0 input capture filter control
+    #define FTM0_FLTCTRL        *(unsigned long *)(FTM_BLOCK_0 + 0x07c)      // FTM0 fault control
+    #define FTM0_QDCTRL         *(unsigned long *)(FTM_BLOCK_0 + 0x080)      // FTM0 quadrature decoder control and status
+    #define FTM0_CONF           *(unsigned long *)(FTM_BLOCK_0 + 0x084)      // FTM0 configuration
       #define FTM_CONF_NUMTOF   0x0000001f                                   // FOT frequency mask
       #define FTM_CONF_BDMMODE_0  0x00000000                                 // FTM counter stops in bdm mode
       #define FTM_CONF_BDMMODE_1  0x00000040                                 // FTM counter stops and outputs set to safe state value in bdm mode (not KL parts)
@@ -7045,29 +7070,46 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
       #define FTM_CONF_BDMMODE_3  0x000000c0                                 // FTM counter continues in bdm mode
       #define FTM_CONF_GTBEEN   0x00000200                                   // use of an external global time base is enabled
       #define FTM_CONF_GTBEOUT  0x00000400                                   // global time base signal generation enabled
-    #define FTM0_FLTPOL         *(unsigned long *)(FTM_BLOCK_0 + 0x088)      // FTM0 Fault Input Polarity
-    #define FTM0_SYNCONF        *(unsigned long *)(FTM_BLOCK_0 + 0x08c)      // FTM0 Synchronisation Configuration
-    #define FTM0_INVCTRL        *(unsigned long *)(FTM_BLOCK_0 + 0x090)      // FTM0 Inverting Control
-    #define FTM0_SWOCTRL        *(unsigned long *)(FTM_BLOCK_0 + 0x094)      // FTM0 Software Output Control
-    #define FTM0_PWMLOAD        *(unsigned long *)(FTM_BLOCK_0 + 0x098)      // FTM0 PWM Load
+    #define FTM0_FLTPOL         *(unsigned long *)(FTM_BLOCK_0 + 0x088)      // FTM0 fault input polarity
+    #define FTM0_SYNCONF        *(unsigned long *)(FTM_BLOCK_0 + 0x08c)      // FTM0 synchronisation configuration
+    #define FTM0_INVCTRL        *(unsigned long *)(FTM_BLOCK_0 + 0x090)      // FTM0 inverting control
+    #define FTM0_SWOCTRL        *(unsigned long *)(FTM_BLOCK_0 + 0x094)      // FTM0 software output control
+    #define FTM0_PWMLOAD        *(unsigned long *)(FTM_BLOCK_0 + 0x098)      // FTM0 PWM load
 #endif
-#define FTM1_SC             *(volatile unsigned long *)(FTM_BLOCK_1 + 0x000) // FTM1 Status and Control
-#define FTM1_CNT            *(volatile unsigned long *)(FTM_BLOCK_1 + 0x004) // FTM1 Counter
-#define FTM1_MOD            *(unsigned long *)(FTM_BLOCK_1 + 0x008)      // FTM1 Modulo
-#define FTM1_C0SC           *(volatile unsigned long *)(FTM_BLOCK_1 + 0x00c) // FTM1 Channel 0 and Control
-#define FTM1_C0V            *(volatile unsigned long *)(FTM_BLOCK_1 + 0x010) // FTM1 Channel 0 Value
-#define FTM1_C1SC           *(volatile unsigned long *)(FTM_BLOCK_1 + 0x014) // FTM1 Channel 1 and Control
-#define FTM1_C1V            *(volatile unsigned long *)(FTM_BLOCK_1 + 0x018) // FTM1 Channel 1 Value
-#define FTM1_C2SC           *(volatile unsigned long *)(FTM_BLOCK_1 + 0x01c) // FTM1 Channel 2 and Control
-#define FTM1_C2V            *(volatile unsigned long *)(FTM_BLOCK_1 + 0x020) // FTM1 Channel 2 Value
-#define FTM1_C3SC           *(volatile unsigned long *)(FTM_BLOCK_1 + 0x024) // FTM1 Channel 3 and Control
-#define FTM1_C3V            *(volatile unsigned long *)(FTM_BLOCK_1 + 0x028) // FTM1 Channel 3 Value
-#define FTM1_C4SC           *(volatile unsigned long *)(FTM_BLOCK_1 + 0x02c) // FTM1 Channel 4 and Control
-#define FTM1_C4V            *(volatile unsigned long *)(FTM_BLOCK_1 + 0x030) // FTM1 Channel 4 Value
-#define FTM1_C5SC           *(volatile unsigned long *)(FTM_BLOCK_1 + 0x034) // FTM1 Channel 5 and Control
-#define FTM1_C5V            *(volatile unsigned long *)(FTM_BLOCK_1 + 0x038) // FTM1 Channel 5 Value
+
+#if defined KINETIS_KL28
+    #define FTM1_VERID      *(volatile unsigned long *)(FTM_BLOCK_1 + 0x000) // FTM1 version ID register (read-only)
+    #define FTM1_PARAM      *(volatile unsigned long *)(FTM_BLOCK_1 + 0x004) // FTM1 parameter register (read-only)
+    #define FTM1_GLOBAL     *(volatile unsigned long *)(FTM_BLOCK_1 + 0x008) // FTM1 global register
+#endif
+#define FTM1_SC             *(volatile unsigned long *)(FTM_BLOCK_1 + FTM_OFFSET_0 + 0x000) // FTM1 status and control
+#define FTM1_CNT            *(volatile unsigned long *)(FTM_BLOCK_1 + FTM_OFFSET_0 + 0x004) // FTM1 counter
+#define FTM1_MOD            *(unsigned long *)(FTM_BLOCK_1 + FTM_OFFSET_0 + 0x008)      // FTM1 modulo
+#if defined KINETIS_KL28
+    #define FTM1_STATUS     *(volatile unsigned long *)(FTM_BLOCK_1 + 0x01c) // FTM1 capture and compare status
+#endif
+#define FTM1_C0SC           *(volatile unsigned long *)(FTM_BLOCK_1 + FTM_OFFSET_1 + 0x00c) // FTM1 channel 0 and control
+#define FTM1_C0V            *(volatile unsigned long *)(FTM_BLOCK_1 + FTM_OFFSET_1 + 0x010) // FTM1 channel 0 value
+#define FTM1_C1SC           *(volatile unsigned long *)(FTM_BLOCK_1 + FTM_OFFSET_1 + 0x014) // FTM1 channel 1 and control
+#define FTM1_C1V            *(volatile unsigned long *)(FTM_BLOCK_1 + FTM_OFFSET_1 + 0x018) // FTM1 channel 1 value
+#define FTM1_C2SC           *(volatile unsigned long *)(FTM_BLOCK_1 + FTM_OFFSET_1 + 0x01c) // FTM1 channel 2 and control
+#define FTM1_C2V            *(volatile unsigned long *)(FTM_BLOCK_1 + FTM_OFFSET_1 + 0x020) // FTM1 channel 2 value
+#define FTM1_C3SC           *(volatile unsigned long *)(FTM_BLOCK_1 + FTM_OFFSET_1 + 0x024) // FTM1 channel 3 and control
+#define FTM1_C3V            *(volatile unsigned long *)(FTM_BLOCK_1 + FTM_OFFSET_1 + 0x028) // FTM1 channel 3 value
+#define FTM1_C4SC           *(volatile unsigned long *)(FTM_BLOCK_1 + FTM_OFFSET_1 + 0x02c) // FTM1 channel 4 and control
+#define FTM1_C4V            *(volatile unsigned long *)(FTM_BLOCK_1 + FTM_OFFSET_1 + 0x030) // FTM1 channel 4 value
+#define FTM1_C5SC           *(volatile unsigned long *)(FTM_BLOCK_1 + FTM_OFFSET_1 + 0x034) // FTM1 channel 5 and control
+#define FTM1_C5V            *(volatile unsigned long *)(FTM_BLOCK_1 + FTM_OFFSET_1 + 0x038) // FTM1 channel 5 value
 #if defined KINETIS_KL || defined KINETIS_KE
-    #define FTM1_STATUS         *(volatile unsigned long *)(FTM_BLOCK_1 + 0x050) // FTM1 Capture and Compare Status
+    #if defined KINETIS_KL28
+        #define FTM1_COMBINE    *(unsigned long *)(FTM_BLOCK_1 + 0x064)      // FTM1 combine channel register
+        #define FTM1_TRIG       *(unsigned long *)(FTM_BLOCK_1 + 0x06c)      // FTM1 channel trigger register
+        #define FTM1_POL        *(unsigned long *)(FTM_BLOCK_1 + 0x070)      // FTM1 channel polarity register
+        #define FTM1_FILTER     *(unsigned long *)(FTM_BLOCK_1 + 0x078)      // FTM1 filter control register
+        #define FTM1_QDCTRL     *(unsigned long *)(FTM_BLOCK_1 + 0x080)      // FTM1 quadrature decoder control and status register
+    #else
+        #define FTM1_STATUS     *(volatile unsigned long *)(FTM_BLOCK_1 + 0x050) // FTM1 Capture and Compare Status
+    #endif
     #define FTM1_CONF           *(unsigned long *)(FTM_BLOCK_1 + 0x084)      // FTM1 Configuration
 #else
     #define FTM1_C6SC           *(volatile unsigned long *)(FTM_BLOCK_1 + 0x03c) // FTM1 Channel 6 and Control
@@ -7096,24 +7138,40 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
     #define FTM1_PWMLOAD        *(unsigned long *)(FTM_BLOCK_1 + 0x098)      // FTM1 PWM Load
 #endif
 
-#define FTM2_SC             *(volatile unsigned long *)(FTM_BLOCK_2 + 0x000) // FTM2 Status and Control
-#define FTM2_CNT            *(volatile unsigned long *)(FTM_BLOCK_2 + 0x004) // FTM2 Counter
-#define FTM2_MOD            *(unsigned long *)(FTM_BLOCK_2 + 0x008)      // FTM2 Modulo
-#define FTM2_C0SC           *(volatile unsigned long *)(FTM_BLOCK_2 + 0x00c) // FTM2 Channel 0 and Control
-#define FTM2_C0V            *(volatile unsigned long *)(FTM_BLOCK_2 + 0x010) // FTM2 Channel 0 Value
-#define FTM2_C1SC           *(volatile unsigned long *)(FTM_BLOCK_2 + 0x014) // FTM2 Channel 1 and Control
-#define FTM2_C1V            *(volatile unsigned long *)(FTM_BLOCK_2 + 0x018) // FTM2 Channel 1 Value
-#define FTM2_C2SC           *(volatile unsigned long *)(FTM_BLOCK_2 + 0x01c) // FTM2 Channel 2 and Control
-#define FTM2_C2V            *(volatile unsigned long *)(FTM_BLOCK_2 + 0x020) // FTM2 Channel 2 Value
-#define FTM2_C3SC           *(volatile unsigned long *)(FTM_BLOCK_2 + 0x024) // FTM2 Channel 3 and Control
-#define FTM2_C3V            *(volatile unsigned long *)(FTM_BLOCK_2 + 0x028) // FTM2 Channel 3 Value
-#define FTM2_C4SC           *(volatile unsigned long *)(FTM_BLOCK_2 + 0x02c) // FTM2 Channel 4 and Control
-#define FTM2_C4V            *(volatile unsigned long *)(FTM_BLOCK_2 + 0x030) // FTM2 Channel 4 Value
-#define FTM2_C5SC           *(volatile unsigned long *)(FTM_BLOCK_2 + 0x034) // FTM2 Channel 5 and Control
-#define FTM2_C5V            *(volatile unsigned long *)(FTM_BLOCK_2 + 0x038) // FTM2 Channel 5 Value
+#if defined KINETIS_KL28
+    #define FTM2_VERID      *(volatile unsigned long *)(FTM_BLOCK_2 + 0x000) // FTM2 version ID register (read-only)
+    #define FTM2_PARAM      *(volatile unsigned long *)(FTM_BLOCK_2 + 0x004) // FTM2 parameter register (read-only)
+    #define FTM2_GLOBAL     *(volatile unsigned long *)(FTM_BLOCK_2 + 0x008) // FTM2 global register
+#endif
+#define FTM2_SC             *(volatile unsigned long *)(FTM_BLOCK_2 + FTM_OFFSET_0 + 0x000) // FTM2 status and control
+#define FTM2_CNT            *(volatile unsigned long *)(FTM_BLOCK_2 + FTM_OFFSET_0 + 0x004) // FTM2 counter
+#define FTM2_MOD            *(unsigned long *)(FTM_BLOCK_2 + FTM_OFFSET_0 + 0x008)      // FTM2 modulo
+#if defined KINETIS_KL28
+    #define FTM2_STATUS     *(volatile unsigned long *)(FTM_BLOCK_2 + 0x01c) // FTM2 capture and compare status
+#endif
+#define FTM2_C0SC           *(volatile unsigned long *)(FTM_BLOCK_2 + FTM_OFFSET_1 + 0x00c) // FTM2 channel 0 and control
+#define FTM2_C0V            *(volatile unsigned long *)(FTM_BLOCK_2 + FTM_OFFSET_1 + 0x010) // FTM2 channel 0 value
+#define FTM2_C1SC           *(volatile unsigned long *)(FTM_BLOCK_2 + FTM_OFFSET_1 + 0x014) // FTM2 channel 1 and control
+#define FTM2_C1V            *(volatile unsigned long *)(FTM_BLOCK_2 + FTM_OFFSET_1 + 0x018) // FTM2 channel 1 value
+#define FTM2_C2SC           *(volatile unsigned long *)(FTM_BLOCK_2 + FTM_OFFSET_1 + 0x01c) // FTM2 channel 2 and control
+#define FTM2_C2V            *(volatile unsigned long *)(FTM_BLOCK_2 + FTM_OFFSET_1 + 0x020) // FTM2 channel 2 value
+#define FTM2_C3SC           *(volatile unsigned long *)(FTM_BLOCK_2 + FTM_OFFSET_1 + 0x024) // FTM2 channel 3 and control
+#define FTM2_C3V            *(volatile unsigned long *)(FTM_BLOCK_2 + FTM_OFFSET_1 + 0x028) // FTM2 channel 3 value
+#define FTM2_C4SC           *(volatile unsigned long *)(FTM_BLOCK_2 + FTM_OFFSET_1 + 0x02c) // FTM2 channel 4 and control
+#define FTM2_C4V            *(volatile unsigned long *)(FTM_BLOCK_2 + FTM_OFFSET_1 + 0x030) // FTM2 channel 4 value
+#define FTM2_C5SC           *(volatile unsigned long *)(FTM_BLOCK_2 + FTM_OFFSET_1 + 0x034) // FTM2 channel 5 and control
+#define FTM2_C5V            *(volatile unsigned long *)(FTM_BLOCK_2 + FTM_OFFSET_1 + 0x038) // FTM2 channel 5 value
 #if defined KINETIS_KL || defined KINETIS_KE
-    #define FTM2_STATUS         *(volatile unsigned long *)(FTM_BLOCK_2 + 0x050) // FTM2 Capture and Compare Status
-    #define FTM2_CONF           *(unsigned long *)(FTM_BLOCK_2 + 0x084)      // FTM2 Configuration
+    #if defined KINETIS_KL28
+        #define FTM2_COMBINE    *(unsigned long *)(FTM_BLOCK_2 + 0x064)      // FTM2 combine channel register
+        #define FTM2_TRIG       *(unsigned long *)(FTM_BLOCK_2 + 0x06c)      // FTM2 channel trigger register
+        #define FTM2_POL        *(unsigned long *)(FTM_BLOCK_2 + 0x070)      // FTM2 channel polarity register
+        #define FTM2_FILTER     *(unsigned long *)(FTM_BLOCK_2 + 0x078)      // FTM2 filter control register
+        #define FTM2_QDCTRL     *(unsigned long *)(FTM_BLOCK_2 + 0x080)      // FTM2 quadrature decoder control and status register
+    #else
+        #define FTM2_STATUS     *(volatile unsigned long *)(FTM_BLOCK_2 + 0x050) // FTM2 capture and compare status
+    #endif
+    #define FTM2_CONF           *(unsigned long *)(FTM_BLOCK_2 + 0x084)      // FTM2 configuration
 #else
     #define FTM2_C6SC           *(volatile unsigned long *)(FTM_BLOCK_2 + 0x03c) // FTM2 Channel 6 and Control
     #define FTM2_C6V            *(volatile unsigned long *)(FTM_BLOCK_2 + 0x040) // FTM2 Channel 6 Value
@@ -7166,24 +7224,24 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
     #define FTM3_C7V            *(volatile unsigned long *)(FTM_BLOCK_3 + 0x048) // FTM3 Channel 7 Value
     #define FTM3_CNTIN          *(volatile unsigned long *)(FTM_BLOCK_3 + 0x04c) // FTM3 Counter Initial Value
     #define FTM3_STATUS         *(volatile unsigned long *)(FTM_BLOCK_3 + 0x050) // FTM3 Capture and Compare Status
-    #define FTM3_MODE           *(unsigned long *)(FTM_BLOCK_3 + 0x054)      // FTM3 Features Mode Selection
-    #define FTM3_SYNC           *(unsigned long *)(FTM_BLOCK_3 + 0x058)      // FTM3 Synchronisation
-    #define FTM3_OUTINIT        *(unsigned long *)(FTM_BLOCK_3 + 0x05c)      // FTM3 Initial State for Channels Output
-    #define FTM3_OUTMASK        *(unsigned long *)(FTM_BLOCK_3 + 0x060)      // FTM3 Output Mask
-    #define FTM3_COMBINE        *(unsigned long *)(FTM_BLOCK_3 + 0x064)      // FTM3 Function for Linked Channels
-    #define FTM3_DEADTIME       *(unsigned long *)(FTM_BLOCK_3 + 0x068)      // FTM3 Deadtime Insertion Control
-    #define FTM3_EXTTRIG        *(unsigned long *)(FTM_BLOCK_3 + 0x06c)      // FTM3 External Trigger
-    #define FTM3_POL            *(unsigned long *)(FTM_BLOCK_3 + 0x070)      // FTM3 Channels Polarity
-    #define FTM3_FMS            *(unsigned long *)(FTM_BLOCK_3 + 0x074)      // FTM3 Fault Mode Status
-    #define FTM3_FILTER         *(unsigned long *)(FTM_BLOCK_3 + 0x078)      // FTM3 Input Capture Filter Control
-    #define FTM3_FLTCTRL        *(unsigned long *)(FTM_BLOCK_3 + 0x07c)      // FTM3 Fault Control
-    #define FTM3_QDCTRL         *(unsigned long *)(FTM_BLOCK_3 + 0x080)      // FTM3 Quadrature Decoder Control and Status
-    #define FTM3_CONF           *(unsigned long *)(FTM_BLOCK_3 + 0x084)      // FTM3 Configuration
-    #define FTM3_FLTPOL         *(unsigned long *)(FTM_BLOCK_3 + 0x088)      // FTM3 Fault Input Polarity
-    #define FTM3_SYNCONF        *(unsigned long *)(FTM_BLOCK_3 + 0x08c)      // FTM3 Synchronisation Configuration
-    #define FTM3_INVCTRL        *(unsigned long *)(FTM_BLOCK_3 + 0x090)      // FTM3 Inverting Control
-    #define FTM3_SWOCTRL        *(unsigned long *)(FTM_BLOCK_3 + 0x094)      // FTM3 Software Output Control
-    #define FTM3_PWMLOAD        *(unsigned long *)(FTM_BLOCK_3 + 0x098)      // FTM3 PWM Load
+    #define FTM3_MODE           *(unsigned long *)(FTM_BLOCK_3 + 0x054)  // FTM3 Features Mode Selection
+    #define FTM3_SYNC           *(unsigned long *)(FTM_BLOCK_3 + 0x058)  // FTM3 Synchronisation
+    #define FTM3_OUTINIT        *(unsigned long *)(FTM_BLOCK_3 + 0x05c)  // FTM3 Initial State for Channels Output
+    #define FTM3_OUTMASK        *(unsigned long *)(FTM_BLOCK_3 + 0x060)  // FTM3 Output Mask
+    #define FTM3_COMBINE        *(unsigned long *)(FTM_BLOCK_3 + 0x064)  // FTM3 Function for Linked Channels
+    #define FTM3_DEADTIME       *(unsigned long *)(FTM_BLOCK_3 + 0x068)  // FTM3 Deadtime Insertion Control
+    #define FTM3_EXTTRIG        *(unsigned long *)(FTM_BLOCK_3 + 0x06c)  // FTM3 External Trigger
+    #define FTM3_POL            *(unsigned long *)(FTM_BLOCK_3 + 0x070)  // FTM3 Channels Polarity
+    #define FTM3_FMS            *(unsigned long *)(FTM_BLOCK_3 + 0x074)  // FTM3 Fault Mode Status
+    #define FTM3_FILTER         *(unsigned long *)(FTM_BLOCK_3 + 0x078)  // FTM3 Input Capture Filter Control
+    #define FTM3_FLTCTRL        *(unsigned long *)(FTM_BLOCK_3 + 0x07c)  // FTM3 Fault Control
+    #define FTM3_QDCTRL         *(unsigned long *)(FTM_BLOCK_3 + 0x080)  // FTM3 Quadrature Decoder Control and Status
+    #define FTM3_CONF           *(unsigned long *)(FTM_BLOCK_3 + 0x084)  // FTM3 Configuration
+    #define FTM3_FLTPOL         *(unsigned long *)(FTM_BLOCK_3 + 0x088)  // FTM3 Fault Input Polarity
+    #define FTM3_SYNCONF        *(unsigned long *)(FTM_BLOCK_3 + 0x08c)  // FTM3 Synchronisation Configuration
+    #define FTM3_INVCTRL        *(unsigned long *)(FTM_BLOCK_3 + 0x090)  // FTM3 Inverting Control
+    #define FTM3_SWOCTRL        *(unsigned long *)(FTM_BLOCK_3 + 0x094)  // FTM3 Software Output Control
+    #define FTM3_PWMLOAD        *(unsigned long *)(FTM_BLOCK_3 + 0x098)  // FTM3 PWM Load
 #endif
 
 #if defined TPMS_AVAILABLE                                               // TPM in addition to flex timers
@@ -7234,14 +7292,35 @@ typedef struct stFLEX_TIMER_CHANNEL
 
 typedef struct stFLEX_TIMER_MODULE
 {
+#if defined KINETIS_KL28
+    volatile unsigned long FTM_VERID;
+    volatile unsigned long FTM_PARAM;
+    unsigned long FTM_GLOBAL;
+    unsigned long ulRes_0;
+#endif
     volatile unsigned long FTM_SC;
     volatile unsigned long FTM_CNT;
     unsigned long FTM_MOD;
+#if defined KINETIS_KL28
+    volatile unsigned long FTM_STATUS;
+#endif
 #if defined KINETIS_KL || defined KINETIS_KE
     FLEX_TIMER_CHANNEL FTM_channel[6];
-    unsigned long ulRes0[5];
-    volatile unsigned long FTM_STATUS;
-    unsigned long ulRes1[12];
+    #if defined KINETIS_KL28
+        unsigned long ulRes0[5];
+        unsigned long FTM_COMBINE;
+        unsigned long ulRes1;
+        unsigned long FTM_TRIG;
+        unsigned long FTM_POL;
+        unsigned long ulRes2;
+        unsigned long FTM_FILTER;
+        unsigned long ulRes3;
+        unsigned long FTM_QDCTRL;
+    #else
+        unsigned long ulRes0[5];
+        volatile unsigned long FTM_STATUS;
+        unsigned long ulRes1[12];
+    #endif
     unsigned long FTM_CONF;
 #else
     FLEX_TIMER_CHANNEL FTM_channel[8];
@@ -11702,9 +11781,15 @@ typedef struct stKINETIS_LPTMR_CTL
         #define PCC_USBOTG_BME_AND       PCC_USB0FS_BME_AND
         #define PCC_USBOTG_BME_XOR       PCC_USB0FS_BME_XOR
     #define PCC_FTM0                     PCC_FLEXTMR0
-    #define PCC_FTM1                     PCC_FLEXTMR1
-    #define PCC_FTM2                     PCC_FLEXTMR2
-    #define PCC_FTM3                     PCC_FLEXTMR3
+    #if FLEX_TIMERS_AVAILABLE > 1
+        #define PCC_FTM1                 PCC_FLEXTMR1
+    #endif
+    #if FLEX_TIMERS_AVAILABLE > 2
+        #define PCC_FTM2                 PCC_FLEXTMR2
+    #endif
+    #if FLEX_TIMERS_AVAILABLE > 3
+        #define PCC_FTM3                 PCC_FLEXTMR3
+    #endif
 #endif
 
 #if defined KINETIS_KE && !defined KINETIS_WITH_SCG

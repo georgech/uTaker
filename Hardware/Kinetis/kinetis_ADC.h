@@ -282,7 +282,7 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
     #if ADC_CONTROLLERS > 1
                 else if (ptrADC_settings->int_adc_controller == 1) {
         #if defined KINETIS_WITH_PCC
-                    PCC_ADC1 &= ~(PCC_CGC | PCC_PCS_MASK);               // disable clocks to module
+                    PCC_ADC1 = 0;                                        // disable clocks to module
         #else
                     POWER_DOWN(3, SIM_SCGC3_ADC1);                       // disable clocks to module
         #endif
@@ -394,7 +394,12 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
             #endif
             #if ADC_CONTROLLERS > 2
                             else if (ptrADC_settings->int_adc_controller == 2) {
-                                ulADC_clock = fnGetPCC_clock(KINETIS_PERIPHERAL_ADC2); // get the clock speed that is configured for ADC1 usage
+                                ulADC_clock = fnGetPCC_clock(KINETIS_PERIPHERAL_ADC2); // get the clock speed that is configured for ADC2 usage
+                            }
+            #endif
+            #if ADC_CONTROLLERS > 3
+                            else if (ptrADC_settings->int_adc_controller == 3) {
+                                ulADC_clock = fnGetPCC_clock(KINETIS_PERIPHERAL_ADC3); // get the clock speed that is configured for ADC3 usage
                             }
             #endif
         #else

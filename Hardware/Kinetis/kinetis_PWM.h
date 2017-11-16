@@ -155,29 +155,32 @@ static __interrupt void _PWM_Interrupt_5(void)
             unsigned char ucFlexTimer = (ptrPWM_settings->pwm_reference >> _TIMER_MODULE_SHIFT);
             FLEX_TIMER_MODULE *ptrFlexTimer;
     #if defined KINETIS_KL
-        #if defined KINETIS_WITH_PCC
-            _EXCEPTION("To do");
-        #elif defined TPM_CLOCKED_FROM_MCGIRCLK                          // {1}
-            #if !defined RUN_FROM_LIRC                                   // {5} if the processor is running from the the internal clock we don't change settings here
+        #if !defined KINETIS_WITH_PCC
+            #if defined TPM_CLOCKED_FROM_MCGIRCLK                        // {1}
+                #if !defined RUN_FROM_LIRC                               // {5} if the processor is running from the the internal clock we don't change settings here
             MCG_C1 |= (MCG_C1_IRCLKEN | MCG_C1_IREFSTEN);                // enable internal reference clock and allow it to continue running in stop modes
-                #if defined USE_FAST_INTERNAL_CLOCK
+                    #if defined USE_FAST_INTERNAL_CLOCK
             MCG_SC = MCG_SC_FCRDIV_1;                                    // remove fast IRC divider
             MCG_C2 |= MCG_C2_IRCS;                                       // select fast internal reference clock (4MHz [8MHz for devices with MCG Lite]) as MCGIRCLK
-                #else
+                    #else
             MCG_C2 &= ~MCG_C2_IRCS;                                      // select slow internal reference clock (32kHz [2MHz for devices with MCG Lite]) as MCGIRCLK
+                    #endif
                 #endif
-            #endif
             SIM_SOPT2 |= SIM_SOPT2_TPMSRC_MCGIRCLK;                      // use MCGIRCLK as timer clock source
-        #elif defined TPM_CLOCKED_FROM_OSCERCLK
+            #elif defined TPM_CLOCKED_FROM_OSCERCLK
             OSC0_CR |= (OSC_CR_ERCLKEN | OSC_CR_EREFSTEN);               // enable the external reference clock and keep it enabled in stop mode
             SIM_SOPT2 |= (SIM_SOPT2_TPMSRC_OSCERCLK);                    // use OSCERCLK as timer clock source
-        #else
+            #else
             SIM_SOPT2 |= (SIM_SOPT2_PLLFLLSEL | SIM_SOPT2_TPMSRC_MCG);   // use MCGPLLCLK/2 (or MCGFLL if FLL is used)
+            #endif
         #endif
     #endif
             switch (ucFlexTimer) {
             case 0:
-                POWER_UP_ATOMIC(6, FTM0);                                // ensure that the FlexTimer module is powered up
+    #if defined KINETIS_WITH_PCC
+                SELECT_PCC_PERIPHERAL_SOURCE(FTM0, FTM0_PCC_SOURCE);     // select the PCC clock used by FlexTimer/TPM 0
+    #endif
+                POWER_UP_ATOMIC(6, FTM0);                                // ensure that the FlexTimer/TPM module is powered up
     #if defined KINETIS_KL
                 iInterruptID = irq_TPM0_ID;
     #else
@@ -190,6 +193,9 @@ static __interrupt void _PWM_Interrupt_5(void)
                 break;
     #if FLEX_TIMERS_AVAILABLE > 1
             case 1:
+        #if defined KINETIS_WITH_PCC
+                SELECT_PCC_PERIPHERAL_SOURCE(FTM1, FTM1_PCC_SOURCE);     // select the PCC clock used by FlexTimer/TPM 1
+        #endif
                 POWER_UP_ATOMIC(6, FTM1);                                // ensure that the FlexTimer module is powered up
         #if defined KINETIS_KL
                 iInterruptID = irq_TPM1_ID;
@@ -204,6 +210,9 @@ static __interrupt void _PWM_Interrupt_5(void)
     #endif
     #if FLEX_TIMERS_AVAILABLE > 2
             case 2:
+        #if defined KINETIS_WITH_PCC
+                SELECT_PCC_PERIPHERAL_SOURCE(FTM2, FTM2_PCC_SOURCE);     // select the PCC clock used by FlexTimer/TPM 2
+        #endif
         #if defined KINETIS_KL
                 POWER_UP_ATOMIC(6, FTM2);                                // ensure that the FlexTimer module is powered up
         #else
@@ -225,6 +234,9 @@ static __interrupt void _PWM_Interrupt_5(void)
     #endif
     #if FLEX_TIMERS_AVAILABLE > 3
             case 3:
+        #if defined KINETIS_WITH_PCC
+                SELECT_PCC_PERIPHERAL_SOURCE(FTM3, FTM3_PCC_SOURCE);     // select the PCC clock used by FlexTimer/TPM 3
+        #endif
                 POWER_UP_ATOMIC(3, FTM3);                                // ensure that the FlexTimer module is powered up
         #if defined KINETIS_KL
                 iInterruptID = irq_TPM3_ID;
@@ -239,6 +251,9 @@ static __interrupt void _PWM_Interrupt_5(void)
     #endif
     #if FLEX_TIMERS_AVAILABLE > 4 && defined TPMS_AVAILABLE
             case 4:
+        #if defined KINETIS_WITH_PCC
+                SELECT_PCC_PERIPHERAL_SOURCE(FTM1, FTM1_PCC_SOURCE);     // select the PCC clock used by TPM 1
+        #endif
                 POWER_UP_ATOMIC(2, TPM1);                                // ensure that the TPM module is powered up
                 iInterruptID = irq_FTM1_ID;
                 iTPM_type = 1;
@@ -249,6 +264,9 @@ static __interrupt void _PWM_Interrupt_5(void)
                 break;
 
             case 5:
+        #if defined KINETIS_WITH_PCC
+                SELECT_PCC_PERIPHERAL_SOURCE(FTM2, FTM2_PCC_SOURCE);     // select the PCC clock used by TPM 2
+        #endif
                 POWER_UP_ATOMIC(2, TPM2);                                // ensure that the TPM module is powered up
                 iInterruptID = irq_FTM2_ID;
                 ptrFlexTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_5;
