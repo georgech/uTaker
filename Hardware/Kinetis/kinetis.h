@@ -1307,22 +1307,34 @@ typedef struct stRESET_VECTOR
 
 // I2C configuration
 //
-#if defined KINETIS_K80 || defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66
+#if defined KINETIS_KL28
+    #define I2C_AVAILABLE                0
+    #define LPI2C_AVAILABLE              3
+#elif defined KINETIS_KE15
+    #define I2C_AVAILABLE                0
+    #define LPI2C_AVAILABLE              2
+#elif defined KINETIS_K80 || defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66
     #define I2C_AVAILABLE                4
+    #define LPI2C_AVAILABLE              0
 #elif defined KINETIS_K64
     #define I2C_AVAILABLE                3
+    #define LPI2C_AVAILABLE              0
 #elif defined KINETIS_K21
     #if (KINETIS_MAX_SPEED  <= 50000000)
         #define I2C_AVAILABLE            2
     #else
         #define I2C_AVAILABLE            3
     #endif
+    #define LPI2C_AVAILABLE              0
 #elif defined KINETIS_KL02 || defined KINETIS_KL25 || defined KINETIS_KL43 || defined KINETIS_KL46 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128 || defined KINETIS_KV31 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL82 || defined KINETIS_KW2X
     #define I2C_AVAILABLE                2
+    #define LPI2C_AVAILABLE              0
 #elif (KINETIS_MAX_SPEED  <= 50000000) || defined KINETIS_KV || defined KINETIS_K02
     #define I2C_AVAILABLE                1
+    #define LPI2C_AVAILABLE              0
 #else
     #define I2C_AVAILABLE                2
+    #define LPI2C_AVAILABLE              0
 #endif
 
 #if defined KINETIS_KL43 || defined KINETIS_KL33 || defined KINETIS_KL27 || defined KINETIS_KL17 || defined KINETIS_KL03
@@ -2535,7 +2547,7 @@ typedef struct stVECTOR_TABLE
     #define irq_LPSPI2_EXTENDED_ID        36                             // 36
     #define irq_LPUART2_EXTENDED_ID       37                             // 37
     #define irq_EMVSIM0_EXTENDED_ID       38                             // 38
-    #define irq_LPI2C1_EXTENDED_ID        39                             // 39
+    #define irq_LPI2C2_EXTENDED_ID        39                             // 39
     #define irq_TSI_EXTENDED_ID           40                             // 40
     #define irq_PMC_EXTENDED_ID           41                             // 41
     #define irq_FTFA_EXTENDED_ID          42                             // 42
@@ -3301,7 +3313,9 @@ typedef struct stVECTOR_TABLE
     #endif
     #define OSC0_BLOCK                         ((unsigned char *)(&kinetis.OSC[0])) // oscillator 0
     #define OSC1_BLOCK                         ((unsigned char *)(&kinetis.OSC[1])) // oscillator 1
-    #define I2C0_BLOCK                         ((unsigned char *)(&kinetis.I2C[0])) // I2C0
+    #if I2C_AVAILABLE > 0
+        #define I2C0_BLOCK                     ((unsigned char *)(&kinetis.I2C[0])) // I2C0
+    #endif
     #if I2C_AVAILABLE > 1
         #define I2C1_BLOCK                     ((unsigned char *)(&kinetis.I2C[1])) // I2C1
     #endif
@@ -3310,6 +3324,15 @@ typedef struct stVECTOR_TABLE
     #endif
     #if I2C_AVAILABLE > 3
         #define I2C3_BLOCK                     ((unsigned char *)(&kinetis.I2C[3])) // I2C1
+    #endif
+    #if LPI2C_AVAILABLE > 0
+        #define LPI2C0_BLOCK                   ((unsigned char *)(&kinetis.LPI2C[0])) // LPI2C0
+    #endif
+    #if LPI2C_AVAILABLE > 1
+        #define LPI2C1_BLOCK                   ((unsigned char *)(&kinetis.LPI2C[1])) // LPI2C1
+    #endif
+    #if LPI2C_AVAILABLE > 2
+        #define LPI2C2_BLOCK                   ((unsigned char *)(&kinetis.LPI2C[2])) // LPI2C1
     #endif
     #if LPUARTS_AVAILABLE > 0
         #define LPUART0_BLOCK                  ((unsigned char *)(&kinetis.LPUART[0])) // LPUART0
@@ -3603,14 +3626,28 @@ typedef struct stVECTOR_TABLE
         #define MCG_BLOCK                      0x40064000                // multi-purpose clock generator
     #endif
     #define OSC0_BLOCK                         0x40065000                // oscillator 0
-    #define I2C0_BLOCK                         0x40066000                // I2C0
-    #if I2C_AVAILABLE > 1
-        #define I2C1_BLOCK                     0x40067000                // I2C1
+    #if (I2C_AVAILABLE + LPI2C_AVAILABLE) > 0
+        #if defined KINETIS_KL28
+            #define I2C0_BLOCK                 0x400c0000                // LPI2C0
+        #else
+            #define I2C0_BLOCK                 0x40066000                // I2C0
+        #endif
     #endif
-    #if I2C_AVAILABLE > 2
-        #define I2C2_BLOCK                     0x400e6000                // I2C2
+    #if (I2C_AVAILABLE + LPI2C_AVAILABLE) > 1
+        #if defined KINETIS_KL28
+            #define I2C1_BLOCK                 0x400c1000                // LPI2C1
+        #else
+            #define I2C1_BLOCK                 0x40067000                // I2C1
+        #endif
     #endif
-    #if I2C_AVAILABLE > 3
+    #if (I2C_AVAILABLE + LPI2C_AVAILABLE) > 2
+        #if defined KINETIS_KL28
+            #define I2C2_BLOCK                 0x40042000                // LPI2C2
+        #else
+            #define I2C2_BLOCK                 0x400e6000                // I2C2
+        #endif
+    #endif
+    #if (I2C_AVAILABLE + LPI2C_AVAILABLE) > 3
         #define I2C3_BLOCK                     0x400e7000                // I2C3
     #endif
     #if LPUARTS_AVAILABLE > 0
@@ -4680,7 +4717,11 @@ extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned char ucDmaT
     #define INTMUX0_PERIPHERAL_SPI1      4
     #define INTMUX0_PERIPHERAL_LPUART2   5
     #define INTMUX0_PERIPHERAL_EMVSIM2   6
-    #define INTMUX0_PERIPHERAL_I2C1      7
+    #if defined KINETIS_KL82
+        #define INTMUX0_PERIPHERAL_I2C1  7
+    #else
+        #define INTMUX0_PERIPHERAL_I2C2  7
+    #endif
     #define INTMUX0_PERIPHERAL_TSI0      8
     #define INTMUX0_PERIPHERAL_PMC       9
     #define INTMUX0_PERIPHERAL_FTFA      10
@@ -9466,6 +9507,9 @@ typedef struct stKINETIS_LPTMR_CTL
           #define SIM_SCGC1_UART5            0x00000800
           // Bit-banding references
           //
+          #define SIM_SCGC1_SIM_SCGC1_OSC1  BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1028), 5)
+          #define SIM_SCGC1_SIM_SCGC1_I2C2  BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1028), 6)
+          #define SIM_SCGC1_SIM_SCGC1_I2C3  BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1028), 7)
           #define SIM_SCGC1_SIM_SCGC1_UART4 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1028), 10)
           #define SIM_SCGC1_SIM_SCGC1_UART5 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1028), 11)
         #define SIM_SCGC2                    *(volatile unsigned long *)(SIM_BLOCK + 0x102c) // System Clock Gating Control Register 2
@@ -10680,7 +10724,7 @@ typedef struct stKINETIS_LPTMR_CTL
 #endif
 #define PD_9_I2C0_SDA                    PORT_MUX_ALT2
 #define PD_8_I2C0_SCL                    PORT_MUX_ALT2
-#if defined KINETIS_K64 || defined KINETIS_KL17 || defined KINETIS_K24 || defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL43 || defined KINETIS_KL46
+#if defined KINETIS_K64 || defined KINETIS_KL17 || defined KINETIS_K24 || defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL43 || defined KINETIS_KL46
     #define PE_25_I2C0_SDA               PORT_MUX_ALT5
     #define PE_24_I2C0_SCL               PORT_MUX_ALT5
     #if defined KINETIS_KL17 || defined KINETIS_KL27
@@ -11628,7 +11672,13 @@ typedef struct stKINETIS_LPTMR_CTL
         #define PCC_OSC32                *(volatile unsigned long *)(PCC_BLOCK + 0x180)
         #define PCC_EWM                  *(volatile unsigned long *)(PCC_BLOCK + 0x184)
         #define PCC_LPI2C0               *(volatile unsigned long *)(PCC_BLOCK + 0x198)
+            #define PCC_LPI2C0_BME_OR    (volatile unsigned long *)(PCC_BLOCK + 0x198 + BME_OR_OFFSET)
+            #define PCC_LPI2C0_BME_AND   (volatile unsigned long *)(PCC_BLOCK + 0x198 + BME_AND_OFFSET)
+            #define PCC_LPI2C0_BME_XOR   (volatile unsigned long *)(PCC_BLOCK + 0x198 + BME_XOR_OFFSET)
         #define PCC_LPI2C1               *(volatile unsigned long *)(PCC_BLOCK + 0x19c)
+            #define PCC_LPI2C1_BME_OR    (volatile unsigned long *)(PCC_BLOCK + 0x19c + BME_OR_OFFSET)
+            #define PCC_LPI2C1_BME_AND   (volatile unsigned long *)(PCC_BLOCK + 0x19c + BME_AND_OFFSET)
+            #define PCC_LPI2C1_BME_XOR   (volatile unsigned long *)(PCC_BLOCK + 0x19c + BME_XOR_OFFSET)
         #define PCC_LPUART0              *(volatile unsigned long *)(PCC_BLOCK + 0x1a8)
             #define PCC_LPUART0_BME_OR   (volatile unsigned long *)(PCC_BLOCK + 0x1a8 + BME_OR_OFFSET)
             #define PCC_LPUART0_BME_AND  (volatile unsigned long *)(PCC_BLOCK + 0x1a8 + BME_AND_OFFSET)
@@ -11704,6 +11754,9 @@ typedef struct stKINETIS_LPTMR_CTL
             #define PCC_RTC_BME_XOR      (volatile unsigned long *)(PCC_BLOCK + 0x0e0 + BME_XOR_OFFSET)
         #define PCC_LPSPI2               *(volatile unsigned long *)(PCC_BLOCK + 0x0f8)
         #define PCC_LPI2C2               *(volatile unsigned long *)(PCC_BLOCK + 0x108)
+            #define PCC_LPI2C2_BME_OR    (volatile unsigned long *)(PCC_BLOCK + 0x108 + BME_OR_OFFSET)
+            #define PCC_LPI2C2_BME_AND   (volatile unsigned long *)(PCC_BLOCK + 0x108 + BME_AND_OFFSET)
+            #define PCC_LPI2C2_BME_XOR   (volatile unsigned long *)(PCC_BLOCK + 0x108 + BME_XOR_OFFSET)
         #define PCC_LPUART2              *(volatile unsigned long *)(PCC_BLOCK + 0x118)
             #define PCC_LPUART2_BME_OR   (volatile unsigned long *)(PCC_BLOCK + 0x118 + BME_OR_OFFSET)
             #define PCC_LPUART2_BME_AND  (volatile unsigned long *)(PCC_BLOCK + 0x118 + BME_AND_OFFSET)
@@ -11749,7 +11802,13 @@ typedef struct stKINETIS_LPTMR_CTL
         #define PCC_LPSPI0               *(volatile unsigned long *)(PCC2_BLOCK + 0x0f0)
         #define PCC_LPSPI1               *(volatile unsigned long *)(PCC2_BLOCK + 0x0f4)
         #define PCC_LPI2C0               *(volatile unsigned long *)(PCC2_BLOCK + 0x100)
+            #define PCC_LPI2C0_BME_OR    (volatile unsigned long *)(PCC2_BLOCK + 0x100 + BME_OR_OFFSET)
+            #define PCC_LPI2C0_BME_AND   (volatile unsigned long *)(PCC2_BLOCK + 0x100 + BME_AND_OFFSET)
+            #define PCC_LPI2C0_BME_XOR   (volatile unsigned long *)(PCC2_BLOCK + 0x100 + BME_XOR_OFFSET)
         #define PCC_LPI2C1               *(volatile unsigned long *)(PCC2_BLOCK + 0x104)
+            #define PCC_LPI2C1_BME_OR    (volatile unsigned long *)(PCC2_BLOCK + 0x104 + BME_OR_OFFSET)
+            #define PCC_LPI2C1_BME_AND   (volatile unsigned long *)(PCC2_BLOCK + 0x104 + BME_AND_OFFSET)
+            #define PCC_LPI2C1_BME_XOR   (volatile unsigned long *)(PCC2_BLOCK + 0x104 + BME_XOR_OFFSET)
         #define PCC_LPUART0              *(volatile unsigned long *)(PCC2_BLOCK + 0x110)
             #define PCC_LPUART0_BME_OR   (volatile unsigned long *)(PCC2_BLOCK + 0x110 + BME_OR_OFFSET)
             #define PCC_LPUART0_BME_AND  (volatile unsigned long *)(PCC2_BLOCK + 0x110 + BME_AND_OFFSET)
@@ -11775,6 +11834,18 @@ typedef struct stKINETIS_LPTMR_CTL
             #define PCC_FTM2_BME_OR      PCC_TPM2_BME_OR
             #define PCC_FTM2_BME_AND     PCC_TPM2_BME_AND
             #define PCC_FTM2_BME_XOR     PCC_TPM2_BME_XOR
+        #define PCC_I2C0                 PCC_LPI2C0
+            #define PCC_I2C0_BME_OR      PCC_LPI2C0_BME_OR
+            #define PCC_I2C0_BME_AND     PCC_LPI2C0_BME_AND
+            #define PCC_I2C0_BME_XOR     PCC_LPI2C0_BME_XOR
+        #define PCC_I2C1                 PCC_LPI2C1
+            #define PCC_I2C1_BME_OR      PCC_LPI2C1_BME_OR
+            #define PCC_I2C1_BME_AND     PCC_LPI2C1_BME_AND
+            #define PCC_I2C1_BME_XOR     PCC_LPI2C1_BME_XOR
+        #define PCC_I2C2                 PCC_LPI2C2
+            #define PCC_I2C2_BME_OR      PCC_LPI2C2_BME_OR
+            #define PCC_I2C2_BME_AND     PCC_LPI2C2_BME_AND
+            #define PCC_I2C2_BME_XOR     PCC_LPI2C2_BME_XOR
     #endif
     #define PCC_USBOTG                   PCC_USB0FS                      // for compatibility
         #define PCC_USBOTG_BME_OR        PCC_USB0FS_BME_OR
@@ -12260,51 +12331,53 @@ typedef struct stKINETIS_LPTMR_CTL
 
 // I2C
 //
-#define I2C0_A1                          *(unsigned char *)(I2C0_BLOCK + 0x0) // I2C0 Address Register 1
-#define I2C0_F                           *(unsigned char *)(I2C0_BLOCK + 0x1) // I2C0 Frequency Divider Register 
-#define I2C0_C1_ADD                      (volatile unsigned char *)(I2C0_BLOCK + 0x2) // I2C0 Control Register 1 address
-#define I2C0_C1                          *(volatile unsigned char *)(I2C0_BLOCK + 0x2) // I2C0 Control Register 1
-  #define I2C_DMAEN                      0x01                            // DMA enable
-  #define I2C_WUEN                       0x02                            // wakeup enable
-  #define I2C_RSTA                       0x04                            // repeat start (write '1' - not readable)
-  #define I2C_TXAK                       0x08                            // transmit acknowledge enable
-  #define I2C_MTX                        0x10                            // transmit mode select
-  #define I2C_MSTA                       0x20                            // master mode
-  #define I2C_IIEN                       0x40                            // I2C interrupt enable
-  #define I2C_IEN                        0x80                            // I2C enable
-#define I2C0_S                           *(volatile unsigned char *)(I2C0_BLOCK + 0x3) // I2C0 Status Register
-  #define I2C_RXACK                      0x01                            // no ack signal detected (read-only)
-  #define I2C_IIF                        0x02                            // I2C interrupt (write '1' to clear)
-  #define I2C_SRW                        0x04                            // slave transmit (read-only)
-  #define I2C_RAM                        0x08                            // range address match
-  #define I2C_IAL                        0x10                            // arbitration lost (write '1' to clear)
-  #define I2C_IBB                        0x20                            // bus busy status (read-only)
-  #define I2C_IAAS                       0x40                            // addressed as slave
-  #define I2C_TCF                        0x80                            // transfer complete (read-only)
-#define I2C0_D                           *(volatile unsigned char *)(I2C0_BLOCK + 0x4) // I2C0 Data Register
-#define I2C0_C2                          *(volatile unsigned char *)(I2C0_BLOCK + 0x5) // I2C0 Control Register 2
-#define I2C0_FLT                         *(volatile unsigned char *)(I2C0_BLOCK + 0x6) // I2C0 Programmable Input Glitch Filter Register 
-  #if defined DOUBLE_BUFFERED_I2C || defined I2C_START_CONDITION_INTERRUPT
-    #define I2C_FLT_FLT_MASK             0x0f                            // programmable filter factor
-    #define I2C_FLT_FLT_STARTF           0x10                            // I2C bus start detect flag (write '1' to clear)
-    #define I2C_FLT_FLT_SSIE             0x20                            // I2C bus stop or start interrupt enable
-    #define I2C_FLT_FLT_INT              I2C_FLT_FLT_SSIE
-  #else
-    #define I2C_FLT_FLT_MASK             0x1f                            // programmable filter factor
-    #define I2C_FLT_FLT_STOPIE           0x20                            // I2C bus stop interrupt enable
-    #define I2C_FLT_FLT_INT              I2C_FLT_FLT_STOPIE
-  #endif
-  #define I2C_FLT_FLT_STOPF              0x40                            // I2C bus stop detected (write '1' to clear)
-  #define I2C_FLT_FLT_SHEN               0x80                            // stop hold enable
-#define I2C0_RA                          *(unsigned char *)(I2C0_BLOCK + 0x7) // I2C0 Range Address Register
-#define I2C0_SMB                         *(volatile unsigned char *)(I2C0_BLOCK + 0x8) // I2C0 SMBus Control and Status Register
-#define I2C0_A2                          *(unsigned char *)(I2C0_BLOCK + 0x9) // I2C0 Address Register 2
-#define I2C0_SLTH                        *(unsigned char *)(I2C0_BLOCK + 0xa) // I2C0 SCL Low Timeout Register High
-#define I2C0_SLTL                        *(unsigned char *)(I2C0_BLOCK + 0xb) // I2C0 SCL Low Timeout Register Low
-#if defined DOUBLE_BUFFERED_I2C
-    #define I2C0_S2                      *(volatile unsigned char *)(I2C0_BLOCK + 0xc) // I2C0 Status Register 2
-      #define I2C_S2_EMPTY               0x00000001                      // tx or rx buffer is empty and can be writtenm to (new data loaded) (read-only)
-      #define I2C_S2_ERROR               0x00000002                      // there are 3 or more write/read errors during the data transfer phase (when the empty flag is not set and the buffer is busy) (write '1' to clear)
+#if I2C_AVAILABLE > 0
+    #define I2C0_A1                      *(unsigned char *)(I2C0_BLOCK + 0x0) // I2C0 Address Register 1
+    #define I2C0_F                       *(unsigned char *)(I2C0_BLOCK + 0x1) // I2C0 Frequency Divider Register 
+    #define I2C0_C1_ADD                  (volatile unsigned char *)(I2C0_BLOCK + 0x2) // I2C0 Control Register 1 address
+    #define I2C0_C1                      *(volatile unsigned char *)(I2C0_BLOCK + 0x2) // I2C0 Control Register 1
+      #define I2C_DMAEN                  0x01                            // DMA enable
+      #define I2C_WUEN                   0x02                            // wakeup enable
+      #define I2C_RSTA                   0x04                            // repeat start (write '1' - not readable)
+      #define I2C_TXAK                   0x08                            // transmit acknowledge enable
+      #define I2C_MTX                    0x10                            // transmit mode select
+      #define I2C_MSTA                   0x20                            // master mode
+      #define I2C_IIEN                   0x40                            // I2C interrupt enable
+      #define I2C_IEN                    0x80                            // I2C enable
+    #define I2C0_S                       *(volatile unsigned char *)(I2C0_BLOCK + 0x3) // I2C0 Status Register
+      #define I2C_RXACK                  0x01                            // no ack signal detected (read-only)
+      #define I2C_IIF                    0x02                            // I2C interrupt (write '1' to clear)
+      #define I2C_SRW                    0x04                            // slave transmit (read-only)
+      #define I2C_RAM                    0x08                            // range address match
+      #define I2C_IAL                    0x10                            // arbitration lost (write '1' to clear)
+      #define I2C_IBB                    0x20                            // bus busy status (read-only)
+      #define I2C_IAAS                   0x40                            // addressed as slave
+      #define I2C_TCF                    0x80                            // transfer complete (read-only)
+    #define I2C0_D                       *(volatile unsigned char *)(I2C0_BLOCK + 0x4) // I2C0 Data Register
+    #define I2C0_C2                      *(volatile unsigned char *)(I2C0_BLOCK + 0x5) // I2C0 Control Register 2
+    #define I2C0_FLT                     *(volatile unsigned char *)(I2C0_BLOCK + 0x6) // I2C0 Programmable Input Glitch Filter Register 
+      #if defined DOUBLE_BUFFERED_I2C || defined I2C_START_CONDITION_INTERRUPT
+        #define I2C_FLT_FLT_MASK         0x0f                            // programmable filter factor
+        #define I2C_FLT_FLT_STARTF       0x10                            // I2C bus start detect flag (write '1' to clear)
+        #define I2C_FLT_FLT_SSIE         0x20                            // I2C bus stop or start interrupt enable
+        #define I2C_FLT_FLT_INT          I2C_FLT_FLT_SSIE
+      #else
+        #define I2C_FLT_FLT_MASK         0x1f                            // programmable filter factor
+        #define I2C_FLT_FLT_STOPIE       0x20                            // I2C bus stop interrupt enable
+        #define I2C_FLT_FLT_INT          I2C_FLT_FLT_STOPIE
+      #endif
+      #define I2C_FLT_FLT_STOPF          0x40                            // I2C bus stop detected (write '1' to clear)
+      #define I2C_FLT_FLT_SHEN           0x80                            // stop hold enable
+    #define I2C0_RA                      *(unsigned char *)(I2C0_BLOCK + 0x7) // I2C0 Range Address Register
+    #define I2C0_SMB                     *(volatile unsigned char *)(I2C0_BLOCK + 0x8) // I2C0 SMBus Control and Status Register
+    #define I2C0_A2                      *(unsigned char *)(I2C0_BLOCK + 0x9) // I2C0 Address Register 2
+    #define I2C0_SLTH                    *(unsigned char *)(I2C0_BLOCK + 0xa) // I2C0 SCL Low Timeout Register High
+    #define I2C0_SLTL                    *(unsigned char *)(I2C0_BLOCK + 0xb) // I2C0 SCL Low Timeout Register Low
+    #if defined DOUBLE_BUFFERED_I2C
+        #define I2C0_S2                  *(volatile unsigned char *)(I2C0_BLOCK + 0xc) // I2C0 Status Register 2
+          #define I2C_S2_EMPTY           0x00000001                      // tx or rx buffer is empty and can be writtenm to (new data loaded) (read-only)
+          #define I2C_S2_ERROR           0x00000002                      // there are 3 or more write/read errors during the data transfer phase (when the empty flag is not set and the buffer is busy) (write '1' to clear)
+    #endif
 #endif
 
 #if I2C_AVAILABLE > 1
@@ -12364,8 +12437,10 @@ typedef struct stKINETIS_LPTMR_CTL
     #endif
 #endif
 
+#if I2C_AVAILABLE > 0
 typedef struct stKINETIS_I2C_CONTROL
 {
+
     unsigned char I2C_A1;
     unsigned char I2C_F;
     volatile unsigned char I2C_C1;
@@ -12382,7 +12457,146 @@ typedef struct stKINETIS_I2C_CONTROL
         volatile unsigned char I2C_S2;
     #endif
 } KINETIS_I2C_CONTROL;
+#endif
 
+// LPI2C
+//
+#if LPI2C_AVAILABLE > 0
+    #define LPI2C0_VERID                 *(volatile unsigned long *)(LPI2C0_BLOCK + 0x000) // LPI2C0 version ID register (read-only)
+    #define LPI2C0_PARAM                 *(volatile unsigned long *)(LPI2C0_BLOCK + 0x004) // LPI2C0 parameter register (read-only)
+    #define LPI2C0_MCR                   *(unsigned long *)(LPI2C0_BLOCK + 0x010) // LPI2C0 master control register
+    #define LPI2C0_MSR                   *(volatile unsigned long *)(LPI2C0_BLOCK + 0x014) // LPI2C0 master status register
+    #define LPI2C0_MIER                  *(unsigned long *)(LPI2C0_BLOCK + 0x018) // LPI2C0 master interrupt enable register
+    #define LPI2C0_MDER                  *(unsigned long *)(LPI2C0_BLOCK + 0x01c) // LPI2C0 master DMA enable register
+    #define LPI2C0_MCFGR0                *(unsigned long *)(LPI2C0_BLOCK + 0x020) // LPI2C0 master configuration register 0
+    #define LPI2C0_MCFGR1                *(unsigned long *)(LPI2C0_BLOCK + 0x024) // LPI2C0 master configuration register 1
+    #define LPI2C0_MCFGR2                *(unsigned long *)(LPI2C0_BLOCK + 0x028) // LPI2C0 master configuration register 2
+    #define LPI2C0_MCFGR3                *(unsigned long *)(LPI2C0_BLOCK + 0x02c) // LPI2C0 master configuration register 3
+    #define LPI2C0_MDMR                  *(unsigned long *)(LPI2C0_BLOCK + 0x040) // LPI2C0 master data match register
+    #define LPI2C0_MCCR0                 *(unsigned long *)(LPI2C0_BLOCK + 0x048) // LPI2C0 master clock configuration register 0
+    #define LPI2C0_MCCR1                 *(unsigned long *)(LPI2C0_BLOCK + 0x050) // LPI2C0 master clock configuration register 1
+    #define LPI2C0_MFCR                  *(unsigned long *)(LPI2C0_BLOCK + 0x058) // LPI2C0 master FIFO configuration register
+    #define LPI2C0_MFSR                  *(volatile unsigned long *)(LPI2C0_BLOCK + 0x05c) // LPI2C0 master FIFO status register (read-only)
+    #define LPI2C0_MTDR                  *(volatile unsigned long *)(LPI2C0_BLOCK + 0x060) // LPI2C0 master transmit data register (write-only)
+    #define LPI2C0_MRDR                  *(volatile unsigned long *)(LPI2C0_BLOCK + 0x070) // LPI2C0 master receive data register (read-only)
+    #define LPI2C0_SCR                   *(unsigned long *)(LPI2C0_BLOCK + 0x110) // LPI2C0 slave control register
+    #define LPI2C0_SSR                   *(volatile unsigned long *)(LPI2C0_BLOCK + 0x114) // LPI2C0 slave status register
+    #define LPI2C0_SIER                  *(unsigned long *)(LPI2C0_BLOCK + 0x118) // LPI2C0 slave interrupt enable register
+    #define LPI2C0_SDER                  *(unsigned long *)(LPI2C0_BLOCK + 0x11c) // LPI2C0 slave DMA enable register
+    #define LPI2C0_SCFGR1                *(unsigned long *)(LPI2C0_BLOCK + 0x124) // LPI2C0 slave configuration register 1
+    #define LPI2C0_SCFGR2                *(unsigned long *)(LPI2C0_BLOCK + 0x128) // LPI2C0 slave configuration register 2
+    #define LPI2C0_SAMR                  *(unsigned long *)(LPI2C0_BLOCK + 0x140) // LPI2C0 slave address match register
+    #define LPI2C0_SASR                  *(volatile unsigned long *)(LPI2C0_BLOCK + 0x150) // LPI2C0 slave address status register (read-only)
+    #define LPI2C0_STAR                  *(unsigned long *)(LPI2C0_BLOCK + 0x154) // LPI2C0 slave transmit ACK register
+    #define LPI2C0_STDR                  *(volatile unsigned long *)(LPI2C0_BLOCK + 0x160) // LPI2C0 slave transmit data register (write-only)
+    #define LPI2C0_SRDR                  *(volatile unsigned long *)(LPI2C0_BLOCK + 0x170) // LPI2C0 slave receive data register (read-only)
+#endif
+#if LPI2C_AVAILABLE > 1
+    #define LPI2C1_VERID                 *(volatile unsigned long *)(LPI2C1_BLOCK + 0x000) // LPI2C1 version ID register (read-only)
+    #define LPI2C1_PARAM                 *(volatile unsigned long *)(LPI2C1_BLOCK + 0x004) // LPI2C1 parameter register (read-only)
+    #define LPI2C1_MCR                   *(unsigned long *)(LPI2C1_BLOCK + 0x010) // LPI2C1 master control register
+    #define LPI2C1_MSR                   *(volatile unsigned long *)(LPI2C1_BLOCK + 0x014) // LPI2C1 master status register
+    #define LPI2C1_MIER                  *(unsigned long *)(LPI2C1_BLOCK + 0x018) // LPI2C1 master interrupt enable register
+    #define LPI2C1_MDER                  *(unsigned long *)(LPI2C1_BLOCK + 0x01c) // LPI2C1 master DMA enable register
+    #define LPI2C1_MCFGR0                *(unsigned long *)(LPI2C1_BLOCK + 0x020) // LPI2C1 master configuration register 0
+    #define LPI2C1_MCFGR1                *(unsigned long *)(LPI2C1_BLOCK + 0x024) // LPI2C1 master configuration register 1
+    #define LPI2C1_MCFGR2                *(unsigned long *)(LPI2C1_BLOCK + 0x028) // LPI2C1 master configuration register 2
+    #define LPI2C1_MCFGR3                *(unsigned long *)(LPI2C1_BLOCK + 0x02c) // LPI2C1 master configuration register 3
+    #define LPI2C1_MDMR                  *(unsigned long *)(LPI2C1_BLOCK + 0x040) // LPI2C1 master data match register
+    #define LPI2C1_MCCR0                 *(unsigned long *)(LPI2C1_BLOCK + 0x048) // LPI2C1 master clock configuration register 0
+    #define LPI2C1_MCCR1                 *(unsigned long *)(LPI2C1_BLOCK + 0x050) // LPI2C1 master clock configuration register 1
+    #define LPI2C1_MFCR                  *(unsigned long *)(LPI2C1_BLOCK + 0x058) // LPI2C1 master FIFO configuration register
+    #define LPI2C1_MFSR                  *(volatile unsigned long *)(LPI2C1_BLOCK + 0x05c) // LPI2C1 master FIFO status register (read-only)
+    #define LPI2C1_MTDR                  *(volatile unsigned long *)(LPI2C1_BLOCK + 0x060) // LPI2C1 master transmit data register (write-only)
+    #define LPI2C1_MRDR                  *(volatile unsigned long *)(LPI2C1_BLOCK + 0x070) // LPI2C1 master receive data register (read-only)
+    #define LPI2C1_SCR                   *(unsigned long *)(LPI2C1_BLOCK + 0x110) // LPI2C1 slave control register
+    #define LPI2C1_SSR                   *(volatile unsigned long *)(LPI2C1_BLOCK + 0x114) // LPI2C1 slave status register
+    #define LPI2C1_SIER                  *(unsigned long *)(LPI2C1_BLOCK + 0x118) // LPI2C1 slave interrupt enable register
+    #define LPI2C1_SDER                  *(unsigned long *)(LPI2C1_BLOCK + 0x11c) // LPI2C1 slave DMA enable register
+    #define LPI2C1_SCFGR1                *(unsigned long *)(LPI2C1_BLOCK + 0x124) // LPI2C1 slave configuration register 1
+    #define LPI2C1_SCFGR2                *(unsigned long *)(LPI2C1_BLOCK + 0x128) // LPI2C1 slave configuration register 2
+    #define LPI2C1_SAMR                  *(unsigned long *)(LPI2C1_BLOCK + 0x140) // LPI2C1 slave address match register
+    #define LPI2C1_SASR                  *(volatile unsigned long *)(LPI2C1_BLOCK + 0x150) // LPI2C1 slave address status register (read-only)
+    #define LPI2C1_STAR                  *(unsigned long *)(LPI2C1_BLOCK + 0x154) // LPI2C1 slave transmit ACK register
+    #define LPI2C1_STDR                  *(volatile unsigned long *)(LPI2C1_BLOCK + 0x160) // LPI2C1 slave transmit data register (write-only)
+    #define LPI2C1_SRDR                  *(volatile unsigned long *)(LPI2C1_BLOCK + 0x170) // LPI2C1 slave receive data register (read-only)
+#endif
+#if LPI2C_AVAILABLE > 2
+    #define LPI2C2_VERID                 *(volatile unsigned long *)(LPI2C2_BLOCK + 0x000) // LPI2C2 version ID register (read-only)
+    #define LPI2C2_PARAM                 *(volatile unsigned long *)(LPI2C2_BLOCK + 0x004) // LPI2C2 parameter register (read-only)
+    #define LPI2C2_MCR                   *(unsigned long *)(LPI2C2_BLOCK + 0x010) // LPI2C2 master control register
+    #define LPI2C2_MSR                   *(volatile unsigned long *)(LPI2C2_BLOCK + 0x014) // LPI2C2 master status register
+    #define LPI2C2_MIER                  *(unsigned long *)(LPI2C2_BLOCK + 0x018) // LPI2C2 master interrupt enable register
+    #define LPI2C2_MDER                  *(unsigned long *)(LPI2C2_BLOCK + 0x01c) // LPI2C2 master DMA enable register
+    #define LPI2C2_MCFGR0                *(unsigned long *)(LPI2C2_BLOCK + 0x020) // LPI2C2 master configuration register 0
+    #define LPI2C2_MCFGR1                *(unsigned long *)(LPI2C2_BLOCK + 0x024) // LPI2C2 master configuration register 1
+    #define LPI2C2_MCFGR2                *(unsigned long *)(LPI2C2_BLOCK + 0x028) // LPI2C2 master configuration register 2
+    #define LPI2C2_MCFGR3                *(unsigned long *)(LPI2C2_BLOCK + 0x02c) // LPI2C2 master configuration register 3
+    #define LPI2C2_MDMR                  *(unsigned long *)(LPI2C2_BLOCK + 0x040) // LPI2C2 master data match register
+    #define LPI2C2_MCCR0                 *(unsigned long *)(LPI2C2_BLOCK + 0x048) // LPI2C2 master clock configuration register 0
+    #define LPI2C2_MCCR1                 *(unsigned long *)(LPI2C2_BLOCK + 0x050) // LPI2C2 master clock configuration register 1
+    #define LPI2C2_MFCR                  *(unsigned long *)(LPI2C2_BLOCK + 0x058) // LPI2C2 master FIFO configuration register
+    #define LPI2C2_MFSR                  *(volatile unsigned long *)(LPI2C2_BLOCK + 0x05c) // LPI2C2 master FIFO status register (read-only)
+    #define LPI2C2_MTDR                  *(volatile unsigned long *)(LPI2C2_BLOCK + 0x060) // LPI2C2 master transmit data register (write-only)
+    #define LPI2C2_MRDR                  *(volatile unsigned long *)(LPI2C2_BLOCK + 0x070) // LPI2C2 master receive data register (read-only)
+    #define LPI2C2_SCR                   *(unsigned long *)(LPI2C2_BLOCK + 0x110) // LPI2C2 slave control register
+    #define LPI2C2_SSR                   *(volatile unsigned long *)(LPI2C2_BLOCK + 0x114) // LPI2C2 slave status register
+    #define LPI2C2_SIER                  *(unsigned long *)(LPI2C2_BLOCK + 0x118) // LPI2C2 slave interrupt enable register
+    #define LPI2C2_SDER                  *(unsigned long *)(LPI2C2_BLOCK + 0x11c) // LPI2C2 slave DMA enable register
+    #define LPI2C2_SCFGR1                *(unsigned long *)(LPI2C2_BLOCK + 0x124) // LPI2C2 slave configuration register 1
+    #define LPI2C2_SCFGR2                *(unsigned long *)(LPI2C2_BLOCK + 0x128) // LPI2C2 slave configuration register 2
+    #define LPI2C2_SAMR                  *(unsigned long *)(LPI2C2_BLOCK + 0x140) // LPI2C2 slave address match register
+    #define LPI2C2_SASR                  *(volatile unsigned long *)(LPI2C2_BLOCK + 0x150) // LPI2C2 slave address status register (read-only)
+    #define LPI2C2_STAR                  *(unsigned long *)(LPI2C2_BLOCK + 0x154) // LPI2C2 slave transmit ACK register
+    #define LPI2C2_STDR                  *(volatile unsigned long *)(LPI2C2_BLOCK + 0x160) // LPI2C2 slave transmit data register (write-only)
+    #define LPI2C2_SRDR                  *(volatile unsigned long *)(LPI2C2_BLOCK + 0x170) // LPI2C2 slave receive data register (read-only)
+#endif
+
+#if LPI2C_AVAILABLE > 0
+typedef struct stKINETIS_LPI2C_CONTROL
+{
+    volatile unsigned long  LPI2C_VERID;
+    volatile unsigned long  LPI2C_PARAM;
+    unsigned long  ulRes0;
+    unsigned long  LPI2C_MCR;
+    volatile unsigned long  LPI2C_MSR;
+    unsigned long  LPI2C_MIER;
+    unsigned long  LPI2C_MDER;
+    unsigned long  LPI2C_MCFGR0;
+    unsigned long  LPI2C_MCFGR1;
+    unsigned long  LPI2C_MCFGR2;
+    unsigned long  LPI2C_MCFGR3;
+    unsigned long  ulRes1[4];
+    unsigned long  LPI2C_MDMR;
+    unsigned long  ulRes2;
+    unsigned long  LPI2C_MCCR0;
+    unsigned long  ulRes3;
+    unsigned long  LPI2C_MCCR1;
+    unsigned long  ulRes4;
+    unsigned long  LPI2C_MFCR;
+    volatile unsigned long  LPI2C_MFSR;
+    volatile unsigned long  LPI2C_MTDR;
+    unsigned long  ulRes5[3];
+    volatile unsigned long  LPI2C_MRDR;
+    unsigned long  ulRes6[27];
+    unsigned long  LPI2C_SCR;
+    volatile unsigned long  LPI2C_SSR;
+    unsigned long  LPI2C_SIER;
+    unsigned long  LPI2C_SDER;
+    unsigned long  ulRes7;
+    unsigned long  LPI2C_SCFGR1;
+    unsigned long  LPI2C_SCFGR2;
+    unsigned long  ulRes8[4];
+    unsigned long  LPI2C_SAMR;
+    unsigned long  ulRes9[3];
+    volatile unsigned long  LPI2C_SASR;
+    unsigned long  LPI2C_STAR;
+    unsigned long  ulRes10[2];
+    volatile unsigned long  LPI2C_STDR;
+    unsigned long  ulRes11[3];
+    volatile unsigned long  LPI2C_SRDR;
+} KINETIS_LPI2C_CONTROL;
+#endif
 
 // CAN Configuration module
 //

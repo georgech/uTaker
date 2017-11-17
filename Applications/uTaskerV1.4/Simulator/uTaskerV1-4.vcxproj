@@ -585,6 +585,7 @@ Build_Kinetis.bat
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_K_CLOCK.h" />
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_LLWU.h" />
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_low_power.h" />
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_LPI2C.h" />
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_LPTMR.h" />
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_MCG_LITE.h" />
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_PDB.h" />

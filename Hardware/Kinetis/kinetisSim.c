@@ -895,8 +895,10 @@ static void fnSetDevice(unsigned long *port_inits)
     PDB0_MOD   = 0x0000ffff;                                             // PDB {16}
     PDB0_IDLY  = 0x0000ffff;
 #endif
+#if I2C_AVAILABLE > 0
     I2C0_S      = I2C_TCF;                                               // I2C
     I2C0_A2     = 0xc2;
+#endif
 #if I2C_AVAILABLE > 1
     I2C1_S      = 0x80;
     I2C1_A2     = 0xc2;
@@ -4961,9 +4963,14 @@ static void fnInterruptI2C(int irq_I2C_ID)
         #endif
     #endif
     #if I2C_AVAILABLE > 2
+        #if !defined irq_I2C2_ID
+        case INTMUX0_PERIPHERAL_I2C2:
+            fnCallINTMUX(INTMUX_I2C2, INTMUX0_PERIPHERAL_I2C2, (unsigned char *)&ptrVect->processor_interrupts.irq_LPI2C2);
+        #else
         case irq_I2C2_ID:
             ptrVect->processor_interrupts.irq_I2C2();                    // call the interrupt handler
             break;
+        #endif
     #endif
     #if I2C_AVAILABLE > 3
         case irq_I2C3_ID:
@@ -4976,6 +4983,7 @@ static void fnInterruptI2C(int irq_I2C_ID)
 
 extern void fnSimulateI2C(int iPort, unsigned char *ptrDebugIn, unsigned short usLen, int iRepeatedStart)
 {
+#if I2C_AVAILABLE > 0
     KINETIS_I2C_CONTROL *ptrI2C = 0;
     int iI2C_irq = 0;
     switch (iPort) {
@@ -5002,7 +5010,11 @@ extern void fnSimulateI2C(int iPort, unsigned char *ptrDebugIn, unsigned short u
     #if I2C_AVAILABLE > 2
     case 2:
         ptrI2C = (KINETIS_I2C_CONTROL *)I2C2_BLOCK;
+        #if defined irq_LPI2C2_EXTENDED_ID
+        iI2C_irq = irq_LPI2C2_EXTENDED_ID;
+        #else
         iI2C_irq = irq_I2C2_ID;
+        #endif
         break;
     #endif
     #if I2C_AVAILABLE > 3
@@ -5063,6 +5075,7 @@ extern void fnSimulateI2C(int iPort, unsigned char *ptrDebugIn, unsigned short u
             fnInterruptI2C(iI2C_irq);                                    // generate the I2C interrupt
         }
     }
+#endif
 }
 #endif
 
@@ -5931,21 +5944,23 @@ extern unsigned long fnSimInts(char *argv[])
             else {
 		        iInts &= ~I2C_INT0;                                      // interrupt has been handled
 		        iInts &= ~I2C_INT0;
+    #if I2C_AVAILABLE > 0
                 if ((I2C0_C1 & I2C_IEN) != 0) {                          // if I2C interrupt enabled
-    #if defined irq_LPI2C0_ID
+        #if defined irq_LPI2C0_ID
                     if (fnGenInt(irq_LPI2C0_ID) != 0)
-    #else
+        #else
                     if (fnGenInt(irq_I2C0_ID) != 0)
-    #endif
+        #endif
                     {                                                    // if I2C interrupt is not disabled
                         VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-    #if defined irq_LPI2C0_ID
+        #if defined irq_LPI2C0_ID
                         ptrVect->processor_interrupts.irq_LPI2C0();      // call the interrupt handler
-    #else
+        #else
                         ptrVect->processor_interrupts.irq_I2C0();        // call the interrupt handler
-    #endif
+        #endif
                     }
                 }
+    #endif
             }
         }
 	}
@@ -5960,8 +5975,10 @@ extern unsigned long fnSimInts(char *argv[])
             }
             else {
 		        iInts &= ~I2C_INT1;                                      // interrupt has been handled
+    #if I2C_AVAILABLE > 1
                 if ((I2C1_C1 & I2C_IEN) != 0) {                          // if I2C interrupt enabled
-        #if !defined irq_I2C1_ID
+        #if defined irq_LPI2C1_ID
+                    if (fnGenInt(irq_LPI2C1_ID) != 0)
         #else
                     if (fnGenInt(irq_I2C1_ID) != 0)
         #endif
@@ -5976,6 +5993,7 @@ extern unsigned long fnSimInts(char *argv[])
         #endif
                     }
                 }
+    #endif
             }
         }
 	}
@@ -5989,12 +6007,23 @@ extern unsigned long fnSimInts(char *argv[])
             }
             else {
 		        iInts &= ~I2C_INT2;                                      // interrupt has been handled
+    #if I2C_AVAILABLE > 2
                 if ((I2C2_C1 & I2C_IEN) != 0) {                          // if I2C interrupt enabled
-                    if (fnGenInt(irq_I2C2_ID) != 0) {                    // if I2C interrupt is not disabled
+        #if !defined irq_I2C2_ID
+                    if (fnGenInt(irq_INTMUX0_0_ID + INTMUX_I2C2) != 0)
+        #else
+                    if (fnGenInt(irq_I2C2_ID) != 0)
+        #endif
+                    {                                                    // if I2C interrupt is not disabled
                         VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-                        ptrVect->processor_interrupts.irq_I2C2();       // call the interrupt handler
+        #if !defined irq_I2C2_ID
+                        fnCallINTMUX(INTMUX_I2C2, INTMUX0_PERIPHERAL_I2C2, (unsigned char *)&ptrVect->processor_interrupts.irq_LPI2C2);
+        #else
+                        ptrVect->processor_interrupts.irq_I2C2();        // call the interrupt handler
+        #endif
                     }
                 }
+    #endif
             }
         }
 	}

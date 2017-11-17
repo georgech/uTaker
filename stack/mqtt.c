@@ -232,7 +232,7 @@ static int fnMQTTListener(USOCKET Socket, unsigned char ucEvent, unsigned char *
         break;
 
     case TCP_EVENT_ABORT:
-        fnMQTT_error(ERROR_MQTT_HOST_CLOSED);
+        fnMQTT_error(MQTT_HOST_CLOSED);
         break;
     case TCP_EVENT_CLOSED:
         fnSetNextMQTT_state(MQTT_STATE_CLOSED);

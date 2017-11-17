@@ -152,8 +152,11 @@
         #elif defined KINETIS_K80 || defined FRDM_KL82Z || defined TWR_KL82Z72M
             #define FXOS8700_READ_ADDRESS     0x39                       // read address of FXOS8700 // assumes SA1 is '1' and SA0 is '0'
             #define FXOS8700_WRITE_ADDRESS    0x38                       // write address of FXOS8700
+        #elif defined FRDM_KL28Z
+            #define FXOS8700_READ_ADDRESS     0x3d                       // read address of FXOS8700 // assumes SA1 is '0' and SA0 is '0'
+            #define FXOS8700_WRITE_ADDRESS    0x3c                       // write address of FXOS8700
         #else
-            #define FXOS8700_READ_ADDRESS     0x3b                       // read address of FXOS8700 // assumes SA1 is '0' and SA0 is '1' {SA1/0 = '00' would be 0x3c} {SA1/0 = '10' would be 0x38} {SA1/0 = '11' would be 0x3e}
+            #define FXOS8700_READ_ADDRESS     0x3b                       // read address of FXOS8700 // assumes SA1 is '0' and SA0 is '1'
             #define FXOS8700_WRITE_ADDRESS    0x3a                       // write address of FXOS8700
         #endif
 

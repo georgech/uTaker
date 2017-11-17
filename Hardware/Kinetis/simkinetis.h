@@ -2527,6 +2527,7 @@ typedef struct stKINETIS_OSC
 unsigned char OSC_CR;
 } KINETIS_OSC;
 
+#if I2C_AVAILABLE > 0
 typedef struct stKINETIS_I2C
 {
 unsigned char I2C_A1;
@@ -2542,6 +2543,53 @@ unsigned char I2C_A2;
 unsigned char I2C_SLTH;
 unsigned char I2C_SLTL;
 } KINETIS_I2C;
+#endif
+
+#if defined LPI2C_AVAILABLE
+typedef struct stKINETIS_LPI2C
+{
+    unsigned long  LPI2C_VERID;
+    unsigned long  LPI2C_PARAM;
+    unsigned long  ulRes0;
+    unsigned long  LPI2C_MCR;
+    unsigned long  LPI2C_MSR;
+    unsigned long  LPI2C_MIER;
+    unsigned long  LPI2C_MDER;
+    unsigned long  LPI2C_MCFGR0;
+    unsigned long  LPI2C_MCFGR1;
+    unsigned long  LPI2C_MCFGR2;
+    unsigned long  LPI2C_MCFGR3;
+    unsigned long  ulRes1[4];
+    unsigned long  LPI2C_MDMR;
+    unsigned long  ulRes2;
+    unsigned long  LPI2C_MCCR0;
+    unsigned long  ulRes3;
+    unsigned long  LPI2C_MCCR1;
+    unsigned long  ulRes4;
+    unsigned long  LPI2C_MFCR;
+    unsigned long  LPI2C_MFSR;
+    unsigned long  LPI2C_MTDR;
+    unsigned long  ulRes5[3];
+    unsigned long  LPI2C_MRDR;
+    unsigned long  ulRes6[27];
+    unsigned long  LPI2C_SCR;
+    unsigned long  LPI2C_SSR;
+    unsigned long  LPI2C_SIER;
+    unsigned long  LPI2C_SDER;
+    unsigned long  ulRes7;
+    unsigned long  LPI2C_SCFGR1;
+    unsigned long  LPI2C_SCFGR2;
+    unsigned long  ulRes8[4];
+    unsigned long  LPI2C_SAMR;
+    unsigned long  ulRes9[3];
+    unsigned long  LPI2C_SASR;
+    unsigned long  LPI2C_STAR;
+    unsigned long  ulRes10[2];
+    unsigned long  LPI2C_STDR;
+    unsigned long  ulRes11[3];
+    unsigned long  LPI2C_SRDR;
+} KINETIS_LPI2C;
+#endif
 
 typedef struct stKINETIS_UART
 {
@@ -3533,7 +3581,12 @@ typedef struct stKINETIS_PERIPH
     KINETIS_MCG        MCG;
 #endif
     KINETIS_OSC        OSC[2];
+#if I2C_AVAILABLE > 0
     KINETIS_I2C        I2C[I2C_AVAILABLE];
+#endif
+#if LPI2C_AVAILABLE > 0
+    KINETIS_LPI2C      LPI2C[LPI2C_AVAILABLE];
+#endif
 #if UARTS_AVAILABLE > 0
     KINETIS_UART       UART[UARTS_AVAILABLE];
 #endif

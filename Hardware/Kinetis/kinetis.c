@@ -1408,7 +1408,11 @@ extern void fnRetriggerWatchdog(void)
 /* =================================================================== */
 /*                                  I2C                                */
 /* =================================================================== */
-    #include "kinetis_I2C.h"                                             // include I2C hardware driver code
+    #if I2C_AVAILABLE > 0
+        #include "kinetis_I2C.h"                                         // include I2C hardware driver code
+    #elif LPI2C_AVAILABLE > 0
+        #include "kinetis_LPI2C.h"                                       // include LPI2C hardware driver code
+    #endif
 #endif
 
 

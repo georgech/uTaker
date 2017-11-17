@@ -2271,8 +2271,7 @@ extern int fnPublishMQTT(void);
 
 #define ERROR_MQTT_NOT_READY      -1
 #define ERROR_MQTT_IN_USE         -2
-#define ERROR_MQTT_HOST_CLOSED    -3
-#define ERROR_MQTT_ARP_FAIL       -4
+#define ERROR_MQTT_ARP_FAIL       -3
 #define MQTT_CLIENT_IDENTIFIER     1
 #define MQTT_CONNACK_RECEIVED      2
 #define MQTT_SUBACK_RECEIVED       3
@@ -2281,6 +2280,7 @@ extern int fnPublishMQTT(void);
 #define MQTT_PUBLISH_DATA          6
 #define MQTT_PUBLISH_TOPIC_FILTER  7
 #define MQTT_CONNECTION_CLOSED     8
+#define MQTT_HOST_CLOSED           9
 
 
 

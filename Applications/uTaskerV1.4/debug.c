@@ -5560,7 +5560,7 @@ static unsigned short fnMQTT_callback(unsigned char ucEvent, unsigned char *ptrR
             }
         }
         break;
-    case ERROR_MQTT_HOST_CLOSED:
+    case MQTT_HOST_CLOSED:
     case MQTT_CONNECTION_CLOSED:
         fnDebugMsg("MQTT closed\r\n");
         break;

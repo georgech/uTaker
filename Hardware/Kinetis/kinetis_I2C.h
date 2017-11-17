@@ -638,7 +638,7 @@ static void fnConfigI2C_pins(QUEUE_HANDLE Channel, int iMaster)          // {2}
         }
         _CONFIG_PERIPHERAL(D, 9,  (PD_9_I2C0_SDA | PORT_ODE | PORT_PS_UP_ENABLE)); // I2C0_SDA on PD9 (alt. function 2)
         _CONFIG_PERIPHERAL(D, 8,  (PD_8_I2C0_SCL | PORT_ODE | PORT_PS_UP_ENABLE)); // I2C0_SCL on PD8 (alt. function 2)
-    #elif (defined KINETIS_K64 || defined KINETIS_KL17 || defined KINETIS_K24 || defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL43 || defined KINETIS_KL46) && defined I2C0_ON_E
+    #elif (defined KINETIS_K64 || defined KINETIS_KL17 || defined KINETIS_K24 || defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL43 || defined KINETIS_KL46) && defined I2C0_ON_E
         if (iMaster != 0) {
             while (_READ_PORT_MASK(E, PORTE_BIT25) == 0) {               // if the SDA line is low we clock the SCL line to free it
                 _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_HIGH(E, PORTE_BIT24, 0, (PORT_ODE | PORT_PS_UP_ENABLE)); // set output '0'
@@ -891,7 +891,7 @@ extern void fnConfigI2C(I2CTABLE *pars)
         _CONFIG_PORT_INPUT_FAST_LOW(D, (PORTD_BIT3 | PORTD_BIT2), (PORT_ODE | PORT_PS_UP_ENABLE));
     #elif defined I2C0_ON_D
         _CONFIG_PORT_INPUT_FAST_LOW(D, (PORTD_BIT9 | PORTD_BIT8), (PORT_ODE | PORT_PS_UP_ENABLE));
-    #elif (defined KINETIS_K64 || defined KINETIS_KL17 || defined KINETIS_K24 || defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL43 || defined KINETIS_KL46) && defined I2C0_ON_E
+    #elif (defined KINETIS_K64 || defined KINETIS_KL17 || defined KINETIS_K24 || defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL43 || defined KINETIS_KL46) && defined I2C0_ON_E
         _CONFIG_PORT_INPUT_FAST_HIGH(E, (PORTE_BIT25 | PORTE_BIT24), (PORT_ODE | PORT_PS_UP_ENABLE));
     #elif (defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_K70) && defined I2C0_ON_E
         _CONFIG_PORT_INPUT_FAST_HIGH(E, (PORTE_BIT19 | PORTE_BIT18), (PORT_ODE | PORT_PS_UP_ENABLE));
@@ -903,7 +903,9 @@ extern void fnConfigI2C(I2CTABLE *pars)
     else if (pars->Channel == 1) {                                       // I2C channel 1
         POWER_UP_ATOMIC(4, I2C1);                                        // enable clock to module
         ptrI2C = (KINETIS_I2C_CONTROL *)I2C1_BLOCK;
-        #if !defined irq_I2C1_ID && defined INTMUX0_AVAILABLE
+        #if defined irq_LPI2C1_ID
+        fnEnterInterrupt(irq_LPI2C1_ID, PRIORITY_I2C1, _I2C_Interrupt_1);  // enter LPI2C1 interrupt handler
+        #elif !defined irq_I2C1_ID && defined INTMUX0_AVAILABLE
         fnEnterInterrupt((irq_INTMUX0_0_ID + INTMUX_I2C1), INTMUX0_PERIPHERAL_I2C1, _I2C_Interrupt_1); // enter I2C1 interrupt handler based on INTMUX
         #else
         fnEnterInterrupt(irq_I2C1_ID, PRIORITY_I2C1, _I2C_Interrupt_1);  // enter I2C1 interrupt handler
@@ -931,7 +933,11 @@ extern void fnConfigI2C(I2CTABLE *pars)
     else if (pars->Channel == 2) {                                       // I2C channel 2
         POWER_UP_ATOMIC(1, I2C2);                                        // enable clock to module
         ptrI2C = (KINETIS_I2C_CONTROL *)I2C2_BLOCK;
+        #if !defined irq_I2C2_ID && defined INTMUX0_AVAILABLE
+        fnEnterInterrupt((irq_INTMUX0_0_ID + INTMUX_I2C2), INTMUX0_PERIPHERAL_I2C2, _I2C_Interrupt_2); // enter I2C2 interrupt handler
+        #else
         fnEnterInterrupt(irq_I2C2_ID, PRIORITY_I2C2, _I2C_Interrupt_2);  // enter I2C2 interrupt handler
+        #endif
         #if defined KINETIS_K80 && defined I2C2_ON_B                     // initially configure as inputs with pull-up
         _CONFIG_PORT_INPUT_FAST_LOW(B, (PORTB_BIT10 | PORTB_BIT11), (PORT_ODE | PORT_PS_UP_ENABLE));
         #elif defined KINETIS_K80 && defined I2C2_A_LOW
