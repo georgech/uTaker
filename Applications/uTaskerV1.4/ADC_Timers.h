@@ -765,7 +765,7 @@ static void fnStart_ADC_Trigger(void)
 
 static void fnConfigureADC(void)
 {
-#if defined _KINETIS && !defined KINETIS_KE                              // {11}
+#if defined _KINETIS && (!defined KINETIS_KE || defined KINETIS_KE15)    // {11}
     static unsigned long ulCalibrate = ADC_CALIBRATE;
 #endif
     ADC_SETUP adc_setup;                                                 // interrupt configuration parameters
@@ -859,6 +859,10 @@ static void fnConfigureADC(void)
     adc_setup.int_adc_sample = (ADC_SAMPLE_LONG_PLUS_12 | ADC_SAMPLE_AVERAGING_8); // additional sampling clocks and hardware averaging
             #endif
     adc_setup.int_adc_bit_b = ADC_TEMP_SENSOR;                           // input B is only valid when using HW triggered mode
+        #elif defined KINETIS_KE15
+        // KE15's ADC uses a fixed clock source from the PCC
+        //
+    adc_setup.int_adc_mode = (ulCalibrate | ADC_CLOCK_DIVIDE_4 | ADC_SAMPLE_ACTIVATE_LONG | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_ENDED_INPUT | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE | ADC_SW_TRIGGERED); // note that the first configuration should calibrate the ADC - single shot with interrupt on completion
         #elif defined KINETIS_KE
     adc_setup.int_adc_mode = (ADC_CLOCK_BUS_DIV_2 | ADC_CLOCK_DIVIDE_8 | ADC_SAMPLE_ACTIVATE_LONG | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE | ADC_SW_TRIGGERED | ADC_LOW_POWER_CONFIG); // single shot with interrupt on completion {12}
         #else
@@ -1605,7 +1609,7 @@ static void fnConfigure_Timer(void)
     pwm_setup.pwm_reference = (_TIMER_2 | 1);                            // timer module 2, channel 1 (red LED in RGB LED)
     #elif defined FRDM_KL25Z
     pwm_setup.pwm_reference = (_TIMER_2 | 0);                            // timer module 2, channel 0 (red LED in RGB LED)
-    #elif defined FRDM_KL26Z || defined FRDM_KL27Z || defined CAPUCCINO_KL27
+    #elif defined FRDM_KL26Z || defined FRDM_KL27Z || defined CAPUCCINO_KL27 || defined FRDM_KE15Z
     pwm_setup.pwm_reference = (_TIMER_0 | 2);                            // timer module 0, channel 2 (red LED in RGB LED)
     #else
     pwm_setup.pwm_reference = (_TIMER_0 | 3);                            // timer module 0, channel 3
@@ -1683,7 +1687,7 @@ static void fnConfigure_Timer(void)
     pwm_setup.pwm_mode |= PWM_POLARITY;                                  // change polarity of second channel
     #elif defined FRDM_KL25Z || defined FRDM_KE02Z || defined FRDM_KE04Z || defined FRDM_KE06Z
     pwm_setup.pwm_reference = (_TIMER_2 | 1);                            // timer module 2, channel 1 (green LED in RGB LED)
-    #elif defined FRDM_KL26Z || defined FRDM_KL27Z || defined CAPUCCINO_KL27
+    #elif defined FRDM_KL26Z || defined FRDM_KL27Z || defined CAPUCCINO_KL27 || defined FRDM_KE15Z
     pwm_setup.pwm_reference = (_TIMER_0 | 4);                            // timer module 0, channel 4 (green LED in RGB LED)
     #else
     pwm_setup.pwm_reference = (_TIMER_0 | 2);                            // timer module 0, channel 2

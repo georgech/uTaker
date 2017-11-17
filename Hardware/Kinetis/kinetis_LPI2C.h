@@ -183,11 +183,13 @@ static void fnI2C_Handler(KINETIS_LPI2C_CONTROL *ptrLPI2C, int iChannel) // gene
         }
     }
     #endif
+#if 0
     #if defined _WINDOWS
     ptrLPI2C->I2C_S &= ~I2C_IIF;
     #else
     ptrLPI2C->I2C_S = I2C_IIF;                                             // clear the interrupt flag (write '1' to clear)
     #endif
+#endif
     #if defined I2C_SLAVE_MODE
     if (ptrLPI2C->I2C_F == 0) {                                            // if we are slave
         I2CQue *ptrRxControl = I2C_rx_control[iChannel];
@@ -278,6 +280,7 @@ static void fnI2C_Handler(KINETIS_LPI2C_CONTROL *ptrLPI2C, int iChannel) // gene
     }
     #endif
     fnLogEvent('M', ptrLPI2C->I2C_S);
+#if 0
     if ((ptrTxControl->ucState & RX_ACTIVE) != 0) {                      // if the processor is reading from a slave
         I2CQue *ptrRxControl = I2C_rx_control[iChannel];
         register int iFirstRead = ((ptrLPI2C->I2C_C1 & I2C_MTX) != 0);
@@ -355,6 +358,7 @@ static void fnI2C_Handler(KINETIS_LPI2C_CONTROL *ptrLPI2C, int iChannel) // gene
             fnTxI2C(ptrTxControl, iChannel);                             // we have another message to send so we can send a repeated start condition
         }
     }
+#endif
 }
 
 static __interrupt void _I2C_Interrupt_0(void)                           // I2C0 interrupt
@@ -420,7 +424,9 @@ extern void fnTxI2C(I2CQue *ptI2CQue, QUEUE_HANDLE Channel)
 
     if ((ptI2CQue->ucState & TX_ACTIVE) != 0) {                          // restart since we are hanging a second telegram on to previous one
         fnLogEvent('*', ptrLPI2C->I2C_C1);
+#if 0
         ptrLPI2C->I2C_C1 = (I2C_IEN | I2C_IIEN | I2C_MSTA | I2C_MTX | I2C_RSTA); // repeated start
+#endif
     #if defined DOUBLE_BUFFERED_I2C
         ptrLPI2C->I2C_FLT = (I2C_FLT_FLT_STARTF | I2C_FLT_FLT_STOPF);      // clear flags
         ptrLPI2C->I2C_FLT = I2C_FLT_FLT_SSIE;                              // enable start/stop condition interrupt
@@ -440,6 +446,7 @@ extern void fnTxI2C(I2CQue *ptI2CQue, QUEUE_HANDLE Channel)
             uDisable_Interrupt();
         }
         fnLogEvent('B', ptrLPI2C->I2C_S);
+#if 0
         while ((ptrLPI2C->I2C_S & I2C_IBB) != 0) {                         // wait until the stop has actually been sent to avoid a further transmission being started in the mean time
             if ((ptrLPI2C->I2C_S & I2C_IAL) != 0) {                        // {3} arbitration lost flag set
                 ptrLPI2C->I2C_S = I2C_IAL;                                 // clear arbitration lost flag
@@ -451,6 +458,7 @@ extern void fnTxI2C(I2CQue *ptI2CQue, QUEUE_HANDLE Channel)
         fnLogEvent('b', ptrLPI2C->I2C_S);
         ptrLPI2C->I2C_C1 = (I2C_IEN | I2C_IIEN | I2C_MTX);                 // set transmit mode with interrupt enabled
         ptrLPI2C->I2C_C1 = (I2C_IEN | I2C_IIEN | I2C_MSTA | I2C_MTX);      // set master mode to cause start condition to be sent
+#endif
     }
     fnSendSlaveAddress(ptI2CQue, Channel, ptrLPI2C);
 }
@@ -458,6 +466,7 @@ extern void fnTxI2C(I2CQue *ptI2CQue, QUEUE_HANDLE Channel)
 static void fnSendSlaveAddress(I2CQue *ptI2CQue, QUEUE_HANDLE Channel, KINETIS_LPI2C_CONTROL *ptrLPI2C)
 {
     register unsigned char ucAddress = *ptI2CQue->I2C_queue.get++;       // the slave address
+#if 0
     ptrLPI2C->I2C_D = ucAddress;                                           // send the slave address (this includes the rd/wr bit) - I2Cx_D
     fnLogEvent('?', ucAddress);
     if (ptI2CQue->I2C_queue.get >= ptI2CQue->I2C_queue.buffer_end) {     // handle circular buffer
@@ -487,6 +496,7 @@ static void fnSendSlaveAddress(I2CQue *ptI2CQue, QUEUE_HANDLE Channel, KINETIS_L
     fnSimI2C_devices(I2C_ADDRESS, ptrLPI2C->I2C_D);
     iInts |= (I2C_INT0 << Channel);                                      // signal that an interrupt is to be generated
     #endif
+#endif
 }
 
 /* =================================================================== */
@@ -751,8 +761,10 @@ static void fnConfigI2C_pins(QUEUE_HANDLE Channel, int iMaster)          // {2}
                 fnDelayLoop(10);
             }
         }
+#if 0
         _CONFIG_PERIPHERAL(C, 11, (PC_11_I2C1_SDA | PORT_ODE | PORT_PS_UP_ENABLE)); // I2C1_SDA on PC11 (alt. function 2)
         _CONFIG_PERIPHERAL(C, 10, (PC_10_I2C1_SCL | PORT_ODE | PORT_PS_UP_ENABLE)); // I2C1_SCL on PC10 (alt. function 2)
+#endif
         #endif
     }
     #endif
@@ -812,8 +824,10 @@ static void fnConfigI2C_pins(QUEUE_HANDLE Channel, int iMaster)          // {2}
                 fnDelayLoop(10);
             }
         }
+#if 0
         _CONFIG_PERIPHERAL(A, 11, (PA_11_I2C2_SDA | PORT_ODE | PORT_PS_UP_ENABLE)); // I2C2_SDA on PA11 (alt. function 5)
         _CONFIG_PERIPHERAL(A, 12, (PA_12_I2C2_SCL | PORT_ODE | PORT_PS_UP_ENABLE)); // I2C2_SCL on PA12 (alt. function 5)
+#endif
             #endif
         #endif
     }
@@ -1030,10 +1044,12 @@ extern void fnConfigI2C(I2CTABLE *pars)
         break;
     #endif
     }
+#if 0
     ptrLPI2C->I2C_F = ucSpeed;                                             // set the operating speed
     #if !defined KINETIS_KE
     ptrLPI2C->I2C_C1 = (I2C_IEN);                                          // enable I2C controller
     #endif
+#endif
     #if defined I2C_SLAVE_MODE
     if (ucSpeed == 0) {
         ptrLPI2C->I2C_C1 |= I2C_IIEN;                                      // immediately enable interrupts if operating as a slave

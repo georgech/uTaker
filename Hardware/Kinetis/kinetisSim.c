@@ -796,7 +796,7 @@ static void fnSetDevice(unsigned long *port_inits)
     INTMUX0_CH2_CSR = 0x200;
     INTMUX0_CH3_CSR = 0x300;
 #endif
-#if defined KINETIS_KE
+#if defined KINETIS_KE && !defined KINETIS_KE15
     ADC0_SC1 = ADC_SC1A_ADCH_OFF;
     ADC0_SC2 = ADC_SC2_FEMPTY;
 #else

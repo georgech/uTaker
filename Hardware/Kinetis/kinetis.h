@@ -1404,10 +1404,33 @@ typedef struct stRESET_VECTOR
     #define FLEX_TIMERS_AVAILABLE   3
 #endif
 
+#if defined KINETIS_KL02 || defined KINETIS_KL03
+    #define FLEX_TIMERS_0_CHANNELS  2
+    #define FLEX_TIMERS_1_CHANNELS  2
+#elif defined KINETIS_KL04 || defined KINETIS_KL53
+    #define FLEX_TIMERS_0_CHANNELS  6
+    #define FLEX_TIMERS_1_CHANNELS  2
+#elif defined KINETIS_KE15
+    #define FLEX_TIMERS_0_CHANNELS  8
+    #define FLEX_TIMERS_1_CHANNELS  4
+    #define FLEX_TIMERS_2_CHANNELS  4
+#elif defined KINETIS_KE
+    #define FLEX_TIMERS_0_CHANNELS  2
+    #define FLEX_TIMERS_1_CHANNELS  2
+    #define FLEX_TIMERS_2_CHANNELS  6
+#else
+    #define FLEX_TIMERS_0_CHANNELS  8
+    #define FLEX_TIMERS_1_CHANNELS  2
+    #define FLEX_TIMERS_2_CHANNELS  2
+    #define FLEX_TIMERS_3_CHANNELS  8
+#endif
+
 // ADC configuration
 //
 #if defined KINETIS_K61 || defined KINETIS_K70 || (((defined KINETIS_K60 && !defined KINETIS_K64 && !defined KINETIS_K65 && !defined KINETIS_K66) || (defined KINETIS_K20 && !defined KINETIS_K26 && !defined KINETIS_K21 && !defined KINETIS_K22 && !defined KINETIS_K24)) && (KINETIS_MAX_SPEED > 100000000))
     #define ADC_CONTROLLERS         4
+#elif defined KINETIS_KE15
+    #define ADC_CONTROLLERS         2
 #elif defined KINETIS_KE18
     #define ADC_CONTROLLERS         3
 #elif defined KINETIS_K80 || defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_K02 || ((defined KINETIS_K20 || defined KINETIS_K21) && (KINETIS_MAX_SPEED < 72000000))
@@ -3406,7 +3429,9 @@ typedef struct stVECTOR_TABLE
     #if defined KINETIS_K70
         #define LCDC_BLOCK                     ((unsigned char *)(&kinetis.LCD)) // {60} LCD controller
     #endif
-    #if !defined KINETIS_KL && !defined KINETIS_KE
+    #if defined KINETIS_KE15
+        #define ADC1_BLOCK                     ((unsigned char *)(&kinetis.ADC1)) // ADC1
+    #elif !defined KINETIS_KL && !defined KINETIS_KE
         #if SPI_AVAILABLE > 2
             #define DSPI2_BLOCK                ((unsigned char *)(&kinetis.DSPI[2])) // DSPI2
         #endif
@@ -3528,9 +3553,9 @@ typedef struct stVECTOR_TABLE
         #endif
     #endif
     #if defined KINETIS_KL28
-        #define FTM_BLOCK_0                    0x400ac000                // FlexTimer 0 (TPM0 in KL/KE)
-        #define FTM_BLOCK_1                    0x400ad000                // FlexTimer 1 (TPM1 in KL/KE)
-        #define FTM_BLOCK_2                    0x4002e000                // FlexTimer 2 (TPM2 in KL/KE)
+        #define FTM_BLOCK_0                    0x400ac000                // FlexTimer 0 (TPM0)
+        #define FTM_BLOCK_1                    0x400ad000                // FlexTimer 1 (TPM1)
+        #define FTM_BLOCK_2                    0x4002e000                // FlexTimer 2 (TPM2)
     #else
         #define FTM_BLOCK_0                    0x40038000                // FlexTimer 0 (TPM0 in KL/KE)
         #define FTM_BLOCK_1                    0x40039000                // FlexTimer 1 (TPM1 in KL/KE)
@@ -3772,7 +3797,9 @@ typedef struct stVECTOR_TABLE
     #if defined KINETIS_K70
         #define LCDC_BLOCK                     0x400b6000                // {60} LCD controller
     #endif
-    #if !defined KINETIS_KL && !defined KINETIS_KE
+    #if defined KINETIS_KE15
+        #define ADC1_BLOCK                     0x40027000                // ADC1
+    #elif !defined KINETIS_KL && !defined KINETIS_KE
         #define SDHC_BLOCK                     0x400b1000                // SDHC
         #define FTM_BLOCK_2                    0x400b8000                // FlexTimer 2
         #define FTM_BLOCK_3                    0x400b9000                // FlexTimer 3
@@ -7392,7 +7419,7 @@ typedef struct stFLEX_TIMER_MODULE
 
 // ADC
 //
-#if defined KINETIS_KE
+#if defined KINETIS_KE && !defined KINETIS_KE15
     #define ADC0_SC1            *(volatile unsigned long *)(ADC0_BLOCK + 0x00) // ADC0 Status and Control Register 1
       #define ADC_SC1A_ADCH_0          0x00000000                            // input channel select - channel 0 select (only single-ended)
       #define ADC_SC1A_ADCH_1          0x00000001                            // input channel select - channel 1 select (only single-ended)
@@ -11067,6 +11094,46 @@ typedef struct stKINETIS_LPTMR_CTL
     #define PE_21_TPM1_CH1               PORT_MUX_ALT3
     #define PE_22_TPM2_CH0               PORT_MUX_ALT3
     #define PE_23_TPM2_CH1               PORT_MUX_ALT3
+#endif
+#if defined KINETIS_KE15
+    #define PB_12_FTM0_CH0               PORT_MUX_ALT2
+    #define PC_0_FTM0_CH0                PORT_MUX_ALT2
+    #define PD_15_FTM0_CH0               PORT_MUX_ALT2
+    #define PB_13_FTM0_CH1               PORT_MUX_ALT2
+    #define PC_1_FTM0_CH1                PORT_MUX_ALT2
+    #define PD_16_FTM0_CH1               PORT_MUX_ALT2
+    #define PB_14_FTM0_CH2               PORT_MUX_ALT2
+    #define PC_2_FTM0_CH2                PORT_MUX_ALT2
+    #define PD_0_FTM0_CH2                PORT_MUX_ALT2
+    #define PB_15_FTM0_CH3               PORT_MUX_ALT2
+    #define PC_3_FTM0_CH3                PORT_MUX_ALT2
+    #define PD_1_FTM0_CH3                PORT_MUX_ALT2
+    #define PB_4_FTM0_CH4                PORT_MUX_ALT2
+    #define PB_16_FTM0_CH4               PORT_MUX_ALT2
+    #define PB_5_FTM0_CH5                PORT_MUX_ALT2
+    #define PB_17_FTM0_CH5               PORT_MUX_ALT2
+    #define PA_17_FTM0_CH6               PORT_MUX_ALT2
+    #define PE_8_FTM0_CH6                PORT_MUX_ALT2
+    #define PE_7_FTM0_CH7                PORT_MUX_ALT2
+    #define PE_9_FTM0_CH7                PORT_MUX_ALT2
+    #define PB_2_FTM1_CH0                PORT_MUX_ALT2
+    #define PC_4_FTM1_CH0                PORT_MUX_ALT2
+    #define PB_3_FTM1_CH1                PORT_MUX_ALT2
+    #define PA_1_FTM1_CH1                PORT_MUX_ALT2
+    #define PC_14_FTM1_CH2               PORT_MUX_ALT2
+    #define PA_15_FTM1_CH2               PORT_MUX_ALT2
+    #define PC_15_FTM1_CH3               PORT_MUX_ALT2
+    #define PA_16_FTM1_CH3               PORT_MUX_ALT2
+    #define PC_5_FTM2_CH0                PORT_MUX_ALT2
+    #define PD_10_FTM2_CH0               PORT_MUX_ALT2
+    #define PD_0_FTM2_CH0                PORT_MUX_ALT4
+    #define PA_0_FTM2_CH1                PORT_MUX_ALT2
+    #define PD_11_FTM2_CH1               PORT_MUX_ALT2
+    #define PD_1_FTM2_CH1                PORT_MUX_ALT4
+    #define PD_12_FTM2_CH2               PORT_MUX_ALT2
+    #define PE_4_FTM2_CH2                PORT_MUX_ALT4
+    #define PD_5_FTM2_CH3                PORT_MUX_ALT2
+    #define PE_5_FTM2_CH3                PORT_MUX_ALT4
 #endif
     #define PE_29_TPM_CLKIN0             PORT_MUX_ALT4
     #define PE_30_TPM_CLKIN1             PORT_MUX_ALT4
@@ -16556,7 +16623,7 @@ typedef struct stADC_SETUP
     unsigned short   int_adc_offset;                                     // offset for input
     unsigned short   int_high_level_trigger;                             // trigger when higher than this level
     unsigned short   int_low_level_trigger;                              // trigger when lower than this level
-    #if !defined KINETIS_KE
+    #if !defined KINETIS_KE || defined KINETIS_KE15
         unsigned char    int_adc_sample;                                 // sampling details
         unsigned char    pga_gain;                                       // {35} PGA gain setting
         unsigned char    int_adc_bit_b;                                  // {57} the ADC channel B input number (used only in hardware mode with double trigger)

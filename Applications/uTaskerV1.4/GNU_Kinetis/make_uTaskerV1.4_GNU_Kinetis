@@ -26,7 +26,7 @@
 # 26.10.2017 Add arm_sin_cos_f32
 # 07.11.2017 Modified method of including assember files requiring core specification
 # 10.11.2017 Add mqtt.c
-# 17.11.2017 Add kinetis_LPI2C.h peripheral dependancy
+# 17.11.2017 Add kinetis_LPI2C.h and kinetis_timer_pins.h peripheral dependancies
 
 #
 # When changing the project target check that the C_FLAGS selection (just elow) and the linker script file (at bottom) matches the processor being used
@@ -116,6 +116,7 @@ PERIPH_DEP = ../../../Hardware/Kinetis/spi_sc16IS7xx.h \
              ../../../Hardware/Kinetis/kinetis_FLASH.h \
              ../../../Hardware/Kinetis/kinetis_SDHC.h \
              ../../../Hardware/Kinetis/kinetis_PWM.h \
+             ../../../Hardware/Kinetis/kinetis_timer_pins.h \
              ../../../Hardware/Kinetis/kinetis_PORTS.h \
              ../../../Hardware/Kinetis/kinetis_LLWU.h \
              ../../../Hardware/Kinetis/kinetis_FLEXTIMER.h \

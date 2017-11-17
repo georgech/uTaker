@@ -940,6 +940,9 @@
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_LPI2C.h">
       <Filter>Hardware\Kinetis</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_timer_pins.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="cursor1.cur">

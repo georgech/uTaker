@@ -26,6 +26,10 @@
 
 #if defined _ADC_INTERRUPT_CODE
 
+#if defined KINETIS_K && !defined KINETIS_KE15
+    #define KINETIS_KE_ADC                                               // ADC used by mpst KE/KEA parts)
+#endif
+
 /* =================================================================== */
 /*                 local function prototype declarations               */
 /* =================================================================== */
@@ -138,7 +142,7 @@ static __interrupt void _ADC_Interrupt_3(void)
 }
     #endif
 
-    #if !defined KINETIS_KE
+    #if !defined KINETIS_KE_ADC
 static unsigned char fnSetADC_channel(unsigned char ucADC_channel, int iDiffMode)
 {
         #if defined _WINDOWS
@@ -181,7 +185,7 @@ static unsigned char fnSetADC_channel(unsigned char ucADC_channel, int iDiffMode
 //
 static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short usStandardValue, int iPlusOne) // {1}
 {
-    #if defined KINETIS_KE                                               // {2}
+    #if defined KINETIS_KE_ADC                                           // {2}
     switch (ptrADC->ADC_SC3 & (ADC_CFG1_MODE_12 | ADC_CFG1_MODE_10)) {
     case ADC_CFG1_MODE_12:                                               // conversion mode - single-ended 12 bit
         if (iPlusOne != 0) {                                             // increase by 1 so that a value is one LSB above the match threshold
@@ -268,7 +272,7 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
             ADC_SETUP *ptrADC_settings = (ADC_SETUP *)ptrSettings; 
             KINETIS_ADC_REGS *ptrADC;
             int irq_ADC_ID;
-    #if !defined KINETIS_KE
+    #if !defined KINETIS_KE_ADC
             unsigned char ucADC_channel = ptrADC_settings->int_adc_bit;  // the channel to be configured
     #endif
             if ((ADC_DISABLE_ADC & ptrADC_settings->int_adc_mode) != 0) {
@@ -338,18 +342,26 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
                 if ((ptrADC_settings->int_adc_mode & ADC_CONFIGURE_ADC) != 0) { // main configuration is to be performed
                     if (ptrADC_settings->int_adc_controller == 0) {      // ADC0
     #if defined KINETIS_WITH_PCC
+        #if defined KINETIS_KE15
+                        SELECT_PCC_PERIPHERAL_SOURCE(ADC0, ADC0_PCC_SOURCE); // select the PCC clock used by ADC0, which must be supplied by the PCC
+        #else
                         if ((ptrADC_settings->int_adc_mode & ADC_CFG1_ADICLK_ASY) == ADC_CFG1_ADICLK_ALT) { // if the alternative clock source is selected
                             SELECT_PCC_PERIPHERAL_SOURCE(ADC0, ADC0_PCC_SOURCE); // select the PCC clock used by ADC0
                         }
+        #endif
     #endif
                         POWER_UP_ATOMIC(6, ADC0);                        // enable clocks to module
                     }
     #if ADC_CONTROLLERS > 1
                     else if (ptrADC_settings->int_adc_controller == 1) {
-        #if defined KINETIS_WITH_PCC
+            #if defined KINETIS_WITH_PCC
+                                #if defined KINETIS_KE15
+                        SELECT_PCC_PERIPHERAL_SOURCE(ADC1, ADC1_PCC_SOURCE); // select the PCC clock used by ADC1, which must be supplied by the PCC
+            #else
                         if ((ptrADC_settings->int_adc_mode & ADC_CFG1_ADICLK_ASY) == ADC_CFG1_ADICLK_ALT) { // if the alternative clock source is selected
                             SELECT_PCC_PERIPHERAL_SOURCE(ADC1, ADC1_PCC_SOURCE); // select the PCC clock used by ADC1
                         }
+            #endif
         #endif
                         POWER_UP_ATOMIC(3, ADC1);                        // enable clocks to module
                     }
@@ -376,13 +388,11 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
                     {
                         unsigned long ulADC_clock = 0;
                         switch (ptrADC->ADC_CFG1 & ADC_CFG1_ADICLK_ASY) {
-                        case ADC_CFG1_ADICLK_BUS:
-                            ulADC_clock = BUS_CLOCK;
-                            break;
-                        case ADC_CFG1_ADICLK_BUS2:
-                            ulADC_clock = (BUS_CLOCK / 2);
-                            break;
+        #if defined KINETIS_KE15
+                        case ADC_CFG1_ADICLK_BUS:                        // equivalent to ALTCLK1 in KE15
+        #else
                         case ADC_CFG1_ADICLK_ALT:
+        #endif
         #if defined KINETIS_WITH_PCC
                             if (ptrADC_settings->int_adc_controller == 0) {
                                 ulADC_clock = fnGetPCC_clock(KINETIS_PERIPHERAL_ADC0); // get the clock speed that is configured for ADC0 usage
@@ -406,6 +416,17 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
                             _EXCEPTION("Unsupported!");
         #endif
                             break;
+        #if defined KINETIS_KE15
+                        default:
+                            _EXCEPTION("Only ALTCLK1 can be used by the KE15's ADC (use ADC_CLOCK_BUS or leave blank for compatibilty)!");
+                            break;
+        #else
+                        case ADC_CFG1_ADICLK_BUS:
+                            ulADC_clock = BUS_CLOCK;
+                            break;
+                        case ADC_CFG1_ADICLK_BUS2:
+                            ulADC_clock = (BUS_CLOCK / 2);
+                            break;
                         case ADC_CFG1_ADICLK_ASY:
                             if ((ptrADC->ADC_CFG1 & ADC_CFG1_ADLPC) != 0) { // low power configuration is active (reduced power at the expense of the clock speed)
                                 if ((ptrADC->ADC_CFG1 & ADC_CFG1_ADLPC) != 0) { // high speed configuration
@@ -424,13 +445,14 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
                                 }
                             }
                             break;
+        #endif
                         }
                         ulADC_clock >>= ((ADC_CFG1_ADIV_8 & ptrADC->ADC_CFG1) >> 5);                  
                         switch (ptrADC->ADC_CFG1 & ADC_CFG1_MODE_MASK) {
                         case ADC_CFG1_MODE_8:
                         case ADC_CFG1_MODE_10:
                         case ADC_CFG1_MODE_12:
-        #if defined KINETIS_KE
+        #if defined KINETIS_KE_ADC
                             if ((ptrADC->ADC_CFG1 & ADC_CFG1_ADLPC) != 0) { // low power mode used when high sampling speeds are not required
                                 if ((ulADC_clock < 400000) || (ulADC_clock > 4000000)) { // check valid ADC clock rate in low power mode
                                     _EXCEPTION("ADC clock rate outside valid range 400kHz..4MHz");
@@ -447,7 +469,7 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
                             }
         #endif
                             break;
-        #if defined KINETIS_KE
+        #if defined KINETIS_KE_ADC
                         default:
                             _EXCEPTION("Invalid ADC resolution!!");
                             break;
@@ -461,7 +483,7 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
                         }
                     }
     #endif
-    #if !defined KINETIS_KE
+    #if !defined KINETIS_KE_ADC
                     if ((ptrADC_settings->int_adc_mode & ADC_SELECT_INPUTS_B) != 0) { // {54}
                         ptrADC->ADC_CFG2 = (ADC_CFG2_MUXSEL_B | (ptrADC_settings->int_adc_sample & 0x7)); // select mux B inputs
                     }
@@ -489,24 +511,24 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
                     }
     #endif
                     ptrADC->ADC_SC2 = ((ptrADC_settings->int_adc_mode >> 8) & (ADC_SC2_REFSEL_ALT | ADC_SC2_ADTRG_HW)); // configure the reference voltage to be used and the trigger mode (hardware or software)
-    #if !defined KINETIS_KE
+    #if !defined KINETIS_KE_ADC
                     ptrADC->ADC_SC3 = ((ptrADC_settings->int_adc_sample >> 4) & 0x07); // configure hardware averaging
     #endif
                     if ((ptrADC_settings->int_adc_mode & ADC_LOOP_MODE) != 0) { // if continuous conversion is required
-    #if defined KINETIS_KE
+    #if defined KINETIS_KE_ADC
                         ucChannelConfig = ADC_SC1A_ADCO;                 // enable continuous conversion
     #else
                         ptrADC->ADC_SC3 |= ADC_SC3_ADCO;                 // enable continuous conversion
     #endif
                     }
-    #if !defined KINETIS_KE
+    #if !defined KINETIS_KE_ADC
                     else {
                         ptrADC->ADC_SC3 &= ~(ADC_SC3_ADCO);              // disable continuous conversion
                     }
     #endif
                 }
                 if ((ptrADC_settings->int_adc_mode & ADC_CONFIGURE_CHANNEL) != 0) { // if a channel is to be configured
-    #if !defined KINETIS_KE
+    #if !defined KINETIS_KE_ADC
                     ucChannelConfig = fnSetADC_channel(ucADC_channel, ((ptrADC_settings->int_adc_mode & ADC_DIFFERENTIAL_INPUT) != 0)); // check that the ADC channel is valid and prepare configuration value
                     if ((ptrADC_settings->int_adc_mode & ADC_HW_TRIGGERED) != 0) { // channel B is only valid in hardware triggered mode
                         ptrADC->ADC_SC1B = fnSetADC_channel(ptrADC_settings->int_adc_bit_b, (ptrADC_settings->int_adc_mode & ADC_DIFFERENTIAL_B));
@@ -538,7 +560,7 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
                                 fnEnterInterrupt(irq_ADC_ID, ptrADC_settings->int_priority, (void (*)(void))_ADC_Interrupt[ptrADC_settings->int_adc_controller]);
                                 ucChannelConfig |= ADC_SC1A_AIEN;        // enable interrupt on end of conversion
                                 if ((ptrADC_settings->int_adc_int_type & (ADC_LOW_LIMIT_INT | ADC_HIGH_LIMIT_INT)) != 0) { // {1} if a level is defined
-    #if defined KINETIS_KE
+    #if defined KINETIS_KE_ADC
                                     ucChannelConfig = ADC_SC1A_ADCO;     // enable continuous conversion
     #else
                                     ptrADC->ADC_SC3 |= ADC_SC3_ADCO;     // enable continuous conversion
@@ -553,7 +575,7 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
                                         ptrADC->ADC_CV1 = fnConvertADCvalue(ptrADC, ptrADC_settings->int_high_level_trigger, 1); // set high level threshold according to mode
                                         ptrADC->ADC_SC2 |= (ADC_SC2_ACFGT | ADC_SC2_ACFE); // enable compare function for greater or equal to threshold
                                         break;
-    #if !defined KINETIS_KE
+    #if !defined KINETIS_KE_ADC
                                     case (ADC_LOW_LIMIT_INT | ADC_HIGH_LIMIT_INT): // if the low value is less that the high value it results in a trigger when the value is higher or lower than the thresholds - if the low value is higher than th high value it rsults in a trigger if the value is between the thresholds
                                         ptrADC->ADC_CV1 = fnConvertADCvalue(ptrADC, ptrADC_settings->int_low_level_trigger, 0); // set low range threshold
                                         ptrADC->ADC_CV2 = fnConvertADCvalue(ptrADC, ptrADC_settings->int_high_level_trigger, 1); // set high range threshold
@@ -568,7 +590,7 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
                         }
     #endif
                   //}
-    #if defined KINETIS_KE
+    #if defined KINETIS_KE_ADC
                     ucChannelConfig |= (unsigned char)(ptrADC_settings->int_adc_bit & ADC_SC1A_ADCH_OFF); // the channel being configured
                     if (ptrADC_settings->int_adc_bit < ADC_SC1A_ADCH_VSS) { // if configuring a channel that uses a pin
                         ptrADC->ADC_APCTL1 |= (ADC_APCTL1_AD0 << ptrADC_settings->int_adc_bit); // enable the pin's ADC function
@@ -577,7 +599,7 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
                     ptrADC->ADC_SC1A = ucChannelConfig;                  // start conversion if software mode or enable triggered conversion
     #endif
                 }
-    #if defined KINETIS_KE                                               // {2}
+    #if defined KINETIS_KE_ADC                                           // {2}
                 else {
                     ucChannelConfig |= (ptrADC->ADC_SC1A & ~(ADC_SC1A_ADCO | ADC_SC1A_ADCO));
                 }

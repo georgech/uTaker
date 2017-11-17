@@ -612,6 +612,7 @@ Build_Kinetis.bat
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_PWM.h" />
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_RTC.h" />
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_SDHC.h" />
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_timer_pins.h" />
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_UART.h" />
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_USB_HS_Device.h" />
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_USB_OTG.h" />

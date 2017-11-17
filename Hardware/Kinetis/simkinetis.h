@@ -1706,7 +1706,7 @@ unsigned long FTM_C5V;
 
 typedef struct stKINETIS_ADC
 {
-#if defined KINETIS_KE
+#if defined KINETIS_KE && !defined KINETIS_KE15
     unsigned long ADC_SC1;
     unsigned long ADC_SC2;
     unsigned long ADC_SC3;
