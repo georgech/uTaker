@@ -7581,7 +7581,11 @@ typedef struct stFLEX_TIMER_MODULE
       #define ADC_SC1A_AIEN     0x00000040                                   // conversion complete interrupt enable
       #define ADC_SC1A_COCO     0x00000080                                   // conversion complete flag (read-only)
     #define ADC0_SC1B           *(unsigned long *)(ADC0_BLOCK + 0x004)       // ADC0 Status and Control Registers 1
-    #define ADC0_CFG1           *(unsigned long *)(ADC0_BLOCK + 0x008)       // ADC0 Configuration Register 1
+    #if defined KINETIS_KE15
+        #define ADC0_CFG1       *(unsigned long *)(ADC0_BLOCK + 0x040)       // ADC0 Configuration Register 1
+    #else
+        #define ADC0_CFG1       *(unsigned long *)(ADC0_BLOCK + 0x008)       // ADC0 Configuration Register 1
+    #endif
       #define ADC_CFG1_ADICLK_BUS  0x00000000                                // input clock select - bus clock
       #define ADC_CFG1_ADICLK_BUS2 0x00000001                                // input clock select - bus clock divided by 2
       #define ADC_CFG1_ADICLK_ALT  0x00000002                                // input clock select - alternative clock (ALTCLK)
@@ -7589,16 +7593,24 @@ typedef struct stFLEX_TIMER_MODULE
       #define ADC_CFG1_MODE_8   0x00000000                                   // conversion mode - single-ended 8 bit or differential 9 bit
       #define ADC_CFG1_MODE_12  0x00000004                                   // conversion mode - single-ended 12 bit or differential 13 bit
       #define ADC_CFG1_MODE_10  0x00000008                                   // conversion mode - single-ended 10 bit or differential 11 bit
+    #if !defined KINETIS_KE15
       #define ADC_CFG1_MODE_16  0x0000000c                                   // conversion mode - single-ended 16 bit or differential 16 bit
-      #define ADC_CFG1_MODE_MASK    ADC_CFG1_MODE_16
+    #endif
+      #define ADC_CFG1_MODE_MASK 0x0000000c
       #define ADC_CFG1_ADLSMP_SHORT 0x00000000                               // short sample time
       #define ADC_CFG1_ADLSMP_LONG  0x00000010                               // long sample time
       #define ADC_CFG1_ADIV_1   0x00000000                                   // ADC clock not divided
       #define ADC_CFG1_ADIV_2   0x00000020                                   // ADC clock divided by 2
       #define ADC_CFG1_ADIV_4   0x00000040                                   // ADC clock divided by 4
       #define ADC_CFG1_ADIV_8   0x00000060                                   // ADC clock divided by 8
+    #if !defined KINETIS_KE15
       #define ADC_CFG1_ADLPC    0x00000080                                   // low power configuration
-    #define ADC0_CFG2           *(unsigned long *)(ADC0_BLOCK + 0x00c)       // ADC0 Configuration Register 2
+    #endif
+    #if defined KINETIS_KE15
+        #define ADC0_CFG2       *(unsigned long *)(ADC0_BLOCK + 0x044)       // ADC0 Configuration Register 2
+    #else
+        #define ADC0_CFG2       *(unsigned long *)(ADC0_BLOCK + 0x00c)       // ADC0 Configuration Register 2
+    #endif
       #define ADC_CFG2_ADLSTS_2  0x00000003                                  // long sample time select - 2 extra (6 clocks total)
       #define ADC_CFG2_ADLSTS_6  0x00000002                                  // long sample time select - 6 extra (10 clocks total)
       #define ADC_CFG2_ADLSTS_12 0x00000001                                  // long sample time select - 12 extra (16 clocks total)
@@ -7607,11 +7619,19 @@ typedef struct stFLEX_TIMER_MODULE
       #define ADC_CFG2_ADACKEN   0x00000008                                  // asynchronous clock and clock output enabled regardless of ADC state
       #define ADC_CFG2_MUXSEL_A  0x00000000                                  // ADC mux select - ADxxa selected
       #define ADC_CFG2_MUXSEL_B  0x00000010                                  // ADC mux select - ADxxb selected
-    #define ADC0_RA             *(volatile unsigned long *)(ADC0_BLOCK + 0x010) // ADC0a Data Result Register (read-only)
-    #define ADC0_RB             *(volatile unsigned long *)(ADC0_BLOCK + 0x014) // ADC0b Data Result Register (read-only)
-    #define ADC0_CV1            *(unsigned long *)(ADC0_BLOCK + 0x018)       // ADC0 Compare Value Registers
-    #define ADC0_CV2            *(unsigned long *)(ADC0_BLOCK + 0x01c)       // ADC0 Compare Value Registers
-    #define ADC0_SC2            *(volatile unsigned long *)(ADC0_BLOCK + 0x020) // ADC0 Status and Control Register 2
+    #if defined KINETIS_KE15
+        #define ADC0_RA         *(volatile unsigned long *)(ADC0_BLOCK + 0x048) // ADC0a Data Result Register (read-only)
+        #define ADC0_RB         *(volatile unsigned long *)(ADC0_BLOCK + 0x04c) // ADC0b Data Result Register (read-only)
+        #define ADC0_CV1        *(unsigned long *)(ADC0_BLOCK + 0x088)       // ADC0 Compare Value Registers
+        #define ADC0_CV2        *(unsigned long *)(ADC0_BLOCK + 0x08c)       // ADC0 Compare Value Registers
+        #define ADC0_SC2        *(volatile unsigned long *)(ADC0_BLOCK + 0x090) // ADC0 Status and Control Register 2
+    #else
+        #define ADC0_RA         *(volatile unsigned long *)(ADC0_BLOCK + 0x010) // ADC0a Data Result Register (read-only)
+        #define ADC0_RB         *(volatile unsigned long *)(ADC0_BLOCK + 0x014) // ADC0b Data Result Register (read-only)
+        #define ADC0_CV1        *(unsigned long *)(ADC0_BLOCK + 0x018)       // ADC0 Compare Value Registers
+        #define ADC0_CV2        *(unsigned long *)(ADC0_BLOCK + 0x01c)       // ADC0 Compare Value Registers
+        #define ADC0_SC2        *(volatile unsigned long *)(ADC0_BLOCK + 0x020) // ADC0 Status and Control Register 2
+    #endif
       #define ADC_SC2_REFSEL_REF 0x00000000                                  // voltage reference selection - reference pair (VREFH and VREFL)
       #define ADC_SC2_REFSEL_ALT 0x00000001                                  // voltage reference selection - alternative reference pair (VALTH and VALTL)
       #define ADC_SC2_DMAEN      0x00000004                                  // DMA enabled
@@ -7621,7 +7641,11 @@ typedef struct stFLEX_TIMER_MODULE
       #define ADC_SC2_ADTRG_SW   0x00000000                                  // conversion trigger select - software
       #define ADC_SC2_ADTRG_HW   0x00000040                                  // conversion trigger select - hardware
       #define ADC_SC2_ADACT      0x00000080                                  // ADC converion in progress (read-only)
-    #define ADC0_SC3            *(volatile unsigned long *)(ADC0_BLOCK + 0x024) // ADC0 Status and Control Register 3
+    #if defined KINETIS_KE15
+        #define ADC0_SC3        *(volatile unsigned long *)(ADC0_BLOCK + 0x094) // ADC0 Status and Control Register 3
+    #else
+        #define ADC0_SC3        *(volatile unsigned long *)(ADC0_BLOCK + 0x024) // ADC0 Status and Control Register 3
+    #endif
       #define ADC_SC3_AVGS_4    0x00000000                                   // hardware average select - 4 samples averaged
       #define ADC_SC3_AVGS_8    0x00000001                                   // hardware average select - 8 samples averaged
       #define ADC_SC3_AVGS_16   0x00000002                                   // hardware average select - 16 samples averaged
@@ -7630,17 +7654,40 @@ typedef struct stFLEX_TIMER_MODULE
       #define ADC_SC3_ADCO      0x00000008                                   // continuous conversion enable
       #define ADC_SC3_CALF      0x00000040                                   // calibration failed flag (read-only)
       #define ADC_SC3_CAL       0x00000080                                   // calibration
-    #define ADC0_OFS            *(unsigned long *)(ADC0_BLOCK + 0x028)       // ADC0 Offset Correction Register
-    #define ADC0_PG             *(unsigned long *)(ADC0_BLOCK + 0x02c)       // ADC0 Plus Side Gain Register
-    #define ADC0_MG             *(unsigned long *)(ADC0_BLOCK + 0x030)       // ADC0 Minus Side Gain Register
-    #define ADC0_CLPD           *(unsigned long *)(ADC0_BLOCK + 0x034)       // ADC0 Plus Side General Calibration Value Register
-    #define ADC0_CLPS           *(unsigned long *)(ADC0_BLOCK + 0x038)       // ADC0 Plus Side General Calibration Value Register
-    #define ADC0_CLP4           *(unsigned long *)(ADC0_BLOCK + 0x03c)       // ADC0 Plus Side General Calibration Value Register
-    #define ADC0_CLP3           *(unsigned long *)(ADC0_BLOCK + 0x040)       // ADC0 Plus Side General Calibration Value Register
-    #define ADC0_CLP2           *(unsigned long *)(ADC0_BLOCK + 0x044)       // ADC0 Plus Side General Calibration Value Register
-    #define ADC0_CLP1           *(unsigned long *)(ADC0_BLOCK + 0x048)       // ADC0 Plus Side General Calibration Value Register
-    #define ADC0_CLP0           *(unsigned long *)(ADC0_BLOCK + 0x04c)       // ADC0 Plus Side General Calibration Value Register
-    #define ADC0_PGA            *(unsigned long *)(ADC0_BLOCK + 0x050)       // ADC0 PGA Register
+    #if defined KINETIS_KE15
+        #define ADC0_BASE_OFS *(volatile unsigned long *)(ADC0_BLOCK + 0x098) // ADC0 base offset register
+        #define ADC0_OFS        *(unsigned long *)(ADC0_BLOCK + 0x09c)       // ADC0 offset correction register
+        #define ADC0_USR_OFS    *(unsigned long *)(ADC0_BLOCK + 0x0a0)       // ADC0 user offset correction register
+        #define ADC0_XOFS       *(unsigned long *)(ADC0_BLOCK + 0x0a4)       // ADC0 x offset correction register
+        #define ADC0_YOFS       *(unsigned long *)(ADC0_BLOCK + 0x0a8)       // ADC0 y offset correction register
+        #define ADC0_G          *(unsigned long *)(ADC0_BLOCK + 0x0ac)       // ADC0 gain register
+        #define ADC0_UG         *(unsigned long *)(ADC0_BLOCK + 0x0b0)       // ADC0 user gain register
+        #define ADC0_CLPS       *(unsigned long *)(ADC0_BLOCK + 0x0b4)       // ADC0 general calibration value register S
+        #define ADC0_CLP3       *(unsigned long *)(ADC0_BLOCK + 0x0b8)       // ADC0 plus side general calibration value register 3
+        #define ADC0_CLP2       *(unsigned long *)(ADC0_BLOCK + 0x0bc)       // ADC0 plus side general calibration value register 2
+        #define ADC0_CLP1       *(unsigned long *)(ADC0_BLOCK + 0x0c0)       // ADC0 plus side general calibration value register 1
+        #define ADC0_CLP0       *(unsigned long *)(ADC0_BLOCK + 0x0c4)       // ADC0 plus side general calibration value register 0
+        #define ADC0_CLPX       *(unsigned long *)(ADC0_BLOCK + 0x0c8)       // ADC0 plus side general calibration value register X
+        #define ADC0_CLP9       *(unsigned long *)(ADC0_BLOCK + 0x0cc)       // ADC0 plus side general calibration value register 9
+        #define ADC0_CLPS_OFS   *(unsigned long *)(ADC0_BLOCK + 0x0d0)       // ADC0 general calibration value register S
+        #define ADC0_CLP3_OFS   *(unsigned long *)(ADC0_BLOCK + 0x0d4)       // ADC0 plus side general calibration offset value register 3
+        #define ADC0_CLP2_OFS   *(unsigned long *)(ADC0_BLOCK + 0x0d8)       // ADC0 plus side general calibration offset value register 2
+        #define ADC0_CLP1_OFS   *(unsigned long *)(ADC0_BLOCK + 0x0dc)       // ADC0 plus side general calibration offset value register 1
+        #define ADC0_CLP0_OFS   *(unsigned long *)(ADC0_BLOCK + 0x0e0)       // ADC0 plus side general calibration offset value register 0
+        #define ADC0_CLPX_OFS   *(unsigned long *)(ADC0_BLOCK + 0x0e4)       // ADC0 plus side general calibration offset value register X
+        #define ADC0_CLP9_OFS   *(unsigned long *)(ADC0_BLOCK + 0x0e8)       // ADC0 plus side general calibration offset value register 9
+    #else
+        #define ADC0_OFS        *(unsigned long *)(ADC0_BLOCK + 0x028)       // ADC0 Offset Correction Register
+        #define ADC0_PG         *(unsigned long *)(ADC0_BLOCK + 0x02c)       // ADC0 Plus Side Gain Register
+        #define ADC0_MG         *(unsigned long *)(ADC0_BLOCK + 0x030)       // ADC0 Minus Side Gain Register
+        #define ADC0_CLPD       *(unsigned long *)(ADC0_BLOCK + 0x034)       // ADC0 Plus Side General Calibration Value Register
+        #define ADC0_CLPS       *(unsigned long *)(ADC0_BLOCK + 0x038)       // ADC0 Plus Side General Calibration Value Register
+        #define ADC0_CLP4       *(unsigned long *)(ADC0_BLOCK + 0x03c)       // ADC0 Plus Side General Calibration Value Register
+        #define ADC0_CLP3       *(unsigned long *)(ADC0_BLOCK + 0x040)       // ADC0 Plus Side General Calibration Value Register
+        #define ADC0_CLP2       *(unsigned long *)(ADC0_BLOCK + 0x044)       // ADC0 Plus Side General Calibration Value Register
+        #define ADC0_CLP1       *(unsigned long *)(ADC0_BLOCK + 0x048)       // ADC0 Plus Side General Calibration Value Register
+        #define ADC0_CLP0       *(unsigned long *)(ADC0_BLOCK + 0x04c)       // ADC0 Plus Side General Calibration Value Register
+        #define ADC0_PGA        *(unsigned long *)(ADC0_BLOCK + 0x050)       // ADC0 PGA Register
       #define ADC_PGA_PGAG_1    0x00000000                                   // PGA gain - 1x
       #define ADC_PGA_PGAG_2    0x00010000                                   // PGA gain - 2x
       #define ADC_PGA_PGAG_4    0x00020000                                   // PGA gain - 4x
@@ -7657,36 +7704,69 @@ typedef struct stFLEX_TIMER_MODULE
     #define ADC0_CLM2           *(unsigned long *)(ADC0_BLOCK + 0x064)       // ADC0 Minus Side General Calibration Value Register
     #define ADC0_CLM1           *(unsigned long *)(ADC0_BLOCK + 0x068)       // ADC0 Minus Side General Calibration Value Register
     #define ADC0_CLM0           *(unsigned long *)(ADC0_BLOCK + 0x06c)       // ADC0 Minus Side General Calibration Value Register
+    #endif
 
     #if ADC_CONTROLLERS > 1
-        #define ADC1_SC1A       *(volatile unsigned long *)(ADC1_BLOCK + 0x000) // ADC1 Status and Control Registers 1
-        #define ADC1_SC1B       *(unsigned long *)(ADC1_BLOCK + 0x004)       // ADC1 Status and Control Registers 1
-        #define ADC1_CFG1       *(unsigned long *)(ADC1_BLOCK + 0x008)       // ADC1 Configuration Register 1
-        #define ADC1_CFG2       *(unsigned long *)(ADC1_BLOCK + 0x00c)       // ADC1 Configuration Register 2
-        #define ADC1_RA         *(volatile unsigned long *)(ADC1_BLOCK + 0x010) // ADC1 Data Result Register (read-only)
-        #define ADC1_RB         *(volatile unsigned long *)(ADC1_BLOCK + 0x014) // ADC1 Data Result Register (read-only)
-        #define ADC1_CV1        *(unsigned long *)(ADC1_BLOCK + 0x018)       // ADC1 Compare Value Registers
-        #define ADC1_CV2        *(unsigned long *)(ADC1_BLOCK + 0x01c)       // ADC1 Compare Value Registers
-        #define ADC1_SC2        *(volatile unsigned long *)(ADC1_BLOCK + 0x020) // ADC1 Status and Control Register 2
-        #define ADC1_SC3        *(volatile unsigned long *)(ADC1_BLOCK + 0x024) // ADC1 Status and Control Register 3
-        #define ADC1_OFS        *(unsigned long *)(ADC1_BLOCK + 0x028)       // ADC1 Offset Correction Register
-        #define ADC1_PG         *(unsigned long *)(ADC1_BLOCK + 0x02c)       // ADC1 Plus Side Gain Register
-        #define ADC1_MG         *(unsigned long *)(ADC1_BLOCK + 0x030)       // ADC1 Minus Side Gain Register
-        #define ADC1_CLPD       *(unsigned long *)(ADC1_BLOCK + 0x034)       // ADC1 Plus Side General Calibration Value Register
-        #define ADC1_CLPS       *(unsigned long *)(ADC1_BLOCK + 0x038)       // ADC1 Plus Side General Calibration Value Register
-        #define ADC1_CLP4       *(unsigned long *)(ADC1_BLOCK + 0x03c)       // ADC1 Plus Side General Calibration Value Register
-        #define ADC1_CLP3       *(unsigned long *)(ADC1_BLOCK + 0x040)       // ADC1 Plus Side General Calibration Value Register
-        #define ADC1_CLP2       *(unsigned long *)(ADC1_BLOCK + 0x044)       // ADC1 Plus Side General Calibration Value Register
-        #define ADC1_CLP1       *(unsigned long *)(ADC1_BLOCK + 0x048)       // ADC1 Plus Side General Calibration Value Register
-        #define ADC1_CLP0       *(unsigned long *)(ADC1_BLOCK + 0x04c)       // ADC1 Plus Side General Calibration Value Register
-        #define ADC1_PGA        *(unsigned long *)(ADC1_BLOCK + 0x050)       // ADC1 PGA Register
-        #define ADC1_CLMD       *(unsigned long *)(ADC1_BLOCK + 0x054)       // ADC1 Minus Side General Calibration Value Register
-        #define ADC1_CLMS       *(unsigned long *)(ADC1_BLOCK + 0x058)       // ADC1 Minus Side General Calibration Value Register
-        #define ADC1_CLM4       *(unsigned long *)(ADC1_BLOCK + 0x05c)       // ADC1 Minus Side General Calibration Value Register
-        #define ADC1_CLM3       *(unsigned long *)(ADC1_BLOCK + 0x060)       // ADC1 Minus Side General Calibration Value Register
-        #define ADC1_CLM2       *(unsigned long *)(ADC1_BLOCK + 0x064)       // ADC1 Minus Side General Calibration Value Register
-        #define ADC1_CLM1       *(unsigned long *)(ADC1_BLOCK + 0x068)       // ADC1 Minus Side General Calibration Value Register
-        #define ADC1_CLM0       *(unsigned long *)(ADC1_BLOCK + 0x06c)       // ADC1 Minus Side General Calibration Value Register
+        #define ADC1_SC1A       *(volatile unsigned long *)(ADC1_BLOCK + 0x000) // ADC1 status and control registers 1
+        #define ADC1_SC1B       *(unsigned long *)(ADC1_BLOCK + 0x004)       // ADC1 status and control registers 1
+        #if defined KINETIS_KE15
+            #define ADC1_CFG1   *(unsigned long *)(ADC1_BLOCK + 0x040)       // ADC1 configuration register 1
+            #define ADC1_CFG2   *(unsigned long *)(ADC1_BLOCK + 0x044)       // ADC1 configuration register 2
+            #define ADC1_RA     *(volatile unsigned long *)(ADC1_BLOCK + 0x048) // ADC1a data result register (read-only)
+            #define ADC1_RB     *(volatile unsigned long *)(ADC1_BLOCK + 0x04c) // ADC1b data result register (read-only)
+            #define ADC1_CV1    *(unsigned long *)(ADC1_BLOCK + 0x088)       // ADC1 compare value registers
+            #define ADC1_CV2    *(unsigned long *)(ADC1_BLOCK + 0x08c)       // ADC1 compare value registers
+            #define ADC1_SC2    *(volatile unsigned long *)(ADC1_BLOCK + 0x090) // ADC1 status and control register 2
+            #define ADC1_SC3    *(volatile unsigned long *)(ADC1_BLOCK + 0x094) // ADC1 status and control register 3
+            #define ADC1_BASE_OFS *(volatile unsigned long *)(ADC1_BLOCK + 0x098) // ADC1 base offset register
+            #define ADC1_OFS    *(unsigned long *)(ADC1_BLOCK + 0x09c)       // ADC1 offset correction register
+            #define ADC1_USR_OFS *(unsigned long *)(ADC1_BLOCK + 0x0a0)      // ADC1 user offset correction register
+            #define ADC1_XOFS   *(unsigned long *)(ADC1_BLOCK + 0x0a4)       // ADC1 x offset correction register
+            #define ADC1_YOFS   *(unsigned long *)(ADC1_BLOCK + 0x0a8)       // ADC1 y offset correction register
+            #define ADC1_G      *(unsigned long *)(ADC1_BLOCK + 0x0ac)       // ADC1 gain register
+            #define ADC1_UG     *(unsigned long *)(ADC1_BLOCK + 0x0b0)       // ADC1 user gain register
+            #define ADC1_CLPS   *(unsigned long *)(ADC1_BLOCK + 0x0b4)       // ADC1 general calibration value register S
+            #define ADC1_CLP3   *(unsigned long *)(ADC1_BLOCK + 0x0b8)       // ADC1 plus side general calibration value register 3
+            #define ADC1_CLP2   *(unsigned long *)(ADC1_BLOCK + 0x0bc)       // ADC1 plus side general calibration value register 2
+            #define ADC1_CLP1   *(unsigned long *)(ADC1_BLOCK + 0x0c0)       // ADC1 plus side general calibration value register 1
+            #define ADC1_CLP0   *(unsigned long *)(ADC1_BLOCK + 0x0c4)       // ADC1 plus side general calibration value register 0
+            #define ADC1_CLPX   *(unsigned long *)(ADC1_BLOCK + 0x0c8)       // ADC1 plus side general calibration value register X
+            #define ADC1_CLP9   *(unsigned long *)(ADC1_BLOCK + 0x0cc)       // ADC1 plus side general calibration value register 9
+            #define ADC1_CLPS_OFS *(unsigned long *)(ADC1_BLOCK + 0x0d0)     // ADC1 general calibration value register S
+            #define ADC1_CLP3_OFS *(unsigned long *)(ADC1_BLOCK + 0x0d4)     // ADC1 plus side general calibration offset value register 3
+            #define ADC1_CLP2_OFS *(unsigned long *)(ADC1_BLOCK + 0x0d8)     // ADC1 plus side general calibration offset value register 2
+            #define ADC1_CLP1_OFS *(unsigned long *)(ADC1_BLOCK + 0x0dc)     // ADC1 plus side general calibration offset value register 1
+            #define ADC1_CLP0_OFS *(unsigned long *)(ADC1_BLOCK + 0x0e0)     // ADC1 plus side general calibration offset value register 0
+            #define ADC1_CLPX_OFS *(unsigned long *)(ADC1_BLOCK + 0x0e4)     // ADC1 plus side general calibration offset value register X
+            #define ADC1_CLP9_OFS *(unsigned long *)(ADC1_BLOCK + 0x0e8)     // ADC1 plus side general calibration offset value register 9
+        #else
+            #define ADC1_CFG1   *(unsigned long *)(ADC1_BLOCK + 0x008)       // ADC1 Configuration Register 1
+            #define ADC1_CFG2   *(unsigned long *)(ADC1_BLOCK + 0x00c)       // ADC1 Configuration Register 2
+            #define ADC1_RA     *(volatile unsigned long *)(ADC1_BLOCK + 0x010) // ADC1 Data Result Register (read-only)
+            #define ADC1_RB     *(volatile unsigned long *)(ADC1_BLOCK + 0x014) // ADC1 Data Result Register (read-only)
+            #define ADC1_CV1    *(unsigned long *)(ADC1_BLOCK + 0x018)       // ADC1 Compare Value Registers
+            #define ADC1_CV2    *(unsigned long *)(ADC1_BLOCK + 0x01c)       // ADC1 Compare Value Registers
+            #define ADC1_SC2    *(volatile unsigned long *)(ADC1_BLOCK + 0x020) // ADC1 Status and Control Register 2
+            #define ADC1_SC3    *(volatile unsigned long *)(ADC1_BLOCK + 0x024) // ADC1 Status and Control Register 3
+            #define ADC1_OFS    *(unsigned long *)(ADC1_BLOCK + 0x028)       // ADC1 Offset Correction Register
+            #define ADC1_PG     *(unsigned long *)(ADC1_BLOCK + 0x02c)       // ADC1 Plus Side Gain Register
+            #define ADC1_MG     *(unsigned long *)(ADC1_BLOCK + 0x030)       // ADC1 Minus Side Gain Register
+            #define ADC1_CLPD   *(unsigned long *)(ADC1_BLOCK + 0x034)       // ADC1 Plus Side General Calibration Value Register
+            #define ADC1_CLPS   *(unsigned long *)(ADC1_BLOCK + 0x038)       // ADC1 Plus Side General Calibration Value Register
+            #define ADC1_CLP4   *(unsigned long *)(ADC1_BLOCK + 0x03c)       // ADC1 Plus Side General Calibration Value Register
+            #define ADC1_CLP3   *(unsigned long *)(ADC1_BLOCK + 0x040)       // ADC1 Plus Side General Calibration Value Register
+            #define ADC1_CLP2   *(unsigned long *)(ADC1_BLOCK + 0x044)       // ADC1 Plus Side General Calibration Value Register
+            #define ADC1_CLP1   *(unsigned long *)(ADC1_BLOCK + 0x048)       // ADC1 Plus Side General Calibration Value Register
+            #define ADC1_CLP0   *(unsigned long *)(ADC1_BLOCK + 0x04c)       // ADC1 Plus Side General Calibration Value Register
+            #define ADC1_PGA    *(unsigned long *)(ADC1_BLOCK + 0x050)       // ADC1 PGA Register
+            #define ADC1_CLMD   *(unsigned long *)(ADC1_BLOCK + 0x054)       // ADC1 Minus Side General Calibration Value Register
+            #define ADC1_CLMS   *(unsigned long *)(ADC1_BLOCK + 0x058)       // ADC1 Minus Side General Calibration Value Register
+            #define ADC1_CLM4   *(unsigned long *)(ADC1_BLOCK + 0x05c)       // ADC1 Minus Side General Calibration Value Register
+            #define ADC1_CLM3   *(unsigned long *)(ADC1_BLOCK + 0x060)       // ADC1 Minus Side General Calibration Value Register
+            #define ADC1_CLM2   *(unsigned long *)(ADC1_BLOCK + 0x064)       // ADC1 Minus Side General Calibration Value Register
+            #define ADC1_CLM1   *(unsigned long *)(ADC1_BLOCK + 0x068)       // ADC1 Minus Side General Calibration Value Register
+            #define ADC1_CLM0   *(unsigned long *)(ADC1_BLOCK + 0x06c)       // ADC1 Minus Side General Calibration Value Register
+        #endif
     #endif
     #if ADC_CONTROLLERS > 2
         #define ADC2_SC1A       *(volatile unsigned long *)(ADC2_BLOCK + 0x000) // ADC2 Status and Control Registers 1
@@ -7797,34 +7877,70 @@ typedef struct stFLEX_TIMER_MODULE
 
     typedef struct stKINETIS_ADC_REGS
     {
-    volatile unsigned long ADC_SC1A;
-    unsigned long ADC_SC1B;
-    unsigned long ADC_CFG1;
-    unsigned long ADC_CFG2;
-    volatile unsigned long ADC_RA;
-    volatile unsigned long ADC_RB;
-    unsigned long ADC_CV1;
-    unsigned long ADC_CV2;
-    volatile unsigned long ADC_SC2;
-    volatile unsigned long ADC_SC3;
-    unsigned long ADC_OFS;
-    unsigned long ADC_PG;
-    unsigned long ADC_MG;
-    unsigned long ADC_CLPD;
-    unsigned long ADC_CLPS;
-    unsigned long ADC_CLP4;
-    unsigned long ADC_CLP3;
-    unsigned long ADC_CLP2;
-    unsigned long ADC_CLP1;
-    unsigned long ADC_CLP0;
-    unsigned long ADC_PGA;
-    unsigned long ADC_CLMD;
-    unsigned long ADC_CLMS;
-    unsigned long ADC_CLM4;
-    unsigned long ADC_CLM3;
-    unsigned long ADC_CLM2;
-    unsigned long ADC_CLM1;
-    unsigned long ADC_CLM0;
+    #if defined KINETIS_KE15
+        volatile unsigned long ADC_SC1A;
+        unsigned long ADC_SC1B;
+        unsigned long ulRes0[14];
+        unsigned long ADC_CFG1;
+        unsigned long ADC_CFG2;
+        volatile unsigned long ADC_RA;
+        volatile unsigned long ADC_RB;
+        unsigned long ulRes1[14];
+        unsigned long ADC_CV1;
+        unsigned long ADC_CV2;
+        volatile unsigned long ADC_SC2;
+        volatile unsigned long ADC_SC3;
+        unsigned long ADC_BASE_OFS;
+        unsigned long ADC_OFS;
+        unsigned long ADC_USR_OFS;
+        unsigned long ADC_XOFS;
+        unsigned long ADC_YOFS;
+        unsigned long ADC_G;
+        unsigned long ADC_UG;
+        unsigned long ADC_CLPS;
+        unsigned long ADC_CLP3;
+        unsigned long ADC_CLP2;
+        unsigned long ADC_CLP1;
+        unsigned long ADC_CLP0;
+        unsigned long ADC_CLPX;
+        unsigned long ADC_CLP9;
+        unsigned long ADC_CLPS_OFS;
+        unsigned long ADC_CLP3_OFS;
+        unsigned long ADC_CLP2_OFS;
+        unsigned long ADC_CLP1_OFS;
+        unsigned long ADC_CLP0_OFS;
+        unsigned long ADC_CLPX_OFS;
+        unsigned long ADC_CLP9_OFS;
+    #else
+        volatile unsigned long ADC_SC1A;
+        unsigned long ADC_SC1B;
+        unsigned long ADC_CFG1;
+        unsigned long ADC_CFG2;
+        volatile unsigned long ADC_RA;
+        volatile unsigned long ADC_RB;
+        unsigned long ADC_CV1;
+        unsigned long ADC_CV2;
+        volatile unsigned long ADC_SC2;
+        volatile unsigned long ADC_SC3;
+        unsigned long ADC_OFS;
+        unsigned long ADC_PG;
+        unsigned long ADC_MG;
+        unsigned long ADC_CLPD;
+        unsigned long ADC_CLPS;
+        unsigned long ADC_CLP4;
+        unsigned long ADC_CLP3;
+        unsigned long ADC_CLP2;
+        unsigned long ADC_CLP1;
+        unsigned long ADC_CLP0;
+        unsigned long ADC_PGA;
+        unsigned long ADC_CLMD;
+        unsigned long ADC_CLMS;
+        unsigned long ADC_CLM4;
+        unsigned long ADC_CLM3;
+        unsigned long ADC_CLM2;
+        unsigned long ADC_CLM1;
+        unsigned long ADC_CLM0;
+    #endif
     } KINETIS_ADC_REGS;
 #endif
 
@@ -16300,7 +16416,9 @@ extern void fnSimPers(void);
     #endif
     #define PWM_CLOCK             TIMER_CLOCK
 #elif defined KINETIS_KE
-    #if (defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA8 || defined KINETIS_KEA64 || defined KINETIS_KEA128)
+    #if defined KINETIS_KE15
+        #define TIMER_CLOCK       DIVCORE_CLK
+    #elif (defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA8 || defined KINETIS_KEA64 || defined KINETIS_KEA128)
         #if defined TIMER_CLOCK_DIVIDE_2
 		    #define TIMER_CLOCK   (ICSOUT_CLOCK/2)
         #else

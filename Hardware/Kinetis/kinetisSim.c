@@ -796,11 +796,22 @@ static void fnSetDevice(unsigned long *port_inits)
     INTMUX0_CH2_CSR = 0x200;
     INTMUX0_CH3_CSR = 0x300;
 #endif
-#if defined KINETIS_KE && !defined KINETIS_KE15
+#if defined KINETIS_KE15
+    ADC0_SC1A = ADC_SC1A_ADCH_OFF;                                       // ADC0
+    ADC0_SC1B = ADC_SC1A_ADCH_OFF;
+    ADC0_CFG2 = 0x0000000c;
+    ADC0_BASE_OFS = 0x00000040;
+    ADC0_XOFS = 0x00000030;
+    ADC0_YOFS = 0x00000037;
+    ADC0_G = 0x000002f0;
+    ADC0_UG = 0x00000004;
+    ADC0_CLPX_OFS = 0x00000440;
+    ADC0_CLP9_OFS = 0x00000240;
+#elif defined KINETIS_KE
     ADC0_SC1 = ADC_SC1A_ADCH_OFF;
     ADC0_SC2 = ADC_SC2_FEMPTY;
 #else
-    ADC0_SC1A   = ADC_SC1A_ADCH_OFF;                                     // ADC
+    ADC0_SC1A   = ADC_SC1A_ADCH_OFF;                                     // ADC0
     ADC0_SC1B   = ADC_SC1A_ADCH_OFF;
     ADC0_OFS    = 0x00000004;
     ADC0_PG     = 0x00008200;
@@ -821,6 +832,18 @@ static void fnSetDevice(unsigned long *port_inits)
     ADC0_CLM0   = 0x00000020;
 #endif
 #if ADC_CONTROLLERS > 1
+    #if defined KINETIS_KE15
+    ADC1_SC1A = ADC_SC1A_ADCH_OFF;                                     // ADC1
+    ADC1_SC1B = ADC_SC1A_ADCH_OFF;
+    ADC1_CFG2 = 0x0000000c;
+    ADC1_BASE_OFS = 0x00000040;
+    ADC1_XOFS = 0x00000030;
+    ADC1_YOFS = 0x00000037;
+    ADC1_G = 0x000002f0;
+    ADC1_UG = 0x00000004;
+    ADC1_CLPX_OFS = 0x00000440;
+    ADC1_CLP9_OFS = 0x00000240;
+    #else
     ADC1_SC1A   = ADC_SC1A_ADCH_OFF;
     ADC1_SC1B   = ADC_SC1A_ADCH_OFF;
     ADC1_OFS    = 0x00000004;
@@ -840,6 +863,7 @@ static void fnSetDevice(unsigned long *port_inits)
     ADC1_CLM2   = 0x00000080;
     ADC1_CLM1   = 0x00000040;
     ADC1_CLM0   = 0x00000020;
+    #endif
 #endif
 #if DAC_CONTROLLERS > 1
     DAC0_SR     = DAC_SR_DACBFRPTF;                                      // DAC
@@ -7466,6 +7490,99 @@ static void fnTriggerADC(int iADC, int iHW_trigger)
 }
 #endif
 
+#if defined SUPPORT_TIMER
+unsigned long fnGetFlexTimer_clock(int iChannel)
+{
+    unsigned long ulClockSpeed = 0;
+    FLEX_TIMER_MODULE *ptrTimer;
+    switch (iChannel) {
+    case 0:
+        ptrTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_0;
+        break;
+    #if defined FTM_BLOCK_1
+    case 1:
+        ptrTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_1;
+        break;
+    #endif
+    #if defined FTM_BLOCK_2
+    case 2:
+        ptrTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_2;
+        break;
+    #endif
+    #if defined FTM_BLOCK_3
+    case 3:
+        ptrTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_3;
+        break;
+    #endif
+    #if defined FTM_BLOCK_4
+    case 4:
+        ptrTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_4;
+        break;
+    #endif
+    #if defined FTM_BLOCK_5
+    case 5:
+        ptrTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_5;
+        break;
+    #endif
+    }
+    #if defined KINETIS_KE15
+    switch (ptrTimer->FTM_SC & (FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)) {
+    case FTM_SC_CLKS_EXT:
+        _EXCEPTION("Not supported");
+        break;
+    case FTM_SC_CLKS_FIX:
+        if ((SCG_SOSCCSR & SCG_SOSCCSR_SOSCERCLKEN) != 0) {
+            _EXCEPTION("Not supported");
+        }
+        else {
+            _EXCEPTION("SOSC_CLK needs to be enable for this use!");
+        }
+        break;
+    case FTM_SC_CLKS_SYS:
+        ulClockSpeed = DIVCORE_CLK;                                      // system clock
+        break;
+    }
+    #elif defined KINETIS_WITH_PCC
+    ulClockSpeed = fnGetPCC_clock((KINETIS_PERIPHERAL_FTM0 + iChannel)); // get the speed of the clock used by this module
+    #elif defined KINETIS_KL
+    switch (SIM_SOPT2 & SIM_SOPT2_TPMSRC_MCGIRCLK) {                     // {38}
+    case SIM_SOPT2_TPMSRC_MCGIRCLK:
+        ulClockSpeed = MCGIRCLK;
+      //ulCountIncrease = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)MCGIRCLK) / 1000000); // bus clocks in a period
+        if ((MCG_C2 & MCG_C2_IRCS) != 0) {                               // if fast clock
+            int prescaler = ((MCG_SC >> 1) & 0x7);                       // FCRDIV value
+            while (prescaler-- != 0) {
+                ulClockSpeed /= 2;                                       // FCRDIV prescale
+            }
+        }
+        break;
+    case SIM_SOPT2_TPMSRC_OSCERCLK:
+        #if defined OSCERCLK
+        ulClockSpeed = OSCERCLK;
+      //ulCountIncrease = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)OSCERCLK) / 1000000); // clocks in a period
+        #else
+        _EXCEPTION("No OSCERCLK available");
+        #endif
+        break;
+    case SIM_SOPT2_TPMSRC_MCG:
+        #if defined FLL_FACTOR
+        ulClockSpeed = MCGFLLCLK;
+      //ulCountIncrease = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)MCGFLLCLK) / 1000000); // bus clocks in a period
+        #else
+        ulClockSpeed = (MCGFLLCLK/2);
+      //ulCountIncrease = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)(MCGPLLCLK / 2)) / 1000000); // bus clocks in a period
+        #endif
+        break;
+    }
+    #else
+    ulClockSpeed = BUS_CLOCK;
+  //unsigned long ulCountIncrease = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)BUS_CLOCK) / 1000000); // bus clocks in a period (assume clocked from bus clock)
+    #endif
+    ulClockSpeed /= (1 << (ptrTimer->FTM_SC & FTM_SC_PS_128));           // apply pre-scaler
+    return ulClockSpeed;
+}
+#endif
+
 // We can simulate timers during a tick here if required
 //
 extern int fnSimTimers(void)
@@ -8379,41 +8496,7 @@ extern int fnSimTimers(void)
 #endif
 #if defined SUPPORT_TIMER                                                // {29}
     if (IS_POWERED_UP(6, FTM0) &&((FTM0_SC & (FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)) != 0)) { // if the TPM/FlexTimer is powered and clocked
-    #if defined KINETIS_WITH_PCC
-        unsigned long ulCountIncrease = fnGetPCC_clock(KINETIS_PERIPHERAL_FTM0); // get the speed of the clock used by this module
-    #elif defined KINETIS_KL
-        unsigned long ulCountIncrease;
-        switch (SIM_SOPT2 & SIM_SOPT2_TPMSRC_MCGIRCLK) {                 // {38}
-        case SIM_SOPT2_TPMSRC_MCGIRCLK:
-            ulCountIncrease = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)MCGIRCLK)/1000000); // bus clocks in a period
-            if ((MCG_C2 & MCG_C2_IRCS) != 0) {                           // if fast clock
-                int prescaler = ((MCG_SC >> 1) & 0x7);                   // FCRDIV value
-                while (prescaler-- != 0) {
-                    ulCountIncrease /= 2;                                // FCRDIV prescale
-                }
-            }
-            break;
-        case SIM_SOPT2_TPMSRC_OSCERCLK:
-        #if defined OSCERCLK
-            ulCountIncrease= (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)OSCERCLK)/1000000); // bus clocks in a period
-        #else
-            _EXCEPTION("No OSCERCLK available");
-        #endif
-            break;
-        case SIM_SOPT2_TPMSRC_MCG:
-        #if defined FLL_FACTOR
-            ulCountIncrease= (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)MCGFLLCLK)/1000000); // bus clocks in a period
-        #else
-            ulCountIncrease= (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)(MCGPLLCLK/2))/1000000); // bus clocks in a period
-        #endif
-            break;
-        }
-    #elif defined KINETIS_KE
-        unsigned long ulCountIncrease = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)BUS_CLOCK)/1000000); // bus clocks in a period (assume clocked from bus clock)
-    #else
-        unsigned long ulCountIncrease = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)BUS_CLOCK)/1000000); // bus clocks in a period (assume clocked from bus clock)
-    #endif
-        ulCountIncrease /= (1 << (FTM0_SC & FTM_SC_PS_128));             // apply pre-scaler
+        unsigned long ulCountIncrease = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)fnGetFlexTimer_clock(0)) / 1000000);
         ulCountIncrease += FTM0_CNT;                                     // new counter value (assume up counting)
         if (ulCountIncrease >= FTM0_MOD) {                               // match/overflow
     #if defined KINETIS_KL || defined KINETIS_KE
@@ -8447,41 +8530,7 @@ extern int fnSimTimers(void)
     }
     #if FLEX_TIMERS_AVAILABLE > 1
     if (IS_POWERED_UP(6, FTM1) && ((FTM1_SC & (FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)) != 0)) { // if the TPM/FlexTimer is powered and clocked
-        #if defined KINETIS_WITH_PCC
-        unsigned long ulCountIncrease = fnGetPCC_clock(KINETIS_PERIPHERAL_FTM1); // get the speed of the clock used by this module
-        #elif defined KINETIS_KL
-        unsigned long ulCountIncrease;
-        switch (SIM_SOPT2 & SIM_SOPT2_TPMSRC_MCGIRCLK) {                 // {38}
-        case SIM_SOPT2_TPMSRC_MCGIRCLK:
-            ulCountIncrease = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)MCGIRCLK)/1000000); // bus clocks in a period
-            if (MCG_C2 & MCG_C2_IRCS) {                                  // if fast clock
-                int prescaler = ((MCG_SC >> 1) & 0x7);                   // FCRDIV value
-                while (prescaler--) {
-                    ulCountIncrease /= 2;                                // FCRDIV prescale
-                }
-            }
-            break;
-        case SIM_SOPT2_TPMSRC_OSCERCLK:
-        #if defined OSCERCLK
-            ulCountIncrease = (unsigned long)((unsigned long long)TICK_RESOLUTION * (unsigned long long)OSCERCLK)/1000000; // bus clocks in a period
-        #else
-            _EXCEPTION("No OSCERCLK available");
-        #endif
-            break;
-        case SIM_SOPT2_TPMSRC_MCG:
-        #if defined FLL_FACTOR
-            ulCountIncrease = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)MCGFLLCLK)/1000000); // bus clocks in a period
-        #else
-            ulCountIncrease = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)(MCGPLLCLK/2))/1000000); // bus clocks in a period
-        #endif
-            break;
-        }
-        #elif defined KINETIS_KE
-        unsigned long ulCountIncrease = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)BUS_CLOCK)/1000000); // bus clocks in a period (assume clocked from bus clock)
-        #else
-        unsigned long ulCountIncrease = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)BUS_CLOCK)/1000000); // bus clocks in a period (assume clocked from bus clock)
-        #endif
-        ulCountIncrease /= (1 << (FTM1_SC & FTM_SC_PS_128));             // apply pre-scaler
+        unsigned long ulCountIncrease = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)fnGetFlexTimer_clock(1)) / 1000000);
         ulCountIncrease += FTM1_CNT;                                     // new counter value (assume up counting)
         if (ulCountIncrease >= FTM1_MOD) {                               // match
         #if defined KINETIS_KL || defined KINETIS_KE
@@ -8533,41 +8582,7 @@ extern int fnSimTimers(void)
     if (IS_POWERED_UP(3, FTM2) &&((FTM2_SC & FTM_SC_CLKS_EXT) != 0))  // if the FlexTimer is powered and clocked
         #endif
     {
-        #if defined KINETIS_WITH_PCC
-        unsigned long ulCountIncrease = fnGetPCC_clock(KINETIS_PERIPHERAL_FTM2); // get the speed of the clock used by this module
-        #elif defined KINETIS_KL
-        unsigned long ulCountIncrease;
-        switch (SIM_SOPT2 & SIM_SOPT2_TPMSRC_MCGIRCLK) {                 // {38}
-        case SIM_SOPT2_TPMSRC_MCGIRCLK:
-            ulCountIncrease = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)MCGIRCLK)/1000000); // bus clocks in a period
-            if ((MCG_C2 & MCG_C2_IRCS) != 0) {                           // if fast clock
-                int prescaler = ((MCG_SC >> 1) & 0x7);                   // FCRDIV value
-                while (prescaler-- != 0) {
-                    ulCountIncrease /= 2;                                // FCRDIV prescale
-                }
-            }
-            break;
-        case SIM_SOPT2_TPMSRC_OSCERCLK:
-            #if defined OSCERCLK
-            ulCountIncrease= (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)OSCERCLK)/1000000); // bus clocks in a period
-            #else
-            _EXCEPTION("No OSCERCLK available!!");
-            #endif
-            break;
-        case SIM_SOPT2_TPMSRC_MCG:
-        #if defined FLL_FACTOR
-            ulCountIncrease = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)MCGFLLCLK)/1000000); // bus clocks in a period
-        #else
-            ulCountIncrease = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)(MCGPLLCLK/2))/1000000); // bus clocks in a period
-        #endif
-            break;
-        }
-        #elif defined KINETIS_KE
-        unsigned long ulCountIncrease = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)BUS_CLOCK)/1000000); // bus clocks in a period (assume clocked from bus clock)
-        #else
-        unsigned long ulCountIncrease = (unsigned long long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)BUS_CLOCK)/1000000); // bus clocks in a period (assume clocked from bus clock)
-        #endif
-        ulCountIncrease /= (1 << (FTM2_SC & FTM_SC_PS_128));             // apply pre-scaler
+        unsigned long ulCountIncrease = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)fnGetFlexTimer_clock(2)) / 1000000);
         ulCountIncrease += FTM2_CNT;                                     // new counter value (assume up counting)
         if (ulCountIncrease >= FTM2_MOD) {                               // match
         #if defined KINETIS_KL || defined KINETIS_KE
@@ -8602,37 +8617,7 @@ extern int fnSimTimers(void)
     #endif
     #if FLEX_TIMERS_AVAILABLE > 3
     if (((IS_POWERED_UP(3, FTM3)) != 0) && ((FTM3_SC & (FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)) != 0)) { // if the FlexTimer is powered and clocked
-        #if defined KINETIS_WITH_PCC
-        unsigned long ulCountIncrease = fnGetPCC_clock(KINETIS_PERIPHERAL_FTM3); // get the speed of the clock used by this module
-        #elif defined KINETIS_KL
-        unsigned long ulCountIncrease;
-        switch ((SIM_SOPT2 & SIM_SOPT2_TPMSRC_MCGIRCLK) != 0) {          // {38}
-        case SIM_SOPT2_TPMSRC_MCGIRCLK:
-            ulCountIncrease = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)MCGIRCLK)/1000000); // bus clocks in a period
-            if (MCG_C2 & MCG_C2_IRCS) {                                  // if fast clock
-                int prescaler = ((MCG_SC >> 1) & 0x7);                   // FCRDIV value
-                while (prescaler--) {
-                    ulCountIncrease /= 2;                                // FCRDIV prescale
-                }
-            }
-            break;
-        case SIM_SOPT2_TPMSRC_OSCERCLK:
-            ulCountIncrease = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)OSCERCLK)/1000000); // bus clocks in a period
-            break;
-        case SIM_SOPT2_TPMSRC_MCG:
-        #if defined FLL_FACTOR
-            ulCountIncrease = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)MCGFLLCLK)/1000000); // bus clocks in a period
-        #else
-            ulCountIncrease = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)(MCGPLLCLK/2))/1000000); // bus clocks in a period
-        #endif
-            break;
-        }
-        #elif defined KINETIS_KE
-        unsigned long ulCountIncrease = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)BUS_CLOCK)/1000000); // bus clocks in a period (assume clocked from bus clock)
-        #else
-        unsigned long ulCountIncrease = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)BUS_CLOCK)/1000000); // bus clocks in a period (assume clocked from bus clock)
-        #endif
-        ulCountIncrease /= (1 << (FTM3_SC & FTM_SC_PS_128));             // apply pre-scaler
+        unsigned long ulCountIncrease = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)fnGetFlexTimer_clock(3)) / 1000000);
         ulCountIncrease += FTM3_CNT;                                     // new counter value (assume up counting)
         if (ulCountIncrease >= FTM3_MOD) {                               // match
         #if defined KINETIS_KL || defined KINETIS_KE

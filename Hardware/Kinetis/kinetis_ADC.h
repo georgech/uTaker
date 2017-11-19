@@ -210,7 +210,8 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
         break;
     }
     #else
-    switch (ptrADC->ADC_CFG1 & ADC_CFG1_MODE_16) {
+    switch (ptrADC->ADC_CFG1 & ADC_CFG1_MODE_MASK) {
+        #if !defined KINETIS_KE15
     case ADC_CFG1_MODE_16:                                               // conversion mode - single-ended 16 bit or differential 16 bit
         if (iPlusOne != 0) {                                             // increase by 1 so that a value is one LSB above the match threshold
             if (usStandardValue != 0xffff) {
@@ -218,6 +219,7 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
             }
         }
         break;
+        #endif
     case ADC_CFG1_MODE_12:                                               // conversion mode - single-ended 12 bit or differential 13 bit
         usStandardValue >>= 4;
         if (ptrADC->ADC_SC1A & ADC_SC1A_DIFF) {                          // differential mode
@@ -469,7 +471,7 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
                             }
         #endif
                             break;
-        #if defined KINETIS_KE_ADC
+        #if defined KINETIS_KE_ADC || defined KINETIS_KE15
                         default:
                             _EXCEPTION("Invalid ADC resolution!!");
                             break;
@@ -492,12 +494,22 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
                     }
                     ptrADC->ADC_SC2 = ((ptrADC_settings->int_adc_mode >> 8) & (ADC_SC2_REFSEL_ALT)); // configure the reference voltage used
                     if ((ADC_CALIBRATE & ptrADC_settings->int_adc_mode) != 0) { // calibration which should be performed once after a reset to achieve optimal accuracy
+        #if defined KINETIS_KE15
+                        ptrADC->ADC_CLPS = 0;
+                        ptrADC->ADC_CLP3 = 0;
+                        ptrADC->ADC_CLP2 = 0;
+                        ptrADC->ADC_CLP1 = 0;
+                        ptrADC->ADC_CLP0 = 0;
+                        ptrADC->ADC_CLPX = 0;
+                        ptrADC->ADC_CLP9 = 0;
+        #endif
                         ptrADC->ADC_SC3 = (ADC_SC3_AVGS_32 | ADC_SC3_AVGE | ADC_SC3_CAL); // continuous conversion mode with hardware averaging during calibration
                         while ((ptrADC->ADC_SC1A & ADC_SC1A_COCO) == 0) {// wait for calibration to complete
         #if defined _WINDOWS
                             ptrADC->ADC_SC1A |= ADC_SC1A_COCO;
         #endif
                         }                                                // failure flag not checked since this should never fail
+        #if !defined KINETIS_KE15
                         // Perform plus side calibration
                         //
                         ptrADC->ADC_PG = (((ptrADC->ADC_CLP0 + ptrADC->ADC_CLP1 + ptrADC->ADC_CLP2 + ptrADC->ADC_CLP3 + ptrADC->ADC_CLP4 + ptrADC->ADC_CLPS)/2) | 0x8000);
@@ -505,6 +517,7 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
                         // Perform minus side calibration
                         //
                         ptrADC->ADC_MG = (((ptrADC->ADC_CLM0 + ptrADC->ADC_CLM1 + ptrADC->ADC_CLM2 + ptrADC->ADC_CLM3 + ptrADC->ADC_CLM4 + ptrADC->ADC_CLMS)/2) | 0x8000);
+        #endif
 
                         ptrADC->ADC_SC3 &= ~(ADC_SC3_CAL);               // remove calibration enable when calibration has completed
                         ptrADC->ADC_SC1A = (ptrADC->ADC_SC1A & ~(ADC_SC1A_COCO)); // write to SC1A clears the conversion complete flag from calibration

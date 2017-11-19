@@ -206,7 +206,7 @@ static __interrupt void _flexTimerInterrupt_3(void)
     #endif
                     return;
                 }
-    #if defined KINETIS_WITH_PCC
+    #if defined KINETIS_WITH_PCC && !defined KINETIS_KE15
                 SELECT_PCC_PERIPHERAL_SOURCE(FTM0, FTM0_PCC_SOURCE);     // select the PCC clock used by FlexTimer/TPM 0
     #endif
                 POWER_UP_ATOMIC(6, FTM0);                                // ensure that the FlexTimer module is powered up
@@ -234,7 +234,7 @@ static __interrupt void _flexTimerInterrupt_3(void)
         #endif
                     return;
                 }
-        #if defined KINETIS_WITH_PCC
+        #if defined KINETIS_WITH_PCC && !defined KINETIS_KE15
                 SELECT_PCC_PERIPHERAL_SOURCE(FTM1, FTM1_PCC_SOURCE);     // select the PCC clock used by FlexTimer/TPM 1
         #endif
                 POWER_UP_ATOMIC(6, FTM1);                                // ensure that the FlexTimer module is powered up
@@ -267,7 +267,7 @@ static __interrupt void _flexTimerInterrupt_3(void)
         #endif
                     return;
                 }
-        #if defined KINETIS_WITH_PCC
+        #if defined KINETIS_WITH_PCC && !defined KINETIS_KE15
                 SELECT_PCC_PERIPHERAL_SOURCE(FTM2, FTM2_PCC_SOURCE);     // select the PCC clock used by FlexTimer/TPM 2
         #endif
         #if defined KINETIS_KL
@@ -300,7 +300,7 @@ static __interrupt void _flexTimerInterrupt_3(void)
         #endif
                     return;
                 }
-        #if defined KINETIS_WITH_PCC
+        #if defined KINETIS_WITH_PCC && !defined KINETIS_KE15
                 SELECT_PCC_PERIPHERAL_SOURCE(FTM3, FTM3_PCC_SOURCE);     // select the PCC clock used by FlexTimer/TPM 3
         #endif
                 POWER_UP_ATOMIC(3, FTM3);                                // ensure that the FlexTimer module is powered up

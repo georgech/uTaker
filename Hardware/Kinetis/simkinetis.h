@@ -1706,7 +1706,41 @@ unsigned long FTM_C5V;
 
 typedef struct stKINETIS_ADC
 {
-#if defined KINETIS_KE && !defined KINETIS_KE15
+#if defined KINETIS_KE15
+    volatile unsigned long ADC_SC1A;
+    unsigned long ADC_SC1B;
+    unsigned long ulRes0[14];
+    unsigned long ADC_CFG1;
+    unsigned long ADC_CFG2;
+    volatile unsigned long ADC_RA;
+    volatile unsigned long ADC_RB;
+    unsigned long ulRes1[14];
+    unsigned long ADC_CV1;
+    unsigned long ADC_CV2;
+    volatile unsigned long ADC_SC2;
+    volatile unsigned long ADC_SC3;
+    unsigned long ADC_BASE_OFS;
+    unsigned long ADC_OFS;
+    unsigned long ADC_USR_OFS;
+    unsigned long ADC_XOFS;
+    unsigned long ADC_YOFS;
+    unsigned long ADC_G;
+    unsigned long ADC_UG;
+    unsigned long ADC_CLPS;
+    unsigned long ADC_CLP3;
+    unsigned long ADC_CLP2;
+    unsigned long ADC_CLP1;
+    unsigned long ADC_CLP0;
+    unsigned long ADC_CLPX;
+    unsigned long ADC_CLP9;
+    unsigned long ADC_CLPS_OFS;
+    unsigned long ADC_CLP3_OFS;
+    unsigned long ADC_CLP2_OFS;
+    unsigned long ADC_CLP1_OFS;
+    unsigned long ADC_CLP0_OFS;
+    unsigned long ADC_CLPX_OFS;
+    unsigned long ADC_CLP9_OFS;
+#elif defined KINETIS_KE
     unsigned long ADC_SC1;
     unsigned long ADC_SC2;
     unsigned long ADC_SC3;

@@ -98,7 +98,7 @@
         #define TEST_TIMER                                               // enable timer test(s)
         #if defined TEST_TIMER
             #if defined SUPPORT_PWM_MODULE                               // {9}
-                #define TEST_PWM                                         // {1} test generating PWM output from timer
+              //#define TEST_PWM                                         // {1} test generating PWM output from timer
               //#define TEST_STEPPER                                     // test generating stepper motor frequency patterns (use together with PWM)
             #endif
             #if defined SUPPORT_TIMER
