@@ -16813,13 +16813,14 @@ typedef struct stADC_SETUP
 #define ADC_CLOCK_ASYNCHRONOUS          0x00000003                       // ADC_CFG1_ADICLK_ASY
 #define ADC_8_BIT_MODE                  0x00000000                       // ADC_CFG1_MODE_8
 #if defined KINETIS_KE
-    #define ADC_10_BIT_MODE             0x00000004                       // ADC_CFG1_MODE_10
-    #define ADC_12_BIT_MODE             0x00000008                       // ADC_CFG1_MODE_12
+    #define ADC_12_BIT_MODE             0x00000004                       // ADC_CFG1_MODE_10
+    #define ADC_10_BIT_MODE             0x00000008                       // ADC_CFG1_MODE_12
 #else
     #define ADC_12_BIT_MODE             0x00000004                       // ADC_CFG1_MODE_12
     #define ADC_10_BIT_MODE             0x00000008                       // ADC_CFG1_MODE_10
     #define ADC_16_BIT_MODE             0x0000000c                       // ADC_CFG1_MODE_16
 #endif
+    #define ADC_WORD_LENGTH_MASK        0x0000000c
 #if !defined KINETIS_KE15
     #define ADC_SAMPLE_ACTIVATE_LONG    0x00000010                       // ADC_CFG1_ADLSMP_LONG
 #endif

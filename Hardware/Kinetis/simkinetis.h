@@ -2134,7 +2134,7 @@ typedef struct stKINETIS_PCC
 {
     unsigned long ulRes0[8];
     unsigned long PCC_DMA0;
-    #if defined KINETIS_KE15
+    #if defined KINETIS_KE18
     unsigned long ulRes1[4];
     unsigned long PCC_MPU;
     unsigned long ulRes1a[0x12];
@@ -2146,44 +2146,45 @@ typedef struct stKINETIS_PCC
     #if defined KINETIS_KE15
         unsigned long ulRes2[5];
         unsigned long PCC_ADC1;
+        unsigned long ulRes3[4];
         unsigned long PCC_LPSPI0;
         unsigned long PCC_LPSPI1;
-        unsigned long ulRes3[4];
+        unsigned long ulRes4[4];
         unsigned long PCC_CRC;
-        unsigned long ulRes4[3];
+        unsigned long ulRes5[3];
         unsigned long PCC_PDB0;
         unsigned long PCC_LPIT0;
         unsigned long PCC_FLEXTMR0;
         unsigned long PCC_FLEXTMR1;
         unsigned long PCC_FLEXTMR2;
         unsigned long PCC_ADC0;
-        unsigned long ulRes5[1];
+        unsigned long ulRes6[1];
         unsigned long PCC_RTC;
-        unsigned long ulRes6[2];
+        unsigned long ulRes7[2];
         unsigned long PCC_LPTMR0;
-        unsigned long ulRes7[4];
+        unsigned long ulRes8[4];
         unsigned long PCC_TSI;
-        unsigned long ulRes8[3];
+        unsigned long ulRes9[3];
         unsigned long PCC_PORTA;
         unsigned long PCC_PORTB;
         unsigned long PCC_PORTC;
         unsigned long PCC_PORTD;
         unsigned long PCC_PORTE;
-        unsigned long ulRes9[8];
+        unsigned long ulRes10[8];
         unsigned long PCC_PWT;
-        unsigned long ulRes10[3];
+        unsigned long ulRes11[3];
         unsigned long PCC_FLEXIO;
-        unsigned long ulRes11[5];
+        unsigned long ulRes12[5];
         unsigned long PCC_OSC32;
         unsigned long PCC_EWM;
-        unsigned long ulRes12[4];
+        unsigned long ulRes13[4];
         unsigned long PCC_LPI2C0;
         unsigned long PCC_LPI2C1;
-        unsigned long ulRes13[2];
+        unsigned long ulRes14[2];
         unsigned long PCC_LPUART0;
         unsigned long PCC_LPUART1;
         unsigned long PCC_LPUART2;
-        unsigned long ulRes14[6];
+        unsigned long ulRes15[6];
         unsigned long PCC_CMP0;
         unsigned long PCC_CMP1;
     #elif defined KINETIS_KE18

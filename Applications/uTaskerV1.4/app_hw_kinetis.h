@@ -2500,7 +2500,11 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 // ADC
 //
 #define SUPPORT_ADC                                                      // {1}
-#define ADC_REFERENCE_VOLTAGE                      3300                  // ADC uses 3.3V reference
+#if defined KINETIS_KE
+    #define ADC_REFERENCE_VOLTAGE                  5000                  // ADC uses 5.0V reference
+#else
+    #define ADC_REFERENCE_VOLTAGE                  3300                  // ADC uses 3.3V reference
+#endif
 #define ADC_SIM_STEP_SIZE                          200                   // 200mV steps when simulating
 
 #if defined SUPPORT_ADC

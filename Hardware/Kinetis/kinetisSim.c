@@ -2140,7 +2140,7 @@ static void fnHandleKBI(int iController, int iPort, unsigned long ulNewState, un
 #if defined SUPPORT_ADC                                                  // {2}
 static unsigned short fnConvertSimADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short usStandardValue)
 {
-    #if defined KINETIS_KE
+    #if defined KINETIS_KE && !defined KINETIS_KE15
     switch (ptrADC->ADC_SC3 & (ADC_CFG1_MODE_MASK)) {
     case ADC_CFG1_MODE_12:                                               // conversion mode - single-ended 12 bit
         usStandardValue >>= 4;
@@ -2153,9 +2153,15 @@ static unsigned short fnConvertSimADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned sh
         break;
     }
     #else
-    switch (ptrADC->ADC_CFG1 & ADC_CFG1_MODE_16) {
+    switch (ptrADC->ADC_CFG1 & ADC_WORD_LENGTH_MASK) {
+        #if defined KINETIS_KE15
+    default:
+        _EXCEPTION("KE15's ADC doesn't support 16 bit mode");
+        break;
+        #else
     case ADC_CFG1_MODE_16:                                               // conversion mode - single-ended 16 bit or differential 16 bit
         break;
+        #endif
     case ADC_CFG1_MODE_12:                                               // conversion mode - single-ended 12 bit or differential 13 bit
         usStandardValue >>= 4;                                           // right aligned
         if ((ptrADC->ADC_SC1A & ADC_SC1A_DIFF) != 0) {                   // differential mode

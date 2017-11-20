@@ -778,7 +778,7 @@ INITHW void fnInitHW(void)                                               // perf
     #endif
 #endif
 #if !defined DEVICE_WITHOUT_DMA && (!defined KINETIS_KL || defined DEVICE_WITH_eDMA)
-    #if defined KINETIS_WITH_PCC
+    #if defined KINETIS_WITH_PCC && !defined KINETIS_KE15                // powered up by default in KE15
     POWER_UP_ATOMIC(0, DMA0);                                            // power up the DMA module
     #endif
     #if defined DEVICE_WITH_TWO_DMA_GROUPS
@@ -787,9 +787,13 @@ INITHW void fnInitHW(void)                                               // perf
     DMA_CR = 0;
     #endif
 #endif
+#if defined KINETIS_KE15                                                 // ADCs in KE15 are powered up by default
+    PCC_ADC0 = PCC_PR;                                                   // power down ADCs so that their clock source can be configured when needed
+    PCC_ADC1 = PCC_PR;
+#endif
 #if defined DMA_MEMCPY_SET && !defined DEVICE_WITHOUT_DMA                // set the eDMA registers to a known zero state
     {
-    #if (!defined KINETIS_KL || defined DEVICE_WITH_eDMA)          // {80}
+    #if (!defined KINETIS_KL || defined DEVICE_WITH_eDMA)                // {80}
         unsigned long *ptr_eDMAdes = (unsigned long *)eDMA_DESCRIPTORS;
         KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS; // {9}
         ptrDMA_TCD += DMA_MEMCPY_CHANNEL;                                // the DMA channel used for memory copy DMA
