@@ -955,7 +955,7 @@ static const char *cPinNumber[PORTS_AVAILABLE + 1][PORT_WIDTH][2] = {
         {  "17",    "-"    },                                            // PE14
         {  "2",     "-"    },                                            // PE15
         {  "1",     "-"    },                                            // PE16
-        {  "20",    "-"    },                                            // PE17
+        {  "-",     "-"    },                                            // PE17
         {  "-",     "-"    },                                            // PE18
         {  "-",     "-"    },                                            // PE19
         {  "-",     "-"    },                                            // PE20
@@ -1015,7 +1015,7 @@ static int ADC_MUX_CHANNEL[PORTS_AVAILABLE][PORT_WIDTH] = {0};
 
 static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][8] = {
     {
-        // GPIO            ALT 1           ALT 2             ALT3          ALT4           ALT5            ALT6                 ALT 7         (GPIO has lowest priority, ALT7 has highest)
+        // ALT0            ALT 1           ALT 2             ALT3          ALT4           ALT5            ALT6                 ALT 7
         {  "ADC0_SE0/ACMP0_IN0/TSI0_CH17","PTA0","FTM2_CH1", "LPI2C0_SCLS","FXIO_D2",     "FTM2_QD_PHA",  "LPUART0_CTS",       "TRGMUX_OUT3" }, // PTA0
         {  "ADC0_SE1/ACMP0_IN1/TSI0_CH18","PTA1","FTM1_CH1", "LPI2C0_SDAS","FXIO_D3",     "FTM1_QD_PHA",  "LPUART0_RTS",       "TRGMUX_OUT0" }, // PTA1
         {  "ADC1_SE0",     "PTA2",         "-",              "LPI2C0_SDA", "EWM_OUT_b",   "-",            "LPUART0_RX",        "-"           }, // PTA2

@@ -5900,7 +5900,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define DEMO_LED_1             (PORTD_BIT16)                         // (green LED) if the port is changed (eg. A to D) the port macros will require appropriate adjustment too
     #define DEMO_LED_2             (PORTD_BIT0)                          // (red LED) if the port is changed (eg. A to D) the port macros will require appropriate adjustment too
     #define DEMO_LED_3             (PORTD_BIT15)                         // (blue LED) if the port is changed (eg. A to D) the port macros will require appropriate adjustment too
-    #define DEMO_LED_4             0
+    #define DEMO_LED_4             (PORTD_BIT12)
 
     #define BLINK_LED              DEMO_LED_1
 
@@ -5921,7 +5921,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define SHIFT_DEMO_LED_1       16                                    // since the port bits are spread out shift each to the lowest 4 bits
     #define SHIFT_DEMO_LED_2       1
     #define SHIFT_DEMO_LED_3       13
-    #define SHIFT_DEMO_LED_4       0
+    #define SHIFT_DEMO_LED_4       9
 
     #define MAPPED_DEMO_LED_1      (DEMO_LED_1 >> SHIFT_DEMO_LED_1)
     #define MAPPED_DEMO_LED_2      (DEMO_LED_2 << SHIFT_DEMO_LED_2)

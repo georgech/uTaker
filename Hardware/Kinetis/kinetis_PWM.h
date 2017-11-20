@@ -20,7 +20,8 @@
     04.01.2017 Don't adjust the RC clock setting when the processor is running from it {5}
     05.03.2017 Add PWM_NO_OUTPUT option to allow PWM channel operation without connecting to an output {6}
     24.04.2017 Add DMA based freqence control opton (eg. for stepper motors) {7}
-    20.05.2017 PWM output configuration moded to kinetis.c so that it can be shared by capture input use
+    20.05.2017 PWM output configuration moded to kinetis.c [kinetis_timer_pins.h] so that it can be shared by capture input use
+    20.11.2017 Add KE15 PWM channel output enable                        {8}
 
 */
 
@@ -177,7 +178,7 @@ static __interrupt void _PWM_Interrupt_5(void)
     #endif
             switch (ucFlexTimer) {
             case 0:
-    #if defined KINETIS_WITH_PCC
+    #if defined KINETIS_WITH_PCC && !defined KINETIS_KE15
                 SELECT_PCC_PERIPHERAL_SOURCE(FTM0, FTM0_PCC_SOURCE);     // select the PCC clock used by FlexTimer/TPM 0
     #endif
                 POWER_UP_ATOMIC(6, FTM0);                                // ensure that the FlexTimer/TPM module is powered up
@@ -193,7 +194,7 @@ static __interrupt void _PWM_Interrupt_5(void)
                 break;
     #if FLEX_TIMERS_AVAILABLE > 1
             case 1:
-        #if defined KINETIS_WITH_PCC
+        #if defined KINETIS_WITH_PCC && !defined KINETIS_KE15
                 SELECT_PCC_PERIPHERAL_SOURCE(FTM1, FTM1_PCC_SOURCE);     // select the PCC clock used by FlexTimer/TPM 1
         #endif
                 POWER_UP_ATOMIC(6, FTM1);                                // ensure that the FlexTimer module is powered up
@@ -210,7 +211,7 @@ static __interrupt void _PWM_Interrupt_5(void)
     #endif
     #if FLEX_TIMERS_AVAILABLE > 2
             case 2:
-        #if defined KINETIS_WITH_PCC
+        #if defined KINETIS_WITH_PCC && !defined KINETIS_KE15
                 SELECT_PCC_PERIPHERAL_SOURCE(FTM2, FTM2_PCC_SOURCE);     // select the PCC clock used by FlexTimer/TPM 2
         #endif
         #if defined KINETIS_KL
@@ -234,7 +235,7 @@ static __interrupt void _PWM_Interrupt_5(void)
     #endif
     #if FLEX_TIMERS_AVAILABLE > 3
             case 3:
-        #if defined KINETIS_WITH_PCC
+        #if defined KINETIS_WITH_PCC && !defined KINETIS_KE15
                 SELECT_PCC_PERIPHERAL_SOURCE(FTM3, FTM3_PCC_SOURCE);     // select the PCC clock used by FlexTimer/TPM 3
         #endif
                 POWER_UP_ATOMIC(3, FTM3);                                // ensure that the FlexTimer module is powered up
@@ -251,7 +252,7 @@ static __interrupt void _PWM_Interrupt_5(void)
     #endif
     #if FLEX_TIMERS_AVAILABLE > 4 && defined TPMS_AVAILABLE
             case 4:
-        #if defined KINETIS_WITH_PCC
+        #if defined KINETIS_WITH_PCC && !defined KINETIS_KE15
                 SELECT_PCC_PERIPHERAL_SOURCE(FTM1, FTM1_PCC_SOURCE);     // select the PCC clock used by TPM 1
         #endif
                 POWER_UP_ATOMIC(2, TPM1);                                // ensure that the TPM module is powered up
@@ -264,7 +265,7 @@ static __interrupt void _PWM_Interrupt_5(void)
                 break;
 
             case 5:
-        #if defined KINETIS_WITH_PCC
+        #if defined KINETIS_WITH_PCC && !defined KINETIS_KE15
                 SELECT_PCC_PERIPHERAL_SOURCE(FTM2, FTM2_PCC_SOURCE);     // select the PCC clock used by TPM 2
         #endif
                 POWER_UP_ATOMIC(2, TPM2);                                // ensure that the TPM module is powered up
@@ -427,6 +428,10 @@ static __interrupt void _PWM_Interrupt_5(void)
                 ulMode |= (FTM_SC_TOIE);                                 // enable interrupt 
     #endif
             }
+    #if defined KINETIS_KE15                                             // {8}
+            ulMode |= (ptrFlexTimer->FTM_SC & (FTM_SC_PWMEN0 | FTM_SC_PWMEN1 | FTM_SC_PWMEN2 | FTM_SC_PWMEN3 | FTM_SC_PWMEN4 | FTM_SC_PWMEN5 | FTM_SC_PWMEN6 | FTM_SC_PWMEN7)); // preserve already set PWM outputs
+            ulMode |= (FTM_SC_PWMEN0 << ptrPWM_settings->pwm_reference); // enable the PWM channel output
+    #endif
             ptrFlexTimer->FTM_SC = ulMode;                               // note that the mode is shared by all channels in the flex timer
     #if defined KINETIS_KE
             _SIM_PER_CHANGE;                                             // update simulator ports

@@ -1438,8 +1438,13 @@ typedef struct stRESET_VECTOR
 #else
     #define ADC_CONTROLLERS         2
 #endif
-#define VTEMP_25_MV                 716                                  // typical internal temperature sensor reference voltage (in mV) (3.3V VDD/VREF and < 3MHz ADC clock speed)
-#define TEMP_SENSOR_SLOPE_UV        1620                                 // typical internal temperature sensor slope uV/°C (3.3V VDD/VREF and < 3MHz ADC clock speed)
+#if defined KINETIS_KE15
+    #define VTEMP_25_MV                 741                              // typical internal temperature sensor reference voltage (in mV) (3.3V VDD/VREF and < 3MHz ADC clock speed)
+    #define TEMP_SENSOR_SLOPE_UV        1563                             // typical internal temperature sensor slope uV/°C (3.3V VDD/VREF and < 3MHz ADC clock speed)
+#else
+    #define VTEMP_25_MV                 716                              // typical internal temperature sensor reference voltage (in mV) (3.3V VDD/VREF and < 3MHz ADC clock speed)
+    #define TEMP_SENSOR_SLOPE_UV        1620                             // typical internal temperature sensor slope uV/°C (3.3V VDD/VREF and < 3MHz ADC clock speed)
+#endif
 
 
 // DAC configuration
@@ -7031,14 +7036,26 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
  #else
   #define FTM_SC_CLKS_FIX   0x00000010                                   // clock source - fixed clock is MCGFFCLK
   #define FTM_SC_CLKS_EXT   0x00000018                                   // clock source - external clock
-  #define FTM_SC_DMA        0x00000100                                   // for compatibility (not available in flex timer but is avaialble in TPM)
+  #define FTM_SC_DMA        0x00000100                                   // for compatibility (not available in flex timer but is available in TPM)
  #endif
   #define FTM_SC_CPWMS      0x00000020                                   // centre-aligned PWM select (FTM operates in up/down counting mode rather than up counting mode)
   #define FTM_SC_TOIE       0x00000040                                   // timer overflow interrupt enable
   #define FTM_SC_TOF        0x00000080                                   // timer overflow flag (write '1' to clear)
-  #define FTM_SC_USED_MASK  0x00000fff                                   // mask of non-reserved bits in the register
   #define FLEX_TIMER_SINGLE_SHOT 0x0000                                  // pseudo bits for mode control
   #define FLEX_TIMER_PERIODIC    0x1000
+    #if defined KINETIS_KE15
+        #define FTM_SC_PWMEN0    0x00010000                              // channel 0 PWM enable
+        #define FTM_SC_PWMEN1    0x00020000                              // channel 1 PWM enable
+        #define FTM_SC_PWMEN2    0x00040000                              // channel 2 PWM enable
+        #define FTM_SC_PWMEN3    0x00080000                              // channel 3 PWM enable
+        #define FTM_SC_PWMEN4    0x00100000                              // channel 4 PWM enable
+        #define FTM_SC_PWMEN5    0x00200000                              // channel 5 PWM enable
+        #define FTM_SC_PWMEN6    0x00400000                              // channel 6 PWM enable
+        #define FTM_SC_PWMEN7    0x00800000                              // channel 7 PWM enable
+        #define FTM_SC_USED_MASK 0x00ff0fff                              // mask of non-reserved bits in the register
+    #else
+        #define FTM_SC_USED_MASK  0x00000fff                             // mask of non-reserved bits in the register
+    #endif
 #define FTM0_CNT            *(volatile unsigned long *)(FTM_BLOCK_0 + FTM_OFFSET_0 + 0x004) // FTM0 counter (16 bit)
 #define FTM0_MOD            *(unsigned long *)(FTM_BLOCK_0 + FTM_OFFSET_0 + 0x008) // FTM0 modulo (16 bit)
 #if defined KINETIS_KL28
@@ -7610,15 +7627,15 @@ typedef struct stFLEX_TIMER_MODULE
         #define ADC0_CFG2       *(unsigned long *)(ADC0_BLOCK + 0x044)       // ADC0 Configuration Register 2
     #else
         #define ADC0_CFG2       *(unsigned long *)(ADC0_BLOCK + 0x00c)       // ADC0 Configuration Register 2
+            #define ADC_CFG2_ADLSTS_2  0x00000003                            // long sample time select - 2 extra (6 clocks total)
+            #define ADC_CFG2_ADLSTS_6  0x00000002                            // long sample time select - 6 extra (10 clocks total)
+            #define ADC_CFG2_ADLSTS_12 0x00000001                            // long sample time select - 12 extra (16 clocks total)
+            #define ADC_CFG2_ADLSTS_20 0x00000000                            // long sample time select - 20 extra (24 clocks total)
+            #define ADC_CFG2_ADHSC     0x00000004                            // high speed configuration
+            #define ADC_CFG2_ADACKEN   0x00000008                            // asynchronous clock and clock output enabled regardless of ADC state
+            #define ADC_CFG2_MUXSEL_A  0x00000000                            // ADC mux select - ADxxa selected
+            #define ADC_CFG2_MUXSEL_B  0x00000010                            // ADC mux select - ADxxb selected
     #endif
-      #define ADC_CFG2_ADLSTS_2  0x00000003                                  // long sample time select - 2 extra (6 clocks total)
-      #define ADC_CFG2_ADLSTS_6  0x00000002                                  // long sample time select - 6 extra (10 clocks total)
-      #define ADC_CFG2_ADLSTS_12 0x00000001                                  // long sample time select - 12 extra (16 clocks total)
-      #define ADC_CFG2_ADLSTS_20 0x00000000                                  // long sample time select - 20 extra (24 clocks total)
-      #define ADC_CFG2_ADHSC     0x00000004                                  // high speed configuration
-      #define ADC_CFG2_ADACKEN   0x00000008                                  // asynchronous clock and clock output enabled regardless of ADC state
-      #define ADC_CFG2_MUXSEL_A  0x00000000                                  // ADC mux select - ADxxa selected
-      #define ADC_CFG2_MUXSEL_B  0x00000010                                  // ADC mux select - ADxxb selected
     #if defined KINETIS_KE15
         #define ADC0_RA         *(volatile unsigned long *)(ADC0_BLOCK + 0x048) // ADC0a Data Result Register (read-only)
         #define ADC0_RB         *(volatile unsigned long *)(ADC0_BLOCK + 0x04c) // ADC0b Data Result Register (read-only)
@@ -7652,7 +7669,9 @@ typedef struct stFLEX_TIMER_MODULE
       #define ADC_SC3_AVGS_32   0x00000003                                   // hardware average select - 32 samples averaged
       #define ADC_SC3_AVGE      0x00000004                                   // hardware average enable
       #define ADC_SC3_ADCO      0x00000008                                   // continuous conversion enable
-      #define ADC_SC3_CALF      0x00000040                                   // calibration failed flag (read-only)
+      #if !defined KINETIS_KE15
+          #define ADC_SC3_CALF  0x00000040                                   // calibration failed flag (read-only)
+      #endif
       #define ADC_SC3_CAL       0x00000080                                   // calibration
     #if defined KINETIS_KE15
         #define ADC0_BASE_OFS *(volatile unsigned long *)(ADC0_BLOCK + 0x098) // ADC0 base offset register
@@ -16742,7 +16761,11 @@ typedef struct stADC_SETUP
     unsigned short   int_high_level_trigger;                             // trigger when higher than this level
     unsigned short   int_low_level_trigger;                              // trigger when lower than this level
     #if !defined KINETIS_KE || defined KINETIS_KE15
-        unsigned char    int_adc_sample;                                 // sampling details
+        #if defined KINETIS_KE15
+            unsigned short int_adc_sample;                               // sampling details (sample time from 2 to 256 clocks)
+        #else
+            unsigned char int_adc_sample;                                // sampling details
+        #endif
         unsigned char    pga_gain;                                       // {35} PGA gain setting
         unsigned char    int_adc_bit_b;                                  // {57} the ADC channel B input number (used only in hardware mode with double trigger)
     #endif
@@ -16797,7 +16820,9 @@ typedef struct stADC_SETUP
     #define ADC_10_BIT_MODE             0x00000008                       // ADC_CFG1_MODE_10
     #define ADC_16_BIT_MODE             0x0000000c                       // ADC_CFG1_MODE_16
 #endif
-#define ADC_SAMPLE_ACTIVATE_LONG        0x00000010                       // ADC_CFG1_ADLSMP_LONG
+#if !defined KINETIS_KE15
+    #define ADC_SAMPLE_ACTIVATE_LONG    0x00000010                       // ADC_CFG1_ADLSMP_LONG
+#endif
 #define ADC_CLOCK_DIVIDE_1              0x00000000                       // ADC_CFG1_ADIV_1
 #define ADC_CLOCK_DIVIDE_2              0x00000020                       // ADC_CFG1_ADIV_2
 #define ADC_CLOCK_DIVIDE_4              0x00000040                       // ADC_CFG1_ADIV_4

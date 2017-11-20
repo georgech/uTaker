@@ -486,12 +486,21 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
                     }
     #endif
     #if !defined KINETIS_KE_ADC
+        #if defined KINETIS_KE15
+                    ptrADC->ADC_CFG2 = (ptrADC_settings->int_adc_sample - 1);
+            #if defined _WINDOWS
+                    if ((ptrADC->ADC_CFG2 == 0) || (ptrADC->ADC_CFG2 > 255)) {
+                        _EXCEPTION("2 to 256 clocks per sample allowed!");
+                    }
+            #endif
+        #else
                     if ((ptrADC_settings->int_adc_mode & ADC_SELECT_INPUTS_B) != 0) { // {54}
                         ptrADC->ADC_CFG2 = (ADC_CFG2_MUXSEL_B | (ptrADC_settings->int_adc_sample & 0x7)); // select mux B inputs
                     }
                     else {
                         ptrADC->ADC_CFG2 = (ADC_CFG2_MUXSEL_A | (ptrADC_settings->int_adc_sample & 0x7)); // select mux A inputs
                     }
+        #endif
                     ptrADC->ADC_SC2 = ((ptrADC_settings->int_adc_mode >> 8) & (ADC_SC2_REFSEL_ALT)); // configure the reference voltage used
                     if ((ADC_CALIBRATE & ptrADC_settings->int_adc_mode) != 0) { // calibration which should be performed once after a reset to achieve optimal accuracy
         #if defined KINETIS_KE15

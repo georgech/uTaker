@@ -86,7 +86,7 @@ extern int fnPortState(CHAR cPortBit)
         return (((GPIOC_PDDR & GPIOB_PDOR & DEMO_LED_3) | (~GPIOC_PDDR & GPIOB_PDIR & DEMO_LED_3)) != 0);
     case '4':
         return (((GPIOB_PDDR & GPIOB_PDOR & DEMO_LED_4) | (~GPIOB_PDDR & GPIOB_PDIR & DEMO_LED_4)) != 0);
-#elif defined TWR_K21D50M || defined tinyK20 || defined TWR_K21F120M || defined TWR_K22F120M || defined TWR_K24F120M || defined TWR_KW21D256 || defined TWR_KW24D512 || defined rcARM_KL26
+#elif defined TWR_K21D50M || defined tinyK20 || defined TWR_K21F120M || defined TWR_K22F120M || defined TWR_K24F120M || defined TWR_KW21D256 || defined TWR_KW24D512 || defined rcARM_KL26 || defined FRDM_KE15Z
     case '1':
         return (((GPIOD_PDDR & GPIOD_PDOR & DEMO_LED_1) | (~GPIOD_PDDR & GPIOD_PDIR & DEMO_LED_1)) != 0);
     case '2':
@@ -134,7 +134,7 @@ extern int fnPortState(CHAR cPortBit)
         return (((GPIOE_PDDR & GPIOE_PDOR & DEMO_LED_2) | (~GPIOE_PDDR & GPIOE_PDIR & DEMO_LED_2)) != 0);
     case '3':
         return (((GPIOD_PDDR & GPIOD_PDOR & DEMO_LED_3) | (~GPIOD_PDDR & GPIOD_PDIR & DEMO_LED_3)) != 0);
-#elif defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined FRDM_KE02Z || defined FRDM_KE06Z || defined FRDM_KE02Z40M || defined K60F150M_50M || defined FRDM_KEAZN32Q64 || defined FRDM_KEAZ64Q64 || defined FRDM_KEAZ128Q80 || defined BLAZE_K22 || defined FRDM_KE15Z // {9}
+#elif defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined FRDM_KE02Z || defined FRDM_KE06Z || defined FRDM_KE02Z40M || defined K60F150M_50M || defined FRDM_KEAZN32Q64 || defined FRDM_KEAZ64Q64 || defined FRDM_KEAZ128Q80 || defined BLAZE_K22 // {9}
     case '1':
         return (((GPIOB_PDDR & GPIOB_PDOR & DEMO_LED_1) | (~GPIOB_PDDR & GPIOB_PDIR & DEMO_LED_1)) != 0);
     case '2':
@@ -298,7 +298,7 @@ extern int fnPortInputConfig(CHAR cPortBit)
         return ((GPIOC_PDDR & DEMO_LED_3) == 0);
     case '4':
         return ((GPIOB_PDDR & DEMO_LED_4) == 0);
-#elif defined TWR_K21D50M || defined tinyK20 || defined TWR_K21F120M || defined TWR_K22F120M || defined TWR_K24F120M || defined TWR_KW21D256 || defined TWR_KW24D512 || defined rcARM_KL26
+#elif defined TWR_K21D50M || defined tinyK20 || defined TWR_K21F120M || defined TWR_K22F120M || defined TWR_K24F120M || defined TWR_KW21D256 || defined TWR_KW24D512 || defined rcARM_KL26 || defined FRDM_KE15Z
     case '1':
         return ((GPIOD_PDDR & DEMO_LED_1) == 0);
     case '2':
@@ -360,7 +360,7 @@ extern int fnPortInputConfig(CHAR cPortBit)
         return ((GPIOE_PDDR & DEMO_LED_2) == 0);
     case '3':
         return ((GPIOE_PDDR & DEMO_LED_3) == 0);
-#elif defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined FRDM_KE02Z || defined FRDM_KE06Z || defined FRDM_KE02Z40M || defined K60F150M_50M || defined FRDM_KEAZN32Q64 || defined FRDM_KEAZ64Q64 || defined FRDM_KEAZ128Q80 || defined BLAZE_K22 || defined FRDM_KE15Z // {9}
+#elif defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined FRDM_KE02Z || defined FRDM_KE06Z || defined FRDM_KE02Z40M || defined K60F150M_50M || defined FRDM_KEAZN32Q64 || defined FRDM_KEAZ64Q64 || defined FRDM_KEAZ128Q80 || defined BLAZE_K22 // {9}
     case '1':
         return ((GPIOB_PDDR & DEMO_LED_1) == 0);
     case '2':
@@ -551,7 +551,7 @@ extern int fnConfigPort(CHAR cPortBit, CHAR cType)
         }
 #elif defined EMCRAFT_K70F120M || defined EMCRAFT_K61F150M || defined TWR_K64F120M
         _CONFIG_PORT_INPUT(E, ulPortBit, PORT_PS_UP_ENABLE);             // set port bit to input (on port E)
-#elif defined TWR_K21D50M || defined tinyK20 || defined TWR_K21F120M || defined TWR_K22F120M || defined TWR_K24F120M || defined TWR_KW21D256 || defined TWR_KW24D512 || defined rcARM_KL26
+#elif defined TWR_K21D50M || defined tinyK20 || defined TWR_K21F120M || defined TWR_K22F120M || defined TWR_K24F120M || defined TWR_KW21D256 || defined TWR_KW24D512 || defined rcARM_KL26 || defined FRDM_KE15Z
         _CONFIG_PORT_INPUT(D, ulPortBit, PORT_PS_UP_ENABLE);             // set port bit to input (on port D)
 #elif defined TWR_K20D50M || defined TWR_K20D72M || defined TEENSY_3_1 || defined TEENSY_LC || defined FRDM_K82F || defined TEENSY_3_5 || defined TEENSY_3_6 || defined FRDM_KL82Z || defined TWR_KL82Z72M
     #if ((defined TEENSY_3_1 || defined TEENSY_LC) && defined ENC424J600_INTERFACE)
@@ -569,7 +569,7 @@ extern int fnConfigPort(CHAR cPortBit, CHAR cType)
         else {
             _CONFIG_PORT_INPUT(C, ulPortBit, PORT_PS_UP_ENABLE);         // set port bit to input (on port C)
         }
-#elif defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined FRDM_KE02Z || defined FRDM_KE06Z || defined FRDM_KE02Z40M || defined K60F150M_50M || defined FRDM_KEAZN32Q64 || defined FRDM_KEAZ64Q64 || defined FRDM_KEAZ128Q80 || defined BLAZE_K22 || defined FRDM_KE15Z // {9}
+#elif defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined FRDM_KE02Z || defined FRDM_KE06Z || defined FRDM_KE02Z40M || defined K60F150M_50M || defined FRDM_KEAZN32Q64 || defined FRDM_KEAZ64Q64 || defined FRDM_KEAZ128Q80 || defined BLAZE_K22 // {9}
         #if defined BLAZE_K22
         if (cPortBit == 4) {
             _CONFIG_PORT_INPUT(C, ulPortBit, PORT_PS_UP_ENABLE);         // set port bit to input (on port C)
@@ -798,7 +798,7 @@ extern int fnConfigPort(CHAR cPortBit, CHAR cType)
         }
 #elif defined EMCRAFT_K70F120M || defined EMCRAFT_K61F150M || defined TWR_K64F120M
         _CONFIG_PORT_OUTPUT(E, ulPortBit, PORT_SRE_SLOW);                // set port bit to output (on port E)
-#elif defined TWR_K21D50M || defined tinyK20 || defined TWR_K21F120M || defined TWR_K22F120M || defined TWR_K24F120M || defined TWR_KW21D256 || defined TWR_KW24D512 || defined rcARM_KL26
+#elif defined TWR_K21D50M || defined tinyK20 || defined TWR_K21F120M || defined TWR_K22F120M || defined TWR_K24F120M || defined TWR_KW21D256 || defined TWR_KW24D512 || defined rcARM_KL26 || defined FRDM_KE15Z
         _CONFIG_PORT_OUTPUT(D, ulPortBit, PORT_SRE_SLOW);                // set port bit to output (on port D)
 #elif defined TWR_K20D50M || defined TWR_K20D72M || defined TEENSY_3_1 || defined TEENSY_LC || defined FRDM_K82F || defined TEENSY_3_5 || defined TEENSY_3_6 || defined FRDM_KL82Z || defined TWR_KL82Z72M
     #if ((defined TEENSY_3_1 || defined TEENSY_LC) && defined ENC424J600_INTERFACE)
@@ -816,7 +816,7 @@ extern int fnConfigPort(CHAR cPortBit, CHAR cType)
         else {
             _CONFIG_PORT_OUTPUT(C, ulPortBit, PORT_SRE_SLOW);            // set port bit to output (on port C)
         }
-#elif defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined FRDM_KE02Z || defined FRDM_KE06Z || defined FRDM_KE02Z40M || defined K60F150M_50M || defined FRDM_KEAZN32Q64 || defined FRDM_KEAZ64Q64 || defined FRDM_KEAZ128Q80 || defined BLAZE_K22 || defined FRDM_KE15Z // {9}
+#elif defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined FRDM_KE02Z || defined FRDM_KE06Z || defined FRDM_KE02Z40M || defined K60F150M_50M || defined FRDM_KEAZN32Q64 || defined FRDM_KEAZ64Q64 || defined FRDM_KEAZ128Q80 || defined BLAZE_K22 // {9}
     #if defined BLAZE_K22
         if (cPortBit == 4) {
             _CONFIG_PORT_OUTPUT(C, ulPortBit, PORT_SRE_SLOW);            // set port bit to output (on port C)

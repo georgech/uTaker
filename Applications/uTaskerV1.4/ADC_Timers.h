@@ -98,7 +98,7 @@
         #define TEST_TIMER                                               // enable timer test(s)
         #if defined TEST_TIMER
             #if defined SUPPORT_PWM_MODULE                               // {9}
-              //#define TEST_PWM                                         // {1} test generating PWM output from timer
+                #define TEST_PWM                                         // {1} test generating PWM output from timer
               //#define TEST_STEPPER                                     // test generating stepper motor frequency patterns (use together with PWM)
             #endif
             #if defined SUPPORT_TIMER
@@ -862,7 +862,8 @@ static void fnConfigureADC(void)
         #elif defined KINETIS_KE15
         // KE15's ADC uses a fixed clock source from the PCC
         //
-    adc_setup.int_adc_mode = (ulCalibrate | ADC_CLOCK_DIVIDE_4 | ADC_SAMPLE_ACTIVATE_LONG | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_ENDED_INPUT | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE | ADC_SW_TRIGGERED); // note that the first configuration should calibrate the ADC - single shot with interrupt on completion
+    adc_setup.int_adc_mode = (ulCalibrate | ADC_CLOCK_DIVIDE_4 | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_ENDED_INPUT | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE | ADC_SW_TRIGGERED); // note that the first configuration should calibrate the ADC - single shot with interrupt on completion
+    adc_setup.int_adc_sample = (12); // sampling time (2..256 clocks)
         #elif defined KINETIS_KE
     adc_setup.int_adc_mode = (ADC_CLOCK_BUS_DIV_2 | ADC_CLOCK_DIVIDE_8 | ADC_SAMPLE_ACTIVATE_LONG | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE | ADC_SW_TRIGGERED | ADC_LOW_POWER_CONFIG); // single shot with interrupt on completion {12}
         #else
