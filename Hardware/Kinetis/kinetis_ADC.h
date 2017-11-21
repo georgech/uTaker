@@ -26,8 +26,8 @@
 
 #if defined _ADC_INTERRUPT_CODE
 
-#if defined KINETIS_K && !defined KINETIS_KE15
-    #define KINETIS_KE_ADC                                               // ADC used by mpst KE/KEA parts)
+#if defined KINETIS_KE && !defined KINETIS_KE15
+    #define KINETIS_KE_ADC                                               // ADC used by most KE/KEA parts)
 #endif
 
 /* =================================================================== */

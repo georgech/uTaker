@@ -692,7 +692,7 @@ static int ADC_DEDICATED_MODULE[PORT_WIDTH] = {0, 0, 0, 0, 0, 0, 0, 0};
 static int ADC_MUX_CHANNEL[PORTS_AVAILABLE_8_BIT][PORT_WIDTH] = {0};
 
 
-static const char *cPer[PORTS_AVAILABLE_8_BIT][PORT_WIDTH * 4][8] = {
+static const char *cPer[PORTS_AVAILABLE_8_BIT][PORT_WIDTH * 4][8] = {    // KEA64/KEA32 has GPIO to ALT4
     {
         // GPIO            ALT 1           ALT 2             ALT3          ALT4           ALT5            ALT6                 ALT 7         (GPIO has lowest priority, ALT7 has highest)
         {  "PTA0",         "KBI0_P0",      "FTM0_CH0",       "I2C0_4WSCLOUT","ACMP0_IN0", "ADC0_SE0",     "-",                 "-"           }, // PTA0
@@ -711,8 +711,13 @@ static const char *cPer[PORTS_AVAILABLE_8_BIT][PORT_WIDTH * 4][8] = {
         {  "PTB3",         "KBI0_P7",      "SPI0_MOSI",      "FTM0_CH1",   "ADC0_SE7",    "-",            "-",                 "-"           }, // PTB3
         {  "PTB4",         "KBI0_P12",     "FTM2_CH4",       "SPI0_MISO",  "ACMP1_IN2",   "NMI_b",        "-",                 "-"           }, // PTB4 (NMI default) (high current drive pin when operated as an output)
         {  "PTB5",         "KBI0_P13",     "FTM2_CH5",       "SPI0_PCS",   "ACMP1_OUT",   "-",            "-",                 "-"           }, // PTB5 (high current drive pin when operated as an output)
+    #if defined KINETIS_KEA32
+        {  "PTB6",         "-",            "I2C0_SDA",       "-",          "XTAL",        "-",            "-",                 "-"           }, // PTB6
+        {  "PTB7",         "-",            "I2C0_SCL",       "-",          "EXTAL",       "-",            "-",                 "-"           }, // PTB7
+    #else
         {  "PTB6",         "KBI0_P14",     "I2C0_SDA",       "-",          "-",           "-",            "XTAL",              "-"           }, // PTB6
         {  "PTB7",         "KBI0_P15",     "I2C0_SCL",       "-",          "-",           "-",            "EXTAL",             "-"           }, // PTB7
+    #endif
     },
     {
         {  "PTC0",         "KBI1_P28",     "FTM2_CH0",       "-",          "ADC0_SE8",    "-",            "-",                 "-"           }, // PTC0

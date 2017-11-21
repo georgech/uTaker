@@ -1439,8 +1439,11 @@ typedef struct stRESET_VECTOR
     #define ADC_CONTROLLERS         2
 #endif
 #if defined KINETIS_KE15
-    #define VTEMP_25_MV                 741                              // typical internal temperature sensor reference voltage (in mV) (3.3V VDD/VREF and < 3MHz ADC clock speed)
-    #define TEMP_SENSOR_SLOPE_UV        1563                             // typical internal temperature sensor slope uV/°C (3.3V VDD/VREF and < 3MHz ADC clock speed)
+    #define VTEMP_25_MV                 741                              // typical internal temperature sensor reference voltage (in mV) (5.0V VDD/VREF and < 3MHz ADC clock speed)
+    #define TEMP_SENSOR_SLOPE_UV        1563                             // typical internal temperature sensor slope uV/°C (5.0V VDD/VREF and < 3MHz ADC clock speed)
+#elif defined KINETIS_KE
+    #define VTEMP_25_MV                 1396                             // typical internal temperature sensor reference voltage (in mV) (5.0V VDD/VREF and < 3MHz ADC clock speed)
+    #define TEMP_SENSOR_SLOPE_UV        3260                             // typical internal temperature sensor slope uV/°C (5.0V VDD/VREF and < 3MHz ADC clock speed)
 #else
     #define VTEMP_25_MV                 716                              // typical internal temperature sensor reference voltage (in mV) (3.3V VDD/VREF and < 3MHz ADC clock speed)
     #define TEMP_SENSOR_SLOPE_UV        1620                             // typical internal temperature sensor slope uV/°C (3.3V VDD/VREF and < 3MHz ADC clock speed)
@@ -15308,7 +15311,7 @@ typedef struct stUSB_HW
     #define WRAP_BIT_RX          0x2000
     #define RECEIVE_OWNERSHIP_2  0x1000                                  // can be optionally used by software
     #define LAST_IN_FRAME_RX     0x0800
-    #define RECEIVE_MISS         0x0100                                  // received due to promiscuouse mode only
+    #define RECEIVE_MISS         0x0100                                  // received due to promiscuous mode only
     #define RECEIVE_BROADCAST    0x0080                                  // received due to broadcast address
     #define RECEIVE_MULTICAST    0x0040                                  // received due to multicast address
     #define RECEIVE_LENGTH_VIOL  0x0020                                  // receive frame length violation
@@ -15378,7 +15381,7 @@ typedef struct stUSB_HW
     #define WRAP_BIT_RX          0x0020
     #define RECEIVE_OWNERSHIP_2  0x0010                                  // can be optionally used by software
     #define LAST_IN_FRAME_RX     0x0008
-    #define RECEIVE_MISS         0x0001                                  // received due to promiscuouse mode only
+    #define RECEIVE_MISS         0x0001                                  // received due to promiscuous mode only
     #define RECEIVE_BROADCAST    0x8000                                  // received due to broadcast address
     #define RECEIVE_MULTICAST    0x4000                                  // received due to multicast address
     #define RECEIVE_LENGTH_VIOL  0x2000                                  // receive frame length violation
@@ -16813,8 +16816,13 @@ typedef struct stADC_SETUP
 #define ADC_CLOCK_ASYNCHRONOUS          0x00000003                       // ADC_CFG1_ADICLK_ASY
 #define ADC_8_BIT_MODE                  0x00000000                       // ADC_CFG1_MODE_8
 #if defined KINETIS_KE
+    #if defined KINETIS_KE15                                             // KE15 has 10 and 12 bit mode control inverted to others
     #define ADC_12_BIT_MODE             0x00000004                       // ADC_CFG1_MODE_10
     #define ADC_10_BIT_MODE             0x00000008                       // ADC_CFG1_MODE_12
+#else
+    #define ADC_10_BIT_MODE             0x00000004                       // ADC_CFG1_MODE_10
+    #define ADC_12_BIT_MODE             0x00000008                       // ADC_CFG1_MODE_12
+#endif
 #else
     #define ADC_12_BIT_MODE             0x00000004                       // ADC_CFG1_MODE_12
     #define ADC_10_BIT_MODE             0x00000008                       // ADC_CFG1_MODE_10

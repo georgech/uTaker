@@ -5786,6 +5786,8 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define SWITCH_3           (KE_PORTA_BIT1)                       // SW3 if the port is changed (eg. A to D) the port macros will require appropriate adjustment too
         #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT(A, (SWITCH_2 | SWITCH_3), PORT_PS_UP_ENABLE) // configure as inputs
         #define WATCHDOG_DISABLE() (_READ_PORT_MASK(A, SWITCH_3) != 0)   // pull this input down to disable watchdog (hold SW3 at reset)
+        #define FTM2_0_ON_H                                              // define location of flex timer outputs
+        #define FTM1_1_ON_E
     #else
         #define SWITCH_2           (KE_PORTE_BIT4)                       // SW2 if the port is changed (eg. A to D) the port macros will require appropriate adjustment too
         #define SWITCH_3           (KE_PORTE_BIT5)                       // SW3 if the port is changed (eg. A to D) the port macros will require appropriate adjustment too
