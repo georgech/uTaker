@@ -245,7 +245,7 @@ static void fnDisablePIT(int iPIT)
     #if defined LPITS_AVAILABLE
             LPIT0_MIER &= ~(LPIT_MIER_TIE0 << PIT_settings->ucPIT);      // disable interrupt
     #else
-            ulCommand = (PIT_TCTRL_TEN);                                 // no interrupt used
+            ulCommand = (PIT_TCTRL_TEN);                                 // no interrupt used (enable without interrupt)
     #endif
         }
         if ((PIT_settings->mode & (PIT_SINGLE_SHOT | PIT_RETRIGGER)) != 0) { // single shot always behaves as retriggerable - periodic change at next timeout by default but can be forced with PIT_RETRIGGER

@@ -48,7 +48,7 @@
     #define _ADC_TIMER_CONFIG
 
     #if defined SUPPORT_ADC                                              // if HW support is enabled
-        #define TEST_ADC                                                 // enable test of ADC operation
+      //#define TEST_ADC                                                 // enable test of ADC operation
             #define ADC_INTERNAL_TEMPERATURE                             // force internal temperature channel to be used, when available
       //#define TEST_AD_DA                                               // {14} enable test of reading ADC and writing (after delay) to DAC
           //#define ADC_TRIGGER_TPM                                      // use TPM module rather than PIT for ADC trigger (valid for KL parts)
@@ -95,7 +95,7 @@
         #define GPT_CAPTURES     5                                       // when testing captures, collect this many values
     #endif
     #if defined SUPPORT_TIMER || defined SUPPORT_PWM_MODULE              // standard timers
-        #define TEST_TIMER                                               // enable timer test(s)
+      //#define TEST_TIMER                                               // enable timer test(s)
         #if defined TEST_TIMER
             #if defined SUPPORT_PWM_MODULE                               // {9}
                 #define TEST_PWM                                         // {1} test generating PWM output from timer
@@ -1204,10 +1204,10 @@ static void fnConfigurePIT(void)
     pit_setup.count_delay = PIT_US_DELAY(100);                           // 10kHz
     pit_setup.mode = (PIT_PERIODIC);                                     // periodic DMA trigger
     pit_setup.int_handler = 0;                                           // no interrupt since the PIT will be used for triggering DMA
-        #if defined KINETIS_KL
+        #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA
     ptrTestBuffer = uMallocAlign((LENGTH_OF_TEST_BUFFER * sizeof(unsigned short)), (LENGTH_OF_TEST_BUFFER * sizeof(unsigned short))); // modulo aligned buffer
         #else
-    ptrTestBuffer = uMalloc(LENGTH_OF_TEST_BUFFER * sizeof(unsigned short));
+    ptrTestBuffer = uMalloc(LENGTH_OF_TEST_BUFFER * sizeof(unsigned short)); // non-modulo-aligned memory is possible
         #endif
     // Define the waveform to be generated
     //
@@ -1288,13 +1288,13 @@ static void fnConfigurePIT(void)
     dac_setup.int_handler = 0;                                           // no interrupt used
     dac_setup.int_priority = 15;                                         // lowest priority (not used in this case)
     dac_setup.dac_mode = (DAC_CONFIGURE | DAC_REF_VDDA | DAC_NON_BUFFERED_MODE | DAC_FULL_BUFFER_DMA | DAC_ENABLE | DAC_BUFFER_DMA_START /* | DAC_OUTPUT_VALUE*/); // configure the DAC to use VDDA as reference voltage in non-buffered mode (using DMA)
-        #if defined KINETIS_KL
+        #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA
     dac_setup.dac_mode |= DAC_FULL_BUFFER_DMA_AUTO_REPEAT;
         #endif
     dac_setup.ptrDAC_Buffer = ptrTestBuffer;
     dac_setup.ulDAC_buffer_length = (LENGTH_OF_TEST_BUFFER * sizeof(unsigned short)); // the number of bytes in the buffer
     dac_setup.ucDmaChannel = 0;                                          // DMA channel 0 used
-    dac_setup.ucDmaTriggerSource = DMAMUX0_DMA0_CHCFG_SOURCE_PIT0;       // PIT0 triggers the channel mux
+    dac_setup.ucDmaTriggerSource = DMAMUX0_DMA0_CHCFG_SOURCE_PIT0;       // PIT0 triggers the channel mux (generally PIT0 can trigger DMA0, PIT1 can trigger DMA channel 1, etc.)
     dac_setup.dac_mode |= DAC_HW_TRIGGER_MODE;                           // use HW trigger mode rather than SW triggered mode (this requires PIT to trigger it)
     fnConfigureInterrupt((void *)&dac_setup);                            // configure DAC
     #endif

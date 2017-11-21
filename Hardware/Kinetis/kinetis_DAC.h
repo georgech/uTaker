@@ -61,10 +61,12 @@
             case 0:
     #if defined KINETIS_KL
                 POWER_UP_ATOMIC(6, DAC0);                                // ensure the DAC 0 is powered up
-        #if defined KINETIS_KL05
+        #if !defined KINETS_KL82
+            #if defined KINETIS_KL05
                 _CONFIG_PERIPHERAL(B, 1, PB_1_DAC0_OUT);                 // ensure that the DAC output pin is configured
-        #else
+            #else
                 _CONFIG_PERIPHERAL(E, 30, PE_30_DAC0_OUT);               // ensure that the DAC output pin is configured
+            #endif
         #endif
     #else
                 POWER_UP_ATOMIC(2, DAC0);                                // ensure DAC 0 is powered up
@@ -95,7 +97,7 @@
                     //
                 }
                 if ((ptrDAC_settings->dac_mode & DAC_BUFFERED_MODE) != 0) {
-                    // To do - add buffered mode
+                    // To do - add buffered mode if ever needed
                     //
                 }
                 else {                                                   // non-buffered mode - write to data[0] triggers conversion
@@ -104,7 +106,7 @@
                     }
                 }
             }
-            if ((ptrDAC_settings->dac_mode & DAC_OUTPUT_VALUE) != 0) {   // in non-buffered mode set the analogue output value
+            if ((ptrDAC_settings->dac_mode & DAC_OUTPUT_VALUE) != 0) {   // in non-buffered mode set the initial analogue output value
                 ptrDAC_regs->DAC_DAT[0] = ptrDAC_settings->usOutputValue;// prepare the first output value
             }
     #if !defined DEVICE_WITHOUT_DMA
