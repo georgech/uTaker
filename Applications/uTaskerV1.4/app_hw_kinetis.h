@@ -8658,8 +8658,12 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 //
 typedef unsigned long LCD_BUS_PORT_SIZE;                                 // we use 32 bit ports
 typedef unsigned long LCD_CONTROL_PORT_SIZE;
-//#define LCD_BUS_8BIT                                                   // data bus in 8 bit mode
-#define LCD_BUS_4BIT                                                     // data bus in 4 bit mode
+#if defined FRDM_KL82Z
+    #define LCD_BUS_8BIT                                                 // data bus in 8 bit mode
+#else                                                                    // choose data bus width
+  //#define LCD_BUS_8BIT                                                 // data bus in 8 bit mode
+    #define LCD_BUS_4BIT                                                 // data bus in 4 bit mode
+#endif
 
 #if defined FRDM_KL25Z
     #if defined LCD_BUS_8BIT
@@ -8757,6 +8761,33 @@ typedef unsigned long LCD_CONTROL_PORT_SIZE;
     #define SET_CONTROL_LINES(x)    _WRITE_PORT_MASK(A, x, O_CONTROL_LINES)
     #define O_SET_CONTROL_LOW(x)    _CLEARBITS(A, x); _CLEARBITS(A, x); _CLEARBITS(A, x); _CLEARBITS(A, x); _CLEARBITS(A, x); _SIM_PORTS
     #define O_SET_CONTROL_HIGH(x)   _SETBITS(A, x);   _SETBITS(A, x);   _SETBITS(A, x);   _SETBITS(A, x);   _SETBITS(A, x); _SIM_PORTS
+#elif defined FRDM_KL82Z                                                 // see video at https://youtu.be/YJEzxSqVtss
+    #define LCD_BUS_MASK            0x000000ff
+    #define DATA_SHIFT_RIGHT        0    
+    #define DATA_SHIFT_LEFT         0
+
+
+    #define O_CONTROL_RS            PORTC_BIT13
+    #define O_WRITE_READ            PORTC_BIT16
+    #define O_CONTROL_EN            PORTC_BIT17
+    #define O_LCD_BACKLIGHT         0                                    // no backlight is used
+
+    #define O_CONTROL_LINES         (O_CONTROL_RS | O_WRITE_READ | O_CONTROL_EN)
+    #define IO_BUS_PORT_DAT_IN      GPIOC_PDIR
+
+    #define SET_DATA_LINES_INPUT()  _CONFIG_PORT_INPUT(D, LCD_BUS_MASK, PORT_PS_UP_ENABLE)
+    #define SET_DATA_LINES_OUTPUT() _DRIVE_PORT_OUTPUT(D, LCD_BUS_MASK)
+    #define SET_CONTROL_LINES_OUTPUT(x) _CONFIG_PORT_OUTPUT(C, x, PORT_SRE_SLOW)
+    #define SET_BUS_DATA(x)         _WRITE_PORT_MASK(D, x,  LCD_BUS_MASK)
+    #define SET_CONTROL_LINES(x)    _WRITE_PORT_MASK(C, x, O_CONTROL_LINES)
+    #define O_SET_CONTROL_LOW(x)    _CLEARBITS(C, x); _CLEARBITS(C, x); _CLEARBITS(C, x); _CLEARBITS(C, x); _CLEARBITS(C, x); _CLEARBITS(C, x); _CLEARBITS(C, x); _CLEARBITS(C, x); _SIM_PORTS;
+    #define O_SET_CONTROL_HIGH(x)   _SETBITS(C, x); _SETBITS(C, x); _SETBITS(C, x); _SETBITS(C, x); _SETBITS(C, x); _SETBITS(C, x); _SETBITS(C, x); _SETBITS(C, x); _SIM_PORTS;
+
+    #define LCD_CONTRAST_CONTROL                                         // contrast controlled by PWM signal
+    #define _LCD_CONTRAST_TIMER                    (_TIMER_0 | 3)        // timer module 0, channel 3
+    #define _LCD_CONTRAST_TIMER_MODE_OF_OPERATION  (PWM_SYS_CLK | PWM_PRESCALER_16 | PWM_EDGE_ALIGNED); // clock PWM timer from the system clock with /16 pre-scaler
+    #define _LCD_CONTRAST_PWM_FREQUENCY            PWM_FREQUENCY(1000, 16); // generate 1000Hz on PWM output using prescaler of 16
+    #define FTM0_3_ON_C                                                  // define the PWM output pin used
 #else
     #if defined LCD_BUS_8BIT
         #define LCD_BUS_MASK        0x7f800000

@@ -21,6 +21,8 @@
     02.08.2010 Add LCD contrast and backlight configurations             {6}
     03.08.2011 Add simulated LCD read support                            {7}
     15.10.2011 Decide on port access style based on processor type       {8}
+    25.11.2017 Add PWM interface option                                  {9}
+    25.11.2017 Modify fnSetContrast() to fnSetLCDContrast() and make external {10}
 
 */        
 
@@ -126,7 +128,7 @@ extern void fnLCD(TTASKTABLE *ptrTaskTable)                              // LCD 
 #endif
     }
 
-    while (fnRead( PortIDInternal, ucInputMessage, HEADER_LENGTH)) {     // check input queue
+    while (fnRead( PortIDInternal, ucInputMessage, HEADER_LENGTH) != 0) { // check input queue
         switch (ucInputMessage[MSG_SOURCE_TASK]) {
         case TIMER_EVENT:
             break;
@@ -363,7 +365,7 @@ static void fnWriteLine(unsigned char *pMsg, unsigned char ucMsgLen, LCD_CONTROL
 
     // The unterminated string or bytes are written to the display as fast as possible from the buffer
     //
-    while (ucMsgLen--) {
+    while (ucMsgLen-- != 0) {
         ucTXDisp[ucDispCount++] = *pMsg++;
         if (ucDispCount >= MAX_TX_DBUF) {
             break;
@@ -378,7 +380,7 @@ static void fnWriteLine(unsigned char *pMsg, unsigned char ucMsgLen, LCD_CONTROL
 
 static void fnSecureCommands(unsigned char *ucPtr, unsigned char ucLen)
 {
-    while (ucLen--) {
+    while (ucLen-- != 0) {
         if ((*ucPtr & 0xe0) == 0x20) {                                   // check for function set command
             *ucPtr &= ~DL_BIT;                                           // ensure we stay in 4 bit mode of operation by clearing the DL bit
         }
@@ -410,8 +412,21 @@ static int fnSendDisplay(void)
 }
 
 #if defined LCD_CONTRAST_CONTROL                                         // {6}
-static void fnSetContrast(void)
+extern void fnSetLCDContrast(unsigned char ucContrast)                   // {10}
 {
+    #if defined SUPPORT_PWM_MODULE && (defined _KINETIS || defined _M5223X) // {9}
+    PWM_INTERRUPT_SETUP pwm_setup;
+    pwm_setup.int_type = PWM_INTERRUPT;
+    pwm_setup.pwm_mode = _LCD_CONTRAST_TIMER_MODE_OF_OPERATION;          // PWM timer configuration
+    pwm_setup.int_handler = 0;                                           // no user interrupt call-back on PWM cycle
+    pwm_setup.pwm_reference = _LCD_CONTRAST_TIMER;                       // timer module 0, channel 3
+    pwm_setup.pwm_frequency = _LCD_CONTRAST_PWM_FREQUENCY;               // contrast control frequency
+    if (ucContrast > 100) {
+        ucContrast = 100;
+    }
+    pwm_setup.pwm_value = (ucContrast, pwm_setup.pwm_frequency);         // contrast as PWM value
+    fnConfigureInterrupt((void *)&pwm_setup);                            // configure and start the PWM output
+    #else
     TIMER_INTERRUPT_SETUP timer_setup = {0};                             // PWM Timer Init Struct
     timer_setup.int_type = TIMER_INTERRUPT;                              // timer setup type
     timer_setup.int_priority = 0;
@@ -419,8 +434,12 @@ static void fnSetContrast(void)
     timer_setup.timer_reference = _LCD_CONTRAST_TIMER;                   // the timer used
     timer_setup.timer_mode  = _LCD_CONTRAST_TIMER_MODE_OF_OPERATION;     // the mode of operation
     timer_setup.timer_value = _LCD_CONTRAST_PWM_FREQUENCY;               // contrast control frequency
-    timer_setup.pwm_value   = _PWM_PERCENT(temp_pars->temp_parameters.ucGLCDContrastPWM, timer_setup.timer_value); // contrast as PWM value
-    fnConfigureInterrupt((void *)&timer_setup);                          // configure PWM output for contrast control
+    if (ucContrast > 100) {
+        ucContrast = 100;
+    }
+    timer_setup.pwm_value   = _PWM_PERCENT(ucContrast, timer_setup.timer_value); // contrast as PWM value
+    fnConfigureInterrupt((void *)&timer_setup);                          // configure PWM output for contrast 
+    #endif
 }
 #endif
 
@@ -458,7 +477,7 @@ static int fnInitDisplay(int iState)
     case STATE_INIT:                                                     // initialise the LCD hardware once on startup
         INITIALISE_LCD_CONTROL_LINES();
 #if defined LCD_CONTRAST_CONTROL                                         // {6}
-        fnSetContrast();
+        fnSetLCDContrast(temp_pars->temp_parameters.ucGLCDContrastPWM);  // {10} set default contrast
 #endif
     case STATE_INITIALISING:
         _fnWriteDisplay(0, INIT_FUNCTION_SET);                           // write function set
@@ -487,7 +506,8 @@ static int fnInitDisplay(int iState)
         fnWriteDisplay(0, DISPLAY_ON_NO_CURSOR);
 
         // At this point the display is clear and the cursor is at the home position.
-        // we inform the application that the initialisation has terminated, so that it can start using it
+        // We inform the application that the initialisation has terminated, so that it can start using it
+        //
         fnEventMessage(LCD_PARTNER_TASK, TASK_LCD, E_LCD_INITIALISED);
 #if defined LCD_BACKLIGHT_CONTROL
         fnSetBacklight();                                                // {6}
@@ -515,7 +535,7 @@ static int fnInitDisplay(int iState)
 //
 static void fnSendAppRead(unsigned char ucData)
 {
-    unsigned char ucMessage[ HEADER_LENGTH + 2];
+    unsigned char ucMessage[HEADER_LENGTH + 2];
 
     ucMessage[MSG_DESTINATION_NODE]   = INTERNAL_ROUTE;                  // destination node 
     ucMessage[MSG_SOURCE_NODE]        = INTERNAL_ROUTE;                  // own node 

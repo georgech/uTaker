@@ -281,6 +281,8 @@
     #define DO_AES192              45                                    // specific hardware command to test AES192 operation
     #define DO_AES256              46                                    // specific hardware command to test AES256 operation
     #define DO_LP_CYCLE            47                                    // specific hardware command to enable/disable low power cycle mode
+    #define DO_GET_CONTRAST        48                                    // specific hardware command to show the LCD contrast setting (%)
+    #define DO_SET_CONTRAST        49                                    // specific hardware command to set the LCD contrast setting (%)
 
 #define DO_TELNET                 2                                      // reference to Telnet group
     #define DO_TELNET_QUIT              0                                // specific Telnet comand to quit the session
@@ -769,6 +771,10 @@ static const DEBUG_COMMAND tIOCommand[] = {
     {"get_ddr",           "Get data direction [1..4]",             DO_HARDWARE,      DO_GET_DDR },
     {"read_port",         "Read port input [1..4]",                DO_HARDWARE,      DO_INPUT },
     {"write_port",        "Set port output [1..4] [0/1]",          DO_HARDWARE,      DO_OUTPUT },
+#endif
+#if defined SUPPORT_LCD && defined LCD_CONTRAST_CONTROL                  // {88}
+    { "lcd_c",            "Show LCD contrast [0..100]%",           DO_HARDWARE,      DO_GET_CONTRAST },
+    { "slcd_c",           "Set LCD contrast [0..100]%",            DO_HARDWARE,      DO_SET_CONTRAST },
 #endif
 #if defined GLCD_BACKLIGHT_CONTROL                                       // {75}
     {"sbl",               "Show backlight",                        DO_HARDWARE,      DO_GET_BACKLIGHT },
@@ -3861,6 +3867,21 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
           }
           break;
 #endif
+#if defined SUPPORT_LCD && defined LCD_CONTRAST_CONTROL                  // {88}
+      case DO_SET_CONTRAST:
+          temp_pars->temp_parameters.ucGLCDContrastPWM = (unsigned char)fnDecStrHex(ptrInput);
+          if (temp_pars->temp_parameters.ucGLCDContrastPWM > 100) {      // limit to 0..100% range
+              temp_pars->temp_parameters.ucGLCDContrastPWM = 100;
+          }
+          fnSetLCDContrast(temp_pars->temp_parameters.ucGLCDContrastPWM);
+          // Fall though intentionally to show the setting
+          //
+      case DO_GET_CONTRAST:
+          fnDebugMsg("LCD contrast = ");
+          fnDebugDec(temp_pars->temp_parameters.ucGLCDContrastPWM, 0);
+          fnDebugMsg("%\r\n");
+          break;
+#endif
 #if defined GLCD_BACKLIGHT_CONTROL                                       // {75}
       case DO_SET_BACKLIGHT:
           temp_pars->temp_parameters.ucGLCDBacklightPWM = (unsigned char)fnDecStrHex(ptrInput);
@@ -6741,6 +6762,9 @@ extern void fnSavePorts(void)
     unsigned short usTempUserDefinedOutputs = temp_pars->temp_parameters.usUserDefinedOutputs;
     CHAR cPort = '1';
     unsigned char ucBit = 1;
+        #if defined SUPPORT_LCD && defined LCD_CONTRAST_CONTROL          // {88}
+    unsigned char ucContrast = temp_pars->temp_parameters.ucGLCDContrastPWM;
+        #endif
 
     while (cPort < '9') {
         if (fnPortState(cPort++)) {
@@ -6754,6 +6778,9 @@ extern void fnSavePorts(void)
     temp_pars->temp_parameters.ucUserOutputs = ucTempUserOutputs;
     temp_pars->temp_parameters.ucUserOutputValues = ucTempUserOutputValues;
     temp_pars->temp_parameters.usUserDefinedOutputs = usTempUserDefinedOutputs;
+        #if defined SUPPORT_LCD && defined LCD_CONTRAST_CONTROL          // {88}
+    temp_pars->temp_parameters.ucGLCDContrastPWM = ucContrast;
+        #endif
     fnSaveNewPars(SAVE_NEW_PARAMETERS);                                  // save these settings as default
 }
     #endif

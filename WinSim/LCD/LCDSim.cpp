@@ -829,7 +829,7 @@ static unsigned char LCDCommand(BOOL bRS, ULONG ulCmd)
 
     if (bRS == 0) {                                                      // is is a command ?
         unsigned char i;
-        if (ulCmd & LCD_DDR_RAM_ADR) {                                   // set the RAM address
+        if ((ulCmd & LCD_DDR_RAM_ADR) != 0) {                            // set the RAM address
             tDisplayMem.ucRAMselect = DDRAM;
             ucAddr = (unsigned char) (((ulCmd - LCD_DDR_RAM_ADR) & 0xff));
            
@@ -846,19 +846,19 @@ static unsigned char LCDCommand(BOOL bRS, ULONG ulCmd)
             tDisplayMem.ucLocX = ucAddr;
             return (tDisplayMem.ddrRam[ucAddr]);                         // {17} return the RAM content in order to support reading this value
         }
-        else if(ulCmd & LCD_CG_RAM_ADR) {
+        else if ((ulCmd & LCD_CG_RAM_ADR) != 0) {
             tDisplayMem.ucRAMselect = CGRAM;
             tDisplayMem.ucCGRAMaddr = (unsigned char)(ulCmd - LCD_CG_RAM_ADR);
         }
-        else if (ulCmd & LCD_FUNCTION_SET) {
-            if((ulCmd & LCD_FONT_TYPE) && !(ulCmd & LCD_2_LINE)) {
+        else if ((ulCmd & LCD_FUNCTION_SET) != 0) {
+            if (((ulCmd & LCD_FONT_TYPE) != 0) && ((ulCmd & LCD_2_LINE) == 0)) {
                 tDisplayMem.ucFontType = FONT_5X11;                      // 1 line                                                                
             }
             else {                
                 tDisplayMem.ucFontType = FONT_5X8;                       // 2 line                                                               
             }
 
-            if(ulCmd & LCD_2_LINE) {
+            if ((ulCmd & LCD_2_LINE) != 0) {
                 tDisplayMem.ucLines = 2;
             }
             else {
@@ -868,14 +868,14 @@ static unsigned char LCDCommand(BOOL bRS, ULONG ulCmd)
             tDisplayMem.ucDDRAMLineLength = LCD_Info.ucDDRAMLineLength[tDisplayMem.ucLines-1];
             tDisplayMem.uiDDRamLength = LCD_Info.uiDDRamLength[tDisplayMem.ucLines-1];
         }
-        else if (ulCmd & LCD_CURSOR_OR_LCD_SHIFT) {                      // shift right
-            if (!(ulCmd & LCD_DDRRAM_SHIFT_RIGHT)) {
-                if (ulCmd & LCD_DDRRAM_DISPLAYSHIFT) {
+        else if ((ulCmd & LCD_CURSOR_OR_LCD_SHIFT) != 0) {               // shift right
+            if ((ulCmd & LCD_DDRRAM_SHIFT_RIGHT) == 0) {
+                if ((ulCmd & LCD_DDRRAM_DISPLAYSHIFT) != 0) {
                     if (++tDisplayMem.ucShiftPosition > (tDisplayMem.ucDDRAMLineLength-1)) { //shift whole display
                         tDisplayMem.ucShiftPosition = 0;
                     }
                 }
-                else{
+                else {
                     if (tDisplayMem.ucLocX > 0)                          // shift cursor only
                         tDisplayMem.ucLocX--;
                     else {
@@ -890,7 +890,7 @@ static unsigned char LCDCommand(BOOL bRS, ULONG ulCmd)
                 }
             }
             else {                                                       //shift left
-                if (ulCmd & LCD_DDRRAM_DISPLAYSHIFT) {
+                if ((ulCmd & LCD_DDRRAM_DISPLAYSHIFT) != 0) {
                     if (tDisplayMem.ucShiftPosition > 0) {               //shift whole display
                         tDisplayMem.ucShiftPosition--;
                     }
@@ -908,7 +908,7 @@ static unsigned char LCDCommand(BOOL bRS, ULONG ulCmd)
                 }
             }
         }
-        else if (ulCmd & LCD_ONOFF) {    
+        else if ((ulCmd & LCD_ONOFF) != 0) {    
             unsigned char ucOldCursor = tDisplayMem.ucCursorOn;
             unsigned char ucOldBlink = tDisplayMem.ucCursorBlinkOn;
             unsigned char ucOldOn = tDisplayMem.ucLCDon;
@@ -929,17 +929,17 @@ static unsigned char LCDCommand(BOOL bRS, ULONG ulCmd)
                 ucBlinkCursor = 0;
             }
         }
-        else if (ulCmd & LCD_ENTRY_MODE) {
+        else if ((ulCmd & LCD_ENTRY_MODE) != 0) {
             tDisplayMem.ucLCDshiftEnable = ((ulCmd & LCD_DISPLAY_SHIFT) == LCD_DISPLAY_SHIFT); // set shift mode
             tDisplayMem.ucCursorInc__Dec = ((ulCmd & LCD_CURSOR_INCREMENT) == LCD_CURSOR_INCREMENT);
         }
-        else if(ulCmd & LCD_RETURN_HOME) {
+        else if ((ulCmd & LCD_RETURN_HOME) != 0) {
             tDisplayMem.ucLocX = 0;
             tDisplayMem.ucLocY = 0;
             tDisplayMem.ucCursorInc__Dec = 1;
             tDisplayMem.ucShiftPosition = 0;
         }
-        else if(ulCmd == LCD_CLEAR) {                                    // clear display and return to home position
+        else if (ulCmd == LCD_CLEAR) {                                    // clear display and return to home position
             memset((void*)&tDisplayMem.ddrRam[0], ' ', tDisplayMem.uiDDRamLength) ;
             tDisplayMem.ucLocX = 0;
             tDisplayMem.ucLocY = 0;
@@ -984,7 +984,7 @@ static unsigned char LCDCommand(BOOL bRS, ULONG ulCmd)
             }
         }
 
-        if (tDisplayMem.ucCursorInc__Dec) {                              //new cursor position
+        if ((tDisplayMem.ucCursorInc__Dec != 0)) {                       // new cursor position
             if (++tDisplayMem.ucLocX > (tDisplayMem.ucDDRAMLineLength-1)) {
                 tDisplayMem.ucLocX = 0;
                 if (++tDisplayMem.ucLocY >= tDisplayMem.ucLines) {
@@ -992,7 +992,7 @@ static unsigned char LCDCommand(BOOL bRS, ULONG ulCmd)
                 }
             }
         }
-        else {                                                           //shift cursor only
+        else {                                                           // shift cursor only
             if (tDisplayMem.ucLocX > 0) {
                 tDisplayMem.ucLocX--;
             }
@@ -1041,7 +1041,7 @@ static void DisplayCharNew(HDC hdc, RECT rect, POINT point, UINT *pBits, UINT nP
 {
     DWORD dwTextColor = LCD_PIXEL_COLOUR, dwCurColor = LCD_ON_COLOUR, dwThisCol;
     if (nBackLightOn == 0) {
-        dwCurColor = LCD_OFF_COLOUR;
+        dwCurColor = LCD_OFF_COLOUR;                                     // without backlight the pixel color is modified
     }
 
     UINT z1 =0, z2 = 0;
@@ -1312,7 +1312,7 @@ static void DrawLcdLine(HWND hwnd)
     #endif
     }
 #else    
-    if(tDisplayMem.ucLCDon) {
+    if (tDisplayMem.ucLCDon != 0) {
         SetBkMode(hdc, OPAQUE);                                          // display values
     }
     else {
@@ -1320,14 +1320,14 @@ static void DrawLcdLine(HWND hwnd)
     }
     
     for (i = 0; i < LCD_Info.ucNrOfLCDLines; i++) {
-        if ((tDisplayMem.ucLines == 1) && (i & 0x01)) {
+        if ((tDisplayMem.ucLines == 1) && ((i & 0x01) != 0)) {
             continue;
         }
 
         pCurrent = tDisplayMem.ucShiftPosition+LCD_Info.uiLCDStartLine[i];
 
-        if (pCurrent >= (LCD_Info.uiDDRAMStartLine[i%2]+tDisplayMem.ucDDRAMLineLength)) {
-                pCurrent = pCurrent-tDisplayMem.ucDDRAMLineLength;
+        if (pCurrent >= (LCD_Info.uiDDRAMStartLine[i%2] + tDisplayMem.ucDDRAMLineLength)) {
+            pCurrent = pCurrent-tDisplayMem.ucDDRAMLineLength;
         }
 
         rect = rectLines[i];
@@ -1335,7 +1335,7 @@ static void DrawLcdLine(HWND hwnd)
         point.y = rect.top;
 
         for (j = 0; j < LCD_Info.ucNrOfVisibleCharacters; j++) {
-            if ((pCurrent == (LCD_Info.uiDDRAMStartLine[tDisplayMem.ucLocY]+tDisplayMem.ucLocX)) && (tDisplayMem.ucCursorOn || tDisplayMem.ucCursorBlinkOn)) {
+            if ((pCurrent == (LCD_Info.uiDDRAMStartLine[tDisplayMem.ucLocY] + tDisplayMem.ucLocX)) && ((tDisplayMem.ucCursorOn != 0) || (tDisplayMem.ucCursorBlinkOn != 0))) {
                 iHandleCursor = 1;
             }
             else {
@@ -1349,8 +1349,9 @@ static void DrawLcdLine(HWND hwnd)
                 pBits = (UINT*)&font_tbl[tDisplayMem.ddrRam[pCurrent]  & 0xFFFE];
             }
             else {
-                if ((usOldValue[i][j] == (unsigned short)((unsigned char)(tDisplayMem.ddrRam[pCurrent]))) &&
-                    !iHandleCursor) goto dont_display;                   // don't bother drawing this one
+                if ((usOldValue[i][j] == (unsigned short)((unsigned char)(tDisplayMem.ddrRam[pCurrent]))) && (iHandleCursor == 0)) {
+                    goto dont_display;                                   // don't bother drawing this one
+                }
                 usOldValue[i][j] = (unsigned short)((unsigned char)(tDisplayMem.ddrRam[pCurrent])); // validate
                 pBits = (UINT*)&font_tbl[tDisplayMem.ddrRam[pCurrent]];
             }
@@ -1359,17 +1360,16 @@ static void DrawLcdLine(HWND hwnd)
             point.x = uiCharStart[j];
             point.y = rect.top;                        
             
-            if (iHandleCursor) {
+            if (iHandleCursor != 0) {
                 usOldValue[i][j] |= 0x8000;                              // ensure updated next time around to avoid cursor left on
                 if (ucBlinkCursor) {
                     pBits = uiBlockCursor;
                     DisplayCharNew(hdc, rect, point, pBits, nPixels, nFactor, 0);
-
-                        if ((tDisplayMem.ucLines == 1) && (tDisplayMem.ucFontType == FONT_5X11)) {
-                            point.y = rectLines[i+1].top;
-                            pBits = uiLargeCursor;
-                            DisplayCharNew(hdc, rect, point, pBits, nPixels, nFactor, 0);
-                        }
+                    if ((tDisplayMem.ucLines == 1) && (tDisplayMem.ucFontType == FONT_5X11)) {
+                        point.y = rectLines[i+1].top;
+                        pBits = uiLargeCursor;
+                        DisplayCharNew(hdc, rect, point, pBits, nPixels, nFactor, 0);
+                    }
                 }
                 else {
                     if (tDisplayMem.ucFontType == FONT_5X11) {
@@ -2780,12 +2780,12 @@ extern "C" int CollectCommand(bool bRS, unsigned long ulByte)            // {17}
     return 0;
 #else                                                                    // character LCD
     int iReturn = 0xff;
-    if (tDisplayMem.bmode) {                                             // 8-bit mode - byte complete
+    if (tDisplayMem.bmode != 0) {                                        // 8-bit mode - byte complete
         iReturn = LCDCommand(bRS, (unsigned char)ulByte);
         DrawLcdLine(ghWnd);
     }
     else {
-        if (nibbel) {                                                    // save most significant nibble
+        if (nibbel != 0) {                                               // save most significant nibble
             nibbel = 0;
             cmd = (unsigned char)(ulByte & 0xf0);
         }

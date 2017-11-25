@@ -7,7 +7,7 @@
 
     www.uTasker.com    Skype: M_J_Butcher
     
-    ---------------------------------------------------------------------L
+    ---------------------------------------------------------------------
     File:      config.h
     Project:   uTaskerV1.4 project
     ---------------------------------------------------------------------
@@ -1808,7 +1808,7 @@
 
 // Character LCD
 //
-//#define SUPPORT_LCD                                                    // enable a task for interfacing to a character LCD
+//#define SUPPORT_LCD                                                    // enable a task for interfacing to a character LCD (see user's guide at http://www.utasker.com/docs/uTasker/uTaskerLCD.PDF and video at https://youtu.be/YJEzxSqVtss)
 #if defined SUPPORT_LCD
     #define LCD_LINES              2                                     // use 2 x 16 LCD
     #define LCD_CHARACTERS         16                                    // options are 1:8 / 1:16 / 1:20 / 1:24 / 1:40 / 2:x / 4:x

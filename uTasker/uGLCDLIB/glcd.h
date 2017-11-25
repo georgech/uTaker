@@ -22,6 +22,7 @@
     26.06.2010 Add MB785_GLCD_MODE
     05.03.2011 Add windowed picture                                      {5}
     15.03.2015 Add TOUCH_MOUSE_EVENT_MESSAGE struct                      {6}
+    25.11.2017 Add fnSetLCDContrast()                                    {7}
        
 */
 
@@ -222,6 +223,8 @@ extern void fnDoLCD_line(void *line);
 extern void fnDoLCD_rect(void *rect);
 extern void fnDoLCD_scroll(GLCD_SCROLL *scroll);
 extern void fnDoLCD_style(GLCD_STYLE *style);
+
+extern void fnSetLCDContrast(unsigned char ucContrast);                  // {7}
 
 #if defined FT800_GLCD_MODE
 
