@@ -8773,7 +8773,7 @@ typedef unsigned long LCD_CONTROL_PORT_SIZE;
     #define O_LCD_BACKLIGHT         0                                    // no backlight is used
 
     #define O_CONTROL_LINES         (O_CONTROL_RS | O_WRITE_READ | O_CONTROL_EN)
-    #define IO_BUS_PORT_DAT_IN      GPIOC_PDIR
+    #define IO_BUS_PORT_DAT_IN      GPIOD_PDIR
 
     #define SET_DATA_LINES_INPUT()  _CONFIG_PORT_INPUT(D, LCD_BUS_MASK, PORT_PS_UP_ENABLE)
     #define SET_DATA_LINES_OUTPUT() _DRIVE_PORT_OUTPUT(D, LCD_BUS_MASK)
