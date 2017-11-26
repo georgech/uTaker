@@ -1181,6 +1181,21 @@ typedef struct stRESET_VECTOR
     #define TRGMUX_AVAILABLE
 #endif
 
+// Touch Sensor Interface
+//
+#if defined KINETIS_KL
+    #if defined KINETIS_KL82
+        #define TSI_AVAILABLE         1
+        #define TSI_INPUTS_AVAILABLE  16
+    #else
+        #define TSI_AVAILABLE         1
+        #define TSI_INPUTS_AVAILABLE  16
+    #endif
+#else
+    #define TSI_AVAILABLE             1
+    #define TSI_INPUTS_AVAILABLE      16
+#endif
+
 // LTC (LP Trusted Cryptography)
 //
 #if defined KINETIS_K82 || defined KINETIS_KL82

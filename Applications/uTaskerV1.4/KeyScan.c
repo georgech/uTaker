@@ -190,9 +190,9 @@ static void fnCheckKeyChanges(void)
     unsigned long ulChanges = (ulColsLast ^ ulCols);
     unsigned char ucEvent = KEY_EVENT_COL_1_ROW_1_PRESSED;               // event on first input pressed
     while (ulChanges != 0) {
-        if (ulChanges & ulInput) {
+        if ((ulChanges & ulInput) != 0) {
             ulChanges &= ~ulInput;
-            if (ulCols & ulInput) {
+            if ((ulCols & ulInput) != 0) {
                 fnInterruptMessage(KEYPAD_PARTNER_TASK, ucEvent);        // send as pressed interrupt event
             }
             else {

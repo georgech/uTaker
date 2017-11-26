@@ -2000,7 +2000,7 @@
     #define MAX_TEXT_LENGTH        64                                    // maximum text length when writing fonts
 #endif
 
-// Key entry
+// Key entry - see keypad user's guide at http://www.utasker.com/docs/uTasker/uTaskerKeypad.PDF
 //
 #if defined NET_K60 || defined rcARM_KL26                                // NET-K60 enables key pad or rcARM touch buttons
     #define SUPPORT_KEY_SCAN                                             // enable a task for key pad scanning
@@ -2024,9 +2024,11 @@
     #define KEYPAD_PARTNER_TASK       TASK_APPLICATION                   // key change events sent to this task
 
     #if defined FRDM_KL26Z || defined FRDM_KL25Z
-        #define VIRTUAL_KEY_ROWS      2
+        #define VIRTUAL_KEY_ROWS      2                                  // virtual rows and columns when KEY_COLUMNS is zero
     #elif defined rcARM_KL26
-        #define VIRTUAL_KEY_ROWS      3
+        #define VIRTUAL_KEY_ROWS      3                                  // virtual rows and columns when KEY_COLUMNS is zero
+    #elif defined FRDM_KL82Z                                             // see video at https://youtu.be/vGk-b40EgL0
+        #define VIRTUAL_KEY_ROWS      12                                 // virtual rows and columns when KEY_COLUMNS is zero
     #else
         #define VIRTUAL_KEY_ROWS      4                                  // virtual rows and columns when KEY_COLUMNS is zero
     #endif

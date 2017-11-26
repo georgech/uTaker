@@ -6524,9 +6524,6 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define MOUSE_DOWN()           0
     #define MOUSE_LEFT()           (_READ_PORT_MASK(A, SWITCH_2) == 0)   // SW2 used as mouse movement left
     #define MOUSE_RIGHT()          (_READ_PORT_MASK(D, SWITCH_3) == 0)   // SW3 used as right mouse movement right
-
-    #define BUTTON_KEY_DEFINITIONS {SWITCH_2_PORT,  SWITCH_2,  {328, 204, 345, 215}}, \
-                                   {SWITCH_3_PORT,  SWITCH_3,  {330, 16,  343, 30 }},
                                     
     #define MULTICOLOUR_LEDS       {0, 2}                               // single LED made up of entries 0, 1 and 2 [green/red/blue]
 
@@ -6536,7 +6533,29 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         {RGB(255,0,0), RGB(0,0,0),     1, {251, 65, 0,   6   }, _PORTC, DEMO_LED_2}, \
         {RGB(0,0,255), RGB(0,0,0),     1, {251, 65, 0,   6   }, _PORTC, DEMO_LED_3}
 
-    #define KEYPAD "KeyPads/FRDM_KL82Z.bmp"
+    #if defined SUPPORT_KEY_SCAN
+        #define USER_DEFINED_KEYPAD_KEYS                                 // disable automatic division of keyboard into button areas since we do it ourselves
+        #define KEYPAD "KeyPads/FRDM_KL82Z_Keys.bmp"                     // image to use
+        #define BUTTON_KEY_DEFINITIONS {SWITCH_2_PORT,  SWITCH_2,    {328, 204, 345, 215}}, \
+                                       {SWITCH_3_PORT,  SWITCH_3,    {330, 16,  343, 30  }}, \
+                                       {_PORTC,         PORTC_BIT0,  {20,  244, 80,  308 }}, \
+                                       {_PORTC,         PORTC_BIT3,  {105, 244, 163, 308 }}, \
+                                       {_PORTA,         PORTA_BIT14, {185, 244, 241, 308 }}, \
+                                       {_PORTE,         PORTE_BIT7,  {266, 244, 322, 308 }}, \
+                                       {_PORTC,         PORTC_BIT5,  {20,  335, 80,  385 }}, \
+                                       {_PORTA,         PORTA_BIT4,  {105, 335, 163, 385 }}, \
+                                       {_PORTE,         PORTE_BIT11, {185, 335, 241, 385 }}, \
+                                       {_PORTE,         PORTE_BIT8,  {266, 335, 322, 385 }}, \
+                                       {_PORTC,         PORTC_BIT10, {20,  416, 80,  462 }}, \
+                                       {_PORTA,         PORTA_BIT2,  {105, 416, 163, 462 }}, \
+                                       {_PORTA,         PORTA_BIT15, {185, 416, 241, 462 }}, \
+                                       {_PORTA,         PORTA_BIT1,  {266, 416, 322, 462 }},
+    #else
+        #define KEYPAD "KeyPads/FRDM_KL82Z.bmp"
+
+        #define BUTTON_KEY_DEFINITIONS {SWITCH_2_PORT,  SWITCH_2,  {328, 204, 345, 215}}, \
+                                       {SWITCH_3_PORT,  SWITCH_3,  {330, 16,  343, 30 }},
+    #endif
 
     // Accelerometer interrupt configuration
     //
@@ -9463,7 +9482,9 @@ typedef unsigned long LCD_CONTROL_PORT_SIZE;
     #endif
 
 #elif defined KEY_COLUMNS && KEY_COLUMNS == 0                            // linear keyboard (key connected directly to inputs)
-    #define TOUCH_SENSOR_INPUTS                                          // {3} use touch sensor inputs
+    #if !defined FRDM_KL82Z && TSI_AVAILABLE > 0
+        #define TOUCH_SENSOR_INPUTS                                      // {3} use touch sensor inputs
+    #endif
     #if defined TOUCH_SENSOR_INPUTS
         #if defined TWR_K20D50M || defined TWR_K20D72M
             #define KEY_ROW_IN_1        PORTB_BIT0
@@ -9571,33 +9592,103 @@ typedef unsigned long LCD_CONTROL_PORT_SIZE;
                                         TSI0_GENCS = (TSI_GENCS_STM_SW_TRIG | TSI_GENCS_SWTS | TSI_GENCS_TSIEN | TSI_GENCS_PS_32);
         #endif
     #else
-        #define KEY_ROW_IN_1        PORTB_BIT20
-        #define KEY_ROW_IN_2        PORTB_BIT21
-        #define KEY_ROW_IN_3        PORTB_BIT22
-        #define KEY_ROW_IN_4        PORTB_BIT23
+        #if defined FRDM_KL82Z
+            #define KEY_ROW_IN_1        PORTC_BIT0
+            #define KEY_ROW_IN_2        PORTC_BIT3
+            #define KEY_ROW_IN_3        PORTA_BIT14
+            #define KEY_ROW_IN_4        PORTE_BIT7
+            #define KEY_ROW_IN_5        PORTC_BIT5
+            #define KEY_ROW_IN_6        PORTA_BIT4
+            #define KEY_ROW_IN_7        PORTE_BIT11
+            #define KEY_ROW_IN_8        PORTE_BIT8
+            #define KEY_ROW_IN_9        PORTC_BIT10
+            #define KEY_ROW_IN_10       PORTA_BIT2
+            #define KEY_ROW_IN_11       PORTA_BIT15
+            #define KEY_ROW_IN_12       PORTA_BIT1
 
-        #define KEY_1_PORT_REF      _PORTB
-        #define KEY_1_PORT_PIN      KEY_ROW_IN_1
+            #define KEY_1_PORT_REF      _PORTC
+            #define KEY_1_PORT_PIN      KEY_ROW_IN_1
 
-        #define KEY_2_PORT_REF      _PORTB
-        #define KEY_2_PORT_PIN      KEY_ROW_IN_2
+            #define KEY_2_PORT_REF      _PORTC
+            #define KEY_2_PORT_PIN      KEY_ROW_IN_2
 
-        #define KEY_3_PORT_REF      _PORTB
-        #define KEY_3_PORT_PIN      KEY_ROW_IN_3
+            #define KEY_3_PORT_REF      _PORTA
+            #define KEY_3_PORT_PIN      KEY_ROW_IN_3
 
-        #define KEY_4_PORT_REF      _PORTB
-        #define KEY_4_PORT_PIN      KEY_ROW_IN_4
+            #define KEY_4_PORT_REF      _PORTE
+            #define KEY_4_PORT_PIN      KEY_ROW_IN_4
 
-        #define INIT_KEY_STATE      0x0000000f
+            #define KEY_5_PORT_REF      _PORTC
+            #define KEY_5_PORT_PIN      KEY_ROW_IN_5
 
-        #define READ_KEY_INPUTS()   (_READ_PORT_MASK(B, (KEY_ROW_IN_1 | KEY_ROW_IN_2 | KEY_ROW_IN_3 | KEY_ROW_IN_4)) >> 20)
+            #define KEY_6_PORT_REF      _PORTA
+            #define KEY_6_PORT_PIN      KEY_ROW_IN_6
 
-        #define INIT_KEY_SCAN()     _CONFIG_PORT_INPUT(B, (KEY_ROW_IN_1 | KEY_ROW_IN_2 | KEY_ROW_IN_3 | KEY_ROW_IN_4), (PORT_PS_UP_ENABLE));
+            #define KEY_7_PORT_REF      _PORTE
+            #define KEY_7_PORT_PIN      KEY_ROW_IN_7
+
+            #define KEY_8_PORT_REF      _PORTE
+            #define KEY_8_PORT_PIN      KEY_ROW_IN_8
+
+            #define KEY_9_PORT_REF      _PORTC
+            #define KEY_9_PORT_PIN      KEY_ROW_IN_9
+
+            #define KEY_10_PORT_REF     _PORTA
+            #define KEY_10_PORT_PIN     KEY_ROW_IN_10
+
+            #define KEY_11_PORT_REF     _PORTA
+            #define KEY_11_PORT_PIN     KEY_ROW_IN_11
+
+            #define KEY_12_PORT_REF     _PORTA
+            #define KEY_12_PORT_PIN     KEY_ROW_IN_12
+
+            #define INIT_KEY_STATE      0xfffff000
+
+            #define INIT_KEY_SCAN()     _CONFIG_PORT_INPUT(C, (KEY_ROW_IN_1 | KEY_ROW_IN_2 | KEY_ROW_IN_5 | KEY_ROW_IN_9), (PORT_PS_UP_ENABLE)); \
+                                        _CONFIG_PORT_INPUT(A, (KEY_ROW_IN_3 | KEY_ROW_IN_6 | KEY_ROW_IN_10 | KEY_ROW_IN_11 | KEY_ROW_IN_12), (PORT_PS_UP_ENABLE)); \
+                                        _CONFIG_PORT_INPUT(E, (KEY_ROW_IN_4 | KEY_ROW_IN_7 | KEY_ROW_IN_8), (PORT_PS_UP_ENABLE))
+
+            #define READ_KEY_INPUTS()   ~((_READ_PORT_MASK(C, (KEY_ROW_IN_1))) | \
+                                          (_READ_PORT_MASK(C, (KEY_ROW_IN_2))  >> (3  - 1))  | \
+                                          (_READ_PORT_MASK(A, (KEY_ROW_IN_3))  >> (14 - 2))  | \
+                                          (_READ_PORT_MASK(E, (KEY_ROW_IN_4))  >> (7  - 3))  | \
+                                          (_READ_PORT_MASK(C, (KEY_ROW_IN_5))  >> (5  - 4))  | \
+                                          (_READ_PORT_MASK(A, (KEY_ROW_IN_6))  << 1)  | \
+                                          (_READ_PORT_MASK(E, (KEY_ROW_IN_7))  >> (11 - 6))  | \
+                                          (_READ_PORT_MASK(E, (KEY_ROW_IN_8))  >> (8  - 7))  | \
+                                          (_READ_PORT_MASK(C, (KEY_ROW_IN_9))  >> (10 - 8))  | \
+                                          (_READ_PORT_MASK(A, (KEY_ROW_IN_10)) << 7)  | \
+                                          (_READ_PORT_MASK(A, (KEY_ROW_IN_11)) >> (15 - 10))  | \
+                                          (_READ_PORT_MASK(A, (KEY_ROW_IN_12)) << 10))
+        #else
+            #define KEY_ROW_IN_1        PORTB_BIT20
+            #define KEY_ROW_IN_2        PORTB_BIT21
+            #define KEY_ROW_IN_3        PORTB_BIT22
+            #define KEY_ROW_IN_4        PORTB_BIT23
+
+            #define KEY_1_PORT_REF      _PORTB
+            #define KEY_1_PORT_PIN      KEY_ROW_IN_1
+
+            #define KEY_2_PORT_REF      _PORTB
+            #define KEY_2_PORT_PIN      KEY_ROW_IN_2
+
+            #define KEY_3_PORT_REF      _PORTB
+            #define KEY_3_PORT_PIN      KEY_ROW_IN_3
+
+            #define KEY_4_PORT_REF      _PORTB
+            #define KEY_4_PORT_PIN      KEY_ROW_IN_4
+
+            #define INIT_KEY_STATE      0x0000000f
+
+            #define READ_KEY_INPUTS()   (_READ_PORT_MASK(B, (KEY_ROW_IN_1 | KEY_ROW_IN_2 | KEY_ROW_IN_3 | KEY_ROW_IN_4)) >> 20)
+
+            #define INIT_KEY_SCAN()     _CONFIG_PORT_INPUT(B, (KEY_ROW_IN_1 | KEY_ROW_IN_2 | KEY_ROW_IN_3 | KEY_ROW_IN_4), (PORT_PS_UP_ENABLE));
+        #endif
     #endif
 
     // LEDs
     //
-    #if !defined TWR_K20D50M && !defined TWR_K20D72M && !defined FRDM_K64F && !defined FRDM_KL27Z && !defined FRDM_KL28Z && !defined FRDM_KL26Z && !defined FRDM_KL25Z && !defined FRDM_KL03Z && !defined FreeLON
+    #if !defined TWR_K20D50M && !defined TWR_K20D72M && !defined FRDM_K64F && !defined FRDM_KL27Z && !defined FRDM_KL28Z && !defined FRDM_KL26Z && !defined FRDM_KL25Z && !defined FRDM_KL03Z && !defined FreeLON && !defined FRDM_KL82Z
                                         // '0'            '1'     input state   center (x,   y)   0 = circle, radius, controlling port, controlling pin 
         #define KEYPAD_LED_DEFINITIONS  {RGB(200,200,200),RGB(255,75,0),  0, {340, 123, 348, 131 }, _PORTA, DEMO_LED_1}, \
                                         {RGB(200,200,200),RGB(255,255,0), 0, {340, 160, 348, 168 }, _PORTA, DEMO_LED_2}, \

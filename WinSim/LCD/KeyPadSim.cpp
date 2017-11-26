@@ -127,12 +127,12 @@ extern void fnInitKeyPad(RECT &rt, int iOrigWidth, int iMaxTop)
 
 extern void DisplayKeyPad(HWND hwnd, RECT rt, RECT refresh_rect)
 {
-#if defined KEYPAD_KEY_DEFINITIONS
-    int i, j;
-#elif defined SUPPORT_KEY_SCAN
-    int x, y, i, j, iKeyWidth, iKeyHeight, iKeySizeX, iKeySizeY;
-#elif defined BUTTON_KEY_DEFINITIONS
     int i;
+#if defined KEYPAD_KEY_DEFINITIONS
+    int j;
+#elif defined SUPPORT_KEY_SCAN && !defined USER_DEFINED_KEYPAD_KEYS
+    int x, y, j, iKeyWidth, iKeyHeight, iKeySizeX, iKeySizeY;
+#elif defined BUTTON_KEY_DEFINITIONS
 #endif
     if (NULL == hwnd) {
         return;
@@ -179,7 +179,7 @@ extern void DisplayKeyPad(HWND hwnd, RECT rt, RECT refresh_rect)
             }
         }
     }
-    #else                                                                // the front panel is automatically divided into columns and rows
+    #elif !defined USER_DEFINED_KEYPAD_KEYS                              // the front panel is automatically divided into columns and rows
     iKeyWidth = cxDib / KEY_COLUMNS;                                     // display pressed keys
     iKeyHeight = cyDib / KEY_ROWS;
     iKeySizeX = (iKeyWidth/4);
