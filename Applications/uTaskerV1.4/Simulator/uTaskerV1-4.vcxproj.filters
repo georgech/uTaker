@@ -943,6 +943,9 @@
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_timer_pins.h">
       <Filter>Hardware\Kinetis</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\spi_flash_kinetis_MX25L.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="cursor1.cur">

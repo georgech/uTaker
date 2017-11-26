@@ -173,7 +173,7 @@ static void _LowLevelInit(void);
 #endif
 
 #if defined SPI_SW_UPLOAD || defined SPI_FLASH_FAT || (defined SPI_FILE_SYSTEM && defined FLASH_FILE_SYSTEM)
-    #if !defined SPI_FLASH_ST && !defined SPI_FLASH_SST25 && !defined SPI_FLASH_W25Q && !defined SPI_FLASH_S25FL1_K
+    #if !defined SPI_FLASH_ST && !defined SPI_FLASH_SST25 && !defined SPI_FLASH_W25Q && !defined SPI_FLASH_S25FL1_K && !defined SPI_FLASH_MX25L
         #define SPI_FLASH_ATMEL                                          // default if not otherwise defined
     #endif
     #define _SPI_DEFINES
@@ -182,6 +182,7 @@ static void _LowLevelInit(void);
         #include "spi_flash_kinetis_sst25.h"
         #include "spi_flash_w25q.h"
         #include "spi_flash_kinetis_s25fl1-k.h"
+        #include "spi_flash_kinetis_MX25L.h"
     #undef _SPI_DEFINES
 #endif
 
@@ -261,6 +262,7 @@ static int iInterruptLevel = 0;                                          // pres
     #include "spi_flash_kinetis_sst25.h"
     #include "spi_flash_w25q.h"
     #include "spi_flash_kinetis_s25fl1-k.h"
+    #include "spi_flash_kinetis_MX25L.h"
 #undef _SPI_FLASH_INTERFACE
 
 
@@ -879,6 +881,7 @@ INITHW void fnInitHW(void)                                               // perf
         #include "spi_flash_kinetis_sst25.h"
         #include "spi_flash_w25q.h"
         #include "spi_flash_kinetis_s25fl1-k.h"
+        #include "spi_flash_kinetis_MX25L.h"
     #undef _CHECK_SPI_CHIPS
 #endif
 }

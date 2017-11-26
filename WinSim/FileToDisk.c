@@ -141,6 +141,8 @@
         #define SPI_FLASH_FILE "SST25XXXX.ini"                           // {7}
     #elif defined SPI_FLASH_S25FL1_K
         #define SPI_FLASH_FILE "S25FL1-K.ini"
+    #elif defined SPI_FLASH_MX25L
+        #define SPI_FLASH_FILE "MX25Lxxxxx.ini"
     #elif defined SPI_FLASH_W25Q
         #define SPI_FLASH_FILE "W25QXXX.ini"
     #else

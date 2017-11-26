@@ -182,7 +182,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
                 }
             }
     #endif
-        } while (ucStatus & STATUS_BUSY);                                // until no longer busy
+        } while ((ucStatus & STATUS_BUSY) != 0);                         // until no longer busy
     }
 
     #if defined SET_SPI_FLASH_MODE

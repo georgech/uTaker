@@ -1819,7 +1819,7 @@
                                             SPI1_MCR = (SPI_MCR_MSTR | SPI_MCR_DCONF_SPI | SPI_MCR_CLR_RXF | SPI_MCR_CLR_TXF | SPI_MCR_PCSIS_CS0 | SPI_MCR_PCSIS_CS1 | SPI_MCR_PCSIS_CS2 | SPI_MCR_PCSIS_CS3 | SPI_MCR_PCSIS_CS4 | SPI_MCR_PCSIS_CS5); \
                                             SPI1_CTAR0 = (SPI_CTAR_DBR | SPI_CTAR_FMSZ_8 | SPI_CTAR_PDT_7 | SPI_CTAR_BR_2 | SPI_CTAR_CPHA | SPI_CTAR_CPOL); // for 50MHz bus, 25MHz speed and 140ns min de-select time
 
-    #define POWER_DOWN_SPI_FLASH_INTERFACE() POWER_DOWN(6, SIM_SCGC6_SPI1) // power down SPI interface if no SPI Flash detected
+    #define POWER_DOWN_SPI_FLASH_INTERFACE() POWER_DOWN_ATOMIC(6, SPI1) // power down SPI interface if no SPI Flash detected
 
     #define FLUSH_SPI_FIFO_AND_FLAGS()      SPI1_MCR |= SPI_MCR_CLR_RXF; SPI1_SR = (SPI_SR_EOQF | SPI_SR_TFUF | SPI_SR_TFFF | SPI_SR_RFOF | SPI_SR_RFDF);
 
@@ -1995,6 +1995,15 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define SPI_FLASH_SECTOR_LENGTH (256 * SPI_FLASH_PAGE_LENGTH)    // sector size of code FLASH
     #endif
     #define SPI_FLASH_BLOCK_LENGTH  SPI_FLASH_SECTOR_LENGTH
+#elif defined SPI_FLASH_MX25L
+    #define SPI_FLASH_MX25L12845E                                        // specific type used
+    #define SPI_FLASH_SIZE               (16 * 1024 * 1024)              // 128 Mbits/16 MBytes
+    #define SPI_FLASH_PAGE_LENGTH        (256)
+    #define SPI_FLASH_PAGES              (SPI_FLASH_SIZE/SPI_FLASH_PAGE_LENGTH)
+    #define SPI_FLASH_SECTOR_LENGTH      (4 * 1024)                      // sector size of SPI FLASH
+    #define SPI_FLASH_SECTORS            (SPI_FLASH_SIZE/SPI_FLASH_SECTOR_LENGTH)
+    #define SPI_FLASH_BLOCK_LENGTH       SPI_FLASH_SECTOR_LENGTH         // for compatibility - file system granularity
+  //#define SUPPORT_ERASE_SUSPEND                                        // automatically suspend an erase that is in progress when a write or a read is performed in a different sector (advised when FAT used in SPI Flash with block management/wear-levelling)
 #elif defined SPI_FLASH_S25FL1_K
     #define SPI_FLASH_S25FL164K                                          // specific type used
     #define SPI_FLASH_SIZE               (8 * 1024 * 1024)               // 64 Mbits/8 MBytes
@@ -2003,7 +2012,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define SPI_FLASH_SECTOR_LENGTH      (4 * 1024)                      // sector size of SPI FLASH
     #define SPI_FLASH_SECTORS            (SPI_FLASH_SIZE/SPI_FLASH_SECTOR_LENGTH)
     #define SPI_FLASH_BLOCK_LENGTH       SPI_FLASH_SECTOR_LENGTH         // for compatibility - file system granularity
-  //#define SUPPORT_ERASE_SUSPEND                                        // automatically suspend an erase that is in progress when a write or a read is performed in a different sector (advised when FAT used in SPI Flash with block mnagement/wear-levelling)
+  //#define SUPPORT_ERASE_SUSPEND                                        // automatically suspend an erase that is in progress when a write or a read is performed in a different sector (advised when FAT used in SPI Flash with block management/wear-levelling)
 #elif defined SPI_FLASH_W25Q
     #define SPI_FLASH_W25Q128
   //#define SPI_FLASH_W25Q16

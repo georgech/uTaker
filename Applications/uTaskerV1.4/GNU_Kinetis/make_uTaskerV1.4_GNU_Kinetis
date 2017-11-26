@@ -143,7 +143,8 @@ SPI_FLASH_DEP = ../../../Hardware/Kinetis/spi_flash_kinetis_atmel.h \
                 ../../../Hardware/Kinetis/spi_flash_kinetis_stmicro.h \
 				../../../Hardware/Kinetis/spi_flash_kinetis_sst25.h \
 				../../../Hardware/Kinetis/spi_flash_w25q.h \
-				../../../Hardware/Kinetis/spi_flash_kinetis_s25fl1-k.h
+				../../../Hardware/Kinetis/spi_flash_kinetis_s25fl1-k.h \
+				../../../Hardware/Kinetis/spi_flash_kinetis_MX25L.h
 
 
 

@@ -2294,7 +2294,7 @@ extern unsigned long fnGetExtFlashSize(void)
     #define SPI_FLASH_DEVICE_COUNT         1
 #endif
 
-    #if !defined SPI_FLASH_ST && !defined SPI_FLASH_SST25 && !defined SPI_FLASH_W25Q && !defined SPI_FLASH_S25FL1_K // {14}
+    #if !defined SPI_FLASH_ST && !defined SPI_FLASH_SST25 && !defined SPI_FLASH_W25Q && !defined SPI_FLASH_S25FL1_K && !defined SPI_FLASH_MX25L // {14}
 
 static unsigned char ucAT45DBXXX[SPI_DATA_FLASH_SIZE];                   // all SPI FLASH devices in one buffer
 
@@ -3496,7 +3496,7 @@ extern unsigned char fnSimW25Qxx(int iSimType, unsigned char ucTxByte)
     }
     return 0xff;
 }
-    #elif defined SPI_FLASH_S25FL1_K
+    #elif defined SPI_FLASH_S25FL1_K || defined SPI_FLASH_MX25L
 
 static unsigned char ucS25FLI_K[SPI_DATA_FLASH_SIZE] = {0};
 
@@ -3514,14 +3514,26 @@ static unsigned char  ucStatus[SPI_FLASH_DEVICE_COUNT][3] = {0};
 static unsigned char  ucWord[SPI_FLASH_DEVICE_COUNT][2] = {0};
 
 #define MANUFACTURER_SPANSION 0x01
-#define MEMORY_TYPE           0x40
 #if defined SPI_FLASH_S25FL164K
+    #define MEMORY_TYPE       0x40
     #define MEMORY_CAPACITY   0x17
 #elif defined SPI_FLASH_S25FL132K
+    #define MEMORY_TYPE       0x40
     #define MEMORY_CAPACITY   0x16
 #else
+    #define MEMORY_TYPE       0x40
     #define MEMORY_CAPACITY   0x16                                       // S25FL116K
 #endif
+
+#define MANUFACTURER_MACRONIX 0xc2                                       // Macronix's manufacturer ID
+#define DEVICE_TYPE           0x20
+
+#if defined SPI_FLASH_MX25L12845E
+    #define MEMORY_TYPE       0x20
+    #define MEMORY_CAPACITY   0x18                                       // MX25L12845
+#endif
+
+
 
 extern void fnInitSPI_DataFlash(void)
 {
@@ -3626,7 +3638,7 @@ extern unsigned char fnSimS25FL1_K(int iSimType, unsigned char ucTxByte)
     }
         #else
         #define ulDeviceOffset 0
-    if (SPI_CS0_PORT & CS0_LINE) {                                       // CS0 line negated
+    if ((SPI_CS0_PORT & CS0_LINE) != 0) {                                // CS0 line negated
         fnActionS25FL1_K(0, 0);
         return 0xff;                                                     // chip not selected, return idle
     }
@@ -3705,7 +3717,11 @@ extern unsigned char fnSimS25FL1_K(int iSimType, unsigned char ucTxByte)
         case 0x9f:                                                       // read JEDEC ID
             iState[iSel]++;
             if (iState[iSel] == 1) {
+    #if defined SPI_FLASH_MX25L
+                return (MANUFACTURER_MACRONIX);                          // Macronix
+    #else
                 return (MANUFACTURER_SPANSION);                          // Spansion
+    #endif
             }
             else if (iState[iSel] == 2) {
                 return (MEMORY_TYPE);

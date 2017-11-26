@@ -849,9 +849,10 @@
     // Specify the SPI flash type used
     //
   //#define SPI_FLASH_W25Q                                               // use Winbond W25Q SPI flash rather than ATMEL
+  //#define SPI_FLASH_MX25L                                              // use Macronix SPI flash rather than ATMEL
   //#define SPI_FLASH_SST25                                              // use SST SPI SPI flash rather than ATMEL
   //#define SPI_FLASH_ST                                                 // use ST SPI flash rather than ATMEL
-    #define SPI_FLASH_S25FL1_K                                           // use Spansion SPI flash rather than ATMEL
+  //#define SPI_FLASH_S25FL1_K                                           // use Spansion SPI flash rather than ATMEL
   //#define SPI_DATA_FLASH                                               // FLASH type is data flash supporting sub-sectors (relevant for ST types)
     #if defined SPI_FLASH_ST
         #if defined SPI_DATA_FLASH
@@ -859,7 +860,7 @@
         #else
             #define FILE_GRANULARITY (SPI_FLASH_BLOCK_LENGTH)            // (65535 byte blocks) file granularity is equal to a multiple of the FLASH granularity (as defined by the device)
         #endif
-    #elif defined SPI_FLASH_S25FL1_K
+    #elif defined SPI_FLASH_S25FL1_K || defined SPI_FLASH_MX25L
         #define FILE_GRANULARITY (8 * SPI_FLASH_BLOCK_LENGTH)            // 32k file granularity
     #elif defined SPI_FLASH_SST25 || defined SPI_FLASH_W25Q
         #define FILE_GRANULARITY (SPI_FLASH_BLOCK_LENGTH)                // (4096 byte blocks) file granularity is equal to sub-sector FLASH granularity (as defined by the device)

@@ -350,6 +350,11 @@ extern unsigned char fnSPI_FlashExt_available(int iExtension);
     #define S25FL132K                 2
     #define S25FL164K                 3
 
+    #define MX25L1645                 1                                  // Macronix MX25L
+    #define MX25L3245                 2
+    #define MX25L6445                 3
+    #define MX25L12845                4
+
 
 typedef struct stSTORAGE_AREA_ENTRY                                      // {28}
 {

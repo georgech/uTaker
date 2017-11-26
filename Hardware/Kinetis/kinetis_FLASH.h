@@ -618,14 +618,14 @@ static int fnWriteInternalFlash(ACCESS_DETAILS *ptrAccessDetails, unsigned char 
 //
 static void fnReadSPI(ACCESS_DETAILS *ptrAccessDetails, unsigned char *ptrBuffer)
 {
-    #if !defined SPI_FLASH_SST25 && !defined SPI_FLASH_W25Q && !defined SPI_FLASH_S25FL1_K
+    #if !defined SPI_FLASH_SST25 && !defined SPI_FLASH_W25Q && !defined SPI_FLASH_S25FL1_K && !defined SPI_FLASH_MX25L
     unsigned short usPageNumber = (unsigned short)(ptrAccessDetails->ulOffset/SPI_FLASH_PAGE_LENGTH); // the page the address is in
     unsigned short usPageOffset = (unsigned short)(ptrAccessDetails->ulOffset - (usPageNumber * SPI_FLASH_PAGE_LENGTH)); // offset in the page
     #endif
 
     #if defined SPI_FLASH_ST
     fnSPI_command(READ_DATA_BYTES, (unsigned long)((unsigned long)(usPageNumber << 8) | (usPageOffset)), _EXTENDED_CS ptrBuffer, ptrAccessDetails->BlockLength);
-    #elif defined SPI_FLASH_SST25 || defined SPI_FLASH_W25Q || defined SPI_FLASH_S25FL1_K
+    #elif defined SPI_FLASH_SST25 || defined SPI_FLASH_W25Q || defined SPI_FLASH_S25FL1_K || defined SPI_FLASH_MX25L
     fnSPI_command(READ_DATA_BYTES, ptrAccessDetails->ulOffset, _EXTENDED_CS ptrBuffer, ptrAccessDetails->BlockLength);
     #else                                                                // ATMEL
         #if SPI_FLASH_PAGE_LENGTH >= 1024
@@ -676,14 +676,14 @@ static void fnWriteSPI(ACCESS_DETAILS *ptrAccessDetails, unsigned char *ptrBuffe
     #endif
     while (Length != 0) {
         usDataLength = (unsigned short)Length;
-    #if defined SPI_FLASH_ST || defined SPI_FLASH_W25Q || defined SPI_FLASH_S25FL1_K
+    #if defined SPI_FLASH_ST || defined SPI_FLASH_W25Q || defined SPI_FLASH_S25FL1_K || defined SPI_FLASH_MX25L
         if (usDataLength > (SPI_FLASH_PAGE_LENGTH - usPageOffset)) {
             usDataLength = (SPI_FLASH_PAGE_LENGTH - usPageOffset);
         }
       //#if !defined SPI_FLASH_S25FL1_K                                  // {200}
         fnSPI_command(WRITE_ENABLE, 0, _EXTENDED_CS 0, 0);               // write enable
       //#endif
-        #if defined SPI_FLASH_W25Q || defined SPI_FLASH_S25FL1_K
+        #if defined SPI_FLASH_W25Q || defined SPI_FLASH_S25FL1_K || defined SPI_FLASH_MX25L
         fnSPI_command(PAGE_PROG, ((usPageNumber * SPI_FLASH_PAGE_LENGTH)) | usPageOffset, _EXTENDED_CS ptrBuffer, usDataLength); // copy new content
         #else
         fnSPI_command(PAGE_PROG, ((usPageNumber << 8) | usPageOffset), _EXTENDED_CS ptrBuffer, usDataLength); // copy new content
@@ -746,7 +746,7 @@ static MAX_FILE_LENGTH fnDeleteSPI(ACCESS_DETAILS *ptrAccessDetails)
     #if !defined SPI_FLASH_ST
     unsigned char  ucCommand;
     #endif
-    #if !defined SPI_FLASH_SST25 && !defined SPI_FLASH_W25Q && !defined SPI_FLASH_S25FL1_K
+    #if !defined SPI_FLASH_SST25 && !defined SPI_FLASH_W25Q && !defined SPI_FLASH_S25FL1_K && !defined SPI_FLASH_MX25L
     unsigned short usPageNumber = (unsigned short)(ptrAccessDetails->ulOffset/SPI_FLASH_PAGE_LENGTH); // the page the address is in
     #endif
     #if defined SPI_FLASH_ST
@@ -758,13 +758,13 @@ static MAX_FILE_LENGTH fnDeleteSPI(ACCESS_DETAILS *ptrAccessDetails)
     fnSPI_command(SECTOR_ERASE, ((unsigned long)usPageNumber << 8), _EXTENDED_CS 0, 0); // delete appropriate sector
     BlockLength = SPI_FLASH_SECTOR_LENGTH;
         #endif
-    #elif defined SPI_FLASH_SST25 || defined SPI_FLASH_W25Q || defined SPI_FLASH_S25FL1_K
+    #elif defined SPI_FLASH_SST25 || defined SPI_FLASH_W25Q || defined SPI_FLASH_S25FL1_K || defined SPI_FLASH_MX25L
       //#if !defined SPI_FLASH_S25FL1_K                                  // {200}
     fnSPI_command(WRITE_ENABLE, 0, _EXTENDED_CS 0, 0);                   // command write enable to allow byte programming
       //#endif
         #if !defined SST25_A_VERSION
     if ((ptrAccessDetails->BlockLength >= (64 * 1024)) && ((ptrAccessDetails->ulOffset & ((64 * 1024) - 1)) == 0)) { // if a complete 64k block can be deleted
-            #if defined SPI_FLASH_S25FL1_K
+            #if defined SPI_FLASH_S25FL1_K || defined SPI_FLASH_MX25L
         ucCommand = BLOCK_ERASE;                                         // delete block of 64k
             #else
         ucCommand = SECTOR_ERASE;                                        // delete block of 64k
@@ -773,7 +773,7 @@ static MAX_FILE_LENGTH fnDeleteSPI(ACCESS_DETAILS *ptrAccessDetails)
     }
     else 
         #endif
-        #if defined SPI_FLASH_S25FL1_K
+        #if defined SPI_FLASH_S25FL1_K || defined SPI_FLASH_MX25L
     {
         ucCommand = SECTOR_ERASE;                                        // delete smallest sector of 4k
         BlockLength = SPI_FLASH_SECTOR_LENGTH;
