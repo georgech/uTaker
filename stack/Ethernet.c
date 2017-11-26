@@ -410,7 +410,7 @@ extern int fnHandleEthernetFrame(ETHERNET_FRAME *ptr_rx_frame, QUEUE_HANDLE inte
                 ptr_rx_frame->ucIPV4_Protocol = ptr_rx_frame->ptEth->ucData[IPV4_PROTOCOL_OFFSET]; // IPv4 protocol
     #endif
     #if (IP_NETWORK_COUNT > 1) && (IP_INTERFACE_COUNT < 2)               // {20}
-                while (1) {
+                FOREVER_LOOP {
     #endif
                     fnHandleIP_protocol(ptr_rx_frame->ptEth->ucData[IPV4_PROTOCOL_OFFSET], ptr_rx_frame); // {10} handle the next protocol layer (above IPv4)
     #if (IP_NETWORK_COUNT > 1) && (IP_INTERFACE_COUNT < 2)               // {20} when the reception is to be handled on multiple networks (broadcasts/matching multicasts)

@@ -356,7 +356,7 @@ static int _fnSimSD_findSector(unsigned long sectorNum, unsigned char ucLun, uns
         }
         #endif
         _lseeki64(iFile, 512, SEEK_SET);                                 // set to first numbered sector
-        while (1) {
+        while ((int)1 != (int)0) {
             int pos = 0;
             int bytesRead = _read(iFile, buffer, sizeof(buffer));
             if (bytesRead == 0) {
@@ -456,7 +456,7 @@ static void fnExtractSector(unsigned long ulSectorNumber, unsigned char *ptrBuff
     else {
         unsigned long ulSectorFromFile;
         _lseek(iSD_card_file, 512, SEEK_SET);                            // set to first numbered sector
-        while (1) {
+        while ((int)1 != (int)0) {
             if (_read(iSD_card_file, &ulSectorFromFile, sizeof(unsigned long)) < sizeof(unsigned long)) { // read the sector number
                 memset(ptrBuffer, 0, 512);                               // empty sector
                 return;
@@ -483,7 +483,7 @@ static void fnWriteSDSector(unsigned long ulSectorNumber, unsigned char ucLUN, u
     else {
         unsigned long ulSectorFromFile;
         _lseek(iSD_card_file, 512, SEEK_SET);                            // set to first numbered sector
-        while (1) {
+        while ((int)1 != (int)0) {
             if (_read(iSD_card_file, &ulSectorFromFile, sizeof(unsigned long)) < sizeof(unsigned long)) { // read the sector number
                 int iLength = 512;
                 int iFound = 0;

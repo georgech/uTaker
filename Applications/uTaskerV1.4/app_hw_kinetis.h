@@ -8225,7 +8225,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
             #define SDCARD_DETECT_PORT    PORTC
             #define PRIORITY_SDCARD_DETECT_PORT_INT     PRIORITY_PORT_C_INT
         #endif
-    #elif defined FRDM_KL27Z || defined FRDM_KL28Z
+    #elif defined FRDM_KL27Z
         // Configure to suit special connection SPI mode at between 100k and 400k (SPI0)
         //
         #define SPI_CS1_0              PORTC_BIT4
@@ -8296,6 +8296,41 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define POWER_UP_SD_CARD()                                       // apply power to the SD card if appropriate
         #define POWER_DOWN_SD_CARD()
         #define GET_SDCARD_WP_STATE()  0                                 // never write protect
+    #elif defined FRDM_KL28Z
+        // Configure to suit SD card SPI mode at between 100k and 400k - use LPSPI0
+        //
+        #define SPI_CS1_0                  PORTD_BIT0
+        #define INITIALISE_SPI_SD_INTERFACE() POWER_UP_ATOMIC(6, SPI0); \
+        LPSPI0_CR = (LPSPI_CR_MEN | LPSPI_CR_RST | LPSPI_CR_DBGEN); \
+        _CONFIG_PERIPHERAL(D, 1, PD_1_LPSPI0_SCK); _CONFIG_PERIPHERAL(D, 2, (PD_2_LPSPI0_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); _CONFIG_PERIPHERAL(D, 3, (PD_3_LPSPI0_SIN | PORT_PS_UP_ENABLE)); \
+        _CONFIG_DRIVE_PORT_OUTPUT_VALUE(D, SPI_CS1_0, SPI_CS1_0, (PORT_SRE_FAST | PORT_DSE_HIGH)); \
+        LPSPI0_CR = (LPSPI_CR_MEN | LPSPI_CR_DBGEN); \
+        LPSPI0_CFGR1 = LPSPI_CFGR1_MASTER; \
+        LPSPI0_TCR = (LPSPI_TCR_CPHA | LPSPI_TCR_CPOL | LPSPI_TCR_PRESCALE_128 | 8)
+
+        #define ENABLE_SPI_SD_OPERATION()
+        #define SET_SD_CARD_MODE()
+
+        // Set maximum speed
+        //
+        #define SET_SPI_SD_INTERFACE_FULL_SPEED()  LPSPI0_TCR = (LPSPI_TCR_CPHA | LPSPI_TCR_CPOL | LPSPI_TCR_PRESCALE_1 | 8)
+        #if defined _WINDOWS
+            #define WRITE_SPI_CMD(byte)    LPSPI0_TDR = (byte); LPSPI0_RDR = _fnSimSD_write((unsigned char)byte)
+            #define WAIT_TRANSMISSON_END() while ((LPSPI0_RSR & LPSPI_RSR_EMPTY) != 0) { LPSPI0_RSR &= ~LPSPI_RSR_EMPTY; }
+            #define READ_SPI_DATA()        (unsigned char)LPSPI0_RDR
+        #else
+            #define WRITE_SPI_CMD(byte)    LPSPI0_TDR = (byte)
+            #define WAIT_TRANSMISSON_END() wwhile ((LPSPI0_RSR & LPSPI_RSR_EMPTY) != 0) { }
+            #define READ_SPI_DATA()        (unsigned char)LPSPI0_RDR
+        #endif
+        #define SET_SD_DI_CS_HIGH()  _SETBITS(D, SPI_CS1_0)              // force DI and CS lines high ready for the initialisation sequence
+        #define SET_SD_CS_LOW()      _CLEARBITS(D, SPI_CS1_0)            // assert the CS line of the SD card to be read
+        #define SET_SD_CS_HIGH()     _SETBITS(D, SPI_CS1_0)              // negate the CS line of the SD card to be read
+        #define POWER_UP_SD_CARD()                                       // apply power to the SD card if appropriate
+
+        #define POWER_DOWN_SD_CARD()                                     // remove power from SD card interface
+        #define GET_SDCARD_WP_STATE() 0                                  // no write protect switch available
+        #define SDCARD_DETECTION()    0                                  // card detection input not present
     #elif defined FRDM_KL25Z && defined FRDM_FXS_MULTI_B
         // Configure to suit FRDM-FXS-MULTI-B SPI mode at between 100k and 400k (SPI0)
         // - SPI0_CS   PTB-2 (J10-6)

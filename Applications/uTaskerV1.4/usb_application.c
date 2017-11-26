@@ -2627,7 +2627,7 @@ static QUEUE_TRANSFER fnSubmitRNDIS(QUEUE_HANDLE rndis_handle, unsigned char *pt
         if (++iTimeout >= MAX_RNDIS_WAIT_COUNT) {                        // if there was no queue space we repeat
             return 0;                                                    // timeout
         }
-    } while (1);
+    } FOREVER_LOOP;
     return (fnWrite(rndis_handle, ptrRNDIS_message, usLength));          // write to the queue
 }
 
@@ -3221,7 +3221,7 @@ static unsigned char fnDisplayDeviceInfo(unsigned long *ptrDeviceType)
     #endif
     #if defined USB_CDC_HOST                                             // {37}
     ptr_interface_desc = (USB_INTERFACE_DESCRIPTOR *)(ptr_config_desc + 1);
-    while ((int)1 != (int)0) {
+    FOREVER_LOOP {
         if (ptr_interface_desc->bDescriptorType == DESCRIPTOR_TYPE_INTERFACE_ASSOCIATION) { // handle an optional interface association descriptor
             USB_INTERFACE_ASSOCIATION_DESCRIPTOR *ptr_interface_association_desc = (USB_INTERFACE_ASSOCIATION_DESCRIPTOR *)ptr_interface_desc;
             fnDebugMsg("Interface count = ");
@@ -3270,7 +3270,7 @@ static unsigned char fnDisplayDeviceInfo(unsigned long *ptrDeviceType)
                 fnDebugHex(ptr_interface_desc->bInterfaceClass, (sizeof(ptr_interface_desc->bInterfaceClass) | WITH_LEADIN | WITH_SPACE | WITH_CR_LF));
                 // Discard unsupported class
                 //
-                while ((int)1 != (int)0) {
+                FOREVER_LOOP {
                     USB_CDC_FUNCTIONAL_DESCRIPTOR_UNION *ptr_functional_des_union = (USB_CDC_FUNCTIONAL_DESCRIPTOR_UNION *)ptr_interface_desc;
                     ptr_interface_desc = (USB_INTERFACE_DESCRIPTOR *)(((unsigned char *)ptr_functional_des_union) + ptr_functional_des_union->bLength);
                     if ((ptr_interface_desc->bDescriptorType == DESCRIPTOR_TYPE_INTERFACE) || (ptr_interface_desc->bDescriptorType == DESCRIPTOR_TYPE_INTERFACE_ASSOCIATION)) {
@@ -3459,14 +3459,14 @@ static int utReadMSD(unsigned char *ptrBuffer, unsigned long ulSectorNumber)
     fnSendMSD_host(UFI_READ_10);                                         // request the read (and enable IN polling for the read data)
     fnDriver(USBPortID_msd_host, (RX_ON), 0);                            // enable IN polling so that we can receive data response
     iWait = 0;
-    while (1) {                                                          // wait until the data has been received
+    FOREVER_LOOP {                                                       // wait until the data has been received
         Length = fnRead(USBPortID_msd_host, (ptrBuffer + (512 - byte_length)), byte_length); // read received data
         if (Length != 0) {                                               // all or part of the requested data is ready
             byte_length -= Length;                                       // the remaining length
             fnDriver(USBPortID_msd_host, (RX_ON), 0);                    // enable IN polling so that we can receive further data, or the status stage
             iWait = 0;
             if (byte_length == 0) {                                      // data has been completely received so we are waiting for the status stage
-                while (1) {                                              // wait until the status stage has been received
+                FOREVER_LOOP {                                           // wait until the status stage has been received
                     if (fnRead(USBPortID_msd_host, (unsigned char *)&status_stage, sizeof(status_stage)) != 0) { // read status stage
                         if ((status_stage.dCBWSignatureL == USBS_SIGNATURE) && (status_stage.dCBWTagL == ulTag)) {
                           //fnDebugMsg(" OK\r\n");
@@ -3552,7 +3552,7 @@ static int utWriteMSD(unsigned char *ptrBuffer, unsigned long ulSectorNumber)
     }
     iWait = 0;
     fnDriver(USBPortID_msd_host, (RX_ON), 0);                            // enable IN polling so that we can receive data/status response (this will block until the trnsmission has completed)
-    while (1) {                                                          // wait until the status stage has been received
+    FOREVER_LOOP {                                                       // wait until the status stage has been received
         if (fnRead(USBPortID_msd_host, (unsigned char *)&status_stage, sizeof(status_stage)) != 0) { // read status stage
             if ((status_stage.dCBWSignatureL == USBS_SIGNATURE) && (status_stage.dCBWTagL == ulTag)) {
               //fnDebugMsg(" OK\r\n");

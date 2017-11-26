@@ -104,7 +104,7 @@ static void prvSetupHardware(void)
 //
 static void blinky(void *par)
 {
-    while ((int)1 != (int)0) {                                           // forever loop
+    FOREVER_LOOP {
         fnToggleRedLED();
         vTaskDelay(750/portTICK_RATE_MS);                                // wait for 750ms in order to flash the LED at 1Hz
     }
@@ -120,7 +120,7 @@ static void uart_task(void *pvParameters)
     vTaskDelay(500/portTICK_RATE_MS);                                    // wait for 500ms in order to allow uTasker to configure UART interfaces
     uart_handle = fnGetUART_Handle();                                    // get the UART handle
     fnDebugMsg("FreeRTOS Output\r\n");                                   // test a UART transmission
-    while ((int)1 != (int)0) {                                           // forever loop
+    FOREVER_LOOP {
         length = fnRead(uart_handle, &dataByte, 1);                      // read a byte from the DMA input buffer (returns immediately)
         if (length != 0) {                                               // if something is available
             fnDebugMsg("Echo:");                                         // echo it back

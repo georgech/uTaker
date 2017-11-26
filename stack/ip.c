@@ -941,7 +941,7 @@ extern signed short fnSendIPv4(unsigned char *prIP_to, unsigned char ucProtType,
         usFragmentOffset += (usLen/8);                                   // next fragment offset
         usLen = usRemainder;
         usIP_identification_field--;
-    } while (1);                                                         // repeat sending datagram fragments
+    } FOREVER_LOOP;                                                      // repeat sending datagram fragments
     return iReturn;
     #else
     fnWrite(_ETHERNET_HANDLE, dat, usLen);                               // add the pay load

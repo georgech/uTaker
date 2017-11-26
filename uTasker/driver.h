@@ -93,6 +93,7 @@
     17.01.2017 Add DSP FFT defines                                       {74}
     03.05.2017 Add UART_RX_MODULO and UART_TX_MODULO flags               {75}
     09.05.2017 Add PAUSE_TX                                              {76}
+    26.11.2017 Added FOREVER_LOOP                                        {77}
 
 */
 
@@ -103,6 +104,8 @@
 /* =================================================================== */
 /*                           global defines                            */
 /* =================================================================== */
+
+#define FOREVER_LOOP      while ((int)1 != (int)0)                       // {77}
 
 // Queues and physical queues supported
 //

@@ -691,7 +691,24 @@ static void fnSetDevice(unsigned long *port_inits)
     FTFL_FPROT2 = (unsigned char)(KINETIS_FLASH_CONFIGURATION_PROGRAM_PROTECTION >> 8);
     FTFL_FPROT3 = (unsigned char)(KINETIS_FLASH_CONFIGURATION_PROGRAM_PROTECTION);
 #endif
-#if defined DSPI_SPI
+#if defined LPSPI_SPI
+    LPSPI0_VERID = 0x01000004;
+    LPSPI0_SR = 0x00000001;
+    LPSPI0_TCR = 0x0000001f;
+    LPSPI0_RSR = 0x00000002;
+    #if SPI_AVAILABLE > 1
+    LPSPI1_VERID = 0x01000004;
+    LPSPI1_SR = 0x00000001;
+    LPSPI1_TCR = 0x0000001f;
+    LPSPI1_RSR = 0x00000002;
+    #endif
+    #if SPI_AVAILABLE > 2
+    LPSPI2_VERID = 0x01000004;
+    LPSPI2_SR = 0x00000001;
+    LPSPI2_TCR = 0x0000001f;
+    LPSPI2_RSR = 0x00000002;
+    #endif
+#elif defined DSPI_SPI
     SPI0_MCR    = (SPI_MCR_DOZE | SPI_MCR_HALT);                         // DSPI
     SPI0_CTAR0  = 0x78000000;
     SPI0_CTAR1  = 0x78000000;
@@ -7052,7 +7069,7 @@ extern void fnCheckUSBOut(int iDevice, int iEndpoint)
             iMasks |= USB_INT;
             return;
         }
-    } while (1);
+    } FOREVER_LOOP;
 }
 
 // Request an endpoint buffer size

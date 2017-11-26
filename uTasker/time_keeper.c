@@ -596,7 +596,7 @@ extern void fnConvertSecondsTime(RTC_SETUP *ptr_rtc_setup, unsigned long ulSecon
     if (ptr_rtc_setup == 0) {
         ulLocalUTC = ulSecondsTime;                                      // set the local seconds count
     }
-    while (1) {
+    FOREVER_LOOP {
         iLeapYear = LEAP_YEAR(_usYear);
         if (iLeapYear != 0) {                                            // if present year is a leap year
             if (ulSecondsTime > LEAP_YEAR_SECONDS) {
@@ -617,7 +617,7 @@ extern void fnConvertSecondsTime(RTC_SETUP *ptr_rtc_setup, unsigned long ulSecon
 
         // In final year (remaining seconds value is in the year)
         //
-        while (1) {
+        FOREVER_LOOP {
             if ((iLeapYear != 0) && (_ucMonthOfYear == 1)) {             // February of a leap year
                 if (ulSecondsTime > (29 * 24 * 60 * 60)) {
                     ulSecondsTime -= (29 * 24 * 60 * 60);
@@ -638,7 +638,7 @@ extern void fnConvertSecondsTime(RTC_SETUP *ptr_rtc_setup, unsigned long ulSecon
             // In final month (remaining seconds value is in the month)
             //
             _ucMonthOfYear++;                                            // change from index to month (1..12)
-            while (1) {
+            FOREVER_LOOP {
                 if (ulSecondsTime > (60 * 60 * 24)) {                    // seconds in a day
                     ulSecondsTime -= (60 * 60 * 24);                     // for each day in final month
                     _ucDayOfMonth++;
@@ -648,7 +648,7 @@ extern void fnConvertSecondsTime(RTC_SETUP *ptr_rtc_setup, unsigned long ulSecon
 
                 // In final day (remaining seconds value is in the day)
                 //
-                while (1) {
+                FOREVER_LOOP {
                     if (ulSecondsTime >= (60 * 60)) {
                         ulSecondsTime -= (60 * 60);                      // for each hour in final day
                         _ucHours++;
@@ -657,7 +657,7 @@ extern void fnConvertSecondsTime(RTC_SETUP *ptr_rtc_setup, unsigned long ulSecon
 
                     // In final hour (remaining seconds value in the hour)
                     //
-                    while (1) {
+                    FOREVER_LOOP {
                         if (ulSecondsTime >= (60)) {                     // {100a} changed to >= to avoid 60 seconds !!
                             ulSecondsTime -= (60);                       // for each minute in final hour
                             _ucMinutes++;

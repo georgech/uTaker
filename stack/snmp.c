@@ -621,7 +621,7 @@ static unsigned char *fnAddASN1_identifier_string(const CHAR *cPtrString, unsign
     ptrStart = ++ucData;                                                 // start of the object identifier
     *ucData++ = 0x2b;                                                    // 1.3. (iso.org.)
 
-    while (1) {                                                          // the object identifier string assume leading 1.3. (which is not present)
+    FOREVER_LOOP {                                                       // the object identifier string assume leading 1.3. (which is not present)
         if (*cPtrString < '0') {                                         // 0..9 and separating dots are assumed < '0' assumes a dot has been encountered
             ucData = fnInsertOID_value(ucData, ulValue, iBufferSpace);   // {4}
             if (ucData == 0) {
@@ -962,7 +962,7 @@ static int fnSendTrap(unsigned char ucTrap, unsigned char ucSpecificCode, int iM
 
     ucVariableBindingRef = 0;
 
-    while (1) {
+    FOREVER_LOOP {
 #if defined SUPPORT_SNMPV2C
         if (ucTrapVersion == SNMPV2) {                                   // always return variable bindings sysUpTime and snmpTrapOID in SNMPv2-Trap-PDU
             if (ucVariableBindingRef == 0) {

@@ -1067,7 +1067,33 @@ typedef struct stKINETIS_IRQ                                             // {24}
 } KINETIS_IRQ;
 #endif
 
-#if !defined DSPI_SPI
+#if defined LPSPI_SPI
+typedef struct stKINETIS_LPSPI
+{
+    volatile unsigned long LPSPI_VERID;
+    volatile unsigned long LPSPI_PARAM;
+    unsigned long ulRes0[2];
+    volatile unsigned long LPSPI_CR;
+    volatile unsigned long LPSPI_SR;
+    unsigned long LPSPI_IER;
+    unsigned long LPSPI_DER;
+    unsigned long LPSPI_CFGR0;
+    unsigned long LPSPI_CFGR1;
+    unsigned long ulRes1[2];
+    unsigned long LPSPI_DMR0;
+    unsigned long LPSPI_DMR1;
+    unsigned long ulRes2[2];
+    unsigned long LPSPI_CCR;
+    unsigned long ulRes3[5];
+    unsigned long LPSPI_FCR;
+    volatile unsigned long LPSPI_FSR;
+    unsigned long LPSPI_TCR;
+    unsigned long LPSPI_TDR;
+    unsigned long ulRes4[2];
+    unsigned long LPSPI_RSR;
+    unsigned long LPSPI_RDR;
+} KINETIS_LPSPI;
+#elif !defined DSPI_SPI
 typedef struct stKINETIS_SPI
 {
     #if defined KINETIS_KL17 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL43 || defined KINETIS_KL46 // supporting 16 bit words
@@ -3510,7 +3536,9 @@ typedef struct stKINETIS_PERIPH
 #if defined KINETIS_KE
     KINETIS_IRQ        IRQ;                                              // {24}
 #endif
-#if defined DSPI_SPI
+#if defined LPSPI_SPI
+    KINETIS_LPSPI      LPSPI[SPI_AVAILABLE];
+#elif defined DSPI_SPI
     KINETIS_DSPI       DSPI[SPI_AVAILABLE];
 #else
     KINETIS_SPI        SPI[SPI_AVAILABLE];

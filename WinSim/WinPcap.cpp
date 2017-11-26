@@ -158,7 +158,7 @@ static void ReadDevice(ThrArgs *hArgs)
     char *ptr[3];
     int res;
 
-    while (1) {
+    while ((int)1 != (int)0) {
         status = WaitForSingleObject(hTermEvent,0);
         if (status == WAIT_OBJECT_0) {
             ResetEvent(hTermEvent);

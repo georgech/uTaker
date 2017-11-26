@@ -1165,7 +1165,7 @@ static int fnWriteRect(GLCD_RECT_BLINK *rect)                            // {1}
                 break;
             }
             usX += iHorizontalDirection;
-        } while (1);
+        } FOREVER_LOOP;
         usY_Start += iNextY;
     }  while (usY_Start <= usY_End);
 #else                                                                    // Toshiba controller
@@ -1229,7 +1229,7 @@ static int fnWriteRect(GLCD_RECT_BLINK *rect)                            // {1}
                 break;
             }
             usX += iNextX;
-        } while (1);
+        } FOREVER_LOOP;
     }  while (usY_Start++ < usY_End);
 #endif
     if ((rect->ucMode & REDRAW) != 0) {

@@ -5027,7 +5027,7 @@ static void fnUDP_socket(PVOID pvoid)
     addr.sin_addr.S_un.S_addr = ADDR_ANY;
     rc = bind(remote_simulation_socket_server,(SOCKADDR *)&addr, sizeof(SOCKADDR_IN));
 
-    while (1) {
+    while ((int)1 != (int)0) {
         rc = recv(remote_simulation_socket_server, (char *)ucBuffer, sizeof(ucBuffer), 0); // wait until data is received
         switch (ucBuffer[0]) {
     #if defined nRF24L01_INTERFACE

@@ -1294,7 +1294,9 @@ typedef struct stRESET_VECTOR
 
 // SPI configuration
 //
-#if defined KINETIS_KL || defined KINETIS_KE                             // KL and KE usually have SPI instead of DSPI
+#if defined KINETIS_KL28
+    #define LPSPI_SPI                                                    // low power SPI
+#elif defined KINETIS_KL || defined KINETIS_KE                           // KL and KE usually have SPI instead of DSPI
     #if defined KINETIS_KL82
         #define DSPI_SPI
     #else
@@ -3243,7 +3245,11 @@ typedef struct stVECTOR_TABLE
     #if defined KINETIS_KE
         #define IRQ_BLOCK                      ((unsigned char *)(&kinetis.IRQ)) // external IRQ
     #endif
-    #if !defined DSPI_SPI
+    #if defined LPSPI_SPI
+        #define LPSPI0_BLOCK                   ((unsigned char *)(&kinetis.LPSPI[0])) // LPSPI0
+        #define LPSPI1_BLOCK                   ((unsigned char *)(&kinetis.LPSPI[1])) // LPSPI1
+        #define LPSPI2_BLOCK                   ((unsigned char *)(&kinetis.LPSPI[2])) // LPSPI2
+    #elif !defined DSPI_SPI
         #define SPI0_BLOCK                     ((unsigned char *)(&kinetis.SPI[0])) // SPI0
         #define SPI1_BLOCK                     ((unsigned char *)(&kinetis.SPI[1])) // SPI1
     #else
@@ -3530,7 +3536,11 @@ typedef struct stVECTOR_TABLE
             #define WDOG32_BLOCK               0x40076000                // WDOG32
         #endif
     #endif
-    #if !defined DSPI_SPI
+    #if defined LPSPI_SPI
+        #define LPSPI0_BLOCK                   0x400bc000                // LPSPI0
+        #define LPSPI1_BLOCK                   0x400bd000                // LPSPI1
+        #define LPSPI2_BLOCK                   0x4003e000                // LPSPI2
+    #elif !defined DSPI_SPI
         #define SPI0_BLOCK                     0x40076000                // SPI0
         #define SPI1_BLOCK                     0x40077000                // SPI1
     #else
@@ -5946,9 +5956,119 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
     } _KINETIS_I2S_SAI;
 #endif
 
-#if !defined DSPI_SPI                                                    // SPI instead of DSPI
+// SPI
+//
+#if defined LPSPI_SPI
+    #define LPSPI0_VERID        *(volatile unsigned long *)(LPSPI0_BLOCK + 0x00) // LPSPI0 version ID register (read-only)
+    #define LPSPI0_PARAM        *(volatile unsigned long *)(LPSPI0_BLOCK + 0x04) // LPSPI0 parameter register (read-only)
+    #define LPSPI0_CR           *(volatile unsigned long *)(LPSPI0_BLOCK + 0x10) // LPSPI0 control register
+        #define LPSPI_CR_MEN    0x00000001                               // module enable
+        #define LPSPI_CR_RST    0x00000002                               // software reset - remains set until cleared by software
+        #define LPSPI_CR_DOZEN  0x00000004                               // doze mode enable
+        #define LPSPI_CR_DBGEN  0x00000008                               // debug enable
+        #define LPSPI_CR_RTF    0x00000100                               // receive FIFO reset - write '1' to reset - reads always '0'
+        #define LPSPI_CR_RRF    0x00000200                               // transmit FIFO reset - write '1' to reset - reads always '0'
+    #define LPSPI0_SR           *(volatile unsigned long *)(LPSPI0_BLOCK + 0x14) // LPSPI0 status register
+        #define LPSPI_SR_TDF    0x00000001                               // transmit data is requested (read-only)
+        #define LPSPI_SR_RDF    0x00000002                               // receive data is ready (read-only)
+        #define LPSPI_SR_WCF    0x00000100                               // word complete flag (write '1' to clear)
+        #define LPSPI_SR_FCF    0x00000200                               // frame complete flag (write '1' to clear)
+        #define LPSPI_SR_TCF    0x00000400                               // transmit complete flag (write '1' to clear)
+        #define LPSPI_SR_TEF    0x00000800                               // transmit error flag (write '1' to clear)
+        #define LPSPI_SR_REF    0x00001000                               // receive error flag (write '1' to clear)
+        #define LPSPI_SR_DMF    0x00002000                               // data match flag (write '1' to clear)
+        #define LPSPI_SR_MBF    0x01000000                               // module busy flag (read-only)
+    #define LPSPI0_IER          *(unsigned long *)(LPSPI0_BLOCK + 0x18)  // LPSPI0 interrupt enable register
+    #define LPSPI0_DER          *(unsigned long *)(LPSPI0_BLOCK + 0x1c)  // LPSPI0 DMA enable register
+    #define LPSPI0_CFGR0        *(unsigned long *)(LPSPI0_BLOCK + 0x20)  // LPSPI0 configuration register 0
+        #define LPSPI_CFGR0_HREN    0x00000001                           // host request enable
+        #define LPSPI_CFGR0_HRPOL   0x00000002                           // host request polarity
+        #define LPSPI_CFGR0_HRSEL   0x00000004                           // host request select
+        #define LPSPI_CFGR0_CIRFIFO 0x00000100                           // circular FIFO enable
+        #define LPSPI_CFGR0_RDMO    0x00000200                           // receive data match only
+    #define LPSPI0_CFGR1        *(unsigned long *)(LPSPI0_BLOCK + 0x24)  // LPSPI0 configuration register 1 (should only be written when LPSPI is disabled)
+        #define LPSPI_CFGR1_MASTER  0x00000001                           // master mode
+        #define LPSPI_CFGR1_SAMPLE  0x00000002                           // input sampled of delayed SCK (only valid in master mode)
+        #define LPSPI_CFGR1_AUTOPCS 0x00000004                           // automatic PCS
+        #define LPSPI_CFGR1_NOSTALL 0x00000008                           // no stall
+        #define LPSPI_CFGR1_PCSPOL  0x00000f00                           // PCS is acive high
+        #define LPSPI_CFGR1_MATCFG  0x00070000                           // match configuration
+        #define LPSPI_CFGR1_PINCFG  0x03000000                           // pin configuration
+        #define LPSPI_CFGR1_OUTCFG  0x04000000                           // output configuration
+        #define LPSPI_CFGR1_PCSCFG  0x08000000                           // peripheral chip select configuration - PCS[3:2]
+    #define LPSPI0_DMR0         *(unsigned long *)(LPSPI0_BLOCK + 0x30)  // LPSPI0 data match register 0
+    #define LPSPI0_DMR1         *(unsigned long *)(LPSPI0_BLOCK + 0x34)  // LPSPI0 data match register 1
+    #define LPSPI0_CCR          *(unsigned long *)(LPSPI0_BLOCK + 0x40)  // LPSPI0 clock configuration register
+        #define LPSPI_CCR_SCKDIV 0x000000ff                              // SCK to PCS delay
+        #define LPSPI_CCR_DBT    0x0000ff00                              // PCS to SCK delay
+        #define LPSPI_CCR_PCSSCK 0x00ff0000                              // delay between transfers
+        #define LPSPI_CCR_SCKPCS 0xff000000                              // SCK divider
+    #define LPSPI0_FCR          *(unsigned long *)(LPSPI0_BLOCK + 0x58)  // LPSPI0 FIFO control register
+    #define LPSPI0_FSR          *(volatile unsigned long *)(LPSPI0_BLOCK + 0x5c) // LPSPI0 FIFO status register
+    #define LPSPI0_TCR          *(unsigned long *)(LPSPI0_BLOCK + 0x60)  // LPSPI0 transmit command register
+        #define LPSPI_TCR_FRAMESZ  0x00000fff                            // frame size
+        #define LPSPI_TCR_WIDTH    0x00030000                            // transfer mask
+        #define LPSPI_TCR_TXMSK    0x00040000                            // transmit data mask
+        #define LPSPI_TCR_RXMSK    0x00080000                            // receive data mask
+        #define LPSPI_TCR_CONCT    0x00100000                            // continuing command
+        #define LPSPI_TCR_CONT     0x00200000                            // continuous mode
+        #define LPSPI_TCR_BYSW     0x00400000                            // byte swap
+        #define LPSPI_TCR_LSBF     0x00800000                            // LSB first
+        #define LPSPI_TCR_PCS      0x03000000                            // peripheral chip select
+        #define LPSPI_TCR_PRESCALE_1   0x00000000                        // clock prescaler - divide by 1
+        #define LPSPI_TCR_PRESCALE_2   0x08000000                        // clock prescaler - divide by 2
+        #define LPSPI_TCR_PRESCALE_4   0x10000000                        // clock prescaler - divide by 4
+        #define LPSPI_TCR_PRESCALE_8   0x18000000                        // clock prescaler - divide by 8
+        #define LPSPI_TCR_PRESCALE_16  0x20000000                        // clock prescaler - divide by 16
+        #define LPSPI_TCR_PRESCALE_32  0x28000000                        // clock prescaler - divide by 32
+        #define LPSPI_TCR_PRESCALE_64  0x30000000                        // clock prescaler - divide by 64
+        #define LPSPI_TCR_PRESCALE_128 0x38000000                        // clock prescaler - divide by 128
+        #define LPSPI_TCR_CPHA     0x40000000                            // clock phase
+        #define LPSPI_TCR_CPOL     0x80000000                            // clock polarity
+    #define LPSPI0_TDR          *(volatile unsigned long *)(LPSPI0_BLOCK + 0x64) // LPSPI0 transmit data register (write-only)
+    #define LPSPI0_RSR          *(volatile unsigned long *)(LPSPI0_BLOCK + 0x70) // LPSPI0 receive status register (read-only)
+        #define LPSPI_RSR_SOF   0x00000001                               // start of frame
+        #define LPSPI_RSR_EMPTY 0x00000001                               // receive FIFO is empty
+    #define LPSPI0_RDR          *(volatile unsigned long *)(LPSPI0_BLOCK + 0x74) // LPSPI0 receive data register (read-only)
+
+    #define LPSPI1_VERID        *(volatile unsigned long *)(LPSPI1_BLOCK + 0x00) // LPSPI1 version ID register (read-only)
+    #define LPSPI1_PARAM        *(volatile unsigned long *)(LPSPI1_BLOCK + 0x04) // LPSPI1 parameter register (read-only)
+    #define LPSPI1_CR           *(volatile unsigned long *)(LPSPI1_BLOCK + 0x10) // LPSPI1 control register
+    #define LPSPI1_SR           *(volatile unsigned long *)(LPSPI1_BLOCK + 0x14) // LPSPI1 status register
+    #define LPSPI1_IER          *(unsigned long *)(LPSPI1_BLOCK + 0x18)  // LPSPI1 interrupt enable register
+    #define LPSPI1_DER          *(unsigned long *)(LPSPI1_BLOCK + 0x1c)  // LPSPI1 DMA enable register
+    #define LPSPI1_CFGR0        *(unsigned long *)(LPSPI1_BLOCK + 0x20)  // LPSPI1 configuration register 0
+    #define LPSPI1_CFGR1        *(unsigned long *)(LPSPI1_BLOCK + 0x24)  // LPSPI1 configuration register 1 (should only be written when LPSPI is disabled)
+    #define LPSPI1_DMR0         *(unsigned long *)(LPSPI1_BLOCK + 0x30)  // LPSPI1 data match register 0
+    #define LPSPI1_DMR1         *(unsigned long *)(LPSPI1_BLOCK + 0x34)  // LPSPI1 data match register 1
+    #define LPSPI1_CCR          *(unsigned long *)(LPSPI1_BLOCK + 0x40)  // LPSPI1 clock configuration register
+    #define LPSPI1_FCR          *(unsigned long *)(LPSPI1_BLOCK + 0x58)  // LPSPI1 FIFO control register
+    #define LPSPI1_FSR          *(volatile unsigned long *)(LPSPI1_BLOCK + 0x5c) // LPSPI1 FIFO status register
+    #define LPSPI1_TCR          *(unsigned long *)(LPSPI1_BLOCK + 0x60)  // LPSPI1 transmit command register
+    #define LPSPI1_TDR          *(volatile unsigned long *)(LPSPI1_BLOCK + 0x64) // LPSPI1 transmit data register (write-only)
+    #define LPSPI1_RSR          *(volatile unsigned long *)(LPSPI1_BLOCK + 0x70) // LPSPI1 receive status register (read only)
+    #define LPSPI1_RDR          *(volatile unsigned long *)(LPSPI1_BLOCK + 0x74) // LPSPI1 receive data register (read only)
+
+    #define LPSPI2_VERID        *(volatile unsigned long *)(LPSPI2_BLOCK + 0x00) // LPSPI2 version ID register (read-only)
+    #define LPSPI2_PARAM        *(volatile unsigned long *)(LPSPI2_BLOCK + 0x04) // LPSPI2 parameter register (read-only)
+    #define LPSPI2_CR           *(volatile unsigned long *)(LPSPI2_BLOCK + 0x10) // LPSPI2 control register
+    #define LPSPI2_SR           *(volatile unsigned long *)(LPSPI2_BLOCK + 0x14) // LPSPI2 status register
+    #define LPSPI2_IER          *(unsigned long *)(LPSPI2_BLOCK + 0x18)  // LPSPI2 interrupt enable register
+    #define LPSPI2_DER          *(unsigned long *)(LPSPI2_BLOCK + 0x1c)  // LPSPI2 DMA enable register
+    #define LPSPI2_CFGR0        *(unsigned long *)(LPSPI2_BLOCK + 0x20)  // LPSPI2 configuration register 0
+    #define LPSPI2_CFGR1        *(unsigned long *)(LPSPI2_BLOCK + 0x24)  // LPSPI2 configuration register 1 (should only be written when LPSPI is disabled)
+    #define LPSPI2_DMR0         *(unsigned long *)(LPSPI2_BLOCK + 0x30)  // LPSPI2 data match register 0
+    #define LPSPI2_DMR1         *(unsigned long *)(LPSPI2_BLOCK + 0x34)  // LPSPI2 data match register 1
+    #define LPSPI2_CCR          *(unsigned long *)(LPSPI2_BLOCK + 0x40)  // LPSPI2 clock configuration register
+    #define LPSPI2_FCR          *(unsigned long *)(LPSPI2_BLOCK + 0x58)  // LPSPI2 FIFO control register
+    #define LPSPI2_FSR          *(volatile unsigned long *)(LPSPI2_BLOCK + 0x5c) // LPSPI2 FIFO status register
+    #define LPSPI2_TCR          *(unsigned long *)(LPSPI2_BLOCK + 0x60)  // LPSPI2 transmit command register
+    #define LPSPI2_TDR          *(volatile unsigned long *)(LPSPI2_BLOCK + 0x64) // LPSPI2 transmit data register (write-only)
+    #define LPSPI2_RSR          *(volatile unsigned long *)(LPSPI2_BLOCK + 0x70) // LPSPI2 receive status register (read-only)
+    #define LPSPI2_RDR          *(volatile unsigned long *)(LPSPI2_BLOCK + 0x74) // LPSPI2 receive data register (read-only)
+#elif !defined DSPI_SPI                                                  // SPI instead of DSPI
   #if defined KINETIS_KL17 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL43 || defined KINETIS_KL46 // KL devices supporting 16 bit words
-    #define SPI0_S             *(volatile unsigned char *)(SPI0_BLOCK + 0x0) // SPI0 status register (read only)
+    #define SPI0_S              *(volatile unsigned char *)(SPI0_BLOCK + 0x0) // SPI0 status register (read only)
     #if defined KINETIS_KL43
       #define SPI_S_RFIFOEF     0x01                                     // receive FIFO empty flag
     #else
@@ -11014,28 +11134,30 @@ typedef struct stKINETIS_LPTMR_CTL
     #define PE_13_QSPI0B_SS1_B           PORT_MUX_ALT5
 #endif
 
-#define PA_15_SPI0_SCK                   PORT_MUX_ALT2                   // SPI0
-#define PC_5_SPI0_SCK                    PORT_MUX_ALT2
-#define PD_1_SPI0_SCK                    PORT_MUX_ALT2
-#define PA_16_SPI0_SOUT                  PORT_MUX_ALT2
-#define PC_6_SPI0_SOUT                   PORT_MUX_ALT2
-#define PD_2_SPI0_SOUT                   PORT_MUX_ALT2
-#define PD_2_SPI0_MOSI                   PD_2_SPI0_SOUT
-#define PA_17_SPI0_SIN                   PORT_MUX_ALT2
-#define PC_7_SPI0_SIN                    PORT_MUX_ALT2
-#define PD_3_SPI0_SIN                    PORT_MUX_ALT2
-#define PD_3_SPI0_MISO                   PD_3_SPI0_SIN
-#define PA_14_SPI0_PCS0                  PORT_MUX_ALT2
-#define PC_4_SPI0_PCS0                   PORT_MUX_ALT2
-#define PD_0_SPI0_PCS0                   PORT_MUX_ALT2
-#define PC_3_SPI0_PCS1                   PORT_MUX_ALT2
-#define PD_4_SPI0_PCS1                   PORT_MUX_ALT2
-#define PC_2_SPI0_PCS2                   PORT_MUX_ALT2
-#define PD_5_SPI0_PCS2                   PORT_MUX_ALT2
-#define PC_1_SPI0_PCS3                   PORT_MUX_ALT2
-#define PD_6_SPI0_PCS3                   PORT_MUX_ALT2
-#define PC_0_SPI0_PCS4                   PORT_MUX_ALT2
-#define PB_23_SPI0_PCS5                  PORT_MUX_ALT3
+#if !defined LPSPI_SPI
+    #define PA_15_SPI0_SCK               PORT_MUX_ALT2                   // SPI0
+    #define PC_5_SPI0_SCK                PORT_MUX_ALT2
+    #define PD_1_SPI0_SCK                PORT_MUX_ALT2
+    #define PA_16_SPI0_SOUT              PORT_MUX_ALT2
+    #define PC_6_SPI0_SOUT               PORT_MUX_ALT2
+    #define PD_2_SPI0_SOUT               PORT_MUX_ALT2
+    #define PD_2_SPI0_MOSI               PD_2_SPI0_SOUT
+    #define PA_17_SPI0_SIN               PORT_MUX_ALT2
+    #define PC_7_SPI0_SIN                PORT_MUX_ALT2
+    #define PD_3_SPI0_SIN                PORT_MUX_ALT2
+    #define PD_3_SPI0_MISO               PD_3_SPI0_SIN
+    #define PA_14_SPI0_PCS0              PORT_MUX_ALT2
+    #define PC_4_SPI0_PCS0               PORT_MUX_ALT2
+    #define PD_0_SPI0_PCS0               PORT_MUX_ALT2
+    #define PC_3_SPI0_PCS1               PORT_MUX_ALT2
+    #define PD_4_SPI0_PCS1               PORT_MUX_ALT2
+    #define PC_2_SPI0_PCS2               PORT_MUX_ALT2
+    #define PD_5_SPI0_PCS2               PORT_MUX_ALT2
+    #define PC_1_SPI0_PCS3               PORT_MUX_ALT2
+    #define PD_6_SPI0_PCS3               PORT_MUX_ALT2
+    #define PC_0_SPI0_PCS4               PORT_MUX_ALT2
+    #define PB_23_SPI0_PCS5              PORT_MUX_ALT3
+#endif
 
 #if defined KINETIS_KL46 || defined KINETIS_KL43 || defined KINETIS_KL17 || defined KINETIS_KL26 || defined KINETIS_KL27
     #define PD_2_SPI0_MISO               PORT_MUX_ALT5
@@ -11044,6 +11166,32 @@ typedef struct stKINETIS_LPTMR_CTL
     #define PC_6_SPI0_MISO               PORT_MUX_ALT5
     #define PC_7_SPI0_MISO               PORT_MUX_ALT2
     #define PC_7_SPI0_MOSI               PORT_MUX_ALT5
+#elif defined KINETIS_KL28
+    #define PE_16_LPSPI0_PCS0            PORT_MUX_ALT2                   // LPSPI0
+    #define PA_14_LPSPI0_PCS0            PORT_MUX_ALT2
+    #define PC_4_LPSPI0_PCS0             PORT_MUX_ALT2
+    #define PD_0_LPSPI0_PCS0             PORT_MUX_ALT2
+    #define PA_11_LPSPI0_PCS1            PORT_MUX_ALT2
+    #define PC_3_LPSPI0_PCS1             PORT_MUX_ALT2
+    #define PC_19_LPSPI0_PCS1            PORT_MUX_ALT2
+    #define PA_10_LPSPI0_PCS2            PORT_MUX_ALT2
+    #define PC_18_LPSPI0_PCS2            PORT_MUX_ALT3
+    #define PC_23_LPSPI0_PCS3            PORT_MUX_ALT2
+    #define PA_7_LPSPI0_PCS3             PORT_MUX_ALT2
+    #define PC_17_LPSPI0_PCS3            PORT_MUX_ALT3
+    #define PC_22_LPSPI0_PCS3            PORT_MUX_ALT2
+    #define PE_17_LPSPI0_SCK             PORT_MUX_ALT2
+    #define PA_15_LPSPI0_SCK             PORT_MUX_ALT2
+    #define PC_5_LPSPI0_SCK              PORT_MUX_ALT2
+    #define PD_1_LPSPI0_SCK              PORT_MUX_ALT2
+    #define PE_18_LPSPI0_SOUT            PORT_MUX_ALT2
+    #define PA_16_LPSPI0_SOUT            PORT_MUX_ALT2
+    #define PC_6_LPSPI0_SOUT             PORT_MUX_ALT2
+    #define PD_2_LPSPI0_SOUT             PORT_MUX_ALT2
+    #define PE_19_LPSPI0_SIN             PORT_MUX_ALT2
+    #define PA_17_LPSPI0_SIN             PORT_MUX_ALT2
+    #define PC_7_LPSPI0_SIN              PORT_MUX_ALT2
+    #define PD_3_LPSPI0_SIN              PORT_MUX_ALT2
 #elif defined KINETIS_KL03
     #define PB_0_SPI0_SCK                PORT_MUX_ALT3
     #define PA_7_SPI0_MOSI               PORT_MUX_ALT3
@@ -11063,6 +11211,29 @@ typedef struct stKINETIS_LPTMR_CTL
     #define PB_3_SPI0_MOSI               PORT_MUX_ALT2
     #define PE_1_SPI0_MOSI               PORT_MUX_ALT2
     #define PB_2_SPI0_SCK                PORT_MUX_ALT3
+#elif defined KINETIS_KL28
+    #define PE_4_LPSPI1_PCS0             PORT_MUX_ALT2                   // LPSPI1
+    #define PB_8_LPSPI1_PCS0             PORT_MUX_ALT2
+    #define PB_10_LPSPI1_PCS0            PORT_MUX_ALT2
+    #define PD_4_LPSPI1_PCS0             PORT_MUX_ALT2
+    #define PE_5_LPSPI1_PCS1             PORT_MUX_ALT2
+    #define PB_7_LPSPI1_PCS1             PORT_MUX_ALT2
+    #define PD_8_LPSPI1_PCS1             PORT_MUX_ALT3
+    #define PE_6_LPSPI1_PCS2             PORT_MUX_ALT2
+    #define PB_6_LPSPI1_PCS2             PORT_MUX_ALT2
+    #define PE_16_LPSPI1_PCS3            PORT_MUX_ALT5
+    #define PB_3_LPSPI1_PCS3             PORT_MUX_ALT4
+    #define PE_2_LPSPI1_SCK              PORT_MUX_ALT2
+    #define PB_9_LPSPI1_SCK              PORT_MUX_ALT2
+    #define PB_11_LPSPI1_SCK             PORT_MUX_ALT2
+    #define PD_5_LPSPI1_SCK              PORT_MUX_ALT2
+    #define PE_1_LPSPI1_SOUT             PORT_MUX_ALT2
+    #define PB_16_LPSPI1_SOUT            PORT_MUX_ALT2
+    #define PD_6_LPSPI1_SOUT             PORT_MUX_ALT2
+    #define PE_0_LPSPI1_SIN              PORT_MUX_ALT2
+    #define PE_3_LPSPI1_SIN              PORT_MUX_ALT2
+    #define PB_17_LPSPI1_SIN             PORT_MUX_ALT2
+    #define PD_7_LPSPI1_SIN              PORT_MUX_ALT2
 #else
     #define PB_11_SPI1_SCK               PORT_MUX_ALT2
     #define PE_2_SPI1_SCK                PORT_MUX_ALT2
@@ -11109,16 +11280,36 @@ typedef struct stKINETIS_LPTMR_CTL
     #endif
 #endif
 
-
-#define PB_21_SPI2_SCK                   PORT_MUX_ALT2                   // SPI2
-#define PD_12_SPI2_SCK                   PORT_MUX_ALT2
-#define PB_22_SPI2_SOUT                  PORT_MUX_ALT2
-#define PD_13_SPI2_SOUT                  PORT_MUX_ALT2
-#define PB_23_SPI2_SIN                   PORT_MUX_ALT2
-#define PD_14_SPI2_SIN                   PORT_MUX_ALT2
-#define PB_20_SPI2_PCS0                  PORT_MUX_ALT2
-#define PD_11_SPI2_PCS0                  PORT_MUX_ALT2
-#define PD_15_SPI2_PCS1                  PORT_MUX_ALT2
+#if defined KINETIS_KL28
+    #define PE_23_LPSPI2_PCS0            PORT_MUX_ALT2
+    #define PB_20_LPSPI2_PCS0            PORT_MUX_ALT2
+    #define PD_11_LPSPI2_PCS0            PORT_MUX_ALT2
+    #define PB_19_LPSPI2_PCS1            PORT_MUX_ALT5
+    #define PC_0_LPSPI2_PCS1             PORT_MUX_ALT2
+    #define PD_15_LPSPI2_PCS1            PORT_MUX_ALT2
+    #define PD_10_LPSPI2_PCS2            PORT_MUX_ALT2
+    #define PB_16_LPSPI2_PCS3            PORT_MUX_ALT5
+    #define PD_9_LPSPI2_PCS3             PORT_MUX_ALT3
+    #define PE_20_LPSPI2_SCK             PORT_MUX_ALT2
+    #define PB_21_LPSPI2_SCK             PORT_MUX_ALT2
+    #define PD_12_LPSPI2_SCK             PORT_MUX_ALT2
+    #define PE_21_LPSPI2_SOUT            PORT_MUX_ALT2
+    #define PB_22_LPSPI2_SOUT            PORT_MUX_ALT2
+    #define PD_13_LPSPI2_SOUT            PORT_MUX_ALT2
+    #define PE_22_LPSPI2_SIN             PORT_MUX_ALT2
+    #define PB_23_LPSPI2_SIN             PORT_MUX_ALT2
+    #define PD_14_LPSPI2_SIN             PORT_MUX_ALT2
+#else
+    #define PB_21_SPI2_SCK               PORT_MUX_ALT2                   // SPI2
+    #define PD_12_SPI2_SCK               PORT_MUX_ALT2
+    #define PB_22_SPI2_SOUT              PORT_MUX_ALT2
+    #define PD_13_SPI2_SOUT              PORT_MUX_ALT2
+    #define PB_23_SPI2_SIN               PORT_MUX_ALT2
+    #define PD_14_SPI2_SIN               PORT_MUX_ALT2
+    #define PB_20_SPI2_PCS0              PORT_MUX_ALT2
+    #define PD_11_SPI2_PCS0              PORT_MUX_ALT2
+    #define PD_15_SPI2_PCS1              PORT_MUX_ALT2
+#endif
 
 #define PE_2_SDHC0_DCLK                  PORT_MUX_ALT4                   // SDHC
 #define PE_3_SDHC0_CMD                   PORT_MUX_ALT4
@@ -12066,6 +12257,18 @@ typedef struct stKINETIS_LPTMR_CTL
             #define PCC_I2C2_BME_OR      PCC_LPI2C2_BME_OR
             #define PCC_I2C2_BME_AND     PCC_LPI2C2_BME_AND
             #define PCC_I2C2_BME_XOR     PCC_LPI2C2_BME_XOR
+        #define PCC_SPI0                 PCC_LPSPI0
+            #define PCC_SPI0_BME_OR      PCC_LPI2C0_BME_OR
+            #define PCC_SPI0_BME_AND     PCC_LPI2C0_BME_AND
+            #define PCC_SPI0_BME_XOR     PCC_LPI2C0_BME_XOR
+        #define PCC_SPI1                 PCC_LPSPI1
+            #define PCC_SPI1_BME_OR      PCC_LPI2C1_BME_OR
+            #define PCC_SPI1_BME_AND     PCC_LPI2C1_BME_AND
+            #define PCC_SPI1_BME_XOR     PCC_LPI2C1_BME_XOR
+        #define PCC_SPI2                 PCC_LPSPI2
+            #define PCC_SPI2_BME_OR      PCC_LPI2C2_BME_OR
+            #define PCC_SPI2_BME_AND     PCC_LPI2C2_BME_AND
+            #define PCC_SPI2_BME_XOR     PCC_LPI2C2_BME_XOR
     #endif
     #define PCC_USBOTG                   PCC_USB0FS                      // for compatibility
         #define PCC_USBOTG_BME_OR        PCC_USB0FS_BME_OR

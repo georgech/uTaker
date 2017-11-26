@@ -626,7 +626,7 @@ extern USER_FILE *fnActivateEmbeddedUserFiles(CHAR *cFile, int iType)
     test_file.fileName = (unsigned char *)((((CAST_POINTER_ARITHMETIC)test_file.fileName << 24) & 0xff000000) | (((CAST_POINTER_ARITHMETIC)test_file.fileName << 8) & 0x00ff0000) | (((CAST_POINTER_ARITHMETIC)test_file.fileName >> 8) & 0x0000ff00) | ((CAST_POINTER_ARITHMETIC)test_file.fileName >> 24));
     test_file.file_length = (unsigned long)((((CAST_POINTER_ARITHMETIC)test_file.file_length << 24) & 0xff000000) | (((CAST_POINTER_ARITHMETIC)test_file.file_length << 8) & 0x00ff0000) | (((CAST_POINTER_ARITHMETIC)test_file.file_length >> 8) & 0x0000ff00) | ((CAST_POINTER_ARITHMETIC)test_file.file_length >> 24));
         #endif
-    while (1) {
+    FOREVER_LOOP {
         if (((CHAR *)test_file.fileName > last_string) && ((unsigned char *)test_file.fileName < (unsigned char *)ptrUserTable)) {
             if (((unsigned char *)test_file.file_content > last_content) && ((unsigned char *)test_file.file_content < (unsigned char *)ptrUserTable)) {
                 if (test_file.file_length < file_length) {
@@ -824,7 +824,7 @@ static MAX_FILE_LENGTH uGetFileLength_variable_header(MEMORY_RANGE_POINTER ptrfi
         ptrfileLocation += ThisLength;                                   // address of next possible block
     }
 
-    while (1) {
+    FOREVER_LOOP {
         if (ptrfileLocation >= (_uFILE_SYSTEM_END - 1)) {                // end of file system reached
             *FileLength = 0;                                             // file length is zero
             return 0;                                                    // nothing found

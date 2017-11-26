@@ -66,7 +66,7 @@
 #if defined _USB_CATCH_ERROR
 static void fnError(int iErrorNumber)
 {
-    while (1) {}
+    FOREVER_LOOP {}
 }
 #endif
 
