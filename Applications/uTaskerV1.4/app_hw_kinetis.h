@@ -8603,7 +8603,36 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
             #define SDHC_SYSCTL_SPEED_SLOW     (SDHC_SYSCTL_SDCLKFS_128 | SDHC_SYSCTL_DVS_2)  // 390kHz when 100MHz clock
             #define SDHC_SYSCTL_SPEED_FAST     (SDHC_SYSCTL_SDCLKFS_2 | SDHC_SYSCTL_DVS_2)    // 25MHz when 100MHz clock
             #define SET_SPI_SD_INTERFACE_FULL_SPEED() fnSetSD_clock(SDHC_SYSCTL_SPEED_FAST); SDHC_PROCTL |= SDHC_PROCTL_DTW_4BIT
-        #else
+        #elif defined FRDM_KL82Z || defined TWR_KL82Z72M
+            // Configure to suit SD card SPI mode at between 100k and 400k
+            //
+            #define SPI_CS1_0                  PORTE_BIT4
+            #define INITIALISE_SPI_SD_INTERFACE() POWER_UP_ATOMIC(6, SPI1); \
+            _CONFIG_PERIPHERAL(E, 2, PE_2_SPI1_SCK); _CONFIG_PERIPHERAL(E, 3, (PE_3_SPI1_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); _CONFIG_PERIPHERAL(E, 1, (PE_1_SPI1_SIN | PORT_PS_UP_ENABLE)); \
+            _CONFIG_DRIVE_PORT_OUTPUT_VALUE(E, SPI_CS1_0, SPI_CS1_0, (PORT_SRE_FAST | PORT_DSE_HIGH)); \
+            SPI1_CTAR0 = (SPI_CTAR_ASC_6 | SPI_CTAR_FMSZ_8 | SPI_CTAR_CPHA | SPI_CTAR_CPOL | SPI_CTAR_BR_128); SPI1_MCR = (SPI_MCR_DIS_TXF | SPI_MCR_DIS_RXF | SPI_MCR_MSTR | SPI_MCR_DCONF_SPI | SPI_MCR_CLR_RXF | SPI_MCR_CLR_TXF | SPI_MCR_PCSIS_CS0 | SPI_MCR_PCSIS_CS1 | SPI_MCR_PCSIS_CS2 | SPI_MCR_PCSIS_CS3 | SPI_MCR_PCSIS_CS4 | SPI_MCR_PCSIS_CS5)
+
+            #define ENABLE_SPI_SD_OPERATION()
+            #define SET_SD_CARD_MODE()
+
+            // Set maximum speed
+            //
+            #define SET_SPI_SD_INTERFACE_FULL_SPEED() SPI1_MCR |= SPI_MCR_HALT; SPI1_CTAR0 = (SPI_CTAR_FMSZ_8 | SPI_CTAR_CPOL | SPI_CTAR_CPHA | SPI_CTAR_BR_2); SPI1_MCR &= ~SPI_MCR_HALT;
+            #if defined _WINDOWS
+                #define WRITE_SPI_CMD(byte)     SPI1_SR &= ~(SPI_SR_RFDF); SPI1_PUSHR = (byte | SPI_PUSHR_PCS_NONE | SPI_PUSHR_CTAS_CTAR0); SPI1_POPR = _fnSimSD_write((unsigned char)byte)
+                #define WAIT_TRANSMISSON_END() while ((SPI1_SR & (SPI_SR_RFDF)) == 0) { SPI1_SR |= (SPI_SR_RFDF); }
+                #define READ_SPI_DATA()        (unsigned char)SPI1_POPR
+            #else
+                #define WRITE_SPI_CMD(byte)    SPI1_SR = (SPI_SR_RFDF); SPI1_PUSHR = (byte | SPI_PUSHR_PCS_NONE | SPI_PUSHR_CTAS_CTAR0) // clear flags before transmitting (and receiving) a single byte
+                #define WAIT_TRANSMISSON_END() while ((SPI1_SR & (SPI_SR_RFDF)) == 0) {}
+                #define READ_SPI_DATA()        (unsigned char)SPI1_POPR
+            #endif
+            #define SET_SD_DI_CS_HIGH()  _SETBITS(E, SPI_CS1_0)          // force DI and CS lines high ready for the initialisation sequence
+            #define SET_SD_CS_LOW()      _CLEARBITS(E, SPI_CS1_0)        // assert the CS line of the SD card to be read
+            #define SET_SD_CS_HIGH()     _SETBITS(E, SPI_CS1_0)          // negate the CS line of the SD card to be read
+            #define POWER_UP_SD_CARD()                                   // apply power to the SD card if appropriate
+            #define POWER_DOWN_SD_CARD()                                 // remove power from SD card interface
+        #else                                                            // this configuration suits various parts connected via SPI1 on PTE0..PTE5
             // Configure to suit SD card SPI mode at between 100k and 400k
             //
             #define SPI_CS1_0                  PORTE_BIT4
@@ -8649,6 +8678,14 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
             #define PRIORITY_SDCARD_DETECT_PORT_INT   PRIORITY_PORT_E_INT // port priority when using card detect switch interrupt
             #define SDCARD_DETECT_PORT     PORTE                         // interrupt is on this port
             #define SDCARD_DETECT_PIN      SD_CARD_DETECTION             // interrupt pin
+        #elif defined FRDM_KL82Z || defined TWR_KL82
+            #define GET_SDCARD_WP_STATE()  0                             // no write protect input
+            #define SD_CARD_DETECTION      PORTE_BIT7
+            #define SDCARD_DETECTION()     (_READ_PORT_MASK(E, SD_CARD_DETECTION) == 0) // card detection input
+            #define PRIORITY_SDCARD_DETECT_PORT_INT   PRIORITY_PORT_E_INT // port priority when using card detect switch interrupt
+            #define SDCARD_DETECT_PORT     PORTE                         // interrupt is on this port
+            #define SDCARD_DETECT_PIN      SD_CARD_DETECTION             // interrupt pin
+            #define SDCARD_DETECT_INPUT_INTERRUPT
         #elif defined TWR_K40X256
             #define GET_SDCARD_WP_STATE() (_READ_PORT_MASK(E, WRITE_PROTECT_INPUT) != 0) // when the input is read as '1' the card is protected from writes
         #else

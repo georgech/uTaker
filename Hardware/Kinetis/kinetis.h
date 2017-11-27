@@ -11134,7 +11134,7 @@ typedef struct stKINETIS_LPTMR_CTL
     #define PE_13_QSPI0B_SS1_B           PORT_MUX_ALT5
 #endif
 
-#if !defined LPSPI_SPI
+#if !defined LPSPI_SPI && !defined KINETIS_KL82
     #define PA_15_SPI0_SCK               PORT_MUX_ALT2                   // SPI0
     #define PC_5_SPI0_SCK                PORT_MUX_ALT2
     #define PD_1_SPI0_SCK                PORT_MUX_ALT2
@@ -11234,6 +11234,47 @@ typedef struct stKINETIS_LPTMR_CTL
     #define PE_3_LPSPI1_SIN              PORT_MUX_ALT2
     #define PB_17_LPSPI1_SIN             PORT_MUX_ALT2
     #define PD_7_LPSPI1_SIN              PORT_MUX_ALT2
+#elif defined KINETIS_KL82
+    #define PA_14_SPI0_PCS0              PORT_MUX_ALT2
+    #define PC_4_SPI0_PCS0               PORT_MUX_ALT2
+    #define PD_0_SPI0_PCS0               PORT_MUX_ALT2
+    #define PC_3_SPI0_PCS1               PORT_MUX_ALT2
+    #define PD_4_SPI0_PCS1               PORT_MUX_ALT2
+    #define PC_2_SPI0_PCS2               PORT_MUX_ALT2
+    #define PD_5_SPI0_PCS2               PORT_MUX_ALT2
+    #define PC_1_SPI0_PCS3               PORT_MUX_ALT2
+    #define PD_6_SPI0_PCS3               PORT_MUX_ALT2
+    #define PC_0_SPI0_PCS4               PORT_MUX_ALT2
+    #define PB_23_SPI0_PCS5              PORT_MUX_ALT3
+    #define PA_15_SPI0_SCK               PORT_MUX_ALT2
+    #define PC_5_SPI0_SCK                PORT_MUX_ALT2
+    #define PD_1_SPI0_SCK                PORT_MUX_ALT2
+    #define PA_16_SPI0_SOUT              PORT_MUX_ALT2
+    #define PC_6_SPI0_SOUT               PORT_MUX_ALT2
+    #define PD_2_SPI0_SOUT               PORT_MUX_ALT2
+    #define PA_17_SPI0_SIN               PORT_MUX_ALT2
+    #define PC_7_SPI0_SIN                PORT_MUX_ALT2
+    #define PD_3_SPI0_SIN                PORT_MUX_ALT2
+
+    #define PE_5_SPI1_PCS0               PORT_MUX_ALT2
+    #define PB_10_SPI1_PCS0              PORT_MUX_ALT2
+    #define PD_4_SPI1_PCS0               PORT_MUX_ALT7
+    #define PE_0_SPI1_PCS1               PORT_MUX_ALT2
+    #define PB_9_SPI1_PCS1               PORT_MUX_ALT2
+    #define PE_3_SPI1_PCS2               PORT_MUX_ALT2
+    #define PE_6_SPI1_PCS3               PORT_MUX_ALT2
+    #define PE_1_SPI1_SCK                PORT_MUX_ALT2
+    #define PE_2_SPI1_SCK                PORT_MUX_ALT7
+    #define PB_11_SPI1_SCK               PORT_MUX_ALT2
+    #define PD_5_SPI1_SCK                PORT_MUX_ALT7
+    #define PE_2_SPI1_SOUT               PORT_MUX_ALT2
+    #define PE_3_SPI1_SOUT               PORT_MUX_ALT7
+    #define PB_16_SPI1_SOUT              PORT_MUX_ALT2
+    #define PD_6_SPI1_SOUT               PORT_MUX_ALT7
+    #define PE_1_SPI1_SIN                PORT_MUX_ALT7
+    #define PE_4_SPI1_SIN                PORT_MUX_ALT2
+    #define PB_17_SPI1_SIN               PORT_MUX_ALT2
+    #define PD_7_SPI1_SIN                PORT_MUX_ALT7
 #else
     #define PB_11_SPI1_SCK               PORT_MUX_ALT2
     #define PE_2_SPI1_SCK                PORT_MUX_ALT2
@@ -11272,11 +11313,6 @@ typedef struct stKINETIS_LPTMR_CTL
         #define PD_4_SPI1_SS             PORT_MUX_ALT2
         #define PD_6_SPI1_MISO           PORT_MUX_ALT5
         #define PD_7_SPI1_MOSI           PORT_MUX_ALT5
-    #elif defined KINETIS_KL82
-        #define PE_5_SPI1_PCS0           PORT_MUX_ALT2
-        #define PE_1_SPI1_SCK            PORT_MUX_ALT2
-        #define PE_2_SPI1_SOUT           PORT_MUX_ALT2
-        #define PE_4_SPI1_SIN            PORT_MUX_ALT2
     #endif
 #endif
 
