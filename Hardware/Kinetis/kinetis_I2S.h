@@ -93,7 +93,7 @@ static void irq_i2S0_error(void)
                     if ((ptrI2S_SAIsetup->I2S_SAI_mode & I2S_SAI_HALF_BUFFER_DMA) != 0) {
                         ulDMA_rules |= DMA_HALF_BUFFER_INTERRUPT;
                     }
-                    fnConfigDMA_buffer(ptrI2S_SAIsetup->ucDmaChannel, ptrI2S_SAIsetup->ucDmaTriggerSource, ptrI2S_SAIsetup->ulI2S_SAI_buffer_length, ptrI2S_SAIsetup->ptrI2S_SAI_Buffer, (void *)&ptrSAI->I2S_TDR0, ulDMA_rules, ptrI2S_SAIsetup->int_handler, ptrI2S_SAIsetup->int_priority); // source is the I2S buffer and destination is the I2S tx data register
+                    fnConfigDMA_buffer(ptrI2S_SAIsetup->ucDmaChannel, ptrI2S_SAIsetup->usDmaTriggerSource, ptrI2S_SAIsetup->ulI2S_SAI_buffer_length, ptrI2S_SAIsetup->ptrI2S_SAI_Buffer, (void *)&ptrSAI->I2S_TDR0, ulDMA_rules, ptrI2S_SAIsetup->int_handler, ptrI2S_SAIsetup->int_priority); // source is the I2S buffer and destination is the I2S tx data register
                     if ((ptrI2S_SAIsetup->I2S_SAI_mode & I2S_SAI_BUFFER_DMA_START) != 0) {
                         fnDMA_BufferReset(ptrI2S_SAIsetup->ucDmaChannel, DMA_BUFFER_START); // start DMA operation
                     }
@@ -123,7 +123,7 @@ static void irq_i2S0_error(void)
                     if ((ptrI2S_SAIsetup->I2S_SAI_mode & I2S_SAI_HALF_BUFFER_DMA) != 0) {
                         ulDMA_rules |= DMA_HALF_BUFFER_INTERRUPT;
                     }
-                    fnConfigDMA_buffer(ptrI2S_SAIsetup->ucDmaChannel, ptrI2S_SAIsetup->ucDmaTriggerSource, ptrI2S_SAIsetup->ulI2S_SAI_buffer_length, (void *)&ptrSAI->I2S_RDR0, ptrI2S_SAIsetup->ptrI2S_SAI_Buffer, ulDMA_rules, ptrI2S_SAIsetup->int_handler, ptrI2S_SAIsetup->int_priority); // source is the I2S rx data register and destination is the I2S buffer
+                    fnConfigDMA_buffer(ptrI2S_SAIsetup->ucDmaChannel, ptrI2S_SAIsetup->usDmaTriggerSource, ptrI2S_SAIsetup->ulI2S_SAI_buffer_length, (void *)&ptrSAI->I2S_RDR0, ptrI2S_SAIsetup->ptrI2S_SAI_Buffer, ulDMA_rules, ptrI2S_SAIsetup->int_handler, ptrI2S_SAIsetup->int_priority); // source is the I2S rx data register and destination is the I2S buffer
                     if ((ptrI2S_SAIsetup->I2S_SAI_mode & I2S_SAI_BUFFER_DMA_START) != 0) {
                         fnDMA_BufferReset(ptrI2S_SAIsetup->ucDmaChannel, DMA_BUFFER_START); // start DMA operation
                     }

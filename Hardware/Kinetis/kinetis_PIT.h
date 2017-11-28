@@ -24,6 +24,7 @@
     22.01.2017 Enable PIT DMA support with SUPPORT_PIT_DMA_PORT_TOGGLE   {7}
     03.02.2017 Check channel's interrupt flag before clearing it (KL)    {8}
     26.09.2017 Add LPIT support                                          {9}
+    28.11.2017 Add configuration of LPIT behaviour in doze and debug modes {10}
 
 */
 
@@ -205,7 +206,7 @@ static void fnDisablePIT(int iPIT)
       //(void)PIT_MCR;                                                   // dummy read of PIT_MCR to guaranty a minimum delay of two bus cycles after enabling the clock gate and not losing next write
   //#endif
     #if defined LPITS_AVAILABLE                                          // {9}
-        LPIT0_MCR = (LPIT_MCR_M_CEN);                                    // ensure the PIT module is clocked (when enabled for the first time 4 clock cycles are required to allow for clock synchronisation and reset assertion)
+        LPIT0_MCR = (LPIT_MCR_M_CEN | LPIT_CHARACTERISTICS);             // {10} ensure the PIT module is clocked (when enabled for the first time 4 clock cycles are required to allow for clock synchronisation and reset assertion)
     #else
         PIT_MCR = 0;                                                     // ensure the PIT module is clocked
     #endif

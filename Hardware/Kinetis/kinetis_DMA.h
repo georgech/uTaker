@@ -439,7 +439,7 @@ extern void fnDMA_BufferReset(int iChannel, int iAction)
 
 // Buffer source to fixed destination address or fixed source address to buffer
 //
-extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned char ucDmaTriggerSource, unsigned long ulBufLength, void *ptrBufSource, void *ptrBufDest, unsigned long ulRules, void (*int_handler)(void), int int_priority)
+extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned short usDmaTriggerSource, unsigned long ulBufLength, void *ptrBufSource, void *ptrBufDest, unsigned long ulRules, void (*int_handler)(void), int int_priority)
 {
     unsigned char ucSize = (unsigned char)(ulRules & 0x07);              // transfer size 1, 2 or 4 bytes
 
@@ -533,7 +533,7 @@ extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned char ucDmaT
         }
     }
     POWER_UP_ATOMIC(6, DMAMUX0);                                         // enable DMA multiplexer 0
-    *(unsigned char *)(DMAMUX0_BLOCK + ucDMA_channel) = (ucDmaTriggerSource | DMAMUX_CHCFG_ENBL); // connect trigger to DMA channel
+    *(unsigned char *)(DMAMUX0_BLOCK + ucDMA_channel) = (unsigned char)(usDmaTriggerSource | DMAMUX_CHCFG_ENBL); // connect trigger to DMA channel
     ptrDMA->DMA_DCR |= (DMA_DCR_CS | DMA_DCR_EADREQ);                    // enable peripheral request - single cycle for each request (asynchronous requests enabled in stop mode)
     #else                                                                // eDMA
     KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
@@ -599,12 +599,17 @@ extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned char ucDmaT
     ptrDMA_TCD->DMA_TCD_BITER_ELINK = ptrDMA_TCD->DMA_TCD_CITER_ELINK = (signed short)(ulBufLength/ucSize); // the number of service requests to be performed each cycle
     POWER_UP_ATOMIC(6, DMAMUX0);                                         // enable DMA multiplexer 0
         #if defined TRGMUX_AVAILABLE
-    if ((ucDmaTriggerSource & DMAMUX_CHCFG_TRIG) != 0) {                 // triggered source (LPIT)
-        TRGMUX_DMAMUX0 = (TRGMUX_SEL_LPIT0_CHANNEL_0 + (ucDmaTriggerSource - DMAMUX0_DMA0_CHCFG_SOURCE_PIT0)); // LPIT is connected to the DMAMUX
-        ucDmaTriggerSource = DMAMUX0_DMA0_CHCFG_SOURCE_PIT0;
+    if ((usDmaTriggerSource & DMAMUX_CHCFG_TRIG) != 0) {                 // triggered source (LPIT)
+#if defined _WINDOWS
+        if ((usDmaTriggerSource >> 8) >= 4) {
+            _EXCEPTION("Invalid LPIT periodic trigger source!");
+        }
+#endif
+        TRGMUX_DMAMUX0 = (TRGMUX_SEL_LPIT0_CHANNEL_0 + (usDmaTriggerSource >> 8)); // LPIT is connected to the DMAMUX
+        usDmaTriggerSource = DMAMUX0_DMA0_CHCFG_SOURCE_PIT0;
     }
         #endif
-    *(unsigned char *)(DMAMUX0_BLOCK + ucDMA_channel) = (ucDmaTriggerSource | DMAMUX_CHCFG_ENBL); // connect trigger source to DMA channel
+    *(unsigned char *)(DMAMUX0_BLOCK + ucDMA_channel) = (unsigned char)(usDmaTriggerSource | DMAMUX_CHCFG_ENBL); // connect trigger source to DMA channel
     #endif
     #if defined _WINDOWS                                                 // simulator checks to help detect incorrect usage
         #if defined DMA_MEMCPY_CHANNEL
@@ -617,9 +622,13 @@ extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned char ucDmaT
         _EXCEPTION("Warning - peripheral DMA is using the alternative channel reserved for DMA based uMemcpy()!!");
     }
         #endif
-    if (DMAMUX0_DMA0_CHCFG_SOURCE_PIT0 == ucDmaTriggerSource) {
+    if (DMAMUX0_DMA0_CHCFG_SOURCE_PIT0 == usDmaTriggerSource) {
         if (ucDMA_channel != 0) {
+        #if defined LPITS_AVAILABLE
+            _EXCEPTION("LPIT triggers only operate on DMA channel 0!!");
+        #else
             _EXCEPTION("PIT0 trigger only operates on DMA channel 0!!");
+        #endif
         }
         #if defined ERRATA_ID_5746
         if ((ptrDMA->DMA_DCR & DMA_DCR_CS) != 0) {
@@ -628,7 +637,7 @@ extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned char ucDmaT
         #endif
     }
         #if defined DMAMUX0_DMA0_CHCFG_SOURCE_PIT1
-    else if (DMAMUX0_DMA0_CHCFG_SOURCE_PIT1 == ucDmaTriggerSource) {
+    else if (DMAMUX0_DMA0_CHCFG_SOURCE_PIT1 == usDmaTriggerSource) {
         if (ucDMA_channel != 1) {
             _EXCEPTION("PIT1 trigger only operates on DMA channel 1!!");
         }
@@ -638,12 +647,12 @@ extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned char ucDmaT
         }
             #endif
     }
-    else if (DMAMUX0_DMA0_CHCFG_SOURCE_PIT2 == ucDmaTriggerSource) {
+    else if (DMAMUX0_DMA0_CHCFG_SOURCE_PIT2 == usDmaTriggerSource) {
         if (ucDMA_channel != 2) {
             _EXCEPTION("PIT2 trigger only operates on DMA channel 2!!");
         }
     }
-    else if (DMAMUX0_DMA0_CHCFG_SOURCE_PIT3 == ucDmaTriggerSource) {
+    else if (DMAMUX0_DMA0_CHCFG_SOURCE_PIT3 == usDmaTriggerSource) {
         if (ucDMA_channel != 3) {
             _EXCEPTION("PIT3 trigger only operates on DMA channel 3!!");
         }

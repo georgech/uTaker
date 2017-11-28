@@ -4762,7 +4762,7 @@ static void fnHandleDMA_triggers(int iTriggerSource, int iDMAmux)
     }
     #if defined TRGMUX_AVAILABLE
     if ((iTriggerSource & DMAMUX_CHCFG_TRIG) != 0) {                     // periodic trigger (LPIT source)
-        iTriggerSource -= DMAMUX0_CHCFG_SOURCE_DMAMUX0;                  // the LPIT that is being checked for
+        iTriggerSource >>= 8;                                            // the LPIT that is being checked for
         if ((TRGMUX_DMAMUX0 & TRGMUX_SEL0) == (TRGMUX_SEL_LPIT0_CHANNEL_0 + iTriggerSource)) { // check that the LPIT trigger is connected to the DMAMUX
             iTriggerSource = DMAMUX0_CHCFG_SOURCE_DMAMUX0;
             iMuxChannels = 4;                                            // period triggers are limited to the first 4 channels
@@ -7875,6 +7875,9 @@ extern int fnSimTimers(void)
                     LPIT0_CVAL2 -= ulCount;
                 }
                 LPIT0_MSR |= LPIT_MSR_TIF2;                              // flag that a reload occurred
+        #if !defined KINETIS_KL82                                        // not yet supported
+                fnHandleDMA_triggers(DMAMUX0_DMA0_CHCFG_SOURCE_PIT2, 0); // handle DMA triggered on LPIT2
+        #endif
                 if ((LPIT0_MIER & LPIT_MIER_TIE2) != 0) {                // if PIT interrupt is enabled
                     if (fnGenInt(irq_LPIT0_ID) != 0) {                   // if general PIT interrupt is not disabled
                         VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
@@ -7894,6 +7897,9 @@ extern int fnSimTimers(void)
                     LPIT0_CVAL3 -= ulCount;
                 }
                 LPIT0_MSR |= LPIT_MSR_TIF3;                              // flag that a reload occurred
+        #if !defined KINETIS_KL82                                        // not yet supported
+                fnHandleDMA_triggers(DMAMUX0_DMA0_CHCFG_SOURCE_PIT3, 0); // handle DMA triggered on LPIT3
+        #endif
                 if ((LPIT0_MIER & LPIT_MIER_TIE3) != 0) {                // if PIT interrupt is enabled
                     if (fnGenInt(irq_LPIT0_ID) != 0) {                   // if general PIT interrupt is not disabled
                         VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;

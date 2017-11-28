@@ -112,8 +112,8 @@
     #if !defined DEVICE_WITHOUT_DMA
             if ((ptrDAC_settings->dac_mode & (DAC_FULL_BUFFER_DMA | DAC_HALF_BUFFER_DMA)) != 0) { // {60} if DMA is being specified
                 unsigned long ulDMA_rules = (DMA_DIRECTION_OUTPUT | DMA_HALF_WORDS); // DMA transfer is from a buffer to a fixed address and each transfer is a half-word in size
-        #if defined _WINDOWS && defined DMAMUX0_DMA0_CHCFG_SOURCE_PIT1
-                if ((ptrDAC_settings->int_dac_controller == 0) && (DMAMUX0_DMA0_CHCFG_SOURCE_PIT1 == ptrDAC_settings->ucDmaTriggerSource)) {
+        #if defined _WINDOWS && defined DMAMUX0_CHCFG_SOURCE_DMAMUX1
+                if ((ptrDAC_settings->int_dac_controller == 0) && (DMAMUX0_DMA0_CHCFG_SOURCE_PIT1 == ptrDAC_settings->usDmaTriggerSource)) {
                     _EXCEPTION("DAC0 cannot be triggered from PIT channel 1!!");
                 }
         #endif
@@ -124,7 +124,7 @@
                 if ((ptrDAC_settings->dac_mode & DAC_HALF_BUFFER_DMA) != 0) {
                     ulDMA_rules |= DMA_HALF_BUFFER_INTERRUPT;
                 }
-                fnConfigDMA_buffer(ptrDAC_settings->ucDmaChannel, ptrDAC_settings->ucDmaTriggerSource, ptrDAC_settings->ulDAC_buffer_length, ptrDAC_settings->ptrDAC_Buffer, ptrDAC_regs, ulDMA_rules, ptrDAC_settings->int_handler, ptrDAC_settings->int_priority); // source is the DAC buffer and destination is the DAC data[0] register
+                fnConfigDMA_buffer(ptrDAC_settings->ucDmaChannel, ptrDAC_settings->usDmaTriggerSource, ptrDAC_settings->ulDAC_buffer_length, ptrDAC_settings->ptrDAC_Buffer, ptrDAC_regs, ulDMA_rules, ptrDAC_settings->int_handler, ptrDAC_settings->int_priority); // source is the DAC buffer and destination is the DAC data[0] register
                 if ((ptrDAC_settings->dac_mode & DAC_BUFFER_DMA_START) != 0) {
                     fnDMA_BufferReset(ptrDAC_settings->ucDmaChannel, DMA_BUFFER_START); // start DMA operation
                 }

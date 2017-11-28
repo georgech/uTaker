@@ -2631,6 +2631,12 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 #if !defined KINETIS_KL02
     #define SUPPORT_PITS                                                 // support PITs
   //#define SUPPORT_PIT_DMA_PORT_TOGGLE                                  // PIT driver supports triggering port toggles
+    // Define behavior of low power PIT (when available) in debug and doze mode
+    #if defined SUPPORT_LOW_POWER
+        #define LPIT_CHARACTERISTICS   (LPIT_MCR_DOZE_EN | LPIT_MCR_DBG_EN) // allow the LPIT to continue running in doze modes since it will otherwise freeze whenever the processor uses WAIT 
+    #else
+        #define LPIT_CHARACTERISTICS   (LPIT_MCR_DBG_EN)                 // allow the LPIT to continue running when the debug pauses the processor
+    #endif
 #endif
 #if defined MODBUS_RTU && !defined SUPPORT_PITS
     #define SUPPORT_PITS                                                 // support PITs

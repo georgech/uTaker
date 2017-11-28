@@ -3137,7 +3137,7 @@ typedef struct stKINETIS_DAC
     unsigned char DAC_DAT0H;
     unsigned char DAC_DAT1L;
     unsigned char DAC_DAT1H;
-    #if defined KINETIS_KL
+    #if defined KINETIS_KL && !defined KINETIS_KL28
         unsigned char ucRes0[28];
     #else
         unsigned char DAC_DAT2L;

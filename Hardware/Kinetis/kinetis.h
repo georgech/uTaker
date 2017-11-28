@@ -122,6 +122,7 @@
     10.11.2016 Set bit-banding addresses as volatile to avoid potential optimisations (GCC) from causing hard-faults {104}
     13.11.2017 Add internal temperature sensor 25°C and slope reference values ADC_REFERENCE_VOLTAGE
     14.11.2017 New macro SELECT_PCC_PERIPHERAL_SOURCE()
+    28.11.2017 DMA tigger source entries extended to 16 bits - 8 bits used for register configuration and higher bits for additional information
 
 */
 
@@ -3864,7 +3865,9 @@ typedef struct stVECTOR_TABLE
         #define EMAC_BASE_ADD                  0x400c0000                // Ethernet Controller
     #endif
     #if (DAC_CONTROLLERS > 0)
-        #if defined KINETIS_KL || defined KINETIS_KE18
+        #if defined KINETIS_KL28
+            #define DAC0_BASE_ADD              0x4006a000                // DAC0
+        #elif defined KINETIS_KL || defined KINETIS_KE18
             #define DAC0_BASE_ADD              0x4003f000                // {52} DAC0
         #else
             #define DAC0_BASE_ADD              0x400cc000                // DAC0
@@ -4747,7 +4750,7 @@ typedef struct stKINETIS_DMA_TDC
 #define DMA_NO_MODULO             0x00000080
 #define DMA_SINGLE_CYCLE          0x00000100
 
-extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned char ucDmaTriggerSource, unsigned long ulBufLength, void *ptrBufSource, void *ptrBufDest, unsigned long ulRules, void(*int_handler)(void), int int_priority);
+extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned short ucDmaTriggerSource, unsigned long ulBufLength, void *ptrBufSource, void *ptrBufDest, unsigned long ulRules, void(*int_handler)(void), int int_priority);
 
 
 // INTMUX                                                                {100}
@@ -5838,9 +5841,9 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
     #define DMAMUX0_DMA0_CHCFG_SOURCE_PIT2   (DMAMUX0_CHCFG_SOURCE_DMAMUX2)
     #define DMAMUX0_DMA0_CHCFG_SOURCE_PIT3   (DMAMUX0_CHCFG_SOURCE_DMAMUX3)
   #else
-    #define DMAMUX0_DMA0_CHCFG_SOURCE_PIT1   (DMAMUX0_DMA0_CHCFG_SOURCE_PIT0 + 1)
-    #define DMAMUX0_DMA0_CHCFG_SOURCE_PIT2   (DMAMUX0_DMA0_CHCFG_SOURCE_PIT0 + 2)
-    #define DMAMUX0_DMA0_CHCFG_SOURCE_PIT3   (DMAMUX0_DMA0_CHCFG_SOURCE_PIT0 + 3)
+    #define DMAMUX0_DMA0_CHCFG_SOURCE_PIT1   (DMAMUX0_DMA0_CHCFG_SOURCE_PIT0 | 0x0100)
+    #define DMAMUX0_DMA0_CHCFG_SOURCE_PIT2   (DMAMUX0_DMA0_CHCFG_SOURCE_PIT0 | 0x0200)
+    #define DMAMUX0_DMA0_CHCFG_SOURCE_PIT3   (DMAMUX0_DMA0_CHCFG_SOURCE_PIT0 | 0x0300)
   #endif
   #define DMAMUX_CHCFG_TRIG                  0x40                        // DMA channel trigger enable
   #define DMAMUX_CHCFG_ENBL                  0x80                        // DMA channel enable
@@ -15962,7 +15965,7 @@ typedef struct stUSB_HW
         #define DAC0_DAT0H                   *(volatile unsigned char *)(DAC0_BASE_ADD + 0x01) // Data High Register
         #define DAC0_DAT1L                   *(volatile unsigned char *)(DAC0_BASE_ADD + 0x02) // Data Low Register
         #define DAC0_DAT1H                   *(volatile unsigned char *)(DAC0_BASE_ADD + 0x03) // Data High Register
-        #if !defined KINETIS_KL                                              // {52}
+        #if !defined KINETIS_KL || defined KINETIS_KL28                  // {52}
             #define DAC0_DAT2L               *(volatile unsigned char *)(DAC0_BASE_ADD + 0x04) // Data Low Register
             #define DAC0_DAT2H               *(volatile unsigned char *)(DAC0_BASE_ADD + 0x05) // Data High Register
             #define DAC0_DAT3L               *(volatile unsigned char *)(DAC0_BASE_ADD + 0x06) // Data Low Register
@@ -16832,9 +16835,9 @@ typedef struct stPWM_INTERRUPT_SETUP
         unsigned long    ulPWM_buffer_length;                            // length of the buffer used for DMA transfer to PWM
         void             (*dma_int_handler)(void);                       // DMA interrupt handler to be configured
         unsigned short  *ptrPWM_Buffer;                                  // source buffer for DMA transfer to PWM
+        unsigned short   usDmaTriggerSource;                             // source used to trigger DMA transfer - 8 bits used for register configuration and higher bits for additional information
         unsigned char    dma_int_priority;                               // DMA interrupt priority the user wants to set
         unsigned char    ucDmaChannel;                                   // DMA channel to be used
-        unsigned char    ucDmaTriggerSource;                             // source used to trigger DMA transfer
     #endif
 } PWM_INTERRUPT_SETUP;
 
@@ -16957,9 +16960,9 @@ typedef struct stI2S_SAI_SETUP
     unsigned char    int_priority;                                       // priority the user wants to set
 
     unsigned long    ulI2S_SAI_buffer_length;
+    unsigned short   usDmaTriggerSource;                                 // 8 bits used for register configuration and higher bits for additional information
     unsigned char    I2S_SAI_mode;
     unsigned char    ucDmaChannel;
-    unsigned char    ucDmaTriggerSource;
     unsigned char    ucSynchBits;
     void            *ptrI2S_SAI_Buffer;
 } I2S_SAI_SETUP;
@@ -17137,7 +17140,7 @@ typedef struct stADC_SETUP
         unsigned long    ulADC_buffer_length;                            // {36} buffer length
         signed short    *ptrADC_Buffer;                                  // {36} if DMA is specified this is a pointer to the buffer in which the samples will be saved to
         unsigned char    ucDmaChannel;                                   // {36} DMA channel to be used
-        unsigned char    ucDmaTriggerSource;                             // {94} DMA trigger souce (0 defaults to the channel's ADC conversion completion)
+        unsigned short   usDmaTriggerSource;                             // {94} DMA trigger souce (0 defaults to the channel's ADC conversion completion) - 8 bits used for register configuration and higher bits for additional information
         unsigned char    dma_int_priority;                               // priority the user wants to set for DMA completion interrupt
     #endif
 } ADC_SETUP;
@@ -17247,7 +17250,7 @@ typedef struct stDAC_SETUP                                               // {23}
     unsigned short   usOutputValue;                                      // value to be output on the DAC output
     unsigned char    int_dac_controller;                                 // the controller to be used
     unsigned char    ucDmaChannel;                                       // {38} DMA channel to be used
-    unsigned char    ucDmaTriggerSource;                                 // {74} DMA trigger source to be used
+    unsigned short   usDmaTriggerSource;                                 // {74} DMA trigger source to be used - 8 bits used for register configuration and higher bits for additional information
 } DAC_SETUP;
 
 // dac_mode

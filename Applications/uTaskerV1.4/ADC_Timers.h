@@ -775,9 +775,9 @@ static void fnConfigureADC(void)
     adc_setup.dma_int_priority = 3;                                      // priority of DMA interrupt the user wants to set
     adc_setup.dma_int_handler = 0;                                       // no interrupt so that free-running circular buffer is used (when ADC_FULL_BUFFER_DMA_AUTO_REPEAT is not defined)
         #if defined KINETIS_KL && defined TEST_AD_DA && defined ADC_TRIGGER_TPM
-    adc_setup.ucDmaTriggerSource = DMAMUX0_CHCFG_SOURCE_TPM1_OVERFLOW;   // trigger DMA TPM overflows
+    adc_setup.usDmaTriggerSource = DMAMUX0_CHCFG_SOURCE_TPM1_OVERFLOW;   // trigger DMA TPM overflows
         #else
-    adc_setup.ucDmaTriggerSource = 0;                                    // default trigger is the ADC conversion completion of the channel in question
+    adc_setup.usDmaTriggerSource = 0;                                    // default trigger is the ADC conversion completion of the channel in question
         #endif
     #endif
     #if !defined KINETIS_KE
@@ -920,15 +920,15 @@ static void fnConfigureADC(void)
         dac_setup.ulDAC_buffer_length = (AD_DA_BUFFER_LENGTH * sizeof(unsigned short));
         dac_setup.ucDmaChannel = 1;                                      // DMA channel 1 used
             #if defined KINETIS_KL && defined ADC_TRIGGER_TPM
-        dac_setup.ucDmaTriggerSource = DMAMUX0_CHCFG_SOURCE_TPM1_OVERFLOW; // trigger DMA to DAC when TPM overflows
+        dac_setup.usDmaTriggerSource = DMAMUX0_CHCFG_SOURCE_TPM1_OVERFLOW; // trigger DMA to DAC when TPM overflows
             #else
-        dac_setup.ucDmaTriggerSource = DMAMUX0_CHCFG_SOURCE_ADC0;        // trigger DMA to DAC when ADC0 sample completes
+        dac_setup.usDmaTriggerSource = DMAMUX0_CHCFG_SOURCE_ADC0;        // trigger DMA to DAC when ADC0 sample completes
             #endif
         dac_setup.dac_mode |= DAC_HW_TRIGGER_MODE;                       // use HW trigger mode rather than SW triggered mode
         dac_setup.dac_mode |= DAC_FULL_BUFFER_DMA_AUTO_REPEAT;           // automated DMA restart (using interrupt) when not using modulo repetitions
         #else
         dac_setup.ucDmaChannel = 7;                                      // use DMA channel 7
-        dac_setup.ucDmaTriggerSource = DMAMUX0_CHCFG_SOURCE_PDB;
+        dac_setup.usDmaTriggerSource = DMAMUX0_CHCFG_SOURCE_PDB;
         dac_setup.ptrDAC_Buffer = (unsigned short *)sADC_buffer;         // DAC transmit buffer to be used (use the ADC buffer to create a digital delay line)
         dac_setup.ulDAC_buffer_length = sizeof(sADC_buffer);             // physical length of the buffer
         #endif
@@ -952,7 +952,7 @@ static void fnConfigureADC(void)
         pwm_setup.dma_int_priority = 0;
         pwm_setup.dma_int_handler = 0;                                   // no user interrupt call-back on DMA transfer completion
         pwm_setup.ucDmaChannel = 0;                                      // DMA channel 0 used (highest priority)
-        pwm_setup.ucDmaTriggerSource = DMAMUX0_CHCFG_SOURCE_ADC0;
+        pwm_setup.usDmaTriggerSource = DMAMUX0_CHCFG_SOURCE_ADC0;
         pwm_setup.ptrPWM_Buffer = (unsigned short *)sADC_buffer;         // PWM buffer to be used (use the ADC buffer to create a digital delay line)
         pwm_setup.ulPWM_buffer_length = (AD_DA_BUFFER_LENGTH * sizeof(unsigned short)); // physical length of the buffer
         fnConfigureInterrupt((void *)&pwm_setup);
@@ -1294,7 +1294,7 @@ static void fnConfigurePIT(void)
     dac_setup.ptrDAC_Buffer = ptrTestBuffer;
     dac_setup.ulDAC_buffer_length = (LENGTH_OF_TEST_BUFFER * sizeof(unsigned short)); // the number of bytes in the buffer
     dac_setup.ucDmaChannel = 0;                                          // DMA channel 0 used
-    dac_setup.ucDmaTriggerSource = DMAMUX0_DMA0_CHCFG_SOURCE_PIT0;       // PIT0 triggers the channel mux (generally PIT0 can trigger DMA0, PIT1 can trigger DMA channel 1, etc.)
+    dac_setup.usDmaTriggerSource = DMAMUX0_DMA0_CHCFG_SOURCE_PIT0;       // PIT0 triggers the channel mux (generally PIT0 can trigger DMA0, PIT1 can trigger DMA channel 1, etc.)
     dac_setup.dac_mode |= DAC_HW_TRIGGER_MODE;                           // use HW trigger mode rather than SW triggered mode (this requires PIT to trigger it)
     fnConfigureInterrupt((void *)&dac_setup);                            // configure DAC
     #endif
@@ -1637,11 +1637,11 @@ static void fnConfigure_Timer(void)
     pwm_setup.ucDmaChannel = 2;                                          // use DMA channel 2
     pwm_setup.dma_int_priority = 0;
     #if defined FLEX_TIMERS_AVAILABLE_
-    pwm_setup.ucDmaTriggerSource = DMAMUX0_CHCFG_SOURCE_FTM1_C0;         // load next value on own timer match
+    pwm_setup.usDmaTriggerSource = DMAMUX0_CHCFG_SOURCE_FTM1_C0;         // load next value on own timer match
     #elif defined FRDM_K66F
-    pwm_setup.ucDmaTriggerSource = DMAMUX0_CHCFG_SOURCE_TPM2_OVERFLOW;   // load next value on own timer overflow
+    pwm_setup.usDmaTriggerSource = DMAMUX0_CHCFG_SOURCE_TPM2_OVERFLOW;   // load next value on own timer overflow
     #else
-    pwm_setup.ucDmaTriggerSource = DMAMUX0_CHCFG_SOURCE_TPM1_OVERFLOW;   // load next value on own timer overflow
+    pwm_setup.usDmaTriggerSource = DMAMUX0_CHCFG_SOURCE_TPM1_OVERFLOW;   // load next value on own timer overflow
     #endif
     #if defined FLEX_TIMERS_AVAILABLE_
     pwm_setup.ptrPWM_Buffer = (unsigned short *)&rampCountValue[1];      // buffer controlling the DMA trigger points

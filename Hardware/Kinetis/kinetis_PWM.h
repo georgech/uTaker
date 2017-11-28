@@ -414,7 +414,7 @@ static __interrupt void _PWM_Interrupt_5(void)
                 else {
                     ptrRegister = (void *)&ptrFlexTimer->FTM_channel[ucChannel].FTM_CV; // each DMA trigger causes a new PWM value to be set
                 }
-                fnConfigDMA_buffer(ptrPWM_settings->ucDmaChannel, ptrPWM_settings->ucDmaTriggerSource, ptrPWM_settings->ulPWM_buffer_length, ptrPWM_settings->ptrPWM_Buffer, ptrRegister, ulDMA_rules, ptrPWM_settings->dma_int_handler, ptrPWM_settings->dma_int_priority); // source is the PWM buffer and destination is the PWM mark-space ratio register
+                fnConfigDMA_buffer(ptrPWM_settings->ucDmaChannel, ptrPWM_settings->usDmaTriggerSource, ptrPWM_settings->ulPWM_buffer_length, ptrPWM_settings->ptrPWM_Buffer, ptrRegister, ulDMA_rules, ptrPWM_settings->dma_int_handler, ptrPWM_settings->dma_int_priority); // source is the PWM buffer and destination is the PWM mark-space ratio register
                 fnDMA_BufferReset(ptrPWM_settings->ucDmaChannel, DMA_BUFFER_START);
             }
     #endif
