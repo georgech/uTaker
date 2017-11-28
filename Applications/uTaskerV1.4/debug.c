@@ -5585,6 +5585,12 @@ static unsigned short fnMQTT_callback(unsigned char ucEvent, unsigned char *ptrR
     case MQTT_CONNECTION_CLOSED:
         fnDebugMsg("MQTT closed\r\n");
         break;
+    case MQTT_TOPIC_ARRIVING:
+        fnDebugMsg("Topic:");
+        break;
+    case MQTT_TOPIC_MESSAGE:
+        fnDebugMsg("Message\r\n");
+        break;
     }
     return (unsigned short)((unsigned char *)ptrBuf - ptrData);
 }

@@ -2279,8 +2279,10 @@ extern int fnPublishMQTT(void);
 #define MQTT_PUBLISH_TOPIC         5
 #define MQTT_PUBLISH_DATA          6
 #define MQTT_PUBLISH_TOPIC_FILTER  7
-#define MQTT_CONNECTION_CLOSED     8
-#define MQTT_HOST_CLOSED           9
+#define MQTT_TOPIC_ARRIVING        8
+#define MQTT_TOPIC_MESSAGE         9
+#define MQTT_CONNECTION_CLOSED     10
+#define MQTT_HOST_CLOSED           11
 
 
 

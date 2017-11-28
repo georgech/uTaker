@@ -150,10 +150,10 @@ static unsigned char fnSetADC_channel(unsigned char ucADC_channel, int iDiffMode
         _EXCEPTION("Selecting invalid ADC channel!");                    // invalid channels                                     
     }
         #endif
-    if ((iDiffMode != 0) && ((ucADC_channel <= ADC_SC1A_ADCH_D3) || ((ucADC_channel >= ADC_SC1A_ADCH_TEMP_SENS) && (ucADC_channel <= ADC_SC1A_ADCH_VREFSH)))) { // set up channel in differential mode (channels 0..3, temperature, bandgap and VREFSH)
+    if ((iDiffMode != 0) && ((ucADC_channel <= ADC_SC1A_ADCH_D3) || ((ucADC_channel >= ADC_SC1A_ADCH_TEMP_SENS) && (ucADC_channel <= ADC_SC1A_ADCH_VREFSH)))) { // set up channel in differential mode (channels 0..3, temperature, band-gap and VREFSH)
         return (ucADC_channel | ADC_SC1A_DIFF);
     }
-    else {                                                               // single ended (channels 0..23, temperature, bandgap and VREFSH and VREFSL)
+    else {                                                               // single ended (channels 0..23, temperature, band-gap and VREFSH and VREFSL)
         switch (ucADC_channel) {
         case ADC_SE23_SINGLE:
         #if defined KINETIS_KL43

@@ -112,7 +112,7 @@
     #if !defined DEVICE_WITHOUT_DMA
             if ((ptrDAC_settings->dac_mode & (DAC_FULL_BUFFER_DMA | DAC_HALF_BUFFER_DMA)) != 0) { // {60} if DMA is being specified
                 unsigned long ulDMA_rules = (DMA_DIRECTION_OUTPUT | DMA_HALF_WORDS); // DMA transfer is from a buffer to a fixed address and each transfer is a half-word in size
-        #if defined _WINDOWS && !defined TRGMUX_AVAILABLE && !defined KINETIS_KL82 // not supported by KL82
+        #if defined _WINDOWS && defined DMAMUX0_DMA0_CHCFG_SOURCE_PIT1
                 if ((ptrDAC_settings->int_dac_controller == 0) && (DMAMUX0_DMA0_CHCFG_SOURCE_PIT1 == ptrDAC_settings->ucDmaTriggerSource)) {
                     _EXCEPTION("DAC0 cannot be triggered from PIT channel 1!!");
                 }

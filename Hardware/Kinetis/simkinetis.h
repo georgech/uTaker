@@ -793,26 +793,26 @@ unsigned short DMA_TCD3_BITER_ELINKYES;
 
 typedef struct stKINETIS_FB
 {
-unsigned long CSAR0;
-unsigned long CSMR0;
-unsigned long CSCR0;
-unsigned long CSAR1;
-unsigned long CSMR1;
-unsigned long CSCR1;
-unsigned long CSAR2;
-unsigned long CSMR2;
-unsigned long CSCR2;
-unsigned long CSAR3;
-unsigned long CSMR3;
-unsigned long CSCR3;
-unsigned long CSAR4;
-unsigned long CSMR4;
-unsigned long CSCR4;
-unsigned long CSAR5;
-unsigned long CSMR5;
-unsigned long CSCR5;
-unsigned long ulRes0[6];
-unsigned long CSPMCR;
+    unsigned long CSAR0;
+    unsigned long CSMR0;
+    unsigned long CSCR0;
+    unsigned long CSAR1;
+    unsigned long CSMR1;
+    unsigned long CSCR1;
+    unsigned long CSAR2;
+    unsigned long CSMR2;
+    unsigned long CSCR2;
+    unsigned long CSAR3;
+    unsigned long CSMR3;
+    unsigned long CSCR3;
+    unsigned long CSAR4;
+    unsigned long CSMR4;
+    unsigned long CSCR4;
+    unsigned long CSAR5;
+    unsigned long CSMR5;
+    unsigned long CSCR5;
+    unsigned long ulRes0[6];
+    unsigned long CSPMCR;
 } KINETIS_FB;
 
 #if defined INTMUX0_AVAILABLE                                            // {36}
@@ -847,6 +847,39 @@ typedef struct stKINETIS_KL_INTMUX
     unsigned long INTMUX_CH3_IPR_31_0;
     unsigned long ulRes11[7];
 } KINETIS_KL_INTMUX;
+#endif
+
+#if defined TRGMUX_AVAILABLE
+typedef struct stKINETIS_TRGMUX0
+{
+    unsigned long TRGMUX_DMAMUX0;
+    unsigned long TRGMUX_LPIT0;
+    unsigned long TRGMUX_TPM2;
+    unsigned long TRGMUX_ADC0;
+    unsigned long TRGMUX_LPUART2;
+    unsigned long ulRes0;
+    unsigned long TRGMUX_LPI2C2;
+    unsigned long ulRes1;
+    unsigned long TRGMUX_LPSPI2;
+    unsigned long ulRes2;
+    unsigned long TRGMUX_CMP0;
+    unsigned long TRGMUX_CMP1;
+    unsigned long TRGMUX_DAC0;
+} KINETIS_TRGMUX0;
+
+typedef struct stKINETIS_TRGMUX1
+{
+    unsigned long ulRes0[2];
+    unsigned long TRGMUX_TPM0;
+    unsigned long TRGMUX_TPM1;
+    unsigned long TRGMUX_FLEXIO;
+    unsigned long TRGMUX_LPUART0;
+    unsigned long TRGMUX_LPUART1;
+    unsigned long TRGMUX_LPI2C0;
+    unsigned long TRGMUX_LPI2C1;
+    unsigned long TRGMUX_LPSPI0;
+    unsigned long TRGMUX_LPSPI1;
+} KINETIS_TRGMUX1;
 #endif
 
 #if defined MPU_AVAILABLE
@@ -3526,6 +3559,10 @@ typedef struct stKINETIS_PERIPH
 #endif
 #if defined INTMUX0_AVAILABLE                                            // {36}
     KINETIS_KL_INTMUX  INTMUX;
+#endif
+#if defined TRGMUX_AVAILABLE
+    KINETIS_TRGMUX0    TRGMUX0;
+    KINETIS_TRGMUX1    TRGMUX1;
 #endif
 #if defined MPU_AVAILABLE
     KINETIS_MPU        MPU;

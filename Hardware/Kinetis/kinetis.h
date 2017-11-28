@@ -3224,6 +3224,10 @@ typedef struct stVECTOR_TABLE
     #if defined INTMUX0_AVAILABLE                                        // {100}
         #define INTMUX0_BLOCK                  ((unsigned char *)(&kinetis.INTMUX)) // INTMUX0
     #endif
+    #if defined TRGMUX_AVAILABLE
+        #define TRGMUX0_BLOCK                  ((unsigned char *)(&kinetis.TRGMUX0)) // TRGMUX0
+        #define TRGMUX1_BLOCK                  ((unsigned char *)(&kinetis.TRGMUX1)) // TRGMUX1
+    #endif
     #if defined MPU_AVAILABLE
         #define MPU_BLOCK                      ((unsigned char *)(&kinetis.MPU)) // Memory Protection Unit
     #endif
@@ -3510,6 +3514,10 @@ typedef struct stVECTOR_TABLE
     #endif
     #if defined INTMUX0_AVAILABLE                                        // {100}
         #define INTMUX0_BLOCK                  0x40024000                // INTMUX0
+    #endif
+    #if defined TRGMUX_AVAILABLE
+        #define TRGMUX0_BLOCK                  0x40027000                // TRGMUX0
+        #define TRGMUX1_BLOCK                  0x400a7000                // TRGMUX1
     #endif
     #if defined MPU_AVAILABLE
         #define MPU_BLOCK                      0x4000d000                // Memory Protection Unit
@@ -4814,6 +4822,96 @@ typedef struct stKINETIS_INTMUX
 #define INPUT_TO_INTMUX0_CHANNEL_3        3
 
 
+#if defined TRGMUX_AVAILABLE
+    #define TRGMUX_DMAMUX0        *(unsigned long *)(TRGMUX0_BLOCK + 0x00)
+        #define TRGMUX_SEL0       0x0000003f                             // peripheral trigger 0 mask
+        #define TRGMUX_SEL1       0x00003f00                             // peripheral trigger 1 mask
+        #define TRGMUX_SEL2       0x003f0000                             // peripheral trigger 2 mask
+        #define TRGMUX_SEL3       0x3f000000                             // peripheral trigger 3 mask
+        #define TRGMUX_LK         0x80000000                             // register locked until next reset
+    #define TRGMUX_LPIT0          *(unsigned long *)(TRGMUX0_BLOCK + 0x04)
+    #define TRGMUX_TPM2           *(unsigned long *)(TRGMUX0_BLOCK + 0x08)
+    #define TRGMUX_ADC0           *(unsigned long *)(TRGMUX0_BLOCK + 0x10)
+    #define TRGMUX_LPUART2        *(unsigned long *)(TRGMUX0_BLOCK + 0x14)
+    #define TRGMUX_LPI2C2         *(unsigned long *)(TRGMUX0_BLOCK + 0x1c)
+    #define TRGMUX_LPSPI2         *(unsigned long *)(TRGMUX0_BLOCK + 0x24)
+    #define TRGMUX_CMP0           *(unsigned long *)(TRGMUX0_BLOCK + 0x2c)
+    #define TRGMUX_CMP1           *(unsigned long *)(TRGMUX0_BLOCK + 0x30)
+    #define TRGMUX_DAC0           *(unsigned long *)(TRGMUX0_BLOCK + 0x34)
+
+    #define TRGMUX_TPM0           *(unsigned long *)(TRGMUX1_BLOCK + 0x08)
+    #define TRGMUX_TPM1           *(unsigned long *)(TRGMUX1_BLOCK + 0x0c)
+    #define TRGMUX_FLEXIO         *(unsigned long *)(TRGMUX1_BLOCK + 0x10)
+    #define TRGMUX_LPUART0        *(unsigned long *)(TRGMUX1_BLOCK + 0x14)
+    #define TRGMUX_LPUART1        *(unsigned long *)(TRGMUX1_BLOCK + 0x18)
+    #define TRGMUX_LPI2C0         *(unsigned long *)(TRGMUX1_BLOCK + 0x1c)
+    #define TRGMUX_LPI2C1         *(unsigned long *)(TRGMUX1_BLOCK + 0x20)
+    #define TRGMUX_LPSPI0         *(unsigned long *)(TRGMUX1_BLOCK + 0x24)
+    #define TRGMUX_LPSPI1         *(unsigned long *)(TRGMUX1_BLOCK + 0x28)
+
+    #define TRGMUX_SEL_DISABLED           0x00
+    #define TRGMUX_SEL_PORT_PIN_TRIGGER   0x01
+    #define TRGMUX_SEL_FLEXIO_TIMER_0     0x02
+    #define TRGMUX_SEL_FLEXIO_TIMER_1     0x03
+    #define TRGMUX_SEL_FLEXIO_TIMER_2     0x04
+    #define TRGMUX_SEL_FLEXIO_TIMER_3     0x05
+    #define TRGMUX_SEL_FLEXIO_TIMER_4     0x06
+    #define TRGMUX_SEL_FLEXIO_TIMER_5     0x07
+    #define TRGMUX_SEL_FLEXIO_TIMER_6     0x08
+    #define TRGMUX_SEL_FLEXIO_TIMER_7     0x09
+    #define TRGMUX_SEL_TPM0_OVERFLOW      0x0a
+    #define TRGMUX_SEL_TPM0_CHANNEL_0     0x0b
+    #define TRGMUX_SEL_TPM0_CHANNEL_1     0x0c
+    #define TRGMUX_SEL_TPM1_OVERFLOW      0x0d
+    #define TRGMUX_SEL_TPM1_CHANNEL_0     0x0e
+    #define TRGMUX_SEL_TPM1_CHANNEL_1     0x0f
+    #define TRGMUX_SEL_LPUART0_RX_DATA    0x14
+    #define TRGMUX_SEL_LPUART0_TX_DATA    0x15
+    #define TRGMUX_SEL_LPUART0_RX_IDLE    0x16
+    #define TRGMUX_SEL_LPUART1_RX_DATA    0x17
+    #define TRGMUX_SEL_LPUART1_TX_DATA    0x18
+    #define TRGMUX_SEL_LPUART1_RX_IDLE    0x19
+    #define TRGMUX_SEL_LPI2C0_MASTER_STOP 0x1a
+    #define TRGMUX_SEL_LPI2C0_SLAVE_STOP  0x1b
+    #define TRGMUX_SEL_LPI2C1_MASTER_STOP 0x1c
+    #define TRGMUX_SEL_LPI2C1_SLAVE_STOP  0x1d
+    #define TRGMUX_SEL_LPSPI0_FRAME       0x1e
+    #define TRGMUX_SEL_LPSPI0_RX_DATA     0x1f
+    #define TRGMUX_SEL_LPSPI1_FRAME       0x20
+    #define TRGMUX_SEL_LPSPI1_RX_DATA     0x21
+    #define TRGMUX_SEL_RTC_SECONDS        0x22
+    #define TRGMUX_SEL_RTC_ALARM          0x23
+    #define TRGMUX_SEL_LPTMR0             0x24
+    #define TRGMUX_SEL_LPTMR1             0x25
+    #define TRGMUX_SEL_CMP0               0x26
+    #define TRGMUX_SEL_CMP1               0x27
+    #define TRGMUX_SEL_ADC0_CONVERSION_A  0x28
+    #define TRGMUX_SEL_ADC0_CONVERSION_B  0x29
+    #define TRGMUX_SEL_PORTA_PIN_TRIGGER  0x2a
+    #define TRGMUX_SEL_PORTB_PIN_TRIGGER  0x2b
+    #define TRGMUX_SEL_PORTC_PIN_TRIGGER  0x2c
+    #define TRGMUX_SEL_PORTD_PIN_TRIGGER  0x2d
+    #define TRGMUX_SEL_PORTE_PIN_TRIGGER  0x2e
+    #define TRGMUX_SEL_TPM2_OVERFLOW      0x2f
+    #define TRGMUX_SEL_TPM2_CHANNEL_0     0x30
+    #define TRGMUX_SEL_TPM2_CHANNEL_1     0x31
+    #define TRGMUX_SEL_LPIT0_CHANNEL_0    0x32
+    #define TRGMUX_SEL_LPIT0_CHANNEL_1    0x33
+    #define TRGMUX_SEL_LPIT0_CHANNEL_2    0x34
+    #define TRGMUX_SEL_LPIT0_CHANNEL_3    0x35
+    #define TRGMUX_SEL_USB_SOF            0x36
+    #define TRGMUX_SEL_LPUART2_RX_DATA    0x37
+    #define TRGMUX_SEL_LPUART2_TX_DATA    0x38
+    #define TRGMUX_SEL_LPUART2_RX_IDLE    0x39
+    #define TRGMUX_SEL_LPI2C2_MASTER_STOP 0x3a
+    #define TRGMUX_SEL_LPI2C2_SLAVE_STOP  0x3b
+    #define TRGMUX_SEL_LPSPI2_FRAME       0x3c
+    #define TRGMUX_SEL_LPSPI2_RX_DATA     0x3d
+    #define TRGMUX_SEL_SAI_TX_FRAME_SYNC  0x3e
+    #define TRGMUX_SEL_SAI_RX_FRAME_SYNC  0x3f
+#endif
+
+
 #if !defined KINETIS_KL
 // FlexBus Module
 //
@@ -5734,10 +5832,16 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
       #define DMAMUX0_CHCFG_SOURCE_DMAMUX5       (63 | DMAMUX_CHCFG_TRIG)// 0x3f DMA MUX - always enabled
     #endif
 #endif
-  #define DMAMUX0_DMA0_CHCFG_SOURCE_PIT0    (DMAMUX0_CHCFG_SOURCE_DMAMUX0)
-  #define DMAMUX0_DMA0_CHCFG_SOURCE_PIT1    (DMAMUX0_CHCFG_SOURCE_DMAMUX1)
-  #define DMAMUX0_DMA0_CHCFG_SOURCE_PIT2    (DMAMUX0_CHCFG_SOURCE_DMAMUX2)
-  #define DMAMUX0_DMA0_CHCFG_SOURCE_PIT3    (DMAMUX0_CHCFG_SOURCE_DMAMUX3)
+  #define DMAMUX0_DMA0_CHCFG_SOURCE_PIT0     (DMAMUX0_CHCFG_SOURCE_DMAMUX0)
+  #if defined DMAMUX0_CHCFG_SOURCE_DMAMUX1
+    #define DMAMUX0_DMA0_CHCFG_SOURCE_PIT1   (DMAMUX0_CHCFG_SOURCE_DMAMUX1)
+    #define DMAMUX0_DMA0_CHCFG_SOURCE_PIT2   (DMAMUX0_CHCFG_SOURCE_DMAMUX2)
+    #define DMAMUX0_DMA0_CHCFG_SOURCE_PIT3   (DMAMUX0_CHCFG_SOURCE_DMAMUX3)
+  #else
+    #define DMAMUX0_DMA0_CHCFG_SOURCE_PIT1   (DMAMUX0_DMA0_CHCFG_SOURCE_PIT0 + 1)
+    #define DMAMUX0_DMA0_CHCFG_SOURCE_PIT2   (DMAMUX0_DMA0_CHCFG_SOURCE_PIT0 + 2)
+    #define DMAMUX0_DMA0_CHCFG_SOURCE_PIT3   (DMAMUX0_DMA0_CHCFG_SOURCE_PIT0 + 3)
+  #endif
   #define DMAMUX_CHCFG_TRIG                  0x40                        // DMA channel trigger enable
   #define DMAMUX_CHCFG_ENBL                  0x80                        // DMA channel enable
 #define DMAMUX0_CHCFG1     *(unsigned char *)(DMAMUX0_BLOCK + 0x01)      // Channel 1 Configuration Register

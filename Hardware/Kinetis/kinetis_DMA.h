@@ -598,6 +598,12 @@ extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned char ucDmaT
   //ptrDMA_TCD->DMA_TCD_SLAST = (-(signed long)(ulBufLength));           // {3} when the buffer has been transmitted set the destination back to the start of it
     ptrDMA_TCD->DMA_TCD_BITER_ELINK = ptrDMA_TCD->DMA_TCD_CITER_ELINK = (signed short)(ulBufLength/ucSize); // the number of service requests to be performed each cycle
     POWER_UP_ATOMIC(6, DMAMUX0);                                         // enable DMA multiplexer 0
+        #if defined TRGMUX_AVAILABLE
+    if ((ucDmaTriggerSource & DMAMUX_CHCFG_TRIG) != 0) {                 // triggered source (LPIT)
+        TRGMUX_DMAMUX0 = (TRGMUX_SEL_LPIT0_CHANNEL_0 + (ucDmaTriggerSource - DMAMUX0_DMA0_CHCFG_SOURCE_PIT0)); // LPIT is connected to the DMAMUX
+        ucDmaTriggerSource = DMAMUX0_DMA0_CHCFG_SOURCE_PIT0;
+    }
+        #endif
     *(unsigned char *)(DMAMUX0_BLOCK + ucDMA_channel) = (ucDmaTriggerSource | DMAMUX_CHCFG_ENBL); // connect trigger source to DMA channel
     #endif
     #if defined _WINDOWS                                                 // simulator checks to help detect incorrect usage
@@ -621,16 +627,16 @@ extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned char ucDmaT
         }
         #endif
     }
-        #if !defined TRGMUX_AVAILABLE && !defined KINETIS_KL82               // not supported by KL82
+        #if defined DMAMUX0_DMA0_CHCFG_SOURCE_PIT1
     else if (DMAMUX0_DMA0_CHCFG_SOURCE_PIT1 == ucDmaTriggerSource) {
         if (ucDMA_channel != 1) {
             _EXCEPTION("PIT1 trigger only operates on DMA channel 1!!");
         }
-        #if defined ERRATA_ID_5746
+            #if defined ERRATA_ID_5746
         if ((ptrDMA->DMA_DCR & DMA_DCR_CS) != 0) {
             _EXCEPTION("PIT1 trigger generates two data transfers when in cycle-steal mode!!");
         }
-        #endif
+            #endif
     }
     else if (DMAMUX0_DMA0_CHCFG_SOURCE_PIT2 == ucDmaTriggerSource) {
         if (ucDMA_channel != 2) {

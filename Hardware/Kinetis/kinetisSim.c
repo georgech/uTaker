@@ -4750,30 +4750,38 @@ extern int fnSimulateDMA(int channel)                                    // {3}
 static void fnHandleDMA_triggers(int iTriggerSource, int iDMAmux)
 {
 #if !defined DEVICE_WITHOUT_DMA
-    #if defined KINETIS_KL
-    #define MAX_DMA_MUX_CHANNELS 4
-    #else
-    #define MAX_DMA_MUX_CHANNELS 16
-    #endif
-    unsigned char *ptrMux = DMAMUX0_CHCFG_ADD;                       // check the channel multiplexers to see whether it connects to the port
+    int iMuxChannels = DMA_CHANNEL_COUNT;
+    unsigned char *ptrMux = DMAMUX0_CHCFG_ADD;                           // check the channel multiplexers to see whether it connects to the port
     int iChannel = 0;
-    iTriggerSource &= ~(DMAMUX_CHCFG_TRIG);
     if (iDMAmux == 1) {
-        #if defined DMAMUX1_CHCFG_ADD
+    #if defined DMAMUX1_CHCFG_ADD
         ptrMux = DMAMUX0_CHCFG_ADD;
-        #else
+    #else
         return;
-        #endif
+    #endif
     }
-    while (iChannel < MAX_DMA_MUX_CHANNELS) {
+    #if defined TRGMUX_AVAILABLE
+    if ((iTriggerSource & DMAMUX_CHCFG_TRIG) != 0) {                     // periodic trigger (LPIT source)
+        iTriggerSource -= DMAMUX0_CHCFG_SOURCE_DMAMUX0;                  // the LPIT that is being checked for
+        if ((TRGMUX_DMAMUX0 & TRGMUX_SEL0) == (TRGMUX_SEL_LPIT0_CHANNEL_0 + iTriggerSource)) { // check that the LPIT trigger is connected to the DMAMUX
+            iTriggerSource = DMAMUX0_CHCFG_SOURCE_DMAMUX0;
+            iMuxChannels = 4;                                            // period triggers are limited to the first 4 channels
+        }
+        else {
+            return;                                                      // trigger is not connected so it can't trigger a DMA request
+        }
+    }
+    #endif
+    iTriggerSource &= ~(DMAMUX_CHCFG_TRIG);
+    while (iChannel < iMuxChannels) {
         if ((*ptrMux++ & ~(DMAMUX_CHCFG_TRIG)) == (DMAMUX_CHCFG_ENBL | (unsigned char)iTriggerSource)) { // matching enabled trigger
-                #if defined _WINDOWS
+    #if defined _WINDOWS && !defined TRGMUX_AVAILABLE
             if ((DMAMUX0_DMA0_CHCFG_SOURCE_PIT0 & ~(DMAMUX_CHCFG_TRIG)) == (unsigned char)iTriggerSource) {
                 if (iChannel != 0) {
                     _EXCEPTION("PIT0 trigger only operates on DMA channel 0!!");
                 }
             }
-        #if !defined KINETIS_KL28 && !defined KINETIS_KL82               // not yet supported
+        #if !defined KINETIS_KL82                                        // not yet supported
             else if ((DMAMUX0_DMA0_CHCFG_SOURCE_PIT1 & ~(DMAMUX_CHCFG_TRIG)) == (unsigned char)iTriggerSource) {
                 if (iChannel != 1) {
                     _EXCEPTION("PIT1 trigger only operates on DMA channel 1!!");
@@ -4795,7 +4803,7 @@ static void fnHandleDMA_triggers(int iTriggerSource, int iDMAmux)
             if ((DMA_ERQ & (DMA_ERQ_ERQ0 << iChannel)) != 0) {           // if the DMA channel is enabled
                 KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
                 ptrDMA_TCD += iChannel;
-                ptrDMA_TCD->DMA_TCD_CSR |= (DMA_TCD_CSR_ACTIVE);             // trigger
+                ptrDMA_TCD->DMA_TCD_CSR |= (DMA_TCD_CSR_ACTIVE);         // trigger
                 fnSimulateDMA(iChannel);
             }
     #else
@@ -7845,7 +7853,7 @@ extern int fnSimTimers(void)
                     LPIT0_CVAL1 -= ulCount;
                 }
                 LPIT0_MSR |= LPIT_MSR_TIF1;                              // flag that a reload occurred
-        #if !defined KINETIS_KL28 && !defined KINETIS_KL82               // not yet supported
+        #if !defined KINETIS_KL82                                        // not yet supported
                 fnHandleDMA_triggers(DMAMUX0_DMA0_CHCFG_SOURCE_PIT1, 0); // handle DMA triggered on LPIT1
         #endif
                 if ((LPIT0_MIER & LPIT_MIER_TIE1) != 0) {                // if PIT interrupt is enabled
