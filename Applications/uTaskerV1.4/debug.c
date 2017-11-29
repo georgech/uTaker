@@ -495,7 +495,8 @@
 
     #define DO_MQTT_CONNECT         69
     #define DO_MQTT_PUB             71
-    #define DO_MQTT_DISCONNECT      72
+    #define DO_MQTT_PUB_LONG        72
+    #define DO_MQTT_DISCONNECT      73
 
 #define DO_CAN                    13
     #define DO_SEND_CAN_DEFAULT     0                                    // specific CAN command to send a message to the default destination
@@ -1056,6 +1057,7 @@ static const DEBUG_COMMAND tFTP_TELNET_Command[] = {                     // {37}
 #if defined USE_MQTT_CLIENT                                              // {87}
     { "mqtt_con",         "Connect to MQTT broker [ip]",           DO_FTP_TELNET_MQTT, DO_MQTT_CONNECT },
     { "mqtt_pub",         "Publish next",                          DO_FTP_TELNET_MQTT, DO_MQTT_PUB },
+    { "mqtt_pub_l",       "Publish next (long)",                  DO_FTP_TELNET_MQTT, DO_MQTT_PUB_LONG },
     { "mqtt_dis",         "Disconect from MQTT broker",            DO_FTP_TELNET_MQTT, DO_MQTT_DISCONNECT },
     #if !defined USE_FTP_CLIENT && ! defined USE_TELNET_CLIENT
     {"help",              "Display menu specific help",            DO_HELP,          DO_MAIN_HELP },
@@ -1220,6 +1222,9 @@ static unsigned char   ucDebugCnt = 0;
     #if defined EZPORT_CLONER_SKIP_REGIONS
         static int iCloningRegion = 0;
     #endif
+#endif
+#if defined USE_MQTT_CLIENT
+    static unsigned short usPubLength = 0;
 #endif
 
 
@@ -5576,7 +5581,7 @@ static unsigned short fnMQTT_callback(unsigned char ucEvent, unsigned char *ptrR
             static unsigned char ucDataCnt = 0;
             int i = 0;
             ptrBuf = uStrcpy(ptrBuf, "abcd");                            // add string content
-            while (i++ < 10) {                                           // plus some binary content
+            while (i++ < usPubLength) {                                  // plus some binary content
                 *ptrBuf++ = ucDataCnt++;
             }
         }
@@ -5776,7 +5781,14 @@ static void fnDoFTP_TELNET_MQTT(unsigned char ucType, CHAR *ptrInput)
             }
         }
         break;
+    case DO_MQTT_PUB_LONG:
     case DO_MQTT_PUB:
+        if (ucType == DO_MQTT_PUB_LONG) {
+            usPubLength = 1024;
+        }
+        else {
+            usPubLength = 10;
+        }
         if (fnPublishMQTT() == 0) {
             fnDebugMsg("Publishing...");
         }

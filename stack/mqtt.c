@@ -31,7 +31,7 @@
 
 #define OWN_TASK     TASK_MQTT
 
-#define MQTT_MESSAGE_LEN       127                                       // largest transmission supported
+#define MQTT_MESSAGE_LEN       1400                                      // largest transmission supported
 
 #define MQTT_CONTROL_PACKET_TYPE_Reserved_0   (0 << 4)                   // forbidden
 #define MQTT_CONTROL_PACKET_TYPE_CONNECT      (1 << 4)                   // client to server connection request
@@ -124,6 +124,12 @@ static int fnHandleData(unsigned char *ptrData, unsigned short usDataLength);
 static unsigned char cucProtocolNameMQTT[] = { 0x00, 0x04,               // length
                                                'M', 'Q', 'T', 'T'        // name
 };
+#if 0 // temp
+static unsigned char test[] = {0x34, 0x38, 0x00, 0x23, 0x2f, 0x61, 0x76, 0x6f, 0x6c, 0x61, 0x6e, 0x61, 0x2f, 0x64, 0x65, 0x76, 0x69, 0x63, 0x65, 0x2f, 0x41,
+0x56, 0x4f, 0x4c, 0x41, 0x4e, 0x41, 0x37, 0x30, 0x62, 0x33, 0x64, 0x35, 0x34, 0x32, 0x38, 0x30, 0x30, 0x37, 0x00, 0x02, 0x7b, 0x22, 0x68, 0x65, 0x6c,
+0x6c, 0x6f, 0x22, 0x3a, 0x22, 0x77, 0x6f, 0x72, 0x6c, 0x64, 0x22, 0x7d };
+static unsigned char test2[] = { 0x62, 0x02, 0x00, 0x02 };
+#endif
 
 /* =================================================================== */
 /*                     global variable definitions                     */
@@ -187,7 +193,14 @@ extern int fnConnectMQTT(unsigned char *ucIP, unsigned short(*fnCallback)(unsign
 
     fnUserCallback = fnCallback;
     uMemcpy(ucMQTT_ip_address, ucIP, IPV4_LENGTH);                       // save the address of the MQTT server/broker we want to connect to
+
+#if 0 // temp
+    ucMQTT_state = MQTT_STATE_CONNECTED_IDLE;
+    fnMQTTListener(MQTT_TCP_socket, TCP_EVENT_DATA, test, sizeof(test));
+    fnMQTTListener(MQTT_TCP_socket, TCP_EVENT_DATA, test2, sizeof(test2));
+#else
     fnSetNextMQTT_state(MQTT_STATE_OPEN_REQUESTED);
+#endif
     return 0;                                                            // OK    
 }
 
@@ -258,7 +271,7 @@ static void fnMQTT_ping(void)
 //
 static int fnSetNextMQTT_state(unsigned char ucNextState)
 {
-    if (ucNextState == MQTT_STATE_CONNECTED_IDLE) {                      // if going idle move to possibel queued states, handled in the order of priority that they are checked in
+    if (ucNextState == MQTT_STATE_CONNECTED_IDLE) {                      // if going idle move to possible queued states, handled in the order of priority that they are checked in
         if ((ucQueueFlags & MQTT_QUEUE_PUBLISH_ACK) != 0) {              // if a publish ack is queued
             ucQueueFlags &= ~(MQTT_QUEUE_PUBLISH_ACK);                   // no longer queued
             ucNextState = MQTT_STATE_PUBLISH_ACK;                        // start state publish ack
@@ -286,7 +299,7 @@ static int fnSetNextMQTT_state(unsigned char ucNextState)
           ucQueueFlags = 0;
           uTaskerStopTimer(OWN_TASK);
           break;
-      case MQTT_CONTROL_PACKET_TYPE_PUBACK:                              // moving to sttes that require a message to be sent
+      case MQTT_STATE_PUBLISH_ACK:                                       // moving to states that require a message to be sent
       case MQTT_STATE_PUBLISH_COMPLETE:
       case MQTT_STATE_PUBLISH_RECEIVED:
       case MQTT_STATE_SENDING_KEEPALIVE:
@@ -367,19 +380,24 @@ static int fnMQTTListener(USOCKET Socket, unsigned char ucEvent, unsigned char *
     return APP_ACCEPT;
 }
 
-// The remaining length field is encoded to one to four bytes - we support just one (0..127 range)
+// The remaining length field is encoded to one to four bytes - we support just two (0..16383 range)
 //
-static unsigned short fnAddMQTT_remaining_length(unsigned char *ptrEnd, unsigned char *ptrStart, int iMaxLength, unsigned char *ptrRemainingLength)
+static unsigned short fnAddMQTT_remaining_length(unsigned char *ptrEnd, unsigned char *ptrStart, int iMaxLength, unsigned char *ptrRemainingLength, int *iVarLenInsert)
 {
-    unsigned short usDataLength = (ptrEnd - ptrStart);
     unsigned long ulRemainingLength = ((ptrEnd - ptrRemainingLength) - 1);
     if (ulRemainingLength <= 127) {                              
-        *ptrRemainingLength = (unsigned char)ulRemainingLength;
+        *ptrRemainingLength = (unsigned char)ulRemainingLength;          // single byte to represent the length
     }
-    else {
-        _EXCEPTION("Implement larger length insertions");                // if more that one byte were to be inserted, the complete following buffer needs also to be shifted
+    else {                                                               // we need to encode the length to two bytes
+        uMemcpy((ptrStart - 1), ptrStart, (ptrRemainingLength - ptrStart)); // rather than shift the message content to make space we shift the small header instead
+        *iVarLenInsert = 0;
+        ptrStart--;
+        *ptrRemainingLength = (unsigned char)(ulRemainingLength/128);
+        ulRemainingLength = ulRemainingLength - (*ptrRemainingLength * 128);
+        ptrRemainingLength--;
+        *ptrRemainingLength = (unsigned char)(0x80 | ulRemainingLength);
     }
-    return usDataLength;
+    return (ptrEnd - ptrStart);                                          // length
 }
 
 // Insert the user's string into the message
@@ -417,10 +435,11 @@ static void fnIncrementtPacketIdentfier(unsigned char ucControlPacketType)
 //
 static unsigned short fnRegenerate(void)
 {
-    unsigned char ucMQTTData[MIN_TCP_HLEN + MQTT_MESSAGE_LEN];
+    unsigned char ucMQTTData[MIN_TCP_HLEN + MQTT_MESSAGE_LEN + 1];
     unsigned short usDataLen = 0;
-    unsigned char *ptrMQTT_packet = (unsigned char *)&ucMQTTData[MIN_TCP_HLEN];
+    unsigned char *ptrMQTT_packet = (unsigned char *)&ucMQTTData[MIN_TCP_HLEN + 1]; // leave one byte at the start free in case we need to add a two byte variable length
     unsigned char *ptrRemainingLength;
+    int iVarLenInsert = 1;
 
     if (ucUnacked != 0) {                                                // if there is unacked data we need to wait until it has been acked before we can continue
         ucQueueFlags |= MQTT_QUEUE_REGEN;                                // flag that we want to continue as soon as the outstanding TCP data has been acknowleged
@@ -437,7 +456,7 @@ static unsigned short fnRegenerate(void)
         ptrMQTT_packet += sizeof(cucProtocolNameMQTT);
         *ptrMQTT_packet++ = MQTT_PROTOCOL_LEVEL;
         *ptrMQTT_packet++ = MQTT_CONNECT_FLAG_CLEAN_SESSION;             // clear any previous session states
-        *ptrMQTT_packet++ = (unsigned char)(MQTT_KEEPALIVE_TIME_SECONDS >> 8); // keep-alive time (the broker shoudl disconnect when there is no acivity during this interval)
+        *ptrMQTT_packet++ = (unsigned char)(MQTT_KEEPALIVE_TIME_SECONDS >> 8); // keep-alive time (the broker should disconnect when there is no acivity during this interval)
         *ptrMQTT_packet++ = (unsigned char)(MQTT_KEEPALIVE_TIME_SECONDS);
         // Payload
         //
@@ -478,7 +497,7 @@ static unsigned short fnRegenerate(void)
         ptrMQTT_packet = fnInsertPacketIdentfier(ptrMQTT_packet, usPacketIdentifier);
         break;
     #endif
-    case MQTT_CONTROL_PACKET_TYPE_PUBACK:
+    case MQTT_STATE_PUBLISH_ACK:
         *ptrMQTT_packet++ = (MQTT_CONTROL_PACKET_TYPE_PUBACK);
         ptrRemainingLength = ptrMQTT_packet++;                           // the location where the remaining length is to be added
         ptrMQTT_packet = fnInsertPacketIdentfier(ptrMQTT_packet, usMessageIdentifier);
@@ -497,15 +516,15 @@ static unsigned short fnRegenerate(void)
         *ptrMQTT_packet++ = MQTT_CONTROL_PACKET_TYPE_PINGREQ;            // ping request
         *ptrMQTT_packet++ = 0;
         uTaskerMonoTimer(OWN_TASK, MQTT_PING_TIME, T_MQTT_BROKER_DEAD);  // monitor the broker's ping response
-        return (ucUnacked = (fnSendTCP(MQTT_TCP_socket, ucMQTTData, 2, TCP_FLAG_PUSH) > 0)); // send data
+        return (ucUnacked = (fnSendTCP(MQTT_TCP_socket, (ucMQTTData + 1), 2, TCP_FLAG_PUSH) > 0)); // send data
     default:
         return 0;
     }
     if (usDataLen == 0) {
-        usDataLen = fnAddMQTT_remaining_length(ptrMQTT_packet, (unsigned char *)&ucMQTTData[MIN_TCP_HLEN], MQTT_MESSAGE_LEN, ptrRemainingLength);
+        usDataLen = fnAddMQTT_remaining_length(ptrMQTT_packet, (unsigned char *)&ucMQTTData[MIN_TCP_HLEN + 1], MQTT_MESSAGE_LEN, ptrRemainingLength, &iVarLenInsert);
     }
     uTaskerMonoTimer(OWN_TASK, MQTT_KEEPALIVE_TIME, T_MQTT_KEEPALIVE_TIMEOUT); // retrigger the keep-alive timer at each transmission
-    return (ucUnacked = (fnSendTCP(MQTT_TCP_socket, ucMQTTData, usDataLen, TCP_FLAG_PUSH) > 0)); // send data
+    return (ucUnacked = (fnSendTCP(MQTT_TCP_socket, (ucMQTTData + iVarLenInsert), usDataLen, TCP_FLAG_PUSH) > 0)); // send data
 }
 
 // Handle receptions from the broker
