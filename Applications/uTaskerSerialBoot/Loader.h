@@ -155,7 +155,7 @@
             #define UTASKER_APP_START     (32 * 1024)                    // application starts at this address
         #endif
       //#define INTERMEDIATE_PROG_BUFFER  (8 * 1024)                     // when UART speed greater than 57600 Baud is used an intermediate buffer is recommended
-        #define UTASKER_APP_END           (unsigned char *)(UTASKER_APP_START + (40 * 1024)) // end of application space - after maximum application size
+        #define UTASKER_APP_END           (unsigned char *)(UTASKER_APP_START + (80 * 1024)) // end of application space - after maximum application size
     #endif
     #if !defined TEENSY_3_1 && !defined TEENSY_LC                        // warning: do not use mass erase with Teensy devices since their loader doesn't support the completely erased state and requires an external loader to recoved to the unsecured flash state
         #define MASS_ERASE                                               // support a mass-erase command. This is used together with a protected FLASH configuration.

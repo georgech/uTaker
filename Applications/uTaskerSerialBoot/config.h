@@ -63,7 +63,7 @@
 //#define FRDM_KL26Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL26Z.html
 //#define TEENSY_LC                                                      // USB development board with KL26Z64 - http://www.utasker.com/kinetis/TEENSY_LC.html
 //#define FRDM_KL27Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL27Z.html
-#define FRDM_KL28Z                                                       // freedom board http://www.utasker.com/kinetis/FRDM-KL28Z.html
+//#define FRDM_KL28Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL28Z.html
 //#define FRDM_KL43Z                                                     // L processors Cortex-M0+ (ultra-low power) with USB and segment LCD - freedom board http://www.utasker.com/kinetis/FRDM-KL43Z.html
 //#define TWR_KL43Z48M                                                   // tower board http://www.utasker.com/kinetis/TWR-KL43Z48M.html
 //#define FRDM_KL46Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL46Z.html
@@ -90,7 +90,7 @@
 //#define K20FX512_120                                                   // development board with 120MHz K20F
 //#define TWR_K21D50M                                                    // tower board http://www.utasker.com/kinetis/TWR-K21D50M.html
 //#define TWR_K21F120M                                                   // tower board http://www.utasker.com/kinetis/TWR-K21F120M.html
-//#define FRDM_K22F                                                      // freedom board http://www.utasker.com/kinetis/FRDM-K22F.html
+#define FRDM_K22F                                                        // freedom board http://www.utasker.com/kinetis/FRDM-K22F.html
 //#define TWR_K22F120M                                                   // tower board http://www.utasker.com/kinetis/TWR-K22F120M.html
 //#define BLAZE_K22                                                      // K22FN1M0 with 1.6" color display and touch http://www.utasker.com/kinetis/BLAZE_K22.html
 //#define TWR_K24F120M                                                   // tower board http://www.utasker.com/kinetis/TWR-K24F120M.html
@@ -425,6 +425,7 @@
     #define DEVICE_WITHOUT_ETHERNET                                      // K20 doesn't have Ethernet controller
     #define OUR_HEAP_SIZE   (HEAP_REQUIREMENTS)((24 * 1024) * MEM_FACTOR)
 #elif defined FRDM_K22F
+  //#define DEV1                                                         // temporary development configuration
     #define TARGET_HW       "FRDM-K22F"
     #define KINETIS_K_FPU                                                // part with floating point unit
     #define KINETIS_K20
