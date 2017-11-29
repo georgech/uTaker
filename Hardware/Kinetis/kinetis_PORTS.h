@@ -129,7 +129,7 @@ static void (*gpio_handlers_B[PORT_WIDTH])(void) = {0};                  // a ha
     #if (PORTS_AVAILABLE > 2) && (defined irq_PORTC_ID || defined irq_PORTC_D_ID || defined irq_PORTBCD_E_ID || defined irq_PORT_B_C_D_ID) && !defined NO_PORT_INTERRUPTS_PORTC  // if port C support has not been removed
 static void (*gpio_handlers_C[PORT_WIDTH])(void) = {0};                  // a handler for each possible port C pin
     #endif
-    #if (PORTS_AVAILABLE > 3) && (defined irq_PORT_B_C_D_ID || defined irq_PORTBCD_E_ID || defined irq_PORTD_ID) && !defined NO_PORT_INTERRUPTS_PORTD // if port D support has not been removed
+    #if (PORTS_AVAILABLE > 3) && (defined irq_PORT_B_C_D_ID || defined irq_PORTBCD_E_ID || defined irq_PORTD_ID || defined irq_PORTC_D_ID) && !defined NO_PORT_INTERRUPTS_PORTD // if port D support has not been removed
 static void (*gpio_handlers_D[PORT_WIDTH])(void) = {0};                  // a handler for each possible port D pin
     #endif
     #if (PORTS_AVAILABLE > 4) && !defined NO_PORT_INTERRUPTS_PORTE && (defined irq_PORTE_ID || defined irq_PORTBCD_E_ID || defined irq_PORT_A_E_ID) // {1} if port E support has not been removed
