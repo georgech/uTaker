@@ -94,6 +94,7 @@
     03.05.2017 Add UART_RX_MODULO and UART_TX_MODULO flags               {75}
     09.05.2017 Add PAUSE_TX                                              {76}
     26.11.2017 Added FOREVER_LOOP                                        {77}
+    29.11.2017 Add UART_INVERT_TX                                        {78}
 
 */
 
@@ -241,6 +242,7 @@
 #define CHAR_7                       0x0001
 #define RS232_EVEN_PARITY            0x0002
 #define RS232_ODD_PARITY             0x0004
+#define ONE_STOP                     0x0000
 #define ONE_HALF_STOPS               0x0008
 #define TWO_STOPS                    0x0010
 
@@ -258,9 +260,12 @@
 #define INFORM_ON_FRAME_TRANSMISSION 0x2000                              // {16} transmitter informs on transmission completion (no more data waiting) in output buffer
 #define BREAK_AFTER_TX               0x4000                              // send a break once the tx buffer has emptied
 #define MSG_BREAK_MODE               0x8000                              // message framing using break
+// The following options are availble when UART_EXTENDED_MODE are enabled
+//
 #define MULTIDROP_MODE_RX            0x00010000                          // {23} extended mode - also known as 9-bit mode (reception)
 #define MULTIDROP_MODE_TX            0x00020000                          // {38} extended mode - also known as 9-bit mode (transmission)
 #define UART_TIMED_TRANSMISSION_MODE 0x00040000                          // {72}
+#define UART_INVERT_TX               0x00080000                          // {78}
 
 #define UART_TX_DMA                  0x01                                // UART uses DMA for transmission
 #define UART_RX_DMA                  0x02                                // UART uses DMA for reception

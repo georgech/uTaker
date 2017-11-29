@@ -148,6 +148,10 @@
     #include "Port_Interrupts.h"                                         // {46} port interrupt tests
     #include "can_tests.h"                                               // {46} CAN tests
 #endif
+#if defined SERIAL_INTERFACE && defined USE_J1708
+    #define KINETIS_USES_FLEX_TIMER
+    #include "../../J1708/j1708c.h"                                      // the driver code is included here
+#endif
 
 /* =================================================================== */
 /*                          local definitions                          */
@@ -251,6 +255,9 @@ static void fnValidatedInit(void);
     #define RFC2217_SERVER_PORT     5555
     static USOCKET Telnet_RFC2217_socket = -1;
     static void    fnConfigureTelnetRFC2217Server(void);
+#endif
+#if defined SERIAL_INTERFACE && defined USE_J1708
+    static void fnInitJ1708(void);
 #endif
 
 /* =================================================================== */
@@ -683,6 +690,9 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
         fnDebugHex(fnHeapAvailable(), (WITH_LEADIN | sizeof(HEAP_REQUIREMENTS) | WITH_CR_LF));
       //fnDebugFloat((float)(12345.123), (WITH_CR_LF | 3));              // test floating point output
 #endif
+#if defined SERIAL_INTERFACE && defined USE_J1708
+        fnInitJ1708();
+#endif
 #if defined FREEMASTER_UART
         FreemasterPortID = fnOpenFreeMasterUART();                       // enable UART for FreeMaster use
 #endif
@@ -764,6 +774,9 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
             fnDisplayPhoto(0);                                           // polling operation
         }
     }
+#endif
+#if defined SERIAL_INTERFACE && defined USE_J1708
+    j1708_update();                                                      // this must be polled faster than the overflow frequency of the free running timer
 #endif
 
     while (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH) != 0) { // check input queue
@@ -1519,8 +1532,8 @@ extern QUEUE_HANDLE fnSetNewSerialMode(unsigned char ucDriverMode)
     uTaskerStateChange(OWN_TASK, UTASKER_POLLING);                       // set the task to polling mode to regularly check the receive buffer
             #endif
         #else
-    tInterfaceParameters.ucDMAConfig = 0;
-  //tInterfaceParameters.ucDMAConfig = UART_TX_DMA;                      // activate DMA on transmission
+  //tInterfaceParameters.ucDMAConfig = 0;
+    tInterfaceParameters.ucDMAConfig = UART_TX_DMA;                      // activate DMA on transmission
   //tInterfaceParameters.ucDMAConfig = (UART_RX_DMA | UART_RX_DMA_HALF_BUFFER | UART_RX_DMA_FULL_BUFFER | UART_RX_DMA_BREAK));
         #endif
     #endif
@@ -1535,6 +1548,50 @@ extern QUEUE_HANDLE fnSetNewSerialMode(unsigned char ucDriverMode)
         }
     }
     return SerialPortID;
+}
+#endif
+#if defined SERIAL_INTERFACE && defined USE_J1708
+static void fnInitJ1708(void)
+{
+    QUEUE_HANDLE J1708_SerialPortID = 0;
+    TTYTABLE tInterfaceParameters;                                       // table for passing information to driver
+    tInterfaceParameters.Channel = J1708_UART;                           // set UART channel for serial use
+    tInterfaceParameters.ucSpeed = SERIAL_BAUD_9600;                     // fixed baud rate
+    tInterfaceParameters.Rx_tx_sizes.RxQueueSize = 8;                    // input buffer size
+    tInterfaceParameters.Rx_tx_sizes.TxQueueSize = 2;                    // output buffer size
+    tInterfaceParameters.Task_to_wake = OWN_TASK;                        // wake self when messages have been received
+    tInterfaceParameters.Config = (UART_INVERT_TX | CHAR_8 | NO_PARITY | ONE_STOP);
+    #if defined SERIAL_SUPPORT_DMA
+    tInterfaceParameters.ucDMAConfig = 0;
+    #endif
+    if ((J1708_SerialPortID = fnOpen(TYPE_TTY, FOR_I_O, &tInterfaceParameters)) != NO_ID_ALLOCATED) { // open or change the channel with defined configurations (initially inactive)
+        INTERRUPT_SETUP interrupt_setup;                                 // interrupt configuration parameters
+        TIMER_INTERRUPT_SETUP timer_setup;                               // interrupt configuration parameters
+        _CONFIG_DRIVE_PORT_OUTPUT_VALUE(A, (PORTA_BIT4 | PORTA_BIT5), (PORTA_BIT5), (PORT_ODE | PORT_SRE_SLOW | PORT_DSE_HIGH)); // enable RS485 reception and RS485 transmission
+        fnDriver(J1708_SerialPortID, (TX_ON | RX_ON), 0);                // enable rx and tx
+        // Since we allow the J1708 driver to take over UART control we modify the Rx interrupt to suit (tx interrupt is not enabled and won't ever be)
+        //
+        fnEnterInterrupt(irq_UART3_ID, PRIORITY_UART3, j1708_rx_isr);    // enter UART3 interrupt handler
+        // Enable an interrupt on the falling edge of the UART's receive pin
+        //
+        interrupt_setup.int_type = PORT_INTERRUPT;                       // identifier to configure port interrupt
+        interrupt_setup.int_handler = j1708_bus_active_isr;              // handling function
+        interrupt_setup.int_priority = PRIORITY_PORT_C_INT;              // interrupt priority level
+        interrupt_setup.int_port = PORTC;                                // the port that the interrupt input is on
+        interrupt_setup.int_port_bits = PORTC_BIT0;
+        interrupt_setup.int_port_sense = (IRQ_FALLING_EDGE | PORT_KEEP_PERIPHERAL); // interrupt is to be falling edge sensitive
+        fnConfigureInterrupt((void *)&interrupt_setup);                  // configure interrupt
+        // Start a fee-running 16-bit up-counting timer of period longer than 3.7ms (this period must also be longer than out polling interval)
+        //
+        timer_setup.int_type = TIMER_INTERRUPT;
+        timer_setup.int_handler = 0;                                     // no interrupt
+        timer_setup.timer_reference = 0;                                 // flex timer 0
+        timer_setup.timer_mode = (TIMER_PERIODIC);                       // period timer interrupt
+        timer_setup.timer_value = TIMER_MS_DELAY(50);                    // 50ms periodic interrupt
+        fnConfigureInterrupt((void *)&timer_setup);
+        j1708_init();                                                    // call the driver initialisation
+        uTaskerStateChange(OWN_TASK, UTASKER_POLLING);                   // set the task to polling mode to regularly check the receive buffer
+    }
 }
 #endif
 

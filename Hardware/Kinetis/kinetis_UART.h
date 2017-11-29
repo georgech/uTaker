@@ -197,7 +197,7 @@ static unsigned char ucUART_mask[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {0};
 #if (defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE
     static unsigned char ucReportEndOfFrame[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {0};
 #endif
-#if defined UART_TIMED_TRANSMISSION                                      // {208}
+#if defined UART_EXTENDED_MODE && defined UART_TIMED_TRANSMISSION        // {208}
     static unsigned long ulInterCharTxDelay[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {0};
     static void fnStopTxTimer(int Channel);
 #endif
@@ -961,7 +961,7 @@ static __interrupt void _uart0_tx_dma_Interrupt(void)
     DMA_INT = (DMA_INT_INT0 << UART_DMA_TX_CHANNEL[0]);                  // clear the interrupt request
         #endif
     #endif
-            #if defined UART_TIMED_TRANSMISSION                          // {208}
+            #if defined UART_EXTENDED_MODE && defined UART_TIMED_TRANSMISSION // {208}
     if (ulInterCharTxDelay[0] != 0) {
         fnStopTxTimer(0);                                                // stop the periodic timer that controlled byte transmissions
     }
@@ -1003,7 +1003,7 @@ static __interrupt void _uart1_tx_dma_Interrupt(void)
     DMA_INT = (DMA_INT_INT0 << UART_DMA_TX_CHANNEL[1]);                  // clear the interrupt request
             #endif
         #endif
-        #if defined UART_TIMED_TRANSMISSION                              // {208}
+        #if defined UART_EXTENDED_MODE && defined UART_TIMED_TRANSMISSION// {208}
     if (ulInterCharTxDelay[1] != 0) {
         fnStopTxTimer(1);                                                // stop the periodic timer that controlled byte transmissions
     }
@@ -1051,7 +1051,7 @@ static __interrupt void _uart2_tx_dma_Interrupt(void)
     DMA_INT = (DMA_INT_INT0 << UART_DMA_TX_CHANNEL[2]);                  // clear the interrupt request
             #endif
         #endif
-        #if defined UART_TIMED_TRANSMISSION                              // {208}
+        #if defined UART_EXTENDED_MODE && defined UART_TIMED_TRANSMISSION// {208}
     if (ulInterCharTxDelay[2] != 0) {
         fnStopTxTimer(2);                                                // stop the periodic timer that controlled byte transmissions
     }
@@ -1092,7 +1092,7 @@ static __interrupt void _uart3_tx_dma_Interrupt(void)
         #else
     DMA_INT = (DMA_INT_INT0 << UART_DMA_TX_CHANNEL[3]);                  // clear the interrupt request
         #endif
-        #if defined UART_TIMED_TRANSMISSION                              // {208}
+        #if defined UART_EXTENDED_MODE && defined UART_TIMED_TRANSMISSION// {208}
     if (ulInterCharTxDelay[3] != 0) {
         fnStopTxTimer(3);                                                // stop the periodic timer that controlled byte transmissions
     }
@@ -1211,7 +1211,7 @@ static void (*_uart_tx_dma_Interrupt[UARTS_AVAILABLE + LPUARTS_AVAILABLE])(void)
     #endif
 };
 
-#if defined UART_TIMED_TRANSMISSION                                      // {208}
+#if defined UART_EXTENDED_MODE && defined UART_TIMED_TRANSMISSION        // {208}
 // Start the periodic timer that will control subsequent byte transmissions
 //
 static void fnStartTxTimer(int Channel, unsigned long ulDelay)
@@ -1246,10 +1246,10 @@ static void fnStopTxTimer(int Channel)
 //
 extern QUEUE_TRANSFER fnTxByteDMA(QUEUE_HANDLE Channel, unsigned char *ptrStart, QUEUE_TRANSFER tx_length)
 {
-        #if defined UART_TIMED_TRANSMISSION && defined _WINDOWS
+        #if defined UART_EXTENDED_MODE && defined UART_TIMED_TRANSMISSION && defined _WINDOWS
     int iNoDMA_int = 0;
         #endif
-        #if defined SUPPORT_LOW_POWER || defined UART_TIMED_TRANSMISSION || defined _WINDOWS
+        #if defined SUPPORT_LOW_POWER || (defined UART_EXTENDED_MODE && defined UART_TIMED_TRANSMISSION) || defined _WINDOWS
     KINETIS_UART_CONTROL *uart_reg = fnSelectChannel(Channel);
         #endif
         #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA              // {81}
@@ -1285,7 +1285,7 @@ extern QUEUE_TRANSFER fnTxByteDMA(QUEUE_HANDLE Channel, unsigned char *ptrStart,
     }
         #endif    
         #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA
-            #if defined UART_TIMED_TRANSMISSION                          // {208}
+            #if defined UART_EXTENDED_MODE && defined UART_TIMED_TRANSMISSION // {208}
     if ((tx_length > 1) && (ulInterCharTxDelay[Channel] != 0)) {         // if timed transmissions are required on this channel (linear buffer is always assumed and 7/8 bit characters)
        ptrDMA->DMA_DSR_BCR = DMA_DSR_BCR_DONE;                           // clear the DONE flag and clear errors etc. before starting the HW timer to trigger transfers
         fnStartTxTimer(Channel, ulInterCharTxDelay[Channel]);            // start the periodic timer that will control subsequent byte transmissions
@@ -1306,7 +1306,7 @@ extern QUEUE_TRANSFER fnTxByteDMA(QUEUE_HANDLE Channel, unsigned char *ptrStart,
             #if defined SUPPORT_LOW_POWER
     ulPeripheralNeedsClock |= (UART0_TX_CLK_REQUIRED << Channel);        // mark that stop mode should be avoided until the transmit activity has completed
             #endif
-            #if defined UART_TIMED_TRANSMISSION                          // {208}
+            #if defined UART_EXTENDED_MODE && defined UART_TIMED_TRANSMISSION // {208}
     if ((tx_length > 1) && (ulInterCharTxDelay[Channel] != 0)) {         // if timed transmissions are required on this channel (linear buffer is always assumed and 7/8 bit characters)
         fnStartTxTimer(Channel, ulInterCharTxDelay[Channel]);            // start the periodic timer that will control subsequent byte transmissions
                 #if defined _WINDOWS
@@ -1335,7 +1335,7 @@ extern QUEUE_TRANSFER fnTxByteDMA(QUEUE_HANDLE Channel, unsigned char *ptrStart,
             #if !defined KINETIS_KL || defined DEVICE_WITH_eDMA
     ptrDMA_TCD->DMA_TCD_CSR |= DMA_TCD_CSR_ACTIVE;                       // trigger activity
             #endif
-            #if defined UART_TIMED_TRANSMISSION
+            #if defined UART_EXTENDED_MODE && defined UART_TIMED_TRANSMISSION
     if (iNoDMA_int != 0) {
         return tx_length;
     }
@@ -2703,6 +2703,14 @@ static void fnConfigUART(QUEUE_HANDLE Channel, TTYTABLE *pars, KINETIS_UART_CONT
             uart_reg->UART_C1 = UART_C1_PARITY_DISABLED;                 // no parity - the UART in the Kinetis will use address mark at the 8th bit position in 7 bit character mode without a parity setting
         }
     }
+    #if defined UART_EXTENDED_MODE
+    if ((pars->Config & UART_INVERT_TX) != 0) {
+        uart_reg->UART_C3 = UART_C3_TXINV;                               // invert the polarity of the transmit signal
+    }
+    else {
+        uart_reg->UART_C3 = 0;                                           // ensure no transmit signal inversion
+    }
+    #endif
     #if (defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE
     if ((pars->Config & INFORM_ON_FRAME_TRANSMISSION) != 0) {            // {200}
         ucReportEndOfFrame[Channel] = 1;                                 // we want to work with a frame completion interrupt
@@ -3646,7 +3654,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
     }
     #endif
 
-    #if defined UART_TIMED_TRANSMISSION && defined SERIAL_SUPPORT_DMA    // {208}
+    #if defined UART_EXTENDED_MODE && defined UART_TIMED_TRANSMISSION && defined SERIAL_SUPPORT_DMA // {208}
     if ((pars->Config & UART_TIMED_TRANSMISSION_MODE) != 0) {
         ulInterCharTxDelay[Channel] = PIT_US_DELAY(pars->usMicroDelay);
     }

@@ -123,6 +123,7 @@
     13.11.2017 Add internal temperature sensor 25°C and slope reference values ADC_REFERENCE_VOLTAGE
     14.11.2017 New macro SELECT_PCC_PERIPHERAL_SOURCE()
     28.11.2017 DMA tigger source entries extended to 16 bits - 8 bits used for register configuration and higher bits for additional information
+    31.01.2017 Add fnMaskInterrupt()                                     {105}
 
 */
 
@@ -17348,6 +17349,7 @@ typedef struct stPDB_SETUP                                               // {37}
 /************************************************************************************************/
 
 extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void (*InterruptFunc)(void)); // {34}
+extern void fnMaskInterrupt(int iInterruptID);                           // {105}
 extern void fnClearPending(int iInterruptID);                            // {90}
 extern int  fnIsPending(int iInterruptID);                               // {90}
 
@@ -17386,6 +17388,7 @@ extern int  fnIsPending(int iInterruptID);                               // {90}
 #define IRQ192_223_SER              *(volatile unsigned long*)(CORTEX_M4_BLOCK + 0x118)// NVIC IRQ192..223 Set Enable Register
 #define IRQ224_239_SER              *(volatile unsigned long*)(CORTEX_M4_BLOCK + 0x11c)// NVIC IRQ224..239 Set Enable Register
 
+#define IRQ0_31_CER_ADD             ( unsigned long*)(CORTEX_M4_BLOCK + 0x180)
 #define IRQ0_31_CER                 *(volatile unsigned long*)(CORTEX_M4_BLOCK + 0x180)// NVIC IRQ0..31    Clear Enable Register
 #define IRQ32_63_CER                *(volatile unsigned long*)(CORTEX_M4_BLOCK + 0x184)// NVIC IRQ32..64   Clear Enable Register
 #define IRQ64_95_CER                *(volatile unsigned long*)(CORTEX_M4_BLOCK + 0x188)// NVIC IRQ64..95   Clear Enable Register

@@ -1017,6 +1017,7 @@
   //#define USE_PPP                                                      // allow TCP/IP on serial
       //#define USE_SLIP                                                 // use slip rather than PPP
       //#define USE_SLIP_DIAL_OUT                                        // dial-out
+  //#define USE_J1708                                                    // integrate a J1708 interface
 #else
     #define NUMBER_SERIAL              0                                 // no physical queue needed
     #define NUMBER_EXTERNAL_SERIAL     0

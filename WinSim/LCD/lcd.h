@@ -83,44 +83,43 @@ typedef struct
 
 // Low level display commands
 //
-#define LCD_CLEAR				0x01                                     // löscht ddram inhalt
-#define LCD_RETURN_HOME			0x02                                     // zeile 1 pos 1 
+#define LCD_CLEAR               0x01                                     // deletes ddram content
+#define LCD_RETURN_HOME         0x02                                     // line 1 position 1 
 
-#define LCD_ENTRY_MODE			0x04 
-#define LCD_CURSOR_INCREMENT	0x02                                     // 1 = increment, 0 = decrement
-#define LCD_DISPLAY_SHIFT		0x01                                     // shift display while writing
+#define LCD_ENTRY_MODE          0x04 
+#define LCD_CURSOR_INCREMENT    0x02                                     // 1 = increment, 0 = decrement
+#define LCD_DISPLAY_SHIFT       0x01                                     // shift display while writing
 
-#define LCD_ONOFF				0x08 
-#define LCD_ON					0x04                                     // 1: display on, 2: display off
-#define LCD_CURSOR_ON			0x02                                     // 1: show cursor
-#define LCD_CURSOR_BLINK_ON		0x01                                     // 1: blinking cursor
+#define LCD_ONOFF               0x08 
+#define LCD_ON                  0x04                                     // 1: display on, 2: display off
+#define LCD_CURSOR_ON           0x02                                     // 1: show cursor
+#define LCD_CURSOR_BLINK_ON     0x01                                     // 1: blinking cursor
 
 #define UPDATE_CURSOR           0x80                                     // pseudo - to update cursor after turning off
 
 
-#define LCD_CURSOR_OR_LCD_SHIFT	0x10 
-#define LCD_DDRRAM_DISPLAYSHIFT	0x08                                     // 1: shift display, 0: move only cursor
-#define LCD_DDRRAM_SHIFT_RIGHT	0x04                                     // 1: shift to right, 0: shift to left
+#define LCD_CURSOR_OR_LCD_SHIFT 0x10 
+#define LCD_DDRRAM_DISPLAYSHIFT 0x08                                     // 1: shift display, 0: move only cursor
+#define LCD_DDRRAM_SHIFT_RIGHT  0x04                                     // 1: shift to right, 0: shift to left
 
 
-#define LCD_FUNCTION_SET		0x20 
-#define LCD_8_BIT_MODE			0x10                                     // 1: 8 bit modus, 0: 4 bit modus
-									                                     // warning: ändert die konfiguration für die kommunikation 
-									                                     // mit dem proz 
-#define LCD_2_LINE				0x08                                     // 1: 2-zeiliges lcd, 0: 1-zeiliges LCD
-#define LCD_FONT_TYPE			0x04                                     // 1: larger font (5x11), 0: smaller font (5x8)
-#define LCD_4_BIT_MODE			0x00                                     // 4 bit modus! nur dieser ist erlaubt!
+#define LCD_FUNCTION_SET        0x20 
+#define LCD_8_BIT_MODE          0x10                                     // 1: 8 bit mode, 0: 4 bit mode
+                                                                         // warning: changes the communication configuration
+#define LCD_2_LINE              0x08                                     // 1: 2-line lcd, 0: 1-line LCD
+#define LCD_FONT_TYPE           0x04                                     // 1: larger font (5x11), 0: smaller font (5x8)
+#define LCD_4_BIT_MODE          0x00                                     // 4 bit mode
 
-#define LCD_CG_RAM_ADR			0x40
-#define LCD_DDR_RAM_ADR			0x80
+#define LCD_CG_RAM_ADR          0x40
+#define LCD_DDR_RAM_ADR         0x80
 
-#define N_BIT                   0x8                                      // 2 line mode 
-#define F_BIT                   0/*0x4*/                                 // 5 x 7 dot font
-#define I_BIT                   0x2                                      // curser increment 
-#define S_BIT                   0/*0x1*/                                 // display doesn't shift
+#define N_BIT                   0x08                                     // 2 line mode 
+#define F_BIT                   0x00                                     // 5 x 7 dot font
+#define I_BIT                   0x02                                     // cursor increment 
+#define S_BIT                   0x00                                     // display doesn't shift
 
-#define FONT_5X8	            1
-#define FONT_5X11	            2
+#define FONT_5X8                1
+#define FONT_5X11               2
 
-#define CGRAM	                1
-#define DDRAM	                0
+#define CGRAM                   1
+#define DDRAM                   0

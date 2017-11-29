@@ -2292,6 +2292,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #elif defined FRDM_K82F || defined TRINAMIC_LANDUNGSBRUECKE || defined K66FX1M0
         #define DEMO_UART    4                                           // use UART 4
         #define RFC2217_UART 0
+        #define J1708_UART   3
     #elif defined TWR_K70F120M || defined EMCRAFT_K70F120M || defined EMCRAFT_K61F150M || defined K61FN1_50M || defined TRK_KEA128 || defined TRK_KEA64 || defined TWR_KL46Z48M || defined TWR_KL43Z48M || defined TWR_K21D50M || defined TWR_K65F180M || defined FRDM_KEAZN32Q64 || defined FRDM_KEAZ64Q64 || defined FRDM_KEAZ128Q80 || defined TEENSY_3_5 || defined TEENSY_3_6 // {9}{23}
         #define DEMO_UART    2                                           // use UART 2
         #define RFC2217_UART 0

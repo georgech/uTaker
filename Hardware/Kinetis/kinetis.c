@@ -62,6 +62,7 @@
     12.05.2017 Allow detection of RNG type in case both revison 1 and revision 2 parts may be encountered {128}
     05.09.2017 Add watchdog interrupt (needs WDOG_STCTRLH_IRQRSTEN or WDOG_CS1_INT set in the watchdog configuration) {129}
     12.09.2017 Added INTMUX support                                      {130}
+    29.11.2017 Add fnMaskInterrupt()                                     {131}
 
 */
 
@@ -1184,6 +1185,13 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void (*
     IRQ32_63_CER  = IRQ32_63_SER;
     IRQ64_95_CER  = IRQ64_95_SER;
 #endif
+}
+
+extern void fnMaskInterrupt(int iInterruptID)                            // {131}
+{
+    volatile unsigned long *ptrIntClr = IRQ0_31_CER_ADD;
+    ptrIntClr += (iInterruptID/32);                                      // move to the clear enable register in which this interrupt is controlled
+    *ptrIntClr = (0x01 << (iInterruptID % 32));                          // disable the interrupt
 }
 
 extern void fnClearPending(int iInterruptID)                             // {126}
