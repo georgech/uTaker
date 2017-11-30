@@ -1567,7 +1567,7 @@ static void fnInitJ1708(void)
     if ((J1708_SerialPortID = fnOpen(TYPE_TTY, FOR_I_O, &tInterfaceParameters)) != NO_ID_ALLOCATED) { // open or change the channel with defined configurations (initially inactive)
         INTERRUPT_SETUP interrupt_setup;                                 // interrupt configuration parameters
         TIMER_INTERRUPT_SETUP timer_setup;                               // interrupt configuration parameters
-        _CONFIG_DRIVE_PORT_OUTPUT_VALUE(A, (PORTA_BIT4 | PORTA_BIT5), (PORTA_BIT5), (PORT_ODE | PORT_SRE_SLOW | PORT_DSE_HIGH)); // enable RS485 reception and RS485 transmission
+        _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, (PORTC_BIT2 | PORTC_BIT3), (PORTC_BIT2), (PORT_ODE | PORT_SRE_SLOW | PORT_DSE_HIGH)); // enable RS485 reception and RS485 transmission
         fnDriver(J1708_SerialPortID, (TX_ON | RX_ON), 0);                // enable rx and tx
         // Since we allow the J1708 driver to take over UART control we modify the Rx interrupt to suit (tx interrupt is not enabled and won't ever be)
         //
@@ -1576,9 +1576,9 @@ static void fnInitJ1708(void)
         //
         interrupt_setup.int_type = PORT_INTERRUPT;                       // identifier to configure port interrupt
         interrupt_setup.int_handler = j1708_bus_active_isr;              // handling function
-        interrupt_setup.int_priority = PRIORITY_PORT_C_INT;              // interrupt priority level
-        interrupt_setup.int_port = PORTC;                                // the port that the interrupt input is on
-        interrupt_setup.int_port_bits = PORTC_BIT0;
+        interrupt_setup.int_priority = PRIORITY_PORT_E_INT;              // interrupt priority level
+        interrupt_setup.int_port = PORTE;                                // the port that the interrupt input is on
+        interrupt_setup.int_port_bits = PORTE_BIT5;
         interrupt_setup.int_port_sense = (IRQ_FALLING_EDGE | PORT_KEEP_PERIPHERAL); // interrupt is to be falling edge sensitive
         fnConfigureInterrupt((void *)&interrupt_setup);                  // configure interrupt
         // Start a fee-running 16-bit up-counting timer of period longer than 3.7ms (this period must also be longer than out polling interval)

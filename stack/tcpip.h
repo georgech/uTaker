@@ -2267,22 +2267,27 @@ extern int  fnVerifyUser(CHAR *cDecodedUser, unsigned char iCheckUser);
 
 extern int fnConnectMQTT(unsigned char *ucIP, unsigned short(*fnCallback)(unsigned char, unsigned char *, unsigned char *));
 extern int fnDisconnectMQTT(void);
-extern int fnPublishMQTT(void);
+extern int fnPublishMQTT(unsigned char ucTopicReference, unsigned char ucQoS);
+extern int fnSubscribeMQTT(CHAR *ptrInput, unsigned char ucQoS);
+extern int fnUnsubscribeMQTT(unsigned char ucSubscriptionRef);
 
-#define ERROR_MQTT_NOT_READY      -1
-#define ERROR_MQTT_IN_USE         -2
-#define ERROR_MQTT_ARP_FAIL       -3
-#define MQTT_CLIENT_IDENTIFIER     1
-#define MQTT_CONNACK_RECEIVED      2
-#define MQTT_SUBACK_RECEIVED       3
-#define MQTT_PUBLISH_RECEIVED      4
-#define MQTT_PUBLISH_TOPIC         5
-#define MQTT_PUBLISH_DATA          6
-#define MQTT_PUBLISH_TOPIC_FILTER  7
-#define MQTT_TOPIC_ARRIVING        8
-#define MQTT_TOPIC_MESSAGE         9
-#define MQTT_CONNECTION_CLOSED     10
-#define MQTT_HOST_CLOSED           11
+#define ERROR_MQTT_NOT_READY             -1
+#define ERROR_MQTT_IN_USE                -2
+#define ERROR_MQTT_ARP_FAIL              -3
+#define ERROR_MQTT_NO_SUBSCRIPTION_ENTRY -4
+#define MQTT_RESULT_OK                    0
+#define MQTT_CLIENT_IDENTIFIER            1
+#define MQTT_CONNACK_RECEIVED             2
+#define MQTT_SUBACK_RECEIVED              3
+#define MQTT_UNSUBACK_RECEIVED            4
+#define MQTT_PUBLISH_RECEIVED             5
+#define MQTT_PUBLISH_TOPIC                6
+#define MQTT_PUBLISH_DATA                 7
+#define MQTT_PUBLISH_TOPIC_FILTER         8
+#define MQTT_TOPIC_ARRIVING               9
+#define MQTT_TOPIC_MESSAGE                10
+#define MQTT_CONNECTION_CLOSED            11
+#define MQTT_HOST_CLOSED                  12
 
 
 

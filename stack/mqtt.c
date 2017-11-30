@@ -33,6 +33,9 @@
 
 #define MQTT_MESSAGE_LEN       1400                                      // largest transmission supported
 
+#define MQTT_MAX_SUBSCRIPTIONS 8
+#define MQTT_MAX_TOPIC_LENGTH  16
+
 #define MQTT_CONTROL_PACKET_TYPE_Reserved_0   (0 << 4)                   // forbidden
 #define MQTT_CONTROL_PACKET_TYPE_CONNECT      (1 << 4)                   // client to server connection request
 #define MQTT_CONTROL_PACKET_TYPE_CONNACK      (2 << 4)                   // server to client connect acknowledgment
@@ -73,6 +76,7 @@
 #define MQTT_STATE_OPEN_SENT                  0x21                       // in the process of connecting to the broker's tcp socket
 #define MQTT_STATE_CONNECTION_OPENED          0x31                       // TCP connection established with the broker
 #define MQTT_STATE_SUBSCRIBE                  0x41                       // in the process of subscribing
+#define MQTT_STATE_UNSUBSCRIBE                0x51                       // in process of unsubscribing
 #define MQTT_STATE_PUBLISH                    0x61                       // in the process of publishing
 #define MQTT_STATE_PUBLISH_RELEASE            0x71                       // in the pubish handshake state
 #define MQTT_STATE_CONNECTED_IDLE             0x80                       // connected and idle
@@ -84,6 +88,10 @@
 
 #define PUBLISH_QoS_LEVEL              MQTT_CONTROL_PACKET_FLAG_QoS_2    // option - always publish using QoS2
 
+#define MQTT_SUBSCRIPTION_QoS_0               0x00
+#define MQTT_SUBSCRIPTION_QoS_1               0x01
+#define MQTT_SUBSCRIPTION_QoS_2               0x02
+
 #define MQTT_KEEPALIVE_TIME            (DELAY_LIMIT)(60 * SEC)
 #define MQTT_PING_TIME                 (DELAY_LIMIT)(15 * SEC)
 #define MQTT_KEEPALIVE_TIME_SECONDS    300
@@ -92,10 +100,12 @@
 #define T_MQTT_BROKER_DEAD             2
 
 #define MQTT_QUEUE_CLOSE            0x01                                 // we are waiting to close
-#define MQTT_QUEUE_PUBLISH          0x02                                 // we are waiting to publish
-#define MQTT_QUEUE_PUBLISH_ACK      0x04                                 // we are waiting to respond with publish ack
-#define MQTT_QUEUE_PUBLISH_RECEIVED 0x08                                 // we are waiting to respond with publish received
-#define MQTT_QUEUE_REGEN            0x10                                 // we are waiting to continue with next state's transmission
+#define MQTT_QUEUE_SUBSCRIBE        0x02                                 // we are waiting to subscribe
+#define MQTT_QUEUE_UNSUBSCRIBE      0x04                                 // we are waiting to unsubscribe
+#define MQTT_QUEUE_PUBLISH          0x08                                 // we are waiting to publish
+#define MQTT_QUEUE_PUBLISH_ACK      0x10                                 // we are waiting to respond with publish ack
+#define MQTT_QUEUE_PUBLISH_RECEIVED 0x20                                 // we are waiting to respond with publish received
+#define MQTT_QUEUE_REGEN            0x40                                 // we are waiting to continue with next state's transmission
 
 /* =================================================================== */
 /*                      local structure definitions                    */
@@ -105,6 +115,12 @@ typedef struct stMQTT_CONTROL_PACKET_HEADER {
     unsigned char ucMQTT_control_packet_type_flags;
     unsigned char ucRemainingLength[1];                                  // 1.. 4 bytes
 } MQTT_CONTROL_PACKET_HEADER;
+
+typedef struct stMQTT_SUBSCRIPTION_ENTRY {
+    unsigned char ucSubscriptionReference;
+    unsigned char ucSubscriptionQoS;                                     // 0, 1 or 2
+    CHAR cSubscriptionTopic[MQTT_MAX_TOPIC_LENGTH + 1];                  // subscription topic string
+} MQTT__SUBSCRIPTION_ENTRY;
 
 /* =================================================================== */
 /*                 local function prototype declarations               */
@@ -147,6 +163,10 @@ static unsigned short usMessageIdentifier = 0;                           // last
 static unsigned short (*fnUserCallback)(unsigned char, unsigned char *, unsigned char *) = 0;
 static unsigned char  ucUnacked = 0;
 static unsigned char  ucQueueFlags = 0;
+static unsigned char  ucSubscriptionInProgress = 0;
+static unsigned char  ucPublishInProgress = 0;
+static unsigned char  ucPublishQoS = 0;
+static MQTT__SUBSCRIPTION_ENTRY subscriptions[MQTT_MAX_SUBSCRIPTIONS] = {{0}};
 
 
 // MQTT task
@@ -218,13 +238,84 @@ extern int fnDisconnectMQTT(void)
     return 0;                                                            // disconnection in progress or queued
 }
 
-// The user can publish at any time when connected, but should not publish further messages until the previous one has been acknowledged
+// The user can subscribe to a topic at any time when connected, but should not subscribe to futher topics until the previous one has been acknowledged
 //
-extern int fnPublishMQTT(void)
+extern int fnSubscribeMQTT(CHAR *ptrInput, unsigned char ucQoS)
 {
+    int iSubscriptionRef = 0;
     if ((MQTT_TCP_socket < 0) || (ucMQTT_state < MQTT_STATE_CONNECTION_OPENED)) { // we have no socket - or called when not connected
         return ERROR_MQTT_NOT_READY;
     }
+    
+    FOREVER_LOOP {
+        if (subscriptions[iSubscriptionRef].ucSubscriptionReference == 0) { // empty subscription found
+            break;                                                       // use this entry
+        }
+        if (++iSubscriptionRef > MQTT_MAX_SUBSCRIPTIONS) {
+            return ERROR_MQTT_NO_SUBSCRIPTION_ENTRY;                     // all subscription entries are in use
+        }
+    }
+    if (ucQoS > MQTT_SUBSCRIPTION_QoS_2) {                               // limit QoS to valid range
+        ucQoS = MQTT_SUBSCRIPTION_QoS_2;
+    }
+    subscriptions[iSubscriptionRef].ucSubscriptionQoS = ucQoS;
+    subscriptions[iSubscriptionRef].ucSubscriptionReference = ucSubscriptionInProgress = (unsigned char)(iSubscriptionRef + 1);
+    uStrcpy(subscriptions[iSubscriptionRef].cSubscriptionTopic, ptrInput); // enter the topic string
+    if ((ucMQTT_state & 0x01) == 0) {                                    // not busy with other commands (otherwise it will be executed at next possible opportunity)
+        fnSetNextMQTT_state(MQTT_STATE_SUBSCRIBE);                       // send
+    }
+    else {
+        ucQueueFlags |= MQTT_QUEUE_SUBSCRIBE;
+    }
+    return ucSubscriptionInProgress;                                     // either sent or queued to be sent
+}
+
+extern int fnUnsubscribeMQTT(unsigned char ucSubscriptionRef)
+{
+    int iSubscriptionRef = 0;
+    FOREVER_LOOP {
+        if (subscriptions[iSubscriptionRef].ucSubscriptionReference == ucSubscriptionRef) { // subscription found
+            break;                                                       // use this entry
+        }
+        if (++iSubscriptionRef > MQTT_MAX_SUBSCRIPTIONS) {
+            return ERROR_MQTT_NO_SUBSCRIPTION_ENTRY;                     // all subscription entries are in use
+        }
+    }
+    ucSubscriptionInProgress = ucSubscriptionRef;
+    if ((ucMQTT_state & 0x01) == 0) {                                    // not busy with other commands (otherwise it will be executed at next possible opportunity)
+        fnSetNextMQTT_state(MQTT_STATE_UNSUBSCRIBE);                     // send
+    }
+    else {
+        ucQueueFlags |= MQTT_QUEUE_UNSUBSCRIBE;
+    }
+    return 0;                                                             // either sent or queued to be sent
+}
+
+// The user can publish at any time when connected, but should not publish further messages until the previous one has been acknowledged
+//
+extern int fnPublishMQTT(unsigned char ucTopicReference, unsigned char ucQoS)
+{
+    int iSubscriptionRef = 0;
+    if ((MQTT_TCP_socket < 0) || (ucMQTT_state < MQTT_STATE_CONNECTION_OPENED)) { // we have no socket - or called when not connected
+        return ERROR_MQTT_NOT_READY;
+    }
+    
+    FOREVER_LOOP {
+        if ((ucTopicReference != 0) && (subscriptions[iSubscriptionRef].ucSubscriptionReference == ucTopicReference)) { // subscription found
+            ucPublishQoS = subscriptions[iSubscriptionRef].ucSubscriptionQoS; // inherit the QoS from the subscription
+            ucPublishInProgress = ucTopicReference;
+            break;                                                       // use this entry
+        }
+        if (++iSubscriptionRef > MQTT_MAX_SUBSCRIPTIONS) {
+            ucPublishInProgress = 0;                                     // no subscription topic found so use callback for topic
+            if (ucQoS > MQTT_SUBSCRIPTION_QoS_2) {                       // limit QoS to valid range
+                ucQoS = MQTT_SUBSCRIPTION_QoS_2;
+            }
+            ucPublishQoS = ucQoS;
+            break;
+        }
+    }
+
     if ((ucMQTT_state & 0x01) == 0) {                                    // not busy with other commands (otherwise it will be executed at next possible opportunity)
         fnSetNextMQTT_state(MQTT_STATE_PUBLISH);                         // send
     }
@@ -284,6 +375,14 @@ static int fnSetNextMQTT_state(unsigned char ucNextState)
             ucQueueFlags &= ~(MQTT_QUEUE_PUBLISH);
             ucNextState = MQTT_STATE_PUBLISH;                            // start state publish
         }
+        else if ((ucQueueFlags & MQTT_QUEUE_UNSUBSCRIBE) != 0) {         // if a unsubscribe request is queued
+            ucQueueFlags &= ~(MQTT_QUEUE_SUBSCRIBE);
+            ucNextState = MQTT_STATE_UNSUBSCRIBE;                        // start state unsubscribe
+        }
+        else if ((ucQueueFlags & MQTT_QUEUE_SUBSCRIBE) != 0) {           // if a subscribe request is queued
+            ucQueueFlags &= ~(MQTT_QUEUE_SUBSCRIBE);
+            ucNextState = MQTT_STATE_SUBSCRIBE;                          // start state publish
+        }
     }
     switch (ucMQTT_state = ucNextState) {                                // set the next state
       case MQTT_STATE_OPEN_REQUESTED:
@@ -297,6 +396,7 @@ static int fnSetNextMQTT_state(unsigned char ucNextState)
       case MQTT_STATE_CLOSED:                                            // TCP connection has been closed
           ucUnacked = 0;
           ucQueueFlags = 0;
+          uMemset(&subscriptions[0], 0, sizeof(subscriptions));
           uTaskerStopTimer(OWN_TASK);
           break;
       case MQTT_STATE_PUBLISH_ACK:                                       // moving to states that require a message to be sent
@@ -305,6 +405,7 @@ static int fnSetNextMQTT_state(unsigned char ucNextState)
       case MQTT_STATE_SENDING_KEEPALIVE:
       case MQTT_STATE_CONNECTION_OPENED:
       case MQTT_STATE_SUBSCRIBE:
+      case MQTT_STATE_UNSUBSCRIBE:
       case MQTT_STATE_PUBLISH:
       case MQTT_STATE_PUBLISH_RELEASE:
           return (fnRegenerate() > 0);                                   // send or repeat transmission
@@ -413,6 +514,20 @@ unsigned char *fnMQTTUserString(unsigned char *ptrMQTT_packet, unsigned char ucE
     return (ptrMQTT_packet + usStringLength);
 }
 
+// Insert a topic string into the message
+//
+unsigned char *fnMQTTTopicString(unsigned char *ptrMQTT_packet, CHAR *ptrString)
+{
+    unsigned char *ptrStringLength = ptrMQTT_packet;
+    unsigned short usStringLength;
+    ptrMQTT_packet += 2;                                                 // leave space for the string length
+    ptrMQTT_packet = uStrcpy(ptrMQTT_packet, ptrString);
+    usStringLength = ((ptrMQTT_packet - (unsigned char *)ptrStringLength) - 2);
+    *ptrStringLength++ = (unsigned char)(usStringLength >> 8);           // insert the length before the string content
+    *ptrStringLength++ = (unsigned char)(usStringLength);
+    return (ptrMQTT_packet);
+}
+
 // Insert the identifier into the message
 //
 unsigned char *fnInsertPacketIdentfier(unsigned char *ptrMQTT_packet, unsigned short usIdentifier)
@@ -463,60 +578,80 @@ static unsigned short fnRegenerate(void)
         ptrMQTT_packet = fnMQTTUserString(ptrMQTT_packet, MQTT_CLIENT_IDENTIFIER, 0); // callback to get the client idetifier (should normally contain only 0..9, a..z, A..Z characters)
         break;
 
+    case MQTT_STATE_UNSUBSCRIBE:
     case MQTT_STATE_SUBSCRIBE:
-        *ptrMQTT_packet++ = (MQTT_CONTROL_PACKET_TYPE_SUBSCRIBE | MQTT_CONTROL_PACKET_FLAG_QoS_1); // the QoS is always 1 for a subscription
+        if (MQTT_STATE_UNSUBSCRIBE == ucMQTT_state) {
+            *ptrMQTT_packet++ = (MQTT_CONTROL_PACKET_TYPE_UNSUBSCRIBE | MQTT_CONTROL_PACKET_FLAG_QoS_1); // the QoS is always 1 for an unsubscription
+        }
+        else {
+            *ptrMQTT_packet++ = (MQTT_CONTROL_PACKET_TYPE_SUBSCRIBE | MQTT_CONTROL_PACKET_FLAG_QoS_1); // the QoS is always 1 for a subscription
+        }
         ptrRemainingLength = ptrMQTT_packet++;                           // the location where the remaining length is to be added
         ptrMQTT_packet = fnInsertPacketIdentfier(ptrMQTT_packet, usPacketIdentifier);
         // Topic filter
         //
-        ptrMQTT_packet = fnMQTTUserString(ptrMQTT_packet, MQTT_PUBLISH_TOPIC_FILTER, 0); // request the topic filter from the user
-        *ptrMQTT_packet++ = (MQTT_CONTROL_PACKET_FLAG_QoS_1 >> 1);
+        if (ucSubscriptionInProgress == 0) {
+            return 0;
+        }
+        ptrMQTT_packet = fnMQTTTopicString(ptrMQTT_packet, subscriptions[ucSubscriptionInProgress - 1].cSubscriptionTopic);
+        if (MQTT_STATE_SUBSCRIBE == ucMQTT_state) {
+            *ptrMQTT_packet++ = subscriptions[ucSubscriptionInProgress - 1].ucSubscriptionQoS; // the subscription QoS
+        }
         break;
 
     case MQTT_STATE_PUBLISH:                                             // client to broker or broker to client - transport an application message
-        *ptrMQTT_packet++ = (MQTT_CONTROL_PACKET_TYPE_PUBLISH | PUBLISH_QoS_LEVEL);
+        *ptrMQTT_packet++ = (MQTT_CONTROL_PACKET_TYPE_PUBLISH | (ucPublishQoS << 1));
         ptrRemainingLength = ptrMQTT_packet++;                           // the location where the remaining length is to be added
         // Topic name
         //
-        ptrMQTT_packet = fnMQTTUserString(ptrMQTT_packet, MQTT_PUBLISH_TOPIC, 0); // request the topic from the user
+        if (ucPublishInProgress == 0) {
+            ptrMQTT_packet = fnMQTTUserString(ptrMQTT_packet, MQTT_PUBLISH_TOPIC, 0); // request the topic from the user
+        }
+        else {
+            ptrMQTT_packet = fnMQTTTopicString(ptrMQTT_packet, subscriptions[ucPublishInProgress - 1].cSubscriptionTopic);
+        }
 
-        // Packet identifier - only present when QoS 1 or 2 is used! Must be non-zero - the respone needs to match!
-        //
-    #if PUBLISH_QoS_LEVEL > MQTT_CONTROL_PACKET_FLAG_QoS_0               // insert out packet identifier if a QoS greater that 0 is used
-        ptrMQTT_packet = fnInsertPacketIdentfier(ptrMQTT_packet, usPacketIdentifier);
-    #endif
+        if (ucPublishQoS > 0) {                                          // insert our packet identifier if a QoS greater that 0 is used
+            // Packet identifier - only present when QoS 1 or 2 is used! Must be non-zero - the respone needs to match!
+            //
+            ptrMQTT_packet = fnInsertPacketIdentfier(ptrMQTT_packet, usPacketIdentifier);
+        }
 
         // Application data
         //
         ptrMQTT_packet += fnUserCallback(MQTT_PUBLISH_DATA, 0, ptrMQTT_packet); // request user to insert the message content - can be any format and length, including zero length
         break;
-    #if PUBLISH_QoS_LEVEL == MQTT_CONTROL_PACKET_FLAG_QoS_2              // puslishing with QoS2
+
     case MQTT_STATE_PUBLISH_RELEASE:
         *ptrMQTT_packet++ = (MQTT_CONTROL_PACKET_TYPE_PUBREL | MQTT_CONTROL_PACKET_FLAG_QoS_1);
         ptrRemainingLength = ptrMQTT_packet++;                           // the location where the remaining length is to be added
         ptrMQTT_packet = fnInsertPacketIdentfier(ptrMQTT_packet, usPacketIdentifier);
         break;
-    #endif
+
     case MQTT_STATE_PUBLISH_ACK:
         *ptrMQTT_packet++ = (MQTT_CONTROL_PACKET_TYPE_PUBACK);
         ptrRemainingLength = ptrMQTT_packet++;                           // the location where the remaining length is to be added
         ptrMQTT_packet = fnInsertPacketIdentfier(ptrMQTT_packet, usMessageIdentifier);
         break;
+
     case MQTT_STATE_PUBLISH_RECEIVED:
         *ptrMQTT_packet++ = (MQTT_CONTROL_PACKET_TYPE_PUBREC);
         ptrRemainingLength = ptrMQTT_packet++;                           // the location where the remaining length is to be added
         ptrMQTT_packet = fnInsertPacketIdentfier(ptrMQTT_packet, usMessageIdentifier);
         break;
+
     case MQTT_STATE_PUBLISH_COMPLETE:
         *ptrMQTT_packet++ = (MQTT_CONTROL_PACKET_TYPE_PUBCOMP);
         ptrRemainingLength = ptrMQTT_packet++;                           // the location where the remaining length is to be added
         ptrMQTT_packet = fnInsertPacketIdentfier(ptrMQTT_packet, usMessageIdentifier);
         break;
+
     case MQTT_STATE_SENDING_KEEPALIVE:
         *ptrMQTT_packet++ = MQTT_CONTROL_PACKET_TYPE_PINGREQ;            // ping request
         *ptrMQTT_packet++ = 0;
         uTaskerMonoTimer(OWN_TASK, MQTT_PING_TIME, T_MQTT_BROKER_DEAD);  // monitor the broker's ping response
         return (ucUnacked = (fnSendTCP(MQTT_TCP_socket, (ucMQTTData + 1), 2, TCP_FLAG_PUSH) > 0)); // send data
+
     default:
         return 0;
     }
@@ -591,7 +726,7 @@ static int fnHandleData(unsigned char *ptrData, unsigned short usDataLength)
     case MQTT_STATE_CONNECTION_OPENED:
         if (ucControlPacketType == MQTT_CONTROL_PACKET_TYPE_CONNACK) {   // the broker is accepting the MQTT connection
             fnUserCallback(MQTT_CONNACK_RECEIVED, 0, 0);                 // inform the user that the broker has accepted
-            return (fnSetNextMQTT_state(MQTT_STATE_SUBSCRIBE));          // now subscribe
+            fnSetNextMQTT_state(MQTT_STATE_CONNECTED_IDLE);
         }
         else {
 
@@ -599,12 +734,20 @@ static int fnHandleData(unsigned char *ptrData, unsigned short usDataLength)
         break;
     case MQTT_STATE_SUBSCRIBE:
         if (ucControlPacketType == MQTT_CONTROL_PACKET_TYPE_SUBACK) {    // the broker is accepting the subscription
-            CHAR *message[10];
             fnIncrementtPacketIdentfier((MQTT_CONTROL_PACKET_TYPE_SUBSCRIBE >> 4));
-            if (fnUserCallback(MQTT_SUBACK_RECEIVED, 0, (unsigned char *)message) != 0) { // inform the user that the broker has accepted
-                return (fnSetNextMQTT_state(MQTT_STATE_PUBLISH));        // user wants to immediately publish a message
-            }
             fnSetNextMQTT_state(MQTT_STATE_CONNECTED_IDLE);
+            fnUserCallback(MQTT_SUBACK_RECEIVED, 0, 0); // pass ucSubscriptionInProgress?
+        }
+        else {
+
+        }
+        break;
+    case MQTT_STATE_UNSUBSCRIBE:
+        if (ucControlPacketType == MQTT_CONTROL_PACKET_TYPE_UNSUBACK) {  // the broker is accepting the unsubscription
+            fnIncrementtPacketIdentfier((MQTT_CONTROL_PACKET_TYPE_UNSUBSCRIBE >> 4));
+            subscriptions[ucSubscriptionInProgress - 1].ucSubscriptionReference = 0;
+            fnSetNextMQTT_state(MQTT_STATE_CONNECTED_IDLE);
+            fnUserCallback(MQTT_UNSUBACK_RECEIVED, 0, 0); // pass ucSubscriptionInProgress?
         }
         else {
 
@@ -614,15 +757,12 @@ static int fnHandleData(unsigned char *ptrData, unsigned short usDataLength)
         if (ucControlPacketType == MQTT_CONTROL_PACKET_TYPE_PUBREC) {    // the broker is accepting to publish
             if (usDataLength == 4) {
                 if (((unsigned char)(usPacketIdentifier >> 8) == *(ptrData + 2)) && (((unsigned char)(usPacketIdentifier) == *(ptrData + 3)))) {
-    #if PUBLISH_QoS_LEVEL == MQTT_CONTROL_PACKET_FLAG_QoS_2
-                    return (fnSetNextMQTT_state(MQTT_STATE_PUBLISH_RELEASE)); // send the third packet of QoS 2 protocol exchange
-    #else
-                    CHAR *message[10];
-                    fnIncrementtPacketIdentfier((MQTT_CONTROL_PACKET_TYPE_PUBLISH >> 4));
-                    if (fnUserCallback(MQTT_PUBLISH_RECEIVED, 0, (unsigned char *)message) != 0) { // inform the user that the broker has accepted to publish
-                        return (fnSetNextMQTT_state(MQTT_STATE_PUBLISH));// user wants to immediately publish a new message
+                    if (ucPublishQoS == MQTT_SUBSCRIPTION_QoS_2) {
+                        return (fnSetNextMQTT_state(MQTT_STATE_PUBLISH_RELEASE)); // send the third packet of QoS 2 protocol exchange
                     }
-    #endif
+                    fnIncrementtPacketIdentfier((MQTT_CONTROL_PACKET_TYPE_PUBLISH >> 4));
+                    fnSetNextMQTT_state(MQTT_STATE_CONNECTED_IDLE);
+                    fnUserCallback(MQTT_PUBLISH_RECEIVED, 0, 0);
                 }
             }
         }
@@ -630,7 +770,6 @@ static int fnHandleData(unsigned char *ptrData, unsigned short usDataLength)
 
         }
         break;
-    #if PUBLISH_QoS_LEVEL == MQTT_CONTROL_PACKET_FLAG_QoS_2
     case MQTT_STATE_PUBLISH_RELEASE:
         if (ucControlPacketType == MQTT_CONTROL_PACKET_TYPE_PUBCOMP) {   // the broker is accepting to publish - handshake stage
             if (usDataLength == 4) {
@@ -660,7 +799,6 @@ static int fnHandleData(unsigned char *ptrData, unsigned short usDataLength)
 
         }
         break;
-    #endif
     case MQTT_STATE_SENDING_KEEPALIVE:
         if (ucControlPacketType == MQTT_CONTROL_PACKET_TYPE_PINGACK) {   // the broker is replying with a ping response
             fnSetNextMQTT_state(MQTT_STATE_CONNECTED_IDLE);

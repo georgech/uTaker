@@ -2435,7 +2435,9 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
       //#define UART2_ON_F                                               // alternative UART2 pin mapping on port F (default is on port D)
       //#define UART3_ON_B                                               // alternative UART3 pin mapping
       //#define UART3_ON_F                                               // alternative UART3 pin mapping on port F
-        #define UART3_ON_C                                               // alternative UART3 pin mapping
+        #if !defined USE_J1708
+            #define UART3_ON_C                                           // alternative UART3 pin mapping
+       #endif
       //#define UART4_ON_C                                               // alternative UART4 pin mapping
       //#define UART5_ON_D                                               // alternative UART5 pin mapping
         #if defined KINETIS_KL

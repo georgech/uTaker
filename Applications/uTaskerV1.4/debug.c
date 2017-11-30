@@ -494,9 +494,11 @@
     #define DO_TELNET_SET_NEGOTIATION 68
 
     #define DO_MQTT_CONNECT         69
-    #define DO_MQTT_PUB             71
-    #define DO_MQTT_PUB_LONG        72
-    #define DO_MQTT_DISCONNECT      73
+    #define DO_MQTT_SUBSCRIBE       70
+    #define DO_MQTT_UNSUBSCRIBE     71
+    #define DO_MQTT_PUB             72
+    #define DO_MQTT_PUB_LONG        73
+    #define DO_MQTT_DISCONNECT      74
 
 #define DO_CAN                    13
     #define DO_SEND_CAN_DEFAULT     0                                    // specific CAN command to send a message to the default destination
@@ -1056,8 +1058,10 @@ static const DEBUG_COMMAND tFTP_TELNET_Command[] = {                     // {37}
 #endif
 #if defined USE_MQTT_CLIENT                                              // {87}
     { "mqtt_con",         "Connect to MQTT broker [ip]",           DO_FTP_TELNET_MQTT, DO_MQTT_CONNECT },
-    { "mqtt_pub",         "Publish next",                          DO_FTP_TELNET_MQTT, DO_MQTT_PUB },
-    { "mqtt_pub_l",       "Publish next (long)",                  DO_FTP_TELNET_MQTT, DO_MQTT_PUB_LONG },
+    { "mqtt_sub",         "Subscribe [topic] <QoS>",               DO_FTP_TELNET_MQTT, DO_MQTT_SUBSCRIBE },
+    { "mqtt_un",          "Unsubscribe [ref]",                     DO_FTP_TELNET_MQTT, DO_MQTT_UNSUBSCRIBE },
+    { "mqtt_pub",         "Publish <ref> <QoS>",                   DO_FTP_TELNET_MQTT, DO_MQTT_PUB },
+    { "mqtt_pub_l",       "Publish (long) <ref> <QoS>",            DO_FTP_TELNET_MQTT, DO_MQTT_PUB_LONG },
     { "mqtt_dis",         "Disconect from MQTT broker",            DO_FTP_TELNET_MQTT, DO_MQTT_DISCONNECT },
     #if !defined USE_FTP_CLIENT && ! defined USE_TELNET_CLIENT
     {"help",              "Display menu specific help",            DO_HELP,          DO_MAIN_HELP },
@@ -1620,10 +1624,7 @@ static unsigned short fnGetWordShift(CHAR **ptrIn)
     CHAR *ptrInput = *ptrIn;
     int i = 4;
 
-    while (*ptrInput == ' ') {                                           // jump over white space
-       ++(*ptrIn);
-       ptrInput++;
-    }
+    ptrInput = fnSkipWhiteSpace(ptrInput);                               // jump over white space                  
 
     while ((i-- != 0) && (*ptrInput >= '0')) {
         usResult <<= 4;
@@ -5563,12 +5564,11 @@ static unsigned short fnMQTT_callback(unsigned char ucEvent, unsigned char *ptrR
     case MQTT_CONNACK_RECEIVED:
         fnDebugMsg("MQTT connected\r\n");
         break;
-    case MQTT_PUBLISH_TOPIC_FILTER:
-        ptrBuf = uStrcpy(ptrBuf, "subtopic");
-        break;
     case MQTT_SUBACK_RECEIVED:
         fnDebugMsg("MQTT subscribed\r\n");
-        ptrBuf = uStrcpy(ptrBuf, "ref1");
+        break;
+    case MQTT_UNSUBACK_RECEIVED:
+        fnDebugMsg("MQTT subscribed\r\n");
         break;
     case MQTT_PUBLISH_RECEIVED:
         fnDebugMsg("MQTT published\r\n");
@@ -5781,19 +5781,74 @@ static void fnDoFTP_TELNET_MQTT(unsigned char ucType, CHAR *ptrInput)
             }
         }
         break;
+    case DO_MQTT_SUBSCRIBE:
+        {
+            CHAR *ptrQoS = ptrInput;
+            int iSubscriptionReference;
+            unsigned char ucQoS;
+            if (*ptrInput == 0) {
+                fnDebugMsg("Missing topic!!");
+                break;
+            }
+            fnJumpWhiteSpace(&ptrQoS);
+            if (*ptrQoS == 0) {
+                ucQoS = 2;                                               // default QoS if not supplied
+            }
+            else {
+                ucQoS = (unsigned char)fnDecStrHex(ptrInput);            // QoS to use
+            }
+            iSubscriptionReference = fnSubscribeMQTT(ptrInput, ucQoS);
+            if (iSubscriptionReference >= 0) {
+                fnDebugMsg("Subscribing (ref=");
+                fnDebugDec(iSubscriptionReference, 0);
+                fnDebugMsg(")...");
+            }
+            else {
+                fnDebugMsg("MQTT error!");
+            }
+        }
+        break;
+    case DO_MQTT_UNSUBSCRIBE:
+        {
+            unsigned char ucSubscriptionRef = (unsigned char)fnDecStrHex(ptrInput); // the subscription reference to be unsubscribed
+            if (fnUnsubscribeMQTT(ucSubscriptionRef) >= 0) {
+                fnDebugMsg("Unsubscribing...");
+            }
+            else {
+                fnDebugMsg("MQTT error!");
+            }
+        }
+        break;
     case DO_MQTT_PUB_LONG:
     case DO_MQTT_PUB:
-        if (ucType == DO_MQTT_PUB_LONG) {
-            usPubLength = 1024;
-        }
-        else {
-            usPubLength = 10;
-        }
-        if (fnPublishMQTT() == 0) {
-            fnDebugMsg("Publishing...");
-        }
-        else {
-            fnDebugMsg("MQTT error!");
+        {
+            unsigned char ucSubscriptionRef;
+            unsigned char ucQoS;
+            if (*ptrInput == 0) {
+                ucSubscriptionRef = 0;                                   // we want to be called back to insert the publish topic
+            }
+            else {
+                ucSubscriptionRef = (unsigned char)fnDecStrHex(ptrInput); // use the publish topic defined
+            }
+            fnJumpWhiteSpace(&ptrInput);
+            if (*ptrInput == 0) {
+                ucQoS = 2;                                               // default QoS
+            }
+            else {
+                ucQoS = (unsigned char)fnDecStrHex(ptrInput);            // QoS to use
+            }
+            if (ucType == DO_MQTT_PUB_LONG) {
+                usPubLength = 1024;
+            }
+            else {
+                usPubLength = 10;
+            }
+            if (fnPublishMQTT(ucSubscriptionRef, ucQoS) == 0) {              // make QoS variable?
+                fnDebugMsg("Publishing...");
+            }
+            else {
+                fnDebugMsg("MQTT error!");
+            }
         }
         break;
     case DO_MQTT_DISCONNECT:
