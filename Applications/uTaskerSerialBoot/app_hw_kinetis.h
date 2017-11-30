@@ -715,11 +715,20 @@
     #define SIZE_OF_EEPROM      (4 * 1024)                               // 4k EEPROM
 #elif defined TWR_K20D72M
     #define KINETIS_FLEX                                                 // X part with flex memory rather than N part with program Flash only
-    #define PIN_COUNT           PIN_COUNT_100_PIN                        // 100 pin LQFP
-    #define SIZE_OF_FLASH       (256 * 1024)                             // 256k program FLASH
-    #define SIZE_OF_FLEXFLASH   (256 * 1024)                             // 256 Flex
-    #define SIZE_OF_RAM         (64 * 1024)                              // 64k SRAM
-    #define SIZE_OF_EEPROM      (2 * 1024)                               // 4k EEPROM
+    #if defined DEV1
+        #define OSC_LOW_GAIN_MODE
+        #define PIN_COUNT           PIN_COUNT_64_PIN                     // 64 pin LQFP
+        #define SIZE_OF_FLASH       (64 * 1024)                          // 64k program FLASH
+        #define SIZE_OF_FLEXFLASH   (32 * 1024)                          // 32 Flex
+        #define SIZE_OF_RAM         (16 * 1024)                          // 16k SRAM
+        #define SIZE_OF_EEPROM      (2 * 1024)                           // 2k EEPROM
+    #else
+        #define PIN_COUNT           PIN_COUNT_100_PIN                    // 100 pin LQFP
+        #define SIZE_OF_FLASH       (256 * 1024)                         // 256k program FLASH
+        #define SIZE_OF_FLEXFLASH   (256 * 1024)                         // 256 Flex
+        #define SIZE_OF_RAM         (64 * 1024)                          // 64k SRAM
+        #define SIZE_OF_EEPROM      (2 * 1024)                           // 2k EEPROM
+    #endif
 #elif defined K20F120M
     #define KINETIS_FLEX                                                 // X part with flex memory rather than N part with program Flash only
   //#define PIN_COUNT           PIN_COUNT_32_PIN
@@ -1706,7 +1715,7 @@
     #define SDCARD_DETECT          (PORTB_BIT6)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
 
     #if defined DEV1                                                     // temporary development configuration
-#define INIT_WATCHDOG_LED() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, (PORTC_BIT3), (PORTC_BIT3), (PORT_SRE_SLOW | PORT_DSE_HIGH)); _CONFIG_DRIVE_PORT_OUTPUT_VALUE(D, (PORTD_BIT0 | PORTD_BIT1 | PORTD_BIT2 | PORTD_BIT3 | PORTD_BIT4 | PORTD_BIT5 | PORTD_BIT6 | PORTD_BIT7), (PORTD_BIT0 | PORTD_BIT1 | PORTD_BIT2 | PORTD_BIT3 | PORTD_BIT4 | PORTD_BIT5 | PORTD_BIT6 | PORTD_BIT7), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+        #define INIT_WATCHDOG_LED() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, (PORTC_BIT3), (PORTC_BIT3), (PORT_SRE_SLOW | PORT_DSE_HIGH)); _CONFIG_DRIVE_PORT_OUTPUT_VALUE(D, (PORTD_BIT0 | PORTD_BIT1 | PORTD_BIT2 | PORTD_BIT3 | PORTD_BIT4 | PORTD_BIT5 | PORTD_BIT6 | PORTD_BIT7), (PORTD_BIT0 | PORTD_BIT1 | PORTD_BIT2 | PORTD_BIT3 | PORTD_BIT4 | PORTD_BIT5 | PORTD_BIT6 | PORTD_BIT7), (PORT_SRE_SLOW | PORT_DSE_HIGH))
         #define INIT_WATCHDOG_DISABLE()
         #define WATCHDOG_DISABLE()  0
         #define FORCE_BOOT()       (_READ_PORT_MASK(A, PORTA_BIT1) == 0) // pull this input down to force boot loader mode (hold SW2 at reset)
@@ -2397,14 +2406,22 @@
     #define SWITCH_2               (PORTC_BIT1)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
     #define SWITCH_3               (PORTC_BIT2)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
 
-    #define INIT_WATCHDOG_LED()    _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, (BLINK_LED), (BLINK_LED), (/*PORT_ODE | */PORT_SRE_SLOW | PORT_DSE_HIGH)); _CONFIG_PORT_INPUT(C, SWITCH_2, PORT_PS_UP_ENABLE); // note that the force boot input is configured here and not with the INIT_WATCHDOG_DISABLE() since the watchdog must be disabled as quickly as possible
-    #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(C, SWITCH_3, PORT_PS_UP_ENABLE); // configure as input
+    #if defined DEV1                                                     // temporary development configuration
+        #define INIT_WATCHDOG_LED() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, (PORTC_BIT3), (PORTC_BIT3), (PORT_SRE_SLOW | PORT_DSE_HIGH)); _CONFIG_DRIVE_PORT_OUTPUT_VALUE(D, (PORTD_BIT0 | PORTD_BIT1 | PORTD_BIT2 | PORTD_BIT3 | PORTD_BIT4 | PORTD_BIT5 | PORTD_BIT6 | PORTD_BIT7), (PORTD_BIT0 | PORTD_BIT1 | PORTD_BIT2 | PORTD_BIT3 | PORTD_BIT4 | PORTD_BIT5 | PORTD_BIT6 | PORTD_BIT7), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+        #define INIT_WATCHDOG_DISABLE()
+        #define WATCHDOG_DISABLE()  0
+        #define FORCE_BOOT()       (_READ_PORT_MASK(A, PORTA_BIT1) == 0) // pull this input down to force boot loader mode (hold SW2 at reset)
+        #define TOGGLE_WATCHDOG_LED()   _TOGGLE_PORT(C, PORTC_BIT3)
+    #else
+        #define INIT_WATCHDOG_LED()    _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, (BLINK_LED), (BLINK_LED), (/*PORT_ODE | */PORT_SRE_SLOW | PORT_DSE_HIGH)); _CONFIG_PORT_INPUT(C, SWITCH_2, PORT_PS_UP_ENABLE); // note that the force boot input is configured here and not with the INIT_WATCHDOG_DISABLE() since the watchdog must be disabled as quickly as possible
+        #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(C, SWITCH_3, PORT_PS_UP_ENABLE); // configure as input
 
-    #define WATCHDOG_DISABLE()     (_READ_PORT_MASK(C, SWITCH_3) == 0)   // pull this input down to disable watchdog (hold SW3 at reset)
-    #define FORCE_BOOT()           (_READ_PORT_MASK(C, SWITCH_2) == 0)   // pull this input down to force boot loader mode (hold SW2 at reset)
-    #define RETAIN_LOADER_MODE()   (_READ_PORT_MASK(C, SWITCH_2) == 0)
+        #define WATCHDOG_DISABLE()     (_READ_PORT_MASK(C, SWITCH_3) == 0)   // pull this input down to disable watchdog (hold SW3 at reset)
+        #define FORCE_BOOT()           (_READ_PORT_MASK(C, SWITCH_2) == 0)   // pull this input down to force boot loader mode (hold SW2 at reset)
+        #define RETAIN_LOADER_MODE()   (_READ_PORT_MASK(C, SWITCH_2) == 0)
 
-    #define TOGGLE_WATCHDOG_LED()   _TOGGLE_PORT(C, BLINK_LED)
+        #define TOGGLE_WATCHDOG_LED()   _TOGGLE_PORT(C, BLINK_LED)
+    #endif
 
 
     // Configure to suit SD card SPI mode at between 100k and 400k (SPI0)
