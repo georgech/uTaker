@@ -5554,9 +5554,10 @@ static void fnDisplayTelnetMode(unsigned short usMode, unsigned short usFlags)
 #endif
 
 #if defined USE_MQTT_CLIENT
-static unsigned short fnMQTT_callback(unsigned char ucEvent, unsigned char *ptrRef, unsigned char *ptrData)
+static unsigned short fnMQTT_callback(unsigned char ucEvent, unsigned char *ptrData, unsigned long ulLength, unsigned char ucSubscriptionRef)
 {
     CHAR *ptrBuf = (CHAR *)ptrData;
+    int iAddRef = 0;
     switch (ucEvent) {
     case MQTT_CLIENT_IDENTIFIER:
         ptrBuf = uStrcpy(ptrBuf, temp_pars->temp_parameters.cDeviceIDName); // supply a string to be used as MQTT device identifier - this should be unique and normally contain only characters 0..9, a..z, A..Z (normally up to 23 bytes)
@@ -5565,15 +5566,18 @@ static unsigned short fnMQTT_callback(unsigned char ucEvent, unsigned char *ptrR
         fnDebugMsg("MQTT connected\r\n");
         break;
     case MQTT_SUBACK_RECEIVED:
-        fnDebugMsg("MQTT subscribed\r\n");
+        fnDebugMsg("MQTT subscribed");
+        iAddRef = 1;
         break;
     case MQTT_UNSUBACK_RECEIVED:
-        fnDebugMsg("MQTT subscribed\r\n");
+        fnDebugMsg("MQTT subscribed");
+        iAddRef = 1;
         break;
     case MQTT_PUBLISH_RECEIVED:
-        fnDebugMsg("MQTT published\r\n");
+        fnDebugMsg("MQTT published");
+        iAddRef = 1;
         break;
-    case MQTT_PUBLISH_TOPIC:
+    case MQTT_PUBLISH_TOPIC:                                             // add the publish topic to be used
         ptrBuf = uStrcpy(ptrBuf, "xyz/abc");
         break;
     case MQTT_PUBLISH_DATA:
@@ -5590,12 +5594,17 @@ static unsigned short fnMQTT_callback(unsigned char ucEvent, unsigned char *ptrR
     case MQTT_CONNECTION_CLOSED:
         fnDebugMsg("MQTT closed\r\n");
         break;
-    case MQTT_TOPIC_ARRIVING:
-        fnDebugMsg("Topic:");
-        break;
     case MQTT_TOPIC_MESSAGE:
-        fnDebugMsg("Message\r\n");
+        fnDebugMsg("Message (");
+        fnDebugDec(ulLength, 0);
+        fnDebugMsg(")");
+        iAddRef = 1;
         break;
+    }
+    if (iAddRef != 0) {
+        fnDebugMsg(" [");
+        fnDebugDec(ucSubscriptionRef, 0);
+        fnDebugMsg("]\r\n");
     }
     return (unsigned short)((unsigned char *)ptrBuf - ptrData);
 }
