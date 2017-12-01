@@ -716,7 +716,7 @@
 #elif defined TWR_K20D72M
     #define KINETIS_FLEX                                                 // X part with flex memory rather than N part with program Flash only
     #if defined DEV1
-        #define OSC_LOW_GAIN_MODE
+        #define OSC_LOW_GAIN_MODE                                        // low gain required for oscillator circuitry
         #define PIN_COUNT           PIN_COUNT_64_PIN                     // 64 pin LQFP
         #define SIZE_OF_FLASH       (64 * 1024)                          // 64k program FLASH
         #define SIZE_OF_FLEXFLASH   (32 * 1024)                          // 32 Flex
@@ -2410,7 +2410,7 @@
     #if defined DEV1                                                     // temporary development configuration
         #define INIT_WATCHDOG_LED() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, (PORTC_BIT3), (PORTC_BIT3), (PORT_SRE_SLOW | PORT_DSE_HIGH)); _CONFIG_DRIVE_PORT_OUTPUT_VALUE(D, (PORTD_BIT0 | PORTD_BIT1 | PORTD_BIT2 | PORTD_BIT3 | PORTD_BIT4 | PORTD_BIT5 | PORTD_BIT6 | PORTD_BIT7), (PORTD_BIT0 | PORTD_BIT1 | PORTD_BIT2 | PORTD_BIT3 | PORTD_BIT4 | PORTD_BIT5 | PORTD_BIT6 | PORTD_BIT7), (PORT_SRE_SLOW | PORT_DSE_HIGH))
         #define INIT_WATCHDOG_DISABLE()
-        #define WATCHDOG_DISABLE()  0
+        #define WATCHDOG_DISABLE()  1
         #define FORCE_BOOT()       (_READ_PORT_MASK(A, PORTA_BIT1) == 0) // pull this input down to force boot loader mode (hold SW2 at reset)
         #define TOGGLE_WATCHDOG_LED()   _TOGGLE_PORT(C, PORTC_BIT3)
     #else
