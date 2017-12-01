@@ -282,25 +282,27 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
     #if defined KINETIS_WITH_PCC
                     PCC_ADC0 &= ~(PCC_CGC | PCC_PCS_MASK);               // disable clocks to module
     #else
-                    POWER_DOWN(6, SIM_SCGC6_ADC0);                       // disable clocks to module
+                    POWER_DOWN_ATOMIC(6, ADC0);                          // disable clocks to module
     #endif
                 }
     #if ADC_CONTROLLERS > 1
                 else if (ptrADC_settings->int_adc_controller == 1) {
         #if defined KINETIS_WITH_PCC
                     PCC_ADC1 = 0;                                        // disable clocks to module
+        #elif defined KINETIS_K22_SF7
+                    POWER_DOWN_ATOMIC(6, ADC1);                          // disable clocks to module
         #else
-                    POWER_DOWN(3, SIM_SCGC3_ADC1);                       // disable clocks to module
+                    POWER_DOWN_ATOMIC(3, ADC1);                          // disable clocks to module
         #endif
                 }
         #if ADC_CONTROLLERS > 2
                 else if (ptrADC_settings->int_adc_controller == 2) {
-                    POWER_DOWN(6, SIM_SCGC6_ADC2);                       // disable clocks to module
+                    POWER_DOWN_ATOMIC(6, ADC2);                          // disable clocks to module
                 }
         #endif
         #if ADC_CONTROLLERS > 3
                 else if (ptrADC_settings->int_adc_controller == 3) {
-                    POWER_DOWN(3, SIM_SCGC3_ADC3);                       // disable clocks to module
+                    POWER_DOWN_ATOMIC(3, ADC3);                          // disable clocks to module
                 }
         #endif
     #endif
@@ -356,8 +358,8 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
                     }
     #if ADC_CONTROLLERS > 1
                     else if (ptrADC_settings->int_adc_controller == 1) {
-            #if defined KINETIS_WITH_PCC
-                                #if defined KINETIS_KE15
+        #if defined KINETIS_WITH_PCC
+            #if defined KINETIS_KE15
                         SELECT_PCC_PERIPHERAL_SOURCE(ADC1, ADC1_PCC_SOURCE); // select the PCC clock used by ADC1, which must be supplied by the PCC
             #else
                         if ((ptrADC_settings->int_adc_mode & ADC_CFG1_ADICLK_ASY) == ADC_CFG1_ADICLK_ALT) { // if the alternative clock source is selected
@@ -365,7 +367,11 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
                         }
             #endif
         #endif
+        #if defined KINETIS_K22_SF7
+                        POWER_UP_ATOMIC(6, ADC1);                        // enable clocks to module
+        #else
                         POWER_UP_ATOMIC(3, ADC1);                        // enable clocks to module
+        #endif
                     }
         #if ADC_CONTROLLERS > 2
                     else if (ptrADC_settings->int_adc_controller == 2) {
@@ -638,7 +644,12 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
                     break;
         #if ADC_CONTROLLERS > 1
                 case 1:
-                    if (IS_POWERED_UP(3, ADC1) == 0) {
+            #if defined KINETIS_K22_SF7
+                    if (IS_POWERED_UP(6, ADC1) == 0)
+            #else
+                    if (IS_POWERED_UP(3, ADC1) == 0)
+            #endif
+                    {
                         _EXCEPTION("Trying to read from ADC1 that is not powered up!");
                     }
                     break;

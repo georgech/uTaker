@@ -214,7 +214,7 @@ static __interrupt void _PWM_Interrupt_5(void)
         #if defined KINETIS_WITH_PCC && !defined KINETIS_KE15
                 SELECT_PCC_PERIPHERAL_SOURCE(FTM2, FTM2_PCC_SOURCE);     // select the PCC clock used by FlexTimer/TPM 2
         #endif
-        #if defined KINETIS_KL
+        #if defined KINETIS_KL || defined KINETIS_K22_SF7
                 POWER_UP_ATOMIC(6, FTM2);                                // ensure that the FlexTimer module is powered up
         #else
                 POWER_UP_ATOMIC(3, FTM2);                                // ensure that the FlexTimer module is powered up
@@ -238,7 +238,11 @@ static __interrupt void _PWM_Interrupt_5(void)
         #if defined KINETIS_WITH_PCC && !defined KINETIS_KE15
                 SELECT_PCC_PERIPHERAL_SOURCE(FTM3, FTM3_PCC_SOURCE);     // select the PCC clock used by FlexTimer/TPM 3
         #endif
+        #if defined KINETIS_K22_SF7
+                POWER_UP_ATOMIC(6, FTM3);                                // ensure that the FlexTimer module is powered up
+        #else
                 POWER_UP_ATOMIC(3, FTM3);                                // ensure that the FlexTimer module is powered up
+        #endif
         #if defined KINETIS_KL
                 iInterruptID = irq_TPM3_ID;
         #else

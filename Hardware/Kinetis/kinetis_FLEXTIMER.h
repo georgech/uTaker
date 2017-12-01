@@ -110,7 +110,7 @@ static void fnHandleFlexTimer(FLEX_TIMER_MODULE *ptrFlexTimer, int iFlexTimerRef
     #endif
     #if FLEX_TIMERS_AVAILABLE > 2
             case 2:
-        #if defined KINETIS_KL
+        #if defined KINETIS_KL ||defined KINETIS_K22_SF7
                 POWER_DOWN_ATOMIC(6, FTM2);
         #else
                 POWER_DOWN_ATOMIC(3, FTM2);
@@ -119,7 +119,11 @@ static void fnHandleFlexTimer(FLEX_TIMER_MODULE *ptrFlexTimer, int iFlexTimerRef
     #endif
     #if FLEX_TIMERS_AVAILABLE > 3
             case 3:
+        #if defined KINETIS_K22_SF7
+                POWER_DOWN_ATOMIC(6, FTM3);
+        #else
                 POWER_DOWN_ATOMIC(3, FTM3);
+        #endif
                 break;
     #endif
             }
@@ -259,7 +263,7 @@ static __interrupt void _flexTimerInterrupt_3(void)
         #if defined KINETIS_WITH_PCC
                     PCC_FTM2 = 0;                                        // disable clocks to module
         #else
-            #if defined KINETIS_KL
+            #if defined KINETIS_KL || defined KINETIS_K22_SF7
                     POWER_DOWN_ATOMIC(6, FTM2);
             #else
                     POWER_DOWN_ATOMIC(3, FTM2);
@@ -270,7 +274,7 @@ static __interrupt void _flexTimerInterrupt_3(void)
         #if defined KINETIS_WITH_PCC && !defined KINETIS_KE15
                 SELECT_PCC_PERIPHERAL_SOURCE(FTM2, FTM2_PCC_SOURCE);     // select the PCC clock used by FlexTimer/TPM 2
         #endif
-        #if defined KINETIS_KL
+        #if defined KINETIS_KL || defined KINETIS_K22_SF7
                 POWER_UP_ATOMIC(6, FTM2);                                // ensure that the FlexTimer module is powered up
         #else
                 POWER_UP_ATOMIC(3, FTM2);                                // ensure that the FlexTimer module is powered up
@@ -295,6 +299,8 @@ static __interrupt void _flexTimerInterrupt_3(void)
                 if ((ptrTimerSetup->timer_mode & TIMER_STOP) != 0) {
         #if defined KINETIS_WITH_PCC
                     PCC_FTM3 = 0;                                        // disable clocks to module
+        #elif defined KINETIS_K22_SF7
+                    POWER_DOWN_ATOMIC(6, FTM3);
         #else
                     POWER_DOWN_ATOMIC(3, FTM3);
         #endif
@@ -303,7 +309,11 @@ static __interrupt void _flexTimerInterrupt_3(void)
         #if defined KINETIS_WITH_PCC && !defined KINETIS_KE15
                 SELECT_PCC_PERIPHERAL_SOURCE(FTM3, FTM3_PCC_SOURCE);     // select the PCC clock used by FlexTimer/TPM 3
         #endif
+        #if defined KINETIS_K22_SF7
+                POWER_UP_ATOMIC(6, FTM3);                                // ensure that the FlexTimer module is powered up
+        #else
                 POWER_UP_ATOMIC(3, FTM3);                                // ensure that the FlexTimer module is powered up
+        #endif
                 ptrFlexTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_3;
                 iInterruptID = irq_FTM3_ID;
                 break;

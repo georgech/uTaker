@@ -245,6 +245,9 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
 #else
     #define LPTMR_AVAILABLE     1
 #endif
+#if (defined KINETIS_K22 && !defined KINETIS_FLEX && ((SIZE_OF_FLASH >= (128 * 1024)) && (SIZE_OF_FLASH <= (512 * 1024))))
+    #define KINETIS_K22_SF7
+#endif
 
 // Clock setting/checking
 //
@@ -3851,7 +3854,11 @@ typedef struct stVECTOR_TABLE
             #define FTM_BLOCK_5                0x400ca000                // TPM2
         #endif
         #if ADC_CONTROLLERS > 1
-            #define ADC1_BLOCK                 0x400bb000                // ADC1
+            #if defined KINETIS_K22_SF7
+                #define ADC1_BLOCK             0x40027000                // ADC1
+            #else
+                #define ADC1_BLOCK             0x400bb000                // ADC1
+            #endif
         #endif
     #endif
     #if ADC_CONTROLLERS > 3
@@ -9887,7 +9894,7 @@ typedef struct stKINETIS_LPTMR_CTL
       #define SIM_SOPT7_ADC0PRETRGSEL_A      0x00000000                  // ADC pretrigger select - pretrigger A
       #define SIM_SOPT7_ADC0PRETRGSEL_B      0x00000010                  // ADC pretrigger select - pretrigger B
       #define SIM_SOPT7_ADC0ALTTRGEN         0x00000080                  // ADC alternate trigger enable
-    #if defined KINETIS_K66 || defined KINETIS_K80
+    #if defined KINETIS_K66 || defined KINETIS_K80 || defined KINETIS_K22_SF7
         #define SIM_SOPT8                    *(unsigned long*)(SIM_BLOCK + 0x101c) // System Options Register 8
     #endif
     #if defined KINETIS_K80 || defined KINETIS_KL82 || defined KINETIS_K65 || defined KINETIS_K66
@@ -9903,6 +9910,7 @@ typedef struct stKINETIS_LPTMR_CTL
         #define SIM_SDID_REVID_MASK          0x0000f000
         #define SIM_SDID_REVID_SHIFT         12
     #if !defined KINETIS_KL
+      #if !defined KINETIS_K22_SF7
         #define SIM_SCGC1                    *(volatile unsigned long *)(SIM_BLOCK + 0x1028) // System Clock Gating Control Register 1
           #define SIM_SCGC1_OSC1             0x00000020
           #if I2C_AVAILABLE > 2
@@ -10011,6 +10019,7 @@ typedef struct stKINETIS_LPTMR_CTL
           #define SIM_SCGC3_SIM_SCGC3_ADC1       BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1030), 27)
           #define SIM_SCGC3_SIM_SCGC3_ADC3       BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1030), 28)
           #define SIM_SCGC3_SIM_SCGC3_SLCD       BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1030), 30)
+      #endif
     #endif
   #if !defined KINETIS_WITH_PCC
      #define SIM_SCGC4                       *(volatile unsigned long *)(SIM_BLOCK + 0x1034)  // System Clock Gating Control Register 4
@@ -10135,16 +10144,23 @@ typedef struct stKINETIS_LPTMR_CTL
       #endif
       #define SIM_SCGC6_FTFL                 0x00000001
       #define SIM_SCGC6_DMAMUX0              0x00000002
-      #define SIM_SCGC6_DMAMUX1              0x00000004
-      #define SIM_SCGC6_INTMUX0              0x00000010                  // {100}
-      #define SIM_SCGC6_FLEXCAN0             0x00000010
-      #define SIM_SCGC6_TRNG0                0x00000020
-      #if defined DSPI_SPI
-          #define SIM_SCGC6_SPI0             0x00001000
-          #define SIM_SCGC6_SPI1             0x00002000
+      #if defined KINETIS_K22_SF7
+          #define SIM_SCGC6_FTM3             0x00000040
+          #define SIM_SCGC6_ADC1             0x00000080
+          #define SIM_SCGC6_DAC1             0x00000100
+          #define SIM_SCGC6_RNGA             0x00000200
+      #else
+          #define SIM_SCGC6_DMAMUX1          0x00000004
+          #define SIM_SCGC6_INTMUX0          0x00000010                  // {100}
+          #define SIM_SCGC6_FLEXCAN0         0x00000010
+          #define SIM_SCGC6_TRNG0            0x00000020
       #endif
       #if !defined KINETIS_KL && !defined KINETIS_K80
           #define SIM_SCGC6_LPUART0          0x00000400
+      #endif
+      #if defined DSPI_SPI
+          #define SIM_SCGC6_SPI0             0x00001000
+          #define SIM_SCGC6_SPI1             0x00002000
       #endif
       #define SIM_SCGC6_SAI0                 0x00008000
       #define SIM_SCGC6_I2S                  0x00008000
@@ -10155,14 +10171,14 @@ typedef struct stKINETIS_LPTMR_CTL
       #define SIM_SCGC6_PIT                  0x00800000
       #define SIM_SCGC6_FTM0                 0x01000000                  // TPM0 on KL/KE
       #define SIM_SCGC6_FTM1                 0x02000000                  // TPM1 on KL/KE
-      #if defined KINETIS_KL || defined KINETIS_KE || (defined KINETIS_K22 && (SIZE_OF_FLASH <= (512 * 1024)))
+      #if defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_K22_SF7
           #define SIM_SCGC6_FTM2             0x04000000                  // TPM2 on KL/KE
       #endif
       #define SIM_SCGC6_ADC0                 0x08000000
       #define SIM_SCGC6_ADC2                 0x10000000
       #define SIM_SCGC6_RTC                  0x20000000
       #define SIM_SCGC6_RTC_RF               0x40000000
-      #if defined KINETIS_KL
+      #if defined KINETIS_KL || defined KINETIS_K22_SF7
           #define SIM_SCGC6_DAC0             0x80000000
       #endif
       // Bit-banding references
@@ -10171,9 +10187,16 @@ typedef struct stKINETIS_LPTMR_CTL
           #define SIM_SCGC6_SIM_SCGC6_FTFL   BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 0)
       #endif
       #define SIM_SCGC6_SIM_SCGC6_DMAMUX0    BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 1)
-      #define SIM_SCGC6_SIM_SCGC6_DMAMUX1    BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 2)
-      #define SIM_SCGC6_SIM_SCGC6_INTMUX0    BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 4)
-      #define SIM_SCGC6_SIM_SCGC6_FLEXCAN0   BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 4)
+      #if defined KINETIS_K22_SF7
+          #define SIM_SCGC6_SIM_SCGC6_FTM3   BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 6)
+          #define SIM_SCGC6_SIM_SCGC6_ADC1   BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 7)
+          #define SIM_SCGC6_SIM_SCGC6_DAC1   BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 8)
+          #define SIM_SCGC6_SIM_SCGC6_RNGA   BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 9)
+      #else
+          #define SIM_SCGC6_SIM_SCGC6_DMAMUX1    BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 2)
+          #define SIM_SCGC6_SIM_SCGC6_INTMUX0    BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 4)
+          #define SIM_SCGC6_SIM_SCGC6_FLEXCAN0   BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 4)
+      #endif
       #if defined DSPI_SPI
           #define SIM_SCGC6_SIM_SCGC6_SPI0   BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 12)
           #define SIM_SCGC6_SIM_SCGC6_SPI1   BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 13)
@@ -10190,13 +10213,13 @@ typedef struct stKINETIS_LPTMR_CTL
       #define SIM_SCGC6_SIM_SCGC6_PIT        BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 23)
       #define SIM_SCGC6_SIM_SCGC6_FTM0       BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 24)
       #define SIM_SCGC6_SIM_SCGC6_FTM1       BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 25)
-      #if defined KINETIS_KL || defined KINETIS_KE || (defined KINETIS_K22 && (SIZE_OF_FLASH <= (512 * 1024)))
+      #if defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_K22_SF7
           #define SIM_SCGC6_SIM_SCGC6_FTM2   BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 26)
       #endif
       #define SIM_SCGC6_SIM_SCGC6_ADC0       BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 27)
       #define SIM_SCGC6_SIM_SCGC6_ADC2       BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 28)
       #define SIM_SCGC6_SIM_SCGC6_RTC        BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 29)
-      #if defined KINETIS_KL
+      #if defined KINETIS_KL || defined KINETIS_K22_SF7
             #define SIM_SCGC6_SIM_SCGC6_DAC0 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 31)
       #endif
     #define SIM_SCGC7                        *(volatile unsigned long*)(SIM_BLOCK + 0x1040) // System Clock Gating Control Register 7

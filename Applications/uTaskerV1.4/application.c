@@ -2749,7 +2749,7 @@ extern void fnUserHWInit(void)
             USB_USBTRC0 = 0;
         #endif
         }
-        POWER_DOWN(4, SIM_SCGC4_USBOTG);                                 // power down the USB controller
+        POWER_DOWN_ATOMIC(4, USBOTG);                                    // power down the USB controller
      }
     #endif
 #endif

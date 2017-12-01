@@ -48,8 +48,8 @@
     #define _ADC_TIMER_CONFIG
 
     #if defined SUPPORT_ADC                                              // if HW support is enabled
-      //#define TEST_ADC                                                 // enable test of ADC operation
-            #define ADC_INTERNAL_TEMPERATURE                             // force internal temperature channel to be used, when available
+        #define TEST_ADC                                                 // enable test of ADC operation
+          //#define ADC_INTERNAL_TEMPERATURE                             // force internal temperature channel to be used, when available
       //#define TEST_AD_DA                                               // {14} enable test of reading ADC and writing (after delay) to DAC
           //#define ADC_TRIGGER_TPM                                      // use TPM module rather than PIT for ADC trigger (valid for KL parts)
           //#define VOICE_RECORDER                                       // {15} needs TEST_AD_DA and mass-storage and saves sampled input to SD card
@@ -198,6 +198,12 @@
             #define ADC_SEQUENCES  2
             #define ADC_SAMPLES_LM3SXXXX (ADC_CHANNELS_LM3S * ADC_SEQUENCES)  // 2 x all channel sample sequences (3 with temperature)
             static unsigned short usADC_samples[ADC_SAMPLES_LM3SXXXX];
+        #endif
+        #if defined DEV1
+            int iBlockLed = 0;
+            static const unsigned char controller[3] = { 0, 0, 1 };
+            static const CHAR *adc_ref[3] = { "ADC0_DP0","ADC0_DM0","ADC1_DP0" };
+            static int iAdcCnt = 0;
         #endif
     #elif defined TEST_AD_DA && (defined DAC_CONTROLLERS && (DAC_CONTROLLERS > 0)) // {14}
         #if defined KINETIS_KL
@@ -370,12 +376,16 @@
                     adc_setup.int_type = ADC_INTERRUPT;                  // identifier
                     adc_setup.int_adc_mode = (ADC_READ_ONLY | ADC_GET_RESULT);
             #if defined _KINETIS                                             // {11}
+                #if defined DEV1
+                    adc_setup.int_adc_controller = controller[iAdcCnt];
+                #else
                     if (ADC_TRIGGER_1 == ucInputMessage[MSG_INTERRUPT_EVENT]) {
                         adc_setup.int_adc_controller = 1;
                     }
                     else {
                         adc_setup.int_adc_controller = 0;
                     }
+                #endif
                 #if defined TWR_K20D50M || defined TWR_K20D72M || defined FRDM_K20D50M || defined TWR_K21D50M || defined TEENSY_3_1
                     adc_setup.int_adc_controller = 0;
                 #endif
@@ -385,6 +395,12 @@
                     adc_setup.int_adc_result = &results;
                     fnConfigureInterrupt((void *)&adc_setup);
                     fnDebugMsg("ADC triggered:");
+            #if defined DEV1
+                    fnDebugMsg((CHAR *)adc_ref[iAdcCnt]);
+                    if (++iAdcCnt >= 3) {
+                        iAdcCnt = 0;
+                    }
+#endif
                     fnDebugHex(results.sADC_value[0], (WITH_SPACE | WITH_LEADIN | WITH_CR_LF | sizeof(results.sADC_value[0]))); // {4}
             #if defined _KINETIS                                         // {11}
                 #if defined ADC_INTERNAL_TEMPERATURE
@@ -765,7 +781,13 @@ static void fnStart_ADC_Trigger(void)
 
 static void fnConfigureADC(void)
 {
-#if defined _KINETIS && (!defined KINETIS_KE || defined KINETIS_KE15)    // {11}
+#if defined DEV1
+    static const unsigned char input[3] = { ADC_DP0_SINGLE, ADC_DM0_SINGLE, ADC_DP0_SINGLE };
+    static unsigned long ulCalibrate[3] = { ADC_CALIBRATE, ADC_CALIBRATE , ADC_CALIBRATE };
+#elif defined DEV1
+    adc_setup.int_adc_bit = ADC_DP0_SINGLE;                          // ADC0_DP0
+#endif
+#if defined _KINETIS && (!defined KINETIS_KE || defined KINETIS_KE15) && !defined DEV1   // {11}
     static unsigned long ulCalibrate = ADC_CALIBRATE;
 #endif
     ADC_SETUP adc_setup;                                                 // interrupt configuration parameters
@@ -876,6 +898,8 @@ static void fnConfigureADC(void)
   //adc_setup.int_adc_mode = (ulCalibrate | ADC_SELECT_INPUTS_A | ADC_CLOCK_ASYNCHRONOUS | ADC_CLOCK_DIVIDE_2 | ADC_SAMPLE_ACTIVATE_LONG | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_ENDED_INPUT | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE | ADC_SW_TRIGGERED); // note that the first configuration should calibrate the ADC - single shot with interrupt on completion
   //adc_setup.int_adc_mode = (ulCalibrate | ADC_SELECT_INPUTS_A | ADC_CLOCK_ALTERNATE_SOURCE | ADC_CLOCK_DIVIDE_8 | ADC_SAMPLE_ACTIVATE_LONG | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_ENDED_INPUT | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE | ADC_SW_TRIGGERED); // note that the first configuration should calibrate the ADC - single shot with interrupt on completion
     adc_setup.int_adc_mode = (ulCalibrate | ADC_SELECT_INPUTS_A /*| ADC_CLOCK_BUS_DIV_2*/ | ADC_CLOCK_DIVIDE_8 | ADC_SAMPLE_ACTIVATE_LONG | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_ENDED_INPUT | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE | ADC_SW_TRIGGERED); // note that the first configuration should calibrate the ADC - single shot with interrupt on completion {12}
+    #elif defined DEV1
+    adc_setup.int_adc_mode = (ulCalibrate[iAdcCnt] | ADC_SELECT_INPUTS_A | ADC_CLOCK_BUS_DIV_2 | ADC_CLOCK_DIVIDE_8 | ADC_SAMPLE_ACTIVATE_LONG | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_ENDED_INPUT | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE | ADC_SW_TRIGGERED); // note that the first configuration should calibrate the ADC - single shot with interrupt on completion {12}
             #else
     adc_setup.int_adc_mode = (ulCalibrate | ADC_SELECT_INPUTS_A | ADC_CLOCK_BUS_DIV_2 | ADC_CLOCK_DIVIDE_8 | ADC_SAMPLE_ACTIVATE_LONG | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_ENDED_INPUT | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE | ADC_SW_TRIGGERED); // note that the first configuration should calibrate the ADC - single shot with interrupt on completion {12}
              #endif
@@ -896,6 +920,11 @@ static void fnConfigureADC(void)
   //adc_setup.int_adc_mode = (ADC_CONFIGURE_ADC | ADC_CONFIGURE_CHANNEL | ADC_SEQUENTIAL_MODE | ADC_TRIGGERED_MODE); // use to test SYNCA trigger
     adc_setup.int_adc_speed = (unsigned char)(ADC_SAMPLING_SPEED(5000000)); // 5MHz sampling (must be between 100kHz and 5MHz)
     adc_setup.int_adc_result = 0;                                        // no result is requested
+#endif
+#if defined DEV1
+    adc_setup.int_adc_bit = input[iAdcCnt];
+    adc_setup.int_adc_controller = controller[iAdcCnt];
+    ulCalibrate[iAdcCnt] = 0;
 #endif
     fnConfigureInterrupt((void *)&adc_setup);                            // configure ADC
 #if defined TEST_AD_DA                                                   // {14}
@@ -961,7 +990,7 @@ static void fnConfigureADC(void)
     #endif
 #endif
 #if defined _KINETIS                                                     // {11}
-    #if (ADC_CONTROLLERS > 1)
+    #if (ADC_CONTROLLERS > 1) && !defined DEV1
     adc_setup.int_adc_controller = 1;                                    // ADC controller 1
     adc_setup.int_adc_bit = ADC_DM1_SINGLE;                              // ADC DM1 single-ended
   //adc_setup.int_adc_int_type = (ADC_LOW_LIMIT_INT);                    // interrupt type (trigger only when lower than the defined level)
@@ -1002,7 +1031,7 @@ static void fnConfigureADC(void)
     adc_setup.int_adc_mode = (ADC_START_OPERATION);
     fnConfigureInterrupt((void *)&adc_setup);                            // start operation now
 #endif
-#if defined _KINETIS && !defined KINETIS_KE
+#if defined _KINETIS && !defined KINETIS_KE && !defined DEV1
     ulCalibrate = 0;                                                     // calibrate ADC only once
 #endif
 }

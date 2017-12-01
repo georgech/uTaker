@@ -408,7 +408,7 @@
 #elif defined FRDM_K22F || defined TWR_K22F120M
   //#define RUN_FROM_DEFAULT_CLOCK                                       // default mode is FLL Engaged Internal - the 32kHz IRC is multiplied by FLL factor of 640 to obtain 20.9715MHz nominal frequency (20MHz..25MHz)
   //#define RUN_FROM_LIRC                                                // clock directly from internal 4MHz RC clock
-  //#define RUN_FROM_HIRC                                                // clock directly from internal 48MHz RC clock
+    #define RUN_FROM_HIRC                                                // clock directly from internal 48MHz RC clock
   //#define RUN_FROM_HIRC_PLL                                            // use 48MHz RC clock as input to the PLL
   //#define RUN_FROM_HIRC_FLL                                            // use 48MHz RC clock as input to the FLL
     #if defined RUN_FROM_LIRC                                            // 4MHz
@@ -1586,7 +1586,7 @@
                                               //SPI0_CTAR0 = (/*SPI_CTAR_DBR | */ SPI_CTAR_BR_2 | SPI_CTAR_FMSZ_8 | SPI_CTAR_PDT_7 | SPI_CTAR_BR_2 | SPI_CTAR_CPHA | SPI_CTAR_CPOL); // for 50MHz bus, 6.25MHz speed and 140ns min de-select time (double speed bit removed and divider added)
     #endif
 
-    #define POWER_DOWN_SPI_FLASH_INTERFACE() POWER_DOWN(6, SIM_SCGC6_SPI0) // power down SPI interface if no SPI Flash detected
+    #define POWER_DOWN_SPI_FLASH_INTERFACE() POWER_DOWN_ATOMIC(6, SPI0)  // power down SPI interface if no SPI Flash detected
 
     #define FLUSH_SPI_FIFO_AND_FLAGS()      SPI0_MCR |= SPI_MCR_CLR_RXF; SPI0_SR = (SPI_SR_EOQF | SPI_SR_TFUF | SPI_SR_TFFF | SPI_SR_RFOF | SPI_SR_RFDF);
 
@@ -1624,7 +1624,7 @@
                                                 SPI0_CTAR0 = (SPI_CTAR_DBR | SPI_CTAR_FMSZ_8 | SPI_CTAR_PDT_7 | SPI_CTAR_BR_2 | SPI_CTAR_CPHA | SPI_CTAR_CPOL); // for 50MHz bus, 25MHz speed and 140ns min de-select time
     #endif
 
-    #define POWER_DOWN_SPI_FLASH_INTERFACE() POWER_DOWN(6, SIM_SCGC6_SPI0) // power down SPI interface if no SPI Flash detected
+    #define POWER_DOWN_SPI_FLASH_INTERFACE() POWER_DOWN_ATOMIC(6, SPI0)  // power down SPI interface if no SPI Flash detected
 
     #define FLUSH_SPI_FIFO_AND_FLAGS()      SPI0_MCR |= SPI_MCR_CLR_RXF; SPI0_SR = (SPI_SR_EOQF | SPI_SR_TFUF | SPI_SR_TFFF | SPI_SR_RFOF | SPI_SR_RFDF);
 
@@ -1653,7 +1653,7 @@
                                             SPI1_MCR = (SPI_MCR_MSTR | SPI_MCR_DCONF_SPI | SPI_MCR_CLR_RXF | SPI_MCR_CLR_TXF | SPI_MCR_PCSIS_CS0 | SPI_MCR_PCSIS_CS1 | SPI_MCR_PCSIS_CS2 | SPI_MCR_PCSIS_CS3 | SPI_MCR_PCSIS_CS4 | SPI_MCR_PCSIS_CS5); \
                                             SPI1_CTAR0 = (SPI_CTAR_DBR | SPI_CTAR_FMSZ_8 | SPI_CTAR_PDT_7 | SPI_CTAR_BR_2 | SPI_CTAR_CPHA | SPI_CTAR_CPOL); // for 50MHz bus, 25MHz speed and 140ns min de-select time
 
-    #define POWER_DOWN_SPI_FLASH_INTERFACE() POWER_DOWN(6, SIM_SCGC6_SPI1) // power down SPI interface if no SPI Flash detected
+    #define POWER_DOWN_SPI_FLASH_INTERFACE() POWER_DOWN_ATOMIC(6, SPI1)  // power down SPI interface if no SPI Flash detected
 
     #define FLUSH_SPI_FIFO_AND_FLAGS()      SPI1_MCR |= SPI_MCR_CLR_RXF; SPI1_SR = (SPI_SR_EOQF | SPI_SR_TFUF | SPI_SR_TFFF | SPI_SR_RFOF | SPI_SR_RFDF);
 
@@ -1693,7 +1693,7 @@
                                             SPI0_BR = (SPI_BR_SPPR_PRE_1 | SPI_BR_SPR_DIV_2); \
                                             (void)SPI0_S; (void)SPI0_D
 
-    #define POWER_DOWN_SPI_FLASH_INTERFACE() POWER_DOWN(4, SIM_SCGC4_SPI0) // power down SPI interface if no SPI Flash detected
+    #define POWER_DOWN_SPI_FLASH_INTERFACE() POWER_DOWN_ATOMIC(4, SPI0)  // power down SPI interface if no SPI Flash detected
 
     #define FLUSH_SPI_FIFO_AND_FLAGS()      
 
@@ -1737,7 +1737,7 @@
                                             SPI1_BR = (SPI_BR_SPPR_PRE_1 | SPI_BR_SPR_DIV_2); \
                                             (void)SPI1_S; (void)SPI1_D
 
-    #define POWER_DOWN_SPI_FLASH_INTERFACE() POWER_DOWN(4, SIM_SCGC4_SPI1) // power down SPI interface if no SPI Flash detected
+    #define POWER_DOWN_SPI_FLASH_INTERFACE() POWER_DOWN_ATOMIC(4, SPI1)  // power down SPI interface if no SPI Flash detected
 
     #define FLUSH_SPI_FIFO_AND_FLAGS()      
 
@@ -1780,7 +1780,7 @@
                                             SPI1_BR = (SPI_BR_SPPR_PRE_1 | SPI_BR_SPR_DIV_2); \
                                             (unsigned char)SPI1_S; (unsigned char)SPI1_D
 
-    #define POWER_DOWN_SPI_FLASH_INTERFACE() POWER_DOWN(4, SIM_SCGC4_SPI1) // power down SPI interface if no SPI Flash detected
+    #define POWER_DOWN_SPI_FLASH_INTERFACE() POWER_DOWN_ATOMIC(4, SPI1)  // power down SPI interface if no SPI Flash detected
 
     #define FLUSH_SPI_FIFO_AND_FLAGS()      
 
@@ -1832,7 +1832,7 @@
     #define REMOVE_SPI_FLASH_MODE()                                      // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
 #elif defined KINETIS_K80 && defined QSPI_FILE_SYSTEM                    // interface using QSPI
     #define POWER_UP_SPI_FLASH_INTERFACE()     POWER_UP_ATOMIC(2, QSPI);
-    #define POWER_DOWN_SPI_FLASH_INTERFACE()   POWER_DOWN(2, QSPI);
+    #define POWER_DOWN_SPI_FLASH_INTERFACE()   POWER_DOWN_ATOMIC(2, QSPI);
     #define CONFIGURE_SPI_FLASH_INTERFACE() \
         _CONFIG_PERIPHERAL(E, 0, (PE_0_QSPI0A_DATA3)); \
         _CONFIG_PERIPHERAL(E, 1, (PE_1_QSPI0A_SCLK)); \
@@ -1939,7 +1939,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
                                             SPI2_CTAR0 = (SPI_CTAR_DBR | SPI_CTAR_FMSZ_8 | SPI_CTAR_PDT_7 | SPI_CTAR_BR_2 | SPI_CTAR_CPHA | SPI_CTAR_CPOL); // for 50MHz bus, 25MHz speed and 140ns min de-select time
                                           //SPI2_CTAR0 = (/*SPI_CTAR_DBR | */ SPI_CTAR_BR_2 | SPI_CTAR_FMSZ_8 | SPI_CTAR_PDT_7 | SPI_CTAR_BR_2 | SPI_CTAR_CPHA | SPI_CTAR_CPOL); // for 50MHz bus, 6.25MHz speed and 140ns min de-select time (double speed bit removed and divider added)
 
-    #define POWER_DOWN_SPI_FLASH_INTERFACE() POWER_DOWN(3, SIM_SCGC3_SPI2) // power down SPI interface if no SPI Flash detected
+    #define POWER_DOWN_SPI_FLASH_INTERFACE() POWER_DOWN_ATOMIC(3, SPI2)  // power down SPI interface if no SPI Flash detected
 
     #define FLUSH_SPI_FIFO_AND_FLAGS()      SPI2_MCR |= SPI_MCR_CLR_RXF; SPI2_SR = (SPI_SR_EOQF | SPI_SR_TFUF | SPI_SR_TFFF | SPI_SR_RFOF | SPI_SR_RFDF);
 
@@ -4583,49 +4583,75 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 
     #define KEYPAD "KeyPads/TWR_K21F120M.bmp"
 #elif defined FRDM_K22F
-    #define DEMO_LED_1             (PORTA_BIT2)                          // (green led) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
-    #define DEMO_LED_2             (PORTA_BIT1)                          // (red led) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
-    #define DEMO_LED_3             (PORTD_BIT5)                          // (blue led) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
-    #define DEMO_LED_4             (PORTD_BIT6)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
-    #define BLINK_LED              (DEMO_LED_1)
-    #define SWITCH_2               (PORTC_BIT1)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
-    #define SWITCH_3               (PORTB_BIT17)                         // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
-    #define SDCARD_DETECT_PIN      (PORTB_BIT16)
-    #define WRITE_PROTECT_INPUT    (0)
-    #define USB_HOST_POWER_ENABLE  (0)
-
-    #define SWITCH_2_PORT          _PORTC
-    #define SWITCH_3_PORT          _PORTB
-
-    #define LED_RED                DEMO_LED_2
-    #define LED_GREEN              DEMO_LED_1
-    #define LED_BLUE               DEMO_LED_3
-
-    #if defined USE_MAINTENANCE && !defined REMOVE_PORT_INITIALISATIONS
-        #define INIT_WATCHDOG_LED()                                      // let the port set up do this (the user can disable blinking)
+    #if defined DEV1                                                     // temporary development configuration
+        #define INIT_WATCHDOG_LED() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, (PORTC_BIT3), (PORTC_BIT3), (PORT_SRE_SLOW | PORT_DSE_HIGH)); _CONFIG_DRIVE_PORT_OUTPUT_VALUE(D, (PORTD_BIT0 | PORTD_BIT1 | PORTD_BIT2 | PORTD_BIT3 | PORTD_BIT4 | PORTD_BIT5 | PORTD_BIT6 | PORTD_BIT7), (PORTD_BIT0 | PORTD_BIT1 | PORTD_BIT2 | PORTD_BIT3 | PORTD_BIT4 | PORTD_BIT5 | PORTD_BIT6 | PORTD_BIT7), (PORT_SRE_SLOW | PORT_DSE_HIGH)); \
+        _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, (PORTC_BIT0 | PORTC_BIT1 | PORTC_BIT2 | PORTC_BIT3 | PORTC_BIT4 | PORTC_BIT5 | PORTC_BIT8 | PORTC_BIT9 | PORTC_BIT10 | PORTC_BIT11), (0), (PORT_SRE_SLOW | PORT_DSE_HIGH)); \
+        _CONFIG_DRIVE_PORT_OUTPUT_VALUE(B, (PORTB_BIT1 | PORTB_BIT2 | PORTB_BIT3 | PORTB_BIT16 | PORTB_BIT17 | PORTB_BIT18 | PORTB_BIT19), (0), (PORT_SRE_SLOW | PORT_DSE_HIGH)); \
+        _CONFIG_DRIVE_PORT_OUTPUT_VALUE(A, (PORTA_BIT13), (0), (PORT_SRE_SLOW | PORT_DSE_HIGH));
+        #define INIT_WATCHDOG_DISABLE()
+        #define WATCHDOG_DISABLE()  0
+        extern int iBlockLed;
+        #define TOGGLE_WATCHDOG_LED()   if (iBlockLed == 0) {_TOGGLE_PORT(C, PORTC_BIT3); }
+        #define REMOVE_PORT_INITIALISATIONS
+        #define MAPPED_DEMO_LED_1   0
+        #define MAPPED_DEMO_LED_2   0
+        #define CONFIG_TEST_OUTPUT()
+        #define ACTIVATE_WATCHDOG()     UNLOCK_WDOG(); WDOG_TOVALL = (2000/5); WDOG_TOVALH = 0; WDOG_STCTRLH = (WDOG_STCTRLH_STNDBYEN | WDOG_STCTRLH_WAITEN | WDOG_STCTRLH_STOPEN | WDOG_STCTRLH_WDOGEN | WDOG_STCTRLH_IRQRSTEN) // watchdog enabled to generate reset on 2s timeout (no further updates allowed)
+        #define DEMO_LED_1             (PORTA_BIT2)                          // (green led) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+        #define DEMO_LED_2             (PORTA_BIT1)                          // (red led) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+        #define DEMO_LED_3             (PORTD_BIT5)                          // (blue led) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+        #define SWITCH_2               (PORTC_BIT1)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+        #define SWITCH_3               (PORTB_BIT17)                         // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+        #define LED_RED                DEMO_LED_2
+        #define LED_GREEN              DEMO_LED_1
+        #define LED_BLUE               DEMO_LED_3
+        #define SWITCH_2_PORT          _PORTC
+        #define SWITCH_3_PORT          _PORTB
     #else
-        #define INIT_WATCHDOG_LED() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(A, (BLINK_LED), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH))
-    #endif
+        #define DEMO_LED_1             (PORTA_BIT2)                          // (green led) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+        #define DEMO_LED_2             (PORTA_BIT1)                          // (red led) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+        #define DEMO_LED_3             (PORTD_BIT5)                          // (blue led) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+        #define DEMO_LED_4             (PORTD_BIT6)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+        #define BLINK_LED              (DEMO_LED_1)
+        #define SWITCH_2               (PORTC_BIT1)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+        #define SWITCH_3               (PORTB_BIT17)                         // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+        #define SDCARD_DETECT_PIN      (PORTB_BIT16)
+        #define WRITE_PROTECT_INPUT    (0)
+        #define USB_HOST_POWER_ENABLE  (0)
 
-    #define SHIFT_DEMO_LED_1        2                                    // since the port bits may be spread out shift each to the lowest 4 bits
-    #define SHIFT_DEMO_LED_2        0
-    #define SHIFT_DEMO_LED_3        3
-    #define SHIFT_DEMO_LED_4        3
+        #define SWITCH_2_PORT          _PORTC
+        #define SWITCH_3_PORT          _PORTB
 
-    #define MAPPED_DEMO_LED_1       (DEMO_LED_1 >> SHIFT_DEMO_LED_1)
-    #define MAPPED_DEMO_LED_2       (DEMO_LED_2 >> SHIFT_DEMO_LED_2)
-    #define MAPPED_DEMO_LED_3       (DEMO_LED_3 >> SHIFT_DEMO_LED_3)
-    #define MAPPED_DEMO_LED_4       (DEMO_LED_4 >> SHIFT_DEMO_LED_4)
+        #define LED_RED                DEMO_LED_2
+        #define LED_GREEN              DEMO_LED_1
+        #define LED_BLUE               DEMO_LED_3
 
-    #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(C, (SWITCH_2), PORT_PS_UP_ENABLE); _CONFIG_PORT_INPUT_FAST_HIGH(B, (SWITCH_3), PORT_PS_UP_ENABLE) // use fast access version (beware that this can only operate on half of the 32 bits at a time)
-    #define WATCHDOG_DISABLE()      (_READ_PORT_MASK(C, SWITCH_2) == 0)  // pull this input down to disable watchdog (hold SW2 at reset)
-    #define ACTIVATE_WATCHDOG()     UNLOCK_WDOG(); WDOG_TOVALL = (2000/5); WDOG_TOVALH = 0; WDOG_STCTRLH = (WDOG_STCTRLH_STNDBYEN | WDOG_STCTRLH_WAITEN | WDOG_STCTRLH_STOPEN | WDOG_STCTRLH_WDOGEN | WDOG_STCTRLH_IRQRSTEN) // watchdog enabled to generate reset on 2s timeout (no further updates allowed)
-    #define TOGGLE_WATCHDOG_LED()   _TOGGLE_PORT(A, BLINK_LED)
+        #if defined USE_MAINTENANCE && !defined REMOVE_PORT_INITIALISATIONS
+            #define INIT_WATCHDOG_LED()                                      // let the port set up do this (the user can disable blinking)
+        #else
+            #define INIT_WATCHDOG_LED() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(A, (BLINK_LED), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+        #endif
 
-    #if defined USE_MAINTENANCE && !defined REMOVE_PORT_INITIALISATIONS
-        #define CONFIG_TEST_OUTPUT()                                         // we use DEMO_LED_2 which is configured by the user code (and can be disabled in parameters if required)
-    #else
-        #define CONFIG_TEST_OUTPUT() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(A, (DEMO_LED_2), (DEMO_LED_2), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+        #define SHIFT_DEMO_LED_1        2                                    // since the port bits may be spread out shift each to the lowest 4 bits
+        #define SHIFT_DEMO_LED_2        0
+        #define SHIFT_DEMO_LED_3        3
+        #define SHIFT_DEMO_LED_4        3
+
+        #define MAPPED_DEMO_LED_1       (DEMO_LED_1 >> SHIFT_DEMO_LED_1)
+        #define MAPPED_DEMO_LED_2       (DEMO_LED_2 >> SHIFT_DEMO_LED_2)
+        #define MAPPED_DEMO_LED_3       (DEMO_LED_3 >> SHIFT_DEMO_LED_3)
+        #define MAPPED_DEMO_LED_4       (DEMO_LED_4 >> SHIFT_DEMO_LED_4)
+
+        #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(C, (SWITCH_2), PORT_PS_UP_ENABLE); _CONFIG_PORT_INPUT_FAST_HIGH(B, (SWITCH_3), PORT_PS_UP_ENABLE) // use fast access version (beware that this can only operate on half of the 32 bits at a time)
+        #define WATCHDOG_DISABLE()      (_READ_PORT_MASK(C, SWITCH_2) == 0)  // pull this input down to disable watchdog (hold SW2 at reset)
+        #define ACTIVATE_WATCHDOG()     UNLOCK_WDOG(); WDOG_TOVALL = (2000/5); WDOG_TOVALH = 0; WDOG_STCTRLH = (WDOG_STCTRLH_STNDBYEN | WDOG_STCTRLH_WAITEN | WDOG_STCTRLH_STOPEN | WDOG_STCTRLH_WDOGEN | WDOG_STCTRLH_IRQRSTEN) // watchdog enabled to generate reset on 2s timeout (no further updates allowed)
+        #define TOGGLE_WATCHDOG_LED()   _TOGGLE_PORT(A, BLINK_LED)
+
+        #if defined USE_MAINTENANCE && !defined REMOVE_PORT_INITIALISATIONS
+            #define CONFIG_TEST_OUTPUT()                                         // we use DEMO_LED_2 which is configured by the user code (and can be disabled in parameters if required)
+        #else
+            #define CONFIG_TEST_OUTPUT() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(A, (DEMO_LED_2), (DEMO_LED_2), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+        #endif
     #endif
     #define TOGGLE_TEST_OUTPUT()    _TOGGLE_PORT(A, DEMO_LED_2)
     #define SET_TEST_OUTPUT()       _SETBITS(A, DEMO_LED_2)
@@ -9179,7 +9205,7 @@ typedef unsigned long LCD_CONTROL_PORT_SIZE;
                                SPI1_MCR = (SPI_MCR_MSTR | SPI_MCR_DCONF_SPI | SPI_MCR_CLR_RXF | SPI_MCR_CLR_TXF | SPI_MCR_PCSIS_CS0 | SPI_MCR_PCSIS_CS1 | SPI_MCR_PCSIS_CS2 | SPI_MCR_PCSIS_CS3 | SPI_MCR_PCSIS_CS4 | SPI_MCR_PCSIS_CS5);\
                                SPI1_CTAR0 = (SPI_CTAR_DBR | SPI_CTAR_FMSZ_8 | SPI_CTAR_PDT_7 | SPI_CTAR_BR_4 | SPI_CTAR_CPHA | SPI_CTAR_CPOL); // for 50MHz bus, 12.5MHz speed and 140ns min de-select time
 
-    #define POWER_DOWN_SPI_LCD_INTERFACE()  POWER_DOWN(6, SIM_SCGC6_SPI1) // power down SPI interface
+    #define POWER_DOWN_SPI_LCD_INTERFACE()  POWER_DOWN_ATOMIC(6, SPI1)   // power down SPI interface
 
     #define FLUSH_SPI1_FIFO_AND_FLAGS()     SPI1_MCR |= SPI_MCR_CLR_RXF; SPI1_SR = (SPI_SR_EOQF | SPI_SR_TFUF | SPI_SR_TFFF | SPI_SR_RFOF | SPI_SR_RFDF | SPI_SR_TCF);
 
@@ -9212,7 +9238,7 @@ typedef unsigned long LCD_CONTROL_PORT_SIZE;
                                SPI0_BR = (SPI_BR_SPPR_PRE_4 | SPI_BR_SPR_DIV_2); \
                                (void)SPI0_S; (void)SPI0_D
 
-    #define POWER_DOWN_SPI_LCD_INTERFACE()  POWER_DOWN(4, SIM_SCGC4_SPI0)// power down SPI interface
+    #define POWER_DOWN_SPI_LCD_INTERFACE()  POWER_DOWN_ATOMIC(4, SPI0)   // power down SPI interface
 
     #define WRITE_SPI_LCD_DATA(byte)        _CLEARBITS(D, SPI_GLCD_CS);\
                                             SPI0_D = (byte);\

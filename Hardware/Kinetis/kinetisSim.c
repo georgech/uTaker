@@ -7470,7 +7470,12 @@ static void fnTriggerADC(int iADC, int iHW_trigger)
         break;
     #if ADC_CONTROLLERS > 1
     case 1:                                                              // ADC1
-        if (IS_POWERED_UP(3, ADC1) && ((ADC1_SC1A & ADC_SC1A_ADCH_OFF) != ADC_SC1A_ADCH_OFF)) { // ADC1 powered up and operating
+        #if defined KINETIS_K22_SF7
+        if (IS_POWERED_UP(6, ADC1) && ((ADC1_SC1A & ADC_SC1A_ADCH_OFF) != ADC_SC1A_ADCH_OFF))
+        #else
+        if (IS_POWERED_UP(3, ADC1) && ((ADC1_SC1A & ADC_SC1A_ADCH_OFF) != ADC_SC1A_ADCH_OFF))
+        #endif
+        {                                                                // ADC1 powered up and operating
             if ((ADC1_SC2 & ADC_SC2_ADTRG_HW) == 0) {                    // software trigger mode
                 fnSimADC(1);                                             // perform ADC conversion
                 if ((ADC1_SC1A & ADC_SC1A_COCO) != 0) {                  // {40} if conversion has completed
@@ -8618,7 +8623,7 @@ extern int fnSimTimers(void)
     }
     #endif
     #if FLEX_TIMERS_AVAILABLE > 2
-        #if defined KINETIS_KL
+        #if defined KINETIS_KL || defined KINETIS_K22_SF7
     if (IS_POWERED_UP(6, FTM2) &&((FTM2_SC & (FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)) != 0))  // if the timer/PWM module is powered and clocked
         #else
     if (IS_POWERED_UP(3, FTM2) &&((FTM2_SC & FTM_SC_CLKS_EXT) != 0))  // if the FlexTimer is powered and clocked
@@ -8658,7 +8663,12 @@ extern int fnSimTimers(void)
     }
     #endif
     #if FLEX_TIMERS_AVAILABLE > 3
-    if (((IS_POWERED_UP(3, FTM3)) != 0) && ((FTM3_SC & (FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)) != 0)) { // if the FlexTimer is powered and clocked
+        #if defined KINETIS_K22_SF7
+    if (((IS_POWERED_UP(6, FTM3)) != 0) && ((FTM3_SC & (FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)) != 0))
+        #else
+    if (((IS_POWERED_UP(3, FTM3)) != 0) && ((FTM3_SC & (FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)) != 0))
+        #endif
+    {                                                                    // if the FlexTimer is powered and clocked
         unsigned long ulCountIncrease = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)fnGetFlexTimer_clock(3)) / 1000000);
         ulCountIncrease += FTM3_CNT;                                     // new counter value (assume up counting)
         if (ulCountIncrease >= FTM3_MOD) {                               // match

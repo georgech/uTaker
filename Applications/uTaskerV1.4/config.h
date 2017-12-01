@@ -560,6 +560,7 @@
     #define DEVICE_WITHOUT_CAN                                           // this K22 doesn't have CAN controller
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((24 * 1024) * MEM_FACTOR)
 #elif defined FRDM_K22F
+  //#define DEV1                                                         // temporary development configuration
     #define TARGET_HW            "FRDM-K22F"
     #define KINETIS_K_FPU                                                // part with floating point unit
     #define KINETIS_MAX_SPEED    120000000

@@ -160,7 +160,7 @@ static void fnDisablePIT(int iPIT)
         #else
             POWER_UP_ATOMIC(6, PIT);                                     // {2} ensure that the module is powered up for the next operation
             PIT_MCR = PIT_MCR_MDIS;                                      // disable clocks to module since no more timers are active
-            POWER_DOWN(6, SIM_SCGC6_PIT);                                // power down the PIT module
+            POWER_DOWN_ATOMIC(6, PIT);                                   // power down the PIT module
         #endif
         }
     #endif

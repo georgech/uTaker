@@ -42,7 +42,7 @@
             if ((ptrDAC_settings->dac_mode & DAC_DISABLE) != 0) {
                 switch (ptrDAC_settings->int_dac_controller) {
                 case 0:
-    #if defined KINETIS_KL
+    #if defined KINETIS_KL || defined KINETIS_K22_SF7
                     POWER_DOWN_ATOMIC(6, DAC0);                          // powered down DAC 0
     #else
                     POWER_DOWN_ATOMIC(2, DAC0);                          // powered down DAC 0
@@ -68,6 +68,8 @@
                 _CONFIG_PERIPHERAL(E, 30, PE_30_DAC0_OUT);               // ensure that the DAC output pin is configured
             #endif
         #endif
+    #elif defined KINETIS_K22_SF7
+                POWER_UP_ATOMIC(6, DAC0);                                // ensure DAC 0 is powered up
     #else
                 POWER_UP_ATOMIC(2, DAC0);                                // ensure DAC 0 is powered up
     #endif

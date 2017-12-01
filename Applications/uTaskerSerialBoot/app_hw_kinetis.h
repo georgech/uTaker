@@ -1715,7 +1715,8 @@
     #define SDCARD_DETECT          (PORTB_BIT6)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
 
     #if defined DEV1                                                     // temporary development configuration
-        #define INIT_WATCHDOG_LED() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, (PORTC_BIT3), (PORTC_BIT3), (PORT_SRE_SLOW | PORT_DSE_HIGH)); _CONFIG_DRIVE_PORT_OUTPUT_VALUE(D, (PORTD_BIT0 | PORTD_BIT1 | PORTD_BIT2 | PORTD_BIT3 | PORTD_BIT4 | PORTD_BIT5 | PORTD_BIT6 | PORTD_BIT7), (PORTD_BIT0 | PORTD_BIT1 | PORTD_BIT2 | PORTD_BIT3 | PORTD_BIT4 | PORTD_BIT5 | PORTD_BIT6 | PORTD_BIT7), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+        #define INIT_WATCHDOG_LED() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, (PORTC_BIT3), (PORTC_BIT3), (PORT_SRE_SLOW | PORT_DSE_HIGH)); _CONFIG_DRIVE_PORT_OUTPUT_VALUE(D, (PORTD_BIT0 | PORTD_BIT1 | PORTD_BIT2 | PORTD_BIT3 | PORTD_BIT4 | PORTD_BIT5 | PORTD_BIT6 | PORTD_BIT7), (PORTD_BIT0 | PORTD_BIT1 | PORTD_BIT2 | PORTD_BIT3 | PORTD_BIT4 | PORTD_BIT5 | PORTD_BIT6 | PORTD_BIT7), (PORT_SRE_SLOW | PORT_DSE_HIGH)); \
+                                    _CONFIG_PORT_INPUT_FAST_LOW(A, (PORTA_BIT1), PORT_PS_UP_ENABLE);
         #define INIT_WATCHDOG_DISABLE()
         #define WATCHDOG_DISABLE()  0
         #define FORCE_BOOT()       (_READ_PORT_MASK(A, PORTA_BIT1) == 0) // pull this input down to force boot loader mode (hold SW2 at reset)
@@ -3531,12 +3532,35 @@
         #define RESET_PERIPHERALS()SYSTICK_CSR = 0; \
                                    POWER_DOWN(4, (SIM_SCGC4_UART0 | SIM_SCGC4_UART1 | SIM_SCGC4_UART2)); \
                                    IRQ0_31_CER  = 0xffffffff
+#elif defined KINETIS_K22_SF7
+    #if defined USB_INTERFACE                                            // disable USB regulator, USB controller module, UARTs and SD card controller, disable peripheral interrupts and clear possible pending
+        #define RESET_PERIPHERALS()SYSTICK_CSR = 0; \
+                                   POWER_DOWN(4, (SIM_SCGC4_UART0 | SIM_SCGC4_UART1 | SIM_SCGC4_UART2 | SIM_SCGC4_UART3 | SIM_SCGC4_USBOTG)); \
+                                   POWER_DOWN_ATOMIC(6, LPUART0); \
+                                   SIM_SOPT1_CLR(SIM_SOPT1_USBREGEN, SIM_SOPT1CFG_URWE); \
+                                   IRQ0_31_CER  = 0xffffffff; \
+                                   IRQ32_63_CER = 0xffffffff; \
+                                   IRQ64_95_CER = 0xffffffff; \
+                                   IRQ0_31_CPR  = 0xffffffff; \
+                                   IRQ32_63_CPR = 0xffffffff; \
+                                   IRQ64_95_CPR = 0xffffffff
+    #else                                                                // don't disable USB regulator
+        #define RESET_PERIPHERALS()SYSTICK_CSR = 0; \
+                                   POWER_DOWN(4, (SIM_SCGC4_UART0 | SIM_SCGC4_UART1 | SIM_SCGC4_UART2 | SIM_SCGC4_UART3)); \
+                                   POWER_DOWN_ATOMIC(6, LPUART0); \
+                                   IRQ0_31_CER  = 0xffffffff; \
+                                   IRQ32_63_CER = 0xffffffff; \
+                                   IRQ64_95_CER = 0xffffffff; \
+                                   IRQ0_31_CPR  = 0xffffffff; \
+                                   IRQ32_63_CPR = 0xffffffff; \
+                                   IRQ64_95_CPR = 0xffffffff 
+    #endif
 #else
     #if defined USB_INTERFACE                                            // disable USB regulator, USB controller module, UARTs and SD card controller, disable peripheral interrupts and clear possible pending
         #define RESET_PERIPHERALS()SYSTICK_CSR = 0; \
                                    POWER_DOWN(4, (SIM_SCGC4_UART0 | SIM_SCGC4_UART1 | SIM_SCGC4_UART2 | SIM_SCGC4_UART3 | SIM_SCGC4_USBOTG)); \
                                    POWER_DOWN(1, (SIM_SCGC1_UART4 | SIM_SCGC1_UART5)); \
-                                   POWER_DOWN(2, SIM_SCGC2_ENET); \
+                                   POWER_DOWN_ATOMIC(2, ENET); \
                                    POWER_DOWN(3, (SIM_SCGC3_SDHC | SIM_SCGC3_USBHS | SIM_SCGC3_USBHSPHY)); \
                                    SIM_SOPT1_CLR(SIM_SOPT1_USBREGEN, SIM_SOPT1CFG_URWE); \
                                    IRQ0_31_CER  = 0xffffffff; \

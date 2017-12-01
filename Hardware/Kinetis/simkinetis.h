@@ -2030,13 +2030,18 @@ typedef struct stKINETIS_SIM
             unsigned long SIM_SOPT6;
         #endif
     unsigned long SIM_SOPT7;
-    unsigned long ulRes2[2];
+    #if defined KINETIS_K66 || defined KINETIS_K80 || defined KINETIS_K22_SF7
+        unsigned long SIM_SOPT8;
+        unsigned long ulRes2[1];
+    #else
+        unsigned long ulRes2[2];
+    #endif
     #endif
     unsigned long SIM_SDID;
     #if defined KINETIS_WITH_PCC
         unsigned long ulRes2a[8];
     #else
-        #if defined KINETIS_KL
+        #if defined KINETIS_KL || defined KINETIS_K22_SF7
             unsigned long ulRes2a[3];
         #else
             unsigned long SIM_SCGC1;

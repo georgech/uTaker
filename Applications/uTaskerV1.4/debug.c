@@ -808,6 +808,11 @@ static const DEBUG_COMMAND tIOCommand[] = {
 #if defined SUPPORT_LPTMR
     { "lp_cnt",           "Read LPTMR CNT",                        DO_HARDWARE,      76 },
 #endif
+#if defined DEV1
+    { "set_an",           "Set anode [hex]",                       DO_HARDWARE,      77 },
+    { "set_ca",           "Set cathode [hex]",                     DO_HARDWARE,      78 },
+    { "relay",            "Relay <1..3> <0..1>",                   DO_HARDWARE,      79 },
+#endif
 #if defined USE_PARAMETER_BLOCK
     {"save",              "Save port setting as default",          DO_HARDWARE,      DO_SAVE_PORT },
 #endif
@@ -4301,6 +4306,194 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
                 fnDebugHex(ulCnt, (WITH_LEADIN | WITH_CR_LF | sizeof(ulCnt)));
             }
             break;
+#endif
+#if defined DEV1
+        case 77:
+        {
+            unsigned char ucAnode = (unsigned char)fnHexStrHex(ptrInput); // get the anode value
+            ucAnode &= 0x7f;
+            iBlockLed = 1;
+            fnDebugMsg("Anode set to ");
+            fnDebugHex(ucAnode, (WITH_LEADIN | sizeof(ucAnode)));
+            if (ucAnode & 0x01) {
+                _SETBITS(D, PORTD_BIT6);
+            }
+            else {
+                _CLEARBITS(D, PORTD_BIT6);
+            }
+            if (ucAnode & 0x01) {
+                _SETBITS(D, PORTD_BIT5);
+            }
+            else {
+                _CLEARBITS(D, PORTD_BIT5);
+            }
+            if (ucAnode & 0x04) {
+                _SETBITS(D, PORTD_BIT4);
+            }
+            else {
+                _CLEARBITS(D, PORTD_BIT4);
+            }
+            if (ucAnode & 0x08) {
+                _SETBITS(D, PORTD_BIT3);
+            }
+            else {
+                _CLEARBITS(D, PORTD_BIT3);
+            }
+            if (ucAnode & 0x10) {
+                _SETBITS(D, PORTD_BIT2);
+            }
+            else {
+                _CLEARBITS(D, PORTD_BIT2);
+            }
+            if (ucAnode & 0x20) {
+                _SETBITS(D, PORTD_BIT1);
+            }
+            else {
+                _CLEARBITS(D, PORTD_BIT1);
+            }
+            if (ucAnode & 0x40) {
+                _SETBITS(D, PORTD_BIT0);
+            }
+            else {
+                _CLEARBITS(D, PORTD_BIT0);
+            }
+        }
+        break;
+        case 78:
+        {
+            unsigned short usCathode = (unsigned short)fnHexStrHex(ptrInput); // get the cathode value
+            usCathode &= 0x3fff;
+            iBlockLed = 1;
+            fnDebugMsg("Cathod set to ");
+            fnDebugHex(usCathode, (WITH_LEADIN | sizeof(usCathode)));
+            if (usCathode & 0x0001) {
+                _SETBITS(C, PORTC_BIT3);
+            }
+            else {
+                _CLEARBITS(C, PORTC_BIT3);
+            }
+            if (usCathode & 0x0002) {
+                _SETBITS(C, PORTC_BIT2);
+            }
+            else {
+                _CLEARBITS(C, PORTC_BIT2);
+            }
+            if (usCathode & 0x0004) {
+                _SETBITS(C, PORTC_BIT1);
+            }
+            else {
+                _CLEARBITS(C, PORTC_BIT1);
+            }
+            if (usCathode & 0x0008) {
+                _SETBITS(C, PORTC_BIT0);
+            }
+            else {
+                _CLEARBITS(C, PORTC_BIT0);
+            }
+            if (usCathode & 0x0010) {
+                _SETBITS(B, PORTB_BIT19);
+            }
+            else {
+                _CLEARBITS(B, PORTB_BIT19);
+            }
+            if (usCathode & 0x0020) {
+                _SETBITS(B, PORTB_BIT18);
+            }
+            else {
+                _CLEARBITS(B, PORTB_BIT18);
+            }
+            if (usCathode & 0x0040) {
+                _SETBITS(B, PORTB_BIT17);
+            }
+            else {
+                _CLEARBITS(B, PORTB_BIT17);
+            }
+            if (usCathode & 0x0080) {
+                _SETBITS(B, PORTB_BIT16);
+            }
+            else {
+                _CLEARBITS(B, PORTB_BIT16);
+            }
+            if (usCathode & 0x0100) {
+                _SETBITS(B, PORTB_BIT3);
+            }
+            else {
+                _CLEARBITS(B, PORTB_BIT3);
+            }
+            if (usCathode & 0x0200) {
+                _SETBITS(B, PORTB_BIT2);
+            }
+            else {
+                _CLEARBITS(B, PORTB_BIT2);
+            }
+            if (usCathode & 0x0400) {
+                _SETBITS(B, PORTB_BIT1);
+            }
+            else {
+                _CLEARBITS(B, PORTB_BIT1);
+            }
+            if (usCathode & 0x0800) {
+                _SETBITS(C, PORTC_BIT8);
+            }
+            else {
+                _CLEARBITS(C, PORTC_BIT8);
+            }
+            if (usCathode & 0x1000) {
+                _SETBITS(C, PORTC_BIT9);
+            }
+            else {
+                _CLEARBITS(C, PORTC_BIT9);
+            }
+            if (usCathode & 0x2000) {
+                _SETBITS(C, PORTC_BIT10);
+            }
+            else {
+                _CLEARBITS(C, PORTC_BIT10);
+            }
+            if (usCathode & 0x4000) {
+                _SETBITS(C, PORTC_BIT11);
+            }
+            else {
+                _CLEARBITS(C, PORTC_BIT11);
+            }
+        }
+        break;
+        case 79:
+        {
+            unsigned char ucRelay = (unsigned char)fnDecStrHex(ptrInput); // get the relay value
+            if ((ucRelay < 1) || (ucRelay > 3)) {
+                fnDebugMsg("Invalid relay - 1, 2 or 3");
+                break;
+            }
+            fnJumpWhiteSpace(&ptrInput);
+            if (*ptrInput == '1') {
+                switch (ucRelay) {
+                case 1:
+                    _SETBITS(C, PORTC_BIT5);
+                    break;
+                case 2:
+                    _SETBITS(C, PORTC_BIT4);
+                    break;
+                case 3:
+                    _SETBITS(A, PORTA_BIT13);
+                    break;
+                }
+            }
+            else {
+                switch (ucRelay) {
+                case 1:
+                    _CLEARBITS(C, PORTC_BIT5);
+                    break;
+                case 2:
+                    _CLEARBITS(C, PORTC_BIT4);
+                    break;
+                case 3:
+                    _CLEARBITS(A, PORTA_BIT13);
+                    break;
+                }
+            }
+        }
+        break;
 #endif
     }
 }
