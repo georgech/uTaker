@@ -48,17 +48,17 @@ static unsigned char ucCheckTxI2C = 0;                                   // {2}
 /* =================================================================== */
 
 
-//#define MAX_EVENTS 200                                                   // comment this in to enable event logging (mainly used to determine behaviour in double-buffered mode in order to find workarounds for silicon issues)
+#define MAX_EVENTS 200                                                   // comment this in to enable event logging (mainly used to determine behaviour in double-buffered mode in order to find workarounds for silicon issues)
 #if defined MAX_EVENTS
-unsigned char ucTemp[MAX_EVENTS] = {0};
+unsigned long ulTemp[MAX_EVENTS] = {0};
 int iEventCounter = 0;
 
-static void fnLogEvent(unsigned char ucLocation, unsigned char ucValue)
+static void fnLogEvent(unsigned char ucLocation, unsigned long ulValue)
 {
     if (iEventCounter < (MAX_EVENTS - 3)) {
-        ucTemp[iEventCounter++] = ucLocation;
-        ucTemp[iEventCounter++] = ucValue;
-        ucTemp[iEventCounter++] = '-';
+        ulTemp[iEventCounter++] = ucLocation;
+        ulTemp[iEventCounter++] = ulValue;
+        ulTemp[iEventCounter++] = '-';
     }
 }
 #else
@@ -118,247 +118,101 @@ static void fnI2C_Handler(KINETIS_LPI2C_CONTROL *ptrLPI2C, int iChannel) // gene
 {
     I2CQue *ptrTxControl = I2C_tx_control[iChannel];
 
-    #if defined I2C_SLAVE_MODE                                           // slave mode support
-    if ((ptrLPI2C->I2C_FLT & I2C_FLT_FLT_INT) != 0) {                      // if the slave has enabled start/stop condition interrupt(s)
-        if ((ptrLPI2C->I2C_FLT & I2C_FLT_FLT_STOPF) != 0) {                // if a stop condition has been detected
-            fnLogEvent('e', ptrLPI2C->I2C_FLT);
-            fnLogEvent('1', ptrLPI2C->I2C_S);
-            ptrLPI2C->I2C_FLT |= I2C_FLT_FLT_STOPF;                        // clear the stop flag (write '1' to clear)
-        #if defined _WINDOWS
-            ptrLPI2C->I2C_FLT &= ~I2C_FLT_FLT_STOPF;
-        #endif
-            fnLogEvent('2', ptrLPI2C->I2C_FLT);
-            ptrLPI2C->I2C_S = I2C_IIF;                                     // clear the interrupt flag (write '1' to clear)
-        #if defined _WINDOWS
-            ptrLPI2C->I2C_S = 0;
-        #endif
-            if ((ptrTxControl->ucState & RX_ACTIVE) != 0) {              // end of a reception from master so terminate reception buffer
-                int iResult = I2C_SLAVE_BUFFER;
-                if (fnI2C_SlaveCallback[iChannel] != 0) {                // if there is a callback
-                    iResult = fnI2C_SlaveCallback[iChannel](iChannel, 0, I2C_SLAVE_WRITE_COMPLETE);
-                }
-                if (iResult == I2C_SLAVE_BUFFER) {
-                    I2CQue *ptrRxControl = I2C_rx_control[iChannel];
-                    *ptrMessage[iChannel] = ucMessageLength[iChannel];   // enter the length of the message into the input buffer
-                    fnLogEvent('3', ucMessageLength[iChannel]);
-                    ptrRxControl->msgs++;                                // increment the message count
-                    if (ptrRxControl->wake_task != 0) {                  // wake up the receiver task if desired
-                        uTaskerStateChange(ptrRxControl->wake_task, UTASKER_ACTIVATE); // wake up owner task
-                    }
-                }
-            }
-            ptrTxControl->ucState &= ~(RX_ACTIVE);                       // idle again
-            return;
-        }
-            #if defined DOUBLE_BUFFERED_I2C || defined I2C_START_CONDITION_INTERRUPT
-        else if ((ptrLPI2C->I2C_FLT & I2C_FLT_FLT_STARTF) != 0) {          // the start condition interrupt must be handled by double-buffered devices
-            fnLogEvent('!', ptrLPI2C->I2C_FLT);
-            fnLogEvent('1', ptrLPI2C->I2C_S);
-            ptrLPI2C->I2C_FLT |= I2C_FLT_FLT_STARTF;                       // clear the start flag (write '1' to clear)
-            ptrLPI2C->I2C_S = I2C_IIF;                                     // clear the interrupt flag (write '1' to clear)
-            fnLogEvent('2', ptrLPI2C->I2C_FLT);
-                #if defined _WINDOWS
-            ptrLPI2C->I2C_S = 0;
-            ptrLPI2C->I2C_FLT &= ~I2C_FLT_FLT_STARTF;
-                #endif
-
-            // Master only
-            //
-            if (ptrLPI2C->I2C_F != 0) {                                    // if master mode is in operation
-                ptrLPI2C->I2C_FLT = 0;                                     // disable further start/stop interrupts
-                fnSendSlaveAddress(ptrTxControl, iChannel, ptrLPI2C);      // a repeated start has just been sent so we now continue with the slave address (this cannot be prepared before the repeated start has been sent)
-            }
-            return;
-        }
-            #endif
-    }
-    #elif defined DOUBLE_BUFFERED_I2C
-    if ((ptrLPI2C->I2C_FLT & I2C_FLT_FLT_INT) != 0) {                      // if the master has enabled start/stop interrupt
-        if ((ptrLPI2C->I2C_FLT & I2C_FLT_FLT_STARTF) != 0) {               // the start condition interrupt must be handled by double-buffered master devices after sending a repeated start
-            ptrLPI2C->I2C_FLT |= I2C_FLT_FLT_STARTF;                       // clear the start flag
-            ptrLPI2C->I2C_S = I2C_IIF;                                     // clear the interrupt flag
-            ptrLPI2C->I2C_FLT = 0;                                         // disable further start/stop interrupts
-            fnSendSlaveAddress(ptrTxControl, iChannel, ptrLPI2C);          // a repeated start has just been sent so we now continue with the slave address (this cannot be prepared before the repeated start has been completed)
-            return;
-        }
-    }
-    #endif
-#if 0
-    #if defined _WINDOWS
-    ptrLPI2C->I2C_S &= ~I2C_IIF;
-    #else
-    ptrLPI2C->I2C_S = I2C_IIF;                                             // clear the interrupt flag (write '1' to clear)
-    #endif
-#endif
-    #if defined I2C_SLAVE_MODE
-    if (ptrLPI2C->I2C_F == 0) {                                            // if we are slave
-        I2CQue *ptrRxControl = I2C_rx_control[iChannel];
-        fnLogEvent('S', ptrLPI2C->I2C_S);
-        if ((ptrLPI2C->I2C_S & I2C_IAAS) != 0) {                           // if being addressed as a slave
-            fnLogEvent('A', ptrLPI2C->I2C_S);
-            if ((ptrTxControl->ucState & RX_ACTIVE) != 0) {              // {4} if a read or write follows a write and repeated start
-                if (fnI2C_SlaveCallback[iChannel] != 0) {                // if there is a callback
-                    fnI2C_SlaveCallback[iChannel](iChannel, 0, I2C_SLAVE_WRITE_COMPLETE);
-                }
-            }
-            if ((ptrLPI2C->I2C_S & I2C_SRW) != 0) {                        // if the master is addressing for a read
-                ptrLPI2C->I2C_C1 = (I2C_IEN | I2C_IIEN | I2C_MTX);         // set transmit mode and clear the IAAS flag
-        #if defined _WINDOWS
-                ptrLPI2C->I2C_S &= ~I2C_IAAS;
-        #endif
-                ptrTxControl->ucState |= TX_ACTIVE;                      // mark that we are transmitting because the master is reading
-                fnLogEvent('R', ptrLPI2C->I2C_S);
-                ptrLPI2C->I2C_D = fnGetTxByte(iChannel, ptrTxControl, I2C_SLAVE_ADDRESSED_FOR_READ); // prepare the byte to be read
-            }
-            else {                                                       // master is addressing for a write
-        #if defined I2C_SLAVE_RX_BUFFER
-                int iResult = I2C_SLAVE_BUFFER;
-        #endif
-                unsigned char ucAddress;
-                ptrLPI2C->I2C_C1 = (I2C_IEN | I2C_IIEN);                   // write to C1 in order to clear the IAAS flag - remain in receive mode
-        #if defined _WINDOWS
-                ptrLPI2C->I2C_S &= ~I2C_IAAS;
-        #endif
-                fnLogEvent('W', ptrLPI2C->I2C_S);
-                ptrTxControl->ucState |= RX_ACTIVE;                      // mark that we are receiving
-                ucAddress = ptrLPI2C->I2C_D;                               // dummy read (this reads out address as addressed)
-                ptrMessage[iChannel] = ptrRxControl->I2C_queue.put;      // remember the location used to save the message length to
-                if (fnI2C_SlaveCallback[iChannel] != 0) {                // if there is a callback
-        #if defined I2C_SLAVE_RX_BUFFER
-                    iResult = fnI2C_SlaveCallback[iChannel](iChannel, &ucAddress, I2C_SLAVE_ADDRESSED_FOR_WRITE);
-        #else
-                    fnI2C_SlaveCallback[iChannel](iChannel, &ucAddress, I2C_SLAVE_ADDRESSED_FOR_WRITE);
-        #endif
-                }
-        #if defined I2C_SLAVE_RX_BUFFER
-                if (iResult == I2C_SLAVE_BUFFER) {
-                    fnSaveRx(ptrRxControl, 0);                           // put a dummy value into the inputs buffer, which is later used for the message length
-                }
-        #endif
-                ucMessageLength[iChannel] = 0;                           // reset the present message length counter
-            }
-        }
-        else {
-            if ((ptrTxControl->ucState & TX_ACTIVE) != 0) {
-                if ((ptrLPI2C->I2C_S & I2C_RXACK) != 0) {                  // no ack means that this is the final byte
-                    fnLogEvent('a', ptrLPI2C->I2C_S);
-                    ptrLPI2C->I2C_C1 = (I2C_IEN | I2C_IIEN);               // switch to receive mode
-                    fnLogEvent('0', ptrLPI2C->I2C_S);
-                    fnLogEvent('1', ptrLPI2C->I2C_D);
-                    (void)ptrLPI2C->I2C_D;                                 // dummy read
-                    fnGetTxByte(iChannel, ptrTxControl, I2C_SLAVE_READ_COMPLETE); // final byte has been read
-                    ptrTxControl->ucState &= ~(TX_ACTIVE);
-                }
-                else {
-                    fnLogEvent('w', ptrLPI2C->I2C_S);
-                    ptrLPI2C->I2C_D = fnGetTxByte(iChannel, ptrTxControl, I2C_SLAVE_READ); // prepare the byte to be read
-                }
-            }
-            else {                                                       // read in progress
-        #if defined I2C_SLAVE_RX_BUFFER
-                int iResult = I2C_SLAVE_BUFFER;
-        #endif
-                unsigned char ucRxData = ptrLPI2C->I2C_D;
-                if (fnI2C_SlaveCallback[iChannel] != 0) {                // if there is a callback
-        #if defined I2C_SLAVE_RX_BUFFER
-                    iResult = fnI2C_SlaveCallback[iChannel](iChannel, &ucRxData, I2C_SLAVE_WRITE);
-        #else
-                    fnI2C_SlaveCallback[iChannel](iChannel, &ucRxData, I2C_SLAVE_WRITE);
-        #endif
-                       
-                }
-        #if defined I2C_SLAVE_RX_BUFFER
-                if (iResult == I2C_SLAVE_BUFFER) {
-                    if (fnSaveRx(ptrRxControl, ucRxData) >= 0) {         // save the received byte to the input buffer
-                        ucMessageLength[iChannel]++;                     // increment the present message length
-                    }
-                }
-        #endif
-            }
-        }
-        return;
-    }
-    #endif
-    fnLogEvent('M', ptrLPI2C->I2C_S);
-#if 0
-    if ((ptrTxControl->ucState & RX_ACTIVE) != 0) {                      // if the processor is reading from a slave
-        I2CQue *ptrRxControl = I2C_rx_control[iChannel];
-        register int iFirstRead = ((ptrLPI2C->I2C_C1 & I2C_MTX) != 0);
-        fnLogEvent('R', ptrLPI2C->I2C_C1);
-        if (ptrTxControl->ucPresentLen == 1) {                           // last byte to be read?
-            ptrLPI2C->I2C_C1 = (I2C_IEN | I2C_IIEN | I2C_MSTA | I2C_TXAK); // we don't acknowledge last byte
-            fnLogEvent('L', ptrLPI2C->I2C_C1);
-        }
-        else if (ptrTxControl->ucPresentLen == 0) {                      // we have completed the read
-            ptrLPI2C->I2C_C1 = (I2C_IEN | I2C_TXAK);                       // send stop condition and disable interrupts
-            ptrTxControl->ucState &= ~(TX_WAIT | TX_ACTIVE | RX_ACTIVE);
+    if ((ptrLPI2C->LPI2C_MIER & ptrLPI2C->LPI2C_MSR) & LPI2C_MSR_SDF) {  // stop condition has completed
+        fnLogEvent('S', ptrLPI2C->LPI2C_MSR);
+        ptrLPI2C->LPI2C_MIER = 0;                                        // disable all interrupt sources
+        WRITE_ONE_TO_CLEAR(ptrLPI2C->LPI2C_MSR, LPI2C_MSR_SDF);          // clear interrupt flag
+        if ((ptrTxControl->ucState & RX_ACTIVE) != 0) {
+            I2CQue *ptrRxControl = I2C_rx_control[iChannel];
             ptrRxControl->msgs++;
             if (ptrRxControl->wake_task != 0) {                          // wake up the receiver task if desired
                 uTaskerStateChange(ptrRxControl->wake_task, UTASKER_ACTIVATE); // wake up owner task
             }
-            fnLogEvent('S', ptrLPI2C->I2C_C1);
         }
         else {
-            ptrLPI2C->I2C_C1 = (I2C_IEN | I2C_IIEN | I2C_MSTA);            // ensure we acknowledge multi-byte reads
-            fnLogEvent('a', ptrLPI2C->I2C_C1);
-        }
-
-        if (iFirstRead != 0) {                                           // have we just sent the slave address?
-            fnLogEvent('d', ptrLPI2C->I2C_D);
-            (void)ptrLPI2C->I2C_D;                                         // dummy read
-        }
-        else {
-            fnLogEvent('R', ptrLPI2C->I2C_C1);
-            *ptrRxControl->I2C_queue.put++ = ptrLPI2C->I2C_D;              // read the byte
-            ptrRxControl->I2C_queue.chars++;                             // and put it into the rx buffer
-            if (ptrRxControl->I2C_queue.put >= ptrRxControl->I2C_queue.buffer_end) { // handle circular input buffer
-                ptrRxControl->I2C_queue.put = ptrRxControl->I2C_queue.QUEbuffer;
+            if (ptrTxControl->wake_task != 0) {
+                uTaskerStateChange(ptrTxControl->wake_task, UTASKER_ACTIVATE); // wake up owner task since the transmission has terminated
             }
         }
+        ptrTxControl->ucState &= ~(TX_WAIT | TX_ACTIVE | RX_ACTIVE);     // interface is idle
+        return;
+    }
 
-        if (ptrTxControl->ucPresentLen != 0) {
-            ptrTxControl->ucPresentLen--;
-        #if defined _WINDOWS
-            ptrLPI2C->I2C_D = fnSimI2C_devices(I2C_RX_DATA, ptrLPI2C->I2C_D);// simulate the interrupt directly
-            ptrLPI2C->I2C_S |= I2C_IIF;
+    if ((ptrTxControl->ucState & RX_ACTIVE) != 0) {                      // if the master is reading from a slave
+        I2CQue *ptrRxControl = I2C_rx_control[iChannel];
+        fnLogEvent('R', ptrLPI2C->LPI2C_MSR);
+        if ((ptrLPI2C->LPI2C_MTDR & LPI2C_MTDR_CMD_START_DATA) != 0) {   // the address transmission has completed
+            fnLogEvent('A', ptrLPI2C->LPI2C_MRDR);
+            (void)(ptrLPI2C->LPI2C_MRDR);                                // dummy read to clear address
+            ptrLPI2C->LPI2C_MTDR = (LPI2C_MTDR_CMD_RX_DATA | (ptrTxControl->ucPresentLen - 1)); // command the read sequence
+            ptrLPI2C->LPI2C_MIER = LPI2C_MIER_RDIE;                      // enable interrupt on reception available and disable transmission interrupt
+#if defined _WINDOWS
+            ptrLPI2C->LPI2C_MSR |= LPI2C_MSR_RDF;
             iInts |= (I2C_INT0 << iChannel);
-        #endif
+#endif
         }
-        else {                                                           // read sequence complete so continue with next write if something is waiting
-            if (ptrTxControl->I2C_queue.chars != 0) {
-                fnLogEvent('P', 0);
-                fnTxI2C(ptrTxControl, iChannel);                         // we have another message to send so we can send a repeated start condition
+        else {                                                           // reception character available
+#if defined _WINDOWS
+            if ((ptrLPI2C->LPI2C_MTDR & LPI2C_MTDR_DATA_MASK) != 0) {
+                ptrLPI2C->LPI2C_MTDR--;
+                ptrLPI2C->LPI2C_MSR |= LPI2C_MSR_RDF;
+                iInts |= (I2C_INT0 << iChannel);
+            }
+            else {
+                ptrLPI2C->LPI2C_MSR &= ~LPI2C_MSR_RDF;
+            }
+            ptrLPI2C->LPI2C_MRDR = fnSimI2C_devices(I2C_RX_DATA, (unsigned char)(ptrLPI2C->LPI2C_MRDR));
+#endif
+            *ptrRxControl->I2C_queue.put = (unsigned char)(ptrLPI2C->LPI2C_MRDR); // read the byte
+            fnLogEvent('r', *ptrRxControl->I2C_queue.put);
+            ptrRxControl->I2C_queue.chars++;                             // and put it into the rx buffer
+            if (++(ptrRxControl->I2C_queue.put) >= ptrRxControl->I2C_queue.buffer_end) { // handle circular input buffer
+                ptrRxControl->I2C_queue.put = ptrRxControl->I2C_queue.QUEbuffer;
+            }
+            if (--(ptrTxControl->ucPresentLen) == 0) {
+                if (ptrTxControl->I2C_queue.chars != 0) {                // reception has completed but we have further queued data
+                    fnLogEvent('P', 0);
+                    fnTxI2C(ptrTxControl, iChannel);                     // we have another message to send so we can send a repeated start condition
+                }
+                else {
+                    ptrLPI2C->LPI2C_MIER = LPI2C_MIER_SDIE;              // disable reception interrupt and enable stop detect interrupt
+                    ptrLPI2C->LPI2C_MTDR = LPI2C_MTDR_CMD_STOP;          // send stop condition
+#if defined _WINDOWS
+                    ptrLPI2C->LPI2C_MSR |= LPI2C_MSR_SDF;                // simulate the interrupt directly
+                    iInts |= (I2C_INT0 << iChannel);                     // signal that an interrupt is to be generated
+#endif
+                }
             }
         }
         return;
     }
     else if (ptrTxControl->ucPresentLen-- != 0) {                        // TX_ACTIVE - send next byte if available
         fnLogEvent('X', *ptrTxControl->I2C_queue.get);
-        ptrLPI2C->I2C_D = *ptrTxControl->I2C_queue.get++;                  // send the next byte
+        ptrLPI2C->LPI2C_MTDR = *ptrTxControl->I2C_queue.get++;;          // send the next byte (note that the command byte is 0, meaning just send byte)
         if (ptrTxControl->I2C_queue.get >= ptrTxControl->I2C_queue.buffer_end) { // handle the circular transmit buffer
             ptrTxControl->I2C_queue.get = ptrTxControl->I2C_queue.QUEbuffer;
         }
         #if defined _WINDOWS
-        ptrLPI2C->I2C_S |= I2C_IIF;                                        // simulate the interrupt directly
-        fnSimI2C_devices(I2C_TX_DATA, ptrLPI2C->I2C_D);
+        ptrLPI2C->LPI2C_MSR |= LPI2C_MSR_TDF;                            // simulate the interrupt directly
+        fnSimI2C_devices(I2C_TX_DATA, (unsigned char)(ptrLPI2C->LPI2C_MTDR));
         iInts |= (I2C_INT0 << iChannel);                                 // signal that an interrupt is to be generated
         #endif
     }
     else {                                                               // last byte in TX_ACTIVE
         if (ptrTxControl->I2C_queue.chars == 0) {                        // transmission complete
-            ptrLPI2C->I2C_C1 = (I2C_IEN | I2C_MTX);                        // send stop condition and disable interrupts
-            fnLogEvent('E', ptrLPI2C->I2C_C1);
-            ptrTxControl->ucState &= ~(TX_WAIT | TX_ACTIVE | RX_ACTIVE);
-            if (ptrTxControl->wake_task != 0) {
-               uTaskerStateChange(ptrTxControl->wake_task, UTASKER_ACTIVATE); // wake up owner task since the transmission has terminated
-            }
+            ptrLPI2C->LPI2C_MIER = LPI2C_MIER_SDIE;                      // disable transmit interrupt and enable stop detect interrupt
+            ptrLPI2C->LPI2C_MTDR = LPI2C_MTDR_CMD_STOP;                  // send stop condition
+            fnLogEvent('E', ptrLPI2C->LPI2C_MSR);
+        #if defined _WINDOWS
+            ptrLPI2C->LPI2C_MSR |= LPI2C_MSR_SDF;                        // simulate the interrupt directly
+            iInts |= (I2C_INT0 << iChannel);                             // signal that an interrupt is to be generated
+        #endif
         }
         else {
             fnLogEvent('p', 0);
             fnTxI2C(ptrTxControl, iChannel);                             // we have another message to send so we can send a repeated start condition
         }
     }
-#endif
 }
 
 static __interrupt void _I2C_Interrupt_0(void)                           // I2C0 interrupt
@@ -423,7 +277,7 @@ extern void fnTxI2C(I2CQue *ptI2CQue, QUEUE_HANDLE Channel)
     }
 
     if ((ptI2CQue->ucState & TX_ACTIVE) != 0) {                          // restart since we are hanging a second telegram on to previous one
-        fnLogEvent('*', ptrLPI2C->I2C_C1);
+        fnLogEvent('*', ptrLPI2C->LPI2C_MSR);
 #if 0
         ptrLPI2C->I2C_C1 = (I2C_IEN | I2C_IIEN | I2C_MSTA | I2C_MTX | I2C_RSTA); // repeated start
 #endif
@@ -439,40 +293,36 @@ extern void fnTxI2C(I2CQue *ptI2CQue, QUEUE_HANDLE Channel)
     #endif
     }
     else {                                                               // address to be sent on an idle bus
-        if ((ucCheckTxI2C & (1 << Channel)) == 0) {                      // {2} on first use we check that the bus is not held in a busy state (can happen when a reset took place during an acknowledge period and the slave is holding the bus)
+        if ((ucCheckTxI2C & (1 << Channel)) == 0) {                      // on first use we check that the bus is not held in a busy state (can happen when a reset took place during an acknowledge period and the slave is holding the bus)
             ucCheckTxI2C |= (1 << Channel);                              // checked only once
             uEnable_Interrupt();
                 fnConfigI2C_pins(Channel, 1);                            // check and configure pins for I2C use
             uDisable_Interrupt();
         }
-        fnLogEvent('B', ptrLPI2C->I2C_S);
-#if 0
-        while ((ptrLPI2C->I2C_S & I2C_IBB) != 0) {                         // wait until the stop has actually been sent to avoid a further transmission being started in the mean time
+        fnLogEvent('B', ptrLPI2C->LPI2C_MSR);
+        while ((ptrLPI2C->LPI2C_MSR & LPI2C_MSR_BBF) != 0) {             // wait until the stop has actually been sent to avoid a further transmission being started in the mean time
+    #if 0
             if ((ptrLPI2C->I2C_S & I2C_IAL) != 0) {                        // {3} arbitration lost flag set
                 ptrLPI2C->I2C_S = I2C_IAL;                                 // clear arbitration lost flag
                 ptrLPI2C->I2C_C1 &= ~(I2C_IEN);                            // disable I2S to clear busy
                 fnDelayLoop(100);                                        // short delay before re-enabling the I2C controller (without delay it doesn't generate any further interrupts)
                 ptrLPI2C->I2C_C1 |= (I2C_IEN);                             // re-enable
             }
+    #endif
         }
-        fnLogEvent('b', ptrLPI2C->I2C_S);
-        ptrLPI2C->I2C_C1 = (I2C_IEN | I2C_IIEN | I2C_MTX);                 // set transmit mode with interrupt enabled
-        ptrLPI2C->I2C_C1 = (I2C_IEN | I2C_IIEN | I2C_MSTA | I2C_MTX);      // set master mode to cause start condition to be sent
-#endif
+        fnLogEvent('b', ptrLPI2C->LPI2C_MSR);
     }
-    fnSendSlaveAddress(ptI2CQue, Channel, ptrLPI2C);
+    fnSendSlaveAddress(ptI2CQue, Channel, ptrLPI2C); // send a start condition or a repeated start
 }
 
 static void fnSendSlaveAddress(I2CQue *ptI2CQue, QUEUE_HANDLE Channel, KINETIS_LPI2C_CONTROL *ptrLPI2C)
 {
     register unsigned char ucAddress = *ptI2CQue->I2C_queue.get++;       // the slave address
-#if 0
-    ptrLPI2C->I2C_D = ucAddress;                                           // send the slave address (this includes the rd/wr bit) - I2Cx_D
+    ptrLPI2C->LPI2C_MTDR = (LPI2C_MTDR_CMD_START_DATA | ucAddress);      // generate a start or repeated start and send the slave address (this includes the rd/wr bit)
     fnLogEvent('?', ucAddress);
     if (ptI2CQue->I2C_queue.get >= ptI2CQue->I2C_queue.buffer_end) {     // handle circular buffer
         ptI2CQue->I2C_queue.get = ptI2CQue->I2C_queue.QUEbuffer;
     }
-
     if ((ucAddress & 0x01) != 0) {                                       // reading from the slave
         I2C_tx_control[Channel]->ucState |= (RX_ACTIVE | TX_ACTIVE);
         ptI2CQue->I2C_queue.chars -= 3;
@@ -487,16 +337,13 @@ static void fnSendSlaveAddress(I2CQue *ptI2CQue, QUEUE_HANDLE Channel, KINETIS_L
         ptI2CQue->I2C_queue.chars -= (ptI2CQue->ucPresentLen + 1);       // the remaining queue content
         fnLogEvent('h', (unsigned char)(ptI2CQue->I2C_queue.chars));
     }
-
+    ptrLPI2C->LPI2C_MIER = LPI2C_MIER_TDIE;                              // enable interrupt on transmission completion
+    fnLogEvent('T', ptrLPI2C->LPI2C_MSR);
     #if defined _WINDOWS
-    ptrLPI2C->I2C_S |= I2C_IIF;                                            // simulate the interrupt directly
-        #if defined DOUBLE_BUFFERED_I2C
-    ptrLPI2C->I2C_FLT |= I2C_FLT_FLT_STARTF;
-        #endif
-    fnSimI2C_devices(I2C_ADDRESS, ptrLPI2C->I2C_D);
+    ptrLPI2C->LPI2C_MSR |= LPI2C_MSR_TDF;                                // simulate the interrupt directly
+    fnSimI2C_devices(I2C_ADDRESS, (unsigned char)(ptrLPI2C->LPI2C_MTDR));
     iInts |= (I2C_INT0 << Channel);                                      // signal that an interrupt is to be generated
     #endif
-#endif
 }
 
 /* =================================================================== */
@@ -868,8 +715,12 @@ extern void fnConfigI2C(I2CTABLE *pars)
     KINETIS_LPI2C_CONTROL *ptrLPI2C;
     unsigned char ucSpeed;
     if (pars->Channel == 0) {                                            // I2C channel 0
+    #if defined KINETIS_WITH_PCC
+        SELECT_PCC_PERIPHERAL_SOURCE(LPI2C0, LPI2C0_PCC_SOURCE);         // select the PCC clock used by LPI2C0
+    #endif
         POWER_UP_ATOMIC(4, I2C0);                                        // enable clock to module
         ptrLPI2C = (KINETIS_LPI2C_CONTROL *)LPI2C0_BLOCK;
+        LPI2C0_MCR = (LPI2C_MCR_RST | LPI2C_MCR_RTF | LPI2C_MCR_RRF);    // reset LPI2C controller and ensure FIFOs are reset
     #if defined irq_LPI2C0_ID
         fnEnterInterrupt(irq_LPI2C0_ID, PRIORITY_I2C0, _I2C_Interrupt_0); // enter I2C0 interrupt handler
     #else
@@ -909,8 +760,12 @@ extern void fnConfigI2C(I2CTABLE *pars)
     }
     #if LPI2C_AVAILABLE > 1
     else if (pars->Channel == 1) {                                       // I2C channel 1
+    #if defined KINETIS_WITH_PCC
+        SELECT_PCC_PERIPHERAL_SOURCE(LPI2C1, LPI2C1_PCC_SOURCE);          // select the PCC clock used by LPI2C1
+    #endif
         POWER_UP_ATOMIC(4, I2C1);                                        // enable clock to module
         ptrLPI2C = (KINETIS_LPI2C_CONTROL *)LPI2C1_BLOCK;
+        LPI2C1_MCR = (LPI2C_MCR_RST | LPI2C_MCR_RTF | LPI2C_MCR_RRF);    // reset LPI2C controller and ensure FIFOs are reset
         #if defined irq_LPI2C1_ID
         fnEnterInterrupt(irq_LPI2C1_ID, PRIORITY_I2C1, _I2C_Interrupt_1);  // enter LPI2C1 interrupt handler
         #elif !defined irq_I2C1_ID && defined INTMUX0_AVAILABLE
@@ -939,8 +794,12 @@ extern void fnConfigI2C(I2CTABLE *pars)
     #endif
     #if LPI2C_AVAILABLE > 2
     else if (pars->Channel == 2) {                                       // I2C channel 2
+        #if defined KINETIS_WITH_PCC
+        SELECT_PCC_PERIPHERAL_SOURCE(LPI2C2, LPI2C2_PCC_SOURCE);         // select the PCC clock used by LPI2C1
+        #endif
         POWER_UP_ATOMIC(1, I2C2);                                        // enable clock to module
         ptrLPI2C = (KINETIS_LPI2C_CONTROL *)LPI2C2_BLOCK;
+        LPI2C2_MCR = (LPI2C_MCR_RST | LPI2C_MCR_RTF | LPI2C_MCR_RRF);    // reset LPI2C controller and ensure FIFOs are reset
         #if !defined irq_I2C2_ID && defined INTMUX0_AVAILABLE
         fnEnterInterrupt((irq_INTMUX0_0_ID + INTMUX_I2C2), INTMUX0_PERIPHERAL_I2C2, _I2C_Interrupt_2); // enter I2C2 interrupt handler
         #else
@@ -965,6 +824,7 @@ extern void fnConfigI2C(I2CTABLE *pars)
     else if (pars->Channel == 3) {                                       // I2C channel 3
         POWER_UP_ATOMIC(1, I2C3);                                        // enable clock to module
         ptrLPI2C = (KINETIS_LPI2C_CONTROL *)LPI2C3_BLOCK;
+        LPI2C3_MCR = (LPI2C_MCR_RST | LPI2C_MCR_RTF | LPI2C_MCR_RRF);    // reset LPI2C controller and ensure FIFOs are reset
         fnEnterInterrupt(irq_I2C3_ID, PRIORITY_I2C3, _I2C_Interrupt_3);  // enter I2C3 interrupt handler
         #if defined I2C3_ON_E                                            // initially configure as inputs with pull-up
         _CONFIG_PORT_INPUT_FAST_LOW(E, (PORTE_BIT10 | PORTE_BIT11), (PORT_ODE | PORT_PS_UP_ENABLE));
@@ -976,90 +836,31 @@ extern void fnConfigI2C(I2CTABLE *pars)
     else {
         return;
     }
-
-    // The calculation of the correct divider ratio doesn't follow a formular so is best taken from a table.
-    // The required divider value is ((BUS_CLOCK/1000)/pars->usSpeed). Various typical speeds are supported here.
-    //                                                                   {1}
-    // Note that some devices have a MULT field in the divider register which can be used as a prescaler - this is presently not used
-    // due to errate e6070 which doesn't allow a repeat start to be generated when it is set to a non-zero value
-    //
-    switch (pars->usSpeed) {
-    case 400:                                                            // high speed I2C (400kHz)
-    #if BUS_CLOCK > 60000000                                             // 75MHz
-        ucSpeed = 0x1e;                                                  // set about 400k with 75MHz bus frequency
-    #elif BUS_CLOCK > 50000000                                           // 60MHz
-        ucSpeed = 0x20;                                                  // set about 400k with 60MHz bus frequency
-    #elif BUS_CLOCK > 40000000                                           // 50MHz
-        ucSpeed = 0x17;                                                  // set about 400k with 50MHz bus frequency
-    #elif BUS_CLOCK > 30000000                                           // 40MHz
-        ucSpeed = 0x16;                                                  // set about 400k with 40MHz bus frequency
-    #elif BUS_CLOCK > 20000000                                           // 30MHz
-        ucSpeed = 0x14;                                                  // set about 400k with 30MHz bus frequency
-    #else                                                                // assume 20MHz
-        ucSpeed = 0x11;                                                  // set about 400k with 20MHz bus frequency
-    #endif
-        break;
-    case 100:                                                            // 100kHz
-    default:                                                             // default to 100kHz
-    #if BUS_CLOCK > 60000000                                             // 75MHz
-        ucSpeed = 0x2e;                                                  // set about 100k with 75MHz bus frequency
-    #elif BUS_CLOCK > 50000000                                           // 60MHz
-        ucSpeed = 0x2d;                                                  // set about 100k with 60MHz bus frequency
-    #elif BUS_CLOCK > 40000000                                           // 50MHz
-        ucSpeed = 0x2b;                                                  // set about 100k with 50MHz bus frequency
-    #elif BUS_CLOCK > 30000000                                           // 40MHz
-        ucSpeed = 0x2a;                                                  // set about 100k with 40MHz bus frequency
-    #elif BUS_CLOCK > 20000000                                           // 30MHz
-        ucSpeed = 0x28;                                                  // set about 100k with 30MHz bus frequency
-    #else                                                                // assume 20MHz
-        ucSpeed = 0x22;                                                  // set about 100k with 20MHz bus frequency
-    #endif
-        break;
-
-    case 50:                                                             // 50kHz
-    #if BUS_CLOCK > 60000000                                             // 75MHz
-        ucSpeed = 0x36;                                                  // set about 50k with 75MHz bus frequency
-    #elif BUS_CLOCK > 50000000                                           // 60MHz
-        ucSpeed = 0x35;                                                  // set about 50k with 60MHz bus frequency
-    #elif BUS_CLOCK > 40000000                                           // 50MHz
-        ucSpeed = 0x33;                                                  // set about 50k with 50MHz bus frequency
-    #elif BUS_CLOCK > 20000000                                           // 40MHz
-        ucSpeed = 0x32;                                                  // set about 50k with 40MHz bus frequency
-    #elif BUS_CLOCK > 10000000                                           // 30MHz
-        ucSpeed = 0x2c;                                                  // set about 50k with 30MHz bus frequency
-    #else                                                                // assume 20MHz
-        ucSpeed = 0x29;                                                  // set about 50k with 20MHz bus frequency
-    #endif
-        break;
+    ptrLPI2C->LPI2C_MCR = (LPI2C_CHARACTERISTICS);                       // take the LPI2C controller out of reset
+    if (pars->usSpeed != 0) {
+        ptrLPI2C->LPI2C_MCFGR1 = (LPI2C_MCFG1_PRESCALE_128 | LPI2C_MCFG1_PINCFG_2_OPEN); // set the clock prescaler and normal I2C mode (2-line with open drain)
+        ptrLPI2C->LPI2C_MCCR0 = (LPI2C_MCCR0_CLKLO_MASK | LPI2C_MCCR0_CLKHI_MASK | LPI2C_MCCR0_SETHOLD_MASK | LPI2C_MCCR0_DATAVD_MASK); // try max timing
+        ptrLPI2C->LPI2C_MCR = (LPI2C_MCR_MEN | LPI2C_CHARACTERISTICS);   // enable master mode of operation
+    }
+    else {
     #if defined I2C_SLAVE_MODE
-    case 0:                                                              // I2C slave mode
-        {
-            ucSpeed = 0;                                                 // speed is determined by master
-            ptrLPI2C->I2C_A1 = pars->ucSlaveAddress;                       // program the slave's address
-            fnConfigI2C_pins(pars->Channel, 0);                          // configure pins for I2C use
-            I2C_rx_control[pars->Channel]->ucState = I2C_SLAVE_RX_MESSAGE_MODE; //{4} the slave receiver operates in message mode
-            I2C_tx_control[pars->Channel]->ucState = I2C_SLAVE_TX_BUFFER_MODE; // the slave transmitter operates in buffer mode
-            fnI2C_SlaveCallback[pars->Channel] = pars->fnI2C_SlaveCallback; // optional callback to use on slave reception
-        }
-        break;
+        ucSpeed = 0;                                                     // speed is determined by master
+        ptrLPI2C->I2C_A1 = pars->ucSlaveAddress;                         // program the slave's address
+        fnConfigI2C_pins(pars->Channel, 0);                              // configure pins for I2C use
+        I2C_rx_control[pars->Channel]->ucState = I2C_SLAVE_RX_MESSAGE_MODE; // the slave receiver operates in message mode
+        I2C_tx_control[pars->Channel]->ucState = I2C_SLAVE_TX_BUFFER_MODE; // the slave transmitter operates in buffer mode
+        fnI2C_SlaveCallback[pars->Channel] = pars->fnI2C_SlaveCallback;  // optional callback to use on slave reception
+
+        ptrLPI2C->I2C_C1 |= I2C_IIEN;                                    // immediately enable interrupts if operating as a slave
+    #if defined DOUBLE_BUFFERED_I2C || defined I2C_START_CONDITION_INTERRUPT
+        ptrLPI2C->I2C_FLT = I2C_FLT_FLT_SSIE;                            // enable start/stop condition interrupt
+    #else
+        ptrLPI2C->I2C_FLT = I2C_FLT_FLT_STOPIE;                          // enable stop condition interrupt
+    #endif
+    #else
+        _EXCEPTION("I2C slave mode not enabled!");
     #endif
     }
-#if 0
-    ptrLPI2C->I2C_F = ucSpeed;                                             // set the operating speed
-    #if !defined KINETIS_KE
-    ptrLPI2C->I2C_C1 = (I2C_IEN);                                          // enable I2C controller
-    #endif
-#endif
-    #if defined I2C_SLAVE_MODE
-    if (ucSpeed == 0) {
-        ptrLPI2C->I2C_C1 |= I2C_IIEN;                                      // immediately enable interrupts if operating as a slave
-        #if defined DOUBLE_BUFFERED_I2C || defined I2C_START_CONDITION_INTERRUPT
-        ptrLPI2C->I2C_FLT = I2C_FLT_FLT_SSIE;                              // enable start/stop condition interrupt
-        #else
-        ptrLPI2C->I2C_FLT = I2C_FLT_FLT_STOPIE;                            // enable stop condition interrupt
-        #endif
-    }
-    #endif
     #if defined _WINDOWS
     fnConfigSimI2C(pars->Channel, (pars->usSpeed * 1000));               // inform the simulator of the I2C speed that has been set
     #endif

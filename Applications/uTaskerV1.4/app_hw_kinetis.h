@@ -2800,6 +2800,11 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define I2C0_ON_D
       //#define I2C1_ON_E
     #endif
+    #if defined SUPPORT_LOW_POWER
+        #define LPI2C_CHARACTERISTICS  (LPI2C_MCR_DOZEN/* | LPI2C_MCR_DBGEN*/) // allow the LPI2C to continue running in doze modes since it will otherwise freeze whenever the processor uses WAIT 
+    #else
+        #define LPI2C_CHARACTERISTICS  (0 | /* | LPI2C_MCR_DBGEN*/) // define whether the LPI2C controller opertion is disabled in debug mode
+    #endif
 #endif
 
 // LAN interface
@@ -3131,6 +3136,10 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define FTM1_PCC_SOURCE        PCC_PCS_SCGFIRCLK
     #define FTM2_PCC_SOURCE        PCC_PCS_SCGFIRCLK
     #define FTM3_PCC_SOURCE        PCC_PCS_SCGFIRCLK
+
+    #define LPI2C0_PCC_SOURCE      PCC_PCS_SCGFIRCLK
+    #define LPI2C1_PCC_SOURCE      PCC_PCS_SCGFIRCLK
+    #define LPI2C2_PCC_SOURCE      PCC_PCS_SCGFIRCLK
 #endif
 
 // Ports

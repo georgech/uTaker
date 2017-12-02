@@ -521,7 +521,7 @@ unsigned char *fnMQTTTopicString(unsigned char *ptrMQTT_packet, CHAR *ptrString)
     unsigned char *ptrStringLength = ptrMQTT_packet;
     unsigned short usStringLength;
     ptrMQTT_packet += 2;                                                 // leave space for the string length
-    ptrMQTT_packet = uStrcpy(ptrMQTT_packet, ptrString);
+    ptrMQTT_packet = (unsigned char *)uStrcpy((CHAR *)ptrMQTT_packet, ptrString);
     usStringLength = ((ptrMQTT_packet - (unsigned char *)ptrStringLength) - 2);
     *ptrStringLength++ = (unsigned char)(usStringLength >> 8);           // insert the length before the string content
     *ptrStringLength++ = (unsigned char)(usStringLength);

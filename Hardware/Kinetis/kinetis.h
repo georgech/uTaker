@@ -13054,21 +13054,100 @@ typedef struct stKINETIS_I2C_CONTROL
 #if LPI2C_AVAILABLE > 0
     #define LPI2C0_VERID                 *(volatile unsigned long *)(LPI2C0_BLOCK + 0x000) // LPI2C0 version ID register (read-only)
     #define LPI2C0_PARAM                 *(volatile unsigned long *)(LPI2C0_BLOCK + 0x004) // LPI2C0 parameter register (read-only)
-    #define LPI2C0_MCR                   *(unsigned long *)(LPI2C0_BLOCK + 0x010) // LPI2C0 master control register
+    #define LPI2C0_MCR                   *(volatile unsigned long *)(LPI2C0_BLOCK + 0x010) // LPI2C0 master control register
+        #define LPI2C_MCR_MEN            0x00000001                      // master logic enable
+        #define LPI2C_MCR_RST            0x00000002                      // master logic reset
+        #define LPI2C_MCR_DOZEN          0x00000004                      // doze mode disable (master is disabled in doze mode)
+        #define LPI2C_MCR_DBGEN          0x00000008                      // debug enable (master is enabled in debug mode)
+        #define LPI2C_MCR_RTF            0x00000010                      // reset transmit FIFO (write-only)
+        #define LPI2C_MCR_RRF            0x00000020                      // reset receive FIFO (write-only)
     #define LPI2C0_MSR                   *(volatile unsigned long *)(LPI2C0_BLOCK + 0x014) // LPI2C0 master status register
+        #define LPI2C_MSR_TDF            0x00000001                      // transmit data is requested (read-only)
+        #define LPI2C_MSR_RDF            0x00000002                      // receive data is ready (read-only)
+        #define LPI2C_MSR_EPF            0x00000100                      // end packet flag (write '1' to clear)
+        #define LPI2C_MSR_SDF            0x00000200                      // STOP detect flag (write '1' to clear)
+        #define LPI2C_MSR_NDF            0x00000400                      // NACK detect flag (write '1' to clear)
+        #define LPI2C_MSR_ALF            0x00000800                      // arbitration lost flag (write '1' to clear)
+        #define LPI2C_MSR_FEF            0x00001000                      // FIFO error flag (write '1' to clear)
+        #define LPI2C_MSR_PLTF           0x00002000                      // pin low timeout flag (write '1' to clear)
+        #define LPI2C_MSR_DMF            0x00004000                      // data match flag (write '1' to clear)
+        #define LPI2C_MSR_MBF            0x01000000                      // I2C master bus busy (read-only)
+        #define LPI2C_MSR_BBF            0x02000000                      // I2C bus busy (read-only)
     #define LPI2C0_MIER                  *(unsigned long *)(LPI2C0_BLOCK + 0x018) // LPI2C0 master interrupt enable register
+        #define LPI2C_MIER_TDIE          0x00000001                      // transmit data interrupt enable
+        #define LPI2C_MIER_RDIE          0x00000002                      // receive data interrupt enable
+        #define LPI2C_MIER_EPIE          0x00000100                      // end packet interrupt enable
+        #define LPI2C_MIER_SDIE          0x00000200                      // STOP detect interrupt enable
+        #define LPI2C_MIER_NDIE          0x00000400                      // NACK detect interrupt enable
+        #define LPI2C_MIER_ALIE          0x00000800                      // arbitration lost interrupt enable
+        #define LPI2C_MIER_FEIE          0x00001000                      // FIFO error interrupt enable
+        #define LPI2C_MIER_PLTIE         0x00002000                      // pin low timeout interrupt enable
+        #define LPI2C_MIER_DMIE          0x00004000                      // data match interrupt enable
     #define LPI2C0_MDER                  *(unsigned long *)(LPI2C0_BLOCK + 0x01c) // LPI2C0 master DMA enable register
+        #define LPI2C_MDER_TDDE          0x00000001                      // transmit data DMA enable
+        #define LPI2C_MDER_RDDE          0x00000002                      // receive data DMA enable
     #define LPI2C0_MCFGR0                *(unsigned long *)(LPI2C0_BLOCK + 0x020) // LPI2C0 master configuration register 0
-    #define LPI2C0_MCFGR1                *(unsigned long *)(LPI2C0_BLOCK + 0x024) // LPI2C0 master configuration register 1
-    #define LPI2C0_MCFGR2                *(unsigned long *)(LPI2C0_BLOCK + 0x028) // LPI2C0 master configuration register 2
-    #define LPI2C0_MCFGR3                *(unsigned long *)(LPI2C0_BLOCK + 0x02c) // LPI2C0 master configuration register 3
+        #define LPI2C_MCFG0_HREN         0x00000001                      // host request enable
+        #define LPI2C_MCFG0_HRPOL        0x00000002                      // host request polarity
+        #define LPI2C_MCFG0_HRSEL        0x00000004                      // host request select
+        #define LPI2C_MCFG0_CIRFIFO      0x00000100                      // circular FIFO enable
+        #define LPI2C_MCFG0_RDMO         0x00000200                      // receive data match only
+    #define LPI2C0_MCFGR1                *(unsigned long *)(LPI2C0_BLOCK + 0x024) // LPI2C0 master configuration register 1 (only write when I2C master is disabled)
+        #define LPI2C_MCFG1_PRESCALE_1   0x00000000                      // clock prescaler - divide by 1
+        #define LPI2C_MCFG1_PRESCALE_2   0x00000001                      // clock prescaler - divide by 2
+        #define LPI2C_MCFG1_PRESCALE_4   0x00000002                      // clock prescaler - divide by 4
+        #define LPI2C_MCFG1_PRESCALE_8   0x00000003                      // clock prescaler - divide by 8
+        #define LPI2C_MCFG1_PRESCALE_16  0x00000004                      // clock prescaler - divide by 16
+        #define LPI2C_MCFG1_PRESCALE_32  0x00000005                      // clock prescaler - divide by 32
+        #define LPI2C_MCFG1_PRESCALE_64  0x00000006                      // clock prescaler - divide by 64
+        #define LPI2C_MCFG1_PRESCALE_128 0x00000007                      // clock prescaler - divide by 128
+        #define LPI2C_MCFG1_AUTOSTOP     0x00000100                      // automatic STOP generation
+        #define LPI2C_MCFG1_IGNACK       0x00000200                      // ignore NACK
+        #define LPI2C_MCFG1_TIMECFG      0x00000400                      // timeout configuration
+        #define LPI2C_MCFG1_MATCFG       0x00070000                      // match configuration mask
+        #define LPI2C_MCFG1_MATCFG_DISABLED 0x00070000                   // match configuration - disabled
+        #define LPI2C_MCFG1_PINCFG       0x07000000                      // pin configuration mask
+        #define LPI2C_MCFG1_PINCFG_2_OPEN   0x00000000                   // pin configuration - LPI2C configured for 2-pin open drain mode
+    #define LPI2C0_MCFGR2                *(unsigned long *)(LPI2C0_BLOCK + 0x028) // LPI2C0 master configuration register 2 (only write when I2C master is disabled)
+        #define LPI2C_MCFG2_BUSIDLE_OFF  0x00000000                      // bus idle timeout disabled
+        #define LPI2C_MCFG2_BUSIDLE_MASK 0x00000fff                      // bus idle timeout mask
+        #define LPI2C_MCFG2_FILTSCL_MASK 0x000f0000                      // glitch filter SCL
+        #define LPI2C_MCFG2_FILTSDA_MASK 0x0f000000                      // glitch filter SDA
+    #define LPI2C0_MCFGR3                *(unsigned long *)(LPI2C0_BLOCK + 0x02c) // LPI2C0 master configuration register 3 (only write when I2C master is disabled)
+        #define LPI2C_MCFG3_PINLOW_MASK  0x000fff00                      // pin low timeout
     #define LPI2C0_MDMR                  *(unsigned long *)(LPI2C0_BLOCK + 0x040) // LPI2C0 master data match register
-    #define LPI2C0_MCCR0                 *(unsigned long *)(LPI2C0_BLOCK + 0x048) // LPI2C0 master clock configuration register 0
-    #define LPI2C0_MCCR1                 *(unsigned long *)(LPI2C0_BLOCK + 0x050) // LPI2C0 master clock configuration register 1
+        #define LPI2C_MDMR_MATCH0        0x000000ff                      // match 0 value
+        #define LPI2C_MDMR_MATCH1        0x00ff0000                      // match 1 value
+    #define LPI2C0_MCCR0                 *(unsigned long *)(LPI2C0_BLOCK + 0x048) // LPI2C0 master clock configuration register 0 (cannot be changed when I2C master is enabled)
+        #define LPI2C_MCCR0_CLKLO_MASK   0x0000003f                      // clock low period
+        #define LPI2C_MCCR0_CLKHI_MASK   0x00003f00                      // clock high period
+        #define LPI2C_MCCR0_SETHOLD_MASK 0x003f0000                      // setup hold delay
+        #define LPI2C_MCCR0_DATAVD_MASK  0x3f000000                      // data valid delay
+    #define LPI2C0_MCCR1                 *(unsigned long *)(LPI2C0_BLOCK + 0x050) // LPI2C0 master clock configuration register 1 (cannot be changed when I2C master is enabled)
+        #define LPI2C_MCCR1_CLKLO_MASK   0x0000003f                      // clock low period
+        #define LPI2C_MCCR1_CLKHI_MASK   0x00003f00                      // clock high period
+        #define LPI2C_MCCR1_SETHOLD_MASK 0x003f0000                      // setup hold delay
+        #define LPI2C_MCCR1_DATAVD_MASK  0x3f000000                      // data valid delay
     #define LPI2C0_MFCR                  *(unsigned long *)(LPI2C0_BLOCK + 0x058) // LPI2C0 master FIFO configuration register
+        #define LPI2C_MFCR_TXWATER_MASK  0x000000ff                      // transmit FIFO watermark
+        #define LPI2C_MFCR_RXWATER_MASK  0x00ff0000                      // receive FIFO watermark
     #define LPI2C0_MFSR                  *(volatile unsigned long *)(LPI2C0_BLOCK + 0x05c) // LPI2C0 master FIFO status register (read-only)
+        #define LPI2C_MFSR_TXCOUNT_MASK  0x000000ff                      // transmit FIFO count
+        #define LPI2C_MFSR_RXCOUNT_MASK  0x00ff0000                      // receive FIFO count
     #define LPI2C0_MTDR                  *(volatile unsigned long *)(LPI2C0_BLOCK + 0x060) // LPI2C0 master transmit data register (write-only)
+        #define LPI2C_MTDR_DATA_MASK     0x000000ff                      // transmit data mask
+        #define LPI2C_MTDR_CMD_TX_DATA        0x00000000                 // command data - transmit DATA[7:0]
+        #define LPI2C_MTDR_CMD_RX_DATA        0x00000100                 // command data - receive DATA[7:0] + 1
+        #define LPI2C_MTDR_CMD_STOP           0x00000200                 // command data - generate stop bit
+        #define LPI2C_MTDR_CMD_DISCARD        0x00000300                 // command data - receive and discard DATA[7:0] + 1
+        #define LPI2C_MTDR_CMD_START_DATA     0x00000400                 // command data - generate (repeated) START and transmit address DATA[7:0]
+        #define LPI2C_MTDR_CMD_START_DATA_N   0x00000500                 // command data - generate (repeated) START and transmit address DATA[7:0] - expect NACK
+        #define LPI2C_MTDR_CMD_START_F_DATA   0x00000600                 // command data - generate (repeated) START and transmit address DATA[7:0] (high speed mode)
+        #define LPI2C_MTDR_CMD_START_F_DATA_N 0x00000700                 // command data - generate (repeated) START and transmit address DATA[7:0] - expect NACK (high speed mode)
+        #define LPI2C_MTDR_CMD_MASK      0x00000700                      // command data mask
     #define LPI2C0_MRDR                  *(volatile unsigned long *)(LPI2C0_BLOCK + 0x070) // LPI2C0 master receive data register (read-only)
+        #define LPI2C_MRDR_DATA_MASK     0x000000ff                      // receive data mask
+        #define LPI2C_MRDR_RXEMPTY       0x00004000                      // receive FIFO is empty
     #define LPI2C0_SCR                   *(unsigned long *)(LPI2C0_BLOCK + 0x110) // LPI2C0 slave control register
     #define LPI2C0_SSR                   *(volatile unsigned long *)(LPI2C0_BLOCK + 0x114) // LPI2C0 slave status register
     #define LPI2C0_SIER                  *(unsigned long *)(LPI2C0_BLOCK + 0x118) // LPI2C0 slave interrupt enable register
@@ -13084,7 +13163,7 @@ typedef struct stKINETIS_I2C_CONTROL
 #if LPI2C_AVAILABLE > 1
     #define LPI2C1_VERID                 *(volatile unsigned long *)(LPI2C1_BLOCK + 0x000) // LPI2C1 version ID register (read-only)
     #define LPI2C1_PARAM                 *(volatile unsigned long *)(LPI2C1_BLOCK + 0x004) // LPI2C1 parameter register (read-only)
-    #define LPI2C1_MCR                   *(unsigned long *)(LPI2C1_BLOCK + 0x010) // LPI2C1 master control register
+    #define LPI2C1_MCR                   *(volatile unsigned long *)(LPI2C1_BLOCK + 0x010) // LPI2C1 master control register
     #define LPI2C1_MSR                   *(volatile unsigned long *)(LPI2C1_BLOCK + 0x014) // LPI2C1 master status register
     #define LPI2C1_MIER                  *(unsigned long *)(LPI2C1_BLOCK + 0x018) // LPI2C1 master interrupt enable register
     #define LPI2C1_MDER                  *(unsigned long *)(LPI2C1_BLOCK + 0x01c) // LPI2C1 master DMA enable register
@@ -13114,7 +13193,7 @@ typedef struct stKINETIS_I2C_CONTROL
 #if LPI2C_AVAILABLE > 2
     #define LPI2C2_VERID                 *(volatile unsigned long *)(LPI2C2_BLOCK + 0x000) // LPI2C2 version ID register (read-only)
     #define LPI2C2_PARAM                 *(volatile unsigned long *)(LPI2C2_BLOCK + 0x004) // LPI2C2 parameter register (read-only)
-    #define LPI2C2_MCR                   *(unsigned long *)(LPI2C2_BLOCK + 0x010) // LPI2C2 master control register
+    #define LPI2C2_MCR                   *(volatile unsigned long *)(LPI2C2_BLOCK + 0x010) // LPI2C2 master control register
     #define LPI2C2_MSR                   *(volatile unsigned long *)(LPI2C2_BLOCK + 0x014) // LPI2C2 master status register
     #define LPI2C2_MIER                  *(unsigned long *)(LPI2C2_BLOCK + 0x018) // LPI2C2 master interrupt enable register
     #define LPI2C2_MDER                  *(unsigned long *)(LPI2C2_BLOCK + 0x01c) // LPI2C2 master DMA enable register
@@ -13147,7 +13226,7 @@ typedef struct stKINETIS_LPI2C_CONTROL
 {
     volatile unsigned long  LPI2C_VERID;
     volatile unsigned long  LPI2C_PARAM;
-    unsigned long  ulRes0;
+    unsigned long  ulRes0[2];
     unsigned long  LPI2C_MCR;
     volatile unsigned long  LPI2C_MSR;
     unsigned long  LPI2C_MIER;

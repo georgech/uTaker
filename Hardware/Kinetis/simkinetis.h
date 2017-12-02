@@ -2649,7 +2649,7 @@ typedef struct stKINETIS_LPI2C
 {
     unsigned long  LPI2C_VERID;
     unsigned long  LPI2C_PARAM;
-    unsigned long  ulRes0;
+    unsigned long  ulRes0[2];
     unsigned long  LPI2C_MCR;
     unsigned long  LPI2C_MSR;
     unsigned long  LPI2C_MIER;

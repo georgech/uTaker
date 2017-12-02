@@ -6006,18 +6006,16 @@ extern unsigned long fnSimInts(char *argv[])
 		        iInts &= ~I2C_INT0;
     #if I2C_AVAILABLE > 0
                 if ((I2C0_C1 & I2C_IEN) != 0) {                          // if I2C interrupt enabled
-        #if defined irq_LPI2C0_ID
-                    if (fnGenInt(irq_LPI2C0_ID) != 0)
-        #else
-                    if (fnGenInt(irq_I2C0_ID) != 0)
-        #endif
-                    {                                                    // if I2C interrupt is not disabled
+                    if (fnGenInt(irq_I2C0_ID) != 0) {                    // if I2C interrupt is not disabled
                         VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-        #if defined irq_LPI2C0_ID
-                        ptrVect->processor_interrupts.irq_LPI2C0();      // call the interrupt handler
-        #else
                         ptrVect->processor_interrupts.irq_I2C0();        // call the interrupt handler
-        #endif
+                    }
+                }
+    #elif defined LPI2C_AVAILABLE > 0
+                if (((LPI2C0_MIER & LPI2C0_MSR) & (LPI2C_MIER_TDIE | LPI2C_MIER_RDIE | LPI2C_MIER_EPIE | LPI2C_MIER_SDIE | LPI2C_MIER_NDIE | LPI2C_MIER_ALIE | LPI2C_MIER_FEIE | LPI2C_MIER_PLTIE | LPI2C_MIER_DMIE)) != 0) { // if an enabled interrupt source is active
+                    if (fnGenInt(irq_LPI2C0_ID) != 0) {
+                        VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                        ptrVect->processor_interrupts.irq_LPI2C0();      // call the interrupt handler
                     }
                 }
     #endif
@@ -6037,20 +6035,20 @@ extern unsigned long fnSimInts(char *argv[])
 		        iInts &= ~I2C_INT1;                                      // interrupt has been handled
     #if I2C_AVAILABLE > 1
                 if ((I2C1_C1 & I2C_IEN) != 0) {                          // if I2C interrupt enabled
-        #if defined irq_LPI2C1_ID
-                    if (fnGenInt(irq_LPI2C1_ID) != 0)
-        #else
-                    if (fnGenInt(irq_I2C1_ID) != 0)
-        #endif
-                    {                                                    // if I2C interrupt is not disabled
+                    if (fnGenInt(irq_I2C1_ID) != 0) {                    // if I2C interrupt is not disabled
                         VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-        #if defined irq_LPI2C1_ID
-                        ptrVect->processor_interrupts.irq_LPI2C1();      // call the interrupt handler
-        #elif !defined irq_I2C1_ID
+        #if !defined irq_I2C1_ID
                         fnCallINTMUX(INTMUX_I2C1, INTMUX0_PERIPHERAL_I2C1, (unsigned char *)&ptrVect->processor_interrupts.irq_I2C1);
         #else
                         ptrVect->processor_interrupts.irq_I2C1();       // call the interrupt handler
         #endif
+                    }
+                }
+    #elif defined LPI2C_AVAILABLE > 1
+                if (((LPI2C1_MIER & LPI2C1_MSR) & (LPI2C_MIER_TDIE | LPI2C_MIER_RDIE | LPI2C_MIER_EPIE | LPI2C_MIER_SDIE | LPI2C_MIER_NDIE | LPI2C_MIER_ALIE | LPI2C_MIER_FEIE | LPI2C_MIER_PLTIE | LPI2C_MIER_DMIE)) != 0) { // if an enabled interrupt source is active
+                    if (fnGenInt(irq_LPI2C1_ID) != 0) {
+                        VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                        ptrVect->processor_interrupts.irq_LPI2C1();      // call the interrupt handler
                     }
                 }
     #endif
@@ -6081,6 +6079,13 @@ extern unsigned long fnSimInts(char *argv[])
         #else
                         ptrVect->processor_interrupts.irq_I2C2();        // call the interrupt handler
         #endif
+                    }
+                }
+    #elif defined LPI2C_AVAILABLE > 1
+                if (((LPI2C2_MIER & LPI2C2_MSR) & (LPI2C_MIER_TDIE | LPI2C_MIER_RDIE | LPI2C_MIER_EPIE | LPI2C_MIER_SDIE | LPI2C_MIER_NDIE | LPI2C_MIER_ALIE | LPI2C_MIER_FEIE | LPI2C_MIER_PLTIE | LPI2C_MIER_DMIE)) != 0) { // if an enabled interrupt source is active
+                    if (fnGenInt(irq_LPI2C2_ID) != 0) {
+                        VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                        ptrVect->processor_interrupts.irq_LPI2C2();      // call the interrupt handler
                     }
                 }
     #endif
