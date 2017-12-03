@@ -3701,14 +3701,14 @@ typedef struct stVECTOR_TABLE
         #if defined KINETIS_KL28
             #define I2C0_BLOCK                 0x400c0000                // LPI2C0
         #else
-            #define I2C0_BLOCK                 0x40066000                // I2C0
+            #define I2C0_BLOCK                 0x40066000                // I2C0/LPI2C
         #endif
     #endif
     #if (I2C_AVAILABLE + LPI2C_AVAILABLE) > 1
         #if defined KINETIS_KL28
             #define I2C1_BLOCK                 0x400c1000                // LPI2C1
         #else
-            #define I2C1_BLOCK                 0x40067000                // I2C1
+            #define I2C1_BLOCK                 0x40067000                // I2C1/LPI2C
         #endif
     #endif
     #if (I2C_AVAILABLE + LPI2C_AVAILABLE) > 2
@@ -11164,7 +11164,13 @@ typedef struct stKINETIS_LPTMR_CTL
 #endif
 #define PD_9_I2C0_SDA                    PORT_MUX_ALT2
 #define PD_8_I2C0_SCL                    PORT_MUX_ALT2
-#if defined KINETIS_K64 || defined KINETIS_KL17 || defined KINETIS_K24 || defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL43 || defined KINETIS_KL46
+
+#if defined KINETIS_KL28
+    #define PE_25_I2C0_SDA               PORT_MUX_ALT5
+    #define PE_24_I2C0_SCL               PORT_MUX_ALT5
+    #define PD_11_I2C0_SDA               PORT_MUX_ALT3
+    #define PD_10_I2C0_SCL               PORT_MUX_ALT3
+#elif defined KINETIS_K64 || defined KINETIS_KL17 || defined KINETIS_K24 || defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL43 || defined KINETIS_KL46
     #define PE_25_I2C0_SDA               PORT_MUX_ALT5
     #define PE_24_I2C0_SCL               PORT_MUX_ALT5
     #if defined KINETIS_KL17 || defined KINETIS_KL27
@@ -11207,7 +11213,7 @@ typedef struct stKINETIS_LPTMR_CTL
     #define PB_3_I2C0_SCL                PORT_MUX_ALT2
 #endif
 
-#if I2C_AVAILABLE > 1
+#if (I2C_AVAILABLE + LPI2C_AVAILABLE) > 1
     #if defined KINETIS_KE06                                             // I2C1
         #define PH_3_I2C1_SDA            PORT_MUX_ALT2
         #define PH_4_I2C1_SCL            PORT_MUX_ALT2
@@ -11224,6 +11230,18 @@ typedef struct stKINETIS_LPTMR_CTL
         #define PE_1_I2C1_SCL            PORT_MUX_ALT6
         #define PE_25_I2C1_SDA           PORT_MUX_ALT5
         #define PE_24_I2C1_SCL           PORT_MUX_ALT5
+    #elif defined KINETIS_KL28
+        #define PA_11_I2C1_SDA           PORT_MUX_ALT5
+        #define PA_12_I2C1_SCL           PORT_MUX_ALT5
+        #define PA_13_I2C1_SDA           PORT_MUX_ALT5
+        #define PA_14_I2C1_SCL           PORT_MUX_ALT5
+        #define PE_0_I2C1_SDA            PORT_MUX_ALT6
+        #define PE_1_I2C1_SCL            PORT_MUX_ALT6
+    #elif defined KINETIS_KE15
+        #define PD_8_I2C1_SDA            PORT_MUX_ALT2
+        #define PD_9_I2C1_SCL            PORT_MUX_ALT2
+        #define PE_0_I2C1_SDA            PORT_MUX_ALT6
+        #define PE_1_I2C1_SCL            PORT_MUX_ALT6
     #else
         #define PE_0_I2C1_SDA            PORT_MUX_ALT6
         #define PE_1_I2C1_SCL            PORT_MUX_ALT6
@@ -11232,7 +11250,7 @@ typedef struct stKINETIS_LPTMR_CTL
     #define PC_10_I2C1_SCL               PORT_MUX_ALT2
 #endif
 
-#if I2C_AVAILABLE > 2
+#if (I2C_AVAILABLE + LPI2C_AVAILABLE) > 2
     #if defined KINETIS_K80
         #define PA_7_I2C2_SDA            PORT_MUX_ALT2
         #define PA_6_I2C2_SCL            PORT_MUX_ALT2
@@ -12406,47 +12424,48 @@ typedef struct stKINETIS_LPTMR_CTL
             #define PCC_LPUART1_BME_XOR  (volatile unsigned long *)(PCC2_BLOCK + 0x114 + BME_XOR_OFFSET)
         #define PCC_FLEXIO0              *(volatile unsigned long *)(PCC2_BLOCK + 0x128)
         #define PCC_CMP1                 *(volatile unsigned long *)(PCC2_BLOCK + 0x1bc)
-
-        // For compatibility
-        //
-        #define PCC_FLEXTMR0             PCC_TPM0
-            #define PCC_FTM0_BME_OR      PCC_TPM0_BME_OR
-            #define PCC_FTM0_BME_AND     PCC_TPM0_BME_AND
-            #define PCC_FTM0_BME_XOR     PCC_TPM0_BME_XOR
-        #define PCC_FLEXTMR1             PCC_TPM1
-            #define PCC_FTM1_BME_OR      PCC_TPM1_BME_OR
-            #define PCC_FTM1_BME_AND     PCC_TPM1_BME_AND
-            #define PCC_FTM1_BME_XOR     PCC_TPM1_BME_XOR
-        #define PCC_FLEXTMR2             PCC_TPM2
-            #define PCC_FTM2_BME_OR      PCC_TPM2_BME_OR
-            #define PCC_FTM2_BME_AND     PCC_TPM2_BME_AND
-            #define PCC_FTM2_BME_XOR     PCC_TPM2_BME_XOR
-        #define PCC_I2C0                 PCC_LPI2C0
-            #define PCC_I2C0_BME_OR      PCC_LPI2C0_BME_OR
-            #define PCC_I2C0_BME_AND     PCC_LPI2C0_BME_AND
-            #define PCC_I2C0_BME_XOR     PCC_LPI2C0_BME_XOR
-        #define PCC_I2C1                 PCC_LPI2C1
-            #define PCC_I2C1_BME_OR      PCC_LPI2C1_BME_OR
-            #define PCC_I2C1_BME_AND     PCC_LPI2C1_BME_AND
-            #define PCC_I2C1_BME_XOR     PCC_LPI2C1_BME_XOR
-        #define PCC_I2C2                 PCC_LPI2C2
-            #define PCC_I2C2_BME_OR      PCC_LPI2C2_BME_OR
-            #define PCC_I2C2_BME_AND     PCC_LPI2C2_BME_AND
-            #define PCC_I2C2_BME_XOR     PCC_LPI2C2_BME_XOR
-        #define PCC_SPI0                 PCC_LPSPI0
-            #define PCC_SPI0_BME_OR      PCC_LPI2C0_BME_OR
-            #define PCC_SPI0_BME_AND     PCC_LPI2C0_BME_AND
-            #define PCC_SPI0_BME_XOR     PCC_LPI2C0_BME_XOR
-        #define PCC_SPI1                 PCC_LPSPI1
-            #define PCC_SPI1_BME_OR      PCC_LPI2C1_BME_OR
-            #define PCC_SPI1_BME_AND     PCC_LPI2C1_BME_AND
-            #define PCC_SPI1_BME_XOR     PCC_LPI2C1_BME_XOR
-        #define PCC_SPI2                 PCC_LPSPI2
-            #define PCC_SPI2_BME_OR      PCC_LPI2C2_BME_OR
-            #define PCC_SPI2_BME_AND     PCC_LPI2C2_BME_AND
-            #define PCC_SPI2_BME_XOR     PCC_LPI2C2_BME_XOR
     #endif
-    #define PCC_USBOTG                   PCC_USB0FS                      // for compatibility
+    // For compatibility
+    //
+    #if !defined PCC_FLEXTMR0
+        #define PCC_FLEXTMR0                 PCC_TPM0
+            #define PCC_FTM0_BME_OR          PCC_TPM0_BME_OR
+            #define PCC_FTM0_BME_AND         PCC_TPM0_BME_AND
+            #define PCC_FTM0_BME_XOR         PCC_TPM0_BME_XOR
+        #define PCC_FLEXTMR1                 PCC_TPM1
+            #define PCC_FTM1_BME_OR          PCC_TPM1_BME_OR
+            #define PCC_FTM1_BME_AND         PCC_TPM1_BME_AND
+            #define PCC_FTM1_BME_XOR         PCC_TPM1_BME_XOR
+        #define PCC_FLEXTMR2                 PCC_TPM2
+            #define PCC_FTM2_BME_OR          PCC_TPM2_BME_OR
+            #define PCC_FTM2_BME_AND         PCC_TPM2_BME_AND
+            #define PCC_FTM2_BME_XOR         PCC_TPM2_BME_XOR
+    #endif
+    #define PCC_I2C0                     PCC_LPI2C0
+        #define PCC_I2C0_BME_OR          PCC_LPI2C0_BME_OR
+        #define PCC_I2C0_BME_AND         PCC_LPI2C0_BME_AND
+        #define PCC_I2C0_BME_XOR         PCC_LPI2C0_BME_XOR
+    #define PCC_I2C1                     PCC_LPI2C1
+        #define PCC_I2C1_BME_OR          PCC_LPI2C1_BME_OR
+        #define PCC_I2C1_BME_AND         PCC_LPI2C1_BME_AND
+        #define PCC_I2C1_BME_XOR         PCC_LPI2C1_BME_XOR
+    #define PCC_I2C2                     PCC_LPI2C2
+        #define PCC_I2C2_BME_OR          PCC_LPI2C2_BME_OR
+        #define PCC_I2C2_BME_AND         PCC_LPI2C2_BME_AND
+        #define PCC_I2C2_BME_XOR         PCC_LPI2C2_BME_XOR
+    #define PCC_SPI0                     PCC_LPSPI0
+        #define PCC_SPI0_BME_OR          PCC_LPI2C0_BME_OR
+        #define PCC_SPI0_BME_AND         PCC_LPI2C0_BME_AND
+        #define PCC_SPI0_BME_XOR         PCC_LPI2C0_BME_XOR
+    #define PCC_SPI1                     PCC_LPSPI1
+        #define PCC_SPI1_BME_OR          PCC_LPI2C1_BME_OR
+        #define PCC_SPI1_BME_AND         PCC_LPI2C1_BME_AND
+        #define PCC_SPI1_BME_XOR         PCC_LPI2C1_BME_XOR
+    #define PCC_SPI2                     PCC_LPSPI2
+        #define PCC_SPI2_BME_OR          PCC_LPI2C2_BME_OR
+        #define PCC_SPI2_BME_AND         PCC_LPI2C2_BME_AND
+        #define PCC_SPI2_BME_XOR         PCC_LPI2C2_BME_XOR
+    #define PCC_USBOTG                   PCC_USB0FS
         #define PCC_USBOTG_BME_OR        PCC_USB0FS_BME_OR
         #define PCC_USBOTG_BME_AND       PCC_USB0FS_BME_AND
         #define PCC_USBOTG_BME_XOR       PCC_USB0FS_BME_XOR
@@ -13132,6 +13151,10 @@ typedef struct stKINETIS_I2C_CONTROL
         #define LPI2C_MCCR0_CLKHI_MASK   0x00003f00                      // clock high period
         #define LPI2C_MCCR0_SETHOLD_MASK 0x003f0000                      // setup hold delay
         #define LPI2C_MCCR0_DATAVD_MASK  0x3f000000                      // data valid delay
+        #define LPI2C_MCCR_CLKLO_SHIFT   0
+        #define LPI2C_MCCR_CLKHI_SHIFT   8
+        #define LPI2C_MCCR_SETHOLD_SHIFT 16
+        #define LPI2C_MCCR_DATAVD_SHIFT  24
     #define LPI2C0_MCCR1                 *(unsigned long *)(LPI2C0_BLOCK + 0x050) // LPI2C0 master clock configuration register 1 (cannot be changed when I2C master is enabled)
         #define LPI2C_MCCR1_CLKLO_MASK   0x0000003f                      // clock low period
         #define LPI2C_MCCR1_CLKHI_MASK   0x00003f00                      // clock high period

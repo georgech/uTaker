@@ -45,6 +45,7 @@
     #define TEST_FXOS8700                                                // test monitoring the 6-axis sensor
     #if defined TEST_FXOS8700
       //#define FXOS8700_14BIT_RES
+      //#define READ_MAGNETOMETER
     #endif
   //#define DISPLAY_ACCELEROMETER_VALUES                                 // print values to debug output irrespective of debug setting
 
@@ -831,7 +832,7 @@ static void acc_data_ready(void)
                 }
     #endif
                 iDisplayRate = 0;
-    #if defined TEST_FXOS8700
+    #if defined TEST_FXOS8700 && defined READ_MAGNETOMETER
                 fnWrite(I2CPortID, (unsigned char *)ucSetMagnetometerRead, sizeof(ucSetMagnetometerRead)); // write the register address to read
                 fnRead(I2CPortID, (unsigned char *)ucReadMagnetometerState, 0); // start the read process of the next status
                 iAccelerometerState = ACC_MAGNETOMETER;
@@ -848,7 +849,7 @@ static void acc_data_ready(void)
     #endif
         }
         break;
-    #if defined TEST_FXOS8700
+    #if defined TEST_FXOS8700 && defined READ_MAGNETOMETER
     case ACC_MAGNETOMETER:
         if (fnRead(I2CPortID, ucInputMessage, 6) != 0) {                 // if the status read has completed
             static int iDisplayRate = 0;

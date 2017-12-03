@@ -448,7 +448,7 @@
     #define RUN_FROM_DEFAULT_CLOCK                                       // default mode is FLL Engaged Internal - the 31.25kHz IRC is multiplied by FLL factor of 1024 to obtain 32MHz nominal frequency
     #define SYSTEM_CLOCK_DIVIDE  1                                       // divide the clock output to give the system clock (maximum 40MHz) (/1, 2, 4, 8, 16, 32, 64 or 128 possible)
     #define BUS_CLOCK_DIVIDE     2                                       // divide by 1 or 2 to give bus and flash clock (maximum 20MHz)
-#elif defined TRK_KEA128 || defined FRDM_KEAZ128Q80
+#elif defined TRK_KEA128 || defined FRDM_KEAZ64Q64 || defined FRDM_KEAZ128Q80
     #define CRYSTAL_FREQUENCY    8000000                                 // 8 MHz crystal
   //#define RUN_FROM_EXTERNAL_CLOCK                                      // run directly from external 8MHz clock (without FLL)
     #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
