@@ -468,7 +468,7 @@ static int fnFTPListener(USOCKET Socket, unsigned char ucEvent, unsigned char *u
 {
     FTP_INSTANCE *ptrFtp = ftp_instance;
     unsigned short usNextData;
-    FOREVER_LOOP {
+    FOREVER_LOOP() {
         if (_TCP_SOCKET_MASK(Socket) == _TCP_SOCKET_MASK(ptrFtp->FTP_TCP_socket)) { // {29}
             break;                                                       // handling connection matched
         }
@@ -907,7 +907,7 @@ static int fnFTPListener(USOCKET Socket, unsigned char ucEvent, unsigned char *u
 static int fnFTP_Data_Listener(USOCKET Socket, unsigned char ucEvent, unsigned char *ucIp_Data, unsigned short usPortLen)
 {
     FTP_INSTANCE *ptrFtp = ftp_instance;
-    FOREVER_LOOP {
+    FOREVER_LOOP() {
         if (_TCP_SOCKET_MASK(Socket) == _TCP_SOCKET_MASK(ptrFtp->FTP_TCP_Data_socket)) {
             break;                                                       // handling connection matched
         }

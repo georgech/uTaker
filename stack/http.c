@@ -1833,7 +1833,7 @@ static unsigned short fnWebParGen(unsigned char ptrBuffer[], HTTP *http_session,
 #if defined HTTP_DYNAMIC_CONTENT                                         // {61}
     http_session->ucDynamicFlags &= ~(MAXIMUM_DYNAMIC_INSERTS | QUIT_FRAME_DURING_GENERATION); // {60}
 #endif
-    FOREVER_LOOP {
+    FOREVER_LOOP() {
         unsigned short usUnacked = (http_session->usUnacked + usFrameLength); // backup the original total content length
         unsigned short usOriginalLength = usFrameLength;                 // backup the original frame length
         unsigned short usThisLength;                                     // {18} allow loop quit when buffer cannot grow any more 

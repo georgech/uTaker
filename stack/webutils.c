@@ -340,7 +340,7 @@ extern CHAR *fnWebStrcpy(CHAR *cStrOut, CHAR *cStrIn)
         cStrOut = cStrIn;                                                // automatically use input buffer as output buffer
         iNullTerminate = 1;                                              // in this case we switch to pure null termination mode
     }
-    FOREVER_LOOP {
+    FOREVER_LOOP() {
     #if !defined WEB_PLUS_NO_CODING                                      // it has been found that + is not always coded so using this define allows it to be used directly
         if (*cStrIn == '+') {                                            // space
             *cStrOut = ' ';

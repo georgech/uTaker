@@ -2207,14 +2207,14 @@ static int utReadMSD(unsigned char *ptrBuffer, unsigned long ulSectorNumber)
     fnSendMSD_host(UFI_READ_10);                                         // request the read (and enable IN polling for the read data)
     fnDriver(USBPortID_host, (RX_ON), 0);                                // enable IN polling so that we can receive data response
     iWait = 0;
-    while (1) {                                                          // wait until the data has been received
+    FOREVER_LOOP() {                                                     // wait until the data has been received
         Length = fnRead(USBPortID_host, (ptrBuffer + (512 - byte_length)), byte_length); // read received data
         if (Length != 0) {                                               // all or part of the requested data is ready
             byte_length -= Length;                                       // the remaining length
             fnDriver(USBPortID_host, (RX_ON), 0);                        // enable IN polling so that we can receive further data, or the status stage
             iWait = 0;
             if (byte_length == 0) {                                      // data has been completely received so we are waiting for the status stage
-                while (1) {                                              // wait until the status stage has been received
+                FOREVER_LOOP() {                                         // wait until the status stage has been received
                     if (fnRead(USBPortID_host, (unsigned char *)&status_stage, sizeof(status_stage)) != 0) { // read status stage
                         if ((status_stage.dCBWSignatureL == USBS_SIGNATURE) && (status_stage.dCBWTagL == ulTag)) {
                             fnDebugMsg(" OK\r\n");
@@ -2279,8 +2279,8 @@ static int utWriteMSD(unsigned char *ptrBuffer, unsigned long ulSectorNumber)
     fnSendMSD_host(UFI_WRITE_10);                                        // request the write
     fnWrite(USBPortID_host, ptrBuffer, 512);                             // write data (buffered on this bulk endpoint)
     iWait = 0;
-//    fnDriver(USBPortID_host, (RX_ON), 0);                                // enable IN polling so that we can receive data/status response
-    while (1) {                                                          // wait until the status stage has been received
+//  fnDriver(USBPortID_host, (RX_ON), 0);                                // enable IN polling so that we can receive data/status response
+    FOREVER_LOOP() {                                                     // wait until the status stage has been received
         if (fnRead(USBPortID_host, (unsigned char *)&status_stage, sizeof(status_stage)) != 0) { // read status stage
             if ((status_stage.dCBWSignatureL == USBS_SIGNATURE) && (status_stage.dCBWTagL == ulTag)) {
                 fnDebugMsg(" OK\r\n");

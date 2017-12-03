@@ -2801,9 +2801,9 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
       //#define I2C1_ON_E
     #endif
     #if defined SUPPORT_LOW_POWER
-        #define LPI2C_CHARACTERISTICS  (LPI2C_MCR_DOZEN/* | LPI2C_MCR_DBGEN*/) // allow the LPI2C to continue running in doze modes since it will otherwise freeze whenever the processor uses WAIT 
+        #define LPI2C_CHARACTERISTICS  (LPI2C_MCR_DOZEN | LPI2C_MCR_DBGEN) // allow the LPI2C to continue running in doze modes since it will otherwise freeze whenever the processor uses WAIT 
     #else
-        #define LPI2C_CHARACTERISTICS  (0 | /* | LPI2C_MCR_DBGEN*/) // define whether the LPI2C controller opertion is disabled in debug mode
+        #define LPI2C_CHARACTERISTICS  (0 | LPI2C_MCR_DBGEN)             // define whether the LPI2C controller opertion is disabled in debug mode
     #endif
 #endif
 
@@ -7907,11 +7907,11 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
             #define SET_SPI_SD_INTERFACE_FULL_SPEED() SPI1_MCR |= SPI_MCR_HALT; SPI1_CTAR0 = (SPI_CTAR_FMSZ_8 | SPI_CTAR_CPOL | SPI_CTAR_CPHA | SPI_CTAR_BR_2); SPI1_MCR &= ~SPI_MCR_HALT;
             #if defined _WINDOWS
                 #define WRITE_SPI_CMD(byte)    SPI1_SR &= ~(SPI_SR_RFDF); SPI1_PUSHR = (byte | SPI_PUSHR_PCS_NONE | SPI_PUSHR_CTAS_CTAR0); SPI1_POPR = _fnSimSD_write((unsigned char)byte)
-                #define WAIT_TRANSMISSON_END() while (!(SPI1_SR & (SPI_SR_RFDF))) { SPI1_SR |= (SPI_SR_RFDF); }
+                #define WAIT_TRANSMISSON_END() while ((SPI1_SR & (SPI_SR_RFDF)) == 0) { SPI1_SR |= (SPI_SR_RFDF); }
                 #define READ_SPI_DATA()        (unsigned char)SPI1_POPR
             #else
                 #define WRITE_SPI_CMD(byte)    SPI1_SR = (SPI_SR_RFDF); SPI1_PUSHR = (byte | SPI_PUSHR_PCS_NONE | SPI_PUSHR_CTAS_CTAR0) // clear flags before transmitting (and receiving) a single byte
-                #define WAIT_TRANSMISSON_END() while (!(SPI1_SR & (SPI_SR_RFDF))) {}
+                #define WAIT_TRANSMISSON_END() while ((SPI1_SR & (SPI_SR_RFDF)) == 0) {}
                 #define READ_SPI_DATA()        (unsigned char)SPI1_POPR
             #endif
             #define SET_SD_DI_CS_HIGH()        _SETBITS(B, SPI1_CS0)     // force DI and CS lines high ready for the initialisation sequence
@@ -7950,11 +7950,11 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
             #define SET_SPI_SD_INTERFACE_FULL_SPEED() SPI2_MCR |= SPI_MCR_HALT; SPI2_CTAR0 = (SPI_CTAR_FMSZ_8 | SPI_CTAR_CPOL | SPI_CTAR_CPHA | SPI_CTAR_BR_2); SPI2_MCR &= ~SPI_MCR_HALT;
             #if defined _WINDOWS
                 #define WRITE_SPI_CMD(byte)   SPI2_SR &= ~(SPI_SR_RFDF); SPI2_PUSHR = (byte | SPI_PUSHR_PCS_NONE | SPI_PUSHR_CTAS_CTAR0); SPI2_POPR = _fnSimSD_write((unsigned char)byte)
-                #define WAIT_TRANSMISSON_END() while (!(SPI2_SR & (SPI_SR_RFDF))) { SPI2_SR |= (SPI_SR_RFDF); }
+                #define WAIT_TRANSMISSON_END() while ((SPI2_SR & (SPI_SR_RFDF)) == 0) { SPI2_SR |= (SPI_SR_RFDF); }
                 #define READ_SPI_DATA()       (unsigned char)SPI2_POPR
             #else
                 #define WRITE_SPI_CMD(byte)   SPI2_SR = (SPI_SR_RFDF); SPI2_PUSHR = (byte | SPI_PUSHR_PCS_NONE | SPI_PUSHR_CTAS_CTAR0) // clear flags before transmitting (and receiving) a single byte
-                #define WAIT_TRANSMISSON_END() while (!(SPI2_SR & (SPI_SR_RFDF))) {}
+                #define WAIT_TRANSMISSON_END() while ((SPI2_SR & (SPI_SR_RFDF)) == 0) {}
                 #define READ_SPI_DATA()       (unsigned char)SPI2_POPR
             #endif
             #define SET_SD_DI_CS_HIGH()       _SETBITS(D, SPI2_CS1)      // force DI and CS lines high ready for the initialisation sequence
@@ -7981,11 +7981,11 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define SET_SPI_SD_INTERFACE_FULL_SPEED() SPI2_MCR |= SPI_MCR_HALT; SPI2_CTAR0 = (SPI_CTAR_FMSZ_8 | SPI_CTAR_CPOL | SPI_CTAR_CPHA | SPI_CTAR_BR_2); SPI2_MCR &= ~SPI_MCR_HALT;
         #if defined _WINDOWS
             #define WRITE_SPI_CMD(byte)       SPI2_SR &= ~(SPI_SR_RFDF); SPI2_PUSHR = (byte | SPI_PUSHR_PCS_NONE | SPI_PUSHR_CTAS_CTAR0); SPI2_POPR = _fnSimSD_write((unsigned char)byte)
-            #define WAIT_TRANSMISSON_END()    while (!(SPI2_SR & (SPI_SR_RFDF))) { SPI2_SR |= (SPI_SR_RFDF); }
+            #define WAIT_TRANSMISSON_END()    while ((SPI2_SR & (SPI_SR_RFDF)) == 0) { SPI2_SR |= (SPI_SR_RFDF); }
             #define READ_SPI_DATA()           (unsigned char)SPI2_POPR
         #else
             #define WRITE_SPI_CMD(byte)       SPI2_SR = (SPI_SR_RFDF); SPI2_PUSHR = (byte | SPI_PUSHR_PCS_NONE | SPI_PUSHR_CTAS_CTAR0) // clear flags before transmitting (and receiving) a single byte
-            #define WAIT_TRANSMISSON_END()    while (!(SPI2_SR & (SPI_SR_RFDF))) {}
+            #define WAIT_TRANSMISSON_END()    while ((SPI2_SR & (SPI_SR_RFDF)) == 0) {}
             #define READ_SPI_DATA()           (unsigned char)SPI2_POPR
         #endif
         #define SET_SD_DI_CS_HIGH()           _SETBITS(B, SPI2_CS0)      // force DI and CS lines high ready for the initialisation sequence
@@ -8057,11 +8057,11 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
             #define SET_SPI_SD_INTERFACE_FULL_SPEED() SPI1_MCR |= SPI_MCR_HALT; SPI1_CTAR0 = (SPI_CTAR_FMSZ_8 | SPI_CTAR_CPOL | SPI_CTAR_CPHA | SPI_CTAR_BR_2); SPI1_MCR &= ~SPI_MCR_HALT;
             #if defined _WINDOWS
                 #define WRITE_SPI_CMD(byte)     SPI1_SR &= ~(SPI_SR_RFDF); SPI1_PUSHR = (byte | SPI_PUSHR_PCS_NONE | SPI_PUSHR_CTAS_CTAR0); SPI1_POPR = _fnSimSD_write((unsigned char)byte)
-                #define WAIT_TRANSMISSON_END() while (!(SPI1_SR & (SPI_SR_RFDF))) { SPI1_SR |= (SPI_SR_RFDF); }
+                #define WAIT_TRANSMISSON_END() while ((SPI1_SR & (SPI_SR_RFDF)) == 0) { SPI1_SR |= (SPI_SR_RFDF); }
                 #define READ_SPI_DATA()        (unsigned char)SPI1_POPR
             #else
                 #define WRITE_SPI_CMD(byte)    SPI1_SR = (SPI_SR_RFDF); SPI1_PUSHR = (byte | SPI_PUSHR_PCS_NONE | SPI_PUSHR_CTAS_CTAR0) // clear flags before transmitting (and receiving) a single byte
-                #define WAIT_TRANSMISSON_END() while (!(SPI1_SR & (SPI_SR_RFDF))) {}
+                #define WAIT_TRANSMISSON_END() while ((SPI1_SR & (SPI_SR_RFDF)) == 0) {}
                 #define READ_SPI_DATA()        (unsigned char)SPI1_POPR
             #endif
             #define SET_SD_DI_CS_HIGH()  _SETBITS(E, SPI_CS1_0)          // force DI and CS lines high ready for the initialisation sequence
@@ -8133,11 +8133,11 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
             #define SET_SPI_SD_INTERFACE_FULL_SPEED() SPI1_MCR |= SPI_MCR_HALT; SPI1_CTAR0 = (SPI_CTAR_FMSZ_8 | SPI_CTAR_CPOL | SPI_CTAR_CPHA | SPI_CTAR_BR_2); SPI1_MCR &= ~SPI_MCR_HALT;
             #if defined _WINDOWS
                 #define WRITE_SPI_CMD(byte)     SPI1_SR &= ~(SPI_SR_RFDF); SPI1_PUSHR = (byte | SPI_PUSHR_PCS_NONE | SPI_PUSHR_CTAS_CTAR0); SPI1_POPR = _fnSimSD_write((unsigned char)byte)
-                #define WAIT_TRANSMISSON_END() while (!(SPI1_SR & (SPI_SR_RFDF))) { SPI1_SR |= (SPI_SR_RFDF); }
+                #define WAIT_TRANSMISSON_END() while ((SPI1_SR & (SPI_SR_RFDF)) == 0) { SPI1_SR |= (SPI_SR_RFDF); }
                 #define READ_SPI_DATA()        (unsigned char)SPI1_POPR
             #else
                 #define WRITE_SPI_CMD(byte)    SPI1_SR = (SPI_SR_RFDF); SPI1_PUSHR = (byte | SPI_PUSHR_PCS_NONE | SPI_PUSHR_CTAS_CTAR0) // clear flags before transmitting (and receiving) a single byte
-                #define WAIT_TRANSMISSON_END() while (!(SPI1_SR & (SPI_SR_RFDF))) {}
+                #define WAIT_TRANSMISSON_END() while ((SPI1_SR & (SPI_SR_RFDF)) == 0) {}
                 #define READ_SPI_DATA()        (unsigned char)SPI1_POPR
             #endif
             #define SET_SD_DI_CS_HIGH()        _SETBITS(E, SPI_CS1_0)    // force DI and CS lines high ready for the initialisation sequence
@@ -8172,11 +8172,11 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define SET_SPI_SD_INTERFACE_FULL_SPEED() SPI0_BR = (SPI_BR_SPPR_PRE_1 | SPI_BR_SPR_DIV_2)
         #if defined _WINDOWS
             #define WRITE_SPI_CMD(byte)    SPI0_D = (byte); SPI0_D = _fnSimSD_write((unsigned char)byte)
-            #define WAIT_TRANSMISSON_END() while (!(SPI0_S & (SPI_S_SPRF))) { SPI0_S |= (SPI_S_SPRF); }
+            #define WAIT_TRANSMISSON_END() while ((SPI0_S & (SPI_S_SPRF)) == 0) { SPI0_S |= (SPI_S_SPRF); }
             #define READ_SPI_DATA()        (unsigned char)SPI0_D
         #else
             #define WRITE_SPI_CMD(byte)    SPI0_D = (byte)
-            #define WAIT_TRANSMISSON_END() while (!(SPI0_S & (SPI_S_SPRF))) {}
+            #define WAIT_TRANSMISSON_END() while ((SPI0_S & (SPI_S_SPRF)) == 0) {}
             #define READ_SPI_DATA()        (unsigned char)SPI0_D
         #endif
         #define SET_SD_DI_CS_HIGH()  _SETBITS(B, SPI_CS1_0)              // force DI and CS lines high ready for the initialisation sequence
@@ -8364,7 +8364,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
             #define READ_SPI_DATA()        (unsigned char)LPSPI0_RDR
         #else
             #define WRITE_SPI_CMD(byte)    LPSPI0_TDR = (byte)
-            #define WAIT_TRANSMISSON_END() wwhile ((LPSPI0_RSR & LPSPI_RSR_EMPTY) != 0) { }
+            #define WAIT_TRANSMISSON_END() while ((LPSPI0_RSR & LPSPI_RSR_EMPTY) != 0) { }
             #define READ_SPI_DATA()        (unsigned char)LPSPI0_RDR
         #endif
         #define SET_SD_DI_CS_HIGH()  _SETBITS(D, SPI_CS1_0)              // force DI and CS lines high ready for the initialisation sequence
@@ -8473,11 +8473,11 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define SET_SPI_SD_INTERFACE_FULL_SPEED() SPI1_BR = (SPI_BR_SPPR_PRE_1 | SPI_BR_SPR_DIV_2)
         #if defined _WINDOWS
             #define WRITE_SPI_CMD(byte)    SPI1_D = (byte); SPI1_D = _fnSimSD_write((unsigned char)byte)
-            #define WAIT_TRANSMISSON_END() while (!((unsigned char)SPI1_S & (SPI_S_SPRF))) { SPI1_S |= (SPI_S_SPRF); }
+            #define WAIT_TRANSMISSON_END() while (((unsigned char)SPI1_S & (SPI_S_SPRF)) == 0) { SPI1_S |= (SPI_S_SPRF); }
             #define READ_SPI_DATA()        (unsigned char)SPI1_D
         #else
             #define WRITE_SPI_CMD(byte)    SPI1_D = (byte)
-            #define WAIT_TRANSMISSON_END() while (!((unsigned char)SPI1_S & (SPI_S_SPRF))) {}
+            #define WAIT_TRANSMISSON_END() while (((unsigned char)SPI1_S & (SPI_S_SPRF)) == 0) {}
             #define READ_SPI_DATA()        (unsigned char)SPI1_D
         #endif
         #define SET_SD_DI_CS_HIGH()  _SETBITS(D, SPI_CS1_0)              // force DI and CS lines high ready for the initialisation sequence
@@ -8503,11 +8503,11 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define SET_SPI_SD_INTERFACE_FULL_SPEED() SPI0_MCR |= SPI_MCR_HALT; SPI0_CTAR0 = (SPI_CTAR_FMSZ_8 | SPI_CTAR_CPOL | SPI_CTAR_CPHA | SPI_CTAR_BR_2 | SPI_CTAR_DBR); SPI0_MCR &= ~SPI_MCR_HALT;
         #if defined _WINDOWS
             #define WRITE_SPI_CMD(byte)     SPI0_SR &= ~(SPI_SR_RFDF); SPI0_PUSHR = (byte | SPI_PUSHR_PCS_NONE | SPI_PUSHR_CTAS_CTAR0); SPI0_POPR = _fnSimSD_write((unsigned char)byte)
-            #define WAIT_TRANSMISSON_END() while (!(SPI0_SR & (SPI_SR_RFDF))) { SPI0_SR |= (SPI_SR_RFDF); }
+            #define WAIT_TRANSMISSON_END() while ((SPI0_SR & (SPI_SR_RFDF)) == 0) { SPI0_SR |= (SPI_SR_RFDF); }
             #define READ_SPI_DATA()        (unsigned char)SPI0_POPR
         #else
             #define WRITE_SPI_CMD(byte)    SPI0_SR = (SPI_SR_RFDF); SPI0_PUSHR = (byte | SPI_PUSHR_PCS_NONE | SPI_PUSHR_CTAS_CTAR0) // clear flags before transmitting (and receiving) a single byte
-            #define WAIT_TRANSMISSON_END() while (!(SPI0_SR & (SPI_SR_RFDF))) {}
+            #define WAIT_TRANSMISSON_END() while ((SPI0_SR & (SPI_SR_RFDF)) == 0) {}
             #define READ_SPI_DATA()        (unsigned char)SPI0_POPR
         #endif
         #define SET_SD_DI_CS_HIGH()  _SETBITS(C, SPI_CS1_0)              // force DI and CS lines high ready for the initialisation sequence

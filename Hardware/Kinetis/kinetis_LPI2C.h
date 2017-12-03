@@ -48,7 +48,7 @@ static unsigned char ucCheckTxI2C = 0;                                   // {2}
 /* =================================================================== */
 
 
-#define MAX_EVENTS 200                                                   // comment this in to enable event logging (mainly used to determine behaviour in double-buffered mode in order to find workarounds for silicon issues)
+//#define MAX_EVENTS 200                                                 // comment this in to enable event logging (mainly used to determine behaviour in double-buffered mode in order to find workarounds for silicon issues)
 #if defined MAX_EVENTS
 unsigned long ulTemp[MAX_EVENTS] = {0};
 int iEventCounter = 0;
@@ -141,11 +141,13 @@ static void fnI2C_Handler(KINETIS_LPI2C_CONTROL *ptrLPI2C, int iChannel) // gene
     if ((ptrTxControl->ucState & RX_ACTIVE) != 0) {                      // if the master is reading from a slave
         I2CQue *ptrRxControl = I2C_rx_control[iChannel];
         fnLogEvent('R', ptrLPI2C->LPI2C_MSR);
-        if ((ptrLPI2C->LPI2C_MTDR & LPI2C_MTDR_CMD_START_DATA) != 0) {   // the address transmission has completed
+        if ((ptrTxControl->ucState & TX_ACTIVE) != 0) {                  // the address transmission has completed
             fnLogEvent('A', ptrLPI2C->LPI2C_MRDR);
             (void)(ptrLPI2C->LPI2C_MRDR);                                // dummy read to clear address
+            ptrLPI2C->LPI2C_MCR = (LPI2C_MCR_RTF | LPI2C_MCR_MEN | LPI2C_CHARACTERISTICS); // ensure receive FIFO is reset
             ptrLPI2C->LPI2C_MTDR = (LPI2C_MTDR_CMD_RX_DATA | (ptrTxControl->ucPresentLen - 1)); // command the read sequence
             ptrLPI2C->LPI2C_MIER = LPI2C_MIER_RDIE;                      // enable interrupt on reception available and disable transmission interrupt
+            ptrTxControl->ucState = (RX_ACTIVE);                         // signal that the address has been sent and we are now receiving
 #if defined _WINDOWS
             ptrLPI2C->LPI2C_MSR |= LPI2C_MSR_RDF;
             iInts |= (I2C_INT0 << iChannel);
@@ -153,13 +155,13 @@ static void fnI2C_Handler(KINETIS_LPI2C_CONTROL *ptrLPI2C, int iChannel) // gene
         }
         else {                                                           // reception character available
 #if defined _WINDOWS
-            if ((ptrLPI2C->LPI2C_MTDR & LPI2C_MTDR_DATA_MASK) != 0) {
+            if ((ptrLPI2C->LPI2C_MTDR & LPI2C_MTDR_DATA_MASK) != 0) {    // this is a write-only register but the simulator uses it to count down the number or reception bytes that was set
                 ptrLPI2C->LPI2C_MTDR--;
                 ptrLPI2C->LPI2C_MSR |= LPI2C_MSR_RDF;
                 iInts |= (I2C_INT0 << iChannel);
             }
             else {
-                ptrLPI2C->LPI2C_MSR &= ~LPI2C_MSR_RDF;
+                ptrLPI2C->LPI2C_MSR &= ~LPI2C_MSR_RDF;                   // final reception was received so remove the reception ready flag
             }
             ptrLPI2C->LPI2C_MRDR = fnSimI2C_devices(I2C_RX_DATA, (unsigned char)(ptrLPI2C->LPI2C_MRDR));
 #endif
@@ -276,7 +278,7 @@ extern void fnTxI2C(I2CQue *ptI2CQue, QUEUE_HANDLE Channel)
         ptI2CQue->I2C_queue.get = ptI2CQue->I2C_queue.QUEbuffer;
     }
 
-    if ((ptI2CQue->ucState & TX_ACTIVE) != 0) {                          // restart since we are hanging a second telegram on to previous one
+    if ((ptI2CQue->ucState & (TX_ACTIVE | RX_ACTIVE)) != 0) {            // restart since we are hanging a second telegram on to previous one
         fnLogEvent('*', ptrLPI2C->LPI2C_MSR);
 #if 0
         ptrLPI2C->I2C_C1 = (I2C_IEN | I2C_IIEN | I2C_MSTA | I2C_MTX | I2C_RSTA); // repeated start
@@ -333,6 +335,7 @@ static void fnSendSlaveAddress(I2CQue *ptI2CQue, QUEUE_HANDLE Channel, KINETIS_L
         }
     }
     else {
+        I2C_tx_control[Channel]->ucState &= ~(RX_ACTIVE);
         I2C_tx_control[Channel]->ucState |= (TX_ACTIVE);                 // writing to the slave
         ptI2CQue->I2C_queue.chars -= (ptI2CQue->ucPresentLen + 1);       // the remaining queue content
         fnLogEvent('h', (unsigned char)(ptI2CQue->I2C_queue.chars));
@@ -838,8 +841,13 @@ extern void fnConfigI2C(I2CTABLE *pars)
     }
     ptrLPI2C->LPI2C_MCR = (LPI2C_CHARACTERISTICS);                       // take the LPI2C controller out of reset
     if (pars->usSpeed != 0) {
-        ptrLPI2C->LPI2C_MCFGR1 = (LPI2C_MCFG1_PRESCALE_128 | LPI2C_MCFG1_PINCFG_2_OPEN); // set the clock prescaler and normal I2C mode (2-line with open drain)
-        ptrLPI2C->LPI2C_MCCR0 = (LPI2C_MCCR0_CLKLO_MASK | LPI2C_MCCR0_CLKHI_MASK | LPI2C_MCCR0_SETHOLD_MASK | LPI2C_MCCR0_DATAVD_MASK); // try max timing
+       // ptrLPI2C->LPI2C_MCFGR1 = (LPI2C_MCFG1_PRESCALE_128 | LPI2C_MCFG1_PINCFG_2_OPEN); // set the clock prescaler and normal I2C mode (2-line with open drain)
+       // ptrLPI2C->LPI2C_MCCR0 = (LPI2C_MCCR0_CLKLO_MASK | LPI2C_MCCR0_CLKHI_MASK | LPI2C_MCCR0_SETHOLD_MASK | LPI2C_MCCR0_DATAVD_MASK); // try max timing
+
+        ptrLPI2C->LPI2C_MCFGR1 = (3 | LPI2C_MCFG1_PINCFG_2_OPEN); // set the clock prescaler and normal I2C mode (2-line with open drain)
+        ptrLPI2C->LPI2C_MCCR0 = 0x09131326; // try max timing - 100kHz from 48MHz clock (calculation needs to be added!!!)
+
+
         ptrLPI2C->LPI2C_MCR = (LPI2C_MCR_MEN | LPI2C_CHARACTERISTICS);   // enable master mode of operation
     }
     else {

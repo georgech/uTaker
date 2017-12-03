@@ -457,11 +457,11 @@ extern int main(void)
         uTaskerStart((UTASKTABLEINIT *)prtInfo->ptTaskTable, prtInfo->ptNodesTable, PHYSICAL_QUEUES);
         while ((prtInfo = (MULTISTART_TABLE *)uTaskerSchedule()) == 0) {}// schedule uTasker
 
-    } FOREVER_LOOP;
+    } FOREVER_LOOP();
 #elif !defined _WINDOWS || defined RUN_IN_FREE_RTOS
   //fnInitialiseHeap(ctOurHeap, HEAP_START_ADDRESS);                     // initialise heap
     uTaskerStart((UTASKTABLEINIT *)ctTaskTable, ctNodes, PHYSICAL_QUEUES); // start the operating system (and TICK interrupt)
-    FOREVER_LOOP {
+    FOREVER_LOOP() {
         uTaskerSchedule();                                               // schedule uTasker
     }
 #endif
@@ -1674,7 +1674,7 @@ extern void fnResetBoard(void)
 {
     APPLICATION_INT_RESET_CTR_REG = (VECTKEY | SYSRESETREQ);             // request Cortex core reset, which will cause the software reset bit to be set in the mode controller for recognition after restart
 #if !defined _WINDOWS
-    FOREVER_LOOP {}
+    FOREVER_LOOP() {}
 #endif
 }
 
@@ -2158,7 +2158,7 @@ static void _LowLevelInit(void)
             break;
         }
         processor_ints++;
-    } FOREVER_LOOP;
+    } FOREVER_LOOP();
     #else
         #if defined NMI_IN_FLASH                                         // {123}
     ptrVect->ptrNMI           = irq_NMI;

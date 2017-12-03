@@ -7082,7 +7082,7 @@ extern void fnCheckUSBOut(int iDevice, int iEndpoint)
             iMasks |= USB_INT;
             return;
         }
-    } FOREVER_LOOP;
+    } FOREVER_LOOP();
 }
 
 // Request an endpoint buffer size

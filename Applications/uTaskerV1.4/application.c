@@ -2252,7 +2252,7 @@ static unsigned long fnGetDataFileLength(const unsigned char *ptrRawData, unsign
     unsigned short *ptrData = (unsigned short *)ptrRawData;
     signed short sValue;
     unsigned long ulFileContentLength = 0;
-    FOREVER_LOOP {                                                       // identify the raw data size in data file
+    FOREVER_LOOP() {                                                     // identify the raw data size in data file
         fnGetParsFile((unsigned char *)ptrData, (unsigned char *)&sValue, sizeof(sValue));
         if (sValue == -1) {
             break;                                                       // 0xffff considered as empty data location so quit counting size
@@ -2768,7 +2768,7 @@ extern void fnUserHWInit(void)
     if (fnRAM_test(0, (SIZE_OF_RAM/RAM_BLOCK_SIZE)) != (unsigned long *)0xffffffff) { // test code of a complete RAM area
         // The return address was the address in RAM that failed
         //
-        FOREVER_LOOP {}                                                  // serious error found in RAM - stop here
+        FOREVER_LOOP() {}                                                // serious error found in RAM - stop here
     }
 #endif
 #if defined nRF24L01_INTERFACE

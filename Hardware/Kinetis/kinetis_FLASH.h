@@ -930,7 +930,7 @@ extern int fnEraseFlashSector(unsigned char *ptrSector, MAX_FILE_LENGTH Length)
             break;
         }
         Length -= AccessDetails.BlockLength;
-    } FOREVER_LOOP;
+    } FOREVER_LOOP();
     #else                                                                // case when only internal Flash is available
         #if (defined FLASH_CONTROLLER_FTMRE && (defined SIZE_OF_EEPROM && SIZE_OF_EEPROM > 0)) // {109}
     if (ptrSector >= (unsigned char *)(SIZE_OF_FLASH)) {                 // is the sector in EEPROM
@@ -953,7 +953,7 @@ extern int fnEraseFlashSector(unsigned char *ptrSector, MAX_FILE_LENGTH Length)
         }
         ptrSector += _FLASH_GRANULARITY;                                 // advance sector point to next internal flash sector
         Length -= _FLASH_GRANULARITY;
-    } FOREVER_LOOP;
+    } FOREVER_LOOP();
     #endif
     return 0;
 }
@@ -1089,7 +1089,7 @@ extern int fnSwapMemory(int iCheck)
 {
     #define FLASH_SWAP_INDICATOR_ADDRESS    ((FLASH_START_ADDRESS + (SIZE_OF_FLASH/2)) - 32) // final sector in the first half of flash memory used as flash swap indicator
     unsigned long ulCommand;
-    FOREVER_LOOP {
+    FOREVER_LOOP() {
         ulCommand = ((SWAP_CONTROL_CODE_REPORT_SWAP_STATUS << 24) | 0x00ffffff); // note that the unused bytes in the command are set to 0xff so that it is clear whether they are changed by the operation (failed operations may otherwise not be detectable)
         if (fnFlashNow(FCMD_SWAP, (unsigned long *)FLASH_SWAP_INDICATOR_ADDRESS, &ulCommand) != 0) { // get the swap state
             return SWAP_COMMAND_FAILURE;                                 // error

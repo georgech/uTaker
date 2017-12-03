@@ -1156,7 +1156,7 @@ extern int fnConfigEthernet(ETHTABLE *pars)
         else {
             break;                                                       // the present PHY address has resulted in a match so use this address
         }
-    } FOREVER_LOOP;
+    } FOREVER_LOOP();
     #endif
 
     if ((usRxSize & 0x0f) != 0) {                                        // ensure size is suitable (divisible by 16)

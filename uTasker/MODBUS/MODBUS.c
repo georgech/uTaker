@@ -4014,7 +4014,7 @@ extern int fnMODBUS_route(int iType, MODBUS_RX_FUNCTION *modbus_rx_function, MOD
     case TCP_ROUTE_FROM_SLAVE:
         {
             MODBUS_TCP_FRAME *ptrMODBUS_frame = modbus_rx_function->modbus_session->ptrMODBUS_input_frame;
-            FOREVER_LOOP {
+            FOREVER_LOOP() {
                 if (routing_table->ucNextRange >= ptrMODBUS_frame->modbus_header.ucUnitIdentifier) {
                     unsigned short usTransfer;
                     if (routing_table->ucMODBUSPort == 0xff) {           // ignore range
@@ -4090,7 +4090,7 @@ extern int fnMODBUS_route(int iType, MODBUS_RX_FUNCTION *modbus_rx_function, MOD
     #if defined MODBUS_SERIAL_INTERFACES
     case SERIAL_ROUTE_FROM_SLAVE:
         {
-            FOREVER_LOOP {
+            FOREVER_LOOP() {
                 if (routing_table->ucNextRange >= modbus_rx_function->ucSourceAddress) {
                     if (routing_table->ucMODBUSPort == 0xff) {           // ignore range
                         break;

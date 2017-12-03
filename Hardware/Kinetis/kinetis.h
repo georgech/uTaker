@@ -3393,7 +3393,7 @@ typedef struct stVECTOR_TABLE
         #define LPI2C1_BLOCK                   ((unsigned char *)(&kinetis.LPI2C[1])) // LPI2C1
     #endif
     #if LPI2C_AVAILABLE > 2
-        #define LPI2C2_BLOCK                   ((unsigned char *)(&kinetis.LPI2C[2])) // LPI2C1
+        #define LPI2C2_BLOCK                   ((unsigned char *)(&kinetis.LPI2C[2])) // LPI2C2
     #endif
     #if LPUARTS_AVAILABLE > 0
         #define LPUART0_BLOCK                  ((unsigned char *)(&kinetis.LPUART[0])) // LPUART0
@@ -3720,6 +3720,15 @@ typedef struct stVECTOR_TABLE
     #endif
     #if (I2C_AVAILABLE + LPI2C_AVAILABLE) > 3
         #define I2C3_BLOCK                     0x400e7000                // I2C3
+    #endif
+    #if LPI2C_AVAILABLE > 0
+        #define LPI2C0_BLOCK                   0x400c0000                // LPI2C0
+    #endif
+    #if LPI2C_AVAILABLE > 1
+        #define LPI2C1_BLOCK                   0x400c1000                // LPI2C1
+    #endif
+    #if LPI2C_AVAILABLE > 2
+        #define LPI2C2_BLOCK                   0x40042000                // LPI2C1
     #endif
     #if LPUARTS_AVAILABLE > 0
         #if defined KINETIS_KE15

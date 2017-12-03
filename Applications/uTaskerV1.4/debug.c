@@ -4902,7 +4902,7 @@ static int fnDoDisk(unsigned char ucType, CHAR *ptrInput)
             else {
                 iFATstalled = 0;
             }
-            FOREVER_LOOP {
+            FOREVER_LOOP() {
 #if defined UTFAT_UNDELETE || defined UTFAT_EXPERT_FUNCTIONS
                 if (fnWrite(DebugHandle, 0, (sizeof(cBuffer) + 3)) == 0) // check whether there is enough space in the output buffer to accept the next entry 
 #else
@@ -5061,7 +5061,7 @@ static int fnDoDisk(unsigned char ucType, CHAR *ptrInput)
                     if (utFile.usLastReadWriteLength < sizeof(ucTemp)) { // complete file content has been read
                         break;
                     }
-                } FOREVER_LOOP;
+                } FOREVER_LOOP();
                 fnDebugMsg("\r\n");
                 utCloseFile(&utFile);
             }
@@ -6079,7 +6079,7 @@ static unsigned char fnGetID_Data(int iActions, CHAR *ptrInput, unsigned char *u
     unsigned char ucLength = 0;
     unsigned char ucBlockLength = 0;
     unsigned char ucTemp;
-    FOREVER_LOOP {                                                          // extract first an optional ID from 0 -- 7ff or extended from 0 -- 1fffffff, followed by data
+    FOREVER_LOOP() {                                                     // extract first an optional ID from 0 -- 7ff or extended from 0 -- 1fffffff, followed by data
         while ((*ptrInput != ' ') && (*ptrInput != 0)) {
             ulID <<= 4;
             ucTemp = (*ptrInput - '0');

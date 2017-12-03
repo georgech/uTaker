@@ -247,7 +247,7 @@ extern int fnSubscribeMQTT(CHAR *ptrInput, unsigned char ucQoS)
         return ERROR_MQTT_NOT_READY;
     }
     
-    FOREVER_LOOP {
+    FOREVER_LOOP() {
         if (subscriptions[iSubscriptionRef].ucSubscriptionReference == 0) { // empty subscription found
             break;                                                       // use this entry
         }
@@ -273,7 +273,7 @@ extern int fnSubscribeMQTT(CHAR *ptrInput, unsigned char ucQoS)
 extern int fnUnsubscribeMQTT(unsigned char ucSubscriptionRef)
 {
     int iSubscriptionRef = 0;
-    FOREVER_LOOP {
+    FOREVER_LOOP() {
         if (subscriptions[iSubscriptionRef].ucSubscriptionReference == ucSubscriptionRef) { // subscription found
             break;                                                       // use this entry
         }
@@ -300,7 +300,7 @@ extern int fnPublishMQTT(unsigned char ucTopicReference, unsigned char ucQoS)
         return ERROR_MQTT_NOT_READY;
     }
     
-    FOREVER_LOOP {
+    FOREVER_LOOP() {
         if ((ucTopicReference != 0) && (subscriptions[iSubscriptionRef].ucSubscriptionReference == ucTopicReference)) { // subscription found
             ucPublishQoS = subscriptions[iSubscriptionRef].ucSubscriptionQoS; // inherit the QoS from the subscription
             ucPublishInProgress = ucTopicReference;
@@ -680,7 +680,7 @@ static int fnHandleData(unsigned char *ptrData, unsigned short usDataLength)
                 int iMultiplier = 1;
                 unsigned short usTopicLength;
                 unsigned char ucEncodedByte;
-                FOREVER_LOOP {
+                FOREVER_LOOP() {
                     ucEncodedByte = *ptrData++;
                     ulLength += ((ucEncodedByte & 0x7f) * iMultiplier);
                     if ((ucEncodedByte & 0x80) == 0) {
@@ -699,7 +699,7 @@ static int fnHandleData(unsigned char *ptrData, unsigned short usDataLength)
                     return ERROR_MQTT_NOT_READY;
                 }
 
-                FOREVER_LOOP{
+                FOREVER_LOOP() {
                     if (subscriptions[iSubscriptionRef].ucSubscriptionReference != 0) {
                         if (uMemcmp(subscriptions[iSubscriptionRef].cSubscriptionTopic, ptrData, usTopicLength) == 0) {
                             break;                                                   // use this entry

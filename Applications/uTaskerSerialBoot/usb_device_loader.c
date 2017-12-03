@@ -2876,7 +2876,7 @@ static int fnIsInClusterChain(unsigned char ucDisk, unsigned long ulSectorNumber
         if (ulInvisibleClusterChain == FAT12_CLUSTER_MASK) {             // end of chain reached
             return 1;
         }
-    } while (1);
+    } FOREVER_LOOP();
 }
 
     #if !defined USB_MSD_REJECTS_BINARY_FILES

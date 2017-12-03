@@ -843,7 +843,7 @@ static void acc_data_ready(void)
                 acc_data_ready();                                        // start an initial read
             }
     #else
-          //fnWrite(I2CPortID, (unsigned char *)ucSetAccelerometerRead, sizeof(ucSetAccelerometerRead)); // write the register address to read (it is not necessary to set the address pointer since it operates in overflow mode)
+          //fnWrite(I2CPortID, (unsigned char *)ucSetAccelerometerRead, sizeof(ucSetAccelerometerRead)); // write the register address to read (it is not necessary to set the address pointer since the accelerometer operates in overflow mode)
             fnRead(I2CPortID, (unsigned char *)ucReadAccelerometerState, 0); // start the read process of the next status
     #endif
         }

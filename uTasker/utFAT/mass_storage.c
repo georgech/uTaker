@@ -1221,7 +1221,7 @@ static int fnCheckSwapArea(int iDiskNumber)
             ptrUsedSectors[iDiskNumber][iPageIndex] |= ucPageMask;       // mark that the physical FAT sector is in use
         }
     }
-    FOREVER_LOOP {                                                       // now scan through the list of change notices
+    FOREVER_LOOP() {                                                     // now scan through the list of change notices
         fnGetParsFile(ptrManagementContent, (unsigned char *)&changeNotice, sizeof(changeNotice)); // read the next change notice
         if (changeNotice.ucChangeType == CHANGE_TYPE_NEW_MAP_ENTRY) {
             ulPhysicalSectorNumber = ptrRemapArray[iDiskNumber][changeNotice.changedSector];
@@ -4369,7 +4369,7 @@ static int _utOpenDirectory(OPEN_FILE_BLOCK *ptrOpenBlock, UTDIRECTORY *ptrDirOb
     DeletedFile.directory_location.ulSector = 0;                         // {11} initially invalid
 #endif
 
-    FOREVER_LOOP {                                                       // search through the directory to find the file/directory entry
+    FOREVER_LOOP() {                                                     // search through the directory to find the file/directory entry
 #if defined UTFAT_LFN_READ
         ptrOpenBlock->ptrFileNameStart = ptrLocalDirPath;                // set a pointer to the name being searched for
 #endif
@@ -4609,7 +4609,7 @@ static int _utOpenDirectory(OPEN_FILE_BLOCK *ptrOpenBlock, UTDIRECTORY *ptrDirOb
                     return UTFAT_PATH_NOT_FOUND;
                 }
             }
-        } FOREVER_LOOP;
+        } FOREVER_LOOP();
     }
 }
 
@@ -5202,11 +5202,11 @@ static unsigned long fnAllocateCluster(UTDISK *ptr_utDisk, unsigned long ulPrese
     #endif
     ulFatOriginal = ulFAT;                                               // remember the starting locations
     iOriginalCluster = iClusterEntry;
-    FOREVER_LOOP {
+    FOREVER_LOOP() {
         if ((_utReadDiskSector[ucDriveNumber](ptr_utDisk, ulFAT, ulSectorContent)) != UTFAT_SUCCESS) { // read a FAT sector containing the (start of) cluster information
             return (unsigned long)UTFAT_DISK_READ_ERROR;
         }
-        FOREVER_LOOP {
+        FOREVER_LOOP() {
     #if defined UTFAT16 || defined UTFAT12
             if (ptr_utDisk->usDiskFlags & (DISK_FORMAT_FAT12)) {
         #if defined UTFAT12
@@ -5398,7 +5398,7 @@ static int fnCreateNameParagraph(const CHAR **pptrDirectoryPath, CHAR cDirectory
 
     uMemset(cDirectoryName, ' ', 11);                                    // start with blank short file name
     cDirectoryName[11] = NT_FLAG;
-    FOREVER_LOOP {
+    FOREVER_LOOP() {
         cInputCharacter = *(*pptrDirectoryPath)++;
         switch (cInputCharacter) {
         case '.':
@@ -5493,7 +5493,7 @@ static int fnCreateNameParagraph(const CHAR **pptrDirectoryPath, CHAR cDirectory
         if (iLength >= 8) {
             if ((iSeparatorFound == 0) || (iLength >= 11)) {             // name part or extension is too long
     #if defined UTFAT_LFN_READ || (defined FAT_EMULATION && defined FAT_EMULATION_LFN)
-                FOREVER_LOOP {
+                FOREVER_LOOP() {
                     switch (*(*pptrDirectoryPath)++) {                   // search the end of the long file name paragraph
                     case 0x0d:                                           // end of line considered fully qualified terminator (for FTP compatibility)
                     case 0x0a:
@@ -5706,7 +5706,7 @@ static int fnInsertLFN_name(OPEN_FILE_BLOCK *ptr_openBlock, UTFILE *ptr_utFile, 
     #endif
     ucEntryLength |= 0x40;                                               // mark first entry
     i = -1;
-    FOREVER_LOOP{                                                        // for each character in the LFN
+    FOREVER_LOOP() {                                                     // for each character in the LFN
         if (iNameLength >= 13) {                                         // pad end when the LFN doesn't fill an entry
             ucNextCharacter = *ptrReverseLFN;
             ucNextCharacterExtension = 0;                                // only english character set supported
@@ -6049,7 +6049,7 @@ _show_data:
         if (fnNextDirectoryEntry(ptr_utDisk, &dirLocation) == UTFAT_DIRECTORY_AREA_EXHAUSTED) { // move to the next entry
             return UTFAT_DIRECTORY_AREA_EXHAUSTED;
         }
-    } FOREVER_LOOP;
+    } FOREVER_LOOP();
     return UTFAT_SUCCESS;
 }
 
@@ -6326,7 +6326,7 @@ static int fnDeleteLFN_entry(UTFILE *ptr_utFile)
         return UTFAT_SUCCESS;
     }
     uMemcpy(&FileLocation, &(ptr_utFile->lfn_file_location), sizeof(DISK_LOCATION)); // make a copy of the long file name entry details
-    FOREVER_LOOP {
+    FOREVER_LOOP() {
         ptr_utDisk->usDiskFlags |= WRITEBACK_BUFFER_FLAG;                // mark that the modified sector content must be committed each time the sector is changed
         if (fnLoadSector(ptr_utDisk, FileLocation.directory_location.ulSector) != UTFAT_SUCCESS) { // load sector where the LFN begins
             return UTFAT_DISK_READ_ERROR;
@@ -6796,7 +6796,7 @@ static int fnDeleteClusterChain(unsigned long ulClusterStart, unsigned char ucDr
     if ((_utReadDiskSector[ucDrive](ptr_utDisk, ulClusterSector, ulSectorContent)) != UTFAT_SUCCESS) { // read a FAT sector containing the cluster information
         return UTFAT_DISK_READ_ERROR;
     }
-    FOREVER_LOOP {
+    FOREVER_LOOP() {
     #if defined UTFAT16 || defined UTFAT12
         if (ptr_utDisk->usDiskFlags & (DISK_FORMAT_FAT12 | DISK_FORMAT_FAT16)) {
             ulNextCluster = LITTLE_LONG_WORD(ulSectorContent[ucClusterEntry/2]);
@@ -6972,7 +6972,7 @@ static int _utDeleteFile(const CHAR *ptrFilePath, UTDIRECTORY *ptrDirObject, int
             if (fnNextDirectoryEntry(ptr_utDisk, ptrDirContent) == UTFAT_DIRECTORY_AREA_EXHAUSTED) { // move to the next entry
                 return UTFAT_DIRECTORY_AREA_EXHAUSTED;
             }
-        } FOREVER_LOOP;
+        } FOREVER_LOOP();
         ptrDirObject->usDirectoryFlags |= (UTDIR_TEST_REL_PATH | UTDIR_DIR_AS_FILE); // handle a directory as a file so that it can also be deleted if found
         iResult = _utOpenFile(ptrFilePath, &utFile, UTFAT_OPEN_FOR_DELETE);
         if (iResult == UTFAT_SUCCESS) {
