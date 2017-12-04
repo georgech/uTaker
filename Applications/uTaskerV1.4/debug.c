@@ -178,9 +178,6 @@
 #endif
 
 #if defined USE_MAINTENANCE
-#if defined MMDVSQ_AVAILABLE && defined _WINDOWS
-    #include <math.h>
-#endif
     #define OWN_TASK                TASK_DEBUG
 
     #define TCP_SERVER_TEST         5
@@ -1114,7 +1111,7 @@ static const DEBUG_COMMAND tAdvancedCommand[] = {                        // {84}
 #endif
 #if defined MMDVSQ_AVAILABLE                                             // {88}
     { "sqrt",             "Square root [<0xHEX><dec>]",            DO_HARDWARE,      DO_SQRT },
-    { "div",              "Divide (signed) [<0xHEX><dec>] / [<0xHEX><dec>]", DO_HARDWARE,     DO_DIV },
+    { "div",              "Divide (signed) [<0xHEX><dec>] / [<0xHEX><dec>]", DO_HARDWARE, DO_DIV },
 #endif
     {"quit",              "Leave command mode",                    DO_TELNET,        DO_TELNET_QUIT },
 };
@@ -3917,13 +3914,9 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
                   iInput++;
                   if (DO_SQRT == ucType) {
                       fnDebugMsg("SQRT = ");
-                      MMDVSQ0_RCND = ulInput[0];
-                      while ((MMDVSQ0_CSR & MMDVSQ0_CSR_BUSY) != 0) {
-                      }
-    #if defined _WINDOWS
-                      MMDVSQ0_RES = (unsigned long)sqrt(MMDVSQ0_RCND);
-    #endif
-                      ulInput[0] = MMDVSQ0_RES;                          // result of the square root calculation
+                      TOGGLE_TEST_OUTPUT();
+                      ulInput[0] = fnIntegerSQRT(ulInput[0]);            // perform integer square root calculation
+                      TOGGLE_TEST_OUTPUT();
                       iInput = 1;
                       break;
                   }
@@ -3943,24 +3936,16 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
                       if (iInput == 1) {
                           fnDebugMsg("Quotient = ");
                           ulDividend = ulInput[0];                       // save for second use later
-                          MMDVSQ0_CSR = (MMDVSQ0_CSR_REM_QUOTIENT | MMDVSQ0_CSR_USGN_SIGNED); // perform signed division and request the quotient (fast mode is enabled so we don't need to command a start)
+                          TOGGLE_TEST_OUTPUT();
+                          ulInput[0] = fnFastSignedIntegerDivide(ulDividend, ulInput[1]); // perform fast signed division
+                          TOGGLE_TEST_OUTPUT();
                       }
                       else {
                           fnDebugMsg("\r\nRemainder = ");
-                          ulInput[0] = ulDividend;                       // restore for second calculation
-                          MMDVSQ0_CSR = (MMDVSQ0_CSR_REM_REMAINDER | MMDVSQ0_CSR_USGN_SIGNED); // perform signed division and request the remainder (fast mode is enabled so we don't need to command a start)
+                          TOGGLE_TEST_OUTPUT();
+                          ulInput[0] = fnFastSignedModulo(ulDividend, ulInput[1]); // perform fast unsigned modulo calculation
+                          TOGGLE_TEST_OUTPUT();
                       }
-                      MMDVSQ0_DEND = ulInput[0];
-                      MMDVSQ0_DSOR = ulInput[1];
-                      while ((MMDVSQ0_CSR & MMDVSQ0_CSR_BUSY) != 0) {    // wait until the calculation has completed
-                      }
-    #if defined _WINDOWS
-                      MMDVSQ0_RES = (MMDVSQ0_DEND / MMDVSQ0_DSOR);
-                      if ((MMDVSQ0_CSR & MMDVSQ0_CSR_REM_REMAINDER) != 0) {
-                          MMDVSQ0_RES = (MMDVSQ0_DEND - (MMDVSQ0_RES * MMDVSQ0_DSOR));
-                      }
-    #endif
-                      ulInput[0] = MMDVSQ0_RES;                          // result of the square root calculation
                   }
                   fnDebugDec(ulInput[0], DISPLAY_NEGATIVE);
                   fnDebugMsg(" [");

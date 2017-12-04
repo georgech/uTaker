@@ -1562,7 +1562,7 @@ typedef struct stRESET_VECTOR
     #define TSTMR_AVAILABLE
 #endif
 
-// Memory-Mapped Divide and Square Root
+// Memory-Mapped Divide and Square Root                                  see https://community.nxp.com/thread/465273?sr=stream
 //
 #if defined KINETIS_KL28
     #define MMDVSQ_AVAILABLE

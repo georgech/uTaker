@@ -63,6 +63,7 @@
     05.09.2017 Add watchdog interrupt (needs WDOG_STCTRLH_IRQRSTEN or WDOG_CS1_INT set in the watchdog configuration) {129}
     12.09.2017 Added INTMUX support                                      {130}
     29.11.2017 Add fnMaskInterrupt()                                     {131}
+    04.12.2017 Add MMDVSQ                                                {132}
 
 */
 
@@ -77,6 +78,9 @@
     extern void fec_txf_isr(void);
     extern void fnSimulateDMA(int channel);
     #define START_CODE 0
+    #if defined MMDVSQ_AVAILABLE                                         // {132}
+        #include <math.h>
+    #endif
 #else
     #define OPSYS_CONFIG                                                 // this module owns the operating system configuration
     #define INITHW  static
@@ -1175,8 +1179,8 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void (*
 #endif
     ptrPriority += iInterruptID;                                         // move to the priority location used by this interrupt
     *ptrPriority = (ucPriority << __NVIC_PRIORITY_SHIFT);                // {48} define the interrupt's priority (16 levels for K and 4 levels for KE/KL)
-    ptrIntSet += (iInterruptID/32);                                      // move to the interrupt enable register in which this interrupt is controlled
-    *ptrIntSet = (0x01 << (iInterruptID%32));                            // enable the interrupt
+    ptrIntSet += (iInterruptID / 32);                                    // move to the interrupt enable register in which this interrupt is controlled
+    *ptrIntSet = (0x01 << (iInterruptID % 32));                          // enable the interrupt
 #if defined _WINDOWS
     IRQ0_31_SER  |= ulState0;                                            // synchronise the interrupt masks
     IRQ32_63_SER |= ulState1;
@@ -1560,6 +1564,161 @@ extern void fnRetriggerWatchdog(void)
 #undef _ADC_INTERRUPT_CODE
 #endif
 
+#if defined MMDVSQ_AVAILABLE                                             // {132}
+/* =================================================================== */
+/*                 Memory-Mapped Divide and Square Root                */
+/* =================================================================== */
+static volatile unsigned char ucMMDVSQ_in_use = 0;
+
+// Warning - do not use from interrupt if it could disturb use already in operation (not protected)
+//
+extern unsigned short fnIntegerSQRT(unsigned long ulInput)
+{
+    register volatile unsigned long ulResult;
+    MMDVSQ0_RCND = ulInput;                                              // write the radicand, which starts the calculation
+    while ((MMDVSQ0_CSR & MMDVSQ0_CSR_BUSY) != 0) {                      // wait until the result is ready
+    }
+    #if defined _WINDOWS
+    MMDVSQ0_RES = (unsigned long)sqrt(MMDVSQ0_RCND);                     // perfrom a traditional square root operation
+    #endif
+    ulResult = MMDVSQ0_RES;                                              // long word read is needed of the result of the square root calculation
+    return ((unsigned short)ulResult);                                   // return the short word result
+}
+
+// This is safe to be used in interrupt routines since it will not disturb an operation in progress
+//
+extern unsigned long fnFastUnsignedModulo(unsigned long ulValue, unsigned long ulMod)
+{
+    if (ucMMDVSQ_in_use != 0) {                                          // if the module is busy we use a traditional calculation
+        return (ulValue % ulMod);
+    }
+    else {
+        unsigned long ulModulo;
+        ucMMDVSQ_in_use = 1;                                             // protect the module from interrupts that may want to use it too
+        MMDVSQ0_CSR = (MMDVSQ0_CSR_REM_REMAINDER | MMDVSQ0_CSR_USGN_UNSIGNED); // perform unsigned division and request the remainder (fast mode is enabled so we don't need to command a start)
+        MMDVSQ0_DEND = ulValue;
+        MMDVSQ0_DSOR = ulMod;
+        while ((MMDVSQ0_CSR & MMDVSQ0_CSR_BUSY) != 0) {                  // wait until the calculation has completed
+        }
+    #if defined _WINDOWS
+        MMDVSQ0_RES = (MMDVSQ0_DEND / MMDVSQ0_DSOR);
+        MMDVSQ0_RES = (MMDVSQ0_DEND - (MMDVSQ0_RES * MMDVSQ0_DSOR));
+    #endif
+        ulModulo = MMDVSQ0_RES;                                          // remainder of the divide calculation
+        ucMMDVSQ_in_use = 0;                                             // module free to use again
+        return ulModulo;
+    }
+}
+
+// This is safe to be used in interrupt routines since it will not disturb an operation in progress
+//
+extern signed long fnFastSignedModulo(signed long slValue, signed long slMod)
+{
+    if (ucMMDVSQ_in_use != 0) {                                          // if the module is busy we use a traditional calculation
+        return (slValue % slMod);
+    }
+    else {
+        signed long slModulo;
+        ucMMDVSQ_in_use = 1;                                             // protect the module from interrupts that may want to use it too
+        MMDVSQ0_CSR = (MMDVSQ0_CSR_REM_REMAINDER | MMDVSQ0_CSR_USGN_SIGNED); // perform signed division and request the remainder (fast mode is enabled so we don't need to command a start)
+        MMDVSQ0_DEND = (signed long)slValue;
+        MMDVSQ0_DSOR = (signed long)slMod;
+        while ((MMDVSQ0_CSR & MMDVSQ0_CSR_BUSY) != 0) {                  // wait until the calculation has completed
+        }
+#if defined _WINDOWS
+        MMDVSQ0_RES = ((signed long)MMDVSQ0_DEND / (signed long)MMDVSQ0_DSOR);
+        MMDVSQ0_RES = (signed long)((signed long)MMDVSQ0_DEND - ((signed long)MMDVSQ0_RES * (signed long)MMDVSQ0_DSOR));
+#endif
+        slModulo = (signed long)MMDVSQ0_RES;                             // remainder of the divide calculation
+        ucMMDVSQ_in_use = 0;                                             // module free to use again
+        return slModulo;
+    }
+}
+
+// This is safe to be used in interrupt routines since it will not disturb an operation in progress
+//
+extern unsigned long fnFastUnsignedIntegerDivide(unsigned long ulDivide, unsigned long ulBy)
+{
+    if (ucMMDVSQ_in_use != 0) {                                          // if the module is busy we use a traditional calculation
+        return (ulDivide / ulBy);
+    }
+    else {
+        unsigned long ulResult;
+        ucMMDVSQ_in_use = 1;                                             // protect the module from interrupts that may want to use it too
+        MMDVSQ0_CSR = (MMDVSQ0_CSR_REM_QUOTIENT | MMDVSQ0_CSR_USGN_UNSIGNED); // perform unsigned division and request the quotient (fast mode is enabled so we don't need to command a start)
+        MMDVSQ0_DEND = ulDivide;
+        MMDVSQ0_DSOR = ulBy;
+        while ((MMDVSQ0_CSR & MMDVSQ0_CSR_BUSY) != 0) {                  // wait until the calculation has completed
+        }
+    #if defined _WINDOWS
+        MMDVSQ0_RES = (MMDVSQ0_DEND / MMDVSQ0_DSOR);
+    #endif
+        ulResult = MMDVSQ0_RES;                                          // result of the divide calculation
+        ucMMDVSQ_in_use = 0;                                             // module free to use again
+        return ulResult;
+    }
+}
+
+// This is safe to be used in interrupt routines since it will not disturb an operation in progress
+//
+extern signed long fnFastSignedIntegerDivide(signed long slDivide, signed long slBy)
+{
+    if (ucMMDVSQ_in_use != 0) {                                          // if the module is busy we use a traditional calculation
+        return (slDivide / slBy);
+    }
+    else {
+        signed long slResult;
+        ucMMDVSQ_in_use = 1;                                             // protect the module from interrupts that may want to use it too
+        MMDVSQ0_CSR = (MMDVSQ0_CSR_REM_QUOTIENT | MMDVSQ0_CSR_USGN_SIGNED); // perform signed division and request the quotient (fast mode is enabled so we don't need to command a start)
+        MMDVSQ0_DEND = (unsigned long)slDivide;
+        MMDVSQ0_DSOR = (unsigned long)slBy;
+        while ((MMDVSQ0_CSR & MMDVSQ0_CSR_BUSY) != 0) {                  // wait until the calculation has completed
+        }
+    #if defined _WINDOWS
+        MMDVSQ0_RES = ((signed long)MMDVSQ0_DEND / (signed long)MMDVSQ0_DSOR);
+    #endif
+        slResult = (signed long)MMDVSQ0_RES;                             // result of the divide calculation
+        ucMMDVSQ_in_use = 0;                                             // module free to use again
+        return slResult;
+    }
+}
+#else
+// If the command are used by processors that do not have co-processor for integer square root it will cause an exception when simulating
+//
+extern unsigned short fnIntegerSQRT(unsigned long ulInput)
+{
+    _EXCEPTION("Not supported on devices without co-processor!");
+    return 0;
+}
+
+// Traditional calculation for compatibility
+//
+extern unsigned long fnFastUnsignedModulo(unsigned long ulValue, unsigned long ulMod)
+{
+    return (ulValue % ulMod);
+}
+
+// Traditional calculation for compatibility
+//
+extern signed long fnFastSignedModulo(signed long slValue, signed long slMod)
+{
+    return (slValue % slMod);
+}
+
+// Traditional calculation for compatibility
+//
+extern unsigned long fnFastUnsignedIntegerDivide(unsigned long ulDivide, unsigned long ulBy)
+{
+    return (ulDivide / ulBy);
+}
+
+// Traditional calculation for compatibility
+//
+extern signed long fnFastSignedIntegerDivide(signed long slDivide, signed long slBy)
+{
+    return (slDivide / slBy);
+}
+#endif
 
 /* =================================================================== */
 /*                General Peripheral/Interrupt Interface               */

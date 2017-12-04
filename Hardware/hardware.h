@@ -74,6 +74,7 @@
     12.01.2016 Add fnSetFragmentMode()                                   {46}
     15.02.2016 Add fnDMA_BufferReset()                                   {47}
     31.01.2017 Add fnVirtualWakeupInterruptHandler()                     {48}
+    04.12.2017 Add special arithmetic                                    {49}
 
 */
 
@@ -269,6 +270,14 @@ extern void fnResetBoard(void);
 #if !defined start_application
     extern void start_application(unsigned long);                        // {15} assembler jump to application
 #endif
+
+// Special Arithmetic                                                    // {49}
+//
+extern unsigned short fnIntegerSQRT(unsigned long ulInput);
+extern unsigned long  fnFastUnsignedModulo(unsigned long ulValue, unsigned long ulMod);
+extern signed long    fnFastSignedModulo(signed long slValue, signed long slMod);
+extern unsigned long  fnFastUnsignedIntegerDivide(unsigned long ulDivide, unsigned long ulBy);
+extern signed long    fnFastSignedIntegerDivide(signed long slDivide, signed long slBy);
 
 // These functions can be called by hardware routines
 //

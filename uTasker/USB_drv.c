@@ -351,7 +351,7 @@ extern QUEUE_TRANSFER entry_usb(QUEUE_HANDLE channel, unsigned char *ptBuffer, Q
                     uDisable_Interrupt();                                // disable interrupts again for compatibility
                 }
                 else {                                                   // wrap results
-                    int iSpace = (remainingSpace%ptrUsbQueue->endpoint_control->usMax_frame_length); // the space at the end of the buffer that must be left unused
+                    int iSpace = (remainingSpace % ptrUsbQueue->endpoint_control->usMax_frame_length); // the space at the end of the buffer that must be left unused
                     int iRemainingCopy;
                     remainingSpace -= iSpace;                            // the length of the first block (divisible by the endpoint length)
                     iRemainingCopy = (Counter - remainingSpace);
