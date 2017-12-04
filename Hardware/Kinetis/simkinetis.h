@@ -51,6 +51,7 @@
     12.09.2017 Add INTMUX support                                        {36}
     26.09.2017 Add LPIT support                                          {37}
     04.11.2017 Add true random number generator registers                {38}
+    04.12.2017 Add LPI2C, MMDVSQ, TSTMR and RFSYS                        {39}
 
 */  
 
@@ -2645,7 +2646,7 @@ unsigned char I2C_SLTL;
 #endif
 
 #if defined LPI2C_AVAILABLE
-typedef struct stKINETIS_LPI2C
+typedef struct stKINETIS_LPI2C                                           // {39}
 {
     unsigned long  LPI2C_VERID;
     unsigned long  LPI2C_PARAM;
@@ -3238,6 +3239,40 @@ unsigned long CAU_CA5;
 } KINETIS_MMCAU;
 #endif
 
+#if defined RFSYS_AVAILABLE
+typedef struct stKINETIS_RFSYS                                           // {39}
+{
+    unsigned long RFSYS_REG0;
+    unsigned long RFSYS_REG1;
+    unsigned long RFSYS_REG2;
+    unsigned long RFSYS_REG3;
+    unsigned long RFSYS_REG4;
+    unsigned long RFSYS_REG5;
+    unsigned long RFSYS_REG6;
+    unsigned long RFSYS_REG7;
+} KINETIS_RFSYS;
+#endif
+
+#if defined TSTMR_AVAILABLE
+typedef struct stKINETIS_TSTMR                                           // {39}
+{
+    unsigned long TSTMR_L;
+    unsigned long TSTMR_H;
+} KINETIS_TSTMR;
+#endif
+
+#if defined MMDVSQ_AVAILABLE
+typedef struct stKINETIS_MMDVSQ                                          // {39}
+{
+    unsigned long MMDVSQ_DEND;
+    unsigned long MMDVSQ_DSOR;
+    unsigned long MMDVSQ_CSR;
+    unsigned long MMDVSQ_RES;
+    unsigned long MMDVSQ_RCND;
+} KINETIS_MMDVSQ;
+#endif
+
+
 typedef struct stKINETIS_CAN
 {
 unsigned long  CAN_MCR;
@@ -3690,7 +3725,7 @@ typedef struct stKINETIS_PERIPH
     KINETIS_I2C        I2C[I2C_AVAILABLE];
 #endif
 #if LPI2C_AVAILABLE > 0
-    KINETIS_LPI2C      LPI2C[LPI2C_AVAILABLE];
+    KINETIS_LPI2C      LPI2C[LPI2C_AVAILABLE];                           // {39}
 #endif
 #if UARTS_AVAILABLE > 0
     KINETIS_UART       UART[UARTS_AVAILABLE];
@@ -3751,9 +3786,16 @@ typedef struct stKINETIS_PERIPH
 #if defined CAU_V1_AVAILABLE || defined CAU_V2_AVAILABLE
     KINETIS_MMCAU      MMCAU;                                            // {17}
 #endif
-
+#if defined RFSYS_AVAILABLE
+    KINETIS_RFSYS      RFSYS;                                            // {39}
+#endif
+#if defined TSTMR_AVAILABLE
+    KINETIS_TSTMR      TSTMR;                                            // {39}
+#endif
+#if defined MMDVSQ_AVAILABLE
+    KINETIS_MMDVSQ     MMDVSQ;                                           // {39}
+#endif
     KINETIS_CORTEX_M4  CORTEX_M4;
-
     KINETIS_CORTEX_M4_REGS CORTEX_M4_REGS;                               // only for simulation use
 } KINETIS_PERIPH;
 

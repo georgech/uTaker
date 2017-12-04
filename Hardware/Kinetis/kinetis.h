@@ -124,6 +124,7 @@
     14.11.2017 New macro SELECT_PCC_PERIPHERAL_SOURCE()
     28.11.2017 DMA tigger source entries extended to 16 bits - 8 bits used for register configuration and higher bits for additional information
     31.01.2017 Add fnMaskInterrupt()                                     {105}
+    04.12.2017 Add LPI2C, MMDVSQ, TSTMR and RFSYS
 
 */
 
@@ -669,7 +670,7 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
             #else
                 #error Invalid FLL factor has been specified - valid are 640, 732, 1280, 1464, 1920, 2197, 2560 or 2929
             #endif
-            #define MCGOUTCLK  ((_EXTERNAL_CLOCK / FRDIVIDER) * FLL_FACTOR) // FLL clock output
+            #define MCGOUTCLK  ((_EXTERNAL_CLOCK/FRDIVIDER) * FLL_FACTOR)// FLL clock output
         #else
             #define MCGOUTCLK  ((_EXTERNAL_CLOCK/CLOCK_DIV) * CLOCK_MUL) // up to 100/120MHz (PLL0 clock output)
         #endif
@@ -1544,9 +1545,27 @@ typedef struct stRESET_VECTOR
 
 // SDRAM configuration
 //
-
 #if (defined KINETIS_K70 || defined KINETIS_K61)
     #define SDRAM_CONTROLLER_AVAILABLE
+#endif
+
+// System Register File configuration
+// - register area that is powered in all power mode, retains its contents during low-voltage detect events and is only reset during power-on reset
+//
+#if defined KINETIS_KL28
+    #define RFSYS_AVAILABLE
+#endif
+
+// Time Stamp Timer Module
+//
+#if defined KINETIS_KL28
+    #define TSTMR_AVAILABLE
+#endif
+
+// Memory-Mapped Divide and Square Root
+//
+#if defined KINETIS_KL28
+    #define MMDVSQ_AVAILABLE
 #endif
 
 // LLWU configuration
@@ -3499,14 +3518,24 @@ typedef struct stVECTOR_TABLE
     #if DAC_CONTROLLERS > 1
         #define DAC1_BASE_ADD                  ((unsigned char *)(&kinetis.DAC[1])) // DAC1
     #endif
-    #define GPIO_BLOCK                         ((unsigned char *)(&kinetis.GPIO)) // General Purpose IOs
+    #define GPIO_BLOCK                         ((unsigned char *)(&kinetis.GPIO)) // general purpose IOs
     #define FGPIO_BLOCK                        GPIO_BLOCK                // fast GPIO alias to GPIO
 
     #define CORTEX_M4_BLOCK                    ((unsigned char *)(&kinetis.CORTEX_M4))
 
-    #define MCM_BLOCK                          ((unsigned char *)(&kinetis.MCM)) // {29} Miscellaneous Control Module
+    #define MCM_BLOCK                          ((unsigned char *)(&kinetis.MCM)) // {29} miscellaneous control module
     #if defined CAU_V1_AVAILABLE || defined CAU_V2_AVAILABLE
-        #define MMCAU_BLOCK                    ((unsigned char *)(&kinetis.MMCAU)) // {45} Memory-Mapped Cryptographic Accelerator Unit
+        #define MMCAU_BLOCK                    ((unsigned char *)(&kinetis.MMCAU)) // {45} memory-mapped cryptographic accelerator unit
+    #endif
+
+    #if defined RFSYS_AVAILABLE
+        #define RFSYS_BLOCK                    ((unsigned char *)(&kinetis.RFSYS)) // system register file
+    #endif
+    #if defined TSTMR_AVAILABLE
+        #define TSTMR_BLOCK                    ((unsigned char *)(&kinetis.TSTMR)) // time stamp timer module
+    #endif
+    #if defined MMDVSQ_AVAILABLE
+        #define MMDVSQ_BLOCK                   ((unsigned char *)(&kinetis.MMDVSQ)) // memory-mapped divide and square root
     #endif
 #else
     #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA                  // {48}
@@ -3922,6 +3951,15 @@ typedef struct stVECTOR_TABLE
         #else
             #define FGPIO_BLOCK                0xf80ff000                // Fast GPIOs
         #endif
+    #endif
+    #if defined RFSYS_AVAILABLE
+        #define RFSYS_BLOCK                    0x4007c000                // system register file
+    #endif
+    #if defined TSTMR_AVAILABLE
+        #define TSTMR_BLOCK                    0x400750f0                // time stamp timer module
+    #endif
+    #if defined MMDVSQ_AVAILABLE
+        #define MMDVSQ_BLOCK                   0xf0004000                // memory-mapped divide and square root
     #endif
 #endif
 
@@ -16878,6 +16916,50 @@ extern void fnSimPers(void);
     #define CAU_CA6                      *(volatile unsigned short *)(MMCAU_BLOCK + _OFFSET_8)   // general purpose register 6
     #define CAU_CA7                      *(volatile unsigned short *)(MMCAU_BLOCK + _OFFSET_9)   // general purpose register 7
     #define CAU_CA8                      *(volatile unsigned short *)(MMCAU_BLOCK + _OFFSET_A)   // general purpose register 8
+#endif
+
+// Systen Register File
+//
+#if defined RFSYS_AVAILABLE
+    #define RFSYS_REG0                   *(unsigned long *)(RFSYS_BLOCK + 0x00) // register file register 0
+    #define RFSYS_REG1                   *(unsigned long *)(RFSYS_BLOCK + 0x04) // register file register 1
+    #define RFSYS_REG2                   *(unsigned long *)(RFSYS_BLOCK + 0x08) // register file register 2
+    #define RFSYS_REG3                   *(unsigned long *)(RFSYS_BLOCK + 0x0c) // register file register 3
+    #define RFSYS_REG4                   *(unsigned long *)(RFSYS_BLOCK + 0x10) // register file register 4
+    #define RFSYS_REG5                   *(unsigned long *)(RFSYS_BLOCK + 0x14) // register file register 5
+    #define RFSYS_REG6                   *(unsigned long *)(RFSYS_BLOCK + 0x18) // register file register 6
+    #define RFSYS_REG7                   *(unsigned long *)(RFSYS_BLOCK + 0x1c) // register file register 7
+#endif
+
+// Time Stamp Timer Module
+//
+#if defined TSTMR_AVAILABLE
+    #define TSTMR0_L                     *(unsigned long *)(TSTMR_BLOCK + 0x0) // time stamp timer register low - must be read with 32 bit accesses (read first)
+    #define TSTMR0_H                     *(unsigned long *)(TSTMR_BLOCK + 0x4) // time stamp timer register high - must be read with 32 bit accesses (read second when reading complete 56 bit time stamp)
+    #define TSTMR0_COUNT_FREQUENCY       1000000                         // continuously incremenets at 1MHz rate
+#endif
+
+
+// Memory-Mapped Divide and Square Root
+//
+#if defined MMDVSQ_AVAILABLE                                             // long word accesses only
+    #define MMDVSQ0_DEND                 *(unsigned long *)(MMDVSQ_BLOCK + 0x00) // divided register
+    #define MMDVSQ0_DSOR                 *(unsigned long *)(MMDVSQ_BLOCK + 0x04) // divisor register
+    #define MMDVSQ0_CSR                  *(volatile unsigned long *)(MMDVSQ_BLOCK + 0x08) // control/status register
+        #define MMDVSQ0_CSR_SRT           0x00000001                     // start (only used to start a divide calculation when MMDVSQ0_CSR_DFS is set)
+        #define MMDVSQ0_CSR_USGN_SIGNED   0x00000000                     // perform a signed divide
+        #define MMDVSQ0_CSR_USGN_UNSIGNED 0x00000002                     // perform an unsigned divide
+        #define MMDVSQ0_CSR_REM_QUOTIENT  0x00000000                     // return the quotient in the RES for the divide calculation
+        #define MMDVSQ0_CSR_REM_REMAINDER 0x00000004                     // return the remainder in the RES for the divide calculation
+        #define MMDVSQ0_CSR_DZE_ALLOW     0x00000000                     // divide by zero error - don't terminate
+        #define MMDVSQ0_CSR_DZE_TERMINATE 0x00000008                     // divide by zero error - terminate on divide by zero errors
+        #define MMDVSQ0_CSR_DZ            0x00000010                     // (read-only) divide by zero (cleared by hardware at the beginning of each operation)
+        #define MMDVSQ0_CSR_DFS           0x00000020                     // disable fast start
+        #define MMDVSQ0_CSR_SQRT          0x20000000                     // current or last operation was a square root (read-only)
+        #define MMDVSQ0_CSR_DIV           0x40000000                     // current or last operation was a divide (read-only)
+        #define MMDVSQ0_CSR_BUSY          0x80000000                     // busy performing a divide or square root calculation (read-only)
+    #define MMDVSQ0_RES                  *(volatile unsigned long *)(MMDVSQ_BLOCK + 0x0c) // result register
+    #define MMDVSQ0_RCND                 *(volatile unsigned long *)(MMDVSQ_BLOCK + 0x10) // radicand register (write-only) - used to initiate square root
 #endif
 
 // Macro to clear flags by writing '1' to the bit

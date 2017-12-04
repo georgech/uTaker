@@ -110,6 +110,7 @@
     02.02.2017 Add low power cycling control                             {85} - see video https://youtu.be/v4UnfcDiaE4
     05.07.2017 Modify SD card sector write interface                     {86}
     10.11.2017 Add MQTT client commands                                  {87}
+    04.12.2017 Add memory-mapped divide and square root demonstration    {88} - Kinetis processors with MMDVSQ
 
 */
 
@@ -177,6 +178,9 @@
 #endif
 
 #if defined USE_MAINTENANCE
+#if defined MMDVSQ_AVAILABLE && defined _WINDOWS
+    #include <math.h>
+#endif
     #define OWN_TASK                TASK_DEBUG
 
     #define TCP_SERVER_TEST         5
@@ -283,6 +287,8 @@
     #define DO_LP_CYCLE            47                                    // specific hardware command to enable/disable low power cycle mode
     #define DO_GET_CONTRAST        48                                    // specific hardware command to show the LCD contrast setting (%)
     #define DO_SET_CONTRAST        49                                    // specific hardware command to set the LCD contrast setting (%)
+    #define DO_SQRT                50                                    // specific hardware command to calculate the square root of an integer entered as dec or hex
+    #define DO_DIV                 51                                    // specific hardware command to calculate the remainder and quotient of an integer division
 
 #define DO_TELNET                 2                                      // reference to Telnet group
     #define DO_TELNET_QUIT              0                                // specific Telnet comand to quit the session
@@ -655,7 +661,7 @@ static const DEBUG_COMMAND tMainCommand[] = {
     {"8",                 "Go to utFAT disk interface",            DO_HELP,          DO_MENU_HELP_DISK }, // {17}
     {"9",                 "FTP/TELNET/MQTT client commands",       DO_HELP,          DO_MENU_HELP_FTP_TELNET_MQTT }, // {37}
     {"a",                 "CAN commands",                          DO_HELP,          DO_MENU_HELP_CAN }, // {38}
-#if defined CMSIS_DSP_CFFT || defined CRYPTOGRAPHY                       // {84}
+#if defined CMSIS_DSP_CFFT || defined CRYPTOGRAPHY || defined MMDVSQ_AVAILABLE // {84}{88}
     {"b",                 "Advanced commands",                     DO_HELP,          DO_MENU_HELP_ADVANCED },
 #endif
     {"help",              "Display menu specific help",            DO_HELP,          DO_MAIN_HELP },
@@ -1095,8 +1101,8 @@ static const DEBUG_COMMAND tCANCommand[] = {                             // {38}
     {"quit",              "Leave command mode",                    DO_TELNET,        DO_TELNET_QUIT },
 };
 
-#if defined CMSIS_DSP_CFFT || defined CRYPTOGRAPHY
-static const DEBUG_COMMAND tAdvancedCommand[] = {                             // {84}
+#if defined CMSIS_DSP_CFFT || defined CRYPTOGRAPHY || defined MMDVSQ_AVAILABLE
+static const DEBUG_COMMAND tAdvancedCommand[] = {                        // {84}
     {"up",                "go to main menu",                       DO_HELP,          DO_HELP_UP },
 #if defined TEST_CMSIS_CFFT
     {"fft",               "Test CFFT [len (16|32|...|2048|4096)]", DO_HARDWARE,      DO_FFT},
@@ -1105,6 +1111,10 @@ static const DEBUG_COMMAND tAdvancedCommand[] = {                             //
     { "aes128",           "Test aes128",                           DO_HARDWARE,      DO_AES128 },
     { "aes192",           "Test aes192",                           DO_HARDWARE,      DO_AES192 },
     { "aes256",           "Test aes256",                           DO_HARDWARE,      DO_AES256 },
+#endif
+#if defined MMDVSQ_AVAILABLE                                             // {88}
+    { "sqrt",             "Square root [<0xHEX><dec>]",            DO_HARDWARE,      DO_SQRT },
+    { "div",              "Divide (signed) [<0xHEX><dec>] / [<0xHEX><dec>]", DO_HARDWARE,     DO_DIV },
 #endif
     {"quit",              "Leave command mode",                    DO_TELNET,        DO_TELNET_QUIT },
 };
@@ -1129,8 +1139,8 @@ static const MENUS ucMenus[] = {
     { tDiskCommand,        13, (sizeof(tDiskCommand) / sizeof(DEBUG_COMMAND)),        "  Disk interface"}, // {17}
     { tFTP_TELNET_Command, 15, (sizeof(tFTP_TELNET_Command) / sizeof(DEBUG_COMMAND)), "FTP/TELNET commands"}, // {37}
     { tCANCommand,         15, (sizeof(tCANCommand) / sizeof(DEBUG_COMMAND)),         "   CAN commands"}, // {38}
-#if defined CMSIS_DSP_CFFT || defined CRYPTOGRAPHY
-    { tAdvancedCommand,    15, (sizeof(tAdvancedCommand) / sizeof(DEBUG_COMMAND)),    "   Advanced" }, // {84}
+#if defined CMSIS_DSP_CFFT || defined CRYPTOGRAPHY || defined MMDVSQ_AVAILABLE
+    { tAdvancedCommand,    15, (sizeof(tAdvancedCommand) / sizeof(DEBUG_COMMAND)),    "   Advanced" }, // {84}{88}
 #endif
 };
 
@@ -3878,6 +3888,88 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
           }
           break;
 #endif
+#if defined MMDVSQ_AVAILABLE                                             // {88}
+      case DO_SQRT:
+      case DO_DIV:
+          {
+              unsigned long ulInput[2] = { 0, 0 };
+              int iInput = 0;
+              unsigned long ulDividend = 0;
+              int iHex;
+              FOREVER_LOOP() {
+                  iHex = 0;
+                  if (*ptrInput == '0') {
+                      ptrInput++;
+                      if ((*ptrInput == 'x') || (*ptrInput == 'X')) {    // recognise hex inputs
+                          ptrInput++;
+                          iHex = 1;
+                      }
+                      else {
+                          ptrInput--;
+                      }
+                  }
+                  if (iHex != 0) {
+                      ulInput[iInput] = fnHexStrHex(ptrInput);           // hex input
+                  }
+                  else {
+                      ulInput[iInput] = fnDecStrHex(ptrInput);           // decimal input
+                  }
+                  iInput++;
+                  if (DO_SQRT == ucType) {
+                      fnDebugMsg("SQRT = ");
+                      MMDVSQ0_RCND = ulInput[0];
+                      while ((MMDVSQ0_CSR & MMDVSQ0_CSR_BUSY) != 0) {
+                      }
+    #if defined _WINDOWS
+                      MMDVSQ0_RES = (unsigned long)sqrt(MMDVSQ0_RCND);
+    #endif
+                      ulInput[0] = MMDVSQ0_RES;                          // result of the square root calculation
+                      iInput = 1;
+                      break;
+                  }
+                  if ((iInput >= 2)) {
+                      break;
+                  }
+                  fnJumpWhiteSpace(&ptrInput);
+              }
+              while (iInput-- != 0) {
+                  if (DO_DIV == ucType) {
+                      // Division
+                      //
+                      if (ulInput[1] == 0) {
+                          fnDebugMsg("Divide by zero!");
+                          break;
+                      }
+                      if (iInput == 1) {
+                          fnDebugMsg("Quotient = ");
+                          ulDividend = ulInput[0];                       // save for second use later
+                          MMDVSQ0_CSR = (MMDVSQ0_CSR_REM_QUOTIENT | MMDVSQ0_CSR_USGN_SIGNED); // perform signed division and request the quotient (fast mode is enabled so we don't need to command a start)
+                      }
+                      else {
+                          fnDebugMsg("\r\nRemainder = ");
+                          ulInput[0] = ulDividend;                       // restore for second calculation
+                          MMDVSQ0_CSR = (MMDVSQ0_CSR_REM_REMAINDER | MMDVSQ0_CSR_USGN_SIGNED); // perform signed division and request the remainder (fast mode is enabled so we don't need to command a start)
+                      }
+                      MMDVSQ0_DEND = ulInput[0];
+                      MMDVSQ0_DSOR = ulInput[1];
+                      while ((MMDVSQ0_CSR & MMDVSQ0_CSR_BUSY) != 0) {    // wait until the calculation has completed
+                      }
+    #if defined _WINDOWS
+                      MMDVSQ0_RES = (MMDVSQ0_DEND / MMDVSQ0_DSOR);
+                      if ((MMDVSQ0_CSR & MMDVSQ0_CSR_REM_REMAINDER) != 0) {
+                          MMDVSQ0_RES = (MMDVSQ0_DEND - (MMDVSQ0_RES * MMDVSQ0_DSOR));
+                      }
+    #endif
+                      ulInput[0] = MMDVSQ0_RES;                          // result of the square root calculation
+                  }
+                  fnDebugDec(ulInput[0], DISPLAY_NEGATIVE);
+                  fnDebugMsg(" [");
+                  fnDebugHex(ulInput[0], (WITH_LEADIN | sizeof(ulInput[0])));
+                  fnDebugMsg("]");
+              }
+          }
+          break;
+#endif
 #if defined SUPPORT_LCD && defined LCD_CONTRAST_CONTROL                  // {88}
       case DO_SET_CONTRAST:
           temp_pars->temp_parameters.ucGLCDContrastPWM = (unsigned char)fnDecStrHex(ptrInput);
@@ -6256,7 +6348,7 @@ static int fnDoCommand(unsigned char ucFunction, unsigned char ucType, CHAR *ptr
             ucMenu = MENU_HELP_CAN;                                      // set CAN menu
             return (fnDisplayHelp(0));                                   // large menu may require special handling
         }
-    #if defined CMSIS_DSP_CFFT || defined CRYPTOGRAPHY                   // {84}
+    #if defined CMSIS_DSP_CFFT || defined CRYPTOGRAPHY || defined MMDVSQ_AVAILABLE // {84}
         else if (DO_MENU_HELP_ADVANCED == ucType) {
             ucMenu = MENU_HELP_ADVANCED;                                 // set advanced menu
             return (fnDisplayHelp(0));
