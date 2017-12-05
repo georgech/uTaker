@@ -16993,8 +16993,8 @@ extern void fnSimPers(void);
 // Time Stamp Timer Module
 //
 #if defined TSTMR_AVAILABLE
-    #define TSTMR0_L                     *(unsigned long *)(TSTMR_BLOCK + 0x0) // time stamp timer register low - must be read with 32 bit accesses (read first)
-    #define TSTMR0_H                     *(unsigned long *)(TSTMR_BLOCK + 0x4) // time stamp timer register high - must be read with 32 bit accesses (read second when reading complete 56 bit time stamp)
+    #define TSTMR0_L                     *(volatile unsigned long *)(TSTMR_BLOCK + 0x0) // time stamp timer register low - must be read with 32 bit accesses (read first)
+    #define TSTMR0_H                     *(volatile unsigned long *)(TSTMR_BLOCK + 0x4) // time stamp timer register high - must be read with 32 bit accesses (read second when reading complete 56 bit time stamp)
     #define TSTMR0_COUNT_FREQUENCY       1000000                         // continuously incremenets at 1MHz rate
 #endif
 

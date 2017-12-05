@@ -2260,14 +2260,17 @@ extern int  fnInsertHTMLString(CHAR *cToAdd, unsigned short usAddLength, unsigne
 extern int  fnDecode64(CHAR *ptrInput, CHAR *ptrOutput);                 // {100}
 extern MAX_FILE_LENGTH fnEncode64(unsigned char *ptrInput, CHAR *ptrOutput, MAX_FILE_LENGTH input_length); // {15}
 extern int  fnVerifyUser(CHAR *cDecodedUser, unsigned char iCheckUser);
-    #define DO_CHECK_USER_NAME     0x01
-    #define DO_CHECK_PASSWORD      0x02
-    #define HTML_PASS_CHECK        0x04
-    #define FTP_PASS_CHECK         0x08
+    #define DO_CHECK_USER_NAME            0x01
+    #define DO_CHECK_PASSWORD             0x02
+    #define HTML_PASS_CHECK               0x04
+    #define FTP_PASS_CHECK                0x08
 
 extern int fnConnectMQTT(unsigned char *ucIP, unsigned short(*fnCallback)(unsigned char, unsigned char *, unsigned long, unsigned char));
 extern int fnDisconnectMQTT(void);
-extern int fnPublishMQTT(unsigned char ucTopicReference, unsigned char ucQoS);
+extern int fnPublishMQTT(unsigned char ucTopicReference, CHAR *ptrTopic, unsigned char ucQoS);
+    #define MQTT_SUBSCRIPTION_QoS_0       0x00
+    #define MQTT_SUBSCRIPTION_QoS_1       0x01
+    #define MQTT_SUBSCRIPTION_QoS_2       0x02
 extern int fnSubscribeMQTT(CHAR *ptrInput, unsigned char ucQoS);
 extern int fnUnsubscribeMQTT(unsigned char ucSubscriptionRef);
 
@@ -2280,15 +2283,12 @@ extern int fnUnsubscribeMQTT(unsigned char ucSubscriptionRef);
 #define MQTT_CONNACK_RECEIVED             2
 #define MQTT_SUBACK_RECEIVED              3
 #define MQTT_UNSUBACK_RECEIVED            4
-#define MQTT_PUBLISH_RECEIVED             5
+#define MQTT_PUBLISH_ACKNOWLEDGED         5
 #define MQTT_PUBLISH_TOPIC                6
 #define MQTT_PUBLISH_DATA                 7
-#define MQTT_PUBLISH_TOPIC_FILTER         8
-#define MQTT_TOPIC_MESSAGE                9
-#define MQTT_CONNECTION_CLOSED            10
-#define MQTT_HOST_CLOSED                  11
-
-
+#define MQTT_TOPIC_MESSAGE                8
+#define MQTT_CONNECTION_CLOSED            9
+#define MQTT_HOST_CLOSED                  10
 
 extern int  fnCheckPass(CHAR *ucReference, CHAR *ucNewInput);
 extern CHAR *fnWebStrcpy(CHAR *cStrOut, CHAR *cStrIn);

@@ -656,7 +656,11 @@ static const DEBUG_COMMAND tMainCommand[] = {
     {"6",                 "Go to USB menu",                        DO_HELP,          DO_MENU_HELP_USB },
     {"7",                 "Go to I2C menu",                        DO_HELP,          DO_MENU_HELP_I2C },
     {"8",                 "Go to utFAT disk interface",            DO_HELP,          DO_MENU_HELP_DISK }, // {17}
+#if defined USE_MQTT_CLIENT
     {"9",                 "FTP/TELNET/MQTT client commands",       DO_HELP,          DO_MENU_HELP_FTP_TELNET_MQTT }, // {37}
+#else
+    {"9",                 "FTP/TELNET commands",                   DO_HELP,          DO_MENU_HELP_FTP_TELNET_MQTT },
+#endif
     {"a",                 "CAN commands",                          DO_HELP,          DO_MENU_HELP_CAN }, // {38}
 #if defined CMSIS_DSP_CFFT || defined CRYPTOGRAPHY || defined MMDVSQ_AVAILABLE // {84}{88}
     {"b",                 "Advanced commands",                     DO_HELP,          DO_MENU_HELP_ADVANCED },
@@ -1068,8 +1072,8 @@ static const DEBUG_COMMAND tFTP_TELNET_Command[] = {                     // {37}
     { "mqtt_con",         "Connect to MQTT broker [ip]",           DO_FTP_TELNET_MQTT, DO_MQTT_CONNECT },
     { "mqtt_sub",         "Subscribe [topic] <QoS>",               DO_FTP_TELNET_MQTT, DO_MQTT_SUBSCRIBE },
     { "mqtt_un",          "Unsubscribe [ref]",                     DO_FTP_TELNET_MQTT, DO_MQTT_UNSUBSCRIBE },
-    { "mqtt_pub",         "Publish <ref> <QoS>",                   DO_FTP_TELNET_MQTT, DO_MQTT_PUB },
-    { "mqtt_pub_l",       "Publish (long) <ref> <QoS>",            DO_FTP_TELNET_MQTT, DO_MQTT_PUB_LONG },
+    { "mqtt_pub",         "Publish <""topic""><ref> <QoS>",        DO_FTP_TELNET_MQTT, DO_MQTT_PUB },
+    { "mqtt_pub_l",       "Publish (long) <""topic""><ref> <QoS>", DO_FTP_TELNET_MQTT, DO_MQTT_PUB_LONG },
     { "mqtt_dis",         "Disconect from MQTT broker",            DO_FTP_TELNET_MQTT, DO_MQTT_DISCONNECT },
     #if !defined USE_FTP_CLIENT && ! defined USE_TELNET_CLIENT
     {"help",              "Display menu specific help",            DO_HELP,          DO_MAIN_HELP },
@@ -1134,7 +1138,11 @@ static const MENUS ucMenus[] = {
     { tUSBCommand,         13, (sizeof(tUSBCommand) / sizeof(DEBUG_COMMAND)),         "    USB menu"},
     { tI2CCommand,         13, (sizeof(tI2CCommand) / sizeof(DEBUG_COMMAND)),         "    I2C menu"},
     { tDiskCommand,        13, (sizeof(tDiskCommand) / sizeof(DEBUG_COMMAND)),        "  Disk interface"}, // {17}
+#if defined USE_MQTT_CLIENT
+    { tFTP_TELNET_Command, 15, (sizeof(tFTP_TELNET_Command) / sizeof(DEBUG_COMMAND)), "FTP/TELNET/MQTT" }, // {37}
+#else
     { tFTP_TELNET_Command, 15, (sizeof(tFTP_TELNET_Command) / sizeof(DEBUG_COMMAND)), "FTP/TELNET commands"}, // {37}
+#endif
     { tCANCommand,         15, (sizeof(tCANCommand) / sizeof(DEBUG_COMMAND)),         "   CAN commands"}, // {38}
 #if defined CMSIS_DSP_CFFT || defined CRYPTOGRAPHY || defined MMDVSQ_AVAILABLE
     { tAdvancedCommand,    15, (sizeof(tAdvancedCommand) / sizeof(DEBUG_COMMAND)),    "   Advanced" }, // {84}{88}
@@ -5851,11 +5859,12 @@ static unsigned short fnMQTT_callback(unsigned char ucEvent, unsigned char *ptrD
         fnDebugMsg("MQTT subscribed");
         iAddRef = 1;
         break;
-    case MQTT_PUBLISH_RECEIVED:
-        fnDebugMsg("MQTT published");
+    case MQTT_PUBLISH_ACKNOWLEDGED:
+        fnDebugMsg("MQTT published - QoS");
+        fnDebugDec(ulLength, 0);
         iAddRef = 1;
         break;
-    case MQTT_PUBLISH_TOPIC:                                             // add the publish topic to be used
+    case MQTT_PUBLISH_TOPIC:                                             // add a default publish topic
         ptrBuf = uStrcpy(ptrBuf, "xyz/abc");
         break;
     case MQTT_PUBLISH_DATA:
@@ -6082,7 +6091,8 @@ static void fnDoFTP_TELNET_MQTT(unsigned char ucType, CHAR *ptrInput)
                 ucQoS = 2;                                               // default QoS if not supplied
             }
             else {
-                ucQoS = (unsigned char)fnDecStrHex(ptrInput);            // QoS to use
+                *(ptrQoS - 1) = 0;                                       // terminate the topic string
+                ucQoS = (unsigned char)fnDecStrHex(ptrQoS);              // QoS to use
             }
             iSubscriptionReference = fnSubscribeMQTT(ptrInput, ucQoS);
             if (iSubscriptionReference >= 0) {
@@ -6109,8 +6119,19 @@ static void fnDoFTP_TELNET_MQTT(unsigned char ucType, CHAR *ptrInput)
     case DO_MQTT_PUB_LONG:
     case DO_MQTT_PUB:
         {
+            CHAR *ptrTopic = 0;
             unsigned char ucSubscriptionRef;
             unsigned char ucQoS;
+            if (*ptrInput == '"') {                                      // we want to insert a on-off publish topic
+                ptrTopic = (ptrInput + 1);
+                fnJumpWhiteSpace(&ptrInput);
+                if (*ptrInput == 0) {
+                    *(ptrInput - 1) = 0;                                 // terminate the topic string in the input buffer
+                }
+                else {
+                    *(ptrInput - 2) = 0;                                 // terminate the topic string in the input buffer
+                }
+            }
             if (*ptrInput == 0) {
                 ucSubscriptionRef = 0;                                   // we want to be called back to insert the publish topic
             }
@@ -6130,7 +6151,7 @@ static void fnDoFTP_TELNET_MQTT(unsigned char ucType, CHAR *ptrInput)
             else {
                 usPubLength = 10;
             }
-            if (fnPublishMQTT(ucSubscriptionRef, ucQoS) == 0) {              // make QoS variable?
+            if (fnPublishMQTT(ucSubscriptionRef, ptrTopic, ucQoS) == 0) {// make QoS variable?
                 fnDebugMsg("Publishing...");
             }
             else {
