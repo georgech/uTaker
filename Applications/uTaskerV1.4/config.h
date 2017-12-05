@@ -512,12 +512,17 @@
     #define DEVICE_WITHOUT_ETHERNET                                      // K20 doesn't have Ethernet controller
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((16 * 1024) * MEM_FACTOR)
 #elif defined TWR_K20D72M
+  //#define DEV1                                                         // temporary development configuration
     #define TARGET_HW            "TWR-K20D72M Kinetis"
     #define KINETIS_K20                                                  // specify the sub-family
     #define KINETIS_REVISION_2
     #define KINETIS_MAX_SPEED    72000000
     #define DEVICE_WITHOUT_ETHERNET                                      // K20 doesn't have Ethernet controller
-    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((20 * 1024) * MEM_FACTOR)
+    #if defined DEV1
+        #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((8 * 1024) * MEM_FACTOR)
+    #else
+        #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((20 * 1024) * MEM_FACTOR)
+    #endif
 #elif defined TEENSY_3_1
     #define TARGET_HW            "TEENSY 3.1 (K20DX256)"
     #define KINETIS_MAX_SPEED    72000000
@@ -820,7 +825,7 @@
   //#define I2C_EEPROM_FILE_SYSTEM                                       // we have an EEPROM based external file system via I2C interface
   //#define SPI_EEPROM_FILE_SYSTEM                                       // we have an EEPROM based external file system via SPI interface
   //#define EXT_FLASH_FILE_SYSTEM                                        // we have a file system in external FLASH memory
-    #if !defined NAND_FLASH_FAT
+    #if !defined NAND_FLASH_FAT && !defined DEV1
         #define FLASH_FILE_SYSTEM                                        // we have an internal file system in FLASH
     #endif
   //#define NVRAM                                                        // we have an external file system in non-volatile RAM

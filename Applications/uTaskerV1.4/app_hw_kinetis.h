@@ -715,15 +715,24 @@
     #define SIZE_OF_RAM         (64 * 1024)                              // 64k SRAM
 #elif defined TWR_K20D72M
     #define KINETIS_FLEX                                                 // X part with flex memory rather than N part with program Flash only
-    #define PIN_COUNT           PIN_COUNT_100_PIN                        // 100 pin LQFP
-    #define PACKAGE_TYPE        PACKAGE_LQFP
-    #define SIZE_OF_FLEXFLASH   (32 * 1024)                              // 32 Flex
-    #define SIZE_OF_RAM         (64 * 1024)                              // 64k SRAM
-    #define SIZE_OF_EEPROM      (2 * 1024)                               // 2k EEPROM
-    #if defined FLEXFLASH_DATA
-        #define SIZE_OF_FLASH   ((256 * 1024) + SIZE_OF_FLEXFLASH)       // 256k program FLASH plus data flash
+    #if defined DEV1
+        #define OSC_LOW_GAIN_MODE                                        // low gain required for oscillator circuitry
+        #define PIN_COUNT           PIN_COUNT_64_PIN                     // 64 pin LQFP
+        #define SIZE_OF_FLASH       (64 * 1024)                          // 64k program FLASH
+        #define SIZE_OF_FLEXFLASH   (32 * 1024)                          // 32 Flex
+        #define SIZE_OF_RAM         (16 * 1024)                          // 16k SRAM
+        #define SIZE_OF_EEPROM      (2 * 1024)                           // 2k EEPROM
     #else
-        #define SIZE_OF_FLASH   (256 * 1024)                             // 256k program FLASH
+        #define PIN_COUNT           PIN_COUNT_100_PIN                    // 100 pin LQFP
+        #define PACKAGE_TYPE        PACKAGE_LQFP
+        #define SIZE_OF_FLEXFLASH   (32 * 1024)                          // 32 Flex
+        #define SIZE_OF_RAM         (64 * 1024)                          // 64k SRAM
+        #define SIZE_OF_EEPROM      (2 * 1024)                           // 2k EEPROM
+        #if defined FLEXFLASH_DATA
+            #define SIZE_OF_FLASH   ((256 * 1024) + SIZE_OF_FLEXFLASH)   // 256k program FLASH plus data flash
+        #else
+            #define SIZE_OF_FLASH   (256 * 1024)                         // 256k program FLASH
+        #endif
     #endif
 #elif defined TEENSY_3_1 || defined TRINAMIC_LANDUNGSBRUECKE
     #define SUPPORT_SW_RTC                                               // support real time clock based purely on software (remove if 32kHz quarz is connected)
@@ -2485,6 +2494,11 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define CDC_UART_4     3
         #define CDC_UART_5     4
     #endif
+    #if defined SUPPORT_LOW_POWER
+        #define LPUART_CHARACTERISTICS     (0 | /*LPUART_CTRL_DOZEEN*/)
+    #else
+        #define LPUART_CHARACTERISTICS     (0)
+    #endif
 #else
     #define TX_BUFFER_SIZE   (256)
     #define RX_BUFFER_SIZE   (256)
@@ -2803,7 +2817,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #if defined SUPPORT_LOW_POWER
         #define LPI2C_CHARACTERISTICS  (LPI2C_MCR_DOZEN | LPI2C_MCR_DBGEN) // allow the LPI2C to continue running in doze modes since it will otherwise freeze whenever the processor uses WAIT 
     #else
-        #define LPI2C_CHARACTERISTICS  (0 | LPI2C_MCR_DBGEN)             // define whether the LPI2C controller opertion is disabled in debug mode
+        #define LPI2C_CHARACTERISTICS  (0 | LPI2C_MCR_DBGEN)             // define whether the LPI2C controller opertaion is enabled in debug mode
     #endif
 #endif
 
@@ -5187,47 +5201,80 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 
     #define KEYPAD "KeyPads/K20FX512_120.bmp"
 #elif defined TWR_K20D50M || defined TWR_K20D72M                         // {2}
-    #define DEMO_LED_1             (PORTC_BIT7)                          // (green LED) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
-    #define DEMO_LED_2             (PORTC_BIT8)                          // (blue LED) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
-    #if defined USB_HOST_SUPPORT
-        #define DEMO_LED_3         (0)                                   // use the port for USB host power control and not LED
+    #if defined DEV1                                                     // temporary development configuration
+        #if defined CAN_INTERFACE
+            #define INIT_WATCHDOG_LED() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, (PORTC_BIT3), (PORTC_BIT3), (PORT_SRE_SLOW | PORT_DSE_HIGH)); _CONFIG_DRIVE_PORT_OUTPUT_VALUE(D, (PORTD_BIT0 | PORTD_BIT1 | PORTD_BIT2 | PORTD_BIT3 | PORTD_BIT4 | PORTD_BIT5 | PORTD_BIT6 | PORTD_BIT7), (PORTD_BIT0 | PORTD_BIT1 | PORTD_BIT2 | PORTD_BIT3 | PORTD_BIT4 | PORTD_BIT5 | PORTD_BIT6 | PORTD_BIT7), (PORT_SRE_SLOW | PORT_DSE_HIGH)); \
+            _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, (PORTC_BIT0 | PORTC_BIT1 | PORTC_BIT2 | PORTC_BIT3 | PORTC_BIT4 | PORTC_BIT5 | PORTC_BIT8 | PORTC_BIT9 | PORTC_BIT10 | PORTC_BIT11), (0), (PORT_SRE_SLOW | PORT_DSE_HIGH)); \
+            _CONFIG_DRIVE_PORT_OUTPUT_VALUE(B, (PORTB_BIT1 | PORTB_BIT2 | PORTB_BIT3 | PORTB_BIT16 | PORTB_BIT17 | PORTB_BIT18 | PORTB_BIT19), (0), (PORT_SRE_SLOW | PORT_DSE_HIGH)); \
+            _CONFIG_DRIVE_PORT_OUTPUT_VALUE(A, (PORTA_BIT5), (0), (PORT_SRE_SLOW | PORT_DSE_HIGH));
+        #else
+            #define INIT_WATCHDOG_LED() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, (PORTC_BIT3), (PORTC_BIT3), (PORT_SRE_SLOW | PORT_DSE_HIGH)); _CONFIG_DRIVE_PORT_OUTPUT_VALUE(D, (PORTD_BIT0 | PORTD_BIT1 | PORTD_BIT2 | PORTD_BIT3 | PORTD_BIT4 | PORTD_BIT5 | PORTD_BIT6 | PORTD_BIT7), (PORTD_BIT0 | PORTD_BIT1 | PORTD_BIT2 | PORTD_BIT3 | PORTD_BIT4 | PORTD_BIT5 | PORTD_BIT6 | PORTD_BIT7), (PORT_SRE_SLOW | PORT_DSE_HIGH)); \
+            _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, (PORTC_BIT0 | PORTC_BIT1 | PORTC_BIT2 | PORTC_BIT3 | PORTC_BIT4 | PORTC_BIT5 | PORTC_BIT8 | PORTC_BIT9 | PORTC_BIT10 | PORTC_BIT11), (0), (PORT_SRE_SLOW | PORT_DSE_HIGH)); \
+            _CONFIG_DRIVE_PORT_OUTPUT_VALUE(B, (PORTB_BIT1 | PORTB_BIT2 | PORTB_BIT3 | PORTB_BIT16 | PORTB_BIT17 | PORTB_BIT18 | PORTB_BIT19), (0), (PORT_SRE_SLOW | PORT_DSE_HIGH)); \
+            _CONFIG_DRIVE_PORT_OUTPUT_VALUE(A, (PORTA_BIT13), (0), (PORT_SRE_SLOW | PORT_DSE_HIGH));
+        #endif
+        #define INIT_WATCHDOG_DISABLE()
+        #define WATCHDOG_DISABLE()  0
+        extern int iBlockLed;
+        #define TOGGLE_WATCHDOG_LED()   if (iBlockLed == 0) {_TOGGLE_PORT(C, PORTC_BIT3); }
+        #define REMOVE_PORT_INITIALISATIONS
+        #define MAPPED_DEMO_LED_1   0
+        #define MAPPED_DEMO_LED_2   0
+        #define CONFIG_TEST_OUTPUT()
+        #define ACTIVATE_WATCHDOG()     UNLOCK_WDOG(); WDOG_TOVALL = (2000/5); WDOG_TOVALH = 0; WDOG_STCTRLH = (WDOG_STCTRLH_STNDBYEN | WDOG_STCTRLH_WAITEN | WDOG_STCTRLH_STOPEN | WDOG_STCTRLH_WDOGEN | WDOG_STCTRLH_IRQRSTEN) // watchdog enabled to generate reset on 2s timeout (no further updates allowed)
+        #define DEMO_LED_1             (PORTA_BIT2)                          // (green led) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+        #define DEMO_LED_2             (PORTA_BIT1)                          // (red led) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+        #define DEMO_LED_3             (PORTD_BIT5)                          // (blue led) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+        #define SWITCH_2               (PORTC_BIT1)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+        #define SWITCH_3               (PORTB_BIT17)                         // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+        #define LED_RED                DEMO_LED_2
+        #define LED_GREEN              DEMO_LED_1
+        #define LED_BLUE               DEMO_LED_3
+        #define SWITCH_2_PORT          _PORTC
+        #define SWITCH_3_PORT          _PORTB
     #else
-        #define DEMO_LED_3         (PORTC_BIT9)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+        #define DEMO_LED_1             (PORTC_BIT7)                          // (green LED) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+        #define DEMO_LED_2             (PORTC_BIT8)                          // (blue LED) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+        #if defined USB_HOST_SUPPORT
+            #define DEMO_LED_3         (0)                                   // use the port for USB host power control and not LED
+        #else
+            #define DEMO_LED_3         (PORTC_BIT9)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+        #endif
+        #define DEMO_LED_4             (PORTC_BIT10)                         // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+        #define BLINK_LED              (DEMO_LED_1)
+        #define SWITCH_2               (PORTC_BIT1)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+        #define SWITCH_3               (PORTC_BIT2)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+        #define USB_HOST_POWER_ENABLE  (PORTC_BIT9)
+
+        #define SWITCH_2_PORT          _PORTC
+        #define SWITCH_3_PORT          _PORTC
+
+        #if defined USE_MAINTENANCE && !defined REMOVE_PORT_INITIALISATIONS
+            #define INIT_WATCHDOG_LED()                                      // let the port set up do this (the user can disable blinking)
+        #else
+            #define INIT_WATCHDOG_LED() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, (BLINK_LED), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+        #endif
+
+        #define SHIFT_DEMO_LED_1        7                                    // since the port bits are spread out shift each to the lowest 4 bits
+        #define SHIFT_DEMO_LED_2        7
+        #define SHIFT_DEMO_LED_3        7
+        #define SHIFT_DEMO_LED_4        7
+
+        #define MAPPED_DEMO_LED_1       (DEMO_LED_1 >> SHIFT_DEMO_LED_1)
+        #define MAPPED_DEMO_LED_2       (DEMO_LED_2 >> SHIFT_DEMO_LED_2)
+        #define MAPPED_DEMO_LED_3       (DEMO_LED_3 >> SHIFT_DEMO_LED_3)
+        #define MAPPED_DEMO_LED_4       (DEMO_LED_4 >> SHIFT_DEMO_LED_4)
+
+        #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(C, SWITCH_3, PORT_PS_UP_ENABLE) // use fast access version (beware that this can only operate on half of the 32 bits at a time)
+        #define WATCHDOG_DISABLE()      (_READ_PORT_MASK(C, SWITCH_3) == 0)  // pull this input down to disable watchdog (hold SW2 at reset)
+        #define ACTIVATE_WATCHDOG()     UNLOCK_WDOG(); WDOG_TOVALL = (2000/5); WDOG_TOVALH = 0; WDOG_STCTRLH = (WDOG_STCTRLH_STNDBYEN | WDOG_STCTRLH_WAITEN | WDOG_STCTRLH_STOPEN | WDOG_STCTRLH_WDOGEN) // watchdog enabled to generate reset on 2s timeout (no further updates allowed)
+        #define TOGGLE_WATCHDOG_LED()   _TOGGLE_PORT(C, BLINK_LED)
+
+        #define CONFIG_TEST_OUTPUT()                                         // we use DEMO_LED_2 which is configured by the user code (and can be disabled in parameters if required)
+        #define TOGGLE_TEST_OUTPUT()    _TOGGLE_PORT(C, DEMO_LED_2)
+        #define SET_TEST_OUTPUT()       _SETBITS(C, DEMO_LED_2)
+        #define CLEAR_TEST_OUTPUT()     _CLEARBITS(C, DEMO_LED_2)
     #endif
-    #define DEMO_LED_4             (PORTC_BIT10)                         // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
-    #define BLINK_LED              (DEMO_LED_1)
-    #define SWITCH_2               (PORTC_BIT1)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
-    #define SWITCH_3               (PORTC_BIT2)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
-    #define USB_HOST_POWER_ENABLE  (PORTC_BIT9)
-
-    #define SWITCH_2_PORT          _PORTC
-    #define SWITCH_3_PORT          _PORTC
-
-    #if defined USE_MAINTENANCE && !defined REMOVE_PORT_INITIALISATIONS
-        #define INIT_WATCHDOG_LED()                                      // let the port set up do this (the user can disable blinking)
-    #else
-        #define INIT_WATCHDOG_LED() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, (BLINK_LED), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH))
-    #endif
-
-    #define SHIFT_DEMO_LED_1        7                                    // since the port bits are spread out shift each to the lowest 4 bits
-    #define SHIFT_DEMO_LED_2        7
-    #define SHIFT_DEMO_LED_3        7
-    #define SHIFT_DEMO_LED_4        7
-
-    #define MAPPED_DEMO_LED_1       (DEMO_LED_1 >> SHIFT_DEMO_LED_1)
-    #define MAPPED_DEMO_LED_2       (DEMO_LED_2 >> SHIFT_DEMO_LED_2)
-    #define MAPPED_DEMO_LED_3       (DEMO_LED_3 >> SHIFT_DEMO_LED_3)
-    #define MAPPED_DEMO_LED_4       (DEMO_LED_4 >> SHIFT_DEMO_LED_4)
-
-    #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(C, SWITCH_3, PORT_PS_UP_ENABLE) // use fast access version (beware that this can only operate on half of the 32 bits at a time)
-    #define WATCHDOG_DISABLE()      (_READ_PORT_MASK(C, SWITCH_3) == 0)  // pull this input down to disable watchdog (hold SW2 at reset)
-    #define ACTIVATE_WATCHDOG()     UNLOCK_WDOG(); WDOG_TOVALL = (2000/5); WDOG_TOVALH = 0; WDOG_STCTRLH = (WDOG_STCTRLH_STNDBYEN | WDOG_STCTRLH_WAITEN | WDOG_STCTRLH_STOPEN | WDOG_STCTRLH_WDOGEN) // watchdog enabled to generate reset on 2s timeout (no further updates allowed)
-    #define TOGGLE_WATCHDOG_LED()   _TOGGLE_PORT(C, BLINK_LED)
-
-    #define CONFIG_TEST_OUTPUT()                                         // we use DEMO_LED_2 which is configured by the user code (and can be disabled in parameters if required)
-    #define TOGGLE_TEST_OUTPUT()    _TOGGLE_PORT(C, DEMO_LED_2)
-    #define SET_TEST_OUTPUT()       _SETBITS(C, DEMO_LED_2)
-    #define CLEAR_TEST_OUTPUT()     _CLEARBITS(C, DEMO_LED_2)
 
     #define CONFIGURE_MOUSE_INPUTS() _CONFIG_PORT_INPUT_FAST_LOW(C, SWITCH_2, PORT_PS_UP_ENABLE); _CONFIG_PORT_INPUT_FAST_LOW(C, SWITCH_3, PORT_PS_UP_ENABLE)
     #define MOUSE_LEFT_CLICK()     0

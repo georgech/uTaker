@@ -13,7 +13,7 @@
     ---------------------------------------------------------------------
     Copyright (C) M.J.Butcher Consulting 2004..2017
     *********************************************************************
-    Supports KEA08, KEA64, KEA128, KE02, KE04, KE06 and KE15 (part complete)
+    Supports KEA08, KEA64, KEA128, KE02, KE04, KE06 and KE15
 
 */
 

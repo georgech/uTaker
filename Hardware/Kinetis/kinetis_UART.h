@@ -2602,7 +2602,7 @@ static void fnConfigLPUART(QUEUE_HANDLE Channel, TTYTABLE *pars, KINETIS_LPUART_
                 ulCtrlReg |= (LPUART_CTRL_PE | LPUART_CTRL_PT_EVEN);     // even parity
             }
         }
-        lpuart_reg->LPUART_CTRL = ulCtrlReg;                             // set the new control register value (this also disabled rx and tx, if enabled, which is in conformance with the requirement to only change settings with these turned off)
+        lpuart_reg->LPUART_CTRL = (ulCtrlReg | LPUART_CHARACTERISTICS);  // set the new control register value (this also disabled rx and tx, if enabled, which is in conformance with the requirement to only change settings with these turned off)
     }
     uEnable_Interrupt();                                                 // enable interrupt again (transmit interrupt enable has been preserved)
     if ((pars->Config & TWO_STOPS) != 0) {                               // LPUART supports 2 stop bits

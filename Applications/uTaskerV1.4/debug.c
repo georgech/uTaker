@@ -4552,7 +4552,11 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
                     _SETBITS(C, PORTC_BIT4);
                     break;
                 case 3:
+#if defined CAN_INTERFACE
+                    _SETBITS(A, PORTA_BIT5);
+#else
                     _SETBITS(A, PORTA_BIT13);
+#endif
                     break;
                 }
             }
@@ -4565,7 +4569,11 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
                     _CLEARBITS(C, PORTC_BIT4);
                     break;
                 case 3:
-                    _CLEARBITS(A, PORTA_BIT13);
+#if defined CAN_INTERFACE
+                    _CLEARBITS(A, PORTA_BIT5);
+#else
+                    _CLEARITS(A, PORTA_BIT13);
+#endif
                     break;
                 }
             }

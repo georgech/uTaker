@@ -49,7 +49,7 @@
 
     #if defined SUPPORT_ADC                                              // if HW support is enabled
       //#define TEST_ADC                                                 // enable test of ADC operation
-            #define ADC_INTERNAL_TEMPERATURE                             // force internal temperature channel to be used, when available
+          //#define ADC_INTERNAL_TEMPERATURE                             // force internal temperature channel to be used, when available
       //#define TEST_AD_DA                                               // {14} enable test of reading ADC and writing (after delay) to DAC
           //#define ADC_TRIGGER_TPM                                      // use TPM module rather than PIT for ADC trigger (valid for KL parts)
           //#define VOICE_RECORDER                                       // {15} needs TEST_AD_DA and mass-storage and saves sampled input to SD card
@@ -784,8 +784,6 @@ static void fnConfigureADC(void)
 #if defined DEV1
     static const unsigned char input[3] = { ADC_DP0_SINGLE, ADC_DM0_SINGLE, ADC_DP0_SINGLE };
     static unsigned long ulCalibrate[3] = { ADC_CALIBRATE, ADC_CALIBRATE , ADC_CALIBRATE };
-#elif defined DEV1
-    adc_setup.int_adc_bit = ADC_DP0_SINGLE;                          // ADC0_DP0
 #endif
 #if defined _KINETIS && (!defined KINETIS_KE || defined KINETIS_KE15) && !defined DEV1   // {11}
     static unsigned long ulCalibrate = ADC_CALIBRATE;
@@ -811,23 +809,23 @@ static void fnConfigureADC(void)
     adc_setup.int_adc_int_type = (ADC_SINGLE_SHOT_TRIGGER_INT);          // interrupt type
     adc_setup.int_adc_offset = 0;                                        // no offset
     #if defined ADC_INTERNAL_TEMPERATURE
-        adc_setup.int_adc_bit = ADC_TEMP_SENSOR;                         // ADC internal temperature
+    adc_setup.int_adc_bit = ADC_TEMP_SENSOR;                             // ADC internal temperature
     #else
         #if defined TWR_K20D50M || defined TWR_K20D72M || defined TWR_K21D50M
-        adc_setup.int_adc_bit = ADC_DM3_SINGLE;                          // ADC DM3 single-ended
-        adc_setup.int_handler = adc_range;                               // handling function
+    adc_setup.int_adc_bit = ADC_DM3_SINGLE;                              // ADC DM3 single-ended
+    adc_setup.int_handler = adc_range;                                   // handling function
         #elif defined TEENSY_3_1
-        adc_setup.int_adc_bit = ADC_DP3_SINGLE;                          // ADC DM3 single-ended - pad A12
-        adc_setup.int_handler = adc_range;                               // handling function
+    adc_setup.int_adc_bit = ADC_DP3_SINGLE;                              // ADC DM3 single-ended - pad A12
+    adc_setup.int_handler = adc_range;                                   // handling function
         #elif defined FRDM_KE02Z40M || defined FRDM_KE06Z
-        adc_setup.int_adc_bit = ADC_SE12_SINGLE;                         // thermistor positive terminal
+    adc_setup.int_adc_bit = ADC_SE12_SINGLE;                             // thermistor positive terminal
         #elif defined FRDM_KL43Z
-        adc_setup.int_adc_bit = ADC_SE23_SINGLE;
+    adc_setup.int_adc_bit = ADC_SE23_SINGLE;
         #else
-        adc_setup.int_adc_bit = ADC_TEMP_SENSOR;                         // ADC internal temperature
+    adc_setup.int_adc_bit = ADC_TEMP_SENSOR;                             // ADC internal temperature
         #endif
     #endif
-    #if defined TWR_K20D50M || defined TWR_K20D72M || defined TWR_K21D50M
+    #if (defined TWR_K20D50M || defined TWR_K20D72M || defined TWR_K21D50M) && !defined DEV1
     adc_setup.int_adc_mode = (ulCalibrate | ADC_SELECT_INPUTS_A | ADC_CLOCK_BUS_DIV_2 | ADC_CLOCK_DIVIDE_4 | ADC_SAMPLE_ACTIVATE_LONG | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_ENDED | ADC_SINGLE_SHOT_MODE | ADC_16_BIT_MODE | ADC_SW_TRIGGERED); // note that the first configuration should calibrate the ADC - single shot with interrupt on completion {12}
     adc_setup.int_adc_sample = (ADC_SAMPLE_LONG_PLUS_12 | ADC_SAMPLE_AVERAGING_32); // additional sampling clocks
     #else
