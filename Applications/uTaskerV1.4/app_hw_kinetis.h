@@ -2495,7 +2495,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define CDC_UART_5     4
     #endif
     #if defined SUPPORT_LOW_POWER
-        #define LPUART_CHARACTERISTICS     (0 | /*LPUART_CTRL_DOZEEN*/)
+        #define LPUART_CHARACTERISTICS     (0 /* | LPUART_CTRL_DOZEEN*/)
     #else
         #define LPUART_CHARACTERISTICS     (0)
     #endif

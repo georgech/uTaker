@@ -1209,6 +1209,7 @@
       //#define SERIAL_SUPPORT_DMA_RX                                    // enable also DMA on receiver (used less that transmit DMA)
       //#define SERIAL_SUPPORT_DMA_RX_FREERUN                            // support free-running reception mode
     #endif
+    #define LPUART_CHARACTERISTICS     0
 #else
     #define TX_BUFFER_SIZE   (256)
     #define RX_BUFFER_SIZE   (256)
@@ -2408,9 +2409,10 @@
     #define SWITCH_3               (PORTC_BIT2)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
 
     #if defined DEV1                                                     // temporary development configuration
-        #define INIT_WATCHDOG_LED() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, (PORTC_BIT3), (PORTC_BIT3), (PORT_SRE_SLOW | PORT_DSE_HIGH)); _CONFIG_DRIVE_PORT_OUTPUT_VALUE(D, (PORTD_BIT0 | PORTD_BIT1 | PORTD_BIT2 | PORTD_BIT3 | PORTD_BIT4 | PORTD_BIT5 | PORTD_BIT6 | PORTD_BIT7), (PORTD_BIT0 | PORTD_BIT1 | PORTD_BIT2 | PORTD_BIT3 | PORTD_BIT4 | PORTD_BIT5 | PORTD_BIT6 | PORTD_BIT7), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+        #define INIT_WATCHDOG_LED() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, (PORTC_BIT3), (PORTC_BIT3), (PORT_SRE_SLOW | PORT_DSE_HIGH)); _CONFIG_DRIVE_PORT_OUTPUT_VALUE(D, (PORTD_BIT0 | PORTD_BIT1 | PORTD_BIT2 | PORTD_BIT3 | PORTD_BIT4 | PORTD_BIT5 | PORTD_BIT6 | PORTD_BIT7), (PORTD_BIT0 | PORTD_BIT1 | PORTD_BIT2 | PORTD_BIT3 | PORTD_BIT4 | PORTD_BIT5 | PORTD_BIT6 | PORTD_BIT7), (PORT_SRE_SLOW | PORT_DSE_HIGH)); \
+                                    _CONFIG_PORT_INPUT_FAST_LOW(A, (PORTA_BIT1), PORT_PS_UP_ENABLE);
         #define INIT_WATCHDOG_DISABLE()
-        #define WATCHDOG_DISABLE()  1
+        #define WATCHDOG_DISABLE()  0
         #define FORCE_BOOT()       (_READ_PORT_MASK(A, PORTA_BIT1) == 0) // pull this input down to force boot loader mode (hold SW2 at reset)
         #define TOGGLE_WATCHDOG_LED()   _TOGGLE_PORT(C, PORTC_BIT3)
     #else
