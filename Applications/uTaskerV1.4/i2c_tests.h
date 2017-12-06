@@ -45,7 +45,7 @@
     #define TEST_FXOS8700                                                // test monitoring the 6-axis sensor
     #if defined TEST_FXOS8700
       //#define FXOS8700_14BIT_RES
-      //#define READ_MAGNETOMETER
+        #define READ_MAGNETOMETER
     #endif
   //#define DISPLAY_ACCELEROMETER_VALUES                                 // print values to debug output irrespective of debug setting
 
@@ -854,15 +854,19 @@ static void acc_data_ready(void)
         if (fnRead(I2CPortID, ucInputMessage, 6) != 0) {                 // if the status read has completed
             static int iDisplayRate = 0;
             if (++iDisplayRate > 100) {
-                int i = 0;
-                unsigned short usState;
-                fnDebugMsg("Mag. state:");                               // display the status on a regular basis
-                while (i < 6) {
-                    usState = (ucInputMessage[i++] << 8);                // 16 bit value
-                    usState |= ucInputMessage[i++];
-                    fnDebugHex(usState, (sizeof(usState) | WITH_LEADIN | WITH_SPACE)); // display the received register contents
+        #if !defined DISPLAY_ACCELEROMETER_VALUES && defined USE_MAINTENANCE
+                if (iAccelOutput != 0) {
+        #endif
+                    int i = 0;
+                    unsigned short usState;
+                    fnDebugMsg("Mag. state:");                           // display the status on a regular basis
+                    while (i < 6) {
+                        usState = (ucInputMessage[i++] << 8);            // 16 bit value
+                        usState |= ucInputMessage[i++];
+                        fnDebugHex(usState, (sizeof(usState) | WITH_LEADIN | WITH_SPACE)); // display the received register contents
+                    }
+                    fnDebugMsg("\r\n");
                 }
-                fnDebugMsg("\r\n");
                 iDisplayRate = 0;
                 fnWrite(I2CPortID, (unsigned char *)ucSetAccelerometerRead, sizeof(ucSetAccelerometerRead)); // write the register address to read
                 fnRead(I2CPortID, (unsigned char *)ucReadAccelerometerState, 0); // start the read process of the next status

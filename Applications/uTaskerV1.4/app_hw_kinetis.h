@@ -2815,9 +2815,9 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
       //#define I2C1_ON_E
     #endif
     #if defined SUPPORT_LOW_POWER
-        #define LPI2C_CHARACTERISTICS  (LPI2C_MCR_DOZEN | LPI2C_MCR_DBGEN) // allow the LPI2C to continue running in doze modes since it will otherwise freeze whenever the processor uses WAIT 
+        #define LPI2C_CHARACTERISTICS  (LPI2C_MCR_DOZEN | LPI2C_MCR_DBGEN) // allow the LPI2C to continue running in doze modes since it will otherwise freeze whenever the processor uses STOP (debug mode should always be enabled otherwise strange effects may be encountered! - reference https://community.nxp.com/thread/465202) 
     #else
-        #define LPI2C_CHARACTERISTICS  (0 | LPI2C_MCR_DBGEN)             // define whether the LPI2C controller opertaion is enabled in debug mode
+        #define LPI2C_CHARACTERISTICS  (0 | LPI2C_MCR_DBGEN)             // define whether the LPI2C controller operation is enabled in debug mode (debug mode should always be enabled otherwise strange effects may be encountered! - reference https://community.nxp.com/thread/465202)
     #endif
 #endif
 

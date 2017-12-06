@@ -21,7 +21,6 @@
 /* =================================================================== */
 
 static void fnConfigI2C_pins(QUEUE_HANDLE Channel,  int iMaster);
-static void fnSendSlaveAddress(I2CQue *ptI2CQue, QUEUE_HANDLE Channel, KINETIS_LPI2C_CONTROL *ptrLPI2C);
 
 /* =================================================================== */
 /*                      local variable definitions                     */
@@ -114,6 +113,16 @@ static unsigned char fnGetTxByte(int iChannel, I2CQue *ptrTxControl, int iType)
 }
 #endif
 
+#if defined TEMP_LPI2C_TEST
+    int iRxLPI2Cpause = 0;
+    int iTxLPI2Cpause = 0;
+    unsigned long ulChange = 0;
+    static unsigned long ulChars = LPI2C_CHARACTERISTICS;
+    #define LPI2C_CHARACTERISTICS_ ulChars
+#else
+    #define LPI2C_CHARACTERISTICS_ LPI2C_CHARACTERISTICS
+#endif
+
 static void fnI2C_Handler(KINETIS_LPI2C_CONTROL *ptrLPI2C, int iChannel) // general LPI2C interrupt handler
 {
     I2CQue *ptrTxControl = I2C_tx_control[iChannel];
@@ -135,6 +144,39 @@ static void fnI2C_Handler(KINETIS_LPI2C_CONTROL *ptrLPI2C, int iChannel) // gene
             }
         }
         ptrTxControl->ucState &= ~(TX_WAIT | TX_ACTIVE | RX_ACTIVE);     // interface is idle
+    #if defined TEMP_LPI2C_TEST
+        if (ulChange != 0) {
+            ptrLPI2C->LPI2C_MCR &= ~(LPI2C_MCR_MEN);
+            if (ulChange & 0x01) {
+                ptrLPI2C->LPI2C_MCFGR1 |= (LPI2C_MCFGR1_AUTOSTOP);
+            }
+            else if (ulChange & 0x02) {
+                ptrLPI2C->LPI2C_MCFGR1 &= ~(LPI2C_MCFGR1_AUTOSTOP);
+            }
+            else if (ulChange & 0x04) {
+                ulChars |= LPI2C_MCR_DOZEN;
+                ptrLPI2C->LPI2C_MCR |= (LPI2C_MCR_DOZEN);
+            }
+            else if (ulChange & 0x08) {
+                ulChars &= ~LPI2C_MCR_DOZEN;
+                ptrLPI2C->LPI2C_MCR &= ~(LPI2C_MCR_DOZEN);
+            }
+            else if (ulChange & 0x10) {
+                ulChars |= LPI2C_MCR_DBGEN;
+                ptrLPI2C->LPI2C_MCR |= (LPI2C_MCR_DBGEN);
+            }
+            else if (ulChange & 0x20) {
+                ulChars &= ~LPI2C_MCR_DBGEN;
+                ptrLPI2C->LPI2C_MCR &= ~(LPI2C_MCR_DBGEN);
+            }
+            ulChange = 0;
+            ptrLPI2C->LPI2C_MCR |= (LPI2C_MCR_MEN);
+        }
+    #endif
+        if (ptrTxControl->I2C_queue.chars != 0) {                        // if there is further data waiting we can send it now
+            fnLogEvent('n', ptrTxControl->I2C_queue.chars);
+            fnTxI2C(ptrTxControl, iChannel);                             // we have another message to send so we can send a repeated start condition
+        }
         return;
     }
 
@@ -144,7 +186,7 @@ static void fnI2C_Handler(KINETIS_LPI2C_CONTROL *ptrLPI2C, int iChannel) // gene
         if ((ptrTxControl->ucState & TX_ACTIVE) != 0) {                  // the address transmission has completed
             fnLogEvent('A', ptrLPI2C->LPI2C_MRDR);
             (void)(ptrLPI2C->LPI2C_MRDR);                                // dummy read to clear address
-            ptrLPI2C->LPI2C_MCR = (LPI2C_MCR_RTF | LPI2C_MCR_MEN | LPI2C_CHARACTERISTICS); // ensure receive FIFO is reset
+            ptrLPI2C->LPI2C_MCR = (LPI2C_MCR_RTF | LPI2C_MCR_MEN | LPI2C_CHARACTERISTICS_); // ensure receive FIFO is reset
             ptrLPI2C->LPI2C_MTDR = (LPI2C_MTDR_CMD_RX_DATA | (ptrTxControl->ucPresentLen - 1)); // command the read sequence
             ptrLPI2C->LPI2C_MIER = LPI2C_MIER_RDIE;                      // enable interrupt on reception available and disable transmission interrupt
             ptrTxControl->ucState = (RX_ACTIVE);                         // signal that the address has been sent and we are now receiving
@@ -252,6 +294,7 @@ static __interrupt void _I2C_Interrupt_3(void)                           // I2C3
 extern void fnTxI2C(I2CQue *ptI2CQue, QUEUE_HANDLE Channel)
 {
     KINETIS_LPI2C_CONTROL *ptrLPI2C;
+    unsigned char ucAddress;
     #if LPI2C_AVAILABLE > 1
     if (Channel == 1) {
         ptrLPI2C = (KINETIS_LPI2C_CONTROL *)LPI2C1_BLOCK;
@@ -293,13 +336,36 @@ extern void fnTxI2C(I2CQue *ptI2CQue, QUEUE_HANDLE Channel)
         }
         fnLogEvent('b', ptrLPI2C->LPI2C_MSR);
     }
-    fnSendSlaveAddress(ptI2CQue, Channel, ptrLPI2C); // send a start condition or a repeated start
-}
-
-static void fnSendSlaveAddress(I2CQue *ptI2CQue, QUEUE_HANDLE Channel, KINETIS_LPI2C_CONTROL *ptrLPI2C)
-{
-    register unsigned char ucAddress = *ptI2CQue->I2C_queue.get++;       // the slave address
+    // Generate a start condition/repeated start and send the address
+    //
+    ucAddress = *ptI2CQue->I2C_queue.get++;                              // get the slave address
     ptrLPI2C->LPI2C_MTDR = (LPI2C_MTDR_CMD_START_DATA | ucAddress);      // generate a start or repeated start and send the slave address (this includes the rd/wr bit)
+    #if defined TEMP_LPI2C_TEST
+    if ((iRxLPI2Cpause != 0) && ((ucAddress & 0x01) != 0)) {
+        unsigned long ulWaitCount = TSTMR0_L;
+        (void)TSTMR0_H;
+        ulWaitCount += iRxLPI2Cpause;
+        while (TSTMR0_L != ulWaitCount) {
+            (void)TSTMR0_H;
+        #if defined _WINDOWS
+            TSTMR0_L = ulWaitCount;
+        #endif
+        }
+        (void)TSTMR0_H;
+    }
+    else if ((iTxLPI2Cpause != 0) && ((ucAddress & 0x01) == 0)) {
+        unsigned long ulWaitCount = TSTMR0_L;
+        (void)TSTMR0_H;
+        ulWaitCount += iTxLPI2Cpause;
+        while (TSTMR0_L != ulWaitCount) {
+            (void)TSTMR0_H;
+        #if defined _WINDOWS
+            TSTMR0_L = ulWaitCount;
+        #endif
+        }
+        (void)TSTMR0_H;
+    }
+    #endif
     fnLogEvent('?', ucAddress);
     if (ptI2CQue->I2C_queue.get >= ptI2CQue->I2C_queue.buffer_end) {     // handle circular buffer
         ptI2CQue->I2C_queue.get = ptI2CQue->I2C_queue.QUEbuffer;
@@ -327,6 +393,8 @@ static void fnSendSlaveAddress(I2CQue *ptI2CQue, QUEUE_HANDLE Channel, KINETIS_L
     iInts |= (I2C_INT0 << Channel);                                      // signal that an interrupt is to be generated
     #endif
 }
+
+
 
 /* =================================================================== */
 /*                         I2C Configuration                           */
@@ -629,7 +697,7 @@ extern void fnConfigI2C(I2CTABLE *pars)
     else {
         return;
     }
-    ptrLPI2C->LPI2C_MCR = (LPI2C_CHARACTERISTICS);                       // take the LPI2C controller out of reset
+    ptrLPI2C->LPI2C_MCR = (LPI2C_CHARACTERISTICS_);                      // take the LPI2C controller out of reset
     if (pars->usSpeed != 0) {
         int iPrecaler;
         int iClkHiCycle;
@@ -661,7 +729,7 @@ extern void fnConfigI2C(I2CTABLE *pars)
                 }
 
                 if (ulAbsoluteDeviation < ulBestDeviation) {             // if this setting is the best that has been found yet
-                    ptrLPI2C->LPI2C_MCFGR1 = (ucPrescalerSetting | LPI2C_MCFG1_PINCFG_2_OPEN); // set the clock prescaler and normal I2C mode (2-line with open drain)
+                    ptrLPI2C->LPI2C_MCFGR1 = (ucPrescalerSetting | LPI2C_MCFGR1_PINCFG_2_OPEN); // set the clock prescaler and normal I2C mode (2-line with open drain)
                     ucClkHi = (unsigned char)iClkHiCycle;
                     if (ulAbsoluteDeviation == 0) {
                         break;                                           // in case a pefect combination has been found we can quit searching
@@ -680,7 +748,7 @@ extern void fnConfigI2C(I2CTABLE *pars)
             ptrLPI2C->LPI2C_MCCR0 = (((ucClkHi << LPI2C_MCCR_CLKHI_SHIFT) & LPI2C_MCCR0_CLKHI_MASK) | ((((2 * ucClkHi) << LPI2C_MCCR_CLKLO_SHIFT) & LPI2C_MCCR0_CLKLO_MASK) | ((ucClkHi << LPI2C_MCCR_SETHOLD_SHIFT) & LPI2C_MCCR0_SETHOLD_MASK) | (((ucClkHi/2) << LPI2C_MCCR_DATAVD_SHIFT) & LPI2C_MCCR0_DATAVD_MASK)));
         }
       //ptrLPI2C->LPI2C_MCCR0 = 0x09131326;                              // reference for 100kHz fr0m 48MHz clock (presacle value of 3)
-        ptrLPI2C->LPI2C_MCR = (LPI2C_MCR_MEN | LPI2C_CHARACTERISTICS);   // enable master mode of operation
+        ptrLPI2C->LPI2C_MCR = (LPI2C_MCR_MEN | LPI2C_CHARACTERISTICS_);  // enable master mode of operation
     }
     else {
     #if defined I2C_SLAVE_MODE

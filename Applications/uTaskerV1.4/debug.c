@@ -925,6 +925,13 @@ static const DEBUG_COMMAND tI2CCommand[] = {
 #if defined I2C_INTERFACE
     {"acc_on",            "enable accelerometer output",           DO_I2C,           DO_ACC_ON }, // {68}
     {"acc_off",           "disable output",                        DO_I2C,           DO_ACC_OFF },
+    #if defined LPI2C_AVAILABLE && defined TEMP_LPI2C_TEST
+    {"tpause",            "test potential bug [1/0]",              DO_I2C,           122 },
+    {"rpause",            "test potential bug [1/0]",              DO_I2C,           123 },
+    {"dozen",             "DOZEN [1/0]",                           DO_I2C,           124 },
+    {"dbgen",             "DBGEN [1/0]",                           DO_I2C,           125 },
+    {"auto",              "AUTOSTOP [1/0]",                        DO_I2C,           126 },
+    #endif
     #if defined TEST_I2C_INTERFACE
     {"wr",                "write [add] [value] {rep}",             DO_I2C,           DO_I2C_WRITE },
     {"rd",                "read  [add] [no. of bytes]",            DO_I2C,           DO_I2C_READ },
@@ -4698,6 +4705,11 @@ static void fnDoOLED(unsigned char ucType, CHAR *ptrInput)               // OLED
 #endif
 
 #if defined I2C_INTERFACE
+    #if defined LPI2C_AVAILABLE && defined TEMP_LPI2C_TEST
+    extern int iRxLPI2Cpause;
+    extern int iTxLPI2Cpause;
+    extern unsigned long ulChange;
+    #endif
 static void fnDoI2C(unsigned char ucType, CHAR *ptrInput)                // I2C group
 {
     switch (ucType) {
@@ -4709,6 +4721,58 @@ static void fnDoI2C(unsigned char ucType, CHAR *ptrInput)                // I2C 
         iAccelOutput = 0;
         fnDebugMsg("Disabled\r\n");
         break;
+    #if defined LPI2C_AVAILABLE && defined TEMP_LPI2C_TEST
+    case 122:
+        if (*ptrInput == '1') {
+            fnDebugMsg("Tx pause 0.5ms");
+            iTxLPI2Cpause = 500;
+        }
+        else {
+            fnDebugMsg("Tx pause removed");
+            iTxLPI2Cpause = 0;
+        }
+        break;
+    case 123:
+        if (*ptrInput == '1') {
+            fnDebugMsg("Rx pause 0.5ms");
+            iRxLPI2Cpause = 500;
+        }
+        else {
+            fnDebugMsg("Rx pause removed");
+            iRxLPI2Cpause = 0;
+        }
+        break;
+    case 124:
+        if (*ptrInput == '1') {
+            fnDebugMsg("DOZEN = '1'");
+            ulChange = 0x04;
+        }
+        else {
+            fnDebugMsg("DOZEN = '0'");
+            ulChange = 0x08;
+        }
+        break;
+    case 125:
+        if (*ptrInput == '1') {
+            fnDebugMsg("DBGEN = '1'");
+            ulChange = 0x10;
+        }
+        else {
+            fnDebugMsg("DBGEN = '0'");
+            ulChange = 0x20;
+        }
+        break;
+    case 126:
+        if (*ptrInput == '1') {
+            fnDebugMsg("AUTOSTOP = '1'");
+            ulChange = 0x01;
+        }
+        else {
+            fnDebugMsg("AUTOSTOP = '0'");
+            ulChange = 0x02;
+        }
+        break;
+    #endif
     #if defined TEST_I2C_INTERFACE
     case DO_I2C_WRITE:                                                   // write a value to a specified I2C address
         {

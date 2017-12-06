@@ -13212,34 +13212,34 @@ typedef struct stKINETIS_I2C_CONTROL
         #define LPI2C_MDER_TDDE          0x00000001                      // transmit data DMA enable
         #define LPI2C_MDER_RDDE          0x00000002                      // receive data DMA enable
     #define LPI2C0_MCFGR0                *(unsigned long *)(LPI2C0_BLOCK + 0x020) // LPI2C0 master configuration register 0
-        #define LPI2C_MCFG0_HREN         0x00000001                      // host request enable
-        #define LPI2C_MCFG0_HRPOL        0x00000002                      // host request polarity
-        #define LPI2C_MCFG0_HRSEL        0x00000004                      // host request select
-        #define LPI2C_MCFG0_CIRFIFO      0x00000100                      // circular FIFO enable
-        #define LPI2C_MCFG0_RDMO         0x00000200                      // receive data match only
+        #define LPI2C_MCFGR0_HREN        0x00000001                      // host request enable
+        #define LPI2C_MCFGR0_HRPOL       0x00000002                      // host request polarity
+        #define LPI2C_MCFGR0_HRSEL       0x00000004                      // host request select
+        #define LPI2C_MCFGR0_CIRFIFO     0x00000100                      // circular FIFO enable
+        #define LPI2C_MCFGR0_RDMO        0x00000200                      // receive data match only
     #define LPI2C0_MCFGR1                *(unsigned long *)(LPI2C0_BLOCK + 0x024) // LPI2C0 master configuration register 1 (only write when I2C master is disabled)
-        #define LPI2C_MCFG1_PRESCALE_1   0x00000000                      // clock prescaler - divide by 1
-        #define LPI2C_MCFG1_PRESCALE_2   0x00000001                      // clock prescaler - divide by 2
-        #define LPI2C_MCFG1_PRESCALE_4   0x00000002                      // clock prescaler - divide by 4
-        #define LPI2C_MCFG1_PRESCALE_8   0x00000003                      // clock prescaler - divide by 8
-        #define LPI2C_MCFG1_PRESCALE_16  0x00000004                      // clock prescaler - divide by 16
-        #define LPI2C_MCFG1_PRESCALE_32  0x00000005                      // clock prescaler - divide by 32
-        #define LPI2C_MCFG1_PRESCALE_64  0x00000006                      // clock prescaler - divide by 64
-        #define LPI2C_MCFG1_PRESCALE_128 0x00000007                      // clock prescaler - divide by 128
-        #define LPI2C_MCFG1_AUTOSTOP     0x00000100                      // automatic STOP generation
-        #define LPI2C_MCFG1_IGNACK       0x00000200                      // ignore NACK
-        #define LPI2C_MCFG1_TIMECFG      0x00000400                      // timeout configuration
-        #define LPI2C_MCFG1_MATCFG       0x00070000                      // match configuration mask
-        #define LPI2C_MCFG1_MATCFG_DISABLED 0x00070000                   // match configuration - disabled
-        #define LPI2C_MCFG1_PINCFG       0x07000000                      // pin configuration mask
-        #define LPI2C_MCFG1_PINCFG_2_OPEN   0x00000000                   // pin configuration - LPI2C configured for 2-pin open drain mode
+        #define LPI2C_MCFGR1_PRESCALE_1  0x00000000                      // clock prescaler - divide by 1
+        #define LPI2C_MCFGR1_PRESCALE_2  0x00000001                      // clock prescaler - divide by 2
+        #define LPI2C_MCFGR1_PRESCALE_4  0x00000002                      // clock prescaler - divide by 4
+        #define LPI2C_MCFGR1_PRESCALE_8  0x00000003                      // clock prescaler - divide by 8
+        #define LPI2C_MCFGR1_PRESCALE_16 0x00000004                      // clock prescaler - divide by 16
+        #define LPI2C_MCFGR1_PRESCALE_32 0x00000005                      // clock prescaler - divide by 32
+        #define LPI2C_MCFGR1_PRESCALE_64 0x00000006                      // clock prescaler - divide by 64
+        #define LPI2C_MCFGR1_PRESCALE_128 0x00000007                      // clock prescaler - divide by 128
+        #define LPI2C_MCFGR1_AUTOSTOP    0x00000100                      // automatic STOP generation
+        #define LPI2C_MCFGR1_IGNACK      0x00000200                      // ignore NACK
+        #define LPI2C_MCFGR1_TIMECFG     0x00000400                      // timeout configuration
+        #define LPI2C_MCFGR1_MATCFG      0x00070000                      // match configuration mask
+        #define LPI2C_MCFGR1_MATCFG_DISABLED 0x00070000                   // match configuration - disabled
+        #define LPI2C_MCFGR1_PINCFG      0x07000000                      // pin configuration mask
+        #define LPI2C_MCFGR1_PINCFG_2_OPEN 0x00000000                   // pin configuration - LPI2C configured for 2-pin open drain mode
     #define LPI2C0_MCFGR2                *(unsigned long *)(LPI2C0_BLOCK + 0x028) // LPI2C0 master configuration register 2 (only write when I2C master is disabled)
-        #define LPI2C_MCFG2_BUSIDLE_OFF  0x00000000                      // bus idle timeout disabled
-        #define LPI2C_MCFG2_BUSIDLE_MASK 0x00000fff                      // bus idle timeout mask
-        #define LPI2C_MCFG2_FILTSCL_MASK 0x000f0000                      // glitch filter SCL
-        #define LPI2C_MCFG2_FILTSDA_MASK 0x0f000000                      // glitch filter SDA
+        #define LPI2C_MCFGR2_BUSIDLE_OFF  0x00000000                      // bus idle timeout disabled
+        #define LPI2C_MCFGR2_BUSIDLE_MASK 0x00000fff                      // bus idle timeout mask
+        #define LPI2C_MCFGR2_FILTSCL_MASK 0x000f0000                      // glitch filter SCL
+        #define LPI2C_MCFGR2_FILTSDA_MASK 0x0f000000                      // glitch filter SDA
     #define LPI2C0_MCFGR3                *(unsigned long *)(LPI2C0_BLOCK + 0x02c) // LPI2C0 master configuration register 3 (only write when I2C master is disabled)
-        #define LPI2C_MCFG3_PINLOW_MASK  0x000fff00                      // pin low timeout
+        #define LPI2C_MCFGR3_PINLOW_MASK 0x000fff00                      // pin low timeout
     #define LPI2C0_MDMR                  *(unsigned long *)(LPI2C0_BLOCK + 0x040) // LPI2C0 master data match register
         #define LPI2C_MDMR_MATCH0        0x000000ff                      // match 0 value
         #define LPI2C_MDMR_MATCH1        0x00ff0000                      // match 1 value
