@@ -47,7 +47,7 @@
         #endif
     #endif
     #if (BUS_CLOCK_DIVIDE == 2)                                          // divide the core/sytem clock by 2 to derive the bus/flash clock
-        #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA8 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+        #if defined SIM_CLKDIV
     SIM_CLKDIV = (SIM_CLKDIV_OUTDIV2_2);                                 // bus clock half the system clock (ICSOUTCLK)
         #else
     SIM_BUSDIV = SIM_BUSDIVBUSDIV;                                       // bus clock half the system clock (ICSOUTCLK)

@@ -47,7 +47,7 @@ static unsigned char ucCheckTxI2C = 0;                                   // {2}
 /* =================================================================== */
 
 
-//#define MAX_EVENTS 200                                                 // comment this in to enable event logging (mainly used to determine behaviour in double-buffered mode in order to find workarounds for silicon issues)
+//#define MAX_EVENTS 200                                                 // comment this in to enable event logging
 #if defined MAX_EVENTS
 unsigned long ulTemp[MAX_EVENTS] = {0};
 int iEventCounter = 0;
@@ -114,8 +114,8 @@ static unsigned char fnGetTxByte(int iChannel, I2CQue *ptrTxControl, int iType)
 #endif
 
 #if defined TEMP_LPI2C_TEST
-    int iRxLPI2Cpause = 0;
-    int iTxLPI2Cpause = 0;
+    unsigned long ulRxLPI2Cpause = 0;
+    unsigned long ulTxLPI2Cpause = 0;
     unsigned long ulChange = 0;
     static unsigned long ulChars = LPI2C_CHARACTERISTICS;
     #define LPI2C_CHARACTERISTICS_ ulChars
@@ -341,29 +341,11 @@ extern void fnTxI2C(I2CQue *ptI2CQue, QUEUE_HANDLE Channel)
     ucAddress = *ptI2CQue->I2C_queue.get++;                              // get the slave address
     ptrLPI2C->LPI2C_MTDR = (LPI2C_MTDR_CMD_START_DATA | ucAddress);      // generate a start or repeated start and send the slave address (this includes the rd/wr bit)
     #if defined TEMP_LPI2C_TEST
-    if ((iRxLPI2Cpause != 0) && ((ucAddress & 0x01) != 0)) {
-        unsigned long ulWaitCount = TSTMR0_L;
-        (void)TSTMR0_H;
-        ulWaitCount += iRxLPI2Cpause;
-        while (TSTMR0_L != ulWaitCount) {
-            (void)TSTMR0_H;
-        #if defined _WINDOWS
-            TSTMR0_L = ulWaitCount;
-        #endif
-        }
-        (void)TSTMR0_H;
+    if ((ulRxLPI2Cpause != 0) && ((ucAddress & 0x01) != 0)) {
+        fnDelayLoop(ulRxLPI2Cpause);
     }
-    else if ((iTxLPI2Cpause != 0) && ((ucAddress & 0x01) == 0)) {
-        unsigned long ulWaitCount = TSTMR0_L;
-        (void)TSTMR0_H;
-        ulWaitCount += iTxLPI2Cpause;
-        while (TSTMR0_L != ulWaitCount) {
-            (void)TSTMR0_H;
-        #if defined _WINDOWS
-            TSTMR0_L = ulWaitCount;
-        #endif
-        }
-        (void)TSTMR0_H;
+    else if ((ulTxLPI2Cpause != 0) && ((ucAddress & 0x01) == 0)) {
+        fnDelayLoop(ulTxLPI2Cpause);
     }
     #endif
     fnLogEvent('?', ucAddress);

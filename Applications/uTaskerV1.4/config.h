@@ -240,7 +240,9 @@
     #define KINETIS_MAX_SPEED    40000000                                // 40MHz version
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((2 * 1024) * MEM_FACTOR)
     #define KINETIS_KE
+    #define KINETIS_KEA
     #define KINETIS_KEA64
+    #define KINETIS_KEAN64                                               // N variation
     #define DEVICE_WITHOUT_ETHERNET                                      // KEA doesn't have Ethernet controller
     #define DEVICE_WITHOUT_USB                                           // KEA doesn't have USB
 #elif defined TRK_KEA128
@@ -280,6 +282,7 @@
     #define DEVICE_WITHOUT_ETHERNET                                      // KEA doesn't have Ethernet controller
     #define DEVICE_WITHOUT_USB                                           // KEA doesn't have USB
 #elif defined FRDM_KL02Z
+  //#define DEV2                                                         // temporary development hardware
     #define TARGET_HW            "FRDM-KL02Z Kinetis"
     #undef MONITOR_PERFORMANCE                                           // KL02 has no PIT
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((2 * 1024) * MEM_FACTOR)
@@ -288,6 +291,16 @@
     #define DEVICE_WITHOUT_CAN                                           // KL doesn't have CAN controller
     #define DEVICE_WITHOUT_ETHERNET                                      // KL doesn't have Ethernet controller
     #define DEVICE_WITHOUT_USB                                           // KL02 doesn't have USB
+
+    #if defined DEV2
+        #undef USE_MAINTENANCE
+        #define REMOVE_PORT_INITIALISATIONS
+        #define I2C_INTERFACE
+        #define NUMBER_I2C       (I2C_AVAILABLE)                         // I2C interfaces available
+        #define I2C_SLAVE_MODE                                           // support slave mode
+          //#define I2C_SLAVE_TX_BUFFER                                  // support preparing slave transmissions with fnWrite()
+          //#define I2C_SLAVE_RX_BUFFER                                  // support slave reception buffer for fnRead()
+    #endif
 #elif defined FRDM_KL03Z
     #define TARGET_HW            "FRDM-KL03Z Kinetis"
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((1.0 * 1024) * MEM_FACTOR)
@@ -825,7 +838,7 @@
   //#define I2C_EEPROM_FILE_SYSTEM                                       // we have an EEPROM based external file system via I2C interface
   //#define SPI_EEPROM_FILE_SYSTEM                                       // we have an EEPROM based external file system via SPI interface
   //#define EXT_FLASH_FILE_SYSTEM                                        // we have a file system in external FLASH memory
-    #if !defined NAND_FLASH_FAT && !defined DEV1
+    #if !defined NAND_FLASH_FAT && !defined DEV1 && !defined DEV2
         #define FLASH_FILE_SYSTEM                                        // we have an internal file system in FLASH
     #endif
   //#define NVRAM                                                        // we have an external file system in non-volatile RAM
@@ -1186,12 +1199,12 @@
 // I2C
 //
 //#define I2C_INTERFACE
-#if defined I2C_INTERFACE
+#if defined I2C_INTERFACE && !defined DEV2
     #define NUMBER_I2C       (I2C_AVAILABLE + LPI2C_AVAILABLE)           // I2C interfaces available
   //#define I2C_SLAVE_MODE                                               // support slave mode
         #define I2C_SLAVE_TX_BUFFER                                      // support preparing slave transmissions with fnWrite()
         #define I2C_SLAVE_RX_BUFFER                                      // support slave reception buffer for fnRead()
-#else
+#elif !defined DEV2
     #define NUMBER_I2C     0                                             // no physical queue needed
 #endif
 
@@ -1297,7 +1310,7 @@
 
 // Ethernet
 //
-#if !defined DEVICE_WITHOUT_ETHERNET && !defined K70F150M_12M && !defined TEENSY_3_5 && !defined TEENSY_3_6 && !defined K66FX1M && !defined HEXIWEAR_K64F && !defined HEXIWEAR_KW40Z
+#if !defined DEVICE_WITHOUT_ETHERNET && !defined K70F150M_12M && !defined TEENSY_3_5 && !defined TEENSY_3_6 && !defined K66FX1M && !defined HEXIWEAR_K64F && !defined HEXIWEAR_KW40Z && !defined K66FX1M0
     #define ETH_INTERFACE                                                // enable Ethernet interface driver
 #elif defined TEENSY_3_1 || defined TEENSY_LC
   //#define ETH_INTERFACE                                                // enable external Ethernet interface driver

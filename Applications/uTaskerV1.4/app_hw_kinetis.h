@@ -590,18 +590,18 @@
     #endif
 #elif defined FRDM_KL02Z || defined FRDM_KL05Z                           // {25}
   //#define RUN_FROM_LIRC                                                // clock from internal 4MHz RC clock
-  //#define RUN_FROM_DEFAULT_CLOCK                                       // default mode is FLL Engaged Internal - the 32kHz IRC is multiplied by FLL factor of 640 to obtain 20.971MHz nominal frequency (20MHz..25MHz)
-    #if defined RUN_FROM_LIRC
+    #define RUN_FROM_DEFAULT_CLOCK                                       // default mode is FLL Engaged Internal - the 32kHz IRC (31.25..39.0625kHz - factory trimmed to 32.768) is multiplied by FLL factor of 640 to obtain 20.971MHz nominal frequency (20MHz..25MHz)
+    #if defined RUN_FROM_LIRC                                            // run directly from 4MHz clock
         #define BUS_CLOCK_DIVIDE    1
         #define FLASH_CLOCK_DIVIDE  1
-    #elif defined RUN_FROM_DEFAULT_CLOCK
-        #define FLL_FACTOR          1464                                 // set highest frequency (47.972MHz)
+    #elif defined RUN_FROM_DEFAULT_CLOCK                                 
+        #define FLL_FACTOR          1464                                 // set highest frequency [1464 gives 47.972MHz] (factors available are 640, 732, 1280, 1464, 1920, 2197, 2560 and 2929)
         #if defined FLL_FACTOR
             #define FLASH_CLOCK_DIVIDE  2                                // 24MHz (valid also as bus clock divide)
         #else
             #define FLASH_CLOCK_DIVIDE  1
         #endif
-    #else
+    #else                                                                // use crystal oscillator as FLL source
         #define OSC_LOW_GAIN_MODE                                        // oscillator without feedback resistor or load capacitors so use low gain mode
         #define CRYSTAL_FREQUENCY   32768                                // 32768 Hz crystal
         #define _EXTERNAL_CLOCK     CRYSTAL_FREQUENCY

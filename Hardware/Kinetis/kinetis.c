@@ -64,6 +64,7 @@
     12.09.2017 Added INTMUX support                                      {130}
     29.11.2017 Add fnMaskInterrupt()                                     {131}
     04.12.2017 Add MMDVSQ                                                {132}
+    06.12.2017 Use TSTMR as time base for fnDelayLoop() when it is available {133}
 
 */
 
@@ -609,7 +610,50 @@ extern void fnClearSLCD(void)
 
 extern void fnDelayLoop(unsigned long ulDelay_us)
 {
-#if !defined TICK_USES_LPTMR && !defined TICK_USES_RTC                   // if the SYSTICK is operating we use it as a us timer for best independence of code execution speed and compiler (KL typically +15% longer then requested value between 100us and 10ms)
+#if defined TSTMR_AVAILABLE                                              // {133}
+    // Use the time stamp timer module to count us
+    //
+    unsigned long ulMatchTimeHigh;
+    unsigned long ulMatchTimeLow;
+    unsigned long ulPresentTimeStamp = TSTMR0_L;                         // get lowest 32 bits of timer
+    (void)TSTMR0_H;                                                      // dummy read of highest 20 bits so that the next low work read is unlocked
+    ulMatchTimeLow = ulPresentTimeStamp;
+    ulMatchTimeHigh = (ulPresentTimeStamp + ulDelay_us);                 // the count value after the delay (rounded up)
+    if (ulMatchTimeHigh > ulPresentTimeStamp) {                          // no long word overflow will normally occur
+        FOREVER_LOOP() {
+            ulPresentTimeStamp = TSTMR0_L;                               // get lowest 32 bits of timer
+            (void)TSTMR0_H;                                              // dummy read of highest 20 bits so that the next low work read is unlocked
+            if ((ulPresentTimeStamp >= ulMatchTimeHigh) || (ulPresentTimeStamp < ulMatchTimeLow)) {
+                // The time has been reached, or passed (including overflow after the match was passed)
+                //
+                return;
+            }
+    #if defined _WINDOWS
+            TSTMR0_L = (TSTMR0_L + 1);
+            if (TSTMR0_L == 0) {
+                TSTMR0_H = (TSTMR0_H + 1);
+            }
+    #endif
+        }
+    }
+    else {                                                               // a long word overfow will occur before the match
+        FOREVER_LOOP() {
+            ulPresentTimeStamp = TSTMR0_L;                               // get lowest 32 bits of timer
+            (void)TSTMR0_H;                                              // dummy read of highest 20 bits so that the next low work read is unlocked
+            if ((ulPresentTimeStamp >= ulMatchTimeHigh) && (ulPresentTimeStamp < ulMatchTimeLow)) {
+                // The time has been reached, or passed
+                //
+                return;
+            }
+    #if defined _WINDOWS
+            TSTMR0_L = (TSTMR0_L + 1);
+            if (TSTMR0_L == 0) {
+                TSTMR0_H = (TSTMR0_H + 1);
+            }
+    #endif
+        }
+    }
+#elif !defined TICK_USES_LPTMR && !defined TICK_USES_RTC                 // if the SYSTICK is operating we use it as a us timer for best independence of code execution speed and compiler (KL typically +15% longer then requested value between 100us and 10ms)
     #define CORE_US (CORE_CLOCK/1000000)                                 // the number of core clocks in a us
     #if !defined _WINDOWS
     register unsigned long ulPresentSystick;

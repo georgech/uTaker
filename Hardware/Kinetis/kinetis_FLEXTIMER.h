@@ -392,7 +392,7 @@ static __interrupt void _flexTimerInterrupt_3(void)
                     SIM_SOPT4 |= ulExtSelect;                            // select CLKIN1 source to this timer
             #endif
         #endif
-        #if defined KINETIS_KL03
+        #if defined KINETIS_KL02 || defined KINETIS_KL03
                     _CONFIG_PERIPHERAL(B, 6, (PB_6_TPM_CLKIN1 | PORT_PS_UP_ENABLE)); // TPM_CLKIN1 on PB.6 (alt. function 3)
         #else
                     _CONFIG_PERIPHERAL(E, 30, (PE_30_TPM_CLKIN1 | PORT_PS_UP_ENABLE)); // TPM_CLKIN1 on PE.30 (alt. function 4)
@@ -406,7 +406,7 @@ static __interrupt void _flexTimerInterrupt_3(void)
                     SIM_SOPT4 &= ~(ulExtSelect);                         // select CLKIN0 source to this timer
             #endif
         #endif
-        #if defined KINETIS_KL03
+        #if defined KINETIS_KL02 || defined KINETIS_KL03
                     _CONFIG_PERIPHERAL(A, 12, (PA_12_TPM_CLKIN0 | PORT_PS_UP_ENABLE)); // TPM_CLKIN0 on PA.12 (alt. function 3)
                   //_CONFIG_PERIPHERAL(A, 1, (PA_1_TPM_CLKIN0 | PORT_PS_UP_ENABLE)); // TPM_CLKIN0 on PA.1 (alt. function 2)
         #else

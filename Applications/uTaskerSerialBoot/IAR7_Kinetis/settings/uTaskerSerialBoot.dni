@@ -1,5 +1,5 @@
 [DebugChecksum]
-Checksum=-636942261
+Checksum=570668518
 [DisAssemblyWindow]
 NumStates=_ 1
 State 1=_ 1
@@ -232,16 +232,6 @@ ShowTiming=1
 Bp0=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\..\..\Hardware\Kinetis\kinetis_FLASH.h}.1010.5" 0 0 1 "" 0 "" 0
 Bp1=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\serial_loader.c}.1974.5" 0 0 1 "" 0 "" 0
 Count=2
-[Disassemble mode]
-mode=1
-[Breakpoints]
-Bp0=_ "STD_CODE" "0x00001754" 0 0 0 0 "" 0 "" 0
-Bp1=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12\Applications\uTaskerSerialBoot\serial_loader.c}.1895.20" 0 0 0 0 "" 0 "" 0
-Bp2=_ "STD_CODE" "0x00015CEE" 0 0 0 0 "" 0 "" 0
-Bp3=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12\Applications\uTaskerSerialBoot\usb_device_loader.c}.2709.40" 0 0 0 0 "" 0 "" 0
-Bp4=_ "STD_CODE" "0x00001388" 0 0 0 0 "" 0 "" 0
-Bp5=_ "STD_CODE" "0x00001C88" 0 0 0 0 "" 0 "" 0
-Count=6
 [Log file]
 LoggingEnabled=_ 0
 LogFile=_ ""
@@ -249,6 +239,10 @@ Category=_ 0
 [TermIOLog]
 LoggingEnabled=_ 0
 LogFile=_ ""
+[Disassemble mode]
+mode=1
+[Breakpoints]
+Count=0
 [Aliases]
 Count=0
 SuppressDialog=0

@@ -821,6 +821,8 @@ static void fnConfigureADC(void)
     adc_setup.int_adc_bit = ADC_SE12_SINGLE;                             // thermistor positive terminal
         #elif defined FRDM_KL43Z
     adc_setup.int_adc_bit = ADC_SE23_SINGLE;
+        #elif defined FRDM_KL03Z
+    adc_setup.int_adc_bit = ADC_SE0_SINGLE;
         #else
     adc_setup.int_adc_bit = ADC_TEMP_SENSOR;                             // ADC internal temperature
         #endif

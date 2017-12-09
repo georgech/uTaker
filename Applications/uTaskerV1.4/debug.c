@@ -1232,7 +1232,7 @@ static unsigned char   ucDebugCnt = 0;
     static TELNET_CLIENT_DETAILS telnet_client_details[TELNET_CLIENT_COUNT] = {{0}};
     static int iTELNET_clientActive = 0;
 #endif
-#if defined SERIAL_INTERFACE
+#if defined SERIAL_INTERFACE || (defined USE_TELNET && defined USE_TELNET_LOGIN)
     static unsigned char ucPasswordState = PASSWORD_IDLE;
 #endif
 #if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST // {17}{81}
@@ -1315,7 +1315,7 @@ extern void fnDebug(TTASKTABLE *ptrTaskTable)
                 iCloningActive = 0;
             }
             else {
-                if (iCloningActive & CLONING_ERASING_BULK) {
+                if ((iCloningActive & CLONING_ERASING_BULK) != 0) {
                     fnEraseEz("0");                                      // erase the first sector so that the security byte is erased
                     iCloningActive &= ~(CLONING_ERASING_BULK);
                     return;
@@ -1403,7 +1403,7 @@ extern void fnDebug(TTASKTABLE *ptrTaskTable)
     }
 #endif
 
-    while (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH)) {      // check input queue
+    while (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH) != 0) { // check input queue
         switch (ucInputMessage[MSG_SOURCE_TASK]) {                       // switch depending on message source
         case INTERRUPT_EVENT:
             if (TX_FREE == ucInputMessage[MSG_INTERRUPT_EVENT]) {
@@ -4706,8 +4706,8 @@ static void fnDoOLED(unsigned char ucType, CHAR *ptrInput)               // OLED
 
 #if defined I2C_INTERFACE
     #if defined LPI2C_AVAILABLE && defined TEMP_LPI2C_TEST
-    extern int iRxLPI2Cpause;
-    extern int iTxLPI2Cpause;
+    extern unsigned long ulRxLPI2Cpause;
+    extern unsigned long ulTxLPI2Cpause;
     extern unsigned long ulChange;
     #endif
 static void fnDoI2C(unsigned char ucType, CHAR *ptrInput)                // I2C group
@@ -4725,21 +4725,21 @@ static void fnDoI2C(unsigned char ucType, CHAR *ptrInput)                // I2C 
     case 122:
         if (*ptrInput == '1') {
             fnDebugMsg("Tx pause 0.5ms");
-            iTxLPI2Cpause = 500;
+            ulTxLPI2Cpause = 500;
         }
         else {
             fnDebugMsg("Tx pause removed");
-            iTxLPI2Cpause = 0;
+            ulTxLPI2Cpause = 0;
         }
         break;
     case 123:
         if (*ptrInput == '1') {
             fnDebugMsg("Rx pause 0.5ms");
-            iRxLPI2Cpause = 500;
+            ulRxLPI2Cpause = 500;
         }
         else {
             fnDebugMsg("Rx pause removed");
-            iRxLPI2Cpause = 0;
+            ulRxLPI2Cpause = 0;
         }
         break;
     case 124:
@@ -6795,7 +6795,7 @@ extern CHAR *fnSkipWhiteSpace(CHAR *ptr_input)
     return (ptr_input);
 }
 
-#if defined USE_TELNET_LOGIN
+#if (defined USE_TELNET && defined USE_TELNET_LOGIN)
 static unsigned char fnCheckUserPass(CHAR *ptrData, unsigned char ucInputLength)
 {
     switch (ucPasswordState) {
@@ -7016,7 +7016,7 @@ extern int fnCommandInput(unsigned char *ptrData, unsigned short usLen, int iSou
         cDebugIn[iDebugBufferIndex][ucDebugCnt] = *ptrData;
         if (*ptrData == '\r') {
             cDebugIn[iDebugBufferIndex][ucDebugCnt] = '\n';
-#if defined USE_TELNET_LOGIN
+#if (defined USE_TELNET && defined USE_TELNET_LOGIN)
             if ((ucPasswordState != PASSWORD_IDLE) && ((usTelnet_state != ES_NETWORK_LOGIN) || (iSource == SOURCE_NETWORK))) {
                 ucPasswordState = fnCheckUserPass(cDebugIn[iDebugBufferIndex], ucDebugCnt);
                 ucDebugCnt = 0;
@@ -7070,7 +7070,7 @@ extern int fnInitiateLogin(unsigned short usNextState)
 #endif
     default:                                                             // network login
         usTelnet_state = ES_NETWORK_LOGIN;
-#if defined USE_TELNET_LOGIN
+#if (defined USE_TELNET && defined USE_TELNET_LOGIN)
         ucPasswordState = TELNET_LOGIN;                                  // we request login before continuing
         fnDebugMsg("\n\rWelcome to the Telnet server.\n\rPlease enter user name and password (user:pass): ");
         return DO_PASSWORD_ENTRY;
@@ -7117,8 +7117,10 @@ extern void fnEchoInput(unsigned char *ucInputMessage, QUEUE_TRANSFER Length)
 void fnDebug(TTASKTABLE *ptrTaskTable)                                   // dummy task
 {
 }
+    #if !defined REMOVE_PORT_INITIALISATIONS
 static void fnSetPortBit(unsigned short usBit, int iSetClr);
 static int  fnConfigOutputPort(CHAR cPortBit);
+    #endif
 #endif                                                                   // endif not KEEP_DEBUG
 
 

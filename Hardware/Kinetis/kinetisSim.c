@@ -3645,13 +3645,13 @@ extern void fnSimPers(void)
                         break;
                     }
     #endif
-    #if (defined KINETIS_KE04 && (SIZE_OF_FLASH > (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 ||  defined KINETIS_KEA128
-                    if ((FTM2_C2SC & (FTM_CSC_ELSA | FTM_CSC_ELSB)) && (!(SIM_PINSEL1 & (SIM_PINSEL1_FTM2PS2_PTD0 | SIM_PINSEL1_FTM2PS2_PTG4)))) {
+    #if ((defined SIM_PINSEL1) && ((defined KINETIS_KE04 && (SIZE_OF_FLASH > (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 ||  defined KINETIS_KEA128))
+                    if (((FTM2_C2SC & (FTM_CSC_ELSA | FTM_CSC_ELSB)) != 0) && ((SIM_PINSEL1 & (SIM_PINSEL1_FTM2PS2_PTD0 | SIM_PINSEL1_FTM2PS2_PTG4)) == 0)) {
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTC][iPin - 16] = PC_2_FTM2_CH2;                    
                     }
     #else
-                    if ((FTM2_C2SC & (FTM_CSC_ELSA | FTM_CSC_ELSB)) && (!(SIM_PINSEL0 & SIM_PINSEL_FTM2PS2))) {
+                    if (((FTM2_C2SC & (FTM_CSC_ELSA | FTM_CSC_ELSB)) != 0) && ((SIM_PINSEL0 & SIM_PINSEL_FTM2PS2) == 0)) {
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[iPort + 2][iPin - 16] = PC_2_FTM2_CH2;                    
                     }
@@ -3677,8 +3677,8 @@ extern void fnSimPers(void)
                         break;
                     }
     #endif
-    #if (defined KINETIS_KE04 && (SIZE_OF_FLASH > (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
-                    if ((FTM2_C3SC & (FTM_CSC_ELSA | FTM_CSC_ELSB)) && (!(SIM_PINSEL1 & (SIM_PINSEL1_FTM2PS3_PTD1 | SIM_PINSEL1_FTM2PS3_PTG5)))) {
+    #if ((defined SIM_PINSEL1) && ((defined KINETIS_KE04 && (SIZE_OF_FLASH > (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128))
+                    if (((FTM2_C3SC & (FTM_CSC_ELSA | FTM_CSC_ELSB)) != 0) && ((SIM_PINSEL1 & (SIM_PINSEL1_FTM2PS3_PTD1 | SIM_PINSEL1_FTM2PS3_PTG5)) == 0)) {
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTC][iPin - 16] = PC_3_FTM2_CH3;                    
                     }
@@ -3742,15 +3742,15 @@ extern void fnSimPers(void)
     #endif
                     break;
                 case KE_PORTC_BIT6:
-    #if defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
-                    if ((MSCAN_CANCTL1 & MSCAN_CANCTL1_CANE) && ((SIM_PINSEL1 & SIM_PINSEL1_MSCANPS) == 0)) { // pin is enabled as CAN function
+    #if ((defined SIM_PINSEL1) && (defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128))
+                    if (((MSCAN_CANCTL1 & MSCAN_CANCTL1_CANE) != 0) && ((SIM_PINSEL1 & SIM_PINSEL1_MSCANPS) == 0)) { // pin is enabled as CAN function
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTC][iPin - 16] = PC_6_CAN0_RX;   
                     }
                     else
     #endif
     #if UARTS_AVAILABLE > 1
-                    if ((UART1_C2 & UART_C2_RE) && ((UART1_C1 & UART_C1_LOOPS) == 0)) { // UART1 rx enabled and not in single-wire/loop back mode
+                    if (((UART1_C2 & UART_C2_RE) != 0) && ((UART1_C1 & UART_C1_LOOPS) == 0)) { // UART1 rx enabled and not in single-wire/loop back mode
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTC][iPin - 16] = PC_6_UART1_RX; 
                     }
@@ -3763,8 +3763,8 @@ extern void fnSimPers(void)
     #endif
                     break;
                 case KE_PORTC_BIT7:
-    #if defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
-                    if ((MSCAN_CANCTL1 & MSCAN_CANCTL1_CANE) && ((SIM_PINSEL1 & SIM_PINSEL1_MSCANPS) == 0)) { // pin is enabled as CAN function
+    #if ((defined SIM_PINSEL1) && (defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128))
+                    if (((MSCAN_CANCTL1 & MSCAN_CANCTL1_CANE) != 0) && ((SIM_PINSEL1 & SIM_PINSEL1_MSCANPS) == 0)) { // pin is enabled as CAN function
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTC][iPin - 16] = PC_7_CAN0_TX;   
                     }
@@ -3788,8 +3788,8 @@ extern void fnSimPers(void)
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTD][iPin - 24] = PD_0_SPI1_SCK; 
                     }
-    #if (defined KINETIS_KE04 && (SIZE_OF_FLASH > (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
-                    else if ((FTM2_C2SC & (FTM_CSC_ELSA | FTM_CSC_ELSB)) && ((SIM_PINSEL1 & SIM_PINSEL1_FTM2PS2_PTD0) && !(SIM_PINSEL1 & SIM_PINSEL1_FTM2PS2_PTG4))) {
+    #if ((defined SIM_PINSEL1) && ((defined KINETIS_KE04 && (SIZE_OF_FLASH > (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128))
+                    else if (((FTM2_C2SC & (FTM_CSC_ELSA | FTM_CSC_ELSB)) != 0) && (((SIM_PINSEL1 & SIM_PINSEL1_FTM2PS2_PTD0) != 0) && ((SIM_PINSEL1 & SIM_PINSEL1_FTM2PS2_PTG4) == 0))) {
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTD][iPin - 24] = PD_0_FTM2_CH2;                    
                     }
@@ -3816,8 +3816,8 @@ extern void fnSimPers(void)
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTD][iPin - 24] = PD_1_SPI1_MOSI; 
                     }
-    #if (defined KINETIS_KE04 && (SIZE_OF_FLASH > (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 ||  defined KINETIS_KEA128
-                    else if ((FTM2_C3SC & (FTM_CSC_ELSA | FTM_CSC_ELSB)) && ((SIM_PINSEL1 & SIM_PINSEL1_FTM2PS3_PTD1) && !(SIM_PINSEL1 & SIM_PINSEL1_FTM2PS3_PTG5))) {
+    #if ((defined SIM_PINSEL1) && ((defined KINETIS_KE04 && (SIZE_OF_FLASH > (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 ||  defined KINETIS_KEA128))
+                    else if (((FTM2_C3SC & (FTM_CSC_ELSA | FTM_CSC_ELSB)) != 0) && (((SIM_PINSEL1 & SIM_PINSEL1_FTM2PS3_PTD1) != 0) && ((SIM_PINSEL1 & SIM_PINSEL1_FTM2PS3_PTG5) == 0))) {
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTD][iPin - 24] = PD_1_FTM2_CH3;                    
                     }
@@ -4015,7 +4015,7 @@ extern void fnSimPers(void)
                     break;
                 case KE_PORTE_BIT5:
     #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
-                    if (KBI1_PE & 0x00000020) {                          // pin is enabled as keyboard interrupt
+                    if ((KBI1_PE & 0x00000020) != 0) {                   // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTE][iPin] = PE_5_KBI1_P5;
                     }
@@ -4023,15 +4023,15 @@ extern void fnSimPers(void)
                     break;
                 case KE_PORTE_BIT6:
     #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
-                    if (KBI1_PE & 0x00000040) {                          // pin is enabled as keyboard interrupt
+                    if ((KBI1_PE & 0x00000040) != 0) {                   // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTE][iPin] = PE_6_KBI1_P6;
                     }
     #endif
                     break;
                 case KE_PORTE_BIT7:
-    #if defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
-                    if ((MSCAN_CANCTL1 & MSCAN_CANCTL1_CANE) && (SIM_PINSEL1 & SIM_PINSEL1_MSCANPS)) { // pin is enabled as CAN function
+    #if ((defined SIM_PINSEL1) && (defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128))
+                    if (((MSCAN_CANCTL1 & MSCAN_CANCTL1_CANE) != 0) && ((SIM_PINSEL1 & SIM_PINSEL1_MSCANPS) != 0)) { // pin is enabled as CAN function
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTE][iPin] = PE_7_CAN0_TX;   
                     }
@@ -4229,14 +4229,14 @@ extern void fnSimPers(void)
     #endif
                     break;
                 case KE_PORTH_BIT2:
-    #if defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
-                    if ((MSCAN_CANCTL1 & MSCAN_CANCTL1_CANE) && (SIM_PINSEL1 & SIM_PINSEL1_MSCANPS)) { // pin is enabled as CAN function
+    #if ((defined SIM_PINSEL1) && (defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128))
+                    if (((MSCAN_CANCTL1 & MSCAN_CANCTL1_CANE) != 0) && ((SIM_PINSEL1 & SIM_PINSEL1_MSCANPS) != 0)) { // pin is enabled as CAN function
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTH][iPin - 24] = PH_2_CAN0_RX;   
                     }
                     else
     #endif
-                    if ((FTM1_C0SC & (FTM_CSC_ELSA | FTM_CSC_ELSB)) && (SIM_PINSEL0 & SIM_PINSEL_FTM1PS0)) {
+                    if (((FTM1_C0SC & (FTM_CSC_ELSA | FTM_CSC_ELSB)) != 0) && ((SIM_PINSEL0 & SIM_PINSEL_FTM1PS0) != 0)) {
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTH][iPin - 24] = PH_2_FTM1_CH0;                    
                     }
@@ -10218,7 +10218,7 @@ extern void fnUpdateOperatingDetails(void)
     #elif defined KINETIS_KV10
     ulBusClockSpeed = (SYSTEM_CLOCK/(((SIM_CLKDIV1 >> 16) & 0x7) + 1));
     #elif defined KINETIS_KE
-        #if defined KINETIS_KE04 || defined KINETIS_KEA8 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+        #if defined SIM_CLKDIV
 	ulBusClockSpeed = ICSOUT_CLOCK;
 	switch (SIM_CLKDIV & SIM_CLKDIV_OUTDIV1_4) {
 	case SIM_CLKDIV_OUTDIV1_1:

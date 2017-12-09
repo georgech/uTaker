@@ -349,7 +349,7 @@ static void fnConfigTimerPin(int iTimer, int iChannel, unsigned long ulCharacter
                         SIM_PINSEL1 |= SIM_PINSEL1_FTM2PS0_PTF0;
                         _CONFIG_PERIPHERAL(F, 1, (PF_1_FTM2_CH1 | ulCharacteristics)); // FTM2_CH1 on PF.1 (alt. function 2)
             #else
-                #if ((defined KINETIS_KE04 && (SIZE_OF_FLASH > (8 * 1024))) || defined KINETIS_KE06) || defined KINETIS_KEA64 || defined KINETIS_KEA128
+                #if (defined SIM_PINSEL1 && (((defined KINETIS_KE04 && (SIZE_OF_FLASH > (8 * 1024))) || defined KINETIS_KE06) || defined KINETIS_KEA64 || defined KINETIS_KEA128))
                         SIM_PINSEL1 &= ~(SIM_PINSEL1_FTM2PS0_PTH0 | SIM_PINSEL1_FTM2PS0_PTF0);
                 #else
                         SIM_PINSEL0 &= ~SIM_PINSEL_FTM2PS1;
@@ -386,7 +386,7 @@ static void fnConfigTimerPin(int iTimer, int iChannel, unsigned long ulCharacter
                         SIM_PINSEL1 |= (SIM_PINSEL1_FTM2PS2_PTD0 | SIM_PINSEL1_FTM2PS2_PTG4);
                         _CONFIG_PERIPHERAL(G, 4, (PG_4_FTM2_CH2 | ulCharacteristics)); // FTM2_CH2 on PG.4 (alt. function 2)
             #else
-                #if ((defined KINETIS_KE04 && (SIZE_OF_FLASH > (8 * 1024))) || defined KINETIS_KE06) || defined KINETIS_KEA64 || defined KINETIS_KEA128
+                #if (defined SIM_PINSEL1 && (((defined KINETIS_KE04 && (SIZE_OF_FLASH > (8 * 1024))) || defined KINETIS_KE06) || defined KINETIS_KEA64 || defined KINETIS_KEA128))
                         SIM_PINSEL1 &= ~(SIM_PINSEL1_FTM2PS2_PTD0 | SIM_PINSEL1_FTM2PS2_PTG4);
                 #else
                         SIM_PINSEL0 &= ~SIM_PINSEL_FTM2PS2;
@@ -416,7 +416,7 @@ static void fnConfigTimerPin(int iTimer, int iChannel, unsigned long ulCharacter
                         SIM_PINSEL1 |= SIM_PINSEL1_FTM2PS3_PTG5;
                         _CONFIG_PERIPHERAL(G, 5, (PG_5_FTM2_CH3 | ulCharacteristics)); // FTM2_CH3 on PG.5 (alt. function 2)
             #else
-                    #if ((defined KINETIS_KE04 && (SIZE_OF_FLASH > (8 * 1024))) || defined KINETIS_KE06) || defined KINETIS_KEA64 ||  defined KINETIS_KEA128
+                    #if (defined SIM_PINSEL1 && (((defined KINETIS_KE04 && (SIZE_OF_FLASH > (8 * 1024))) || defined KINETIS_KE06) || defined KINETIS_KEA64 ||  defined KINETIS_KEA128))
                         SIM_PINSEL1 &= ~(SIM_PINSEL1_FTM2PS3_PTD1 | SIM_PINSEL1_FTM2PS3_PTG5);
                     #else
                         SIM_PINSEL0 &= ~SIM_PINSEL_FTM2PS3;
@@ -426,8 +426,8 @@ static void fnConfigTimerPin(int iTimer, int iChannel, unsigned long ulCharacter
                         break;
         #endif
         #if FLEX_TIMERS_2_CHANNELS > 4
-                    case 4:                                                  // timer 2, channel 4
-            #if defined FTM2_4_ON_G
+                    case 4:                                              // timer 2, channel 4
+            #if defined FTM2_4_ON_G && defined SIM_PINSEL1
                         SIM_PINSEL1 |= SIM_PINSEL1_FTM2PS4;
                         _CONFIG_PERIPHERAL(G, 6, (PG_6_FTM2_CH4 | ulCharacteristics)); // FTM2_CH4 on PG.6 (alt. function 2)
             #else
@@ -439,8 +439,8 @@ static void fnConfigTimerPin(int iTimer, int iChannel, unsigned long ulCharacter
                         break;
         #endif
         #if FLEX_TIMERS_2_CHANNELS > 5
-                    case 5:                                                  // timer 2, channel 5
-            #if defined FTM2_5_ON_G
+                    case 5:                                              // timer 2, channel 5
+            #if defined FTM2_5_ON_G && defined SIM_PINSEL1
                         SIM_PINSEL1 |= SIM_PINSEL1_FTM2PS5;
                         _CONFIG_PERIPHERAL(G, 7, (PG_7_FTM2_CH5 | ulCharacteristics)); // FTM2_CH5 on PG.7 (alt. function 2)
             #else

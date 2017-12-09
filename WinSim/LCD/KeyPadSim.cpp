@@ -127,7 +127,9 @@ extern void fnInitKeyPad(RECT &rt, int iOrigWidth, int iMaxTop)
 
 extern void DisplayKeyPad(HWND hwnd, RECT rt, RECT refresh_rect)
 {
+#if defined BUTTON_KEY_DEFINITIONS || defined SUPPORT_KEY_SCAN
     int i;
+#endif
 #if defined KEYPAD_KEY_DEFINITIONS
     int j;
 #elif defined SUPPORT_KEY_SCAN && !defined USER_DEFINED_KEYPAD_KEYS
