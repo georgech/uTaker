@@ -1164,31 +1164,35 @@ extern void fnConfigUSB(QUEUE_HANDLE Channel, USBTABLE *pars)
         #endif
         USB_CLK_RECOVER_IRC_EN = USB_CLK_RECOVER_IRC_EN_IRC_EN;          // enable 48MHz IRC clock and clock recovery (this may have been disabled by the USB reset command)
         USB_CLK_RECOVER_CTRL = USB_CLK_RECOVER_CTRL_CLOCK_RECOVER_EN;
+    #elif (defined KINETIS_K64 || (defined KINETIS_K24 && (SIZE_OF_FLASH == (1024 * 1024)))) && (defined RUN_FROM_HIRC_PLL || defined RUN_FROM_HIRC)
+        if (iIRC48M_workaround != 0) {
+            USB_CLK_RECOVER_IRC_EN = (USB_CLK_RECOVER_IRC_EN_REG_EN | USB_CLK_RECOVER_IRC_EN_IRC_EN); // the IRC48M is only usable when enabled via the USB module so re-enable since it was disabled by the USB reset command
+        }
     #endif
     #if (defined KINETIS_K64 || (defined KINETIS_K24 && (SIZE_OF_FLASH == (1024 * 1024)))) && (defined RUN_FROM_HIRC_PLL || defined RUN_FROM_HIRC)
         if (iIRC48M_workaround != 0) {
             // Move back to original clock source
             //
-            #if defined RUN_FROM_HIRC_PLL                                // we are in FBI state and must move to FBE
+        #if defined RUN_FROM_HIRC_PLL                                    // we are in FBI state and must move to FBE
             MCG_C1 = (MCG_C1_CLKS_EXTERN_CLK | MCG_C1_FRDIV_1280);       // switch the external clock source also to the FLL to satisfy the PBE state requirement
             MCG_C5 = ((CLOCK_DIV - 1) | MCG_C5_PLLSTEN0);                // PLL remains enabled in normal stop modes
             MCG_C6 = ((CLOCK_MUL - MCG_C6_VDIV0_LOWEST) | MCG_C6_PLLS);  // complete PLL configuration and move to PBE
             while ((MCG_S & MCG_S_PLLST) == 0) {                         // loop until the PLLS clock source becomes valid
-                #if defined _WINDOWS
+            #if defined _WINDOWS
                 MCG_S |= MCG_S_PLLST;
-                #endif
+            #endif
             }
             while ((MCG_S & MCG_S_LOCK) == 0) {                          // loop until PLL locks
-                #if defined _WINDOWS
+            #if defined _WINDOWS
                 MCG_S |= MCG_S_LOCK;
-                #endif
+            #endif
             }
             MCG_C1 = (MCG_C1_CLKS_PLL_FLL | MCG_C1_FRDIV_1024);          // finally move from PBE to PEE mode - switch to PLL clock
             while ((MCG_S & MCG_S_CLKST_MASK) != MCG_S_CLKST_PLL) {      // loop until the PLL clock is selected
-                #if defined _WINDOWS
+            #if defined _WINDOWS
                 MCG_S &= ~MCG_S_CLKST_MASK;
                 MCG_S |= MCG_S_CLKST_PLL;
-                #endif
+            #endif
             }
         #else
             MCG_C1 = ((MCG_C1 & ~MCG_C1_CLKS_INTERN_CLK) | (original_MCG_C1 & MCG_S_CLKST_EXTERN_CLK)); // switch MCGOUTCLK back to the original clock source

@@ -94,6 +94,7 @@
     #define UTASKER_STACK_SIZE          (4 * 1024)
     #define UTASKER_TASK_PRIORITY       0                                // 0 is lowest priority
     #define RUN_IN_FREE_RTOS
+    #define FOREVER_LOOP()     while ((int)1 != (int)0)
   //#define memset(a,b,c) uMemset(a,b,c)                                 // allow FreeRTOS to use DMA bases memset() and memcpy() routines
   //#define memcpy(a,b,c) uMemcpy(a,b,c)
     extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*InterruptFunc)(void));

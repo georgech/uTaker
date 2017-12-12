@@ -1949,9 +1949,10 @@ typedef struct _PACK stETH_IP_ENCAPSULATION_HEADER                       // fixe
 
 // Cipher suites
 //
-/*
 #define TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256      0xc02b
 #define TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256        0xc02f
+#define TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256      0xc023
+#define TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256        0xc027
 #define TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA         0xc00a
 #define TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA         0xc009
 #define TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA           0xc013
@@ -1966,7 +1967,8 @@ typedef struct _PACK stETH_IP_ENCAPSULATION_HEADER                       // fixe
 #define TLS_RSA_WITH_3DES_EDE_CBC_SHA                0x000a
 #define TLS_RSA_WITH_RC4_128_SHA                     0x0005
 #define TLS_RSA_WITH_RC4_128_MD5                     0x0004
-*/
+#define TLS_EMPTY_RENEGOTIATION_INFO_SCSV            0x00ff
+
 // Secure sockets layer
 //
 #define SSL_TLS_CONTENT_HANDSHAKE                    0x16
@@ -1974,6 +1976,10 @@ typedef struct _PACK stETH_IP_ENCAPSULATION_HEADER                       // fixe
 #define TLS_VERSION_1_2                              0x0303
 #define SSL_TLS_HANDSHAKE_TYPE_CLIENT_HELLO          0x01
 #define SSL_TLS_HANDSHAKE_TYPE_SERVER_HELLO          0x02
+#define SSL_TLS_HANDSHAKE_TYPE_CERTIFICATE           0x0b
+#define SSL_TLS_HANDSHAKE_TYPE_SERVER_KEY_EXCHANGE   0x0c
+#define SSL_TLS_HANDSHAKE_TYPE_CERTIFICATE_REQUEST   0x0d
+#define SSL_TLS_HANDSHAKE_TYPE_SERVER_HELLO_DONE     0x0e
 
 typedef struct _PACK stSSL_TLS_EXTENSION
 {

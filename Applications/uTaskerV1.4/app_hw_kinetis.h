@@ -152,8 +152,13 @@
         #define FLEX_CLOCK_DIVIDE    3                                   // 120/3 to give 40MHz
         #define FLASH_CLOCK_DIVIDE   5                                   // 120/5 to give 24MHz
     #endif
-  //#define USB_CRYSTAL_LESS                                             // use 48MHz IRC as USB source (according to Freescale AN4905 - only possible in device mode)
-  //#define USB_CLOCK_GENERATED_INTERNALLY                               // use USB clock from internal source rather than external pin - 120MHz is suitable from PLL
+    #if defined RUN_FROM_HIRC_PLL || defined RUN_FROM_HIRC || defined RUN_FROM_HIRC_FLL
+        #define USB_CRYSTAL_LESS                                         // use 48MHz IRC as USB source (according to Freescale AN4905 - only possible in device mode) - this shoudl always be used if not external !!
+      //#define USB_CLOCK_GENERATED_INTERNALLY                           // use USB clock from internal source rather than external pin - 120MHz is suitable from PLL
+    #else
+      //#define USB_CRYSTAL_LESS                                         // use 48MHz IRC as USB source (according to Freescale AN4905 - only possible in device mode)
+      //#define USB_CLOCK_GENERATED_INTERNALLY                           // use USB clock from internal source rather than external pin - 120MHz is suitable from PLL
+    #endif
 #elif defined TWR_K65F180M || defined FRDM_K66F || defined K66FX1M0 || defined TEENSY_3_6 || defined FRDM_KL82Z || defined TWR_KL82Z72M || defined FRDM_K28F
   //#define RUN_FROM_DEFAULT_CLOCK                                       // default mode is FLL Engaged Internal - the 32kHz IRC is multiplied by FLL factor of 640 to obtain 20.9715MHz nominal frequency (20MHz..25MHz)
   //#define RUN_FROM_HIRC                                                // clock directly from internal 48MHz RC clock
@@ -968,7 +973,9 @@
     #endif
     #define PACKAGE_TYPE        PACKAGE_MAPBGA
   //#define PACKAGE_TYPE        PACKAGE_WLCSP
-  //#define KINETIS_FLEX                                                 // X part with flex memory rather than N part with program Flash only
+    #if defined K66FX1M0
+        #define KINETIS_FLEX                                             // X part with flex memory rather than N part with program Flash only
+    #endif
     #if defined FRDM_K28F
         #define SIZE_OF_FLASH       (2 * 1024 * 1024)                    // 2M FLASH
         #define SIZE_OF_RAM         (1024 * 1024)                        // 1M SRAM
@@ -978,11 +985,15 @@
     #endif
 
     #if defined KINETIS_FLEX
-        #undef SIZE_OF_FLASH
         #define SIZE_OF_FLEXFLASH   (256 * 1024)
         #define SIZE_OF_EEPROM      (4 * 1024)                           // 4k EEPROM
         #define FLEXFLASH_DATA
-        #define SIZE_OF_FLASH   ((256 * 1024) + SIZE_OF_FLEXFLASH)   // 256k program FLASH plus data flash
+        #undef SIZE_OF_FLASH
+        #if defined FLEXFLASH_DATA
+            #define SIZE_OF_FLASH   ((1024 * 1024) + SIZE_OF_FLEXFLASH)  // 1M program FLASH plus data flash
+        #else
+            #define SIZE_OF_FLASH   (1024 * 1024)                        // 1M program FLASH
+        #endif
     #endif
 #elif defined TEENSY_3_6
     #define MASK_0N65N
@@ -2289,10 +2300,10 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define NUMBER_SERIAL   (UARTS_AVAILABLE + LPUARTS_AVAILABLE)        // the number of physical queues needed for serial interface(s)
     #define SIM_COM_EXTENDED                                             // COM ports defined from 1..255
     #define SERIAL_PORT_0    4                                           // if we open UART channel 0 we simulate using comx on the PC
-    #define SERIAL_PORT_1    6                                           // if we open UART channel 1 we simulate using comx on the PC
-    #define SERIAL_PORT_2    8                                           // if we open UART channel 2 we simulate using comx on the PC
+    #define SERIAL_PORT_1    4                                           // if we open UART channel 1 we simulate using comx on the PC
+    #define SERIAL_PORT_2    4                                           // if we open UART channel 2 we simulate using comx on the PC
     #define SERIAL_PORT_3    4                                           // if we open UART channel 3 we simulate using comx on the PC
-    #define SERIAL_PORT_4    8                                           // if we open UART channel 4 we simulate using comx on the PC
+    #define SERIAL_PORT_4    4                                           // if we open UART channel 4 we simulate using comx on the PC
     #define SERIAL_PORT_5    4                                           // if we open UART channel 5 we simulate using comx on the PC
 
     #if defined KWIKSTIK || defined TWR_K60F120M || defined K20FX512_120 || defined TWR_K21F120M || (defined TWR_K64F120M && defined TWR_SER) || (defined TWR_K60N512 && defined DEBUG_ON_VIRT_COM)

@@ -50,7 +50,7 @@
     #if defined SUPPORT_ADC                                              // if HW support is enabled
       //#define TEST_ADC                                                 // enable test of ADC operation
           //#define ADC_INTERNAL_TEMPERATURE                             // force internal temperature channel to be used, when available
-      //#define TEST_AD_DA                                               // {14} enable test of reading ADC and writing (after delay) to DAC
+        #define TEST_AD_DA                                               // {14} enable test of reading ADC and writing (after delay) to DAC
           //#define ADC_TRIGGER_TPM                                      // use TPM module rather than PIT for ADC trigger (valid for KL parts)
           //#define VOICE_RECORDER                                       // {15} needs TEST_AD_DA and mass-storage and saves sampled input to SD card
       //#define INTERNAL_TEMP                                            // {2} read also internal temperature (Luminary Micro)
@@ -205,7 +205,7 @@
             static const CHAR *adc_ref[3] = { "ADC0_DP0","ADC0_DM0","ADC1_DP0" };
             static int iAdcCnt = 0;
         #endif
-    #elif defined TEST_AD_DA && (defined DAC_CONTROLLERS && (DAC_CONTROLLERS > 0)) // {14}
+    #elif defined TEST_AD_DA                                             // {14}
         #if defined KINETIS_KL
             #define AD_DA_BUFFER_LENGTH    (256)                         // buffer for 31.25ms at 8k bytes/s
         #else
@@ -874,7 +874,9 @@ static void fnConfigureADC(void)
   //adc_setup.int_adc_mode = (ulCalibrate | ADC_LOOP_MODE | ADC_FULL_BUFFER_DMA | ADC_HALF_BUFFER_DMA | ADC_SELECT_INPUTS_A | ADC_CLOCK_BUS_DIV_2 | ADC_CLOCK_DIVIDE_4 | ADC_SAMPLE_ACTIVATE_LONG | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_ENDED_INPUT | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE); // continuous conversion (DMA to buffer)
     adc_setup.int_adc_mode = (ulCalibrate | ADC_FULL_BUFFER_DMA | ADC_HALF_BUFFER_DMA | ADC_SELECT_INPUTS_A | ADC_CLOCK_BUS_DIV_2 | ADC_CLOCK_DIVIDE_8 | ADC_SAMPLE_ACTIVATE_LONG | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_ENDED_INPUT | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE | ADC_HW_TRIGGERED); // hardware triggering (DMA to buffer)
     adc_setup.int_adc_mode |= ADC_FULL_BUFFER_DMA_AUTO_REPEAT;           // automated DMA (using interrupt) restart when not using modulo repetitions
+                    #if !defined DEVICE_WITHOUT_DMA
     adc_setup.dma_int_handler = 0;                                       // no user DMA interrupt call-back
+                    #endif
                 #else
     adc_setup.int_adc_mode = (ulCalibrate | /*ADC_LOOP_MODE |*/ ADC_HALF_BUFFER_DMA | ADC_SELECT_INPUTS_A | ADC_CLOCK_BUS_DIV_2 | ADC_CLOCK_DIVIDE_8 | ADC_SAMPLE_ACTIVATE_LONG | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_ENDED_INPUT | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE | ADC_HW_TRIGGERED); // hardware triggering example (DMA to buffer with interrupt on half-buffer completion) - requires PDB set up afterwards
                 #endif
@@ -970,7 +972,7 @@ static void fnConfigureADC(void)
         PWM_INTERRUPT_SETUP pwm_setup;
         pwm_setup.int_type = PWM_INTERRUPT;
         pwm_setup.pwm_mode = (PWM_SYS_CLK | PWM_PRESCALER_1 | PWM_FULL_BUFFER_DMA); // clock PWM timer from the system clock with /16 pre-scaler
-        #if defined KINETIS_KL
+        #if defined KINETIS_KL && !defined DEVICE_WITHOUT_DMA
         pwm_setup.pwm_mode |= PWM_FULL_BUFFER_DMA_AUTO_REPEAT;           // automated DMA (using interrupt) restart when not using modulo repetitions
         #endif
         pwm_setup.pwm_frequency = PWM_TIMER_US_DELAY(TIMER_FREQUENCY_VALUE(2000), 2); // generate 2000Hz on PWM output
@@ -978,12 +980,14 @@ static void fnConfigureADC(void)
         pwm_setup.pwm_reference = (_TIMER_2 | 0);                        // timer module 2, channel 0 (red LED in RGB LED of KL26 and KL27 boards)
         pwm_setup.int_priority = 0;
         pwm_setup.int_handler = 0;                                       // no user interrupt call-back on PWM cycle
+        #if !defined DEVICE_WITHOUT_DMA
         pwm_setup.dma_int_priority = 0;
         pwm_setup.dma_int_handler = 0;                                   // no user interrupt call-back on DMA transfer completion
         pwm_setup.ucDmaChannel = 0;                                      // DMA channel 0 used (highest priority)
         pwm_setup.usDmaTriggerSource = DMAMUX0_CHCFG_SOURCE_ADC0;
         pwm_setup.ptrPWM_Buffer = (unsigned short *)sADC_buffer;         // PWM buffer to be used (use the ADC buffer to create a digital delay line)
         pwm_setup.ulPWM_buffer_length = (AD_DA_BUFFER_LENGTH * sizeof(unsigned short)); // physical length of the buffer
+        #endif
         fnConfigureInterrupt((void *)&pwm_setup);
         fnStart_ADC_Trigger();                                           // configure the used timer to trigger ADC
     }

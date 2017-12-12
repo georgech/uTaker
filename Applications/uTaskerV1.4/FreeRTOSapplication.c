@@ -37,7 +37,7 @@ static void prvSetupHardware(void);
 
 extern void fnFreeRTOS_main(void)
 {
-    prvSetupHardware();                                                  // perform any hardware setup necesary (that the uTasker initialisation hasn't done)
+    prvSetupHardware();                                                  // perform any hardware setup necessary (that the uTasker initialisation hasn't done)
 
     // Add the uTasker OS and project as a single task under FreeRTOS
     //

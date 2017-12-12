@@ -2346,6 +2346,7 @@ static void _LowLevelInit(void)
     ptrVect->ptrBusFault      = irq_bus_fault;
     ptrVect->ptrUsageFault    = irq_usage_fault;
     ptrVect->ptrDebugMonitor  = irq_debug_monitor;
+    ptrVect->ptrSysTick       = irq_default;
         #if defined RUN_IN_FREE_RTOS
     ptrVect->ptrPendSV        = xPortPendSVHandler;                      // FreeRTOS's PendSV handler
     ptrVect->ptrSVCall        = vPortSVCHandler;                         // FreeRTOS's SCV handler

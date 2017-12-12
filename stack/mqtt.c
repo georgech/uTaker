@@ -31,6 +31,13 @@
 
 #define OWN_TASK     TASK_MQTT
 
+//#define SECURE_MQTT
+#if defined SECURE_MQTT
+    #define MQTTS_PORT_   MQTTS_PORT
+#else
+    #define MQTTS_PORT_   MQTT_PORT
+#endif
+
 #define MQTT_MESSAGE_LEN       1400                                      // largest transmission supported
 
 #define MQTT_MAX_SUBSCRIPTIONS 8
@@ -192,7 +199,6 @@ extern void fnMQTT(TTASKTABLE *ptrTaskTable)
         }
     }
 }
-
 
 // The user calls this to initiate a connection to the MQTT server/broker
 //
@@ -394,7 +400,7 @@ static int fnSetNextMQTT_state(unsigned char ucNextState)
     switch (ucMQTT_state = ucNextState) {                                // set the next state
       case MQTT_STATE_OPEN_REQUESTED:
           fnTCP_close(MQTT_TCP_socket);                                  // release existing connection
-          if (fnTCP_Connect(MQTT_TCP_socket, ucMQTT_ip_address, MQTT_PORT, 0, 0) >= 0) { // start connection with MQTT broker
+          if (fnTCP_Connect(MQTT_TCP_socket, ucMQTT_ip_address, MQTTS_PORT_, 0, 0) >= 0) { // start connection to MQTT broker
               ucMQTT_state = MQTT_STATE_OPEN_SENT;
               ucUnacked = 0;
               return 1;                                                  // connection request sent
@@ -430,6 +436,420 @@ static int fnSetNextMQTT_state(unsigned char ucNextState)
     return (0);
 }
 
+
+#if defined SECURE_MQTT
+
+#define HANDSHAKE_EXTENSION_SERVER_NAME            0
+#define HANDSHAKE_EXTENSION_SUPPORTED_GROUPS       10
+#define HANDSHAKE_EXTENSION_EC_POINT_FORMATS       11
+#define HANDSHAKE_EXTENSION_SIGNATURE_ALGORITHMS   13
+#define HANDSHAKE_EXTENSION_ENCRYPT_THEN_MAC       22
+#define HANDSHAKE_EXTENSION_EXTENDED_MASTER_SECRET 23
+
+#define SIGNATURE_HASH_ALGORITHM_HASH_SHA224        3
+#define SIGNATURE_HASH_ALGORITHM_HASH_SHA256        4
+
+#define SIGNATURE_HASH_ALGORITHM_SIGNATURE_RSA      1
+#define SIGNATURE_HASH_ALGORITHM_SIGNATURE_ECDSA    3
+
+#define GROUP_SECP245R1                             0x0017
+
+typedef struct stSIGNATURE_HASH_ALGORITHM_ENTRY {
+    unsigned char ucHash;
+    unsigned char ucSignature;
+} SIGNATURE_HASH_ALGORITHM_ENTRY;
+
+
+// The cipher suites that we support
+//
+static const unsigned short cusCipherSuites[] = {
+    TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
+    TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+    TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+    TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+    TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,
+    TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256,
+    TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
+    TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
+    TLS_EMPTY_RENEGOTIATION_INFO_SCSV,
+};
+
+// The handshake extensions that we send
+//
+static const unsigned short cusHandshakeExtensions[] = {
+    HANDSHAKE_EXTENSION_SERVER_NAME,
+    HANDSHAKE_EXTENSION_SIGNATURE_ALGORITHMS,
+    HANDSHAKE_EXTENSION_SUPPORTED_GROUPS,
+    HANDSHAKE_EXTENSION_EC_POINT_FORMATS,
+    HANDSHAKE_EXTENSION_ENCRYPT_THEN_MAC,
+    HANDSHAKE_EXTENSION_EXTENDED_MASTER_SECRET
+};
+
+#define MAX_HANDSHAKE_EXTENSIONS     (sizeof(cusHandshakeExtensions)/sizeof(unsigned short))
+
+
+// The hash algorithms that we support
+//
+static const SIGNATURE_HASH_ALGORITHM_ENTRY cucSignatureAlgorithms[] = {
+    { SIGNATURE_HASH_ALGORITHM_HASH_SHA256,          SIGNATURE_HASH_ALGORITHM_SIGNATURE_ECDSA },
+    { SIGNATURE_HASH_ALGORITHM_HASH_SHA256,          SIGNATURE_HASH_ALGORITHM_SIGNATURE_RSA },
+    { SIGNATURE_HASH_ALGORITHM_HASH_SHA224,          SIGNATURE_HASH_ALGORITHM_SIGNATURE_ECDSA },
+    { SIGNATURE_HASH_ALGORITHM_HASH_SHA224,          SIGNATURE_HASH_ALGORITHM_SIGNATURE_RSA },
+};
+
+#define MAX_SIGNATURE_HASH_ALGORITHMS (sizeof(cucSignatureAlgorithms)/sizeof(SIGNATURE_HASH_ALGORITHM_ENTRY))
+
+// The groups that we support
+//
+static const unsigned short cusGroups[] = {
+    GROUP_SECP245R1
+};
+
+#define MAX_GROUPS (sizeof(cusGroups)/sizeof(unsigned short))
+
+#define EC_POINT_FORMAT_UNCOMPRESSED     0
+
+static const unsigned char cucEC_pointFormats[] = {
+    EC_POINT_FORMAT_UNCOMPRESSED
+};
+
+#define MAX_GROUPS (sizeof(cusGroups)/sizeof(unsigned short))
+
+
+static iTLS_state = 0;
+
+static unsigned char *fnInsertCipherSuites(unsigned char *ptrData)
+{
+    int i;
+    unsigned short usCipherSuite;
+    unsigned short usLength = sizeof(cusCipherSuites);                   // cipher suites length
+    *ptrData++ = (unsigned char)(usLength >> 8);
+    *ptrData++ = (unsigned char)(usLength);
+    for (i = 0; i < (sizeof(cusCipherSuites)/sizeof(unsigned short)); i++) {
+        usCipherSuite = cusCipherSuites[i];
+        *ptrData++ = (unsigned char)(usCipherSuite >> 8);
+        *ptrData++ = (unsigned char)(usCipherSuite);
+    }
+    return ptrData;
+}
+
+static unsigned char *fnInsertTLS_random(unsigned char *ptrData)
+{
+    RTC_SETUP rtc;
+    int i;
+    unsigned short usRandom;
+    fnGetRTC(&rtc);                                                  // present time
+    *ptrData++ = (unsigned char)(rtc.ulLocalUTC >> 24);
+    *ptrData++ = (unsigned char)(rtc.ulLocalUTC >> 16);
+    *ptrData++ = (unsigned char)(rtc.ulLocalUTC >> 8);
+    *ptrData++ = (unsigned char)(rtc.ulLocalUTC);
+    for (i = 0; i < 28; i += sizeof(unsigned short)) {
+        usRandom = fnGetRndHW();
+        *ptrData++ = (unsigned char)(usRandom >> 8);
+        *ptrData++ = (unsigned char)(usRandom);
+    }
+    return ptrData;
+}
+
+static unsigned char *fnInsertSessionID(unsigned char *ptrData, unsigned char ucLength)
+{
+    int i;
+    unsigned short usRandom;
+    if ((ucLength != 16) && (ucLength != 32)) {
+        ucLength = 0;
+    }
+    *ptrData++ = ucLength;
+    for (i = 0; i < ucLength; i += sizeof(unsigned short)) {
+        usRandom = fnGetRndHW();
+        *ptrData++ = (unsigned char)(usRandom >> 8);
+        *ptrData++ = (unsigned char)(usRandom);
+    }
+    return ptrData;
+}
+
+static unsigned char *fnInsertServerNameIndication(unsigned char *ptrData, const CHAR *cServer, unsigned char ucServerNameType)
+{
+    unsigned char *ptrLength = ptrData;
+    unsigned short usLength;
+    ptrData += 5;
+    ptrData = uStrcpy(ptrData, cServer);                                 // insert the server name string
+    usLength = (ptrData - ptrLength - 2);                                // server name list length
+    *ptrLength++ = (unsigned char)(usLength >> 8);
+    *ptrLength++ = (unsigned char)(usLength);
+    *ptrLength++ = ucServerNameType;                                     // server name type
+    usLength -= 3;                                                       // server name length
+    *ptrLength++ = (unsigned char)(usLength >> 8);
+    *ptrLength++ = (unsigned char)(usLength);
+    return ptrData;
+}
+
+static unsigned char *fnInsertSigatureHashAlgorithms(unsigned char *ptrData)
+{
+    int iAlgorithm;
+    unsigned short usLength = sizeof(cucSignatureAlgorithms);
+    *ptrData++ = (unsigned char)(usLength >> 8);
+    *ptrData++ = (unsigned char)(usLength);
+    for (iAlgorithm = 0; iAlgorithm < MAX_SIGNATURE_HASH_ALGORITHMS; iAlgorithm++) { // insert each siganture alogorithm
+        *ptrData++ = cucSignatureAlgorithms[iAlgorithm].ucHash;
+        *ptrData++ = cucSignatureAlgorithms[iAlgorithm].ucSignature;
+    }
+    return ptrData;
+}
+
+static unsigned char *fnInsertGroups(unsigned char *ptrData)
+{
+    int iGroup;
+    unsigned short usLength = sizeof(cusGroups);
+    *ptrData++ = (unsigned char)(usLength >> 8);
+    *ptrData++ = (unsigned char)(usLength);
+    for (iGroup = 0; iGroup < MAX_GROUPS; iGroup++) {                    // insert each group
+        *ptrData++ = (unsigned char)(cusGroups[iGroup] >> 8);
+        *ptrData++ = (unsigned char)(cusGroups[iGroup]);
+    }
+    return ptrData;
+}
+
+static unsigned char *fnInsertEC_pointFormats(unsigned char *ptrData)
+{
+    int iFormat;
+    *ptrData++ = sizeof(cucEC_pointFormats);
+    for (iFormat = 0; iFormat < sizeof(cucEC_pointFormats); iFormat++) { // insert each format
+        *ptrData++ = cucEC_pointFormats[iFormat];
+    }
+    return ptrData;
+}
+
+static unsigned char *fnInsertExtension(unsigned char *ptrData, const unsigned short usHandshakeExtension)
+{
+    unsigned char *ptrLength;
+    unsigned short usLength;
+    *ptrData++ = (unsigned char)(usHandshakeExtension >> 8);
+    *ptrData++ = (unsigned char)(usHandshakeExtension);
+    ptrLength = ptrData;
+    ptrData += 2;                                                        // leave space for the extension length
+    switch (usHandshakeExtension) {
+    case HANDSHAKE_EXTENSION_SERVER_NAME:
+        ptrData = fnInsertServerNameIndication(ptrData, "a5zj8ezn577ey.iot.us-east-2.amazonaws.com", 0); // server name type - host name
+        break;
+    case HANDSHAKE_EXTENSION_SIGNATURE_ALGORITHMS:
+        ptrData = fnInsertSigatureHashAlgorithms(ptrData);
+        break;
+    case HANDSHAKE_EXTENSION_SUPPORTED_GROUPS:
+        ptrData = fnInsertGroups(ptrData);
+        break;
+    case HANDSHAKE_EXTENSION_EC_POINT_FORMATS:
+        ptrData = fnInsertEC_pointFormats(ptrData);
+        break;
+    case HANDSHAKE_EXTENSION_ENCRYPT_THEN_MAC:
+    case HANDSHAKE_EXTENSION_EXTENDED_MASTER_SECRET:
+        // Insert nothing
+        //
+        break;
+    default:
+        _EXCEPTION("??");
+        break;
+    }
+    usLength = (ptrData - ptrLength - 2);                                // server name list length
+    *ptrLength++ = (unsigned char)(usLength >> 8);
+    *ptrLength++ = (unsigned char)(usLength);
+    return ptrData;
+}
+
+static unsigned char *fnInsertHandshakeExtensions(unsigned char *ptrData)
+{
+    int iExtension;
+    for (iExtension = 0; iExtension < MAX_HANDSHAKE_EXTENSIONS; iExtension++) { // insert each extension
+        ptrData = fnInsertExtension(ptrData, cusHandshakeExtensions[iExtension]);
+    }
+    return ptrData;
+}
+
+static int fnTLS(USOCKET Socket, int iAction)
+{
+    unsigned char ucTLS_frame[MIN_TCP_HLEN + 1024];                      // temporary buffer for constructing the secure socket layer message in
+    unsigned char *ptrData = &ucTLS_frame[MIN_TCP_HLEN];                 // start of teh message content
+    unsigned char *ptrRecordLength;
+    unsigned char *ptrHandshakeLength;
+    unsigned char *ptrExtensionLength;
+    unsigned short usLength;
+    switch (iAction) {
+    case 0:                                                              // send Client Hello
+        // TLSv1.2 record layer
+        //
+        *ptrData++ = SSL_TLS_CONTENT_HANDSHAKE;
+        *ptrData++ = (unsigned char)(TLS_VERSION_1_0 >> 8);
+        *ptrData++ = (unsigned char)(TLS_VERSION_1_0);
+        ptrRecordLength = ptrData;                                       // the location where the overall length is to be inserted
+        ptrData += 2;                                                    // leave space for the TLSv1.2 record content length
+
+        // Handshake protocol
+        //
+        *ptrData++ = SSL_TLS_HANDSHAKE_TYPE_CLIENT_HELLO;
+        ptrHandshakeLength = ptrData;
+        ptrData += 3;                                                    // leave space for the handshake protocol content length
+
+        *ptrData++ = (unsigned char)(TLS_VERSION_1_2 >> 8);
+        *ptrData++ = (unsigned char)(TLS_VERSION_1_2);
+
+        ptrData = fnInsertTLS_random(ptrData);                           // insert random
+
+        ptrData = fnInsertSessionID(ptrData, 0);                         // session ID length (0, 16 or 32)
+
+        ptrData = fnInsertCipherSuites(ptrData);                         // insert the accepted cipher suites
+        *ptrData++ = 1;                                                  // compression method length
+        *ptrData++ = 0;                                                  // no compression method
+
+        ptrExtensionLength = ptrData;
+        ptrData += 2;                                                    // leave space for the extension content length
+
+        ptrData = fnInsertHandshakeExtensions(ptrData);
+
+        usLength = (ptrData - ptrRecordLength - 2);                      // the TLSv1.2 record content length
+        *ptrRecordLength++ = (unsigned char)(usLength >> 8);
+        *ptrRecordLength = (unsigned char)(usLength);
+
+        usLength = (ptrData - ptrHandshakeLength - 3);                   // the handshake protocol content length
+        *ptrHandshakeLength++ = 0;                                       // most significant byte is always 0
+        *ptrHandshakeLength++ = (unsigned char)(usLength >> 8);
+        *ptrHandshakeLength = (unsigned char)(usLength);
+
+        usLength = (ptrData - ptrExtensionLength - 2);                   // the extension content length
+        *ptrExtensionLength++ = (unsigned char)(usLength >> 8);
+        *ptrExtensionLength = (unsigned char)(usLength);
+
+        usLength = (ptrData - &ucTLS_frame[MIN_TCP_HLEN]);               // complete contet length
+        iTLS_state = 1;                                                  // sending client hello
+        break;
+    default:
+        return 0;
+    }
+    return (ucUnacked = (fnSendTCP(Socket, ucTLS_frame, usLength, TCP_FLAG_PUSH) > 0)); // send data
+}
+
+static unsigned char ucBuffer[4 * 1024];
+static unsigned long ulBufferContent = 0;
+
+static int fnHandelHandshake(unsigned char *ucPrtData, unsigned long ulHandshakeSize, unsigned char ucPresentHandshakeType)
+{
+    switch (ucPresentHandshakeType) {                                    // the handshake protocol being treated
+    case SSL_TLS_HANDSHAKE_TYPE_SERVER_HELLO:
+        fnDebugMsg("Hello server recognised - ");
+        break;
+    case SSL_TLS_HANDSHAKE_TYPE_CERTIFICATE:
+        fnDebugMsg("Certificate recognised - ");
+        break;
+    case SSL_TLS_HANDSHAKE_TYPE_SERVER_KEY_EXCHANGE:
+        fnDebugMsg("Key exchange recognised - ");
+        break;
+    case SSL_TLS_HANDSHAKE_TYPE_CERTIFICATE_REQUEST:
+        fnDebugMsg("Cert request recognised - ");
+        break;
+    case SSL_TLS_HANDSHAKE_TYPE_SERVER_HELLO_DONE:
+        fnDebugMsg("Hello done recognised - ");
+        break;
+    default:
+        fnDebugMsg("????");
+        break;
+    }
+    fnDebugDec(ulHandshakeSize, WITH_CR_LF);
+    return 0;
+}
+
+static int fnTLS_rx(USOCKET Socket, unsigned char *ucPrtData, unsigned short usLength)
+{
+    static unsigned long ulHandshakeSize = 0;
+    static unsigned short usRecordLength = 0;
+    static unsigned char ucPresentHandshakeType = 0;
+    while (usLength != 0) {                                              // while we still have data to handle
+        switch (iTLS_state) {
+        case 1:                                                          // we are expecting a TLSv1.2 record layer message
+            if (*ucPrtData == SSL_TLS_CONTENT_HANDSHAKE) {
+                iTLS_state = 2;
+            }
+            break;
+        case 2:
+            if (*ucPrtData == (unsigned char)(TLS_VERSION_1_2 >> 8)) {
+                iTLS_state = 3;
+            }
+            break;
+        case 3:
+            if (*ucPrtData == (unsigned char)(TLS_VERSION_1_2)) {
+                iTLS_state = 4;                                          // we have checked the TLS version number
+            }
+            break;
+        case 4:
+            usRecordLength = *ucPrtData;
+            usRecordLength <<= 8;
+            iTLS_state = 5;
+            break;
+        case 5:
+            usRecordLength |= *ucPrtData;                                // total content
+            iTLS_state = 6;
+            break;
+        case 6:
+            ucPresentHandshakeType = *ucPrtData;                         // the handshake protocol type
+            iTLS_state = 7;
+            break;
+        case 7:
+            ulHandshakeSize = *ucPrtData;
+            ulHandshakeSize <<= 8;
+            iTLS_state = 8;
+            break;
+        case 8:
+            ulHandshakeSize |= *ucPrtData;
+            ulHandshakeSize <<= 8;
+            iTLS_state = 9;
+            break;
+        case 9:
+            ulHandshakeSize |= *ucPrtData;
+            iTLS_state = 10;
+            if (ulHandshakeSize != 0) {
+                break;
+            }
+            usLength--;                                                  // this is expected only on reception of zero content server hello done but this would ensure that following records would also be handled correctly if they ever followed
+            ucPrtData++;
+            // Fall through intentionally if the handshake size is zero
+            //
+        case 10:
+            if (usLength < ulHandshakeSize) {                            // if the complete handshake protocol is not contained in the input buffer
+                register unsigned long ulSave = usLength;
+                if ((ulBufferContent + ulSave) > ulHandshakeSize) {      // handle only the required length
+                    ulSave = (unsigned short)(ulHandshakeSize - ulBufferContent);
+                }
+                uMemcpy(&ucBuffer[ulBufferContent], ucPrtData, ulSave);  // save to the intermediate buffer
+                if ((ulBufferContent + ulSave) < ulHandshakeSize) {      // if the handshake protocol content hasn't been completeley collected
+                    ulBufferContent += ulSave;
+                    return APP_ACCEPT;
+                }
+                fnHandelHandshake(ucBuffer, ulHandshakeSize, ucPresentHandshakeType); // handle from intermediate buffer
+            }
+            else {                                                       // this tcp frame contains the complete handshake protocol content
+                fnHandelHandshake(ucPrtData, ulHandshakeSize, ucPresentHandshakeType); // handle from tcp receptiion buffer
+            }
+            usRecordLength -= 4;                                         // compensate for the handshake protocol type and length in each handled protocol
+            if (ulHandshakeSize >= usRecordLength) {                     // if the complete record has been handled
+                usRecordLength = 0;
+                ulBufferContent = 0;
+                iTLS_state = 1;                                          // the record has been completely handled
+                return APP_ACCEPT;
+            }
+            usLength -= (unsigned short)(ulHandshakeSize - ulBufferContent); // remaining in present input buffer
+            ucPrtData += (ulHandshakeSize - ulBufferContent);
+            ulBufferContent = 0;
+            usRecordLength -= (unsigned short)ulHandshakeSize;           // total remaining
+            iTLS_state = 6;                                              // continue with next handshake protocol
+            continue;                                                    // do not perform usLenth and ucPtrData manipulation
+        default:
+            return APP_ACCEPT;
+        }
+        usLength--;
+        ucPrtData++;
+    }
+    return APP_ACCEPT;
+}
+#endif
+
+
 // Local listener on TCP MQTT port
 //
 static int fnMQTTListener(USOCKET Socket, unsigned char ucEvent, unsigned char *ucIp_Data, unsigned short usPortLen)
@@ -445,7 +865,11 @@ static int fnMQTTListener(USOCKET Socket, unsigned char ucEvent, unsigned char *
 
     case TCP_EVENT_CONNECTED:                                            // the broker has accepted the TCP connection request
         if (ucMQTT_state == MQTT_STATE_OPEN_SENT) {
+#if defined SECURE_MQTT
+            return (fnTLS(Socket, 0));                                   // continue by establishing a secure socket connection
+#else
             return (fnSetNextMQTT_state(MQTT_STATE_CONNECTION_OPENED));
+#endif
         }
         break;
 
@@ -482,6 +906,11 @@ static int fnMQTTListener(USOCKET Socket, unsigned char ucEvent, unsigned char *
         return (fnRegenerate() > 0);
 
     case TCP_EVENT_DATA:                                                 // we have new receive data
+#if defined SECURE_MQTT
+        if (iTLS_state < 20) {                                           // if still in handshake phase
+            return (fnTLS_rx(Socket, ucIp_Data, usPortLen));
+        }
+#endif
         return (fnHandleData(ucIp_Data, usPortLen));                     // interpret the data
 
     case TCP_EVENT_CONREQ:                                               // we do not accept connection requests
@@ -561,7 +990,7 @@ static void fnIncrementtPacketIdentfier(void)
 //
 static unsigned short fnRegenerate(void)
 {
-    unsigned char ucMQTTData[MIN_TCP_HLEN + MQTT_MESSAGE_LEN + 1];
+    unsigned char ucMQTTData[MIN_TCP_HLEN + MQTT_MESSAGE_LEN + 1];       // temporary buffer for constructing the MQTT message in
     unsigned short usDataLen = 0;
     unsigned char *ptrMQTT_packet = (unsigned char *)&ucMQTTData[MIN_TCP_HLEN + 1]; // leave one byte at the start free in case we need to add a two byte variable length
     unsigned char *ptrRemainingLength;
