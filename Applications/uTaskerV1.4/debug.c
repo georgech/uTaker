@@ -497,11 +497,12 @@
     #define DO_TELNET_SET_NEGOTIATION 68
 
     #define DO_MQTT_CONNECT         69
-    #define DO_MQTT_SUBSCRIBE       70
-    #define DO_MQTT_UNSUBSCRIBE     71
-    #define DO_MQTT_PUB             72
-    #define DO_MQTT_PUB_LONG        73
-    #define DO_MQTT_DISCONNECT      74
+    #define DO_MQTTS_CONNECT        70
+    #define DO_MQTT_SUBSCRIBE       71
+    #define DO_MQTT_UNSUBSCRIBE     72
+    #define DO_MQTT_PUB             73
+    #define DO_MQTT_PUB_LONG        74
+    #define DO_MQTT_DISCONNECT      75
 
 #define DO_CAN                    13
     #define DO_SEND_CAN_DEFAULT     0                                    // specific CAN command to send a message to the default destination
@@ -1076,6 +1077,9 @@ static const DEBUG_COMMAND tFTP_TELNET_Command[] = {                     // {37}
     #endif
 #endif
 #if defined USE_MQTT_CLIENT                                              // {87}
+    #if defined  SECURE_MQTT
+    { "mqtts_con",        "Secure con. to MQTT broker [ip]",       DO_FTP_TELNET_MQTT, DO_MQTTS_CONNECT },
+    #endif
     { "mqtt_con",         "Connect to MQTT broker [ip]",           DO_FTP_TELNET_MQTT, DO_MQTT_CONNECT },
     { "mqtt_sub",         "Subscribe [topic] <QoS>",               DO_FTP_TELNET_MQTT, DO_MQTT_SUBSCRIBE },
     { "mqtt_un",          "Unsubscribe [ref]",                     DO_FTP_TELNET_MQTT, DO_MQTT_UNSUBSCRIBE },
@@ -6124,12 +6128,21 @@ static void fnDoFTP_TELNET_MQTT(unsigned char ucType, CHAR *ptrInput)
         break;
     #endif
     #if defined USE_MQTT_CLIENT
+        #if defined SECURE_MQTT
+    case DO_MQTTS_CONNECT:
+        #endif
     case DO_MQTT_CONNECT:
         {
             unsigned char ucDestinationIP[IPV4_LENGTH] = {0};
             if (fnStrIP(ptrInput, ucDestinationIP) != 0) {
+                int iMQTT_mode = UNSECURE_MQTT_CONNECTION;
+        #if defined SECURE_MQTT
+                if (DO_MQTTS_CONNECT == ucType) {
+                    iMQTT_mode = SECURE_MQTT_CONNECTION;
+                }
+        #endif
                 fnDebugMsg("MQTT client ");
-                if (fnConnectMQTT(ucDestinationIP, fnMQTT_callback) == 0) {
+                if (fnConnectMQTT(ucDestinationIP, fnMQTT_callback, iMQTT_mode) == 0) {
                     fnDebugMsg("Connecting...");
                 }
                 else {

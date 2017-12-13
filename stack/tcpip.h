@@ -1151,6 +1151,7 @@ __PACK_OFF
 #define APP_REJECT_DATA                     0x10
 #define HANDLING_PARTICAL_ACK               0x20
 #define APP_REQUEST_AUTHENTICATION          0x40                         // {21}
+#define APP_SECURITY_HANDLED                0x80
 
 
 #define NO_TCP_LISTENER_INSTALLED          -1                            // TCP error codes
@@ -1971,7 +1972,10 @@ typedef struct _PACK stETH_IP_ENCAPSULATION_HEADER                       // fixe
 
 // Secure sockets layer
 //
-#define SSL_TLS_CONTENT_HANDSHAKE                    0x16
+#define SSL_TLS_CONTENT_CHANGE_CIPHER_SPEC           0x14                // 20
+#define SSL_TLS_CONTENT_ALERT                        0x15                // 21
+#define SSL_TLS_CONTENT_HANDSHAKE                    0x16                // 22
+#define SSL_TLS_CONTENT_APPLICATION_DATA             0x17                // 23
 #define TLS_VERSION_1_0                              0x0301
 #define TLS_VERSION_1_2                              0x0303
 #define SSL_TLS_HANDSHAKE_TYPE_CLIENT_HELLO          0x01
@@ -1988,18 +1992,45 @@ typedef struct _PACK stSSL_TLS_EXTENSION
     unsigned char  renegotiation_info_extension;
 } SSL_TLS_EXTENSION;
 
-typedef struct _PACK stSSL_TLS_HANDSHAKE_PROTOCOL
+typedef struct _PACK stSSL_TLS_HANDSHAKE_PROTOCOL_HELLO_DETAILS
 {
-    unsigned char  handshake_type;
-    unsigned char  length[3];
-    unsigned char  version[2];
-    unsigned char  random[32];
-    unsigned char  session_id_length;
-    unsigned char  session_id[32];
     unsigned char  cipher[2];
     unsigned char  compression_method;
     unsigned char  extensionsLength[2];
     SSL_TLS_EXTENSION extension;
+} SSL_TLS_HANDSHAKE_PROTOCOL_HELLO_DETAILS;
+
+typedef struct _PACK stSSL_TLS_HANDSHAKE_PROTOCOL_HELLO_NO_ID
+{
+    unsigned char  version[2];
+    unsigned char  random[32];
+    unsigned char  session_id_length;
+    SSL_TLS_HANDSHAKE_PROTOCOL_HELLO_DETAILS session_details;
+} SSL_TLS_HANDSHAKE_PROTOCOL_HELLO_NO_ID;
+
+typedef struct _PACK stSSL_TLS_HANDSHAKE_PROTOCOL_HELLO_16_ID
+{
+    unsigned char  version[2];
+    unsigned char  random[32];
+    unsigned char  session_id_length;
+    unsigned char  session_id[16];
+    SSL_TLS_HANDSHAKE_PROTOCOL_HELLO_DETAILS session_details;
+} SSL_TLS_HANDSHAKE_PROTOCOL_HELLO_16_ID;
+
+typedef struct _PACK stSSL_TLS_HANDSHAKE_PROTOCOL_HELLO_32_ID
+{
+    unsigned char  version[2];
+    unsigned char  random[32];
+    unsigned char  session_id_length;
+    unsigned char  session_id[32];
+    SSL_TLS_HANDSHAKE_PROTOCOL_HELLO_DETAILS session_details;
+} SSL_TLS_HANDSHAKE_PROTOCOL_HELLO_32_ID;
+
+typedef struct _PACK stSSL_TLS_HANDSHAKE_PROTOCOL
+{
+    unsigned char  handshake_type;
+    unsigned char  length[3];
+    SSL_TLS_HANDSHAKE_PROTOCOL_HELLO_32_ID handshake_protocol;
 } SSL_TLS_HANDSHAKE_PROTOCOL;
 
 typedef struct _PACK stSSL_TLS_RECORD
@@ -2271,7 +2302,9 @@ extern int  fnVerifyUser(CHAR *cDecodedUser, unsigned char iCheckUser);
     #define HTML_PASS_CHECK               0x04
     #define FTP_PASS_CHECK                0x08
 
-extern int fnConnectMQTT(unsigned char *ucIP, unsigned short(*fnCallback)(unsigned char, unsigned char *, unsigned long, unsigned char));
+extern int fnConnectMQTT(unsigned char *ucIP, unsigned short(*fnCallback)(unsigned char, unsigned char *, unsigned long, unsigned char), int iMode);
+    #define UNSECURE_MQTT_CONNECTION      0
+    #define SECURE_MQTT_CONNECTION        1
 extern int fnDisconnectMQTT(void);
 extern int fnPublishMQTT(unsigned char ucTopicReference, CHAR *ptrTopic, unsigned char ucQoS);
     #define MQTT_SUBSCRIPTION_QoS_0       0x00

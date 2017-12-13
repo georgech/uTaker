@@ -30,6 +30,7 @@
     25.06.2010 Modify fnWebStrcpy() to accept ? as terminator            {13}
     13.10.2013 Allow use of uReverseMemcpy() for buffer right shifting   {14}
     10.02.2016 Add string length return value to fnDecode64()            {15}
+    13.12.2017 Correct fnBase64DecodeAlphabet() when input is '?'        {16}
 
 */
 
@@ -50,8 +51,12 @@
 
 static CHAR fnBase64DecodeAlphabet(CHAR cInput, CHAR *cRes)
 {
-    if ((cInput == '/') || (cInput == '+')) {
+    if (cInput == '/') {
         *cRes = '?';
+        return B64_NEW_VALUE_READY;
+    }
+    else if (cInput == '+') {                                            // {16}
+        *cRes = '>';
         return B64_NEW_VALUE_READY;
     }
 
@@ -89,19 +94,19 @@ static CHAR fnBase64DecodeAlphabet(CHAR cInput, CHAR *cRes)
 
 static CHAR fnBase64EncodeAlphabet(CHAR cInputByte)
 {
-    if (cInputByte <= 25) {
+    if (cInputByte <= 25) {                                              // 0..25
         return (cInputByte + 'A');
     }
-    if (cInputByte <= 51) {
+    if (cInputByte <= 51) {                                              // 26..51
         return ((cInputByte - 26) + 'a');
     }
-    if (cInputByte <= 61) {
+    if (cInputByte <= 61) {                                              // 52..61
         return ((cInputByte - 52) + '0');
     }
-    if (cInputByte == 62) {
+    if (cInputByte == 62) {                                              // 62
         return ('+');
     }
-    return ('/');
+    return ('/');                                                        // 63
 }
 
 // Perform base 64 encoding of input string, which is terminated by <= '&' character. Return the number of bytes in output buffer.
@@ -146,7 +151,7 @@ extern MAX_FILE_LENGTH fnEncode64(unsigned char *ptrInput, CHAR *ptrOutput, MAX_
         *ptrOutput++ = fnBase64EncodeAlphabet(cNewByte);
         len--;
     }
-    while (Length & 0x3) {                                               // pad if necessary
+    while ((Length & 0x3) != 0) {                                        // pad if necessary
         *ptrOutput++ = '=';
         Length++;
     }

@@ -31,12 +31,12 @@
 
 #define OWN_TASK     TASK_MQTT
 
-//#define SECURE_MQTT
 #if defined SECURE_MQTT
-    #define MQTTS_PORT_   MQTTS_PORT
+    #define MQTTS_PORT_   usMQTT_port
 #else
     #define MQTTS_PORT_   MQTT_PORT
 #endif
+
 
 #define MQTT_MESSAGE_LEN       1400                                      // largest transmission supported
 
@@ -134,7 +134,8 @@ static int  fnSetNextMQTT_state(unsigned char ucNextState);
 static void fnMQTT_error(unsigned char ucError);
 static unsigned short fnRegenerate(void);
 static void fnMQTT_ping(void);
-static int fnHandleData(unsigned char *ptrData, unsigned short usDataLength);
+static int  fnHandleData(unsigned char *ptrData, unsigned short usDataLength);
+static int  fnHandelHandshake(USOCKET Socket, unsigned char *ucPrtData, unsigned long ulHandshakeSize, unsigned char ucPresentHandshakeType);
 
 /* =================================================================== */
 /*                             constants                               */
@@ -143,12 +144,7 @@ static int fnHandleData(unsigned char *ptrData, unsigned short usDataLength);
 static unsigned char cucProtocolNameMQTT[] = { 0x00, 0x04,               // length
                                                'M', 'Q', 'T', 'T'        // name
 };
-#if 0 // temp
-static unsigned char test[] = {0x34, 0x38, 0x00, 0x23, 0x2f, 0x61, 0x76, 0x6f, 0x6c, 0x61, 0x6e, 0x61, 0x2f, 0x64, 0x65, 0x76, 0x69, 0x63, 0x65, 0x2f, 0x41,
-0x56, 0x4f, 0x4c, 0x41, 0x4e, 0x41, 0x37, 0x30, 0x62, 0x33, 0x64, 0x35, 0x34, 0x32, 0x38, 0x30, 0x30, 0x37, 0x00, 0x02, 0x7b, 0x22, 0x68, 0x65, 0x6c,
-0x6c, 0x6f, 0x22, 0x3a, 0x22, 0x77, 0x6f, 0x72, 0x6c, 0x64, 0x22, 0x7d };
-static unsigned char test2[] = { 0x62, 0x02, 0x00, 0x02 };
-#endif
+
 
 /* =================================================================== */
 /*                     global variable definitions                     */
@@ -171,7 +167,12 @@ static unsigned char  ucPublishInProgress = 0;
 static unsigned char  ucPublishQoS = MQTT_SUBSCRIPTION_QoS_0;
 static MQTT__SUBSCRIPTION_ENTRY subscriptions[MQTT_MAX_SUBSCRIPTIONS] = {{0}};
 static CHAR           cPublishTopic[MQTT_MAX_TOPIC_LENGTH + 1] = { 0 };  // one-off publish topic string
-
+#if defined SECURE_MQTT
+    static iTLS_state = 0;
+    static unsigned short usMQTT_port = 0;
+    static unsigned char ucBuffer[4 * 1024];
+    static unsigned long ulBufferContent = 0;
+#endif
 
 // MQTT task
 //
@@ -202,7 +203,7 @@ extern void fnMQTT(TTASKTABLE *ptrTaskTable)
 
 // The user calls this to initiate a connection to the MQTT server/broker
 //
-extern int fnConnectMQTT(unsigned char *ucIP, unsigned short(*fnCallback)(unsigned char, unsigned char *, unsigned long, unsigned char))
+extern int fnConnectMQTT(unsigned char *ucIP, unsigned short(*fnCallback)(unsigned char, unsigned char *, unsigned long, unsigned char), int iMode)
 {
     if (MQTT_TCP_socket < 0) {                                           // we have no socket - or called before initialisation complete    
         if ((MQTT_TCP_socket = fnGetTCP_Socket(TOS_MINIMISE_DELAY, INFINITE_TIMEOUT, fnMQTTListener)) < 0) {
@@ -216,14 +217,22 @@ extern int fnConnectMQTT(unsigned char *ucIP, unsigned short(*fnCallback)(unsign
 
     fnUserCallback = fnCallback;
     uMemcpy(ucMQTT_ip_address, ucIP, IPV4_LENGTH);                       // save the address of the MQTT server/broker we want to connect to
-
-#if 0 // temp
-    ucMQTT_state = MQTT_STATE_CONNECTED_IDLE;
-    fnMQTTListener(MQTT_TCP_socket, TCP_EVENT_DATA, test, sizeof(test));
-    fnMQTTListener(MQTT_TCP_socket, TCP_EVENT_DATA, test2, sizeof(test2));
-#else
-    fnSetNextMQTT_state(MQTT_STATE_OPEN_REQUESTED);
+    #if defined SECURE_MQTT
+    if (iMode == SECURE_MQTT_CONNECTION) {
+        usMQTT_port = MQTTS_PORT;
+    }
+    else {
+        usMQTT_port = MQTT_PORT;
+    }
+    #endif
+#if defined _WINDOWS_                                                   // test server hadshake sequence
+    fnHandelHandshake(MQTT_TCP_socket, 0, 0, SSL_TLS_HANDSHAKE_TYPE_SERVER_HELLO);
+    fnHandelHandshake(MQTT_TCP_socket, 0, 0, SSL_TLS_HANDSHAKE_TYPE_CERTIFICATE);
+    fnHandelHandshake(MQTT_TCP_socket, 0, 0, SSL_TLS_HANDSHAKE_TYPE_SERVER_KEY_EXCHANGE);
+    fnHandelHandshake(MQTT_TCP_socket, 0, 0, SSL_TLS_HANDSHAKE_TYPE_CERTIFICATE_REQUEST);
+    fnHandelHandshake(MQTT_TCP_socket, 0, 0, SSL_TLS_HANDSHAKE_TYPE_SERVER_HELLO_DONE);
 #endif
+    fnSetNextMQTT_state(MQTT_STATE_OPEN_REQUESTED);
     return 0;                                                            // OK    
 }
 
@@ -371,7 +380,7 @@ static void fnMQTT_ping(void)
     }
 }
 
-// Moe to the next MQTT state
+// Move to the next MQTT state
 //
 static int fnSetNextMQTT_state(unsigned char ucNextState)
 {
@@ -515,8 +524,6 @@ static const unsigned char cucEC_pointFormats[] = {
 
 #define MAX_GROUPS (sizeof(cusGroups)/sizeof(unsigned short))
 
-
-static iTLS_state = 0;
 
 static unsigned char *fnInsertCipherSuites(unsigned char *ptrData)
 {
@@ -664,6 +671,34 @@ static unsigned char *fnInsertHandshakeExtensions(unsigned char *ptrData)
     return ptrData;
 }
 
+// This assumes an X502 formatted certificate in flash memory
+//
+static int fnInsertCertificate(unsigned char **ptrptrData, int iCertificate)
+{
+    if (iCertificate == 0) {                                             // just one supported
+        MEMORY_RANGE_POINTER file;
+        unsigned long ulLength;
+        CHAR *ptrSource;
+        file = uOpenFile("7.txt");                                       // first certificate in flash
+        ulLength = uGetFileLength(file);
+        if (ulLength != 0) {                                             // if loaded
+            unsigned char *ptrData = *ptrptrData;
+            ptrSource = fnGetFlashAdd(file + FILE_HEADER);               // the plain text version in Flash
+            // Base64 decode the content between "-----BEGIN CERTIFICATE-----" and "-----END CERTIFICATE-----"
+            //
+            ptrSource += 27;                                             // assume we start with "-----BEGIN CERTIFICATE-----"
+            ulLength = fnDecode64(ptrSource, (CHAR *)(ptrData + 3));     // this ignores carriage returns in the input string and the "-----END CERTIFICATE-----" at the end of it
+            *ptrData++ = (unsigned char)(ulLength >> 16);
+            *ptrData++ = (unsigned char)(ulLength >> 8);
+            *ptrData++ = (unsigned char)(ulLength);
+            ptrData += ulLength;
+            *ptrptrData = ptrData;
+            return (int)ulLength;                                        // the certificate's length
+        }
+    }
+    return -1;                                                           // certificate doesn't exist
+}
+
 static int fnTLS(USOCKET Socket, int iAction)
 {
     unsigned char ucTLS_frame[MIN_TCP_HLEN + 1024];                      // temporary buffer for constructing the secure socket layer message in
@@ -717,8 +752,44 @@ static int fnTLS(USOCKET Socket, int iAction)
         *ptrExtensionLength++ = (unsigned char)(usLength >> 8);
         *ptrExtensionLength = (unsigned char)(usLength);
 
-        usLength = (ptrData - &ucTLS_frame[MIN_TCP_HLEN]);               // complete contet length
+        usLength = (ptrData - &ucTLS_frame[MIN_TCP_HLEN]);               // complete content length
         iTLS_state = 1;                                                  // sending client hello
+        break;
+    case 1:                                                              // send our certificates(s) to the server
+        {
+            unsigned long ulLength;
+            int iCertificates = 0;
+          //file = uOpenFile("6.txt");  // private key
+          //ulLength = uGetFileLength(file);
+
+            *ptrData++ = SSL_TLS_CONTENT_HANDSHAKE;
+            *ptrData++ = (unsigned char)(TLS_VERSION_1_2 >> 8);
+            *ptrData++ = (unsigned char)(TLS_VERSION_1_2);
+            ptrRecordLength = ptrData;                                   // the location where the overall length is to be inserted
+            ptrData += 2;                                                // leave space for the TLSv1.2 record content length
+            *ptrData++ = SSL_TLS_HANDSHAKE_TYPE_CERTIFICATE;
+            ptrHandshakeLength = ptrData;                                // the location where the certificate lengths are to be inserted
+            ptrData += 6;                                                // leave space for length and certificates length fields
+            FOREVER_LOOP() {
+                if (fnInsertCertificate(&ptrData, iCertificates++) < 0) {
+                    break;
+                }
+            }
+            ulLength = (ptrData - ptrRecordLength - 2);
+            *ptrRecordLength++ = (unsigned char)(ulLength >> 8);
+            *ptrRecordLength++ = (unsigned char)(ulLength);
+            ulLength = (ptrData - ptrHandshakeLength - 3);
+            *ptrHandshakeLength++ = (unsigned char)(ulLength >> 16);
+            *ptrHandshakeLength++ = (unsigned char)(ulLength >> 8);
+            *ptrHandshakeLength++ = (unsigned char)(ulLength);
+            ulLength -= 3;
+            *ptrHandshakeLength++ = (unsigned char)(ulLength >> 16);
+            *ptrHandshakeLength++ = (unsigned char)(ulLength >> 8);
+            *ptrHandshakeLength++ = (unsigned char)(ulLength);
+
+            usLength = (ptrData - &ucTLS_frame[MIN_TCP_HLEN]);           // complete content length
+            iTLS_state = 101;
+        }
         break;
     default:
         return 0;
@@ -726,26 +797,153 @@ static int fnTLS(USOCKET Socket, int iAction)
     return (ucUnacked = (fnSendTCP(Socket, ucTLS_frame, usLength, TCP_FLAG_PUSH) > 0)); // send data
 }
 
-static unsigned char ucBuffer[4 * 1024];
-static unsigned long ulBufferContent = 0;
-
-static int fnHandelHandshake(unsigned char *ucPrtData, unsigned long ulHandshakeSize, unsigned char ucPresentHandshakeType)
+static unsigned char *fnExtractCertificate(unsigned char *ucPrtData, int iCertificateReference, unsigned long *ptrulCertificatesLength)
 {
+    unsigned long ulCertificateLength = *ucPrtData++;
+    ulCertificateLength <<= 8;
+    ulCertificateLength |= *ucPrtData++;
+    ulCertificateLength <<= 8;
+    ulCertificateLength |= *ucPrtData++;
+    // sigedCertificate
+    // AlgorithmIdentifier
+    // Padding
+    // Ecrypted certificate
+    ucPrtData += ulCertificateLength;
+    ulCertificateLength += 3;                                            // account for the certificate length fields
+    if (*ptrulCertificatesLength >= ulCertificateLength) {
+        *ptrulCertificatesLength -= ulCertificateLength;
+    }
+    else {
+        *ptrulCertificatesLength = 0;
+    }
+    return ucPrtData;
+}
+
+static int fnHandelHandshake(USOCKET Socket, unsigned char *ucPrtData, unsigned long ulHandshakeSize, unsigned char ucPresentHandshakeType)
+{
+    static int iNextState = 0;
+#if defined _WINDOWS
+    MEMORY_RANGE_POINTER file = 0;
     switch (ucPresentHandshakeType) {                                    // the handshake protocol being treated
     case SSL_TLS_HANDSHAKE_TYPE_SERVER_HELLO:
-        fnDebugMsg("Hello server recognised - ");
+        file = uOpenFile("0.bin");
         break;
     case SSL_TLS_HANDSHAKE_TYPE_CERTIFICATE:
-        fnDebugMsg("Certificate recognised - ");
+        file = uOpenFile("1.bin");
         break;
     case SSL_TLS_HANDSHAKE_TYPE_SERVER_KEY_EXCHANGE:
-        fnDebugMsg("Key exchange recognised - ");
+        file = uOpenFile("4.bin");
         break;
     case SSL_TLS_HANDSHAKE_TYPE_CERTIFICATE_REQUEST:
-        fnDebugMsg("Cert request recognised - ");
+        file = uOpenFile("5.bin");
         break;
     case SSL_TLS_HANDSHAKE_TYPE_SERVER_HELLO_DONE:
-        fnDebugMsg("Hello done recognised - ");
+        break;
+    default:
+        break;
+    }
+    if (file != 0) {
+        if (ucPrtData == 0) {                                            // playback mode
+            MAX_FILE_LENGTH length = uGetFileLength(file);
+            uMemcpy(ucBuffer, fnGetFlashAdd(file + FILE_HEADER), length);
+            ucPrtData = ucBuffer;
+            ulHandshakeSize = length;
+        }
+        else {
+            unsigned char ucMimeType = MIME_BINARY;
+            uFileWrite(file, ucPrtData, (MAX_FILE_LENGTH)ulHandshakeSize);
+            uFileCloseMime(file, &ucMimeType);
+        }
+    }
+#endif
+    switch (ucPresentHandshakeType) {                                    // the handshake protocol being treated
+    case SSL_TLS_HANDSHAKE_TYPE_SERVER_HELLO:
+        {
+            SSL_TLS_HANDSHAKE_PROTOCOL_HELLO_32_ID *ptrHello = (SSL_TLS_HANDSHAKE_PROTOCOL_HELLO_32_ID *)ucPrtData;
+            SSL_TLS_HANDSHAKE_PROTOCOL_HELLO_DETAILS *ptrHelloSession;
+            unsigned short usExtensionLength;
+            unsigned char *ptrExtensionData;
+            iNextState = 0;
+            fnDebugMsg("Hello server recognised ");
+            if (ptrHello->version[0] == (unsigned char)(TLS_VERSION_1_2 >> 8)) {
+                if (ptrHello->version[1] == (unsigned char)(TLS_VERSION_1_2)) {
+                    // ptrHello->random contains 4 bytes that may either be random or are the UTC time, followed by 28 bytes of random data
+                    if (ptrHello->session_id_length <= 32) {
+                        ptrHello = (SSL_TLS_HANDSHAKE_PROTOCOL_HELLO_32_ID *)(((unsigned char *)ptrHello) + (32 - ptrHello->session_id_length)); // set the session content pointer accordingly
+                        ptrHelloSession = (SSL_TLS_HANDSHAKE_PROTOCOL_HELLO_DETAILS *)&(ptrHello->session_details);
+                        // ptrHelloSession->cipher contains the cipher suite that must be used for the session
+                        // ptrHelloSession->compression_method will be 0 since we always set zero
+                        usExtensionLength = ptrHelloSession->extensionsLength[0];
+                        usExtensionLength <<= 8;
+                        usExtensionLength |= ptrHelloSession->extensionsLength[1];
+                        ptrExtensionData = (unsigned char *)&(ptrHelloSession->extension);
+                        while (usExtensionLength >= 4) {                 // handle each extension
+                            #define TLS_HELLO_EXTENSION_RENEGOTIATION_INFO 0xff01
+                            unsigned short usThisExtensionLength;
+                            unsigned short usExtensionType = *ptrExtensionData++;
+                            usExtensionType <<= 8;
+                            usExtensionType |= *ptrExtensionData++;
+                            usThisExtensionLength = *ptrExtensionData++;
+                            usThisExtensionLength <<= 8;
+                            usThisExtensionLength |= *ptrExtensionData++;
+                            switch (usExtensionType) {
+                            case TLS_HELLO_EXTENSION_RENEGOTIATION_INFO:
+                                ptrExtensionData++;
+                                break;
+                            default:
+                                ptrExtensionData += usThisExtensionLength;
+                                break;
+                            }
+                            usThisExtensionLength += 4;                  // account for the extension type and length fields
+                            if (usExtensionLength <= usThisExtensionLength) {
+                                break;
+                            }
+                            usExtensionLength -= usThisExtensionLength;  // remaining length
+                        }
+                    }
+                }
+            }
+
+        }
+        break;
+    case SSL_TLS_HANDSHAKE_TYPE_CERTIFICATE:                             // we are receiving the server's certificates
+        {
+            int iCertificateReference = 0;
+            unsigned long ulCertificatesLength = *ucPrtData++;
+            ulCertificatesLength <<= 8;
+            ulCertificatesLength |= *ucPrtData++;
+            ulCertificatesLength <<= 8;
+            ulCertificatesLength |= *ucPrtData++;
+            fnDebugMsg("Certificate recognised ");
+            while (ulCertificatesLength != 0) {
+                ucPrtData = fnExtractCertificate(ucPrtData, iCertificateReference++, &ulCertificatesLength);
+            }
+        }
+        break;
+    case SSL_TLS_HANDSHAKE_TYPE_SERVER_KEY_EXCHANGE:                     // we are receiving the server's public key
+        fnDebugMsg("Key exchange recognised ");
+        break;
+    case SSL_TLS_HANDSHAKE_TYPE_CERTIFICATE_REQUEST:                     // the server is requesting a certificate from us - this is the next step that we must do
+        {
+        unsigned short usSignatureHashAlgorithmsLength;
+            unsigned char ucCertificateTypesCount = *ucPrtData++;
+            ucPrtData += 3; // the certificate types
+            usSignatureHashAlgorithmsLength = *ucPrtData++;
+            usSignatureHashAlgorithmsLength <<= 8;
+            usSignatureHashAlgorithmsLength |= *ucPrtData++;
+            fnDebugMsg("Cert request recognised ");
+            ucPrtData += usSignatureHashAlgorithmsLength; // the certificate algorithms that are accepted
+            iNextState = 100;
+        }
+        break;
+    case SSL_TLS_HANDSHAKE_TYPE_SERVER_HELLO_DONE:                       // the handshake record has copleted
+        fnDebugMsg("Hello done recognised ");
+        if (iNextState == 100) {                                         // immediately respond with our certificate(s)
+            return (fnTLS(Socket, 1)); 
+        }
+        else {
+          //iTLS_state = 200; gets overwritten
+        }
         break;
     default:
         fnDebugMsg("????");
@@ -755,15 +953,22 @@ static int fnHandelHandshake(unsigned char *ucPrtData, unsigned long ulHandshake
     return 0;
 }
 
-static int fnTLS_rx(USOCKET Socket, unsigned char *ucPrtData, unsigned short usLength)
+// TLS content being received
+//
+static int fnTLS_rx(USOCKET Socket, unsigned char *ucPrtData, unsigned short *ptr_usLength)
 {
     static unsigned long ulHandshakeSize = 0;
     static unsigned short usRecordLength = 0;
     static unsigned char ucPresentHandshakeType = 0;
+    int iReturn = APP_ACCEPT;
+    unsigned short usLength = *ptr_usLength;
     while (usLength != 0) {                                              // while we still have data to handle
         switch (iTLS_state) {
         case 1:                                                          // we are expecting a TLSv1.2 record layer message
             if (*ucPrtData == SSL_TLS_CONTENT_HANDSHAKE) {
+                ulHandshakeSize = 0;
+                usRecordLength = 0;
+                ucPresentHandshakeType = 0;
                 iTLS_state = 2;
             }
             break;
@@ -817,35 +1022,58 @@ static int fnTLS_rx(USOCKET Socket, unsigned char *ucPrtData, unsigned short usL
                     ulSave = (unsigned short)(ulHandshakeSize - ulBufferContent);
                 }
                 uMemcpy(&ucBuffer[ulBufferContent], ucPrtData, ulSave);  // save to the intermediate buffer
-                if ((ulBufferContent + ulSave) < ulHandshakeSize) {      // if the handshake protocol content hasn't been completeley collected
+                if ((ulBufferContent + ulSave) < ulHandshakeSize) {      // if the handshake protocol content hasn't been completely collected
                     ulBufferContent += ulSave;
                     return APP_ACCEPT;
                 }
-                fnHandelHandshake(ucBuffer, ulHandshakeSize, ucPresentHandshakeType); // handle from intermediate buffer
+                iReturn |= fnHandelHandshake(Socket, ucBuffer, ulHandshakeSize, ucPresentHandshakeType); // handle from intermediate buffer
             }
             else {                                                       // this tcp frame contains the complete handshake protocol content
-                fnHandelHandshake(ucPrtData, ulHandshakeSize, ucPresentHandshakeType); // handle from tcp receptiion buffer
+                iReturn |= fnHandelHandshake(Socket, ucPrtData, ulHandshakeSize, ucPresentHandshakeType); // handle from tcp receptiion buffer
             }
             usRecordLength -= 4;                                         // compensate for the handshake protocol type and length in each handled protocol
             if (ulHandshakeSize >= usRecordLength) {                     // if the complete record has been handled
                 usRecordLength = 0;
                 ulBufferContent = 0;
                 iTLS_state = 1;                                          // the record has been completely handled
-                return APP_ACCEPT;
+                return iReturn;
             }
             usLength -= (unsigned short)(ulHandshakeSize - ulBufferContent); // remaining in present input buffer
             ucPrtData += (ulHandshakeSize - ulBufferContent);
             ulBufferContent = 0;
             usRecordLength -= (unsigned short)ulHandshakeSize;           // total remaining
             iTLS_state = 6;                                              // continue with next handshake protocol
-            continue;                                                    // do not perform usLenth and ucPtrData manipulation
+            continue;                                                    // do not perform usLength and ucPtrData manipulation
         default:
+            // We are connected so can decrypt content for the application
+            //
+            switch (*ucPrtData) {
+            case SSL_TLS_CONTENT_HANDSHAKE:
+                break;
+            case SSL_TLS_CONTENT_CHANGE_CIPHER_SPEC:
+                break;
+            case SSL_TLS_CONTENT_APPLICATION_DATA:
+                //return APP_SECURITY_HANDLED; // if decrypted, whereby the new data length can be changed by *ptr_usLength
+                break;
+            case SSL_TLS_CONTENT_ALERT:
+                break;
+            }
             return APP_ACCEPT;
         }
         usLength--;
         ucPrtData++;
     }
     return APP_ACCEPT;
+}
+
+static int fnTLS_ack(USOCKET Socket)
+{
+    return APP_SECURITY_HANDLED;
+}
+
+static int fnTLS_regenerate(USOCKET Socket)
+{
+    return APP_SECURITY_HANDLED;
 }
 #endif
 
@@ -866,10 +1094,11 @@ static int fnMQTTListener(USOCKET Socket, unsigned char ucEvent, unsigned char *
     case TCP_EVENT_CONNECTED:                                            // the broker has accepted the TCP connection request
         if (ucMQTT_state == MQTT_STATE_OPEN_SENT) {
 #if defined SECURE_MQTT
-            return (fnTLS(Socket, 0));                                   // continue by establishing a secure socket connection
-#else
-            return (fnSetNextMQTT_state(MQTT_STATE_CONNECTION_OPENED));
+            if (MQTTS_PORT == usMQTT_port) {                             // if we are operating in secure mode
+                return (fnTLS(Socket, 0));                               // start establishing a secure socket connection
+            }
 #endif
+            return (fnSetNextMQTT_state(MQTT_STATE_CONNECTION_OPENED));
         }
         break;
 
@@ -888,6 +1117,14 @@ static int fnMQTTListener(USOCKET Socket, unsigned char ucEvent, unsigned char *
 
     case TCP_EVENT_ACK:                                                  // last TCP transmission has been acknowledged
         ucUnacked = 0;                                                   // no more outstanding data to be acked
+#if defined SECURE_MQTT
+        if (MQTTS_PORT == usMQTT_port) {                                 // if we are operating in secure mode
+            int iReturn = fnTLS_ack(Socket);
+            if (APP_SECURITY_HANDLED != iReturn) {                       // if the handling responded to an ack
+                return iReturn;                                          // return according to the secure socket layer's response
+            }
+        }
+#endif
         if ((MQTT_STATE_PUBLISH == ucMQTT_state) && (ucPublishQoS == MQTT_SUBSCRIPTION_QoS_0)) {
             ucMQTT_state = MQTT_STATE_CONNECTED_IDLE;
             fnUserCallback(MQTT_PUBLISH_ACKNOWLEDGED, 0, MQTT_SUBSCRIPTION_QoS_0, subscriptions[ucPublishInProgress - 1].ucSubscriptionReference);
@@ -903,12 +1140,23 @@ static int fnMQTTListener(USOCKET Socket, unsigned char ucEvent, unsigned char *
         //
     case TCP_EVENT_REGENERATE:                                           // we must repeat the previous transmission
         ucUnacked = 0;
+#if defined SECURE_MQTT
+        if (MQTTS_PORT == usMQTT_port) {                                 // if we are operating in secure mode
+            int iReturn = fnTLS_regenerate(Socket);
+            if (APP_SECURITY_HANDLED != iReturn) {                       // if the handling needed to regenerate
+                return iReturn;                                          // return according to the secure socket layer's response
+            }
+        }
+#endif
         return (fnRegenerate() > 0);
 
     case TCP_EVENT_DATA:                                                 // we have new receive data
 #if defined SECURE_MQTT
-        if (iTLS_state < 20) {                                           // if still in handshake phase
-            return (fnTLS_rx(Socket, ucIp_Data, usPortLen));
+        if (MQTTS_PORT == usMQTT_port) {                                 // if we are operating in secure mode
+            int iReturn = fnTLS_rx(Socket, ucIp_Data, &usPortLen);
+            if (APP_SECURITY_HANDLED != iReturn) {                       // if the handling did not decrypt the content
+                return iReturn;                                          // return according to the secure socket layer's response
+            }
         }
 #endif
         return (fnHandleData(ucIp_Data, usPortLen));                     // interpret the data

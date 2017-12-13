@@ -525,7 +525,7 @@ extern QUEUE_TRANSFER fnFillBuf_FIFO(QUEQUE *ptQUEQue, unsigned char *fifo_buffe
     // Nested write to the queue may happen here from interrupts
     //
     CopyCount = FirstCopy;
-    while (CopyCount--) {
+    while (CopyCount-- != 0) {
         *ptrTo++ = *fifo_buffer;
     #if defined _WINDOWS
         fifo_buffer++;
@@ -589,7 +589,7 @@ static QUEUE_TRANSFER fnWriteInternal(unsigned char *output_buffer, QUEUE_TRANSF
 
         iLen = (HEADER_LENGTH+1);                                        // copy the head but don't wake the task since it is not yet complete...The sending task must complete the job or else there may be problems...
         ptQUEQue->chars += (HEADER_LENGTH + 1);
-        while (iLen--) {                                                 // copy the header to the buffer
+        while (iLen-- != 0) {                                            // copy the header to the buffer
             *ptQUEQue->put++ = *output_buffer++;
             if (ptQUEQue->put >= ptQUEQue->buffer_end) {                 // handle wrap in circular buffer
                 ptQUEQue->put = ptQUEQue->QUEbuffer;
