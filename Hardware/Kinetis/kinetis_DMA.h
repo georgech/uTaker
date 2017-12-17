@@ -24,6 +24,7 @@
     02.03.2017 Add optional alternative DMA channel for use by interrupts when the main one is in use {5}
     19.10.2017 Add DMA_SINGLE_CYCLE option to allow a single buffer transfer and stopping automatically {6}
     19.10.2017 Use ATOMIC_PERIPHERAL_BIT_REF_SET() and ATOMIC_PERIPHERAL_BIT_REF_CLEAR() to enable/disable DMA_ERQ (interrupt and DMA safe)
+    17.12.2017 Change uMemset() to match memset() parameters             {7}
 
 */
 
@@ -922,10 +923,11 @@ extern void *uReverseMemcpy(void *ptrTo, const void *ptrFrom, size_t Size)
 
 // memset implementation
 //
-extern void *uMemset(void *ptrTo, unsigned char ucValue, size_t Size)    // {9}
+extern void *uMemset(void *ptrTo, int iValue, size_t Size)               // {7}
 {
     register unsigned char *ptr = (unsigned char *)ptrTo;
-
+    register unsigned char ucValue = (unsigned char)iValue;              // {7}
+    
     if (Size >= SMALLEST_DMA_COPY) {                                     // if large enough to be worthwhile 
     #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA                  // {80}
         KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;

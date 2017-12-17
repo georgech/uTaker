@@ -5,10 +5,6 @@
       <UniqueIdentifier>{60118a63-8179-4bb1-a7a2-22808811feb1}</UniqueIdentifier>
       <Extensions>cpp;c;cxx;rc;def;r;odl;idl;hpj;bat</Extensions>
     </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{865310c7-9fb4-4963-99a9-edfe2256535b}</UniqueIdentifier>
-      <Extensions>h;hpp;hxx;hm;inl</Extensions>
-    </Filter>
     <Filter Include="uTasker">
       <UniqueIdentifier>{e8a54d7b-111a-443f-8153-1bd3c3c4ab14}</UniqueIdentifier>
     </Filter>
@@ -65,6 +61,16 @@
     </Filter>
     <Filter Include="FreeRTOS\include">
       <UniqueIdentifier>{a094671f-7e9c-4069-80f2-8f4ee4e5f64b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{865310c7-9fb4-4963-99a9-edfe2256535b}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl</Extensions>
+    </Filter>
+    <Filter Include="TCP/IP\MQTTS">
+      <UniqueIdentifier>{ced666b3-7ade-4966-ba7d-85be5cab6d29}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="TCP/IP\MQTTS\include">
+      <UniqueIdentifier>{f56219c5-9ce2-42a3-aafe-788082b65b34}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -287,9 +293,6 @@
     <ClCompile Include="..\..\..\uTasker\DSP.c">
       <Filter>uTasker</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\stack\SSL\mbedtls-1.3.10\aes.c">
-      <Filter>TCP/IP\mbedtls</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\stack\SSL\wolfssl-3.9.6\w_aes.c">
       <Filter>TCP/IP\wolfSSL</Filter>
     </ClCompile>
@@ -373,6 +376,102 @@
     </ClCompile>
     <ClCompile Include="..\..\..\stack\mqtt.c">
       <Filter>TCP/IP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\SSL\mbedtls-2.6\ecp.c">
+      <Filter>TCP/IP\MQTTS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\SSL\mbedtls-2.6\bignum.c">
+      <Filter>TCP/IP\MQTTS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\SSL\mbedtls-2.6\ecp_curves.c">
+      <Filter>TCP/IP\MQTTS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\SSL\mbedtls-2.6\x509_crt.c">
+      <Filter>TCP/IP\MQTTS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\SSL\mbedtls-2.6\asn1parse.c">
+      <Filter>TCP/IP\MQTTS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\SSL\mbedtls-2.6\x509.c">
+      <Filter>TCP/IP\MQTTS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\SSL\mbedtls-2.6\pem.c">
+      <Filter>TCP/IP\MQTTS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\SSL\mbedtls-2.6\pk.c">
+      <Filter>TCP/IP\MQTTS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\SSL\mbedtls-2.6\base64.c">
+      <Filter>TCP/IP\MQTTS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\SSL\mbedtls-2.6\md.c">
+      <Filter>TCP/IP\MQTTS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\SSL\mbedtls-2.6\oid.c">
+      <Filter>TCP/IP\MQTTS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\SSL\mbedtls-2.6\pk_wrap.c">
+      <Filter>TCP/IP\MQTTS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\SSL\mbedtls-2.6\md_wrap.c">
+      <Filter>TCP/IP\MQTTS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\SSL\mbedtls-2.6\sha1.c">
+      <Filter>TCP/IP\MQTTS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\SSL\mbedtls-2.6\sha256.c">
+      <Filter>TCP/IP\MQTTS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\SSL\mbedtls-2.6\rsa.c">
+      <Filter>TCP/IP\MQTTS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\SSL\mbedtls-2.6\ecdsa.c">
+      <Filter>TCP/IP\MQTTS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\SSL\mbedtls-2.6\asn1write.c">
+      <Filter>TCP/IP\MQTTS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\SSL\mbedtls-2.6\hmac_drbg.c">
+      <Filter>TCP/IP\MQTTS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\SSL\mbedtls-2.6\pkparse.c">
+      <Filter>TCP/IP\MQTTS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\SSL\mbedtls-2.6\ecdh.c">
+      <Filter>TCP/IP\MQTTS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\SSL\mbedtls-2.6\ssl_cli.c">
+      <Filter>TCP/IP\MQTTS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\SSL\mbedtls-2.6\ssl_ciphersuites.c">
+      <Filter>TCP/IP\MQTTS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\SSL\mbedtls-2.6\ssl_tls.c">
+      <Filter>TCP/IP\MQTTS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\SSL\mbedtls-2.6\cipher.c">
+      <Filter>TCP/IP\MQTTS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\SSL\mbedtls-2.6\cipher_wrap.c">
+      <Filter>TCP/IP\MQTTS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\SSL\mbedtls-2.6\gcm.c">
+      <Filter>TCP/IP\MQTTS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\SSL\mbedtls-2.6\dhm.c">
+      <Filter>TCP/IP\MQTTS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\SSL\mbedtls-2.6\aes.c">
+      <Filter>TCP/IP\MQTTS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\SSL\mbedtls-1.3.10\aes_mbedTLS.c">
+      <Filter>TCP/IP\mbedtls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\secure_layer.c">
+      <Filter>TCP/IP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\SSL\mbedtls-2.6\mbedTLS_Interface.c">
+      <Filter>TCP/IP\MQTTS</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -946,6 +1045,120 @@
     <ClInclude Include="..\..\..\uTasker\usb.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\mbedtls-2.6\mbedtls\aes.h">
+      <Filter>TCP/IP\MQTTS\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\mbedtls-2.6\mbedtls\asn1.h">
+      <Filter>TCP/IP\MQTTS\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\mbedtls-2.6\mbedtls\asn1write.h">
+      <Filter>TCP/IP\MQTTS\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\mbedtls-2.6\mbedtls\base64.h">
+      <Filter>TCP/IP\MQTTS\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\mbedtls-2.6\mbedtls\bignum.h">
+      <Filter>TCP/IP\MQTTS\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\mbedtls-2.6\mbedtls\bn_mul.h">
+      <Filter>TCP/IP\MQTTS\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\mbedtls-2.6\mbedtls\certs.h">
+      <Filter>TCP/IP\MQTTS\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\mbedtls-2.6\mbedtls\check_config.h">
+      <Filter>TCP/IP\MQTTS\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\mbedtls-2.6\mbedtls\cipher.h">
+      <Filter>TCP/IP\MQTTS\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\mbedtls-2.6\mbedtls\cipher_internal.h">
+      <Filter>TCP/IP\MQTTS\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\mbedtls-2.6\mbedtls\config.h">
+      <Filter>TCP/IP\MQTTS\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\mbedtls-2.6\mbedtls\debug.h">
+      <Filter>TCP/IP\MQTTS\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\mbedtls-2.6\mbedtls\des.h">
+      <Filter>TCP/IP\MQTTS\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\mbedtls-2.6\mbedtls\dhm.h">
+      <Filter>TCP/IP\MQTTS\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\mbedtls-2.6\mbedtls\ecdh.h">
+      <Filter>TCP/IP\MQTTS\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\mbedtls-2.6\mbedtls\ecdsa.h">
+      <Filter>TCP/IP\MQTTS\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\mbedtls-2.6\mbedtls\ecp.h">
+      <Filter>TCP/IP\MQTTS\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\mbedtls-2.6\mbedtls\ecp_internal.h">
+      <Filter>TCP/IP\MQTTS\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\mbedtls-2.6\mbedtls\gcm.h">
+      <Filter>TCP/IP\MQTTS\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\mbedtls-2.6\mbedtls\hmac_drbg.h">
+      <Filter>TCP/IP\MQTTS\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\mbedtls-2.6\mbedtls\md.h">
+      <Filter>TCP/IP\MQTTS\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\mbedtls-2.6\mbedtls\md_internal.h">
+      <Filter>TCP/IP\MQTTS\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\mbedtls-2.6\mbedtls\md5.h">
+      <Filter>TCP/IP\MQTTS\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\mbedtls-2.6\mbedtls\oid.h">
+      <Filter>TCP/IP\MQTTS\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\mbedtls-2.6\mbedtls\pem.h">
+      <Filter>TCP/IP\MQTTS\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\mbedtls-2.6\mbedtls\pk.h">
+      <Filter>TCP/IP\MQTTS\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\mbedtls-2.6\mbedtls\pk_internal.h">
+      <Filter>TCP/IP\MQTTS\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\mbedtls-2.6\mbedtls\platform.h">
+      <Filter>TCP/IP\MQTTS\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\mbedtls-2.6\mbedtls\rsa.h">
+      <Filter>TCP/IP\MQTTS\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\mbedtls-2.6\mbedtls\sha1.h">
+      <Filter>TCP/IP\MQTTS\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\mbedtls-2.6\mbedtls\sha256.h">
+      <Filter>TCP/IP\MQTTS\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\mbedtls-2.6\mbedtls\ssl.h">
+      <Filter>TCP/IP\MQTTS\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\mbedtls-2.6\mbedtls\ssl_ciphersuites.h">
+      <Filter>TCP/IP\MQTTS\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\mbedtls-2.6\mbedtls\ssl_internal.h">
+      <Filter>TCP/IP\MQTTS\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\mbedtls-2.6\mbedtls\threading.h">
+      <Filter>TCP/IP\MQTTS\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\mbedtls-2.6\mbedtls\x509.h">
+      <Filter>TCP/IP\MQTTS\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\mbedtls-2.6\mbedtls\x509_crl.h">
+      <Filter>TCP/IP\MQTTS\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\mbedtls-2.6\mbedtls\x509_crt.h">
+      <Filter>TCP/IP\MQTTS\include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="cursor1.cur">
@@ -971,6 +1184,8 @@
     <None Include="..\..\..\Hardware\Kinetis\CMSIS_DSP\arm_bitreversal2.S">
       <Filter>Hardware\Kinetis\CMSIS_DSP</Filter>
     </None>
+    <None Include="..\GNU_Kinetis\Build_Kinetis_SSL.bat" />
+    <None Include="..\GNU_Kinetis\make_uTaskerV1.4_SSL_GNU_Kinetis" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="uTasker.rc">

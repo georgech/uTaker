@@ -8478,8 +8478,8 @@ extern int fnSimTimers(void)
                 iPDB_interrupt_triggered = 1;
                 if ((PDB0_SC & PDB_SC_PDBIE) != 0) {                     // if interrupt is enabled
                     PDB0_SC |= PDB_SC_PDBIF;                             // set the interrupt flag
-                    if (fnGenInt(irq_PDB_ID) != 0) {
-                        ptrVect->processor_interrupts.irq_PDB();         // call the interrupt handler
+                    if (fnGenInt(irq_PDB0_ID) != 0) {
+                        ptrVect->processor_interrupts.irq_PDB0();        // call the interrupt handler
                     }
                 }
             }

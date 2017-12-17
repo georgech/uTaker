@@ -712,7 +712,7 @@
     #define KINETIS_K64                                                  // extra sub-family type precision
 #elif defined FRDM_K64F
     #define TARGET_HW            "FRDM-K64F"
-    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((48 * 1024) * MEM_FACTOR) // large SRAM parts
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((63 * 1024) * MEM_FACTOR) // large SRAM parts
     #define KINETIS_MAX_SPEED    120000000
     #define KINETIS_K_FPU                                                // part with floating point unit
     #define KINETIS_K60                                                  // specify the sub-family
@@ -1491,7 +1491,10 @@
             #define MODBUS_TCP                                           // support MODBUS TCP protocol
             #define USE_MQTT_CLIENT                                      // enable MQTT (message queuing telemetry transport) client support
           //#define USE_MQTT_SERVER                                      // enable MQTT (message queuing telemetry transport) server support
-                #define SECURE_MQTT                                      // MQTTS support
+              //#define SECURE_MQTT                                      // MQTTS support
+                #if defined SECURE_MQTT
+                    #define SUPPORT_UCALLOC
+                #endif
 
           //#define TEST_CLIENT_SERVER                                   // TCP client/server test (see debug.c)
             #define TEST_TCP_SERVER                                      // TCP server (see debug.c) - uses also a TELNET session
@@ -1537,7 +1540,7 @@
                 #define DNS_SERVER_OWN_ADDRESS                           // command line menu allows DNS server address to be set, otherwise it uses the default gateway
           //#define USE_TFTP                                             // enable TFTP - needs UDP
             #define USE_NETBIOS                                          // enable NetBIOS - needs UDP
-            #define USE_SNMP
+          //#define USE_SNMP
                 #define SUPPORT_SNMPV2C                                  // SNMPV2c as well as SNMPV1
                 #define SNMP_MANAGER_COUNT        3                      // the number of managers supported
                 #define SNMP_TRAP_QUEUE_LENGTH    8                      // traps that can be queued to each manager

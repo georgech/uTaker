@@ -1409,9 +1409,11 @@ typedef struct stRESET_VECTOR
 #endif
 
 // PWT configuration
+//
 #if (defined KINETIS_KE && !defined KINETIS_KE02) || (defined KINETIS_KEA && !defined KINETIS_KEA64)
     #define PWT_AVAILABLE   1
 #endif
+
 
 // FlexTimer configuration
 //
@@ -1757,7 +1759,7 @@ typedef struct stPROCESSOR_IRQ
     void  (*reserved26)(void);                                           // 26
     void  (*irq_MCG)(void);                                              // 27
     void  (*irq_LPTMR0)(void);                                           // 28
-    void  (*irq_PDB)(void);                                              // 29
+    void  (*irq_PDB0)(void);                                             // 29
     void  (*irq_PORTA)(void);                                            // 30
     void  (*irq_PORTB_C_D_E)(void);                                      // 31 single interrupt vector for ports B, C, D and E
 #elif defined KINETIS_KL                                                 // {42}
@@ -1991,7 +1993,7 @@ typedef struct stPROCESSOR_IRQ
     void  (*irq_PIT1)(void);                                             // 49
     void  (*irq_PIT2)(void);                                             // 50
     void  (*irq_PIT3)(void);                                             // 51
-    void  (*irq_PDB)(void);                                              // 52
+    void  (*irq_PDB0)(void);                                             // 52
     void  (*irq_USB_OTG)(void);                                          // 53
     void  (*irq_USB_CD)(void);                                           // 54
     void  (*reserved55)(void);                                           // 55
@@ -2058,7 +2060,7 @@ typedef struct stPROCESSOR_IRQ
     void  (*irq_PIT1)(void);                                             // 31
     void  (*irq_PIT2)(void);                                             // 32
     void  (*irq_PIT3)(void);                                             // 33
-    void  (*irq_PDB)(void);                                              // 34
+    void  (*irq_PDB0)(void);                                             // 34
     void  (*irq_USB_OTG)(void);                                          // 35
     void  (*irq_USB_CD)(void);                                           // 36
     void  (*irq_TSI)(void);                                              // 37
@@ -2151,7 +2153,7 @@ typedef struct stPROCESSOR_IRQ
         void  (*irq_PIT1)(void);                                         // 49
         void  (*irq_PIT2)(void);                                         // 50
         void  (*irq_PIT3)(void);                                         // 51
-        void  (*irq_PDB)(void);                                          // 52
+        void  (*irq_PDB0)(void);                                         // 52
         void  (*irq_USB_OTG)(void);                                      // 53
         void  (*irq_USB_CD)(void);                                       // 54
         void  (*irq_res_55)(void);
@@ -2258,7 +2260,7 @@ typedef struct stPROCESSOR_IRQ
         void  (*irq_PIT1)(void);                                         // 49
         void  (*irq_PIT2)(void);                                         // 50
         void  (*irq_PIT3)(void);                                         // 51
-        void  (*irq_PDB)(void);                                          // 52
+        void  (*irq_PDB0)(void);                                         // 52
         void  (*irq_USB_OTG)(void);                                      // 53
         void  (*irq_USB_CD)(void);                                       // 54
         void  (*irq_res_55)(void);
@@ -2406,7 +2408,7 @@ typedef struct stPROCESSOR_IRQ
         void  (*irq_PIT1)(void);                                         // 69
         void  (*irq_PIT2)(void);                                         // 70
         void  (*irq_PIT3)(void);                                         // 71
-        void  (*irq_PDB)(void);                                          // 72
+        void  (*irq_PDB0)(void);                                         // 72
         void  (*irq_USB_OTG)(void);                                      // 73
         void  (*irq_USB_CD)(void);                                       // 74
         #if defined ETHERNET_AVAILABLE
@@ -2582,7 +2584,7 @@ typedef struct stVECTOR_TABLE
 
     #define irq_MCG_ID                    27                             // 27
     #define irq_LPTMR0_ID                 28                             // 28
-    #define irq_PDB_ID                    29                             // 29
+    #define irq_PDB0_ID                   29                             // 29
     #define irq_PORTA_ID                  30                             // 30
     #define irq_PORTB_C_D_E_ID            31                             // 31 (ports B, C, D and E share an interrupt)
 #elif defined KINETIS_KL28
@@ -2796,7 +2798,7 @@ typedef struct stVECTOR_TABLE
     #define irq_PIT1_ID                   49                             // 49
     #define irq_PIT2_ID                   50                             // 50
     #define irq_PIT3_ID                   51                             // 51
-    #define irq_PDB_ID                    52                             // 52
+    #define irq_PDB0_ID                   52                             // 52
     #define irq_USB_OTG_ID                53                             // 53
     #define irq_USB_CD_ID                 54                             // 54
 
@@ -2863,7 +2865,7 @@ typedef struct stVECTOR_TABLE
     #define irq_PIT1_ID                   31                             // 31
     #define irq_PIT2_ID                   32                             // 32
     #define irq_PIT3_ID                   33                             // 33
-    #define irq_PDB_ID                    34                             // 34
+    #define irq_PDB0_ID                   34                             // 34
     #define irq_USB_OTG_ID                35                             // 35
     #define irq_USB_CD_ID                 36                             // 36
     #define irq_TSI_ID                    37                             // 37
@@ -2932,7 +2934,7 @@ typedef struct stVECTOR_TABLE
         #define irq_PIT1_ID               49                             // 49
         #define irq_PIT2_ID               50                             // 50
         #define irq_PIT3_ID               51                             // 51
-        #define irq_PDB_ID                52                             // 52
+        #define irq_PDB0_ID               52                             // 52
         #define irq_USB_OTG_ID            53                             // 53
         #define irq_USB_CD_ID             54                             // 54
 
@@ -2995,7 +2997,7 @@ typedef struct stVECTOR_TABLE
         #define irq_PIT1_ID               49                             // 49
         #define irq_PIT2_ID               50                             // 50
         #define irq_PIT3_ID               51                             // 51
-        #define irq_PDB_ID                52                             // 52
+        #define irq_PDB0_ID               52                             // 52
         #define irq_USB_OTG_ID            53                             // 53
         #define irq_USB_CD_ID             54                             // 54
 
@@ -3110,7 +3112,7 @@ typedef struct stVECTOR_TABLE
         #define irq_PIT1_ID               69                             // 69
         #define irq_PIT2_ID               70                             // 70
         #define irq_PIT3_ID               71                             // 71
-        #define irq_PDB_ID                72                             // 72
+        #define irq_PDB0_ID               72                             // 72
         #define irq_USB_OTG_ID            73                             // 73
         #define irq_USB_CD_ID             74                             // 74
         #if defined ETHERNET_AVAILABLE
@@ -3230,6 +3232,13 @@ typedef struct stVECTOR_TABLE
 
 
 
+// PDB configuration
+//
+#if defined irq_PDB0_ID
+    #define PDB_AVAILABLE   1
+#else
+    #define PDB_AVAILABLE   0
+#endif
 
 
 
@@ -3317,7 +3326,7 @@ typedef struct stVECTOR_TABLE
     #if defined PWT_AVAILABLE
         #define PWT_BLOCK                      ((unsigned char *)(&kinetis.PWT)) // {88} PWT
     #endif
-    #if !defined KINETIS_KL && !defined KINETIS_KE
+    #if PDB_AVAILABLE > 0
         #define PDB_BLOCK                      ((unsigned char *)(&kinetis.PDB)) // {31} PDB
     #endif
     #if !defined KINETIS_WITHOUT_PIT
@@ -3621,7 +3630,7 @@ typedef struct stVECTOR_TABLE
     #if defined PWT_AVAILABLE
         #define PWT_BLOCK                      0x40033000                // {88} PWT
     #endif
-    #if !defined KINETIS_KL && !defined KINETIS_KE
+    #if PDB_AVAILABLE > 0
         #define PDB_BLOCK                      0x40036000                // PDB {31}
     #endif
     #if !defined KINETIS_WITHOUT_PIT
@@ -7147,7 +7156,7 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
   #define PWT_R2_PWTC_MASK 0xffff0000                                    // negative pulse width
 #endif
 
-#if !defined KINETIS_KL && !defined KINETIS_KE                           // {42}
+#if PDB_AVAILABLE > 0                                                    // {42}
 // PDB (Programmable Delay Block)                                        {31}
 //
 #define PDB0_SC             *(volatile unsigned long *)(PDB_BLOCK + 0x000) // status and control register
@@ -10328,6 +10337,7 @@ typedef struct stKINETIS_LPTMR_CTL
       #define SIM_SCGC6_SIM_SCGC6_ADC0       BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 27)
       #define SIM_SCGC6_SIM_SCGC6_ADC2       BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 28)
       #define SIM_SCGC6_SIM_SCGC6_RTC        BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 29)
+      #define SIM_SCGC6_SIM_SCGC6_RTC_RF     BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 30)
       #if defined KINETIS_KL || defined KINETIS_K22_SF7
             #define SIM_SCGC6_SIM_SCGC6_DAC0 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 31)
       #endif

@@ -7,10 +7,16 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "uTaskerKinetis", "uTaskerV1
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		uTasker Kinetis - SSL plus GNU build|x86 = uTasker Kinetis - SSL plus GNU build|x86
+		uTasker Kinetis - SSL|x86 = uTasker Kinetis - SSL|x86
 		uTasker Kinetis plus GNU build|x86 = uTasker Kinetis plus GNU build|x86
 		uTasker Kinetis|x86 = uTasker Kinetis|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F08CCFCE-B19A-4F3C-9FA7-CF907BB6F36F}.uTasker Kinetis - SSL plus GNU build|x86.ActiveCfg = uTasker Kinetis - SSL plus GNU build|Win32
+		{F08CCFCE-B19A-4F3C-9FA7-CF907BB6F36F}.uTasker Kinetis - SSL plus GNU build|x86.Build.0 = uTasker Kinetis - SSL plus GNU build|Win32
+		{F08CCFCE-B19A-4F3C-9FA7-CF907BB6F36F}.uTasker Kinetis - SSL|x86.ActiveCfg = uTasker Kinetis - SSL|Win32
+		{F08CCFCE-B19A-4F3C-9FA7-CF907BB6F36F}.uTasker Kinetis - SSL|x86.Build.0 = uTasker Kinetis - SSL|Win32
 		{F08CCFCE-B19A-4F3C-9FA7-CF907BB6F36F}.uTasker Kinetis plus GNU build|x86.ActiveCfg = uTasker Kinetis plus GNU build|Win32
 		{F08CCFCE-B19A-4F3C-9FA7-CF907BB6F36F}.uTasker Kinetis plus GNU build|x86.Build.0 = uTasker Kinetis plus GNU build|Win32
 		{F08CCFCE-B19A-4F3C-9FA7-CF907BB6F36F}.uTasker Kinetis|x86.ActiveCfg = uTasker Kinetis|Win32

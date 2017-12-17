@@ -44,7 +44,7 @@
     11.12.2009 Add additional ASCII character defines                    {26}
     23.12.2009 Correct LITTLE_LONG_WORD() macro for big-endian processors{27}
     02.01.2010 Add UTFAT_OPERATION_COMPLETED                             {28}
-    02.02.2010 Add uFree()                                               {29}
+    02.02.2010 Add optional uFree()                                      {29}
     21.03.2010 Add USB_ENDPOINT_TERMINATES, TRANSPARENT_CALLBACK, ENDPOINT_REQUEST_TYPE and ENDPOINT_CLEARED {30}
     31.03.2010 Add ucParameters and ucPaired_IN to USB_ENDPOINT and mode USB_TERMINATING_ENDPOINT {31}
     02.04.2010 Add fnGetPairedIN()                                       {32}
@@ -95,6 +95,8 @@
     09.05.2017 Add PAUSE_TX                                              {76}
     26.11.2017 Added FOREVER_LOOP()                                      {77}
     29.11.2017 Add UART_INVERT_TX                                        {78}
+    16.12.2017 Add optional uCalloc() and uCFree()                       {79}
+    17.12.2017 Change uMemset() to match memset() parameters             {80}
 
 */
 
@@ -983,34 +985,40 @@ extern void fnRTS_change(QUEUE_HANDLE Channel, int iState);
 
 extern void *uMalloc(MAX_MALLOC);
 extern void *uMallocAlign(MAX_MALLOC __size, unsigned short ucAlign);    // {2}
-extern MAX_MALLOC uFree(int iFreeRegion);                                // {29}
+#if defined SUPPORT_UFREE
+    extern MAX_MALLOC uFree(int iFreeRegion);                            // {29}
+#endif
 #if defined SECONDARY_UMALLOC                                            // {52}
     extern void *uMalloc2(unsigned long);
     extern void *uMallocAlign2(unsigned long __size, unsigned short ucAlign);
     extern unsigned long uFree2(int iFreeRegion);
 #endif
+#if defined SUPPORT_UCALLOC                                              // {79}
+    extern void uCFree(void *ptr);
+    extern void *uCalloc(size_t n, size_t size);
+#endif
 
 
 #if defined RUN_LOOPS_IN_RAM
-  extern void  fnInitDriver(void);
-  extern int (*uMemcmp)(const void *ptrTo, const void *ptrFrom, size_t Size);
-  extern int (*uStrcmp)(const CHAR *ptrTo, const CHAR *ptrFrom);
-  extern CHAR *(*uStrcpy)(CHAR *ptrTo, const CHAR *ptrFrom);
-  extern int (*uStrlen)(const CHAR *ptrStr);
- #if defined DMA_MEMCPY_SET && !defined DEVICE_WITHOUT_DMA
-  extern void *uMemcpy(void *ptrTo, const void *ptrFrom, size_t Size);
-  extern void *uMemset(void *ptrTo, unsigned char ucValue, size_t Size);
- #else
-  extern void (*uMemcpy)(void *ptrTo, const void *ptrFrom, size_t Size);
-  extern void (*uMemset)(void *ptrTo, unsigned char ucValue, size_t Size);
- #endif
+    extern void  fnInitDriver(void);
+    extern int (*uMemcmp)(const void *ptrTo, const void *ptrFrom, size_t Size);
+    extern int (*uStrcmp)(const CHAR *ptrTo, const CHAR *ptrFrom);
+    extern CHAR *(*uStrcpy)(CHAR *ptrTo, const CHAR *ptrFrom);
+    extern int (*uStrlen)(const CHAR *ptrStr);
+    #if defined DMA_MEMCPY_SET && !defined DEVICE_WITHOUT_DMA
+        extern void *uMemcpy(void *ptrTo, const void *ptrFrom, size_t Size);
+        extern void *uMemset(void *ptrTo, int iValue, size_t Size);      // {80} use int as second parameter to match memset()
+    #else
+        extern void (*uMemcpy)(void *ptrTo, const void *ptrFrom, size_t Size);
+        extern void (*uMemset)(void *ptrTo, int iValue, size_t Size);    // {80} use int as second parameter to match memset()
+    #endif
 #else
-  extern int   uMemcmp(const void *ptrTo, const void *ptrFrom, size_t Size);
-  extern void *uMemcpy(void *ptrTo, const void *ptrFrom, size_t Size);
-  extern void *uMemset(void *ptrTo, unsigned char ucValue, size_t Size);
-  extern int   uStrcmp(const CHAR *ptrTo, const CHAR *ptrFrom);
-  extern CHAR *uStrcpy(CHAR *ptrTo, const CHAR *ptrFrom);
-  extern int   uStrlen(const CHAR *ptrStr);
+    extern int   uMemcmp(const void *ptrTo, const void *ptrFrom, size_t Size);
+    extern void *uMemcpy(void *ptrTo, const void *ptrFrom, size_t Size);
+    extern void *uMemset(void *ptrTo, int iValue, size_t Size);          // {80} use int as second parameter to match memset()
+    extern int   uStrcmp(const CHAR *ptrTo, const CHAR *ptrFrom);
+    extern CHAR *uStrcpy(CHAR *ptrTo, const CHAR *ptrFrom);
+    extern int   uStrlen(const CHAR *ptrStr);
 #endif
 
 extern void uMemset_long(unsigned long *ptrTo, unsigned long ulValue, size_t Size); // {19}

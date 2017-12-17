@@ -20,6 +20,7 @@
     12.12.2011 Add optional UNUSED_HEAP_PATTERN to aid debugging         {5}
     29.05.2013 Add optional second heap in fixed sized memory area       {6}
     06.11.2015 Modify fnStackFree() to allow worst-case used stack to be returned {7}
+    16.12.2017 Add optional uCalloc() and uCFree()                       {8}
 
 */
 
@@ -340,3 +341,214 @@ extern unsigned long uFree2(int iFreeRegion)
     #endif
 #endif
 
+#if defined SUPPORT_UCALLOC                                              // {8}
+
+#define SECURITY_HEAP_SIZE (24 * 1024)
+#define BREAK_DOWN_BLOCKS_LIMIT  (4 * 1024)                              // break down holes of this size and larger by reallocating them in preference to filing smallest possibly hole
+#define HEAP_OBJECTS       200
+#define MNITOR_PEAK_MANAGEMENT_BLOCK_USE                                 // check the maximum block use during operation
+
+typedef struct stHEAP_MANAGEMENT_BLOCK
+{
+    unsigned char *ptrMemory;                                            // pointer to the allocated memory
+    MAX_MALLOC memorySize;                                               // the size of the allocated memory
+    unsigned char ucStatus;
+} HEAP_MANAGEMENT_BLOCK;
+
+static unsigned long ulMemoryAllocated = 0;                              // present size of allocated hep memory
+static unsigned long ulTopMergin = 0xffffffff;                           // the worst case of heap margin detected
+static unsigned long ulHoleCount = 0;                                    // the nummer of holes that presently exist
+static unsigned long ulAllocateCount = 0;                                // the number of times memory allocation has been requested
+static unsigned long ulDeallocateCount = 0;                              // the number of times memory has been freed
+static unsigned long ulAccumulatedHoleSize = 0;                          // the accumulated hole memory size
+#if defined MNITOR_PEAK_MANAGEMENT_BLOCK_USE
+    static unsigned long ulMaxUsedManagementBlocks = 0;                  // the maximum utilisation of management blocks detected
+#endif
+
+static unsigned char *ptrSecurityHeapTop = 0;                            // present top of allocated heap memory
+static HEAP_MANAGEMENT_BLOCK *ptrHeapManager = 0;                        // the location of the heap management entries
+
+
+// Return always zeroed memory that is long word aligned
+//
+extern void *uCalloc(size_t n, size_t size)
+{
+    static unsigned char *ptrSecurityHeapStart = 0;
+    static unsigned char *ptrSecurityHeapEnd = 0;
+    register HEAP_MANAGEMENT_BLOCK *ptrHeapEntry;
+    int iEntry = 0;
+    MAX_MALLOC thisSize = (MAX_MALLOC)(n * size);                        // the size of zeroed memory requested
+    thisSize += 3;
+    thisSize &= ~0x3;                                                    // always long word size
+    if (ptrHeapManager == 0) {
+        ptrHeapManager = uMalloc((HEAP_OBJECTS * sizeof(HEAP_MANAGEMENT_BLOCK)));
+        ptrSecurityHeapStart = ptrSecurityHeapTop = uMalloc(SECURITY_HEAP_SIZE);
+        ptrSecurityHeapEnd = (ptrSecurityHeapStart + SECURITY_HEAP_SIZE);
+    }
+    ptrHeapEntry = ptrHeapManager;
+    ulAllocateCount++;
+    FOREVER_LOOP() {
+        if (ptrHeapEntry->ptrMemory == 0) {                              // free entry found (neither in use nor a hole)
+            // If we can find a hole that can be re-used we do this as preference, rather than letting the heap grow unnecessarily and not being able to accept a large block later
+            //
+            register HEAP_MANAGEMENT_BLOCK *ptrReuseEntry = ptrHeapManager;
+            register HEAP_MANAGEMENT_BLOCK *ptrPreferredHole = 0;
+            register unsigned long ulSpaceOnTopOfStack;
+            register unsigned long ulHolesToCheck = ulHoleCount;
+#if defined MNITOR_PEAK_MANAGEMENT_BLOCK_USE
+            unsigned long ulUsedManagementBlockCount = ++iEntry;
+            ptrPreferredHole = ptrHeapEntry;
+            while (iEntry++ < HEAP_OBJECTS) {
+                ptrPreferredHole++;
+                if (ptrHeapEntry->ptrMemory != 0) {                      // either in use or a hold
+                    ulUsedManagementBlockCount++;
+                }
+            }
+            if (ulMaxUsedManagementBlocks < ulUsedManagementBlockCount) {
+                ulMaxUsedManagementBlocks = ulUsedManagementBlockCount;  // the peak in use count seen
+            }
+            ptrPreferredHole = 0;
+#endif
+            iEntry = 0;
+            while (ulHolesToCheck != 0) {                                // we scan for holes
+                if (ptrReuseEntry->ucStatus != 0) {                      // this is a hole
+                    ulHolesToCheck--;
+                    if (ptrReuseEntry->memorySize == thisSize) {         // this hole has the perfect size for us
+                        ptrReuseEntry->ucStatus = 0;                     // the hole is in use again (with original size)
+                        ulHoleCount--;
+                        ulAccumulatedHoleSize -= thisSize;
+                        ulMemoryAllocated += thisSize;
+                        return (void *)(ptrReuseEntry->ptrMemory);
+                    }
+                    else if (ptrReuseEntry->memorySize > thisSize) {     // this hole has adequate size for us
+                        if (ptrPreferredHole == 0) {                     // the first hole that we have found
+                            ptrPreferredHole = ptrReuseEntry;            // presently it is the one that will be re-used
+                        }
+                        else {
+                            if ((ptrReuseEntry->memorySize >= BREAK_DOWN_BLOCKS_LIMIT) || (ptrPreferredHole->memorySize >= BREAK_DOWN_BLOCKS_LIMIT)) { // if this hole is large
+                                if (ptrPreferredHole->memorySize < ptrReuseEntry->memorySize) { // we prefer to break down larger blocks rather than fill smaller ones
+                                    ptrPreferredHole = ptrReuseEntry;    // larger hole has been found which we will re-use instead
+                                }
+                            }
+                            else {
+                                if (ptrPreferredHole->memorySize > ptrReuseEntry->memorySize) { // we prefer to use the smallest that fits
+                                    ptrPreferredHole = ptrReuseEntry;    // smaller hole has been found which we will re-use instead
+                                }
+                            }
+                        }
+                    }
+                }
+                if (++iEntry >= HEAP_OBJECTS) {                          // complete list checked
+                    break;
+                }
+                ptrReuseEntry++;                                         // move to next entry
+            }
+            if (ptrPreferredHole != 0) {                                 // we reuse a part of a hole
+                ptrHeapEntry->memorySize = thisSize;                     // the entry size
+                ptrHeapEntry->ptrMemory = ptrPreferredHole->ptrMemory;   // insert at start of hole
+                ptrPreferredHole->memorySize -= thisSize;                // the original hole is now smaller but is still a hole
+                ptrPreferredHole->ptrMemory += thisSize;
+                ulAccumulatedHoleSize -= thisSize;
+                ulMemoryAllocated += thisSize;
+                return (void *)(ptrHeapEntry->ptrMemory);
+            }
+            // No memory re-use was possible so it must be put to the top of heap
+            //
+            ulSpaceOnTopOfStack = (ptrSecurityHeapEnd - ptrSecurityHeapTop); // the remaining memory at the top of the heap
+            if (thisSize > ulSpaceOnTopOfStack) {
+                _EXCEPTION("Heap exhausted!!");
+                return 0;
+            }
+            if (ulTopMergin > ulSpaceOnTopOfStack) {
+                ulTopMergin = ulSpaceOnTopOfStack;
+            }
+            ptrHeapEntry->ptrMemory = ptrSecurityHeapTop;
+            ptrHeapEntry->memorySize = thisSize;
+            ptrSecurityHeapTop += thisSize;
+            ulMemoryAllocated += thisSize;
+            break;
+        }
+        if (++iEntry >= HEAP_OBJECTS) {
+            _EXCEPTION("Not enough heap management objects!");
+            return 0;
+        }
+        ptrHeapEntry++;
+    }
+    return (void *)(ptrHeapEntry->ptrMemory);
+}
+
+extern void uCFree(void *ptr)
+{
+    if (ptr == 0) {
+        _EXCEPTION("Ignoring free of zero pointer!");
+        return;
+    }
+    if (ptrHeapManager != 0) {
+        register int iEntry = 0;
+        register HEAP_MANAGEMENT_BLOCK *ptrHeapEntry = ptrHeapManager;
+        ulDeallocateCount++;
+        FOREVER_LOOP() {
+            if (ptrHeapEntry->ptrMemory == ptr) {                        // entry found
+                uMemset(ptrHeapEntry->ptrMemory, 0, ptrHeapEntry->memorySize); // zero freed memory (so that subsequent allocation doesn't need to do it any also to cover up previous use in security applications)
+                ulMemoryAllocated -= ptrHeapEntry->memorySize;
+                if ((ptrHeapEntry->ptrMemory + ptrHeapEntry->memorySize) == ptrSecurityHeapTop) { // being removed from the top of heap
+                    ptrSecurityHeapTop = ptrHeapEntry->ptrMemory;
+                    ptrHeapEntry->ptrMemory = 0;
+                    ptrHeapEntry->ucStatus = 0;
+                    return;
+                }
+                else {
+                    register HEAP_MANAGEMENT_BLOCK *ptrHeapScan = ptrHeapManager;
+                    register HEAP_MANAGEMENT_BLOCK *ptrHeapEntryBefore = 0;
+                    register HEAP_MANAGEMENT_BLOCK *ptrHeapEntryAfter = 0;
+                    void *ptrMemoryBefore = ptrHeapEntry->ptrMemory;
+                    void *ptrMemoryAfter = (ptrHeapEntry->ptrMemory + ptrHeapEntry->memorySize);
+                    ptrHeapEntry->ucStatus = 1;                          // this is now a hole
+                    ulHoleCount++;
+                    ulAccumulatedHoleSize += ptrHeapEntry->memorySize;
+                    iEntry = 0;
+                    FOREVER_LOOP() {
+                        if (ptrHeapScan->ucStatus != 0) {
+                            if (ptrHeapScan->ptrMemory == ptrMemoryAfter) {
+                                ptrHeapEntryAfter = ptrHeapScan;         // found following hole
+                                if (ptrHeapEntryBefore != 0) {
+                                    break;                               // since we have found both a preceeding and following hole we can stop a continued search
+                                }
+                            }
+                            else if ((ptrHeapScan->ptrMemory + ptrHeapScan->memorySize) == ptrMemoryBefore) {
+                                ptrHeapEntryBefore = ptrHeapScan;        // found preceeding hole
+                                if (ptrHeapEntryAfter != 0) {
+                                    break;                               // since we have found both a preceeding and following hole we can stop a continued search
+                                }
+                            }
+                        }
+                        if (++iEntry >= HEAP_OBJECTS) {
+                            break;                                       // all blocks have been scanned for possible combination
+                        }
+                        ptrHeapScan++;
+                    }
+                    if (ptrHeapEntryBefore != 0) {
+                        ptrHeapEntryBefore->memorySize += ptrHeapEntry->memorySize; // combine previous hole with ours
+                        ptrHeapEntry->ptrMemory = 0;
+                        ptrHeapEntry->ucStatus = 0;                      // this entry is free
+                        ptrHeapEntry = ptrHeapEntryBefore;
+                        ulHoleCount--;
+                    }
+                    if (ptrHeapEntryAfter != 0) {
+                        ptrHeapEntry->memorySize += ptrHeapEntryAfter->memorySize; // combine with following hole
+                        ptrHeapEntryAfter->ptrMemory = 0;
+                        ptrHeapEntryAfter->ucStatus = 0;                 // this entry is free           
+                        ulHoleCount--;
+                    }
+                }
+                break;
+            }
+            if (++iEntry >= HEAP_OBJECTS) {
+                _EXCEPTION("Trying to free non-allocated memory!");
+                break;
+            }
+            ptrHeapEntry++;
+        }
+    }
+}
+#endif

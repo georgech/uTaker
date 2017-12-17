@@ -90,12 +90,12 @@ static __interrupt void _pdb_Interrupt(void)
                 }
                 if (ptr_pdb_setup->int_handler != 0) {                   // if an interrupt handler is defined
                     pdb_interrupt_handler = ptr_pdb_setup->int_handler;  // enter the user's handler
-                    fnEnterInterrupt(irq_PDB_ID, ptr_pdb_setup->int_priority, (void (*)(void))_pdb_Interrupt); // enter interrupt handler
+                    fnEnterInterrupt(irq_PDB0_ID, ptr_pdb_setup->int_priority, (void (*)(void))_pdb_Interrupt); // enter interrupt handler
                     ulMode |= PDB_SC_PDBIE;                              // enable interrupt
                 }
             }
     #if defined SUPPORT_DAC && !defined KINETIS_KE                       // {1}
-            if (ptr_pdb_setup->pdb_mode & PDB_TRIGGER_DAC0) {
+            if ((ptr_pdb_setup->pdb_mode & PDB_TRIGGER_DAC0) != 0) {
                 if (ptr_pdb_setup->dac0_delay_0 == 0) {
                     PDB0_DACINT0 = 0;
                 }

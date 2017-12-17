@@ -1972,18 +1972,23 @@ typedef struct _PACK stETH_IP_ENCAPSULATION_HEADER                       // fixe
 
 // Secure sockets layer
 //
-#define SSL_TLS_CONTENT_CHANGE_CIPHER_SPEC           0x14                // 20
-#define SSL_TLS_CONTENT_ALERT                        0x15                // 21
-#define SSL_TLS_CONTENT_HANDSHAKE                    0x16                // 22
-#define SSL_TLS_CONTENT_APPLICATION_DATA             0x17                // 23
 #define TLS_VERSION_1_0                              0x0301
 #define TLS_VERSION_1_2                              0x0303
 #define SSL_TLS_HANDSHAKE_TYPE_CLIENT_HELLO          0x01
 #define SSL_TLS_HANDSHAKE_TYPE_SERVER_HELLO          0x02
-#define SSL_TLS_HANDSHAKE_TYPE_CERTIFICATE           0x0b
-#define SSL_TLS_HANDSHAKE_TYPE_SERVER_KEY_EXCHANGE   0x0c
-#define SSL_TLS_HANDSHAKE_TYPE_CERTIFICATE_REQUEST   0x0d
-#define SSL_TLS_HANDSHAKE_TYPE_SERVER_HELLO_DONE     0x0e
+#define SSL_TLS_HANDSHAKE_TYPE_CERTIFICATE           0x0b                // 11
+#define SSL_TLS_HANDSHAKE_TYPE_SERVER_KEY_EXCHANGE   0x0c                // 12
+#define SSL_TLS_HANDSHAKE_TYPE_CERTIFICATE_REQUEST   0x0d                // 13
+#define SSL_TLS_HANDSHAKE_TYPE_SERVER_HELLO_DONE     0x0e                // 14
+#define SSL_TLS_HANDSHAKE_TYPE_CERTIFICATE_VERIFY    0x0f                // 15
+#define SSL_TLS_HANDSHAKE_TYPE_CLIENT_KEY_EXCHANGE   0x10                // 16
+
+#define SSL_TLS_CONTENT_CHANGE_CIPHER_SPEC           0x14                // 20
+#define SSL_TLS_CONTENT_ALERT                        0x15                // 21
+#define SSL_TLS_CONTENT_HANDSHAKE                    0x16                // 22
+#define SSL_TLS_CONTENT_APPLICATION_DATA             0x17                // 23
+
+#define SSL_TLS_CHANGE_CIPHER_SPEC_MESSAGE           0x01
 
 typedef struct _PACK stSSL_TLS_EXTENSION
 {

@@ -28,9 +28,10 @@
 # 10.11.2017 Add mqtt.c
 # 17.11.2017 Add kinetis_LPI2C.h and kinetis_timer_pins.h peripheral dependancies
 # 30.11.2017 Add make_uTaskerV1.4_GNU_Kinetis to dependencies to ensure clean each time this file is modified
+# 17.12.2017 Add secure_layer
 
 #
-# When changing the project target check that the C_FLAGS selection (just elow) and the linker script file (at bottom) matches the processor being used
+# When changing the project target check that the C_FLAGS selection (just below) and the linker script file (at bottom) matches the processor being used
 #
 
 
@@ -48,11 +49,11 @@ OBJS = Build/application.o Build/debug.o Build/webInterface.o Build/KeyScan.o Bu
        Build/MODBUS.o Build/modbus_app.o \
        Build/mass_storage.o \
        Build/GLCD.o Build/LCD.o Build/FT_CoPro_Cmds.o  \
-       Build/aes.o Build/w_aes.o Build/aes_cbc.o Build/cbc128.o Build/aes_core.o \
+       Build/aes_mbedTLS.o Build/w_aes.o Build/aes_cbc.o Build/cbc128.o Build/aes_core.o \
        Build/arm_bitreversal2.o Build/arm_cfft_f32.o Build/arm_cfft_radix8_f32.o Build/arm_cmplx_mag_f32.o Build/arm_common_tables.o Build/arm_const_structs.o Build/arm_max_f32.o Build/arm_sin_cos_f32.o \
        Build/eth_drv.o Build/Driver.o Build/uMalloc.o Build/uTasker.o Build/Tty_drv.o Build/i2c_drv.o Build/USB_drv.o Build/uFile.o Build/Watchdog.o Build/GlobalTimer.o Build/time_keeper.o Build/low_power.o Build/can_drv.o \
        Build/Ethernet.o Build/arp.o Build/dhcp.o Build/dns.o Build/ftp.o Build/http.o Build/icmp.o Build/ip_utils.o Build/ip.o Build/pop3.o Build/smtp.o Build/snmp.o \
-       Build/tcp.o Build/telnet.o Build/tftp.o Build/udp.o Build/webutils.o Build/NetBIOS.o Build/zero_config.o Build/ftp_client.o Build/igmp.o Build/ppp.o Build/mqtt.o \
+       Build/tcp.o Build/telnet.o Build/tftp.o Build/udp.o Build/webutils.o Build/NetBIOS.o Build/zero_config.o Build/ftp_client.o Build/igmp.o Build/ppp.o Build/mqtt.o Build/secure_layer.o \
        Build/crypto.o Build/DSP.o Build/mmcau_aes_functions.o \
        Build/tasks.o Build/timers.o Build/queue.o Build/list.o Build/event_groups.o Build/croutine.o Build/port.o
 
@@ -87,7 +88,7 @@ DEPENDS_CMSIS = ../config.h \
        make_uTaskerV1.4_GNU_Kinetis
        
 
-FREERTOS_INC = ../../../FreeRTOS\Source\include
+FREERTOS_INC = ../../../FreeRTOS/Source/include
 FREERTOS_PORT_INC = ../../../FreeRTOS/Source/portable/GCC/ARM_CM4F
 
 DEPENDS_FREERTOS = $(FREERTOS_INC) \
@@ -318,6 +319,9 @@ Build/ppp.o: ../../../stack/ppp.c $(DEPENDS)
 Build/mqtt.o: ../../../stack/mqtt.c $(DEPENDS)
 		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../stack/mqtt.c -o Build/mqtt.o
 
+Build/secure_layer.o: ../../../stack/secure_layer.c $(DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../stack/secure_layer.c -o Build/secure_layer.o
+
 # uGLCDLIB files
 #
 Build/GLCD.o: ../../../uTasker/uGLCDLIB/GLCD.c $(DEPENDS) ../application.h ../../../uTasker/uGLCDLIB/glcd_fonts.h ../../../uTasker/uGLCDLIB/glcd_samsung.h ../../../uTasker/uGLCDLIB/glcd_toshiba.h ../../../uTasker/uGLCDLIB/glcd_oled.h ../../../uTasker/uGLCDLIB/glcd_cglcd.h ../../../uTasker/uGLCDLIB/glcd_st7565s.h ../../../uTasker/uGLCDLIB/glcd_tft.h
@@ -351,8 +355,8 @@ Build/mmcau_aes_functions.o: ../../../Hardware/Kinetis/Crypto/mmcau_aes_function
 Build/w_aes.o: ../../../stack/SSL/wolfssl-3.9.6/w_aes.c $(DEPENDS) ../../../stack/SSL/wolfssl-3.9.6/aes.h
 		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../stack/SSL/wolfssl-3.9.6/w_aes.c -o Build/w_aes.o
 
-Build/aes.o: ../../../stack/SSL/mbedtls-1.3.10/aes.c $(DEPENDS) ../../../stack/SSL/mbedtls-1.3.10/aes.h
-		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../stack/SSL/mbedtls-1.3.10/aes.c -o Build/aes.o
+Build/aes_mbedTLS.o: ../../../stack/SSL/mbedtls-1.3.10/aes_mbedTLS.c $(DEPENDS) ../../../stack/SSL/mbedtls-1.3.10/aes.h
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../stack/SSL/mbedtls-1.3.10/aes_mbedTLS.c -o Build/aes_mbedTLS.o
 
 Build/aes_cbc.o: ../../../stack/SSL/openssl-1.0.2/aes_cbc.c $(DEPENDS) ../../../stack/SSL/openssl-1.0.2/aes.h
 		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../stack/SSL/openssl-1.0.2/aes_cbc.c -o Build/aes_cbc.o
@@ -416,14 +420,14 @@ Build/port.o : ../../../FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c $(DEPENDS_F
 # Create output file and show its size
 # $(LINKER) $(C_FLAGS) -I../../uTaskerV1.4 -D _GNU -D _KINETIS -g -Os -Wl,-Map=uTaskerV1.4.map -nostartfiles -TK_1M_256.ld -o uTaskerV1.4.elf $(OBJS) $(OBJS2)
 uTaskerV1.4.elf: $(OBJS) $(OBJS2) K_2M_256.ld K_1M_256.ld K_1M_128.ld K_512_64.ld K_256_256.ld K_256_64.ld K_256_32.ld K_128_24.ld K_128_16.ld K_64_16.ld KL_128_96.ld KL_256_32.ld KL_128_16.ld KL_64_8.ld KL_32_4.ld KV_32_8.ld KV_512_96.ld KE_64_4.ld KE_256_32.ld KE_128_16.ld KE_8_1.ld KEA_128_16.ld KEA_64_4.ld  KEA_32_4.ld KEA_8_1.ld
-	$(CC_LNK) $(C_FLAGS) -Os -g -TK_512_128.ld -nostartfiles -Xlinker --gc-sections -lm -Wl,-Map,"uTaskerV1.4.map" -o "uTaskerV1.4.elf" $(OBJS) $(OBJS2)
+	$(CC_LNK) $(C_FLAGS) -Os -g -TK_1M_256.ld -nostartfiles -Xlinker --gc-sections -lm -Wl,-Map,"uTaskerV1.4.map" -o "uTaskerV1.4.elf" $(OBJS) $(OBJS2)
 	$(CC_OBJ) --only-section=.data --only-section=.init --only-section=.text --only-section=.rodata --only-section=.vectors --only-section=.f_config --output-target=srec uTaskerV1.4.elf uTaskerV1.4.srec
 	$(CC_OBJ) --only-section=.data --only-section=.init --only-section=.text --only-section=.rodata --only-section=.vectors --only-section=.f_config --output-target=ihex uTaskerV1.4.elf uTaskerV1.4.hex
 	$(CC_OBJ) --only-section=.data --only-section=.init --only-section=.text --only-section=.rodata --only-section=.vectors --only-section=.f_config --output-target=binary uTaskerV1.4.elf uTaskerV1.4.bin
 	$(CC_SIZE) uTaskerV1.4.elf
 
 uTaskerV1.4_BM.elf: $(OBJS) $(OBJS2_BM) K_2M_256_BM.ld K_1M_256_BM.ld K_1M_128_BM.ld K_512_64_BM.ld K_256_256_BM.ld K_256_64_BM.ld K_128_24_BM.ld K_128_16_BM.ld K_64_16_BM.ld KL_128_96_BM.ld KL_256_32_BM.ld KL_128_16_BM.ld KL_64_8_BM.ld KL_32_4_BM.ld KV_32_8_BM.ld KV_512_96_BM.ld KE_256_32_BM.ld KE_128_16_BM.ld KE_64_4_BM.ld KEA_128_16_BM.ld KEA_64_4_BM.ld KEA_32_4_BM.ld K_1M_128_Blaze.ld
-	$(CC_LNK) $(C_FLAGS) -Os -g -TK_512_128_BM.ld -nostartfiles -Xlinker --gc-sections -lm -Wl,-Map=uTaskerV1.4_BM.map -o uTaskerV1.4_BM.elf $(OBJS) $(OBJS2_BM)
+	$(CC_LNK) $(C_FLAGS) -Os -g -TK_1M_256_BM.ld -nostartfiles -Xlinker --gc-sections -lm -Wl,-Map=uTaskerV1.4_BM.map -o uTaskerV1.4_BM.elf $(OBJS) $(OBJS2_BM)
 	$(CC_OBJ) --only-section=.data --only-section=.init --only-section=.text --only-section=.rodata --only-section=.vectors --output-target=srec uTaskerV1.4_BM.elf uTaskerV1.4_BM.srec
 	$(CC_OBJ) --only-section=.data --only-section=.init --only-section=.text --only-section=.rodata --only-section=.vectors --output-target=ihex uTaskerV1.4_BM.elf uTaskerV1.4_BM.hex
 	$(CC_OBJ) --only-section=.data --only-section=.init --only-section=.text --only-section=.rodata --only-section=.vectors --output-target=binary uTaskerV1.4_BM.elf uTaskerV1.4_BM.bin

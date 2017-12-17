@@ -45,6 +45,7 @@
     12.09.2013 Added uReverseMemcpy()                                    {30}
     01.03.2015 Add FIFO queue                                            {31}
     01.03.2015 Control flush of input or output and return flushed content size {32}
+    17.12.2017 Change uMemset() to match memset() parameters             {32}
 
 */
 
@@ -1193,15 +1194,16 @@ extern void *uReverseMemcpy(void *ptrTo, const void *ptrFrom, size_t Size)
     #if !defined uMemset                                                 // {7}
         #if defined RUN_LOOPS_IN_RAM                                     // execute this routine from RAM to optimise its speed
 void (*uMemset)(void *ptrTo, unsigned char ucValue, size_t Size);
-static void *_uMemset(void *ptrTo, unsigned char ucValue, size_t Size)
+static void *_uMemset(void *ptrTo, int iValue, size_t Size)
         #else
-extern void *uMemset(void *ptrTo, unsigned char ucValue, size_t Size)
+extern void *uMemset(void *ptrTo, int iValue, size_t Size)
         #endif
 {
+    register unsigned char ucValue = (unsigned char)iValue;              // {32} convert the int paremeter to unsigned char
     void *buffer = ptrTo;
     unsigned char *ptr = (unsigned char *)ptrTo;
 
-    while (Size--) {
+    while (Size-- != 0) {
         *ptr++ = ucValue;
     }
     return buffer;

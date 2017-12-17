@@ -53,6 +53,7 @@
         #define TEST_AD_DA                                               // {14} enable test of reading ADC and writing (after delay) to DAC
           //#define ADC_TRIGGER_TPM                                      // use TPM module rather than PIT for ADC trigger (valid for KL parts)
           //#define VOICE_RECORDER                                       // {15} needs TEST_AD_DA and mass-storage and saves sampled input to SD card
+            #define HANDLE_PDB_INTERRUPT                                 // when the ADC is triggered by PDB handle also a PDB interrupt
       //#define INTERNAL_TEMP                                            // {2} read also internal temperature (Luminary Micro)
 
         #if defined TEST_ADC && (defined _HW_SAM7X || defined _HW_AVR32) // SAM7X and AVR32 specific tests
@@ -710,7 +711,7 @@ static void half_buffer_interrupt(void)
     ucPingPong ^= 1;
 }
     #endif
-    #if !defined KINETIS_KL
+    #if PDB_AVAILABLE > 0 && defined HANDLE_PDB_INTERRUPT
 // If enabled, the PDB interrupt occurs at 8kHz
 //
 static void _pdb_interrupt(void)
@@ -724,7 +725,7 @@ static void _pdb_interrupt(void)
 //
 static void fnStart_ADC_Trigger(void)
 {
-    #if defined KINETIS_KL || defined KINETIS_KE                         // the KL devices do not have a PDB so the PIT is used instead to trigger the ADC/DAC
+    #if PDB_AVAILABLE == 0                                               // for devices that do not have a PDB the PIT is used instead to trigger the ADC/DAC
         #if defined ADC_TRIGGER_TPM                                      // ADC triggering from TPM 1 - channel 0 and 1 (these channels are the default ADC triggers for ADC 0 inputs A and B)
     PWM_INTERRUPT_SETUP pwm_setup;
     pwm_setup.int_type = PWM_INTERRUPT;
@@ -750,7 +751,9 @@ static void fnStart_ADC_Trigger(void)
     #else
     PDB_SETUP pdb_setup;                                                 // interrupt configuration parameters
     pdb_setup.int_type = PDB_INTERRUPT;
-    //pdb_setup.int_handler = _pdb_interrupt;                            // interrupt on each PDB cycle match
+        #if defined HANDLE_PDB_INTERRUPT
+    pdb_setup.int_handler = _pdb_interrupt;                              // interrupt on each PDB cycle match
+        #endif
     pdb_setup.int_handler = 0;                                           // no interrupt
     pdb_setup.int_priority = PRIORITY_PDB;    
     //pdb_setup.pdb_mode = (PDB_PERIODIC_DMA | PDB_TRIGGER_ADC1_A);      // periodic DMA and trigger ADC1 - channel A
