@@ -2307,7 +2307,7 @@ extern int  fnVerifyUser(CHAR *cDecodedUser, unsigned char iCheckUser);
     #define HTML_PASS_CHECK               0x04
     #define FTP_PASS_CHECK                0x08
 
-extern int fnConnectMQTT(unsigned char *ucIP, unsigned short(*fnCallback)(unsigned char, unsigned char *, unsigned long, unsigned char), int iMode);
+extern int fnConnectMQTT(unsigned char *ucIP, unsigned short(*fnCallback)(signed char, unsigned char *, unsigned long, unsigned char), int iMode);
     #define UNSECURE_MQTT_CONNECTION      0
     #define SECURE_MQTT_CONNECTION        1
 extern int fnDisconnectMQTT(void);

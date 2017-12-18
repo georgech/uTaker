@@ -3529,7 +3529,7 @@
     <group>
       <name>mbedtls</name>
       <file>
-        <name>$PROJ_DIR$\..\..\..\stack\SSL\mbedtls-1.3.10\aes.c</name>
+        <name>$PROJ_DIR$\..\..\..\stack\SSL\mbedtls-1.3.10\aes_mbedTLS.c</name>
       </file>
     </group>
     <group>
@@ -3594,6 +3594,9 @@
     </file>
     <file>
       <name>$PROJ_DIR$\..\..\..\stack\ppp.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\..\stack\secure_layer.c</name>
     </file>
     <file>
       <name>$PROJ_DIR$\..\..\..\stack\smtp.c</name>

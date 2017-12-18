@@ -59,7 +59,7 @@ typedef struct stSIGNATURE_HASH_ALGORITHM_ENTRY {
 /*                 local function prototype declarations               */
 /* =================================================================== */
 
-static int  fnHandelHandshake(USOCKET Socket, unsigned char *ucPrtData, unsigned long ulHandshakeSize, unsigned char ucPresentHandshakeType);
+static int  fnHandleHandshake(USOCKET Socket, unsigned char *ucPrtData, unsigned long ulHandshakeSize, unsigned char ucPresentHandshakeType);
 
 /* =================================================================== */
 /*                             constants                               */
@@ -335,19 +335,8 @@ static int fnInsertCertificate(unsigned char **ptrptrData, int iCertificate)
 }
 
 
-
-extern int mbedtls_platform_set_calloc_free(void * (*calloc_func)(size_t, size_t),
-    void(*free_func)(void *))
-{
-    mbedtls_calloc = calloc_func;
-    mbedtls_free = free_func;
-    return(0);
-}
-
-
 static unsigned char *fnInsertPublicKey(unsigned char *ptrData)
 {
-    int i = 0;
     unsigned char *ptrLength = ptrData++;
     unsigned char ucLength;
 
@@ -547,11 +536,14 @@ static unsigned char *fnExtractCertificate(unsigned char *ucPrtData, int iCertif
     return ucPrtData;
 }
 extern int fnInitialiseSecureLayer(const unsigned char *ptrOurCertificate, unsigned long ulCertificateLength, const unsigned char *ptrOutPrivateKey, unsigned long ulOurPrivateKeyLength);
-extern void fnSetSessionCipher(unsigned short session_cipher, unsigned char ucVersion[2]);
+extern void fnHandshakeStats(unsigned char ucHandshakeType, unsigned long ulHandshakeSize, unsigned char *ucPrtData);
+extern void fnEnterRandom(unsigned char *ucPrtData);
+extern void fnSetSessionCipher(unsigned short session_cipher, unsigned char ucVersion[2], unsigned char ucIdLength, unsigned char *ptrID);
+extern int fnHandleSecurityExtension(unsigned short ext_id, unsigned short ext_size, unsigned char *ptrExtensionData);
 
 // Handle individual handshake fields in the input buffer
 //
-static int fnHandelHandshake(USOCKET Socket, unsigned char *ucPrtData, unsigned long ulHandshakeSize, unsigned char ucPresentHandshakeType)
+static int fnHandleHandshake(USOCKET Socket, unsigned char *ucPrtData, unsigned long ulHandshakeSize, unsigned char ucPresentHandshakeType)
 {
     static int iNextState = 0;
 #if defined _WINDOWS
@@ -590,7 +582,7 @@ static int fnHandelHandshake(USOCKET Socket, unsigned char *ucPrtData, unsigned 
     }
 #endif
     switch (ucPresentHandshakeType) {                                    // the handshake protocol being treated
-    case SSL_TLS_HANDSHAKE_TYPE_SERVER_HELLO:
+    case SSL_TLS_HANDSHAKE_TYPE_SERVER_HELLO:                            // receiving server hello
         {
             SSL_TLS_HANDSHAKE_PROTOCOL_HELLO_32_ID *ptrHello = (SSL_TLS_HANDSHAKE_PROTOCOL_HELLO_32_ID *)ucPrtData;
             SSL_TLS_HANDSHAKE_PROTOCOL_HELLO_DETAILS *ptrHelloSession;
@@ -599,38 +591,34 @@ static int fnHandelHandshake(USOCKET Socket, unsigned char *ucPrtData, unsigned 
             MEMORY_RANGE_POINTER our_private_key = uOpenFile("6.bin");
             MEMORY_RANGE_POINTER our_certificate = uOpenFile("7.bin");
             iNextState = 0;
-            mbedtls_platform_set_calloc_free(uCalloc, uCFree);
-            fnInitialiseSecureLayer((const unsigned char *)fnGetFlashAdd(our_certificate + FILE_HEADER), uGetFileLength(our_certificate), (const unsigned char *)fnGetFlashAdd(our_private_key + FILE_HEADER), uGetFileLength(our_private_key));
             fnDebugMsg("Hello server recognised ");
+            if (fnInitialiseSecureLayer((const unsigned char *)fnGetFlashAdd(our_certificate + FILE_HEADER), uGetFileLength(our_certificate), (const unsigned char *)fnGetFlashAdd(our_private_key + FILE_HEADER), uGetFileLength(our_private_key)) != 0) {
+                return -1;
+            }
             if (ptrHello->version[0] == (unsigned char)(TLS_VERSION_1_2 >> 8)) { // we only accept TLSv1.2
                 if (ptrHello->version[1] == (unsigned char)(TLS_VERSION_1_2)) {
-                    // ptrHello->random contains 4 bytes that may either be random or are the UTC time, followed by 28 bytes of random data
                     if (ptrHello->session_id_length <= 32) {
+                        fnHandshakeStats(SSL_TLS_HANDSHAKE_TYPE_SERVER_HELLO, ulHandshakeSize, ucPrtData); // update handshake statistics (calculates handshake check sum))
+                        fnEnterRandom(ptrHello->random);                 // save the server's 32 bytes of random data (the first 4 may contain the UTC time)
                         ptrHello = (SSL_TLS_HANDSHAKE_PROTOCOL_HELLO_32_ID *)(((unsigned char *)ptrHello) + (32 - ptrHello->session_id_length)); // set the session content pointer accordingly
                         ptrHelloSession = (SSL_TLS_HANDSHAKE_PROTOCOL_HELLO_DETAILS *)&(ptrHello->session_details);
                         session_cipher = ((ptrHelloSession->cipher[0] << 8) | (ptrHelloSession->cipher[1])); // the cipher suite to be used during the session
-                        fnSetSessionCipher(session_cipher, ptrHello->version);
+                        fnSetSessionCipher(session_cipher, ptrHello->version, ptrHello->session_id_length, (ptrHelloSession->cipher - ptrHello->session_id_length));
                         // ptrHelloSession->compression_method will be 0 since we always set zero
                         usExtensionLength = ptrHelloSession->extensionsLength[0];
                         usExtensionLength <<= 8;
                         usExtensionLength |= ptrHelloSession->extensionsLength[1];
                         ptrExtensionData = (unsigned char *)&(ptrHelloSession->extension);
                         while (usExtensionLength >= 4) {                 // handle each extension
-                            #define TLS_HELLO_EXTENSION_RENEGOTIATION_INFO 0xff01
                             unsigned short usThisExtensionLength;
-                            unsigned short usExtensionType = *ptrExtensionData++;
+                            unsigned short usExtensionType = *ptrExtensionData++; // the extension type
                             usExtensionType <<= 8;
                             usExtensionType |= *ptrExtensionData++;
                             usThisExtensionLength = *ptrExtensionData++;
                             usThisExtensionLength <<= 8;
                             usThisExtensionLength |= *ptrExtensionData++;
-                            switch (usExtensionType) {
-                            case TLS_HELLO_EXTENSION_RENEGOTIATION_INFO:
-                                ptrExtensionData++;
-                                break;
-                            default:
-                                ptrExtensionData += usThisExtensionLength;
-                                break;
+                            if (fnHandleSecurityExtension(usExtensionType, usThisExtensionLength, ptrExtensionData) != 0) {
+                                return -1;
                             }
                             usThisExtensionLength += 4;                  // account for the extension type and length fields
                             if (usExtensionLength <= usThisExtensionLength) {
@@ -639,15 +627,17 @@ static int fnHandelHandshake(USOCKET Socket, unsigned char *ucPrtData, unsigned 
                             usExtensionLength -= usThisExtensionLength;  // remaining length
                         }
                     }
+                    return 0;
                 }
             }
-
+            return -1;
         }
         break;
     case SSL_TLS_HANDSHAKE_TYPE_CERTIFICATE:                             // we are receiving the server's certificate(s)
         {
             int iCertificateReference = 0;
-            unsigned long ulCertificatesLength = *ucPrtData++;
+            unsigned long ulCertificatesLength = *ucPrtData;
+            fnHandshakeStats(SSL_TLS_HANDSHAKE_TYPE_CERTIFICATE, ulHandshakeSize, ucPrtData++); // update handshake statistics (calculates handshake check sum))
             ulCertificatesLength <<= 8;
             ulCertificatesLength |= *ucPrtData++;
             ulCertificatesLength <<= 8;
@@ -661,13 +651,15 @@ static int fnHandelHandshake(USOCKET Socket, unsigned char *ucPrtData, unsigned 
     case SSL_TLS_HANDSHAKE_TYPE_SERVER_KEY_EXCHANGE:                     // we are receiving the server's public key
         {
             fnDebugMsg("Key exchange recognised ");
+            fnHandshakeStats(SSL_TLS_HANDSHAKE_TYPE_SERVER_KEY_EXCHANGE, ulHandshakeSize, ucPrtData);
             fnExtractPublicKey(ucPrtData, ulHandshakeSize);
         }
         break;
     case SSL_TLS_HANDSHAKE_TYPE_CERTIFICATE_REQUEST:                     // the server is requesting a certificate from us - this is the next step that we must do
         {
-        unsigned short usSignatureHashAlgorithmsLength;
-            unsigned char ucCertificateTypesCount = *ucPrtData++;
+            unsigned short usSignatureHashAlgorithmsLength;
+          //unsigned char ucCertificateTypesCount = *ucPrtData;
+            fnHandshakeStats(SSL_TLS_HANDSHAKE_TYPE_CERTIFICATE_REQUEST, ulHandshakeSize, ucPrtData++);
             ucPrtData += 3;                                              // the certificate types
             usSignatureHashAlgorithmsLength = *ucPrtData++;
             usSignatureHashAlgorithmsLength <<= 8;
@@ -680,6 +672,7 @@ static int fnHandelHandshake(USOCKET Socket, unsigned char *ucPrtData, unsigned 
         break;
     case SSL_TLS_HANDSHAKE_TYPE_SERVER_HELLO_DONE:                       // the handshake record has copleted
         fnDebugMsg("Hello done recognised ");
+        fnHandshakeStats(SSL_TLS_HANDSHAKE_TYPE_SERVER_HELLO_DONE, ulHandshakeSize, ucPrtData);
         if (iNextState == 100) {                                         // immediately respond with our certificate(s)
             return (fnTLS(Socket, TCP_TLS_CERTIFICATES));
         }
@@ -764,18 +757,23 @@ extern int fnSecureLayerReception(USOCKET Socket, unsigned char *ucPrtData, unsi
                     ulSave = (unsigned short)(ulHandshakeSize - ulBufferContent);
                 }
                 if (ptrReceptionBuffer == 0) {
-                    ptrReceptionBuffer = (unsigned char *)uCalloc(1, ulHandshakeSize); // create reception buffer as required to handle this content
+                    ptrReceptionBuffer = (unsigned char *)uCalloc(1, (ulHandshakeSize + 4)); // create reception buffer as required to handle this content
+                    ptrReceptionBuffer[0] = ucPresentHandshakeType;      // insert the type and length fields since these are required by the handshake statistics function
+                    ptrReceptionBuffer[1] = (unsigned char)(ulHandshakeSize >> 16);
+                    ptrReceptionBuffer[2] = (unsigned char)(ulHandshakeSize >> 8);
+                    ptrReceptionBuffer[3] = (unsigned char)ulHandshakeSize;
+                    ptrReceptionBuffer += 4;                             // generally we don't need to know that these fields are in the buffer
                 }
                 uMemcpy(&ptrReceptionBuffer[ulBufferContent], ucPrtData, ulSave);  // save to the intermediate buffer
                 if ((ulBufferContent + ulSave) < ulHandshakeSize) {      // if the handshake protocol content hasn't yet been completely collected
                     ulBufferContent += ulSave;
                     return APP_ACCEPT;
                 }
-                iReturn |= fnHandelHandshake(Socket, ptrReceptionBuffer, ulHandshakeSize, ucPresentHandshakeType); // handle from intermediate buffer
-                uCFree(ptrReceptionBuffer);                              // deallocate intermediate reception buffer memory
+                iReturn |= fnHandleHandshake(Socket, ptrReceptionBuffer, ulHandshakeSize, ucPresentHandshakeType); // handle from intermediate buffer
+                uCFree(ptrReceptionBuffer - 4);                          // deallocate intermediate reception buffer memory (note that we set the pointer back to be beginning of the physical buffer)
             }
             else {                                                       // this tcp frame contains the complete handshake protocol content
-                iReturn |= fnHandelHandshake(Socket, ucPrtData, ulHandshakeSize, ucPresentHandshakeType); // handle directly in  tcp reception buffer
+                iReturn |= fnHandleHandshake(Socket, ucPrtData, ulHandshakeSize, ucPresentHandshakeType); // handle directly in  tcp reception buffer
             }
             usRecordLength -= 4;                                         // compensate for the handshake protocol type and length in each handled protocol
             if (ulHandshakeSize >= usRecordLength) {                     // if the complete record has been handled
@@ -815,11 +813,11 @@ extern int fnSecureLayerReception(USOCKET Socket, unsigned char *ucPrtData, unsi
 extern void test_secure(USOCKET socket)
 {
 #if defined _WINDOWS                                                     // test server handshake sequence
-    fnHandelHandshake(socket, 0, 0, SSL_TLS_HANDSHAKE_TYPE_SERVER_HELLO);
-    fnHandelHandshake(socket, 0, 0, SSL_TLS_HANDSHAKE_TYPE_CERTIFICATE);
-    fnHandelHandshake(socket, 0, 0, SSL_TLS_HANDSHAKE_TYPE_SERVER_KEY_EXCHANGE);
-    fnHandelHandshake(socket, 0, 0, SSL_TLS_HANDSHAKE_TYPE_CERTIFICATE_REQUEST);
-    fnHandelHandshake(socket, 0, 0, SSL_TLS_HANDSHAKE_TYPE_SERVER_HELLO_DONE);
+    fnHandleHandshake(socket, 0, 0, SSL_TLS_HANDSHAKE_TYPE_SERVER_HELLO);
+    fnHandleHandshake(socket, 0, 0, SSL_TLS_HANDSHAKE_TYPE_CERTIFICATE);
+    fnHandleHandshake(socket, 0, 0, SSL_TLS_HANDSHAKE_TYPE_SERVER_KEY_EXCHANGE);
+    fnHandleHandshake(socket, 0, 0, SSL_TLS_HANDSHAKE_TYPE_CERTIFICATE_REQUEST);
+    fnHandleHandshake(socket, 0, 0, SSL_TLS_HANDSHAKE_TYPE_SERVER_HELLO_DONE);
 #endif
 }
 #endif

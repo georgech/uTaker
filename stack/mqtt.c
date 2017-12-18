@@ -131,7 +131,7 @@ typedef struct stMQTT_SUBSCRIPTION_ENTRY {
 
 static int  fnMQTTListener(signed char cSocket, unsigned char ucEvent, unsigned char *ucIp_Data, unsigned short usPortLen);
 static int  fnSetNextMQTT_state(unsigned char ucNextState);
-static void fnMQTT_error(unsigned char ucError);
+static void fnMQTT_error(signed char ucError);
 static unsigned short fnRegenerate(void);
 static void fnMQTT_ping(void);
 static int  fnHandleData(unsigned char *ptrData, unsigned short usDataLength);
@@ -158,7 +158,7 @@ static unsigned char  ucMQTT_ip_address[IPV4_LENGTH] = { 0 };
 static unsigned char  ucMQTT_state = MQTT_STATE_CLOSED;
 static unsigned short usPacketIdentifier = 1;                            // the packet identifier that is sent - unique per publish message
 static unsigned short usMessageIdentifier = 0;                           // last reception message identifier
-static unsigned short (*fnUserCallback)(unsigned char, unsigned char *, unsigned long, unsigned char) = 0;
+static unsigned short (*fnUserCallback)(signed char, unsigned char *, unsigned long, unsigned char) = 0;
 static unsigned char  ucUnacked = 0;
 static unsigned char  ucQueueFlags = 0;
 static unsigned char  ucSubscriptionInProgress = 0;
@@ -203,7 +203,7 @@ extern void test_secure(USOCKET socket);
 
 // The user calls this to initiate a connection to the MQTT server/broker
 //
-extern int fnConnectMQTT(unsigned char *ucIP, unsigned short(*fnCallback)(unsigned char, unsigned char *, unsigned long, unsigned char), int iMode)
+extern int fnConnectMQTT(unsigned char *ucIP, unsigned short(*fnCallback)(signed char, unsigned char *, unsigned long, unsigned char), int iMode)
 {
     if (MQTT_TCP_socket < 0) {                                           // we have no socket - or called before initialisation complete    
         if ((MQTT_TCP_socket = fnGetTCP_Socket(TOS_MINIMISE_DELAY, INFINITE_TIMEOUT, fnMQTTListener)) < 0) {
@@ -730,13 +730,13 @@ static unsigned short fnRegenerate(void)
     return (ucUnacked = (fnSendTCP(MQTT_TCP_socket, (ucMQTTData + iVarLenInsert), usDataLen, TCP_FLAG_PUSH) > 0)); // send data
 }
 
-// Handle receptions from the broker
+// Handle reception from the broker
 //
 static int fnHandleData(unsigned char *ptrData, unsigned short usDataLength)
 {
     unsigned char ucControlPacketType = (*ptrData & MQTT_CONTROL_PACKET_TYPE_MASK);
     if (ucMQTT_state >= MQTT_STATE_CONNECTION_OPENED) {
-        // Reception that is state-independend as long as there is an open connection
+        // Reception that is state-independent as long as there is an open connection
         //
         switch (ucControlPacketType) {
         case MQTT_CONTROL_PACKET_TYPE_PUBLISH:                           // broker is publishing data - presumably to a topic that we have subscribed to
@@ -897,7 +897,7 @@ static int fnHandleData(unsigned char *ptrData, unsigned short usDataLength)
 }
 
 
-static void fnMQTT_error(unsigned char ucError)
+static void fnMQTT_error(signed char ucError)
 {
     fnSetNextMQTT_state(MQTT_STATE_CLOSED);
     fnUserCallback(ucError, 0, 0, 0);

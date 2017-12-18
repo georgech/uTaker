@@ -72,3 +72,5 @@ Applications/SHoistID/
 Applications/emBasic/
 Applications/uTaskerSerialBoot/Simulator/UART3.txt
 Applications/uTaskerV1.4/Simulator/UART2.txt
+/uTaskerV1.4_SSL_FLASH/
+/uTaskerV1.4_BM_SSL_FLASH/

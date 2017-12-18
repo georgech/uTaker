@@ -583,6 +583,16 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\stack\igmp.c</FilePath>
             </File>
+            <File>
+              <FileName>mqtt.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\stack\mqtt.c</FilePath>
+            </File>
+            <File>
+              <FileName>secure_layer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\stack\secure_layer.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -822,6 +832,46 @@
               <FileName>LCD.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\uTasker\uGLCDLIB\LCD.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>mbedTLS</GroupName>
+          <Files>
+            <File>
+              <FileName>aes_mbedTLS.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\stack\SSL\mbedtls-1.3.10\aes_mbedTLS.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>OpenSSL</GroupName>
+          <Files>
+            <File>
+              <FileName>aes_cbc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\stack\SSL\openssl-1.0.2\aes_cbc.c</FilePath>
+            </File>
+            <File>
+              <FileName>aes_core.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\stack\SSL\openssl-1.0.2\aes_core.c</FilePath>
+            </File>
+            <File>
+              <FileName>cbc128.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\stack\SSL\openssl-1.0.2\cbc128.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>wolfSSL</GroupName>
+          <Files>
+            <File>
+              <FileName>w_aes.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\stack\SSL\wolfssl-3.9.6\w_aes.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -1403,6 +1453,16 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\stack\igmp.c</FilePath>
             </File>
+            <File>
+              <FileName>mqtt.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\stack\mqtt.c</FilePath>
+            </File>
+            <File>
+              <FileName>secure_layer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\stack\secure_layer.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -1642,6 +1702,46 @@
               <FileName>LCD.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\uTasker\uGLCDLIB\LCD.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>mbedTLS</GroupName>
+          <Files>
+            <File>
+              <FileName>aes_mbedTLS.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\stack\SSL\mbedtls-1.3.10\aes_mbedTLS.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>OpenSSL</GroupName>
+          <Files>
+            <File>
+              <FileName>aes_cbc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\stack\SSL\openssl-1.0.2\aes_cbc.c</FilePath>
+            </File>
+            <File>
+              <FileName>aes_core.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\stack\SSL\openssl-1.0.2\aes_core.c</FilePath>
+            </File>
+            <File>
+              <FileName>cbc128.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\stack\SSL\openssl-1.0.2\cbc128.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>wolfSSL</GroupName>
+          <Files>
+            <File>
+              <FileName>w_aes.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\stack\SSL\wolfssl-3.9.6\w_aes.c</FilePath>
             </File>
           </Files>
         </Group>

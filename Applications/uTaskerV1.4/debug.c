@@ -5908,11 +5908,11 @@ static void fnDisplayTelnetMode(unsigned short usMode, unsigned short usFlags)
 #endif
 
 #if defined USE_MQTT_CLIENT
-static unsigned short fnMQTT_callback(unsigned char ucEvent, unsigned char *ptrData, unsigned long ulLength, unsigned char ucSubscriptionRef)
+static unsigned short fnMQTT_callback(signed char scEvent, unsigned char *ptrData, unsigned long ulLength, unsigned char ucSubscriptionRef)
 {
     CHAR *ptrBuf = (CHAR *)ptrData;
     int iAddRef = 0;
-    switch (ucEvent) {
+    switch (scEvent) {
     case MQTT_CLIENT_IDENTIFIER:
         ptrBuf = uStrcpy(ptrBuf, temp_pars->temp_parameters.cDeviceIDName); // supply a string to be used as MQTT device identifier - this should be unique and normally contain only characters 0..9, a..z, A..Z (normally up to 23 bytes)
         break;
@@ -6690,11 +6690,11 @@ static int fnTELNETListener(USOCKET Socket, unsigned char ucEvent, unsigned char
 #if defined TEST_TCP_SERVER                                              // {30}
 static int fnTestTCP(USOCKET Socket, unsigned char ucTestCase)
 {
+    int iSent = 0;
     switch (ucTestCase) {
     case 0x01:                                                           // we should send data blocks as fast as possible
         {
             int i;
-            int iSent = 0;
             unsigned char test_buffer[26];
             for (i = 0; i < 26; i++) {
                 test_buffer[i] = 'a' + i;
@@ -6702,11 +6702,10 @@ static int fnTestTCP(USOCKET Socket, unsigned char ucTestCase)
             while (fnSendBufTCP(Socket, 0, 26, TCP_BUF_CHECK) != 0) {    // while space in output buffer              
                 iSent += fnSendBufTCP(Socket, test_buffer, 26, (TCP_BUF_SEND | TCP_BUF_SEND_REPORT_COPY));
             }
-            return iSent;
         }
         break;
     }
-    return 0;
+    return iSent;
 }
 
 //#define FAST_PEER_DROPED_FRAME_TEST                                    // temp test
