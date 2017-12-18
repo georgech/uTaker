@@ -346,7 +346,7 @@ extern unsigned long uFree2(int iFreeRegion)
 #define SECURITY_HEAP_SIZE (24 * 1024)
 #define BREAK_DOWN_BLOCKS_LIMIT  (4 * 1024)                              // break down holes of this size and larger by reallocating them in preference to filing smallest possibly hole
 #define HEAP_OBJECTS       200
-#define MNITOR_PEAK_MANAGEMENT_BLOCK_USE                                 // check the maximum block use during operation
+#define MONITOR_PEAK_MANAGEMENT_BLOCK_USE                                // check the maximum block use during operation
 
 typedef struct stHEAP_MANAGEMENT_BLOCK
 {
@@ -361,7 +361,7 @@ static unsigned long ulHoleCount = 0;                                    // the 
 static unsigned long ulAllocateCount = 0;                                // the number of times memory allocation has been requested
 static unsigned long ulDeallocateCount = 0;                              // the number of times memory has been freed
 static unsigned long ulAccumulatedHoleSize = 0;                          // the accumulated hole memory size
-#if defined MNITOR_PEAK_MANAGEMENT_BLOCK_USE
+#if defined MONITOR_PEAK_MANAGEMENT_BLOCK_USE
     static unsigned long ulMaxUsedManagementBlocks = 0;                  // the maximum utilisation of management blocks detected
 #endif
 
@@ -395,7 +395,7 @@ extern void *uCalloc(size_t n, size_t size)
             register HEAP_MANAGEMENT_BLOCK *ptrPreferredHole = 0;
             register unsigned long ulSpaceOnTopOfStack;
             register unsigned long ulHolesToCheck = ulHoleCount;
-#if defined MNITOR_PEAK_MANAGEMENT_BLOCK_USE
+#if defined MONITOR_PEAK_MANAGEMENT_BLOCK_USE
             unsigned long ulUsedManagementBlockCount = ++iEntry;
             ptrPreferredHole = ptrHeapEntry;
             while (iEntry++ < HEAP_OBJECTS) {

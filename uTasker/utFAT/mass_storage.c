@@ -34,6 +34,7 @@
     24.04.2017 Handle USB_MSD_REMOVED when memory stick is removed       {16}
     09.07.2017 Allow renaming a file to a different directory location   {17}
     14.07.2017 Avoid matching directories when not complete path handled {18} [utFAT2.04]
+    18.12.2017 Allow emulated FAT to be used together with other disk types than SD card {19}
 
 */
 
@@ -51,6 +52,9 @@
 /*                          local definitions                          */
 /* =================================================================== */
 
+#if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST // {19}
+    #define FULL_FAT_SUPPORT
+#endif
 
 #if !defined UTFAT_DISABLE_DEBUG_OUT                                     // allow all debug messages to be disabled
     #define fnMemoryDebugMsg(x) fnDebugMsg(x)                            // enable debug output
@@ -207,7 +211,7 @@
 /*                      local structure definitions                    */
 /* =================================================================== */
 
-#if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST || defined FAT_EMULATION
+#if defined FULL_FAT_SUPPORT || defined FAT_EMULATION
 #define DELETED_ENTRY_COUNT 21                                           // 0 is a reference to a single space, 1 to a double deleted hole in the directory objects, 1 to a tripple,.. 20 to a row of 21 deleted objects
 typedef struct stOPEN_FILE_BLOCK
 {
@@ -282,7 +286,7 @@ typedef struct stFAT12_FAT
 /*                 local function prototype declarations               */
 /* =================================================================== */
 
-#if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST
+#if defined FULL_FAT_SUPPORT
     #if defined SDCARD_SUPPORT
         #if defined SD_CONTROLLER_AVAILABLE                              // routines supplied by HW specific module
             extern void fnInitSDCardInterface(void);
@@ -338,7 +342,7 @@ typedef struct stFAT12_FAT
 #if ((defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST) && (defined UTFAT_WRITE)) || defined FAT_EMULATION
     static void fnAddInfoSect(INFO_SECTOR_FAT32 *ptrInfoSector, unsigned long ulFreeCount, unsigned long ulNextFree);
 #endif
-#if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST || (defined FAT_EMULATION && defined EMULATED_FAT_FILE_NAME_CONTROL)
+#if defined FULL_FAT_SUPPORT || (defined FAT_EMULATION && defined EMULATED_FAT_FILE_NAME_CONTROL)
     static int fnCreateNameParagraph(const CHAR **pptrDirectoryPath, CHAR cDirectoryName[12]);
 #endif
 #if defined UTFAT_LFN_READ || (defined FAT_EMULATION && defined FAT_EMULATION_LFN  && defined EMULATED_FAT_FILE_NAME_CONTROL)
@@ -374,7 +378,7 @@ typedef struct stFAT12_FAT
         static const unsigned char ucREAD_OCR_CMD58[6]      = {READ_OCR_CMD58, 0x00, 0x00, 0x00, 0x00, CS_READ_OCR_CMD58};
     #endif
 #endif
-#if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST
+#if defined FULL_FAT_SUPPORT
     #if defined UTFAT_WRITE && defined UTFAT_FORMATTING
 static const unsigned char ucEmptyFAT32[12] = {
     LITTLE_LONG_WORD_BYTES(MEDIA_VALUE_FIXED),
@@ -393,7 +397,7 @@ static const unsigned char ucEmptyFAT12[4] = {
         #endif
     #endif
 #endif
-#if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST || (defined FAT_EMULATION && defined EMULATED_FAT_FILE_NAME_CONTROL)
+#if defined FULL_FAT_SUPPORT || (defined FAT_EMULATION && defined EMULATED_FAT_FILE_NAME_CONTROL)
 static const unsigned char ucCharacterTable[] = {
     (0),                                                                 // !
     (_CHAR_REJECT),                                                      // "
@@ -501,7 +505,7 @@ static const unsigned char ucCharacterTable[] = {
 /*                      local variable definitions                     */
 /* =================================================================== */
 
-#if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST
+#if defined FULL_FAT_SUPPORT
 static UTDISK utDisks[DISK_COUNT] = {{0}};                               // disk objects
 
 #if defined SDCARD_SUPPORT && !defined SD_CONTROLLER_AVAILABLE && !defined NAND_FLASH_FAT
@@ -1566,7 +1570,7 @@ static int utDeleteSPISector(UTDISK *ptr_utDisk, unsigned long ulSectorNumber)
     #endif
 #endif
 
-#if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST
+#if defined FULL_FAT_SUPPORT
     #if defined UTFAT_WRITE
         static int (*_utCommitSectorData[DISK_COUNT])(UTDISK *ptr_utDisk, void *ptrBuffer, unsigned long ulSectorNumber) = {0};
         static int (*_utDeleteSector[DISK_COUNT])(UTDISK *ptr_utDisk, unsigned long ulSectorNumber) = {0};
@@ -1619,8 +1623,9 @@ static int fnCheckCSD(unsigned char ucData[18])
 }
 #endif
 
-#if ((defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST) && (defined UTFAT_WRITE && defined UTFAT_FORMATTING)) || defined FAT_EMULATION
-#if !defined SDCARD_SUPPORT && !defined SPI_FLASH_FAT && !defined FLASH_FAT && !defined USB_MSD_HOST
+
+#if ((defined FULL_FAT_SUPPORT) && (defined UTFAT_WRITE && defined UTFAT_FORMATTING)) || defined FAT_EMULATION
+#if !defined FULL_FAT_SUPPORT
     static UTDISK utDisks[EMULATED_FAT_LUMS] = {{0}};
 #endif
 static unsigned long ulFAT32size[EMULATED_FAT_LUMS] = {0};
@@ -1880,7 +1885,7 @@ static void fnAddInfoSect(INFO_SECTOR_FAT32 *ptrInfoSector, unsigned long ulFree
 }
 #endif
 
-#if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST || defined MANAGED_FILES
+#if defined FULL_FAT_SUPPORT || defined MANAGED_FILES
     #if !defined SIMPLE_FLASH && (defined SPI_FLASH_FAT || defined FLASH_FAT)
 static void fnInitBlockManagement(int iDiskNumber)
 {
@@ -1914,7 +1919,7 @@ extern void fnMassStorage(TTASKTABLE *ptrTaskTable)
         #define _return return
     #endif
     unsigned char ucInputMessage[HEADER_LENGTH];                         // reserve space for receiving messages
-    #if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST
+    #if defined FULL_FAT_SUPPORT
     int iActionResult = 0;
         #if defined SDCARD_SUPPORT
     unsigned char ucData[18];
@@ -1930,7 +1935,7 @@ extern void fnMassStorage(TTASKTABLE *ptrTaskTable)
     #if DISK_COUNT > 1
     while (++iDiskNumber < DISK_COUNT) {                                 // for each disk
     #endif
-    #if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST
+    #if defined FULL_FAT_SUPPORT
     if ((iMemoryOperation[iDiskNumber] & _READING_MEMORY) != 0) {        // reading
         if ((iActionResult = _utReadDiskSector[iDiskNumber](&utDisks[iDiskNumber], 0, utDisks[iDiskNumber].ptrSectorData)) == CARD_BUSY_WAIT) {
             return;                                                      // still reading so keep waiting
@@ -2066,7 +2071,10 @@ extern void fnMassStorage(TTASKTABLE *ptrTaskTable)
                 utDisks[iDiskNumber].usDiskFlags = DISK_FAT_EMULATION;
                 utDisks[iDiskNumber].ptrSectorData = (unsigned char *)SDCARD_MALLOC(512);
                 iMemoryState[iDiskNumber] = DISK_MOUNTING_1;
-            #if !defined SDCARD_SUPPORT
+            #if DISK_COUNT > 1                                           // {19}
+                iDiskNumber--;
+                _return;
+            #elif !defined SDCARD_SUPPORT
                 uTaskerMonoTimer(OWN_TASK, 0, E_POWER_STABILISED);       // schedule again to mount the virtual disk
             #endif
                 continue;
@@ -3096,7 +3104,7 @@ extern void fnMassStorage(TTASKTABLE *ptrTaskTable)
 #endif                                                                   // end #if defined SDCARD_SUPPORT || defined MANAGED_FILES
 
 
-#if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST
+#if defined FULL_FAT_SUPPORT
 static void fnCardNotFormatted(int iDisk)
 {
     utDisks[iDisk].usDiskFlags |= DISK_UNFORMATTED;
@@ -5384,7 +5392,7 @@ static int fnCommitInfoChanges(UTDISK *ptr_utDisk)
 #endif
 #endif
 
-#if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST || (defined FAT_EMULATION && defined EMULATED_FAT_FILE_NAME_CONTROL)
+#if defined FULL_FAT_SUPPORT || (defined FAT_EMULATION && defined EMULATED_FAT_FILE_NAME_CONTROL)
 static int fnCreateNameParagraph(const CHAR **pptrDirectoryPath, CHAR cDirectoryName[12])
 {
     #if defined UTFAT_LFN_WRITE || (defined FAT_EMULATION && defined FAT_EMULATION_LFN)
@@ -6178,7 +6186,7 @@ static void fnDisplayFileInfo(int iFile, const CHAR *ptrFilePath, UTFILE *ptr_ut
 }
 #endif
 
-#if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST
+#if defined FULL_FAT_SUPPORT
 // Internal function to open a file or directory object
 //
 static int _utOpenFile(const CHAR *ptrFilePath, UTFILE *ptr_utFile, unsigned long ulAccessMode)
@@ -6481,7 +6489,7 @@ static int fnFileLocked(UTFILE *ptr_utFile)
     while (iFileHandle < UTMANAGED_FILE_COUNT) {
         if (utManagedFiles[iFileHandle].managed_owner != 0) {
             if (uMemcmp(&ptr_utFile->private_file_location, &utManagedFiles[iFileHandle].utManagedFile->private_file_location, sizeof(FILE_LOCATION)) == 0) {
-                if (utManagedFiles[iFileHandle].managed_mode & UTFAT_PROTECTED) {
+                if ((utManagedFiles[iFileHandle].managed_mode & UTFAT_PROTECTED) != 0) {
                     return 1;                                            // another user is locking this file
                 }
             }
@@ -6505,10 +6513,10 @@ extern int utWriteFile(UTFILE *ptr_utFile, unsigned char *ptrBuffer, unsigned sh
     FILE_DATA_CACHE *ptrDataCache;
     #endif
     ptr_utFile->usLastReadWriteLength = 0;
-    if (ptr_utDisk->usDiskFlags & WRITE_PROTECTED_SD_CARD) {
+    if ((ptr_utDisk->usDiskFlags & WRITE_PROTECTED_SD_CARD) != 0) {
         return UTFAT_DISK_WRITE_PROTECTED;
     }
-    if (!(ptr_utFile->ulFileMode & UTFAT_OPEN_FOR_WRITE)) {              // only allow writes if the file is open for writing
+    if ((ptr_utFile->ulFileMode & UTFAT_OPEN_FOR_WRITE) == 0) {          // only allow writes if the file is open for writing
         return UTFAT_FILE_NOT_WRITEABLE;
     }
     #if defined UTFAT_FILE_CACHE_POOL && UTFAT_FILE_CACHE_POOL > 0
@@ -7606,7 +7614,7 @@ static int fnReadEmulatedSector(UTDISK *ptr_utDisk, unsigned long ulSectorNumber
     return UTFAT_SUCCESS;
 }
 
-    #if !defined SDCARD_SUPPORT
+    #if !defined FULL_FAT_SUPPORT
 extern int fnReadSector(unsigned char ucDisk, unsigned char *ptrBuffer, unsigned long ulSectorNumber)
 {
     if (ptrBuffer == 0) {                                                // if a zero pointer is given read to the sector buffer
@@ -7845,7 +7853,7 @@ _add_length:
 
 // Emulated disk
 //
-    #if !defined SDCARD_SUPPORT
+    #if !defined FULL_FAT_SUPPORT
 extern const UTDISK *fnGetDiskInfo(unsigned char ucDisk)
 {
     static unsigned long ulSectorMemory[2 + (BYTES_PER_SECTOR / sizeof(unsigned long))] = {0}; // long-word aligned buffer shared by all disks (used by only one at a time)

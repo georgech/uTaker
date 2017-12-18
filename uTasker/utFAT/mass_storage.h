@@ -17,6 +17,7 @@
     22.01.2015 Add option to return a file's creation time and date in its file object {1}
     30.10.2015 Add emulated FAT support (FAT_EMULATION)                  {2}
     17.01.2016 Add utFileAttribute()                                     {3}
+    18.12.2017 Add disk setup for internal flash and emulated FAT combination {4}
 
 */
 
@@ -70,6 +71,12 @@
     #define DISK_D                         0
     #define DISK_COUNT                     1
     #define DISK_SPI_FLASH                 DISK_D
+#elif defined FLASH_FAT && defined FAT_EMULATION                         // {4} internal flash and FAT eumlation - disks C and D
+    #define DISK_C                         0
+    #define DISK_D                         1
+    #define DISK_COUNT                     2
+    #define DISK_INTERNAL_FLASH            DISK_C
+    #define DISK_EM_FAT                    DISK_D
 #elif defined FLASH_FAT                                                  // internal flash alone
     #define DISK_C                         0
     #define DISK_COUNT                     1
