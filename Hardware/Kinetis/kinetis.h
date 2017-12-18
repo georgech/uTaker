@@ -125,6 +125,7 @@
     28.11.2017 DMA tigger source entries extended to 16 bits - 8 bits used for register configuration and higher bits for additional information
     31.01.2017 Add fnMaskInterrupt()                                     {105}
     04.12.2017 Add LPI2C, MMDVSQ, TSTMR and RFSYS
+    18.12.2017 Correct bus and flash clock calculation for KL parts with individual bus and flash clock dividers {106}
 
 */
 
@@ -681,8 +682,13 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
         #define BUS_CLOCK      DIVSLOW_CLK
         #define FLASH_CLOCK    DIVSLOW_CLK
     #elif defined KINETIS_KL || defined KINETIS_KE
-        #define BUS_CLOCK      (CORE_CLOCK/BUS_CLOCK_DIVIDE)             // up to 50MHz/60MHz but must not be faster than the core clock {75}
-        #define FLASH_CLOCK    (CORE_CLOCK/BUS_CLOCK_DIVIDE)             // up to 25MHz but must not be faster than the bus clock {75}
+        #if defined BUS_FLASH_CLOCK_SHARED                               // {106}
+            #define BUS_CLOCK      (CORE_CLOCK/BUS_CLOCK_DIVIDE)         // up to 50MHz/60MHz but must not be faster than the core clock {75}
+            #define FLASH_CLOCK    (CORE_CLOCK/BUS_CLOCK_DIVIDE)         // up to 25MHz but must not be faster than the bus clock {75}
+        #else
+            #define BUS_CLOCK      (MCGOUTCLK/BUS_CLOCK_DIVIDE)          // up to 50MHz/60MHz but must not be faster than the core clock
+            #define FLASH_CLOCK    (MCGOUTCLK/BUS_CLOCK_DIVIDE)          // up to 25MHz but must not be faster than the bus clock
+        #endif
     #else
         #define BUS_CLOCK      (MCGOUTCLK/BUS_CLOCK_DIVIDE)              // up to 50MHz/60MHz but must not be faster than the core clock {75}
         #define FLEXBUS_CLOCK  (MCGOUTCLK/FLEX_CLOCK_DIVIDE)             // up to 50MHz but must not be faster than the bus clock {75}
