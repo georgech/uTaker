@@ -23,6 +23,7 @@
     13.07.2017 Use standard clock configuration                          {8}
     17.07.2017 Use standard port configuration                           {9}
     26.07.2017 Add Cortex-m0+ assembler code                             {10}
+    20.12.2017 Change uMemset() to match memset() parameters             {11}
 
     */
 
@@ -130,8 +131,9 @@ extern void fnDelayLoop(unsigned long ulDelay_us)
 
 // memset implementation
 //
-extern void *uMemset(void *ptrTo, unsigned char ucValue, size_t Size)
+extern void *uMemset(void *ptrTo, int iValue, size_t Size)               // {11}
 {
+    unsigned char ucValue = (unsigned char)iValue;
     void *buffer = ptrTo;
     unsigned char *ptr = (unsigned char *)ptrTo;
 
