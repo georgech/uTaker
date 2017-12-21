@@ -187,11 +187,15 @@ typedef struct
         #endif
     #elif !defined KBOOT_LOADER && !defined DEVELOPERS_LOADER && !defined REMOVE_SREC_LOADING
         static unsigned char *fnBlankCheck(void);
-            static void fnPrintScreen(void);
+        static void fnPrintScreen(void);
         #if !defined REMOVE_SREC_LOADING                                 // {17}
-            #if defined INTERMEDIATE_PROG_BUFFER
+            #if defined USE_USB_CDC && !defined SERIAL_INTERFACE
+                #undef INTERMEDIATE_PROG_BUFFER
+            #else
+                #if defined INTERMEDIATE_PROG_BUFFER
             static int fnIntermediateWrite(unsigned char *ptrAddr, unsigned char *ucPtrData, int iDataCnt);
             static int fnFlashIntermediate(void);
+                #endif
             #endif
         #endif
     #elif defined REMOVE_SREC_LOADING && !defined USE_MODBUS

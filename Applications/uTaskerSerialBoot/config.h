@@ -384,7 +384,7 @@
         #define OUR_HEAP_SIZE   (HEAP_REQUIREMENTS)((12 * 1024) * MEM_FACTOR)
     #endif
 #elif defined TEENSY_3_1
-    #define SPECIAL_VERSION                                              // temporary special version with some specific setups
+  //#define SPECIAL_VERSION                                              // temporary special version with some specific setups
     #define KINETIS_K20
     #define KINETIS_REVISION_2
     #define TARGET_HW   "TEENSY 3.1 (K20DX256)"
