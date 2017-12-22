@@ -281,11 +281,12 @@
     #define DO_AES128              44                                    // specific hardware command to test AES128 operation
     #define DO_AES192              45                                    // specific hardware command to test AES192 operation
     #define DO_AES256              46                                    // specific hardware command to test AES256 operation
-    #define DO_LP_CYCLE            47                                    // specific hardware command to enable/disable low power cycle mode
-    #define DO_GET_CONTRAST        48                                    // specific hardware command to show the LCD contrast setting (%)
-    #define DO_SET_CONTRAST        49                                    // specific hardware command to set the LCD contrast setting (%)
-    #define DO_SQRT                50                                    // specific hardware command to calculate the square root of an integer entered as dec or hex
-    #define DO_DIV                 51                                    // specific hardware command to calculate the remainder and quotient of an integer division
+    #define DO_SHA256              47                                    // specific hardware command to test SHA256 operation
+    #define DO_LP_CYCLE            48                                    // specific hardware command to enable/disable low power cycle mode
+    #define DO_GET_CONTRAST        49                                    // specific hardware command to show the LCD contrast setting (%)
+    #define DO_SET_CONTRAST        50                                    // specific hardware command to set the LCD contrast setting (%)
+    #define DO_SQRT                51                                    // specific hardware command to calculate the square root of an integer entered as dec or hex
+    #define DO_DIV                 52                                    // specific hardware command to calculate the remainder and quotient of an integer division
 
 #define DO_TELNET                 2                                      // reference to Telnet group
     #define DO_TELNET_QUIT              0                                // specific Telnet comand to quit the session
@@ -1120,9 +1121,14 @@ static const DEBUG_COMMAND tAdvancedCommand[] = {                        // {84}
     {"fft",               "Test CFFT [len (16|32|...|2048|4096)]", DO_HARDWARE,      DO_FFT},
 #endif
 #if defined CRYPTOGRAPHY
+    #if defined CRYPTO_AES
     { "aes128",           "Test aes128",                           DO_HARDWARE,      DO_AES128 },
     { "aes192",           "Test aes192",                           DO_HARDWARE,      DO_AES192 },
     { "aes256",           "Test aes256",                           DO_HARDWARE,      DO_AES256 },
+    #endif
+    #if defined CRYPTO_SHA
+    { "sha256",           "Test sha256",                           DO_HARDWARE,      DO_SHA256 },
+    #endif
 #endif
 #if defined MMDVSQ_AVAILABLE                                             // {88}
     { "sqrt",             "Square root [<0xHEX><dec>]",            DO_HARDWARE,      DO_SQRT },
@@ -3849,9 +3855,14 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
           break;
 #endif
 #if defined CRYPTOGRAPHY                                                 // {84}
+    #if defined CRYPTO_AES
       case DO_AES128:
       case DO_AES192:
       case DO_AES256:
+    #endif
+    #if defined CRYPTO_SHA
+      case DO_SHA256:
+    #endif
           {
               typedef struct stALIGNED_BUFFER
               {
@@ -3861,10 +3872,11 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
               static const ALIGNED_BUFFER encryption_key = { 0, { 0x60,0x3d,0xeb,0x10,0x15,0xca,0x71,0xbe,0x2b,0x73,0xae,0xf0,0x85,0x7d,0x77,0x81,0x1f,0x35,0x2c,0x07,0x3b,0x61,0x08,0xd7,0x2d,0x98,0x10,0xa3,0x09,0x14,0xdf,0xf4 } };
               static const ALIGNED_BUFFER plaintext = { 0, { 0x60,0x3d,0xeb,0x10,0x15,0xca,0x71,0xbe,0x2b,0x73,0xae,0xf0,0x85,0x7d,0x77,0x81,0x1f,0x35,0x2c,0x07,0x3b,0x61,0x08,0xd7,0x2d,0x98,0x10,0xa3,0x09,0x14,0xdf,0xf4 } };
               ALIGNED_BUFFER ciphertext = {0};
-              ALIGNED_BUFFER recovered = {0};
+              ALIGNED_BUFFER recovered  = {0};
               int i;
               int iKeyLength;
               switch (ucType) {
+    #if defined CRYPTO_AES
               case DO_AES128:
                   iKeyLength = 128;
                   break;
@@ -3874,6 +3886,18 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
               case DO_AES256:
                   iKeyLength = 256;
                   break;
+    #endif
+    #if defined CRYPTO_SHA
+              case DO_SHA256:
+                  extern int fnSHA256(const unsigned char *ptrInput, unsigned char *ptrOutput, unsigned long ulLength, int iMode);
+                  TOGGLE_TEST_OUTPUT();
+                  fnSHA256(plaintext.ucData, recovered.ucData, sizeof(plaintext.ucData), 0);
+                  TOGGLE_TEST_OUTPUT();
+                  for (i = 0; i < 32; i++) {
+                      fnDebugHex(recovered.ucData[i], (WITH_SPACE | sizeof(unsigned char) | WITH_LEADIN));
+                  }
+                  return;
+    #endif
               }
 
               TOGGLE_TEST_OUTPUT();

@@ -1292,6 +1292,12 @@ Build_Kinetis_SSL.bat
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
     </None>
+    <None Include="..\..\..\Hardware\Kinetis\Crypto\mmcau_sha256_functions.S">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
+    </None>
     <None Include="..\..\..\Hardware\Kinetis\kinetis_asm.s" />
     <None Include="..\GNU_Kinetis\Build_Kinetis.bat" />
     <None Include="..\GNU_Kinetis\Build_Kinetis_SSL.bat" />

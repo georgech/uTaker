@@ -480,7 +480,7 @@ extern void *uCalloc(size_t n, size_t size)
 extern void uCFree(void *ptr)
 {
     if (ptr == 0) {
-        _EXCEPTION("Ignoring free of zero pointer!");
+      //_EXCEPTION("Ignoring free of zero pointer!");
         return;
     }
     if (ptrHeapManager != 0) {

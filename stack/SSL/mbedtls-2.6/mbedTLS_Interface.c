@@ -28,6 +28,15 @@
 #include "mbedtls/ssl_internal.h"
 #include "mbedtls/platform.h"
 
+extern int fnSHA256(const unsigned char *ptrInput, unsigned char *ptrOutput, unsigned long ulLength, int iMode)
+{
+    mbedtls_sha256_context sha256;
+    mbedtls_sha256_starts(&sha256, 0);
+    mbedtls_sha256_update(&sha256, ptrInput, ulLength);
+    mbedtls_sha256_finish(&sha256, ptrOutput);
+    return 0;
+}
+
 typedef struct stUTASKER_MBEDSSL_SESSION
 {
     mbedtls_ssl_context  ssl;
@@ -77,7 +86,7 @@ extern int fnInitialiseSecureLayer(const unsigned char *ptrOurCertificate, unsig
     if (secure_session != 0) {
         return -1;                                                       // session already created
     }
-    set_calloc_free(uCalloc, uCFree);                                    // enter ethe calloc() / free() methods to be used
+    set_calloc_free(uCalloc, uCFree);                                    // enter the calloc() / free() methods to be used
     secure_session = mbedtls_calloc(1, sizeof(UTASKER_MBEDSSL_SESSION)); // get the memory needed for the session (1252 bytes)
     ptrTempString = (unsigned char *)mbedtls_calloc(1, (ulOurPrivateKeyLength + 1));
     uMemcpy(ptrTempString, ptrOutPrivateKey, ulOurPrivateKeyLength);     // copy the private key string
@@ -104,15 +113,13 @@ extern int fnInitialiseSecureLayer(const unsigned char *ptrOurCertificate, unsig
             secure_session->config.curve_list = mbedtls_ecp_grp_id_list();
 #endif
 
-            secure_session->ssl.out_ctr = (unsigned char *)mbedtls_calloc(1, 8); // 64 bit outgoing counter memory
-            secure_session->ssl.out_iv = (unsigned char *)mbedtls_calloc(1, 16); // ??
             iReturn = mbedtls_ssl_conf_own_cert(&(secure_session->config), &(secure_session->ourCertificate), &(secure_session->ourPrivateKey)); // attach the client certificate and private key to the  configuration
         }
     }
     return iReturn;
 }
 
-extern void fnHandshakeStats(unsigned char ucHandshakeType, unsigned long ulHandshakeSize, unsigned char *ucPrtData)
+extern void fnHandshakeStats(unsigned long ulHandshakeSize, unsigned char *ucPrtData)
 {
     secure_session->ssl.in_msg = (ucPrtData - 4);
     secure_session->ssl.in_hslen = (ulHandshakeSize + 4);
@@ -704,8 +711,7 @@ static unsigned char *ssl_encrypt_buf( mbedtls_ssl_context *ssl, unsigned char *
             padlen = 0;
 
         for( i = 0; i <= padlen; i++ )
-            *ptrData++ = (unsigned char)padlen;
-            //ssl->out_msg[ssl->out_msglen + i] = (unsigned char) padlen;
+            ssl->out_msg[ssl->out_msglen + i] = (unsigned char) padlen;
 
         ssl->out_msglen += padlen + 1;
 
@@ -834,18 +840,25 @@ extern unsigned char *fnFinished(unsigned char *ptrData)
 
    // MBEDTLS_SSL_DEBUG_MSG(2, ("=> write finished"));
 
+    secure_session->ssl.out_buf = secure_session->ssl.out_ctr = ptrData;
+    secure_session->ssl.out_hdr = secure_session->ssl.out_buf + 8;
+    secure_session->ssl.out_len = secure_session->ssl.out_hdr + 3;
+    secure_session->ssl.out_iv = secure_session->ssl.out_len + 2;
+
     /*
     * Set the out_msg pointer to the correct location based on IV length
     */
     if (secure_session->ssl.minor_ver >= MBEDTLS_SSL_MINOR_VERSION_2)
     {
-        secure_session->ssl.out_msg = ptrData /*secure_session->ssl.out_iv*/ + secure_session->ssl.transform_negotiate->ivlen -
+        secure_session->ssl.out_msg = secure_session->ssl.out_iv + secure_session->ssl.transform_negotiate->ivlen -
             secure_session->ssl.transform_negotiate->fixed_ivlen;
     }
-    else
-        secure_session->ssl.out_msg = ptrData;// secure_session->ssl.out_iv;
+    else {
+        secure_session->ssl.out_msg = secure_session->ssl.out_iv;
+    }
+    
 
-        secure_session->ssl.handshake->calc_finished(&(secure_session->ssl), secure_session->ssl.out_msg, secure_session->ssl.conf->endpoint);
+    secure_session->ssl.handshake->calc_finished(&(secure_session->ssl), secure_session->ssl.out_msg, secure_session->ssl.conf->endpoint); // complete the calculation of the check sum
 
     /*
     * RFC 5246 7.4.9 (Page 63) says 12 is the default length and ciphersuites
@@ -969,7 +982,7 @@ static void ssl_update_checksum_start( mbedtls_ssl_context *ssl,
 //
 static void ssl_handshake_params_init( mbedtls_ssl_handshake_params *handshake )
 {
-  //memset( handshake, 0, sizeof( mbedtls_ssl_handshake_params ) ); // uTasker - not required
+  //memset( handshake, 0, sizeof( mbedtls_ssl_handshake_params ) ); // uTasker - not required because content is already zeroed
 
 #if defined(MBEDTLS_SSL_PROTO_SSL3) || defined(MBEDTLS_SSL_PROTO_TLS1) || \
     defined(MBEDTLS_SSL_PROTO_TLS1_1)
@@ -980,7 +993,7 @@ static void ssl_handshake_params_init( mbedtls_ssl_handshake_params *handshake )
 #endif
 #if defined(MBEDTLS_SSL_PROTO_TLS1_2)
 #if defined(MBEDTLS_SHA256_C)
-  //mbedtls_sha256_init(   &handshake->fin_sha256    ); // uTasker - not required
+  //mbedtls_sha256_init(   &handshake->fin_sha256    ); not needed because content is already zeroed
     mbedtls_sha256_starts( &handshake->fin_sha256, 0 );
 #endif
 #if defined(MBEDTLS_SHA512_C)

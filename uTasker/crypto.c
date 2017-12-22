@@ -63,6 +63,9 @@ typedef struct _PACK stAES_INSTANCE
 #elif defined CRYPTO_WOLF_SSL
     Aes           aes_encrypt_context;
 #else
+    #if (defined LTC_AVAILABLE && !defined AES_DISABLE_LTC && !defined _WINDOWS)
+    int iRounds;
+    #endif
     aes_context   aes_encrypt_context;
     unsigned char iv[AES_BLOCK_LENGTH];
 #endif
@@ -73,7 +76,7 @@ typedef struct _PACK stAES_INSTANCE
 /*                      local variable definitions                     */
 /* =================================================================== */
 
-#if defined NATIVE_AES_CAU
+#if defined NATIVE_AES_CAU || (defined LTC_AVAILABLE && !defined AES_DISABLE_LTC && !defined _WINDOWS)
     static AES_INSTANCE aes_instance[AES_INSTANCE_COUNT] = {{0}};
 #elif defined CRYPTO_OPEN_SSL
     static AES_INSTANCE aes_instance[AES_INSTANCE_COUNT] = {{{{0}}}};

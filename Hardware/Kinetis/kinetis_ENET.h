@@ -1000,7 +1000,7 @@ extern int fnConfigEthernet(ETHTABLE *pars)
     #if defined ETHERNET_RMII && defined ETHERNET_RMII_CLOCK_INPUT       // {14}
         #if defined KINETIS_K65 || defined KINETIS_K66
     _CONFIG_PERIPHERAL(E, 26,  PE_26_ENET_1588_CLKIN);                   // select the pin function for external 50MHz clock input
-    SIM_SOPT2 |= (SIM_SOPT2_RMIISRC_ENET_1588_CLKIN);                    // select the EET_1588_CLKIN as clock source (rather than EXTAL)
+    SIM_SOPT2 |= (SIM_SOPT2_RMIISRC_ENET_1588_CLKIN);                    // select the ENET_1588_CLKIN as clock source (rather than EXTAL)
         #endif
     #endif
     #if !defined ETHERNET_RMII                                           // additional signals used in MII mode

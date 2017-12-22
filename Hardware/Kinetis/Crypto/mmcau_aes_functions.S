@@ -21,7 +21,7 @@
 #          11-2013    Teejay Ciancio   Small performance improvements to
 #                                      set_key and decrypt; also, some cleanup
 #          20.01.2017 Removed cau2_defines.hdr and inserted defines locally {uTasker}
-#                     Note also that this will not assemble for cortex-m0 core
+#                     Note also that this will assemble for cortex-m0 or cortex-m4 based on core type define
 #
 #*******************************************************************************
 #*******************************************************************************
@@ -47,7 +47,6 @@
 #                       Note also that this will not assemble for cortex-m4 core
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-
 #if !defined (ARM_MATH_CM0PLUS)
     #.include "cau2_defines.hdr"                                         {uTasker} Cortex-M4 code
     .equ    MMCAU_PPB_DIRECT,  0xe0081000
@@ -1008,7 +1007,7 @@ decrypt_reg_data:
     .equ          MMCAU_2_CMDS, 0x80100000
     .equ          MMCAU_3_CMDS, 0x80100200
 
-        .equ    TL,0
+    .equ    TL,0
     .equ    TS,0
     .equ    CASR,0
     .equ    CAA,1

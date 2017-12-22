@@ -58,8 +58,8 @@
 
 #define TARGET_HW           "Bare-Minimum Boot"
 
-//#define SPI_SW_UPLOAD                                                  // new SW is located in SPI FLASH {1}{2}
-//#define SPI_FLASH_W25Q                                                 // use Winbond W25Q SPI flash rather than ATMEL
+#define SPI_SW_UPLOAD                                                  // new SW is located in SPI FLASH {1}{2}
+#define SPI_FLASH_W25Q                                                 // use Winbond W25Q SPI flash rather than ATMEL
 //#define SPI_FLASH_SST25                                                // {15} use SST SPI FLASH rather than ATMEL
 //#define SPI_FLASH_ST                                                   // define that we are using ST FLASH rather than default ATMEL {9}
 //#define SPI_DATA_FLASH                                                 // FLASH type is data FLASH supporting sub-sectors (relevant for ST types) {9}
@@ -82,11 +82,11 @@
     #if defined _KINETIS                                                 // {20}
       //#define FRDM_KL25Z
       //#define FRDM_KL27Z
-        #define CAPUCCINO_KL27                                           // KL27 with 256k flash / 32k SRAM
+      //#define CAPUCCINO_KL27                                           // KL27 with 256k flash / 32k SRAM
       //#define FRDM_KL82Z
       //#define KINETIS_K40
       //#define KINETIS_K60
-      //#define FRDM_K64F                                                // {24} next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area
+        #define FRDM_K64F                                                // {24} next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area
       //#define KINETIS_K70
 
       //#define NET_KBED

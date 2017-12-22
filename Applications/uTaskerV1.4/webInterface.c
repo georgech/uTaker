@@ -76,8 +76,9 @@
 /*                             constants                               */
 /* =================================================================== */
 
-const CHAR  cSoftwareVersion[] = SOFTWARE_VERSION;                       // software version for general purpose display use
-
+#if defined USE_MAINTENANCE || defined USE_HTTP
+    const CHAR  cSoftwareVersion[] = SOFTWARE_VERSION;                   // software version for general purpose display use
+#endif
 
 #if defined USE_HTTP
 

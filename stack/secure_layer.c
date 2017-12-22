@@ -24,6 +24,15 @@
 
 #if defined SECURE_MQTT
 
+// To include in standard header
+//
+extern int fnInitialiseSecureLayer(const unsigned char *ptrOurCertificate, unsigned long ulCertificateLength, const unsigned char *ptrOutPrivateKey, unsigned long ulOurPrivateKeyLength);
+extern void fnHandshakeStats(unsigned long ulHandshakeSize, unsigned char *ucPrtData);
+extern void fnEnterRandom(unsigned char *ucPrtData);
+extern void fnSetSessionCipher(unsigned short session_cipher, unsigned char ucVersion[2], unsigned char ucIdLength, unsigned char *ptrID);
+extern int fnHandleSecurityExtension(unsigned short ext_id, unsigned short ext_size, unsigned char *ptrExtensionData);
+
+
 /* =================================================================== */
 /*                          local definitions                          */
 /* =================================================================== */
@@ -135,7 +144,11 @@ static unsigned long ulBufferContent = 0;
 
 // Temporary
 //
-#define TCP_TLS_CERTIFICATES     20                                      // to extend the TCP event defines - after TCP_WINDOW_PROBE
+#define TCP_TLS_CERTIFICATES            20                               // to extend the TCP event defines - after TCP_WINDOW_PROBE
+#define TCP_TLS_CLIENT_KEY_EXCHANGE     21
+#define TCP_TLS_CERTIFICATE_VERIFY      22
+#define TCP_TLS_CHANGE_CIPHER_SPEC      23
+#define TCP_TLS_ENCRYPTED_HANDSHAKE     24
 
 extern unsigned char *fnGeneratePublicKey(unsigned char *ptrData);       // in uTaskerInterface.c
 extern unsigned char *fnInsertSignatureAlgorithm(unsigned char *ptrData);
@@ -357,55 +370,64 @@ static unsigned char *fnInsertPublicKey(unsigned char *ptrData)
 extern int fnTLS(USOCKET Socket, unsigned char ucEvent)
 {
     unsigned char ucTLS_frame[MIN_TCP_HLEN + 1024];                      // temporary buffer for constructing the secure socket layer message in
-    unsigned char *ptrData = &ucTLS_frame[MIN_TCP_HLEN];                 // start of teh message content
+    unsigned char *ptrData = &ucTLS_frame[MIN_TCP_HLEN];                 // start of the message content
     unsigned char *ptrRecordLength;
     unsigned char *ptrHandshakeLength;
     unsigned char *ptrExtensionLength;
+    unsigned short ucChecksumLength;
     unsigned short usLength;
     switch (ucEvent) {
     case TCP_EVENT_CONNECTED:                                            // send Client Hello since TCP has connected
-        // TLSv1.2 record layer
-        //
-        *ptrData++ = SSL_TLS_CONTENT_HANDSHAKE;
-        *ptrData++ = (unsigned char)(TLS_VERSION_1_0 >> 8);
-        *ptrData++ = (unsigned char)(TLS_VERSION_1_0);
-        ptrRecordLength = ptrData;                                       // the location where the overall length is to be inserted
-        ptrData += 2;                                                    // leave space for the TLSv1.2 record content length
-        // Handshake protocol
-        //
-        *ptrData++ = SSL_TLS_HANDSHAKE_TYPE_CLIENT_HELLO;
-        ptrHandshakeLength = ptrData;
-        ptrData += 3;                                                    // leave space for the handshake protocol content length
+        {
+            // TLSv1.2 record layer
+            //
+            MEMORY_RANGE_POINTER our_private_key = uOpenFile("6.bin");
+            MEMORY_RANGE_POINTER our_certificate = uOpenFile("7.bin");
+            if (fnInitialiseSecureLayer((const unsigned char *)fnGetFlashAdd(our_certificate + FILE_HEADER), uGetFileLength(our_certificate), (const unsigned char *)fnGetFlashAdd(our_private_key + FILE_HEADER), uGetFileLength(our_private_key)) != 0) {
+                return -1;                                               // can't create the session or local keys missing
+            }
+            *ptrData++ = SSL_TLS_CONTENT_HANDSHAKE;
+            *ptrData++ = (unsigned char)(TLS_VERSION_1_0 >> 8);
+            *ptrData++ = (unsigned char)(TLS_VERSION_1_0);
+            ptrRecordLength = ptrData;                                   // the location where the overall length is to be inserted
+            ptrData += 2;                                                // leave space for the TLSv1.2 record content length
+            // Handshake protocol
+            //
+            *ptrData++ = SSL_TLS_HANDSHAKE_TYPE_CLIENT_HELLO;
+            ptrHandshakeLength = ptrData;
+            ptrData += 3;                                                // leave space for the handshake protocol content length
 
-        *ptrData++ = (unsigned char)(TLS_VERSION_1_2 >> 8);
-        *ptrData++ = (unsigned char)(TLS_VERSION_1_2);
+            *ptrData++ = (unsigned char)(TLS_VERSION_1_2 >> 8);
+            *ptrData++ = (unsigned char)(TLS_VERSION_1_2);
 
-        ptrData = fnInsertTLS_random(ptrData);                           // insert random
-        ptrData = fnInsertSessionID(ptrData, 0);                         // session ID length (0, 16 or 32)
-        ptrData = fnInsertCipherSuites(ptrData);                         // insert the accepted cipher suites
-        *ptrData++ = 1;                                                  // compression method length
-        *ptrData++ = 0;                                                  // no compression method
+            ptrData = fnInsertTLS_random(ptrData);                       // insert random
+            ptrData = fnInsertSessionID(ptrData, 0);                     // session ID length (0 to 32)
+            ptrData = fnInsertCipherSuites(ptrData);                     // insert the accepted cipher suites
+            *ptrData++ = 1;                                              // compression method length
+            *ptrData++ = 0;                                              // no compression method
 
-        ptrExtensionLength = ptrData;
-        ptrData += 2;                                                    // leave space for the extension content length
+            ptrExtensionLength = ptrData;
+            ptrData += 2;                                                // leave space for the extension content length
 
-        ptrData = fnInsertHandshakeExtensions(ptrData);
+            ptrData = fnInsertHandshakeExtensions(ptrData);
 
-        usLength = (ptrData - ptrRecordLength - 2);                      // the TLSv1.2 record content length
-        *ptrRecordLength++ = (unsigned char)(usLength >> 8);
-        *ptrRecordLength = (unsigned char)(usLength);
+            ucChecksumLength = (ptrData - ptrRecordLength - 2);          // the TLSv1.2 record content length
+            *ptrRecordLength++ = (unsigned char)(ucChecksumLength >> 8);
+            *ptrRecordLength = (unsigned char)(ucChecksumLength);
 
-        usLength = (ptrData - ptrHandshakeLength - 3);                   // the handshake protocol content length
-        *ptrHandshakeLength++ = 0;                                       // most significant byte is always 0
-        *ptrHandshakeLength++ = (unsigned char)(usLength >> 8);
-        *ptrHandshakeLength = (unsigned char)(usLength);
+            usLength = (ptrData - ptrHandshakeLength - 3);               // the handshake protocol content length
+            *ptrHandshakeLength++ = 0;                                   // most significant byte is always 0
+            *ptrHandshakeLength++ = (unsigned char)(usLength >> 8);
+            *ptrHandshakeLength++ = (unsigned char)(usLength);
 
-        usLength = (ptrData - ptrExtensionLength - 2);                   // the extension content length
-        *ptrExtensionLength++ = (unsigned char)(usLength >> 8);
-        *ptrExtensionLength = (unsigned char)(usLength);
+            usLength = (ptrData - ptrExtensionLength - 2);               // the extension content length
+            *ptrExtensionLength++ = (unsigned char)(usLength >> 8);
+            *ptrExtensionLength = (unsigned char)(usLength);
 
-        usLength = (ptrData - &ucTLS_frame[MIN_TCP_HLEN]);               // complete content length
-        iTLS_state = 1;                                                  // sending client hello
+            usLength = (ptrData - &ucTLS_frame[MIN_TCP_HLEN]);           // complete content length
+            fnHandshakeStats(ucChecksumLength, (ptrHandshakeLength - 4));// update handshake statistics (calculates handshake check sum)
+            iTLS_state = 1;                                              // sending client hello
+        }
         break;
     case TCP_TLS_CERTIFICATES:                                           // send our certificates(s) to the server
         {
@@ -424,9 +446,9 @@ extern int fnTLS(USOCKET Socket, unsigned char ucEvent)
                     break;
                 }
             }
-            ulLength = (ptrData - ptrRecordLength - 2);
-            *ptrRecordLength++ = (unsigned char)(ulLength >> 8);
-            *ptrRecordLength++ = (unsigned char)(ulLength);
+            ucChecksumLength = (ptrData - ptrRecordLength - 2);
+            *ptrRecordLength++ = (unsigned char)(ucChecksumLength >> 8);
+            *ptrRecordLength++ = (unsigned char)(ucChecksumLength);
             ulLength = (ptrData - ptrHandshakeLength - 3);
             *ptrHandshakeLength++ = (unsigned char)(ulLength >> 16);
             *ptrHandshakeLength++ = (unsigned char)(ulLength >> 8);
@@ -437,10 +459,11 @@ extern int fnTLS(USOCKET Socket, unsigned char ucEvent)
             *ptrHandshakeLength++ = (unsigned char)(ulLength);
 
             usLength = (ptrData - &ucTLS_frame[MIN_TCP_HLEN]);           // complete content length
+            fnHandshakeStats(ucChecksumLength, (ptrHandshakeLength - 4));// update handshake statistics (calculates handshake check sum)
             iTLS_state = 101;                                            // the next step if to send the client key exchange
-#if defined _WINDOWS
-            // Test the step here
+            // Fall through intentionally (assuming enough output message space)
             //
+    case TCP_TLS_CLIENT_KEY_EXCHANGE:
             *ptrData++ = SSL_TLS_CONTENT_HANDSHAKE;
             *ptrData++ = (unsigned char)(TLS_VERSION_1_2 >> 8);
             *ptrData++ = (unsigned char)(TLS_VERSION_1_2);
@@ -450,18 +473,19 @@ extern int fnTLS(USOCKET Socket, unsigned char ucEvent)
             ptrExtensionLength = ptrData;                                // the location where the public key length is to be inserted
             ptrData += 3;                                                // leave space for length
             ptrData = fnInsertPublicKey(ptrData);                        // 
-            ulLength = (ptrData - ptrHandshakeLength - 2);
-            *ptrHandshakeLength++ = (unsigned char)(ulLength >> 8);
-            *ptrHandshakeLength++ = (unsigned char)(ulLength);
+            ucChecksumLength = (ptrData - ptrHandshakeLength - 2);
+            *ptrHandshakeLength++ = (unsigned char)(ucChecksumLength >> 8);
+            *ptrHandshakeLength++ = (unsigned char)(ucChecksumLength);
             ulLength = (ptrData - ptrExtensionLength - 3);               // the public key content length
             *ptrExtensionLength++ = 0;                                   // MSB is always 0
             *ptrExtensionLength++ = (unsigned char)(ulLength >> 8);
             *ptrExtensionLength = (unsigned char)(ulLength);
             usLength = (ptrData - &ucTLS_frame[MIN_TCP_HLEN]);           // complete content length
+            fnHandshakeStats(ucChecksumLength, (ptrHandshakeLength - 4));// update handshake statistics (calculates handshake check sum)
             iTLS_state = 102;                                            // the next step if to send a certificate verify
-
-            // Test the step here
+            // Fall through intentionally (assuming enough output message space)
             //
+    case TCP_TLS_CERTIFICATE_VERIFY:
             *ptrData++ = SSL_TLS_CONTENT_HANDSHAKE;
             *ptrData++ = (unsigned char)(TLS_VERSION_1_2 >> 8);
             *ptrData++ = (unsigned char)(TLS_VERSION_1_2);
@@ -471,41 +495,43 @@ extern int fnTLS(USOCKET Socket, unsigned char ucEvent)
             ptrExtensionLength = ptrData;                                // the location where the signature algorithm length is to be inserted
             ptrData += 3;                                                // leave space for length
             ptrData = fnInsertSignatureAlgorithm(ptrData);
-            usLength = (unsigned short)(ptrData - ptrHandshakeLength - 2);
-            *ptrHandshakeLength++ = (unsigned char)(usLength >> 8);
-            *ptrHandshakeLength = (unsigned char)(usLength);
+            ucChecksumLength = (unsigned short)(ptrData - ptrHandshakeLength - 2);
+            *ptrHandshakeLength++ = (unsigned char)(ucChecksumLength >> 8);
+            *ptrHandshakeLength = (unsigned char)(ucChecksumLength);
             ulLength = (ptrData - ptrExtensionLength - 3);               // the public key content length
             *ptrExtensionLength++ = (unsigned char)(ulLength >> 16);
             *ptrExtensionLength++ = (unsigned char)(ulLength >> 8);
             *ptrExtensionLength = (unsigned char)(ulLength);
             usLength = (ptrData - &ucTLS_frame[MIN_TCP_HLEN]);           // complete content length
+            fnHandshakeStats(ucChecksumLength, (ptrHandshakeLength - 4));// update handshake statistics (calculates handshake check sum)
             iTLS_state = 103;                                            // the next step if to send a change cipher spec request
-
-            // Test the step here
+            // Fall through intentionally (assuming enough output message space)
             //
+    case TCP_TLS_CHANGE_CIPHER_SPEC:
             *ptrData++ = SSL_TLS_CONTENT_HANDSHAKE;
             *ptrData++ = (unsigned char)(TLS_VERSION_1_2 >> 8);
             *ptrData++ = (unsigned char)(TLS_VERSION_1_2);
             *ptrData++ = 0;                                              // fixed length of 1
             *ptrData++ = 1;
+            ptrHandshakeLength = ptrData;
             *ptrData++ = SSL_TLS_CHANGE_CIPHER_SPEC_MESSAGE;
             usLength = (ptrData - &ucTLS_frame[MIN_TCP_HLEN]);           // complete content length
+            fnHandshakeStats(6, (ptrHandshakeLength - 4));               // update handshake statistics (calculates handshake check sum)
             iTLS_state = 104;                                            // the next step if to send an encrypted handshake message
-
-            // Test the step here
+            // Fall through intentionally (assuming enough output message space)
             //
+    case TCP_TLS_ENCRYPTED_HANDSHAKE:
             *ptrData++ = SSL_TLS_CONTENT_HANDSHAKE;
             *ptrData++ = (unsigned char)(TLS_VERSION_1_2 >> 8);
             *ptrData++ = (unsigned char)(TLS_VERSION_1_2);
             ptrHandshakeLength = ptrData;                                // the location where the encrypted handshake length is to be inserted
             ptrData += 2;                                                // leave space for length
-            ptrData = fnFinished(ptrData);
+            ptrData = fnFinished(ptrData);                               // insert encrypted handshake message
             ulLength = (ptrData - ptrHandshakeLength - 2);
             *ptrHandshakeLength++ = (unsigned char)(ulLength >> 8);
             *ptrHandshakeLength++ = (unsigned char)(ulLength);
             usLength = (ptrData - &ucTLS_frame[MIN_TCP_HLEN]);           // complete content length
             iTLS_state = 105;                                            // the next step if to send an encrypted handshake message
-#endif
         }
         break;
     case TCP_EVENT_ACK:
@@ -535,11 +561,7 @@ static unsigned char *fnExtractCertificate(unsigned char *ucPrtData, int iCertif
     }
     return ucPrtData;
 }
-extern int fnInitialiseSecureLayer(const unsigned char *ptrOurCertificate, unsigned long ulCertificateLength, const unsigned char *ptrOutPrivateKey, unsigned long ulOurPrivateKeyLength);
-extern void fnHandshakeStats(unsigned char ucHandshakeType, unsigned long ulHandshakeSize, unsigned char *ucPrtData);
-extern void fnEnterRandom(unsigned char *ucPrtData);
-extern void fnSetSessionCipher(unsigned short session_cipher, unsigned char ucVersion[2], unsigned char ucIdLength, unsigned char *ptrID);
-extern int fnHandleSecurityExtension(unsigned short ext_id, unsigned short ext_size, unsigned char *ptrExtensionData);
+
 
 // Handle individual handshake fields in the input buffer
 //
@@ -563,6 +585,11 @@ static int fnHandleHandshake(USOCKET Socket, unsigned char *ucPrtData, unsigned 
         file = uOpenFile("5.bin");
         break;
     case SSL_TLS_HANDSHAKE_TYPE_SERVER_HELLO_DONE:
+        {
+            static const unsigned char server_hello[] = { 0x0e, 0x00, 0x00, 0x00 };
+            ucPrtData = (unsigned char *)server_hello;
+            ucPrtData += 4;
+        }
         break;
     default:
         break;
@@ -574,7 +601,7 @@ static int fnHandleHandshake(USOCKET Socket, unsigned char *ucPrtData, unsigned 
             ucPrtData = ucBuffer;
             ulHandshakeSize = length;
         }
-        else {
+        else {                                                           // session recoring
             unsigned char ucMimeType = MIME_BINARY;
             uFileWrite(file, ucPrtData, (MAX_FILE_LENGTH)ulHandshakeSize);
             uFileCloseMime(file, &ucMimeType);
@@ -588,17 +615,12 @@ static int fnHandleHandshake(USOCKET Socket, unsigned char *ucPrtData, unsigned 
             SSL_TLS_HANDSHAKE_PROTOCOL_HELLO_DETAILS *ptrHelloSession;
             unsigned short usExtensionLength;
             unsigned char *ptrExtensionData;
-            MEMORY_RANGE_POINTER our_private_key = uOpenFile("6.bin");
-            MEMORY_RANGE_POINTER our_certificate = uOpenFile("7.bin");
             iNextState = 0;
             fnDebugMsg("Hello server recognised ");
-            if (fnInitialiseSecureLayer((const unsigned char *)fnGetFlashAdd(our_certificate + FILE_HEADER), uGetFileLength(our_certificate), (const unsigned char *)fnGetFlashAdd(our_private_key + FILE_HEADER), uGetFileLength(our_private_key)) != 0) {
-                return -1;
-            }
             if (ptrHello->version[0] == (unsigned char)(TLS_VERSION_1_2 >> 8)) { // we only accept TLSv1.2
                 if (ptrHello->version[1] == (unsigned char)(TLS_VERSION_1_2)) {
                     if (ptrHello->session_id_length <= 32) {
-                        fnHandshakeStats(SSL_TLS_HANDSHAKE_TYPE_SERVER_HELLO, ulHandshakeSize, ucPrtData); // update handshake statistics (calculates handshake check sum))
+                        fnHandshakeStats(ulHandshakeSize, ucPrtData);    // update handshake statistics (calculates handshake check sum)
                         fnEnterRandom(ptrHello->random);                 // save the server's 32 bytes of random data (the first 4 may contain the UTC time)
                         ptrHello = (SSL_TLS_HANDSHAKE_PROTOCOL_HELLO_32_ID *)(((unsigned char *)ptrHello) + (32 - ptrHello->session_id_length)); // set the session content pointer accordingly
                         ptrHelloSession = (SSL_TLS_HANDSHAKE_PROTOCOL_HELLO_DETAILS *)&(ptrHello->session_details);
@@ -637,7 +659,7 @@ static int fnHandleHandshake(USOCKET Socket, unsigned char *ucPrtData, unsigned 
         {
             int iCertificateReference = 0;
             unsigned long ulCertificatesLength = *ucPrtData;
-            fnHandshakeStats(SSL_TLS_HANDSHAKE_TYPE_CERTIFICATE, ulHandshakeSize, ucPrtData++); // update handshake statistics (calculates handshake check sum))
+            fnHandshakeStats(ulHandshakeSize, ucPrtData++);              // update handshake statistics (calculates handshake check sum)
             ulCertificatesLength <<= 8;
             ulCertificatesLength |= *ucPrtData++;
             ulCertificatesLength <<= 8;
@@ -651,15 +673,14 @@ static int fnHandleHandshake(USOCKET Socket, unsigned char *ucPrtData, unsigned 
     case SSL_TLS_HANDSHAKE_TYPE_SERVER_KEY_EXCHANGE:                     // we are receiving the server's public key
         {
             fnDebugMsg("Key exchange recognised ");
-            fnHandshakeStats(SSL_TLS_HANDSHAKE_TYPE_SERVER_KEY_EXCHANGE, ulHandshakeSize, ucPrtData);
+            fnHandshakeStats(ulHandshakeSize, ucPrtData);                // update handshake statistics (calculates handshake check sum)
             fnExtractPublicKey(ucPrtData, ulHandshakeSize);
         }
         break;
     case SSL_TLS_HANDSHAKE_TYPE_CERTIFICATE_REQUEST:                     // the server is requesting a certificate from us - this is the next step that we must do
         {
             unsigned short usSignatureHashAlgorithmsLength;
-          //unsigned char ucCertificateTypesCount = *ucPrtData;
-            fnHandshakeStats(SSL_TLS_HANDSHAKE_TYPE_CERTIFICATE_REQUEST, ulHandshakeSize, ucPrtData++);
+            fnHandshakeStats(ulHandshakeSize, ucPrtData++);              // update handshake statistics (calculates handshake check sum)
             ucPrtData += 3;                                              // the certificate types
             usSignatureHashAlgorithmsLength = *ucPrtData++;
             usSignatureHashAlgorithmsLength <<= 8;
@@ -672,12 +693,12 @@ static int fnHandleHandshake(USOCKET Socket, unsigned char *ucPrtData, unsigned 
         break;
     case SSL_TLS_HANDSHAKE_TYPE_SERVER_HELLO_DONE:                       // the handshake record has copleted
         fnDebugMsg("Hello done recognised ");
-        fnHandshakeStats(SSL_TLS_HANDSHAKE_TYPE_SERVER_HELLO_DONE, ulHandshakeSize, ucPrtData);
+        fnHandshakeStats(ulHandshakeSize, ucPrtData);                    // update handshake statistics (calculates handshake check sum)
         if (iNextState == 100) {                                         // immediately respond with our certificate(s)
             return (fnTLS(Socket, TCP_TLS_CERTIFICATES));
         }
         else {
-          //iTLS_state = 200; gets overwritten
+            return (fnTLS(Socket, TCP_TLS_CLIENT_KEY_EXCHANGE));         // skip certificate and start with client key exchange
         }
         break;
     default:
@@ -813,6 +834,7 @@ extern int fnSecureLayerReception(USOCKET Socket, unsigned char *ucPrtData, unsi
 extern void test_secure(USOCKET socket)
 {
 #if defined _WINDOWS                                                     // test server handshake sequence
+    fnTLS(socket, TCP_EVENT_CONNECTED);
     fnHandleHandshake(socket, 0, 0, SSL_TLS_HANDSHAKE_TYPE_SERVER_HELLO);
     fnHandleHandshake(socket, 0, 0, SSL_TLS_HANDSHAKE_TYPE_CERTIFICATE);
     fnHandleHandshake(socket, 0, 0, SSL_TLS_HANDSHAKE_TYPE_SERVER_KEY_EXCHANGE);

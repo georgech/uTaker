@@ -53,7 +53,7 @@
         #define TEST_AD_DA                                               // {14} enable test of reading ADC and writing (after delay) to DAC
           //#define ADC_TRIGGER_TPM                                      // use TPM module rather than PIT for ADC trigger (valid for KL parts)
           //#define VOICE_RECORDER                                       // {15} needs TEST_AD_DA and mass-storage and saves sampled input to SD card
-            #define HANDLE_PDB_INTERRUPT                                 // when the ADC is triggered by PDB handle also a PDB interrupt
+          //#define HANDLE_PDB_INTERRUPT                                 // when the ADC is triggered by PDB handle also a PDB interrupt
       //#define INTERNAL_TEMP                                            // {2} read also internal temperature (Luminary Micro)
 
         #if defined TEST_ADC && (defined _HW_SAM7X || defined _HW_AVR32) // SAM7X and AVR32 specific tests
@@ -85,7 +85,7 @@
         #endif
     #endif
     #if defined SUPPORT_LPTMR                                            // Kinetis low power timer {18}
-        #define TEST_LPTMR_PERIODIC                                      // test a user defined periodic interrupt
+      //#define TEST_LPTMR_PERIODIC                                      // test a user defined periodic interrupt
       //#define TEST_LPTMR_SINGLE_SHOT                                   // test a user defined single-shot interrupt
     #endif
     #if defined SUPPORT_DMA_TIMER                                        // M522XX DMA timers
@@ -96,7 +96,7 @@
         #define GPT_CAPTURES     5                                       // when testing captures, collect this many values
     #endif
     #if defined SUPPORT_TIMER || defined SUPPORT_PWM_MODULE              // standard timers
-      //#define TEST_TIMER                                               // enable timer test(s)
+        #define TEST_TIMER                                               // enable timer test(s)
         #if defined TEST_TIMER
             #if defined SUPPORT_PWM_MODULE                               // {9}
                 #define TEST_PWM                                         // {1} test generating PWM output from timer
@@ -753,8 +753,9 @@ static void fnStart_ADC_Trigger(void)
     pdb_setup.int_type = PDB_INTERRUPT;
         #if defined HANDLE_PDB_INTERRUPT
     pdb_setup.int_handler = _pdb_interrupt;                              // interrupt on each PDB cycle match
-        #endif
+        #else
     pdb_setup.int_handler = 0;                                           // no interrupt
+        #endif
     pdb_setup.int_priority = PRIORITY_PDB;    
     //pdb_setup.pdb_mode = (PDB_PERIODIC_DMA | PDB_TRIGGER_ADC1_A);      // periodic DMA and trigger ADC1 - channel A
     #if defined KWIKSTIK || defined TEENSY_3_1
@@ -974,7 +975,7 @@ static void fnConfigureADC(void)
     {
         PWM_INTERRUPT_SETUP pwm_setup;
         pwm_setup.int_type = PWM_INTERRUPT;
-        pwm_setup.pwm_mode = (PWM_SYS_CLK | PWM_PRESCALER_1 | PWM_FULL_BUFFER_DMA); // clock PWM timer from the system clock with /16 pre-scaler
+        pwm_setup.pwm_mode = (PWM_SYS_CLK | PWM_PRESCALER_1 | PWM_FULL_BUFFER_DMA); // clock PWM timer from the system clock with /1 pre-scaler
         #if defined KINETIS_KL && !defined DEVICE_WITHOUT_DMA
         pwm_setup.pwm_mode |= PWM_FULL_BUFFER_DMA_AUTO_REPEAT;           // automated DMA (using interrupt) restart when not using modulo repetitions
         #endif

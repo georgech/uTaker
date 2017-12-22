@@ -159,6 +159,8 @@ utFAT V2.04 - 14.07.2017 : http://www.uTasker.com/software/utFAT/utFAT2.04.zip
 
 Renaming files to different locations is possible with this release. Also renaming directories to different locations is supported.
 
+18.12.2017 Update to include support for a configuration with FAT in internal flash together with emulated FAT
+
 
 
 

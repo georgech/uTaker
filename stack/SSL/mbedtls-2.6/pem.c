@@ -389,11 +389,7 @@ void mbedtls_pem_free( mbedtls_pem_context *ctx )
 {
     mbedtls_free( ctx->buf );
 
-    // uTasker - avoid calling with zero pointer
-    //
-    if (ctx->info != 0) {
-        mbedtls_free(ctx->info);
-    }
+    mbedtls_free(ctx->info);
 
     mbedtls_zeroize( ctx, sizeof( mbedtls_pem_context ) );
 }

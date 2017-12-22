@@ -2689,7 +2689,7 @@ _handle_local_slave:
                     if (RESTART_CLEAR_LOG == usData) {                   // restart and also delete event log
                         fnDeleteEventLog(_DIAG_PORT);
                     }
-                    uTaskerMonoTimer( TASK_APPLICATION, (DELAY_LIMIT)(1*SEC), E_TIMER_SW_DELAYED_RESET ); // reset after short delay
+                    uTaskerMonoTimer(TASK_APPLICATION, (DELAY_LIMIT)(1 * SEC), E_TIMER_SW_DELAYED_RESET); // reset after short delay
                     break;
             #endif
             #if !defined NO_SLAVE_MODBUS_DIAG_SUB_RETURN_DIAG_REG

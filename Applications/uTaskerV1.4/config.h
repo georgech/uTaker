@@ -1086,9 +1086,9 @@
                 #define NUMBER_USB_AUDIO  0
             #endif
             #if defined USE_USB_MSD
-                #define FAT_EMULATION                                    // support FAT emulation (full mass-storage not required by USB-MSD)
+              //#define FAT_EMULATION                                    // support FAT emulation (full mass-storage not required by USB-MSD)
                 #if defined FAT_EMULATION
-                    #define NUMBER_USB_MSD 1                             // single MSD LUM (set to 2 for SD card and emulated drive)
+                    #define NUMBER_USB_MSD 1                             // single MSD LUM (eg. set to 2 for SD card and emulated drive)
                     #define EMULATED_FAT_LUMS         1                  // the number of logical units on emulated drive
                     #define EMULATED_FAT_DISK_SIZE   (1024 * 1024)       // 1 MByte disk to be emulated
                     #define MAXIMUM_DATA_FILES        8                  // maximum number of data files that could be used by the disk
@@ -1601,7 +1601,7 @@
                 #define FTP_DISPLAY_USER_FILES                           // allow user files to be displayed by FTP
             #endif
             #if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT // disk D: is used
-                #define FTP_UTFAT                                        // allow FTP to work with utFAT
+              //#define FTP_UTFAT                                        // allow FTP to work with utFAT
                 #define FTP_ROOT                "/"                      // the root directory as seen by the FTP server (can be set to a sub-directory of the main disk to restrict FTP accesses to there)
                 #define UT_FTP_PATH_LENGTH      128                      // this must be non-zero to enable PWD request to return a path name
             #endif
@@ -1753,7 +1753,7 @@
             #endif
             #define HTTP_HEADER_CONTENT_INFO                             // add plain text HTTP header information - ensures that Internet Explorer correctly displays txt files
             #if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT // disk D: is used
-                #define HTTP_UTFAT                                       // allow HTTP to work with utFAT
+              //#define HTTP_UTFAT                                       // allow HTTP to work with utFAT
                 #define HTTP_ROOT              "web"                     // the root directory as seen by the HTTP server (can be set to a sub-directory of the main disk to restrict HTTP accesses to there)
                 #define DEFAULT_HTTP_FILE      "index.htm"               // the file served when first contact is made with the web server
             #endif
@@ -1802,12 +1802,13 @@
   //#define CRYPTO_OPEN_SSL                                              // use OpenSSL library code
   //#define CRYPTO_WOLF_SSL                                              // use wolfSSL library code
     #define CRYPTO_MBEDTLS                                               // use mbedTLS library code
-    #define CRYPTO_AES                                                   // use AES cypher
+    #define CRYPTO_AES                                                   // use AES (advanced encryption standard) cypher
         #define MBEDTLS_AES_ROM_TABLES                                   // mbedTLS uses ROM tables for AES rather than calculating sbox and tables (costs 8k Flash, saves 8.5k RAM, loses about 70% performance)
         #define OPENSSL_AES_FULL_LOOP_UNROLL                             // unroll loops for improved performance (costs 4k Flash, gains about 20% performance)
       //#define NATIVE_AES_CAU                                           // use uTasker mmCAU (LTC) - only possible when the device has mmCAU (LTC) - simulation requires a SW library to be enabled for alternate use
           //#define AES_DISABLE_CAU                                      // force software implementation by disabling any available crypto accelerator (used mainly for testing CAU efficiency increase)
-          //#define AES_DISABLE_LTC                                      // LTC has priority of CAU unless it is disabled (less devices support LTC - LP Trusted Cryptography)
+          //#define AES_DISABLE_LTC                                      // LTC has priority over CAU unless it is disabled (less devices support LTC - Low Power Trusted Cryptography)
+  //#define CRYPTO_SHA                                                   // use SHA (secure hash algorithm)
 
 // Signal Processing (DSP)
 //
