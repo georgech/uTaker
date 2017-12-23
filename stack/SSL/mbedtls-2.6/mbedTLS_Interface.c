@@ -64,7 +64,7 @@ static int fnSimpleRandom(void *ptr, unsigned char *ptrBuf, size_t length)
 {
     static unsigned char ucPoorRandomForTest = 0;
     while (length-- != 0) {
-        *ptrBuf++ = ucPoorRandomForTest++;
+        *ptrBuf++ = 0x55;// ucPoorRandomForTest++;
     }
     return 0;
 }

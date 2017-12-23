@@ -2097,11 +2097,11 @@ extern void fnHandleTCP(ETHERNET_FRAME *ptrRx_frame)                     // {41}
 //
 static int fnDoCountDown(TCP_CONTROL *ptr_TCP)
 {
-    if (ptr_TCP->usTransmitTimer) {
+    if (ptr_TCP->usTransmitTimer != 0) {
         ptr_TCP->usTransmitTimer--;
     }
     else {
-        if (ptr_TCP->ucRetransmissions) {                                // timeout
+        if (ptr_TCP->ucRetransmissions != 0) {                           // timeout
             ptr_TCP->ucRetransmissions--;
             ptr_TCP->usTransmitTimer = TCP_STANDARD_RETRY_TOUT;
             return 1;

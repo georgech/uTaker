@@ -188,6 +188,11 @@ static unsigned char *fnInsertTLS_random(unsigned char *ptrData)
     RTC_SETUP rtc;
     int i;
     unsigned short usRandom;
+    uMemset(ptrData, 0x55, 32);
+    ptrData += 32;
+    return ptrData;
+
+
 #if defined SUPPORT_RTC || defined USE_SNTP || defined USE_TIME_SERVER || defined SUPPORT_SW_RTC
     #define TLS_RANDOM_LENGTH     28
     fnGetRTC(&rtc);                                                      // present time
@@ -425,7 +430,7 @@ extern int fnTLS(USOCKET Socket, unsigned char ucEvent)
             *ptrExtensionLength = (unsigned char)(usLength);
 
             usLength = (ptrData - &ucTLS_frame[MIN_TCP_HLEN]);           // complete content length
-            fnHandshakeStats(ucChecksumLength, (ptrHandshakeLength - 4));// update handshake statistics (calculates handshake check sum)
+            fnHandshakeStats((ucChecksumLength - 4), ptrHandshakeLength);// update handshake statistics (calculates handshake check sum)
             iTLS_state = 1;                                              // sending client hello
         }
         break;
@@ -456,10 +461,10 @@ extern int fnTLS(USOCKET Socket, unsigned char ucEvent)
             ulLength -= 3;
             *ptrHandshakeLength++ = (unsigned char)(ulLength >> 16);
             *ptrHandshakeLength++ = (unsigned char)(ulLength >> 8);
-            *ptrHandshakeLength++ = (unsigned char)(ulLength);
+            *ptrHandshakeLength = (unsigned char)(ulLength);
 
             usLength = (ptrData - &ucTLS_frame[MIN_TCP_HLEN]);           // complete content length
-            fnHandshakeStats(ucChecksumLength, (ptrHandshakeLength - 4));// update handshake statistics (calculates handshake check sum)
+            fnHandshakeStats((ucChecksumLength - 4), (ptrHandshakeLength - 3)); // update handshake statistics (calculates handshake check sum)
             iTLS_state = 101;                                            // the next step if to send the client key exchange
             // Fall through intentionally (assuming enough output message space)
             //
@@ -481,7 +486,7 @@ extern int fnTLS(USOCKET Socket, unsigned char ucEvent)
             *ptrExtensionLength++ = (unsigned char)(ulLength >> 8);
             *ptrExtensionLength = (unsigned char)(ulLength);
             usLength = (ptrData - &ucTLS_frame[MIN_TCP_HLEN]);           // complete content length
-            fnHandshakeStats(ucChecksumLength, (ptrHandshakeLength - 4));// update handshake statistics (calculates handshake check sum)
+            fnHandshakeStats((ucChecksumLength - 4), ptrHandshakeLength); // update handshake statistics (calculates handshake check sum)
             iTLS_state = 102;                                            // the next step if to send a certificate verify
             // Fall through intentionally (assuming enough output message space)
             //
@@ -497,13 +502,13 @@ extern int fnTLS(USOCKET Socket, unsigned char ucEvent)
             ptrData = fnInsertSignatureAlgorithm(ptrData);
             ucChecksumLength = (unsigned short)(ptrData - ptrHandshakeLength - 2);
             *ptrHandshakeLength++ = (unsigned char)(ucChecksumLength >> 8);
-            *ptrHandshakeLength = (unsigned char)(ucChecksumLength);
+            *ptrHandshakeLength++ = (unsigned char)(ucChecksumLength);
             ulLength = (ptrData - ptrExtensionLength - 3);               // the public key content length
             *ptrExtensionLength++ = (unsigned char)(ulLength >> 16);
             *ptrExtensionLength++ = (unsigned char)(ulLength >> 8);
             *ptrExtensionLength = (unsigned char)(ulLength);
             usLength = (ptrData - &ucTLS_frame[MIN_TCP_HLEN]);           // complete content length
-            fnHandshakeStats(ucChecksumLength, (ptrHandshakeLength - 4));// update handshake statistics (calculates handshake check sum)
+            fnHandshakeStats((ucChecksumLength - 4), ptrHandshakeLength);// update handshake statistics (calculates handshake check sum)
             iTLS_state = 103;                                            // the next step if to send a change cipher spec request
             // Fall through intentionally (assuming enough output message space)
             //
@@ -516,7 +521,7 @@ extern int fnTLS(USOCKET Socket, unsigned char ucEvent)
             ptrHandshakeLength = ptrData;
             *ptrData++ = SSL_TLS_CHANGE_CIPHER_SPEC_MESSAGE;
             usLength = (ptrData - &ucTLS_frame[MIN_TCP_HLEN]);           // complete content length
-            fnHandshakeStats(6, (ptrHandshakeLength - 4));               // update handshake statistics (calculates handshake check sum)
+            fnHandshakeStats(6, ptrHandshakeLength);                     // update handshake statistics (calculates handshake check sum)
             iTLS_state = 104;                                            // the next step if to send an encrypted handshake message
             // Fall through intentionally (assuming enough output message space)
             //
