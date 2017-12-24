@@ -226,7 +226,7 @@ extern int fnConnectMQTT(unsigned char *ucIP, unsigned short(*fnCallback)(signed
     }
     #endif
     #if defined _WINDOWS && defined SECURE_MQTT
-    test_secure(MQTT_TCP_socket);
+   // test_secure(MQTT_TCP_socket);
     #endif
     fnSetNextMQTT_state(MQTT_STATE_OPEN_REQUESTED);
     return 0;                                                            // OK    

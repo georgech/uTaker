@@ -60,14 +60,46 @@ static int ssl_parse_alpn_ext(mbedtls_ssl_context *ssl, const unsigned char *buf
 
 static UTASKER_MBEDSSL_SESSION *secure_session = 0;
 
-static int fnSimpleRandom(void *ptr, unsigned char *ptrBuf, size_t length)
+static int fnSecureRandomNumber(void *ptr, unsigned char *ptrBuf, size_t length)
 {
     static unsigned char ucPoorRandomForTest = 0;
     while (length-- != 0) {
-        *ptrBuf++ = 0x55;// ucPoorRandomForTest++;
+        *ptrBuf++ = /*0x55;*/ ucPoorRandomForTest++;
     }
     return 0;
 }
+
+extern void fnEnterRandom(unsigned char *ucPrtData, int iServer)
+{
+    int iOffset;
+    if (iServer != 0) {
+        iOffset = 32;                                                    // server's random number occupies the second half of the session's random number buffer
+    }
+    else {
+        iOffset = 0;                                                     // client's random number occupies the first half of the session's random number buffer
+    }
+    uMemcpy((secure_session->ssl.handshake->randbytes + iOffset), ucPrtData, 32);
+}
+
+extern unsigned char *fnInsertTLS_random(unsigned char *ptrData, unsigned long ulUTC)
+{
+    size_t Length;
+    if (ulUTC != 0) {
+        *ptrData++ = (unsigned char)(ulUTC >> 24);                       // insert UCT as first four bytes of the random number
+        *ptrData++ = (unsigned char)(ulUTC >> 16);
+        *ptrData++ = (unsigned char)(ulUTC >> 8);
+        *ptrData++ = (unsigned char)(ulUTC);
+        Length = 28;
+    }
+    else {
+        Length = 32;
+    }
+    fnSecureRandomNumber(0, ptrData, Length);
+    ptrData += Length;
+    fnEnterRandom((ptrData - 32), 0);                                    // session's client random number
+    return (ptrData);
+}
+
 
 // Enter calloc() and free() implementation to be used by mbedTLS
 //
@@ -105,7 +137,7 @@ extern int fnInitialiseSecureLayer(const unsigned char *ptrOurCertificate, unsig
             secure_session->ssl.transform_negotiate = mbedtls_calloc(1, sizeof(mbedtls_ssl_transform));
             secure_session->ssl.session_negotiate = mbedtls_calloc(1, sizeof(mbedtls_ssl_session));
 
-            mbedtls_ssl_conf_rng(&(secure_session->config), fnSimpleRandom, secure_session); // set the random number method
+            mbedtls_ssl_conf_rng(&(secure_session->config), fnSecureRandomNumber, secure_session); // set the random number method
             secure_session->ssl.conf = &(secure_session->config);
             secure_session->config.endpoint = MBEDTLS_SSL_IS_CLIENT;     // we are client
 
@@ -126,10 +158,6 @@ extern void fnHandshakeStats(unsigned long ulHandshakeSize, unsigned char *ucPrt
     mbedtls_ssl_update_handshake_status(&(secure_session->ssl));
 }
 
-extern void fnEnterRandom(unsigned char *ucPrtData)
-{
-    uMemcpy(secure_session->ssl.handshake->randbytes, ucPrtData, 32);
-}
 
 // During the server hello we receive the cipher to be used during the session
 //
@@ -829,7 +857,7 @@ static unsigned char *ssl_encrypt_buf( mbedtls_ssl_context *ssl, unsigned char *
 
   //  MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= encrypt buf" ) );
 
-    return( 0 );
+    return(ptrData + ssl->out_msglen);
 }
 
 
@@ -839,11 +867,12 @@ extern unsigned char *fnFinished(unsigned char *ptrData)
     int /*ret, */hash_len;
 
    // MBEDTLS_SSL_DEBUG_MSG(2, ("=> write finished"));
+    unsigned char tempcnt[8]; // don't know where rhe counter will be yet....
+    secure_session->ssl.out_ctr = tempcnt;
 
-    secure_session->ssl.out_buf = secure_session->ssl.out_ctr = ptrData;
-    secure_session->ssl.out_hdr = secure_session->ssl.out_buf + 8;
-    secure_session->ssl.out_len = secure_session->ssl.out_hdr + 3;
-    secure_session->ssl.out_iv = secure_session->ssl.out_len + 2;
+    secure_session->ssl.out_hdr = (ptrData - 5);
+    secure_session->ssl.out_len = (ptrData - 2);
+    secure_session->ssl.out_iv = ptrData;
 
     /*
     * Set the out_msg pointer to the correct location based on IV length
@@ -857,8 +886,7 @@ extern unsigned char *fnFinished(unsigned char *ptrData)
         secure_session->ssl.out_msg = secure_session->ssl.out_iv;
     }
     
-
-    secure_session->ssl.handshake->calc_finished(&(secure_session->ssl), secure_session->ssl.out_msg, secure_session->ssl.conf->endpoint); // complete the calculation of the check sum
+    secure_session->ssl.handshake->calc_finished(&(secure_session->ssl), (secure_session->ssl.out_msg + 4), secure_session->ssl.conf->endpoint); // complete the calculation of the check sum and insert the result into the message
 
     /*
     * RFC 5246 7.4.9 (Page 63) says 12 is the default length and ciphersuites
@@ -873,9 +901,17 @@ extern unsigned char *fnFinished(unsigned char *ptrData)
     memcpy(ssl->own_verify_data, ssl->out_msg + 4, hash_len);
 #endif
 
-    //ssl->out_msglen = 4 + hash_len;
-    //ssl->out_msgtype = MBEDTLS_SSL_MSG_HANDSHAKE;
-    //ssl->out_msg[0] = MBEDTLS_SSL_HS_FINISHED;
+    secure_session->ssl.out_msglen = (4 + hash_len);
+  //ssl->out_msgtype = MBEDTLS_SSL_MSG_HANDSHAKE;
+    secure_session->ssl.out_msg[0] = MBEDTLS_SSL_HS_FINISHED;
+    secure_session->ssl.out_msg[1] = (unsigned char)(hash_len >> 16);
+    secure_session->ssl.out_msg[2] = (unsigned char)(hash_len >> 8);
+    secure_session->ssl.out_msg[3] = (unsigned char)hash_len;
+    secure_session->ssl.out_len[0] = (unsigned char)(secure_session->ssl.out_msglen >> 8);
+    secure_session->ssl.out_len[1] = (unsigned char)secure_session->ssl.out_msglen;
+
+    // calculate the check sum - warnig - does this always get done in every mode?????
+    mbedtls_sha256_update(&(secure_session->ssl.handshake->fin_sha256), secure_session->ssl.out_msg, secure_session->ssl.out_msglen);
 
     /*
     * In case of session resuming, invert the client and server
@@ -927,7 +963,7 @@ extern unsigned char *fnFinished(unsigned char *ptrData)
     }
     else
 #endif /* MBEDTLS_SSL_PROTO_DTLS */
-        memset(secure_session->ssl.out_ctr, 0, 8);
+    memset(secure_session->ssl.out_ctr, 0, 8);
 
     secure_session->ssl.transform_out = secure_session->ssl.transform_negotiate;
     secure_session->ssl.session_out = secure_session->ssl.session_negotiate;
