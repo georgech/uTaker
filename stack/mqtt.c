@@ -443,7 +443,8 @@ static int fnSetNextMQTT_state(unsigned char ucNextState)
 
 #if defined SECURE_MQTT
     extern int fnTLS(USOCKET Socket, unsigned char ucEvent);
-    extern int fnSecureLayerReception(USOCKET Socket, unsigned char *ucPrtData, unsigned short *ptr_usLength);
+    extern int fnSecureLayerReception(USOCKET Socket, unsigned char **ptr_ucPrtData, unsigned short *ptr_usLength);
+    extern int fnSecureLayerTransmission(USOCKET Socket, unsigned char *ucPrtData, unsigned short usLength, unsigned char ucFlag);
 #endif
 
 // Local listener on TCP MQTT port
@@ -523,8 +524,11 @@ static int fnMQTTListener(USOCKET Socket, unsigned char ucEvent, unsigned char *
     case TCP_EVENT_DATA:                                                 // we have new receive data
 #if defined SECURE_MQTT
         if (MQTTS_PORT == usMQTT_port) {                                 // if we are operating in secure mode
-            int iReturn = fnSecureLayerReception(Socket, ucIp_Data, &usPortLen);
-            if (APP_SECURITY_HANDLED != iReturn) {                       // if the handling did not decrypt the content
+            int iReturn = fnSecureLayerReception(Socket, &ucIp_Data, &usPortLen);
+            if ((APP_SECURITY_HANDLED & iReturn) == 0) {                 // if the handling did not decrypt the content to be handled subsequently by the application
+                if ((APP_SECURITY_CONNECTED & iReturn) != 0) {           // if the secure layer has just been established
+                    return (fnSetNextMQTT_state(MQTT_STATE_CONNECTION_OPENED)); // continue with the application operation
+                }
                 return iReturn;                                          // return according to the secure socket layer's response
             }
         }
@@ -727,6 +731,11 @@ static unsigned short fnRegenerate(void)
         usDataLen = fnAddMQTT_remaining_length(ptrMQTT_packet, (unsigned char *)&ucMQTTData[MIN_TCP_HLEN + 1], MQTT_MESSAGE_LEN, ptrRemainingLength, &iVarLenInsert);
     }
     uTaskerMonoTimer(OWN_TASK, MQTT_KEEPALIVE_TIME, T_MQTT_KEEPALIVE_TIMEOUT); // retrigger the keep-alive timer at each transmission
+    #if defined SECURE_MQTT
+    if (MQTTS_PORT == usMQTT_port) {                                     // if we are operating in secure mode
+        return (ucUnacked = fnSecureLayerTransmission(MQTT_TCP_socket, (ucMQTTData + iVarLenInsert + MIN_TCP_HLEN), usDataLen, TCP_FLAG_PUSH));
+    }
+    #endif
     return (ucUnacked = (fnSendTCP(MQTT_TCP_socket, (ucMQTTData + iVarLenInsert), usDataLen, TCP_FLAG_PUSH) > 0)); // send data
 }
 

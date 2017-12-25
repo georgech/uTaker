@@ -1143,15 +1143,16 @@ __PACK_OFF
 #define TCP_WINDOW_UPDATE                   11                           // {4}
 #define TCP_WINDOW_PROBE                    12                           // {4}
 
-#define APP_ACCEPT                          0x00                         // TCP listener return values
-#define APP_SENT_DATA                       0x01
-#define APP_REJECT                          0x02
-#define APP_WAIT                            0x04
-#define APP_REQUEST_CLOSE                   0x08
-#define APP_REJECT_DATA                     0x10
-#define HANDLING_PARTICAL_ACK               0x20
-#define APP_REQUEST_AUTHENTICATION          0x40                         // {21}
-#define APP_SECURITY_HANDLED                0x80
+#define APP_ACCEPT                          0x0000                       // TCP listener return values
+#define APP_SENT_DATA                       0x0001
+#define APP_REJECT                          0x0002
+#define APP_WAIT                            0x0004
+#define APP_REQUEST_CLOSE                   0x0008
+#define APP_REJECT_DATA                     0x0010
+#define HANDLING_PARTICAL_ACK               0x0020
+#define APP_REQUEST_AUTHENTICATION          0x0040                       // {21}
+#define APP_SECURITY_HANDLED                0x0080
+#define APP_SECURITY_CONNECTED              0x0100
 
 
 #define NO_TCP_LISTENER_INSTALLED          -1                            // TCP error codes
@@ -1970,23 +1971,31 @@ typedef struct _PACK stETH_IP_ENCAPSULATION_HEADER                       // fixe
 #define TLS_RSA_WITH_RC4_128_MD5                     0x0004
 #define TLS_EMPTY_RENEGOTIATION_INFO_SCSV            0x00ff
 
-// Secure sockets layer
+
+// Secure sockets layer - messages
 //
-#define TLS_VERSION_1_0                              0x0301
+#define SSL_TLS_CONTENT_CHANGE_CIPHER_SPEC           0x14                // 20
+#define SSL_TLS_CONTENT_ALERT                        0x15                // 21
+#define SSL_TLS_CONTENT_HANDSHAKE                    0x16                // 22
+#define SSL_TLS_CONTENT_APPLICATION_DATA             0x17                // 23
+
+#define TLS_VERSION_1_0                              0x0301              // version number - follows messages (plus length in two bytes)
 #define TLS_VERSION_1_2                              0x0303
+
+// Secure sockets layer - handshakes (followed by three byte length)
+//
+#define SSL_TLS_HANDSHAKE_TYPE_HELLO_REQUEST         0x00
 #define SSL_TLS_HANDSHAKE_TYPE_CLIENT_HELLO          0x01
 #define SSL_TLS_HANDSHAKE_TYPE_SERVER_HELLO          0x02
+#define SSL_TLS_HANDSHAKE_TYPE_HELLO_VERIFY_REQUEST  0x03
+#define SSL_TLS_HANDSHAKE_TYPE_NEW_SESSION_TICKET    0x04
 #define SSL_TLS_HANDSHAKE_TYPE_CERTIFICATE           0x0b                // 11
 #define SSL_TLS_HANDSHAKE_TYPE_SERVER_KEY_EXCHANGE   0x0c                // 12
 #define SSL_TLS_HANDSHAKE_TYPE_CERTIFICATE_REQUEST   0x0d                // 13
 #define SSL_TLS_HANDSHAKE_TYPE_SERVER_HELLO_DONE     0x0e                // 14
 #define SSL_TLS_HANDSHAKE_TYPE_CERTIFICATE_VERIFY    0x0f                // 15
 #define SSL_TLS_HANDSHAKE_TYPE_CLIENT_KEY_EXCHANGE   0x10                // 16
-
-#define SSL_TLS_CONTENT_CHANGE_CIPHER_SPEC           0x14                // 20
-#define SSL_TLS_CONTENT_ALERT                        0x15                // 21
-#define SSL_TLS_CONTENT_HANDSHAKE                    0x16                // 22
-#define SSL_TLS_CONTENT_APPLICATION_DATA             0x17                // 23
+#define SSL_TLS_HANDSHAKE_TYPE_FINISHED              0x14                // 20
 
 #define SSL_TLS_CHANGE_CIPHER_SPEC_MESSAGE           0x01
 

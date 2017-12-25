@@ -1224,7 +1224,7 @@ extern void *uMemcpy(void *ptrTo, const void *ptrFrom, size_t Size)
     unsigned char *ptr1 = (unsigned char *)ptrTo;
     unsigned char *ptr2 = (unsigned char *)ptrFrom;
 
-    while (Size--) {
+    while (Size-- != 0) {
         *ptr1++ = *ptr2++;
     }
 

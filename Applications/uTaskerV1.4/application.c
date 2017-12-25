@@ -673,7 +673,9 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
 #if defined USE_MAINTENANCE && !defined REMOVE_PORT_INITIALISATIONS && (!(defined KWIKSTIK && defined SUPPORT_SLCD))
         fnInitialisePorts();                                             // set up ports as required by the user
 #endif
-        uTaskerStateChange(TASK_DEBUG, UTASKER_ACTIVATE);
+#if defined USE_TELNET || defined USE_TELNET_CLIENT
+        uTaskerStateChange(TASK_DEBUG, UTASKER_ACTIVATE);                // schedule the debug task so that it can configure telnet use
+#endif
 #if defined SERIAL_INTERFACE && defined DEMO_UART                        // {32} this serial interface is used for debug output and menu based control
         if (NO_ID_ALLOCATED == fnSetNewSerialMode(FOR_I_O)) {            // open serial port for I/O
             return;                                                      // if the serial port could not be opened we quit
