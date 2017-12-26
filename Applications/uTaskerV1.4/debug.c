@@ -5940,6 +5940,12 @@ static unsigned short fnMQTT_callback(signed char scEvent, unsigned char *ptrDat
     case MQTT_CLIENT_IDENTIFIER:
         ptrBuf = uStrcpy(ptrBuf, temp_pars->temp_parameters.cDeviceIDName); // supply a string to be used as MQTT device identifier - this should be unique and normally contain only characters 0..9, a..z, A..Z (normally up to 23 bytes)
         break;
+    case MQTT_WILL_TOPIC:                                                // optional connection string fields
+    case MQTT_WILL_MESSAGE:
+    case MQTT_USER_NAME:
+    case MQTT_USER_PASSWORD:
+        ptrBuf = uStrcpy(ptrBuf, "string");
+        break;
     case MQTT_CONNACK_RECEIVED:
         fnDebugMsg("MQTT connected\r\n");
         break;
@@ -6159,14 +6165,14 @@ static void fnDoFTP_TELNET_MQTT(unsigned char ucType, CHAR *ptrInput)
         {
             unsigned char ucDestinationIP[IPV4_LENGTH] = {0};
             if (fnStrIP(ptrInput, ucDestinationIP) != 0) {
-                int iMQTT_mode = UNSECURE_MQTT_CONNECTION;
+                unsigned long ulModeFlags = (UNSECURE_MQTT_CONNECTION | MQTT_CONNECT_FLAG_CLEAN_SESSION);
         #if defined SECURE_MQTT
                 if (DO_MQTTS_CONNECT == ucType) {
-                    iMQTT_mode = SECURE_MQTT_CONNECTION;
+                    ulModeFlags = (SECURE_MQTT_CONNECTION | MQTT_CONNECT_FLAG_CLEAN_SESSION);
                 }
         #endif
                 fnDebugMsg("MQTT client ");
-                if (fnConnectMQTT(ucDestinationIP, fnMQTT_callback, iMQTT_mode) == 0) {
+                if (fnConnectMQTT(ucDestinationIP, fnMQTT_callback, ulModeFlags) == 0) {
                     fnDebugMsg("Connecting...");
                 }
                 else {

@@ -1971,7 +1971,6 @@ typedef struct _PACK stETH_IP_ENCAPSULATION_HEADER                       // fixe
 #define TLS_RSA_WITH_RC4_128_MD5                     0x0004
 #define TLS_EMPTY_RENEGOTIATION_INFO_SCSV            0x00ff
 
-
 // Secure sockets layer - messages
 //
 #define SSL_TLS_CONTENT_CHANGE_CIPHER_SPEC           0x14                // 20
@@ -1998,6 +1997,41 @@ typedef struct _PACK stETH_IP_ENCAPSULATION_HEADER                       // fixe
 #define SSL_TLS_HANDSHAKE_TYPE_FINISHED              0x14                // 20
 
 #define SSL_TLS_CHANGE_CIPHER_SPEC_MESSAGE           0x01
+
+// Alert levels and codes
+//
+#define SSL_TLS_ALERT_LEVEL_WARNING                  0x01
+#define SSL_TLS_ALERT_LEVEL_FATAL                    0x02
+
+#define SSL_TLS_ALERT_MSG_CLOSE_NOTIFY               0x00                // 0
+#define SSL_TLS_ALERT_MSG_UNEXPECTED_MESSAGE         0x0a                // 10
+#define SSL_TLS_ALERT_MSG_BAD_RECORD_MAC             0x14                // 20 
+#define SSL_TLS_ALERT_MSG_DECRYPTION_FAILED          0x15                // 21 
+#define SSL_TLS_ALERT_MSG_RECORD_OVERFLOW            0x16                // 22 
+#define SSL_TLS_ALERT_MSG_DECOMPRESSION_FAILURE      0x1E                // 30 
+#define SSL_TLS_ALERT_MSG_HANDSHAKE_FAILURE          0x28                // 40 
+#define SSL_TLS_ALERT_MSG_NO_CERT                    0x29                // 41 
+#define SSL_TLS_ALERT_MSG_BAD_CERT                   0x2A                // 42 
+#define SSL_TLS_ALERT_MSG_UNSUPPORTED_CERT           0x2B                // 43 
+#define SSL_TLS_ALERT_MSG_CERT_REVOKED               0x2C                // 44 
+#define SSL_TLS_ALERT_MSG_CERT_EXPIRED               0x2D                // 45 
+#define SSL_TLS_ALERT_MSG_CERT_UNKNOWN               0x2E                // 46 
+#define SSL_TLS_ALERT_MSG_ILLEGAL_PARAMETER          0x2F                // 47 
+#define SSL_TLS_ALERT_MSG_UNKNOWN_CA                 0x30                // 48 
+#define SSL_TLS_ALERT_MSG_ACCESS_DENIED              0x31                // 49 
+#define SSL_TLS_ALERT_MSG_DECODE_ERROR               0x32                // 50 
+#define SSL_TLS_ALERT_MSG_DECRYPT_ERROR              0x33                // 51 
+#define SSL_TLS_ALERT_MSG_EXPORT_RESTRICTION         0x3C                // 60 
+#define SSL_TLS_ALERT_MSG_PROTOCOL_VERSION           0x46                // 70 
+#define SSL_TLS_ALERT_MSG_INSUFFICIENT_SECURITY      0x47                // 71 
+#define SSL_TLS_ALERT_MSG_INTERNAL_ERROR             0x50                // 80 
+#define SSL_TLS_ALERT_MSG_INAPROPRIATE_FALLBACK      0x56                // 86 
+#define SSL_TLS_ALERT_MSG_USER_CANCELED              0x5A                // 90 
+#define SSL_TLS_ALERT_MSG_NO_RENEGOTIATION           0x64                // 100
+#define SSL_TLS_ALERT_MSG_UNSUPPORTED_EXT            0x6E                // 110
+#define SSL_TLS_ALERT_MSG_UNRECOGNIZED_NAME          0x70                // 112
+#define SSL_TLS_ALERT_MSG_UNKNOWN_PSK_IDENTITY       0x73                // 115
+#define SSL_TLS_ALERT_MSG_NO_APPLICATION_PROTOCOL    0x78                // 120
 
 typedef struct _PACK stSSL_TLS_EXTENSION
 {
@@ -2316,9 +2350,16 @@ extern int  fnVerifyUser(CHAR *cDecodedUser, unsigned char iCheckUser);
     #define HTML_PASS_CHECK               0x04
     #define FTP_PASS_CHECK                0x08
 
-extern int fnConnectMQTT(unsigned char *ucIP, unsigned short(*fnCallback)(signed char, unsigned char *, unsigned long, unsigned char), int iMode);
-    #define UNSECURE_MQTT_CONNECTION      0
-    #define SECURE_MQTT_CONNECTION        1
+extern int fnConnectMQTT(unsigned char *ucIP, unsigned short(*fnCallback)(signed char, unsigned char *, unsigned long, unsigned char), unsigned long ulModeFlags);
+    #define UNSECURE_MQTT_CONNECTION                 0
+    #define SECURE_MQTT_CONNECTION               0x100
+    #define MQTT_CONNECT_FLAG_CLEAN_SESSION       0x02                   // flag to request that a new session clears and previous session states
+    #define MQTT_CONNECT_FLAG_WILL_FLAG           0x04                   // flag to signal that the "will QoS" and "will retain" fields will be used by the server
+    #define MQTT_CONNECT_FLAG_WILL_QOS_MASK       0x18                   // the QoS level to be used when publishing the "will message" (must be set to 0 if the "will flag" is not set)
+    #define MQTT_CONNECT_FLAG_WILL_RETAIN         0x20                   // flag to signal that the server must publish the "will message" as a retained message (not allowed if the "will flag" is not set)
+    #define MQTT_CONNECT_FLAG_PASSWORD_FLAG       0x40                   // flag to indicate that a password must be present in the payload (not allowed if the user name flag is not set)
+    #define MQTT_CONNECT_FLAG_USER_NAME_FLAG      0x80                   // flag to indicate that a user name must be present in the payload
+
 extern int fnDisconnectMQTT(void);
 extern int fnPublishMQTT(unsigned char ucTopicReference, CHAR *ptrTopic, unsigned char ucQoS);
     #define MQTT_SUBSCRIPTION_QoS_0       0x00
@@ -2333,15 +2374,19 @@ extern int fnUnsubscribeMQTT(unsigned char ucSubscriptionRef);
 #define ERROR_MQTT_NO_SUBSCRIPTION_ENTRY -4
 #define MQTT_RESULT_OK                    0
 #define MQTT_CLIENT_IDENTIFIER            1
-#define MQTT_CONNACK_RECEIVED             2
-#define MQTT_SUBACK_RECEIVED              3
-#define MQTT_UNSUBACK_RECEIVED            4
-#define MQTT_PUBLISH_ACKNOWLEDGED         5
-#define MQTT_PUBLISH_TOPIC                6
-#define MQTT_PUBLISH_DATA                 7
-#define MQTT_TOPIC_MESSAGE                8
-#define MQTT_CONNECTION_CLOSED            9
-#define MQTT_HOST_CLOSED                  10
+#define MQTT_WILL_TOPIC                   2
+#define MQTT_WILL_MESSAGE                 3
+#define MQTT_USER_NAME                    4
+#define MQTT_USER_PASSWORD                5
+#define MQTT_CONNACK_RECEIVED             6
+#define MQTT_SUBACK_RECEIVED              7
+#define MQTT_UNSUBACK_RECEIVED            8
+#define MQTT_PUBLISH_ACKNOWLEDGED         9
+#define MQTT_PUBLISH_TOPIC                10
+#define MQTT_PUBLISH_DATA                 11
+#define MQTT_TOPIC_MESSAGE                12
+#define MQTT_CONNECTION_CLOSED            13
+#define MQTT_HOST_CLOSED                  14
 
 extern int  fnCheckPass(CHAR *ucReference, CHAR *ucNewInput);
 extern CHAR *fnWebStrcpy(CHAR *cStrOut, CHAR *cStrIn);

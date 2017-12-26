@@ -71,13 +71,6 @@
 
 #define MQTT_PROTOCOL_LEVEL                   4                          // version 3.1.1
 
-#define MQTT_CONNECT_FLAG_CLEAN_SESSION       0x02                       // flag to request that a new session clears and previous session states
-#define MQTT_CONNECT_FLAG_WILL_FLAG           0x04                       // flag to signal that the "will QoS" and "will retain" fields will be used by the server
-#define MQTT_CONNECT_FLAG_WILL_QOS_MASK       0x18                       // the QoS level to be used when publishing the "will message" (must be set to 0 if the "will flag" is not set)
-#define MQTT_CONNECT_FLAG_WILL_RETAIN         0x20                       // flag to signal that the server must publish the "will message" as a retained message (not allowed if the "will flag" is not set)
-#define MQTT_CONNECT_FLAG_PASSWORD_FLAG       0x40                       // flag to indicate that a password must be present in the payload (not allowed if the user name flag is not set)
-#define MQTT_CONNECT_FLAG_USER_NAME_FLAG      0x80                       // flag to indicate that a user name must be present in the payload
-
 #define MQTT_STATE_CLOSED                     0x00                       // not connnected
 #define MQTT_STATE_OPEN_REQUESTED             0x11                       // intending to connect
 #define MQTT_STATE_OPEN_SENT                  0x21                       // in the process of connecting to the broker's tcp socket
@@ -154,6 +147,7 @@ static unsigned char cucProtocolNameMQTT[] = { 0x00, 0x04,               // leng
 /* =================================================================== */
 
 static USOCKET        MQTT_TCP_socket = -1;
+static unsigned char  ucSessionFlags = 0;
 static unsigned char  ucMQTT_ip_address[IPV4_LENGTH] = { 0 };
 static unsigned char  ucMQTT_state = MQTT_STATE_CLOSED;
 static unsigned short usPacketIdentifier = 1;                            // the packet identifier that is sent - unique per publish message
@@ -203,7 +197,7 @@ extern void test_secure(USOCKET socket);
 
 // The user calls this to initiate a connection to the MQTT server/broker
 //
-extern int fnConnectMQTT(unsigned char *ucIP, unsigned short(*fnCallback)(signed char, unsigned char *, unsigned long, unsigned char), int iMode)
+extern int fnConnectMQTT(unsigned char *ucIP, unsigned short(*fnCallback)(signed char, unsigned char *, unsigned long, unsigned char), unsigned long ulModeFlags)
 {
     if (MQTT_TCP_socket < 0) {                                           // we have no socket - or called before initialisation complete    
         if ((MQTT_TCP_socket = fnGetTCP_Socket(TOS_MINIMISE_DELAY, INFINITE_TIMEOUT, fnMQTTListener)) < 0) {
@@ -218,13 +212,14 @@ extern int fnConnectMQTT(unsigned char *ucIP, unsigned short(*fnCallback)(signed
     fnUserCallback = fnCallback;
     uMemcpy(ucMQTT_ip_address, ucIP, IPV4_LENGTH);                       // save the address of the MQTT server/broker we want to connect to
     #if defined SECURE_MQTT
-    if (iMode == SECURE_MQTT_CONNECTION) {
-        usMQTT_port = MQTTS_PORT;
+    if ((ulModeFlags & SECURE_MQTT_CONNECTION) != 0) {
+        usMQTT_port = MQTTS_PORT;                                        // secure TCP port number
     }
     else {
-        usMQTT_port = MQTT_PORT;
+        usMQTT_port = MQTT_PORT;                                         // standard TCP port number
     }
     #endif
+    ucSessionFlags = (unsigned char)ulModeFlags;
     #if defined _WINDOWS && defined SECURE_MQTT
    // test_secure(MQTT_TCP_socket);
     #endif
@@ -623,21 +618,33 @@ static unsigned short fnRegenerate(void)
         return 0;
     }
 
-    switch (ucMQTT_state) {                                              // resent last packet
+    switch (ucMQTT_state) {                                              // (re)send last packet
     case MQTT_STATE_CONNECTION_OPENED:                                   // client to broker after establishing the TCP connection
         // The TCP connection has been established so we now request an MQTT connection
         //
         *ptrMQTT_packet++ = (MQTT_CONTROL_PACKET_TYPE_CONNECT | 0);      // flags are not used by the connection connection request
         ptrRemainingLength = ptrMQTT_packet++;                           // the location where the remaining length is to be added
-        uMemcpy(ptrMQTT_packet, cucProtocolNameMQTT, sizeof(cucProtocolNameMQTT)); // add the variable header, beginning with the fixed protocol name
+        uMemcpy(ptrMQTT_packet, cucProtocolNameMQTT, sizeof(cucProtocolNameMQTT)); // add the variable header, beginning with the fixed protocol name "MQTT"
         ptrMQTT_packet += sizeof(cucProtocolNameMQTT);
         *ptrMQTT_packet++ = MQTT_PROTOCOL_LEVEL;
-        *ptrMQTT_packet++ = MQTT_CONNECT_FLAG_CLEAN_SESSION;             // clear any previous session states
+        *ptrMQTT_packet++ = ucSessionFlags;                              // clear any previous session states
         *ptrMQTT_packet++ = (unsigned char)(MQTT_KEEPALIVE_TIME_SECONDS >> 8); // keep-alive time (the broker should disconnect when there is no acivity during this interval)
         *ptrMQTT_packet++ = (unsigned char)(MQTT_KEEPALIVE_TIME_SECONDS);
         // Payload
         //
-        ptrMQTT_packet = fnMQTTUserString(ptrMQTT_packet, MQTT_CLIENT_IDENTIFIER); // callback to get the client idetifier (should normally contain only 0..9, a..z, A..Z characters)
+        ptrMQTT_packet = fnMQTTUserString(ptrMQTT_packet, MQTT_CLIENT_IDENTIFIER); // callback to get the client identifier (should normally contain only 0..9, a..z, A..Z characters)
+        // Optional fields (strictly in this order)
+        //
+        if ((ucSessionFlags & MQTT_CONNECT_FLAG_WILL_FLAG) != 0) {       // if the will flag is set the will topic and will messages must be present
+            ptrMQTT_packet = fnMQTTUserString(ptrMQTT_packet, MQTT_WILL_TOPIC); // callback to get the will topic (should normally contain only 0..9, a..z, A..Z characters)
+            ptrMQTT_packet = fnMQTTUserString(ptrMQTT_packet, MQTT_WILL_MESSAGE); // callback to get the will message (should normally contain only 0..9, a..z, A..Z characters)
+        }
+        if ((ucSessionFlags & MQTT_CONNECT_FLAG_USER_NAME_FLAG) != 0) {  // if the user name flag is set the user name must be present
+            ptrMQTT_packet = fnMQTTUserString(ptrMQTT_packet, MQTT_USER_NAME); // callback to get the will topic (should normally contain only 0..9, a..z, A..Z characters)
+        }
+        if ((ucSessionFlags & MQTT_CONNECT_FLAG_PASSWORD_FLAG) != 0) {   // if the password flag is set the password must be present
+            ptrMQTT_packet = fnMQTTUserString(ptrMQTT_packet, MQTT_USER_PASSWORD); // callback to get the will topic (should normally contain only 0..9, a..z, A..Z characters)
+        }
         break;
 
     case MQTT_STATE_UNSUBSCRIBE:

@@ -64,7 +64,7 @@ static int fnSecureRandomNumber(void *ptr, unsigned char *ptrBuf, size_t length)
 {
     static unsigned char ucPoorRandomForTest = 0;
     while (length-- != 0) {
-        *ptrBuf++ = /*0x55;*/ ucPoorRandomForTest++;
+        *ptrBuf++ = 0x55;// ucPoorRandomForTest++;
     }
     return 0;
 }
@@ -415,14 +415,14 @@ extern unsigned char *fnInsertSignatureAlgorithm(unsigned char *ptrData)
         {
     //        MBEDTLS_SSL_DEBUG_MSG(2, ("<= skip write certificate verify"));
             //ssl->state++;
-            return(0);
+            return(ptrData);
         }
 
         if (secure_session->ssl.client_auth == 0 || mbedtls_ssl_own_cert(&secure_session->ssl) == NULL)
         {
         //    MBEDTLS_SSL_DEBUG_MSG(2, ("<= skip write certificate verify"));
             //ssl->state++;
-            return(0);
+            return(ptrData);
         }
 
         if (mbedtls_ssl_own_key(&secure_session->ssl) == NULL)
@@ -561,6 +561,27 @@ extern unsigned char *fnInsertSignatureAlgorithm(unsigned char *ptrData)
 #define SSL_SOME_MODES_USE_MAC
 #endif
 
+    /* Length of the "epoch" field in the record header */
+static inline size_t ssl_ep_len(const mbedtls_ssl_context *ssl)
+{
+#if defined(MBEDTLS_SSL_PROTO_DTLS)
+    if (ssl->conf->transport == MBEDTLS_SSL_TRANSPORT_DATAGRAM)
+        return(2);
+#else
+    ((void)ssl);
+#endif
+    return(0);
+}
+
+static void fnIncCounter(mbedtls_ssl_context *ssl, unsigned char *ctr)   // increment a 64 bit counter (8 bytes)
+{
+    size_t i;
+    for (i = 8; i > ssl_ep_len(ssl); i--) {
+        if (++ctr[i - 1] != 0) {
+            break;
+        }
+    }
+}
 
 extern unsigned char *fnEncrypt(unsigned char *ptrData, unsigned char *ptrInputData, unsigned long ulLength)
 {
@@ -635,6 +656,8 @@ extern unsigned char *fnEncrypt(unsigned char *ptrData, unsigned char *ptrInputD
             mbedtls_md_hmac_finish( &ssl->transform_out->md_ctx_enc,
                              ssl->out_msg + ssl->out_msglen );
             mbedtls_md_hmac_reset( &ssl->transform_out->md_ctx_enc );
+
+            fnIncCounter(ssl, ssl->out_ctr);                             // increment the output counter
         }
         else
 #endif
@@ -897,18 +920,6 @@ extern unsigned char *fnEncrypt(unsigned char *ptrData, unsigned char *ptrInputD
 }
 
 
-
-/* Length of the "epoch" field in the record header */
-static inline size_t ssl_ep_len(const mbedtls_ssl_context *ssl)
-{
-#if defined(MBEDTLS_SSL_PROTO_DTLS)
-    if (ssl->conf->transport == MBEDTLS_SSL_TRANSPORT_DATAGRAM)
-        return(2);
-#else
-    ((void)ssl);
-#endif
-    return(0);
-}
 
 extern int fnDecrypt(unsigned char **ptrptrInput, unsigned long *ptr_ulLength)
 {
@@ -1400,9 +1411,10 @@ extern int fnDecrypt(unsigned char **ptrptrInput, unsigned long *ptr_ulLength)
     else
 #endif
     {
-        for (i = 8; i > ssl_ep_len(ssl); i--)
-            if (++ssl->in_ctr[i - 1] != 0)
-                break;
+        fnIncCounter(ssl, ssl->in_ctr);                                  // increment the input counter
+      //  for (i = 8; i > ssl_ep_len(ssl); i--)
+        //    if (++ssl->in_ctr[i - 1] != 0)
+          //      break;
 
         /* The loop goes to its end iff the counter is wrapping */
         if (i == ssl_ep_len(ssl))

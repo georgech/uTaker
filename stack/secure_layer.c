@@ -357,18 +357,25 @@ static unsigned char *fnInsertPublicKey(unsigned char *ptrData)
     unsigned char ucLength;
 
     switch (session_cipher) {
-    case TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA:
+    case TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA:                           // tested at AWS
+    case TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA:                             // tested as Mosquitto.org
         ptrData = fnGeneratePublicKey(ptrData);                          // use the security library to generate the key and insert it into the data stream
         break;
     default:
-        _EXCEPTION("cipher suite not supported!");
+        _EXCEPTION("cipher suite not tested!");
         return ptrData;
     }
     ucLength = (ptrData - ptrLength - 1);
     *ptrLength = ucLength;
     return ptrData;
 }
-
+/*
+static const unsigned char referenceTx[] = {
+    0x10, 0x48, 0x00, 0x04, 0x4d, 0x51, 0x54, 0x54, 0x04, 0x82, 0x04, 0xb0, 0x00, 0x08, 0x4d, 0x51, 0x54, 0x54, 0x45, 0x63, 0x68, 0x6f, 0x00, 0x32, 0x3f, 0x53, 0x44, 0x4b, 0x3d, 0x41, 0x6d, 0x61, 0x7a, 0x6f, 0x6e, 0x46,
+    0x72, 0x65, 0x65, 0x52, 0x54, 0x4f, 0x53, 0x26, 0x56, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x3d, 0x56, 0x39, 0x2e, 0x30, 0x2e, 0x30, 0x26, 0x50, 0x6c, 0x61, 0x74, 0x66, 0x6f, 0x72, 0x6d, 0x3d, 0x57, 0x69, 0x6e, 0x53,
+    0x69, 0x6d
+};
+*/
 extern int fnSecureLayerTransmission(USOCKET Socket, unsigned char *ucPrtData, unsigned short usLength, unsigned char ucFlag)
 {
     unsigned char ucTLS_frame[MIN_TCP_HLEN + 1400];                      // temporary buffer for constructing the secure socket layer message in
@@ -378,6 +385,11 @@ extern int fnSecureLayerTransmission(USOCKET Socket, unsigned char *ucPrtData, u
     *ptrData++ = (unsigned char)(TLS_VERSION_1_2 >> 8);
     *ptrData++ = (unsigned char)(TLS_VERSION_1_2);
     ptrRecordLength = ptrData;
+
+/*
+    usLength = sizeof(referenceTx);
+    ucPrtData = (unsigned char *)referenceTx;
+*/
     *ptrData++ = (unsigned char)(usLength >> 8);                         // unencrypted length (will be overwritten)
     *ptrData++ = (unsigned char)(usLength);
     ptrData = fnEncrypt(ptrData, ucPrtData, usLength);
@@ -528,11 +540,16 @@ extern int fnTLS(USOCKET Socket, unsigned char ucEvent)
             *ptrHandshakeLength++ = (unsigned char)(ucChecksumLength >> 8);
             *ptrHandshakeLength = (unsigned char)(ucChecksumLength);
             ulLength = (ptrData - ptrExtensionLength - 3);               // the public key content length
-            *ptrExtensionLength++ = (unsigned char)(ulLength >> 16);
-            *ptrExtensionLength++ = (unsigned char)(ulLength >> 8);
-            *ptrExtensionLength = (unsigned char)(ulLength);
-            usLength = (ptrData - &ucTLS_frame[MIN_TCP_HLEN]);           // complete content length
-            fnHandshakeStats((ucChecksumLength - 4), (ptrHandshakeLength + 5)); // update handshake statistics (calculates handshake check sum)
+            if (ulLength == 0) {                                         // if no certificate verification is needed we skip the message
+                ptrData -= 9;
+            }
+            else {
+                *ptrExtensionLength++ = (unsigned char)(ulLength >> 16);
+                *ptrExtensionLength++ = (unsigned char)(ulLength >> 8);
+                *ptrExtensionLength = (unsigned char)(ulLength);
+                usLength = (ptrData - &ucTLS_frame[MIN_TCP_HLEN]);       // complete content length
+                fnHandshakeStats((ucChecksumLength - 4), (ptrHandshakeLength + 5)); // update handshake statistics (calculates handshake check sum)
+            }
             iTLS_tx_state = 103;                                         // the next step if to send a change cipher spec request
             // Fall through intentionally (assuming enough output message space)
             //
@@ -590,6 +607,24 @@ static unsigned char *fnExtractCertificate(unsigned char *ucPrtData, int iCertif
     return ucPrtData;
 }
 
+static int fnHandleAlert(unsigned char *ucPrtData, unsigned long ulHandshakeSize)
+{
+    fnDebugMsg("Alert ");
+    switch (*ucPrtData++) {
+    case SSL_TLS_ALERT_LEVEL_WARNING:
+        fnDebugMsg("Warning: ");
+        break;
+    case SSL_TLS_ALERT_LEVEL_FATAL:
+        fnDebugMsg("Fatal: ");
+        break;
+    default:
+        fnDebugMsg("?\r\n");
+        return 0;
+    }
+    fnDebugDec(*ucPrtData, WITH_CR_LF);                                  // alert code
+    return 0;
+}
+
 
 // Handle individual handshake fields in the input buffer
 //
@@ -644,7 +679,7 @@ static int fnHandleHandshake(USOCKET Socket, unsigned char *ucPrtData, unsigned 
             unsigned short usExtensionLength;
             unsigned char *ptrExtensionData;
             iNextState = 0;
-            fnDebugMsg("Hello server recognised ");
+            fnDebugMsg("Server hello recognised ");
             if (ptrHello->version[0] == (unsigned char)(TLS_VERSION_1_2 >> 8)) { // we only accept TLSv1.2
                 if (ptrHello->version[1] == (unsigned char)(TLS_VERSION_1_2)) {
                     if (ptrHello->session_id_length <= 32) {
@@ -670,6 +705,7 @@ static int fnHandleHandshake(USOCKET Socket, unsigned char *ucPrtData, unsigned 
                             if (fnHandleSecurityExtension(usExtensionType, usThisExtensionLength, ptrExtensionData) != 0) {
                                 return -1;
                             }
+                            ptrExtensionData += usThisExtensionLength;
                             usThisExtensionLength += 4;                  // account for the extension type and length fields
                             if (usExtensionLength <= usThisExtensionLength) {
                                 break;
@@ -732,7 +768,7 @@ static int fnHandleHandshake(USOCKET Socket, unsigned char *ucPrtData, unsigned 
         }
         break;
     case SSL_TLS_HANDSHAKE_TYPE_FINISHED:
-        fnDebugMsg("Finished recognised ");
+        fnDebugMsg("Finished recognised\r\n");
         return APP_SECURITY_CONNECTED;                                   // the secure connetion is complete so we allow the application layer to use it
     default:
         fnDebugMsg("????");
@@ -851,10 +887,13 @@ extern int fnSecureLayerReception(USOCKET Socket, unsigned char **ptr_ucPrtData,
                 uMemcpy(&ptrReceptionBuffer[ulBufferContent], ucPrtData, ulSave);  // save to the intermediate buffer
                 if ((ulBufferContent + ulSave) < ulHandshakeSize) {      // if the handshake protocol content hasn't yet been completely collected
                     ulBufferContent += ulSave;
-                    return APP_ACCEPT;
+                    return iReturn;
                 }
                 iReturn |= fnHandleHandshake(Socket, ptrReceptionBuffer, ulHandshakeSize, ucPresentHandshakeType); // handle from intermediate buffer
                 uCFree(ptrReceptionBuffer - 4);                          // deallocate intermediate reception buffer memory (note that we set the pointer back to be beginning of the physical buffer)
+                ptrReceptionBuffer = 0;                                  // no memory allocated
+                ulHandshakeSize = ulSave;
+                usRecordLength = 4;                                      // caue record termination
             }
             else {                                                       // this tcp frame contains the complete handshake protocol content
                 iReturn |= fnHandleHandshake(Socket, ucPrtData, ulHandshakeSize, ucPresentHandshakeType); // handle directly in tcp reception buffer
@@ -864,7 +903,9 @@ extern int fnSecureLayerReception(USOCKET Socket, unsigned char **ptr_ucPrtData,
                 usRecordLength = 0;
                 ulBufferContent = 0;
                 iTLS_rx_state = TLS_RX_STATE_IDLE;                       // the record has been completely handled so start searching the next
-                return iReturn;
+                usLength -= (unsigned short)ulHandshakeSize;
+                ucPrtData += ulHandshakeSize;
+                continue;                                                // do not perform usLength and ucPtrData manipulation
             }
             usLength -= (unsigned short)(ulHandshakeSize - ulBufferContent); // remaining in present input buffer
             ucPrtData += (ulHandshakeSize - ulBufferContent);
@@ -876,7 +917,7 @@ extern int fnSecureLayerReception(USOCKET Socket, unsigned char **ptr_ucPrtData,
         case TLS_RX_STATE_ENCRYPTED_ALERT_CONTENT:
         case TLS_RX_STATE_ENCRYPTED_RECORD_CONTENT:
             if (usLength < ulHandshakeSize) {                            // if the complete handshake protocol is not contained in the input buffer
-                _EXCEPTION("No buffering available...");
+                _EXCEPTION("No buffering available (at the moment)...");
             }
             else {                                                       // this tcp frame contains the complete handshake protocol content
                 fnDecrypt(&ucPrtData, &ulHandshakeSize);                 // decrypt the collected content (performed in place, with reduction in output length)
@@ -885,10 +926,10 @@ extern int fnSecureLayerReception(USOCKET Socket, unsigned char **ptr_ucPrtData,
                     *ptr_usLength = (unsigned short)ulHandshakeSize;     // the data length
                     return APP_SECURITY_HANDLED;                         // allow the user to handle the data as if it were received unencoded
                 }
-                else {
-                    if (TLS_RX_STATE_ENCRYPTED_ALERT_CONTENT == iTLS_rx_state) {
-                        iTLS_rx_state = TLS_RX_STATE_ENCRYPTED_ALERT_CONTENT;
-                    }
+                else if (TLS_RX_STATE_ENCRYPTED_ALERT_CONTENT == iTLS_rx_state) {
+                    iReturn |= fnHandleAlert(ucPrtData, ulHandshakeSize);
+                }
+                else {                                                   // decrypted handshake
                     ucPresentHandshakeType = *ucPrtData++;
                     ulHandshakeSize = (*ucPrtData++ << 16);
                     ulHandshakeSize |= (*ucPrtData++ << 8);
@@ -908,23 +949,23 @@ extern int fnSecureLayerReception(USOCKET Socket, unsigned char **ptr_ucPrtData,
             iTLS_rx_state = TLS_RX_STATE_IDLE;                           // continue with next record
             break;
         default:
-            return APP_ACCEPT;
+            return iReturn;
         }
         usLength--;
         ucPrtData++;
     }
-    return APP_ACCEPT;
+    return iReturn;
 }
 
 extern void test_secure(USOCKET socket)
 {
-#if defined _WINDOWS                                                     // test server handshake sequence
+    #if defined _WINDOWS                                                 // test server handshake sequence
     fnTLS(socket, TCP_EVENT_CONNECTED);
     fnHandleHandshake(socket, 0, 0, SSL_TLS_HANDSHAKE_TYPE_SERVER_HELLO);
     fnHandleHandshake(socket, 0, 0, SSL_TLS_HANDSHAKE_TYPE_CERTIFICATE);
     fnHandleHandshake(socket, 0, 0, SSL_TLS_HANDSHAKE_TYPE_SERVER_KEY_EXCHANGE);
     fnHandleHandshake(socket, 0, 0, SSL_TLS_HANDSHAKE_TYPE_CERTIFICATE_REQUEST);
     fnHandleHandshake(socket, 0, 0, SSL_TLS_HANDSHAKE_TYPE_SERVER_HELLO_DONE);
-#endif
+    #endif
 }
 #endif
