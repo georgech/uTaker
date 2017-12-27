@@ -23,7 +23,7 @@
 
 #include "config.h"
 
-#if defined USE_MQTT_CLIENT || defined USE_MQTT_SERVER
+#if defined USE_MQTT_CLIENT
 
 /* =================================================================== */
 /*                          local definitions                          */

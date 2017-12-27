@@ -129,7 +129,7 @@
 
 
 #define MANUFACTURER_ID_SPANSION 0x01                                    // Spansion's manufacturer ID
-#define DEVICE_TYPE              0x40
+#define SPI_FLASH_DEVICE_TYPE    0x40
 
 #define DEVICE_ID_DATA_S25FL116K 0x14                                    // 16MBit / 2MegByte
 #define DEVICE_ID_DATA_S25FL132K 0x16                                    // 32MBit / 4MegByte
@@ -442,7 +442,7 @@ static unsigned char fnCheckS25FL1_K(void)
         }
     } while ((ucID[0] & STATUS_BUSY) != 0);                              // allow operation in progress to complete before reading the chip type
     fnSPI_command(READ_JEDEC_ID, 0, __EXTENDED_CS ucID, sizeof(ucID));
-    if ((ucID[0] == MANUFACTURER_ID_SPANSION) && (ucID[1] == DEVICE_TYPE)) { // Spansion memory part recognised
+    if ((ucID[0] == MANUFACTURER_ID_SPANSION) && (ucID[1] == SPI_FLASH_DEVICE_TYPE)) { // Spansion memory part recognised
         switch (ucID[2]) {
         case DEVICE_ID_DATA_S25FL116K:
             ucReturnType = S25FL116K;

@@ -114,7 +114,7 @@
 
 
 #define MANUFACTURER_ID_SST      0xbf                                    // SST manufacturer's ID
-#define DEVICE_TYPE              0x25
+#define SPI_FLASH_DEVICE_TYPE    0x25
 
 #define DEVICE_ID_DATA_SST_FLASH_A_1M  0x49                              // 1MBit / 128MegByte - A type
 #define DEVICE_ID_DATA_SST_FLASH_A_2M  0x43                              // 2MBit / 256MegByte - A type
@@ -362,7 +362,7 @@ static unsigned char fnCheckSST25xxx(void)
     volatile unsigned char ucID[3];
     unsigned char ucReturnType = NO_SPI_FLASH_AVAILABLE;
     fnSPI_command(READ_MANUFACTURER_ID, 0, __EXTENDED_CS ucID, sizeof(ucID));
-    if ((ucID[0] == MANUFACTURER_ID_SST) && (ucID[1] == DEVICE_TYPE)) {  // SST memory part recognised
+    if ((ucID[0] == MANUFACTURER_ID_SST) && (ucID[1] == SPI_FLASH_DEVICE_TYPE)) { // SST memory part recognised
         switch (ucID[2]) {
         case DEVICE_ID_1_DATA_SST_FLASH_4M:
             ucReturnType = SST25VF040B;

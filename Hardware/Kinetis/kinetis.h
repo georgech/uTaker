@@ -1308,14 +1308,28 @@ typedef struct stRESET_VECTOR
 //
 #if defined KINETIS_KL28 || defined KINETIS_KE15
     #define LPSPI_SPI                                                    // low power SPI
+    #define SPI_FIFO_DEPTH_0    4                                        // LPSPI0 has 4 deep rx/tx FIFO
+    #define SPI_FIFO_DEPTH_1    4                                        // LPSPI1 has 4 deep rx/tx FIFO
 #elif defined KINETIS_KL || defined KINETIS_KE                           // KL and KE usually have SPI instead of DSPI
     #if defined KINETIS_KL82
         #define DSPI_SPI
+        #define SPI_FIFO_DEPTH_0    4                                    // SPI0 has 4 deep rx/tx FIFO
+        #define SPI_FIFO_DEPTH_1    1                                    // SPI1 has 1 deep rx/tx FIFO
     #else
         #define SPI_SPI
+        #define SPI_FIFO_DEPTH_0    1                                    // SPI0 has 1 deep rx/tx FIFO
+        #define SPI_FIFO_DEPTH_1    1                                    // SPI1 has 1 deep rx/tx FIFO
     #endif
 #else
     #define DSPI_SPI
+    #define SPI_FIFO_DEPTH_0    4                                        // SPI0 has 4 deep rx/tx FIFO
+    #if defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66
+        #define SPI_FIFO_DEPTH_1    1                                    // SPI1 has 1 deep rx/tx FIFO
+        #define SPI_FIFO_DEPTH_2    1                                    // SPI2 has 1 deep rx/tx FIFO
+    #else
+        #define SPI_FIFO_DEPTH_1    4                                    // SPI1 has 4 deep rx/tx FIFO
+        #define SPI_FIFO_DEPTH_2    4                                    // SPI2 has 4 deep rx/tx FIFO
+    #endif
 #endif
 
 #if defined KINETIS_K02
@@ -16809,9 +16823,9 @@ extern void fnSimPers(void);
     #define _CONFIG_PORT_OUTPUT_FAST_LOW(ref, pins, chars)  _CONFIG_PORT_OUTPUT(ref, pins, chars)
     #define _CONFIG_PORT_OUTPUT_FAST_HIGH(ref, pins, chars) _CONFIG_PORT_OUTPUT(ref, pins, chars)
 #else
-    #define _CONFIG_PORT_OUTPUT(ref, pins, chars) SIM_SCGC5 |= SIM_SCGC5_PORT##ref; fnConnectGPIO(PORT##ref, pins, (PORT_MUX_GPIO | chars)); GPIO##ref##_PDDR |= (pins); _SIM_PORT_CHANGE; _SIM_PER_CHANGE; _SIM_PER_CHANGE
-    #define _CONFIG_PORT_OUTPUT_FAST_LOW(ref, pins, chars)  SIM_SCGC5 |= SIM_SCGC5_PORT##ref; PORT##ref##_GPCLR = (((pins) << 16) | (chars | PORT_MUX_GPIO)); GPIO##ref##_PDDR |= ((pins) & 0x0000ffff); _SIM_PORT_CHANGE; _SIM_PER_CHANGE
-    #define _CONFIG_PORT_OUTPUT_FAST_HIGH(ref, pins, chars) SIM_SCGC5 |= SIM_SCGC5_PORT##ref; PORT##ref##_GPCHR = (((pins) & 0xffff0000) | chars | PORT_MUX_GPIO); GPIO##ref##_PDDR |= ((pins) & 0xffff0000); _SIM_PORT_CHANGE; _SIM_PER_CHANGE // {65}
+    #define _CONFIG_PORT_OUTPUT(ref, pins, chars) POWER_UP_ATOMIC(5, PORT##ref); fnConnectGPIO(PORT##ref, pins, (PORT_MUX_GPIO | chars)); GPIO##ref##_PDDR |= (pins); _SIM_PORT_CHANGE; _SIM_PER_CHANGE; _SIM_PER_CHANGE
+    #define _CONFIG_PORT_OUTPUT_FAST_LOW(ref, pins, chars)  POWER_UP_ATOMIC(5, PORT##ref); SIM_SCGC5 |= SIM_SCGC5_PORT##ref; PORT##ref##_GPCLR = (((pins) << 16) | (chars | PORT_MUX_GPIO)); GPIO##ref##_PDDR |= ((pins) & 0x0000ffff); _SIM_PORT_CHANGE; _SIM_PER_CHANGE
+    #define _CONFIG_PORT_OUTPUT_FAST_HIGH(ref, pins, chars) POWER_UP_ATOMIC(5, PORT##ref); PORT##ref##_GPCHR = (((pins) & 0xffff0000) | chars | PORT_MUX_GPIO); GPIO##ref##_PDDR |= ((pins) & 0xffff0000); _SIM_PORT_CHANGE; _SIM_PER_CHANGE // {65}
 #endif
 
 // Configure pins as Input, including enabling clock to specified port eg. _CONFIG_PORT_INPUT(A, PORTA_BIT4, PORT_PS_UP_ENABLE);

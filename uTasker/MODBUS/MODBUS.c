@@ -1225,7 +1225,7 @@ static unsigned short fnCRCRTUFrame(unsigned char *ptrFrame, QUEUE_TRANSFER rxFr
         ucIndex = (ucCRC_Lo ^ *ptrFrame++);
         ucCRC_Lo = (ucCRC_Hi ^ ucCRC_lookup[ucIndex]);
         ucCRC_Hi = ucCRC_lookup[ucIndex + 256];
-    } while (--rxFrameLength);
+    } while (--rxFrameLength != 0);
     return ((ucCRC_Hi << 8) | ucCRC_Lo);
         #else                                                            // shift register method
     #define MODBUS_CRC_POLY 0xa001
@@ -1243,7 +1243,7 @@ static unsigned short fnCRCRTUFrame(unsigned char *ptrFrame, QUEUE_TRANSFER rxFr
             }
         }
         ptrFrame++;
-    } while (--rxFrameLength);
+    } while (--rxFrameLength != 0);
     return usCRC;
         #endif
 }
@@ -3627,12 +3627,14 @@ static int fnHandleModbusTcpData(MODBUS_TCP_FRAME *ptrMODBUS_frame, unsigned sho
         if (SerialHandle[modbus_session->ucSerialPort] == 0) {           // check that the serial port is available
             iRtn = (fnSendMODBUS_exception(&modbus_rx_function, MODBUS_EXCEPTION_GATEWAY_PATH_UNAV) > 0);
         }
+        #if defined MODBUS_GATE_WAY_ROUTING
         else {
             MODBUS_ROUTE routing_table;
             routing_table.ucNextRange = 0xff;
             routing_table.ucMODBUSPort = modbus_session->ucSerialPort;
             fnMODBUS_route(TCP_ROUTE_FROM_SLAVE, &modbus_rx_function, &routing_table);
         }
+        #endif
         if (ptrMODBUS_frame->modbus_header.ucUnitIdentifier != BROADCAST_MODBUS_ADDRESS) {
             return iRtn;
         }

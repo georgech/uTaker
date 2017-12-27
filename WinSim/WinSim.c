@@ -3513,24 +3513,26 @@ static unsigned char  ucProgramBuffer[SPI_FLASH_DEVICE_COUNT][256] = {{0}};
 static unsigned char  ucStatus[SPI_FLASH_DEVICE_COUNT][3] = {0};
 static unsigned char  ucWord[SPI_FLASH_DEVICE_COUNT][2] = {0};
 
-#define MANUFACTURER_SPANSION 0x01
-#if defined SPI_FLASH_S25FL164K
-    #define MEMORY_TYPE       0x40
-    #define MEMORY_CAPACITY   0x17
-#elif defined SPI_FLASH_S25FL132K
-    #define MEMORY_TYPE       0x40
-    #define MEMORY_CAPACITY   0x16
-#else
-    #define MEMORY_TYPE       0x40
-    #define MEMORY_CAPACITY   0x16                                       // S25FL116K
-#endif
+#if defined SPI_FLASH_S25FL1_K
+    #define MANUFACTURER_SPANSION 0x01
+    #if defined SPI_FLASH_S25FL164K
+        #define MEMORY_TYPE       0x40
+        #define MEMORY_CAPACITY   0x17
+    #elif defined SPI_FLASH_S25FL132K
+        #define MEMORY_TYPE       0x40
+        #define MEMORY_CAPACITY   0x16
+    #else
+        #define MEMORY_TYPE       0x40
+        #define MEMORY_CAPACITY   0x16                                   // S25FL116K
+    #endif
+#elif defined SPI_FLASH_MX25L
+    #define MANUFACTURER_MACRONIX 0xc2                                   // Macronix's manufacturer ID
+    #define SPI_FLASH_DEVICE_TYPE 0x20
 
-#define MANUFACTURER_MACRONIX 0xc2                                       // Macronix's manufacturer ID
-#define DEVICE_TYPE           0x20
-
-#if defined SPI_FLASH_MX25L12845E
-    #define MEMORY_TYPE       0x20
-    #define MEMORY_CAPACITY   0x18                                       // MX25L12845
+    #if defined SPI_FLASH_MX25L12845E
+        #define MEMORY_TYPE       0x20
+        #define MEMORY_CAPACITY   0x18                                   // MX25L12845
+    #endif
 #endif
 
 
@@ -3707,7 +3709,11 @@ extern unsigned char fnSimS25FL1_K(int iSimType, unsigned char ucTxByte)
         case 0xab:
             if (ulAccessAddress[iSel] == 0) {
                 ulAccessAddress[iSel] = 1;
+    #if defined SPI_FLASH_MX25L
+                return (MANUFACTURER_MACRONIX);                          // Macronix
+    #else
                 return (MANUFACTURER_SPANSION);                          // Spansion
+    #endif
             }
             else if (ulAccessAddress[iSel] == 0x1) {
                 ulAccessAddress[iSel] = 0;

@@ -172,7 +172,7 @@ const UTASK_TASK ctNodes[] = {                                           // we u
 #if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined MANAGED_FILES || defined USB_MSD_HOST
     TASK_MASS_STORAGE,                                                   // {5} mass storage task
 #endif
-#if defined USE_MQTT_CLIENT || defined USE_MQTT_SERVER
+#if defined USE_MQTT_CLIENT || defined USE_MQTT_BROKER
     TASK_MQTT,                                                           // {14} MQTT client/server task
 #endif
 #if defined USE_DHCP_CLIENT
@@ -269,7 +269,7 @@ const UTASKTABLEINIT ctTaskTable[] = {
 #if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined MANAGED_FILES || defined USB_MSD_HOST
     {"MassSt",    fnMassStorage,  MEDIUM_QUE,  (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP}, // mass storage task
 #endif
-#if defined USE_MQTT_CLIENT || defined USE_MQTT_SERVER                   // {14}
+#if defined USE_MQTT_CLIENT || defined USE_MQTT_BROKER                   // {14}
     {"Q-mqtt",    fnMQTT,       SMALL_QUEUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP },
 #endif
 #if defined USE_DHCP_CLIENT
