@@ -1474,7 +1474,7 @@
             #define RTC_CLOCK_PRESCALER_2  100                           // 128, 256, 512, 1024, 2048, 100 or 1000 (valid for bus clock or 1kHz LPO clock)
     #endif
 #else
-    #define SUPPORT_RTC                                                  // support real time clock
+  //#define SUPPORT_RTC                                                  // support real time clock
     #define ALARM_TASK   TASK_APPLICATION                                // alarm is handled by the application task (handled by time keeper if not defined)
     #if defined TWR_KL46Z48M || defined TWR_KL43Z48M
         #define RTC_USES_RTC_CLKIN                                       // TWR-KL46Z48M and TWR-KL43Z48M have a 32kHz oscillator supplying an accurate clock and the OpenSDA interface supplies a clock on the FRDM-KL46Z as long as the debug interface is powered (not possible with P&E debugger version)
@@ -1503,7 +1503,7 @@
     #endif
 #endif
 
-#define SUPPORT_LPTMR                                                    // {28} support low power timer
+//#define SUPPORT_LPTMR                                                  // {28} support low power timer
 #if defined SUPPORT_LPTMR
     //#define TICK_USES_LPTMR                                            // use low power timer for TICK so that it continues to operate in stop based low power modes
     //Select the clock used by the low power timer - if the timer if to continue running in low power modes the clock chosen should continue to run in that mode too
@@ -1570,6 +1570,7 @@
 //#define SPI_FLASH_MULTIPLE_CHIPS                                       // activate when multiple physical chips are used
 
 #if defined NET_KBED                                                     // {16}
+    #define SPI_FLASH_FIFO_DEPTH            SPI0_FIFO_DEPTH
     #if defined SPI_FLASH_S25FL1_K
         #define CS0_LINE                    SPI_PUSHR_PCS0               // CS0 line used when SPI FLASH is enabled
     #else
@@ -1614,6 +1615,7 @@
     #define WAIT_SPI_RECEPTION_END()        while ((SPI0_SR & SPI_SR_RFDF) == 0) {}
     #define CLEAR_RECEPTION_FLAG()          SPI0_SR |= SPI_SR_RFDF
 #elif defined NET_K60 || defined FRDM_K64F || defined FRDM_K22F || defined TWR_K22F120M || defined FreeLON
+    #define SPI_FLASH_FIFO_DEPTH            SPI0_FIFO_DEPTH
     #define CS0_LINE                        SPI_PUSHR_PCS0               // CS0 line used when SPI FLASH is enabled
     #define CS1_LINE                                                     // CS1 line used when extended SPI FLASH is enabled
     #define CS2_LINE                                                     // CS2 line used when extended SPI FLASH is enabled
@@ -1654,6 +1656,7 @@
     #define SET_SPI_FLASH_MODE()                                         // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
     #define REMOVE_SPI_FLASH_MODE()                                      // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
 #elif defined TWR_K24F120M
+    #define SPI_FLASH_FIFO_DEPTH            SPI1_FIFO_DEPTH
     #define CS0_LINE                        SPI_PUSHR_PCS0               // CS0 line used when SPI FLASH is enabled
     #define CS1_LINE                                                     // CS1 line used when extended SPI FLASH is enabled
     #define CS2_LINE                                                     // CS2 line used when extended SPI FLASH is enabled
@@ -1690,6 +1693,7 @@
     // - SPI0_MISO PTC-7
     // - SPI Flash reset PTC-1
     //
+    #define SPI_FLASH_FIFO_DEPTH            SPI0_FIFO_DEPTH
     #define CS0_LINE                        PORTC_BIT2                   // CS0 line used when SPI FLASH is enabled
     #define CS1_LINE                                                     // CS1 line used when extended SPI FLASH is enabled
     #define CS2_LINE                                                     // CS2 line used when extended SPI FLASH is enabled
@@ -1734,6 +1738,7 @@
     // - SPI1_MOSI PTD-6 (J2-8)
     // - SPI1_MISO PTD-7 (J2-10)
     //
+    #define SPI_FLASH_FIFO_DEPTH            SPI1_FIFO_DEPTH
     #define CS0_LINE                        PORTE_BIT4                   // CS0 line used when SPI FLASH is enabled
     #define CS1_LINE                                                     // CS1 line used when extended SPI FLASH is enabled
     #define CS2_LINE                                                     // CS2 line used when extended SPI FLASH is enabled
@@ -1777,6 +1782,7 @@
     // - SPI1_MOSI PTE-1 (J2-20)
     // - SPI1_MISO PTE-3 (J9-11)
     //
+    #define SPI_FLASH_FIFO_DEPTH            SPI1_FIFO_DEPTH
     #define CS0_LINE                        PORTE_BIT4                   // CS0 line used when SPI FLASH is enabled
     #define CS1_LINE                                                     // CS1 line used when extended SPI FLASH is enabled
     #define CS2_LINE                                                     // CS2 line used when extended SPI FLASH is enabled
@@ -1820,6 +1826,7 @@
     // - SPI1_SOUT PTE-2
     // - SPI1_SIN  PTE-4
     //
+    #define SPI_FLASH_FIFO_DEPTH            SPI1_FIFO_DEPTH
     #define CS0_LINE                        SPI_PUSHR_PCS0               // CS0 line used when SPI FLASH is enabled
     #define CS1_LINE                                                     // CS1 line used when extended SPI FLASH is enabled
     #define CS2_LINE                                                     // CS2 line used when extended SPI FLASH is enabled
@@ -1829,8 +1836,12 @@
     #define SPI_TX_BYTE                     SPI1_PUSHR                   // for simulator
     #define SPI_RX_BYTE                     SPI1_POPR                    // for simulator
 
+    #define SPI_FLASH_RESET                 (PORTE_BIT0)                 // spi flash device reset input
+    #define SPI_FLASH_WP                    (PORTE_BIT3)                 // spi flash device write protect input
+
     #define POWER_UP_SPI_FLASH_INTERFACE()  POWER_UP_ATOMIC(6, SPI1)
-    #define CONFIGURE_SPI_FLASH_INTERFACE() _CONFIG_PERIPHERAL(E, 5, (PE_5_SPI1_PCS0 | PORT_SRE_FAST | PORT_DSE_HIGH)); \
+    #define CONFIGURE_SPI_FLASH_INTERFACE() _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_LOW(E, (SPI_FLASH_RESET | SPI_FLASH_WP), (SPI_FLASH_RESET | SPI_FLASH_WP), (PORT_SRE_SLOW | PORT_DSE_LOW)); \
+                                            _CONFIG_PERIPHERAL(E, 5, (PE_5_SPI1_PCS0 | PORT_SRE_FAST | PORT_DSE_HIGH)); \
                                             _CONFIG_PERIPHERAL(E, 1, PE_1_SPI1_SCK); \
                                             _CONFIG_PERIPHERAL(E, 2, (PE_2_SPI1_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); \
                                             _CONFIG_PERIPHERAL(E, 4, (PE_4_SPI1_SIN | PORT_PS_UP_ENABLE)); \
@@ -1929,6 +1940,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #endif
 #else                                                                    // SPI flash configuration not assigned to a specific board
   //#define MANUAL_FLASH_CS_CONTROL
+    #define SPI_FLASH_FIFO_DEPTH            SPI2_FIFO_DEPTH
   //#define CS0_LINE                        PORTE_BIT4                   // CS0 line used when SPI FLASH is enabled
     #define ASSERT_CS_LINE(ulChipSelectLine) _CLEARBITS(E, ulChipSelectLine)
     #define NEGATE_CS_LINE(ulChipSelectLine) _SETBITS(E, ulChipSelectLine)

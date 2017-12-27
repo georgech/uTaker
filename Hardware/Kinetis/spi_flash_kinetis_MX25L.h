@@ -19,6 +19,9 @@
 #if defined SPI_FLASH_MX25L
 
 #if defined _SPI_DEFINES
+    #if !defined SPI_FLASH_FIFO_DEPTH
+        #define SPI_FLASH_FIFO_DEPTH     1                               // if no fifo depth is specified we assume that it is 1
+    #endif
     #if defined SPI_FLASH_MULTIPLE_CHIPS
         #define __EXTENDED_CS     iChipSelect,
         static unsigned char fnCheckMX25L(int iChipSelect);

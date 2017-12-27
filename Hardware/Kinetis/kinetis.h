@@ -1308,27 +1308,27 @@ typedef struct stRESET_VECTOR
 //
 #if defined KINETIS_KL28 || defined KINETIS_KE15
     #define LPSPI_SPI                                                    // low power SPI
-    #define SPI_FIFO_DEPTH_0    4                                        // LPSPI0 has 4 deep rx/tx FIFO
-    #define SPI_FIFO_DEPTH_1    4                                        // LPSPI1 has 4 deep rx/tx FIFO
+    #define SPI0_FIFO_DEPTH     4                                        // LPSPI0 has 4 deep rx/tx FIFO
+    #define SPI1_FIFO_DEPTH     4                                        // LPSPI1 has 4 deep rx/tx FIFO
 #elif defined KINETIS_KL || defined KINETIS_KE                           // KL and KE usually have SPI instead of DSPI
     #if defined KINETIS_KL82
         #define DSPI_SPI
-        #define SPI_FIFO_DEPTH_0    4                                    // SPI0 has 4 deep rx/tx FIFO
-        #define SPI_FIFO_DEPTH_1    1                                    // SPI1 has 1 deep rx/tx FIFO
+        #define SPI0_FIFO_DEPTH    4                                     // SPI0 has 4 deep rx/tx FIFO
+        #define SPI1_FIFO_DEPTH    1                                     // SPI1 has 1 deep rx/tx FIFO
     #else
         #define SPI_SPI
-        #define SPI_FIFO_DEPTH_0    1                                    // SPI0 has 1 deep rx/tx FIFO
-        #define SPI_FIFO_DEPTH_1    1                                    // SPI1 has 1 deep rx/tx FIFO
+        #define SPI0_FIFO_DEPTH    1                                     // SPI0 has 1 deep rx/tx FIFO
+        #define SPI1_FIFO_DEPTH    1                                     // SPI1 has 1 deep rx/tx FIFO
     #endif
 #else
     #define DSPI_SPI
-    #define SPI_FIFO_DEPTH_0    4                                        // SPI0 has 4 deep rx/tx FIFO
+    #define SPI0_FIFO_DEPTH        4                                     // SPI0 has 4 deep rx/tx FIFO
     #if defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66
-        #define SPI_FIFO_DEPTH_1    1                                    // SPI1 has 1 deep rx/tx FIFO
-        #define SPI_FIFO_DEPTH_2    1                                    // SPI2 has 1 deep rx/tx FIFO
+        #define SPI1_FIFO_DEPTH    1                                     // SPI1 has 1 deep rx/tx FIFO
+        #define SPI2_FIFO_DEPTH    1                                     // SPI2 has 1 deep rx/tx FIFO
     #else
-        #define SPI_FIFO_DEPTH_1    4                                    // SPI1 has 4 deep rx/tx FIFO
-        #define SPI_FIFO_DEPTH_2    4                                    // SPI2 has 4 deep rx/tx FIFO
+        #define SPI1_FIFO_DEPTH    4                                     // SPI1 has 4 deep rx/tx FIFO
+        #define SPI2_FIFO_DEPTH    4                                     // SPI2 has 4 deep rx/tx FIFO
     #endif
 #endif
 
