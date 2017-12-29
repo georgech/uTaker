@@ -2078,7 +2078,7 @@ static void fnTestRTC(void)
 }
 #endif
 
-#if defined SUPPORT_SLCD && defined SUPPORT_RTC                          // {60}
+#if defined SUPPORT_SLCD && (defined SUPPORT_RTC || defined STOP_WATCH_APPLICATION) // {60}
     #include "slcd_time.h"                                               // {95} hardware specific time drawing functions
 #endif
 
@@ -2722,6 +2722,60 @@ QUEUE_HANDLE fnGetUART_Handle(void)
     return SerialPortID;
 }
     #endif
+#endif
+
+#if defined SUPPORT_SLCD && defined STOP_WATCH_APPLICATION
+// Called at 10ms intervals from the tick interrupt
+//
+extern void fnStopWatchApplication(void)
+{
+    static int iTimerState = 0;
+    static unsigned char ulCount_ms = 0;
+    static unsigned char ulCount_s = 0;
+    int iStopKeyState = (_READ_PORT_MASK(A, SWITCH_1) == 0);
+    if (_READ_PORT_MASK(C, SWITCH_3) == 0) {                             // start key pressed
+        // Start counting
+        //
+        if (1 != iTimerState) {                                          // if not running
+            ulCount_ms = ulCount_s = 0;                                  // reset
+            iTimerState = 1;                                             // start running
+        }
+    }
+    switch (iTimerState) {
+    case 0:
+        break;
+    case 4:
+        if (0 == iStopKeyState) {
+            iTimerState = 1;
+        }
+        // Fall through intentionally
+        //
+    case 1:                                                              // stop watch running
+        fnTimeDisplay(ulCount_s, ulCount_ms, 0);
+        if ((1 == iTimerState) && (1 == iStopKeyState)) {                // if stop is pressed
+            iTimerState = 2;
+        }
+        // Fall through intentionally
+        //
+    case 2:                                                              // stopped
+        if ((2 == iTimerState) && (0 == iStopKeyState)) {                // if stop is released again
+            iTimerState = 3;
+        }
+        // Fall through intentionally
+        //
+    case 3:
+        if ((3 == iTimerState) && (0 != iStopKeyState)) {                // if stop is pressed again
+            iTimerState = 4;
+        }
+        if (++ulCount_ms > 99) {                                         // keep running in background
+            ulCount_ms = 0;
+            if (++ulCount_s > 99) {
+                iTimerState = 2;                                         // freeze at maximum value
+            }
+        }
+        break;
+    }
+}
 #endif
 
 // The user has the chance to configure things very early after startup (Note - heap not yet available!)

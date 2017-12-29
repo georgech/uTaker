@@ -341,6 +341,7 @@ static void fnTimeDisplay(unsigned char ucHours, unsigned char ucMinutes, unsign
 #define SEVEN_SEGMENT_1_T_R         0x04000000                           // 27-3
 #define SEVEN_SEGMENT_1_B_R         0x02000000                           // 27-2
 
+#define SEVEN_SEGMENT_1_DOT         0x01000000                           // 27-1
 
 #define SEVEN_SEGMENT_1_ALL         (SEVEN_SEGMENT_1_TOP | SEVEN_SEGMENT_1_MID | SEVEN_SEGMENT_1_BOT | SEVEN_SEGMENT_1_T_L | SEVEN_SEGMENT_1_B_L | SEVEN_SEGMENT_1_T_R | SEVEN_SEGMENT_1_B_R)
 #define SEVEN_SEGMENT_1_0           (SEVEN_SEGMENT_1_ALL & ~(SEVEN_SEGMENT_1_MID))
@@ -425,6 +426,12 @@ static const unsigned long ulSegment2[] = {                              // tens
     SEVEN_SEGMENT_2_3,
     SEVEN_SEGMENT_2_4,
     SEVEN_SEGMENT_2_5,
+    #if defined STOP_WATCH_APPLICATION                                   // add 6..9
+    SEVEN_SEGMENT_2_6,
+    SEVEN_SEGMENT_2_7,
+    SEVEN_SEGMENT_2_8,
+    SEVEN_SEGMENT_2_9,
+    #endif
 };
 
 static const unsigned long ulSegment3[] = {                              // minutes 0..9
@@ -456,8 +463,41 @@ static void fnTimeDisplay(unsigned char ucHours, unsigned char ucMinutes, unsign
         ulRegister = (SEVEN_SEGMENT_0_TOP | SEVEN_SEGMENT_0_T_R);        // prepare the tens of hours ('2')
         WRITE_SLCD(23TO20, (SEVEN_SEGMENT_0_MID | SEVEN_SEGMENT_0_BOT | SEVEN_SEGMENT_0_B_L));
         break;
+    #if defined STOP_WATCH_APPLICATION                                   // add 3..9
+    case 3:
+        ulRegister = (SEVEN_SEGMENT_0_TOP | SEVEN_SEGMENT_0_T_R);        // prepare the tens of hours ('3')
+        WRITE_SLCD(23TO20, (SEVEN_SEGMENT_0_MID | SEVEN_SEGMENT_0_BOT | SEVEN_SEGMENT_0_B_R));
+        break;
+    case 4:
+        ulRegister = (SEVEN_SEGMENT_0_T_R | SEVEN_SEGMENT_0_B_R);        // prepare the tens of hours ('4')
+        WRITE_SLCD(23TO20, (SEVEN_SEGMENT_0_T_L | SEVEN_SEGMENT_0_MID));
+        break;
+    case 5:
+        ulRegister = (SEVEN_SEGMENT_0_TOP | SEVEN_SEGMENT_0_B_R);        // prepare the tens of hours (54')
+        WRITE_SLCD(23TO20, (SEVEN_SEGMENT_0_T_L | SEVEN_SEGMENT_0_MID | SEVEN_SEGMENT_0_BOT));
+        break;
+    case 6:
+        ulRegister = (SEVEN_SEGMENT_0_TOP | SEVEN_SEGMENT_0_B_R);        // prepare the tens of hours ('6')
+        WRITE_SLCD(23TO20, (SEVEN_SEGMENT_0_T_L | SEVEN_SEGMENT_0_MID | SEVEN_SEGMENT_0_B_L | SEVEN_SEGMENT_0_BOT));
+        break;
+    case 7:
+        ulRegister = (SEVEN_SEGMENT_0_TOP | SEVEN_SEGMENT_0_T_R | SEVEN_SEGMENT_0_B_R); // prepare the tens of hours ('7')
+        WRITE_SLCD(23TO20, 0);
+        break;
+    case 8:
+        ulRegister = (SEVEN_SEGMENT_0_TOP | SEVEN_SEGMENT_0_T_R | SEVEN_SEGMENT_0_B_R); // prepare the tens of hours ('8')
+        WRITE_SLCD(23TO20, (SEVEN_SEGMENT_0_T_L | SEVEN_SEGMENT_0_MID | SEVEN_SEGMENT_0_B_L | SEVEN_SEGMENT_0_BOT));
+        break;
+    case 9:
+        ulRegister = (SEVEN_SEGMENT_0_TOP | SEVEN_SEGMENT_0_T_R | SEVEN_SEGMENT_0_B_R); // prepare the tens of hours ('9')
+        WRITE_SLCD(23TO20, (SEVEN_SEGMENT_0_T_L | SEVEN_SEGMENT_0_MID | SEVEN_SEGMENT_0_BOT));
+        break;
+    #endif
     }
     ucHours -= ((ucHours/10) * 10);
+    #if defined STOP_WATCH_APPLICATION
+    ulRegister |= SEVEN_SEGMENT_1_DOT; // add decimal place
+    #endif
     WRITE_SLCD(27TO24, (ulRegister | ulSegment1[ucHours]));              // write hours
     ulRegister = (ulSegment2[ucMinutes/10] & SEVEN_SEGMENT_2_ALL);       // prepare tens of minutes
     ucMinutes -= ((ucMinutes/10) * 10);
@@ -465,7 +505,9 @@ static void fnTimeDisplay(unsigned char ucHours, unsigned char ucMinutes, unsign
     WRITE_SLCD(43TO40, ulRegister);                                      // write tens of minutes and part of minutes
     ulRegister = LCD_WF47TO44;                                           // read present value
     ulRegister &= ~SEVEN_SEGMENT_3_44_MASK;                              // mask out the minutes part
-    ulRegister ^= SEGMENT_COLON;                                         // toggle ':'
+    #if !defined STOP_WATCH_APPLICATION
+        ulRegister ^= SEGMENT_COLON;                                     // toggle ':'
+    #endif
     ulRegister |= (ulSegment3[ucMinutes] & SEVEN_SEGMENT_3_44_MASK);     // add second part of minutes
     WRITE_SLCD(47TO44, ulRegister);                                      // complete minutes and colon blink
 }
@@ -819,18 +861,20 @@ static void fnTimeDisplay(unsigned char ucHours, unsigned char ucMinutes, unsign
 }
 #endif
 
+#if (defined SUPPORT_SLCD || defined BLAZE_DIGITAL_WATCH) && defined SUPPORT_RTC
 static void _rtc_second_interrupt(void)                                  // seconds interrupt call-back handler
 {
     RTC_SETUP rtc_setup;
     rtc_setup.command = RTC_GET_TIME;
     fnConfigureRTC(&rtc_setup);                                          // get the present time
-#if defined KINETIS_KL
+    #if defined KINETIS_KL
     if (IS_POWERED_UP(5, SLCD)) {                                        // display time as long as the SLCD has been enabled
         fnTimeDisplay(rtc_setup.ucHours, rtc_setup.ucMinutes, rtc_setup.ucSeconds);
     }
-#else
+    #else
     if (IS_POWERED_UP(3, SLCD)) {                                        // display time as long as the SLCD has been enabled
         fnTimeDisplay(rtc_setup.ucHours, rtc_setup.ucMinutes, rtc_setup.ucSeconds);
     }
-#endif
+    #endif
 }
+#endif

@@ -313,7 +313,22 @@ static CHAR *cDedicated[PORT_WIDTH] = {                                  // dedi
 
 static int ADC_DEDICATED_CHANNEL[PORT_WIDTH] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ADC_SE23_SINGLE, ADC_SE23_SINGLE, ADC_SE18_SINGLE, ADC_SE21_SINGLE, ADC_SE22_SINGLE, 0, 0, ADC_DM3_SINGLE, ADC_DP3_SINGLE, ADC_DM3_SINGLE, ADC_DP3_SINGLE, ADC_DM1_SINGLE, ADC_DP1_SINGLE, ADC_DM1_SINGLE, ADC_DP1_SINGLE, 0, 0, 0, 0, 0};
 static int ADC_DEDICATED_MODULE[PORT_WIDTH]  = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,               0,               1,               0,               0,               0, 0, 0,              0,              1,              1,              1,              1,              0,              0,              0, 0, 0, 0, 0};
-static int ADC_MUX_CHANNEL[PORTS_AVAILABLE][PORT_WIDTH] = {0};
+static int ADC_MUX_CHANNEL[PORTS_AVAILABLE][PORT_WIDTH] = {
+    { -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 }, // port A
+    { -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 }, // port B
+#if PORTS_AVAILABLE > 2
+    { -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 }, // port C
+#endif
+#if PORTS_AVAILABLE > 3
+    { -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 }, // port D
+#endif
+#if PORTS_AVAILABLE > 4
+    { -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 }, // port E
+#endif
+#if PORTS_AVAILABLE > 5
+    { -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 }, // port F
+#endif
+};
 
 
 #if defined DEVICE_196_PIN

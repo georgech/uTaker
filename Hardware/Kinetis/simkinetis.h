@@ -2078,7 +2078,7 @@ typedef struct stKINETIS_SIM
         unsigned long SIM_PCSR;
     #else
         #if defined KINETIS_KL && !defined KINETIS_KL82                  // {15}
-            unsigned long ulRes3[34];
+            unsigned long ulRes3[39];
             unsigned long SIM_COPC;
             unsigned long SIM_SRVCOPC;
         #elif defined KINETIS_K_FPU || (KINETIS_MAX_SPEED > 100000000)

@@ -1550,7 +1550,6 @@
 #endif
 
 #define TICK_INTERRUPT()                                                 // user callback from system TICK (dummy if left empty)
-
 #if defined MONITOR_PERFORMANCE
     #if PITS_AVAILABLE > 2                                               // PIT3 is used to monitor task durations
         #define INITIALISE_MONITOR_TIMER()        POWER_UP_ATOMIC(6, PIT); PIT_MCR = 0; LOAD_PIT(3, 0xffffffff); PIT_TCTRL3 = PIT_TCTRL_TEN
@@ -1820,7 +1819,7 @@
             
     #define SET_SPI_FLASH_MODE()                                         // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
     #define REMOVE_SPI_FLASH_MODE()                                      // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
-#elif defined FRDM_KL82Z || defined TWR_KL82Z72M
+#elif defined FRDM_K82F || defined FRDM_KL82Z || defined TWR_KL82Z72M
     // - SPI1_CS   PTE-5
     // - SPI1_SCK  PTE-1
     // - SPI1_SOUT PTE-2
@@ -7018,10 +7017,15 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(A, (SWITCH_1), PORT_PS_UP_ENABLE); _CONFIG_PORT_INPUT_FAST_LOW(C, (SWITCH_3), PORT_PS_UP_ENABLE) // configure as input
     #define WATCHDOG_DISABLE()      (_READ_PORT_MASK(C, SWITCH_3) == 0) // hold switch 3 down at reset to disable watchdog
     #define ACTIVATE_WATCHDOG()     SIM_COPC = (SIM_COPC_COPCLKS_1K | SIM_COPC_COPT_LONGEST) // 1.024s watchdog timeout
-    #if defined SUPPORT_SLCD && !defined SUPPORT_RTC
+    #if defined SUPPORT_SLCD && !defined SUPPORT_RTC && !defined SUPPORT_SLCD
         #define TOGGLE_WATCHDOG_LED()  _TOGGLE_PORT(E, BLINK_LED); if (IS_POWERED_UP(5, SLCD)) { TOGGLE_SLCD(44, 0x01); } // toggle LED and blink LCD ":"
     #else
         #define TOGGLE_WATCHDOG_LED()  _TOGGLE_PORT(E, BLINK_LED)
+    #endif
+
+    #if defined SUPPORT_SLCD && defined STOP_WATCH_APPLICATION
+        #undef TICK_INTERRUPT
+        #define TICK_INTERRUPT()  fnStopWatchApplication()
     #endif
 
     #define CONFIG_TEST_OUTPUT()                                         // we use DEMO_LED_2 which is configured by the user code (and can be disabled in parameters if required)

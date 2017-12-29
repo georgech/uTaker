@@ -350,11 +350,41 @@ static CHAR *cDedicated[PORT_WIDTH] = {                                  // dedi
 #if defined KINETIS_K64
     static int ADC_DEDICATED_CHANNEL[PORT_WIDTH] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ADC_SE23_SINGLE, ADC_SE23_SINGLE, ADC_SE18_SINGLE, ADC_SE16_SINGLE, ADC_SE16_SINGLE, ADC_SE23_SINGLE, 0, 0, 0, ADC_DM0_SINGLE, ADC_DP0_SINGLE, ADC_DM0_SINGLE, ADC_DP0_SINGLE, ADC_DM1_SINGLE, ADC_DP1_SINGLE, ADC_DM1_SINGLE, ADC_DP1_SINGLE, 0, 0, 0, 0, 0};
     static int ADC_DEDICATED_MODULE[PORT_WIDTH]  = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2,               1,               2,               1,               2,               1,               0, 0, 0, 2,              2,              1,              1,              2,              2,              1,              1,              0, 0, 0, 0, 0}; // ADC0 is named 1, ADC1 is named 2 etc.
-    static int ADC_MUX_CHANNEL[PORTS_AVAILABLE][PORT_WIDTH] = {0};           // not yet controlled
+    static int ADC_MUX_CHANNEL[PORTS_AVAILABLE][PORT_WIDTH] = {
+        { -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 }, // port A
+        { -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 }, // port B
+    #if PORTS_AVAILABLE > 2
+        { -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 }, // port C
+    #endif
+    #if PORTS_AVAILABLE > 3
+        { -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 }, // port D
+    #endif
+    #if PORTS_AVAILABLE > 4
+        { -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 }, // port E
+    #endif
+    #if PORTS_AVAILABLE > 5
+        { -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 }, // port F
+    #endif
+    };
 #else
     static int ADC_DEDICATED_CHANNEL[PORT_WIDTH] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ADC_SE16_SINGLE, 0, 0, 0, 0, ADC_DM1_SINGLE, ADC_DP1_SINGLE, ADC_DM1_SINGLE, ADC_DP1_SINGLE};
     static int ADC_DEDICATED_MODULE[PORT_WIDTH]  = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 2, 2, 1, 1}; // ADC0 is named 1, ADC1 is named 2 etc.
-    static int ADC_MUX_CHANNEL[PORTS_AVAILABLE][PORT_WIDTH] = {0};           // not yet controlled
+    static int ADC_MUX_CHANNEL[PORTS_AVAILABLE][PORT_WIDTH] = {
+        { -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 }, // port A
+        { -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 }, // port B
+    #if PORTS_AVAILABLE > 2
+        { -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 }, // port C
+    #endif
+    #if PORTS_AVAILABLE > 3
+        { -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 }, // port D
+    #endif
+    #if PORTS_AVAILABLE > 4
+        { -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 }, // port E
+    #endif
+    #if PORTS_AVAILABLE > 5
+        { -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 }, // port F
+    #endif
+    };
 #endif
 
 

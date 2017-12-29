@@ -282,7 +282,6 @@
     #define DEVICE_WITHOUT_ETHERNET                                      // KEA doesn't have Ethernet controller
     #define DEVICE_WITHOUT_USB                                           // KEA doesn't have USB
 #elif defined FRDM_KL02Z
-  //#define DEV2                                                         // temporary development hardware
     #define TARGET_HW            "FRDM-KL02Z Kinetis"
     #undef MONITOR_PERFORMANCE                                           // KL02 has no PIT
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((2 * 1024) * MEM_FACTOR)
@@ -291,16 +290,6 @@
     #define DEVICE_WITHOUT_CAN                                           // KL doesn't have CAN controller
     #define DEVICE_WITHOUT_ETHERNET                                      // KL doesn't have Ethernet controller
     #define DEVICE_WITHOUT_USB                                           // KL02 doesn't have USB
-
-    #if defined DEV2
-        #undef USE_MAINTENANCE
-        #define REMOVE_PORT_INITIALISATIONS
-        #define I2C_INTERFACE
-        #define NUMBER_I2C       (I2C_AVAILABLE)                         // I2C interfaces available
-        #define I2C_SLAVE_MODE                                           // support slave mode
-          //#define I2C_SLAVE_TX_BUFFER                                  // support preparing slave transmissions with fnWrite()
-          //#define I2C_SLAVE_RX_BUFFER                                  // support slave reception buffer for fnRead()
-    #endif
 #elif defined FRDM_KL03Z
     #define TARGET_HW            "FRDM-KL03Z Kinetis"
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((1.0 * 1024) * MEM_FACTOR)
@@ -456,6 +445,11 @@
     #define KINETIS_KL43
     #define DEVICE_WITHOUT_CAN                                           // KL doesn't have CAN controller
     #define DEVICE_WITHOUT_ETHERNET                                      // KL doesn't have Ethernet controller
+    #define STOP_WATCH_APPLICATION
+    #if defined STOP_WATCH_APPLICATION
+        #undef _TICK_RESOLUTION
+        #define _TICK_RESOLUTION     TICK_UNIT_MS(10) 
+    #endif
 #elif defined FRDM_KL46Z
     #define TARGET_HW            "FRDM-KL46Z"
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((12 * 1024) * MEM_FACTOR)
@@ -838,7 +832,7 @@
   //#define I2C_EEPROM_FILE_SYSTEM                                       // we have an EEPROM based external file system via I2C interface
   //#define SPI_EEPROM_FILE_SYSTEM                                       // we have an EEPROM based external file system via SPI interface
   //#define EXT_FLASH_FILE_SYSTEM                                        // we have a file system in external FLASH memory
-    #if !defined NAND_FLASH_FAT && !defined DEV1 && !defined DEV2
+    #if !defined NAND_FLASH_FAT && !defined DEV1
         #define FLASH_FILE_SYSTEM                                        // we have an internal file system in FLASH
     #endif
   //#define NVRAM                                                        // we have an external file system in non-volatile RAM
@@ -1042,7 +1036,7 @@
     #define NUMBER_EXTERNAL_SERIAL     0
 #endif
 
-#if defined USE_MODBUS && defined MODBUS_GATE_WAY_QUEUE && !defined SUPPORT_FLUSH
+#if defined USE_MODBUS && (defined MODBUS_GATE_WAY_QUEUE || defined MODBUS_RTU) && !defined SUPPORT_FLUSH
     #define SUPPORT_FLUSH                                                // support queue flush for use by the MODBUS gateway
 #endif
 
@@ -1059,8 +1053,8 @@
         #if defined USB_HOST_SUPPORT
             #define NUMBER_USB     (5 + 1)                               // physical queues (control plus 5 endpoints)
         #else                                                            // define one or more device classes (multiple classes creates a composite device)
-            #define USE_USB_CDC                                          // USB-CDC (use also for Modbus over USB)
-          //#define USE_USB_MSD                                          // needs SD card to compile (or alternatives FLASH_FAT / SPI_FLASH_FAT / FAT_EMULATION)
+          //#define USE_USB_CDC                                          // USB-CDC (use also for Modbus over USB)
+            #define USE_USB_MSD                                          // needs SD card to compile (or alternatives FLASH_FAT / SPI_FLASH_FAT / FAT_EMULATION)
           //#define USE_USB_HID_MOUSE                                    // human interface device (mouse)
           //#define USE_USB_HID_KEYBOARD                                 // human interface device (keyboard)
               //#define USB_KEYBOARD_DELAY                               // enable inter-character delay control
@@ -1086,7 +1080,7 @@
                 #define NUMBER_USB_AUDIO  0
             #endif
             #if defined USE_USB_MSD
-              //#define FAT_EMULATION                                    // support FAT emulation (full mass-storage not required by USB-MSD)
+                #define FAT_EMULATION                                    // support FAT emulation (full mass-storage not required by USB-MSD)
                 #if defined FAT_EMULATION
                     #define NUMBER_USB_MSD 1                             // single MSD LUM (eg. set to 2 for SD card and emulated drive)
                     #define EMULATED_FAT_LUMS         1                  // the number of logical units on emulated drive
@@ -1199,12 +1193,12 @@
 // I2C
 //
 //#define I2C_INTERFACE
-#if defined I2C_INTERFACE && !defined DEV2
+#if defined I2C_INTERFACE
     #define NUMBER_I2C       (I2C_AVAILABLE + LPI2C_AVAILABLE)           // I2C interfaces available
   //#define I2C_SLAVE_MODE                                               // support slave mode
         #define I2C_SLAVE_TX_BUFFER                                      // support preparing slave transmissions with fnWrite()
         #define I2C_SLAVE_RX_BUFFER                                      // support slave reception buffer for fnRead()
-#elif !defined DEV2
+#else
     #define NUMBER_I2C     0                                             // no physical queue needed
 #endif
 
@@ -1490,7 +1484,7 @@
                 #define NUMBER_OF_TIME_SERVERS 3                         // number of time servers that are used
             #define MODBUS_TCP                                           // support MODBUS TCP protocol
             #define USE_MQTT_CLIENT                                      // enable MQTT (message queuing telemetry transport) client support
-          //#define USE_MQTT_SERVER                                      // enable MQTT (message queuing telemetry transport) server support
+          //#define USE_MQTT_BROKER                                      // enable MQTT (message queuing telemetry transport) broker support
               //#define SECURE_MQTT                                      // MQTTS support
                 #if defined SECURE_MQTT
                     #define SUPPORT_UCALLOC
@@ -1637,7 +1631,7 @@
         #endif
 
         #if defined MODBUS_TCP
-          //#define MODBUS_TCP_GATEWAY                                   // support MODBUS TCP <-> MODBUS serial gateway
+            #define MODBUS_TCP_GATEWAY                                   // support MODBUS TCP <-> MODBUS serial gateway
             #if defined USE_MODBUS_MASTER                                // following options require master support
                 #define TCP_SLAVE_ROUTER                                 // TCP slave router support
                 #define MODBUS_TCP_MASTERS    2                          // support MODBUS TCP masters

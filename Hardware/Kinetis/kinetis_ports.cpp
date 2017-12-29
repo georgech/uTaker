@@ -191,10 +191,10 @@ extern void fnSetPortDetails(char *cPortDetails, int iPort, int iBit, unsigned l
         unsigned char *ptrList = _ptrPerFunctions;
         int _iPort = iPort;
         int _iBit = iBit;
-        while (_iPort--) {
+        while (_iPort-- != 0) {
             ptrList += (PORT_WIDTH);
         }
-        while (_iBit--) {
+        while (_iBit-- != 0) {
             ptrList++;
         }
         if (*ptrList > ALTERNATIVE_FUNCTIONS) {
@@ -279,7 +279,9 @@ extern unsigned long fnGetPortMask(int iPortNumber)
     if (iPortNumber >= (PORTS_AVAILABLE + 1))
     #endif
     {                                                                    // {4} handle external port mask
-    #if defined _EXT_PORT_16_BIT
+    #if defined _EXT_PORT_28_BIT
+        return 0xf0000000;
+    #elif defined _EXT_PORT_16_BIT
         return 0xffff0000;
     #else
         return 0xffffff00;
@@ -311,7 +313,7 @@ extern "C" int fnGetADC_sim_channel(int iPort, int iBit)
             return -1;                                                   // not ADC function
         }
     #else
-        if (ADC_MUX_CHANNEL[iPort][31 - iBit] == 0) {
+        if (ADC_MUX_CHANNEL[iPort][31 - iBit] == -1) {
             return -1;                                                   // not ADC function
         }
     #endif

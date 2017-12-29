@@ -1,5 +1,5 @@
 [DebugChecksum]
-Checksum=570668518
+Checksum=-256455236
 [DisAssemblyWindow]
 NumStates=_ 1
 State 1=_ 1
@@ -96,17 +96,17 @@ interface_selection=_ "1"
 SHOWDIALOG=_ "1"
 TraceLink_MaxBufferSize=_ "1"
 [PE_STORED_DEVICES]
-device0=_ "NXP_KL8x_KL82Z128M7"
-device1=_ "NXP_K6x_K66FX1M0M18"
-device2=_ "NXP_KL2x_KL25Z128M4"
-device3=_ "NXP_KEx_KE06Z128M4"
-device4=_ "NXP_KL2x_KL28Z512M7"
+device0=_ "NXP_K6x_K66FX1M0M18"
+device1=_ "NXP_KL2x_KL25Z128M4"
+device2=_ "NXP_KEx_KE06Z128M4"
+device3=_ "NXP_KL2x_KL28Z512M7"
+device4=_ "NXP_K2x_K22FX512AM12"
 [PE_PEDEBUG]
-CURRENTDEVICE=_ "NXP_KL2x_KL28Z512M7"
+CURRENTDEVICE=_ "NXP_K2x_K22FX512AM12"
 ERASE_PROGRAM_WITHOUT_ASKING=_ "1"
 CURRENTMODE=_ "4"
 [PE_DEVICE]
-CHIPMODE=_ "NXP_KL2x_KL28Z512M7"
+CHIPMODE=_ "NXP_K2x_K22FX512AM12"
 [PE_SETTINGS]
 MEMORYSTART1=_ "0"
 MEMORYSTART2=_ "0"
@@ -138,21 +138,21 @@ Freq=10000000
 MultiCoreRunAll=1
 [SWOTraceHWSettings]
 OverrideDefaultClocks=0
-CpuClock=72000000
+CpuClock=0
 ClockAutoDetect=0
-ClockWanted=2000000
-JtagSpeed=2000000
-Prescaler=36
+ClockWanted=0
+JtagSpeed=0
+Prescaler=0
 TimeStampPrescIndex=0
 TimeStampPrescData=0
-PcSampCYCTAP=1
-PcSampPOSTCNT=15
+PcSampCYCTAP=0
+PcSampPOSTCNT=0
 PcSampIndex=0
 DataLogMode=0
 ITMportsEnable=0
 ITMportsTermIO=0
 ITMportsLogFile=0
-ITMlogFile=$PROJ_DIR$\ITM.log
+ITMlogFile=
 [PEMICRODriver]
 PEM_LeaveTargetRunning=0x00000000
 [struct_types]
@@ -228,21 +228,21 @@ Exclusions=
 Enabled=0
 [CallStackStripe]
 ShowTiming=1
+[TermIOLog]
+LoggingEnabled=_ 0
+LogFile=_ ""
 [Breakpoints2]
 Bp0=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\..\..\Hardware\Kinetis\kinetis_FLASH.h}.1010.5" 0 0 1 "" 0 "" 0
 Bp1=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\serial_loader.c}.1974.5" 0 0 1 "" 0 "" 0
 Count=2
-[Log file]
-LoggingEnabled=_ 0
-LogFile=_ ""
-Category=_ 0
-[TermIOLog]
-LoggingEnabled=_ 0
-LogFile=_ ""
 [Disassemble mode]
 mode=1
 [Breakpoints]
 Count=0
+[Log file]
+LoggingEnabled=_ 0
+LogFile=_ ""
+Category=_ 0
 [Aliases]
 Count=0
 SuppressDialog=0

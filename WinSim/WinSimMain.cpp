@@ -1380,7 +1380,9 @@ static void fnDisplayPorts(HDC hdc)
             cPorts[2] = 'T';
             cPorts[3] = '-';
             cPorts[4] = ((i - _PORTS_AVAILABLE) + '0');                  // supports 10 external 8 bit ports
-    #if defined _EXT_PORT_16_BIT                                         // {91}
+    #if defined _EXT_PORT_28_BIT
+            ulPortMask = 0xf0000000;
+    #elif defined _EXT_PORT_16_BIT                                         // {91}
             ulPortMask = 0xffff0000;
     #else
             ulPortMask = 0xffffff00;
@@ -1391,7 +1393,7 @@ static void fnDisplayPorts(HDC hdc)
             while (cPorts[iSpaces] == ' ') {                             // find the start of the port bit display
                 iSpaces++;
             }
-            if (cPorts[iSpaces + 1] == ' ') {                            // this is used to find an port number that has been incremented which we don't want to happen for extended ports
+            if (cPorts[iSpaces + 1] == ' ') {                            // this is used to find a port number that has been incremented which we don't want to happen for extended ports
                 cPorts[iSpaces] = ' ';
             }
             goto _next_port;
@@ -1417,7 +1419,9 @@ static void fnDisplayPorts(HDC hdc)
 #endif
 #if defined _KINETIS && !(defined KINETIS_K00 || defined KINETIS_K20 || defined KINETIS_K60 || defined KINETIS_K61 || defined KINETIS_K64 || defined KINETIS_K70 || defined KINETIS_K80 || defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_KV || defined KINETIS_KW2X) // {70}{74}{82}{92}{96}
         if (i >= (_PORTS_AVAILABLE - 1)) {                               // {91}
-    #if defined _EXT_PORT_16_BIT    
+    #if defined _EXT_PORT_28_BIT
+            ulPortMask = 0xf0000000;
+    #elif defined _EXT_PORT_16_BIT    
             ulPortMask = 0xffff0000;
     #else
             ulPortMask = 0xffffff00;

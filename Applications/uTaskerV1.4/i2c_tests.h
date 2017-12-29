@@ -29,7 +29,7 @@
 
     #if defined I2C_SLAVE_MODE
         #define TEST_I2C_SLAVE                                           // test behaving as I2C slave
-            #define OUR_SLAVE_ADDRESS   0xd0
+        #define OUR_SLAVE_ADDRESS   0xd0
     #endif
   //#define TEST_I2C                                                     // test I2C EEPROM
       //#define EEPROM_M24256                                            // EEPROM with two byte addressing
@@ -318,134 +318,6 @@
 #if defined _I2C_INIT_CODE && (defined TEST_I2C || defined I2C_SLAVE_MODE || defined TEST_I2C_SLAVE || defined TEST_DS1307 || defined TEST_SENSIRION || defined TEST_MMA8451Q || defined TEST_MMA7660F || defined TEST_FXOS8700)
 
     #if defined TEST_I2C_SLAVE
-// The function is called during I2C slave interrupt handling so that the application can immediately respond in order to realise an I2C slave device
-//
-static int fnI2C_SlaveCallback(int iChannel, unsigned char *ptrDataByte, int iType)
-{
-#if defined DEV2
-    #define APP_BUTTON_STATUS_PWM     0                                  // reads button status
-    #define APP_VERSION_REQUEST       1                                  // request version number (resets after read to button status)
-    #define APP_UPLOAD_DATA           2                                  // writes upload data and sets upload status read state
-    #define APP_RESET_REQUEST         3                                  // resets the device
-    #define I2C_IDLE                  0
-    #define I2C_SET_COMMAND           1
-    #define I2C_SET_DATA              2
-    static const unsigned char cucVersion[] = {1, 0};
-        #define BUTTON_STATE          0
-        #define PWM_VALUE             1
-    static int iRxCount = 0;
-    static unsigned char ucResetKey = 0;
-    static unsigned char ucFirmwareBuffer[256];
-    static unsigned char ucUploadState[5] = {0};
-    static unsigned char ucInfo[2] = {0};                                // present button status and PWM
-    static unsigned char ucState = I2C_IDLE;
-    static unsigned char ucMode = APP_BUTTON_STATUS_PWM;                 // initially returning the button state
-    switch (iType) {                                                     // the interrupt callback type
-    case I2C_SLAVE_ADDRESSED_FOR_READ:                                   // the slave is being addressed for reading from
-        iRxCount = 0;
-    case I2C_SLAVE_READ:                                                 // further reads
-        switch (ucMode) {
-        case APP_BUTTON_STATUS_PWM:
-        default:
-            *ptrDataByte = ucInfo[iRxCount++];                           // return the button state - or PWM state if 2 bytes are read
-            if (iRxCount >= sizeof(ucInfo)) {
-                iRxCount = 0;
-            }
-            break;
-        case APP_VERSION_REQUEST:
-            *ptrDataByte = (unsigned char)cucVersion[iRxCount++];        // return the application version
-            if (iRxCount >= sizeof(cucVersion)) {
-                iRxCount = 0;
-            }
-            break;
-        case APP_UPLOAD_DATA:
-            *ptrDataByte = ucUploadState[iRxCount++];                    // return the upload state
-            if (iRxCount >= sizeof(ucUploadState)) {
-                iRxCount = 0;
-            }
-            break;
-        }
-        return I2C_SLAVE_TX_PREPARED;                                    // the prepared byte is to to be sent
-
-    case I2C_SLAVE_ADDRESSED_FOR_WRITE:                                  // the slave is being addressed to write to
-        // *ptrDataByte is our address
-        //
-        ucState = I2C_SET_COMMAND;                                       // a write is being received and we expect the command to be written next
-        return I2C_SLAVE_RX_CONSUMED;                                    // the byte has been consumed and nothing is to be put in the queue buffer
-
-    case I2C_SLAVE_WRITE:                                                // data byte received
-        // *ptrDataByte is the data received
-        //
-        if (ucState == I2C_SET_COMMAND) {                                // we are expecting the command to be received
-            switch (ucMode = *ptrDataByte) {
-            case APP_UPLOAD_DATA:                                        // optionally data will follow
-            case APP_RESET_REQUEST:                                      // reset key will follow
-            case APP_BUTTON_STATUS_PWM:                                  // the new PWM value will follow
-                ucResetKey = 0;
-                ucState = I2C_SET_DATA;
-                break;
-            case APP_VERSION_REQUEST:
-                // Fall through intentionally 
-                //
-            default:
-                ucState = I2C_IDLE;                                      // return to data reception
-                break;
-            }
-        }
-        else {                                                           // writing data
-            switch (ucMode) {
-            case APP_UPLOAD_DATA:                                        // optionally data will follow
-                {
-                    unsigned long ulUploadAddress = ((ucUploadState[1] << 24) | (ucUploadState[2] << 16) | (ucUploadState[3] << 8) | ucUploadState[4]);
-                    ucFirmwareBuffer[ulUploadAddress % 256] = *ptrDataByte; // put the data into the programming buffer
-                    ucFirmwareBuffer[0] |= 0x01;                         // upload has started
-                    ulUploadAddress++;
-                    ucUploadState[1] = (unsigned char)(ulUploadAddress >> 24); // put the updated address back to the status buffer for possible reading
-                    ucUploadState[2] = (unsigned char)(ulUploadAddress >> 16);
-                    ucUploadState[3] = (unsigned char)(ulUploadAddress >> 8);
-                    ucUploadState[4] = (unsigned char)(ulUploadAddress);
-                }
-                break;
-            case APP_RESET_REQUEST:                                      // reset key is checked
-                if ((ucResetKey == 0) && (*ptrDataByte == 0x55)) {
-                    ucResetKey++;
-                }
-                else if ((ucResetKey == 1) && (*ptrDataByte == 0xaa)) {
-                    ucFirmwareBuffer[0] |= 0x80;                         // mark that a reset will occur shortly
-                    fnResetBoard();
-                }
-                else {
-                    ucResetKey = 0xff;                                   // block the reset key until next try
-                }
-                break;
-            case APP_BUTTON_STATUS_PWM:                                  // the new PWM value will follow
-                ucInfo[PWM_VALUE] = *ptrDataByte;                        // set the new PWM value to be set
-                if (ucInfo[PWM_VALUE] > 100) {
-                    ucInfo[PWM_VALUE] = 100;
-                }
-                // Schedule the PWM task to commit the new value
-                //
-                break;
-            default:
-                ucState = I2C_IDLE;                                      // return to data reception
-                break;
-            }
-        }
-        return I2C_SLAVE_RX_CONSUMED;                                    // the byte has been consumed and nothing is to be put in the queue buffer
-
-    case I2C_SLAVE_READ_COMPLETE:
-        // Fall through intentionally
-        //
-        if (ucMode == APP_VERSION_REQUEST) {
-            ucMode = APP_BUTTON_STATUS_PWM;                              // fall back to button mode
-        }
-    case I2C_SLAVE_WRITE_COMPLETE:                                       // the write has terminated
-        // ptrDataByte is 0 and so should not be used
-        //
-        ucState = I2C_IDLE;                                              // return to data reception
-        return I2C_SLAVE_RX_CONSUMED;
-    }
-#else
     #define I2C_RAM_IDLE              0                                  // RAM pointer states
     #define SET_ADDRESS_POINTER       1
     static unsigned char ucRAM[256] = {0};                               // RAM buffer, initially zeroed
@@ -483,7 +355,6 @@ static int fnI2C_SlaveCallback(int iChannel, unsigned char *ptrDataByte, int iTy
         //
         return I2C_SLAVE_RX_CONSUMED;
     }
-#endif
     return I2C_SLAVE_BUFFER;                                             // use the buffer for this transaction
 }
     #endif

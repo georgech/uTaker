@@ -11522,7 +11522,7 @@ typedef struct stKINETIS_LPTMR_CTL
     #define PE_3_LPSPI1_SIN              PORT_MUX_ALT2
     #define PB_17_LPSPI1_SIN             PORT_MUX_ALT2
     #define PD_7_LPSPI1_SIN              PORT_MUX_ALT2
-#elif defined KINETIS_KL82
+#elif defined KINETIS_KL82 || defined KINETIS_K82
     #define PA_14_SPI0_PCS0              PORT_MUX_ALT2
     #define PC_4_SPI0_PCS0               PORT_MUX_ALT2
     #define PD_0_SPI0_PCS0               PORT_MUX_ALT2
@@ -16839,9 +16839,9 @@ extern void fnSimPers(void);
     #define _CONFIG_PORT_INPUT_FAST_LOW(ref, pins, chars)  _CONFIG_PORT_INPUT(ref, pins, chars)
     #define _CONFIG_PORT_INPUT_FAST_HIGH(ref, pins, chars) _CONFIG_PORT_INPUT(ref, pins, chars)
 #else
-    #define _CONFIG_PORT_INPUT(ref, pins, chars)  SIM_SCGC5 |= SIM_SCGC5_PORT##ref; GPIO##ref##_PDDR &= ~(pins); fnConnectGPIO(PORT##ref, pins, (PORT_MUX_GPIO | chars)); _SIM_PORT_CHANGE; _SIM_PER_CHANGE
-    #define _CONFIG_PORT_INPUT_FAST_LOW(ref, pins, chars)  SIM_SCGC5 |= SIM_SCGC5_PORT##ref; GPIO##ref##_PDDR &= ~((pins) & 0x0000ffff); PORT##ref##_GPCLR = (((pins) << 16) | chars | PORT_MUX_GPIO);  _SIM_PORT_CHANGE; _SIM_PER_CHANGE
-    #define _CONFIG_PORT_INPUT_FAST_HIGH(ref, pins, chars) SIM_SCGC5 |= SIM_SCGC5_PORT##ref; GPIO##ref##_PDDR &= ~((pins) & 0xffff0000); PORT##ref##_GPCHR = (((pins) & 0xffff0000) | chars | PORT_MUX_GPIO); _SIM_PORT_CHANGE; _SIM_PER_CHANGE
+    #define _CONFIG_PORT_INPUT(ref, pins, chars)  POWER_UP_ATOMIC(5, PORT##ref); GPIO##ref##_PDDR &= ~(pins); fnConnectGPIO(PORT##ref, pins, (PORT_MUX_GPIO | chars)); _SIM_PORT_CHANGE; _SIM_PER_CHANGE
+    #define _CONFIG_PORT_INPUT_FAST_LOW(ref, pins, chars)  POWER_UP_ATOMIC(5, PORT##ref); GPIO##ref##_PDDR &= ~((pins) & 0x0000ffff); PORT##ref##_GPCLR = (((pins) << 16) | chars | PORT_MUX_GPIO);  _SIM_PORT_CHANGE; _SIM_PER_CHANGE
+    #define _CONFIG_PORT_INPUT_FAST_HIGH(ref, pins, chars) POWER_UP_ATOMIC(5, PORT##ref); GPIO##ref##_PDDR &= ~((pins) & 0xffff0000); PORT##ref##_GPCHR = (((pins) & 0xffff0000) | chars | PORT_MUX_GPIO); _SIM_PORT_CHANGE; _SIM_PER_CHANGE
 #endif
 
 // Configure a peripheral function eg. _CONFIG_PERIPHERAL(B, 2, (PB_2_FTM0_CH0 | PORT_SRE_FAST | PORT_DSE_HIGH));
@@ -16899,9 +16899,9 @@ extern void fnSimPers(void);
     #define _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_LOW(ref, pins, value, chars) _CONFIG_DRIVE_PORT_OUTPUT_VALUE(ref, pins, value, chars)
     #define _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_HIGH(ref, pins, value, chars) _CONFIG_DRIVE_PORT_OUTPUT_VALUE(ref, pins, value, chars)
 #else
-    #define _CONFIG_DRIVE_PORT_OUTPUT_VALUE(ref, pins, value, chars) SIM_SCGC5 |= SIM_SCGC5_PORT##ref; fnConnectGPIO(PORT##ref, pins, (PORT_MUX_GPIO | chars)); GPIO##ref##_PDOR = ((GPIO##ref##_PDOR & ~(pins)) | (value)); GPIO##ref##_PDDR |= (pins); _SIM_PORT_CHANGE; _SIM_PER_CHANGE
-    #define _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_LOW(ref, pins, value, chars) SIM_SCGC5 |= SIM_SCGC5_PORT##ref; PORT##ref##_GPCLR = (((pins) << 16) | (chars | PORT_MUX_GPIO)); GPIO##ref##_PDOR = ((GPIO##ref##_PDOR & ~((pins) & 0x0000ffff)) | ((value) & 0x0000ffff)); GPIO##ref##_PDDR |= ((pins) & 0x0000ffff); _SIM_PORT_CHANGE; _SIM_PER_CHANGE // {12}
-    #define _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_HIGH(ref, pins, value, chars) SIM_SCGC5 |= SIM_SCGC5_PORT##ref; PORT##ref##_GPCHR = (((pins) & 0xffff0000) | (chars | PORT_MUX_GPIO)); GPIO##ref##_PDOR = ((GPIO##ref##_PDOR & ~((pins) & 0xffff0000)) | ((value) & 0xffff0000)); GPIO##ref##_PDDR |= ((pins) & 0xffff0000); _SIM_PORT_CHANGE; _SIM_PER_CHANGE // {12}{39}
+    #define _CONFIG_DRIVE_PORT_OUTPUT_VALUE(ref, pins, value, chars) POWER_UP_ATOMIC(5, PORT##ref); fnConnectGPIO(PORT##ref, pins, (PORT_MUX_GPIO | chars)); GPIO##ref##_PDOR = ((GPIO##ref##_PDOR & ~(pins)) | (value)); GPIO##ref##_PDDR |= (pins); _SIM_PORT_CHANGE; _SIM_PER_CHANGE
+    #define _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_LOW(ref, pins, value, chars) POWER_UP_ATOMIC(5, PORT##ref); PORT##ref##_GPCLR = (((pins) << 16) | (chars | PORT_MUX_GPIO)); GPIO##ref##_PDOR = ((GPIO##ref##_PDOR & ~((pins) & 0x0000ffff)) | ((value) & 0x0000ffff)); GPIO##ref##_PDDR |= ((pins) & 0x0000ffff); _SIM_PORT_CHANGE; _SIM_PER_CHANGE // {12}
+    #define _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_HIGH(ref, pins, value, chars) POWER_UP_ATOMIC(5, PORT##ref); PORT##ref##_GPCHR = (((pins) & 0xffff0000) | (chars | PORT_MUX_GPIO)); GPIO##ref##_PDOR = ((GPIO##ref##_PDOR & ~((pins) & 0xffff0000)) | ((value) & 0xffff0000)); GPIO##ref##_PDDR |= ((pins) & 0xffff0000); _SIM_PORT_CHANGE; _SIM_PER_CHANGE // {12}{39}
 #endif
 
 // Set from inputs to outputs and set a value to them - this is equivalent to _CONFIG_DRIVE_PORT_OUTPUT_VALUE on this device

@@ -35,7 +35,7 @@
     29.11.2010 Add RX6XX support                                         {19}
     03.03.2011 Correct SPI_FLASH_AT45DB161, SPI_FLASH_AT45DB321 and SPI_FLASH_AT45DB642 sizes
     29.03.2011 Add Kinetis support                                       {20}
-    26.10.2012 Make READ_SPI_FLASH_DATA() access volatile                {21}
+    26.10.2012 Make READ_SPI_FLASH_DATA() access volatile                {21} [removed later]
     24.08.2013 Add option for multiple intermediate locations            {22}
     25.08.2013 Add NET_KBED and NET_K60                                  {23}
     18.04.2016 Add specific FRDM-K64F target                             {24}
@@ -58,8 +58,8 @@
 
 #define TARGET_HW           "Bare-Minimum Boot"
 
-#define SPI_SW_UPLOAD                                                  // new SW is located in SPI FLASH {1}{2}
-#define SPI_FLASH_W25Q                                                 // use Winbond W25Q SPI flash rather than ATMEL
+#define SPI_SW_UPLOAD                                                    // new SW is located in SPI FLASH {1}{2}
+#define SPI_FLASH_W25Q                                                   // use Winbond W25Q SPI flash rather than ATMEL
 //#define SPI_FLASH_SST25                                                // {15} use SST SPI FLASH rather than ATMEL
 //#define SPI_FLASH_ST                                                   // define that we are using ST FLASH rather than default ATMEL {9}
 //#define SPI_DATA_FLASH                                                 // FLASH type is data FLASH supporting sub-sectors (relevant for ST types) {9}
@@ -462,7 +462,7 @@
 
             #define WRITE_SPI_CMD0(byte)             SPI0_PUSHR = (byte | SPI_PUSHR_CONT | ulChipSelectLine | SPI_PUSHR_CTAS_CTAR0) // write a single byte to the output FIFO - assert CS line
             #define WRITE_SPI_CMD0_LAST(byte)        SPI0_PUSHR = (byte | SPI_PUSHR_EOQ  | ulChipSelectLine | SPI_PUSHR_CTAS_CTAR0) // write final byte to output FIFO - this will negate the CS line when complete
-            #define READ_SPI_FLASH_DATA()            (volatile unsigned char)SPI0_POPR
+            #define READ_SPI_FLASH_DATA()            (unsigned char)SPI0_POPR
             #define WAIT_SPI_RECEPTION_END()         while (!(SPI0_SR & SPI_SR_RFDF)) {}
             #define CLEAR_RECEPTION_FLAG()           SPI0_SR |= SPI_SR_RFDF
         #elif defined FRDM_KL25Z
@@ -564,8 +564,8 @@
 
             #define WRITE_SPI_CMD0(byte)             SPI2_PUSHR = (byte | SPI_PUSHR_CONT | ulChipSelectLine | SPI_PUSHR_CTAS_CTAR0) // write a single byte to the output FIFO - assert CS line
             #define WRITE_SPI_CMD0_LAST(byte)        SPI2_PUSHR = (byte | SPI_PUSHR_EOQ  | ulChipSelectLine | SPI_PUSHR_CTAS_CTAR0) // write final byte to output FIFO - this will negate the CS line when complete
-            #define READ_SPI_FLASH_DATA()            (volatile unsigned char)SPI2_POPR // {21}
-            #define WAIT_SPI_RECEPTION_END()         while (!(SPI2_SR & SPI_SR_RFDF)) {}
+            #define READ_SPI_FLASH_DATA()            (unsigned char)SPI2_POPR // {21}
+            #define WAIT_SPI_RECEPTION_END()         while ((SPI2_SR & SPI_SR_RFDF) == 0) {}
             #define CLEAR_RECEPTION_FLAG()           SPI2_SR |= SPI_SR_RFDF
         #endif
             

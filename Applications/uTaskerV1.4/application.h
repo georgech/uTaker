@@ -149,6 +149,9 @@ extern void fnInitialiseSNMP(void);                                      // {21}
 extern void fnDisplayIP(unsigned char *ptrIP);                           // {22}
 extern void fnShowLowPowerMode(void);                                    // {24}
 extern void fnHandleFreeMaster(QUEUE_HANDLE comHandle, unsigned char *ptr_ucBuffer, QUEUE_TRANSFER Length);
+#if defined SUPPORT_SLCD && defined STOP_WATCH_APPLICATION
+    extern void fnStopWatchApplication(void);
+#endif
 #if defined USE_USB_AUDIO && defined AUDIO_FFT && defined BLAZE_K22
     extern void fnDisplayFFT(float *fft_magnitude_buffer, signed short *sRawInput);
 #endif
