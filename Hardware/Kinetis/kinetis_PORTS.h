@@ -11,7 +11,7 @@
     File:      kinetis_PORTS.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     24.09.2012 Ensure port interrupt handler is entered before configuring interrupt {26}
     18.02.2015 fnConnectGPIO() modified to allow modifying only parts of pin characteristics {115}

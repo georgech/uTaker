@@ -8,10 +8,10 @@
     www.uTasker.com    Skype: M_J_Butcher
 
     ---------------------------------------------------------------------
-    File:        igmp.c
-    Project:     Single Chip Embedded Internet
+    File:      igmp.c
+    Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     04.02.2016 Correct interface mask when there are multiple interfaces available {1}
 

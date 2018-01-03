@@ -11,7 +11,7 @@
     File:      usb.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     20.09.2008 Add USB host defines                                      {1}
     23.11.2009 Remove little-endian macros and padding defined to driver.h since the same is required for SD cards and other general use

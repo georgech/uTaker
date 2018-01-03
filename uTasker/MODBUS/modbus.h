@@ -11,7 +11,7 @@
     File:        modbus.h
     Project:     uTasker Demonstration project
     --------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     ********************************************************************
     22.08.2009 Dimensions of tcp_master_timeout and tcp_master_broadcast_timeout corrected to MODBUS_TCP_MASTERS {V1.04}
     29.09.2009 Add SERIAL_ROUTE_INFO                                      {V1.07}

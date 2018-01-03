@@ -11,7 +11,7 @@
     File:      kinetis_UART.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     03.03.2012 Add K70 UART2 alternative port mapping                    {3}
     05.04.2012 Add UART DMA support for Tx                               {6}

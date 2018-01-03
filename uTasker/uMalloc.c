@@ -11,7 +11,7 @@
     File:      uMalloc.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     12.10.2007 uMallocAlign() quantity extended to 64k                   {1}
     05.05.2009 Add conditional compile on UNUSED_STACK_PATTERN           {2}
@@ -344,7 +344,7 @@ extern unsigned long uFree2(int iFreeRegion)
 #if defined SUPPORT_UCALLOC                                              // {8}
 
 #define SECURITY_HEAP_SIZE (24 * 1024)
-#define BREAK_DOWN_BLOCKS_LIMIT  (4 * 1024)                              // break down holes of this size and larger by reallocating them in preference to filing smallest possibly hole
+#define BREAK_DOWN_BLOCKS_LIMIT  (4 * 1024)                              // break down holes of this size and larger by reallocating them in preference to filling smallest possibly hole
 #define HEAP_OBJECTS       200
 #define MONITOR_PEAK_MANAGEMENT_BLOCK_USE                                // check the maximum block use during operation
 
@@ -368,6 +368,8 @@ static unsigned long ulAccumulatedHoleSize = 0;                          // the 
 static unsigned char *ptrSecurityHeapTop = 0;                            // present top of allocated heap memory
 static HEAP_MANAGEMENT_BLOCK *ptrHeapManager = 0;                        // the location of the heap management entries
 
+#define MEMORY_RANGE_MIN      512
+#define MEMORY_RANGE_MAX      1024
 
 // Return always zeroed memory that is long word aligned
 //
@@ -387,6 +389,11 @@ extern void *uCalloc(size_t n, size_t size)
     }
     ptrHeapEntry = ptrHeapManager;
     ulAllocateCount++;
+#if defined _WINDOWS
+    if ((thisSize >= MEMORY_RANGE_MIN) && (thisSize <= MEMORY_RANGE_MAX)) {
+        thisSize = thisSize;
+    }
+#endif
     FOREVER_LOOP() {
         if (ptrHeapEntry->ptrMemory == 0) {                              // free entry found (neither in use nor a hole)
             // If we can find a hole that can be re-used we do this as preference, rather than letting the heap grow unnecessarily and not being able to accept a large block later
@@ -489,7 +496,15 @@ extern void uCFree(void *ptr)
         ulDeallocateCount++;
         FOREVER_LOOP() {
             if (ptrHeapEntry->ptrMemory == ptr) {                        // entry found
-                uMemset(ptrHeapEntry->ptrMemory, 0, ptrHeapEntry->memorySize); // zero freed memory (so that subsequent allocation doesn't need to do it any also to cover up previous use in security applications)
+#if defined _WINDOWS
+                if (ptrHeapEntry->ucStatus != 0) {
+                    _EXCEPTION("Freeing a pointer that has already been freed!!");
+                }
+                if ((ptrHeapEntry->memorySize >= MEMORY_RANGE_MIN) && (ptrHeapEntry->memorySize <= MEMORY_RANGE_MAX)) {
+                    ptrHeapEntry->memorySize = ptrHeapEntry->memorySize;
+                }
+#endif
+                uMemset(ptrHeapEntry->ptrMemory, 0, ptrHeapEntry->memorySize); // zero freed memory (so that subsequent allocation doesn't need to do it and also to cover up previous use in security applications)
                 ulMemoryAllocated -= ptrHeapEntry->memorySize;
                 if ((ptrHeapEntry->ptrMemory + ptrHeapEntry->memorySize) == ptrSecurityHeapTop) { // being removed from the top of heap
                     ptrSecurityHeapTop = ptrHeapEntry->ptrMemory;

@@ -11,7 +11,7 @@
     File:      kinetis_FLEXTIMER.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     21.06.2014 Adjust FlexTimer/TPM use of FTM_SC_TOF to clear interrupt correctly {1}
     22.07.2014 Add clock source selection to TPM                         {2}

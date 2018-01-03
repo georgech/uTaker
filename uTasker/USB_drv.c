@@ -11,7 +11,7 @@
     File:      USB_drv.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     06.10.2008 Adjust USB read/writes to support FIFO operation          {1}
     17.10.2008 Add control endpoint direction control and setup clear    {2}

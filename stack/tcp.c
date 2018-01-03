@@ -11,7 +11,7 @@
     File:      tcp.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     **********************************************************************
     03.06.2007 fnGetFreeTCP_Port() made external                         {1}
     03.06.2007 Extend REUSE_TIME_WAIT_SOCKETS to rx connection use       {2}

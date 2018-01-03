@@ -11,7 +11,7 @@
     File:      kinetis_low_power.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     22.07.2014 Add fnGetLowPowerMode() and fnSetLowPowerMode()           {1}
     02.07.2015 Always re-synchronise the RTC counters after waking from a low leakage state {2}

@@ -11,7 +11,7 @@
     File:      application_lcd.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     06.08.2009 Add OLED graphical demo                                    {1}
     11.08.2009 Add line and rectangle drawing tests                       {2}

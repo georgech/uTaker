@@ -11,7 +11,7 @@
     File:      types.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     01.03.2007 Increased SAM7 file system dimensions {1} to allow boot loader to operate
     15.09.2007 Add support for Luminary LM3SXXXX

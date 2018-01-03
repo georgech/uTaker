@@ -11,7 +11,7 @@
     File:      FreeMaster.c
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     This file contains a partial uTasker redevelopment of the FreeMaster implementation which
     is operational on UART and USB-CDC.

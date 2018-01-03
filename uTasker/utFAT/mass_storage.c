@@ -11,7 +11,7 @@
     File:      mass_storage.c
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     11.07.2014 utFATV2.00
     05.08.2014 Correct long file rename end of directory save            {1}

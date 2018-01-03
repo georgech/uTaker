@@ -11,7 +11,7 @@
     File:      nRF24201.c
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     This file contains application operation of nRF24201 (primary or secondary).
     It is intended as a temporary project file to be later incorporated in networking software.

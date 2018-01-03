@@ -11,7 +11,7 @@
     File:      usb_application.c - example of USB communication device, MSD and HID mouse
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     19.09.2008 File content made conditional on HOST support             {1}
     19.09.2008 Allow use without USE_MAINTENANCE                         {2}

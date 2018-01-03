@@ -11,7 +11,7 @@
     File:      MODBUS.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     28.07.2009 Completed AVR32 configuration and reset RTU state to idle after inter-character space error {V1.01}
     06.08.2009 MODBUS USB slave support added, plus additional dependency for event counter use {V1.02}

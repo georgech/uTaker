@@ -11,7 +11,7 @@
     File:      can_drv.c 
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     04.12.2011 Pass channel to fnCAN_tx() and fnCAN_get_rx()             {1}
 

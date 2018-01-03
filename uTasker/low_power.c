@@ -11,7 +11,7 @@
     File:      low_power.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     25.11.2007 Add optional low power monitoring                         {1}
     15.07.2014 Add optional preparation for low power mode and recovery after leaving low power mode {2}

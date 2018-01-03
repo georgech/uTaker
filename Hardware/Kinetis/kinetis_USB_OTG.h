@@ -11,7 +11,7 @@
     File:      kinetis_USB_OTG.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     28.03.2013 Add USB HS support                                        {33}
     05.03.2014 Add USB error counters and clear errors in the USB interrupt routine {71}

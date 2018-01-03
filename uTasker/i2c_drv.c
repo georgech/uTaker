@@ -11,7 +11,7 @@
     File:      i2c_drv.c
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     21.05.2007 Read modified to return zero when no receive messages are ready, even when there are characters available {1}
     13.08.2007 Removed GNU warning                                       {2}

@@ -11,7 +11,7 @@
     File:      usb_cdc_descriptors.h
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     01.12.2015 Add RNDIS support
     23.12.2015 Add RAW HID and Audio support

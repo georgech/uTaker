@@ -11,7 +11,7 @@
     File:      uTasker.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     11.05.2007 UTASK_TASK used consistently for node ids
     23.08.2007 enabled flag added to Timer table                         {1}

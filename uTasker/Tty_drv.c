@@ -11,7 +11,7 @@
     File:      tty_drv.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     22.02.2007 WAKE_BLOCKED_TX allow TX_FREE on char <= level (was < level) {1}. Remove check on tx done {2}
     17.03.2007 Add check fnWakeBlockedTx when transmission complete for DMA mode {3}

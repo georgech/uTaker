@@ -11,7 +11,7 @@
     File:      kinetis_USB_HS_Device.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     28.03.2013 Add USB HS support                                        {33}
     04.06.2013 Added USB_FS_MALLOC(), USB_FS_MALLOC_ALIGN(), USB_HS_MALLOC(), USB_HS_MALLOC_ALIGN() defaults {42}

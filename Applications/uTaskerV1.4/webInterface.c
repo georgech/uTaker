@@ -11,7 +11,7 @@
     File:      webInterface.c
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     26.02.2007 Added SMTP parameter support
     17.03.2007 Corrected SMTP login flag so that it is not cleared when Ethernet settings are changed {1}

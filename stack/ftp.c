@@ -11,7 +11,7 @@
     File:      FTP.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     08.05.2007 Change a routine array initialisation to avoid library memcpy {1}
     22.05.2007 Add sub-file write support for devices with large FLASH segments {2}

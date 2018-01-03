@@ -11,7 +11,7 @@
     File:      kinetis_DAC.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     19.11.2013 Add DAC DMA configuration                                 {60}
     23.12.2015 Add automatic DAC DMA buffer repetition                   {1}

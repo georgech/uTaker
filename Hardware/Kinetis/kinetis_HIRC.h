@@ -11,7 +11,7 @@
     File:      kinetis_HIRC.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     26.07.2017 Add SCG support for fast IRC clocking                     {1}
 

@@ -11,7 +11,7 @@
     File:      Port_Interrupts.h
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     28.10.2009 Modify SAM7X initialisation to include glitch filer configuration {1}
     30.12.2009 Modify M522xx use of IRQ7 to NMI technique                 {2}

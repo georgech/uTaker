@@ -11,7 +11,7 @@
     File:      smtp.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     16.02.2007 Add SMTP LOGIN support (#if defined USE_SMTP_AUTHENTICATION) and improve TCP interraction to avoid unnecessary ACKs
     18.05.2007 Adjust fnEncode64() use                                   {1}

@@ -11,7 +11,7 @@
     File:      TaskConfig.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     28.04.2007 Add SNMP task
     13.05.2007 Add PPP task

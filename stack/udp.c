@@ -11,7 +11,7 @@
     File:      udp.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     08.04.2007 Don't send destination unreachable to subnet broadcast (with new SUPPORT_SUBNET_BROADCAST) {1}
     06.09.2010 Optimise reception code when the device performs rx offloading {2}

@@ -11,7 +11,7 @@
     File:      ftp_client.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     03.06.2012 Return to state FTP_CLIENT_STATE_LOGGED_IN when response 200 is not received when expected {1}
     03.06.2012 Listing and Getting requires both the server's success response and the data connection to be closed before terminating and informing of success {2}

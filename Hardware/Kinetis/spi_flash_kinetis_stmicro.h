@@ -11,7 +11,7 @@
     File:      spi_flash_kinetis_stmicro.h
     Project:   Single Chip Embedded Internet 
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     14.08.2014 Adapt for KL family compatibility (KL has neither FIFO nor automatic chip select control)
     This file contains SPI FLASH specific code for all chips that are supported.

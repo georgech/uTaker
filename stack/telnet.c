@@ -11,7 +11,7 @@
     File:      telnet.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     04.02.2007 SentLength initialised to zero since it is always checked {1}
     21.05.2009 SentLength used as echo result to avoid particular lengths being interpreted incorrectly by TCP {2}

@@ -11,7 +11,7 @@
     File:      user_glcd_fonts.h
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     This file allows fonts to be extended by user defined special characters.
     Most standard fonts contain ASCII values starting at ' ' and ending at '~', although some may have more or less.

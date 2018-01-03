@@ -11,7 +11,7 @@
     File:      glcd_st7565.h
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     With thanks to ELZET80 for development
     *********************************************************************

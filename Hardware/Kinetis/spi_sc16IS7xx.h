@@ -11,7 +11,7 @@
     File:        spi_sc16IS7xx.h [Kinetis]
     Project:     Single Chip Embedded Internet 
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     05.01.2017 Add optional midi baud rate                               {1}
 

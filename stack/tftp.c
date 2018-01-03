@@ -11,7 +11,7 @@
     File:      tftp.c [TFTP server]
     Project:   uTasker - Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     22.05.2007 Sub-file write support added for devices with large flash granularity
     16.02.2008 Correct TFTP mode check                                   {1}

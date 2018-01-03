@@ -11,7 +11,7 @@
     File:      kinetis_I2C.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     09.10.2012 Extend I2C speed settings                                 {1}
     25.04.2014 Add automatic I2C lockup detection and recovery           {2}

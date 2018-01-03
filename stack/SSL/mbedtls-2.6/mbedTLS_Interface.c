@@ -11,7 +11,7 @@
     File:      mbedTLS_Interface.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
 
 */
@@ -100,6 +100,20 @@ extern unsigned char *fnInsertTLS_random(unsigned char *ptrData, unsigned long u
     return (ptrData);
 }
 
+// Deallocate used session memory
+//
+extern void fnTearDown(void)
+{                                                                        // before starting 13024 still allocated - 17 holes - 100 blocks not deallocated still - 7116 in holes
+    mbedtls_x509_crt_free(&(secure_session->certificates));              // after call 9444 still allocated - 20 holes - 73 blocks not deallocated still - 10696 in holes
+    mbedtls_free(secure_session->ssl.out_ctr);                           // 8 bytes
+    mbedtls_free(secure_session->ssl.in_ctr);                            // 8 bytes
+    mbedtls_free(secure_session->ssl.session_negotiate);                 // 108 bytes
+    mbedtls_free(secure_session->ssl.transform_negotiate);               // 208 bytes
+    mbedtls_free(secure_session->ssl.handshake);                         // 744 bytes
+    mbedtls_free(secure_session);                                        // free the session memory (1252)
+    secure_session = 0;
+    // remaining state 7116 still allocated - 22 holes with 13024 - 67 blocks still allocated
+}
 
 // Enter calloc() and free() implementation to be used by mbedTLS
 //
@@ -123,19 +137,19 @@ extern int fnInitialiseSecureLayer(const unsigned char *ptrOurCertificate, unsig
     ptrTempString = (unsigned char *)mbedtls_calloc(1, (ulOurPrivateKeyLength + 1));
     uMemcpy(ptrTempString, ptrOutPrivateKey, ulOurPrivateKeyLength);     // copy the private key string
     ptrTempString[ulOurPrivateKeyLength++] = 0;                          // terminate the string, which is required for its further processing
-    iReturn = mbedtls_pk_parse_key(&(secure_session->ourPrivateKey), ptrTempString, ulOurPrivateKeyLength, 0, 0); // no password
+    iReturn = mbedtls_pk_parse_key(&(secure_session->ourPrivateKey), ptrTempString, ulOurPrivateKeyLength, 0, 0); // no password - allocates 10 blocks of heap - total 2580 - 2 holes of 5624 total
     mbedtls_free(ptrTempString);
     if (iReturn == 0) {
         ptrTempString = (unsigned char *)mbedtls_calloc(1, (ulCertificateLength + 1));
         uMemcpy(ptrTempString, ptrOurCertificate, ulCertificateLength);  // copy the private key string
         ptrTempString[ulCertificateLength++] = 0;                        // terminate the string, which is required for its further processing
-        iReturn = mbedtls_x509_crt_parse(&(secure_session->ourCertificate), ptrTempString, ulCertificateLength);
+        iReturn = mbedtls_x509_crt_parse(&(secure_session->ourCertificate), ptrTempString, ulCertificateLength); // allocates 4 blocks of heap - total 3876 - 3 holes of 4328 total
         mbedtls_free(ptrTempString);
         if (iReturn == 0) {
-            secure_session->ssl.handshake = (mbedtls_ssl_handshake_params *)mbedtls_calloc(1, (sizeof(mbedtls_ssl_handshake_params))); // handshake parameters
-            ssl_handshake_params_init(secure_session->ssl.handshake);   // initialise the handshake parameters
-            secure_session->ssl.transform_negotiate = mbedtls_calloc(1, sizeof(mbedtls_ssl_transform));
-            secure_session->ssl.session_negotiate = mbedtls_calloc(1, sizeof(mbedtls_ssl_session));
+            secure_session->ssl.handshake = (mbedtls_ssl_handshake_params *)mbedtls_calloc(1, (sizeof(mbedtls_ssl_handshake_params))); // handshake parameters (744 bytes)
+            ssl_handshake_params_init(secure_session->ssl.handshake);   // initialise the handshake parameters - allocates 1 block of heap - total 4620 - 3 holes of 3584 total
+            secure_session->ssl.transform_negotiate = mbedtls_calloc(1, sizeof(mbedtls_ssl_transform)); // (208 bytes)
+            secure_session->ssl.session_negotiate = mbedtls_calloc(1, sizeof(mbedtls_ssl_session)); // (108 bytes)
 
             mbedtls_ssl_conf_rng(&(secure_session->config), fnSecureRandomNumber, secure_session); // set the random number method
             secure_session->ssl.conf = &(secure_session->config);
@@ -147,7 +161,7 @@ extern int fnInitialiseSecureLayer(const unsigned char *ptrOurCertificate, unsig
             secure_session->ssl.out_ctr = (unsigned char *)mbedtls_calloc(1, 8); // 64 bit counters
             secure_session->ssl.in_ctr  = (unsigned char *)mbedtls_calloc(1, 8);
 
-            iReturn = mbedtls_ssl_conf_own_cert(&(secure_session->config), &(secure_session->ourCertificate), &(secure_session->ourPrivateKey)); // attach the client certificate and private key to the  configuration
+            iReturn = mbedtls_ssl_conf_own_cert(&(secure_session->config), &(secure_session->ourCertificate), &(secure_session->ourPrivateKey)); // attach the client certificate and private key to the configuration - allocates 1 block of heap - total 4964 - 3 holes of 3240 total
         }
     }
     return iReturn;
@@ -172,7 +186,7 @@ extern void fnSwitchTransformSpec(void)
     secure_session->ssl.transform_in = secure_session->ssl.transform_negotiate;
     secure_session->ssl.session_in = secure_session->ssl.session_negotiate;
     memset(secure_session->ssl.in_ctr, 0, 8);                            // reset the counter
-    secure_session->ssl.handshake->calc_finished(&(secure_session->ssl), buf, (secure_session->ssl.conf->endpoint ^ 1));
+    secure_session->ssl.handshake->calc_finished(&(secure_session->ssl), buf, (secure_session->ssl.conf->endpoint ^ 1)); //  - allocates (?) to 100 block of heap - total 13024 - 17 holes of 7116 total
 
 }
 
@@ -194,7 +208,7 @@ extern void fnSetSessionCipher(unsigned short session_cipher, unsigned char ucVe
 //
 extern int fnSaveServerCertificate(unsigned char *ptrCertificate, unsigned long ulCertificateLength)
 {
-    return (mbedtls_x509_crt_parse_der(&(secure_session->certificates), ptrCertificate, ulCertificateLength));
+    return (mbedtls_x509_crt_parse_der(&(secure_session->certificates), ptrCertificate, ulCertificateLength)); //  - allocates (?) to 35 block of heap - total 8952 - 2 holes of 2340 total
 }
 
 //When the server requests our certificate it defines also the method of passing it (although the supported algorithms are ignored....)
@@ -211,7 +225,7 @@ extern int fnPrepareCertificate(unsigned char *ptrData, unsigned short usSignatu
 
 extern int fnExtractPublicKey(unsigned char *ptrData, unsigned long ulKeyExchangeLength)
 {
-    int iReturn = mbedtls_ecdh_read_params(&(secure_session->ssl.handshake->ecdh_ctx), (const unsigned char **)&ptrData, (const unsigned char *)(ptrData + ulKeyExchangeLength));
+    int iReturn = mbedtls_ecdh_read_params(&(secure_session->ssl.handshake->ecdh_ctx), (const unsigned char **)&ptrData, (const unsigned char *)(ptrData + ulKeyExchangeLength)); // - allocates (?) to 50 block of heap - total 8612 - 3 holes of 1572 total
     if (iReturn == 0) {
         iReturn = ssl_check_server_ecdh_params(&secure_session->ssl);    // check server key exchange message (ECDHE curve)
     }
@@ -222,12 +236,12 @@ extern unsigned char *fnGeneratePublicKey(unsigned char *ptrData)
 {
     int iReturn;
     size_t output_length;
-    iReturn = mbedtls_ecp_gen_keypair_base(&(secure_session->ssl.handshake->ecdh_ctx.grp), &(secure_session->ssl.handshake->ecdh_ctx.grp.G), &(secure_session->ssl.handshake->ecdh_ctx.d), &(secure_session->ssl.handshake->ecdh_ctx.Q), secure_session->config.f_rng, secure_session->config.p_rng); // generate public key [ecp.c]
+    iReturn = mbedtls_ecp_gen_keypair_base(&(secure_session->ssl.handshake->ecdh_ctx.grp), &(secure_session->ssl.handshake->ecdh_ctx.grp.G), &(secure_session->ssl.handshake->ecdh_ctx.d), &(secure_session->ssl.handshake->ecdh_ctx.Q), secure_session->config.f_rng, secure_session->config.p_rng); // generate public key [ecp.c] - allocates (?) to 88 block of heap - total 10440 - 14 holes of 1748 total
     if (iReturn == 0) {
         iReturn = mbedtls_ecp_point_write_binary(&(secure_session->ssl.handshake->ecdh_ctx.grp), &(secure_session->ssl.handshake->ecdh_ctx.Q), secure_session->ssl.handshake->ecdh_ctx.point_format, &output_length, ptrData, 1000); // export a point into unsigned binary data [ecp.c]
         if (iReturn == 0) {
             ptrData += output_length;
-            iReturn = mbedtls_ecdh_calc_secret(&secure_session->ssl.handshake->ecdh_ctx, &(secure_session->ssl.handshake->pmslen), secure_session->ssl.handshake->premaster, MBEDTLS_MPI_MAX_SIZE, secure_session->config.f_rng, secure_session->config.p_rng);
+            iReturn = mbedtls_ecdh_calc_secret(&secure_session->ssl.handshake->ecdh_ctx, &(secure_session->ssl.handshake->pmslen), secure_session->ssl.handshake->premaster, MBEDTLS_MPI_MAX_SIZE, secure_session->config.f_rng, secure_session->config.p_rng); //  - allocates (?) to 89 block of heap - total 10472 - 13 holes of 1716 total
         }
     }
     if (iReturn != 0) {
@@ -248,20 +262,17 @@ extern int fnHandleSecurityExtension(unsigned short ext_id, unsigned short ext_s
 #if defined(MBEDTLS_SSL_RENEGOTIATION)
         renegotiation_info_seen = 1;
 #endif
-
-        if ((ret = ssl_parse_renegotiation_info(ssl, ptrExtensionData, ext_size)) != 0)
+        if ((ret = ssl_parse_renegotiation_info(ssl, ptrExtensionData, ext_size)) != 0) {
             return(ret);
-
+        }
         break;
 
 #if defined(MBEDTLS_SSL_MAX_FRAGMENT_LENGTH)
     case MBEDTLS_TLS_EXT_MAX_FRAGMENT_LENGTH:
    //     MBEDTLS_SSL_DEBUG_MSG(3, ("found max_fragment_length extension"));
-
         if ((ret = ssl_parse_max_fragment_length_ext(ssl, ptrExtensionData, ext_size)) != 0) {
             return(ret);
         }
-
         break;
 #endif /* MBEDTLS_SSL_MAX_FRAGMENT_LENGTH */
 
@@ -400,8 +411,7 @@ extern unsigned char *fnInsertSignatureAlgorithm(unsigned char *ptrData)
 
 //      MBEDTLS_SSL_DEBUG_MSG(2, ("=> write certificate verify"));
 
-        if ((ret = mbedtls_ssl_derive_keys(&secure_session->ssl)) != 0)
-        {
+        if ((ret = mbedtls_ssl_derive_keys(&secure_session->ssl)) != 0) { //  - allocates (?) to 95 block of heap - total 11472 - 12 holes of 716 total
 //            MBEDTLS_SSL_DEBUG_RET(1, "mbedtls_ssl_derive_keys", ret);
             //return(ret);
             return 0;
@@ -418,15 +428,13 @@ extern unsigned char *fnInsertSignatureAlgorithm(unsigned char *ptrData)
             return(ptrData);
         }
 
-        if (secure_session->ssl.client_auth == 0 || mbedtls_ssl_own_cert(&secure_session->ssl) == NULL)
-        {
+        if (secure_session->ssl.client_auth == 0 || mbedtls_ssl_own_cert(&secure_session->ssl) == NULL) {
         //    MBEDTLS_SSL_DEBUG_MSG(2, ("<= skip write certificate verify"));
             //ssl->state++;
             return(ptrData);
         }
 
-        if (mbedtls_ssl_own_key(&secure_session->ssl) == NULL)
-        {
+        if (mbedtls_ssl_own_key(&secure_session->ssl) == NULL) {
    //         MBEDTLS_SSL_DEBUG_MSG(1, ("got no private key for certificate"));
            // return(MBEDTLS_ERR_SSL_PRIVATE_KEY_REQUIRED);
             return 0;
@@ -470,8 +478,7 @@ extern unsigned char *fnInsertSignatureAlgorithm(unsigned char *ptrData)
 #endif /* MBEDTLS_SSL_PROTO_SSL3 || MBEDTLS_SSL_PROTO_TLS1 || \
               MBEDTLS_SSL_PROTO_TLS1_1 */
 #if defined(MBEDTLS_SSL_PROTO_TLS1_2)
-            if (secure_session->ssl.minor_ver == MBEDTLS_SSL_MINOR_VERSION_3)
-            {
+            if (secure_session->ssl.minor_ver == MBEDTLS_SSL_MINOR_VERSION_3) {
                 /*
                 * digitally-signed struct {
                 *     opaque handshake_messages[handshake_messages_length];
@@ -487,14 +494,11 @@ extern unsigned char *fnInsertSignatureAlgorithm(unsigned char *ptrData)
                 * Reason: Otherwise we should have running hashes for SHA512 and SHA224
                 *         in order to satisfy 'weird' needs from the server side.
                 */
-                if (secure_session->ssl.transform_negotiate->ciphersuite_info->mac ==
-                    MBEDTLS_MD_SHA384)
-                {
+                if (secure_session->ssl.transform_negotiate->ciphersuite_info->mac == MBEDTLS_MD_SHA384) {
                     md_alg = MBEDTLS_MD_SHA384;
                     *ptrData++ = MBEDTLS_SSL_HASH_SHA384;
                 }
-                else
-                {
+                else {
                     md_alg = MBEDTLS_MD_SHA256;
                     *ptrData++ = MBEDTLS_SSL_HASH_SHA256;
                 }
@@ -512,10 +516,7 @@ extern unsigned char *fnInsertSignatureAlgorithm(unsigned char *ptrData)
                 return 0;
             }
 
-        if ((ret = mbedtls_pk_sign(mbedtls_ssl_own_key(&secure_session->ssl), md_alg, hash_start, hashlen,
-            (ptrData + 2), &n,
-            secure_session->ssl.conf->f_rng, secure_session->ssl.conf->p_rng)) != 0)
-        {
+        if ((ret = mbedtls_pk_sign(mbedtls_ssl_own_key(&secure_session->ssl), md_alg, hash_start, hashlen, (ptrData + 2), &n, secure_session->ssl.conf->f_rng, secure_session->ssl.conf->p_rng)) != 0) { //  - allocates (?) to 100 block of heap - total 13024 - 17 holes of 7116 total
       //      MBEDTLS_SSL_DEBUG_RET(1, "mbedtls_pk_sign", ret);
            // return(ret);
             return 0;
@@ -523,27 +524,6 @@ extern unsigned char *fnInsertSignatureAlgorithm(unsigned char *ptrData)
         *ptrData++ = (unsigned char)(n >> 8);
         *ptrData++ = (unsigned char)(n);
         ptrData += n;
-
-        /*
-        ssl->out_msg[4 + offset] = (unsigned char)(n >> 8);
-        ssl->out_msg[5 + offset] = (unsigned char)(n);
-
-        ssl->out_msglen = 6 + n + offset;
-        ssl->out_msgtype = MBEDTLS_SSL_MSG_HANDSHAKE;
-        ssl->out_msg[0] = MBEDTLS_SSL_HS_CERTIFICATE_VERIFY;
-
-        ssl->state++;
-        */
-      //  if ((ret = mbedtls_ssl_write_record(&secure_session->ssl)) != 0)
-      //{
-     //       MBEDTLS_SSL_DEBUG_RET(1, "mbedtls_ssl_write_record", ret);
-         //   return(ret);
-      //    return 0;
-      //}
-
-    //    MBEDTLS_SSL_DEBUG_MSG(2, ("<= write certificate verify"));
-
-        //return(ret);
         return ptrData;
     }
 #endif /* !MBEDTLS_KEY_EXCHANGE_RSA_ENABLED &&
@@ -599,24 +579,14 @@ extern unsigned char *fnEncrypt(unsigned char *ptrData, unsigned char *ptrInputD
         /*
         * Set the out_msg pointer to the correct location based on IV length
         */
-        if (secure_session->ssl.minor_ver >= MBEDTLS_SSL_MINOR_VERSION_2)
-        {
-            secure_session->ssl.out_msg = secure_session->ssl.out_iv + secure_session->ssl.transform_negotiate->ivlen -
-                secure_session->ssl.transform_negotiate->fixed_ivlen;
+        if (secure_session->ssl.minor_ver >= MBEDTLS_SSL_MINOR_VERSION_2) {
+            secure_session->ssl.out_msg = (secure_session->ssl.out_iv + secure_session->ssl.transform_negotiate->ivlen - secure_session->ssl.transform_negotiate->fixed_ivlen);
         }
         else {
             secure_session->ssl.out_msg = secure_session->ssl.out_iv;
         }
-        memcpy(secure_session->ssl.out_msg, ptrInputData, ulLength);     // copy plain text to its position so that it will be encrypted
+        uMemcpy(secure_session->ssl.out_msg, ptrInputData, ulLength);    // copy plain text to its position so that it will be encrypted
     }
-
-   // MBEDTLS_SSL_DEBUG_MSG( 2, ( "=> encrypt buf" ) );
-
- /*   if( ssl->session_out == NULL || ssl->transform_out == NULL )
-    {
-        MBEDTLS_SSL_DEBUG_MSG( 1, ( "should never happen" ) );
-        return( MBEDTLS_ERR_SSL_INTERNAL_ERROR );
-    }*/
 
     mode = mbedtls_cipher_get_cipher_mode( &ssl->transform_out->cipher_ctx_enc );
 
@@ -627,13 +597,11 @@ extern unsigned char *fnEncrypt(unsigned char *ptrData, unsigned char *ptrInputD
      * Add MAC before if needed
      */
 #if defined(SSL_SOME_MODES_USE_MAC)
-    if( mode == MBEDTLS_MODE_STREAM ||
-        ( mode == MBEDTLS_MODE_CBC
+    if (mode == MBEDTLS_MODE_STREAM || ( mode == MBEDTLS_MODE_CBC
 #if defined(MBEDTLS_SSL_ENCRYPT_THEN_MAC)
           && ssl->session_out->encrypt_then_mac == MBEDTLS_SSL_ETM_DISABLED
 #endif
-        ) )
-    {
+        ) ) {
 #if defined(MBEDTLS_SSL_PROTO_SSL3)
         if( ssl->minor_ver == MBEDTLS_SSL_MINOR_VERSION_0 )
         {
@@ -646,8 +614,7 @@ extern unsigned char *fnEncrypt(unsigned char *ptrData, unsigned char *ptrInputD
 #endif
 #if defined(MBEDTLS_SSL_PROTO_TLS1) || defined(MBEDTLS_SSL_PROTO_TLS1_1) || \
         defined(MBEDTLS_SSL_PROTO_TLS1_2)
-        if( ssl->minor_ver >= MBEDTLS_SSL_MINOR_VERSION_1 )
-        {
+        if (ssl->minor_ver >= MBEDTLS_SSL_MINOR_VERSION_1) {
             mbedtls_md_hmac_update( &ssl->transform_out->md_ctx_enc, ssl->out_ctr, 8 );
             mbedtls_md_hmac_update( &ssl->transform_out->md_ctx_enc, ssl->out_hdr, 3 );
             mbedtls_md_hmac_update( &ssl->transform_out->md_ctx_enc, ssl->out_len, 2 );
@@ -665,11 +632,6 @@ extern unsigned char *fnEncrypt(unsigned char *ptrData, unsigned char *ptrInputD
 //            MBEDTLS_SSL_DEBUG_MSG( 1, ( "should never happen" ) );
             return( 0 /*MBEDTLS_ERR_SSL_INTERNAL_ERROR*/ );
         }
-
-//        MBEDTLS_SSL_DEBUG_BUF( 4, "computed mac",
-  //                     ssl->out_msg + ssl->out_msglen,
-    //                   ssl->transform_out->maclen );
-
         ssl->out_msglen += ssl->transform_out->maclen;
         auth_done++;
     }
@@ -708,8 +670,7 @@ extern unsigned char *fnEncrypt(unsigned char *ptrData, unsigned char *ptrInputD
 #endif /* MBEDTLS_ARC4_C || MBEDTLS_CIPHER_NULL_CIPHER */
 #if defined(MBEDTLS_GCM_C) || defined(MBEDTLS_CCM_C)
     if( mode == MBEDTLS_MODE_GCM ||
-        mode == MBEDTLS_MODE_CCM )
-    {
+        mode == MBEDTLS_MODE_CCM ) {
         int ret;
         size_t enc_msglen, olen;
         unsigned char *enc_msg;
@@ -730,8 +691,7 @@ extern unsigned char *fnEncrypt(unsigned char *ptrData, unsigned char *ptrInputD
         /*
          * Generate IV
          */
-        if( ssl->transform_out->ivlen - ssl->transform_out->fixed_ivlen != 8 )
-        {
+        if( ssl->transform_out->ivlen - ssl->transform_out->fixed_ivlen != 8 ) {
             /* Reminder if we ever add an AEAD mode with a different size */
          //   MBEDTLS_SSL_DEBUG_MSG( 1, ( "should never happen" ) );
             return( 0/*MBEDTLS_ERR_SSL_INTERNAL_ERROR*/ );
@@ -765,14 +725,12 @@ extern unsigned char *fnEncrypt(unsigned char *ptrData, unsigned char *ptrInputD
                                          add_data, 13,
                                          enc_msg, enc_msglen,
                                          enc_msg, &olen,
-                                         enc_msg + enc_msglen, taglen ) ) != 0 )
-        {
+                                         enc_msg + enc_msglen, taglen ) ) != 0 ) {
          //   MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_cipher_auth_encrypt", ret );
             return( 0 );
         }
 
-        if( olen != enc_msglen )
-        {
+        if (olen != enc_msglen) {
      //       MBEDTLS_SSL_DEBUG_MSG( 1, ( "should never happen" ) );
             return( 0/*MBEDTLS_ERR_SSL_INTERNAL_ERROR*/ );
         }
@@ -932,7 +890,6 @@ extern int fnDecrypt(unsigned char **ptrptrInput, unsigned long *ptr_ulLength)
     size_t padlen = 0, correct = 1;
 #endif
 
-
     ssl->in_msglen = *ptr_ulLength;
     ssl->in_hdr = (ptrInput - 5); // warning - this assumes that the record header is in the buffer!!!!!
     ssl->in_len = (ssl->in_hdr + 3);
@@ -944,21 +901,14 @@ extern int fnDecrypt(unsigned char **ptrptrInput, unsigned long *ptr_ulLength)
         secure_session->ssl.in_msg = secure_session->ssl.in_iv;
     }
 
-
-
-
-//    MBEDTLS_SSL_DEBUG_MSG(2, ("=> decrypt buf"));
-
-    if (ssl->session_in == NULL || ssl->transform_in == NULL)
-    {
+    if (ssl->session_in == NULL || ssl->transform_in == NULL) {
    //     MBEDTLS_SSL_DEBUG_MSG(1, ("should never happen"));
-        return(MBEDTLS_ERR_SSL_INTERNAL_ERROR);
+        return (MBEDTLS_ERR_SSL_INTERNAL_ERROR);
     }
 
     mode = mbedtls_cipher_get_cipher_mode(&ssl->transform_in->cipher_ctx_dec);
 
-    if (ssl->in_msglen < ssl->transform_in->minlen)
-    {
+    if (ssl->in_msglen < ssl->transform_in->minlen) {
 //        MBEDTLS_SSL_DEBUG_MSG(1, ("in_msglen (%d) < minlen (%d)",
         //    ssl->in_msglen, ssl->transform_in->minlen));
         return(MBEDTLS_ERR_SSL_INVALID_MAC);
@@ -992,8 +942,7 @@ extern int fnDecrypt(unsigned char **ptrptrInput, unsigned long *ptr_ulLength)
 #endif /* MBEDTLS_ARC4_C || MBEDTLS_CIPHER_NULL_CIPHER */
 #if defined(MBEDTLS_GCM_C) || defined(MBEDTLS_CCM_C)
         if (mode == MBEDTLS_MODE_GCM ||
-            mode == MBEDTLS_MODE_CCM)
-        {
+            mode == MBEDTLS_MODE_CCM) {
             int ret;
             size_t dec_msglen, olen;
             unsigned char *dec_msg;
@@ -1449,16 +1398,14 @@ extern unsigned char *fnFinished(unsigned char *ptrData)
     /*
     * Set the out_msg pointer to the correct location based on IV length
     */
-    if (secure_session->ssl.minor_ver >= MBEDTLS_SSL_MINOR_VERSION_2)
-    {
-        secure_session->ssl.out_msg = secure_session->ssl.out_iv + secure_session->ssl.transform_negotiate->ivlen -
-            secure_session->ssl.transform_negotiate->fixed_ivlen;
+    if (secure_session->ssl.minor_ver >= MBEDTLS_SSL_MINOR_VERSION_2) {
+        secure_session->ssl.out_msg = (secure_session->ssl.out_iv + secure_session->ssl.transform_negotiate->ivlen - secure_session->ssl.transform_negotiate->fixed_ivlen);
     }
     else {
         secure_session->ssl.out_msg = secure_session->ssl.out_iv;
     }
     
-    secure_session->ssl.handshake->calc_finished(&(secure_session->ssl), (secure_session->ssl.out_msg + 4), secure_session->ssl.conf->endpoint); // complete the calculation of the check sum and insert the result into the message
+    secure_session->ssl.handshake->calc_finished(&(secure_session->ssl), (secure_session->ssl.out_msg + 4), secure_session->ssl.conf->endpoint); // complete the calculation of the check sum and insert the result into the message - allocates (?) to 100 block of heap - total 13024 - 17 holes of 7116 total
 
     /*
     * RFC 5246 7.4.9 (Page 63) says 12 is the default length and ciphersuites
@@ -1635,8 +1582,6 @@ static void ssl_handshake_params_init( mbedtls_ssl_handshake_params *handshake )
     handshake->sni_authmode = MBEDTLS_SSL_VERIFY_UNSET;
 #endif
 }
-
-
 
 #if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED) ||                     \
     defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED) ||                   \

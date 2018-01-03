@@ -11,7 +11,7 @@
     File:      kinetis.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     03.03.2012 Correct PORT5_BLOCK address (K61/K70)                     {1}
     03.03.2012 Add UART2 alternative port mapping on K70                 {2}

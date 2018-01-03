@@ -11,7 +11,7 @@
     File:      glcd_toshiba.h
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     12.08.2013 Add ST7565S_GLCD_MODE                                     {1}
        

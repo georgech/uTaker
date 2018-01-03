@@ -11,7 +11,7 @@
     File:      LCD.c
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     09.10.2007 Add configurable delay to ensure two back to back writes are not too fast in 4 bit mode {1}
     10.10.2007 Correct nibble adjustment in 4-bit read                   {2}

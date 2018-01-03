@@ -11,7 +11,7 @@
     File:      kinetis.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     23.02.2012 Allow user defined start-up code immediately after the watchdog configuration and before clock configuration to be defined {1}
     12.03.2012 Add ADC support                                           {5}

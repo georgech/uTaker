@@ -11,7 +11,7 @@
     File:      http.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     16.05.2007 Rename variable from i to iSessionNumber and remove unnecessary zeroing {1}
     16.05.2007 Add iWebHandlerCommand variable for clarity.                            {2}

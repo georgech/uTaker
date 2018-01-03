@@ -11,7 +11,7 @@
     File:      glcd_fonts.h
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     This file is not linked directly in the project but is included by the GLCD task file
 

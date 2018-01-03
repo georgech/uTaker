@@ -11,7 +11,7 @@
     File:      zero_config.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     03.08.2011 Add optional simulator validation test and simulator state display  {1}
     03.08.2011 Ensure new link local address is used after collision during use {2}

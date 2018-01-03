@@ -11,7 +11,7 @@
     File:      GlobalTimer.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     This task is used as global system timer task to allow multiple timers
     18.01.2007 Correct hardware timer check                              {1}

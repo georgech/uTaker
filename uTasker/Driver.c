@@ -11,7 +11,7 @@
     File:      Driver.c (containing queue driver and some library replacement routines)
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     24.03.2007 Cast to quieten GNU compiler                              {1}
     25.08.2007 uStrlen() const type to match prototype                   {2}

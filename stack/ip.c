@@ -11,7 +11,7 @@
     File:      ip.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     08.04.2007 Add SUPPORT_SUBNET_BROADCAST - new function fnSubnetBroadcast() {1}
     25.08.2007 Use static RAM for code from RAM since uMalloc may not always be ready {2}

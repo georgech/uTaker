@@ -11,7 +11,7 @@
     File:      uTasker.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     24.03.2007 Starting a monostable timer with zero event changes periodic repetition timer {1}
     30.03.2007 Change end of task table on zero name rather than zero function. This allows more flexibility when redefining tasks {2}

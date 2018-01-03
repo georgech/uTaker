@@ -11,7 +11,7 @@
     File:      WinPcap.cpp
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     08.01.2008 Made content conditional on Ethernet interface availability
     16.07.2008 Wait before injecting Ethernet frames if the main task is active {1}

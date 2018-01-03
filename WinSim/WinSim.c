@@ -11,7 +11,7 @@
     File:      WinSim.c
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     28.04.2007 Added function fnGetEEPROMSize()                          {1}
     11.08.2007 Added SPI Data FLASH to support the AT45DBXXX             {2}

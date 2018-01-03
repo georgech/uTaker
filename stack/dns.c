@@ -11,7 +11,7 @@
     File:      dns.c (DNS client)
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     26.12.2009 Add random ID to ensure that no routers block repeated ID values {1}
     09.12.2013 Correction of DNS query length and allow a host name to end with '.' (thanks to Jakob M.N) {2}

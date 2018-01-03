@@ -11,7 +11,7 @@
     File:        snmp_mib_handlers.c
     Project:     Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     This file contains standard SNMP MIB-II handlers for get and set requests
     - each function handler is preceded by its description from rfc 1213

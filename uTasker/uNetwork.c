@@ -11,7 +11,7 @@
     File:      uNetwork.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     10.03.2007 Sequence number correction                                {1}
     08.03.2007 Improve global message sequence number handling           {2}

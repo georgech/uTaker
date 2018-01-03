@@ -11,7 +11,7 @@
     File:      time_keeper.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     18.02.2014 Correct fnConvertSecondsTime() calculation                {69}
     19.08.2015 Use uMemset() to initialise strcture to avoid GCC using memset() {1}

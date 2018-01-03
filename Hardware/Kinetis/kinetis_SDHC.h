@@ -11,7 +11,7 @@
     File:      kinetis_SDHC.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     27.07.2013 Ensure that SDHC read is not performed using a command that can't save to misaligned memory {47}
     18.12.2013 Add monitoring of SDHC transmission buffer and break on stall {62}

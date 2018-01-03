@@ -11,7 +11,7 @@
     File:      kinetis_FLASH.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     07.04.2012 Adapt Flash interface for FPU devices                     {10}
     22.07.2012 Add interface for OTP area                                {20}

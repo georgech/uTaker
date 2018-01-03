@@ -11,7 +11,7 @@
     File:      icmp.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     15.03.2010 Extended to include ICMPV6 (USE_IPV6) to handle neighbor solicitation/advertisement and pings
     06.09.2010 Optimise code when the device performs rx or tx offloading {1}

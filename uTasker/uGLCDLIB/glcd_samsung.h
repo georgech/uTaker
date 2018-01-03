@@ -11,7 +11,7 @@
     File:      glcd_samsung.h
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     25.02.2011 Correct polling of busy bit in multiple devices           {1}
        

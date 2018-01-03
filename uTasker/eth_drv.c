@@ -11,7 +11,7 @@
     File:      eth_drv.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     15.03.2007 VLAN transmission support added                           {1}
     07.05.2007 Added STR91XF support                                     {2}

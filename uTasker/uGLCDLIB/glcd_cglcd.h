@@ -11,7 +11,7 @@
     File:      glcd_cglcd.h
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     13.05.2010 Add KITRONIX_GLCD_MODE                                    {1}
     26.06.2010 Add MB785_GLCD_MODE                                       {2}

@@ -11,7 +11,7 @@
     File:      dhcp.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     10.06.2007 Quieten GNU compiler by initialising a variable           {1}
     22.06.2008 Allow operation without random number generator support   {2}

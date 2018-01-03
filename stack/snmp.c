@@ -8,10 +8,10 @@
     www.uTasker.com    Skype: M_J_Butcher
 
     ---------------------------------------------------------------------
-    File:        snmp.c (SNMPv1, SNMPv2c)
-    Project:     Single Chip Embedded Internet
+    File:      snmp.c (SNMPv1, SNMPv2c)
+    Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     30.03.2014 Modify handling single variable binding items in the request since some SNMP managers count ASN1_NULL_CODE as part of the sequence length and some don't {1}
     30.03.2014 Correct ASN1_TIME_STAMP_CODE insertion to use the same format as ucANS1_type {2}

@@ -11,7 +11,7 @@
     File:      SSC_drv.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     04.06.2013 Added SSC_DRV_MALLOC() and SCC_DRV_MALLOC_ALIGN() defaults {1}
 

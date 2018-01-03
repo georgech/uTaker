@@ -11,7 +11,7 @@
     File:      NetworkIndicator.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     20.01.2009 Add debug message for link up/down                        {1}
     16.12.2012 Add PHY_POLL_LINK support (this version doesn't operate together with LAN_REPORT_ACTIVITY) {2}

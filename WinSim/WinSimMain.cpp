@@ -11,7 +11,7 @@
     File:      WinSimMain.cpp
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     18.01.2007 Correct array size                                        {1}
     26.01.2007 Increase ucDoList[10000]; to ensure no overrun {2} and OVERLAPPED data structure in fnSendSerialMessage

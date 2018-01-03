@@ -8,10 +8,10 @@
     www.uTasker.com    Skype: M_J_Butcher
 
     --------------------------------------------------------------------
-    File:      PPP.c
+    File:      ppp.c
     Project:   Single Chip Embedded Internet
     --------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     ********************************************************************
     09.05.2017 SLIP [RFC1055] implemented (PPP is not presently used but shows an initial test framework)
     

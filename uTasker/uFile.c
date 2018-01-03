@@ -11,7 +11,7 @@
     File:      uFile.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     01.03.2007 Optional uCompareFile() added
     19.05.2007 Add FLASH unprotect/protect support for devices which require or support it {1}

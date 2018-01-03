@@ -11,7 +11,7 @@
     File:      app_user_files.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     06.08.2009 Add OLED graphical demo                                   {1}
     28.02.2010 Control LCD web interface with define LCD_WEB_INTERFACE   {2}

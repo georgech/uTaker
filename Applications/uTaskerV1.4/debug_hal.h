@@ -12,7 +12,7 @@
     Project:   uTasker project
                - hardware application layer for Kinetis
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     This file includes a number of hardware specific routines that are
     included in debug.c. This include file allows the main content of debug.c

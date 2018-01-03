@@ -11,7 +11,7 @@
     File:      webutils.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     16.02.2007 Added fnEncode64() to support SMTP login
     01.06.2007 Changed use of user name and password checking            {1}

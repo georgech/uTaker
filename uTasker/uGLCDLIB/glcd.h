@@ -11,7 +11,7 @@
     File:      glcd.h
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     11.08.2009 Add FONT_CHAR_LCD                                         {1}     
     11.08.2009 Add GLCD_LINE and GLCD_RECT                               {2}

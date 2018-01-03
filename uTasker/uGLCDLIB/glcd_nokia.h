@@ -11,7 +11,7 @@
     File:      glcd_nokia.h
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     20.10.2009 Add pixel format command during Philips controller initialisation {1}
        

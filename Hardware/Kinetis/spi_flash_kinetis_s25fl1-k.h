@@ -11,7 +11,7 @@
     File:      spi_flash_kinetis_s25fl1-k.h - Spansion
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     22.12.2015 Correction for KL interface                               {1}
     22.12.2015 Remove write enable outside of this file for KL/KE chip select compatibility {2}

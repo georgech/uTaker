@@ -11,7 +11,7 @@
     File:      mass_storage.h
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     11.07.2014 utFAT2.0
     22.01.2015 Add option to return a file's creation time and date in its file object {1}

@@ -11,7 +11,7 @@
     File:      debug.c
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     18.02.2007 Corrected port support for M52233 DEMO board              {1}
     26.02.2007 Improve port control via serial/Telnet                    {2}

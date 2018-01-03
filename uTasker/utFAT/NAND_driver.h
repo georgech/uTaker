@@ -11,7 +11,7 @@
     File:      NAND_driver.h
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     Implementation originally for SAM7SE with K9F5608U0D-P in 8 bit mode
     24.02.2011 Correct management of last remap content location         {1}

@@ -11,7 +11,7 @@
     File:      ip_utils.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     01.03.2007 Add file name termination when ? found. This is useful when sending files in html text where this identifies the end of a name.
     26.05.2007 Improve MIME type search                                  {2}

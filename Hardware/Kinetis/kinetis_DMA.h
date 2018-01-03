@@ -11,7 +11,7 @@
     File:      kinetis_DMA.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     17.11.2013 Add uReverseMemcpy() using DMA                            {59}
     06.05.2014 Add KL DMA based uMemcpy() and uMemset()                  {80}

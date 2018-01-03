@@ -11,7 +11,7 @@
     File:      kinetis_PWM.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     22.07.2014 Add clock source selection to TPM                         {1}
     04.01.2016 Added DMA buffer to PWM support                           {2}

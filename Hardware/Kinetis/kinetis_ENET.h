@@ -11,7 +11,7 @@
     File:      kinetis_ENET.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     21.04.2012 Use link-local IPv6 address for multicast configuration   {11}
     29.04.2012 Add LAN_TX_FPU_WORKAROUND to workaround a problem with the Ethernet controller missing a queued buffer when caching is enabled {12}

@@ -11,7 +11,7 @@
     File:      glcd_tft.h [LPC247x / LPC1788 / Kinetis K70]
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     09.08.2010 Add CGLCD_PIXEL_SIZE to control effective size             {1}
     10.08.2010 Don't remove pull-up from P1-27 when USB is used           {2}

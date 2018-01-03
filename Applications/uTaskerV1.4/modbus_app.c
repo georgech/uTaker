@@ -11,7 +11,7 @@
     File:      modbus_app.c
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     02.09.2009 Adjust gateway parameter to respect present use           // {1}
     07.11.2011 Don't use fnMODBUS_Master_send() when there is no master functionality {2}
@@ -874,7 +874,20 @@ extern void fnInitModbus(void)
 #endif
 #if MODBUS_TCP_MASTERS > 0 && defined MODBUS_TCP
     #if defined _WINDOWS && defined PSEUDO_LOOPBACK
-    fnAddARP(&network.ucOurIP[0], (unsigned char *)cucBroadcast, ARP_FIXED_IP); // prime our own IP address in the ARP table to allow internal loop back testing - only for simulation!
+    {
+        ARP_DETAILS arp_details;
+    #if IP_INTERFACE_COUNT > 1
+        arp_details.Tx_handle = 0;                                       // the interface handle associated with the ARP entry
+    #endif
+    #if defined ARP_VLAN_SUPPORT
+        arp_details.usVLAN_ID = 0xffff;                                  // VLAN ID for checking with ARP entries (0xffff means no VLAN tag)
+    #endif
+        arp_details.ucType = ARP_FIXED_IP;                               // the type of ARP entry (ARP_FIXED_IP, ARP_TEMP_IP, ARP_PERMANENT_IP)
+    #if IP_NETWORK_COUNT > 1
+        arp_details.ucNetworkID = 0;                                     // the network that ARP activity belongs to
+    #endif
+        fnAddARP(&network.ucOurIP[0], (unsigned char *)cucBroadcast, &arp_details); // prime our own IP address in the ARP table to allow internal loop back testing - only for simulation!
+    }
     #endif
     fnInitialiseMODBUS_port(++usModbusPort, 0, 0, fnMODBUSmaster);       // initialise MODBUS TCP MASTER
     fnInitialiseMODBUS_port(++usModbusPort, 0, 0, fnMODBUSmaster);       // initialise MODBUS TCP MASTER

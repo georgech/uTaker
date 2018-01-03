@@ -11,7 +11,7 @@
     File:      mqtt.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     Single MQTT client connection implemented using a simple socket (one outstanding transmission at a time)
 
@@ -467,10 +467,20 @@ static int fnMQTTListener(USOCKET Socket, unsigned char ucEvent, unsigned char *
         break;
 
     case TCP_EVENT_CLOSE:                                                // broker is requesting a TCP close
+#if defined SECURE_MQTT
+        if (MQTTS_PORT == usMQTT_port) {                                 // if we are operating in secure mode
+            fnTLS(Socket, TCP_EVENT_CLOSE);
+        }
+#endif
         fnSetNextMQTT_state(MQTT_STATE_CLOSING);
         break;
 
     case TCP_EVENT_ABORT:                                                // broker has reset the TCP connection
+#if defined SECURE_MQTT
+        if (MQTTS_PORT == usMQTT_port) {                                 // if we are operating in secure mode
+            fnTLS(Socket, TCP_EVENT_ABORT);
+        }
+#endif
         fnMQTT_error(MQTT_HOST_CLOSED);
         break;
 

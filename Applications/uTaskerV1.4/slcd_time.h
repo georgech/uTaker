@@ -11,7 +11,7 @@
     File:      slcd_time.h
     Project:   uTasker Demonstration project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
 */
 

@@ -11,7 +11,7 @@
     File:      secure_layer.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
 
 */        
@@ -35,6 +35,7 @@ extern unsigned char *fnInsertTLS_random(unsigned char *ptrData, size_t Length);
 extern void fnSwitchTransformSpec(void);
 extern int fnDecrypt(unsigned char **ptrptrInput, unsigned long *ptr_ulLength);
 extern unsigned char *fnEncrypt(unsigned char *ptrInput, unsigned char *ptrInputData, unsigned long ulLength);
+extern void fnTearDown(void);
 
 
 /* =================================================================== */
@@ -579,6 +580,10 @@ extern int fnTLS(USOCKET Socket, unsigned char ucEvent)
             iTLS_tx_state = 105;                                         // the next step if to send an encrypted handshake message
         }
         break;
+    case TCP_EVENT_CLOSE:
+    case TCP_EVENT_ABORT:
+        fnTearDown();
+        break;
     case TCP_EVENT_ACK:
     case TCP_EVENT_REGENERATE:
         return APP_SECURITY_HANDLED;
@@ -891,9 +896,7 @@ extern int fnSecureLayerReception(USOCKET Socket, unsigned char **ptr_ucPrtData,
                 }
                 iReturn |= fnHandleHandshake(Socket, ptrReceptionBuffer, ulHandshakeSize, ucPresentHandshakeType); // handle from intermediate buffer
                 uCFree(ptrReceptionBuffer - 4);                          // deallocate intermediate reception buffer memory (note that we set the pointer back to be beginning of the physical buffer)
-                ptrReceptionBuffer = 0;                                  // no memory allocated
-                ulHandshakeSize = ulSave;
-                usRecordLength = 4;                                      // caue record termination
+                ptrReceptionBuffer = 0;                                  // no more memory allocated
             }
             else {                                                       // this tcp frame contains the complete handshake protocol content
                 iReturn |= fnHandleHandshake(Socket, ucPrtData, ulHandshakeSize, ucPresentHandshakeType); // handle directly in tcp reception buffer
@@ -910,7 +913,7 @@ extern int fnSecureLayerReception(USOCKET Socket, unsigned char **ptr_ucPrtData,
             usLength -= (unsigned short)(ulHandshakeSize - ulBufferContent); // remaining in present input buffer
             ucPrtData += (ulHandshakeSize - ulBufferContent);
             ulBufferContent = 0;
-            usRecordLength -= (unsigned short)ulHandshakeSize;           // total remaining
+            usRecordLength -= (unsigned short)ulHandshakeSize;           // total record content remaining
             iTLS_rx_state = TLS_RX_STATE_PROTOCOL_TYPE;                  // continue with next handshake protocol
             continue;                                                    // do not perform usLength and ucPtrData manipulation
         case TLS_RX_STATE_ENCRYPTED_APP_CONTENT:

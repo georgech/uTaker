@@ -11,7 +11,7 @@
     File:      kinetis_ADC.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     03.06.2013 Add ADC result to interrupt call-back                     {41}
     30.09.2013 Add ADC A/B input multiplexer control                     {54}

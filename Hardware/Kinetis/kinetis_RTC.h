@@ -11,7 +11,7 @@
     File:      kinetis_RTC.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     05.08.2013 Add UTC option when setting and retrieving time/date      {51}
     17.04.2014 Use RTC seconds interrupt rather than alarm interrupt, when available {75}
