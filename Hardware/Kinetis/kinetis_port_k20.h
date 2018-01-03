@@ -279,15 +279,15 @@ static const char *cPinNumber[PORTS_AVAILABLE + 1][PORT_WIDTH][10] = {
         #endif
     },
     { 
-        // QFN32, LQFP48, ,LQFP64, MAPBGA64, LQFP80, MAPBGA81 LQFP100, MAPBGA121, LQFP144, MAPBGA144    dedicated ADC pins
-        {  "-",   "-",    "9",     "G1",  "-",  "-",   "-",   "-",   "-",   "-",    }, // ADC0_DP0
-        {  "-",   "-",    "10",    "F1",  "-",  "-",   "-",   "-",   "-",   "-",    }, // ADC0_DM0
+        // QFN32, LQFP48, LQFP64,  MAPBGA64, LQFP80, MAPBGA81 LQFP100, MAPBGA121, LQFP144, MAPBGA144    dedicated ADC pins
+        {  "-",   "-",    "9",     "G1",  "-",  "-",   "-",   "-",   "-",   "-",    }, // ADC0_DP0/ADC1_DP3
+        {  "-",   "-",    "10",    "F1",  "-",  "-",   "-",   "-",   "-",   "-",    }, // ADC0_DM0/ADC1_DM3
         {  "-",   "-",    "-",     "-",   "-",  "-",   "-",   "-",   "-",   "-",    }, // ADC0_DP1
         {  "-",   "-",    "-",     "-",   "-",  "-",   "-",   "-",   "-",   "-",    }, // ADC0_DM1
         {  "-",   "-",    "-",     "-",   "-",  "-",   "-",   "-",   "-",   "-",    }, // PGA0_DP
         {  "-",   "-",    "-",     "-",   "-",  "-",   "-",   "-",   "-",   "-",    }, // PGA0_DM
-        {  "-",   "-",    "11",    "G2",  "-",  "-",   "-",   "-",   "-",   "-",    }, // ADC0_DP3
-        {  "-",   "-",    "12",    "F2",  "-",  "-",   "-",   "-",   "-",   "-",    }, // ADC0_DM3
+        {  "-",   "-",    "11",    "G2",  "-",  "-",   "-",   "-",   "-",   "-",    }, // ADC1/DP0/ADC0_DP3
+        {  "-",   "-",    "12",    "F2",  "-",  "-",   "-",   "-",   "-",   "-",    }, // ADC1_DM0/ADC0_DM3
         {  "-",   "-",    "-",     "-",   "-",  "-",   "-",   "-",   "-",   "-",    }, // ADC1_DP0
         {  "-",   "-",    "-",     "-",   "-",  "-",   "-",   "-",   "-",   "-",    }, // ADC1_DM0
         {  "-",   "-",    "-",     "-",   "-",  "-",   "-",   "-",   "-",   "-",    }, // ADC1_DP1
@@ -739,8 +739,46 @@ static const char *cPinNumber[PORTS_AVAILABLE + 1][PORT_WIDTH][10] = {
 #endif
 };
 
-static int ADC_DEDICATED_CHANNEL[PORT_WIDTH] = {0, 0, 0, 0, 0, 0, 0, ADC_DM3_SINGLE, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-static int ADC_DEDICATED_MODULE[PORT_WIDTH] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+#if defined KINETIS_K22
+#define _DEDICATED_PINS
+static CHAR *cDedicated[PORT_WIDTH] = {                                  // dedicated pin functions
+    "ADC0_DP0/ADC1_DP3",
+    "ADC0_DM0/ADC1_DM3",
+    "ADC0_DP1",
+    "ADC0_DM1",
+    "PGA0_DP",
+    "PGA0_DM",
+    "ADC1_DP0/ADC0_DP3",
+    "ADC1_DM0/ADC0_DM3",
+    "ADC1_DP0",
+    "ADC1_DM0",
+    "ADC1_DP1",
+    "ADC1_DM1",
+    "PGA1_DP",
+    "PGA1_DM",
+    "ADC1_DP3",
+    "ADC1_DM3",
+    "ADC2_DP0",
+    "ADC2_DM0",
+    "ADC2_DP1",
+    "ADC2_DM1",
+    "PGA2_DP",
+    "PGA2_DM",
+    "ADC2_DP3",
+    "ADC2_DM3",
+    "ADC3_DP0",
+    "ADC3_DM0",
+    "ADC3_DP1",
+    "ADC3_DM1",
+    "PGA3_DP",
+    "PGA3_DM",
+    "ADC3_DP3",
+    "ADC3_DM3"
+};
+#endif
+
+static int ADC_DEDICATED_CHANNEL[PORT_WIDTH] = {0, 0, 0, 0, 0, 0, 0, ADC_DM3_SINGLE, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ADC_DM0_SINGLE, ADC_DP0_SINGLE, 0, 0, 0, 0, ADC_DM0_SINGLE, ADC_DP0_SINGLE };
+static int ADC_DEDICATED_MODULE[PORT_WIDTH] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 1, 1};
 static int ADC_MUX_CHANNEL[PORTS_AVAILABLE][PORT_WIDTH] = {
     { -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 }, // port A
     { -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 }, // port B

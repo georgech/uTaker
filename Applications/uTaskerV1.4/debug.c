@@ -4441,7 +4441,7 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
             else {
                 _CLEARBITS(D, PORTD_BIT6);
             }
-            if (ucAnode & 0x01) {
+            if (ucAnode & 0x02) {
                 _SETBITS(D, PORTD_BIT5);
             }
             else {
@@ -4482,7 +4482,7 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
         case 78:
         {
             unsigned short usCathode = (unsigned short)fnHexStrHex(ptrInput); // get the cathode value
-            usCathode &= 0x3fff;
+            usCathode &= 0x7fff;
             iBlockLed = 1;
             fnDebugMsg("Cathod set to ");
             fnDebugHex(usCathode, (WITH_LEADIN | sizeof(usCathode)));
@@ -4615,7 +4615,7 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
 #if defined CAN_INTERFACE
                     _CLEARBITS(A, PORTA_BIT5);
 #else
-                    _CLEARITS(A, PORTA_BIT13);
+                    _CLEARBITS(A, PORTA_BIT13);
 #endif
                     break;
                 }

@@ -689,7 +689,7 @@ extern int fnInitialiseMODBUS_port(unsigned char ucMODBUSport, const MODBUS_CONF
             #if defined MODBUS_SUPPORT_SERIAL_LINE_FUNCTIONS && defined MODBUS_SUPPORT_SERIAL_LINE_DIAGNOSTICS
         ucEndOfMessageDelimiter[ucMODBUSport] = ptrMODBUS_pars->ucLineFeedCharacter[ucMODBUSport]; // initialise variable delimiter
             #endif
-        if (ptrMODBUS_pars->ucModbusSerialPortMode[ucMODBUSport] & MODBUS_MODE_ASCII) {
+        if ((ptrMODBUS_pars->ucModbusSerialPortMode[ucMODBUSport] & MODBUS_MODE_ASCII) != 0) {
             iModbusSerialState[ucMODBUSport] = MODBUS_ASCII_HUNTING;     // ASCII
         }
         else {
@@ -715,7 +715,7 @@ extern int fnInitialiseMODBUS_port(unsigned char ucMODBUSport, const MODBUS_CONF
                 ucNegateRTS[ucMODBUSport] = (MODIFY_CONTROL | CLEAR_RTS);
             }
             fnDriver(SerialHandle[ucMODBUSport], usMode, 0);             // configure RTS pin for control use
-            if (ptrMODBUS_pars->ucModbusSerialPortMode[ucMODBUSport] & MODBUS_RS485_POSITIVE) {
+            if ((ptrMODBUS_pars->ucModbusSerialPortMode[ucMODBUSport] & MODBUS_RS485_POSITIVE) != 0) {
                 fnDriver(SerialHandle[ucMODBUSport], (MODIFY_CONTROL | SET_RTS), 0); // initially '0'
             }
         }

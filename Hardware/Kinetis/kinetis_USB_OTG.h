@@ -24,6 +24,7 @@
     12.04.2017 Add optional USB event logging for operation analysis     {5}
     12.04.2017 Add setup frame response timeout and repetition in host mode {6}
     12.04.2017 Temporarily disable USB operation on host mode reset to ensure that state change flags can be reliably reset {7}
+    02.01.2018 Allow new KL devices with SIM_CLKDIV2 to control the USB clock divider {8}
 
 */
 
@@ -1062,7 +1063,7 @@ extern void fnConfigUSB(QUEUE_HANDLE Channel, USBTABLE *pars)
         #define USB_CLOCK_SOURCE   MCGPLLCLK                             // fixed clock source for USB
         SIM_SOPT2 |= (SIM_SOPT2_USBSRC | SIM_SOPT2_PLLFLLSEL);           // set the source to MCGPLLCLK
     #endif
-    #if defined KINETIS_KL                                               // {67}
+    #if !defined SIM_CLKDIV2                                             // {8}
         #if defined KINETIS_HAS_IRC48M && defined USB_CRYSTAL_LESS       // {104}
         #elif defined _WINDOWS
             #if (MCGPLLCLK/2) != 48000000                                // check that the clock has the correct frequency for USB operation
