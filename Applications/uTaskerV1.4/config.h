@@ -11,7 +11,7 @@
     File:      config.h
     Project:   uTaskerV1.4 project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     **********************************************************************
     02.02.2017 Adapt for us tick resolution (_TICK_RESOLUTION)
     
@@ -822,6 +822,8 @@
 //
 #if defined FRDM_KE04Z || defined FRDM_KL03Z || defined TWR_KV10Z32 || defined TEENSY_LC || defined TRK_KEA8 // due to the restricted flash size in this device the flash is used only for program code
     #define NO_FLASH_SUPPORT                                             // neither parameter nor file system
+#else
+  //#define NO_FLASH_SUPPORT                                             // neither parameter nor file system
 #endif
 #if !defined NO_FLASH_SUPPORT
     #define USE_PARAMETER_BLOCK                                          // enable a parameter block for storing and retrieving non-volatile information
@@ -1160,8 +1162,8 @@
             #define USB_HS_INTERFACE                                     // use HS interface rather than FS interface (needs external ULPI transceiver) - use with TWR_SER2 and secondary elevator (not dummy elevator)
         #endif
         #if defined USB_HOST_SUPPORT
-          //#define USB_MSD_HOST                                         // works together with mass-storage for a USB memory stick as disk E
-            #define USB_CDC_HOST                                         // supports CDC device (can be used together with MSD host) - see https://youtu.be/XhISV1czIo4 for a demonstration of CDC communication betwen a host and a device target
+            #define USB_MSD_HOST                                         // works together with mass-storage for a USB memory stick as disk E
+          //#define USB_CDC_HOST                                         // supports CDC device (can be used together with MSD host) - see https://youtu.be/XhISV1czIo4 for a demonstration of CDC communication betwen a host and a device target
                 #define SUPPORT_USB_SIMPLEX_HOST_ENDPOINTS               // allow operation with devices using bulk IN/OUT on the same endpoint (this should normally always be set)
                 #define USB_CDC_COUNT  1                                 // support up to this many virtual com host interfaces
         #endif

@@ -11,7 +11,7 @@
     File:      app_hw_kinetis.h
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     03.03.2012 Add TWR_K70F120M and defined TWR_K53N512 support
     12.03.2012 Add ADC setup                                             {1}
@@ -1533,8 +1533,10 @@
 //
 #include "../../Hardware/Kinetis/kinetis.h"                              // include the Kinetis processor header at this location
 
-#if defined RNG_AVAILABLE
-    #define RND_HW_SUPPORT                                               // enable the use of the hardware resources in this chip
+#if defined RNG_AVAILABLE                                                // hardware RNG support available
+    #if !defined KINETIS_K80 && !defined KINETIS_KL82                    // TRNG module is very slow and not yet suitable as general purpose random number generator
+        #define RND_HW_SUPPORT                                           // enable the use of the hardware resources in this chip
+    #endif
 #endif
 
 #if defined TWR_K60F120M || defined K60F150M_50M || defined TWR_K70F120M || defined TWR_K53N512 || defined TWR_VF65GS10
@@ -2350,8 +2352,11 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define DEMO_UART        3                                       // use UART 3
         #define RFC2217_UART     0
     #endif
-    #if defined FRDM_KL03Z || defined FRDM_KL43Z || defined FRDM_KL27Z || defined FRDM_KL82Z || defined TWR_KL82Z72M || defined CAPUCCINO_KL27 || defined TWR_KL43Z48M || defined FRDM_K22F || defined TWR_KV31F120M || defined TWR_K80F150M || defined FRDM_K82F || defined FRDM_K66F
-        #define LPUART_IRC48M                                            // if the 48MHz clock is available clock the LPUART from it
+    #if LPUARTS_AVAILABLE > 0
+        #define LPUART_IRC48M                                            // if the 48MHz clock is available clock the LPUART from it (warning - don't use when USB is in operation and requires MCGIRCLK)
+        #if defined SIM_CLKDIV3
+          //#define LPUART_MCGPLLCLK                                     // clock the LPUARTs from MCGPLLCLK
+        #endif
       //#define LPUART_OSCERCLK                                          // clock the LPUART from the external clock
       //#define LPUART_MCGIRCLK                                          // clock the LPUART from MCGIRCLK (IRC8M/FCRDIV/LIRC_DIV2) - default if others are not defined
     #endif

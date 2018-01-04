@@ -507,9 +507,11 @@ extern void fnInitialiseRND(unsigned short *usSeedValue)
         #else
     POWER_UP_ATOMIC(6, TRNG0);                                           // power up TRNG0
         #endif
-    // To do...
-    // reset module to program mode, set user configuration (optionally lock the registers from further change), start first conversion
-    //
+    TRNG0_MCTL = (TRNG_MCTL_PRGM | TRNG_MCTL_RST_DEF);                   // ensure we are in programming mode with defaults set
+    TRNG0_FRQMIN = 0;
+    TRNG0_FRQMAX = 0x03ffff;                                             // the default maximum value is too low and causes a frequency count failure if not increased
+    TRNG0_SDCTL = ((1600 << 16) | (2500));                               // entropy delay and sample size reduced to half of default
+    TRNG0_MCTL = (TRNG_MCTL_PRGM_RUN | TRNG_MCTL_SAMP_MODE_VON_NEUMANN | TRNG_MCTL_TRNG_ACC | TRNG_MCTL_OSC_DIV_1); // set to run mode with TRNG access
     #endif
 }
 
@@ -563,6 +565,8 @@ extern unsigned short fnGetRndHW(void)
     return (unsigned short)(ulRandomNumber);                             // return 16 bits of output
     #endif
     #if defined TRUE_RANDOM_NUMBER_GENERATOR
+    static int iEntropyIndex = 0;
+    volatile unsigned long *ptrEntropy = TRNG0_ENT0_ADD;                 // the first entropy register
         #if defined _WINDOWS
             #if defined SIM_SCGC3
     if (IS_POWERED_UP(3, TRNG0) == 0)
@@ -573,10 +577,38 @@ extern unsigned short fnGetRndHW(void)
         _EXCEPTION("Warning: TRNG0 being used before initialised!!!");
     }
         #endif
-    // To do...
-    //
-    _EXCEPTION("TRNG0 not yet implemented!");
-    return 0;
+    ptrEntropy += iEntropyIndex;                                         // read entropy registers 0..15
+    while ((TRNG0_MCTL & TRNG_MCTL_ENT_VAL) == 0) {                      // wait until random value is ready
+        #if defined _WINDOWS
+        TRNG0_ENT0 = rand();
+        TRNG0_ENT1 = rand();
+        TRNG0_ENT2 = rand();
+        TRNG0_ENT3 = rand();
+        TRNG0_ENT4 = rand();
+        TRNG0_ENT5 = rand();
+        TRNG0_ENT6 = rand();
+        TRNG0_ENT7 = rand();
+        TRNG0_ENT8 = rand();
+        TRNG0_ENT9 = rand();
+        TRNG0_ENT10 = rand();
+        TRNG0_ENT11 = rand();
+        TRNG0_ENT12 = rand();
+        TRNG0_ENT13 = rand();
+        TRNG0_ENT14 = rand();
+        TRNG0_ENT15 = rand();
+        TRNG0_MCTL |= TRNG_MCTL_ENT_VAL;                                 // flag that the entropy values are valid
+        #endif
+        if ((TRNG0_MCTL & TRNG_MCTL_ERR) != 0) {                         // if an error is signalled
+            break;
+        }
+    }
+    if (++iEntropyIndex > 15) {
+        iEntropyIndex = 0;
+        #if defined _WINDOWS
+        TRNG0_MCTL &= ~(TRNG_MCTL_ENT_VAL);                              // reading the last entropy register causes the next conversion to be started
+        #endif
+    }
+    return (unsigned short)(*ptrEntropy);
     #endif
 }
     #else

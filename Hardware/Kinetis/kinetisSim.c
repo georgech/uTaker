@@ -11,7 +11,7 @@
     File:      kinetisSim.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     04.03.2012 Add NAND Flash controller                                 {1}
     18.03.2012 Add ADC                                                   {2}
@@ -902,7 +902,7 @@ static void fnSetDevice(unsigned long *port_inits)
     #elif defined RANDOM_NUMBER_GENERATOR_A
     RNGA_SR     = (RNGA_SR_OREG_SIZE);
     #elif defined TRUE_RANDOM_NUMBER_GENERATOR                           // {48}
-    TRNG0_MCTL = 0x00012001;
+    TRNG0_MCTL = (TRNG_MCTL_PRGM | TRNG_MCTL_TSTOP_OK | TRNG_MCTL_SAMP_MODE_RAW);
     TRNG0_SCMISC = 0x00010022;
     TRNG0_PKRRNG = 0x000009a3;
     TRNG0_PKRMAX = 0x00006920;

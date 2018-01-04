@@ -10503,7 +10503,23 @@ typedef struct stKINETIS_LPTMR_CTL
     #define SIM_UIDL                         *(volatile unsigned long *)(SIM_BLOCK + 0x1060) // Unique Identification Register Low (read-only)
     #if defined KINETIS_WITH_PCC
         #define SIM_PCSR                     *(volatile unsigned long *)(SIM_BLOCK + 0x10ec) // peripheral clock status register (read-only)
-    #elif defined KINETIS_KL && !defined KINETIS_KL82                    // {42}
+    #elif defined KINETIS_KL82
+        #define SIM_CLKDIV3                  *(unsigned long *)(SIM_BLOCK + 0x1064) // system clock divider register 3
+            #define SIM_CLKDIV3_PLLFLLFRAC   0x00000001
+            #define SIM_CLKDIV3_PLLFLLDIV_1  0x00000000
+            #define SIM_CLKDIV3_PLLFLLDIV_2  0x00000002
+            #define SIM_CLKDIV3_PLLFLLDIV_3  0x00000004
+            #define SIM_CLKDIV3_PLLFLLDIV_4  0x00000006
+            #define SIM_CLKDIV3_PLLFLLDIV_5  0x00000008
+            #define SIM_CLKDIV3_PLLFLLDIV_6  0x0000000a
+            #define SIM_CLKDIV3_PLLFLLDIV_7  0x0000000c
+            #define SIM_CLKDIV3_PLLFLLDIV_8  0x0000000e
+        #define SIM_MISCCTRL                 *(unsigned long *)(SIM_BLOCK + 0x106c) // misc control register
+        #define SIM_SECKEY0                  *(unsigned long *)(SIM_BLOCK + 0x1090) // secure key register 0
+        #define SIM_SECKEY1                  *(unsigned long *)(SIM_BLOCK + 0x1094) // secure key register 1
+        #define SIM_SECKEY2                  *(unsigned long *)(SIM_BLOCK + 0x1098) // secure key register 2
+        #define SIM_SECKEY3                  *(unsigned long *)(SIM_BLOCK + 0x109c) // secure key register 3
+    #elif defined KINETIS_KL                                             // {42}
         #define SIM_COPC                     *(unsigned long *)(SIM_BLOCK + 0x1100) // COP Control Register - all of the bits in this register can be written only once after a reset
           #define SIM_COPC_COPW              0x00000001                  // COP windowed mode
           #define SIM_COPC_COPCLKS_1K        0x00000000                  // COP source is 1kHz clock
@@ -12945,6 +12961,8 @@ typedef struct stKINETIS_LPTMR_CTL
         #endif
         #define MCG_C6                   *(unsigned char *)(MCG_BLOCK + 0x05) // MSG Control 6 Register
           #if (defined KINETIS_K_FPU || (KINETIS_MAX_SPEED > 100000000)) && !defined KINETIS_K21 && !defined KINETIS_K22 && !defined KINETIS_K24 && !defined KINETIS_K64 && !defined KINETIS_KV30
+              #define MCG_C6_VDIV0_LOWEST  16
+          #elif defined KINETIS_KL82
               #define MCG_C6_VDIV0_LOWEST  16
           #else
               #define MCG_C6_VDIV0_LOWEST  24
@@ -15451,11 +15469,35 @@ typedef struct stUSB_HW
 #endif
 #if defined TRUE_RANDOM_NUMBER_GENERATOR                                // {103}
     #define TRNG0_MCTL           *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x00) // TRNG0 miscellaneous control
-    #define TRNG0_SCMISC         *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x04) // TRNG0 statistical check miscellaneous
+        #define TRNG_MCTL_SAMP_MODE_VON_NEUMANN 0x00000000               // use Von Neumann data into both entropy shifter and statistical checker (writable only when TRNG_MCTL_PRGM is set)
+        #define TRNG_MCTL_SAMP_MODE_RAW         0x00000001               // use raw data into both entropy shifter and statistical checker
+        #define TRNG_MCTL_SAMP_MODE_RAW_STAT    0x00000002               // use Von Neumann data into entropy shifter and use raw data into statistical checker
+        #define TRNG_MCTL_OSC_DIV_1 0x00000000                           // use ring oscillator with no divide (writable only when TRNG_MCTL_PRGM is set)
+        #define TRNG_MCTL_OSC_DIV_2 0x00000004                           // use ring oscillator with divide by 2
+        #define TRNG_MCTL_OSC_DIV_4 0x00000008                           // use ring oscillator with divide by 4
+        #define TRNG_MCTL_OSC_DIV_8 0x0000000c                           // use ring oscillator with divide by 8
+        #define TRNG_MCTL_TRNG_ACC  0x00000020                           // TRNG access mode
+        #define TRNG_MCTL_RST_DEF   0x00000040                           // reset defaults (write-only)
+        #define TRNG_MCTL_FOR_SCLK  0x00000080                           // force system clock
+        #define TRNG_MCTL_FCT_FAIL  0x00000100                           // frequency count fail (read-only)
+        #define TRNG_MCTL_FCT_VAL   0x00000200                           // frequency count valid (read-only)
+        #define TRNG_MCTL_ENT_VAL   0x00000400                           // entropy valid (read-only)
+        #define TRNG_MCTL_TST_OUT   0x00000800                           // test point inside ring oscillator (read-only)
+        #define TRNG_MCTL_ERR       0x00001000                           // error (write '1' to clear)
+        #define TRNG_MCTL_TSTOP_OK  0x00002000                           // OK to stop (read-only)
+        #define TRNG_MCTL_PRGM      0x00010000                           // programming mode select
+        #define TRNG_MCTL_PRGM_RUN  0x00000000                           // run mode select
+    #define TRNG0_SCMISC         *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x04) // TRNG0 statistical check miscellaneous (writable only when TRNG_MCTL_PRGM is set)
+        #define TRNG_SCMISC_LRUN_MAX_MASK 0x000000ff                     // long run max limit - default 0x22
+        #define TRNG_SCMISC_RTY_CT_MASK   0x000f0000                     // retry count (1..15) - default 1
     #define TRNG0_PKRRNG         *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x08) // TRNG0 poker range
+        #define TRNG_PKRRNG_PKR_RNG_MASK  0x0000ffff                     // poker range - default 0x09a3
     #define TRNG0_PKRMAX         *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x0c) // TRNG0 poker maximum limit
+        #define TRNG_PKRMAX_PKR_MAX_MASK  0x00ffffff                     // poker maximum limit - default 0x006920
     #define TRNG0_PKRSQ          *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x0c) // TRNG0 poker square calculation result (read-only)
     #define TRNG0_SDCTL          *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x10) // TRNG0 seed control
+        #define TRNG_SDCTL_SAMP_SIZE_MASK 0x0000ffff                     // sample size mask - default 0x09c4
+        #define TRNG_SDCTL_ENT_DLY_MASK   0xffff0000                     // entropy delay mask - default 0x0c80
     #define TRNG0_SBLIM          *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x14) // TRNG0 sparse bit limit
     #define TRNG0_TOTSAM         *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x14) // TRNG0 total samples (read-only)
     #define TRNG0_FRQMIN         *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x18) // TRNG0 frequency count minimum limit
@@ -15476,6 +15518,7 @@ typedef struct stUSB_HW
     #define TRNG0_SCR6L          *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x38) // TRNG0 statistical check run length 6 limit
     #define TRNG0_SCR6C          *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x38) // TRNG0 statistical check run length 6 count (read-only)
     #define TRNG0_STATUS         *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x3c) // TRNG0 status (read-only)
+    #define TRNG0_ENT0_ADD       (volatile unsigned long *)(TRNG0_BASE_ADD + 0x40)
     #define TRNG0_ENT0           *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x40) // TRNG0 entropy read 0 (read-only)
     #define TRNG0_ENT1           *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x44) // TRNG0 entropy read 1 (read-only)
     #define TRNG0_ENT2           *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x48) // TRNG0 entropy read 2 (read-only)
@@ -15491,7 +15534,7 @@ typedef struct stUSB_HW
     #define TRNG0_ENT12          *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x70) // TRNG0 entropy read 12 (read-only)
     #define TRNG0_ENT13          *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x74) // TRNG0 entropy read 13 (read-only)
     #define TRNG0_ENT14          *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x78) // TRNG0 entropy read 14 (read-only)
-    #define TRNG0_ENT15          *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x7c) // TRNG0 entropy read 15 (read-only)
+    #define TRNG0_ENT15          *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x7c) // TRNG0 entropy read 15 (read-only) - this must be read last to trigger the next random number generation
     #define TRNG0_PKRCNT10       *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x80) // TRNG0 statistical check poker count 1 and 0 (read-only)
     #define TRNG0_PKRCNT32       *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x84) // TRNG0 statistical check poker count 3 and 2 (read-only)
     #define TRNG0_PKRCNT54       *(volatile unsigned long *)(TRNG0_BASE_ADD + 0x88) // TRNG0 statistical check poker count 5 and 4 (read-only)

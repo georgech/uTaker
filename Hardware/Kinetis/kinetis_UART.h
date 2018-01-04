@@ -3016,6 +3016,8 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #else
             #if defined LPUART_IRC48M                                    // use the IRC48M clock as UART clock
                 #define SPECIAL_LPUART_CLOCK  (48000000)
+            #elif defined LPUART_MCGPLLCLK
+                #define SPECIAL_LPUART_CLOCK   (MCGOUTCLK)
             #elif defined LPUART_OSCERCLK                                // clock the UART from the external clock
                 #define SPECIAL_LPUART_CLOCK  (_EXTERNAL_CLOCK)
             #else
@@ -3051,6 +3053,9 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
                 #else
             SIM_SOPT2 = ((SIM_SOPT2 & ~(SIM_SOPT2_UART0SRC_MCGIRCLK)) | (SIM_SOPT2_UART0SRC_IRC48M | SIM_SOPT2_PLLFLLSEL_IRC48M)); // {3} select the 48MHz IRC48MHz clock as source for the LPUART
                 #endif
+            #elif defined LPUART_MCGPLLCLK
+            SIM_SOPT2 = ((SIM_SOPT2 & ~(SIM_SOPT2_UART0SRC_MCGIRCLK)) | (SIM_SOPT2_UART0SRC_IRC48M | SIM_SOPT2_PLLFLLSEL_PLL));
+            SIM_CLKDIV3 = SIM_CLKDIV3_PLLFLLDIV_2;                       // fixed clock
             #elif defined LPUART_OSCERCLK                                // clock the UART from the external clock
             SIM_SOPT2 |= (SIM_SOPT2_UART0SRC_OSCERCLK);
             #else                                                        // clock the UART from MCGIRCLK (IRC8M/FCRDIV/LIRC_DIV2)
@@ -3091,6 +3096,9 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
                     #else
             SIM_SOPT2 = ((SIM_SOPT2 & ~(SIM_SOPT2_UART1SRC_MCGIRCLK)) | (SIM_SOPT2_UART1SRC_IRC48M | SIM_SOPT2_PLLFLLSEL_IRC48M)); // {202} select the 48MHz IRC48MHz clock as source for the LPUART
                     #endif
+                #elif defined LPUART_MCGPLLCLK
+            SIM_SOPT2 = ((SIM_SOPT2 & ~(SIM_SOPT2_UART1SRC_MCGIRCLK)) | (SIM_SOPT2_UART1SRC_IRC48M | SIM_SOPT2_PLLFLLSEL_PLL));
+            SIM_CLKDIV3 = SIM_CLKDIV3_PLLFLLDIV_2;                       // fixed clock
                 #elif defined LPUART_OSCERCLK                            // clock the UART from the external clock
             SIM_SOPT2 |= (SIM_SOPT2_UART1SRC_OSCERCLK);
                 #else                                                    // clock the UART from MCGIRCLK (IRC8M/FCRDIV/LIRC_DIV2)
@@ -3123,6 +3131,9 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
                     #else
             SIM_SOPT2 = ((SIM_SOPT2 & ~(SIM_SOPT2_UART2SRC_MCGIRCLK)) | (SIM_SOPT2_UART2SRC_IRC48M | SIM_SOPT2_PLLFLLSEL_IRC48M)); // select the 48MHz IRC48MHz clock as source for the LPUART
                     #endif
+                #elif defined LPUART_MCGPLLCLK
+            SIM_SOPT2 = ((SIM_SOPT2 & ~(SIM_SOPT2_UART2SRC_MCGIRCLK)) | (SIM_SOPT2_UART2SRC_IRC48M | SIM_SOPT2_PLLFLLSEL_PLL));
+            SIM_CLKDIV3 = SIM_CLKDIV3_PLLFLLDIV_2;                       // fixed clock
                 #elif defined LPUART_OSCERCLK                            // clock the UART from the external clock
             SIM_SOPT2 |= (SIM_SOPT2_UART2SRC_OSCERCLK);
                 #else                                                    // clock the UART from MCGIRCLK (IRC8M/FCRDIV/LIRC_DIV2)

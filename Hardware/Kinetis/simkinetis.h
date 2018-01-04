@@ -11,7 +11,7 @@
     File:      simkinetis.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     04.03.2012 Add NAND Flash controller                                 {1}
     17.03.2012 Add ADC                                                   {2}
@@ -2076,16 +2076,23 @@ typedef struct stKINETIS_SIM
     #if defined KINETIS_WITH_PCC
         unsigned long ulRes3[39];
         unsigned long SIM_PCSR;
-    #else
-        #if defined KINETIS_KL && !defined KINETIS_KL82                  // {15}
-            unsigned long ulRes3[39];
-            unsigned long SIM_COPC;
-            unsigned long SIM_SRVCOPC;
-        #elif defined KINETIS_K_FPU || (KINETIS_MAX_SPEED > 100000000)
-            unsigned long SIM_CLKDIV3;
-            unsigned long SIM_CLKDIV4;
-            unsigned long SIM_MCR;
-        #endif
+    #elif defined KINETIS_KL82
+        unsigned long SIM_CLKDIV3;
+        unsigned long ulRes3;
+        unsigned long SIM_MISCCTRL;
+        unsigned long ulRes4[8];
+        unsigned long SIM_SECKEY0;
+        unsigned long SIM_SECKEY1;
+        unsigned long SIM_SECKEY2;
+        unsigned long SIM_SECKEY3;
+    #elif defined KINETIS_KL                                             // {15}
+        unsigned long ulRes3[39];
+        unsigned long SIM_COPC;
+        unsigned long SIM_SRVCOPC;
+    #elif defined KINETIS_K_FPU || (KINETIS_MAX_SPEED > 100000000)
+        unsigned long SIM_CLKDIV3;
+        unsigned long SIM_CLKDIV4;
+        unsigned long SIM_MCR;
     #endif
 #endif
 } KINETIS_SIM;
