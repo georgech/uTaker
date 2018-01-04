@@ -11,7 +11,7 @@
     File:      serial_dev.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     14.03.2007 Added MAX543X Digital Potentiometer (L,M,N,P suffixes)
     29.09.2007 Added LM80 (microprocessor system hardware monitor) and PCF8574 port expander

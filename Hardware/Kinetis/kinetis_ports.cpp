@@ -11,7 +11,7 @@
     File:      kinetis_ports.cpp
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     16.04.2012 New method for K20, K61, K70                              {1}
     18.04.2012 Add dedicated ADC display                                 {2}

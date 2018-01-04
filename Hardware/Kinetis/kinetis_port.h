@@ -11,7 +11,7 @@
     File:      kinetis_port.h (k60)
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     27.10.2012 Reworked with new style and dedicated port strings, 121 pin completed
     21.04.2012 Added new K60 pin functions                               {1}

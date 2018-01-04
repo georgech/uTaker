@@ -11,7 +11,7 @@
     File:      ADC_Timers.h
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     29.08.2009 Add timer frequency and PWM output tests                  {1}
     08.09.2009 Add INTERNAL_TEMP option for Luminary                     {2}
@@ -50,7 +50,7 @@
     #if defined SUPPORT_ADC                                              // if HW support is enabled
       //#define TEST_ADC                                                 // enable test of ADC operation
           //#define ADC_INTERNAL_TEMPERATURE                             // force internal temperature channel to be used, when available
-        #define TEST_AD_DA                                               // {14} enable test of reading ADC and writing (after delay) to DAC
+      //#define TEST_AD_DA                                               // {14} enable test of reading ADC and writing (after delay) to DAC
           //#define ADC_TRIGGER_TPM                                      // use TPM module rather than PIT for ADC trigger (valid for KL parts)
           //#define VOICE_RECORDER                                       // {15} needs TEST_AD_DA and mass-storage and saves sampled input to SD card
           //#define HANDLE_PDB_INTERRUPT                                 // when the ADC is triggered by PDB handle also a PDB interrupt
@@ -787,7 +787,7 @@ static void fnConfigureADC(void)
 {
 #if defined DEV1
     static const unsigned char input[3] = { ADC_DP0_SINGLE, ADC_DM0_SINGLE, ADC_DP0_SINGLE };
-    static unsigned long ulCalibrate[3] = { ADC_CALIBRATE, ADC_CALIBRATE , ADC_CALIBRATE };
+    static unsigned long ulCalibrate[3] = { ADC_CALIBRATE, ADC_CALIBRATE, ADC_CALIBRATE };
 #endif
 #if defined _KINETIS && (!defined KINETIS_KE || defined KINETIS_KE15) && !defined DEV1   // {11}
     static unsigned long ulCalibrate = ADC_CALIBRATE;

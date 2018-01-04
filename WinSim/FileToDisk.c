@@ -11,7 +11,7 @@
     File:      FileToDisk.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     18.01.2007 Correct file sharing flag (_SH_DENYNO) for more recent VisualStudio versions  {1}
     11.05.2007 Add SAVE_COMPLETE_FLASH support (mainly for devices with multiple FLASH banks){2}

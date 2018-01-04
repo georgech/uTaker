@@ -11,7 +11,7 @@
     File:      KeyPadSim.cpp
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     02.11.2009 Remove pressed key filtering and add display of keypad LEDs {1}
     01.05.2010 Add local define _EXCLUDE_WINDOWS_

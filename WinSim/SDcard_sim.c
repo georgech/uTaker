@@ -11,7 +11,7 @@
     File:      SDcard_sim.c
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     19.06.2010 Rename fnWriteSector() to fnWriteSDSector() to avoid confilict with new external function with same name {1}
     20.07.2010 Add SD card controller interface                          {2}

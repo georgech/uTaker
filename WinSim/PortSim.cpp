@@ -11,7 +11,7 @@
     File:      PortSim.cpp
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     18.07.2008 Parser correction                                         {1}
     19.07.2008 Add UART CTS and break, plus USB frame injection          {2}

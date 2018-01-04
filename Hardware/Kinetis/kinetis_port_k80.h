@@ -11,7 +11,7 @@
     File:      kinetis_port_k80.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************/
 
 // Work in progress - ports A, B and E have been completed for K82

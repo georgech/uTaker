@@ -11,7 +11,7 @@
     File:      kinetis_port_k20.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     16.04.2012 Add 32, 48 and 64 pin devices - use new method
     17.02.2014 K21 added

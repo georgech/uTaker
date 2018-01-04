@@ -11,7 +11,7 @@
     File:      kinetis_port_kl.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     Supports KL02, KL03, KL05, KL17, KL25, KL26, KL27, KL28, KL43, KL46, KL82 (provisional A done)
 

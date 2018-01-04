@@ -11,7 +11,7 @@
     File:      kinetis_port_ke.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     Supports KEA08, KEA64, KEA128, KE02, KE04, KE06 and KE15
 

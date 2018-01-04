@@ -11,7 +11,7 @@
     File:      Ethereal.cpp
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     08.01.2008 Content made conditional on Ethernet availability
     15.02.2009 Moved check of file open to before attempted read         {1}

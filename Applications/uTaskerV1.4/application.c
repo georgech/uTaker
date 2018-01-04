@@ -11,7 +11,7 @@
     File:      application.c
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     16.02.2006 Add SMTP LOGIN support
     18.02.2006 Add SMTP parameter settings
@@ -611,6 +611,24 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
             fnEraseFlashSector(upload_location, (MAX_FILE_LENGTH)(MAX_SIZE_OF_BM_APPLICATION)); // ensure that the upload area is erased
             uFileWrite(upload_location, temp, (size + 1));               // write the code to the upload file (thsi saves it in the correct file format)
             uFileCloseMime(upload_location, &ucMimeType);                // close file as binary type
+        }
+#endif
+#if defined USE_MQTT_CLIENT && defined SECURE_MQTT && defined _WINDOWS
+        {
+            ARP_DETAILS arp_details;
+    #if IP_INTERFACE_COUNT > 1
+            arp_details.Tx_handle = 0;                                   // the interface handle associated with the ARP entry
+    #endif
+    #if defined ARP_VLAN_SUPPORT
+            arp_details.usVLAN_ID = 0xffff;                              // VLAN ID for checking with ARP entries (0xffff means no VLAN tag)
+    #endif
+            arp_details.ucType = ARP_FIXED_IP;                           // the type of ARP entry (ARP_FIXED_IP, ARP_TEMP_IP, ARP_PERMANENT_IP)
+    #if IP_NETWORK_COUNT > 1
+            arp_details.ucNetworkID = 0;                                 // the network that ARP activity belongs to
+    #endif
+            unsigned char gatewayIP[] = {192, 168, 0, 1};
+            unsigned char gatewayMAC[] = { 0x54, 0x67, 0x51, 0xbe, 0x0a, 0x57 };
+            fnAddARP(gatewayIP, gatewayMAC, &arp_details);               // temp for development
         }
 #endif
       //float fTest = fnFloatStrFloat("1235.0123");                      // test floating point input
@@ -2190,8 +2208,12 @@ extern int uDatacopy(int iDisk, int iDataRef, unsigned char *ptrSectorData, cons
         if (FORMAT_TYPE_RAW_STRING == dataFile[iDataRef].ucFormatType) {
             uMemcpy(ptrSectorData, ptrSourceData, iAdded);               // strings are in code so copy directly from memory
         }
-        else {
+        else {                                                           // raw binary type
+    #if defined NO_FLASH_SUPPORT                                         // assume in memory mapped medium
+            uMemcpy(ptrSectorData, ptrSourceData, iAdded);
+    #else
             fnGetParsFile((unsigned char *)ptrSourceData, ptrSectorData, iAdded); // prepare the raw data
+    #endif
         }
         break;
 
@@ -2216,7 +2238,11 @@ extern int uDatacopy(int iDisk, int iDataRef, unsigned char *ptrSectorData, cons
             }
             else {
                 signed short sValue;
+    #if defined NO_FLASH_SUPPORT                                         // assume in memory mapped medium
+                uMemcpy(&sValue, ptrRawSource, sizeof(sValue));
+    #else
                 fnGetParsFile((unsigned char *)ptrRawSource, (unsigned char *)&sValue, sizeof(sValue)); // get the next raw sample from the linear data area
+    #endif
                 ptrBuf = fnBufferDec(sValue, DISPLAY_NEGATIVE, (CHAR *)ptrSectorData); // the ASCII decimal representation of the sample
                 iStringLength = (ptrBuf - (CHAR *)ptrSectorData);        
                 if (iStringLength < 6) {

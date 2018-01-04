@@ -11,7 +11,7 @@
     File:      LCDSim.cpp
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     13.02.2007 Improve LCD re-draw {1} and correct initialisation in 4-line mode {2}
     05.05.2009 Add graphic LCD support - T6963C controller - SUPPORT_GLCD
