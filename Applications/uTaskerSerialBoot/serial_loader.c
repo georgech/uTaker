@@ -11,7 +11,7 @@
     File:      serial_loader.c
     Project:   uTasker serial loader
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     07.01.2010 Provisional optional GCC workaround                       {1}
     25.03.2010 Use fnEraseFlashSector() rather than uFileErase()         {2}

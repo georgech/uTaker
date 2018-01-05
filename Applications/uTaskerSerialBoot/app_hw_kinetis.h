@@ -11,7 +11,7 @@
     File:      app_hw_kinetis.h
     Project:   uTasker serial loader
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     22.01.2012 Add SD card loader support to Kwikstik
     03.03.2012 Add TWR_K70F120M and TWR_K53N512 support

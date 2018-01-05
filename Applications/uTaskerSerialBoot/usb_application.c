@@ -11,7 +11,7 @@
     File:      usb_application.c - MSD
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     This application is the same as the USB application in the uTaskerV1.4 project - state 20.7.2015,
     whereby the USB-MSD model is used to allow USB-MSD (on SD card) to be operated whilst in the boot loader

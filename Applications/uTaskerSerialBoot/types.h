@@ -11,7 +11,7 @@
     File:      types.h
     Project:   Single Chip Embedded Internet - serial loader
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     14.02.2010 Remove "../../Hardware/xxxx/xxxx.h" include to app_hw_xxxx.h {1}
     01.12.2010 Add RX6XX                                                 {2}

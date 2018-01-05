@@ -11,7 +11,7 @@
     File:      usb_host_loader.c - MSD
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     USB-MSD host loader application
     19.11.2015 Limit UFI_READ_FORMAT_CAPACITY transfer length to a single 64 byte frame {1}

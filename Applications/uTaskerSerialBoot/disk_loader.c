@@ -11,7 +11,7 @@
     File:      disk_loader.c
     Project:   uTasker disk loader
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     03.03.2012 Add TWR_K53N512                                           {1}
     19.09.2012 Close Flash buffer when device has flash with row writing {2}

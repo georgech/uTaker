@@ -11,7 +11,7 @@
     File:      Loader.h
     Project:   uTasker Demonstration project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     15.09.2009 Add STR91XF setup
     03.01.2010 Add SAM7X setup

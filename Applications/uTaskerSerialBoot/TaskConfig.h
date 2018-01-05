@@ -11,7 +11,7 @@
     File:      TaskConfig.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     07.05.2011 Application task dependent on SERIAL_INTERFACE            {1}
     22.01.2012 Add SD card support                                       {2}

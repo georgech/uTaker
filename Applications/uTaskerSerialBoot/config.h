@@ -11,7 +11,7 @@
     File:      config.h
     Project:   Serial Loader (SREC/iHex serial, USB-MSD, memory stick, SD card, ethernet)
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     02.02.2017 Adapt for us tick resolution (_TICK_RESOLUTION)
     05.10.2017 Add modbus configuration

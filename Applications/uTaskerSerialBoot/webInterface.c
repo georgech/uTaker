@@ -11,7 +11,7 @@
     File:      webInterface.c
     Project:   Ethernet Boot Loader
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     03.06.2014 Add file object when working together with USB-MSD        {1}
     04.06.2014 Add nework indicator task to allow PHY polling when necessary {2}
