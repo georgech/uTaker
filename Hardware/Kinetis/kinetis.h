@@ -7995,7 +7995,11 @@ typedef struct stFLEX_TIMER_MODULE
         #define ADC0_CFG1       *(unsigned long *)(ADC0_BLOCK + 0x008)       // ADC0 Configuration Register 1
     #endif
       #define ADC_CFG1_ADICLK_BUS  0x00000000                                // input clock select - bus clock
+    #if defined KINETIS_KL82
+      #define ADC_CFG1_ADICLK_ALT2 0x00000001                                // input clock select - IRC48MCLK
+    #else
       #define ADC_CFG1_ADICLK_BUS2 0x00000001                                // input clock select - bus clock divided by 2
+    #endif
       #define ADC_CFG1_ADICLK_ALT  0x00000002                                // input clock select - alternative clock (ALTCLK)
       #define ADC_CFG1_ADICLK_ASY  0x00000003                                // input clock select - asynchronous clock (ADACK)
       #define ADC_CFG1_MODE_8   0x00000000                                   // conversion mode - single-ended 8 bit or differential 9 bit
@@ -13064,6 +13068,12 @@ typedef struct stKINETIS_LPTMR_CTL
             #define MCG_MC_LIRC_DIV2_64  0x06                            // second low-frequency internal reference clock divider - divide by by 64
             #define MCG_MC_LIRC_DIV2_128 0x07                            // second low-frequency internal reference clock divider - divide by by 128
             #define MCG_MC_HIRCEN        0x80                            // high-frequency IRC enable
+      #elif defined KINETIS_KL82
+        #define MCG_C7                   *(unsigned char *)(MCG_BLOCK + 0x0c) // MSG Control 7 Register
+          #define MCG_C7_OSCSEL_OSCCLK   0x00                            // MCG FLL external reference clock is OSCCLK (OSCCLK0)
+          #define MCG_C7_OSCSEL_32K      0x01                            // MCG FLL external reference clock is 32 kHz RTC Oscillator
+          #define MCG_C7_OSCSEL_IRC48MCLK 0x02                           // MCG FLL external reference clock is IRC48M (OSCCLK1)
+        #define MCG_C8                   *(volatile unsigned char *)(MCG_BLOCK + 0x0d) // MSG Control 8 Register
       #endif
 #endif
 
@@ -17524,7 +17534,11 @@ typedef struct stADC_SETUP
 
 
 #define ADC_CLOCK_BUS                   0x00000000                       // ADC_CFG1_ADICLK_BUS
-#define ADC_CLOCK_BUS_DIV_2             0x00000001                       // ADC_CFG1_ADICLK_BUS2
+#if defined KINETIS_KL82
+    #define ADC_CLOCK_IRC48MCLK         0x00000001                       // ADC_CFG1_ADICLK2
+#else
+    #define ADC_CLOCK_BUS_DIV_2         0x00000001                       // ADC_CFG1_ADICLK_BUS2
+#endif
 #define ADC_CLOCK_ALTERNATE_SOURCE      0x00000002                       // ADC_CFG1_ADICLK_ALT
 #define ADC_CLOCK_ASYNCHRONOUS          0x00000003                       // ADC_CFG1_ADICLK_ASY
 #define ADC_8_BIT_MODE                  0x00000000                       // ADC_CFG1_MODE_8

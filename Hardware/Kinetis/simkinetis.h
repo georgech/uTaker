@@ -2463,6 +2463,13 @@ typedef struct stKINETIS_PCC2
         unsigned char MCG_C11;
         unsigned char MCG_C12;
         unsigned char MCG_S2;
+        #elif defined KINETIS_KL82
+        unsigned char MCG_SC;
+        unsigned char ucRes2;
+        unsigned char MCG_ATCVH;
+        unsigned char MCG_ATCVL;
+        unsigned char MCG_C7;
+        unsigned char MCG_C8;
         #else
         unsigned char MCG_ATCM;
         unsigned char ucRes2;

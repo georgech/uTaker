@@ -390,6 +390,11 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
         #endif
     #endif
                     ptrADC->ADC_CFG1 = (0xff & ptrADC_settings->int_adc_mode);
+    #if defined ADC_CFG1_ADICLK_ALT2_
+                    if ((ptrADC->ADC_CFG1 & ADC_CFG1_ADICLK_ASY) == ADC_CFG1_ADICLK_ALT2) { // if the IRC48MCLK is being chosen as clock source we ensure that it is enabled
+                        MCG_C7 = MCG_C7_OSCSEL_IRC48MCLK;                // enable clock even if not used by other sources
+                    }
+    #endif
     #if defined _WINDOWS                                                 // simuation check of ADC clock speed range
                     // Check that the ADC frequency is set to a valid range
                     //
@@ -432,9 +437,15 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
                         case ADC_CFG1_ADICLK_BUS:
                             ulADC_clock = BUS_CLOCK;
                             break;
+            #if defined ADC_CFG1_ADICLK_ALT2
+                        case ADC_CFG1_ADICLK_ALT2:
+                            ulADC_clock = 48000000;
+                            break;
+            #else
                         case ADC_CFG1_ADICLK_BUS2:
                             ulADC_clock = (BUS_CLOCK / 2);
                             break;
+            #endif
                         case ADC_CFG1_ADICLK_ASY:
                             if ((ptrADC->ADC_CFG1 & ADC_CFG1_ADLPC) != 0) { // low power configuration is active (reduced power at the expense of the clock speed)
                                 if ((ptrADC->ADC_CFG1 & ADC_CFG1_ADLPC) != 0) { // high speed configuration
