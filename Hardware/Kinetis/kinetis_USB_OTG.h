@@ -1061,12 +1061,12 @@ extern void fnConfigUSB(QUEUE_HANDLE Channel, USBTABLE *pars)
         #endif
     #else
         #define USB_CLOCK_SOURCE   MCGPLLCLK                             // fixed clock source for USB
+        SIM_SOPT2 |= (SIM_SOPT2_USBSRC | SIM_SOPT2_PLLFLLSEL);           // set the source to MCGPLLCLK
         #if defined _WINDOWS && defined KINETIS_HAS_IRC48M               // check that the clock rate programmed is accurate for USB
         if ((SIM_SOPT2 & SIM_SOPT2_PLLFLLSEL_IRC48M) != SIM_SOPT2_PLLFLLSEL_PLL) {
             _EXCEPTION("IRC48M has been selected by another peripheral - all peripherals must be set to use MCGPLLCLK for USB compatibility!!");
         }
         #endif
-        SIM_SOPT2 |= (SIM_SOPT2_USBSRC | SIM_SOPT2_PLLFLLSEL);           // set the source to MCGPLLCLK
     #endif
     #if !defined SIM_CLKDIV2                                             // {8}
         #if defined KINETIS_HAS_IRC48M && defined USB_CRYSTAL_LESS       // {104}

@@ -25,6 +25,7 @@
     03.02.2017 Check channel's interrupt flag before clearing it (KL)    {8}
     26.09.2017 Add LPIT support                                          {9}
     28.11.2017 Add configuration of LPIT behaviour in doze and debug modes {10}
+    05.01.2018 Check whether PIT module is powered up before disabling individual PIT channel {11}
 
 */
 
@@ -149,21 +150,24 @@ static void fnDisablePIT(int iPIT)
 {
     KINETIS_PIT_CTL *ptrCtl = (KINETIS_PIT_CTL *)PIT_CTL_ADD;
     ptrCtl += iPIT;
-    ptrCtl->PIT_TCTRL = 0;                                               // disable the individual PIT
+  //ptrCtl->PIT_TCTRL = 0;                                               // {11} disable the individual PIT
     uDisable_Interrupt();                                                // {2} protect the mode variable during modification
-        ucPITmodes &= ~((PIT_SINGLE_SHOT | PIT_PERIODIC) << (iPIT * 2)); // clear the PIT's mode flags
+        if (IS_POWERED_UP(6, PIT) != 0) {                                // {11} ignore if the PIT module is not powered up
+            ptrCtl->PIT_TCTRL = 0;                                       // disable the individual PIT
+            ucPITmodes &= ~((PIT_SINGLE_SHOT | PIT_PERIODIC) << (iPIT * 2)); // clear the PIT's mode flags
     #if !defined PIT_TIMER_USED_BY_PERFORMANCE_MONITOR                   // don't power the PITs down if one is being used for performance monitoring
-        if (ucPITmodes == 0) {                                           // if no PITs are in use power down the PIT module
+            if (ucPITmodes == 0) {                                       // if no PITs are in use power down the PIT module
         #if defined LPITS_AVAILABLE                                      // {9}
-            LPIT0_MCR = 0;                                               // disable clocks to module since no more timers are active
-            PCC_LPIT0 = 0;
+                LPIT0_MCR = 0;                                           // disable clocks to module since no more timers are active
+                PCC_LPIT0 = 0;
         #else
-            POWER_UP_ATOMIC(6, PIT);                                     // {2} ensure that the module is powered up for the next operation
-            PIT_MCR = PIT_MCR_MDIS;                                      // disable clocks to module since no more timers are active
-            POWER_DOWN_ATOMIC(6, PIT);                                   // power down the PIT module
+                //POWER_UP_ATOMIC(6, PIT);                               // {2}{11} ensure that the module is powered up for the next operation
+                PIT_MCR = PIT_MCR_MDIS;                                  // disable clocks to module since no more timers are active
+                POWER_DOWN_ATOMIC(6, PIT);                               // power down the PIT module
         #endif
-        }
+            }
     #endif
+        }
     uEnable_Interrupt();
 }
 #endif
