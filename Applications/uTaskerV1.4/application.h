@@ -164,6 +164,9 @@ extern void fnHandleFreeMaster(QUEUE_HANDLE comHandle, unsigned char *ptr_ucBuff
     extern void fnHandle_nRF24L01_event(void);
     extern void fnTest_nRF24L01_Write(int iPingPong);
 #endif
+#if defined USE_MAINTENANCE && defined USB_INTERFACE && defined USE_USB_CDC
+    extern int fnUSB_CDC_TX(int iStart);
+#endif
 
 typedef struct stPARS
 {
@@ -455,6 +458,7 @@ extern int iAccelOutput;
 #define E_SHIFT_DISPLAY            9
 #define E_NEXT_PIC                 10
 #define E_NEXT_PHOTO               11
+#define E_TIMER_START_USB_TX       12
 
 #define E_TIMER_TEST_10S           20
 #define E_TIMER_TEST_10MS          E_TIMER_TEST_10S                      // use same event number as 10s timer
@@ -527,6 +531,8 @@ extern int iAccelOutput;
 #define E_TEST_MODBUS_DELAY        133
 #define E_nRF24L01_PERIOD          134
 #define E_nRF24L01_EVENT           135
+
+#define E_USB_TX_CONTINUE          136
 
 
 

@@ -498,7 +498,7 @@ extern void uTaskerMonoTimer(UTASK_TASK pcTaskName, DELAY_LIMIT delay, unsigned 
     TTIMETABLE *ptTimerList = tTimerList;
 
     if (ptTimerList != 0) {                                                  // protection - it is not expected that there will never be timers in the syste,
-        ptTaskTable = tTaskTable;                                            // set at start of the task table  and work down to bottom
+        ptTaskTable = tTaskTable;                                            // set at start of the task table and work down to bottom
         while (ptTaskTable->pcTaskName != 0) {                               // while task entries present
             if (*ptTaskTable->pcTaskName == pcTaskName) {                    // only compare first letter or task name
                 while (ptTimerList->ptTaskEntry != 0) {                      // while tasks queued

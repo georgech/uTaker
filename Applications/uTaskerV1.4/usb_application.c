@@ -2740,7 +2740,7 @@ static int mass_storage_callback(unsigned char *ptrData, unsigned short length, 
                     case UFI_READ_CAPACITY:                              // {36}
                     case UFI_READ_FORMAT_CAPACITY:
                         if (ptrDiskInfo[ucActiveLUN]->usDiskFlags & (DISK_MOUNTED | DISK_UNFORMATTED)) { // {16} only respond when there is media inserted, else stall
-                            return TRANSPARENT_CALLBACK;             // the call-back has done its work and the input buffer can now be used
+                            return TRANSPARENT_CALLBACK;                 // the call-back has done its work and the input buffer can now be used
                         }
                         break;                                           // stall
                     case UFI_READ_10:
@@ -2769,7 +2769,8 @@ static int mass_storage_callback(unsigned char *ptrData, unsigned short length, 
                             ulLogicalBlockAdr = ((ptrWrite->ucLogicalBlockAddress[0] << 24) | (ptrWrite->ucLogicalBlockAddress[1] << 16) | (ptrWrite->ucLogicalBlockAddress[2] << 8) | ptrWrite->ucLogicalBlockAddress[3]);
                             if (ulLogicalBlockAdr < ptrDiskInfo[ucActiveLUN]->ulSD_sectors) { // check that the sector is valid
                                 return TRANSPARENT_CALLBACK;             // the call-back has done its work and the input buffer can now be used
-                            }                        }
+                            }                        
+                        }
                         break;                                           // stall
                     default:
                         break;
@@ -3638,7 +3639,6 @@ static void usb_watchdog(void)
     slDelta = 0;                                                         // without USB reception the delta value is zero
 }
 
-
 static void fnAudio(QUEUE_HANDLE audioHandle, QUEUE_TRANSFER queue_size)
 {
     // Configure audio output (DAC based on DMA transfer from USB buffer)
@@ -4118,6 +4118,63 @@ static void fnConfigureApplicationEndpoints(void)
     USBPortID_Audio = fnOpen(TYPE_USB, 0, &tInterfaceParameters);        // open the endpoints with defined configurations (initially inactive)
     fnAudio(USBPortID_Audio, tInterfaceParameters.queue_sizes.RxQueueSize); // initialise the audio output
     #endif
+}
+#endif
+
+#if defined USE_MAINTENANCE && defined USB_INTERFACE && defined USE_USB_CDC
+extern int fnUSB_CDC_TX(int iStart)
+{
+    static unsigned long ulTxCount[USB_CDC_VCOM_COUNT] = {0};
+    static unsigned char ucTxComplete[USB_CDC_VCOM_COUNT] = {0};
+    #if SIZE_OF_RAM < (16 * 1024)
+    static unsigned char ucTestData[128];                                // the transmit block size is best a length of half the output buffer size so that it can keep the output buffer filled
+    #else
+    static unsigned char ucTestData[512];
+    #endif
+    int i;
+    int iNotComplete = 0;
+    if (iStart != 0) {
+        static int iNotTested = 0;
+        iNotTested = 0;
+        uMemset(ucTxComplete, 0, sizeof(ucTxComplete));
+        for (i = 0; i < USB_CDC_VCOM_COUNT; i++) {
+            if (fnWrite(USBPortID_comms[i], 0, 1) == 0) {                // if it is not possible to queue a single byte of data the interface is not active
+                ucTxComplete[i] = 1;                                     // mark that this interface will not be tested
+                iNotTested++;                                            // count the number of interfaces that will not be tested
+            }
+            else {
+                fnFlush(USBPortID_comms[i], FLUSH_TX);                  // flush the transmitter before starting in order to have an aligned circular buffer for optimal efficiency
+            }
+        }
+        if (iNotTested >= USB_CDC_VCOM_COUNT) {                          // if there are no active interfaces
+            fnDebugMsg("No USB-CDC interface active!\r\n");              // abort the test
+            return 0;
+        }
+        uMemset(ulTxCount, 0, sizeof(ulTxCount));
+        uMemset(ucTestData, 'X', sizeof(ucTestData));                    // set the transmission pattern
+    }
+    for (i = 0; i < USB_CDC_VCOM_COUNT; i++) {                           // fo reach possible interface
+        if (ucTxComplete[i] != 0) {                                      // ignore interfaces that have completed or aren't to be tested
+            continue;
+        }
+        if (fnWrite(USBPortID_comms[i], 0, sizeof(ucTestData)) != 0) {   // check whether the data can be copied to the output buffer
+            fnWrite(USBPortID_comms[i], ucTestData, sizeof(ucTestData)); // copy data for transmission
+            ulTxCount[i] += sizeof(ucTestData);                          // the amount of data queued for transmission
+            if (ulTxCount[i] >= (10 * 1024 * 1024)) {                    // has all the test data been sent over this interface?
+                ucTxComplete[i] = 1;                                     // mark that this interface has completed
+                continue;                                                // avoid setting the "not complete" flag due to the final queued data block
+            }
+        }
+        iNotComplete = 1;
+    }
+    if (iNotComplete != 0) {                                             // if not complete
+        fnInterruptMessage(TASK_DEBUG, E_USB_TX_CONTINUE);               // schedule the next transmission
+        return 1;
+    }
+    // All USB CDC interfaces have terminated
+    //
+    fnDebugMsg("\r\nComplete!\r\n");
+    return 0;
 }
 #endif
 

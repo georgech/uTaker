@@ -409,6 +409,7 @@
     #define DO_VIRTUAL_COM          4                                    // specific USB command to open a connection to a connected CDC device
     #define DO_USB_DELTA            5                                    // specific USB command to display present audio drift value
     #define DO_USB_KEYBOARD_DELAY   6                                    // specific USB command to display and change keystroke delay
+    #define DO_USB_SPEED            7                                    // specific USB command to send 10MBytes of data to test the transmit speed
 
 #define DO_OLED                   9                                      // reference to OLED group
     #define DO_OLED_GET_GRAY_SCALES 0                                    // specific OLED command to get gray levels
@@ -904,6 +905,7 @@ static const DEBUG_COMMAND tUSBCommand[] = {
     {"usb-serial",        "RS232<->USB mode (disconnect to quit)", DO_USB,           DO_USB_RS232_MODE },
         #endif
     {"usb-load",          "USB-SW download",                       DO_USB,           DO_USB_DOWNLOAD },
+    {"usb-tx",            "Test tx speed (send 10MByte data)",     DO_USB,           DO_USB_SPEED },
     #endif
     #if defined USE_USB_HID_KEYBOARD && defined SUPPORT_FIFO_QUEUES
     {"usb-kb",            "Keyboard input (disconnect to quit)",   DO_USB,           DO_USB_KEYBOARD }, // {77}
@@ -1415,6 +1417,13 @@ extern void fnDebug(TTASKTABLE *ptrTaskTable)
 
     while (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH) != 0) { // check input queue
         switch (ucInputMessage[MSG_SOURCE_TASK]) {                       // switch depending on message source
+#if defined USE_MAINTENANCE && defined USB_INTERFACE && defined USE_USB_CDC
+        case TIMER_EVENT:
+            if (E_TIMER_START_USB_TX == ucInputMessage[MSG_TIMER_EVENT]) {
+                fnUSB_CDC_TX(1);                                         // start transmission of data to USB-CDC interface(s)
+            }
+            break;
+#endif
         case INTERRUPT_EVENT:
             if (TX_FREE == ucInputMessage[MSG_INTERRUPT_EVENT]) {
 #if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST // {17}{81}
@@ -1449,6 +1458,13 @@ extern void fnDebug(TTASKTABLE *ptrTaskTable)
                 }
 #endif
             }
+#if defined USE_MAINTENANCE && defined USB_INTERFACE && defined USE_USB_CDC
+            else if (E_USB_TX_CONTINUE == ucInputMessage[MSG_INTERRUPT_EVENT]) {
+                if (fnUSB_CDC_TX(0) != 0) {                              // continue transmission of data to USB-CDC interface(s)
+                    return;
+                }
+            }
+#endif
 #if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST // {81}
             else if (UTFAT_OPERATION_COMPLETED == ucInputMessage[MSG_INTERRUPT_EVENT]) {
                 if (iFATstalled == STALL_COUNTING_CLUSTERS) {
@@ -3084,7 +3100,6 @@ static void fnDoServer(unsigned char ucType, CHAR *ptrInput)
 static void fnDoTelnet(unsigned char ucType, CHAR *ptrInput)
 {
     switch (ucType) {
-
       case DO_SET_TELNET_PORT:
           temp_pars->temp_parameters.usTelnetPort = (unsigned short)fnDecStrHex(ptrInput);
           break;
@@ -4649,6 +4664,10 @@ static void fnDoUSB(unsigned char ucType, CHAR *ptrInput)                // USB 
             usUSB_state |= ES_USB_DOWNLOAD_MODE;
         #endif
         }
+        break;
+    case DO_USB_SPEED:
+        fnDebugMsg("Test starts in 1s - get ready to receive 10 MBytes of data....");
+        uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(1 * SEC), E_TIMER_START_USB_TX);
         break;
     #endif
     #if defined USE_USB_HID_KEYBOARD && defined SUPPORT_FIFO_QUEUES
