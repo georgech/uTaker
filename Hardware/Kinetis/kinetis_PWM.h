@@ -171,6 +171,8 @@ static __interrupt void _PWM_Interrupt_5(void)
             #elif defined TPM_CLOCKED_FROM_OSCERCLK
             OSC0_CR |= (OSC_CR_ERCLKEN | OSC_CR_EREFSTEN);               // enable the external reference clock and keep it enabled in stop mode
             SIM_SOPT2 |= (SIM_SOPT2_TPMSRC_OSCERCLK);                    // use OSCERCLK as timer clock source
+            #elif defined TPM_CLOCKED_FROM_IRC48M && defined SIM_SOPT2_PLLFLLSEL_IRC48M && (SIM_SOPT2_PLLFLLSEL_IRC48M != 0)
+            SIM_SOPT2 |= (SIM_SOPT2_PLLFLLSEL_IRC48M | SIM_SOPT2_TPMSRC_MCG); // use IRC48M
             #else
             SIM_SOPT2 |= (SIM_SOPT2_PLLFLLSEL | SIM_SOPT2_TPMSRC_MCG);   // use MCGPLLCLK/2 (or MCGFLL if FLL is used)
             #endif

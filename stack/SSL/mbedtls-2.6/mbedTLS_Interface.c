@@ -105,14 +105,16 @@ extern unsigned char *fnInsertTLS_random(unsigned char *ptrData, unsigned long u
 extern void fnTearDown(void)
 {                                                                        // before starting 13024 still allocated - 17 holes - 100 blocks not deallocated still - 7116 in holes
     mbedtls_x509_crt_free(&(secure_session->certificates));              // after call 9444 still allocated - 20 holes - 73 blocks not deallocated still - 10696 in holes
-    mbedtls_free(secure_session->ssl.out_ctr);                           // 8 bytes
-    mbedtls_free(secure_session->ssl.in_ctr);                            // 8 bytes
-    mbedtls_free(secure_session->ssl.session_negotiate);                 // 108 bytes
-    mbedtls_free(secure_session->ssl.transform_negotiate);               // 208 bytes
-    mbedtls_free(secure_session->ssl.handshake);                         // 744 bytes
+    mbedtls_x509_crt_free(&(secure_session->ourCertificate));            // unallocate all certificate data
+    mbedtls_pk_free(&(secure_session->ourPrivateKey));                   // unallocate private key context components
+    mbedtls_ecdh_free(&(secure_session->edch));
+    mbedtls_free(secure_session->ssl.out_ctr);
+    mbedtls_free(secure_session->ssl.in_ctr);
+    mbedtls_ssl_free(&(secure_session->ssl));
+    mbedtls_ssl_config_free(&(secure_session->config));
     mbedtls_free(secure_session);                                        // free the session memory (1252)
     secure_session = 0;
-    // remaining state 7116 still allocated - 22 holes with 13024 - 67 blocks still allocated
+    // remaining state 28 bytes still allocated - 3 holes with 17028 - 3 blocks still allocated
 }
 
 // Enter calloc() and free() implementation to be used by mbedTLS

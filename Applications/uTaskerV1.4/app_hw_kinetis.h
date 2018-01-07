@@ -1488,10 +1488,13 @@
   //#define SUPPORT_CAPTURE                                              // support capture mode of operation
 
 #if defined KINETIS_KL || defined KINETIS_K66
+    #if defined KINETIS_KL82
+      //#define TPM_CLOCKED_FROM_IRC48M                                  // TPM clock is connected to the IRC48MCLK
+    #endif
   //#define TPM_CLOCKED_FROM_OSCERCLK                                    // TPM clock is connected to OSCERCLK (external crystal or oscillator)
   //#define TPM_CLOCKED_FROM_MCGIRCLK                                    // TPM clock is connected to MCGIRCLK (either 32kHz or 4MHz)
   //#define USE_FAST_INTERNAL_CLOCK                                      // select fast interal clock (4MHz) rather than slow (32kHz)
-    #if defined KINETIS_K66                                              // device with both flex timer and TPM
+    #if defined KINETIS_K65 || defined KINETIS_K66                       // device with both flex timer and TPM
       //#define TPM_CLOCKED_FROM_MCGFFLCLK                               // TPM is clocked by MCGFFLCLK
       //#define TPM_CLOCKED_FROM_IRC48M                                  // TPM is clocked by IRC48M
       //#define TPM_CLOCKED_FROM_USB1_PDF                                // TPM is clocked by USB1_PDF
@@ -2353,9 +2356,9 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define RFC2217_UART     0
     #endif
     #if LPUARTS_AVAILABLE > 0
-        #define LPUART_IRC48M                                            // if the 48MHz clock is available clock the LPUART from it (warning - don't use when USB is in operation and requires MCGIRCLK)
-        #if defined SIM_CLKDIV3
-          //#define LPUART_MCGPLLCLK                                     // clock the LPUARTs from MCGPLLCLK
+      //#define LPUART_IRC48M                                            // if the 48MHz clock is available clock the LPUART from it (warning - don't use when USB is in operation and requires MCGIRCLK)
+        #if defined SIM_CLKDIV3 && defined SIM_CLKDIV3_PLLFLLDIV_2
+            #define LPUART_MCGPLLCLK                                     // clock the LPUARTs from MCGPLLCLK (this is used together with USB when the crystal-less clocking is not possible)
         #endif
       //#define LPUART_OSCERCLK                                          // clock the LPUART from the external clock
       //#define LPUART_MCGIRCLK                                          // clock the LPUART from MCGIRCLK (IRC8M/FCRDIV/LIRC_DIV2) - default if others are not defined

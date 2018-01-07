@@ -9863,7 +9863,7 @@ typedef struct stKINETIS_LPTMR_CTL
         #define SIM_SOPT2_CLKOUTSEL_MASK     0x000000f0
         #define SIM_SOPT2_USBSRC             0x00040000                  // usb clock source is MCGPLLCLK/2 or MCGFLLCLK rather than USB_CLKIN
         #define SIM_SOPT2_TPMSRC_DISABLED    0x00000000                  // TPM clock source disabled
-        #define SIM_SOPT2_TPMSRC_MCG         0x01000000                  // TPM clock MCGFLL or MCGPLLCLK/2
+        #define SIM_SOPT2_TPMSRC_MCG         0x01000000                  // TPM clock MCGFLL or MCGPLLCLK/2 or IRC48M
         #define SIM_SOPT2_TPMSRC_OSCERCLK    0x02000000                  // TPM clock source OSCERCLK
         #define SIM_SOPT2_TPMSRC_MCGIRCLK    0x03000000                  // TPM clock source MCGIRCLK
         #define SIM_SOPT2_UART0SRC_DISABLED  0x00000000                  // UART0 clock source disabled

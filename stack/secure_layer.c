@@ -583,7 +583,17 @@ extern int fnTLS(USOCKET Socket, unsigned char ucEvent)
     case TCP_EVENT_CLOSE:
     case TCP_EVENT_ABORT:
         fnTearDown();
-        break;
+        // Reset
+        //
+        iTLS_tx_state = TLS_TX_STATE_IDLE;
+        iTLS_rx_state = TLS_RX_STATE_IDLE;
+        iTLS_rx_type = 0;
+        iTLS_rx_encryted = 0;
+        usTLS_rx_version = 0;
+        session_cipher = 0;
+        ptrReceptionBuffer = 0;
+        ulBufferContent = 0;
+        return 0;
     case TCP_EVENT_ACK:
     case TCP_EVENT_REGENERATE:
         return APP_SECURITY_HANDLED;

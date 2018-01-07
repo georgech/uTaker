@@ -356,7 +356,7 @@ typedef struct stHEAP_MANAGEMENT_BLOCK
 } HEAP_MANAGEMENT_BLOCK;
 
 static unsigned long ulMemoryAllocated = 0;                              // present size of allocated hep memory
-static unsigned long ulTopMergin = 0xffffffff;                           // the worst case of heap margin detected
+static unsigned long ulTopMargin = 0xffffffff;                           // the worst case of heap margin detected
 static unsigned long ulHoleCount = 0;                                    // the nummer of holes that presently exist
 static unsigned long ulAllocateCount = 0;                                // the number of times memory allocation has been requested
 static unsigned long ulDeallocateCount = 0;                              // the number of times memory has been freed
@@ -367,9 +367,6 @@ static unsigned long ulAccumulatedHoleSize = 0;                          // the 
 
 static unsigned char *ptrSecurityHeapTop = 0;                            // present top of allocated heap memory
 static HEAP_MANAGEMENT_BLOCK *ptrHeapManager = 0;                        // the location of the heap management entries
-
-#define MEMORY_RANGE_MIN      512
-#define MEMORY_RANGE_MAX      1024
 
 // Return always zeroed memory that is long word aligned
 //
@@ -389,11 +386,6 @@ extern void *uCalloc(size_t n, size_t size)
     }
     ptrHeapEntry = ptrHeapManager;
     ulAllocateCount++;
-#if defined _WINDOWS
-    if ((thisSize >= MEMORY_RANGE_MIN) && (thisSize <= MEMORY_RANGE_MAX)) {
-        thisSize = thisSize;
-    }
-#endif
     FOREVER_LOOP() {
         if (ptrHeapEntry->ptrMemory == 0) {                              // free entry found (neither in use nor a hole)
             // If we can find a hole that can be re-used we do this as preference, rather than letting the heap grow unnecessarily and not being able to accept a large block later
@@ -457,7 +449,7 @@ extern void *uCalloc(size_t n, size_t size)
                 ptrPreferredHole->ptrMemory += thisSize;
                 ulAccumulatedHoleSize -= thisSize;
                 ulMemoryAllocated += thisSize;
-                return (void *)(ptrHeapEntry->ptrMemory);
+                break;
             }
             // No memory re-use was possible so it must be put to the top of heap
             //
@@ -466,8 +458,8 @@ extern void *uCalloc(size_t n, size_t size)
                 _EXCEPTION("Heap exhausted!!");
                 return 0;
             }
-            if (ulTopMergin > ulSpaceOnTopOfStack) {
-                ulTopMergin = ulSpaceOnTopOfStack;
+            if (ulTopMargin > ulSpaceOnTopOfStack) {
+                ulTopMargin = ulSpaceOnTopOfStack;
             }
             ptrHeapEntry->ptrMemory = ptrSecurityHeapTop;
             ptrHeapEntry->memorySize = thisSize;
@@ -496,65 +488,62 @@ extern void uCFree(void *ptr)
         ulDeallocateCount++;
         FOREVER_LOOP() {
             if (ptrHeapEntry->ptrMemory == ptr) {                        // entry found
+                register HEAP_MANAGEMENT_BLOCK *ptrHeapScan = ptrHeapManager;
+                register HEAP_MANAGEMENT_BLOCK *ptrHeapEntryBefore = 0;
+                register HEAP_MANAGEMENT_BLOCK *ptrHeapEntryAfter = 0;
+                void *ptrMemoryBefore = ptrHeapEntry->ptrMemory;
+                void *ptrMemoryAfter = (ptrHeapEntry->ptrMemory + ptrHeapEntry->memorySize);
 #if defined _WINDOWS
                 if (ptrHeapEntry->ucStatus != 0) {
                     _EXCEPTION("Freeing a pointer that has already been freed!!");
-                }
-                if ((ptrHeapEntry->memorySize >= MEMORY_RANGE_MIN) && (ptrHeapEntry->memorySize <= MEMORY_RANGE_MAX)) {
-                    ptrHeapEntry->memorySize = ptrHeapEntry->memorySize;
+                    return;
                 }
 #endif
                 uMemset(ptrHeapEntry->ptrMemory, 0, ptrHeapEntry->memorySize); // zero freed memory (so that subsequent allocation doesn't need to do it and also to cover up previous use in security applications)
                 ulMemoryAllocated -= ptrHeapEntry->memorySize;
-                if ((ptrHeapEntry->ptrMemory + ptrHeapEntry->memorySize) == ptrSecurityHeapTop) { // being removed from the top of heap
-                    ptrSecurityHeapTop = ptrHeapEntry->ptrMemory;
-                    ptrHeapEntry->ptrMemory = 0;
-                    ptrHeapEntry->ucStatus = 0;
-                    return;
+                ptrHeapEntry->ucStatus = 1;                              // this is now a hole
+                ulHoleCount++;
+                ulAccumulatedHoleSize += ptrHeapEntry->memorySize;
+                iEntry = 0;
+                FOREVER_LOOP() {
+                    if (ptrHeapScan->ucStatus != 0) {                    // for each hole found
+                        if (ptrHeapScan->ptrMemory == ptrMemoryAfter) {
+                            ptrHeapEntryAfter = ptrHeapScan;             // found following hole
+                            if (ptrHeapEntryBefore != 0) {
+                                break;                                   // since we have found both a preceeding and following hole we can stop a continued search
+                            }
+                        }
+                        else if ((ptrHeapScan->ptrMemory + ptrHeapScan->memorySize) == ptrMemoryBefore) {
+                            ptrHeapEntryBefore = ptrHeapScan;            // found preceeding hole
+                            if (ptrHeapEntryAfter != 0) {
+                                break;                                   // since we have found both a preceeding and following hole we can stop a continued search
+                            }
+                        }
+                    }
+                    if (++iEntry >= HEAP_OBJECTS) {
+                        break;                                           // all blocks have been scanned for possible combination
+                    }
+                    ptrHeapScan++;
                 }
-                else {
-                    register HEAP_MANAGEMENT_BLOCK *ptrHeapScan = ptrHeapManager;
-                    register HEAP_MANAGEMENT_BLOCK *ptrHeapEntryBefore = 0;
-                    register HEAP_MANAGEMENT_BLOCK *ptrHeapEntryAfter = 0;
-                    void *ptrMemoryBefore = ptrHeapEntry->ptrMemory;
-                    void *ptrMemoryAfter = (ptrHeapEntry->ptrMemory + ptrHeapEntry->memorySize);
-                    ptrHeapEntry->ucStatus = 1;                          // this is now a hole
-                    ulHoleCount++;
-                    ulAccumulatedHoleSize += ptrHeapEntry->memorySize;
-                    iEntry = 0;
-                    FOREVER_LOOP() {
-                        if (ptrHeapScan->ucStatus != 0) {
-                            if (ptrHeapScan->ptrMemory == ptrMemoryAfter) {
-                                ptrHeapEntryAfter = ptrHeapScan;         // found following hole
-                                if (ptrHeapEntryBefore != 0) {
-                                    break;                               // since we have found both a preceeding and following hole we can stop a continued search
-                                }
-                            }
-                            else if ((ptrHeapScan->ptrMemory + ptrHeapScan->memorySize) == ptrMemoryBefore) {
-                                ptrHeapEntryBefore = ptrHeapScan;        // found preceeding hole
-                                if (ptrHeapEntryAfter != 0) {
-                                    break;                               // since we have found both a preceeding and following hole we can stop a continued search
-                                }
-                            }
-                        }
-                        if (++iEntry >= HEAP_OBJECTS) {
-                            break;                                       // all blocks have been scanned for possible combination
-                        }
-                        ptrHeapScan++;
-                    }
-                    if (ptrHeapEntryBefore != 0) {
-                        ptrHeapEntryBefore->memorySize += ptrHeapEntry->memorySize; // combine previous hole with ours
-                        ptrHeapEntry->ptrMemory = 0;
-                        ptrHeapEntry->ucStatus = 0;                      // this entry is free
-                        ptrHeapEntry = ptrHeapEntryBefore;
-                        ulHoleCount--;
-                    }
-                    if (ptrHeapEntryAfter != 0) {
-                        ptrHeapEntry->memorySize += ptrHeapEntryAfter->memorySize; // combine with following hole
-                        ptrHeapEntryAfter->ptrMemory = 0;
-                        ptrHeapEntryAfter->ucStatus = 0;                 // this entry is free           
-                        ulHoleCount--;
-                    }
+                if (ptrHeapEntryBefore != 0) {                           // if a hole was found before the freed chunk
+                    ptrHeapEntryBefore->memorySize += ptrHeapEntry->memorySize; // combine previous hole with ours
+                    ptrHeapEntry->ptrMemory = 0;
+                    ptrHeapEntry->ucStatus = 0;                          // this entry is free
+                    ptrHeapEntry = ptrHeapEntryBefore;
+                    ulHoleCount--;
+                }
+                if (ptrHeapEntryAfter != 0) {                            // if a hole was found after the freed chunk
+                    ptrHeapEntry->memorySize += ptrHeapEntryAfter->memorySize; // combine with following hole
+                    ptrHeapEntryAfter->ptrMemory = 0;
+                    ptrHeapEntryAfter->ucStatus = 0;                     // this entry is free           
+                    ulHoleCount--;
+                }
+                if ((ptrHeapEntry->ptrMemory + ptrHeapEntry->memorySize) == ptrSecurityHeapTop) { // being removed from the top of heap
+                    ulAccumulatedHoleSize -= ptrHeapEntry->memorySize;
+                    ptrSecurityHeapTop = ptrHeapEntry->ptrMemory;        // remove the freed memory from the top of heap
+                    ulHoleCount--;                                       // it is no longer a hole
+                    ptrHeapEntry->ucStatus = 0;
+                    ptrHeapEntry->ptrMemory = 0;
                 }
                 break;
             }
