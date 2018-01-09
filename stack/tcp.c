@@ -519,6 +519,13 @@ extern signed short fnSendTCP(USOCKET TCP_socket, unsigned char *ptrBuf, unsigne
     if ((ptr_TCP = fnGetSocketControl(TCP_socket)) == 0) {
         return SOCKET_NOT_FOUND;                                         // {17} get a pointer to the TCP socket control structure
     }
+
+#if defined USE_SECURE_SOCKET_LAYER
+    if ((TCP_socket & SECURE_SOCKET_MODE) != 0) {                        // if we are operating in secure mode
+        extern int fnSecureLayerTransmission(USOCKET Socket, unsigned char *ucPrtData, unsigned short usLength, unsigned char ucFlag);
+        return (fnSecureLayerTransmission(_TCP_SOCKET_MASK(TCP_socket), ptrBuf, usDataLen, ucTempFlags));
+    }
+#endif
 #if defined USE_IPV6
     if (ptr_TCP->ucTCPInternalFlags & TCP_OVER_IPV6) {                   // {41} send over IPv6 and not IPv4
         iIPv6 = 1;
@@ -1097,7 +1104,11 @@ extern unsigned short fnDefineTCPBufferSize(USOCKET TCP_socket, unsigned short u
 static signed short fnSendTCPControl(TCP_CONTROL *ptr_TCP)
 {
     unsigned char ucTCP_control_buf[MIN_TCP_HLEN];                       // temporary control buffer space
-    return (fnSendTCP(ptr_TCP->MySocketNumber, ucTCP_control_buf, 0, 0));// send a control frame without data
+#if defined USE_SECURE_SOCKET_LAYER
+    return (fnSendTCP((ptr_TCP->MySocketNumber & ~(SECURE_SOCKET_MODE)), ucTCP_control_buf, 0, 0)); // send a control frame without data
+#else
+    return (fnSendTCP(ptr_TCP->MySocketNumber, ucTCP_control_buf, 0, 0)); // send a control frame without data
+#endif
 }
 
 static void fnRestartTCP_timer(void)                                     // {58}
@@ -1202,6 +1213,15 @@ static unsigned long fnGetTCP_init_seq(void)
         }
     }
 
+#if defined USE_SECURE_SOCKET_LAYER
+    if ((TCP_socket & SECURE_SOCKET_MODE) != 0) {
+        ptr_TCP->event_listener = (int(*)(USOCKET, unsigned char, unsigned char *, unsigned short))fnInsertSecureLayer(TCP_socket, ptr_TCP->event_listener, 1); // insert the secure socket layer between TCP and the application                   
+    }
+    else {
+        ptr_TCP->event_listener = (int(*)(USOCKET, unsigned char, unsigned char *, unsigned short))fnInsertSecureLayer(TCP_socket, ptr_TCP->event_listener, 0); // remove secure layer in case it was previously installed
+    }
+#endif
+
     if ((ptr_TCP->ucTCP_state & (TCP_STATE_RESERVED | TCP_STATE_LISTEN | TCP_STATE_CLOSED)) == 0) { // are we in an invalid state?
 #if defined REUSE_TIME_WAIT_SOCKETS
         // It has been observed that if a final FIN is missed while in the TCP_STATE_FIN_WAIT_2, the socket
@@ -1240,7 +1260,7 @@ static unsigned long fnGetTCP_init_seq(void)
     ptr_TCP->usRemport = usRemotePort;
     ptr_TCP->usLocport = usOurPort;
 #if defined CONTROL_WINDOW_SIZE
-    if (!usMaxWindow) {
+    if (0 == usMaxWindow) {
         ptr_TCP->usRxWindowSize = TCP_MAX_WINDOW_SIZE;                   // set standard window size if application doesn't care
     }
     else {
@@ -2005,7 +2025,7 @@ extern void fnHandleTCP(ETHERNET_FRAME *ptrRx_frame)                     // {41}
                                                                          // inform application that a link has been established
                 ptr_TCP->event_listener(tcp_socket/*ptr_TCP->MySocketNumber*/, TCP_EVENT_CONNECTED, ptr_TCP->ucRemoteIP, ptr_TCP->usRemport); // {56}
             }
-            else if (rx_tcp_packet.usHeaderLengthAndFlags & TCP_FLAG_ACK) {
+            else if ((rx_tcp_packet.usHeaderLengthAndFlags & TCP_FLAG_ACK) != 0) {
                 fnAbortTCPSession(ptr_TCP);                              // this happens when we have a previous non-correctly disconnected session - we will try to close it
             }
             break;
@@ -2027,7 +2047,7 @@ extern void fnHandleTCP(ETHERNET_FRAME *ptrRx_frame)                     // {41}
                 return;
             }
 
-            if (rx_tcp_packet.usHeaderLengthAndFlags & TCP_FLAG_ACK) {
+            if ((rx_tcp_packet.usHeaderLengthAndFlags & TCP_FLAG_ACK) != 0) {
                 if( rx_tcp_packet.ulAckNo != ptr_TCP->ulNextTransmissionNumber) {
                     return;                                              // invalid ACK so ignore the frame
                 }
@@ -2078,7 +2098,8 @@ extern void fnHandleTCP(ETHERNET_FRAME *ptrRx_frame)                     // {41}
                 }
 
                 ptr_TCP->ulSendUnackedNumber = ptr_TCP->ulNextTransmissionNumber; // synchronise
-                // inform application that the connection has been close. It is up to the application to command listen again if it so desires
+                // Inform application that the connection has been close. It is up to the application to command listen again if it so desires
+                //
                 fnNewTCPState(ptr_TCP, TCP_STATE_CLOSED);
                 ptr_TCP->event_listener(tcp_socket/*ptr_TCP->MySocketNumber*/, TCP_EVENT_CLOSED, ptr_TCP->ucRemoteIP, ptr_TCP->usRemport); // {56}
                 return;
@@ -2230,7 +2251,7 @@ static void fnPollTCP(void)
                 break;
 
             case TCP_STATE_TIME_WAIT:
-                if (ptr_TCP->usTransmitTimer) {
+                if (ptr_TCP->usTransmitTimer != 0) {
                     ptr_TCP->usTransmitTimer--;
                 }
                 else {
@@ -2241,7 +2262,7 @@ static void fnPollTCP(void)
             case TCP_STATE_LAST_ACK:
             case TCP_STATE_FIN_WAIT_1:
             case TCP_STATE_CLOSING:
-                if (fnDoCountDown(ptr_TCP)) {
+                if (fnDoCountDown(ptr_TCP) != 0) {
                     ptr_TCP->ucSendFlags = (TCP_FLAG_FIN | TCP_FLAG_ACK);
                     fnSendTCPControl(ptr_TCP);
                 }
@@ -2305,8 +2326,11 @@ static void fnSendSyn(TCP_CONTROL *ptr_TCP, unsigned char ucFlags)
     ucTCP_control_buf[MIN_TCP_HLEN + 1] = MSS_LENGTH;
     ucTCP_control_buf[MIN_TCP_HLEN + 2] = (unsigned char)(TCP_DEF_MTU >> 8);
     ucTCP_control_buf[MIN_TCP_HLEN + 3] = (unsigned char)(TCP_DEF_MTU);
-
+    #if defined USE_SECURE_SOCKET_LAYER
+    fnSendTCP((ptr_TCP->MySocketNumber & ~(SECURE_SOCKET_MODE)), ucTCP_control_buf, MSS_OPTION_LENGTH, 0); // send a control frame without data but with options
+    #else
     fnSendTCP(ptr_TCP->MySocketNumber, ucTCP_control_buf, MSS_OPTION_LENGTH, 0); // send a control frame without data but with options
+    #endif
 }
 #endif
 

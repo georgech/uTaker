@@ -22,7 +22,7 @@
 
 #include "config.h"
 
-#if defined SECURE_MQTT
+#if defined USE_SECURE_SOCKET_LAYER
 
 // To include in standard header
 //
@@ -379,26 +379,23 @@ static const unsigned char referenceTx[] = {
 */
 extern int fnSecureLayerTransmission(USOCKET Socket, unsigned char *ucPrtData, unsigned short usLength, unsigned char ucFlag)
 {
-    unsigned char ucTLS_frame[MIN_TCP_HLEN + 1400];                      // temporary buffer for constructing the secure socket layer message in
-    unsigned char *ptrData = &ucTLS_frame[MIN_TCP_HLEN];                 // start of the message content
     unsigned char *ptrRecordLength;
-    *ptrData++ = SSL_TLS_CONTENT_APPLICATION_DATA;
-    *ptrData++ = (unsigned char)(TLS_VERSION_1_2 >> 8);
-    *ptrData++ = (unsigned char)(TLS_VERSION_1_2);
-    ptrRecordLength = ptrData;
-
-/*
-    usLength = sizeof(referenceTx);
-    ucPrtData = (unsigned char *)referenceTx;
-*/
-    *ptrData++ = (unsigned char)(usLength >> 8);                         // unencrypted length (will be overwritten)
-    *ptrData++ = (unsigned char)(usLength);
-    ptrData = fnEncrypt(ptrData, ucPrtData, usLength);
-    usLength = (ptrData - ptrRecordLength - 2);                          // the encrypted content length
+    unsigned char *ptrBuffer = ucPrtData;
+    unsigned char *ptrContentLength;
+    ucPrtData += MIN_TCP_HLEN;                                           // leave space for TCP header
+    ptrContentLength = ucPrtData;
+    *ucPrtData++ = SSL_TLS_CONTENT_APPLICATION_DATA;
+    *ucPrtData++ = (unsigned char)(TLS_VERSION_1_2 >> 8);
+    *ucPrtData++ = (unsigned char)(TLS_VERSION_1_2);
+    ptrRecordLength = ucPrtData;
+    *ucPrtData++ = (unsigned char)(usLength >> 8);                       // unencrypted length (will be overwritten with the encrypted length)
+    *ucPrtData++ = (unsigned char)(usLength);
+    ucPrtData = fnEncrypt(ucPrtData, ucPrtData, usLength);
+    usLength = (ucPrtData - ptrRecordLength - 2);                        // the encrypted content length
     *ptrRecordLength++ = (unsigned char)(usLength >> 8);                 // overwrite with encrypted content length
     *ptrRecordLength = (unsigned char)(usLength);
-    usLength = (ptrData - &ucTLS_frame[MIN_TCP_HLEN]);                   // complete content length
-    return (fnSendTCP(Socket, ucTLS_frame, usLength, TCP_FLAG_PUSH) > 0);// send data
+    usLength = (ucPrtData - ptrContentLength);                           // complete content length
+    return (fnSendTCP((Socket & ~(SECURE_SOCKET_MODE)), ptrBuffer, usLength, ucFlag) > 0); // send data
 }
 
 extern int fnTLS(USOCKET Socket, unsigned char ucEvent)
@@ -600,7 +597,7 @@ extern int fnTLS(USOCKET Socket, unsigned char ucEvent)
     default:
         return 0;
     }
-    return (fnSendTCP(Socket, ucTLS_frame, usLength, TCP_FLAG_PUSH) > 0); // send data
+    return (fnSendTCP((Socket & ~(SECURE_SOCKET_MODE)), ucTLS_frame, usLength, TCP_FLAG_PUSH) > 0); // send data
 }
 
 static unsigned char *fnExtractCertificate(unsigned char *ucPrtData, int iCertificateReference, unsigned long *ptrulCertificatesLength)
@@ -969,6 +966,90 @@ extern int fnSecureLayerReception(USOCKET Socket, unsigned char **ptr_ucPrtData,
     }
     return iReturn;
 }
+
+static int (*app_listener[NO_OF_TCPSOCKETS])(USOCKET, unsigned char, unsigned char *, unsigned short) = {0};
+
+
+// Local listener on secure port (inserted between the secure socket layer and the application's listener)
+//
+static int fnSecureListener(USOCKET Socket, unsigned char ucEvent, unsigned char *ucIp_Data, unsigned short usPortLen)
+{
+    static unsigned char ucUnacked = 0;
+    switch (ucEvent) {
+    case TCP_EVENT_CONNECTED:                                            // the server has accepted the TCP connection request
+         return (ucUnacked = fnTLS(Socket, TCP_EVENT_CONNECTED));        // start establishing a secure socket connection
+
+    case TCP_EVENT_CLOSE:                                                // server is requesting a TCP close
+        fnTLS(Socket, TCP_EVENT_CLOSE);
+        break;
+
+    case TCP_EVENT_ABORT:                                                // server has reset the TCP connection
+        fnTLS(Socket, TCP_EVENT_ABORT);
+        break;
+
+    case TCP_EVENT_ACK:                                                  // last TCP transmission has been acknowledged
+        {
+            int iReturn;
+            ucUnacked = 0;                                               // no more outstanding data to be acked
+            iReturn = fnTLS(Socket, TCP_EVENT_ACK);
+            if (APP_SECURITY_HANDLED != iReturn) {                       // if the handling responded to an ack
+                ucUnacked = 1;
+                return iReturn;                                          // return according to the secure socket layer's response
+            }
+        }
+        break;
+    case TCP_EVENT_REGENERATE:                                           // we must repeat the previous transmission
+        {
+            int iReturn;
+            ucUnacked = 0;
+            iReturn = fnTLS(Socket, TCP_EVENT_REGENERATE);
+            if (APP_SECURITY_HANDLED != iReturn) {                       // if the handling needed to regenerate
+                ucUnacked = 1;
+                return iReturn;                                          // return according to the secure socket layer's response
+            }
+        }
+        break;
+
+    case TCP_EVENT_DATA:                                                 // we have new receive data
+        {
+            int iReturn = fnSecureLayerReception(Socket, &ucIp_Data, &usPortLen);
+            if ((APP_SECURITY_HANDLED & iReturn) == 0) {                 // if the handling did not decrypt the content to be handled subsequently by the application
+                if ((APP_SECURITY_CONNECTED & iReturn) != 0) {           // if the secure layer has just been established
+                    ucEvent = TCP_EVENT_CONNECTED;
+                    break;
+                }
+                return iReturn;                                          // return according to the secure socket layer's response
+            }
+        }
+        break;
+
+    case TCP_EVENT_ARP_RESOLUTION_FAILED:
+    case TCP_EVENT_CLOSED:                                               // the TCP connection has closed
+    case TCP_EVENT_CONREQ:
+    default:
+        break;
+    }
+    // Pass on to the application layer callback
+    //
+    return (app_listener[_TCP_SOCKET_MASK(Socket)]((Socket | SECURE_SOCKET_MODE), ucEvent, ucIp_Data, usPortLen));
+}
+
+extern void *fnInsertSecureLayer(USOCKET TCP_socket, int (*listener)(USOCKET, unsigned char, unsigned char *, unsigned short), int iInsert)
+{
+    if (iInsert != 0) {
+        app_listener[_TCP_SOCKET_MASK(TCP_socket)] = listener;           // enter the application listener
+        return fnSecureListener;                                         // return the inserted secure listener
+    }
+    else {
+        if (app_listener[_TCP_SOCKET_MASK(TCP_socket)] != 0) {
+            return (app_listener[_TCP_SOCKET_MASK(TCP_socket)]);
+        }
+        else {
+            return listener;
+        }
+    }
+}
+
 
 extern void test_secure(USOCKET socket)
 {

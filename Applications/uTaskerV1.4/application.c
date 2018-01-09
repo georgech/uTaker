@@ -613,7 +613,7 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
             uFileCloseMime(upload_location, &ucMimeType);                // close file as binary type
         }
 #endif
-#if defined USE_MQTT_CLIENT && defined SECURE_MQTT && defined _WINDOWS
+#if defined USE_MQTT_CLIENT && defined SECURE_MQTT && defined _WINDOWS   // temporary for secure MQTT simulation tests
         {
             ARP_DETAILS arp_details;
     #if IP_INTERFACE_COUNT > 1

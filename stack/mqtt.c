@@ -33,8 +33,12 @@
 
 #if defined SECURE_MQTT
     #define MQTTS_PORT_   usMQTT_port
+    #define MAX_SECURE_SOCKET_HEADER       (21) // record header plus max iv
+    #define MAX_SECURE_SOCKET_TAIL         (64) // MAC plus padding
+    #define _MIN_TCP_HLEN  (MIN_TCP_HLEN + MAX_SECURE_SOCKET_HEADER + MAX_SECURE_SOCKET_TAIL)
 #else
     #define MQTTS_PORT_   MQTT_PORT
+    #define _MIN_TCP_HLEN  MIN_TCP_HLEN
 #endif
 
 
@@ -213,9 +217,11 @@ extern int fnConnectMQTT(unsigned char *ucIP, unsigned short(*fnCallback)(signed
     uMemcpy(ucMQTT_ip_address, ucIP, IPV4_LENGTH);                       // save the address of the MQTT server/broker we want to connect to
     #if defined SECURE_MQTT
     if ((ulModeFlags & SECURE_MQTT_CONNECTION) != 0) {
+        MQTT_TCP_socket |= (SECURE_SOCKET_MODE);
         usMQTT_port = MQTTS_PORT;                                        // secure TCP port number
     }
     else {
+        MQTT_TCP_socket &= ~(SECURE_SOCKET_MODE);
         usMQTT_port = MQTT_PORT;                                         // standard TCP port number
     }
     #endif
@@ -436,11 +442,6 @@ static int fnSetNextMQTT_state(unsigned char ucNextState)
     return (0);
 }
 
-#if defined SECURE_MQTT
-    extern int fnTLS(USOCKET Socket, unsigned char ucEvent);
-    extern int fnSecureLayerReception(USOCKET Socket, unsigned char **ptr_ucPrtData, unsigned short *ptr_usLength);
-    extern int fnSecureLayerTransmission(USOCKET Socket, unsigned char *ucPrtData, unsigned short usLength, unsigned char ucFlag);
-#endif
 
 // Local listener on TCP MQTT port
 //
@@ -457,30 +458,15 @@ static int fnMQTTListener(USOCKET Socket, unsigned char ucEvent, unsigned char *
 
     case TCP_EVENT_CONNECTED:                                            // the broker has accepted the TCP connection request
         if (ucMQTT_state == MQTT_STATE_OPEN_SENT) {
-#if defined SECURE_MQTT
-            if (MQTTS_PORT == usMQTT_port) {                             // if we are operating in secure mode
-                return (ucUnacked = fnTLS(Socket, TCP_EVENT_CONNECTED)); // start establishing a secure socket connection
-            }
-#endif
             return (fnSetNextMQTT_state(MQTT_STATE_CONNECTION_OPENED));
         }
         break;
 
     case TCP_EVENT_CLOSE:                                                // broker is requesting a TCP close
-#if defined SECURE_MQTT
-        if (MQTTS_PORT == usMQTT_port) {                                 // if we are operating in secure mode
-            fnTLS(Socket, TCP_EVENT_CLOSE);
-        }
-#endif
         fnSetNextMQTT_state(MQTT_STATE_CLOSING);
         break;
 
     case TCP_EVENT_ABORT:                                                // broker has reset the TCP connection
-#if defined SECURE_MQTT
-        if (MQTTS_PORT == usMQTT_port) {                                 // if we are operating in secure mode
-            fnTLS(Socket, TCP_EVENT_ABORT);
-        }
-#endif
         fnMQTT_error(MQTT_HOST_CLOSED);
         break;
 
@@ -491,15 +477,6 @@ static int fnMQTTListener(USOCKET Socket, unsigned char ucEvent, unsigned char *
 
     case TCP_EVENT_ACK:                                                  // last TCP transmission has been acknowledged
         ucUnacked = 0;                                                   // no more outstanding data to be acked
-#if defined SECURE_MQTT
-        if (MQTTS_PORT == usMQTT_port) {                                 // if we are operating in secure mode
-            int iReturn = fnTLS(Socket, TCP_EVENT_ACK);
-            if (APP_SECURITY_HANDLED != iReturn) {                       // if the handling responded to an ack
-                ucUnacked = 1;
-                return iReturn;                                          // return according to the secure socket layer's response
-            }
-        }
-#endif
         if ((MQTT_STATE_PUBLISH == ucMQTT_state) && (ucPublishQoS == MQTT_SUBSCRIPTION_QoS_0)) {
             ucMQTT_state = MQTT_STATE_CONNECTED_IDLE;
             fnUserCallback(MQTT_PUBLISH_ACKNOWLEDGED, 0, MQTT_SUBSCRIPTION_QoS_0, subscriptions[ucPublishInProgress - 1].ucSubscriptionReference);
@@ -515,29 +492,9 @@ static int fnMQTTListener(USOCKET Socket, unsigned char ucEvent, unsigned char *
         //
     case TCP_EVENT_REGENERATE:                                           // we must repeat the previous transmission
         ucUnacked = 0;
-#if defined SECURE_MQTT
-        if (MQTTS_PORT == usMQTT_port) {                                 // if we are operating in secure mode
-            int iReturn = fnTLS(Socket, TCP_EVENT_REGENERATE);
-            if (APP_SECURITY_HANDLED != iReturn) {                       // if the handling needed to regenerate
-                ucUnacked = 1;
-                return iReturn;                                          // return according to the secure socket layer's response
-            }
-        }
-#endif
         return (fnRegenerate() > 0);
 
     case TCP_EVENT_DATA:                                                 // we have new receive data
-#if defined SECURE_MQTT
-        if (MQTTS_PORT == usMQTT_port) {                                 // if we are operating in secure mode
-            int iReturn = fnSecureLayerReception(Socket, &ucIp_Data, &usPortLen);
-            if ((APP_SECURITY_HANDLED & iReturn) == 0) {                 // if the handling did not decrypt the content to be handled subsequently by the application
-                if ((APP_SECURITY_CONNECTED & iReturn) != 0) {           // if the secure layer has just been established
-                    return (fnSetNextMQTT_state(MQTT_STATE_CONNECTION_OPENED)); // continue with the application operation
-                }
-                return iReturn;                                          // return according to the secure socket layer's response
-            }
-        }
-#endif
         return (fnHandleData(ucIp_Data, usPortLen));                     // interpret the data
 
     case TCP_EVENT_CONREQ:                                               // we do not accept connection requests
@@ -617,9 +574,10 @@ static void fnIncrementtPacketIdentfier(void)
 //
 static unsigned short fnRegenerate(void)
 {
-    unsigned char ucMQTTData[MIN_TCP_HLEN + MQTT_MESSAGE_LEN + 1];       // temporary buffer for constructing the MQTT message in
+    unsigned char ucMQTTData[_MIN_TCP_HLEN + MQTT_MESSAGE_LEN + 1];      // temporary buffer for constructing the MQTT message in
     unsigned short usDataLen = 0;
     unsigned char *ptrMQTT_packet = (unsigned char *)&ucMQTTData[MIN_TCP_HLEN + 1]; // leave one byte at the start free in case we need to add a two byte variable length
+    unsigned char *ptrStart;
     unsigned char *ptrRemainingLength;
     int iVarLenInsert = 1;
 
@@ -627,6 +585,12 @@ static unsigned short fnRegenerate(void)
         ucQueueFlags |= MQTT_QUEUE_REGEN;                                // flag that we want to continue as soon as the outstanding TCP data has been acknowleged
         return 0;
     }
+    #if defined SECURE_MQTT
+    if ((MQTT_TCP_socket & SECURE_SOCKET_MODE) != 0) {                   // when using secure socket
+        ptrMQTT_packet += MAX_SECURE_SOCKET_HEADER;                      // leave additional space for the secure header
+    }
+    #endif
+    ptrStart = ptrMQTT_packet;
 
     switch (ucMQTT_state) {                                              // (re)send last packet
     case MQTT_STATE_CONNECTION_OPENED:                                   // client to broker after establishing the TCP connection
@@ -638,7 +602,7 @@ static unsigned short fnRegenerate(void)
         ptrMQTT_packet += sizeof(cucProtocolNameMQTT);
         *ptrMQTT_packet++ = MQTT_PROTOCOL_LEVEL;
         *ptrMQTT_packet++ = ucSessionFlags;                              // clear any previous session states
-        *ptrMQTT_packet++ = (unsigned char)(MQTT_KEEPALIVE_TIME_SECONDS >> 8); // keep-alive time (the broker should disconnect when there is no acivity during this interval)
+        *ptrMQTT_packet++ = (unsigned char)(MQTT_KEEPALIVE_TIME_SECONDS >> 8); // keep-alive time (the broker should disconnect when there is no activity during this interval)
         *ptrMQTT_packet++ = (unsigned char)(MQTT_KEEPALIVE_TIME_SECONDS);
         // Payload
         //
@@ -745,14 +709,9 @@ static unsigned short fnRegenerate(void)
         return 0;
     }
     if (usDataLen == 0) {
-        usDataLen = fnAddMQTT_remaining_length(ptrMQTT_packet, (unsigned char *)&ucMQTTData[MIN_TCP_HLEN + 1], MQTT_MESSAGE_LEN, ptrRemainingLength, &iVarLenInsert);
+        usDataLen = fnAddMQTT_remaining_length(ptrMQTT_packet, ptrStart, MQTT_MESSAGE_LEN, ptrRemainingLength, &iVarLenInsert);
     }
     uTaskerMonoTimer(OWN_TASK, MQTT_KEEPALIVE_TIME, T_MQTT_KEEPALIVE_TIMEOUT); // retrigger the keep-alive timer at each transmission
-    #if defined SECURE_MQTT
-    if (MQTTS_PORT == usMQTT_port) {                                     // if we are operating in secure mode
-        return (ucUnacked = fnSecureLayerTransmission(MQTT_TCP_socket, (ucMQTTData + iVarLenInsert + MIN_TCP_HLEN), usDataLen, TCP_FLAG_PUSH));
-    }
-    #endif
     return (ucUnacked = (fnSendTCP(MQTT_TCP_socket, (ucMQTTData + iVarLenInsert), usDataLen, TCP_FLAG_PUSH) > 0)); // send data
 }
 

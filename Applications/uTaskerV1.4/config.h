@@ -1055,8 +1055,8 @@
         #if defined USB_HOST_SUPPORT
             #define NUMBER_USB     (5 + 1)                               // physical queues (control plus 5 endpoints)
         #else                                                            // define one or more device classes (multiple classes creates a composite device)
-          //#define USE_USB_CDC                                          // USB-CDC (use also for Modbus over USB)
-            #define USE_USB_MSD                                          // needs SD card to compile (or alternatives FLASH_FAT / SPI_FLASH_FAT / FAT_EMULATION)
+            #define USE_USB_CDC                                          // USB-CDC (use also for Modbus over USB)
+          //#define USE_USB_MSD                                          // needs SD card to compile (or alternatives FLASH_FAT / SPI_FLASH_FAT / FAT_EMULATION)
           //#define USE_USB_HID_MOUSE                                    // human interface device (mouse)
           //#define USE_USB_HID_KEYBOARD                                 // human interface device (keyboard)
               //#define USB_KEYBOARD_DELAY                               // enable inter-character delay control
@@ -1488,10 +1488,6 @@
             #define USE_MQTT_CLIENT                                      // enable MQTT (message queuing telemetry transport) client support
           //#define USE_MQTT_BROKER                                      // enable MQTT (message queuing telemetry transport) broker support
               //#define SECURE_MQTT                                      // MQTTS support
-                #if defined SECURE_MQTT
-                    #define SUPPORT_UCALLOC
-                #endif
-
           //#define TEST_CLIENT_SERVER                                   // TCP client/server test (see debug.c)
             #define TEST_TCP_SERVER                                      // TCP server (see debug.c) - uses also a TELNET session
             #if defined TEST_CLIENT_SERVER
@@ -1504,6 +1500,10 @@
                     #undef UT_DIRECTORIES_AVAILABLE
                     #define UT_DIRECTORIES_AVAILABLE 5                   // this many directories objects are available for allocation (more to allow web server and FTP)
                 #endif
+            #endif
+            #if (defined USE_MQTT_CLIENT && defined SECURE_MQTT)
+                #define USE_SECURE_SOCKET_LAYER
+                #define SUPPORT_UCALLOC
             #endif
         #endif
 

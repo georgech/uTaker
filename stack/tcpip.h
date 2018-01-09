@@ -141,10 +141,10 @@
 #define MAX_IPV6_STRING         40                                       // maximum size of IPV6 address as terminated string
 
 #if !defined IP_NETWORK_COUNT                                            // {61}
-    #define IP_NETWORK_COUNT     1                                       // default is for one network
+    #define IP_NETWORK_COUNT    1                                        // default is for one network
 #endif
 #if !defined IP_INTERFACE_COUNT
-    #define IP_INTERFACE_COUNT   1
+    #define IP_INTERFACE_COUNT  1
 #endif
 #if !defined DEFAULT_NETWORK                                             // {61}
     #define DEFAULT_NETWORK      (unsigned char)0
@@ -158,16 +158,31 @@
 #else
     #define _ALTERNATIVE_VLAN(uSocket) 0                                 // {69}
 #endif
-#if IP_INTERFACE_COUNT > 1 || IP_NETWORK_COUNT > 1                       // {74}
-    #define _TCP_SOCKET_MASK_ASSIGN(uSocket)  (uSocket &= (SOCKET_NUMBER_MASK))
-    #define _TCP_SOCKET_MASK(uSocket)  (USOCKET)((uSocket) & (SOCKET_NUMBER_MASK))
-    #define _UDP_SOCKET_MASK_ASSIGN(uSocket)  (uSocket &= (SOCKET_NUMBER_MASK))
-    #define _UDP_SOCKET_MASK(uSocket)  (USOCKET)((uSocket) & (SOCKET_NUMBER_MASK))
+#if defined USE_SECURE_SOCKET_LAYER
+    #define SECURE_SOCKET_MODE   (1 << ((sizeof(USOCKET) * 8) - 2))      // 0x40, 0x4000 or 0x40000000
+    #if IP_INTERFACE_COUNT > 1 || IP_NETWORK_COUNT > 1                   // {74}
+        #define _TCP_SOCKET_MASK_ASSIGN(uSocket)  (uSocket &= (SOCKET_NUMBER_MASK))
+        #define _TCP_SOCKET_MASK(uSocket)         (USOCKET)((uSocket) & (SOCKET_NUMBER_MASK))
+        #define _UDP_SOCKET_MASK_ASSIGN(uSocket)  (uSocket &= (SOCKET_NUMBER_MASK))
+        #define _UDP_SOCKET_MASK(uSocket)         (USOCKET)((uSocket) & (SOCKET_NUMBER_MASK))
+    #else
+        #define _TCP_SOCKET_MASK_ASSIGN(uSocket)  (uSocket &= ~(SECURE_SOCKET_MODE))
+        #define _TCP_SOCKET_MASK(uSocket)         (uSocket & ~(SECURE_SOCKET_MODE))
+        #define _UDP_SOCKET_MASK_ASSIGN(uSocket)  (uSocket &= ~(SECURE_SOCKET_MODE))
+        #define _UDP_SOCKET_MASK(uSocket)         (uSocket & ~(SECURE_SOCKET_MODE))
+    #endif
 #else
-    #define _TCP_SOCKET_MASK_ASSIGN(uSocket)                             // does nothing when single interface and single networks
-    #define _TCP_SOCKET_MASK(uSocket) (uSocket)
-    #define _UDP_SOCKET_MASK_ASSIGN(uSocket)
-    #define _UDP_SOCKET_MASK(uSocket) (uSocket)
+    #if IP_INTERFACE_COUNT > 1 || IP_NETWORK_COUNT > 1                   // {74}
+        #define _TCP_SOCKET_MASK_ASSIGN(uSocket)  (uSocket &= (SOCKET_NUMBER_MASK))
+        #define _TCP_SOCKET_MASK(uSocket)         (USOCKET)((uSocket) & (SOCKET_NUMBER_MASK))
+        #define _UDP_SOCKET_MASK_ASSIGN(uSocket)  (uSocket &= (SOCKET_NUMBER_MASK))
+        #define _UDP_SOCKET_MASK(uSocket)         (USOCKET)((uSocket) & (SOCKET_NUMBER_MASK))
+    #else
+        #define _TCP_SOCKET_MASK_ASSIGN(uSocket)
+        #define _TCP_SOCKET_MASK(uSocket)         (uSocket)
+        #define _UDP_SOCKET_MASK_ASSIGN(uSocket) 
+        #define _UDP_SOCKET_MASK(uSocket)         (uSocket)
+    #endif
 #endif
 
 /************************** Ethernet Defines *****************************************************************/
@@ -250,11 +265,11 @@ typedef struct _PACK stETHERNET_FRAME                                    // {1}
 #define INTERFACE_RX_PAYLOAD_CS_FRAGS         0x40                       // used only locally - do not set as interface characteristic
 #define INTERFACE_CALC_TCP_IPv6               0x80                       // used only locally - do not set as interface characteristic
 
-#define VLAN_UNTAG_TX_FRAME   0x10                                       // force transmission to be untagged
-#define VLAN_UNTAGGED_FRAME   0x20                                       // {67} this flag indicates that the frame arrived untagged but hasn't been dropped even though VLAN operation is enabled (eg. untagged frames are allowed on certain ports in certain circumstances)
-#define VLAN_CONTENT_PRESENT  0x40                                       // the VLAN content has not been removed
-#define VLAN_TAGGED_FRAME     0x80                                       // the original frame had VLAN content
-#define VLAN_MEMBER_MASK      0x0f                                       // maximum alternative VLAN groups is 15
+#define VLAN_UNTAG_TX_FRAME                   0x10                       // force transmission to be untagged
+#define VLAN_UNTAGGED_FRAME                   0x20                       // {67} this flag indicates that the frame arrived untagged but hasn't been dropped even though VLAN operation is enabled (eg. untagged frames are allowed on certain ports in certain circumstances)
+#define VLAN_CONTENT_PRESENT                  0x40                       // the VLAN content has not been removed
+#define VLAN_TAGGED_FRAME                     0x80                       // the original frame had VLAN content
+#define VLAN_MEMBER_MASK                      0x0f                       // maximum alternative VLAN groups is 15
 
 typedef struct _PACK stETHERNET_STATS                                    // don't change order due to dynamic html references...
 {
@@ -2202,6 +2217,7 @@ extern void fnSendICMPError(ICMP_ERROR *tICMP_error, unsigned short usLength);
 #else
     extern USOCKET fnTCP_Connect(USOCKET TCP_socket, unsigned char *RemoteIP, unsigned short usRemotePort, unsigned short usOurPort, unsigned short usMaxWindow);
 #endif
+extern void *fnInsertSecureLayer(USOCKET TCP_socket, int(*listener)(USOCKET, unsigned char, unsigned char *, unsigned short), int iInsert);
 extern USOCKET fnTCP_close(USOCKET TCP_Socket);
 //extern unsigned char fnGetTCP_state(USOCKET TCP_socket);               // {14}{94}
 extern TCP_CONTROL *fnGetSocketControl(USOCKET TCP_socket);              // {94}

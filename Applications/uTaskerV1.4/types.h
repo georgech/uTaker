@@ -107,8 +107,9 @@ typedef unsigned short    LENGTH_CHUNK_COUNT;                            // http
 // Ix = flags for each interface that the socket can use I0, I1, I2, I3 and I4 means that there are 5 physical sockets available in this example
 // Vx = virtual lan membership reference (0 is standard virtual LAN and 1, 2, 3 are alternative VLANs)
 // S = socket number from 0..0x3f (maximum 64 TCP and 64 UDP sockets possible)
-// note that USOCKET would be chosen as signed short to give adequate width for this example
-
+// Note that USOCKET would be chosen as signed short to give adequate width for this example
+// Beware that SECURE_SOCKET_MODE is 0x40, 0x4000 or 0x40000000, depending on USOCKET width and should be left free in case secure socket layer is used
+//
 #if IP_NETWORK_COUNT > 1                                                 // {12}
     #if defined USE_SNMP
         typedef signed short         USOCKET;
@@ -155,12 +156,12 @@ typedef unsigned short    LENGTH_CHUNK_COUNT;                            // http
     #else
         #if IP_INTERFACE_COUNT > 1
             typedef signed short         USOCKET;                        // socket support from 0..63 (negative values are errors)
-            #define SOCKET_NUMBER_MASK   0x1f                            // socket mask for 0..31
+            #define SOCKET_NUMBER_MASK   0x001f                          // socket mask for 0..31
             #define INTERFACE_SHIFT      5                               // interface bit location
             #define INTERFACE_MASK       0x0f                            // four interfaces possible
         #else
-            typedef signed char          USOCKET;                        // socket support from 0..127 (negative values are errors)
-            #define SOCKET_NUMBER_MASK   0x7f                            // default when using a single network and interface (USOCKET can be single byte width)
+            typedef signed char          USOCKET;                        // socket support from 0..63 (negative values are errors)
+            #define SOCKET_NUMBER_MASK   0x3f                            // default when using a single network and interface (USOCKET can be single byte width)
             #define INTERFACE_SHIFT      0                               // single interface
             #define INTERFACE_MASK       0
         #endif

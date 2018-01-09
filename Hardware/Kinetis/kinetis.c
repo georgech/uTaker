@@ -1925,7 +1925,7 @@ extern int fnClkout(int iClockSource)                                    // {120
     case LOW_POWER_OSCILLATOR_CLOCK_OUT:
         ulSIM_SOPT2 |= SIM_SOPT2_CLKOUTSEL_LPO;
         break;
-    case INTERNAL_LIRC_CLOCK_OUT:
+    case INTERNAL_LIRC_CLOCK_OUT:                                        // same as INTERNAL_MCGIRCLK_CLOCK_OUT
         ulSIM_SOPT2 |= SIM_SOPT2_CLKOUTSEL_MCGIRCLK;
         break;
     case EXTERNAL_OSCILLATOR_CLOCK_OUT:
@@ -1939,9 +1939,15 @@ extern int fnClkout(int iClockSource)                                    // {120
     case RTC_CLOCK_OUT:
     #if defined KINETIS_KL03
         _CONFIG_PERIPHERAL(B, 13, (PB_13_RTC_CLKOUT | PORT_SRE_SLOW | PORT_DSE_LOW)); // configure the RTC_CLKOUT pin
-        return 0;
+    #elif defined KINETIS_K64
+        _CONFIG_PERIPHERAL(E, 0, (PE_0_RTC_CLKOUT | PORT_SRE_SLOW | PORT_DSE_LOW)); // configure the RTC_CLKOUT pin
+      //_CONFIG_PERIPHERAL(E, 26, (PE_26_RTC_CLKOUT | PORT_SRE_SLOW | PORT_DSE_LOW)); // configure the RTC_CLKOUT pin
     #endif
+        return 0;
+    #if defined KINETIS_K64
     case FLEXBUS_CLOCK_OUT:
+        ulSIM_SOPT2 &= ~(SIM_SOPT2_CLKOUTSEL_IRC48M);
+    #endif
     default:
         return -1;                                                       // invalid clock source
     }
@@ -1950,6 +1956,8 @@ extern int fnClkout(int iClockSource)                                    // {120
     _CONFIG_PERIPHERAL(A, 12, (PA_12_CLKOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); // configure the CLKOUT pin (PA_4_CLKOUT would be an alternative possibility)
     #elif defined KINETIS_KL05
     _CONFIG_PERIPHERAL(A, 15, (PA_15_CLKOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); // configure the CLKOUT pin (PA_4_CLKOUT would be an alternative possibility)
+    #elif defined KINETIS_K64 && (PIN_COUNT == PIN_COUNT_144_PIN)
+    _CONFIG_PERIPHERAL(A, 6, (PA_6_CLKOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); // configure the CLKOUT pin
     #else
     _CONFIG_PERIPHERAL(C, 3, (PC_3_CLKOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); // configure the CLKOUT pin
     #endif
@@ -2317,9 +2325,13 @@ static void _LowLevelInit(void)
 #else
     #include "kinetis_K_CLOCK.h"                                         // K clock configuration
 #endif
-#if defined CLKOUT_AVAILABLE
-  //fnClkout(BUS_CLOCK_OUT);                                             // select the clock to monitor on CLKOUT
+#if defined CLKOUT_AVAILABLE && !defined KINETIS_WITH_PCC                // select the clock signal to be driven on CLKOUT pin
+    #if defined KINETIS_K64
+      //fnClkout(FLEXBUS_CLOCK_OUT);                                     // select the clock to monitor on CLKOUT
+    #endif
+  //#if defined LOW_POWER_OSCILLATOR_CLOCK_OUT
   //fnClkout(INTERNAL_IRC48M_CLOCK_OUT);
+  //fnClkout(INTERNAL_LIRC_CLOCK_OUT);                                   // equivalent to INTERNAL_MCGIRCLK_CLOCK_OUT
   //fnClkout(EXTERNAL_OSCILLATOR_CLOCK_OUT);
   //fnClkout(RTC_CLOCK_OUT);
 #endif

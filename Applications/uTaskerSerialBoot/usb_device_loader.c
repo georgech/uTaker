@@ -2250,7 +2250,7 @@ static int mass_storage_callback(unsigned char *ptrData, unsigned short length, 
                     case UFI_READ_10:
                     case UFI_READ_12:
                     case UFI_READ_FORMAT_CAPACITY:
-                        if (_ptrDiskInfo->usDiskFlags & (DISK_MOUNTED | DISK_UNFORMATTED)) { // only respond when there is media inserted, else stall
+                        if ((_ptrDiskInfo->usDiskFlags & (DISK_MOUNTED | DISK_UNFORMATTED)) != 0) { // only respond when there is media inserted, else stall
                             return TRANSPARENT_CALLBACK;                 // the callback has done its work and the input buffer can now be used
                         }
                         present_sense_data.ucValid_ErrorCode = (VALID_SENSE_DATA | CURRENT_ERRORS);
@@ -2269,7 +2269,7 @@ static int mass_storage_callback(unsigned char *ptrData, unsigned short length, 
                         return TRANSPARENT_CALLBACK;                     // the callback has done its work and the input buffer can now be used
                     case UFI_WRITE_10:
                     case UFI_WRITE_12:
-                        if (_ptrDiskInfo->usDiskFlags & (DISK_MOUNTED | DISK_UNFORMATTED)) { // only respond when there media inserted, else stall
+                        if ((_ptrDiskInfo->usDiskFlags & (DISK_MOUNTED | DISK_UNFORMATTED)) != 0) { // only respond when there media inserted, else stall
                             return TRANSPARENT_CALLBACK;                 // the callback has done its work and the input buffer can now be used
                         }
                         present_sense_data.ucValid_ErrorCode = (VALID_SENSE_DATA | CURRENT_ERRORS);

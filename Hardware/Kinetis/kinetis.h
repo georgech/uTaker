@@ -157,6 +157,7 @@ extern int fnClkout(int iClockSource);                                   // {69}
     #define BUS_CLOCK_OUT                  3
     #define LOW_POWER_OSCILLATOR_CLOCK_OUT 4
     #define INTERNAL_LIRC_CLOCK_OUT        5
+    #define INTERNAL_MCGIRCLK_CLOCK_OUT    5
     #define EXTERNAL_OSCILLATOR_CLOCK_OUT  6
     #define INTERNAL_IRC48M_CLOCK_OUT      7
 
@@ -1171,7 +1172,7 @@ typedef struct stRESET_VECTOR
      #define NON_INITIALISED_RAM_SIZE    (4 + PERSISTENT_RAM_SIZE)
 #endif
 
-#if ((defined KINETIS_KL && !defined KINETIS_KL02) || defined KINETIS_K22)
+#if ((defined KINETIS_KL && !defined KINETIS_KL02) || defined KINETIS_K22 || defined KINETIS_K64)
     #define CLKOUT_AVAILABLE
 #endif
 
@@ -12121,6 +12122,9 @@ typedef struct stKINETIS_LPTMR_CTL
         #define PC_3_CLKOUT              PORT_MUX_ALT5
     #endif
 #else
+    #if defined KINETIS_K64 && defined PIN_COUNT_144_PIN
+        #define PA_6_CLKOUT              PORT_MUX_ALT5
+   #endif
     #define PC_3_CLKOUT                  PORT_MUX_ALT5
     #define PE_0_RTC_CLKOUT              PORT_MUX_ALT7
     #define PE_26_RTC_CLKOUT             PORT_MUX_ALT6

@@ -1080,7 +1080,7 @@ static const DEBUG_COMMAND tFTP_TELNET_Command[] = {                     // {37}
     #endif
 #endif
 #if defined USE_MQTT_CLIENT                                              // {87}
-    #if defined  SECURE_MQTT
+    #if defined SECURE_MQTT
     { "mqtts_con",        "Secure con. to MQTT broker [ip]",       DO_FTP_TELNET_MQTT, DO_MQTTS_CONNECT },
     #endif
     { "mqtt_con",         "Connect to MQTT broker [ip]",           DO_FTP_TELNET_MQTT, DO_MQTT_CONNECT },
