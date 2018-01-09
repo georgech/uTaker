@@ -797,6 +797,7 @@ extern int fnSecureLayerReception(USOCKET Socket, unsigned char **ptr_ucPrtData,
     static unsigned long ulHandshakeSize = 0;
     static unsigned short usRecordLength = 0;
     static unsigned char ucPresentHandshakeType = 0;
+    unsigned long ulThisLength;
     int iReturn = APP_ACCEPT;
     unsigned char *ucPrtData = *ptr_ucPrtData;
     unsigned short usLength = *ptr_usLength;
@@ -904,17 +905,19 @@ extern int fnSecureLayerReception(USOCKET Socket, unsigned char **ptr_ucPrtData,
                 iReturn |= fnHandleHandshake(Socket, ptrReceptionBuffer, ulHandshakeSize, ucPresentHandshakeType); // handle from intermediate buffer
                 uCFree(ptrReceptionBuffer - 4);                          // deallocate intermediate reception buffer memory (note that we set the pointer back to be beginning of the physical buffer)
                 ptrReceptionBuffer = 0;                                  // no more memory allocated
+                ulThisLength = ulSave;
             }
             else {                                                       // this tcp frame contains the complete handshake protocol content
                 iReturn |= fnHandleHandshake(Socket, ucPrtData, ulHandshakeSize, ucPresentHandshakeType); // handle directly in tcp reception buffer
+                ulThisLength = ulHandshakeSize;
             }
             usRecordLength -= 4;                                         // compensate for the handshake protocol type and length in each handled protocol
             if (ulHandshakeSize >= usRecordLength) {                     // if the complete record has been handled
                 usRecordLength = 0;
                 ulBufferContent = 0;
                 iTLS_rx_state = TLS_RX_STATE_IDLE;                       // the record has been completely handled so start searching the next
-                usLength -= (unsigned short)ulHandshakeSize;
-                ucPrtData += ulHandshakeSize;
+                usLength -= (unsigned short)ulThisLength;
+                ucPrtData += ulThisLength;
                 continue;                                                // do not perform usLength and ucPtrData manipulation
             }
             usLength -= (unsigned short)(ulHandshakeSize - ulBufferContent); // remaining in present input buffer
@@ -934,7 +937,7 @@ extern int fnSecureLayerReception(USOCKET Socket, unsigned char **ptr_ucPrtData,
                 if (TLS_RX_STATE_ENCRYPTED_APP_CONTENT == iTLS_rx_state) {
                     *ptr_ucPrtData = ucPrtData;                          // the data content
                     *ptr_usLength = (unsigned short)ulHandshakeSize;     // the data length
-                    return APP_SECURITY_HANDLED;                         // allow the user to handle the data as if it were received unencoded
+                    iReturn = APP_SECURITY_HANDLED;                      // allow the user to handle the data as if it were received unencoded
                 }
                 else if (TLS_RX_STATE_ENCRYPTED_ALERT_CONTENT == iTLS_rx_state) {
                     iReturn |= fnHandleAlert(ucPrtData, ulHandshakeSize);
