@@ -2451,18 +2451,20 @@ typedef struct stKINETIS_PCC2
         unsigned char ucRes2[0x10];
         unsigned char MCG_MC;
     #else
-        #if defined KINETIS_K_FPU || (KINETIS_MAX_SPEED > 100000000)
+        #if defined KINETIS_K_FPU || (KINETIS_MAX_SPEED > 100000000) || defined KINETIS_REVISION_2 || defined KINETIS_KW2X
         unsigned char MCG_SC;
         unsigned char ucRes2;
         unsigned char MCG_ATCVH;
         unsigned char MCG_ATCVL;
         unsigned char MCG_C7;
         unsigned char MCG_C8;
-        unsigned char ucRes3;
+        unsigned char MCG_C9;
         unsigned char MCG_C10;
-        unsigned char MCG_C11;
-        unsigned char MCG_C12;
-        unsigned char MCG_S2;
+            #if defined KINETIS_K_FPU || (KINETIS_MAX_SPEED > 100000000)
+            unsigned char MCG_C11;
+            unsigned char MCG_C12;
+            unsigned char MCG_S2;
+            #endif
         #elif defined KINETIS_KL82
         unsigned char MCG_SC;
         unsigned char ucRes2;

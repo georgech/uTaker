@@ -31,7 +31,7 @@
     #define MCG_C2_FREQ_RANGE     MCG_C2_RANGE_32K_40K
 #endif
 
-#if !defined RUN_FROM_DEFAULT_CLOCK && !defined EXTERNAL_CLOCK           // no configuration performed - remain in default clocked mode
+#if !defined RUN_FROM_DEFAULT_CLOCK && !defined EXTERNAL_CLOCK && !defined CLOCK_FROM_RTC_OSCILLATOR // no configuration performed - remain in default clocked mode
     #if CRYSTAL_FREQUENCY == 8000000
         #define MCG_C1_FRDIV_VALUE    MCG_C1_FRDIV_256
     #elif CRYSTAL_FREQUENCY == 16000000
@@ -72,29 +72,33 @@
     SIM_CLKDIV1 = (((SYSTEM_CLOCK_DIVIDE - 1) << 28) | ((BUS_CLOCK_DIVIDE - 1) << 24) | ((FLEX_CLOCK_DIVIDE - 1) << 20) | ((FLASH_CLOCK_DIVIDE - 1) << 16)); // prepare bus clock divides
     MCG_C2 |= MCG_C2_LP;                                                 // disable FLL in bypass mode
 #else
-    #if defined EXTERNAL_CLOCK                                           // external oscillator source - first move from state FEI to state FBE
+    #if defined EXTERNAL_CLOCK || defined CLOCK_FROM_RTC_OSCILLATOR      // external oscillator source - first move from state FEI to state FBE
         #if defined RUN_FROM_HIRC_PLL
     MCG_C7 = MCG_C7_OSCSEL_IRC48MCLK;                                    // route the IRC48M clock to the external reference clock input (this enables IRC48M)
         #endif
-        #if defined RUN_FROM_RTC_FLL
+        #if defined CLOCK_FROM_RTC_OSCILLATOR 
     POWER_UP_ATOMIC(6, RTC);                                             // enable access to the RTC
-    MCG_C7 = MCG_C7_OSCSEL_32K;                                          // select the RTC clock as external clock input to the FLL
+    MCG_C7 = MCG_C7_OSCSEL_32K;                                          // select the RTC clock as external clock input to the FLL or MCGOUTCLK
     RTC_CR = (RTC_CR_OSCE);                                              // enable RTC oscillator and output the 32.768kHz output clock so that it can be used by the MCG (the first time that it starts it can have a startup/stabilisation time but this is not critical for the FLL usage)
+            #if defined FLL_FACTOR
     MCG_C1 = ((MCG_C1_CLKS_PLL_FLL | MCG_C1_FRDIV_RANGE0_1) & ~MCG_C1_IREFS); // switch the FLL input to the undivided external clock source (RTC)
-    SIM_CLKDIV1 = (((SYSTEM_CLOCK_DIVIDE - 1) << 28) | ((BUS_CLOCK_DIVIDE - 1) << 24) | ((FLEX_CLOCK_DIVIDE - 1) << 20) | ((FLASH_CLOCK_DIVIDE - 1) << 16)); // prepare bus clock divides
-    while ((MCG_S & MCG_S_IREFST) != 0) {                                // wait until the switch to the external clock source has completed
+            #endif
+    SIM_CLKDIV1 = (((SYSTEM_CLOCK_DIVIDE - 1) << 28) | ((BUS_CLOCK_DIVIDE - 1) << 24) | ((FLEX_CLOCK_DIVIDE - 1) << 20) | ((FLASH_CLOCK_DIVIDE - 1) << 16)); // prepare bus clock divides ready for the final operating frequency
+    while ((MCG_S & MCG_S_IREFST) != 0) {                                // wait until the switch to the external RTC source has completed
             #if defined _WINDOWS
         MCG_S &= ~(MCG_S_IREFST);
             #endif
     }
+            #if defined FLL_FACTOR
     MCG_C4 = ((MCG_C4 & ~(MCG_C4_DMX32 | MCG_C4_HIGH_RANGE)) | (_FLL_VALUE)); // adjust FLL factor to obtain the required operating frequency
-        #elif defined RUN_FROM_RTC_FLL
+            #endif
+        #elif defined FLL_FACTOR
     MCG_C4 = ((MCG_C4 & ~(MCG_C4_DMX32 | MCG_C4_HIGH_RANGE)) | (_FLL_VALUE)); // adjust FLL factor to obtain the required operating frequency
         #else                                                            // external oscillator
             #if EXTERNAL_CLOCK >= 8000000
     MCG_C2 = (MCG_C2_RANGE_8M_32M | MCG_C2_LOCRE0);                      // select external clock source (with reset on clock loss)
     MCG_C1 = (MCG_C1_CLKS_EXTERN_CLK | MCG_C1_FRDIV_1024);               // switch to external input clock (the FLL input clock is set to as close to its input range as possible, although this is not absolutely necessary since the FLL will not be used)
-            #else
+            #elif !defined CLOCK_FROM_RTC_OSCILLATOR
     MCG_C2 = (MCG_C2_RANGE_1M_8M | MCG_C2_LOCRE0);                       // select external clock source (with reset on clock loss)
     MCG_C1 = (MCG_C1_CLKS_EXTERN_CLK | MCG_C1_FRDIV_128);                // switch to external input clock (the FLL input clock is set to as close to its input range as possible, although this is not absolutely necessary since the FLL will not be used)
             #endif
@@ -121,7 +125,7 @@
     }
         #endif
     #endif
-        #if !defined RUN_FROM_RTC_FLL
+        #if !defined CLOCK_FROM_RTC_OSCILLATOR
     while ((MCG_S & MCG_S_IREFST) != 0) {                                // loop until the FLL source is no longer the internal reference clock
             #if defined _WINDOWS
         MCG_S &= ~MCG_S_IREFST;

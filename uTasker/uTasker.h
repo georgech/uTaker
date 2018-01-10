@@ -23,6 +23,7 @@
     22.07.2014 Add UTASKER_ERROR and uGetTaskState()                     {5}
     06.11.2015 Modify fnStackFree() to allow worst-case used stack to be returned {6}
     31.01.2017 Add TICK_UNIT_MS() and TICK_UNIT_US()                     {7}
+    10.01.2018 pucBottomOfHeap made extern                               {8}
 
 */
 
@@ -204,6 +205,7 @@ extern NETWORK_LIMIT         OurNetworkNumber;                           // pres
 #if defined MONITOR_PERFORMANCE
     extern unsigned long ulMaximumIdle;                                  // this value contains the maximum idle duration that has occurred - setting it to 0xffffffff causes the performance monitoring to be reset after the next schedule sequence
 #endif
+extern unsigned char *pucBottomOfHeap;                                   // {8} the location of heap memory, which is the top of static variables
 
 /* =================================================================== */
 /*                 global function prototype declarations              */

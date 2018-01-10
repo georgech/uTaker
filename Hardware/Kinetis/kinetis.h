@@ -530,7 +530,32 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
         #endif
     #endif
 #elif defined KINETIS_KE15
-#elif !defined RUN_FROM_DEFAULT_CLOCK                                    // default is K-series
+#elif defined RUN_FROM_DEFAULT_CLOCK                                     // K-series running from defaut clock
+    #if defined FLL_FACTOR                                               // using FLL
+        #define CLOCK_DIV   1
+        #define CLOCK_MUL   FLL_FACTOR
+        #if (FLL_FACTOR == 640)
+            #define _FLL_VALUE (MCG_C4_LOW_RANGE)
+        #elif (FLL_FACTOR == 732)
+            #define _FLL_VALUE (MCG_C4_LOW_RANGE | MCG_C4_DMX32)
+        #elif (FLL_FACTOR == 1280)
+            #define _FLL_VALUE (MCG_C4_MID_RANGE)
+        #elif (FLL_FACTOR == 1464)
+            #define _FLL_VALUE (MCG_C4_MID_RANGE | MCG_C4_DMX32)
+        #elif (FLL_FACTOR == 1920)
+            #define _FLL_VALUE (MCG_C4_MID_HIGH_RANGE)
+        #elif (FLL_FACTOR == 2197)
+            #define _FLL_VALUE (MCG_C4_MID_HIGH_RANGE | MCG_C4_DMX32)
+        #elif (FLL_FACTOR == 2560)
+            #define _FLL_VALUE (MCG_C4_HIGH_RANGE)
+        #elif (FLL_FACTOR == 2929)
+            #define _FLL_VALUE (MCG_C4_HIGH_RANGE | MCG_C4_DMX32)
+        #else
+            #error Invalid FLL factor has been specified - valid are 640, 732, 1280, 1464, 1920, 2197, 2560 or 2929
+        #endif
+    #endif
+#elif defined CLOCK_FROM_RTC_OSCILLATOR
+#else                                                                    // default is K-series running from PLL sourced by the system oscillator
     #if (CLOCK_DIV < 1) || (CLOCK_DIV > 25)
         #error input divide must be between 1 and 25
     #endif
@@ -672,7 +697,13 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
             #else
                 #error Invalid FLL factor has been specified - valid are 640, 732, 1280, 1464, 1920, 2197, 2560 or 2929
             #endif
-            #define MCGOUTCLK  ((_EXTERNAL_CLOCK/FRDIVIDER) * FLL_FACTOR)// FLL clock output
+            #if defined CLOCK_FROM_RTC_OSCILLATOR
+                #define MCGOUTCLK  ((32768/FRDIVIDER) * FLL_FACTOR)// FLL clock output
+            #else
+                #define MCGOUTCLK  ((_EXTERNAL_CLOCK/FRDIVIDER) * FLL_FACTOR)// FLL clock output
+            #endif
+        #elif defined CLOCK_FROM_RTC_OSCILLATOR                          // clock directly from RTC oscillator
+            #define MCGOUTCLK   32768
         #else
             #define MCGOUTCLK  ((_EXTERNAL_CLOCK/CLOCK_DIV) * CLOCK_MUL) // up to 100/120MHz (PLL0 clock output)
         #endif
@@ -12122,7 +12153,7 @@ typedef struct stKINETIS_LPTMR_CTL
         #define PC_3_CLKOUT              PORT_MUX_ALT5
     #endif
 #else
-    #if defined KINETIS_K64 && defined PIN_COUNT_144_PIN
+    #if defined KINETIS_K64 && (PIN_COUNT == PIN_COUNT_144_PIN)
         #define PA_6_CLKOUT              PORT_MUX_ALT5
    #endif
     #define PC_3_CLKOUT                  PORT_MUX_ALT5
@@ -13003,7 +13034,7 @@ typedef struct stKINETIS_LPTMR_CTL
         #define MCG_S_LOCK               0x40                            // PLL has acquired lock
         #define MCG_S_LOLS               0x80                            // PLL has lost lock since LOLS was last cleared
       #endif
-      #if (defined KINETIS_K_FPU || (KINETIS_MAX_SPEED > 100000000)) || defined KINETIS_KL || defined KINETIS_KV || defined KINETIS_KW2X
+      #if (defined KINETIS_K_FPU || (KINETIS_MAX_SPEED > 100000000)) || defined KINETIS_REVISION_2 ||  defined KINETIS_KL || defined KINETIS_KV || defined KINETIS_KW2X
         #define MCG_SC                   *(volatile unsigned char *)(MCG_BLOCK + 0x08) // MSG status and control register
           #if !defined KINETIS_WITH_MCG_LITE
               #define MCG_SC_LOCS0       0x01                            // 
@@ -13027,7 +13058,7 @@ typedef struct stKINETIS_LPTMR_CTL
          #define MCG_ATCVL               *(unsigned char *)(MCG_BLOCK + 0x0b) // MSG Auto Trim Compare Value Low Register
         #endif
       #endif
-      #if defined KINETIS_K_FPU || (KINETIS_MAX_SPEED > 100000000) || defined KINETIS_KW2X
+      #if defined KINETIS_K_FPU || (KINETIS_MAX_SPEED > 100000000) || defined KINETIS_REVISION_2 || defined KINETIS_KW2X
         #define MCG_C7                   *(unsigned char *)(MCG_BLOCK + 0x0c) // MSG Control 7 Register
           #define MCG_C7_OSCSEL_OSCCLK   0x00                            // MCG FLL external reference clock is OSCCLK (OSCCLK0)
           #define MCG_C7_OSCSEL_32K      0x01                            // MCG FLL external reference clock is 32 kHz RTC Oscillator
@@ -13035,8 +13066,9 @@ typedef struct stKINETIS_LPTMR_CTL
           #define MCG_C7_OSCSEL_IRC48MCLK 0x02                           // MCG FLL external reference clock is IRC48M (OSCCLK1)
         #endif
         #define MCG_C8                   *(volatile unsigned char *)(MCG_BLOCK + 0x0d) // MSG Control 8 Register
+        #define MCG_C9                   *(volatile unsigned char *)(MCG_BLOCK + 0x0e) // MSG Control 9 Register
         #define MCG_C10                  *(unsigned char *)(MCG_BLOCK + 0x0f) // MSG Control 10 Register
-        #if !defined KINETIS_KW2X
+        #if defined KINETIS_K_FPU || (KINETIS_MAX_SPEED > 100000000)
             #define MCG_C11                  *(unsigned char *)(MCG_BLOCK + 0x10) // MSG Control 11 Register
               #define MCG_C11_PRDIV1_MASK    0x07                        // PLL1 external reference divider
               #define MCG_C11_PLLCS_PPL0     0x00                        // PLL0 output is selected as the MCG source when CLKS are programmed in PLL engaged external mode

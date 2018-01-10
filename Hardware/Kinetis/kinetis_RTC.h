@@ -292,7 +292,7 @@ extern int fnConfigureRTC(void *ptrSettings)
             RTC_SR = 0;                                                  // ensure stopped
             RTC_TSR = 0;                                                 // write to clear RTC_SR_TIF in status register when not yet enabled
         #if defined KINETIS_WITH_RTC_CRYSTAL                             // {6} devices with RTC crystal oscillator circuity
-            #if !defined RUN_FROM_RTC_FLL                                // the RTC oscillator will always be enabled in the clock initialisation
+            #if !defined CLOCK_FROM_RTC_OSCILLATOR && defined FLL_FACTOR // the RTC oscillator will always be enabled in the clock initialisation
             RTC_CR = (RTC_CR_OSCE | RTC_CR_CLKO);                        // enable oscillator but don't supply clock to other peripherals
             #endif
             return WAIT_STABILISING_DELAY;                               // the oscillator requires some time to stabilise so the user should call again after this time has expired

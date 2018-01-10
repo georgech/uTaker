@@ -66,8 +66,8 @@
     MCG_C4 = ((MCG_C4 & ~(MCG_C4_DMX32 | MCG_C4_HIGH_RANGE)) | (_FLL_VALUE)); // adjust FLL factor to obtain the required operating frequency
     #endif
 #else
-    #if defined EXTERNAL_CLOCK                                           // first move from state FEI to state FBE
-        #if defined RUN_FROM_RTC_FLL
+    #if defined EXTERNAL_CLOCK || defined CLOCK_FROM_RTC_OSCILLATOR      // first move from state FEI to state FBE
+        #if defined CLOCK_FROM_RTC_OSCILLATOR
     POWER_UP_ATOMIC(6, RTC);                                             // enable access to the RTC
     MCG_C7 = MCG_C7_OSCSEL_32K;                                          // select the RTC clock as external clock input to the FLL
     RTC_CR = (RTC_CR_OSCE);                                              // enable RTC oscillator and output the 32.768kHz output clock so that it can be used by the MCG (the first time that it starts it can have a startup/stabilisation time but this is not critical for the FLL usage)
@@ -78,8 +78,10 @@
         MCG_S &= ~(MCG_S_IREFST);
             #endif
     }
+            #if defined FLL_FACTOR
     MCG_C4 = ((MCG_C4 & ~(MCG_C4_DMX32 | MCG_C4_HIGH_RANGE)) | (_FLL_VALUE)); // adjust FLL factor to obtain the required operating frequency
-        #elif defined RUN_FROM_RTC_FLL
+            #endif
+        #elif defined FLL_FACTOR
     MCG_C4 = ((MCG_C4 & ~(MCG_C4_DMX32 | MCG_C4_HIGH_RANGE)) | (_FLL_VALUE)); // adjust FLL factor to obtain the required operating frequency
         #else                                                            // external oscillator
             #if EXTERNAL_CLOCK >= 8000000
@@ -116,7 +118,7 @@
     }
         #endif
     #endif                                                               // endif not EXTERNAL_CLOCK
-    #if !defined RUN_FROM_RTC_FLL
+    #if !defined CLOCK_FROM_RTC_OSCILLATOR
     while ((MCG_S & MCG_S_IREFST) != 0) {                                // loop until the FLL source is no longer the internal reference clock
         #if defined _WINDOWS
         MCG_S &= ~MCG_S_IREFST;

@@ -146,7 +146,7 @@ extern void fnDoLowPower(void)
     // The processor will continue after being woken by any pending interrupt (also when the global interrupt mask is still set)
     // - this mean that the processor has woken again when the code execution reaches this location
     //
-    #if !defined FLL_FACTOR && !defined RUN_FROM_EXTERNAL_CLOCK && !defined RUN_FROM_LIRC && !defined RUN_FROM_DEFAULT_CLOCK && !defined KINETIS_KE && !defined RUN_FROM_HIRC && !defined RUN_FROM_LIRC && !defined KINETIS_WITH_MCG_LITE
+    #if !defined FLL_FACTOR && !defined RUN_FROM_EXTERNAL_CLOCK && !defined RUN_FROM_LIRC && !defined RUN_FROM_DEFAULT_CLOCK && !defined KINETIS_KE && !defined RUN_FROM_HIRC && !defined RUN_FROM_LIRC && !defined KINETIS_WITH_MCG_LITE && !defined CLOCK_FROM_RTC_OSCILLATOR
         #if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000)
     if (((SYSTEM_CONTROL_REGISTER & SLEEPDEEP) != 0) && ((SMC_PMPROT & (SMC_PMPROT_AVLP | SMC_PMPROT_ALLS)) != 0))
         #else

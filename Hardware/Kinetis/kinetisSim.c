@@ -404,8 +404,10 @@ static void fnSetDevice(unsigned long *port_inits)
     MCG_C1 = MCG_C1_IREFS;                                               // multi-purpose clock generator
     MCG_C2 = MCG_C2_LOCRE0;
     MCG_S  = MCG_S_IREFST;
-    #if defined KINETIS_K_FPU || (KINETIS_MAX_SPEED > 100000000)
-    MCG_SC = 0x02;
+    #if defined MCG_SC
+    MCG_SC = MCG_SC_FCRDIV_2;
+    #endif
+    #if defined MCG_C10 && (defined KINETIS_K_FPU || (KINETIS_MAX_SPEED > 100000000))
     MCG_C10 = 0x80;
     #endif
     #if defined KINETIS_REVISION_2

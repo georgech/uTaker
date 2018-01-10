@@ -7647,17 +7647,17 @@ extern int fnCommandInput(unsigned char *ptrData, unsigned short usLen, int iSou
 
 extern void fnDisplayMemoryUsage(void)
 {
-    STACK_REQUIREMENTS stackUsed;                                // {79}
+    STACK_REQUIREMENTS stackUsed;                                        // {79}
     fnDebugMsg("\n\rSystem memory use:\n\r");
     fnDebugMsg("==================\n\r");
     fnDebugMsg("Free heap = ");
-    fnDebugHex(fnHeapFree(), (2 | WITH_LEADIN));
+    fnDebugHex(fnHeapFree(), (sizeof(HEAP_REQUIREMENTS) | WITH_LEADIN));
     fnDebugMsg(" from ");
-    fnDebugHex(fnHeapAvailable(), (2 | WITH_LEADIN));
+    fnDebugHex(fnHeapAvailable(), (sizeof(HEAP_REQUIREMENTS) | WITH_LEADIN));
     fnDebugMsg("\n\rUnused stack = ");
-    fnDebugHex(fnStackFree(&stackUsed), (2 | WITH_LEADIN));      // {79}
+    fnDebugHex(fnStackFree(&stackUsed), (sizeof(unsigned long) | WITH_LEADIN)); // {79}
     fnDebugMsg(" (");
-    fnDebugHex(stackUsed, (2 | WITH_LEADIN));                    // {79}
+    fnDebugHex(stackUsed, (sizeof(unsigned long) | WITH_LEADIN));        // {79}
     fnDebugMsg(")\n\r");
 }
 

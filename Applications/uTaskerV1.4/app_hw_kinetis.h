@@ -341,13 +341,30 @@
     #define USB_CRYSTAL_LESS                                             // use 48MHz IRC as USB source (according to Freescale AN4905 - only possible in device mode)
     #define USB_CLOCK_GENERATED_INTERNALLY                               // use USB clock from internal source rather than external pin - 120MHz is suitable
 #elif defined TWR_K60N512 || defined TWR_K60D100M || defined KINETIS_K52 || defined TWR_K53N512 || defined KINETIS_K61 || defined KINETIS_K70
-    #define EXTERNAL_CLOCK           50000000                            // this must be 50MHz in order to use Ethernet in RMII mode
-    #define _EXTERNAL_CLOCK          EXTERNAL_CLOCK
+  //#define CLOCK_FROM_RTC_OSCILLATOR                                    // clock from 32768Hz RTC oscillator circuit, either directly or from FLL
   //#define RUN_FROM_DEFAULT_CLOCK
+    #if !defined CLOCK_FROM_RTC_OSCILLATOR
+        #define EXTERNAL_CLOCK           50000000                        // this must be 50MHz in order to use Ethernet in RMII mode
+        #define _EXTERNAL_CLOCK          EXTERNAL_CLOCK
+    #endif
     #if defined RUN_FROM_DEFAULT_CLOCK
-        #define SYSTEM_CLOCK_DIVIDE   1
-        #define BUS_CLOCK_DIVIDE      1
-        #define FLASH_CLOCK_DIVIDE    2
+        #define FLL_FACTOR            2929                               // use FLL (factors available are 640, 732, 1280, 1464, 1920, 2197, 2560 and 2929)
+        #if defined FLL_FACTOR
+            #define SYSTEM_CLOCK_DIVIDE   1                              // 96MHz
+            #define BUS_CLOCK_DIVIDE      2
+            #define FLASH_CLOCK_DIVIDE    4
+            #define FLEX_CLOCK_DIVIDE     2
+        #else
+            #define SYSTEM_CLOCK_DIVIDE   1                              // use default FFL speed (x640)
+            #define BUS_CLOCK_DIVIDE      1
+            #define FLASH_CLOCK_DIVIDE    2
+            #define FLEX_CLOCK_DIVIDE     2
+        #endif
+    #elif defined CLOCK_FROM_RTC_OSCILLATOR
+        #define FLL_FACTOR            2929                               // use FLL (factors available are 640, 732, 1280, 1464, 1920, 2197, 2560 and 2929)
+        #define SYSTEM_CLOCK_DIVIDE   1                                  // 96MHz
+        #define BUS_CLOCK_DIVIDE      2
+        #define FLASH_CLOCK_DIVIDE    4
         #define FLEX_CLOCK_DIVIDE     2
     #else
         #if defined USB_INTERFACE                                        // when using USB generate 96MHz clock so that a 48MHz clock can be generated from it

@@ -698,17 +698,28 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
         if (NO_ID_ALLOCATED == fnSetNewSerialMode(FOR_I_O)) {            // open serial port for I/O
             return;                                                      // if the serial port could not be opened we quit
         }
-        DebugHandle = SerialPortID;                                      // assign our serial interface as debug port
-        fnDebugMsg("\r\n\nHello, world... ");
-        fnDebugMsg(TARGET_HW);                                           // {103}
-        fnDebugMsg(" [");
-        fnAddResetCause(0);                                              // {107}
-        fnDebugMsg("]\r\n");
-        fnDebugMsg("OS Heap use = ");
-        fnDebugHex(OS_heap, (WITH_LEADIN | sizeof(HEAP_REQUIREMENTS)));
-        fnDebugMsg(" from ");
-        fnDebugHex(fnHeapAvailable(), (WITH_LEADIN | sizeof(HEAP_REQUIREMENTS) | WITH_CR_LF));
-      //fnDebugFloat((float)(12345.123), (WITH_CR_LF | 3));              // test floating point output
+        else {
+            STACK_REQUIREMENTS stackUsed;
+            DebugHandle = SerialPortID;                                  // assign our serial interface as debug port
+            fnDebugMsg("\r\n\nHello, world... ");
+            fnDebugMsg(TARGET_HW);                                       // {103}
+            fnDebugMsg(" [");
+            fnAddResetCause(0);                                          // {107}
+            fnDebugMsg("]\r\n");
+            fnDebugMsg("Static memory = ");
+    #if defined _WINDOWS
+            fnDebugHex(((RAM_START_ADDRESS + SIZE_OF_RAM) - RAM_START_ADDRESS), (WITH_LEADIN | sizeof(unsigned long) | WITH_CR_LF));
+    #else
+            fnDebugHex((pucBottomOfHeap - (unsigned char *)RAM_START_ADDRESS), (WITH_LEADIN | sizeof(unsigned long) | WITH_CR_LF));
+    #endif
+            fnDebugMsg("OS Heap use = ");
+            fnDebugHex(OS_heap, (WITH_LEADIN | sizeof(HEAP_REQUIREMENTS)));
+            fnDebugMsg(" from ");
+            fnDebugHex(fnHeapAvailable(), (WITH_LEADIN | sizeof(HEAP_REQUIREMENTS) | WITH_CR_LF));
+            fnDebugMsg("Initial stack margin ");
+            fnDebugHex(fnStackFree(&stackUsed), (sizeof(unsigned long) | WITH_LEADIN | WITH_CR_LF));
+          //fnDebugFloat((float)(12345.123), (WITH_CR_LF | 3));          // test floating point output
+        }
 #endif
 #if defined SERIAL_INTERFACE && defined USE_J1708
         fnInitJ1708();

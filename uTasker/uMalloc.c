@@ -21,6 +21,7 @@
     29.05.2013 Add optional second heap in fixed sized memory area       {6}
     06.11.2015 Modify fnStackFree() to allow worst-case used stack to be returned {7}
     16.12.2017 Add optional uCalloc() and uCFree()                       {8}
+    10.01.2018 pucBottomOfHeap made extern                               {9}
 
 */
 
@@ -45,8 +46,8 @@
 
 // Minimalist heap management without free support
 //
+unsigned char *pucBottomOfHeap = 0;                                      // {9}
 static HEAP_REQUIREMENTS present_HeapSize = 0;
-static unsigned char *pucBottomOfHeap = 0;
 static unsigned char *pucTopOfHeap = 0;
 
 #if defined SECONDARY_UMALLOC                                            // {6}
