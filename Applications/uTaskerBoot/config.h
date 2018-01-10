@@ -11,7 +11,7 @@
     File:        config.h
     Project:     Single Chip Embedded Internet - boot loader
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     11.08.2007 Add M5223X SPI FLASH support                              {1}
     16.12.2007 Add SAM7X SPI FLASH support                               {2}

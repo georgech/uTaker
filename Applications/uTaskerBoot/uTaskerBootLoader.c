@@ -11,7 +11,7 @@
     File:      uTaskerBootLoader.c [FREESCALE/NXP Coldfire, SAM7X, LPC23XX, LM3Sxxxx, STR91XF, AVR32, RX6XX, Kinetis]
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     27.02.2007 Changed header interpretation so that it is endian-independent {1}
     29.03.2007 Added decryption support                                  {2}

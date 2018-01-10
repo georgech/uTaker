@@ -11,7 +11,7 @@
     File:      kinetis_boot.c
     Project:   Single Chip Embedded Internet - boot loader
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     17.04.2012 Add start_application() and flash support for KINETIS_K_FPU types {1}
     25.08.2013 Allow user defined start-up code immediately after the watchdog configuration and before clock configuration to be defined {2}

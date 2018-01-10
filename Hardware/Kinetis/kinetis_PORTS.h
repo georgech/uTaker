@@ -449,7 +449,7 @@ static __interrupt void _port_B_isr(void)
         ulPortBit = 0x00000001;
         iInterrupt = 0;
         while (ulSources != 0) {
-            if (ulSources & ulPortBit) {                                 // pending interrupt detected on this input
+            if ((ulSources & ulPortBit) != 0) {                          // pending interrupt detected on this input
                 register unsigned long ulInterruptType = ((*(unsigned long *)(PORT1_BLOCK + (iInterrupt * sizeof(unsigned long)))) & PORT_IRQC_INT_MASK);
                 uDisable_Interrupt();                                    // ensure interrupts remain blocked when user callback operates
                     gpio_handlers_B[iInterrupt]();                       // call the application handler (this is expected to clear level sensitive input sources)

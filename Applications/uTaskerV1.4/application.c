@@ -812,7 +812,7 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
                 fnResetBoard();
                 break;
 #endif
-#if defined SERIAL_INTERFACE
+#if defined USE_MAINTENANCE && (defined USE_TELNET || defined SERIAL_INTERFACE || defined USE_USB_CDC)
             case E_QUIT_SERIAL_COMMAND_MODE:
                 {
                     static const CHAR ucCOMMAND_MODE_TIMEOUT[] = "Connection timed out\r\n";

@@ -11,7 +11,7 @@
     File:        types.h
     Project:     Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     02.11.2007 Add typedef MEMORY_RANGE_POINTER for compatibility
     13.03.2008 Add typedef LENGTH_CHUNK_COUNT
