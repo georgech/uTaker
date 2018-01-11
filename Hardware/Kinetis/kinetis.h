@@ -1417,7 +1417,7 @@ typedef struct stRESET_VECTOR
 
 #if defined KINETIS_KL43 || defined KINETIS_KL33 || defined KINETIS_KL27 || defined KINETIS_KL17 || defined KINETIS_KL03
     #define DOUBLE_BUFFERED_I2C
-#elif defined KINETIS_K22 || defined KINETIS_K64 || defined KINETIS_KE02 // parts with single-buffered I2C implementation but a start condition interrupt
+#elif defined KINETIS_K22 || defined KINETIS_K64 || defined KINETIS_KL02 || defined KINETIS_KE02 // parts with single-buffered I2C implementation but a start condition interrupt
     #define I2C_START_CONDITION_INTERRUPT
 #endif
 
