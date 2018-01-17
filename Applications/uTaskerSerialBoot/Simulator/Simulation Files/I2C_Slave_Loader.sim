@@ -1,0 +1,42 @@
+// Simulate I2C slave loader operation (slave address 0x50)
+
+// Check the loader version and flash status
++50 I2C-0 51 03
+
+// Command delete of flash
++50 I2C-0 50 01 52 84
+
+
+// Check the flash status again
++50 I2C-0 51 03
+
+
+// Set command to firmware upload (no data content) and read the upload status
++50 I2C-0 50 00
++50 I2CR-0 51 05
+
+// Set command to firmware upload (with data) and read the upload status
++50 I2C-0 50 00 00 11 22 33 44 55 66 77 88 99 aa bb cc dd ee ff
++50 I2CR-0 51 05
+
+// More upload data
++50 I2C-0 50 00 00 11 22 33 44 55 66 77 88 99 aa bb cc dd ee ff
++50 I2CR-0 50 00 00 11 22 33 44 55 66 77 88 99 aa bb cc dd ee ff
++50 I2CR-0 50 00 00 11 22 33 44 55 66 77 88 99 aa bb cc dd ee ff
+
+// Check the upload status
++50 I2C-0 51 05
+
+// Check the flash status again (write dummy to return to normal read mode)
++50 I2C-0 50 00
++50 I2C-0 51 03
+
+// Command reset to start new code
++50 I2C-0 50 02 55 aa
+
+
+
+
+
+
+

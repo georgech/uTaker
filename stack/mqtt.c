@@ -32,13 +32,11 @@
 #define OWN_TASK     TASK_MQTT
 
 #if defined SECURE_MQTT
-    #define MQTTS_PORT_   usMQTT_port
-    #define MAX_SECURE_SOCKET_HEADER       (21) // record header plus max iv
-    #define MAX_SECURE_SOCKET_TAIL         (64) // MAC plus padding
-    #define _MIN_TCP_HLEN  (MIN_TCP_HLEN + MAX_SECURE_SOCKET_HEADER + MAX_SECURE_SOCKET_TAIL)
+    #define MQTTS_PORT_        usMQTT_port
+    #define _MIN_TCP_HLEN      (MIN_TCP_HLEN + MAX_SECURE_SOCKET_HEADER + MAX_SECURE_SOCKET_TAIL)
 #else
-    #define MQTTS_PORT_   MQTT_PORT
-    #define _MIN_TCP_HLEN  MIN_TCP_HLEN
+    #define MQTTS_PORT_        MQTT_PORT
+    #define _MIN_TCP_HLEN      MIN_TCP_HLEN
 #endif
 
 
@@ -574,9 +572,9 @@ static void fnIncrementtPacketIdentfier(void)
 //
 static unsigned short fnRegenerate(void)
 {
-    unsigned char ucMQTTData[_MIN_TCP_HLEN + MQTT_MESSAGE_LEN + 1];      // temporary buffer for constructing the MQTT message in
+    unsigned char ucMQTTData[_MIN_TCP_HLEN + MQTT_MESSAGE_LEN + 1];      // temporary buffer for constructing the MQTT message in (including TCP header requirement)
     unsigned short usDataLen = 0;
-    unsigned char *ptrMQTT_packet = (unsigned char *)&ucMQTTData[MIN_TCP_HLEN + 1]; // leave one byte at the start free in case we need to add a two byte variable length
+    unsigned char *ptrMQTT_packet = (unsigned char *)&ucMQTTData[1];     // leave one byte at the start free in case we need to insert a two byte variable length field
     unsigned char *ptrStart;
     unsigned char *ptrRemainingLength;
     int iVarLenInsert = 1;
@@ -585,12 +583,8 @@ static unsigned short fnRegenerate(void)
         ucQueueFlags |= MQTT_QUEUE_REGEN;                                // flag that we want to continue as soon as the outstanding TCP data has been acknowleged
         return 0;
     }
-    #if defined SECURE_MQTT
-    if ((MQTT_TCP_socket & SECURE_SOCKET_MODE) != 0) {                   // when using secure socket
-        ptrMQTT_packet += MAX_SECURE_SOCKET_HEADER;                      // leave additional space for the secure header
-    }
-    #endif
-    ptrStart = ptrMQTT_packet;
+    ptrMQTT_packet = fnInsertTCPHeader(MQTT_TCP_socket, ptrMQTT_packet); // leave space for the TCP header to be inserted (respecting secure layer requirements if in operation)
+    ptrStart = ptrMQTT_packet;                                           // remember the location of the start of the payload
 
     switch (ucMQTT_state) {                                              // (re)send last packet
     case MQTT_STATE_CONNECTION_OPENED:                                   // client to broker after establishing the TCP connection

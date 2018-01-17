@@ -47,6 +47,7 @@
     02.08.2016 Limit the file object backup size to the root_file[] struct size {32}
     16.01.2017 Check valid file and display for delete if random data    {33}
     03.08.2017 Add USB-MSD iHex/SREC content support                     {34}
+    14.01.2018 Block USB-MSD further command handling until complete write data has been received {35}
 
 */
 
@@ -191,7 +192,11 @@
         #define DISK_NAME                  "LPT_DISK1"
         #define DISK_NAME_INC              7
     #elif defined TEENSY_3_1
-        #define DISK_NAME                  "LASERTAGPRO"
+        #if defined SPECIAL_VERSION_2
+            #define DISK_NAME              "BATTLE_COMP"
+        #else
+            #define DISK_NAME              "LASERTAGPRO"
+        #endif
     #else
         #define DISK_NAME                  "LPT_DISK"
     #endif
@@ -1141,6 +1146,7 @@ static QUEUE_HANDLE USB_control = NO_ID_ALLOCATED;                       // USB 
     static unsigned long ulLogicalBlockAdr = 0;                          // present logical block address (shared between read and write)
     static unsigned long ulReadBlock = 0;                                // the outstanding blocks to be read from the media
     static unsigned long ulWriteBlock = 0;                               // the outstanding blocks to be written to the media
+    static int iWriteInProgress = 0;                                     // {35} flag indicating that reception is write data and not commands
     static int iContent = 0;
     static USB_MASS_STORAGE_CSW csw = {{'U', 'S', 'B', 'S'}, {0}, {0}, CSW_STATUS_COMMAND_PASSED};
     static CBW_RETURN_SENSE_DATA present_sense_data = {0};
@@ -1370,6 +1376,7 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
         #endif
                 ulReadBlock = 0;
                 iContent = 0;
+                iWriteInProgress = 0;                                    // {35}
         #if defined WINDOWS_8_1_WORKAROUND || defined MAC_OS_X_WORKAROUND// {15}
                 uMemset(ucAcceptUploads, 0, sizeof(ucAcceptUploads));
         #endif
@@ -1616,6 +1623,7 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
             if (ulWriteBlock != 0) {                                     // more data expected
                 continue;
             }                                                            // allow CSW to be sent after a complete transfer has completed
+            iWriteInProgress = 0;                                        // {35} allow further USB-MSD commands to be interpreted
         }
         else {
             const UTDISK *_ptrDiskInfo;
@@ -2220,7 +2228,7 @@ static void fnContinueMedia(void)
 
 static int mass_storage_callback(unsigned char *ptrData, unsigned short length, int iType)
 {
-    if (ulWriteBlock != 0) {                                             // data expected
+    if (iWriteInProgress != 0) {                                         // {35} data expected so don't attempt to handle as a command
         return TRANSPARENT_CALLBACK;                                     // handle data in task
     }
     if (uMemcmp(cCBWSignature, ptrData, sizeof(cCBWSignature)) == 0) {
@@ -2270,6 +2278,7 @@ static int mass_storage_callback(unsigned char *ptrData, unsigned short length, 
                     case UFI_WRITE_10:
                     case UFI_WRITE_12:
                         if ((_ptrDiskInfo->usDiskFlags & (DISK_MOUNTED | DISK_UNFORMATTED)) != 0) { // only respond when there media inserted, else stall
+                            iWriteInProgress = 1;                        // {35} do not handle further commands until the data had been received
                             return TRANSPARENT_CALLBACK;                 // the callback has done its work and the input buffer can now be used
                         }
                         present_sense_data.ucValid_ErrorCode = (VALID_SENSE_DATA | CURRENT_ERRORS);

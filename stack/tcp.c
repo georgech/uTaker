@@ -83,6 +83,8 @@
     31.05.2016 Modify MJB_TEST5 case to accept FIN together with final data content {66}
     13.10.2016 Simultaneous close correction                             {67}
     02.02.2017 Adapt for us tick resolution                              {68}
+    09.01.2018 Add secure sokcet layer support                           {69}
+    09.01.2018 Add fnInsertTCPHeader()                                   {70}
 
 */
 
@@ -520,9 +522,8 @@ extern signed short fnSendTCP(USOCKET TCP_socket, unsigned char *ptrBuf, unsigne
         return SOCKET_NOT_FOUND;                                         // {17} get a pointer to the TCP socket control structure
     }
 
-#if defined USE_SECURE_SOCKET_LAYER
+#if defined USE_SECURE_SOCKET_LAYER                                      // {69}
     if ((TCP_socket & SECURE_SOCKET_MODE) != 0) {                        // if we are operating in secure mode
-        extern int fnSecureLayerTransmission(USOCKET Socket, unsigned char *ucPrtData, unsigned short usLength, unsigned char ucFlag);
         return (fnSecureLayerTransmission(_TCP_SOCKET_MASK(TCP_socket), ptrBuf, usDataLen, ucTempFlags));
     }
 #endif
@@ -1104,7 +1105,7 @@ extern unsigned short fnDefineTCPBufferSize(USOCKET TCP_socket, unsigned short u
 static signed short fnSendTCPControl(TCP_CONTROL *ptr_TCP)
 {
     unsigned char ucTCP_control_buf[MIN_TCP_HLEN];                       // temporary control buffer space
-#if defined USE_SECURE_SOCKET_LAYER
+#if defined USE_SECURE_SOCKET_LAYER                                      // {69}
     return (fnSendTCP((ptr_TCP->MySocketNumber & ~(SECURE_SOCKET_MODE)), ucTCP_control_buf, 0, 0)); // send a control frame without data
 #else
     return (fnSendTCP(ptr_TCP->MySocketNumber, ucTCP_control_buf, 0, 0)); // send a control frame without data
@@ -1213,11 +1214,11 @@ static unsigned long fnGetTCP_init_seq(void)
         }
     }
 
-#if defined USE_SECURE_SOCKET_LAYER
-    if ((TCP_socket & SECURE_SOCKET_MODE) != 0) {
+#if defined USE_SECURE_SOCKET_LAYER                                      // {69}
+    if ((TCP_socket & SECURE_SOCKET_MODE) != 0) {                        // if the connection is over secure socket layer
         ptr_TCP->event_listener = (int(*)(USOCKET, unsigned char, unsigned char *, unsigned short))fnInsertSecureLayer(TCP_socket, ptr_TCP->event_listener, 1); // insert the secure socket layer between TCP and the application                   
     }
-    else {
+    else {                                                               // else bypass secure layer
         ptr_TCP->event_listener = (int(*)(USOCKET, unsigned char, unsigned char *, unsigned short))fnInsertSecureLayer(TCP_socket, ptr_TCP->event_listener, 0); // remove secure layer in case it was previously installed
     }
 #endif
@@ -2312,6 +2313,19 @@ extern USOCKET fnTCP_IdleTimeout(USOCKET TCPSocket, unsigned short usIdleTimeout
     }
     ptr_TCP->usIdleTimeout = usIdleTimeout;
     return TCPSocket;
+}
+
+// Adjust the application's buffer payload location by inerting space for a TCP header (optionally with secure layer header)
+//
+extern unsigned char *fnInsertTCPHeader(USOCKET TCPSocket, unsigned char *ptrBuffer) // {70}
+{
+    ptrBuffer += MIN_TCP_HLEN;                                           // advance the buffer over the fixed TCP header length
+#if defined USE_SECURE_SOCKET_LAYER                                      // {69}
+    if ((TCPSocket & SECURE_SOCKET_MODE) != 0) {                         // when using secure socket operation
+        ptrBuffer += MAX_SECURE_SOCKET_HEADER;                           // leave additional space for the secure header
+    }
+#endif
+    return ptrBuffer;                                                    // return the payload location that the appication should use
 }
 
 

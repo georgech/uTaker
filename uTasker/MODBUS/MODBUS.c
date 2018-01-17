@@ -3900,7 +3900,7 @@ extern int fnMODBUS_Master_send(unsigned char ucModbusPort, unsigned char ucSlav
             ucBuff[8] = 0;                                               // range 1..0x79 doesn't need MSB
             ucBuff[9] = (unsigned char)(usQuantity);
             ucBuff[10] = (unsigned char)(usQuantity * 2);                // byte count
-            while (usQuantity--) {
+            while (usQuantity-- != 0) {
                 ucBuff[x++] = (unsigned char)(*ptrReg >> 8);             // add the write register content
                 ucBuff[x++] = (unsigned char)(*ptrReg++);
             }

@@ -341,7 +341,12 @@
     #define CRYSTAL_FREQUENCY    16000000                                // 16 MHz crystal
     #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
     #define CLOCK_DIV            8                                       // input must be divided to 2MHz..4MHz range (/1 to /25 possible)
-    #define CLOCK_MUL            36                                      // the PLL multiplication factor to achieve operating frequency of 48MHz (x24 to x55 possible)
+    #if defined SPECIAL_VERSION_2
+        #define CLOCK_MUL        24                                      // the PLL multiplication factor to achieve operating frequency of 48MHz (x24 to x55 possible)
+        #define FLASH_CLOCK_DIVIDE 2                                     // 24MHz flash clock
+    #else
+        #define CLOCK_MUL        36                                      // the PLL multiplication factor to achieve operating frequency of 72MHz (x24 to x55 possible)
+    #endif
     #define USB_CLOCK_GENERATED_INTERNALLY                               // use USB clock from internal source rather than external pin
 #elif defined TWR_K20D72M
     #define CRYSTAL_FREQUENCY    8000000                                 // 8 MHz crystal
@@ -750,13 +755,18 @@
     #define PIN_COUNT           PIN_COUNT_64_PIN                         // 64 pin LQFP
     #define PACKAGE_TYPE        PACKAGE_LQFP
     #define SIZE_OF_FLEXFLASH   (32 * 1024)                              // 32 Flex
-    #define SIZE_OF_RAM         (64 * 1024)                              // 64k SRAM
-    #define SIZE_OF_EEPROM      (2 * 1024)                               // 2k EEPROM
-  //#define FLEXFLASH_DATA
-    #if defined FLEXFLASH_DATA
-        #define SIZE_OF_FLASH   ((256 * 1024) + SIZE_OF_FLEXFLASH)       // 256k program FLASH plus data flash
+    #if defined SPECIAL_VERSION_2
+        #define SIZE_OF_RAM     (16 * 1024)                              // 16k SRAM
+        #define SIZE_OF_FLASH   (128 * 1024)                            // 128k program FLASH
     #else
-        #define SIZE_OF_FLASH   (256 * 1024)                             // 256k program FLASH
+        #define SIZE_OF_RAM         (64 * 1024)                          // 64k SRAM
+        #define SIZE_OF_EEPROM      (2 * 1024)                           // 2k EEPROM
+      //#define FLEXFLASH_DATA
+        #if defined FLEXFLASH_DATA
+            #define SIZE_OF_FLASH   ((256 * 1024) + SIZE_OF_FLEXFLASH)   // 256k program FLASH plus data flash
+        #else
+            #define SIZE_OF_FLASH   (256 * 1024)                         // 256k program FLASH
+        #endif
     #endif
 #elif defined K02F100M
     #define MASK_0N36M                                                   // enable errata workarounds for this mask

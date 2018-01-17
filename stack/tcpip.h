@@ -125,6 +125,7 @@
     05.11.2016 Add pseudo flag TCP_FLAG_FIN_RECEIVED                     {102}
     16.02.2017 Add RFC 2217 (Telnet com port control option) mode        {103}
     10.05.2017 Add optional Ethernet frame ucErrorFlags field            {104}
+    09.01.2018 Add fnInsertTCPHeader(), fnSecureLayerTransmission() and SECURE_SOCKET_MODE {105}
 
 */
 
@@ -158,7 +159,7 @@
 #else
     #define _ALTERNATIVE_VLAN(uSocket) 0                                 // {69}
 #endif
-#if defined USE_SECURE_SOCKET_LAYER
+#if defined USE_SECURE_SOCKET_LAYER                                      // {105}
     #define SECURE_SOCKET_MODE   (1 << ((sizeof(USOCKET) * 8) - 2))      // 0x40, 0x4000 or 0x40000000
     #if IP_INTERFACE_COUNT > 1 || IP_NETWORK_COUNT > 1                   // {74}
         #define _TCP_SOCKET_MASK_ASSIGN(uSocket)  (uSocket &= (SOCKET_NUMBER_MASK))
@@ -977,6 +978,9 @@ __PACK_OFF
 
 #define MIN_TCP_HLEN                   20                                // TCP header length without options
 #define MAX_TCP_OPTLEN                 40                                // maximum TCP options length
+
+#define MAX_SECURE_SOCKET_HEADER       21                                // record header plus maximum initial vector length
+#define MAX_SECURE_SOCKET_TAIL         36                                // MAC plus maximum padding length
 
 #define TCP_CLOSEPENDING               0x01                              // internal flag
 #define SILLY_WINDOW_AVOIDANCE         0x02                              // we are stalling the transmitter to avoid silly (small) window
@@ -2250,6 +2254,9 @@ extern int  fnActiveTCP_connections(int iReset);                         // {44}
     #define SEARCH_CONNECTION 0
     #define RESET_CONNECTIONS 1
 extern USOCKET fnTCP_IdleTimeout(USOCKET TCPSocket, unsigned short usIdleTimeout); // {49}
+extern unsigned char *fnInsertTCPHeader(USOCKET TCPSocket, unsigned char *ptrBuffer); // {105}
+extern int fnSecureLayerTransmission(USOCKET Socket, unsigned char *ucPrtData, unsigned short usLength, unsigned char ucFlag);// {105}
+
 extern signed short fnResolveHostName(const CHAR *cHostNamePtr, void (*fnListener)(unsigned char , unsigned char *));
 extern int  fnConnectPOP3(unsigned char *ucIP);
 extern void fnStartPopPolling(DELAY_LIMIT PollTime, CHAR *(*fnCallback)(unsigned char, unsigned char *));

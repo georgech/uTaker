@@ -1687,6 +1687,13 @@ typedef struct stRESET_VECTOR
     #define PORTS_AVAILABLE 5
 #endif
 
+// Port inputs that don't support interrupts
+//
+#if defined KINETIS_KL02
+    #define RESTRICTED_PORT_A_BITS  0x0000237c
+    #define RESTRICTED_PORT_B_BITS  0x00003f00
+#endif
+
 // DMA configuration
 //
 #if defined KINETIS_KE15 || defined KINETIS_KL82 || defined KINETIS_KL28

@@ -667,11 +667,16 @@ static void fnEnterPortInterruptHandler(INTERRUPT_SETUP *port_interrupt, unsigne
     register int ucPortRef = (int)(port_interrupt->int_port);
     unsigned long ulBit = 0x00000001;
     int port_bit = 0;
-    while (ulPortBits != 0) {
-        if ((ulPortBits & ulBit) != 0) {
-            switch (ucPortRef) {
+    while (ulPortBits != 0) {                                            // for each enabled port bit
+        if ((ulPortBits & ulBit) != 0) {                                 // if this port bit is enabled
+            switch (ucPortRef) {                                         // switch on the port
     #if !defined NO_PORT_INTERRUPTS_PORTA && (defined irq_PORTA_ID || defined irq_PORT_A_E_ID) // if port A support has not been removed
-            case PORTA:
+            case PORTA:                                                  // port A
+        #if defined _WINDOWS && defined RESTRICTED_PORT_A_BITS
+                if ((ulBit & RESTRICTED_PORT_A_BITS) != 0) {
+                    _EXCEPTION("This input doesn't support a port interrupt!");
+                }
+        #endif
                 gpio_handlers_A[port_bit] = port_interrupt->int_handler; // {26} enter the application handler
                 if (gpio_handlers_A[port_bit] != 0) {
         #if defined irq_PORT_A_E_ID
@@ -691,7 +696,12 @@ static void fnEnterPortInterruptHandler(INTERRUPT_SETUP *port_interrupt, unsigne
                 break;
     #endif
     #if !defined NO_PORT_INTERRUPTS_PORTB && (defined irq_PORTB_ID || defined irq_PORTBCD_E_ID || defined irq_PORT_B_C_D_ID) // {1} if port B support has not been removed
-            case PORTB:
+            case PORTB:                                                  // port B
+        #if defined _WINDOWS && defined RESTRICTED_PORT_B_BITS
+                if ((ulBit & RESTRICTED_PORT_B_BITS) != 0) {
+                    _EXCEPTION("This input doesn't support a port interrupt!");
+                }
+        #endif
                 gpio_handlers_B[port_bit] = port_interrupt->int_handler; // {26} enter the application handler
                 if (gpio_handlers_B[port_bit] != 0) {
         #if defined irq_PORT_B_C_D_ID
@@ -713,7 +723,12 @@ static void fnEnterPortInterruptHandler(INTERRUPT_SETUP *port_interrupt, unsigne
                 break;
     #endif
     #if (PORTS_AVAILABLE > 2) && (defined irq_PORTC_ID || defined irq_PORTC_D_ID || defined irq_PORTBCD_E_ID || defined irq_PORT_B_C_D_ID) && !defined NO_PORT_INTERRUPTS_PORTC // if port C support has not been removed
-            case PORTC:
+            case PORTC:                                                  // port C
+        #if defined _WINDOWS && defined RESTRICTED_PORT_C_BITS
+                if ((ulBit & RESTRICTED_PORT_C_BITS) != 0) {
+                    _EXCEPTION("This input doesn't support a port interrupt!");
+                }
+        #endif
                 gpio_handlers_C[port_bit] = port_interrupt->int_handler; // {26} enter the application handler
                 if (gpio_handlers_C[port_bit] != 0) {
         #if defined irq_PORT_B_C_D
@@ -737,7 +752,12 @@ static void fnEnterPortInterruptHandler(INTERRUPT_SETUP *port_interrupt, unsigne
                 break;
     #endif
     #if (PORTS_AVAILABLE > 3) && (defined irq_PORTD_ID || defined irq_PORTC_D_ID || defined irq_PORTBCD_E_ID || defined irq_PORT_B_C_D_ID) && !defined NO_PORT_INTERRUPTS_PORTD       // if port D support has not been removed
-            case PORTD:
+            case PORTD:                                                  // port D
+        #if defined _WINDOWS && defined RESTRICTED_PORT_D_BITS
+                if ((ulBit & RESTRICTED_PORT_D_BITS) != 0) {
+                    _EXCEPTION("This input doesn't support a port interrupt!");
+                }
+        #endif
                 gpio_handlers_D[port_bit] = port_interrupt->int_handler; // {26} enter the application handler
                 if (gpio_handlers_D[port_bit] != 0) {
         #if defined irq_PORT_B_C_D_ID
@@ -761,7 +781,12 @@ static void fnEnterPortInterruptHandler(INTERRUPT_SETUP *port_interrupt, unsigne
                 break;
     #endif
     #if (PORTS_AVAILABLE > 4) && !defined NO_PORT_INTERRUPTS_PORTE && (defined irq_PORTE_ID || defined irq_PORTBCD_E_ID || defined irq_PORT_A_E_ID) // {1} if port E support has not been removed
-            case PORTE:
+            case PORTE:                                                  // port E
+        #if defined _WINDOWS && defined RESTRICTED_PORT_E_BITS
+                if ((ulBit & RESTRICTED_PORT_E_BITS) != 0) {
+                    _EXCEPTION("This input doesn't support a port interrupt!");
+                }
+        #endif
                 gpio_handlers_E[port_bit] = port_interrupt->int_handler; // {26} enter the application handler
                 if (gpio_handlers_E[port_bit] != 0) {
         #if defined irq_PORT_A_E_ID
@@ -783,7 +808,12 @@ static void fnEnterPortInterruptHandler(INTERRUPT_SETUP *port_interrupt, unsigne
                 break;
     #endif
     #if (PORTS_AVAILABLE > 5)  && !defined NO_PORT_INTERRUPTS_PORTE && defined irq_PORTF_ID // {2} if port F support has not been removed
-            case PORTF:
+            case PORTF:                                                  // port F
+        #if defined _WINDOWS && defined RESTRICTED_PORT_F_BITS
+                if ((ulBit & RESTRICTED_PORT_F_BITS) != 0) {
+                    _EXCEPTION("This input doesn't support a port interrupt!");
+                }
+        #endif
                 gpio_handlers_F[port_bit] = port_interrupt->int_handler; // enter the application handler
                 if (gpio_handlers_F[port_bit] != 0) {
                     fnEnterInterrupt(irq_PORTF_ID, port_interrupt->int_priority, _port_F_isr); // ensure that the handler for this port is entered

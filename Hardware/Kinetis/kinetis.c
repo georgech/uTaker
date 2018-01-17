@@ -421,7 +421,7 @@ extern int main(void)
     fnInitialiseHeap(ctOurHeap, HEAP_START_ADDRESS);                     // initialise heap
 #if defined RUN_IN_FREE_RTOS
     fnFreeRTOS_main();                                                   // never return in normal situations
-    for (;;) {
+    FOREVER_LOOP() {
         // This only happens when there was a failure to initialise and start FreeRTOS (usually not enough heap)
         //
         _EXCEPTION("FreeRTOS failed to initialise");

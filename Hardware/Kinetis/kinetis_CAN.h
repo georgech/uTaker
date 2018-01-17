@@ -555,7 +555,7 @@ extern void fnConfigCAN(QUEUE_HANDLE DriverID, CANTABLE *pars)
             ptrCanQue->DriverID = DriverID;
             ptrCanQue->TaskToWake = pars->Task_to_wake;
             ptrCanQue->ucMode = (CAN_TX_BUF | CAN_TX_BUF_FREE);
-            if (pars->ulTxID & CAN_EXTENDED_ID) {
+            if ((pars->ulTxID & CAN_EXTENDED_ID) != 0) {
                 ptrCanQue->ulPartnerID = pars->ulTxID;                   // enter default destination ID
                 ptrMessageBuffer->ulCode_Len_TimeStamp = (MB_TX_INACTIVE | IDE); // enable extended ID transmission
             }
@@ -563,7 +563,7 @@ extern void fnConfigCAN(QUEUE_HANDLE DriverID, CANTABLE *pars)
                 ptrCanQue->ulPartnerID = ((pars->ulTxID << CAN_STANDARD_SHIFT) & CAN_STANDARD_BITMASK); // enter reception ID for the buffer
                 ptrMessageBuffer->ulCode_Len_TimeStamp = MB_TX_INACTIVE;
             }
-            if (pars->ulRxID & CAN_EXTENDED_ID) {
+            if ((pars->ulRxID & CAN_EXTENDED_ID) != 0) {
                 ptrCanQue->ulOwnID = pars->ulRxID;
             }
             else {
@@ -593,11 +593,11 @@ extern void fnConfigCAN(QUEUE_HANDLE DriverID, CANTABLE *pars)
         if (ucRxCnt == 0) {
             break;
         }
-        if (!(ptrCanQue->DriverID)) {                                    // not yet allocated
+        if (0 == ptrCanQue->DriverID) {                                  // not yet allocated
             ucRxCnt--;
             ptrCanQue->DriverID = DriverID;
             ptrCanQue->TaskToWake = pars->Task_to_wake;
-            if (pars->ulRxID & CAN_EXTENDED_ID) {
+            if ((pars->ulRxID & CAN_EXTENDED_ID) != 0) {
                 if (ptrFirstAllocated == ptrMessageBuffer) {
                     ptrCAN_control->CAN_RX15MASK = pars->ulRxIDMask;     // first allocated receiver buffer has special mask
                 }
@@ -610,7 +610,7 @@ extern void fnConfigCAN(QUEUE_HANDLE DriverID, CANTABLE *pars)
                 ptrMessageBuffer->ulID = (pars->ulRxID & CAN_EXTENDED_MASK); // enter reception ID for the buffer
                 ptrMessageBuffer->ulCode_Len_TimeStamp = (MB_RX_EMPTY | IDE); // enable extended ID reception
             }
-            else {
+            else {                                                       // standard ID
                 unsigned long ulMask = ((pars->ulRxIDMask << CAN_STANDARD_SHIFT) & CAN_STANDARD_BITMASK);
                 if (ptrFirstAllocated == ptrMessageBuffer) {
                     ptrCAN_control->CAN_RX15MASK = ulMask;               // first allocated receiver buffer has special mask

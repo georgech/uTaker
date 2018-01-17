@@ -15,6 +15,7 @@
     *********************************************************************
     02.02.2017 Adapt for us tick resolution (_TICK_RESOLUTION)
     05.10.2017 Add modbus configuration
+    17.01.2018 Add I2C slave configuration
 
     See this video for details of building the serial loader with KDS: https://youtu.be/bilc_4Cr7eo
     See this video for details of building and using the serial loader's Ethernet loading method: https://youtu.be/g71PGlQy6eI
@@ -384,13 +385,19 @@
         #define OUR_HEAP_SIZE   (HEAP_REQUIREMENTS)((12 * 1024) * MEM_FACTOR)
     #endif
 #elif defined TEENSY_3_1
-  //#define SPECIAL_VERSION                                              // temporary special version with some specific setups
+    #define SPECIAL_VERSION                                              // temporary special version with some specific setups
+      //#define SPECIAL_VERSION_2                                        // temporary special version with some specific setups
     #define KINETIS_K20
     #define KINETIS_REVISION_2
     #define TARGET_HW   "TEENSY 3.1 (K20DX256)"
-    #define KINETIS_MAX_SPEED    72000000
+    #if defined SPECIAL_VERSION_2
+        #define KINETIS_MAX_SPEED    50000000
+        #define OUR_HEAP_SIZE   (HEAP_REQUIREMENTS)((10 * 1024) * MEM_FACTOR)
+    #else
+        #define KINETIS_MAX_SPEED    72000000
+        #define OUR_HEAP_SIZE   (HEAP_REQUIREMENTS)((12 * 1024) * MEM_FACTOR)
+    #endif
     #define DEVICE_WITHOUT_ETHERNET                                      // K20 doesn't have Ethernet controller
-    #define OUR_HEAP_SIZE   (HEAP_REQUIREMENTS)((12 * 1024) * MEM_FACTOR)
 #elif defined FRDM_K20D50M
     #define KINETIS_K20
     #define KINETIS_MAX_SPEED    50000000
@@ -782,7 +789,7 @@
 
 
 #if !defined K70F150M_12M && !defined KWIKSTIK && !(defined TEENSY_3_1 && defined SPECIAL_VERSION) && !defined BLAZE_K22
-  //#define SERIAL_INTERFACE                                             // enable serial interface driver
+    #define SERIAL_INTERFACE                                             // enable serial interface driver
 #endif
 #if defined SERIAL_INTERFACE
     #if defined USE_MODBUS
@@ -806,7 +813,7 @@
       //#define MODBUS_CRC_FROM_LOOKUP_TABLE                             // MODBUS RTU cyclic redundancy check performed with help of loop up table (requires 512 bytes FLASH table, but faster than calculation loop)
         #define REMOVE_SREC_LOADING
     #else
-      //#define KBOOT_LOADER                                             // use KBOOT UART interface rather than SREC/iHex interface
+        #define KBOOT_LOADER                                             // use KBOOT UART interface rather than SREC/iHex interface
       //#define DEVELOPERS_LOADER                                        // Freescale Developer's Bootloader (AN2295) compatible mode (rather than SREC/iHex)
           //#define DEVELOPERS_LOADER_PROTOCOL_VERSION_9                 // user protocol version 9 rather than obsolete Kinetis 8 (not completed at the moment)
             #define DEVELOPERS_LOADER_READ                               // support reading back program
@@ -840,10 +847,18 @@
 #endif
 #define NUMBER_EXTERNAL_SERIAL         0                                 // no external UARTs
 
+//#define I2C_INTERFACE                                                  // enable I2C slave mode
+#if defined I2C_INTERFACE
+    #define NUMBER_I2C       (I2C_AVAILABLE + LPI2C_AVAILABLE)           // I2C interfaces available
+    #define I2C_SLAVE_MODE                                               // support slave mode (interrupt call-back method)
+#else
+    #define NUMBER_I2C     0                                             // no physical queue needed
+#endif
+
 #if defined DEVICE_WITHOUT_USB
     #define NUMBER_USB     0                                             // no physical queue needed
 #else
-    #define USB_INTERFACE                                                // enable USB driver interface
+  //#define USB_INTERFACE                                                // enable USB driver interface
     #if defined USB_INTERFACE
       //#define USE_USB_CDC                                              // allow SREC/iHex loading via virtual COM
         #define USB_MSD_DEVICE_LOADER                                    // USB-MSD device mode (the board appears as a hard-drive to the host)
@@ -1271,13 +1286,7 @@
     #endif
 #endif
 
-#if defined BLAZE_K22
-    #define NUMBER_I2C        I2C_AVAILABLE
-    #define PHYSICAL_QUEUES   (NUMBER_LAN + NUMBER_SERIAL + NUMBER_I2C + NUMBER_USB) // the number of physical queues in the system
-#else
-    #define PHYSICAL_QUEUES   (NUMBER_LAN + NUMBER_SERIAL + NUMBER_USB) // the number of physical queues in the system
-#endif
-
+#define PHYSICAL_QUEUES   (NUMBER_LAN + NUMBER_SERIAL + NUMBER_I2C + NUMBER_USB) // the number of physical queues in the system
 
 
 // Project includes are set here for all files in the correct order

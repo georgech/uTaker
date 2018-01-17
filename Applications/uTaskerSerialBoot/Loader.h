@@ -43,10 +43,11 @@
     20.10.2015 Add fnJumpToValidApplication();                           {26}
     03.08.2017 Add USB-MSD iHex/SREC content support                     {27}
     05.10.2017 Add modbus loading                                        {28}
+    17.01.2018 Add I2C slave loading                                     {29}
 
 */
 
-#define SOFTWARE_VERSION              "V1.4"
+#define SOFTWARE_VERSION              "V1.5"
 
 #define MY_PROJECT_NAME               "uTasker loader project"
 
@@ -67,6 +68,8 @@
 #if !defined FRDM_KE04Z
     #define SHOW_APP_DETAILS                                             // {2} display application start and size in menu
 #endif
+
+#define OUR_SLAVE_ADDRESS             (0x50)                             // {29} I2C slave address
 
 #if defined _M5223X
     #define SERIAL_SPEED              SERIAL_BAUD_115200                 // the Baud rate of the UART
@@ -124,7 +127,11 @@
         #define INTERMEDIATE_PROG_BUFFER  (2 * 1024)                     // when UART speed greater than 57600 Baud is used an intermediate buffer is recommended
     #elif defined TEENSY_3_1 && defined SPECIAL_VERSION
         #define UTASKER_APP_START     (16 * 1024)                        // application starts at this address
-        #define UTASKER_APP_END       (unsigned char *)(UTASKER_APP_START + (240 * 1024)) // end of application space - after maximum application size
+        #if defined SPECIAL_VERSION_2
+            #define UTASKER_APP_END       (unsigned char *)(UTASKER_APP_START + (112 * 1024)) // end of application space - after maximum application size
+        #else
+            #define UTASKER_APP_END       (unsigned char *)(UTASKER_APP_START + (240 * 1024)) // end of application space - after maximum application size
+        #endif
     #elif defined TWR_K20D50M ||  defined FRDM_KL46Z || defined FRDM_KL43Z || defined TWR_KL43Z48M || defined TWR_KL46Z48M || defined TEENSY_3_1 || defined TWR_K24F120M // {16}
         #if defined FLEXFLASH_DATA
             #define DISK_D_LOCATION   (SIZE_OF_FLASH - SIZE_OF_FLEXFLASH)// locate a second hard drive in flex flash memory at a virtual location just after internal flash
@@ -355,6 +362,8 @@ extern void fnSetBacklight(void);
 // Application interrupt events
 //
 #define USER_FORCE_LOADER         1
+#define DELETE_APPLICATION_FLASH  2
+#define TERMINATE_PROGRAMMING     3
 
 // USB to mass storage
 //

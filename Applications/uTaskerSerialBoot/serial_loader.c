@@ -44,7 +44,8 @@
     07.01.2016 Remove power from memory stick when jumping to the application {28}
     02.07.2016 Add Intel Hex mode                                        {29}
     03.08.2017 Add USB-MSD iHex/SREC content support                     {30}
-    05.10.2017 Add modbus loading support (takes precedance over serial) {31}
+    05.10.2017 Add modbus loading support (takes precedence over serial) {31}
+    17.01.2018 Add I2C slave mode                                        {32}
 
 */
 
@@ -55,7 +56,7 @@
 
 #include "config.h"
 
-#if defined SERIAL_INTERFACE || defined USE_USB_CDC || defined SUPPORT_GLCD || (defined USB_INTERFACE && defined HID_LOADER && defined KBOOT_HID_LOADER) || defined ETH_INTERFACE // {9}{16} remove srec/kboot loader when no serial interface but keep parts for Ethernet operation
+#if defined SERIAL_INTERFACE || defined I2C_INTERFACE || defined USE_USB_CDC || defined SUPPORT_GLCD || (defined USB_INTERFACE && defined HID_LOADER && defined KBOOT_HID_LOADER) || defined ETH_INTERFACE // {9}{16} remove srec/kboot loader when no serial interface but keep parts for Ethernet operation
     #define KEEP_SERIAL_TASK
 
 #if defined BLAZE_K22
@@ -152,7 +153,7 @@
 
 #endif
 
-#if (defined USB_MSD_DEVICE_LOADER && (defined USB_MSD_ACCEPTS_SREC_FILES || defined USB_MSD_ACCEPTS_HEX_FILES)) || (((defined SERIAL_INTERFACE && !defined USE_MODBUS) || defined USE_USB_CDC) && !defined REMOVE_SREC_LOADING)
+#if (defined USB_MSD_DEVICE_LOADER && (defined USB_MSD_ACCEPTS_SREC_FILES || defined USB_MSD_ACCEPTS_HEX_FILES)) || (((defined SERIAL_INTERFACE && !defined USE_MODBUS) || defined USE_USB_CDC) && !defined REMOVE_SREC_LOADING && !defined KBOOT_LOADER)
     #define SREC_IHEX_REQUIRED
     #if defined USB_MSD_ACCEPTS_HEX_FILES && !defined USB_MSD_ACCEPTS_SREC_FILES && !defined KEEP_SERIAL_TASK
         #define EXCLUSIVE_INTEL_HEX_MODE
@@ -181,7 +182,6 @@ typedef struct
         static void fnSendDevelopers(QUEUE_HANDLE SerialPortID, unsigned char ucByte);
         static void fnSendDevelopersAckNak(QUEUE_HANDLE SerialPortID, unsigned char ucByte);
         static void fnSendDevelopersLongWord(QUEUE_HANDLE SerialPortID, unsigned long ulLongWord);
-        static void fnCommittProgramStart(void);
         #if defined DEVELOPERS_LOADER_CRC
             static void fnSendCRC(QUEUE_HANDLE SerialPortID);
         #endif
@@ -203,8 +203,15 @@ typedef struct
         static void fnPrintScreen(void);
     #endif
 #endif
+#if ((defined SERIAL_INTERFACE || defined USE_USB_CDC) && defined DEVELOPERS_LOADER) || (defined I2C_INTERFACE && !defined BLAZE_K22)
+    static void fnCommittProgramStart(void);
+#endif
 #if defined BLAZE_K22
     static void fnLoaderForced(int iNoFirmware);
+#endif
+#if defined I2C_INTERFACE                                                // {32}
+    static void fnOpenI2C_slave(void);
+    static void fnCheckFlashState(void);
 #endif
 
 /* =================================================================== */
@@ -232,7 +239,7 @@ typedef struct
 /* =================================================================== */
 
 #endif
-#if defined SREC_IHEX_REQUIRED || (defined DEVELOPERS_LOADER && defined SERIAL_INTERFACE)
+#if defined SREC_IHEX_REQUIRED || defined I2C_INTERFACE || (defined DEVELOPERS_LOADER && defined SERIAL_INTERFACE)
     #if defined FLASH_ROW_SIZE && FLASH_ROW_SIZE > 0
         static unsigned char ucCodeStart[FLASH_ROW_SIZE] = {0};
     #else
@@ -265,6 +272,9 @@ typedef struct
 #if defined DEVELOPERS_LOADER && defined DEVELOPERS_LOADER_CRC
     static unsigned short usCRC_Tx = 0;                                  // present transmit message CRC calculation value
     static unsigned short usCRC_Rx = 0;                                  // present receive message CRC calculation value
+#endif
+#if defined I2C_INTERFACE                                                // {32}
+    static QUEUE_HANDLE I2CPortID = NO_ID_ALLOCATED;                     // handle of I2C interface
 #endif
 
 
@@ -303,6 +313,9 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
         tInterfaceParameters.ucSpeed = SERIAL_SPEED;                     // baud rate
         tInterfaceParameters.Config = (CHAR_8 + NO_PARITY + ONE_STOP + USE_XON_OFF + CHAR_MODE);
     #endif
+    #if defined SERIAL_SUPPORT_DMA
+        tInterfaceParameters.ucDMAConfig = 0;
+    #endif
         tInterfaceParameters.Rx_tx_sizes.RxQueueSize = RX_BUFFER_SIZE;   // input buffer size
         tInterfaceParameters.Rx_tx_sizes.TxQueueSize = TX_BUFFER_SIZE;   // output buffer size
         tInterfaceParameters.Task_to_wake = OWN_TASK;                    // wake self when messages have been received
@@ -339,6 +352,12 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
         #else
         uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(0.2 * SEC), T_HOOKUP_TIMEOUT); // wait up to 200ms for a response from the PC
         #endif
+    #endif
+#endif
+#if defined I2C_INTERFACE                                                // {32}
+        fnOpenI2C_slave();
+    #if !defined SREC_IHEX_REQUIRED
+        uMemset(ucCodeStart, 0xff, sizeof(ucCodeStart));                 // reset the contents of a flash buffer that will store the start of the code so that it can be programmed as final step
     #endif
 #endif
 #if defined ETH_INTERFACE                                                // {16}
@@ -391,7 +410,7 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
 #endif
                 }
             }
-#if defined USE_TFTP || defined BLAZE_K22
+#if defined USE_TFTP || defined BLAZE_K22 || defined I2C_INTERFACE
             else if (INTERRUPT_EVENT == ucInputMessage[MSG_SOURCE_TASK]) {
                 switch (ucInputMessage[MSG_INTERRUPT_EVENT]) {
     #if defined USE_TFTP
@@ -406,6 +425,19 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
     #if defined BLAZE_K22
                 case USER_FORCE_LOADER:
                     fnLoaderForced(0);                                   // start loader since the user wants to use it
+                    break;
+    #endif
+    #if defined I2C_INTERFACE                                            // {32}
+                case DELETE_APPLICATION_FLASH:
+                    fnEraseFlashSector((unsigned char *)UTASKER_APP_START, (UTASKER_APP_END - (unsigned char *)UTASKER_APP_START)); // delete application space
+                    fnCheckFlashState();
+                    break;
+                case TERMINATE_PROGRAMMING:
+        #if defined FLASH_ROW_SIZE && FLASH_ROW_SIZE > 0
+                    fnWriteBytesFlash(0, 0, 0);                          // close any outstanding FLASH buffer
+        #endif
+                    fnCommittProgramStart();
+                    fnResetBoard();                                      // command hardware reset
                     break;
     #endif
                 }
@@ -727,7 +759,7 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
                     fnWriteBytesFlash(0, 0, 0);                          // close any outstanding FLASH buffer
                 }
             #endif
-                while (iLength--) {
+                while (iLength-- != 0) {
                     fnGetParsFile((unsigned char *)ulAddress++, &ucProgramContent, 1); // collect the program content (supports also SPI Flash based content)
                     fnSendDevelopers(SerialPortID, ucProgramContent);    // return the data
                 }
@@ -1071,13 +1103,16 @@ static void fnSendDevelopersLongWord(QUEUE_HANDLE SerialPortID, unsigned long ul
     fnSendDevelopers(SerialPortID, (unsigned char)(ulLongWord >> 8));
     fnSendDevelopers(SerialPortID, (unsigned char)(ulLongWord));
 }
+#endif
+
+#if ((defined SERIAL_INTERFACE || defined USE_USB_CDC) && defined DEVELOPERS_LOADER) || defined I2C_INTERFACE
 
 // This routine allows a buffers content to be checked against a single byte value (often for all 0x00 or all 0xff)
 //
 static void *fnMemValue(void *ptrCheck, unsigned char ucValue, size_t Size)
 {
     unsigned char *ptr = (unsigned char *)ptrCheck;
-    while (Size--) {                                                     // for each byte
+    while (Size-- != 0) {                                                // for each byte
         if (*ptr != ucValue) {
             return (void *)ptr;                                          // return pointer to the value that was not equal
         }
@@ -1331,7 +1366,7 @@ extern int fnHandleKboot(QUEUE_HANDLE hInterface, int iInterfaceType, KBOOT_PACK
                 if (iParameters > 1) {
                     _EXCEPTION("only one parameter tested!");
                 }
-                while (iParameters--) {                                  // for each requested parameter (presently only one parameter is ever received)
+                while (iParameters-- != 0) {                             // for each requested parameter (presently only one parameter is ever received)
                   /*ulStatus = */fnHandlePropertyGet(*prType, &ulValue);
                 }
                 KBOOT_response.ucLength[0] = 12;
@@ -1889,7 +1924,7 @@ static unsigned char fnConvertByte(unsigned char ucASCII)
 }
 #endif
 
-#if (((defined SERIAL_INTERFACE && !defined USE_MODBUS) || defined USE_USB_CDC) && !defined KBOOT_LOADER && !defined DEVELOPERS_LOADER) || defined USB_INTERFACE // {9}
+#if (((defined SERIAL_INTERFACE && !defined USE_MODBUS) || defined USE_USB_CDC) && !defined KBOOT_LOADER && !defined DEVELOPERS_LOADER) || defined USB_INTERFACE || defined I2C_INTERFACE // {9}{32}
 static unsigned char *fnBlankCheck(void)
 {
     #if defined SPI_SW_UPLOAD                                            // {5}
@@ -1917,6 +1952,186 @@ static unsigned char *fnBlankCheck(void)
         return 0;                                                        // application Flash is blank
     }
     return ptrFlash;                                                     // not blank
+}
+#endif
+
+#if defined I2C_INTERFACE                                                // {32}
+#define VERSION_MAJOR 1                                                  // I2C slave loader version
+#define VERSION_MINOR 0
+
+static unsigned char ucFlashState = 0;
+
+static void fnFlashByte(unsigned char *ptrAddress, unsigned char *ptrByte)
+{
+    if (ptrAddress < (unsigned char *)(_UTASKER_APP_START_ + sizeof(ucCodeStart))) {
+        ucCodeStart[(unsigned long)ptrAddress - _UTASKER_APP_START_] = *ptrByte; // backup start of code until complete code received
+    }
+    else {
+        fnWriteBytesFlash(ptrAddress, ptrByte, 1);                       // save the received byte
+    }
+
+}
+
+// The function is called during I2C slave interrupt handling so that the application can immediately respond in order to realise an I2C slave device
+//
+static int fnI2C_SlaveCallback(int iChannel, unsigned char *ptrDataByte, int iType)
+{
+    #define READ_VERSION_MAJOR         0
+    #define READ_VERSION_MINOR         1
+    #define READ_VERSION_FLASH_STATE   2
+
+    #define TOTAL_RX_REGISTERS         3
+
+    #define UPLOAD_MODE_READ           3
+
+    #define WRITE_UPLOAD_DATA          0                                 // writes upload data and sets upload status read state
+    #define WRITE_DELETE_REQUEST       1
+    #define WRITE_RESET_REQUEST        2                                 // resets the device
+
+    #define WRITE_DUMMY                3
+
+    #define I2C_IDLE                   0
+    #define I2C_SET_COMMAND            1
+    #define I2C_SET_DATA               2
+    static const unsigned char cucVersion[] = {VERSION_MAJOR, VERSION_MINOR};
+    static int iRxCount = 0;
+    static unsigned char ucResetKey = 0;
+    static unsigned char ucUploadState[5] = {0};
+    static unsigned char ucState = I2C_IDLE;
+    static unsigned char ucReadMode = 0;
+    static unsigned char ucWriteMode = 0;
+    switch (iType) {                                                     // the interrupt callback type
+    case I2C_SLAVE_ADDRESSED_FOR_READ:                                   // the slave is being addressed for reading from (first byte is requested)
+        // Fall through intentionally
+        //
+    case I2C_SLAVE_READ:                                                 // further reads requested
+        switch (ucReadMode++) {
+        case READ_VERSION_MAJOR:
+            *ptrDataByte = (unsigned char)cucVersion[0];                 // return the application version (major)
+            break;
+        case READ_VERSION_MINOR:
+            *ptrDataByte = (unsigned char)cucVersion[1];                 // return the application version (minor)
+            break;
+        case READ_VERSION_FLASH_STATE:
+            *ptrDataByte = ucFlashState;                                 // return the state of program flash
+            ucReadMode = 0;                                              // circle back to the version
+            break;
+        case UPLOAD_MODE_READ:
+            *ptrDataByte = ucUploadState[iRxCount++];                    // return the upload state
+            if (iRxCount >= sizeof(ucUploadState)) {
+                iRxCount = 0;                                            // circle in upload mode area
+            }
+            ucReadMode = UPLOAD_MODE_READ;                               // stay in this mode when uploading
+            break;
+        }
+        return I2C_SLAVE_TX_PREPARED;                                    // the prepared byte is to to be sent
+
+    case I2C_SLAVE_ADDRESSED_FOR_WRITE:                                  // the slave is being addressed to write to (*ptrDataByte is our address)
+        uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(1 * 60 * SEC), T_RESET);// reset if there is no master activity for this length of time
+        ucState = I2C_SET_COMMAND;                                       // a write is being received and we expect the command to be written next
+        return I2C_SLAVE_RX_CONSUMED;                                    // the byte has been consumed and nothing is to be put in the queue buffer
+
+    case I2C_SLAVE_WRITE:                                                // data byte received (*ptrDataByte is the data received)
+        if (ucState == I2C_SET_COMMAND) {                                // we are expecting the command to be received
+            ucWriteMode = *ptrDataByte;                                  // the register that we will be writing to
+            if (ucWriteMode > WRITE_RESET_REQUEST) {
+                ucWriteMode = WRITE_DUMMY;                               // ignore invalid addresses
+            }
+            else if (ucWriteMode == WRITE_UPLOAD_DATA) {
+                ucReadMode = UPLOAD_MODE_READ;                           // reads will return upload status from now on
+            }
+            ucResetKey = 0;
+            ucState = I2C_SET_DATA;                                      // we may receive data next
+        }
+        else {                                                           // writing data
+            switch (ucWriteMode++) {
+            case WRITE_DUMMY:
+                ucWriteMode = WRITE_DUMMY;                               // stay at dummy address in order to ignore all that arrives before a new write
+                break;
+            case WRITE_UPLOAD_DATA:
+                {
+                    unsigned long ulUploadAddress = ((ucUploadState[1] << 24) | (ucUploadState[2] << 16) | (ucUploadState[3] << 8) | ucUploadState[4]);
+                    fnFlashByte((unsigned char *)(ulUploadAddress + _UTASKER_APP_START_), ptrDataByte); // save each byte to flash as it is received (the slave will hold the bus during the programming duration)
+                    ucUploadState[0] |= 0x01;                            // upload has started
+                    ulUploadAddress++;                                   // increment the address
+                    ucUploadState[1] = (unsigned char)(ulUploadAddress >> 24); // put the updated address back to the status buffer for possible reading
+                    ucUploadState[2] = (unsigned char)(ulUploadAddress >> 16);
+                    ucUploadState[3] = (unsigned char)(ulUploadAddress >> 8);
+                    ucUploadState[4] = (unsigned char)(ulUploadAddress);
+                    ucWriteMode = WRITE_UPLOAD_DATA;
+                }
+                break;
+            case WRITE_DELETE_REQUEST:                                   // delete key is being checked
+                if ((ucResetKey == 0) && (*ptrDataByte == 0x52)) {
+                    ucResetKey++;
+                }
+                else if ((ucResetKey == 1) && (*ptrDataByte == 0x84)) {
+                    uMemset(ucUploadState, 0, sizeof(ucUploadState));
+                    fnInterruptMessage(OWN_TASK, DELETE_APPLICATION_FLASH); // send an interrupt event to the application so that it can delete the flash outside the interrupt routine
+                }
+                else {
+                    ucResetKey = 0xff;                                   // block the reset key until next try
+                }
+                ucWriteMode = WRITE_DELETE_REQUEST;
+                break;
+            case WRITE_RESET_REQUEST:                                    // reset key is checked
+                if ((ucResetKey == 0) && (*ptrDataByte == 0x55)) {
+                    ucResetKey++;
+                }
+                else if ((ucResetKey == 1) && (*ptrDataByte == 0xaa)) {
+                    ucUploadState[0] |= 0x80;                            // mark that a reset will occur shortly
+                    if (ucUploadState[0] & 0x01) {                       // if reset command following loading
+                        fnInterruptMessage(OWN_TASK, TERMINATE_PROGRAMMING);
+                    }
+                    else {
+                        fnResetBoard();
+                    }
+                }
+                else {
+                    ucResetKey = 0xff;                                   // block the reset key until next try
+                }
+                ucWriteMode = WRITE_RESET_REQUEST;
+                break;
+            default:
+                ucState = I2C_IDLE;                                      // return to data reception
+                break;
+            }
+        }
+        return I2C_SLAVE_RX_CONSUMED;                                    // the byte has been consumed and nothing is to be put in the queue buffer
+
+    case I2C_SLAVE_READ_COMPLETE:
+        // Fall through intentionally
+        //
+    case I2C_SLAVE_WRITE_COMPLETE:                                       // the write has terminated
+        // ptrDataByte is 0 and so should not be used
+        //
+        ucState = I2C_IDLE;                                              // return to data reception
+        return I2C_SLAVE_RX_CONSUMED;
+    }
+    return I2C_SLAVE_BUFFER;                                             // use the buffer for this transaction
+}
+
+static void fnOpenI2C_slave(void)
+{
+    I2CTABLE tI2CParameters;
+
+    tI2CParameters.Channel = 0;                                          // I2C0
+    tI2CParameters.ucSlaveAddress = OUR_SLAVE_ADDRESS;                   // slave address
+    tI2CParameters.usSpeed = 0;                                          // select slave mode of operation
+    tI2CParameters.fnI2C_SlaveCallback = fnI2C_SlaveCallback;            // the I2C slave interrupt callback on reception
+    tI2CParameters.Rx_tx_sizes.TxQueueSize = 2;                          // transmit queue size (not used)
+    tI2CParameters.Rx_tx_sizes.RxQueueSize = 2;                          // receive queue size (not used)
+    tI2CParameters.Task_to_wake = 0;                                     // do not wake task on transmission termination
+
+    I2CPortID = fnOpen(TYPE_I2C, FOR_I_O, &tI2CParameters);              // open the I2C channel with defined configurations
+    fnCheckFlashState();
+}
+
+static void fnCheckFlashState(void)
+{
+    if (fnBlankCheck() == 0) {                                           // check whether flash is empty
+        ucFlashState = 1;                                                // flash is empty
+    }
 }
 #endif
 

@@ -18,6 +18,7 @@
     15.04.2014 Add web server upload support                             {3}
     04.06.2014 Add network indicator task option for PHY polling         {4}
     05.10.2017 Add modbus task                                           {5}
+    17.01.2018 Add I2C dependancy                                        {6}
 
 */
  
@@ -111,7 +112,7 @@ const UTASK_TASK ctNodes[] = {                                           // we u
     TASK_MASS_STORAGE,                                                   // mass storage task
     TASK_SD_LOADER,
 #endif
-#if defined SERIAL_INTERFACE || defined ETH_INTERFACE || defined USE_USB_CDC || defined SUPPORT_GLCD
+#if defined SERIAL_INTERFACE || defined ETH_INTERFACE || defined USE_USB_CDC || defined SUPPORT_GLCD || defined I2C_INTERFACE // {6}
     TASK_APPLICATION,                                                    // application task
 #endif
 #if defined SUPPORT_GLCD
@@ -159,7 +160,7 @@ const UTASKTABLEINIT ctTaskTable[] = {
 #if defined USE_MODBUS
     { "mod",       fnMODBUS,     MEDIUM_QUE,  (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP }, // {13} MODBUS task  
 #endif
-#if defined SERIAL_INTERFACE || defined ETH_INTERFACE || defined USE_USB_CDC || defined SUPPORT_GLCD
+#if defined SERIAL_INTERFACE || defined I2C_INTERFACE || defined ETH_INTERFACE || defined USE_USB_CDC || defined SUPPORT_GLCD // {6}
     { "app",       fnApplication,  MEDIUM_QUE,  (DELAY_LIMIT)((0.10 * SEC) + (PHY_POWERUP_DELAY)), 0, UTASKER_STOP}, // Application - start after Ethernet to be sure we have Ethernet handle
 #endif
 #if defined USB_INTERFACE
