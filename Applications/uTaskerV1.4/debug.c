@@ -111,6 +111,7 @@
     05.07.2017 Modify SD card sector write interface                     {86}
     10.11.2017 Add MQTT client commands                                  {87}
     04.12.2017 Add memory-mapped divide and square root demonstration    {88} - Kinetis processors with MMDVSQ
+    17.01.2018 Add I2C master firmware loader                            {89}
 
 */
 
@@ -131,9 +132,11 @@
 
 //#define TEST_SDCARD_SECTOR_WRITE                                       // {44} activate to allow sector writes to be tested
 //#define TEST_I2C_INTERFACE                                             // activate to enable special I2C tests via menu
-#define DEVELOP_PHY_CONTROL                                              // {33} activate to enable PHY register dump and writes to individual register addresses
+//#define DEVELOP_PHY_CONTROL                                            // {33} activate to enable PHY register dump and writes to individual register addresses
                                                                          // note that STOP_MII_CLOCK should not be enabled when using this (kinetis)
 //#define _DEBUG_CAN                                                     // support dumping CAN register details for debugging purpose
+//#define I2C_MASTER_LOADER                                              // {89} load firmware to a connected I2C slave (requires I2C_INTERFACE - enable TEST_I2C in i2c_tests.h for interface open)
+
 #if defined CMSIS_DSP_CFFT
     #define TEST_CMSIS_CFFT                                              // {84} enable test of CMSIS CFFT
 #endif
@@ -422,6 +425,7 @@
     #define DO_I2C_READ_PLUS_WRITE  3                                    // specific I2C command to read from I2C bus from present address, followed by a queued write to set address zero
     #define DO_ACC_ON               4                                    // specific I2C command to enable accelerator debugout output
     #define DO_ACC_OFF              5                                    // specific I2C command to disable accelerator debugout output
+    #define DO_I2C_LOAD_FIRMWARE    6                                    // specific I2C command to load firmware to an I2C slave
 
 #define DO_DISK                   11                                     // reference to SD-card, disk group
     #define DO_DIR                  0                                    // specific command to display directory content
@@ -635,8 +639,11 @@ typedef struct stCLONER_SKIP_REGION
         static int fnTELNETClientListener(USOCKET Socket, unsigned char ucEvent, unsigned char *ucIp_Data, unsigned short usPortLen);
     #endif
     #if !defined REMOVE_PORT_INITIALISATIONS
-    static void fnSetPortBit(unsigned short usBit, int iSetClr);
-    static int  fnConfigOutputPort(CHAR cPortBit);
+        static void fnSetPortBit(unsigned short usBit, int iSetClr);
+        static int  fnConfigOutputPort(CHAR cPortBit);
+    #endif
+    #if defined I2C_INTERFACE && defined I2C_MASTER_LOADER                   // {89}
+        static void fnProgramI2CSlave(unsigned char ucSlaveAddress, int iCommand);
     #endif
 #endif
 
@@ -941,6 +948,9 @@ static const DEBUG_COMMAND tI2CCommand[] = {
     {"rd",                "read  [add] [no. of bytes]",            DO_I2C,           DO_I2C_READ },
     {"srd",               "simple read [no. of bytes]",            DO_I2C,           DO_I2C_READ_NO_ADDRESS },
     {"rdq",               "read  [add] [no. of bytes] + wr",       DO_I2C,           DO_I2C_READ_PLUS_WRITE },
+    #endif
+    #if defined I2C_INTERFACE && defined I2C_MASTER_LOADER                // {89}
+    {"load",              "Load firmware [add]",                   DO_I2C,           DO_I2C_LOAD_FIRMWARE },
     #endif
     {"help",              "Display menu specific help",            DO_HELP,          DO_MAIN_HELP },
 #endif
@@ -1251,7 +1261,7 @@ static unsigned char   ucDebugCnt = 0;
     static UTDIRECTORY *ptr_utDirectory[DISK_COUNT] = {0};               // pointer to a directory object
     static int iFATstalled = 0;                                          // stall flags when listing large directories and printing content
 #endif
-#if defined I2C_INTERFACE && defined TEST_I2C_INTERFACE
+#if defined I2C_INTERFACE && (defined TEST_I2C_INTERFACE || defined I2C_MASTER_LOADER)
     extern QUEUE_HANDLE I2CPortID;
 #endif
 #if DISK_COUNT > 1
@@ -1573,7 +1583,8 @@ extern void fnDebug(TTASKTABLE *ptrTaskTable)
             break;
         }
     }
-#if defined I2C_INTERFACE && defined TEST_I2C_INTERFACE
+#if defined I2C_INTERFACE
+    #if defined TEST_I2C_INTERFACE
     if (fnMsgs(I2CPortID) != 0) {                                        // if I2C message waiting
         QUEUE_TRANSFER i2c_length = fnMsgs(I2CPortID);
         int x = 0;
@@ -1584,6 +1595,38 @@ extern void fnDebug(TTASKTABLE *ptrTaskTable)
         }
         fnDebugMsg("\r\n");
     }
+    #elif defined I2C_MASTER_LOADER
+    if (fnMsgs(I2CPortID) != 0) {                                        // if I2C message waiting
+        QUEUE_TRANSFER i2c_length = fnMsgs(I2CPortID);                   // the waiting length
+        fnRead(I2CPortID, ucInputMessage, i2c_length);
+        #if defined _WINDOWS
+        ucInputMessage[0] = 0x01;
+        #endif
+        if (1 == i2c_length) {                                           // delete status
+            if (ucInputMessage[0] == 0x01) {
+                fnDebugMsg("Slave flash deleted\r\n");
+                fnProgramI2CSlave(0, 2);                                 // program the firmware
+                fnDebugMsg("Programming");
+            }
+            else if (ucInputMessage[0] == 0x00) {                        // flash is not empty
+                fnDebugMsg("*");
+                fnProgramI2CSlave(0, 1);                                 // poll the delete status until the slave responds that it has completed
+            }
+            else {
+                fnDebugMsg("Slave not responding!\r\n");
+            }
+        }
+        else if (5 == i2c_length) {                                      // programming status
+            fnDebugMsg(".");
+            if (ucInputMessage[0] == 0x01) {
+                fnProgramI2CSlave(0, 2);                                 // program next block
+            }
+            else {
+                fnDebugMsg("Programming error!\r\n");
+            }
+        }
+    }
+    #endif
 #endif
 }
 
@@ -4751,6 +4794,66 @@ static void fnDoOLED(unsigned char ucType, CHAR *ptrInput)               // OLED
 }
 #endif
 
+#if defined I2C_INTERFACE && defined I2C_MASTER_LOADER                   // {89}
+static void fnProgramI2CSlave(unsigned char ucSlaveAddress, int iCommand)
+{
+    static unsigned char ucAddressToProgram = 0;
+    static MEMORY_RANGE_POINTER slave_firmware = 0;
+    static MAX_FILE_LENGTH slave_firmwareLength = 0;
+    unsigned char ucDelete[4];
+    if (iCommand == 0) {
+        if (0 == ucSlaveAddress) {
+            fnDebugMsg("Invalid slave address (0x00)!");
+            return;
+        }
+        slave_firmware = uOpenFile("0.bin");                             // location of firmware to send to the slave (uFileSystem "0.bin")
+        slave_firmwareLength = uGetFileLength(slave_firmware);           // the length of the data to program
+        if (slave_firmwareLength == 0) {
+            fnDebugMsg("No program to send!");
+            return;
+        }
+        slave_firmware += FILE_HEADER;
+        fnDebugMsg("Commanding slave device at ");
+        ucAddressToProgram = (ucSlaveAddress & 0xfe);                    // ensure the write address is used
+        fnDebugHex(ucAddressToProgram, (WITH_LEADIN | sizeof(ucAddressToProgram)));
+        fnDebugMsg(" to delete its memory...");
+        ucDelete[0] = ucAddressToProgram;                                // slave write address
+        ucDelete[1] = 0x01;                                              // write to 0x01 command an erase
+        ucDelete[2] = 0x52;                                              // magic number must match for the erase to be executed
+        ucDelete[3] = 0x84;
+        fnWrite(I2CPortID, ucDelete, sizeof(ucDelete));                  // send delete command
+    }
+    if (iCommand < 2) {                                                  // delete or request delete status
+        ucDelete[0] = 1;                                                 // read one byte of data
+        ucDelete[1] = (ucAddressToProgram | 0x01);                       // slave read address
+        ucDelete[2] = OWN_TASK;                                          // wake our task when the read has completed
+        fnRead(I2CPortID, ucDelete, 0);                                  // get the status
+    }
+    else {                                                               // programming
+        if (slave_firmwareLength != 0) {                                 // if more data to program
+            unsigned char ucProgram[60];                                 // smal blocks are sent since the I2C ty buffer may be no larger than 64 bytes (see setting in i2c_tests.h)
+            unsigned char ucLength = (sizeof(ucProgram) - 2);
+            if (ucLength > slave_firmwareLength) {                       // if there is not enough remaining program data to fill the buffer
+                ucLength = (unsigned char)slave_firmwareLength;          // send the remaining amount of data
+            }
+            ucProgram[0] = ucAddressToProgram;                           // slave write address
+            ucProgram[1] = 0x00;                                         // write to 0 to program slave
+            fnGetParsFile(slave_firmware, &ucProgram[2], ucLength);      // get next block of data to send
+            fnWrite(I2CPortID, ucProgram, (ucLength + 2));               // send delete command
+            slave_firmwareLength -= ucLength;
+            slave_firmware += ucLength;
+            ucProgram[0] = 5;                                            // read five bytes of data
+            ucProgram[1] = (ucAddressToProgram | 0x01);                  // slave read address
+            ucProgram[2] = OWN_TASK;                                     // wake our task when the read has completed
+            fnRead(I2CPortID, ucProgram, 0);                             // get the programming status
+        }
+        else {                                                           // all data programmed
+            fnDebugMsg("\r\nProgramming compete\r\n");
+        }
+    }
+}
+#endif
+
 #if defined I2C_INTERFACE
     #if defined LPI2C_AVAILABLE && defined TEMP_LPI2C_TEST
     extern unsigned long ulRxLPI2Cpause;
@@ -4768,6 +4871,14 @@ static void fnDoI2C(unsigned char ucType, CHAR *ptrInput)                // I2C 
         iAccelOutput = 0;
         fnDebugMsg("Disabled\r\n");
         break;
+    #if defined I2C_INTERFACE && defined I2C_MASTER_LOADER               // {89}
+    case DO_I2C_LOAD_FIRMWARE:
+        {
+            unsigned char ucI2C_slave_address = (unsigned char)fnHexStrHex(ptrInput);
+            fnProgramI2CSlave(ucI2C_slave_address, 0);
+        }
+        break;
+    #endif
     #if defined LPI2C_AVAILABLE && defined TEMP_LPI2C_TEST
     case 122:
         if (*ptrInput == '1') {

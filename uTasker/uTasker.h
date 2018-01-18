@@ -73,19 +73,23 @@
 
 #define HEADER_LENGTH             5                                      // a message header has always this length
 
-#define NO_QUE                    0
+#define NO_QUE                 0
+#define NO_QUEUE               NO_QUE
 
-#define SMALL_MESSAGE            32                                      // these are a few message length defines - users can befine their own in config.h if special sizes are required
-#define MEDIUM_MESSAGE           64
-#define LARGE_MESSAGE           128
-#define LARGER_MESSAGE          256
-#define BIG_MESSAGE             512
+#define SMALL_MESSAGE          32                                        // these are a few message length defines - users can befine their own in config.h if special sizes are required
+#define MEDIUM_MESSAGE         64
+#define LARGE_MESSAGE          128
+#define LARGER_MESSAGE         256
+#define BIG_MESSAGE            512
 #define BIGGER_MESSAGE         1024
 
-#define SMALLEST_QUE  (HEADER_LENGTH + 0)                                // absolutely smallest size - use when only a timer or interrupt event can arrive
-#define SMALL_QUEUE   (HEADER_LENGTH + SMALL_MESSAGE)
-#define MEDIUM_QUE    (HEADER_LENGTH + MEDIUM_MESSAGE)
-#define LARGE_QUE     (HEADER_LENGTH + LARGE_MESSAGE)
+#define SMALLEST_QUE           (HEADER_LENGTH + 0)                       // absolutely smallest size - use when only a timer or interrupt event can arrive
+#define SMALL_QUEUE            (HEADER_LENGTH + SMALL_MESSAGE)
+#define MEDIUM_QUE             (HEADER_LENGTH + MEDIUM_MESSAGE)
+#define LARGE_QUE              (HEADER_LENGTH + LARGE_MESSAGE)
+#define SMALLEST_QUEUE         SMALLEST_QUE
+#define MEDIUM_QUEUE           MEDIUM_QUE
+#define LARGE_QUEUE            LARGE_QUE
 
 #define NO_DELAY_RESERVE_MONO (DELAY_LIMIT)(0 - 1)                       // zero delay but reserve a mono stable timer for the task
 

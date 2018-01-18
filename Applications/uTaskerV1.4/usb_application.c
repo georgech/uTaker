@@ -1032,7 +1032,7 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
                     {
                         MODE_PARAMETER_6 SelectDataWP;
                         uMemcpy(&SelectDataWP, &SelectData, sizeof(SelectData));
-                        if (ptrDiskInfo[ucActiveLUN]->usDiskFlags & WRITE_PROTECTED_SD_CARD) {
+                        if ((ptrDiskInfo[ucActiveLUN]->usDiskFlags & WRITE_PROTECTED_SD_CARD) != 0) {
                             SelectDataWP.ucWP_DPOFUA = PAR6_WRITE_PROTECTED; // the medium is write protected
                         }
                         fnWrite(USBPortID_MSD, (unsigned char *)&SelectDataWP, sizeof(SelectData)); // respond to the request and then return 
@@ -1079,8 +1079,8 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
                         unsigned short usLengthAccepted = ((ptrCapacities->ucAllocationLength[0] << 8) | (ptrCapacities->ucAllocationLength[1]));
                         CBW_CAPACITY_LIST mediaCapacity;
                         uMemcpy(&mediaCapacity, &formatCapacityNoMedia, sizeof(CBW_CAPACITY_LIST)); // assume no disk
-                        if (ptrDiskInfo[ucActiveLUN]->usDiskFlags & (DISK_MOUNTED | DISK_UNFORMATTED)) { // {16}
-                            if (ptrDiskInfo[ucActiveLUN]->usDiskFlags & DISK_FORMATTED) {
+                        if ((ptrDiskInfo[ucActiveLUN]->usDiskFlags & (DISK_MOUNTED | DISK_UNFORMATTED)) != 0) { // {16}
+                            if ((ptrDiskInfo[ucActiveLUN]->usDiskFlags & DISK_FORMATTED) != 0) {
                                 mediaCapacity.capacityDescriptor.ucDescriptorCode = DESC_CODE_FORMATTED_MEDIA;
                             }
                             else {
@@ -2749,13 +2749,13 @@ static int mass_storage_callback(unsigned char *ptrData, unsigned short length, 
 
                     case UFI_READ_CAPACITY:                              // {36}
                     case UFI_READ_FORMAT_CAPACITY:
-                        if (ptrDiskInfo[ucActiveLUN]->usDiskFlags & (DISK_MOUNTED | DISK_UNFORMATTED)) { // {16} only respond when there is media inserted, else stall
+                        if ((ptrDiskInfo[ucActiveLUN]->usDiskFlags & (DISK_MOUNTED | DISK_UNFORMATTED)) != 0) { // {16} only respond when there is media inserted, else stall
                             return TRANSPARENT_CALLBACK;                 // the call-back has done its work and the input buffer can now be used
                         }
                         break;                                           // stall
                     case UFI_READ_10:
                     case UFI_READ_12:
-                        if (ptrDiskInfo[ucActiveLUN]->usDiskFlags & (DISK_MOUNTED | DISK_UNFORMATTED)) { // {16} only respond when there is media inserted, else stall
+                        if ((ptrDiskInfo[ucActiveLUN]->usDiskFlags & (DISK_MOUNTED | DISK_UNFORMATTED)) != 0) { // {16} only respond when there is media inserted, else stall
                             CBW_READ_10 *ptrRead = (CBW_READ_10 *)ptrCBW->CBWCB;
                             ulLogicalBlockAdr = ((ptrRead->ucLogicalBlockAddress[0] << 24) | (ptrRead->ucLogicalBlockAddress[1] << 16) | (ptrRead->ucLogicalBlockAddress[2] << 8) | ptrRead->ucLogicalBlockAddress[3]);
                             if (ulLogicalBlockAdr < ptrDiskInfo[ucActiveLUN]->ulSD_sectors) { // check that the sector is valid
@@ -2774,7 +2774,7 @@ static int mass_storage_callback(unsigned char *ptrData, unsigned short length, 
                         return TRANSPARENT_CALLBACK;                     // the call-back has done its work and the input buffer can now be used
                     case UFI_WRITE_10:
                     case UFI_WRITE_12:
-                        if (ptrDiskInfo[ucActiveLUN]->usDiskFlags & (DISK_MOUNTED | DISK_UNFORMATTED)) { // {16} only respond when there is media inserted, else stall
+                        if ((ptrDiskInfo[ucActiveLUN]->usDiskFlags & (DISK_MOUNTED | DISK_UNFORMATTED)) != 0) { // {16} only respond when there is media inserted, else stall
                             CBW_WRITE_10 *ptrWrite = (CBW_WRITE_10 *)ptrCBW->CBWCB;
                             ulLogicalBlockAdr = ((ptrWrite->ucLogicalBlockAddress[0] << 24) | (ptrWrite->ucLogicalBlockAddress[1] << 16) | (ptrWrite->ucLogicalBlockAddress[2] << 8) | ptrWrite->ucLogicalBlockAddress[3]);
                             if (ulLogicalBlockAdr < ptrDiskInfo[ucActiveLUN]->ulSD_sectors) { // check that the sector is valid

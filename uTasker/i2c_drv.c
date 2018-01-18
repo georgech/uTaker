@@ -157,7 +157,7 @@ static QUEUE_TRANSFER entry_I2C(QUEUE_HANDLE channel, unsigned char *ptBuffer, Q
             if ((ptI2CQue->ucState & I2C_SLAVE_TX_BUFFER_MODE) == 0) {   // if the channel is in slave buffer mode we don't enter the length in the output buffer
     #endif
         #if defined _WINDOWS                                             // {4}
-                if (*ptBuffer & 0x01) {
+                if ((*ptBuffer & 0x01) != 0) {
                     _EXCEPTION("Incorrect I2C address being used!!");    // cause an exception to warn of bad use
                 }                                                        // the caller is trying to write to a read I2C address!!
         #endif

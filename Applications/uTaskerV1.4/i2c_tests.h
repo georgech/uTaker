@@ -31,7 +31,7 @@
         #define TEST_I2C_SLAVE                                           // test behaving as I2C slave
         #define OUR_SLAVE_ADDRESS   0xd0
     #endif
-  //#define TEST_I2C                                                     // test I2C EEPROM
+    #define TEST_I2C                                                     // test I2C EEPROM
       //#define EEPROM_M24256                                            // EEPROM with two byte addressing
   //#define TEST_I2C_INTENSIVE                                           // intensive transmitter test
   //#define TEST_DS1307                                                  // test DS1307 RTC via I2C bus
@@ -43,7 +43,7 @@
     #endif
   //#define TEST_MMA7660F                                                // test monitoring the 3-axis accelerometer
     #if RX_BUFFER_SIZE >= 112                                            // avoid using FXOS870 if the application task's input buffer is not adequately large
-        #define TEST_FXOS8700                                            // test monitoring the 6-axis sensor
+      //#define TEST_FXOS8700                                            // test monitoring the 6-axis sensor
         #if defined TEST_FXOS8700
           //#define FXOS8700_14BIT_RES
             #define READ_MAGNETOMETER

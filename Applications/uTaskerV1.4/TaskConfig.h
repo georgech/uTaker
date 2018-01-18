@@ -245,29 +245,29 @@ const UTASKTABLEINIT ctTaskTable[] = {
     // task name,  task routine,   input queue size, start delay, period, initial task state
     //
 #if defined _HW_SAM7X
-    {"Wdog",      fnTaskWatchdog, NO_QUE,   (DELAY_LIMIT)(0.2 * SEC), (DELAY_LIMIT)(0.2 * SEC),  UTASKER_STOP}, // watchdog task (note SAM7X is not allowed to start watchdog immediately since it also checks for too fast triggering!!)
+    {"Wdog",      fnTaskWatchdog, NO_QUEUE, (DELAY_LIMIT)(0.2 * SEC), (DELAY_LIMIT)(0.2 * SEC),  UTASKER_STOP}, // watchdog task (note SAM7X is not allowed to start watchdog immediately since it also checks for too fast triggering!!)
 #else
-    {"Wdog",      fnTaskWatchdog, NO_QUE,   0, (DELAY_LIMIT)(0.2 * SEC),  UTASKER_GO}, // watchdog task (runs immediately and then periodically)
+    {"Wdog",      fnTaskWatchdog, NO_QUEUE, 0, (DELAY_LIMIT)(0.2 * SEC),  UTASKER_GO}, // watchdog task (runs immediately and then periodically)
 #endif
 #if defined USE_IP || defined USE_IPV6                                   // {6} warning - start ARP task before Ethernet. If Ethernet messages are received before ARP table is ready there would be an error..
-    {"ARP",       fnTaskArp,    MEDIUM_QUE, (DELAY_LIMIT)(0.05 * SEC), 0, UTASKER_STOP}, // ARP task check periodically state of ARP table
+    {"ARP",       fnTaskArp,    MEDIUM_QUEUE, (DELAY_LIMIT)(0.05 * SEC), 0, UTASKER_STOP}, // ARP task check periodically state of ARP table
 #endif
 #if defined ETH_INTERFACE
     {"Eth",       fnTaskEthernet, (HEADER_LENGTH * 12), (DELAY_LIMIT)((0.05 * SEC) + (PHY_POWERUP_DELAY)), 0, UTASKER_STOP}, // {1} ethernet task - runs automatically
 #endif
 #if defined USE_TCP
-    {"TCP",       fnTaskTCP,    MEDIUM_QUE,  (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP}, // {1} TCP task checks periodically state of session timeouts (controlled by task itself)
+    {"TCP",       fnTaskTCP,    MEDIUM_QUEUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP}, // {1} TCP task checks periodically state of session timeouts (controlled by task itself)
 #endif
 #if defined USE_MODBUS
-    {"O-MOD",     fnMODBUS,     MEDIUM_QUE,  (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP}, // MODBUS task  
+    {"O-MOD",     fnMODBUS,     MEDIUM_QUEUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP}, // MODBUS task  
 #endif
 #if defined _EXE && defined ETH_INTERFACE && !defined BLINKY
-    {"app",       fnApplication,  MEDIUM_QUE,  (DELAY_LIMIT)((0.5 * SEC) + (PHY_POWERUP_DELAY)), 0, UTASKER_STOP}, // application - start after Ethernet to be sure we have Ethernet handle
+    {"app",       fnApplication,  MEDIUM_QUEUE, (DELAY_LIMIT)((0.5 * SEC) + (PHY_POWERUP_DELAY)), 0, UTASKER_STOP}, // application - start after Ethernet to be sure we have Ethernet handle
 #elif !defined BLINKY
-    {"app",       fnApplication,  MEDIUM_QUE,  (DELAY_LIMIT)((0.10 * SEC) + (PHY_POWERUP_DELAY)), 0, UTASKER_STOP}, // application - start after Ethernet to be sure we have Ethernet handle
+    {"app",       fnApplication,  MEDIUM_QUEUE, (DELAY_LIMIT)((0.10 * SEC) + (PHY_POWERUP_DELAY)), 0, UTASKER_STOP}, // application - start after Ethernet to be sure we have Ethernet handle
 #endif
 #if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined MANAGED_FILES || defined USB_MSD_HOST
-    {"MassSt",    fnMassStorage,  MEDIUM_QUE,  (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP}, // mass storage task
+    {"MassSt",    fnMassStorage,  MEDIUM_QUEUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP}, // mass storage task
 #endif
 #if defined USE_MQTT_CLIENT || defined USE_MQTT_BROKER                   // {14}
     {"Q-mqtt",    fnMQTT,       SMALL_QUEUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP },
@@ -300,16 +300,16 @@ const UTASKTABLEINIT ctTaskTable[] = {
     {"zero",      fnZeroConfig, SMALL_QUEUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP},
 #endif
 #if defined SUPPORT_LCD
-    {"LCD",       fnLCD,        MEDIUM_QUE,  (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP},
+    {"LCD",       fnLCD,        MEDIUM_QUEUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP},
 #elif defined SUPPORT_GLCD || defined SUPPORT_OLED /* || defined SUPPORT_TFT || defined GLCD_COLOR */ // {2}{4}{8}
     #if defined GLCD_COLOR
     {"LCD",       fnLCD,        SMALL_QUEUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_ACTIVATE}, // runs immediately
     #else
-    {"LCD",       fnLCD,        (LARGE_QUE + 128),  (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP}, // large queue for queuing text
+    {"LCD",       fnLCD,        (LARGE_QUEUE + 128), (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP}, // large queue for queuing text
     #endif
 #endif
 #if defined SUPPORT_KEY_SCAN
-    {"Key",       fnKey,        NO_QUE,      (DELAY_LIMIT)(0.4 * SEC), (DELAY_LIMIT)(0.05 * SEC), UTASKER_STOP}, // {3}
+    {"Key",       fnKey,        NO_QUEUE, (DELAY_LIMIT)(0.4 * SEC), (DELAY_LIMIT)(0.05 * SEC), UTASKER_STOP}, // {3}
 #endif
 #if defined GLOBAL_TIMER_TASK
     {"period",    fnTimer,      SMALL_QUEUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP}, // gobal timer task
@@ -318,7 +318,7 @@ const UTASKTABLEINIT ctTaskTable[] = {
     {"maintenace",fnDebug,      SMALL_QUEUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP}, // task used for debug messages (started by application)
 #endif
 #if (defined LAN_REPORT_ACTIVITY || defined PHY_POLL_LINK || defined INTERRUPT_TASK_PHY) && !defined BLINKY // {9}{11}
-    {"NetInd",    fnNetworkIndicator,LARGE_QUE,   (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP}, // network activity task
+    {"NetInd",    fnNetworkIndicator, LARGE_QUEUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP}, // network activity task
 #endif
 #if defined USB_INTERFACE
     {"usb",       fnTaskUSB,    SMALL_QUEUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP}, // USB (application) task
@@ -327,13 +327,13 @@ const UTASKTABLEINIT ctTaskTable[] = {
     {"keeper",    fnTimeKeeper, SMALL_QUEUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP}, // time keeper task
 #endif
 #if defined QUICK_DEV_TASKS && !defined BLINKY
-    {"1",    fnQuickTask1, MEDIUM_QUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP}, // quick development  tasks
-    {"2",    fnQuickTask2, MEDIUM_QUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP},
-    {"3",    fnQuickTask3, MEDIUM_QUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP},
-    {"4",    fnQuickTask4, MEDIUM_QUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP},
+    {"1",    fnQuickTask1, MEDIUM_QUEUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP}, // quick development  tasks
+    {"2",    fnQuickTask2, MEDIUM_QUEUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP},
+    {"3",    fnQuickTask3, MEDIUM_QUEUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP},
+    {"4",    fnQuickTask4, MEDIUM_QUEUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP},
 #endif
 #if defined SUPPORT_LOW_POWER
-    {"lowPower",  fnLowPower,   NO_QUE,      0, 0, UTASKER_GO},          // low power task
+    {"lowPower",  fnLowPower,   NO_QUEUE,  0, 0, UTASKER_GO},          // low power task
 #endif
     {0}
 };
