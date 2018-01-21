@@ -55,7 +55,7 @@
 //#define FRDM_KE06Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KE06Z.html
 //#define FRDM_KE15Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KE15Z.html
 
-//#define FRDM_KL02Z                                                     // L processors Cortex-M0+ (ultra-low power) basic - freedom board http://www.utasker.com/kinetis/FRDM-KL02Z.html
+#define FRDM_KL02Z                                                       // L processors Cortex-M0+ (ultra-low power) basic - freedom board http://www.utasker.com/kinetis/FRDM-KL02Z.html
 //#define FRDM_KL03Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL03Z.html
 //#define FRDM_KL05Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL05Z.html
 
@@ -111,7 +111,7 @@
 
 //#define EMCRAFT_K61F150M                                               // K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - http://www.utasker.com/kinetis/EMCRAFT_K61F150M.html
 
-#define FRDM_K64F                                                        // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
+//#define FRDM_K64F                                                      // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
 //#define TWR_K64F120M                                                   // tower board http://www.utasker.com/kinetis/TWR-K64F120M.html
 //#define HEXIWEAR_K64F                                                  // hexiwear - wearable development kit for IoT (K64FN1M0VDC12 main processor) http://www.hexiwear.com/
 //#define TEENSY_3_5                                                     // USB development board with K64FX512 - http://www.utasker.com/kinetis/TEENSY_3.5.html
@@ -813,14 +813,14 @@
       //#define MODBUS_CRC_FROM_LOOKUP_TABLE                             // MODBUS RTU cyclic redundancy check performed with help of loop up table (requires 512 bytes FLASH table, but faster than calculation loop)
         #define REMOVE_SREC_LOADING
     #else
-        #define KBOOT_LOADER                                             // use KBOOT UART interface rather than SREC/iHex interface
+      //#define KBOOT_LOADER                                             // use KBOOT UART interface rather than SREC/iHex interface
       //#define DEVELOPERS_LOADER                                        // Freescale Developer's Bootloader (AN2295) compatible mode (rather than SREC/iHex)
           //#define DEVELOPERS_LOADER_PROTOCOL_VERSION_9                 // user protocol version 9 rather than obsolete Kinetis 8 (not completed at the moment)
             #define DEVELOPERS_LOADER_READ                               // support reading back program
             #define DEVELOPERS_LOADER_CRC                                // support CRC in communication
       //#define REMOVE_SREC_LOADING                                      // disable SREC (and Intel Hex) loading but keep debug output and the command line menu
         #if !defined REMOVE_SREC_LOADING
-            #define SUPPORT_INTEL_HEX_MODE                               // support Intel Hex mode together with SREC (auto-recognition)
+          //#define SUPPORT_INTEL_HEX_MODE                               // support Intel Hex mode together with SREC (auto-recognition)
           //#define EXCLUSIVE_INTEL_HEX_MODE                             // loading mode is exclusively Intel Hex (use with or without SUPPORT_INTEL_HEX_MODE)
         #endif
       //#define SERIAL_STATS                                             // keep statistics about serial interface use
@@ -847,7 +847,7 @@
 #endif
 #define NUMBER_EXTERNAL_SERIAL         0                                 // no external UARTs
 
-//#define I2C_INTERFACE                                                  // enable I2C slave mode
+#define I2C_INTERFACE                                                    // enable I2C slave mode
 #if defined I2C_INTERFACE
     #define NUMBER_I2C       (I2C_AVAILABLE + LPI2C_AVAILABLE)           // I2C interfaces available
     #define I2C_SLAVE_MODE                                               // support slave mode (interrupt call-back method)

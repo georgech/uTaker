@@ -186,6 +186,7 @@ typedef struct
             static void fnSendCRC(QUEUE_HANDLE SerialPortID);
         #endif
     #elif !defined KBOOT_LOADER && !defined DEVELOPERS_LOADER && !defined REMOVE_SREC_LOADING
+        static int fnPerformBlankCheck(void);
         static unsigned char *fnBlankCheck(void);
         static void fnPrintScreen(void);
         #if !defined REMOVE_SREC_LOADING                                 // {17}
@@ -199,6 +200,7 @@ typedef struct
             #endif
         #endif
     #elif defined REMOVE_SREC_LOADING && !defined USE_MODBUS
+        static int fnPerformBlankCheck(void);
         static unsigned char *fnBlankCheck(void);
         static void fnPrintScreen(void);
     #endif
@@ -844,18 +846,7 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
         #endif
                     else if ((ucSerialInputMessage[0] == 'b') || (ucSerialInputMessage[0] == 'B')) {
                         if ((ucSerialInputMessage[1] == 'c') || (ucSerialInputMessage[1] == 'C')) {
-                            unsigned char *ptrFlash = fnBlankCheck();    // subroutine for blank check added
-                            if (ptrFlash == 0) {                         // if the application area is blank
-                                fnDebugMsg(" EMPTY!\r\n> ");
-                            }
-                            else {
-        #if defined SHOW_APP_DETAILS
-                                fnDebugHex((CAST_POINTER_ARITHMETIC)ptrFlash, (WITH_SPACE | WITH_LEADIN | sizeof(CAST_POINTER_ARITHMETIC)));
-                                fnDebugMsg(" NOT BLANK!\r\n> ");
-        #else
-                                fnDebugMsg(" NOT BLANK!\r\n> ");
-        #endif
-                            }
+                            fnPerformBlankCheck();
                             break;
                         }
                     }
@@ -1953,6 +1944,24 @@ static unsigned char *fnBlankCheck(void)
     }
     return ptrFlash;                                                     // not blank
 }
+
+static int fnPerformBlankCheck(void)
+{
+    unsigned char *ptrFlash = fnBlankCheck();                            // subroutine for blank check added
+    if (ptrFlash == 0) {                                                 // if the application area is blank
+        fnDebugMsg(" EMPTY!\r\n> ");
+        return 0;
+    }
+    else {
+    #if defined SHOW_APP_DETAILS
+        fnDebugHex((CAST_POINTER_ARITHMETIC)ptrFlash, (WITH_SPACE | WITH_LEADIN | sizeof(CAST_POINTER_ARITHMETIC)));
+        fnDebugMsg(" NOT BLANK!\r\n> ");
+    #else
+        fnDebugMsg(" NOT BLANK!\r\n> ");
+    #endif
+        return 1;
+    }
+}
 #endif
 
 #if defined I2C_INTERFACE                                                // {32}
@@ -2067,7 +2076,9 @@ static int fnI2C_SlaveCallback(int iChannel, unsigned char *ptrDataByte, int iTy
                 }
                 else if ((ucResetKey == 1) && (*ptrDataByte == 0x84)) {
                     uMemset(ucUploadState, 0, sizeof(ucUploadState));
-                    fnInterruptMessage(OWN_TASK, DELETE_APPLICATION_FLASH); // send an interrupt event to the application so that it can delete the flash outside the interrupt routine
+                    if (ucFlashState == 0) {                             // if the application area is not erased
+                        fnInterruptMessage(OWN_TASK, DELETE_APPLICATION_FLASH); // send an interrupt event to the application so that it can delete the flash outside the interrupt routine
+                    }
                 }
                 else {
                     ucResetKey = 0xff;                                   // block the reset key until next try
@@ -2125,11 +2136,14 @@ static void fnOpenI2C_slave(void)
 
     I2CPortID = fnOpen(TYPE_I2C, FOR_I_O, &tI2CParameters);              // open the I2C channel with defined configurations
     fnCheckFlashState();
+    if (ucFlashState == 0) {                                             // not empty
+        uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(3 * 60 * SEC), T_RESET);// reset if there is no activity for this length of time
+    }
 }
 
 static void fnCheckFlashState(void)
 {
-    if (fnBlankCheck() == 0) {                                           // check whether flash is empty
+    if (fnPerformBlankCheck() == 0) {                                    // check whether flash is empty
         ucFlashState = 1;                                                // flash is empty
     }
 }

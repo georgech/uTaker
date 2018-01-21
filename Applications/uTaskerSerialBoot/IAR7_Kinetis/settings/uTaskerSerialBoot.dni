@@ -1,5 +1,5 @@
 [DebugChecksum]
-Checksum=-256455236
+Checksum=-642223701
 [DisAssemblyWindow]
 NumStates=_ 1
 State 1=_ 1
@@ -90,23 +90,23 @@ FREQ_TRACELINK=_ "3"
 FREQ_LIGHTNING=_ "1"
 FREQ_OPENSDA=_ "3"
 RESET_DELAY=_ "0"
-PORT=_ "21"
-PORT_NAME_STRING=_ "PE5655870"
-interface_selection=_ "1"
+PORT=_ "181"
+PORT_NAME_STRING=_ "66C22E1A"
+interface_selection=_ "7"
 SHOWDIALOG=_ "1"
 TraceLink_MaxBufferSize=_ "1"
 [PE_STORED_DEVICES]
-device0=_ "NXP_K6x_K66FX1M0M18"
-device1=_ "NXP_KL2x_KL25Z128M4"
-device2=_ "NXP_KEx_KE06Z128M4"
-device3=_ "NXP_KL2x_KL28Z512M7"
-device4=_ "NXP_K2x_K22FX512AM12"
+device0=_ "NXP_K6x_K64FN1M0M12"
+device1=_ "NXP_K2x_K22FX512M12"
+device2=_ "NXP_KL8x_KL82Z128M7"
+device3=_ "NXP_K6x_K60N512M10"
+device4=_ "NXP_KL0x_KL02Z32M4"
 [PE_PEDEBUG]
-CURRENTDEVICE=_ "NXP_K2x_K22FX512AM12"
+CURRENTDEVICE=_ "NXP_KL0x_KL02Z32M4"
 ERASE_PROGRAM_WITHOUT_ASKING=_ "1"
 CURRENTMODE=_ "4"
 [PE_DEVICE]
-CHIPMODE=_ "NXP_K2x_K22FX512AM12"
+CHIPMODE=_ "NXP_KL0x_KL02Z32M4"
 [PE_SETTINGS]
 MEMORYSTART1=_ "0"
 MEMORYSTART2=_ "0"
@@ -155,12 +155,6 @@ ITMportsLogFile=0
 ITMlogFile=
 [PEMICRODriver]
 PEM_LeaveTargetRunning=0x00000000
-[struct_types]
-Fmt0=KINETIS_USB_BD-ulUSB_BDControl	4	0
-[array_types]
-Fmt0=unsigned long[2]	4	0
-[watch_formats]
-Fmt0={W}1:ptUSB_BD->ulUSB_BDControl	4	0
 [DataLog]
 LogEnabled=0
 GraphEnabled=0
@@ -192,9 +186,6 @@ SumSortOrder=0
 [SfrWindow]
 Show=1 1
 Sort=4 0
-[Trace1]
-Enabled=0
-ShowSource=1
 [ETMTraceWindow]
 PortWidth=4
 PortMode=0
@@ -228,21 +219,30 @@ Exclusions=
 Enabled=0
 [CallStackStripe]
 ShowTiming=1
-[TermIOLog]
-LoggingEnabled=_ 0
-LogFile=_ ""
+[Trace1]
+Enabled=0
+ShowSource=1
 [Breakpoints2]
 Bp0=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\..\..\Hardware\Kinetis\kinetis_FLASH.h}.1010.5" 0 0 1 "" 0 "" 0
-Bp1=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\serial_loader.c}.1974.5" 0 0 1 "" 0 "" 0
+Bp1=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\serial_loader.c}.1978.2" 0 0 1 "" 0 "" 0
 Count=2
-[Disassemble mode]
-mode=1
-[Breakpoints]
-Count=0
+[array_types]
+Fmt0=unsigned long[2]	4	0
+[watch_formats]
+Fmt0={W}1:ptUSB_BD->ulUSB_BDControl	4	0
 [Log file]
 LoggingEnabled=_ 0
 LogFile=_ ""
 Category=_ 0
+[TermIOLog]
+LoggingEnabled=_ 0
+LogFile=_ ""
+[Disassemble mode]
+mode=1
+[Breakpoints]
+Bp0=_ "STD_CODE" "0x0000E690" 0 0 0 0 "" 0 "" 0
+Bp1=_ "STD_CODE" "0x0000E5AC" 0 0 0 0 "" 0 "" 0
+Count=2
 [Aliases]
 Count=0
 SuppressDialog=0

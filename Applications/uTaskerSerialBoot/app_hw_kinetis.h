@@ -2642,7 +2642,7 @@
     #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(B, (SWITCH_2), PORT_PS_UP_ENABLE); _CONFIG_PORT_INPUT_FAST_LOW(A, (SWITCH_1), PORT_PS_UP_ENABLE) // configure as input
 
     #define WATCHDOG_DISABLE()     (_READ_PORT_MASK(B, SWITCH_2) == 0)   // pull this input down to disable watchdog (J8-4)
-    #define FORCE_BOOT()           (_READ_PORT_MASK(A, SWITCH_1) == 0)   // pull this input down to force boot loader mode (J8-3)
+    #define FORCE_BOOT()           ((_READ_PORT_MASK(A, SWITCH_1) == 0) || (((RCM_SRS1 & RCM_SRS1_SW) != 0) && (*BOOT_MAIL_BOX == RESET_TO_SERIAL_LOADER))) // pull this input down to force boot loader mode (J8-3)
     #define RETAIN_LOADER_MODE()   (_READ_PORT_MASK(A, SWITCH_1) == 0)
 
     #define TOGGLE_WATCHDOG_LED()   _TOGGLE_PORT(B, BLINK_LED)

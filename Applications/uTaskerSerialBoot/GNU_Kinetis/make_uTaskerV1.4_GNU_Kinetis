@@ -16,8 +16,8 @@
 # Compiler flags (thumb mode - little endian)
 
 # (set to Cortex-M4 or Cortex-M0+ accordingly)
-#C_FLAGS = -mcpu=cortex-m0plus -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char  -ffunction-sections -fdata-sections 
-C_FLAGS = -mcpu=cortex-m4 -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char  -ffunction-sections -fdata-sections
+C_FLAGS = -mcpu=cortex-m0plus -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char  -ffunction-sections -fdata-sections 
+#C_FLAGS = -mcpu=cortex-m4 -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char  -ffunction-sections -fdata-sections
 #C_FLAGS = -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections  
 #C_FLAGS = -mcpu=cortex-m7 -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char  -ffunction-sections -fdata-sections 
 
@@ -217,7 +217,7 @@ Build/modbus_app.o: ../modbus_app.c $(DEPENDS)
 # Create output files and show program size
 #
 uTaskerSerialBoot.elf: $(OBJS) K_2M_256.ld K_1M_256.ld K_256_256.ld K_1M_128.ld K_512_64.ld K_256_64.ld K_128_16.ld K_64_16.ld KW_512_64.ld KW_256_32.ld KL_512_128.ld KL_256_32.ld KL_128_96.ld KL_128_16.ld KL_64_8.ld KL_32_4.ld KL_32_2.ld KV_32_8.ld KV_512_96.ld KE_256_32.ld KE_128_16.ld KE_64_4.ld KE_8_1.ld KEA_128_16.ld KEA_64_4.ld
-	$(CC) $(C_FLAGS) -Os -g -TK_256_64.ld -nostartfiles -Xlinker --gc-sections -Wl,-Map,"uTaskerSerialBoot.map" -o "uTaskerSerialBoot.elf" $(OBJS)
+	$(CC) $(C_FLAGS) -Os -g -TKL_32_4.ld -nostartfiles -Xlinker --gc-sections -Wl,-Map,"uTaskerSerialBoot.map" -o "uTaskerSerialBoot.elf" $(OBJS)
 	$(CC_OBJ) --output-target=srec uTaskerSerialBoot.elf uTaskerSerialBoot.s19
 	$(CC_OBJ) --output-target=ihex uTaskerSerialBoot.elf uTaskerSerialBoot.hex
 	$(CC_OBJ) --only-section=.data --only-section=.init --only-section=.text --only-section=.rodata --only-section=.vectors --only-section=.f_config --output-target=binary uTaskerSerialBoot.elf uTaskerSerialBoot.bin

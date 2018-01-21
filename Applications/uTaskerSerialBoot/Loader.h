@@ -102,7 +102,7 @@
     #define _SECRET_KEY                  {0xa7, 0x48, 0xb6, 0x53, 0x11, 0x24}
 #elif defined _KINETIS                                                   // {4}
     #if defined FRDM_KL02Z || defined FRDM_KL05Z
-        #define SERIAL_SPEED          SERIAL_BAUD_57600                  // the Baud rate of the UART
+        #define SERIAL_SPEED          SERIAL_BAUD_38400                  // the Baud rate of the UART
     #elif defined FRDM_KL03Z || defined FRDM_KE04Z
         #define SERIAL_SPEED          SERIAL_BAUD_19200                  // the Baud rate of the UART (there is a 100nF capacitor on the Rx input on this board so a slow Baud rate is needed)
     #elif defined FRDM_KE02Z || defined FRDM_KE02Z40M || defined TWR_KW21D256 || defined FRDM_KEAZ128Q80 || defined FRDM_KEAZ64Q64 || defined FRDM_KEAZN32Q64
@@ -141,11 +141,11 @@
         #define INTERMEDIATE_PROG_BUFFER  (8 * 1024)                     // when UART speed greater than 57600 Baud is used an intermediate buffer is recommended
         #define UTASKER_APP_END       (unsigned char *)(UTASKER_APP_START + (100 * 1024)) // end of application space - after maximum application size
     #elif defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined FRDM_KE02Z || defined FRDM_KE02Z40M || defined TWR_KV10Z32 || defined TWR_KV31F120M || defined TRK_KEA64 || defined FRDM_KEAZN32Q64 // {18}
-        #define UTASKER_APP_START     (10 * 1024)                        // application starts at this address
+        #define UTASKER_APP_START     (11 * 1024)                        // application starts at this address
         #if defined TWR_KV31F120M
             #define UTASKER_APP_END   (unsigned char *)(UTASKER_APP_START + (48 * 1024)) // end of application space - after maximum application size
         #else
-            #define UTASKER_APP_END   (unsigned char *)(UTASKER_APP_START + (22 * 1024)) // end of application space - after maximum application size
+            #define UTASKER_APP_END   (unsigned char *)(UTASKER_APP_START + (19 * 1024)) // end of application space - after maximum application size
         #endif
     #elif defined FRDM_KEAZ64Q64
         #define UTASKER_APP_START     (32 * 1024)                        // application starts at this address
