@@ -1291,7 +1291,9 @@
 
 //#define USE_SECTION_PROGRAMMING                                        // allow the flash section command to be used to accelerate programming (faster than word programming but blocks interrupts for longer)
 
-#define STOP_MII_CLOCK                                                   // only apply clock when needed (don't use when DEVELOP_PHY_CONTROL is set in debug.c)
+#if defined TWR_K64F120M && !defined TWR_SER2                            // this combination doesn't report link state changes when the MII clock is stopped
+  #define STOP_MII_CLOCK                                                 // only apply clock when needed (don't use when DEVELOP_PHY_CONTROL is set in debug.c)
+#endif
 #if !defined DEVICE_WITHOUT_ETHERNET
     #define EMAC_ENHANCED                                                // use enhanced mode for Ethernet controller operation
         #define EMAC_IEEE1588                                            // enable IEEE 1588 time stamping (needs EMAC_ENHANCED)
@@ -2221,7 +2223,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
             #else
                 #define FILE_GRANULARITY (4 * FLASH_GRANULARITY)         // each file a multiple of 4k
             #endif
-            #if SIZE_OF_FLASH >= (512 * 1025) 
+            #if SIZE_OF_FLASH >= (512 * 1024) 
                 #define FILE_SYSTEM_SIZE (372 * 1024)                    // 372k reserved for file system {5}
             #else
                 #define FILE_SYSTEM_SIZE (SIZE_OF_FLASH - uFILE_START)
@@ -2337,7 +2339,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define SERIAL_PORT_4    4                                           // if we open UART channel 4 we simulate using comx on the PC
     #define SERIAL_PORT_5    4                                           // if we open UART channel 5 we simulate using comx on the PC
 
-    #if defined KWIKSTIK || defined TWR_K60F120M || defined K20FX512_120 || defined TWR_K21F120M || (defined TWR_K64F120M && defined TWR_SER) || (defined TWR_K60N512 && defined DEBUG_ON_VIRT_COM)
+    #if defined KWIKSTIK || defined TWR_K60F120M || defined K20FX512_120 || defined TWR_K21F120M || (defined TWR_K64F120M && (defined TWR_SER || defined TWR_SER2)) || (defined TWR_K60N512 && defined DEBUG_ON_VIRT_COM)
         #define DEMO_UART    5                                           // use UART 5
         #define RFC2217_UART 0
     #elif defined FRDM_K82F || defined TRINAMIC_LANDUNGSBRUECKE || defined K66FX1M0

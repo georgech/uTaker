@@ -1101,7 +1101,7 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
                     {
                         CBW_RETURN_SENSE_DATA present_sense_data;
                         uMemcpy(&present_sense_data, &sense_data_OK, sizeof(sense_data_OK));
-                        if ((ptrDiskInfo[ucActiveLUN]->usDiskFlags & (DISK_MOUNTED | DISK_UNFORMATTED)) == 0) {
+                        if ((ptrDiskInfo[ucActiveLUN]->usDiskFlags & (DISK_MOUNTED | DISK_UNFORMATTED)) == 0) { // if the disk is not present
                             present_sense_data.ucValid_ErrorCode = (CURRENT_ERRORS); // set that the disk is presently in a non-usable state
                             present_sense_data.ucSenseKey = SENSE_NOT_READY;
                             present_sense_data.ucAdditionalSenseCode = DESC_MEDIUM_NOT_PRESENT;

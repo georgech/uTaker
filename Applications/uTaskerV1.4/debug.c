@@ -1600,15 +1600,15 @@ extern void fnDebug(TTASKTABLE *ptrTaskTable)
         QUEUE_TRANSFER i2c_length = fnMsgs(I2CPortID);                   // the waiting length
         fnRead(I2CPortID, ucInputMessage, i2c_length);
         #if defined _WINDOWS
-        ucInputMessage[0] = 0x01;
+        ucInputMessage[2] = 0x01;
         #endif
-        if (1 == i2c_length) {                                           // delete status
-            if (ucInputMessage[0] == 0x01) {
+        if (3 == i2c_length) {                                           // delete status
+            if (ucInputMessage[2] == 0x01) {                             // flass is empty
                 fnDebugMsg("Slave flash deleted\r\n");
                 fnProgramI2CSlave(0, 2);                                 // program the firmware
                 fnDebugMsg("Programming");
             }
-            else if (ucInputMessage[0] == 0x00) {                        // flash is not empty
+            else if (ucInputMessage[2] == 0x00) {                        // flash is not empty
                 fnDebugMsg("*");
                 fnProgramI2CSlave(0, 1);                                 // poll the delete status until the slave responds that it has completed
             }
@@ -4818,20 +4818,20 @@ static void fnProgramI2CSlave(unsigned char ucSlaveAddress, int iCommand)
         fnDebugHex(ucAddressToProgram, (WITH_LEADIN | sizeof(ucAddressToProgram)));
         fnDebugMsg(" to delete its memory...");
         ucDelete[0] = ucAddressToProgram;                                // slave write address
-        ucDelete[1] = 0x01;                                              // write to 0x01 command an erase
+        ucDelete[1] = 0x01;                                              // write to 0x01 to command an erase
         ucDelete[2] = 0x52;                                              // magic number must match for the erase to be executed
         ucDelete[3] = 0x84;
         fnWrite(I2CPortID, ucDelete, sizeof(ucDelete));                  // send delete command
     }
     if (iCommand < 2) {                                                  // delete or request delete status
-        ucDelete[0] = 1;                                                 // read one byte of data
+        ucDelete[0] = 3;                                                 // read three bytes of data (versin plus flash state)
         ucDelete[1] = (ucAddressToProgram | 0x01);                       // slave read address
         ucDelete[2] = OWN_TASK;                                          // wake our task when the read has completed
         fnRead(I2CPortID, ucDelete, 0);                                  // get the status
     }
     else {                                                               // programming
         if (slave_firmwareLength != 0) {                                 // if more data to program
-            unsigned char ucProgram[60];                                 // smal blocks are sent since the I2C ty buffer may be no larger than 64 bytes (see setting in i2c_tests.h)
+            unsigned char ucProgram[60];                                 // small blocks are sent since the I2C ty buffer may be no larger than 64 bytes (see setting in i2c_tests.h)
             unsigned char ucLength = (sizeof(ucProgram) - 2);
             if (ucLength > slave_firmwareLength) {                       // if there is not enough remaining program data to fill the buffer
                 ucLength = (unsigned char)slave_firmwareLength;          // send the remaining amount of data
@@ -4848,7 +4848,13 @@ static void fnProgramI2CSlave(unsigned char ucSlaveAddress, int iCommand)
             fnRead(I2CPortID, ucProgram, 0);                             // get the programming status
         }
         else {                                                           // all data programmed
-            fnDebugMsg("\r\nProgramming compete\r\n");
+            unsigned char ucReset[4];
+            ucReset[0] = ucAddressToProgram;                             // slave write address
+            ucReset[1] = 0x02;                                           // write to 0x02 to command a reset
+            ucReset[2] = 0x55;                                           // magic number must match for the erase to be executed
+            ucReset[3] = 0xaa;
+            fnWrite(I2CPortID, ucReset, sizeof(ucReset));                // send reset command
+            fnDebugMsg("\r\nProgramming complete\r\n");
         }
     }
 }
