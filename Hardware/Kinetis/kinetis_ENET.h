@@ -1027,10 +1027,10 @@ extern int fnConfigEthernet(ETHTABLE *pars)
     EIMR = (BABR | BABT | GRA | RXF | EBERR | LC | RL | UN);             // interrupt sources
     #endif
     EIR = 0xffffffff;                                                    // reset all pending interrupts
-    #if (((ETHERNET_CONTROLLER_CLOCK/(2 * MII_MANAGEMENT_CLOCK_SPEED)) + 1) > 0x3f) // ensure that there is no overflow when a low speed can't be obtained
+    #if (((ETHERNET_CONTROLLER_CLOCK/(2 * MII_MANAGEMENT_CLOCK_SPEED)) - 1) > 0x3f) // ensure that there is no overflow when a low speed can't be obtained
     MSCR = 0x7e;                                                         // maximum vaue
     #else
-    MSCR = (((ETHERNET_CONTROLLER_CLOCK/(2 * MII_MANAGEMENT_CLOCK_SPEED)) + 1) << 1); // generate the communication channel clock
+    MSCR = (((ETHERNET_CONTROLLER_CLOCK/(2 * MII_MANAGEMENT_CLOCK_SPEED)) - 1) << 1); // generate the communication channel clock
     #endif
     GAUR = 0;                                                            // reset group hash entries
     GALR = 0;

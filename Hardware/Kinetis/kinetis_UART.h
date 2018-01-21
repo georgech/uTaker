@@ -847,7 +847,7 @@ extern int fnTxByte(QUEUE_HANDLE Channel, unsigned char ucTxByte)
             uart_reg->UART_C2 |= (UART_C2_TIE);                          // enable UART transmission interrupt (buffer empty)   
         }
         #else
-        uart_reg->UART_C2 |= (UART_C2_TIE);                              // enable UART transmission interrupt (buffer empty) 
+        uart_reg->UART_C2 |= (UART_C2_TIE);                              // enable UART transmission interrupt (buffer empty)
         #endif
     #endif
     #if LPUARTS_AVAILABLE > 0 && UARTS_AVAILABLE > 0

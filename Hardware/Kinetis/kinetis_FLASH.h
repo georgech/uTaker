@@ -516,7 +516,7 @@ extern int fnMassEraseFlash(void)
 #if defined FLASH_ROUTINES || defined ACTIVE_FILE_SYSTEM || defined USE_PARAMETER_BLOCK
 static int fnWriteInternalFlash(ACCESS_DETAILS *ptrAccessDetails, unsigned char *ucData)
 {
-    #if (defined FLASH_ROUTINES || defined FLASH_FILE_SYSTEM) && (defined FLASH_ROW_SIZE && FLASH_ROW_SIZE > 0)
+    #if (defined FLASH_ROUTINES || defined FLASH_FILE_SYSTEM || defined USE_PARAMETER_BLOCK) && (defined FLASH_ROW_SIZE && FLASH_ROW_SIZE > 0)
     static unsigned char *ptrOpenBuffer = 0;
     unsigned char *ptrFlashBuffer;
     unsigned long ulBufferOffset;

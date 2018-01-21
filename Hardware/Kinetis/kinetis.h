@@ -1170,11 +1170,11 @@ typedef struct stRESET_VECTOR
     #define MPU_AVAILABLE
 #endif
 
-#define FLEXNVM_START_ADDRESS   (0x10000000)
-#define KE_EEPROM_START_ADDRESS FLEXNVM_START_ADDRESS
-#define KE_EEPROM_GRANULARITY   (2)
-#define FLEXRAM_START_ADDRESS   (0x14000000)                             // devices without flexNVM may also have "programming acceleration RAM" in this area
-#define FLEXRAM_SIZE            (4 * 1024)
+#define FLEXNVM_START_ADDRESS       (0x10000000)
+#define KE_EEPROM_START_ADDRESS     FLEXNVM_START_ADDRESS
+#define KE_EEPROM_GRANULARITY       (2)
+#define FLEXRAM_START_ADDRESS       (0x14000000)                         // devices without flexNVM may also have "programming acceleration RAM" in this area
+#define FLEXRAM_SIZE                (4 * 1024)
 #if defined _WINDOWS
     extern unsigned char uninitialisedRAM[16];
     #define BOOT_MAIL_BOX           (unsigned short *)&uninitialisedRAM[0]
@@ -1192,7 +1192,9 @@ typedef struct stRESET_VECTOR
     #define RTC_PRESCALER_LOCATION  (unsigned short *)(RAM_START_ADDRESS + (SIZE_OF_RAM - 16)) // {63}
 #endif
 
-#define RTC_VALID_PATTERN       0xca35
+#define RESET_TO_SERIAL_LOADER      0x89a2                               // pattern set to BOOT_MAIL_BOX to request the serial loader to start
+
+#define RTC_VALID_PATTERN           0xca35                               // pattern set the RTC_VALID_LOCATION when the RTC values are valid
 
 #if !defined PERSISTENT_RAM_SIZE
     #define PERSISTENT_RAM_SIZE          0
@@ -15873,7 +15875,7 @@ typedef struct stUSB_HW
   #define MII_READ  (MII_TA | MII_ST | READ_OP)
 #define MSCR                 *(unsigned long *)(EMAC_BASE_ADD + 0x44)    // MII Speed Control Register
   #define DIS_PREAMBLE       0x00000080
-  #define MII_SPEED_60MHZ    (0xd  << 1)                                 // Correct setting for 60MHz system
+  #define MII_SPEED_60MHZ    (0xd << 1)                                  // correct setting for 60MHz system
 #define MIBC                 *(volatile unsigned long *)(EMAC_BASE_ADD + 0x64) // MII Control/Status Register
   #define MIB_DISABLE        0x80000000
   #define MIB_IDLE           0x40000000

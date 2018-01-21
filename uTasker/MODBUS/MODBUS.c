@@ -47,6 +47,7 @@
     10.09.2015 Protect against attempting to access single non-existing register content at address 0 {V1.28}
     18.03.2016 Correct fnPostFunction() parameters when NOTIFY_ONLY_COIL_CHANGES is used {V1.29}
     04.10.2017 Allow Kinetis KE/KL parts to manually control RTS in RTU mode {V1.30}
+    18.01.2018 Removed fnGetUARTChannel() and replaced by modbus_uart_map look-up table - extend to 6 possible UARTs
 
 */
 
@@ -224,6 +225,28 @@ static const unsigned short usRTSTimes[SERIAL_BAUD_115200 - SERIAL_BAUD_600][RTS
     (unsigned short)((RTS_BIT_DELAY_7BIT_DMA * REFERENCE_BIT_TIME) * (float)(115200 / 115200))
     #endif
     },
+};
+#endif
+#if MODBUS_SERIAL_INTERFACES > 0
+// Map of Modbus (serial) port number to its UART channel
+//
+static const QUEUE_HANDLE modbus_uart_map[MODBUS_SERIAL_INTERFACES] = {
+    MODBUS_UART_0,                                                       // UART channel used on modbus serial port 0
+    #if MODBUS_SERIAL_INTERFACES > 1
+    MODBUS_UART_1,                                                       // UART channel used on modbus serial port 1
+    #endif
+    #if MODBUS_SERIAL_INTERFACES > 2
+    MODBUS_UART_2,                                                       // UART channel used on modbus serial port 2
+    #endif
+    #if MODBUS_SERIAL_INTERFACES > 3
+    MODBUS_UART_3,                                                       // UART channel used on modbus serial port 3
+    #endif
+    #if MODBUS_SERIAL_INTERFACES > 4
+    MODBUS_UART_4,                                                       // UART channel used on modbus serial port 4
+    #endif
+    #if MODBUS_SERIAL_INTERFACES > 5
+    MODBUS_UART_5,                                                       // UART channel used on modbus serial port 5
+    #endif
 };
 #endif
 
@@ -828,35 +851,12 @@ extern int fnShareMODBUS_port(unsigned char ucMODBUSport, const MODBUS_CONFIG *p
 
 #if MODBUS_SERIAL_INTERFACES > 0
 
-// Convert between MODBUS UART port and the UART hardware channel
-//
-static QUEUE_HANDLE fnGetUARTChannel(unsigned char ucMODBUSport)
-{
-    #if MODBUS_SERIAL_INTERFACES > 1
-    if (ucMODBUSport == 1) {
-        return MODBUS_UART_1;                                            // HW UART channel used by MODBUS UART port 1
-    }
-        #if MODBUS_SERIAL_INTERFACES > 2
-    else if (ucMODBUSport == 2) {
-        return MODBUS_UART_2;                                            // HW UART channel used by MODBUS UART port 2
-    }
-            #if MODBUS_SERIAL_INTERFACES > 3
-    else if (ucMODBUSport == 3) {
-        return MODBUS_UART_3;                                            // HW UART channel used by MODBUS UART port 3
-    }
-            #endif
-        #endif
-    #endif
-    return MODBUS_UART_0;                                                // HW UART channel used by MODBUS UART port 0
-}
-
-
 // Configure and open a MODBUS serial interface
 //
 static QUEUE_HANDLE fnOpenSerialInterface(unsigned char ucMODBUSport)
 {
     TTYTABLE tInterfaceParameters;                                       // table for passing information to driver
-    tInterfaceParameters.Channel = fnGetUARTChannel(ucMODBUSport);       // get the HW UART channel used for this MODBUS UART port
+    tInterfaceParameters.Channel = modbus_uart_map[ucMODBUSport];        // get the HW UART channel used for this MODBUS UART port
 #if defined MODBUS_USB_SLAVE                                             // {V1.02}
     if (tInterfaceParameters.Channel >= NUMBER_SERIAL) {
         return USBPortID_comms[tInterfaceParameters.Channel - NUMBER_SERIAL + MODBUS_USB_INTERFACE_BASE]; // {V1.25} use USB interface instead of a UART
@@ -1161,22 +1161,30 @@ static void fnConvertToASCII(unsigned char ucValue, unsigned char *ptrBuf)
     #if defined MODBUS_RTU                                               // only when RTU support is enabled
 static unsigned char fnMapMODBUSport(QUEUE_HANDLE Channel)
 {
+    switch (Channel) {
         #if defined MODBUS_UART_1
-    if (Channel == MODBUS_UART_1) {
-        return 1;
-    }
+    case MODBUS_UART_1:
+        return 1;                                                        // modbus serial port 1
         #endif
         #if defined MODBUS_UART_2
-    if (Channel == MODBUS_UART_2) {
-        return 2;
-    }
+    case MODBUS_UART_2:
+        return 2;                                                        // modbus serial port 2
         #endif
         #if defined MODBUS_UART_3
-    if (Channel == MODBUS_UART_3) {
-        return 3;
-    }
+    case MODBUS_UART_3:
+        return 3;                                                        // modbus serial port 3
         #endif
-    return 0;
+        #if defined MODBUS_UART_4
+    case MODBUS_UART_4:
+        return 4;                                                        // modbus serial port 4
+        #endif
+        #if defined MODBUS_UART_5
+    case MODBUS_UART_5:
+        return 5;                                                        // modbus serial port 5
+        #endif
+    default:
+        return 0;                                                        // modbus serial port 0
+    }
 }
 
 // Calculate the check sum of an RTU type frame
@@ -3175,16 +3183,16 @@ extern int fnMODBUS_transmit(MODBUS_RX_FUNCTION *modbus_rx_function, unsigned ch
     #if defined MODBUS_RS485_SUPPORT                                     // {V1.10}
         if (ptrMODBUS_pars->ucModbusSerialPortMode[modbus_rx_function->ucMODBUSport] & (MODBUS_RS485_NEGATIVE | MODBUS_RS485_POSITIVE)) {
         #if defined _HW_SAM7X
-            if (fnGetUARTChannel(modbus_rx_function->ucMODBUSport) >= 2) { // only control RTS line manually when DBGU UART is used, with no automatic control
+            if (modbus_uart_map[modbus_rx_function->ucMODBUSport] >= 2) { // only control RTS line manually when DBGU UART is used, with no automatic control
                 fnDriver(SerialHandle[modbus_rx_function->ucMODBUSport], ucAssertRTS[modbus_rx_function->ucMODBUSport], 0); // assert RTS line ready for transmission
             }
         #elif defined _HW_AVR32
-            if (fnGetUARTChannel(modbus_rx_function->ucMODBUSport) != 1) { // only control RTS line manually USART1 is not used (which has automatic control)
+            if (modbus_uart_map[modbus_rx_function->ucMODBUSport] != 1) { // only control RTS line manually USART1 is not used (which has automatic control)
                 fnDriver(SerialHandle[modbus_rx_function->ucMODBUSport], ucAssertRTS[modbus_rx_function->ucMODBUSport], 0); // assert RTS line ready for transmission
             }
         #elif !defined _KINETIS || (defined KINETIS_KE || defined KINETIS_KL) // {V1.21}{V1.30}
             #if NUMBER_EXTERNAL_SERIAL > 0                               // {V1.16}
-            if (fnGetUARTChannel(modbus_rx_function->ucMODBUSport) < NUMBER_SERIAL) {              // not required when using external UART (assumes that this supports automatic control)
+            if (modbus_uart_map[modbus_rx_function->ucMODBUSport] < NUMBER_SERIAL) { // not required when using external UART (assumes that this supports automatic control)
                 fnDriver(SerialHandle[modbus_rx_function->ucMODBUSport], ucAssertRTS[modbus_rx_function->ucMODBUSport], 0); // assert RTS line ready for transmission
             }
             #else
@@ -3216,16 +3224,16 @@ extern int fnMODBUS_transmit(MODBUS_RX_FUNCTION *modbus_rx_function, unsigned ch
     #if defined MODBUS_RS485_SUPPORT                                     // {V1.10}
         if ((ptrMODBUS_pars->ucModbusSerialPortMode[modbus_rx_function->ucMODBUSport] & (MODBUS_RS485_NEGATIVE | MODBUS_RS485_POSITIVE)) != 0) {
         #if defined _HW_SAM7X
-            if (fnGetUARTChannel(modbus_rx_function->ucMODBUSport) == 2) { // only control RTS line manually when DBGU UART is used, with no automatic control
+            if (modbus_uart_map[modbus_rx_function->ucMODBUSport] == 2) {// only control RTS line manually when DBGU UART is used, with no automatic control
                 fnDriver(SerialHandle[modbus_rx_function->ucMODBUSport], ucAssertRTS[modbus_rx_function->ucMODBUSport], 0); // assert RTS line ready for transmission
             }
         #elif defined _HW_AVR32
-            if (fnGetUARTChannel(modbus_rx_function->ucMODBUSport) != 1) { // only control RTS line manually USART1 is not used (which has automatic control)
+            if (modbus_uart_map[modbus_rx_function->ucMODBUSport] != 1) {// only control RTS line manually USART1 is not used (which has automatic control)
                 fnDriver(SerialHandle[modbus_rx_function->ucMODBUSport], ucAssertRTS[modbus_rx_function->ucMODBUSport], 0); // assert RTS line ready for transmission
             }
         #elif !defined _KINETIS || (defined KINETIS_KE || defined KINETIS_KL) // {V1.21}{V1.27}
             #if NUMBER_EXTERNAL_SERIAL > 0                               // {V1.16}
-            if (fnGetUARTChannel(modbus_rx_function->ucMODBUSport) < NUMBER_SERIAL) { // not required when using external UART (assumes that this supports automatic control)
+            if (modbus_uart_map[modbus_rx_function->ucMODBUSport] < NUMBER_SERIAL) { // not required when using external UART (assumes that this supports automatic control)
                 fnDriver(SerialHandle[modbus_rx_function->ucMODBUSport], ucAssertRTS[modbus_rx_function->ucMODBUSport], 0); // assert RTS line ready for transmission
             }
             #else

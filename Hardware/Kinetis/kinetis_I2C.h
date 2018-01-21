@@ -19,6 +19,7 @@
     07.01.2016 Added 4th I2C interface
     27.03.2016 Add arbitration lost check and recovery                   {3}
     24.12.2016 Add I2C_SLAVE_RX_MESSAGE_MODE and generate I2C_SLAVE_WRITE_COMPLETE on slave reception after repeated-start {4}
+    21.01.2018 If the slave is already addressed when the stop condition handling is performed, allow the reception handling to continue {5}
 
 */
 
@@ -54,7 +55,7 @@ static unsigned char ucCheckTxI2C = 0;                                   // {2}
 /* =================================================================== */
 
 
-//#define MAX_EVENTS 200                                                   // comment this in to enable event logging (mainly used to determine behaviour in double-buffered mode in order to find workarounds for silicon issues)
+//#define MAX_EVENTS 200                                                 // comment this in to enable event logging (mainly used to determine behaviour in double-buffered mode in order to find workarounds for silicon issues)
 #if defined MAX_EVENTS
 unsigned char ucTemp[MAX_EVENTS] = {0};
 int iEventCounter = 0;
@@ -129,7 +130,7 @@ static void fnI2C_Handler(KINETIS_I2C_CONTROL *ptrI2C, int iChannel)     // gene
         if ((ptrI2C->I2C_FLT & I2C_FLT_FLT_STOPF) != 0) {                // if a stop condition has been detected
             fnLogEvent('e', ptrI2C->I2C_FLT);
             fnLogEvent('1', ptrI2C->I2C_S);
-            ptrI2C->I2C_FLT |= I2C_FLT_FLT_STOPF;                        // clear the stop flag (write '1' to clear)
+            ptrI2C->I2C_FLT |= I2C_FLT_FLT_STOPF;                        // clear the stop flag (write '1' to clear) [note that if the start flag is also set, it is also cleared by this action]
         #if defined _WINDOWS
             ptrI2C->I2C_FLT &= ~I2C_FLT_FLT_STOPF;
         #endif
@@ -154,7 +155,9 @@ static void fnI2C_Handler(KINETIS_I2C_CONTROL *ptrI2C, int iChannel)     // gene
                 }
             }
             ptrTxControl->ucState &= ~(RX_ACTIVE);                       // idle again
-            return;
+            if ((ptrI2C->I2C_S & I2C_IAAS) == 0) {                       // {5} if the slave is already addressed we allow the reception handlng to continue
+                return;
+            }
         }
             #if defined DOUBLE_BUFFERED_I2C || defined I2C_START_CONDITION_INTERRUPT
         else if ((ptrI2C->I2C_FLT & I2C_FLT_FLT_STARTF) != 0) {          // the start condition interrupt must be handled by double-buffered devices

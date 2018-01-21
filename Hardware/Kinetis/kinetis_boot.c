@@ -25,7 +25,7 @@
     26.07.2017 Add Cortex-m0+ assembler code                             {10}
     20.12.2017 Change uMemset() to match memset() parameters             {11}
 
-    */
+*/
 
 #if defined _KINETIS
 
@@ -110,7 +110,7 @@ extern void uEnable_Interrupt(void)
 //
 extern unsigned short fnCRC16(unsigned short usCRC, unsigned char *ptrInput, unsigned short usBlockSize)
 {
-    while (usBlockSize--) {
+    while (usBlockSize-- != 0) {
         usCRC = (unsigned char)(usCRC >> 8) | (usCRC << 8);
         usCRC ^= *ptrInput++;
         usCRC ^= (unsigned char)(usCRC & 0xff) >> 4;
@@ -123,7 +123,7 @@ extern unsigned short fnCRC16(unsigned short usCRC, unsigned char *ptrInput, uns
 extern void fnDelayLoop(unsigned long ulDelay_us)
 {
     volatile int i_us;
-    while (ulDelay_us--) {                                               // for each us required
+    while (ulDelay_us-- != 0) {                                          // for each us required
         i_us = (CORE_CLOCK/8300000);
         while (i_us-- != 0) {}                                           // simple loop tuned to perform us timing
     }
