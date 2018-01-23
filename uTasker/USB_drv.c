@@ -964,7 +964,7 @@ static int fnHostEmumeration(int iEndpoint, int iEvent, USB_HW *ptrUSB_HW)
         }
         break;
     case HOST_ENUMERATION_SET_CONFIGURATION_ACK:
-#if defined SET_INTERFACE
+    #if defined SET_INTERFACE
         {
     static const USB_HOST_DESCRIPTOR set_interface = {
         (STANDARD_HOST_TO_DEVICE | REQUEST_INTERFACE_STANDARD),          // 0x01 request class specific interface
@@ -979,7 +979,7 @@ static int fnHostEmumeration(int iEndpoint, int iEvent, USB_HW *ptrUSB_HW)
         }
         break;
     case HOST_ENUMERATION_SET_INTERFACE_ACK:
-#endif
+    #endif
         ucRequestType = HOST_ENUMERATION_CONFIGURED;                     // the device has been configured and the host is fully operating
         fnUSB_message(E_USB_ACTIVATE_CONFIGURATION, &ucActiveConfiguration, sizeof(ucActiveConfiguration), usb_endpoint_control->event_task); // enumeration has completed
         break;

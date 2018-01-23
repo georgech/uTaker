@@ -20,6 +20,7 @@
     27.03.2016 Add arbitration lost check and recovery                   {3}
     24.12.2016 Add I2C_SLAVE_RX_MESSAGE_MODE and generate I2C_SLAVE_WRITE_COMPLETE on slave reception after repeated-start {4}
     21.01.2018 If the slave is already addressed when the stop condition handling is performed, allow the reception handling to continue {5}
+    23.01.2018 If the slave is already addressed when the start condition handling is performed, allow the reception handling to continue {6}
 
 */
 
@@ -135,7 +136,7 @@ static void fnI2C_Handler(KINETIS_I2C_CONTROL *ptrI2C, int iChannel)     // gene
             ptrI2C->I2C_FLT &= ~I2C_FLT_FLT_STOPF;
         #endif
             fnLogEvent('2', ptrI2C->I2C_FLT);
-            ptrI2C->I2C_S = I2C_IIF;                                     // clear the interrupt flag (write '1' to clear)
+            WRITE_ONE_TO_CLEAR(ptrI2C->I2C_S, I2C_IIF);                  // clear the interrupt flag (write '1' to clear)
         #if defined _WINDOWS
             ptrI2C->I2C_S = 0;
         #endif
@@ -155,7 +156,7 @@ static void fnI2C_Handler(KINETIS_I2C_CONTROL *ptrI2C, int iChannel)     // gene
                 }
             }
             ptrTxControl->ucState &= ~(RX_ACTIVE);                       // idle again
-            if ((ptrI2C->I2C_S & I2C_IAAS) == 0) {                       // {5} if the slave is already addressed we allow the reception handlng to continue
+            if ((ptrI2C->I2C_S & (I2C_IAAS | I2C_TCF)) != (I2C_IAAS | I2C_TCF)) { // {5} if the slave is already addressed we allow the reception handling to continue since we will have cleared the reception interrupt
                 return;
             }
         }
@@ -164,7 +165,7 @@ static void fnI2C_Handler(KINETIS_I2C_CONTROL *ptrI2C, int iChannel)     // gene
             fnLogEvent('!', ptrI2C->I2C_FLT);
             fnLogEvent('1', ptrI2C->I2C_S);
             ptrI2C->I2C_FLT |= I2C_FLT_FLT_STARTF;                       // clear the start flag (write '1' to clear)
-            ptrI2C->I2C_S = I2C_IIF;                                     // clear the interrupt flag (write '1' to clear)
+            WRITE_ONE_TO_CLEAR(ptrI2C->I2C_S, I2C_IIF);                  // clear the interrupt flag (write '1' to clear)
             fnLogEvent('2', ptrI2C->I2C_FLT);
                 #if defined _WINDOWS
             ptrI2C->I2C_S = 0;
@@ -176,12 +177,15 @@ static void fnI2C_Handler(KINETIS_I2C_CONTROL *ptrI2C, int iChannel)     // gene
             if (ptrI2C->I2C_F != 0) {                                    // if master mode is in operation
                 ptrI2C->I2C_FLT = 0;                                     // disable further start/stop interrupts
                 fnSendSlaveAddress(ptrTxControl, iChannel, ptrI2C);      // a repeated start has just been sent so we now continue with the slave address (this cannot be prepared before the repeated start has been sent)
+                return;
             }
-            return;
+            else if ((ptrI2C->I2C_S & (I2C_IAAS | I2C_TCF)) != (I2C_IAAS | I2C_TCF)) { // {6} if the slave is already addressed and the interrupt is pending we allow the reception handling to continue since we will have cleared the reception interruüt
+                return;                                                  // otherwise return
+            }
         }
             #endif
     }
-    #elif defined DOUBLE_BUFFERED_I2C
+    #elif defined DOUBLE_BUFFERED_I2C                                    // master mode only
     if ((ptrI2C->I2C_FLT & I2C_FLT_FLT_INT) != 0) {                      // if the master has enabled start/stop interrupt
         if ((ptrI2C->I2C_FLT & I2C_FLT_FLT_STARTF) != 0) {               // the start condition interrupt must be handled by double-buffered master devices after sending a repeated start
             ptrI2C->I2C_FLT |= I2C_FLT_FLT_STARTF;                       // clear the start flag
@@ -192,11 +196,7 @@ static void fnI2C_Handler(KINETIS_I2C_CONTROL *ptrI2C, int iChannel)     // gene
         }
     }
     #endif
-    #if defined _WINDOWS
-    ptrI2C->I2C_S &= ~I2C_IIF;
-    #else
-    ptrI2C->I2C_S = I2C_IIF;                                             // clear the interrupt flag (write '1' to clear)
-    #endif
+    WRITE_ONE_TO_CLEAR(ptrI2C->I2C_S, I2C_IIF);                          // clear the interrupt flag (write '1' to clear)
     #if defined I2C_SLAVE_MODE
     if (ptrI2C->I2C_F == 0) {                                            // if we are slave
         I2CQue *ptrRxControl = I2C_rx_control[iChannel];
@@ -209,7 +209,7 @@ static void fnI2C_Handler(KINETIS_I2C_CONTROL *ptrI2C, int iChannel)     // gene
                 }
             }
             if ((ptrI2C->I2C_S & I2C_SRW) != 0) {                        // if the master is addressing for a read
-                ptrI2C->I2C_C1 = (I2C_IEN | I2C_IIEN | I2C_MTX);         // set transmit mode and clear the IAAS flag
+                ptrI2C->I2C_C1 = (I2C_IEN | I2C_IIEN | I2C_MTX);         // set transmit mode and clear the IAAS flag (a write to I2C_C1 clears IAAS)
         #if defined _WINDOWS
                 ptrI2C->I2C_S &= ~I2C_IAAS;
         #endif
@@ -222,7 +222,7 @@ static void fnI2C_Handler(KINETIS_I2C_CONTROL *ptrI2C, int iChannel)     // gene
                 int iResult = I2C_SLAVE_BUFFER;
         #endif
                 unsigned char ucAddress;
-                ptrI2C->I2C_C1 = (I2C_IEN | I2C_IIEN);                   // write to C1 in order to clear the IAAS flag - remain in receive mode
+                ptrI2C->I2C_C1 = (I2C_IEN | I2C_IIEN);                   // write to C1 in order to clear the IAAS flag - remain in receive mode (a write to I2C_C1 clears IAAS)
         #if defined _WINDOWS
                 ptrI2C->I2C_S &= ~I2C_IAAS;
         #endif
@@ -245,7 +245,7 @@ static void fnI2C_Handler(KINETIS_I2C_CONTROL *ptrI2C, int iChannel)     // gene
                 ucMessageLength[iChannel] = 0;                           // reset the present message length counter
             }
         }
-        else {
+        else {                                                           //
             if ((ptrTxControl->ucState & TX_ACTIVE) != 0) {
                 if ((ptrI2C->I2C_S & I2C_RXACK) != 0) {                  // no ack means that this is the final byte
                     fnLogEvent('a', ptrI2C->I2C_S);
@@ -283,7 +283,7 @@ static void fnI2C_Handler(KINETIS_I2C_CONTROL *ptrI2C, int iChannel)     // gene
         #endif
             }
         }
-        return;
+        return;                                                          // slave mode interrupt handling completed
     }
     #endif
     fnLogEvent('M', ptrI2C->I2C_S);

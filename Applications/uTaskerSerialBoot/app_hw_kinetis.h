@@ -757,7 +757,7 @@
     #define SIZE_OF_FLEXFLASH   (32 * 1024)                              // 32 Flex
     #if defined SPECIAL_VERSION_2
         #define SIZE_OF_RAM     (16 * 1024)                              // 16k SRAM
-        #define SIZE_OF_FLASH   (128 * 1024)                            // 128k program FLASH
+        #define SIZE_OF_FLASH   (128 * 1024)                             // 128k program FLASH
     #else
         #define SIZE_OF_RAM         (64 * 1024)                          // 64k SRAM
         #define SIZE_OF_EEPROM      (2 * 1024)                           // 2k EEPROM

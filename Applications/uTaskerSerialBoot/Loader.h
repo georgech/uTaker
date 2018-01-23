@@ -69,7 +69,7 @@
     #define SHOW_APP_DETAILS                                             // {2} display application start and size in menu
 #endif
 
-#define OUR_SLAVE_ADDRESS             (0x50)                             // {29} I2C slave address
+#define OUR_SLAVE_ADDRESS             0x50                               // {29} I2C slave address
 
 #if defined _M5223X
     #define SERIAL_SPEED              SERIAL_BAUD_115200                 // the Baud rate of the UART
