@@ -17225,8 +17225,8 @@ extern void fnSimPers(void);
 
 // FlexTimer delays
 //
-#define TIMER_MS_DELAY(msec)           ((TIMER_CLOCK/1000) * msec)
-#define TIMER_US_DELAY(usec)           ((TIMER_CLOCK/1000000) * usec)
+#define TIMER_US_DELAY(usec)           (((usec) * (TIMER_CLOCK / 1000)) / 1000)
+#define TIMER_MS_DELAY(msec)           ((msec) * (TIMER_CLOCK / 1000))
 #define TIMER_FREQUENCY_VALUE(hertz)   (1000000/hertz)
 
 typedef struct stPWM_INTERRUPT_SETUP

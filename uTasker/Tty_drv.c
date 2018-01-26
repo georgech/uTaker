@@ -822,7 +822,7 @@ extern void fnSciRxByte(unsigned char ch, QUEUE_HANDLE Channel)
     }
 #endif
 #if defined MODBUS_RTU                                                   // {14}
-    if (RTU_RX_MODE & rx_ctl->opn_mode) {                                // inter-space timer needs to be started
+    if ((RTU_RX_MODE & rx_ctl->opn_mode) != 0) {                         // inter-space timer needs to be started
         fnRetrigger_T1_5_monitor(Channel);                               // retrigger the chosen timer to monitor the 1.5 character interval
     }
 #endif

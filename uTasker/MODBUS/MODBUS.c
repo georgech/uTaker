@@ -48,6 +48,8 @@
     18.03.2016 Correct fnPostFunction() parameters when NOTIFY_ONLY_COIL_CHANGES is used {V1.29}
     04.10.2017 Allow Kinetis KE/KL parts to manually control RTS in RTU mode {V1.30}
     18.01.2018 Removed fnGetUARTChannel() and replaced by modbus_uart_map look-up table - extend to 6 possible UARTs
+    26.01.2018 Corrected 4th Kinetis serial modbus port's RTU timer      {1}
+    26.01.2018 Use flex timers for Kinetis serial modbus ports 4 and 5 RTU timers {2}
 
 */
 
@@ -899,7 +901,7 @@ static QUEUE_HANDLE fnOpenSerialInterface(unsigned char ucMODBUSport)
     tInterfaceParameters.ucDMAConfig = UART_TX_DMA;                      // activate DMA on transmission
     #endif
     #if defined MODBUS_RS485_SUPPORT                                     // {V1.10}
-    if (ptrMODBUS_pars->ucModbusSerialPortMode[ucMODBUSport] & (MODBUS_RS485_NEGATIVE | MODBUS_RS485_POSITIVE)) {
+    if ((ptrMODBUS_pars->ucModbusSerialPortMode[ucMODBUSport] & (MODBUS_RS485_NEGATIVE | MODBUS_RS485_POSITIVE)) != 0) {
         #if defined _HW_SAM7X
         if (tInterfaceParameters.Channel == 2) {                         // only required when DBGU channel is used, which has no automatic RTS control
             tInterfaceParameters.Config |= INFORM_ON_FRAME_TRANSMISSION;
@@ -1298,6 +1300,18 @@ static void fnTimer_T_3_5_fired_3(void)
     fnTimerT3_5_fired(3);
 }
         #endif
+        #if MODBUS_SERIAL_INTERFACES > 4
+static void fnTimer_T_3_5_fired_4(void)
+{
+    fnTimerT3_5_fired(4);
+}
+        #endif
+        #if MODBUS_SERIAL_INTERFACES > 5
+static void fnTimer_T_3_5_fired_5(void)
+{
+    fnTimerT3_5_fired(5);
+}
+        #endif
 
 // An inter-character space of greater than 1.5 characters has been detected
 // Now start the T3.5 timer to detect whether it is an end of frame or if it is an illegal gap
@@ -1326,6 +1340,20 @@ static void fnTimer_T_1_5_fired_3(void)
 {
     iModbusSerialState[3] = MODBUS_CHARACTER_TERMINATING;
     fnConfigureInterrupt((void *)&timer_setup_3_5[3]);                   // {V1.16} start T3.5 timer
+}
+        #endif
+        #if MODBUS_SERIAL_INTERFACES > 4
+static void fnTimer_T_1_5_fired_4(void)
+{
+    iModbusSerialState[4] = MODBUS_CHARACTER_TERMINATING;
+    fnConfigureInterrupt((void *)&timer_setup_3_5[4]);                   //start T3.5 timer
+}
+        #endif
+        #if MODBUS_SERIAL_INTERFACES > 5
+static void fnTimer_T_1_5_fired_5(void)
+{
+    iModbusSerialState[5] = MODBUS_CHARACTER_TERMINATING;
+    fnConfigureInterrupt((void *)&timer_setup_3_5[5]);                   // start T3.5 timer
 }
         #endif
 
@@ -1410,14 +1438,14 @@ static void fnConfigureInterspaceTimes(unsigned char ucMODBUSport)
         ptrSetup3_5->int_handler = fnTimer_T_3_5_fired_2;
     }
                 #endif
-                #if MODBUS_SERIAL_INTERFACES > 3                         // maximum four MODBUS serial interfaces on Kinetis
+                #if MODBUS_SERIAL_INTERFACES > 3                         // first 4 ports use PIT on Kinetis
     else if (ucMODBUSport == 3) {
         ptrSetup1_5->ucPIT = MODBUS3_PIT_TIMER_CHANNEL;                  // PIT timer channel
         ptrSetup3_5->ucPIT = MODBUS3_PIT_TIMER_CHANNEL;                  // PIT timer channel
         ptrSetup1_5->int_priority = MODBUS3_PIT_INTERRUPT_PRIORITY;      // define interrupt priority
         ptrSetup3_5->int_priority = MODBUS3_PIT_INTERRUPT_PRIORITY;      // define interrupt priority
-        ptrSetup1_5->int_handler = fnTimer_T_1_5_fired_2;
-        ptrSetup3_5->int_handler = fnTimer_T_3_5_fired_2;
+        ptrSetup1_5->int_handler = fnTimer_T_1_5_fired_3;                // {1}
+        ptrSetup3_5->int_handler = fnTimer_T_3_5_fired_3;                // {1}
     }
                 #endif
             #endif
@@ -1460,10 +1488,54 @@ static void fnConfigureInterspaceTimes(unsigned char ucMODBUSport)
         ptrSetup3_5->count_delay = PIT_US_DELAY((unsigned long)((T3_5_19600_US_TIME*192)/1152));
         break;
             #endif
-    default:                                                         // assumed faster than 19200
+    default:                                                             // assumed faster than 19200
         ptrSetup1_5->count_delay = PIT_US_DELAY((unsigned long)FAST_T1_5_US_TIME); // serial line specifications requires fix value to be set for higher speeds
         ptrSetup3_5->count_delay = PIT_US_DELAY((unsigned long)FAST_T3_5_US_TIME);
         break;
+    }
+            #if MODBUS_SERIAL_INTERFACES > 4                             // {2} further channels use flex timer
+    if (ucMODBUSport >= 4) {
+        TIMER_INTERRUPT_SETUP *ptrFlex1_5 = (TIMER_INTERRUPT_SETUP *)ptrSetup1_5; // reuse as flex timer configuration instead of PIT
+        TIMER_INTERRUPT_SETUP *ptrFlex3_5 = (TIMER_INTERRUPT_SETUP *)ptrSetup3_5; // reuse as flex timer configuration instead of PIT
+                #if defined _WINDOWS
+        if (sizeof(TIMER_INTERRUPT_SETUP) > sizeof(_TIMER_INTERRUPT_SETUP)) {
+            _EXCEPTION("Flex timer interrupt setup may not be larger that the main timer's struct in order to be able to reuse its content!");
+        }
+                #endif
+        ptrFlex1_5->int_type = TIMER_INTERRUPT;                          // change from PIT to flex timer
+        ptrFlex3_5->int_type = TIMER_INTERRUPT;                          // change from PIT to flex timer
+        ptrFlex1_5->timer_value = (ptrSetup1_5->count_delay + 1);        // convert from PIT match value to flex timer count value
+        ptrFlex3_5->timer_value = (ptrSetup3_5->count_delay + 1);        // convert from PIT match value to flex timer count value
+                #if BUS_CLOCK > TIMER_CLOCK
+        ptrFlex1_5->timer_value *= (TIMER_CLOCK/1000);
+        ptrFlex1_5->timer_value /= (BUS_CLOCK/1000);
+        ptrFlex3_5->timer_value *= (TIMER_CLOCK / 1000);
+        ptrFlex3_5->timer_value /= (BUS_CLOCK / 1000);
+                #elif BUS_CLOCK < TIMER_CLOCK
+        ptrFlex1_5->timer_value *= (BUS_CLOCK / 1000);
+        ptrFlex1_5->timer_value /= (TIMER_CLOCK / 1000);
+        ptrFlex3_5->timer_value *= (BUS_CLOCK / 1000);
+        ptrFlex3_5->timer_value /= (TIMER_CLOCK / 1000);
+                #endif
+        if (ucMODBUSport == 4) {
+            ptrFlex1_5->timer_reference = MODBUS4_FLEXTIMER_TIMER_CHANNEL; // flex timer channel
+            ptrFlex3_5->timer_reference = MODBUS4_FLEXTIMER_TIMER_CHANNEL; // flex timer channel
+            ptrFlex1_5->int_priority = MODBUS4_FLEXTIMER_INTERRUPT_PRIORITY; // define interrupt priority
+            ptrFlex3_5->int_priority = MODBUS4_FLEXTIMER_INTERRUPT_PRIORITY; // define interrupt priority
+            ptrFlex1_5->int_handler = fnTimer_T_1_5_fired_4;
+            ptrFlex3_5->int_handler = fnTimer_T_3_5_fired_4;
+        }
+            #endif
+            #if MODBUS_SERIAL_INTERFACES > 5
+        else if (ucMODBUSport == 5) {
+            ptrFlex1_5->timer_reference = MODBUS5_FLEXTIMER_TIMER_CHANNEL; // flex timer channel
+            ptrFlex3_5->timer_reference = MODBUS5_FLEXTIMER_TIMER_CHANNEL; // flex timer channel
+            ptrFlex1_5->int_priority = MODBUS5_FLEXTIMER_INTERRUPT_PRIORITY; // define interrupt priority
+            ptrFlex3_5->int_priority = MODBUS5_FLEXTIMER_INTERRUPT_PRIORITY; // define interrupt priority
+            ptrFlex1_5->int_handler = fnTimer_T_1_5_fired_5;
+            ptrFlex3_5->int_handler = fnTimer_T_3_5_fired_5;
+        }
+            #endif
     }
         #elif defined _M5223X                                            // M5223x specific DMA timer code
     ptrSetup1_5->int_type = DMA_TIMER_INTERRUPT;                         // configure the timer struct once for efficiency
