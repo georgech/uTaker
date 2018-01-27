@@ -1482,6 +1482,13 @@ typedef struct stRESET_VECTOR
     #define FLEX_TIMERS_AVAILABLE   4
 #elif defined KINETIS_KL02 || defined KINETIS_KL03 || defined KINETIS_KL05 || ((defined KINETIS_K10 || defined KINETIS_K20) && (KINETIS_MAX_SPEED <= 50000000))
     #define FLEX_TIMERS_AVAILABLE   2
+#elif (defined KINETIS_KE04 && (SIZE_OF_FLASH <= (8 * 1024)))
+    #define FLEX_TIMERS_AVAILABLE   3
+    #define NO_FLEX_TIMER_2                                              // flex timer 1 is not available
+    #define FLEX_TIMER_0_REDUCED                                         // reduced functionality on timer 0
+#elif defined KINETIS_KE04
+    #define FLEX_TIMER_0_REDUCED                                         // reduced functionality on timer 0
+    #define FLEX_TIMER_1_REDUCED                                         // reduced functionality on timer 1
 #else
     #define FLEX_TIMERS_AVAILABLE   3
 #endif
@@ -9806,7 +9813,7 @@ typedef struct stKINETIS_LPTMR_CTL
           #define SIM_CLKDIV_OUTDIV1_4       0x30000000                  // core/system clock is equal to ICSOUTCLK/4
     #else
         #define SIM_UUIDL                    *(volatile unsigned long *)(SIM_BLOCK + 0x10) // Universally Unique Identifier Low Register (read-only)
-          #if defined KINETIS_KEA8
+          #if defined KINETIS_KEA8 || (defined KINETIS_KE04 && (SIZE_OF_FLASH <= (8 * 1024)))
 			#define SIM_UUIDML               *(volatile unsigned long *)(SIM_BLOCK + 0x14) // Universally Unique Identifier Middle Low Register (read-only)
 			#define SIM_UUIDMH               *(volatile unsigned long *)(SIM_BLOCK + 0x18) // Universally Unique Identifier Middle High Register (read-only)
           #else

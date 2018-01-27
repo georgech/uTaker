@@ -99,7 +99,7 @@
       //#define TEST_TIMER                                               // enable timer test(s)
         #if defined TEST_TIMER
             #if defined SUPPORT_PWM_MODULE                               // {9}
-                #define TEST_PWM                                         // {1} test generating PWM output from timer
+              //#define TEST_PWM                                         // {1} test generating PWM output from timer
               //#define TEST_STEPPER                                     // test generating stepper motor frequency patterns (use together with PWM)
             #endif
             #if defined SUPPORT_TIMER
@@ -1487,13 +1487,13 @@ static void fnConfigure_GPT(void)
 
 
 #if defined _ADC_TIMER_ROUTINES && defined TEST_TIMER
-    #if !((defined _KINETIS || defined _M5223X) && defined TEST_PWM)
+    #if !((defined _KINETIS || defined _M5223X) && (defined TEST_PWM && !defined TEST_PERIODIC_TIMER))
 static void timer_int(void)
 {
-#if defined TEST_CAPTURE && defined _KINETIS                             // {24}
+        #if defined TEST_CAPTURE && defined _KINETIS                     // {24}
     static volatile unsigned long ulLastCapture = 0;
     ulLastCapture = CAPTURE_VALUE(0, 1);                                 // update the last capture value
-#endif
+        #endif
     TOGGLE_TEST_OUTPUT();
         #if defined TEST_SINGLE_SHOT_TIMER
     fnConfigure_Timer();
@@ -1635,6 +1635,9 @@ static void fnEndOfRamp(void)
 static void fnConfigure_Timer(void)
 {
 #if (defined _KINETIS || defined _M5223X) && defined TEST_PWM            // {9} Kinetis and Coldfire PWM
+    #if (defined _KINETIS) && defined TEST_PERIODIC_TIMER                // allow periodic timer together with PWM
+    static TIMER_INTERRUPT_SETUP timer_setup = {0};                      // interrupt configuration parameters
+    #endif
     PWM_INTERRUPT_SETUP pwm_setup;
     pwm_setup.int_type = PWM_INTERRUPT;
     pwm_setup.pwm_mode = (PWM_SYS_CLK | PWM_PRESCALER_16 | PWM_EDGE_ALIGNED); // clock PWM timer from the system clock with /16 pre-scaler
@@ -1756,6 +1759,16 @@ static void fnConfigure_Timer(void)
     #elif defined FRDM_KL26Z || defined FRDM_KL27Z || defined CAPUCCINO_KL27
     pwm_setup.pwm_reference = (_TIMER_0 | 5);                            // timer module 0, channel 5 (blue LED in RGB LED)
     fnConfigureInterrupt((void *)&pwm_setup);
+    #endif
+    #if (defined _KINETIS) && defined TEST_PERIODIC_TIMER                // allow periodic timer together with PWM
+    timer_setup.int_type = TIMER_INTERRUPT;
+    timer_setup.int_priority = PRIORITY_TIMERS;
+    timer_setup.int_handler = timer_int;
+    timer_setup.timer_reference = 2;                                     // FlexTimer/TPM 2
+  //timer_setup.timer_mode = (TIMER_PERIODIC | TIMER_EXT_CLK_1);         // period timer interrupt using external clocksource 1
+    timer_setup.timer_mode = (TIMER_PERIODIC);                           // period timer interrupt
+    timer_setup.timer_value = TIMER_MS_DELAY(100);                       // 100ms periodic interrupt
+    fnConfigureInterrupt((void *)&timer_setup);                          // enter interrupt for timer test
     #endif
 #else
     static TIMER_INTERRUPT_SETUP timer_setup = {0};                      // interrupt configuration parameters

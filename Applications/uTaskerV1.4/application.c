@@ -323,8 +323,8 @@ const PARS cParameters = {
 #endif
     },
 #if defined FRDM_KL03Z                                                   // this board has a capacitor connected to the LPUART0_RX pin so cannot use fast speeds
-    SERIAL_BAUD_115200,
-  //SERIAL_BAUD_19200,                                                   // baud rate of serial interface
+  //SERIAL_BAUD_115200,
+    SERIAL_BAUD_19200,                                                   // baud rate of serial interface
 #else
     SERIAL_BAUD_115200,                                                  // baud rate of serial interface
 #endif
@@ -653,7 +653,9 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
         #endif
     #endif
 #endif
+#if !defined NO_MODIFIABLE_PARAMETERS
         temp_pars  = (TEMPPARS *)uMalloc(sizeof(TEMPPARS));              // get space for a working set of all modifiable parameters
+#endif
 #if defined USE_PARAMETER_BLOCK
         parameters = (PARS *)uMalloc(sizeof(PARS));                      // get RAM for a local copy of device parameters
 #endif
@@ -1074,8 +1076,8 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
             }
         #else
             fnEchoInput(ucInputMessage, Length);
-            #if defined TRK_KEA8
-            if (ucInputMessage[0] == CARRIAGE_RETURN) {                           // device with very small memory so no command line interface used - show memory utilisation
+            #if defined TRK_KEA8 || defined FRDM_KE04Z
+            if (ucInputMessage[0] == CARRIAGE_RETURN) {                   // devices with very small memory so no command line interface used - show memory utilisation
                 fnDisplayMemoryUsage();
             }
             #endif
@@ -1352,7 +1354,9 @@ static unsigned short fnGetOurParameters_1(void)
 
 extern unsigned short fnGetOurParameters(int iCase)
 {
-#if defined USE_PARAMETER_BLOCK
+#if defined NO_MODIFIABLE_PARAMETERS
+    return 0;
+#elif defined USE_PARAMETER_BLOCK
     unsigned short usTemp;
     #if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP
     if (iCase == 1) {
@@ -1530,7 +1534,13 @@ extern QUEUE_HANDLE fnSetNewSerialMode(unsigned char ucDriverMode)
 {
     TTYTABLE tInterfaceParameters;                                       // table for passing information to driver
     tInterfaceParameters.Channel = DEMO_UART;                            // set UART channel for serial use
+    #if defined NO_MODIFIABLE_PARAMETERS
+    tInterfaceParameters.ucSpeed = cParameters.ucSerialSpeed;            // baud rate
+    tInterfaceParameters.Config = cParameters.SerialMode;                // serial port mode
+    #else
     tInterfaceParameters.ucSpeed = temp_pars->temp_parameters.ucSerialSpeed; // baud rate
+    tInterfaceParameters.Config = temp_pars->temp_parameters.SerialMode; // {43}
+    #endif
     tInterfaceParameters.Rx_tx_sizes.RxQueueSize = RX_BUFFER_SIZE;       // input buffer size
     tInterfaceParameters.Rx_tx_sizes.TxQueueSize = TX_BUFFER_SIZE;       // output buffer size
     #if defined RUN_IN_FREE_RTOS && defined FREE_RTOS_UART
@@ -1539,10 +1549,9 @@ extern QUEUE_HANDLE fnSetNewSerialMode(unsigned char ucDriverMode)
     tInterfaceParameters.Task_to_wake = OWN_TASK;                        // wake self when messages have been received
     #endif
     #if defined SUPPORT_FLOW_HIGH_LOW
-    tInterfaceParameters.ucFlowHighWater = temp_pars->temp_parameters.ucFlowHigh;// set the flow control high and low water levels in %
+    tInterfaceParameters.ucFlowHighWater = temp_pars->temp_parameters.ucFlowHigh; // set the flow control high and low water levels in %
     tInterfaceParameters.ucFlowLowWater = temp_pars->temp_parameters.ucFlowLow;
     #endif
-    tInterfaceParameters.Config = temp_pars->temp_parameters.SerialMode; // {43}
     #if defined TEST_MSG_MODE
     tInterfaceParameters.Config |= (MSG_MODE);
         #if defined (TEST_MSG_CNT_MODE) && defined (SUPPORT_MSG_CNT)

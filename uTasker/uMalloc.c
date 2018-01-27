@@ -197,12 +197,12 @@ extern STACK_REQUIREMENTS fnStackFree(STACK_REQUIREMENTS *stackUsed)     // {7}
     #endif
     STACK_REQUIREMENTS FreeStack = 0;
 
-    while (*(++ptrStack) == UNUSED_STACK_PATTERN) {
+    while (*(ptrStack++) == UNUSED_STACK_PATTERN) {
         FreeStack++;                                                     // count free locations in RAM never used until now
     }
-    if (FreeStack != 0) {
-        ptrStack = pucTopOfHeap;
-    }
+  //if (FreeStack != 0) {
+  //    ptrStack = pucTopOfHeap;
+  //}
     *stackUsed = ((unsigned char *)((RAM_START_ADDRESS + (SIZE_OF_RAM - NON_INITIALISED_RAM_SIZE))) - ptrStack); // {7}
     return (FreeStack);
 #else

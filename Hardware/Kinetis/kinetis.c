@@ -2683,7 +2683,7 @@ const _RESET_VECTOR __vector_table
     #else
     irq_default,                                                         // 17
     #endif
-    #if defined SUPPORT_TIMER && (FLEX_TIMERS_AVAILABLE > 1)
+    #if defined SUPPORT_TIMER && (FLEX_TIMERS_AVAILABLE > 1 && !defined NO_FLEX_TIMER_2)
 	_flexTimerInterrupt_1,                                               // 18
     #else
     irq_default,                                                         // 18

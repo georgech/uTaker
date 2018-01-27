@@ -58,8 +58,8 @@
 
 #define TARGET_HW           "Bare-Minimum Boot"
 
-#define SPI_SW_UPLOAD                                                    // new SW is located in SPI FLASH {1}{2}
-#define SPI_FLASH_W25Q                                                   // use Winbond W25Q SPI flash rather than ATMEL
+//#define SPI_SW_UPLOAD                                                  // new SW is located in SPI FLASH {1}{2}
+//#define SPI_FLASH_W25Q                                                 // use Winbond W25Q SPI flash rather than ATMEL
 //#define SPI_FLASH_SST25                                                // {15} use SST SPI FLASH rather than ATMEL
 //#define SPI_FLASH_ST                                                   // define that we are using ST FLASH rather than default ATMEL {9}
 //#define SPI_DATA_FLASH                                                 // FLASH type is data FLASH supporting sub-sectors (relevant for ST types) {9}
@@ -86,6 +86,7 @@
       //#define FRDM_KL82Z
       //#define KINETIS_K40
       //#define KINETIS_K60
+            #define DEV3                                                 // temporary development version
         #define FRDM_K64F                                                // {24} next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area
       //#define KINETIS_K70
 
@@ -300,7 +301,15 @@
             // Initialise for 100MHz(120MHz) from 50MHz external clock
             //
             #if defined KINETIS_K60 || defined KINETIS_K70
-                #if defined KINETIS_K_FPU
+                #define RUN_FROM_DEFAULT_CLOCK                           // 32768Hz IRC
+                #if defined RUN_FROM_DEFAULT_CLOCK
+                  //#define FLL_FACTOR           2929                    // use FLL (factors available are 640, 732, 1280, 1464, 1920, 2197, 2560 and 2929)
+                    #define SYSTEM_CLOCK_DIVIDE  1
+                    #define BUS_CLOCK_DIVIDE     2
+                    #define FLASH_CLOCK_DIVIDE   4
+                    #define FLEX_CLOCK_DIVIDE    2
+                    #define PIN_COUNT            PIN_COUNT_144_PIN
+                #elif defined KINETIS_K_FPU
                     #define EXTERNAL_CLOCK       50000000                // this must be 50MHz in order to use Ethernet in RMII mode
                     #define _EXTERNAL_CLOCK      EXTERNAL_CLOCK
                     #define CLOCK_DIV            5                       // input must be divided to 8MHz..16MHz range (/1 to /8 for FPU parts)
@@ -329,9 +338,13 @@
             #define SIZE_OF_RAM        (64 * 1024)                       // suitable for K40, K60 and K70
 
             #define FILE_GRANULARITY   (1 * FLASH_GRANULARITY)           // each file a multiple of 2k/4k
-
-            #define uFILE_START        0x60000                           // FLASH location at 384k start
-            #define FILE_SYSTEM_SIZE   (128 * 1024)                      // 128k reserved for file system
+            #if defined DEV3
+                #define uFILE_START        (250 * 1024)                  // FLASH location at 250k start
+                #define FILE_SYSTEM_SIZE   ((124 - 4) * 1024)            // 122k reserved for file system - maximum upload size (after 4k boot)
+            #else
+                #define uFILE_START        0x60000                       // FLASH location at 384k start
+                #define FILE_SYSTEM_SIZE   (128 * 1024)                  // 128k reserved for file system
+            #endif
         #endif
         #if !defined SYSTEM_CLOCK_DIVIDE
             #define SYSTEM_CLOCK_DIVIDE  1                               // 1 to 16 - usually 1

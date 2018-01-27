@@ -167,7 +167,9 @@ const UTASK_TASK ctNodes[] = {                                           // we u
 #endif
 #if !defined BLINKY
     TASK_APPLICATION,                                                    // application task
+    #if defined USE_MAINTENANCE
     TASK_DEBUG,                                                          // maintenance task
+    #endif
 #endif
 #if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined MANAGED_FILES || defined USB_MSD_HOST
     TASK_MASS_STORAGE,                                                   // {5} mass storage task

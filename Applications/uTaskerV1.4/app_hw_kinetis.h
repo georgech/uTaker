@@ -1482,7 +1482,7 @@
 #if defined KINETIS_KV || defined KINETIS_KL02 || defined KINETIS_K02    // device without RTC
     #define SUPPORT_SW_RTC                                               // support real time clock based purely on software
 #elif defined KINETIS_KE && !defined KINETIS_KE15
-    #define SUPPORT_RTC                                                  // support real time clock (do not use together with TICK_USES_RTC)
+  //#define SUPPORT_RTC                                                  // support real time clock (do not use together with TICK_USES_RTC)
   //#define TICK_USES_RTC                                                // use RTC for TICK so that it continues to operate in stop based low power modes
     #if defined TICK_USES_RTC || defined SUPPORT_RTC
       //#define RTC_USES_EXT_CLK                                         // use the external clock as RTC clock source
@@ -2410,7 +2410,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #endif
 
     #if defined FRDM_KE04Z || defined TRK_KEA8 || defined FRDM_KL03Z
-        #define TX_BUFFER_SIZE   (QUEUE_TRANSFER)(128)                   // the size of demo RS232 input and output buffers
+        #define TX_BUFFER_SIZE   (QUEUE_TRANSFER)(140)                   // the size of demo RS232 input and output buffers
         #define RX_BUFFER_SIZE   (8)
     #elif defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined FRDM_KE02Z || defined TRK_KEA64 || defined FRDM_KE02Z40M || defined TEENSY_LC // {25}{30} these devices have small RAM size
         #define TX_BUFFER_SIZE   (QUEUE_TRANSFER)(256)                   // the size of RS232 input and output buffers
@@ -2572,7 +2572,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 
 // ADC
 //
-#define SUPPORT_ADC                                                      // {1}
+//#define SUPPORT_ADC                                                    // {1}
 #if defined KINETIS_KE
     #define ADC_REFERENCE_VOLTAGE                  5000                  // ADC uses 5.0V reference
 #else
@@ -2686,13 +2686,13 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 #endif
 
 
-#if !defined KINETIS_KL && !defined KINETIS_KE
+#if PDB_AVAILABLE > 0
     #define SUPPORT_PDB                                                  // {19} support programmable delay block (can be used as timer and/or for triggering ADC/DAC)
 #endif
 
 //#define SUPPORT_I2S_SAI                                                // support I2S/SAI
 
-#if !defined KINETIS_KL02
+#if !defined KINETIS_WITHOUT_PIT
     #define SUPPORT_PITS                                                 // support PITs
   //#define SUPPORT_PIT_DMA_PORT_TOGGLE                                  // PIT driver supports triggering port toggles
     // Define behavior of low power PIT (when available) in debug and doze mode
@@ -2711,7 +2711,9 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define SUPPORT_PWM_MODULE                                           // enable PWM support from FlexTimers
     #if defined KINETIS_KE
       //#define FTM0_0_ON_B
-      //#define FTM0_1_ON_B
+        #if defined FRDM_KE04Z
+            #define FTM0_1_ON_B                                          // blue LED on FRDM_KE04Z
+        #endif
         #define FTM1_0_ON_H
       //#define FTM1_1_ON_E
       //#define FTM2_0_ON_H
@@ -2818,7 +2820,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #endif
 #endif
 
-#define SUPPORT_KEYBOARD_INTERRUPTS                                      // support code for keyboard interrupts (KE/KEA devices)
+//#define SUPPORT_KEYBOARD_INTERRUPTS                                    // support code for keyboard interrupts (KE/KEA devices)
 
 // I2C Interface
 //
@@ -6116,11 +6118,14 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define BLINK_LED              DEMO_LED_1
 
     #define SWITCH_1               (KE_PORTA_BIT0)                       // (J1-2) if the port is changed (eg. A to D) the port macros will require appropriate adjustment too
-
-    #define INIT_WATCHDOG_LED()    _CONFIG_DRIVE_PORT_OUTPUT_VALUE(A, (BLINK_LED), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+    #if defined REMOVE_PORT_INITIALISATIONS
+        #define INIT_WATCHDOG_LED()    _CONFIG_DRIVE_PORT_OUTPUT_VALUE(A, (BLINK_LED | DEMO_LED_2), (BLINK_LED | DEMO_LED_2), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+    #else
+        #define INIT_WATCHDOG_LED()    _CONFIG_DRIVE_PORT_OUTPUT_VALUE(A, (BLINK_LED), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+    #endif
     #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT(A, (SWITCH_1), PORT_PS_UP_ENABLE); // configure as input with pullup enabled
 
-    #define WATCHDOG_DISABLE()     (!_READ_PORT_MASK(A, SWITCH_1))       // pull this input down to disable watchdog (J1-2)
+    #define WATCHDOG_DISABLE()     (_READ_PORT_MASK(A, SWITCH_1) == 0)   // pull this input down to disable watchdog (J1-2)
 
     #define ACTIVATE_WATCHDOG()    UNLOCK_WDOG(); WDOG_CS2 = (WDOG_CS2_CLK_1kHz | WDOG_CS2_FLG); WDOG_TOVAL = BIG_SHORT_WORD(2000); WDOG_WIN = 0; WDOG_CS1 = (/*WDOG_CS1_UPDATE | */WDOG_CS1_EN); // enable watchdog with 2s timeout
 

@@ -29,7 +29,7 @@
 /* =================================================================== */
 
 static __interrupt void _flexTimerInterrupt_0(void);
-    #if FLEX_TIMERS_AVAILABLE > 1
+    #if FLEX_TIMERS_AVAILABLE > 1 && !defined NO_FLEX_TIMER_2
 static __interrupt void _flexTimerInterrupt_1(void);
     #endif
     #if FLEX_TIMERS_AVAILABLE > 2
@@ -49,7 +49,11 @@ static void (*_flexTimerHandler[FLEX_TIMERS_AVAILABLE])(void) = {0};     // user
 static void (*_flexTimerInterrupt[FLEX_TIMERS_AVAILABLE])(void) = {
     _flexTimerInterrupt_0,
     #if FLEX_TIMERS_AVAILABLE > 1
+        #if defined NO_FLEX_TIMER_2
+    0,                                                                   // dummy when the timer is not available
+        #else
     _flexTimerInterrupt_1,
+        #endif
     #endif
     #if FLEX_TIMERS_AVAILABLE > 2
     _flexTimerInterrupt_2,
@@ -103,7 +107,7 @@ static void fnHandleFlexTimer(FLEX_TIMER_MODULE *ptrFlexTimer, int iFlexTimerRef
             case 0:
                 POWER_DOWN_ATOMIC(6, FTM0);
                 break;
-    #if FLEX_TIMERS_AVAILABLE > 1
+    #if FLEX_TIMERS_AVAILABLE > 1 && !defined NO_FLEX_TIMER_2
             case 1:
                 POWER_DOWN_ATOMIC(6, FTM1);
                 break;
@@ -144,7 +148,7 @@ static __interrupt void _flexTimerInterrupt_0(void)
     fnHandleFlexTimer((FLEX_TIMER_MODULE *)FTM_BLOCK_0, 0);
 }
 
-    #if FLEX_TIMERS_AVAILABLE > 1
+    #if FLEX_TIMERS_AVAILABLE > 1 && !defined NO_FLEX_TIMER_2
 static __interrupt void _flexTimerInterrupt_1(void)
 {
     fnHandleFlexTimer((FLEX_TIMER_MODULE *)FTM_BLOCK_1, 1);
@@ -178,6 +182,7 @@ static __interrupt void _flexTimerInterrupt_3(void)
             register unsigned long ulDelay = ptrTimerSetup->timer_value;
             register int iPrescaler = 0;
             FLEX_TIMER_MODULE *ptrFlexTimer;
+            int iReducedFunctionality = 0;
     #if defined KINETIS_KL
         #if !defined KINETIS_WITH_PCC
             unsigned long ulExtSelect;
@@ -227,8 +232,11 @@ static __interrupt void _flexTimerInterrupt_3(void)
     #else
                 iInterruptID = irq_FTM0_ID;
     #endif
+    #if defined FLEX_TIMER_0_REDUCED
+                iReducedFunctionality = 1;
+    #endif
                 break;
-    #if FLEX_TIMERS_AVAILABLE > 1
+    #if FLEX_TIMERS_AVAILABLE > 1 && !defined NO_FLEX_TIMER_2
             case 1:
                 if ((ptrTimerSetup->timer_mode & TIMER_STOP) != 0) {
         #if defined KINETIS_WITH_PCC
@@ -254,6 +262,9 @@ static __interrupt void _flexTimerInterrupt_3(void)
             #endif
         #else
                 iInterruptID = irq_FTM1_ID;
+        #endif
+        #if defined FLEX_TIMER_1_REDUCED
+                iReducedFunctionality = 1;
         #endif
                 break;
     #endif
@@ -292,6 +303,9 @@ static __interrupt void _flexTimerInterrupt_3(void)
         #else
                 iInterruptID = irq_FTM2_ID;
         #endif
+        #if defined FLEX_TIMER_2_REDUCED
+                iReducedFunctionality = 1;
+        #endif
                 break;
     #endif
     #if FLEX_TIMERS_AVAILABLE > 3
@@ -316,6 +330,9 @@ static __interrupt void _flexTimerInterrupt_3(void)
         #endif
                 ptrFlexTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_3;
                 iInterruptID = irq_FTM3_ID;
+        #if defined FLEX_TIMER_3_REDUCED
+                iReducedFunctionality = 1;
+        #endif
                 break;
     #endif
             default:
@@ -326,7 +343,9 @@ static __interrupt void _flexTimerInterrupt_3(void)
             if ((ptrFlexTimer->FTM_SC & FTM_SC_TOF) != 0) {              // ensure no pending interrupt
                 ptrFlexTimer->FTM_SC = 0;                                // clear pending interrupt (requires a read of the interrupt bit at '1' beforehand)
             }
-            ptrFlexTimer->FTM_CONF = FTM_DEBUG_BEHAVIOUR;                // set the debugging behaviour (whether the counter runs in debug mode and how the outputs react)
+            if (iReducedFunctionality == 0) {                            // don't configure debugger behaviour on timers with reduced functionality
+                ptrFlexTimer->FTM_CONF = FTM_DEBUG_BEHAVIOUR;            // set the debugging behaviour (whether the counter runs in debug mode and how the outputs react)
+            }
     #if !defined KINETIS_KL && !defined KINETIS_KE
             ptrFlexTimer->FTM_CNTIN = 0;                                 // counter start value
     #endif
