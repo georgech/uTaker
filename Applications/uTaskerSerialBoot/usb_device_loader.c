@@ -48,6 +48,8 @@
     16.01.2017 Check valid file and display for delete if random data    {33}
     03.08.2017 Add USB-MSD iHex/SREC content support                     {34}
     14.01.2018 Block USB-MSD further command handling until complete write data has been received {35}
+    31.01.2018 Reset intermediate buffer length counter when checking valid records {36}
+    31.01.2018 Remove validity check of file length when hex or srec loading is possible {37}
 
 */
 
@@ -2698,16 +2700,20 @@ static int _fnReadSector(unsigned char ucDisk, unsigned char *ptrBuffer, unsigne
 
 static int fnIsEntryValid(DIR_ENTRY_STRUCTURE_FAT32 *ptrDir)
 {
+    #if !defined USB_MSD_ACCEPTS_HEX_FILES && !defined USB_MSD_ACCEPTS_SREC_FILES
     unsigned long ulFilesSize;
+    #endif
     if (ptrDir->DIR_Name[0] == 0) {
         return 1;                                                        // empty entry assumed
     }
     switch (ptrDir->DIR_Attr) {
     case DIR_ATTR_ARCHIVE:
+    #if !defined USB_MSD_ACCEPTS_HEX_FILES && !defined USB_MSD_ACCEPTS_SREC_FILES // {37} this check can't be made on the length of the hex or srec file that was originally copied
         ulFilesSize = ((ptrDir->DIR_FileSize[3] << 24) | (ptrDir->DIR_FileSize[2] << 16) | (ptrDir->DIR_FileSize[1] << 8) | ptrDir->DIR_FileSize[0]);
         if (ulFilesSize > MAX_UTASKER_APP_SIZE) {
             return 0;                                                    // invalid entry
         }
+    #endif
         break;
     case DIR_ATTR_LONG_NAME:                                             // only files or volume ID are expected
     case DIR_ATTR_VOLUME_ID:
@@ -2994,10 +3000,10 @@ static int fnStoreRecord(int iType, unsigned char *ptrBuffer)
         if (ucNewByte != '\n') {                                         // ignore
             if (ucNewByte == '\r') {                                     // end of a line
                 iReturn = fnHandleRecord(ucInputBuffer, (ucInputBuffer + iInputLength + 1), iType); // handle the buffer as protocol content
+                iInputLength = 0;                                        // {36} unconditionally reset for next use
                 if (iType == 0) {                                        // if testing for valid content return result immediately before programming can begin
                     break;
                 }
-                iInputLength = 0;
             }
             else {
                 if (++iInputLength >= sizeof(ucInputBuffer)) {           // protect the collection buffer from overflow

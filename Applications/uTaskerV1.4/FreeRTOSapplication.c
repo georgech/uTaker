@@ -69,9 +69,9 @@ extern void fnFreeRTOS_main(void)
     }
     #endif
     #if defined FREE_RTOS_UART
-    if (xTaskCreate(                                                     // FreeRTOS blinky
+    if (xTaskCreate(                                                     // FreeRTOS UART task
         uart_task,                                                       // pointer to the task
-        "uart_task",                                                        // task name for kernel awareness debugging
+        "uart_task",                                                     // task name for kernel awareness debugging
         configMINIMAL_STACK_SIZE,                                        // task stack size
         (void*)NULL,                                                     // optional task startup argument
         (configMAX_PRIORITIES - 1),                                      // initial priority

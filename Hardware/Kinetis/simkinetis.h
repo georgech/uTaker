@@ -2919,7 +2919,7 @@ unsigned char MC_PMCTRL;
     {
     unsigned char SMC_PMPROT;
     unsigned char SMC_PMCTRL;
-    #if defined KINETIS_KL || defined KINETIS_K22
+    #if defined KINETIS_KL || defined KINETIS_K22 || defined KINETIS_K65 || defined KINETIS_K66
         unsigned char SMC_STOPCTRL;
     #else
         unsigned char SMC_VLLSCTRL;

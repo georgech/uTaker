@@ -86,9 +86,6 @@
 #define STATE_QUESTION_SWAP         0x4000
 
 
-#define CODE_DELETED                0
-#define DELETE_FAILED               -1
-
 #define INTERMEDIATE_BUFFER_RESERVE 200
 
 #if (defined SERIAL_INTERFACE && (defined KBOOT_LOADER || defined DEVELOPERS_LOADER || !defined REMOVE_SREC_LOADING)) || defined USE_USB_CDC
@@ -186,6 +183,7 @@ typedef struct
             static void fnSendCRC(QUEUE_HANDLE SerialPortID);
         #endif
     #elif !defined KBOOT_LOADER && !defined DEVELOPERS_LOADER && !defined REMOVE_SREC_LOADING
+        #define NEEDS_BLANK_CHECK
         static int fnPerformBlankCheck(void);
         static unsigned char *fnBlankCheck(void);
         static void fnPrintScreen(void);
@@ -200,6 +198,7 @@ typedef struct
             #endif
         #endif
     #elif defined REMOVE_SREC_LOADING && !defined USE_MODBUS
+        #define NEEDS_BLANK_CHECK
         static int fnPerformBlankCheck(void);
         static unsigned char *fnBlankCheck(void);
         static void fnPrintScreen(void);
@@ -900,21 +899,19 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
         #endif
         #if defined SPI_SW_UPLOAD
                 fnDebugMsg("\r\n\nDeleting area...");
-                switch (fnEraseFlashSector((unsigned char *)(SIZE_OF_FLASH + UPLOAD_OFFSET), (UTASKER_APP_END - (unsigned char *)UTASKER_APP_START))) // delete space in SPI FLASH
+                if (fnEraseFlashSector((unsigned char *)(SIZE_OF_FLASH + UPLOAD_OFFSET), (UTASKER_APP_END - (unsigned char *)UTASKER_APP_START)) == 0) // delete space in SPI FLASH
         #else
                 fnDebugMsg("\r\n\nDeleting code...");
             #if defined MEMORY_SWAP && defined ADD_FILE_OBJECT_AFTER_LOADING
                 fnEraseFlashSector((unsigned char *)(UTASKER_APP_START + (SIZE_OF_FLASH/2) - (2 * FLASH_GRANULARITY)), 0); // delete the firmware's file object
             #endif
-                switch (fnEraseFlashSector((unsigned char *)UTASKER_APP_START, (UTASKER_APP_END - (unsigned char *)UTASKER_APP_START))) // delete application space {2}
+                if (fnEraseFlashSector((unsigned char *)UTASKER_APP_START, (UTASKER_APP_END - (unsigned char *)UTASKER_APP_START)) == 0) // delete application space {2}
         #endif
                 {
-                case CODE_DELETED:
                     fnDebugMsg("successful\r\n> ");
-                    break;
-                case DELETE_FAILED:
+                }
+                else {
                     fnDebugMsg("failed!!\r\n> ");
-                    break;
                 }
             }
             else {
@@ -1944,7 +1941,10 @@ static unsigned char *fnBlankCheck(void)
     }
     return ptrFlash;                                                     // not blank
 }
+#endif
 
+
+#if defined NEEDS_BLANK_CHECK
 static int fnPerformBlankCheck(void)
 {
     unsigned char *ptrFlash = fnBlankCheck();                            // subroutine for blank check added

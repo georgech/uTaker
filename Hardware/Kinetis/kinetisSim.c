@@ -346,7 +346,7 @@ static void fnSetDevice(unsigned long *port_inits)
     RCM_SRS0 = (RCM_SRS0_POR | RCM_SRS0_LVD);                            // reset control module - reset status due to power on reset
         #endif
     #endif
-    #if defined KINETIS_KL || defined KINETIS_K22
+    #if defined KINETIS_KL || defined KINETIS_K22 || defined KINETIS_K65 || defined KINETIS_K66
     SMC_STOPCTRL = SMC_STOPCTRL_VLLSM_VLLS3;
     #else
     SMC_VLLSCTRL = SMC_VLLSCTRL_VLLSM_VLLS3;

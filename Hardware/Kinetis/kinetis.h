@@ -299,7 +299,7 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
     #endif
 #endif
 
-#if (defined KINETIS_K22 && !defined KINETIS_FLEX && ((SIZE_OF_FLASH >= (128 * 1024)) && (SIZE_OF_FLASH <= (512 * 1024)))) || defined KINETIS_K80 || defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_KL28 || defined KINETIS_KL82 || defined KINETIS_KE15
+#if (defined KINETIS_K22 && !defined KINETIS_FLEX && ((SIZE_OF_FLASH >= (128 * 1024)) && (SIZE_OF_FLASH <= (512 * 1024)))) || defined KINETIS_K80 || defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_KL28 || defined KINETIS_KL82 || defined KINETIS_KE15
     #define HIGH_SPEED_RUN_MODE_AVAILABLE
 #endif
 
@@ -12642,6 +12642,7 @@ typedef struct stKINETIS_LPTMR_CTL
             #define PCC_FTM2_BME_AND         PCC_TPM2_BME_AND
             #define PCC_FTM2_BME_XOR         PCC_TPM2_BME_XOR
     #endif
+    #define PCC_PIT                      PCC_LPIT0
     #define PCC_I2C0                     PCC_LPI2C0
         #define PCC_I2C0_BME_OR          PCC_LPI2C0_BME_OR
         #define PCC_I2C0_BME_AND         PCC_LPI2C0_BME_AND
@@ -15285,7 +15286,7 @@ typedef struct stUSB_HW
         #define SMC_PMCTRL_RUNM_HSRUN 0x60                               // high speed run mode
       #endif
       #define SMC_PMCTRL_LPWUI        0x80                               // (not KL) the system exits from VLP mode (VLPR, VLPW or VLPS) on an interrupt
-    #if defined KINETIS_KL || defined KINETIS_K22
+    #if defined KINETIS_KL || defined KINETIS_K22 || defined KINETIS_K65 || defined KINETIS_K66
         #define SMC_STOPCTRL     *(unsigned char *)(SMC_BASE_ADD + 0x2)  // Stop Control Register
           #define SMC_STOPCTRL_VLLSM_VLLS0   0x00                        // VLLS mode control - VLLS0
           #define SMC_STOPCTRL_VLLSM_VLLS1   0x01                        // VLLS mode control - VLLS1
@@ -15313,6 +15314,9 @@ typedef struct stUSB_HW
       #define SMC_PMSTAT_VLPS 0x10                                       // current power mode is VLPS
       #define SMC_PMSTAT_LLS  0x20                                       // current power mode is LLS
       #define SMC_PMSTAT_VLLS 0x40                                       // current power mode is VLLS
+    #if defined HIGH_SPEED_RUN_MODE_AVAILABLE
+        #define SMC_PMSTAT_HSRUN 0x80                                    // current power mode is high speed run
+    #endif
 
     // Reset Control Module
     //

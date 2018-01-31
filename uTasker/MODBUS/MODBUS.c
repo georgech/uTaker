@@ -135,6 +135,8 @@
         #define RTS_BIT_DELAY_8BIT_DMA (float)11.9
         #define RTS_BIT_DELAY_7BIT_DMA (float)10.8
         #define MODBUS_RS485_RTS_SUPPORT                                 // enable RTS support based on a port output controlled by a timer on each MODBUS serial port
+    #elif defined _KINETIS && (!defined KINETIS_KE && !defined KINETIS_KL)
+        #define AUTO_RTS_CONTROL
     #endif
 #endif
 
@@ -258,7 +260,7 @@ static const QUEUE_HANDLE modbus_uart_map[MODBUS_SERIAL_INTERFACES] = {
 
 #if defined MODBUS_SERIAL_INTERFACES && defined SERIAL_INTERFACE         // serial port variables
     static QUEUE_HANDLE    SerialHandle[MODBUS_SERIAL_INTERFACES] = {NO_ID_ALLOCATED};
-    #if defined MODBUS_RS485_SUPPORT                                     // {V1.10}
+    #if defined MODBUS_RS485_SUPPORT && !defined AUTO_RTS_CONTROL        // {V1.10}
     static unsigned char   ucAssertRTS[MODBUS_SERIAL_INTERFACES];
     static unsigned char   ucNegateRTS[MODBUS_SERIAL_INTERFACES];
     #endif
@@ -731,13 +733,17 @@ extern int fnInitialiseMODBUS_port(unsigned char ucMODBUSport, const MODBUS_CONF
             unsigned short usMode;
             if ((ptrMODBUS_pars->ucModbusSerialPortMode[ucMODBUSport] & MODBUS_RS485_POSITIVE) != 0) {
                 usMode = (MODIFY_CONTROL | CONFIG_RTS_PIN | SET_RS485_MODE);
+            #if !defined AUTO_RTS_CONTROL
                 ucAssertRTS[ucMODBUSport] = (MODIFY_CONTROL | CLEAR_RTS);
                 ucNegateRTS[ucMODBUSport] = (MODIFY_CONTROL | SET_RTS);
+            #endif
             }
             else {
                 usMode = (MODIFY_CONTROL | CONFIG_RTS_PIN | SET_RS485_MODE | SET_RS485_NEG);
+            #if !defined AUTO_RTS_CONTROL
                 ucAssertRTS[ucMODBUSport] = (MODIFY_CONTROL | SET_RTS);
                 ucNegateRTS[ucMODBUSport] = (MODIFY_CONTROL | CLEAR_RTS);
+            #endif
             }
             fnDriver(SerialHandle[ucMODBUSport], usMode, 0);             // configure RTS pin for control use
             if ((ptrMODBUS_pars->ucModbusSerialPortMode[ucMODBUSport] & MODBUS_RS485_POSITIVE) != 0) {
@@ -1525,8 +1531,7 @@ static void fnConfigureInterspaceTimes(unsigned char ucMODBUSport)
             ptrFlex1_5->int_handler = fnTimer_T_1_5_fired_4;
             ptrFlex3_5->int_handler = fnTimer_T_3_5_fired_4;
         }
-            #endif
-            #if MODBUS_SERIAL_INTERFACES > 5
+                #if MODBUS_SERIAL_INTERFACES > 5
         else if (ucMODBUSport == 5) {
             ptrFlex1_5->timer_reference = MODBUS5_FLEXTIMER_TIMER_CHANNEL; // flex timer channel
             ptrFlex3_5->timer_reference = MODBUS5_FLEXTIMER_TIMER_CHANNEL; // flex timer channel
@@ -1535,8 +1540,9 @@ static void fnConfigureInterspaceTimes(unsigned char ucMODBUSport)
             ptrFlex1_5->int_handler = fnTimer_T_1_5_fired_5;
             ptrFlex3_5->int_handler = fnTimer_T_3_5_fired_5;
         }
-            #endif
+                #endif
     }
+            #endif
         #elif defined _M5223X                                            // M5223x specific DMA timer code
     ptrSetup1_5->int_type = DMA_TIMER_INTERRUPT;                         // configure the timer struct once for efficiency
     ptrSetup3_5->int_type = DMA_TIMER_INTERRUPT;
@@ -3262,7 +3268,7 @@ extern int fnMODBUS_transmit(MODBUS_RX_FUNCTION *modbus_rx_function, unsigned ch
             if (modbus_uart_map[modbus_rx_function->ucMODBUSport] != 1) { // only control RTS line manually USART1 is not used (which has automatic control)
                 fnDriver(SerialHandle[modbus_rx_function->ucMODBUSport], ucAssertRTS[modbus_rx_function->ucMODBUSport], 0); // assert RTS line ready for transmission
             }
-        #elif !defined _KINETIS || (defined KINETIS_KE || defined KINETIS_KL) // {V1.21}{V1.30}
+        #elif !defined AUTO_RTS_CONTROL                                  // {V1.21}{V1.30}
             #if NUMBER_EXTERNAL_SERIAL > 0                               // {V1.16}
             if (modbus_uart_map[modbus_rx_function->ucMODBUSport] < NUMBER_SERIAL) { // not required when using external UART (assumes that this supports automatic control)
                 fnDriver(SerialHandle[modbus_rx_function->ucMODBUSport], ucAssertRTS[modbus_rx_function->ucMODBUSport], 0); // assert RTS line ready for transmission

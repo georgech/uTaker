@@ -2064,16 +2064,16 @@
     #define SDHC_SYSCTL_SPEED_FAST  (SDHC_SYSCTL_SDCLKFS_2 | SDHC_SYSCTL_DVS_3) // 20MHz when 120MHz clock
     #define SET_SPI_SD_INTERFACE_FULL_SPEED() fnSetSD_clock(SDHC_SYSCTL_SPEED_FAST); SDHC_PROCTL |= SDHC_PROCTL_DTW_4BIT
 #elif defined K66FX1M0
-    #define LED_GREEN          (PORTC_BIT5)                              // green LED - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
-    #define LED_BLUE           (PORTE_BIT0)                              // blue LED - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+    #define LED_ORANGE         (PORTC_BIT5)                              // orange LED - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+    #define LED_GREEN          (PORTE_BIT0)                              // green LED - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
 
     #define SWITCH_1           (PORTD_BIT11)                             // switch 1 - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
     #define SWITCH_22          (PORTD_BIT15)                             // switch 22 - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
 
     #define BLINK_LED          (LED_GREEN)
 
-    #define INIT_WATCHDOG_LED()    _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_LOW(C, (BLINK_LED), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH))
-    #define TOGGLE_WATCHDOG_LED()  _TOGGLE_PORT(C, BLINK_LED)
+    #define INIT_WATCHDOG_LED()    _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_LOW(E, (BLINK_LED), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+    #define TOGGLE_WATCHDOG_LED()  _TOGGLE_PORT(E, BLINK_LED)
     #define FORCE_BOOT()       (_READ_PORT_MASK(D, SWITCH_1) == 0)       // pull this input down to force boot loader mode (hold SW1 at reset)
     #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(D, (SWITCH_1 | SWITCH_22), PORT_PS_UP_ENABLE)
 
@@ -2120,6 +2120,9 @@
     #define SDHC_SYSCTL_SPEED_SLOW  (SDHC_SYSCTL_SDCLKFS_64 | SDHC_SYSCTL_DVS_5) // 375kHz when 120MHz clock
     #define SDHC_SYSCTL_SPEED_FAST  (SDHC_SYSCTL_SDCLKFS_2 | SDHC_SYSCTL_DVS_3) // 20MHz when 120MHz clock
     #define SET_SPI_SD_INTERFACE_FULL_SPEED() fnSetSD_clock(SDHC_SYSCTL_SPEED_FAST); SDHC_PROCTL |= SDHC_PROCTL_DTW_4BIT
+
+    #define DEL_USB_SYMBOL()                                             // control display of USB enumeration - clear
+    #define SET_USB_SYMBOL()                                             // control display of USB enumeration - set
 #elif defined TEENSY_3_5 || defined TEENSY_3_6
     #define LED_RED            (PORTC_BIT5)                              // red LED - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
 

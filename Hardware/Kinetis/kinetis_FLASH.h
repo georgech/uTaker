@@ -941,7 +941,7 @@ extern int fnEraseFlashSector(unsigned char *ptrSector, MAX_FILE_LENGTH Length)
     ptrSector = (unsigned char *)((CAST_POINTER_ARITHMETIC)ptrSector & ~(_FLASH_GRANULARITY - 1)); // set to sector boundary
     do {
         if ((fnFlashNow(FCMD_ERASE_FLASH_SECTOR, (unsigned long *)ptrSector, (unsigned long)0)) != 0) { // erase a single sector
-            return 1;                                                    // error
+            return -1;                                                   // error
         }
         if (Length <= _FLASH_GRANULARITY) {                              // check whether entire deletion has completed
         #if defined MANAGED_FILES
@@ -955,7 +955,7 @@ extern int fnEraseFlashSector(unsigned char *ptrSector, MAX_FILE_LENGTH Length)
         Length -= _FLASH_GRANULARITY;
     } FOREVER_LOOP();
     #endif
-    return 0;
+    return 0;                                                            // success
 }
 
 

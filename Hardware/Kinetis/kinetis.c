@@ -65,6 +65,7 @@
     29.11.2017 Add fnMaskInterrupt()                                     {131}
     04.12.2017 Add MMDVSQ                                                {132}
     06.12.2017 Use TSTMR as time base for fnDelayLoop() when it is available {133}
+    31.01.2018 If HSRUN mode is detected after a reset the RUN mode can be returned to avoid flash programming issues {134}
 
 */
 
@@ -2306,8 +2307,13 @@ static void _LowLevelInit(void)
     FMC_PFB0CR &= ~(BANKDCE | BANKICE | BANKSEBE);                       // disable cache
     FMC_PFB1CR &= ~(BANKDCE | BANKICE | BANKSEBE);
 #endif
-    // Configure clock generator
-    //
+// Configure clock generator
+//
+#if defined HIGH_SPEED_RUN_MODE_AVAILABLE && !defined USE_HIGH_SPEED_RUN_MODE // {134}
+    if (SMC_PMSTAT == SMC_PMSTAT_HSRUN) {                                // if in high speed run mode we switch back to run mode
+        SMC_PMCTRL = (SMC_PMCTRL_STOPM_NORMAL | SMC_PMCTRL_RUNM_NORMAL);
+    }
+#endif
 #if defined KINETIS_KE && !defined KINETIS_KE15
     #include "kinetis_KE_CLOCK.h"                                        // KE and KEA clock configuration
 #elif defined RUN_FROM_HIRC || defined RUN_FROM_HIRC_FLL || defined RUN_FROM_HIRC_PLL // 48MHz
