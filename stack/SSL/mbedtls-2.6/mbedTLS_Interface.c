@@ -131,24 +131,28 @@ static void set_calloc_free(void * (*calloc_func)(size_t, size_t), void(*free_fu
 //
 extern int fnInitialiseSecureLayer(const unsigned char *ptrOurCertificate, unsigned long ulCertificateLength, const unsigned char *ptrOutPrivateKey, unsigned long ulOurPrivateKeyLength)
 {
-    int iReturn ;
+    int iReturn = 0;
     unsigned char *ptrTempString;
     if (secure_session != 0) {
         return -1;                                                       // session already created
     }
     set_calloc_free(uCalloc, uCFree);                                    // enter the calloc() / free() methods to be used
     secure_session = mbedtls_calloc(1, sizeof(UTASKER_MBEDSSL_SESSION)); // get the memory needed for the session (1252 bytes)
-    ptrTempString = (unsigned char *)mbedtls_calloc(1, (ulOurPrivateKeyLength + 1));
-    uMemcpy(ptrTempString, ptrOutPrivateKey, ulOurPrivateKeyLength);     // copy the private key string
-    ptrTempString[ulOurPrivateKeyLength++] = 0;                          // terminate the string, which is required for its further processing
-    iReturn = mbedtls_pk_parse_key(&(secure_session->ourPrivateKey), ptrTempString, ulOurPrivateKeyLength, 0, 0); // no password - allocates 10 blocks of heap - total 2580 - 2 holes of 5624 total
-    mbedtls_free(ptrTempString);
-    if (iReturn == 0) {
-        ptrTempString = (unsigned char *)mbedtls_calloc(1, (ulCertificateLength + 1));
-        uMemcpy(ptrTempString, ptrOurCertificate, ulCertificateLength);  // copy the private key string
-        ptrTempString[ulCertificateLength++] = 0;                        // terminate the string, which is required for its further processing
-        iReturn = mbedtls_x509_crt_parse(&(secure_session->ourCertificate), ptrTempString, ulCertificateLength); // allocates 4 blocks of heap - total 3876 - 3 holes of 4328 total
+    if (ulOurPrivateKeyLength != 0) {                                    // if we have a private key
+        ptrTempString = (unsigned char *)mbedtls_calloc(1, (ulOurPrivateKeyLength + 1));
+        uMemcpy(ptrTempString, ptrOutPrivateKey, ulOurPrivateKeyLength); // copy the private key string
+        ptrTempString[ulOurPrivateKeyLength++] = 0;                      // terminate the string, which is required for its further processing
+        iReturn = mbedtls_pk_parse_key(&(secure_session->ourPrivateKey), ptrTempString, ulOurPrivateKeyLength, 0, 0); // no password - allocates 10 blocks of heap - total 2580 - 2 holes of 5624 total
         mbedtls_free(ptrTempString);
+    }
+    if (iReturn == 0) {
+        if (ulCertificateLength != 0) {                                  // if we have a certificate
+            ptrTempString = (unsigned char *)mbedtls_calloc(1, (ulCertificateLength + 1));
+            uMemcpy(ptrTempString, ptrOurCertificate, ulCertificateLength); // copy the private key string
+            ptrTempString[ulCertificateLength++] = 0;                    // terminate the string, which is required for its further processing
+            iReturn = mbedtls_x509_crt_parse(&(secure_session->ourCertificate), ptrTempString, ulCertificateLength); // allocates 4 blocks of heap - total 3876 - 3 holes of 4328 total
+            mbedtls_free(ptrTempString);
+        }
         if (iReturn == 0) {
             secure_session->ssl.handshake = (mbedtls_ssl_handshake_params *)mbedtls_calloc(1, (sizeof(mbedtls_ssl_handshake_params))); // handshake parameters (744 bytes)
             ssl_handshake_params_init(secure_session->ssl.handshake);   // initialise the handshake parameters - allocates 1 block of heap - total 4620 - 3 holes of 3584 total
@@ -162,10 +166,11 @@ extern int fnInitialiseSecureLayer(const unsigned char *ptrOurCertificate, unsig
 #if defined(MBEDTLS_ECP_C)
             secure_session->config.curve_list = mbedtls_ecp_grp_id_list();
 #endif
-            secure_session->ssl.out_ctr = (unsigned char *)mbedtls_calloc(1, 8); // 64 bit counters
-            secure_session->ssl.in_ctr  = (unsigned char *)mbedtls_calloc(1, 8);
-
-            iReturn = mbedtls_ssl_conf_own_cert(&(secure_session->config), &(secure_session->ourCertificate), &(secure_session->ourPrivateKey)); // attach the client certificate and private key to the configuration - allocates 1 block of heap - total 4964 - 3 holes of 3240 total
+            secure_session->ssl.out_ctr = (unsigned char *)mbedtls_calloc(1, 8); // 64 bit counter used by transmitter
+            secure_session->ssl.in_ctr  = (unsigned char *)mbedtls_calloc(1, 8); // 64 bit counter used by receiver
+            if ((ulCertificateLength != 0) && (ulOurPrivateKeyLength != 0)) {
+                iReturn = mbedtls_ssl_conf_own_cert(&(secure_session->config), &(secure_session->ourCertificate), &(secure_session->ourPrivateKey)); // attach the client certificate and private key to the configuration - allocates 1 block of heap - total 4964 - 3 holes of 3240 total
+            }
         }
     }
     return iReturn;

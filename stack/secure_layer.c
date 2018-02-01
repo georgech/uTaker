@@ -419,7 +419,7 @@ extern int fnTLS(USOCKET Socket, unsigned char ucEvent)
             fnGetRTC(&rtc);                                              // present time
     #endif
             if (fnInitialiseSecureLayer((const unsigned char *)fnGetFlashAdd(our_certificate + FILE_HEADER), uGetFileLength(our_certificate), (const unsigned char *)fnGetFlashAdd(our_private_key + FILE_HEADER), uGetFileLength(our_private_key)) != 0) {
-                return -1;                                               // can't create the session or local keys missing
+                return -1;                                               // can't create the session
             }
             *ptrData++ = SSL_TLS_CONTENT_HANDSHAKE;
             *ptrData++ = (unsigned char)(TLS_VERSION_1_0 >> 8);
@@ -978,9 +978,15 @@ static int (*app_listener[NO_OF_TCPSOCKETS])(USOCKET, unsigned char, unsigned ch
 static int fnSecureListener(USOCKET Socket, unsigned char ucEvent, unsigned char *ucIp_Data, unsigned short usPortLen)
 {
     static unsigned char ucUnacked = 0;
+    int iResult;
     switch (ucEvent) {
     case TCP_EVENT_CONNECTED:                                            // the server has accepted the TCP connection request
-         return (ucUnacked = fnTLS(Socket, TCP_EVENT_CONNECTED));        // start establishing a secure socket connection
+        iResult = fnTLS(Socket, TCP_EVENT_CONNECTED);                    // start establishing a secure socket connection
+        if (iResult < 0) {                                               // if it is not possible to start we need to close
+            fnTCP_close(Socket);
+            return APP_REQUEST_CLOSE;
+        }
+        return (ucUnacked = (iResult > 0));
 
     case TCP_EVENT_CLOSE:                                                // server is requesting a TCP close
         fnTLS(Socket, TCP_EVENT_CLOSE);
