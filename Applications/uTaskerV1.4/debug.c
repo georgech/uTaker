@@ -936,7 +936,7 @@ static const DEBUG_COMMAND tI2CCommand[] = {
 #if defined I2C_INTERFACE
     {"acc_on",            "enable accelerometer output",           DO_I2C,           DO_ACC_ON }, // {68}
     {"acc_off",           "disable output",                        DO_I2C,           DO_ACC_OFF },
-    #if defined LPI2C_AVAILABLE && defined TEMP_LPI2C_TEST
+    #if LPI2C_AVAILABLE > 0 && defined TEMP_LPI2C_TEST
     {"tpause",            "test potential bug [1/0]",              DO_I2C,           122 },
     {"rpause",            "test potential bug [1/0]",              DO_I2C,           123 },
     {"dozen",             "DOZEN [1/0]",                           DO_I2C,           124 },
@@ -4861,7 +4861,7 @@ static void fnProgramI2CSlave(unsigned char ucSlaveAddress, int iCommand)
 #endif
 
 #if defined I2C_INTERFACE
-    #if defined LPI2C_AVAILABLE && defined TEMP_LPI2C_TEST
+    #if LPI2C_AVAILABLE > 0 && defined TEMP_LPI2C_TEST
     extern unsigned long ulRxLPI2Cpause;
     extern unsigned long ulTxLPI2Cpause;
     extern unsigned long ulChange;
@@ -4885,7 +4885,7 @@ static void fnDoI2C(unsigned char ucType, CHAR *ptrInput)                // I2C 
         }
         break;
     #endif
-    #if defined LPI2C_AVAILABLE && defined TEMP_LPI2C_TEST
+    #if LPI2C_AVAILABLE > 0 && defined TEMP_LPI2C_TEST
     case 122:
         if (*ptrInput == '1') {
             fnDebugMsg("Tx pause 0.5ms");

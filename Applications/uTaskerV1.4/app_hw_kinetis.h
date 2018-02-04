@@ -741,13 +741,13 @@
         #define OSC_LOW_GAIN_MODE                                        // low gain required for oscillator circuitry
         #define PIN_COUNT           PIN_COUNT_64_PIN                     // 64 pin LQFP
         #define SIZE_OF_FLASH       (64 * 1024)                          // 64k program FLASH
-        #define SIZE_OF_FLEXFLASH   (32 * 1024)                          // 32 Flex
+        #define SIZE_OF_FLEXFLASH   (32 * 1024)                          // 32k Flex
         #define SIZE_OF_RAM         (16 * 1024)                          // 16k SRAM
         #define SIZE_OF_EEPROM      (2 * 1024)                           // 2k EEPROM
     #else
         #define PIN_COUNT           PIN_COUNT_100_PIN                    // 100 pin LQFP
         #define PACKAGE_TYPE        PACKAGE_LQFP
-        #define SIZE_OF_FLEXFLASH   (32 * 1024)                          // 32 Flex
+        #define SIZE_OF_FLEXFLASH   (32 * 1024)                          // 32k Flex
         #define SIZE_OF_RAM         (64 * 1024)                          // 64k SRAM
         #define SIZE_OF_EEPROM      (2 * 1024)                           // 2k EEPROM
         #if defined FLEXFLASH_DATA

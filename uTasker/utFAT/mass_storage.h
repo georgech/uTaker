@@ -564,6 +564,7 @@ extern int  utFileAttribute(UTFILE *ptr_utFile, int iNewAttributes);
     #define FILE_ATTRIBUTE_OF_DIRECTORY         0x10
 extern int  fnReadSector(unsigned char ucDisk, unsigned char *ptrBuffer, unsigned long ulSectorNumber);
 extern int  fnWriteSector(unsigned char ucDisk, unsigned char *ptrBuffer, unsigned long ulSectorNumber);
+extern int  fnPrepareBlockRead(unsigned char ucDisk, unsigned long ulReadBlocks);
 extern int  fnPrepareBlockWrite(unsigned char ucDisk, unsigned long ulWriteBlocks, int iPreErase);
 extern int  utFreeClusters(unsigned char ucDisk, UTASK_TASK owner_task);
 extern int  utReadDirectory(UTLISTDIRECTORY *ptr_utListDirectory, UTFILEINFO *ptr_ut_fileInfo);
@@ -699,6 +700,7 @@ extern int uFileManagedDelete(int fileHandle);
 #define STOP_TRANSMISSION_CMD12          (COMMAND_OFFSET + 12)
 #define SET_BLOCKLEN_CMD16               (COMMAND_OFFSET + 16)
 #define READ_SINGLE_BLOCK_CMD17          (COMMAND_OFFSET + 17)
+#define READ_MULTIPLE_BLOCK_CMD18        (COMMAND_OFFSET + 18)
 #define PRE_ERASE_BLOCKS_CMD23           (COMMAND_OFFSET + 23)
 #define WRITE_BLOCK_CMD24                (COMMAND_OFFSET + 24)
 #define WRITE_MULTIPLE_BLOCK_CMD25       (COMMAND_OFFSET + 25)

@@ -868,7 +868,7 @@ static void fnConfigureADC(void)
     adc_setup.ulADC_buffer_length = sizeof(sADC_buffer);                 // physical length of the buffer
             #endif
             #if defined VOICE_RECORDER && defined SDCARD_SUPPORT         // {15}
-    adc_setup.int_adc_mode = (ulCalibrate | /*ADC_LOOP_MODE |*/ ADC_HALF_BUFFER_DMA | ADC_SELECT_INPUTS_A | ADC_CLOCK_BUS_DIV_2 | ADC_CLOCK_DIVIDE_8 | ADC_SAMPLE_ACTIVATE_LONG | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_ENDED | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE | ADC_HW_TRIGGERED); // hardware triggering example (DMA to buffer with interrupt on half-buffer completion) - requires PDB set up afterwards
+    adc_setup.int_adc_mode = (ulCalibrate | /*ADC_LOOP_MODE |*/ ADC_HALF_BUFFER_DMA | ADC_SELECT_INPUTS_A | ADC_CLOCK_BUS_DIV_2 | ADC_CLOCK_DIVIDE_8 | ADC_SAMPLE_ACTIVATE_LONG | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_ENDED_INPUT | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE | ADC_HW_TRIGGERED); // hardware triggering example (DMA to buffer with interrupt on half-buffer completion) - requires PDB set up afterwards
     adc_setup.int_adc_sample = (ADC_SAMPLE_LONG_PLUS_12 | ADC_SAMPLE_AVERAGING_8); // additional sampling clocks
                 #if defined KINETIS_KL                                   // {21}
     adc_setup.int_adc_mode |= ADC_FULL_BUFFER_DMA_AUTO_REPEAT;           // automated DMA (using interrupt) restart when not using modulo repetitions

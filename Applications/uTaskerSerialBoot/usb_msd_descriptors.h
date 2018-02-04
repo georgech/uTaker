@@ -204,7 +204,11 @@ static const USB_CONFIGURATION_DESCRIPTOR_COLLECTION config_descriptor = {
     (OUT_ENDPOINT | 0x01),                                               // direction and address of endpoint
     #endif
     ENDPOINT_BULK,                                                       // endpoint attributes
+    #if defined USB_HS_INTERFACE
+    {LITTLE_SHORT_WORD_BYTES(512)},                                      // endpoint FIFO size (little-endian - 512 bytes)
+    #else
     {LITTLE_SHORT_WORD_BYTES(64)},                                       // endpoint FIFO size (little-endian - 64 bytes)
+    #endif
     0                                                                    // polling interval in ms - ignored for bulk
     },
 
@@ -217,7 +221,11 @@ static const USB_CONFIGURATION_DESCRIPTOR_COLLECTION config_descriptor = {
     (IN_ENDPOINT | USB_MSB_IN_ENDPOINT_NUMBER),                          // direction and address of endpoint
     #endif
     ENDPOINT_BULK,                                                       // endpoint attributes
+    #if defined USB_HS_INTERFACE
+    {LITTLE_SHORT_WORD_BYTES(512)},                                      // endpoint FIFO size (little-endian - 512 bytes)
+    #else
     {LITTLE_SHORT_WORD_BYTES(64)},                                       // endpoint FIFO size (little-endian - 64 bytes)
+    #endif
     0                                                                    // polling interval in ms - ignored for bulk
     },
     #if defined USE_USB_HID_MOUSE

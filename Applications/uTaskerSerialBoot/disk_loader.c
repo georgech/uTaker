@@ -29,6 +29,9 @@
     23.10.2015 Renamed from SDLoader.c to disk_loader.c
     07.01.2016 Use fnJumpToValidApplication() to start application       {14}
     20.09.2017 Correct decryption when offset is larger than the file length {15}
+    04.02.2018 Allow loading to data flash area (flexflash)              {16}
+    04.02.2018 Allow limiting internal flash chunk erase sizes to avoid blocking operation when large flash is used {17}
+    04.02.2018 Allow limiting flash erasure to the program size to be loaded {18}
 
 */
 
@@ -38,7 +41,7 @@
 
 #include "config.h"
 
-#if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined USB_MSD_HOST_LOADER
+#if ((defined SDCARD_SUPPORT || defined SPI_FLASH_FAT) && !defined SDCARD_ACCESS_WITHOUT_UTFAT) || defined USB_MSD_HOST_LOADER
 
 /* =================================================================== */
 /*                          local definitions                          */
@@ -63,8 +66,12 @@
 #define E_DO_SEARCH                2
 #define E_RECHECK_SW               3
 
-#define CRC_BLOCK_SIZE             1024                                  // CRC check in internal flash made in blocks of this size
 #define COPY_BUFFER_SIZE           256                                   // file processed in blocks of this size from SD card
+#if defined FLEXFLASH_DATA
+    #define CRC_BLOCK_SIZE         COPY_BUFFER_SIZE                      // use the same (size) buffer for both copy and CRC check
+#else
+    #define CRC_BLOCK_SIZE         1024                                  // CRC check in internal flash made in blocks of this size
+#endif
 
 #if defined USB_MSD_HOST_LOADER
     #define LOADING_DISK           DISK_E
@@ -130,7 +137,7 @@ static const unsigned char ucSecretKey[] = _SECRET_KEY;
 #else
     static unsigned char ucCodeStart[4] = {0xff, 0xff, 0xff, 0xff};
 #endif
-#if defined USB_INTERFACE && defined USB_MSD_DEVICE_LOADER
+#if defined USB_INTERFACE && defined USB_MSD_DEVICE_LOADER && !defined USE_USB_MSD
     static FILE_OBJECT_INFO fileObjInfo = {0};                           // {6}
 #endif
 #if defined WILDCARD_FILES && defined DELETE_SDCARD_FILE_AFTER_UPDATE
@@ -184,15 +191,15 @@ extern void fnSD_loader(TTASKTABLE *ptrTaskTable)
                 if (T_CHECK_CARD == ucInputMessage[MSG_TIMER_EVENT]) {   // check whether the disk is ready
                     const UTDISK *ptrDiskInfo = fnGetDiskInfo(LOADING_DISK);
     #if defined IGNORE_SD_CARD
-                    if ((IGNORE_SD_CARD()) || (ptrDiskInfo->usDiskFlags == 0) || (ptrDiskInfo->usDiskFlags & DISK_NOT_PRESENT))
+                    if ((IGNORE_SD_CARD()) || (ptrDiskInfo->usDiskFlags == 0) || ((ptrDiskInfo->usDiskFlags & DISK_NOT_PRESENT) != 0))
     #else
-                    if ((ptrDiskInfo->usDiskFlags == 0) || (ptrDiskInfo->usDiskFlags & DISK_NOT_PRESENT)) // no card detected
+                    if ((ptrDiskInfo->usDiskFlags == 0) || ((ptrDiskInfo->usDiskFlags & DISK_NOT_PRESENT) != 0)) // no card detected
     #endif
                     {
                         _DISPLAY_SD_CARD_NOT_PRESENT();                  // optionally display that the card is not present
                         fnJumpToApplication(0);                          // {3} jump to application if retries expire (restart timer when not yet true)
                     }
-                    else if (ptrDiskInfo->usDiskFlags & DISK_UNFORMATTED) {
+                    else if ((ptrDiskInfo->usDiskFlags & DISK_UNFORMATTED) != 0) {
                         _DISPLAY_SD_CARD_NOT_FORMATTED();                // optionally display that SD card is not formatted
                         fnJumpToApplication(0);                          // {3} jump to application if retries expire (restart timer when not yet true)
                     }
@@ -255,7 +262,7 @@ extern void fnSD_loader(TTASKTABLE *ptrTaskTable)
     #if defined WILDCARD_FILES                                           // {8}
                 if (E_DO_SEARCH == ucInputMessage[MSG_INTERRUPT_EVENT]) {
                      if (utListDir(&utListDirectory, &fileList) != UTFAT_NO_MORE_LISTING_ITEMS_FOUND) { // search through all files in the root directory
-                        if (fileList.ucFileAttributes & DIR_ATTR_ARCHIVE) { // if a file
+                        if ((fileList.ucFileAttributes & DIR_ATTR_ARCHIVE) != 0) { // if a file
                             CHAR *ptrFileName = &cBuffer[fileList.usStringLength - fileList.ucNameLength]; // set pointer to null terminated file name
                             if (fnWildcardMatch(ptrFileName, NEW_SOFTWARE_FILE) == 0) { // if the name matches
                                 iResult = 1;                             // note that a file has been found with a valid name
@@ -270,7 +277,7 @@ extern void fnSD_loader(TTASKTABLE *ptrTaskTable)
         #endif
                                         if (utFile.ulFileSize == (file_header.ulCodeLength + SIZE_OF_UPLOAD_HEADER)) { // content length matches
                                             if ((file_header.usMagicNumber == VALID_VERSION_MAGIC_NUMBER)) { // check test that the header version (magic number) is correct
-        #if defined USB_INTERFACE && defined USB_MSD_DEVICE_LOADER
+        #if defined USB_INTERFACE && defined USB_MSD_DEVICE_LOADER && !defined USE_USB_MSD
                                                 fileObjInfo.usCreationDate = utFile.usCreationDate;
                                                 fileObjInfo.usCreationTime = utFile.usCreationTime;
         #endif
@@ -409,6 +416,9 @@ static int fnUpdateSoftware(int iAppState, UTFILE *ptr_utFile, UPLOAD_HEADER *pt
     static unsigned long  ulProgrammed = 0;
     static UTFILE         utFile_decrypt = {0};
     #endif
+    #if defined MAX_FLASH_ERASE_SIZE                                     // {17}
+    static unsigned long  ulDeleteSize = 0;
+    #endif
     static unsigned short usCRC = 0;
     static int            iFlashMismatch = 0;
     static unsigned char  *ptrInternalFlash;
@@ -417,11 +427,14 @@ static int fnUpdateSoftware(int iAppState, UTFILE *ptr_utFile, UPLOAD_HEADER *pt
     #if defined ENCRYPTED_CARD_CONTENT
     MAX_FILE_LENGTH       toProgram;
     #endif
-    unsigned char         ucBuffer[COPY_BUFFER_SIZE];
+    unsigned char         ucBuffer[COPY_BUFFER_SIZE];                    // buffer for reading SD card content to
+    #if defined FLEXFLASH_DATA
+    unsigned char         ucCheckBuffer[COPY_BUFFER_SIZE];               // buffer for reading internal flash content to
+    #endif
 
     switch (iAppState) {
     case STATE_START_CHECKING:
-    #if defined USB_INTERFACE && defined USB_MSD_DEVICE_LOADER
+    #if defined USB_INTERFACE && defined USB_MSD_DEVICE_LOADER && !defined USE_USB_MSD
         fileObjInfo.ptrLastAddress = 0;                                  // {6}
     #endif
         iFlashMismatch = 0;
@@ -452,12 +465,22 @@ static int fnUpdateSoftware(int iAppState, UTFILE *ptr_utFile, UPLOAD_HEADER *pt
             }
             fnDecrypt(ucBuffer, ptr_utFile->usLastReadWriteLength);      // decrypt the buffer before comparing
     #endif
+    #if defined FLEXFLASH_DATA                                           // {16} if there is a possibility of working in data flash we need to collect a buffer first
+            fnGetParsFile(ptrInternalFlash, ucCheckBuffer, ptr_utFile->usLastReadWriteLength);
+            if (uMemcmp(ucCheckBuffer, ucBuffer, ptr_utFile->usLastReadWriteLength) != 0) { // check whether the code is different
+                iFlashMismatch = 1;                                      // the code is different so needs to be updated
+            }
+            else {
+                ptrInternalFlash += ptr_utFile->usLastReadWriteLength;
+            }
+    #else
             if (uMemcmp(fnGetFlashAdd(ptrInternalFlash), ucBuffer, ptr_utFile->usLastReadWriteLength) != 0) { // check whether the code is different
                 iFlashMismatch = 1;                                      // the code is different so needs to be updated
             }
             else {
                 ptrInternalFlash += ptr_utFile->usLastReadWriteLength;
             }
+    #endif
         }
         if (ptr_utFile->usLastReadWriteLength != sizeof(ucBuffer)) {     // end of file reached
             iNextState = STATE_CHECK_SECRET_KEY;
@@ -470,7 +493,24 @@ static int fnUpdateSoftware(int iAppState, UTFILE *ptr_utFile, UPLOAD_HEADER *pt
         if (usCRC == ptrFile_header->usCRC) {                            // content is valid
             _DISPLAY_VALID_CONTENT();                                    // optionally display that the content is valid
             if (iFlashMismatch != 0) {                                   // valid new code which needs to be programmed
+    #if defined MAX_FLASH_ERASE_SIZE                                     // {17}
+                unsigned long ulThisDeleteSize;
+        #if defined ERASE_NEEDED_FLASH_ONLY                              // {18}
+                ulDeleteSize = ptrFile_header->ulCodeLength;             // delete only the size required to accept the new code 
+        #else
+                ulDeleteSize = (UTASKER_APP_END - (unsigned char *)UTASKER_APP_START);
+        #endif
+                ulThisDeleteSize = ulDeleteSize;
+                if (ulThisDeleteSize > MAX_FLASH_ERASE_SIZE) {
+                    ulThisDeleteSize = MAX_FLASH_ERASE_SIZE;
+                }
+                ptrInternalFlash = (unsigned char *)UTASKER_APP_START;
+                fnEraseFlashSector(ptrInternalFlash, ulThisDeleteSize);  // delete application space
+                ulDeleteSize -= ulThisDeleteSize;
+                ptrInternalFlash += ulThisDeleteSize;
+    #else
                 fnEraseFlashSector((unsigned char *)UTASKER_APP_START, (UTASKER_APP_END - (unsigned char *)UTASKER_APP_START)); // delete application space
+    #endif
                 iNextState = STATE_DELETING_FLASH;
                 fnInterruptMessage(OWN_TASK, E_DO_NEXT);                 // schedule next
             }
@@ -495,6 +535,19 @@ static int fnUpdateSoftware(int iAppState, UTFILE *ptr_utFile, UPLOAD_HEADER *pt
         break;
 
     case STATE_DELETING_FLASH:                                           // flash deleted
+    #if defined MAX_FLASH_ERASE_SIZE                                     // {17}
+        if (ulDeleteSize != 0) {
+            unsigned long ulThisDeleteSize = ulDeleteSize;
+            if (ulThisDeleteSize > MAX_FLASH_ERASE_SIZE) {
+                ulThisDeleteSize = MAX_FLASH_ERASE_SIZE;
+            }
+            fnEraseFlashSector(ptrInternalFlash, ulThisDeleteSize);      // delete application space
+            ulDeleteSize -= ulThisDeleteSize;
+            ptrInternalFlash += ulThisDeleteSize;
+            fnInterruptMessage(OWN_TASK, E_DO_NEXT);                     // schedule next
+            break;
+        }
+    #endif
         ptrInternalFlash = (unsigned char *)_UTASKER_APP_START_;
     #if defined ENCRYPTED_CARD_CONTENT                                   // {9}
         ulProgrammed = sizeof(ucCodeStart);
@@ -538,7 +591,7 @@ static int fnUpdateSoftware(int iAppState, UTFILE *ptr_utFile, UPLOAD_HEADER *pt
     #if defined FLASH_ROW_SIZE && FLASH_ROW_SIZE > 0                     // {2}
             fnWriteBytesFlash(ptrInternalFlash, 0, 0);                   // close any outstanding FLASH buffer from end of the file
     #endif
-    #if defined USB_INTERFACE && defined USB_MSD_DEVICE_LOADER
+    #if defined USB_INTERFACE && defined USB_MSD_DEVICE_LOADER && !defined USE_USB_MSD
             fileObjInfo.ptrLastAddress = ptrInternalFlash;               // save information about the length of data written
     #endif
             ptrInternalFlash = (unsigned char *)_UTASKER_APP_START_;
@@ -561,13 +614,23 @@ static int fnUpdateSoftware(int iAppState, UTFILE *ptr_utFile, UPLOAD_HEADER *pt
 
     case STATE_VERIFYING:                                                // verify the CRC of the new application in flash
         if (ulFileLength >= CRC_BLOCK_SIZE) {
+    #if defined FLEXFLASH_DATA                                           // {16} if there is a possibility of working in data flash we need to collect a buffer first
+            fnGetParsFile(ptrInternalFlash, ucCheckBuffer, CRC_BLOCK_SIZE);
+            usCRC = fnCRC16(usCRC, ucCheckBuffer, CRC_BLOCK_SIZE);
+    #else
             usCRC = fnCRC16(usCRC, fnGetFlashAdd(ptrInternalFlash), CRC_BLOCK_SIZE);
+    #endif
             ulFileLength -= CRC_BLOCK_SIZE;
             ptrInternalFlash += CRC_BLOCK_SIZE;
             fnInterruptMessage(OWN_TASK, E_DO_NEXT);                     // schedule next
         }
         else {
+    #if defined FLEXFLASH_DATA                                           // {16} if there is a possibility of working in data flash we need to collect a buffer first
+            fnGetParsFile(ptrInternalFlash, ucCheckBuffer, ulFileLength);
+            usCRC = fnCRC16(usCRC, ucCheckBuffer, ulFileLength);
+    #else
             usCRC = fnCRC16(usCRC, fnGetFlashAdd(ptrInternalFlash), ulFileLength); // last block
+    #endif
             usCRC = fnCRC16(usCRC, (unsigned char *)ucSecretKey, sizeof(ucSecretKey)); // add the secret key
     #if defined ENCRYPTED_CARD_CONTENT                                   // {9}
             if (usCRC == ptrFile_header->usRAWCRC)

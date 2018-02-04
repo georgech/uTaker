@@ -161,11 +161,19 @@
             #define UTASKER_APP_START     (SIZE_OF_FLASH/2)              // second half of flash memory is used by the next application
         #elif defined NXP_MSD_HOST                                       // if using NXP host stack the loader is larger in size
             #define UTASKER_APP_START     (64 * 1024)                    // application starts at this address
+        #elif defined DWGB_SDCARD
+            #define UTASKER_APP_START     (24 * 1024)                    // application starts at this address
         #else
             #define UTASKER_APP_START     (32 * 1024)                    // application starts at this address
         #endif
       //#define INTERMEDIATE_PROG_BUFFER  (8 * 1024)                     // when UART speed greater than 57600 Baud is used an intermediate buffer is recommended
-        #define UTASKER_APP_END           (unsigned char *)(UTASKER_APP_START + (128 * 1024)) // end of application space - after maximum application size
+        #if defined DWGB_SDCARD
+            #define UTASKER_APP_END           (unsigned char *)(SIZE_OF_FLASH) // end of application space - after maximum application size
+            #define MAX_FLASH_ERASE_SIZE      (64 * 1024)                // limit flash erasure to blocks of thie size to avoid blocking watchdog task when large flash size is to be erased
+            #define ERASE_NEEDED_FLASH_ONLY                              // erase only the flash size needed by the new program code
+        #else
+            #define UTASKER_APP_END           (unsigned char *)(UTASKER_APP_START + (128 * 1024)) // end of application space - after maximum application size
+        #endif
     #endif
     #if !defined TEENSY_3_1 && !defined TEENSY_LC                        // warning: do not use mass erase with Teensy devices since their loader doesn't support the completely erased state and requires an external loader to recoved to the unsecured flash state
         #define MASS_ERASE                                               // support a mass-erase command. This is used together with a protected FLASH configuration.
@@ -187,7 +195,11 @@
         #define KEY_PRIME             0xafe1                             // never set to 0
         #define CODE_OFFSET           0xc298                             // ensure that this value is a multiple of the smallest flash programming entity size (divisible by 8 is suitable for all Kinetis parts)
     #else
-        #define NEW_SOFTWARE_FILE     "software.bin"
+        #if defined SPECIAL_VERSION_SDCARD
+            #define NEW_SOFTWARE_FILE "LTPgun****.bin"
+        #else
+            #define NEW_SOFTWARE_FILE "software.bin"
+        #endif
         #define VALID_VERSION_MAGIC_NUMBER   0x1234
         #define _SECRET_KEY           {0xa7, 0x48, 0xb6, 0x53, 0x11, 0x24}
     #endif

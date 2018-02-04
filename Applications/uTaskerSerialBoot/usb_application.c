@@ -785,6 +785,9 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
                         else {
                             ulReadBlock = ((ptrRead->ucTransferLength[0] << 8) | ptrRead->ucTransferLength[1]); // the total number of blocks to be returned
                         }
+    #if defined UTFAT_MULTIPLE_BLOCK_READ
+                        fnPrepareBlockRead(ucActiveLUN, ulReadBlock);    // since we know that there will be a read from one or more blocks we can prepare the disk so that it can read faster
+    #endif
                         fnContinueMedia();
                         continue;                                        // the transfer has not completed so don't send termination stage yet
                     }
@@ -2335,7 +2338,11 @@ static void fnConfigureApplicationEndpoints(void)
     #if defined IN_COMPLETE_CALLBACK
     tInterfaceParameters.INcallback = 0;
     #endif
+    #if defined USB_HS_INTERFACE
+    tInterfaceParameters.usEndpointSize = 512;                           // endpoint queue size (2 buffers of this size will be created for reception)
+    #else
     tInterfaceParameters.usEndpointSize = 64;                            // endpoint queue size (2 buffers of this size will be created for reception)
+    #endif
     #if defined USE_USB_CDC
         #if defined _LPC23XX || defined _LPC17XX
     tInterfaceParameters.Endpoint = 5;                                   // set USB endpoints to act as an input/output pair - transmitter (IN)

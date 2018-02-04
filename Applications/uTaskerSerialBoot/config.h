@@ -9,7 +9,7 @@
 
     ---------------------------------------------------------------------
     File:      config.h
-    Project:   Serial Loader (SREC/iHex serial, USB-MSD, memory stick, SD card, ethernet)
+    Project:   Serial Loader (SREC/iHex serial, USB-MSD, memory stick, SD card, ethernet, Modbus, I2C slave)
     ---------------------------------------------------------------------
     Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
@@ -19,7 +19,7 @@
 
     See this video for details of building the serial loader with KDS: https://youtu.be/bilc_4Cr7eo
     See this video for details of building and using the serial loader's Ethernet loading method: https://youtu.be/g71PGlQy6eI
-
+    See thsi video for I2C slave loading: https://youtu.be/awREsqeCEzQ
 */
 
 #if !defined __CONFIG__
@@ -55,7 +55,7 @@
 //#define FRDM_KE06Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KE06Z.html
 //#define FRDM_KE15Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KE15Z.html
 
-#define FRDM_KL02Z                                                       // L processors Cortex-M0+ (ultra-low power) basic - freedom board http://www.utasker.com/kinetis/FRDM-KL02Z.html
+//#define FRDM_KL02Z                                                     // L processors Cortex-M0+ (ultra-low power) basic - freedom board http://www.utasker.com/kinetis/FRDM-KL02Z.html
 //#define FRDM_KL03Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL03Z.html
 //#define FRDM_KL05Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL05Z.html
 
@@ -111,7 +111,7 @@
 
 //#define EMCRAFT_K61F150M                                               // K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - http://www.utasker.com/kinetis/EMCRAFT_K61F150M.html
 
-//#define FRDM_K64F                                                      // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
+#define FRDM_K64F                                                        // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
 //#define TWR_K64F120M                                                   // tower board http://www.utasker.com/kinetis/TWR-K64F120M.html
 //#define HEXIWEAR_K64F                                                  // hexiwear - wearable development kit for IoT (K64FN1M0VDC12 main processor) http://www.hexiwear.com/
 //#define TEENSY_3_5                                                     // USB development board with K64FX512 - http://www.utasker.com/kinetis/TEENSY_3.5.html
@@ -386,7 +386,14 @@
     #endif
 #elif defined TEENSY_3_1
   //#define SPECIAL_VERSION                                              // temporary special version with some specific setups
+      //#define SPECIAL_VERSION_SDCARD                                   // temporary special version with some specific setups
       //#define SPECIAL_VERSION_2                                        // temporary special version with some specific setups
+        #if defined SPECIAL_VERSION_SDCARD
+            #define SDCARD_SUPPORT
+            #define WILDCARD_FILES
+            #define DELETE_SDCARD_FILE_AFTER_UPDATE
+            #define USE_USB_MSD
+        #endif
     #define KINETIS_K20
     #define KINETIS_REVISION_2
     #define TARGET_HW   "TEENSY 3.1 (K20DX256)"
@@ -630,7 +637,9 @@
     #define KINETIS_K60                                                  // specify the sub-family
     #define KINETIS_REVISION_2
     #define KINETIS_K66                                                  // extra sub-family type precision
-    #define USB_HS_INTERFACE                                             // use HS interface (USB1) rather than FS interface (USB0)
+    #if !defined K66FX1M0
+        #define USB_HS_INTERFACE                                         // use HS interface (USB1) rather than FS interface (USB0)
+    #endif
 #elif defined TEENSY_3_6
     #define TARGET_HW            "Teensy 3.6 (K66FX1M0)"
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((48 * 1024) * MEM_FACTOR) // large SRAM parts
@@ -645,15 +654,21 @@
     #define KINETIS_K_FPU                                                // part with floating point unit
     #define KINETIS_K70
     #define KINETIS_MAX_SPEED    120000000
-    #define USB_HS_INTERFACE                                             // use HS interface rather than FS interface (needs external ULPI transceiver)
-    #define TWR_SER2                                                     // use SER2 serial board instead of standard serial board (used also when HS USB is enabled)
+  //#define USB_HS_INTERFACE                                             // use HS interface rather than FS interface (needs external ULPI transceiver)
+  //#define TWR_SER2                                                     // use SER2 serial board instead of standard serial board (used also when HS USB is enabled)
     #define OUR_HEAP_SIZE   (HEAP_REQUIREMENTS)((24 * 1024) * MEM_FACTOR)// kinetis uses dedicated Ethernet buffers so doesn't need heap for these
 #elif defined K70F150M_12M
+  //#define DWGB_SDCARD                                                  // SD card configuration option
     #define TARGET_HW       "K70F150M-12MHz crystal"
     #define KINETIS_MAX_SPEED    150000000
     #define KINETIS_K_FPU                                                // part with floating point unit
     #define KINETIS_K70
-    #define OUR_HEAP_SIZE   (HEAP_REQUIREMENTS)((24 * 1024) * MEM_FACTOR) // kinetis uses dedicated Ethernet buffers so doesn't need heap for these
+    #define OUR_HEAP_SIZE   (HEAP_REQUIREMENTS)((24 * 1024) * MEM_FACTOR)
+    #if defined DWGB_SDCARD
+        #define SDCARD_SUPPORT                                           // SD card loading
+        #define DELETE_SDCARD_FILE_AFTER_UPDATE
+        #define UTFAT_WRITE                                              // ensure SD card write is supported in order to delete firmware file after successful updte
+    #endif
 #elif defined TWR_K80F150M
     #define KINETIS_MAX_SPEED    150000000
     #define TARGET_HW            "TWR-K80F150M"
@@ -788,7 +803,7 @@
 #endif
 
 
-#if !defined K70F150M_12M && !defined KWIKSTIK && !(defined TEENSY_3_1 && defined SPECIAL_VERSION) && !defined BLAZE_K22
+#if !(defined K70F150M_12M && !defined DWGB_SDCARD) && !defined KWIKSTIK && !(defined TEENSY_3_1 && defined SPECIAL_VERSION) && !defined BLAZE_K22
     #define SERIAL_INTERFACE                                             // enable serial interface driver
 #endif
 #if defined SERIAL_INTERFACE
@@ -818,7 +833,7 @@
           //#define DEVELOPERS_LOADER_PROTOCOL_VERSION_9                 // user protocol version 9 rather than obsolete Kinetis 8 (not completed at the moment)
             #define DEVELOPERS_LOADER_READ                               // support reading back program
             #define DEVELOPERS_LOADER_CRC                                // support CRC in communication
-      //#define REMOVE_SREC_LOADING                                      // disable SREC (and Intel Hex) loading but keep debug output and the command line menu
+        #define REMOVE_SREC_LOADING                                      // disable SREC (and Intel Hex) loading but keep debug output and the command line menu
         #if !defined REMOVE_SREC_LOADING
           //#define SUPPORT_INTEL_HEX_MODE                               // support Intel Hex mode together with SREC (auto-recognition)
           //#define EXCLUSIVE_INTEL_HEX_MODE                             // loading mode is exclusively Intel Hex (use with or without SUPPORT_INTEL_HEX_MODE)
@@ -842,12 +857,14 @@
     #define LOG_UART1                                                    // activate this option to log all data sent to UART 1 to a file called "UART1.txt"
     #define LOG_UART2                                                    // activate this option to log all data sent to UART 2 to a file called "UART2.txt"
     #define LOG_UART3                                                    // activate this option to log all data sent to UART 3 to a file called "UART3.txt"
+    #define LOG_UART4                                                    // activate this option to log all data sent to UART 2 to a file called "UART2.txt"
+    #define LOG_UART5                                                    // activate this option to log all data sent to UART 3 to a file called "UART3.txt"
 #else
     #define NUMBER_SERIAL              0                                 // no physical queue needed
 #endif
 #define NUMBER_EXTERNAL_SERIAL         0                                 // no external UARTs
 
-#define I2C_INTERFACE                                                    // enable I2C slave mode
+//#define I2C_INTERFACE                                                  // enable I2C slave mode - see I2C slave loader video at https://youtu.be/awREsqeCEzQ
 #if defined I2C_INTERFACE
     #define NUMBER_I2C       (I2C_AVAILABLE + LPI2C_AVAILABLE)           // I2C interfaces available
     #define I2C_SLAVE_MODE                                               // support slave mode (interrupt call-back method)
@@ -855,10 +872,10 @@
     #define NUMBER_I2C     0                                             // no physical queue needed
 #endif
 
-#if defined DEVICE_WITHOUT_USB
+#if defined DEVICE_WITHOUT_USB || defined DWGB_SDCARD
     #define NUMBER_USB     0                                             // no physical queue needed
 #else
-  //#define USB_INTERFACE                                                // enable USB driver interface
+    #define USB_INTERFACE                                                // enable USB driver interface
     #if defined USB_INTERFACE
       //#define USE_USB_CDC                                              // allow SREC/iHex loading via virtual COM
         #define USB_MSD_DEVICE_LOADER                                    // USB-MSD device mode (the board appears as a hard-drive to the host)
@@ -883,9 +900,9 @@
                 #define MAX_FIRMWARE_NAME  64                            // longest firmware file name string buffer
                 #define EMULATED_FAT_FILE_DATE_CONTROL
             #endif
-          //#define USB_MSD_REJECTS_BINARY_FILES                         // default is to accept binary files
+            #define USB_MSD_REJECTS_BINARY_FILES                         // default is to accept binary files
           //#define USB_MSD_ACCEPTS_SREC_FILES                           // optionally accept SREC content
-          //#define USB_MSD_ACCEPTS_HEX_FILES                            // optionally accept Intel HEX content
+            #define USB_MSD_ACCEPTS_HEX_FILES                            // optionally accept Intel HEX content
         #endif
         #if defined USB_MSD_HOST_LOADER                                  // support loading from memory stick
             #if defined USB_HS_INTERFACE
@@ -957,7 +974,14 @@
         #define SUPPORT_FLUSH
     #endif
     #if defined SDCARD_SUPPORT
-        #define UREVERSEMEMCPY                                           // required when SD card used in SPI mode
+        #if !defined DWGB_SDCARD
+            #define UREVERSEMEMCPY                                       // required when SD card used in SPI mode
+          //#define SDCARD_ACCESS_WITHOUT_UTFAT                          // no utFAT interface (just low level access for USB-MSD operation)
+            #define SDCARD_FIXED                                         // no SD card monitoring since it is fixed in hardware
+            #if defined SDCARD_FIXED
+              //#define UTFAT_MULTIPLE_BLOCK_READ
+            #endif
+        #endif
     #endif
 #endif
 #if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined USB_MSD_HOST_LOADER
@@ -987,8 +1011,8 @@
 #endif
 
 #if !defined DEVICE_WITHOUT_ETHERNET
-    #if !defined TEENSY_3_5 && !defined TEENSY_3_6 && !defined HEXIWEAR_K64F && !defined HEXIWEAR_KW40Z
-        #define ETH_INTERFACE                                            // enable Ethernet interface driver
+    #if !defined TEENSY_3_5 && !defined TEENSY_3_6  && !defined K66FX1M0 && !defined HEXIWEAR_K64F && !defined HEXIWEAR_KW40Z && !defined DWGB_SDCARD
+      //#define ETH_INTERFACE                                            // enable Ethernet interface driver
     #endif
     #if defined FRDM_K64F
       //#define ENC424J600_INTERFACE                                     // 10/100 Ethernet connected via SPI (also ENC624J600 in larger package with more parallel modes)

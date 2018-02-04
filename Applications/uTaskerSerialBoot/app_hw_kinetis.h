@@ -293,7 +293,7 @@
     #define CRYSTAL_FREQUENCY    12000000                                // 12 MHz crystal
     #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
     #define CLOCK_DIV            1                                       // input must be divided to 8MHz..16MHz range (/1 to /8 for 150MHz parts)
-    #define CLOCK_MUL            25                                      // the PLL multiplication factor to achieve operating frequency of 120MHz (x16 to x47 possible - divided by 2 at VCO output)
+    #define CLOCK_MUL            25                                      // the PLL multiplication factor to achieve operating frequency of 150MHz (x16 to x47 possible - divided by 2 at VCO output)
     #define USB_CLOCK_GENERATED_INTERNALLY                               // use USB clock from internal source rather than external pin
     #define FLEX_CLOCK_DIVIDE    3                                       // 150/3 to give 50MHz
     #define FLASH_CLOCK_DIVIDE   6                                       // 150/6 to give 25MHz
@@ -604,7 +604,14 @@
     #define SIZE_OF_RAM         (128 * 1024)                             // 128k SRAM
 #elif defined K70F150M_12M
     #define PIN_COUNT           PIN_COUNT_256_PIN
-    #define SIZE_OF_FLASH       (1024 * 1024)                            // 1M FLASH
+    #if defined DWGB_SDCARD
+        #define KINETIS_FLEX                                             // X part with flex memory rather than N part with program Flash only
+        #define FLEXFLASH_DATA                                           // use FlexNMV in data mode
+        #define SIZE_OF_FLEXFLASH (512 * 1024)                           // 512k Flex
+        #define SIZE_OF_FLASH   ((512 * 1024) + SIZE_OF_FLEXFLASH)       // 512k program FLASH plus data flash
+    #else
+        #define SIZE_OF_FLASH   (1024 * 1024)                            // 1M FLASH
+    #endif
     #define SIZE_OF_RAM         (128 * 1024)                             // 128k SRAM
 #elif defined FRDM_K22F
     #define PIN_COUNT           PIN_COUNT_64_PIN                         // 64 LQFP pin package
@@ -1138,7 +1145,7 @@
         #define LOADER_UART           5                                  // the serial interface used by the serial loader
     #elif defined FRDM_K82F
         #define LOADER_UART           4                                  // use UART 4
-    #elif defined TWR_K70F120M || defined TWR_KL46Z48M || defined TWR_K21D50M || defined TWR_KL43Z48M || defined TRK_KEA128 || defined TRK_KEA64 || defined KL25_TEST_BOARD || defined TWR_K65F180M || defined K26FN2_180 || defined FRDM_KEAZN32Q64 || defined FRDM_KEAZ64Q64 || defined FRDM_KEAZ128Q80 || defined TEENSY_3_5 || defined TEENSY_3_6
+    #elif defined TWR_K70F120M || defined TWR_KL46Z48M || defined TWR_K21D50M || defined TWR_KL43Z48M || defined TRK_KEA128 || defined TRK_KEA64 || defined KL25_TEST_BOARD || defined TWR_K65F180M || defined K26FN2_180 || defined FRDM_KEAZN32Q64 || defined FRDM_KEAZ64Q64 || defined FRDM_KEAZ128Q80 || defined TEENSY_3_5 || defined TEENSY_3_6 || defined DWGB_SDCARD
         #define LOADER_UART           2                                  // the serial interface used by the serial loader
     #elif defined TWR_K20D50M || defined TWR_K80F150M || defined tinyK20 || defined TWR_K20D72M || defined FRDM_KE02Z || defined FRDM_KE02Z40M || defined FRDM_KE06Z || defined FRDM_K22F || defined TWR_K22F120M || defined TWR_K24F120M || defined K24FN1M0_120 || defined TWR_K64F120M || defined TWR_KW21D256 || defined TWR_KW24D512 || defined BLAZE_K22 || defined FRDM_KE15Z
         #define LOADER_UART           1                                  // the serial interface used by the serial loader
@@ -1516,9 +1523,11 @@
     #define USB_HOST_POWER_CONFIG() 
     #define USB_HOST_POWER_ON()
     #define USB_HOST_POWER_OFF()
-#elif defined TWR_K60N512 || defined TWR_K60D100M || defined TWR_K60F120M || defined TWR_K70F120M || defined TWR_K80F150M || defined K60F150M_50M
+#elif defined TWR_K60N512 || defined TWR_K60D100M || defined TWR_K60F120M || defined TWR_K70F120M || defined TWR_K80F150M || defined K60F150M_50M || (defined K70F150M_12M && defined DWGB_SDCARD)
     #if defined K60F150M_50M
         #define DEMO_LED_1         (PORTB_BIT6)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+    #elif defined DWGB_SDCARD
+        #define DEMO_LED_1         (PORTC_BIT1)                          // run LED
     #else
         #define DEMO_LED_1         (PORTA_BIT11)                         // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
     #endif
@@ -1537,7 +1546,9 @@
     #define SWITCH_2               (PORTE_BIT26)                         // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
     #define SDCARD_DETECT          (PORTE_BIT28)                         // {2} if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
 
-    #if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT                  // {2}
+    #if defined DWGB_SDCARD
+        #define INIT_WATCHDOG_LED() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, (BLINK_LED), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH)); _CONFIG_PORT_INPUT(E, (SDCARD_DETECT), PORT_PS_UP_ENABLE);
+    #elif defined SDCARD_SUPPORT || defined SPI_FLASH_FAT                // {2}
         #define INIT_WATCHDOG_LED() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(A, (BLINK_LED), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH)); _CONFIG_PORT_INPUT(E, (SWITCH_2 | SDCARD_DETECT), PORT_PS_UP_ENABLE); // note that the force boot input is configured here and not with the INIT_WATCHDOG_DISABLE() since the watchdog must be disabled as quickly as possible
     #else
         #if defined K60F150M_50M
@@ -1547,7 +1558,10 @@
         #endif
     #endif
 
-    #if defined K60F150M_50M
+    #if defined DWGB_SDCARD
+        #define INIT_WATCHDOG_DISABLE()
+        #define WATCHDOG_DISABLE()      0
+    #elif defined K60F150M_50M
         #define INIT_WATCHDOG_DISABLE()
         #define WATCHDOG_DISABLE()      1
     #elif defined TWR_K70F120M
@@ -1557,20 +1571,30 @@
         #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_HIGH(A, SWITCH_1, PORT_PS_UP_ENABLE); // configure as input
         #define WATCHDOG_DISABLE()      (_READ_PORT_MASK(A, SWITCH_1) == 0) // pull this input down to disable watchdog (hold SW1 at reset)
     #endif
-    #if defined K60F150M_50M
+
+    #if defined DWGB_SDCARD
+        #define TOGGLE_WATCHDOG_LED()   _TOGGLE_PORT(C, BLINK_LED)
+    #elif defined K60F150M_50M
         #define TOGGLE_WATCHDOG_LED()   _TOGGLE_PORT(B, BLINK_LED)
     #else
         #define TOGGLE_WATCHDOG_LED()   _TOGGLE_PORT(A, BLINK_LED)
     #endif
 
-    #if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT                  // {2}
+    #if defined DWGB_SDCARD
+        #define FORCE_BOOT()       (_READ_PORT_MASK(E, SDCARD_DETECT) == 0) // inserted SD card forces the loader mode
+    #elif defined SDCARD_SUPPORT || defined SPI_FLASH_FAT                // {2}
         #define FORCE_BOOT()       ((_READ_PORT_MASK(E, SWITCH_2) == 0) || (_READ_PORT_MASK(E, SDCARD_DETECT) == 0)) // hold SW2 at reset or with inserted SD card
     #elif defined K60F150M_50M
         #define FORCE_BOOT()       1
     #else
         #define FORCE_BOOT()       (_READ_PORT_MASK(E, SWITCH_2) == 0)   // pull this input down to force boot loader mode (hold SW2 at reset)
     #endif
-    #define RETAIN_LOADER_MODE()   (_READ_PORT_MASK(E, SWITCH_2) == 0)
+
+    #if defined DWGB_SDCARD
+        #define RETAIN_LOADER_MODE()   0
+    #else
+        #define RETAIN_LOADER_MODE()   (_READ_PORT_MASK(E, SWITCH_2) == 0)
+    #endif
 
     #define SD_CONTROLLER_AVAILABLE                                      // use SDHC controller rather than SPI
     #if defined TWR_K60N512 || defined TWR_K60D100M                      // TWR_K60F120M/TWR_K70F120M have no write protect input on the SD card socket
@@ -1592,7 +1616,11 @@
                 #define POWER_UP_SD_CARD()    SDHC_SYSCTL |= SDHC_SYSCTL_INITA; while (SDHC_SYSCTL & SDHC_SYSCTL_INITA) {}; // apply power to the SD card if appropriate (we use this to send 80 clocks)
             #endif
         #endif
-        #if defined TWR_K60F120M || defined TWR_K70F120M
+
+        #if defined DWGB_SDCARD
+            #define SDHC_SYSCTL_SPEED_SLOW        (SDHC_SYSCTL_SDCLKFS_64 | SDHC_SYSCTL_DVS_6) // 390kHz when 150MHz clock
+            #define SDHC_SYSCTL_SPEED_FAST        (SDHC_SYSCTL_SDCLKFS_2 | SDHC_SYSCTL_DVS_3) // 25MHz when 150MHz clock
+        #elif defined TWR_K60F120M || defined TWR_K70F120M
             #define SDHC_SYSCTL_SPEED_SLOW        (SDHC_SYSCTL_SDCLKFS_64 | SDHC_SYSCTL_DVS_5) // 375kHz when 120MHz clock
             #define SDHC_SYSCTL_SPEED_FAST        (SDHC_SYSCTL_SDCLKFS_2 | SDHC_SYSCTL_DVS_3) // 20MHz when 120MHz clock
         #else
@@ -1633,7 +1661,7 @@
     #endif
 
     #define POWER_DOWN_SD_CARD()                                         // remove power from SD card interface
-    #if defined TWR_K60F120M || defined TWR_K70F120M
+    #if defined TWR_K60F120M || defined TWR_K70F120M || defined K70F150M_12M
         #define GET_SDCARD_WP_STATE() 0                                  // TWR_K60F120M/TWR_K70F120M have no write protect input on the SD card socket
     #else
         #define GET_SDCARD_WP_STATE() (_READ_PORT_MASK(E, WRITE_PROTECT_INPUT)) // when the input is read as '1' the card is protected from writes
@@ -2074,7 +2102,7 @@
 
     #define INIT_WATCHDOG_LED()    _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_LOW(E, (BLINK_LED), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH))
     #define TOGGLE_WATCHDOG_LED()  _TOGGLE_PORT(E, BLINK_LED)
-    #define FORCE_BOOT()       (_READ_PORT_MASK(D, SWITCH_1) == 0)       // pull this input down to force boot loader mode (hold SW1 at reset)
+    #define FORCE_BOOT()       ((_READ_PORT_MASK(D, (SWITCH_1 | SWITCH_22)) == 0) && ((RCM_SRS0 & (RCM_SRS0_POR | RCM_SRS0_LVD)) != 0)) // pull this input down to force boot loader mode (hold SW1 and SW22 at reset) - only valid at power on
     #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(D, (SWITCH_1 | SWITCH_22), PORT_PS_UP_ENABLE)
 
     #define WATCHDOG_DISABLE()     (_READ_PORT_MASK(D, SWITCH_22) == 0)  // pull this input down to disable watchdog (hold SW22 at reset)

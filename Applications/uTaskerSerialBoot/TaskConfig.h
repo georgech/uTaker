@@ -110,7 +110,9 @@ const UTASK_TASK ctNodes[] = {                                           // we u
 #endif
 #if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined USB_MSD_HOST_LOADER // {2}
     TASK_MASS_STORAGE,                                                   // mass storage task
+    #if !defined SDCARD_ACCESS_WITHOUT_UTFAT
     TASK_SD_LOADER,
+    #endif
 #endif
 #if defined SERIAL_INTERFACE || defined ETH_INTERFACE || defined USE_USB_CDC || defined SUPPORT_GLCD || defined I2C_INTERFACE // {6}
     TASK_APPLICATION,                                                    // application task
@@ -177,10 +179,12 @@ const UTASKTABLEINIT ctTaskTable[] = {
 #endif
 #if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined USB_MSD_HOST_LOADER // {2}
     { "MassSt",    fnMassStorage,  MEDIUM_QUE,  (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_ACTIVATE}, // mass storage task
-    #if defined USB_MSD_HOST_LOADER && defined USB_MSD_DEVICE_LOADER
+    #if !defined SDCARD_ACCESS_WITHOUT_UTFAT
+        #if defined USB_MSD_HOST_LOADER && defined USB_MSD_DEVICE_LOADER
     { "SD",        fnSD_loader,    SMALL_QUEUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP}, // SD card loader task (not started automatically)
-    #else
+        #else
     { "SD",        fnSD_loader,    SMALL_QUEUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_ACTIVATE}, // SD card loader task
+        #endif
     #endif
 #endif
 #if defined SUPPORT_GLCD
