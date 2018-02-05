@@ -290,17 +290,26 @@
   //#define USB_CLOCK_GENERATED_INTERNALLY                               // use USB clock from internal source rather than external pin - 120MHz is suitable
   //#define USB_CLOCK_SOURCE_MCGPLL0CLK                                  // the clock source for the USB clock
 #elif defined K70F150M_12M
-    #define CRYSTAL_FREQUENCY    12000000                                // 12 MHz crystal
-    #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
-    #define CLOCK_DIV            1                                       // input must be divided to 8MHz..16MHz range (/1 to /8 for 150MHz parts)
-    #define CLOCK_MUL            25                                      // the PLL multiplication factor to achieve operating frequency of 150MHz (x16 to x47 possible - divided by 2 at VCO output)
-    #define USB_CLOCK_GENERATED_INTERNALLY                               // use USB clock from internal source rather than external pin
-    #define FLEX_CLOCK_DIVIDE    3                                       // 150/3 to give 50MHz
-    #define FLASH_CLOCK_DIVIDE   6                                       // 150/6 to give 25MHz
-    #define USB_CLOCK_GENERATED_INTERNALLY                               // use USB clock from internal source rather than external pin - 150MHz is suitable from PLL1
-    #define USB_CLOCK_SOURCE_MCGPLL1CLK                                  // the clock source for the USB clock is dedicated to the FS USB interface (48MHz)
-    #define CLOCK_DIV_1          1                                       // input must be divided to 8MHz..16MHz range (/1 to /8 for FPU parts)
-    #define CLOCK_MUL_1          16                                      // PLL1 multiplication factor to achieve operating frequency of 96MHz [suitable for FS USB] (x16 to x47 possible - divided by 2 at VCO output)
+    #if defined DWGB_SDCARD
+        #define RUN_FROM_DEFAULT_CLOCK
+        #define FLL_FACTOR            2929                               // use FLL (factors available are 640, 732, 1280, 1464, 1920, 2197, 2560 and 2929)
+        #define SYSTEM_CLOCK_DIVIDE   1
+        #define BUS_CLOCK_DIVIDE      2
+        #define FLASH_CLOCK_DIVIDE    6
+        #define FLEX_CLOCK_DIVIDE     3
+    #else
+        #define CRYSTAL_FREQUENCY    12000000                            // 12 MHz crystal
+        #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
+        #define CLOCK_DIV            1                                   // input must be divided to 8MHz..16MHz range (/1 to /8 for 150MHz parts)
+        #define CLOCK_MUL            25                                  // the PLL multiplication factor to achieve operating frequency of 150MHz (x16 to x47 possible - divided by 2 at VCO output)
+        #define USB_CLOCK_GENERATED_INTERNALLY                           // use USB clock from internal source rather than external pin
+        #define FLEX_CLOCK_DIVIDE    3                                   // 150/3 to give 50MHz
+        #define FLASH_CLOCK_DIVIDE   6                                   // 150/6 to give 25MHz
+        #define USB_CLOCK_GENERATED_INTERNALLY                           // use USB clock from internal source rather than external pin - 150MHz is suitable from PLL1
+        #define USB_CLOCK_SOURCE_MCGPLL1CLK                              // the clock source for the USB clock is dedicated to the FS USB interface (48MHz)
+        #define CLOCK_DIV_1          1                                   // input must be divided to 8MHz..16MHz range (/1 to /8 for FPU parts)
+        #define CLOCK_MUL_1          16                                  // PLL1 multiplication factor to achieve operating frequency of 96MHz [suitable for FS USB] (x16 to x47 possible - divided by 2 at VCO output)
+    #endif
 #elif defined TWR_K60F120M || defined TWR_K70F120M
     #define EXTERNAL_CLOCK       50000000                                // this must be 50MHz in order to use Ethernet in RMII mode
     #define _EXTERNAL_CLOCK      EXTERNAL_CLOCK
@@ -310,17 +319,26 @@
     #define FLASH_CLOCK_DIVIDE   5                                       // 120/5 to give 24MHz
     #define USB_CLOCK_GENERATED_INTERNALLY                               // use USB clock from internal source rather than external pin - 120MHz is suitable
     #define USB_CLOCK_SOURCE_MCGPLL0CLK                                  // the clock source for the USB clock
-#elif defined K60F150M_50M
-    #define EXTERNAL_CLOCK       50000000                                // this must be 50MHz in order to use Ethernet in RMII mode
-    #define _EXTERNAL_CLOCK      EXTERNAL_CLOCK
-    #define CLOCK_DIV            5                                       // input must be divided to 8MHz..16MHz range (/1 to /8 for FPU parts)
-    #define CLOCK_MUL            30                                      // the PLL multiplication factor to achieve operating frequency of 150MHz (x16 to x47 possible - divided by 2 at VCO output)
-    #define FLEX_CLOCK_DIVIDE    3                                       // 150/3 to give 50MHz
-    #define FLASH_CLOCK_DIVIDE   6                                       // 150/6 to give 25MHz
-    #define USB_CLOCK_GENERATED_INTERNALLY                               // use USB clock from internal source rather than external pin - 120MHz is suitable
-    #define USB_CLOCK_SOURCE_MCGPLL1CLK                                  // the clock source for the USB clock is dedicated to the FS USB interface (48MHz)
-    #define CLOCK_DIV_1          5                                       // input must be divided to 8MHz..16MHz range (/1 to /8 for FPU parts) (Neets - BDR)
-    #define CLOCK_MUL_1          24                                      // PLL1 multiplication factor to achieve operating frequency of 120MHz [suitable for FS USB] (x16 to x47 possible - divided by 2 at VCO output) (Neets - BDR)
+#elif defined K60F150M_50M || defined DWGB_SDCARD
+  //#define RUN_FROM_DEFAULT_CLOCK
+    #if defined RUN_FROM_DEFAULT_CLOCK
+        #define FLL_FACTOR            2929                               // use FLL (factors available are 640, 732, 1280, 1464, 1920, 2197, 2560 and 2929)
+        #define SYSTEM_CLOCK_DIVIDE   1
+        #define BUS_CLOCK_DIVIDE      2
+        #define FLASH_CLOCK_DIVIDE    6
+        #define FLEX_CLOCK_DIVIDE     3
+    #else
+        #define EXTERNAL_CLOCK       50000000                            // this must be 50MHz in order to use Ethernet in RMII mode
+        #define _EXTERNAL_CLOCK      EXTERNAL_CLOCK
+        #define CLOCK_DIV            5                                   // input must be divided to 8MHz..16MHz range (/1 to /8 for FPU parts)
+        #define CLOCK_MUL            30                                  // the PLL multiplication factor to achieve operating frequency of 150MHz (x16 to x47 possible - divided by 2 at VCO output)
+        #define FLEX_CLOCK_DIVIDE    3                                   // 150/3 to give 50MHz
+        #define FLASH_CLOCK_DIVIDE   6                                   // 150/6 to give 25MHz
+        #define USB_CLOCK_GENERATED_INTERNALLY                           // use USB clock from internal source rather than external pin - 120MHz is suitable
+        #define USB_CLOCK_SOURCE_MCGPLL1CLK                              // the clock source for the USB clock is dedicated to the FS USB interface (48MHz)
+        #define CLOCK_DIV_1          5                                   // input must be divided to 8MHz..16MHz range (/1 to /8 for FPU parts) (Neets - BDR)
+        #define CLOCK_MUL_1          24                                  // PLL1 multiplication factor to achieve operating frequency of 120MHz [suitable for FS USB] (x16 to x47 possible - divided by 2 at VCO output) (Neets - BDR)
+    #endif
 #elif defined TWR_K60N512 || defined TWR_K60D100M || defined TWR_K53N512
     #define EXTERNAL_CLOCK       50000000                                // this must be 50MHz in order to use Ethernet in RMII mode
     #define _EXTERNAL_CLOCK      EXTERNAL_CLOCK
@@ -1620,6 +1638,7 @@
         #if defined DWGB_SDCARD
             #define SDHC_SYSCTL_SPEED_SLOW        (SDHC_SYSCTL_SDCLKFS_64 | SDHC_SYSCTL_DVS_6) // 390kHz when 150MHz clock
             #define SDHC_SYSCTL_SPEED_FAST        (SDHC_SYSCTL_SDCLKFS_2 | SDHC_SYSCTL_DVS_3) // 25MHz when 150MHz clock
+            #define SDCARD_DETECTION()            ((_READ_PORT_MASK(E, SDCARD_DETECT)) == 0)// card detection input
         #elif defined TWR_K60F120M || defined TWR_K70F120M
             #define SDHC_SYSCTL_SPEED_SLOW        (SDHC_SYSCTL_SDCLKFS_64 | SDHC_SYSCTL_DVS_5) // 375kHz when 120MHz clock
             #define SDHC_SYSCTL_SPEED_FAST        (SDHC_SYSCTL_SDCLKFS_2 | SDHC_SYSCTL_DVS_3) // 20MHz when 120MHz clock

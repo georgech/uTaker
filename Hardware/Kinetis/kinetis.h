@@ -611,7 +611,7 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
             #if defined RUN_FROM_HIRC_FLL
                 #define MCGOUTCLK      ((48000000/1536) * FLL_FACTOR)    // 48MHz/1536 IRC multiplied by the FLL factor
             #else
-                #define MCGOUTCLK      (35000 * FLL_FACTOR)              // 32kHz IRC multiplied by the FLL factor
+                #define MCGOUTCLK      (32768 * FLL_FACTOR)              // 32kHz IRC multiplied by the FLL factor
             #endif
         #elif defined RUN_FROM_HIRC
             #define MCGOUTCLK          48000000

@@ -111,7 +111,7 @@
     MCG_C1 = (MCG_C1_CLKS_EXTERN_CLK | MCG_C1_FRDIV_VALUE);              // switch to external source (the FLL input clock is set to as close to its input range as possible, although this is not absolutely necessary if the FLL will not be used)
     while ((MCG_S & MCG_S_OSCINIT) == 0) {                               // loop until the crystal source has been selected
         #if defined _WINDOWS
-        MCG_S |= MCG_S_OSCINIT;                                          // set the flag indicating that the ocsillator initialisation has completed
+        MCG_S |= MCG_S_OSCINIT;                                          // set the flag indicating that the oscillator initialisation has completed
         #endif
     }
         #if defined FLL_FACTOR
