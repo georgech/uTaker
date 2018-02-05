@@ -575,6 +575,7 @@ TEMPPARS *temp_pars = 0;                                                 // work
 static QUEUE_HANDLE save_handle = NETWORK_HANDLE;                        // temporary debug handle backup
 static int iAppState = STATE_INIT;                                       // task state
 
+
 // Application task
 //
 extern void fnApplication(TTASKTABLE *ptrTaskTable)
@@ -744,8 +745,8 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
 #if defined PHY_POLL_LINK                                                // {83}
         fnInterruptMessage(TASK_NETWORK_INDICATOR, LAN_LINK_DOWN);       // start PHY polling operation
 #endif
-#if defined _WINDOWS
-        fnSimulateLinkUp();                                              // Ethernet link up simulation
+#if defined _WINDOWS && (defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP)
+        fnSimulateLinkUp();                                              // ethernet link up simulation
 #endif
 #if defined TEST_GLOBAL_TIMERS
         fnStartGlobalTimers();
@@ -1562,11 +1563,11 @@ extern QUEUE_HANDLE fnSetNewSerialMode(unsigned char ucDriverMode)
     #endif
     #if defined SERIAL_SUPPORT_DMA
         #if defined FREE_RUNNING_RX_DMA_RECEPTION
-            #if defined KINETIS_KL
-    tInterfaceParameters.ucDMAConfig = (UART_RX_DMA | UART_RX_MODULO); // modulo aligned reception memory is required by kinetis KL parts in free-running DMA mode
-  //tInterfaceParameters.ucDMAConfig = (UART_RX_DMA | UART_RX_MODULO | UART_TX_DMA); // modulo aligned reception memory is required by kinetis KL parts in free-running DMA mode
+            #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA
+    tInterfaceParameters.ucDMAConfig = (UART_RX_DMA | UART_RX_MODULO); // modulo aligned reception memory is required by kinetis KL parts without eDMA in free-running DMA mode
+  //tInterfaceParameters.ucDMAConfig = (UART_RX_DMA | UART_RX_MODULO | UART_TX_DMA); // modulo aligned reception memory is required by kinetis KL parts without eDMA in free-running DMA mode
             #else
-    tInterfaceParameters.ucDMAConfig = (UART_RX_DMA);
+    tInterfaceParameters.ucDMAConfig = (UART_RX_DMA | UART_TX_DMA);
             #endif
             #if !(defined RUN_IN_FREE_RTOS && defined FREE_RTOS_UART)
     uTaskerStateChange(OWN_TASK, UTASKER_POLLING);                       // set the task to polling mode to regularly check the receive buffer

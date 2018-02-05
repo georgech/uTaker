@@ -218,7 +218,7 @@ static QUEUE_TRANSFER entry_tty(QUEUE_HANDLE channel, unsigned char *ptBuffer, Q
 #if !defined _NO_CHECK_QUEUE_INPUT                                       // {19}
     case CALL_INPUT:                                                     // request the number or input characters waiting
         ptTTYQue = (struct stTTYQue *)(que_ids[DriverID].input_buffer_control); // set to input control block
-        if (ptTTYQue->opn_mode & (MSG_MODE | MSG_BREAK_MODE)) {          // {26}
+        if ((ptTTYQue->opn_mode & (MSG_MODE | MSG_BREAK_MODE)) != 0) {   // {26}
     #if defined (SUPPORT_MSG_CNT)
             if (ptTTYQue->opn_mode & MSG_MODE_RX_CNT) {
                 rtn_val = (ptTTYQue->msgs + 1)/2;                        // in count mode we count the count and the actual message

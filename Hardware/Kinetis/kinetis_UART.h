@@ -41,6 +41,7 @@
     06.08.2017 Use POWER_UP_ATOMIC() instead of POWER_UP() to enable clocks to UART modules (using bit-banding access)
     01.09.2017 Correct clearing LPUART overrun flag                      {210}
     19.10.2017 Use ATOMIC_PERIPHERAL_BIT_REF_SET() and ATOMIC_PERIPHERAL_BIT_REF_CLEAR() to enable/disable DMA_ERQ (interrupt and DMA safe)
+    05.02.2018 Add free-running LPUART DM Areception for KL devices with eDMA {211}
 
 */
 
@@ -184,9 +185,7 @@ static unsigned char ucUART_mask[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {0};
     static unsigned char ucStops[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {0};
 #endif
 #if defined SERIAL_INTERFACE && defined SERIAL_SUPPORT_DMA_RX && defined SERIAL_SUPPORT_DMA_RX_FREERUN // {15}
-    #if !defined KINETIS_KL || (defined KINETIS_KL && !defined DEVICE_WITH_eDMA)
     static unsigned long ulDMA_progress[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {0};
-    #endif
     #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA                  // {209}
     static QUEUE_TRANSFER RxModulo[UARTS_AVAILABLE + LPUARTS_AVAILABLE];
     #endif
@@ -1462,12 +1461,26 @@ static void (*_uart_rx_dma_Interrupt[UARTS_AVAILABLE + LPUARTS_AVAILABLE])(void)
 };
     #endif
 
-    #if defined SERIAL_SUPPORT_DMA_RX_FREERUN && (defined KINETIS_KL && !defined DEVICE_WITH_eDMA)
+    #if defined SERIAL_SUPPORT_DMA_RX_FREERUN && defined KINETIS_KL
 // Check the progress of the channel's free-running DMA reception and update the TTY character account accordingly
 // - retrigger the DMA max. count on each check so that it never terminates
 //
 static void fnCheckFreerunningDMA_reception(int channel, QUEQUE *tty_queue) // {209}
 {
+        #if defined DEVICE_WITH_eDMA                                     // {211}
+    unsigned short usDMA_rx;
+    KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
+    ptrDMA_TCD += UART_DMA_RX_CHANNEL[channel];
+    usDMA_rx = ptrDMA_TCD->DMA_TCD_CITER_ELINK;                          // snap-shot of DMA reception progress
+    if (ulDMA_progress[channel] >= usDMA_rx) {
+        tty_queue->chars += (QUEUE_TRANSFER)(ulDMA_progress[channel] - usDMA_rx); // the extra number of characters received by DMA since last check
+    }
+    else {
+        tty_queue->chars += (QUEUE_TRANSFER)ulDMA_progress[channel];
+        tty_queue->chars += (ptrDMA_TCD->DMA_TCD_BITER_ELINK - usDMA_rx); // the extra number of characters received by DMA since last check
+    }
+    ulDMA_progress[channel] = usDMA_rx;                                  // remember the check state
+        #else
     unsigned long ulDMA_rx;
     KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
     ptrDMA += UART_DMA_RX_CHANNEL[channel];                              // set the DMA channel that the UART channel is using
@@ -1480,34 +1493,39 @@ static void fnCheckFreerunningDMA_reception(int channel, QUEQUE *tty_queue) // {
     }
     ulDMA_progress[channel] = ulDMA_rx;                                  // remember this check state for future comparisons
     ptrDMA->DMA_DSR_BCR |= (0xffff0);                                    // retrigger maximum DMA transfer at each poll
+        #endif
 }
     #endif
-    #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA
+    #if defined KINETIS_KL
 // Configure KL DMA for reception to a free-running modulo buffer and then enable reception (also configuring the RXD input)
 //
 static void fnEnableRxAndDMA(int channel, unsigned long buffer_length, unsigned long buffer_address, void *uart_data_reg) // {209}
 {
+    #if defined DEVICE_WITH_eDMA                                         // {211}
+    ulDMA_progress[channel] = buffer_length;
+    #else
     RxModulo[channel] = (QUEUE_TRANSFER)buffer_length;                   // this must be modulo 2 (16, 32, 64, 128...256k)
     ulDMA_progress[channel] = buffer_address;                            // destination must be modulo aligned
+    #endif
     fnConfigDMA_buffer(UART_DMA_RX_CHANNEL[channel], (DMAMUX_CHCFG_SOURCE_UART0_RX + (2 * channel)), buffer_length, uart_data_reg, (void *)buffer_address, (DMA_DIRECTION_INPUT | DMA_BYTES), 0, 0);
     fnDMA_BufferReset(UART_DMA_RX_CHANNEL[channel], DMA_BUFFER_START);   // enable DMA operation
     fnRxOn(channel);                                                     // configure receiver pin and enable reception and its interrupt/DMA
 }
     #endif
 
-// The Kinetis buffer has been set up to run continuously in circular buffer mode and this routine is used to enable the receiver and DMA on first call and optionally to later poll teh DMA transfer state
+// The Kinetis buffer has been set up to run continuously in circular buffer mode and this routine is used to enable the receiver and DMA on first call and optionally to later poll the DMA transfer state
 //
 extern void fnPrepareRxDMA(QUEUE_HANDLE channel, unsigned char *ptrStart, QUEUE_TRANSFER rx_length)
 {
-    #if (UARTS_AVAILABLE > 0) || ((LPUARTS_AVAILABLE > 0) && (defined KINETIS_KL && !defined DEVICE_WITH_eDMA))
+    #if (UARTS_AVAILABLE > 0) || ((LPUARTS_AVAILABLE > 0) && (defined KINETIS_KL))
     KINETIS_UART_CONTROL *uart_reg = fnSelectChannel(channel);           // select the UART/LPUART channel register set
     #endif
     #if LPUARTS_AVAILABLE > 0                                            // if the device has LPUART(s)
         #if UARTS_AVAILABLE > 0                                          // if also UARTs
     if (uart_type[channel] == UART_TYPE_LPUART) {                        // LPUART channel
         #endif
-        #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA              // {209}
-        if ((((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_CTRL & LPUART_CTRL_RE) == 0) { // if receiver not yet enabled
+        #if defined KINETIS_KL                                           // {209}{211}
+        if ((((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_CTRL & LPUART_CTRL_RE) == 0) { // if receiver is not yet enabled
             fnEnableRxAndDMA(channel, rx_length, (unsigned long)ptrStart, (void *)&(((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_DATA)); // configure DMA and reception, including configuring the RXD input
         }
             #if defined SERIAL_SUPPORT_DMA_RX_FREERUN

@@ -5877,6 +5877,9 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
         #define DMAMUX_CHCFG_SOURCE_LPTMR1       62                      // 0x3d LPTMR1
         #define DMAMUX0_CHCFG_SOURCE_DMAMUX0    (63 | DMAMUX_CHCFG_TRIG) // 0x3e DMA MUX - always enabled
     #endif
+    // For compatibility
+    //
+    #define DMAMUX_CHCFG_SOURCE_UART0_RX         DMAMUX0_CHCFG_SOURCE_LPUART0_RX
 #else
     #if defined KINETIS_K66
       #define DMAMUX_CHCFG_SOURCE_TSI0           1                       // 0x01 TSI0
@@ -8898,26 +8901,26 @@ typedef struct stFLEX_TIMER_MODULE
 #define SDHC_BLKATTR        *(unsigned long *)(SDHC_BLOCK + 0x004)       // SDHC Block Attributes Register
   #define SDHC_BLKATTR_BLKCNT_SHIFT 16
   #define SDHC_BLKATTR_BLKSIZE_MASK 0x00001fff
-#define SDHC_CMDARG         *(unsigned long *)(SDHC_BLOCK + 0x008)       // SDHC Command Argument Register
-#define SDHC_XFERTYP        *(unsigned long *)(SDHC_BLOCK + 0x00c)       // SDHC Transfer Type Register
-  #define SDHC_XFERTYP_DMAEN        0x00000001                           // DMA Enable
-  #define SDHC_XFERTYP_BCEN         0x00000002                           // Block Count Enable
-  #define SDHC_XFERTYP_AC12EN       0x00000004                           // Auto CMD12 Enable
-  #define SDHC_XFERTYP_DTDSEL_WRITE 0x00000000                           // Data Transfer Direction Select - write
-  #define SDHC_XFERTYP_DTDSEL_READ  0x00000010                           // Data Transfer Direction Select - read
-  #define SDHC_XFERTYP_MSBSEL       0x00000020                           // Multi/Single Block Select
-  #define SDHC_XFERTYP_RSPTYP_NONE  0x00000000                           // Response Type Select - no response
-  #define SDHC_XFERTYP_RSPTYP_126   0x00010000                           // Response Type Select - response length 136
-  #define SDHC_XFERTYP_RSPTYP_48    0x00020000                           // Response Type Select - response length 48
-  #define SDHC_XFERTYP_RSPTYP_48BSY 0x00030000                           // Response Type Select - response length 48 - check busy after response
-  #define SDHC_XFERTYP_CCCEN        0x00080000                           // Command CRC Check Enable
-  #define SDHC_XFERTYP_CICEN        0x00100000                           // Command Index Check Enable
-  #define SDHC_XFERTYP_DPSEL        0x00200000                           // Data Present Select
-  #define SDHC_XFERTYP_CMDTYP_NORM  0x00000000                           // Command Type
+#define SDHC_CMDARG         *(unsigned long *)(SDHC_BLOCK + 0x008)       // SDHC command argument register
+#define SDHC_XFERTYP        *(unsigned long *)(SDHC_BLOCK + 0x00c)       // SDHC transfer type register
+  #define SDHC_XFERTYP_DMAEN        0x00000001                           // DMA enable
+  #define SDHC_XFERTYP_BCEN         0x00000002                           // block count enable
+  #define SDHC_XFERTYP_AC12EN       0x00000004                           // auto CMD12 enable
+  #define SDHC_XFERTYP_DTDSEL_WRITE 0x00000000                           // data transfer direction select - write
+  #define SDHC_XFERTYP_DTDSEL_READ  0x00000010                           // data transfer direction select - read
+  #define SDHC_XFERTYP_MSBSEL       0x00000020                           // multi/single block select
+  #define SDHC_XFERTYP_RSPTYP_NONE  0x00000000                           // response type select - no response
+  #define SDHC_XFERTYP_RSPTYP_126   0x00010000                           // response type select - response length 136
+  #define SDHC_XFERTYP_RSPTYP_48    0x00020000                           // response type select - response length 48
+  #define SDHC_XFERTYP_RSPTYP_48BSY 0x00030000                           // response type select - response length 48 - check busy after response
+  #define SDHC_XFERTYP_CCCEN        0x00080000                           // command CRC check enable
+  #define SDHC_XFERTYP_CICEN        0x00100000                           // command index check enable
+  #define SDHC_XFERTYP_DPSEL        0x00200000                           // data present select
+  #define SDHC_XFERTYP_CMDTYP_NORM  0x00000000                           // command type
   #define SDHC_XFERTYP_CMDTYP_SUSP  0x00400000            
   #define SDHC_XFERTYP_CMDTYP_RESUM 0x00800000            
   #define SDHC_XFERTYP_CMDTYP_ABORT 0x00c00000            
-  #define SDHC_XFERTYP_CMDINX_MASK  0x3f000000                           // Command Index value
+  #define SDHC_XFERTYP_CMDINX_MASK  0x3f000000                           // command Index value
   #define SDHC_XFERTYP_CMDINX_SHIFT 24
 #define SDHC_CMDRSP0        *(volatile unsigned long *)(SDHC_BLOCK + 0x010) // SDHC Command Response Register 0 (read-only)
 #define SDHC_CMDRSP1        *(volatile unsigned long *)(SDHC_BLOCK + 0x014) // SDHC Command Response Register 1 (read-only)
