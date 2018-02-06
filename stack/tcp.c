@@ -85,6 +85,7 @@
     02.02.2017 Adapt for us tick resolution                              {68}
     09.01.2018 Add secure sokcet layer support                           {69}
     09.01.2018 Add fnInsertTCPHeader()                                   {70}
+    06.02.2018 Only callback with TCP_EVENT_CLOSED event when socket is reused from the TCP_STATE_FIN_WAIT_2 state {71}
 
 */
 
@@ -1231,8 +1232,11 @@ static unsigned long fnGetTCP_init_seq(void)
         // So that the socket is not blocked forever we also allow it to be reused here...
         //
         if (ptr_TCP->ucTCP_state & (TCP_STATE_FIN_WAIT_2 | TCP_STATE_TIME_WAIT)) {
+            int iTimeWait2 = ((ptr_TCP->ucTCP_state & TCP_STATE_FIN_WAIT_2) != 0);
             fnNewTCPState(ptr_TCP, TCP_STATE_CLOSED);
-            ptr_TCP->event_listener(_TCP_SOCKET_MASK(ptr_TCP->MySocketNumber), TCP_EVENT_CLOSED, ptr_TCP->ucRemoteIP, ptr_TCP->usRemport); // {56}
+            if (iTimeWait2 != 0) {                                       // {71} only inform of close if the socket was is the TCP_STATE_FIN_WAIT_2 state
+                ptr_TCP->event_listener(_TCP_SOCKET_MASK(ptr_TCP->MySocketNumber), TCP_EVENT_CLOSED, ptr_TCP->ucRemoteIP, ptr_TCP->usRemport); // {56}
+            }
         }
         else {
             return (SOCKET_STATE_INVALID);

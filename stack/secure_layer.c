@@ -13,6 +13,7 @@
     ---------------------------------------------------------------------
     Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
+    06.02.2017 Remove secure layer when the connection is terminated     {1}
 
 */        
 
@@ -577,6 +578,7 @@ extern int fnTLS(USOCKET Socket, unsigned char ucEvent)
             iTLS_tx_state = 105;                                         // the next step if to send an encrypted handshake message
         }
         break;
+    case TCP_EVENT_CLOSED:
     case TCP_EVENT_CLOSE:
     case TCP_EVENT_ABORT:
         fnTearDown();
@@ -930,7 +932,43 @@ extern int fnSecureLayerReception(USOCKET Socket, unsigned char **ptr_ucPrtData,
         case TLS_RX_STATE_ENCRYPTED_ALERT_CONTENT:
         case TLS_RX_STATE_ENCRYPTED_RECORD_CONTENT:
             if (usLength < ulHandshakeSize) {                            // if the complete handshake protocol is not contained in the input buffer
-                _EXCEPTION("No buffering available (at the moment)...");
+                register unsigned long ulSave = usLength;
+                if ((ulBufferContent + ulSave) > ulHandshakeSize) {      // handle only the required length
+                    ulSave = (unsigned short)(ulHandshakeSize - ulBufferContent);
+                }
+                if (ptrReceptionBuffer == 0) {                           // buffer doesn't yet exist
+                    ptrReceptionBuffer = (unsigned char *)uCalloc(1, ulHandshakeSize); // create reception buffer as required to handle this content
+                }
+                uMemcpy(&ptrReceptionBuffer[ulBufferContent], ucPrtData, ulSave); // save to the intermediate buffer
+                if ((ulBufferContent + ulSave) < ulHandshakeSize) {      // if the handshake protocol content hasn't yet been completely collected
+                    ulBufferContent += ulSave;
+                    return iReturn;
+                }
+                fnDecrypt(&ptrReceptionBuffer, &ulHandshakeSize);        // decrypt the collected content (performed in place, with reduction in output length)
+              //uCFree(ptrReceptionBuffer);  can't free until the application has handled it                        // deallocate intermediate reception buffer memory (note that we set the pointer back to be beginning of the physical buffer)
+              //ptrReceptionBuffer = 0;                                  // no more memory allocated
+                ulThisLength = ulSave;
+                if (TLS_RX_STATE_ENCRYPTED_APP_CONTENT == iTLS_rx_state) {
+                    *ptr_ucPrtData = ptrReceptionBuffer;                 // the data content
+                    *ptr_usLength = (unsigned short)ulHandshakeSize;     // the data length
+                    iReturn = (APP_SECURITY_HANDLED | APP_FREE_DATA);    // allow the user to handle the data as if it were received unencoded, after which it should be freed
+                }
+                else if (TLS_RX_STATE_ENCRYPTED_ALERT_CONTENT == iTLS_rx_state) {
+                    iReturn |= fnHandleAlert(ptrReceptionBuffer, ulHandshakeSize);
+                }
+                else {                                                   // decrypted handshake
+                    ucPresentHandshakeType = ptrReceptionBuffer[0];
+                    ulHandshakeSize = (ptrReceptionBuffer[1] << 16);
+                    ulHandshakeSize |= (ptrReceptionBuffer[2] << 8);
+                    ulHandshakeSize |= ptrReceptionBuffer[3];
+                    iReturn |= fnHandleHandshake(Socket, &ptrReceptionBuffer[4], ulHandshakeSize, ucPresentHandshakeType); // handle tcp temporary buffer
+                }
+                uCFree(ptrReceptionBuffer);                              // deallocate intermediate reception buffer memory
+                ptrReceptionBuffer = 0;                                  // no more memory allocated
+                usRecordLength = 0;
+                ulBufferContent = 0;
+                iTLS_rx_state = TLS_RX_STATE_IDLE;                       // the record has been completely handled so start searching the next
+                return iReturn;
             }
             else {                                                       // this tcp frame contains the complete handshake protocol content
                 fnDecrypt(&ucPrtData, &ulHandshakeSize);                 // decrypt the collected content (performed in place, with reduction in output length)
@@ -972,13 +1010,13 @@ extern int fnSecureLayerReception(USOCKET Socket, unsigned char **ptr_ucPrtData,
 
 static int (*app_listener[NO_OF_TCPSOCKETS])(USOCKET, unsigned char, unsigned char *, unsigned short) = {0};
 
-
 // Local listener on secure port (inserted between the secure socket layer and the application's listener)
 //
 static int fnSecureListener(USOCKET Socket, unsigned char ucEvent, unsigned char *ucIp_Data, unsigned short usPortLen)
 {
     static unsigned char ucUnacked = 0;
     int iResult;
+    int iClosed = 0;
     switch (ucEvent) {
     case TCP_EVENT_CONNECTED:                                            // the server has accepted the TCP connection request
         iResult = fnTLS(Socket, TCP_EVENT_CONNECTED);                    // start establishing a secure socket connection
@@ -994,6 +1032,7 @@ static int fnSecureListener(USOCKET Socket, unsigned char ucEvent, unsigned char
 
     case TCP_EVENT_ABORT:                                                // server has reset the TCP connection
         fnTLS(Socket, TCP_EVENT_ABORT);
+        iClosed = 1;
         break;
 
     case TCP_EVENT_ACK:                                                  // last TCP transmission has been acknowledged
@@ -1007,6 +1046,7 @@ static int fnSecureListener(USOCKET Socket, unsigned char ucEvent, unsigned char
             }
         }
         break;
+
     case TCP_EVENT_REGENERATE:                                           // we must repeat the previous transmission
         {
             int iReturn;
@@ -1029,29 +1069,48 @@ static int fnSecureListener(USOCKET Socket, unsigned char ucEvent, unsigned char
                 }
                 return iReturn;                                          // return according to the secure socket layer's response
             }
+            if ((APP_FREE_DATA & iReturn) != 0) {                        // if decrypted data is in a temporary buffer
+                iReturn = app_listener[_TCP_SOCKET_MASK(Socket)]((Socket | SECURE_SOCKET_MODE), ucEvent, ucIp_Data, usPortLen); // let the application handle the data
+                uCFree(ptrReceptionBuffer);                              // deallocate intermediate reception buffer memory
+                ptrReceptionBuffer = 0;                                  // no more memory allocated
+                return iReturn;
+            }
         }
         break;
 
-    case TCP_EVENT_ARP_RESOLUTION_FAILED:
+
     case TCP_EVENT_CLOSED:                                               // the TCP connection has closed
+        fnTLS(Socket, TCP_EVENT_CLOSED);
+        iClosed = 1;
+        break;
+    case TCP_EVENT_ARP_RESOLUTION_FAILED:
     case TCP_EVENT_CONREQ:
     default:
         break;
     }
     // Pass on to the application layer callback
     //
-    return (app_listener[_TCP_SOCKET_MASK(Socket)]((Socket | SECURE_SOCKET_MODE), ucEvent, ucIp_Data, usPortLen));
+    iResult = app_listener[_TCP_SOCKET_MASK(Socket)]((Socket | SECURE_SOCKET_MODE), ucEvent, ucIp_Data, usPortLen);
+    if (iClosed != 0) {                                                   // {1}
+        (int(*)(USOCKET, unsigned char, unsigned char *, unsigned short))fnInsertSecureLayer(Socket, 0, 0); // uninstall secure layer
+    }
+    return iResult;
 }
 
-extern void *fnInsertSecureLayer(USOCKET TCP_socket, int (*listener)(USOCKET, unsigned char, unsigned char *, unsigned short), int iInsert)
+extern void *fnInsertSecureLayer(USOCKET TCP_socket, int(*listener)(USOCKET, unsigned char, unsigned char *, unsigned short), int iInsert)
 {
     if (iInsert != 0) {
         app_listener[_TCP_SOCKET_MASK(TCP_socket)] = listener;           // enter the application listener
         return fnSecureListener;                                         // return the inserted secure listener
     }
     else {
-        if (app_listener[_TCP_SOCKET_MASK(TCP_socket)] != 0) {
-            return (app_listener[_TCP_SOCKET_MASK(TCP_socket)]);
+        if (app_listener[_TCP_SOCKET_MASK(TCP_socket)] != 0) {           // if a secure layer had been inserted
+            if (0 == listener) {                                         // {1} when called without knowledge of the present listener
+                TCP_CONTROL *ptr_TCP = fnGetSocketControl(TCP_socket);
+                ptr_TCP->event_listener = app_listener[_TCP_SOCKET_MASK(TCP_socket)]; // directly insert the original listener
+                return ptr_TCP->event_listener;
+            }
+            return (app_listener[_TCP_SOCKET_MASK(TCP_socket)]);         // return the original application listener in order to remove the secure layer
         }
         else {
             return listener;

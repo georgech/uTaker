@@ -113,7 +113,7 @@ extern void fnTearDown(void)
         mbedtls_free(secure_session->ssl.in_ctr);
         mbedtls_ssl_free(&(secure_session->ssl));
         mbedtls_ssl_config_free(&(secure_session->config));
-        mbedtls_free(secure_session);                                        // free the session memory (1252)
+        mbedtls_free(secure_session);                                    // free the session memory (1252)
         secure_session = 0;
     }
     // remaining state 28 bytes still allocated - 3 holes with 17028 - 3 blocks still allocated

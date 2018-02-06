@@ -1171,7 +1171,8 @@ __PACK_OFF
 #define HANDLING_PARTICAL_ACK               0x0020
 #define APP_REQUEST_AUTHENTICATION          0x0040                       // {21}
 #define APP_SECURITY_HANDLED                0x0080
-#define APP_SECURITY_CONNECTED              0x0100
+#define APP_FREE_DATA                       0x0100
+#define APP_SECURITY_CONNECTED              0x0200
 
 
 #define NO_TCP_LISTENER_INSTALLED          -1                            // TCP error codes
