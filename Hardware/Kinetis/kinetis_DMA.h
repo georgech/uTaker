@@ -862,16 +862,15 @@ extern void *uReverseMemcpy(void *ptrTo, const void *ptrFrom, size_t Size)
             }
             else {
                 switch (Size & 0x3) {
-                case 0x00:
-                    iOffset = 0;
-                    break;
                 case 0x01:
                     iOffset = 2;
                     break;
                 case 0x02:
                     iOffset = 1;
                     break;
+                case 0x00:
                 case 0x03:
+                default:
                     iOffset = 0;
                     break;
                 }

@@ -19,6 +19,7 @@
     26.01.2017 Add external clock selection for KL parts                 {4}
     26.04.2017 Add KL82 TPM clock input selection                        {5}
     20.05.2017 Add capture mode to Kinetis                               {6}
+    07.02.2018 Ensure that the count value is reset to zero when starting timer {7}
 
 */
 
@@ -348,6 +349,7 @@ static __interrupt void _flexTimerInterrupt_3(void)
             }
     #if !defined KINETIS_KL && !defined KINETIS_KE
             ptrFlexTimer->FTM_CNTIN = 0;                                 // counter start value
+            ptrFlexTimer->FTM_CNT = 0;                                   // {7} cause the counter to be set to zero
     #endif
     #if defined SUPPORT_CAPTURE
             if ((ptrTimerSetup->timer_mode & TIMER_CAPTURE_RISING_FALLING) != 0) { // {6} if capture mode is required
