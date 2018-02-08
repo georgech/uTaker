@@ -2480,6 +2480,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define UART1_ON_C
     #elif defined FRDM_KL82Z || defined TWR_KL82Z72M || defined FRDM_KL28Z
         #define LPUART0_ON_B                                             // alternative LPUART0 pin mapping
+        #define LPUART2_ON_E_HIGH
     #elif defined TWR_K20D72M
         #define UART3_ON_B                                               // alternative UART3 pin mapping
     #else
@@ -2503,6 +2504,9 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
           //#define UART2_ON_E_HIGH                                      // alternative UART2 pin mapping
           //#define UART2_ON_D_HIGH                                      // alternative UART2 pin mapping
         #endif
+      //#define LPUART2_ON_D_LOW
+      //#define LPUART2_ON_E_LOW
+      //#define LPUART2_ON_E_HIGH
     #endif
     #if DEMO_UART == 0
         #define CDC_UART_1     1                                         // UARTs to be used with multiple USB-CDC/serial connections

@@ -1638,7 +1638,7 @@
         #if defined DWGB_SDCARD
             #define SDHC_SYSCTL_SPEED_SLOW        (SDHC_SYSCTL_SDCLKFS_64 | SDHC_SYSCTL_DVS_6) // 390kHz when 150MHz clock
             #define SDHC_SYSCTL_SPEED_FAST        (SDHC_SYSCTL_SDCLKFS_2 | SDHC_SYSCTL_DVS_3) // 25MHz when 150MHz clock
-            #define SDCARD_DETECTION()            ((_READ_PORT_MASK(E, SDCARD_DETECT)) == 0)// card detection input
+             #define SDCARD_DETECTION()           ((_READ_PORT_MASK(E, SDCARD_DETECT)) == 0)// card detection input
         #elif defined TWR_K60F120M || defined TWR_K70F120M
             #define SDHC_SYSCTL_SPEED_SLOW        (SDHC_SYSCTL_SDCLKFS_64 | SDHC_SYSCTL_DVS_5) // 375kHz when 120MHz clock
             #define SDHC_SYSCTL_SPEED_FAST        (SDHC_SYSCTL_SDCLKFS_2 | SDHC_SYSCTL_DVS_3) // 20MHz when 120MHz clock
@@ -2124,7 +2124,7 @@
     #define FORCE_BOOT()       ((_READ_PORT_MASK(D, (SWITCH_1 | SWITCH_22)) == 0) && ((RCM_SRS0 & (RCM_SRS0_POR | RCM_SRS0_LVD)) != 0)) // pull this input down to force boot loader mode (hold SW1 and SW22 at reset) - only valid at power on
     #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(D, (SWITCH_1 | SWITCH_22), PORT_PS_UP_ENABLE)
 
-    #define WATCHDOG_DISABLE()     (_READ_PORT_MASK(D, SWITCH_22) == 0)  // pull this input down to disable watchdog (hold SW22 at reset)
+    #define WATCHDOG_DISABLE()  (1) // (_READ_PORT_MASK(D, SWITCH_22) == 0) // pull this input down to disable watchdog (hold SW22 at reset)
 #elif defined FRDM_K66F
     #define LED_GREEN          (PORTE_BIT6)                              // green LED - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
     #define LED_RED            (PORTC_BIT9)                              // red LED - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too

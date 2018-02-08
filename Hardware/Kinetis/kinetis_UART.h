@@ -2071,8 +2071,18 @@ extern void fnTxOn(QUEUE_HANDLE Channel)
             #else
         case (2):                                                        // LPUART 2
             #endif
-            #if defined KINETIS_K80
-               #if defined LPUART2_ON_E_LOW
+            #if defined KINETIS_KL28
+                #if defined LPUART2_ON_E_LOW
+            _CONFIG_PERIPHERAL(E, 16, (PE_16_LPUART2_TX | UART_PULL_UPS)); // LPUART2_TX on PE16 (alt. function 3)
+                #elif defined LPUART2_ON_E_HIGH
+            _CONFIG_PERIPHERAL(E, 22, (PE_22_LPUART2_TX | UART_PULL_UPS)); // LPUART2_TX on PE22 (alt. function 4)
+                #elif defined LPUART2_ON_D_LOW
+            _CONFIG_PERIPHERAL(D, 3, (PD_3_LPUART2_TX | UART_PULL_UPS)); // LPUART2_TX on PD3 (alt. function 3)
+                #else
+            _CONFIG_PERIPHERAL(D, 5, (PD_5_LPUART2_TX | UART_PULL_UPS)); // LPUART2_TX on PD5 (alt. function 3)
+                #endif
+            #elif defined KINETIS_K80
+                #if defined LPUART2_ON_E_LOW
             _CONFIG_PERIPHERAL(E, 12, (PE_12_LPUART2_TX | UART_PULL_UPS)); // LPUART2_TX on PE12 (alt. function 3)
                 #elif defined LPUART2_ON_E_HIGH
             _CONFIG_PERIPHERAL(E, 16, (PE_16_LPUART2_TX | UART_PULL_UPS)); // LPUART2_TX on PE16 (alt. function 3)
@@ -2376,7 +2386,17 @@ extern void fnRxOn(QUEUE_HANDLE Channel)
             #else
         case (2):                                                        // LPUART 2
             #endif
-            #if defined KINETIS_K80
+            #if defined KINETIS_KL28
+                #if defined LPUART2_ON_E_LOW
+            _CONFIG_PERIPHERAL(E, 17, (PE_17_LPUART2_RX | UART_PULL_UPS)); // LPUART2_RX on PE17 (alt. function 3)
+                #elif defined LPUART2_ON_E_HIGH
+            _CONFIG_PERIPHERAL(E, 23, (PE_23_LPUART2_RX | UART_PULL_UPS)); // LPUART2_RX on PE23 (alt. function 4)
+                #elif defined LPUART2_ON_D_LOW
+            _CONFIG_PERIPHERAL(D, 2, (PD_2_LPUART2_RX | UART_PULL_UPS)); // LPUART2_RX on PD2 (alt. function 3)
+                #else
+            _CONFIG_PERIPHERAL(D, 4, (PD_4_LPUART2_RX | UART_PULL_UPS)); // LPUART2_RX on PD4 (alt. function 3)
+                #endif
+            #elif defined KINETIS_K80
                #if defined LPUART2_ON_E_LOW
             _CONFIG_PERIPHERAL(E, 13, (PE_13_LPUART2_RX | UART_PULL_UPS)); // LPUART2_RX on PE13 (alt. function 3)
                 #elif defined LPUART2_ON_E_HIGH

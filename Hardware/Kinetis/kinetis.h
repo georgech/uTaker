@@ -11329,6 +11329,15 @@ typedef struct stKINETIS_LPTMR_CTL
         #define PE_16_LPUART2_TX         PORT_MUX_ALT3
         #define PD_2_LPUART2_RX          PORT_MUX_ALT3
         #define PD_3_LPUART2_TX          PORT_MUX_ALT3
+    #elif defined KINETIS_KL28
+        #define PE_17_LPUART2_RX         PORT_MUX_ALT3
+        #define PE_16_LPUART2_TX         PORT_MUX_ALT3
+        #define PE_23_LPUART2_RX         PORT_MUX_ALT4
+        #define PE_22_LPUART2_TX         PORT_MUX_ALT4
+        #define PD_2_LPUART2_RX          PORT_MUX_ALT3
+        #define PD_3_LPUART2_TX          PORT_MUX_ALT3
+        #define PD_4_LPUART2_RX          PORT_MUX_ALT3
+        #define PD_5_LPUART2_TX          PORT_MUX_ALT3
     #endif
 #endif
 #if LPUARTS_AVAILABLE > 3
