@@ -97,7 +97,7 @@ static const unsigned short cusCipherSuites[] = {
 // The handshake extensions that we send
 //
 static const unsigned short cusHandshakeExtensions[] = {
-    HANDSHAKE_EXTENSION_SERVER_NAME,
+  //HANDSHAKE_EXTENSION_SERVER_NAME,
     HANDSHAKE_EXTENSION_SIGNATURE_ALGORITHMS,
     HANDSHAKE_EXTENSION_SUPPORTED_GROUPS,
     HANDSHAKE_EXTENSION_EC_POINT_FORMATS,
@@ -155,6 +155,7 @@ static const unsigned char cucEC_pointFormats[] = {
 #define TLS_RX_STATE_ENCRYPTED_RECORD_CONTENT 11
 #define TLS_RX_STATE_ENCRYPTED_APP_CONTENT    12
 #define TLS_RX_STATE_ENCRYPTED_ALERT_CONTENT  13
+#define TLS_RX_STATE_PLAIN_TEXT_ALERT_CONTENT 14
 
 static int iTLS_tx_state = TLS_TX_STATE_IDLE;
 static int iTLS_rx_state = TLS_RX_STATE_IDLE;
@@ -857,7 +858,13 @@ extern int fnSecureLayerReception(USOCKET Socket, unsigned char **ptr_ucPrtData,
                     }
                 }
                 else {
-                    iTLS_rx_state = TLS_RX_STATE_PROTOCOL_TYPE;
+                    if (SSL_TLS_CONTENT_ALERT == iTLS_rx_type) {         // unencrypted alert
+                        iTLS_rx_state = TLS_RX_STATE_PLAIN_TEXT_ALERT_CONTENT;
+                        ulHandshakeSize = 2;
+                    }
+                    else {
+                        iTLS_rx_state = TLS_RX_STATE_PROTOCOL_TYPE;
+                    }
                 }
             }
             break;
@@ -885,6 +892,7 @@ extern int fnSecureLayerReception(USOCKET Socket, unsigned char **ptr_ucPrtData,
             ucPrtData++;
             // Fall through intentionally if the handshake size is zero because there is no content to be collected
             //
+        case TLS_RX_STATE_PLAIN_TEXT_ALERT_CONTENT:
         case TLS_RX_STATE_CONTENT:                                       // collecting content
             if (usLength < ulHandshakeSize) {                            // if the complete handshake protocol is not contained in the input buffer
                 register unsigned long ulSave = usLength;
@@ -910,7 +918,13 @@ extern int fnSecureLayerReception(USOCKET Socket, unsigned char **ptr_ucPrtData,
                 ulThisLength = ulSave;
             }
             else {                                                       // this tcp frame contains the complete handshake protocol content
-                iReturn |= fnHandleHandshake(Socket, ucPrtData, ulHandshakeSize, ucPresentHandshakeType); // handle directly in tcp reception buffer
+                if (TLS_RX_STATE_PLAIN_TEXT_ALERT_CONTENT == iTLS_rx_state) {
+                    iReturn |= fnHandleAlert(ucPrtData, ulHandshakeSize);
+                    usRecordLength += 2;                                 // compensation for following compatibility with standard records
+                }
+                else {
+                    iReturn |= fnHandleHandshake(Socket, ucPrtData, ulHandshakeSize, ucPresentHandshakeType); // handle directly in tcp reception buffer
+                }
                 ulThisLength = ulHandshakeSize;
             }
             usRecordLength -= 4;                                         // compensate for the handshake protocol type and length in each handled protocol
