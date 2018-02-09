@@ -268,7 +268,7 @@ static int fnPresentLP_mode(void)
         }
         #endif
         else if (((SMC_PMPROT & SMC_PMPROT_AVLLS) != 0) && ((SMC_PMCTRL & (SMC_PMCTRL_STOPM_VLLSx | SMC_PMCTRL_STOPM_LLS)) == SMC_PMCTRL_STOPM_VLLSx)) {
-            #if defined KINETIS_KL || defined KINETIS_K22                // KL devices
+            #if defined KINETIS_KL || defined KINETIS_K22 || defined KINETIS_K65 || defined KINETIS_K66 // KL and select K devices
             switch (SMC_STOPCTRL & SMC_STOPCTRL_VLLSM_VLLS3) {
             case SMC_STOPCTRL_VLLSM_VLLS0:
                 return VLLS0_MODE;
@@ -282,7 +282,7 @@ static int fnPresentLP_mode(void)
                 return VLLS3_MODE;
             }
             #else
-            switch (SMC_VLLSCTRL & SMC_VLLSCTRL_VLLSM_VLLS3) {           // K devices
+            switch (SMC_VLLSCTRL & SMC_VLLSCTRL_VLLSM_VLLS3) {           // general K devices
             case SMC_VLLSCTRL_VLLSM_VLLS0:
                 return VLLS0_MODE;
             case SMC_VLLSCTRL_VLLSM_VLLS1:
@@ -474,7 +474,7 @@ extern void fnSetLowPowerMode(int new_lp_mode)                           // {1}
     case VLLS0_MODE:                                                     // VLLS0
         #if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000)
       //SMC_PMPROT |= SMC_PMPROT_AVLLS;                                  // {3} - set once in kinetis.c
-            #if defined KINETIS_KL || defined KINETIS_K22
+            #if defined KINETIS_KL || defined KINETIS_K22 || defined KINETIS_K65 || defined KINETIS_K66 // KL and select K devices
         SMC_STOPCTRL = (unsigned char)(SMC_STOPCTRL_VLLSM_VLLS0 | (new_lp_mode & LOW_POWER_OPTIONS));
             #else
         SMC_VLLSCTRL = (unsigned char)(SMC_VLLSCTRL_VLLSM_VLLS0 | (new_lp_mode & LOW_POWER_OPTIONS));
@@ -489,7 +489,7 @@ extern void fnSetLowPowerMode(int new_lp_mode)                           // {1}
     case VLLS1_MODE:                                                     // VLLS1
         #if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000)
       //SMC_PMPROT |= SMC_PMPROT_AVLLS;                                  // {3} - set once in kinetis.c
-            #if defined KINETIS_KL || defined KINETIS_K22
+            #if defined KINETIS_KL || defined KINETIS_K22 || defined KINETIS_K65 || defined KINETIS_K66 // KL and select K devices
         SMC_STOPCTRL = (unsigned char)(SMC_STOPCTRL_VLLSM_VLLS1 | (new_lp_mode & LOW_POWER_OPTIONS));
             #else
         SMC_VLLSCTRL = (unsigned char)(SMC_VLLSCTRL_VLLSM_VLLS1 | (new_lp_mode & LOW_POWER_OPTIONS));
@@ -505,7 +505,7 @@ extern void fnSetLowPowerMode(int new_lp_mode)                           // {1}
     case VLLS2_MODE:                                                     // VLLS2
         #if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000)
       //SMC_PMPROT |= SMC_PMPROT_AVLLS;                                   // {3} - set once in kinetis.c
-            #if defined KINETIS_KL || defined KINETIS_K22
+            #if defined KINETIS_KL || defined KINETIS_K22 || defined KINETIS_K65 || defined KINETIS_K66 // KL and select K devices
         SMC_STOPCTRL = (unsigned char)(SMC_STOPCTRL_VLLSM_VLLS2 | (new_lp_mode & LOW_POWER_OPTIONS));
             #else
         SMC_VLLSCTRL = (unsigned char)(SMC_VLLSCTRL_VLLSM_VLLS2 | (new_lp_mode & LOW_POWER_OPTIONS));
@@ -521,7 +521,7 @@ extern void fnSetLowPowerMode(int new_lp_mode)                           // {1}
     case VLLS3_MODE:                                                     // VLLS3
         #if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000)
       //SMC_PMPROT |= SMC_PMPROT_AVLLS;                                  // {3} - set once in kinetis.c
-            #if defined KINETIS_KL || defined KINETIS_K22
+            #if defined KINETIS_KL || defined KINETIS_K22 || defined KINETIS_K65 || defined KINETIS_K66 // KL and select K devices
         SMC_STOPCTRL = (unsigned char)(SMC_STOPCTRL_VLLSM_VLLS3 | (new_lp_mode & LOW_POWER_OPTIONS));
             #else
         SMC_VLLSCTRL = (unsigned char)(SMC_VLLSCTRL_VLLSM_VLLS3 | (new_lp_mode & LOW_POWER_OPTIONS));

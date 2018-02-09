@@ -424,7 +424,7 @@ static void fnConfigI2C_pins(QUEUE_HANDLE Channel, int iMaster)          // {2}
     #elif defined I2C0_B_LOW
         if (iMaster != 0) {
             while (_READ_PORT_MASK(B, PORTB_BIT1) == 0) {                // if the SDA line is low we clock the SCL line to free it
-                _CONFIG_DRIVE_PORT_OUTPUT_VALUE__FAST_LOW(B, PORTB_BIT0, 0, (PORT_ODE | PORT_PS_UP_ENABLE)); // set output '0'
+                _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_LOW(B, PORTB_BIT0, 0, (PORT_ODE | PORT_PS_UP_ENABLE)); // set output '0'
                 fnDelayLoop(10);
                 _CONFIG_PORT_INPUT__FAST_LOW(B, PORTB_BIT0, (PORT_ODE | PORT_PS_UP_ENABLE));
                 fnDelayLoop(10);
@@ -435,9 +435,9 @@ static void fnConfigI2C_pins(QUEUE_HANDLE Channel, int iMaster)          // {2}
     #elif defined I2C0_B_HIGH
         if (iMaster != 0) {
             while (_READ_PORT_MASK(B, PORTB_BIT3) == 0) {                // if the SDA line is low we clock the SCL line to free it
-                _CONFIG_DRIVE_PORT_OUTPUT_VALUE__FAST_LOW(B, PORTB_BIT2, 0, (PORT_ODE | PORT_PS_UP_ENABLE)); // set output '0'
+                _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_LOW(B, PORTB_BIT2, 0, (PORT_ODE | PORT_PS_UP_ENABLE)); // set output '0'
                 fnDelayLoop(10);
-                _CONFIG_PORT_INPUT__FAST_LOW(B, PORTB_BIT2, (PORT_ODE | PORT_PS_UP_ENABLE));
+                _CONFIG_PORT_INPUT_FAST_LOW(B, PORTB_BIT2, (PORT_ODE | PORT_PS_UP_ENABLE));
                 fnDelayLoop(10);
             }
         }

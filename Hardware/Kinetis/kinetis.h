@@ -15298,11 +15298,11 @@ typedef struct stUSB_HW
         #define SMC_PMCTRL_RUNM_HSRUN 0x60                               // high speed run mode
       #endif
       #define SMC_PMCTRL_LPWUI        0x80                               // (not KL) the system exits from VLP mode (VLPR, VLPW or VLPS) on an interrupt
-    #if defined KINETIS_KL || defined KINETIS_K22 || defined KINETIS_K65 || defined KINETIS_K66
+    #if defined KINETIS_KL || (defined KINETIS_K22 || defined KINETIS_K65 || defined KINETIS_K66)
         #define SMC_STOPCTRL     *(unsigned char *)(SMC_BASE_ADD + 0x2)  // Stop Control Register
           #define SMC_STOPCTRL_VLLSM_VLLS0   0x00                        // VLLS mode control - VLLS0
           #define SMC_STOPCTRL_VLLSM_VLLS1   0x01                        // VLLS mode control - VLLS1
-        #if defined KINETIS_K22
+        #if !defined KINETIS_KL
           #define SMC_STOPCTRL_VLLSM_VLLS2   0x02                        // VLLS mode control - VLLS2
         #endif
           #define SMC_STOPCTRL_VLLSM_VLLS3   0x03                        // VLLS mode control - VLLS3
@@ -17537,8 +17537,8 @@ typedef struct stADC_INTERRUPT_RESULT                                    // {6}
 
 typedef struct stADC_RESULTS
 {
-    signed short     sADC_value[ADC_CHANNELS];                           // present ADC sample values
-    unsigned char    ucADC_status[ADC_CHANNELS];                         // present ADC channel status
+    signed short     sADC_value[1];                                      // present ADC sample values
+    unsigned char    ucADC_status[1];                                    // present ADC channel status
 } ADC_RESULTS;
 
 // Define interrupt setup structure to suit this processor
@@ -17637,6 +17637,7 @@ typedef struct stADC_SETUP
 #define ADC_SW_TRIGGERED                0x00000000
 #define ADC_HW_TRIGGERED                0x00004000                       // (ADC_SC2_ADTRG_HW << 8)
 #define ADC_FULL_BUFFER_DMA_AUTO_REPEAT 0x00010000
+#define ADC_CHECK_CONVERSION            0x00080000
 #define ADC_CALIBRATE                   0x00100000
 #define ADC_READ_ONLY                   0x00200000
 #define ADC_CONFIGURE_CHANNEL           0x00400000

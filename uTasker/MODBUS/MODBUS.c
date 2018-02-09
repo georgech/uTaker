@@ -506,7 +506,7 @@ extern void fnMODBUS(TTASKTABLE *ptrTaskTable)
                     fnDebugMsg(" too long\n\r");
                     do {
                         fnRead(SerialHandle[ucMODBUSport], ucModbusSerialInputBuffer[ucMODBUSport], 1); // flush the over-length frame
-                    } while (--rxFrameLength[ucMODBUSport]);
+                    } while (--rxFrameLength[ucMODBUSport] != 0);
                     break;
                 }
                 fnRead(SerialHandle[ucMODBUSport], ucModbusSerialInputBuffer[ucMODBUSport], rxFrameLength[ucMODBUSport]); // read the present frame
@@ -525,7 +525,7 @@ extern void fnMODBUS(TTASKTABLE *ptrTaskTable)
     #endif
                 if (
     #if defined USE_MODBUS_MASTER
-                    (!(ptrMODBUS_pars->ucModbusSerialPortMode[ucMODBUSport] & (MODBUS_SERIAL_MASTER | MODBUS_SERIAL_GATEWAY))) && // master or gateway receives all frames
+                    ((ptrMODBUS_pars->ucModbusSerialPortMode[ucMODBUSport] & (MODBUS_SERIAL_MASTER | MODBUS_SERIAL_GATEWAY)) == 0) && // master or gateway receives all frames
     #endif
                     (ucModbusSerialInputBuffer[ucMODBUSport][0] != ptrMODBUS_pars->ucModbus_slave_address[ucMODBUSport]) && (ucModbusSerialInputBuffer[ucMODBUSport][0] != BROADCAST_MODBUS_ADDRESS)) {
                     fnDebugMsg(" not addressed\n\r");
@@ -878,7 +878,7 @@ static QUEUE_HANDLE fnOpenSerialInterface(unsigned char ucMODBUSport)
     tInterfaceParameters.ucFlowLowWater  = 0;
     #endif
     tInterfaceParameters.Config = ptrMODBUS_pars->usSerialMode[ucMODBUSport];
-    if (ptrMODBUS_pars->ucModbusSerialPortMode[ucMODBUSport] & MODBUS_MODE_ASCII) {
+    if ((ptrMODBUS_pars->ucModbusSerialPortMode[ucMODBUSport] & MODBUS_MODE_ASCII) != 0) {
     #if defined MODBUS_ASCII
         #if defined STRICT_MODBUS_SERIAL_MODE
         tInterfaceParameters.Config |= (CHAR_7);                         // ASCII must use 7 bit characters
@@ -1914,7 +1914,7 @@ static void fnDeleteEventLog(unsigned char ucMODBUSport)
     #endif
 #endif                                                                   // endif MODBUS_SERIAL_INTERFACES
 
-#if defined _V1_18B1 && (defined MODBUS_GATE_WAY_QUEUE && defined USE_MODBUS_MASTER && MODBUS_SERIAL_INTERFACES > 0)
+#if defined _V1_18B1 && (defined USE_MODBUS_MASTER && MODBUS_SERIAL_INTERFACES > 0)
 static int fnMODBUS_transmit_master_timer(MODBUS_RX_FUNCTION *modbus_rx_function, unsigned char *ptrBuf, unsigned short usLength)
 {
     int iRtn;
@@ -3408,7 +3408,7 @@ static int fnSendMODBUS_response(MODBUS_RX_FUNCTION *modbus_rx_function, void *p
     ucTxBuffer[1] = modbus_rx_function->ucFunctionCode;                  // enter the function code
     if (ucShift & (NO_SHIFT_REGISTER_VALUE | NO_SHIFT_FIFO_VALUE)) {     // register values rather than bit values
         unsigned short *ptrShort = (unsigned short *)ptrData;            // we are dealing with short words
-        if (ucShift & NO_SHIFT_FIFO_VALUE) {                             // 16 bit byte count plus 16 bit count
+        if ((ucShift & NO_SHIFT_FIFO_VALUE) != 0) {                      // 16 bit byte count plus 16 bit count
             ucTxBuffer[2] = (unsigned char)(usLength >> 8);              // special case for MODBUS_READ_FIFO_QUEUE response
             ucTxBuffer[3] = (unsigned char)(usLength);
             usLength /= 2;
@@ -3825,7 +3825,9 @@ static int fnMODBUSListener(USOCKET Socket, unsigned char ucEvent, unsigned char
 //
 extern int fnMODBUS_Master_send(unsigned char ucModbusPort, unsigned char ucSlave, unsigned short usFunction, void *details)
 {
+    #if defined MODBUS_GATE_WAY_QUEUE || ((MODBUS_SERIAL_INTERFACES > 0) && !defined _V1_18B1)
     int iRtn;
+    #endif
     unsigned char ucBuff[MODBUS_TX_BUFFER_SIZE];
     unsigned short usLength = 8;
     MODBUS_RX_FUNCTION modbus_rx_function;                               // build a temporary function block for subroutine use
