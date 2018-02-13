@@ -250,9 +250,10 @@ extern DELAY_LIMIT fnStopHW_Timer(void);                                 // stop
 // Buffer DMA                             
 //
 extern void fnDMA_BufferReset(int iChannel, int iAction);                // {47}
-    #define DMA_BUFFER_RESET     0                                       // disable DMA and reset the buffer (but don't re-enable yet)
-    #define DMA_BUFFER_START     1                                       // start DMA operation (must have been configured previously)
-    #define DMA_BUFFER_RESTART   2                                       // reset buffer and restart immediately
+    #define DMA_BUFFER_RESET         0                                   // disable DMA and reset the buffer (but don't re-enable yet)
+    #define DMA_BUFFER_START         1                                   // start DMA operation (must have been configured previously)
+    #define DMA_BUFFER_RESTART       2                                   // reset buffer and restart immediately
+    #define DMA_BUFFER_START_FINISH  3                                   // start DMA operation (must have been configured previously) and return only after it has terminated
 
 // Low power
 //

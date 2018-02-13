@@ -20,6 +20,8 @@
     07.02.2014 Add application CMD55 checking, pre-delete, read and write multiple sector commands {5}
     21.11.2015 Memory stick simulation added                             {6}
     21.11.2015 Enable FAST_SD_SIMULATION for faster disk simulation      {7}
+    12.02.2017 Add block read simulation                                 {8}
+
 
 */        
 
@@ -549,6 +551,9 @@ extern unsigned char _fnSimSD_write(unsigned char ucTxByte)
 #define SD_CARD_MULTI_BLOCK_WRITE      14
 #define SD_CARD_MULTI_BLOCK_WRITING    15
 #define SD_CARD_MULTI_BLOCK_COLLECTING 16
+#define SD_CARD_MULTI_BLOCK_READ       17
+#define SD_CARD_MULTI_BLOCK_READING    18
+#define SD_CARD_STOPPING               19
 
 #if defined SD_CONTROLLER_AVAILABLE                                      // {2}
     static int iSD_Card_State = SD_CARD_INIT;
@@ -559,6 +564,7 @@ extern unsigned char _fnSimSD_write(unsigned char ucTxByte)
     static int iMultiBlockReadActive = 0;
     static unsigned long ulPreDeleteLength = 1;                          // {5} default length of a delete when writing
     static unsigned long ulWriteOffset;
+    static unsigned long ulByteOffset;
     static int iArguments = 0;
     static int iSendArg = 0;
     static unsigned char ucCommand = 0;
@@ -584,7 +590,7 @@ extern unsigned char _fnSimSD_write(unsigned char ucTxByte)
             _EXCEPTION("Command requires pre-CMD55!!");
         }
     case SD_CARD_APP_CMD:
-        if ((ucTxByte == 0x40) || (ucTxByte == 0x42) || (ucTxByte == 0x43) || (ucTxByte == 0x46) || (ucTxByte == 0x47) || (ucTxByte == 0x48) || (ucTxByte == 0x4c) || (ucTxByte == 0x50) || (ucTxByte == 0x57) || (ucTxByte == 0x77) || (ucTxByte == 0x69) || (ucTxByte == 0x7a) || (ucTxByte == 0x58) || (ucTxByte == 0x51) || (ucTxByte == 0x49) || (ucTxByte == 0x59)) { // all expected commands
+        if ((ucTxByte == 0x40) || (ucTxByte == 0x42) || (ucTxByte == 0x43) || (ucTxByte == 0x46) || (ucTxByte == 0x47) || (ucTxByte == 0x48) || (ucTxByte == 0x4c) || (ucTxByte == 0x50) || (ucTxByte == 0x52) || (ucTxByte == 0x57) || (ucTxByte == 0x77) || (ucTxByte == 0x69) || (ucTxByte == 0x7a) || (ucTxByte == 0x58) || (ucTxByte == 0x51) || (ucTxByte == 0x49) || (ucTxByte == 0x59)) { // all expected commands
             ucCommand = ucTxByte;
             iArguments = 0;
             iSD_Card_State = SD_CARD_ARGUMENTS;
@@ -596,19 +602,19 @@ extern unsigned char _fnSimSD_write(unsigned char ucTxByte)
             iSD_Card_State = SD_CARD_MULTI_BLOCK_COLLECTING;
         }
         else if (ucTxByte != 0xff) {                                     // accept idle line, which is used when poll for busy
-            _EXCEPTION("Neither command not idle - program error!!");
+            _EXCEPTION("Neither command nor idle - program error!!");
         }
         break;
-    case SD_CARD_ARGUMENTS:
+    case SD_CARD_ARGUMENTS:                                              // collect 4 argument bytes
         ucArguments[iArguments++] = ucTxByte;
         if (iArguments == 4) {
-            iSD_Card_State = SD_CARD_CRC;
+            iSD_Card_State = SD_CARD_CRC;                                // when the argument bytes have been collected move to the CRC check state
             break;
         }
         break;
     case SD_CARD_CRC:
         if (ucCommand == 0x51) {                                         // single block read
-            unsigned long ulByteOffset = ((ucArguments[0] << 24) + (ucArguments[1] << 16) + (ucArguments[2] << 8) + ucArguments[3]);
+            ulByteOffset = ((ucArguments[0] << 24) + (ucArguments[1] << 16) + (ucArguments[2] << 8) + ucArguments[3]); // sector reference
             iSD_Card_State = SD_CARD_ANSWER;
             iArguments = 515;                                            // a block answer is expected
             ucArguments[0] = 0xfe;
@@ -655,6 +661,13 @@ extern unsigned char _fnSimSD_write(unsigned char ucTxByte)
 #endif
             ucAnswer = 0x00;                                             // in idle state
         }
+        else if (ucCommand == 0x52) {                                    // {8} multiple block read
+            ulByteOffset = ((ucArguments[0] << 24) + (ucArguments[1] << 16) + (ucArguments[2] << 8) + ucArguments[3]); // sector reference
+            iSD_Card_State = SD_CARD_MULTI_BLOCK_READ;                   // multiple block reads are expected to follow
+            ucArguments[0] = 0xfe;
+            fnExtractSector((ulByteOffset / OFFSET_CONVERSION), &ucArguments[1]); // prepare first block of data
+            ucAnswer = 0x00;
+        }
 #if defined SD_CONTROLLER_AVAILABLE
         else if (ucCommand == 0x50) {                                    // set block length
             iSD_Card_State = SD_CARD_ANSWER;
@@ -694,7 +707,7 @@ extern unsigned char _fnSimSD_write(unsigned char ucTxByte)
     #else
             ucArguments[0] &= ~0x40;                                     // not high capacity
     #endif
-            ucAnswer = 0;
+            ucAnswer = 0x00;
         }
 #endif
         else if (ucCommand == 0x57) {                                    // {5} pre-delete command
@@ -705,27 +718,27 @@ extern unsigned char _fnSimSD_write(unsigned char ucTxByte)
             iSD_Card_State = SD_CARD_ANSWER;
             iArguments = 0;
             ucArguments[0] = 0xfe;
-            ucAnswer = 0;
+            ucAnswer = 0x00;
         }
         else if (ucCommand == 0x58) {                                    // single block write
             ulWriteOffset = ((ucArguments[0] << 24) + (ucArguments[1] << 16) + (ucArguments[2] << 8) + ucArguments[3]);
             iSD_Card_State = SD_CARD_BLOCK_WRITE;                        // a block write is expected to follow
             iArguments = 0;
             ucArguments[0] = 0xfe;
-            ucAnswer = 0;
+            ucAnswer = 0x00;
         }
         else if (ucCommand == 0x59) {                                    // multiple block write
             ulWriteOffset = ((ucArguments[0] << 24) + (ucArguments[1] << 16) + (ucArguments[2] << 8) + ucArguments[3]);
             iSD_Card_State = SD_CARD_MULTI_BLOCK_WRITE;                  // multiple block writes are expected to follow
             iArguments = 0;
             ucArguments[0] = 0xfe;
-            ucAnswer = 0;
+            ucAnswer = 0x00;
         }
         else if (ucCommand == 0x4c) {                                    // {5} terminate multiple block operation
             iSD_Card_State = SD_CARD_ANSWER;
             iArguments = 0;
             ucArguments[0] = 0xfe;
-            ucAnswer = 0;
+            ucAnswer = 0x00;
             iMultiBlockWriteActive = iMultiBlockReadActive = 0;          // multiple block operation temrinated
         }
         else if (ucCommand == 0x42) {                                    // read card information
@@ -857,6 +870,11 @@ extern unsigned char _fnSimSD_write(unsigned char ucTxByte)
             }
         }
         break;
+    case SD_CARD_MULTI_BLOCK_READ:                                       // {8}
+        iSendArg = 0;
+        iArguments = 515;
+        iSD_Card_State = SD_CARD_MULTI_BLOCK_READING;                    // move to the data reading phase
+        return ucAnswer;
     case SD_CARD_MULTI_BLOCK_WRITE:
         iSD_Card_State = SD_CARD_MULTI_BLOCK_WRITING;
         return ucAnswer;
@@ -874,11 +892,31 @@ extern unsigned char _fnSimSD_write(unsigned char ucTxByte)
             iSD_Card_State = SD_CARD_ANSWER_EXTRA;
         }
         return ucAnswer;
+    case SD_CARD_STOPPING:
+        if (--iArguments == 0) {                                         // ignore arguments after a CMD12 to stop block operations
+            iSD_Card_State = SD_CARD_INIT;
+        }
+        break;
+    case SD_CARD_MULTI_BLOCK_READING:                                    // {8}
+        if ((ucTxByte == 0x4c)) {                                        // CMD12
+            iSD_Card_State = SD_CARD_STOPPING;
+            iArguments = 6;                                              // ignore the following 6 bytes
+            break;
+        }
+        // Fall-though intentionally
+        //
     case SD_CARD_ANSWER_EXTRA:
         {
             unsigned char ucReturnData = ucArguments[iSendArg++];
-            if (iSendArg >= iArguments) {
-                iSD_Card_State = SD_CARD_INIT;
+            if (iSendArg >= iArguments) {                                // end of a block has been detected
+                if (SD_CARD_MULTI_BLOCK_READING == iSD_Card_State) {     // {8}
+                    ulByteOffset++;                                      // prepare next block of data
+                    fnExtractSector((ulByteOffset/OFFSET_CONVERSION), &ucArguments[1]);
+                    iSendArg = 0;                                        // multiple block reads remain in this read state until a CMD12 is received to terminate it
+                }
+                else {
+                    iSD_Card_State = SD_CARD_INIT;
+                }
             }
             return ucReturnData;
         }

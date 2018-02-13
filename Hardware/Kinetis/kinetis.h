@@ -4889,6 +4889,10 @@ typedef struct stKINETIS_DMA_TDC
 #define DMA_FIXED_ADDRESSES       0x00000040
 #define DMA_NO_MODULO             0x00000080
 #define DMA_SINGLE_CYCLE          0x00000100
+#define DMA_SW_TRIGGER            0x00000200
+#define DMA_INITIATE_TRANSFER     0x00000400
+#define DMA_WAIT_TERMINATION      0x00000800
+#define DMA_SW_TRIGGER_WAIT_TERMINATION (DMA_SW_TRIGGER | DMA_INITIATE_TRANSFER | DMA_WAIT_TERMINATION)
 
 extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned short ucDmaTriggerSource, unsigned long ulBufLength, void *ptrBufSource, void *ptrBufDest, unsigned long ulRules, void(*int_handler)(void), int int_priority);
 
@@ -8926,6 +8930,7 @@ typedef struct stFLEX_TIMER_MODULE
 #define SDHC_CMDRSP1        *(volatile unsigned long *)(SDHC_BLOCK + 0x014) // SDHC Command Response Register 1 (read-only)
 #define SDHC_CMDRSP2        *(volatile unsigned long *)(SDHC_BLOCK + 0x018) // SDHC Command Response Register 2 (read-only)
 #define SDHC_CMDRSP3        *(volatile unsigned long *)(SDHC_BLOCK + 0x01c) // SDHC Command Response Register 3 (read-only)
+#define SDHC_DATPORT_ADDR   (unsigned long *)(SDHC_BLOCK + 0x020)
 #define SDHC_DATPORT        *(volatile unsigned long *)(SDHC_BLOCK + 0x020) // {3} SDHC Buffer Data Port Register
 #define SDHC_PRSSTAT        *(volatile unsigned long *)(SDHC_BLOCK + 0x024) // SDHC Present Status Register (read-only)
   #define SDHC_PRSSTAT_CIHB      0x00000001                              // Command Inhibit (CMD)
@@ -11273,15 +11278,19 @@ typedef struct stKINETIS_LPTMR_CTL
         #define PB_4_LPUART0_RX          PORT_MUX_ALT3
         #define PB_3_LPUART0_TX          PORT_MUX_ALT3
     #elif defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL43 || defined KINETIS_KL82 || defined KINETIS_K80
+        #if defined KINETIS_K80 || defined KINETIS_KL28
+            #define PA_15_LPUART0_RX     PORT_MUX_ALT3
+            #define PA_14_LPUART0_TX     PORT_MUX_ALT3
+        #endif
         #if !defined KINETIS_K80
             #define PE_21_LPUART0_RX     PORT_MUX_ALT4
+            #define PE_20_LPUART0_TX     PORT_MUX_ALT4
         #endif
-        #define PE_20_LPUART0_TX         PORT_MUX_ALT4
         #define PA_1_LPUART0_RX          PORT_MUX_ALT2
         #define PA_2_LPUART0_TX          PORT_MUX_ALT2
         #define PB_16_LPUART0_RX         PORT_MUX_ALT3
         #define PB_17_LPUART0_TX         PORT_MUX_ALT3
-        #if defined KINETIS_KL43
+        #if defined KINETIS_KL43 || defined KINETIS_KL28
             #define PD_6_LPUART0_RX      PORT_MUX_ALT3
             #define PD_7_LPUART0_TX      PORT_MUX_ALT3
         #endif
@@ -11307,7 +11316,7 @@ typedef struct stKINETIS_LPTMR_CTL
     #define PE_10_LPUART0_CTS            PORT_MUX_ALT5
 #endif
 #if LPUARTS_AVAILABLE > 1
-    #if defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL43 || defined KINETIS_K80
+    #if defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL43 || defined KINETIS_K80
         #define PC_3_LPUART1_RX          PORT_MUX_ALT3
         #define PC_4_LPUART1_TX          PORT_MUX_ALT3
         #if !defined KINETIS_K80

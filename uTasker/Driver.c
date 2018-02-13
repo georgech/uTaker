@@ -269,7 +269,7 @@ extern QUEUE_TRANSFER fnDriver(QUEUE_HANDLE driver_id, unsigned short state, uns
         return 0;
     }
     driver_id -= 1;
-    return (que_ids[driver_id].CallAddress)(que_ids[driver_id].qHandle, (unsigned char *)(CAST_POINTER_ARITHMETIC)rx_or_tx, state, CALL_DRIVER, driver_id);// {1}
+    return (que_ids[driver_id].CallAddress)(que_ids[driver_id].qHandle, (unsigned char *)(CAST_POINTER_ARITHMETIC)rx_or_tx, state, CALL_DRIVER, driver_id); // {1}
 }
 
 // Write to queue or interface. Returns the number of bytes successfully sent

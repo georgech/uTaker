@@ -3949,7 +3949,7 @@ extern int fnMODBUS_Master_send(unsigned char ucModbusPort, unsigned char ucSlav
             ucBytes   = (unsigned char)(usRangeLength * 2);              // the number of bytes
             ucBuff[6] = ucBytes;
             usLength = (ucBytes + 9);
-            while (ucBytes) {
+            while (ucBytes != 0) {
                 ucBuff[iOffset++] = (unsigned char)(*ptrValues >> 8);    // the register values
                 ucBuff[iOffset++] = (unsigned char)(*ptrValues++);
                 ucBytes -= 2;

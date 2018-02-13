@@ -25,6 +25,7 @@
     19.10.2017 Add DMA_SINGLE_CYCLE option to allow a single buffer transfer and stopping automatically {6}
     19.10.2017 Use ATOMIC_PERIPHERAL_BIT_REF_SET() and ATOMIC_PERIPHERAL_BIT_REF_CLEAR() to enable/disable DMA_ERQ (interrupt and DMA safe)
     17.12.2017 Change uMemset() to match memset() parameters             {7}
+    12.02.2018 Add DMA_SW_TRIGGER, DMA_INITIATE_TRANSFER and DMA_WAIT_TERMINATION options as well as DMA_BUFFER_START_FINISH {8}
 
 */
 
@@ -387,17 +388,25 @@ extern void fnDMA_BufferReset(int iChannel, int iAction)
     }
     #else
     switch (iAction) {
+    case DMA_BUFFER_START_FINISH:                                        // {8} start a prepared transfer with software trigger and return only after the transfer has compeleted
+        {
+            KINETIS_DMA_TDC *ptrDMA_TCD;
+            ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
+            ptrDMA_TCD->DMA_TCD_CSR = DMA_TCD_CSR_START;                 // start DMA transfer
+            while ((ptrDMA_TCD->DMA_TCD_CSR & DMA_TCD_CSR_DONE) == 0) { fnSimulateDMA(iChannel); } // wait until completed
+        }
+        break;
     case DMA_BUFFER_START:
-        ATOMIC_PERIPHERAL_BIT_REF_SET(DMA_ERQ, iChannel);                // just enable the channel's operation
-      //DMA_ERQ |= (DMA_ERQ_ERQ0 << iChannel);           
+        ATOMIC_PERIPHERAL_BIT_REF_SET(DMA_ERQ, iChannel);                // just enable the channel's operation        
         break;
     case DMA_BUFFER_RESET:                                               // reset the DMA back to the start of the present buffer
     case DMA_BUFFER_RESTART:                                             // reset and start again
         {
             int iSize = 1;                                               // default is single byte size
             unsigned long ulBufferLength;
-            KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
+            KINETIS_DMA_TDC *ptrDMA_TCD;
             ATOMIC_PERIPHERAL_BIT_REF_CLEAR(DMA_ERQ, iChannel);          // disable DMA operation on the channel
+            ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
           //DMA_ERQ &= ~(DMA_ERQ_ERQ0 << iChannel);            
             ptrDMA_TCD += iChannel;
             if (ptrDMA_TCD->DMA_TCD_DLASTSGA == 0) {                     // input buffer needs to be reset
@@ -597,6 +606,17 @@ extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned short usDma
     ptrDMA_TCD->DMA_TCD_DADDR = (unsigned long)ptrBufDest;               // destination
   //ptrDMA_TCD->DMA_TCD_DLASTSGA = 0;                                    // {3} no destination displacement on transmit buffer completion
   //ptrDMA_TCD->DMA_TCD_SLAST = (-(signed long)(ulBufLength));           // {3} when the buffer has been transmitted set the destination back to the start of it
+    if ((ulRules & DMA_SW_TRIGGER) != 0) {                               // {8} no peripheral trigger used - use software start
+        ptrDMA_TCD->DMA_TCD_CITER_ELINK = 1;                             // one main loop iteration
+        ptrDMA_TCD->DMA_TCD_NBYTES_ML = ulBufLength;                     // total number of bytes
+        if ((ulRules & DMA_INITIATE_TRANSFER) != 0) {                    // if the transfer is to be initiated immediately
+            ptrDMA_TCD->DMA_TCD_CSR = DMA_TCD_CSR_START;                 // start DMA transfer
+            if ((ulRules & DMA_WAIT_TERMINATION) != 0) {                 // if the call is a blocking call we wait until the transfer terminates
+                while ((ptrDMA_TCD->DMA_TCD_CSR & DMA_TCD_CSR_DONE) == 0) { fnSimulateDMA(ucDMA_channel); } // wait until completed
+            }
+        }
+        return;                                                          
+    }
     ptrDMA_TCD->DMA_TCD_BITER_ELINK = ptrDMA_TCD->DMA_TCD_CITER_ELINK = (signed short)(ulBufLength/ucSize); // the number of service requests to be performed each cycle
     POWER_UP_ATOMIC(6, DMAMUX0);                                         // enable DMA multiplexer 0
         #if defined TRGMUX_AVAILABLE
