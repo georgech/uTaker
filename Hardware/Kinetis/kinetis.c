@@ -440,7 +440,9 @@ extern int main(void)
     static void fn_uTasker_main(void)
 #endif
 {
-#if defined MULTISTART
+#if !defined _WINDOWS && defined MULTISTART
+    MULTISTART_TABLE *prtInfo;
+    unsigned char *pucHeapStart;
     prtInfo = ptMultiStartTable;                                         // if the user has already set to alternative start configuration
     if (prtInfo == 0) {                                                  // no special start required
     _abort_multi:

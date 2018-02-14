@@ -853,7 +853,6 @@ extern QUEUE_HANDLE Ethernet_handle[ETHERNET_INTERFACES];                // Ethe
 /*                 global function prototype declarations              */
 /* =================================================================== */
 
-
 extern QUEUE_TRANSFER fnDebugMsg (CHAR *ucToSend);                       // send string to debug interface
 extern unsigned long  fnHexStrHex(CHAR *ucNewAdd);                       // converts an ASCII hex byte sequence to its hex value (can be up to a 32 bit value in length)
 extern unsigned long  fnDecStrHex(CHAR *ucNewAdd);                       // converts an ASCII decimal input to its binary hex value
@@ -936,6 +935,7 @@ extern QUEUE_HANDLE   fnOpenCAN(CANTABLE *pars, unsigned char driver_mode);
     extern void fnSetUSBEndpointState(int iEndpoint, unsigned char ucStateSet);
     extern int  fnGetPairedIN(int iEndpoint_OUT);                        // {32}
     extern QUEUE_TRANSFER entry_usb(QUEUE_HANDLE channel, unsigned char *ptBuffer, QUEUE_TRANSFER Counter, unsigned char ucCallType, QUEUE_HANDLE DriverID);
+    extern QUEUE_TRANSFER fnStartUSB_send(QUEUE_HANDLE channel, USBQUE *ptrUsbQueue, QUEUE_TRANSFER txLength);
 #endif
 extern QUEUE_HANDLE   fnOpenETHERNET(ETHTABLE *pars, unsigned short driver_mode);
 extern QUEUE_HANDLE   fnOpenSPI(SPITABLE *pars, unsigned char driver_mode);

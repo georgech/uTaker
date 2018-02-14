@@ -465,6 +465,7 @@
     #define DO_WRITE_UNHIDE         34                                   // specific command to remove hidden file/director property
     #define DO_SET_PROTECT          35                                   // specific command to set file/directory write-protection
     #define DO_REMOVE_PROTECT       36                                   // specific command to remove file/directory write-protection
+    #define DO_DISPLAY_MULTI_SECTOR 37                                   // specific command to display multiple sectors of the SD card
 
 #define DO_FTP_TELNET_MQTT        12
     #define DO_SHOW_FTP_CONFIG      0                                    // specific ftp client command to show settings
@@ -1015,6 +1016,9 @@ static const DEBUG_COMMAND tDiskCommand[] = {                            // {17}
     #endif
         #if !defined LOW_MEMORY
     {"sect",              "[hex no.] display sector",              DO_DISK,          DO_DISPLAY_SECTOR},
+            #if defined UTFAT_MULTIPLE_BLOCK_READ
+    { "msect",            "[hex no.] display multi sector",        DO_DISK,          DO_DISPLAY_MULTI_SECTOR },
+            #endif
         #endif
     #if defined UTFAT_WRITE
         #if defined NAND_FLASH_FAT
@@ -1297,7 +1301,7 @@ extern void fnDebug(TTASKTABLE *ptrTaskTable)
 #if defined USE_TELNET_CLIENT
     if (telnet_client_details[0].listener == 0) {                        // if the TELNET clients have not yet been configured with default settings
         int i;
-        for (i = 0; i < TELNET_CLIENT_COUNT; i++) {
+        for (i = 0; i < TELNET_CLIENT_COUNT; i++) {                      // for each telnet client socket
             telnet_client_details[i].usPortNumber = TELNET_SERVERPORT;   // set default TELNET port number
             telnet_client_details[i].listener = fnTELNETClientListener;  // configure fixed listener
             telnet_client_details[i].usIdleTimeout = 120;                // set idle timeout to 120s
@@ -5414,6 +5418,9 @@ static int fnDoDisk(unsigned char ucType, CHAR *ptrInput)
     case DO_DISPLAY_PAGE:
 #endif
 #if !defined LOW_MEMORY
+    #if defined UTFAT_MULTIPLE_BLOCK_READ
+    case DO_DISPLAY_MULTI_SECTOR:                                        // multiple sector (to test faster reading)
+    #endif
     case DO_DISPLAY_SECTOR:
         {
             int i, j;
@@ -5429,7 +5436,7 @@ static int fnDoDisk(unsigned char ucType, CHAR *ptrInput)
                 fnDebugMsg("Reading sector ");
             }
     #else
-            unsigned long ulBuffer[512/sizeof(unsigned long)];
+            unsigned long ulBuffer[512/sizeof(unsigned long)];           // long word aligned buffer for efficiency
             fnDebugMsg("Reading sector ");
     #endif
             fnDebugHex(ulSectorNumber, (WITH_LEADIN | sizeof(ulSectorNumber)));
@@ -5438,12 +5445,29 @@ static int fnDoDisk(unsigned char ucType, CHAR *ptrInput)
     #elif (!defined _LITTLE_ENDIAN) && defined UTFAT_SECT_LITTLE_ENDIAN
             fnDebugMsg(" (little-endian view)");
     #endif
-            if (fnReadSector(ucPresentDisk, (unsigned char *)ulBuffer, ulSectorNumber) != 0) {
+    #if defined UTFAT_MULTIPLE_BLOCK_READ
+            if (DO_DISPLAY_MULTI_SECTOR == ucType) {
+                fnPrepareBlockRead(ucPresentDisk, 20);                   // prepare for a block read of 20 sectors
+            }
+            for (i = 0; i < 20; i++) {                                   // read 20 consecutive sectors (block read)
+                TOGGLE_TEST_OUTPUT();
+                if (fnReadSector(ucPresentDisk, (unsigned char *)ulBuffer, ulSectorNumber++) != 0) { // the the sector content to a buffer
+                    fnDebugMsg(" FAILED!!\r\n");
+                    return 0;
+                }
+                TOGGLE_TEST_OUTPUT();
+                if (DO_DISPLAY_SECTOR == ucType) {
+                    break;
+                }
+            }
+    #else
+            if (fnReadSector(ucPresentDisk, (unsigned char *)ulBuffer, ulSectorNumber) != 0) { // the the sector content to a buffer
                 fnDebugMsg(" FAILED!!\r\n");
                 break;
             }
+    #endif
             fnDebugMsg("\r\n");
-            for (i = 0; i < 8; i++) {
+            for (i = 0; i < 8; i++) {                                    // display the read data
                 for (j = 0; j < 16; j++) {
     #if (defined _WINDOWS || defined _LITTLE_ENDIAN) && defined UTFAT_SECT_BIG_ENDIAN // {61}
                     fnDebugHex(BIG_LONG_WORD(ulBuffer[(i * 16) + j]), (WITH_LEADIN | WITH_SPACE | sizeof(ulBuffer[0])));

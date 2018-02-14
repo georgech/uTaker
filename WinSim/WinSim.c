@@ -2037,7 +2037,7 @@ extern void fnLogUSB(int iEndpoint, unsigned char ucToken, unsigned short usLeng
         if (usLength == 0) {
             _write(iUSB_Log[iEndpoint], "ZERO-DATA", 9);
         }
-        while (usLength--) {
+        while (usLength-- != 0) {
             unsigned char ucTemp1 = (*ptrUSBData >> 4);
             unsigned char ucTemp2 = (*ptrUSBData & 0x0f);
             if (ucTemp1 <= 9) {

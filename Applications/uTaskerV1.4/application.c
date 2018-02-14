@@ -614,7 +614,7 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
             uFileCloseMime(upload_location, &ucMimeType);                // close file as binary type
         }
 #endif
-#if defined USE_MQTT_CLIENT && defined SECURE_MQTT && defined _WINDOWS   // temporary for secure MQTT simulation tests
+#if /*defined USE_MQTT_CLIENT && defined SECURE_MQTT &&*/ defined _WINDOWS   // temporary for secure MQTT simulation tests
         {
             ARP_DETAILS arp_details;
     #if IP_INTERFACE_COUNT > 1
@@ -627,8 +627,10 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
     #if IP_NETWORK_COUNT > 1
             arp_details.ucNetworkID = 0;                                 // the network that ARP activity belongs to
     #endif
-            unsigned char gatewayIP[] = {192, 168, 0, 1};
-            unsigned char gatewayMAC[] = { 0x54, 0x67, 0x51, 0xbe, 0x0a, 0x57 };
+          //unsigned char gatewayIP[] = {192, 168, 0, 1};
+          //unsigned char gatewayMAC[] = { 0x54, 0x67, 0x51, 0xbe, 0x0a, 0x57 };
+            unsigned char gatewayIP[] = { 192, 168, 0, 4 };
+            unsigned char gatewayMAC[] = { 0x00, 0x50, 0xc2, 0xfa, 0xd0, 0x42 };
             fnAddARP(gatewayIP, gatewayMAC, &arp_details);               // temp for development
         }
 #endif
@@ -1105,13 +1107,17 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
         fnSendBufTCP(Telnet_RFC2217_socket, ucInputMessage, Length, (TCP_BUF_SEND | TCP_BUF_SEND_REPORT_COPY)); // send to TELNET RFC2217 socket connection
     }
 #endif
-
 #if !defined NO_PERIPHERAL_DEMONSTRATIONS
-    #define _I2C_READ_CODE
+    #define _I2C_READ_CODE                                               // I2C reception checking
     #if !defined BLAZE_K22
         #include "i2c_tests.h"                                           // include I2C code to handle reception
     #endif
     #undef _I2C_READ_CODE
+
+    #define _ADC_POLL_CODE                                               // ADC polling operation
+        #include "ADC_Timers.h"
+    #undef _ADC_POLL_CODE
+
     #define _PORT_NMI_CHECK                                              // {53}
         #include "Port_Interrupts.h"                                     // port interrupt timer interrupt event handling - ranges
     #undef _PORT_NMI_CHECK

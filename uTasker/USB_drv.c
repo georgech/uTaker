@@ -146,7 +146,6 @@ static void fnError(int iErrorNumber)
 /*                 local function prototype declarations               */
 /* =================================================================== */
 
-static QUEUE_TRANSFER fnStartUSB_send(QUEUE_HANDLE channel, USBQUE *ptrUsbQueue, QUEUE_TRANSFER txLength);
 
 /* =================================================================== */
 /*                             constants                               */
@@ -414,7 +413,7 @@ extern QUEUE_TRANSFER entry_usb(QUEUE_HANDLE channel, unsigned char *ptBuffer, Q
     return (rtn_val);
 }
 
-static QUEUE_TRANSFER fnStartUSB_send(QUEUE_HANDLE channel, USBQUE *ptrUsbQueue, QUEUE_TRANSFER txLength)
+extern QUEUE_TRANSFER fnStartUSB_send(QUEUE_HANDLE channel, USBQUE *ptrUsbQueue, QUEUE_TRANSFER txLength)
 {
 #if defined USB_DMA_TX && defined USB_RAM_START
     ptrUsbQueue->endpoint_control->ucState |= TX_ACTIVE;                 // mark that the transmitter is active
@@ -426,19 +425,19 @@ static QUEUE_TRANSFER fnStartUSB_send(QUEUE_HANDLE channel, USBQUE *ptrUsbQueue,
     if (fnGetUSB_HW(channel, &ptr_usb_hardware) == ENDPOINT_FREE) {      // check that there is a free buffer to send with
         unsigned short usLength;
         ptrUsbQueue->endpoint_control->ucState |= TX_ACTIVE;             // mark that the transmitter is active
-#if defined USB_TX_MESSAGE_MODE
+    #if defined USB_TX_MESSAGE_MODE
         if (ptrUsbQueue->endpoint_control->messageQueue != 0) {          // {32}
             usLength = txLength;                                         // in message mode we always handle each new transmission as a single message, even if it involves circular buffer operation
         }
         else {
-#endif
+    #endif
             usLength = (ptrUsbQueue->USB_queue.buffer_end - ptrUsbQueue->USB_queue.get); // maximum linear part of buffer
             if (txLength < usLength) {                                   // if the requested transmission length is less that the maximum possible linear length
                 usLength = txLength;                                     // set requested length
             }
-#if defined USB_TX_MESSAGE_MODE
+    #if defined USB_TX_MESSAGE_MODE
         }
-#endif
+     #endif
         return (fnPrepareOutData(DEVICE_HOST_DATA ptrUsbQueue->USB_queue.get, usLength, usLength, channel, ptr_usb_hardware));
     }
     else {                                                               // the transmitter is not busy but it was not possible to send the data

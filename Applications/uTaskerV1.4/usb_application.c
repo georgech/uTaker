@@ -62,6 +62,7 @@
     12.02.2017 Allow USB-MSD or USB-CDC host operation, depending on which device is detected {44}
     07.03.2017 Add USB_MSD_REMOVED event on memory stick removal         {45}
     14.01.2018 Block USB-MSD further command handling until complete write data has been received {46}
+    14.02.2018 Allow operation in both device and host modes (decided at initialisation) {47}
 
 */
 
@@ -92,8 +93,10 @@
 #endif
 
 #if defined USB_HOST_SUPPORT
-    #define NUMBER_OF_ENDPOINTS             3                            // reserve 2 bulk endpoints for USB-MSD host as well as an interrupt endpoint (although not used, some memory sticks request this)
-    #define STATUS_TRANSPORT                0x100
+    #define NUMBER_OF_HOST_ENDPOINTS             3                       // reserve 2 bulk endpoints for USB-MSD host as well as an interrupt endpoint (although not used, some memory sticks request this)
+    #if defined USB_MSD_HOST
+        #define STATUS_TRANSPORT                0x100
+    #endif
 #endif
 
 #define INCLUDE_USB_DEFINES
@@ -137,6 +140,8 @@
 #define T_REPEAT_COMMAND                    6
 #define T_REQUEST_LUN                       7
 
+#define USB_DEVICE_MODE_OF_OPERATION        0
+#define USB_HOST_MODE_OF_OPERATION          1
 
 #if defined USE_USB_MSD
     #define NUMBER_OF_PARTITIONS            DISK_COUNT
@@ -159,12 +164,25 @@
 #define USB_HOST_MSD_ACTIVE                 0x01
 #define USB_HOST_CDC_ACTIVE                 0x02
 
-#if defined USB_HOST_SUPPORT && defined USB_CDC_HOST && !defined FIRST_CDC_INTERFACE
+#if defined USB_HOST_SUPPORT && defined USB_CDC_HOST && !defined FIRST_CDC_INTERFACE && !defined USB_DEVICE_SUPPORT
     #define FIRST_CDC_INTERFACE             0                            // {41}
 #endif
 #if !defined RNDIS_NETWORK
     #define RNDIS_NETWORK                   0
 #endif
+
+#if defined USB_HOST_SUPPORT && defined USB_HOST_SUPPORT                 // {47} decide the number of additional endpoints required for both host and device operations
+    #if NUMBER_OF_HOST_ENDPOINTS > NUMBER_OF_ENDPOINTS
+        #define NUMBER_OF_ENDPOINTS_REQUIRED (NUMBER_OF_HOST_ENDPOINTS)
+    #else
+        #define NUMBER_OF_ENDPOINTS_REQUIRED (NUMBER_OF_ENDPOINTS)
+    #endif
+#elif defined USB_HOST_SUPPORT && !defined USB_HOST_SUPPORT
+    #define NUMBER_OF_ENDPOINTS_REQUIRED (NUMBER_OF_HOST_ENDPOINTS)
+#else
+    #define NUMBER_OF_ENDPOINTS_REQUIRED (NUMBER_OF_ENDPOINTS)
+#endif
+
 /* =================================================================== */
 /*                       local structure definitions                   */
 /* =================================================================== */
@@ -255,11 +273,15 @@ __PACK_ON                                                                // comp
 /*                      local variable definitions                     */
 /* =================================================================== */
 
+#if defined USB_HOST_SUPPORT && defined USB_DEVICE_SUPPORT               // {47}
+    static int iUSB_mode = USB_DEVICE_MODE_OF_OPERATION;                 // default to device mode
+#endif
+
 static QUEUE_HANDLE USB_control = NO_ID_ALLOCATED;                       // USB default control endpoint handle
 static unsigned short usExpectedData = 0;                                // used by the control endpoint to collect data
 static unsigned char  ucCollectingMode = 0xff;
 #if defined USB_HOST_SUPPORT
-    static unsigned long ulDeviceType = 0;                               // {44}
+    static unsigned long ulHostClassTypes = 0;                           // {44}
 #endif
 #if defined USB_HOST_SUPPORT && defined USB_MSD_HOST
     static QUEUE_HANDLE USBPortID_msd_host = NO_ID_ALLOCATED;
@@ -386,7 +408,7 @@ static void fnConfigureUSB(void);                                        // rout
     #endif
 #endif
 #if defined USB_HOST_SUPPORT
-    static void fnConfigureApplicationEndpoints(unsigned char ucConfiguration);
+    static void fnConfigureHostApplicationEndpoints(unsigned char ucConfiguration);
     static unsigned char fnDisplayDeviceInfo(unsigned long *ptrDeviceType);
     #if defined USB_MSD_HOST
         static void fnRequestLUN(void);
@@ -438,6 +460,7 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
 #if defined USE_USB_CDC && defined SERIAL_INTERFACE && defined USB_SERIAL_CONNECTIONS && (USB_CDC_VCOM_COUNT > 1)
         fnOpenUSB_UARTs(0);                                              // configure and open additional UARTs to be used with USB CDC connection
 #endif
+      //iUSB_mode = USB_HOST_MODE_OF_OPERATION;                          // use host mode instead of device mode
         fnConfigureUSB();                                                // configure the USB interface
 #if defined MODBUS_USB_SLAVE                                             // {11}
         fnInitModbus();                                                  // initialise MODBUS since the USB handle is now ready
@@ -645,7 +668,7 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
     #endif
                 fnDebugMsg("USB device removed\r\n");
     #if defined USB_MSD_HOST
-                if ((ulDeviceType & USB_HOST_MSD_ACTIVE) != 0) {
+                if ((ulHostClassTypes & USB_HOST_MSD_ACTIVE) != 0) {
                     fnEventMessage(TASK_MASS_STORAGE, TASK_USB_HOST, USB_MSD_REMOVED); // {45} initiate mounting the memory stick at the mass storage task
                 }
     #endif
@@ -714,7 +737,7 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
 #if defined USB_HOST_SUPPORT                                             // {32}
                 case E_USB_DEVICE_INFO:                                  // the USB host has collected information ready to decide how to work with a device
                     fnDebugMsg("USB device information ready:\r\n");
-                    ucInputMessage[0] = fnDisplayDeviceInfo(&ulDeviceType); // analyse and display information
+                    ucInputMessage[0] = fnDisplayDeviceInfo(&ulHostClassTypes); // analyse and display information
                     if (ucInputMessage[0] != 0) {                        // if there is a supported configuration to be enabled
     #if defined USB_MSD_HOST                        
                         ulTag = fnRandom();                              // start with random tag number
@@ -784,15 +807,15 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
                 fnDebugMsg(")\n\r");
                 SET_USB_SYMBOL();                                        // {21} display connection in LCD, on LED etc.
 #if defined USB_HOST_SUPPORT                                             // {32}
-                fnConfigureApplicationEndpoints(ucInputMessage[MSG_CONTENT_COMMAND + 1]); // configure endpoints according to configuration
+                fnConfigureHostApplicationEndpoints(ucInputMessage[MSG_CONTENT_COMMAND + 1]); // configure endpoints according to configuration
     #if defined USB_MSD_HOST
                 iUSB_MSD_OpCode = 0;
-                if ((ulDeviceType & USB_HOST_MSD_ACTIVE) != 0) {         // {44}
+                if ((ulHostClassTypes & USB_HOST_MSD_ACTIVE) != 0) {     // {44}
                     fnRequestLUN();                                      // the first thing that the MSD host does is request the number of logical units that the disk drive has
                 }
     #endif
     #if defined USB_CDC_HOST
-                if ((ulDeviceType & USB_HOST_CDC_ACTIVE) != 0) {         // {44}
+                if ((ulHostClassTypes & USB_HOST_CDC_ACTIVE) != 0) {     // {44}
                     fnDriver(USBPortID_comms[FIRST_CDC_INTERFACE], (RX_ON), 0); // {43} enable IN polling on first interface
                 }
     #endif
@@ -819,6 +842,9 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
     }
 
 #if defined USB_HOST_SUPPORT
+    #if defined USB_DEVICE_SUPPORT                                       // {47}
+    if (USB_HOST_MODE_OF_OPERATION == iUSB_mode) {                       // if operating in host mode
+    #endif
     #if defined USB_MSD_HOST
     if (USBPortID_msd_host != NO_ID_ALLOCATED) {                         // don't check bulk input queue until host is configured
         while (fnMsgs(USBPortID_msd_host) != 0) {                        // reception from host IN endpoint
@@ -975,8 +1001,12 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
         return;
     }
     #endif
+    #if defined USB_DEVICE_SUPPORT
+    }                                                                    // end of host mode operation
+    else {
+    #endif
 #endif
-#if defined USE_USB_MSD                                                  // usb-msd device mode
+#if defined USB_DEVICE_SUPPORT && defined USE_USB_MSD                    // usb-msd device mode
     while (fnMsgs(USBPortID_MSD) != 0) {                                 // handle USB-MSD host receptions
         if (ulWriteBlock != 0) {                                         // write data expected
             static unsigned char ucBuffer[512];                          // intermediate buffer to collect each sector content
@@ -1149,7 +1179,7 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
         fnWrite(USBPortID_MSD, (unsigned char *)&csw, sizeof(csw));      // close with CSW stage
     }
 #endif
-#if defined USB_CDC_RNDIS
+#if defined USB_DEVICE_SUPPORT && defined USB_CDC_RNDIS                  // RNDIS device mode
     if (usExpectedRNDISlength == 0) {                                    // if the size of the present frame is not yet known
         usMaxDataLength = ((sizeof(remoteNDISpacket.rndis_message.ucMessageType) + sizeof(remoteNDISpacket.rndis_message.ucMessageLength)) - usRNDISpacketLength); // read initially the message type and length
     }
@@ -1257,11 +1287,11 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
         }
     }
 #endif
-#if defined FREEMASTER_CDC && (USB_CDC_VCOM_COUNT == 1)                  // {35} FreeMaster run-time debugging on single USB-CDC connection rather than command-line interface
+#if defined USB_DEVICE_SUPPORT && defined FREEMASTER_CDC && (USB_CDC_VCOM_COUNT == 1) // {35} FreeMaster run-time debugging on single USB-CDC connection rather than command-line interface
     if ((Length = fnRead(USBPortID_comms[FIRST_CDC_INTERFACE], ucInputMessage, MEDIUM_MESSAGE)) != 0) { // read available data
         fnHandleFreeMaster(USBPortID_comms[FIRST_CDC_INTERFACE], ucInputMessage, Length);  // handle the received data
     }
-#elif ((defined USE_USB_CDC && (USB_CDC_VCOM_COUNT > 0)) && defined USE_MAINTENANCE) || defined USB_CDC_HOST // USB-CDC with command line interface
+#elif defined USB_DEVICE_SUPPORT && ((defined USE_USB_CDC && (USB_CDC_VCOM_COUNT > 0)) && defined USE_MAINTENANCE) || defined USB_CDC_HOST // USB-CDC with command line interface
     while (fnMsgs(USBPortID_comms[FIRST_CDC_INTERFACE]) != 0) {          // while reception from OUT endpoint on first CDC interface
     #if defined USB_CDC_HOST
         fnDriver(USBPortID_comms[FIRST_CDC_INTERFACE], (RX_ON), 0);      // enable IN polling again so that further data can be received
@@ -1370,7 +1400,7 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
         #endif
     }
     #endif
-#elif defined USE_USB_CDC && (USB_CDC_VCOM_COUNT > 0)                    // USB-CDC without command line menu (quick test case without full flow control handling)
+#elif defined USB_DEVICE_SUPPORT && defined USE_USB_CDC && (USB_CDC_VCOM_COUNT > 0) // USB-CDC without command line menu (quick test case without full flow control handling)
     #if USB_CDC_VCOM_COUNT > 1                                           // multiple CDC interfacs
         #if defined SERIAL_INTERFACE && defined DEMO_UART
     CDCSerialPortID[0] = SerialPortID;                                   // automatically enter the debug serial port in the CDC UART list
@@ -1408,7 +1438,7 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
     }
     #endif
 #endif
-#if defined USE_USB_HID_RAW
+#if defined USB_DEVICE_SUPPORT && defined USE_USB_HID_RAW
     if (USBPortID_HID_raw != NO_ID_ALLOCATED) {
     #if HID_RAW_TX_SIZE > HID_RAW_RX_SIZE
         static unsigned char ucRawData[HID_RAW_TX_SIZE];                 // static reception buffer
@@ -1419,6 +1449,9 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
             fnWrite(USBPortID_HID_raw, ucRawData, HID_RAW_RX_SIZE);      // send back
         }
     }
+#endif
+#if defined USB_HOST_SUPPORT && defined USB_DEVICE_SUPPORT               // {47}
+    }                                                                    // end of device mode operation
 #endif
 }
 
@@ -1828,7 +1861,7 @@ static void fnOpenUSB_UARTs(int iInterface)
 //
 extern void *fnGetUSB_device_descriptor(unsigned short *usLength)
 {
-#if defined USB_HOST_SUPPORT
+#if defined USB_HOST_SUPPORT && !defined USB_DEVICE_SUPPORT              // {47}
     return 0;                                                            // dummy for host
 #else
     *usLength = sizeof(device_descriptor);
@@ -1841,7 +1874,7 @@ extern void *fnGetUSB_device_descriptor(unsigned short *usLength)
 //
 extern void *fnGetUSB_config_descriptor(unsigned short *usLength)
 {
-#if defined USB_HOST_SUPPORT
+#if defined USB_HOST_SUPPORT && !defined USB_DEVICE_SUPPORT              // {47}
     return 0;                                                            // in host mode we return a zero so that the generic driver uses its own information
 #else
     *usLength = sizeof(config_descriptor);
@@ -1888,7 +1921,7 @@ static void fnSetSerialNumberString(CHAR *ptrSerialNumber) {             // {12}
 //
 extern unsigned char *fnGetUSB_string_entry(unsigned char ucStringRef, unsigned short *usLength) // {40}
 {
-    #if defined USB_HOST_SUPPORT
+    #if defined USB_HOST_SUPPORT && !defined USB_DEVICE_SUPPORT          // {47}
     return 0;                                                            // dummy for host
     #else
     if (ucStringRef > (unsigned char)LAST_STRING_INDEX) {
@@ -3118,27 +3151,27 @@ static void fnDisplayEndpoint(USB_ENDPOINT_DESCRIPTOR *ptr_endpoint_desc, int iI
     if ((ptr_endpoint_desc->bEndpointAddress & IN_ENDPOINT) != 0) {
         fnDebugMsg(" IN");
         if (ptr_endpoint_desc->bmAttributes == ENDPOINT_BULK) {
-#if defined USB_MSD_HOST                                                 // it is expected that MSD has only one bulk IN endpoint
+    #if defined USB_MSD_HOST                                             // it is expected that MSD has only one bulk IN endpoint
             ucMSDBulkInEndpoint = ucEndpointNumber;                      // the endpoint that is to be used as IN endpoint
             usMSDBulkInEndpointSize = usEndpointLength;                  // the length of the IN endpoint
-#endif
-#if defined USB_CDC_HOST                                                 // it is expected that CDC has only one bulk IN endpoint
+    #endif
+    #if defined USB_CDC_HOST                                             // it is expected that CDC has only one bulk IN endpoint
             ucCDCBulkInEndpoint[iInterfaceRef] = ucEndpointNumber;       // the endpoint that is to be used as IN endpoint
             usCDCBulkInEndpointSize[iInterfaceRef] = usEndpointLength;   // the length of the IN endpoint
-#endif
+    #endif
         }
     }
     else {
         fnDebugMsg(" OUT");
         if (ptr_endpoint_desc->bmAttributes == ENDPOINT_BULK) {
-#if defined USB_MSD_HOST                                                 // it is expected that MSD has only one bulk OUT endpoint
+    #if defined USB_MSD_HOST                                             // it is expected that MSD has only one bulk OUT endpoint
             ucMSDBulkOutEndpoint = ucEndpointNumber;                     // the endpoint that is to be used as OUT endpoint
             usMSDBulkOutEndpointSize = usEndpointLength;                 // the length of the OUT endpoint
-#endif
-#if defined USB_CDC_HOST                                                 // it is expected that CDC has only one bulk OUT endpoint
+    #endif
+    #if defined USB_CDC_HOST                                             // it is expected that CDC has only one bulk OUT endpoint
             ucCDCBulkOutEndpoint[iInterfaceRef] = ucEndpointNumber;      // the endpoint that is to be used as OUT endpoint
             usCDCBulkOutEndpointSize[iInterfaceRef] = usEndpointLength;  // the length of the OUT endpoint
-#endif
+    #endif
         }
     }
     fnDebugMsg(" with size");
@@ -3298,12 +3331,14 @@ static unsigned char fnDisplayDeviceInfo(unsigned long *ptrDeviceType)
     return 0;                                                            // not supported device
 }
 
-static void fnConfigureApplicationEndpoints(unsigned char ucActiveConfiguration)
+// Host endpoint configuration
+//
+static void fnConfigureHostApplicationEndpoints(unsigned char ucActiveConfiguration)
 {
     USBTABLE tInterfaceParameters;                                       // table for passing information to driver
 
     #if defined USB_MSD_HOST
-    if ((ulDeviceType & USB_HOST_MSD_ACTIVE) != 0) {                     // {44}
+    if ((ulHostClassTypes & USB_HOST_MSD_ACTIVE) != 0) {                 // {44}
         if (NO_ID_ALLOCATED == USBPortID_msd_host) {
             tInterfaceParameters.owner_task = OWN_TASK;                  // wake usb task on receptions
             tInterfaceParameters.Endpoint = ucMSDBulkOutEndpoint;        // set USB endpoints to act as an input/output pair - transmitter (OUT)
@@ -3321,7 +3356,7 @@ static void fnConfigureApplicationEndpoints(unsigned char ucActiveConfiguration)
     }
     #endif
     #if defined USB_CDC_HOST                                             // {37}
-    if ((ulDeviceType & USB_HOST_CDC_ACTIVE) != 0) {                     // {44}
+    if ((ulHostClassTypes & USB_HOST_CDC_ACTIVE) != 0) {                 // {44}
         if ((NO_ID_ALLOCATED == USBPortID_comms[FIRST_CDC_INTERFACE]) && (ucCDCBulkOutEndpoint[0] != 0)) {
             tInterfaceParameters.owner_task = OWN_TASK;                  // wake usb task on receptions
             tInterfaceParameters.Endpoint = ucCDCBulkOutEndpoint[0];     // set USB endpoints to act as an input/output pair - transmitter (OUT)
@@ -3603,7 +3638,9 @@ extern int utDeleteMSDSector(UTDISK *ptr_utDisk, unsigned long ulSectorNumber)
 }
     #endif
     #endif
-#else
+#endif
+
+#if defined USB_DEVICE_SUPPORT
     #if defined USE_USB_AUDIO
         #if defined _WINDOWS
 #define USB_WATCHDOG    (TICK_RESOLUTION * 32)                           // when simulating use longer timeout to avoid the time firing during tests
@@ -3876,7 +3913,7 @@ static void fnUSBModifyMulticastFilter(QUEUE_TRANSFER action, unsigned char *ptr
 #endif
 
 
-static void fnConfigureApplicationEndpoints(void)
+static void fnConfigureDeviceApplicationEndpoints(void)
 {
     USBTABLE tInterfaceParameters;                                       // table for passing information to driver
     QUEUE_HANDLE endpointNumber = 1;
@@ -4201,7 +4238,7 @@ static void fnConfigureUSB(void)
     // Configure the control endpoint
     //
     tInterfaceParameters.Endpoint = 0;                                   // set USB default control endpoint for configuration
-    #if defined USB_HOST_SUPPORT                                         // {32} host mode rather than device mode
+    #if defined USB_HOST_SUPPORT && !defined USB_DEVICE_SUPPORT          // {32}{47} host mode (only) rather than device mode
     tInterfaceParameters.usConfig = USB_HOST_MODE;                       // configure host mode of operation
     #else
         #if defined OLIMEX_LPC2378_STK                                   // {20} this board requires alternative USB pin mapping
@@ -4214,6 +4251,11 @@ static void fnConfigureUSB(void)
             #endif
         #endif
     #endif
+    #if defined USB_HOST_SUPPORT && defined USB_DEVICE_SUPPORT           // {47}
+    if (USB_HOST_MODE_OF_OPERATION == iUSB_mode) {                       // if we are in host mode
+        tInterfaceParameters.usConfig = USB_HOST_MODE;                   // configure host mode of operation
+    }
+    #endif
     tInterfaceParameters.usb_callback = control_callback;                // call-back for control endpoint to enable class exchanges to be handled
     tInterfaceParameters.queue_sizes.TxQueueSize = 0;                    // no tx buffering on control endpoint
     tInterfaceParameters.queue_sizes.RxQueueSize = 0;                    // no rx buffering on control endpoint
@@ -4225,15 +4267,20 @@ static void fnConfigureUSB(void)
     #if defined _LPC23XX || defined _LPC17XX                             // {14}
     tInterfaceParameters.ucEndPoints = 5;                                // due to fixed endpoint ordering in the LPC endpoints up to 5 are used
     #else
-    tInterfaceParameters.ucEndPoints = NUMBER_OF_ENDPOINTS;              // number of endpoints, in addition to EP0, required by the configuration
+    tInterfaceParameters.ucEndPoints = NUMBER_OF_ENDPOINTS_REQUIRED;     // number of endpoints, in addition to EP0, required by the configuration
     #endif
     tInterfaceParameters.owner_task = OWN_TASK;                          // local task receives USB state change events
     #if defined USE_USB_OTG_CHARGE_PUMP
     tInterfaceParameters.OTG_I2C_Channel = I2CPortID;                    // let the driver open its own I2C interface, if not yet open
     #endif
     USB_control = fnOpen(TYPE_USB, 0, &tInterfaceParameters);            // open the default control endpoint with defined configurations (reserves resources but only control is active)
-    #if !defined USB_HOST_SUPPORT
-    fnConfigureApplicationEndpoints();                                   // configure the endpoints that will be used by the class/application
+    #if defined USB_DEVICE_SUPPORT && defined USB_HOST_SUPPORT           // {47}
+    if (USB_HOST_MODE_OF_OPERATION == iUSB_mode) {                       // if we are in host mode
+        return;                                                          // don't perform device endpoint configuration
+    }
+    #endif
+    #if defined USB_DEVICE_SUPPORT
+    fnConfigureDeviceApplicationEndpoints();                             // configure the endpoints that will be used by the device class/application
     #endif
 }
 __PACK_OFF

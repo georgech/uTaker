@@ -327,6 +327,8 @@ static void fnSetDevice(unsigned long *port_inits)
     int j;
 #endif
 
+    kinetis.CORTEX_M4_REGS.ulPRIMASK = INTERRUPT_MASKED;                 // interrupts are masked out of reset
+
 #if !defined KINETIS_KL
     FMC_PFAPR  = 0x00f8003f;                                             // flash memory controller
     FMC_PFB0CR = 0x3002001f;

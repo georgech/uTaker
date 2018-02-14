@@ -36,7 +36,7 @@
 #define _TICK_RESOLUTION     TICK_UNIT_MS(50)                            // 50ms system tick period - max possible at 50MHz SYSTICK would be about 335ms !
 
 //#define REMOVE_PORT_INITIALISATIONS                                    // remove port initialisation and use demonstration to ensure that port configuration and use doesn't conflict with specific application development (exception is blink LED)
-  //#define NO_PERIPHERAL_DEMONSTRATIONS                                 // disable peripheral demonstration code (ADC/I2C/CAN/port interrupts/etc.) so that they can't interfere with new application developments
+//#define NO_PERIPHERAL_DEMONSTRATIONS                                   // disable peripheral demonstration code (ADC/I2C/CAN/port interrupts/etc.) so that they can't interfere with new application developments
 
 #define USE_MAINTENANCE                                                  // include the command line shell (on UART, USB-CDC and/or Telnet) with maintenance support for the application (remove to reduce project size for special tests or possibly running from limited RAM)
     #define PREVIOUS_COMMAND_BUFFERS  4                                  // allow the up-arrow to retrieve this many past commands
@@ -186,8 +186,9 @@
 #elif defined FRDM_KE04Z
     #define TARGET_HW            "FRDM_KE04Z"
     #define KINETIS_MAX_SPEED    48000000
-    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((820) * MEM_FACTOR)
-    #undef USE_MAINTENANCE                                               // this target has very limited RAM - disable maintenance so that accelerometer operation can bee tested
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((492) * MEM_FACTOR)
+    #undef USE_MAINTENANCE                                               // this target has very limited memory - disable maintenance
+    #define NO_MODIFIABLE_PARAMETERS                                     // in order to save RAM the parameters are fixed in flash
     #define KINETIS_KE
     #define KINETIS_KE04
     #define DEVICE_WITHOUT_CAN                                           // KE04 doesn't have CAN controller
@@ -1051,13 +1052,15 @@
   //#define USB_INTERFACE                                                // enable USB driver interface
     #if defined USB_INTERFACE
       //#define MICROSOFT_OS_STRING_DESCRIPTOR                           // support MODs
-      //#define USB_HOST_SUPPORT                                         // host rather than device
+      //#define USB_HOST_SUPPORT                                         // host supported
+        #define USB_DEVICE_SUPPORT                                       // device supported
         #define USB_SPEC_VERSION            USB_SPEC_VERSION_2_0         // report USB2.0 rather than USB1.1 - usually USB1.1 is used since it is equivalent to USB2.0 but requires one less descriptor transfer
-        #if defined USB_HOST_SUPPORT
+        #if defined USB_HOST_SUPPORT && !defined USB_DEVICE_SUPPORT
             #define NUMBER_USB     (5 + 1)                               // physical queues (control plus 5 endpoints)
-        #else                                                            // define one or more device classes (multiple classes creates a composite device)
+        #endif
+        #if defined USB_DEVICE_SUPPORT                                   // define one or more device classes (multiple classes creates a composite device)
             #define USE_USB_CDC                                          // USB-CDC (use also for Modbus over USB)
-            #define USE_USB_MSD                                          // needs SD card to compile (or alternatives FLASH_FAT / SPI_FLASH_FAT / FAT_EMULATION)
+          //#define USE_USB_MSD                                          // needs SD card to compile (or alternatives FLASH_FAT / SPI_FLASH_FAT / FAT_EMULATION)
           //#define USE_USB_HID_MOUSE                                    // human interface device (mouse)
           //#define USE_USB_HID_KEYBOARD                                 // human interface device (keyboard)
               //#define USB_KEYBOARD_DELAY                               // enable inter-character delay control
@@ -1163,12 +1166,12 @@
             #define USB_HS_INTERFACE                                     // use HS interface rather than FS interface (needs external ULPI transceiver) - use with TWR_SER2 and secondary elevator (not dummy elevator)
         #endif
         #if defined USB_HOST_SUPPORT
-            #define USB_MSD_HOST                                         // works together with mass-storage for a USB memory stick as disk E
-          //#define USB_CDC_HOST                                         // supports CDC device (can be used together with MSD host) - see https://youtu.be/XhISV1czIo4 for a demonstration of CDC communication betwen a host and a device target
+          //#define USB_MSD_HOST                                         // works together with mass-storage for a USB memory stick as disk E
+            #define USB_CDC_HOST                                         // supports CDC device (can be used together with MSD host) - see https://youtu.be/XhISV1czIo4 for a demonstration of CDC communication betwen a host and a device target
                 #define SUPPORT_USB_SIMPLEX_HOST_ENDPOINTS               // allow operation with devices using bulk IN/OUT on the same endpoint (this should normally always be set)
                 #define USB_CDC_COUNT  1                                 // support up to this many virtual com host interfaces
         #endif
-        #if defined USB_HS_INTERFACE || defined USB_HOST_SUPPORT || defined USE_USB_AUDIO || defined USB_CDC_RNDIS // since RNDIS makes intensive use of enpoint 0 for status and control it makes snese to use the largest size possible (assuming at least full-speed operation)
+        #if defined USB_HS_INTERFACE || defined USB_HOST_SUPPORT || defined USE_USB_AUDIO || defined USB_CDC_RNDIS // since RNDIS makes intensive use of enpoint 0 for status and control it makes sense to use the largest size possible (assuming at least full-speed operation)
             #define ENDPOINT_0_SIZE         64                           // high speed devices should use 64 bytes (and hosts use full size endpoint size)
         #else
             #define ENDPOINT_0_SIZE         8                            // maximum packet size for endpoint 0. Low speed devices must use 8 whereas full speed devices can chose to use 8, 16, 32 or 64
@@ -1195,7 +1198,7 @@
 
 // I2C
 //
-#define I2C_INTERFACE
+//#define I2C_INTERFACE
 #if defined I2C_INTERFACE
     #define NUMBER_I2C       (I2C_AVAILABLE + LPI2C_AVAILABLE)           // I2C interfaces available
   //#define I2C_SLAVE_MODE                                               // support slave mode
@@ -1266,8 +1269,10 @@
     #if defined UTFAT_LFN_READ
         #define MAX_UTFAT_FILE_NAME      (100)                           // the maximum file name length supported - maximum 255
     #endif
+  //#define SDCARD_FIXED                                                 // no SD card monitoring since it is fixed in hardware
   //#define UTFAT_MULTIPLE_BLOCK_WRITE                                   // use multiple block writes where possible (write speed efficiency)
       //#define UTFAT_PRE_ERASE                                          // use pre-erase where possible (potential write speed efficiency)
+  //#define UTFAT_MULTIPLE_BLOCK_READ                                    // use multiple block writes where possible (read speed efficiency)
     #define UTFAT_WRITE                                                  // enable write functions
     #if defined UTFAT_WRITE
         #define UTFAT_FORMATTING                                         // enable formatting SD cards (requires also write)
@@ -1598,7 +1603,7 @@
                 #define FTP_DISPLAY_USER_FILES                           // allow user files to be displayed by FTP
             #endif
             #if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT // disk D: is used
-              //#define FTP_UTFAT                                        // allow FTP to work with utFAT
+                #define FTP_UTFAT                                        // allow FTP to work with utFAT
                 #define FTP_ROOT                "/"                      // the root directory as seen by the FTP server (can be set to a sub-directory of the main disk to restrict FTP accesses to there)
                 #define UT_FTP_PATH_LENGTH      128                      // this must be non-zero to enable PWD request to return a path name
             #endif
