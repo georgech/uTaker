@@ -30,7 +30,7 @@
 extern int fnInitialiseSecureLayer(const unsigned char *ptrOurCertificate, unsigned long ulCertificateLength, const unsigned char *ptrOutPrivateKey, unsigned long ulOurPrivateKeyLength);
 extern void fnHandshakeStats(unsigned long ulHandshakeSize, unsigned char *ucPrtData);
 extern void fnEnterRandom(unsigned char *ucPrtData, int iServer);
-extern void fnSetSessionCipher(unsigned short session_cipher, unsigned char ucVersion[2], unsigned char ucIdLength, unsigned char *ptrID);
+extern int fnSetSessionCipher(unsigned short session_cipher, unsigned char ucVersion[2], unsigned char ucIdLength, unsigned char *ptrID);
 extern int fnHandleSecurityExtension(unsigned short ext_id, unsigned short ext_size, unsigned char *ptrExtensionData);
 extern unsigned char *fnInsertTLS_random(unsigned char *ptrData, size_t Length);
 extern void fnSwitchTransformSpec(void);
@@ -80,9 +80,15 @@ static int  fnHandleHandshake(USOCKET Socket, unsigned char *ucPrtData, unsigned
 /*                             constants                               */
 /* =================================================================== */
 
+
 // The cipher suites that we support
 //
 static const unsigned short cusCipherSuites[] = {
+#if 0
+    TLS_RSA_WITH_AES_256_CBC_SHA,                                        // requires MBEDTLS_KEY_EXCHANGE_RSA_ENABLED in mbedtls configuration
+    TLS_RSA_WITH_AES_128_GCM_SHA256,
+    TLS_RSA_WITH_AES_128_CBC_SHA,
+#else
     TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
     TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
     TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
@@ -91,13 +97,14 @@ static const unsigned short cusCipherSuites[] = {
     TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256,
     TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
     TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
+#endif
     TLS_EMPTY_RENEGOTIATION_INFO_SCSV,
 };
 
 // The handshake extensions that we send
 //
 static const unsigned short cusHandshakeExtensions[] = {
-  //HANDSHAKE_EXTENSION_SERVER_NAME,
+    HANDSHAKE_EXTENSION_SERVER_NAME,
     HANDSHAKE_EXTENSION_SIGNATURE_ALGORITHMS,
     HANDSHAKE_EXTENSION_SUPPORTED_GROUPS,
     HANDSHAKE_EXTENSION_EC_POINT_FORMATS,
@@ -177,7 +184,7 @@ static unsigned long ulBufferContent = 0;
 #define TCP_TLS_CHANGE_CIPHER_SPEC      23
 #define TCP_TLS_ENCRYPTED_HANDSHAKE     24
 
-extern unsigned char *fnGeneratePublicKey(unsigned char *ptrData);       // in uTaskerInterface.c
+extern unsigned char *fnGeneratePublicKey(unsigned char *ptrData, unsigned short session_cipher, int *iType);  // in uTaskerInterface.c
 extern unsigned char *fnInsertSignatureAlgorithm(unsigned char *ptrData);
 extern int fnSaveServerCertificate(unsigned char *ptrCertificate, unsigned long ulCertificateLength);
 extern int fnExtractPublicKey(unsigned char *ptrData, unsigned long ulKeyExchangeLength);
@@ -356,20 +363,16 @@ static int fnInsertCertificate(unsigned char **ptrptrData, int iCertificate)
 
 static unsigned char *fnInsertPublicKey(unsigned char *ptrData)
 {
+    int iType = 0;
     unsigned char *ptrLength = ptrData++;
-    unsigned char ucLength;
-
-    switch (session_cipher) {
-    case TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA:                           // tested at AWS
-    case TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA:                             // tested as Mosquitto.org
-        ptrData = fnGeneratePublicKey(ptrData);                          // use the security library to generate the key and insert it into the data stream
-        break;
-    default:
-        _EXCEPTION("cipher suite not tested!");
-        return ptrData;
+    unsigned short usLength;
+    ptrData = fnGeneratePublicKey(ptrData, session_cipher, &iType);      // use the security library to generate the key and insert it into the data stream
+    usLength = (unsigned short)(ptrData - ptrLength - 1);
+    if (iType == 1) {                                                    // some types use two length bytes
+        usLength--;                                                      // compensate the fact that the tye will have made more space for the second length bytes
+        *ptrLength++ = (unsigned char)(usLength >> 8);
     }
-    ucLength = (ptrData - ptrLength - 1);
-    *ptrLength = ucLength;
+    *ptrLength = (unsigned char)usLength;
     return ptrData;
 }
 /*
@@ -513,7 +516,11 @@ extern int fnTLS(USOCKET Socket, unsigned char ucEvent)
             *ptrData++ = SSL_TLS_HANDSHAKE_TYPE_CLIENT_KEY_EXCHANGE;
             ptrExtensionLength = ptrData;                                // the location where the public key length is to be inserted
             ptrData += 3;                                                // leave space for length
-            ptrData = fnInsertPublicKey(ptrData);                        // 
+            ptrData = fnInsertPublicKey(ptrData);                        // generate and insert the public key
+            if (ptrData == 0) {
+                _EXCEPTION("public key generation failed!");
+                return 0;
+            }
             ucChecksumLength = (ptrData - ptrHandshakeLength - 2);
             *ptrHandshakeLength++ = (unsigned char)(ucChecksumLength >> 8);
             *ptrHandshakeLength = (unsigned char)(ucChecksumLength);
@@ -703,9 +710,14 @@ static int fnHandleHandshake(USOCKET Socket, unsigned char *ucPrtData, unsigned 
                         ptrHello = (SSL_TLS_HANDSHAKE_PROTOCOL_HELLO_32_ID *)(((unsigned char *)ptrHello) + (32 - ptrHello->session_id_length)); // set the session content pointer accordingly
                         ptrHelloSession = (SSL_TLS_HANDSHAKE_PROTOCOL_HELLO_DETAILS *)&(ptrHello->session_details);
                         session_cipher = ((ptrHelloSession->cipher[0] << 8) | (ptrHelloSession->cipher[1])); // the cipher suite to be used during the session
-                        fnSetSessionCipher(session_cipher, ptrHello->version, ptrHello->session_id_length, (ptrHelloSession->cipher - ptrHello->session_id_length));
+                        if (fnSetSessionCipher(session_cipher, ptrHello->version, ptrHello->session_id_length, (ptrHelloSession->cipher - ptrHello->session_id_length)) != 0) {
+                            return -1;
+                        }
                         // ptrHelloSession->compression_method will be 0 since we always set zero
-                        usExtensionLength = ptrHelloSession->extensionsLength[0];
+                        if (ulHandshakeSize <= (unsigned long)(32 + ptrHello->session_id_length + 1 + 2 + 3)) { // for there to be valid extensions there must be a length greater that the random number plus the id length and other fixed fields
+                            break;                                       // finished since there are no extensions
+                        }
+                        usExtensionLength = ptrHelloSession->extensionsLength[0]; // extract the length of the extensions
                         usExtensionLength <<= 8;
                         usExtensionLength |= ptrHelloSession->extensionsLength[1];
                         ptrExtensionData = (unsigned char *)&(ptrHelloSession->extension);
@@ -723,7 +735,7 @@ static int fnHandleHandshake(USOCKET Socket, unsigned char *ucPrtData, unsigned 
                             ptrExtensionData += usThisExtensionLength;
                             usThisExtensionLength += 4;                  // account for the extension type and length fields
                             if (usExtensionLength <= usThisExtensionLength) {
-                                break;
+                                break;                                   // all extensions handled
                             }
                             usExtensionLength -= usThisExtensionLength;  // remaining length
                         }
@@ -745,8 +757,8 @@ static int fnHandleHandshake(USOCKET Socket, unsigned char *ucPrtData, unsigned 
             ulCertificatesLength <<= 8;
             ulCertificatesLength |= *ucPrtData++;
             fnDebugMsg("Certificate recognised ");
-            while (ulCertificatesLength != 0) {
-                ucPrtData = fnExtractCertificate(ucPrtData, iCertificateReference++, &ulCertificatesLength);
+            while (ulCertificatesLength != 0) {                          // for each certificate in the chain
+                ucPrtData = fnExtractCertificate(ucPrtData, iCertificateReference++, &ulCertificatesLength); // extract and save each certificate
             }
         }
         break;
@@ -766,9 +778,10 @@ static int fnHandleHandshake(USOCKET Socket, unsigned char *ucPrtData, unsigned 
             usSignatureHashAlgorithmsLength <<= 8;
             usSignatureHashAlgorithmsLength |= *ucPrtData++;
             fnDebugMsg("Certificate request recognised ");
-            fnPrepareCertificate(ucPrtData, usSignatureHashAlgorithmsLength);
-            ucPrtData += usSignatureHashAlgorithmsLength;                // the certificate algorithms that are accepted
-            iNextState = 100;
+            if (fnPrepareCertificate(ucPrtData, usSignatureHashAlgorithmsLength) == 0) {
+                ucPrtData += usSignatureHashAlgorithmsLength;            // the certificate algorithms that are accepted
+                iNextState = 100;                                        // we will respond with our certificate next
+            }
         }
         break;
     case SSL_TLS_HANDSHAKE_TYPE_SERVER_HELLO_DONE:                       // the handshake record has copleted

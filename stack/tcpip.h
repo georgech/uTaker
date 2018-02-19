@@ -1981,6 +1981,7 @@ typedef struct _PACK stETH_IP_ENCAPSULATION_HEADER                       // fixe
 #define TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA           0xc014
 #define TLS_ECDHE_ECDSA_WITH_RC4_128_SHA             0xc007
 #define TLS_ECDHE_RSA_WITH_RC4_128_SHA               0xc011
+#define TLS_RSA_WITH_AES_128_GCM_SHA256              0x009c
 #define TLS_DHE_RSA_WITH_AES_128_CBC_SHA             0x0033
 #define TLS_DHE_DSS_WITH_AES_128_CBC_SHA             0x0032
 #define TLS_DHE_RSA_WITH_AES_256_CBC_SHA             0x0039
