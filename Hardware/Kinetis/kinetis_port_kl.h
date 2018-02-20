@@ -1792,9 +1792,9 @@ static const char *cPinNumber[PORTS_AVAILABLE + 1][PORT_WIDTH][7] = {
         {  "19",    "K2",  },                     // PE21
         {  "20",    "L1",  },                     // PE22
         {  "21",    "L2",  },                     // PE23
-        {  "-",     "-",   },                     // PE24
-        {  "-",     "-",   },                     // PE25
-        {  "-",     "-",   },                     // PE26
+        {  "31",    "H5",  },                     // PE24
+        {  "32",    "J5",  },                     // PE25
+        {  "33",    "H6",  },                     // PE26
         {  "-",     "-",   },                     // PE27
         {  "-",     "-",   },                     // PE28
         {  "26",    "L3",  },                     // PE29
@@ -2024,9 +2024,9 @@ static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][8] = {
         {  "ADC0_DM0/ADC0_SE4a","PTE21","LPSPI2_SOUT","TPM1_CH1","LPUART0_RX","-",         "FXIO0_D5", "-"                 },
         {  "ADC0_DP3/ADC0_SE3","PTE22","LPSPI2_SIN","TPM2_CH0","LPUART2_TX",  "-",         "FXIO0_D6", "-"                 },
         {  "ADC0_DM3/ADC0_SE7a","PTE23","LPSPI2_PCS0","TPM2_CH1","LPUART2_RX","-",         "FXIO0_D7", "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
+        {  "ADC0_SE20",    "PTE24", "EMVSIM0_IO","TPM0_CH0",   "-",           "LPI2C0_SCL","-",        "-"                 },
+        {  "ADC0_SE21",    "PTE25/LLWU_P21","EMVSIM0_PD","TPM0_CH1","-",      "LPI2C0_SDA","-",        "-"                 },
+        {  "-",            "PTE26/RTC_CLKOUT","-","TPM0_CH5",  "-",           "LPI2C0_SCLS","-",       "USB_CLKIN"         },
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
         {  "CMP1_IN5/CMP0_IN5/ADC0_SE4b","PTE29","EMVSIM0_CLK","TPM0_CH2","TPM0_CLKIN","-","-",        "-"                 },

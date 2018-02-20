@@ -13,6 +13,7 @@
     ---------------------------------------------------------------------
     Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
+    20.02.2018 Enable ignoring Nacks to allow compatible operation with other I2C controllers {1}
 
 */
 
@@ -231,8 +232,9 @@ static void fnI2C_Handler(KINETIS_LPI2C_CONTROL *ptrLPI2C, int iChannel) // gene
         return;
     }
     else if (ptrTxControl->ucPresentLen-- != 0) {                        // TX_ACTIVE - send next byte if available
+        fnLogEvent('U', ptrLPI2C->LPI2C_MSR);
         fnLogEvent('X', *ptrTxControl->I2C_queue.get);
-        ptrLPI2C->LPI2C_MTDR = *ptrTxControl->I2C_queue.get++;;          // send the next byte (note that the command byte is 0, meaning just send byte)
+        ptrLPI2C->LPI2C_MTDR = *ptrTxControl->I2C_queue.get++;           // send the next byte (note that the command byte is 0, meaning just send byte)
         if (ptrTxControl->I2C_queue.get >= ptrTxControl->I2C_queue.buffer_end) { // handle the circular transmit buffer
             ptrTxControl->I2C_queue.get = ptrTxControl->I2C_queue.QUEbuffer;
         }
@@ -367,7 +369,7 @@ extern void fnTxI2C(I2CQue *ptI2CQue, QUEUE_HANDLE Channel)
         ptI2CQue->I2C_queue.chars -= (ptI2CQue->ucPresentLen + 1);       // the remaining queue content
         fnLogEvent('h', (unsigned char)(ptI2CQue->I2C_queue.chars));
     }
-    ptrLPI2C->LPI2C_MIER = LPI2C_MIER_TDIE;                              // enable interrupt on transmission completion
+    ptrLPI2C->LPI2C_MIER = (LPI2C_MIER_TDIE);                            // enable interrupt on transmission completion
     fnLogEvent('T', ptrLPI2C->LPI2C_MSR);
     #if defined _WINDOWS
     ptrLPI2C->LPI2C_MSR |= LPI2C_MSR_TDF;                                // simulate the interrupt directly
@@ -703,7 +705,7 @@ extern void fnConfigI2C(I2CTABLE *pars)
                     ulI2C_speed = (ulPrescaledClock / ((3 * iClkHiCycle) + 2 + (2/iPrecaler))); // the I2C frequency that this combination gives
                 }
 
-                if (ulDesiredSpeed >= ulI2C_speed) {                     // absolute deviation form desired frequency
+                if (ulDesiredSpeed >= ulI2C_speed) {                     // absolute deviation from desired frequency
                     ulAbsoluteDeviation = (ulDesiredSpeed - ulI2C_speed);
                 }
                 else {
@@ -711,7 +713,7 @@ extern void fnConfigI2C(I2CTABLE *pars)
                 }
 
                 if (ulAbsoluteDeviation < ulBestDeviation) {             // if this setting is the best that has been found yet
-                    ptrLPI2C->LPI2C_MCFGR1 = (ucPrescalerSetting | LPI2C_MCFGR1_PINCFG_2_OPEN); // set the clock prescaler and normal I2C mode (2-line with open drain)
+                    ptrLPI2C->LPI2C_MCFGR1 = (ucPrescalerSetting | LPI2C_MCFGR1_IGNACK | LPI2C_MCFGR1_PINCFG_2_OPEN); // {1} set the clock prescaler and normal I2C mode (2-line with open drain) - ignore nacks
                     ucClkHi = (unsigned char)iClkHiCycle;
                     if (ulAbsoluteDeviation == 0) {
                         break;                                           // in case a pefect combination has been found we can quit searching

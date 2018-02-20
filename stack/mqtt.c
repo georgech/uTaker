@@ -495,6 +495,9 @@ static int fnMQTTListener(USOCKET Socket, unsigned char ucEvent, unsigned char *
     case TCP_EVENT_DATA:                                                 // we have new receive data
         return (fnHandleData(ucIp_Data, usPortLen));                     // interpret the data
 
+    case TCP_WINDOW_UPDATE:
+        break;
+
     case TCP_EVENT_CONREQ:                                               // we do not accept connection requests
     default:
         return -1;

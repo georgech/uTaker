@@ -63,6 +63,7 @@
     07.03.2017 Add USB_MSD_REMOVED event on memory stick removal         {45}
     14.01.2018 Block USB-MSD further command handling until complete write data has been received {46}
     14.02.2018 Allow operation in both device and host modes (decided at initialisation) {47}
+    20.02.2018 When both host and device modes can operate handle CDC reception appropriately {48}
 
 */
 
@@ -140,8 +141,6 @@
 #define T_REPEAT_COMMAND                    6
 #define T_REQUEST_LUN                       7
 
-#define USB_DEVICE_MODE_OF_OPERATION        0
-#define USB_HOST_MODE_OF_OPERATION          1
 
 #if defined USE_USB_MSD
     #define NUMBER_OF_PARTITIONS            DISK_COUNT
@@ -182,6 +181,9 @@
 #else
     #define NUMBER_OF_ENDPOINTS_REQUIRED (NUMBER_OF_ENDPOINTS)
 #endif
+
+#define USB_DEVICE_MODE_OF_OPERATION        0
+#define USB_HOST_MODE_OF_OPERATION          1
 
 /* =================================================================== */
 /*                       local structure definitions                   */
@@ -1291,10 +1293,16 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
     if ((Length = fnRead(USBPortID_comms[FIRST_CDC_INTERFACE], ucInputMessage, MEDIUM_MESSAGE)) != 0) { // read available data
         fnHandleFreeMaster(USBPortID_comms[FIRST_CDC_INTERFACE], ucInputMessage, Length);  // handle the received data
     }
-#elif defined USB_DEVICE_SUPPORT && ((defined USE_USB_CDC && (USB_CDC_VCOM_COUNT > 0)) && defined USE_MAINTENANCE) || defined USB_CDC_HOST // USB-CDC with command line interface
+#elif defined USB_DEVICE_SUPPORT && ((defined USE_USB_CDC && (USB_CDC_VCOM_COUNT > 0)) && defined USE_MAINTENANCE) || (defined USB_HOST_SUPPORT && defined USB_CDC_HOST) // USB-CDC with command line interface
     while (fnMsgs(USBPortID_comms[FIRST_CDC_INTERFACE]) != 0) {          // while reception from OUT endpoint on first CDC interface
     #if defined USB_CDC_HOST
-        fnDriver(USBPortID_comms[FIRST_CDC_INTERFACE], (RX_ON), 0);      // enable IN polling again so that further data can be received
+        #if defined USB_DEVICE_SUPPORT                                   // {48} when both modes are possible
+        if (USB_HOST_MODE_OF_OPERATION == iUSB_mode) {                   // only enable IN polling when in host mode
+        #endif
+            fnDriver(USBPortID_comms[FIRST_CDC_INTERFACE], (RX_ON), 0);  // enable IN polling again so that further data can be received
+        #if defined USB_DEVICE_SUPPORT
+        }
+        #endif
     #endif
     #if defined USE_MAINTENANCE
         if ((usUSB_state & (ES_USB_DOWNLOAD_MODE | ES_USB_RS232_MODE)) != 0) {
@@ -1335,27 +1343,33 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
                                                                          // the TX_FREE event is not explicitly handled since it is used to wake a next check of the buffer progress
         }
     #endif
-    #if defined USB_CDC_HOST
-      //fnDriver(USBPortID_comms[FIRST_CDC_INTERFACE], (RX_OFF), 0);     // pause IN polling so that we can send
+    #if defined USB_DEVICE_SUPPORT
+        #if defined USB_HOST_SUPPORT                                     // {48} when host or device modes can operate
+        if (USB_DEVICE_MODE_OF_OPERATION == iUSB_mode) {                 // echo input only in device mode
+        #endif
+            fnWrite(USBPortID_comms[FIRST_CDC_INTERFACE], ucInputMessage, Length); // echo input
+        #if defined USB_HOST_SUPPORT
+        }
+        #endif
     #endif
-    #if !defined USB_CDC_HOST
-        fnWrite(USBPortID_comms[FIRST_CDC_INTERFACE], ucInputMessage, Length); // echo input
-    #endif
-    #if defined USB_CDC_HOST
-      //fnDriver(USBPortID_comms[FIRST_CDC_INTERFACE], (RX_ON), 0);      // enable IN polling again so that further data can be received
-    #endif
-    #if !defined USB_CDC_HOST
-        if (usUSB_state == ES_NO_CONNECTION) {
-            if (fnCommandInput(ucInputMessage, Length, SOURCE_USB) != 0) {
-                if (fnInitiateLogin(ES_USB_LOGIN) == TELNET_ON_LINE) {
-                    static const CHAR ucCOMMAND_MODE_BLOCKED[] = "Command line blocked\r\n";
-                    fnWrite(USBPortID_comms[FIRST_CDC_INTERFACE], (unsigned char *)ucCOMMAND_MODE_BLOCKED, sizeof(ucCOMMAND_MODE_BLOCKED));
+    #if defined USB_DEVICE_SUPPORT
+        #if defined USB_HOST_SUPPORT                                     // {48} when host or device modes can operate
+        if (USB_DEVICE_MODE_OF_OPERATION == iUSB_mode) {                 // handle command line input only when in device mode
+        #endif
+            if (usUSB_state == ES_NO_CONNECTION) {
+                if (fnCommandInput(ucInputMessage, Length, SOURCE_USB) != 0) {
+                    if (fnInitiateLogin(ES_USB_LOGIN) == TELNET_ON_LINE) {
+                        static const CHAR ucCOMMAND_MODE_BLOCKED[] = "Command line blocked\r\n";
+                        fnWrite(USBPortID_comms[FIRST_CDC_INTERFACE], (unsigned char *)ucCOMMAND_MODE_BLOCKED, sizeof(ucCOMMAND_MODE_BLOCKED));
+                    }
                 }
             }
+            else {
+                fnCommandInput(ucInputMessage, Length, SOURCE_USB);
+            }
+        #if defined USB_HOST_SUPPORT
         }
-        else {
-            fnCommandInput(ucInputMessage, Length, SOURCE_USB);
-        }
+        #endif
     #endif
     }
     #if (USB_CDC_VCOM_COUNT > 1) && (USB_CDC_VCOM_COUNT > (MODBUS_USB_CDC_COUNT + 1))

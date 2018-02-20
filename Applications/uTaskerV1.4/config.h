@@ -1494,6 +1494,7 @@
             #define USE_MQTT_CLIENT                                      // enable MQTT (message queuing telemetry transport) client support
           //#define USE_MQTT_BROKER                                      // enable MQTT (message queuing telemetry transport) broker support
               //#define SECURE_MQTT                                      // MQTTS support
+              //#define SUPPORT_CLIENT_SIDE_CERTIFICATE                  // support client certificate and private key
           //#define TEST_CLIENT_SERVER                                   // TCP client/server test (see debug.c)
             #define TEST_TCP_SERVER                                      // TCP server (see debug.c) - uses also a TELNET session
             #if defined TEST_CLIENT_SERVER

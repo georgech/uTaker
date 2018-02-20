@@ -1486,7 +1486,8 @@ typedef struct stRESET_VECTOR
     #define FLEX_TIMERS_AVAILABLE   3
     #define NO_FLEX_TIMER_2                                              // flex timer 1 is not available
     #define FLEX_TIMER_0_REDUCED                                         // reduced functionality on timer 0
-#elif defined KINETIS_KE04
+#elif defined KINETIS_KE04 || defined KINETIS_KE06
+    #define FLEX_TIMERS_AVAILABLE   3
     #define FLEX_TIMER_0_REDUCED                                         // reduced functionality on timer 0
     #define FLEX_TIMER_1_REDUCED                                         // reduced functionality on timer 1
 #else
@@ -11450,6 +11451,8 @@ typedef struct stKINETIS_LPTMR_CTL
         #define PE_25_I2C1_SDA           PORT_MUX_ALT5
         #define PE_24_I2C1_SCL           PORT_MUX_ALT5
     #elif defined KINETIS_KL28
+        #define PC_2_I2C1_SDA            PORT_MUX_ALT2
+        #define PC_1_I2C1_SCL            PORT_MUX_ALT2
         #define PA_11_I2C1_SDA           PORT_MUX_ALT5
         #define PA_12_I2C1_SCL           PORT_MUX_ALT5
         #define PA_13_I2C1_SDA           PORT_MUX_ALT5

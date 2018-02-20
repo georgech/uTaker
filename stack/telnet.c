@@ -660,9 +660,9 @@ static int fnTELNETListener(USOCKET Socket, unsigned char ucEvent, unsigned char
     case TCP_EVENT_CONNECTED:                                            // TCP connection has been established
         TELNET_session->ucState = TELNET_STATE_CONNECTED;
     #if defined USE_TELNET_CLIENT
-        if ((TELNET_session->usTelnetMode & (TELNET_CLIENT_MODE | TELNET_CLIENT_NO_NEGOTIATION)) == (TELNET_CLIENT_MODE)) { // acting as a client with negotiation not edisabled
+        if ((TELNET_session->usTelnetMode & (TELNET_CLIENT_MODE | TELNET_CLIENT_NO_NEGOTIATION)) == (TELNET_CLIENT_MODE)) { // acting as a client with negotiation not disabled
             int iReturnNeg;
-            if (TELNET_session->usTelnetMode & TELNET_CLIENT_MODE_ECHO) {// we need to negotiate echo
+            if ((TELNET_session->usTelnetMode & TELNET_CLIENT_MODE_ECHO) != 0) {// we need to negotiate echo
                 iReturnNeg = (fnSendNeg(TELNET_session, TELNET_DO, TELNET_ECHO) > 0); // inform that we would like echo
             }
             else {
@@ -696,7 +696,7 @@ static int fnTELNETListener(USOCKET Socket, unsigned char ucEvent, unsigned char
 
     #if defined SUPPORT_PEER_WINDOW
     case TCP_EVENT_PARTIAL_ACK:                                          // possible ack to a part of a transmission received
-        if (TELNET_session->wakeOnAck) {
+        if (TELNET_session->wakeOnAck != 0) {
             uTaskerStateChange(TELNET_session->wakeOnAck, UTASKER_ACTIVATE); // wake application so that it can continue with queued receive data
         }
         if (fnSendBufTCP(Socket, 0, usPortLen, TCP_BUF_NEXT)) {          // send next buffered (if waiting)

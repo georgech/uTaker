@@ -309,7 +309,7 @@ extern "C" int fnGetADC_sim_channel(int iPort, int iBit)
     }
     else {                                                               // multiplexed port
     #if defined KINETIS_KE && !defined KINETIS_KE15
-        if (ADC_MUX_CHANNEL[iPort][7 - iBit] == 0) {
+        if (ADC_MUX_CHANNEL[iPort][7 - iBit] == -1) {
             return -1;                                                   // not ADC function
         }
     #else
