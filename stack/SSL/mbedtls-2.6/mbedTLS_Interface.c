@@ -147,7 +147,7 @@ extern int fnInitialiseSecureLayer(const unsigned char *ptrOurCertificate, unsig
         iReturn = mbedtls_pk_parse_key(&(secure_session->ourPrivateKey), ptrTempString, ulOurPrivateKeyLength, 0, 0); // no password - allocates 10 blocks of heap - total 2580 - 2 holes of 5624 total
         mbedtls_free(ptrTempString);
     }
-    if (iReturn == 0) {
+    if (iReturn == 0) {                                                  // if the optional private key is valid
         if (ulCertificateLength != 0) {                                  // if we have a certificate
             ptrTempString = (unsigned char *)mbedtls_calloc(1, (ulCertificateLength + 1));
             uMemcpy(ptrTempString, ptrOurCertificate, ulCertificateLength); // copy the private key string
@@ -155,7 +155,7 @@ extern int fnInitialiseSecureLayer(const unsigned char *ptrOurCertificate, unsig
             iReturn = mbedtls_x509_crt_parse(&(secure_session->ourCertificate), ptrTempString, ulCertificateLength); // allocates 4 blocks of heap - total 3876 - 3 holes of 4328 total
             mbedtls_free(ptrTempString);
         }
-        if (iReturn == 0) {
+        if (iReturn == 0) {                                              // if the otional certificate is valid
             secure_session->ssl.handshake = (mbedtls_ssl_handshake_params *)mbedtls_calloc(1, (sizeof(mbedtls_ssl_handshake_params))); // handshake parameters (744 bytes)
             ssl_handshake_params_init(secure_session->ssl.handshake);   // initialise the handshake parameters - allocates 1 block of heap - total 4620 - 3 holes of 3584 total
             secure_session->ssl.transform_negotiate = mbedtls_calloc(1, sizeof(mbedtls_ssl_transform)); // (208 bytes)
