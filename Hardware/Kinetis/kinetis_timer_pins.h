@@ -252,7 +252,7 @@ static void fnConfigTimerPin(int iTimer, int iChannel, unsigned long ulCharacter
             #endif
         #elif (defined KINETIS_KL02 || defined KINETIS_KL03) && defined TPM1_1_ALT_2
                         _CONFIG_PERIPHERAL(B, 6, (PB_6_TPM1_CH0 | ulCharacteristics)); // TPM1_CH0 on PB.6 (alt. function 2)
-        #elif defined KINETIS_KL02 || defined KINETIS_KL03 || defined KINETIS_KL04 || defined KINETIS_KL05 && defined FTM1_1_ALT
+        #elif (defined KINETIS_KL02 || defined KINETIS_KL03 || defined KINETIS_KL04 || defined KINETIS_KL05) && defined FTM1_1_ALT
                         _CONFIG_PERIPHERAL(B, 13, (PB_13_TPM1_CH1 | ulCharacteristics)); // TPM1_CH1 on PB.13 (alt. function 2)
         #elif defined KINETIS_KL02 || defined KINETIS_KL03 || defined KINETIS_KL04 || defined KINETIS_KL05
                         _CONFIG_PERIPHERAL(B, 5, (PB_5_TPM1_CH1 | ulCharacteristics)); // TPM1_CH1 on PB.5 (alt. function 2)
