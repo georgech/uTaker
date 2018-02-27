@@ -131,6 +131,7 @@
 #define SPI_FLASH_DEVICE_TYPE    0x20
 
 #define DEVICE_ID_DATA_MX25L1645  0x14                                   // 16MBit / 2MegByte
+#define DEVICE_ID_DATA_MX25L1606  0x15                                   // 16MBit / 2MegByte
 #define DEVICE_ID_DATA_MX25L3245  0x16                                   // 32MBit / 4MegByte
 #define DEVICE_ID_DATA_MX25L6445  0x17                                   // 64MBit / 8MegByte
 #define DEVICE_ID_DATA_MX25L12845 0x18                                   // 128MBit / 16MegByte
@@ -163,7 +164,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
 
     FLUSH_SPI_FIFO_AND_FLAGS();                                          // ensure that the FIFOs are empty and the status flags are reset before starting
 
-    if (SPI_FLASH_Danger[iChipSelect] & (DANGER_PROGRAMMING | DANGER_ERASING)) { // check whether the chip is ready to work - if not, wait until the present internal operation has completed or suspend it
+    if ((SPI_FLASH_Danger[iChipSelect] & (DANGER_PROGRAMMING | DANGER_ERASING)) != 0) { // check whether the chip is ready to work - if not, wait until the present internal operation has completed or suspend it
         volatile unsigned char ucStatus;
     #if defined SUPPORT_ERASE_SUSPEND
         unsigned long ulInitialState = SPI_FLASH_Danger[iChipSelect];    // backup the original state
@@ -429,6 +430,9 @@ static unsigned char fnCheckMX25L(void)
         switch (ucID[2]) {
         case DEVICE_ID_DATA_MX25L1645:
             ucReturnType = MX25L1645;
+            break;
+        case DEVICE_ID_DATA_MX25L1606:
+            ucReturnType = MX25L1606;
             break;
         case DEVICE_ID_DATA_MX25L3245:
             ucReturnType = MX25L3245;

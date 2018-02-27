@@ -1289,6 +1289,9 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
         }
     }
 #endif
+#if defined USB_HOST_SUPPORT && defined USB_DEVICE_SUPPORT               // {47}
+    }                                                                    // end of device mode operation
+#endif
 #if defined USB_DEVICE_SUPPORT && defined FREEMASTER_CDC && (USB_CDC_VCOM_COUNT == 1) // {35} FreeMaster run-time debugging on single USB-CDC connection rather than command-line interface
     if ((Length = fnRead(USBPortID_comms[FIRST_CDC_INTERFACE], ucInputMessage, MEDIUM_MESSAGE)) != 0) { // read available data
         fnHandleFreeMaster(USBPortID_comms[FIRST_CDC_INTERFACE], ucInputMessage, Length);  // handle the received data
@@ -1463,9 +1466,6 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
             fnWrite(USBPortID_HID_raw, ucRawData, HID_RAW_RX_SIZE);      // send back
         }
     }
-#endif
-#if defined USB_HOST_SUPPORT && defined USB_DEVICE_SUPPORT               // {47}
-    }                                                                    // end of device mode operation
 #endif
 }
 

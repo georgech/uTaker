@@ -497,27 +497,27 @@ extern void uTaskerMonoTimer(UTASK_TASK pcTaskName, DELAY_LIMIT delay, unsigned 
     TTASKTABLE *ptTaskTable;
     TTIMETABLE *ptTimerList = tTimerList;
 
-    if (ptTimerList != 0) {                                                  // protection - it is not expected that there will never be timers in the syste,
+    if (ptTimerList != 0) {                                                  // protection - it is not expected that there will never be timers in the system,
         ptTaskTable = tTaskTable;                                            // set at start of the task table and work down to bottom
         while (ptTaskTable->pcTaskName != 0) {                               // while task entries present
             if (*ptTaskTable->pcTaskName == pcTaskName) {                    // only compare first letter or task name
                 while (ptTimerList->ptTaskEntry != 0) {                      // while tasks queued
                     if (ptTaskTable == ptTimerList->ptTaskEntry) {           // the task we are looking for
                         uDisable_Interrupt();                                // protect from interrupts
-                        ptTaskTable->ucTaskState &= ~UTASKER_SUSPENDED;      // ensure the task can start again
-                        if ((int)(ptTimerList->ucEvent = time_out_nr) == 0) {// set event message for this type of timeout
-                            ptTaskTable->TaskRepetition = delay;             // modify delay value when zero event {1}
-                            if (delay == 0) {                                // zero delay stops repetition
-                                ptTimerList->ucTimerEnabled = (unsigned char)0; // disable timer {6}
-                                uEnable_Interrupt();                         // enable interrupts after modifications
-                                return;
+                            ptTaskTable->ucTaskState &= ~UTASKER_SUSPENDED;  // ensure the task can start again
+                            if ((int)(ptTimerList->ucEvent = time_out_nr) == 0) { // set event message for this type of timeout
+                                ptTaskTable->TaskRepetition = delay;         // modify delay value when zero event {1}
+                                if (delay == 0) {                            // zero delay stops repetition
+                                    ptTimerList->ucTimerEnabled = (unsigned char)0; // disable timer {6}
+                                    uEnable_Interrupt();                     // enable interrupts after modifications
+                                    return;
+                                }
                             }
-                        }
-                        if (delay == 0) {                                    // if the delay is less that a TICK interval round it up rather than never timing out {5}
-                            delay = 1;
-                        }
-                        ptTimerList->taskDelay = (uTaskerSystemTick + delay);// set delay
-                        ptTimerList->ucTimerEnabled = (unsigned char)1;      // ensure timer enabled {6}                    
+                            if (delay == 0) {                                    // if the delay is less that a TICK interval round it up rather than never timing out {5}
+                                delay = 1;
+                            }
+                            ptTimerList->taskDelay = (uTaskerSystemTick + delay);// set delay
+                            ptTimerList->ucTimerEnabled = (unsigned char)1;      // ensure timer enabled {6}                    
                         uEnable_Interrupt();                                 // enable interrupts after modifications
                         return;
                     }

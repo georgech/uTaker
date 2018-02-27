@@ -17674,7 +17674,6 @@ typedef struct stADC_SETUP
 #define PGA_GAIN_16                     ((ADC_PGA_PGAG_16 | ADC_PGA_PGAEN) >> 16)
 #define PGA_GAIN_32                     ((ADC_PGA_PGAG_32 | ADC_PGA_PGAEN) >> 16)
 #define PGA_GAIN_64                     ((ADC_PGA_PGAG_64 | ADC_PGA_PGAEN) >> 16)
-#define PGA_GAIN_64                     ((ADC_PGA_PGAG_64 | ADC_PGA_PGAEN) >> 16)
 #define PGA_RUNS_IN_LP_MODE             (ADC_PGA_PGALPb >> 16)
  
 

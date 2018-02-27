@@ -403,7 +403,6 @@ extern int iAccelOutput;
 //
 #define EVENT_USB_KEYBOARD_INPUT  1                                      // {30}
 
-
 // Key pad events
 // Keypad to application - sent as interrupt events!!
 //

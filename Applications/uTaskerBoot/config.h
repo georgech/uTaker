@@ -42,6 +42,7 @@
     02.02.2017 Adapt for us tick resolution (_TICK_RESOLUTION)           {25}
     13.07.2017 Add w25q (windbond) spi flash option and a target for the FRDM-KL82Z
     17.07.2017 Add target for the FRDM-KL25Z
+    27.02.2018 Add Macronix SPI flash                                    {26}
 
     See this video for details of buiding and checking the "Bare-Minimum" boot loader: https://youtu.be/lm3M-ZlaFLQ
 
@@ -59,6 +60,7 @@
 #define TARGET_HW           "Bare-Minimum Boot"
 
 //#define SPI_SW_UPLOAD                                                  // new SW is located in SPI FLASH {1}{2}
+//#define SPI_FLASH_MX25L                                                // {26} use Macronix SPI flash rather than ATMEL
 //#define SPI_FLASH_W25Q                                                 // use Winbond W25Q SPI flash rather than ATMEL
 //#define SPI_FLASH_SST25                                                // {15} use SST SPI FLASH rather than ATMEL
 //#define SPI_FLASH_ST                                                   // define that we are using ST FLASH rather than default ATMEL {9}
@@ -82,12 +84,13 @@
     #if defined _KINETIS                                                 // {20}
       //#define FRDM_KL25Z
       //#define FRDM_KL27Z
-      //#define CAPUCCINO_KL27                                           // KL27 with 256k flash / 32k SRAM
+        #define CAPUCCINO_KL27                                           // KL27 with 256k flash / 32k SRAM
+          //#define DEV4                                                 // temporary development version
       //#define FRDM_KL82Z
       //#define KINETIS_K40
       //#define KINETIS_K60
-            #define DEV3                                                 // temporary development version
-        #define FRDM_K64F                                                // {24} next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area
+          //#define DEV3                                                 // temporary development version
+      //#define FRDM_K64F                                                // {24} next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area
       //#define KINETIS_K70
 
       //#define NET_KBED
@@ -190,11 +193,18 @@
             #define USB_CRYSTAL_LESS                                     // use 48MHz HIRC as USB source (according to Freescale AN4905 - only possible in device mode) - rather than external pin
             #define ERRATE_1N87M
             #if defined CAPUCCINO_KL27
-                #define PIN_COUNT           PIN_COUNT_32_PIN
-               #define PACKAGE_TYPE         PACKAGE_QFN
-                #define SIZE_OF_FLASH       (256 * 1024)                 // 256k program Flash
+                #if defined DEV4
+                    #define PIN_COUNT       PIN_COUNT_48_PIN
+                    #define PACKAGE_TYPE    PACKAGE_QFN
+                    #define SIZE_OF_FLASH   (128 * 1024)                 // 128k program Flash
+                    #define uFILE_START     (FLASH_START_ADDRESS + (64 * 1024)) // FLASH location at 0x10000 start
+                #else
+                    #define PIN_COUNT       PIN_COUNT_32_PIN
+                    #define PACKAGE_TYPE    PACKAGE_QFN
+                    #define SIZE_OF_FLASH   (256 * 1024)                 // 256k program Flash
+                    #define uFILE_START     (FLASH_START_ADDRESS + (214 * 1024)) // FLASH location at 0x35800 start
+                #endif
                 #define SIZE_OF_RAM         (32 * 1024)                  // 32k SRAM
-                #define uFILE_START         (FLASH_START_ADDRESS + (214 * 1024)) // FLASH location at 0x35800 start
                 #define FILE_SYSTEM_SIZE    (40 * 1024)                  // 40k application accepted
             #else
                 #define PIN_COUNT           PIN_COUNT_64_PIN             // 64 pin package
@@ -204,7 +214,11 @@
                 #define FILE_SYSTEM_SIZE    (SIZE_OF_FLASH/2)            // half of the flash reserved for file system
                 #define uFILE_START         (SIZE_OF_FLASH/2)            // FLASH location at half of the flash
             #endif
-            #define FILE_GRANULARITY    (1 * FLASH_GRANULARITY)          // each file a multiple of 1k
+            #if defined DEV4
+                #define FILE_GRANULARITY    (8 * SPI_FLASH_BLOCK_LENGTH) // 32k file granularity
+            #else
+                #define FILE_GRANULARITY    (1 * FLASH_GRANULARITY)      // each file a multiple of 1k
+            #endif
         #elif defined FRDM_KL82Z
           //#define RUN_FROM_DEFAULT_CLOCK                               // default mode is FLL Engaged Internal - the 32kHz IRC is multiplied by FLL factor of 640 to obtain 20.9715MHz nominal frequency (20MHz..25MHz)
           //#define RUN_FROM_HIRC                                        // clock directly from internal 48MHz RC clock
@@ -521,6 +535,53 @@
             
             #define SET_SPI_FLASH_MODE()                                 // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
             #define REMOVE_SPI_FLASH_MODE()                              // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
+        #elif defined CAPUCCINO_KL27
+            // - SPI1_CS   PTC-5
+            // - SPI1_SCK  PTD-5
+            // - SPI1_MOSI PTD-7
+            // - SPI1_MISO PTD-6
+            //
+            #define CS0_LINE                        PORTC_BIT5           // CS0 line used when SPI FLASH is enabled
+            #define CS1_LINE                                             // CS1 line used when extended SPI FLASH is enabled
+            #define CS2_LINE                                             // CS2 line used when extended SPI FLASH is enabled
+            #define CS3_LINE                                             // CS3 line used when extended SPI FLASH is enabled
+
+            #define ASSERT_CS_LINE(ulChipSelectLine) _CLEARBITS(C, ulChipSelectLine)
+            #define NEGATE_CS_LINE(ulChipSelectLine) _SETBITS(C, ulChipSelectLine)
+
+            #define SPI_CS0_PORT                    GPIOC_PDOR           // for simulator
+            #define SPI_TX_BYTE                     SPI1_D               // for simulator
+            #define SPI_RX_BYTE                     SPI1_D               // for simulator
+
+            #if defined DEV4                        // hold FPGA in reset during loader operation
+                #define POWER_UP_SPI_FLASH_INTERFACE()  POWER_UP_ATOMIC(4, SPI1); _CONFIG_DRIVE_PORT_OUTPUT_VALUE(B, PORTB_BIT17, 0, (PORT_SRE_SLOW | PORT_DSE_LOW))
+            #else
+                #define POWER_UP_SPI_FLASH_INTERFACE()  POWER_UP_ATOMIC(4, SPI1)
+            #endif
+            #define CONFIGURE_SPI_FLASH_INTERFACE() _CONFIG_PERIPHERAL(D, 5, PD_5_SPI1_SCK); \
+                                                    _CONFIG_PERIPHERAL(D, 7, (PD_7_SPI1_MOSI | PORT_SRE_FAST | PORT_DSE_HIGH)); \
+                                                    _CONFIG_PERIPHERAL(D, 6, (PD_6_SPI1_MISO | PORT_PS_UP_ENABLE)); \
+                                                    _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, CS0_LINE, CS0_LINE, (PORT_SRE_FAST | PORT_DSE_HIGH)); \
+                                                    SPI1_C1 = (SPI_C1_CPHA | SPI_C1_CPOL | SPI_C1_MSTR | SPI_C1_SPE); \
+                                                    SPI1_BR = (SPI_BR_SPPR_PRE_1 | SPI_BR_SPR_DIV_2); \
+                                                    (unsigned char)SPI1_S; (unsigned char)SPI1_D
+
+            #define POWER_DOWN_SPI_FLASH_INTERFACE() POWER_DOWN_ATOMIC(4, SPI1) // power down SPI interface if no SPI Flash detected
+
+            #define FLUSH_SPI_FIFO_AND_FLAGS()      
+
+            #define WRITE_SPI_CMD0(byte)            SPI1_D = (byte)      // write a single byte
+            #define WRITE_SPI_CMD0_LAST(byte)       SPI1_D = (byte)      // write final byte
+            #define READ_SPI_FLASH_DATA()           (unsigned char)SPI1_D
+            #if defined _WINDOWS
+                #define WAIT_SPI_RECEPTION_END()    while ((SPI1_S & (SPI_S_SPRF)) == 0) {SPI1_S |= SPI_S_SPRF;}
+            #else
+                #define WAIT_SPI_RECEPTION_END()    while ((SPI1_S & (SPI_S_SPRF)) == 0) {}
+            #endif
+            #define CLEAR_RECEPTION_FLAG()          
+            
+            #define SET_SPI_FLASH_MODE()                                 // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
+            #define REMOVE_SPI_FLASH_MODE()                              // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
         #elif defined FRDM_KL82Z
             // - SPI1_CS   PTE-5
             // - SPI1_SCK  PTE-1
@@ -624,6 +685,20 @@
                 #define SPI_FLASH_SECTOR_LENGTH (256 * SPI_FLASH_PAGE_LENGTH) // sector size of code FLASH
             #endif
             #define SPI_FLASH_BLOCK_LENGTH  SPI_FLASH_SECTOR_LENGTH
+        #elif defined SPI_FLASH_MX25L                                    // {26}
+          //#define SPI_FLASH_MX25L12845E                                // specific type used
+            #define SPI_FLASH_MX25L1606E                                 // specific type used
+            #if defined SPI_FLASH_MX25L12845E
+                #define SPI_FLASH_SIZE           (16 * 1024 * 1024)      // 128 Mbits/16 MBytes
+            #else
+                #define SPI_FLASH_SIZE           (2 * 1024 * 1024)       // 16 Mbits/2 MBytes
+            #endif
+            #define SPI_FLASH_PAGE_LENGTH        (256)
+            #define SPI_FLASH_PAGES              (SPI_FLASH_SIZE/SPI_FLASH_PAGE_LENGTH)
+            #define SPI_FLASH_SECTOR_LENGTH      (4 * 1024)              // sector size of SPI FLASH
+            #define SPI_FLASH_SECTORS            (SPI_FLASH_SIZE/SPI_FLASH_SECTOR_LENGTH)
+            #define SPI_FLASH_BLOCK_LENGTH       SPI_FLASH_SECTOR_LENGTH // for compatibility - file system granularity
+          //#define SUPPORT_ERASE_SUSPEND                                // automatically suspend an erase that is in progress when a write or a read is performed in a different sector (advised when FAT used in SPI Flash with block management/wear-levelling)
         #elif defined SPI_FLASH_W25Q
             #define SPI_FLASH_W25Q128
           //#define SPI_FLASH_W25Q16
@@ -775,32 +850,27 @@
     #define FILE_SYSTEM_SIZE (32 * FILE_GRANULARITY)                     // 64k reserved for file system (including parameter blocks)
   #endif
 #else
- #if defined _HW_SAM7X                                                   // _HW_SAM7X
-   #if defined MJB_BUILD_BC2
-    #if defined SPI_SW_UPLOAD
-        #define uFILE_START (0x100000)                                   // FLASH location
-
-        #define FILE_GRANULARITY (4 * FLASH_GRANULARITY)                 // each file a multiple of 1k
-        #define FILE_SYSTEM_SIZE (256 * FILE_GRANULARITY)                // 125k reserved for file system (including parameter blocks)
-
-    #else
-        #define uFILE_START (0x12a000)                                   // FLASH location
-
-        #define FILE_GRANULARITY (4 * FLASH_GRANULARITY)                 // each file a multiple of 1k
-        #define FILE_SYSTEM_SIZE (84 * FILE_GRANULARITY)                 // 84k reserved for file system (including parameter blocks)
+    #if defined _HW_SAM7X                                                // _HW_SAM7X
+        #if defined MJB_BUILD_BC2
+            #if defined SPI_SW_UPLOAD
+                #define uFILE_START (0x100000)                           // FLASH location
+                #define FILE_GRANULARITY (4 * FLASH_GRANULARITY)         // each file a multiple of 1k
+                #define FILE_SYSTEM_SIZE (256 * FILE_GRANULARITY)        // 125k reserved for file system (including parameter blocks)
+            #else
+                #define uFILE_START (0x12a000)                           // FLASH location
+                #define FILE_GRANULARITY (4 * FLASH_GRANULARITY)         // each file a multiple of 1k
+                #define FILE_SYSTEM_SIZE (84 * FILE_GRANULARITY)         // 84k reserved for file system (including parameter blocks)
+            #endif
+        #elif defined SPI_SW_UPLOAD
+            #define uFILE_START (0x100000)                               // FLASH location
+            #define FILE_GRANULARITY (4 * FLASH_GRANULARITY)             // each file a multiple of 1k
+            #define FILE_SYSTEM_SIZE (256 * FILE_GRANULARITY)            // 256k reserved for file system (including parameter blocks)
+        #else
+            #define uFILE_START 0x118000                                 // FLASH location at 96k start
+            #define FILE_GRANULARITY (4 * FLASH_GRANULARITY)             // each file a multiple of 1k
+            #define FILE_SYSTEM_SIZE (160 * FILE_GRANULARITY)            // 160k reserved for file system (including parameter blocks)
+        #endif
     #endif
-   #elif defined SPI_SW_UPLOAD
-    #define uFILE_START (0x100000)                                       // FLASH location
-    #define FILE_GRANULARITY (4 * FLASH_GRANULARITY)                     // each file a multiple of 1k
-    #define FILE_SYSTEM_SIZE (256 * FILE_GRANULARITY)                    // 256k reserved for file system (including parameter blocks)
-
-   #else
-    #define uFILE_START 0x118000                                         // FLASH location at 96k start
-
-    #define FILE_GRANULARITY (4 * FLASH_GRANULARITY)                     // each file a multiple of 1k
-    #define FILE_SYSTEM_SIZE (160 * FILE_GRANULARITY)                    // 160k reserved for file system (including parameter blocks)
-   #endif
- #endif
     #if defined _STR91XF                                                 // _STR91XF
         #define uFILE_START 0x80000                                      // FLASH location at 512k start
 

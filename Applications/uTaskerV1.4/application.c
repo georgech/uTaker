@@ -614,7 +614,7 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
             uFileCloseMime(upload_location, &ucMimeType);                // close file as binary type
         }
 #endif
-#if defined ETH_INTERFCE && /*defined USE_MQTT_CLIENT && defined SECURE_MQTT &&*/ defined _WINDOWS   // temporary for secure MQTT simulation tests
+#if defined ETH_INTERFACE && /*defined USE_MQTT_CLIENT && defined SECURE_MQTT &&*/ defined _WINDOWS   // temporary for secure MQTT simulation tests
         {
             ARP_DETAILS arp_details;
     #if IP_INTERFACE_COUNT > 1
@@ -627,10 +627,10 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
     #if IP_NETWORK_COUNT > 1
             arp_details.ucNetworkID = 0;                                 // the network that ARP activity belongs to
     #endif
-          //unsigned char gatewayIP[] = {192, 168, 0, 1};
-          //unsigned char gatewayMAC[] = { 0x54, 0x67, 0x51, 0xbe, 0x0a, 0x57 };
-            unsigned char gatewayIP[] = { 192, 168, 0, 4 };
-            unsigned char gatewayMAC[] = { 0x00, 0x50, 0xc2, 0xfa, 0xd0, 0x42 };
+            unsigned char gatewayIP[] = {192, 168, 0, 1};
+            unsigned char gatewayMAC[] = { 0x54, 0x67, 0x51, 0xbe, 0x0a, 0x57 };
+          //unsigned char gatewayIP[] = { 192, 168, 0, 4 };
+          //unsigned char gatewayMAC[] = { 0x00, 0x50, 0xc2, 0xfa, 0xd0, 0x42 };
             fnAddARP(gatewayIP, gatewayMAC, &arp_details);               // temp for development
         }
 #endif
@@ -2892,6 +2892,7 @@ extern void fnUserHWInit(void)
 //
 extern void fnQuickTask1(TTASKTABLE *ptrTaskTable)
 {
+
 }
 
 extern void fnQuickTask2(TTASKTABLE *ptrTaskTable)

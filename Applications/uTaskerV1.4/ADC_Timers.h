@@ -106,7 +106,7 @@
             #endif
             #if defined SUPPORT_TIMER
               //#define TEST_SINGLE_SHOT_TIMER                           // test single-shot mode
-              //#define TEST_PERIODIC_TIMER                              // test periodic interrupt mode
+                #define TEST_PERIODIC_TIMER                              // test periodic interrupt mode
               //#define TEST_ADC_TIMER                                   // test periodic ADC trigger mode (Luminary)
               //#define TEST_CAPTURE                                     // {6} test timer capture mode
             #endif

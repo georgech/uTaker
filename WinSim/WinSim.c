@@ -3532,6 +3532,9 @@ static unsigned char  ucWord[SPI_FLASH_DEVICE_COUNT][2] = {0};
     #if defined SPI_FLASH_MX25L12845E
         #define MEMORY_TYPE       0x20
         #define MEMORY_CAPACITY   0x18                                   // MX25L12845
+    #elif defined SPI_FLASH_MX25L1606E
+        #define MEMORY_TYPE       0x20
+        #define MEMORY_CAPACITY   0x15                                   // MX25L1606 - 2MBytes
     #endif
 #endif
 

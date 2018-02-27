@@ -124,6 +124,9 @@
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_PORTS.h">
       <Filter>Hardware\KINETIS</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\spi_flash_kinetis_MX25L.h">
+      <Filter>Hardware\KINETIS</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="cursor1.cur">

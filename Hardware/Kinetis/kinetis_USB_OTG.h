@@ -765,7 +765,7 @@ static __interrupt void _usb_otg_isr(void)
             }           
             INT_STAT = TOK_DNE;                                          // clear the flag (don't clear until processing has completed to ensure that the STAT register stays valid)
     #if defined _WINDOWS
-            INT_STAT = 0;                                                // simulate fag being cleared
+            INT_STAT = 0;                                                // simulate flag being cleared
     #endif      
         }
     }

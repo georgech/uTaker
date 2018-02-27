@@ -126,6 +126,7 @@
     16.02.2017 Add RFC 2217 (Telnet com port control option) mode        {103}
     10.05.2017 Add optional Ethernet frame ucErrorFlags field            {104}
     09.01.2018 Add fnInsertTCPHeader(), fnSecureLayerTransmission() and SECURE_SOCKET_MODE {105}
+    20.02.2018 Add buffered TCP extended option TCP_BUF_PREPARE in order to allow preparing data in the output buffer of an open connection but not start its transmission yet {106}
 
 */
 
@@ -2245,8 +2246,9 @@ extern signed short fnSendTCP(USOCKET TCP_socket, unsigned char *ptrBuf, unsigne
     #define TCP_CONTENT_NEGOTIATION    0x20
     #define TCP_REPEAT_WINDOW          0x40
     #define TCP_BUF_KICK_NEXT          0x80
-    #define TCP_BUF_QUEUE              0x0100                            // {47} queue the data is the connection is not yet established
-#if defined INDIVIDUAL_BUFFERED_TCP_BUFFER_SIZE                          // {40}
+    #define TCP_BUF_QUEUE              0x0100                            // {47} queue the data if the connection is not yet established
+    #define TCP_BUF_PREPARE            0x0200                            // {106} allow preparing data in the output buffer of an open connection but not start its transmission yet
+#if defined INDIVIDUAL_BUFFERED_TCP_BUFFER_SIZE                          // {40} 
     extern unsigned short fnDefineTCPBufferSize(USOCKET TCP_socket, unsigned short usBufferSize); // enter the buffer size associated with a buffered TCP socket
 #endif
 extern USOCKET fnModifyTCPWindow(USOCKET TCPSocket, unsigned short usBufferSpace); // {33}

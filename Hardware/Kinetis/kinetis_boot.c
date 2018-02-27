@@ -24,6 +24,7 @@
     17.07.2017 Use standard port configuration                           {9}
     26.07.2017 Add Cortex-m0+ assembler code                             {10}
     20.12.2017 Change uMemset() to match memset() parameters             {11}
+    27.02.2018 Add mx25l (macronix) SPI Flash support                    {12}
 
 */
 
@@ -180,6 +181,7 @@ extern void *uMemcpy(void *ptrTo, const void *ptrFrom, size_t Size)
         #include "spi_flash_kinetis_sst25.h"
         #include "spi_flash_w25q.h"                                      // {6}
         #include "spi_flash_kinetis_s25fl1-k.h"
+        #include "spi_flash_kinetis_MX25L.h"                             // {12}
     #undef _SPI_DEFINES
     #undef _SPI_FLASH_INTERFACE
 
@@ -195,6 +197,7 @@ extern int fnConfigSPIFileSystem(void)
         #include "spi_flash_kinetis_sst25.h"
         #include "spi_flash_w25q.h"                                      // {6}
         #include "spi_flash_kinetis_s25fl1-k.h"
+        #include "spi_flash_kinetis_MX25L.h"                             // {12}
     #undef _CHECK_SPI_CHIPS
     if (NO_SPI_FLASH_AVAILABLE == ucSPI_FLASH_Type[0]) {                 // if no SPI Flash detected
         return 1;

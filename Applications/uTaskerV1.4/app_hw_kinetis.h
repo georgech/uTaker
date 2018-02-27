@@ -523,7 +523,6 @@
       //#define RUN_FROM_LIRC_2M                                         // clock from internal 2MHz RC clock
     #define SYSTEM_CLOCK_DIVIDE  1                                       // system clock divider value (1..16)
     #define BUS_CLOCK_DIVIDE     2                                       // bus and flash clock divider value (1..8)
-
     #define USB_CRYSTAL_LESS                                             // use 48MHz HIRC as USB source (according to Freescale AN4905 - only possible in device mode) - rather than external pin
 #elif defined FRDM_KL28Z
     #define OSC_LOW_GAIN_MODE
@@ -1117,9 +1116,14 @@
     #define SIZE_OF_RAM         (16 * 1024)                              // 16k SRAM
   //#define SIZE_OF_RAM         (32 * 1024)                              // 32k SRAM
 #elif defined CAPUCCINO_KL27
-    #define PIN_COUNT           PIN_COUNT_64_PIN                         // 64 pin package
     #define PACKAGE_TYPE        PACKAGE_LQFP                             // LQFP
-    #define SIZE_OF_FLASH       (256 * 1024)                             // 256k program Flash
+    #if defined DEV4
+        #define PIN_COUNT       PIN_COUNT_48_PIN                         // 48 pin package
+        #define SIZE_OF_FLASH   (128 * 1024)                             // 128k program Flash
+    #else
+        #define PIN_COUNT       PIN_COUNT_64_PIN                         // 64 pin package
+        #define SIZE_OF_FLASH   (256 * 1024)                             // 256k program Flash
+    #endif
     #define SIZE_OF_RAM         (32 * 1024)                              // 32k SRAM
 #elif defined FRDM_KL28Z
     #define ERRATE_1N52N
@@ -1843,6 +1847,53 @@
             
     #define SET_SPI_FLASH_MODE()                                         // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
     #define REMOVE_SPI_FLASH_MODE()                                      // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
+#elif defined CAPUCCINO_KL27
+    // - SPI1_CS   PTC-5
+    // - SPI1_SCK  PTD-5
+    // - SPI1_MOSI PTD-7
+    // - SPI1_MISO PTD-6
+    //
+    #define CS0_LINE                        PORTC_BIT5                   // CS0 line used when SPI FLASH is enabled
+    #define CS1_LINE                                                     // CS1 line used when extended SPI FLASH is enabled
+    #define CS2_LINE                                                     // CS2 line used when extended SPI FLASH is enabled
+    #define CS3_LINE                                                     // CS3 line used when extended SPI FLASH is enabled
+
+    #define ASSERT_CS_LINE(ulChipSelectLine) _CLEARBITS(C, ulChipSelectLine)
+    #define NEGATE_CS_LINE(ulChipSelectLine) _SETBITS(C, ulChipSelectLine)
+
+    #define SPI_CS0_PORT                    GPIOC_PDOR                   // for simulator
+    #define SPI_TX_BYTE                     SPI1_D                       // for simulator
+    #define SPI_RX_BYTE                     SPI1_D                       // for simulator
+
+    #if defined DEV4                                                     // hold FPGA in reset during initial operation
+        #define POWER_UP_SPI_FLASH_INTERFACE()  POWER_UP_ATOMIC(4, SPI1); _CONFIG_DRIVE_PORT_OUTPUT_VALUE(B, PORTB_BIT17, 0, (PORT_SRE_SLOW | PORT_DSE_LOW))
+    #else
+        #define POWER_UP_SPI_FLASH_INTERFACE()  POWER_UP_ATOMIC(4, SPI1)
+    #endif
+    #define CONFIGURE_SPI_FLASH_INTERFACE() _CONFIG_PERIPHERAL(D, 5, PD_5_SPI1_SCK); \
+                                            _CONFIG_PERIPHERAL(D, 7, (PD_7_SPI1_MOSI | PORT_SRE_FAST | PORT_DSE_HIGH)); \
+                                            _CONFIG_PERIPHERAL(D, 6, (PD_6_SPI1_MISO | PORT_PS_UP_ENABLE)); \
+                                            _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, CS0_LINE, CS0_LINE, (PORT_SRE_FAST | PORT_DSE_HIGH)); \
+                                            SPI1_C1 = (SPI_C1_CPHA | SPI_C1_CPOL | SPI_C1_MSTR | SPI_C1_SPE); \
+                                            SPI1_BR = (SPI_BR_SPPR_PRE_1 | SPI_BR_SPR_DIV_2); \
+                                            (unsigned char)SPI1_S; (unsigned char)SPI1_D
+
+    #define POWER_DOWN_SPI_FLASH_INTERFACE() POWER_DOWN_ATOMIC(4, SPI1)  // power down SPI interface if no SPI Flash detected
+
+    #define FLUSH_SPI_FIFO_AND_FLAGS()      
+
+    #define WRITE_SPI_CMD0(byte)            SPI1_D = (byte)              // write a single byte
+    #define WRITE_SPI_CMD0_LAST(byte)       SPI1_D = (byte)              // write final byte
+    #define READ_SPI_FLASH_DATA()           (unsigned char)SPI1_D
+    #if defined _WINDOWS
+        #define WAIT_SPI_RECEPTION_END()    while ((SPI1_S & (SPI_S_SPRF)) == 0) {SPI1_S |= SPI_S_SPRF;}
+    #else
+        #define WAIT_SPI_RECEPTION_END()    while ((SPI1_S & (SPI_S_SPRF)) == 0) {}
+    #endif
+    #define CLEAR_RECEPTION_FLAG()          
+            
+    #define SET_SPI_FLASH_MODE()                                         // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
+    #define REMOVE_SPI_FLASH_MODE()                                      // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
 #elif defined FRDM_K82F || defined FRDM_KL82Z || defined TWR_KL82Z72M
     // - SPI1_CS   PTE-5
     // - SPI1_SCK  PTE-1
@@ -2049,8 +2100,16 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #endif
     #define SPI_FLASH_BLOCK_LENGTH  SPI_FLASH_SECTOR_LENGTH
 #elif defined SPI_FLASH_MX25L
-    #define SPI_FLASH_MX25L12845E                                        // specific type used
-    #define SPI_FLASH_SIZE               (16 * 1024 * 1024)              // 128 Mbits/16 MBytes
+    #if defined DEV4
+        #define SPI_FLASH_MX25L1606E                                     // specific type used
+    #else
+      //#define SPI_FLASH_MX25L12845E                                    // specific type used
+    #endif
+    #if defined SPI_FLASH_MX25L12845E
+        #define SPI_FLASH_SIZE           (16 * 1024 * 1024)              // 128 Mbits/16 MBytes
+    #else
+        #define SPI_FLASH_SIZE           (2 * 1024 * 1024)               // 16 Mbits/2 MBytes
+    #endif
     #define SPI_FLASH_PAGE_LENGTH        (256)
     #define SPI_FLASH_PAGES              (SPI_FLASH_SIZE/SPI_FLASH_PAGE_LENGTH)
     #define SPI_FLASH_SECTOR_LENGTH      (4 * 1024)                      // sector size of SPI FLASH
@@ -2567,7 +2626,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 // DAC
 //
 #if defined DAC_CONTROLLERS && (DAC_CONTROLLERS > 0)                     // if the device has a DAC
-    #define SUPPORT_DAC                                                  // {15} enable general DAC support
+  //#define SUPPORT_DAC                                                  // {15} enable general DAC support
     #if defined SUPPORT_DAC
         #define SUPPORT_DAC0                                             // enable DAC controller 0 support
       //#define SUPPORT_DAC1                                             // enable DAC controller 1 support
@@ -2802,7 +2861,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 #undef UART_FRAME_COMPLETE                                               // this can be disabled if not specifically needed for other purposes to MODBUS RS485 mode
 
 
-#define SUPPORT_PORT_INTERRUPTS                                          // support code for port interrupts (IRQ for KE/KEA devices) - see the following video showing port interrupt operation in a KL27: https://youtu.be/CubinvMuTwU
+//#define SUPPORT_PORT_INTERRUPTS                                        // support code for port interrupts (IRQ for KE/KEA devices) - see the following video showing port interrupt operation in a KL27: https://youtu.be/CubinvMuTwU
     #if defined FRDM_KL03Z
         #define NO_PORT_INTERRUPTS_PORTA                                 // remove port interrupt support from port A
         #define NO_PORT_INTERRUPTS_PORTB                                 // remove port interrupt support from port B
@@ -2841,6 +2900,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define I2C0_B_LOW                                               // I2C0_SCL on PB0 and I2C0_SDA on PB1
     #elif defined FRDM_K64F || defined FRDM_KL25Z || defined FRDM_KL26Z || defined FRDM_KL46Z || defined FRDM_KL43Z || defined TWR_K24F120M || defined TWR_K70F120M || defined TWR_K65F180M || defined TWR_K80F150M || defined FreeLON || defined FRDM_KL28Z
         #define I2C0_ON_E
+
     #elif defined FRDM_K22F
       //#define I2C0_B_LOW
       //#define I2C0_ON_D
@@ -3679,9 +3739,13 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
             #define POWER_UP_SD_CARD()  SDHC_SYSCTL |= SDHC_SYSCTL_INITA; while (SDHC_SYSCTL & SDHC_SYSCTL_INITA) {}; // apply power to the SD card if appropriate (we use this to send 80 clocks)
         #endif
 
-        #define SDHC_SYSCTL_SPEED_SLOW  (SDHC_SYSCTL_SDCLKFS_64 | SDHC_SYSCTL_DVS_5) // 375kHz when 120MHz clock
-        #define SDHC_SYSCTL_SPEED_FAST  (SDHC_SYSCTL_SDCLKFS_2 | SDHC_SYSCTL_DVS_3) // 20MHz when 120MHz clock
+      //#define SDHC_SYSCTL_SPEED_SLOW  (SDHC_SYSCTL_SDCLKFS_64 | SDHC_SYSCTL_DVS_5) // 375kHz when 120MHz clock
+        #define SDHC_SYSCTL_SPEED_SLOW  (SDHC_SYSCTL_SDCLKFS_64 | SDHC_SYSCTL_DVS_8) // 351kHz when 180MHz clock
+        #define SDHC_SYSCTL_SPEED_FAST  (SDHC_SYSCTL_SDCLKFS_2 | SDHC_SYSCTL_DVS_2) // 30MHz when 120MHz clock / 45MHz when 180MHz clock
         #define SET_SPI_SD_INTERFACE_FULL_SPEED() fnSetSD_clock(SDHC_SYSCTL_SPEED_FAST); SDHC_PROCTL |= SDHC_PROCTL_DTW_4BIT
+        #if defined FRDM_K66F
+            #define SDCARD_RX_DMA_CHANNEL      14                        // use DMA copy from SDHC fifo to read buffer on this DMA channel
+        #endif
     #endif
 
     #define POWER_DOWN_SD_CARD()                                         // remove power from SD card interface
@@ -6053,8 +6117,8 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define SET_TEST_OUTPUT()       _SETBITS(B, DEMO_LED_2)
     #define CLEAR_TEST_OUTPUT()     _CLEARBITS(B, DEMO_LED_2)
 
-    #define MEASURE_LOW_POWER_ON()  SET_TEST_OUTPUT()                    // signal when the processor is in sleep mode
-    #define MEASURE_LOW_POWER_OFF() CLEAR_TEST_OUTPUT()                  // signal when the processor is in active mode
+  //#define MEASURE_LOW_POWER_ON()  SET_TEST_OUTPUT()                    // signal when the processor is in sleep mode
+  //#define MEASURE_LOW_POWER_OFF() CLEAR_TEST_OUTPUT()                  // signal when the processor is in active mode
 #elif defined FRDM_KE15Z || defined TWR_KE18F || defined HVP_KE18F
     #define DEMO_LED_1             (PORTD_BIT16)                         // (green LED) if the port is changed (eg. A to D) the port macros will require appropriate adjustment too
     #define DEMO_LED_2             (PORTD_BIT0)                          // (red LED) if the port is changed (eg. A to D) the port macros will require appropriate adjustment too

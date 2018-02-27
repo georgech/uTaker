@@ -572,7 +572,7 @@ extern unsigned long fnGetEEPROMSize(void);                              // {1}
 //
 #if !defined _EXCLUDE_WINDOWS_
     #if defined NAND_FLASH_FAT
-        #define SD_card_state(a,b)
+        #define SD_card_state(a, b)
     #else
         extern int SD_card_state(int iSetState, int iClearState);        // {44}
     #endif

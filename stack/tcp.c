@@ -86,6 +86,7 @@
     09.01.2018 Add secure sokcet layer support                           {69}
     09.01.2018 Add fnInsertTCPHeader()                                   {70}
     06.02.2018 Only callback with TCP_EVENT_CLOSED event when socket is reused from the TCP_STATE_FIN_WAIT_2 state {71}
+    20.02.2018 Allow preparing data in the output buffer of an open connection but not start its transmission yet {72}
 
 */
 
@@ -775,7 +776,7 @@ extern QUEUE_TRANSFER fnSendBufTCP(USOCKET TCP_socket, unsigned char *ptrBuf, un
     }
 
     #if defined _EXTENDED_BUFFERED_TCP                                   // {38} - allow data to be queued before connection is established
-    if ((ptr_TCP->ucTCP_state != TCP_STATE_ESTABLISHED) && (!(Command & TCP_BUF_QUEUE))) {
+    if ((ptr_TCP->ucTCP_state != TCP_STATE_ESTABLISHED) && ((Command & TCP_BUF_QUEUE) == 0)) {
         return 0;
     }
     #else
@@ -844,9 +845,9 @@ extern QUEUE_TRANSFER fnSendBufTCP(USOCKET TCP_socket, unsigned char *ptrBuf, un
         tcp_tx->ucDataEnd += usDataLen;                                  // set the end of the waiting data
 
     #if defined _EXTENDED_BUFFERED_TCP
-        if (ptr_TCP->ucTCP_state != TCP_STATE_ESTABLISHED) {
-            tcp_tx->usWaitingSize += usDataLen;
-            return 0;                                                    // data added to buffer but no transmission started since the connectionis not (yet) open
+        if ((ptr_TCP->ucTCP_state != TCP_STATE_ESTABLISHED) || ((Command & TCP_BUF_PREPARE) != 0)) { // if the connection has not yet been established {72} or the caller wishes to prepare the buffer before sending
+            tcp_tx->usWaitingSize += usDataLen;                          // extra waiting data size
+            return 0;                                                    // data added to buffer but no transmission started since the connection is not (yet) open
         }
     #endif
     }
@@ -866,7 +867,7 @@ extern QUEUE_TRANSFER fnSendBufTCP(USOCKET TCP_socket, unsigned char *ptrBuf, un
         if (usDataLen == 0) {                                            // no further outstanding data to be acknowledged
             if (ptr_TCP->ucTCPInternalFlags & SILLY_WINDOW_AVOIDANCE) {  // if acknowledgement to all outstanding data before entering the silly window avoidance state
                 ptr_TCP->usTransmitTimer = TCP_SILLY_WINDOW_DELAY;       // probe after this delay if the peer doesn't inform of its reception window opening
-                if (TCP_BUF_SEND & Command) {                            // unconditional probe when we are in the silly window avoidance state
+                if ((TCP_BUF_SEND & Command) != 0) {                     // unconditional probe when we are in the silly window avoidance state
                     return 0;                                            // normally a window probe would be sent here this is not implemented
                 }
             }
@@ -879,14 +880,14 @@ extern QUEUE_TRANSFER fnSendBufTCP(USOCKET TCP_socket, unsigned char *ptrBuf, un
         tcp_tx->usWaitingSize = 0;                                       // reset the waiting size, assuming that all will be sent (will be corrected if not possible to send all)
     #if defined WAKE_BLOCKED_TCP_BUF
         if (DataCopied == 0) {                                           // if the buffer is already empty
-            if (tcp_tx->WakeTask) {                                      // and the application is waiting for confirmation of the buffer being free
-                //unsigned char tx_continue_message[ HEADER_LENGTH ] = { INTERNAL_ROUTE, INTERNAL_ROUTE, tcp_tx->WakeTask, INTERRUPT_EVENT, TX_FREE};
-                unsigned char tx_continue_message[ HEADER_LENGTH ];
-                tx_continue_message[ MSG_DESTINATION_NODE ] = INTERNAL_ROUTE;
-                tx_continue_message[ MSG_SOURCE_NODE ] = INTERNAL_ROUTE;
-                tx_continue_message[ MSG_DESTINATION_TASK ] = tcp_tx->WakeTask;
-                tx_continue_message[ MSG_SOURCE_TASK ] = INTERRUPT_EVENT;
-                tx_continue_message[ MSG_INTERRUPT_EVENT ] = TX_FREE;
+            if (tcp_tx->WakeTask != 0) {                                 // and the application is waiting for confirmation of the buffer being free
+                //unsigned char tx_continue_message[HEADER_LENGTH] = {INTERNAL_ROUTE, INTERNAL_ROUTE, tcp_tx->WakeTask, INTERRUPT_EVENT, TX_FREE};
+                unsigned char tx_continue_message[HEADER_LENGTH];
+                tx_continue_message[MSG_DESTINATION_NODE] = INTERNAL_ROUTE;
+                tx_continue_message[MSG_SOURCE_NODE] = INTERNAL_ROUTE;
+                tx_continue_message[MSG_DESTINATION_TASK] = tcp_tx->WakeTask;
+                tx_continue_message[MSG_SOURCE_TASK] = INTERRUPT_EVENT;
+                tx_continue_message[MSG_INTERRUPT_EVENT] = TX_FREE;
                 fnWrite(INTERNAL_ROUTE, tx_continue_message, HEADER_LENGTH); // inform the blocked task
             }
         }
@@ -904,7 +905,7 @@ extern QUEUE_TRANSFER fnSendBufTCP(USOCKET TCP_socket, unsigned char *ptrBuf, un
             //
             int iRepeatSimple = 0;
             unsigned short ucTheseWindowSizes = 0;
-            while (tcp_tx->ucOpenAcks--) {
+            while (tcp_tx->ucOpenAcks-- != 0) {
                 if (tcp_tx->ucPutFrame-- == 0) {
                     tcp_tx->ucPutFrame = (WINDOWING_BUFFERS-1);
                 }
@@ -923,7 +924,7 @@ extern QUEUE_TRANSFER fnSendBufTCP(USOCKET TCP_socket, unsigned char *ptrBuf, un
             else {
                 QUEUE_TRANSFER rtnSent = 0;
                 tcp_tx->usWaitingSize += ucTheseWindowSizes;
-                while ((iRepeatSimple--) && ((DataCopied = fnSendBufTCP(TCP_socket, 0, 0, (TCP_BUF_REP | TCP_REPEAT_WINDOW))) != 0)) {
+                while ((iRepeatSimple-- != 0) && ((DataCopied = fnSendBufTCP(TCP_socket, 0, 0, (TCP_BUF_REP | TCP_REPEAT_WINDOW))) != 0)) {
                     rtnSent |= DataCopied;
                 }
                 BUFFERED_TCP_LEAVE_CRITICAL();                           // leave potentially critical region
@@ -1035,7 +1036,7 @@ extern QUEUE_TRANSFER fnSendBufTCP(USOCKET TCP_socket, unsigned char *ptrBuf, un
             }
         }
     #else
-        while (DataCopied--) {                                           // copy from circular buffer to linear output buffer
+        while (DataCopied-- != 0) {                                      // copy from circular buffer to linear output buffer
             *ptrTxBuffer++ = *ptrIn++;                                   // without doing any IAC stuffing
             if (ptrIn >= ptrEnd) {
                 ptrIn = tcp_tx->ucTCP_tx;
@@ -1061,7 +1062,7 @@ extern QUEUE_TRANSFER fnSendBufTCP(USOCKET TCP_socket, unsigned char *ptrBuf, un
 
     tcp_tx->usWaitingSize += DataCopied;                                 // no data transmitted but waiting queue size increased accordingly
     BUFFERED_TCP_LEAVE_CRITICAL();                                       // leave potentially critical region
-    if (TCP_BUF_SEND_REPORT_COPY & Command) {                            // if the user wants to know how many bytes have been queued we return the value
+    if ((TCP_BUF_SEND_REPORT_COPY & Command) != 0) {                     // if the user wants to know how many bytes have been queued we return the value
         return DataCopied;
     }
     return 0;                                                            // we haven't sent a TCP frame
@@ -1884,11 +1885,11 @@ extern void fnHandleTCP(ETHERNET_FRAME *ptrRx_frame)                     // {41}
                     unsigned short usPartialDataLength = (unsigned short)(ptr_TCP->ulNextTransmissionNumber - rx_tcp_packet.ulAckNo); // the length of the data being acknowledged
                     if (usPartialDataLength != 0) {                      // {29}
                         ptr_TCP->usTxWindowSize -= usPartialDataLength;  // {32} since there is still data underway to the peer respect this in the window size
-                        if (APP_REQUEST_CLOSE & (iAppTCP |= ptr_TCP->event_listener(tcp_socket/*>->MySocketNumber*/, TCP_EVENT_PARTIAL_ACK, ptr_TCP->ucRemoteIP, usPartialDataLength))) { // {56} usPartialDataLength is the number of bytes that are still unaccounted for
-                            if (rx_tcp_packet.usHeaderLengthAndFlags & TCP_FLAG_FIN) { // the application has commanded the close of the connection
+                        if ((APP_REQUEST_CLOSE & (iAppTCP |= ptr_TCP->event_listener(tcp_socket/*>->MySocketNumber*/, TCP_EVENT_PARTIAL_ACK, ptr_TCP->ucRemoteIP, usPartialDataLength))) != 0) { // {56} usPartialDataLength is the number of bytes that are still unaccounted for
+                            if ((rx_tcp_packet.usHeaderLengthAndFlags & TCP_FLAG_FIN) != 0) { // the application has commanded the close of the connection
                                 // We have just received FIN + ACK, meaning that the other side has also initiated a close
                                 //
-                                fnNewTCPState(ptr_TCP, TCP_STATE_CLOSING);   // this a simultaneous close, so we go to state closing and wait for the last ack
+                                fnNewTCPState(ptr_TCP, TCP_STATE_CLOSING); // this a simultaneous close, so we go to state closing and wait for the last ack
                             }
                             return;
                         }
@@ -2236,7 +2237,7 @@ static void fnPollTCP(void)
 
             case TCP_STATE_SYN_SENT:
             case TCP_STATE_SYN_RCVD:
-                if (fnDoCountDown(ptr_TCP)) {
+                if (fnDoCountDown(ptr_TCP) != 0) {
                     if (ptr_TCP->ucTCP_state == TCP_STATE_SYN_SENT) {
                         ptr_TCP->usTransmitTimer = TCP_SYN_RETRY_TOUT;
 #if defined ANNOUNCE_MAX_SEGMENT_SIZE
