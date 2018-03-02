@@ -35,6 +35,7 @@
     09.07.2017 Allow renaming a file to a different directory location   {17}
     14.07.2017 Avoid matching directories when not complete path handled {18} [utFAT2.04]
     18.12.2017 Allow emulated FAT to be used together with other disk types than SD card {19}
+    02.03.2018 Added block read option                                   {19}
 
 */
 
@@ -313,39 +314,40 @@ typedef struct stFAT12_FAT
             extern int utDeleteMSDSector(UTDISK *ptr_utDisk, unsigned long ulSectorNumber);
         #endif
     #endif
-        
     static int  ut_read_disk(UTDISK *ptr_utDisk);
-    static void fnCardNotFormatted(int iDisk);
     static void fnInitialisationError(int iDisk, int iNotSupported);
+    static void fnCardNotFormatted(int iDisk);
+    #if !defined SDCARD_ACCESS_WITHOUT_UTFAT
     static void fnResetDirectories(unsigned char ucDisk);
-    #if defined UTFAT_WRITE        
+    #endif
+    #if defined UTFAT_WRITE && !defined SDCARD_ACCESS_WITHOUT_UTFAT       
         static unsigned long fnAllocateCluster(UTDISK *ptr_utDisk, unsigned long ulPresentCluster, unsigned char ucClusterType);
         static int  fnDeleteFileContent(UTFILE *ptr_utFile, UTDISK *ptr_utDisk, int iDestroyClusters);
         static int  fnDeleteClusterChain(unsigned long ulClusterStart, unsigned char ucDrive, int iDestroyClusters);
         static void fnAddInfoSect(INFO_SECTOR_FAT32 *ptrInfoSector, unsigned long ulFreeCount, unsigned long ulNextFree);
         static void fnSetTimeDate(DIR_ENTRY_STRUCTURE_FAT32 *ptrEntry, int iCreation);
     #endif
-    #if defined UTFAT_LFN_READ && (defined UTFAT_LFN_DELETE || defined UTFAT_LFN_WRITE)
+    #if defined UTFAT_LFN_READ && (defined UTFAT_LFN_DELETE || defined UTFAT_LFN_WRITE) && !defined SDCARD_ACCESS_WITHOUT_UTFAT
         static int fnDeleteLFN_entry(UTFILE *ptr_utFile);
         static int fnDirectorySectorCreate(UTDISK *ptr_utDisk, FILE_LOCATION *ptr_location);
     #endif
     #if defined UTMANAGED_FILE_COUNT && UTMANAGED_FILE_COUNT > 0
         static int fnFileLocked(UTFILE *ptr_utFile);
     #endif
-    #if defined SDCARD_DETECT_INPUT_INTERRUPT 
+    #if defined SDCARD_DETECT_INPUT_INTERRUPT && !defined SDCARD_FIXED
         static void fnPrepareDetectInterrupt(void);
     #endif
     #if defined UTFAT_FILE_CACHE_POOL && (UTFAT_FILE_CACHE_POOL > 0) && (UTMANAGED_FILE_COUNT > 0)
         static int fnGetManagedFileCache(unsigned long ulSector, unsigned char *ptrBuffer, unsigned short usAccessOffset, unsigned short usAccessLength);
     #endif
 #endif
-#if ((defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST) && (defined UTFAT_WRITE)) || defined FAT_EMULATION
+#if ((defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST) && (defined UTFAT_WRITE && !defined SDCARD_ACCESS_WITHOUT_UTFAT)) || defined FAT_EMULATION
     static void fnAddInfoSect(INFO_SECTOR_FAT32 *ptrInfoSector, unsigned long ulFreeCount, unsigned long ulNextFree);
 #endif
-#if defined FULL_FAT_SUPPORT || (defined FAT_EMULATION && defined EMULATED_FAT_FILE_NAME_CONTROL)
+#if (defined FULL_FAT_SUPPORT && !defined SDCARD_ACCESS_WITHOUT_UTFAT) || (defined FAT_EMULATION && defined EMULATED_FAT_FILE_NAME_CONTROL)
     static int fnCreateNameParagraph(const CHAR **pptrDirectoryPath, CHAR cDirectoryName[12]);
 #endif
-#if defined UTFAT_LFN_READ || (defined FAT_EMULATION && defined FAT_EMULATION_LFN  && defined EMULATED_FAT_FILE_NAME_CONTROL)
+#if (defined UTFAT_LFN_READ && !defined SDCARD_ACCESS_WITHOUT_UTFAT) || (defined FAT_EMULATION && defined FAT_EMULATION_LFN  && defined EMULATED_FAT_FILE_NAME_CONTROL)
     static unsigned char fnLFN_checksum(CHAR *cPtrSFN_alias);
 #endif
 #if defined UTFAT12
@@ -370,7 +372,7 @@ typedef struct stFAT12_FAT
         static unsigned char ucSELECT_CARD_CMD7[5]          = {SELECT_CARD_CMD7, 0x00, 0x00, 0x00, 0x00};
         static unsigned char ucSEND_CSD_CMD9[5]             = {SEND_CSD_CMD9, 0x00, 0x00, 0x00, 0x00};
         static unsigned char ucAPP_CMD_CMD55[5]             = {APP_CMD_CMD55, 0x00, 0x00, 0x00, 0x00};
-        static unsigned char ucSET_BUS_WIDTH_CMD6[5]        = {SET_BUS_WIDTH_CMD6, 0x00, 0x00, 0x00, 0x02};
+        static unsigned char ucSET_BUS_WIDTH_CMD6[5]        = {SET_BUS_WIDTH_CMD6, 0x00, 0x00, 0x00, ACMD6_BUS_WIDTH_4};
     #else
         static const unsigned char ucSEND_OP_COND_ACMD_CMD41[6] = {SEND_OP_COND_ACMD_CMD41, HIGH_CAPACITY_SD_CARD_MEMORY, 0x00, 0x00, 0x00, CS_SEND_OP_COND_ACMD_CMD41};
         static const unsigned char ucSEND_CSD_CMD9[6]       = {SEND_CSD_CMD9, 0x00, 0x00, 0x00, 0x00, CS_SEND_CSD_CMD9};
@@ -397,7 +399,7 @@ static const unsigned char ucEmptyFAT12[4] = {
         #endif
     #endif
 #endif
-#if defined FULL_FAT_SUPPORT || (defined FAT_EMULATION && defined EMULATED_FAT_FILE_NAME_CONTROL)
+#if (defined FULL_FAT_SUPPORT && !defined SDCARD_ACCESS_WITHOUT_UTFAT) || (defined FAT_EMULATION && defined EMULATED_FAT_FILE_NAME_CONTROL)
 static const unsigned char ucCharacterTable[] = {
     (0),                                                                 // !
     (_CHAR_REJECT),                                                      // "
@@ -521,7 +523,11 @@ static int iMemoryState[DISK_COUNT] = {0};
 
 #if defined UTFAT_MULTIPLE_BLOCK_WRITE
     static unsigned long ulBlockWriteLength = 0;                         // multiple block writing to speed up write operations
-    static unsigned long ulMultiBlockAddress = 0;
+  //static unsigned long ulMultiBlockWriteAddress = 0;
+#endif
+#if defined UTFAT_MULTIPLE_BLOCK_READ                                    // {19}
+    static unsigned long ulBlockReadLength = 0;
+  //static unsigned long ulMultiBlockReadAddress = 0;
 #endif
 
 #if defined UTFAT12
@@ -793,9 +799,8 @@ static void fnManagedMediaCheck(void)
 }
 #endif
 
-
-
 #if defined SDCARD_SUPPORT
+#if !defined SDCARD_ACCESS_WITHOUT_UTFAT
 // Read a part of the specified sector to the buffer (avoiding overwriting all buffer content)
 //
 static int utReadPartialSector(UTDISK *ptr_utDisk, unsigned long ulSectorNumber, void *ptrBuf, unsigned short usOffset, unsigned short usLength)
@@ -829,6 +834,7 @@ static int utReadPartialSector(UTDISK *ptr_utDisk, unsigned long ulSectorNumber,
     }
     return UTFAT_SUCCESS;
 }
+#endif
 
 // Read a single, complete sector from the disk to the specified buffer
 //
@@ -847,8 +853,26 @@ static int utReadDiskSector(UTDISK *ptr_utDisk, unsigned long ulSectorNumber, vo
     case _READING_MEMORY:
         {
             unsigned char ucResult;
+    #if defined UTFAT_MULTIPLE_BLOCK_READ                                // {19}
+            if (ulBlockReadLength != 0) {
+                if ((ulBlockReadLength & 0x80000000) == 0) {             // if the initial block read command hasn't been executed
+                    unsigned long ulResponse = ulBlockReadLength;        // don't pass pointer to ulBlockReadLength directly since it is overwritten with the result
+                    while ((iActionResult = fnSendSD_command(fnCreateCommand(READ_MULTIPLE_BLOCK_CMD18, ulSector), &ucResult, (unsigned char *)&ulResponse)) == CARD_BUSY_WAIT) {} // set the SD card to multiple read block mode
+                  //ulMultiBlockReadAddress = ulSector;
+                    ulBlockReadLength |= 0x80000000;                     // flag that were are in a block read phase
+                }
+                else {
+                    iActionResult = 0;                                   // allow the sector read to continue
+                    ucResult = 0;
+                }
+            }
+            else {
+                while ((iActionResult = fnSendSD_command(fnCreateCommand(READ_SINGLE_BLOCK_CMD17, ulSector), &ucResult, 0)) == CARD_BUSY_WAIT) {} // command a single block read
+            }
+    #else
             while ((iActionResult = fnSendSD_command(fnCreateCommand(READ_SINGLE_BLOCK_CMD17, ulSector), &ucResult, 0)) == CARD_BUSY_WAIT) {}
-            if (iActionResult < 0) {
+    #endif
+            if (iActionResult < 0) {                                     // if there was an error
                 SET_SD_CS_HIGH();                                        // negate the chip select line
                 iMemoryOperation[DISK_SDCARD] &= ~_READING_MEMORY;       // read operation has completed
                 return iActionResult;
@@ -856,6 +880,15 @@ static int utReadDiskSector(UTDISK *ptr_utDisk, unsigned long ulSectorNumber, vo
             if (ucResult == 0) {
                 iActionResult = fnGetSector(ptrBuf);                     // read a single sector to the buffer
             }
+    #if defined UTFAT_MULTIPLE_BLOCK_READ                                // {19}
+            if (ulBlockReadLength != 0) {                                // in multiple block read
+                ulBlockReadLength--;                                     // block has been read
+                if ((ulBlockReadLength & ~(0x80000000)) == 0) {          // final block has been read
+                    fnSendSD_command(fnCreateCommand(STOP_TRANSMISSION_CMD12, 0), &ucResult, 0);
+                    ulBlockReadLength = 0;                               // planned multiple block read has completed
+                }
+            }
+    #endif
             SET_SD_CS_HIGH();                                            // negate the chip select line
             iMemoryOperation[DISK_SDCARD] &= ~_READING_MEMORY;           // read operation has completed
         }
@@ -886,7 +919,7 @@ static int fnPutSector(unsigned char *ptrBuf, int iMultiBlock)
         ptrBuf++;
         WAIT_TRANSMISSON_END();                                          // wait until transmission complete
         (void)READ_SPI_DATA();                                           // clear the receiver with a dummy read
-    } while (--iLength);
+    } while (--iLength != 0);
     WRITE_SPI_CMD(0xff);                                                 // send two dummy CRC bytes
     WAIT_TRANSMISSON_END();                                              // wait until transmission complete
     (void)READ_SPI_DATA();                                               // dummy read to clear the receiver
@@ -920,17 +953,18 @@ static int utCommitSectorData(UTDISK *ptr_utDisk, void *ptrBuffer, unsigned long
             unsigned char ucResult;
     #if defined UTFAT_MULTIPLE_BLOCK_WRITE
             if (ulBlockWriteLength != 0) {                               // if multiple block writes are to be performed
-                if (!(ulBlockWriteLength & 0x80000000)) {                // if block write command has not yet been sent
-                    if ((iActionResult = fnSendSD_command(fnCreateCommand(WRITE_MULTIPLE_BLOCK_CMD25, ulSector), &ucResult, (unsigned char *)&ulBlockWriteLength)) != 0) { // start multiple block write
+                if ((ulBlockWriteLength & 0x80000000) == 0) {            // if block write command has not yet been sent
+                    unsigned long ulResponse = ulBlockWriteLength;        // don't pass pointer to ulBlockWriteLength directly since it is overwritten with the result
+                    if ((iActionResult = fnSendSD_command(fnCreateCommand(WRITE_MULTIPLE_BLOCK_CMD25, ulSector), &ucResult, (unsigned char *)&ulResponse)) != 0) { // start multiple block write
                         return iActionResult;
                     }
-                    ulMultiBlockAddress = ulSector;
+                  //ulMultiBlockWriteAddress = ulSector;
                     ulBlockWriteLength |= 0x80000000;                    // mark that the command has been sent
                 }
                 else {
                 /*  if (!(ulBlockWriteLength & ~0x80000000)) {           // if multiple write is being aborted
                         ulBlockWriteLength = 0;
-                        while (fnSendSD_command(fnCreateCommand(STOP_TRANSMISSION_CMD12, 0), &ucResult, 0) == CARD_BUSY_WAIT) {}; // terminate present multiple block mode
+                        fnSendSD_command(fnCreateCommand(STOP_TRANSMISSION_CMD12, 0), &ucResult, 0); // terminate present multiple block mode
                         if ((iActionResult = fnSendSD_command(fnCreateCommand(WRITE_BLOCK_CMD24, ulSector), &ucResult, 0)) != 0) { // single block write command
                             return iActionResult;
                         }
@@ -948,12 +982,12 @@ static int utCommitSectorData(UTDISK *ptr_utDisk, void *ptrBuffer, unsigned long
                     fnMemoryDebugMsg("Write error\r\n");
                     return UTFAT_DISK_WRITE_ERROR;
                 }
-                if (!(ptr_utDisk->usDiskFlags & HIGH_CAPACITY_SD_CARD)) {
-                    ulMultiBlockAddress += 512;                         // monitor the multiple write sector
-                }
-                else {
-                    ulMultiBlockAddress++;
-                }
+              //if ((ptr_utDisk->usDiskFlags & HIGH_CAPACITY_SD_CARD) == 0) {
+              //    ulMultiBlockWriteAddress += 512;                     // monitor the multiple write sector
+              //}
+              //else {
+              //    ulMultiBlockWriteAddress++;
+              //}
             }
     #else
             if ((iActionResult = fnSendSD_command(fnCreateCommand(WRITE_BLOCK_CMD24, ulSector), &ucResult, 0)) != 0) { // single block write command
@@ -971,7 +1005,7 @@ static int utCommitSectorData(UTDISK *ptr_utDisk, void *ptrBuffer, unsigned long
                 ulBlockWriteLength--;                                    // block has been written
                 if ((ulBlockWriteLength & ~(0x80000000)) == 0) {         // final block has been written
                     ulBlockWriteLength = 0;                              // planned multiple block write has completed
-                    fnSendSD_command(fnCreateCommand(STOP_TRANSMISSION_CMD12, 0), &ucResult, 0); // terminate multiple block mode
+                    while ((iActionResult = fnSendSD_command(STOP_TRANSMISSION_CMD12, &ucResult, 0)) == CARD_BUSY_WAIT) {}
                 }
             }
     #endif
@@ -983,6 +1017,7 @@ static int utCommitSectorData(UTDISK *ptr_utDisk, void *ptrBuffer, unsigned long
     return UTFAT_SUCCESS;
 }
 
+#if !defined SDCARD_ACCESS_WITHOUT_UTFAT
 // Delete the specified sector by writing data content of 0x00
 //
 static int utDeleteSector(UTDISK *ptr_utDisk, unsigned long ulSectorNumber)
@@ -1023,7 +1058,7 @@ static int utDeleteSector(UTDISK *ptr_utDisk, unsigned long ulSectorNumber)
     return UTFAT_SUCCESS;
 }
 #endif
-
+#endif
 
 
 // Temporary development
@@ -1573,10 +1608,14 @@ static int utDeleteSPISector(UTDISK *ptr_utDisk, unsigned long ulSectorNumber)
 #if defined FULL_FAT_SUPPORT
     #if defined UTFAT_WRITE
         static int (*_utCommitSectorData[DISK_COUNT])(UTDISK *ptr_utDisk, void *ptrBuffer, unsigned long ulSectorNumber) = {0};
+        #if !defined SDCARD_ACCESS_WITHOUT_UTFAT
         static int (*_utDeleteSector[DISK_COUNT])(UTDISK *ptr_utDisk, unsigned long ulSectorNumber) = {0};
+        #endif
     #endif
     static int (*_utReadDiskSector[DISK_COUNT])(UTDISK *ptr_utDisk, unsigned long ulSectorNumber, void *ptrBuf) = {0};
+    #if !defined SDCARD_ACCESS_WITHOUT_UTFAT
     static int (*_utReadPartialDiskData[DISK_COUNT])(UTDISK *ptr_utDisk, unsigned long ulSector, void *ptrBuf, unsigned short usOffset, unsigned short usLength) = {0};
+    #endif
     #if defined FAT_EMULATION                                            // {12}
         static int fnReadEmulatedSector(UTDISK *ptr_utDisk, unsigned long ulSectorNumber, void *ptrBuf);
         static int fnReadPartialEmulatedSector(UTDISK *ptr_utDisk, unsigned long ulSector, void *ptrBuf, unsigned short usOffset, unsigned short usLength);
@@ -1871,7 +1910,7 @@ static void fnCreateInfoSector(int iDiskNumber)
     #endif
 #endif
 
-#if ((defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST) && (defined UTFAT_WRITE)) || defined FAT_EMULATION
+#if ((defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST) && (defined UTFAT_WRITE) && !defined SDCARD_ACCESS_WITHOUT_UTFAT) || defined FAT_EMULATION
 static void fnAddInfoSect(INFO_SECTOR_FAT32 *ptrInfoSector, unsigned long ulFreeCount, unsigned long ulNextFree)
 {
     ptrInfoSector->FSI_Free_Count[0] = (unsigned char)(ulFreeCount);
@@ -2081,11 +2120,15 @@ extern void fnMassStorage(TTASKTABLE *ptrTaskTable)
             }
         #endif
         #if defined SDCARD_SUPPORT                                       // initialisation only required by SD card
+            #if !defined SDCARD_ACCESS_WITHOUT_UTFAT            
             _utReadPartialDiskData[iDiskNumber] = utReadPartialSector;   // SD card function to read a partial sector
+            #endif
             _utReadDiskSector[iDiskNumber] = utReadDiskSector;           // SD card function to read a sector to a defined buffer
             #if defined UTFAT_WRITE
             _utCommitSectorData[iDiskNumber] = utCommitSectorData;       // SD card function to write a sector from a buffer
+                #if !defined SDCARD_ACCESS_WITHOUT_UTFAT
             _utDeleteSector[iDiskNumber] = utDeleteSector;               // SD card function to delete a sector
+                #endif
             #endif
             #if defined SD_CONTROLLER_AVAILABLE
             fnInitSDCardInterface();                                     // HW interface initialisation
@@ -2095,7 +2138,7 @@ extern void fnMassStorage(TTASKTABLE *ptrTaskTable)
             uTaskerMonoTimer(OWN_TASK, T_POWER_STABILISE, E_POWER_STABILISED); // wait until SD card power stabilised
             #else
             INITIALISE_SPI_SD_INTERFACE();                               // initialise the SPI interface to the card
-                #if defined SDCARD_DETECT_INPUT_POLL || defined SDCARD_DETECT_INPUT_INTERRUPT
+                #if (defined SDCARD_DETECT_INPUT_POLL || defined SDCARD_DETECT_INPUT_INTERRUPT) && !defined SDCARD_FIXED
                     #if defined SDCARD_DETECT_INPUT_INTERRUPT 
             fnPrepareDetectInterrupt();                                  // prepare interrupt detection of SD card presence
                     #endif
@@ -2120,7 +2163,7 @@ extern void fnMassStorage(TTASKTABLE *ptrTaskTable)
         case SD_STATE_STABILISING:                                       // delay after applying power to the SD-card
             #if defined SD_CONTROLLER_AVAILABLE
             POWER_UP_SD_CARD();                                          // apply power
-                #if defined SDCARD_DETECT_INPUT_POLL || defined SDCARD_DETECT_INPUT_INTERRUPT
+                #if (defined SDCARD_DETECT_INPUT_POLL || defined SDCARD_DETECT_INPUT_INTERRUPT) && !defined SDCARD_FIXED
                     #if defined SDCARD_DETECT_INPUT_INTERRUPT 
             fnPrepareDetectInterrupt();                                  // prepare interrupt detection of SD card presence
                     #endif
@@ -2172,7 +2215,7 @@ extern void fnMassStorage(TTASKTABLE *ptrTaskTable)
                 break;
             }
             if (ucResult == SDC_CARD_VERSION_2PLUS) {                    // version 2 or higher
-                if (ucData[3] == CHECK_PATTERN) {
+                if (ucData[3] == CHECK_PATTERN) {                        // check that the 0xaa check pattern (echo of that sent) is detected in the response
                     if (ucData[2] == VOLTAGE_2_7__3_6) {                 // check whether the card can operate between 2.7V and 3.6V
                         iMemoryState[DISK_SDCARD] = SD_STATE_APP_CMD55_CMD41; // now poll the SD card until it accept the application command 42
                         uTaskerStateChange(OWN_TASK, UTASKER_ACTIVATE);  // run again
@@ -2238,7 +2281,7 @@ extern void fnMassStorage(TTASKTABLE *ptrTaskTable)
             }
             #endif
             fnMemoryDebugMsg("SD-card V2 - ");
-            if (ucData[0] & HIGH_CAPACITY_SD_CARD_MEMORY) {              // check the CCS bit
+            if ((ucData[0] & HIGH_CAPACITY_SD_CARD_MEMORY) != 0) {       // check the CCS bit
                 utDisks[DISK_SDCARD].usDiskFlags = HIGH_CAPACITY_SD_CARD;
                 fnMemoryDebugMsg("High Capacity\r\n");
             }
@@ -2286,7 +2329,7 @@ extern void fnMassStorage(TTASKTABLE *ptrTaskTable)
             }
             #endif
             uMemcpy(utDisks[DISK_SDCARD].utFileInfo.ucCardSpecificData, &ucData[2 - SD_CONTROLLER_SHIFT], sizeof(utDisks[DISK_SDCARD].utFileInfo.ucCardSpecificData)); // back up the card specific data since it can be of interest later
-            if (ucData[2 - SD_CONTROLLER_SHIFT] & HIGH_CAPACITY_SD_CARD_MEMORY) { // high capacity
+            if ((ucData[2 - SD_CONTROLLER_SHIFT] & HIGH_CAPACITY_SD_CARD_MEMORY) != 0) { // high capacity (CSD version 2.0)
                 utDisks[DISK_SDCARD].ulSD_sectors = (((ucData[9 - SD_CONTROLLER_SHIFT] << 16) + (ucData[10 - SD_CONTROLLER_SHIFT] << 8)  + ucData[11 - SD_CONTROLLER_SHIFT]) + 1);// SD version 2 assumed
                 utDisks[DISK_SDCARD].ulSD_sectors *= 1024;               // the number of sectors on the SD card
             }
@@ -2326,15 +2369,29 @@ extern void fnMassStorage(TTASKTABLE *ptrTaskTable)
             }
             iMemoryState[DISK_SDCARD] = SD_SET_INTERFACE;                // fall through to send the application command
         case SD_SET_INTERFACE:
-            if ((iActionResult = fnSendSD_command(ucSET_BUS_WIDTH_CMD6, &ucResult, ucData)) != UTFAT_SUCCESS) { // set bus width
-                if (iActionResult == CARD_BUSY_WAIT) {
-                    _return;                                             // read is taking time to complete so quit for the moment
+            {
+            #if defined SET_SPI_SD_INTERFACE_FAST_SPEED
+                CSD_2_0 *ptrCSD = (CSD_2_0 *)utDisks[DISK_SDCARD].utFileInfo.ucCardSpecificData;
+            #endif
+                if ((iActionResult = fnSendSD_command(ucSET_BUS_WIDTH_CMD6, &ucResult, ucData)) != UTFAT_SUCCESS) { // set bus width
+                    if (iActionResult == CARD_BUSY_WAIT) {
+                        _return;                                         // read is taking time to complete so quit for the moment
+                    }
+                    fnInitialisationError(DISK_SDCARD, 0);               // the card is behaving incorrectly - stop and try again later
+                    break;
                 }
-                fnInitialisationError(DISK_SDCARD, 0);                   // the card is behaving incorrectly - stop and try again later
-                break;
+                iMemoryState[DISK_SDCARD] = SD_SET_BLOCK_LENGTH;
+            #if defined SET_SPI_SD_INTERFACE_FAST_SPEED
+                if (ptrCSD->ucTRAN_SPEED == CSD_2_MAX_DATA_RATE_25M) {   // if the SD card's speed is limited to 25MHz
+                    SET_SPI_SD_INTERFACE_FULL_SPEED();                   // speed up SDHC interface since initialisation is complete (as well as set data bus width)
+                }
+                else {
+                    SET_SPI_SD_INTERFACE_FAST_SPEED();                   // speed up SDHC interface to fastest speed since initialisation is complete (as well as set data bus width)
+                }
+            #else
+                SET_SPI_SD_INTERFACE_FULL_SPEED();                       // speed up SDHC interface since initialisation is complete (as well as set data bus width)
+            #endif
             }
-            iMemoryState[DISK_SDCARD] = SD_SET_BLOCK_LENGTH;
-            SET_SPI_SD_INTERFACE_FULL_SPEED();                           // speed up the SPI interface since initialisation is complete (as well as data bus width)
         case SD_SET_BLOCK_LENGTH:
             if ((iActionResult = fnSendSD_command(ucSET_BLOCK_LENGTH_CMD16, &ucResult, ucData)) != UTFAT_SUCCESS) { // set relative address
                 if (iActionResult == CARD_BUSY_WAIT) {
@@ -2544,7 +2601,9 @@ extern void fnMassStorage(TTASKTABLE *ptrTaskTable)
             utDisks[iDiskNumber].usDiskFlags |= DISK_MOUNTED;            // the disk is now ready for use (not write protected)
             #endif
             fnMemoryDebugMsg("\r\n");
+        #if !defined SDCARD_ACCESS_WITHOUT_UTFAT
             fnResetDirectories((unsigned char)iDiskNumber);              // {8} reset directories using this disk
+        #endif
             iMemoryOperation[iDiskNumber] |= _INITIALISED_MEMORY;
             iMemoryState[iDiskNumber] = DISK_STATE_READY;
         #if defined MEMORY_STICK_TASK
@@ -2552,7 +2611,7 @@ extern void fnMassStorage(TTASKTABLE *ptrTaskTable)
                 fnInterruptMessage(MEMORY_STICK_TASK, MEM_STICK_MOUNTED);// inform that application that the memory stick can be used
             }
         #endif
-        #if defined T_CHECK_CARD_REMOVAL
+        #if defined T_CHECK_CARD_REMOVAL && !defined SDCARD_FIXED
             if (DISK_SDCARD == iDiskNumber) {
                 uTaskerMonoTimer(OWN_TASK, T_CHECK_CARD_REMOVAL, E_CHECK_CARD_REMOVAL); // poll the SD card to detect removal
             }
@@ -2574,7 +2633,7 @@ extern void fnMassStorage(TTASKTABLE *ptrTaskTable)
             }
         #endif
             break;
-        #if defined T_CHECK_CARD_REMOVAL
+        #if defined T_CHECK_CARD_REMOVAL && !defined SDCARD_FIXED
         case STATE_CHECKING_DISK_REMOVAL:
             #if defined SDCARD_DETECT_INPUT_POLL
             if ((SDCARD_DETECTION()) == 0) {                             // if card has been removed start remounting process
@@ -2865,34 +2924,34 @@ extern void fnMassStorage(TTASKTABLE *ptrTaskTable)
         }
     }
     else if (iMemoryOperation[iDiskNumber] & _COUNTING_CLUSTERS) {       // free cluster counting in progress
-#if defined FAT12_DEVELOPMENT
+        #if defined FAT12_DEVELOPMENT
         if (ulClusterSectorCheck[iDiskNumber] < (utDisks[iDiskNumber].utFAT.ulFAT_start + utDisks[iDiskNumber].utFAT.ulFatSize))
-#else
+        #else
         if (ulClusterSectorCheck[iDiskNumber] >= utDisks[iDiskNumber].utFAT.ulFAT_start)
-#endif
+        #endif
         {
-#if defined FAT12_DEVELOPMENT
+        #if defined FAT12_DEVELOPMENT
             unsigned long ulRepetitions;
-#else
+        #else
             int ulRepetitions = 10;                                      // read maximum 10 sectors at a time
-#endif
+        #endif
             unsigned long ulSectorContent[512/sizeof(signed long)];      // long word aligned FAT sector memory
-#if defined FAT12_DEVELOPMENT
+        #if defined FAT12_DEVELOPMENT
             ulRepetitions = ((utDisks[iDiskNumber].utFAT.ulFAT_start + utDisks[iDiskNumber].utFAT.ulFatSize) - ulClusterSectorCheck[iDiskNumber]); // the remaining number of clusters to be checked
             if (ulRepetitions > 10) {                                    // limit to a maximum 10 sectors at a time
                 ulRepetitions = 10;
             }
-#else
+        #else
             if (ulClusterSectorCheck[iDiskNumber] < (iRepetitions + utDisks[iDiskNumber].utFAT.ulFAT_start)) {
                 ulRepetitions = (ulClusterSectorCheck[iDiskNumber] - utDisks[iDiskNumber].utFAT.ulFAT_start);
             }
-#endif
+        #endif
             while (ulRepetitions-- > 0) {
-#if defined FAT12_DEVELOPMENT
+        #if defined FAT12_DEVELOPMENT
                 if ((_utReadDiskSector[iDiskNumber](&utDisks[iDiskNumber], ulClusterSectorCheck[iDiskNumber]++, ulSectorContent)) == UTFAT_SUCCESS) // read a FAT sector containing the cluster information
-#else
+        #else
                 if ((_utReadDiskSector[iDiskNumber](&utDisks[iDiskNumber], ulClusterSectorCheck[iDiskNumber]--, ulSectorContent)) == UTFAT_SUCCESS) // read a FAT sector containing the cluster information
-#endif
+        #endif
                 {
         #if defined UTFAT16 || defined UTFAT12
                     if (utDisks[iDiskNumber].usDiskFlags & (DISK_FORMAT_FAT16)) {
@@ -3027,7 +3086,7 @@ extern void fnMassStorage(TTASKTABLE *ptrTaskTable)
                 break;
             }
     #endif
-    #if defined T_CHECK_CARD_REMOVAL
+    #if defined T_CHECK_CARD_REMOVAL && !defined SDCARD_FIXED
             if (E_CHECK_CARD_REMOVAL == ucInputMessage[MSG_TIMER_EVENT]) { // time to check whether the card is responding
                 if (DISK_STATE_READY == iMemoryState[DISK_SDCARD]) {     // only perform removal check when the card is in the ready state - don't disturb operation when formatting or mounting
                     iMemoryState[DISK_SDCARD] = STATE_CHECKING_DISK_REMOVAL; // set state to cause next check
@@ -3057,7 +3116,7 @@ extern void fnMassStorage(TTASKTABLE *ptrTaskTable)
     #endif
             break;
 
-    #if defined SDCARD_DETECT_INPUT_INTERRUPT
+    #if defined SDCARD_DETECT_INPUT_INTERRUPT && !defined SDCARD_FIXED
         case INTERRUPT_EVENT:                                            // new state of SD card detection
             if (E_SDCARD_DETECTION_CHANGE == ucInputMessage[MSG_INTERRUPT_EVENT]) {
                 if (SDCARD_DETECTION() != 0) {                           // card has been inserted so try to mount it
@@ -3164,19 +3223,21 @@ static void fnInitialisationError(int iDisk, int iNotSupported)
 }
 
 #if defined SDCARD_SUPPORT
+// Create an SD card command header in a static buffer
+//
 static const unsigned char *fnCreateCommand(unsigned char ucCommand, unsigned long ulValue)
 {
     static unsigned char ucCommandBuffer[6];                             // space for a permanent command
-    ucCommandBuffer[0] = ucCommand;
-    ucCommandBuffer[1] = (unsigned char)(ulValue >> 24);
+    ucCommandBuffer[0] = ucCommand;                                      // the command
+    ucCommandBuffer[1] = (unsigned char)(ulValue >> 24);                 // the argument
     ucCommandBuffer[2] = (unsigned char)(ulValue >> 16);
     ucCommandBuffer[3] = (unsigned char)(ulValue >> 8);
     ucCommandBuffer[4] = (unsigned char)(ulValue);
     ucCommandBuffer[5] = 0;                                              // dummy CRC
-    return (const unsigned char *)ucCommandBuffer;
+    return (const unsigned char *)ucCommandBuffer;                       // return a pointer to the prepared command header
 }
 
-    #if !defined SD_CONTROLLER_AVAILABLE                                // SPI interface is local - SD card interface uses HW specific external routines
+    #if !defined SD_CONTROLLER_AVAILABLE                                 // SPI interface is local - SD card interface uses HW specific external routines
 // Read a sector from SD card into the specified data buffer
 //
 static int fnGetSector(unsigned char *ptrBuf)
@@ -3393,7 +3454,8 @@ static int ut_read_disk(UTDISK *ptr_utDisk)
     return iRtn;
 }
 
-#if defined UTFAT_LFN_READ
+
+#if defined UTFAT_LFN_READ && !defined SDCARD_ACCESS_WITHOUT_UTFAT
 // This routine checks through a chain of long file name entries to see whether there is a match with the reference file or directory name
 // It is called multiple times, once for each possible entry
 //
@@ -3571,24 +3633,24 @@ static int fnMatchLongName(OPEN_FILE_BLOCK *ptrOpenBlock, LFN_ENTRY_STRUCTURE_FA
 }
 #endif
 
-
 // Load a sector if the present sector content is not alread valid
 //
 static int fnLoadSector(UTDISK *ptr_utDisk, unsigned long ulSector)
 {
     if (ptr_utDisk->ulPresentSector != ulSector) {                       // if the requested sector is not the already loaded one
-#if defined UTFAT_WRITE
-        if (ptr_utDisk->usDiskFlags & WRITEBACK_BUFFER_FLAG) {           // if changes have been made to the sector since its read it must be written back
+    #if defined UTFAT_WRITE && !defined SDCARD_ACCESS_WITHOUT_UTFAT
+        if ((ptr_utDisk->usDiskFlags & WRITEBACK_BUFFER_FLAG) != 0) {    // if changes have been made to the sector since its read it must be written back
             while (_utCommitSectorData[ptr_utDisk->ucDriveNumber](ptr_utDisk, ptr_utDisk->ptrSectorData, ptr_utDisk->ulPresentSector) == CARD_BUSY_WAIT) {} // force writeback to finalise the operation
             ptr_utDisk->usDiskFlags &= ~WRITEBACK_BUFFER_FLAG;
         }
-#endif
+    #endif
         ptr_utDisk->ulPresentSector = ulSector;
         return (_utReadDiskSector[ptr_utDisk->ucDriveNumber](ptr_utDisk, ulSector, ptr_utDisk->ptrSectorData)); // read the new sector
     }
     return UTFAT_SUCCESS;
 }
 
+#if !defined SDCARD_ACCESS_WITHOUT_UTFAT
 // Read a part of a sector directly to a buffer (length is maximum 512 bytes)
 //
 static int fnLoadPartialData(UTDISK *ptr_utDisk, unsigned long ulSector, void *ptrBuf, unsigned short usOffset, unsigned short usLength)
@@ -3761,8 +3823,9 @@ static int fnNextSectorCreate(UTDISK *ptr_utDisk, FILE_LOCATION *ptr_location, i
     }
     return UTFAT_SUCCESS;
 }
+#endif
 
-#if defined UTFAT_LFN_WRITE
+#if defined UTFAT_LFN_WRITE && !defined SDCARD_ACCESS_WITHOUT_UTFAT
 static int fnDirectorySectorCreate(UTDISK *ptr_utDisk, FILE_LOCATION *ptr_location)
 {
     unsigned long ulClusterSector;
@@ -3830,7 +3893,7 @@ extern int utUndeleteFile(UTLISTDIRECTORY *ptrListDirectory)
 }
 #endif
 
-
+#if !defined SDCARD_ACCESS_WITHOUT_UTFAT
 // Move to the next entry in a directory - this is a simple increment of ucDirectoryEntry as long as the end of the sector is not reached, in which case
 // the next sector will need to be loaded 
 //
@@ -3842,7 +3905,6 @@ static int fnNextDirectoryEntry(UTDISK *ptr_utDisk, DISK_LOCATION *ptr_location)
     }
     return UTFAT_SUCCESS;
 }
-
 
 static void fnLoadShortFileInfo(UTFILEINFO *ptr_utFileInfo, const DIR_ENTRY_STRUCTURE_FAT32 *ptrDirectoryEntry)
 {
@@ -3884,9 +3946,9 @@ static void fnLoadShortFileInfo(UTFILEINFO *ptr_utFileInfo, const DIR_ENTRY_STRU
     ptr_utFileInfo->usFileData = ((ptrDirectoryEntry->DIR_WrtDate[1] << 8) + ptrDirectoryEntry->DIR_WrtDate[0]);
     ptr_utFileInfo->usFileTime = ((ptrDirectoryEntry->DIR_WrtTime[1] << 8) + ptrDirectoryEntry->DIR_WrtTime[0]);
 }
+#endif
 
-#if defined UTFAT_LFN_READ
-
+#if defined UTFAT_LFN_READ && !defined SDCARD_ACCESS_WITHOUT_UTFAT
 static int fnExtractLongFileName(CHAR cLongFileName[MAX_UTFAT_FILE_NAME], LFN_ENTRY_STRUCTURE_FAT32 *ptrLFN_Entry, unsigned char *ucLongFileNameLength, unsigned char *ucLFN_checksum)
 {
     int i = *ucLongFileNameLength;
@@ -3934,6 +3996,7 @@ static int fnExtractLongFileName(CHAR cLongFileName[MAX_UTFAT_FILE_NAME], LFN_EN
 }
 #endif
 
+#if !defined SDCARD_ACCESS_WITHOUT_UTFAT
 #if defined UTFAT_UNDELETE || defined UTFAT_EXPERT_FUNCTIONS
     static int fnExtractFileDetails(UTDISK *ptr_utDisk, UTFILEINFO *ptr_ut_fileInfo, DISK_LOCATION *ptr_disk_location, DISK_LOCATION *ptr_undelete_disk_location, unsigned char ucListFlags)
 #else
@@ -4077,15 +4140,16 @@ _entry_found:                                                            // entr
 extern int utReadDirectory(UTLISTDIRECTORY *ptr_utListDirectory, UTFILEINFO *ptr_ut_fileInfo)
 {
     UTDISK *ptr_utDisk = &utDisks[ptr_utListDirectory->ptr_utDirObject->ucDrive]; // the disk that the directory is associated with
-#if defined UTFAT_UNDELETE || defined UTFAT_EXPERT_FUNCTIONS
+    #if defined UTFAT_UNDELETE || defined UTFAT_EXPERT_FUNCTIONS
     return (fnExtractFileDetails(ptr_utDisk, ptr_ut_fileInfo, &ptr_utListDirectory->private_disk_location, &ptr_utListDirectory->undelete_disk_location, ptr_utListDirectory->ucListFlags));
-#else
+    #else
     return (fnExtractFileDetails(ptr_utDisk, ptr_ut_fileInfo, &ptr_utListDirectory->private_disk_location));
-#endif
+    #endif
 }
+#endif
 
 
-#if !defined _REMOVE_FORMATTED_OUTPUT                                    // no directory listing possible without formatted output
+#if !defined _REMOVE_FORMATTED_OUTPUT && !defined SDCARD_ACCESS_WITHOUT_UTFAT // no directory listing possible without formatted output
 // Perform a directory listing to a buffer (with options for DOS and FTP styles)
 //
 extern int utListDir(UTLISTDIRECTORY *ptr_utListDirectory, FILE_LISTING *ptrFileListingInfo)
@@ -4284,7 +4348,7 @@ extern int utListDir(UTLISTDIRECTORY *ptr_utListDirectory, FILE_LISTING *ptrFile
 }
 #endif
 
-
+#if !defined SDCARD_ACCESS_WITHOUT_UTFAT
 static UTDIRECTORY utDirectoryObjects[UT_DIRECTORIES_AVAILABLE] = {{0}};
 
 extern UTDIRECTORY *utAllocateDirectory(unsigned char ucDisk, unsigned short usPathLength)
@@ -4319,16 +4383,16 @@ static void fnResetDirectories(unsigned char ucDisk)
             utDirectoryObjects[i].ucDrive = ucDisk;
             if (ptrPath != 0) {
                 utDirectoryObjects[i].ptrDirectoryPath = ptrPath;
-#if defined DISK_C
+    #if defined DISK_C
                 uStrcpy(ptrPath, "C:\\");                                // set root path
-#elif defined DISK_D
+    #elif defined DISK_D
                 uStrcpy(ptrPath, "D:\\");                                // set root path
-#elif defined DISK_E
+    #elif defined DISK_E
                 uStrcpy(ptrPath, "E:\\");                                // set root path
-#endif
-#if DISK_COUNT > 1
+    #endif
+    #if DISK_COUNT > 1
                 *ptrPath += ucDisk;                                      // set the drive name
-#endif
+    #endif
                 utDirectoryObjects[i].usRelativePathLocation = 3;        // the relative path is equal to the root path   
             }
         }
@@ -4723,7 +4787,7 @@ static int _fnHandlePath(OPEN_FILE_BLOCK *ptrOpenBlock, const CHAR *ptrDirPath, 
     if ((ptrOpenBlock->usDirFlags & UTDIR_VALID) == 0) {
         ptrOpenBlock->ulCluster = ptr_utDisk->ulDirectoryBase;           // the first cluster in the root directory
         ptrDirObject->private_disk_location.directory_location.ulCluster = ptrOpenBlock->ulCluster;
-#if defined UTFAT16 || defined UTFAT12
+    #if defined UTFAT16 || defined UTFAT12
         if ((ptrOpenBlock->ulCluster <= 1) && (ptr_utDisk->usDiskFlags & (DISK_FORMAT_FAT12 | DISK_FORMAT_FAT16))) { // if FAT12/FAT16 root folder
             ptrDirObject->private_disk_location.directory_location.ulSector = (ptr_utDisk->utFAT.ucSectorsPerCluster + ptr_utDisk->ulVirtualBaseAddress - (32 - 1));// the sector in which the directory entries begin
         }
@@ -4731,26 +4795,26 @@ static int _fnHandlePath(OPEN_FILE_BLOCK *ptrOpenBlock, const CHAR *ptrDirPath, 
             ptrDirObject->private_disk_location.directory_location.ulSector = (ptrOpenBlock->ulCluster * ptr_utDisk->utFAT.ucSectorsPerCluster); // section referenced to logical base address
             ptrDirObject->private_disk_location.directory_location.ulSector += ptr_utDisk->ulVirtualBaseAddress; // the sector in which the directory entries begin
         }
-#else
+    #else
         ptrDirObject->private_disk_location.directory_location.ulSector = (ptrOpenBlock->ulCluster * ptr_utDisk->utFAT.ucSectorsPerCluster); // section referenced to logical base address
         ptrDirObject->private_disk_location.directory_location.ulSector += ptr_utDisk->ulVirtualBaseAddress; // the sector in which the directory entries begin
-#endif
+    #endif
         ptrDirObject->private_disk_location.ucDirectoryEntry = 0;        // reset the entry index
         uMemcpy(&ptrDirObject->root_disk_location, &ptrDirObject->private_disk_location, sizeof(ptrDirObject->root_disk_location)); // enter the fixed root location
         uMemcpy(&ptrDirObject->public_disk_location, &ptrDirObject->private_disk_location, sizeof(ptrDirObject->root_disk_location)); // ensure that the public entry cannot be used with invalid value
         ptrDirObject->usDirectoryFlags = (UTDIR_ALLOCATED | UTDIR_VALID | UTDIR_REFERENCED);// the entry is now valid
         ptrOpenBlock->iRootDirectory |= ROOT_DIRECTORY_SETTING;          // mark that the (virtual) root has been set
         if (ptrDirObject->ptrDirectoryPath != 0) {                       // if a root path is being used and root is to be set, set also for virtual root location 
-#if defined DISK_C
+    #if defined DISK_C
             uStrcpy(ptrDirObject->ptrDirectoryPath, "C:\\");             // set root path
-#elif defined DISK_D
+    #elif defined DISK_D
             uStrcpy(ptrDirObject->ptrDirectoryPath, "D:\\");             // set root path
-#elif defined DISK_E
+    #elif defined DISK_E
             uStrcpy(ptrDirObject->ptrDirectoryPath, "E:\\");             // set root path
-#endif
-#if DISK_COUNT > 1
+    #endif
+    #if DISK_COUNT > 1
             ptrDirObject->ptrDirectoryPath[0] += ptrDirObject->ucDrive;  // adjust the drive letter
-#endif
+    #endif
             ptrDirObject->usRelativePathLocation = 3;                    // the relative path is equal to the root path
         }
     }
@@ -4798,8 +4862,9 @@ extern int utOpenDirectory(const CHAR *ptrDirPath, UTDIRECTORY *ptrDirObject)
 
     return _utOpenDirectory(&openBlock, ptrDirObject, 0);
 }
+#endif
 
-    #if defined UTFAT_FILE_CACHE_POOL && UTFAT_FILE_CACHE_POOL > 0
+#if defined UTFAT_FILE_CACHE_POOL && UTFAT_FILE_CACHE_POOL > 0
 static FILE_DATA_CACHE *fnGetDataCache(void)
 {
     int i;
@@ -4845,6 +4910,7 @@ static int fnHandleFileDataCache(UTDISK *ptr_utDisk, UTFILE *ptr_utFile, FILE_DA
 }
 #endif
 
+#if !defined SDCARD_ACCESS_WITHOUT_UTFAT
 // Read linear file data content directly to an external buffer
 //
 extern int utReadFile(UTFILE *ptr_utFile, void *ptrBuffer, unsigned short usReadLength)
@@ -4939,8 +5005,9 @@ extern int utLocateDirectory(const CHAR *ptrDirPath, UTLISTDIRECTORY *ptrListDir
     }
     return iReturn;
 }
+#endif
 
-#if defined UTFAT_WRITE
+#if defined UTFAT_WRITE && !defined SDCARD_ACCESS_WITHOUT_UTFAT
 // This routine sets a time and data to a file object - it uses if fixed value if no local date/time is present
 //
 static void fnSetTimeDate(DIR_ENTRY_STRUCTURE_FAT32 *ptrEntry, int iCreation)
@@ -5152,7 +5219,7 @@ static int fnInsertFat12_cluster(FAT12_FAT *ptr_fat12_fat, unsigned long ulClust
 }
 #endif
 
-#if defined UTFAT_WRITE
+#if defined UTFAT_WRITE && !defined SDCARD_ACCESS_WITHOUT_UTFAT
 // Allocate a single new cluster
 //
 static unsigned long fnAllocateCluster(UTDISK *ptr_utDisk, unsigned long ulPresentCluster, unsigned char ucClusterType)
@@ -5359,14 +5426,14 @@ static unsigned long fnAllocateCluster(UTDISK *ptr_utDisk, unsigned long ulPrese
             if (iClusterEntry >= iClusterMax) {
                 break;
             }
-#if defined UTFAT12
+    #if defined UTFAT12
             fat12_fat.iFat12Offset++;
             if (fat12_fat.iNoEntryIncrement == 0) {
                 iClusterEntry++;
             }
-#else
+    #else
             iClusterEntry++;
-#endif
+    #endif
         }
         ucClusterType &= ~UPDATE_FAT_END;                                // the new FAT entry is in a different FAT sector so needs to be modified later
         iClusterEntry = 0;
@@ -5392,7 +5459,7 @@ static int fnCommitInfoChanges(UTDISK *ptr_utDisk)
 #endif
 #endif
 
-#if defined FULL_FAT_SUPPORT || (defined FAT_EMULATION && defined EMULATED_FAT_FILE_NAME_CONTROL)
+#if (defined FULL_FAT_SUPPORT && !defined SDCARD_ACCESS_WITHOUT_UTFAT) || (defined FAT_EMULATION && defined EMULATED_FAT_FILE_NAME_CONTROL)
 static int fnCreateNameParagraph(const CHAR **pptrDirectoryPath, CHAR cDirectoryName[12])
 {
     #if defined UTFAT_LFN_WRITE || (defined FAT_EMULATION && defined FAT_EMULATION_LFN)
@@ -5526,7 +5593,7 @@ static int fnCreateNameParagraph(const CHAR **pptrDirectoryPath, CHAR cDirectory
 }
 #endif
 
-#if defined UTFAT_LFN_READ || (defined FAT_EMULATION && defined FAT_EMULATION_LFN  && defined EMULATED_FAT_FILE_NAME_CONTROL)
+#if (defined UTFAT_LFN_READ && !defined SDCARD_ACCESS_WITHOUT_UTFAT) || (defined FAT_EMULATION && defined FAT_EMULATION_LFN  && defined EMULATED_FAT_FILE_NAME_CONTROL)
 // Calculate the checkum of a short file name alias
 //
 static unsigned char fnLFN_checksum(CHAR *cPtrSFN_alias)
@@ -5541,7 +5608,7 @@ static unsigned char fnLFN_checksum(CHAR *cPtrSFN_alias)
 }
 #endif
 
-#if defined UTFAT_LFN_WRITE || (defined FAT_EMULATION && defined FAT_EMULATION_LFN  && defined EMULATED_FAT_FILE_NAME_CONTROL)
+#if (defined UTFAT_LFN_WRITE && !defined SDCARD_ACCESS_WITHOUT_UTFAT) || (defined FAT_EMULATION && defined FAT_EMULATION_LFN  && defined EMULATED_FAT_FILE_NAME_CONTROL)
     #if defined UTFAT_LFN_WRITE_PATCH
 // Create a short file name alisas that does not represent a valid file name and minimises the risk
 // of causing problems with older systems supporting long file names and causing collision in a directory
@@ -5595,7 +5662,7 @@ static void fnCreateSFN_alias(CHAR cFileName[12])
     #endif
 #endif
 
-#if defined UTFAT_WRITE                                                  // {17}
+#if defined SDCARD_SUPPORT && defined UTFAT_WRITE && !defined SDCARD_ACCESS_WITHOUT_UTFAT // {17}
 // Read the present (SFN) file object to a buffer and mark the original as deleted
 //
 static int fnBackupFreeFileObject(OPEN_FILE_BLOCK *ptr_openBlock, DIR_ENTRY_STRUCTURE_FAT32 *ptr_file_object)
@@ -5613,8 +5680,7 @@ static int fnBackupFreeFileObject(OPEN_FILE_BLOCK *ptr_openBlock, DIR_ENTRY_STRU
 }
 #endif
 
-
-#if (defined UTFAT_LFN_READ && defined UTFAT_LFN_WRITE) || (defined FAT_EMULATION && defined FAT_EMULATION_LFN && defined EMULATED_FAT_FILE_NAME_CONTROL)
+#if (defined UTFAT_LFN_READ && defined UTFAT_LFN_WRITE && !defined SDCARD_ACCESS_WITHOUT_UTFAT) || (defined FAT_EMULATION && defined FAT_EMULATION_LFN && defined EMULATED_FAT_FILE_NAME_CONTROL)
 // Verify that a long file name entry is possible or else move to a location that is possible, which may be the end of the present directory
 //
 static int fnInsertLFN_name(OPEN_FILE_BLOCK *ptr_openBlock, UTFILE *ptr_utFile, int iRename) // {4}
@@ -5874,7 +5940,50 @@ static int fnInsertLFN_name(OPEN_FILE_BLOCK *ptr_openBlock, UTFILE *ptr_utFile, 
 }
 #endif
 
-#if defined UTFAT_WRITE
+#if defined SDCARD_SUPPORT
+extern int fnReadSector(unsigned char ucDisk, unsigned char *ptrBuffer, unsigned long ulSectorNumber)
+{
+    if (ptrBuffer == 0) {                                                // if a zero pointer is given force a load but don't copy to a buffer
+        return (fnLoadSector(&utDisks[ucDisk], ulSectorNumber));
+    }
+    return (_utReadDiskSector[ucDisk](&utDisks[ucDisk], ulSectorNumber, ptrBuffer));
+}
+
+    #if defined UTFAT_MULTIPLE_BLOCK_READ                                // {19}
+// Prepare the read from sectors if there are capabilities to improve the following read speed
+//
+extern int fnPrepareBlockRead(unsigned char ucDisk, unsigned long ulReadBlocks)
+{
+    if (ulBlockReadLength == 0) {                                        // if a multi block read is not already in operations
+        if (ulReadBlocks < 2) {                                          // don't use multiple block command if only one sector is to be read
+            return UTFAT_SUCCESS;
+        }
+        ulBlockReadLength = ulReadBlocks;                                // set the number of blocks to be read
+    }
+    else {                                                               // test abort
+        //ulBlockReadLength = 0x80000000;
+    }
+    return UTFAT_SUCCESS;
+}
+    #endif
+#endif
+
+#if defined SDCARD_SUPPORT && defined UTFAT_WRITE
+// Write a sector with data from a passed buffer
+//
+extern int fnWriteSector(unsigned char ucDisk, unsigned char *ptrBuffer, unsigned long ulSectorNumber)
+{
+    int iResult;
+    UTDISK *ptr_utDisk = &utDisks[ucDisk];
+    while ((iResult = _utCommitSectorData[ucDisk](ptr_utDisk, ptrBuffer, ulSectorNumber)) == CARD_BUSY_WAIT) {}
+    if (ulSectorNumber == ptr_utDisk->ulPresentSector) {                 // {9} if the write was to the present sector the sector buffer cache is also updated
+        uMemcpy(ptr_utDisk->ptrSectorData, ptrBuffer, ptr_utDisk->utFAT.usBytesPerSector);
+    }
+    return iResult;
+}
+#endif
+
+#if defined SDCARD_SUPPORT && !defined SDCARD_ACCESS_WITHOUT_UTFAT && defined UTFAT_WRITE
 // The new file or its new name will be located either at the end of the present directory or else reuse deleted areas of adequate size
 //
 static int fnSetFileLocation(UTFILE *ptr_utFile, OPEN_FILE_BLOCK *ptr_openBlock, /*const CHAR *ptrFilePath,*/ int iRename) // {4}
@@ -5971,7 +6080,7 @@ static int fnCreateFile(OPEN_FILE_BLOCK *ptr_openBlock, UTFILE *ptr_utFile, /*co
 }
 #endif
 
-#if defined UTFAT_EXPERT_FUNCTIONS
+#if defined SDCARD_SUPPORT && defined UTFAT_EXPERT_FUNCTIONS
 static int fnDisplayLFN(DISK_LOCATION *ptrFileLocation, UTDISK *ptr_utDisk)
 {
     DISK_LOCATION dirLocation;
@@ -6145,9 +6254,7 @@ static int fnDisplaySFN(int iFile, UTFILE *ptr_utFile, OPEN_FILE_BLOCK *ptr_open
     fnDebugHex((ulCluster & 0x7f), (WITH_LEADIN | WITH_CR_LF | sizeof(unsigned char)));
     return UTFAT_SUCCESS;
 }
-#endif
 
-#if defined UTFAT_EXPERT_FUNCTIONS
 static void fnDisplayFileInfo(int iFile, const CHAR *ptrFilePath, UTFILE *ptr_utFile, OPEN_FILE_BLOCK *ptr_openBlock)
 {
     if (iFile != 0) {
@@ -6187,6 +6294,13 @@ static void fnDisplayFileInfo(int iFile, const CHAR *ptrFilePath, UTFILE *ptr_ut
 #endif
 
 #if defined FULL_FAT_SUPPORT
+extern const UTDISK *fnGetDiskInfo(unsigned char ucDisk)
+{
+    return &utDisks[ucDisk];
+}
+#endif
+
+#if defined FULL_FAT_SUPPORT && !defined SDCARD_ACCESS_WITHOUT_UTFAT
 // Internal function to open a file or directory object
 //
 static int _utOpenFile(const CHAR *ptrFilePath, UTFILE *ptr_utFile, unsigned long ulAccessMode)
@@ -6318,7 +6432,7 @@ extern int utOpenFile(const CHAR *ptrFilePath, UTFILE *ptr_utFile, UTDIRECTORY *
     return _utOpenFile(ptrFilePath, ptr_utFile, ulAccessMode);
 }
 
-#if defined UTFAT_WRITE                                                  // allow operation without write support
+#if defined UTFAT_WRITE  && !defined SDCARD_ACCESS_WITHOUT_UTFAT         // allow operation without write support
     #if defined UTFAT_LFN_READ && (defined UTFAT_LFN_DELETE || defined UTFAT_LFN_WRITE)
 // If the file name being deleted this routine deletes the complete long file name part before the short file name alias (it doesn't delete file content)
 //
@@ -6392,36 +6506,38 @@ extern int utRenameFile(const CHAR *ptrFilePath, UTFILE *ptr_utFile)
 }
 #endif
 
+#if !defined SDCARD_ACCESS_WITHOUT_UTFAT
 // A close only has real significance when the file was opened as a managed file, or when data caching or delayed directory object write is used
 //
 extern int utCloseFile(UTFILE *ptr_utFile)
 {
     int iReturn = UTFAT_SUCCESS;
-#if defined UTMANAGED_FILE_COUNT && UTMANAGED_FILE_COUNT > 0             // allow SD card interface to be used without UTMANAGED_FILE_COUNT
+    #if defined UTMANAGED_FILE_COUNT && UTMANAGED_FILE_COUNT > 0         // allow SD card interface to be used without UTMANAGED_FILE_COUNT
     if (ptr_utFile->ulFileMode & UTFAT_MANAGED_MODE) {
         utManagedFiles[ptr_utFile->iFileHandle].managed_owner = 0;       // free the managed file entry
     }
-#endif
-#if defined UTFAT_FILE_CACHE_POOL && UTFAT_FILE_CACHE_POOL > 0
+    #endif
+    #if defined UTFAT_FILE_CACHE_POOL && UTFAT_FILE_CACHE_POOL > 0
     if (ptr_utFile->ptrFileDataCache != 0) {                             // if we are working with a data cache check whether data has to be saved to disk
         FILE_DATA_CACHE *ptrDataCache = ptr_utFile->ptrFileDataCache;
-    #if defined UTFAT_WRITE
+        #if defined UTFAT_WRITE
         if (ptrDataCache->ucFileCacheState & FILE_BUFFER_MODIFIED) {     // if modified data waiting to be saved
             int iDrive = ptr_utFile->ucDrive;
             while (_utCommitSectorData[iDrive](&utDisks[iDrive], ptrDataCache->ucFileDataCache, ptrDataCache->ulFileCacheSector) == CARD_BUSY_WAIT) {} // commit the data to the disk
         }
-    #endif
+        #endif
         ptrDataCache->ucFileCacheState &= ~(FILE_BUFFER_MODIFIED);       // free the cache for use by other files
     }
-#endif
-#if defined UTFAT_WRITE
+    #endif
+    #if defined UTFAT_WRITE
     if (ptr_utFile->ulFileMode & _FILE_CHANGED) {                        // the file's content was changed while the file was open so we write the information on close
         iReturn = fnCommitFileInfo(ptr_utFile, &utDisks[ptr_utFile->ucDrive]);
     }
-#endif
+    #endif
     uMemset(ptr_utFile, 0, sizeof(UTFILE));                              // delete the file object
     return iReturn;
 }
+#endif
 
 
 #if defined UTMANAGED_FILE_COUNT && UTMANAGED_FILE_COUNT > 0             // allow SD card interface to be used without UTMANAGED_FILE_COUNT
@@ -6500,7 +6616,7 @@ static int fnFileLocked(UTFILE *ptr_utFile)
 }
 #endif
 
-#if defined UTFAT_WRITE
+#if defined UTFAT_WRITE && !defined SDCARD_ACCESS_WITHOUT_UTFAT
 extern int utWriteFile(UTFILE *ptr_utFile, unsigned char *ptrBuffer, unsigned short usLength)
 {
     unsigned short usWriteLength;
@@ -6608,6 +6724,7 @@ extern int utWriteFile(UTFILE *ptr_utFile, unsigned char *ptrBuffer, unsigned sh
 }
 #endif
 
+#if !defined SDCARD_ACCESS_WITHOUT_UTFAT
 // Change the directory location with reference to its present position
 //
 extern int utChangeDirectory(const CHAR *ptrDirPath, UTDIRECTORY *ptrDirObject)
@@ -6715,10 +6832,10 @@ extern int utSeek(UTFILE *ptr_utFile, unsigned long ulPosition, int iSeekType)
     }
     return iResult;
 }
+#endif
 
 #if defined UTFAT_WRITE                                                  // support writing as well as reading
     #if defined NAND_FLASH_FAT
-
 static int utCommitSectorData(UTDISK *ptr_utDisk, void *ptrBuffer, unsigned long ulSectorNumber)
 {
     static unsigned long ulSector;
@@ -6775,6 +6892,7 @@ static int utDeleteSector(UTDISK *ptr_utDisk, unsigned long ulSectorNumber)
 }
     #endif
 
+#if !defined SDCARD_ACCESS_WITHOUT_UTFAT
 static int fnDeleteClusterChain(unsigned long ulClusterStart, unsigned char ucDrive, int iDestroyClusters)
 {
     UTDISK *ptr_utDisk = &utDisks[ucDrive];
@@ -7139,8 +7257,9 @@ extern int utTruncateFile(UTFILE *ptr_utFile)
     }
     return UTFAT_SUCCESS;
 }
+#endif
 
-    #if defined UTFAT_EXPERT_FUNCTIONS
+    #if defined UTFAT_EXPERT_FUNCTIONS && !defined SDCARD_ACCESS_WITHOUT_UTFAT
 // Change a file or directory attribute
 //
 extern int utFileAttribute(UTFILE *ptr_utFile, int iNewAttributes)
@@ -7187,6 +7306,7 @@ extern int utFileAttribute(UTFILE *ptr_utFile, int iNewAttributes)
 #endif
 
 
+#if !defined SDCARD_ACCESS_WITHOUT_UTFAT
 // This routine is called to count the free clusters and update the disk information
 //
 extern int utFreeClusters(unsigned char ucDisk, UTASK_TASK owner_task)
@@ -7195,14 +7315,14 @@ extern int utFreeClusters(unsigned char ucDisk, UTASK_TASK owner_task)
         return MISSING_USER_TASK_REFERENCE;                              // the user must pass a task reference
     }
     ulActiveFreeClusterCount[ucDisk] = 0;                                // reset the free-cluster counter
-#if defined UTFAT12
+    #if defined UTFAT12
     ulMaximumClusterCount[ucDisk] = utDisks[ucDisk].utFAT.ulClusterCount;// maximum clusters to check
-#endif
-#if defined FAT12_DEVELOPMENT                                            // FAT12 requires scanning in the forward direction
+    #endif
+    #if defined FAT12_DEVELOPMENT                                        // FAT12 requires scanning in the forward direction
     ulClusterSectorCheck[ucDisk] = utDisks[ucDisk].utFAT.ulFAT_start;    // set to first FAT sector
-#else
+    #else
     ulClusterSectorCheck[ucDisk] = (utDisks[ucDisk].utFAT.ulFAT_start + (utDisks[ucDisk].utFAT.ulFatSize - 1)); // set to final FAT sector
-#endif
+    #endif
     iMemoryOperation[ucDisk] |= _COUNTING_CLUSTERS;
     cluster_task[ucDisk] = owner_task;
     uTaskerStateChange(OWN_TASK, UTASKER_ACTIVATE);                      // start cluster counting operation
@@ -7228,17 +7348,10 @@ extern int uMatchFileExtension(UTFILEINFO *ptrFileInfo, const CHAR *ptrExtension
     }
     return -1;                                                           // file type doesn't match
 }
+#endif
 
 // Low level access routines
 //
-extern int fnReadSector(unsigned char ucDisk, unsigned char *ptrBuffer, unsigned long ulSectorNumber)
-{
-    if (ptrBuffer == 0) {                                                // if a zero pointer is given force a load but don't copy to a buffer
-        return (fnLoadSector(&utDisks[ucDisk], ulSectorNumber));
-    }
-    return (_utReadDiskSector[ucDisk](&utDisks[ucDisk], ulSectorNumber, ptrBuffer));
-}
-
 #if defined UTFAT_WRITE                                                  // allow operation without write support
 
 #if defined UTFAT_MULTIPLE_BLOCK_WRITE
@@ -7265,27 +7378,9 @@ extern int fnPrepareBlockWrite(unsigned char ucDisk, unsigned long ulWriteBlocks
     return UTFAT_SUCCESS;
 }
 #endif
-
-// Write a sector with data from a passed buffer
-//
-extern int fnWriteSector(unsigned char ucDisk, unsigned char *ptrBuffer, unsigned long ulSectorNumber)
-{
-    int iResult;
-    UTDISK *ptr_utDisk = &utDisks[ucDisk];
-    while ((iResult = _utCommitSectorData[ucDisk](ptr_utDisk, ptrBuffer, ulSectorNumber)) == CARD_BUSY_WAIT) {}
-    if (ulSectorNumber == ptr_utDisk->ulPresentSector) {                 // {9} if the write was to the present sector the sector buffer cache is also updated
-        uMemcpy(ptr_utDisk->ptrSectorData, ptrBuffer, ptr_utDisk->utFAT.usBytesPerSector);
-    }
-    return iResult;
-}
 #endif
 
-extern const UTDISK *fnGetDiskInfo(unsigned char ucDisk)
-{
-    return &utDisks[ucDisk];
-}
-
-#if defined HTTP_ROOT || defined FTP_ROOT
+#if !defined SDCARD_ACCESS_WITHOUT_UTFAT && (defined HTTP_ROOT || defined FTP_ROOT)
 extern int utServer(UTDIRECTORY *ptr_utDirectory, unsigned long ulServerType)
 {
     if (ptr_utDirectory == 0) {                                          // change setting
@@ -7330,7 +7425,7 @@ extern int utServer(UTDIRECTORY *ptr_utDirectory, unsigned long ulServerType)
 }
 #endif
 
-#if defined SDCARD_DETECT_INPUT_INTERRUPT
+#if defined SDCARD_DETECT_INPUT_INTERRUPT && !defined SDCARD_FIXED
 // Interrupt call-back on change in SD-card presence
 //
 static void sdcard_detection_change(void)
@@ -7379,7 +7474,8 @@ static void fnPrepareDetectInterrupt(void)
 #endif
 #endif
 
-
+// FAT emulation
+//
 #if defined FAT_EMULATION                                                // {12}
 static const unsigned char *fnGetDataPointer(int iDisk, unsigned long ulSector, int *ptr_iFileReference)
 {

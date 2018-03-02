@@ -3331,7 +3331,7 @@ extern void fnSimPers(void)
     #endif
                     break;
                 case KE_PORTA_BIT5:
-                    if ((SIM_SOPT0 & SIM_SOPT_RSTPE) != 0) {
+                    if ((SIM_SOPT0 & SIM_SOPT_RSTPE) != 0) {             // default pin function as reset
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTA][iPin] = PA_5_RESET;
                     }

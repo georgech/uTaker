@@ -213,18 +213,18 @@ static void fnInitIRQ(void)
     interrupt_setup.int_priority   = PRIORITY_KEYBOARD_INT;              // interrupt priority level
     interrupt_setup.int_port       = KE_PORTC;                           // the port that the interrupt input is on (KE_PORTA, KE_PORTB, KE_PORTC and KE_PORTD are the same)
     interrupt_setup.int_port_bits  = (KE_PORTC_BIT4);                    // the IRQ input connected (switch 1)
-        #elif defined FRDM_KE02Z || defined FRDM_KE02Z40M || defined TRK_KEA64 || defined TRK_KEA128 || defined FRDM_KEAZN32Q64 || defined FRDM_KEAZN64Q64 || defined FRDM_KEAZN128Q80
+        #elif defined FRDM_KE02Z || defined FRDM_KE02Z40M || defined TRK_KEA64 || defined TRK_KEA128 || defined FRDM_KEAZN32Q64 || defined FRDM_KEAZ64Q64 || defined FRDM_KEAZ128Q80
     // Keyboard
     //
-    interrupt_setup.int_type       = KEYBOARD_INTERRUPT;                 // define keyboard interrupt rather than IRQ
-    interrupt_setup.int_priority   = PRIORITY_KEYBOARD_INT;              // interrupt priority level
-    interrupt_setup.int_port       = KE_PORTD;                           // the port that the interrupt input is on (KE_PORTA, KE_PORTB, KE_PORTC and KE_PORTD are the same)
-    interrupt_setup.int_port_bits  = (KE_PORTD_BIT5 | KE_PORTB_BIT3);    // the IRQs input connected
+  //interrupt_setup.int_type       = KEYBOARD_INTERRUPT;                 // define keyboard interrupt rather than IRQ
+  //interrupt_setup.int_priority   = PRIORITY_KEYBOARD_INT;              // interrupt priority level
+  //interrupt_setup.int_port       = KE_PORTD;                           // the port that the interrupt input is on (KE_PORTA, KE_PORTB, KE_PORTC and KE_PORTD are the same)
+  //interrupt_setup.int_port_bits  = (KE_PORTD_BIT5 | KE_PORTB_BIT3);    // the IRQs input connected
     // IRQ
     //
-  //interrupt_setup.int_priority   = PRIORITY_PORT_IRQ_INT;              // interrupt priority level
-  //interrupt_setup.int_port       = KE_PORTA;                           // the port that the interrupt input is on (when using PTA5 as IRQ SIM_SOPT_KE_DEFAULT must be configured to disable the reset function on the pin)
-  //interrupt_setup.int_port_bits  = KE_PORTA_BIT5;                      // the IRQ input connected
+    interrupt_setup.int_priority   = PRIORITY_PORT_IRQ_INT;              // interrupt priority level
+    interrupt_setup.int_port       = KE_PORTA;                           // the port that the interrupt input is on (when using PTA5 as IRQ SIM_SOPT_KE_DEFAULT must be configured to disable the reset function on the pin)
+    interrupt_setup.int_port_bits  = KE_PORTA_BIT5;                      // the IRQ input connected
         #elif defined FRDM_KE04Z || defined FRDM_KE06Z
     // Keyboard
     //

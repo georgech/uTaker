@@ -404,11 +404,10 @@ extern void fnDMA_BufferReset(int iChannel, int iAction)
         {
             int iSize = 1;                                               // default is single byte size
             unsigned long ulBufferLength;
-            KINETIS_DMA_TDC *ptrDMA_TCD;
+            KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;;
             ATOMIC_PERIPHERAL_BIT_REF_CLEAR(DMA_ERQ, iChannel);          // disable DMA operation on the channel
-            ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
-          //DMA_ERQ &= ~(DMA_ERQ_ERQ0 << iChannel);            
-            ptrDMA_TCD += iChannel;
+            register unsigned long ulTransferLength = ptrDMA_TCD->DMA_TCD_CITER_ELINK;
+            ptrDMA_TCD += iChannel;                                      // move to the DMA channel being used
             if (ptrDMA_TCD->DMA_TCD_DLASTSGA == 0) {                     // input buffer needs to be reset
                 if ((ptrDMA_TCD->DMA_TCD_ATTR & DMA_TCD_ATTR_SSIZE_16) != 0) {
                     iSize = 2;
@@ -416,7 +415,7 @@ extern void fnDMA_BufferReset(int iChannel, int iAction)
                 else if ((ptrDMA_TCD->DMA_TCD_ATTR & DMA_TCD_ATTR_SSIZE_32) != 0) {
                     iSize = 4;
                 }
-                ptrDMA_TCD->DMA_TCD_SADDR += (ptrDMA_TCD->DMA_TCD_CITER_ELINK * iSize); // project to the end of the transfer that is remaining
+                ptrDMA_TCD->DMA_TCD_SADDR += (ulTransferLength * iSize); // project to the end of the transfer that is remaining
                 ulBufferLength = -(signed long)(ptrDMA_TCD->DMA_TCD_SLAST);
                 ptrDMA_TCD->DMA_TCD_SADDR -= ulBufferLength;             // set back to start of the input buffer
             }
@@ -427,14 +426,13 @@ extern void fnDMA_BufferReset(int iChannel, int iAction)
                 else if ((ptrDMA_TCD->DMA_TCD_ATTR & DMA_TCD_ATTR_DSIZE_32) != 0) {
                     iSize = 4;
                 }
-                ptrDMA_TCD->DMA_TCD_DADDR += (ptrDMA_TCD->DMA_TCD_CITER_ELINK * iSize); // project to the end of the transfer that is remaining
+                ptrDMA_TCD->DMA_TCD_DADDR += (ulTransferLength * iSize); // project to the end of the transfer that is remaining
                 ulBufferLength = -(signed long)(ptrDMA_TCD->DMA_TCD_DLASTSGA);
                 ptrDMA_TCD->DMA_TCD_DADDR -= ulBufferLength;             // set back to start of the output buffer
             }
-            ptrDMA_TCD->DMA_TCD_BITER_ELINK = ptrDMA_TCD->DMA_TCD_CITER_ELINK = (signed short)(ulBufferLength/ iSize); // set the cycle length
+            ptrDMA_TCD->DMA_TCD_BITER_ELINK = ptrDMA_TCD->DMA_TCD_CITER_ELINK = (signed short)(ulBufferLength/iSize); // set the cycle length
             if (iAction != DMA_BUFFER_RESET) {                           // if not a buffer reset without continued operation
                 ATOMIC_PERIPHERAL_BIT_REF_SET(DMA_ERQ, iChannel);        // restart DMA from the start of the buffer
-              //DMA_ERQ |= (DMA_ERQ_ERQ0 << iChannel);
             }
         }
         break;
@@ -816,9 +814,9 @@ extern void *uMemcpy(void *ptrTo, const void *ptrFrom, size_t Size)      // {9}
         }
     #endif
     }
-#if defined AVOID_PARTITION_BURST
+    #if defined AVOID_PARTITION_BURST
 _do_simple_copy:
-#endif
+    #endif
     // Normal memcpy() solution
     //
     while (Size-- != 0) {

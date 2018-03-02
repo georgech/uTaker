@@ -18,6 +18,7 @@
     30.10.2015 Add emulated FAT support (FAT_EMULATION)                  {2}
     17.01.2016 Add utFileAttribute()                                     {3}
     18.12.2017 Add disk setup for internal flash and emulated FAT combination {4}
+    02.03.2018 Added CSD structs                                         {5}
 
 */
 
@@ -191,6 +192,39 @@ typedef struct stFILEINFO
     unsigned long ulNextFreeCluster;
     unsigned char ucCardSpecificData[16];                                // CSD register content (128 bits)
 } FILEINFO;
+
+typedef struct _PACK stCSD_1_0                                           // {5}
+{
+    unsigned char ucCDC_STRUCTURE;                                       // 0x00
+    unsigned char ucTAAC;                                                // data read access-time
+    unsigned char ucNSAC;                                                // data read access-time in clock cycles
+    unsigned char ucTRAN_SPEED;                                          // maximum data transfer rate (0x32 or 0x5a)
+    unsigned char ucCCC_READ_BL_LEN[2];                                  // card command classes (12 bits) and maximum read data block length (4 bits)
+    unsigned char ucVarious1[6];                                         // READ_BL_PARTIAL, WRITE_BLK_MISALIGN, READ_BLK_MISALIGN, DSR_IMP flags, C_SIZE, VDD_R_CURR_MIN/MAX, VDD_W_CURR_MIN/MAX, C_SIZE_MULT, ERASE_BLK_EN, SECTOR_SIZE, WP_GRP_SIZE
+    unsigned char ucVarious2[2];                                         // WP_GRP_ENABLE, R2W_FACTOR, WRITE_BL_LEN, WRITE_BL_PARTIAL
+    unsigned char ucFile;                                                // FILE_FORMAT_GRP, COPY, PERM_WRITE_PROTECT, TMP_WRITE_PROTECT, FILE_FORMAT
+    unsigned char ucCRC;                                                 // CSD CRC
+} CSD_1_0;
+
+typedef struct _PACK stCSD_2_0                                           // {5}
+{
+    unsigned char ucCDC_STRUCTURE;                                       // 0x40
+    unsigned char ucTAAC;                                                // data read access-time (0x0e)
+    unsigned char ucNSAC;                                                // data read access-time in clock cycles (0x00)
+    unsigned char ucTRAN_SPEED;                                          // maximum data transfer rate (0x32, 0x5a, 0x0b, 0x2b)
+    unsigned char ucCCC_READ_BL_LEN[2];                                  // card command classes (12 bits) and maximum read data block length (4 bits)
+    unsigned char ucFlags;                                               // READ_BL_PARTIAL, WRITE_BLK_MISALIGN, READ_BLK_MISALIGN, DSR_IMP flags
+    unsigned char ucC_SIZE[3];                                           // device size (22 bits)
+    unsigned char ucERASE_PROT[2];                                       // ERASE_BLK_EN, SECTOR_SIZE, WP_GRP_SIZE
+    unsigned char ucVarious[2];                                          // WP_GRP_ENABLE, R2W_FACTOR, WRITE_BL_LEN, WRITE_BL_PARTIAL
+    unsigned char ucFile;                                                // FILE_FORMAT_GRP, COPY, PERM_WRITE_PROTECT, TMP_WRITE_PROTECT, FILE_FORMAT
+    unsigned char ucCRC;                                                 // CSD CRC
+} CSD_2_0;
+
+#define CSD_2_MAX_DATA_RATE_25M      0x32
+#define CSD_2_MAX_DATA_RATE_50M      0x5a
+#define CSD_2_MAX_DATA_RATE_100M     0x0b
+#define CSD_2_MAX_DATA_RATE_220M     0x2b
 
 typedef struct _PACK stDIR_ENTRY_STRUCTURE_FAT32
 {
@@ -710,10 +744,14 @@ extern int uFileManagedDelete(int fileHandle);
 
 
 #define VOLTAGE_2_7__3_6                 0x01
+#define VOLTAGE_LOW_VOLTAGE_RANGE        0x02
 #define CHECK_PATTERN                    0xaa
 #define CS_SEND_IF_COND_CMD8             0x87
 
 #define HIGH_CAPACITY_SD_CARD_MEMORY     0x40
+
+#define ACMD6_BUS_WIDTH_1                0x00
+#define ACMD6_BUS_WIDTH_4                0x02
 
 #define CS_GO_IDLE_STATE_CMD0            0x95
 #define CS_SEND_OP_COND_ACMD_CMD41       0x00

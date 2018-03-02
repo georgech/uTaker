@@ -341,12 +341,16 @@ static __interrupt void _usb_hs_otg_isr(void)
     static unsigned char ucUSBHS_state = 0;
     unsigned char ucSetupBuffer[8];
     unsigned long ulInterrupts;
+    register unsigned long ulUSB_StatusRegister;
+    register unsigned long ulUSB_InterruptEnableRegister;
 
-    while ((ulInterrupts = (USBHS_USBSTS & USBHS_USBINTR)) != 0) {       // while enabled interrupt pending
-        USBHS_USBSTS = ulInterrupts;                                     // clear all interrupts that will be handled
-    #if defined _WINDOWS
-        USBHS_USBSTS = 0;
-    #endif
+    FOREVER_LOOP() {                                                     // while enabled interrupt pending
+        ulUSB_InterruptEnableRegister = USBHS_USBINTR;                   // present state of interrupt enable register - interrupts that we want to handle
+        ulUSB_StatusRegister = USBHS_USBSTS;                             // present state of interrupt status register - interrupts that may be pending
+        if ((ulInterrupts = (ulUSB_InterruptEnableRegister & ulUSB_StatusRegister)) == 0) { // if there are no pending interrupt that we are interested in
+            break;                                                       // leave the interrupt handeler
+        }
+        WRITE_ONE_TO_CLEAR(USBHS_USBSTS, ulInterrupts);                  // clear all interrupts that will be handled
         if ((ulInterrupts & USBHS_USBINTR_URE) != 0) {                   // handle USB reset interrupt
             fnDeInitEndpoints();                                         // abort any active enpoints and free transfer buffers
             USBHS_EPCR0 = (USBHS_EPCR_RXE | USBHS_EPCR_RXR | USBHS_EPCR_TXE | USBHS_EPCR_TXR); // reset data toggle (synchronise) on endpoint 0
@@ -671,10 +675,7 @@ extern void fnActivateHWEndpoint(unsigned char ucEndpointType, unsigned char ucE
         USBHS_USBINTR &= ~(USBHS_USBINTR_SLE);                           // disable suspend interrupt when not configured
         return;
     }
-    USBHS_USBSTS = USBHS_USBINTR_SLE;                                    // clear possible pending suspend interrupt
-        #if defined _WINDOWS
-    USBHS_USBSTS &= ~(USBHS_USBINTR_SLE);
-        #endif
+    WRITE_ONE_TO_CLEAR(USBHS_USBSTS, USBHS_USBINTR_SLE);                 // clear possible pending suspend interrupt
     USBHS_USBINTR |= (USBHS_USBINTR_SLE);                                // since we have just been configured, enable suspend interrupt
 
     #if defined USB_SIMPLEX_ENDPOINTS

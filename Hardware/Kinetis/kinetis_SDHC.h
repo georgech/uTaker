@@ -16,6 +16,7 @@
     27.07.2013 Ensure that SDHC read is not performed using a command that can't save to misaligned memory {47}
     18.12.2013 Add monitoring of SDHC transmission buffer and break on stall {62}
     18.12.2013 Reset SDHC flags at re-initialisation to ensure no old error flags remain {63}
+    02.03.2018 Add block read support and optimised sector read making use of FIFO and optional DMA {64}
 
 */
 
@@ -36,6 +37,14 @@ extern void fnSetSD_clock(unsigned long ulSpeed)
 
 // Initialise the SD controllers interface with low speed clock during initailiation sequence
 //
+#if defined KINETIS_K65 || defined KINETIS_K66
+    #define READ_WATERMARK  128
+    #define WRITE_WATERMARK 1
+#else
+    #define READ_WATERMARK  1
+    #define WRITE_WATERMARK 1
+#endif
+
 extern void fnInitSDCardInterface(void)
 {
     POWER_UP_ATOMIC(3, SDHC);                                            // power up the SDHC controller
@@ -50,7 +59,7 @@ extern void fnInitSDCardInterface(void)
     _CONFIG_PERIPHERAL(E, 2, (PE_2_SDHC0_DCLK | PORT_DSE_HIGH));         // SDHC_DCLK on PE.2 (alt. function 4)
 
     SDHC_VENDOR = 0;                                                     // disable external DMA request
-    SDHC_WML = (0x00010001);                                             // FIFO watermark set to 1 for read and write
+    SDHC_WML = ((WRITE_WATERMARK << 16) | READ_WATERMARK);               // FIFO watermark setting for read and write
     SDHC_PROCTL = (SDHC_PROCTL_EMODE_LITTLE);                            // set little endian mode
     fnSetSD_clock(SDHC_SYSCTL_SPEED_SLOW);                               // set initial speed to about 390kHz (between 100k and 400k)
 
@@ -76,12 +85,12 @@ extern int fnSendSD_command(const unsigned char ucCommand[6], unsigned char *ucR
     else {
         switch (iCommandState) {
         case 0:
-            while (SDHC_PRSSTAT & SDHC_PRSSTAT_CIHB) {                   // wait for idle command line
+            while ((SDHC_PRSSTAT & SDHC_PRSSTAT_CIHB) != 0) {            // wait for idle command line
     #if defined _WINDOWS
                 SDHC_PRSSTAT &= ~SDHC_PRSSTAT_CIHB;
     #endif
             }
-            SDHC_CMDARG = ((ucCommand[1] << 24) | (ucCommand[2] << 16) | (ucCommand[3] << 8) | ucCommand[4]); // set the argument of the command
+            SDHC_CMDARG = ((ucCommand[1] << 24) | (ucCommand[2] << 16) | (ucCommand[3] << 8) | ucCommand[4]); // set the argument of the command argument register
             switch (ucCommand[0]) {                                      // case on command type
             case GO_IDLE_STATE_CMD0:
                 SDHC_XFERTYP  = ((ucCommand[0] << SDHC_XFERTYP_CMDINX_SHIFT) | SDHC_XFERTYP_DTDSEL_WRITE | SDHC_XFERTYP_RSPTYP_NONE | SDHC_XFERTYP_RSPTYP_48 | SDHC_XFERTYP_CMDTYP_NORM); // launch the command (no response)
@@ -107,6 +116,9 @@ extern int fnSendSD_command(const unsigned char ucCommand[6], unsigned char *ucR
                 break;
     #endif
             case WRITE_BLOCK_CMD24:                                      // single sector write
+    #if READ_WATERMARK != 1
+                SDHC_WML = ((WRITE_WATERMARK << 16) | 1);                // set read FIFO watermark setting to 1 during write otherwise it stops the buffer write enable flag from being set
+    #endif
                 SDHC_DSADDR = 0;
                 SDHC_BLKATTR = ((1 << SDHC_BLKATTR_BLKCNT_SHIFT) | 512); // 1 block with 512 byte size
                 SDHC_XFERTYP  = ((ucCommand[0] << SDHC_XFERTYP_CMDINX_SHIFT) | SDHC_XFERTYP_AC12EN | SDHC_XFERTYP_CCCEN | SDHC_XFERTYP_CICEN | SDHC_XFERTYP_RSPTYP_NONE | SDHC_XFERTYP_CMDTYP_NORM | SDHC_XFERTYP_BCEN | SDHC_XFERTYP_DTDSEL_WRITE | SDHC_XFERTYP_MSBSEL | SDHC_XFERTYP_DPSEL | SDHC_XFERTYP_RSPTYP_48); // launch the command with a write
@@ -115,26 +127,51 @@ extern int fnSendSD_command(const unsigned char ucCommand[6], unsigned char *ucR
     #endif
                 break;
             case READ_SINGLE_BLOCK_CMD17:                                // single sector read
-                {
-                    SDHC_DSADDR = 0;
-                    SDHC_BLKATTR = ((1 << SDHC_BLKATTR_BLKCNT_SHIFT) | 512); // 1 block with 512 byte size
-                    SDHC_XFERTYP  = ((READ_SINGLE_BLOCK_CMD17 << SDHC_XFERTYP_CMDINX_SHIFT) | SDHC_XFERTYP_AC12EN | SDHC_XFERTYP_CCCEN | SDHC_XFERTYP_CICEN | SDHC_XFERTYP_RSPTYP_NONE | SDHC_XFERTYP_RSPTYP_NONE | SDHC_XFERTYP_CMDTYP_NORM | SDHC_XFERTYP_BCEN | SDHC_XFERTYP_DTDSEL_READ | SDHC_XFERTYP_MSBSEL | SDHC_XFERTYP_DPSEL | SDHC_XFERTYP_RSPTYP_48); // launch the command with a read
+                SDHC_DSADDR = 0;                                         // reset DMA system address register 
+                SDHC_BLKATTR = ((1 << SDHC_BLKATTR_BLKCNT_SHIFT) | 512); // 1 block with 512 byte size
+                SDHC_XFERTYP  = ((READ_SINGLE_BLOCK_CMD17 << SDHC_XFERTYP_CMDINX_SHIFT) | // launch the command
+                    SDHC_XFERTYP_AC12EN |
+                    SDHC_XFERTYP_CCCEN |                                 // enable CRC
+                    SDHC_XFERTYP_CICEN |                                 // enable command index check - check the CRC in the response
+                    SDHC_XFERTYP_CMDTYP_NORM |                           // not a special command (suspend, resume or abort)
+                    SDHC_XFERTYP_DTDSEL_READ |                           // read card to host
+                    SDHC_XFERTYP_DPSEL |                                 // data line is to be used
+                    SDHC_XFERTYP_RSPTYP_48);                             // response length is 48 (don't check busy)
     #if defined _WINDOWS
-                    SDHC_IRQSTAT = (SDHC_IRQSTAT_CC | SDHC_IRQSTAT_TC);
+                SDHC_IRQSTAT = (SDHC_IRQSTAT_CC | SDHC_IRQSTAT_TC);
     #endif
-                }
                 break;
-    #if defined UTFAT_MULTIPLE_BLOCK_WRITE
+    #if defined UTFAT_MULTIPLE_BLOCK_READ                                // {64}
+            case READ_MULTIPLE_BLOCK_CMD18:                              // multiple block read
+                SDHC_DSADDR = 0;                                         // reset DMA system address register 
+                SDHC_BLKATTR = ((*(unsigned long *)ptrReturnData << SDHC_BLKATTR_BLKCNT_SHIFT) | 512); // defined block count with 512 byte size
+                SDHC_XFERTYP  = ((READ_MULTIPLE_BLOCK_CMD18 << SDHC_XFERTYP_CMDINX_SHIFT) | // launch the command
+                    SDHC_XFERTYP_AC12EN |                                // automatic termination after the defined block count is read
+                    SDHC_XFERTYP_CCCEN |                                 // enable CRC
+                    SDHC_XFERTYP_CICEN |                                 // enable command index check - check the CRC in the response
+                    SDHC_XFERTYP_CMDTYP_NORM |                           // not a special command (suspend, resume or abort)
+                    SDHC_XFERTYP_BCEN |                                  // enable block count (not an infinite transfer)
+                    SDHC_XFERTYP_DTDSEL_READ |                           // read card to host
+                    SDHC_XFERTYP_MSBSEL |                                // multiple blocks
+                    SDHC_XFERTYP_DPSEL |                                 // data line is to be used
+                    SDHC_XFERTYP_RSPTYP_48);                             // response length is 48 bytes (don't check busy)
+        #if defined _WINDOWS
+                SDHC_IRQSTAT = (SDHC_IRQSTAT_CC | SDHC_IRQSTAT_TC);
+        #endif
+                break;
+    #endif
+    #if defined UTFAT_MULTIPLE_BLOCK_WRITE || defined UTFAT_MULTIPLE_BLOCK_READ // {64}
             case STOP_TRANSMISSION_CMD12:                                // terminate multiple block mode
               //SDHC_PROCTL |= (SDHC_PROCTL_SABGREQ);                    // request stopping block transmission (when not all previously specified blocks have been sent)
-                while (!(SDHC_IRQSTAT & SDHC_IRQSTAT_TC)) {              // wait for any active transfer to complete
+              //while ((SDHC_IRQSTAT & SDHC_IRQSTAT_TC) == 0) {          // wait for any active transfer to complete
         #if defined _WINDOWS
-                    SDHC_IRQSTAT |= SDHC_IRQSTAT_TC;
+              //    SDHC_IRQSTAT |= SDHC_IRQSTAT_TC;
         #endif
-                }
+              //}
               //SDHC_PROCTL &= ~(SDHC_PROCTL_SABGREQ);
                 SDHC_IRQSTAT = (SDHC_IRQSTAT_TC | SDHC_IRQSTAT_BWR | SDHC_IRQSTAT_AC12E); // reset flags
-
+                // Fall through interntionally
+                //
     #endif
           //case PRE_ERASE_BLOCKS_CMD23:                                 // prepare multiple block write
             default:
@@ -154,7 +191,7 @@ extern int fnSendSD_command(const unsigned char ucCommand[6], unsigned char *ucR
     #endif
         case 6:
             do {                                                         // loop until the command has been transferred
-                if (SDHC_IRQSTAT & SDHC_IRQSTAT_CC) {                    // command has completed
+                if ((SDHC_IRQSTAT & SDHC_IRQSTAT_CC) != 0) {             // command has completed
                     if (GO_IDLE_STATE_CMD0 == ucCommand[0]) {            // this command receives no response
                         *ucResult = R1_IN_IDLE_STATE;                    // dummy response for compatibility
                     }
@@ -169,7 +206,7 @@ extern int fnSendSD_command(const unsigned char ucCommand[6], unsigned char *ucR
                             uTaskerStateChange(TASK_MASS_STORAGE, UTASKER_GO); // switch to polling mode of operation
                             return CARD_BUSY_WAIT;
                         }
-                        else if (SDHC_IRQSTAT & SDHC_IRQSTAT_CCE) {      // CRC error detected
+                        else if ((SDHC_IRQSTAT & SDHC_IRQSTAT_CCE) != 0) { // CRC error detected
                             if (ucCommand[0] == SEND_OP_COND_ACMD_CMD41) { // this responds with command value 0x3f and CRC-7 0xff
                                 *ucResult = 0;                           // for compatibility
                             }
@@ -205,7 +242,7 @@ extern int fnSendSD_command(const unsigned char ucCommand[6], unsigned char *ucR
                     iCommandYieldCount++;;
                     return CARD_BUSY_WAIT;                               // poll up to 20 times before yielding
                 }
-            } while (*ucResult & SD_CARD_BUSY);                          // poll the card until it is no longer indicating busy and returns the value
+            } while ((*ucResult & SD_CARD_BUSY) != 0);                   // poll the card until it is no longer indicating busy and returns the value
             if (ptrReturnData != 0) {                                    // if the caller requests data, read it here
                 if ((ucCommand[0] == SEND_CSD_CMD9) || (ucCommand[0] == SEND_CID_CMD2)) { // exception requiring 16 bytes
     #if defined _WINDOWS
@@ -244,12 +281,12 @@ extern int fnSendSD_command(const unsigned char ucCommand[6], unsigned char *ucR
                     *ptrReturnData++ = (unsigned char)SDHC_CMDRSP0;
                     *ptrReturnData   = 0;                                // checksum not received from controller
                 }
-                else if (ucCommand[0] != WRITE_MULTIPLE_BLOCK_CMD25) {   // WRITE_MULTIPLE_BLOCK_CMD25 passes value but doesn't want a response
+                else {
     #if defined _WINDOWS
                     if (ucCommand[0] != SEND_OP_COND_ACMD_CMD41) {
                         _fnSimSD_write(0xff);_fnSimSD_write(0xff);       // for compatibility
                     }
-                    SDHC_CMDRSP0  = (_fnSimSD_write(0xff) << 24);
+                    SDHC_CMDRSP0  = (_fnSimSD_write(0xff) << 24);        // get the response
                     SDHC_CMDRSP0 |= (_fnSimSD_write(0xff) << 16);
                     SDHC_CMDRSP0 |= (_fnSimSD_write(0xff) << 8);
                     SDHC_CMDRSP0 |=  _fnSimSD_write(0xff);
@@ -282,7 +319,10 @@ static unsigned long ulSectorWriteCount = 0;
 extern int fnGetSector(unsigned char *ptrBuf)
 {
     unsigned long *ptrData = (unsigned long *)ptrBuf;                    // the Kinetis driver ensures that the buffer is long word aligned
-    int i = (512/sizeof(unsigned long));                                 // long word in a 512 byte sector
+#if READ_WATERMARK != 128
+    unsigned long *ptrTerminate = (ptrData + (512 / sizeof(unsigned long))); // end of sector buffer
+#endif
+    int iFifoFill = 0;
     int iMonitorRead;                                                    // {62}
     #if defined _COMPILE_KEIL                                            // {47}
     unsigned long ulTempBuffer[512/sizeof(unsigned long)];               // long word aligned intermediate buffer
@@ -298,35 +338,60 @@ extern int fnGetSector(unsigned char *ptrBuf)
     #if defined _WINDOWS
     _fnSimSD_write(0xff);                                                // dummy for simulator compatibility
     #endif
-    while (SDHC_PRSSTAT & SDHC_PRSSTAT_DLA) {                            // ensure that the previous command has completed
+    while ((SDHC_PRSSTAT & (SDHC_PRSSTAT_DLA | SDHC_PRSSTAT_SDOFF)) == SDHC_PRSSTAT_DLA) { // ensure that the previous command has completed (in multiple block reads the clock may be gated off to pause and so this is accepted)
     #if defined _WINDOWS
         SDHC_PRSSTAT &= ~SDHC_PRSSTAT_DLA;
     #endif
     };
     ulSectorReadCount++;                                                 // counter to indicate how many times a sector read has been executed
-    while (i--) {                                                        // for each long word to be read
+    #if READ_WATERMARK != 128
+    FOREVER_LOOP() {
+    #endif
         iMonitorRead = 0;                                                // {62}
-        if (SDHC_IRQSTAT & (SDHC_IRQSTAT_DEBE | SDHC_IRQSTAT_DCE | SDHC_IRQSTAT_DTOE)) { // check for read errors
-            SDHC_IRQSTAT = (SDHC_IRQSTAT_DEBE | SDHC_IRQSTAT_DCE | SDHC_IRQSTAT_DTOE | SDHC_IRQSTAT_BRR); // reset error flags
-            return UTFAT_DISK_READ_ERROR;                                // return error
-        }
-        while ((SDHC_PRSSTAT & SDHC_PRSSTAT_BREN) == 0) {                // wait for the buffer read enable flag to become set (room for write in output buffer)
+        while ((SDHC_PRSSTAT & SDHC_PRSSTAT_BREN) == 0) {                // wait for the buffer read enable flag to become set (fifo ready to be read)
     #if defined _WINDOWS
             SDHC_PRSSTAT |= SDHC_PRSSTAT_BREN;
     #endif
+            if ((SDHC_IRQSTAT & (SDHC_IRQSTAT_DEBE | SDHC_IRQSTAT_DCE | SDHC_IRQSTAT_DTOE)) != 0) { // check for read errors
+                SDHC_IRQSTAT = (SDHC_IRQSTAT_DEBE | SDHC_IRQSTAT_DCE | SDHC_IRQSTAT_DTOE | SDHC_IRQSTAT_BRR); // reset error flags
+                return UTFAT_DISK_READ_ERROR;                            // return error
+            }
             if (++iMonitorRead >= 1000) {                                // {62} if the buffer stalls (can happen when SD card removed during operation)
                 return UTFAT_DISK_READ_ERROR;                            // return with error
             }
         }
-    #if defined _WINDOWS
-        SDHC_DATPORT =   _fnSimSD_write(0xff);
-        SDHC_DATPORT |= (_fnSimSD_write(0xff) << 8);
-        SDHC_DATPORT |= (_fnSimSD_write(0xff) << 16);
-        SDHC_DATPORT |= (_fnSimSD_write(0xff) << 24);
+
+    #if (READ_WATERMARK == 128) && defined SDCARD_RX_DMA_CHANNEL && !defined DEVICE_WITHOUT_DMA && !defined _WINDOWS // {64}
+        if (((CAST_POINTER_ARITHMETIC)ptrData & 0x3) == 0) {             // if long word aligned we can use DMA transfer
+            // Note that the DMA copy is not necessarily faster than the loop copy but it allow interrupts to be handled without slowing the read
+            //
+            fnConfigDMA_buffer(SDCARD_RX_DMA_CHANNEL, 0, 512, SDHC_DATPORT_ADDR, ptrData, (DMA_DIRECTION_INPUT | DMA_LONG_WORDS | DMA_SINGLE_CYCLE | DMA_SW_TRIGGER_WAIT_TERMINATION), 0, 0); // configure the transfer, start and wait for termination
+        }
+        else {
     #endif
-        *ptrData++ = SDHC_DATPORT;                                       // this access should be long word aligned for maximum efficiency
+            while (++iFifoFill <= READ_WATERMARK) {                      // {64} tight loop for read of available fifo content
+    #if defined _WINDOWS                                                 // read data from SD card simulator
+                SDHC_DATPORT = _fnSimSD_write(0xff);
+                SDHC_DATPORT |= (_fnSimSD_write(0xff) << 8);
+                SDHC_DATPORT |= (_fnSimSD_write(0xff) << 16);
+                SDHC_DATPORT |= (_fnSimSD_write(0xff) << 24);
+    #endif
+                *ptrData++ = SDHC_DATPORT;                               // this access should be long word aligned for maximum efficiency            
+            }
+    #if READ_WATERMARK != 128
+            if (ptrData >= ptrTerminate) {                               // complete data read
+                break;
+            }
+            iFifoFill = 0;
     }
+    #endif
+    #if (READ_WATERMARK == 128) && defined SDCARD_RX_DMA_CHANNEL && !defined DEVICE_WITHOUT_DMA && !defined _WINDOWS
+        }
+    #endif
     while ((SDHC_IRQSTAT & SDHC_IRQSTAT_TC) == 0) {                      // wait for complete transfer to complete
+        if ((SDHC_PRSSTAT & SDHC_PRSSTAT_CCIHB) != 0) {                  // during block reads the data inhibit remains set and we use it to continue
+            break;
+        }
     #if defined _WINDOWS
         SDHC_IRQSTAT |= SDHC_IRQSTAT_TC;
     #endif
@@ -362,15 +427,12 @@ extern int fnPutSector(unsigned char *ptrBuf, int iMultiBlock)
 {
     unsigned long *ptrData = (unsigned long *)ptrBuf;
     int i = (512/sizeof(unsigned long));
-//unsigned long ulStartTime = uTaskerSystemTick;
-//static unsigned long ulMaxDelay = 0;
-//_SETBITS(A, DEMO_LED_2);
-ulSectorWriteCount++;
+    ulSectorWriteCount++;
     #if defined _WINDOWS
     _fnSimSD_write(0xfe);                                                // dummy for simulator compatibility
     #endif
-    while (i--) {                                                        // for each long word of the sector buffer to be written
-        while (!(SDHC_PRSSTAT & SDHC_PRSSTAT_BWEN)) {                    // wait until there is buffer space when the tranmission buffer fills
+    while (i-- != 0) {                                                   // for each long word of the sector buffer to be written
+        while ((SDHC_PRSSTAT & SDHC_PRSSTAT_BWEN) == 0) {                // wait until there is buffer space when the transmission buffer fills
     #if defined _WINDOWS
             SDHC_PRSSTAT |= SDHC_PRSSTAT_BWEN;
     #endif
@@ -388,7 +450,7 @@ ulSectorWriteCount++;
     #endif
     if (iMultiBlock == 0) {                                              // when performing multiple block transfers the transfer complete is not waited for
       //int iMonitorWrite = 0;
-        while (!(SDHC_IRQSTAT & SDHC_IRQSTAT_TC)) {                      // wait for transfer to complete
+        while ((SDHC_IRQSTAT & SDHC_IRQSTAT_TC) == 0) {                  // wait for transfer to complete
         #if defined _WINDOWS
             SDHC_IRQSTAT |= SDHC_IRQSTAT_TC;
         #endif
@@ -397,17 +459,9 @@ ulSectorWriteCount++;
           //}
         }
         SDHC_IRQSTAT = (SDHC_IRQSTAT_TC | SDHC_IRQSTAT_BWR | SDHC_IRQSTAT_AC12E); // reset flags
-     /* if (uTaskerSystemTick > (ulStartTime + 1) ) {                // monitor > 50ms delays
-            if ((uTaskerSystemTick - ulStartTime) > ulMaxDelay) {
-                ulMaxDelay = (uTaskerSystemTick - ulStartTime);
-                fnDebugMsg("Record = ");
-                fnDebugDec(ulMaxDelay, WITH_CR_LF);
-            }
-            else {
-                fnDebugMsg("L ");
-            }
-        }*/
     }
-//_CLEARBITS(A, DEMO_LED_2);
+    #if READ_WATERMARK != 1
+    SDHC_WML = ((WRITE_WATERMARK << 16) | READ_WATERMARK);               // return read watermark setting after write
+    #endif
     return UTFAT_SUCCESS;
 }

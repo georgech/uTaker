@@ -340,14 +340,21 @@
         #define CLOCK_MUL_1          24                                  // PLL1 multiplication factor to achieve operating frequency of 120MHz [suitable for FS USB] (x16 to x47 possible - divided by 2 at VCO output) (Neets - BDR)
     #endif
 #elif defined TWR_K60N512 || defined TWR_K60D100M || defined TWR_K53N512
-    #define EXTERNAL_CLOCK       50000000                                // this must be 50MHz in order to use Ethernet in RMII mode
-    #define _EXTERNAL_CLOCK      EXTERNAL_CLOCK
-    #if defined USB_INTERFACE                                            // when using USB generate 96MHz clock so that a 48Mhz clock can be generated from it
-        #define CLOCK_DIV        25                                      // input must be divided to 2MHz..4MHz range (/1 to /25 possible - /1 to /8 for FPU parts)
+    #define CRYSTAL_FREQUENCY    16000000                                // 16 MHz crystal
+    #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
+  //#define EXTERNAL_CLOCK       50000000                                // this must be 50MHz in order to use Ethernet in RMII mode
+  //#define _EXTERNAL_CLOCK      EXTERNAL_CLOCK
+    #if defined CRYSTAL_FREQUENCY
+        #define CLOCK_DIV        8                                       // input must be divided to 2MHz..4MHz range (/1 to /25 possible - /1 to /8 for FPU parts)
         #define CLOCK_MUL        48                                      // the PLL multiplication factor to achieve operating frequency of 100MHz (x24 to x55 possible)
     #else
-        #define CLOCK_DIV        16                                      // input must be divided to 2MHz..4MHz range (/1 to /25 possible - /1 to /8 for FPU parts)
-        #define CLOCK_MUL        32                                      // the PLL multiplication factor to achieve operating frequency of 100MHz (x24 to x55 possible)
+        #if defined USB_INTERFACE                                        // when using USB generate 96MHz clock so that a 48Mhz clock can be generated from it
+            #define CLOCK_DIV        25                                  // input must be divided to 2MHz..4MHz range (/1 to /25 possible - /1 to /8 for FPU parts)
+            #define CLOCK_MUL        48                                  // the PLL multiplication factor to achieve operating frequency of 100MHz (x24 to x55 possible)
+        #else
+            #define CLOCK_DIV        16                                  // input must be divided to 2MHz..4MHz range (/1 to /25 possible - /1 to /8 for FPU parts)
+            #define CLOCK_MUL        32                                  // the PLL multiplication factor to achieve operating frequency of 100MHz (x24 to x55 possible)
+        #endif
     #endif
 #elif defined KWIKSTIK
     #define CRYSTAL_FREQUENCY    4000000                                 // 4 MHz crystal
@@ -2164,9 +2171,20 @@
     #endif
     #define POWER_DOWN_SD_CARD()                                         // remove power from SD card interface
 
-    #define SDHC_SYSCTL_SPEED_SLOW  (SDHC_SYSCTL_SDCLKFS_64 | SDHC_SYSCTL_DVS_5) // 375kHz when 120MHz clock
-    #define SDHC_SYSCTL_SPEED_FAST  (SDHC_SYSCTL_SDCLKFS_2 | SDHC_SYSCTL_DVS_3) // 20MHz when 120MHz clock
+    #if CORE_CLOCK == 180000000
+        #define SDHC_SYSCTL_SPEED_SLOW  (SDHC_SYSCTL_SDCLKFS_64 | SDHC_SYSCTL_DVS_8) // 351kHz when 180MHz clock
+        #define SDHC_SYSCTL_SPEED_FAST  (SDHC_SYSCTL_SDCLKFS_2 | SDHC_SYSCTL_DVS_2) // 45MHz when 180MHz clock
+        #define SDHC_SYSCTL_SPEED_SUPER_FAST  (SDHC_SYSCTL_SDCLKFS_2 | SDHC_SYSCTL_DVS_1) // 90MHz when 180MHz clock
+    #else
+        #define SDHC_SYSCTL_SPEED_SLOW  (SDHC_SYSCTL_SDCLKFS_64 | SDHC_SYSCTL_DVS_5) // 375kHz when 120MHz clock
+        #define SDHC_SYSCTL_SPEED_FAST  (SDHC_SYSCTL_SDCLKFS_2 | SDHC_SYSCTL_DVS_2) // 30MHz when 120MHz clock
+        #define SDHC_SYSCTL_SPEED_SUPER_FAST  (SDHC_SYSCTL_SDCLKFS_2 | SDHC_SYSCTL_DVS_1) // 60MHz when 120MHz clock
+    #endif
     #define SET_SPI_SD_INTERFACE_FULL_SPEED() fnSetSD_clock(SDHC_SYSCTL_SPEED_FAST); SDHC_PROCTL |= SDHC_PROCTL_DTW_4BIT
+    #define SET_SPI_SD_INTERFACE_FAST_SPEED() fnSetSD_clock(SDHC_SYSCTL_SPEED_SUPER_FAST); SDHC_PROCTL |= SDHC_PROCTL_DTW_4BIT
+    #if defined FRDM_K66F
+        #define SDCARD_RX_DMA_CHANNEL      14                           // use DMA copy from SDHC fifo to read buffer on this DMA channel
+    #endif
 
     #define DEL_USB_SYMBOL()                                             // control display of USB enumeration - clear
     #define SET_USB_SYMBOL()                                             // control display of USB enumeration - set

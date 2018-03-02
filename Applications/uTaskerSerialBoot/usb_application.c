@@ -16,6 +16,7 @@
     This application is the same as the USB application in the uTaskerV1.4 project - state 20.7.2015,
     whereby the USB-MSD model is used to allow USB-MSD (on SD card) to be operated whilst in the boot loader
     14.01.2018 Block USB-MSD further command handling until complete write data has been received {1}
+    02.03.2018 Add local option to read SD card directly to USB output buffer in order to save copy steps {2}
 
 */
 
@@ -27,6 +28,9 @@
 #include "config.h"
 
 #if (defined USB_INTERFACE && defined USE_USB_MSD && defined SDCARD_SUPPORT)
+
+#define BYPASS_READ_BUFFER                                               // {2} read from SD card directly into USB transmission buffer
+//#define READ_SPECULATION_BUFFERS            8                          // additional speculative block reads which can be used to increase overall read speed
 
 /* =================================================================== */
 /*                          local definitions                          */
@@ -224,6 +228,14 @@ static unsigned char  ucCollectingMode = 0;
     static const UTDISK *ptrDiskInfo[DISK_COUNT] = {0};
     static USB_MASS_STORAGE_CSW csw = {{'U', 'S', 'B', 'S'}, {0}, {0}, CSW_STATUS_COMMAND_PASSED };
     static unsigned char ucActiveLUN = DISK_D;
+    #if defined BYPASS_READ_BUFFER                                       // {2}
+        USBQUE *ptrUsbMSD_Queue = 0;                                     // USB-MSD output queue
+        #if defined READ_SPECULATION_BUFFERS && (READ_SPECULATION_BUFFERS > 0)
+            static unsigned long ulSpeculationBuffers[READ_SPECULATION_BUFFERS][512/sizeof(unsigned long)] = {{0}};
+            static unsigned long ulSpeculationAdr = 0;
+            static unsigned long ulCache = 0;
+        #endif
+    #endif
 #endif
 
 #if defined USB_STRING_OPTION && defined USB_RUN_TIME_DEFINABLE_STRINGS
@@ -429,7 +441,9 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
                 }
 #endif
                 fnDebugMsg("USB Reset\n\r");                             // display that the USB bus has been reset
+#if defined DEL_USB_SYMBOL
                 DEL_USB_SYMBOL();                                        // optionally display the new USB state
+#endif
                 break;
 
             case EVENT_USB_SUSPEND:                                      // a suspend condition has been detected. A bus powered device should reduce consumption to <= 500uA or <= 2.5mA (high power device)
@@ -460,13 +474,17 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
 #endif
                 fnSetUSBConfigState(USB_DEVICE_SUSPEND, 0);              // set all endpoint states to suspended
                 fnDebugMsg("USB Suspended\n\r");
+#if defined DEL_USB_SYMBOL
                 DEL_USB_SYMBOL();                                        // optionally display the new USB state
+#endif
                 break;
 
             case EVENT_USB_RESUME:                                       // a resume sequence has been detected so full power consumption can be resumed
                 fnSetUSBConfigState(USB_DEVICE_RESUME, 0);               // remove suspended state from all endpoints
                 fnDebugMsg("USB Resume\n\r");
+#if defined SET_USB_SYMBOL
                 SET_USB_SYMBOL();                                        // optionally display the new USB state
+#endif
 #if defined USE_USB_HID_MOUSE
                 iUSB_mouse_state = 1;                                    // mark that the mouse function is active
                 uTaskerMonoTimer(OWN_TASK, MOUSE_INTERVAL, T_MOUSE_ACTION); // start polling the USB state since the USB connection has resumed
@@ -576,7 +594,9 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
                     fnDebugMsg("Enumerated (");                          // the interface has been activated and enumeration has completed
                     fnDebugDec(ucEndpointConfiguration, 0);              // the configuration
                     fnDebugMsg(")\n\r");
+#if defined SET_USB_SYMBOL
                     SET_USB_SYMBOL();                                    // display connection in LCD, on LED etc.
+#endif
 #if defined USB_HOST_SUPPORT
                     fnConfigureApplicationEndpoints(ucEndpointConfiguration); // configure endpoints according to configuration
                     iUSB_MSD_OpCode = 0;
@@ -714,7 +734,10 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
             ulWriteBlock -= Length;
             iContent += Length;
             if (iContent >= 512) {                                       // input buffer is complete
-                fnWriteSector(ucActiveLUN, ucBuffer, ulLogicalBlockAdr++); // commit the buffer content to the media
+    #if defined UTFAT_WRITE                                              // if no write support is enabled the writes to disk are ignored
+                fnWriteSector(ucActiveLUN, ucBuffer, ulLogicalBlockAdr); // commit the buffer content to the media
+    #endif
+                ulLogicalBlockAdr++;
                 iContent = 0;                                            // reset intermediate buffer
                 if (ulWriteBlock != 0) {                                 // block not complete
                     uTaskerStateChange(OWN_TASK, UTASKER_ACTIVATE);      // yield after a write when further data is expected but schedule again immediately to read any remaining queue content
@@ -786,7 +809,30 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
                             ulReadBlock = ((ptrRead->ucTransferLength[0] << 8) | ptrRead->ucTransferLength[1]); // the total number of blocks to be returned
                         }
     #if defined UTFAT_MULTIPLE_BLOCK_READ
+        #if defined READ_SPECULATION_BUFFERS && (READ_SPECULATION_BUFFERS > 0)
+                        if ((ulLogicalBlockAdr != 0) && (ulReadBlock >= 8)) { // on larger block reads we add speculative buffer reads (we don't allow starting at sector 0)
+                            ulSpeculationAdr = (ulLogicalBlockAdr + ulReadBlock); // the cached content
+                            ulReadBlock += READ_SPECULATION_BUFFERS;     // we will read additional blocks to cache since we may be able to speed up following reads with them
+                        }
+                        else {
+                            ulSpeculationAdr = 0;
+                        }
+                        if (ulCache != 0) {                              // if there is already cached data that will be used instead of card reads
+                            unsigned long ulReadBlockLength = ulReadBlock;
+                            if (ulLogicalBlockAdr == ulCache) {          // if there is a cache match
+                                ulReadBlockLength -= READ_SPECULATION_BUFFERS; // reduce the block count that will be read from the card
+                            }
+                            else {
+                                ulCache = 0;                             // since there will ne no match we invalidate the cache
+                            }
+                            fnPrepareBlockRead(ucActiveLUN, ulReadBlockLength);
+                        }
+                        else {
+                            fnPrepareBlockRead(ucActiveLUN, ulReadBlock);// since we know that there will be a read from one or more blocks we can prepare the disk so that it can read faster
+                        }
+        #else
                         fnPrepareBlockRead(ucActiveLUN, ulReadBlock);    // since we know that there will be a read from one or more blocks we can prepare the disk so that it can read faster
+        #endif
     #endif
                         fnContinueMedia();
                         continue;                                        // the transfer has not completed so don't send termination stage yet
@@ -1248,23 +1294,78 @@ static void fnRawHIDPolled(unsigned char ucEndpoint)
 //
 static void fnContinueMedia(void)
 {
-    QUEUE_TRANSFER buffer_space = fnWrite(USBPortID_MSD, 0, 0);          // check whether there is space available in the USB output buffer to queue
+    int iResult;
+    QUEUE_TRANSFER buffer_space;
+    #if defined BYPASS_READ_BUFFER                                       // {2}
+    // When a transfer starts it is always aligned at the start of the output buffer
+    // - the buffer length is a multiple of the 512 byte sector size
+    // - the usual transmitter handling is performed locally to bypass copying data to the output queue since it is written there directly from the SD card read
+    //
+    QUEQUE *USB_queue = &(ptrUsbMSD_Queue->USB_queue);
+    buffer_space = (USB_queue->buf_length - USB_queue->chars);           // the amount of space in the USB-MSD output buffer that could be filled (on entry)
+    #else
+    buffer_space = fnWrite(USBPortID_MSD, 0, 0);                         // check whether there is space available in the USB output buffer to queue data to
+    #endif
     while ((ulReadBlock != 0) && (buffer_space >= 512)) {                // send as many blocks as possible as long as the output buffer has space
-        if (UTFAT_SUCCESS == fnReadSector(ucActiveLUN, 0, ulLogicalBlockAdr)) { // read a sector from the disk
+    #if defined READ_SPECULATION_BUFFERS && (READ_SPECULATION_BUFFERS > 0)
+        if ((ulCache != 0) && (ulLogicalBlockAdr >= ulCache) && (ulLogicalBlockAdr < (ulCache + READ_SPECULATION_BUFFERS))) {
+            iResult = UTFAT_SUCCESS;
+            uMemcpy(USB_queue->put, &ulSpeculationBuffers[ulLogicalBlockAdr - ulCache][0], 512); // copy from cache to the USB buffer withot needing to access the SD card
+        }
+        else {
+    #endif
+    #if defined BYPASS_READ_BUFFER                                       // {2}
+            iResult = fnReadSector(ucActiveLUN, USB_queue->put, ulLogicalBlockAdr);  // read a sector from the disk directly to the USB-MSD output buffer
+    #else
+            iResult = fnReadSector(ucActiveLUN, 0, ulLogicalBlockAdr);   // read a sector from the disk to the disk's sector buffer
+    #endif
+    #if defined READ_SPECULATION_BUFFERS && (READ_SPECULATION_BUFFERS > 0)
+        }
+    #endif
+        if (UTFAT_SUCCESS == iResult) {
+    #if defined BYPASS_READ_BUFFER                                       // {2}
+            USB_queue->put += 512;                                       // increment the put pointer and handle circular buffer overflow
+            if (USB_queue->put >= USB_queue->buffer_end) {
+                USB_queue->put = USB_queue->QUEbuffer;
+            }
+            uDisable_Interrupt();                                        // protect the count value during modification
+                USB_queue->chars += 512;                                 // the new amount of data waiting to be sent (the USB driver can start using this if it is already active)
+                if ((ptrUsbMSD_Queue->endpoint_control->ucState & TX_ACTIVE) == 0) { // if transmission is already in progress don't initiate any more activity because the USB interrupt drier will do it
+                    fnStartUSB_send(ptrUsbMSD_Queue->endpoint_control->ucEndpointNumber, ptrUsbMSD_Queue, 512); // start sending message content since the USB driver was not active
+                }
+            uEnable_Interrupt();                                         // end protected region
+    #else
             fnWrite(USBPortID_MSD, ptrDiskInfo[ucActiveLUN]->ptrSectorData, 512); // send it to the USB output queue
-            buffer_space -= 512;
-            ulLogicalBlockAdr++;
+    #endif
+            buffer_space -= 512;                                         // less USB-MSD output buffer space is now available
+            ulLogicalBlockAdr++;                                         // move to the next sector
         }
         else {
             // Error reading media
             //
         }
-        ulReadBlock--;                                                   // one less block to be sent
+        ulReadBlock--;                                                   // one less block to be prepared for transmission
+    #if defined READ_SPECULATION_BUFFERS && (READ_SPECULATION_BUFFERS > 0)
+        while ((ulSpeculationAdr != 0) && (ulReadBlock <= READ_SPECULATION_BUFFERS)) { // data to collect has been sent - if enabled we can now continue with some speculative reads
+            if (UTFAT_SUCCESS == fnReadSector(ucActiveLUN, (unsigned char *)&ulSpeculationBuffers[READ_SPECULATION_BUFFERS - ulReadBlock][0], ulLogicalBlockAdr)) { // read a sector from the disk into the cache buffers
+                ulLogicalBlockAdr++;
+            }
+            else {
+                // Error reading media
+                //
+            }
+            if (--ulReadBlock == 0) {                                    // speculative reads have completed
+                ulCache = ulSpeculationAdr;                              // mark that the cache contains valid data
+                buffer_space = (USB_queue->buf_length - USB_queue->chars); // the amount of space in the USB-MSD output buffer that could still be filled
+                break;                                                   // cache has been filled
+            }
+        }
+    #endif
     }
     if (ulReadBlock == 0) {                                              // all blocks have been read and put to the output queue
-        if (buffer_space >= sizeof(csw)) {
+        if (buffer_space >= sizeof(csw)) {                               // as long as there is enough buffer space for the CSW stage
             fnWrite(USBPortID_MSD, (unsigned char *)&csw, sizeof(csw));  // close with CSW stage
-            return;
+            return;                                                      // transfer complete
         }
     }
     if (buffer_space < 512) {                                            // if there is too little buffer space for a complete sector
@@ -2442,12 +2543,15 @@ static void fnConfigureApplicationEndpoints(void)
         #endif
     tInterfaceParameters.usb_callback = mass_storage_callback;           // allow receptions to be 'peeked' by call-back
     tInterfaceParameters.queue_sizes.RxQueueSize = 512;                  // optional input queue (used only when no call-back defined) and large enough to hold a full sector
-    tInterfaceParameters.queue_sizes.TxQueueSize = 1024;                 // additional tx buffer
+    tInterfaceParameters.queue_sizes.TxQueueSize = (1024 * 8);           // additional tx buffer (set to multiple of 512)
         #if defined WAKE_BLOCKED_USB_TX
     tInterfaceParameters.low_water_level = (tInterfaceParameters.queue_sizes.TxQueueSize/2); // TX_FREE event on half buffer empty
         #endif
     tInterfaceParameters.owner_task = OWN_TASK;                          // wake the USB task on receptions
     USBPortID_MSD = fnOpen(TYPE_USB, 0, &tInterfaceParameters);          // open the endpoints with defined configurations (initially inactive)
+        #if defined BYPASS_READ_BUFFER                                   // {2}
+    ptrUsbMSD_Queue = (USBQUE *)que_ids[USBPortID_MSD - 1].output_buffer_control; // set to output control block
+        #endif
     #endif
     #if defined USE_USB_HID_MOUSE || defined USE_USB_HID_KEYBOARD
     tInterfaceParameters.usEndpointSize = 8;                             // endpoint queue size (2 buffers of this size will be created for reception)
