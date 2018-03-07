@@ -29,6 +29,7 @@
     12.01.2015 Perform write enable for SPI_FLASH_S25FL1_K (for KL/KE driver compatibility) {200}
     19.08.2017 Correct calculation of start address of preceding multiple memory device {201}
     13.10.2017 Replace KINETIS_KE dependancy by FLASH_CONTROLLER_FTMRE dependancy
+    07.03.2018 Add 25AA160 SPI EEPROM support                            {202}
 
 */
 
@@ -43,6 +44,9 @@
 
 #if defined SPI_SW_UPLOAD || defined SPI_FLASH_FAT || (defined SPI_FILE_SYSTEM && defined FLASH_FILE_SYSTEM)
     #define SPI_FLASH_ENABLED 
+#endif
+#if (defined SPI_EEPROM_FILE_SYSTEM && defined FLASH_FILE_SYSTEM)
+    #define SPI_EEPROM_ENABLED 
 #endif
 
 /* =================================================================== */
@@ -804,6 +808,41 @@ static MAX_FILE_LENGTH fnDeleteSPI(ACCESS_DETAILS *ptrAccessDetails)
 }
     #endif
 
+    #if defined SPI_EEPROM_ENABLED                                       // {202}
+// This routine reads data from the defined device into a buffer. The access details inform of the length to be read (already limited to maximum possible length for the device)
+// as well as the address in the specific device
+//
+static void fnReadSPI_EEPROM(ACCESS_DETAILS *ptrAccessDetails, unsigned char *ptrBuffer)
+{
+    fnSPI_EEPROM_command(EEPROM_READ_DATA_BYTES, ptrAccessDetails->ulOffset, _EXTENDED_CS ptrBuffer, ptrAccessDetails->BlockLength);
+}
+
+// This routine writes data from a buffer to an area in SPI Flash (the caller has already defined the data to a particular area and device)
+//
+static void fnWriteSPI_EEPROM(ACCESS_DETAILS *ptrAccessDetails, unsigned char *ptrBuffer)
+{
+    MAX_FILE_LENGTH Length = ptrAccessDetails->BlockLength;
+    unsigned long Destination = ptrAccessDetails->ulOffset;
+    unsigned short usDataLength;
+    unsigned short usPageNumber = (unsigned short)(Destination/SPI_FLASH_PAGE_LENGTH); // the page the address is in
+    unsigned short usPageOffset = (unsigned short)(Destination - (usPageNumber * SPI_FLASH_PAGE_LENGTH)); // offset in the page
+    while (Length != 0) {
+        usDataLength = (unsigned short)Length;
+        if (usDataLength > (SPI_EEPROM_PAGE_LENGTH - usPageOffset)) {
+            usDataLength = (SPI_EEPROM_PAGE_LENGTH - usPageOffset);
+        }
+        fnSPI_EEPROM_command(EEPROM_WRITE_ENABLE, 0, _EXTENDED_CS 0, 0); // write enable
+        fnSPI_EEPROM_command(PAGE_PROG, ((usPageNumber * SPI_EEPROM_PAGE_LENGTH)) | usPageOffset, _EXTENDED_CS ptrBuffer, usDataLength); // copy new content
+        Length -= usDataLength;
+        ptrBuffer += usDataLength;
+        usPageNumber++;
+        usPageOffset = 0;
+    }
+    fnSPI_EEPROM_command(EEPROM_WRITE_DISABLE, 0, _EXTENDED_CS 0, 0); // write disable (this will generally not be necessary since it is automatically set after each successful write operation=
+}
+
+    #endif
+
     #if !defined ONLY_INTERNAL_FLASH_STORAGE
 
 // Search for the memory type that the starting address is in, return the type and restrict the largest length that can be read,written, erased from that location
@@ -889,8 +928,17 @@ extern int fnEraseFlashSector(unsigned char *ptrSector, MAX_FILE_LENGTH Length)
             }
             break;
         #endif
-        #if defined SPI_EEPROM_FILE_SYSTEM
+        #if defined SPI_EEPROM_ENABLED                                   // {202}
         case _STORAGE_SPI_EEPROM:
+        {
+            unsigned char ucErased[SPI_EEPROM_PAGE_LENGTH];
+            MAX_FILE_LENGTH PageBoundaryOffset = (MAX_FILE_LENGTH)(((CAST_POINTER_ARITHMETIC)(AccessDetails.ulOffset))%SPI_EEPROM_PAGE_LENGTH);
+            Length += PageBoundaryOffset;                                // include length back to start of page
+            ptrSector -= PageBoundaryOffset;                             // set to page boundary
+            uMemset(ucErased, 0xff, SPI_EEPROM_PAGE_LENGTH);             // buffer with 0xff
+            fnWriteSPI(&AccessDetails, ucErased);                        // delete page in SPI eeprom (by programming to 0xff)
+            AccessDetails.BlockLength = SPI_EEPROM_PAGE_LENGTH;
+        }
             break;
         #endif
         #if defined I2C_EEPROM_FILE_SYSTEM
@@ -976,8 +1024,9 @@ extern int fnWriteBytesFlash(unsigned char *ucDestination, unsigned char *ucData
             fnWriteSPI(&AccessDetails, ucData);
             break;
         #endif
-        #if defined SPI_EEPROM_FILE_SYSTEM
+        #if defined SPI_EEPROM_ENABLED                                   // {202}
         case _STORAGE_SPI_EEPROM:
+            fnWriteSPI_EEPROM(&AccessDetails, ucData);
             break;
         #endif
         #if defined I2C_EEPROM_FILE_SYSTEM
@@ -1037,8 +1086,9 @@ extern void fnGetParsFile(unsigned char *ParLocation, unsigned char *ptrValue, M
                 fnReadSPI(&AccessDetails, ptrValue);                     // read from the SPI device
                 break;
                 #endif
-                #if defined SPI_EEPROM_FILE_SYSTEM
+                #if defined SPI_EEPROM_ENABLED                           // {202}
             case _STORAGE_SPI_EEPROM:
+                fnReadSPI_EEPROM(&AccessDetails, ptrValue);              // read from the SPI eeprom device
                 break;
                 #endif
                 #if defined I2C_EEPROM_FILE_SYSTEM

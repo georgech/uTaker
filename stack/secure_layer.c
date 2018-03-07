@@ -27,14 +27,17 @@
 
 // To include in standard header
 //
-extern int fnInitialiseSecureLayer(const unsigned char *ptrOurCertificate, unsigned long ulCertificateLength, const unsigned char *ptrOutPrivateKey, unsigned long ulOurPrivateKeyLength);
+extern int  fnInitialiseSecureLayer(const unsigned char *ptrOurCertificate, unsigned long ulCertificateLength, const unsigned char *ptrOutPrivateKey, unsigned long ulOurPrivateKeyLength);
 extern void fnHandshakeStats(unsigned long ulHandshakeSize, unsigned char *ucPrtData);
 extern void fnEnterRandom(unsigned char *ucPrtData, int iServer);
-extern int fnSetSessionCipher(unsigned short session_cipher, unsigned char ucVersion[2], unsigned char ucIdLength, unsigned char *ptrID);
-extern int fnHandleSecurityExtension(unsigned short ext_id, unsigned short ext_size, unsigned char *ptrExtensionData);
+#if defined SUPPORT_SECURE_CLIENT
+    extern int fnChooseSessionCipher(unsigned short *session_cipher, unsigned char *ptrCipherSuites, unsigned short usCipherSuitesLength);
+#endif
+extern int  fnSetSessionCipher(unsigned short session_cipher, unsigned char ucVersion[2], unsigned char ucIdLength, unsigned char *ptrID);
+extern int  fnHandleSecurityExtension(unsigned short ext_id, unsigned short ext_size, unsigned char *ptrExtensionData, int iServerMode);
 extern unsigned char *fnInsertTLS_random(unsigned char *ptrData, size_t Length);
 extern void fnSwitchTransformSpec(void);
-extern int fnDecrypt(unsigned char **ptrptrInput, unsigned long *ptr_ulLength);
+extern int  fnDecrypt(unsigned char **ptrptrInput, unsigned long *ptr_ulLength);
 extern unsigned char *fnEncrypt(unsigned char *ptrInput, unsigned char *ptrInputData, unsigned long ulLength);
 extern void fnTearDown(void);
 
@@ -657,13 +660,28 @@ static int fnHandleAlert(unsigned char *ucPrtData, unsigned long ulHandshakeSize
     return 0;
 }
 
+#if defined SUPPORT_SECURE_SERVER
+static int fnGenerateServerHello(void)
+{
+    // TLS1.2 record layer
+    // - handshake
+    // Server Hello
+    // Certificate
+    // Optional certificate request
+    // server hello done
+    //
+    return 0;
+  //return APP_SENT_DATA; // when data sent
+}
+#endif
+
 
 // Handle individual handshake fields in the input buffer
 //
 static int fnHandleHandshake(USOCKET Socket, unsigned char *ucPrtData, unsigned long ulHandshakeSize, unsigned char ucPresentHandshakeType)
 {
     static int iNextState = 0;
-#if defined _WINDOWS
+#if defined _WINDOWS && defined SUPPORT_SECURE_CLIENT
     unsigned char ucBuffer[4 * 1024];
     MEMORY_RANGE_POINTER file = 0;
     switch (ucPresentHandshakeType) {                                    // the handshake protocol being treated
@@ -704,27 +722,66 @@ static int fnHandleHandshake(USOCKET Socket, unsigned char *ucPrtData, unsigned 
     }
 #endif
     switch (ucPresentHandshakeType) {                                    // the handshake protocol being treated
+#if defined SUPPORT_SECURE_SERVER
+    case SSL_TLS_HANDSHAKE_TYPE_CLIENT_HELLO:                            // client is connecting to us
+        fnDebugMsg("Client hello recognised ");
+        fnInitialiseSecureLayer(0, 0, 0, 0);                             // initialise the secure socket context
+        // Fall through intentionally
+        //
+#endif
+#if defined SUPPORT_SECURE_CLIENT || defined SUPPORT_SECURE_SERVER
     case SSL_TLS_HANDSHAKE_TYPE_SERVER_HELLO:                            // receiving server hello
         {
             SSL_TLS_HANDSHAKE_PROTOCOL_HELLO_32_ID *ptrHello = (SSL_TLS_HANDSHAKE_PROTOCOL_HELLO_32_ID *)ucPrtData;
             SSL_TLS_HANDSHAKE_PROTOCOL_HELLO_DETAILS *ptrHelloSession;
+            unsigned long ulMinLength;
             unsigned short usExtensionLength;
             unsigned char *ptrExtensionData;
             iNextState = 0;
-            fnDebugMsg("Server hello recognised ");
+#if defined SUPPORT_SECURE_CLIENT
+            if (SSL_TLS_HANDSHAKE_TYPE_SERVER_HELLO == ucPresentHandshakeType) {
+                fnDebugMsg("Server hello recognised ");
+            }
+#endif
             if (ptrHello->version[0] == (unsigned char)(TLS_VERSION_1_2 >> 8)) { // we only accept TLSv1.2
                 if (ptrHello->version[1] == (unsigned char)(TLS_VERSION_1_2)) {
                     if (ptrHello->session_id_length <= 32) {
                         fnHandshakeStats(ulHandshakeSize, ucPrtData);    // update handshake statistics (calculates handshake check sum)
-                        fnEnterRandom(ptrHello->random, 1);              // save the server's 32 bytes of random data (the first 4 may contain the UTC time)
-                        ptrHello = (SSL_TLS_HANDSHAKE_PROTOCOL_HELLO_32_ID *)(((unsigned char *)ptrHello) + (32 - ptrHello->session_id_length)); // set the session content pointer accordingly
-                        ptrHelloSession = (SSL_TLS_HANDSHAKE_PROTOCOL_HELLO_DETAILS *)&(ptrHello->session_details);
-                        session_cipher = ((ptrHelloSession->cipher[0] << 8) | (ptrHelloSession->cipher[1])); // the cipher suite to be used during the session
-                        if (fnSetSessionCipher(session_cipher, ptrHello->version, ptrHello->session_id_length, (ptrHelloSession->cipher - ptrHello->session_id_length)) != 0) {
-                            return -1;
+                        fnEnterRandom(ptrHello->random, 1);              // save the client/server's 32 bytes of random data (the first 4 may contain the UTC time)
+#if defined SUPPORT_SECURE_SERVER
+                        if (SSL_TLS_HANDSHAKE_TYPE_CLIENT_HELLO == ucPresentHandshakeType) {
+                            unsigned char *ptrCipherSuites = (((unsigned char *)ptrHello) + (32 + 3 - ptrHello->session_id_length));
+                            unsigned short usCipherSuitesLength = *ptrCipherSuites++;
+                            usCipherSuitesLength <<= 8;
+                            usCipherSuitesLength |= *ptrCipherSuites;
+                            if (fnChooseSessionCipher(&session_cipher, (ptrCipherSuites + 1), usCipherSuitesLength) != 0) { // we check the cipher suites that the client supports and choose one for session use
+                                return -1;
+                            }
+                            ptrHelloSession = (SSL_TLS_HANDSHAKE_PROTOCOL_HELLO_DETAILS *)(ptrCipherSuites + usCipherSuitesLength);
+                            if (ptrHelloSession->compression_method != 0) {
+                                return -1;                               // we don't support compression
+                            }
+                            if (fnSetSessionCipher(session_cipher, ptrHello->version, ptrHello->session_id_length, (ptrHelloSession->cipher - ptrHello->session_id_length)) != 0) {
+                                return -1;
+                            }
+                            ulMinLength = (32 + ptrHello->session_id_length + 1 + 2 + 3 + usCipherSuitesLength); // for there to be valid extensions there must be a length greater that the random number plus the id length and other fixed fields and cipher suites
                         }
+                        else {
+#endif
+#if defined SUPPORT_SECURE_CLIENT
+                            ptrHello = (SSL_TLS_HANDSHAKE_PROTOCOL_HELLO_32_ID *)(((unsigned char *)ptrHello) + (32 - ptrHello->session_id_length)); // set the session content pointer accordingly
+                            ptrHelloSession = (SSL_TLS_HANDSHAKE_PROTOCOL_HELLO_DETAILS *)&(ptrHello->session_details);
+                            session_cipher = ((ptrHelloSession->cipher[0] << 8) | (ptrHelloSession->cipher[1])); // the cipher suite to be used during the session
+                            if (fnSetSessionCipher(session_cipher, ptrHello->version, ptrHello->session_id_length, (ptrHelloSession->cipher - ptrHello->session_id_length)) != 0) {
+                                return -1;
+                            }
+                            ulMinLength = (32 + ptrHello->session_id_length + 1 + 2 + 3); // for there to be valid extensions there must be a length greater that the random number plus the id length and other fixed fields
+#endif
+#if defined SUPPORT_SECURE_SERVER
+                        }
+#endif
                         // ptrHelloSession->compression_method will be 0 since we always set zero
-                        if (ulHandshakeSize <= (unsigned long)(32 + ptrHello->session_id_length + 1 + 2 + 3)) { // for there to be valid extensions there must be a length greater that the random number plus the id length and other fixed fields
+                        if (ulHandshakeSize <= ulMinLength) {            // check whether there are extensions present
                             break;                                       // finished since there are no extensions
                         }
                         usExtensionLength = ptrHelloSession->extensionsLength[0]; // extract the length of the extensions
@@ -739,7 +796,7 @@ static int fnHandleHandshake(USOCKET Socket, unsigned char *ucPrtData, unsigned 
                             usThisExtensionLength = *ptrExtensionData++;
                             usThisExtensionLength <<= 8;
                             usThisExtensionLength |= *ptrExtensionData++;
-                            if (fnHandleSecurityExtension(usExtensionType, usThisExtensionLength, ptrExtensionData) != 0) {
+                            if (fnHandleSecurityExtension(usExtensionType, usThisExtensionLength, ptrExtensionData, (SSL_TLS_HANDSHAKE_TYPE_CLIENT_HELLO == ucPresentHandshakeType)) != 0) {
                                 return -1;
                             }
                             ptrExtensionData += usThisExtensionLength;
@@ -750,6 +807,13 @@ static int fnHandleHandshake(USOCKET Socket, unsigned char *ucPrtData, unsigned 
                             usExtensionLength -= usThisExtensionLength;  // remaining length
                         }
                     }
+#if defined SUPPORT_SECURE_SERVER
+                    if (SSL_TLS_HANDSHAKE_TYPE_CLIENT_HELLO == ucPresentHandshakeType) {
+                        // Server responds to client hello with server hello, certificate, certificate request (option) and server hello done
+                        //
+                        return fnGenerateServerHello();
+                    }
+#endif
                 }
             }
             else {
@@ -757,6 +821,8 @@ static int fnHandleHandshake(USOCKET Socket, unsigned char *ucPrtData, unsigned 
             }
         }
         break;
+#endif
+#if defined SUPPORT_SECURE_CLIENT
     case SSL_TLS_HANDSHAKE_TYPE_CERTIFICATE:                             // we are receiving the server's certificate(s)
         {
             int iCertificateReference = 0;
@@ -798,20 +864,21 @@ static int fnHandleHandshake(USOCKET Socket, unsigned char *ucPrtData, unsigned 
         fnDebugMsg("Hello done recognised ");
         fnDebugDec(ulHandshakeSize, WITH_CR_LF);
         fnHandshakeStats(ulHandshakeSize, ucPrtData);                    // update handshake statistics (calculates handshake check sum)
-#if defined SUPPORT_CLIENT_SIDE_CERTIFICATE
+    #if defined SUPPORT_CLIENT_SIDE_CERTIFICATE
         if (iNextState == 100) {                                         // immediately respond with our certificate(s)
             return (fnTLS(Socket, TCP_TLS_CERTIFICATES));
         }
         else {
-#endif
+    #endif
             return (fnTLS(Socket, TCP_TLS_CLIENT_KEY_EXCHANGE));         // skip certificate and start with client key exchange
-#if defined SUPPORT_CLIENT_SIDE_CERTIFICATE
+    #if defined SUPPORT_CLIENT_SIDE_CERTIFICATE
         }
-#endif
+    #endif
         break;
     case SSL_TLS_HANDSHAKE_TYPE_FINISHED:
         fnDebugMsg("Finished recognised\r\n");
         return APP_SECURITY_CONNECTED;                                   // the secure connetion is complete so we allow the application layer to use it
+#endif
     default:
         fnDebugMsg("????");
         break;
@@ -910,10 +977,10 @@ extern int fnSecureLayerReception(USOCKET Socket, unsigned char **ptr_ucPrtData,
             iTLS_rx_state = TLS_RX_STATE_TYPE_LENGTH_LSB;
             break;
         case TLS_RX_STATE_TYPE_LENGTH_LSB:                               // collecting LSB of type length
-            ulHandshakeSize |= *ucPrtData;
+            ulHandshakeSize |= *ucPrtData;                               // teh handshake size is now known
             iTLS_rx_state = TLS_RX_STATE_CONTENT;
             if (ulHandshakeSize != 0) {
-                break;
+                break;                                                   // collect the handshake content
             }
             usLength--;                                                  // this is expected only on reception of zero content server hello done but this would ensure that following records would also be handled correctly if they ever followed
             ucPrtData++;

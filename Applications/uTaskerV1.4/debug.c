@@ -3893,18 +3893,18 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
               unsigned char ucPresentPort = 0;
               unsigned char ucBit = 0x01;
               CHAR cPortBit = '1';
-              while (cPortBit < '5') {
+              while (cPortBit < '5') {                                   // get the present port states
                   if (fnPortState(cPortBit++) != 0) {
                       ucPresentPort |= ucBit;
                   }
                   ucBit <<= 1;
               }
-              ucBit = (unsigned char)fnHexStrHex(ptrInput);
-              ucBit = (1 << (ucBit - 1));
-              if (fnHexStrHex(++ptrInput) == 0x01) {
+              ucBit = (unsigned char)fnHexStrHex(ptrInput);              // the input to be modified
+              ucBit = (1 << (ucBit - 1));                                // the bit represented by this input
+              if (fnHexStrHex(++ptrInput) == 0x01) {                     // if a '1' is to be set
                   ucPresentPort |= ucBit;
               }
-              else {
+              else {                                                     // else set 0
                   ucPresentPort &= ~ucBit;
               }
               fnSetPortOut(ucPresentPort, 0);                            // set new port state

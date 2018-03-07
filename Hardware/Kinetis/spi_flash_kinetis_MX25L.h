@@ -204,7 +204,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
             SPI_FLASH_Danger[iChipSelect] = ((DANGER_PROGRAMMING << iEraseCommand) | ulPageNumberOffset); // a write/erase will be started so we need to poll the status before next command
         }
     #else
-        SPI_FLASH_Danger[iChipSelect] = DANGER_PROGRAMMING;              // mark that there is an operation in progress that wil require time to complete
+        SPI_FLASH_Danger[iChipSelect] = DANGER_PROGRAMMING;              // mark that there is an operation in progress that will require time to complete
     #endif
         dataWrites = discardCount = DataLength;
     case DEVICE_ID:
@@ -292,7 +292,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         WRITE_SPI_CMD0(0xff);                                            // ensure transmit FIFO has more than one byte in it
         break;
 
-    case READ_STATUS_REGISTER:                                           // read single byte from status register (ox05)
+    case READ_STATUS_REGISTER:                                           // read single byte from status register (0x05)
         WRITE_SPI_CMD0(ucCommand);                                       // write command byte
     #if defined _WINDOWS
         fnSimS25FL1_K(S25FL1_K_WRITE, (unsigned char)SPI_TX_BYTE);       // simulate the SPI FLASH device

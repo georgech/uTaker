@@ -166,7 +166,7 @@
         #else
             #define UTASKER_APP_START     (32 * 1024)                    // application starts at this address
         #endif
-      //#define INTERMEDIATE_PROG_BUFFER  (8 * 1024)                     // when UART speed greater than 57600 Baud is used an intermediate buffer is recommended
+        #define INTERMEDIATE_PROG_BUFFER  (8 * 1024)                     // when UART speed greater than 57600 Baud is used an intermediate buffer is recommended
         #if defined DWGB_SDCARD
             #define UTASKER_APP_END           (unsigned char *)(SIZE_OF_FLASH) // end of application space - after maximum application size
             #define MAX_FLASH_ERASE_SIZE      (64 * 1024)                // limit flash erasure to blocks of thie size to avoid blocking watchdog task when large flash size is to be erased

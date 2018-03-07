@@ -1139,9 +1139,9 @@ extern int Ft_Gpu_Hal_WaitCmdfifo_empty(Ft_Gpu_Hal_Context_t *host)
     else {
         #define MAX_YIELD_TIME    500
         volatile int iYield = 0;
-        while (Ft_Gpu_Hal_Rd16(0, REG_CMD_READ) != Ft_Gpu_Hal_Rd16(0, REG_CMD_WRITE)) {
-            if (++iYield > MAX_YIELD_TIME) {
-                iLCD_State = STATE_LCD_WRITING;
+        while (Ft_Gpu_Hal_Rd16(0, REG_CMD_READ) != Ft_Gpu_Hal_Rd16(0, REG_CMD_WRITE)) { // wait until the display has completed its present work
+            if (++iYield > MAX_YIELD_TIME) {                             // if the wait is longer than the yield time
+                iLCD_State = STATE_LCD_WRITING;                          // mark that we are in a state writing to the display
                 ft800_host.iCoProcessorWait = FIFO_WRITE_YIELD;          // mark that the co-processor is busy and we yield until it is ready again
                 uTaskerStateChange(OWN_TASK, UTASKER_GO);                // poll the co-processor state and inform on completion
                 return 1;                                                // not yet completed

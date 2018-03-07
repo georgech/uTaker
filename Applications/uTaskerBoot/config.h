@@ -84,11 +84,11 @@
     #if defined _KINETIS                                                 // {20}
       //#define FRDM_KL25Z
       //#define FRDM_KL27Z
-        #define CAPUCCINO_KL27                                           // KL27 with 256k flash / 32k SRAM
+      //#define CAPUCCINO_KL27                                           // KL27 with 256k flash / 32k SRAM
           //#define DEV4                                                 // temporary development version
       //#define FRDM_KL82Z
       //#define KINETIS_K40
-      //#define KINETIS_K60
+        #define KINETIS_K60
           //#define DEV3                                                 // temporary development version
       //#define FRDM_K64F                                                // {24} next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area
       //#define KINETIS_K70

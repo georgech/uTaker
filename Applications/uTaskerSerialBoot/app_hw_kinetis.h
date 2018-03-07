@@ -45,7 +45,7 @@
 #if defined _KINETIS && !defined __APP_HW_KINETIS__
 #define __APP_HW_KINETIS__
 
-#if defined KINETIS_K_FPU || defined K02F100M || defined TWR_K20D50M || defined tinyK20 || defined FRDM_K20D50M || defined TWR_K21D50M || defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_K64 || defined FRDM_K22F || defined KINETIS_KV || defined KINETIS_KW2X // newer devices have these errate solved
+#if defined KINETIS_K_FPU || defined K02F100M || defined TWR_K20D50M || defined tinyK20 || defined FRDM_K20D50M || defined TWR_K21D50M || defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_KV || defined KINETIS_KW2X // newer devices have these errate solved
     #define ERRATA_E2583_SOLVED                                          // in early silicon the CAN controllers only work when the OSC is enabled (enable if the chip revision used doesn't suffer from the problem)
     #define ERRATA_E2644_SOLVED                                          // early devices without flex memory doesn't support speculation logic and this should be disabled
     #define ERRATE_E2647_SOLVED                                          // early 512k and 384k flash-only devices don't support cache aliasing and this needs to be disabled
@@ -256,7 +256,7 @@
     #define USB_CRYSTAL_LESS                                             // use 48MHz IRC as USB source (according to Freescale AN4905 - only possibel in device mode)
   //#define USB_CLOCK_GENERATED_INTERNALLY                               // use USB clock from internal source rather than external pin - 120MHz is suitable
   //#define USB_CLOCK_SOURCE_MCGPLL0CLK                                  // the clock source for the USB clock
-#elif defined FRDM_K22F || defined TWR_K22F120M
+#elif defined FRDM_K22F || defined TWR_K22F120M || defined tinyK22
   //#define RUN_FROM_DEFAULT_CLOCK                                       // default mode is FLL Engaged Internal - the 32kHz IRC is multiplied by FLL factor of 640 to obtain 20.9715MHz nominal frequency (20MHz..25MHz)
     #define RUN_FROM_HIRC                                                // clock directly from internal 48MHz RC clock
     #if !defined RUN_FROM_DEFAULT_CLOCK
@@ -638,7 +638,7 @@
         #define SIZE_OF_FLASH   (1024 * 1024)                            // 1M FLASH
     #endif
     #define SIZE_OF_RAM         (128 * 1024)                             // 128k SRAM
-#elif defined FRDM_K22F
+#elif defined FRDM_K22F || defined tinyK22
     #define PIN_COUNT           PIN_COUNT_64_PIN                         // 64 LQFP pin package
     #define PACKAGE_TYPE        PACKAGE_LQFP
     #define SIZE_OF_FLASH       (512 * 1024)                             // 512k FLASH
@@ -1172,7 +1172,7 @@
         #define LOADER_UART           4                                  // use UART 4
     #elif defined TWR_K70F120M || defined TWR_KL46Z48M || defined TWR_K21D50M || defined TWR_KL43Z48M || defined TRK_KEA128 || defined TRK_KEA64 || defined KL25_TEST_BOARD || defined TWR_K65F180M || defined K26FN2_180 || defined FRDM_KEAZN32Q64 || defined FRDM_KEAZ64Q64 || defined FRDM_KEAZ128Q80 || defined TEENSY_3_5 || defined TEENSY_3_6 || defined DWGB_SDCARD
         #define LOADER_UART           2                                  // the serial interface used by the serial loader
-    #elif defined TWR_K20D50M || defined TWR_K80F150M || defined tinyK20 || defined TWR_K20D72M || defined FRDM_KE02Z || defined FRDM_KE02Z40M || defined FRDM_KE06Z || defined FRDM_K22F || defined TWR_K22F120M || defined TWR_K24F120M || defined K24FN1M0_120 || defined TWR_K64F120M || defined TWR_KW21D256 || defined TWR_KW24D512 || defined BLAZE_K22 || defined FRDM_KE15Z
+    #elif defined TWR_K20D50M || defined TWR_K80F150M || defined tinyK20 || defined TWR_K20D72M || defined FRDM_KE02Z || defined FRDM_KE02Z40M || defined FRDM_KE06Z || defined FRDM_K22F || defined TWR_K22F120M || defined TWR_K24F120M || defined K24FN1M0_120 || defined TWR_K64F120M || defined TWR_KW21D256 || defined TWR_KW24D512 || defined BLAZE_K22 || defined tinyK22 || defined FRDM_KE15Z
         #define LOADER_UART           1                                  // the serial interface used by the serial loader
     #elif defined K02F100M || defined FRDM_K20D50M || defined FRDM_KL46Z || defined FRDM_KL43Z || defined FRDM_KL25Z || defined FRDM_KL26Z || defined FRDM_KL27Z || defined FRDM_KL28Z || defined TEENSY_LC || defined TWR_KL25Z48M || defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined TEENSY_3_1 || defined FRDM_K64F || defined FRDM_KE04Z || defined TWR_KV10Z32 || defined TWR_KV31F120M || defined TWR_KV58F220M || defined FRDM_KL82Z || defined FRDM_K66F || defined HEXIWEAR_K64F || ((defined TWR_K40X256 || defined TWR_K40D100M) && defined DEBUG_ON_VIRT_COM)
         #define LOADER_UART           0                                  // the serial interface used by the serial loader
@@ -1769,6 +1769,17 @@
 
     #define DEL_USB_SYMBOL()
     #define SET_USB_SYMBOL()
+#elif defined tinyK22
+    #define LED_BLUE               (PORTC_BIT2)                          // blue LED - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+    #define SWITCH_1               (PORTB_BIT17)                         // switch 1 - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+    #define SWITCH_2               (PORTC_BIT11)                         // switch 2 - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+
+    #define INIT_WATCHDOG_LED()    _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, (LED_BLUE), (LED_BLUE), (PORT_SRE_SLOW | PORT_DSE_HIGH)); _CONFIG_PORT_INPUT_FAST_LOW(C, (SWITCH_1), PORT_PS_UP_ENABLE);
+    #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_HIGH(B, (SWITCH_1), PORT_PS_UP_ENABLE) // configure as input
+
+    #define WATCHDOG_DISABLE()     (_READ_PORT_MASK(C, SWITCH_2) == 0) // pull this input low at reset to disable watchdog
+    #define FORCE_BOOT()           (_READ_PORT_MASK(B, SWITCH_1) == 0) // pull this input low at reset to force the boot loader
+    #define TOGGLE_WATCHDOG_LED()   _TOGGLE_PORT(C, LED_BLUE)
 #elif defined FRDM_K22F
     #define LED_GREEN              (PORTA_BIT2)                          // green LED - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
     #define LED_BLUE               (PORTD_BIT5)                          // blue LED - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too

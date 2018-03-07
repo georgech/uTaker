@@ -1046,7 +1046,7 @@ extern int fnConfigEthernet(ETHTABLE *pars)
     #if defined _WINDOWS
     EIR = 0;
     if ((PALR & 0x01000000) != 0) {                                      // {29}
-        _EXCEPTION("Check that the own MAC address doesn't set the multicast bit!!"); // delete the file FLASH_kinetis.h after changing processor types to start with default parameters again
+        _EXCEPTION("Check that the own MAC address doesn't set the multicast bit!!"); // delete the file FLASH_KINETIS.ini (insimulation folder) after changing processor types to start with default parameters again
     }
     #endif
     OPD = PAUSE_DURATION;

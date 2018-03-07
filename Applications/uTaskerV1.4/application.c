@@ -2892,7 +2892,6 @@ extern void fnUserHWInit(void)
 //
 extern void fnQuickTask1(TTASKTABLE *ptrTaskTable)
 {
-
 }
 
 extern void fnQuickTask2(TTASKTABLE *ptrTaskTable)

@@ -204,7 +204,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
             SPI_FLASH_Danger[iChipSelect] = ((DANGER_PROGRAMMING << iEraseCommand) | ulPageNumberOffset); // a write/erase will be started so we need to poll the status before next command
         }
     #else
-        SPI_FLASH_Danger[iChipSelect] = DANGER_PROGRAMMING;              // mark that there is an operation in progress that wil require time to complete
+        SPI_FLASH_Danger[iChipSelect] = DANGER_PROGRAMMING;              // mark that there is an operation in progress that will require time to complete
     #endif
         dataWrites = discardCount = DataLength;
     case DEVICE_ID:

@@ -66,6 +66,7 @@
     04.12.2017 Add MMDVSQ                                                {132}
     06.12.2017 Use TSTMR as time base for fnDelayLoop() when it is available {133}
     31.01.2018 If HSRUN mode is detected after a reset the RUN mode can be returned to avoid flash programming issues {134}
+    07.03.2018 Add 25AA160 SPI EEPROM support                            {135}
 
 */
 
@@ -192,6 +193,11 @@ static void _LowLevelInit(void);
         #include "spi_flash_kinetis_MX25L.h"
     #undef _SPI_DEFINES
 #endif
+#if (defined SPI_FILE_SYSTEM && defined FLASH_FILE_SYSTEM)
+    #define _SPI_EEPROM_DEFINES                                          // {135}
+        #include "spi_eeprom_kinetis_25AA160.h"
+    #undef _SPI_EEPROM_DEFINES
+#endif
 
 /* =================================================================== */
 /*                      local variable definitions                     */
@@ -233,6 +239,12 @@ static int iInterruptLevel = 0;                                          // pres
         #define _EXTENDED_CS
     #endif
 #endif
+#if (defined SPI_FILE_SYSTEM && defined FLASH_FILE_SYSTEM)
+    #if !defined SPI_EEPROM_DEVICE_COUNT
+        #define SPI_EEPROM_DEVICE_COUNT 1
+    #endif
+    static unsigned long SPI_EEPROM_Danger[SPI_EEPROM_DEVICE_COUNT] = {0}; // signal that the FLASH status should be checked before using since there is a danger that it is still busy
+#endif
 
 
 /* =================================================================== */
@@ -271,6 +283,9 @@ static int iInterruptLevel = 0;                                          // pres
     #include "spi_flash_kinetis_s25fl1-k.h"
     #include "spi_flash_kinetis_MX25L.h"
 #undef _SPI_FLASH_INTERFACE
+#define _SPI_EEPROM_INTERFACE                                            // {135}
+    #include "spi_eeprom_kinetis_25AA160.h"
+#undef _SPI_EEPROM_INTERFACE
 
 
 /* =================================================================== */
@@ -954,18 +969,23 @@ INITHW void fnInitHW(void)                                               // perf
 #if defined _WINDOWS
     fnSimPorts();                                                        // ensure port states are recognised
 #endif
-#if defined SPI_SW_UPLOAD || defined SPI_FLASH_FAT || (defined SPI_FILE_SYSTEM && defined FLASH_FILE_SYSTEM)
+#if defined SPI_SW_UPLOAD || defined SPI_FLASH_FAT || ((defined SPI_FILE_SYSTEM || defined SPI_EEPROM_FILE_SYSTEM) && defined FLASH_FILE_SYSTEM)
     // Power up the SPI interface, configure the pins used and select the mode and speed
     //
     POWER_UP_SPI_FLASH_INTERFACE();
-    CONFIGURE_SPI_FLASH_INTERFACE();                                     // configure SPI interface for maximum possible speed (after TICK has been configured due to poential use of delay routine)
+    CONFIGURE_SPI_FLASH_INTERFACE();                                     // configure SPI interface for maximum possible speed (after TICK has been configured due to potential use of delay routine)
     #define _CHECK_SPI_CHIPS                                             // insert manufacturer dependent code
+    #if defined SPI_FILE_SYSTEM
         #include "spi_flash_kinetis_atmel.h"
         #include "spi_flash_kinetis_stmicro.h"
         #include "spi_flash_kinetis_sst25.h"
         #include "spi_flash_w25q.h"
         #include "spi_flash_kinetis_s25fl1-k.h"
         #include "spi_flash_kinetis_MX25L.h"
+    #endif
+    #if defined SPI_EEPROM_FILE_SYSTEM                                   // {135}
+        #include "spi_eeprom_kinetis_25AA160.h"
+    #endif
     #undef _CHECK_SPI_CHIPS
 #endif
 }

@@ -313,29 +313,6 @@ static unsigned char ucWebServerMode = 0;                                // the 
     static POST_HEADER_SEARCH_PROGRESS header_search_state = {0};
 #endif
 
-#if NO_OF_HTTPS_SESSIONS > 0
-/*
-#include <openssl/rsa.h>       / * SSLeay stuff * /
-#include <openssl/crypto.h>
-#include <openssl/x509.h>
-#include <openssl/pem.h>
-#include <openssl/ssl.h>
-#include <openssl/err.h>*/
-
-    /*
-extern ASN1_TYPE *ASN1_TYPE_new(void)
-{
-    // allocate a type and return a pointer to it
-    return 0;
-}
-
-extern void ASN1_TYPE_free(ASN1_TYPE *a)
-{
-    // free the asn1 type
-}
-*/
-#endif
-
 
 // The user calls this to start the HTTP server
 // The user specifies call back functions for optionally handle HTTP parameters and generating its own web site information
@@ -356,7 +333,8 @@ extern void fnStartHTTP(HTTP_FUNCTION_SET *ptrFunctionSet)               // {79}
             ptrHTTP->OwnerTCPSocket = fnGetTCP_Socket(TOS_MAXIMISE_THROUGHPUT, TCP_DEFAULT_TIMEOUT, fnHTTPListener);
 #if NO_OF_HTTPS_SESSIONS > 0
             if (i >= NO_OF_HTTP_SESSIONS) {
-                usServerPort = HTTPS_SERVERPORT;
+                usServerPort = HTTPS_SERVERPORT;                         // listen on secure HTTP port number (443)
+                ptrHTTP->OwnerTCPSocket |= SECURE_SOCKET_MODE;
             }
 #endif
             fnTCP_Listen(ptrHTTP->OwnerTCPSocket, usServerPort, 0);
@@ -371,18 +349,6 @@ extern void fnStartHTTP(HTTP_FUNCTION_SET *ptrFunctionSet)               // {79}
             }
         }
 #endif
-#if NO_OF_HTTPS_SESSIONS > 0
-        {
-            /*
-            SSL_CTX* ctx;
-            SSL_METHOD *meth;
-            SSL_load_error_strings();
-            SSL_library_init();
-            meth = SSLv23_server_method();
-            ctx = SSL_CTX_new (meth);
-            */
-        }
-#endif
     }
     else {
         HTTP *http_session = ptrHTTP;
@@ -391,6 +357,7 @@ extern void fnStartHTTP(HTTP_FUNCTION_SET *ptrFunctionSet)               // {79}
 #if NO_OF_HTTPS_SESSIONS > 0
                 if (i >= NO_OF_HTTP_SESSIONS) {
                     usServerPort = HTTPS_SERVERPORT;
+                    ptrHTTP->OwnerTCPSocket |= SECURE_SOCKET_MODE;
                 }
 #endif
                 http_session->OwnerTCPSocket = fnGetTCP_Socket(TOS_MAXIMISE_THROUGHPUT, TCP_DEFAULT_TIMEOUT, fnHTTPListener);
@@ -1305,6 +1272,11 @@ static int fnHTTPListener(USOCKET Socket, unsigned char ucEvent, unsigned char *
                     http_session->usPeerMSS = present_tcp->usPeerMSS;    // set the peer's MSS for this connection
                 }
 #endif
+#if NO_OF_HTTPS_SESSIONS > 0
+                if (Socket >= NO_OF_HTTP_SESSIONS) {
+                    return APP_SECURITY_CONNECTED;                       // signal to the TCP level that it should now insert the secure socket layer for further operation
+                }
+#endif
                 break;
 
 #if defined HTTP_WINDOWING_BUFFERS                                       // {7}
@@ -1371,10 +1343,6 @@ _continue_ack:
     #if defined HTTP_REPEAT_DOUBLE_ACKS                                  // {69}
 _regenerate:
     #endif
-              //if (TCP_EVENT_REGENERATE == ucEvent) {
-                  //present_tcp->ulNextTransmissionNumber -= present_tcp->usOpenCnt;
-                  //present_tcp->ulSendUnackedNumber -= present_tcp->usOpenCnt;
-              //}
                 http_session->ucOpenWindows = 0;
                 present_tcp->usOpenCnt = 0;
 #endif
@@ -1502,20 +1470,7 @@ _probe_jumped:
                 {
                 int iWebHandlerCommand;                                  // {2}
                 if (http_session->ptrFileStart == 0) {
-                    if (http_session->ucState < HTTP_STATE_PROCESSING) { // first command after connection
-#if NO_OF_HTTPS_SESSIONS > 0
-                        if (iSessionNumber >= NO_OF_HTTP_SESSIONS) {
-                            // HTTPS connection - test Client Hello
-                            //
-                            SSL_TLS_RECORD *ptrRecord = (SSL_TLS_RECORD *)ucIp_Data;
-                            if (ptrRecord->content_type == SSL_TLS_CONTENT_HANDSHAKE) {
-                                SSL_TLS_HANDSHAKE_PROTOCOL *ptrHandshake = &ptrRecord->handshake;
-                                if (ptrHandshake->handshake_type == 0x01) {
-                                    ptrHandshake->handshake_type = 0;
-                                }
-                            }
-                        }
-#endif
+                    if (http_session->ucState < HTTP_STATE_PROCESSING) { // first command after TCP connection
 #if defined SUPPORT_HTTP_POST
                         if (uMemcmp(ucIp_Data, (unsigned char *)cGet, sizeof(cGet)) != 0) {
                             if (uMemcmp(ucIp_Data, (unsigned char *)cPost, sizeof(cPost)) != 0) {

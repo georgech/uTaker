@@ -79,7 +79,7 @@ extern void fnTimer(TTASKTABLE *ptrTaskTable)                            // glob
     QUEUE_HANDLE PortIDInternal = ptrTaskTable->TaskID;                  // queue ID for task input
     unsigned char ucInputMessage[HEADER_LENGTH];                         // reserve space for receiving messages
 
-    while (fnRead( PortIDInternal, ucInputMessage, HEADER_LENGTH)) {     // check input queue
+    while (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH) != 0) { // check input queue
         switch (ucInputMessage[MSG_SOURCE_TASK]) {
         case TIMER_EVENT:
             fnSWTimerFired();
@@ -157,7 +157,7 @@ static TIMER_BLOCK *fnGetSWFired(DELAY_LIMIT Time)                       // {10}
     TIMER_BLOCK *ptrFired = 0;
 
     while (iTimers < TIMER_QUANTITY) {
-        if (((ptrTim->OwnerTask) && (ptrTim->TimerDelay <= Time)) && ((!ptrFired) || (ptrTim->TimerDelay < ptrFired->TimerDelay))) {
+        if (((ptrTim->OwnerTask) && (ptrTim->TimerDelay <= Time)) && ((0 == ptrFired) || (ptrTim->TimerDelay < ptrFired->TimerDelay))) {
             ptrFired = ptrTim;                                           // lowest value
         }
         ptrTim++;

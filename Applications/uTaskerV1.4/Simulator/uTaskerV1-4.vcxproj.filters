@@ -1159,6 +1159,9 @@
     <ClInclude Include="..\..\..\stack\SSL\mbedtls-2.6\mbedtls\x509_crt.h">
       <Filter>TCP/IP\MQTTS\include</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\spi_eeprom_kinetis_25AA160.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="cursor1.cur">

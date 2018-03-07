@@ -206,6 +206,8 @@
     #if EMULATED_FAT_LUMS > 1
         #define DISK_NAME                  "UPLOAD_DSK1"
         #define DISK_NAME_INC              10
+    #elif defined tinyK22
+        #define DISK_NAME                  "TINYK22"
     #else
         #define DISK_NAME                  "UPLOAD_DISK"
     #endif

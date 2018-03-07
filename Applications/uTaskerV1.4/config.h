@@ -121,6 +121,7 @@
 //#define TWR_K21F120M                                                   // tower board http://www.utasker.com/kinetis/TWR-K21F120M.html
 //#define FRDM_K22F                                                      // freedom board http://www.utasker.com/kinetis/FRDM-K22F.html
 //#define TWR_K22F120M                                                   // tower board http://www.utasker.com/kinetis/TWR-K22F120M.html
+//#define tinyK22                                                        // USB memory stick format board with SD card and 120MMHz K22FN512 http://www.utasker.com/kinetis/tinyK22.html
 //#define BLAZE_K22                                                      // K22FN1M0 with 1.6" color display and touch http://www.utasker.com/kinetis/BLAZE_K22.html
 //#define TWR_K24F120M                                                   // tower board http://www.utasker.com/kinetis/TWR-K24F120M.html
 //#define FRDM_K28F                                                      // freedom board http://www.utasker.com/kinetis/FRDM-K28F.html
@@ -375,6 +376,7 @@
     #if defined DEV4
         #define SPI_FILE_SYSTEM
         #define SPI_FLASH_MX25L
+        #define SPI_EEPROM_FILE_SYSTEM
     #endif
 #elif defined FRDM_KL28Z
     #define TARGET_HW            "FRDM-KL28Z"
@@ -577,9 +579,13 @@
     #define DEVICE_WITHOUT_ETHERNET                                      // K22 doesn't have Ethernet controller
     #define DEVICE_WITHOUT_CAN                                           // this K22 doesn't have CAN controller
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((24 * 1024) * MEM_FACTOR)
-#elif defined FRDM_K22F
-  //#define DEV1                                                         // temporary development configuration
-    #define TARGET_HW            "FRDM-K22F"
+#elif defined FRDM_K22F ||defined tinyK22
+    #if defined tinyK22
+        #define TARGET_HW        "tinyK22"
+    #else
+      //#define DEV1                                                     // temporary development configuration
+        #define TARGET_HW        "FRDM-K22F"
+    #endif
     #define KINETIS_K_FPU                                                // part with floating point unit
     #define KINETIS_MAX_SPEED    120000000
     #define KINETIS_K20                                                  // specify the sub-family
@@ -1054,7 +1060,7 @@
 #if defined DEVICE_WITHOUT_USB
     #define NUMBER_USB     0                                             // no physical queue needed
 #else
-    #define USB_INTERFACE                                                // enable USB driver interface
+  //#define USB_INTERFACE                                                // enable USB driver interface
     #if defined USB_INTERFACE
       //#define MICROSOFT_OS_STRING_DESCRIPTOR                           // support MODs
       //#define USB_HOST_SUPPORT                                         // host supported
@@ -1065,7 +1071,7 @@
         #endif
         #if defined USB_DEVICE_SUPPORT                                   // define one or more device classes (multiple classes creates a composite device)
             #define USE_USB_CDC                                          // USB-CDC (use also for Modbus over USB)
-          //#define USE_USB_MSD                                          // needs SD card to compile (or alternatives FLASH_FAT / SPI_FLASH_FAT / FAT_EMULATION)
+            #define USE_USB_MSD                                          // needs SD card to compile (or alternatives FLASH_FAT / SPI_FLASH_FAT / FAT_EMULATION)
           //#define USE_USB_HID_MOUSE                                    // human interface device (mouse)
           //#define USE_USB_HID_KEYBOARD                                 // human interface device (keyboard)
               //#define USB_KEYBOARD_DELAY                               // enable inter-character delay control
@@ -1203,7 +1209,7 @@
 
 // I2C
 //
-//#define I2C_INTERFACE
+#define I2C_INTERFACE
 #if defined I2C_INTERFACE
     #define NUMBER_I2C       (I2C_AVAILABLE + LPI2C_AVAILABLE)           // I2C interfaces available
   //#define I2C_SLAVE_MODE                                               // support slave mode
@@ -1498,7 +1504,7 @@
             #define MODBUS_TCP                                           // support MODBUS TCP protocol
             #define USE_MQTT_CLIENT                                      // enable MQTT (message queuing telemetry transport) client support
           //#define USE_MQTT_BROKER                                      // enable MQTT (message queuing telemetry transport) broker support
-              //#define SECURE_MQTT                                      // MQTTS support
+                #define SECURE_MQTT                                      // MQTTS support
               //#define SUPPORT_CLIENT_SIDE_CERTIFICATE                  // support client certificate and private key
           //#define TEST_CLIENT_SERVER                                   // TCP client/server test (see debug.c)
             #define TEST_TCP_SERVER                                      // TCP server (see debug.c) - uses also a TELNET session
@@ -1512,10 +1518,6 @@
                     #undef UT_DIRECTORIES_AVAILABLE
                     #define UT_DIRECTORIES_AVAILABLE 5                   // this many directories objects are available for allocation (more to allow web server and FTP)
                 #endif
-            #endif
-            #if (defined USE_MQTT_CLIENT && defined SECURE_MQTT)
-                #define USE_SECURE_SOCKET_LAYER
-                #define SUPPORT_UCALLOC
             #endif
         #endif
 
@@ -1748,7 +1750,7 @@
             #define SUPPORT_DELAY_WEB_SERVING                            // enable delayed web page serving defined by the application
 
           //#define SUPPORT_WEBSOCKET                                    // support WebSocket protocol to allow two-way communication between a web server process and web browser application
-            #define NO_OF_HTTPS_SESSIONS       4                         // this many parallel HTTPS sockets are reserved for this many parallel sessions
+            #define NO_OF_HTTPS_SESSIONS       1                         // this many parallel HTTPS sockets are reserved for this many parallel sessions
             #define NO_OF_HTTP_SESSIONS        4                         // this many parallel HTTP sockets are reserved for this many parallel sessions
             #define HTTP_AUTHENTICATION                                  // activate basic authentication
             #define PROJECT_CREDENTIALS  "HTTP/1.0 401\r\nWWW-Authenticate: Basic realm=""uTasker""\r\n\r\n" // put project name here to spice up credential pop-up
@@ -1774,6 +1776,17 @@
         #endif
 
         #define USER_NAME_AND_PASS                                       // routines for user name and password support
+
+        #if defined USE_TCP && ((defined USE_MQTT_CLIENT && defined SECURE_MQTT) || (defined USE_HTTP && (NO_OF_HTTPS_SESSIONS > 0))) // when these options are selected we require secure socket layer
+            #define USE_SECURE_SOCKET_LAYER
+            #define SUPPORT_UCALLOC
+            #if (defined USE_MQTT_CLIENT && defined SECURE_MQTT)
+                #define SUPPORT_SECURE_CLIENT
+            #endif
+            #if (defined USE_HTTP && (NO_OF_HTTPS_SESSIONS > 0))
+                #define SUPPORT_SECURE_SERVER
+            #endif
+        #endif
 
         #define NO_OF_TCPSOCKETS (NO_OF_HTTP_SESSIONS + NO_OF_HTTPS_SESSIONS + FTP_SOCKETS + POP3_SOCKET + SMTP_SOCKET + NO_OF_TELNET_SESSIONS + TIME_SERVER_SOCKET + MODBUS_TCP_SOCKETS + FTP_CLIENT_SOCKETS + MQTT_CLIENT_SOCKET + USER_TCP_SOCKETS) // reserve the number of TCP sockets necessary for our configuration
     #endif
@@ -1892,7 +1905,7 @@
       //#define KITRONIX_GLCD_MODE                                       // use colour TFT in GLCD compatible mode (IDM_L35_B)
       //#define MB785_GLCD_MODE                                          // use colour TFT in GLCD compatible mode (STM321C-EVAL)
       //#define TFT2N0369_GLCD_MODE                                      // use colour TFT in GLCD compatible mode (TWR-LCD)
-      //#define FT800_GLCD_MODE                                          // FTDI FT800 controller
+        #define FT800_GLCD_MODE                                          // FTDI FT800 controller
             #define FT_800_ENABLE                                        // select the FT800 display type
           //#define FT_801_ENABLE                                        // select the FT801 display type
           //#define FT_810_ENABLE                                        // select the FT810 display type

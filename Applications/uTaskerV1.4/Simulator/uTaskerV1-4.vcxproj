@@ -1100,6 +1100,7 @@ Build_Kinetis_SSL.bat
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_USB_HS_Device.h" />
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_USB_OTG.h" />
     <ClInclude Include="..\..\..\Hardware\Kinetis\simkinetis.h" />
+    <ClInclude Include="..\..\..\Hardware\Kinetis\spi_eeprom_kinetis_25AA160.h" />
     <ClInclude Include="..\..\..\Hardware\Kinetis\spi_flash_kinetis_atmel.h" />
     <ClInclude Include="..\..\..\Hardware\Kinetis\spi_flash_kinetis_MX25L.h" />
     <ClInclude Include="..\..\..\Hardware\Kinetis\spi_flash_kinetis_s25fl1-k.h" />

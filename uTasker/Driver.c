@@ -366,7 +366,7 @@ extern QUEUE_TRANSFER fnPeekInput(QUEUE_HANDLE driver_id, unsigned char *input_b
 #endif
 
 #if defined SERIAL_STATS
-extern void fnStats( QUEUE_HANDLE driver_id, QUEUE_TRANSFER CounterNumber, unsigned long *ulCountValue)
+extern void fnStats(QUEUE_HANDLE driver_id, QUEUE_TRANSFER CounterNumber, unsigned long *ulCountValue)
 {
     driver_id -= 1;
     (que_ids[driver_id].CallAddress)(que_ids[driver_id].qHandle, (unsigned char*)ulCountValue, CounterNumber, CALL_STATS, driver_id);
