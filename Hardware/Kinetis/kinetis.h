@@ -10761,10 +10761,10 @@ typedef struct stKINETIS_LPTMR_CTL
     #define PORT_ODE                     0
 #else
     #define PORTA_PCR0                   *(volatile unsigned long *)(PORT0_BLOCK + 0x00)  // Pin Control Register 0
-      #define PORT_NO_PULL               0x00000000                                       // no pull-ups enabled
-      #define PORT_PE                    0x00000002                                       // enable pull if digital input
-      #define PORT_PS_DOWN_ENABLE        (0x00000000 | PORT_PE)                           // pull-down if enabled
-      #define PORT_PS_UP_ENABLE          (0x00000001 | PORT_PE)                           // pull-up if enabled
+      #define PORT_NO_PULL               0x00000000                                       // no pull-up/down enabled
+      #define PORT_PE                    0x00000002                                       // enable pull if digital input (sense defined by following)
+      #define PORT_PS_DOWN_ENABLE        (0x00000000 | PORT_PE)                           // pull-down active (note that it is combined with the PORT_PE so that it is enabled)
+      #define PORT_PS_UP_ENABLE          (0x00000001 | PORT_PE)                           // pull-up active (note that it is combined with the PORT_PE so that it is enabled)
       #define PORT_SRE_FAST              0x00000000                                       // fast slew-rate if digital output
       #define PORT_SRE_SLOW              0x00000004                                       // slow slew-rate if digital output
       #define PORT_PFE                   0x00000010                                       // passive filter enabled if digital input (disable for signals > 2MHz)
