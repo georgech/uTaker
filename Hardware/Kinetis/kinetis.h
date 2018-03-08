@@ -7482,7 +7482,12 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
   #define FTM_SC_CLKS_OFF   0x00000000                                   // clock source - no clock
   #define FTM_SC_CLKS_SYS   0x00000008                                   // clock source - system clock
  #if defined KINETIS_KL
-  #define FTM_SC_CLKS_EXT   0x00000010                                   // clock source - TPM_EXTCLK (rising edge)
+  #if defined KINETIS_KL28
+      #define FTM_SC_CLKS_EXT_SYNC 0x00000010                            // clock source - TPM_EXTCLK (rising edge) [synchronised to TPM counter clock]
+      #define FTM_SC_CLKS_EXT      0x00000018                            // clock source - TPM_EXTCLK (rising edge) [direct]
+  #else
+      #define FTM_SC_CLKS_EXT   0x00000010                               // clock source - TPM_EXTCLK (rising edge)
+    #endif
   #define FTM_SC_DMA        0x00000100                                   // DMA enable
  #else
   #define FTM_SC_CLKS_FIX   0x00000010                                   // clock source - fixed clock is MCGFFCLK
@@ -11958,7 +11963,21 @@ typedef struct stKINETIS_LPTMR_CTL
 #define PE_5_FTM3_CH7                    PORT_MUX_ALT6
 #define PC_11_FTM3_CH7                   PORT_MUX_ALT3
 
-#if defined KINETIS_K66 || defined KINETIS_K80
+#if defined KINETIS_KL28
+    #define PA_18_TPM0_CLKIN             PORT_MUX_ALT4
+    #define PB_16_TPM0_CLKIN             PORT_MUX_ALT4
+    #define PC_12_TPM0_CLKIN             PORT_MUX_ALT4
+    #define PE_16_TPM0_CLKIN             PORT_MUX_ALT4
+    #define PE_29_TPM0_CLKIN             PORT_MUX_ALT4
+    #define PA_19_TPM1_CLKIN             PORT_MUX_ALT4
+    #define PB_17_TPM1_CLKIN             PORT_MUX_ALT4
+    #define PC_13_TPM1_CLKIN             PORT_MUX_ALT4
+    #define PE_17_TPM1_CLKIN             PORT_MUX_ALT4
+    #define PE_30_TPM1_CLKIN             PORT_MUX_ALT4
+    #define PA_20_TPM2_CLKIN             PORT_MUX_ALT4
+    #define PB_11_TPM2_CLKIN             PORT_MUX_ALT4
+    #define PE_31_TPM2_CLKIN             PORT_MUX_ALT4
+#elif defined KINETIS_K66 || defined KINETIS_K80
     #define PB_0_TPM1_CH0                PORT_MUX_ALT6
     #define PA_12_TPM1_CH0               PORT_MUX_ALT7
     #define PA_8_TPM1_CH0                PORT_MUX_ALT6

@@ -90,11 +90,13 @@
 
 #define PUBLISH_QoS_LEVEL              MQTT_CONTROL_PACKET_FLAG_QoS_2    // option - always publish using QoS2
 
-#define MQTT_KEEPALIVE_TIME            (DELAY_LIMIT)(60 * SEC)
-#define MQTT_PING_TIME                 (DELAY_LIMIT)(15 * SEC)
-#define MQTT_KEEPALIVE_TIME_SECONDS    300
+#if !defined MQTT_KEEPALIVE_TIME_SECONDS
+    #define MQTT_KEEPALIVE_TIME_SECONDS    300                           // the keep-alive time announced to the broker
+#endif
+#define MQTT_KEEPALIVE_TIME            (DELAY_LIMIT)((MQTT_KEEPALIVE_TIME_SECONDS / 4) * SEC) // pings will be sent at 25% of the keep-alive time in case fo no other activity
+#define MQTT_PING_TIME                 (DELAY_LIMIT)(15 * SEC)           // if the broker doesn't respond to a ping after this length of time it is assumed that the broker is no longer on-line
 
-#define T_MQTT_KEEPALIVE_TIMEOUT       1
+#define T_MQTT_KEEPALIVE_TIMEOUT       1                                 // local timer events
 #define T_MQTT_BROKER_DEAD             2
 
 #define MQTT_QUEUE_CLOSE            0x01                                 // we are waiting to close

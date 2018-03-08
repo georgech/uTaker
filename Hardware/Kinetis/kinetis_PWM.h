@@ -190,7 +190,7 @@ static __interrupt void _PWM_Interrupt_5(void)
                 iInterruptID = irq_FTM0_ID;
     #endif
                 if ((ulMode & PWM_NO_OUTPUT) == 0) {                     // {6}
-                    fnConfigTimerPin(0, (ptrPWM_settings->pwm_reference & ~_TIMER_MODULE_MASK), (PORT_SRE_FAST | PORT_DSE_HIGH));
+                    fnConfigTimerPin(0, (ptrPWM_settings->pwm_reference & ~_TIMER_MODULE_MASK), (PORT_SRE_FAST | PORT_DSE_HIGH)); // configure the PWM output pin
                 }
                 ptrFlexTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_0;
                 break;
@@ -319,7 +319,45 @@ static __interrupt void _PWM_Interrupt_5(void)
                 }
                 else {
     #endif
-    #if defined FTM_CLKIN_1
+    #if defined KINETIS_KL28                                             // KL28 has a dedicated external clock pin for each timer
+                    switch (ucFlexTimer) {
+                    case 0:                                              // TPM0
+        #if defined TPMCLKIN0_ON_E_HIGH
+                        _CONFIG_PERIPHERAL(E, 29, (PE_29_TPM0_CLKIN | PORT_PS_UP_ENABLE)); // TPM0_CLKIN on PE.29 (alt. function 4)
+        #elif defined TPMCLKIN0_ON_E_LOW
+                        _CONFIG_PERIPHERAL(E, 16, (PE_16_TPM0_CLKIN | PORT_PS_UP_ENABLE)); // TPM0_CLKIN on PE.16 (alt. function 4)
+        #elif defined TPMCLKIN0_ON_C
+                        _CONFIG_PERIPHERAL(C, 12, (PC_12_TPM0_CLKIN | PORT_PS_UP_ENABLE)); // TPM0_CLKIN on PC.12 (alt. function 4)
+        #elif defined TPMCLKIN0_ON_B
+                        _CONFIG_PERIPHERAL(B, 16, (PB_16_TPM0_CLKIN | PORT_PS_UP_ENABLE)); // TPM0_CLKIN on PB.16 (alt. function 4)
+        #else
+                        _CONFIG_PERIPHERAL(A, 18, (PA_18_TPM0_CLKIN | PORT_PS_UP_ENABLE)); // TPM0_CLKIN on PA.18 (alt. function 4)
+        #endif
+                        break;
+                    case 1:                                              // TPM1
+        #if defined TPMCLKIN1_ON_E_HIGH
+                        _CONFIG_PERIPHERAL(E, 30, (PE_30_TPM1_CLKIN | PORT_PS_UP_ENABLE)); // TPM1_CLKIN on PE.30 (alt. function 4)
+        #elif defined TPMCLKIN1_ON_E_LOW
+                        _CONFIG_PERIPHERAL(E, 17, (PE_17_TPM1_CLKIN | PORT_PS_UP_ENABLE)); // TPM1_CLKIN on PE.17 (alt. function 4)
+        #elif defined TPMCLKIN1_ON_C
+                        _CONFIG_PERIPHERAL(C, 13, (PC_13_TPM1_CLKIN | PORT_PS_UP_ENABLE)); // TPM1_CLKIN on PC.13 (alt. function 4)
+        #elif defined TPMCLKIN1_ON_B
+                        _CONFIG_PERIPHERAL(B, 17, (PB_17_TPM1_CLKIN | PORT_PS_UP_ENABLE)); // TPM1_CLKIN on PB.17 (alt. function 4)
+        #else
+                        _CONFIG_PERIPHERAL(A, 19, (PA_19_TPM1_CLKIN | PORT_PS_UP_ENABLE)); // TPM1_CLKIN on PA.19 (alt. function 4)
+        #endif
+                        break;
+                    case 2:                                              // TPM2
+        //#if defined TPMCLKIN1_ON_E_HIGH
+                        _CONFIG_PERIPHERAL(E, 31, (PE_31_TPM2_CLKIN | PORT_PS_UP_ENABLE)); // TPM2_CLKIN on PE.31 (alt. function 4)
+        //#elif defined TPMCLKIN1_ON_B
+                        _CONFIG_PERIPHERAL(B, 11, (PB_11_TPM2_CLKIN | PORT_PS_UP_ENABLE)); // TPM2_CLKIN on PB.11 (alt. function 4)
+        //#else
+                        _CONFIG_PERIPHERAL(A, 20, (PA_20_TPM2_CLKIN | PORT_PS_UP_ENABLE)); // TPM2_CLKIN on PA.20 (alt. function 4)
+        //#endif
+                        break;
+                    }
+    #elif defined FTM_CLKIN_1                                            // use CLKIN1 source
         #if !defined KINETIS_KE
                     SIM_SOPT4 |= (SIM_SOPT4_FTM0CLKSEL << ucChannel);    // select CLKIN1 to FTN
         #endif
@@ -330,7 +368,7 @@ static __interrupt void _PWM_Interrupt_5(void)
         #else
                     _CONFIG_PERIPHERAL(A, 19, (PA_19_FTM_CLKIN1 | PORT_PS_UP_ENABLE)); // FTM_CKLIN1 on PA.19 (alt. function 4)
         #endif
-    #else
+    #else                                                                // use CLKIN0 source
         #if !defined KINETIS_KE && !defined KINETIS_KL82 && !defined KINETIS_KL28
                     SIM_SOPT4 &= ~(SIM_SOPT4_FTM0CLKSEL << ucChannel);   // select CLKIN0 to FTM
         #endif
