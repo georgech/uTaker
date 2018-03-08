@@ -225,7 +225,7 @@ static void fnConfigTimerPin(int iTimer, int iChannel, unsigned long ulCharacter
                         _CONFIG_PERIPHERAL(A, 12, (PA_12_TPM1_CH0 | ulCharacteristics)); // TPM1_CH0 on PA.12 (alt. function 2)
         #elif defined KINETIS_KL02 || defined KINETIS_KL03 || defined KINETIS_KL04 || defined KINETIS_KL05
                         _CONFIG_PERIPHERAL(A, 0, (PA_0_TPM1_CH0 | ulCharacteristics)); // TPM1_CH0 on PA.0 (alt. function 2)
-        #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL43) && defined TPM1_0_ON_E
+        #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL43) && defined TPM1_0_ON_E
                         _CONFIG_PERIPHERAL(E, 20, (PE_20_TPM1_CH0 | ulCharacteristics)); // TPM1_CH0 on PE.20 (alt. function 3)
         #elif defined FTM1_0_ON_B
                         _CONFIG_PERIPHERAL(B, 0, (PB_0_FTM1_CH0 | ulCharacteristics)); // FTM1_CH0 on PB.0 (alt. function 3)
@@ -256,7 +256,7 @@ static void fnConfigTimerPin(int iTimer, int iChannel, unsigned long ulCharacter
                         _CONFIG_PERIPHERAL(B, 13, (PB_13_TPM1_CH1 | ulCharacteristics)); // TPM1_CH1 on PB.13 (alt. function 2)
         #elif defined KINETIS_KL02 || defined KINETIS_KL03 || defined KINETIS_KL04 || defined KINETIS_KL05
                         _CONFIG_PERIPHERAL(B, 5, (PB_5_TPM1_CH1 | ulCharacteristics)); // TPM1_CH1 on PB.5 (alt. function 2)
-        #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL43) && defined TPM1_1_ON_E
+        #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL43) && defined TPM1_1_ON_E
                         _CONFIG_PERIPHERAL(E, 21, (PE_21_TPM1_CH1 | ulCharacteristics)); // TPM1_CH1 on PE.21 (alt. function 3)
         #elif defined FTM1_1_ON_B
                         _CONFIG_PERIPHERAL(B, 1, (PB_1_FTM1_CH1 | ulCharacteristics)); // FTM1_CH1 on PB.1 (alt. function 3)

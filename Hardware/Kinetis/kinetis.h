@@ -1508,6 +1508,10 @@ typedef struct stRESET_VECTOR
     #define FLEX_TIMERS_0_CHANNELS  2
     #define FLEX_TIMERS_1_CHANNELS  2
     #define FLEX_TIMERS_2_CHANNELS  6
+#elif defined KINETIS_KL28
+    #define FLEX_TIMERS_0_CHANNELS  6
+    #define FLEX_TIMERS_1_CHANNELS  2
+    #define FLEX_TIMERS_2_CHANNELS  2
 #else
     #define FLEX_TIMERS_0_CHANNELS  8
     #define FLEX_TIMERS_1_CHANNELS  2
@@ -11839,13 +11843,18 @@ typedef struct stKINETIS_LPTMR_CTL
     #define PB_7_TPM1_CH0                PORT_MUX_ALT2
     #define PB_6_TPM1_CH0                PORT_MUX_ALT2
 #endif
-#if defined KINETIS_KL17 || defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL43
+#if defined KINETIS_KL17 || defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL43
     #define PD_0_FTM0_CH0                PORT_MUX_ALT4
     #define PD_1_FTM0_CH1                PORT_MUX_ALT4
     #define PD_2_FTM0_CH2                PORT_MUX_ALT4
     #define PD_3_FTM0_CH3                PORT_MUX_ALT4
-    #define PE_24_TPM0_CH0               PORT_MUX_ALT3
-    #define PE_25_TPM0_CH1               PORT_MUX_ALT3
+    #if defined KINETIS_KL28
+        #define PD_4_FTM0_CH3            PORT_MUX_ALT4
+        #define PD_5_FTM0_CH3            PORT_MUX_ALT4
+    #else
+        #define PE_24_TPM0_CH0           PORT_MUX_ALT3
+        #define PE_25_TPM0_CH1           PORT_MUX_ALT3
+    #endif
     #define PE_29_TPM0_CH2               PORT_MUX_ALT3
     #define PE_30_TPM0_CH3               PORT_MUX_ALT3
     #define PE_31_TPM0_CH4               PORT_MUX_ALT3
