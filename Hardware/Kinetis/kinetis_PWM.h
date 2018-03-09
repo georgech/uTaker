@@ -348,13 +348,13 @@ static __interrupt void _PWM_Interrupt_5(void)
         #endif
                         break;
                     case 2:                                              // TPM2
-        //#if defined TPMCLKIN1_ON_E_HIGH
+        #if defined TPMCLKIN1_ON_E_HIGH
                         _CONFIG_PERIPHERAL(E, 31, (PE_31_TPM2_CLKIN | PORT_PS_UP_ENABLE)); // TPM2_CLKIN on PE.31 (alt. function 4)
-        //#elif defined TPMCLKIN1_ON_B
+        #elif defined TPMCLKIN1_ON_B
                         _CONFIG_PERIPHERAL(B, 11, (PB_11_TPM2_CLKIN | PORT_PS_UP_ENABLE)); // TPM2_CLKIN on PB.11 (alt. function 4)
-        //#else
+        #else
                         _CONFIG_PERIPHERAL(A, 20, (PA_20_TPM2_CLKIN | PORT_PS_UP_ENABLE)); // TPM2_CLKIN on PA.20 (alt. function 4)
-        //#endif
+        #endif
                         break;
                     }
     #elif defined FTM_CLKIN_1                                            // use CLKIN1 source
