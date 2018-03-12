@@ -1519,6 +1519,10 @@ typedef struct stHTTP                                                    // {8} 
   #define MAXIMUM_DYNAMIC_INSERTS       0x20                             // {36} flag that no further dynamic inserts should be started in the present TCP frame
 #endif
 
+#if !defined NO_OF_HTTPS_SESSIONS                                        // if no define is available for the number of secure HTTP sockets
+    #define NO_OF_HTTPS_SESSIONS 0                                       // set none in order to disable HTTPS
+#endif
+
 #define HTTP_STATE_FREE                  0                               // HTTP states
 #define HTTP_STATE_RESERVED              1
 #define HTTP_STATE_ACTIVE                2
@@ -2388,10 +2392,11 @@ extern int fnConnectMQTT(unsigned char *ucIP, unsigned short(*fnCallback)(signed
     #define MQTT_CONNECT_FLAG_USER_NAME_FLAG      0x80                   // flag to indicate that a user name must be present in the payload
 
 extern int fnDisconnectMQTT(void);
-extern int fnPublishMQTT(unsigned char ucTopicReference, CHAR *ptrTopic, unsigned char ucQoS);
+extern int fnPublishMQTT(unsigned char ucTopicReference, CHAR *ptrTopic, signed char cQoS);
     #define MQTT_SUBSCRIPTION_QoS_0       0x00
     #define MQTT_SUBSCRIPTION_QoS_1       0x01
     #define MQTT_SUBSCRIPTION_QoS_2       0x02
+extern int fnShowMQTT_subscription(int iRef);
 extern int fnSubscribeMQTT(CHAR *ptrInput, unsigned char ucQoS);
 extern int fnUnsubscribeMQTT(unsigned char ucSubscriptionRef);
 
@@ -2399,6 +2404,8 @@ extern int fnUnsubscribeMQTT(unsigned char ucSubscriptionRef);
 #define ERROR_MQTT_IN_USE                -2
 #define ERROR_MQTT_ARP_FAIL              -3
 #define ERROR_MQTT_NO_SUBSCRIPTION_ENTRY -4
+#define ERROR_MQTT_MISSING_TOPIC         -5
+#define ERROR_MQTT_INVALID_SUBSCRIPTION  -6
 #define MQTT_RESULT_OK                    0
 #define MQTT_CLIENT_IDENTIFIER            1
 #define MQTT_WILL_TOPIC                   2

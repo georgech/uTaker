@@ -2336,6 +2336,8 @@ static void _LowLevelInit(void)
         SMC_PMCTRL = (SMC_PMCTRL_STOPM_NORMAL | SMC_PMCTRL_RUNM_NORMAL);
     }
 #endif
+// Include clock configuration code
+//
 #if defined KINETIS_KE && !defined KINETIS_KE15
     #include "kinetis_KE_CLOCK.h"                                        // KE and KEA clock configuration
 #elif defined RUN_FROM_HIRC || defined RUN_FROM_HIRC_FLL || defined RUN_FROM_HIRC_PLL // 48MHz
@@ -2353,11 +2355,14 @@ static void _LowLevelInit(void)
 #else
     #include "kinetis_K_CLOCK.h"                                         // K clock configuration
 #endif
+
 #if defined CLKOUT_AVAILABLE && !defined KINETIS_WITH_PCC                // select the clock signal to be driven on CLKOUT pin
     #if defined KINETIS_K64
       //fnClkout(FLEXBUS_CLOCK_OUT);                                     // select the clock to monitor on CLKOUT
     #endif
-  //#if defined LOW_POWER_OSCILLATOR_CLOCK_OUT
+    #if defined LOW_POWER_OSCILLATOR_CLOCK_OUT
+      //fnClkout(LOW_POWER_OSCILLATOR_CLOCK_OUT);
+    #endif
   //fnClkout(INTERNAL_IRC48M_CLOCK_OUT);
   //fnClkout(INTERNAL_LIRC_CLOCK_OUT);                                   // equivalent to INTERNAL_MCGIRCLK_CLOCK_OUT
   //fnClkout(EXTERNAL_OSCILLATOR_CLOCK_OUT);

@@ -126,6 +126,7 @@
     31.01.2017 Add fnMaskInterrupt()                                     {105}
     04.12.2017 Add LPI2C, MMDVSQ, TSTMR and RFSYS
     18.12.2017 Correct bus and flash clock calculation for KL parts with individual bus and flash clock dividers {106}
+    11.03.2018 Correct PWM clock source                                  {107}
 
 */
 
@@ -16591,6 +16592,9 @@ typedef struct stGPIO_RGS
     volatile unsigned long  PDDR;
     #if defined KINETIS_KE
         volatile unsigned long  PIDR;
+        unsigned long  ulRes[9];
+    #else
+        unsigned long  ulRes[10];
     #endif
 } GPIO_REGS;
 
@@ -17283,7 +17287,7 @@ extern void fnSimPers(void);
     #define PWM_CLOCK             (TIMER_CLOCK)
 #else
     #define TIMER_CLOCK           (BUS_CLOCK)
-    #define PWM_CLOCK             (SYSTEM_CLOCK/2)
+    #define PWM_CLOCK             (TIMER_CLOCK)                          // {107} - corrected from (SYSTEM_CLOCK/2)
 #endif
 
 // FlexTimer delays

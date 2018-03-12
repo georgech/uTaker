@@ -112,7 +112,6 @@
 #if !defined HTTP_MALLOC                                                 // {67}
     #define HTTP_MALLOC(x) uMalloc((MAX_MALLOC)(x))
 #endif
-
 #if !defined WEB_ESCAPE_LEN                                              // {9}
     #define WEB_ESCAPE_LEN 4                                             // standard escape length, eg. "£xyz"
 #endif

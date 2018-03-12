@@ -149,6 +149,7 @@
         #define _EXTERNAL_CLOCK      EXTERNAL_CLOCK
         #define CLOCK_DIV            20                                  // input must be divided to 2MHz..4MHz range (/1 to /24)
         #define CLOCK_MUL            48                                  // the PLL multiplication factor to achieve operating frequency of 120MHz (x24 to x55 possible)
+        #define BUS_CLOCK_DIVIDE     2                                   // 120/ to give 60MHz
         #define FLEX_CLOCK_DIVIDE    3                                   // 120/3 to give 40MHz
         #define FLASH_CLOCK_DIVIDE   5                                   // 120/5 to give 24MHz
     #endif
@@ -1497,7 +1498,7 @@
             #define RTC_CLOCK_PRESCALER_2  100                           // 128, 256, 512, 1024, 2048, 100 or 1000 (valid for bus clock or 1kHz LPO clock)
     #endif
 #else
-  //#define SUPPORT_RTC                                                  // support real time clock
+    #define SUPPORT_RTC                                                  // support real time clock
     #define ALARM_TASK   TASK_APPLICATION                                // alarm is handled by the application task (handled by time keeper if not defined)
     #if defined TWR_KL46Z48M || defined TWR_KL43Z48M
         #define RTC_USES_RTC_CLKIN                                       // TWR-KL46Z48M and TWR-KL43Z48M have a 32kHz oscillator supplying an accurate clock and the OpenSDA interface supplies a clock on the FRDM-KL46Z as long as the debug interface is powered (not possible with P&E debugger version)
@@ -1866,8 +1867,8 @@
     #define SPI_RX_BYTE                     SPI1_D                       // for simulator
 
     #if defined DEV4                                                     // hold FPGA in reset during initial operation
-        #define POWER_UP_SPI_FLASH_INTERFACE()  POWER_UP_ATOMIC(4, SPI1); _CONFIG_DRIVE_PORT_OUTPUT_VALUE(B, PORTB_BIT17, 0, (PORT_SRE_SLOW | PORT_DSE_LOW))
         #define CS0_LINE_EEPROM             PORTE_BIT30
+        #define POWER_UP_SPI_FLASH_INTERFACE()  POWER_UP_ATOMIC(4, SPI1); _CONFIG_DRIVE_PORT_OUTPUT_VALUE(B, PORTB_BIT17, 0, (PORT_SRE_SLOW | PORT_DSE_LOW)); _CONFIG_DRIVE_PORT_OUTPUT_VALUE(E, CS0_LINE_EEPROM, CS0_LINE_EEPROM, (PORT_SRE_SLOW | PORT_DSE_LOW))
         #define ASSERT_CS_LINE_EEPROM(ulChipSelectLine_eeprom) _CLEARBITS(E, ulChipSelectLine_eeprom)
         #define NEGATE_CS_LINE_EEPROM(ulChipSelectLine_eeprom) _SETBITS(E, ulChipSelectLine_eeprom)
     #else
@@ -3699,7 +3700,11 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define DEMO_LED_1         (LED_GREEN)
     #define DEMO_LED_2         (LED_RED)
     #define DEMO_LED_3         (LED_BLUE)
-    #define DEMO_LED_4         (PORTA_BIT12)
+    #if defined FRDM_K66F
+        #define DEMO_LED_4     0                                         // don't distrupb ethernet interface
+    #else
+        #define DEMO_LED_4     (PORTA_BIT12)
+    #endif
 
     #define SHIFT_DEMO_LED_1    6                                        // since the port bits may be spread out shift each to the lowest 2 bits
     #define SHIFT_DEMO_LED_2    8
@@ -6694,6 +6699,18 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define _CONFIGURE_RTS_2_LOW()  _CONFIG_DRIVE_PORT_OUTPUT_VALUE(B, (PORTB_BIT18), (0), (PORT_SRE_SLOW | PORT_DSE_HIGH))
     #define _SET_RTS_2_HIGH()       _SETBITS(B, PORTB_BIT18)
     #define _SET_RTS_2_LOW()        _CLEARBITS(B, PORTB_BIT18)
+
+    // CTS line configuration for RTS/CTS flow control
+    //
+    #define CTS_0_PORT                  PORTD
+    #define CTS_0_PIN                   PORTD_BIT0
+    #define CTS_0_INTERRUPT_PRIORITY    PRIORITY_PORT_D_INT
+    #define CTS_1_PORT                  PORTD
+    #define CTS_1_PIN                   PORTD_BIT1
+    #define CTS_1_INTERRUPT_PRIORITY    PRIORITY_PORT_D_INT
+    #define CTS_2_PORT                  PORTD
+    #define CTS_2_PIN                   PORTD_BIT2
+    #define CTS_2_INTERRUPT_PRIORITY    PRIORITY_PORT_D_INT
 #elif defined FRDM_KL28Z
     #define DEMO_LED_1             (PORTC_BIT4)                          // (green LED) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
     #define DEMO_LED_2             (PORTE_BIT29)                         // (red LED) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too

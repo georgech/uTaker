@@ -85,7 +85,7 @@
 //#define rcARM_KL26                                                     // development board with KL26
 //#define TEENSY_LC                                                      // USB development board with KL26Z64 - http://www.utasker.com/kinetis/TEENSY_LC.html
 //#define FRDM_KL27Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL27Z.html
-#define CAPUCCINO_KL27                                                   // http://www.utasker.com/kinetis/Capuccino-KL27.html
+//#define CAPUCCINO_KL27                                                 // http://www.utasker.com/kinetis/Capuccino-KL27.html
 //#define TWR_KL28Z72M                                                   // tower board http://www.utasker.com/kinetis/FRDM-KL28Z72M
 //#define FRDM_KL28Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL28Z.html
 //#define FRDM_KL43Z                                                     // L processors Cortex-M0+ (ultra-low power) with USB and segment LCD - freedom board http://www.utasker.com/kinetis/FRDM-KL43Z.html
@@ -142,7 +142,7 @@
 //#define EMCRAFT_K61F150M                                               // K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - http://www.utasker.com/kinetis/EMCRAFT_K61F150M.html
 //#define K61FN1_50M                                                     // board with 150MHz K61 and 50MHz clock (HS USB and KSZ8863 ethernet switch)
 
-//#define FRDM_K64F                                                      // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
+#define FRDM_K64F                                                        // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
 //#define TWR_K64F120M                                                   // tower board http://www.utasker.com/kinetis/TWR-K64F120M.html
 //#define HEXIWEAR_K64F                                                  // hexiwear - wearable development kit for IoT (K64FN1M0VDC12 main processor) http://www.hexiwear.com/
 //#define TEENSY_3_5                                                     // USB development board with K64FX512 - http://www.utasker.com/kinetis/TEENSY_3.5.html
@@ -1003,9 +1003,7 @@
   //#define SERIAL_SUPPORT_ECHO                                          // enable echo mode in rx driver
   //#define SERIAL_SUPPORT_ESCAPE                                        // enable escape sequencing in driver
   //#define SERIAL_SUPPORT_SCAN                                          // serial receiver supports scanning of input buffer for a sequence
-    #if !defined KINETIS_KL && !defined KINETIS_KE
-        #define SUPPORT_HW_FLOW                                          // support RTS/CTS flow control and other possible modem signals
-    #endif
+  //#define SUPPORT_HW_FLOW                                              // support RTS/CTS flow control and other possible modem signals
   //#define UART_BREAK_SUPPORT                                           // support break control in the UART driver
   //#define SUPPORT_MIDI_BAUD_RATE                                       // support 31250 Baud rate standard setting
   //#define UART_TIMED_TRANSMISSION                                      // automatic timed character transmission to achive tx inter-character delay
@@ -1060,7 +1058,7 @@
 #if defined DEVICE_WITHOUT_USB
     #define NUMBER_USB     0                                             // no physical queue needed
 #else
-  //#define USB_INTERFACE                                                // enable USB driver interface
+    #define USB_INTERFACE                                                // enable USB driver interface
     #if defined USB_INTERFACE
       //#define MICROSOFT_OS_STRING_DESCRIPTOR                           // support MODs
       //#define USB_HOST_SUPPORT                                         // host supported
@@ -1071,7 +1069,7 @@
         #endif
         #if defined USB_DEVICE_SUPPORT                                   // define one or more device classes (multiple classes creates a composite device)
             #define USE_USB_CDC                                          // USB-CDC (use also for Modbus over USB)
-            #define USE_USB_MSD                                          // needs SD card to compile (or alternatives FLASH_FAT / SPI_FLASH_FAT / FAT_EMULATION)
+          //#define USE_USB_MSD                                          // needs SD card to compile (or alternatives FLASH_FAT / SPI_FLASH_FAT / FAT_EMULATION)
           //#define USE_USB_HID_MOUSE                                    // human interface device (mouse)
           //#define USE_USB_HID_KEYBOARD                                 // human interface device (keyboard)
               //#define USB_KEYBOARD_DELAY                               // enable inter-character delay control
@@ -1504,7 +1502,7 @@
             #define MODBUS_TCP                                           // support MODBUS TCP protocol
             #define USE_MQTT_CLIENT                                      // enable MQTT (message queuing telemetry transport) client support
           //#define USE_MQTT_BROKER                                      // enable MQTT (message queuing telemetry transport) broker support
-                #define SECURE_MQTT                                      // MQTTS support
+              //#define SECURE_MQTT                                      // MQTTS support
               //#define SUPPORT_CLIENT_SIDE_CERTIFICATE                  // support client certificate and private key
           //#define TEST_CLIENT_SERVER                                   // TCP client/server test (see debug.c)
             #define TEST_TCP_SERVER                                      // TCP server (see debug.c) - uses also a TELNET session
@@ -1750,7 +1748,7 @@
             #define SUPPORT_DELAY_WEB_SERVING                            // enable delayed web page serving defined by the application
 
           //#define SUPPORT_WEBSOCKET                                    // support WebSocket protocol to allow two-way communication between a web server process and web browser application
-            #define NO_OF_HTTPS_SESSIONS       1                         // this many parallel HTTPS sockets are reserved for this many parallel sessions
+          //#define NO_OF_HTTPS_SESSIONS       1                         // this many parallel HTTPS sockets are reserved for this many parallel sessions
             #define NO_OF_HTTP_SESSIONS        4                         // this many parallel HTTP sockets are reserved for this many parallel sessions
             #define HTTP_AUTHENTICATION                                  // activate basic authentication
             #define PROJECT_CREDENTIALS  "HTTP/1.0 401\r\nWWW-Authenticate: Basic realm=""uTasker""\r\n\r\n" // put project name here to spice up credential pop-up

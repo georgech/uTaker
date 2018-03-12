@@ -119,7 +119,7 @@ static void fnSPI_EEPROM_command(unsigned char ucCommand, unsigned long ulPageNu
         SPI_EEPROM_Danger[iChipSelect] = 0;                              // device will no longer be busy after continuing
         do {
             fnSPI_EEPROM_command(READ_STATUS_REGISTER, 0, __EXTENDED_CS &ucStatus, 1); // read busy status register
-        } while ((ucStatus & STATUS_WIP) != 0);                          // until no longer busy
+        } while ((ucStatus & STATUS_WIP) != 0);                          // until no longer busy (5ms is maximum expected write cycle time)
     }
 
     #if defined SET_SPI_FLASH_MODE
@@ -127,7 +127,7 @@ static void fnSPI_EEPROM_command(unsigned char ucCommand, unsigned long ulPageNu
     #endif
 
     #if !defined DSPI_SPI || defined MANUAL_FLASH_CS_CONTROL
-    ASSERT_CS_LINE_EEPROM(ulChipSelectLine);                             // assert the chip select line
+    ASSERT_CS_LINE_EEPROM(ulChipSelectLine_eeprom);                      // assert the chip select line
     #endif
 
     switch (ucCommand) {
@@ -277,12 +277,12 @@ static void fnSPI_EEPROM_command(unsigned char ucCommand, unsigned long ulPageNu
         discardCount--;
     }
     #if (!defined DSPI_SPI) || defined MANUAL_FLASH_CS_CONTROL
-    NEGATE_CS_LINE_EEPROM(ulChipSelectLine);                             // negate the chip select line
+    NEGATE_CS_LINE_EEPROM(ulChipSelectLine_eeprom);                      // negate the chip select line
     #endif
     #if defined _WINDOWS
         #if defined DSPI_SPI && !defined MANUAL_FLASH_CS_CONTROL
     if ((SPI_TX_BYTE & SPI_PUSHR_EOQ) != 0) {                            // check that the CS has been negated
-        SPI_TX_BYTE &= ~(ulChipSelectLine);
+        SPI_TX_BYTE &= ~(ulChipSelectLine_eeprom);
     }
         #endif
     fnSimS25FL1_K(S25FL1_K_CHECK_SS, 0);                                 // simulate the SPI FLASH device

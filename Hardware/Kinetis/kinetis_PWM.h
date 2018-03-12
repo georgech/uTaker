@@ -424,7 +424,7 @@ static __interrupt void _PWM_Interrupt_5(void)
                 ptrFlexTimer->FTM_channel[ucChannel].FTM_CSC = FTM_CSC_MS_ELS_PWM_HIGH_TRUE_PULSES;
             }
             //
-            //ptrFlexTimer->FTM_channel[ucChannel].FTM_CSC = (FTM_CSC_ELSA | FTM_CSC_MSA);
+            //ptrFlexTimer->FTM_channel[ucChannel].FTM_CSC = (FTM_CSC_ELSA | FTM_CSC_MSA); // test line
             //
     #if !defined DEVICE_WITHOUT_DMA
             if ((ulMode & PWM_DMA_CHANNEL_ENABLE) != 0) {

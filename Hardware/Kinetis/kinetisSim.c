@@ -776,7 +776,8 @@ static void fnSetDevice(unsigned long *port_inits)
     #if !defined KINETIS_WITHOUT_RTC
         #if !defined KINETIS_KE || defined KINETIS_WITH_SRTC
             #if defined SUPPORT_RTC                                      // RTC
-    RTC_SR      = 0;                                                     // assume running
+  //RTC_SR      = 0;                                                     // assume running
+    RTC_SR      = RTC_SR_TIF;                                            // normally it would be running but we signal it as not so that the initialisation routine is exercised
             #else
     RTC_SR      = RTC_SR_TIF;
             #endif
@@ -8107,8 +8108,13 @@ extern int fnSimTimers(void)
             }
     #else
             switch (SIM_SOPT1 & SIM_SOPT1_OSC32KSEL_MASK) {
-            case SIM_SOPT1_OSC32KSEL_SYS_OSC:
-                ulCounter = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)32000)/1000000); // approximately 32kHz clock pulses in a TICK period
+            case SIM_SOPT1_OSC32KSEL_SYS_OSC:                            // 32kHz oscillator
+                if ((RTC_CR & RTC_CR_OSCE) != 0) {                       // if oscillator is enabled
+                    ulCounter = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)32768) / 1000000); // 32kHz clock pulses in a TICK period
+                }
+                else {
+                    ulCounter = 0;                                       // no clock
+                }
                 break;
             case SIM_SOPT1_OSC32KSEL_LPO_1kHz:
         #if TICK_RESOLUTION >= 1000

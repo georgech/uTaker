@@ -152,7 +152,7 @@ static QUEUE_TRANSFER entry_ssc(QUEUE_HANDLE channel, unsigned char *ptBuffer, Q
             uEnable_Interrupt();                                         // fnFillBuffer disables and then re-enables interrupts - be sure we are compatible
             rtn_val = fnFillBuf(&ptSSCQue->ssc_queue, ptBuffer, (QUEUE_TRANSFER)(Counter * ptSSCQue->ucBytesPerWord));
             uDisable_Interrupt();
-            if (!(ptSSCQue->ucState & (TX_WAIT | TX_ACTIVE))) {
+            if ((ptSSCQue->ucState & (TX_WAIT | TX_ACTIVE)) == 0) {
                 send_next_word(channel, ptSSCQue);                       // this is not done when the transmitter is already performing a transfer or if suspended
             }
             uEnable_Interrupt();
@@ -251,7 +251,7 @@ static void send_next_word(QUEUE_HANDLE channel, SSCQUE *ptSSCQue)       // inte
         ptSSCQue->lastDMA_block_length = 0;
     }
 #endif
-    if (!(ptSSCQue->ucState & TX_WAIT)) {                                // send the next byte if possible - either first char or tx interrupt
+    if ((ptSSCQue->ucState & TX_WAIT) == 0) {                            // send the next byte if possible - either first char or tx interrupt
         if (!ptSSCQue->ssc_queue.chars) {                                // are there more to send?
             ptSSCQue->ucState &= ~TX_ACTIVE;                             // transmission of a block has terminated
             fnClearSSCTxInt(channel);                                    // clear interrupt

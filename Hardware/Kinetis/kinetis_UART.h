@@ -42,6 +42,7 @@
     01.09.2017 Correct clearing LPUART overrun flag                      {210}
     19.10.2017 Use ATOMIC_PERIPHERAL_BIT_REF_SET() and ATOMIC_PERIPHERAL_BIT_REF_CLEAR() to enable/disable DMA_ERQ (interrupt and DMA safe)
     05.02.2018 Add free-running LPUART DM Areception for KL devices with eDMA {211}
+    13.03.2018 Add RTS/CTS flow control to devices without integrated modem control {212}
 
 */
 
@@ -1948,6 +1949,91 @@ extern void fnControlLine(QUEUE_HANDLE channel, unsigned short usModifications, 
     }
         #endif
 }
+
+#if defined SUPPORT_HW_FLOW && (defined KINETIS_KL && !defined LPUART_WITH_RTS_CTS) // {212}
+static const unsigned char uCTS_priority[LPUARTS_AVAILABLE + UARTS_AVAILABLE] = {
+    CTS_0_INTERRUPT_PRIORITY,
+    #if (LPUARTS_AVAILABLE + UARTS_AVAILABLE) > 1
+    CTS_1_INTERRUPT_PRIORITY,
+    #endif
+    #if (LPUARTS_AVAILABLE + UARTS_AVAILABLE) > 2
+    CTS_2_INTERRUPT_PRIORITY,
+    #endif
+    #if (LPUARTS_AVAILABLE + UARTS_AVAILABLE) > 3
+    CTS_3_INTERRUPT_PRIORITY,
+    #endif
+};
+
+static const unsigned char ucCTS_port[LPUARTS_AVAILABLE + UARTS_AVAILABLE] = {
+    CTS_0_PORT,
+    #if (LPUARTS_AVAILABLE + UARTS_AVAILABLE) > 1
+    CTS_1_PORT,
+    #endif
+    #if (LPUARTS_AVAILABLE + UARTS_AVAILABLE) > 2
+    CTS_2_PORT,
+    #endif
+    #if (LPUARTS_AVAILABLE + UARTS_AVAILABLE) > 3
+    CTS_3_PORT,
+    #endif
+};
+
+static const unsigned long ulPin[LPUARTS_AVAILABLE + UARTS_AVAILABLE] = {
+    CTS_0_PIN,
+    #if (LPUARTS_AVAILABLE + UARTS_AVAILABLE) > 1
+    CTS_1_PIN,
+    #endif
+    #if (LPUARTS_AVAILABLE + UARTS_AVAILABLE) > 2
+    CTS_2_PIN,
+    #endif
+    #if (LPUARTS_AVAILABLE + UARTS_AVAILABLE) > 3
+    CTS_3_PIN,
+    #endif
+};
+
+static void _cts_change_0(void)
+{
+    GPIO_REGS *ptrGPIO = (GPIO_REGS *)GPIOA_ADD;
+    ptrGPIO += ucCTS_port[0];
+    fnRTS_change(0, ((ptrGPIO->PDIR & ulPin[0]) == 0));                  // synchronise control with buffer control
+}
+    #if (LPUARTS_AVAILABLE + UARTS_AVAILABLE) > 1
+static void _cts_change_1(void)
+{
+    GPIO_REGS *ptrGPIO = (GPIO_REGS *)GPIOA_ADD;
+    ptrGPIO += ucCTS_port[1];
+    fnRTS_change(1, ((ptrGPIO->PDIR & ulPin[1]) == 0));                  // synchronise control with buffer control
+}
+    #endif
+    #if (LPUARTS_AVAILABLE + UARTS_AVAILABLE) > 2
+static void _cts_change_2(void)
+{
+    GPIO_REGS *ptrGPIO = (GPIO_REGS *)GPIOA_ADD;
+    ptrGPIO += ucCTS_port[2];
+    fnRTS_change(2, ((ptrGPIO->PDIR & ulPin[2]) == 0));                  // synchronise control with buffer control
+}
+    #endif
+    #if (LPUARTS_AVAILABLE + UARTS_AVAILABLE) > 3
+static void _cts_change_3(void)
+{
+    GPIO_REGS *ptrGPIO = (GPIO_REGS *)GPIOA_ADD;
+    ptrGPIO += ucCTS_port[3];
+    fnRTS_change(3, (ptrGPIO->PDIR & ulPin[3] == 0));                    // synchronise control with buffer control
+}
+    #endif
+
+static const void (*cts_handlers[LPUARTS_AVAILABLE + UARTS_AVAILABLE])(void) = {
+    _cts_change_0,
+    #if (LPUARTS_AVAILABLE + UARTS_AVAILABLE) > 1
+    _cts_change_1,
+    #endif
+    #if (LPUARTS_AVAILABLE + UARTS_AVAILABLE) > 2
+    _cts_change_2,
+    #endif
+    #if (LPUARTS_AVAILABLE + UARTS_AVAILABLE) > 3
+    _cts_change_3,
+    #endif
+};
+#endif
  
 // Modify control line interrupt operation (this is called from entry_tty() with disabled interrupts)
 //
@@ -1982,7 +2068,24 @@ extern QUEUE_TRANSFER fnControlLineInterrupt(QUEUE_HANDLE channel, unsigned shor
     }
     return SET_CTS;                                                      // the state of the CTS line cannot be read but report that it is asserted since flow control is performed by hardware
         #else
-    return 0;
+    // Devices without CTS input use a port interrupt                    {212}
+    //
+    GPIO_REGS *ptrGPIO = (GPIO_REGS *)GPIOA_ADD;
+    INTERRUPT_SETUP interrupt_setup;                                     // interrupt configuration parameters
+    interrupt_setup.int_type =       PORT_INTERRUPT;                     // identifier to configure port interrupt
+    interrupt_setup.int_handler =    (void(*)(void))cts_handlers[channel]; // handling function
+    interrupt_setup.int_priority =   uCTS_priority[channel];             // interrupt priority level
+    interrupt_setup.int_port =       ucCTS_port[channel];                // the port that the interrupt input is on
+    ptrGPIO += interrupt_setup.int_port;
+    interrupt_setup.int_port_bits =  ulPin[channel];                     // the IRQ input connected
+    interrupt_setup.int_port_sense = (IRQ_BOTH_EDGES | PULLUP_ON);       // interrupt is to fire on any edge
+    fnConfigureInterrupt((void *)&interrupt_setup);                      // configure interrupt
+    if ((ptrGPIO->PDIR & interrupt_setup.int_port_bits) == 0) {          // return the present state of the CTS input
+        return SET_CTS;
+    }
+    else {
+        return 0;
+    }
         #endif
 }
     #endif                                                               // end SUPPORT_HW_FLOW

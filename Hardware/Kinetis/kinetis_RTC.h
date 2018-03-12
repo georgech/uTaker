@@ -24,6 +24,7 @@
     13.06.2017 Synchronise prescaler when setting new time               {5}
     18.09.2017 Use new dependency KINETIS_WITH_RTC_CRYSTAL               {6}
     05.11.2017 Clear pending RTC alarm interrupt on initialisation (this tends to be pending after each power on reset or after a wake-up) {7}
+    13.03.2018 Enable RTC oscillator with internal clock disabled when not already configured {8}
 
 */
 
@@ -289,12 +290,18 @@ extern int fnConfigureRTC(void *ptrSettings)
     #else
         POWER_UP_ATOMIC(6, RTC);                                         // enable access and interrupts to the RTC
         if ((RTC_SR & RTC_SR_TIF) != 0) {                                // if timer invalid
+        #if defined _WINDOWS
+            unsigned long ulTSR = RTC_TSR;
+        #endif
             RTC_SR = 0;                                                  // ensure stopped
             RTC_TSR = 0;                                                 // write to clear RTC_SR_TIF in status register when not yet enabled
+        #if defined _WINDOWS
+            RTC_TSR = ulTSR;                                             // return the present time (since we always exercise the power up case but do have teh local time)
+        #endif
         #if defined KINETIS_WITH_RTC_CRYSTAL                             // {6} devices with RTC crystal oscillator circuity
-            #if !defined CLOCK_FROM_RTC_OSCILLATOR && defined FLL_FACTOR // the RTC oscillator will always be enabled in the clock initialisation
-            RTC_CR = (RTC_CR_OSCE | RTC_CR_CLKO);                        // enable oscillator but don't supply clock to other peripherals
-            #endif
+            if ((RTC_CR & RTC_CR_OSCE) == 0) {                           // {8} the RTC oscillator may have been enabled in the clock initialisation where the clock is bein supplied to other peripherals
+                RTC_CR = (RTC_CR_OSCE | RTC_CR_CLKO);                    // enable oscillator but don't supply clock to other peripherals (since not yet enabled)
+            }
             return WAIT_STABILISING_DELAY;                               // the oscillator requires some time to stabilise so the user should call again after this time has expired
         #endif
         }

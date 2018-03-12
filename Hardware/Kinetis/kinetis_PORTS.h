@@ -837,6 +837,7 @@ static void fnEnterPortInterruptHandler(INTERRUPT_SETUP *port_interrupt, unsigne
         ulBit <<= 1;
         port_bit++;
     }
+    _SIM_PORT_CHANGE;
 }
     #endif
 #endif

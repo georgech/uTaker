@@ -132,7 +132,7 @@
 
 //#define TEST_SDCARD_SECTOR_WRITE                                       // {44} activate to allow sector writes to be tested
 //#define TEST_I2C_INTERFACE                                             // activate to enable special I2C tests via menu
-//#define DEVELOP_PHY_CONTROL                                            // {33} activate to enable PHY register dump and writes to individual register addresses
+//#define DEVELOP_PHY_CONTROL                                            // {33} activate to enable PHY register dump and writes to individual register addresses (warning: disabled STOP_MII_CLOCK option when using this)
                                                                          // note that STOP_MII_CLOCK should not be enabled when using this (kinetis)
 //#define _DEBUG_CAN                                                     // support dumping CAN register details for debugging purpose
 //#define I2C_MASTER_LOADER                                              // {89} load firmware to a connected I2C slave (requires I2C_INTERFACE - enable TEST_I2C in i2c_tests.h for interface open)
@@ -507,9 +507,10 @@
     #define DO_MQTTS_CONNECT        70
     #define DO_MQTT_SUBSCRIBE       71
     #define DO_MQTT_UNSUBSCRIBE     72
-    #define DO_MQTT_PUB             73
-    #define DO_MQTT_PUB_LONG        74
-    #define DO_MQTT_DISCONNECT      75
+    #define DO_MQTT_TOPICS          73
+    #define DO_MQTT_PUB             74
+    #define DO_MQTT_PUB_LONG        75
+    #define DO_MQTT_DISCONNECT      76
 
 #define DO_CAN                    13
     #define DO_SEND_CAN_DEFAULT     0                                    // specific CAN command to send a message to the default destination
@@ -1099,10 +1100,11 @@ static const DEBUG_COMMAND tFTP_TELNET_Command[] = {                     // {37}
     #endif
     { "mqtt_con",         "Connect to MQTT broker [ip]",           DO_FTP_TELNET_MQTT, DO_MQTT_CONNECT },
     { "mqtt_sub",         "Subscribe [topic] <QoS>",               DO_FTP_TELNET_MQTT, DO_MQTT_SUBSCRIBE },
+    { "mqtt_top",         "List sub. topics",                      DO_FTP_TELNET_MQTT, DO_MQTT_TOPICS },
     { "mqtt_un",          "Unsubscribe [ref]",                     DO_FTP_TELNET_MQTT, DO_MQTT_UNSUBSCRIBE },
-    { "mqtt_pub",         "Publish <""topic""><ref> <QoS>",        DO_FTP_TELNET_MQTT, DO_MQTT_PUB },
-    { "mqtt_pub_l",       "Publish (long) <""topic""><ref> <QoS>", DO_FTP_TELNET_MQTT, DO_MQTT_PUB_LONG },
-    { "mqtt_dis",         "Disconect from MQTT broker",            DO_FTP_TELNET_MQTT, DO_MQTT_DISCONNECT },
+    { "mqtt_pub",         "Publish <\x22topic\x22/ref> <QoS>",    DO_FTP_TELNET_MQTT, DO_MQTT_PUB },
+    { "mqtt_pub_l",       "Publish (long) <\x22topic\x22/ref> <QoS>", DO_FTP_TELNET_MQTT, DO_MQTT_PUB_LONG },
+    { "mqtt_dis",         "Disconnect from MQTT broker",           DO_FTP_TELNET_MQTT, DO_MQTT_DISCONNECT },
     #if !defined USE_FTP_CLIENT && ! defined USE_TELNET_CLIENT
     {"help",              "Display menu specific help",            DO_HELP,          DO_MAIN_HELP },
     #endif
@@ -6354,7 +6356,7 @@ static void fnDoFTP_TELNET_MQTT(unsigned char ucType, CHAR *ptrInput)
                 break;
             }
             fnJumpWhiteSpace(&ptrQoS);
-            if (*ptrQoS == 0) {
+            if (*ptrQoS == 0) {                                          // if no QoS specified
                 ucQoS = 2;                                               // default QoS if not supplied
             }
             else {
@@ -6372,6 +6374,21 @@ static void fnDoFTP_TELNET_MQTT(unsigned char ucType, CHAR *ptrInput)
             }
         }
         break;
+    case DO_MQTT_TOPICS:                                                 // list the topics that we are presently subscribed to
+        {
+           int iRef = 1;
+           int iResult;
+           int iNotEmpty = 0;
+           while ((iResult = fnShowMQTT_subscription(iRef++)) != ERROR_MQTT_INVALID_SUBSCRIPTION) { // print out details of each mqtt subscription
+               if (MQTT_RESULT_OK == iResult) {
+                   iNotEmpty = 1;
+               }
+           }
+           if (iNotEmpty == 0) {
+               fnDebugMsg("No MQTT substriptions");
+           }
+        }
+        break;
     case DO_MQTT_UNSUBSCRIBE:
         {
             unsigned char ucSubscriptionRef = (unsigned char)fnDecStrHex(ptrInput); // the subscription reference to be unsubscribed
@@ -6387,9 +6404,9 @@ static void fnDoFTP_TELNET_MQTT(unsigned char ucType, CHAR *ptrInput)
     case DO_MQTT_PUB:
         {
             CHAR *ptrTopic = 0;
-            unsigned char ucSubscriptionRef;
-            unsigned char ucQoS;
-            if (*ptrInput == '"') {                                      // we want to insert a on-off publish topic
+            unsigned char ucSubscriptionRef = 0;                         // default will call-back to insert the publish topic
+            signed char cQoS;
+            if (*ptrInput == '"') {                                      // we want to insert a one-off publish topic instead of using a subscribed reference
                 ptrTopic = (ptrInput + 1);
                 fnJumpWhiteSpace(&ptrInput);
                 if (*ptrInput == 0) {
@@ -6399,18 +6416,17 @@ static void fnDoFTP_TELNET_MQTT(unsigned char ucType, CHAR *ptrInput)
                     *(ptrInput - 2) = 0;                                 // terminate the topic string in the input buffer
                 }
             }
-            if (*ptrInput == 0) {
-                ucSubscriptionRef = 0;                                   // we want to be called back to insert the publish topic
+            else {
+                if (*ptrInput != 0) {
+                    ucSubscriptionRef = (unsigned char)fnDecStrHex(ptrInput); // use the publish topic defined
+                    fnJumpWhiteSpace(&ptrInput);
+                }
+            }
+            if (*ptrInput == 0) {                                        // if no QoS is specified
+                cQoS = -1;                                               // a QoS value fo -1 causes the subscription to be used or else 2 for one-off-topics
             }
             else {
-                ucSubscriptionRef = (unsigned char)fnDecStrHex(ptrInput); // use the publish topic defined
-            }
-            fnJumpWhiteSpace(&ptrInput);
-            if (*ptrInput == 0) {
-                ucQoS = 2;                                               // default QoS
-            }
-            else {
-                ucQoS = (unsigned char)fnDecStrHex(ptrInput);            // QoS to use
+                cQoS = (signed char)fnDecStrHex(ptrInput);               // QoS to use
             }
             if (ucType == DO_MQTT_PUB_LONG) {
                 usPubLength = 1024;
@@ -6418,7 +6434,7 @@ static void fnDoFTP_TELNET_MQTT(unsigned char ucType, CHAR *ptrInput)
             else {
                 usPubLength = 10;
             }
-            if (fnPublishMQTT(ucSubscriptionRef, ptrTopic, ucQoS) == 0) {// make QoS variable?
+            if (fnPublishMQTT(ucSubscriptionRef, ptrTopic, cQoS) == 0) {
                 fnDebugMsg("Publishing...");
             }
             else {
@@ -6428,7 +6444,7 @@ static void fnDoFTP_TELNET_MQTT(unsigned char ucType, CHAR *ptrInput)
         break;
     case DO_MQTT_DISCONNECT:
         if (fnDisconnectMQTT() == 0) {
-            fnDebugMsg("Disonnecting...");
+            fnDebugMsg("Disconnecting...");
         }
         else {
             fnDebugMsg("Not connected!");
