@@ -11849,6 +11849,12 @@ typedef struct stKINETIS_LPTMR_CTL
     #define PB_7_TPM1_CH0                PORT_MUX_ALT2
     #define PB_6_TPM1_CH0                PORT_MUX_ALT2
 #endif
+#if defined KINETIS_KL28
+    #define PC_8_TPM0_CH4                PORT_MUX_ALT3
+    #define PC_9_TPM0_CH5                PORT_MUX_ALT3
+    #define PA_1_FTM2_CH0                PORT_MUX_ALT3
+    #define PA_2_FTM2_CH0                PORT_MUX_ALT3
+#endif
 #if defined KINETIS_KL17 || defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL43
     #define PD_0_FTM0_CH0                PORT_MUX_ALT4
     #define PD_1_FTM0_CH1                PORT_MUX_ALT4
@@ -11857,10 +11863,9 @@ typedef struct stKINETIS_LPTMR_CTL
     #if defined KINETIS_KL28
         #define PD_4_FTM0_CH3            PORT_MUX_ALT4
         #define PD_5_FTM0_CH3            PORT_MUX_ALT4
-    #else
-        #define PE_24_TPM0_CH0           PORT_MUX_ALT3
-        #define PE_25_TPM0_CH1           PORT_MUX_ALT3
     #endif
+    #define PE_24_TPM0_CH0               PORT_MUX_ALT3
+    #define PE_25_TPM0_CH1               PORT_MUX_ALT3
     #define PE_29_TPM0_CH2               PORT_MUX_ALT3
     #define PE_30_TPM0_CH3               PORT_MUX_ALT3
     #define PE_31_TPM0_CH4               PORT_MUX_ALT3
@@ -11942,7 +11947,7 @@ typedef struct stKINETIS_LPTMR_CTL
 #define PA_10_FTM2_CH0                   PORT_MUX_ALT3
 #define PB_19_FTM2_CH1                   PORT_MUX_ALT3
 #define PA_11_FTM2_CH1                   PORT_MUX_ALT3
-#if defined KINETIS_KL21 || defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27
+#if defined KINETIS_KL21 || defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL28
     #define PB_2_FTM2_CH0                PORT_MUX_ALT3
     #define PB_3_FTM2_CH1                PORT_MUX_ALT3
 #endif
@@ -17335,7 +17340,11 @@ typedef struct stPWM_INTERRUPT_SETUP
 #define PWM_PRESCALER_0         0x0000
 #define PWM_EDGE_ALIGNED        0x0000
 #define PWM_CENTER_ALIGNED      FTM_SC_CPWMS                             // 0x20
-#define PWM_EXTERNAL_CLK        FTM_SC_CLKS_EXT                          // 0x18
+#if defined KINETIS_KL28
+    #define PWM_EXTERNAL_CLK    FTM_SC_CLKS_EXT_SYNC                     // 0x10 - counter increments on rising edge of TPM_EXTCLK synchronised to the TPM counter clock
+#else
+    #define PWM_EXTERNAL_CLK    FTM_SC_CLKS_EXT                          // 0x18
+#endif
 #define PWM_FIXED_CLK           FTM_SC_CLKS_FIX                          // 0x10 presently not supported
 #define PWM_SYS_CLK             FTM_SC_CLKS_SYS                          // 0x08
 #define PWM_IRC48M_CLK          FTM_SC_CLKS_SYS                          // for use by device with IRC48M

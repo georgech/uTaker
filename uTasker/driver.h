@@ -32,7 +32,7 @@
     24.02.2009 Add CONFIG_RTS_PIN, CONFIG_CTS_PIN, SET_RS485_MODE        {14}
     24.02.2009 TTYTABLE configuration extended to configurable tye. TTYQUE opn_mode also changed to same type {15}
     24.02.2009 Add INFORM_ON_FRAME_TRANSMISSION                          {16}
-    07.04.2009 Add fnGetUserMimeType(), fnEnterUserFiles() and USER_FILE struc {17}
+    07.04.2009 Add fnGetUserMimeType(), fnEnterUserFiles() and USER_FILE struct {17}
     16.04.2009 Add WITH_CR_LF flag for use with string functions         {18}
     26.05.2009 Add uMemset_long() and uMemcpy_long()                     {19}
     10.06.2009 DCE_MODE and DTE_MODE removed (replaced by INFORM_ON_FRAME_TRANSMISSION) {20}
@@ -97,6 +97,7 @@
     29.11.2017 Add UART_INVERT_TX                                        {78}
     16.12.2017 Add optional uCalloc() and uCFree()                       {79}
     17.12.2017 Change uMemset() to match memset() parameters             {80}
+    13.03.2018 Add UART_IDLE_LINE_INTERRUPT                              {81}
 
 */
 
@@ -262,12 +263,15 @@
 #define INFORM_ON_FRAME_TRANSMISSION 0x2000                              // {16} transmitter informs on transmission completion (no more data waiting) in output buffer
 #define BREAK_AFTER_TX               0x4000                              // send a break once the tx buffer has emptied
 #define MSG_BREAK_MODE               0x8000                              // message framing using break
-// The following options are availble when UART_EXTENDED_MODE are enabled
-//
-#define MULTIDROP_MODE_RX            0x00010000                          // {23} extended mode - also known as 9-bit mode (reception)
-#define MULTIDROP_MODE_TX            0x00020000                          // {38} extended mode - also known as 9-bit mode (transmission)
-#define UART_TIMED_TRANSMISSION_MODE 0x00040000                          // {72}
-#define UART_INVERT_TX               0x00080000                          // {78}
+#if defined UART_EXTENDED_MODE
+    // The following options are available when UART_EXTENDED_MODE is enabled
+    //
+    #define MULTIDROP_MODE_RX            0x00010000                      // {23} extended mode - also known as 9-bit mode (reception)
+    #define MULTIDROP_MODE_TX            0x00020000                      // {38} extended mode - also known as 9-bit mode (transmission)
+    #define UART_TIMED_TRANSMISSION_MODE 0x00040000                      // {72}
+    #define UART_INVERT_TX               0x00080000                      // {78}
+    #define UART_IDLE_LINE_INTERRUPT     0x00100000                      // {81}
+#endif
 
 #define UART_TX_DMA                  0x01                                // UART uses DMA for transmission
 #define UART_RX_DMA                  0x02                                // UART uses DMA for reception

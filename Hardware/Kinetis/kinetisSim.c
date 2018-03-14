@@ -97,7 +97,9 @@ static unsigned long ulPort_in_A, ulPort_in_B, ulPort_in_C, ulPort_in_D, ulPort_
 #if PORTS_AVAILABLE > 5
     static unsigned long ulPort_in_F;
 #endif
-
+#if defined SERIAL_INTERFACE
+    static int iUART_rx_Active[LPUARTS_AVAILABLE + UARTS_AVAILABLE] = {0};
+#endif
 #if defined KINETIS_KE && !defined KINETIS_KE15
     static unsigned char ucPortFunctions[PORTS_AVAILABLE_8_BIT][PORT_WIDTH] = {0};
 #else
@@ -5189,7 +5191,9 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
 #if defined SERIAL_INTERFACE
     VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
     #if defined LOG_UART_RX
-    fnLogRx(iPort, ptrDebugIn, usLen);                                   // {43}
+    if (ptrDebugIn != 0) {
+        fnLogRx(iPort, ptrDebugIn, usLen);                               // {43}
+    }
     #endif
     #if NUMBER_EXTERNAL_SERIAL > 0
     if (iPort >= NUMBER_SERIAL) {
@@ -5214,7 +5218,11 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
         return;
     }
     #endif
-
+    #if defined SERIAL_INTERFACE
+    if (usLen != 0) {
+        iUART_rx_Active[iPort] = 1;                                      // mark that the reception line is not idle
+    }
+    #endif
     #if LPUARTS_AVAILABLE > 0
         #if UARTS_AVAILABLE > 0
     if (uart_type[iPort] == UART_TYPE_LPUART) {
@@ -5226,7 +5234,17 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
         case 0:
         #endif
             if ((LPUART0_CTRL & LPUART_CTRL_RE) != 0) {                  // if receiver enabled
-                while ((usLen--) != 0) {                                 // for each reception character
+                if (ptrDebugIn == 0) {                                   // idle line detection
+                    LPUART0_STAT |= LPUART_STAT_IDLE;                    // mark idle line status
+                    if ((LPUART0_CTRL & LPUART_CTRL_ILIE) != 0) {        // if the idle line interrupt is enabled
+                        if (fnGenInt(irq_LPUART0_ID) != 0) {             // if LPUART0 interrupt is not disabled
+                            VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                            ptrVect->processor_interrupts.irq_LPUART0(); // call the interrupt handler
+                        }
+                    }
+                    return;
+                }
+                while (usLen-- != 0) {                                   // for each reception character
                     LPUART0_DATA = *ptrDebugIn++;
                     LPUART0_STAT |= LPUART_STAT_RDRF;                    // set interrupt cause
                     if ((LPUART0_CTRL & LPUART_CTRL_RIE) != 0) {
@@ -5272,6 +5290,16 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
         case 1:
             #endif
             if ((LPUART1_CTRL & LPUART_CTRL_RE) != 0) {                  // if receiver enabled
+                if (ptrDebugIn == 0) {                                   // idle line detection
+                    LPUART1_STAT |= LPUART_STAT_IDLE;                    // mark idle line status
+                    if ((LPUART1_CTRL & LPUART_CTRL_ILIE) != 0) {        // if the idle line interrupt is enabled
+                        if (fnGenInt(irq_LPUART1_ID) != 0) {             // if LPUART1 interrupt is not disabled
+                            VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                            ptrVect->processor_interrupts.irq_LPUART1(); // call the interrupt handler
+                        }
+                    }
+                    return;
+                }
                 while ((usLen--) != 0) {                                 // for each reception character
                     LPUART1_DATA = *ptrDebugIn++;
                     LPUART1_STAT |= LPUART_STAT_RDRF;                    // set interrupt cause
@@ -5319,7 +5347,26 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
         case 2:
             #endif
             if ((LPUART2_CTRL & LPUART_CTRL_RE) != 0) {                  // if receiver enabled
-                while ((usLen--) != 0) {                                 // for each reception character
+                if (ptrDebugIn == 0) {                                   // idle line detection
+                    LPUART2_STAT |= LPUART_STAT_IDLE;                    // mark idle line status
+                    if ((LPUART2_CTRL & LPUART_CTRL_ILIE) != 0) {        // if the idle line interrupt is enabled
+            #if !defined irq_LPUART2_ID && defined INTMUX0_AVAILABLE
+                        if (fnGenInt(irq_INTMUX0_0_ID + INTMUX_LPUART2) != 0) // {46}
+            #else
+                        if (fnGenInt(irq_LPUART2_ID) != 0)
+            #endif
+                        {                                                // if LPUART2 interrupt is not disabled
+                            VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+            #if !defined irq_LPUART2_ID
+                            fnCallINTMUX(INTMUX_LPUART2, INTMUX0_PERIPHERAL_LPUART2, (unsigned char *)&ptrVect->processor_interrupts.irq_LPUART2);
+            #else
+                            ptrVect->processor_interrupts.irq_LPUART2(); // call the interrupt handler
+            #endif
+                        }
+                    }
+                    return;
+                }
+                while (usLen-- != 0) {                                   // for each reception character
                     LPUART2_DATA = *ptrDebugIn++;
                     LPUART2_STAT |= LPUART_STAT_RDRF;                    // set interrupt cause
                     if ((LPUART2_CTRL & LPUART_CTRL_RIE) != 0) {
@@ -5518,7 +5565,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                             VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                             ptrVect->processor_interrupts.irq_UART1();   // call the interrupt handler
                         }
-        #if !defined DEVICE_WITHOUT_DMA                              // if the device supports DMA
+        #if !defined DEVICE_WITHOUT_DMA                                  // if the device supports DMA
                     }
         #endif
                 }
@@ -5529,7 +5576,18 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
     #if (UARTS_AVAILABLE > 2 && (LPUARTS_AVAILABLE < 3 || defined LPUARTS_PARALLEL)) || ((UARTS_AVAILABLE == 1) && (LPUARTS_AVAILABLE == 2))
     case 2:
         if ((UART2_C2 & UART_C2_RE) != 0) {                              // if receiver enabled
-            while ((usLen--) != 0) {                                     // for each reception character
+            if (ptrDebugIn == 0) {                                       // idle line detection
+                UART2_S1 |= UART_S1_IDLE;                                // mark idle line status
+                if ((UART2_C2 & UART_C2_ILIE) != 0) {                    // if the idle line interrupt is enabled
+                    if (fnGenInt(irq_UART2_ID) != 0) {                   // if UART2 interrupt is not disabled
+                        VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                        ptrVect->processor_interrupts.irq_UART2();       // call the interrupt handler
+                    }
+                }
+                return;
+            }
+            UART2_S1 &= ~(UART_S1_IDLE);
+            while (usLen-- != 0) {                                       // for each reception character
                 UART2_D = *ptrDebugIn++;
                 UART2_S1 |= UART_S1_RDRF;                                // set interrupt cause
                 if ((UART2_C2 & UART_C2_RIE) != 0) {                     // if reception interrupt is enabled
@@ -5537,7 +5595,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
             #if defined KINETIS_KL &&  (UARTS_AVAILABLE > 1)
                     if ((UART2_C4 & UART_C4_RDMAS) != 0)                 // if DMA mode is enabled
             #else
-                    if ((UART2_C5 & UART_C5_RDMAS) != 0)
+                    if ((UART2_C5 & UART_C5_RDMAS) != 0)                 // if DMA mode is enabled
             #endif
                     {                                                    // {4} if the UART is operating in DMA reception mode
             #if defined SERIAL_SUPPORT_DMA && defined DMA_UART2_RX_CHANNEL
@@ -7643,6 +7701,9 @@ unsigned long fnGetFlexTimer_clock(int iChannel)
 //
 extern int fnSimTimers(void)
 {
+#if defined SERIAL_INTERFACE
+    int iUART = 0;
+#endif
 #if !defined KINETIS_KL                                                  // {24}
     static int iPDB = 0;
     static int iPDB_interrupt_triggered = 0;
@@ -8715,6 +8776,17 @@ extern int fnSimTimers(void)
         }
     }
     #endif
+#endif
+#if defined SERIAL_INTERFACE
+    while (iUART < (LPUARTS_AVAILABLE + UARTS_AVAILABLE)) {
+        if (iUART_rx_Active[iUART] != 0) {                               // if the UART's input has been active
+            if (iUART_rx_Active[iUART] == 1) {                           // detect idle line
+                fnSimulateSerialIn(iUART, 0, 0);                         // simulate idle line event
+            }
+            iUART_rx_Active[iUART]--;
+        }
+        iUART++;
+    }
 #endif
     return 0;
 }

@@ -280,6 +280,12 @@ static __interrupt void _LPSCI0_Interrupt(void)                          // LPUA
           //(void)LPUART0_DATA;                                          // read the data register in order to clear the overrun flag and allow the receiver to continue operating
         }
     }
+        #if defined UART_EXTENDED_MODE && defined UART_SUPPORT_IDLE_LINE_INTERRUPT
+    else if (((ulState & LPUART_STAT_IDLE) & LPUART0_CTRL) != 0) {       // idle line interrupt
+        WRITE_ONE_TO_CLEAR(LPUART0_STAT, LPUART_STAT_IDLE);              // write the IDLE flag back to clear it
+        fnSciRxIdle(0);                                                  // call the idle line interrupt handler
+    }
+        #endif
 
     if (((ulState & LPUART_STAT_TDRE) & LPUART0_CTRL) != 0) {            // transmit buffer is empty and the transmit interrupt is enabled
         fnSciTxByte(LPUART0_CH_NUMBER);                                  // transmit data empty interrupt - write next byte, if waiting
@@ -292,7 +298,7 @@ static __interrupt void _LPSCI0_Interrupt(void)                          // LPUA
             ulPeripheralNeedsClock &= ~(UART0_TX_CLK_REQUIRED << LPUART0_CH_NUMBER); // confirmation that the final byte has been sent out on the line so the UART no longer needs a UART clock (stop mode doesn't needed to be blocked)
             #endif
             #if (defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE
-            if (ucReportEndOfFrame[0] != 0) {                                // if the end of frame call-back is enabled
+            if (ucReportEndOfFrame[0] != 0) {                            // if the end of frame call-back is enabled
                 fnUARTFrameTermination(0);
             }
             #endif
@@ -324,6 +330,12 @@ static __interrupt void _LPSCI1_Interrupt(void)                          // LPUA
           //(void)LPUART1_DATA;                                          // read the data register in order to clear the overrun flag and allow the receiver to continue operating
         }
     }
+        #if defined UART_EXTENDED_MODE && defined UART_SUPPORT_IDLE_LINE_INTERRUPT
+    else if (((ulState & LPUART_STAT_IDLE) & LPUART0_CTRL) != 0) {       // idle line interrupt
+        WRITE_ONE_TO_CLEAR(LPUART1_STAT, LPUART_STAT_IDLE);              // write the IDLE flag back to clear it
+        fnSciRxIdle(1);                                                  // call the idle line interrupt handler
+    }
+        #endif
 
     if (((ulState & LPUART_STAT_TDRE) & LPUART1_CTRL) != 0) {            // transmit buffer is empty and the transmit interrupt is enabled
         fnSciTxByte(LPUART1_CH_NUMBER);                                  // transmit data empty interrupt - write next byte, if waiting
@@ -599,10 +611,10 @@ static __interrupt void _SCI2_Interrupt(void)                            // UART
     unsigned char ucState = UART2_S1;                                    // status register on entry to the interrupt routine
 
         #if defined SERIAL_SUPPORT_DMA                                   // {8}
-            #if defined KINETIS_KL
-    if ((UART2_C4 & UART_C4_RDMAS) == 0)
+            #if defined KINETIS_KL &&  (UARTS_AVAILABLE > 1)
+    if ((UART2_C4 & UART_C4_RDMAS) == 0)                                 // if not operating in DMA reception mode
             #else
-    if ((UART2_C5 & UART_C5_RDMAS) == 0)
+    if ((UART2_C5 & UART_C5_RDMAS) == 0)                                 // if not operating in DMA reception mode
             #endif
     {                                                                    // if the receiver is operating in DMA mode ignore reception interrupt flags
         #endif
@@ -618,12 +630,24 @@ static __interrupt void _SCI2_Interrupt(void)                            // UART
         }
         #if defined SERIAL_SUPPORT_DMA
     }
+            #if defined UART_EXTENDED_MODE && defined UART_SUPPORT_IDLE_LINE_INTERRUPT
+    else if (((ucState & UART_S1_IDLE) & UART2_C2) != 0) {               // idle line interrupt in DMA reception mode
+        // In order to clear the idle flag we need to read the data register
+        // - it is assumed that there is no risk of reading data that the DMA reception will be handling
+        //
+        (void)UART2_D;
+                #if defined _WINDOWS
+        UART2_S1 &= ~(UART_S1_IDLE);                                     // clear the idle line status flag
+                #endif
+        fnSciRxIdle(2);                                                  // call the idle line interrupt handler
+    }
+            #endif
         #endif
         #if defined SERIAL_SUPPORT_DMA                                   // {6}
-            #if defined KINETIS_KL
-    if ((UART2_C4 & UART_C4_TDMAS) == 0)
+            #if defined KINETIS_KL &&  (UARTS_AVAILABLE > 1)
+    if ((UART2_C4 & UART_C4_TDMAS) == 0)                                 // if not operating in DMA transmission mode
             #else
-    if ((UART2_C5 & UART_C5_TDMAS) == 0)
+    if ((UART2_C5 & UART_C5_TDMAS) == 0)                                 // if not operating in DMA transmission mode
             #endif
     {                                                                    // if the transmitter is operating in DMA mode ignore transmission interrupt flags
         #endif
@@ -2804,6 +2828,20 @@ static void fnConfigLPUART(QUEUE_HANDLE Channel, TTYTABLE *pars, KINETIS_LPUART_
         lpuart_reg->LPUART_BAUD &= ~LPUART_BAUD_RDMAE;                   // disable rx DMA so that rx interrupt mode can be used
     }
     #endif
+    #if defined UART_EXTENDED_MODE
+    if ((pars->Config & UART_INVERT_TX) != 0) {
+        lpuart_reg->LPUART_CTRL |= LPUART_CTRL_TXINV;                    // invert the polarity of the transmit signal
+    }
+    else {
+        lpuart_reg->LPUART_CTRL &= ~LPUART_CTRL_TXINV;                   // ensure no transmit signal inversion
+    }
+    if ((pars->Config & UART_IDLE_LINE_INTERRUPT) != 0) {                // if the idle line interrupt is to be used
+        lpuart_reg->LPUART_CTRL |= (LPUART_CTRL_IDLECFG_4 | LPUART_CTRL_ILIE | LPUART_CTRL_ILT); // idle line starts after the stop bit and 4 idle characters
+    }
+    else {
+        lpuart_reg->LPUART_CTRL &= ~(LPUART_CTRL_IDLECFG_4 | LPUART_CTRL_ILIE | LPUART_CTRL_ILT); // ensure that the idle line interrupt is disabled
+    }
+    #endif
     #if defined KINETIS_KL && defined UART_FRAME_END_COMPLETE
     if ((pars->Config & INFORM_ON_FRAME_TRANSMISSION) != 0) {
         ucReportEndOfFrame[Channel] = 1;                                 // we want to work with a frame completion interrupt
@@ -2854,6 +2892,13 @@ static void fnConfigUART(QUEUE_HANDLE Channel, TTYTABLE *pars, KINETIS_UART_CONT
     }
     else {
         uart_reg->UART_C3 = 0;                                           // ensure no transmit signal inversion
+    }
+    if ((pars->Config & UART_IDLE_LINE_INTERRUPT) != 0) {                // if the idle line interrut is to be used
+        uart_reg->UART_C1 |= UART_C1_ILT;                                // idle line starts after the stop bit
+        uart_reg->UART_C2 |= UART_C2_ILIE;                               // enable idle line interrupt
+    }
+    else {
+        uart_reg->UART_C2 &= ~UART_C2_ILIE;                              // ensure that the idle line interrupt is disabled
     }
     #endif
     #if (defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE

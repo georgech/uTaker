@@ -44,9 +44,9 @@ static void fnConfigTimerPin(int iTimer, int iChannel, unsigned long ulCharacter
                     _CONFIG_PERIPHERAL(A, 6,(PA_6_TPM0_CH0 | ulCharacteristics)); // TPM0_CH0 on PA.6 (alt. function 2)
     #elif defined KINETIS_KL02 || defined KINETIS_KL03 || defined KINETIS_KL04 || defined KINETIS_KL05
                         _CONFIG_PERIPHERAL(B, 11,(PB_11_TPM0_CH0 | ulCharacteristics)); // TPM0_CH0 on PB.11 (alt. function 2)
-    #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL43) && defined TPM0_0_ON_D
+    #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL43) && defined TPM0_0_ON_D
                         _CONFIG_PERIPHERAL(D, 0, (PD_0_FTM0_CH0 | ulCharacteristics)); // FTM0_CH0 on PD.0 (alt. function 4)
-    #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL43) && defined TPM0_0_ON_E
+    #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL43) && defined TPM0_0_ON_E
                         _CONFIG_PERIPHERAL(E, 24, (PE_24_TPM0_CH0 | ulCharacteristics)); // TPM0_CH0 on PE.24 (alt. function 3)
     #elif defined FTM0_0_ON_C
                         _CONFIG_PERIPHERAL(C, 1, (PC_1_FTM0_CH0 | ulCharacteristics)); // FTM0_CH0 on PC.1 (alt. function 4)
@@ -75,9 +75,9 @@ static void fnConfigTimerPin(int iTimer, int iChannel, unsigned long ulCharacter
                         _CONFIG_PERIPHERAL(A, 5, (PA_5_TPM0_CH1 | ulCharacteristics)); // TPM0_CH1 on PA.5 (alt. function 2)
     #elif defined KINETIS_KL02 || defined KINETIS_KL03 || defined KINETIS_KL04 || defined KINETIS_KL05
                         _CONFIG_PERIPHERAL(B, 10,(PB_10_TPM0_CH1 | ulCharacteristics)); // TPM0_CH1 on PB.10 (alt. function 2)
-    #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL43) && defined TPM0_1_ON_D
+    #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL43) && defined TPM0_1_ON_D
                         _CONFIG_PERIPHERAL(D, 1, (PD_1_FTM0_CH1 | ulCharacteristics)); // FTM0_CH1 on PD.1 (alt. function 4)
-    #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL43) && defined TPM0_1_ON_E
+    #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL43) && defined TPM0_1_ON_E
                         _CONFIG_PERIPHERAL(E, 25, (PE_25_TPM0_CH1 | ulCharacteristics)); // TPM0_CH1 on PE.25 (alt. function 3)
     #elif defined FTM0_1_ON_C
                         _CONFIG_PERIPHERAL(C, 2, (PC_2_FTM0_CH1 | ulCharacteristics)); // FTM0_CH1 on PC.2 (alt. function 4)
@@ -97,9 +97,9 @@ static void fnConfigTimerPin(int iTimer, int iChannel, unsigned long ulCharacter
             #endif
         #elif defined KINETIS_KL04 || defined KINETIS_KL05
                         _CONFIG_PERIPHERAL(B, 9, (PB_9_TPM0_CH2 | ulCharacteristics)); // TPM0_CH2 on PB.9 (alt. function 2)
-        #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL43) && defined TPM0_2_ON_D
+        #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL43) && defined TPM0_2_ON_D
                         _CONFIG_PERIPHERAL(D, 2, (PD_2_FTM0_CH2 | ulCharacteristics)); // FTM0_CH2 on PD.2 (alt. function 4)
-        #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL43) && defined TPM0_2_ON_E
+        #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL43) && defined TPM0_2_ON_E
                         _CONFIG_PERIPHERAL(E, 29, (PE_29_TPM0_CH2 | ulCharacteristics)); // TPM0_CH2 on PE.29 (alt. function 3)
         #elif defined FTM0_2_ON_C
                         _CONFIG_PERIPHERAL(C, 3, (PC_3_FTM0_CH2 | ulCharacteristics)); // FTM0_CH2 on PC.3 (alt. function 4)
@@ -118,11 +118,11 @@ static void fnConfigTimerPin(int iTimer, int iChannel, unsigned long ulCharacter
             #endif
         #elif defined KINETIS_KL04 || defined KINETIS_KL05
                         _CONFIG_PERIPHERAL(B, 8, (PB_8_TPM0_CH3 | ulCharacteristics)); // TPM0_CH3 on PB.8 (alt. function 2)
-        #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL43) && defined TPM0_3_ON_D
+        #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL43) && defined TPM0_3_ON_D
                         _CONFIG_PERIPHERAL(D, 3, (PD_3_FTM0_CH3 | ulCharacteristics)); // FTM0_CH3 on PD.3 (alt. function 4)
-        #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL43) && defined TPM0_3_ON_E
+        #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL43) && defined TPM0_3_ON_E
                         _CONFIG_PERIPHERAL(E, 30, (PE_30_TPM0_CH3 | ulCharacteristics)); // TPM0_CH3 on PE.30 (alt. function 3)
-        #elif (defined FTM0_3_ON_C && (defined KINETIS_K64  || defined KINETIS_KL43 || defined KINETIS_K80 || defined KINETIS_KL82))
+        #elif (defined FTM0_3_ON_C && (defined KINETIS_K64  || defined KINETIS_KL43 || defined KINETIS_K80 || defined KINETIS_KL82 || defined KINETIS_KL28))
                         _CONFIG_PERIPHERAL(C, 4, (PC_4_FTM0_CH3 | ulCharacteristics)); // FTM0_CH3 on PC.4 (alt. function 4)
         #else
                         _CONFIG_PERIPHERAL(A, 6, (PA_6_FTM0_CH3 | ulCharacteristics)); // FTM0_CH3 on PA.6 (alt. function 3)
@@ -137,7 +137,9 @@ static void fnConfigTimerPin(int iTimer, int iChannel, unsigned long ulCharacter
             #endif
         #elif defined KINETIS_KL04 || defined KINETIS_KL05
                         _CONFIG_PERIPHERAL(A, 6, (PA_6_TPM0_CH4 | ulCharacteristics)); // TPM0_CH4 on PA.6 (alt. function 2)
-        #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL43) && defined TPM0_4_ON_E
+        #elif defined FTM0_4_ON_C && defined KINETIS_KL28
+                        _CONFIG_PERIPHERAL(C, 8, (PC_0_TPM0_CH4 | ulCharacteristics)); // TPM0_CH4 on PC.8 (alt. function 3)
+        #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL43) && defined TPM0_4_ON_E
                         _CONFIG_PERIPHERAL(E, 31, (PE_31_TPM0_CH4 | ulCharacteristics)); // TPM0_CH4 on PE.31 (alt. function 3)
         #elif defined FTM0_4_ON_D
                         _CONFIG_PERIPHERAL(D, 4, (PD_4_FTM0_CH4 | ulCharacteristics)); // FTM0_CH4 on PD.4 (alt. function 4)
@@ -154,7 +156,9 @@ static void fnConfigTimerPin(int iTimer, int iChannel, unsigned long ulCharacter
             #endif
         #elif defined KINETIS_KL04 || defined KINETIS_KL05
                         _CONFIG_PERIPHERAL(A, 5, (PA_5_TPM0_CH5 | ulCharacteristics)); // TPM0_CH5 on PA.5 (alt. function 2)
-        #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27) && defined TPM0_5_ON_E
+        #elif defined FTM0_5_ON_C && defined KINETIS_KL28
+                        _CONFIG_PERIPHERAL(C, 9, (PC_9_TPM0_CH4 | ulCharacteristics)); // TPM0_CH4 on PC.9 (alt. function 3)
+        #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL28) && defined TPM0_5_ON_E
                         _CONFIG_PERIPHERAL(E, 26, (PE_26_TPM0_CH5 | ulCharacteristics)); // TPM0_CH5 on PE.26 (alt. function 3)
         #elif defined FTM0_5_ON_D
                         _CONFIG_PERIPHERAL(D, 5, (PD_5_FTM0_CH5 | ulCharacteristics)); // FTM0_CH5 on PD.5 (alt. function 4)
@@ -229,7 +233,7 @@ static void fnConfigTimerPin(int iTimer, int iChannel, unsigned long ulCharacter
                         _CONFIG_PERIPHERAL(E, 20, (PE_20_TPM1_CH0 | ulCharacteristics)); // TPM1_CH0 on PE.20 (alt. function 3)
         #elif defined FTM1_0_ON_B
                         _CONFIG_PERIPHERAL(B, 0, (PB_0_FTM1_CH0 | ulCharacteristics)); // FTM1_CH0 on PB.0 (alt. function 3)
-        #elif defined FTM1_0_ALT_A
+        #elif defined FTM1_0_ALT_A || defined KINETIS_KL28
                         _CONFIG_PERIPHERAL(A, 12, (PA_12_FTM1_CH0 | ulCharacteristics)); // FTM1_CH0 on PA.12 (alt. function 3)
         #else
                         _CONFIG_PERIPHERAL(A, 8, (PA_8_FTM1_CH0 | ulCharacteristics)); // FTM1_CH0 on PA.8 (alt. function 3)
@@ -260,7 +264,7 @@ static void fnConfigTimerPin(int iTimer, int iChannel, unsigned long ulCharacter
                         _CONFIG_PERIPHERAL(E, 21, (PE_21_TPM1_CH1 | ulCharacteristics)); // TPM1_CH1 on PE.21 (alt. function 3)
         #elif defined FTM1_1_ON_B
                         _CONFIG_PERIPHERAL(B, 1, (PB_1_FTM1_CH1 | ulCharacteristics)); // FTM1_CH1 on PB.1 (alt. function 3)
-        #elif defined FTM1_1_ALT_A
+        #elif defined FTM1_1_ALT_A || defined KINETIS_KL28
                         _CONFIG_PERIPHERAL(A, 13, (PA_13_FTM1_CH1 | ulCharacteristics)); // FTM1_CH1 on PA.13 (alt. function 3)
         #else
                         _CONFIG_PERIPHERAL(A, 9, (PA_9_FTM1_CH1 | ulCharacteristics)); // FTM1_CH1 on PA.9 (alt. function 3)
@@ -316,9 +320,11 @@ static void fnConfigTimerPin(int iTimer, int iChannel, unsigned long ulCharacter
                         SIM_PINSEL0 &= ~SIM_PINSEL_FTM1PS1;
                         _CONFIG_PERIPHERAL(C, 0, (PC_0_FTM2_CH0 | ulCharacteristics)); // FTM2_CH0 on PC.0 (alt. function 2)
             #endif
-        #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27) && defined TPM2_0_ON_E
+        #elif defined FTM2_0_ON_A && defined KINETIS_KL28
+                        _CONFIG_PERIPHERAL(A, 1, (PA_1_FTM2_CH0 | ulCharacteristics)); // FTM2_CH0 on PA.1 (alt. function 3)
+        #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL28) && defined TPM2_0_ON_E
                         _CONFIG_PERIPHERAL(E, 22, (PE_22_TPM2_CH0 | ulCharacteristics)); // TPM2_CH0 on PE.22 (alt. function 3)
-        #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27) && defined FTM2_0_ON_B_LOW
+        #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL28) && defined FTM2_0_ON_B_LOW
                         _CONFIG_PERIPHERAL(B, 2,  (PB_2_FTM2_CH0 | ulCharacteristics)); // FTM2_CH0 on PB.2 (alt. function 3)
         #elif defined FTM2_0_ON_B
                         _CONFIG_PERIPHERAL(B, 18, (PB_18_FTM2_CH0 | ulCharacteristics)); // FTM2_CH0 on PB.18 (alt. function 3)
@@ -356,9 +362,11 @@ static void fnConfigTimerPin(int iTimer, int iChannel, unsigned long ulCharacter
                 #endif
                         _CONFIG_PERIPHERAL(C, 1, (PC_1_FTM2_CH1 | ulCharacteristics)); // FTM2_CH1 on PC.1 (alt. function 2)
             #endif
-        #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27) && defined TPM2_1_ON_E
+        #elif defined FTM2_1_ON_A && defined KINETIS_KL28
+                        _CONFIG_PERIPHERAL(A, 2, (PA_2_FTM2_CH0 | ulCharacteristics)); // FTM2_CH0 on PA.2 (alt. function 3)
+        #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL28) && defined TPM2_1_ON_E
                         _CONFIG_PERIPHERAL(E, 23, (PE_23_TPM2_CH1 | ulCharacteristics)); // TPM2_CH1 on PE.23 (alt. function 3)
-        #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27) && defined FTM2_1_ON_B_LOW
+        #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL28) && defined FTM2_1_ON_B_LOW
                         _CONFIG_PERIPHERAL(B, 3,  (PB_3_FTM2_CH1 | ulCharacteristics)); // FTM2_CH1 on PB.3 (alt. function 3)
         #elif defined FTM2_1_ON_B
                         _CONFIG_PERIPHERAL(B, 19, (PB_19_FTM2_CH1 | ulCharacteristics)); // FTM2_CH1 on PB.19 (alt. function 3)
