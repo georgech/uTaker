@@ -1759,7 +1759,60 @@
             
     #define SET_SPI_FLASH_MODE()                                         // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
     #define REMOVE_SPI_FLASH_MODE()                                      // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
-#elif defined FRDM_KL26Z || defined FRDM_KL27Z || defined FRDM_KL28Z || defined TEENSY_LC || defined TWR_KL46Z48M || defined FRDM_KL46Z || defined FRDM_KL43Z || defined rcARM_KL26
+#elif defined FRDM_KL28Z
+    // - LPSPI0_CS0  PTE-16 (J2-11)
+    // - LPSPI0_SCK  PTE-17 (J2-13)
+    // - LPSPI0_SOUT PTE-18 (J2-15)
+    // - LPSPI0_SIN  PTE-19 (J2-17)
+    //
+    #define SPI_FLASH_FIFO_DEPTH            SPI0_FIFO_DEPTH
+    #if defined _WINDOWS
+        #define CS0_LINE                    (1 << (12 + 0))              // make use of unused register bits to allow simulator to recognise chip select state
+        #define CS1_LINE                  //(1 << (12 + 1))              // CS1 line used when extended SPI FLASH is enabled
+        #define CS2_LINE                  //(1 << (12 + 2))              // CS2 line used when extended SPI FLASH is enabled
+        #define CS3_LINE                  //(1 << (12 + 3))              // CS3 line used when extended SPI FLASH is enabled
+    #else
+        #define CS0_LINE                    LPSPI_TCR_PCS_0              // CS0 line used when SPI FLASH is enabled
+        #define CS1_LINE                                                 // CS1 line used when extended SPI FLASH is enabled
+        #define CS2_LINE                                                 // CS2 line used when extended SPI FLASH is enabled
+        #define CS3_LINE                                                 // CS3 line used when extended SPI FLASH is enabled
+    #endif
+
+    #define SPI_CS0_PORT                    LPSPI0_TCR                   // for simulator
+    #define SPI_TX_BYTE                     LPSPI0_TDR                   // for simulator
+    #define SPI_RX_BYTE                     LPSPI0_RDR                   // for simulator
+
+    #define POWER_UP_SPI_FLASH_INTERFACE()  SELECT_PCC_PERIPHERAL_SOURCE(LPSPI0, PCC_PCS_SCGFIRCLK); POWER_UP_ATOMIC(0, LPSPI0); LPSPI0_CR = (LPSPI_CR_RST)
+    #define CONFIGURE_SPI_FLASH_INTERFACE() _CONFIG_PERIPHERAL(E, 17, PE_17_LPSPI0_SCK); \
+                                            _CONFIG_PERIPHERAL(E, 18, (PE_18_LPSPI0_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); \
+                                            _CONFIG_PERIPHERAL(E, 19, (PE_19_LPSPI0_SIN | PORT_PS_UP_ENABLE)); \
+                                            _CONFIG_PERIPHERAL(E, 16, (PE_16_LPSPI0_PCS0)); \
+                                            LPSPI0_CFGR1 = (LPSPI_CFGR1_MASTER); \
+                                            LPSPI0_CCR = (0); \
+                                            LPSPI0_CR = (LPSPI_CR_MEN)
+
+    #define POWER_DOWN_SPI_FLASH_INTERFACE() POWER_DOWN_ATOMIC(0, LPSPI0)  // power down LPSPI interface if no SPI Flash detected
+
+    #define FLUSH_SPI_FIFO_AND_FLAGS()      LPSPI0_CR = (LPSPI_CR_RTF | LPSPI_CR_RRF | LPSPI_CR_MEN)
+
+    #define WRITE_SPI_CMD0(byte)            LPSPI0_TDR = (byte)          // write a single byte
+    #define READ_SPI_FLASH_DATA()           (unsigned char)LPSPI0_RDR
+    #if defined _WINDOWS
+        #define ASSERT_CS_LINE(ulChipSelectLine) LPSPI0_TCR = (LPSPI_TCR_CPOL | LPSPI_TCR_CPHA | LPSPI_TCR_PRESCALE_4 | (0x0000f000 & ~ulChipSelectLine) | LPSPI_TCR_MSBF | LPSPI_TCR_CONT | 8) // queue assertion of CS line
+        #define WRITE_SPI_CMD0_LAST(byte)   LPSPI0_TDR = (byte) // queue negation of final byte and write final byte
+        #define WAIT_SPI_RECEPTION_END()    while ((LPSPI0_RSR & (LPSPI_RSR_RXEMPTY)) != 0) {LPSPI0_RSR &= ~(LPSPI_RSR_RXEMPTY);}
+        #define NEGATE_CS_LINE(ulChipSelectLine) LPSPI0_TCR = ((LPSPI0_TCR & ~(LPSPI_TCR_CONT)) | CS0_LINE) // this is performed before queuing the final byte on the HW
+    #else
+        #define ASSERT_CS_LINE(ulChipSelectLine) LPSPI0_TCR = (LPSPI_TCR_CPOL | LPSPI_TCR_CPHA | LPSPI_TCR_PRESCALE_4 | ulChipSelectLine | LPSPI_TCR_MSBF | LPSPI_TCR_CONT | 8) // queue assertion of CS line
+        #define WRITE_SPI_CMD0_LAST(byte)   LPSPI0_TCR &= ~(LPSPI_TCR_CONT); LPSPI0_TDR = (byte) // queue negation of final byte and write final byte
+        #define WAIT_SPI_RECEPTION_END()    while ((LPSPI0_RSR & (LPSPI_RSR_RXEMPTY)) != 0) {}
+        #define NEGATE_CS_LINE(ulChipSelectLine)
+    #endif
+    #define CLEAR_RECEPTION_FLAG()          
+            
+    #define SET_SPI_FLASH_MODE()                                         // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
+    #define REMOVE_SPI_FLASH_MODE()                                      // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
+#elif defined FRDM_KL26Z || defined FRDM_KL27Z || defined TEENSY_LC || defined TWR_KL46Z48M || defined FRDM_KL46Z || defined FRDM_KL43Z || defined rcARM_KL26
     // Configure to suit special connection SPI mode at between 100k and 400k (SPI1)
     // - SPI1_CS   PTD-4 (J2-6) [VDD J3-4 / 0V J3-14]
     // - SPI1_SCK  PTD-5 (J2-12)
@@ -2016,6 +2069,45 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #else
         #define SPI_CS0_PORT                ~(SPI2_PUSHR)                // for simulator
     #endif
+#elif defined TWR_K64F120M
+    #define SPI_FLASH_FIFO_DEPTH            SPI2_FIFO_DEPTH
+
+    #define CS0_LINE                        SPI_PUSHR_PCS0               // CS0 line used when SPI FLASH is enabled
+  //#define CS1_LINE                        SPI_PUSHR_PCS1               // CS1 line used when extended SPI FLASH is enabled
+  //#define CS2_LINE                                                     // CS2 line used when extended SPI FLASH is enabled
+  //#define CS3_LINE                                                     // CS3 line used when extended SPI FLASH is enabled
+
+    #define SPI_CS0_PORT                    ~(SPI2_PUSHR)                // for simulator
+    #define SPI_CS1_PORT                    ~(SPI2_PUSHR)                // for simulator
+    #define SPI_TX_BYTE                     SPI2_PUSHR                   // for simulator
+    #define SPI_RX_BYTE                     SPI2_POPR                    // for simulator
+
+    #define POWER_UP_SPI_FLASH_INTERFACE()  POWER_UP_ATOMIC(3, SPI2)
+    #define CONFIGURE_SPI_FLASH_INTERFACE() _CONFIG_PERIPHERAL(B, 20, (PB_20_SPI2_PCS0 | PORT_SRE_FAST | PORT_DSE_HIGH));\
+                                            _CONFIG_PERIPHERAL(B, 21, (PB_21_SPI2_SCK | PORT_SRE_FAST | PORT_DSE_HIGH));\
+                                            _CONFIG_PERIPHERAL(B, 22, (PB_22_SPI2_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH));\
+                                            _CONFIG_PERIPHERAL(B, 23, PB_23_SPI2_SIN);\
+                                            SPI2_MCR = (SPI_MCR_MSTR | SPI_MCR_DCONF_SPI | SPI_MCR_CLR_RXF | SPI_MCR_CLR_TXF | SPI_MCR_PCSIS_CS0 | SPI_MCR_PCSIS_CS1 | SPI_MCR_PCSIS_CS2 | SPI_MCR_PCSIS_CS3 | SPI_MCR_PCSIS_CS4 | SPI_MCR_PCSIS_CS5);\
+                                            SPI2_CTAR0 = (SPI_CTAR_DBR | SPI_CTAR_FMSZ_8 | SPI_CTAR_PDT_7 | SPI_CTAR_BR_2 | SPI_CTAR_CPHA | SPI_CTAR_CPOL); // for 50MHz bus, 25MHz speed and 140ns min de-select time
+                                          //SPI2_CTAR0 = (/*SPI_CTAR_DBR | */ SPI_CTAR_BR_2 | SPI_CTAR_FMSZ_8 | SPI_CTAR_PDT_7 | SPI_CTAR_BR_2 | SPI_CTAR_CPHA | SPI_CTAR_CPOL); // for 50MHz bus, 6.25MHz speed and 140ns min de-select time (double speed bit removed and divider added)
+
+    #define POWER_DOWN_SPI_FLASH_INTERFACE() POWER_DOWN_ATOMIC(3, SPI2)  // power down SPI interface if no SPI Flash detected
+
+    #define FLUSH_SPI_FIFO_AND_FLAGS()      SPI2_MCR |= SPI_MCR_CLR_RXF; SPI2_SR = (SPI_SR_EOQF | SPI_SR_TFUF | SPI_SR_TFFF | SPI_SR_RFOF | SPI_SR_RFDF);
+
+    #if defined MANUAL_FLASH_CS_CONTROL
+        #define WRITE_SPI_CMD0(byte)        SPI2_PUSHR = (byte | SPI_PUSHR_CONT | 0 | SPI_PUSHR_CTAS_CTAR0) // write a single byte to the output FIFO - no automatic chip select control
+        #define WRITE_SPI_CMD0_LAST(byte)   SPI2_PUSHR = (byte | SPI_PUSHR_EOQ  | 0 | SPI_PUSHR_CTAS_CTAR0) // write final byte to output FIFO - no automatic chip select control
+    #else
+        #define WRITE_SPI_CMD0(byte)        SPI2_PUSHR = (byte | SPI_PUSHR_CONT | ulChipSelectLine | SPI_PUSHR_CTAS_CTAR0) // write a single byte to the output FIFO - assert CS line
+        #define WRITE_SPI_CMD0_LAST(byte)   SPI2_PUSHR = (byte | SPI_PUSHR_EOQ  | ulChipSelectLine | SPI_PUSHR_CTAS_CTAR0) // write final byte to output FIFO - this will negate the CS line when complete
+    #endif
+    #define READ_SPI_FLASH_DATA()           (unsigned char)SPI2_POPR
+    #define WAIT_SPI_RECEPTION_END()        while ((SPI2_SR & SPI_SR_RFDF) == 0) {}
+    #define CLEAR_RECEPTION_FLAG()          SPI2_SR |= SPI_SR_RFDF
+            
+    #define SET_SPI_FLASH_MODE()                                         // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
+    #define REMOVE_SPI_FLASH_MODE()                                      // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
 #else                                                                    // SPI flash configuration not assigned to a specific board
   //#define MANUAL_FLASH_CS_CONTROL
     #define SPI_FLASH_FIFO_DEPTH            SPI2_FIFO_DEPTH

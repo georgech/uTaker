@@ -1345,6 +1345,9 @@ typedef struct stRESET_VECTOR
     #define LPSPI_SPI                                                    // low power SPI
     #define SPI0_FIFO_DEPTH     4                                        // LPSPI0 has 4 deep rx/tx FIFO
     #define SPI1_FIFO_DEPTH     4                                        // LPSPI1 has 4 deep rx/tx FIFO
+    #if defined KINETIS_KL28
+        #define SPI2_FIFO_DEPTH     4                                    // LPSPI1 has 4 deep rx/tx FIFO
+    #endif
 #elif defined KINETIS_KL || defined KINETIS_KE                           // KL and KE usually have SPI instead of DSPI
     #if defined KINETIS_KL82
         #define DSPI_SPI
@@ -6324,11 +6327,15 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
         #define LPSPI_TCR_WIDTH    0x00030000                            // transfer mask
         #define LPSPI_TCR_TXMSK    0x00040000                            // transmit data mask
         #define LPSPI_TCR_RXMSK    0x00080000                            // receive data mask
-        #define LPSPI_TCR_CONCT    0x00100000                            // continuing command
+        #define LPSPI_TCR_CONTC    0x00100000                            // continuing command
         #define LPSPI_TCR_CONT     0x00200000                            // continuous mode
         #define LPSPI_TCR_BYSW     0x00400000                            // byte swap
+        #define LPSPI_TCR_MSBF     0x00000000                            // MSB first
         #define LPSPI_TCR_LSBF     0x00800000                            // LSB first
-        #define LPSPI_TCR_PCS      0x03000000                            // peripheral chip select
+        #define LPSPI_TCR_PCS_0    0x00000000                            // peripheral chip select PCS0 used during transfer
+        #define LPSPI_TCR_PCS_1    0x01000000                            // peripheral chip select PCS1 used during transfer
+        #define LPSPI_TCR_PCS_2    0x02000000                            // peripheral chip select PCS2 used during transfer
+        #define LPSPI_TCR_PCS_3    0x03000000                            // peripheral chip select PCS3 used during transfer
         #define LPSPI_TCR_PRESCALE_1   0x00000000                        // clock prescaler - divide by 1
         #define LPSPI_TCR_PRESCALE_2   0x08000000                        // clock prescaler - divide by 2
         #define LPSPI_TCR_PRESCALE_4   0x10000000                        // clock prescaler - divide by 4
@@ -6341,8 +6348,8 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
         #define LPSPI_TCR_CPOL     0x80000000                            // clock polarity
     #define LPSPI0_TDR          *(volatile unsigned long *)(LPSPI0_BLOCK + 0x64) // LPSPI0 transmit data register (write-only)
     #define LPSPI0_RSR          *(volatile unsigned long *)(LPSPI0_BLOCK + 0x70) // LPSPI0 receive status register (read-only)
-        #define LPSPI_RSR_SOF   0x00000001                               // start of frame
-        #define LPSPI_RSR_EMPTY 0x00000001                               // receive FIFO is empty
+        #define LPSPI_RSR_SOF     0x00000001                             // start of frame
+        #define LPSPI_RSR_RXEMPTY 0x00000002                             // receive FIFO is empty
     #define LPSPI0_RDR          *(volatile unsigned long *)(LPSPI0_BLOCK + 0x74) // LPSPI0 receive data register (read-only)
 
     #define LPSPI1_VERID        *(volatile unsigned long *)(LPSPI1_BLOCK + 0x00) // LPSPI1 version ID register (read-only)
@@ -11706,13 +11713,14 @@ typedef struct stKINETIS_LPTMR_CTL
     #endif
 #endif
 
-#if defined KINETIS_KL28
+#if defined KINETIS_KL28                                                 // LPSPI2s
     #define PE_23_LPSPI2_PCS0            PORT_MUX_ALT2
     #define PB_20_LPSPI2_PCS0            PORT_MUX_ALT2
     #define PD_11_LPSPI2_PCS0            PORT_MUX_ALT2
     #define PB_19_LPSPI2_PCS1            PORT_MUX_ALT5
     #define PC_0_LPSPI2_PCS1             PORT_MUX_ALT2
-    #define PD_15_LPSPI2_PCS1            PORT_MUX_ALT2
+    #define PD_15_LPSPI2_PCS2            PORT_MUX_ALT2
+    #define PB_17_LPSPI2_PCS2            PORT_MUX_ALT5
     #define PD_10_LPSPI2_PCS2            PORT_MUX_ALT2
     #define PB_16_LPSPI2_PCS3            PORT_MUX_ALT5
     #define PD_9_LPSPI2_PCS3             PORT_MUX_ALT3
@@ -12617,6 +12625,9 @@ typedef struct stKINETIS_LPTMR_CTL
             #define PCC_RTC_BME_AND      (volatile unsigned long *)(PCC_BLOCK + 0x0e0 + BME_AND_OFFSET)
             #define PCC_RTC_BME_XOR      (volatile unsigned long *)(PCC_BLOCK + 0x0e0 + BME_XOR_OFFSET)
         #define PCC_LPSPI2               *(volatile unsigned long *)(PCC_BLOCK + 0x0f8)
+            #define PCC_LPSPI2_BME_OR    (volatile unsigned long *)(PCC2_BLOCK + 0x0f8 + BME_OR_OFFSET)
+            #define PCC_LPSPI2_BME_AND   (volatile unsigned long *)(PCC2_BLOCK + 0x0f8 + BME_AND_OFFSET)
+            #define PCC_LPSPI2_BME_XOR   (volatile unsigned long *)(PCC2_BLOCK + 0x0f8 + BME_XOR_OFFSET)
         #define PCC_LPI2C2               *(volatile unsigned long *)(PCC_BLOCK + 0x108)
             #define PCC_LPI2C2_BME_OR    (volatile unsigned long *)(PCC_BLOCK + 0x108 + BME_OR_OFFSET)
             #define PCC_LPI2C2_BME_AND   (volatile unsigned long *)(PCC_BLOCK + 0x108 + BME_AND_OFFSET)
@@ -12664,7 +12675,13 @@ typedef struct stKINETIS_LPTMR_CTL
             #define PCC_LPTMR1_BME_AND   (volatile unsigned long *)(PCC2_BLOCK + 0x0d4 + BME_AND_OFFSET)
             #define PCC_LPTMR1_BME_XOR   (volatile unsigned long *)(PCC2_BLOCK + 0x0d4 + BME_XOR_OFFSET)
         #define PCC_LPSPI0               *(volatile unsigned long *)(PCC2_BLOCK + 0x0f0)
+            #define PCC_LPSPI0_BME_OR    (volatile unsigned long *)(PCC2_BLOCK + 0x0f0 + BME_OR_OFFSET)
+            #define PCC_LPSPI0_BME_AND   (volatile unsigned long *)(PCC2_BLOCK + 0x0f0 + BME_AND_OFFSET)
+            #define PCC_LPSPI0_BME_XOR   (volatile unsigned long *)(PCC2_BLOCK + 0x0f0 + BME_XOR_OFFSET)
         #define PCC_LPSPI1               *(volatile unsigned long *)(PCC2_BLOCK + 0x0f4)
+            #define PCC_LPSPI1_BME_OR    (volatile unsigned long *)(PCC2_BLOCK + 0x0f4 + BME_OR_OFFSET)
+            #define PCC_LPSPI1_BME_AND   (volatile unsigned long *)(PCC2_BLOCK + 0x0f4 + BME_AND_OFFSET)
+            #define PCC_LPSPI1_BME_XOR   (volatile unsigned long *)(PCC2_BLOCK + 0x0f4 + BME_XOR_OFFSET)
         #define PCC_LPI2C0               *(volatile unsigned long *)(PCC2_BLOCK + 0x100)
             #define PCC_LPI2C0_BME_OR    (volatile unsigned long *)(PCC2_BLOCK + 0x100 + BME_OR_OFFSET)
             #define PCC_LPI2C0_BME_AND   (volatile unsigned long *)(PCC2_BLOCK + 0x100 + BME_AND_OFFSET)

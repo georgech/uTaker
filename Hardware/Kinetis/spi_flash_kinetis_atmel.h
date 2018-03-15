@@ -191,7 +191,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     #endif
     case WRITE_BUFFER_1:                                                 // write data to the buffer
   //case WRITE_BUFFER_2:
-    #if !defined DSPI_SPI                                                // {2}
+    #if !defined DSPI_SPI && !defined LPSPI_SPI                          // {2}
         WAIT_SPI_RECEPTION_END();                                        // wait until the command has been sent
         (void)READ_SPI_FLASH_DATA();                                     // discard the received byte
     #endif
@@ -199,7 +199,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     #if defined _WINDOWS
         fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
     #endif
-    #if !defined DSPI_SPI                                                // {2}
+    #if !defined DSPI_SPI && !defined LPSPI_SPI                          // {2}
         WAIT_SPI_RECEPTION_END();                                        // wait until the command has been sent
         (void)READ_SPI_FLASH_DATA();                                     // discard the received byte
     #endif
@@ -207,7 +207,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     #if defined _WINDOWS
         fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
     #endif
-    #if !defined DSPI_SPI                                                // {2}
+    #if !defined DSPI_SPI && !defined LPSPI_SPI                          // {2}
         WAIT_SPI_RECEPTION_END();                                        // wait until the command has been sent
         (void)READ_SPI_FLASH_DATA();                                     // discard the received byte
     #endif
@@ -216,7 +216,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
     #endif
         dataWrites = DataLength;
-    #if !defined DSPI_SPI                                                // {2}
+    #if !defined DSPI_SPI && !defined LPSPI_SPI                          // {2}
         discardCount = (DataLength + 1);
     #else
         discardCount = (DataLength + 4);
@@ -231,7 +231,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
   //case ERASE_PROG_FROM_BUFFER_2:
     case PAGE_ERASE:
     case BLOCK_ERASE:
-    #if !defined DSPI_SPI                                                // {2}
+    #if !defined DSPI_SPI && !defined LPSPI_SPI                          // {2}
         WAIT_SPI_RECEPTION_END();                                        // wait until the command has been sent
         (void)READ_SPI_FLASH_DATA();                                     // discard the received byte
     #endif
@@ -257,7 +257,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     #if defined _WINDOWS
         fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
     #endif
-    #if !defined DSPI_SPI                                                // {2}
+    #if !defined DSPI_SPI && !defined LPSPI_SPI                          // {2}
         WAIT_SPI_RECEPTION_END();                                        // wait until the command has been sent
         (void)READ_SPI_FLASH_DATA();                                     // discard the received byte
     #endif
@@ -283,7 +283,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     #if defined _WINDOWS
         fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
     #endif
-    #if !defined DSPI_SPI                                                // {2}
+    #if !defined DSPI_SPI && !defined LPSPI_SPI                          // {2}
         WAIT_SPI_RECEPTION_END();                                        // wait until the command has been sent
         (void)READ_SPI_FLASH_DATA();                                     // discard the received byte
     #endif
@@ -297,7 +297,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
     #endif
         SPI_FLASH_Danger[iChipSelect] = 1;                               // mark that the device will be busy for some time
-    #if !defined DSPI_SPI                                                // {2}
+    #if !defined DSPI_SPI && !defined LPSPI_SPI                          // {2}
         discardCount = 1;
     #else
         discardCount = 4;
@@ -305,7 +305,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         break;
 
     case CONTINUOUS_ARRAY_READ:                                          // this is a legacy command for compatibility between B and D-devices
-    #if !defined DSPI_SPI                                                // {2}
+    #if !defined DSPI_SPI && !defined LPSPI_SPI                          // {2}
         WAIT_SPI_RECEPTION_END();                                        // wait until the command has been sent
         (void)READ_SPI_FLASH_DATA();                                     // discard the received byte
     #endif
@@ -313,7 +313,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     #if defined _WINDOWS
         fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
     #endif
-    #if !defined DSPI_SPI                                                // {2}
+    #if !defined DSPI_SPI && !defined LPSPI_SPI                          // {2}
         WAIT_SPI_RECEPTION_END();                                        // wait until the command has been sent
         (void)READ_SPI_FLASH_DATA();                                     // discard the received byte
     #endif
@@ -321,7 +321,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     #if defined _WINDOWS
         fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
     #endif
-    #if !defined DSPI_SPI                                                // {2}
+    #if !defined DSPI_SPI && !defined LPSPI_SPI                          // {2}
         WAIT_SPI_RECEPTION_END();                                        // wait until the command has been sent
         (void)READ_SPI_FLASH_DATA();                                     // discard the received byte
     #endif
@@ -330,7 +330,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
     #endif
         dummyWrites = (DataLength + 4);                                  // 4 dummy bytes needed before the device returns data
-    #if !defined DSPI_SPI                                                // {2}
+    #if !defined DSPI_SPI && !defined LPSPI_SPI                          // {2}
         discardCount = 5;
     #else
         discardCount = 8;
@@ -338,7 +338,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         break;
 
     case READ_MANUFACTURER_ID:                                           // this only works on D-device     
-    #if !defined DSPI_SPI                                                // {2}
+    #if !defined DSPI_SPI && !defined LPSPI_SPI                          // {2}
         dummyWrites = 5;
     #else
         WRITE_SPI_CMD0(0xff);                                            // ensure transmit FIFO has more than one byte in it
@@ -348,7 +348,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         break;
 
     case READ_STATUS_REGISTER:                                           // read single byte from status register
-    #if !defined DSPI_SPI                                                // {2}
+    #if !defined DSPI_SPI && !defined LPSPI_SPI                          // {2}
         dummyWrites = 1;
     #else
         WRITE_SPI_CMD0_LAST(0xff);                                       // dummy write
