@@ -260,6 +260,12 @@ static const unsigned long ulDisabled[PORTS_AVAILABLE] = {
     0x00000c38,                                                          // port C disabled default pins
     0x0000009d,                                                          // port D disabled default pins
     0x83000003                                                           // port E disabled default pins
+    #elif defined KINETIS_KL28
+    (PORTA_BIT29 | PORTA_BIT16 | PORTA_BIT15 | PORTA_BIT14 | PORTA_BIT13 | PORTA_BIT12 | PORTA_BIT11 | PORTA_BIT10 | PORTA_BIT7 | PORTA_BIT6 | PORTA_BIT5 | PORTA_BIT4 | PORTA_BIT2 | PORTA_BIT1), // port A disabled default pins
+    (PORTB_BIT23 | PORTB_BIT22 | PORTB_BIT21 | PORTB_BIT20 | PORTB_BIT11 | PORTB_BIT10 | PORTB_BIT9 | PORTB_BIT8 | PORTB_BIT7 | PORTB_BIT6), // port B disabled default pins
+    (PORTC_BIT23 | PORTC_BIT22 | PORTC_BIT19 | PORTC_BIT18 | PORTC_BIT17 | PORTC_BIT16 | PORTC_BIT15 | PORTC_BIT14 | PORTC_BIT13 | PORTC_BIT12 | PORTC_BIT11 | PORTC_BIT10 | PORTC_BIT5 | PORTC_BIT4), // port C disabled default pins
+    (PORTD_BIT15 | PORTD_BIT14 | PORTD_BIT13 | PORTD_BIT12 | PORTD_BIT11 | PORTD_BIT10 | PORTD_BIT9 | PORTD_BIT8 | PORTD_BIT7 | PORTD_BIT4 | PORTD_BIT3 | PORTD_BIT2 | PORTD_BIT0), // port D disabled default pins
+    (PORTE_BIT31 | PORTE_BIT26 | PORTE_BIT6 | PORTE_BIT5 | PORTE_BIT4)   // port E disabled default pins
     #elif defined KINETIS_KL82                                           // {44}
     0x2003fc00,                                                          // port A disabled default pins
     0x00f00ff0,                                                          // port B disabled default pins
@@ -1045,8 +1051,8 @@ static void fnSetDevice(unsigned long *port_inits)
     #endif
 #endif
 #if defined CHIP_HAS_FLEXIO
-    FLEXIO_VERID = 0x01000000;
-    FLEXIO_PARAM = 0x10080404;
+    FLEXIO0_VERID = 0x01010001;
+    FLEXIO0_PARAM = 0x04200808;
 #endif
 #if !defined KINETIS_KL && !defined KINETIS_KE
     CRC_CRC   = 0xffffffff;                                              // {6} CRC

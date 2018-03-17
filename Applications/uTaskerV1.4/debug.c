@@ -112,6 +112,8 @@
     10.11.2017 Add MQTT client commands                                  {87}
     04.12.2017 Add memory-mapped divide and square root demonstration    {88} - Kinetis processors with MMDVSQ
     17.01.2018 Add I2C master firmware loader                            {89}
+    16.03.2018 Accept control-? (0x7f) as back space (used by putty by default) {90}
+    17.03.2018 Add FlexIO menu                                           {91}
 
 */
 
@@ -136,6 +138,7 @@
                                                                          // note that STOP_MII_CLOCK should not be enabled when using this (kinetis)
 //#define _DEBUG_CAN                                                     // support dumping CAN register details for debugging purpose
 //#define I2C_MASTER_LOADER                                              // {89} load firmware to a connected I2C slave (requires I2C_INTERFACE - enable TEST_I2C in i2c_tests.h for interface open)
+#define TEST_FLEXIO                                                      // {91} allow testing of flexio operations
 
 #if defined CMSIS_DSP_CFFT
     #define TEST_CMSIS_CFFT                                              // {84} enable test of CMSIS CFFT
@@ -235,7 +238,8 @@
     #define DO_MENU_HELP_FTP_TELNET_MQTT 16                              // {37}
     #define DO_MENU_HELP_CAN        17                                   // {38}
     #define DO_MENU_HELP_ADVANCED   18                                   // {84}
-    #define DO_HELP_UP              19                                   // go up menu tree
+    #define DO_MENU_HELP_FLEXIO     19
+    #define DO_HELP_UP              20                                   // go up menu tree
 
 #define DO_HARDWARE               1                                      // reference to hardware group of commands
     #define DO_RESET                0                                    // specific hardware command to reset target
@@ -290,6 +294,10 @@
     #define DO_SET_CONTRAST        50                                    // specific hardware command to set the LCD contrast setting (%)
     #define DO_SQRT                51                                    // specific hardware command to calculate the square root of an integer entered as dec or hex
     #define DO_DIV                 52                                    // specific hardware command to calculate the remainder and quotient of an integer division
+    #define DO_FLEXIO_ON           53                                    // specific flexio command to power up the flexio module
+    #define DO_FLEXIO_PIN          54                                    // specific flexio command to configure pin(s) to flexio mode
+    #define DO_FLEXIO_PIN_STATE    55                                    // specific flexio command to display the pin states
+    #define DO_FLEXIO_STATUS       56                                    // specific flexio command to display shifter and timer status
 
 #define DO_TELNET                 2                                      // reference to Telnet group
     #define DO_TELNET_QUIT              0                                // specific Telnet comand to quit the session
@@ -535,6 +543,7 @@
 #define MENU_HELP_FTP               9
 #define MENU_HELP_CAN               10
 #define MENU_HELP_ADVANCED          11
+#define MENU_HELP_FLEXIO            11                                   // in place of MENU_HELP_ADVANCED
 
 #if defined USE_FTP_CLIENT && !defined FTP_CLIENT_BUFFERED_SOCKET_MODE && !defined FTP_CLIENT_EXTERN_DATA_SOCKET // {37}
     #define FTP_SIMPLE_DATA_SOCKET
@@ -674,7 +683,9 @@ static const DEBUG_COMMAND tMainCommand[] = {
     {"9",                 "FTP/TELNET commands",                   DO_HELP,          DO_MENU_HELP_FTP_TELNET_MQTT },
 #endif
     {"a",                 "CAN commands",                          DO_HELP,          DO_MENU_HELP_CAN }, // {38}
-#if defined CMSIS_DSP_CFFT || defined CRYPTOGRAPHY || defined MMDVSQ_AVAILABLE // {84}{88}
+#if defined TEST_FLEXIO                                                  // {91}
+    {"b",                 "FLEXIO",                                DO_HELP,          DO_MENU_HELP_FLEXIO },
+#elif defined CMSIS_DSP_CFFT || defined CRYPTOGRAPHY || defined MMDVSQ_AVAILABLE // {84}{88}
     {"b",                 "Advanced commands",                     DO_HELP,          DO_MENU_HELP_ADVANCED },
 #endif
     {"help",              "Display menu specific help",            DO_HELP,          DO_MAIN_HELP },
@@ -1132,7 +1143,19 @@ static const DEBUG_COMMAND tCANCommand[] = {                             // {38}
     {"quit",              "Leave command mode",                    DO_TELNET,        DO_TELNET_QUIT },
 };
 
-#if defined CMSIS_DSP_CFFT || defined CRYPTOGRAPHY || defined MMDVSQ_AVAILABLE
+#if defined TEST_FLEXIO                                                  // {91}
+static const DEBUG_COMMAND tFlexioCommand[] = {
+    {"up",                "go to main menu",                       DO_HELP,          DO_HELP_UP},
+    {"flex_on",           "power up module",                       DO_HARDWARE,      DO_FLEXIO_ON},
+    {"flex_pin",          "config pin [0..23]",                    DO_HARDWARE,      DO_FLEXIO_PIN},
+    #if defined KINETIS_KL28
+    {"flex_in",           "display the pin state",                 DO_HARDWARE,      DO_FLEXIO_PIN_STATE},
+    #endif
+    {"flex_stat",         "display status",                        DO_HARDWARE,      DO_FLEXIO_STATUS},
+    {"quit",              "Leave command mode",                    DO_TELNET,        DO_TELNET_QUIT},
+};
+
+#elif defined CMSIS_DSP_CFFT || defined CRYPTOGRAPHY || defined MMDVSQ_AVAILABLE
 static const DEBUG_COMMAND tAdvancedCommand[] = {                        // {84}
     {"up",                "go to main menu",                       DO_HELP,          DO_HELP_UP },
 #if defined TEST_CMSIS_CFFT
@@ -1164,23 +1187,25 @@ static const DEBUG_COMMAND tSecretCommands[] = {
 };
 
 static const MENUS ucMenus[] = {
-    { tMainCommand,        15, (sizeof(tMainCommand) / sizeof(DEBUG_COMMAND)),        "     Main menu"},
-    { tLANCommand,         20, (sizeof(tLANCommand) / sizeof(DEBUG_COMMAND)),         " LAN configuration"},
-    { tSERIALCommand,      22, (sizeof(tSERIALCommand) / sizeof(DEBUG_COMMAND)),      "   Serial config."},
-    { tIOCommand,          15, (sizeof(tIOCommand) / sizeof(DEBUG_COMMAND)),          " Input/Output menu"},
-    { tADMINCommand,       17, (sizeof(tADMINCommand) / sizeof(DEBUG_COMMAND)),       "   Admin. menu"},
-    { tStatCommand,        17, (sizeof(tStatCommand) / sizeof(DEBUG_COMMAND)),        "   Stats. menu"},
-    { tUSBCommand,         13, (sizeof(tUSBCommand) / sizeof(DEBUG_COMMAND)),         "    USB menu"},
-    { tI2CCommand,         13, (sizeof(tI2CCommand) / sizeof(DEBUG_COMMAND)),         "    I2C menu"},
-    { tDiskCommand,        13, (sizeof(tDiskCommand) / sizeof(DEBUG_COMMAND)),        "  Disk interface"}, // {17}
+    { tMainCommand,        15, (sizeof(tMainCommand)/sizeof(DEBUG_COMMAND)),        "     Main menu"},
+    { tLANCommand,         20, (sizeof(tLANCommand)/sizeof(DEBUG_COMMAND)),         " LAN configuration"},
+    { tSERIALCommand,      22, (sizeof(tSERIALCommand)/sizeof(DEBUG_COMMAND)),      "   Serial config."},
+    { tIOCommand,          15, (sizeof(tIOCommand)/sizeof(DEBUG_COMMAND)),          " Input/Output menu"},
+    { tADMINCommand,       17, (sizeof(tADMINCommand)/sizeof(DEBUG_COMMAND)),       "   Admin. menu"},
+    { tStatCommand,        17, (sizeof(tStatCommand)/sizeof(DEBUG_COMMAND)),        "   Stats. menu"},
+    { tUSBCommand,         13, (sizeof(tUSBCommand)/sizeof(DEBUG_COMMAND)),         "    USB menu"},
+    { tI2CCommand,         13, (sizeof(tI2CCommand)/sizeof(DEBUG_COMMAND)),         "    I2C menu"},
+    { tDiskCommand,        13, (sizeof(tDiskCommand)/sizeof(DEBUG_COMMAND)),        "  Disk interface"}, // {17}
 #if defined USE_MQTT_CLIENT
-    { tFTP_TELNET_Command, 15, (sizeof(tFTP_TELNET_Command) / sizeof(DEBUG_COMMAND)), "FTP/TELNET/MQTT" }, // {37}
+    { tFTP_TELNET_Command, 15, (sizeof(tFTP_TELNET_Command)/sizeof(DEBUG_COMMAND)), "FTP/TELNET/MQTT" }, // {37}
 #else
-    { tFTP_TELNET_Command, 15, (sizeof(tFTP_TELNET_Command) / sizeof(DEBUG_COMMAND)), "FTP/TELNET commands"}, // {37}
+    { tFTP_TELNET_Command, 15, (sizeof(tFTP_TELNET_Command)/sizeof(DEBUG_COMMAND)), "FTP/TELNET commands"}, // {37}
 #endif
-    { tCANCommand,         15, (sizeof(tCANCommand) / sizeof(DEBUG_COMMAND)),         "   CAN commands"}, // {38}
-#if defined CMSIS_DSP_CFFT || defined CRYPTOGRAPHY || defined MMDVSQ_AVAILABLE
-    { tAdvancedCommand,    15, (sizeof(tAdvancedCommand) / sizeof(DEBUG_COMMAND)),    "   Advanced" }, // {84}{88}
+    { tCANCommand,         15, (sizeof(tCANCommand)/sizeof(DEBUG_COMMAND)),         "   CAN commands"}, // {38}
+#if defined TEST_FLEXIO                                                  // {91}
+    { tFlexioCommand,      15, (sizeof(tFlexioCommand)/sizeof(DEBUG_COMMAND)),      "   FLEXIO" },
+#elif defined CMSIS_DSP_CFFT || defined CRYPTOGRAPHY || defined MMDVSQ_AVAILABLE
+    { tAdvancedCommand,    15, (sizeof(tAdvancedCommand)/sizeof(DEBUG_COMMAND)),    "   Advanced" }, // {84}{88}
 #endif
 };
 
@@ -3992,7 +4017,147 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
           }
           break;
 #endif
-#if defined MMDVSQ_AVAILABLE                                             // {88}
+#if defined TEST_FLEXIO                                                  // {91}
+      case DO_FLEXIO_ON:
+    #if defined KINETIS_WITH_PCC
+          SELECT_PCC_PERIPHERAL_SOURCE(FLEXIO0, FLEXIO_PCC_SOURCE);      // select the PCC clock used by LPI2C0
+    #endif
+          POWER_UP_ATOMIC(2, FLEXIO0);
+          FLEXIO0_CTRL = (FLEXIO_CTRL_SWRST | FLEXIO_CTRL_FLEXEN | FLEXIO_CTRL_DBGE); // reset and enable
+          FLEXIO0_CTRL = (FLEXIO_CTRL_FLEXEN | FLEXIO_CTRL_DBGE);
+          fnDebugMsg("Flex io powered\r\n");
+          fnDebugMsg("Verion ID = ");
+          while ((FLEXIO0_CTRL & FLEXIO_CTRL_SWRST) != 0) {              // wait until module has completed its reset
+          }
+          fnDebugHex(FLEXIO0_VERID, (sizeof(unsigned long) | WITH_LEADIN | WITH_CR_LF));
+          fnDebugMsg("Parameter = ");
+          fnDebugHex(FLEXIO0_PARAM, (sizeof(unsigned long) | WITH_LEADIN));
+          break;
+      case DO_FLEXIO_PIN:
+          {
+              unsigned char ucPinRef = (unsigned char)fnDecStrHex(ptrInput);
+              switch (ucPinRef) {
+              case 0:
+                  fnDebugMsg("PTE16");
+                  _CONFIG_PERIPHERAL(E, 16, (PE_16_FXIO0_D0 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 1:
+                  fnDebugMsg("PTE17");
+                  _CONFIG_PERIPHERAL(E, 17, (PE_17_FXIO0_D1 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 2:
+                  fnDebugMsg("PTE18");
+                  _CONFIG_PERIPHERAL(E, 18, (PE_18_FXIO0_D2 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 3:
+                  fnDebugMsg("PTE19");
+                  _CONFIG_PERIPHERAL(E, 19, (PE_19_FXIO0_D3 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 4:
+                  fnDebugMsg("PTE20");
+                  _CONFIG_PERIPHERAL(E, 20, (PE_20_FXIO0_D4 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 5:
+                  fnDebugMsg("PTE21");
+                  _CONFIG_PERIPHERAL(E, 21, (PE_21_FXIO0_D5 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 6:
+                  fnDebugMsg("PTE22");
+                  _CONFIG_PERIPHERAL(E, 22, (PE_22_FXIO0_D6 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 7:
+                  fnDebugMsg("PTE23");
+                  _CONFIG_PERIPHERAL(E, 23, (PE_23_FXIO0_D7 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 8:
+                  fnDebugMsg("PTB0");
+                  _CONFIG_PERIPHERAL(B, 0, (PB_0_FXIO0_D8 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 9:
+                  fnDebugMsg("PTB1");
+                  _CONFIG_PERIPHERAL(B, 1, (PB_1_FXIO0_D9 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 10:
+                  fnDebugMsg("PTB2");
+                  _CONFIG_PERIPHERAL(B, 2, (PB_2_FXIO0_D10 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 11:
+                  fnDebugMsg("PTB3");
+                  _CONFIG_PERIPHERAL(B, 3, (PB_3_FXIO0_D11 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 12:
+                  fnDebugMsg("PTB8");
+                  _CONFIG_PERIPHERAL(B, 8, (PB_8_FXIO0_D12 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 13:
+                  fnDebugMsg("PTB9");
+                  _CONFIG_PERIPHERAL(B, 9, (PB_9_FXIO0_D13 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 14:
+                  fnDebugMsg("PTB10");
+                  _CONFIG_PERIPHERAL(B, 10, (PB_10_FXIO0_D14 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 15:
+                  fnDebugMsg("PTB11");
+                  _CONFIG_PERIPHERAL(B, 11, (PB_11_FXIO0_D15 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 16:
+                  fnDebugMsg("PTB16");
+                  _CONFIG_PERIPHERAL(B, 16, (PB_16_FXIO0_D16 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 17:
+                  fnDebugMsg("PTB17");
+                  _CONFIG_PERIPHERAL(B, 17, (PB_17_FXIO0_D17 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 18:
+                  fnDebugMsg("PTB18");
+                  _CONFIG_PERIPHERAL(B, 18, (PB_18_FXIO0_D18 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 19:
+                  fnDebugMsg("PTB19");
+                  _CONFIG_PERIPHERAL(B, 19, (PB_19_FXIO0_D19 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 20:
+                  fnDebugMsg("PTC7");
+                  _CONFIG_PERIPHERAL(C, 7, (PC_7_FXIO0_D20 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 21:
+                  fnDebugMsg("PTC8");
+                  _CONFIG_PERIPHERAL(C, 8, (PC_8_FXIO0_D21 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 22:
+                  fnDebugMsg("PTC9");
+                  _CONFIG_PERIPHERAL(C, 9, (PC_9_FXIO0_D22 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 23:
+                  fnDebugMsg("PTC10");
+                  _CONFIG_PERIPHERAL(C, 10, (PC_10_FXIO0_D23 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              default:
+                  fnDebugMsg("Invalid pin");
+                  return;
+              }
+              fnDebugMsg(" configured");
+          }
+          break;
+    #if defined KINETIS_KL28
+        case DO_FLEXIO_PIN_STATE:
+            fnDebugMsg("Flexio pin state ");
+            fnDebugHex(FLEXIO0_PARAM, (sizeof(unsigned long) | WITH_LEADIN));
+            break;
+    #endif
+        case DO_FLEXIO_STATUS:
+            fnDebugMsg("Shifter status ");
+            fnDebugHex(FLEXIO0_SHIFTSTAT, (sizeof(unsigned long) | WITH_LEADIN));
+            fnDebugHex(FLEXIO0_SHIFTSIEN, (WITH_SPACE | sizeof(unsigned long) | WITH_LEADIN | WITH_CR_LF));
+            fnDebugMsg("Shifter error ");
+            fnDebugHex(FLEXIO0_SHIFTERR, (sizeof(unsigned long) | WITH_LEADIN));
+            fnDebugHex(FLEXIO0_SHIFTEIEN, (WITH_SPACE | sizeof(unsigned long) | WITH_LEADIN | WITH_CR_LF));
+            fnDebugMsg("Timer status ");
+            fnDebugHex(FLEXIO0_TIMSTAT, (sizeof(unsigned long) | WITH_LEADIN));
+            fnDebugHex(FLEXIO0_TIMIEN, (WITH_SPACE | sizeof(unsigned long) | WITH_LEADIN));
+            break;
+#elif defined MMDVSQ_AVAILABLE                                           // {88}
       case DO_SQRT:
       case DO_DIV:
           {
@@ -6645,7 +6810,12 @@ static int fnDoCommand(unsigned char ucFunction, unsigned char ucType, CHAR *ptr
             ucMenu = MENU_HELP_CAN;                                      // set CAN menu
             return (fnDisplayHelp(0));                                   // large menu may require special handling
         }
-    #if defined CMSIS_DSP_CFFT || defined CRYPTOGRAPHY || defined MMDVSQ_AVAILABLE // {84}
+    #if defined TEST_FLEXIO                                              // {91}
+        else if (DO_MENU_HELP_FLEXIO == ucType) {
+            ucMenu = MENU_HELP_FLEXIO;                                   // set flexio menu
+            return (fnDisplayHelp(0));
+        }
+    #elif defined CMSIS_DSP_CFFT || defined CRYPTOGRAPHY || defined MMDVSQ_AVAILABLE // {84}
         else if (DO_MENU_HELP_ADVANCED == ucType) {
             ucMenu = MENU_HELP_ADVANCED;                                 // set advanced menu
             return (fnDisplayHelp(0));
@@ -7164,7 +7334,7 @@ extern int fnCommandInput(unsigned char *ptrData, unsigned short usLen, int iSou
 #endif
 
     while (usLen-- != 0) {
-        if (*ptrData == DELETE_KEY) {
+        if ((DELETE_KEY == *ptrData) || (CONTROL_QUESTION_MARK == *ptrData)) { // {90} putty defaults to using control-? instead of control-H for back space
             if (ucDebugCnt != 0) {
                 ucDebugCnt--;                                            // we delete it from our local buffer but not from display
                 fnDebugMsg((CHAR *)&cDeleteInput[1]);
@@ -7216,7 +7386,7 @@ extern int fnCommandInput(unsigned char *ptrData, unsigned short usLen, int iSou
                     }
                     fnDebugMsg("\r");
                 }
-                while (iOriginalLength--) {
+                while (iOriginalLength-- != 0) {
                     fnDebugMsg(" ");
                 }
                 fnDebugMsg("\r");

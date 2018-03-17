@@ -3367,7 +3367,11 @@ typedef struct stKINETIS_FLEXIO
 unsigned long FLEXIO_VERID;
 unsigned long FLEXIO_PARAM;
 unsigned long FLEXIO_CTRL;
+    #if defined KINETIS_KL28
+unsigned long FLEXIO_PIN;
+    #else
 unsigned long ulRes0;
+    #endif
 unsigned long FLEXIO_SHIFTSTAT;
 unsigned long FLEXIO_SHIFTERR;
 unsigned long FLEXIO_TIMSTAT;

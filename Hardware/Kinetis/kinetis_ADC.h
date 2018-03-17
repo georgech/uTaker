@@ -443,7 +443,7 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
                             break;
             #else
                         case ADC_CFG1_ADICLK_BUS2:
-                            ulADC_clock = (BUS_CLOCK / 2);
+                            ulADC_clock = (BUS_CLOCK/2);
                             break;
             #endif
                         case ADC_CFG1_ADICLK_ASY:

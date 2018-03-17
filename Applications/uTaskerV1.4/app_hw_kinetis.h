@@ -530,14 +530,18 @@
     #define CRYSTAL_FREQUENCY    32768                                   // 32kHz crystal
     #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
     #define RUN_FROM_HIRC                                                // clock from fast internal RC clock
-      //#define RUN_FROM_HIRC_48MHz                                      // fast IRC trimmed to 48MHz
+      //#define RUN_FROM_HIRC_48MHz                                      // fast IRC trimmed to 48MHz (default)
       //#define RUN_FROM_HIRC_52MHz                                      // fast IRC trimmed to 52MHz
       //#define RUN_FROM_HIRC_56MHz                                      // fast IRC trimmed to 56MHz
       //#define RUN_FROM_HIRC_60MHz                                      // fast IRC trimmed to 60MHz
   //#define RUN_FROM_LIRC                                                // clock from internal 8MHz RC clock
       //#define RUN_FROM_LIRC_2M                                         // clock from internal 2MHz RC clock
     #define SYSTEM_CLOCK_DIVIDE  1                                       // system clock divider value (1..16)
-    #define BUS_CLOCK_DIVIDE     2                                       // bus and flash clock divider value (1..16)
+    #if defined RUN_FROM_HIRC && (defined RUN_FROM_HIRC_60MHz || defined RUN_FROM_HIRC_56MHz || defined RUN_FROM_HIRC_52MHz)
+        #define BUS_CLOCK_DIVIDE     3                                   // bus and flash clock divider value (1..16)
+    #else
+        #define BUS_CLOCK_DIVIDE     2                                   // bus and flash clock divider value (1..16)
+    #endif
 
     #define USB_CRYSTAL_LESS                                             // use 48MHz HIRC as USB source (according to Freescale AN4905 - only possible in device mode) - rather than external pin
 #elif defined TWR_K20D50M || defined TWR_K21D50M || defined FRDM_K20D50M || defined tinyK20 || defined FRDM_KL46Z || defined TWR_KL46Z48M || defined FRDM_KL25Z || defined FRDM_KL26Z || defined TWR_KL25Z48M || defined RD_KL25_AGMP01 // {2}{22}{23}{24}
@@ -1498,7 +1502,7 @@
             #define RTC_CLOCK_PRESCALER_2  100                           // 128, 256, 512, 1024, 2048, 100 or 1000 (valid for bus clock or 1kHz LPO clock)
     #endif
 #else
-    #define SUPPORT_RTC                                                  // support real time clock
+  //#define SUPPORT_RTC                                                  // support real time clock
     #define ALARM_TASK   TASK_APPLICATION                                // alarm is handled by the application task (handled by time keeper if not defined)
     #if defined TWR_KL46Z48M || defined TWR_KL43Z48M
         #define RTC_USES_RTC_CLKIN                                       // TWR-KL46Z48M and TWR-KL43Z48M have a 32kHz oscillator supplying an accurate clock and the OpenSDA interface supplies a clock on the FRDM-KL46Z as long as the debug interface is powered (not possible with P&E debugger version)
@@ -2370,6 +2374,10 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
             #define uFILE_START      (FLASH_START_ADDRESS + (512 * 1024))// FLASH location at 512k start
             #define FILE_GRANULARITY (1 * FLASH_GRANULARITY)              // each file a multiple of 4k
             #define FILE_SYSTEM_SIZE (SIZE_OF_FLASH - uFILE_START)
+        #elif defined TRK_KEA8
+            #define uFILE_START      (FLASH_START_ADDRESS + SIZE_OF_FLASH)// FLASH location at end fo flash
+            #define FILE_GRANULARITY (1 * FLASH_GRANULARITY)              // each file a multiple of 512 bytes
+            #define FILE_SYSTEM_SIZE (SIZE_OF_FLASH - uFILE_START)        // zero actually used
         #else
           //#define uFILE_START      (FLASH_START_ADDRESS + (144 * 1024))// FLASH location at 140k start {5}
             #define uFILE_START      (FLASH_START_ADDRESS + (200 * 1024))// FLASH location at 140k start {5}
@@ -2414,6 +2422,9 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #else
         #define PARAMETER_BLOCK_START       (SIZE_OF_FLASH - PAR_BLOCK_SIZE) // parameters just before the end of flash
     #endif
+#elif defined USE_PARAMETER_AREA
+    #define PAR_BLOCK_SIZE                  FLASH_GRANULARITY
+    #define PARAMETER_BLOCK_START           (SIZE_OF_FLASH - PAR_BLOCK_SIZE) // parameters just before the end of flash
 #else
     #define PAR_BLOCK_SIZE  (0)
 #endif
@@ -3367,6 +3378,8 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define LPI2C0_PCC_SOURCE      PCC_PCS_SCGFIRCLK
     #define LPI2C1_PCC_SOURCE      PCC_PCS_SCGFIRCLK
     #define LPI2C2_PCC_SOURCE      PCC_PCS_SCGFIRCLK
+
+    #define FLEXIO_PCC_SOURCE      PCC_PCS_SCGFIRCLK
 #endif
 
 // Ports

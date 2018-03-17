@@ -1673,7 +1673,7 @@ typedef struct stRESET_VECTOR
 
 // FlexIO configuration
 //
-#if defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL43 || defined KINETIS_K80
+#if defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL43 || defined KINETIS_K80
     #define CHIP_HAS_FLEXIO
 #endif
 
@@ -3795,7 +3795,11 @@ typedef struct stVECTOR_TABLE
         #define WDOG_BLOCK                     0x40052000                // watchdog timer
     #endif
     #if defined CHIP_HAS_FLEXIO
-        #define FLEXIO_BLOCK                   0x4005f000                // FlexIO
+        #if defined KINETIS_KL28
+            #define FLEXIO_BLOCK               0x400ca000                // FlexIO
+        #else
+            #define FLEXIO_BLOCK               0x4005f000                // FlexIO
+        #endif
     #endif
     #if !defined KINETIS_KL && !defined KINETIS_KE
         #define EWM_BLOCK                      0x4005f000                // external watchdog monitor
@@ -12243,6 +12247,35 @@ typedef struct stKINETIS_LPTMR_CTL
     #define PE_26_RTC_CLKOUT             PORT_MUX_ALT6
 #endif
 
+// Flexio
+//
+#if defined KINETIS_KL28
+    #define PE_16_FXIO0_D0               PORT_MUX_ALT6
+    #define PE_17_FXIO0_D1               PORT_MUX_ALT6
+    #define PE_18_FXIO0_D2               PORT_MUX_ALT6
+    #define PE_19_FXIO0_D3               PORT_MUX_ALT6
+    #define PE_20_FXIO0_D4               PORT_MUX_ALT6
+    #define PE_21_FXIO0_D5               PORT_MUX_ALT6
+    #define PE_22_FXIO0_D6               PORT_MUX_ALT6
+    #define PE_23_FXIO0_D7               PORT_MUX_ALT6
+    #define PB_0_FXIO0_D8                PORT_MUX_ALT6
+    #define PB_1_FXIO0_D9                PORT_MUX_ALT6
+    #define PB_2_FXIO0_D10               PORT_MUX_ALT6
+    #define PB_3_FXIO0_D11               PORT_MUX_ALT6
+    #define PB_8_FXIO0_D12               PORT_MUX_ALT6
+    #define PB_9_FXIO0_D13               PORT_MUX_ALT6
+    #define PB_10_FXIO0_D14              PORT_MUX_ALT6
+    #define PB_11_FXIO0_D15              PORT_MUX_ALT6
+    #define PB_16_FXIO0_D16              PORT_MUX_ALT6
+    #define PB_17_FXIO0_D17              PORT_MUX_ALT6
+    #define PB_18_FXIO0_D18              PORT_MUX_ALT6
+    #define PB_19_FXIO0_D19              PORT_MUX_ALT6
+    #define PC_7_FXIO0_D20               PORT_MUX_ALT6
+    #define PC_8_FXIO0_D21               PORT_MUX_ALT6
+    #define PC_9_FXIO0_D22               PORT_MUX_ALT6
+    #define PC_10_FXIO0_D23              PORT_MUX_ALT6
+#endif
+
 #if defined KINETIS_KE04 && (SIZE_OF_FLASH <= (8 * 1024))                // KE04 ADC
     #define PA_1_ADC0_SE1                PORT_MUX_ALT6
     #define PA_6_ADC0_SE2                PORT_MUX_ALT6
@@ -12409,52 +12442,84 @@ typedef struct stKINETIS_LPTMR_CTL
 
 
 #if defined CHIP_HAS_FLEXIO
-    #define FLEXIO_VERID                 *(volatile unsigned long *)(FLEXIO_BLOCK + 0x000) // version ID register (read-only)
-    #define FLEXIO_PARAM                 *(volatile unsigned long *)(FLEXIO_BLOCK + 0x004) // parameter register (read-only)
-    #define FLEXIO_CTRL                  *(volatile unsigned long *)(FLEXIO_BLOCK + 0x008) // FlexIO control register
-    #define FLEXIO_SHIFTSTAT             *(volatile unsigned long *)(FLEXIO_BLOCK + 0x010) // shifter status register (write '1' to clear)
-    #define FLEXIO_SHIFTERR              *(volatile unsigned long *)(FLEXIO_BLOCK + 0x014) // shifter error register (write '1' to clear)
-    #define FLEXIO_TIMSTAT               *(volatile unsigned long *)(FLEXIO_BLOCK + 0x018) // timer status register (write '1' to clear)
-    #define FLEXIO_SHIFTSIEN             *(unsigned long *)(FLEXIO_BLOCK + 0x020) // shifter status interrupt enable register
-    #define FLEXIO_SHIFTEIEN             *(unsigned long *)(FLEXIO_BLOCK + 0x024) // shifter error interrupt enable register
-    #define FLEXIO_TIMIEN                *(unsigned long *)(FLEXIO_BLOCK + 0x028) // timer interrupt enable register
-    #define FLEXIO_SHIFTSDEN             *(unsigned long *)(FLEXIO_BLOCK + 0x030) // shifter status DMA enable
-    #define FLEXIO_SHIFTCTL0             *(unsigned long *)(FLEXIO_BLOCK + 0x080) // shifter control 0 register
-    #define FLEXIO_SHIFTCTL1             *(unsigned long *)(FLEXIO_BLOCK + 0x084) // shifter control 1 register
-    #define FLEXIO_SHIFTCTL2             *(unsigned long *)(FLEXIO_BLOCK + 0x088) // shifter control 2 register
-    #define FLEXIO_SHIFTCTL3             *(unsigned long *)(FLEXIO_BLOCK + 0x08c) // shifter control 3 register
-    #define FLEXIO_SHIFTCFG0             *(unsigned long *)(FLEXIO_BLOCK + 0x100) // shifter configuration 0 register
-    #define FLEXIO_SHIFTCFG1             *(unsigned long *)(FLEXIO_BLOCK + 0x104) // shifter configuration 1 register
-    #define FLEXIO_SHIFTCFG2             *(unsigned long *)(FLEXIO_BLOCK + 0x108) // shifter configuration 2 register
-    #define FLEXIO_SHIFTCFG3             *(unsigned long *)(FLEXIO_BLOCK + 0x10c) // shifter configuration 3 register
-    #define FLEXIO_SHIFTBUF0             *(unsigned long *)(FLEXIO_BLOCK + 0x200) // shifter buffer 0 register
-    #define FLEXIO_SHIFTBUF1             *(unsigned long *)(FLEXIO_BLOCK + 0x204) // shifter buffer 1 register
-    #define FLEXIO_SHIFTBUF2             *(unsigned long *)(FLEXIO_BLOCK + 0x208) // shifter buffer 2 register
-    #define FLEXIO_SHIFTBUF3             *(unsigned long *)(FLEXIO_BLOCK + 0x20c) // shifter buffer 3 register
-    #define FLEXIO_SHIFTBUFBIS0          *(unsigned long *)(FLEXIO_BLOCK + 0x280) // shifter buffer 0 bit swapped register
-    #define FLEXIO_SHIFTBUFBIS1          *(unsigned long *)(FLEXIO_BLOCK + 0x284) // shifter buffer 1 bit swapped register
-    #define FLEXIO_SHIFTBUFBIS2          *(unsigned long *)(FLEXIO_BLOCK + 0x288) // shifter buffer 2 bit swapped register
-    #define FLEXIO_SHIFTBUFBIS3          *(unsigned long *)(FLEXIO_BLOCK + 0x28c) // shifter buffer 3 bit swapped register
-    #define FLEXIO_SHIFTBUFBYS0          *(unsigned long *)(FLEXIO_BLOCK + 0x300) // shifter buffer 0 byte swapped register
-    #define FLEXIO_SHIFTBUFBYS1          *(unsigned long *)(FLEXIO_BLOCK + 0x304) // shifter buffer 1 byte swapped register
-    #define FLEXIO_SHIFTBUFBYS2          *(unsigned long *)(FLEXIO_BLOCK + 0x308) // shifter buffer 2 byte swapped register
-    #define FLEXIO_SHIFTBUFBYS3          *(unsigned long *)(FLEXIO_BLOCK + 0x30c) // shifter buffer 3 byte swapped register
-    #define FLEXIO_SHIFTBUFBBS0          *(unsigned long *)(FLEXIO_BLOCK + 0x380) // shifter buffer 0 bit byte swapped register
-    #define FLEXIO_SHIFTBUFBBS1          *(unsigned long *)(FLEXIO_BLOCK + 0x384) // shifter buffer 1 bit byte swapped register
-    #define FLEXIO_SHIFTBUFBBS2          *(unsigned long *)(FLEXIO_BLOCK + 0x388) // shifter buffer 2 bit byte swapped register
-    #define FLEXIO_SHIFTBUFBBS3          *(unsigned long *)(FLEXIO_BLOCK + 0x38c) // shifter buffer 3 bit byte swapped register
-    #define FLEXIO_TIMCTL0               *(unsigned long *)(FLEXIO_BLOCK + 0x400) // timer control 0 register
-    #define FLEXIO_TIMCTL1               *(unsigned long *)(FLEXIO_BLOCK + 0x404) // timer control 1 register
-    #define FLEXIO_TIMCTL2               *(unsigned long *)(FLEXIO_BLOCK + 0x408) // timer control 2 register
-    #define FLEXIO_TIMCTL3               *(unsigned long *)(FLEXIO_BLOCK + 0x40c) // timer control 3 register
-    #define FLEXIO_TIMCFG0               *(unsigned long *)(FLEXIO_BLOCK + 0x480) // timer configuration 0 register
-    #define FLEXIO_TIMCFG1               *(unsigned long *)(FLEXIO_BLOCK + 0x484) // timer configuration 1 register
-    #define FLEXIO_TIMCFG2               *(unsigned long *)(FLEXIO_BLOCK + 0x488) // timer configuration 2 register
-    #define FLEXIO_TIMCFG3               *(unsigned long *)(FLEXIO_BLOCK + 0x48c) // timer configuration 3 register
-    #define FLEXIO_TIMCMP0               *(unsigned long *)(FLEXIO_BLOCK + 0x500) // timer compare 0 register
-    #define FLEXIO_TIMCMP1               *(unsigned long *)(FLEXIO_BLOCK + 0x504) // timer compare 1 register
-    #define FLEXIO_TIMCMP2               *(unsigned long *)(FLEXIO_BLOCK + 0x508) // timer compare 2 register
-    #define FLEXIO_TIMCMP3               *(unsigned long *)(FLEXIO_BLOCK + 0x50c) // timer compare 3 register
+    #define FLEXIO0_VERID                *(volatile unsigned long *)(FLEXIO_BLOCK + 0x000) // version ID register (read-only)
+    #define FLEXIO0_PARAM                *(volatile unsigned long *)(FLEXIO_BLOCK + 0x004) // parameter register (read-only)
+    #define FLEXIO0_CTRL                 *(volatile unsigned long *)(FLEXIO_BLOCK + 0x008) // FlexIO control register
+        #define FLEXIO_CTRL_FLEXEN       0x00000001                      // flexio module enabled
+        #define FLEXIO_CTRL_SWRST        0x00000002                      // software reset
+        #define FLEXIO_CTRL_FASTACC      0x00000004                      // fast register access (flexio clock must be twice the bus clock speed to be used)
+        #define FLEXIO_CTRL_DBGE         0x40000000                      // enabled in debug mode
+        #define FLEXIO_CTRL_DOZEN        0x80000000                      // disabled in doze mode
+    #if defined KINETIS_KL28
+        #define FLEXIO0_PIN              *(volatile unsigned long *)(FLEXIO_BLOCK + 0x00c) // FlexIO pin state register (read-only)
+    #endif
+    #define FLEXIO0_SHIFTSTAT            *(volatile unsigned long *)(FLEXIO_BLOCK + 0x010) // shifter status register (write '1' to clear)
+        #define FLEXIO_SHIFTSTAT_SSF0    0x00000001                      // status flag of shifter 0
+        #define FLEXIO_SHIFTSTAT_SSF1    0x00000002                      // status flag of shifter 1
+        #define FLEXIO_SHIFTSTAT_SSF2    0x00000004                      // status flag of shifter 2
+        #define FLEXIO_SHIFTSTAT_SSF3    0x00000008                      // status flag of shifter 3
+        #define FLEXIO_SHIFTSTAT_SSF4    0x00000010                      // status flag of shifter 4
+        #define FLEXIO_SHIFTSTAT_SSF5    0x00000020                      // status flag of shifter 5
+        #define FLEXIO_SHIFTSTAT_SSF6    0x00000040                      // status flag of shifter 6
+        #define FLEXIO_SHIFTSTAT_SSF7    0x00000080                      // status flag of shifter 7
+    #define FLEXIO0_SHIFTERR             *(volatile unsigned long *)(FLEXIO_BLOCK + 0x014) // shifter error register (write '1' to clear)
+        #define FLEXIO_SHIFTERR_SEF0     0x00000001                      // error flag of shifter 0
+        #define FLEXIO_SHIFTERR_SEF1     0x00000002                      // error flag of shifter 1
+        #define FLEXIO_SHIFTERR_SEF2     0x00000004                      // error flag of shifter 2
+        #define FLEXIO_SHIFTERR_SEF3     0x00000008                      // error flag of shifter 3
+        #define FLEXIO_SHIFTERR_SEF4     0x00000010                      // error flag of shifter 4
+        #define FLEXIO_SHIFTERR_SEF5     0x00000020                      // error flag of shifter 5
+        #define FLEXIO_SHIFTERR_SEF6     0x00000040                      // error flag of shifter 6
+        #define FLEXIO_SHIFTERR_SEF7     0x00000080                      // error flag of shifter 7
+    #define FLEXIO0_TIMSTAT              *(volatile unsigned long *)(FLEXIO_BLOCK + 0x018) // timer status register (write '1' to clear)
+        #define FLEXIO_TIMSTAT_TSF0      0x00000001                      // status flag of timer 0
+        #define FLEXIO_TIMSTAT_TSF1      0x00000002                      // status flag of timer 1
+        #define FLEXIO_TIMSTAT_TSF2      0x00000004                      // status flag of timer 2
+        #define FLEXIO_TIMSTAT_TSF3      0x00000008                      // status flag of timer 3
+        #define FLEXIO_TIMSTAT_TSF4      0x00000010                      // status flag of timer 4
+        #define FLEXIO_TIMSTAT_TSF5      0x00000020                      // status flag of timer 5
+        #define FLEXIO_TIMSTAT_TSF6      0x00000040                      // status flag of timer 6
+        #define FLEXIO_TIMSTAT_TSF7      0x00000080                      // status flag of timer 7
+    #define FLEXIO0_SHIFTSIEN            *(unsigned long *)(FLEXIO_BLOCK + 0x020) // shifter status interrupt enable register
+    #define FLEXIO0_SHIFTEIEN            *(unsigned long *)(FLEXIO_BLOCK + 0x024) // shifter error interrupt enable register
+    #define FLEXIO0_TIMIEN               *(unsigned long *)(FLEXIO_BLOCK + 0x028) // timer interrupt enable register
+    #define FLEXIO0_SHIFTSDEN            *(unsigned long *)(FLEXIO_BLOCK + 0x030) // shifter status DMA enable
+    #define FLEXIO0_SHIFTCTL0            *(unsigned long *)(FLEXIO_BLOCK + 0x080) // shifter control 0 register
+    #define FLEXIO0_SHIFTCTL1            *(unsigned long *)(FLEXIO_BLOCK + 0x084) // shifter control 1 register
+    #define FLEXIO0_SHIFTCTL2            *(unsigned long *)(FLEXIO_BLOCK + 0x088) // shifter control 2 register
+    #define FLEXIO0_SHIFTCTL3            *(unsigned long *)(FLEXIO_BLOCK + 0x08c) // shifter control 3 register
+    #define FLEXIO0_SHIFTCFG0            *(unsigned long *)(FLEXIO_BLOCK + 0x100) // shifter configuration 0 register
+    #define FLEXIO0_SHIFTCFG1            *(unsigned long *)(FLEXIO_BLOCK + 0x104) // shifter configuration 1 register
+    #define FLEXIO0_SHIFTCFG2            *(unsigned long *)(FLEXIO_BLOCK + 0x108) // shifter configuration 2 register
+    #define FLEXIO0_SHIFTCFG3            *(unsigned long *)(FLEXIO_BLOCK + 0x10c) // shifter configuration 3 register
+    #define FLEXIO0_SHIFTBUF0            *(unsigned long *)(FLEXIO_BLOCK + 0x200) // shifter buffer 0 register
+    #define FLEXIO0_SHIFTBUF1            *(unsigned long *)(FLEXIO_BLOCK + 0x204) // shifter buffer 1 register
+    #define FLEXIO0_SHIFTBUF2            *(unsigned long *)(FLEXIO_BLOCK + 0x208) // shifter buffer 2 register
+    #define FLEXIO0_SHIFTBUF3            *(unsigned long *)(FLEXIO_BLOCK + 0x20c) // shifter buffer 3 register
+    #define FLEXIO0_SHIFTBUFBIS0         *(unsigned long *)(FLEXIO_BLOCK + 0x280) // shifter buffer 0 bit swapped register
+    #define FLEXIO0_SHIFTBUFBIS1         *(unsigned long *)(FLEXIO_BLOCK + 0x284) // shifter buffer 1 bit swapped register
+    #define FLEXIO0_SHIFTBUFBIS2         *(unsigned long *)(FLEXIO_BLOCK + 0x288) // shifter buffer 2 bit swapped register
+    #define FLEXIO0_SHIFTBUFBIS3         *(unsigned long *)(FLEXIO_BLOCK + 0x28c) // shifter buffer 3 bit swapped register
+    #define FLEXIO0_SHIFTBUFBYS0         *(unsigned long *)(FLEXIO_BLOCK + 0x300) // shifter buffer 0 byte swapped register
+    #define FLEXIO0_SHIFTBUFBYS1         *(unsigned long *)(FLEXIO_BLOCK + 0x304) // shifter buffer 1 byte swapped register
+    #define FLEXIO0_SHIFTBUFBYS2         *(unsigned long *)(FLEXIO_BLOCK + 0x308) // shifter buffer 2 byte swapped register
+    #define FLEXIO0_SHIFTBUFBYS3         *(unsigned long *)(FLEXIO_BLOCK + 0x30c) // shifter buffer 3 byte swapped register
+    #define FLEXIO0_SHIFTBUFBBS0         *(unsigned long *)(FLEXIO_BLOCK + 0x380) // shifter buffer 0 bit byte swapped register
+    #define FLEXIO0_SHIFTBUFBBS1         *(unsigned long *)(FLEXIO_BLOCK + 0x384) // shifter buffer 1 bit byte swapped register
+    #define FLEXIO0_SHIFTBUFBBS2         *(unsigned long *)(FLEXIO_BLOCK + 0x388) // shifter buffer 2 bit byte swapped register
+    #define FLEXIO0_SHIFTBUFBBS3         *(unsigned long *)(FLEXIO_BLOCK + 0x38c) // shifter buffer 3 bit byte swapped register
+    #define FLEXIO0_TIMCTL0              *(unsigned long *)(FLEXIO_BLOCK + 0x400) // timer control 0 register
+    #define FLEXIO0_TIMCTL1              *(unsigned long *)(FLEXIO_BLOCK + 0x404) // timer control 1 register
+    #define FLEXIO0_TIMCTL2              *(unsigned long *)(FLEXIO_BLOCK + 0x408) // timer control 2 register
+    #define FLEXIO0_TIMCTL3              *(unsigned long *)(FLEXIO_BLOCK + 0x40c) // timer control 3 register
+    #define FLEXIO0_TIMCFG0              *(unsigned long *)(FLEXIO_BLOCK + 0x480) // timer configuration 0 register
+    #define FLEXIO0_TIMCFG1              *(unsigned long *)(FLEXIO_BLOCK + 0x484) // timer configuration 1 register
+    #define FLEXIO0_TIMCFG2              *(unsigned long *)(FLEXIO_BLOCK + 0x488) // timer configuration 2 register
+    #define FLEXIO0_TIMCFG3              *(unsigned long *)(FLEXIO_BLOCK + 0x48c) // timer configuration 3 register
+    #define FLEXIO0_TIMCMP0              *(unsigned long *)(FLEXIO_BLOCK + 0x500) // timer compare 0 register
+    #define FLEXIO0_TIMCMP1              *(unsigned long *)(FLEXIO_BLOCK + 0x504) // timer compare 1 register
+    #define FLEXIO0_TIMCMP2              *(unsigned long *)(FLEXIO_BLOCK + 0x508) // timer compare 2 register
+    #define FLEXIO0_TIMCMP3              *(unsigned long *)(FLEXIO_BLOCK + 0x50c) // timer compare 3 register
 #endif
 
 // External Watchdog Monitor
@@ -12658,8 +12723,17 @@ typedef struct stKINETIS_LPTMR_CTL
             #define PCC_DAC0_BME_AND     (volatile unsigned long *)(PCC_BLOCK + 0x1a8 + BME_AND_OFFSET)
             #define PCC_DAC0_BME_XOR     (volatile unsigned long *)(PCC_BLOCK + 0x1a8 + BME_XOR_OFFSET)
         #define PCC_CMP0                 *(volatile unsigned long *)(PCC_BLOCK + 0x1b8)
+            #define PCC_CMP0_BME_OR      (volatile unsigned long *)(PCC2_BLOCK + 0x1b8 + BME_OR_OFFSET)
+            #define PCC_CMP0_BME_AND     (volatile unsigned long *)(PCC2_BLOCK + 0x1b8 + BME_AND_OFFSET)
+            #define PCC_CMP0_BME_XOR     (volatile unsigned long *)(PCC2_BLOCK + 0x1b8 + BME_XOR_OFFSET)
         #define PCC_VREF                 *(volatile unsigned long *)(PCC_BLOCK + 0x1c8)
+            #define PCC_VREF_BME_OR      (volatile unsigned long *)(PCC2_BLOCK + 0x1c8 + BME_OR_OFFSET)
+            #define PCC_VREF_BME_AND     (volatile unsigned long *)(PCC2_BLOCK + 0x1c8 + BME_AND_OFFSET)
+            #define PCC_VREF_BME_XOR     (volatile unsigned long *)(PCC2_BLOCK + 0x1c8 + BME_XOR_OFFSET)
         #define PCC_CRC                  *(volatile unsigned long *)(PCC_BLOCK + 0x1e0)
+            #define PCC_CRC_BME_OR       (volatile unsigned long *)(PCC2_BLOCK + 0x1e0 + BME_OR_OFFSET)
+            #define PCC_CRC_BME_AND      (volatile unsigned long *)(PCC2_BLOCK + 0x1e0 + BME_AND_OFFSET)
+            #define PCC_CRC_BME_XOR      (volatile unsigned long *)(PCC2_BLOCK + 0x1e0 + BME_XOR_OFFSET)
 
         #define PCC_TRNG                 *(volatile unsigned long *)(PCC2_BLOCK + 0x094)
         #define PCC_TPM0                 *(volatile unsigned long *)(PCC2_BLOCK + 0x0b0)
@@ -12699,7 +12773,13 @@ typedef struct stKINETIS_LPTMR_CTL
             #define PCC_LPUART1_BME_AND  (volatile unsigned long *)(PCC2_BLOCK + 0x114 + BME_AND_OFFSET)
             #define PCC_LPUART1_BME_XOR  (volatile unsigned long *)(PCC2_BLOCK + 0x114 + BME_XOR_OFFSET)
         #define PCC_FLEXIO0              *(volatile unsigned long *)(PCC2_BLOCK + 0x128)
+            #define PCC_FLEXIO0_BME_OR   (volatile unsigned long *)(PCC2_BLOCK + 0x128 + BME_OR_OFFSET)
+            #define PCC_FLEXIO0_BME_AND  (volatile unsigned long *)(PCC2_BLOCK + 0x128 + BME_AND_OFFSET)
+            #define PCC_FLEXIO0_BME_XOR  (volatile unsigned long *)(PCC2_BLOCK + 0x128 + BME_XOR_OFFSET)
         #define PCC_CMP1                 *(volatile unsigned long *)(PCC2_BLOCK + 0x1bc)
+            #define PCC_CMP1_BME_OR      (volatile unsigned long *)(PCC2_BLOCK + 0x1bc + BME_OR_OFFSET)
+            #define PCC_CMP1_BME_AND     (volatile unsigned long *)(PCC2_BLOCK + 0x1bc + BME_AND_OFFSET)
+            #define PCC_CMP1_BME_XOR     (volatile unsigned long *)(PCC2_BLOCK + 0x1bc + BME_XOR_OFFSET)
     #endif
     // For compatibility
     //

@@ -98,6 +98,7 @@
     16.12.2017 Add optional uCalloc() and uCFree()                       {79}
     17.12.2017 Change uMemset() to match memset() parameters             {80}
     13.03.2018 Add UART_IDLE_LINE_INTERRUPT                              {81}
+    16.03.2018 Add CONTROL_QUESTION_MARK                                 {82}
 
 */
 
@@ -202,7 +203,7 @@
 #define ASCII_ENQ                    0x05
 #define ASCII_ACK                    0x06
 #define ASCII_BEL                    0x07
-#define DELETE_KEY                   0x08                                // back space
+#define DELETE_KEY                   0x08                                // back space (control-H)
 #define ASCII_HT                     0x09
 #define LINE_FEED                    0x0a
 #define ASCII_VT                     0x0b
@@ -233,6 +234,7 @@
 #define ARROW_LEFT_SEQUENCE          0x44                                // {43}
 #define ESCAPE_ARROWS                0x5b                                // {43}
 #define BACK_SLASH                   0x5c                                // {26}
+#define CONTROL_QUESTION_MARK        0x7f                                // {82} control-? (this is used by putty as back space if not set to control-H)
 
 
 // Serial configuration
