@@ -289,7 +289,7 @@ extern int fnConfigureRTC(void *ptrSettings)
         rtc_interrupt_handler[iIRQ] = ((INTERRUPT_SETUP *)ptrSettings)->int_handler; // enter the handling interrupt
     #else
         POWER_UP_ATOMIC(6, RTC);                                         // enable access and interrupts to the RTC
-        if ((RTC_SR & RTC_SR_TIF) != 0) {                                // if timer invalid
+        if ((RTC_SR & RTC_SR_TIF) != 0) {                                // if time invalid
         #if defined _WINDOWS
             unsigned long ulTSR = RTC_TSR;
         #endif

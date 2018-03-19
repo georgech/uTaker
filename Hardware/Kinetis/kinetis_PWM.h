@@ -22,6 +22,7 @@
     24.04.2017 Add DMA based freqence control opton (eg. for stepper motors) {7}
     20.05.2017 PWM output configuration moded to kinetis.c [kinetis_timer_pins.h] so that it can be shared by capture input use
     20.11.2017 Add KE15 PWM channel output enable                        {8}
+    19.03.2018 Add PWM clock source from TRGMUX settings                 {9}
 
 */
 
@@ -206,7 +207,7 @@ static __interrupt void _PWM_Interrupt_5(void)
                 iInterruptID = irq_FTM1_ID;
         #endif
                 if ((ulMode & PWM_NO_OUTPUT) == 0) {                     // {6}
-                    fnConfigTimerPin(1, (ptrPWM_settings->pwm_reference & ~_TIMER_MODULE_MASK), (PORT_SRE_FAST | PORT_DSE_HIGH));
+                    fnConfigTimerPin(1, (ptrPWM_settings->pwm_reference & ~_TIMER_MODULE_MASK), (PORT_SRE_FAST | PORT_DSE_HIGH)); // configure the PWM output pin
                 }
                 ptrFlexTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_1;
                 break;
@@ -231,7 +232,7 @@ static __interrupt void _PWM_Interrupt_5(void)
                 iInterruptID = irq_FTM2_ID;
         #endif
                 if ((ulMode & PWM_NO_OUTPUT) == 0) {                     // {6}
-                    fnConfigTimerPin(2, (ptrPWM_settings->pwm_reference & ~_TIMER_MODULE_MASK), (PORT_SRE_FAST | PORT_DSE_HIGH));
+                    fnConfigTimerPin(2, (ptrPWM_settings->pwm_reference & ~_TIMER_MODULE_MASK), (PORT_SRE_FAST | PORT_DSE_HIGH)); // configure the PWM output pin
                 }
                 break;
     #endif
@@ -252,7 +253,7 @@ static __interrupt void _PWM_Interrupt_5(void)
         #endif
                 ptrFlexTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_3;
                 if ((ulMode & PWM_NO_OUTPUT) == 0) {                     // {6}
-                    fnConfigTimerPin(3, (ptrPWM_settings->pwm_reference & ~_TIMER_MODULE_MASK), (PORT_SRE_FAST | PORT_DSE_HIGH));
+                    fnConfigTimerPin(3, (ptrPWM_settings->pwm_reference & ~_TIMER_MODULE_MASK), (PORT_SRE_FAST | PORT_DSE_HIGH)); // configure the PWM output pin
                 }
                 break;
     #endif
@@ -266,7 +267,7 @@ static __interrupt void _PWM_Interrupt_5(void)
                 iTPM_type = 1;
                 ptrFlexTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_4;
                 if ((ulMode & PWM_NO_OUTPUT) == 0) {                     // {6}
-                    fnConfigTimerPin(4, (ptrPWM_settings->pwm_reference & ~_TIMER_MODULE_MASK), (PORT_SRE_FAST | PORT_DSE_HIGH));
+                    fnConfigTimerPin(4, (ptrPWM_settings->pwm_reference & ~_TIMER_MODULE_MASK), (PORT_SRE_FAST | PORT_DSE_HIGH)); // configure the PWM output pin
                 }
                 break;
 
@@ -279,7 +280,7 @@ static __interrupt void _PWM_Interrupt_5(void)
                 ptrFlexTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_5;
                 iTPM_type = 1;
                 if ((ulMode & PWM_NO_OUTPUT) == 0) {                     // {6}
-                    fnConfigTimerPin(5, (ptrPWM_settings->pwm_reference & ~_TIMER_MODULE_MASK), (PORT_SRE_FAST | PORT_DSE_HIGH));
+                    fnConfigTimerPin(5, (ptrPWM_settings->pwm_reference & ~_TIMER_MODULE_MASK), (PORT_SRE_FAST | PORT_DSE_HIGH)); // configure the PWM output pin
                 }
                 break;
     #endif
@@ -292,7 +293,7 @@ static __interrupt void _PWM_Interrupt_5(void)
     #if !defined KINETIS_KE
             ptrFlexTimer->FTM_CONF = FTM_DEBUG_BEHAVIOUR;                // set the debugging behaviour (whether the counter runs in debug mode and how the outputs react)
     #endif
-            if (PWM_EXTERNAL_CLK == (ulMode & FTM_SC_CLKS_EXT)) {        // if external clock source is to be used program the clock input
+            if (PWM_EXTERNAL_CLK == (ulMode & FTM_SC_CLKS_MASK)) {       // if external clock source is to be used program the clock input
     #if FLEX_TIMERS_AVAILABLE > 4 && defined TPMS_AVAILABLE
                 if (iTPM_type != 0) {
                     ulMode &= ~(FTM_SC_CLKS_EXT);                        // convert FTM external clock to TPM external clock setting
@@ -388,6 +389,25 @@ static __interrupt void _PWM_Interrupt_5(void)
                 }
     #endif
             }
+    #if defined TRGMUX_AVAILABLE                                         // {9}
+            else if (PWM_TRIGGER_CLK == (ulMode & FTM_SC_CLKS_MASK)) {   // if trigger clock source is to be used program the trigger input connection using the TRGMUX
+                switch (ucFlexTimer) {
+                case 0:                                                  // TPM0
+                    TRGMUX_TPM0 = ptrPWM_settings->ucTriggerSource;      // connect the trigger source to the clock input
+                    break;
+                case 1:                                                  // TPM1
+                    TRGMUX_TPM1 = ptrPWM_settings->ucTriggerSource;      // connect the trigger source to the clock input
+                    break;
+                case 2:                                                  // TPM2
+                    TRGMUX_TPM2 = ptrPWM_settings->ucTriggerSource;      // connect the trigger source to the clock input
+                    break;
+                }
+                ptrFlexTimer->FTM_CONF &= ~(FTM_CONF_TRGSRC_INTERNAL | FTM_CONF_TRGSEL_EXT_MASK); // ensure external trigger on trigger 0
+                if ((PWM_TRIGGER_CLOCK_INVERT & ulMode) != 0) {
+                    ptrFlexTimer->FTM_CONF |= FTM_CONF_TRGPOL_LOW;       // falling edge triggered (note that this has no effet on the KL28)
+                }
+            }
+    #endif
     #if FLEX_TIMERS_AVAILABLE > 4 && defined TPMS_AVAILABLE
             if (iTPM_type != 0) {
         #if defined TPM_CLOCKED_FROM_MCGIRCLK

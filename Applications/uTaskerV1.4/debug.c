@@ -298,6 +298,9 @@
     #define DO_FLEXIO_PIN          54                                    // specific flexio command to configure pin(s) to flexio mode
     #define DO_FLEXIO_PIN_STATE    55                                    // specific flexio command to display the pin states
     #define DO_FLEXIO_STATUS       56                                    // specific flexio command to display shifter and timer status
+    #define DO_SHOW_TRIM           57
+    #define DO_CHANGE_TRIM_COARSE  58
+    #define DO_CHANGE_TRIM_FINE    59
 
 #define DO_TELNET                 2                                      // reference to Telnet group
     #define DO_TELNET_QUIT              0                                // specific Telnet comand to quit the session
@@ -1152,6 +1155,11 @@ static const DEBUG_COMMAND tFlexioCommand[] = {
     {"flex_in",           "display the pin state",                 DO_HARDWARE,      DO_FLEXIO_PIN_STATE},
     #endif
     {"flex_stat",         "display status",                        DO_HARDWARE,      DO_FLEXIO_STATUS},
+    #if defined KINETIS_KL28
+    {"show_trim",         "display trim setting",                  DO_HARDWARE,      DO_SHOW_TRIM},
+    {"trim_c",            "coarse trim [0..0x3f]",                 DO_HARDWARE,      DO_CHANGE_TRIM_COARSE},
+    {"trim_f",            "fine trim [0..0x7f]",                   DO_HARDWARE,      DO_CHANGE_TRIM_FINE },
+    #endif
     {"quit",              "Leave command mode",                    DO_TELNET,        DO_TELNET_QUIT},
 };
 
@@ -4144,6 +4152,26 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
         case DO_FLEXIO_PIN_STATE:
             fnDebugMsg("Flexio pin state ");
             fnDebugHex(FLEXIO0_PARAM, (sizeof(unsigned long) | WITH_LEADIN));
+            break;
+        case DO_SHOW_TRIM:
+            fnDebugMsg("Fast IRC trim ");
+            fnDebugHex(SCG_FIRCTCFG, (sizeof(unsigned long) | WITH_LEADIN));
+            fnDebugHex(SCG_FIRCSTAT, (WITH_SPACE | sizeof(unsigned long) | WITH_LEADIN | WITH_CR_LF));
+            break;
+        case DO_CHANGE_TRIM_COARSE:
+        case DO_CHANGE_TRIM_FINE:
+        {
+            unsigned char ucTrim = (unsigned char)fnHexStrHex(ptrInput);
+            SCG_FIRCTCFG = SCG_FIRCTCFG_TRIMSRC_OSC;
+            SCG_FIRCCSR |= SCG_FIRCCSR_FIRCTREN;
+            SCG_FIRCCSR &= ~(SCG_FIRCCSR_FIRCTRUP);                      // allow writing the register
+            if (DO_CHANGE_TRIM_FINE == ucType) {
+                SCG_FIRCSTAT = ((SCG_FIRCSTAT & ~(SCG_FIRCSTAT_TRIMFINE_MASK)) | (ucTrim & SCG_FIRCSTAT_TRIMFINE_MASK));
+            }
+            else {
+                SCG_FIRCSTAT = ((SCG_FIRCSTAT & ~(SCG_FIRCSTAT_TRIMCOAR_MASK)) | ((ucTrim & SCG_FIRCSTAT_TRIMCOAR_MASK) << SCG_FIRCSTAT_TRIMCOAR_SHIFT));
+            }
+        }
             break;
     #endif
         case DO_FLEXIO_STATUS:

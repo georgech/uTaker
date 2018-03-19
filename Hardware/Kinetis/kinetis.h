@@ -127,6 +127,7 @@
     04.12.2017 Add LPI2C, MMDVSQ, TSTMR and RFSYS
     18.12.2017 Correct bus and flash clock calculation for KL parts with individual bus and flash clock dividers {106}
     11.03.2018 Correct PWM clock source                                  {107}
+    19.03.2018 Extend PWM configuration to use TRGMUX triggers as clock input {108}
 
 */
 
@@ -7494,11 +7495,13 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
   #define FTM_SC_CLKS_OFF   0x00000000                                   // clock source - no clock
   #define FTM_SC_CLKS_SYS   0x00000008                                   // clock source - system clock
  #if defined KINETIS_KL
-  #if defined KINETIS_KL28
-      #define FTM_SC_CLKS_EXT_SYNC 0x00000010                            // clock source - TPM_EXTCLK (rising edge) [synchronised to TPM counter clock]
-      #define FTM_SC_CLKS_EXT      0x00000018                            // clock source - TPM_EXTCLK (rising edge) [direct]
+  #if defined TRGMUX_AVAILABLE
+      #define FTM_SC_CLKS_EXT      0x00000010                            // clock source - TPM_EXTCLK (rising edge) [synchronised to TPM counter clock]
+      #define FTM_SC_CLK_TRIGGER   0x00000018                            // clock source - trigger input (rising edge) [direct]
+      #define FTM_SC_CLKS_MASK     0x00000018
   #else
       #define FTM_SC_CLKS_EXT   0x00000010                               // clock source - TPM_EXTCLK (rising edge)
+      #define FTM_SC_CLKS_MASK  0x00000010
     #endif
   #define FTM_SC_DMA        0x00000100                                   // DMA enable
  #else
@@ -7571,13 +7574,25 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
       #define FTM_CONF_CSOT     0x00010000                                   // counter start on trigger
       #define FTM_CONF_CSOO     0x00020000                                   // counter stop on overflow
       #define FTM_CONF_CROT     0x00040000                                   // counter reload on trigger
-      #define FTM_CONF_CPOT     0x00080000                                   // 
-      #define FTM_CONF_TRGPOL   0x00400000                                   // 
-      #define FTM_CONF_TRGSRC   0x00800000                                   // 
-      #define FTM_CONF_TRGSEL0  0x01000000                                   // channel 0 pin input capture (change only when TPM is disabled)
-      #define FTM_CONF_TRGSEL1  0x02000000                                   // channel 1 pin input capture (change only when TPM is disabled)
-      #define FTM_CONF_TRGSEL2  0x04000000                                   // channel 2 pin input capture (change only when TPM is disabled)
-      #define FTM_CONF_TRGSEL3  0x08000000                                   // channel 3 pin input capture (change only when TPM is disabled)
+      #define FTM_CONF_CPOT     0x00080000                                   // counter pause on trigger
+      #define FTM_CONF_TRGPOL_HIGH     0x00000000                            // trigger polarity of external trigger source is active high
+      #define FTM_CONF_TRGPOL_LOW      0x00400000                            // trigger polarity of external trigger source is active low
+      #define FTM_CONF_TRGSRC_EXTERNAL 0x00000000                            // trigger source selected by TRGSEL is external
+      #define FTM_CONF_TRGSRC_INTERNAL 0x00800000                            // trigger source selected by TRGSEL is internal (channel pin input capture)
+      #if defined TRGMUX_AVAILABLE
+          #define FTM_CONF_TRGSEL0  0x01000000                               // channel 0 pin input capture (change only when TPM is disabled) when internal source is selected (FTM_CONF_TRGSRC_INTERNAL)
+          #define FTM_CONF_TRGSEL1  0x02000000                               // channel 1 pin input capture (change only when TPM is disabled) when internal source is selected (FTM_CONF_TRGSRC_INTERNAL)
+          #define FTM_CONF_TRGSEL2  0x03000000                               // channel 0 or channel 1 pin input capture (change only when TPM is disabled) when internal source is selected (FTM_CONF_TRGSRC_INTERNAL)
+          #define FTM_CONF_TRGSEL0_EXT  0x00000000                           // TRGMUX_TPMx_trigger0 (change only when TPM is disabled) when external source is selected (FTM_CONF_TRGSRC_EXTERNAL)
+          #define FTM_CONF_TRGSEL1_EXT  0x01000000                           // TRGMUX_TPMx_trigger1 (change only when TPM is disabled) when external source is selected (FTM_CONF_TRGSRC_EXTERNAL)
+          #define FTM_CONF_TRGSEL2_EXT  0x02000000                           // TRGMUX_TPMx_trigger2 (change only when TPM is disabled) when external source is selected (FTM_CONF_TRGSRC_EXTERNAL)
+          #define FTM_CONF_TRGSEL_EXT_MASK 0x03000000
+      #else
+          #define FTM_CONF_TRGSEL0  0x01000000                               // channel 0 pin input capture (change only when TPM is disabled)
+          #define FTM_CONF_TRGSEL1  0x02000000                               // channel 1 pin input capture (change only when TPM is disabled)
+          #define FTM_CONF_TRGSEL2  0x04000000                               // channel 2 pin input capture (change only when TPM is disabled)
+          #define FTM_CONF_TRGSEL3  0x08000000                               // channel 3 pin input capture (change only when TPM is disabled)
+      #endif
 #else
     #define FTM0_C6SC           *(volatile unsigned long *)(FTM_BLOCK_0 + 0x03c) // FTM0 channel 6 and control
     #define FTM0_C6V            *(volatile unsigned long *)(FTM_BLOCK_0 + 0x040) // FTM0 channel 6 value (16 bit)
@@ -13074,7 +13089,8 @@ typedef struct stKINETIS_LPTMR_CTL
         #define SCG_FIRCCFG_RANGE_56MHz  0x00000002                      // fast IRC is trimmed to 56MHz
         #define SCG_FIRCCFG_RANGE_60MHz  0x00000003                      // fast IRC is trimmed to 60MHz
     #define SCG_FIRCTCFG                 *(unsigned long *)(SCG_BLOCK + 0x30c) // fast IRC trim configuration register
-        #define SCG_FIRCTCFG_TRIMSRC_USB0 0x00000001                     // 1kHz USB0 start of frame is used as trim source
+        #define SCG_FIRCTCFG_TRIMSRC_USB0 0x00000000                     // 1kHz USB0 start of frame is used as trim source
+        #define SCG_FIRCTCFG_TRIMSRC_OSC 0x00000002                      // system OSC is used as trim source
         #define SCG_FIRCTCFG_TRIMDIV_1   0x00000000                      // fast IRC trim pre-divide 1
         #define SCG_FIRCTCFG_TRIMDIV_128 0x00000100                      // fast IRC trim pre-divide 128
         #define SCG_FIRCTCFG_TRIMDIV_256 0x00000200                      // fast IRC trim pre-divide 256
@@ -13082,6 +13098,9 @@ typedef struct stKINETIS_LPTMR_CTL
         #define SCG_FIRCTCFG_TRIMDIV_1K  0x00000400                      // fast IRC trim pre-divide 1k
         #define SCG_FIRCTCFG_TRIMDIV_2K  0x00000500                      // fast IRC trim pre-divide 2k
     #define SCG_FIRCSTAT                 *(volatile unsigned long *)(SCG_BLOCK + 0x318) // fast IRC status register
+        #define SCG_FIRCSTAT_TRIMFINE_MASK 0x0000007f                    // trim fine status mask  (approx. +/- 0.4%)
+        #define SCG_FIRCSTAT_TRIMCOAR_MASK 0x00003f00                    // trim coarse status mask (approx. +/- 0.7%)
+        #define SCG_FIRCSTAT_TRIMCOAR_SHIFT 8
     #if defined KINETIS_KE15
         #define SCG_LPFLLCSR             *(volatile unsigned long *)(SCG_BLOCK + 0x500) // low power FFL control status register
         #define SCG_LPFLLDIV             *(unsigned long *)(SCG_BLOCK + 0x504) // low power FFL divide register
@@ -17415,6 +17434,9 @@ typedef struct stPWM_INTERRUPT_SETUP
         unsigned char    dma_int_priority;                               // DMA interrupt priority the user wants to set
         unsigned char    ucDmaChannel;                                   // DMA channel to be used
     #endif
+    #if defined TRGMUX_AVAILABLE                                         // {108}
+        unsigned char    ucTriggerSource;                                // trigger source when clock is set to PWM_TRIGGER_CLK
+    #endif
 } PWM_INTERRUPT_SETUP;
 
 #define _TIMER_0                0x00                                     // used together with pwm_reference to specify the FTM used
@@ -17437,8 +17459,9 @@ typedef struct stPWM_INTERRUPT_SETUP
 #define PWM_PRESCALER_0         0x0000
 #define PWM_EDGE_ALIGNED        0x0000
 #define PWM_CENTER_ALIGNED      FTM_SC_CPWMS                             // 0x20
-#if defined KINETIS_KL28
-    #define PWM_EXTERNAL_CLK    FTM_SC_CLKS_EXT_SYNC                     // 0x10 - counter increments on rising edge of TPM_EXTCLK synchronised to the TPM counter clock
+#if defined TRGMUX_AVAILABLE
+    #define PWM_EXTERNAL_CLK    FTM_SC_CLKS_EXT                          // 0x10 - counter increments on rising edge of TPM_EXTCLK synchronised to the TPM counter clock
+    #define PWM_TRIGGER_CLK     FTM_SC_CLK_TRIGGER                       // 0x18 - counter increments on rising edge of trigger input
 #else
     #define PWM_EXTERNAL_CLK    FTM_SC_CLKS_EXT                          // 0x18
 #endif
@@ -17454,6 +17477,7 @@ typedef struct stPWM_INTERRUPT_SETUP
 #define PWM_DMA_CHANNEL_ENABLE  0x2000                                   // {93} enable the channel to trigger DMA
 #define PWM_DMA_CONTROL_PWM     0x0000
 #define PWM_DMA_CONTROL_FREQUENCY 0x4000
+#define PWM_TRIGGER_CLOCK_INVERT  0x8000
 
 #define PWM_MODE_SETTINGS_MASK  (PWM_PRESCALER_128 | FTM_SC_CPWMS | FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS | PWM_DMA_PERIOD_ENABLE)
 
