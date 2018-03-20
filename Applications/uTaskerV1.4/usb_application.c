@@ -293,7 +293,9 @@ static unsigned char  ucCollectingMode = 0xff;
     #if USB_CDC_VCOM_COUNT > 0
         static CDC_PSTN_LINE_CODING uart_setting[USB_CDC_VCOM_COUNT];    // use a static struct to ensure that non-buffered transmission remains stable. Use also to receive new settings to
         #if USB_CDC_VCOM_COUNT > 1
+            #if defined SERIAL_INTERFACE
             static QUEUE_HANDLE CDCSerialPortID[USB_CDC_VCOM_COUNT] = {NO_ID_ALLOCATED};
+            #endif
             static UART_MODE_CONFIG CDC_UART_SerialMode[USB_CDC_VCOM_COUNT - 1];
             static unsigned char ucCDC_UART_SerialSpeed[USB_CDC_VCOM_COUNT - 1];
         #endif
@@ -1297,6 +1299,7 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
         fnHandleFreeMaster(USBPortID_comms[FIRST_CDC_INTERFACE], ucInputMessage, Length);  // handle the received data
     }
 #elif defined USB_DEVICE_SUPPORT && ((defined USE_USB_CDC && (USB_CDC_VCOM_COUNT > 0)) && defined USE_MAINTENANCE) || (defined USB_HOST_SUPPORT && defined USB_CDC_HOST) // USB-CDC with command line interface
+    #if !defined FREE_RTOS_USB || USB_CDC_COUNT > 1
     while (fnMsgs(USBPortID_comms[FIRST_CDC_INTERFACE]) != 0) {          // while reception from OUT endpoint on first CDC interface
     #if defined USB_CDC_HOST
         #if defined USB_DEVICE_SUPPORT                                   // {48} when both modes are possible
@@ -1375,8 +1378,9 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
         #endif
     #endif
     }
+    #endif
     #if (USB_CDC_VCOM_COUNT > 1) && (USB_CDC_VCOM_COUNT > (MODBUS_USB_CDC_COUNT + 1))
-    for (iCDC_input = (1 + MODBUS_USB_CDC_COUNT); iCDC_input < USB_CDC_VCOM_COUNT; iCDC_input++) { // for each CDC interface
+    for (iCDC_input = (1 + MODBUS_USB_CDC_COUNT); iCDC_input < USB_CDC_VCOM_COUNT; iCDC_input++) { // for each additional CDC interface
         #if defined FREEMASTER_CDC && (USB_CDC_VCOM_COUNT > 1)           // {35} FreeMaster run-time debugging on final USB-CDC connection
         if (iCDC_input == (USB_CDC_VCOM_COUNT - 1)) {                    // final CDC instance if used for FreeMaster run-time debugging
             if ((Length = fnRead(USBPortID_comms[iCDC_input], ucInputMessage, MEDIUM_MESSAGE)) != 0) { // read available data
@@ -1408,7 +1412,7 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
                 fnWrite(USBPortID_comms[iCDC_input], ucInputMessage, Length); // send to USB-CDC interface
             }
         }
-            #else
+            #elif !defined FREE_RTOS_USB
         Length = fnRead(USBPortID_comms[iCDC_input], ucInputMessage, LARGE_MESSAGE); // read any content
         if (Length != 0) {
             fnWrite(USBPortID_comms[iCDC_input], ucInputMessage, Length); // echo the reception back
@@ -1793,9 +1797,23 @@ extern QUEUE_TRANSFER fnSendToUSB(unsigned char *ptrData, QUEUE_TRANSFER Length)
 extern void fnSetUSB_debug(void)
 {
     #if USB_CDC_VCOM_COUNT > 0
-    DebugHandle = USBPortID_comms[FIRST_CDC_INTERFACE];
+    DebugHandle = USBPortID_comms[FIRST_CDC_INTERFACE];                  // first usb-cdc interface is used as debug interface
     #endif
 }
+
+#if defined RUN_IN_FREE_RTOS && defined FREE_RTOS_USB
+QUEUE_HANDLE fnGetUSB_Handle(void)
+{
+    #if USB_CDC_VCOM_COUNT > 1
+    return USBPortID_comms[FIRST_CDC_INTERFACE + 1];
+    #elif USB_CDC_VCOM_COUNT > 0
+    return USBPortID_comms[FIRST_CDC_INTERFACE];
+    #else
+    return (NO_ID_ALLOCATED);
+    #endif
+}
+#endif
+
 
     #if defined USE_USB_CDC && defined SERIAL_INTERFACE && defined USB_SERIAL_CONNECTIONS && (USB_CDC_VCOM_COUNT > 1)
 static QUEUE_HANDLE fnOpenUART(TTYTABLE *PtrInterfaceParameters, unsigned char ucDriverMode)
@@ -2777,7 +2795,7 @@ static int mass_storage_callback(unsigned char *ptrData, unsigned short length, 
         ucActiveLUN = ptrCBW->dCBWLUN;                                   // the logical unit number to use
         if (fnGetPartition(ucActiveLUN, 0) != 0) {                       // if valid storage device
             if ((ptrCBW->dCBWCBLength > 0) && (ptrCBW->dCBWCBLength <= 16)) { // check for valid length
-                if (ptrCBW->dmCBWFlags & CBW_IN_FLAG) {
+                if ((ptrCBW->dmCBWFlags & CBW_IN_FLAG) != 0) {
                     switch (ptrCBW->CBWCB[CBW_OperationCode]) {
                     case UFI_MODE_SENSE_6:
                         {                                                // {15}

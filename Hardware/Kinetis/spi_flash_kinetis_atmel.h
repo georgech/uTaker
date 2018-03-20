@@ -66,7 +66,7 @@
     if (ucSPI_FLASH_Type[0] < AT45DB021B)                                // we expect at least this part to be available
        #endif
     {                                                                    
-        POWER_DOWN_SPI_FLASH_INTERFACE();                                // power down SPI
+       POWER_DOWN_SPI_FLASH_INTERFACE();                                // power down SPI
     }
     else {
         #if defined SPI_FLASH_MULTIPLE_CHIPS                             // check for further devices
@@ -177,11 +177,11 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     ASSERT_CS_LINE(ulChipSelectLine);                                    // assert the chip select line
     #endif
 
+
     WRITE_SPI_CMD0(ucCommand);                                           // write command byte
     #if defined _WINDOWS
     fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SPI_TX_BYTE);         // simulate the SPI FLASH device
     #endif
-
     switch (ucCommand) {
     #if SPI_FLASH_PAGE_LENGTH == 256 || SPI_FLASH_PAGE_LENGTH == 512 || SPI_FLASH_PAGE_LENGTH == 1024 // {1}
     case POWER_OF_TWOS:
@@ -483,17 +483,16 @@ static unsigned char fnCheckAT45dbxxx(void)
             return iRtn;
         }
     }
-
     fnSPI_command(READ_STATUS_REGISTER, 0, __EXTENDED_CS ucID, 1);       // it is possibly a B-device so check the status register
     switch (ucID[0] & 0x3c) {                                            // check part size field
     case STATUS_1MEG:
-        return AT45DB011B; 
+        return AT45DB011B;
     case STATUS_2MEG:
-        return AT45DB021B; 
+        return AT45DB021B;
     case STATUS_4MEG:
-        return AT45DB041B; 
+        return AT45DB041B;
     case STATUS_8MEG:
-        return AT45DB081B; 
+        return AT45DB081B;
     default:
         break;
     }

@@ -86,8 +86,9 @@
  * 01.07.2017 uTasker configuration                                      {1}
  *----------------------------------------------------------*/
 
-#if defined _FREE_RTOS_APPLICATION || defined INC_FREERTOS_H             // {1} FreeRTOS application files can use these additiona defines
+#if defined _FREE_RTOS_APPLICATION || defined INC_FREERTOS_H             // {1} FreeRTOS application files can use these additional defines
     #include "config.h"
+    #define NO_ID_ALLOCATED    0
     #define QUEUE_TRANSFER     unsigned short
     #define QUEUE_HANDLE       unsigned char
     #define CHAR               char
@@ -98,7 +99,7 @@
     typedef unsigned int size_t;
     extern void *uMemcpy(void *ptrTo, const void *ptrFrom, size_t Size);
     extern void *uMemset(void *ptrTo, int ucValue, size_t Size);
-    #define memset(a,b,c) uMemset(a,b,c)                                 // allow FreeRTOS to use DMA bases memset() and memcpy() routines
+    #define memset(a,b,c) uMemset(a,b,c)                                 // allow FreeRTOS to use DMA based memset() and memcpy() routines
     #define memcpy(a,b,c) uMemcpy(a,b,c)
     extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*InterruptFunc)(void));
     extern QUEUE_TRANSFER fnDebugMsg(CHAR *ucToSend);

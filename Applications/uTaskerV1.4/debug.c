@@ -138,7 +138,9 @@
                                                                          // note that STOP_MII_CLOCK should not be enabled when using this (kinetis)
 //#define _DEBUG_CAN                                                     // support dumping CAN register details for debugging purpose
 //#define I2C_MASTER_LOADER                                              // {89} load firmware to a connected I2C slave (requires I2C_INTERFACE - enable TEST_I2C in i2c_tests.h for interface open)
-#define TEST_FLEXIO                                                      // {91} allow testing of flexio operations
+#if defined CHIP_HAS_FLEXIO
+    #define TEST_FLEXIO                                                  // {91} allow testing of flexio operations
+#endif
 
 #if defined CMSIS_DSP_CFFT
     #define TEST_CMSIS_CFFT                                              // {84} enable test of CMSIS CFFT

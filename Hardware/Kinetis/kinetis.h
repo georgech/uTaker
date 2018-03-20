@@ -6320,14 +6320,19 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
         #define LPSPI_CFGR1_PCSCFG  0x08000000                           // peripheral chip select configuration - PCS[3:2]
     #define LPSPI0_DMR0         *(unsigned long *)(LPSPI0_BLOCK + 0x30)  // LPSPI0 data match register 0
     #define LPSPI0_DMR1         *(unsigned long *)(LPSPI0_BLOCK + 0x34)  // LPSPI0 data match register 1
-    #define LPSPI0_CCR          *(unsigned long *)(LPSPI0_BLOCK + 0x40)  // LPSPI0 clock configuration register
-        #define LPSPI_CCR_SCKDIV 0x000000ff                              // SCK to PCS delay
-        #define LPSPI_CCR_DBT    0x0000ff00                              // PCS to SCK delay
-        #define LPSPI_CCR_PCSSCK 0x00ff0000                              // delay between transfers
-        #define LPSPI_CCR_SCKPCS 0xff000000                              // SCK divider
+    #define LPSPI0_CCR          *(unsigned long *)(LPSPI0_BLOCK + 0x40)  // LPSPI0 clock configuration register (only used in master mode and can't be changed when LPSPI is enabled)
+        #define LPSPI_CCR_SCKDIV 0x000000ff                              // SCK divider - divides the LPSPI functional clock by this value + 2
+        #define LPSPI_CCR_SCKDIV_SHIFT    0
+        #define LPSPI_CCR_DBT    0x0000ff00                              // PCS negation to next PCS assertion delay in LPSPI functional clock cycles
+        #define LPSPI_CCR_DBT_SHIFT       8
+        #define LPSPI_CCR_PCSSCK 0x00ff0000                              // PCS assertion to first SCK delay in LPSPI function clock cycles
+        #define LPSPI_CCR_PCSSCK_SHIFT   16
+        #define LPSPI_CCR_SCKPCS 0xff000000                              // last edge of SCK to PCS delay in LPSPI functional clock cycles
+        #define LPSPI_CCR_SCKPCS_SHIFT   24
+        #define LPSPI_MASTER_CLOCK_SETTING(div, delay_pcs_sck, delay_sck_pcs, delay_between) LPSPI0_CCR = (((div - 2) & LPSPI_CCR_SCKDIV) | (((delay_pcs_sck - 1) << LPSPI_CCR_PCSSCK_SHIFT) & LPSPI_CCR_PCSSCK) | (((delay_sck_pcs - 1) << LPSPI_CCR_SCKPCS_SHIFT) & LPSPI_CCR_SCKPCS) | (((delay_between - 2) << LPSPI_CCR_DBT_SHIFT) & LPSPI_CCR_DBT));
     #define LPSPI0_FCR          *(unsigned long *)(LPSPI0_BLOCK + 0x58)  // LPSPI0 FIFO control register
     #define LPSPI0_FSR          *(volatile unsigned long *)(LPSPI0_BLOCK + 0x5c) // LPSPI0 FIFO status register
-    #define LPSPI0_TCR          *(unsigned long *)(LPSPI0_BLOCK + 0x60)  // LPSPI0 transmit command register
+    #define LPSPI0_TCR          *(volatile unsigned long *)(LPSPI0_BLOCK + 0x60)  // LPSPI0 transmit command register
         #define LPSPI_TCR_FRAMESZ  0x00000fff                            // frame size
         #define LPSPI_TCR_WIDTH    0x00030000                            // transfer mask
         #define LPSPI_TCR_TXMSK    0x00040000                            // transmit data mask
@@ -7507,6 +7512,7 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
  #else
   #define FTM_SC_CLKS_FIX   0x00000010                                   // clock source - fixed clock is MCGFFCLK
   #define FTM_SC_CLKS_EXT   0x00000018                                   // clock source - external clock
+  #define FTM_SC_CLKS_MASK  0x00000018
   #define FTM_SC_DMA        0x00000100                                   // for compatibility (not available in flex timer but is available in TPM)
  #endif
   #define FTM_SC_CPWMS      0x00000020                                   // centre-aligned PWM select (FTM operates in up/down counting mode rather than up counting mode)

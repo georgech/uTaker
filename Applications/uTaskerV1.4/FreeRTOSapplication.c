@@ -23,6 +23,10 @@
 #include "task.h"
 
 extern void fn_uTasker_main(void *);
+#if defined FREE_RTOS_USB
+    extern unsigned char fnGetUSB_Handle(void);
+    static void usb_task(void *pvParameters);
+#endif
 #if defined FREE_RTOS_UART
     extern unsigned char fnGetUART_Handle(void);
     static void uart_task(void *pvParameters);
@@ -64,7 +68,20 @@ extern void fnFreeRTOS_main(void)
         tskIDLE_PRIORITY,                                                // initial priority
         NULL
         ) != pdPASS) {
-        _EXCEPTION("FreeRTOS failed to initialise task");
+        _EXCEPTION("FreeRTOS failed to initialise blinky task");
+        return;                                                          // this only happens when there was a failure to initialise the task (usually not enough heap)
+    }
+    #endif
+    #if defined FREE_RTOS_USB
+    if (xTaskCreate(                                                     // FreeRTOS USB task
+        usb_task,                                                        // pointer to the task
+        "usb_task",                                                      // task name for kernel awareness debugging
+        configMINIMAL_STACK_SIZE,                                        // task stack size
+        (void*)NULL,                                                     // optional task startup argument
+        (configMAX_PRIORITIES - 1),                                      // initial priority
+        NULL
+    ) != pdPASS) {
+        _EXCEPTION("FreeRTOS failed to initialise usb task");
         return;                                                          // this only happens when there was a failure to initialise the task (usually not enough heap)
     }
     #endif
@@ -77,7 +94,7 @@ extern void fnFreeRTOS_main(void)
         (configMAX_PRIORITIES - 1),                                      // initial priority
         NULL
         ) != pdPASS) {
-        _EXCEPTION("FreeRTOS failed to initialise task");
+        _EXCEPTION("FreeRTOS failed to initialise uart task");
         return;                                                          // this only happens when there was a failure to initialise the task (usually not enough heap)
     }
     #endif
@@ -111,19 +128,44 @@ static void blinky(void *par)
 }
 #endif
 
+#if defined FREE_RTOS_USB
+extern unsigned char fnGetUSB_Handle(void);
+static void usb_task(void *pvParameters)
+{
+    QUEUE_TRANSFER length = 0;
+    QUEUE_HANDLE usb_handle;
+    unsigned char ucRxData[128];
+    while ((usb_handle = fnGetUSB_Handle()) == NO_ID_ALLOCATED) {        // get the USB handle
+        vTaskDelay(500/portTICK_RATE_MS);                                // wait for 500ms and try again
+    }
+    FOREVER_LOOP() {
+        length = fnRead(usb_handle, ucRxData, sizeof(ucRxData));         // read any usb data received
+        if (length != 0) {                                               // if something is available
+            fnWrite(usb_handle, (unsigned char *)"FreeRTOS Echo:", 14);  // echo it back
+            fnWrite(usb_handle, ucRxData, length);                       // send the data back
+            fnWrite(usb_handle, (unsigned char *)"\r\n", 2);             // with termination
+        }
+        else {                                                           // nothing in the input buffer
+            vTaskDelay(1);                                               // wait a single tick to allow other tasks to execute
+        }
+    }
+}
+#endif
+
 #if defined FREE_RTOS_UART
 static void uart_task(void *pvParameters)
 {
     QUEUE_TRANSFER length = 0;
     QUEUE_HANDLE uart_handle;
     unsigned char dataByte;
-    vTaskDelay(500/portTICK_RATE_MS);                                    // wait for 500ms in order to allow uTasker to configure UART interfaces
-    uart_handle = fnGetUART_Handle();                                    // get the UART handle
+    while ((uart_handle = fnGetUART_Handle()) == NO_ID_ALLOCATED) {      // get the UART handle
+        vTaskDelay(500/portTICK_RATE_MS);                                // wait for 500ms in order to allow uTasker to configure UART interfaces
+    }
     fnDebugMsg("FreeRTOS Output\r\n");                                   // test a UART transmission
     FOREVER_LOOP() {
         length = fnRead(uart_handle, &dataByte, 1);                      // read a byte from the DMA input buffer (returns immediately)
         if (length != 0) {                                               // if something is available
-            fnDebugMsg("Echo:");                                         // echo it back
+            fnDebugMsg("FreeRTOS Echo:");                                // echo it back
             fnWrite(uart_handle, &dataByte, 1);                          // send the byte back
             fnDebugMsg("\r\n");                                          // with termination
         }

@@ -101,12 +101,12 @@
       //#define TEST_TIMER                                               // enable timer test(s)
         #if defined TEST_TIMER
             #if defined SUPPORT_PWM_MODULE                               // {9}
-              //#define TEST_PWM                                         // {1} test generating PWM output from timer
+                #define TEST_PWM                                         // {1} test generating PWM output from timer
               //#define TEST_STEPPER                                     // test generating stepper motor frequency patterns (use together with PWM)
             #endif
             #if defined SUPPORT_TIMER
               //#define TEST_SINGLE_SHOT_TIMER                           // test single-shot mode
-                #define TEST_PERIODIC_TIMER                              // test periodic interrupt mode
+              //#define TEST_PERIODIC_TIMER                              // test periodic interrupt mode
               //#define TEST_ADC_TIMER                                   // test periodic ADC trigger mode (Luminary)
               //#define TEST_CAPTURE                                     // {6} test timer capture mode
             #endif
@@ -402,9 +402,9 @@
                     else {
                         adc_setup.int_adc_controller = 0;
                     }
-                #endif
-                #if defined TWR_K20D50M || defined TWR_K20D72M || defined FRDM_K20D50M || defined TWR_K21D50M || defined TEENSY_3_1
+                    #if defined TWR_K20D50M || defined TWR_K20D72M || defined FRDM_K20D50M || defined TWR_K21D50M || defined TEENSY_3_1
                     adc_setup.int_adc_controller = 0;
+                    #endif
                 #endif
             #else
                     adc_setup.int_adc_bit = 0;
@@ -1777,11 +1777,20 @@ static void fnConfigure_Timer(void)
     pwm_setup.pwm_reference = (_TIMER_2 | 1);                            // timer module 2, channel 1 (green LED in RGB LED)
     #elif defined FRDM_KL26Z || defined FRDM_KL27Z || defined CAPUCCINO_KL27 || defined FRDM_KE15Z
     pwm_setup.pwm_reference = (_TIMER_0 | 4);                            // timer module 0, channel 4 (green LED in RGB LED)
+    #elif defined FRDM_KL28Z
+    pwm_setup.pwm_mode = (PWM_TRIGGER_CLK | PWM_PRESCALER_1 | PWM_EDGE_ALIGNED); // clock from trigger source
+    pwm_setup.pwm_reference = (_TIMER_1 | 1);                            // timer module 1, channel 1
+    pwm_setup.ucTriggerSource = TRGMUX_SEL_TPM0_OVERFLOW;                // use TPM0's time base as clock to TPM1
     #else
     pwm_setup.pwm_reference = (_TIMER_0 | 2);                            // timer module 0, channel 2
     pwm_setup.pwm_mode |= PWM_POLARITY;                                  // change polarity of second channel
     #endif
+    #if defined FRDM_KL28Z
+    pwm_setup.pwm_frequency = 64;                                        // PWM1 period is defined by 64 PWM0 periods
+    pwm_setup.pwm_value = 1;                                             // mark is defined by a single PWM0 clock cycle
+    #else
     pwm_setup.pwm_value  = _PWM_TENTH_PERCENT(706, pwm_setup.pwm_frequency); // 70.6% PWM (low/high) on different channel
+    #endif
     fnConfigureInterrupt((void *)&pwm_setup);
     #if defined FRDM_K64F
     pwm_setup.pwm_value = _PWM_TENTH_PERCENT(553, pwm_setup.pwm_frequency); // 55.3% PWM (low/high) on different channel

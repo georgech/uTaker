@@ -1787,33 +1787,38 @@
     #define SPI_RX_BYTE                     LPSPI0_RDR                   // for simulator
 
     #define POWER_UP_SPI_FLASH_INTERFACE()  SELECT_PCC_PERIPHERAL_SOURCE(LPSPI0, PCC_PCS_SCGFIRCLK); POWER_UP_ATOMIC(0, LPSPI0); LPSPI0_CR = (LPSPI_CR_RST)
+
     #define CONFIGURE_SPI_FLASH_INTERFACE() _CONFIG_PERIPHERAL(E, 17, PE_17_LPSPI0_SCK); \
                                             _CONFIG_PERIPHERAL(E, 18, (PE_18_LPSPI0_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); \
                                             _CONFIG_PERIPHERAL(E, 19, (PE_19_LPSPI0_SIN | PORT_PS_UP_ENABLE)); \
                                             _CONFIG_PERIPHERAL(E, 16, (PE_16_LPSPI0_PCS0)); \
+                                            LPSPI0_CR = 0; \
+                                            LPSPI_MASTER_CLOCK_SETTING(8, 8, 8, 24); \
                                             LPSPI0_CFGR1 = (LPSPI_CFGR1_MASTER); \
-                                            LPSPI0_CCR = (0); \
-                                            LPSPI0_CR = (LPSPI_CR_MEN)
+                                            LPSPI0_CR = (LPSPI_CR_MEN); \
+                                            LPSPI0_TCR = (LPSPI_TCR_CPOL | LPSPI_TCR_CPHA | LPSPI_TCR_PRESCALE_1 | LPSPI_TCR_MSBF | LPSPI_TCR_CONT  | (8 - 1)); \
+                                            LPSPI0_CR = (LPSPI_CR_RTF | LPSPI_CR_MEN);
 
     #define POWER_DOWN_SPI_FLASH_INTERFACE() POWER_DOWN_ATOMIC(0, LPSPI0)  // power down LPSPI interface if no SPI Flash detected
 
-    #define FLUSH_SPI_FIFO_AND_FLAGS()      LPSPI0_CR = (LPSPI_CR_RTF | LPSPI_CR_RRF | LPSPI_CR_MEN)
+    #define FLUSH_SPI_FIFO_AND_FLAGS()
 
-    #define WRITE_SPI_CMD0(byte)            LPSPI0_TDR = (byte)          // write a single byte
     #define READ_SPI_FLASH_DATA()           (unsigned char)LPSPI0_RDR
     #if defined _WINDOWS
-        #define ASSERT_CS_LINE(ulChipSelectLine) LPSPI0_TCR = (LPSPI_TCR_CPOL | LPSPI_TCR_CPHA | LPSPI_TCR_PRESCALE_4 | (0x0000f000 & ~ulChipSelectLine) | LPSPI_TCR_MSBF | LPSPI_TCR_CONT | 8) // queue assertion of CS line
-        #define WRITE_SPI_CMD0_LAST(byte)   LPSPI0_TDR = (byte) // queue negation of final byte and write final byte
+        #define ASSERT_CS_LINE(ulChipSelectLine) LPSPI0_TCR = (LPSPI_TCR_CPOL | LPSPI_TCR_CPHA | LPSPI_TCR_PRESCALE_1 | (0x0000f000 & ~ulChipSelectLine) | LPSPI_TCR_MSBF | LPSPI_TCR_CONT | LPSPI_TCR_CONTC | (8 - 1)) // queue assertion of CS line
+        #define WRITE_SPI_CMD0(byte)        LPSPI0_TDR = (byte)          // write a single byte
+        #define WRITE_SPI_CMD0_LAST(byte)   LPSPI0_TDR = (byte)          // queue negation of final byte and write final byte
         #define WAIT_SPI_RECEPTION_END()    while ((LPSPI0_RSR & (LPSPI_RSR_RXEMPTY)) != 0) {LPSPI0_RSR &= ~(LPSPI_RSR_RXEMPTY);}
         #define NEGATE_CS_LINE(ulChipSelectLine) LPSPI0_TCR = ((LPSPI0_TCR & ~(LPSPI_TCR_CONT)) | CS0_LINE) // this is performed before queuing the final byte on the HW
     #else
-        #define ASSERT_CS_LINE(ulChipSelectLine) LPSPI0_TCR = (LPSPI_TCR_CPOL | LPSPI_TCR_CPHA | LPSPI_TCR_PRESCALE_4 | ulChipSelectLine | LPSPI_TCR_MSBF | LPSPI_TCR_CONT | 8) // queue assertion of CS line
-        #define WRITE_SPI_CMD0_LAST(byte)   LPSPI0_TCR &= ~(LPSPI_TCR_CONT); LPSPI0_TDR = (byte) // queue negation of final byte and write final byte
+        #define ASSERT_CS_LINE(ulChipSelectLine) LPSPI0_TCR = (LPSPI_TCR_CPOL | LPSPI_TCR_CPHA | LPSPI_TCR_PRESCALE_8 | ulChipSelectLine | LPSPI_TCR_MSBF | LPSPI_TCR_CONT | LPSPI_TCR_CONTC | (8 - 1)); 
+        #define WRITE_SPI_CMD0(byte)        LPSPI0_TDR = (byte)          // write a single byte
+        #define WRITE_SPI_CMD0_LAST(byte)   LPSPI0_TCR &= ~(LPSPI_TCR_CONT); LPSPI0_TDR = (byte);  // write final byte and queue negation of final byte
         #define WAIT_SPI_RECEPTION_END()    while ((LPSPI0_RSR & (LPSPI_RSR_RXEMPTY)) != 0) {}
         #define NEGATE_CS_LINE(ulChipSelectLine)
     #endif
     #define CLEAR_RECEPTION_FLAG()          
-            
+
     #define SET_SPI_FLASH_MODE()                                         // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
     #define REMOVE_SPI_FLASH_MODE()                                      // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
 #elif defined FRDM_KL26Z || defined FRDM_KL27Z || defined TEENSY_LC || defined TWR_KL46Z48M || defined FRDM_KL46Z || defined FRDM_KL43Z || defined rcARM_KL26
@@ -4114,8 +4119,10 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 
     #if defined USE_MAINTENANCE && !defined REMOVE_PORT_INITIALISATIONS
         #define INIT_WATCHDOG_LED()                                     // let the port set up do this (the user can disable blinking)
+        #define CONFIG_TEST_OUTPUT()                                    // we use DEMO_LED_2 which is configured by the user code (and can be disabled in parameters if required)
     #else
-        #define INIT_WATCHDOG_LED() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(E, (BLINK_LED), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+        #define INIT_WATCHDOG_LED()  _CONFIG_DRIVE_PORT_OUTPUT_VALUE(E, (BLINK_LED), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+        #define CONFIG_TEST_OUTPUT() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, (DEMO_LED_2), (DEMO_LED_2), (PORT_SRE_SLOW | PORT_DSE_HIGH))
     #endif
 
     #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(C, SWITCH_2, PORT_PS_UP_ENABLE)
@@ -4123,7 +4130,6 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define ACTIVATE_WATCHDOG()     UNLOCK_WDOG(); WDOG_TOVALL = (2000/5); WDOG_TOVALH = 0; WDOG_STCTRLH = (WDOG_STCTRLH_STNDBYEN | WDOG_STCTRLH_WAITEN | WDOG_STCTRLH_STOPEN | WDOG_STCTRLH_WDOGEN) // watchdog enabled to generate reset on 2s timeout (no further updates allowed)
     #define TOGGLE_WATCHDOG_LED()   _TOGGLE_PORT(E, BLINK_LED)
 
-    #define CONFIG_TEST_OUTPUT()                                         // we use DEMO_LED_2 which is configured by the user code (and can be disabled in parameters if required)
     #define TOGGLE_TEST_OUTPUT()    _TOGGLE_PORT(C, DEMO_LED_2)
     #define SET_TEST_OUTPUT()       _SETBITS(C, DEMO_LED_2)
     #define CLEAR_TEST_OUTPUT()     _CLEARBITS(C, DEMO_LED_2)
@@ -8703,14 +8709,14 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         _CONFIG_DRIVE_PORT_OUTPUT_VALUE(D, SPI_CS1_0, SPI_CS1_0, (PORT_SRE_FAST | PORT_DSE_HIGH)); \
         LPSPI0_CR = (LPSPI_CR_MEN | LPSPI_CR_DBGEN); \
         LPSPI0_CFGR1 = LPSPI_CFGR1_MASTER; \
-        LPSPI0_TCR = (LPSPI_TCR_CPHA | LPSPI_TCR_CPOL | LPSPI_TCR_PRESCALE_128 | 8)
+        LPSPI0_TCR = (LPSPI_TCR_CPHA | LPSPI_TCR_CPOL | LPSPI_TCR_PRESCALE_128 | 7)
 
         #define ENABLE_SPI_SD_OPERATION()
         #define SET_SD_CARD_MODE()
 
         // Set maximum speed
         //
-        #define SET_SPI_SD_INTERFACE_FULL_SPEED()  LPSPI0_TCR = (LPSPI_TCR_CPHA | LPSPI_TCR_CPOL | LPSPI_TCR_PRESCALE_1 | 8)
+        #define SET_SPI_SD_INTERFACE_FULL_SPEED()  LPSPI0_TCR = (LPSPI_TCR_CPHA | LPSPI_TCR_CPOL | LPSPI_TCR_PRESCALE_1 | 7)
         #if defined _WINDOWS
             #define WRITE_SPI_CMD(byte)    LPSPI0_TDR = (byte); LPSPI0_RDR = _fnSimSD_write((unsigned char)byte)
             #define WAIT_TRANSMISSON_END() while ((LPSPI0_RSR & LPSPI_RSR_EMPTY) != 0) { LPSPI0_RSR &= ~LPSPI_RSR_EMPTY; }

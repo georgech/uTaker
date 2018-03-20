@@ -239,7 +239,7 @@ static int iInterruptLevel = 0;                                          // pres
         #define _EXTENDED_CS
     #endif
 #endif
-#if (defined SPI_FILE_SYSTEM && defined FLASH_FILE_SYSTEM)
+#if (defined SPI_EEPROM_FILE_SYSTEM && defined FLASH_FILE_SYSTEM)
     #if !defined SPI_EEPROM_DEVICE_COUNT
         #define SPI_EEPROM_DEVICE_COUNT 1
     #endif
