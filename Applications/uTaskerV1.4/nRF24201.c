@@ -33,23 +33,32 @@
 #define nRF24L01_HANDLE   (NETWORK_HANDLE - 1)
 
 
-#if defined FRDM_K64F                                                    // SPI1
-    #define nRF24L01P_SLAVE()    (_READ_PORT_MASK(B, PORTB_BIT19))       // J1-3 held to ground selects slave mode
+#if defined FRDM_K64F || defined FRDM_K66F                               // SPI1
+    #define nRF24L01P_SLAVE()    (_READ_PORT_MASK(B, PORTB_BIT19))       // K64 J1-3/K66 J2-4 held to ground selects slave mode
     #define nRF24L01P_CS         PORTD_BIT4                              // SPI chip select (active low)
-    #define nRF24L01P_TX_ENABLE  PORTC_BIT12                             // chip enable activates rx or tx mode
     #define nRF24L01P_DOUT       PORTD_BIT6                              // SPI data to the nRF24L01+
     #define nRF24L01P_SCLK       PORTD_BIT5                              // SPI clock to the nRF24L01+
     #define nRF24L01P_DIN        PORTD_BIT7                              // SPI data from the nRF24L01+
     #define nRF24L01P_IRQ        PORTC_BIT18                             // maskable interrupt pin from the nRF24L01+, active low
     #define nRF24L01P_IRQ_PORT   PORTC
     #define nRF24L01P_IRQ_PRIORITY PRIORITY_PORT_C_INT
-
-    #define CONFIGURE_INTERFACE_nRF24L01() _CONFIG_PORT_INPUT_FAST_HIGH(B, (PORTB_BIT19), PORT_PS_UP_ENABLE); \
+    #if defined FRDM_K66F
+        #define nRF24L01P_TX_ENABLE  PORTB_BIT20                         // chip enable activates rx or tx mode
+        #define CONFIGURE_INTERFACE_nRF24L01() _CONFIG_PORT_INPUT_FAST_HIGH(B, (PORTB_BIT19), PORT_PS_UP_ENABLE); \
+                                 _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_HIGH(B, nRF24L01P_TX_ENABLE, 0, (PORT_SRE_SLOW | PORT_DSE_LOW));\
+                                 _CONFIG_PERIPHERAL(D, 4, (PD_4_SPI1_PCS0 | PORT_DSE_HIGH | PORT_PS_UP_ENABLE | PORT_SRE_FAST));\
+                                 _CONFIG_PERIPHERAL(D, 6, (PD_6_SPI1_SOUT | PORT_DSE_HIGH | PORT_PS_UP_ENABLE | PORT_SRE_FAST));\
+                                 _CONFIG_PERIPHERAL(D, 7, (PD_7_SPI1_SIN | PORT_PS_UP_ENABLE));\
+                                 _CONFIG_PERIPHERAL(D, 5, (PD_5_SPI1_SCK  | PORT_DSE_HIGH | PORT_PS_UP_ENABLE | PORT_SRE_FAST))
+    #else
+        #define nRF24L01P_TX_ENABLE  PORTC_BIT12                         // chip enable activates rx or tx mode
+        #define CONFIGURE_INTERFACE_nRF24L01() _CONFIG_PORT_INPUT_FAST_HIGH(B, (PORTB_BIT19), PORT_PS_UP_ENABLE); \
                                  _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_LOW(C, nRF24L01P_TX_ENABLE, 0, (PORT_SRE_SLOW | PORT_DSE_LOW));\
                                  _CONFIG_PERIPHERAL(D, 4, (PD_4_SPI1_PCS0 | PORT_DSE_HIGH | PORT_PS_UP_ENABLE | PORT_SRE_FAST));\
                                  _CONFIG_PERIPHERAL(D, 6, (PD_6_SPI1_SOUT | PORT_DSE_HIGH | PORT_PS_UP_ENABLE | PORT_SRE_FAST));\
                                  _CONFIG_PERIPHERAL(D, 7, (PD_7_SPI1_SIN | PORT_PS_UP_ENABLE));\
                                  _CONFIG_PERIPHERAL(D, 5, (PD_5_SPI1_SCK  | PORT_DSE_HIGH | PORT_PS_UP_ENABLE | PORT_SRE_FAST))
+    #endif
 
     #define CONFIGURE_nRF24L01_SPI_MODE() POWER_UP_ATOMIC(6, SPI1); \
                                  SPI1_MCR = (SPI_MCR_MSTR | SPI_MCR_DCONF_SPI | SPI_MCR_CLR_RXF | SPI_MCR_CLR_TXF | SPI_MCR_PCSIS_CS0 | SPI_MCR_PCSIS_CS1 | SPI_MCR_PCSIS_CS2 | SPI_MCR_PCSIS_CS3 | SPI_MCR_PCSIS_CS4 | SPI_MCR_PCSIS_CS5);\
@@ -60,13 +69,17 @@
     #define WRITE_nRF24L01_SPI(byte)            SPI1_PUSHR = (byte | SPI_PUSHR_CONT | SPI_PUSHR_PCS0 | SPI_PUSHR_CTAS_CTAR0) // write a single byte to the output FIFO - assert CS line
     #define WRITE_nRF24L01_SPI_LAST(byte)       SPI1_PUSHR = (byte | SPI_PUSHR_EOQ  | SPI_PUSHR_PCS0 | SPI_PUSHR_CTAS_CTAR0) // write final byte to output FIFO - this will negate the CS line when complete
     #define READ_nRF24L01_SPI_FLASH_DATA()      (unsigned char)SPI1_POPR
-    #define WAIT_nRF24L01_SPI_RECEPTION_END()   while (!(SPI1_SR & SPI_SR_RFDF)) {}
+    #define WAIT_nRF24L01_SPI_RECEPTION_END()   while ((SPI1_SR & SPI_SR_RFDF) == 0) {}
     #define CLEAR_nRF24L01_SPI_RECEPTION_FLAG() SPI1_SR |= SPI_SR_RFDF
 
-    #define SPI_FIFO_DEPTH_1                                             // K64 SPI 1 has a FIFO depth of just 1 in SPI1 and SPI 2 !!!!
-
-    #define DISABLE_RX_TX()      _CLEARBITS(C, nRF24L01P_TX_ENABLE); fnRemoteSimulationInterface(REMOTE_RF_INTERFACE, REMOTE_RF_DISABLE_RX_TX, 0, 0, 0)
-    #define ENABLE_RX_TX()       _SETBITS(C, nRF24L01P_TX_ENABLE);   fnRemoteSimulationInterface(REMOTE_RF_INTERFACE, REMOTE_RF_ENABLE_RX_TX,  0, 0, 0)
+    #define SPI_FIFO_DEPTH_1                                             // K64/K66 SPI 1 has a FIFO depth of just 1 in SPI1 and SPI 2
+    #if defined FRDM_K66F
+        #define DISABLE_RX_TX()  _CLEARBITS(B, nRF24L01P_TX_ENABLE); fnRemoteSimulationInterface(REMOTE_RF_INTERFACE, REMOTE_RF_DISABLE_RX_TX, 0, 0, 0)
+        #define ENABLE_RX_TX()   _SETBITS(B, nRF24L01P_TX_ENABLE);   fnRemoteSimulationInterface(REMOTE_RF_INTERFACE, REMOTE_RF_ENABLE_RX_TX,  0, 0, 0)
+    #else
+        #define DISABLE_RX_TX()  _CLEARBITS(C, nRF24L01P_TX_ENABLE); fnRemoteSimulationInterface(REMOTE_RF_INTERFACE, REMOTE_RF_DISABLE_RX_TX, 0, 0, 0)
+        #define ENABLE_RX_TX()   _SETBITS(C, nRF24L01P_TX_ENABLE);   fnRemoteSimulationInterface(REMOTE_RF_INTERFACE, REMOTE_RF_ENABLE_RX_TX,  0, 0, 0)
+    #endif
 #elif defined FRDM_KL46Z
     #define nRF24L01P_SLAVE()    (_READ_PORT_MASK(B, PORTB_BIT19))       // J1-3 held to ground selects slave mode
     #define nRF24L01P_CS         PORTA_BIT14                             // J2-9

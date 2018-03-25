@@ -1811,9 +1811,9 @@
         #define WAIT_SPI_RECEPTION_END()    while ((LPSPI0_RSR & (LPSPI_RSR_RXEMPTY)) != 0) {LPSPI0_RSR &= ~(LPSPI_RSR_RXEMPTY);}
         #define NEGATE_CS_LINE(ulChipSelectLine) LPSPI0_TCR = ((LPSPI0_TCR & ~(LPSPI_TCR_CONT)) | CS0_LINE) // this is performed before queuing the final byte on the HW
     #else
-        #define ASSERT_CS_LINE(ulChipSelectLine) LPSPI0_TCR = (LPSPI_TCR_CPOL | LPSPI_TCR_CPHA | LPSPI_TCR_PRESCALE_8 | ulChipSelectLine | LPSPI_TCR_MSBF | LPSPI_TCR_CONT | LPSPI_TCR_CONTC | (8 - 1)); 
+        #define ASSERT_CS_LINE(ulChipSelectLine) LPSPI0_TCR = (LPSPI_TCR_CPOL | LPSPI_TCR_CPHA | LPSPI_TCR_PRESCALE_1 | ulChipSelectLine | LPSPI_TCR_MSBF | LPSPI_TCR_CONT | LPSPI_TCR_CONTC | (8 - 1)); 
         #define WRITE_SPI_CMD0(byte)        LPSPI0_TDR = (byte)          // write a single byte
-        #define WRITE_SPI_CMD0_LAST(byte)   LPSPI0_TCR &= ~(LPSPI_TCR_CONT); LPSPI0_TDR = (byte);  // write final byte and queue negation of final byte
+        #define WRITE_SPI_CMD0_LAST(byte)   LPSPI0_TCR &= ~(LPSPI_TCR_CONT); LPSPI0_TDR = (byte);  // write final byte and queue negation of chip select line
         #define WAIT_SPI_RECEPTION_END()    while ((LPSPI0_RSR & (LPSPI_RSR_RXEMPTY)) != 0) {}
         #define NEGATE_CS_LINE(ulChipSelectLine)
     #endif
@@ -2550,7 +2550,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define RFC2217_UART     0
     #endif
     #if LPUARTS_AVAILABLE > 0
-      //#define LPUART_IRC48M                                            // if the 48MHz clock is available clock the LPUART from it (warning - don't use when USB is in operation and requires MCGIRCLK)
+        #define LPUART_IRC48M                                            // if the 48MHz clock is available clock the LPUART from it (warning - don't use when USB is in operation and requires MCGIRCLK)
         #if defined SIM_CLKDIV3 && defined SIM_CLKDIV3_PLLFLLDIV_2
             #define LPUART_MCGPLLCLK                                     // clock the LPUARTs from MCGPLLCLK (this is used together with USB when the crystal-less clocking is not possible)
         #endif

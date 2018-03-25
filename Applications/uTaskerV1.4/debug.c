@@ -139,7 +139,7 @@
 //#define _DEBUG_CAN                                                     // support dumping CAN register details for debugging purpose
 //#define I2C_MASTER_LOADER                                              // {89} load firmware to a connected I2C slave (requires I2C_INTERFACE - enable TEST_I2C in i2c_tests.h for interface open)
 #if defined CHIP_HAS_FLEXIO
-    #define TEST_FLEXIO                                                  // {91} allow testing of flexio operations
+  //#define TEST_FLEXIO                                                  // {91} allow testing of flexio operations
 #endif
 
 #if defined CMSIS_DSP_CFFT
@@ -1152,8 +1152,12 @@ static const DEBUG_COMMAND tCANCommand[] = {                             // {38}
 static const DEBUG_COMMAND tFlexioCommand[] = {
     {"up",                "go to main menu",                       DO_HELP,          DO_HELP_UP},
     {"flex_on",           "power up module",                       DO_HARDWARE,      DO_FLEXIO_ON},
+    #if defined KINETIS_K80
+    {"flex_pin",          "config pin [0..31]",                    DO_HARDWARE,      DO_FLEXIO_PIN},
+    #else
     {"flex_pin",          "config pin [0..23]",                    DO_HARDWARE,      DO_FLEXIO_PIN},
-    #if defined KINETIS_KL28
+    #endif
+    #if defined KINETIS_KL28 || defined KINETIS_K80
     {"flex_in",           "display the pin state",                 DO_HARDWARE,      DO_FLEXIO_PIN_STATE},
     #endif
     {"flex_stat",         "display status",                        DO_HARDWARE,      DO_FLEXIO_STATUS},
@@ -4047,6 +4051,136 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
           {
               unsigned char ucPinRef = (unsigned char)fnDecStrHex(ptrInput);
               switch (ucPinRef) {
+    #if defined KINETIS_K80
+              case 0:
+                  fnDebugMsg("PTB0");
+                  _CONFIG_PERIPHERAL(B, 0, (PB_0_FXIO0_D0 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 1:
+                  fnDebugMsg("PTB1");
+                  _CONFIG_PERIPHERAL(B, 1, (PB_1_FXIO0_D1 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 2:
+                  fnDebugMsg("PTB2");
+                  _CONFIG_PERIPHERAL(B, 2, (PB_2_FXIO0_D2 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 3:
+                  fnDebugMsg("PTB3");
+                  _CONFIG_PERIPHERAL(B, 3, (PB_3_FXIO0_D3 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 4:
+                  fnDebugMsg("PTB10");
+                  _CONFIG_PERIPHERAL(B, 10, (PB_10_FXIO0_D4 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 5:
+                  fnDebugMsg("PTB11");
+                  _CONFIG_PERIPHERAL(B, 11, (PB_11_FXIO0_D5 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 6:
+                  fnDebugMsg("PTB18");
+                  _CONFIG_PERIPHERAL(B, 18, (PB_18_FXIO0_D6 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 7:
+                  fnDebugMsg("PTB19");
+                  _CONFIG_PERIPHERAL(B, 19, (PB_19_FXIO0_D7 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 8:
+                  fnDebugMsg("PTB20");
+                  _CONFIG_PERIPHERAL(B, 20, (PB_20_FXIO0_D8 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 9:
+                  fnDebugMsg("PTB21");
+                  _CONFIG_PERIPHERAL(B, 21, (PB_21_FXIO0_D9 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 10:
+                  fnDebugMsg("PTB22");
+                  _CONFIG_PERIPHERAL(B, 22, (PB_22_FXIO0_D10 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 11:
+                  fnDebugMsg("PTB23");
+                  _CONFIG_PERIPHERAL(B, 23, (PB_23_FXIO0_D11 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 12:
+                  fnDebugMsg("PTC0");
+                  _CONFIG_PERIPHERAL(C, 0, (PC_0_FXIO0_D12 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 13:
+                  fnDebugMsg("PTC1");
+                  _CONFIG_PERIPHERAL(C, 1, (PC_1_FXIO0_D13 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 14:
+                  fnDebugMsg("PTC6");
+                  _CONFIG_PERIPHERAL(C, 6, (PC_6_FXIO0_D14 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 15:
+                  fnDebugMsg("PTC7");
+                  _CONFIG_PERIPHERAL(C, 7, (PC_7_FXIO0_D15 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 16:
+                  fnDebugMsg("PTC8");
+                  _CONFIG_PERIPHERAL(C, 8, (PC_8_FXIO0_D16 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 17:
+                  fnDebugMsg("PTC9");
+                  _CONFIG_PERIPHERAL(C, 9, (PC_9_FXIO0_D17 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 18:
+                  fnDebugMsg("PTC10");
+                  _CONFIG_PERIPHERAL(C, 10, (PC_10_FXIO0_D18 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 19:
+                  fnDebugMsg("PTC11");
+                  _CONFIG_PERIPHERAL(C, 11, (PC_11_FXIO0_D19 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 20:
+                  fnDebugMsg("PTC14");
+                  _CONFIG_PERIPHERAL(C, 14, (PC_14_FXIO0_D20 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 21:
+                  fnDebugMsg("PTC15");
+                  _CONFIG_PERIPHERAL(C, 15, (PC_15_FXIO0_D21 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 22:
+                  fnDebugMsg("PTD0");
+                  _CONFIG_PERIPHERAL(D, 0, (PD_0_FXIO0_D22 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 23:
+                  fnDebugMsg("PTD1");
+                  _CONFIG_PERIPHERAL(D, 1, (PD_1_FXIO0_D23 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 24:
+                  fnDebugMsg("PTD8");
+                  _CONFIG_PERIPHERAL(D, 8, (PD_8_FXIO0_D24 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 25:
+                  fnDebugMsg("PTD9");
+                  _CONFIG_PERIPHERAL(D, 9, (PD_9_FXIO0_D25 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 26:
+                  fnDebugMsg("PTD10");
+                  _CONFIG_PERIPHERAL(D, 10, (PD_10_FXIO0_D26 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 27:
+                  fnDebugMsg("PTD11");
+                  _CONFIG_PERIPHERAL(D, 11, (PD_11_FXIO0_D27 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 28:
+                  fnDebugMsg("PTD12");
+                  _CONFIG_PERIPHERAL(D, 12, (PD_12_FXIO0_D28 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 29:
+                  fnDebugMsg("PTD13");
+                  _CONFIG_PERIPHERAL(D, 13, (PD_13_FXIO0_D29 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 30:
+                  fnDebugMsg("PTD14");
+                  _CONFIG_PERIPHERAL(D, 14, (PD_14_FXIO0_D30 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+              case 31:
+                  fnDebugMsg("PTD15");
+                  _CONFIG_PERIPHERAL(D, 15, (PD_15_FXIO0_D31 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
+                  break;
+    #elif defined KINETIS_KL28
               case 0:
                   fnDebugMsg("PTE16");
                   _CONFIG_PERIPHERAL(E, 16, (PE_16_FXIO0_D0 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
@@ -4143,6 +4277,7 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
                   fnDebugMsg("PTC10");
                   _CONFIG_PERIPHERAL(C, 10, (PC_10_FXIO0_D23 | PORT_SRE_FAST | PORT_DSE_HIGH | PORT_PS_UP_ENABLE));
                   break;
+    #endif
               default:
                   fnDebugMsg("Invalid pin");
                   return;
@@ -4150,11 +4285,12 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
               fnDebugMsg(" configured");
           }
           break;
-    #if defined KINETIS_KL28
+    #if defined KINETIS_KL28 || defined KINETIS_K80
         case DO_FLEXIO_PIN_STATE:
             fnDebugMsg("Flexio pin state ");
-            fnDebugHex(FLEXIO0_PARAM, (sizeof(unsigned long) | WITH_LEADIN));
+            fnDebugHex(FLEXIO0_PIN, (sizeof(unsigned long) | WITH_LEADIN));
             break;
+        #if 0                                                            // test code for trimming fast IRC on KL28 -however not possible due to chip errata
         case DO_SHOW_TRIM:
             fnDebugMsg("Fast IRC trim ");
             fnDebugHex(SCG_FIRCTCFG, (sizeof(unsigned long) | WITH_LEADIN));
@@ -4162,19 +4298,20 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
             break;
         case DO_CHANGE_TRIM_COARSE:
         case DO_CHANGE_TRIM_FINE:
-        {
-            unsigned char ucTrim = (unsigned char)fnHexStrHex(ptrInput);
-            SCG_FIRCTCFG = SCG_FIRCTCFG_TRIMSRC_OSC;
-            SCG_FIRCCSR |= SCG_FIRCCSR_FIRCTREN;
-            SCG_FIRCCSR &= ~(SCG_FIRCCSR_FIRCTRUP);                      // allow writing the register
-            if (DO_CHANGE_TRIM_FINE == ucType) {
-                SCG_FIRCSTAT = ((SCG_FIRCSTAT & ~(SCG_FIRCSTAT_TRIMFINE_MASK)) | (ucTrim & SCG_FIRCSTAT_TRIMFINE_MASK));
+            {
+                unsigned char ucTrim = (unsigned char)fnHexStrHex(ptrInput);
+                SCG_FIRCTCFG = SCG_FIRCTCFG_TRIMSRC_OSC;
+                SCG_FIRCCSR |= SCG_FIRCCSR_FIRCTREN;
+                SCG_FIRCCSR &= ~(SCG_FIRCCSR_FIRCTRUP);                  // allow writing the register
+                if (DO_CHANGE_TRIM_FINE == ucType) {
+                    SCG_FIRCSTAT = ((SCG_FIRCSTAT & ~(SCG_FIRCSTAT_TRIMFINE_MASK)) | (ucTrim & SCG_FIRCSTAT_TRIMFINE_MASK));
+                }
+                else {
+                    SCG_FIRCSTAT = ((SCG_FIRCSTAT & ~(SCG_FIRCSTAT_TRIMCOAR_MASK)) | ((ucTrim & SCG_FIRCSTAT_TRIMCOAR_MASK) << SCG_FIRCSTAT_TRIMCOAR_SHIFT));
+                }
             }
-            else {
-                SCG_FIRCSTAT = ((SCG_FIRCSTAT & ~(SCG_FIRCSTAT_TRIMCOAR_MASK)) | ((ucTrim & SCG_FIRCSTAT_TRIMCOAR_MASK) << SCG_FIRCSTAT_TRIMCOAR_SHIFT));
-            }
-        }
             break;
+        #endif
     #endif
         case DO_FLEXIO_STATUS:
             fnDebugMsg("Shifter status ");

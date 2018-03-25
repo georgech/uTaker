@@ -10217,7 +10217,7 @@ typedef struct stKINETIS_LPTMR_CTL
               #define SIM_SCGC2_SIM_SCGC2_EMVSIM1 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x102c), 21)
               #define SIM_SCGC2_SIM_SCGC2_LPUART4 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x102c), 22)
               #define SIM_SCGC2_SIM_SCGC2_QSPI    BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x102c), 26)
-              #define SIM_SCGC2_SIM_SCGC2_FLEXIO  BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x102c), 31)
+              #define SIM_SCGC2_SIM_SCGC2_FLEXIO0 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x102c), 31)
           #endif
           #define SIM_SCGC2_SIM_SCGC2_DAC0   BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x102c), 12)
           #define SIM_SCGC2_SIM_SCGC2_DAC1   BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x102c), 13)
@@ -12270,7 +12270,40 @@ typedef struct stKINETIS_LPTMR_CTL
 
 // Flexio
 //
-#if defined KINETIS_KL28
+#if defined KINETIS_K80
+    #define PB_0_FXIO0_D0                PORT_MUX_ALT7
+    #define PB_1_FXIO0_D1                PORT_MUX_ALT7
+    #define PB_2_FXIO0_D2                PORT_MUX_ALT7
+    #define PB_3_FXIO0_D3                PORT_MUX_ALT7
+    #define PB_10_FXIO0_D4               PORT_MUX_ALT7
+    #define PB_11_FXIO0_D5               PORT_MUX_ALT7
+    #define PB_18_FXIO0_D6               PORT_MUX_ALT7
+    #define PB_19_FXIO0_D7               PORT_MUX_ALT7
+    #define PB_20_FXIO0_D8               PORT_MUX_ALT7
+    #define PB_21_FXIO0_D9               PORT_MUX_ALT7
+    #define PB_22_FXIO0_D10              PORT_MUX_ALT7
+    #define PB_23_FXIO0_D11              PORT_MUX_ALT7
+    #define PC_0_FXIO0_D12               PORT_MUX_ALT7
+    #define PC_1_FXIO0_D13               PORT_MUX_ALT7
+    #define PC_6_FXIO0_D14               PORT_MUX_ALT7
+    #define PC_7_FXIO0_D15               PORT_MUX_ALT7
+    #define PC_8_FXIO0_D16               PORT_MUX_ALT7
+    #define PC_9_FXIO0_D17               PORT_MUX_ALT7
+    #define PC_10_FXIO0_D18              PORT_MUX_ALT7
+    #define PC_11_FXIO0_D19              PORT_MUX_ALT7
+    #define PC_14_FXIO0_D20              PORT_MUX_ALT7
+    #define PC_15_FXIO0_D21              PORT_MUX_ALT7
+    #define PD_0_FXIO0_D22               PORT_MUX_ALT7
+    #define PD_1_FXIO0_D23               PORT_MUX_ALT7
+    #define PD_8_FXIO0_D24               PORT_MUX_ALT7
+    #define PD_9_FXIO0_D25               PORT_MUX_ALT7
+    #define PD_10_FXIO0_D26              PORT_MUX_ALT7
+    #define PD_11_FXIO0_D27              PORT_MUX_ALT7
+    #define PD_12_FXIO0_D28              PORT_MUX_ALT7
+    #define PD_13_FXIO0_D29              PORT_MUX_ALT7
+    #define PD_14_FXIO0_D30              PORT_MUX_ALT7
+    #define PD_15_FXIO0_D31              PORT_MUX_ALT7
+#elif defined KINETIS_KL28
     #define PE_16_FXIO0_D0               PORT_MUX_ALT6
     #define PE_17_FXIO0_D1               PORT_MUX_ALT6
     #define PE_18_FXIO0_D2               PORT_MUX_ALT6
@@ -12471,7 +12504,7 @@ typedef struct stKINETIS_LPTMR_CTL
         #define FLEXIO_CTRL_FASTACC      0x00000004                      // fast register access (flexio clock must be twice the bus clock speed to be used)
         #define FLEXIO_CTRL_DBGE         0x40000000                      // enabled in debug mode
         #define FLEXIO_CTRL_DOZEN        0x80000000                      // disabled in doze mode
-    #if defined KINETIS_KL28
+    #if defined KINETIS_KL28 || defined KINETIS_K80
         #define FLEXIO0_PIN              *(volatile unsigned long *)(FLEXIO_BLOCK + 0x00c) // FlexIO pin state register (read-only)
     #endif
     #define FLEXIO0_SHIFTSTAT            *(volatile unsigned long *)(FLEXIO_BLOCK + 0x010) // shifter status register (write '1' to clear)

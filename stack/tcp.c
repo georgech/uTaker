@@ -825,7 +825,7 @@ extern QUEUE_TRANSFER fnSendBufTCP(USOCKET TCP_socket, unsigned char *ptrBuf, un
         }
     }
     #endif
-    ptrEnd = tcp_tx->ucTCP_tx + _TCP_BUFFER;                             // add data to buffer as long as there is space for it
+    ptrEnd = (tcp_tx->ucTCP_tx + _TCP_BUFFER);                           // add data to buffer as long as there is space for it
 
     if (ptrBuf != 0) {                                                   // data pointer available
         QUEUE_TRANSFER Remaining_space = (_TCP_BUFFER - (tcp_tx->usWaitingSize + tcp_tx->usPacketSize));

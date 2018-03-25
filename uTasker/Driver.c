@@ -46,6 +46,7 @@
     01.03.2015 Add FIFO queue                                            {31}
     01.03.2015 Control flush of input or output and return flushed content size {32}
     17.12.2017 Change uMemset() to match memset() parameters             {32}
+    23.03.2018 Optimise /= 10 used by fnBufferDec() using look-up table  {33}
 
 */
 
@@ -814,10 +815,13 @@ extern CHAR *fnBufferDec(signed long slNumberToConvert, unsigned char ucStyle, C
 extern CHAR *fnDebugDec(signed long slNumberToConvert, unsigned char ucStyle, CHAR *ptrBuf)
     #endif
 {
-    // converts the number to ASCII - the result is right aligned in the width given - an additional 0 is added at the end to aid string output
+    // Converts the number to ASCII - the result is right aligned in the width given - an additional 0 is added at the end to aid string output
     // range -2^31 .. +2^31
     // length 1 .. 5                                                    // max possible space, inkl. neg
-    unsigned long ulDiv = 1000000000;
+    //
+    static const unsigned long ulNextDivide[] = {100000000, 10000000, 1000000, 100000, 10000, 1000, 100, 10, 1, 0}; // {33} progressive divide by 10 values
+    int iNext = 0;
+    register unsigned long ulDiv = 1000000000;                           // largest possible divisor
     unsigned long ulNumberToConvert;
     unsigned char ucResult;
     unsigned int iFirstFound = 0;
@@ -834,47 +838,47 @@ extern CHAR *fnDebugDec(signed long slNumberToConvert, unsigned char ucStyle, CH
     }
     #endif
 
-    if ((WITH_SPACE & ucStyle) != 0) {
+    if ((WITH_SPACE & ucStyle) != 0) {                                   // add a space before the string
         *cPtr++ = ' ';
         ucStyle &= ~LEADING_SPACE;
     }
 
-    if (((ucStyle & DISPLAY_NEGATIVE) != 0) && (slNumberToConvert < 0)) {
+    if (((ucStyle & DISPLAY_NEGATIVE) != 0) && (slNumberToConvert < 0)) {// if the number is to be interpreted as a signed number and it is negative
         ulNumberToConvert = (unsigned long)-slNumberToConvert;
-        *cPtr++ = '-';
+        *cPtr++ = '-';                                                   // add sign
     }
     else {
         ulNumberToConvert = (unsigned long)slNumberToConvert;
     }
 
-    while (ulNumberToConvert != 0) {
-        while (ulDiv > ulNumberToConvert) {
-            ulDiv /= 10;
-            if (iFirstFound) {
-                *cPtr++ = '0';
+    while (ulNumberToConvert != 0) {                                     // while there is a remainder
+        while (ulDiv > ulNumberToConvert) {                              // identify when the number to convert is larger than the divide value
+            ulDiv = ulNextDivide[iNext++];                               // ulDiv /= 10;
+            if (iFirstFound != 0) {                                      // if this is not the leading digit
+                *cPtr++ = '0';                                           // insert a zero mid-string
             }
             else {
-                if (ulDiv == 1){
-                    if (ucStyle & LEADING_ZERO) {
-                        *cPtr++ = '0';
+                if (ulDiv == 1) {                                        // smallest division unit reached without being able to divide (value < 10)
+                    if ((ucStyle & LEADING_ZERO) != 0) {                 // if a leading zero is required
+                        *cPtr++ = '0';                                   // insert a leading zero
                     }
-                    else if (ucStyle & LEADING_SPACE) {
-                        *cPtr++ = ' ';
+                    else if ((ucStyle & LEADING_SPACE) != 0) {           // of if a leading space is required
+                        *cPtr++ = ' ';                                   // insert a leading space
                     }
                 }
             }
         }
-        if (ulDiv) {
+        if (ulDiv != 0) {
             iFirstFound = 1;
         }
 
         ucResult = (unsigned char)(ulNumberToConvert / ulDiv);
         *cPtr++ = ucResult + '0';
         ulNumberToConvert -= (ucResult * ulDiv);
-        ulDiv /= 10;
+        ulDiv = ulNextDivide[iNext++];                                   // ulDiv /= 10;
     }
     while ((ulDiv != 0) && (iFirstFound != 0)) {
-        ulDiv /= 10;
+        ulDiv = ulNextDivide[iNext++];                                   // ulDiv /= 10;
         *cPtr++ = '0';                                                   // add trailing zeros
     }
 
@@ -889,6 +893,7 @@ extern CHAR *fnDebugDec(signed long slNumberToConvert, unsigned char ucStyle, CH
             *cPtr++ = '0';
         }
     }
+
     if ((ucStyle & WITH_CR_LF) != 0) {                                   // {10}
         *cPtr++ = '\r';
         *cPtr++ = '\n';

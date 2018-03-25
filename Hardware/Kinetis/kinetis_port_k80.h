@@ -14,7 +14,6 @@
     Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************/
 
-// Work in progress - ports A, B and E have been completed for K82
 
 #if PIN_COUNT == PIN_COUNT_100_PIN                                       // 100 pin LQFP
     #define _PIN_COUNT              1
@@ -338,26 +337,26 @@ static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][8] = {
     },
     {
         // ALT 0           ALT 1    ALT2         ALT 3         ALT 4          ALT 5        ALT 6       ALT 7
-        {  "ADC0_SE14/TSI0_CH13","PTC0","SPI0_PCS4","PDB0_EXTRG","-",         "FB_AD14/NFC_DATA11","I2S0_TXD1","-"         }, // PORT C
-        {  "ADC0_SE15/TSI0_CH14","PTC1","SPI0_PCS3","UART1_RTS_b","FTM0_CH0", "FB_AD13/NFC_DATA10","I2S0_TXD0","-"         },
-        {  "ADC0_SE4b/CMP1_IN0/TSI0_CH15","PTC2","SPI0_PCS2","UART1_CTS_b","FTM0_CH1","FB_AD12/NFC_DATA9","I2S0_TX_FS","-" },
-        {  "CMP1_IN1",     "PTC3",  "SPI0_PCS1", "UART1_RX",   "FTM0_CH2",    "-",         "I2S0_TX_BCLK","-"              },
-        {  "-",            "PTC4",  "SPI0_PCS0", "UART1_TX",   "FTM0_CH3",    "FB_AD11/NFC_DATA8","CMP1_OUT", "I2S1_TX_BCLK" },
-        {  "-",            "PTC5",  "SPI0_SCK",  "LPTMR0_ALT2","I2S0_RXD0",   "FB_AD10/NFC_DATA7","CMP0_OUT", "I2S1_TX_FS" },
-        {  "CMP0_IN0",     "PTC6",  "SPI0_SOUT", "PDB0_EXTRG", "I2S0_RX_BCLK","FB_AD9/NFC_DATA6","I2S0_MCLK", "-"          },
-        {  "CMP0_IN1",     "PTC7",  "SPI0_SIN",  "USB_SOF_OUT","I2S0_RX_FS",  "FB_AD8/NFC_DATA5","-",  "-"                 },
-        {  "ADC1_SE4b/CMP0_IN2","PTC8","-",      "FTM3_CH4",   "I2S0_MCLK",   "FB_AD7/NFC_DATA4","-",  "-"                 },
-        {  "ADC1_SE5b/CMP0_IN3","PTC9","-",      "FTM3_CH5",   "I2S0_RX_BCLK","FB_AD6/NFC_DATA3","FTM2_FLT0","-"           },
-        {  "ADC1_SE6b",    "PTC10", "I2C1_SCL",  "FTM3_CH6",   "I2S0_RX_FS",  "FB_AD5/NFC_DATA2","I2S1_MCLK","-"           },
-        {  "ADC1_SE7b",    "PTC11", "I2C1_SDA",  "FTM3_CH7",   "I2S0_RXD1",   "FB_RW_b/NFC_WE","-",     "-"                },
-        {  "-",            "PTC12", "-",         "UART4_RTS_b","-",           "FB_AD27",   "FTM3_FLT0", "-"                },
-        {  "-",            "PTC13", "-",         "UART4_CTS_b","-",           "FB_AD26",   "-",        "-"                 },
-        {  "-",            "PTC14", "-",         "UART4_RX",   "-",           "FB_AD25",   "-",        "-"                 },
-        {  "-",            "PTC15", "-",         "UART4_TX",   "-",           "FB_AD24",   "-",        "-"                 },
-        {  "-",            "PTC16", "CAN1_RX",   "UART3_RX",   "ENET_1588_TMR0","FB_CS5_b/FB_TSIZ1/FB_BE23_16_BLS15_8_b","NFC_RB","-"},
-        {  "-",            "PTC17", "CAN1_TX",   "UART3_TX",   "ENET_1588_TMR1","FB_CS4_b/FB_TSIZ0/FB_BE31_24_BLS7_0_b","NFC_CE0_b","-"},
-        {  "-",            "PTC18", "-",         "UART3_RTS_b","ENET_1588_TMR2","FB_TBST_b/FB_CS2_b/FB_BE15_8_BLS23_16_b","NFC_CE1_b","-"},
-        {  "-",            "PTC19", "-",         "UART3_CTS_b","ENET_1588_TMR3","FB_CS3_b/FB_BE7_0_BLS31_24_b","FB_TA_b","-"     },
+        {  "ADC0_SE14/TSI0_CH13","PTC0","SPI0_PCS4","PDB0_EXTRG","USB0_SOF_OUT","FB_AD14/SDRAM_A22","I2S0_TXD1","FXIO0_D12"}, // PORT C
+        {  "ADC0_SE15/TSI0_CH14","PTC1/LLWU_P6","SPI0_PCS3","LPUART1_RTS_b","FTM0_CH0","FB_AD13/SDRAM_A21","I2S0_TXD0","FXIO0_D13"},
+        {  "ADC0_SE4b/CMP1_IN0/TSI0_CH15","PTC2","SPI0_PCS2","LPUART1_CTS_b","FTM0_CH1","FB_AD12/SDRAM_A20","I2S0_TX_FS","-"},
+        {  "CMP1_IN1",     "PTC3/LLWU_P7","SPI0_PCS1","LPUART1_RX","FTM0_CH2","CLKOUT","I2S0_TX_BCLK", "-"                 },
+        {  "-",            "PTC4/LLWU_P8","SPI0_PCS0","LPUART1_TX","FTM0_CH3","FB_AD11/SDRAM_A19","CMP1_OUT", "-"          },
+        {  "-",            "PTC5/LLWU_P9","SPI0_SCK","LPTMR0_ALT2/LPTMR1_ALT2","I2S0_RXD0","FB_AD10/SDRAM_A18","CMP0_OUT","FTM0_CH2" },
+        {  "CMP0_IN0",     "PTC6/LLWU_P10","SPI0_SOUT","PDB0_EXTRG","I2S0_RX_BCLK","FB_AD9/SDRAM_A17","I2S0_MCLK","FXIO0_D14"},
+        {  "CMP0_IN1",     "PTC7",  "SPI0_SIN",  "USB_SOF_OUT","I2S0_RX_FS",  "FB_AD8/SDRAM_A16","-",  "FXIO0_D15"         },
+        {  "CMP0_IN2",     "PTC8",  "-",         "FTM3_CH4",   "I2S0_MCLK",   "FB_AD7/SDRAM_A15","-",  "FXIO_D16"          },
+        {  "CMP0_IN3",     "PTC9",  "-",         "FTM3_CH5",   "I2S0_RX_BCLK","FB_AD6/SDRAM_A14","FTM2_FLT0","FXIO0_D17"   },
+        {  "-",            "PTC10", "I2C1_SCL",  "FTM3_CH6",   "I2S0_RX_FS",  "FB_AD5/SDRAM_A13","-",  "FXIO0_D18"         },
+        {  "-",            "PTC11/LLWU_P11","I2C1_SDA","FTM3_CH7","I2S0_RXD1","FB_RW_b",   "-",        "FXIO0_D19"         },
+        {  "-",            "PTC12", "-",         "LPUART4_RTS_b","FTM_CLKIN0","FB_AD27/SDRAM_D27","FTM3_FLT0","TPM_CLKIN0" },
+        {  "-",            "PTC13", "-",         "LPUART4_CTS_b","FTM_CLKIN1","FB_AD26/SDRAM_D26","-", "TPM_CLKIN1"        },
+        {  "-",            "PTC14", "-",         "LPUART4_RX", "-",           "FB_AD25/SDRAM_D25","-", "FXIO0_D20"         },
+        {  "-",            "PTC15", "-",         "LPUART4_TX", "-",           "FB_AD24/SDRAM_D24","-", "FXIO0_D21"         },
+        {  "-",            "PTC16", "-",         "LPUART3_RX", "-",           "FB_CS5_b/FB_TSIZ1/FB_BE23_16_BLS15_8_b/SDRAM_DQM2","-","-"},
+        {  "-",            "PTC17", "-",         "LPUART3_TX", "-",           "FB_CS4_b/FB_TSIZ0/FB_BE31_24_BLS7_0_b/SDRAM_DQM3","-","-"},
+        {  "-",            "PTC18", "-",         "LPUART3_RTS_b","-",         "FB_TBST_b/FB_CS2_b/FB_BE15_8_BLS23_16_b/SDRAM_DQM1","-","-"},
+        {  "-",            "PTC19", "-",         "LPUART3_CTS_b","-",         "FB_CS3_b/FB_BE7_0_BLS31_24_b/SDRAM_DQM0","FB_TA_b","-"},
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
@@ -373,22 +372,22 @@ static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][8] = {
     },
     {
         // ALT 0           ALT 1    ALT2         ALT 3         ALT 4          ALT 5        ALT 6       ALT 7
-        {  "-",            "PTD0",  "SPI0_PCS0", "UART2_RTS_b","FTM3_CH0",    "FB_ALE/FB_CS1_b/FB_TS_b","I2S1_RXD1","-"    }, // PORT D
-        {  "ADC0_SE5b",    "PTD1",  "SPI0_SCK",  "UART2_CTS_b","FTM3_CH1",    "FB_CS0_b",  "I2S1_RXD0","-"                 },
-        {  "-",            "PTD2",  "SPI0_SOUT", "UART2_RX",   "FTM3_CH2",    "FB_AD4",    "I2S1_RX_FS","-"                },
-        {  "-",            "PTD3",  "SPI0_SIN",  "UART2_TX",   "FTM3_CH3",    "FB_AD3",    "I2S1_RX_BCLK","-"              },
-        {  "-",            "PTD4",  "SPI0_PCS1", "UART0_RTS_b","FTM0_CH4",    "FB_AD2/NFC_DATA1","EWM_IN","-"              },
-        {  "ADC0_SE6b",    "PTD5",  "SPI0_PCS2", "UART0_CTS_b/UART0_COL_b","FTM0_CH5","FB_AD1/NFC_DATA0","EWM_OUT_b","-"   },
-        {  "ADC0_SE7b",    "PTD6",  "SPI0_PCS3", "UART0_RX",   "FTM0_CH6",    "FB_AD0",    "FTM0_FLT0","-"                 },
-        {  "-",            "PTD7",  "CMT_IRO",   "UART0_TX",   "FTM0_CH7",    "-",         "FTM0_FLT1","-"                 },
-        {  "-",            "PTD8",  "I2C0_SCL",  "UART5_RX",   "-",           "-",         "FB_A16/NFC_CLE","-"            },
-        {  "-",            "PTD9",  "I2C0_SDA",  "UART5_TX",   "-",           "-",         "FB_A17/NFC_ALE","-"            },
-        {  "-",            "PTD10", "-",         "UART5_RTS_b","-",           "-",         "FB_A18/NFC_RE","-"             },
-        {  "-",            "PTD11", "SPI2_PCS0", "UART5_CTS_b","SDHC0_CLKIN", "-",         "FB_A19",   "GLCD_CONTRAST"     },
-        {  "-",            "PTD12", "SPI2_SCK",  "FTM3_FLT0",  "SDHC0_D4",    "-",         "FB_A20",   "GLCD_PCLK"         },
-        {  "-",            "PTD13", "SPI2_SOUT", "-",          "SDHC0_D5",    "-",         "FB_A21",   "GLCD_DE"           },
-        {  "-",            "PTD14", "SPI2_SIN",  "-",          "SDHC0_D6",    "-",         "FB_A22",   "GLCD_HFS"          },
-        {  "-",            "PTD15", "SPI2_PCS1", "-",          "SDHC0_D7",    "-",         "FB_A23",   "GLCD_VFS"          },
+        {  "-",            "PTD0/LLWU_P12","SPI0_PCS0","LPUART2_RTS_b","FTM3_CH0","FB_ALE/FB_CS1_b/FB_TS_b","-","FXIO0_D22"}, // PORT D
+        {  "ADC0_SE5b",    "PTD1",  "SPI0_SCK",  "LPUART2_CTS_b","FTM3_CH1",  "FB_CS0_b",  "-",        "FXIO0_D23"         },
+        {  "-",            "PTD2/LLWU_P13","SPI0_SOUT","LPUART2_RX","FTM3_CH2","FB_AD4/SDRAM_A12","-", "I2C0_SCL"          },
+        {  "-",            "PTD3",  "SPI0_SIN",  "LPUART2_TX", "FTM3_CH3",    "FB_AD3/SDRAM_A11","-",  "I2C0_SDA"          },
+        {  "-",            "PTD4/LLWU_P14","SPI0_PCS1","LPUART0_RTS_b","FTM0_CH4","FB_AD2/SDRAM_A10","EWM_IN","SPI1_PCS0"  },
+        {  "ADC0_SE6b",    "PTD5",  "SPI0_PCS2", "LPUART0_CTS_b","FTM0_CH5","FB_AD1/SDRAM_A9","EWM_OUT_b","SPI1_SCK"       },
+        {  "ADC0_SE7b",    "PTD6/LLWU_P15","SPI0_PCS3","LPUART0_RX","FTM0_CH6","FB_AD0",   "FTM0_FLT0","SPI1_SOUT"         },
+        {  "-",            "PTD7",  "CMT_IRO",   "LPUART0_TX", "FTM0_CH7",    "SDRAM_CKE", "FTM0_FLT1","SPI1_SIN"          },
+        {  "-",            "PTD8/LLWU_P24","I2C0_SCL","-",     "-",           "-",         "FB_A16",   "FXIO0_D24"         },
+        {  "-",            "PTD9",  "I2C0_SDA",  "-",          "-",           "-",         "FB_A17",   "FXIO0_D25"         },
+        {  "-",            "PTD10", "-",         "-",          "-",           "-",         "FB_A18",   "FXIO0_D26"         },
+        {  "-",            "PTD11/LLWU_P25","SPI2_PCS0","-",   "-",           "-",         "FB_A19",   "FXIO0_D27"         },
+        {  "-",            "PTD12", "SPI2_SCK",  "FTM3_FLT0",  "-",           "-",         "FB_A20",   "FXIO0_D28"         },
+        {  "-",            "PTD13", "SPI2_SOUT", "-",          "-",           "-",         "FB_A21",   "FXIO0_D29"         },
+        {  "-",            "PTD14", "SPI2_SIN",  "-",          "-",           "-",         "FB_A22",   "FXIO0_D30"         },
+        {  "-",            "PTD15", "SPI2_PCS1", "-",          "-",           "-",         "FB_A23",   "FXIO0_D31"         },
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },

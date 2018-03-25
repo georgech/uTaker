@@ -26,6 +26,7 @@
     19.10.2017 Use ATOMIC_PERIPHERAL_BIT_REF_SET() and ATOMIC_PERIPHERAL_BIT_REF_CLEAR() to enable/disable DMA_ERQ (interrupt and DMA safe)
     17.12.2017 Change uMemset() to match memset() parameters             {7}
     12.02.2018 Add DMA_SW_TRIGGER, DMA_INITIATE_TRANSFER and DMA_WAIT_TERMINATION options as well as DMA_BUFFER_START_FINISH {8}
+    25.03.2018 Correct _DMA_Interrupt_3()                                {9}
 
 */
 
@@ -269,7 +270,7 @@ static __interrupt void _DMA_Interrupt_3(void)
         _DMA_Handler(_DMA_CHANNEL_COUNT + 3);
     }
 #else
-    _DMA_Handler(2);
+    _DMA_Handler(3);                                                     // {9}
 #endif
 }
 
