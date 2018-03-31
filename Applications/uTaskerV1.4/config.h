@@ -2,7 +2,7 @@
     Mark Butcher    Bsc (Hons) MPhil MIET
 
     M.J.Butcher Consulting
-    Birchstrasse 20f,    CH-5406, Rütihof
+    Birchstrasse 20f,    CH-5406, RÃ¼tihof
     Switzerland
 
     www.uTasker.com    Skype: M_J_Butcher
@@ -88,7 +88,7 @@
 //#define FRDM_KL27Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL27Z.html
 //#define CAPUCCINO_KL27                                                 // http://www.utasker.com/kinetis/Capuccino-KL27.html
 //#define TWR_KL28Z72M                                                   // tower board http://www.utasker.com/kinetis/FRDM-KL28Z72M
-#define FRDM_KL28Z                                                       // freedom board http://www.utasker.com/kinetis/FRDM-KL28Z.html
+//#define FRDM_KL28Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL28Z.html
 //#define FRDM_KL43Z                                                     // L processors Cortex-M0+ (ultra-low power) with USB and segment LCD - freedom board http://www.utasker.com/kinetis/FRDM-KL43Z.html
 //#define TWR_KL43Z48M                                                   // tower board http://www.utasker.com/kinetis/TWR-KL43Z48M.html
 //#define FRDM_KL46Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL46Z.html
@@ -102,6 +102,7 @@
 
 //#define TWR_KV10Z32                                                    // V processors Cortex M0+/M4/M7 (M0+ - motor control and power conversion - low dynamic control) - tower board http://www.utasker.com/kinetis/TWR-KV10Z32.html
 //#define TWR_KV11Z75M                                                   // tower board http://www.utasker.com/kinetis/TWR-KV11Z75M.html
+//#define FRDM_KV31F                                                     // (M4 - high dynamic control) - freedom board http://www.utasker.com/kinetis/FRDM-KV32F.html
 //#define TWR_KV31F120M                                                  // (M4 - high dynamic control) - tower board http://www.utasker.com/kinetis/TWR-KV31F120M.html
 //#define TWR_KV46F150M                                                  // tower board http://www.utasker.com/kinetis/TWR-KV46F150M.html
 //#define TWR_KV58F220M                                                  // (M7 - power conversion) tower board http://www.utasker.com/kinetis/TWR-KV58F220M.html
@@ -150,7 +151,7 @@
 //#define FreeLON                                                        // K64 based with integrated LON
 //#define TWR_K65F180M                                                   // tower board http://www.utasker.com/kinetis/TWR-K65F180M.html
 //#define K66FX1M0                                                       // development board with K66FX1M0
-//#define FRDM_K66F                                                      // freedom board http://www.utasker.com/kinetis/FRDM-K66F.html
+#define FRDM_K66F                                                        // freedom board http://www.utasker.com/kinetis/FRDM-K66F.html
 //#define TEENSY_3_6                                                     // USB development board with K66FX1M0 - http://www.utasker.com/kinetis/TEENSY_3.6.html
 
 //#define TWR_K70F120M                                                   // K processors Cortex M4 with graphical LCD, Ethernet, USB, encryption, tamper - tower board http://www.utasker.com/kinetis/TWR-K70F120M.html
@@ -416,8 +417,14 @@
     #define DEVICE_WITHOUT_USB
     #define DEVICE_WITHOUT_CAN
     #define DEVICE_WITHOUT_ETHERNET
-#elif defined TWR_KV31F120M || defined TWR_KV46F150M
-    #define TARGET_HW            "TWR-KV31F120M"
+#elif defined TWR_KV31F120M || defined TWR_KV46F150M || defined FRDM_KV31F
+    #if defined FRDM_KV31F
+        #define TARGET_HW        "FRDM-KV31F"
+    #elif defined TWR_KV46F150M
+        #define TARGET_HW        "TWR-KV46F150M"
+    #else
+        #define TARGET_HW        "TWR-KV31F120M"
+    #endif
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((32 * 1024) * MEM_FACTOR)
     #define KINETIS_MAX_SPEED    120000000
     #define KINETIS_K_FPU                                                // part with floating point unit
@@ -1221,7 +1228,11 @@
 // CAN
 //
 #if !defined DEVICE_WITHOUT_CAN                                          // if the device has CAN
-  //#define CAN_INTERFACE                                                // enable CAN bus interface
+    #if defined DEV1
+        #define CAN_INTERFACE                                            // enable CAN bus interface
+    #else
+      //#define CAN_INTERFACE                                            // enable CAN bus interface
+    #endif
     #if defined CAN_INTERFACE
         #define NUMBER_CAN          4                                    // the number of logical queues required for CAN support (2 logical queues each for up to 2 CAN controllers)
       //#define UTASKER_SIM                                              // simulator HW extension
@@ -1310,7 +1321,7 @@
 
 // nRF24L01
 //
-#if defined FRDM_K64F || defined FRDM_K22F || defined FRDM_KL25Z || defined FRDM_KL46Z || defined FRDM_KL03Z || defined FRDM_KL43Z // during development only - these boards have been configured and tested
+#if defined FRDM_K66F | defined FRDM_K64F || defined FRDM_K22F || defined FRDM_KL25Z || defined FRDM_KL46Z || defined FRDM_KL03Z || defined FRDM_KL43Z // these boards have been configured and tested
   //#define nRF24L01_INTERFACE                                           // nRF24L01+ interface - low power RF
     #if defined FRDM_K64F
       //#define ENC424J600_INTERFACE                                     // 10/100 Ethernet connected via SPI (also ENC624J600 in larger package with more parallel modes)
@@ -1714,7 +1725,7 @@
 
             #define WEB_PARAMETER_GENERATION                             // support of parameter generating (eg. manipulating select and adding values)
             #define WEB_PARAMETER_HANDLING                               // support  handling of received web parameters
-            #define WEB_PARSER_START          '£'                        // this symbol is used in Web pages to instruct parsing to begin
+            #define WEB_PARSER_START          'Â£'                        // this symbol is used in Web pages to instruct parsing to begin
             #define WEB_INSERT_STRING         'v'
             #define WEB_DISABLE_FIELD         'D'
             #define WEB_NOT_DISABLE_FIELD     'd'

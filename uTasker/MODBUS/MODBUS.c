@@ -89,7 +89,7 @@
 #define EVENT_VALID_FRAME_RECEIVED      10
 #define EVENT_INCOMPLETE_FRAME_RECEIVED 20
 #define EVENT_BAD_FRAME_TERMINATED      30
-
+//#define DEBUG_MODBUS
 #if !defined DEBUG_MODBUS                                                // debug output disabled when not required
     #define fnDebugMsg(x)
     #define fnDebugDec(x,y)
@@ -515,7 +515,7 @@ extern void fnMODBUS(TTASKTABLE *ptrTaskTable)
                     break;
                 }
     #if defined MODBUS_SUPPORT_SERIAL_LINE_FUNCTIONS && defined MODBUS_SUPPORT_SERIAL_LINE_DIAGNOSTICS
-                DiagnosticCounters[ucMODBUSport].usMessageCounter++;     // count the number of messags detected on the bus, irrespecifive of whether addressed or not
+                DiagnosticCounters[ucMODBUSport].usMessageCounter++;     // count the number of messags detected on the bus, irrespective of whether addressed or not
     #endif
     #if defined USE_MODBUS_SLAVE && MODBUS_SHARED_SERIAL_INTERFACES > 0
                 if ((ptrMODBUS_pars->ucModbusSerialPortMode[ucMODBUSport] & MODBUS_SERIAL_SLAVE) && // only slaves can have shared serial interfaces
@@ -864,6 +864,9 @@ extern int fnShareMODBUS_port(unsigned char ucMODBUSport, const MODBUS_CONFIG *p
 static QUEUE_HANDLE fnOpenSerialInterface(unsigned char ucMODBUSport)
 {
     TTYTABLE tInterfaceParameters;                                       // table for passing information to driver
+#if defined SERIAL_SUPPORT_DMA
+    tInterfaceParameters.ucDMAConfig = 0;
+#endif
     tInterfaceParameters.Channel = modbus_uart_map[ucMODBUSport];        // get the HW UART channel used for this MODBUS UART port
 #if defined MODBUS_USB_SLAVE                                             // {V1.02}
     if (tInterfaceParameters.Channel >= NUMBER_SERIAL) {
@@ -871,8 +874,8 @@ static QUEUE_HANDLE fnOpenSerialInterface(unsigned char ucMODBUSport)
     }
 #endif
     tInterfaceParameters.ucSpeed = ptrMODBUS_pars->ucSerialSpeed[ucMODBUSport]; // baud rate
-    tInterfaceParameters.Rx_tx_sizes.RxQueueSize = MODBUS_RX_ASCII_SIZE; // input buffer size
-    tInterfaceParameters.Rx_tx_sizes.TxQueueSize = MODBUS_TX_ASCII_SIZE; // output buffer size
+    tInterfaceParameters.Rx_tx_sizes.RxQueueSize = MODBUS_RX_ASCII_SIZE; // input buffer size (adequate for maximum reception frame size)
+    tInterfaceParameters.Rx_tx_sizes.TxQueueSize = MODBUS_TX_ASCII_SIZE; // output buffer size (adequate for maximum reception frame size)
     #if defined SUPPORT_FLOW_HIGH_LOW
     tInterfaceParameters.ucFlowHighWater = 100;                          // set the flow control high and low water levels in %
     tInterfaceParameters.ucFlowLowWater  = 0;
@@ -895,6 +898,15 @@ static QUEUE_HANDLE fnOpenSerialInterface(unsigned char ucMODBUSport)
         tInterfaceParameters.Config |= RTU_RX_MODE;                      // activate RTU receiver timing
         fnConfigureInterspaceTimes(ucMODBUSport);
         tInterfaceParameters.Task_to_wake = 0;                           // no wake up since it is performed by timer
+        #if defined SERIAL_SUPPORT_DMA_RX && defined SERIAL_SUPPORT_DMA_RX_FREERUN
+           #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA           // free running rx DMA used only in RTU mode
+        tInterfaceParameters.Rx_tx_sizes.RxQueueSize = MODBUS_RX_BUFFER_SIZE; // RTU size required, which is also a modulo length (256 bytes)
+        tInterfaceParameters.ucDMAConfig = (UART_RX_DMA | UART_RX_MODULO); // activate DMA on transmission and reception (free running reception requires modulo buffer)
+            #else
+        tInterfaceParameters.ucDMAConfig = (UART_RX_DMA);                // activate DMA on transmission and reception
+            #endif
+        tInterfaceParameters.Config |= UART_IDLE_LINE_INTERRUPT;         // use idle line interrupt to signal end of RTU reception
+        #endif
     }
     #endif
     #if defined STRICT_MODBUS_SERIAL_MODE
@@ -904,7 +916,7 @@ static QUEUE_HANDLE fnOpenSerialInterface(unsigned char ucMODBUSport)
     }
     #endif
     #if defined SERIAL_SUPPORT_DMA
-    tInterfaceParameters.ucDMAConfig = UART_TX_DMA;                      // activate DMA on transmission
+    tInterfaceParameters.ucDMAConfig |= UART_TX_DMA;                      // activate DMA on transmission
     #endif
     #if defined MODBUS_RS485_SUPPORT                                     // {V1.10}
     if ((ptrMODBUS_pars->ucModbusSerialPortMode[ucMODBUSport] & (MODBUS_RS485_NEGATIVE | MODBUS_RS485_POSITIVE)) != 0) {
@@ -1400,7 +1412,17 @@ extern int fnSciRxIdle(QUEUE_HANDLE Channel)
     iModbusSerialState[ucMODBUSport] = MODBUS_CHARACTER_TERMINATING;     // we expect that we are terminating
     return 21;                                                           // set next delay until T3.5
 }
+        #elif defined _KINETIS
+// An idle period has been detected
+//
+extern int fnSciRxIdle(QUEUE_HANDLE Channel)
+{
+    unsigned char ucMODBUSport = fnMapMODBUSport(Channel);               // convert the UART channel to its modbus port
+    fnTimerT3_5_fired(ucMODBUSport);                                     // handle an idle line as end of an RTU reception
+    return 0;
+}
         #endif
+
 
 // Configure the inter-space timers based on the Baud rate
 //
@@ -1810,7 +1832,7 @@ static void fnConfigRTS_delay(unsigned char ucMODBUSport, TTYTABLE *InterfacePar
         ucType++;                                                        // 7 bit interrupt
     }
         #if defined SERIAL_SUPPORT_DMA
-    if (InterfaceParameters->ucDMAConfig & UART_TX_DMA) {
+    if ((InterfaceParameters->ucDMAConfig & UART_TX_DMA) != 0) {
         ucType += 2;                                                     // DMA used on transmissions
     }
         #endif
@@ -1900,7 +1922,7 @@ extern void fnUARTFrameTermination(QUEUE_HANDLE Channel)
             #endif
         #endif
 }
-    #elif !defined MODBUS_RS485_SUPPORT && defined UART_FRAME_COMPLETE   // {V1.19}
+    #elif !defined MODBUS_RS485_SUPPORT && (defined UART_FRAME_COMPLETE || defined UART_FRAME_END_COMPLETE) // {V1.19}
 extern void fnUARTFrameTermination(QUEUE_HANDLE Channel)                 // dummy in case of chips not requiring this handler and UART_FRAME_COMPLETE nevertheless active
 {
 }
@@ -4092,6 +4114,49 @@ extern int fnClose_MODBUS_port(unsigned char ucMODBUSport)               // {V1.
     return -1;                                                           // not a TCP master
 }
 #endif                                                                   // end if USE_MODBUS_MASTER
+
+// Write a single-precision floating point value to a modbus register location
+//
+extern void fnSaveModbusFloat(unsigned short *_ptrReg, float *_ptrFloat)
+{
+    unsigned char *ptrReg = (unsigned char *)_ptrReg;
+    unsigned char *ptrFloat = (unsigned char *)_ptrFloat;
+    *ptrReg++ = *ptrFloat++;
+    *ptrReg++ = *ptrFloat++;
+    *ptrReg++ = *ptrFloat++;
+    *ptrReg = *ptrFloat;
+}
+
+// Read a single-precision floating point value from a modbus register location
+//
+extern float fnGetModbusFloat(unsigned short *_ptrReg)
+{
+    float value;
+    unsigned char *ptrReg = (unsigned char *)_ptrReg;
+    unsigned char *ptr_float = (unsigned char *)&value;
+    *ptr_float++ = *ptrReg++;
+    *ptr_float++ = *ptrReg++;
+    *ptr_float++ = *ptrReg++;
+    *ptr_float = *ptrReg;
+    return (value);
+}
+
+// Write a long word value to a modbus register
+//
+extern void fnSaveModbusLongWord(unsigned short *_ptrReg, unsigned long _LongWord)
+{
+    *_ptrReg++ = (unsigned short)(_LongWord >> 16);
+    *_ptrReg = (unsigned short)(_LongWord);
+}
+
+// Read a long word value from a modbus register location
+//
+extern unsigned long fnGetModbusLongWord(unsigned short *_ptrReg)
+{
+    unsigned long ulWord = (*_ptrReg++ << 16);
+    ulWord |= (*_ptrReg);
+    return ulWord;
+}
 
 #if defined MODBUS_GATE_WAY_ROUTING
 

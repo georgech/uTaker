@@ -377,7 +377,7 @@
         #endif
         #define USB_CLOCK_GENERATED_INTERNALLY                           // use USB clock from internal source rather than external pin
     #endif
-#elif defined TWR_KV31F120M || defined TWR_KV46F150M || defined TWR_KV58F220M
+#elif defined TWR_KV31F120M || defined TWR_KV46F150M || defined TWR_KV58F220M || defined FRDM_KV31F
   //#define RUN_FROM_DEFAULT_CLOCK                                       // default mode is FLL Engaged Internal - the 32kHz IRC is multiplied by FLL factor of 640 to obtain 20.9715MHz nominal frequency (20MHz..25MHz)
     #if !defined RUN_FROM_DEFAULT_CLOCK
         #define OSC_LOW_GAIN_MODE
@@ -1048,7 +1048,7 @@
   //#define PACKAGE_TYPE        PACKAGE_QFN
     #define SIZE_OF_FLASH       (32 * 1024)                              // 32k program Flash
     #define SIZE_OF_RAM         (8 * 1024)                               // 8k SRAM
-#elif defined TWR_KV31F120M || defined TWR_KV46F150M
+#elif defined TWR_KV31F120M || defined TWR_KV46F150M || defined FRDM_KV31F
   //#define PIN_COUNT           PIN_COUNT_64_PIN
     #define PIN_COUNT           PIN_COUNT_100_PIN                        // 100 pin package
     #define SIZE_OF_FLASH       (512 * 1024)                             // 512k program Flash
@@ -2527,7 +2527,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #elif defined TWR_K20D50M || defined TWR_K80F150M || defined tinyK20 || defined tinyK22 || defined TWR_K20D72M || defined NET_K60 || defined FRDM_KE02Z || defined FRDM_KE02Z40M || defined FRDM_KE06Z || defined FRDM_K22F || defined TWR_K22F120M || defined TWR_K24F120M || defined TWR_K64F120M || defined TWR_KW21D256 || defined TWR_KW24D512 || defined rcARM_KL26 || defined BLAZE_K22 || defined FRDM_KE15Z // {2}{16}{25}{30}
         #define DEMO_UART    1                                           // use UART 1
         #define RFC2217_UART 0
-    #elif defined K02F100M || defined FRDM_K20D50M || defined FRDM_KL46Z || defined FRDM_KL43Z || defined FRDM_KL25Z || defined FRDM_KL26Z || defined FRDM_KL27Z || defined FRDM_KL28Z || defined FRDM_KL82Z || defined TWR_KL82Z72M ||defined CAPUCCINO_KL27 || defined TEENSY_LC || defined TWR_KL25Z48M || defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined TRK_KEA8 || defined TEENSY_3_1 || defined FRDM_KE04Z || defined FRDM_K64F || defined FRDM_K66F || defined TWR_KV10Z32  || defined TWR_KV31F120M || ((defined TWR_K40X256 || defined TWR_K40D100M) && defined DEBUG_ON_VIRT_COM) || defined FreeLON || defined HEXIWEAR_K64F // {21}{22}{24}{25}
+    #elif defined K02F100M || defined FRDM_K20D50M || defined FRDM_KL46Z || defined FRDM_KL43Z || defined FRDM_KL25Z || defined FRDM_KL26Z || defined FRDM_KL27Z || defined FRDM_KL28Z || defined FRDM_KL82Z || defined TWR_KL82Z72M ||defined CAPUCCINO_KL27 || defined TEENSY_LC || defined TWR_KL25Z48M || defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined TRK_KEA8 || defined TEENSY_3_1 || defined FRDM_KE04Z || defined FRDM_K64F || defined FRDM_K66F || defined TWR_KV10Z32  || defined TWR_KV31F120M || defined FRDM_KV31F || ((defined TWR_K40X256 || defined TWR_K40D100M) && defined DEBUG_ON_VIRT_COM) || defined FreeLON || defined HEXIWEAR_K64F // {21}{22}{24}{25}
         #define DEMO_UART    0                                           // use UART 0
         #define RFC2217_UART 1
     #elif defined NET_KBED                                               // {16}
@@ -2751,7 +2751,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 
 // ADC
 //
-//#define SUPPORT_ADC                                                    // {1}
+#define SUPPORT_ADC                                                      // {1}
 #if defined KINETIS_KE
     #define ADC_REFERENCE_VOLTAGE                  5000                  // ADC uses 5.0V reference
 #else
@@ -7529,7 +7529,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         {RGB(255,0,0),   RGB(20,20,20), 1, {376, 163, 389, 167 }, _PORTD, DEMO_LED_8}, \
 
     #define KEYPAD "KeyPads/TWR_KV10Z32.bmp"
-#elif defined TWR_KV31F120M || defined TWR_KV46F150M || defined TWR_KV58F220M
+#elif defined TWR_KV31F120M || defined TWR_KV46F150M || defined TWR_KV58F220M || defined FRDM_KV31F
     #define DEMO_LED_1             (PORTD_BIT7)                          // (green LED) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
     #define DEMO_LED_2             (PORTB_BIT19)                         // (orange LED) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
     #define DEMO_LED_3             (PORTE_BIT0)                          // (red LED) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
@@ -7594,6 +7594,8 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define KEYPAD "KeyPads/TWR_KV58F220M.bmp"
     #elif defined TWR_KV46F150M
         #define KEYPAD "KeyPads/TWR_KV46F150M.bmp"
+    #elif defined FRDM_KV31F
+        #define KEYPAD "KeyPads/FRDM_KV31F.bmp"
     #else
         #define KEYPAD "KeyPads/TWR_KV31.bmp"
     #endif

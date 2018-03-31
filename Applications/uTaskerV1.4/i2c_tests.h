@@ -399,7 +399,7 @@ static void fnConfigI2C_Interface(void)
             #else
         static const unsigned char ucSetEEPROMAddress0[] = {ADD_EEPROM_WRITE, 0}; // command to set address to read to 0
                 #endif
-        static const unsigned char ucReadEEPROM[] = { 16, ADD_EEPROM_READ, OWN_TASK }; // command to start a read of 16 bytes with the task scheduled when the read has completed
+        static const unsigned char ucReadEEPROM[] = {16, ADD_EEPROM_READ, OWN_TASK}; // command to start a read of 16 bytes with the task scheduled when the read has completed
         fnWrite(I2CPortID, (unsigned char *)ucSetEEPROMAddress0, sizeof(ucSetEEPROMAddress0)); // write the EEPROM address to read
         fnRead(I2CPortID, (unsigned char *)ucReadEEPROM, 0);             // start the read process of 16 bytes
             #endif	

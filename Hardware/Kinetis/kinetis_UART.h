@@ -43,6 +43,7 @@
     19.10.2017 Use ATOMIC_PERIPHERAL_BIT_REF_SET() and ATOMIC_PERIPHERAL_BIT_REF_CLEAR() to enable/disable DMA_ERQ (interrupt and DMA safe)
     05.02.2018 Add free-running LPUART DM Areception for KL devices with eDMA {211}
     13.03.2018 Add RTS/CTS flow control to devices without integrated modem control {212}
+    25.03.2018 Rework of DMA routines to make use of generic DMA subroutines (code saving and better clarity) and allow KL parts to use full or half-buffer DMA interrupts
 
 */
 
@@ -60,122 +61,130 @@
 /*                             constants                               */
 /* =================================================================== */
 
-    #if LPUARTS_AVAILABLE > 0 && UARTS_AVAILABLE > 0                     // device contains both UART and LPUART
+#if LPUARTS_AVAILABLE > 0 && UARTS_AVAILABLE > 0                         // device contains both UART and LPUART
 // For details about UART/LPUART numbering conventions see http://www.utasker.com/kinetis/UART_LPUART.html
 //
 #define UART_TYPE_LPUART 0
 #define UART_TYPE_UART   1
 static const unsigned char uart_type[LPUARTS_AVAILABLE + UARTS_AVAILABLE] = {  // UART type reference of each channel
-        #if defined LPUARTS_PARALLEL
+    #if defined LPUARTS_PARALLEL
     UART_TYPE_UART,                                                      // UART0
-            #if UARTS_AVAILABLE > 1
+        #if UARTS_AVAILABLE > 1
     UART_TYPE_UART,                                                      // UART1
-            #endif
-            #if UARTS_AVAILABLE > 2
-    UART_TYPE_UART,                                                      // UART2
-            #endif
-            #if UARTS_AVAILABLE > 3
-    UART_TYPE_UART,                                                      // UART1
-            #endif
-            #if UARTS_AVAILABLE > 4
-    UART_TYPE_UART,                                                      // UART2
-            #endif
-    UART_TYPE_LPUART,                                                    // LPUART0 (numbered starting with UARTS_AVAILABLE)
-        #else
-    UART_TYPE_LPUART,                                                    // LPUART0
-            #if LPUARTS_AVAILABLE > 1
-    UART_TYPE_LPUART,                                                    // LPUART1
-            #endif
-            #if LPUARTS_AVAILABLE > 2
-    UART_TYPE_LPUART,                                                    // LPUART2
-            #endif
-            #if LPUARTS_AVAILABLE > 3
-    UART_TYPE_LPUART,                                                    // LPUART3
-            #endif
-    UART_TYPE_UART,                                                      // UART
         #endif
-};
+        #if UARTS_AVAILABLE > 2
+    UART_TYPE_UART,                                                      // UART2
+        #endif
+        #if UARTS_AVAILABLE > 3
+    UART_TYPE_UART,                                                      // UART1
+        #endif
+        #if UARTS_AVAILABLE > 4
+    UART_TYPE_UART,                                                      // UART2
+        #endif
+    UART_TYPE_LPUART,                                                    // LPUART0 (numbered starting with UARTS_AVAILABLE)
+    #else
+    UART_TYPE_LPUART,                                                    // LPUART0
+        #if LPUARTS_AVAILABLE > 1
+    UART_TYPE_LPUART,                                                    // LPUART1
+        #endif
+        #if LPUARTS_AVAILABLE > 2
+    UART_TYPE_LPUART,                                                    // LPUART2
+        #endif
+        #if LPUARTS_AVAILABLE > 3
+    UART_TYPE_LPUART,                                                    // LPUART3
+        #endif
+    UART_TYPE_UART,                                                      // UART
     #endif
+};
+#endif
 
-    #if defined SERIAL_SUPPORT_DMA                                       // {6}
+#if defined SERIAL_SUPPORT_DMA                                           // {6} DMA support on transmission
+// DMA channel assignments to each UART transmitter
+//
 static const unsigned char UART_DMA_TX_CHANNEL[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {
     DMA_UART0_TX_CHANNEL, 
-        #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 1
+    #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 1
     DMA_UART1_TX_CHANNEL,
-        #endif
-        #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 2
+    #endif
+    #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 2
     DMA_UART2_TX_CHANNEL, 
-        #endif
-        #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 3
+    #endif
+    #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 3
     DMA_UART3_TX_CHANNEL,
-        #endif
-        #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 4
+    #endif
+    #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 4
     DMA_UART4_TX_CHANNEL,
-        #endif
-        #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 5
+    #endif
+    #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 5
     DMA_UART5_TX_CHANNEL,
-        #endif
+    #endif
 };
 
+// DMA channel interrupt priority assignments for each UART transmitter
+//
 static const unsigned char UART_DMA_TX_INT_PRIORITY[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {
     DMA_UART0_TX_INT_PRIORITY, 
-        #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 1
+    #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 1
     DMA_UART1_TX_INT_PRIORITY, 
-        #endif
-        #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 2
-    DMA_UART2_TX_INT_PRIORITY, 
-        #endif
-        #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 3
-    DMA_UART3_TX_INT_PRIORITY,
-        #endif
-        #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 4
-    DMA_UART4_TX_INT_PRIORITY,
-        #endif
-        #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 5
-    DMA_UART5_TX_INT_PRIORITY,
-        #endif
-};
     #endif
+    #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 2
+    DMA_UART2_TX_INT_PRIORITY, 
+    #endif
+    #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 3
+    DMA_UART3_TX_INT_PRIORITY,
+    #endif
+    #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 4
+    DMA_UART4_TX_INT_PRIORITY,
+    #endif
+    #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 5
+    DMA_UART5_TX_INT_PRIORITY,
+    #endif
+};
+#endif
 
-     #if defined SERIAL_SUPPORT_DMA_RX
+ #if defined SERIAL_SUPPORT_DMA_RX                                       // DMA support on reception
+// DMA channel assignments to each UART receiver
+//
 static const unsigned char UART_DMA_RX_CHANNEL[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {
         DMA_UART0_RX_CHANNEL, 
-        #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 1
+    #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 1
         DMA_UART1_RX_CHANNEL, 
-        #endif
-        #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 2
+    #endif
+    #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 2
         DMA_UART2_RX_CHANNEL, 
-        #endif
-        #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 3
+    #endif
+    #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 3
         DMA_UART3_RX_CHANNEL,
-        #endif
-        #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 4
+    #endif
+    #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 4
         DMA_UART4_RX_CHANNEL,
-        #endif
-        #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 5
+    #endif
+    #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 5
         DMA_UART5_RX_CHANNEL
-        #endif
+    #endif
 };
 
+// DMA channel interrupt priority assignments for each UART receiver
+//
 static const unsigned char UART_DMA_RX_INT_PRIORITY[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {
         DMA_UART0_RX_INT_PRIORITY, 
-        #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 1
+    #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 1
         DMA_UART1_RX_INT_PRIORITY, 
-        #endif
-        #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 2
-        DMA_UART2_RX_INT_PRIORITY, 
-        #endif
-        #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 3
-        DMA_UART3_RX_INT_PRIORITY,
-        #endif
-        #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 4
-        DMA_UART4_RX_INT_PRIORITY,
-        #endif
-        #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 5
-        DMA_UART5_RX_INT_PRIORITY
-        #endif
-};
     #endif
+    #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 2
+        DMA_UART2_RX_INT_PRIORITY, 
+    #endif
+    #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 3
+        DMA_UART3_RX_INT_PRIORITY,
+    #endif
+    #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 4
+        DMA_UART4_RX_INT_PRIORITY,
+    #endif
+    #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 5
+        DMA_UART5_RX_INT_PRIORITY
+    #endif
+};
+#endif
 
 /* =================================================================== */
 /*                      local variable definitions                     */
@@ -882,7 +891,6 @@ extern int fnTxByte(QUEUE_HANDLE Channel, unsigned char ucTxByte)
     return 0;                                                            // transmission started
 }
 
-
 // The TTY driver uses this call to reset/disable the transmit interrupt on the serial port
 //
 extern void fnClearTxInt(QUEUE_HANDLE Channel)
@@ -976,18 +984,7 @@ extern void fnClearTxInt(QUEUE_HANDLE Channel)
 //
 static __interrupt void _uart0_tx_dma_Interrupt(void)
 {
-    #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA                  // {81}
-    KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
-    ptrDMA += DMA_UART0_TX_CHANNEL;
-    ptrDMA->DMA_DSR_BCR = DMA_DSR_BCR_DONE;                              // clear DMA interrupt
-    #else
-        #if defined _WINDOWS
-    DMA_INT &= ~(DMA_INT_INT0 << UART_DMA_TX_CHANNEL[0]);                // clear the DMA interrupt request
-        #else
-    DMA_INT = (DMA_INT_INT0 << UART_DMA_TX_CHANNEL[0]);                  // clear the interrupt request
-        #endif
-    #endif
-            #if defined UART_EXTENDED_MODE && defined UART_TIMED_TRANSMISSION // {208}
+        #if defined UART_EXTENDED_MODE && defined UART_TIMED_TRANSMISSION// {208}
     if (ulInterCharTxDelay[0] != 0) {
         fnStopTxTimer(0);                                                // stop the periodic timer that controlled byte transmissions
     }
@@ -1018,17 +1015,6 @@ static __interrupt void _uart0_tx_dma_Interrupt(void)
     #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 1
 static __interrupt void _uart1_tx_dma_Interrupt(void)
 {
-        #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA              // {81}
-    KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
-    ptrDMA += DMA_UART1_TX_CHANNEL;
-    ptrDMA->DMA_DSR_BCR = DMA_DSR_BCR_DONE;                              // clear DMA interrupt
-        #else
-            #if defined _WINDOWS
-    DMA_INT &= ~(DMA_INT_INT0 << UART_DMA_TX_CHANNEL[1]);                // clear the DMA interrupt request
-            #else
-    DMA_INT = (DMA_INT_INT0 << UART_DMA_TX_CHANNEL[1]);                  // clear the interrupt request
-            #endif
-        #endif
         #if defined UART_EXTENDED_MODE && defined UART_TIMED_TRANSMISSION// {208}
     if (ulInterCharTxDelay[1] != 0) {
         fnStopTxTimer(1);                                                // stop the periodic timer that controlled byte transmissions
@@ -1066,17 +1052,6 @@ static __interrupt void _uart1_tx_dma_Interrupt(void)
     #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 2
 static __interrupt void _uart2_tx_dma_Interrupt(void)
 {
-        #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA              // {81}
-    KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
-    ptrDMA += DMA_UART2_TX_CHANNEL;
-    ptrDMA->DMA_DSR_BCR = DMA_DSR_BCR_DONE;                              // clear DMA interrupt
-        #else
-            #if defined _WINDOWS
-    DMA_INT &= ~(DMA_INT_INT0 << UART_DMA_TX_CHANNEL[2]);                // clear the DMA interrupt request
-            #else
-    DMA_INT = (DMA_INT_INT0 << UART_DMA_TX_CHANNEL[2]);                  // clear the interrupt request
-            #endif
-        #endif
         #if defined UART_EXTENDED_MODE && defined UART_TIMED_TRANSMISSION// {208}
     if (ulInterCharTxDelay[2] != 0) {
         fnStopTxTimer(2);                                                // stop the periodic timer that controlled byte transmissions
@@ -1113,11 +1088,6 @@ static __interrupt void _uart2_tx_dma_Interrupt(void)
     #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 3
 static __interrupt void _uart3_tx_dma_Interrupt(void)
 {
-        #if defined _WINDOWS
-    DMA_INT &= ~(DMA_INT_INT0 << UART_DMA_TX_CHANNEL[3]);                // clear the DMA interrupt request
-        #else
-    DMA_INT = (DMA_INT_INT0 << UART_DMA_TX_CHANNEL[3]);                  // clear the interrupt request
-        #endif
         #if defined UART_EXTENDED_MODE && defined UART_TIMED_TRANSMISSION// {208}
     if (ulInterCharTxDelay[3] != 0) {
         fnStopTxTimer(3);                                                // stop the periodic timer that controlled byte transmissions
@@ -1156,11 +1126,6 @@ static __interrupt void _uart3_tx_dma_Interrupt(void)
     #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 4
 static __interrupt void _uart4_tx_dma_Interrupt(void)
 {
-        #if defined _WINDOWS
-    DMA_INT &= ~(DMA_INT_INT0 << UART_DMA_TX_CHANNEL[4]);                // clear the interrupt request
-        #else
-    DMA_INT = (DMA_INT_INT0 << UART_DMA_TX_CHANNEL[4]);                  // clear the interrupt request
-        #endif
         #if defined SUPPORT_LOW_POWER                                    // {96}
     ulPeripheralNeedsClock &= ~(UART4_TX_CLK_REQUIRED);                  // mark that this UART has completed transmission activity
         #endif
@@ -1188,11 +1153,6 @@ static __interrupt void _uart4_tx_dma_Interrupt(void)
     #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 5
 static __interrupt void _uart5_tx_dma_Interrupt(void)
 {
-        #if defined _WINDOWS
-    DMA_INT &= ~(DMA_INT_INT0 << UART_DMA_TX_CHANNEL[5]);                // clear the interrupt request
-        #else
-    DMA_INT = (DMA_INT_INT0 << UART_DMA_TX_CHANNEL[5]);                  // clear the interrupt request
-        #endif
         #if defined SUPPORT_LOW_POWER                                    // {96}
     ulPeripheralNeedsClock &= ~(UART5_TX_CLK_REQUIRED);                  // mark that this UART has completed transmission activity
         #endif
@@ -1341,7 +1301,6 @@ extern QUEUE_TRANSFER fnTxByteDMA(QUEUE_HANDLE Channel, unsigned char *ptrStart,
     }
             #endif
     ATOMIC_PERIPHERAL_BIT_REF_SET(DMA_ERQ, UART_DMA_TX_CHANNEL[Channel]);// enable request source
-  //DMA_ERQ |= (DMA_ERQ_ERQ0 << UART_DMA_TX_CHANNEL[Channel]);           
         #endif 
         #if defined _WINDOWS                                             // simulation
             #if LPUARTS_AVAILABLE > 0
@@ -1384,90 +1343,42 @@ extern QUEUE_TRANSFER fnAbortTxDMA(QUEUE_HANDLE channel, QUEQUE *ptrQueue)
 /* =================================================================== */
 
     #if defined SERIAL_SUPPORT_DMA_RX
-        #if !defined KINETIS_KL
 static __interrupt void _uart0_rx_dma_Interrupt(void)
 {
-    #if defined KINETIS_KL
-    // To do...
-    #else
-        #if defined _WINDOWS
-    DMA_INT &= ~(DMA_INT_INT0 << UART_DMA_RX_CHANNEL[0]);                // clear the interrupt request
-        #else
-    DMA_INT = (DMA_INT_INT0 << UART_DMA_RX_CHANNEL[0]);                  // clear the interrupt request
-        #endif
-    #endif
     fnSciRxByte(0, 0);                                                   // tty block ready for read
 }
-        #endif
+
     #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 1
-        #if !defined KINETIS_KL
 static __interrupt void _uart1_rx_dma_Interrupt(void)
 {
-        #if defined KINETIS_KL
-        // To do...
-        #else
-            #if defined _WINDOWS
-    DMA_INT &= ~(DMA_INT_INT0 << UART_DMA_RX_CHANNEL[1]);                // clear the interrupt request
-            #else
-    DMA_INT = (DMA_INT_INT0 << UART_DMA_RX_CHANNEL[1]);                  // clear the interrupt request
-            #endif
-        #endif
     fnSciRxByte(0, 1);                                                   // tty block ready for read
 }
-        #endif
     #endif
     #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 2
-        #if !defined KINETIS_KL
 static __interrupt void _uart2_rx_dma_Interrupt(void)
 {
-        #if defined KINETIS_KL
-    // To do...
-        #else
-            #if defined _WINDOWS
-    DMA_INT &= ~(DMA_INT_INT0 << UART_DMA_RX_CHANNEL[2]);                // clear the interrupt request
-            #else
-    DMA_INT = (DMA_INT_INT0 << UART_DMA_RX_CHANNEL[2]);                  // clear the interrupt request
-            #endif
-        #endif
     fnSciRxByte(0, 2);                                                   // tty block ready for read
 }
-        #endif
     #endif
     #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 3
 static __interrupt void _uart3_rx_dma_Interrupt(void)
 {
-        #if defined _WINDOWS
-    DMA_INT &= ~(DMA_INT_INT0 << UART_DMA_RX_CHANNEL[3]);                // clear the interrupt request
-        #else
-    DMA_INT = (DMA_INT_INT0 << UART_DMA_RX_CHANNEL[3]);                  // clear the interrupt request
-        #endif
     fnSciRxByte(0, 3);                                                   // tty block ready for read
 }
     #endif
     #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 4
 static __interrupt void _uart4_rx_dma_Interrupt(void)
 {
-        #if defined _WINDOWS
-    DMA_INT &= ~(DMA_INT_INT0 << UART_DMA_RX_CHANNEL[4]);                // clear the interrupt request
-        #else
-    DMA_INT = (DMA_INT_INT0 << UART_DMA_RX_CHANNEL[4]);                  // clear the interrupt request
-        #endif
     fnSciRxByte(0, 4);                                                   // tty block ready for read
 }
     #endif
     #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 5
 static __interrupt void _uart5_rx_dma_Interrupt(void)
 {
-        #if defined _WINDOWS
-    DMA_INT &= ~(DMA_INT_INT0 << UART_DMA_RX_CHANNEL[5]);                // clear the interrupt request
-        #else
-    DMA_INT = (DMA_INT_INT0 << UART_DMA_RX_CHANNEL[5]);                  // clear the interrupt request
-        #endif
     fnSciRxByte(0, 5);                                                   // tty block ready for read
 }
     #endif
 
-    #if !defined KINETIS_KL
 static void (*_uart_rx_dma_Interrupt[UARTS_AVAILABLE + LPUARTS_AVAILABLE])(void) = {
     _uart0_rx_dma_Interrupt,
     #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 1
@@ -1486,28 +1397,14 @@ static void (*_uart_rx_dma_Interrupt[UARTS_AVAILABLE + LPUARTS_AVAILABLE])(void)
     _uart5_rx_dma_Interrupt
     #endif
 };
-    #endif
 
-    #if defined SERIAL_SUPPORT_DMA_RX_FREERUN && defined KINETIS_KL
+    #if defined SERIAL_SUPPORT_DMA_RX_FREERUN
 // Check the progress of the channel's free-running DMA reception and update the TTY character account accordingly
 // - retrigger the DMA max. count on each check so that it never terminates
 //
 static void fnCheckFreerunningDMA_reception(int channel, QUEQUE *tty_queue) // {209}
 {
-        #if defined DEVICE_WITH_eDMA                                     // {211}
-    unsigned short usDMA_rx;
-    KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
-    ptrDMA_TCD += UART_DMA_RX_CHANNEL[channel];
-    usDMA_rx = ptrDMA_TCD->DMA_TCD_CITER_ELINK;                          // snap-shot of DMA reception progress
-    if (ulDMA_progress[channel] >= usDMA_rx) {
-        tty_queue->chars += (QUEUE_TRANSFER)(ulDMA_progress[channel] - usDMA_rx); // the extra number of characters received by DMA since last check
-    }
-    else {
-        tty_queue->chars += (QUEUE_TRANSFER)ulDMA_progress[channel];
-        tty_queue->chars += (ptrDMA_TCD->DMA_TCD_BITER_ELINK - usDMA_rx); // the extra number of characters received by DMA since last check
-    }
-    ulDMA_progress[channel] = usDMA_rx;                                  // remember the check state
-        #else
+        #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA              // {211}
     unsigned long ulDMA_rx;
     KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
     ptrDMA += UART_DMA_RX_CHANNEL[channel];                              // set the DMA channel that the UART channel is using
@@ -1520,38 +1417,48 @@ static void fnCheckFreerunningDMA_reception(int channel, QUEQUE *tty_queue) // {
     }
     ulDMA_progress[channel] = ulDMA_rx;                                  // remember this check state for future comparisons
     ptrDMA->DMA_DSR_BCR |= (0xffff0);                                    // retrigger maximum DMA transfer at each poll
+        #else
+    unsigned short usDMA_rx;
+    KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
+    ptrDMA_TCD += UART_DMA_RX_CHANNEL[channel];
+    usDMA_rx = ptrDMA_TCD->DMA_TCD_CITER_ELINK;                          // snap-shot of DMA reception progress
+    if (ulDMA_progress[channel] >= usDMA_rx) {
+        tty_queue->chars += (QUEUE_TRANSFER)(ulDMA_progress[channel] - usDMA_rx); // the extra number of characters received by DMA since last check
+    }
+    else {
+        tty_queue->chars += (QUEUE_TRANSFER)ulDMA_progress[channel];
+        tty_queue->chars += (ptrDMA_TCD->DMA_TCD_BITER_ELINK - usDMA_rx); // the extra number of characters received by DMA since last check
+    }
+    ulDMA_progress[channel] = usDMA_rx;                                  // remember the check state
         #endif
 }
     #endif
-    #if defined KINETIS_KL
 // Configure KL DMA for reception to a free-running modulo buffer and then enable reception (also configuring the RXD input)
 //
 static void fnEnableRxAndDMA(int channel, unsigned long buffer_length, unsigned long buffer_address, void *uart_data_reg) // {209}
 {
-    #if defined DEVICE_WITH_eDMA                                         // {211}
-    ulDMA_progress[channel] = buffer_length;
-    #else
+    #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA                  // {211}
     RxModulo[channel] = (QUEUE_TRANSFER)buffer_length;                   // this must be modulo 2 (16, 32, 64, 128...256k)
     ulDMA_progress[channel] = buffer_address;                            // destination must be modulo aligned
+    #else
+    ulDMA_progress[channel] = buffer_length;
     #endif
     fnConfigDMA_buffer(UART_DMA_RX_CHANNEL[channel], (DMAMUX_CHCFG_SOURCE_UART0_RX + (2 * channel)), buffer_length, uart_data_reg, (void *)buffer_address, (DMA_DIRECTION_INPUT | DMA_BYTES), 0, 0);
     fnDMA_BufferReset(UART_DMA_RX_CHANNEL[channel], DMA_BUFFER_START);   // enable DMA operation
     fnRxOn(channel);                                                     // configure receiver pin and enable reception and its interrupt/DMA
 }
-    #endif
 
 // The Kinetis buffer has been set up to run continuously in circular buffer mode and this routine is used to enable the receiver and DMA on first call and optionally to later poll the DMA transfer state
 //
 extern void fnPrepareRxDMA(QUEUE_HANDLE channel, unsigned char *ptrStart, QUEUE_TRANSFER rx_length)
 {
-    #if (UARTS_AVAILABLE > 0) || ((LPUARTS_AVAILABLE > 0) && (defined KINETIS_KL))
+    #if (UARTS_AVAILABLE > 0) || (LPUARTS_AVAILABLE > 0)
     KINETIS_UART_CONTROL *uart_reg = fnSelectChannel(channel);           // select the UART/LPUART channel register set
     #endif
     #if LPUARTS_AVAILABLE > 0                                            // if the device has LPUART(s)
         #if UARTS_AVAILABLE > 0                                          // if also UARTs
     if (uart_type[channel] == UART_TYPE_LPUART) {                        // LPUART channel
         #endif
-        #if defined KINETIS_KL                                           // {209}{211}
         if ((((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_CTRL & LPUART_CTRL_RE) == 0) { // if receiver is not yet enabled
             fnEnableRxAndDMA(channel, rx_length, (unsigned long)ptrStart, (void *)&(((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_DATA)); // configure DMA and reception, including configuring the RXD input
         }
@@ -1559,8 +1466,7 @@ extern void fnPrepareRxDMA(QUEUE_HANDLE channel, unsigned char *ptrStart, QUEUE_
         else if (rx_length == 0) {                                       // call to update DMA progress
             fnCheckFreerunningDMA_reception(channel, (QUEQUE *)ptrStart);
         }
-            #endif
-        #endif
+    #endif
         return;
         #if UARTS_AVAILABLE > 0                                          // if also UARTs
     }
@@ -1571,36 +1477,11 @@ extern void fnPrepareRxDMA(QUEUE_HANDLE channel, unsigned char *ptrStart, QUEUE_
     // UART channel
     //
     if ((uart_reg->UART_C2 & UART_C2_RE) == 0) {                         // if receiver not yet enabled
-        #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA              // {209}
         fnEnableRxAndDMA(channel, rx_length, (unsigned long)ptrStart, (void *)&(uart_reg->UART_D)); // configure DMA and reception, including configuring the RXD input
-        #else
-        KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
-        ptrDMA_TCD += UART_DMA_RX_CHANNEL[channel];
-        ptrDMA_TCD->DMA_TCD_DADDR = (unsigned long)ptrStart;             // destination is the input tty buffer
-        ATOMIC_PERIPHERAL_BIT_REF_SET(DMA_ERQ, UART_DMA_RX_CHANNEL[channel]); // enable request source
-      //DMA_ERQ |= (DMA_ERQ_ERQ0 << UART_DMA_RX_CHANNEL[channel]);       
-        fnRxOn(channel);                                                 // configure receiver pin and enable reception and its interrupt/DMA
-        #endif
     }
         #if defined SERIAL_SUPPORT_DMA_RX_FREERUN                        // {15}
     else if (rx_length == 0) {                                           // call to update DMA progress
-            #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA          // {209}
         fnCheckFreerunningDMA_reception(channel, (QUEQUE *)ptrStart);
-            #else
-        QUEQUE *tty_queue = (QUEQUE *)ptrStart;
-        unsigned short usDMA_rx;
-        KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
-        ptrDMA_TCD += UART_DMA_RX_CHANNEL[channel];
-        usDMA_rx = ptrDMA_TCD->DMA_TCD_CITER_ELINK;                      // snap-shot of DMA reception progress
-        if (ulDMA_progress[channel] >= usDMA_rx) {
-            tty_queue->chars += (QUEUE_TRANSFER)(ulDMA_progress[channel] - usDMA_rx); // the extra number of characters received by DMA since last check
-        }
-        else {
-            tty_queue->chars += (QUEUE_TRANSFER)ulDMA_progress[channel];
-            tty_queue->chars += (ptrDMA_TCD->DMA_TCD_BITER_ELINK - usDMA_rx); // the extra number of characters received by DMA since last check
-        }
-        ulDMA_progress[channel] = usDMA_rx;                              // remember the check state
-            #endif
     }
         #endif                                                           // endif SERIAL_SUPPORT_DMA_RX_FREERUN
     #endif                                                               // endif (UARTS_AVAILABLE > 0)
@@ -2777,50 +2658,20 @@ static void fnConfigLPUART(QUEUE_HANDLE Channel, TTYTABLE *pars, KINETIS_LPUART_
     if ((pars->Config & TWO_STOPS) != 0) {                               // LPUART supports 2 stop bits
         lpuart_reg->LPUART_BAUD |= LPUART_BAUD_SBNS_2;                   // set 2 stop bits
     }
-    #if defined SERIAL_SUPPORT_DMA                                       // only transmit DMA supported due to limited DMA channels
-    if ((pars->ucDMAConfig & UART_TX_DMA) != 0) {
-        #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA
-        KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
-        if ((lpuart_reg->LPUART_BAUD & LPUART_BAUD_TDMAE) != 0) {
-            return;                                                      // if the DMA has already been configured don't disturb it
+    #if defined SERIAL_SUPPORT_DMA
+    if ((pars->ucDMAConfig & UART_TX_DMA) != 0) {                        // if transmission is to be DMA driven
+        if ((lpuart_reg->LPUART_BAUD & LPUART_BAUD_TDMAE) == 0) {        // if the DMA has already been configured don't disturb it
+            fnConfigDMA_buffer(UART_DMA_TX_CHANNEL[Channel], (DMAMUX0_CHCFG_SOURCE_LPUART0_TX + (2 * (Channel - UARTS_AVAILABLE))), 0, 0, (void *)&(lpuart_reg->LPUART_DATA), (DMA_BYTES | DMA_DIRECTION_OUTPUT | DMA_SINGLE_CYCLE), _uart_tx_dma_Interrupt[Channel], UART_DMA_TX_INT_PRIORITY[Channel]);
+            lpuart_reg->LPUART_CTRL &= ~(LPUART_CTRL_TIE | LPUART_CTRL_TCIE); // ensure tx interrupts are not enabled
+            lpuart_reg->LPUART_BAUD |= LPUART_BAUD_TDMAE;                // use DMA rather than interrupts for transmission
         }
-        ptrDMA += UART_DMA_TX_CHANNEL[Channel];
-        ptrDMA->DMA_DSR_BCR = DMA_DSR_BCR_DONE;                          // clear the DONE flag and clear errors etc.
-        ptrDMA->DMA_DAR = (unsigned long)&(lpuart_reg->LPUART_DATA);     // destination is the LPUART's data register
-        POWER_UP_ATOMIC(6, DMAMUX0);                                     // enable DMA multiplexer
-        fnEnterInterrupt((irq_DMA0_ID + UART_DMA_TX_CHANNEL[Channel]), UART_DMA_TX_INT_PRIORITY[Channel], (void (*)(void))_uart_tx_dma_Interrupt[Channel]); // enter DMA interrupt handler
-        lpuart_reg->LPUART_CTRL &= ~(LPUART_CTRL_TIE | LPUART_CTRL_TCIE);// ensure tx interrupt is not enabled
-        lpuart_reg->LPUART_BAUD |= LPUART_BAUD_TDMAE;                    // use DMA rather than interrupts for transmission
-        ptrDMA->DMA_DCR = (DMA_DCR_SINC | DMA_DCR_D_REQ | DMA_DCR_DSIZE_8 | DMA_DCR_SSIZE_8 | DMA_DCR_DMOD_OFF | DMA_DCR_SMOD_OFF | DMA_DCR_CS | DMA_DCR_EINT); // set mode and protect from interrupts that could use the function in the process
-        *(unsigned char *)(DMAMUX0_BLOCK + UART_DMA_TX_CHANNEL[Channel]) = ((DMAMUX_CHCFG_SOURCE_UART0_TX + (2 * Channel)) | DMAMUX_CHCFG_ENBL); // connect UART tx to DMA channel
-        #else
-        KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
-        ptrDMA_TCD += UART_DMA_TX_CHANNEL[Channel];
-        ptrDMA_TCD->DMA_TCD_SOFF = 1;                                    // source increment one byte
-        ptrDMA_TCD->DMA_TCD_DOFF = 0;                                    // destination not incremented
-      //_SET_DMA_CHANNEL_PRIORITY(UART_DMA_TX_CHANNEL[Channel], UART_DMA_TX_PRIORITY[Channel]); // DMA priority, whereby channel can suspend a lower priority channel (not changed since we use the channel's inherent priority)
-        ptrDMA_TCD->DMA_TCD_ATTR = (DMA_TCD_ATTR_DSIZE_8 | DMA_TCD_ATTR_SSIZE_8); // transfer sizes always single bytes
-        ptrDMA_TCD->DMA_TCD_DADDR = (unsigned long)&(lpuart_reg->LPUART_DATA);  // destination is the LPUART's data register
-        ptrDMA_TCD->DMA_TCD_SLAST = ptrDMA_TCD->DMA_TCD_DLASTSGA = 0;    // {107} no change to address when the buffer has filled
-        ptrDMA_TCD->DMA_TCD_NBYTES_ML = 1;                               // each request starts a single transfer
-        ptrDMA_TCD->DMA_TCD_CSR = (DMA_TCD_CSR_DREQ | DMA_TCD_CSR_INTMAJOR); // stop after the defined number of service requests and interrupt on completion
-            #if defined eDMA_SHARES_INTERRUPTS
-        fnEnterInterrupt((irq_DMA0_0_4_ID + (UART_DMA_TX_CHANNEL[Channel]%(DMA_CHANNEL_COUNT/2))), UART_DMA_TX_INT_PRIORITY[Channel], (void (*)(void))_uart_tx_dma_Interrupt[Channel]); // enter DMA interrupt handler
-            #else
-        fnEnterInterrupt((irq_DMA0_ID + UART_DMA_TX_CHANNEL[Channel]), UART_DMA_TX_INT_PRIORITY[Channel], (void (*)(void))_uart_tx_dma_Interrupt[Channel]); // enter DMA interrupt handler
-            #endif
-        lpuart_reg->LPUART_CTRL &= ~(LPUART_CTRL_TIE | LPUART_CTRL_TCIE);// ensure tx interrupts are not enabled
-        lpuart_reg->LPUART_BAUD |= LPUART_BAUD_TDMAE;                    // use DMA rather than interrupts for transmission
-        POWER_UP_ATOMIC(6, DMAMUX0);                                     // enable DMA multiplexer 0
-        *(unsigned char *)(DMAMUX0_BLOCK + UART_DMA_TX_CHANNEL[Channel]) = ((DMAMUX0_CHCFG_SOURCE_LPUART0_TX + (2 * (Channel - UARTS_AVAILABLE))) | DMAMUX_CHCFG_ENBL); // connect LPUART tx to DMA channel
-        #endif
     }
     else {                                                               // interrupt driven transmitter
         lpuart_reg->LPUART_BAUD &= ~LPUART_BAUD_TDMAE;                   // disable tx DMA so that tx interrupt mode can be used
     }
     #endif
     #if defined SERIAL_SUPPORT_DMA_RX                                    // {209}
-    if ((pars->ucDMAConfig & UART_RX_DMA) != 0) {
+    if ((pars->ucDMAConfig & UART_RX_DMA) != 0) {                        // dma required on receiver
         lpuart_reg->LPUART_CTRL &= ~(LPUART_CTRL_RIE);                   // ensure rx interrupt is not enabled
         lpuart_reg->LPUART_BAUD |= LPUART_BAUD_RDMAE;                    // use DMA rather than interrupts for reception
     }
@@ -2936,73 +2787,53 @@ _configDMA:
         #endif
     if ((pars->ucDMAConfig & UART_TX_DMA) != 0) {
         #if defined KINETIS_KL                                           // {81}
-        KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
+        int iConfigured = 0;
             #if UARTS_AVAILABLE > 1
         if (Channel == 0) {
-            if ((uart_reg->UART_C5 & UART_C5_TDMAS) != 0) {              // {203} if DMA has already been configured we quit re-configuration
-                return;
+            if ((uart_reg->UART_C5 & UART_C5_TDMAS) != 0) {              // {203} if DMA has already been configured we leave the configuration untouched
+                iConfigured = 1;
             }
         }
         else {
-            if ((uart_reg->UART_MA1_C4 & UART_C4_TDMAS) != 0) {          // {203} if DMA has already been configured we quit re-configuration
-                return;
+            if ((uart_reg->UART_MA1_C4 & UART_C4_TDMAS) != 0) {          // {203} if DMA has already been configured we leave the configuration untouched
+                iConfigured = 1;
             }
         }
             #else
-        if ((uart_reg->UART_C5 & UART_C5_TDMAS) != 0) {                  // {203} if DMA has already been configured we quit re-configuration
-            return;
+        if ((uart_reg->UART_C5 & UART_C5_TDMAS) != 0) {                  // {203} if DMA has already been configured we leave the configuration untouched
+            iConfigured = 1;
         }
             #endif
-        ptrDMA += UART_DMA_TX_CHANNEL[Channel];
-        ptrDMA->DMA_DSR_BCR = DMA_DSR_BCR_DONE;                          // clear the DONE flag and clear errors etc.
-        ptrDMA->DMA_DAR = (unsigned long)&(uart_reg->UART_D);            // destination is the UART's data register
-        POWER_UP_ATOMIC(6, DMAMUX0);                                     // enable DMA multiplexer 0
-        fnEnterInterrupt((irq_DMA0_ID + UART_DMA_TX_CHANNEL[Channel]), UART_DMA_TX_INT_PRIORITY[Channel], (void (*)(void))_uart_tx_dma_Interrupt[Channel]); // enter DMA interrupt handler
-        uart_reg->UART_C2 &= ~(UART_C2_TIE | UART_C2_TCIE);              // ensure tx interrupt is not enabled
+        if (0 == iConfigured) {
+            uart_reg->UART_C2 &= ~(UART_C2_TIE | UART_C2_TCIE);          // ensure tx interrupt is not enabled
+            fnConfigDMA_buffer(UART_DMA_TX_CHANNEL[Channel], (DMAMUX_CHCFG_SOURCE_UART0_TX + (2 * Channel)), 0, 0, (void *)&(uart_reg->UART_D), (DMA_BYTES | DMA_DIRECTION_OUTPUT | DMA_SINGLE_CYCLE), _uart_tx_dma_Interrupt[Channel], UART_DMA_TX_INT_PRIORITY[Channel]);
             #if UARTS_AVAILABLE > 1
-        if (Channel == 0) {
-            uart_reg->UART_C5 |= UART_C5_TDMAS;                          // use DMA rather than interrupts for transmission
-        }
-        else {
-            uart_reg->UART_MA1_C4 |= UART_C4_TDMAS;                      // use DMA rather than interrupts for transmission
-            uart_reg->UART_C2 |= (UART_C2_TIE);                          // enable the tx dma request (DMA not yet enabled) rather than interrupt mode
-        }
+            if (Channel == 0) {
+                uart_reg->UART_C5 |= UART_C5_TDMAS;                      // use DMA rather than interrupts for transmission
+            }
+            else {
+                uart_reg->UART_MA1_C4 |= UART_C4_TDMAS;                  // use DMA rather than interrupts for transmission
+                uart_reg->UART_C2 |= (UART_C2_TIE);                      // enable the tx dma request (DMA not yet enabled) rather than interrupt mode
+            }
             #else
                 #if defined K_STYLE_UART2                                // the UART in some KL parts behave like one in the K devices with respect to needing the interrupt enabled for DMA to be triggered
-        uart_reg->UART_C2 |= (UART_C2_TIE);                              // enable the tx dma request (DMA not yet enabled) rather than interrupt mode
+            uart_reg->UART_C2 |= (UART_C2_TIE);                          // enable the tx dma request (DMA not yet enabled) rather than interrupt mode
                 #endif
-        uart_reg->UART_C5 |= UART_C5_TDMAS;                              // use DMA rather than interrupts for transmission
+            uart_reg->UART_C5 |= UART_C5_TDMAS;                          // use DMA rather than interrupts for transmission
             #endif
-        ptrDMA->DMA_DCR = (DMA_DCR_SINC | DMA_DCR_D_REQ | DMA_DCR_DSIZE_8 | DMA_DCR_SSIZE_8 | DMA_DCR_DMOD_OFF | DMA_DCR_SMOD_OFF | DMA_DCR_CS | DMA_DCR_EINT); // set mode and protect from interrupts that could use the function in the process
-        *(unsigned char *)(DMAMUX0_BLOCK + UART_DMA_TX_CHANNEL[Channel]) = ((DMAMUX_CHCFG_SOURCE_UART0_TX + (2 * Channel)) | DMAMUX_CHCFG_ENBL); // connect UART tx to DMA channel
+        }
         #else
-        KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
-        if ((uart_reg->UART_C2 & UART_C2_TIE) != 0) {                    // {203} if DMA has already been configured we quit re-configuration
-            return;
-        }
-        ptrDMA_TCD += UART_DMA_TX_CHANNEL[Channel];
-        ptrDMA_TCD->DMA_TCD_SOFF = 1;                                    // source increment one byte
-        ptrDMA_TCD->DMA_TCD_DOFF = 0;                                    // destination not incremented
-      //_SET_DMA_CHANNEL_PRIORITY(UART_DMA_TX_CHANNEL[Channel], UART_DMA_TX_PRIORITY[Channel]); // DMA priority, whereby channel can suspend a lower priority channel (not changed since we use the channel's inherent priority)
-        ptrDMA_TCD->DMA_TCD_ATTR = (DMA_TCD_ATTR_DSIZE_8 | DMA_TCD_ATTR_SSIZE_8); // transfer sizes always single bytes
-        ptrDMA_TCD->DMA_TCD_DADDR = (unsigned long)&(uart_reg->UART_D);  // destination is the UART's data register
-        ptrDMA_TCD->DMA_TCD_SLAST = ptrDMA_TCD->DMA_TCD_DLASTSGA = 0;    // {107} no change to address when the buffer has filled
-        ptrDMA_TCD->DMA_TCD_NBYTES_ML = 1;                               // each request starts a single transfer
-        ptrDMA_TCD->DMA_TCD_CSR = (DMA_TCD_CSR_DREQ | DMA_TCD_CSR_INTMAJOR); // stop after the defined number of service requests and interrupt on completion
-        fnEnterInterrupt((irq_DMA0_ID + UART_DMA_TX_CHANNEL[Channel]), UART_DMA_TX_INT_PRIORITY[Channel], (void (*)(void))_uart_tx_dma_Interrupt[Channel]); // enter DMA interrupt handler
-        uart_reg->UART_C5 |= UART_C5_TDMAS;                              // use DMA rather than interrupts for transmission
-        POWER_UP_ATOMIC(6, DMAMUX0);                                     // enable DMA multiplexer 0
+        if ((uart_reg->UART_C2 & UART_C2_TIE) == 0) {                    // {203} if DMA has already been configured we leave it untouched
+            unsigned short usDMAMUX = (DMAMUX_CHCFG_SOURCE_UART0_TX + (2 * Channel));
             #if ((defined KINETIS_K21 || defined KINETIS_K22) && (UARTS_AVAILABLE > 4)) || defined KINETIS_K64
-        if (Channel > 3) {                                               // channels 4 and 5 each share DMA source for TX and RX
-            *(unsigned char *)(DMAMUX0_BLOCK + UART_DMA_TX_CHANNEL[Channel]) = ((DMAMUX_CHCFG_SOURCE_UART3_TX + (Channel - 3)) | DMAMUX_CHCFG_ENBL); // connect UART tx to DMA channel
-        }
-        else {
-            *(unsigned char *)(DMAMUX0_BLOCK + UART_DMA_TX_CHANNEL[Channel]) = ((DMAMUX_CHCFG_SOURCE_UART0_TX + (2 * Channel)) | DMAMUX_CHCFG_ENBL); // connect UART tx to DMA channel
-        }
-            #else
-        *(unsigned char *)(DMAMUX0_BLOCK + UART_DMA_TX_CHANNEL[Channel]) = ((DMAMUX_CHCFG_SOURCE_UART0_TX + (2 * Channel)) | DMAMUX_CHCFG_ENBL); // connect UART tx to DMA channel
+            if (Channel > 3) {                                           // channels 4 and 5 each share DMA source for TX and RX
+                usDMAMUX = (DMAMUX_CHCFG_SOURCE_UART3_TX + (Channel - 3));
+            }
             #endif
-        uart_reg->UART_C2 |= (UART_C2_TIE);                              // enable the tx dma request (DMA not yet enabled) rather than interrupt mode
+            uart_reg->UART_C5 |= UART_C5_TDMAS;                          // use DMA rather than interrupts for transmission
+            fnConfigDMA_buffer(UART_DMA_TX_CHANNEL[Channel], usDMAMUX, 0, 0, (void *)&(uart_reg->UART_D), (DMA_BYTES | DMA_DIRECTION_OUTPUT | DMA_SINGLE_CYCLE), _uart_tx_dma_Interrupt[Channel], UART_DMA_TX_INT_PRIORITY[Channel]);
+            uart_reg->UART_C2 |= (UART_C2_TIE);                          // enable the tx dma request (DMA not yet enabled) rather than interrupt mode
+        }
         #endif
     }
     else {                                                               // interrupt driven transmitter
@@ -3018,7 +2849,7 @@ _configDMA:
         #endif
     }
         #if defined SERIAL_SUPPORT_DMA_RX
-    if ((pars->ucDMAConfig & UART_RX_DMA) != 0) {                        // {8}
+    if ((pars->ucDMAConfig & UART_RX_DMA) != 0) {                        // {8} reception dma is required 
             #if defined KINETIS_KL                                       // {209}
                 #if (UARTS_AVAILABLE > 1)
         if (Channel == 0) {
@@ -3031,53 +2862,23 @@ _configDMA:
         uart_reg->UART_C5 |= UART_C5_RDMAS;                              // use DMA rather than interrupts for reception
                 #endif
             #else
-        KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
-        ptrDMA_TCD += UART_DMA_RX_CHANNEL[Channel];                      // set the DMA channel register
-        fnEnterInterrupt((irq_DMA0_ID + UART_DMA_RX_CHANNEL[Channel]), UART_DMA_RX_INT_PRIORITY[Channel], (void (*)(void))_uart_rx_dma_Interrupt[Channel]); // enter DMA interrupt handler
-            #if defined KINETIS_KL && (UARTS_AVAILABLE > 1)
-        if (Channel == 0) {
-            uart_reg->UART_C5 |= UART_C5_RDMAS;                          // use DMA rather than interrupts for reception
-        }
-        else {
-            uart_reg->UART_MA1_C4 |= UART_C4_RDMAS;                      // use DMA rather than interrupts for reception
-        }
-            #else
         uart_reg->UART_C5 |= UART_C5_RDMAS;                              // use DMA rather than interrupts for reception
             #endif
-        POWER_UP_ATOMIC(6, DMAMUX0);                                     // enable DMA multiplexer 0
-        *(unsigned char *)(DMAMUX0_BLOCK + UART_DMA_RX_CHANNEL[Channel]) = ((DMAMUX_CHCFG_SOURCE_UART0_RX + (2 * Channel)) | DMAMUX_CHCFG_ENBL); // connect UART rx to DMA channel
-        ptrDMA_TCD->DMA_TCD_BITER_ELINK = ptrDMA_TCD->DMA_TCD_CITER_ELINK = pars->Rx_tx_sizes.RxQueueSize; // the length of the input buffer in use
-        ptrDMA_TCD->DMA_TCD_SOFF = 0;                                    // source not increment
-        ptrDMA_TCD->DMA_TCD_DOFF = 1;                                    // destination incremented
-      //_SET_DMA_CHANNEL_PRIORITY(UART_DMA_RX_CHANNEL[Channel], UART_DMA_RX_PRIORITY[Channel]); // DMA priority, whereby channel can suspend a lower priority channel (not changed since we use the channel's inherent priority)
-        ptrDMA_TCD->DMA_TCD_ATTR = (DMA_TCD_ATTR_DSIZE_8 | DMA_TCD_ATTR_SSIZE_8); // transfer sizes always single bytes
-        ptrDMA_TCD->DMA_TCD_SADDR = (unsigned long)&(uart_reg->UART_D);  // source is the UART's data register
-        ptrDMA_TCD->DMA_TCD_NBYTES_ML = 1;                               // each request starts a single transfer
         if ((pars->ucDMAConfig & (UART_RX_DMA_HALF_BUFFER | UART_RX_DMA_FULL_BUFFER)) != 0) { // if operating in half-buffer or full buffer mode
+            unsigned long ulDMA_rules = (DMA_BYTES | DMA_DIRECTION_INPUT | DMA_SINGLE_CYCLE);
             if ((pars->ucDMAConfig & UART_RX_DMA_HALF_BUFFER) != 0) {
-                ptrDMA_TCD->DMA_TCD_CSR = (DMA_TCD_CSR_INTMAJOR | DMA_TCD_CSR_INTHALF); // never disable and inform on half and full buffer
+                ulDMA_rules |= DMA_HALF_BUFFER_INTERRUPT;
             }
-            else {
-                ptrDMA_TCD->DMA_TCD_CSR = (DMA_TCD_CSR_INTMAJOR);        // never disable and inform on full buffer
-            }
+            fnConfigDMA_buffer(UART_DMA_RX_CHANNEL[Channel], (DMAMUX_CHCFG_SOURCE_UART0_RX + (2 * Channel)), pars->Rx_tx_sizes.RxQueueSize, (void *)&(uart_reg->UART_D), 0, ulDMA_rules, _uart_rx_dma_Interrupt[Channel], UART_DMA_RX_INT_PRIORITY[Channel]);
         }
-            #if defined SERIAL_SUPPORT_DMA_RX_FREERUN
-        else {
-            ptrDMA_TCD->DMA_TCD_CSR = 0;                                 // continuous
-            ulDMA_progress[Channel] = ptrDMA_TCD->DMA_TCD_BITER_ELINK;
-        }
-            #endif
-        ptrDMA_TCD->DMA_TCD_SLAST = 0;                                   // {56} no change to address when the buffer has filled
-        ptrDMA_TCD->DMA_TCD_DLASTSGA = (-pars->Rx_tx_sizes.RxQueueSize); // when the buffer has been filled set the destination back to the start of it
-            #endif
     }
     else {                                                               // interrupt driven receiver
             #if defined KINETIS_KL && (UARTS_AVAILABLE > 1)
         if (Channel == 0) {
-            uart_reg->UART_C5 &= ~(UART_C5_RDMAS);                       // disable tx DMA so that tx interrupt mode can be used
+            uart_reg->UART_C5 &= ~(UART_C5_RDMAS);                       // disable rx DMA so that rx interrupt mode can be used
         }
         else {
-            uart_reg->UART_MA1_C4 &= ~(UART_C4_RDMAS);                   // disable tx DMA so that tx interrupt mode can be used
+            uart_reg->UART_MA1_C4 &= ~(UART_C4_RDMAS);                   // disable rx DMA so that rx interrupt mode can be used
         }
             #else
         uart_reg->UART_C5 &= ~(UART_C5_RDMAS);                           // disable rx DMA so that rx interrupt mode can be used
@@ -3258,7 +3059,11 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
             MCG_C2 &= ~MCG_C2_IRCS;                                      // select slow internal reference clock (32kHz [2MHz for devices with MCG Lite]) as MCGIRCLK
                     #endif
                 #endif
-            SIM_SOPT2 |= (SIM_SOPT2_UART0SRC_MCGIRCLK);
+                #if defined SIM_SOPT2_UART0SRC_MCGIRCLK
+            SIM_SOPT2 |= (SIM_SOPT2_UART0SRC_MCGIRCLK);                  // select the LPUART clock source to MCGIRCLK
+                #else
+            SIM_SOPT2 |= SIM_SOPT2_LPUARTSRC_MGC;                        // select the LPUART clock source to MCGIRCLK
+                #endif
             #endif
         #endif
             break;
@@ -3292,7 +3097,11 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
                 #elif defined LPUART_OSCERCLK                            // clock the UART from the external clock
             SIM_SOPT2 |= (SIM_SOPT2_UART1SRC_OSCERCLK);
                 #else                                                    // clock the UART from MCGIRCLK (IRC8M/FCRDIV/LIRC_DIV2)
-            SIM_SOPT2 |= (SIM_SOPT2_UART1SRC_MCGIRCLK);
+                    #if defined SIM_SOPT2_UART1SRC_MCGIRCLK
+            SIM_SOPT2 |= (SIM_SOPT2_UART1SRC_MCGIRCLK);                  // select the LPUART clock source to MCGIRCLK
+                    #else
+            SIM_SOPT2 |= SIM_SOPT2_LPUARTSRC_MGC;                        // select the LPUART clock source to MCGIRCLK
+                    #endif
                 #endif
             #endif
             break;
@@ -3327,7 +3136,11 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
                 #elif defined LPUART_OSCERCLK                            // clock the UART from the external clock
             SIM_SOPT2 |= (SIM_SOPT2_UART2SRC_OSCERCLK);
                 #else                                                    // clock the UART from MCGIRCLK (IRC8M/FCRDIV/LIRC_DIV2)
+                    #if defined SIM_SOPT2_UART2SRC_MCGIRCLK              // select the LPUART clock source to MCGIRCLK
             SIM_SOPT2 |= (SIM_SOPT2_UART2SRC_MCGIRCLK);
+                    #else
+            SIM_SOPT2 |= SIM_SOPT2_LPUARTSRC_MGC;                        // select the LPUART clock source to MCGIRCLK
+                    #endif
                 #endif
             #endif
             break;
@@ -3351,7 +3164,11 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
             #elif defined LPUART_OSCERCLK                                // clock the UART from the external clock
             SIM_SOPT2 |= (SIM_SOPT2_UART3SRC_OSCERCLK);
             #else                                                        // clock the UART from MCGIRCLK (IRC8M/FCRDIV/LIRC_DIV2)
-            SIM_SOPT2 |= (SIM_SOPT2_UART3SRC_MCGIRCLK);
+                #if defined SIM_SOPT2_UART3SRC_MCGIRCLK
+            SIM_SOPT2 |= (SIM_SOPT2_UART3SRC_MCGIRCLK);                  // select the LPUART clock source to MCGIRCLK
+                #else
+            SIM_SOPT2 |= SIM_SOPT2_LPUARTSRC_MGC;                        // select the LPUART clock source to MCGIRCLK
+                #endif
             #endif
             break;
         #endif
@@ -3374,7 +3191,11 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
             #elif defined LPUART_OSCERCLK                                // clock the UART from the external clock
             SIM_SOPT2 |= (SIM_SOPT2_UART4SRC_OSCERCLK);
             #else                                                        // clock the UART from MCGIRCLK (IRC8M/FCRDIV/LIRC_DIV2)
-            SIM_SOPT2 |= (SIM_SOPT2_UART4SRC_MCGIRCLK);
+                #if defined SIM_SOPT2_UART4SRC_MCGIRCLK
+            SIM_SOPT2 |= (SIM_SOPT2_UART4SRC_MCGIRCLK);                  // select the LPUART clock source to MCGIRCLK
+                #else
+            SIM_SOPT2 |= SIM_SOPT2_LPUARTSRC_MGC;                        // select the LPUART clock source to MCGIRCLK
+                #endif
             #endif
             break;
         #endif
@@ -3868,7 +3689,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #if UARTS_AVAILABLE > 0                                          // device contains both UART and LPUART
     if (uart_type[Channel] == UART_TYPE_LPUART) {                        // configure the low power UART
         #endif
-        fnConfigLPUART(Channel, pars, (KINETIS_LPUART_CONTROL *)uart_reg, usDivider);
+        fnConfigLPUART(Channel, pars, (KINETIS_LPUART_CONTROL *)uart_reg, usDivider); // configure the LPUART
         #if UARTS_AVAILABLE > 0
     }
     else {

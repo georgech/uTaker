@@ -476,6 +476,11 @@ extern MODBUS_TCP_CTL *fnGet_MODBUS_TCP_port_status(unsigned char ucMODBUSport);
 
 extern int fnMODBUS_route(int iType, MODBUS_RX_FUNCTION *modbus_rx_function, MODBUS_ROUTE *routing_table);
 
+extern void fnSaveModbusFloat(unsigned short *_ptrReg, float *_ptrFloat);// write a single-precision floating point value to a modbus register location
+extern float fnGetModbusFloat(unsigned short *_ptrReg);                  // read a single-precision floating point value from a modbus register location
+extern void fnSaveModbusLongWord(unsigned short *_ptrReg, unsigned long _LongWord); // write a long word value to a modbus register
+extern unsigned long fnGetModbusLongWord(unsigned short *_ptrReg);       // read a long word value from a modbus register location
+
 #define PREPARE_COILS                          0
 #define PREPARE_DISCRETE_INPUTS                1
 #define PREPARE_HOLDING_REGISTERS              2

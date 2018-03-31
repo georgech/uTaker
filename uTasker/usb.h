@@ -29,16 +29,7 @@
 #if !defined _USB_
 #define _USB_
 
-#if defined _CODE_WARRIOR_CF                                                  // ensure no padding in structs in this file
-    #pragma pack(1)
-    #define __PACK_ON 
-    #define __PACK_OFF 
-#endif
-#if defined _COMPILE_COSMIC
-    #define _PACK
-    #define __PACK_ON 
-    #define __PACK_OFF 
-#endif
+__PACK_ON                                                                // ensure no padding in structs in this file
 
 #define ENDPOINT_PAIR(x, y)          ()
 

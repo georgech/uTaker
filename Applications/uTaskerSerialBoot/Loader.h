@@ -126,11 +126,15 @@
         #define UTASKER_APP_END       (unsigned char *)(UTASKER_APP_START + (64 * 1024)) // end of application space - after maximum application size
         #define INTERMEDIATE_PROG_BUFFER  (2 * 1024)                     // when UART speed greater than 57600 Baud is used an intermediate buffer is recommended
     #elif defined TEENSY_3_1 && defined SPECIAL_VERSION
-        #define UTASKER_APP_START     (16 * 1024)                        // application starts at this address
-        #if defined SPECIAL_VERSION_2
-            #define UTASKER_APP_END       (unsigned char *)(UTASKER_APP_START + (112 * 1024)) // end of application space - after maximum application size
+        #if defined SPECIAL_VERSION_SDCARD
+            #define UTASKER_APP_START  (32 * 1024)                       // application starts at this address
         #else
-            #define UTASKER_APP_END       (unsigned char *)(UTASKER_APP_START + (240 * 1024)) // end of application space - after maximum application size
+            #define UTASKER_APP_START  (16 * 1024)                       // application starts at this address
+        #endif
+        #if defined SPECIAL_VERSION_2
+            #define UTASKER_APP_END   (unsigned char *)(UTASKER_APP_START + (112 * 1024)) // end of application space - after maximum application size
+        #else
+            #define UTASKER_APP_END   (unsigned char *)(SIZE_OF_FLASH)   // end of application space - after maximum application size
         #endif
     #elif defined TWR_K20D50M ||  defined FRDM_KL46Z || defined FRDM_KL43Z || defined TWR_KL43Z48M || defined TWR_KL46Z48M || defined TEENSY_3_1 || defined TWR_K24F120M // {16}
         #if defined FLEXFLASH_DATA
@@ -196,7 +200,8 @@
         #define CODE_OFFSET           0xc298                             // ensure that this value is a multiple of the smallest flash programming entity size (divisible by 8 is suitable for all Kinetis parts)
     #else
         #if defined SPECIAL_VERSION_SDCARD
-            #define NEW_SOFTWARE_FILE "LTPgun****.bin"
+          //#define NEW_SOFTWARE_FILE "BCgun*.bin"
+            #define NEW_SOFTWARE_FILE "BCvest*.bin"
         #else
             #define NEW_SOFTWARE_FILE "software.bin"
         #endif
@@ -300,7 +305,7 @@
 
 #if defined MEMORY_SWAP
     #define _UTASKER_APP_START_       (FLASH_START_ADDRESS)
-#elif defined USB_INTERFACE && defined USB_MSD_DEVICE_LOADER
+#elif defined USB_INTERFACE && (defined USB_MSD_DEVICE_LOADER || defined SPECIAL_VERSION_SDCARD)
     #define _UTASKER_APP_START_       (UTASKER_APP_START + (ROOT_FILE_ENTRIES * 32)) // when USB is used the start of application space is used for FAT entries
 #else
     #define _UTASKER_APP_START_       (UTASKER_APP_START)
@@ -348,6 +353,7 @@ extern void fnSetBacklight(void);
 #define T_COMMIT_BUFFER           3
 #define T_MESSAGE_TIMEOUT         4
 #define T_HOOKUP_TIMEOUT          4
+#define T_RECHECK_CARD            100
 
 // LDC to application
 //

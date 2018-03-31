@@ -61,6 +61,7 @@
 
 #define T_JUMP_TO_APP              1
 #define T_CHECK_CARD               2
+#define T_DELAYED_JUMP_TO_APP      3
 
 #define E_DO_NEXT                  1
 #define E_DO_SEARCH                2
@@ -255,8 +256,21 @@ extern void fnSD_loader(TTASKTABLE *ptrTaskTable)
                     }
                 }
                 else if (T_JUMP_TO_APP == ucInputMessage[MSG_TIMER_EVENT]) { // go to application
+    #if defined SPECIAL_VERSION_SDCARD
+                    uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(SEC * 60 * 3), T_DELAYED_JUMP_TO_APP);
+                    uTaskerStateChange(TASK_USB, UTASKER_ACTIVATE);      // allow the USB task to start
+    #else
                     fnJumpToApplication(1);                              // {3} unconditional jump to application code
+    #endif
                 }
+    #if defined SPECIAL_VERSION_SDCARD
+                else if (T_RECHECK_CARD == ucInputMessage[MSG_TIMER_EVENT]) { // USB write activity has taken place so the card needs to be rechecked for new firmware
+                    uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(SEC * 0.1), T_CHECK_CARD);
+                }
+                else if (T_DELAYED_JUMP_TO_APP == ucInputMessage[MSG_TIMER_EVENT]) {
+                    fnJumpToApplication(1);                              // unconditional jump to application code after an additional delay
+                }
+    #endif
             }
             else {                                                       // interrupt event assumed
     #if defined WILDCARD_FILES                                           // {8}
@@ -652,7 +666,11 @@ static int fnUpdateSoftware(int iAppState, UTFILE *ptr_utFile, UPLOAD_HEADER *pt
                 iStartRequested = 1;                                     // {13} allow the application to start after an update
     #endif
                 _DISPLAY_SW_UPDATED();                                   // optionally display that the code was successfully programmed
+    #if defined SPECIAL_VERSION_SDCARD
+                uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(SEC * 1.5), T_DELAYED_JUMP_TO_APP); // start the application after a short delay
+    #else
                 uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(SEC * 1.5), T_JUMP_TO_APP); // start the application after a short delay
+   #endif
             }
             else {
                 _DISPLAY_ERROR();                                        // optionally display that there was an error with the image loaded to flash

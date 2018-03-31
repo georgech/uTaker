@@ -99,15 +99,15 @@ static const MODBUS_PARS cMODBUS_default = {
     },
     {
     #if MODBUS_SERIAL_INTERFACES > 1
-        SERIAL_BAUD_19200,                                               // baud rate of serial interface - serial port 0
+        SERIAL_BAUD_115200,                                              // baud rate of serial interface - serial port 0
     #endif
-        SERIAL_BAUD_19200,                                               // baud rate of serial interface - serial port 1
+        SERIAL_BAUD_115200,                                              // baud rate of serial interface - serial port 1
     },
     {
     #if MODBUS_SERIAL_INTERFACES > 1
         (MODBUS_MODE_ASCII | MODBUS_SERIAL_MASTER | MODBUS_RS485_POSITIVE /*MODBUS_RS485_NEGATIVE*/),// default to RTU mode as master - serial port 0
     #endif
-        (MODBUS_MODE_ASCII | MODBUS_SERIAL_SLAVE | /*MODBUS_SERIAL_GATEWAY | */MODBUS_RS485_POSITIVE), // default to RTU mode as slave - serial port 1
+        (MODBUS_MODE_RTU | MODBUS_SERIAL_SLAVE | /*MODBUS_SERIAL_GATEWAY | */MODBUS_RS485_POSITIVE), // default to RTU mode as slave - serial port 1
     },
     #if defined MODBUS_GATE_WAY_QUEUE
     {

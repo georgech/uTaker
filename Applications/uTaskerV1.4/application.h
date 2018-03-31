@@ -163,6 +163,9 @@ extern void fnHandleFreeMaster(QUEUE_HANDLE comHandle, unsigned char *ptr_ucBuff
     extern void fnInit_nRF24L01(void);
     extern void fnHandle_nRF24L01_event(void);
     extern void fnTest_nRF24L01_Write(int iPingPong);
+    #if defined USE_MQTT_CLIENT && defined USE_MAINTENANCE
+        extern unsigned char *fnSetLast_nRF24201_data(unsigned char *ptrData);
+    #endif
 #endif
 #if defined USE_MAINTENANCE && defined USB_INTERFACE && defined USE_USB_CDC
     extern int fnUSB_CDC_TX(int iStart);

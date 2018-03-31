@@ -1290,7 +1290,7 @@ extern void fnDebugHex(unsigned long ulValue, unsigned char uLen)        // disp
 #endif
 
 
-#if (defined SERIAL_INTERFACE && defined KBOOT_LOADER) || (defined USB_INTERFACE && defined HID_LOADER && defined KBOOT_HID_LOADER) // {20}
+#if (defined SERIAL_INTERFACE && defined KBOOT_LOADER) || (defined USB_INTERFACE && defined HID_LOADER && defined KBOOT_HID_LOADER && !defined USE_USB_MSD) // {20}
 static unsigned long fnHandlePropertyGet(unsigned char ucCommandtag, unsigned long *prValue)
 {
 #define BOOT_LOADER_NAME          'K'

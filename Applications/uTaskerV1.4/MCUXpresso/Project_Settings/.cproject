@@ -173,7 +173,7 @@
 						</tool>
 					</fileInfo>
 					<sourceEntries>
-						<entry excluding="stack/secure_layer.c|Applications/emBasic|Applications/DIGILink|stack/SSL/mbedtls-2.6|Hardware/Kinetis/kinetis_boot.c|FreeRTOS/Source/portable/GCC/ARM_CM7|FreeRTOS/Source/portable/GCC/ARM_CM4_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3|FreeRTOS/Source/portable/GCC/ARM_CM0|FreeRTOS/Source/portable/RVDS|FreeRTOS/Source/portable/MSVC-MingW|FreeRTOS/Source/portable/MemMang|FreeRTOS/Source/portable/Keil|FreeRTOS/Source/portable/IAR|FreeRTOS/Source/portable/Common|Hardware/Kinetis/kinetis_asm.s|Hardware/Kinetis/kinetisSim.c|Applications/uTaskerSerialBoot|Applications/uTaskerBoot|Tools|WinSim" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="Applications/I2C_Slave|Applications/Citynox-loader|stack/secure_layer.c|Applications/emBasic|Applications/DIGILink|stack/SSL/mbedtls-2.6|Hardware/Kinetis/kinetis_boot.c|FreeRTOS/Source/portable/GCC/ARM_CM7|FreeRTOS/Source/portable/GCC/ARM_CM4_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3|FreeRTOS/Source/portable/GCC/ARM_CM0|FreeRTOS/Source/portable/RVDS|FreeRTOS/Source/portable/MSVC-MingW|FreeRTOS/Source/portable/MemMang|FreeRTOS/Source/portable/Keil|FreeRTOS/Source/portable/IAR|FreeRTOS/Source/portable/Common|Hardware/Kinetis/kinetis_asm.s|Hardware/Kinetis/kinetisSim.c|Applications/uTaskerSerialBoot|Applications/uTaskerBoot|Tools|WinSim" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -351,7 +351,7 @@
 						</tool>
 					</fileInfo>
 					<sourceEntries>
-						<entry excluding="stack/secure_layer.c|Applications/emBasic|Applications/DIGILink|stack/SSL/mbedtls-2.6|Hardware/Kinetis/kinetis_boot.c|FreeRTOS/Source/portable/GCC/ARM_CM7|FreeRTOS/Source/portable/GCC/ARM_CM4_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3|FreeRTOS/Source/portable/GCC/ARM_CM0|FreeRTOS/Source/portable/RVDS|FreeRTOS/Source/portable/MSVC-MingW|FreeRTOS/Source/portable/MemMang|FreeRTOS/Source/portable/Keil|FreeRTOS/Source/portable/IAR|FreeRTOS/Source/portable/Common|Hardware/Kinetis/kinetis_asm.s|Hardware/Kinetis/kinetisSim.c|Applications/uTaskerSerialBoot|Applications/uTaskerBoot|Tools|WinSim" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="Applications/I2C_Slave|Applications/Citynox-loader|stack/secure_layer.c|Applications/emBasic|Applications/DIGILink|stack/SSL/mbedtls-2.6|Hardware/Kinetis/kinetis_boot.c|FreeRTOS/Source/portable/GCC/ARM_CM7|FreeRTOS/Source/portable/GCC/ARM_CM4_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3|FreeRTOS/Source/portable/GCC/ARM_CM0|FreeRTOS/Source/portable/RVDS|FreeRTOS/Source/portable/MSVC-MingW|FreeRTOS/Source/portable/MemMang|FreeRTOS/Source/portable/Keil|FreeRTOS/Source/portable/IAR|FreeRTOS/Source/portable/Common|Hardware/Kinetis/kinetis_asm.s|Hardware/Kinetis/kinetisSim.c|Applications/uTaskerSerialBoot|Applications/uTaskerBoot|Tools|WinSim" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -371,7 +371,7 @@
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration artifactExtension="elf" artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe" cleanCommand="rm -rf" description="uTasker application for use with Boot Loaders" errorParsers="org.eclipse.cdt.core.CWDLocator;org.eclipse.cdt.core.GmakeErrorParser;org.eclipse.cdt.core.GCCErrorParser;org.eclipse.cdt.core.GLDErrorParser;org.eclipse.cdt.core.GASErrorParser" id="com.crt.advproject.config.exe.release.975616254.1431784295.1734585806" name="uTaskerV1.4_BM_FLASH" parent="com.crt.advproject.config.exe.release" postannouncebuildStep="Run a bat file to combinae and encode loadable targets" postbuildStep="&quot;${ProjDirPath}/Applications/uTaskerV1.4/MCUXpresso/uTaskerV1.4_BM_FLASH/generate.bat&quot;">
+				<configuration artifactExtension="elf" artifactName="uTaskerV1.4_BM" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe" cleanCommand="rm -rf" description="uTasker application for use with Boot Loaders" errorParsers="org.eclipse.cdt.core.CWDLocator;org.eclipse.cdt.core.GmakeErrorParser;org.eclipse.cdt.core.GCCErrorParser;org.eclipse.cdt.core.GLDErrorParser;org.eclipse.cdt.core.GASErrorParser" id="com.crt.advproject.config.exe.release.975616254.1431784295.1734585806" name="uTaskerV1.4_BM_FLASH" parent="com.crt.advproject.config.exe.release" postannouncebuildStep="Run a bat file to combine and encode loadable targets" postbuildStep="&quot;${ProjDirPath}/Applications/uTaskerV1.4/MCUXpresso/uTaskerV1.4_BM_FLASH/generate.bat&quot;">
 					<folderInfo id="com.crt.advproject.config.exe.release.975616254.1431784295.1734585806." name="/" resourcePath="">
 						<toolChain id="com.crt.advproject.toolchain.exe.release.521529066" name="NXP MCU Tools" superClass="com.crt.advproject.toolchain.exe.release">
 							<targetPlatform binaryParser="org.eclipse.cdt.core.ELF;org.eclipse.cdt.core.GNU_ELF" id="com.crt.advproject.platform.exe.release.1072790622" name="ARM-based MCU (Release)" superClass="com.crt.advproject.platform.exe.release"/>
@@ -530,7 +530,7 @@
 						</tool>
 					</fileInfo>
 					<sourceEntries>
-						<entry excluding="stack/secure_layer.c|Applications/emBasic|Applications/DIGILink|stack/SSL/mbedtls-2.6|Hardware/Kinetis/kinetis_boot.c|FreeRTOS/Source/portable/GCC/ARM_CM7|FreeRTOS/Source/portable/GCC/ARM_CM4_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3|FreeRTOS/Source/portable/GCC/ARM_CM0|FreeRTOS/Source/portable/RVDS|FreeRTOS/Source/portable/MSVC-MingW|FreeRTOS/Source/portable/MemMang|FreeRTOS/Source/portable/Keil|FreeRTOS/Source/portable/IAR|FreeRTOS/Source/portable/Common|Hardware/Kinetis/kinetis_asm.s|Hardware/Kinetis/kinetisSim.c|Applications/uTaskerSerialBoot|Applications/uTaskerBoot|Tools|WinSim" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="Applications/I2C_Slave|Applications/Citynox-loader|stack/secure_layer.c|Applications/emBasic|Applications/DIGILink|stack/SSL/mbedtls-2.6|Hardware/Kinetis/kinetis_boot.c|FreeRTOS/Source/portable/GCC/ARM_CM7|FreeRTOS/Source/portable/GCC/ARM_CM4_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3|FreeRTOS/Source/portable/GCC/ARM_CM0|FreeRTOS/Source/portable/RVDS|FreeRTOS/Source/portable/MSVC-MingW|FreeRTOS/Source/portable/MemMang|FreeRTOS/Source/portable/Keil|FreeRTOS/Source/portable/IAR|FreeRTOS/Source/portable/Common|Hardware/Kinetis/kinetis_asm.s|Hardware/Kinetis/kinetisSim.c|Applications/uTaskerSerialBoot|Applications/uTaskerBoot|Tools|WinSim" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -708,7 +708,7 @@
 						</tool>
 					</fileInfo>
 					<sourceEntries>
-						<entry excluding="stack/secure_layer.c|Applications/emBasic|Applications/DIGILink|stack/SSL/mbedtls-2.6|FreeRTOS|Applications/uTaskerSerialBoot/Simulator|Applications/uTaskerV1.4|Hardware/Kinetis/kinetis_boot.c|FreeRTOS/Source/portable/GCC/ARM_CM7|FreeRTOS/Source/portable/GCC/ARM_CM4_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3|FreeRTOS/Source/portable/GCC/ARM_CM0|FreeRTOS/Source/portable/RVDS|FreeRTOS/Source/portable/MSVC-MingW|FreeRTOS/Source/portable/MemMang|FreeRTOS/Source/portable/Keil|FreeRTOS/Source/portable/IAR|FreeRTOS/Source/portable/Common|Hardware/Kinetis/kinetis_asm.s|Hardware/Kinetis/kinetisSim.c|Applications/uTaskerBoot|Tools|WinSim" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="Applications/I2C_Slave|Applications/Citynox-loader|stack/secure_layer.c|Applications/emBasic|Applications/DIGILink|stack/SSL/mbedtls-2.6|FreeRTOS|Applications/uTaskerSerialBoot/Simulator|Applications/uTaskerV1.4|Hardware/Kinetis/kinetis_boot.c|FreeRTOS/Source/portable/GCC/ARM_CM7|FreeRTOS/Source/portable/GCC/ARM_CM4_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3|FreeRTOS/Source/portable/GCC/ARM_CM0|FreeRTOS/Source/portable/RVDS|FreeRTOS/Source/portable/MSVC-MingW|FreeRTOS/Source/portable/MemMang|FreeRTOS/Source/portable/Keil|FreeRTOS/Source/portable/IAR|FreeRTOS/Source/portable/Common|Hardware/Kinetis/kinetis_asm.s|Hardware/Kinetis/kinetisSim.c|Applications/uTaskerBoot|Tools|WinSim" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -886,7 +886,7 @@
 						</tool>
 					</fileInfo>
 					<sourceEntries>
-						<entry excluding="Applications/emBasic|Applications/DIGILink|uTasker|uTasker/Driver.c|Applications/uTaskerV1.4|uTasker/utFAT|uTasker/uGLCDLIB|uTasker/MODBUS|stack|FreeRTOS|Hardware/Kinetis/Crypto|Hardware/Kinetis/CMSIS_DSP|Hardware/Kinetis/kinetis.c|Applications/uTaskerBoot/Simulator|FreeRTOS/Source/portable/GCC/ARM_CM7|FreeRTOS/Source/portable/GCC/ARM_CM4_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3|FreeRTOS/Source/portable/GCC/ARM_CM0|FreeRTOS/Source/portable/RVDS|FreeRTOS/Source/portable/MSVC-MingW|FreeRTOS/Source/portable/MemMang|FreeRTOS/Source/portable/Keil|FreeRTOS/Source/portable/IAR|FreeRTOS/Source/portable/Common|Hardware/Kinetis/kinetis_asm.s|Hardware/Kinetis/kinetisSim.c|Applications/uTaskerSerialBoot|Tools|WinSim" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="Applications/I2C_Slave|Applications/Citynox-loader|Applications/emBasic|Applications/DIGILink|uTasker|uTasker/Driver.c|Applications/uTaskerV1.4|uTasker/utFAT|uTasker/uGLCDLIB|uTasker/MODBUS|stack|FreeRTOS|Hardware/Kinetis/Crypto|Hardware/Kinetis/CMSIS_DSP|Hardware/Kinetis/kinetis.c|Applications/uTaskerBoot/Simulator|FreeRTOS/Source/portable/GCC/ARM_CM7|FreeRTOS/Source/portable/GCC/ARM_CM4_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3|FreeRTOS/Source/portable/GCC/ARM_CM0|FreeRTOS/Source/portable/RVDS|FreeRTOS/Source/portable/MSVC-MingW|FreeRTOS/Source/portable/MemMang|FreeRTOS/Source/portable/Keil|FreeRTOS/Source/portable/IAR|FreeRTOS/Source/portable/Common|Hardware/Kinetis/kinetis_asm.s|Hardware/Kinetis/kinetisSim.c|Applications/uTaskerSerialBoot|Tools|WinSim" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -906,7 +906,7 @@
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration artifactExtension="elf" artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe" cleanCommand="rm -rf" description="uTasker application with security layer for Flash" errorParsers="org.eclipse.cdt.core.CWDLocator;org.eclipse.cdt.core.GmakeErrorParser;org.eclipse.cdt.core.GCCErrorParser;org.eclipse.cdt.core.GLDErrorParser;org.eclipse.cdt.core.GASErrorParser" id="com.crt.advproject.config.exe.release.975616254.1431784295.1447596636" name="uTaskerV1.4_SSL_FLASH" parent="com.crt.advproject.config.exe.release" postannouncebuildStep="Run a bat file to generate various outputs formats" postbuildStep="&quot;${ProjDirPath}/Applications/uTaskerV1.4/MCUXpresso/uTaskerV1.4_FLASH/generate.bat&quot;">
+				<configuration artifactExtension="elf" artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe" cleanCommand="rm -rf" description="uTasker application with security layer for Flash" errorParsers="org.eclipse.cdt.core.CWDLocator;org.eclipse.cdt.core.GmakeErrorParser;org.eclipse.cdt.core.GCCErrorParser;org.eclipse.cdt.core.GLDErrorParser;org.eclipse.cdt.core.GASErrorParser" id="com.crt.advproject.config.exe.release.975616254.1431784295.1447596636" name="uTaskerV1.4_SSL_FLASH" parent="com.crt.advproject.config.exe.release" postannouncebuildStep="Run a bat file to generate various outputs formats" postbuildStep="&quot;${ProjDirPath}/Applications/uTaskerV1.4/MCUXpresso/uTaskerV1.4_SSL_FLASH/generate.bat&quot;">
 					<folderInfo id="com.crt.advproject.config.exe.release.975616254.1431784295.1447596636." name="/" resourcePath="">
 						<toolChain id="com.crt.advproject.toolchain.exe.release.134429198" name="NXP MCU Tools" superClass="com.crt.advproject.toolchain.exe.release">
 							<targetPlatform binaryParser="org.eclipse.cdt.core.ELF;org.eclipse.cdt.core.GNU_ELF" id="com.crt.advproject.platform.exe.release.560461385" name="ARM-based MCU (Release)" superClass="com.crt.advproject.platform.exe.release"/>
@@ -962,7 +962,7 @@
 								<option id="com.crt.advproject.link.gcc.multicore.slave.94622770" name="Multicore configuration" superClass="com.crt.advproject.link.gcc.multicore.slave" useByScannerDiscovery="false"/>
 								<option defaultValue="com.crt.advproject.heapAndStack.lpcXpressoStyle" id="com.crt.advproject.link.memory.heapAndStack.style.1477144950" name="Heap and Stack placement" superClass="com.crt.advproject.link.memory.heapAndStack.style" useByScannerDiscovery="false" value="com.crt.advproject.heapAndStack.mcuXpressoStyle" valueType="enumerated"/>
 								<option id="com.crt.advproject.link.scriptdir.190168907" name="Script path" superClass="com.crt.advproject.link.scriptdir" useByScannerDiscovery="false" value="&quot;${ProjDirPath}/Applications/uTaskerV1.4/GNU_Kinetis&quot;" valueType="string"/>
-								<option id="gnu.c.link.option.nostart.1320015677" superClass="gnu.c.link.option.nostart" useByScannerDiscovery="false" value="true" valueType="boolean"/>
+								<option id="gnu.c.link.option.nostart.1320015677" name="Do not use standard start files (-nostartfiles)" superClass="gnu.c.link.option.nostart" useByScannerDiscovery="false" value="true" valueType="boolean"/>
 								<inputType id="cdt.managedbuild.tool.gnu.c.linker.input.533487208" superClass="cdt.managedbuild.tool.gnu.c.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
@@ -1065,7 +1065,7 @@
 						</tool>
 					</fileInfo>
 					<sourceEntries>
-						<entry excluding="Applications/emBasic|Applications/DIGILink|Hardware/Kinetis/kinetis_boot.c|FreeRTOS/Source/portable/GCC/ARM_CM7|FreeRTOS/Source/portable/GCC/ARM_CM4_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3|FreeRTOS/Source/portable/GCC/ARM_CM0|FreeRTOS/Source/portable/RVDS|FreeRTOS/Source/portable/MSVC-MingW|FreeRTOS/Source/portable/MemMang|FreeRTOS/Source/portable/Keil|FreeRTOS/Source/portable/IAR|FreeRTOS/Source/portable/Common|Hardware/Kinetis/kinetis_asm.s|Hardware/Kinetis/kinetisSim.c|Applications/uTaskerSerialBoot|Applications/uTaskerBoot|Tools|WinSim" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="Applications/I2C_Slave|Applications/Citynox-loader|Applications/emBasic|Applications/DIGILink|Hardware/Kinetis/kinetis_boot.c|FreeRTOS/Source/portable/GCC/ARM_CM7|FreeRTOS/Source/portable/GCC/ARM_CM4_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3|FreeRTOS/Source/portable/GCC/ARM_CM0|FreeRTOS/Source/portable/RVDS|FreeRTOS/Source/portable/MSVC-MingW|FreeRTOS/Source/portable/MemMang|FreeRTOS/Source/portable/Keil|FreeRTOS/Source/portable/IAR|FreeRTOS/Source/portable/Common|Hardware/Kinetis/kinetis_asm.s|Hardware/Kinetis/kinetisSim.c|Applications/uTaskerSerialBoot|Applications/uTaskerBoot|Tools|WinSim" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -1085,7 +1085,7 @@
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration artifactExtension="elf" artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe" cleanCommand="rm -rf" description="uTasker application with secure layer for use with Boot Loaders" errorParsers="org.eclipse.cdt.core.CWDLocator;org.eclipse.cdt.core.GmakeErrorParser;org.eclipse.cdt.core.GCCErrorParser;org.eclipse.cdt.core.GLDErrorParser;org.eclipse.cdt.core.GASErrorParser" id="com.crt.advproject.config.exe.release.975616254.1431784295.1734585806.2099973882" name="uTaskerV1.4_BM_SSL_FLASH" parent="com.crt.advproject.config.exe.release" postannouncebuildStep="Run a bat file to combinae and encode loadable targets" postbuildStep="&quot;${ProjDirPath}/Applications/uTaskerV1.4/MCUXpresso/uTaskerV1.4_BM_FLASH/generate.bat&quot;">
+				<configuration artifactExtension="elf" artifactName="uTaskerV1.4_BM" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe" cleanCommand="rm -rf" description="uTasker application with secure layer for use with Boot Loaders" errorParsers="org.eclipse.cdt.core.CWDLocator;org.eclipse.cdt.core.GmakeErrorParser;org.eclipse.cdt.core.GCCErrorParser;org.eclipse.cdt.core.GLDErrorParser;org.eclipse.cdt.core.GASErrorParser" id="com.crt.advproject.config.exe.release.975616254.1431784295.1734585806.2099973882" name="uTaskerV1.4_BM_SSL_FLASH" parent="com.crt.advproject.config.exe.release" postannouncebuildStep="Run a bat file to combinae and encode loadable targets" postbuildStep="&quot;${ProjDirPath}/Applications/uTaskerV1.4/MCUXpresso/uTaskerV1.4_BM_SSL_FLASH/generate.bat&quot;">
 					<folderInfo id="com.crt.advproject.config.exe.release.975616254.1431784295.1734585806.2099973882." name="/" resourcePath="">
 						<toolChain id="com.crt.advproject.toolchain.exe.release.1975489381" name="NXP MCU Tools" superClass="com.crt.advproject.toolchain.exe.release">
 							<targetPlatform binaryParser="org.eclipse.cdt.core.ELF;org.eclipse.cdt.core.GNU_ELF" id="com.crt.advproject.platform.exe.release.991337043" name="ARM-based MCU (Release)" superClass="com.crt.advproject.platform.exe.release"/>
@@ -1245,7 +1245,7 @@
 						</tool>
 					</fileInfo>
 					<sourceEntries>
-						<entry excluding="Applications/emBasic|Applications/DIGILink|Hardware/Kinetis/kinetis_boot.c|FreeRTOS/Source/portable/GCC/ARM_CM7|FreeRTOS/Source/portable/GCC/ARM_CM4_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3|FreeRTOS/Source/portable/GCC/ARM_CM0|FreeRTOS/Source/portable/RVDS|FreeRTOS/Source/portable/MSVC-MingW|FreeRTOS/Source/portable/MemMang|FreeRTOS/Source/portable/Keil|FreeRTOS/Source/portable/IAR|FreeRTOS/Source/portable/Common|Hardware/Kinetis/kinetis_asm.s|Hardware/Kinetis/kinetisSim.c|Applications/uTaskerSerialBoot|Applications/uTaskerBoot|Tools|WinSim" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="Applications/I2C_Slave|Applications/Citynox-loader|Applications/emBasic|Applications/DIGILink|Hardware/Kinetis/kinetis_boot.c|FreeRTOS/Source/portable/GCC/ARM_CM7|FreeRTOS/Source/portable/GCC/ARM_CM4_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3|FreeRTOS/Source/portable/GCC/ARM_CM0|FreeRTOS/Source/portable/RVDS|FreeRTOS/Source/portable/MSVC-MingW|FreeRTOS/Source/portable/MemMang|FreeRTOS/Source/portable/Keil|FreeRTOS/Source/portable/IAR|FreeRTOS/Source/portable/Common|Hardware/Kinetis/kinetis_asm.s|Hardware/Kinetis/kinetisSim.c|Applications/uTaskerSerialBoot|Applications/uTaskerBoot|Tools|WinSim" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -1272,10 +1272,10 @@
 &lt;memory id="RAM" type="RAM"/&gt;&#13;
 &lt;memory id="Periph" is_volatile="true" type="Peripheral"/&gt;&#13;
 &lt;memoryInstance derived_from="RAM" id="RamLoc" location="0x0" size="0x4000"/&gt;&#13;
-&lt;peripheralInstance derived_from="V7M_MPU" determined="infoFile" id="MPU" location="0xe000ed90"/&gt;&#13;
-&lt;peripheralInstance derived_from="V7M_NVIC" determined="infoFile" id="NVIC" location="0xe000e000"/&gt;&#13;
-&lt;peripheralInstance derived_from="V7M_DCR" determined="infoFile" id="DCR" location="0xe000edf0"/&gt;&#13;
-&lt;peripheralInstance derived_from="V7M_ITM" determined="infoFile" id="ITM" location="0xe0000000"/&gt;&#13;
+&lt;peripheralInstance derived_from="V7M_MPU" id="MPU" location="0xe000ed90"/&gt;&#13;
+&lt;peripheralInstance derived_from="V7M_NVIC" id="NVIC" location="0xe000e000"/&gt;&#13;
+&lt;peripheralInstance derived_from="V7M_DCR" id="DCR" location="0xe000edf0"/&gt;&#13;
+&lt;peripheralInstance derived_from="V7M_ITM" id="ITM" location="0xe0000000"/&gt;&#13;
 &lt;/chip&gt;&#13;
 &lt;processor&gt;&lt;name gcc_name="cortex-m4"&gt;Cortex-M4&lt;/name&gt;&#13;
 &lt;family&gt;Cortex-M&lt;/family&gt;&#13;
@@ -1285,7 +1285,29 @@
 &lt;/infoList&gt;&#13;
 &lt;/TargetConfig&gt;</projectStorage>
 	</storageModule>
-	<storageModule moduleId="com.crt.advproject"/>
-	<storageModule moduleId="refreshScope"/>
+	<storageModule moduleId="refreshScope" versionNumber="2">
+		<configuration configurationName="uTaskerBM_loader">
+			<resource resourceType="PROJECT" workspacePath="/uTaskerV1.4"/>
+		</configuration>
+		<configuration configurationName="uTaskerSerialLoader_FLASH">
+			<resource resourceType="PROJECT" workspacePath="/uTaskerV1.4"/>
+		</configuration>
+		<configuration configurationName="uTaskerV1.4_BM_SSL_FLASH">
+			<resource resourceType="PROJECT" workspacePath="/uTaskerV1.4"/>
+		</configuration>
+		<configuration configurationName="uTaskerV1.4_FLASH">
+			<resource resourceType="PROJECT" workspacePath="/uTaskerV1.4"/>
+		</configuration>
+		<configuration configurationName="uTaskerV1.4_BM_FLASH">
+			<resource resourceType="PROJECT" workspacePath="/uTaskerV1.4"/>
+		</configuration>
+		<configuration configurationName="uTaskerV1.4_SSL_FLASH">
+			<resource resourceType="PROJECT" workspacePath="/uTaskerV1.4"/>
+		</configuration>
+		<configuration configurationName="uTaskerV1.4_RAM">
+			<resource resourceType="PROJECT" workspacePath="/uTaskerV1.4"/>
+		</configuration>
+	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
+	<storageModule moduleId="com.crt.advproject"/>
 </cproject>

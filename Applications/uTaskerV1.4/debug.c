@@ -6463,6 +6463,14 @@ static unsigned short fnMQTT_callback(signed char scEvent, unsigned char *ptrDat
         {
             static unsigned char ucDataCnt = 0;
             int i = 0;
+    #if defined nRF24L01_INTERFACE
+            if (0 == ucSubscriptionRef) {
+                ptrBuf = (CHAR *)fnSetLast_nRF24201_data(ptrData);       // insert the last received data from nRF24201 receiver
+                if (ptrBuf != (CHAR *)ptrData) {                         // if there was data to insert
+                    break;                                               // complete
+                }
+            }
+    #endif
             ptrBuf = uStrcpy(ptrBuf, "abcd");                            // add string content
             while (i++ < usPubLength) {                                  // plus some binary content
                 *ptrBuf++ = ucDataCnt++;

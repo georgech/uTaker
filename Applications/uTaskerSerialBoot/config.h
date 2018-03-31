@@ -2,7 +2,7 @@
     Mark Butcher    Bsc (Hons) MPhil MIET
 
     M.J.Butcher Consulting
-    Birchstrasse 20f,    CH-5406, Rütihof
+    Birchstrasse 20f,    CH-5406, RÃ¼tihof
     Switzerland
 
     www.uTasker.com    Skype: M_J_Butcher
@@ -91,7 +91,7 @@
 //#define K20FX512_120                                                   // development board with 120MHz K20F
 //#define TWR_K21D50M                                                    // tower board http://www.utasker.com/kinetis/TWR-K21D50M.html
 //#define TWR_K21F120M                                                   // tower board http://www.utasker.com/kinetis/TWR-K21F120M.html
-#define tinyK22                                                          // USB memory stick format board with SD card and 120MHz K22FN512 http://www.utasker.com/kinetis/tinyK22.html
+//#define tinyK22                                                        // USB memory stick format board with SD card and 120MHz K22FN512 http://www.utasker.com/kinetis/tinyK22.html
 //#define FRDM_K22F                                                      // freedom board http://www.utasker.com/kinetis/FRDM-K22F.html
 //#define TWR_K22F120M                                                   // tower board http://www.utasker.com/kinetis/TWR-K22F120M.html
 //#define BLAZE_K22                                                      // K22FN1M0 with 1.6" color display and touch http://www.utasker.com/kinetis/BLAZE_K22.html
@@ -112,7 +112,7 @@
 
 //#define EMCRAFT_K61F150M                                               // K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - http://www.utasker.com/kinetis/EMCRAFT_K61F150M.html
 
-//#define FRDM_K64F                                                      // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
+#define FRDM_K64F                                                        // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
 //#define TWR_K64F120M                                                   // tower board http://www.utasker.com/kinetis/TWR-K64F120M.html
 //#define HEXIWEAR_K64F                                                  // hexiwear - wearable development kit for IoT (K64FN1M0VDC12 main processor) http://www.hexiwear.com/
 //#define TEENSY_3_5                                                     // USB development board with K64FX512 - http://www.utasker.com/kinetis/TEENSY_3.5.html
@@ -387,13 +387,13 @@
     #endif
 #elif defined TEENSY_3_1
   //#define SPECIAL_VERSION                                              // temporary special version with some specific setups
-      //#define SPECIAL_VERSION_SDCARD                                   // temporary special version with some specific setups
+        #define SPECIAL_VERSION_SDCARD                                   // temporary special version with some specific setups
       //#define SPECIAL_VERSION_2                                        // temporary special version with some specific setups
         #if defined SPECIAL_VERSION_SDCARD
+            #define USE_USB_MSD                                          // host to SD card
             #define SDCARD_SUPPORT
             #define WILDCARD_FILES
-            #define DELETE_SDCARD_FILE_AFTER_UPDATE
-            #define USE_USB_MSD
+          //#define DELETE_SDCARD_FILE_AFTER_UPDATE
         #endif
     #define KINETIS_K20
     #define KINETIS_REVISION_2
@@ -653,7 +653,7 @@
     #define KINETIS_K60                                                  // specify the sub-family
     #define KINETIS_REVISION_2
     #define KINETIS_K66                                                  // extra sub-family type precision
-    #define USB_HS_INTERFACE                                             // use HS interface rather than FS interface
+  //#define USB_HS_INTERFACE                                             // use HS interface rather than FS interface
 #elif defined TWR_K70F120M
     #define TARGET_HW       "TWR-K70F120M Kinetis"
     #define KINETIS_K_FPU                                                // part with floating point unit
@@ -884,7 +884,7 @@
     #define USB_INTERFACE                                                // enable USB driver interface
     #if defined USB_INTERFACE
       //#define USE_USB_CDC                                              // allow SREC/iHex loading via virtual COM
-        #define USB_MSD_DEVICE_LOADER                                    // USB-MSD device mode (the board appears as a hard-drive to the host)
+      //#define USB_MSD_DEVICE_LOADER                                    // USB-MSD device mode (the board appears as a hard-drive to the host)
       //#define USB_MSD_HOST_LOADER                                      // USB-MSD host mode (the board operates as host and can read new code from a memory stick)
         #if defined USE_USB_CDC
             #undef SERIAL_INTERFACE                                      // remove the UART interface
@@ -907,8 +907,8 @@
                 #define EMULATED_FAT_FILE_DATE_CONTROL
             #endif
           //#define USB_MSD_REJECTS_BINARY_FILES                         // default is to accept binary files
-            #define USB_MSD_ACCEPTS_SREC_FILES                           // optionally accept SREC content
-            #define USB_MSD_ACCEPTS_HEX_FILES                            // optionally accept Intel HEX content
+          //#define USB_MSD_ACCEPTS_SREC_FILES                           // optionally accept SREC content
+          //#define USB_MSD_ACCEPTS_HEX_FILES                            // optionally accept Intel HEX content
         #endif
         #if defined USB_MSD_HOST_LOADER                                  // support loading from memory stick
             #if defined USB_HS_INTERFACE
@@ -928,7 +928,7 @@
         #if defined USB_MSD_DEVICE_LOADER || defined USB_MSD_HOST_LOADER
             #define SUPPORT_FLUSH                                        // allow flush command to be used (important for mass storage class)
         #endif
-      //#define USE_USB_MSD                                              // full USB-MSD to SD card interface on USB (no emulated loader function) - requires SDCARD_SUPPORT (USB_MSD_DEVICE_LOADER can be disabled)
+        #define USE_USB_MSD                                              // full USB-MSD to SD card interface on USB (no emulated loader function) - requires SDCARD_SUPPORT (USB_MSD_DEVICE_LOADER can be disabled)
             #define DISK_COUNT         1                                 // single upload disk (set to 2 for two upload disks)
           //#define DEBUG_MAC                                            // activate debug output used to monitor the operation of MAC OS X
         #define HID_LOADER                                               // Freescale HIDloader.exe or KBOOT compatible
@@ -965,7 +965,7 @@
 #endif
 
 #if !defined TWR_K20D50M && !defined FRDM_K20D50M && !defined FRDM_KL46Z && !defined FRDM_KL43Z && !defined TWR_KL46Z48M && !defined FRDM_KL26Z && !defined FRDM_KL27Z && !defined TWR_KL25Z48M && !defined FRDM_KL02Z && !defined FRDM_KL03Z && !defined FRDM_KL05Z && !defined FRDM_KE02Z && !defined FRDM_KE02Z40M && !defined FRDM_KE04Z && !defined TWR_K20D72M && !defined TWR_K21D50M && !defined TWR_K22F120M && !defined TWR_K24F120M && !defined K24FN1M0_120 && !defined FRDM_K22F && !defined TWR_KV10Z32 && !defined TWR_KV31F120M && !defined K66FX1M0 // boards have no SD card socket
-  //#define SDCARD_SUPPORT                                               // SD-card interface (only choose one of these options at a time)
+    #define SDCARD_SUPPORT                                               // SD-card interface (only choose one of these options at a time)
   //#define SPI_FLASH_FAT                                                // SPI flash
         #define SIMPLE_FLASH                                             // don't perform block management and wear-levelling
         #define FLASH_FAT_MANAGEMENT_ADDRESS     (SIZE_OF_FLASH)
@@ -974,7 +974,7 @@
         #define UTFAT_DISABLE_DEBUG_OUT                                  // disable general mass-storage output so that the SREC loader is not disturbed
     #endif
     #if defined DELETE_SDCARD_FILE_AFTER_UPDATE || defined USE_USB_MSD
-        #define UTFAT_WRITE
+      //#define UTFAT_WRITE
     #endif
     #if defined USE_USB_MSD
         #define SUPPORT_FLUSH
@@ -982,10 +982,12 @@
     #if defined SDCARD_SUPPORT
         #if !defined DWGB_SDCARD
             #define UREVERSEMEMCPY                                       // required when SD card used in SPI mode
-            #define SDCARD_ACCESS_WITHOUT_UTFAT                          // no utFAT interface (just low level access for USB-MSD operation)
-            #define SDCARD_FIXED                                         // no SD card monitoring since it is fixed in hardware
-            #if defined SDCARD_FIXED
-                #define UTFAT_MULTIPLE_BLOCK_READ
+            #if !defined SPECIAL_VERSION_SDCARD
+                #define SDCARD_ACCESS_WITHOUT_UTFAT                      // no utFAT interface (just low level access for USB-MSD operation)
+                #define SDCARD_FIXED                                     // no SD card monitoring since it is fixed in hardware
+                #if defined SDCARD_FIXED
+                    #define UTFAT_MULTIPLE_BLOCK_READ
+                #endif
             #endif
         #endif
     #endif
@@ -1002,7 +1004,7 @@
     #if defined UTFAT_LFN_READ
         #define MAX_UTFAT_FILE_NAME     (100)                            // the maximum file name length supported
     #endif
-  //#define UTFAT_WRITE                                                  // enable write functions
+    #define UTFAT_WRITE                                                  // enable write functions
     #if defined UTFAT_WRITE
         #define UTFAT_LFN_WRITE
       //#define UTFAT_LFN_WRITE_PATCH
@@ -1240,7 +1242,7 @@
 
             #define WEB_PARAMETER_GENERATION                             // support of parameter generating (eg. manipulating select and adding values)
             #define WEB_PARAMETER_HANDLING                               // support  handling of received web parameters
-            #define WEB_PARSER_START          '£'                        // this symbol is used in Web pages to instruct parsing to begin
+            #define WEB_PARSER_START          'Â£'                        // this symbol is used in Web pages to instruct parsing to begin
             #define WEB_INSERT_STRING         'v'
             #define WEB_DISABLE_FIELD         'D'
             #define WEB_NOT_DISABLE_FIELD     'd'
@@ -1252,11 +1254,11 @@
                 #define FILE404_IN_PROG                                  // fixed FILE404 in Code (no NE64 support since it pages the file system in memory)
             #endif
 
-            #define FILE_404_CONTENT        "<html><head><title>£vN0 Loader</title></head><body bgcolor=#d0d000 text=#000000 topmargin=3 marginheight=3><center><td valign=top class=h> \
-<font color=#ff0000 style=font-size:30px><b style='mso-bidi-font-weight:normal'>£vN0</font> - Loader (£vV0)</b></td><br><td align=left><br><br> \
-<form action=webpage.html name=e1><input type=submit value=""Erase-Application"" name=e>Enter Password <input maxLength=17 size=17 name=c1 value=""£ve0""> £vV1</form> \
-<form action=0S.bin enctype=""multipart/form-data"" method=""post""><p><input type=""file"" name=""datafile"" size=""30""><input type=""submit"" value=""Upload"" £ds0></p></form> \
-<br><form action=webpage.html name=e0><input type=submit value=""Mass-Erase"" name=e>Enter Password <input maxLength=17 size=17 name=c0 value=""£ve0""></form> \
+            #define FILE_404_CONTENT        "<html><head><title>Â£vN0 Loader</title></head><body bgcolor=#d0d000 text=#000000 topmargin=3 marginheight=3><center><td valign=top class=h> \
+<font color=#ff0000 style=font-size:30px><b style='mso-bidi-font-weight:normal'>Â£vN0</font> - Loader (Â£vV0)</b></td><br><td align=left><br><br> \
+<form action=webpage.html name=e1><input type=submit value=""Erase-Application"" name=e>Enter Password <input maxLength=17 size=17 name=c1 value=""Â£ve0""> Â£vV1</form> \
+<form action=0S.bin enctype=""multipart/form-data"" method=""post""><p><input type=""file"" name=""datafile"" size=""30""><input type=""submit"" value=""Upload"" Â£ds0></p></form> \
+<br><form action=webpage.html name=e0><input type=submit value=""Mass-Erase"" name=e>Enter Password <input maxLength=17 size=17 name=c0 value=""Â£ve0""></form> \
 <br></font></td></body></html>";
 
             #define _FIXED_WEB_PAGE_404                                  // force 404 error on every file served

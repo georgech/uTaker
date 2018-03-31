@@ -2,7 +2,7 @@
     Mark Butcher    Bsc (Hons) MPhil MIET
     
     M.J.Butcher Consulting
-    Birchstrasse 20f,    CH-5406, Rütihof
+    Birchstrasse 20f,    CH-5406, RÃ¼tihof
     Switzerland
     
     www.uTasker.com    Skype: M_J_Butcher
@@ -828,7 +828,7 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
                 fnResetBoard();
                 break;
 #endif
-#if defined USE_MAINTENANCE && (defined USE_TELNET || defined SERIAL_INTERFACE || defined USE_USB_CDC)
+#if defined USE_MAINTENANCE && defined SERIAL_INTERFACE && (defined USE_TELNET || defined USE_USB_CDC)
             case E_QUIT_SERIAL_COMMAND_MODE:
                 {
                     static const CHAR ucCOMMAND_MODE_TIMEOUT[] = "Connection timed out\r\n";
@@ -1570,8 +1570,8 @@ extern QUEUE_HANDLE fnSetNewSerialMode(unsigned char ucDriverMode)
     #if defined SERIAL_SUPPORT_DMA
         #if defined FREE_RUNNING_RX_DMA_RECEPTION
             #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA
-    tInterfaceParameters.ucDMAConfig = (UART_RX_DMA | UART_RX_MODULO); // modulo aligned reception memory is required by kinetis KL parts without eDMA in free-running DMA mode
-  //tInterfaceParameters.ucDMAConfig = (UART_RX_DMA | UART_RX_MODULO | UART_TX_DMA); // modulo aligned reception memory is required by kinetis KL parts without eDMA in free-running DMA mode
+  //tInterfaceParameters.ucDMAConfig = (UART_RX_DMA | UART_RX_MODULO); // modulo aligned reception memory is required by kinetis KL parts without eDMA in free-running DMA mode
+    tInterfaceParameters.ucDMAConfig = (UART_RX_DMA | UART_RX_MODULO | UART_TX_DMA); // modulo aligned reception memory is required by kinetis KL parts without eDMA in free-running DMA mode
             #else
     tInterfaceParameters.ucDMAConfig = (UART_RX_DMA | UART_TX_DMA);
             #endif
@@ -2904,5 +2904,13 @@ extern void fnQuickTask3(TTASKTABLE *ptrTaskTable)
 
 extern void fnQuickTask4(TTASKTABLE *ptrTaskTable)
 {
+}
+#endif
+
+#if defined STEPPER_MOTOR_EXAMPLE
+extern void fnTestStepper(void);
+extern void fnStepper(TTASKTABLE *ptrTaskTable)
+{
+    fnTestStepper();
 }
 #endif

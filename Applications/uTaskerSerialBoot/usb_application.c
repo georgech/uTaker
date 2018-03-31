@@ -747,6 +747,9 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
             if (ulWriteBlock != 0) {                                     // more data expected
                 continue;
             }                                                            // allow CSW to be sent after a complete transfer has completed
+    #if defined SPECIAL_VERSION_SDCARD
+            uTaskerMonoTimer(TASK_SD_LOADER, (DELAY_LIMIT)(SEC * 5), T_RECHECK_CARD); // check the SD card after writes to the SD card have taken place
+    #endif
             iWriteInProgress = 0;                                        // {1} allow further USB-MSD commands to be interpreted
         }
         else {

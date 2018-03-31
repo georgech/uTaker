@@ -16,6 +16,8 @@
     This file contains application operation of nRF24201 (primary or secondary).
     It is intended as a temporary project file to be later incorporated in networking software.
 
+    30.03.2018 Added FRDM-K66F target an publish MQTT message on reception {1}
+
 */
 
 
@@ -304,7 +306,10 @@ static unsigned char fnWrite_nRF24L01(unsigned char ucCommand, unsigned char *pt
 
 static int iPrimaryTransmitter = 0;
 
-
+#if defined USE_MQTT_CLIENT && defined USE_MAINTENANCE                   // {1}
+    static unsigned char ucLastData[32] = {0};
+    static unsigned char ucLastLength = 0;
+#endif
 
 
 
@@ -696,17 +701,25 @@ static unsigned char fnRead_nRF24L01_1(unsigned char ucCommand, unsigned char *p
     return ucStatus;                                                     // return the status read as response to first byte
 }
 
+#if defined USE_MQTT_CLIENT && defined USE_MAINTENANCE                   // {1}
+unsigned char *fnSetLast_nRF24201_data(unsigned char *ptrData)
+{
+    uMemcpy(ptrData, ucLastData, ucLastLength);
+    return (ptrData + ucLastLength);
+}
+#endif
+
 extern void fnHandle_nRF24L01_event(void)
 {
     unsigned char ucStatus = fnCommand_nRF24L01_0(CMD_NOP);              // read the cause of the interrupt
-    if (ucStatus & nRF24L01_STATUS_TX_DS) {                              // data was acked
+    if ((ucStatus & nRF24L01_STATUS_TX_DS) != 0) {                       // data was acked
         fnDebugMsg("DATA ACKED!!\r\n");
     }
-    if (ucStatus & nRF24L01_STATUS_MAX_RT) {                             // maximum repetitions made by transmitter
+    if ((ucStatus & nRF24L01_STATUS_MAX_RT) != 0) {                      // maximum repetitions made by transmitter
         fnCommand_nRF24L01_0(CMD_FLUSH_TX);                              // remove the message
         fnDebugMsg("No ACK ;-(\r\n");
     }
-    if (ucStatus & nRF24L01_STATUS_RX_DR) {                              // data reception
+    if ((ucStatus & nRF24L01_STATUS_RX_DR) != 0) {                       // data reception
         int iPipe = ((ucStatus & nRF24L01_STATUS_RX_P_NO_MASK) >> 1);
         unsigned char ucData[32];
         unsigned char ucLength;
@@ -727,8 +740,15 @@ extern void fnHandle_nRF24L01_event(void)
             fnDebugMsg("\r\n");
             if (iPrimaryTransmitter == 0) {
                 fnWrite_nRF24L01(W_ACK_PAYLOAD, ucData, (unsigned char)(ucLength/2)); // echo data back on next data reception
-                ucData[0]++;                                            // modify for test
-                fnWrite_nRF24L01(W_ACK_PAYLOAD, ucData, ucLength);      // echo modified data back (test 2 in FIFO)
+                ucData[0]++;                                             // modify for test
+                fnWrite_nRF24L01(W_ACK_PAYLOAD, ucData, ucLength);       // echo modified data back (test 2 in FIFO)
+    #if defined USE_MQTT_CLIENT && defined USE_MAINTENANCE               // {1}
+                if ((ucLength != 0) && (fnPublishMQTT(0, "nRF24201", 0) == 0)) { // if we are connected to an MQTT broker publish the data to the topic "nRF24201"
+                    uMemcpy(ucLastData, ucData, ucLength);               // save the last data that was received so that it can be added to the MQTT publication
+                    ucLastLength = ucLength;
+                    fnDebugMsg("MQTT Pub to nRF24201\r\n");
+                }
+    #endif
             }
         }
     }
