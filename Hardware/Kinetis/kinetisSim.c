@@ -5554,11 +5554,11 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
     #if UARTS_AVAILABLE > 1 && (LPUARTS_AVAILABLE < 2 || defined LPUARTS_PARALLEL)
     case 1:
         if ((UART1_C2 & UART_C2_RE) != 0) {                              // if receiver enabled
-            while ((usLen--) != 0) {                                     // for each reception character
+            while (usLen-- != 0) {                                       // for each reception character
                 UART1_D = *ptrDebugIn++;                                 // save the received byte to the UART data register
                 UART1_S1 |= UART_S1_RDRF;                                // set interrupt cause
                 if ((UART1_C2 & UART_C2_RIE) != 0) {                     // if reception interrupt (or DMA) is enabled
-        #if !defined DEVICE_WITHOUT_DMA                              // if the device supports DMA
+        #if !defined DEVICE_WITHOUT_DMA                                  // if the device supports DMA
             #if defined KINETIS_KL
                     if ((UART1_C4 & UART_C4_RDMAS) != 0)                 // DMA mode
             #else
@@ -5659,12 +5659,12 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
     #if UARTS_AVAILABLE > 3
     case 3:
         if ((UART3_C2 & UART_C2_RE) != 0) {                              // if receiver enabled
-            while (usLen--) {                                            // for each reception character
+            while (usLen-- != 0) {                                       // for each reception character
                 UART3_D = *ptrDebugIn++;
                 UART3_S1 |= UART_S1_RDRF;                                // set interrupt cause
-                if (UART3_C2 & UART_C2_RIE) {                            // if reception interrupt is enabled
-                    if (UART3_C5 & UART_C5_RDMAS) {                      // {4} if the UART is operating in DMA reception mode
-        #if defined SERIAL_SUPPORT_DMA
+                if ((UART3_C2 & UART_C2_RIE) != 0) {                     // if reception interrupt is enabled
+                    if ((UART3_C5 & UART_C5_RDMAS) != 0) {               // {4} if the UART is operating in DMA reception mode
+        #if defined SERIAL_SUPPORT_DMA && defined DMA_UART3_RX_CHANNEL
                         if (DMA_ERQ & (DMA_ERQ_ERQ0 << DMA_UART3_RX_CHANNEL)) { // if source enabled
                             KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
                             ptrDMA_TCD += DMA_UART3_RX_CHANNEL;
@@ -5693,7 +5693,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                 UART4_S1 |= UART_S1_RDRF;                                // set interrupt cause
                 if ((UART4_C2 & UART_C2_RIE) != 0) {                     // if reception interrupt is enabled
                     if ((UART4_C5 & UART_C5_RDMAS) != 0) {               // {4} if the UART is operating in DMA reception mode
-        #if defined SERIAL_SUPPORT_DMA
+        #if defined SERIAL_SUPPORT_DMA && defined DMA_UART4_RX_CHANNEL
                         if ((DMA_ERQ & (DMA_ERQ_ERQ0 << DMA_UART4_RX_CHANNEL)) != 0) { // if source enabled
                             KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
                             ptrDMA_TCD += DMA_UART4_RX_CHANNEL;
@@ -5717,13 +5717,13 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
     #if UARTS_AVAILABLE > 5
     case 5:
         if ((UART5_C2 & UART_C2_RE) != 0) {                              // if receiver enabled
-            while (usLen--) {                                            // for each reception character
+            while (usLen-- != 0) {                                       // for each reception character
                 UART5_D = *ptrDebugIn++;
                 UART5_S1 |= UART_S1_RDRF;                                // set interrupt cause
-                if (UART5_C2 & UART_C2_RIE) {                            // if reception interrupt is enabled
-                    if (UART5_C5 & UART_C5_RDMAS) {                      // {4} if the UART is operating in DMA reception mode
-        #if defined SERIAL_SUPPORT_DMA
-                        if (DMA_ERQ & (DMA_ERQ_ERQ0 << DMA_UART5_RX_CHANNEL)) { // if source enabled
+                if ((UART5_C2 & UART_C2_RIE) != 0) {                     // if reception interrupt is enabled
+                    if ((UART5_C5 & UART_C5_RDMAS) != 0) {               // {4} if the UART is operating in DMA reception mode
+        #if defined SERIAL_SUPPORT_DMA && defined DMA_UART5_RX_CHANNEL
+                        if ((DMA_ERQ & (DMA_ERQ_ERQ0 << DMA_UART5_RX_CHANNEL)) != 0) { // if source enabled
                             KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
                             ptrDMA_TCD += DMA_UART5_RX_CHANNEL;
                             ptrDMA_TCD->DMA_TCD_CSR |= (DMA_TCD_CSR_ACTIVE); // trigger

@@ -1437,11 +1437,13 @@ static void fnCheckFreerunningDMA_reception(int channel, QUEQUE *tty_queue) // {
 //
 static void fnEnableRxAndDMA(int channel, unsigned long buffer_length, unsigned long buffer_address, void *uart_data_reg) // {209}
 {
-    #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA                  // {211}
+    #if defined SERIAL_SUPPORT_DMA_RX_FREERUN
+        #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA              // {211}
     RxModulo[channel] = (QUEUE_TRANSFER)buffer_length;                   // this must be modulo 2 (16, 32, 64, 128...256k)
     ulDMA_progress[channel] = buffer_address;                            // destination must be modulo aligned
-    #else
+        #else
     ulDMA_progress[channel] = buffer_length;
+        #endif
     #endif
     fnConfigDMA_buffer(UART_DMA_RX_CHANNEL[channel], (DMAMUX_CHCFG_SOURCE_UART0_RX + (2 * channel)), buffer_length, uart_data_reg, (void *)buffer_address, (DMA_DIRECTION_INPUT | DMA_BYTES), 0, 0);
     fnDMA_BufferReset(UART_DMA_RX_CHANNEL[channel], DMA_BUFFER_START);   // enable DMA operation

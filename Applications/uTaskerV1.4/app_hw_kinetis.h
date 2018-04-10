@@ -1793,7 +1793,7 @@
                                             _CONFIG_PERIPHERAL(E, 19, (PE_19_LPSPI0_SIN | PORT_PS_UP_ENABLE)); \
                                             _CONFIG_PERIPHERAL(E, 16, (PE_16_LPSPI0_PCS0)); \
                                             LPSPI0_CR = 0; \
-                                            LPSPI_MASTER_CLOCK_SETTING(8, 8, 8, 24); \
+                                            LPSPI_MASTER_CLOCK_SETTING(0, 8, 8, 8, 24); \
                                             LPSPI0_CFGR1 = (LPSPI_CFGR1_MASTER); \
                                             LPSPI0_CR = (LPSPI_CR_MEN); \
                                             LPSPI0_TCR = (LPSPI_TCR_CPOL | LPSPI_TCR_CPHA | LPSPI_TCR_PRESCALE_1 | LPSPI_TCR_MSBF | LPSPI_TCR_CONT  | (8 - 1)); \

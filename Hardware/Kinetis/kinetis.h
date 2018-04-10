@@ -1310,6 +1310,8 @@ typedef struct stRESET_VECTOR
     #endif
 #elif defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_KW2X   // {42}
     #define UARTS_AVAILABLE         3
+#elif defined KINETIS_K12
+    #define UARTS_AVAILABLE         4
 #else
     #define UARTS_AVAILABLE         6
 #endif
@@ -1372,7 +1374,7 @@ typedef struct stRESET_VECTOR
     #endif
 #endif
 
-#if defined KINETIS_K02
+#if defined KINETIS_K02 || defined KINETIS_K12
     #define SPI_AVAILABLE           1
 #elif defined KINETIS_KL82 || defined KINETIS_KE15
     #define SPI_AVAILABLE           2
@@ -1533,7 +1535,7 @@ typedef struct stRESET_VECTOR
     #define ADC_CONTROLLERS         2
 #elif defined KINETIS_KE18
     #define ADC_CONTROLLERS         3
-#elif defined KINETIS_K80 || defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_K02 || ((defined KINETIS_K20 || defined KINETIS_K21) && (KINETIS_MAX_SPEED < 72000000))
+#elif defined KINETIS_K80 || defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_K02 || defined KINETIS_K12 || ((defined KINETIS_K20 || defined KINETIS_K21) && (KINETIS_MAX_SPEED < 72000000))
     #define ADC_CONTROLLERS         1
 #else
     #define ADC_CONTROLLERS         2
@@ -2104,7 +2106,7 @@ typedef struct stPROCESSOR_IRQ
         void  (*irq_CAN0_WAKE_UP)(void);                                 // 80
         void  (*irq_SDHC)(void);                                         // 81
     #endif
-#elif (KINETIS_MAX_SPEED <= 50000000) && !defined KINETIS_KW2X
+#elif (KINETIS_MAX_SPEED <= 50000000) && !defined KINETIS_KW2X && !defined KINETIS_K12
     void  (*irq_DMA0)(void);                                             // 0
     void  (*irq_DMA1)(void);                                             // 1
     void  (*irq_DMA2)(void);                                             // 2
@@ -2281,8 +2283,8 @@ typedef struct stPROCESSOR_IRQ
         void  (*irq_res_98)(void);                                       // 98
         void  (*irq_res_99)(void);                                       // 99
         void  (*irq_QSPI)(void);                                         // 100
-    #elif defined KINETIS_K26 || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_K02 || defined KINETIS_K22 || defined KINETIS_K24 || defined KINETIS_KV30 || defined KINETIS_KW2X // {46}
-        #if defined KINETIS_KW2X || defined KINETIS_K24 || defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66
+    #elif defined KINETIS_K26 || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_K02 || defined KINETIS_K12 || defined KINETIS_K22 || defined KINETIS_K24 || defined KINETIS_KV30 || defined KINETIS_KW2X // {46}
+        #if defined KINETIS_KW2X || defined KINETIS_K12 || defined KINETIS_K24 || defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66
             void  (*irq_I2S0_TX)(void);                                  // 28
             void  (*irq_I2S0_RX)(void);                                  // 29
             void  (*irq_res_30)(void);                                   // 30
@@ -2352,7 +2354,7 @@ typedef struct stPROCESSOR_IRQ
         void  (*irq_PORTD)(void);                                        // 62
         void  (*irq_PORTE)(void);                                        // 63
         void  (*irq_SOFTWARE)(void);                                     // 64
-        #if !defined KINETIS_K02 && !defined KINETIS_KW2X
+        #if !defined KINETIS_K02 && !defined KINETIS_KW2X && !defined KINETIS_K12
             void  (*irq_SPI2)(void);                                     // 65
             #if UARTS_AVAILABLE > 4
                 void  (*irq_UART4)(void);                                // 66
@@ -2909,7 +2911,7 @@ typedef struct stVECTOR_TABLE
         #define irq_CAN0_WAKE_UP_ID       80                             // 80
         #define irq_SDHC_ID               81                             // 81
     #endif
-#elif (KINETIS_MAX_SPEED <= 50000000) && !defined KINETIS_KW2X
+#elif (KINETIS_MAX_SPEED <= 50000000) && !defined KINETIS_KW2X && !defined KINETIS_K12
     #define irq_DMA0_ID                   0                              // 0
     #define irq_DMA1_ID                   1                              // 1
     #define irq_DMA2_ID                   2                              // 2
@@ -2986,9 +2988,13 @@ typedef struct stVECTOR_TABLE
         #define irq_RNG_ID                23                             // 23
     #endif
     #define irq_I2C0_ID                   24                             // 24
-    #define irq_I2C1_ID                   25                             // 25
+    #if I2C_AVAILABLE > 1
+        #define irq_I2C1_ID               25                             // 25
+    #endif
     #define irq_SPI0_ID                   26                             // 26
-    #define irq_SPI1_ID                   27                             // 27
+    #if SPI_AVAILABLE > 1
+        #define irq_SPI1_ID               27                             // 27
+    #endif
     #if defined KINETIS_K80
         #define irq_I2S0_TX_ID            28                             // 28
         #define irq_I2S0_RX_ID            29                             // 29
@@ -3042,8 +3048,8 @@ typedef struct stVECTOR_TABLE
         #define irq_I2C3_ID               91                             // 91
 
         #define irq_QSPI_ID               100                            // 100
-    #elif defined KINETIS_K02 || defined KINETIS_K26 || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_K22 || defined KINETIS_K24 || defined KINETIS_KV30 || defined KINETIS_KW2X // {46}
-        #if defined KINETIS_KW2X || defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66
+    #elif defined KINETIS_K02 || defined KINETIS_K12 || defined KINETIS_K26 || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_K22 || defined KINETIS_K24 || defined KINETIS_KV30 || defined KINETIS_KW2X // {46}
+        #if defined KINETIS_KW2X || defined KINETIS_K12 || defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66
             #define irq_I2S0_TX_ID        28                             // 28
             #define irq_I2S0_RX_ID        29                             // 29
         #else
@@ -3089,7 +3095,7 @@ typedef struct stVECTOR_TABLE
         #define irq_PORTD_ID              62                             // 62
         #define irq_PORTE_ID              63                             // 63
         #define irq_SOFTWARE_ID           64                             // 64
-        #if !defined KINETIS_K02 && !defined KINETIS_KW2X
+        #if !defined KINETIS_K02 && !defined KINETIS_KW2X && !defined KINETIS_K12
             #define irq_SPI2_ID           65                             // 65
             #if UARTS_AVAILABLE > 4
                 #define irq_UART4_ID          66                         // 66
@@ -3253,7 +3259,7 @@ typedef struct stVECTOR_TABLE
 #elif defined KINETIS_KE                                                 // {42}
     #define LAST_PROCESSOR_IRQ     irq_WDOG0
     #define CHECK_VECTOR_SIZE                180                         // (16 + 28 + 1) = 45) * 4 - adequate for this processor [0xb4]
-#elif defined KINETIS_K02 || defined KINETIS_KW2X
+#elif defined KINETIS_K02 || defined KINETIS_KW2X || defined KINETIS_K12
     #define LAST_PROCESSOR_IRQ     irq_SOFTWARE
     #define CHECK_VECTOR_SIZE                324                         // (16 + 64 + 1) = 81) * 4 - adequate for this processor [0x144]
 #elif defined KINETIS_KV30 || defined KINETIS_K22
@@ -6330,7 +6336,7 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
         #define LPSPI_CCR_PCSSCK_SHIFT   16
         #define LPSPI_CCR_SCKPCS 0xff000000                              // last edge of SCK to PCS delay in LPSPI functional clock cycles
         #define LPSPI_CCR_SCKPCS_SHIFT   24
-        #define LPSPI_MASTER_CLOCK_SETTING(div, delay_pcs_sck, delay_sck_pcs, delay_between) LPSPI0_CCR = (((div - 2) & LPSPI_CCR_SCKDIV) | (((delay_pcs_sck - 1) << LPSPI_CCR_PCSSCK_SHIFT) & LPSPI_CCR_PCSSCK) | (((delay_sck_pcs - 1) << LPSPI_CCR_SCKPCS_SHIFT) & LPSPI_CCR_SCKPCS) | (((delay_between - 2) << LPSPI_CCR_DBT_SHIFT) & LPSPI_CCR_DBT));
+        #define LPSPI_MASTER_CLOCK_SETTING(chan, div, delay_pcs_sck, delay_sck_pcs, delay_between) LPSPI##chan##_CCR = (((div - 2) & LPSPI_CCR_SCKDIV) | (((delay_pcs_sck - 1) << LPSPI_CCR_PCSSCK_SHIFT) & LPSPI_CCR_PCSSCK) | (((delay_sck_pcs - 1) << LPSPI_CCR_SCKPCS_SHIFT) & LPSPI_CCR_SCKPCS) | (((delay_between - 2) << LPSPI_CCR_DBT_SHIFT) & LPSPI_CCR_DBT));
     #define LPSPI0_FCR          *(unsigned long *)(LPSPI0_BLOCK + 0x58)  // LPSPI0 FIFO control register
     #define LPSPI0_FSR          *(volatile unsigned long *)(LPSPI0_BLOCK + 0x5c) // LPSPI0 FIFO status register
     #define LPSPI0_TCR          *(volatile unsigned long *)(LPSPI0_BLOCK + 0x60)  // LPSPI0 transmit command register

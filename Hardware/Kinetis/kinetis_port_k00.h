@@ -13,6 +13,7 @@
     ---------------------------------------------------------------------
     Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
+    11.04.2018 K12 48 pin package added here since it is very close to K02 pinout
     
 */
 
@@ -265,8 +266,13 @@ static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][8] = {
     {
         // ALT 0           ALT 1    ALT2         ALT 3         ALT 4          ALT 5        ALT 6       ALT 7
         {  "-",            "PTA0",  "UART0_CTS_b","FTM0_CH5",  "-",           "-",         "-",        "JTAG_TCLK/SWD_CLK" }, // PORT A
+#if defined KINETIS_K12
+        {  "-",            "PTA1",  "UART0_RX",  "FTM0_CH6",   "-",           "-",         "-",        "JTAG_TDI"          },
+        {  "-",            "PTA2",  "UART0_TX",  "FTM0_CH7",   "-",           "-",         "-",        "JTAG_TDO/TRACE_SWO"},
+#else
         {  "-",            "PTA1",  "UART0_RX",  "-",          "-",           "-",         "-",        "JTAG_TDI"          },
         {  "-",            "PTA2",  "UART0_TX",  "-",          "-",           "-",         "-",        "JTAG_TDO/TRACE_SWO"},
+#endif
         {  "-",            "PTA3",  "UART0_RTS", "FTM0_CH0",   "-",           "-",         "-",        "JTAG_TMS/SWD_DIO"  },
         {  "-",            "PTA4/LLWU_P3","-",   "FTM0_CH1",   "-",           "-",         "-",        "NMI_b"             },
         {  "-",            "PTA5",  "-",         "FTM0_CH2",   "-",           "-",         "-",        "JTAG_TRST"      },
@@ -316,8 +322,13 @@ static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][8] = {
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
+#if defined KINETIS_K12
+        {  "-",            "PTB16", "-",         "UART0_RX",   "-",           "-",         "EWM_IN",   "FTM_CLKIN0"        },
+        {  "-",            "PTB17", "-",         "UART0_TX",   "-",           "-",         "EWM_OUT_b","FTM_CLKIN1"        },
+#else
         {  "-",            "PTB16", "-",         "UART0_RX",   "FTM_CLKIN0",  "-",         "EWM_IN",   "-"                 },
         {  "-",            "PTB17", "-",         "UART0_TX",   "FTM_CLKIN1",  "-",         "EWM_OUT_b","-"                 },
+#endif
         {  "-",            "PTB18", "-",         "FTM2_CH0",   "-",           "-",         "FTM2_QD_PHA","-"               },
         {  "-",            "PTB19", "-",         "FTM2_CH1",   "-",           "-",         "FTM2_QD_PHB","-"               },
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
@@ -335,6 +346,16 @@ static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][8] = {
     },
     {
         // ALT 0           ALT 1    ALT2         ALT 3         ALT 4          ALT 5        ALT 6       ALT 7
+#if defined KINETIS_K12
+        {  "ADC0_SE14",    "PTC0",  "SPI0_PCS4", "PDB0_EXTRG", "-",           "-",         "I2S0_TXD1","-"                 }, // PORT C
+        {  "ADC0_SE15",    "PTC1/LLWU_P6","SPI0_PCS3","UART1_RTS_b","FTM0_CH0","-",        "I2S0_TXD0","-"                 },
+        {  "ADC0_SE4b/CMP1_IN0","PTC2","SPI0_PCS2","UART1_CTS_b","FTM0_CH1",  "-",         "I2S0_TX_FS","-"                },
+        {  "CMP1_IN1",     "PTC3/LLWU_P7","SPI0_PCS1","UART1_RX","FTM0_CH2",  "-",         "I2S0_TX_BCLK","-"              },
+        {  "-",            "PTC4/LLWU_P8","SPI0_PCS0","UART1_TX","FTM0_CH3",  "-",         "CMP1_OUT", "-"                 },
+        {  "-",            "PTC5/LLWU_P9","SPI0_SCK","LPTMR0_ALT2","I2S0_RXD0","-",        "CMP0_OUT", "FTM0_CH2"          },
+        {  "CMP0_IN0",     "PTC6/LLWU_P10","SPI0_SOUT","PDB0_EXTRG","I2S0_RX_BCLK","-",    "I2S0_MCLK","-"                 },
+        {  "CMP0_IN1",     "PTC7",  "SPI0_SIN",  "-",          "I2S0_RX_FS",  "-",         "-",        "-"                 },
+#else
         {  "ADC0_SE14",    "PTC0",  "SPI0_PCS4", "PDB0_EXTRG", "-",           "-",         "-",        "-"                 }, // PORT C
         {  "ADC0_SE15",    "PTC1/LLWU_P6","SPI0_PCS3","UART1_RTS_b","FTM0_CH0","-",        "-",        "-"                 },
         {  "ADC0_SE4b/CMP1_IN0","PTC2","SPI0_PCS2","UART1_CTS_b","FTM0_CH1",  "-",         "-",        "-"                 },
@@ -343,6 +364,7 @@ static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][8] = {
         {  "-",            "PTC5/LLWU_P9","SPI0_SCK","LPTMR0_ALT2","-",       "-",         "CMP0_OUT", "FTM0_CH2"          },
         {  "CMP0_IN0",     "PTC6/LLWU_P10","SPI0_SOUT","PDB0_EXTRG","-",      "-",         "-",        "-"                 },
         {  "CMP0_IN1",     "PTC7",  "SPI0_SIN",  "-",          "-",           "-",         "-",        "-"                 },
+#endif
         {  "CMP0_IN2",     "PTC8",  "-",         "-",          "-",           "-",         "-",        "-"                 },
         {  "CMP0_IN3",     "PTC9",  "-",         "-",          "-",           "-",         "FTM2_FLT0","-"                 },
         {  "-",            "PTC10", "-",         "-",          "-",           "-",         "-",        "-"                 },
@@ -370,6 +392,16 @@ static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][8] = {
     },
     {
         // ALT 0           ALT 1    ALT2         ALT 3         ALT 4          ALT 5        ALT 6       ALT 7
+#if defined KINETIS_K12
+        {  "-",            "PTD0/LLWU_P12","SPI0_PCS0", "UART2_RTS_b","-",    "-",         "-",        "-"                 }, // PORT D
+        {  "ADC0_SE5b",    "PTD1",  "SPI0_SCK",  "UART2_CTS_b","-",           "-",         "-",        "-"                 },
+        {  "-",            "PTD2/LLWU_P13","SPI0_SOUT","UART2_RX","I2C0_SCL", "-",         "-",        "-"                 },
+        {  "-",            "PTD3",  "SPI0_SIN",  "UART2_TX",   "I2C0_SDA",    "-",         "-",        "-"                 },
+        {  "-",            "PTD4/LLWU_P14","SPI0_PCS1","UART0_RTS_b","FTM0_CH4","-",       "EWM_IN",   "-"                 },
+        {  "ADC0_SE6b",    "PTD5",  "SPI0_PCS2", "UART0_CTS_b/UART0_COL_b","FTM0_CH5","-", "EWM_OUT_b","-"                 },
+        {  "ADC0_SE7b",    "PTD6/LLWU_P15","SPI0_PCS3", "UART0_RX","FTM0_CH6","-",         "FTM0_FLT0","-"                 },
+        {  "ADC0_SE22",    "PTD7",  "CMT_IRO",   "UART0_TX",   "FTM0_CH7",    "-",         "FTM0_FLT1","-"                 },
+#else
         {  "-",            "PTD0/LLWU_P12","SPI0_PCS0", "-",   "-",           "-",         "-",        "-"                 }, // PORT D
         {  "ADC0_SE5b",    "PTD1",  "SPI0_SCK",  "-",          "-",           "-",         "-",        "-"                 },
         {  "-",            "PTD2/LLWU_P13","SPI0_SOUT","-",    "-",           "-",         "-",        "-"                 },
@@ -378,6 +410,7 @@ static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][8] = {
         {  "ADC0_SE6b",    "PTD5",  "SPI0_PCS2", "UART0_CTS_b","FTM0_CH5",    "-",         "EWM_OUT_b","-"                 },
         {  "ADC0_SE7b",    "PTD6/LLWU_P15","SPI0_PCS3", "UART0_RX","FTM0_CH0","-",         "FTM0_FLT0","-"                 },
         {  "-",            "PTD7",  "-",         "UART0_TX",   "FTM0_CH1",    "-",         "FTM0_FLT1","-"                 },
+#endif
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
