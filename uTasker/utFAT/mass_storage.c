@@ -5662,7 +5662,7 @@ static void fnCreateSFN_alias(CHAR cFileName[12])
     #endif
 #endif
 
-#if defined SDCARD_SUPPORT && defined UTFAT_WRITE && !defined SDCARD_ACCESS_WITHOUT_UTFAT // {17}
+#if (defined UTFAT_LFN_READ && defined UTFAT_LFN_WRITE && !defined SDCARD_ACCESS_WITHOUT_UTFAT) // {17}
 // Read the present (SFN) file object to a buffer and mark the original as deleted
 //
 static int fnBackupFreeFileObject(OPEN_FILE_BLOCK *ptr_openBlock, DIR_ENTRY_STRUCTURE_FAT32 *ptr_file_object)
@@ -5940,7 +5940,7 @@ static int fnInsertLFN_name(OPEN_FILE_BLOCK *ptr_openBlock, UTFILE *ptr_utFile, 
 }
 #endif
 
-#if defined SDCARD_SUPPORT
+#if defined FULL_FAT_SUPPORT
 extern int fnReadSector(unsigned char ucDisk, unsigned char *ptrBuffer, unsigned long ulSectorNumber)
 {
     if (ptrBuffer == 0) {                                                // if a zero pointer is given force a load but don't copy to a buffer
@@ -5983,7 +5983,7 @@ extern int fnWriteSector(unsigned char ucDisk, unsigned char *ptrBuffer, unsigne
 }
 #endif
 
-#if defined SDCARD_SUPPORT && !defined SDCARD_ACCESS_WITHOUT_UTFAT && defined UTFAT_WRITE
+#if defined FULL_FAT_SUPPORT && defined UTFAT_WRITE && !defined SDCARD_ACCESS_WITHOUT_UTFAT
 // The new file or its new name will be located either at the end of the present directory or else reuse deleted areas of adequate size
 //
 static int fnSetFileLocation(UTFILE *ptr_utFile, OPEN_FILE_BLOCK *ptr_openBlock, /*const CHAR *ptrFilePath,*/ int iRename) // {4}
@@ -6006,7 +6006,9 @@ static int fnSetFileLocation(UTFILE *ptr_utFile, OPEN_FILE_BLOCK *ptr_openBlock,
     //
     return iReturn;
 }
+#endif
 
+#if defined FULL_FAT_SUPPORT && defined UTFAT_WRITE && !defined SDCARD_ACCESS_WITHOUT_UTFAT
 // Create or rename a file
 //
 static int fnCreateFile(OPEN_FILE_BLOCK *ptr_openBlock, UTFILE *ptr_utFile, /*const CHAR *ptrFilePath, */unsigned long ulAccessMode) // {4}
@@ -6080,7 +6082,7 @@ static int fnCreateFile(OPEN_FILE_BLOCK *ptr_openBlock, UTFILE *ptr_utFile, /*co
 }
 #endif
 
-#if defined SDCARD_SUPPORT && defined UTFAT_EXPERT_FUNCTIONS
+#if defined FULL_FAT_SUPPORT && defined UTFAT_EXPERT_FUNCTIONS && !defined SDCARD_ACCESS_WITHOUT_UTFAT
 static int fnDisplayLFN(DISK_LOCATION *ptrFileLocation, UTDISK *ptr_utDisk)
 {
     DISK_LOCATION dirLocation;
@@ -6254,7 +6256,8 @@ static int fnDisplaySFN(int iFile, UTFILE *ptr_utFile, OPEN_FILE_BLOCK *ptr_open
     fnDebugHex((ulCluster & 0x7f), (WITH_LEADIN | WITH_CR_LF | sizeof(unsigned char)));
     return UTFAT_SUCCESS;
 }
-
+#endif
+#if defined FULL_FAT_SUPPORT && defined UTFAT_EXPERT_FUNCTIONS && !defined SDCARD_ACCESS_WITHOUT_UTFAT
 static void fnDisplayFileInfo(int iFile, const CHAR *ptrFilePath, UTFILE *ptr_utFile, OPEN_FILE_BLOCK *ptr_openBlock)
 {
     if (iFile != 0) {
@@ -6325,7 +6328,6 @@ static int _utOpenFile(const CHAR *ptrFilePath, UTFILE *ptr_utFile, unsigned lon
         openBlock.usDirFlags |= UTDIR_DIR_AS_FILE;                       // handle directories as files
     }
 #endif
-
     iReturn = _utOpenDirectory(&openBlock, ptr_utFile->ptr_utDirObject, ulAccessMode /*((ulAccessMode & UTFAT_OPEN_DELETED) != UTFAT_SUCCESS)*/); // {3} pass full access mode
     if (UTFAT_PATH_IS_FILE == iReturn) {
         uMemcpy(&ptr_utFile->private_disk_location, &ptr_utFile->ptr_utDirObject->public_disk_location, sizeof(ptr_utFile->private_disk_location)); // copy the referenced directory details

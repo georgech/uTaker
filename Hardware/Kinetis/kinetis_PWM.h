@@ -23,6 +23,7 @@
     20.05.2017 PWM output configuration moded to kinetis.c [kinetis_timer_pins.h] so that it can be shared by capture input use
     20.11.2017 Add KE15 PWM channel output enable                        {8}
     19.03.2018 Add PWM clock source from TRGMUX settings                 {9}
+    10.04.2018 Add KL27 clock inputs and trigger configuration           {10}
 
 */
 
@@ -358,9 +359,32 @@ static __interrupt void _PWM_Interrupt_5(void)
         #endif
                         break;
                     }
+    #elif defined KINETIS_KL27                                           // {10} KL27 has two external clock sources (TPM_CLKIN0 and TPM_CLKIN1) which can be individually defined for use by each of the TPMs
+                    if ((ulMode & PWM_SOURCE_CLKIN1) != 0) {             // use TPM_CLKIN1
+        #if defined TPMCLKIN1_ON_E_HIGH
+                        _CONFIG_PERIPHERAL(E, 30, (PE_30_TPM_CLKIN1 | PORT_PS_UP_ENABLE)); // TPM_CLKIN1 on PE.30 (alt. function 4)
+        #elif defined TPMCLKIN1_ON_E_LOW
+                        _CONFIG_PERIPHERAL(E, 17, (PE_17_TPM_CLKIN1 | PORT_PS_UP_ENABLE)); // TPM_CLKIN1 on PE.17 (alt. function 4)
+        #else
+                        _CONFIG_PERIPHERAL(A, 19, (PA_19_TPM_CLKIN1 | PORT_PS_UP_ENABLE)); // TPM_CLKIN1 on PA.19 (alt. function 4)
+        #endif
+                        SIM_SOPT4 |= (SIM_SOPT4_FTM0CLKSEL << ucChannel);// select CLKIN1 to TPM
+                    }
+                    else {                                               // use TPM_CLKIN0
+        #if defined TPMCLKIN0_ON_E_HIGH
+                        _CONFIG_PERIPHERAL(E, 29, (PE_29_TPM_CLKIN0 | PORT_PS_UP_ENABLE)); // TPM_CLKIN0 on PE.29 (alt. function 4)
+        #elif defined TPMCLKIN0_ON_E_LOW
+                        _CONFIG_PERIPHERAL(E, 16, (PE_16_TPM_CLKIN0 | PORT_PS_UP_ENABLE)); // TPM_CLKIN0 on PE.16 (alt. function 4)
+        #elif defined TPMCLKIN0_ON_B
+                        _CONFIG_PERIPHERAL(B, 16, (PB_16_TPM_CLKIN0 | PORT_PS_UP_ENABLE)); // TPM_CLKIN0 on PB.16 (alt. function 4)
+        #else
+                        _CONFIG_PERIPHERAL(A, 18, (PA_18_TPM_CLKIN0 | PORT_PS_UP_ENABLE)); // TPM_CLKIN0 on PA.18 (alt. function 4)
+        #endif
+                        SIM_SOPT4 &= ~(SIM_SOPT4_FTM0CLKSEL << ucChannel); // select CLKIN0 to TPM
+                    }
     #elif defined FTM_CLKIN_1                                            // use CLKIN1 source
         #if !defined KINETIS_KE
-                    SIM_SOPT4 |= (SIM_SOPT4_FTM0CLKSEL << ucChannel);    // select CLKIN1 to FTN
+                    SIM_SOPT4 |= (SIM_SOPT4_FTM0CLKSEL << ucChannel);    // select CLKIN1 to FTM
         #endif
         #if defined KINETIS_KL02
                     _CONFIG_PERIPHERAL(B, 6, (PB_6_TPM_CLKIN1 | PORT_PS_UP_ENABLE)); // TPM_CKLIN1 on PB.6 (alt. function 3)
@@ -389,8 +413,11 @@ static __interrupt void _PWM_Interrupt_5(void)
                 }
     #endif
             }
-    #if defined TRGMUX_AVAILABLE                                         // {9}
+    #if defined TRGMUX_AVAILABLE || defined KINETIS_KL27                 // {9}{10}
             else if (PWM_TRIGGER_CLK == (ulMode & FTM_SC_CLKS_MASK)) {   // if trigger clock source is to be used program the trigger input connection using the TRGMUX
+        #if defined KINETIS_KL27                                         // {10}
+                ptrFlexTimer->FTM_CONF = ((ptrFlexTimer->FTM_CONF & ~(FTM_CONF_TRGSEL15 | FTM_CONF_TRGSRC_INTERNAL)) | (ptrPWM_settings->ucTriggerSource << EXT_TRIG_SEL_SHIFT));
+        #else
                 switch (ucFlexTimer) {
                 case 0:                                                  // TPM0
                     TRGMUX_TPM0 = ptrPWM_settings->ucTriggerSource;      // connect the trigger source to the clock input
@@ -403,8 +430,9 @@ static __interrupt void _PWM_Interrupt_5(void)
                     break;
                 }
                 ptrFlexTimer->FTM_CONF &= ~(FTM_CONF_TRGSRC_INTERNAL | FTM_CONF_TRGSEL_EXT_MASK); // ensure external trigger on trigger 0
+        #endif
                 if ((PWM_TRIGGER_CLOCK_INVERT & ulMode) != 0) {
-                    ptrFlexTimer->FTM_CONF |= FTM_CONF_TRGPOL_LOW;       // falling edge triggered (note that this has no effet on the KL28)
+                    ptrFlexTimer->FTM_CONF |= FTM_CONF_TRGPOL_LOW;       // falling edge triggered (note that this has no effect on the KL28)
                 }
             }
     #endif

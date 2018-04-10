@@ -899,7 +899,7 @@ static int fnHostEmumeration(int iEndpoint, int iEvent, USB_HW *ptrUSB_HW)
     case HOST_ENUMERATION_SET_ADDRESS:                                   // address has been acknowledged by the device
         fnSetUSB_device_address(USB_DEVICE_ADDRESS);                     // set the device address since it has been acknowledged
         ucRequestLengthRemaining = 255;                                  // up to 255 bytes possible
-        fnPrepareOutData(HOST_SETUP  (unsigned char *)&get_configuration_descriptor, sizeof(get_configuration_descriptor), 8, 0, ptrUSB_HW); // send setup stage of get device descriptor (this is sent to the new address)
+        fnPrepareOutData(HOST_SETUP  (unsigned char *)&get_configuration_descriptor, sizeof(get_configuration_descriptor), 8, 0, ptrUSB_HW); // send setup stage of get configuration descriptor (this is sent to the new address)
         ucRequestType = HOST_ENUMERATION_CONFIGURATION_DESCRIPTOR;       // set next state
         break;
 

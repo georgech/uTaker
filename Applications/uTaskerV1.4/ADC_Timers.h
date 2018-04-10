@@ -1811,7 +1811,13 @@ static void fnConfigure_Timer(void)
     #elif defined FRDM_KL25Z
     pwm_setup.pwm_reference = (_TIMER_0 | 1);                            // timer module 0, channel 1 (blue LED in RGB LED)
     fnConfigureInterrupt((void *)&pwm_setup);
-    #elif defined FRDM_KL26Z || defined FRDM_KL27Z || defined CAPUCCINO_KL27
+    #elif defined FRDM_KL27Z
+  //pwm_setup.pwm_mode = (PWM_EXTERNAL_CLK | PWM_PRESCALER_1 | PWM_EDGE_ALIGNED); // clock from TPM_CLKIN0
+  //pwm_setup.pwm_mode = (PWM_EXTERNAL_CLK_1 | PWM_PRESCALER_1 | PWM_EDGE_ALIGNED); // clock from TPM_CLKIN1
+    pwm_setup.pwm_mode = (PWM_TRIGGER_CLK | PWM_PRESCALER_1 | PWM_EDGE_ALIGNED); // clock from trigger source
+    pwm_setup.pwm_reference = (_TIMER_2 | 1);                            // timer module 2, channel 1
+    pwm_setup.ucTriggerSource = TRGMUX_SEL_TPM0_OVERFLOW;                // use TPM0's time base as clock to TPM2
+    #elif defined FRDM_KL26Z || defined CAPUCCINO_KL27
     pwm_setup.pwm_reference = (_TIMER_0 | 5);                            // timer module 0, channel 5 (blue LED in RGB LED)
     fnConfigureInterrupt((void *)&pwm_setup);
     #endif

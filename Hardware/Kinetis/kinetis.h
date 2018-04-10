@@ -226,7 +226,7 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
 
 // ROM Bootoader
 //
-#if (defined KINETIS_KL03 || defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL43 || defined KINETIS_KL82 || defined KINETIS_KE15) // devices with ROM bootloader
+#if (defined KINETIS_K27 || defined KINETIS_K28 || defined KINETIS_K80 || defined KINETIS_KL03 || defined KINETIS_KL13 || defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL33 || defined KINETIS_KL43 || defined KINETIS_KL81 || defined KINETIS_KL82 || defined KINETIS_KE14 || defined KINETIS_KE15 || defined KINETIS_KE16 || defined KINETIS_KE18) // devices with ROM bootloader
     #define ROM_BOOTLOADER
 #endif
 
@@ -3600,7 +3600,7 @@ typedef struct stVECTOR_TABLE
     #if defined DEVICE_WITH_SLCD
         #define SLCD_BASE_ADD                  ((unsigned char *)(&kinetis.SLCD)) // SLCD Controller
     #endif
-    #if defined KINETIS_K52 || defined KINETIS_K53 || defined KINETIS_K60 || defined KINETIS_K61 || defined KINETIS_K64 || defined KINETIS_K70
+    #if defined ETHERNET_AVAILABLE
         #define EMAC_BASE_ADD                  ((unsigned char *)(&kinetis.EMAC)) // Ethernet Controller
     #endif
     #if DAC_CONTROLLERS > 0
@@ -4007,7 +4007,7 @@ typedef struct stVECTOR_TABLE
     #elif defined KINETIS_KL46 || defined KINETIS_KL43
         #define SLCD_BASE_ADD                  0x40053000                // SLCD Controller
     #endif
-    #if defined KINETIS_K52 || defined KINETIS_K53 || defined KINETIS_K60 || defined KINETIS_K61 || defined KINETIS_K64 || defined KINETIS_K70
+    #if defined ETHERNET_AVAILABLE
         #define EMAC_BASE_ADD                  0x400c0000                // Ethernet Controller
     #endif
     #if (DAC_CONTROLLERS > 0)
@@ -7505,6 +7505,9 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
       #define FTM_SC_CLKS_EXT      0x00000010                            // clock source - TPM_EXTCLK (rising edge) [synchronised to TPM counter clock]
       #define FTM_SC_CLK_TRIGGER   0x00000018                            // clock source - trigger input (rising edge) [direct]
       #define FTM_SC_CLKS_MASK     0x00000018
+  #elif defined KINETIS_KL27
+      #define FTM_SC_CLKS_EXT      0x00000010                            // clock source - TPM_EXTCLK (rising edge) [synchronised to TPM counter clock]
+      #define FTM_SC_CLKS_MASK     0x00000018
   #else
       #define FTM_SC_CLKS_EXT   0x00000010                               // clock source - TPM_EXTCLK (rising edge)
       #define FTM_SC_CLKS_MASK  0x00000010
@@ -7594,6 +7597,35 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
           #define FTM_CONF_TRGSEL1_EXT  0x01000000                           // TRGMUX_TPMx_trigger1 (change only when TPM is disabled) when external source is selected (FTM_CONF_TRGSRC_EXTERNAL)
           #define FTM_CONF_TRGSEL2_EXT  0x02000000                           // TRGMUX_TPMx_trigger2 (change only when TPM is disabled) when external source is selected (FTM_CONF_TRGSRC_EXTERNAL)
           #define FTM_CONF_TRGSEL_EXT_MASK 0x03000000
+      #elif defined KINETIS_KL27
+          #define FTM_CONF_TRGSEL0  0x01000000                               // channel 0 pin input capture (change only when TPM is disabled) when internal source is selected (FTM_CONF_TRGSRC_INTERNAL)
+          #define FTM_CONF_TRGSEL1  0x02000000                               // channel 1 pin input capture (change only when TPM is disabled) when internal source is selected (FTM_CONF_TRGSRC_INTERNAL)
+          #define FTM_CONF_TRGSEL2  0x03000000                               // channel 0 or channel 1 pin input capture (change only when TPM is disabled) when internal source is selected (FTM_CONF_TRGSRC_INTERNAL)
+          #define FTM_CONF_TRGSEL4  0x04000000                               // channel 2 pin input capture (change only when TPM is disabled) when internal source is selected (FTM_CONF_TRGSRC_INTERNAL)
+          #define FTM_CONF_TRGSEL5  0x05000000                               // channel 0 or channel 2 pin input capture (change only when TPM is disabled) when internal source is selected (FTM_CONF_TRGSRC_INTERNAL)
+          #define FTM_CONF_TRGSEL6  0x06000000                               // channel 1 or channel 2 pin input capture (change only when TPM is disabled) when internal source is selected (FTM_CONF_TRGSRC_INTERNAL)
+          #define FTM_CONF_TRGSEL7  0x07000000                               // channel 0 or channel 1 or channel 2 pin input capture (change only when TPM is disabled) when internal source is selected (FTM_CONF_TRGSRC_INTERNAL)
+          #define FTM_CONF_TRGSEL8  0x08000000                               // channel 3 pin input capture (change only when TPM is disabled) when internal source is selected (FTM_CONF_TRGSRC_INTERNAL)
+          #define FTM_CONF_TRGSEL9  0x09000000                               // channel 0 or channel 3 pin input capture (change only when TPM is disabled) when internal source is selected (FTM_CONF_TRGSRC_INTERNAL)
+          #define FTM_CONF_TRGSEL10 0x0a000000                               // channel 1 or channel 3 pin input capture (change only when TPM is disabled) when internal source is selected (FTM_CONF_TRGSRC_INTERNAL)
+          #define FTM_CONF_TRGSEL11 0x0b000000                               // channel 0 or channel 1 or channel 3 pin input capture (change only when TPM is disabled) when internal source is selected (FTM_CONF_TRGSRC_INTERNAL)
+          #define FTM_CONF_TRGSEL12 0x0c000000                               // channel 2 or channel 3 pin input capture (change only when TPM is disabled) when internal source is selected (FTM_CONF_TRGSRC_INTERNAL)
+          #define FTM_CONF_TRGSEL13 0x0d000000                               // channel 0 or channel 2 or channel 3 pin input capture (change only when TPM is disabled) when internal source is selected (FTM_CONF_TRGSRC_INTERNAL)
+          #define FTM_CONF_TRGSEL14 0x0e000000                               // channel 1 or channel 2 or channel 3 pin input capture (change only when TPM is disabled) when internal source is selected (FTM_CONF_TRGSRC_INTERNAL)
+          #define FTM_CONF_TRGSEL15 0x0f000000                               // channel 0 or channel 1 or channel 2 or channel 3 pin input capture (change only when TPM is disabled) when internal source is selected (FTM_CONF_TRGSRC_INTERNAL)
+          // TPM external trigger options (note that these are not controlled by the TRGMUX module since it is not available but the names are used for compatibility)
+          //
+          #define EXT_TRIG_SEL_SHIFT           24
+          #define TRGMUX_SEL_EXTRG_IN           0x00
+          #define TRGMUX_SEL_CMP0               0x01
+          #define TRGMUX_SEL_PIT0_CHANNEL_0     0x04
+          #define TRGMUX_SEL_PIT0_CHANNEL_1     0x05
+          #define TRGMUX_SEL_TPM0_OVERFLOW      0x08
+          #define TRGMUX_SEL_TPM1_OVERFLOW      0x09
+          #define TRGMUX_SEL_TPM2_OVERFLOW      0x0a
+          #define TRGMUX_SEL_RTC_ALARM          0x0c
+          #define TRGMUX_SEL_RTC_SECONDS        0x0d
+          #define TRGMUX_SEL_LPTMR0             0x0e
       #else
           #define FTM_CONF_TRGSEL0  0x01000000                               // channel 0 pin input capture (change only when TPM is disabled)
           #define FTM_CONF_TRGSEL1  0x02000000                               // channel 1 pin input capture (change only when TPM is disabled)
@@ -12031,6 +12063,14 @@ typedef struct stKINETIS_LPTMR_CTL
     #define PA_20_TPM2_CLKIN             PORT_MUX_ALT4
     #define PB_11_TPM2_CLKIN             PORT_MUX_ALT4
     #define PE_31_TPM2_CLKIN             PORT_MUX_ALT4
+#elif defined KINETIS_KL27
+    #define PA_18_TPM_CLKIN0             PORT_MUX_ALT4
+    #define PB_16_TPM_CLKIN0             PORT_MUX_ALT4
+    #define PE_16_TPM_CLKIN0             PORT_MUX_ALT4
+    #define PE_29_TPM_CLKIN0             PORT_MUX_ALT4
+    #define PA_19_TPM_CLKIN1             PORT_MUX_ALT4
+    #define PE_17_TPM_CLKIN1             PORT_MUX_ALT4
+    #define PE_30_TPM_CLKIN1             PORT_MUX_ALT4
 #elif defined KINETIS_K66 || defined KINETIS_K80
     #define PB_0_TPM1_CH0                PORT_MUX_ALT6
     #define PA_12_TPM1_CH0               PORT_MUX_ALT7
@@ -17488,7 +17528,7 @@ typedef struct stPWM_INTERRUPT_SETUP
         unsigned char    dma_int_priority;                               // DMA interrupt priority the user wants to set
         unsigned char    ucDmaChannel;                                   // DMA channel to be used
     #endif
-    #if defined TRGMUX_AVAILABLE                                         // {108}
+    #if defined TRGMUX_AVAILABLE || defined KINETIS_KL27                 // {108}
         unsigned char    ucTriggerSource;                                // trigger source when clock is set to PWM_TRIGGER_CLK
     #endif
 } PWM_INTERRUPT_SETUP;
@@ -17516,6 +17556,11 @@ typedef struct stPWM_INTERRUPT_SETUP
 #if defined TRGMUX_AVAILABLE
     #define PWM_EXTERNAL_CLK    FTM_SC_CLKS_EXT                          // 0x10 - counter increments on rising edge of TPM_EXTCLK synchronised to the TPM counter clock
     #define PWM_TRIGGER_CLK     FTM_SC_CLK_TRIGGER                       // 0x18 - counter increments on rising edge of trigger input
+#elif defined KINETIS_KL27
+    #define PWM_EXTERNAL_CLK    FTM_SC_CLKS_EXT                          // 0x10 - TPM_CLKIN0
+    #define PWM_SOURCE_CLKIN1   0x0100
+    #define PWM_EXTERNAL_CLK_1 (PWM_EXTERNAL_CLK | PWM_SOURCE_CLKIN1)    // use TPM_CLKIN1 rather than TPM_CLKIN0
+    #define PWM_TRIGGER_CLK     0x18                                     // this configuration is not valid for KL27 but is used to request its equivalent operation
 #else
     #define PWM_EXTERNAL_CLK    FTM_SC_CLKS_EXT                          // 0x18
 #endif
