@@ -17534,7 +17534,7 @@ typedef struct stPWM_INTERRUPT_SETUP
         unsigned char    dma_int_priority;                               // DMA interrupt priority the user wants to set
         unsigned char    ucDmaChannel;                                   // DMA channel to be used
     #endif
-    #if defined TRGMUX_AVAILABLE || defined KINETIS_KL27                 // {108}
+    #if defined TRGMUX_AVAILABLE                                         // {108}
         unsigned char    ucTriggerSource;                                // trigger source when clock is set to PWM_TRIGGER_CLK
     #endif
 } PWM_INTERRUPT_SETUP;
