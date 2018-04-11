@@ -4813,7 +4813,7 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
             fnMeasurePWM(PORTC, PORTC_BIT4);                             // test measuring a PWM input on this input
             break;
 #endif
-#if defined SUPPORT_LPTMR
+#if defined SUPPORT_LPTMR && (LPTMR_AVAILABLE > 0)
         case 76:                                                         // temp test to check technique for reading value of counter
             {
                 unsigned long ulCnt;

@@ -1490,11 +1490,11 @@ typedef struct stRESET_VECTOR
     #define FLEX_TIMERS_AVAILABLE   4
 #elif defined KINETIS_KL02 || defined KINETIS_KL03 || defined KINETIS_KL05 || ((defined KINETIS_K10 || defined KINETIS_K20) && (KINETIS_MAX_SPEED <= 50000000))
     #define FLEX_TIMERS_AVAILABLE   2
-#elif (defined KINETIS_KE04 && (SIZE_OF_FLASH <= (8 * 1024)))
+#elif (defined KINETIS_KEA8) || (defined KINETIS_KE04 && (SIZE_OF_FLASH <= (8 * 1024)))
     #define FLEX_TIMERS_AVAILABLE   3
     #define NO_FLEX_TIMER_2                                              // flex timer 1 is not available
     #define FLEX_TIMER_0_REDUCED                                         // reduced functionality on timer 0
-#elif defined KINETIS_KE04 || defined KINETIS_KE06
+#elif defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
     #define FLEX_TIMERS_AVAILABLE   3
     #define FLEX_TIMER_0_REDUCED                                         // reduced functionality on timer 0
     #define FLEX_TIMER_1_REDUCED                                         // reduced functionality on timer 1

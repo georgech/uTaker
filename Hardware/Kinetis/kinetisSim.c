@@ -8385,7 +8385,7 @@ extern int fnSimTimers(void)
         }
     }
 #endif
-#if defined SUPPORT_LPTMR                                                // {35}
+#if defined SUPPORT_LPTMR && (LPTMR_AVAILABLE > 0)                       // {35}
     if (((IS_POWERED_UP(5, LPTMR0)) != 0) && ((LPTMR0_CSR & LPTMR_CSR_TEN) != 0)) { // if the low power timer is enabled and running
         unsigned long ulCount = 0;                                       // count in a tick period
         switch (LPTMR0_PSR & LPTMR_PSR_PCS_OSC0ERCLK) {
