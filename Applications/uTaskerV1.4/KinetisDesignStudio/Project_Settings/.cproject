@@ -223,20 +223,6 @@
 							<outputType id="org.eclipse.cdt.managedbuilder.ui.rcbs.outputtype.1802148112" name="Resource Custom Build Step Output Type"/>
 						</tool>
 					</fileInfo>
-					<fileInfo id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.1518097371.1707471076.410677661" name="arm_bitreversal2.S" rcbsApplicability="disable" resourcePath="Hardware/Kinetis/CMSIS_DSP/arm_bitreversal2.S" toolsToInvoke="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.528577963.354867249">
-						<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.528577963.354867249" name="Cross ARM GNU Assembler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.528577963">
-							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.defs.621778897" name="Defined symbols (-D)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.defs" valueType="definedSymbols">
-								<listOptionValue builtIn="false" value="ARM_MATH_CM0PLUS"/>
-							</option>
-							<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.input.1013305773" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.input"/>
-						</tool>
-						<tool customBuildStep="true" id="org.eclipse.cdt.managedbuilder.ui.rcbs.567144068" name="Resource Custom Build Step">
-							<inputType id="org.eclipse.cdt.managedbuilder.ui.rcbs.inputtype.1780055260" name="Resource Custom Build Step Input Type">
-								<additionalInput kind="additionalinputdependency" paths=""/>
-							</inputType>
-							<outputType id="org.eclipse.cdt.managedbuilder.ui.rcbs.outputtype.1495880746" name="Resource Custom Build Step Output Type"/>
-						</tool>
-					</fileInfo>
 					<fileInfo id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.1518097371.1707471076.1219492986" name="FreeRTOSapplication.c" rcbsApplicability="disable" resourcePath="Applications/uTaskerV1.4/FreeRTOSapplication.c" toolsToInvoke="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.1388445889.155237364">
 						<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.1388445889.155237364" name="Cross ARM C Compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.1388445889">
 							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths.1664606437" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths" valueType="includePath">
@@ -255,7 +241,7 @@
 					</fileInfo>
 					<fileInfo id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.1518097371.1707471076..settings/com.freescale.processorexpert.core.prefs" name="com.freescale.processorexpert.core.prefs" rcbsApplicability="disable" resourcePath=".settings/com.freescale.processorexpert.core.prefs" toolsToInvoke=""/>
 					<sourceEntries>
-						<entry excluding="stack/SSL/mbedtls-2.6|Applications/emBasic|NXP|FreeRTOS/Source/portable/RVDS|FreeRTOS/Source/portable/MSVC-MingW|FreeRTOS/Source/portable/MemMang|FreeRTOS/Source/portable/Keil|FreeRTOS/Source/portable/IAR|FreeRTOS/Source/portable/GCC/ARM_CM7|FreeRTOS/Source/portable/GCC/ARM_CM4_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3|FreeRTOS/Source/portable/GCC/ARM_CM0|FreeRTOS/Source/portable/Common|Applications/sam|Applications/PlatformManager|Applications/emBASIC|WinSim|Tools|stack/SNMP|Hardware/Kinetis/kinetisSim.c|Hardware/Kinetis/kinetis_ports.cpp|Hardware/Kinetis/kinetis_boot.c|Hardware/Kinetis/kinetis_asm.s|Hardware/Kinetis/GUI|Hardware/IIC_devices|Applications/uTaskerV1.4/WebPages|Applications/uTaskerV1.4/uVision_Kinetis|Applications/uTaskerV1.4/USB|Applications/uTaskerV1.4/Simulator|Applications/uTaskerV1.4/Rowley_Kinetis|Applications/uTaskerV1.4/KinetisCodeWarrior|Applications/uTaskerV1.4/KinetisAtollic|Applications/uTaskerV1.4/Images|Applications/uTaskerV1.4/IAR6_Kinetis|Applications/uTaskerV1.4/GNU_Kinetis|Applications/uTaskerSerialBoot|Applications/uTaskerBoot|.settings/com.freescale.processorexpert.core.prefs" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="Applications/DIGILink|Applications/Citynox-loader|Applications/I2C_Slave|Applications/uTaskerSerialBoot Hoist 1V000|Applications/SunshineHoist|Hardware/STM32|stack/SSL/mbedtls-2.6|Applications/emBasic|NXP|FreeRTOS/Source/portable/RVDS|FreeRTOS/Source/portable/MSVC-MingW|FreeRTOS/Source/portable/MemMang|FreeRTOS/Source/portable/Keil|FreeRTOS/Source/portable/IAR|FreeRTOS/Source/portable/GCC/ARM_CM7|FreeRTOS/Source/portable/GCC/ARM_CM4_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3|FreeRTOS/Source/portable/GCC/ARM_CM0|FreeRTOS/Source/portable/Common|Applications/sam|Applications/PlatformManager|Applications/emBASIC|WinSim|Tools|stack/SNMP|Hardware/Kinetis/kinetisSim.c|Hardware/Kinetis/kinetis_ports.cpp|Hardware/Kinetis/kinetis_boot.c|Hardware/Kinetis/kinetis_asm.s|Hardware/Kinetis/GUI|Hardware/IIC_devices|Applications/uTaskerV1.4/WebPages|Applications/uTaskerV1.4/uVision_Kinetis|Applications/uTaskerV1.4/USB|Applications/uTaskerV1.4/Simulator|Applications/uTaskerV1.4/Rowley_Kinetis|Applications/uTaskerV1.4/KinetisCodeWarrior|Applications/uTaskerV1.4/KinetisAtollic|Applications/uTaskerV1.4/Images|Applications/uTaskerV1.4/IAR6_Kinetis|Applications/uTaskerV1.4/GNU_Kinetis|Applications/uTaskerSerialBoot|Applications/uTaskerBoot|.settings/com.freescale.processorexpert.core.prefs" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -390,32 +376,6 @@
 							<outputType id="org.eclipse.cdt.managedbuilder.ui.rcbs.outputtype.1720338634" name="Resource Custom Build Step Output Type"/>
 						</tool>
 					</fileInfo>
-					<fileInfo id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.1518097371.1707471076.573531147.1533855835" name="event_groups.c" rcbsApplicability="disable" resourcePath="FreeRTOS/Source/event_groups.c" toolsToInvoke="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.1476540855.1723221177">
-						<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.1476540855.1723221177" name="Cross ARM C Compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.1476540855">
-							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths.1100102191" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths" valueType="includePath">
-								<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/Applications/uTaskerV1.4&quot;"/>
-								<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/FreeRTOS/Source/include&quot;"/>
-								<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/FreeRTOS/Source/portable/GCC/ARM_CM4F&quot;"/>
-							</option>
-							<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.444218401" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input"/>
-						</tool>
-						<tool customBuildStep="true" id="org.eclipse.cdt.managedbuilder.ui.rcbs.1402525090" name="Resource Custom Build Step">
-							<inputType id="org.eclipse.cdt.managedbuilder.ui.rcbs.inputtype.2110276536" name="Resource Custom Build Step Input Type">
-								<additionalInput kind="additionalinputdependency" paths=""/>
-							</inputType>
-							<outputType id="org.eclipse.cdt.managedbuilder.ui.rcbs.outputtype.1888130861" name="Resource Custom Build Step Output Type"/>
-						</tool>
-					</fileInfo>
-					<fileInfo id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.1518097371.1707471076.573531147.1427825239" name="port.c" rcbsApplicability="disable" resourcePath="FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c" toolsToInvoke="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.1476540855.748921618">
-						<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.1476540855.748921618" name="Cross ARM C Compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.1476540855">
-							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths.1975561448" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths" valueType="includePath">
-								<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/Applications/uTaskerV1.4&quot;"/>
-								<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/FreeRTOS/Source/include&quot;"/>
-								<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/FreeRTOS/Source/portable/GCC/ARM_CM4F&quot;"/>
-							</option>
-							<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.1192584723" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input"/>
-						</tool>
-					</fileInfo>
 					<fileInfo id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.1518097371.1707471076.573531147.950235034" name="tasks.c" rcbsApplicability="disable" resourcePath="FreeRTOS/Source/tasks.c" toolsToInvoke="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.1476540855.772243227">
 						<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.1476540855.772243227" name="Cross ARM C Compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.1476540855">
 							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths.1456163654" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths" valueType="includePath">
@@ -430,6 +390,32 @@
 								<additionalInput kind="additionalinputdependency" paths=""/>
 							</inputType>
 							<outputType id="org.eclipse.cdt.managedbuilder.ui.rcbs.outputtype.113748801" name="Resource Custom Build Step Output Type"/>
+						</tool>
+					</fileInfo>
+					<fileInfo id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.1518097371.1707471076.573531147.1427825239" name="port.c" rcbsApplicability="disable" resourcePath="FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c" toolsToInvoke="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.1476540855.748921618">
+						<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.1476540855.748921618" name="Cross ARM C Compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.1476540855">
+							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths.1975561448" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths" valueType="includePath">
+								<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/Applications/uTaskerV1.4&quot;"/>
+								<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/FreeRTOS/Source/include&quot;"/>
+								<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/FreeRTOS/Source/portable/GCC/ARM_CM4F&quot;"/>
+							</option>
+							<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.1192584723" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input"/>
+						</tool>
+					</fileInfo>
+					<fileInfo id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.1518097371.1707471076.573531147.1533855835" name="event_groups.c" rcbsApplicability="disable" resourcePath="FreeRTOS/Source/event_groups.c" toolsToInvoke="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.1476540855.1723221177">
+						<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.1476540855.1723221177" name="Cross ARM C Compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.1476540855">
+							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths.1100102191" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths" valueType="includePath">
+								<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/Applications/uTaskerV1.4&quot;"/>
+								<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/FreeRTOS/Source/include&quot;"/>
+								<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/FreeRTOS/Source/portable/GCC/ARM_CM4F&quot;"/>
+							</option>
+							<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.444218401" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input"/>
+						</tool>
+						<tool customBuildStep="true" id="org.eclipse.cdt.managedbuilder.ui.rcbs.1402525090" name="Resource Custom Build Step">
+							<inputType id="org.eclipse.cdt.managedbuilder.ui.rcbs.inputtype.2110276536" name="Resource Custom Build Step Input Type">
+								<additionalInput kind="additionalinputdependency" paths=""/>
+							</inputType>
+							<outputType id="org.eclipse.cdt.managedbuilder.ui.rcbs.outputtype.1888130861" name="Resource Custom Build Step Output Type"/>
 						</tool>
 					</fileInfo>
 					<fileInfo id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.1518097371.1707471076.573531147.874921704" name="queue.c" rcbsApplicability="disable" resourcePath="FreeRTOS/Source/queue.c" toolsToInvoke="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.1476540855.1355229953">
@@ -450,7 +436,7 @@
 					</fileInfo>
 					<fileInfo id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.1518097371.1707471076.573531147.1598956680" name="timers.c" rcbsApplicability="disable" resourcePath="FreeRTOS/Source/timers.c" toolsToInvoke="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.1476540855.731011635">
 						<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.1476540855.731011635" name="Cross ARM C Compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.1476540855">
-							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths.1620444667" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths" valueType="includePath">
+							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths.1620444667" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths" valueType="includePath">
 								<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/Applications/uTaskerV1.4&quot;"/>
 								<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/FreeRTOS/Source/include&quot;"/>
 								<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/FreeRTOS/Source/portable/GCC/ARM_CM4F&quot;"/>
@@ -466,7 +452,7 @@
 					</fileInfo>
 					<fileInfo id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.1518097371.1707471076.573531147..settings/com.freescale.processorexpert.core.prefs" name="com.freescale.processorexpert.core.prefs" rcbsApplicability="disable" resourcePath=".settings/com.freescale.processorexpert.core.prefs" toolsToInvoke=""/>
 					<sourceEntries>
-						<entry excluding="stack/SSL/mbedtls-2.6|Applications/emBasic|NXP|FreeRTOS/Source/portable/RVDS|FreeRTOS/Source/portable/MSVC-MingW|FreeRTOS/Source/portable/MemMang|FreeRTOS/Source/portable/Keil|FreeRTOS/Source/portable/IAR|FreeRTOS/Source/portable/GCC/ARM_CM7|FreeRTOS/Source/portable/GCC/ARM_CM4_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3|FreeRTOS/Source/portable/GCC/ARM_CM0|FreeRTOS/Source/portable/Common|Applications/sam|Applications/PlatformManager|Applications/uTaskerBoot|Applications/uTaskerBoot/uVision_Kinetis|Applications/uTaskerBoot/Simulator|Applications/uTaskerBoot/Rowley_Kinetis|Applications/uTaskerBoot/KinetisCodeWarrior|Applications/uTaskerBoot/IAR6_Kinetis|Applications/uTaskerBoot/GNU_Kinetis|Applications/emBASIC|WinSim|Tools|stack/SNMP|Hardware/Kinetis/kinetisSim.c|Hardware/Kinetis/kinetis_ports.cpp|Hardware/Kinetis/kinetis_boot.c|Hardware/Kinetis/kinetis_asm.s|Hardware/Kinetis/GUI|Hardware/IIC_devices|Applications/uTaskerV1.4/WebPages|Applications/uTaskerV1.4/uVision_Kinetis|Applications/uTaskerV1.4/USB|Applications/uTaskerV1.4/Simulator|Applications/uTaskerV1.4/Rowley_Kinetis|Applications/uTaskerV1.4/KinetisCodeWarrior|Applications/uTaskerV1.4/KinetisAtollic|Applications/uTaskerV1.4/Images|Applications/uTaskerV1.4/IAR6_Kinetis|Applications/uTaskerV1.4/GNU_Kinetis|Applications/uTaskerSerialBoot|.settings/com.freescale.processorexpert.core.prefs" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="Applications/DIGILink|Applications/Citynox-loader|Applications/I2C_Slave|Applications/uTaskerSerialBoot Hoist 1V000|Applications/SunshineHoist|Hardware/STM32|stack/SSL/mbedtls-2.6|Applications/emBasic|NXP|FreeRTOS/Source/portable/RVDS|FreeRTOS/Source/portable/MSVC-MingW|FreeRTOS/Source/portable/MemMang|FreeRTOS/Source/portable/Keil|FreeRTOS/Source/portable/IAR|FreeRTOS/Source/portable/GCC/ARM_CM7|FreeRTOS/Source/portable/GCC/ARM_CM4_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3|FreeRTOS/Source/portable/GCC/ARM_CM0|FreeRTOS/Source/portable/Common|Applications/sam|Applications/PlatformManager|Applications/uTaskerBoot|Applications/uTaskerBoot/uVision_Kinetis|Applications/uTaskerBoot/Simulator|Applications/uTaskerBoot/Rowley_Kinetis|Applications/uTaskerBoot/KinetisCodeWarrior|Applications/uTaskerBoot/IAR6_Kinetis|Applications/uTaskerBoot/GNU_Kinetis|Applications/emBASIC|WinSim|Tools|stack/SNMP|Hardware/Kinetis/kinetisSim.c|Hardware/Kinetis/kinetis_ports.cpp|Hardware/Kinetis/kinetis_boot.c|Hardware/Kinetis/kinetis_asm.s|Hardware/Kinetis/GUI|Hardware/IIC_devices|Applications/uTaskerV1.4/WebPages|Applications/uTaskerV1.4/uVision_Kinetis|Applications/uTaskerV1.4/USB|Applications/uTaskerV1.4/Simulator|Applications/uTaskerV1.4/Rowley_Kinetis|Applications/uTaskerV1.4/KinetisCodeWarrior|Applications/uTaskerV1.4/KinetisAtollic|Applications/uTaskerV1.4/Images|Applications/uTaskerV1.4/IAR6_Kinetis|Applications/uTaskerV1.4/GNU_Kinetis|Applications/uTaskerSerialBoot|.settings/com.freescale.processorexpert.core.prefs" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -568,7 +554,7 @@
 					</folderInfo>
 					<fileInfo id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.1518097371.1707471076.801628766..settings/com.freescale.processorexpert.core.prefs" name="com.freescale.processorexpert.core.prefs" rcbsApplicability="disable" resourcePath=".settings/com.freescale.processorexpert.core.prefs" toolsToInvoke=""/>
 					<sourceEntries>
-						<entry excluding="stack/SSL/mbedtls-2.6|Applications/emBasic|NXP|FreeRTOS/Source/portable/RVDS|FreeRTOS/Source/portable/MSVC-MingW|FreeRTOS/Source/portable/MemMang|FreeRTOS/Source/portable/Keil|FreeRTOS/Source/portable/IAR|FreeRTOS/Source/portable/GCC/ARM_CM7|FreeRTOS/Source/portable/GCC/ARM_CM4_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3|FreeRTOS/Source/portable/GCC/ARM_CM0|FreeRTOS/Source/portable/Common|Applications/sam|Applications/PlatformManager|Applications/emBASIC|WinSim|Tools|stack/SNMP|Hardware/Kinetis/kinetisSim.c|Hardware/Kinetis/kinetis_ports.cpp|Hardware/Kinetis/kinetis_boot.c|Hardware/Kinetis/kinetis_asm.s|Hardware/Kinetis/GUI|Hardware/IIC_devices|Applications/uTaskerV1.4/WebPages|Applications/uTaskerV1.4/uVision_Kinetis|Applications/uTaskerV1.4/USB|Applications/uTaskerV1.4/Simulator|Applications/uTaskerV1.4/Rowley_Kinetis|Applications/uTaskerV1.4/KinetisCodeWarrior|Applications/uTaskerV1.4/KinetisAtollic|Applications/uTaskerV1.4/Images|Applications/uTaskerV1.4/IAR6_Kinetis|Applications/uTaskerV1.4/GNU_Kinetis|Applications/uTaskerSerialBoot|Applications/uTaskerBoot|.settings/com.freescale.processorexpert.core.prefs" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="Applications/DIGILink|Applications/Citynox-loader|Applications/I2C_Slave|Applications/uTaskerSerialBoot Hoist 1V000|Applications/SunshineHoist|Hardware/STM32|stack/SSL/mbedtls-2.6|Applications/emBasic|NXP|FreeRTOS/Source/portable/RVDS|FreeRTOS/Source/portable/MSVC-MingW|FreeRTOS/Source/portable/MemMang|FreeRTOS/Source/portable/Keil|FreeRTOS/Source/portable/IAR|FreeRTOS/Source/portable/GCC/ARM_CM7|FreeRTOS/Source/portable/GCC/ARM_CM4_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3|FreeRTOS/Source/portable/GCC/ARM_CM0|FreeRTOS/Source/portable/Common|Applications/sam|Applications/PlatformManager|Applications/emBASIC|WinSim|Tools|stack/SNMP|Hardware/Kinetis/kinetisSim.c|Hardware/Kinetis/kinetis_ports.cpp|Hardware/Kinetis/kinetis_boot.c|Hardware/Kinetis/kinetis_asm.s|Hardware/Kinetis/GUI|Hardware/IIC_devices|Applications/uTaskerV1.4/WebPages|Applications/uTaskerV1.4/uVision_Kinetis|Applications/uTaskerV1.4/USB|Applications/uTaskerV1.4/Simulator|Applications/uTaskerV1.4/Rowley_Kinetis|Applications/uTaskerV1.4/KinetisCodeWarrior|Applications/uTaskerV1.4/KinetisAtollic|Applications/uTaskerV1.4/Images|Applications/uTaskerV1.4/IAR6_Kinetis|Applications/uTaskerV1.4/GNU_Kinetis|Applications/uTaskerSerialBoot|Applications/uTaskerBoot|.settings/com.freescale.processorexpert.core.prefs" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -670,7 +656,7 @@
 					</folderInfo>
 					<fileInfo id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.1518097371.1707471076.596524842..settings/com.freescale.processorexpert.core.prefs" name="com.freescale.processorexpert.core.prefs" rcbsApplicability="disable" resourcePath=".settings/com.freescale.processorexpert.core.prefs" toolsToInvoke=""/>
 					<sourceEntries>
-						<entry excluding="Applications/emBasic|NXP|Hardware/Kinetis/Crypto|FreeRTOS|FreeRTOS/Source/portable/RVDS|FreeRTOS/Source/portable/MSVC-MingW|FreeRTOS/Source/portable/MemMang|FreeRTOS/Source/portable/Keil|FreeRTOS/Source/portable/IAR|FreeRTOS/Source/portable/GCC/ARM_CM7|FreeRTOS/Source/portable/GCC/ARM_CM4_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3|FreeRTOS/Source/portable/GCC/ARM_CM0|FreeRTOS/Source/portable/Common|Hardware/Kinetis/CMSIS_DSP|Hardware/Kinetis/Crypto/mmcau_aes_functions.s|Applications/sam|Applications/PlatformManager|Applications/uTaskerBoot/uVision_Kinetis|Applications/uTaskerBoot/uTaskerBM_loader|Applications/uTaskerBoot/Simulator|Applications/uTaskerBoot/Rowley_Kinetis|Applications/uTaskerBoot/KinetisCodeWarrior|Applications/uTaskerBoot/IAR6_Kinetis|Applications/uTaskerBoot/GNU_Kinetis|stack|uTasker|Hardware/Kinetis/kinetis.c|Applications/uTaskerV1.4|Applications/emBASIC|WinSim|Tools|stack/SNMP|Hardware/Kinetis/kinetisSim.c|Hardware/Kinetis/kinetis_ports.cpp|Hardware/Kinetis/kinetis_asm.s|Hardware/Kinetis/GUI|Hardware/IIC_devices|Applications/uTaskerV1.4/WebPages|Applications/uTaskerV1.4/uVision_Kinetis|Applications/uTaskerV1.4/USB|Applications/uTaskerV1.4/Simulator|Applications/uTaskerV1.4/Rowley_Kinetis|Applications/uTaskerV1.4/KinetisCodeWarrior|Applications/uTaskerV1.4/KinetisAtollic|Applications/uTaskerV1.4/Images|Applications/uTaskerV1.4/IAR6_Kinetis|Applications/uTaskerV1.4/GNU_Kinetis|Applications/uTaskerSerialBoot|.settings/com.freescale.processorexpert.core.prefs" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="Applications/DIGILink|Applications/Citynox-loader|Applications/I2C_Slave|Applications/uTaskerSerialBoot Hoist 1V000|Applications/SunshineHoist|Hardware/STM32|Applications/emBasic|NXP|Hardware/Kinetis/Crypto|FreeRTOS|FreeRTOS/Source/portable/RVDS|FreeRTOS/Source/portable/MSVC-MingW|FreeRTOS/Source/portable/MemMang|FreeRTOS/Source/portable/Keil|FreeRTOS/Source/portable/IAR|FreeRTOS/Source/portable/GCC/ARM_CM7|FreeRTOS/Source/portable/GCC/ARM_CM4_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3|FreeRTOS/Source/portable/GCC/ARM_CM0|FreeRTOS/Source/portable/Common|Hardware/Kinetis/CMSIS_DSP|Hardware/Kinetis/Crypto/mmcau_aes_functions.s|Applications/sam|Applications/PlatformManager|Applications/uTaskerBoot/uVision_Kinetis|Applications/uTaskerBoot/uTaskerBM_loader|Applications/uTaskerBoot/Simulator|Applications/uTaskerBoot/Rowley_Kinetis|Applications/uTaskerBoot/KinetisCodeWarrior|Applications/uTaskerBoot/IAR6_Kinetis|Applications/uTaskerBoot/GNU_Kinetis|stack|uTasker|Hardware/Kinetis/kinetis.c|Applications/uTaskerV1.4|Applications/emBASIC|WinSim|Tools|stack/SNMP|Hardware/Kinetis/kinetisSim.c|Hardware/Kinetis/kinetis_ports.cpp|Hardware/Kinetis/kinetis_asm.s|Hardware/Kinetis/GUI|Hardware/IIC_devices|Applications/uTaskerV1.4/WebPages|Applications/uTaskerV1.4/uVision_Kinetis|Applications/uTaskerV1.4/USB|Applications/uTaskerV1.4/Simulator|Applications/uTaskerV1.4/Rowley_Kinetis|Applications/uTaskerV1.4/KinetisCodeWarrior|Applications/uTaskerV1.4/KinetisAtollic|Applications/uTaskerV1.4/Images|Applications/uTaskerV1.4/IAR6_Kinetis|Applications/uTaskerV1.4/GNU_Kinetis|Applications/uTaskerSerialBoot|.settings/com.freescale.processorexpert.core.prefs" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -777,7 +763,7 @@
 					</folderInfo>
 					<fileInfo id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.1518097371.1707471076.737691589.420265764..settings/com.freescale.processorexpert.core.prefs" name="com.freescale.processorexpert.core.prefs" rcbsApplicability="disable" resourcePath=".settings/com.freescale.processorexpert.core.prefs" toolsToInvoke=""/>
 					<sourceEntries>
-						<entry excluding="Applications/emBasic|Hardware/Kinetis/Crypto|uTasker/uGLCDLIB|uTasker/MODBUS|FreeRTOS|FreeRTOS/Source/portable/RVDS|FreeRTOS/Source/portable/MSVC-MingW|FreeRTOS/Source/portable/MemMang|FreeRTOS/Source/portable/Keil|FreeRTOS/Source/portable/IAR|FreeRTOS/Source/portable/GCC/ARM_CM7|FreeRTOS/Source/portable/GCC/ARM_CM4_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3|FreeRTOS/Source/portable/GCC/ARM_CM0|FreeRTOS/Source/portable/Common|Hardware/Kinetis/CMSIS_DSP|Hardware/Kinetis/Crypto/mmcau_aes_functions.s|Applications/sam|Applications/PlatformManager|stack/SSL|Applications/uTaskerSerialBoot/uVision_Kinetis|Applications/uTaskerSerialBoot/Simulator|Applications/uTaskerSerialBoot/Rowley_Kinetis|Applications/uTaskerSerialBoot/KinetisCodeWarrior|Applications/uTaskerSerialBoot/IAR6_Kinetis|Applications/uTaskerSerialBoot/GNU_Kinetis|Applications/uTaskerBoot|Applications/uTaskerBoot/uVision_Kinetis|Applications/uTaskerBoot/Simulator|Applications/uTaskerBoot/Rowley_Kinetis|Applications/uTaskerBoot/KinetisCodeWarrior|Applications/uTaskerBoot/IAR6_Kinetis|Applications/uTaskerBoot/GNU_Kinetis|Applications/uTaskerV1.4|Applications/emBASIC|WinSim|Tools|stack/SNMP|Hardware/Kinetis/kinetisSim.c|Hardware/Kinetis/kinetis_ports.cpp|Hardware/Kinetis/kinetis_boot.c|Hardware/Kinetis/kinetis_asm.s|Hardware/Kinetis/GUI|Hardware/IIC_devices|Applications/uTaskerV1.4/WebPages|Applications/uTaskerV1.4/uVision_Kinetis|Applications/uTaskerV1.4/USB|Applications/uTaskerV1.4/Simulator|Applications/uTaskerV1.4/Rowley_Kinetis|Applications/uTaskerV1.4/KinetisCodeWarrior|Applications/uTaskerV1.4/KinetisAtollic|Applications/uTaskerV1.4/Images|Applications/uTaskerV1.4/IAR6_Kinetis|Applications/uTaskerV1.4/GNU_Kinetis|.settings/com.freescale.processorexpert.core.prefs" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="Applications/DIGILink|Applications/Citynox-loader|Applications/I2C_Slave|Applications/uTaskerSerialBoot Hoist 1V000|Applications/SunshineHoist|Hardware/STM32|Applications/emBasic|Hardware/Kinetis/Crypto|uTasker/uGLCDLIB|uTasker/MODBUS|FreeRTOS|FreeRTOS/Source/portable/RVDS|FreeRTOS/Source/portable/MSVC-MingW|FreeRTOS/Source/portable/MemMang|FreeRTOS/Source/portable/Keil|FreeRTOS/Source/portable/IAR|FreeRTOS/Source/portable/GCC/ARM_CM7|FreeRTOS/Source/portable/GCC/ARM_CM4_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3|FreeRTOS/Source/portable/GCC/ARM_CM0|FreeRTOS/Source/portable/Common|Hardware/Kinetis/CMSIS_DSP|Hardware/Kinetis/Crypto/mmcau_aes_functions.s|Applications/sam|Applications/PlatformManager|stack/SSL|Applications/uTaskerSerialBoot/uVision_Kinetis|Applications/uTaskerSerialBoot/Simulator|Applications/uTaskerSerialBoot/Rowley_Kinetis|Applications/uTaskerSerialBoot/KinetisCodeWarrior|Applications/uTaskerSerialBoot/IAR6_Kinetis|Applications/uTaskerSerialBoot/GNU_Kinetis|Applications/uTaskerBoot|Applications/uTaskerBoot/uVision_Kinetis|Applications/uTaskerBoot/Simulator|Applications/uTaskerBoot/Rowley_Kinetis|Applications/uTaskerBoot/KinetisCodeWarrior|Applications/uTaskerBoot/IAR6_Kinetis|Applications/uTaskerBoot/GNU_Kinetis|Applications/uTaskerV1.4|Applications/emBASIC|WinSim|Tools|stack/SNMP|Hardware/Kinetis/kinetisSim.c|Hardware/Kinetis/kinetis_ports.cpp|Hardware/Kinetis/kinetis_boot.c|Hardware/Kinetis/kinetis_asm.s|Hardware/Kinetis/GUI|Hardware/IIC_devices|Applications/uTaskerV1.4/WebPages|Applications/uTaskerV1.4/uVision_Kinetis|Applications/uTaskerV1.4/USB|Applications/uTaskerV1.4/Simulator|Applications/uTaskerV1.4/Rowley_Kinetis|Applications/uTaskerV1.4/KinetisCodeWarrior|Applications/uTaskerV1.4/KinetisAtollic|Applications/uTaskerV1.4/Images|Applications/uTaskerV1.4/IAR6_Kinetis|Applications/uTaskerV1.4/GNU_Kinetis|.settings/com.freescale.processorexpert.core.prefs" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -791,8 +777,8 @@
 				</macros>
 				<externalSettings/>
 				<extensions>
-					<extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
 					<extension id="org.eclipse.cdt.managedbuilder.core.ManagedBuildManager" point="org.eclipse.cdt.core.ScannerInfoProvider"/>
+					<extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
 					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
 					<extension id="org.eclipse.cdt.core.CWDLocator" point="org.eclipse.cdt.core.ErrorParser"/>
 					<extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
@@ -1006,20 +992,6 @@
 							<outputType id="org.eclipse.cdt.managedbuilder.ui.rcbs.outputtype.1802148112.858228273" name="Resource Custom Build Step Output Type"/>
 						</tool>
 					</fileInfo>
-					<fileInfo id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.1518097371.1707471076.1343850062.Hardware/Kinetis/CMSIS_DSP/arm_bitreversal2.S" name="arm_bitreversal2.S" rcbsApplicability="disable" resourcePath="Hardware/Kinetis/CMSIS_DSP/arm_bitreversal2.S" toolsToInvoke="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.1049941629">
-						<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.1049941629" name="Cross ARM GNU Assembler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.687213577">
-							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.defs.1654296047" name="Defined symbols (-D)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.defs" valueType="definedSymbols">
-								<listOptionValue builtIn="false" value="ARM_MATH_CM0PLUS"/>
-							</option>
-							<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.input.1432655385" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.input"/>
-						</tool>
-						<tool customBuildStep="true" id="org.eclipse.cdt.managedbuilder.ui.rcbs.567144068.914892444" name="Resource Custom Build Step">
-							<inputType id="org.eclipse.cdt.managedbuilder.ui.rcbs.inputtype.1780055260.1061113181" name="Resource Custom Build Step Input Type">
-								<additionalInput kind="additionalinputdependency" paths=""/>
-							</inputType>
-							<outputType id="org.eclipse.cdt.managedbuilder.ui.rcbs.outputtype.1495880746.38435620" name="Resource Custom Build Step Output Type"/>
-						</tool>
-					</fileInfo>
 					<fileInfo id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.1518097371.1707471076.1343850062.Applications/uTaskerV1.4/FreeRTOSapplication.c" name="FreeRTOSapplication.c" rcbsApplicability="disable" resourcePath="Applications/uTaskerV1.4/FreeRTOSapplication.c" toolsToInvoke="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.628234470">
 						<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.628234470" name="Cross ARM C Compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.473342888">
 							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths.1195209653" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths" valueType="includePath">
@@ -1038,7 +1010,7 @@
 					</fileInfo>
 					<fileInfo id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.1518097371.1707471076.1343850062..settings/com.freescale.processorexpert.core.prefs" name="com.freescale.processorexpert.core.prefs" rcbsApplicability="disable" resourcePath=".settings/com.freescale.processorexpert.core.prefs" toolsToInvoke=""/>
 					<sourceEntries>
-						<entry excluding="Applications/emBasic|NXP|FreeRTOS/Source/portable/RVDS|FreeRTOS/Source/portable/MSVC-MingW|FreeRTOS/Source/portable/MemMang|FreeRTOS/Source/portable/Keil|FreeRTOS/Source/portable/IAR|FreeRTOS/Source/portable/GCC/ARM_CM7|FreeRTOS/Source/portable/GCC/ARM_CM4_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3|FreeRTOS/Source/portable/GCC/ARM_CM0|FreeRTOS/Source/portable/Common|Applications/sam|Applications/PlatformManager|Applications/emBASIC|WinSim|Tools|stack/SNMP|Hardware/Kinetis/kinetisSim.c|Hardware/Kinetis/kinetis_ports.cpp|Hardware/Kinetis/kinetis_boot.c|Hardware/Kinetis/kinetis_asm.s|Hardware/Kinetis/GUI|Hardware/IIC_devices|Applications/uTaskerV1.4/WebPages|Applications/uTaskerV1.4/uVision_Kinetis|Applications/uTaskerV1.4/USB|Applications/uTaskerV1.4/Simulator|Applications/uTaskerV1.4/Rowley_Kinetis|Applications/uTaskerV1.4/KinetisCodeWarrior|Applications/uTaskerV1.4/KinetisAtollic|Applications/uTaskerV1.4/Images|Applications/uTaskerV1.4/IAR6_Kinetis|Applications/uTaskerV1.4/GNU_Kinetis|Applications/uTaskerSerialBoot|Applications/uTaskerBoot|.settings/com.freescale.processorexpert.core.prefs" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="Applications/DIGILink|Applications/Citynox-loader|Applications/I2C_Slave|Applications/uTaskerSerialBoot Hoist 1V000|Applications/SunshineHoist|Hardware/STM32|Applications/emBasic|NXP|FreeRTOS/Source/portable/RVDS|FreeRTOS/Source/portable/MSVC-MingW|FreeRTOS/Source/portable/MemMang|FreeRTOS/Source/portable/Keil|FreeRTOS/Source/portable/IAR|FreeRTOS/Source/portable/GCC/ARM_CM7|FreeRTOS/Source/portable/GCC/ARM_CM4_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3|FreeRTOS/Source/portable/GCC/ARM_CM0|FreeRTOS/Source/portable/Common|Applications/sam|Applications/PlatformManager|Applications/emBASIC|WinSim|Tools|stack/SNMP|Hardware/Kinetis/kinetisSim.c|Hardware/Kinetis/kinetis_ports.cpp|Hardware/Kinetis/kinetis_boot.c|Hardware/Kinetis/kinetis_asm.s|Hardware/Kinetis/GUI|Hardware/IIC_devices|Applications/uTaskerV1.4/WebPages|Applications/uTaskerV1.4/uVision_Kinetis|Applications/uTaskerV1.4/USB|Applications/uTaskerV1.4/Simulator|Applications/uTaskerV1.4/Rowley_Kinetis|Applications/uTaskerV1.4/KinetisCodeWarrior|Applications/uTaskerV1.4/KinetisAtollic|Applications/uTaskerV1.4/Images|Applications/uTaskerV1.4/IAR6_Kinetis|Applications/uTaskerV1.4/GNU_Kinetis|Applications/uTaskerSerialBoot|Applications/uTaskerBoot|.settings/com.freescale.processorexpert.core.prefs" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -1051,8 +1023,8 @@
 				</macros>
 				<externalSettings/>
 				<extensions>
-					<extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
 					<extension id="org.eclipse.cdt.managedbuilder.core.ManagedBuildManager" point="org.eclipse.cdt.core.ScannerInfoProvider"/>
+					<extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
 					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
 					<extension id="org.eclipse.cdt.core.CWDLocator" point="org.eclipse.cdt.core.ErrorParser"/>
 					<extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
@@ -1161,14 +1133,14 @@
 							<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.1542605550" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input"/>
 						</tool>
 					</fileInfo>
-					<fileInfo id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.1518097371.1707471076.573531147.41730219.56151315" name="event_groups.c" rcbsApplicability="disable" resourcePath="FreeRTOS/Source/event_groups.c" toolsToInvoke="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.910324323.1214732252">
-						<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.910324323.1214732252" name="Cross ARM C Compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.910324323">
-							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths.1334048433" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths" valueType="includePath">
+					<fileInfo id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.1518097371.1707471076.573531147.41730219.606007891" name="tasks.c" rcbsApplicability="disable" resourcePath="FreeRTOS/Source/tasks.c" toolsToInvoke="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.910324323.1252813321">
+						<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.910324323.1252813321" name="Cross ARM C Compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.910324323">
+							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths.1040602507" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths" valueType="includePath">
 								<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/Applications/uTaskerV1.4&quot;"/>
 								<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/FreeRTOS/Source/include&quot;"/>
 								<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/FreeRTOS/Source/portable/GCC/ARM_CM4F&quot;"/>
 							</option>
-							<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.1003637903" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input"/>
+							<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.773316171" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input"/>
 						</tool>
 					</fileInfo>
 					<fileInfo id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.1518097371.1707471076.573531147.41730219.216665728" name="port.c" rcbsApplicability="disable" resourcePath="FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c" toolsToInvoke="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.910324323.2065804488">
@@ -1187,14 +1159,14 @@
 							<outputType id="org.eclipse.cdt.managedbuilder.ui.rcbs.outputtype.1159820379" name="Resource Custom Build Step Output Type"/>
 						</tool>
 					</fileInfo>
-					<fileInfo id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.1518097371.1707471076.573531147.41730219.606007891" name="tasks.c" rcbsApplicability="disable" resourcePath="FreeRTOS/Source/tasks.c" toolsToInvoke="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.910324323.1252813321">
-						<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.910324323.1252813321" name="Cross ARM C Compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.910324323">
-							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths.1040602507" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths" valueType="includePath">
+					<fileInfo id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.1518097371.1707471076.573531147.41730219.56151315" name="event_groups.c" rcbsApplicability="disable" resourcePath="FreeRTOS/Source/event_groups.c" toolsToInvoke="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.910324323.1214732252">
+						<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.910324323.1214732252" name="Cross ARM C Compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.910324323">
+							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths.1334048433" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths" valueType="includePath">
 								<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/Applications/uTaskerV1.4&quot;"/>
 								<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/FreeRTOS/Source/include&quot;"/>
 								<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/FreeRTOS/Source/portable/GCC/ARM_CM4F&quot;"/>
 							</option>
-							<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.773316171" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input"/>
+							<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.1003637903" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input"/>
 						</tool>
 					</fileInfo>
 					<fileInfo id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.1518097371.1707471076.573531147.41730219.1584694725" name="queue.c" rcbsApplicability="disable" resourcePath="FreeRTOS/Source/queue.c" toolsToInvoke="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.910324323.1370525569">
@@ -1209,7 +1181,7 @@
 					</fileInfo>
 					<fileInfo id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.1518097371.1707471076.573531147.41730219.1509296213" name="timers.c" rcbsApplicability="disable" resourcePath="FreeRTOS/Source/timers.c" toolsToInvoke="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.910324323.1884715179">
 						<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.910324323.1884715179" name="Cross ARM C Compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.910324323">
-							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths.1022934295" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths" valueType="includePath">
+							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths.1022934295" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths" valueType="includePath">
 								<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/Applications/uTaskerV1.4&quot;"/>
 								<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/FreeRTOS/Source/include&quot;"/>
 								<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/FreeRTOS/Source/portable/GCC/ARM_CM4F&quot;"/>
@@ -1219,7 +1191,7 @@
 					</fileInfo>
 					<fileInfo id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.1518097371.1707471076.573531147.41730219..settings/com.freescale.processorexpert.core.prefs" name="com.freescale.processorexpert.core.prefs" rcbsApplicability="disable" resourcePath=".settings/com.freescale.processorexpert.core.prefs" toolsToInvoke=""/>
 					<sourceEntries>
-						<entry excluding="Applications/emBasic|NXP|FreeRTOS/Source/portable/RVDS|FreeRTOS/Source/portable/MSVC-MingW|FreeRTOS/Source/portable/MemMang|FreeRTOS/Source/portable/Keil|FreeRTOS/Source/portable/IAR|FreeRTOS/Source/portable/GCC/ARM_CM7|FreeRTOS/Source/portable/GCC/ARM_CM4_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3|FreeRTOS/Source/portable/GCC/ARM_CM0|FreeRTOS/Source/portable/Common|Applications/sam|Applications/PlatformManager|Applications/uTaskerBoot|Applications/uTaskerBoot/uVision_Kinetis|Applications/uTaskerBoot/Simulator|Applications/uTaskerBoot/Rowley_Kinetis|Applications/uTaskerBoot/KinetisCodeWarrior|Applications/uTaskerBoot/IAR6_Kinetis|Applications/uTaskerBoot/GNU_Kinetis|Applications/emBASIC|WinSim|Tools|stack/SNMP|Hardware/Kinetis/kinetisSim.c|Hardware/Kinetis/kinetis_ports.cpp|Hardware/Kinetis/kinetis_boot.c|Hardware/Kinetis/kinetis_asm.s|Hardware/Kinetis/GUI|Hardware/IIC_devices|Applications/uTaskerV1.4/WebPages|Applications/uTaskerV1.4/uVision_Kinetis|Applications/uTaskerV1.4/USB|Applications/uTaskerV1.4/Simulator|Applications/uTaskerV1.4/Rowley_Kinetis|Applications/uTaskerV1.4/KinetisCodeWarrior|Applications/uTaskerV1.4/KinetisAtollic|Applications/uTaskerV1.4/Images|Applications/uTaskerV1.4/IAR6_Kinetis|Applications/uTaskerV1.4/GNU_Kinetis|Applications/uTaskerSerialBoot|.settings/com.freescale.processorexpert.core.prefs" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="Applications/DIGILink|Applications/Citynox-loader|Applications/I2C_Slave|Applications/uTaskerSerialBoot Hoist 1V000|Applications/SunshineHoist|Hardware/STM32|Applications/emBasic|NXP|FreeRTOS/Source/portable/RVDS|FreeRTOS/Source/portable/MSVC-MingW|FreeRTOS/Source/portable/MemMang|FreeRTOS/Source/portable/Keil|FreeRTOS/Source/portable/IAR|FreeRTOS/Source/portable/GCC/ARM_CM7|FreeRTOS/Source/portable/GCC/ARM_CM4_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3_MPU|FreeRTOS/Source/portable/GCC/ARM_CM3|FreeRTOS/Source/portable/GCC/ARM_CM0|FreeRTOS/Source/portable/Common|Applications/sam|Applications/PlatformManager|Applications/uTaskerBoot|Applications/uTaskerBoot/uVision_Kinetis|Applications/uTaskerBoot/Simulator|Applications/uTaskerBoot/Rowley_Kinetis|Applications/uTaskerBoot/KinetisCodeWarrior|Applications/uTaskerBoot/IAR6_Kinetis|Applications/uTaskerBoot/GNU_Kinetis|Applications/emBASIC|WinSim|Tools|stack/SNMP|Hardware/Kinetis/kinetisSim.c|Hardware/Kinetis/kinetis_ports.cpp|Hardware/Kinetis/kinetis_boot.c|Hardware/Kinetis/kinetis_asm.s|Hardware/Kinetis/GUI|Hardware/IIC_devices|Applications/uTaskerV1.4/WebPages|Applications/uTaskerV1.4/uVision_Kinetis|Applications/uTaskerV1.4/USB|Applications/uTaskerV1.4/Simulator|Applications/uTaskerV1.4/Rowley_Kinetis|Applications/uTaskerV1.4/KinetisCodeWarrior|Applications/uTaskerV1.4/KinetisAtollic|Applications/uTaskerV1.4/Images|Applications/uTaskerV1.4/IAR6_Kinetis|Applications/uTaskerV1.4/GNU_Kinetis|Applications/uTaskerSerialBoot|.settings/com.freescale.processorexpert.core.prefs" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

@@ -829,7 +829,8 @@ static int fnHandleData(unsigned char *ptrData, unsigned short usDataLength)
                     return (fnSendPublishReceived());                    // respond with public received, after which a public release si expected, which will be terminated with public complete
                 }
             }
-            break;
+            // No break because this line is unreachable (and would fall-though to the same)
+            //
         default:
             break;
         }

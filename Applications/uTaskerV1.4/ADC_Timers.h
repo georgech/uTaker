@@ -86,9 +86,9 @@
                 #define TIMED_UART  1                                    // the UART to use
         #endif
     #endif
-    #if defined SUPPORT_LPTMR                                            // Kinetis low power timer {18}
+    #if defined SUPPORT_LPTMR && (LPTMR_AVAILABLE > 0)                   // Kinetis low power timer {18}
       //#define TEST_LPTMR_PERIODIC                                      // test a user defined periodic interrupt
-      //#define TEST_LPTMR_SINGLE_SHOT                                   // test a user defined single-shot interrupt
+        #define TEST_LPTMR_SINGLE_SHOT                                   // test a user defined single-shot interrupt
     #endif
     #if defined SUPPORT_DMA_TIMER                                        // M522XX DMA timers
       //#define TEST_DMA_TIMER      ulCnt                                // test a user defined periodic interrupt
@@ -101,11 +101,11 @@
       //#define TEST_TIMER                                               // enable timer test(s)
         #if defined TEST_TIMER
             #if defined SUPPORT_PWM_MODULE                               // {9}
-                #define TEST_PWM                                         // {1} test generating PWM output from timer
+              //#define TEST_PWM                                         // {1} test generating PWM output from timer
               //#define TEST_STEPPER                                     // test generating stepper motor frequency patterns (use together with PWM)
             #endif
             #if defined SUPPORT_TIMER
-              //#define TEST_SINGLE_SHOT_TIMER                           // test single-shot mode
+                #define TEST_SINGLE_SHOT_TIMER                           // test single-shot mode
               //#define TEST_PERIODIC_TIMER                              // test periodic interrupt mode
               //#define TEST_ADC_TIMER                                   // test periodic ADC trigger mode (Luminary)
               //#define TEST_CAPTURE                                     // {6} test timer capture mode

@@ -509,7 +509,8 @@ LWIP PPP temporarily added as experimental PPP layer.
 - 1.9.2017 Added FreeRTOS UART demonstration (using uTasker UART drivers)
 
 
-
+Consult the GIT log for a complete list of checked-in changes after this date
+=============================================================================
 
 
 

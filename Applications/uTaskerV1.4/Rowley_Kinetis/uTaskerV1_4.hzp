@@ -6,7 +6,7 @@
       Placement="Flash"
       Target="MKL02Z16xxx4"
       arm_architecture="v6M"
-      arm_core_type="Cortex-M0"
+      arm_core_type="Cortex-M0+"
       arm_fpu_type="None"
       arm_gcc_target="arm-unknown-eabi"
       arm_linker_heap_size="128"

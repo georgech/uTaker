@@ -5959,8 +5959,8 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define MAPPED_DEMO_LED_3      (DEMO_LED_3 >> SHIFT_DEMO_LED_3)
     #define MAPPED_DEMO_LED_4      (DEMO_LED_4 >> SHIFT_DEMO_LED_4)
 
-    #define MEASURE_LOW_POWER_ON()    _CLEARBITS(A, DEMO_LED_2)          // signal when the processor is in sleep mode
-    #define MEASURE_LOW_POWER_OFF()   _SETBITS(A, DEMO_LED_2)            // signal when the processor is in active mode
+    #define MEASURE_LOW_POWER_ON()    //_CLEARBITS(A, DEMO_LED_2)        // signal when the processor is in sleep mode
+    #define MEASURE_LOW_POWER_OFF()   //_SETBITS(A, DEMO_LED_2)          // signal when the processor is in active mode
 
     #if defined TRK_KEA8
             // '0'          '1'           input state  rectangle      controlling port, controlling pin (4 LEDs then connector ports)
@@ -6160,7 +6160,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define KEYPAD "KeyPads/TRK-KEA.bmp"
 
     #define CONFIG_TEST_OUTPUT()
-    #define TOGGLE_TEST_OUTPUT()
+    #define TOGGLE_TEST_OUTPUT()  _TOGGLE_PORT(A, DEMO_LED_2)
     #define SET_TEST_OUTPUT()
     #define CLEAR_TEST_OUTPUT()
 #elif defined FRDM_KEAZ128Q80 || defined FRDM_KEAZ64Q64 || defined FRDM_KEAZN32Q64
@@ -6223,7 +6223,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define KEYPAD "KeyPads/FRDM-KEA128.bmp"
 
     #define CONFIG_TEST_OUTPUT()
-    #define TOGGLE_TEST_OUTPUT()
+    #define TOGGLE_TEST_OUTPUT()    _TOGGLE_PORT(B, DEMO_LED_2)
     #define SET_TEST_OUTPUT()
     #define CLEAR_TEST_OUTPUT()
 

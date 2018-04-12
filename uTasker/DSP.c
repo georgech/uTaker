@@ -18,7 +18,7 @@
 
 #include "config.h"
 #if defined CMSIS_DSP_CFFT
-    #include "../../Hardware/Kinetis/CMSIS_DSP/arm_const_structs.h"      // include defines required for the use of ARM CMSIS FFT
+    #include "../../Hardware/CMSIS_DSP/arm_const_structs.h"              // include defines required for the use of ARM CMSIS FFT
 
 extern float fnGenerateWindowFloat(float *ptrWindowBuffer, int iInputSamples, int iWindowType)
 {
@@ -200,7 +200,7 @@ extern int fnFFT(void *ptrInputBuffer, void *ptrOutputBuffer, int iInputSamples,
 
 #if defined _WINDOWS
 #if !defined CMSIS_DSP_CFFT
-    #include "../../Hardware/Kinetis/CMSIS_DSP/arm_const_structs.h"      // include defines required for the use of ARM CMSIS FFT
+    #include "../../Hardware/CMSIS_DSP/arm_const_structs.h"              // include defines required for the use of ARM CMSIS FFT
 #endif
 #if !defined SINE_INSTANCES
     #define SINE_INSTANCES 1

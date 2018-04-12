@@ -21,7 +21,7 @@
 					<folderInfo id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.debug.1993034600.611177042." name="/" resourcePath="">
 						<toolChain errorParsers="" id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.toolchain.debug.612373245" name="ARM Ltd Windows GCC (G++ Lite)" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.toolchain.debug">
 							<option id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.option.debugging.level.1925460888" name="Debug level" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.option.debugging.level" value="org.eclipse.cdt.cross.arm.gnu.base.option.debugging.level.max" valueType="enumerated"/>
-							<option id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.option.target.fpu.abi.80445917" name="Float ABI" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.option.target.fpu.abi" value="org.eclipse.cdt.cross.arm.gnu.base.option.target.fpu.abi.soft" valueType="enumerated"/>
+							<option id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.option.target.fpu.abi.80445917" name="Float ABI" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.option.target.fpu.abi" value="org.eclipse.cdt.cross.arm.gnu.base.option.target.fpu.abi.default" valueType="enumerated"/>
 							<option id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.option.target.fpu.unit.160577402" name="FPU Type" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.option.target.fpu.unit" value="org.eclipse.cdt.cross.arm.gnu.base.option.target.fpu.unit.default" valueType="enumerated"/>
 							<option id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.toolchain.sharedoption.librarian.752000616" name="Enable automatic library configurations" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.toolchain.sharedoption.librarian" value="true" valueType="boolean"/>
 							<option id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.toolchain.sharedoption.model.867502617" name="Model" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.toolchain.sharedoption.model" value="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.toolchain.sharedoption.model.ewl_c_noio" valueType="enumerated"/>
@@ -152,7 +152,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="Applications/I2C_Slave|Applications/emBasic|Applications/DIGILink|stack/SSL/mbedtls-2.6|stack/PPP|FreeRTOS|NXP|J1708|Applications/emBASIC|stack/SNMP|Applications/uTaskerBoot|Tools|WinSim|Applications/uTaskerSerialBoot|Hardware/IIC_devices/IIC_dev.c|Hardware/Kinetis/kinetis_boot.c|Hardware/Kinetis/kinetis_ports.cpp|Hardware/Kinetis/kinetisSim.c|Hardware/Kinetis/kinetis_asm.s|Hardware/Kinetis/GUI|Project_Settings/Linker_Files/MK21FN1M0_ram.ld" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="Applications/uTaskerV1.4/Simulator|Applications/uTaskerV1.4/Rowley_Kinetis|Hardware/STM32|Applications/uTaskerSerialBoot Hoist 1V000|Applications/SunshineHoist|Applications/Citynox-loader|Applications/I2C_Slave|Applications/emBasic|Applications/DIGILink|stack/SSL/mbedtls-2.6|stack/PPP|FreeRTOS|NXP|J1708|Applications/emBASIC|stack/SNMP|Applications/uTaskerBoot|Tools|WinSim|Applications/uTaskerSerialBoot|Hardware/IIC_devices/IIC_dev.c|Hardware/Kinetis/kinetis_boot.c|Hardware/Kinetis/kinetis_ports.cpp|Hardware/Kinetis/kinetisSim.c|Hardware/Kinetis/kinetis_asm.s|Hardware/Kinetis/GUI|Project_Settings/Linker_Files/MK21FN1M0_ram.ld" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -303,7 +303,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="Applications/I2C_Slave|Applications/emBasic|Applications/DIGILink|stack/SSL/mbedtls-2.6|stack/PPP|FreeRTOS|NXP|J1708|Applications/emBASIC|stack/SNMP|Applications/uTaskerBoot|Tools|WinSim|Applications/uTaskerSerialBoot|Hardware/IIC_devices/IIC_dev.c|Hardware/Kinetis/kinetis_boot.c|Hardware/Kinetis/kinetis_ports.cpp|Hardware/Kinetis/kinetisSim.c|Hardware/Kinetis/kinetis_asm.s|Hardware/Kinetis/GUI|Project_Settings/Linker_Files/MK21FN1M0_flash.ld" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="Applications/uTaskerV1.4/Simulator|Applications/uTaskerV1.4/Rowley_Kinetis|Hardware/STM32|Applications/uTaskerSerialBoot Hoist 1V000|Applications/SunshineHoist|Applications/Citynox-loader|Applications/I2C_Slave|Applications/emBasic|Applications/DIGILink|stack/SSL/mbedtls-2.6|stack/PPP|FreeRTOS|NXP|J1708|Applications/emBASIC|stack/SNMP|Applications/uTaskerBoot|Tools|WinSim|Applications/uTaskerSerialBoot|Hardware/IIC_devices/IIC_dev.c|Hardware/Kinetis/kinetis_boot.c|Hardware/Kinetis/kinetis_ports.cpp|Hardware/Kinetis/kinetisSim.c|Hardware/Kinetis/kinetis_asm.s|Hardware/Kinetis/GUI|Project_Settings/Linker_Files/MK21FN1M0_flash.ld" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -429,7 +429,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="Applications/I2C_Slave|Applications/emBasic|Applications/DIGILink|stack/SSL/mbedtls-2.6|stack/PPP|FreeRTOS|NXP|J1708|Applications/emBASIC|Applications/uTaskerSerialBoot/Simulator|Applications/uTaskerBoot|Tools|WinSim|stack/zero_config.c|stack/udp.c|stack/tftp.c|stack/telnet.c|stack/snmp.c|stack/smtp.c|stack/ppp.c|stack/pop3.c|stack/NetBIOS.c|stack/igmp.c|stack/ftp.c|stack/ftp_client.c|stack/dns.c|stack/dhcp.c|uTasker/uGLCDLIB|uTasker/MODBUS|Applications/uTaskerV1.4|Hardware/IIC_devices/IIC_dev.c|Hardware/Kinetis/kinetis_boot.c|Hardware/Kinetis/kinetis_ports.cpp|Hardware/Kinetis/kinetisSim.c|Hardware/Kinetis/kinetis_asm.s|Hardware/Kinetis/GUI|stack/SNMP|Project_Settings/Linker_Files/MK21FN1M0_ram.ld" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="Hardware/STM32|Applications/uTaskerSerialBoot Hoist 1V000|Applications/SunshineHoist|Applications/Citynox-loader|Applications/I2C_Slave|Applications/emBasic|Applications/DIGILink|stack/SSL/mbedtls-2.6|stack/PPP|FreeRTOS|NXP|J1708|Applications/emBASIC|Applications/uTaskerSerialBoot/Simulator|Applications/uTaskerBoot|Tools|WinSim|stack/zero_config.c|stack/udp.c|stack/tftp.c|stack/telnet.c|stack/snmp.c|stack/smtp.c|stack/ppp.c|stack/pop3.c|stack/NetBIOS.c|stack/igmp.c|stack/ftp.c|stack/ftp_client.c|stack/dns.c|stack/dhcp.c|uTasker/uGLCDLIB|uTasker/MODBUS|Applications/uTaskerV1.4|Hardware/IIC_devices/IIC_dev.c|Hardware/Kinetis/kinetis_boot.c|Hardware/Kinetis/kinetis_ports.cpp|Hardware/Kinetis/kinetisSim.c|Hardware/Kinetis/kinetis_asm.s|Hardware/Kinetis/GUI|stack/SNMP|Project_Settings/Linker_Files/MK21FN1M0_ram.ld" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -554,7 +554,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="Applications/I2C_Slave|Applications/emBasic|Applications/DIGILink|FreeRTOS|NXP|J1708|uTasker|Applications/emBASIC|stack|Hardware/Kinetis/kinetis.c|Applications/uTaskerSerialBoot|Applications/uTaskerSerialBoot/Simulator|Tools|WinSim|stack/zero_config.c|stack/webutils.c|stack/udp.c|stack/tftp.c|stack/telnet.c|stack/tcpip.h|stack/tcp.c|stack/snmp.c|stack/smtp.c|stack/ppp.c|stack/pop3.c|stack/NetBIOS.c|stack/ip.c|stack/igmp.c|stack/icmp.c|stack/http.c|stack/ftp.c|stack/ftp_client.c|stack/Ethernet.c|stack/dns.c|stack/dhcp.c|stack/arp.c|uTasker/uGLCDLIB|uTasker/MODBUS|Applications/uTaskerV1.4|Hardware/IIC_devices/IIC_dev.c|Hardware/Kinetis/kinetis_ports.cpp|Hardware/Kinetis/kinetisSim.c|Hardware/Kinetis/kinetis_asm.s|Hardware/Kinetis/GUI|stack/SNMP|Project_Settings/Linker_Files/MK21FN1M0_ram.ld" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="Hardware/STM32|Applications/uTaskerSerialBoot Hoist 1V000|Applications/SunshineHoist|Applications/Citynox-loader|Applications/I2C_Slave|Applications/emBasic|Applications/DIGILink|FreeRTOS|NXP|J1708|uTasker|Applications/emBASIC|stack|Hardware/Kinetis/kinetis.c|Applications/uTaskerSerialBoot|Applications/uTaskerSerialBoot/Simulator|Tools|WinSim|stack/zero_config.c|stack/webutils.c|stack/udp.c|stack/tftp.c|stack/telnet.c|stack/tcpip.h|stack/tcp.c|stack/snmp.c|stack/smtp.c|stack/ppp.c|stack/pop3.c|stack/NetBIOS.c|stack/ip.c|stack/igmp.c|stack/icmp.c|stack/http.c|stack/ftp.c|stack/ftp_client.c|stack/Ethernet.c|stack/dns.c|stack/dhcp.c|stack/arp.c|uTasker/uGLCDLIB|uTasker/MODBUS|Applications/uTaskerV1.4|Hardware/IIC_devices/IIC_dev.c|Hardware/Kinetis/kinetis_ports.cpp|Hardware/Kinetis/kinetisSim.c|Hardware/Kinetis/kinetis_asm.s|Hardware/Kinetis/GUI|stack/SNMP|Project_Settings/Linker_Files/MK21FN1M0_ram.ld" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -709,7 +709,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="Applications/I2C_Slave|Applications/emBasic|Applications/DIGILink|stack/SSL/mbedtls-2.6|stack/PPP|FreeRTOS|NXP|J1708|Applications/emBASIC|stack/SNMP|Applications/uTaskerBoot|Tools|WinSim|Applications/uTaskerSerialBoot|Hardware/IIC_devices/IIC_dev.c|Hardware/Kinetis/kinetis_boot.c|Hardware/Kinetis/kinetis_ports.cpp|Hardware/Kinetis/kinetisSim.c|Hardware/Kinetis/kinetis_asm.s|Hardware/Kinetis/GUI|Project_Settings/Linker_Files/MK21FN1M0_ram.ld" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="Applications/uTaskerV1.4/Simulator|Applications/uTaskerV1.4/Rowley_Kinetis|Hardware/STM32|Applications/uTaskerSerialBoot Hoist 1V000|Applications/SunshineHoist|Applications/Citynox-loader|Applications/I2C_Slave|Applications/emBasic|Applications/DIGILink|stack/SSL/mbedtls-2.6|stack/PPP|FreeRTOS|NXP|J1708|Applications/emBASIC|stack/SNMP|Applications/uTaskerBoot|Tools|WinSim|Applications/uTaskerSerialBoot|Hardware/IIC_devices/IIC_dev.c|Hardware/Kinetis/kinetis_boot.c|Hardware/Kinetis/kinetis_ports.cpp|Hardware/Kinetis/kinetisSim.c|Hardware/Kinetis/kinetis_asm.s|Hardware/Kinetis/GUI|Project_Settings/Linker_Files/MK21FN1M0_ram.ld" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

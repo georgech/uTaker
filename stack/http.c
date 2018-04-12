@@ -1619,8 +1619,8 @@ static unsigned short fnWebParGenerator(unsigned char *ptrBuffer, HTTP *http_ses
     usToSend = usLen;
     ucAction = NOT_SELECTED;
 
-    while (usLen) {                                                      // we scan the HTTP frame to be sent, looking for a position to fill out
-        if (*ptrBuffer++ == (unsigned char)WEB_PARSER_START) {           // a field has been found which needs to be filled out
+    while (usLen != 0) {                                                 // we scan the HTTP frame to be sent, looking for a position to fill out
+        if (*ptrBuffer++ == (unsigned char)(WEB_PARSER_START)) {         // a field has been found which needs to be filled out
                                                                          // example £sAB - insert select, parameter A / B
             if (usLen < WEB_ESCAPE_LEN) {                                // check whether long enough to ensure correct interpretation in all cases {9}{25}(change <= to <)
                 *usMaxLen -= usLen;

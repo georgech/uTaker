@@ -405,9 +405,10 @@ extern void fnDMA_BufferReset(int iChannel, int iAction)
         {
             int iSize = 1;                                               // default is single byte size
             unsigned long ulBufferLength;
-            KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;;
+					  register unsigned long ulTransferLength;
+            KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
             ATOMIC_PERIPHERAL_BIT_REF_CLEAR(DMA_ERQ, iChannel);          // disable DMA operation on the channel
-            register unsigned long ulTransferLength = ptrDMA_TCD->DMA_TCD_CITER_ELINK;
+            ulTransferLength = ptrDMA_TCD->DMA_TCD_CITER_ELINK;
             ptrDMA_TCD += iChannel;                                      // move to the DMA channel being used
             if (ptrDMA_TCD->DMA_TCD_DLASTSGA == 0) {                     // input buffer needs to be reset
                 if ((ptrDMA_TCD->DMA_TCD_ATTR & DMA_TCD_ATTR_SSIZE_16) != 0) {
