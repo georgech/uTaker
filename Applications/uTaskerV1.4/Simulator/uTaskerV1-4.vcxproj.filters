@@ -1192,18 +1192,6 @@
     <ClInclude Include="..\..\..\Hardware\STM32\stm32_UART.h">
       <Filter>Hardware\STM32</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Hardware\STM32\STM32F7XX_port.h">
-      <Filter>Hardware\STM32</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Hardware\STM32\STM32F41X_port.h">
-      <Filter>Hardware\STM32</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Hardware\STM32\STM32F100X_port.h">
-      <Filter>Hardware\STM32</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Hardware\STM32\STM32F105X_107X_port.h">
-      <Filter>Hardware\STM32</Filter>
-    </ClInclude>
     <ClInclude Include="..\debug_hal_kinetis.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -1236,6 +1224,21 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\CMSIS_DSP\core_cm7.h">
       <Filter>Hardware\CMSIS_DSP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\STM32F7XX_port.h">
+      <Filter>WinSim\SIMstm32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\STM32F41X_port.h">
+      <Filter>WinSim\SIMstm32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\STM32F100X_port.h">
+      <Filter>WinSim\SIMstm32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\STM32F105X_107X_port.h">
+      <Filter>WinSim\SIMstm32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\STM32L4XX_port.h">
+      <Filter>WinSim\SIMstm32</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

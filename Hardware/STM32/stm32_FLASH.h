@@ -651,7 +651,7 @@ extern int fnEraseFlashSector(unsigned char *ptrSector, MAX_FILE_LENGTH Length)
             break;
         }
         Length -= AccessDetails.BlockLength;
-    } while (1);
+    } FOREVER_LOOP();
     #else                                                                // case when only internal Flash is available
     do {
         #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
@@ -707,7 +707,7 @@ extern int fnEraseFlashSector(unsigned char *ptrSector, MAX_FILE_LENGTH Length)
         }
         ptrSector += _ulSectorSize;                                      // advance sector point to next internal flash sector
         Length -= _ulSectorSize;
-    } while (1);
+    } FOREVER_LOOP();
     #endif
     return 0;
 }

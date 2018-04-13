@@ -25,7 +25,7 @@
 
 ///////////////////////////////////////////////////////////////////////////
 //                                                                       // new users who would like to see just a blinking LED before enabling the project's many powerful features can set this
-//#define BLINKY                                                         // to give simplest scheduling of a single task called at 200ms rate that retriggers the watchdog and toggles the board's heartbeat LED
+#define BLINKY                                                           // to give simplest scheduling of a single task called at 200ms rate that retriggers the watchdog and toggles the board's heartbeat LED
 //                                                                       // 
 ///////////////////////////////////////////////////////////////////////////
 //#define QUICK_DEV_TASKS                                                // add 4 additional tasks for simple and quick development use (located at the end of appication.c)
@@ -168,6 +168,10 @@
 #elif defined _STM32
     // STM32
     //
+    // Nucleo 32 range
+    //
+    #define NUCLEO_L432KC
+
     //#define STM3210C_EVAL                                              // evaluation board with STM32F107VCT
     //#define NUCLEO_F401RE                                              // evaluation board with STM32F401RET6
     // Nucleo 144 range
@@ -176,7 +180,7 @@
 
     //#define NUCLEO_L476RG                                              // evaluation board with STM32L476RGT6U
     //#define WISDOM_STM32F407                                           // evaluation board with STM32F407ZET6
-    #define STM3240G_EVAL                                                // evaluation board with STM32F407IGH6
+    //#define STM3240G_EVAL                                              // evaluation board with STM32F407IGH6
     //#define ST_MB913C_DISCOVERY                                        // discovery board with STM32F100RB
     //#define ST_MB997A_DISCOVERY                                        // discovery board with STM32F407VGT6
     //#define STM32F407ZG_SK                                             // IAR prototyping board with STM32F407ZGT6
@@ -780,6 +784,7 @@
     #define KINETIS_K64                                                  // extra sub-family type precision
 #elif defined TWR_K65F180M
   //#define TWR_SER                                                      // use TWR-SER serial board instead of OpenSDA virtual COM port
+    #define TWR_SER2                                                     // use SER2 serial board instead of standard serial board (used also when HS USB is enabled)
     #define TARGET_HW            "TWR-K65F180M"
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((48 * 1024) * MEM_FACTOR) // large SRAM parts
     #define KINETIS_MAX_SPEED    180000000
@@ -856,6 +861,14 @@
     #define KINETIS_REVISION_2
     #define DEVICE_WITHOUT_ETHERNET                                      // K82 doesn't have Ethernet controller
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((30 * 1024) * MEM_FACTOR)
+#elif defined NUCLEO_L432KC
+    #define TARGET_HW            " NUCLEO-L432KC (STM32L432)"
+    #define _STM32L432                                                   // part type
+    #define STM32_FPU                                                    // FPU present
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((16 * 1024) * MEM_FACTOR)
+    #define DEVICE_WITHOUT_USB                                           // the STM32 device has USB but the board doesn't allow it to be used directly
+    #define DEVICE_WITHOUT_ETHERNET                                      // the STM32 doesn't have ethernet
+    #define DEVICE_WITHOUT_DMA                                           // provisional during initial development
 #elif defined STM3210C_EVAL
     #define TARGET_HW            "STM3210C-EVAL (STM32F107VCT)"
     #define _STM32F107X                                                  // part group

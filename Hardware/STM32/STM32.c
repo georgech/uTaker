@@ -369,12 +369,12 @@ _abort_multi:
 
         while ((ptrInfo = (MULTISTART_TABLE*)uTaskerSchedule()) == 0) {} // schedule uTasker
 
-    } while (1);
+    } FOREVER_LOOP();
 #else
     fnInitialiseHeap(ctOurHeap, HEAP_START_ADDRESS);                     // initialise heap
     uTaskerStart((UTASKTABLEINIT *)ctTaskTable, ctNodes, PHYSICAL_QUEUES); // start the operating system
 
-    while (1) {
+    FOREVER_LOOP() {
         uTaskerSchedule();                                               // schedule uTasker
     }
 #endif
@@ -420,13 +420,13 @@ extern void uDisable_Interrupt(void)
 extern void uEnable_Interrupt(void)
 {
 #if defined _WINDOWS
-    if (!iInterruptLevel) {
+    if (0 == iInterruptLevel) {
         *(int *)0 = 0;                                                   // basic error - cause simulator exception
         // A routine is enabling interrupt although they are presently off. This may not be a serious error but it is unexpected so best check why...
         //
     }
 #endif
-    if (!(--iInterruptLevel)) {                                          // only when no more interrupt nesting,
+    if ((--iInterruptLevel) == 0) {                                      // only when no more interrupt nesting,
         __enable_interrupt();                                            // enable processor interrupts
     }
 }
@@ -489,7 +489,11 @@ static __interrupt void _RealTimeInterrupt(void)
 // Routine to initialise the Tick interrupt (uses Cortex M3 SysTick timer)
 //
 #define REQUIRED_US (1000000/(TICK_RESOLUTION))                          // the TICK frequency we require in MHz
-#define TICK_DIVIDE (((HCLK + REQUIRED_US/2)/REQUIRED_US) - 1)           // the divide ratio required
+#if defined _STM32L432
+    #define TICK_DIVIDE ((((HCLK/8) + REQUIRED_US/2)/REQUIRED_US) - 1)   // the divide ratio required - systick is clocked from HCLK/8
+#else
+    #define TICK_DIVIDE (((HCLK + REQUIRED_US/2)/REQUIRED_US) - 1)       // the divide ratio required - systick is clocked from HCLK
+#endif
 #if TICK_DIVIDE > 0x00ffffff
     #error "TICK value cannot be achieved with SYSTICK at this core frequency!!"
 #endif
@@ -507,7 +511,11 @@ extern void fnStartTick(void)
 #endif
     SYSTICK_RELOAD = TICK_DIVIDE;                                        // set reload value to determine the period
     SYSTEM_HANDLER_12_15_PRIORITY_REGISTER |= (SYSTICK_PRIORITY << 24);  // enter the SYSTICK priority
+#if defined _STM32L432
+    SYSTICK_CSR = (SYSTICK_ENABLE | SYSTICK_TICKINT);                    // enable timer and its interrupt
+#else
     SYSTICK_CSR = (SYSTICK_CORE_CLOCK | SYSTICK_ENABLE | SYSTICK_TICKINT); // enable timer and its interrupt
+#endif
 #if defined _WINDOWS
     SYSTICK_RELOAD &= SYSTICK_COUNT_MASK;                                // mask any values which are out of range
     SYSTICK_CURRENT = SYSTICK_RELOAD;                                    // prime the reload count
@@ -2312,7 +2320,7 @@ extern int fnSendSD_command(const unsigned char ucCommand[6], unsigned char *ucR
                         return CARD_BUSY_WAIT;                           // yield after short polling period
                     }
                 }
-            } while (1);
+            } FOREVER_LOOP();
             if (ptrReturnData != 0) {                                    // if the caller requests data, read it here
     #if defined _WINDOWS
                 _fnSimSD_write(0xff);_fnSimSD_write(0xff);               // for compatibility
@@ -2805,7 +2813,7 @@ extern void fnResetBoard(void)
 }
 
 
-#if defined DMA_MEMCPY_SET
+#if defined DMA_MEMCPY_SET && !defined DEVICE_WITHOUT_DMA
 #define SMALLEST_DMA_COPY 20                                             // smaller copies have no DMA advantage
 extern void *uMemcpy(void *ptrTo, const void *ptrFrom, size_t Size)
 {
@@ -3114,13 +3122,16 @@ static void STM32_LowLevelInit(void)
     void (**processor_ints)(void);
 #endif
     VECTOR_TABLE *ptrVect;
-
+#if defined _STM32L432
+    RCC_CR = (RCC_CR_MSIRANGE_4M | RCC_CR_MSIRDY | RCC_CR_MSION);        // set reset state - default is MSI at around 4MHz
+#else
     RCC_CR = (0x00000080 | RCC_CR_HSIRDY | RCC_CR_HSION);                // set reset state - default is high-speed internal clock
+#endif
     RCC_CFGR = 0;
 #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
     RCC_PLLCFGR = RCC_PLLCFGR_RESET_VALUE;                               // set the PLL configuration register to default
 #endif
-#if !defined USE_HSI_CLOCK
+#if !defined USE_HSI_CLOCK && !defined _STM32L432
     RCC_CR = (0x00000080 | RCC_CR_HSIRDY | RCC_CR_HSION | RCC_CR_HSEON); // enable the high-speed external clock
 #endif
 #if defined _STM32F7XX
@@ -3130,6 +3141,10 @@ static void STM32_LowLevelInit(void)
 #elif defined _STM32F2XX || defined _STM32F4XX
     FLASH_ACR = (FLASH_ACR_ICRST | FLASH_ACR_DCRST);                     // flush data and instruction cache
     FLASH_ACR = (/*FLASH_ACR_PRFTEN | */FLASH_ACR_DCEN | FLASH_ACR_ICEN | FLASH_WAIT_STATES); // set flash wait states appropriately and enable pre-fetch buffer and cache
+    RCC_CFGR = (_RCC_CFGR_HPRE_SYSCLK | _RCC_CFGR_PPRE1_HCLK | _RCC_CFGR_PPRE2_HCLK); // set HCLK (AHB), PCLK1 and PCLK2 speeds
+#elif defined _STM32L432
+    FLASH_ACR = (FLASH_ACR_ICRST | FLASH_ACR_DCRST);                     // flush data and instruction cache
+    FLASH_ACR = (FLASH_ACR_DCEN | FLASH_ACR_ICEN | FLASH_WAIT_STATES);   // set flash wait states appropriately and enable pre-fetch buffer and cache
     RCC_CFGR = (_RCC_CFGR_HPRE_SYSCLK | _RCC_CFGR_PPRE1_HCLK | _RCC_CFGR_PPRE2_HCLK); // set HCLK (AHB), PCLK1 and PCLK2 speeds
 #elif defined _CONNECTIVITY_LINE
     FLASH_ACR = (FLASH_ACR_PRFTBE | FLASH_WAIT_STATES);                  // set flash wait states appropriately and enable pre-fetch buffer
@@ -3148,6 +3163,9 @@ static void STM32_LowLevelInit(void)
 #if defined DISABLE_PLL
     #if !defined USE_HSI_CLOCK
     RCC_CFGR |= RCC_CFGR_HSE_SELECT;                                     // set oscillator as direct source
+    #elif defined _STM32L432
+    RCC_CR |= (RCC_CR_HSION);                                            // turn on the 16MHz HSI oscillator
+    RCC_CFGR |= (RCC_CFGR_HSI16_SELECT);                                 // switch from 4MHz MSI to HSE16
     #endif
 #else
     #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
@@ -3219,7 +3237,7 @@ static void STM32_LowLevelInit(void)
             break;
         }
         processor_ints++;
-    } while (1);
+    } FOREVER_LOOP();
 #else
     ptrVect->ptrHardFault     = irq_default;
     ptrVect->ptrMemManagement = irq_default;
@@ -3230,7 +3248,7 @@ static void STM32_LowLevelInit(void)
     ptrVect->ptrPendSV        = irq_default;
     ptrVect->ptrSVCall        = irq_default;
 #endif
-#if defined DMA_MEMCPY_SET                                               // if uMemcpy()/uMemset() is to use DMA enable the DMA controller used by it
+#if defined DMA_MEMCPY_SET && !defined DEVICE_WITHOUT_DMA                // if uMemcpy()/uMemset() is to use DMA enable the DMA controller used by it
     #if MEMCPY_CHANNEL > 7
     POWER_UP(AHB1, RCC_AHB1ENR_DMA2EN);
     #else

@@ -309,6 +309,7 @@ static const NETWORK_PARAMETERS network_default[IP_NETWORK_COUNT] = {
 };
 #endif
 
+#if !defined BLINKY
 // The default user settings (factory settings)
 //
 const PARS cParameters = {
@@ -318,120 +319,121 @@ const PARS cParameters = {
     23,                                                                  // TELNET port number
     {
         (/*ACTIVE_DHCP + */ACTIVE_LOGIN + ACTIVE_FTP_SERVER /*+ ACTIVE_FTP_LOGIN*/ + ACTIVE_SNTP + ACTIVE_TIME_SERVER + ACTIVE_WEB_SERVER + ACTIVE_TELNET_SERVER + SMTP_LOGIN), // active servers (ACTIVE_DHCP and ACTIVE_FTP_LOGIN disabled)
-#if (IP_NETWORK_COUNT > 1)
+    #if (IP_NETWORK_COUNT > 1)
         (/*ACTIVE_DHCP + */ACTIVE_LOGIN + ACTIVE_FTP_SERVER /*+ ACTIVE_FTP_LOGIN*/ + ACTIVE_SNTP + ACTIVE_TIME_SERVER + ACTIVE_WEB_SERVER + ACTIVE_TELNET_SERVER + SMTP_LOGIN), // active servers (ACTIVE_DHCP and ACTIVE_FTP_LOGIN disabled)
-#endif
+    #endif
     },
-#if defined FRDM_KL03Z                                                   // this board has a capacitor connected to the LPUART0_RX pin so cannot use fast speeds
+    #if defined FRDM_KL03Z                                                   // this board has a capacitor connected to the LPUART0_RX pin so cannot use fast speeds
   //SERIAL_BAUD_115200,
     SERIAL_BAUD_19200,                                                   // baud rate of serial interface
-#else
+    #else
     SERIAL_BAUD_115200,                                                  // baud rate of serial interface
-#endif
+    #endif
     {0, 0, 0, 0},                                                        // trusted dial out IP address (null IP means no checking)
     {'A', 'D', 'M', 'I', 'N', 0, ' ', ' '},                              // default user name - & or null terminator closes sequence
     {'u', 'T', 'a', 's', 'k', 'e', 'r', '&'},                            // default user password - & or null terminator closes sequence
-#if defined _M5225X
+    #if defined _M5225X
     {'K', 'I', 'R', 'I', 'N', '3', 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-#elif defined _KINETIS
+    #elif defined _KINETIS
     {'K', 'I', 'N', 'E', 'T', 'I', 'S', 0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-#elif defined _STM32
+    #elif defined _STM32
     {'S', 'T', 'M', '3', '2', 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-#else
+    #else
     {'u', 'T', 'a', 's', 'k', 'e', 'r', ' ', 'N', 'u', 'm', 'b', 'e', 'r', ' ', '1',0,0,0,0,0},
-#endif
+    #endif
     80,                                                                  // flow control at 80% high water
     20,                                                                  // flow control at 20% low water
-#if defined _KINETIS || defined AVR32_AT32UC3C_EK || defined AVR32_UC3_C2_XPLAINED // {80}
+    #if defined _KINETIS || defined AVR32_AT32UC3C_EK || defined AVR32_UC3_C2_XPLAINED // {80}
     (MAPPED_DEMO_LED_1 | MAPPED_DEMO_LED_2),                             // user port DDR value
     (MAPPED_DEMO_LED_1 | MAPPED_DEMO_LED_2),                             // user port value of outputs
-#else
-    #if defined _LM3SXXXX
-    (BLINK_LED),                                                         // user port DDR value
     #else
+        #if defined _LM3SXXXX
+    (BLINK_LED),                                                         // user port DDR value
+        #else
     (DEMO_LED_1 | DEMO_LED_2),                                           // user port DDR value
-    #endif
+        #endif
     (DEMO_LED_1 | DEMO_LED_2),                                           // user port value of outputs
-#endif
+    #endif
     0,                                                                   // second set of user defined outputs
-#if !defined ETH_INTERFACE
+    #if !defined ETH_INTERFACE
     0,                                                                   // serial number (when Ethernet is enabled it is derived from the MAC address instead)
-#endif
-#if defined USE_SNTP || defined USE_TIME_SERVER
+    #endif
+    #if defined USE_SNTP || defined USE_TIME_SERVER
     (TIME_ZONE_UTC_PLUS_1 | DAYLIGHT_SAVING_WINTER),                     // time zone and daylight saving (UTC + 1)
-#endif
-#if defined USE_SNTP
+    #endif
+    #if defined USE_SNTP
     {                                                                    // SNTP server list
         {194, 0, 229, 89},                                               // stratum 1 - ntpstm.netbone-digital.com St. Moritz
         {131, 188, 3, 220},                                              // stratum 1 - ntp0.fau.de University Erlangen-Nuernberg, D-91058 Erlangen, FRG
         {217, 147, 223, 78},                                             // stratum 2 - clock.tix.ch CH-8005 Zurich, Switzerland
         {129, 6, 15, 29},                                                // time-b.nist.gov
     },
-#endif
-#if defined USE_TIME_SERVER
+    #endif
+    #if defined USE_TIME_SERVER
     {                                                                    // time server list
         {129, 6, 15, 28},                                                // time-a.nist.gov 129.6.15.28 NIST, Gaithersburg, Maryland
         {132, 163, 4, 101},                                              // time-a.timefreq.bldrdoc.gov 132.163.4.101 NIST, Boulder, Colorado
         {216, 200, 93, 8},                                               // nist1-dc.glassey.com 216.200.93.8 Abovenet, Virginia
     },
-#endif
-#if defined SMTP_PARAMETERS
+    #endif
+    #if defined SMTP_PARAMETERS
     {'U', 's', 'e', 'r', ' ', 'n', 'a', 'm', 'e', 0,0,0,0,0,0,0,0,0,0,0,0,0,0},
     {'P', 'a', 's', 's', ' ', 'w', 'o', 'r', 'd', 0,0},
     {'M', 'y', 'A', 'd', 'd', 'r', 'e', 's', 's', '@', 'u', 'T', 'a', 's', 'k', 'e', 'r', '.', 'c', 'o', 'm', 0,0,0,0,0,0,0,0,0,0},
     {'m', 'a', 'i', 'l', '.', 'p', 'r', 'o', 'v', 'i', 'd', 'e', 'r', '.', 'c', 'o', 'm', 0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-    #if defined USE_DNS
+        #if defined USE_DNS
     {0, 0, 0, 0},
-    #else
+        #else
     SMTP_PROVIDER_IP_ADDRESS,
+        #endif
     #endif
-#endif
-#if defined LCD_CONTRAST_CONTROL
+    #if defined LCD_CONTRAST_CONTROL
     50,                                                                  // default LCD contrast PWM value (%)
-#endif
-#if defined GLCD_BACKLIGHT_CONTROL
+    #endif
+    #if defined GLCD_BACKLIGHT_CONTROL
     95,                                                                  // default LCD backlight PWM intensity (%)
-#endif
-#if defined SUPPORT_TOUCH_SCREEN
+    #endif
+    #if defined SUPPORT_TOUCH_SCREEN
     0, 0, 0, 0,                                                          // default touch screen calibration parameters
-#endif
-#if defined USE_FTP_CLIENT                                               // {67}
+    #endif
+    #if defined USE_FTP_CLIENT                                           // {67}
     {"FTP-USER-NAME"},                                                   // default FTP server user name
     {"FTP-PASSWORD"},                                                    // default FTP server user name
     21,                                                                  // FTP port number
     (2 * 60),                                                            // default idle timeout in seconds
     {192, 168, 0, 1},                                                    // default FTP server IPv4 address
-    #if defined USE_IPV6                                                 // {78}
+        #if defined USE_IPV6                                             // {78}
     {_IP6_ADD_DIGIT(0xfe80), _IP6_ADD_DIGIT(0x0000), _IP6_ADD_DIGIT(0x0000), _IP6_ADD_DIGIT(0x0000), _IP6_ADD_DIGIT(0x0200), _IP6_ADD_DIGIT(0x00ff), _IP6_ADD_DIGIT(0xfe00), _IP6_ADD_DIGIT(0x0000)}, // default FTP server IPv6 address
   //{_IP6_ADD_DIGIT(0x2001), _IP6_ADD_DIGIT(0x0470), _IP6_ADD_DIGIT(0x0026), _IP6_ADD_DIGIT(0x0105), _IP6_ADD_DIGIT(0), _IP6_ADD_DIGIT(0), _IP6_ADD_DIGIT(0), _IP6_ADD_DIGIT(0x0010)}, // default FTP server IPv6 address
+        #endif
     #endif
-#endif
-#if defined USE_IPV6INV4 && (defined USE_IPV6INV4_RELAY_DESTINATIONS && (USE_IPV6INV4_RELAY_DESTINATIONS != 0)) // {74} single IPv6in4 relay destination
+    #if defined USE_IPV6INV4 && (defined USE_IPV6INV4_RELAY_DESTINATIONS && (USE_IPV6INV4_RELAY_DESTINATIONS != 0)) // {74} single IPv6in4 relay destination
     {
         {
             {_IP6_ADD_DIGIT(0x2001), _IP6_ADD_DIGIT(0x0470), _IP6_ADD_DIGIT(0x0025), _IP6_ADD_DIGIT(0x0105), _IP6_ADD_DIGIT(0), _IP6_ADD_DIGIT(0), _IP6_ADD_DIGIT(0), _IP6_ADD_DIGIT(0x0002)}, // global IPv6 address of destination
             {192, 168, 0, 99},                                           // ipv4 address of destination
             {0xf0, 0x4d, 0xa2, 0x9d, 0x94, 0xdc}                         // MAC address of distination
         },
-    #if USE_IPV6INV4_RELAY_DESTINATIONS > 1
+        #if USE_IPV6INV4_RELAY_DESTINATIONS > 1
         {
             {_IP6_ADD_DIGIT(0x2001), _IP6_ADD_DIGIT(0x0470), _IP6_ADD_DIGIT(0x0026), _IP6_ADD_DIGIT(0x0105), _IP6_ADD_DIGIT(0), _IP6_ADD_DIGIT(0), _IP6_ADD_DIGIT(0), _IP6_ADD_DIGIT(0x0011)}, // global IPv6 address of destination
             {192, 168, 0, 4},                                            // ipv4 address of destination
             {0x00, 0x00, 0x00, 0x00, 0x00, 0x04}                         // MAC address of distination
         },
-    #endif
+        #endif
     },
-#endif
-#if defined DUSK_AND_DAWN
+    #endif
+    #if defined DUSK_AND_DAWN
     {
         {0,0,0},                                                         // our geographical coordinates
         {0,0,0}
     },
-#endif
-#if defined USE_USB_HID_KEYBOARD && defined USB_KEYBOARD_DELAY
+    #endif
+    #if defined USE_USB_HID_KEYBOARD && defined USB_KEYBOARD_DELAY
     (100 - 1),                                                           // minimum inter-character delay between keyboard inputs (ms)
-#endif
+    #endif
 };
+#endif
 
 #if defined SUPPORT_KEY_SCAN                                             // support up to 4 x 4 for test purposes
     static const char *cKey[] = {
@@ -1421,11 +1423,13 @@ extern unsigned short fnGetOurParameters(int iCase)
     return 0;
     #endif
 #else
+    #if !defined BLINKY
     uMemcpy(&temp_pars->temp_parameters, &cParameters, sizeof(PARS));    // {10}
   //uMemcpy(parameters, &cParameters, sizeof(PARS));
-    #if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP
+        #if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP
     uMemcpy(&temp_pars->temp_network, &network[DEFAULT_NETWORK], sizeof(temp_pars->temp_network));
     #endif
+        #endif
     return 0;
 #endif
 }

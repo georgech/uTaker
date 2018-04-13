@@ -126,6 +126,47 @@ typedef struct stSTM32_RCC
     unsigned long ulRes6[2];
     unsigned long RCC_SSCGR;
     unsigned long RCC_PLLI2SCFGR;
+#elif defined _STM32L432
+    unsigned long RCC_CR;
+    unsigned long RCC_ICSCR;
+    unsigned long RCC_CFGR;
+    unsigned long RCC_PLLCFGR;
+    unsigned long RCC_PLLSAI1CFGR;
+    unsigned long ulRes0;
+    unsigned long RCC_CIR;
+    unsigned long RCC_CIFR;
+    unsigned long RCC_CICR;
+    unsigned long ulRes1;
+    unsigned long RCC_AHB1RSTR;
+    unsigned long RCC_AHB2RSTR;
+    unsigned long RCC_AHB3RSTR;
+    unsigned long ulRes2;
+    unsigned long RCC_APB1RSTR1;
+    unsigned long RCC_APB1RSTR2;
+    unsigned long RCC_APB2RSTR;
+    unsigned long ulRes3;
+    unsigned long RCC_AHB1ENR;
+    unsigned long RCC_AHB2ENR;
+    unsigned long RCC_AHB3ENR;
+    unsigned long ulRes4;
+    unsigned long RCC_APB1ENR1;
+    unsigned long RCC_APB1ENR2;
+    unsigned long RCC_APB2ENR;
+    unsigned long ulRes5;
+    unsigned long RCC_AHB1SMENR;
+    unsigned long RCC_AHB2SMENR;
+    unsigned long RCC_AHB3SMENR;
+    unsigned long ulRes6;
+    unsigned long RCC_APB1SMENR1;
+    unsigned long RCC_APB1SMENR2;
+    unsigned long RCC_APB2SMENR;
+    unsigned long ulRes7;
+    unsigned long RCC_CCIPR;
+    unsigned long ulRes8;
+    unsigned long RCC_BDCR;
+    unsigned long RCC_CSR;
+    unsigned long RCC_CRRCR;
+    unsigned long RCC_CCCIPR2;
 #else
     unsigned long RCC_CR;
     unsigned long RCC_CFGR;
@@ -399,7 +440,7 @@ unsigned long EXTI_PR;
 
 typedef struct stSTM32_GPIO
 {
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432
     unsigned long GPIO_MODER;
     unsigned long GPIO_OTYPER;
     unsigned long GPIO_OSPEEDR;
@@ -410,6 +451,9 @@ typedef struct stSTM32_GPIO
     unsigned long GPIO_LCKR;
     unsigned long GPIO_AFRL;
     unsigned long GPIO_AFRH;
+    #if defined _STM32L432
+        unsigned long GPIO_BRR;
+    #endif
 #else
     unsigned long GPIO_CRL;
     unsigned long GPIO_CRH;
@@ -825,7 +869,7 @@ unsigned short SPI2_I2SPR;
 } STM32_SPI_I2S;
 
 
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432
 typedef struct stSTM32_SYSCFG
 {
 unsigned long SYSCFG_MEMRM;
@@ -1262,7 +1306,8 @@ typedef struct stSTR32M_PERIPH
     STM32_PWR            PWR;
     STM32_CAN            CAN;
     STM32_CAN_SLAVE      CAN_SLAVE;
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+
+#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432
     STM32_SPI_I2S        SPI_I2S[3];
     STM32_SYSCFG         SYSCFG;
     STM32_FSMC           FSMC;

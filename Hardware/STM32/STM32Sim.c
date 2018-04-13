@@ -82,10 +82,13 @@ static void fnSetDevice(unsigned short *port_inits)
     int i;
 #endif
     CPUID_BASE_REGISTER = 0x411fc231;
-
+#if defined _STM32L432
+    RCC_CR = (RCC_CR_MSIRANGE_4M | RCC_CR_MSIRDY | RCC_CR_MSION);        // reset and clock control
+    RCC_CSR = (RCC_CSR_PINRSTF | RCC_CSR_PORRSTF | RCC_CSR_MSIRANGE_4M);
+#else
     RCC_CR = (0x00000080 | RCC_CR_HSIRDY | RCC_CR_HSION);                // reset and clock control
     RCC_CSR = (RCC_CSR_PINRSTF | RCC_CSR_PORRSTF);
-
+#endif
     GPIOA_IDR = ulGPIOIN[0] = *port_inits++;                             // set port inputs to default states
     GPIOB_IDR = ulGPIOIN[1] = *port_inits++;
     GPIOC_IDR = ulGPIOIN[2] = *port_inits++;
@@ -93,7 +96,7 @@ static void fnSetDevice(unsigned short *port_inits)
     GPIOE_IDR = ulGPIOIN[4] = *port_inits++;
     GPIOF_IDR = ulGPIOIN[5] = *port_inits++;
     GPIOG_IDR = ulGPIOIN[6] = *port_inits++;
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432
     GPIOH_IDR = ulGPIOIN[7] = *port_inits++;
     GPIOI_IDR = ulGPIOIN[8] = *port_inits++;
     #if defined _STM32F7XX
@@ -106,9 +109,12 @@ static void fnSetDevice(unsigned short *port_inits)
     #else
     PWR_CR = PWR_CR_VOS;
     #endif
-
+    #if !defined _STM32L432
     RCC_AHB1ENR = RCC_AHB1ENR_CCMDATARAMEN;
     RCC_PLLCFGR = 0x24003010;
+    #endif
+#elif defined _STM32L432
+    RCC_AHB1ENR = (RCC_AHB1ENR_FLASHEN);
 #else
     RCC_AHB1ENR = (RCC_AHB1ENR_FLITFEN | RCC_AHB1ENR_SRAMEN);
 #endif
@@ -121,7 +127,7 @@ static void fnSetDevice(unsigned short *port_inits)
     FLASH_OBR = 0x03fffffc;
 #endif
 
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432
     GPIOA_MODER = 0xa8000000;
     GPIOB_MODER = 0x00000280;
     GPIOB_OSPEEDR = 0x000000c0;
@@ -1029,7 +1035,7 @@ static void fnHandleExti(unsigned short usOriginal, unsigned short usNew, unsign
 {
     VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)((unsigned char *)((unsigned char *)&vector_ram));
     int iInputCount = 0;
-    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432
     unsigned long *ptrMux = SYSCFG_EXTICR1_ADDR;
     #else
     unsigned long *ptrMux = AFIO_EXTICR1_ADD;
@@ -1039,7 +1045,7 @@ static void fnHandleExti(unsigned short usOriginal, unsigned short usNew, unsign
     unsigned short usFalling = (usChange & ~usNew);                      // negative changes
     unsigned short usBit = 0x0001;
     while (usChange != 0) {                                              // while all changes have not been checked
-        if (usChange & usBit) {                                          // change on this input
+        if ((usChange & usBit) != 0) {                                   // change on this input
             if (((*ptrMux >> (4 * iInputCount)) & 0xf) == ucPort) {      // if this input is connected to this port
                 if ((usBit & usRising & EXTI_RTSR) || (usBit & usFalling & EXTI_FTSR)) {  // if the particular edge is enabled
                     EXTI_PR |= usBit;                                    // set the interrupt pending bit
@@ -1107,11 +1113,18 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
     if ((RCC_AHB1ENR & (RCC_AHB1ENR_GPIOAEN << ucPort)) == 0) {          // check whether the port is clocked
         return;                                                          // not clocked so ignore
     }
-    if ((RCC_APB1RSTR & (RCC_AHB1ENR_GPIOAEN << ucPort)) != 0) {         // check whether in reset
+    if ((RCC_AHB1RSTR & (RCC_AHB1RSTR_GPIOARST << ucPort)) != 0) {       // check whether in reset
+        return;                                                          // in reset so ignore
+    }
+#elif defined _STM32L432
+    if ((RCC_AHB2ENR & (RCC_AHB2ENR_GPIOAEN << ucPort)) == 0) {          // check whether the port is clocked
+        return;                                                          // not clocked so ignore
+    }
+    if ((RCC_AHB2RSTR & (RCC_AHB2RSTR_GPIOARST << ucPort)) != 0) {       // check whether in reset
         return;                                                          // in reset so ignore
     }
 #else
-    if (!(RCC_APB2ENR & (RCC_APB2ENR_IOPAEN << ucPort))) {
+    if ((RCC_APB2ENR & (RCC_APB2ENR_IOPAEN << ucPort)) == 0) {
         return;                                                          // not clocked so ignore
     }
     if (RCC_APB2RSTR & (RCC_APB2ENR_IOPAEN << ucPort)) {
@@ -1221,7 +1234,7 @@ extern int fnSimulateEthernetIn(unsigned char *ucData, unsigned short usLen, int
 static void fnUpdatePeripheral(int iPort, unsigned long ulPeriph)
 {
     int i = 0;
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432
     int iHigh = 0;
     int iFunctionShift = 0;
     unsigned long ulMaskMode = 0x00000003;
@@ -1695,7 +1708,7 @@ static unsigned short fnGetPortType(int portNr, int iRequest, int i)
 {
     unsigned short usPeripherals = 0;
     unsigned short usBit = 0x0001;
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432
     unsigned long ulMask = 0x00000003;
     STM32_GPIO *ptrPort = &STM32.Ports[portNr];
     if (GET_OUTPUTS == iRequest) {
@@ -1742,7 +1755,7 @@ static unsigned short fnGetPortType(int portNr, int iRequest, int i)
             }
             switch (iRequest) {
             case GET_OUTPUTS:
-                if ((!(ulReg & ALTERNATIVE_FUNCTION)) && (ulReg & OUTPUT_FAST)) { // mode set to output but not alternative peripheral output
+                if (((ulReg & ALTERNATIVE_FUNCTION) == 0) && ((ulReg & OUTPUT_FAST) != 0)) { // mode set to output but not alternative peripheral output
                     usPeripherals |= usBit;
                 }
                 break;
@@ -2311,46 +2324,7 @@ extern unsigned short fnGetEndpointInfo(int iEndpoint)
 }
 #endif
 
-#if defined SUPPORT_ADC                                                  // {10}
-static unsigned short fnConvertSimADCvalue(STM32_ADC_REGS *ptrADC, unsigned short usStandardValue)
-{
-    switch (ptrADC->ADC_CR1 & ADC_CR1_RES_6_BIT) {
-    case ADC_CR1_RES_12_BIT:                                             // conversion mode - single-ended 12 bit
-        if ((ptrADC->ADC_CR2 & ADC_CR2_ALIGN_LEFT) == 0) {
-            usStandardValue >>= 4;
-        }
-        else {
-            usStandardValue &= 0xfff0;
-        }
-        break;
-    case ADC_CR1_RES_10_BIT:                                             // conversion mode - single-ended 10 bit
-        if ((ptrADC->ADC_CR2 & ADC_CR2_ALIGN_LEFT) == 0) {
-            usStandardValue >>= 6;
-        }
-        else {
-            usStandardValue &= 0xffc0;
-        }
-        break;
-    case ADC_CR1_RES_8_BIT:                                              // conversion mode - single-ended 8 bit
-        if ((ptrADC->ADC_CR2 & ADC_CR2_ALIGN_LEFT) == 0) {
-            usStandardValue >>= 8;
-        }
-        else {
-            usStandardValue &= 0xff00;
-        }
-        break;
-    case ADC_CR1_RES_6_BIT:                                              // conversion mode - single-ended 6 bit
-        if ((ptrADC->ADC_CR2 & ADC_CR2_ALIGN_LEFT) == 0) {
-            usStandardValue >>= 10;
-        }
-        else {
-            usStandardValue &= 0xfc00;
-        }
-        break;
-    }
-    return usStandardValue;
-}
-
+#if !defined DEVICE_WITHOUT_DMA
 static int fnSimulateDMA(unsigned char ucChannel, int iDMA)
 {
     VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
@@ -2430,7 +2404,6 @@ static int fnSimulateDMA(unsigned char ucChannel, int iDMA)
 
 static void fnHandleDMA_triggers(unsigned char ucChannel, int iDMA)
 {
-#if !defined DEVICE_WITHOUT_DMA
     switch (iDMA) {
     case 1:
         break;
@@ -2440,7 +2413,47 @@ static void fnHandleDMA_triggers(unsigned char ucChannel, int iDMA)
         }
         break;
     }
+}
 #endif
+
+#if defined SUPPORT_ADC                                                  // {10}
+static unsigned short fnConvertSimADCvalue(STM32_ADC_REGS *ptrADC, unsigned short usStandardValue)
+{
+    switch (ptrADC->ADC_CR1 & ADC_CR1_RES_6_BIT) {
+    case ADC_CR1_RES_12_BIT:                                             // conversion mode - single-ended 12 bit
+        if ((ptrADC->ADC_CR2 & ADC_CR2_ALIGN_LEFT) == 0) {
+            usStandardValue >>= 4;
+        }
+        else {
+            usStandardValue &= 0xfff0;
+        }
+        break;
+    case ADC_CR1_RES_10_BIT:                                             // conversion mode - single-ended 10 bit
+        if ((ptrADC->ADC_CR2 & ADC_CR2_ALIGN_LEFT) == 0) {
+            usStandardValue >>= 6;
+        }
+        else {
+            usStandardValue &= 0xffc0;
+        }
+        break;
+    case ADC_CR1_RES_8_BIT:                                              // conversion mode - single-ended 8 bit
+        if ((ptrADC->ADC_CR2 & ADC_CR2_ALIGN_LEFT) == 0) {
+            usStandardValue >>= 8;
+        }
+        else {
+            usStandardValue &= 0xff00;
+        }
+        break;
+    case ADC_CR1_RES_6_BIT:                                              // conversion mode - single-ended 6 bit
+        if ((ptrADC->ADC_CR2 & ADC_CR2_ALIGN_LEFT) == 0) {
+            usStandardValue >>= 10;
+        }
+        else {
+            usStandardValue &= 0xfc00;
+        }
+        break;
+    }
+    return usStandardValue;
 }
 
 static void fnSimADC(int iChannel)
@@ -2497,7 +2510,9 @@ static void fnSimADC(int iChannel)
             usADCvalue = fnConvertSimADCvalue(ptrADC, usADC_values[ulChannel]); // convert the standard value to the format used by the present mode
             ptrADC->ADC_DR = usADCvalue;                                 // put the result into the regular data register
             if ((ptrADC->ADC_CR2 & ADC_CR2_DMA) != 0) {                  // if in DMA mode
+    #if !defined DEVICE_WITHOUT_DMA
                 fnHandleDMA_triggers(0, 2);                              // process the trigger
+    #endif
             }
             else if ((ptrADC->ADC_CR2 & ADC_CR2_EOCS_CONVERSION) != 0) { // if the EOC is set after each individual conversion
                 ptrADC->ADC_SR |= ADC_SR_EOC;
@@ -2526,7 +2541,6 @@ static void fnSimADC(int iChannel)
         ptrADC->ADC_CR2 |= ADC_CR2_SWSTART;                              // enable next conversion (this may not be accurate simulation but will keep it running)
     }
 }
-
 
 static void fnTriggerADC(int iADC, int iHW_trigger)
 {
@@ -2582,7 +2596,10 @@ extern int fnSimTimers(void)
     if ((SYSTICK_CSR & SYSTICK_ENABLE) != 0) {                           // SysTick is enabled
         unsigned long ulTickCount = 0;
         if ((SYSTICK_CSR & SYSTICK_CORE_CLOCK) != 0) {
-            ulTickCount = ((TICK_RESOLUTION/1000) * (HCLK/1000));        // count per tick period from internal clock
+            ulTickCount = (unsigned long)((unsigned long long)((unsigned long long)TICK_RESOLUTION * (unsigned long long)HCLK)/1000000); // count per tick period from internal clock
+        }
+        else {
+            ulTickCount = (unsigned long)((unsigned long long)((unsigned long long)TICK_RESOLUTION * (unsigned long long)HCLK)/8000000); // count per tick period from internal clock divided by 8
         }
         if ((SYSTICK_CURRENT + 1) > ulTickCount) {
             SYSTICK_CURRENT -= ulTickCount;
@@ -3470,14 +3487,22 @@ extern void fnUpdateOperatingDetails(void)
     ptrBuffer = fnBufferDec((SIZE_OF_RAM/1024), 0, ptrBuffer);
     ptrBuffer = uStrcpy(ptrBuffer, "k, HCLK = ");
     ulHCLK = (PLL_OUTPUT_FREQ >> ((RCC_CFGR & RCC_CFGR_HPRE_SYSCLK_DIV512) >> 4)); // HCLK according to register setting
-    if (RCC_CFGR & RCC_CFGR_PPRE1_HCLK_DIV2) {                           // if divide enabled
+    if ((RCC_CFGR & RCC_CFGR_PPRE1_HCLK_DIV2) != 0) {                    // if divide enabled
+        #if defined _STM32L432
+        ulAPB1 = (ulHCLK >> (((RCC_CFGR >> 8) & 0x03) + 1));             // APB1 clock according to register settings
+        #else
         ulAPB1 = (ulHCLK >> (((RCC_CFGR >> 10) & 0x03) + 1));            // APB1 clock according to register settings
+        #endif
     }
     else {
         ulAPB1 = ulHCLK;
     }
-    if (RCC_CFGR & RCC_CFGR_PPRE2_HCLK_DIV2) {                           // if divide enabled
+    if ((RCC_CFGR & RCC_CFGR_PPRE2_HCLK_DIV2) != 0) {                    // if divide enabled
+        #if defined _STM32L432
+        ulAPB2 = (ulHCLK >> (((RCC_CFGR >> 11) & 0x03) + 1));            // APB2 clock according to register settings
+        #else
         ulAPB2 = (ulHCLK >> (((RCC_CFGR >> 13) & 0x03) + 1));            // APB2 clock according to register settings
+        #endif
     }
     else {
         ulAPB2 = ulHCLK;

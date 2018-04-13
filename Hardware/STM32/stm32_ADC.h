@@ -63,15 +63,16 @@ static void fnEndOfConversion(int iADC, unsigned long ulValue)
     }
 }
 
+#if !defined DEVICE_WITHOUT_DMA
 static void fnEndOfConversionDMA1(void)
 {
     if ((ADC1_CR1 & ADC_CR1_AWDEN) != 0) {                               // analog watchdog mode in operation
         ADC1_CR2 &= ~(ADC_CR2_DMA);                                      // toggle the DMA mode control bit so that further DMA operations are executed
         adc_result[0].ucADC_status[(ADC1_CR1 & ADC_CR1_AWDCH_MASK)] = ADC_RESULT_VALID;
-#if defined _WINDOWS
+    #if defined _WINDOWS
         DMA2_S0NDTR = (unsigned long)(16);                               // the number of transfers (decremented after each trigger) - it seems like the HW puts this orignal value back when the DMA is re-enabled (?)
         DMA2_S0M0AR = (DMA2_S0M0AR - (16 * sizeof(unsigned short)));     // the original memory pointer - it seems like the HW sort of does this automatically(?)
-#endif
+    #endif
         ADC1_CR2 |= (ADC_CR2_DMA);
         fnDMA_BufferReset(2, DMA_BUFFER_START);                          // enable again
       //ADC1_CR2 |= ADC_CR2_SWSTART;                                     // start next conversion (not needed in loop mode)
@@ -195,6 +196,7 @@ static void _DMA_Interrupt_7(void)
 #endif
     _DMA_Handler(7);
 }
+#endif
 
 // ADC global interrupt
 //

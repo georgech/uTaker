@@ -38,8 +38,28 @@
     #define _SIM_PORTS
 #endif
 
+#if defined NUCLEO_L432KC                                                // STM32L432 (80Mhz)
+    #define CRYSTAL_FREQ        32768                                    // when there is a 32kHz crystal it can be used for the RTC, LSCO or MCO (optionally divided)
 
-#if defined STM3210C_EVAL                                                // STM32F107VCT (72MHz)
+    #define MCO_CONNECTED_TO_HSI
+    #define MCO_DIVIDE          16                                       // 1..16 possible
+
+  //#define USE_MSI_CLOCK                                                // use internal HSI clock source (4MHz default)
+    #define MSI_CLOCK           4000000
+    #define USE_HSI_CLOCK                                                // use internal HSI clock source (16MHz)
+    #define DISABLE_PLL                                                  // run from clock source directly
+
+    #define HCLK_DIVIDE         1                                        // 1,2,4,8,16,32,64,128,256 or 512
+    #define PCLK1_DIVIDE        2                                        // 1,2,4,8, or 16
+    #define PCLK2_DIVIDE        1                                        // 1,2,4,8, or 16
+
+    #define PIN_COUNT           PIN_COUNT_32_PIN
+    #define PACKAGE_TYPE        PACKAGE_QFN
+    #define SIZE_OF_RAM         (64 * 1024)                              // 64k SRAM
+    #define SIZE_OF_FLASH       (256 * 1024)                             // 256k FLASH
+
+    #define CORE_VOLTAGE        VCORE_RANGE_1                            // normal core voltage operation
+#elif defined STM3210C_EVAL                                              // STM32F107VCT (72MHz)
     #define CRYSTAL_FREQ        25000000
   //#define DISABLE_PLL                                                  // run from clock source directly
   //#define USE_HSI_CLOCK                                                // use internal HSI clock source
@@ -197,18 +217,6 @@
                                                                          // other configurations can be added here
 #endif
 
-
-// Clock settings
-//
-#if defined DISABLE_PLL
-    #undef PLL_OUTPUT_FREQ
-    #if defined USE_HSI_CLOCK
-        #define PLL_OUTPUT_FREQ  HSI_FREQUENCY
-    #else
-        #define PLL_OUTPUT_FREQ  CRYSTAL_FREQ
-    #endif
-#endif
-#define SYSCLK          PLL_OUTPUT_FREQ 
 
 
 #include "../../Hardware/STM32/STM32.h"
@@ -667,7 +675,7 @@
     #define RX_BUFFER_SIZE   (256)
 #endif
 
-#define SUPPORT_ADC
+//#define SUPPORT_ADC
 #define ADC_REFERENCE_VOLTAGE                      3300                  // ADC uses 3.3V reference
 #define ADC_SIM_STEP_SIZE                          200                   // 200mV steps when simulating
 
@@ -690,7 +698,7 @@
     #define ADC12_15_START_VOLTAGE                 1500
 #endif
 
-#define SUPPORT_TIMER                                                    // support hardware timer interrupt configuration
+//#define SUPPORT_TIMER                                                  // support hardware timer interrupt configuration
 #if defined MODBUS_RTU && !defined SUPPORT_TIMER
     #define SUPPORT_TIMER                                                // MODBUS required HW timer in RTU mode
 #endif
@@ -872,7 +880,28 @@
 #define PRIORITY_EMAC              1
 #define PRIORITY_OTG_FS            1
 
-#if defined STM3240G_EVAL
+#if defined NUCLEO_L432KC
+    #define LED_GREEN                  PORTB_BIT3
+
+    #define DEMO_LED_1                 LED_GREEN
+    #define DEMO_LED_2                 PORTB_BIT4
+    #define DEMO_LED_3                 PORTB_BIT5
+    #define DEMO_LED_4                 
+    #define DEMO_USER_PORTS            (DEMO_LED_1 | DEMO_LED_2 | DEMO_LED_3 | DEMO_LED_4)
+
+    #define BLINK_LED                  DEMO_LED_1
+
+    #if !defined USE_MAINTENANCE || defined REMOVE_PORT_INITIALISATIONS
+        #define INIT_WATCHDOG_LED() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(B, (BLINK_LED), (BLINK_LED), (OUTPUT_SLOW | OUTPUT_PUSH_PULL))
+    #else
+        #define INIT_WATCHDOG_LED()                                      // configured according to user parameters
+    #endif
+    #define TOGGLE_WATCHDOG_LED()      _TOGGLE_PORT(B, BLINK_LED)        // blink the LED, if set as output
+    #define CONFIG_TEST_OUTPUT()
+
+    #define INIT_WATCHDOG_DISABLE()    _CONFIG_PORT_INPUT(A, (PORTA_BIT12), (INPUT_PULL_UP)) // PA12 configured as input with pull-up (CN3-5 on extension connector)
+    #define WATCHDOG_DISABLE()         ((_READ_PORT_MASK(A, (PORTA_BIT12))) == 0)
+#elif defined STM3240G_EVAL
     #define JOYSTICK_SEL               0x80                              // I/O expander input
     #define JOYSTICK_DOWN              0x08                              // I/O expander input
     #define JOYSTICK_LEFT              0x20                              // I/O expander input

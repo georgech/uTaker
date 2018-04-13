@@ -170,7 +170,7 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*I
     #define FLASH_GRANULARITY           (2 * 1024)                       // sector delete size
 #endif
 
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432
     #define HSI_FREQUENCY 16000000                                       // high speed internal RC oscillator speed (+/- 1% at 25°C)
 #else
     #define HSI_FREQUENCY 8000000                                        // high speed internal RC oscillator speed (+/- 1% at 25°C)
@@ -195,7 +195,107 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*I
 //
 #define ADC_CONTROLLERS 3
 
-#if defined _STM32F4XX || defined _STM32F7XX
+
+// Clock settings
+//
+#if defined DISABLE_PLL
+    #undef PLL_OUTPUT_FREQ
+    #if defined USE_HSI_CLOCK
+        #define PLL_OUTPUT_FREQ  HSI_FREQUENCY
+    #elif defined USE_MSI_CLOCK && defined _STM32L432
+        #define PLL_OUTPUT_FREQ  MSI_CLOCK
+        #if defined MSI_CLOCK
+            #if (MSI_CLOCK == 100000)
+                #define RCC_CR_MISRANGE_SETTING      RCC_CR_MSIRANGE_100k
+            #elif (MSI_CLOCK == 200000)
+                #define RCC_CR_MISRANGE_SETTING      RCC_CR_MSIRANGE_200k
+            #elif (MSI_CLOCK == 400000)
+                #define RCC_CR_MISRANGE_SETTING      RCC_CR_MSIRANGE_400k
+            #elif (MSI_CLOCK == 800000)
+                #define RCC_CR_MISRANGE_SETTING      RCC_CR_MSIRANGE_800k
+            #elif (MSI_CLOCK == 1000000)
+                #define RCC_CR_MISRANGE_SETTING      RCC_CR_MSIRANGE_1M
+            #elif (MSI_CLOCK == 2000000)
+                #define RCC_CR_MISRANGE_SETTING      RCC_CR_MSIRANGE_2M
+            #elif (MSI_CLOCK == 4000000)
+                #define RCC_CR_MISRANGE_SETTING      RCC_CR_MSIRANGE_4M
+            #elif (MSI_CLOCK == 8000000)
+                #define RCC_CR_MISRANGE_SETTING      RCC_CR_MSIRANGE_8M
+            #elif (MSI_CLOCK == 16000000)
+                #define RCC_CR_MISRANGE_SETTING      RCC_CR_MSIRANGE_16M
+            #elif (MSI_CLOCK == 24000000)
+                #define RCC_CR_MISRANGE_SETTING      RCC_CR_MSIRANGE_24M
+            #elif (MSI_CLOCK == 32000000)
+                #define RCC_CR_MISRANGE_SETTING      RCC_CR_MSIRANGE_32M
+            #elif (MSI_CLOCK == 48000000)
+                #define RCC_CR_MISRANGE_SETTING      RCC_CR_MSIRANGE_48M
+            #else
+                #error "Invalid MSI frequency!"
+            #endif
+        #else
+            #define MSI_CLOCK    4000000
+        #endif
+        #define PLL_OUTPUT_FREQ  MSI_CLOCK
+    #else
+        #define PLL_OUTPUT_FREQ  CRYSTAL_FREQ
+    #endif
+#endif
+#define SYSCLK          PLL_OUTPUT_FREQ
+
+#if defined _STM32L432
+    #if defined DISABLE_PLL
+    #else
+    #endif
+    #if HCLK_DIVIDE == 1
+        #define _RCC_CFGR_HPRE_SYSCLK    RCC_CFGR_HPRE_SYSCLK
+    #elif HCLK_DIVIDE == 2
+        #define _RCC_CFGR_HPRE_SYSCLK    RCC_CFGR_HPRE_SYSCLK_DIV2
+    #elif HCLK_DIVIDE == 4
+        #define _RCC_CFGR_HPRE_SYSCLK    RCC_CFGR_HPRE_SYSCLK_DIV4
+    #elif HCLK_DIVIDE == 8
+        #define _RCC_CFGR_HPRE_SYSCLK    RCC_CFGR_HPRE_SYSCLK_DIV8
+    #elif HCLK_DIVIDE == 16
+        #define _RCC_CFGR_HPRE_SYSCLK    RCC_CFGR_HPRE_SYSCLK_DIV16
+    #elif HCLK_DIVIDE == 64
+        #define _RCC_CFGR_HPRE_SYSCLK    RCC_CFGR_HPRE_SYSCLK_DIV64
+    #elif HCLK_DIVIDE == 128
+        #define _RCC_CFGR_HPRE_SYSCLK    RCC_CFGR_HPRE_SYSCLK_DIV128
+    #elif HCLK_DIVIDE == 256
+        #define _RCC_CFGR_HPRE_SYSCLK    RCC_CFGR_HPRE_SYSCLK_DIV256
+    #elif HCLK_DIVIDE == 512
+        #define _RCC_CFGR_HPRE_SYSCLK    RCC_CFGR_HPRE_SYSCLK_DIV512
+    #else
+        #error "Invalid HCLK divide value!!"
+    #endif
+
+    #if PCLK1_DIVIDE == 1
+        #define _RCC_CFGR_PPRE1_HCLK     RCC_CFGR_PPRE1_HCLK
+    #elif PCLK1_DIVIDE == 2
+        #define _RCC_CFGR_PPRE1_HCLK     RCC_CFGR_PPRE1_HCLK_DIV2
+    #elif PCLK1_DIVIDE == 4
+        #define _RCC_CFGR_PPRE1_HCLK     RCC_CFGR_PPRE1_HCLK_DIV4
+    #elif PCLK1_DIVIDE == 8
+        #define _RCC_CFGR_PPRE1_HCLK     RCC_CFGR_PPRE1_HCLK_DIV8
+    #elif PCLK1_DIVIDE == 16
+        #define _RCC_CFGR_PPRE1_HCLK     RCC_CFGR_PPRE1_HCLK_DIV16
+    #else
+        #error "Invalid PCLK1 divide value!!"
+    #endif
+
+    #if PCLK2_DIVIDE == 1
+        #define _RCC_CFGR_PPRE2_HCLK     RCC_CFGR_PPRE2_HCLK
+    #elif PCLK2_DIVIDE == 2
+        #define _RCC_CFGR_PPRE2_HCLK     RCC_CFGR_PPRE2_HCLK_DIV2
+    #elif PCLK2_DIVIDE == 4
+        #define _RCC_CFGR_PPRE2_HCLK     RCC_CFGR_PPRE2_HCLK_DIV4
+    #elif PCLK2_DIVIDE == 8
+        #define _RCC_CFGR_PPRE2_HCLK     RCC_CFGR_PPRE2_HCLK_DIV8
+    #elif PCLK2_DIVIDE == 16
+        #define _RCC_CFGR_PPRE2_HCLK     RCC_CFGR_PPRE2_HCLK_DIV16
+    #else
+        #error "Invalid PCLK2 divide value!!"
+    #endif
+#elif defined _STM32F4XX || defined _STM32F7XX
     #if !defined DISABLE_PLL
         #if PLL_INPUT_DIV < 2 || PLL_INPUT_DIV > 64
             #error "PLL input must be divided by between 2 and 64"
@@ -468,6 +568,7 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*I
             #define PLL_OUTPUT_FREQ  CRYSTAL_FREQ
         #endif
     #endif
+#elif defined _STM32L432
 #else
     #if !defined DISABLE_PLL
         #if defined USE_HSI_CLOCK
@@ -495,7 +596,6 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*I
         #endif
     #endif
 #endif
-
 
 #define PCLK2       (SYSCLK/PCLK2_DIVIDE)
 #define PCLK1       (SYSCLK/PCLK1_DIVIDE)
@@ -562,13 +662,49 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*I
 #define PACKAGE_LQFP      0
 #define PACKAGE_BGA       1
 
-#define SUPPLY_1_8__2_1   0                                              // supplying F4 with reduced voltage reduces the fastest speed and increase required wait states
+#define SUPPLY_1_8__2_1   0                                              // supplying F4 with reduced voltage reduces the fastest speed and increases required wait states
 #define SUPPLY_2_1__2_4   1
 #define SUPPLY_2_4__2_7   2
 #define SUPPLY_2_7__3_6   3
 
+#define VCORE_RANGE_1     0                                              // STM32L432 can use 1.2V code voltage for maximum speed and minimum wait state
+#define VCORE_RANGE_2     1                                              // 1.0V core reduces maximum operating speed and increaed the required wait states
 
-#if defined _STM32F4XX || defined _STM32F7XX
+#if defined _STM32L432
+    // Determine highest operating frequency and optimal wait states
+    //
+    #if CORE_VOLTAGE == VCORE_RANGE_2                                    // reduced core voltage operation
+        #define PLL_MAX_FREQ         26000000                            // highest speed possible
+        #define HSE_MAX_FREQ         26000000                            // highest external clock speed
+        #define MSI_MAX_FREQ         24000000                            // highest programmable RC clock speed
+
+        #if HCLK <= 6000000
+            #define FLASH_WAIT_STATES   FLASH_ACR_LATENCY_ZERO_WAIT
+        #elif SYSCLK <= 12000000
+            #define FLASH_WAIT_STATES   FLASH_ACR_LATENCY_ONE_WAIT
+        #elif SYSCLK <= 18000000
+            #define FLASH_WAIT_STATES   FLASH_ACR_LATENCY_TWO_WAITS
+        #elif SYSCLK <= 26000000
+            #define FLASH_WAIT_STATES   FLASH_ACR_LATENCY_THREE_WAITS
+        #endif
+    #else
+        #define PLL_MAX_FREQ         80000000                            // highest speed possible
+        #define HSE_MAX_FREQ         48000000                            // highest external clock speed
+        #define MSI_MAX_FREQ         48000000                            // highest programmable RC clock speed
+
+        #if HCLK <= 16000000
+            #define FLASH_WAIT_STATES   FLASH_ACR_LATENCY_ZERO_WAIT
+        #elif SYSCLK <= 32000000
+            #define FLASH_WAIT_STATES   FLASH_ACR_LATENCY_ONE_WAIT
+        #elif SYSCLK <= 48000000
+            #define FLASH_WAIT_STATES   FLASH_ACR_LATENCY_TWO_WAITS
+        #elif SYSCLK <= 64000000
+            #define FLASH_WAIT_STATES   FLASH_ACR_LATENCY_THREE_WAITS
+        #else
+            #define FLASH_WAIT_STATES   FLASH_ACR_LATENCY_TFOUR_WAITS
+        #endif
+    #endif
+#elif defined _STM32F4XX || defined _STM32F7XX
     // Determine highest operating frequency and optimal wait states
     //
     #if SUPPLY_VOLTAGE == SUPPLY_2_7__3_6
@@ -747,7 +883,7 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*I
 
 #if defined _WINDOWS
   #define ENET_BLOCK                    ((unsigned char *)(&STM32.ETH))        // Ethernet Controller
-  #define RESET_CLOCK_BLOCK             ((unsigned char *)(&STM32.RCC))        // Reset and Clock Control
+  #define RCC_BLOCK                     ((unsigned char *)(&STM32.RCC))        // Reset and Clock Control
   #define DMA1_BLOCK                    ((unsigned char *)(&STM32.DMAC[0]))    // DMA Controller 1
   #define DMA2_BLOCK                    ((unsigned char *)(&STM32.DMAC[1]))    // DMA Controller 2
   #define ADC_BLOCK                     ((unsigned char *)(&STM32.ADC))        // ADC
@@ -815,7 +951,7 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*I
   #define PWR_BLOCK                     ((unsigned char *)(&STM32.PWR))        // Power Control
   #define CAN1_BLOCK                    ((unsigned char *)(&STM32.CAN))        // bxCAN1
   #define CAN2_BLOCK                    ((unsigned char *)(&STM32.CAN_SLAVE))  // bxCAN2
-  #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+  #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432
     #define SPI1_I2S_BLOCK              ((unsigned char *)(&STM32.SPI_I2S[0])) // SPI-I2S
     #define SPI2_I2S_BLOCK              ((unsigned char *)(&STM32.SPI_I2S[1])) // SPI-I2S
     #define SPI3_I2S_BLOCK              ((unsigned char *)(&STM32.SPI_I2S[2])) // SPI-I2S
@@ -897,7 +1033,7 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*I
     #define GPIO_PORTK_BLOCK            0x40028000
   #endif
     #define CRC_BLOCK                   0x40023000
-    #define RESET_CLOCK_BLOCK           0x40023800
+    #define RCC_BLOCK                   0x40023800
     #define FMI_BLOCK                   0x40023c00
     #define BKPSRAM_BLOCK               0x40024000
     #define DMA1_BLOCK                  0x40026000
@@ -917,6 +1053,82 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*I
     //
     #define FSMC_BLOCK                  0xa0000000
     #define QUADSPI_BLOCK               0xa0001000
+
+    #define CORTEX_M3_BLOCK             0xe000e000
+    #define DBG_BLOCK                   0xe0042000
+#elif defined _STM32L432
+    // APB1 peripherals
+    //
+    #define TIM2_BLOCK                  0x40000000
+    #define TIM3_BLOCK                  0x40000400
+  //#define TIM4_BLOCK                  0x40000800
+  //#define TIM5_BLOCK                  0x40000c00
+    #define TIM6_BLOCK                  0x40001000
+    #define TIM7_BLOCK                  0x40001400
+  //#define TIM12_BLOCK                 0x40001800
+  //#define TIM13_BLOCK                 0x40001c00
+  //#define TIM14_BLOCK                 0x40002000
+    #define LCD_BLOCK                   0x40002400                       // only STM32L4x3xx
+    #define RTC_BLOCK                   0x40002800
+    #define WWDG_BLOCK                  0x40002c00
+    #define IWDG_BLOCK                  0x40003000
+    #define SPI2_I2S_BLOCK              0x40003800
+    #define SPI3_I2S_BLOCK              0x40003c00
+    #define USART2_BLOCK                0x40004400
+    #define USART3_BLOCK                0x40004800
+    #define UART4_BLOCK                 0x40004c00
+    #define I2C1_BLOCK                  0x40005400
+    #define I2C2_BLOCK                  0x40005800
+    #define I2C3_BLOCK                  0x40005c00
+    #define CRS_BLOCK                   0x40006000
+    #define CAN1_BLOCK                  0x40006400
+    #define USB_FS_BLOCK                0x40006800
+    #define USB_SRAM_BLOCK              0x40006c00
+    #define PWR_BLOCK                   0x40007000
+    #define DAC1_BLOCK                  0x40007400
+    #define OPAMP_BLOCK                 0x40007800
+    #define LPTIM1_BLOCK                0x40007c00
+    #define LPUART1_BLOCK               0x40008000
+    #define I2C4_BLOCK                  0x40008400
+    #define SWPMI1_BLOCK                0x40008800
+    #define LPTIM2_BLOCK                0x40009400
+
+    // APB2 peripherals
+    //
+    #define SYSCFG_BLOCK                0x40010000
+    #define VREFBUF_BLOCK               0x40010030
+    #define COMP_BLOCK                  0x40010200
+    #define EXTI_BLOCK                  0x40010400
+    #define FIREWALL_BLOCK              0x4001c000
+    #define SDMMC_BLOCK                 0x40012800
+    #define TIM1_BLOCK                  0x40012c00
+    #define SPI1_BLOCK                  0x40013000
+    #define USART_BLOCK                 0x40013800
+    #define TIM15_BLOCK                 0x40014000
+    #define TIM16_BLOCK                 0x40014400
+    #define SAI1_BLOCK                  0x40015400
+    #define DFSDM1_BLOCK                0x40016000
+
+    // AHB1 peripherals
+    //
+    #define DMA1_BLOCK                  0x40020000
+    #define DMA2_BLOCK                  0x40020400
+    #define RCC_BLOCK                   0x40021000
+    #define FMI_BLOCK                   0x40022000
+    #define CRC_BLOCK                   0x40023000
+    #define TSC_BLOCK                   0x40024000
+
+    // AHB2 peripherals
+    //
+    #define GPIO_PORTA_BLOCK            0x48000000
+    #define GPIO_PORTB_BLOCK            0x48000400
+    #define GPIO_PORTC_BLOCK            0x48000800
+    #define GPIO_PORTD_BLOCK            0x48000c00
+    #define GPIO_PORTE_BLOCK            0x48001000
+    #define GPIO_PORTH_BLOCK            0x48001c00
+    #define ADC_BLOCK                   0x50040000
+    #define AES_BLOCK                   0x50060000
+    #define RNG_BLOCK                   0x50060800
 
     #define CORTEX_M3_BLOCK             0xe000e000
     #define DBG_BLOCK                   0xe0042000
@@ -945,8 +1157,8 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*I
     #define I2C2_BLOCK                  0x40005800
     #define USB_DEV_FS_BLOCK            0x40005c00
     #define USB_CAN_MEM_BLOCK           0x40006000                       // not accessible in connectivity line devices
-    #define CAN2_BLOCK                  0x40006800
     #define CAN1_BLOCK                  0x40006400
+    #define CAN2_BLOCK                  0x40006800
     #define BKP_BLOCK                   0x40006c00
     #define PWR_BLOCK                   0x40007000
     #define DAC_BLOCK                   0x40007400
@@ -978,7 +1190,7 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*I
     #define SDIO_BLOCK                  0x40018000
     #define DMA1_BLOCK                  0x40020000
     #define DMA2_BLOCK                  0x40020400
-    #define RESET_CLOCK_BLOCK           0x40021000
+    #define RCC_BLOCK                   0x40021000
     #define FMI_BLOCK                   0x40022000
     #define CRC_BLOCK                   0x40023000
     #define ENET_BLOCK                  0x40028000
@@ -1957,7 +2169,7 @@ typedef struct stSTM32_BD
 // Reset and clock control
 //
 #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
-    #define RCC_CR                           *(volatile unsigned long *)(RESET_CLOCK_BLOCK + 0x00)  // Clock Control Register
+    #define RCC_CR                           *(volatile unsigned long *)(RCC_BLOCK + 0x00) // clock control register
       #define RCC_CR_HSION                   0x00000001
       #define RCC_CR_HSIRDY                  0x00000002                  // read-only
       #define RCC_CR_HSITRIM_MASK            0x000000f8
@@ -1973,9 +2185,8 @@ typedef struct stSTM32_BD
         #define RCC_CR_PLLI2SRDY             0x08000000                  // read-only
         #define RCC_CR_PLLSAION              0x10000000
         #define RCC_CR_PLLSAIRDY             0x20000000                  // read-only
-
       #endif
-    #define RCC_PLLCFGR                      *(volatile unsigned long *)(RESET_CLOCK_BLOCK + 0x04) // PLL Configuration Register
+    #define RCC_PLLCFGR                      *(volatile unsigned long *)(RCC_BLOCK + 0x04) // PLL configuration register
         #define RCC_PLLCFGR_M_MASK           0x0000003f
         #define RCC_PLLCFGR_N_MASK           0x00007fc0
         #define RCC_PLLCFGR_P_MASK           0x00030000
@@ -1983,7 +2194,7 @@ typedef struct stSTM32_BD
         #define RCC_PLLCFGR_PLLSRC_HSI       0x00000000                  // internal 16MHz RC used as PLL source
         #define RCC_PLLCFGR_Q_MASK           0x0f000000
         #define RCC_PLLCFGR_RESET_VALUE      0x24003010
-    #define RCC_CFGR                         *(volatile unsigned long *)(RESET_CLOCK_BLOCK + 0x08)  // Clock Configuration Register
+    #define RCC_CFGR                         *(volatile unsigned long *)(RCC_BLOCK + 0x08) // clock configuration register
       #define RCC_CFGR_HSI_SELECT            0x00000000                  // HSI selected as system clock
       #define RCC_CFGR_HSE_SELECT            0x00000001                  // HSE selected as system clock
       #define RCC_CFGR_PLL_SELECT            0x00000002                  // PLL selected as system clock
@@ -2051,8 +2262,8 @@ typedef struct stSTM32_BD
       #define RCC_CFGR_MCO1_PRE              0x07000000
       #define RCC_CFGR_MCO2_PRE              0x38000000
       #define RCC_CFGR_MCO2                  0xc0000000
-    #define RCC_CIR                          *(volatile unsigned long *)(RESET_CLOCK_BLOCK + 0x0c)  // Clock Interrupt Register
-    #define RCC_AHB1RSTR                     *(volatile unsigned long *)(RESET_CLOCK_BLOCK + 0x10)  // AHB1 Peripheral Reset Register
+    #define RCC_CIR                          *(volatile unsigned long *)(RCC_BLOCK + 0x0c) // clock interrupt register
+    #define RCC_AHB1RSTR                     *(volatile unsigned long *)(RCC_BLOCK + 0x10) // AHB1 peripheral reset register
       #define RCC_AHB1RSTR_GPIOARST          0x00000001                  // {19}
       #define RCC_AHB1RSTR_GPIOBRST          0x00000002
       #define RCC_AHB1RSTR_GPIOCSRT          0x00000004
@@ -2072,16 +2283,16 @@ typedef struct stSTM32_BD
       #define RCC_AHB1RSTR_ETHMACPTPRST      0x10000000
       #define RCC_AHB1RSTR_OTGHSRST          0x20000000
       #define RCC_AHB1RSTR_OTGHSULPIRST      0x40000000
-    #define RCC_AHB2RSTR                     *(volatile unsigned long *)(RESET_CLOCK_BLOCK + 0x14)  // AHB2 Peripheral Reset Register
+    #define RCC_AHB2RSTR                     *(volatile unsigned long *)(RCC_BLOCK + 0x14) // AHB2 peripheral reset register
       #define RCC_APB2RSTR_DCMIRST           0x00000001                  // {19}
       #define RCC_APB2RSTR_CRYPRST           0x00000010
       #define RCC_APB2RSTR_HASHRST           0x00000020
       #define RCC_APB2RSTR_RNGRST            0x00000040
       #define RCC_APB2RSTR_OTGFSRST          0x00000080
-    #define RCC_AHB3RSTR                     *(volatile unsigned long *)(RESET_CLOCK_BLOCK + 0x18)  // AHB3 Peripheral Reset Register
+    #define RCC_AHB3RSTR                     *(volatile unsigned long *)(RCC_BLOCK + 0x18) // AHB3 peripheral reset register
       #define RCC_APB3RSTR_FSMCRST           0x00000001                  // {19}
       #define RCC_APB3RSTR_QSPIRST           0x00000002
-    #define RCC_APB1RSTR                     *(volatile unsigned long *)(RESET_CLOCK_BLOCK + 0x20)  // APB1 Peripheral Reset Register
+    #define RCC_APB1RSTR                     *(volatile unsigned long *)(RCC_BLOCK + 0x20) // APB1 peripheral reset register
       #define RCC_APB1RSTR_TIM2RST           0x00000001
       #define RCC_APB1RSTR_TIM3RST           0x00000002
       #define RCC_APB1RSTR_TIM4RST           0x00000004
@@ -2102,7 +2313,7 @@ typedef struct stSTM32_BD
       #define RCC_APB1RSTR_BKPRST            0x08000000
       #define RCC_APB1RSTR_PWRRST            0x10000000
       #define RCC_APB1RSTR_DACRST            0x20000000
-    #define RCC_APB2RSTR                     *(volatile unsigned long *)(RESET_CLOCK_BLOCK + 0x24)  // APB2 Peripheral Reset Register
+    #define RCC_APB2RSTR                     *(volatile unsigned long *)(RCC_BLOCK + 0x24) // APB2 peripheral reset register
       #define RCC_APB2RSTR_TIM1RST           0x00000001                  // {19}
       #define RCC_APB2RSTR_TIM8RST           0x00000004
       #define RCC_APB2RSTR_USART1RST         0x00000010
@@ -2116,7 +2327,7 @@ typedef struct stSTM32_BD
       #define RCC_APB2RSTR_TIM9RST           0x00010000
       #define RCC_APB2RSTR_TIM10RST          0x00020000
       #define RCC_APB2RSTR_TIM20RST          0x00040000
-    #define RCC_AHB1ENR                      *(volatile unsigned long *)(RESET_CLOCK_BLOCK + 0x30)  // AHB1 Peripheral Clock Enable Register
+    #define RCC_AHB1ENR                      *(volatile unsigned long *)(RCC_BLOCK + 0x30) // AHB1 peripheral clock enable register
       #define RCC_AHB1ENR_GPIOAEN            0x00000001
       #define RCC_AHB1ENR_GPIOBEN            0x00000002
       #define RCC_AHB1ENR_GPIOCEN            0x00000004
@@ -2144,16 +2355,16 @@ typedef struct stSTM32_BD
       #define RCC_AHB1ENR_ETHMACPTPEN        0x10000000
       #define RCC_AHB1ENR_OTGHSEN            0x20000000
       #define RCC_AHB1ENR_OTGHSULPIEN        0x40000000
-    #define RCC_AHB2ENR                      *(volatile unsigned long *)(RESET_CLOCK_BLOCK + 0x34)  // AHB2 Peripheral Clock Enable Register
+    #define RCC_AHB2ENR                      *(volatile unsigned long *)(RCC_BLOCK + 0x34) // AHB2 peripheral clock enable register
       #define RCC_AHB2ENR_DCMIEN             0x00000001
       #define RCC_AHB2ENR_CRYPEN             0x00000010
       #define RCC_AHB2ENR_HASHEN             0x00000020
       #define RCC_AHB2ENR_RNGEN              0x00000040
       #define RCC_AHB2ENR_OTGFSEN            0x00000080
-    #define RCC_AHB3ENR                      *(volatile unsigned long *)(RESET_CLOCK_BLOCK + 0x38)  // AHB3 Peripheral Clock Enable Register
+    #define RCC_AHB3ENR                      *(volatile unsigned long *)(RCC_BLOCK + 0x38) // AHB3 peripheral clock enable register
       #define RCC_AHB3ENR_FSMCEN             0x00000001
       #define RCC_AHB3ENR_QSPIEN             0x00000002
-    #define RCC_APB1ENR                      *(volatile unsigned long *)(RESET_CLOCK_BLOCK + 0x40)  // APB1 Peripheral Clock Enable Register
+    #define RCC_APB1ENR                      *(volatile unsigned long *)(RCC_BLOCK + 0x40) // APB1 peripheral clock enable register
       #define RCC_APB1ENR_TIM2EN             0x00000001
       #define RCC_APB1ENR_TIM3EN             0x00000002
       #define RCC_APB1ENR_TIM4EN             0x00000004
@@ -2179,7 +2390,7 @@ typedef struct stSTM32_BD
       #define RCC_APB1ENR_DACEN              0x20000000
       #define RCC_APB1ENR_UART7EN            0x40000000
       #define RCC_APB1ENR_UART8EN            0x80000000
-    #define RCC_APB2ENR                      *(volatile unsigned long *)(RESET_CLOCK_BLOCK + 0x44)  // APB2 Peripheral Clock Enable Register
+    #define RCC_APB2ENR                      *(volatile unsigned long *)(RCC_BLOCK + 0x44) // APB2 peripheral clock enable register
       #define RCC_APB2ENR_TIM1EN             0x00000001
       #define RCC_APB2ENR_TIM8EN             0x00000004
       #define RCC_APB2ENR_USART1EN           0x00000010
@@ -2193,14 +2404,14 @@ typedef struct stSTM32_BD
       #define RCC_APB2ENR_TIM9EN             0x00010000
       #define RCC_APB2ENR_TIM10EN            0x00020000
       #define RCC_APB2ENR_TIM11EN            0x00040000
-    #define RCC_AHB1LPENR                    *(volatile unsigned long *)(RESET_CLOCK_BLOCK + 0x50)  // AHB1 Peripheral Clock Enabled in Low Power Register
-    #define RCC_AHB2LPENR                    *(volatile unsigned long *)(RESET_CLOCK_BLOCK + 0x54)  // AHB2 Peripheral Clock Enabled in Low Power Register
-    #define RCC_AHB3LPENR                    *(volatile unsigned long *)(RESET_CLOCK_BLOCK + 0x58)  // AHB3 Peripheral Clock Enabled in Low Power Register
+    #define RCC_AHB1LPENR                    *(volatile unsigned long *)(RCC_BLOCK + 0x50) // AHB1 peripheral clock enabled in low power register
+    #define RCC_AHB2LPENR                    *(volatile unsigned long *)(RCC_BLOCK + 0x54) // AHB2 peripheral clock enabled in low power register
+    #define RCC_AHB3LPENR                    *(volatile unsigned long *)(RCC_BLOCK + 0x58) // AHB3 peripheral clock enabled in low power register
 
-    #define RCC_APB1LPENR                    *(volatile unsigned long *)(RESET_CLOCK_BLOCK + 0x60)  // APB1 Peripheral Clock Enabled in Low Power Register
-    #define RCC_APB2LPENR                    *(volatile unsigned long *)(RESET_CLOCK_BLOCK + 0x64)  // APB2 Peripheral Clock Enabled in Low Power Register
+    #define RCC_APB1LPENR                    *(volatile unsigned long *)(RCC_BLOCK + 0x60) // APB1 peripheral clock enabled in low power register
+    #define RCC_APB2LPENR                    *(volatile unsigned long *)(RCC_BLOCK + 0x64) // APB2 peripheral clock enabled in low power register
 
-    #define RCC_BDCR                         *(volatile unsigned long *)(RESET_CLOCK_BLOCK + 0x70)  // Backup Domain Control Register
+    #define RCC_BDCR                         *(volatile unsigned long *)(RCC_BLOCK + 0x70) // backup domain control register
       #define RCC_BDCR_LSEON                 0x00000001                  // external low speed oscillator enable
       #define RCC_BDCR_LSERDY                0x00000002                  // external low speed oscillator ready (read-only)
       #define RCC_BDCR_LSEBYP                0x00000004                  // external low speed oscillator bypassed
@@ -2210,7 +2421,7 @@ typedef struct stSTM32_BD
       #define RCC_BDCR_RTCSEC_HSE            0x00000300                  // HSE oscillator clock divided by RTCPRE[4:0] in RCC:CFGR used as the RTC clock
       #define RCC_BDCR_RTCEN                 0x00008000                  // RTC enable
       #define RCC_BDCR_BDRST                 0x00010000                  // backup domain reset
-    #define RCC_CSR                          *(volatile unsigned long *)(RESET_CLOCK_BLOCK + 0x74)  // Control Status Register
+    #define RCC_CSR                          *(volatile unsigned long *)(RCC_BLOCK + 0x74) // control status register
       #define RCC_CSR_LSION                  0x00000001                  // enable 40kHz RC oscillator
       #define RCC_CSR_LSIRDY                 0x00000002                  // read-only
       #define RCC_CSR_RMVF                   0x01000000                  // remove reset flag (write 1 to clear reset flags)
@@ -2220,10 +2431,169 @@ typedef struct stSTM32_BD
       #define RCC_CSR_IWDGRSTF               0x20000000                  // independent watchdog reset flag
       #define RCC_CSR_WWDGRSTF               0x40000000                  // window watchdog reset flag
       #define RCC_CSR_LPWRRSTF               0x80000000                  // low power reset flag
-    #define RCC_SSCGR                        *(volatile unsigned long *)(RESET_CLOCK_BLOCK + 0x80)  // Spread Spectrum Clock Generation Register
-    #define RCC_PLLI2SCFGR                   *(volatile unsigned long *)(RESET_CLOCK_BLOCK + 0x84)  // PLLI2S Configuration Register
+      #define RESET_CAUSE_FLAGS              (RCC_CSR_RMVF | RCC_CSR_PINRSTF | RCC_CSR_PORRSTF | RCC_CSR_SFTRSTF | RCC_CSR_IWDGRSTF | RCC_CSR_WWDGRSTF | RCC_CSR_LPWRRSTF);
+    #define RCC_SSCGR                        *(volatile unsigned long *)(RCC_BLOCK + 0x80) // spread spectrum clock generation register
+    #define RCC_PLLI2SCFGR                   *(volatile unsigned long *)(RCC_BLOCK + 0x84) // PLLI2S configuration register
+#elif defined _STM32L432
+    #define RCC_CR                           *(volatile unsigned long *)(RCC_BLOCK + 0x00) // clock control register
+      #define RCC_CR_MSION                   0x00000001
+      #define RCC_CR_MSIRDY                  0x00000002                  // read-only
+      #define RCC_CR_MSIPLLEN                0x00000004
+      #define RCC_CR_MSIRGSEL                0x00000008
+      #define RCC_CR_MSIRANGE_100k           0x00000000                  // MSI frequency around 100kHz (MSI range should only be changed when off or ready - not when on AND not-ready)
+      #define RCC_CR_MSIRANGE_200k           0x00000010                  // MSI frequency around 200kHz
+      #define RCC_CR_MSIRANGE_400k           0x00000020                  // MSI frequency around 400kHz
+      #define RCC_CR_MSIRANGE_800k           0x00000030                  // MSI frequency around 800kHz
+      #define RCC_CR_MSIRANGE_1M             0x00000040                  // MSI frequency around 1M
+      #define RCC_CR_MSIRANGE_2M             0x00000050                  // MSI frequency around 2M
+      #define RCC_CR_MSIRANGE_4M             0x00000060                  // MSI frequency around 4M (dfeault after reset)
+      #define RCC_CR_MSIRANGE_8M             0x00000070                  // MSI frequency around 8M
+      #define RCC_CR_MSIRANGE_16M            0x00000080                  // MSI frequency around 16M
+      #define RCC_CR_MSIRANGE_24M            0x00000090                  // MSI frequency around 24M
+      #define RCC_CR_MSIRANGE_32M            0x000000a0                  // MSI frequency around 32M
+      #define RCC_CR_MSIRANGE_48M            0x000000b0                  // MSI frequency around 48M
+      #define RCC_CR_MSIRANGE_MASK           0x000000f0
+      #define RCC_CR_HSION                   0x00000100
+      #define RCC_CR_HSIKERON                0x00000200
+      #define RCC_CR_HSIRDY                  0x00000400                  // read-only
+      #define RCC_CR_HSIASFS                 0x00000800
+      #define RCC_CR_HSEON                   0x00010000
+      #define RCC_CR_HSERDY                  0x00020000                  // read-only
+      #define RCC_CR_HSEBYP                  0x00040000
+      #define RCC_CR_CSSON                   0x00080000
+      #define RCC_CR_PLLON                   0x01000000
+      #define RCC_CR_PLLRDY                  0x02000000                  // read-only
+      #define RCC_CR_PLLSAI1ON               0x04000000
+      #define RCC_CR_PLLSAI1RDY              0x08000000                  // read-only
+    #define RCC_ICSCR                        *(volatile unsigned long *)(RCC_BLOCK + 0x04)
+    #define RCC_CFGR                         *(volatile unsigned long *)(RCC_BLOCK + 0x08) // clock configuration register
+      #define RCC_CFGR_MSI_SELECT            0x00000000                  // MSI selected as system clock
+      #define RCC_CFGR_HSI16_SELECT          0x00000001                  // HSI16 selected as system clock
+      #define RCC_CFGR_HSE_SELECT            0x00000003                  // HSE selected as system clock
+      #define RCC_CFGR_PLL_SELECT            0x00000004                  // PLL selected as system clock
+      #define RCC_CFGR_SYSCLK_MASK           0x00000003
+      #define RCC_CFGR_MSI_USED              0x00000000                  // MSI used as system clock
+      #define RCC_CFGR_HSI16_USED            0x00000004                  // HSI16 used as system clock
+      #define RCC_CFGR_HSE_USED              0x00000008                  // HSE used as system clock
+      #define RCC_CFGR_PLL_USED              0x0000000c                  // PLL used as system clock
+      #define RCC_CFGR_SWS_MASK              0x0000000c                  // read-only
+      #define RCC_CFGR_HPRE_SYSCLK           0x00000000                  // AHB prescaler
+      #define RCC_CFGR_HPRE_SYSCLK_DIV2      0x00000080
+      #define RCC_CFGR_HPRE_SYSCLK_DIV4      0x00000090
+      #define RCC_CFGR_HPRE_SYSCLK_DIV8      0x000000a0
+      #define RCC_CFGR_HPRE_SYSCLK_DIV16     0x000000b0
+      #define RCC_CFGR_HPRE_SYSCLK_DIV64     0x000000c0
+      #define RCC_CFGR_HPRE_SYSCLK_DIV128    0x000000d0
+      #define RCC_CFGR_HPRE_SYSCLK_DIV256    0x000000e0
+      #define RCC_CFGR_HPRE_SYSCLK_DIV512    0x000000f0
+      #define RCC_CFGR_PPRE1_HCLK            0x00000000                  // PCLK1 speed
+      #define RCC_CFGR_PPRE1_HCLK_DIV2       0x00000400
+      #define RCC_CFGR_PPRE1_HCLK_DIV4       0x00000500
+      #define RCC_CFGR_PPRE1_HCLK_DIV8       0x00000600
+      #define RCC_CFGR_PPRE1_HCLK_DIV16      0x00000800
+      #define RCC_CFGR_PPRE2_HCLK            0x00000000                  // PCLK2 speed
+      #define RCC_CFGR_PPRE2_HCLK_DIV2       0x00002000
+      #define RCC_CFGR_PPRE2_HCLK_DIV4       0x00002800
+      #define RCC_CFGR_PPRE2_HCLK_DIV8       0x00003000
+      #define RCC_CFGR_PPRE2_HCLK_DIV16      0x00003800
+      #define RCC_CFGR_STOPWUCK              0x00008000                  // wakeup from stop and CSS backup clock selection
+      #define RCC_CFGR_MCOSEL_DISABLED       0x00000000
+      #define RCC_CFGR_MCOSEL_SYSCLK         0x01000000
+      #define RCC_CFGR_MCOSEL_MSI            0x02000000
+      #define RCC_CFGR_MCOSEL_HSI16          0x03000000
+      #define RCC_CFGR_MCOSEL_HSE            0x04000000
+      #define RCC_CFGR_MCOSEL_PLL            0x05000000
+      #define RCC_CFGR_MCOSEL_LSI            0x06000000
+      #define RCC_CFGR_MCOSEL_LSE            0x07000000
+      #define RCC_CFGR_MCOSEL_HSI48          0x08000000
+      #define RCC_CFGR_MCOSEL_MASK           0x0f000000
+      #define RCC_CFGR_MCOPRE_1              0x00000000                  // MCO divided by 1
+      #define RCC_CFGR_MCOPRE_2              0x10000000                  // MCO divided by 2
+      #define RCC_CFGR_MCOPRE_4              0x20000000                  // MCO divided by 4
+      #define RCC_CFGR_MCOPRE_8              0x30000000                  // MCO divided by 8
+      #define RCC_CFGR_MCOPRE_16             0x40000000                  // MCO divided by 16
+      #define RCC_CFGR_MCOPRE_MASK           0x70000000
+    #define RCC_PLLCFGR                      *(volatile unsigned long *)(RCC_BLOCK + 0x0c) // PLL configuration register
+    #define RCC_PLLSAI1CFGR                  *(volatile unsigned long *)(RCC_BLOCK + 0x10) // PLL SAI1 configuration register
+    #define RCC_CIR                          *(volatile unsigned long *)(RCC_BLOCK + 0x18) // clock interrupt register
+    #define RCC_CIFR                         *(volatile unsigned long *)(RCC_BLOCK + 0x1c) // clock interrupt flag register
+    #define RCC_CICR                         *(volatile unsigned long *)(RCC_BLOCK + 0x20) // clock interrupt clear register
+    #define RCC_AHB1RSTR                     *(volatile unsigned long *)(RCC_BLOCK + 0x28) // AHB1 peripheral reset register
+    #define RCC_AHB2RSTR                     *(volatile unsigned long *)(RCC_BLOCK + 0x2c) // AHB2 peripheral reset register
+      #define RCC_AHB2RSTR_GPIOARST          0x00000001
+      #define RCC_AHB2RSTR_GPIOBRST          0x00000002
+      #define RCC_AHB2RSTR_GPIOCRST          0x00000004
+      #define RCC_AHB2RSTR_GPIODRST          0x00000008
+      #define RCC_AHB2RSTR_GPIOERST          0x00000010
+      #define RCC_AHB2RSTR_GPIOFRST          0x00000020
+      #define RCC_AHB2RSTR_GPIOGRST          0x00000040
+      #define RCC_AHB2RSTR_GPIOHRST          0x00000080
+    #define RCC_AHB3RSTR                     *(volatile unsigned long *)(RCC_BLOCK + 0x30) // AHB3 peripheral reset register
+    #define RCC_APB1RSTR1                    *(volatile unsigned long *)(RCC_BLOCK + 0x38) // APB1 peripheral reset register 1
+    #define RCC_APB1RSTR2                    *(volatile unsigned long *)(RCC_BLOCK + 0x3c) // APB1 peripheral reset register 2
+    #define RCC_APB2RSTR                     *(volatile unsigned long *)(RCC_BLOCK + 0x40) // APB2 peripheral enable register
+    #define RCC_AHB1ENR                      *(volatile unsigned long *)(RCC_BLOCK + 0x48) // AHB1 peripheral enable register
+      #define RCC_AHB1ENR_FLASHEN            0x00000100
+    #define RCC_AHB2ENR                      *(volatile unsigned long *)(RCC_BLOCK + 0x4c) // AHB2 peripheral enable register
+        #define RCC_AHB2ENR_GPIOAEN          0x00000001
+        #define RCC_AHB2ENR_GPIOBEN          0x00000002
+        #define RCC_AHB2ENR_GPIOCEN          0x00000004
+        #define RCC_AHB2ENR_GPIODEN          0x00000008
+        #define RCC_AHB2ENR_GPIOEEN          0x00000010
+        #define RCC_AHB2ENR_GPIOFEN          0x00000020
+        #define RCC_AHB2ENR_GPIOGEN          0x00000040
+        #define RCC_AHB2ENR_GPIOHEN          0x00000080
+    #define RCC_AHB3ENR                      *(volatile unsigned long *)(RCC_BLOCK + 0x50) // AHB3 peripheral enable register
+    #define RCC_APB1ENR1                     *(volatile unsigned long *)(RCC_BLOCK + 0x58) // APB1 peripheral enable register 1
+    #define RCC_APB1ENR2                     *(volatile unsigned long *)(RCC_BLOCK + 0x5c) // APB1 peripheral enable register 2
+    #define RCC_APB2ENR                      *(volatile unsigned long *)(RCC_BLOCK + 0x60) // APB2 peripheral enable register
+      #define RCC_APB2ENR_SYSCFGEN           0x00000001
+      #define RCC_APB2ENR_FWEN               0x00000080
+      #define RCC_APB2ENR_SDMMC1EN           0x00000400
+      #define RCC_APB2ENR_TIM1EN             0x00000800
+      #define RCC_APB2ENR_SPI1EN             0x00001000
+      #define RCC_APB2ENR_USART1EN           0x00004000
+      #define RCC_APB2ENR_TIM15EN            0x00010000
+      #define RCC_APB2ENR_TIM16EN            0x00020000
+      #define RCC_APB2ENR_SAI1EN             0x00200000
+      #define RCC_APB2ENR_DFSDM1EN           0x01000000
+    #define RCC_AHB1SMENR                    *(volatile unsigned long *)(RCC_BLOCK + 0x68)
+    #define RCC_AHB2SMENR                    *(volatile unsigned long *)(RCC_BLOCK + 0x6c)
+    #define RCC_AHB3SMENR                    *(volatile unsigned long *)(RCC_BLOCK + 0x70)
+    #define RCC_APB1SMENR1                   *(volatile unsigned long *)(RCC_BLOCK + 0x78)
+    #define RCC_APB1SMENR2                   *(volatile unsigned long *)(RCC_BLOCK + 0x7c)
+    #define RCC_APB2SMENR                    *(volatile unsigned long *)(RCC_BLOCK + 0x80)
+    #define RCC_CCIPR                        *(volatile unsigned long *)(RCC_BLOCK + 0x88)
+    #define RCC_BDCR                         *(volatile unsigned long *)(RCC_BLOCK + 0x90) // backup domain control register
+    #define RCC_CSR                          *(volatile unsigned long *)(RCC_BLOCK + 0x94) // control status register
+      #define RCC_CSR_LSION                  0x00000001                  // enable 32kHz RC oscillator
+      #define RCC_CSR_LSIRDY                 0x00000002                  // read-only
+      #define RCC_CSR_MSIRANGE_100k          0x00000000                  // MSI frequency around 100kHz
+      #define RCC_CSR_MSIRANGE_200k          0x00000010                  // MSI frequency around 200kHz
+      #define RCC_CSR_MSIRANGE_400k          0x00000020                  // MSI frequency around 400kHz
+      #define RCC_CSR_MSIRANGE_800k          0x00000030                  // MSI frequency around 800kHz
+      #define RCC_CSR_MSIRANGE_1M            0x00000040                  // MSI frequency around 1M
+      #define RCC_CSR_MSIRANGE_2M            0x00000050                  // MSI frequency around 2M
+      #define RCC_CSR_MSIRANGE_4M            0x00000060                  // MSI frequency around 4M (dfeault after reset)
+      #define RCC_CSR_MSIRANGE_8M            0x00000070                  // MSI frequency around 8M
+      #define RCC_CSR_MSIRANGE_16M           0x00000080                  // MSI frequency around 16M
+      #define RCC_CSR_MSIRANGE_24M           0x00000090                  // MSI frequency around 24M
+      #define RCC_CSR_MSIRANGE_32M           0x000000a0                  // MSI frequency around 32M
+      #define RCC_CSR_MSIRANGE_48M           0x000000b0                  // MSI frequency around 48M
+      #define RCC_CSR_MSISRANGE_MASK         0x00000f00                  // read/write
+      #define RCC_CSR_RMVF                   0x01000000                  // read/write
+      #define RCC_CSR_FWRSTF                 0x02000000                  // read-only
+      #define RCC_CSR_PINRSTF                0x04000000                  // read-only
+      #define RCC_CSR_PORRSTF                0x08000000                  // read-only
+      #define RCC_CSR_SFTRSTF                0x10000000                  // read-only
+      #define RCC_CSR_IWDGRSTF               0x20000000                  // read-only
+      #define RCC_CSR_WWDGRSTF               0x40000000                  // read-only
+      #define RCC_CSR_LPWRRSTF               0x80000000                  // read-only
+      #define RESET_CAUSE_FLAGS              (RCC_CSR_FWRSTF | RCC_CSR_RMVF | RCC_CSR_PINRSTF | RCC_CSR_PORRSTF | RCC_CSR_SFTRSTF | RCC_CSR_IWDGRSTF | RCC_CSR_WWDGRSTF | RCC_CSR_LPWRRSTF)
+    #define RCC_CRRCR                        *(volatile unsigned long *)(RCC_BLOCK + 0x98)
+    #define RCC_CCCIPR2                      *(volatile unsigned long *)(RCC_BLOCK + 0x9c)
 #else
-    #define RCC_CR                           *(volatile unsigned long *)(RESET_CLOCK_BLOCK + 0x00)  // Clock Control Register
+    #define RCC_CR                           *(volatile unsigned long *)(RCC_BLOCK + 0x00) // clock control register
       #define RCC_CR_HSION                   0x00000001
       #define RCC_CR_HSIRDY                  0x00000002                  // read-only
       #define RCC_CR_HSITRIM_MASK            0x000000f8
@@ -2238,7 +2608,7 @@ typedef struct stSTM32_BD
       #define RCC_CR_PLL2RDY                 0x08000000                  // read-only
       #define RCC_CR_PLL3ON                  0x10000000
       #define RCC_CR_PLL3RDY                 0x20000000                  // read-only
-    #define RCC_CFGR                         *(volatile unsigned long *)(RESET_CLOCK_BLOCK + 0x04)  // Clock Configuration Register
+    #define RCC_CFGR                         *(volatile unsigned long *)(RCC_BLOCK + 0x04) // clock configuration register
       #define RCC_CFGR_HSI_SELECT            0x00000000                  // HSI selected as system clock
       #define RCC_CFGR_HSE_SELECT            0x00000001                  // HSE selected as system clock
       #define RCC_CFGR_PLL_SELECT            0x00000002                  // PLL selected as system clock
@@ -2287,7 +2657,7 @@ typedef struct stSTM32_BD
       #else
         #define RCC_CFGR_MCO1_MASK           0x07000000
       #endif
-    #define RCC_CIR                          *(volatile unsigned long *)(RESET_CLOCK_BLOCK + 0x08)  // Clock Interrupt Register
+    #define RCC_CIR                          *(volatile unsigned long *)(RCC_BLOCK + 0x08) // clock interrupt register
       #define RCC_CIR_LSIRDYF                0x00000001                  // read-only
       #define RCC_CIR_LSERDYF                0x00000002                  // read-only
       #define RCC_CIR_HSIRDYF                0x00000004                  // read-only
@@ -2311,7 +2681,7 @@ typedef struct stSTM32_BD
       #define RCC_CIR_PLL2RDYC               0x00200000                  // write only
       #define RCC_CIR_PLL3RDYC               0x00400000                  // write only
       #define RCC_CIR_CSSC                   0x00800000                  // write only
-    #define RCC_APB2RSTR                     *(volatile unsigned long *)(RESET_CLOCK_BLOCK + 0x0c)  // APB2 Peripheral Reset Register
+    #define RCC_APB2RSTR                     *(volatile unsigned long *)(RCC_BLOCK + 0x0c) // APB2 peripheral reset register
       #define RCC_APB2RSTR_AFIORST           0x00000001
       #define RCC_APB2RSTR_IOPARST           0x00000004
       #define RCC_APB2RSTR_IOPBRST           0x00000008
@@ -2323,7 +2693,7 @@ typedef struct stSTM32_BD
       #define RCC_APB2RSTR_TIM1RST           0x00000800
       #define RCC_APB2RSTR_SPI1RST           0x00001000
       #define RCC_APB2RSTR_USART1RST         0x00004000
-    #define RCC_APB1RSTR                     *(volatile unsigned long *)(RESET_CLOCK_BLOCK + 0x10)  // APB1 Peripheral Reset Register
+    #define RCC_APB1RSTR                     *(volatile unsigned long *)(RCC_BLOCK + 0x10) // APB1 peripheral reset register
       #define RCC_APB1RSTR_TIM2RST           0x00000001
       #define RCC_APB1RSTR_TIM3RST           0x00000002
       #define RCC_APB1RSTR_TIM4RST           0x00000004
@@ -2344,7 +2714,7 @@ typedef struct stSTM32_BD
       #define RCC_APB1RSTR_BKPRST            0x08000000
       #define RCC_APB1RSTR_PWRRST            0x10000000
       #define RCC_APB1RSTR_DACRST            0x20000000
-    #define RCC_AHB1ENR                      *(volatile unsigned long *)(RESET_CLOCK_BLOCK + 0x14)  // AHB Peripheral Clock Enable Register
+    #define RCC_AHB1ENR                      *(volatile unsigned long *)(RCC_BLOCK + 0x14) // AHB peripheral clock enable register
       #define RCC_AHB1ENR_DMA1EN             0x00000001
       #define RCC_AHB1ENR_DMA2EN             0x00000002
       #define RCC_AHB1ENR_SRAMEN             0x00000004
@@ -2354,7 +2724,7 @@ typedef struct stSTM32_BD
       #define RCC_AHB1ENR_ETHMACEN           0x00004000
       #define RCC_AHB1ENR_ETHMACTXEN         0x00008000
       #define RCC_AHB1ENR_ETHMACRXEN         0x00010000
-    #define RCC_APB2ENR                      *(volatile unsigned long *)(RESET_CLOCK_BLOCK + 0x18)  // APB2 Peripheral Clock Enable Register
+    #define RCC_APB2ENR                      *(volatile unsigned long *)(RCC_BLOCK + 0x18) // APB2 peripheral clock enable register
       #define RCC_APB2ENR_AFIOEN             0x00000001
       #define RCC_APB2ENR_IOPAEN             0x00000004
       #define RCC_APB2ENR_IOPBEN             0x00000008
@@ -2373,7 +2743,7 @@ typedef struct stSTM32_BD
       #define RCC_APB2ENR_TIM9EN             0x00080000
       #define RCC_APB2ENR_TIM10EN            0x00100000
       #define RCC_APB2ENR_TIM11EN            0x00200000
-    #define RCC_APB1ENR                      *(volatile unsigned long *)(RESET_CLOCK_BLOCK + 0x1c)  // APB1 Peripheral Clock Enable Register
+    #define RCC_APB1ENR                      *(volatile unsigned long *)(RCC_BLOCK + 0x1c) // APB1 peripheral clock enable register
       #define RCC_APB1ENR_TIM2EN             0x00000001
       #define RCC_APB1ENR_TIM3EN             0x00000002
       #define RCC_APB1ENR_TIM4EN             0x00000004
@@ -2394,7 +2764,7 @@ typedef struct stSTM32_BD
       #define RCC_APB1ENR_BKPEN              0x08000000
       #define RCC_APB1ENR_PWMEN              0x10000000
       #define RCC_APB1ENR_DACEN              0x20000000
-    #define RCC_BDCR                         *(volatile unsigned long *)(RESET_CLOCK_BLOCK + 0x20)  // Backup Domain Control Register
+    #define RCC_BDCR                         *(volatile unsigned long *)(RCC_BLOCK + 0x20) // backup domain control register
       #define RCC_BDCR_LSEON                 0x00000001
       #define RCC_BDCR_LSERDY                0x00000002                  // read-only
       #define RCC_BDCR_LSEBYP                0x00000004
@@ -2404,7 +2774,7 @@ typedef struct stSTM32_BD
       #define RCC_BDCR_RTCSEC_HSE            0x00000300                  // HSE oscillator clock divided by RTCPRE[4:0] in RCC:CFGR used as the RTC clock
       #define RCC_BDCR_RTCEN                 0x00008000
       #define RCC_BDCR_BDRST                 0x00010000
-    #define RCC_CSR                          *(volatile unsigned long *)(RESET_CLOCK_BLOCK + 0x24)  // Control Status Register
+    #define RCC_CSR                          *(volatile unsigned long *)(RCC_BLOCK + 0x24) // control status register
       #define RCC_CSR_LSION                  0x00000001                  // enable 40kHz RC oscillator
       #define RCC_CSR_LSIRDY                 0x00000002                  // read-only
       #define RCC_CSR_RMVF                   0x01000000
@@ -2414,10 +2784,11 @@ typedef struct stSTM32_BD
       #define RCC_CSR_IWDGRSTF               0x20000000
       #define RCC_CSR_WWDGRSTF               0x40000000
       #define RCC_CSR_LPWRRSTF               0x80000000
-    #define RCC_AHB1RSTR                      *(unsigned long *)(RESET_CLOCK_BLOCK + 0x28) // AHB Peripheral Clock Enable Register
+      #define RESET_CAUSE_FLAGS              (RCC_CSR_RMVF | RCC_CSR_PINRSTF | RCC_CSR_PORRSTF | RCC_CSR_SFTRSTF | RCC_CSR_IWDGRSTF | RCC_CSR_WWDGRSTF | RCC_CSR_LPWRRSTF);
+    #define RCC_AHB1RSTR                      *(unsigned long *)(RCC_BLOCK + 0x28) // AHB peripheral clock enable register
       #define RCC_AHBRSTR_OTGFSRST           0x00001000
       #define RCC_AHBRSTR_ETHMACRST          0x00004000
-      #define RCC_CFGR2                      *(unsigned long *)(RESET_CLOCK_BLOCK + 0x2c) // Clock Configuration Register 2
+      #define RCC_CFGR2                      *(unsigned long *)(RCC_BLOCK + 0x2c) // clock configuration register 2
         #define RCC_CFGR2_PREDIV1_MASK       0x0000000f
       #ifdef _CONNECTIVITY_LINE
           #define RCC_CFGR2_PREDIV2_MASK     0x000000f0
@@ -3342,7 +3713,7 @@ typedef struct stSTM32_ADC_REGS
     #define FLASH_ACR_PRFTEN              0x00000100                     // prefetch buffer enable
     #define FLASH_ACR_ARTEN               0x00000200                     // ART accelerator enable
     #define FLASH_ACR_ARTRS               0x00000800                     // ART accelerator reset
-  #elif defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+  #elif defined _STM32F2XX || defined _STM32F4XX || defined _STM32L432
     #define FLASH_ACR_LATENCY_ZERO_WAIT   0x00000000                     // zero wait states when SYSCLK <= 30MHz (valid only for highest voltage)
     #define FLASH_ACR_LATENCY_ONE_WAIT    0x00000001                     // one wait state when SYSCLK > 30MHz
     #define FLASH_ACR_LATENCY_TWO_WAITS   0x00000002                     // two wait states when SYSCLK > 60MHz
@@ -3356,6 +3727,10 @@ typedef struct stSTM32_ADC_REGS
     #define FLASH_ACR_DCEN                0x00000400                     // data cache enable
     #define FLASH_ACR_ICRST               0x00000800                     // instruction cache reset (write only when D cache is disabled)
     #define FLASH_ACR_DCRST               0x00001000                     // data cache reset (write only when D cache is disabled)
+    #if defined _STM32L432
+        #define FLASH_ACR_RUN_PD          0x00002000                     // flash power-down during run or low power run mode
+        #define FLASH_ACR_SLEEP_PD        0x00004000                     // flash power-down during sleep or low power sleep mode
+    #endif
   #elif defined _CONNECTIVITY_LINE
     #define FLASH_ACR_LATENCY_ZERO_WAIT  0x00000000                      // zero wait states when SYSCLK <= 24MHz
     #define FLASH_ACR_LATENCY_ONE_WAIT   0x00000001                      // one wait state when SYSCLK > 24MHz
@@ -4280,7 +4655,7 @@ typedef struct stTIM9_10_11_13_12_14_REGS
 
 // Ports
 //
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432
     #define GPIOA_MODER                 *(unsigned long *)(GPIO_PORTA_BLOCK + 0x00)           // Port A Mode Register
       #define GPIO_MODER_INPUT          0x0
       #define GPIO_MODER_OUTPUT         0x1
@@ -4304,6 +4679,9 @@ typedef struct stTIM9_10_11_13_12_14_REGS
     #define GPIOA_LCKR                  *(unsigned long *)(GPIO_PORTA_BLOCK + 0x1c)           // Port A Configuration Lock Register
     #define GPIOA_AFRL                  *(unsigned long *)(GPIO_PORTA_BLOCK + 0x20)           // Port A Alternate Function Low Register
     #define GPIOA_AFRH                  *(unsigned long *)(GPIO_PORTA_BLOCK + 0x24)           // Port A Alternate Function High Register
+    #if defined _STM32L432
+        #define GPIOA_BRR               *(unsigned long *)(GPIO_PORTA_BLOCK + 0x28)           // Port A port bit reset register
+    #endif
 
     #define GPIOB_MODER                 *(unsigned long *)(GPIO_PORTB_BLOCK + 0x00)           // Port B Mode Register
     #define GPIOB_OTYPER                *(unsigned long *)(GPIO_PORTB_BLOCK + 0x04)           // Port B Output Type Register
@@ -4315,6 +4693,9 @@ typedef struct stTIM9_10_11_13_12_14_REGS
     #define GPIOB_LCKR                  *(unsigned long *)(GPIO_PORTB_BLOCK + 0x1c)           // Port B Configuration Lock Register
     #define GPIOB_AFRL                  *(unsigned long *)(GPIO_PORTB_BLOCK + 0x20)           // Port B Alternate Function Low Register
     #define GPIOB_AFRH                  *(unsigned long *)(GPIO_PORTB_BLOCK + 0x24)           // Port B Alternate Function High Register
+    #if defined _STM32L432
+        #define GPIOB_BRR               *(unsigned long *)(GPIO_PORTB_BLOCK + 0x28)           // Port B port bit reset register
+    #endif
 
     #define GPIOC_MODER                 *(unsigned long *)(GPIO_PORTC_BLOCK + 0x00)           // Port C Mode Register
     #define GPIOC_OTYPER                *(unsigned long *)(GPIO_PORTC_BLOCK + 0x04)           // Port C Output Type Register
@@ -4326,6 +4707,9 @@ typedef struct stTIM9_10_11_13_12_14_REGS
     #define GPIOC_LCKR                  *(unsigned long *)(GPIO_PORTC_BLOCK + 0x1c)           // Port C Configuration Lock Register
     #define GPIOC_AFRL                  *(unsigned long *)(GPIO_PORTC_BLOCK + 0x20)           // Port C Alternate Function Low Register
     #define GPIOC_AFRH                  *(unsigned long *)(GPIO_PORTC_BLOCK + 0x24)           // Port C Alternate Function High Register
+    #if defined _STM32L432
+        #define GPIOC_BRR               *(unsigned long *)(GPIO_PORTC_BLOCK + 0x28)           // Port C port bit reset register
+    #endif
 
     #define GPIOD_MODER                 *(unsigned long *)(GPIO_PORTD_BLOCK + 0x00)           // Port D Mode Register
     #define GPIOD_OTYPER                *(unsigned long *)(GPIO_PORTD_BLOCK + 0x04)           // Port D Output Type Register
@@ -4337,6 +4721,9 @@ typedef struct stTIM9_10_11_13_12_14_REGS
     #define GPIOD_LCKR                  *(unsigned long *)(GPIO_PORTD_BLOCK + 0x1c)           // Port D Configuration Lock Register
     #define GPIOD_AFRL                  *(unsigned long *)(GPIO_PORTD_BLOCK + 0x20)           // Port D Alternate Function Low Register
     #define GPIOD_AFRH                  *(unsigned long *)(GPIO_PORTD_BLOCK + 0x24)           // Port D Alternate Function High Register
+    #if defined _STM32L432
+        #define GPIOD_BRR               *(unsigned long *)(GPIO_PORTD_BLOCK + 0x28)           // Port D port bit reset register
+    #endif
 
     #define GPIOE_MODER                 *(unsigned long *)(GPIO_PORTE_BLOCK + 0x00)           // Port E Mode Register
     #define GPIOE_OTYPER                *(unsigned long *)(GPIO_PORTE_BLOCK + 0x04)           // Port E Output Type Register
@@ -4348,6 +4735,9 @@ typedef struct stTIM9_10_11_13_12_14_REGS
     #define GPIOE_LCKR                  *(unsigned long *)(GPIO_PORTE_BLOCK + 0x1c)           // Port E Configuration Lock Register
     #define GPIOE_AFRL                  *(unsigned long *)(GPIO_PORTE_BLOCK + 0x20)           // Port E Alternate Function Low Register
     #define GPIOE_AFRH                  *(unsigned long *)(GPIO_PORTE_BLOCK + 0x24)           // Port E Alternate Function High Register
+    #if defined _STM32L432
+        #define GPIOE_BRR               *(unsigned long *)(GPIO_PORTE_BLOCK + 0x28)           // Port E port bit reset register
+    #endif
 
     #define GPIOF_MODER                 *(unsigned long *)(GPIO_PORTF_BLOCK + 0x00)           // Port F Mode Register
     #define GPIOF_OTYPER                *(unsigned long *)(GPIO_PORTF_BLOCK + 0x04)           // Port F Output Type Register
@@ -4359,6 +4749,9 @@ typedef struct stTIM9_10_11_13_12_14_REGS
     #define GPIOF_LCKR                  *(unsigned long *)(GPIO_PORTF_BLOCK + 0x1c)           // Port F Configuration Lock Register
     #define GPIOF_AFRL                  *(unsigned long *)(GPIO_PORTF_BLOCK + 0x20)           // Port F Alternate Function Low Register
     #define GPIOF_AFRH                  *(unsigned long *)(GPIO_PORTF_BLOCK + 0x24)           // Port F Alternate Function High Register
+    #if defined _STM32L432
+        #define GPIOF_BRR               *(unsigned long *)(GPIO_PORTF_BLOCK + 0x28)           // Port F port bit reset register
+    #endif
 
     #define GPIOG_MODER                 *(unsigned long *)(GPIO_PORTG_BLOCK + 0x00)           // Port G Mode Register
     #define GPIOG_OTYPER                *(unsigned long *)(GPIO_PORTG_BLOCK + 0x04)           // Port G Output Type Register
@@ -4370,6 +4763,9 @@ typedef struct stTIM9_10_11_13_12_14_REGS
     #define GPIOG_LCKR                  *(unsigned long *)(GPIO_PORTG_BLOCK + 0x1c)           // Port G Configuration Lock Register
     #define GPIOG_AFRL                  *(unsigned long *)(GPIO_PORTG_BLOCK + 0x20)           // Port G Alternate Function Low Register
     #define GPIOG_AFRH                  *(unsigned long *)(GPIO_PORTG_BLOCK + 0x24)           // Port G Alternate Function High Register
+    #if defined _STM32L432
+        #define GPIOG_BRR               *(unsigned long *)(GPIO_PORTG_BLOCK + 0x28)           // Port G port bit reset register
+    #endif
 
     #define GPIOH_MODER                 *(unsigned long *)(GPIO_PORTH_BLOCK + 0x00)           // Port H Mode Register
     #define GPIOH_OTYPER                *(unsigned long *)(GPIO_PORTH_BLOCK + 0x04)           // Port H Output Type Register
@@ -4381,6 +4777,9 @@ typedef struct stTIM9_10_11_13_12_14_REGS
     #define GPIOH_LCKR                  *(unsigned long *)(GPIO_PORTH_BLOCK + 0x1c)           // Port H Configuration Lock Register
     #define GPIOH_AFRL                  *(unsigned long *)(GPIO_PORTH_BLOCK + 0x20)           // Port H Alternate Function Low Register
     #define GPIOH_AFRH                  *(unsigned long *)(GPIO_PORTH_BLOCK + 0x24)           // Port H Alternate Function High Register
+    #if defined _STM32L432
+        #define GPIOH_BRR               *(unsigned long *)(GPIO_PORTH_BLOCK + 0x28)           // Port H port bit reset register
+    #endif
 
     #define GPIOI_MODER                 *(unsigned long *)(GPIO_PORTI_BLOCK + 0x00)           // Port I Mode Register
     #define GPIOI_OTYPER                *(unsigned long *)(GPIO_PORTI_BLOCK + 0x04)           // Port I Output Type Register
@@ -4392,6 +4791,9 @@ typedef struct stTIM9_10_11_13_12_14_REGS
     #define GPIOI_LCKR                  *(unsigned long *)(GPIO_PORTI_BLOCK + 0x1c)           // Port I Configuration Lock Register
     #define GPIOI_AFRL                  *(unsigned long *)(GPIO_PORTI_BLOCK + 0x20)           // Port I Alternate Function Low Register
     #define GPIOI_AFRH                  *(unsigned long *)(GPIO_PORTI_BLOCK + 0x24)           // Port I Alternate Function High Register
+    #if defined _STM32L432
+        #define GPIOI_BRR               *(unsigned long *)(GPIO_PORTI_BLOCK + 0x28)           // Port I port bit reset register
+    #endif
 
   #if defined _STM32F7XX
     #define GPIOJ_MODER                 *(unsigned long *)(GPIO_PORTJ_BLOCK + 0x00)           // Port J Mode Register
@@ -5862,6 +6264,74 @@ typedef struct stVECTOR_TABLE
   #define FLOATING_INPUT              (GPIO_PUPDR_NONE << 6)
   #define INPUT_PULL_UP               (GPIO_PUPDR_PULL_UP << 6)
   #define INPUT_PULL_DOWN             (GPIO_PUPDR_PULL_DOWN << 6)
+#elif defined _STM32L432
+    // First the port is powered and each pin set as output, then the characteristics are set to the speed and type registers {8}
+    //
+    #define _CONFIG_PORT_OUTPUT(ref, pins, characteristics) RCC_AHB2ENR |= (RCC_AHB2ENR_GPIO##ref##EN); \
+    GPIO##ref##_MODER = ((GPIO##ref##_MODER & \
+     ~((0x0001 & pins)        | ((0x0001 & pins) << 1)  | ((0x0002 & pins) << 1)  | ((0x0002 & pins) << 2)    | \
+     (((0x0004 & pins) << 2)  | ((0x0004 & pins) << 3)  | ((0x0008 & pins) << 3)  | ((0x0008 & pins) << 4))   | \
+     (((0x0010 & pins) << 4)  | ((0x0010 & pins) << 5)  | ((0x0020 & pins) << 5)  | ((0x0020 & pins) << 6))   | \
+     (((0x0040 & pins) << 6)  | ((0x0040 & pins) << 7)  | ((0x0080 & pins) << 7)  | ((0x0080 & pins) << 8))   | \
+     (((0x0100 & pins) << 8)  | ((0x0100 & pins) << 9)  | ((0x0200 & pins) << 9)  | ((0x0200 & pins) << 10))  | \
+     (((0x0400 & pins) << 10) | ((0x0400 & pins) << 11) | ((0x0800 & pins) << 11) | ((0x0800 & pins) << 12))  | \
+     (((0x1000 & pins) << 12) | ((0x1000 & pins) << 13) | ((0x2000 & pins) << 13) | ((0x2000 & pins) << 14))  | \
+     (((0x4000 & pins) << 14) | ((0x4000 & pins) << 15) | ((0x8000 & pins) << 15) | ((0x8000 & pins) << 16))))| \
+     (((0x0001 & pins)) | ((0x0002 & pins) << 1) | ((0x0004 & pins) << 2) | ((0x0008 & pins) << 3) | ((0x0010 & pins) << 4) | ((0x0020 & pins) << 5) | \
+      ((0x0040 & pins) << 6) | ((0x0080 & pins) << 7) | ((0x0100 & pins) << 8) | ((0x0200 & pins) << 9) | ((0x0400 & pins) << 10)| ((0x0800 & pins) << 11)| \
+      ((0x1000 & pins) << 12)| ((0x2000 & pins) << 13)| ((0x4000 & pins) << 14)| ((0x8000 & pins) << 15))); \
+    GPIO##ref##_OSPEEDR = ((GPIO##ref##_OSPEEDR & \
+     ~((0x0001 & pins)        | ((0x0001 & pins) << 1)  | ((0x0002 & pins) << 1)  | ((0x0002 & pins) << 2)    | \
+     (((0x0004 & pins) << 2)  | ((0x0004 & pins) << 3)  | ((0x0008 & pins) << 3)  | ((0x0008 & pins) << 4))   | \
+     (((0x0010 & pins) << 4)  | ((0x0010 & pins) << 5)  | ((0x0020 & pins) << 5)  | ((0x0020 & pins) << 6))   | \
+     (((0x0040 & pins) << 6)  | ((0x0040 & pins) << 7)  | ((0x0080 & pins) << 7)  | ((0x0080 & pins) << 8))   | \
+     (((0x0100 & pins) << 8)  | ((0x0100 & pins) << 9)  | ((0x0200 & pins) << 9)  | ((0x0200 & pins) << 10))  | \
+     (((0x0400 & pins) << 10) | ((0x0400 & pins) << 11) | ((0x0800 & pins) << 11) | ((0x0800 & pins) << 12))  | \
+     (((0x1000 & pins) << 12) | ((0x1000 & pins) << 13) | ((0x2000 & pins) << 13) | ((0x2000 & pins) << 14))  | \
+     (((0x4000 & pins) << 14) | ((0x4000 & pins) << 15) | ((0x8000 & pins) << 15) | ((0x8000 & pins) << 16))))| \
+     ((characteristics) & ((0x0001 & pins) | ((0x0001 & pins) << 1))) | \
+     ((characteristics << 2)  & (((0x0002 & pins) << 1) | ((0x0002 & pins) << 2))) | \
+     ((characteristics << 4)  & (((0x0004 & pins) << 2) | ((0x0004 & pins) << 3))) | \
+     ((characteristics << 6)  & (((0x0008 & pins) << 3) | ((0x0008 & pins) << 4))) | \
+     ((characteristics << 8)  & (((0x0010 & pins) << 4) | ((0x0010 & pins) << 5))) | \
+     ((characteristics << 10) & (((0x0020 & pins) << 5) | ((0x0020 & pins) << 6))) | \
+     ((characteristics << 12) & (((0x0040 & pins) << 6) | ((0x0040 & pins) << 7))) | \
+     ((characteristics << 14) & (((0x0080 & pins) << 7) | ((0x0080 & pins) << 8))) | \
+     ((characteristics << 16) & (((0x0100 & pins) << 8) | ((0x0100 & pins) << 9))) | \
+     ((characteristics << 18) & (((0x0200 & pins) << 9) | ((0x0200 & pins) << 10)))| \
+     ((characteristics << 20) & (((0x0400 & pins) << 10)| ((0x0400 & pins) << 11)))| \
+     ((characteristics << 22) & (((0x0800 & pins) << 11)| ((0x0800 & pins) << 12)))| \
+     ((characteristics << 24) & (((0x1000 & pins) << 12)| ((0x1000 & pins) << 13)))| \
+     ((characteristics << 26) & (((0x2000 & pins) << 13)| ((0x2000 & pins) << 14)))| \
+     ((characteristics << 28) & (((0x4000 & pins) << 14)| ((0x4000 & pins) << 15)))| \
+     ((characteristics << 30) & (((0x8000 & pins) << 15)| ((0x8000 & pins) << 16)))); \
+    GPIO##ref##_OTYPER = ((GPIO##ref##_OTYPER & ~(pins)) | \
+    (((characteristics >> 2)  & (0x0001 & pins)) | \
+     ((characteristics >> 1)  & (0x0002 & pins)) | \
+     ((characteristics)       & (0x0004 & pins)) | \
+     ((characteristics << 1)  & (0x0008 & pins)) | \
+     ((characteristics << 2)  & (0x0010 & pins)) | \
+     ((characteristics << 3)  & (0x0020 & pins)) | \
+     ((characteristics << 4)  & (0x0040 & pins)) | \
+     ((characteristics << 5)  & (0x0080 & pins)) | \
+     ((characteristics << 6)  & (0x0100 & pins)) | \
+     ((characteristics << 7)  & (0x0200 & pins)) | \
+     ((characteristics << 8)  & (0x0400 & pins)) | \
+     ((characteristics << 9)  & (0x0800 & pins)) | \
+     ((characteristics << 10) & (0x1000 & pins)) | \
+     ((characteristics << 11) & (0x2000 & pins)) | \
+     ((characteristics << 12) & (0x4000 & pins)) | \
+     ((characteristics << 13) & (0x8000 & pins))));   _SIM_PORT_CHANGE
+
+  #define OUTPUT_SLOW                 (GPIO_OSPEEDR_2MHz)                // 2 MHz
+  #define OUTPUT_MEDIUM               (GPIO_OSPEEDR_25MHz)               // 25 MHz
+  #define OUTPUT_FAST                 (GPIO_OSPEEDR_50MHz)               // 50 MHz
+  #define OUTPUT_ULTRA_FAST           (GPIO_OSPEEDR_100MHz)              // 100 MHz
+  #define OUTPUT_PUSH_PULL            (GPIO_OTYPER_PUSH_PULL << 2)
+  #define OUTPUT_OPEN_DRAIN           (GPIO_OTYPER_OPEN_DRAIN << 2)
+  #define FLOATING_INPUT              (GPIO_PUPDR_NONE << 6)
+  #define INPUT_PULL_UP               (GPIO_PUPDR_PULL_UP << 6)
+  #define INPUT_PULL_DOWN             (GPIO_PUPDR_PULL_DOWN << 6)
 #else
     // First the port is powered and enabled, then the peripheral function selection is masked, port out function set, inputs disabled and the output is finally driven (it drives the original port line state)
     //
@@ -5953,6 +6423,44 @@ typedef struct stVECTOR_TABLE
      ((characteristics << 20) & (((0x2000 & pins) << 13)| ((0x2000 & pins) << 14)))| \
      ((characteristics << 22) & (((0x4000 & pins) << 14)| ((0x4000 & pins) << 15)))| \
      ((characteristics << 24) & (((0x8000 & pins) << 15)| ((0x8000 & pins) << 16))));             _SIM_PORT_CHANGE // {17}
+#elif defined _STM32L432
+    // First the port is powered and each pin set as input, then the characteristics are set to the pullup/down register
+    //
+    #define _CONFIG_PORT_INPUT(ref, pins, characteristics) RCC_AHB2ENR |= (RCC_AHB2ENR_GPIO##ref##EN); \
+    GPIO##ref##_MODER = ((GPIO##ref##_MODER & \
+     ~((0x0001 & pins)        | ((0x0001 & pins) << 1)  | ((0x0002 & pins) << 1)  | ((0x0002 & pins) << 2)    | \
+     (((0x0004 & pins) << 2)  | ((0x0004 & pins) << 3)  | ((0x0008 & pins) << 3)  | ((0x0008 & pins) << 4))   | \
+     (((0x0010 & pins) << 4)  | ((0x0010 & pins) << 5)  | ((0x0020 & pins) << 5)  | ((0x0020 & pins) << 6))   | \
+     (((0x0040 & pins) << 6)  | ((0x0040 & pins) << 7)  | ((0x0080 & pins) << 7)  | ((0x0080 & pins) << 8))   | \
+     (((0x0100 & pins) << 8)  | ((0x0100 & pins) << 9)  | ((0x0200 & pins) << 9)  | ((0x0200 & pins) << 10))  | \
+     (((0x0400 & pins) << 10) | ((0x0400 & pins) << 11) | ((0x0800 & pins) << 11) | ((0x0800 & pins) << 12))  | \
+     (((0x1000 & pins) << 12) | ((0x1000 & pins) << 13) | ((0x2000 & pins) << 13) | ((0x2000 & pins) << 14))  | \
+     (((0x4000 & pins) << 14) | ((0x4000 & pins) << 15) | ((0x8000 & pins) << 15) | ((0x8000 & pins) << 16))))); \
+    GPIO##ref##_PUPDR = ((GPIO##ref##_PUPDR & \
+     ~((0x0001 & pins)        | ((0x0001 & pins) << 1)  | ((0x0002 & pins) << 1)  | ((0x0002 & pins) << 2)    | \
+     (((0x0004 & pins) << 2)  | ((0x0004 & pins) << 3)  | ((0x0008 & pins) << 3)  | ((0x0008 & pins) << 4))   | \
+     (((0x0010 & pins) << 4)  | ((0x0010 & pins) << 5)  | ((0x0020 & pins) << 5)  | ((0x0020 & pins) << 6))   | \
+     (((0x0040 & pins) << 6)  | ((0x0040 & pins) << 7)  | ((0x0080 & pins) << 7)  | ((0x0080 & pins) << 8))   | \
+     (((0x0100 & pins) << 8)  | ((0x0100 & pins) << 9)  | ((0x0200 & pins) << 9)  | ((0x0200 & pins) << 10))  | \
+     (((0x0400 & pins) << 10) | ((0x0400 & pins) << 11) | ((0x0800 & pins) << 11) | ((0x0800 & pins) << 12))  | \
+     (((0x1000 & pins) << 12) | ((0x1000 & pins) << 13) | ((0x2000 & pins) << 13) | ((0x2000 & pins) << 14))  | \
+     (((0x4000 & pins) << 14) | ((0x4000 & pins) << 15) | ((0x8000 & pins) << 15) | ((0x8000 & pins) << 16))))| \
+     ((characteristics >> 6)  & ((0x0001 & pins) | ((0x0001 & pins) << 1))) | \
+     ((characteristics >> 4)  & (((0x0002 & pins) << 1) | ((0x0002 & pins) << 2))) | \
+     ((characteristics >> 2)  & (((0x0004 & pins) << 2) | ((0x0004 & pins) << 3))) | \
+     ((characteristics)       & (((0x0008 & pins) << 3) | ((0x0008 & pins) << 4))) | \
+     ((characteristics << 2)  & (((0x0010 & pins) << 4) | ((0x0010 & pins) << 5))) | \
+     ((characteristics << 4)  & (((0x0020 & pins) << 5) | ((0x0020 & pins) << 6))) | \
+     ((characteristics << 6)  & (((0x0040 & pins) << 6) | ((0x0040 & pins) << 7))) | \
+     ((characteristics << 8)  & (((0x0080 & pins) << 7) | ((0x0080 & pins) << 8))) | \
+     ((characteristics << 10) & (((0x0100 & pins) << 8) | ((0x0100 & pins) << 9))) | \
+     ((characteristics << 12) & (((0x0200 & pins) << 9) | ((0x0200 & pins) << 10)))| \
+     ((characteristics << 14) & (((0x0400 & pins) << 10)| ((0x0400 & pins) << 11)))| \
+     ((characteristics << 16) & (((0x0800 & pins) << 11)| ((0x0800 & pins) << 12)))| \
+     ((characteristics << 18) & (((0x1000 & pins) << 12)| ((0x1000 & pins) << 13)))| \
+     ((characteristics << 20) & (((0x2000 & pins) << 13)| ((0x2000 & pins) << 14)))| \
+     ((characteristics << 22) & (((0x4000 & pins) << 14)| ((0x4000 & pins) << 15)))| \
+     ((characteristics << 24) & (((0x8000 & pins) << 15)| ((0x8000 & pins) << 16))));             _SIM_PORT_CHANGE
 #else
     #define _CONFIG_PORT_INPUT(ref, pins, characteristics)  RCC_APB2ENR |= (RCC_APB2ENR_IOP##ref##EN); GPIO##ref##_ODR |= (characteristics >> 16); \
          GPIO##ref##_CRL = ((GPIO##ref##_CRL & \
@@ -6808,18 +7316,28 @@ typedef struct stADC_SETUP
 #if defined _STM32F7XX
     #define PORTS_AVAILABLE      11
     #define CHIP_HAS_UARTS       8
+    #define CHIP_HAS_LPUARTS     0
     #define CHIP_HAS_I2C         4
 #elif defined _STM32F429
     #define PORTS_AVAILABLE      9
     #define CHIP_HAS_UARTS       8
+    #define CHIP_HAS_LPUARTS     0
     #define CHIP_HAS_I2C         3
 #elif defined _STM32F2XX || defined _STM32F4XX
     #define PORTS_AVAILABLE      9
     #define CHIP_HAS_UARTS       6
+    #define CHIP_HAS_LPUARTS     0
     #define CHIP_HAS_I2C         3
+#elif defined _STM32L432
+    #define PORTS_AVAILABLE      8
+    #define CHIP_HAS_UARTS       2
+    #define CHIP_HAS_LPUARTS     1
+    #define CHIP_HAS_I2C         3
+    #define CHIP_HAS_NO_I2C2
 #else
     #define PORTS_AVAILABLE      5
     #define CHIP_HAS_UARTS       5
+    #define CHIP_HAS_LPUARTS     0
     #define CHIP_HAS_I2C         2
 #endif
 

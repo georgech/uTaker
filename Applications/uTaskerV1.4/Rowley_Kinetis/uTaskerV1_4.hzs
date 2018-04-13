@@ -20,6 +20,7 @@
  </Memory4>
  <Project>
   <ProjectSessionItem path="uTaskerV1_4"/>
+  <ProjectSessionItem path="uTaskerV1_4;uTaskerV1_4"/>
  </Project>
  <Register1>
   <RegisterWindow visibleNodes="" binaryNodes="" asciiNodes="" openNodes="MCG" name="uTaskerV1_4" decimalNodes="" octalNodes="" unsignedNodes=""/>

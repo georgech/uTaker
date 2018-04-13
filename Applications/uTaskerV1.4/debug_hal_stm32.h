@@ -1285,6 +1285,9 @@ extern unsigned char fnAddResetCause(CHAR *ptrBuffer)
     static const CHAR cSoftware[]      = "Software";
     static const CHAR cLowPower[]      = "Low power";
     static const CHAR cPinReset[]      = "Reset pin";
+    #if defined RCC_CSR_FWRSTF
+    static const CHAR cFirwallReset[]  = "Firewall reset";
+    #endif
 
     static const CHAR cUnknown[]       = "???";
     const CHAR *ptrStr;
@@ -1292,7 +1295,7 @@ extern unsigned char fnAddResetCause(CHAR *ptrBuffer)
         ulRCC_CSR = RCC_CSR;                                             // store the value for following requests
         RCC_CSR |= (RCC_CSR_RMVF);                                       // clear flags ready for next reset
     #if defined _WINDOWS
-        RCC_CSR &= ~(RCC_CSR_RMVF | RCC_CSR_PINRSTF | RCC_CSR_PORRSTF | RCC_CSR_SFTRSTF | RCC_CSR_IWDGRSTF | RCC_CSR_WWDGRSTF | RCC_CSR_LPWRRSTF);
+        RCC_CSR &= ~(RESET_CAUSE_FLAGS);
     #endif
     }
 
@@ -1302,6 +1305,11 @@ extern unsigned char fnAddResetCause(CHAR *ptrBuffer)
     else if ((ulRCC_CSR & RCC_CSR_PINRSTF) != 0) {                       // reset pin
         ptrStr = cPinReset;
     }
+    #if defined RCC_CSR_FWRSTF
+    else if ((ulRCC_CSR & RCC_CSR_FWRSTF) != 0) {                        //firewall reset
+        ptrStr = cFirwallReset;
+    }
+    #endif
     else if ((ulRCC_CSR & RCC_CSR_SFTRSTF) != 0) {                       // software commanded reset
         ptrStr = cSoftware;
     }

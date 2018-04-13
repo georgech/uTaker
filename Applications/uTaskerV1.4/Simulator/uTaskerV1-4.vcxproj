@@ -1335,6 +1335,7 @@ Build_Kinetis_SSL.bat
     <ClInclude Include="..\..\..\Hardware\STM32\STM32F105X_107X_port.h" />
     <ClInclude Include="..\..\..\Hardware\STM32\STM32F41X_port.h" />
     <ClInclude Include="..\..\..\Hardware\STM32\STM32F7XX_port.h" />
+    <ClInclude Include="..\..\..\Hardware\STM32\STM32L4XX_port.h" />
     <ClInclude Include="..\..\..\Hardware\STM32\stm32_ADC.h" />
     <ClInclude Include="..\..\..\Hardware\STM32\stm32_ENET.h" />
     <ClInclude Include="..\..\..\Hardware\STM32\stm32_FLASH.h" />
