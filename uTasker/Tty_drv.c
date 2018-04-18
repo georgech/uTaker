@@ -245,7 +245,7 @@ static QUEUE_TRANSFER entry_tty(QUEUE_HANDLE channel, unsigned char *ptBuffer, Q
         ptTTYQue = (struct stTTYQue *)(que_ids[DriverID].output_buffer_control); // set to output control block
         if (ptBuffer == 0) {                                             // the caller wants to see whether the data will fit and not copy data so inform
 #if defined SERIAL_SUPPORT_DMA_                                          // {18}
-            if (ptTTYQue->ucDMA_mode & UART_TX_DMA) {
+            if ((ptTTYQue->ucDMA_mode & UART_TX_DMA) != 0) {
                 QUEUE_TRANSFER reduction = (ptTTYQue->lastDMA_block_length - fnRemainingDMA_tx(channel)); // get the number of characters
                 ptTTYQue->tty_queue.chars -= reduction;
                 ptTTYQue->lastDMA_block_length -= reduction;
@@ -256,7 +256,7 @@ static QUEUE_TRANSFER entry_tty(QUEUE_HANDLE channel, unsigned char *ptBuffer, Q
             }
 #endif
             if ((ptTTYQue->tty_queue.buf_length - ptTTYQue->tty_queue.chars) >= Counter) {
-                rtn_val = ptTTYQue->tty_queue.buf_length - ptTTYQue->tty_queue.chars; // the remaining space
+                rtn_val = (ptTTYQue->tty_queue.buf_length - ptTTYQue->tty_queue.chars); // the remaining space
             }
         }
         else {

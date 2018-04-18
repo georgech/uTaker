@@ -441,9 +441,14 @@
     #if defined FRDM_K20D50M || defined TWR_KL46Z48M || defined FRDM_KL25Z || defined FRDM_KL26Z || defined TWR_KL25Z48M || defined TWR_K21D50M || defined tinyK20
         #define OSC_LOW_GAIN_MODE                                        // oscillator without feedback resistor or load capacitors so use low gain mode
     #endif
-    #define CRYSTAL_FREQUENCY    8000000                                 // 8 MHz crystal
+    #if defined tinyK20 && defined TINYK20_16MHz
+        #define CRYSTAL_FREQUENCY    16000000                            // 16 MHz crystal
+        #define CLOCK_DIV            8                                   // input must be divided to 2MHz..4MHz range (/1 to /25 possible)
+    #else
+        #define CRYSTAL_FREQUENCY    8000000                             // 8 MHz crystal
+        #define CLOCK_DIV            4                                   // input must be divided to 2MHz..4MHz range (/1 to /25 possible)
+    #endif
     #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
-    #define CLOCK_DIV            4                                       // input must be divided to 2MHz..4MHz range (/1 to /25 possible)
     #if defined FRDM_KL46Z || defined TWR_KL46Z48M || defined FRDM_KL25Z || defined FRDM_KL26Z || defined TWR_KL25Z48M
         #define CLOCK_MUL        48                                      // the PLL multiplication factor to achieve MCGPLLCLK operating frequency of 98MHz (x24 to x55 possible)
         #define SYSTEM_CLOCK_DIVIDE 2                                    // divide to get core clock of 48MHz (MCGPLLCLK/2 is 48MHz - required by USB)
@@ -834,7 +839,11 @@
     #define SIZE_OF_EEPROM      (2 * 1024)                               // 2k EEPROM
 #elif defined tinyK20
     #define KINETIS_FLEX                                                 // X part with flex memory rather than N part with program Flash only
-    #define PIN_COUNT           PIN_COUNT_48_PIN
+    #if defined TINYK20_16MHz
+        #define PIN_COUNT       PIN_COUNT_64_PIN
+    #else
+        #define PIN_COUNT       PIN_COUNT_48_PIN
+    #endif
     #define PACKAGE_TYPE        PACKAGE_LQFP
   //#define FLEXFLASH_DATA                                               // use FlexNMV in data mode
     #define SIZE_OF_FLEXFLASH   (32 * 1024)                              // 32 Flex
@@ -2194,7 +2203,8 @@
     #define SET_SPI_SD_INTERFACE_FULL_SPEED() fnSetSD_clock(SDHC_SYSCTL_SPEED_FAST); SDHC_PROCTL |= SDHC_PROCTL_DTW_4BIT
     #define SET_SPI_SD_INTERFACE_FAST_SPEED() fnSetSD_clock(SDHC_SYSCTL_SPEED_SUPER_FAST); SDHC_PROCTL |= SDHC_PROCTL_DTW_4BIT
     #if defined FRDM_K66F
-        #define SDCARD_RX_DMA_CHANNEL      14                           // use DMA copy from SDHC fifo to read buffer on this DMA channel
+        #define SDCARD_RX_DMA_CHANNEL      14                            // use DMA copy from SDHC fifo to read buffer on this DMA channel
+      //#define SDCARD_TX_DMA_CHANNEL      14                            // since tx and rx don't take place at the same time we share the DMA channel
     #endif
 
     #define DEL_USB_SYMBOL()                                             // control display of USB enumeration - clear
@@ -2600,53 +2610,64 @@
 
     #define TOGGLE_WATCHDOG_LED()   _TOGGLE_PORT(D, BLINK_LED)
 #elif defined tinyK20
-    #define BLINK_LED              (PORTD_BIT4)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
-    #define SWITCH_1               (PORTB_BIT0)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
-    #define SWITCH_2               (PORTB_BIT1)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
-    #define SDCARD_DETECT_PIN      (PORTC_BIT0)                          // '1' when SD card is inserted
-
-    #define INIT_WATCHDOG_LED()    _CONFIG_DRIVE_PORT_OUTPUT_VALUE(D, (BLINK_LED), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH))
-    #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(B, (SWITCH_1 | SWITCH_2), PORT_PS_UP_ENABLE); _CONFIG_PORT_INPUT_FAST_LOW(C, (SDCARD_DETECT_PIN), PORT_PS_DOWN_ENABLE) // configure as inputs
-
-    #define WATCHDOG_DISABLE()     (_READ_PORT_MASK(B, SWITCH_2) == 0)   // pull this input down to disable watchdog
-    #if defined SDCARD_SUPPORT
-        #define FORCE_BOOT()       (_READ_PORT_MASK(C, SDCARD_DETECT_PIN) != 0) // inserted SD card forces boot loader mode
+    #if defined TINYK20_16MHz
+        #define BLINK_LED              (PORTC_BIT8)                      // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+        #define SWITCH_1               (PORTC_BIT6)                      // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+        #define SWITCH_2               (PORTC_BIT7)                      // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+        #define INIT_WATCHDOG_LED()    _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, (BLINK_LED), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+        #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(C, (SWITCH_1 | SWITCH_2), PORT_PS_UP_ENABLE) // configure as inputs
+        #define WATCHDOG_DISABLE()     (_READ_PORT_MASK(C, SWITCH_2) == 0) // pull this input down to disable watchdog
+        #define FORCE_BOOT()           (_READ_PORT_MASK(C, SWITCH_1) == 0) // pull this input down to force boot loader mode
+        #define TOGGLE_WATCHDOG_LED()  _TOGGLE_PORT(C, BLINK_LED)
     #else
-        #define FORCE_BOOT()       (_READ_PORT_MASK(B, SWITCH_1) == 0)   // pull this input down to force boot loader mode
+        #define BLINK_LED              (PORTD_BIT4)                      // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+        #define SWITCH_1               (PORTB_BIT0)                      // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+        #define SWITCH_2               (PORTB_BIT1)                      // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+        #define SDCARD_DETECT_PIN      (PORTC_BIT0)                      // '1' when SD card is inserted
+
+        #define INIT_WATCHDOG_LED()    _CONFIG_DRIVE_PORT_OUTPUT_VALUE(D, (BLINK_LED), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+        #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(B, (SWITCH_1 | SWITCH_2), PORT_PS_UP_ENABLE); _CONFIG_PORT_INPUT_FAST_LOW(C, (SDCARD_DETECT_PIN), PORT_PS_DOWN_ENABLE) // configure as inputs
+
+        #define WATCHDOG_DISABLE()     (_READ_PORT_MASK(B, SWITCH_2) == 0) // pull this input down to disable watchdog
+        #if defined SDCARD_SUPPORT
+            #define FORCE_BOOT()       (_READ_PORT_MASK(C, SDCARD_DETECT_PIN) != 0) // inserted SD card forces boot loader mode
+        #else
+            #define FORCE_BOOT()       (_READ_PORT_MASK(B, SWITCH_1) == 0) // pull this input down to force boot loader mode
+        #endif
+        #define RETAIN_LOADER_MODE()   (_READ_PORT_MASK(B, SWITCH_1) == 0) // pull this input low to retain the boot loader mode after SD card has been checked
+        #define TOGGLE_WATCHDOG_LED()  _TOGGLE_PORT(D, BLINK_LED)
+
+        // Configure to suit SD card SPI mode at between 100k and 400k (SPI0)
+        //
+        #define SPI_CS1_0                  PORTC_BIT1
+        #define INITIALISE_SPI_SD_INTERFACE() POWER_UP_ATOMIC(6, SPI0); \
+        _CONFIG_PORT_INPUT(E, (PORTE_BIT0), (PORT_NO_PULL)); \
+        _CONFIG_PERIPHERAL(C, 5, PC_5_SPI0_SCK); _CONFIG_PERIPHERAL(C, 6, (PC_6_SPI0_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); _CONFIG_PERIPHERAL(C, 7, (PC_7_SPI0_SIN | PORT_PS_UP_ENABLE)); \
+        _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, SPI_CS1_0, SPI_CS1_0, (PORT_SRE_FAST | PORT_DSE_HIGH)); \
+        SPI0_CTAR0 = (SPI_CTAR_ASC_6 | SPI_CTAR_FMSZ_8 | SPI_CTAR_CPHA | SPI_CTAR_CPOL | SPI_CTAR_BR_128); SPI0_MCR = (SPI_MCR_DIS_TXF | SPI_MCR_DIS_RXF | SPI_MCR_MSTR | SPI_MCR_DCONF_SPI | SPI_MCR_CLR_RXF | SPI_MCR_CLR_TXF | SPI_MCR_PCSIS_CS0 | SPI_MCR_PCSIS_CS1 | SPI_MCR_PCSIS_CS2 | SPI_MCR_PCSIS_CS3 | SPI_MCR_PCSIS_CS4 | SPI_MCR_PCSIS_CS5)
+
+        #define ENABLE_SPI_SD_OPERATION()
+        #define SET_SD_CARD_MODE()
+
+        // Set maximum speed
+        //
+        #define SET_SPI_SD_INTERFACE_FULL_SPEED() SPI0_MCR |= SPI_MCR_HALT; SPI0_CTAR0 = (SPI_CTAR_FMSZ_8 | SPI_CTAR_CPOL | SPI_CTAR_CPHA | SPI_CTAR_BR_2); SPI0_MCR &= ~SPI_MCR_HALT;
+        #if defined _WINDOWS
+            #define WRITE_SPI_CMD(byte)    SPI0_SR &= ~(SPI_SR_RFDF); SPI0_PUSHR = (byte | SPI_PUSHR_PCS_NONE | SPI_PUSHR_CTAS_CTAR0); SPI0_POPR = _fnSimSD_write((unsigned char)byte)
+            #define WAIT_TRANSMISSON_END() while ((SPI0_SR & (SPI_SR_RFDF)) == 0) { SPI0_SR |= (SPI_SR_RFDF); }
+            #define READ_SPI_DATA()        (unsigned char)SPI0_POPR
+        #else
+            #define WRITE_SPI_CMD(byte)    SPI0_SR = (SPI_SR_RFDF); SPI0_PUSHR = (byte | SPI_PUSHR_PCS_NONE | SPI_PUSHR_CTAS_CTAR0) // clear flags before transmitting (and receiving) a single byte
+            #define WAIT_TRANSMISSON_END() while ((SPI0_SR & (SPI_SR_RFDF)) == 0) {}
+            #define READ_SPI_DATA()        (unsigned char)SPI0_POPR
+        #endif
+        #define SET_SD_DI_CS_HIGH()  _SETBITS(C, SPI_CS1_0)              // force DI and CS lines high ready for the initialisation sequence
+        #define SET_SD_CS_LOW()      _CLEARBITS(C, SPI_CS1_0)            // assert the CS line of the SD card to be read
+        #define SET_SD_CS_HIGH()     _SETBITS(C, SPI_CS1_0)              // negate the CS line of the SD card to be read
+        #define POWER_UP_SD_CARD()                                       // apply power to the SD card if appropriate
+        #define POWER_DOWN_SD_CARD()
+        #define GET_SDCARD_WP_STATE()  1                                 // always write protect
     #endif
-    #define RETAIN_LOADER_MODE()   (_READ_PORT_MASK(B, SWITCH_1) == 0)   // pull this input low to retain the boot loader mode after SD card has been checked
-    #define TOGGLE_WATCHDOG_LED()  _TOGGLE_PORT(D, BLINK_LED)
-
-    // Configure to suit SD card SPI mode at between 100k and 400k (SPI0)
-    //
-    #define SPI_CS1_0                  PORTC_BIT1
-    #define INITIALISE_SPI_SD_INTERFACE() POWER_UP_ATOMIC(6, SPI0); \
-    _CONFIG_PORT_INPUT(E, (PORTE_BIT0), (PORT_NO_PULL)); \
-    _CONFIG_PERIPHERAL(C, 5, PC_5_SPI0_SCK); _CONFIG_PERIPHERAL(C, 6, (PC_6_SPI0_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); _CONFIG_PERIPHERAL(C, 7, (PC_7_SPI0_SIN | PORT_PS_UP_ENABLE)); \
-    _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, SPI_CS1_0, SPI_CS1_0, (PORT_SRE_FAST | PORT_DSE_HIGH)); \
-    SPI0_CTAR0 = (SPI_CTAR_ASC_6 | SPI_CTAR_FMSZ_8 | SPI_CTAR_CPHA | SPI_CTAR_CPOL | SPI_CTAR_BR_128); SPI0_MCR = (SPI_MCR_DIS_TXF | SPI_MCR_DIS_RXF | SPI_MCR_MSTR | SPI_MCR_DCONF_SPI | SPI_MCR_CLR_RXF | SPI_MCR_CLR_TXF | SPI_MCR_PCSIS_CS0 | SPI_MCR_PCSIS_CS1 | SPI_MCR_PCSIS_CS2 | SPI_MCR_PCSIS_CS3 | SPI_MCR_PCSIS_CS4 | SPI_MCR_PCSIS_CS5)
-
-    #define ENABLE_SPI_SD_OPERATION()
-    #define SET_SD_CARD_MODE()
-
-    // Set maximum speed
-    //
-    #define SET_SPI_SD_INTERFACE_FULL_SPEED() SPI0_MCR |= SPI_MCR_HALT; SPI0_CTAR0 = (SPI_CTAR_FMSZ_8 | SPI_CTAR_CPOL | SPI_CTAR_CPHA | SPI_CTAR_BR_2); SPI0_MCR &= ~SPI_MCR_HALT;
-    #if defined _WINDOWS
-        #define WRITE_SPI_CMD(byte)    SPI0_SR &= ~(SPI_SR_RFDF); SPI0_PUSHR = (byte | SPI_PUSHR_PCS_NONE | SPI_PUSHR_CTAS_CTAR0); SPI0_POPR = _fnSimSD_write((unsigned char)byte)
-        #define WAIT_TRANSMISSON_END() while ((SPI0_SR & (SPI_SR_RFDF)) == 0) { SPI0_SR |= (SPI_SR_RFDF); }
-        #define READ_SPI_DATA()        (unsigned char)SPI0_POPR
-    #else
-        #define WRITE_SPI_CMD(byte)    SPI0_SR = (SPI_SR_RFDF); SPI0_PUSHR = (byte | SPI_PUSHR_PCS_NONE | SPI_PUSHR_CTAS_CTAR0) // clear flags before transmitting (and receiving) a single byte
-        #define WAIT_TRANSMISSON_END() while ((SPI0_SR & (SPI_SR_RFDF)) == 0) {}
-        #define READ_SPI_DATA()        (unsigned char)SPI0_POPR
-    #endif
-    #define SET_SD_DI_CS_HIGH()  _SETBITS(C, SPI_CS1_0)                  // force DI and CS lines high ready for the initialisation sequence
-    #define SET_SD_CS_LOW()      _CLEARBITS(C, SPI_CS1_0)                // assert the CS line of the SD card to be read
-    #define SET_SD_CS_HIGH()     _SETBITS(C, SPI_CS1_0)                  // negate the CS line of the SD card to be read
-    #define POWER_UP_SD_CARD()                                           // apply power to the SD card if appropriate
-    #define POWER_DOWN_SD_CARD()
-    #define GET_SDCARD_WP_STATE()  1                                     // always write protect
 #elif defined K02F100M
     #define BLINK_LED              (PORTB_BIT1)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
     #define SWITCH_1               (PORTB_BIT2)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too

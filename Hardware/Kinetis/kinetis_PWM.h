@@ -418,17 +418,17 @@ static __interrupt void _PWM_Interrupt_5(void)
                 }
     #endif
             }
-    #if defined TRGMUX_AVAILABLE                                         // {9}
+    #if defined TRGMUX_AVAILABLE && defined FTM_SC_CLK_TRIGGER           // {9}
             else if (PWM_TRIGGER_CLK == (ulMode & FTM_SC_CLKS_MASK)) {   // if trigger clock source is to be used program the trigger input connection using the TRGMUX
                 switch (ucFlexTimer) {
-                case 0:                                                  // TPM0
-                    TRGMUX_TPM0 = ptrPWM_settings->ucTriggerSource;      // connect the trigger source to the clock input
+                case 0:                                                  // FTM0/TPM0
+                    TRGMUX_FTM0 = ptrPWM_settings->ucTriggerSource;      // connect the trigger source to the clock input
                     break;
-                case 1:                                                  // TPM1
-                    TRGMUX_TPM1 = ptrPWM_settings->ucTriggerSource;      // connect the trigger source to the clock input
+                case 1:                                                  // FTM1/TPM1
+                    TRGMUX_FTM1 = ptrPWM_settings->ucTriggerSource;      // connect the trigger source to the clock input
                     break;
-                case 2:                                                  // TPM2
-                    TRGMUX_TPM2 = ptrPWM_settings->ucTriggerSource;      // connect the trigger source to the clock input
+                case 2:                                                  // FTM2/TPM2
+                    TRGMUX_FTM2 = ptrPWM_settings->ucTriggerSource;      // connect the trigger source to the clock input
                     break;
                 }
                 ptrFlexTimer->FTM_CONF &= ~(FTM_CONF_TRGSRC_INTERNAL | FTM_CONF_TRGSEL_EXT_MASK); // ensure external trigger on trigger 0

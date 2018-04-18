@@ -33,12 +33,11 @@ static __interrupt void _pdb_Interrupt(void)
 #endif
 
 
-
 #if defined _PDB_CONFIG_CODE
         {
             PDB_SETUP *ptr_pdb_setup = (PDB_SETUP *)ptrSettings;
             unsigned long ulMode = ((ptr_pdb_setup->prescaler >> 4) | (((ptr_pdb_setup->prescaler << 12) & PDB_SC_PRESCALER_128) | (ptr_pdb_setup->pdb_trigger << 8)) | PDB_SC_MULT_1 | PDB_SC_LDMOD_IMM | PDB_SC_PDBEN);
-            POWER_UP_ATOMIC(6, PDB);                                     // power up the programmable delay block
+            POWER_UP_ATOMIC(6, PDB0);                                    // power up the programmable delay block
 
             PDB0_MOD = ptr_pdb_setup->period;                            // set cycle period - warning: note that the value is not read back from the register until PDB_SC_LDOK has been set
 

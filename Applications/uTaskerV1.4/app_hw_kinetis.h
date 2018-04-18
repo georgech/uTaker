@@ -1405,6 +1405,10 @@
         #define FNRESETPHY()
         #define PHY_IDENTIFIER         0x20005ca2                        // National/TI DP83849I identifier
         #define _DP83849I
+        #if defined TWR_K65F180M
+            #define MDIO_ON_PORTA                                        // MDIO/MDC are connected on PTA7 and PTA8 respectively
+            #define ETHERNET_MDIO_WITH_PULLUPS                           // there is no pull-up on the tower board so enable one at the MDIO input
+        #endif
     #else                                                                // MICREL PHY KS8041 on tower SER board
         #define ETHERNET_RMII                                            // RMII mode of operation instead of MII
         #define FORCE_PHY_CONFIG                                         // activate forced configuration
@@ -1539,9 +1543,11 @@
     //#define TICK_USES_LPTMR                                            // use low power timer for TICK so that it continues to operate in stop based low power modes
     //Select the clock used by the low power timer - if the timer if to continue running in low power modes the clock chosen should continue to run in that mode too
     //
-    #define LPTMR_CLOCK_LPO                                              // clock the low power timer from LPO (1kHz)
+  //#define LPTMR_CLOCK_LPO                                              // clock the low power timer from LPO (1kHz)
   //#define LPTMR_CLOCK_INTERNAL_30_40kHz                                // clock the low power timer from the 30..40kHz internal reference
+    #define LPTMR_CLOCK_INTERNAL_2MHz                                    // clock the low power timer from the 2MHz internal reference
   //#define LPTMR_CLOCK_INTERNAL_4MHz                                    // clock the low power timer from the 4MHz internal reference
+  //#define LPTMR_CLOCK_INTERNAL_8MHz                                    // clock the low power timer from the 8MHz internal reference
   //#define LPTMR_CLOCK_EXTERNAL_32kHz                                   // clock the low power timer from external 32kHz reference
   //#define LPTMR_CLOCK_OSCERCLK                                         // clock the low power timer from the external reference
     #if defined FRDM_K64F || defined FreeLON

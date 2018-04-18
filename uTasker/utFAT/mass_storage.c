@@ -521,7 +521,7 @@ static UTDISK utDisks[DISK_COUNT] = {{0}};                               // disk
 static int iMemoryOperation[DISK_COUNT] = {0};
 static int iMemoryState[DISK_COUNT] = {0};
 
-#if defined UTFAT_MULTIPLE_BLOCK_WRITE
+#if defined UTFAT_MULTIPLE_BLOCK_WRITE && defined UTFAT_WRITE
     static unsigned long ulBlockWriteLength = 0;                         // multiple block writing to speed up write operations
   //static unsigned long ulMultiBlockWriteAddress = 0;
 #endif
@@ -994,9 +994,10 @@ static int utCommitSectorData(UTDISK *ptr_utDisk, void *ptrBuffer, unsigned long
                 return iActionResult;
             }
             if (ucResult == 0) {
-                if (fnPutSector((unsigned char *)ptrBuffer, 0) != UTFAT_SUCCESS) { // start writing buffer to single sector
+                iActionResult = fnPutSector((unsigned char *)ptrBuffer, 0); // start writing buffer to single sector
+                if (iActionResult != UTFAT_SUCCESS) {
                     fnMemoryDebugMsg("Write error\r\n");
-                    return UTFAT_DISK_WRITE_ERROR;
+                    return iActionResult;
                 }
             }
     #endif
@@ -1004,8 +1005,8 @@ static int utCommitSectorData(UTDISK *ptr_utDisk, void *ptrBuffer, unsigned long
             if (ulBlockWriteLength != 0) {                               // in multiple block write
                 ulBlockWriteLength--;                                    // block has been written
                 if ((ulBlockWriteLength & ~(0x80000000)) == 0) {         // final block has been written
-                    ulBlockWriteLength = 0;                              // planned multiple block write has completed
-                    while ((iActionResult = fnSendSD_command(STOP_TRANSMISSION_CMD12, &ucResult, 0)) == CARD_BUSY_WAIT) {}
+                    ulBlockWriteLength = 0;                              // planned multiple block write has completed     
+                    while ((iActionResult = fnSendSD_command(fnCreateCommand(STOP_TRANSMISSION_CMD12, 0), &ucResult, 0)) == CARD_BUSY_WAIT) {}
                 }
             }
     #endif
@@ -5966,6 +5967,31 @@ extern int fnPrepareBlockRead(unsigned char ucDisk, unsigned long ulReadBlocks)
     return UTFAT_SUCCESS;
 }
     #endif
+
+    #if defined UTFAT_WRITE && defined UTFAT_MULTIPLE_BLOCK_WRITE
+// Prepare the write to sectors if there are capabilities to improve the following write speed
+//
+extern int fnPrepareBlockWrite(unsigned char ucDisk, unsigned long ulWriteBlocks, int iPreErase)
+{
+    if (ulBlockWriteLength == 0) {                                       // if a multi block write is not already in operations
+        #if defined UTFAT_PRE_ERASE
+        if ((iPreErase != 0) && (ulWriteBlocks > 1)) {                   // ignore if single block is to be written or no pre-erase is requested
+            unsigned char ucResult;
+            int iActionResult;
+            SET_SD_CS_LOW();
+            while ((iActionResult = fnSendSD_command(ucAPP_CMD_CMD55, &ucResult, 0)) == CARD_BUSY_WAIT) {}
+            while ((iActionResult = fnSendSD_command(fnCreateCommand(PRE_ERASE_BLOCKS_CMD23, ulWriteBlocks), &ucResult, 0)) == CARD_BUSY_WAIT) {}
+            SET_SD_CS_HIGH();
+        }
+        #endif
+        ulBlockWriteLength = ulWriteBlocks;                              // set the number of blocks to be written
+    }
+    else {                                                               // test abort
+        //ulBlockWriteLength = 0x80000000;
+    }
+    return UTFAT_SUCCESS;
+}
+    #endif
 #endif
 
 #if defined SDCARD_SUPPORT && defined UTFAT_WRITE
@@ -5976,9 +6002,13 @@ extern int fnWriteSector(unsigned char ucDisk, unsigned char *ptrBuffer, unsigne
     int iResult;
     UTDISK *ptr_utDisk = &utDisks[ucDisk];
     while ((iResult = _utCommitSectorData[ucDisk](ptr_utDisk, ptrBuffer, ulSectorNumber)) == CARD_BUSY_WAIT) {}
-    if (ulSectorNumber == ptr_utDisk->ulPresentSector) {                 // {9} if the write was to the present sector the sector buffer cache is also updated
-        uMemcpy(ptr_utDisk->ptrSectorData, ptrBuffer, ptr_utDisk->utFAT.usBytesPerSector);
+    #if !defined SDCARD_ACCESS_WITHOUT_UTFAT
+    if (UTFAT_SUCCESS  == iResult) {
+        if (ulSectorNumber == ptr_utDisk->ulPresentSector) {             // {9} if the write was to the present sector the sector buffer cache is also updated
+            uMemcpy(ptr_utDisk->ptrSectorData, ptrBuffer, ptr_utDisk->utFAT.usBytesPerSector);
+        }
     }
+    #endif
     return iResult;
 }
 #endif
@@ -7352,35 +7382,6 @@ extern int uMatchFileExtension(UTFILEINFO *ptrFileInfo, const CHAR *ptrExtension
 }
 #endif
 
-// Low level access routines
-//
-#if defined UTFAT_WRITE                                                  // allow operation without write support
-
-#if defined UTFAT_MULTIPLE_BLOCK_WRITE
-// Prepare the write to sectors if there are capabilities to improve the following write speed
-//
-extern int fnPrepareBlockWrite(unsigned char ucDisk, unsigned long ulWriteBlocks, int iPreErase)
-{
-    if (ulBlockWriteLength == 0) {                                       // if a multi block write is not already in operations
-    #if defined UTFAT_PRE_ERASE
-        if ((iPreErase != 0) && (ulWriteBlocks > 1)) {                   // ignore if single block is to written or no pre-erase is requested
-            unsigned char ucResult;
-            int iActionResult;
-            SET_SD_CS_LOW();
-            while ((iActionResult = fnSendSD_command(ucAPP_CMD_CMD55, &ucResult, 0)) == CARD_BUSY_WAIT) {}
-            while ((iActionResult = fnSendSD_command(fnCreateCommand(PRE_ERASE_BLOCKS_CMD23, ulWriteBlocks), &ucResult, 0)) == CARD_BUSY_WAIT) {}
-            SET_SD_CS_HIGH();
-        }
-    #endif
-        ulBlockWriteLength = ulWriteBlocks;                              // set the number of blocks to be written
-    }
-    else {                                                               // test abort
-        //ulBlockWriteLength = 0x80000000;
-    }
-    return UTFAT_SUCCESS;
-}
-#endif
-#endif
 
 #if !defined SDCARD_ACCESS_WITHOUT_UTFAT && (defined HTTP_ROOT || defined FTP_ROOT)
 extern int utServer(UTDIRECTORY *ptr_utDirectory, unsigned long ulServerType)

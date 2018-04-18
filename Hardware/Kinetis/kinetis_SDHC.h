@@ -39,7 +39,7 @@ extern void fnSetSD_clock(unsigned long ulSpeed)
 //
 #if defined KINETIS_K65 || defined KINETIS_K66
     #define READ_WATERMARK  128
-    #define WRITE_WATERMARK 1
+    #define WRITE_WATERMARK 128
 #else
     #define READ_WATERMARK  1
     #define WRITE_WATERMARK 1
@@ -116,7 +116,7 @@ extern int fnSendSD_command(const unsigned char ucCommand[6], unsigned char *ucR
                 break;
     #endif
             case WRITE_BLOCK_CMD24:                                      // single sector write
-    #if READ_WATERMARK != 1
+    #if READ_WATERMARK != 1 && WRITE_WATERMARK == 1
                 SDHC_WML = ((WRITE_WATERMARK << 16) | 1);                // set read FIFO watermark setting to 1 during write otherwise it stops the buffer write enable flag from being set
     #endif
                 SDHC_DSADDR = 0;
@@ -170,7 +170,7 @@ extern int fnSendSD_command(const unsigned char ucCommand[6], unsigned char *ucR
               //}
               //SDHC_PROCTL &= ~(SDHC_PROCTL_SABGREQ);
                 SDHC_IRQSTAT = (SDHC_IRQSTAT_TC | SDHC_IRQSTAT_BWR | SDHC_IRQSTAT_AC12E); // reset flags
-                // Fall through interntionally
+                // Fall through intentionally
                 //
     #endif
           //case PRE_ERASE_BLOCKS_CMD23:                                 // prepare multiple block write
@@ -199,7 +199,7 @@ extern int fnSendSD_command(const unsigned char ucCommand[6], unsigned char *ucR
                         *ucResult = 0;                                   // for compatibility
                     }
                     else {
-                        if (SDHC_IRQSTAT & SDHC_IRQSTAT_CTOE) {          // timeout occurred while waiting for command to complete
+                        if ((SDHC_IRQSTAT & SDHC_IRQSTAT_CTOE) != 0) {   // timeout occurred while waiting for command to complete
                             SDHC_IRQSTAT = (SDHC_IRQSTAT_CC | SDHC_IRQSTAT_CIE | SDHC_IRQSTAT_CEBE | SDHC_IRQSTAT_CTOE); // clear flags
                             iCommandYieldCount++;                        // monitor the maximum number of timeouts
                             iCommandState = 0;                           // allow resend of command
@@ -363,7 +363,7 @@ extern int fnGetSector(unsigned char *ptrBuf)
 
     #if (READ_WATERMARK == 128) && defined SDCARD_RX_DMA_CHANNEL && !defined DEVICE_WITHOUT_DMA && !defined _WINDOWS // {64}
         if (((CAST_POINTER_ARITHMETIC)ptrData & 0x3) == 0) {             // if long word aligned we can use DMA transfer
-            // Note that the DMA copy is not necessarily faster than the loop copy but it allow interrupts to be handled without slowing the read
+            // Note that the DMA copy is not necessarily faster than the loop copy but it allows interrupts to be handled without slowing the read
             //
             fnConfigDMA_buffer(SDCARD_RX_DMA_CHANNEL, 0, 512, SDHC_DATPORT_ADDR, ptrData, (DMA_DIRECTION_INPUT | DMA_LONG_WORDS | DMA_SINGLE_CYCLE | DMA_SW_TRIGGER_WAIT_TERMINATION), 0, 0); // configure the transfer, start and wait for termination
         }
@@ -425,42 +425,76 @@ ulPartialSectorReadCount++;
 //
 extern int fnPutSector(unsigned char *ptrBuf, int iMultiBlock)
 {
+    #if WRITE_WATERMARK == 128
+    int iMonitorWrite = 0;
+    #endif
     unsigned long *ptrData = (unsigned long *)ptrBuf;
-    int i = (512/sizeof(unsigned long));
+    int i = (512/sizeof(unsigned long));                                 // the number of long words
     ulSectorWriteCount++;
     #if defined _WINDOWS
     _fnSimSD_write(0xfe);                                                // dummy for simulator compatibility
     #endif
+    #if WRITE_WATERMARK == 128
+    while ((SDHC_PRSSTAT & SDHC_PRSSTAT_BWEN) == 0) {                    // wait for the buffer write enable flag to become set (fifo ready to be written to)
+        #if defined _WINDOWS
+        SDHC_PRSSTAT |= SDHC_PRSSTAT_BWEN;
+        #endif
+        if ((SDHC_IRQSTAT & (SDHC_IRQSTAT_DMAE | SDHC_IRQSTAT_AC12E | SDHC_IRQSTAT_DCE | SDHC_IRQSTAT_DTOE)) != 0) { // check for write errors
+            SDHC_IRQSTAT = (SDHC_IRQSTAT_DMAE | SDHC_IRQSTAT_AC12E | SDHC_IRQSTAT_DCE | SDHC_IRQSTAT_DTOE); // reset error flags
+            return UTFAT_DISK_WRITE_ERROR;                               // return error
+        }
+        if (++iMonitorWrite >= 10000) {                                  // if the buffer stalls (can happen when SD card removed during operation)
+             return UTFAT_DISK_WRITE_ERROR;                              // return with error
+        }
+    }
+    #if (WRITE_WATERMARK == 128) && defined SDCARD_TX_DMA_CHANNEL && !defined DEVICE_WITHOUT_DMA && !defined _WINDOWS
+    if (((CAST_POINTER_ARITHMETIC)ptrBuf & 0x3) == 0) {                  // if long word aligned we can use DMA transfer
+        // Note that the DMA copy is not necessarily faster than the loop copy but it allows interrupts to be handled without slowing the write
+        //
+        fnConfigDMA_buffer(SDCARD_TX_DMA_CHANNEL, 0, 512, ptrBuf, SDHC_DATPORT_ADDR, (DMA_DIRECTION_OUTPUT | DMA_LONG_WORDS | DMA_SINGLE_CYCLE | DMA_SW_TRIGGER_WAIT_TERMINATION), 0, 0); // configure the transfer, start and wait for termination
+    }
+    else {
+    #endif
+        while (i-- != 0) {                                               // for each long word of the sector buffer to be written
+            SDHC_DATPORT = *ptrData++;                                   // copy the data to be sent to the SDHC buffer (it will be transferred by the controller as fast as possible to the card)
+            #if defined _WINDOWS                                         // simulate the write of 4 bytes from the long word buffer entry
+            _fnSimSD_write((unsigned char)SDHC_DATPORT);
+            _fnSimSD_write((unsigned char)(SDHC_DATPORT >> 8));
+            _fnSimSD_write((unsigned char)(SDHC_DATPORT >> 16));
+            _fnSimSD_write((unsigned char)(SDHC_DATPORT >> 24));
+            #endif
+        }
+    #if (WRITE_WATERMARK == 128) && defined SDCARD_TX_DMA_CHANNEL && !defined DEVICE_WITHOUT_DMA && !defined _WINDOWS
+    }
+    #endif
+    #else
     while (i-- != 0) {                                                   // for each long word of the sector buffer to be written
         while ((SDHC_PRSSTAT & SDHC_PRSSTAT_BWEN) == 0) {                // wait until there is buffer space when the transmission buffer fills
-    #if defined _WINDOWS
+        #if defined _WINDOWS
             SDHC_PRSSTAT |= SDHC_PRSSTAT_BWEN;
-    #endif
+        #endif
         }
         SDHC_DATPORT = *ptrData++;                                       // copy the data to be sent to the SDHC buffer (it will be transferred by the controller as fast as possible to the card)
-    #if defined _WINDOWS                                                 // simulate the write of 4 bytes from the long word buffer entry
+        #if defined _WINDOWS                                             // simulate the write of 4 bytes from the long word buffer entry
         _fnSimSD_write((unsigned char)SDHC_DATPORT);
         _fnSimSD_write((unsigned char)(SDHC_DATPORT >> 8));
         _fnSimSD_write((unsigned char)(SDHC_DATPORT >> 16));
         _fnSimSD_write((unsigned char)(SDHC_DATPORT >> 24));
-    #endif
+        #endif
     }
+    #endif
     #if defined _WINDOWS
     _fnSimSD_write(0xff);_fnSimSD_write(0xff);_fnSimSD_write(0xff);      // dummy for simulator compatibility after sector data transfer
     #endif
     if (iMultiBlock == 0) {                                              // when performing multiple block transfers the transfer complete is not waited for
-      //int iMonitorWrite = 0;
         while ((SDHC_IRQSTAT & SDHC_IRQSTAT_TC) == 0) {                  // wait for transfer to complete
         #if defined _WINDOWS
             SDHC_IRQSTAT |= SDHC_IRQSTAT_TC;
         #endif
-          //if (++iMonitorWrite > 100000) {                              // protect against blocking
-          //    return UTFAT_DISK_WRITE_ERROR;
-          //}
         }
         SDHC_IRQSTAT = (SDHC_IRQSTAT_TC | SDHC_IRQSTAT_BWR | SDHC_IRQSTAT_AC12E); // reset flags
     }
-    #if READ_WATERMARK != 1
+    #if READ_WATERMARK != 1 && WRITE_WATERMARK == 1
     SDHC_WML = ((WRITE_WATERMARK << 16) | READ_WATERMARK);               // return read watermark setting after write
     #endif
     return UTFAT_SUCCESS;

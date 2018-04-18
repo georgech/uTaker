@@ -729,17 +729,29 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
 #if defined USE_USB_MSD        
     while (fnMsgs(USBPortID_MSD) != 0) {                                 // handle USB-MSD host receptions
         if (ulWriteBlock != 0) {                                         // write data expected
-            static unsigned char ucBuffer[512];                          // intermediate buffer to collect each sector content
-            Length = fnRead(USBPortID_MSD, &ucBuffer[iContent], (QUEUE_TRANSFER)(512 - iContent)); // read the content directly to the intermediate buffer
-            ulWriteBlock -= Length;
-            iContent += Length;
-            if (iContent >= 512) {                                       // input buffer is complete
+            static unsigned long ulBuffer[512/sizeof(unsigned long)];    // aligned intermediate buffer to collect each sector content in
+            unsigned char *ptrBuffer = (unsigned char *)ulBuffer;
+            Length = fnRead(USBPortID_MSD, (ptrBuffer + iContent), (QUEUE_TRANSFER)(512 - iContent)); // read the content directly to the intermediate buffer
+            ulWriteBlock -= Length;                                      // the amount of data that is still to be collected
+            iContent += Length;                                          // the content now in the buffer
+            if (iContent >= 512) {                                       // input buffer content is complete
     #if defined UTFAT_WRITE                                              // if no write support is enabled the writes to disk are ignored
-                fnWriteSector(ucActiveLUN, ucBuffer, ulLogicalBlockAdr); // commit the buffer content to the media
+                int iResult = fnWriteSector(ucActiveLUN, (unsigned char *)ulBuffer, ulLogicalBlockAdr); // commit the buffer content to the media
+                if (iResult != UTFAT_SUCCESS) {
+                    fnDebugMsg("Write failed: ");
+                    fnDebugDec(iResult, (DISPLAY_NEGATIVE | WITH_CR_LF));
+                    iResult = fnWriteSector(ucActiveLUN, (unsigned char *)ulBuffer, ulLogicalBlockAdr); // commit the buffer content to the media
+                    if (iResult == UTFAT_SUCCESS) {
+                        fnDebugMsg("Retry OK!!\r\n");
+                    }
+                    else {
+                        fnDebugMsg("Retry too!\r\n");
+                    }
+                }
     #endif
-                ulLogicalBlockAdr++;
-                iContent = 0;                                            // reset intermediate buffer
-                if (ulWriteBlock != 0) {                                 // block not complete
+                ulLogicalBlockAdr++;                                     // following writes are to the subsequent logical block
+                iContent = 0;                                            // reset intermediate buffer content
+                if (ulWriteBlock != 0) {                                 // if block not complete
                     uTaskerStateChange(OWN_TASK, UTASKER_ACTIVATE);      // yield after a write when further data is expected but schedule again immediately to read any remaining queue content
                     return;
                 }
@@ -918,9 +930,9 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
                             ulWriteBlock = ((ptrWrite->ucTransferLength[0] << 24) | (ptrWrite->ucTransferLength[1] << 16) | (ptrWrite->ucTransferLength[2] << 8) | ptrWrite->ucTransferLength[3]);
                         }
                         else {
-                            ulWriteBlock = ((ptrWrite->ucTransferLength[0] << 8) | ptrWrite->ucTransferLength[1]); // the total number of blocks to be returned
+                            ulWriteBlock = ((ptrWrite->ucTransferLength[0] << 8) | ptrWrite->ucTransferLength[1]); // the total number of blocks to be written
                         }
-    #if defined UTFAT_MULTIPLE_BLOCK_WRITE
+    #if defined UTFAT_MULTIPLE_BLOCK_WRITE && defined UTFAT_WRITE
                         fnPrepareBlockWrite(ucActiveLUN, ulWriteBlock, 1); // since we know that there will be a write to one or more blocks we can prepare the disk so that it can write faster
     #endif
                         ulWriteBlock *= 512;                             // convert to byte count

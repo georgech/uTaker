@@ -1531,7 +1531,7 @@ static unsigned char fnConvertByte(unsigned char ucASCII)
     static int fnLoadTerminate(void)
 #endif
 {
-        #if defined INTERMEDIATE_PROG_BUFFER
+        #if defined SERIAL_INTERFACE && defined INTERMEDIATE_PROG_BUFFER
     if (fnFlashIntermediate() != 0) {                                    // flash final intermediate buffer
         return PROGRAMMING_ERROR;
     }
@@ -1607,7 +1607,7 @@ static unsigned char fnConvertByte(unsigned char ucASCII)
     #define I_EXTENDED_LINEAR_ADDRESS   0x04
     #define I_START_LINEAR_ADDRESS      0x05
 
-    #if !defined INTERMEDIATE_PROG_BUFFER && (FLASH_ROW_SIZE && FLASH_ROW_SIZE > 0) // {24}
+    #if !(defined SERIAL_INTERFACE && defined INTERMEDIATE_PROG_BUFFER) && (FLASH_ROW_SIZE && FLASH_ROW_SIZE > 0) // {24}
     static unsigned long ulNextExpectedSREC = 0;
     #endif
     #if defined SPI_SW_UPLOAD_ENCRYPTED                                  // {8}
@@ -1843,7 +1843,7 @@ static unsigned char fnConvertByte(unsigned char ucASCII)
                     return LINE_ACCEPTED;                                // content is valid
                 }
         #endif
-        #if defined INTERMEDIATE_PROG_BUFFER
+        #if defined SERIAL_INTERFACE && defined INTERMEDIATE_PROG_BUFFER
             #if defined MEMORY_SWAP
                 return (fnIntermediateWrite((unsigned char *)(srec.addr + UTASKER_APP_START), ptrData, iDataCnt));
             #else

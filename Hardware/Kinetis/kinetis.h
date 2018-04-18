@@ -5018,6 +5018,41 @@ typedef struct stKINETIS_INTMUX
         #define TRGMUX_CTRL0          *(unsigned long *)(TRGMUX1_BLOCK + 0x00)
         #define TRGMUX_CTRL1          *(unsigned long *)(TRGMUX1_BLOCK + 0x04)
 
+        // TRGMUX0
+        //
+        #define TRGMUX_SEL_TRGMUX_IN0         0x00
+        #define TRGMUX_SEL_TRGMUX_IN1         0x01
+        #define TRGMUX_SEL_TRGMUX_IN2         0x02
+        #define TRGMUX_SEL_TRGMUX_IN3         0x03
+        #define TRGMUX_SEL_RTC_SECONDS        0x04
+        #define TRGMUX_SEL_RTC_ALARM          0x05
+        #define TRGMUX_SEL_LPTMR0             0x06
+        #define TRGMUX_SEL_LPIT0_CHANNEL_0    0x07
+        #define TRGMUX_SEL_LPIT0_CHANNEL_1    0x08
+        #define TRGMUX_SEL_LPIT0_CHANNEL_2    0x09
+        #define TRGMUX_SEL_LPIT0_CHANNEL_3    0x0a
+        #define TRGMUX_SEL_FTM0               0x0b
+        #define TRGMUX_SEL_FTM1               0x0c
+        #define TRGMUX_SEL_FTM2               0x0d
+        #define TRGMUX_SEL_ADC0_CONVERSION_A  0x0f
+        #define TRGMUX_SEL_ADC0_CONVERSION_B  0x10
+        #define TRGMUX_SEL_CMP0               0x11
+        #define TRGMUX_SEL_CMP1               0x12
+        #define TRGMUX_SEL_FLEXIO_TRIGGER_0   0x14
+        #define TRGMUX_SEL_FLEXIO_TRIGGER_1   0x15
+        #define TRGMUX_SEL_FLEXIO_TRIGGER_2   0x16
+        #define TRGMUX_SEL_FLEXIO_TRIGGER_3   0x17
+        #define TRGMUX_SEL_TRGMUX1_OUTPUT_0   0x18
+        #define TRGMUX_SEL_TRGMUX1_OUTPUT_1   0x19
+        #define TRGMUX_SEL_TRGMUX1_OUTPUT_2   0x1a
+        #define TRGMUX_SEL_TRGMUX1_OUTPUT_3   0x1b
+        #define TRGMUX_SEL_TRGMUX1_OUTPUT_4   0x1c
+        #define TRGMUX_SEL_TRGMUX1_OUTPUT_5   0x1d
+        #define TRGMUX_SEL_TRGMUX1_OUTPUT_6   0x1e
+        #define TRGMUX_SEL_TRGMUX1_OUTPUT_7   0x1f
+
+        // TRGMUX 1
+        //
         #define TRGMUX_SEL_DISABLED           0x00
         #define TRGMUX_SEL_VDD                0x01
         #define TRGMUX_SEL_SIM_SW_TRIGGER     0x02
@@ -5125,6 +5160,12 @@ typedef struct stKINETIS_INTMUX
         #define TRGMUX_SEL_LPSPI2_RX_DATA     0x3d
         #define TRGMUX_SEL_SAI_TX_FRAME_SYNC  0x3e
         #define TRGMUX_SEL_SAI_RX_FRAME_SYNC  0x3f
+
+        // For compatibility
+        //
+        #define TRGMUX_FTM0                   TRGMUX_TPM0
+        #define TRGMUX_FTM1                   TRGMUX_TPM1
+        #define TRGMUX_FTM2                   TRGMUX_TPM2
     #endif
     #define TRGMUX_SEL0           0x0000003f                             // peripheral trigger 0 mask
     #define TRGMUX_SEL1           0x00003f00                             // peripheral trigger 1 mask
@@ -10503,7 +10544,7 @@ typedef struct stKINETIS_LPTMR_CTL
       #define SIM_SCGC6_SIM_SCGC6_CRC        BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 18)
       #define SIM_SCGC6_SIM_SCGC6_USBHS      BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 20)
       #define SIM_SCGC6_SIM_SCGC6_USBDCD     BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 21)
-      #define SIM_SCGC6_SIM_SCGC6_PDB        BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 22)
+      #define SIM_SCGC6_SIM_SCGC6_PDB0       BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 22)
       #define SIM_SCGC6_SIM_SCGC6_PIT        BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 23)
       #define SIM_SCGC6_SIM_SCGC6_FTM0       BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 24)
       #define SIM_SCGC6_SIM_SCGC6_FTM1       BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 25)
@@ -17640,8 +17681,12 @@ typedef struct stLPTMR_SETUP                                             // {51}
     #define LPTMR_CLOCK (1000)
 #elif defined LPTMR_CLOCK_INTERNAL_30_40kHz
     #define LPTMR_CLOCK (35000)
+#elif defined LPTMR_CLOCK_INTERNAL_2MHz
+    #define LPTMR_CLOCK (2000000)
 #elif defined LPTMR_CLOCK_INTERNAL_4MHz
     #define LPTMR_CLOCK (4000000)
+#elif defined LPTMR_CLOCK_INTERNAL_8MHz
+    #define LPTMR_CLOCK (8000000)
 #elif defined LPTMR_CLOCK_EXTERNAL_32kHz
     #define LPTMR_CLOCK (32768)
 #else                                                                    // LPTMR_CLOCK_OSCERCLK

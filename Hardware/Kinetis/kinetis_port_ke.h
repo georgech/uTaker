@@ -1111,31 +1111,50 @@ static const char *cPinNumber[PORTS_AVAILABLE + 1][PORT_WIDTH][2] = {
                                              
 static int ADC_DEDICATED_CHANNEL[PORT_WIDTH] = {0, 0, 0, 0, 0, 0, 0, 0};
 static int ADC_DEDICATED_MODULE[PORT_WIDTH] = {0, 0, 0, 0, 0, 0, 0, 0};
+#if defined PORTS_AVAILABLE_8_BIT
 static int ADC_MUX_CHANNEL[PORTS_AVAILABLE_8_BIT][PORT_WIDTH] = {
     { -1,-1,-1,-1,-1,-1,-1,-1 }, // port A
     { -1,-1,-1,-1,-1,-1,-1,-1 }, // port B
-#if PORTS_AVAILABLE_8_BIT > 2
+    #if PORTS_AVAILABLE_8_BIT > 2
     { -1,-1,-1,-1,-1,-1,-1,-1 }, // port C
-#endif
-#if PORTS_AVAILABLE_8_BIT > 3
+    #endif
+    #if PORTS_AVAILABLE_8_BIT > 3
     { -1,-1,-1,-1,-1,-1,-1,-1 }, // port D
-#endif
-#if PORTS_AVAILABLE_8_BIT > 4
+    #endif
+    #if PORTS_AVAILABLE_8_BIT > 4
     { -1,-1,-1,-1,-1,-1,-1,-1 }, // port E
-#endif
-#if PORTS_AVAILABLE_8_BIT > 5
+    #endif
+    #if PORTS_AVAILABLE_8_BIT > 5
     { -1,-1,-1,-1,-1,-1,-1,-1 }, // port F
-#endif
-#if PORTS_AVAILABLE_8_BIT > 6
+    #endif
+    #if PORTS_AVAILABLE_8_BIT > 6
     { -1,-1,-1,-1,-1,-1,-1,-1 }, // port G
-#endif
-#if PORTS_AVAILABLE_8_BIT > 7
+    #endif
+    #if PORTS_AVAILABLE_8_BIT > 7
     { -1,-1,-1,-1,-1,-1,-1,-1 }, // port H
-#endif
-#if PORTS_AVAILABLE_8_BIT > 8
+    #endif
+    #if PORTS_AVAILABLE_8_BIT > 8
     { -1,-1,-1,-1,-1,-1,-1,-1 }, // port I
-#endif
+    #endif
 };
+#else
+static int ADC_MUX_CHANNEL[PORTS_AVAILABLE][PORT_WIDTH] = {
+    { -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 }, // port A
+    { -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 }, // port B
+    #if PORTS_AVAILABLE_BIT > 2
+    { -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 }, // port C
+    #endif
+    #if PORTS_AVAILABLE_BIT > 3
+    { -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 }, // port D
+    #endif
+    #if PORTS_AVAILABLE_BIT > 4
+    { -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 }, // port E
+    #endif
+    #if PORTS_AVAILABLE_BIT > 5
+    { -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 }, // port F
+    #endif
+};
+#endif
                                              
 
 static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][8] = {

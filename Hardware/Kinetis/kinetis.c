@@ -1209,7 +1209,12 @@ static void fnINTMUX3(void)
 extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void (*InterruptFunc)(void)) // {55}
 {
     volatile unsigned long *ptrIntSet = IRQ0_31_SER_ADD;                 // {73}
+#if defined KINETIS_KL03                                                 // only long word acesses are possible to the priority registers
+    volatile unsigned long *ptrPriority = (unsigned long *)IRQ0_3_PRIORITY_REGISTER_ADD;
+    int iShift;
+#else
     volatile unsigned char *ptrPriority = IRQ0_3_PRIORITY_REGISTER_ADD;  // {73}
+#endif
 #if !defined INTERRUPT_VECTORS_IN_FLASH                                  // {111}
     VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
     void (**processor_ints)(void);
@@ -1276,9 +1281,15 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void (*
     processor_ints += iInterruptID;                                      // move the pointer to the location used by this interrupt number
     *processor_ints = InterruptFunc;                                     // enter the interrupt handler into the vector table
 #endif
+#if defined KINETIS_KL03
+    ptrPriority += (iInterruptID/4);                                     // move to the priority location used by this interrupt
+    iShift = ((iInterruptID % 4) * 8);
+    *ptrPriority = ((*ptrPriority & ~(0xff << iShift)) | (ucPriority << (iShift + __NVIC_PRIORITY_SHIFT)));
+#else
     ptrPriority += iInterruptID;                                         // move to the priority location used by this interrupt
     *ptrPriority = (ucPriority << __NVIC_PRIORITY_SHIFT);                // {48} define the interrupt's priority (16 levels for K and 4 levels for KE/KL)
-    ptrIntSet += (iInterruptID / 32);                                    // move to the interrupt enable register in which this interrupt is controlled
+#endif
+    ptrIntSet += (iInterruptID/32);                                      // move to the interrupt enable register in which this interrupt is controlled
     *ptrIntSet = (0x01 << (iInterruptID % 32));                          // enable the interrupt
 #if defined _WINDOWS
     IRQ0_31_SER  |= ulState0;                                            // synchronise the interrupt masks
@@ -1601,7 +1612,7 @@ extern void fnRetriggerWatchdog(void)
 #endif
 
 
-#if defined SUPPORT_PDB && !defined KINETIS_KL && !defined KINETIS_KE    // {58}
+#if defined SUPPORT_PDB && defined PDB_AVAILABLE                         // {58}
 /* =================================================================== */
 /*                    Programmable Delay Block (PDB)                   */
 /* =================================================================== */
@@ -2767,7 +2778,7 @@ const _RESET_VECTOR __vector_table
     #if defined TICK_USES_LPTMR
     _RealTimeInterrupt,                                                  // 28
     #elif defined SUPPORT_LPTMR && !defined TICK_USES_LPTMR && !defined KINETIS_KE
-    _LPTMR_periodic,                                                     // 28 warning that only periodic interrupt is supported (not single-shot)
+    _LPTMR0_handler,                                                     // 28
     #else
     irq_default,                                                         // 28
     #endif
