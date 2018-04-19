@@ -741,7 +741,15 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
     #else
         #define MCGIRCLK       SLOW_ICR                                  // 30..40kHz (2MHz for devices with MCG Lite)
     #endif
-    #define MCGFFCLK
+    #if defined EXTERNAL_CLOCK && !defined CLOCK_FROM_RTC_OSCILLATOR     // external oscillator used
+        #if EXTERNAL_CLOCK >= 8000000
+            #define MCGFFCLK  (EXTERNAL_CLOCK/1024)
+        #else
+            #define MCGFFCLK  (EXTERNAL_CLOCK/128)
+        #endif
+    #else
+        #define MCGFFCLK       SLOW_ICR
+    #endif
     #define MCGFLLCLK          MCGOUTCLK
     #define MCGPLLCLK          MCGOUTCLK
     #define MCG_EXT_REF_CLOCK
@@ -12135,6 +12143,7 @@ typedef struct stKINETIS_LPTMR_CTL
 #define PA_19_FTM_CLKIN1                 PORT_MUX_ALT4
 
 #define PB_16_FTM_CLKIN0                 PORT_MUX_ALT4
+#define PB_17_FTM_CLKIN0                 PORT_MUX_ALT4
 #if defined KINETIS_K66 || defined KINETIS_K80
     #define PC_12_FTM_CLKIN0             PORT_MUX_ALT4
     #define PA_18_TPM_CLKIN0             PORT_MUX_ALT7
@@ -17550,6 +17559,7 @@ extern void fnSimPers(void);
 #else
     #define TIMER_CLOCK           (BUS_CLOCK)
     #define PWM_CLOCK             (TIMER_CLOCK)                          // {107} - corrected from (SYSTEM_CLOCK/2)
+    #define PWM_FIXED_CLOCK       (MCGFFCLK)
 #endif
 
 // FlexTimer delays
@@ -17628,6 +17638,7 @@ typedef struct stPWM_INTERRUPT_SETUP
 #define PWM_MODE_SETTINGS_MASK  (PWM_PRESCALER_128 | FTM_SC_CPWMS | FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS | PWM_DMA_PERIOD_ENABLE)
 
 #define PWM_FREQUENCY(frequency, prescaler)  (PWM_CLOCK/prescaler/frequency) // {83}
+#define PWM_FIXED_CLOCK_FREQUENCY(frequency, prescaler) (PWM_FIXED_CLOCK/prescaler/frequency)
 #if (((PWM_CLOCK/1000000) * 1000000) != PWM_CLOCK)                       // if the clock is not an exact MHz value
     #define PWM_TIMER_US_DELAY(usec, prescaler)  ((unsigned long)(((double)PWM_CLOCK/(double)1000000) * usec)/prescaler)
 #else

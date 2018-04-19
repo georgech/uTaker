@@ -461,7 +461,7 @@ extern unsigned char fnSetShowTime(int iSetDisplay, CHAR *ptrInput)
     else {
         fnGetRTC(&rtc_setup);                                            // get the local time structure content
     }
-    if (iSetDisplay & (DISPLAY_RTC_TIME_DATE | DISPLAY_RTC_ALARM)) {     // display time and date
+    if ((iSetDisplay & (DISPLAY_RTC_TIME_DATE | DISPLAY_RTC_ALARM)) != 0) { // display time and date
         CHAR *ptrTimeBuffer = ptrInput;
         if (ptrInput != 0) {                                             // if buffer specified
             if (iSetDisplay & (DISPLAY_RTC_DATE | DISPLAY_RTC_ALARM)) {
@@ -533,7 +533,7 @@ extern unsigned char fnSetShowTime(int iSetDisplay, CHAR *ptrInput)
                     }
                 }
             }
-            if (SET_RTC_DATE & iSetDisplay) {
+            if ((SET_RTC_DATE & iSetDisplay) != 0) {
                 rtc_setup.ucDayOfMonth = ucDay_hour;
                 rtc_setup.ucMonthOfYear = ucMinute_month;
                 rtc_setup.usYear = usSecond_year;

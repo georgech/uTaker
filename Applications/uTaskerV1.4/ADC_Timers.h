@@ -87,8 +87,8 @@
         #endif
     #endif
     #if defined SUPPORT_LPTMR && (LPTMR_AVAILABLE > 0)                   // Kinetis low power timer {18}
-      //#define TEST_LPTMR_PERIODIC                                      // test a user defined periodic interrupt
-        #define TEST_LPTMR_SINGLE_SHOT                                   // test a user defined single-shot interrupt
+        #define TEST_LPTMR_PERIODIC                                      // test a user defined periodic interrupt
+      //#define TEST_LPTMR_SINGLE_SHOT                                   // test a user defined single-shot interrupt
     #endif
     #if defined SUPPORT_DMA_TIMER                                        // M522XX DMA timers
       //#define TEST_DMA_TIMER      ulCnt                                // test a user defined periodic interrupt
@@ -105,7 +105,7 @@
               //#define TEST_STEPPER                                     // test generating stepper motor frequency patterns (use together with PWM)
             #endif
             #if defined SUPPORT_TIMER
-                #define TEST_SINGLE_SHOT_TIMER                           // test single-shot mode
+              //#define TEST_SINGLE_SHOT_TIMER                           // test single-shot mode
               //#define TEST_PERIODIC_TIMER                              // test periodic interrupt mode
               //#define TEST_ADC_TIMER                                   // test periodic ADC trigger mode (Luminary)
               //#define TEST_CAPTURE                                     // {6} test timer capture mode
@@ -1792,7 +1792,7 @@ static void fnConfigure_Timer(void)
     pwm_setup.pwm_value  = _PWM_TENTH_PERCENT(706, pwm_setup.pwm_frequency); // 70.6% PWM (low/high) on different channel
     #endif
     fnConfigureInterrupt((void *)&pwm_setup);
-    #if defined FRDM_K64F
+    #if defined FRDM_K64F                                                // generate 6 different PWM signals o flex timer 0
     pwm_setup.pwm_value = _PWM_TENTH_PERCENT(553, pwm_setup.pwm_frequency); // 55.3% PWM (low/high) on different channel
     pwm_setup.pwm_reference = (_TIMER_0 | 1);
     fnConfigureInterrupt((void *)&pwm_setup);
@@ -1804,6 +1804,11 @@ static void fnConfigure_Timer(void)
     fnConfigureInterrupt((void *)&pwm_setup);
     pwm_setup.pwm_value = _PWM_TENTH_PERCENT(20, pwm_setup.pwm_frequency); // 2.0% PWM (low/high) on different channel
     pwm_setup.pwm_reference = (_TIMER_0 | 5);
+    fnConfigureInterrupt((void *)&pwm_setup);
+    pwm_setup.pwm_mode = (PWM_FIXED_CLK | PWM_PRESCALER_1 | PWM_EDGE_ALIGNED); // clock from fixed clock (MCGFFCLK)
+    pwm_setup.pwm_reference = (_TIMER_2 | 0);                            // timer module 2, channel 1
+    pwm_setup.pwm_frequency = PWM_FIXED_CLOCK_FREQUENCY(1, 1);           // generate 1Hz on PWM output
+    pwm_setup.pwm_value = _PWM_TENTH_PERCENT(200, pwm_setup.pwm_frequency); // 20.0% PWM (low/high)
     fnConfigureInterrupt((void *)&pwm_setup);
     #elif defined FRDM_KL02Z || defined FRDM_KE02Z40M
     pwm_setup.pwm_reference = (_TIMER_1 | 1);                            // timer module 1, channel 1 (red LED for FRDM-KL02Z and blue for FRDM-KE02Z40M)

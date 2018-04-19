@@ -2993,7 +2993,8 @@ unsigned char MC_PMCTRL;
     unsigned long RNG_ESR;
     unsigned long RNG_OUT;
     } KINETIS_RNGB;
-    #elif defined RANDOM_NUMBER_GENERATOR_A
+    #endif
+    #if defined RANDOM_NUMBER_GENERATOR_A
     typedef struct stKINETIS_RNGA
     {
     unsigned long RNGA_CR;
@@ -3001,7 +3002,8 @@ unsigned char MC_PMCTRL;
     unsigned long RNGA_ER;
     unsigned long RNGA_OR;
     } KINETIS_RNGA;
-    #elif defined TRUE_RANDOM_NUMBER_GENERATOR                           // {38}
+    #endif
+    #if defined TRUE_RANDOM_NUMBER_GENERATOR                             // {38}
     typedef struct stKINETIS_TRNG
     {
         unsigned long TRNG0_MCTL;
@@ -3785,9 +3787,11 @@ typedef struct stKINETIS_PERIPH
 #if defined RNG_AVAILABLE
     #if defined RANDOM_NUMBER_GENERATOR_A                                // {13}
     KINETIS_RNGA       RNGA;
-    #elif defined RANDOM_NUMBER_GENERATOR_B
+    #endif
+    #if defined RANDOM_NUMBER_GENERATOR_B
     KINETIS_RNGB       RNGB;
-    #elif defined TRUE_RANDOM_NUMBER_GENERATOR                           // {38}
+    #endif
+    #if defined TRUE_RANDOM_NUMBER_GENERATOR                           // {38}
     KINETIS_TRNG       TRNG;
     #endif
 #endif

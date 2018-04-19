@@ -564,7 +564,9 @@ extern unsigned short fnGetRndHW(void)
         #endif
     #endif
     #if defined RANDOM_NUMBER_GENERATOR_A                                // RNGA
+        #if !defined RANDOM_NUMBER_GENERATOR_B
     unsigned long ulRandomNumber;
+        #endif
         #if defined _WINDOWS
     if (IS_POWERED_UP(3, RNGA) == 0) {
         _EXCEPTION("Warning: RNGA being used before initialised!!!");
