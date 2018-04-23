@@ -628,6 +628,9 @@ static void fnSetDevice(unsigned long *port_inits)
 #if ((UARTS_AVAILABLE > 0) && (LPUARTS_AVAILABLE == 0)) || (defined LPUARTS_PARALLEL && (UARTS_AVAILABLE > 0))
     UART0_BDL    = 0x04;                                                 // UARTs
     UART0_S1     = (UART_S1_TDRE | UART_S1_TC);
+    #if defined KINETIS_KL
+    UART0_C4 = UART_C4_OSR_16;
+    #endif
     #if !defined KINETIS_KL && !defined KINETIS_KE
     UART0_SFIFO  = 0xc0;
     UART0_RWFIFO = 0x01;
@@ -642,6 +645,9 @@ static void fnSetDevice(unsigned long *port_inits)
 #elif UARTS_AVAILABLE > 1
     UART1_BDL    = 0x04;   
     UART1_S1     = 0xc0;
+    #if defined KINETIS_KL
+    UART1_C4 = UART_C4_OSR_16;
+    #endif
         #if !defined KINETIS_KL && !defined KINETIS_KE
     UART1_SFIFO  = 0xc0;
     UART1_RWFIFO = 0x01;
@@ -652,6 +658,9 @@ static void fnSetDevice(unsigned long *port_inits)
 #if UARTS_AVAILABLE > 2 || (LPUARTS_AVAILABLE == 2 && UARTS_AVAILABLE == 1)
     UART2_BDL    = 0x04;   
     UART2_S1     = 0xc0;
+    #if defined KINETIS_KL
+    UART2_C4 = UART_C4_OSR_16;
+    #endif
      #if !defined KINETIS_KL && !defined KINETIS_KE
     UART2_SFIFO  = 0xc0;
     UART2_RWFIFO = 0x01;

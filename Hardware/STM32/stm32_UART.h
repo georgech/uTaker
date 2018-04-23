@@ -185,22 +185,38 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         break;
 
     case 1:
+#if defined _STM32L432
+        RCC_APB1ENR1 |= (RCC_APB1ENR1_USART2EN);                         // enable clocks to USART2
+#else
         POWER_UP(APB1, RCC_APB1ENR_USART2EN);                            // enable clocks to USART2
+#endif
         fnEnterInterrupt(irq_USART2_ID, PRIORITY_USART2, SCI2_Interrupt);// enter USART interrupt handler
         break;
 
     case 2:
+#if defined _STM32L432
+        RCC_APB1ENR1 |= (RCC_APB1ENR1_USART3EN);                         // enable clocks to USART3
+#else
         POWER_UP(APB1, RCC_APB1ENR_USART3EN);                            // enable clocks to USART3
+#endif
         fnEnterInterrupt(irq_USART3_ID, PRIORITY_USART3, SCI3_Interrupt);// enter USART interrupt handler
         break;
 
     case 3:
+#if defined _STM32L432
+        RCC_APB1ENR1 |= (RCC_APB1ENR1_UART4EN);                          // enable clocks to UART4
+#else
         POWER_UP(APB1, RCC_APB1ENR_UART4EN);                             // enable clocks to UART4
+#endif
         fnEnterInterrupt(irq_UART4_ID, PRIORITY_UART4, SCI4_Interrupt);  // enter UART interrupt handler
         break;
 
     case 4:
+#if defined _STM32L432                                                   // LPUART1
+        RCC_APB1ENR2 |= (RCC_APB1ENR2_LPUART1EN);                        // enable clocks to LPUART1
+#else
         POWER_UP(APB1, RCC_APB1ENR_UART5EN);                             // enable clocks to UART5
+#endif
         fnEnterInterrupt(irq_UART5_ID, PRIORITY_UART5, SCI5_Interrupt);  // enter UART interrupt handler
         break;
 #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
@@ -413,7 +429,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
 extern void fnRxOn(QUEUE_HANDLE Channel)
 {
     switch (Channel) {
-    case 0:
+    case 0:                                                              // USART1
 #if defined USART1_REMAP
         _PERIPHERAL_REMAP(USART1_REMAPPED);
         _CONFIG_PERIPHERAL_INPUT(B, (PERIPHERAL_USART1_2_3), (PORTB_BIT7), (UART_RX_INPUT_TYPE)); // RX 1 on PB7
@@ -426,12 +442,14 @@ extern void fnRxOn(QUEUE_HANDLE Channel)
 #if defined USART2_REMAP
         _PERIPHERAL_REMAP(USART2_REMAPPED);
         _CONFIG_PERIPHERAL_INPUT(D, (PERIPHERAL_USART1_2_3), (PORTD_BIT6), (UART_RX_INPUT_TYPE)); // RX 2 on PD6
+#elif defined USART2_PARTIAL_REMAP && defined _STM32L432
+        _CONFIG_PERIPHERAL_INPUT(A, (PERIPHERAL_USART2), (PORTA_BIT15), (UART_RX_INPUT_TYPE)); // RX 2 on PA3
 #else
         _CONFIG_PERIPHERAL_INPUT(A, (PERIPHERAL_USART1_2_3), (PORTA_BIT3), (UART_RX_INPUT_TYPE)); // RX 2 on PA3
 #endif
         USART2_CR1 |= (USART_CR1_UE | USART_CR1_RE | USART_CR1_RXNEIE);  // enable the receiver with Rx interrupts
         break;
-    case 2:
+    case 2:                                                              // USART3
 #if defined USART3_FULL_REMAP
         _PERIPHERAL_REMAP(USART3_FULLY_REMAPPED);
         _CONFIG_PERIPHERAL_INPUT(D, (PERIPHERAL_USART1_2_3), (PORTD_BIT9), (UART_RX_INPUT_TYPE)); // RX 3 on PD9
@@ -444,13 +462,19 @@ extern void fnRxOn(QUEUE_HANDLE Channel)
         USART3_CR1 |= (USART_CR1_UE | USART_CR1_RE | USART_CR1_RXNEIE);  // enable the receiver with Rx interrupts
         break;
     case 3:
+#if defined _STM32L432                                                   // LPUART1
+        _CONFIG_PERIPHERAL_INPUT(A, (PERIPHERAL_LPUART1), (PORTA_BIT3), (UART_RX_INPUT_TYPE)); // RX 4 on PA3
+#else
         _CONFIG_PERIPHERAL_INPUT(C, (PERIPHERAL_USART4_5_6), (PORTC_BIT11), (UART_RX_INPUT_TYPE)); // RX 4 on PC11
         UART4_CR1 |= (USART_CR1_UE | USART_CR1_RE | USART_CR1_RXNEIE);   // enable the receiver with Rx interrupts
+#endif
         break;
+#if !defined _STM32L432
     case 4:
         _CONFIG_PERIPHERAL_INPUT(D, (PERIPHERAL_USART4_5_6), (PORTD_BIT2), (UART_RX_INPUT_TYPE)); // RX 5 on PD2
         UART5_CR1 |= (USART_CR1_UE | USART_CR1_RE | USART_CR1_RXNEIE);   // enable the receiver with Rx interrupts
         break;
+#endif
 #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
     case 5:
     #if defined USART6_REMAP
@@ -534,13 +558,19 @@ extern void fnTxOn(QUEUE_HANDLE Channel)
         USART3_CR1 |= (USART_CR1_UE | USART_CR1_TE);                     // enable the transmitter
         break;
     case 3:
+#if defined _STM32L432
+        _CONFIG_PERIPHERAL_OUTPUT(A, (PERIPHERAL_LPUART1), (PORTA_BIT2), (OUTPUT_MEDIUM | OUTPUT_PUSH_PULL)); // TX 4 on PA2
+#else
         _CONFIG_PERIPHERAL_OUTPUT(C, (PERIPHERAL_USART4_5_6), (PORTC_BIT10), (OUTPUT_MEDIUM | OUTPUT_PUSH_PULL)); // TX 4 on PC10
+#endif
         UART4_CR1 |= (USART_CR1_UE | USART_CR1_TE);                      // enable the transmitter
         break;
+#if !defined _STM32L432
     case 4:
         _CONFIG_PERIPHERAL_OUTPUT(C, (PERIPHERAL_USART4_5_6), (PORTC_BIT12), (OUTPUT_MEDIUM | OUTPUT_PUSH_PULL)); // TX 5 on PC12
         UART5_CR1 |= (USART_CR1_UE | USART_CR1_TE);                      // enable the transmitter
         break;
+#endif
 #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
     case 5:
     #if defined USART6_REMAP

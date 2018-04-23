@@ -3897,11 +3897,11 @@ typedef struct stVECTOR_TABLE
         #if defined KINETIS_KE15
             #define LPUART2_BLOCK              0x4006c000                // LPUART0
         #elif defined KINETIS_KL28
-            #define LPUART2_BLOCK              0x40046000                 // LPUART2
+            #define LPUART2_BLOCK              0x40046000                // LPUART2
         #elif defined KINETIS_KL82
-            #define LPUART2_BLOCK              0x40056000                 // LPUART2
+            #define LPUART2_BLOCK              0x40056000                // LPUART2
         #else
-            #define LPUART2_BLOCK              0x400c6000                 // LPUART2
+            #define LPUART2_BLOCK              0x400c6000                // LPUART2
         #endif
     #endif
     #if LPUARTS_AVAILABLE > 3
@@ -5623,6 +5623,7 @@ typedef struct stKINETIS_INTMUX
         #define FTMRH_FSEC          *(volatile unsigned char *)(FTFL_BLOCK + 0x1) // Flash Security Register (read-only)
           #define FTMRH_FSEC_SEC_SECURE       0x3c
           #define FTMRH_FSEC_SEC_UNSECURE     0x3e
+          #define FTMRH_FSEC_SEC_UNSECURE_FLAG 0x02
           #define FTMRH_FSEC_KEYEN_ENABLED    0x80
           #define FTMRH_FSEC_KEYEN_DISABLED   0xc0
         #define FTMRH_FCCOBIX       *(unsigned char *)(FTFL_BLOCK + 0x2) // Flash CCOB Index Register
@@ -5833,7 +5834,7 @@ typedef struct _PACK stBOOT_ROM_CONFIGURATION                            // load
 typedef struct _PACK stKINETIS_FLASH_CONFIGURATION                       // loaded from FLASH 0x00000400 at reset
 {
     unsigned char  ucBackdoorComparisonKey[8];
-    #if defined KINETIS_KE                                               // {81}
+    #if defined KINETIS_KE && !defined KINETIS_KE15                      // {81}
     unsigned long  ulReserved;
     unsigned char  ucEEPROM_protection;
     unsigned char  ucProgramFlashProtection;
@@ -14457,7 +14458,12 @@ typedef struct stKINETIS_CAN_CONTROL
     #define UART0_MA1                    *(unsigned char *)(UART0_BLOCK + 0x08) // UART 0 Match Address Registers 1
     #define UART0_MA2                    *(unsigned char *)(UART0_BLOCK + 0x09) // UART 0 Match Address Registers 2
     #define UART0_C4                     *(unsigned char *)(UART0_BLOCK + 0x0a) // UART 0 Control Register 4
-      #define UART_C4_BRFA_MASK          0x1f                            // baud rate fine adjust
+      #if defined KINETIS_KL
+        #define UART_C4_OSR_16           0x0f
+        #define UART_C4_OSR_MASK         0x1f                            // over sampling ratio - change only when receiver and transmitter are disabled
+      #else
+        #define UART_C4_BRFA_MASK        0x1f                            // baud rate fine adjust
+      #endif
       #define UART_C4_M10                0x20                            // 10-bit mode select
       #define UART_C4_MAEN2              0x40                            // match address mode enable 2
       #define UART_C4_MAEN1              0x80                            // match address mode enable 1

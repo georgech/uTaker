@@ -385,7 +385,7 @@ extern int fnConfigPort(CHAR cPortBit, CHAR cType)
             _CONFIG_PORT_INPUT(C, (DEMO_LED_1 << PORT_SHIFT), (INPUT_PULL_UP)); // configure as input with pull-up
             temp_pars->temp_parameters.ucUserOutputs &= ~DEMO_LED_1;     // set present bit as input
             break;
-#elif defined NUCLEO_F429ZI
+#elif defined NUCLEO_F429ZI || defined NUCLEO_L432KC
         case 0:
             _CONFIG_PORT_INPUT(B, (LED1), (INPUT_PULL_UP));              // configure as input with pull-up
             temp_pars->temp_parameters.ucUserOutputs &= ~0x01;           // set present bit as input
@@ -535,7 +535,7 @@ extern int fnConfigPort(CHAR cPortBit, CHAR cType)
             _CONFIG_PORT_OUTPUT(C, (DEMO_LED_1 << PORT_SHIFT), (OUTPUT_PUSH_PULL | OUTPUT_MEDIUM)); // configure as medium speed output with push-pull output
             temp_pars->temp_parameters.ucUserOutputs |= DEMO_LED_1;      // set present bit as output
             break;
-#elif defined NUCLEO_F429ZI
+#elif defined NUCLEO_F429ZI || defined NUCLEO_L432KC
         case 0:
             _CONFIG_PORT_OUTPUT(B, (LED1), (OUTPUT_PUSH_PULL | OUTPUT_MEDIUM)); // configure as medium speed output with push-pull output
             temp_pars->temp_parameters.ucUserOutputs |= 0x01;            // set present bit as output
@@ -619,7 +619,7 @@ extern int fnConfigPort(CHAR cPortBit, CHAR cType)
 //
 static void fnSetPortBit(unsigned short usBit, int iSetClr)
 {
-    #if !defined STM32_P207 && !defined STM32F407ZG_SK && !defined NUCLEO_F429ZI
+    #if !defined STM32_P207 && !defined STM32F407ZG_SK && !defined NUCLEO_F429ZI && !defined NUCLEO_L432KC
         #if defined STM3240G_EVAL || defined WISDOM_STM32F407 || defined NUCLEO_F401RE || defined STM32F746G_DISCO
     POWER_UP_USER_PORTS();                                               // ensure that the used ports are powered up before used
         #endif
@@ -735,7 +735,7 @@ static void fnSetPortBit(unsigned short usBit, int iSetClr)
 //
 extern int fnUserPortState(CHAR cPortBit)
 {
-    #if !defined STM32_P207 && !defined STM32F407ZG_SK && !defined NUCLEO_F429ZI
+    #if !defined STM32_P207 && !defined STM32F407ZG_SK && !defined NUCLEO_F429ZI && !defined NUCLEO_L432KC
     switch (cPortBit) {
     case 'a':
         return ((USER_PORT_1 & USER_PORT_1_BIT) != 0);
@@ -780,7 +780,7 @@ extern int fnUserPortState(CHAR cPortBit)
 //
 static int fnConfigOutputPort(CHAR cPortBit)
 {
-    #if !defined STM32_P207 && !defined STM32F407ZG_SK && !defined NUCLEO_F429ZI
+    #if !defined STM32_P207 && !defined STM32F407ZG_SK && !defined NUCLEO_F429ZI && !defined NUCLEO_L432KC
     switch (cPortBit) {
     case 'a':
         CONFIG_USER_PORT_1();
@@ -842,7 +842,7 @@ static int fnConfigOutputPort(CHAR cPortBit)
 //
 extern int fnTogglePortOut(CHAR cPortBit)
 {
-    #if !defined STM32_P207 && !defined STM32F407ZG_SK && !defined NUCLEO_F429ZI
+    #if !defined STM32_P207 && !defined STM32F407ZG_SK && !defined NUCLEO_F429ZI && !defined NUCLEO_L432KC
     switch (cPortBit) {
     case 'a':
         USER_PORT_1 ^= USER_PORT_1_BIT;
@@ -959,14 +959,18 @@ extern void fnSetPortOut(unsigned char ucPortOutputs, int iInitialisation)
         }
         ucBit <<= 1;
     }
-    #elif defined NUCLEO_F429ZI
+    #elif defined NUCLEO_F429ZI || defined NUCLEO_L432KC
     unsigned char ucBit = 0x01;
     while (ucBit != 0) {                                                 // for each possible output
         if ((0x07 & ucBit) != 0) {                                       // if the port bit is to be an output
             switch (ucBit) {
             case 0x01:
                 if (iInitialisation != 0) {
+    #if defined _STM32L432
+                    POWER_UP(AHB2, RCC_AHB2ENR_GPIOBEN);                 // ensure port is powered up
+    #else
                     POWER_UP(AHB1, RCC_AHB1ENR_GPIOBEN);                 // ensure port is powered up
+    #endif
                 }
                 if ((ucPortOutputs & 0x01) != 0) {
                     _SETBITS(B, LED1);
@@ -977,7 +981,11 @@ extern void fnSetPortOut(unsigned char ucPortOutputs, int iInitialisation)
                 break;
             case 0x02:
                 if (iInitialisation != 0) {
+    #if defined _STM32L432
+                    POWER_UP(AHB2, RCC_AHB2ENR_GPIOBEN);                 // ensure port is powered up
+    #else
                     POWER_UP(AHB1, RCC_AHB1ENR_GPIOBEN);                 // ensure port is powered up
+    #endif
                 }
                 if ((ucPortOutputs & 0x02) != 0) {
                     _SETBITS(B, LED2);
@@ -988,7 +996,11 @@ extern void fnSetPortOut(unsigned char ucPortOutputs, int iInitialisation)
                 break;
             case 0x04:
                 if (iInitialisation != 0) {
+    #if defined _STM32L432
+                    POWER_UP(AHB2, RCC_AHB2ENR_GPIOBEN);                 // ensure port is powered up
+    #else
                     POWER_UP(AHB1, RCC_AHB1ENR_GPIOBEN);                 // ensure port is powered up
+    #endif
                 }
                 if ((ucPortOutputs & 0x04) != 0) {
                     _SETBITS(B, LED3);

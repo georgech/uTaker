@@ -3145,7 +3145,7 @@ static void STM32_LowLevelInit(void)
 #elif defined _STM32L432
     FLASH_ACR = (FLASH_ACR_ICRST | FLASH_ACR_DCRST);                     // flush data and instruction cache
     FLASH_ACR = (FLASH_ACR_DCEN | FLASH_ACR_ICEN | FLASH_WAIT_STATES);   // set flash wait states appropriately and enable pre-fetch buffer and cache
-    RCC_CFGR = (_RCC_CFGR_HPRE_SYSCLK | _RCC_CFGR_PPRE1_HCLK | _RCC_CFGR_PPRE2_HCLK); // set HCLK (AHB), PCLK1 and PCLK2 speeds
+    RCC_CFGR = (_RCC_CFGR_HPRE_SYSCLK | _RCC_CFGR_PPRE1_HCLK | _RCC_CFGR_PPRE2_HCLK); // prepare HCLK (AHB), PCLK1 and PCLK2 speeds
 #elif defined _CONNECTIVITY_LINE
     FLASH_ACR = (FLASH_ACR_PRFTBE | FLASH_WAIT_STATES);                  // set flash wait states appropriately and enable pre-fetch buffer
     RCC_CFGR = (RCC_CFGR_HPRE_SYSCLK | RCC_CFGR_PPRE1_HCLK_DIV2 | RCC_CFGR_PPRE2_HCLK); // set HCLK to SYSCLK, PCLK2 to HCLK and PCLK1 to HCLK/2 - PCLK1 must not be greater than SYSCLK/2
@@ -3153,7 +3153,7 @@ static void STM32_LowLevelInit(void)
     FLASH_ACR = 0; //FLASH_ACR_HLFCYA;                                   // enable half-cycle access - to do???
     RCC_CFGR = (RCC_CFGR_HPRE_SYSCLK | RCC_CFGR_PPRE1_HCLK_DIV2 | RCC_CFGR_PPRE2_HCLK); // set HCLK to SYSCLK, PCLK2 to HCLK and PCLK1 to HCLK/2 - PCLK1 must not be greater than SYSCLK/2
 #endif
-#if !defined USE_HSI_CLOCK
+#if !defined USE_HSI_CLOCK && !defined USE_MSI_CLOCK
     while ((RCC_CR & RCC_CR_HSERDY) == 0) {                              // wait until the oscillator is ready
     #if defined _WINDOWS
         RCC_CR |= RCC_CR_HSERDY;
@@ -3161,9 +3161,9 @@ static void STM32_LowLevelInit(void)
     }
 #endif
 #if defined DISABLE_PLL
-    #if !defined USE_HSI_CLOCK
+    #if !defined USE_HSI_CLOCK && !defined USE_MSI_CLOCK
     RCC_CFGR |= RCC_CFGR_HSE_SELECT;                                     // set oscillator as direct source
-    #elif defined _STM32L432
+    #elif defined _STM32L432 && defined USE_HSI_CLOCK
     RCC_CR |= (RCC_CR_HSION);                                            // turn on the 16MHz HSI oscillator
     RCC_CFGR |= (RCC_CFGR_HSI16_SELECT);                                 // switch from 4MHz MSI to HSE16
     #endif
@@ -3265,6 +3265,25 @@ static void STM32_LowLevelInit(void)
 #endif
 #if defined _WINDOWS
     fnUpdateOperatingDetails();                                          // {33} update operating details to be displayed in the simulator
+#endif
+#if defined MCO_CONNECTED_TO_MSI
+    RCC_CFGR &= ~(RCC_CFGR_MCOSEL_MASK | RCC_CFGR_MCOPRE_MASK);          // ensure the fields are initially masked
+    #if defined MCO_DIVIDE
+        #if MCO_DIVIDE == 1
+    RCC_CFGR |= RCC_CFGR_MCOSEL_MSI;                                     // connect MSI clock to MCO output
+        #elif MCO_DIVIDE == 2
+    RCC_CFGR |= (RCC_CFGR_MCOPRE_2 | RCC_CFGR_MCOSEL_MSI);               // divide by 2 and connect MSI clock to MCO output
+        #elif MCO_DIVIDE == 4
+    RCC_CFGR |= (RCC_CFGR_MCOPRE_4 | RCC_CFGR_MCOSEL_MSI);               // divide by 4 and connect MSI clock to MCO output
+        #elif MCO_DIVIDE == 8
+    RCC_CFGR |= (RCC_CFGR_MCOPRE_8 | RCC_CFGR_MCOSEL_MSI);               // divide by 8 and connect MSI clock to MCO output
+        #elif MCO_DIVIDE == 16
+    RCC_CFGR |= (RCC_CFGR_MCOPRE_16 | RCC_CFGR_MCOSEL_MSI);              // divide by 16 and connect MSI clock to MCO output
+        #else
+    #error "Invalid MCO prescale value!"
+        #endif
+    #endif
+    _CONFIG_PERIPHERAL_OUTPUT(A, (PERIPHERAL_SYS), (PORTA_BIT8), (OUTPUT_MEDIUM | OUTPUT_PUSH_PULL)); // MCO on PA8
 #endif
 }
 

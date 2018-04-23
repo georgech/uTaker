@@ -85,6 +85,7 @@ static void fnSetDevice(unsigned short *port_inits)
 #if defined _STM32L432
     RCC_CR = (RCC_CR_MSIRANGE_4M | RCC_CR_MSIRDY | RCC_CR_MSION);        // reset and clock control
     RCC_CSR = (RCC_CSR_PINRSTF | RCC_CSR_PORRSTF | RCC_CSR_MSIRANGE_4M);
+    RCC_APB1ENR1 = RCC_APB1ENR1_RTCAPBEN;
 #else
     RCC_CR = (0x00000080 | RCC_CR_HSIRDY | RCC_CR_HSION);                // reset and clock control
     RCC_CSR = (RCC_CSR_PINRSTF | RCC_CSR_PORRSTF);

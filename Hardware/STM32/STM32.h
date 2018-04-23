@@ -2545,7 +2545,12 @@ typedef struct stSTM32_BD
         #define RCC_AHB2ENR_GPIOHEN          0x00000080
     #define RCC_AHB3ENR                      *(volatile unsigned long *)(RCC_BLOCK + 0x50) // AHB3 peripheral enable register
     #define RCC_APB1ENR1                     *(volatile unsigned long *)(RCC_BLOCK + 0x58) // APB1 peripheral enable register 1
+      #define RCC_APB1ENR1_RTCAPBEN          0x00000400
+      #define RCC_APB1ENR1_USART2EN          0x00020000
+      #define RCC_APB1ENR1_USART3EN          0x00040000
+      #define RCC_APB1ENR1_UART4EN           0x00080000
     #define RCC_APB1ENR2                     *(volatile unsigned long *)(RCC_BLOCK + 0x5c) // APB1 peripheral enable register 2
+      #define RCC_APB1ENR2_LPUART1EN         0x00000001
     #define RCC_APB2ENR                      *(volatile unsigned long *)(RCC_BLOCK + 0x60) // APB2 peripheral enable register
       #define RCC_APB2ENR_SYSCFGEN           0x00000001
       #define RCC_APB2ENR_FWEN               0x00000080
@@ -6721,7 +6726,228 @@ typedef struct stVECTOR_TABLE
     #define PERIPHERAL_AF14               0xe
     #define PERIPHERAL_AF15               0x5
 
-    #define _PERIPHERAL_REMAP(remap_peripheral)                          // not used by F2/F4
+    #define _PERIPHERAL_REMAP(remap_peripheral)                          // not used by F2/F4/F7
+    #define _PERIPHERAL_REMOVE_REMAP(remap_peripheral)
+#elif defined _STM32L432
+    // Enable power to port, clear the pins to inputs and set alternative function and output characteristics, then set the specific function type {8}
+    //
+    #define _CONFIG_PERIPHERAL_OUTPUT(ref, per_func, pins, characteristics) RCC_AHB2ENR |= (RCC_AHB2ENR_GPIO##ref##EN); \
+    GPIO##ref##_MODER = ((GPIO##ref##_MODER & \
+     ~((0x0001 & pins)        | ((0x0001 & pins) << 1)  | ((0x0002 & pins) << 1)  | ((0x0002 & pins) << 2)    | \
+     (((0x0004 & pins) << 2)  | ((0x0004 & pins) << 3)  | ((0x0008 & pins) << 3)  | ((0x0008 & pins) << 4))   | \
+     (((0x0010 & pins) << 4)  | ((0x0010 & pins) << 5)  | ((0x0020 & pins) << 5)  | ((0x0020 & pins) << 6))   | \
+     (((0x0040 & pins) << 6)  | ((0x0040 & pins) << 7)  | ((0x0080 & pins) << 7)  | ((0x0080 & pins) << 8))   | \
+     (((0x0100 & pins) << 8)  | ((0x0100 & pins) << 9)  | ((0x0200 & pins) << 9)  | ((0x0200 & pins) << 10))  | \
+     (((0x0400 & pins) << 10) | ((0x0400 & pins) << 11) | ((0x0800 & pins) << 11) | ((0x0800 & pins) << 12))  | \
+     (((0x1000 & pins) << 12) | ((0x1000 & pins) << 13) | ((0x2000 & pins) << 13) | ((0x2000 & pins) << 14))  | \
+     (((0x4000 & pins) << 14) | ((0x4000 & pins) << 15) | ((0x8000 & pins) << 15) | ((0x8000 & pins) << 16))))| \
+     (((0x0001 & pins) << 1) | ((0x0002 & pins) << 2) | ((0x0004 & pins) << 3) | ((0x0008 & pins) << 4) | ((0x0010 & pins) << 5) | ((0x0020 & pins) << 6) | \
+      ((0x0040 & pins) << 7) | ((0x0080 & pins) << 8) | ((0x0100 & pins) << 9) | ((0x0200 & pins) << 10)| ((0x0400 & pins) << 11)| ((0x0800 & pins) << 12)| \
+      ((0x1000 & pins) << 13)| ((0x2000 & pins) << 14)| ((0x4000 & pins) << 15)| ((0x8000 & pins) << 16))); \
+    GPIO##ref##_OSPEEDR = ((GPIO##ref##_OSPEEDR & \
+     ~((0x0001 & pins)        | ((0x0001 & pins) << 1)  | ((0x0002 & pins) << 1)  | ((0x0002 & pins) << 2)    | \
+     (((0x0004 & pins) << 2)  | ((0x0004 & pins) << 3)  | ((0x0008 & pins) << 3)  | ((0x0008 & pins) << 4))   | \
+     (((0x0010 & pins) << 4)  | ((0x0010 & pins) << 5)  | ((0x0020 & pins) << 5)  | ((0x0020 & pins) << 6))   | \
+     (((0x0040 & pins) << 6)  | ((0x0040 & pins) << 7)  | ((0x0080 & pins) << 7)  | ((0x0080 & pins) << 8))   | \
+     (((0x0100 & pins) << 8)  | ((0x0100 & pins) << 9)  | ((0x0200 & pins) << 9)  | ((0x0200 & pins) << 10))  | \
+     (((0x0400 & pins) << 10) | ((0x0400 & pins) << 11) | ((0x0800 & pins) << 11) | ((0x0800 & pins) << 12))  | \
+     (((0x1000 & pins) << 12) | ((0x1000 & pins) << 13) | ((0x2000 & pins) << 13) | ((0x2000 & pins) << 14))  | \
+     (((0x4000 & pins) << 14) | ((0x4000 & pins) << 15) | ((0x8000 & pins) << 15) | ((0x8000 & pins) << 16))))| \
+     ((characteristics) & ((0x0001 & pins) | ((0x0001 & pins) << 1))) | \
+     ((characteristics << 2)  & (((0x0002 & pins) << 1) | ((0x0002 & pins) << 2))) | \
+     ((characteristics << 4)  & (((0x0004 & pins) << 2) | ((0x0004 & pins) << 3))) | \
+     ((characteristics << 6)  & (((0x0008 & pins) << 3) | ((0x0008 & pins) << 4))) | \
+     ((characteristics << 8)  & (((0x0010 & pins) << 4) | ((0x0010 & pins) << 5))) | \
+     ((characteristics << 10) & (((0x0020 & pins) << 5) | ((0x0020 & pins) << 6))) | \
+     ((characteristics << 12) & (((0x0040 & pins) << 6) | ((0x0040 & pins) << 7))) | \
+     ((characteristics << 14) & (((0x0080 & pins) << 7) | ((0x0080 & pins) << 8))) | \
+     ((characteristics << 16) & (((0x0100 & pins) << 8) | ((0x0100 & pins) << 9))) | \
+     ((characteristics << 18) & (((0x0200 & pins) << 9) | ((0x0200 & pins) << 10)))| \
+     ((characteristics << 20) & (((0x0400 & pins) << 10)| ((0x0400 & pins) << 11)))| \
+     ((characteristics << 22) & (((0x0800 & pins) << 11)| ((0x0800 & pins) << 12)))| \
+     ((characteristics << 24) & (((0x1000 & pins) << 12)| ((0x1000 & pins) << 13)))| \
+     ((characteristics << 26) & (((0x2000 & pins) << 13)| ((0x2000 & pins) << 14)))| \
+     ((characteristics << 28) & (((0x4000 & pins) << 14)| ((0x4000 & pins) << 15)))| \
+     ((characteristics << 30) & (((0x8000 & pins) << 15)| ((0x8000 & pins) << 16)))); \
+    GPIO##ref##_OTYPER = ((GPIO##ref##_OTYPER & ~(pins)) | \
+    (((characteristics >> 2)  & (0x0001 & pins)) | \
+     ((characteristics >> 1)  & (0x0002 & pins)) | \
+     ((characteristics)       & (0x0004 & pins)) | \
+     ((characteristics << 1)  & (0x0008 & pins)) | \
+     ((characteristics << 2)  & (0x0010 & pins)) | \
+     ((characteristics << 3)  & (0x0020 & pins)) | \
+     ((characteristics << 4)  & (0x0040 & pins)) | \
+     ((characteristics << 5)  & (0x0080 & pins)) | \
+     ((characteristics << 6)  & (0x0100 & pins)) | \
+     ((characteristics << 7)  & (0x0200 & pins)) | \
+     ((characteristics << 8)  & (0x0400 & pins)) | \
+     ((characteristics << 9)  & (0x0800 & pins)) | \
+     ((characteristics << 10) & (0x1000 & pins)) | \
+     ((characteristics << 11) & (0x2000 & pins)) | \
+     ((characteristics << 12) & (0x4000 & pins)) | \
+     ((characteristics << 13) & (0x8000 & pins))));  \
+    GPIO##ref##_PUPDR = ((GPIO##ref##_PUPDR & \
+     ~((0x0001 & pins)        | ((0x0001 & pins) << 1)  | ((0x0002 & pins) << 1)  | ((0x0002 & pins) << 2)    | \
+     (((0x0004 & pins) << 2)  | ((0x0004 & pins) << 3)  | ((0x0008 & pins) << 3)  | ((0x0008 & pins) << 4))   | \
+     (((0x0010 & pins) << 4)  | ((0x0010 & pins) << 5)  | ((0x0020 & pins) << 5)  | ((0x0020 & pins) << 6))   | \
+     (((0x0040 & pins) << 6)  | ((0x0040 & pins) << 7)  | ((0x0080 & pins) << 7)  | ((0x0080 & pins) << 8))   | \
+     (((0x0100 & pins) << 8)  | ((0x0100 & pins) << 9)  | ((0x0200 & pins) << 9)  | ((0x0200 & pins) << 10))  | \
+     (((0x0400 & pins) << 10) | ((0x0400 & pins) << 11) | ((0x0800 & pins) << 11) | ((0x0800 & pins) << 12))  | \
+     (((0x1000 & pins) << 12) | ((0x1000 & pins) << 13) | ((0x2000 & pins) << 13) | ((0x2000 & pins) << 14))  | \
+     (((0x4000 & pins) << 14) | ((0x4000 & pins) << 15) | ((0x8000 & pins) << 15) | ((0x8000 & pins) << 16))))| \
+     ((characteristics >> 6)  & ((0x0001 & pins) | ((0x0001 & pins) << 1))) | \
+     ((characteristics >> 4)  & (((0x0002 & pins) << 1) | ((0x0002 & pins) << 2))) | \
+     ((characteristics >> 2)  & (((0x0004 & pins) << 2) | ((0x0004 & pins) << 3))) | \
+     ((characteristics)       & (((0x0008 & pins) << 3) | ((0x0008 & pins) << 4))) | \
+     ((characteristics << 2)  & (((0x0010 & pins) << 4) | ((0x0010 & pins) << 5))) | \
+     ((characteristics << 4)  & (((0x0020 & pins) << 5) | ((0x0020 & pins) << 6))) | \
+     ((characteristics << 6)  & (((0x0040 & pins) << 6) | ((0x0040 & pins) << 7))) | \
+     ((characteristics << 8)  & (((0x0080 & pins) << 7) | ((0x0080 & pins) << 8))) | \
+     ((characteristics << 10) & (((0x0100 & pins) << 8) | ((0x0100 & pins) << 9))) | \
+     ((characteristics << 12) & (((0x0200 & pins) << 9) | ((0x0200 & pins) << 10)))| \
+     ((characteristics << 14) & (((0x0400 & pins) << 10)| ((0x0400 & pins) << 11)))| \
+     ((characteristics << 16) & (((0x0800 & pins) << 11)| ((0x0800 & pins) << 12)))| \
+     ((characteristics << 28) & (((0x1000 & pins) << 12)| ((0x1000 & pins) << 13)))| \
+     ((characteristics << 20) & (((0x2000 & pins) << 13)| ((0x2000 & pins) << 14)))| \
+     ((characteristics << 22) & (((0x4000 & pins) << 14)| ((0x4000 & pins) << 15)))| \
+     ((characteristics << 24) & (((0x8000 & pins) << 15)| ((0x8000 & pins) << 16)))); \
+     GPIO##ref##_AFRL = ((GPIO##ref##_AFRL & \
+     ~((0x0001 & pins)        | ((0x0001 & pins) << 1)  | ((0x0001 & pins) << 2)  | ((0x0001 & pins) << 3)    | \
+     (((0x0002 & pins) << 3)  | ((0x0002 & pins) << 4)  | ((0x0002 & pins) << 5)  | ((0x0002 & pins) << 6))   | \
+     (((0x0004 & pins) << 6)  | ((0x0004 & pins) << 7)  | ((0x0004 & pins) << 8)  | ((0x0004 & pins) << 9))   | \
+     (((0x0008 & pins) << 9)  | ((0x0008 & pins) << 10) | ((0x0008 & pins) << 11) | ((0x0008 & pins) << 12))  | \
+     (((0x0010 & pins) << 12) | ((0x0010 & pins) << 13) | ((0x0010 & pins) << 14) | ((0x0010 & pins) << 15))  | \
+     (((0x0020 & pins) << 15) | ((0x0020 & pins) << 16) | ((0x0020 & pins) << 17) | ((0x0020 & pins) << 18))  | \
+     (((0x0040 & pins) << 18) | ((0x0040 & pins) << 19) | ((0x0040 & pins) << 20) | ((0x0040 & pins) << 21))  | \
+     (((0x0080 & pins) << 21) | ((0x0080 & pins) << 22) | ((0x0080 & pins) << 23) | ((0x0080 & pins) << 24))))| \
+      (((0x0001 & pins)       | ((0x0001 & pins) << 1)  | ((0x0001 & pins) << 2)  | ((0x0001 & pins) << 3))  & (per_func)) | \
+     ((((0x0002 & pins) << 3) | ((0x0002 & pins) << 4)  | ((0x0002 & pins) << 5)  | ((0x0002 & pins) << 6))  & ((per_func) << 4)) | \
+     ((((0x0004 & pins) << 6) | ((0x0004 & pins) << 7)  | ((0x0004 & pins) << 8)  | ((0x0004 & pins) << 9))  & ((per_func) << 8)) | \
+     ((((0x0008 & pins) << 9) | ((0x0008 & pins) << 10) | ((0x0008 & pins) << 11) | ((0x0008 & pins) << 12)) & ((per_func) << 12)) | \
+     ((((0x0010 & pins) << 12)| ((0x0010 & pins) << 13) | ((0x0010 & pins) << 14) | ((0x0010 & pins) << 15)) & ((per_func) << 16)) | \
+     ((((0x0020 & pins) << 15)| ((0x0020 & pins) << 16) | ((0x0020 & pins) << 17) | ((0x0020 & pins) << 18)) & ((per_func) << 20)) | \
+     ((((0x0040 & pins) << 18)| ((0x0040 & pins) << 19) | ((0x0040 & pins) << 20) | ((0x0040 & pins) << 21)) & ((per_func) << 24)) | \
+     ((((0x0080 & pins) << 21)| ((0x0080 & pins) << 22) | ((0x0080 & pins) << 23) | ((0x0080 & pins) << 24)) & ((per_func) << 28))); \
+     GPIO##ref##_AFRH = ((GPIO##ref##_AFRH & \
+     ~(((0x0100 & pins) >> 8) | ((0x0100 & pins) >> 7)  | ((0x0100 & pins) >> 6)  | ((0x0100 & pins) >> 5)    | \
+     (((0x0200 & pins) >> 5)  | ((0x0200 & pins) >> 4)  | ((0x0200 & pins) >> 3)  | ((0x0200 & pins) >> 2))   | \
+     (((0x0400 & pins) >> 2)  | ((0x0400 & pins) >> 1)  | ((0x0400 & pins))       | ((0x0400 & pins) << 1))   | \
+     (((0x0800 & pins) << 1)  | ((0x0800 & pins) << 2)  | ((0x0800 & pins) << 3)  | ((0x0800 & pins) << 4))   | \
+     (((0x1000 & pins) << 4)  | ((0x1000 & pins) << 5)  | ((0x1000 & pins) << 6)  | ((0x1000 & pins) << 7))   | \
+     (((0x2000 & pins) << 7)  | ((0x2000 & pins) << 8)  | ((0x2000 & pins) << 9)  | ((0x2000 & pins) << 10))  | \
+     (((0x4000 & pins) << 10) | ((0x4000 & pins) << 11) | ((0x4000 & pins) << 12) | ((0x4000 & pins) << 13))  | \
+     (((0x8000 & pins) << 13) | ((0x8000 & pins) << 14) | ((0x8000 & pins) << 15) | ((0x8000 & pins) << 16))))| \
+     ((((0x0100 & pins) >> 8) | ((0x0100 & pins) >> 7)  | ((0x0100 & pins) >> 6)  | ((0x0100 & pins) >> 5))  & (per_func)) | \
+     ((((0x0200 & pins) >> 5) | ((0x0200 & pins) >> 4)  | ((0x0200 & pins) >> 3)  | ((0x0200 & pins) >> 2))  & ((per_func) << 4)) | \
+     ((((0x0400 & pins) >> 2) | ((0x0400 & pins) >> 1)  | ((0x0400 & pins))       | ((0x0400 & pins) << 1))  & ((per_func) << 8)) | \
+     ((((0x0800 & pins) << 1) | ((0x0800 & pins) << 2)  | ((0x0800 & pins) << 3)  | ((0x0800 & pins) << 4))  & ((per_func) << 12)) | \
+     ((((0x1000 & pins) << 4) | ((0x1000 & pins) << 5)  | ((0x1000 & pins) << 6)  | ((0x1000 & pins) << 7))  & ((per_func) << 16)) | \
+     ((((0x2000 & pins) << 7) | ((0x2000 & pins) << 8)  | ((0x2000 & pins) << 9)  | ((0x2000 & pins) << 10)) & ((per_func) << 20)) | \
+     ((((0x4000 & pins) << 10)| ((0x4000 & pins) << 11) | ((0x4000 & pins) << 12) | ((0x4000 & pins) << 13)) & ((per_func) << 24)) | \
+     ((((0x8000 & pins) << 13)| ((0x8000 & pins) << 14) | ((0x8000 & pins) << 15) | ((0x8000 & pins) << 16)) & ((per_func) << 28))); _SIM_PORT_CHANGE
+
+    // Enable power to port, clear the pins' to inputs and set alternative function and output characteristics, then set the specific function type
+    //
+    #define _CONFIG_PERIPHERAL_INPUT(ref, per_func, pins, characteristics) RCC_AHB2ENR |= (RCC_AHB2ENR_GPIO##ref##EN); \
+    GPIO##ref##_MODER = ((GPIO##ref##_MODER & \
+     ~((0x0001 & pins)        | ((0x0001 & pins) << 1)  | ((0x0002 & pins) << 1)  | ((0x0002 & pins) << 2)    | \
+     (((0x0004 & pins) << 2)  | ((0x0004 & pins) << 3)  | ((0x0008 & pins) << 3)  | ((0x0008 & pins) << 4))   | \
+     (((0x0010 & pins) << 4)  | ((0x0010 & pins) << 5)  | ((0x0020 & pins) << 5)  | ((0x0020 & pins) << 6))   | \
+     (((0x0040 & pins) << 6)  | ((0x0040 & pins) << 7)  | ((0x0080 & pins) << 7)  | ((0x0080 & pins) << 8))   | \
+     (((0x0100 & pins) << 8)  | ((0x0100 & pins) << 9)  | ((0x0200 & pins) << 9)  | ((0x0200 & pins) << 10))  | \
+     (((0x0400 & pins) << 10) | ((0x0400 & pins) << 11) | ((0x0800 & pins) << 11) | ((0x0800 & pins) << 12))  | \
+     (((0x1000 & pins) << 12) | ((0x1000 & pins) << 13) | ((0x2000 & pins) << 13) | ((0x2000 & pins) << 14))  | \
+     (((0x4000 & pins) << 14) | ((0x4000 & pins) << 15) | ((0x8000 & pins) << 15) | ((0x8000 & pins) << 16))))| \
+     (((0x0001 & pins) << 1) | ((0x0002 & pins) << 2) | ((0x0004 & pins) << 3) | ((0x0008 & pins) << 4) | ((0x0010 & pins) << 5) | ((0x0020 & pins) << 6) | \
+      ((0x0040 & pins) << 7) | ((0x0080 & pins) << 8) | ((0x0100 & pins) << 9) | ((0x0200 & pins) << 10)| ((0x0400 & pins) << 11)| ((0x0800 & pins) << 12)| \
+      ((0x1000 & pins) << 13)| ((0x2000 & pins) << 14)| ((0x4000 & pins) << 15)| ((0x8000 & pins) << 16))); \
+    GPIO##ref##_PUPDR = ((GPIO##ref##_PUPDR & \
+     ~((0x0001 & pins)        | ((0x0001 & pins) << 1)  | ((0x0002 & pins) << 1)  | ((0x0002 & pins) << 2)    | \
+     (((0x0004 & pins) << 2)  | ((0x0004 & pins) << 3)  | ((0x0008 & pins) << 3)  | ((0x0008 & pins) << 4))   | \
+     (((0x0010 & pins) << 4)  | ((0x0010 & pins) << 5)  | ((0x0020 & pins) << 5)  | ((0x0020 & pins) << 6))   | \
+     (((0x0040 & pins) << 6)  | ((0x0040 & pins) << 7)  | ((0x0080 & pins) << 7)  | ((0x0080 & pins) << 8))   | \
+     (((0x0100 & pins) << 8)  | ((0x0100 & pins) << 9)  | ((0x0200 & pins) << 9)  | ((0x0200 & pins) << 10))  | \
+     (((0x0400 & pins) << 10) | ((0x0400 & pins) << 11) | ((0x0800 & pins) << 11) | ((0x0800 & pins) << 12))  | \
+     (((0x1000 & pins) << 12) | ((0x1000 & pins) << 13) | ((0x2000 & pins) << 13) | ((0x2000 & pins) << 14))  | \
+     (((0x4000 & pins) << 14) | ((0x4000 & pins) << 15) | ((0x8000 & pins) << 15) | ((0x8000 & pins) << 16))))| \
+     ((characteristics >> 6)  & ((0x0001 & pins) | ((0x0001 & pins) << 1))) | \
+     ((characteristics >> 4)  & (((0x0002 & pins) << 1) | ((0x0002 & pins) << 2))) | \
+     ((characteristics >> 2)  & (((0x0004 & pins) << 2) | ((0x0004 & pins) << 3))) | \
+     ((characteristics)       & (((0x0008 & pins) << 3) | ((0x0008 & pins) << 4))) | \
+     ((characteristics << 2)  & (((0x0010 & pins) << 4) | ((0x0010 & pins) << 5))) | \
+     ((characteristics << 4)  & (((0x0020 & pins) << 5) | ((0x0020 & pins) << 6))) | \
+     ((characteristics << 6)  & (((0x0040 & pins) << 6) | ((0x0040 & pins) << 7))) | \
+     ((characteristics << 8)  & (((0x0080 & pins) << 7) | ((0x0080 & pins) << 8))) | \
+     ((characteristics << 10) & (((0x0100 & pins) << 8) | ((0x0100 & pins) << 9))) | \
+     ((characteristics << 12) & (((0x0200 & pins) << 9) | ((0x0200 & pins) << 10)))| \
+     ((characteristics << 14) & (((0x0400 & pins) << 10)| ((0x0400 & pins) << 11)))| \
+     ((characteristics << 16) & (((0x0800 & pins) << 11)| ((0x0800 & pins) << 12)))| \
+     ((characteristics << 28) & (((0x1000 & pins) << 12)| ((0x1000 & pins) << 13)))| \
+     ((characteristics << 20) & (((0x2000 & pins) << 13)| ((0x2000 & pins) << 14)))| \
+     ((characteristics << 22) & (((0x4000 & pins) << 14)| ((0x4000 & pins) << 15)))| \
+     ((characteristics << 24) & (((0x8000 & pins) << 15)| ((0x8000 & pins) << 16)))); \
+     GPIO##ref##_AFRL = ((GPIO##ref##_AFRL & \
+     ~((0x0001 & pins)        | ((0x0001 & pins) << 1)  | ((0x0001 & pins) << 2)  | ((0x0001 & pins) << 3)    | \
+     (((0x0002 & pins) << 3)  | ((0x0002 & pins) << 4)  | ((0x0002 & pins) << 5)  | ((0x0002 & pins) << 6))   | \
+     (((0x0004 & pins) << 6)  | ((0x0004 & pins) << 7)  | ((0x0004 & pins) << 8)  | ((0x0004 & pins) << 9))   | \
+     (((0x0008 & pins) << 9)  | ((0x0008 & pins) << 10) | ((0x0008 & pins) << 11) | ((0x0008 & pins) << 12))  | \
+     (((0x0010 & pins) << 12) | ((0x0010 & pins) << 13) | ((0x0010 & pins) << 14) | ((0x0010 & pins) << 15))  | \
+     (((0x0020 & pins) << 15) | ((0x0020 & pins) << 16) | ((0x0020 & pins) << 17) | ((0x0020 & pins) << 18))  | \
+     (((0x0040 & pins) << 18) | ((0x0040 & pins) << 19) | ((0x0040 & pins) << 20) | ((0x0040 & pins) << 21))  | \
+     (((0x0080 & pins) << 21) | ((0x0080 & pins) << 22) | ((0x0080 & pins) << 23) | ((0x0080 & pins) << 24))))| \
+      (((0x0001 & pins)       | ((0x0001 & pins) << 1)  | ((0x0001 & pins) << 2)  | ((0x0001 & pins) << 3))  & (per_func)) | \
+     ((((0x0002 & pins) << 3) | ((0x0002 & pins) << 4)  | ((0x0002 & pins) << 5)  | ((0x0002 & pins) << 6))  & ((per_func) << 4)) | \
+     ((((0x0004 & pins) << 6) | ((0x0004 & pins) << 7)  | ((0x0004 & pins) << 8)  | ((0x0004 & pins) << 9))  & ((per_func) << 8)) | \
+     ((((0x0008 & pins) << 9) | ((0x0008 & pins) << 10) | ((0x0008 & pins) << 11) | ((0x0008 & pins) << 12)) & ((per_func) << 12)) | \
+     ((((0x0010 & pins) << 12)| ((0x0010 & pins) << 13) | ((0x0010 & pins) << 14) | ((0x0010 & pins) << 15)) & ((per_func) << 16)) | \
+     ((((0x0020 & pins) << 15)| ((0x0020 & pins) << 16) | ((0x0020 & pins) << 17) | ((0x0020 & pins) << 18)) & ((per_func) << 20)) | \
+     ((((0x0040 & pins) << 18)| ((0x0040 & pins) << 19) | ((0x0040 & pins) << 20) | ((0x0040 & pins) << 21)) & ((per_func) << 24)) | \
+     ((((0x0080 & pins) << 21)| ((0x0080 & pins) << 22) | ((0x0080 & pins) << 23) | ((0x0080 & pins) << 24)) & ((per_func) << 28))); \
+     GPIO##ref##_AFRH = ((GPIO##ref##_AFRH & \
+     ~(((0x0100 & pins) >> 8) | ((0x0100 & pins) >> 7)  | ((0x0100 & pins) >> 6)  | ((0x0100 & pins) >> 5)    | \
+     (((0x0200 & pins) >> 5)  | ((0x0200 & pins) >> 4)  | ((0x0200 & pins) >> 3)  | ((0x0200 & pins) >> 2))   | \
+     (((0x0400 & pins) >> 2)  | ((0x0400 & pins) >> 1)  | ((0x0400 & pins))       | ((0x0400 & pins) << 1))   | \
+     (((0x0800 & pins) << 1)  | ((0x0800 & pins) << 2)  | ((0x0800 & pins) << 3)  | ((0x0800 & pins) << 4))   | \
+     (((0x1000 & pins) << 4)  | ((0x1000 & pins) << 5)  | ((0x1000 & pins) << 6)  | ((0x1000 & pins) << 7))   | \
+     (((0x2000 & pins) << 7)  | ((0x2000 & pins) << 8)  | ((0x2000 & pins) << 9)  | ((0x2000 & pins) << 10))  | \
+     (((0x4000 & pins) << 10) | ((0x4000 & pins) << 11) | ((0x4000 & pins) << 12) | ((0x4000 & pins) << 13))  | \
+     (((0x8000 & pins) << 13) | ((0x8000 & pins) << 14) | ((0x8000 & pins) << 15) | ((0x8000 & pins) << 16))))| \
+     ((((0x0100 & pins) >> 8) | ((0x0100 & pins) >> 7)  | ((0x0100 & pins) >> 6)  | ((0x0100 & pins) >> 5))  & (per_func)) | \
+     ((((0x0200 & pins) >> 5) | ((0x0200 & pins) >> 4)  | ((0x0200 & pins) >> 3)  | ((0x0200 & pins) >> 2))  & ((per_func) << 4)) | \
+     ((((0x0400 & pins) >> 2) | ((0x0400 & pins) >> 1)  | ((0x0400 & pins))       | ((0x0400 & pins) << 1))  & ((per_func) << 8)) | \
+     ((((0x0800 & pins) << 1) | ((0x0800 & pins) << 2)  | ((0x0800 & pins) << 3)  | ((0x0800 & pins) << 4))  & ((per_func) << 12)) | \
+     ((((0x1000 & pins) << 4) | ((0x1000 & pins) << 5)  | ((0x1000 & pins) << 6)  | ((0x1000 & pins) << 7))  & ((per_func) << 16)) | \
+     ((((0x2000 & pins) << 7) | ((0x2000 & pins) << 8)  | ((0x2000 & pins) << 9)  | ((0x2000 & pins) << 10)) & ((per_func) << 20)) | \
+     ((((0x4000 & pins) << 10)| ((0x4000 & pins) << 11) | ((0x4000 & pins) << 12) | ((0x4000 & pins) << 13)) & ((per_func) << 24)) | \
+     ((((0x8000 & pins) << 13)| ((0x8000 & pins) << 14) | ((0x8000 & pins) << 15) | ((0x8000 & pins) << 16)) & ((per_func) << 28))); _SIM_PORT_CHANGE
+
+    // Enable power to port, set the pins' to analog inputs
+    //
+    #define _CONFIG_ANALOG_INPUT(ref, pins) RCC_AHB2ENR |= (RCC_AHB2ENR_GPIO##ref##EN); \
+    GPIO##ref##_MODER = (GPIO##ref##_MODER | \
+    ((0x0001 & pins) | ((0x0001 & pins) << 1) | ((0x0002 & pins) << 1) | ((0x0002 & pins) << 2) | ((0x0004 & pins) << 2) | ((0x0004 & pins) << 3) | ((0x0008 & pins) << 3) | ((0x0008 & pins) << 4) | \
+    ((0x0010 & pins) << 4) | ((0x0010 & pins) << 5) | ((0x0020 & pins) << 5) | ((0x0020 & pins) << 6) | ((0x0040 & pins) << 6) | ((0x0040 & pins) << 7) | ((0x0080 & pins) << 7) | ((0x0080 & pins) << 8) | \
+    ((0x0100 & pins) << 8) | ((0x0100 & pins) << 9) | ((0x0200 & pins) << 9) | ((0x0200 & pins) << 10) | ((0x0400 & pins) << 10)  | ((0x0400 & pins) << 11) | ((0x0800 & pins) << 11) | ((0x0800 & pins) << 12) | \
+    ((0x1000 & pins) << 12) | ((0x1000 & pins) << 13) | ((0x2000 & pins) << 13) | ((0x2000 & pins) << 14) | ((0x4000 & pins) << 14)  | ((0x4000 & pins) << 15) | ((0x8000 & pins) << 15)) | ((0x8000 & pins) << 16)); _SIM_PORT_CHANGE
+
+    #define PERIPHERAL_SYS                0x0
+    #define PERIPHERAL_TIM1_2_LPTIM1      0x1
+    #define PERIPHERAL_TIM1_2             0x2
+    #define PERIPHERAL_USART2             0x3
+    #define PERIPHERAL_I2C1_2_3           0x4
+    #define PERIPHERAL_SPI1_2             0x5
+    #define PERIPHERAL_SPI3               0x6
+    #define PERIPHERAL_USART1_2_3         0x7
+    #define PERIPHERAL_LPUART1            0x8
+    #define PERIPHERAL_CAN1_TSC           0x9
+    #define PERIPHERAL_USB_QUADSPI        0xa
+
+    #define PERIPHERAL_COMP1_COP2_SWPMI1  0xc
+    #define PERIPHERAL_SAI1               0xd
+    #define PERIPHERAL_TIM2_15_16_LPTIM2  0xe
+    #define PERIPHERAL_EVENTOUT           0xf
+
+    #define _PERIPHERAL_REMAP(remap_peripheral)                          // not used 
     #define _PERIPHERAL_REMOVE_REMAP(remap_peripheral)
 #else
     #define _CONFIG_PERIPHERAL_OUTPUT(ref, per_func, pins, characteristics) _CONFIG_PORT_OUTPUT(ref, pins, (characteristics | ALTERNATIVE_FUNCTION))

@@ -41,12 +41,12 @@
 #if defined NUCLEO_L432KC                                                // STM32L432 (80Mhz)
     #define CRYSTAL_FREQ        32768                                    // when there is a 32kHz crystal it can be used for the RTC, LSCO or MCO (optionally divided)
 
-    #define MCO_CONNECTED_TO_HSI
-    #define MCO_DIVIDE          16                                       // 1..16 possible
+    #define MCO_CONNECTED_TO_MSI
+    #define MCO_DIVIDE          16                                       // 1, 2, 4, 8 or 16 possible (defaults to /1 if not specified)
 
-  //#define USE_MSI_CLOCK                                                // use internal HSI clock source (4MHz default)
-    #define MSI_CLOCK           4000000
-    #define USE_HSI_CLOCK                                                // use internal HSI clock source (16MHz)
+    #define USE_MSI_CLOCK                                                // use internal MSI clock source (4MHz default)
+    #define MSI_CLOCK           4000000                                  // 100kHz, 200kHz, 400kHz, 800kHz, 1MHz, 2MHz, 4MHz, 8MHz, 16MHz, 32MHz, 48MHz possible
+  //#define USE_HSI_CLOCK                                                // use internal HSI clock source (16MHz)
     #define DISABLE_PLL                                                  // run from clock source directly
 
     #define HCLK_DIVIDE         1                                        // 1,2,4,8,16,32,64,128,256 or 512
@@ -659,7 +659,11 @@
         #define USART1_REMAP                                             // use USART1 on remapped pins (note that this is channel 0)
         #define USART1_NOREMAP_TX                                        // rx is remapped but tx not
     #endif
-    #define USART2_REMAP                                                 // use USART2 on remapped pins (note that this is channel 1)
+    #if defined NUCLEO_L432KC
+        #define USART2_PARTIAL_REMAP
+    #else
+        #define USART2_REMAP                                             // use USART2 on remapped pins (note that this is channel 1)
+    #endif
     #if defined STM32_P207 || defined STM32F407ZG_SK || defined NUCLEO_F429ZI
         #define USART3_FULL_REMAP                                        // use USART3 on second set of remapped pins (note that this is channel 2)
     #elif !defined STM3240G_EVAL
@@ -881,15 +885,18 @@
 #define PRIORITY_OTG_FS            1
 
 #if defined NUCLEO_L432KC
-    #define LED_GREEN                  PORTB_BIT3
+    #define LED1                       PORTB_BIT3                        // green LED
+    #define LED2                       PORTB_BIT4
+    #define LED3                       PORTB_BIT5
 
-    #define DEMO_LED_1                 LED_GREEN
-    #define DEMO_LED_2                 PORTB_BIT4
-    #define DEMO_LED_3                 PORTB_BIT5
-    #define DEMO_LED_4                 
-    #define DEMO_USER_PORTS            (DEMO_LED_1 | DEMO_LED_2 | DEMO_LED_3 | DEMO_LED_4)
+    #define DEMO_LED_1                 (LED1 >> 3)
+    #define DEMO_LED_2                 (LED2 >> 3)
+    #define DEMO_LED_3                 (LED3 >> 3)
+    #define DEMO_USER_PORTS            (DEMO_LED_1 | DEMO_LED_2 | DEMO_LED_3)
 
-    #define BLINK_LED                  DEMO_LED_1
+    #define BLINK_LED                  LED1
+
+    #define DEMO_INPUT_PORT            GPIOB_IDR
 
     #if !defined USE_MAINTENANCE || defined REMOVE_PORT_INITIALISATIONS
         #define INIT_WATCHDOG_LED() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(B, (BLINK_LED), (BLINK_LED), (OUTPUT_SLOW | OUTPUT_PUSH_PULL))
@@ -901,6 +908,8 @@
 
     #define INIT_WATCHDOG_DISABLE()    _CONFIG_PORT_INPUT(A, (PORTA_BIT12), (INPUT_PULL_UP)) // PA12 configured as input with pull-up (CN3-5 on extension connector)
     #define WATCHDOG_DISABLE()         ((_READ_PORT_MASK(A, (PORTA_BIT12))) == 0)
+
+    #define KEYPAD "KeyPads/NUCLEO32.bmp"
 #elif defined STM3240G_EVAL
     #define JOYSTICK_SEL               0x80                              // I/O expander input
     #define JOYSTICK_DOWN              0x08                              // I/O expander input
