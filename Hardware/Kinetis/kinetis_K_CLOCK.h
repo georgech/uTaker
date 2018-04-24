@@ -13,6 +13,7 @@
     ---------------------------------------------------------------------
     Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
+    24.04.2018 Allow clocking from RTC crystal with automatic detection of revision 1 and revision 2 parts {1}
 
 */
 
@@ -78,7 +79,16 @@
         #endif
         #if defined CLOCK_FROM_RTC_OSCILLATOR 
     POWER_UP_ATOMIC(6, RTC);                                             // enable access to the RTC
+    #if defined KINETIS_REVISION_1 && defined KINETIS_REVISION_2         // {1} revision 1 and revision 2 part compatibility is required
+    SIM_SOPT2 |= SIM_SOPT2_MCGCLKSEL;                                    // attempt to select external source (revision 1 parts)
+    if ((SIM_SOPT2 & SIM_SOPT2_MCGCLKSEL) == 0) {                        // rev 2 parts won't set this bit so we can tell that the setting must be performed in the MCG module instead
+        MCG_C7 = MCG_C7_OSCSEL_32K;                                      // select the RTC clock as external clock input to the FLL or MCGOUTCLK
+    }
+    #elif defined KINETIS_REVISION_2
     MCG_C7 = MCG_C7_OSCSEL_32K;                                          // select the RTC clock as external clock input to the FLL or MCGOUTCLK
+    #else
+    SIM_SOPT2 |= SIM_SOPT2_MCGCLKSEL;                                    // select the RTC clock as external clock input to the FLL or MCGOUTCLK (revison 1 parts did this in the SIM module rather than in the MCG module)
+    #endif
     RTC_CR = (RTC_CR_OSCE);                                              // enable RTC oscillator and output the 32.768kHz output clock so that it can be used by the MCG (the first time that it starts it can have a startup/stabilisation time but this is not critical for the FLL usage)
             #if defined FLL_FACTOR
     MCG_C1 = ((MCG_C1_CLKS_PLL_FLL | MCG_C1_FRDIV_RANGE0_1) & ~MCG_C1_IREFS); // switch the FLL input to the undivided external clock source (RTC)

@@ -199,9 +199,11 @@ typedef struct
         #endif
     #elif defined REMOVE_SREC_LOADING && !defined USE_MODBUS
         #define NEEDS_BLANK_CHECK
-        static int fnPerformBlankCheck(void);
         static unsigned char *fnBlankCheck(void);
-        static void fnPrintScreen(void);
+        #if !defined KBOOT_LOADER
+            static int fnPerformBlankCheck(void);
+            static void fnPrintScreen(void);
+        #endif
     #endif
 #endif
 #if ((defined SERIAL_INTERFACE || defined USE_USB_CDC) && defined DEVELOPERS_LOADER) || (defined I2C_INTERFACE && !defined BLAZE_K22)
@@ -1291,22 +1293,105 @@ extern void fnDebugHex(unsigned long ulValue, unsigned char uLen)        // disp
 
 
 #if (defined SERIAL_INTERFACE && defined KBOOT_LOADER) || (defined USB_INTERFACE && defined HID_LOADER && defined KBOOT_HID_LOADER && !defined USE_USB_MSD) // {20}
-static unsigned long fnHandlePropertyGet(unsigned char ucCommandtag, unsigned long *prValue)
+static void fnHandlePropertyGet(unsigned long ulPropertyTag, unsigned long ulMemoryID, KBOOT_PACKET *ptrKBOOT_response)
 {
-#define BOOT_LOADER_NAME          'K'
-#define BOOT_LOADER_MAJOR_VERSION 1
-#define BOOT_LOADER_MINOR_VERSION 1
-#define BOOT_LOADER_BUGFIX        0
+    #define BOOT_LOADER_NAME                    'K'
+    #define BOOT_LOADER_MAJOR_VERSION            2
+    #define BOOT_LOADER_MINOR_VERSION            0
+    #define BOOT_LOADER_BUGFIX                   0
+    #define kStatus_Success                      0
+    #define kStatus_Fail                         1
+    #define kStatus_ReadOnly                     2
+    #define kStatus_OutOfRange                   3
+    #define kStatus_UnknownProperty              10300
+    #define kStatus_ReadOnlyProperty             10301
+    #define kStatus_InvalidPropertyValue         10302
+    #define KB_SUPPORTS_FLASH_ERASE_ALL          0x00000001
+    #define KB_SUPPORTS_FLASH_ERASE_REGION       0x00000002
+    #define KB_SUPPORTS_READ_MEMORY              0x00000004
+    #define KB_SUPPORTS_WRITE_MEMORY             0x00000008
+    #define KB_SUPPORTS_FILL_MEMORY              0x00000010
+    #define KB_SUPPORTS_FLASH_SECURITY_DISABLE   0x00000020
+    #define KB_SUPPORTS_GET_PROPERTY             0x00000040
+    #define KB_SUPPORTS_RECEIVE_SB_FILE          0x00000080
+    #define KB_SUPPORTS_EXECUTE                  0x00000100
+    #define KB_SUPPORTS_CALL                     0x00000200
+    #define KB_SUPPORTS_RESET                    0x00000400
+    #define KB_SUPPORTS_SET_PROPERTY             0x00000800
+    #define KB_SUPPORTS_FLASH_ERASE_ALL_UNSECURE 0x00001000
+    #define KB_SUPPORTS_FLASH_PROGRAM_ONCE       0x00002000
+    #define KB_SUPPORTS_FLASH_READ_ONCE          0x00004000
+    #define KB_SUPPORTS_FLASH_READ_RESOURCE      0x00008000
+    #define KB_SUPPORTS_CONFIGURE_QUAD_SPI       0x00010000
+    #define KB_SUPPORTS_RELIABLE_UPDATE          0x00100000
+    #define SUPPORTED_KBOOT_COMMANDS            (KB_SUPPORTS_FLASH_ERASE_REGION | KB_SUPPORTS_WRITE_MEMORY | KB_SUPPORTS_GET_PROPERTY | KB_SUPPORTS_RESET)
     const unsigned long version_info = ((BOOT_LOADER_NAME << 24) | (BOOT_LOADER_MAJOR_VERSION << 16) | (BOOT_LOADER_MINOR_VERSION << 8) | (BOOT_LOADER_BUGFIX));
-    switch (ucCommandtag) {
-    case PROPERTY_VERSION:
-        *prValue = version_info;
+    unsigned long ulStatus = kStatus_Success;
+    unsigned long ulResponseData[4];
+    int iDataLength = 1;                                                 // most responses return one data value
+    int iNoStatus = 0;
+    int iDataIndex = 4;
+    int iDataRef = 0;
+    int iDataPairs = 0;
+    switch (ulPropertyTag) {
+    case PROPERTY_VERSION:                                               // 1
+        ulResponseData[0] = (unsigned long)version_info;
         break;
-    case PROPERTY_FLASH_SECTOR_SIZE:
-        *prValue = FLASH_GRANULARITY;
+    case PROPERTY_FLASH_START_ADD:                                       // 3
+        ulResponseData[0] = FLASH_START_ADDRESS;
+        break;
+    case PROPERTY_FLASH_SIZE_BYTES:                                      // 4
+        ulResponseData[0] = SIZE_OF_FLASH;
+        break;
+    case PROPERTY_FLASH_SECTOR_SIZE:                                     // 5
+        ulResponseData[0] = FLASH_GRANULARITY;
+        break;
+    case PROPERTY_AVAILABLE_CMDS:                                        // 7
+        ulResponseData[0] = SUPPORTED_KBOOT_COMMANDS;
+        break;
+    case PROPERTY_RESERVED_REGIONS:                                      // 12 (0x0c)
+        iNoStatus = 0;
+        iDataLength = 4;                                                 // the number of data values
+        iDataPairs = 0;                                                  // the number of data pairs
+        ulResponseData[0] = FLASH_START_ADDRESS;                         // reserved region
+        ulResponseData[1] = (_UTASKER_APP_START_ - 1);
+        ulResponseData[2] = RAM_START_ADDRESS;
+        ulResponseData[3] = (RAM_START_ADDRESS + (SIZE_OF_RAM/2));
+        break;
+    case PROPERTY_RAM_SIZE_BYTES:                                        // 15 (0x0f)
+        ulResponseData[0] = SIZE_OF_RAM;
+        break;
+    case PROPERTY_FLASH_SEC_STATE:                                       // 17 (0x11)
+    #if defined FLASH_CONTROLLER_FTMRE
+        ulResponseData[0] = ((FTMRH_FSEC & FTMRH_FSEC_SEC_UNSECURE_FLAG) == 0);
+    #else
+        ulResponseData[0] = ((FTFL_FSEC & FTFL_FSEC_SEC_UNSECURE) == 0);
+    #endif
+        break;
+    default:
+        iDataLength = 0;
+        ulStatus = kStatus_UnknownProperty;                              // returning this causes an error message to be displayed at the host but further operation is OK
         break;
     }
-    return 0;                                                            // status is OK
+    if (iNoStatus == 0) {                                                // insert the status if not explicitly not required
+        ptrKBOOT_response->ucData[iDataIndex++] = (unsigned char)ulStatus;
+        ptrKBOOT_response->ucData[iDataIndex++] = (unsigned char)(ulStatus >> 8);
+        ptrKBOOT_response->ucData[iDataIndex++] = (unsigned char)(ulStatus >> 16);
+        ptrKBOOT_response->ucData[iDataIndex++] = (unsigned char)(ulStatus >> 24);
+        ptrKBOOT_response->ucData[3]++;                                  // parameter count
+    }
+    while (iDataLength-- != 0) {                                         // insert data
+        ptrKBOOT_response->ucData[iDataIndex++] = (unsigned char)ulResponseData[iDataRef];
+        ptrKBOOT_response->ucData[iDataIndex++] = (unsigned char)(ulResponseData[iDataRef] >> 8);
+        ptrKBOOT_response->ucData[iDataIndex++] = (unsigned char)(ulResponseData[iDataRef] >> 16);
+        ptrKBOOT_response->ucData[iDataIndex++] = (unsigned char)(ulResponseData[iDataRef] >> 24);
+        ptrKBOOT_response->ucData[3]++;                                  // parameter count
+        iDataRef++;
+    }
+    while (iDataPairs-- != 0) {
+        ptrKBOOT_response->ucData[3]--;
+    }
+    ptrKBOOT_response->ucLength[0] = (unsigned char)iDataIndex;
 }
 
 static void fnReturnResponse(QUEUE_HANDLE hInterface, int iInterfaceType, KBOOT_PACKET *ptrKBOOT_response)
@@ -1345,25 +1430,20 @@ extern int fnHandleKboot(QUEUE_HANDLE hInterface, int iInterfaceType, KBOOT_PACK
     case KBOOT_REPORT_ID_COMMAND_OUT:
         KBOOT_response.ucCommandType = KBOOT_REPORT_ID_COMMAND_IN;
         switch (ptrKBOOT_packet->ucData[0]) {
-        case KBOOT_COMMAND_TAG_GET_PROPERTY:                             // 0x07 this routine is partly prepared for multiple parameters but assumes only a single one
+        case KBOOT_COMMAND_TAG_GET_PROPERTY:                             // 0x07
             {
-                int iParameters = ptrKBOOT_packet->ucData[3];
-              //unsigned long ulStatus = 0;
-                unsigned long ulValue = 0;
-                unsigned char *prType = &ptrKBOOT_packet->ucData[4];
-                if (iParameters > 1) {
-                    _EXCEPTION("only one parameter tested!");
+    #if defined _WINDOWS
+                unsigned char ucParameterCount = ptrKBOOT_packet->ucData[3]; // parameter count
+    #endif
+                unsigned long ulPropertyTag = (ptrKBOOT_packet->ucData[4] | (ptrKBOOT_packet->ucData[5] << 8) | (ptrKBOOT_packet->ucData[6] << 16) | (ptrKBOOT_packet->ucData[7] << 24));
+                unsigned long ulMemoryID = (ptrKBOOT_packet->ucData[8] | (ptrKBOOT_packet->ucData[9] << 8) | (ptrKBOOT_packet->ucData[10] << 16) | (ptrKBOOT_packet->ucData[11] << 24));
+    #if defined _WINDOWS
+                if (ucParameterCount != 2) {
+                    _EXCEPTION("Expecting the parameter count to be always 2 - investigate if this exception occurs");
                 }
-                while (iParameters-- != 0) {                             // for each requested parameter (presently only one parameter is ever received)
-                  /*ulStatus = */fnHandlePropertyGet(*prType, &ulValue);
-                }
-                KBOOT_response.ucLength[0] = 12;
-                KBOOT_response.ucData[0] = (ptrKBOOT_packet->ucData[0] | 0xa0);
-                KBOOT_response.ucData[3] = (ptrKBOOT_packet->ucData[3] + 1); // status plus requested parameters
-                KBOOT_response.ucData[8] = (unsigned char)ulValue;
-                KBOOT_response.ucData[9] = (unsigned char)(ulValue >> 8);
-                KBOOT_response.ucData[10] = (unsigned char)(ulValue >> 16);
-                KBOOT_response.ucData[11] = (unsigned char)(ulValue >> 24);
+    #endif
+                KBOOT_response.ucData[0] = (ptrKBOOT_packet->ucData[0] | 0xa0); // response tag
+                fnHandlePropertyGet(ulPropertyTag, ulMemoryID, &KBOOT_response);
             }
             break;
         case KBOOT_COMMAND_TAG_WRITE_MEMORY:                             // 0x04
@@ -1442,22 +1522,15 @@ extern int fnHandleKboot(QUEUE_HANDLE hInterface, int iInterfaceType, KBOOT_PACK
             break;
 
         case KBOOT_COMMAND_TAG_ERASE_ALL:                                // the following are not yet used by KBOOT
-            break;
         case KBOOT_COMMAND_TAG_READ_MEMORY:
-            break;
         case KBOOT_COMMAND_TAG_FILL_MEMORY:
-            break;
         case KBOOT_COMMAND_TAG_FLASH_SECURITY_DISABLE:
-            break;
         case KBOOT_COMMAND_TAG_RECEIVE_SBFILE:
-            break;
         case KBOOT_COMMAND_TAG_EXECUTE:
-            break;
         case KBOOT_COMMAND_TAG_CALL:
-            break;
         case KBOOT_COMMAND_TAG_SET_PROPERTY:
-            break;
         case KBOOT_COMMAND_TAG_MASS_ERASE:
+            _EXCEPTION("Use detected - investigate....");
             break;
         }
         fnReturnResponse(hInterface, iInterfaceType, &KBOOT_response);
@@ -1512,7 +1585,7 @@ extern int fnHandleKboot(QUEUE_HANDLE hInterface, int iInterfaceType, KBOOT_PACK
 #endif
 
 #if defined SREC_IHEX_REQUIRED
-    #if !defined KBOOT_LOADER
+    #if !defined KBOOT_LOADER || (defined USB_INTERFACE && defined USB_MSD_DEVICE_LOADER && (defined USB_MSD_ACCEPTS_SREC_FILES || defined USB_MSD_ACCEPTS_HEX_FILES))
 static unsigned char fnConvertByte(unsigned char ucASCII)
 {
     unsigned char ucResult = (ucASCII - 0x30);
@@ -1531,7 +1604,7 @@ static unsigned char fnConvertByte(unsigned char ucASCII)
     static int fnLoadTerminate(void)
 #endif
 {
-        #if defined SERIAL_INTERFACE && defined INTERMEDIATE_PROG_BUFFER
+        #if (defined SERIAL_INTERFACE && !defined KBOOT_LOADER) && defined INTERMEDIATE_PROG_BUFFER
     if (fnFlashIntermediate() != 0) {                                    // flash final intermediate buffer
         return PROGRAMMING_ERROR;
     }
@@ -1607,7 +1680,7 @@ static unsigned char fnConvertByte(unsigned char ucASCII)
     #define I_EXTENDED_LINEAR_ADDRESS   0x04
     #define I_START_LINEAR_ADDRESS      0x05
 
-    #if !(defined SERIAL_INTERFACE && defined INTERMEDIATE_PROG_BUFFER) && (FLASH_ROW_SIZE && FLASH_ROW_SIZE > 0) // {24}
+    #if !((defined SERIAL_INTERFACE && !defined KBOOT_LOADER) && defined INTERMEDIATE_PROG_BUFFER) && (FLASH_ROW_SIZE && FLASH_ROW_SIZE > 0) // {24}
     static unsigned long ulNextExpectedSREC = 0;
     #endif
     #if defined SPI_SW_UPLOAD_ENCRYPTED                                  // {8}
@@ -1843,7 +1916,7 @@ static unsigned char fnConvertByte(unsigned char ucASCII)
                     return LINE_ACCEPTED;                                // content is valid
                 }
         #endif
-        #if defined SERIAL_INTERFACE && defined INTERMEDIATE_PROG_BUFFER
+        #if defined SERIAL_INTERFACE && !defined KBOOT_LOADER && defined INTERMEDIATE_PROG_BUFFER
             #if defined MEMORY_SWAP
                 return (fnIntermediateWrite((unsigned char *)(srec.addr + UTASKER_APP_START), ptrData, iDataCnt));
             #else
@@ -1912,7 +1985,7 @@ static unsigned char fnConvertByte(unsigned char ucASCII)
 }
 #endif
 
-#if (((defined SERIAL_INTERFACE && !defined USE_MODBUS) || defined USE_USB_CDC) && !defined KBOOT_LOADER && !defined DEVELOPERS_LOADER) || defined USB_INTERFACE || defined I2C_INTERFACE // {9}{32}
+#if defined NEEDS_BLANK_CHECK
 static unsigned char *fnBlankCheck(void)
 {
     #if defined SPI_SW_UPLOAD                                            // {5}
@@ -1944,7 +2017,7 @@ static unsigned char *fnBlankCheck(void)
 #endif
 
 
-#if defined NEEDS_BLANK_CHECK
+#if defined NEEDS_BLANK_CHECK && !defined KBOOT_LOADER
 static int fnPerformBlankCheck(void)
 {
     unsigned char *ptrFlash = fnBlankCheck();                            // subroutine for blank check added
@@ -2208,7 +2281,7 @@ extern void fnUserHWInit(void)
         _DELETE_BOOT_MAILBOX();                                          // {13}
         fnJumpToValidApplication(0);                                     // {25} check for forced boot mode or no application code
     }
-    #if defined USB_INTERFACE                                            // {9}
+    #if defined USB_INTERFACE && defined USB_MSD_DEVICE_LOADER           // {9}
     else {
         #if !defined _WINDOWS
         _DELETE_BOOT_MAILBOX();                                          // {13}

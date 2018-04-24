@@ -716,6 +716,7 @@
   //#define TWR_SER2                                                     // use SER2 serial board instead of standard serial board
     #define TARGET_HW            "TWR-K60D100M"
     #define KINETIS_K60                                                  // specify the sub-family
+  //#define KINETIS_REVISION_1                                           // in case both revisions of K60 could be encoutered this define makes the operation of the two compatible
     #define KINETIS_REVISION_2
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((32 * 1024) * MEM_FACTOR) // we have the LAN buffers in HEAP and big RX/TX - a little more for USB
 #elif defined TWR_K60N512
@@ -724,6 +725,7 @@
   //#define DEBUG_ON_VIRT_COM                                            // optionally set UART debug on virtual COM rather than the serial board
     #define TARGET_HW            "TWR-K60N512"
     #define KINETIS_K60                                                  // specify the sub-family
+    #define KINETIS_REVISION_1
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((32 * 1024) * MEM_FACTOR) // we have the LAN buffers in HEAP and big RX/TX - a little more for USB
 #elif defined EMCRAFT_K61F150M
     #define KINETIS_K_FPU                                                // part with floating point unit

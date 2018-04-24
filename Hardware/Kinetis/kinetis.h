@@ -10016,7 +10016,7 @@ typedef struct stKINETIS_LPTMR_CTL
             #define SIM_USBPHYCTL_USBDISILIM 0x00800000                  // disable current limitior for the USB voltage regulator
     #endif
   #if !defined KINETIS_WITH_PCC
-    #define SIM_SOPT2                        *(unsigned long *)(SIM_BLOCK + 0x1004) // System Options Register 2
+    #define SIM_SOPT2                        *(volatile unsigned long *)(SIM_BLOCK + 0x1004) // System Options Register 2
       #if defined KINETIS_KL
         #define SIM_SOPT2_RTCCLKOUT_1Hz      0x00000000                  // RTC 1Hz clock is output on RTC_CLKOUT pin
         #if defined KINETIS_HAS_IRC48M                                   // {58}
@@ -10077,10 +10077,12 @@ typedef struct stKINETIS_LPTMR_CTL
             #define SIM_SOPT2_UART1SRC_MCGIRCLK  0x30000000              // UART1 clock source MCGIRCLK
         #endif
       #else
-        #define SIM_SOPT2_CLKOUTSEL_MASK     0x000000e0
+        #define SIM_SOPT2_MCGCLKSEL              0x00000001              // revision 1 parts only
+        #define SIM_SOPT2_RTCCLKOUTSEL           0x00000010              // revision 2 parts only
+        #define SIM_SOPT2_CLKOUTSEL_MASK         0x000000e0              // revision 2 parts only
         #if defined KINETIS_WITH_USBPHY
-            #define SIM_SOPT2_USBSLSRC_RTC   0x00000001                  // USB slow clock source RTC 32.768kHz instead of MCGIRCLK
-            #define SIM_SOPT2_USBREGEN       0x00000002                  // enable USB PHY PLL regulator
+            #define SIM_SOPT2_USBSLSRC_RTC       0x00000001              // USB slow clock source RTC 32.768kHz instead of MCGIRCLK
+            #define SIM_SOPT2_USBREGEN           0x00000002              // enable USB PHY PLL regulator
         #else
             #define SIM_SOPT2_USBHSSRC_BUS_CLK   0x00000000              // USB HS clock source select from bus clock {25}
             #define SIM_SOPT2_USBHSSRC_MCGPLL0   0x00000004              // USB HS clock source select from MSCGPLL0

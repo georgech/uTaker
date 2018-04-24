@@ -19,7 +19,7 @@
 
     See this video for details of building the serial loader with KDS: https://youtu.be/bilc_4Cr7eo
     See this video for details of building and using the serial loader's Ethernet loading method: https://youtu.be/g71PGlQy6eI
-    See thsi video for I2C slave loading: https://youtu.be/awREsqeCEzQ
+    See this video for I2C slave loading: https://youtu.be/awREsqeCEzQ
 */
 
 #if !defined __CONFIG__
@@ -61,7 +61,7 @@
 
 //#define FRDM_KL25Z                                                     // L processors Cortex-M0+ (ultra-low power) with USB - freedom board http://www.utasker.com/kinetis/FRDM-KL25Z.html
 //#define TWR_KL25Z48M                                                   // tower board http://www.utasker.com/kinetis/TWR-KL25Z48M.html
-//#define FRDM_KL26Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL26Z.html
+#define FRDM_KL26Z                                                       // freedom board http://www.utasker.com/kinetis/FRDM-KL26Z.html
 //#define TEENSY_LC                                                      // USB development board with KL26Z64 - http://www.utasker.com/kinetis/TEENSY_LC.html
 //#define FRDM_KL27Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL27Z.html
 //#define FRDM_KL28Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL28Z.html
@@ -112,7 +112,7 @@
 
 //#define EMCRAFT_K61F150M                                               // K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - http://www.utasker.com/kinetis/EMCRAFT_K61F150M.html
 
-#define FRDM_K64F                                                        // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
+//#define FRDM_K64F                                                      // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
 //#define TWR_K64F120M                                                   // tower board http://www.utasker.com/kinetis/TWR-K64F120M.html
 //#define HEXIWEAR_K64F                                                  // hexiwear - wearable development kit for IoT (K64FN1M0VDC12 main processor) http://www.hexiwear.com/
 //#define TEENSY_3_5                                                     // USB development board with K64FX512 - http://www.utasker.com/kinetis/TEENSY_3.5.html
@@ -413,6 +413,7 @@
     #define DEVICE_WITHOUT_ETHERNET                                      // K20 doesn't have Ethernet controller
     #define OUR_HEAP_SIZE   (HEAP_REQUIREMENTS)((8 * 1024) * MEM_FACTOR)
 #elif defined tinyK20
+  //#define TINYK20_16MHz                                                // special version with 16MHz crystal
     #define TARGET_HW            "tinyK20"
     #define DEVICE_WITHOUT_CAN                                           // 50MHz K20 doesn't have CAN controller
     #define KINETIS_K20                                                  // specify the sub-family
@@ -834,12 +835,12 @@
       //#define MODBUS_CRC_FROM_LOOKUP_TABLE                             // MODBUS RTU cyclic redundancy check performed with help of loop up table (requires 512 bytes FLASH table, but faster than calculation loop)
         #define REMOVE_SREC_LOADING
     #else
-      //#define KBOOT_LOADER                                             // use KBOOT UART interface rather than SREC/iHex interface
+        #define KBOOT_LOADER                                             // use KBOOT UART interface rather than SREC/iHex interface
       //#define DEVELOPERS_LOADER                                        // Freescale Developer's Bootloader (AN2295) compatible mode (rather than SREC/iHex)
           //#define DEVELOPERS_LOADER_PROTOCOL_VERSION_9                 // user protocol version 9 rather than obsolete Kinetis 8 (not completed at the moment)
             #define DEVELOPERS_LOADER_READ                               // support reading back program
             #define DEVELOPERS_LOADER_CRC                                // support CRC in communication
-      //#define REMOVE_SREC_LOADING                                      // disable SREC (and Intel Hex) loading but keep debug output and the command line menu
+        #define REMOVE_SREC_LOADING                                      // disable SREC (and Intel Hex) loading but keep debug output and the command line menu
         #if !defined REMOVE_SREC_LOADING
             #define SUPPORT_INTEL_HEX_MODE                               // support Intel Hex mode together with SREC (auto-recognition)
           //#define EXCLUSIVE_INTEL_HEX_MODE                             // loading mode is exclusively Intel Hex (use with or without SUPPORT_INTEL_HEX_MODE)
@@ -881,17 +882,17 @@
 #if defined DEVICE_WITHOUT_USB || defined DWGB_SDCARD
     #define NUMBER_USB     0                                             // no physical queue needed
 #else
-    #define USB_INTERFACE                                                // enable USB driver interface
+  //#define USB_INTERFACE                                                // enable USB driver interface
     #if defined USB_INTERFACE
       //#define USE_USB_CDC                                              // allow SREC/iHex loading via virtual COM
-      //#define USB_MSD_DEVICE_LOADER                                    // USB-MSD device mode (the board appears as a hard-drive to the host)
+        #define USB_MSD_DEVICE_LOADER                                    // USB-MSD device mode (the board appears as a hard-drive to the host)
       //#define USB_MSD_HOST_LOADER                                      // USB-MSD host mode (the board operates as host and can read new code from a memory stick)
         #if defined USE_USB_CDC
             #undef SERIAL_INTERFACE                                      // remove the UART interface
             #define NUMBER_SERIAL          0
         #endif
         #if defined USB_MSD_DEVICE_LOADER
-          //#define USB_DEVICE_SUPPORT                                   // requires USB device driver support
+            #define USB_DEVICE_SUPPORT                                   // requires USB device driver support
           //#define USB_MSD_TIMEOUT                                      // if there is no enumeration within a short time the application will be started
           //#define FAT_EMULATION                                        // use fat emulation
             #if defined FAT_EMULATION
@@ -907,7 +908,7 @@
                 #define EMULATED_FAT_FILE_DATE_CONTROL
             #endif
           //#define USB_MSD_REJECTS_BINARY_FILES                         // default is to accept binary files
-          //#define USB_MSD_ACCEPTS_SREC_FILES                           // optionally accept SREC content
+            #define USB_MSD_ACCEPTS_SREC_FILES                           // optionally accept SREC content
           //#define USB_MSD_ACCEPTS_HEX_FILES                            // optionally accept Intel HEX content
         #endif
         #if defined USB_MSD_HOST_LOADER                                  // support loading from memory stick
@@ -928,7 +929,7 @@
         #if defined USB_MSD_DEVICE_LOADER || defined USB_MSD_HOST_LOADER
             #define SUPPORT_FLUSH                                        // allow flush command to be used (important for mass storage class)
         #endif
-        #define USE_USB_MSD                                              // full USB-MSD to SD card interface on USB (no emulated loader function) - requires SDCARD_SUPPORT (USB_MSD_DEVICE_LOADER can be disabled)
+      //#define USE_USB_MSD                                              // full USB-MSD to SD card interface on USB (no emulated loader function) - requires SDCARD_SUPPORT (USB_MSD_DEVICE_LOADER can be disabled)
             #define DISK_COUNT         1                                 // single upload disk (set to 2 for two upload disks)
           //#define DEBUG_MAC                                            // activate debug output used to monitor the operation of MAC OS X
         #define HID_LOADER                                               // Freescale HIDloader.exe or KBOOT compatible
@@ -965,7 +966,7 @@
 #endif
 
 #if !defined TWR_K20D50M && !defined FRDM_K20D50M && !defined FRDM_KL46Z && !defined FRDM_KL43Z && !defined TWR_KL46Z48M && !defined FRDM_KL26Z && !defined FRDM_KL27Z && !defined TWR_KL25Z48M && !defined FRDM_KL02Z && !defined FRDM_KL03Z && !defined FRDM_KL05Z && !defined FRDM_KE02Z && !defined FRDM_KE02Z40M && !defined FRDM_KE04Z && !defined TWR_K20D72M && !defined TWR_K21D50M && !defined TWR_K22F120M && !defined TWR_K24F120M && !defined K24FN1M0_120 && !defined FRDM_K22F && !defined TWR_KV10Z32 && !defined TWR_KV31F120M && !defined K66FX1M0 // boards have no SD card socket
-    #define SDCARD_SUPPORT                                               // SD-card interface (only choose one of these options at a time)
+  //#define SDCARD_SUPPORT                                               // SD-card interface (only choose one of these options at a time)
   //#define SPI_FLASH_FAT                                                // SPI flash
         #define SIMPLE_FLASH                                             // don't perform block management and wear-levelling
         #define FLASH_FAT_MANAGEMENT_ADDRESS     (SIZE_OF_FLASH)
@@ -974,7 +975,7 @@
         #define UTFAT_DISABLE_DEBUG_OUT                                  // disable general mass-storage output so that the SREC loader is not disturbed
     #endif
     #if defined DELETE_SDCARD_FILE_AFTER_UPDATE || defined USE_USB_MSD
-      //#define UTFAT_WRITE
+        #define UTFAT_WRITE
     #endif
     #if defined USE_USB_MSD
         #define SUPPORT_FLUSH
@@ -987,6 +988,7 @@
                 #define SDCARD_FIXED                                     // no SD card monitoring since it is fixed in hardware
                 #if defined SDCARD_FIXED
                     #define UTFAT_MULTIPLE_BLOCK_READ
+                  //#define UTFAT_MULTIPLE_BLOCK_WRITE
                 #endif
             #endif
         #endif
@@ -1004,7 +1006,7 @@
     #if defined UTFAT_LFN_READ
         #define MAX_UTFAT_FILE_NAME     (100)                            // the maximum file name length supported
     #endif
-    #define UTFAT_WRITE                                                  // enable write functions
+  //#define UTFAT_WRITE                                                  // enable write functions
     #if defined UTFAT_WRITE
         #define UTFAT_LFN_WRITE
       //#define UTFAT_LFN_WRITE_PATCH
