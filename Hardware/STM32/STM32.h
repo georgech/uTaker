@@ -187,8 +187,23 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*I
 #if defined _STM32F429
     #define USARTS_AVAILABLE   4
     #define UARTS_AVAILABLE    4
+    #define LPUARTS_AVAILABLE  0
+#elif defined _STM32L451 || defined _STM32L452 || defined _STM32L462
+    #define USARTS_AVAILABLE   3
+    #define UARTS_AVAILABLE    1
+    #define LPUARTS_AVAILABLE  1
+#elif defined _STM32L431 || defined _STM32L433 || defined _STM32L443
+    #define USARTS_AVAILABLE   3
+    #define UARTS_AVAILABLE    0
+    #define LPUARTS_AVAILABLE  1
+#elif defined _STM32L432 || defined _STM32L442
+    #define USARTS_AVAILABLE   2
+    #define UARTS_AVAILABLE    0
+    #define LPUARTS_AVAILABLE  1
 #else
+    #define USARTS_AVAILABLE   0
     #define UARTS_AVAILABLE    (CHIP_HAS_UARTS)
+    #define LPUARTS_AVAILABLE  0
 #endif
 
 // ADC configuration
@@ -908,12 +923,18 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*I
   #endif
   #define USART1_BLOCK                  ((unsigned char *)(&STM32.USART[0]))   // USART 1
   #define USART2_BLOCK                  ((unsigned char *)(&STM32.USART[1]))   // USART 2
-  #define USART3_BLOCK                  ((unsigned char *)(&STM32.USART[2]))   // USART 3
+  #if USARTS_AVAILABLE > 2
+    #define USART3_BLOCK                ((unsigned char *)(&STM32.USART[2]))   // USART 3
+  #endif
   #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
     #define USART6_BLOCK                ((unsigned char *)(&STM32.USART[3]))   // USART 6
   #endif
-  #define UART4_BLOCK                   ((unsigned char *)(&STM32.UART[0]))    // UART 4
-  #define UART5_BLOCK                   ((unsigned char *)(&STM32.UART[1]))    // UART 5
+  #if UARTS_AVAILABLE > 0
+    #define UART4_BLOCK                 ((unsigned char *)(&STM32.UART[0]))    // UART 4
+  #endif
+  #if UARTS_AVAILABLE > 1
+    #define UART5_BLOCK                 ((unsigned char *)(&STM32.UART[1]))    // UART 5
+  #endif
   #if defined _STM32F7XX || defined _STM32F429
     #define UART7_BLOCK                 ((unsigned char *)(&STM32.UART[2]))    // UART 7
     #define UART8_BLOCK                 ((unsigned char *)(&STM32.UART[3]))    // UART 8
@@ -1103,7 +1124,7 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*I
     #define SDMMC_BLOCK                 0x40012800
     #define TIM1_BLOCK                  0x40012c00
     #define SPI1_BLOCK                  0x40013000
-    #define USART_BLOCK                 0x40013800
+    #define USART1_BLOCK                0x40013800
     #define TIM15_BLOCK                 0x40014000
     #define TIM16_BLOCK                 0x40014400
     #define SAI1_BLOCK                  0x40015400
@@ -2439,7 +2460,7 @@ typedef struct stSTM32_BD
       #define RCC_CR_MSION                   0x00000001
       #define RCC_CR_MSIRDY                  0x00000002                  // read-only
       #define RCC_CR_MSIPLLEN                0x00000004
-      #define RCC_CR_MSIRGSEL                0x00000008
+      #define RCC_CR_MSIRGSEL                0x00000008                  // MSI clock range selection - controlled by value in this register (reset to zero on exit from standby) when set or by the value in RCC_CSR when cleared
       #define RCC_CR_MSIRANGE_100k           0x00000000                  // MSI frequency around 100kHz (MSI range should only be changed when off or ready - not when on AND not-ready)
       #define RCC_CR_MSIRANGE_200k           0x00000010                  // MSI frequency around 200kHz
       #define RCC_CR_MSIRANGE_400k           0x00000020                  // MSI frequency around 400kHz
@@ -2573,18 +2594,10 @@ typedef struct stSTM32_BD
     #define RCC_CSR                          *(volatile unsigned long *)(RCC_BLOCK + 0x94) // control status register
       #define RCC_CSR_LSION                  0x00000001                  // enable 32kHz RC oscillator
       #define RCC_CSR_LSIRDY                 0x00000002                  // read-only
-      #define RCC_CSR_MSIRANGE_100k          0x00000000                  // MSI frequency around 100kHz
-      #define RCC_CSR_MSIRANGE_200k          0x00000010                  // MSI frequency around 200kHz
-      #define RCC_CSR_MSIRANGE_400k          0x00000020                  // MSI frequency around 400kHz
-      #define RCC_CSR_MSIRANGE_800k          0x00000030                  // MSI frequency around 800kHz
-      #define RCC_CSR_MSIRANGE_1M            0x00000040                  // MSI frequency around 1M
+      #define RCC_CSR_MSIRANGE_1M            0x00000040                  // MSI frequency around 1M (can only be written when RCC_CR_MSIRGSEL is set and defines the MSI frequency on exit from standby mode, until RCC_CR_MSIRGSEL set again)
       #define RCC_CSR_MSIRANGE_2M            0x00000050                  // MSI frequency around 2M
-      #define RCC_CSR_MSIRANGE_4M            0x00000060                  // MSI frequency around 4M (dfeault after reset)
+      #define RCC_CSR_MSIRANGE_4M            0x00000060                  // MSI frequency around 4M (default after reset)
       #define RCC_CSR_MSIRANGE_8M            0x00000070                  // MSI frequency around 8M
-      #define RCC_CSR_MSIRANGE_16M           0x00000080                  // MSI frequency around 16M
-      #define RCC_CSR_MSIRANGE_24M           0x00000090                  // MSI frequency around 24M
-      #define RCC_CSR_MSIRANGE_32M           0x000000a0                  // MSI frequency around 32M
-      #define RCC_CSR_MSIRANGE_48M           0x000000b0                  // MSI frequency around 48M
       #define RCC_CSR_MSISRANGE_MASK         0x00000f00                  // read/write
       #define RCC_CSR_RMVF                   0x01000000                  // read/write
       #define RCC_CSR_FWRSTF                 0x02000000                  // read-only
@@ -3829,7 +3842,7 @@ typedef struct stSTM32_ADC_REGS
 
 // USARTs
 //
-#if defined _STM32F7XX
+#if defined _STM32F7XX || defined _STM32L432
     #define USART1_CR1                   *(volatile unsigned long *)(USART1_BLOCK + 0x00)  // USART1 control register 1
       #define USART_CR1_UE               0x00000001                      // USART enable
       #define USART_CR1_RE               0x00000004                      // receiver enable
@@ -4161,7 +4174,7 @@ typedef struct stSTM32_ADC_REGS
 
 typedef struct stUSART_REG
 {
-#if defined _STM32F7XX
+#if defined _STM32F7XX || defined _STM32L432
     unsigned long UART_CR1;
     unsigned long UART_CR2;
     unsigned long UART_CR3;

@@ -45,7 +45,7 @@
     #define MCO_DIVIDE          16                                       // 1, 2, 4, 8 or 16 possible (defaults to /1 if not specified)
 
     #define USE_MSI_CLOCK                                                // use internal MSI clock source (4MHz default)
-    #define MSI_CLOCK           4000000                                  // 100kHz, 200kHz, 400kHz, 800kHz, 1MHz, 2MHz, 4MHz, 8MHz, 16MHz, 32MHz, 48MHz possible
+    #define MSI_CLOCK           48000000                                 // 100kHz, 200kHz, 400kHz, 800kHz, 1MHz, 2MHz, 4MHz, 8MHz, 16MHz, 32MHz, 48MHz possible
   //#define USE_HSI_CLOCK                                                // use internal HSI clock source (16MHz)
     #define DISABLE_PLL                                                  // run from clock source directly
 
@@ -910,6 +910,10 @@
     #define WATCHDOG_DISABLE()         ((_READ_PORT_MASK(A, (PORTA_BIT12))) == 0)
 
     #define KEYPAD "KeyPads/NUCLEO32.bmp"
+
+                                       // '0'            '1'   input state center (x,   y)   0 = circle, radius, controlling port, controlling pin 
+    #define KEYPAD_LED_DEFINITIONS     {RGB(50,50,50),RGB(0,255,0),  0, {118, 408, 127, 424}, _GPIO_B, LED1}
+
 #elif defined STM3240G_EVAL
     #define JOYSTICK_SEL               0x80                              // I/O expander input
     #define JOYSTICK_DOWN              0x08                              // I/O expander input

@@ -702,7 +702,7 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
         uTaskerStateChange(TASK_DEBUG, UTASKER_ACTIVATE);                // schedule the debug task so that it can configure telnet use
 #endif
 #if defined SERIAL_INTERFACE && defined DEMO_UART                        // {32} this serial interface is used for debug output and menu based control
-        if (NO_ID_ALLOCATED == fnSetNewSerialMode(FOR_I_O)) {            // open serial port for I/O
+        if (NO_ID_ALLOCATED == (SerialPortID = fnSetNewSerialMode(FOR_I_O))) { // open serial port for I/O
             return;                                                      // if the serial port could not be opened we quit
         }
         else {
@@ -1543,6 +1543,7 @@ extern void fnMagicFrame(unsigned char ucType, unsigned char usOptionalDate[32])
 #if defined SERIAL_INTERFACE && defined DEMO_UART                        // {32}
 extern QUEUE_HANDLE fnSetNewSerialMode(unsigned char ucDriverMode)
 {
+    QUEUE_HANDLE newSerialID;
     TTYTABLE tInterfaceParameters;                                       // table for passing information to driver
     tInterfaceParameters.Channel = DEMO_UART;                            // set UART channel for serial use
     #if defined NO_MODIFIABLE_PARAMETERS
@@ -1591,14 +1592,14 @@ extern QUEUE_HANDLE fnSetNewSerialMode(unsigned char ucDriverMode)
     #if defined SUPPORT_HW_FLOW
   //tInterfaceParameters.Config |= RTS_CTS;                              // enable RTS/CTS operation (HW flow control)
     #endif
-    if ((SerialPortID = fnOpen(TYPE_TTY, ucDriverMode, &tInterfaceParameters)) != NO_ID_ALLOCATED) { // open or change the channel with defined configurations (initially inactive)
-        fnDriver(SerialPortID, (TX_ON | RX_ON), 0);                      // enable rx and tx
+    if ((newSerialID = fnOpen(TYPE_TTY, ucDriverMode, &tInterfaceParameters)) != NO_ID_ALLOCATED) { // open or change the channel with defined configurations (initially inactive)
+        fnDriver(newSerialID, (TX_ON | RX_ON), 0);                       // enable rx and tx
         if ((tInterfaceParameters.Config & RTS_CTS) != 0) {              // {8} if HW flow control is being used
-            fnDriver(SerialPortID, (MODIFY_INTERRUPT | ENABLE_CTS_CHANGE), 0); // activate CTS interrupt when working with HW flow control (this returns also the present control line states)
-            fnDriver(SerialPortID, (MODIFY_CONTROL | SET_RTS), 0);       // activate RTS line when working with HW flow control
+            fnDriver(newSerialID, (MODIFY_INTERRUPT | ENABLE_CTS_CHANGE), 0); // activate CTS interrupt when working with HW flow control (this returns also the present control line states)
+            fnDriver(newSerialID, (MODIFY_CONTROL | SET_RTS), 0);        // activate RTS line when working with HW flow control
         }
     }
-    return SerialPortID;
+    return newSerialID;
 }
 #endif
 #if defined SERIAL_INTERFACE && defined USE_J1708

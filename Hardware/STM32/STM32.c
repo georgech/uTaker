@@ -3163,6 +3163,10 @@ static void STM32_LowLevelInit(void)
 #if defined DISABLE_PLL
     #if !defined USE_HSI_CLOCK && !defined USE_MSI_CLOCK
     RCC_CFGR |= RCC_CFGR_HSE_SELECT;                                     // set oscillator as direct source
+    #elif defined _STM32L432 && defined USE_MSI_CLOCK                    // set MSI frequency
+        #if MSI_CLOCK != 4000000
+    RCC_CR = (RCC_CR_MISRANGE_SETTING | RCC_CR_MSIRGSEL | RCC_CR_MSIRDY | RCC_CR_MSION); // set the MSI range value and use this register's value to control it
+        #endif
     #elif defined _STM32L432 && defined USE_HSI_CLOCK
     RCC_CR |= (RCC_CR_HSION);                                            // turn on the 16MHz HSI oscillator
     RCC_CFGR |= (RCC_CFGR_HSI16_SELECT);                                 // switch from 4MHz MSI to HSE16
@@ -3270,7 +3274,7 @@ static void STM32_LowLevelInit(void)
     RCC_CFGR &= ~(RCC_CFGR_MCOSEL_MASK | RCC_CFGR_MCOPRE_MASK);          // ensure the fields are initially masked
     #if defined MCO_DIVIDE
         #if MCO_DIVIDE == 1
-    RCC_CFGR |= RCC_CFGR_MCOSEL_MSI;                                     // connect MSI clock to MCO output
+    RCC_CFGR |= RCC_CFGR_MCOSEL_MSI;                                     // connect undivided MSI clock to MCO output
         #elif MCO_DIVIDE == 2
     RCC_CFGR |= (RCC_CFGR_MCOPRE_2 | RCC_CFGR_MCOSEL_MSI);               // divide by 2 and connect MSI clock to MCO output
         #elif MCO_DIVIDE == 4
@@ -3282,6 +3286,8 @@ static void STM32_LowLevelInit(void)
         #else
     #error "Invalid MCO prescale value!"
         #endif
+    #else
+    RCC_CFGR |= RCC_CFGR_MCOSEL_MSI;                                     // connect undivided MSI clock to MCO output
     #endif
     _CONFIG_PERIPHERAL_OUTPUT(A, (PERIPHERAL_SYS), (PORTA_BIT8), (OUTPUT_MEDIUM | OUTPUT_PUSH_PULL)); // MCO on PA8
 #endif

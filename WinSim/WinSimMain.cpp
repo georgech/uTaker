@@ -3045,9 +3045,13 @@ static void fnSaveUserFiles()
 
 #if defined SERIAL_INTERFACE
     #if defined LPUARTS_AVAILABLE
+        #if defined USARTS_AVAILABLE
+static char cUART[UARTS_AVAILABLE + USARTS_AVAILABLE + LPUARTS_AVAILABLE][BUFSSIZE] = {{0}};
+        #else
 static char cUART[UARTS_AVAILABLE + LPUARTS_AVAILABLE][BUFSSIZE] = {{0}};
+        #endif
     #elif defined USARTS_AVAILABLE
-static char cUART[UARTS_AVAILABLE + USARTS_AVAILABLE][BUFSSIZE] = { { 0 } };
+static char cUART[UARTS_AVAILABLE + USARTS_AVAILABLE][BUFSSIZE] = {{0}};
     #else
 static char cUART[UARTS_AVAILABLE][BUFSSIZE] = {{0}};
     #endif

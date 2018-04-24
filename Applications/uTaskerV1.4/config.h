@@ -862,7 +862,7 @@
     #define DEVICE_WITHOUT_ETHERNET                                      // K82 doesn't have Ethernet controller
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((30 * 1024) * MEM_FACTOR)
 #elif defined NUCLEO_L432KC
-    #define TARGET_HW            " NUCLEO-L432KC (STM32L432)"
+    #define TARGET_HW            "NUCLEO-L432KC (STM32L432)"
     #define _STM32L432                                                   // part type
     #define STM32_FPU                                                    // FPU present
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((16 * 1024) * MEM_FACTOR)
@@ -1136,7 +1136,7 @@
             #define MODBUS_SERIAL_INTERFACES      2
         #endif
       //#define MODBUS_SHARED_SERIAL_INTERFACES   3                      // number of slave interfaces sharing UARTs
-      //#define MODBUS_RS485_SUPPORT                                     // support RTS control for RS485 transmission
+        #define MODBUS_RS485_SUPPORT                                     // support RTS control for RS485 transmission
       //#define FAST_MODBUS_RTU                                          // speeds of greater than 19200 use calculated RTU times rather than recommended fixed values
         #if defined MODBUS_RS485_SUPPORT
             #if !defined SUPPORT_HW_FLOW
@@ -1435,7 +1435,7 @@
 // Ethernet
 //
 #if !defined DEVICE_WITHOUT_ETHERNET && !defined K70F150M_12M && !defined TEENSY_3_5 && !defined TEENSY_3_6 && !defined K66FX1M && !defined HEXIWEAR_K64F && !defined HEXIWEAR_KW40Z && !defined K66FX1M0
-    #define ETH_INTERFACE                                                // enable Ethernet interface driver
+  //#define ETH_INTERFACE                                                // enable Ethernet interface driver
 #elif defined TEENSY_3_1 || defined TEENSY_LC
   //#define ETH_INTERFACE                                                // enable external Ethernet interface driver
     #if defined ETH_INTERFACE

@@ -480,7 +480,7 @@ unsigned long AFIO_MAPR2;
 
 typedef struct stSTM32_USART
 {
-#if defined _STM32F7XX
+#if defined _STM32F7XX || defined _STM32L432
     unsigned long UART_CR1;
     unsigned long UART_CR2;
     unsigned long UART_CR3;
