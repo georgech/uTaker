@@ -43,11 +43,13 @@
       target_reset_script="FLASHReset()" />
     <folder Name="Source Files">
       <configuration Name="Common" filter="c;cpp;cxx;cc;h;s;asm;inc" />
-      <file file_name="../Loader.c" />
       <file file_name="../webInterface.c" />
       <file file_name="../usb_device_loader.c" />
       <file file_name="../usb_host_loader.c" />
       <file file_name="../disk_loader.c" />
+      <file file_name="../serial_loader.c" />
+      <file file_name="../usb_application.c" />
+      <file file_name="../modbus_app.c" />
     </folder>
     <folder Name="System Files">
       <file file_name="$(TargetsDir)/Kinetis/Kinetis_Target.js">
@@ -61,7 +63,12 @@
         <configuration Name="THUMB Debug" build_exclude_from_build="Yes" />
         <configuration Name="THUMB Release" build_exclude_from_build="Yes" />
       </file>
-      <file file_name="../GNU_Kinetis/K_1M_128.ld" />
+      <file file_name="../GNU_Kinetis/K_1M_128.ld">
+        <configuration Name="THUMB Release" build_exclude_from_build="Yes" />
+      </file>
+      <file file_name="../../uTaskerV1.4/GNU_Kinetis/K_128_16.ld">
+        <configuration Name="Common" file_type="Linker Script" />
+      </file>
     </folder>
     <configuration
       Name="THUMB Debug"

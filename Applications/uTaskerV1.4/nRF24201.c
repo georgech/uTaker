@@ -16,7 +16,7 @@
     This file contains application operation of nRF24201 (primary or secondary).
     It is intended as a temporary project file to be later incorporated in networking software.
 
-    30.03.2018 Added FRDM-K66F target an publish MQTT message on reception {1}
+    30.03.2018 Added FRDM-K66F target and publish MQTT message on reception {1}
 
 */
 

@@ -61,7 +61,7 @@
 
 //#define FRDM_KL25Z                                                     // L processors Cortex-M0+ (ultra-low power) with USB - freedom board http://www.utasker.com/kinetis/FRDM-KL25Z.html
 //#define TWR_KL25Z48M                                                   // tower board http://www.utasker.com/kinetis/TWR-KL25Z48M.html
-#define FRDM_KL26Z                                                       // freedom board http://www.utasker.com/kinetis/FRDM-KL26Z.html
+//#define FRDM_KL26Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL26Z.html
 //#define TEENSY_LC                                                      // USB development board with KL26Z64 - http://www.utasker.com/kinetis/TEENSY_LC.html
 //#define FRDM_KL27Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL27Z.html
 //#define FRDM_KL28Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL28Z.html
@@ -83,6 +83,7 @@
 //#define HEXIWEAR_KW40Z                                                 // hexiwear - wearable development kit for IoT (KW40Z160 support wireless processor) http://www.hexiwear.com/
 
 //#define K02F100M                                                       // development board with 100MHz K02F
+//#define K12D50M                                                          // development board with 50MHz K12
 //#define FRDM_K20D50M                                                   // K processors Cortex M4 (performance and integration) with USB - freedom board http://www.utasker.com/kinetis/FRDM-K20D50M.html
 //#define tinyK20                                                        // USB memory stick format board with SD card and 50MHz K20DX128 http://www.utasker.com/kinetis/tinyK20.html
 //#define TWR_K20D50M                                                    // tower board http://www.utasker.com/kinetis/TWR-K20D50M.html
@@ -112,7 +113,7 @@
 
 //#define EMCRAFT_K61F150M                                               // K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - http://www.utasker.com/kinetis/EMCRAFT_K61F150M.html
 
-//#define FRDM_K64F                                                      // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
+#define FRDM_K64F                                                        // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
 //#define TWR_K64F120M                                                   // tower board http://www.utasker.com/kinetis/TWR-K64F120M.html
 //#define HEXIWEAR_K64F                                                  // hexiwear - wearable development kit for IoT (K64FN1M0VDC12 main processor) http://www.hexiwear.com/
 //#define TEENSY_3_5                                                     // USB development board with K64FX512 - http://www.utasker.com/kinetis/TEENSY_3.5.html
@@ -357,16 +358,27 @@
     #define TARGET_HW       "TWR-KW24D512"
     #define DEVICE_WITHOUT_ETHERNET                                      // KW doesn't have Ethernet controller
     #define OUR_HEAP_SIZE   (HEAP_REQUIREMENTS)((16 * 1024) * MEM_FACTOR)
-#elif defined K02F100M
-    #define TARGET_HW            "K02F100M"
-    #define KINETIS_K_FPU                                                // part with floating point unit
-    #define KINETIS_K00                                                  // specify the sub-family
-    #define KINETIS_K02                                                  // extra sub-family type precision
-    #define KINETIS_MAX_SPEED    100000000
+#elif defined K02F100M || defined K12D50M
+  //#define DEV5                                                         // special option which forces SD card loading
+    #if defined K12D50M
+        #define TARGET_HW            "K12D50M"
+        #define KINETIS_K10                                              // specify the sub-family
+        #define KINETIS_K12                                              // extra sub-family type precision
+        #define KINETIS_MAX_SPEED    50000000
+    #else
+        #define TARGET_HW            "K02F100M"
+        #define KINETIS_K_FPU                                           // part with floating point unit
+        #define KINETIS_K00                                             // specify the sub-family
+        #define KINETIS_K02                                             // extra sub-family type precision
+        #define KINETIS_MAX_SPEED    100000000
+    #endif
     #define DEVICE_WITHOUT_ETHERNET                                      // K02F doesn't have Ethernet controller
     #define DEVICE_WITHOUT_USB                                           // K02F doesn't have USB
     #define DEVICE_WITHOUT_CAN                                           // K02F doesn't have CAN controller
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((10 * 1024) * MEM_FACTOR)
+    #if defined DEV5
+        #define SDCARD_SUPPORT                                           // use SD card loading method
+    #endif
 #elif defined TWR_K20D50M
     #define KINETIS_K20
     #define KINETIS_MAX_SPEED    50000000
@@ -574,10 +586,14 @@
     #define KINETIS_K60
     #define OUR_HEAP_SIZE   (HEAP_REQUIREMENTS)((24 * 1024) * MEM_FACTOR)
 #elif defined TWR_K60D100M
+  //#define DEV6                                                         // special option which forces SD card loading
     #define TARGET_HW       "TWR-K60D100M"
     #define KINETIS_K60
     #define KINETIS_REVISION_2
     #define OUR_HEAP_SIZE   (HEAP_REQUIREMENTS)((24 * 1024) * MEM_FACTOR)
+    #if defined DEV6
+        #define SDCARD_SUPPORT                                           // use SD card loading method
+    #endif
 #elif defined TWR_K60N512
     #define TARGET_HW       "TWR-K60N512"
     #define KINETIS_K60
@@ -835,7 +851,7 @@
       //#define MODBUS_CRC_FROM_LOOKUP_TABLE                             // MODBUS RTU cyclic redundancy check performed with help of loop up table (requires 512 bytes FLASH table, but faster than calculation loop)
         #define REMOVE_SREC_LOADING
     #else
-        #define KBOOT_LOADER                                             // use KBOOT UART interface rather than SREC/iHex interface
+      //#define KBOOT_LOADER                                             // use KBOOT UART interface rather than SREC/iHex interface
       //#define DEVELOPERS_LOADER                                        // Freescale Developer's Bootloader (AN2295) compatible mode (rather than SREC/iHex)
           //#define DEVELOPERS_LOADER_PROTOCOL_VERSION_9                 // user protocol version 9 rather than obsolete Kinetis 8 (not completed at the moment)
             #define DEVELOPERS_LOADER_READ                               // support reading back program
@@ -983,7 +999,7 @@
     #if defined SDCARD_SUPPORT
         #if !defined DWGB_SDCARD
             #define UREVERSEMEMCPY                                       // required when SD card used in SPI mode
-            #if !defined SPECIAL_VERSION_SDCARD
+            #if !defined SPECIAL_VERSION_SDCARD && !defined DEV5 && !defined DEV6
                 #define SDCARD_ACCESS_WITHOUT_UTFAT                      // no utFAT interface (just low level access for USB-MSD operation)
                 #define SDCARD_FIXED                                     // no SD card monitoring since it is fixed in hardware
                 #if defined SDCARD_FIXED

@@ -1301,7 +1301,7 @@
 //#define USE_SECTION_PROGRAMMING                                        // allow the flash section command to be used to accelerate programming (faster than word programming but blocks interrupts for longer)
 
 #if defined TWR_K64F120M && !defined TWR_SER2                            // this combination doesn't report link state changes when the MII clock is stopped
-  #define STOP_MII_CLOCK                                                 // only apply clock when needed (don't use when DEVELOP_PHY_CONTROL is set in debug.c)
+    #define STOP_MII_CLOCK                                               // only apply clock when needed (don't use when DEVELOP_PHY_CONTROL is set in debug.c)
 #endif
 #if !defined DEVICE_WITHOUT_ETHERNET
     #define EMAC_ENHANCED                                                // use enhanced mode for Ethernet controller operation

@@ -1745,7 +1745,7 @@ static const CHAR *fnEmailTest(unsigned char ucEvent, unsigned short *usData)
 
 
 
-#if defined (USE_SMTP) && defined (USE_DNS)
+#if defined USE_SMTP && defined USE_DNS
 static void fnDNSListner(unsigned char ucEvent, unsigned char *ptrIP)
 {
     switch (ucEvent) {

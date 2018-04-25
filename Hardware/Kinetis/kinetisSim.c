@@ -121,6 +121,12 @@ static const unsigned long ulDisabled[PORTS_AVAILABLE] = {
     0x00000c30,                                                          // port C disabled default pins
     0x0000009d,                                                          // port D disabled default pins
     0x00000003                                                           // port E disabled default pins
+#elif defined KINETIS_K12
+    (PORTA_BIT17 | PORTA_BIT16 | PORTA_BIT15 | PORTA_BIT14 | PORTA_BIT13 | PORTA_BIT12 | PORTA_BIT5), // port A disabled default pins
+    (PORTB_BIT19 | PORTB_BIT18 | PORTB_BIT17 | PORTB_BIT16 | PORTB_BIT13 | PORTB_BIT12 | PORTB_BIT11 | PORTB_BIT10), // port B disabled default pins
+    (PORTC_BIT17 | PORTC_BIT16 | PORTC_BIT13 | PORTC_BIT12 | PORTC_BIT11 | PORTC_BIT10 | PORTC_BIT5 | PORTC_BIT4), // port C disabled default pins
+    (PORTD_BIT3 | PORTD_BIT2 | PORTD_BIT0),                              // port D disabled default pins
+    (PORTE_BIT5 | PORTE_BIT4)                                            // port E disabled default pins
 #elif defined KINETIS_K10
     0x3f01ce60,                                                          // port A disabled default pins
     0x00f00300,                                                          // port B disabled default pins

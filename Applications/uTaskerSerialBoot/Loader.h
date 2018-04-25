@@ -167,6 +167,8 @@
             #define UTASKER_APP_START     (64 * 1024)                    // application starts at this address
         #elif defined DWGB_SDCARD
             #define UTASKER_APP_START     (24 * 1024)                    // application starts at this address
+        #elif ((defined K02F100M || defined K12D50M) && defined DEV5) || (defined TWR_K60D100M && defined DEV6)
+            #define UTASKER_APP_START     (20 * 1024)                    // application starts at 0x5000
         #else
             #define UTASKER_APP_START     (32 * 1024)                    // application starts at this address
         #endif
@@ -175,6 +177,10 @@
             #define UTASKER_APP_END           (unsigned char *)(SIZE_OF_FLASH) // end of application space - after maximum application size
             #define MAX_FLASH_ERASE_SIZE      (64 * 1024)                // limit flash erasure to blocks of thie size to avoid blocking watchdog task when large flash size is to be erased
             #define ERASE_NEEDED_FLASH_ONLY                              // erase only the flash size needed by the new program code
+        #elif (defined TWR_K60D100M && defined DEV6)
+            #define UTASKER_APP_END           (unsigned char *)(UTASKER_APP_START + (256 * 1024)) // end of application space - after maximum application size
+        #elif (defined K02F100M || defined K12D50M) && defined DEV5
+            #define UTASKER_APP_END           (unsigned char *)(UTASKER_APP_START + (108 * 1024)) // end of application space - after maximum application size
         #else
             #define UTASKER_APP_END           (unsigned char *)(UTASKER_APP_START + (128 * 1024)) // end of application space - after maximum application size
         #endif
@@ -202,11 +208,21 @@
         #if defined SPECIAL_VERSION_SDCARD
           //#define NEW_SOFTWARE_FILE "BCgun*.bin"
             #define NEW_SOFTWARE_FILE "BCvest*.bin"
+            #define VALID_VERSION_MAGIC_NUMBER   0x1234
+            #define _SECRET_KEY       {0xa7, 0x48, 0xb6, 0x53, 0x11, 0x24}
+        #elif (defined TWR_K60D100M && defined DEV6)
+            #define NEW_SOFTWARE_FILE "display.bin"
+            #define VALID_VERSION_MAGIC_NUMBER   0x0001
+            #define _SECRET_KEY       {0xa7, 0x48, 0xb6, 0x53, 0x11, 0x25}
+        #elif (defined K02F100M || defined K12D50M) && defined DEV5
+            #define NEW_SOFTWARE_FILE "hoist.bin"
+            #define VALID_VERSION_MAGIC_NUMBER   0x0002
+            #define _SECRET_KEY       {0xa7, 0x48, 0xb6, 0x53, 0x11, 0x26}
         #else
             #define NEW_SOFTWARE_FILE "software.bin"
+            #define VALID_VERSION_MAGIC_NUMBER   0x1234
+            #define _SECRET_KEY       {0xa7, 0x48, 0xb6, 0x53, 0x11, 0x24}
         #endif
-        #define VALID_VERSION_MAGIC_NUMBER   0x1234
-        #define _SECRET_KEY           {0xa7, 0x48, 0xb6, 0x53, 0x11, 0x24}
     #endif
 #elif defined _LPC23XX
     #define SERIAL_SPEED              SERIAL_BAUD_115200                 // the Baud rate of the UART
