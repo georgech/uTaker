@@ -59,6 +59,27 @@
     #define SIZE_OF_FLASH       (256 * 1024)                             // 256k FLASH
 
     #define CORE_VOLTAGE        VCORE_RANGE_1                            // normal core voltage operation
+#elif defined NUCLEO_L031K6
+    #define CRYSTAL_FREQ        32768                                    // when there is a 32kHz crystal it can be used for the RTC, LSCO or MCO (optionally divided)
+
+    #define MCO_CONNECTED_TO_MSI
+    #define MCO_DIVIDE          16                                       // 1, 2, 4, 8 or 16 possible (defaults to /1 if not specified)
+
+    #define USE_MSI_CLOCK                                                // use internal MSI clock source (4.194MHz default)
+    #define MSI_CLOCK           2097000                                  // 65.536kHz, 131.072kHz, 262.144kHz, 524.288kHz, 1.048MHz, 2.097MHz and 4.194MHz possible
+  //#define USE_HSI_CLOCK                                                // use internal HSI clock source (16MHz)
+    #define DISABLE_PLL                                                  // run from clock source directly
+
+    #define HCLK_DIVIDE         1                                        // 1,2,4,8,16,32,64,128,256 or 512
+    #define PCLK1_DIVIDE        2                                        // 1,2,4,8, or 16
+    #define PCLK2_DIVIDE        1                                        // 1,2,4,8, or 16
+
+    #define PIN_COUNT           PIN_COUNT_32_PIN
+    #define PACKAGE_TYPE        PACKAGE_LQFP
+    #define SIZE_OF_RAM         (8 * 1024)                               // 64k SRAM
+    #define SIZE_OF_FLASH       (32 * 1024)                              // 256k FLASH
+
+    #define CORE_VOLTAGE        VCORE_RANGE_1                            // normal core voltage operation (1.65V..1.95V)
 #elif defined STM3210C_EVAL                                              // STM32F107VCT (72MHz)
     #define CRYSTAL_FREQ        25000000
   //#define DISABLE_PLL                                                  // run from clock source directly
@@ -884,7 +905,7 @@
 #define PRIORITY_EMAC              1
 #define PRIORITY_OTG_FS            1
 
-#if defined NUCLEO_L432KC
+#if defined NUCLEO_L432KC || defined NUCLEO_L031K6
     #define LED1                       PORTB_BIT3                        // green LED
     #define LED2                       PORTB_BIT4
     #define LED3                       PORTB_BIT5

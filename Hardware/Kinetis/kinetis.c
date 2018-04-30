@@ -389,7 +389,14 @@ static void disable_watchdog(void)
         #endif
     }
         #if defined SUPPORT_LOW_POWER && (defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000))
-        PMC_REGSC = PMC_REGSC_ACKISO;                                    // acknowledge the isolation mode to set certain peripherals and I/O pads back to normal run state
+            #if defined SUPPORT_LPTMR                                    // ensure no interrupts pending after waking from VLLS modes via LPTMR
+    POWER_UP_ATOMIC(5, LPTMR0);                                          // power up the low power timer
+    PMC_REGSC = PMC_REGSC_ACKISO;                                        // acknowledge the isolation mode to set certain peripherals and I/O pads back to normal run state
+    LPTMR0_CSR = 0;                                                      // clear possible pending interrupt and stop the timer
+    POWER_DOWN_ATOMIC(5, LPTMR0);                                        // power down the low power timer
+            #else
+    PMC_REGSC = PMC_REGSC_ACKISO;                                        // acknowledge the isolation mode to set certain peripherals and I/O pads back to normal run state
+            #endif
         #endif
     INIT_WATCHDOG_LED();                                                 // allow user configuration of a blink LED
         #if defined USER_STARTUP_CODE                                    // {40} allow user defined start-up code immediately after the watchdog configuration and before clock configuration to be defined
@@ -2324,7 +2331,15 @@ static void _LowLevelInit(void)
     #endif
     }
     #if defined SUPPORT_LOW_POWER && (defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000))
+        #if defined SUPPORT_LPTMR                                        // ensure no interrupts pending after waking from VLLS modes via LPTMR
+    POWER_UP_ATOMIC(5, LPTMR0);                                          // power up the low power timer
     PMC_REGSC = PMC_REGSC_ACKISO;                                        // acknowledge the isolation mode to set certain peripherals and I/O pads back to normal run state
+    LPTMR0_CSR = 0;                                                      // clear possible pending interrupt and stop the timer
+    POWER_DOWN_ATOMIC(5, LPTMR0);                                        // power down the low power timer
+    fnClearPending(irq_LPTMR0_ID);
+        #else
+    PMC_REGSC = PMC_REGSC_ACKISO;                                        // acknowledge the isolation mode to set certain peripherals and I/O pads back to normal run state
+        #endif
     #endif
     INIT_WATCHDOG_LED();                                                 // allow user configuration of a blink LED
 #endif

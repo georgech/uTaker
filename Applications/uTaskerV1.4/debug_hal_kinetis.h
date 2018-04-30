@@ -32,7 +32,7 @@
     22.02.2014 Add FRDM_KL02Z, FRDM_KL05Z and FRDM_KE02Z                 {9}
     08.04.2014 Add FRDM_K64F                                             {10}
     06.07.2014 Add Kinetis KE reset cause                                {11}
-    15.07.2014 Add fnShowLowPowerMode() and fnSetLowPowerMode)           {12}
+    15.07.2014 Add fnShowLowPowerMode() and fnSetLowPowerMode()          {12}
     09.11.2014 Add FRDM_KE04Z, defined FRDM_KL03Z, FRDM_K22F and TWR_K22F120M
     04.12.2014 Add FRDM_KL43Z
     16.02.2015 Add TWR_KL43Z48M
@@ -2318,6 +2318,125 @@ extern unsigned char fnAddResetCause(CHAR *ptrBuffer)
 
 
 #if defined SUPPORT_LOW_POWER                                            // {12}
+extern void fnShowThisLowPowerMode(int iThisMode)
+{
+    switch (iThisMode) {
+    case RUN_MODE:
+        fnDebugMsg("RUN");                                               // no low power mode used
+        break;
+    case WAIT_MODE:
+        fnDebugMsg("WAIT");
+        break;
+    case STOP_MODE:
+        fnDebugMsg("STOP");
+        break;
+    #if defined KINETIS_K22
+    case VLPR_MODE:
+        fnDebugMsg("VLPR");
+        break;
+    case VLPW_MODE:
+        fnDebugMsg("VLPW");
+        break;
+    case VLPS_MODE:
+        fnDebugMsg("VLPS");
+        break;
+    case LLS2_MODE:
+        fnDebugMsg("LLS2");
+        break;
+    case LLS3_MODE:
+        fnDebugMsg("LLS3");
+        break;
+    case VLLS0_MODE:
+        fnDebugMsg("VLLS0");
+        break;
+    case VLLS1_MODE:
+        fnDebugMsg("VLLS1");
+        break;
+    case VLLS2_MODE:
+        fnDebugMsg("VLLS2");
+        break;
+    case VLLS3_MODE:
+        fnDebugMsg("VLLS3");
+        break;
+    #elif defined KINETIS_KL17 || defined KINETIS_KL27
+    case VLPR_MODE:
+        fnDebugMsg("VLPR");
+        break;
+    case VLPW_MODE:
+        fnDebugMsg("VLPW");
+        break;
+    case VLPS_MODE:
+        fnDebugMsg("VLPS");
+        break;
+    case LLS_MODE:
+        fnDebugMsg("LLS");
+        break;
+    case VLLS0_MODE:
+        fnDebugMsg("VLLS0");
+        break;
+    case VLLS1_MODE:
+        fnDebugMsg("VLLS1");
+        break;
+    case VLLS3_MODE:
+        fnDebugMsg("VLLS3");
+        break;
+    #elif defined KINETIS_KL03
+    case PSTOP1_MODE:
+        fnDebugMsg("PSTOP1");
+        break;
+    case PSTOP2_MODE:
+        fnDebugMsg("PSTOP2");
+        break;
+    case VLPR_MODE:
+        fnDebugMsg("VLPR");
+        break;
+    case VLPW_MODE:
+        fnDebugMsg("VLPW");
+        break;
+    case VLPS_MODE:
+        fnDebugMsg("VLPS");
+        break;
+    case VLLS0_MODE:
+        fnDebugMsg("VLLS0");
+        break;
+    case VLLS1_MODE:
+        fnDebugMsg("VLLS1");
+        break;
+    case VLLS3_MODE:
+        fnDebugMsg("VLLS3");
+        break;
+    #elif !defined KINETIS_KE
+    case VLPR_MODE:
+        fnDebugMsg("VLPR");
+        break;
+    case VLPS_MODE:
+        fnDebugMsg("VLPS");
+        break;
+    case LLS_MODE:
+        fnDebugMsg("LLS");
+        break;
+    case VLLS0_MODE:
+        fnDebugMsg("VLLS0");
+        break;
+    case VLLS1_MODE:
+        fnDebugMsg("VLLS1");
+        break;
+        #if defined KINETIS_KL
+    case VLLS3_MODE:
+        fnDebugMsg("VLLS3");
+        break;
+        #else
+    case VLLS2_MODE:
+        fnDebugMsg("VLLS2");
+        break;
+    case VLLS3_MODE:
+        fnDebugMsg("VLLS3");
+        break;
+        #endif
+    #endif
+    }
+}
+
 // Display the low power modes that the processor offers and show presently active one
 //
 extern void fnShowLowPowerMode(void)
@@ -2329,121 +2448,9 @@ extern void fnShowLowPowerMode(void)
     iPresentMode = fnGetLowPowerMode();                                  // get the present mode from the device
 
     for (iMode = 0; iMode <= MAX_LP_MODES; iMode++) {                    // display the possible low power modes
-        switch (iMode) {
-        case RUN_MODE:
-            fnDebugMsg("0 = RUN");                                       // no low power mode used
-            break;
-        case WAIT_MODE:
-            fnDebugMsg("1 = WAIT");
-            break;
-        case STOP_MODE:
-            fnDebugMsg("2 = STOP");
-            break;
-    #if defined KINETIS_K22
-        case VLPR_MODE:
-            fnDebugMsg("3 = VLPR");
-            break;
-        case VLPW_MODE:
-            fnDebugMsg("4 = VLPW");
-            break;
-        case VLPS_MODE:
-            fnDebugMsg("5 = VLPS");
-            break;
-        case LLS2_MODE:
-            fnDebugMsg("6 = LLS2");
-            break;
-        case LLS3_MODE:
-            fnDebugMsg("7 = LLS3");
-            break;
-        case VLLS0_MODE:
-            fnDebugMsg("8 = VLLS0");
-            break;
-        case VLLS1_MODE:
-            fnDebugMsg("9 = VLLS1");
-            break;
-        case VLLS2_MODE:
-            fnDebugMsg("10 = VLLS2");
-            break;
-        case VLLS3_MODE:
-            fnDebugMsg("11 = VLLS3");
-            break;
-    #elif defined KINETIS_KL17 || defined KINETIS_KL27
-        case VLPR_MODE:
-            fnDebugMsg("3 = VLPR");
-            break;
-        case VLPW_MODE:
-            fnDebugMsg("4 = VLPW");
-            break;
-        case VLPS_MODE:
-            fnDebugMsg("5 = VLPS");
-            break;
-        case LLS_MODE:
-            fnDebugMsg("6 = LLS");
-            break;
-        case VLLS0_MODE:
-            fnDebugMsg("7 = VLLS0");
-            break;
-        case VLLS1_MODE:
-            fnDebugMsg("8 = VLLS1");
-            break;
-        case VLLS3_MODE:
-            fnDebugMsg("9 = VLLS3");
-            break;
-    #elif defined KINETIS_KL03
-        case PSTOP1_MODE:
-            fnDebugMsg("3 = PSTOP1");
-            break;
-        case PSTOP2_MODE:
-            fnDebugMsg("4 = PSTOP2");
-            break;
-        case VLPR_MODE:
-            fnDebugMsg("5 = VLPR");
-            break;
-        case VLPW_MODE:
-            fnDebugMsg("6 = VLPW");
-            break;
-        case VLPS_MODE:
-            fnDebugMsg("7 = VLPS");
-            break;
-        case VLLS0_MODE:
-            fnDebugMsg("8 = VLLS0");
-            break;
-        case VLLS1_MODE:
-            fnDebugMsg("9 = VLLS1");
-            break;
-        case VLLS3_MODE:
-            fnDebugMsg("10 = VLLS3");
-            break;
-    #elif !defined KINETIS_KE
-        case VLPR_MODE:
-            fnDebugMsg("3 = VLPR");
-            break;
-        case VLPS_MODE:
-            fnDebugMsg("4 = VLPS");
-            break;
-        case LLS_MODE:
-            fnDebugMsg("5 = LLS");
-            break;
-        case VLLS0_MODE:
-            fnDebugMsg("6 = VLLS0");
-            break;
-        case VLLS1_MODE:
-            fnDebugMsg("7 = VLLS1");
-            break;
-        #if defined KINETIS_KL
-        case VLLS3_MODE:
-            fnDebugMsg("8 = VLLS3");
-            break;
-        #else
-        case VLLS2_MODE:
-            fnDebugMsg("8 = VLLS2");
-            break;
-        case VLLS3_MODE:
-            fnDebugMsg("9 = VLLS3");
-            break;
-        #endif
-    #endif
-        }
+        fnShowThisLowPowerMode(iMode);
+        fnDebugMsg(" = ");
+        fnDebugDec(iMode, 0);
         if (iPresentMode == iMode) {
             fnDebugMsg(" [active]");                                     // this mode is presently active
         }

@@ -966,7 +966,9 @@ extern void fnSetPortOut(unsigned char ucPortOutputs, int iInitialisation)
             switch (ucBit) {
             case 0x01:
                 if (iInitialisation != 0) {
-    #if defined _STM32L432
+    #if defined _STM32L031
+                    RCC_IOPENR |= (RCC_IOPENR_IOPBEN);                   // ensure port is powered up
+    #elif defined _STM32L432
                     POWER_UP(AHB2, RCC_AHB2ENR_GPIOBEN);                 // ensure port is powered up
     #else
                     POWER_UP(AHB1, RCC_AHB1ENR_GPIOBEN);                 // ensure port is powered up
@@ -981,7 +983,9 @@ extern void fnSetPortOut(unsigned char ucPortOutputs, int iInitialisation)
                 break;
             case 0x02:
                 if (iInitialisation != 0) {
-    #if defined _STM32L432
+    #if defined _STM32L031
+                    RCC_IOPENR |= (RCC_IOPENR_IOPBEN);                   // ensure port is powered up
+    #elif defined _STM32L432
                     POWER_UP(AHB2, RCC_AHB2ENR_GPIOBEN);                 // ensure port is powered up
     #else
                     POWER_UP(AHB1, RCC_AHB1ENR_GPIOBEN);                 // ensure port is powered up
@@ -996,7 +1000,9 @@ extern void fnSetPortOut(unsigned char ucPortOutputs, int iInitialisation)
                 break;
             case 0x04:
                 if (iInitialisation != 0) {
-    #if defined _STM32L432
+    #if defined _STM32L031
+                    RCC_IOPENR |= (RCC_IOPENR_IOPBEN);                   // ensure port is powered up
+    #elif defined _STM32L432
                     POWER_UP(AHB2, RCC_AHB2ENR_GPIOBEN);                 // ensure port is powered up
     #else
                     POWER_UP(AHB1, RCC_AHB1ENR_GPIOBEN);                 // ensure port is powered up
@@ -1298,7 +1304,10 @@ extern unsigned char fnAddResetCause(CHAR *ptrBuffer)
     static const CHAR cLowPower[]      = "Low power";
     static const CHAR cPinReset[]      = "Reset pin";
     #if defined RCC_CSR_FWRSTF
-    static const CHAR cFirwallReset[]  = "Firewall reset";
+    static const CHAR cFirwallReset[]  = "Firewall";
+    #endif
+    #if defined RCC_CSR_OBLRSTF
+    static const CHAR cOBLReset[]      = "OBL";
     #endif
 
     static const CHAR cUnknown[]       = "???";
@@ -1318,8 +1327,13 @@ extern unsigned char fnAddResetCause(CHAR *ptrBuffer)
         ptrStr = cPinReset;
     }
     #if defined RCC_CSR_FWRSTF
-    else if ((ulRCC_CSR & RCC_CSR_FWRSTF) != 0) {                        //firewall reset
+    else if ((ulRCC_CSR & RCC_CSR_FWRSTF) != 0) {                        // firewall reset
         ptrStr = cFirwallReset;
+    }
+    #endif
+    #if defined RCC_CSR_OBLRSTF
+    else if ((ulRCC_CSR & RCC_CSR_OBLRSTF) != 0) {                       // options byte loading reset
+        ptrStr = cOBLReset;
     }
     #endif
     else if ((ulRCC_CSR & RCC_CSR_SFTRSTF) != 0) {                       // software commanded reset

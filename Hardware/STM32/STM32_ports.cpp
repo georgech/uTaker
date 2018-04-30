@@ -37,6 +37,8 @@
 
 #if defined _STM32L432
     #include "STM32L4XX_port.h"
+#elif defined _STM32L031
+    #include "STM32L031_port.h"
 #elif defined _STM32F7XX
     #include "STM32F7XX_port.h"
 #elif defined _STM32F2XX || defined _STM32F4XX
@@ -124,10 +126,10 @@ extern void fnSetPortDetails(char *cPortDetails, int iPort, int iBit, unsigned l
         unsigned char *ptrList = _ptrPerFunctions;
         int _iPort = iPort;
         int _iBit = iBit;
-        while (_iPort--) {
+        while (_iPort-- != 0) {
             ptrList += (PORT_WIDTH);
         }
-        while (_iBit--) {
+        while (_iBit-- != 0) {
             ptrList++;
         }
         if (*ptrList > _ALTERNATIVE_FUNCTIONS) {

@@ -167,6 +167,28 @@ typedef struct stSTM32_RCC
     unsigned long RCC_CSR;
     unsigned long RCC_CRRCR;
     unsigned long RCC_CCCIPR2;
+#elif defined _STM32L031
+    unsigned long RCC_CR;
+    unsigned long RCC_ICSCR;
+    unsigned long ulRes0;
+    unsigned long RCC_CFGR;
+    unsigned long RCC_CIER;
+    unsigned long RCC_CIFR;
+    unsigned long RCC_CICR;
+    unsigned long RCC_IOPRSTR;
+    unsigned long RCC_AHBRSTR;
+    unsigned long RCC_APB2RSTR;
+    unsigned long RCC_APB1RSTR;
+    unsigned long RCC_IOPENR;
+    unsigned long RCC_AHBENR;
+    unsigned long RCC_APB2ENR;
+    unsigned long RCC_APB1ENR;
+    unsigned long RCC_IOPSMEN;
+    unsigned long RCC_AHBSMENR;
+    unsigned long RCC_APB2SMENR;
+    unsigned long RCC_APB1SMENR;
+    unsigned long RCC_CCIPR;
+    unsigned long RCC_CSR;
 #else
     unsigned long RCC_CR;
     unsigned long RCC_CFGR;
@@ -409,20 +431,34 @@ unsigned long SDIO_FIFO31;
 
 typedef struct stSTM32_FMI
 {
-unsigned long FLASH_ACR;
-unsigned long FLASH_KEYR;
-unsigned long FLASH_OPTKEYR;
-unsigned long FLASH_SR;
-unsigned long FLASH_CR;
-unsigned long FLASH_AR;
-unsigned long ulRes0;
-unsigned long FLASH_OBR;
-unsigned long FLASH_WRPR;
-#ifdef XL_DENSITY
-    unsigned long FLASH_KEYR2;
-    unsigned long FLASH_SR2;
-    unsigned long FLASH_CR2;
-    unsigned long FLASH_AR2;
+#if defined _STM32L031
+    unsigned long FLASH_ACR;
+    unsigned long FLASH_PECR;
+    unsigned long FLASH_PDKEYR;
+    unsigned long FLASH_PKEYR;
+    unsigned long FLASH_PRGKEYR;
+    unsigned long FLASH_OPTKEYR;
+    unsigned long FLASH_SR;
+    unsigned long FLASH_OPTR;
+    unsigned long FLASH_WRPROT1;
+    unsigned long ulRes0[17];
+    unsigned long FLASH_WRPROT2;
+#else
+    unsigned long FLASH_ACR;
+    unsigned long FLASH_KEYR;
+    unsigned long FLASH_OPTKEYR;
+    unsigned long FLASH_SR;
+    unsigned long FLASH_CR;
+    unsigned long FLASH_AR;
+    unsigned long ulRes0;
+    unsigned long FLASH_OBR;
+    unsigned long FLASH_WRPR;
+    #ifdef XL_DENSITY
+        unsigned long FLASH_KEYR2;
+        unsigned long FLASH_SR2;
+        unsigned long FLASH_CR2;
+        unsigned long FLASH_AR2;
+    #endif
 #endif
 } STM32_FMI;
 
@@ -440,7 +476,7 @@ unsigned long EXTI_PR;
 
 typedef struct stSTM32_GPIO
 {
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432
+#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432 || defined _STM32L031
     unsigned long GPIO_MODER;
     unsigned long GPIO_OTYPER;
     unsigned long GPIO_OSPEEDR;
@@ -451,7 +487,7 @@ typedef struct stSTM32_GPIO
     unsigned long GPIO_LCKR;
     unsigned long GPIO_AFRL;
     unsigned long GPIO_AFRH;
-    #if defined _STM32L432
+    #if defined _STM32L432 || defined _STM32L031
         unsigned long GPIO_BRR;
     #endif
 #else
@@ -869,7 +905,7 @@ unsigned short SPI2_I2SPR;
 } STM32_SPI_I2S;
 
 
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432
+#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432 || defined _STM32L031
 typedef struct stSTM32_SYSCFG
 {
 unsigned long SYSCFG_MEMRM;
@@ -1307,7 +1343,7 @@ typedef struct stSTR32M_PERIPH
     STM32_CAN            CAN;
     STM32_CAN_SLAVE      CAN_SLAVE;
 
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432
+#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432 || defined _STM32L031
     STM32_SPI_I2S        SPI_I2S[3];
     STM32_SYSCFG         SYSCFG;
     STM32_FSMC           FSMC;

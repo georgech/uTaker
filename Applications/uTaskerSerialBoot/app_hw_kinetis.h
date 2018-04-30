@@ -1898,22 +1898,27 @@
     //
     #define SET_SPI_SD_INTERFACE_FULL_SPEED() SPI0_MCR |= SPI_MCR_HALT; SPI0_CTAR0 = (SPI_CTAR_FMSZ_8 | SPI_CTAR_CPOL | SPI_CTAR_CPHA | SPI_CTAR_BR_2 | SPI_CTAR_DBR); SPI0_MCR &= ~SPI_MCR_HALT;
     #if defined _WINDOWS
-        #define WRITE_SPI_CMD(byte)     SPI0_SR &= ~(SPI_SR_RFDF); SPI0_PUSHR = (byte | SPI_PUSHR_PCS_NONE | SPI_PUSHR_CTAS_CTAR0); SPI0_POPR = _fnSimSD_write((unsigned char)byte)
-        #define WAIT_TRANSMISSON_END() while (!(SPI0_SR & (SPI_SR_RFDF))) { SPI0_SR |= (SPI_SR_RFDF); }
+        #define WRITE_SPI_CMD(byte)    SPI0_SR &= ~(SPI_SR_RFDF); SPI0_PUSHR = (byte | SPI_PUSHR_PCS_NONE | SPI_PUSHR_CTAS_CTAR0); SPI0_POPR = _fnSimSD_write((unsigned char)byte)
+        #define WAIT_TRANSMISSON_END() while ((SPI0_SR & (SPI_SR_RFDF)) == 0) { SPI0_SR |= (SPI_SR_RFDF); }
         #define READ_SPI_DATA()        (unsigned char)SPI0_POPR
     #else
         #define WRITE_SPI_CMD(byte)    SPI0_SR = (SPI_SR_RFDF); SPI0_PUSHR = (byte | SPI_PUSHR_PCS_NONE | SPI_PUSHR_CTAS_CTAR0) // clear flags before transmitting (and receiving) a single byte
-        #define WAIT_TRANSMISSON_END() while (!(SPI0_SR & (SPI_SR_RFDF))) {}
+        #define WAIT_TRANSMISSON_END() while ((SPI0_SR & (SPI_SR_RFDF)) == 0) {}
         #define READ_SPI_DATA()        (unsigned char)SPI0_POPR
     #endif
     #define SET_SD_DI_CS_HIGH()  _SETBITS(C, SPI_CS1_0)                  // force DI and CS lines high ready for the initialisation sequence
     #define SET_SD_CS_LOW()      _CLEARBITS(C, SPI_CS1_0)                // assert the CS line of the SD card to be read
     #define SET_SD_CS_HIGH()     _SETBITS(C, SPI_CS1_0)                  // negate the CS line of the SD card to be read
     #define POWER_UP_SD_CARD()                                           // apply power to the SD card if appropriate
-
     #define POWER_DOWN_SD_CARD()                                         // remove power from SD card interface
     #define GET_SDCARD_WP_STATE() 0                                      // no write protect switch available
     #define SDCARD_DETECTION()    0                                      // card detection input not present
+
+    #define RETAIN_LOADER_MODE()   (_READ_PORT_MASK(C, SWITCH_2) == 0)
+
+    #define USB_HOST_POWER_CONFIG()
+    #define USB_HOST_POWER_ON()                                          // the FRDM-K22F doesn't have a USB power supply that can be controlled, instead jumper J22 can be manually shorted so that the 5V power from the OpenSDA circuit is connected
+    #define USB_HOST_POWER_OFF()
 #elif defined BLAZE_K22
     #define EXT_IO0                (PORTA_BIT0)                          // warning - this pin is JTAG_TCLK
     #define EXT_IO1                (PORTA_BIT1)                          // IoT UART; warning - this pin is JTAG_TDI
@@ -3049,6 +3054,10 @@
     #define _CONFIGURE_RTS_2_LOW()
     #define _SET_RTS_2_HIGH()
     #define _SET_RTS_2_LOW()
+
+    #define USB_HOST_POWER_CONFIG()
+    #define USB_HOST_POWER_ON()                                          // the FRDM-K27Z doesn't have a USB power supply so must be modified for operation
+    #define USB_HOST_POWER_OFF()
 #elif defined TEENSY_LC
     #define BLINK_LED              (PORTC_BIT5)                          // (green LED) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
     #define SWITCH_1               (PORTB_BIT0)                          // (pin 16) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too

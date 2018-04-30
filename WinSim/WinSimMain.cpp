@@ -599,27 +599,47 @@ unsigned long *pPixels = 0;
         #define PORT_FIRST_LINE   270
         #define PORT_DISPLAY_LEFT 149
     #else                                                                // connectivity line
-        #if defined _STM32F7XX
+        #if defined _STM32L4XX
+            #if defined _EXE
+                #define CHIP_PACKAGE "stm32L4.bmp"
+            #else
+                #define CHIP_PACKAGE "..//..//..//Hardware//STM32//GUI//stm32L4.bmp"
+            #endif
+            #define PORT_FIRST_LINE     320
+            #define PORT_DISPLAY_LEFT   154
+        #elif defined _STM32L0
+            #if defined _EXE
+                #define CHIP_PACKAGE "stm32L0.bmp"
+            #else
+                #define CHIP_PACKAGE "..//..//..//Hardware//STM32//GUI//stm32L0.bmp"
+            #endif
+            #define PORT_FIRST_LINE     260
+            #define PORT_DISPLAY_LEFT   154
+        #elif defined _STM32F7XX
             #if defined _EXE
                 #define CHIP_PACKAGE "stm32f746.bmp"
             #else
                 #define CHIP_PACKAGE "..//..//..//Hardware//STM32//GUI//stm32f746.bmp"
             #endif
+            #define PORT_FIRST_LINE     320
+            #define PORT_DISPLAY_LEFT   154
         #elif defined _STM32F4XX                                         // {76}
             #if defined _EXE
                 #define CHIP_PACKAGE "stm32f407.bmp"
             #else
                 #define CHIP_PACKAGE "..//..//..//Hardware//STM32//GUI//stm32f407.bmp"
             #endif
+            #define PORT_FIRST_LINE     320
+            #define PORT_DISPLAY_LEFT   154
         #else
             #if defined _EXE
                 #define CHIP_PACKAGE "stm32f107.bmp"
             #else
                 #define CHIP_PACKAGE "..//..//..//Hardware//STM32//GUI//stm32f107.bmp"
             #endif
+            #define PORT_FIRST_LINE     320
+            #define PORT_DISPLAY_LEFT   154
         #endif
-        #define PORT_FIRST_LINE   320
-        #define PORT_DISPLAY_LEFT 154
     #endif
     #define START_PORTS_X (PORT_DISPLAY_LEFT)
     #define PORT_TEXT_LENGTH 8
@@ -895,7 +915,7 @@ static void fnSimPortInputToggle(int iPort, int iPortBit);
 #elif defined _AT32UC3C && defined CHIP_64_PIN                           // {87}
     #define UTASKER_WIN_HEIGHT 480
 #elif defined _STM32
-    #define UTASKER_WIN_HEIGHT  (381 + (24 * _PORTS_AVAILABLE))          // {71}
+    #define UTASKER_WIN_HEIGHT  (PORT_FIRST_LINE + 61 + (24 * _PORTS_AVAILABLE)) // {71}
 #else
     #define UTASKER_WIN_HEIGHT 580
 #endif

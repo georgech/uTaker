@@ -170,15 +170,16 @@
     //
     // Nucleo 32 range
     //
-    #define NUCLEO_L432KC
+    //#define NUCLEO_L432KC                                              // evaluation boad with STM32L432 (cortex-m4 with FPU)
+      #define NUCLEO_L031K6                                              // evaluation boad with STM32L032 (cortex-m0+)
 
-    //#define STM3210C_EVAL                                              // evaluation board with STM32F107VCT
-    //#define NUCLEO_F401RE                                              // evaluation board with STM32F401RET6
     // Nucleo 144 range
     //
+    //#define NUCLEO_F401RE                                              // evaluation board with STM32F401RET6
     //#define NUCLEO_F429ZI                                              // evaluation board with STM32F429ZIT6
-
     //#define NUCLEO_L476RG                                              // evaluation board with STM32L476RGT6U
+
+    //#define STM3210C_EVAL                                              // evaluation board with STM32F107VCT
     //#define WISDOM_STM32F407                                           // evaluation board with STM32F407ZET6
     //#define STM3240G_EVAL                                              // evaluation board with STM32F407IGH6
     //#define ST_MB913C_DISCOVERY                                        // discovery board with STM32F100RB
@@ -864,9 +865,21 @@
     #define DEVICE_WITHOUT_ETHERNET                                      // K82 doesn't have Ethernet controller
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((30 * 1024) * MEM_FACTOR)
 #elif defined NUCLEO_L432KC
+    #define STM_MAX_SPEED        80000000
     #define TARGET_HW            "NUCLEO-L432KC (STM32L432)"
+    #define _STM32L4XX
     #define _STM32L432                                                   // part type
     #define STM32_FPU                                                    // FPU present
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((16 * 1024) * MEM_FACTOR)
+    #define DEVICE_WITHOUT_USB                                           // the STM32 device has USB but the board doesn't allow it to be used directly
+    #define DEVICE_WITHOUT_ETHERNET                                      // the STM32 doesn't have ethernet
+    #define DEVICE_WITHOUT_DMA                                           // provisional during initial development
+#elif defined NUCLEO_L031K6
+    #define STM_MAX_SPEED        32000000
+    #define TARGET_HW            "NUCLEO-L031K6 (STM32L031K6)"
+    #define _STM32L0                                                     // cortex-m0+
+    #define _STM32L0x1                                                   // part family
+    #define _STM32L031                                                   // part type
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((16 * 1024) * MEM_FACTOR)
     #define DEVICE_WITHOUT_USB                                           // the STM32 device has USB but the board doesn't allow it to be used directly
     #define DEVICE_WITHOUT_ETHERNET                                      // the STM32 doesn't have ethernet
@@ -877,7 +890,8 @@
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((24 * 1024) * MEM_FACTOR) // we have the LAN buffers in HEAP and big RX/TX
 #elif defined NUCLEO_F401RE
     #define TARGET_HW            "NUCLEO-F401RE (STM32F401RET6)"
-    #define _STM32F4XX                                                   // part group
+    #define _STM32F4XX                                                   // part family
+    #define _STM32F401                                                   // part group
     #define DEVICE_WITHOUT_ETHERNET                                      // board doesn't have Ethernet without base-board
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((16 * 1024) * MEM_FACTOR)
 #elif defined NUCLEO_F429ZI
@@ -1169,7 +1183,7 @@
 #if defined DEVICE_WITHOUT_USB
     #define NUMBER_USB     0                                             // no physical queue needed
 #else
-    #define USB_INTERFACE                                                // enable USB driver interface
+  //#define USB_INTERFACE                                                // enable USB driver interface
     #if defined USB_INTERFACE
       //#define MICROSOFT_OS_STRING_DESCRIPTOR                           // support MODs
       //#define USB_HOST_SUPPORT                                         // host supported
@@ -1179,8 +1193,8 @@
             #define NUMBER_USB     (5 + 1)                               // physical queues (control plus 5 endpoints)
         #endif
         #if defined USB_DEVICE_SUPPORT                                   // define one or more device classes (multiple classes creates a composite device)
-            #define USE_USB_CDC                                          // USB-CDC (use also for Modbus over USB)
-          //#define USE_USB_MSD                                          // needs SD card to compile (or alternatives FLASH_FAT / SPI_FLASH_FAT / FAT_EMULATION)
+          //#define USE_USB_CDC                                          // USB-CDC (use also for Modbus over USB)
+            #define USE_USB_MSD                                          // needs SD card to compile (or alternatives FLASH_FAT / SPI_FLASH_FAT / FAT_EMULATION)
           //#define USE_USB_HID_MOUSE                                    // human interface device (mouse)
           //#define USE_USB_HID_KEYBOARD                                 // human interface device (keyboard)
               //#define USB_KEYBOARD_DELAY                               // enable inter-character delay control
@@ -2264,6 +2278,7 @@
     #undef QUICK_DEV_TASKS
     #undef RANDOM_NUMBER_GENERATOR
     #define NO_FLASH_SUPPORT
+    #define NO_PERIPHERAL_DEMONSTRATIONS
 #endif
 
 #if !defined _FREE_RTOS_APPLICATION && !defined INC_FREERTOS_H

@@ -82,7 +82,10 @@ static void fnSetDevice(unsigned short *port_inits)
     int i;
 #endif
     CPUID_BASE_REGISTER = 0x411fc231;
-#if defined _STM32L432
+#if defined _STM32L031
+    RCC_CR = (RCC_CR_MSIRDY | RCC_CR_MSION);                             // reset and clock control
+    RCC_ICSCR = (RCC_ICSCR_MSIRANGE_2_097M);
+#elif defined _STM32L432
     RCC_CR = (RCC_CR_MSIRANGE_4M | RCC_CR_MSIRDY | RCC_CR_MSION);        // reset and clock control
     RCC_CSR = (RCC_CSR_PINRSTF | RCC_CSR_PORRSTF | RCC_CSR_MSIRANGE_4M);
     RCC_APB1ENR1 = RCC_APB1ENR1_RTCAPBEN;
@@ -116,19 +119,39 @@ static void fnSetDevice(unsigned short *port_inits)
     #endif
 #elif defined _STM32L432
     RCC_AHB1ENR = (RCC_AHB1ENR_FLASHEN);
+#elif defined _STM32L031
+    RCC_AHBENR = RCC_AHBENR_MIFEN;
+    RCC_IOPSMEN = 0x0000009f;
+    RCC_AHBSMENR = 0x01001301;
+    RCC_APB2SMENR = 0x00405225;
+    RCC_APB1SMENR = 0xd07e4833;
+    RCC_CSR = 0x0c000000;
 #else
     RCC_AHB1ENR = (RCC_AHB1ENR_FLITFEN | RCC_AHB1ENR_SRAMEN);
 #endif
-
-    FLASH_CR = FLASH_CR_LOCK;                                            // FLASH controller
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
-    FLASH_OPTCR = 0x0fffaaed;
+#if defined _STM32L031
+    FLASH_PECR = 0x0000007;
+    FLASH_SR = 0x0000000c;
+    FLASH_OPTR = 0x807000aa;
 #else
+    FLASH_CR = FLASH_CR_LOCK;                                            // FLASH controller
+    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+    FLASH_OPTCR = 0x0fffaaed;
+    #else
     FLASH_WRPR = 0xffffffff;
     FLASH_OBR = 0x03fffffc;
+    #endif
 #endif
 
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432
+#if defined _STM32L031
+    GPIOA_MODER = 0xebfffcff;
+    GPIOA_PUPDR = 0x24000000;
+    GPIOB_MODER = 0xffffffff;
+    GPIOC_MODER = 0xffffffff;
+    GPIOD_MODER = 0xffffffff;
+    GPIOE_MODER = 0xffffffff;
+    GPIOH_MODER = 0xffffffff;
+#elif defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432
     GPIOA_MODER = 0xa8000000;
     GPIOB_MODER = 0x00000280;
     GPIOB_OSPEEDR = 0x000000c0;
@@ -1062,7 +1085,7 @@ static void fnHandleExti(unsigned short usOriginal, unsigned short usNew, unsign
 {
     VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)((unsigned char *)((unsigned char *)&vector_ram));
     int iInputCount = 0;
-    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432
+    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432 || defined _STM32L031
     unsigned long *ptrMux = SYSCFG_EXTICR1_ADDR;
     #else
     unsigned long *ptrMux = AFIO_EXTICR1_ADD;
@@ -1150,7 +1173,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
     if ((RCC_AHB2RSTR & (RCC_AHB2RSTR_GPIOARST << ucPort)) != 0) {       // check whether in reset
         return;                                                          // in reset so ignore
     }
-#else
+#elif !defined _STM32L031
     if ((RCC_APB2ENR & (RCC_APB2ENR_IOPAEN << ucPort)) == 0) {
         return;                                                          // not clocked so ignore
     }
@@ -1261,7 +1284,7 @@ extern int fnSimulateEthernetIn(unsigned char *ucData, unsigned short usLen, int
 static void fnUpdatePeripheral(int iPort, unsigned long ulPeriph)
 {
     int i = 0;
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432
+#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432 || defined _STM32L031
     int iHigh = 0;
     int iFunctionShift = 0;
     unsigned long ulMaskMode = 0x00000003;
@@ -1428,20 +1451,24 @@ static void fnUpdatePeripheral(int iPort, unsigned long ulPeriph)
                         break;
                     }
     #endif
-                    if ((!(AFIO_MAPR & USART3_FULLY_REMAPPED)) && (USART3_CR1 & USART_CR1_RE)) {
+    #if USARTS_AVAILABLE > 2
+                    if (((AFIO_MAPR & USART3_FULLY_REMAPPED) == 0) && ((USART3_CR1 & USART_CR1_RE) != 0)) {
                         ucPortFunctions[iPort][i] = 1;                   // USARTRX3
                     }
                     else {
                         ucPortFunctions[iPort][i] = 3;                   // I2C2_SCL
                     }
+    #endif
                     break;
                 case 11:
                     if (ETH_MACCR & (ETH_MACCR_RE | ETH_MACCR_TE)) {     // EMAC is enabled so assume this use
                         ucPortFunctions[iPort][i] = 0;                   // ETH_MII_TX_EN
                     }
-                    else if ((!(AFIO_MAPR & USART3_FULLY_REMAPPED)) && (USART3_CR1 & USART_CR1_RE)) {
+    #if USARTS_AVAILABLE > 2
+                    else if (((AFIO_MAPR & USART3_FULLY_REMAPPED) == 0) && ((USART3_CR1 & USART_CR1_RE) != 0)) {
                         ucPortFunctions[iPort][i] = 1;                   // USART3_RX
                     }
+    #endif
                     else {
                         ucPortFunctions[iPort][i] = 3;                   // I2C2_SDA
                     }
@@ -1474,23 +1501,27 @@ static void fnUpdatePeripheral(int iPort, unsigned long ulPeriph)
                     }
                     break;
                 case 10:
-                    if (((AFIO_MAPR & USART3_FULLY_REMAPPED) == USART3_PARTIALLY_REMAPPED) && (USART3_CR1 & USART_CR1_TE)) {
+    #if USARTS_AVAILABLE > 2
+                    if (((AFIO_MAPR & USART3_FULLY_REMAPPED) == USART3_PARTIALLY_REMAPPED) && ((USART3_CR1 & USART_CR1_TE) != 0)) {
                         ucPortFunctions[iPort][i] = 0;                   // USART3_TX
                     }
-    #if defined _CONNECTIVITY_LINE
+        #if defined _CONNECTIVITY_LINE
                     else if (AFIO_MAPR & SPI3_REMAP) {                   // alternative mapping (SPI3 PA4:PC10:PC11:PC12)
                         ucPortFunctions[iPort][i] = 0;                   // SPI3 this matches with the value in STM32_ports.c
                     }
+        #endif
     #endif
                     break;
                 case 11:
-                    if (((AFIO_MAPR & USART3_FULLY_REMAPPED) == USART3_PARTIALLY_REMAPPED) && (USART3_CR1 & USART_CR1_RE)) {
+    #if USARTS_AVAILABLE > 2
+                    if (((AFIO_MAPR & USART3_FULLY_REMAPPED) == USART3_PARTIALLY_REMAPPED) && ((USART3_CR1 & USART_CR1_RE) != 0)) {
                         ucPortFunctions[iPort][i] = 0;                   // USART3_RX
                     }
-    #if defined _CONNECTIVITY_LINE
+        #if defined _CONNECTIVITY_LINE
                     else if (AFIO_MAPR & SPI3_REMAP) {                   // alternative mapping (SPI3 PA4:PC10:PC11:PC12)
                         ucPortFunctions[iPort][i] = 0;                   // SPI3 this matches with the value in STM32_ports.c
                     }
+        #endif
     #endif
                     break;
                 case 12:
@@ -1511,10 +1542,11 @@ static void fnUpdatePeripheral(int iPort, unsigned long ulPeriph)
             if (ulBit & ulPeriph) {                                      // for each port bit that has a peripheral function
                 switch (i) {
                 case 8:
-                    if (((AFIO_MAPR & USART3_FULLY_REMAPPED) == USART3_FULLY_REMAPPED) && (USART3_CR1 & USART_CR1_TE)) {
+    #if USARTS_AVAILABLE > 2
+                    if (((AFIO_MAPR & USART3_FULLY_REMAPPED) == USART3_FULLY_REMAPPED) && ((USART3_CR1 & USART_CR1_TE) != 0)) {
                         ucPortFunctions[iPort][i] = 1;                   // USART3_TX
                     }
-    #if defined _CONNECTIVITY_LINE
+        #if defined _CONNECTIVITY_LINE
                     else if (AFIO_MAPR & ETH_REMAP) {                    // alternative mapping (EMAC PD8:PD9:PD10:PD11:PD12)
                         if (!(AFIO_MAPR & MII_RMII_SEL)) {               // MII
                             ucPortFunctions[iPort][i] = 0;               // this matches with the value in STM32_ports.c
@@ -1522,13 +1554,15 @@ static void fnUpdatePeripheral(int iPort, unsigned long ulPeriph)
                         else {                                           // RMII
                         }
                     }
+        #endif
     #endif
                     break;
                 case 9:
-                    if (((AFIO_MAPR & USART3_FULLY_REMAPPED) == USART3_FULLY_REMAPPED) && (USART3_CR1 & USART_CR1_RE)) {
+    #if USARTS_AVAILABLE > 2
+                    if (((AFIO_MAPR & USART3_FULLY_REMAPPED) == USART3_FULLY_REMAPPED) && ((USART3_CR1 & USART_CR1_RE) != 0)) {
                         ucPortFunctions[iPort][i] = 1;                   // USART3_RX
                     }
-    #if defined _CONNECTIVITY_LINE
+        #if defined _CONNECTIVITY_LINE
                     else if (AFIO_MAPR & ETH_REMAP) {                    // alternative mapping (EMAC PD8:PD9:PD10:PD11:PD12)
                         if (!(AFIO_MAPR & MII_RMII_SEL)) {               // MII
                             ucPortFunctions[iPort][i] = 0;               // this matches with the value in STM32_ports.c
@@ -1536,6 +1570,7 @@ static void fnUpdatePeripheral(int iPort, unsigned long ulPeriph)
                         else {                                           // RMII
                         }
                     }
+        #endif
     #endif
                     break;
                 case 10:
@@ -1735,7 +1770,7 @@ static unsigned short fnGetPortType(int portNr, int iRequest, int i)
 {
     unsigned short usPeripherals = 0;
     unsigned short usBit = 0x0001;
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432
+#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432 || defined _STM32L031
     unsigned long ulMask = 0x00000003;
     STM32_GPIO *ptrPort = &STM32.Ports[portNr];
     if (GET_OUTPUTS == iRequest) {
@@ -1754,17 +1789,21 @@ static unsigned short fnGetPortType(int portNr, int iRequest, int i)
                 usPeripherals |= usBit;
             }
             else if (((ptrPort->GPIO_MODER & ulMask) >> (i * 2)) == GPIO_MODER_ANALOG) { // if port bit set as analog function
+    #if !defined _STM32L031
                 usPeripherals |= usBit;
+    #endif
             }
             usBit <<= 1;
             ulMask <<= 2;
             i++;
         }
+    #if !defined _STM32L031
         if (portNr == _GPIO_H) {                                         // {2}
-            if (RCC_CR & RCC_CR_HSEON) {                                 // if external oscillator is enabled
+            if ((RCC_CR & RCC_CR_HSEON) != 0) {                          // if external oscillator is enabled
                 usPeripherals |= (PORTH_BIT0 | PORTH_BIT1);              // OSC_IN and OSC_OUT enabled on PH0 and PH1
             }
         }
+    #endif
     }
 #else
     unsigned long  ulReg;
@@ -1895,9 +1934,11 @@ static unsigned short fnGetPortType(int portNr, int iRequest, int i)
                         break;
     #endif
                     case 11:
-                        if ((!(AFIO_MAPR & USART3_FULLY_REMAPPED)) && (USART3_CR1 & USART_CR1_RE)) { // if USART3 rx is enabled
+    #if USARTS_AVAILABLE > 2
+                        if ((!(AFIO_MAPR & USART3_FULLY_REMAPPED)) && ((USART3_CR1 & USART_CR1_RE) != 0)) { // if USART3 rx is enabled
                             usPeripherals |= usBit;                      // peripheral input
                         }
+    #endif
                         break;
                     }
                 }
@@ -1941,12 +1982,14 @@ static unsigned short fnGetPortType(int portNr, int iRequest, int i)
                         break;
     #endif
                     case 11:
-                        if (((AFIO_MAPR & USART3_FULLY_REMAPPED) == USART3_PARTIALLY_REMAPPED) && (USART3_CR1 & USART_CR1_RE)) {
+    #if USARTS_AVAILABLE > 2
+                        if (((AFIO_MAPR & USART3_FULLY_REMAPPED) == USART3_PARTIALLY_REMAPPED) && ((USART3_CR1 & USART_CR1_RE) != 0)) {
                             usPeripherals |= usBit;                      // USART3_RX
                         }
-                        else if (SPI3_CR1 & SPICR1_SPE) {                // SPI3 is enabled so assume peripheral input
+                        else if ((SPI3_CR1 & SPICR1_SPE) != 0) {         // SPI3 is enabled so assume peripheral input
                             usPeripherals |= usBit;                      // peripheral input
                         }
+    #endif
                         break;
                     }
                 }
@@ -1976,18 +2019,20 @@ static unsigned short fnGetPortType(int portNr, int iRequest, int i)
                 if ((ulReg & ALTERNATIVE_FUNCTION) && (ulReg & OUTPUT_FAST)) { // mode set to peripheral output function
                     usPeripherals |= usBit;                              // peripheral output
                 }
-                else if (!(ulReg & OUTPUT_FAST)) {                       // input but could be attached to peripheral
+                else if ((ulReg & OUTPUT_FAST) == 0) {                   // input but could be attached to peripheral
                     switch (i) {
                     case 9:
-                        if (((AFIO_MAPR & USART3_FULLY_REMAPPED) == USART3_FULLY_REMAPPED) && (USART3_CR1 & USART_CR1_RE)) {
+    #if USARTS_AVAILABLE > 2
+                        if (((AFIO_MAPR & USART3_FULLY_REMAPPED) == USART3_FULLY_REMAPPED) && ((USART3_CR1 & USART_CR1_RE) != 0)) {
                             usPeripherals |= usBit;                      // USART3_RX
                         }
-    #if defined _CONNECTIVITY_LINE
+        #if defined _CONNECTIVITY_LINE
                         else if (AFIO_MAPR & ETH_REMAP) {                // alternative mapping (EMAC PD8:PD9:PD10:PD11:PD12)
                             if (ETH_MACCR & (ETH_MACCR_RE | ETH_MACCR_TE)) { // EMAC is enabled so assume peripheral input
                                 usPeripherals |= usBit;                  // peripheral input
                             }
                         }
+        #endif
     #endif
                         break;
                     case 8:

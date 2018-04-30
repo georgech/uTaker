@@ -148,6 +148,7 @@ extern void fnAddDiscoverySerialNumber(CHAR *ptrBuffer, int iMaxLength); // {19}
 extern void fnInitialiseSNMP(void);                                      // {21}
 extern void fnDisplayIP(unsigned char *ptrIP);                           // {22}
 extern void fnShowLowPowerMode(void);                                    // {24}
+extern void fnShowThisLowPowerMode(int iThisMode);
 extern void fnHandleFreeMaster(QUEUE_HANDLE comHandle, unsigned char *ptr_ucBuffer, QUEUE_TRANSFER Length);
 #if defined SUPPORT_SLCD && defined STOP_WATCH_APPLICATION
     extern void fnStopWatchApplication(void);
