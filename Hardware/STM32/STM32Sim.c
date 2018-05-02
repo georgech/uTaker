@@ -174,7 +174,7 @@ static void fnSetDevice(unsigned short *port_inits)
     GPIOG_CRH = 0x44444444;
 #endif
 
-#if defined _STM32F7XX || defined _STM32L432
+#if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1
     USART1_ISR = (0x02000000 | USART_ISR_TXE | USART_ISR_TC);
     USART2_ISR = (0x02000000 | USART_ISR_TXE | USART_ISR_TC);
     #if USARTS_AVAILABLE > 2
@@ -238,6 +238,9 @@ static void fnSetDevice(unsigned short *port_inits)
     ETH_MACCR   = 0x00008000;
 
     IWDG_RLR = 0xfff;                                                    // independent watchdog
+#if defined _STM32L432 || defined _STM32L031
+    IWDG_WINR = 0xfff;
+#endif
 
 #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX       // USB OTG FS
     OTG_FS_GOTGCTL  = OTG_FS_GOTGCTL_DHNPEN;
@@ -359,6 +362,54 @@ extern unsigned long fnGetFlashSize(int iMemory)
 extern STM32M_PERIPH  STM32 = {0};
 
 
+// Check whether a particular interrupt is enabled in the NVIC
+//
+static int fnGenInt(int iIrqID)
+{
+    if (iIrqID < 32) {
+        IRQ0_31_SPR |= (1 << iIrqID);
+        IRQ0_31_CPR = IRQ0_31_SPR;
+        if ((IRQ0_31_SER & (1 << iIrqID)) != 0) {                        // if interrupt is not disabled
+            return 1;
+        }
+    }
+    else if (iIrqID < 64) {
+        IRQ32_63_SPR |= (1 << (iIrqID - 32));
+        IRQ32_63_CPR = IRQ32_63_SPR;
+        if ((IRQ32_63_SER & (1 << (iIrqID - 32))) != 0) {                // if interrupt is not disabled
+            return 1;
+        }
+    }
+    else if (iIrqID < 96) {
+        IRQ64_95_SPR |= (1 << (iIrqID - 64));
+        IRQ64_95_CPR = IRQ64_95_SPR;
+        if ((IRQ64_95_SER & (1 << (iIrqID - 64))) != 0) {                // if interrupt is not disabled
+            return 1;
+        }
+    }
+    else if (iIrqID < 128) {
+        IRQ96_127_SPR |= (1 << (iIrqID - 96));
+        IRQ96_127_CPR = IRQ96_127_SPR;
+        if ((IRQ96_127_SER & (1 << (iIrqID - 96))) != 0) {               // if interrupt is not disabled
+            return 1;
+        }
+    }
+    else if (iIrqID < 160) {
+        IRQ128_159_SPR |= (1 << (iIrqID - 128));
+        IRQ128_159_CPR = IRQ128_159_SPR;
+        if ((IRQ128_159_SER & (1 << (iIrqID - 128))) != 0) {             // if interrupt is not disabled
+            return 1;
+        }
+    }
+    else if (iIrqID < 192) {
+        IRQ160_191_SPR |= (1 << (iIrqID - 164));
+        IRQ160_191_CPR = IRQ160_191_SPR;
+        if ((IRQ160_191_SER & (1 << (iIrqID - 164))) != 0) {             // if interrupt is not disabled
+            return 1;
+        }
+    }
+    return 0;
+}
 
 
 // Process simulated interrupts
@@ -380,13 +431,13 @@ extern unsigned long fnSimInts(char *argv[])
 		        iInts &= ~CHANNEL_0_SERIAL_INT;                          // interrupt has been handled
                 fnLogTx0((unsigned char)USART1_TDR);
                 ulNewActions |= SEND_COM_0;
-    #if defined _STM32F7XX || defined _STM32L432
+    #if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1
                 USART1_ISR |= USART_ISR_TXE;
     #else
                 USART1_SR |= USART_SR_TXE;
     #endif
                 if ((USART1_CR1 & USART_CR1_TXEIE) != 0) {               // if tx interrupts enabled
-                    if ((IRQ32_63_SER & (1 << (irq_USART1_ID - 32))) != 0) { // if USART 1 interrupt is not disabled
+                    if (fnGenInt(irq_USART1_ID) != 0) {                  // if USART 1 interrupt is not disabled
                         ptrVect->processor_interrupts.irq_USART1();      // call the interrupt handler
                     }
                 }
@@ -406,13 +457,13 @@ extern unsigned long fnSimInts(char *argv[])
 		        iInts &= ~CHANNEL_1_SERIAL_INT;                          // interrupt has been handled
                 fnLogTx1((unsigned char)USART2_TDR);
                 ulNewActions |= SEND_COM_1;
-    #if defined _STM32F7XX || defined _STM32L432
+    #if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1
                 USART2_ISR |= USART_ISR_TXE;
     #else
                 USART2_SR |= USART_SR_TXE;
     #endif
                 if ((USART2_CR1 & USART_CR1_TXEIE) != 0) {               // if tx interrupts enabled
-                    if ((IRQ32_63_SER & (1 << (irq_USART2_ID - 32))) != 0) { // if USART 2 interrupt is not disabled
+                    if (fnGenInt(irq_USART2_ID) != 0) {                  // if USART 2 interrupt is not disabled
                         ptrVect->processor_interrupts.irq_USART2();      // call the interrupt handler
                     }
                 }
@@ -432,7 +483,7 @@ extern unsigned long fnSimInts(char *argv[])
 		        iInts &= ~CHANNEL_2_SERIAL_INT;                          // interrupt has been handled
                 fnLogTx2((unsigned char)USART3_TDR);
                 ulNewActions |= SEND_COM_2;
-        #if defined _STM32F7XX || defined _STM32L432
+        #if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1
                 USART3_ISR |= USART_ISR_TXE;
         #else
                 USART3_SR |= USART_SR_TXE;
@@ -459,7 +510,7 @@ extern unsigned long fnSimInts(char *argv[])
 		        iInts &= ~CHANNEL_3_SERIAL_INT;                          // interrupt has been handled
                 fnLogTx3((unsigned char)UART4_TDR);
                 ulNewActions |= SEND_COM_3;
-        #if defined _STM32F7XX || defined _STM32L432
+        #if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1
                 UART4_ISR |= USART_ISR_TXE;
         #else
                 UART4_SR |= USART_SR_TXE;
@@ -486,7 +537,7 @@ extern unsigned long fnSimInts(char *argv[])
 		        iInts &= ~CHANNEL_4_SERIAL_INT;                          // interrupt has been handled
                 fnLogTx4((unsigned char)UART5_TDR);
                 ulNewActions |= SEND_COM_4;
-        #if defined _STM32F7XX || defined _STM32L432
+        #if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1
                 UART5_ISR |= USART_ISR_TXE;
         #else
                 UART5_SR |= USART_SR_TXE;
@@ -772,7 +823,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
     switch (iPort) {
     case 0:                                                              // USART 1
 	    while (usLen-- != 0) {
-    #if defined _STM32F7XX || defined _STM32L432
+    #if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1
 		    USART1_RDR = *ptrDebugIn++;                                  // put received byte to input buffer
             USART1_ISR |= USART_ISR_RXNE;
     #else
@@ -780,7 +831,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
             USART1_SR |= USART_SR_RXNE;
     #endif
             if ((USART1_CR1 & USART_CR1_RXNEIE) != 0) {                  // if rx interrupts enabled
-                if ((IRQ32_63_SER & (1 << (irq_USART1_ID - 32))) != 0) { // if USART 1 interrupt is not disabled
+                if (fnGenInt(irq_USART1_ID) != 0) {                      // if USART 1 interrupt is not disabled
                     ptrVect->processor_interrupts.irq_USART1();          // call the interrupt handler (note that UART0 is refered to as USART1 at the STM32)
                 }
             }
@@ -788,7 +839,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
         break;
     case 1:                                                              // USART 2
 	    while (usLen-- != 0) {
-    #if defined _STM32F7XX || defined _STM32L432
+    #if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1
 		    USART2_RDR = *ptrDebugIn++;                                  // put received byte to input buffer
             USART2_ISR |= USART_ISR_RXNE;
     #else
@@ -796,7 +847,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
             USART2_SR |= USART_SR_RXNE;
     #endif
             if ((USART2_CR1 & USART_CR1_RXNEIE) != 0) {                  // if rx interrupts enabled
-                if ((IRQ32_63_SER & (1 << (irq_USART2_ID - 32))) != 0) { // if USART 2 interrupt is not disabled
+                if (fnGenInt(irq_USART2_ID) != 0) {                      // if USART 2 interrupt is not disabled
                     ptrVect->processor_interrupts.irq_USART2();          // call the interrupt handler
                 }
             }
@@ -805,7 +856,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
     #if USARTS_AVAILABLE > 2
     case 2:                                                              // USART 3
 	    while (usLen-- != 0) {
-        #if defined _STM32F7XX || defined _STM32L432
+        #if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1
 		    USART3_RDR = *ptrDebugIn++;                                  // put received byte to input buffer
             USART3_ISR |= USART_ISR_RXNE;
         #else
@@ -1097,44 +1148,46 @@ static void fnHandleExti(unsigned short usOriginal, unsigned short usNew, unsign
     while (usChange != 0) {                                              // while all changes have not been checked
         if ((usChange & usBit) != 0) {                                   // change on this input
             if (((*ptrMux >> (4 * iInputCount)) & 0xf) == ucPort) {      // if this input is connected to this port
-                if ((usBit & usRising & EXTI_RTSR) || (usBit & usFalling & EXTI_FTSR)) {  // if the particular edge is enabled
+                if (((usBit & usRising & EXTI_RTSR) != 0) || ((usBit & usFalling & EXTI_FTSR) != 0)) {  // if the particular edge is enabled
                     EXTI_PR |= usBit;                                    // set the interrupt pending bit
-                    if (usBit & EXTI_IMR) {                             // interrupt not masked
-                        if (usBit & 0x0001) {
+                    if ((usBit & EXTI_IMR) != 0) {                       // interrupt not masked
+    #if defined irq_EXTI0_ID
+                        if ((usBit & 0x0001) != 0) {
                             if (IRQ0_31_SER & (1 << irq_EXTI0_ID)) {    // if EXTI0 interrupt is not disabled
                                 ptrVect->processor_interrupts.irq_EXTI0(); // call the interrupt handler
                             }
                         }
-                        else if (usBit & 0x0002) {
+                        else if ((usBit & 0x0002) != 0) {
                             if (IRQ0_31_SER & (1 << irq_EXTI1_ID)) {    // if EXTI1 interrupt is not disabled
                                 ptrVect->processor_interrupts.irq_EXTI1(); // call the interrupt handler
                             }
                         }
-                        else if (usBit & 0x0004) {
+                        else if ((usBit & 0x0004) != 0) {
                             if (IRQ0_31_SER & (1 << irq_EXTI2_ID)) {    // if EXTI2 interrupt is not disabled
                                 ptrVect->processor_interrupts.irq_EXTI2(); // call the interrupt handler
                             }
                         }
-                        else if (usBit & 0x0008) {
+                        else if ((usBit & 0x0008) != 0) {
                             if (IRQ0_31_SER & (1 << irq_EXTI3_ID)) {    // if EXTI3 interrupt is not disabled
                                 ptrVect->processor_interrupts.irq_EXTI3(); // call the interrupt handler
                             }
                         }
-                        else if (usBit & 0x0010) {
-                            if (IRQ0_31_SER & (1 << irq_EXTI4_ID)) {    // if EXTI3 interrupt is not disabled
+                        else if ((usBit & 0x0010) != 0) {
+                            if ((IRQ0_31_SER & (1 << irq_EXTI4_ID)) != 0) {    // if EXTI3 interrupt is not disabled
                                 ptrVect->processor_interrupts.irq_EXTI4(); // call the interrupt handler
                             }
                         }
-                        else if (usBit & 0x03e0) {
+                        else if ((usBit & 0x03e0) != 0) {
                             if (IRQ0_31_SER & (1 << irq_EXTI9_5_ID)) {   // if EXTI5..9 interrupt is not disabled
                                 ptrVect->processor_interrupts.irq_EXTI9_5(); // call the interrupt handler
                             }
                         }
-                        else if (usBit & 0xfc00) {
+                        else if ((usBit & 0xfc00) != 0) {
                             if (IRQ32_63_SER & (1 << (irq_EXTI15_10_ID - 32))) { // if EXTI10..15 interrupt is not disabled
                                 ptrVect->processor_interrupts.irq_EXTI15_10(); // call the interrupt handler
                             }
                         }
+    #endif
                     }
                 }
             }
@@ -3560,7 +3613,7 @@ extern void fnUpdateOperatingDetails(void)
     ptrBuffer = uStrcpy(ptrBuffer, "k, HCLK = ");
     ulHCLK = (PLL_OUTPUT_FREQ >> ((RCC_CFGR & RCC_CFGR_HPRE_SYSCLK_DIV512) >> 4)); // HCLK according to register setting
     if ((RCC_CFGR & RCC_CFGR_PPRE1_HCLK_DIV2) != 0) {                    // if divide enabled
-        #if defined _STM32L432
+        #if defined _STM32L432 || defined _STM32L031
         ulAPB1 = (ulHCLK >> (((RCC_CFGR >> 8) & 0x03) + 1));             // APB1 clock according to register settings
         #else
         ulAPB1 = (ulHCLK >> (((RCC_CFGR >> 10) & 0x03) + 1));            // APB1 clock according to register settings
@@ -3570,7 +3623,7 @@ extern void fnUpdateOperatingDetails(void)
         ulAPB1 = ulHCLK;
     }
     if ((RCC_CFGR & RCC_CFGR_PPRE2_HCLK_DIV2) != 0) {                    // if divide enabled
-        #if defined _STM32L432
+        #if defined _STM32L432 || defined _STM32L031
         ulAPB2 = (ulHCLK >> (((RCC_CFGR >> 11) & 0x03) + 1));            // APB2 clock according to register settings
         #else
         ulAPB2 = (ulHCLK >> (((RCC_CFGR >> 13) & 0x03) + 1));            // APB2 clock according to register settings

@@ -319,7 +319,7 @@ static int fnWriteInternalFlash(ACCESS_DETAILS *ptrAccessDetails, unsigned char 
 {
     MAX_FILE_LENGTH Length = ptrAccessDetails->BlockLength;
     unsigned char *ucDestination = (unsigned char *)ptrAccessDetails->ulOffset;
-
+#if !defined _STM32L031                                                  // temporary
     if ((FLASH_CR & FLASH_CR_LOCK) != 0) {                               // if the flash has not been unlocked, unlock it before programming
         FLASH_KEYR = FLASH_KEYR_KEY1;
         FLASH_KEYR = FLASH_KEYR_KEY2;
@@ -451,6 +451,7 @@ static int fnWriteInternalFlash(ACCESS_DETAILS *ptrAccessDetails, unsigned char 
     ulFlashLockState = FLASH_CR_LOCK;
     #endif
     #endif
+#endif
     return 0;
 }
 
@@ -547,6 +548,7 @@ static unsigned long fnGetFlashSectorSize(unsigned char *ptrSector, unsigned lon
 //
 extern int fnEraseFlashSector(unsigned char *ptrSector, MAX_FILE_LENGTH Length)
 {
+#if !defined _STM32L031                                                  // temporary
     #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
     unsigned long _ulSectorSize;                                         // F2/F4/F7 have variable flash granularity
     unsigned long ulSectorNumber;
@@ -709,6 +711,7 @@ extern int fnEraseFlashSector(unsigned char *ptrSector, MAX_FILE_LENGTH Length)
         Length -= _ulSectorSize;
     } FOREVER_LOOP();
     #endif
+#endif
     return 0;
 }
 
@@ -828,10 +831,9 @@ extern void fnGetParsFile(unsigned char *ParLocation, unsigned char *ptrValue, M
 }
 
 #if defined USE_PARAMETER_BLOCK
-
-    #define PARAMETER_BLOCK_1     (unsigned char*)(PARAMETER_BLOCK_START)
+    #define PARAMETER_BLOCK_1     (unsigned char *)(PARAMETER_BLOCK_START)
     #if defined USE_PAR_SWAP_BLOCK
-        #define PARAMETER_BLOCK_2 (PARAMETER_BLOCK_1 + PARAMETER_BLOCK_SIZE)
+        #define PARAMETER_BLOCK_2 (unsigned char *)(PARAMETER_BLOCK_1 + PARAMETER_BLOCK_SIZE)
     #endif
 
 // The STM32F1 has 1k or 2k byte blocks which can be individually modified so we use one of these, and a backup if desired (F2/F4 has 16k boot sectors which can be used)

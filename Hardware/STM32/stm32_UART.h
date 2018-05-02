@@ -25,8 +25,10 @@
 static USART_REG *fnSelectChannel(QUEUE_HANDLE Channel)
 {
     switch (Channel) {
+#if !defined USART1_NOT_PRESENT
     case 0:
         return (USART_REG *)(USART1_BLOCK);
+#endif
     case 1:
         return (USART_REG *)(USART2_BLOCK);
 #if USARTS_AVAILABLE > 2
@@ -52,6 +54,7 @@ static USART_REG *fnSelectChannel(QUEUE_HANDLE Channel)
         return (USART_REG *)(UART8_BLOCK);
 #endif
     default:
+        _EXCEPTION("Invalid UART!");
         return 0;
     }
 }
@@ -60,6 +63,7 @@ static USART_REG *fnSelectChannel(QUEUE_HANDLE Channel)
 /*                     USART interrupt handlers                        */
 /* =================================================================== */
 
+#if !defined USART1_NOT_PRESENT
 static __interrupt void SCI1_Interrupt(void)
 {
     while (((USART1_CR1 & USART_CR1_RXNEIE) != 0) && ((USART1_ISR & USART_ISR_RXNE) != 0)) { // if an enabled reception interrupt
@@ -72,6 +76,7 @@ static __interrupt void SCI1_Interrupt(void)
         fnSciTxByte(0);                                                  // transmit data empty interrupt
     }
 }
+#endif
 
 static __interrupt void SCI2_Interrupt(void)
 {
@@ -183,16 +188,17 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
 {
     USART_REG *USART_regs = fnSelectChannel(Channel);                    // collect a pointer to the USART/UART/LPUART being used
     unsigned long ulSpeed;
-#if !defined _STM32F7XX_ && !defined _STM32L432
+#if !defined _STM32F7XX_ && !defined _STM32L432 && !defined _STM32L0x1
     unsigned char ucFraction;
 #endif
 
     switch (Channel) {
+#if !defined USART1_NOT_PRESENT
     case 0:
         POWER_UP(APB2, RCC_APB2ENR_USART1EN);                            // enable clocks to USART1
         fnEnterInterrupt(irq_USART1_ID, PRIORITY_USART1, SCI1_Interrupt);// enter USART interrupt handler
         break;
-
+#endif
     case 1:
 #if defined _STM32L432
         RCC_APB1ENR1 |= (RCC_APB1ENR1_USART2EN);                         // enable clocks to USART2
@@ -265,6 +271,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
     if (Channel == 0)                                                    // USART1 clocked from PCLK2 (note that _STM32L432 has configurable clock source but PCLK2 is is used for compatibility)
 #endif
     {
+#if !defined USART1_NOT_PRESENT
         switch (pars->ucSpeed) {
         case SERIAL_BAUD_300:
 #if defined _STM32L432
@@ -388,11 +395,12 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
 #endif
             break;
         }
+#endif
     }
     else {                                                               // else clocked from PCLK1 (note that _STM32L432 has configurable clock source but PCLK1 is is used for compatibility)
         switch (pars->ucSpeed) {
         case SERIAL_BAUD_300:
-#if defined _STM32L432
+#if defined _STM32L432 || defined _STM32L0x1
             ulSpeed = (PCLK1/300);                                       // set 300
 #else
             ulSpeed = (PCLK1/16/300);                                    // set 300
@@ -402,7 +410,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
 #endif
             break;
         case SERIAL_BAUD_600:
-#if defined _STM32L432
+#if defined _STM32L432 || defined _STM32L0x1
             ulSpeed = (PCLK1/600);                                       // set 600
 #else
             ulSpeed = (PCLK1/16/600);                                    // set 600
@@ -412,7 +420,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
 #endif
             break;
         case SERIAL_BAUD_1200:
-#if defined _STM32L432
+#if defined _STM32L432 || defined _STM32L0x1
             ulSpeed = (PCLK1/1200);                                      // set 1200
 #else
             ulSpeed = (PCLK1/16/1200);                                   // set 1200
@@ -422,7 +430,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
 #endif
             break;
         case SERIAL_BAUD_2400:
-#if defined _STM32L432
+#if defined _STM32L432 || defined _STM32L0x1
             ulSpeed = (PCLK1/2400);                                      // set 2400
 #else
             ulSpeed = (PCLK1/16/2400);                                   // set 2400
@@ -432,7 +440,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
 #endif
             break;
         case SERIAL_BAUD_4800:
-#if defined _STM32L432
+#if defined _STM32L432 || defined _STM32L0x1
             ulSpeed = (PCLK1/4800);                                      // set 4800
 #else
             ulSpeed = (PCLK1/16/4800);                                   // set 4800
@@ -442,7 +450,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
 #endif
             break;
         case SERIAL_BAUD_9600:
-#if defined _STM32L432
+#if defined _STM32L432 || defined _STM32L0x1
             ulSpeed = (PCLK1/9600);                                      // set 9600
 #else
             ulSpeed = (PCLK1/16/9600);                                   // set 9600
@@ -452,7 +460,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
 #endif
             break;
         case SERIAL_BAUD_14400:
-#if defined _STM32L432
+#if defined _STM32L432 || defined _STM32L0x1
             ulSpeed = (PCLK1/14400);                                     // set 14400
 #else
             ulSpeed = (PCLK1/16/14400);                                  // set 14400
@@ -463,7 +471,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
             break;
         default:                                                         // if not valid value set this one
         case SERIAL_BAUD_19200:
-#if defined _STM32L432
+#if defined _STM32L432 || defined _STM32L0x1
             ulSpeed = (PCLK1/19200);                                     // set 19200
 #else
             ulSpeed = (PCLK1/16/19200);                                  // set 19200
@@ -473,7 +481,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
 #endif
             break;
         case SERIAL_BAUD_38400:
-#if defined _STM32L432
+#if defined _STM32L432 || defined _STM32L0x1
             ulSpeed = (PCLK1/38400);                                     // set 38400
 #else
             ulSpeed = (PCLK1/16/38400);                                  // set 38400
@@ -483,7 +491,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
 #endif
             break;
         case SERIAL_BAUD_57600:
-#if defined _STM32L432
+#if defined _STM32L432 || defined _STM32L0x1
             ulSpeed = (PCLK1/57600);                                     // set 57600
 #else
             ulSpeed = (PCLK1/16/57600);                                  // set 57600
@@ -493,7 +501,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
 #endif
             break;
         case SERIAL_BAUD_115200:
-#if defined _STM32L432
+#if defined _STM32L432 || defined _STM32L0x1
             ulSpeed = (PCLK1/115200);                                    // set 115200
 #else
             ulSpeed = (PCLK1/16/115200);                                 // set 115200
@@ -503,7 +511,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
 #endif
             break;
         case SERIAL_BAUD_230400:
-#if defined _STM32L432
+#if defined _STM32L432 || defined _STM32L0x1
             ulSpeed = (PCLK1/230400);                                    // set 230400
 #else
             ulSpeed = (PCLK1/16/230400);                                 // set 230400
@@ -514,7 +522,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
             break;
         }
     }
-#if defined _STM32F7XX_ || defined _STM32L432
+#if defined _STM32F7XX_ || defined _STM32L432 || defined _STM32L0x1
     USART_regs->UART_BRR = ulSpeed;                                      // set baud rate value
 #else
     USART_regs->UART_BRR = ((ulSpeed << 4) | ucFraction);                // set baud rate value
@@ -548,8 +556,8 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
     }
 
     if ((pars->Config & CHAR_7) == 0) {                                  // 7 bits is only possible when parity is enabled
-        if (pars->Config & (RS232_ODD_PARITY | RS232_EVEN_PARITY)) {     // if parity is enable in 8 bit mode set 9 bit mode so that it is inserted at the 9th bit position
-#if defined _STM32F7XX || defined _STM32L432
+        if ((pars->Config & (RS232_ODD_PARITY | RS232_EVEN_PARITY)) != 0) { // if parity is enable in 8 bit mode set 9 bit mode so that it is inserted at the 9th bit position
+#if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1
             USART_regs->UART_CR1 |= USART_CR1_9BIT;
 #else
             USART_regs->UART_CR1 |= USART_CR1_M;
@@ -573,7 +581,12 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
     #endif
     }
     else {
-    #if defined _STM32L432
+    #if defined _STM32L432 || defined _STM32L0x1
+        #if defined _STM32L0x1
+        if (USART_regs->UART_BRR <= 16) {
+            _EXCEPTION("BBR value is too small - this results in very slow or no speeds: >16 MUST be used!!");
+        }
+        #endif
         fnConfigSimSCI(Channel, (PCLK1/USART_regs->UART_BRR), pars); // open a serial port on PC if desired
     #elif defined _STM32F7XX_
         fnConfigSimSCI(Channel, (PCLK1/((USART_regs->UART_BRR) * 16)), pars); // open a serial port on PC if desired
@@ -589,20 +602,22 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
 extern void fnRxOn(QUEUE_HANDLE Channel)
 {
     switch (Channel) {
+#if !defined USART1_NOT_PRESENT
     case 0:                                                              // USART1
-#if defined USART1_REMAP
+    #if defined USART1_REMAP
         _PERIPHERAL_REMAP(USART1_REMAPPED);
         _CONFIG_PERIPHERAL_INPUT(B, (PERIPHERAL_USART1_2_3), (PORTB_BIT7), (UART_RX_INPUT_TYPE)); // RX 1 on PB7
-#else
+    #else
         _CONFIG_PERIPHERAL_INPUT(A, (PERIPHERAL_USART1_2_3), (PORTA_BIT10), (UART_RX_INPUT_TYPE)); // RX 1 on PA10
-#endif
+    #endif
         USART1_CR1 |= (USART_CR1_UE | USART_CR1_RE | USART_CR1_RXNEIE);  // enable the receiver with Rx interrupts
         break;
+#endif
     case 1:                                                              // USART2
 #if defined USART2_REMAP
         _PERIPHERAL_REMAP(USART2_REMAPPED);
         _CONFIG_PERIPHERAL_INPUT(D, (PERIPHERAL_USART1_2_3), (PORTD_BIT6), (UART_RX_INPUT_TYPE)); // RX 2 on PD6
-#elif defined USART2_PARTIAL_REMAP && defined _STM32L432
+#elif defined USART2_PARTIAL_REMAP && (defined _STM32L432 || defined _STM32L031)
         _CONFIG_PERIPHERAL_INPUT(A, (PERIPHERAL_USART2), (PORTA_BIT15), (UART_RX_INPUT_TYPE)); // RX 2 on PA3
 #else
         _CONFIG_PERIPHERAL_INPUT(A, (PERIPHERAL_USART1_2_3), (PORTA_BIT3), (UART_RX_INPUT_TYPE)); // RX 2 on PA3
@@ -623,15 +638,17 @@ extern void fnRxOn(QUEUE_HANDLE Channel)
         USART3_CR1 |= (USART_CR1_UE | USART_CR1_RE | USART_CR1_RXNEIE);  // enable the receiver with Rx interrupts
         break;
 #endif
+#if !defined _STM32L031
     case 3:
-#if defined _STM32L432                                                   // LPUART1
+    #if defined _STM32L432                                               // LPUART1
         _CONFIG_PERIPHERAL_INPUT(A, (PERIPHERAL_LPUART1), (PORTA_BIT3), (UART_RX_INPUT_TYPE)); // RX 4 on PA3
-#else
+    #else
         _CONFIG_PERIPHERAL_INPUT(C, (PERIPHERAL_USART4_5_6), (PORTC_BIT11), (UART_RX_INPUT_TYPE)); // RX 4 on PC11
         UART4_CR1 |= (USART_CR1_UE | USART_CR1_RE | USART_CR1_RXNEIE);   // enable the receiver with Rx interrupts
-#endif
+    #endif
         break;
-#if !defined _STM32L432
+#endif
+#if !defined _STM32L432 && !defined _STM32L031
     case 4:
         _CONFIG_PERIPHERAL_INPUT(D, (PERIPHERAL_USART4_5_6), (PORTD_BIT2), (UART_RX_INPUT_TYPE)); // RX 5 on PD2
         UART5_CR1 |= (USART_CR1_UE | USART_CR1_RE | USART_CR1_RXNEIE);   // enable the receiver with Rx interrupts
@@ -680,19 +697,21 @@ extern void fnRxOff(QUEUE_HANDLE Channel)
 extern void fnTxOn(QUEUE_HANDLE Channel)
 {
     switch (Channel) {
+#if !defined USART1_NOT_PRESENT
     case 0:
-#if defined _WINDOWS
+    #if defined _WINDOWS
         USART1_CR1 |= (USART_CR1_UE | USART_CR1_TE);                     // enable the transmitter earlier when simulating so that the peripheral function can be detected
-#endif
-#if defined USART1_REMAP && !defined USART1_NOREMAP_TX
+    #endif
+    #if defined USART1_REMAP && !defined USART1_NOREMAP_TX
         _PERIPHERAL_REMAP(USART1_REMAPPED);
         _CONFIG_PERIPHERAL_OUTPUT(B, (PERIPHERAL_USART1_2_3), (PORTB_BIT6), (OUTPUT_MEDIUM | OUTPUT_PUSH_PULL)); // TX 1 on PB6
-#else
+    #else
         _CONFIG_PERIPHERAL_OUTPUT(A, (PERIPHERAL_USART1_2_3), (PORTA_BIT9), (OUTPUT_MEDIUM | OUTPUT_PUSH_PULL)); // TX 1 on PA9
-#endif
+    #endif
         USART1_CR1 |= (USART_CR1_UE | USART_CR1_TE);                     // enable the transmitter
         break;
-    case 1:                                                              // USART2 (PD5)
+#endif
+    case 1:                                                              // USART2
 #if defined _WINDOWS
         USART2_CR1 |= (USART_CR1_UE | USART_CR1_TE);                     // enable the transmitter earlier when simulating so that the peripheral function can be detected
 #endif
@@ -731,7 +750,7 @@ extern void fnTxOn(QUEUE_HANDLE Channel)
         UART4_CR1 |= (USART_CR1_UE | USART_CR1_TE);                      // enable the transmitter
         break;
 #endif
-#if !defined _STM32L432
+#if !defined _STM32L432 && !defined _STM32L031
     case 4:
         _CONFIG_PERIPHERAL_OUTPUT(C, (PERIPHERAL_USART4_5_6), (PORTC_BIT12), (OUTPUT_MEDIUM | OUTPUT_PUSH_PULL)); // TX 5 on PC12
         UART5_CR1 |= (USART_CR1_UE | USART_CR1_TE);                      // enable the transmitter
@@ -837,22 +856,23 @@ extern void fnSetMultiDropByte(QUEUE_HANDLE channel, unsigned char ucMSB)
 extern int fnTxByte(QUEUE_HANDLE channel, unsigned char ucTxByte)
 {
     switch (channel) {
+#if !defined USART1_NOT_PRESENT
     case 0:                                                              // USART 1
         if ((USART1_ISR & USART_ISR_TXE) == 0) {
             return 1;                                                    // busy, wait
         }
         USART1_CR1 |= (USART_CR1_TXEIE);                                 // ensure Tx interrupt is enabled
-#if defined UART_EXTENDED_MODE && defined SERIAL_MULTIDROP_TX            // {18a}
+    #if defined UART_EXTENDED_MODE && defined SERIAL_MULTIDROP_TX        // {18a}
         USART1_TDR = ((ucExtendedWithTx[channel] << 8) | ucTxByte);      // send the byte with extended bits
-#else
+    #else
         USART1_TDR = ucTxByte;                                           // send the byte
-#endif
-#if defined _WINDOWS
+    #endif
+    #if defined _WINDOWS
         USART1_ISR &= ~USART_ISR_TXE;
         iInts |= CHANNEL_0_SERIAL_INT;                                   // simulate interrupt
-#endif
+    #endif
         break;
-
+#endif
     case 1:                                                              // USART 2
         if ((USART2_ISR & USART_ISR_TXE) == 0) {
             return 1;                                                    // busy, wait

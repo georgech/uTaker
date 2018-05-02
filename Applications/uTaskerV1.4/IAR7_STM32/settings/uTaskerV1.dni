@@ -1,5 +1,5 @@
 [DebugChecksum]
-Checksum=45217122
+Checksum=1685042610
 [DisAssemblyWindow]
 NumStates=_ 1
 State 1=_ 1
@@ -72,7 +72,7 @@ LeaveTargetRunning=_ 0
 stlinkserialNo=69CAB789
 stlinkfoundProbes=
 [StLinkDriver]
-stlinkserialNo=67242321
+stlinkserialNo=67214215
 stlinkfoundProbes=
 CStepIntDis=_ 0
 LeaveTargetRunning=_ 0
@@ -125,12 +125,19 @@ ShowTimeLog=1
 SumEnabled=0
 ShowTimeSum=1
 SumSortOrder=0
+[DriverProfiling]
+Enabled=0
+Mode=3
+Graph=0
+Symbiont=0
+Exclusions=
 [Disassemble mode]
 mode=1
 [Breakpoints2]
 Bp0=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\..\..\Hardware\STM32\STM32.c}.374.5" 0 0 1 "" 0 "" 0
 Bp1=_ 0 "EMUL_CODE" "0x0800C6DC" 0 0 1 "" 0 "" 0
-Count=2
+Bp2=_ 0 "EMUL_CODE" "0x0800073E" 0 0 1 "" 0 "" 0
+Count=3
 [Log file]
 LoggingEnabled=_ 0
 LogFile=_ ""
@@ -141,12 +148,6 @@ LogFile=_ ""
 [Aliases]
 Count=0
 SuppressDialog=0
-[DriverProfiling]
-Enabled=0
-Mode=3
-Graph=0
-Symbiont=0
-Exclusions=
 [CallStackLog]
 Enabled=0
 [CallStackStripe]

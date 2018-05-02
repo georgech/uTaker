@@ -516,7 +516,7 @@ unsigned long AFIO_MAPR2;
 
 typedef struct stSTM32_USART
 {
-#if defined _STM32F7XX || defined _STM32L432
+#if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1
     unsigned long UART_CR1;
     unsigned long UART_CR2;
     unsigned long UART_CR3;
@@ -572,6 +572,9 @@ unsigned long IWDG_KR;
 unsigned long IWDG_PR;
 unsigned long IWDG_RLR;
 unsigned long IWDG_SR;
+#if defined _STM32L432 || defined _STM32L031
+    unsigned long  IWDG_WINR;
+#endif
 } STM32_IWDG;
 
 

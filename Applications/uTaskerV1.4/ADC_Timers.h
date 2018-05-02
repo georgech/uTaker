@@ -1215,6 +1215,7 @@ static void fnConfigureLPTMR(void)
     lptmr_setup.int_type = LPTMR_INTERRUPT;
     lptmr_setup.int_handler = low_power_timer_int;                       // test a single shot timer
     lptmr_setup.count_delay = LPTMR_US_DELAY(3245);                      // 3245us delay
+  //lptmr_setup.count_delay = LPTMR_S_DELAY(5);                          // 5s delay
     #if defined TEST_LPTMR_PERIODIC
     lptmr_setup.mode = LPTMR_PERIODIC;                                   // periodic interrupt
     #else

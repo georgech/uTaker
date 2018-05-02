@@ -1226,6 +1226,8 @@ static void fnCallINTMUX(int iChannel, int iPeripheralReference, unsigned char *
 }
 #endif
 
+// Check whether a particular interrupt is enabled in the NVIC
+//
 static int fnGenInt(int iIrqID)
 {
     if (iIrqID < 32) {

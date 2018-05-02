@@ -237,6 +237,7 @@ __interrupt static void _exti10_15_handler(void)
             }
             exti_handler[iInputRef] = ptrSetup->int_handler;             // enter the user handler
             switch (iInputRef) {
+    #if defined irq_EXTI0_ID
             case 0:
                 fnEnterInterrupt(irq_EXTI0_ID, ptrSetup->int_priority, _exti0_handler); // enter interrupt handler
                 break;
@@ -267,6 +268,7 @@ __interrupt static void _exti10_15_handler(void)
             case 15:
                 fnEnterInterrupt(irq_EXTI15_10_ID, ptrSetup->int_priority, _exti10_15_handler); // enter interrupt handler
                 break;
+    #endif
             default:
     #if defined _WINDOWS
             if (usPortBit != 0) {

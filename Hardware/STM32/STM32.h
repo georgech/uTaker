@@ -107,7 +107,7 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*I
     #define RAM_START_ADDRESS          0x20000000                        // up to 96k
 #endif
 
-#if 0                                                                    // to add
+#if defined _STM32L0
     #define ARM_MATH_CM0PLUS                                             // cortex-M0+ to be used
 #elif defined _STM32F7XX                                                 // cortex-M7
     #define ARM_MATH_CM7
@@ -164,6 +164,8 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*I
     #define TIMER_12_AVAILABLE
     #define TIMER_13_AVAILABLE
     #define TIMER_14_AVAILABLE
+#elif defined _STM32L0x1
+    #define FLASH_GRANULARITY           (128)                            // sector delete size
 #elif !defined _CONNECTIVITY_LINE && (SIZE_OF_FLASH <= (128 * 1024))     // {11}
     #define FLASH_GRANULARITY           (1 * 1024)                       // sector delete size
 #else
@@ -205,7 +207,8 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*I
     #define UARTS_AVAILABLE    0
     #define LPUARTS_AVAILABLE  1
 #elif defined _STM32L031
-    #define USARTS_AVAILABLE   1
+    #define USARTS_AVAILABLE   2
+    #define USART1_NOT_PRESENT                                           // only USART2 available/usable
     #define UARTS_AVAILABLE    0
     #define LPUARTS_AVAILABLE  1
 #else
@@ -718,8 +721,12 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*I
 #define SUPPLY_2_4__2_7   2
 #define SUPPLY_2_7__3_6   3
 
-#define VCORE_RANGE_1     0                                              // STM32L432 can use 1.2V code voltage for maximum speed and minimum wait state
-#define VCORE_RANGE_2     1                                              // 1.0V core reduces maximum operating speed and increaed the required wait states
+// STM32L432 can use 1.2V code voltage for maximum speed and minimum wait state (VCORE_RANGE_1)
+// 1.0V core reduces maximum operating speed and increased the required wait states (VCORE_RANGE_2)
+//
+#define VCORE_RANGE_1     0
+#define VCORE_RANGE_2     1
+#define VCORE_RANGE_3     2
 
 #if defined _STM32L432
     // Determine highest operating frequency and optimal wait states
@@ -1259,7 +1266,6 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*I
     #define GPIO_PORTH_BLOCK            0x50001c00
 
     #define CORTEX_M3_BLOCK             0xe000e000
-    #define DBG_BLOCK                   0xe0042000
 #else                                                                    // F1
     // APB1 peripherals
     //
@@ -2717,7 +2723,7 @@ typedef struct stSTM32_BD
       #define RESET_CAUSE_FLAGS              (RCC_CSR_FWRSTF | RCC_CSR_RMVF | RCC_CSR_PINRSTF | RCC_CSR_PORRSTF | RCC_CSR_SFTRSTF | RCC_CSR_IWDGRSTF | RCC_CSR_WWDGRSTF | RCC_CSR_LPWRRSTF)
     #define RCC_CRRCR                        *(volatile unsigned long *)(RCC_BLOCK + 0x98)
     #define RCC_CCCIPR2                      *(volatile unsigned long *)(RCC_BLOCK + 0x9c)
-#elif defined _STM32L031
+#elif defined _STM32L0x1
     #define RCC_CR                           *(volatile unsigned long *)(RCC_BLOCK + 0x00) // clock control register
       #define RCC_CR_HSION                   0x00000001                  // high speed internal clock on
       #define RCC_CR_HSIKERON                0x00000002                  // high speed internal clock forced on in stop mode
@@ -2735,13 +2741,13 @@ typedef struct stSTM32_BD
       #define RCC_CR_PLLON                   0x01000000                  // PLL enable
       #define RCC_CR_PLLRDY                  0x02000000                  // PLL clock ready (read-only)
     #define RCC_ICSCR                        *(volatile unsigned long *)(RCC_BLOCK + 0x04) // internal clock source calibration register
-      #define RCC_ICSCR_MSIRANGE_65536       0x0000e000                  // MSI frequency around 65.536kHz
-      #define RCC_ICSCR_MSIRANGE_131072      0x0000e000                  // MSI frequency around 131.072kHz
-      #define RCC_ICSCR_MSIRANGE_262144      0x0000e000                  // MSI frequency around 262.144kHz
-      #define RCC_ICSCR_MSIRANGE_524288      0x0000e000                  // MSI frequency around 524.288kHz
-      #define RCC_ICSCR_MSIRANGE_1_048M      0x0000e000                  // MSI frequency around 1.048M
-      #define RCC_ICSCR_MSIRANGE_2_097M      0x0000e000                  // MSI frequency around 2.097M (default after reset)
-      #define RCC_ICSCR_MSIRANGE_4_194M      0x0000e000                  // MSI frequency around 4.194M
+      #define RCC_ICSCR_MSIRANGE_65536       0x00000000                  // MSI frequency around 65.536kHz
+      #define RCC_ICSCR_MSIRANGE_131072      0x00002000                  // MSI frequency around 131.072kHz
+      #define RCC_ICSCR_MSIRANGE_262144      0x00004000                  // MSI frequency around 262.144kHz
+      #define RCC_ICSCR_MSIRANGE_524288      0x00006000                  // MSI frequency around 524.288kHz
+      #define RCC_ICSCR_MSIRANGE_1_048M      0x00008000                  // MSI frequency around 1.048M
+      #define RCC_ICSCR_MSIRANGE_2_097M      0x0000a000                  // MSI frequency around 2.097M (default after reset)
+      #define RCC_ICSCR_MSIRANGE_4_194M      0x0000c000                  // MSI frequency around 4.194M
       #define RCC_ICSCR_MSIRANGE_MASK        0x0000e000
     #define RCC_CFGR                         *(volatile unsigned long *)(RCC_BLOCK + 0x0c) // clock configuration register
       #define RCC_CFGR_MSI_SELECT            0x00000000                  // MSI selected as system clock
@@ -2776,8 +2782,8 @@ typedef struct stSTM32_BD
       #define RCC_CFGR_STOPWUCK              0x00008000                  // wakeup from stop and CSS backup clock selection
       #define RCC_CFGR_MCOSEL_DISABLED       0x00000000
       #define RCC_CFGR_MCOSEL_SYSCLK         0x01000000
-      #define RCC_CFGR_MCOSEL_HSI16          0x03000000
-      #define RCC_CFGR_MCOSEL_MSI            0x04000000
+      #define RCC_CFGR_MCOSEL_HSI16          0x02000000
+      #define RCC_CFGR_MCOSEL_MSI            0x03000000
       #define RCC_CFGR_MCOSEL_HSE            0x04000000
       #define RCC_CFGR_MCOSEL_PLL            0x05000000
       #define RCC_CFGR_MCOSEL_LSI            0x06000000
@@ -2800,7 +2806,13 @@ typedef struct stSTM32_BD
       #define RCC_AHB2RSTR_CRCRST            0x00001000
       #define RCC_AHB2RSTR_CRYPRST           0x02000000
     #define RCC_APB2RSTR                     *(volatile unsigned long *)(RCC_BLOCK + 0x24) // APB2 peripheral reset register
+      #define RCC_APB2RSTR_USART1RST         0x00003000                  // reset USART1
     #define RCC_APB1RSTR                     *(volatile unsigned long *)(RCC_BLOCK + 0x28) // APB1 peripheral reset register
+      #define RCC_APB1RSTR_USART2RST         0x00020000                  // reset USART2
+      #define RCC_APB1RSTR_LPUART1RST        0x00040000                  // reset LPUART1
+      #define RCC_APB1RSTR_USART4RST         0x00080000                  // reset USART4
+      #define RCC_APB1RSTR_USART5RST         0x00100000                  // reset USART5
+      #define RCC_APB1RSTR_LPTIM1RST         0x80000000                  // reset LPTIM1
     #define RCC_IOPENR                       *(volatile unsigned long *)(RCC_BLOCK + 0x2c) // GPIO clock enable register
       #define RCC_IOPENR_IOPAEN              0x00000001                  // I/O port A clock enable
       #define RCC_IOPENR_IOPBEN              0x00000002                  // I/O port B clock enable
@@ -2814,9 +2826,13 @@ typedef struct stSTM32_BD
       #define RCC_AHBENR_MIFEN               0x00000100
     #define RCC_APB2ENR                      *(volatile unsigned long *)(RCC_BLOCK + 0x34) // APB2 peripheral enable register
       #define RCC_APB2ENR_SYSCFGEN           0x00000001
-      #define RCC_APB1ENR1_USART1EN          0x00004000
+      #define RCC_APB2ENR_USART1EN           0x00004000
     #define RCC_APB1ENR                      *(volatile unsigned long *)(RCC_BLOCK + 0x38) // APB1 peripheral enable register
-      #define RCC_APB1ENR2_LPUART1EN         0x00000001
+      #define RCC_APB1ENR_USART2EN           0x00020000                  // USART2 clock enable
+      #define RCC_APB1ENR_LPUART1EN          0x00040000                  // LPUART1 clock enable
+      #define RCC_APB1ENR_USART4EN           0x00080000                  // USART4 clock enable
+      #define RCC_APB1ENR_USART5EN           0x00100000                  // USART5 clock enable
+      #define RCC_APB1ENR_LPTIM1EN           0x80000000                  // LPTIM1 clock enable
     #define RCC_IOPSMEN                      *(volatile unsigned long *)(RCC_BLOCK + 0x3c) // GPIO clock enable in sleep mode register
     #define RCC_AHBSMENR                     *(volatile unsigned long *)(RCC_BLOCK + 0x40) // AHB peripheral clock enable in sleep mode register
     #define RCC_APB2SMENR                    *(volatile unsigned long *)(RCC_BLOCK + 0x44) // APB2 peripheral clock enable in sleep mode register
@@ -4087,7 +4103,7 @@ typedef struct stSTM32_ADC_REGS
 
 // USARTs
 //
-#if defined _STM32F7XX || defined _STM32L432
+#if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1
     #define USART1_CR1                   *(volatile unsigned long *)(USART1_BLOCK + 0x00)  // USART1 control register 1
       #define USART_CR1_UE               0x00000001                      // USART enable
       #define USART_CR1_RE               0x00000004                      // receiver enable
@@ -4419,7 +4435,7 @@ typedef struct stSTM32_ADC_REGS
 
 typedef struct stUSART_REG
 {
-#if defined _STM32F7XX || defined _STM32L432
+#if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1
     unsigned long UART_CR1;
     unsigned long UART_CR2;
     unsigned long UART_CR3;
@@ -5724,6 +5740,38 @@ typedef struct stRESET_VECTOR
 //
 typedef struct stPROCESSOR_IRQ
 {
+#if defined _STM32L031
+    void  (*irq_WindowsWatchdog)(void);                                  // 0
+    void  (*irq_PVD)(void);                                              // 1
+    void  (*irq_RTC)(void);                                              // 2
+    void  (*irq_FLASH)(void);                                            // 3
+    void  (*irq_RCC)(void);                                              // 4
+    void  (*irq_EXTI0_1)(void);                                          // 5
+    void  (*irq_EXTI2_3)(void);                                          // 6
+    void  (*irq_EXTI4_15)(void);                                         // 7
+    void  (*irq_res0)(void);                                             // 8
+    void  (*irq_DMA1_Channel1)(void);                                    // 9
+    void  (*irq_DMA1_Channel2_3)(void);                                  // 10
+    void  (*irq_DMA1_Channel4_7)(void);                                  // 11
+    void  (*irq_ADC_COMP)(void);                                         // 12
+    void  (*irq_LPTIM1)(void);                                           // 13
+    void  (*irq_USART4_5)(void);                                         // 14
+    void  (*irq_TIM2)(void);                                             // 15
+    void  (*irq_TIM3)(void);                                             // 16
+    void  (*irq_TIM6)(void);                                             // 17
+    void  (*irq_TIM7)(void);                                             // 18
+    void  (*irq_res1)(void);                                             // 19
+    void  (*irq_TIM21)(void);                                            // 20
+    void  (*irq_I2C3)(void);                                             // 21
+    void  (*irq_TIM22)(void);                                            // 22
+    void  (*irq_I2C1)(void);                                             // 23
+    void  (*irq_I2C2)(void);                                             // 24
+    void  (*irq_SPI1)(void);                                             // 25
+    void  (*irq_SPI2)(void);                                             // 26
+    void  (*irq_USART1)(void);                                           // 27
+    void  (*irq_USART2)(void);                                           // 28
+    void  (*irq_LPUART1_AES)(void);                                      // 29
+#else
     void  (*irq_WindowsWatchdog)(void);                                  // 0
     void  (*irq_PVD)(void);                                              // 1
     void  (*irq_Tamper)(void);                                           // 2
@@ -5735,7 +5783,7 @@ typedef struct stPROCESSOR_IRQ
     void  (*irq_EXTI2)(void);                                            // 8
     void  (*irq_EXTI3)(void);                                            // 9
     void  (*irq_EXTI4)(void);                                            // 10
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
     void  (*irq_DMA1_Stream0)(void);                                     // 11
     void  (*irq_DMA1_Stream1)(void);                                     // 12
     void  (*irq_DMA1_Stream2)(void);                                     // 13
@@ -5743,7 +5791,7 @@ typedef struct stPROCESSOR_IRQ
     void  (*irq_DMA1_Stream4)(void);                                     // 15
     void  (*irq_DMA1_Stream5)(void);                                     // 16
     void  (*irq_DMA1_Stream6)(void);                                     // 17
-#else
+    #else
     void  (*irq_DMA1_Channel1)(void);                                    // 11
     void  (*irq_DMA1_Channel2)(void);                                    // 12
     void  (*irq_DMA1_Channel3)(void);                                    // 13
@@ -5751,12 +5799,12 @@ typedef struct stPROCESSOR_IRQ
     void  (*irq_DMA1_Channel5)(void);                                    // 15
     void  (*irq_DMA1_Channel6)(void);                                    // 16
     void  (*irq_DMA1_Channel7)(void);                                    // 17
-#endif
-#if defined _STM32F7XX
+    #endif
+    #if defined _STM32F7XX
     void  (*irq_ADC1_2_3)(void);                                         // 18
-#else
+    #else
     void  (*irq_ADC1_2_3)(void);                                         // 18
-#endif
+    #endif
     void  (*irq_CAN1_TX)(void);                                          // 19
     void  (*irq_CAN1_RX0)(void);                                         // 20
     void  (*irq_CAN1_RX1)(void);                                         // 21
@@ -5781,7 +5829,7 @@ typedef struct stPROCESSOR_IRQ
     void  (*irq_EXTI15_10)(void);                                        // 40
     void  (*irq_RTCAlarm)(void);                                         // 41
     void  (*irq_OTG_FS_WKUP)(void);                                      // 42
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
     void  (*irq_TIM8_BRK_TIM12)(void);                                   // 43
     void  (*irq_TIM8_UP_TIM13)(void);                                    // 44
     void  (*irq_TIM8_TRG_COM_TIM14)(void);                               // 45
@@ -5789,7 +5837,7 @@ typedef struct stPROCESSOR_IRQ
     void  (*irq_DMA1_Stream7)(void);                                     // 47
     void  (*irq_FSMC)(void);                                             // 48
     void  (*irq_SDIO)(void);                                             // 49
-#else
+    #else
     void  (*irq_res1)(void);                                             // 43
     void  (*irq_res2)(void);                                             // 44
     void  (*irq_res3)(void);                                             // 45
@@ -5797,30 +5845,30 @@ typedef struct stPROCESSOR_IRQ
     void  (*irq_res5)(void);                                             // 47
     void  (*irq_res6)(void);                                             // 48
     void  (*irq_res7)(void);                                             // 49
-#endif
+    #endif
     void  (*irq_TIM5)(void);                                             // 50
     void  (*irq_SPI3)(void);                                             // 51
     void  (*irq_UART4)(void);                                            // 52
     void  (*irq_UART5)(void);                                            // 53
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
     void  (*irq_TIM6_DAC)(void);                                         // 54
-#else
+    #else
     void  (*irq_TIM6)(void);                                             // 54
-#endif
+    #endif
     void  (*irq_TIM7)(void);                                             // 55
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
     void  (*irq_DMA2_Stream0)(void);                                     // 56
     void  (*irq_DMA2_Stream1)(void);                                     // 57
     void  (*irq_DMA2_Stream2)(void);                                     // 58
     void  (*irq_DMA2_Stream3)(void);                                     // 59
     void  (*irq_DMA2_Stream4)(void);                                     // 60
-#else
+    #else
     void  (*irq_DMA2_Channel1)(void);                                    // 56
     void  (*irq_DMA2_Channel2)(void);                                    // 57
     void  (*irq_DMA2_Channel3)(void);                                    // 58
     void  (*irq_DMA2_Channel4)(void);                                    // 59
     void  (*irq_DMA2_Channel5)(void);                                    // 60
-#endif
+    #endif
     void  (*irq_ETH)(void);                                              // 61
     void  (*irq_ETH_WKUP)(void);                                         // 62
     void  (*irq_CAN2_TX)(void);                                          // 63
@@ -5828,7 +5876,7 @@ typedef struct stPROCESSOR_IRQ
     void  (*irq_CAN2_RX1)(void);                                         // 65
     void  (*irq_CAN2_SCE)(void);                                         // 66
     void  (*irq_OTG_FS)(void);                                           // 67
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
     void  (*irq_DMA2_Stream5)(void);                                     // 68
     void  (*irq_DMA2_Stream6)(void);                                     // 69
     void  (*irq_DMA2_Stream7)(void);                                     // 70
@@ -5843,12 +5891,12 @@ typedef struct stPROCESSOR_IRQ
     void  (*irq_CRYP)(void);                                             // 79
     void  (*irq_HASH_RNG)(void);                                         // 80
     void  (*irq_FPU)(void);                                              // 81
-#endif
-#if defined _STM32F7XX || defined _STM32F429
+    #endif
+    #if defined _STM32F7XX || defined _STM32F429
     void  (*irq_UART7)(void);                                            // 82
     void  (*irq_UART8)(void);                                            // 83
-#endif
-#if defined _STM32F7XX
+    #endif
+    #if defined _STM32F7XX
     void  (*irq_SPI4)(void);                                             // 84
     void  (*irq_SPI5)(void);                                             // 85
     void  (*irq_SPI6)(void);                                             // 86
@@ -5863,10 +5911,13 @@ typedef struct stPROCESSOR_IRQ
     void  (*irq_I2C4_EV)(void);                                          // 95
     void  (*irq_I2C4_ER)(void);                                          // 96
     void  (*irq_SPDIFRX)(void);                                          // 97
+    #endif
 #endif
 } PROCESSOR_IRQ;
 
-#if defined _STM32F7XX
+#if defined _STM32L031
+    #define LAST_PROCESSOR_IRQ  irq_LPUART1_AES
+#elif defined _STM32F7XX
     #define LAST_PROCESSOR_IRQ  irq_SPDIFRX
 #elif defined _STM32F429
     #define LAST_PROCESSOR_IRQ  irq_UART8
@@ -5894,7 +5945,10 @@ typedef struct stVECTOR_TABLE
 } VECTOR_TABLE;
 
 #define VECTOR_SIZE                      (sizeof(VECTOR_TABLE))
-#if defined _STM32F7XX
+
+#if defined _STM32L031
+    #define CHECK_VECTOR_SIZE            184                             // (16 + 29 + 1) = 46) * 4 - adequate for this processor
+#elif defined _STM32F7XX
     #define CHECK_VECTOR_SIZE            456                             // (16 + 97 + 1) = 114) * 4 - adequate for this processor
 #elif defined _STM32F429
     #define CHECK_VECTOR_SIZE            400                             // (16 + 83 + 1) = 100) * 4 - adequate for this processor
@@ -5912,6 +5966,11 @@ typedef struct stVECTOR_TABLE
 // NVIC
 //
 #define INT_CONT_TYPE               *(const unsigned long*)(CORTEX_M3_BLOCK + 0x04)    // NVIC Interrupt Controller Type Register (read only)
+#if defined ARM_MATH_CM0PLUS
+    #define __NVIC_PRIORITY_SHIFT   6                                    // 4 levels of priority so shifted by (8 - 2 (number of implemented bits))
+#else
+    #define __NVIC_PRIORITY_SHIFT   4                                    // 16 levels of priority so shifted by (8 - 4 (number of implemented bits))
+#endif
 
 // SYSTICK
 //
@@ -6078,103 +6137,136 @@ typedef struct stVECTOR_TABLE
 
 // Interrupt sources
 //
-#define irq_WindowsWatchdog_ID        0
-#define irq_PVD_ID                    1
-#define irq_Tamper_ID                 2
-#define irq_RTC_ID                    3
-#define irq_FLASH_ID                  4
-#define irq_RCC_ID                    5
-#define irq_EXTI0_ID                  6
-#define irq_EXTI1_ID                  7
-#define irq_EXTI2_ID                  8
-#define irq_EXTI3_ID                  9
-#define irq_EXTI4_ID                  10
-#define irq_DMA1_Channel1_ID          11
-#define irq_DMA1_Stream0_ID           11
-#define irq_DMA1_Channel2_ID          12
-#define irq_DMA1_Stream1_ID           12
-#define irq_DMA1_Channel3_ID          13
-#define irq_DMA1_Stream2_ID           13
-#define irq_DMA1_Channel4_ID          14
-#define irq_DMA1_Stream3_ID           14
-#define irq_DMA1_Channel5_ID          15
-#define irq_DMA1_Stream4_ID           15
-#define irq_DMA1_Channel6_ID          16
-#define irq_DMA1_Stream5_ID           16
-#define irq_DMA1_Channel7_ID          17
-#define irq_DMA1_Stream6_ID           17
-#define irq_ADC_ID                    18                                 // ADC global interrupts
-#define irq_CAN1_TX_ID                19
-#define irq_CAN1_RX0_ID               20
-#define irq_CAN1_RX1_ID               21
-#define irq_CAN1_SCE_ID               22
-#define irq_EXTI9_5_ID                23
-#define irq_TIM1_BRK_TIM9_ID          24
-#define irq_TIM1_UP_TIM10_ID          25
-#define irq_TIM1_TRG_COM_TIM11_ID     26
-#define irq_TIM1_CC_ID                27
-#define irq_TIM2_ID                   28
-#define irq_TIM3_ID                   29
-#define irq_TIM4_ID                   30
-#define irq_I2C1_EV_ID                31
-#define irq_I2C1_ER_ID                32
-#define irq_I2C2_EV_ID                33
-#define irq_I2C2_ER_ID                34
-#define irq_SPI1_ID                   35
-#define irq_SPI2_ID                   36
-#define irq_USART1_ID                 37
-#define irq_USART2_ID                 38
-#define irq_USART3_ID                 39
-#define irq_EXTI15_10_ID              40
-#define irq_RTCAlarm_ID               41
-#define irq_OTG_FS_WKUP_ID            42
-#define irq_TIM8_BRK_TIM12_ID         43
-#define irq_TIM8_UP_TIM13_ID          44
-#define irq_TIM8_TRG_COM_TIM14_ID     45
-#define irq_TIM8_CC_ID                46
-#define irq_DMA1_Stream7_ID           47
-#define irq_FSMC_ID                   48
-#define irq_SDIO_ID                   49
-#define irq_TIM5_ID                   50
-#define irq_SPI3_ID                   51
-#define irq_UART4_ID                  52
-#define irq_UART5_ID                  53
-#define irq_TIM6_ID                   54
-#define irq_TIM6_DAC_ID               54
-#define irq_TIM7_ID                   55
-#define irq_DMA2_Channel1_ID          56
-#define irq_DMA2_Stream0_ID           56
-#define irq_DMA2_Channel2_ID          57
-#define irq_DMA2_Stream1_ID           57
-#define irq_DMA2_Channel3_ID          58
-#define irq_DMA2_Stream2_ID           58
-#define irq_DMA2_Channel4_ID          59
-#define irq_DMA2_Stream3_ID           59
-#define irq_DMA2_Channel5_ID          60
-#define irq_DMA2_Stream4_ID           60
-#define irq_ETH_ID                    61
-#define irq_ETH_WKUP_ID               62
-#define irq_CAN2_TX_ID                63
-#define irq_CAN2_RX0_ID               64
-#define irq_CAN2_RX1_ID               65
-#define irq_CAN2_SCE_ID               66
-#define irq_OTG_FS_ID                 67
-#define irq_DMA2_Stream5_ID           68
-#define irq_DMA2_Stream6_ID           69
-#define irq_DMA2_Stream7_ID           70
-#define irq_USART6_ID                 71
-#define irq_I2C3_EV_ID                72
-#define irq_I2C3_ER_ID                73                                 // {9}
-#define irq_OTG_HS_EP1_OUT_ID         74
-#define irq_OTG_HS_EP1_IN_ID          75
-#define irq_OTG_HS_WKUP_ID            76
-#define irq_OTG_HS_ID                 77
-#define irq_DCMI_ID                   78
-#define irq_CRYP_ID                   79
-#define irq_HASH_RNG_ID               80
-#define irq_FPU_ID                    81
-#define irq_UART7_ID                  82
-#define irq_UART8_ID                  83
+#if defined _STM32L031
+    #define irq_WindowsWatchdog_ID        0
+    #define irq_PVD_ID                    1
+    #define irq_RTC_ID                    2
+    #define irq_FLASH_ID                  3
+    #define irq_RCC_ID                    4
+    #define irq_EXTI0_1_ID                5
+    #define irq_EXTI2_3_ID                6
+    #define irq_EXTI4_15_ID               7
+
+    #define irq_DMA1_Channel1_ID          9
+    #define irq_DMA1_Channel2_3_ID        10
+    #define irq_DMA1_Channel4_7_ID        11
+    #define irq_ADC_COMP_ID               12
+    #define irq_LPTIM1_ID                 13
+    #define irq_USART4_5_ID               14
+    #define irq_TIM2_ID                   15
+    #define irq_TIM3_ID                   16
+    #define irq_TIM6_ID                   17
+    #define irq_TIM7_ID                   18
+
+    #define irq_TIM21_ID                  20
+    #define irq_I2C3_ID                   21
+    #define irq_TIM22_ID                  22
+    #define irq_I2C1_ID                   23
+    #define irq_I2C2_ID                   24
+    #define irq_SPI1_ID                   25
+    #define irq_SPI2_ID                   26
+    #define irq_USART1_ID                 27
+    #define irq_USART2_ID                 28
+    #define irq_LPUART1_AES_ID            29
+#else
+    #define irq_WindowsWatchdog_ID        0
+    #define irq_PVD_ID                    1
+    #define irq_Tamper_ID                 2
+    #define irq_RTC_ID                    3
+    #define irq_FLASH_ID                  4
+    #define irq_RCC_ID                    5
+    #define irq_EXTI0_ID                  6
+    #define irq_EXTI1_ID                  7
+    #define irq_EXTI2_ID                  8
+    #define irq_EXTI3_ID                  9
+    #define irq_EXTI4_ID                  10
+    #define irq_DMA1_Channel1_ID          11
+    #define irq_DMA1_Stream0_ID           11
+    #define irq_DMA1_Channel2_ID          12
+    #define irq_DMA1_Stream1_ID           12
+    #define irq_DMA1_Channel3_ID          13
+    #define irq_DMA1_Stream2_ID           13
+    #define irq_DMA1_Channel4_ID          14
+    #define irq_DMA1_Stream3_ID           14
+    #define irq_DMA1_Channel5_ID          15
+    #define irq_DMA1_Stream4_ID           15
+    #define irq_DMA1_Channel6_ID          16
+    #define irq_DMA1_Stream5_ID           16
+    #define irq_DMA1_Channel7_ID          17
+    #define irq_DMA1_Stream6_ID           17
+    #define irq_ADC_ID                    18                             // ADC global interrupts
+    #define irq_CAN1_TX_ID                19
+    #define irq_CAN1_RX0_ID               20
+    #define irq_CAN1_RX1_ID               21
+    #define irq_CAN1_SCE_ID               22
+    #define irq_EXTI9_5_ID                23
+    #define irq_TIM1_BRK_TIM9_ID          24
+    #define irq_TIM1_UP_TIM10_ID          25
+    #define irq_TIM1_TRG_COM_TIM11_ID     26
+    #define irq_TIM1_CC_ID                27
+    #define irq_TIM2_ID                   28
+    #define irq_TIM3_ID                   29
+    #define irq_TIM4_ID                   30
+    #define irq_I2C1_EV_ID                31
+    #define irq_I2C1_ER_ID                32
+    #define irq_I2C2_EV_ID                33
+    #define irq_I2C2_ER_ID                34
+    #define irq_SPI1_ID                   35
+    #define irq_SPI2_ID                   36
+    #define irq_USART1_ID                 37
+    #define irq_USART2_ID                 38
+    #define irq_USART3_ID                 39
+    #define irq_EXTI15_10_ID              40
+    #define irq_RTCAlarm_ID               41
+    #define irq_OTG_FS_WKUP_ID            42
+    #define irq_TIM8_BRK_TIM12_ID         43
+    #define irq_TIM8_UP_TIM13_ID          44
+    #define irq_TIM8_TRG_COM_TIM14_ID     45
+    #define irq_TIM8_CC_ID                46
+    #define irq_DMA1_Stream7_ID           47
+    #define irq_FSMC_ID                   48
+    #define irq_SDIO_ID                   49
+    #define irq_TIM5_ID                   50
+    #define irq_SPI3_ID                   51
+    #define irq_UART4_ID                  52
+    #define irq_UART5_ID                  53
+    #define irq_TIM6_ID                   54
+    #define irq_TIM6_DAC_ID               54
+    #define irq_TIM7_ID                   55
+    #define irq_DMA2_Channel1_ID          56
+    #define irq_DMA2_Stream0_ID           56
+    #define irq_DMA2_Channel2_ID          57
+    #define irq_DMA2_Stream1_ID           57
+    #define irq_DMA2_Channel3_ID          58
+    #define irq_DMA2_Stream2_ID           58
+    #define irq_DMA2_Channel4_ID          59
+    #define irq_DMA2_Stream3_ID           59
+    #define irq_DMA2_Channel5_ID          60
+    #define irq_DMA2_Stream4_ID           60
+    #define irq_ETH_ID                    61
+    #define irq_ETH_WKUP_ID               62
+    #define irq_CAN2_TX_ID                63
+    #define irq_CAN2_RX0_ID               64
+    #define irq_CAN2_RX1_ID               65
+    #define irq_CAN2_SCE_ID               66
+    #define irq_OTG_FS_ID                 67
+    #define irq_DMA2_Stream5_ID           68
+    #define irq_DMA2_Stream6_ID           69
+    #define irq_DMA2_Stream7_ID           70
+    #define irq_USART6_ID                 71
+    #define irq_I2C3_EV_ID                72
+    #define irq_I2C3_ER_ID                73                             // {9}
+    #define irq_OTG_HS_EP1_OUT_ID         74
+    #define irq_OTG_HS_EP1_IN_ID          75
+    #define irq_OTG_HS_WKUP_ID            76
+    #define irq_OTG_HS_ID                 77
+    #define irq_DCMI_ID                   78
+    #define irq_CRYP_ID                   79
+    #define irq_HASH_RNG_ID               80
+    #define irq_FPU_ID                    81
+    #define irq_UART7_ID                  82
+    #define irq_UART8_ID                  83
+#endif
 
 
 
@@ -6895,7 +6987,9 @@ typedef struct stVECTOR_TABLE
         #define PERIPHERAL_COMP1_COMP2                           0x7
         // For compatibility
         //
-        #define PERIPHERAL_SYS      PERIPHERAL_SPI1_USART2_LPTIM1_TIM21_EVENTOUT_SYS
+        #define PERIPHERAL_SYS          PERIPHERAL_SPI1_USART2_LPTIM1_TIM21_EVENTOUT_SYS
+        #define PERIPHERAL_USART2       PERIPHERAL_I2C1_USART2_LPUART1_TIM22_EVENTOUT
+        #define PERIPHERAL_USART1_2_3   PERIPHERAL_I2C1_USART2_LPUART1_TIM22_EVENTOUT
     #else
         #define PERIPHERAL_SYS                0x0
         #define PERIPHERAL_TIM1_2             0x1
@@ -7091,11 +7185,11 @@ typedef struct stVECTOR_TABLE
 
 // Independent Watchdog
 //
-#define IWDG_KR                         *(volatile unsigned long *)(IWDG_BLOCK + 0x0) // IWDG Key Register (write-only)
+#define IWDG_KR                         *(volatile unsigned long *)(IWDG_BLOCK + 0x00) // IWDG Key Register (write-only)
   #define IWDG_KR_START                 0xcccc
   #define IWDG_KR_RETRIGGER             0xaaaa
   #define IWDG_KR_MODIFY                0x5555
-#define IWDG_PR                         *(unsigned long *)(IWDG_BLOCK + 0x4)  // IWDG Prescale Register
+#define IWDG_PR                         *(unsigned long *)(IWDG_BLOCK + 0x04) // IWDG Prescale Register
   #define IWDG_PR_PRESCALE_4            0x0000
   #define IWDG_PR_PRESCALE_8            0x0001
   #define IWDG_PR_PRESCALE_16           0x0002
@@ -7103,11 +7197,14 @@ typedef struct stVECTOR_TABLE
   #define IWDG_PR_PRESCALE_64           0x0004
   #define IWDG_PR_PRESCALE_128          0x0005
   #define IWDG_PR_PRESCALE_256          0x0006
-#define IWDG_RLR                        *(unsigned long *)(IWDG_BLOCK + 0x8)  // IWDG Reload Register
+#define IWDG_RLR                        *(unsigned long *)(IWDG_BLOCK + 0x08) // IWDG Reload Register
   #define IWDG_RLR_MASK                 0xfff
-#define IWDG_SR                         *(volatile unsigned long *)(IWDG_BLOCK + 0xc) // IWDG Status Register (read-only)
+#define IWDG_SR                         *(volatile unsigned long *)(IWDG_BLOCK + 0x0c) // IWDG Status Register (read-only)
   #define IWDG_SR_PVU                   0x00000001                       // watchdog prescale value update
   #define IWDG_SR_RVU                   0x00000002                       // watchdog reload value update
+#if defined _STM32L432 || defined _STM32L031
+    #define IWDG_WINR                   *(unsigned long *)(IWDG_BLOCK + 0x10)  // IWDG Reload Register
+#endif
 
 #define RETRIGGER_WATCHDOG()            IWDG_KR = IWDG_KR_RETRIGGER
 

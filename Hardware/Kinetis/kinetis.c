@@ -1218,7 +1218,7 @@ static void fnINTMUX3(void)
 extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void (*InterruptFunc)(void)) // {55}
 {
     volatile unsigned long *ptrIntSet = IRQ0_31_SER_ADD;                 // {73}
-#if defined KINETIS_KL03                                                 // only long word acesses are possible to the priority registers
+#if defined ARM_MATH_CM0PLUS                                             // only long word acesses are possible to the priority registers
     volatile unsigned long *ptrPriority = (unsigned long *)IRQ0_3_PRIORITY_REGISTER_ADD;
     int iShift;
 #else
@@ -1290,7 +1290,7 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void (*
     processor_ints += iInterruptID;                                      // move the pointer to the location used by this interrupt number
     *processor_ints = InterruptFunc;                                     // enter the interrupt handler into the vector table
 #endif
-#if defined KINETIS_KL03
+#if defined ARM_MATH_CM0PLUS
     ptrPriority += (iInterruptID/4);                                     // move to the priority location used by this interrupt
     iShift = ((iInterruptID % 4) * 8);
     *ptrPriority = ((*ptrPriority & ~(0xff << iShift)) | (ucPriority << (iShift + __NVIC_PRIORITY_SHIFT)));

@@ -789,12 +789,12 @@ unsigned long *pPixels = 0;
         #endif
     #else
         #if defined _LM3S10X
-            #define CHIP_PACKAGE "..//..//..//Hardware//LM3SXXXX//GUI//lm3s10x.bmp"
+            #define CHIP_PACKAGE "..//..//..//Hardware//Luminary//GUI//lm3s10x.bmp"
         #else
             #if defined DEVICE_WITHOUT_ETHERNET
-                #define CHIP_PACKAGE "..//..//..//Hardware//LM3SXXXX//GUI//lm3sxxxx.bmp"
+                #define CHIP_PACKAGE "..//..//..//Hardware//Luminary//GUI//lm3sxxxx.bmp"
             #else
-                #define CHIP_PACKAGE "..//..//..//Hardware//LM3SXXXX//GUI//lm3sxxxxEth.bmp"
+                #define CHIP_PACKAGE "..//..//..//Hardware//Luminary//GUI//lm3sxxxxEth.bmp"
             #endif
         #endif   
     #endif

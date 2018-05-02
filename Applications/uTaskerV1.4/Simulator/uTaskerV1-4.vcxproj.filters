@@ -78,6 +78,27 @@
     <Filter Include="WinSim\SIMstm32">
       <UniqueIdentifier>{c60e26b6-9db7-4261-8ace-e2f2597c0ac0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Hardware\Luminary">
+      <UniqueIdentifier>{33218b4d-59e2-4c35-a926-00dc284040ff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Hardware\Coldfire">
+      <UniqueIdentifier>{9ba0eade-8d4c-4267-8d28-85cfce82aeab}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Hardware\LPC2XXX">
+      <UniqueIdentifier>{2a92aab8-6cba-4768-9af2-b19e2b3bea26}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Hardware\LPC17XX">
+      <UniqueIdentifier>{e2693bb2-e87d-471c-b37d-0e12b9ec0753}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Hardware\AVR32">
+      <UniqueIdentifier>{e21507c9-c60c-4da3-8df7-0a724dcfdb2e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Hardware\SAM7">
+      <UniqueIdentifier>{cb0b4524-0ec6-4e28-b480-97c8219fbba4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="WinSim\SIMluminary">
+      <UniqueIdentifier>{93c2770d-0c7f-4f4e-bff7-d2993e9e70fe}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\application.c">
@@ -267,9 +288,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\Hardware\Kinetis\kinetisSim.c">
-      <Filter>WinSim\SIMKinetis</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\WinSim\serial_dev.c">
       <Filter>WinSim\SIMKinetis</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\uTasker\i2c_drv.c">
@@ -488,6 +506,18 @@
     <ClCompile Include="..\..\..\Hardware\CMSIS_DSP\arm_sin_cos_f32.c">
       <Filter>Hardware\CMSIS_DSP</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\Hardware\Luminary\LM3SXXXX.c">
+      <Filter>Hardware\Luminary</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Hardware\Luminary\LM3SXXXXSim.c">
+      <Filter>WinSim\SIMluminary</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Hardware\Luminary\LM3SXXXX_ports.cpp">
+      <Filter>WinSim\SIMluminary</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\WinSim\serial_dev.c">
+      <Filter>WinSim</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\ADC_Timers.h">
@@ -558,9 +588,6 @@
     </ClInclude>
     <ClInclude Include="..\..\..\WinSim\WinSim.h">
       <Filter>WinSim</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis.h">
-      <Filter>Hardware\Kinetis</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\spi_flash_kinetis_atmel.h">
       <Filter>Hardware\Kinetis</Filter>
@@ -1240,6 +1267,66 @@
     <ClInclude Include="..\..\..\Hardware\STM32\STM32L4XX_port.h">
       <Filter>WinSim\SIMstm32</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\STM32L031_port.h">
+      <Filter>WinSim\SIMstm32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Luminary\LM3SXXXX.h">
+      <Filter>Hardware\Luminary</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Luminary\spi_flash_lm3s_atmel.h">
+      <Filter>Hardware\Luminary</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Luminary\spi_flash_lm3s_sst25.h">
+      <Filter>Hardware\Luminary</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Luminary\spi_flash_lm3s_stmicro.h">
+      <Filter>Hardware\Luminary</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Luminary\spi_sc16IS7xx.h">
+      <Filter>Hardware\Luminary</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Luminary\LM3S9B95_port.h">
+      <Filter>WinSim\SIMluminary</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Luminary\LM3S10X_port.h">
+      <Filter>WinSim\SIMluminary</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Luminary\LM3S1968_port.h">
+      <Filter>WinSim\SIMluminary</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Luminary\LM3S2110_port.h">
+      <Filter>WinSim\SIMluminary</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Luminary\LM3S2139_port.h">
+      <Filter>WinSim\SIMluminary</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Luminary\LM3S3748_port.h">
+      <Filter>WinSim\SIMluminary</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Luminary\LM3S3768_port.h">
+      <Filter>WinSim\SIMluminary</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Luminary\LM3S5732_port.h">
+      <Filter>WinSim\SIMluminary</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Luminary\LM3S6965_port.h">
+      <Filter>WinSim\SIMluminary</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Luminary\LM3S8962_port.h">
+      <Filter>WinSim\SIMluminary</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Luminary\SimLM3SXXXX.h">
+      <Filter>WinSim\SIMluminary</Filter>
+    </ClInclude>
+    <ClInclude Include="..\app_hw_lm3sxxxx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\CMSIS_DSP\core_cm3.h">
+      <Filter>Hardware\CMSIS_DSP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="cursor1.cur">
@@ -1272,6 +1359,12 @@
     </None>
     <None Include="..\..\..\Hardware\CMSIS_DSP\arm_bitreversal2.S">
       <Filter>Hardware\CMSIS_DSP</Filter>
+    </None>
+    <None Include="..\..\..\Hardware\Luminary\LM3SXXXX_asm.s">
+      <Filter>Hardware\Luminary</Filter>
+    </None>
+    <None Include="..\..\..\Hardware\Luminary\LM3SXXXX_startup_keil.s">
+      <Filter>Hardware\Luminary</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

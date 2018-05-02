@@ -15,6 +15,7 @@
     **********************************************************************
     02.02.2017 Adapt for us tick resolution (_TICK_RESOLUTION)
     11.04.2018 Merge with STM32 project
+    01.05.2018 Merge with Luminary projects
     
 */
 
@@ -63,7 +64,7 @@
 //
 // Kinetis
 //
-#if defined _KINETIS
+#if defined _KINETIS                                                     // NXP Kinetis targets
     //#define TRK_KEA8                                                   // EA ultra-reliable automotive processors Cortex-M0+ - starterTRAK board http://www.utasker.com/kinetis/TRK-KEA8.html
     //#define TRK_KEA64                                                  // starterTRAK board http://www.utasker.com/kinetis/TRK-KEA64.html
     //#define TRK_KEA128                                                 // starterTRAK board http://www.utasker.com/kinetis/TRK-KEA128.html
@@ -165,7 +166,21 @@
     //#define FRDM_K82F                                                  // K processors Cortex M4 with USB, encryption, tamper (scalable and secure) - freedom board http://www.utasker.com/kinetis/FRDM-K82F.html
     //#define TWR_POS_K81
     //#define TWR_K80F150M                                               // tower board http://www.utasker.com/kinetis/TWR-K80F150M.html
-#elif defined _STM32
+#elif defined _LM3SXXXX                                                  // Luminary Micro Stellaris family
+    //#define _LM3S10X                                                   // small package part - 28 SOIC
+      #define EK_LM3S1968                                                // LUMINARY EVAL board without Ethernet
+    //#define EK_LM3S2110                                                // LUMINARY CAN DEVICE BOARD
+    //#define EK_LM3S2139                                                // LUMINARY CAN DEVICE BOARD
+    //#define EK_LM3S3748                                                // LUMINARY EVAL board with USB HOST/DEVICE (100pin) + CGLCD
+    //#define EK_LM3S3768                                                // LUMINARY EVAL board with USB HOST/DEVICE/OTG
+    //#define EK_LM3S5732                                                // LUMINARY EVAL board with USB HOST/DEVICE (64pin)
+    //#define EK_LM3S6965                                                // LUMINARY EVAL board with Ethernet
+    //#define EK_LM3S8962                                                // LUMINARY EVAL board with Ethernet and CAN
+    //#define EK_LM3S9B90                                                // LUMINARY EVAL board with Ethernet, USB-OTG, 2xCAN
+    //#define EK_LM3S9B95                                                // LUMINARY EVAL board with Ethernet, USB-OTG, 2xCAN
+    //#define DK_LM3S9B96
+    //#define IDM_L35_B                                                  // LUMINARY inteligent display module with 3.5" TFT and touch screen (LM3S1958)
+#elif defined _STM32                                                     // ST Micro STM32 family
     // STM32
     //
     // Nucleo 32 range
@@ -864,9 +879,62 @@
     #define KINETIS_REVISION_2
     #define DEVICE_WITHOUT_ETHERNET                                      // K82 doesn't have Ethernet controller
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((30 * 1024) * MEM_FACTOR)
+#elif defined EK_LM3S9B95
+    #define TARGET_HW            "LUMINARY LM3S9B95 BOARD"
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((25 * 1024)*MEM_FACTOR)
+#elif defined DK_LM3S9B96
+    #define TARGET_HW            "LUMINARY LM3S9B96 BOARD"
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((25 * 1024)*MEM_FACTOR)
+#elif defined EK_LM3S9B90
+    #define TARGET_HW            "LUMINARY LM3S9B90 BOARD"
+    #define DEVICE_WITHOUT_USB
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((25 * 1024)*MEM_FACTOR)
+#elif defined EK_LM3S6965
+    #define DEVICE_WITHOUT_USB
+    #define TARGET_HW            "LUMINARY LM3S6965 BOARD"
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((25 * 1024)*MEM_FACTOR)
+#elif defined EK_LM3S8962
+    #define DEVICE_WITHOUT_USB
+    #define TARGET_HW            "LUMINARY LM3S8962 BOARD"
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((25 * 1024)*MEM_FACTOR)
+#elif defined EK_LM3S1968
+    #define DEVICE_WITHOUT_ETHERNET
+    #define DEVICE_WITHOUT_USB
+    #define TARGET_HW            "LUMINARY LM3S1968 BOARD"
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((25 * 1024)*MEM_FACTOR)
+#elif defined IDM_L35_B
+    #define DEVICE_WITHOUT_ETHERNET
+    #define DEVICE_WITHOUT_USB
+    #define TARGET_HW            "LUMINARY LM3S1958 BOARD"
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((25 * 1024)*MEM_FACTOR)
+#elif defined _LM3S10X
+    #define DEVICE_WITHOUT_USB
+    #define DEVICE_WITHOUT_ETHERNET
+    #define TARGET_HW            "LUMINARY LM3S10X"
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((16 * 1024)*MEM_FACTOR)
+#elif defined EK_LM3S5732
+    #define DEVICE_WITHOUT_ETHERNET
+    #define TARGET_HW            "LUMINARY LM3S5732"
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((25 * 1024)*MEM_FACTOR)
+#elif defined EK_LM3S3748
+    #define DEVICE_WITHOUT_ETHERNET
+    #define TARGET_HW            "LUMINARY LM3S3748"
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((25 * 1024)*MEM_FACTOR)
+#elif defined EK_LM3S3768
+    #define DEVICE_WITHOUT_ETHERNET
+    #define TARGET_HW            "LUMINARY LM3S3768"
+#elif defined EK_LM3S2110
+    #define DEVICE_WITHOUT_ETHERNET
+    #define DEVICE_WITHOUT_USB
+    #define TARGET_HW            "LM3S2110 CAN DEVICE"
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((25 * 1024)*MEM_FACTOR)
+#elif defined EK_LM3S2139
+    #define DEVICE_WITHOUT_ETHERNET
+    #define DEVICE_WITHOUT_USB
+    #define TARGET_HW            "LM3S2139 CAN DEVICE"
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((25 * 1024)*MEM_FACTOR)
 #elif defined NUCLEO_L432KC
-    #define STM_MAX_SPEED        80000000
-    #define TARGET_HW            "NUCLEO-L432KC (STM32L432)"
+    #define TARGET_HW            "NUCLEO-L432KC (STM32L432)"             // 80MHz with FPU
     #define _STM32L4XX
     #define _STM32L432                                                   // part type
     #define STM32_FPU                                                    // FPU present
@@ -874,16 +942,17 @@
     #define DEVICE_WITHOUT_USB                                           // the STM32 device has USB but the board doesn't allow it to be used directly
     #define DEVICE_WITHOUT_ETHERNET                                      // the STM32 doesn't have ethernet
     #define DEVICE_WITHOUT_DMA                                           // provisional during initial development
+    #define DEVICE_WITHOUT_CAN                                           // this STM32L4 doesn't have CAN controller
 #elif defined NUCLEO_L031K6
-    #define STM_MAX_SPEED        32000000
-    #define TARGET_HW            "NUCLEO-L031K6 (STM32L031K6)"
+    #define TARGET_HW            "NUCLEO-L031K6 (STM32L031K6)"           // 32MHz
     #define _STM32L0                                                     // cortex-m0+
     #define _STM32L0x1                                                   // part family
     #define _STM32L031                                                   // part type
-    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((16 * 1024) * MEM_FACTOR)
-    #define DEVICE_WITHOUT_USB                                           // the STM32 device has USB but the board doesn't allow it to be used directly
-    #define DEVICE_WITHOUT_ETHERNET                                      // the STM32 doesn't have ethernet
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((4 * 1024) * MEM_FACTOR)
+    #define DEVICE_WITHOUT_USB                                           // this STM32L device doesn't have US
+    #define DEVICE_WITHOUT_ETHERNET                                      // this STM32L doesn't have ethernet
     #define DEVICE_WITHOUT_DMA                                           // provisional during initial development
+    #define DEVICE_WITHOUT_CAN                                           // this STM32L doesn't have CAN controller
 #elif defined STM3210C_EVAL
     #define TARGET_HW            "STM3210C-EVAL (STM32F107VCT)"
     #define _STM32F107X                                                  // part group
@@ -956,7 +1025,7 @@
 #if defined FRDM_KE04Z || defined FRDM_KL03Z || defined TWR_KV10Z32 || defined TEENSY_LC || defined TRK_KEA8 // due to the restricted flash size in this device the flash is used only for program code
     #define NO_FLASH_SUPPORT                                             // neither parameter nor file system
 #else
-  //#define NO_FLASH_SUPPORT                                             // neither parameter nor file system
+  //#define NO_FLASH_SUPPORT                                             // neither parameter nor file system used
 #endif
 #if !defined NO_FLASH_SUPPORT
     #define USE_PARAMETER_BLOCK                                          // enable a parameter block for storing and retrieving non-volatile information
@@ -2278,6 +2347,7 @@
     #undef QUICK_DEV_TASKS
     #undef RANDOM_NUMBER_GENERATOR
     #define NO_FLASH_SUPPORT
+    #define REMOVE_PORT_INITIALISATIONS
     #define NO_PERIPHERAL_DEMONSTRATIONS
 #endif
 

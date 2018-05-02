@@ -50,6 +50,7 @@
     06.05.2017 Modify external port referecne from bit number to bit mask{35}
     31.08.2017 Add ADC                                                   {36}
     11.04.2018 Change uMemset() to match memset() parameters             {37}
+    01.05.2018 Write to SYSTICK_CURRENT to synchronise the Systick counter after configuration {38}
 
 */
 
@@ -436,7 +437,12 @@ extern void uEnable_Interrupt(void)
 extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void (*InterruptFunc)(void))
 {
     volatile unsigned long *ptrIntSet = IRQ0_31_SER_ADD;                 // {25}
+#if defined ARM_MATH_CM0PLUS                                             // only long word acesses are possible to the priority registers
+    volatile unsigned long *ptrPriority = (unsigned long *)IRQ0_3_PRIORITY_REGISTER_ADD;
+    int iShift;
+#else
     volatile unsigned char *ptrPriority = IRQ0_3_PRIORITY_REGISTER_ADD;  // {25}
+#endif
     VECTOR_TABLE *ptrVect;
     void (**processor_ints)(void);
 #if defined _WINDOWS                                                     // back up the present enabled interrupt registers
@@ -456,9 +462,25 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void (*
 
     ptrIntSet += (iInterruptID/32);
     *ptrIntSet = (0x01 << (iInterruptID%32));                            // enable the interrupt
-
+#if defined _WINDOWS                                                     // check for valid interrupt priority range
+    #if defined ARM_MATH_CM0PLUS
+    if (ucPriority >= 4) {
+        _EXCEPTION("Invalid Cortex-M0+ priority being used!!");
+    }
+    #else
+    if (ucPriority >= 16) {
+        _EXCEPTION("Invalid Cortex-M4 priority being used!!");
+    }
+    #endif
+#endif
+#if defined ARM_MATH_CM0PLUS
+    ptrPriority += (iInterruptID/4);                                     // move to the priority location used by this interrupt
+    iShift = ((iInterruptID % 4) * 8);
+    *ptrPriority = ((*ptrPriority & ~(0xff << iShift)) | (ucPriority << (iShift + __NVIC_PRIORITY_SHIFT)));
+#else
     ptrPriority += iInterruptID;
-    *ptrPriority = (ucPriority << 4);                                    // define the interrupt's priority
+    *ptrPriority = (ucPriority << __NVIC_PRIORITY_SHIFT);                // define the interrupt's priority
+#endif
 #if defined _WINDOWS
     IRQ0_31_SER  |= ulState0;                                            // synchronise the interrupt masks
     IRQ32_63_SER |= ulState1;
@@ -488,7 +510,7 @@ static __interrupt void _RealTimeInterrupt(void)
 // Routine to initialise the Tick interrupt (uses Cortex M3 SysTick timer)
 //
 #define REQUIRED_US (1000000/(TICK_RESOLUTION))                          // the TICK frequency we require in MHz
-#if defined _STM32L432
+#if defined SYSTICK_DIVIDE_8
     #define TICK_DIVIDE ((((HCLK/8) + REQUIRED_US/2)/REQUIRED_US) - 1)   // the divide ratio required - systick is clocked from HCLK/8
 #else
     #define TICK_DIVIDE (((HCLK + REQUIRED_US/2)/REQUIRED_US) - 1)       // the divide ratio required - systick is clocked from HCLK
@@ -509,11 +531,12 @@ extern void fnStartTick(void)
     ptrVect->ptrSysTick = _RealTimeInterrupt;                            // enter interrupt handler
 #endif
     SYSTICK_RELOAD = TICK_DIVIDE;                                        // set reload value to determine the period
-    SYSTEM_HANDLER_12_15_PRIORITY_REGISTER |= (SYSTICK_PRIORITY << 24);  // enter the SYSTICK priority
-#if defined _STM32L432
-    SYSTICK_CSR = (SYSTICK_ENABLE | SYSTICK_TICKINT);                    // enable timer and its interrupt
+    SYSTICK_CURRENT = TICK_DIVIDE;                                       // {38}
+    SYSTEM_HANDLER_12_15_PRIORITY_REGISTER |= (unsigned long)(SYSTICK_PRIORITY << (24 + __NVIC_PRIORITY_SHIFT)); // enter the SYSTICK priority
+#if defined SYSTICK_DIVIDE_8
+    SYSTICK_CSR = (SYSTICK_ENABLE | SYSTICK_TICKINT);                    // enable timer and its interrupt (clock form HCLK/8)
 #else
-    SYSTICK_CSR = (SYSTICK_CORE_CLOCK | SYSTICK_ENABLE | SYSTICK_TICKINT); // enable timer and its interrupt
+    SYSTICK_CSR = (SYSTICK_CORE_CLOCK | SYSTICK_ENABLE | SYSTICK_TICKINT); // enable timer and its interrupt (clock from HCLK)
 #endif
 #if defined _WINDOWS
     SYSTICK_RELOAD &= SYSTICK_COUNT_MASK;                                // mask any values which are out of range
@@ -3073,9 +3096,38 @@ static void irq_default(void)
 //
 extern void fnDelayLoop(unsigned long ulDelay_us)
 {
+#if !defined TICK_USES_LPTMR && !defined TICK_USES_RTC                   // if the SYSTICK is operating we use it as a us timer for best independence of code execution speed and compiler (KL typically +15% longer then requested value between 100us and 10ms)
+    #if defined SYSTICK_DIVIDE_8
+        #define CORE_US (HCLK/8/1000000)                                 // the number of core clocks in a us
+    #else
+        #define CORE_US (HCLK/1000000)                                   // the number of core clocks in a us
+    #endif
+    #if !defined _WINDOWS
+    register unsigned long ulPresentSystick;
+    #endif
+    register unsigned long ulMatch;
+    register unsigned long _ulDelay_us = ulDelay_us;                     // ensure that the compiler puts the variable in a register rather than work with it on the stack
+    if (_ulDelay_us == 0) {                                              // minimum delay is 1us
+        _ulDelay_us = 1;
+    }
+    (void)SYSTICK_CSR;                                                   // clear the SysTick reload flag
+    ulMatch = (SYSTICK_CURRENT - CORE_US);                               // next 1us match value (SysTick counts down)
+    do {
+    #if !defined _WINDOWS
+        while ((ulPresentSystick = SYSTICK_CURRENT) > ulMatch) {         // wait until a us period has expired
+            if ((SYSTICK_CSR & SYSTICK_COUNTFLAG) != 0) {                // if we missed a reload
+                (void)SYSTICK_CSR;
+                break;                                                   // assume a us period expired
+            }
+        }
+        ulMatch = (ulPresentSystick - CORE_US);
+    #endif
+    } while (--_ulDelay_us != 0);
+#else
     #define LOOP_FACTOR  14000000                                        // tuned
     volatile unsigned long ulDelay = ((SYSCLK/LOOP_FACTOR) * ulDelay_us);
-    while (ulDelay--) {}                                                 // simple loop tuned to perform us timing
+    while (ulDelay-- != 0) {}                                            // simple loop tuned to perform us timing
+#endif
 }
 
 
@@ -3241,8 +3293,14 @@ static void STM32_LowLevelInit(void)
     ptrVect->ptrUsageFault    = irq_usage_fault;
     ptrVect->ptrDebugMonitor  = irq_debug_monitor;
     ptrVect->ptrNMI           = irq_NMI;
+    #if defined RUN_IN_FREE_RTOS
+    ptrVect->ptrPendSV        = xPortPendSVHandler;                      // FreeRTOS's PendSV handler
+    ptrVect->ptrSVCall        = vPortSVCHandler;                         // FreeRTOS's SCV handler
+    ptrVect->reset_vect.ptrResetSP = (void *)(RAM_START_ADDRESS + (SIZE_OF_RAM - NON_INITIALISED_RAM_SIZE)); // the stack pointer value will be taken from the vector base area so enter it in SRAM
+    #else
     ptrVect->ptrPendSV        = irq_pend_sv;
     ptrVect->ptrSVCall        = irq_SVCall;
+    #endif
     processor_ints = (void (**)(void))&ptrVect->processor_interrupts;    // fill all processor specific interrupts with a default handler
     do {
         *processor_ints = irq_default;
@@ -3317,14 +3375,23 @@ static void _main2(void)
 }
 #endif
 
-#ifndef _COMPILE_KEIL                                                    // Keil doesn't support in-line assembler in Thumb mode so an assembler file is required
+#if !defined _COMPILE_KEIL                                               // Keil doesn't support in-line assembler in Thumb mode so an assembler file is required
 // Allow the jump to a foreign application as if it were a reset (load SP and PC)
 //
-extern void start_application(unsigned long app_link_location)           // {3}
+extern void start_application(unsigned long app_link_location)
 {
-    #ifndef _WINDOWS
-    asm(" ldr sp, [r0,#0]");
-    asm(" ldr pc, [r0,#4]");
+    #if defined ARM_MATH_CM0PLUS                                         // {67} cortex-M0+ assembler code
+        #if !defined _WINDOWS
+    asm(" ldr r1, [r0,#0]");                                             // get the stack pointer value from the program's reset vector
+    asm(" mov sp, r1");                                                  // copy the value to the stack pointer
+    asm(" ldr r0, [r0,#4]");                                             // get the program counter value from the program's reset vector
+    asm(" blx r0");                                                      // jump to the start address
+        #endif
+    #else                                                                // cortex-M3/M4 assembler code
+        #if !defined _WINDOWS
+    asm(" ldr sp, [r0,#0]");                                             // load the stack pointer value from the program's reset vector
+    asm(" ldr pc, [r0,#4]");                                             // load the program counter value from the program's reset vector to cause operation to continue from there
+        #endif
     #endif
 }
 #endif

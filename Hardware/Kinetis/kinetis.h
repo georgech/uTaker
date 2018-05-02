@@ -128,6 +128,7 @@
     18.12.2017 Correct bus and flash clock calculation for KL parts with individual bus and flash clock dividers {106}
     11.03.2018 Correct PWM clock source                                  {107}
     19.03.2018 Extend PWM configuration to use TRGMUX triggers as clock input {108}
+    01.05.2018 Add SET_KUART_BAUD() SET_UART_BAUD() and SET_LPUART_BAUD() macros to directly change UART baud rates {109}
 
 */
 
@@ -186,8 +187,8 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
     #define __PACK_ON  #pragma pack(1) 
     #define __PACK_OFF #pragma pack() 
 #elif defined _COMPILE_GHS
-    #define __PACK_ON  //#pragma pack(1) 
-    #define __PACK_OFF //#pragma pack(0) 
+    #define __PACK_ON
+    #define __PACK_OFF
 #else
     #define __PACK_ON 
     #define __PACK_OFF 
@@ -14402,6 +14403,10 @@ typedef struct stKINETIS_CAN_CONTROL
         unsigned long LPUART_WATER;
     #endif
     } KINETIS_LPUART_CONTROL;
+
+    // Macro to directly change the baud rate of a LPUART - the user must know the LPUART clock's speed and be sure that the LPUART has already been powered up {109}
+    //
+    #define SET_LPUART_BAUD(ref, baud_rate, uart_clock)           LPUART##ref##_BAUD = ((LPUART##ref##_BAUD & ~LPUART_BAUD_SBR) | ((((uart_clock/8/baud_rate) + 1)/2) | LPUART_BAUD_OSR_16))
 #endif
 
 #define UART0_BDH                        *(volatile unsigned char *)(UART0_BLOCK + 0x00) // UART 0 baud rate register: high (write order BDH followed by BDL)
@@ -14529,6 +14534,13 @@ typedef struct stKINETIS_CAN_CONTROL
     #define UART0_ET7816                 *(unsigned char *)(UART0_BLOCK + 0x1e)           // UART 0 7816 Error Threshold Register
     #define UART0_TL7816                 *(unsigned char *)(UART0_BLOCK + 0x1f)           // UART 0 7816 Transmit Length Register
 #endif
+
+// Macro to directly change the baud rate of a UART - the user must know the UART clock's speed and be sure that the UART has already been powered up {109}
+// - SET_KUART_BAUD() is for use with the full UART as found in K parts and soem KL part channels
+// - SET_UART_BAUD() is for use with UARTs that have no fration divider, such as in most KL parts
+//
+#define SET_KUART_BAUD(ref, baud_rate, uart_clock) UART##ref##_C4 = (unsigned char)((float)((((float)uart_clock/(float)16/(float)baud_rate) - (int)(uart_clock/16/baud_rate)) * 32)); UART##ref##_BDH = (unsigned char)(((uart_clock/16/baud_rate) >> 8) & 0x1f); UART##ref##_BDL = (unsigned char)(uart_clock/16/baud_rate)
+#define SET_UART_BAUD(ref, baud_rate, uart_clock)  UART##ref##_BDH = (unsigned char)(((((uart_clock/8/baud_rate) + 1)/2) >> 8) & 0x1f); UART##ref##_BDL = (unsigned char)(((uart_clock/8/baud_rate) + 1)/2)
 
 #define UART1_BDH                        *(volatile unsigned char *)(UART1_BLOCK + 0x00)  // UART 1 Baud Rate Registers: High
 #if defined KINETIS_KL

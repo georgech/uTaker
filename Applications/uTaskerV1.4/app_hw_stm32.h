@@ -38,7 +38,8 @@
     #define _SIM_PORTS
 #endif
 
-#if defined NUCLEO_L432KC                                                // STM32L432 (80Mhz)
+#if defined NUCLEO_L432KC                                                // STM32L432 (80MHz)
+    #define SYSTICK_DIVIDE_8                                             // use HCLK/8 as SYSTICK clock
     #define CRYSTAL_FREQ        32768                                    // when there is a 32kHz crystal it can be used for the RTC, LSCO or MCO (optionally divided)
 
     #define MCO_CONNECTED_TO_MSI
@@ -66,7 +67,7 @@
     #define MCO_DIVIDE          16                                       // 1, 2, 4, 8 or 16 possible (defaults to /1 if not specified)
 
     #define USE_MSI_CLOCK                                                // use internal MSI clock source (4.194MHz default)
-    #define MSI_CLOCK           2097000                                  // 65.536kHz, 131.072kHz, 262.144kHz, 524.288kHz, 1.048MHz, 2.097MHz and 4.194MHz possible
+    #define MSI_CLOCK           4194000                                  // 65.536kHz, 131.072kHz, 262.144kHz, 524.288kHz, 1.048MHz, 2.097MHz and 4.194MHz possible
   //#define USE_HSI_CLOCK                                                // use internal HSI clock source (16MHz)
     #define DISABLE_PLL                                                  // run from clock source directly
 
@@ -564,7 +565,12 @@
             #define FILE_SYSTEM_SIZE (124 * FILE_GRANULARITY)            // 512k reserved for file system (assuming 4k file size)
         #endif
     #else
-        #if (SIZE_OF_FLASH == (128 * 1024))
+        #if (SIZE_OF_FLASH == (32 * 1024))
+            #define FILE_GRANULARITY (1 * FLASH_GRANULARITY)             // each file a multiple of page size
+            #define FILE_SYSTEM_SIZE (1 * FILE_GRANULARITY)              // one page reserved for file system
+            #define PARAMETER_BLOCK_START (FLASH_START_ADDRESS + SIZE_OF_FLASH - (2 * FLASH_GRANULARITY)) // FLASH location of parameter system
+            #define uFILE_START (PARAMETER_BLOCK_START - FILE_SYSTEM_SIZE) // FLASH location of uFileSystem
+        #elif (SIZE_OF_FLASH == (128 * 1024))
             #if defined _CONNECTIVITY_LINE                               // {7}
                 #define PARAMETER_BLOCK_START (FLASH_START_ADDRESS + 0x10000)// FLASH location at 64k start
                 #define uFILE_START (FLASH_START_ADDRESS + 0x11000)      // FLASH location at 68k start
@@ -680,7 +686,7 @@
         #define USART1_REMAP                                             // use USART1 on remapped pins (note that this is channel 0)
         #define USART1_NOREMAP_TX                                        // rx is remapped but tx not
     #endif
-    #if defined NUCLEO_L432KC
+    #if defined NUCLEO_L432KC || defined NUCLEO_L031K6
         #define USART2_PARTIAL_REMAP
     #else
         #define USART2_REMAP                                             // use USART2 on remapped pins (note that this is channel 1)
@@ -872,39 +878,71 @@
     #define DMA_CNDTR1_MEMCPY DMA1_CNDTR1
 #endif
 
-// Define interrupt priorities in the system (STM32 support 0..15 - 0 is highest priority and 15 is lowest priority)
+// Define interrupt priorities in the system (STM32 cortex-m3/m4/m7 supports 0..15 - 0 is highest priority and 15 is lowest priority) (STM32L cortex-m0+ supports 0..3)
 //
-#define SYSTICK_PRIORITY           15
+#if defined ARM_MATH_CM0PLUS
+    #define SYSTICK_PRIORITY           3
 
-#define PRIORITY_EXI10_15          8
-#define PRIORITY_EXI5_9            8
-#define PRIORITY_EXI0              8
-#define PRIORITY_EXI1              8
-#define PRIORITY_EXI2              8
-#define PRIORITY_EXI3              8
-#define PRIORITY_EXI4              8
-#define PHY_INT_PRIORITY           PRIORITY_EXI10_15
-#define PRIORITY_UART5             7
-#define PRIORITY_UART4             7
-#define PRIORITY_USART6            6
-#define PRIORITY_UART7             6
-#define PRIORITY_UART8             6
-#define PRIORITY_USART1            6
-#define PRIORITY_USART2            6
-#define PRIORITY_USART3            6
-#define PRIORITY_RTC               5
-#define PRIORITY_HW_TIMER          5
-#define PRIORITY_TIMERS            5
-#define PRIORITY_USB_OTG           4
-#define PRIORITY_I2C1              4
-#define PRIORITY_I2C2              4
-#define PRIORITY_I2C3              4
-#define PRIORITY_TWI               4
-#define PRIORITY_TICK_TIMER        3
-#define PRIORITY_ADC               2
-#define PRIORITY_EMAC              1
-#define PRIORITY_OTG_FS            1
+    #define PRIORITY_EXI10_15          3
+    #define PRIORITY_EXI5_9            3
+    #define PRIORITY_EXI0              3
+    #define PRIORITY_EXI1              3
+    #define PRIORITY_EXI2              3
+    #define PRIORITY_EXI3              3
+    #define PRIORITY_EXI4              3
+    #define PHY_INT_PRIORITY           PRIORITY_EXI10_15
+    #define PRIORITY_UART5             2
+    #define PRIORITY_UART4             2
+    #define PRIORITY_USART6            2
+    #define PRIORITY_UART7             2
+    #define PRIORITY_UART8             2
+    #define PRIORITY_USART1            2
+    #define PRIORITY_USART2            2
+    #define PRIORITY_USART3            2
+    #define PRIORITY_RTC               2
+    #define PRIORITY_HW_TIMER          1
+    #define PRIORITY_TIMERS            1
+    #define PRIORITY_USB_OTG           1
+    #define PRIORITY_I2C1              1
+    #define PRIORITY_I2C2              1
+    #define PRIORITY_I2C3              1
+    #define PRIORITY_TWI               1
+    #define PRIORITY_TICK_TIMER        1
+    #define PRIORITY_ADC               0
+    #define PRIORITY_EMAC              0
+    #define PRIORITY_OTG_FS            0
+#else
+    #define SYSTICK_PRIORITY           15
 
+    #define PRIORITY_EXI10_15          8
+    #define PRIORITY_EXI5_9            8
+    #define PRIORITY_EXI0              8
+    #define PRIORITY_EXI1              8
+    #define PRIORITY_EXI2              8
+    #define PRIORITY_EXI3              8
+    #define PRIORITY_EXI4              8
+    #define PHY_INT_PRIORITY           PRIORITY_EXI10_15
+    #define PRIORITY_UART5             7
+    #define PRIORITY_UART4             7
+    #define PRIORITY_USART6            6
+    #define PRIORITY_UART7             6
+    #define PRIORITY_UART8             6
+    #define PRIORITY_USART1            6
+    #define PRIORITY_USART2            6
+    #define PRIORITY_USART3            6
+    #define PRIORITY_RTC               5
+    #define PRIORITY_HW_TIMER          5
+    #define PRIORITY_TIMERS            5
+    #define PRIORITY_USB_OTG           4
+    #define PRIORITY_I2C1              4
+    #define PRIORITY_I2C2              4
+    #define PRIORITY_I2C3              4
+    #define PRIORITY_TWI               4
+    #define PRIORITY_TICK_TIMER        3
+    #define PRIORITY_ADC               2
+    #define PRIORITY_EMAC              1
+    #define PRIORITY_OTG_FS            1
+#endif
 #if defined NUCLEO_L432KC || defined NUCLEO_L031K6
     #define LED1                       PORTB_BIT3                        // green LED
     #define LED2                       PORTB_BIT4
