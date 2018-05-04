@@ -189,7 +189,7 @@ extern void fnTaskArp(TTASKTABLE *ptrTaskTable)                          // ARP 
     }
     #endif
 
-    while (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH) != 0) { // check input queue
+    while (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH) != 0) { // check task input queue
         switch (ucInputMessage[MSG_SOURCE_TASK]) {
         case TIMER_EVENT:
             if (ucInputMessage[MSG_TIMER_EVENT] == E_ARP_CHECK) {        // refresh the ARP/NN cache

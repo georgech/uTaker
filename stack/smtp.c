@@ -85,7 +85,7 @@ extern void fnSmtp(TTASKTABLE *ptrTaskTable)
     unsigned char ucInputMessage[SMALL_QUEUE];                           // reserve space for receiving messages
 
     if (ucSMTP_state != SMTP_STATE_INIT) {
-        if ( fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH)) {    // check input queue
+        if ( fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH)) {    // check task input queue
             if (ucInputMessage[MSG_SOURCE_TASK] == TIMER_EVENT) {
                 fnSMTP_error(ERROR_SMTP_TIMEOUT);                        // assume E_SMTP_TIMEOUT
             }

@@ -275,7 +275,7 @@ extern void fnTaskEthernet(TTASKTABLE *ptrTaskTable)
 #endif
     }
 #if !defined ETHERNET_RELEASE_AFTER_EVERY_FRAME                          // {8}
-    while (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH)) {      // check input queue
+    while (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH)) {      // check task input queue
         switch (ucInputMessage[MSG_SOURCE_TASK]) {
         case INTERRUPT_EVENT:
             while ((cEthernetBuffer = fnEthernetEvent(&ucInputMessage[MSG_INTERRUPT_EVENT], &rx_frame)) >= 0)

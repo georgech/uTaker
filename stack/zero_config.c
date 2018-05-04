@@ -102,8 +102,8 @@ extern void fnZeroConfig(TTASKTABLE *ptrTaskTable)
     QUEUE_HANDLE PortIDInternal = ptrTaskTable->TaskID;                  // queue ID for task input 
     unsigned char ucInputMessage[HEADER_LENGTH];                         // reserve space for receiving messages 
 
-    if (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH)) {         // check input queue
-        if (TIMER_EVENT == ucInputMessage[MSG_SOURCE_TASK]) {            // only timer events expetced
+    if (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH)) {         // check task input queue
+        if (TIMER_EVENT == ucInputMessage[MSG_SOURCE_TASK]) {            // only timer events expected
             if (ucZeroConfigState > ZERO_CONFIG_OFF) {                   // timer events not allowed in the off state
                 fnStateEventZeroConfig(ucInputMessage[MSG_TIMER_EVENT]); // handle timer event
             }

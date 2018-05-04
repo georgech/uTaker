@@ -479,9 +479,6 @@
     <ClCompile Include="..\..\..\stack\SSL\mbedtls-2.6\mbedTLS_Interface.c">
       <Filter>TCP/IP\MQTTS</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Hardware\STM32\STM32.c">
-      <Filter>Hardware\STM32</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\Hardware\STM32\STM32Sim.c">
       <Filter>WinSim\SIMstm32</Filter>
     </ClCompile>
@@ -520,6 +517,12 @@
     </ClCompile>
     <ClCompile Include="..\..\..\WinSim\serial_dev.c">
       <Filter>WinSim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Hardware\STM32\STM32.c">
+      <Filter>Hardware\STM32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\DMX512.c">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

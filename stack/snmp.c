@@ -121,7 +121,7 @@ extern void fnSNMP(TTASKTABLE *ptrTaskTable)
     QUEUE_HANDLE PortIDInternal = ptrTaskTable->TaskID;                  // queue ID for task input
     unsigned char ucInputMessage[SMALL_QUEUE];                           // reserve space for receiving messages
 
-    while (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH)) {      // check input queue
+    while (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH)) {      // check task input queue
         if (ucInputMessage[MSG_SOURCE_TASK] == TASK_ARP) {
             USOCKET socket;
             fnRead(PortIDInternal, ucInputMessage, ucInputMessage[MSG_CONTENT_LENGTH]); // read the contents

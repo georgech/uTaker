@@ -64,6 +64,7 @@
     14.01.2018 Block USB-MSD further command handling until complete write data has been received {46}
     14.02.2018 Allow operation in both device and host modes (decided at initialisation) {47}
     20.02.2018 When both host and device modes can operate handle CDC reception appropriately {48}
+    04.05.2018 Change interface to fnSetNewSerialMode()                  {49}
 
 */
 
@@ -2178,7 +2179,7 @@ static void fnComitt_UART(int iInterface)
         temp_pars->temp_parameters.SerialMode |= usNewSerialMode;
         temp_pars->temp_parameters.ucSerialSpeed = ucNewSerialSpeed;
     #if defined SERIAL_INTERFACE && defined DEMO_UART                    // {8}
-        fnSetNewSerialMode(MODIFY_CONFIG);                               // modify the debug interface setting accordingly
+        fnSetNewSerialMode(0, MODIFY_CONFIG);                            // {49} modify the debug interface setting accordingly
         return;
     #endif
     }

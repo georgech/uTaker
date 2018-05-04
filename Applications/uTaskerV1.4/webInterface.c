@@ -62,6 +62,7 @@
     12.08.2013 Add ST7565S_GLCD_MODE                                     {43}
     06.11.2015 Adjust fnStackFree() parameters                           {44}
     11.02 2016 Parameters for fnStartHTTP() modified                     {45}
+    04.05.2018 Change interface to fnSetNewSerialMode()                  {46}
 
 */
 
@@ -482,7 +483,7 @@ static int fnHandleWeb(unsigned char ucType, CHAR *ptrData, HTTP *http_session)
 
     case 'u':                                                            // end of serial mode change
         temp_pars->temp_parameters.SerialMode = SerialMode;              // modify serial mode according to on bits
-        fnSetNewSerialMode(MODIFY_CONFIG);                               // affect any changes
+        fnSetNewSerialMode(0, MODIFY_CONFIG);                            // {46} affect any changes
         break;
 #endif
 

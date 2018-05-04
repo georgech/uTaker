@@ -68,7 +68,7 @@ extern void fnNetworkIndicator(TTASKTABLE *ptrTaskTable)                 // task
     static unsigned char ucState = 0;                                    // state of the Ethernet connection leds
     #endif
 
-    while (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH) != 0) { // check input queue
+    while (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH) != 0) { // check task input queue
         switch (ucInputMessage[MSG_SOURCE_TASK]) {
         case TIMER_EVENT:
             if (E_TIMEOUT == ucInputMessage[MSG_TIMER_EVENT]) {          // LED blink period expired

@@ -2,6 +2,7 @@
 #
 # 17.12.2017 Cloned from make_uTaskerV1.4_GNU_Kinetis to add SSL
 # 22.12.2017 Add mmcau_sha256_functions
+# 04.05.2018 Add DMX512.c
 
 #
 # When changing the project target check that the C_FLAGS selection (justb elow) and the linker script file (at bottom) matches the processor being used
@@ -18,7 +19,7 @@ C_FLAGS = -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mlittle-en
 
 # All objects (Hardware, application, uTasker, stack)
 #
-OBJS = Build/application.o Build/debug.o Build/webInterface.o Build/KeyScan.o Build/NetworkIndicator.o Build/usb_application.o Build/snmp_mib_handlers.o Build/FreeMaster.o Build/nRF24201.o Build/FreeRTOSapplication.o \
+OBJS = Build/application.o Build/debug.o Build/webInterface.o Build/KeyScan.o Build/DMX512.o Build/NetworkIndicator.o Build/usb_application.o Build/snmp_mib_handlers.o Build/FreeMaster.o Build/nRF24201.o Build/FreeRTOSapplication.o \
        Build/MODBUS.o Build/modbus_app.o \
        Build/mass_storage.o \
        Build/GLCD.o Build/LCD.o Build/FT_CoPro_Cmds.o  \
@@ -154,6 +155,9 @@ Build/usb_application.o: ../usb_application.c $(DEPENDS) ../application.h ../usb
 
 Build/KeyScan.o: ../KeyScan.c $(DEPENDS) ../application.h
 		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../KeyScan.c -o Build/KeyScan.o
+
+Build/DMX512.o: ../DMX512.c $(DEPENDS) ../application.h
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../DMX512.c -o Build/DMX512.o
 
 Build/NetworkIndicator.o: ../NetworkIndicator.c $(DEPENDS) ../application.h
 		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../NetworkIndicator.c -o Build/NetworkIndicator.o

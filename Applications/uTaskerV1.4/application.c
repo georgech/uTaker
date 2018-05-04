@@ -126,6 +126,8 @@
     05.11.2017 Remove temporary RTC workaround due to pending alarm interrupt {105}
     05.11.2017 Add QUICK_DEV_TASKS                                       {106}
     06.11.2017 Add reset cause to start-up message                       {107}
+    04.05.2018 Change interface to fnSetNewSerialMode()                  {108}
+    04.05.2018 Add DMX512                                                {109}
 
 */
 
@@ -702,7 +704,7 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
         uTaskerStateChange(TASK_DEBUG, UTASKER_ACTIVATE);                // schedule the debug task so that it can configure telnet use
 #endif
 #if defined SERIAL_INTERFACE && defined DEMO_UART                        // {32} this serial interface is used for debug output and menu based control
-        if (NO_ID_ALLOCATED == (SerialPortID = fnSetNewSerialMode(FOR_I_O))) { // open serial port for I/O
+        if (NO_ID_ALLOCATED == (SerialPortID = fnSetNewSerialMode(0, FOR_I_O))) { // open serial port for I/O
             return;                                                      // if the serial port could not be opened we quit
         }
         else {
@@ -768,6 +770,9 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
         OurNetworkNumber = 1;                                            // set a valid network address for ourselves
         fnSendDist();
 #endif
+#if defined USE_DMX512_MASTER || defined USE_DMX512_SLAVE                // {109}
+        uTaskerStateChange(TASK_DMX512, UTASKER_ACTIVATE);               // start the DMX512 task
+#endif
 #if defined USE_SNMP
         fnInitialiseSNMP();                                              // {91}
         fnSendSNMPTrap(SNMP_COLDSTART, 0, ALL_SNMP_MANAGERS);            // send cold start trap to all possible SNMP managers
@@ -817,7 +822,7 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
     j1708_update();                                                      // this must be polled faster than the overflow frequency of the free running timer
 #endif
 
-    while (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH) != 0) { // check input queue
+    while (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH) != 0) { // check task input queue
         switch (ucInputMessage[MSG_SOURCE_TASK]) {                       // switch depending on message source
         case TIMER_EVENT:
             switch (ucInputMessage[MSG_TIMER_EVENT]) {
@@ -1541,60 +1546,63 @@ extern void fnMagicFrame(unsigned char ucType, unsigned char usOptionalDate[32])
 #endif
 
 #if defined SERIAL_INTERFACE && defined DEMO_UART                        // {32}
-extern QUEUE_HANDLE fnSetNewSerialMode(unsigned char ucDriverMode)
+extern QUEUE_HANDLE fnSetNewSerialMode(TTYTABLE *ptrInterfaceParameters, unsigned char ucDriverMode) // {108}
 {
     QUEUE_HANDLE newSerialID;
     TTYTABLE tInterfaceParameters;                                       // table for passing information to driver
-    tInterfaceParameters.Channel = DEMO_UART;                            // set UART channel for serial use
+    if (0 == ptrInterfaceParameters) {                                   // if no interface parameters are passed we use the paraeter settings and the debug interface
+        tInterfaceParameters.Channel = DEMO_UART;                        // set UART channel for serial use
     #if defined NO_MODIFIABLE_PARAMETERS
-    tInterfaceParameters.ucSpeed = cParameters.ucSerialSpeed;            // baud rate
-    tInterfaceParameters.Config = cParameters.SerialMode;                // serial port mode
+        tInterfaceParameters.ucSpeed = cParameters.ucSerialSpeed;        // baud rate
+        tInterfaceParameters.Config = cParameters.SerialMode;            // serial port mode
     #else
-    tInterfaceParameters.ucSpeed = temp_pars->temp_parameters.ucSerialSpeed; // baud rate
-    tInterfaceParameters.Config = temp_pars->temp_parameters.SerialMode; // {43}
+        tInterfaceParameters.ucSpeed = temp_pars->temp_parameters.ucSerialSpeed; // baud rate
+        tInterfaceParameters.Config = temp_pars->temp_parameters.SerialMode; // {43}
     #endif
-    tInterfaceParameters.Rx_tx_sizes.RxQueueSize = RX_BUFFER_SIZE;       // input buffer size
-    tInterfaceParameters.Rx_tx_sizes.TxQueueSize = TX_BUFFER_SIZE;       // output buffer size
+        tInterfaceParameters.Rx_tx_sizes.RxQueueSize = RX_BUFFER_SIZE;   // input buffer size
+        tInterfaceParameters.Rx_tx_sizes.TxQueueSize = TX_BUFFER_SIZE;   // output buffer size
     #if defined RUN_IN_FREE_RTOS && defined FREE_RTOS_UART
-    tInterfaceParameters.Task_to_wake = 0;                               // don't schedule any task when characters/messages are received
+        tInterfaceParameters.Task_to_wake = 0;                           // don't schedule any task when characters/messages are received
     #else
-    tInterfaceParameters.Task_to_wake = OWN_TASK;                        // wake self when messages have been received
+        tInterfaceParameters.Task_to_wake = OWN_TASK;                    // wake self when messages have been received
     #endif
     #if defined SUPPORT_FLOW_HIGH_LOW
-    tInterfaceParameters.ucFlowHighWater = temp_pars->temp_parameters.ucFlowHigh; // set the flow control high and low water levels in %
-    tInterfaceParameters.ucFlowLowWater = temp_pars->temp_parameters.ucFlowLow;
+        tInterfaceParameters.ucFlowHighWater = temp_pars->temp_parameters.ucFlowHigh; // set the flow control high and low water levels in %
+        tInterfaceParameters.ucFlowLowWater = temp_pars->temp_parameters.ucFlowLow;
     #endif
     #if defined TEST_MSG_MODE
-    tInterfaceParameters.Config |= (MSG_MODE);
+        tInterfaceParameters.Config |= (MSG_MODE);
         #if defined (TEST_MSG_CNT_MODE) && defined (SUPPORT_MSG_CNT)
-    tInterfaceParameters.Config |= (MSG_MODE_RX_CNT);
+        tInterfaceParameters.Config |= (MSG_MODE_RX_CNT);
         #endif
-    tInterfaceParameters.Config &= ~USE_XON_OFF;
-    tInterfaceParameters.ucMessageTerminator = '\r';
+        tInterfaceParameters.Config &= ~USE_XON_OFF;
+        tInterfaceParameters.ucMessageTerminator = '\r';
     #endif
     #if defined SERIAL_SUPPORT_DMA
         #if defined FREE_RUNNING_RX_DMA_RECEPTION
             #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA
-  //tInterfaceParameters.ucDMAConfig = (UART_RX_DMA | UART_RX_MODULO); // modulo aligned reception memory is required by kinetis KL parts without eDMA in free-running DMA mode
-    tInterfaceParameters.ucDMAConfig = (UART_RX_DMA | UART_RX_MODULO | UART_TX_DMA); // modulo aligned reception memory is required by kinetis KL parts without eDMA in free-running DMA mode
+      //tInterfaceParameters.ucDMAConfig = (UART_RX_DMA | UART_RX_MODULO); // modulo aligned reception memory is required by kinetis KL parts without eDMA in free-running DMA mode
+        tInterfaceParameters.ucDMAConfig = (UART_RX_DMA | UART_RX_MODULO | UART_TX_DMA); // modulo aligned reception memory is required by kinetis KL parts without eDMA in free-running DMA mode
             #else
-    tInterfaceParameters.ucDMAConfig = (UART_RX_DMA | UART_TX_DMA);
+        tInterfaceParameters.ucDMAConfig = (UART_RX_DMA | UART_TX_DMA);
             #endif
             #if !(defined RUN_IN_FREE_RTOS && defined FREE_RTOS_UART)
-    uTaskerStateChange(OWN_TASK, UTASKER_POLLING);                       // set the task to polling mode to regularly check the receive buffer
+        uTaskerStateChange(OWN_TASK, UTASKER_POLLING);                   // set the task to polling mode to regularly check the receive buffer
             #endif
         #else
-  //tInterfaceParameters.ucDMAConfig = 0;
-    tInterfaceParameters.ucDMAConfig = UART_TX_DMA;                      // activate DMA on transmission
-  //tInterfaceParameters.ucDMAConfig = (UART_RX_DMA | UART_RX_DMA_HALF_BUFFER | UART_RX_DMA_FULL_BUFFER | UART_RX_DMA_BREAK));
+      //tInterfaceParameters.ucDMAConfig = 0;
+        tInterfaceParameters.ucDMAConfig = UART_TX_DMA;                  // activate DMA on transmission
+      //tInterfaceParameters.ucDMAConfig = (UART_RX_DMA | UART_RX_DMA_HALF_BUFFER | UART_RX_DMA_FULL_BUFFER | UART_RX_DMA_BREAK));
         #endif
     #endif
     #if defined SUPPORT_HW_FLOW
-  //tInterfaceParameters.Config |= RTS_CTS;                              // enable RTS/CTS operation (HW flow control)
+      //tInterfaceParameters.Config |= RTS_CTS;                              // enable RTS/CTS operation (HW flow control)
     #endif
-    if ((newSerialID = fnOpen(TYPE_TTY, ucDriverMode, &tInterfaceParameters)) != NO_ID_ALLOCATED) { // open or change the channel with defined configurations (initially inactive)
+        ptrInterfaceParameters = &tInterfaceParameters;
+    }
+    if ((newSerialID = fnOpen(TYPE_TTY, ucDriverMode, ptrInterfaceParameters)) != NO_ID_ALLOCATED) { // open or change the channel with defined configurations (initially inactive)
         fnDriver(newSerialID, (TX_ON | RX_ON), 0);                       // enable rx and tx
-        if ((tInterfaceParameters.Config & RTS_CTS) != 0) {              // {8} if HW flow control is being used
+        if ((ptrInterfaceParameters->Config & RTS_CTS) != 0) {           // {8} if HW flow control is being used
             fnDriver(newSerialID, (MODIFY_INTERRUPT | ENABLE_CTS_CHANGE), 0); // activate CTS interrupt when working with HW flow control (this returns also the present control line states)
             fnDriver(newSerialID, (MODIFY_CONTROL | SET_RTS), 0);        // activate RTS line when working with HW flow control
         }

@@ -79,7 +79,7 @@ extern void fnTimer(TTASKTABLE *ptrTaskTable)                            // glob
     QUEUE_HANDLE PortIDInternal = ptrTaskTable->TaskID;                  // queue ID for task input
     unsigned char ucInputMessage[HEADER_LENGTH];                         // reserve space for receiving messages
 
-    while (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH) != 0) { // check input queue
+    while (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH) != 0) { // check task input queue
         switch (ucInputMessage[MSG_SOURCE_TASK]) {
         case TIMER_EVENT:
             fnSWTimerFired();

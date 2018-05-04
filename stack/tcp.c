@@ -206,7 +206,7 @@ extern void fnTaskTCP(TTASKTABLE *ptrTaskTable)
     QUEUE_HANDLE PortIDInternal = ptrTaskTable->TaskID;                  // queue ID for task input
     unsigned char ucInputMessage[MEDIUM_MESSAGE];                        // reserve space for receiving messages
 
-    while (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH)) {      // check input queue
+    while (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH)) {      // check task input queue
         switch (ucInputMessage[MSG_SOURCE_TASK]) {
             case TIMER_EVENT:
                 fnPollTCP();                                             // do TCP management on a periodic basis

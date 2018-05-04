@@ -93,7 +93,7 @@ void fnDNS(TTASKTABLE *ptrTaskTable)
         }    
     } 
     else {
-        if (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH) != 0) {// check input queue
+        if (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH) != 0) {// check task input queue
             if (ucInputMessage[MSG_SOURCE_TASK] == TASK_ARP) {
                 fnRead(PortIDInternal, ucInputMessage, ucInputMessage[MSG_CONTENT_LENGTH]);  // read the contents
                 if (ARP_RESOLUTION_FAILED == ucInputMessage[0]) {

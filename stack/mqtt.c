@@ -179,7 +179,7 @@ extern void fnMQTT(TTASKTABLE *ptrTaskTable)
     QUEUE_HANDLE PortIDInternal = ptrTaskTable->TaskID;                  // queue ID for task input
     unsigned char ucInputMessage[SMALL_QUEUE];                           // reserve space for receiving messages
 
-    if (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH) != 0) {    // check input queue
+    if (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH) != 0) {    // check task input queue
         if (ucInputMessage[MSG_SOURCE_TASK] == TIMER_EVENT) {
             switch (ucInputMessage[MSG_TIMER_EVENT]) {
             case T_MQTT_KEEPALIVE_TIMEOUT:

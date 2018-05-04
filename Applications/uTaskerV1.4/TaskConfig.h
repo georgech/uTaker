@@ -33,6 +33,7 @@
     18.11.2015 Add USB host task                                         {13}
     18.04.2017 Add BLINKY configuration
     10.11.2017 Add MQTT task                                             {14}
+    04.05.2018 Add DMX512 task                                           {15}
 
 */
  
@@ -68,7 +69,8 @@
 #define TASK_MASS_STORAGE       'M'                                      // {5} mass storage task
 #define TASK_ZERO_CONFIG        'z'                                      // {7} zero config task
 #define TASK_TIME_KEEPER        'k'                                      // {12} time keeper task (RTC/SNTP)
-#define TASK_MQTT               'Q'                                      // {14}
+#define TASK_MQTT               'Q'                                      // {14} MQTT task
+#define TASK_DMX512             '5'                                      // {15} DMX512 task
 
 #define TASK_STEPPER_MOTOR      '0'
 #define TASK_DEV_1              '1'
@@ -112,6 +114,7 @@ extern void fnMassStorage(TTASKTABLE *);                                 // {5}
 extern void fnZeroConfig(TTASKTABLE *);                                  // {7}
 extern void fnTimeKeeper(TTASKTABLE *ptrTaskTable);                      // {12}
 extern void fnMQTT(TTASKTABLE *ptrTaskTable);                            // {14}
+extern void fnDMX512(TTASKTABLE *ptrTaskTable);                          // {15}
 #if defined STEPPER_MOTOR_EXAMPLE
     extern void fnStepper(TTASKTABLE *);
 #endif
@@ -226,6 +229,9 @@ const UTASK_TASK ctNodes[] = {                                           // we u
 #if (defined USE_SNTP || defined USE_TIME_SERVER || defined USE_TIME_SERVER || defined SUPPORT_RTC || defined SUPPORT_SW_RTC) && !defined BLINKY // {12}
     TASK_TIME_KEEPER,
 #endif
+#if defined USE_DMX512_MASTER || defined USE_DMX512_SLAVE
+    TASK_DMX512,
+#endif
 #if defined STEPPER_MOTOR_EXAMPLE
     TASK_STEPPER_MOTOR,
 #endif
@@ -335,17 +341,20 @@ const UTASKTABLEINIT ctTaskTable[] = {
 #if (defined USE_SNTP || defined USE_TIME_SERVER || defined USE_TIME_SERVER || defined SUPPORT_RTC || defined SUPPORT_SW_RTC) && !defined BLINKY // {12}
     {"keeper",    fnTimeKeeper, SMALL_QUEUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP}, // time keeper task
 #endif
+#if defined USE_DMX512_MASTER || defined USE_DMX512_SLAVE
+    {"512",       fnDMX512,     SMALL_QUEUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP},
+#endif
 #if defined STEPPER_MOTOR_EXAMPLE
-    { "0_step",   fnStepper, SMALL_QUEUE, (DELAY_LIMIT)(0.5 * SEC), 0, UTASKER_STOP }, // time keeper task
+    {"0_step",    fnStepper, SMALL_QUEUE, (DELAY_LIMIT)(0.5 * SEC), 0, UTASKER_STOP }, // time keeper task
 #endif
 #if defined QUICK_DEV_TASKS && !defined BLINKY
-    {"1",    fnQuickTask1, MEDIUM_QUEUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP}, // quick development  tasks
-    {"2",    fnQuickTask2, MEDIUM_QUEUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP},
-    {"3",    fnQuickTask3, MEDIUM_QUEUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP},
-    {"4",    fnQuickTask4, MEDIUM_QUEUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP},
+    {"1",         fnQuickTask1, MEDIUM_QUEUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP}, // quick development  tasks
+    {"2",         fnQuickTask2, MEDIUM_QUEUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP},
+    {"3",         fnQuickTask3, MEDIUM_QUEUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP},
+    {"4",         fnQuickTask4, MEDIUM_QUEUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP},
 #endif
 #if defined SUPPORT_LOW_POWER
-    {"lowPower",  fnLowPower,   NO_QUEUE,  0, 0, UTASKER_GO},          // low power task
+    {"lowPower", fnLowPower,    NO_QUEUE,  0, 0, UTASKER_GO},            // low power task
 #endif
     {0}
 };

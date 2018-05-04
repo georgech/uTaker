@@ -240,7 +240,7 @@ extern void fnTimeKeeper(TTASKTABLE *ptrTaskTable)
     QUEUE_HANDLE        PortIDInternal = ptrTaskTable->TaskID;           // queue ID for task input
     unsigned char       ucInputMessage[SMALL_MESSAGE];                   // reserve space for receiving messages
 
-    while (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH)) {      // check input queue
+    while (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH)) {      // check task input queue
         switch (ucInputMessage[MSG_SOURCE_TASK]) {                       // switch depending on message source
     #if (defined SUPPORT_RTC  || defined SUPPORT_SW_RTC) && (ALARM_TASK == OWN_TASK)
         case INTERRUPT_EVENT:

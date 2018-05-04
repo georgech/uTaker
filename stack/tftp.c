@@ -120,7 +120,7 @@ extern void fnTftp(TTASKTABLE *ptrTaskTable)
     QUEUE_HANDLE PortIDInternal = ptrTaskTable->TaskID;                  // queue ID for task input
     unsigned char ucInputMessage[SMALL_QUEUE];                           // reserve space for receiving messages
 
-    if ( fnRead( PortIDInternal, ucInputMessage, HEADER_LENGTH )) {      // check input queue
+    if ( fnRead( PortIDInternal, ucInputMessage, HEADER_LENGTH )) {      // check task input queue
         switch (ucInputMessage[ MSG_SOURCE_TASK ]) {
         case TIMER_EVENT:
             if (TFTP_TIMEOUT == ucInputMessage[MSG_TIMER_EVENT]) {

@@ -128,7 +128,7 @@ extern void fnLCD(TTASKTABLE *ptrTaskTable)                              // LCD 
 #endif
     }
 
-    while (fnRead( PortIDInternal, ucInputMessage, HEADER_LENGTH) != 0) { // check input queue
+    while (fnRead( PortIDInternal, ucInputMessage, HEADER_LENGTH) != 0) { // check task input queue
         switch (ucInputMessage[MSG_SOURCE_TASK]) {
         case TIMER_EVENT:
             break;

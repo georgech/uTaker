@@ -454,7 +454,7 @@ extern void fnLCD(TTASKTABLE *ptrTaskTable)                              // LCD 
         }
     }
 #endif
-    while (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH)) {      // check input queue - this only occurs when all previous operation has completed
+    while (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH)) {      // check task input queue - this only occurs when all previous operation has completed
         switch (ucInputMessage[MSG_SOURCE_TASK]) {
         case TIMER_EVENT:
 #if defined MAX_BLINKING_OBJECTS

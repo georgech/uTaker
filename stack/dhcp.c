@@ -346,7 +346,7 @@ extern void fnDHCP(TTASKTABLE *ptrTaskTable)
     unsigned char ucInputMessage[SMALL_QUEUE];                           // reserve space for receiving messages
     int iNetwork = 0;
 
-    while (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH) != 0) { // check input queue
+    while (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH) != 0) { // check task input queue
         if (ucInputMessage[MSG_SOURCE_TASK] == TASK_ARP) {
             // Note that we receive ARP messages only on our attempt to send a test message to a node with our allocated IP address.
             // Since DHCP uses broadcast messages until this point there can be no ARP errors

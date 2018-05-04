@@ -48,6 +48,7 @@
     12.12.2015 Changed PAR_DEVICE and PAR_MODBUS to respect the number of networks present {32}
     12.12.2015 usServer added for each network                           {33}
     26.06.2017 Add fnDisplayMemoryUsage()                                {34}
+    04.05.2018 Change interface to fnSetNewSerialMode()                  {35}
 
 */
 
@@ -86,7 +87,7 @@ extern void fnEstablishDataConnection(void);
 extern void fnTerminateDataConnection(void);
 extern void fnEstablishManualDataConnection(unsigned char *ucDialinIP, unsigned short usSerialDialinPort);
 extern void fnConfigureTelnetServer(void);
-extern QUEUE_HANDLE fnSetNewSerialMode(unsigned char ucDriverMode);
+extern QUEUE_HANDLE fnSetNewSerialMode(TTYTABLE *ptrInterfaceParameters, unsigned char ucDriverMode); // {35}
 extern unsigned short fnGetOurParameters(int iCase);
 extern void fnConfigureFtpServer(unsigned short usTimeout);
 extern void fnFlushSerialRx(void);

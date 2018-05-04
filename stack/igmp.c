@@ -75,7 +75,7 @@ extern void fnIgmp(TTASKTABLE *ptrTaskTable)
     IGMP_HOST *ptrIGMP_host;
     unsigned char ucInputMessage[SMALL_MESSAGE];                         // reserve space for receiving messages
 
-    while (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH)) {      // check input queue
+    while (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH)) {      // check task input queue
         switch (ucInputMessage[MSG_SOURCE_TASK]) {
             case TIMER_EVENT:
     #if (defined USE_IGMP_V2 || defined USE_IGMP_V3)

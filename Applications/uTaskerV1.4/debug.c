@@ -114,6 +114,7 @@
     17.01.2018 Add I2C master firmware loader                            {89}
     16.03.2018 Accept control-? (0x7f) as back space (used by putty by default) {90}
     17.03.2018 Add FlexIO menu                                           {91}
+    04.05.2018 Change interface to fnSetNewSerialMode()                  {92}
 
 */
 
@@ -1470,7 +1471,7 @@ extern void fnDebug(TTASKTABLE *ptrTaskTable)
     }
 #endif
 
-    while (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH) != 0) { // check input queue
+    while (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH) != 0) { // check task input queue
         switch (ucInputMessage[MSG_SOURCE_TASK]) {                       // switch depending on message source
 #if defined USE_MAINTENANCE && defined USB_INTERFACE && defined USE_USB_CDC
         case TIMER_EVENT:
@@ -2316,7 +2317,7 @@ static void fnDoSerial(unsigned char ucType, CHAR *ptr_input)
     }
     #if (defined SERIAL_INTERFACE && defined DEMO_UART)
     if (iChangeSerial != 0) {
-        fnSetNewSerialMode(MODIFY_CONFIG);                               // if there were changes, modify interface
+        fnSetNewSerialMode(0, MODIFY_CONFIG);                            // {92} if there were changes, modify interface
     }
     #endif
 }
@@ -7742,7 +7743,7 @@ extern void fnResetChanges(void)
     fnGetOurParameters(1);                                               // get original parameters from FLASH, but preserve DHCP defined values
     #if defined SERIAL_INTERFACE && defined DEMO_UART                    // {10}
     if ((iActions & CHANGE_SERIAL_SETTINGS) != 0) {
-        fnSetNewSerialMode(MODIFY_CONFIG);                               // return settings to interface
+        fnSetNewSerialMode(0, MODIFY_CONFIG);                            // {92} return settings to interface
     }
     #endif
     if ((CHANGE_WEB_SERVER & iActions) != 0) {

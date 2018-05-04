@@ -76,7 +76,7 @@ extern void fnPOP3(TTASKTABLE *ptrTaskTable)
         ucPOP_state = POP_STATE_CLOSED;
     }
     else {
-        if (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH) != 0) {// check input queue
+        if (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH) != 0) {// check task input queue
             if (ucInputMessage[MSG_SOURCE_TASK] == TIMER_EVENT) {
                 if (E_POP_TIMEOUT == ucInputMessage[MSG_TIMER_EVENT]) {
                     fnPOP_error(ERROR_POP3_TIMEOUT);
