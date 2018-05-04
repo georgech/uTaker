@@ -1,6 +1,6 @@
 <Analysispoints>
 	<Name>AnalysispointsManager</Name>
-	<ProjectPath>C:/MJBC/Internal/Freescale/Kinetis/workspace/uTaskerV1_4/SaAnalysispointsManager.apconfig</ProjectPath>
+	<ProjectPath>D:/MJBC/Internal/Freescale/Kinetis/workspace/uTaskerV1.4.12_master/SaAnalysispointsManager.apconfig</ProjectPath>
 	<MaxNumberOfCores>1</MaxNumberOfCores>
 	<Comments>Analysispoints Manager</Comments>
 	<IgnoreAll>false</IgnoreAll>

@@ -108,7 +108,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Applications/uTaskerV1.4"/>
+						<entry excluding="Rowley_Kinetis|stepperMotor.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Applications/uTaskerV1.4"/>
 						<entry excluding="kinetisSim.c|kinetis_ports.cpp|kinetis_boot.c|kinetis_asm.s" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Hardware/Kinetis"/>
 						<entry excluding="SNMP" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="stack"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="uTasker"/>
@@ -222,7 +222,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Applications/uTaskerV1.4"/>
+						<entry excluding="Rowley_Kinetis|stepperMotor.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Applications/uTaskerV1.4"/>
 						<entry excluding="kinetisSim.c|kinetis_ports.cpp|kinetis_boot.c|kinetis_asm.s" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Hardware/Kinetis"/>
 						<entry excluding="SNMP" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="stack"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="uTasker"/>
