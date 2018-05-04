@@ -63,6 +63,9 @@ static void fnConfigSPIFileSystem(void)
 #endif
 
 #if defined ACTIVE_FILE_SYSTEM || defined USE_PARAMETER_BLOCK
+    #if defined _WINDOWS
+static unsigned long ulFlashLockState = 0;
+    #endif
 
     #if defined SPI_FLASH_ENABLED
 // This routine reads data from the defined device into a buffer. The access details inform of the length to be read (already limited to maximum possible length for the device)
@@ -319,7 +322,7 @@ static int fnWriteInternalFlash(ACCESS_DETAILS *ptrAccessDetails, unsigned char 
 {
     MAX_FILE_LENGTH Length = ptrAccessDetails->BlockLength;
     unsigned char *ucDestination = (unsigned char *)ptrAccessDetails->ulOffset;
-#if !defined _STM32L031                                                  // temporary
+#if !defined _STM32L0x1                                                  // temporary
     if ((FLASH_CR & FLASH_CR_LOCK) != 0) {                               // if the flash has not been unlocked, unlock it before programming
         FLASH_KEYR = FLASH_KEYR_KEY1;
         FLASH_KEYR = FLASH_KEYR_KEY2;
@@ -548,7 +551,7 @@ static unsigned long fnGetFlashSectorSize(unsigned char *ptrSector, unsigned lon
 //
 extern int fnEraseFlashSector(unsigned char *ptrSector, MAX_FILE_LENGTH Length)
 {
-#if !defined _STM32L031                                                  // temporary
+#if !defined _STM32L0x1                                                  // temporary
     #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
     unsigned long _ulSectorSize;                                         // F2/F4/F7 have variable flash granularity
     unsigned long ulSectorNumber;

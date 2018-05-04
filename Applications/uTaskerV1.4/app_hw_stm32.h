@@ -60,6 +60,45 @@
     #define SIZE_OF_FLASH       (256 * 1024)                             // 256k FLASH
 
     #define CORE_VOLTAGE        VCORE_RANGE_1                            // normal core voltage operation
+#elif defined NUCLEO_L011K4
+    #define CRYSTAL_FREQ        32768                                    // when there is a 32kHz crystal it can be used for the RTC, LSCO or MCO (optionally divided)
+
+    #define MCO_CONNECTED_TO_MSI
+    #define MCO_DIVIDE          16                                       // 1, 2, 4, 8 or 16 possible (defaults to /1 if not specified)
+
+    #define USE_MSI_CLOCK                                                // use internal MSI clock source (4.194MHz default)
+    #define MSI_CLOCK           4194000                                  // 65.536kHz, 131.072kHz, 262.144kHz, 524.288kHz, 1.048MHz, 2.097MHz and 4.194MHz possible
+  //#define USE_HSI_CLOCK                                                // use internal HSI clock source (16MHz)
+    #define DISABLE_PLL                                                  // run from clock source directly
+
+    #define HCLK_DIVIDE         1                                        // 1,2,4,8,16,32,64,128,256 or 512
+    #define PCLK1_DIVIDE        2                                        // 1,2,4,8, or 16
+    #define PCLK2_DIVIDE        1                                        // 1,2,4,8, or 16
+
+    #define PIN_COUNT           PIN_COUNT_32_PIN
+    #define PACKAGE_TYPE        PACKAGE_LQFP
+    #define SIZE_OF_RAM         (2 * 1024)                               // 2k SRAM
+    #define SIZE_OF_FLASH       (16 * 1024)                              // 16k FLASH
+
+    #define CORE_VOLTAGE        VCORE_RANGE_1                            // normal core voltage operation (1.65V..1.95V)
+#elif defined NUCLEO_F031K6
+    #define CRYSTAL_FREQ        32768                                    // when there is a 32kHz crystal it can be used for the RTC, LSCO or MCO (optionally divided)
+
+    #define MCO_CONNECTED_TO_HSI
+    #define MCO_DIVIDE          128                                       // 1, 2, 4, 8, 16, 32, 64 or 128 possible (defaults to /1 if not specified)
+
+    #define USE_HSI_CLOCK                                                // use internal HSI clock source (8MHz)
+    #define DISABLE_PLL                                                  // run from clock source directly
+
+    #define HCLK_DIVIDE         1                                        // 1,2,4,8,16,32,64,128,256 or 512
+    #define PCLK_DIVIDE         2                                        // 1,2,4,8, or 16
+
+    #define PIN_COUNT           PIN_COUNT_32_PIN
+    #define PACKAGE_TYPE        PACKAGE_LQFP
+    #define SIZE_OF_RAM         (4 * 1024)                               // 4k SRAM
+    #define SIZE_OF_FLASH       (32 * 1024)                              // 32k FLASH
+
+  //#define CORE_VOLTAGE        VCORE_RANGE_1                            // normal core voltage operation
 #elif defined NUCLEO_L031K6
     #define CRYSTAL_FREQ        32768                                    // when there is a 32kHz crystal it can be used for the RTC, LSCO or MCO (optionally divided)
 
@@ -77,8 +116,8 @@
 
     #define PIN_COUNT           PIN_COUNT_32_PIN
     #define PACKAGE_TYPE        PACKAGE_LQFP
-    #define SIZE_OF_RAM         (8 * 1024)                               // 64k SRAM
-    #define SIZE_OF_FLASH       (32 * 1024)                              // 256k FLASH
+    #define SIZE_OF_RAM         (8 * 1024)                               // 8k SRAM
+    #define SIZE_OF_FLASH       (32 * 1024)                              // 32k FLASH
 
     #define CORE_VOLTAGE        VCORE_RANGE_1                            // normal core voltage operation (1.65V..1.95V)
 #elif defined STM3210C_EVAL                                              // STM32F107VCT (72MHz)
@@ -565,7 +604,7 @@
             #define FILE_SYSTEM_SIZE (124 * FILE_GRANULARITY)            // 512k reserved for file system (assuming 4k file size)
         #endif
     #else
-        #if (SIZE_OF_FLASH == (32 * 1024))
+        #if (SIZE_OF_FLASH <= (32 * 1024))
             #define FILE_GRANULARITY (1 * FLASH_GRANULARITY)             // each file a multiple of page size
             #define FILE_SYSTEM_SIZE (1 * FILE_GRANULARITY)              // one page reserved for file system
             #define PARAMETER_BLOCK_START (FLASH_START_ADDRESS + SIZE_OF_FLASH - (2 * FLASH_GRANULARITY)) // FLASH location of parameter system
@@ -656,7 +695,7 @@
 
     #if defined ST_MB913C_DISCOVERY
         #define DEMO_UART    2                                           // use UART channel 2 (USART 3 since ST USARTs count from 1)
-    #elif defined WISDOM_STM32F407 || defined STM32F746G_DISCO
+    #elif defined WISDOM_STM32F407 || defined STM32F746G_DISCO || defined NUCLEO_F031K6
         #define DEMO_UART    0                                           // use UART channel 0 (USART 1 since ST USARTs count from 1)
     #elif defined NUCLEO_F429ZI
         #define DEMO_UART    2                                           // use UART channel 2 (USART 3 since ST USARTs count from 1)
@@ -675,18 +714,25 @@
     #define MODBUS_UART_3    4
     #define MODBUS_UART_4    5
     #define MODBUS_UART_5    2
-    #if defined SDCARD_SUPPORT
-        #define TX_BUFFER_SIZE   (2048)                                  // the size of RS232 input and output buffers
+    #if defined NUCLEO_L011K4                                            // 2k SRAM device
+        #define TX_BUFFER_SIZE   (200)                                   // the size of RS232 output buffer
+        #define RX_BUFFER_SIZE   (16)
+    #elif defined SDCARD_SUPPORT
+        #define TX_BUFFER_SIZE   (2048)                                  // the size of RS232 output buffer
+        #define RX_BUFFER_SIZE   (64)
     #else
-        #define TX_BUFFER_SIZE   (512)                                   // the size of RS232 input and output buffers
+        #define TX_BUFFER_SIZE   (512)                                   // the size of RS232 output buffer
+        #define RX_BUFFER_SIZE   (64)
     #endif
-    #define RX_BUFFER_SIZE   (64)
 
     #if defined STM32F746G_DISCO                                         // virtual com port on st-link
         #define USART1_REMAP                                             // use USART1 on remapped pins (note that this is channel 0)
         #define USART1_NOREMAP_TX                                        // rx is remapped but tx not
     #endif
-    #if defined NUCLEO_L432KC || defined NUCLEO_L031K6
+    #if defined NUCLEO_F031K6
+        #define USART1_PARTIAL_REMAP
+    #endif
+    #if defined NUCLEO_L432KC || defined NUCLEO_L031K6 || defined NUCLEO_L011K4 || defined NUCLEO_F031K6
         #define USART2_PARTIAL_REMAP
     #else
         #define USART2_REMAP                                             // use USART2 on remapped pins (note that this is channel 1)
@@ -880,7 +926,7 @@
 
 // Define interrupt priorities in the system (STM32 cortex-m3/m4/m7 supports 0..15 - 0 is highest priority and 15 is lowest priority) (STM32L cortex-m0+ supports 0..3)
 //
-#if defined ARM_MATH_CM0PLUS
+#if defined ARM_MATH_CM0PLUS || defined ARM_MATH_CM0
     #define SYSTICK_PRIORITY           3
 
     #define PRIORITY_EXI10_15          3
@@ -943,7 +989,7 @@
     #define PRIORITY_EMAC              1
     #define PRIORITY_OTG_FS            1
 #endif
-#if defined NUCLEO_L432KC || defined NUCLEO_L031K6
+#if defined NUCLEO_L432KC || defined NUCLEO_L031K6 || defined NUCLEO_L011K4 || defined NUCLEO_F031K6
     #define LED1                       PORTB_BIT3                        // green LED
     #define LED2                       PORTB_BIT4
     #define LED3                       PORTB_BIT5

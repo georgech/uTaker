@@ -117,6 +117,15 @@
     #define UART_CTS_INPUT_TYPE FLOATING_INPUT                           // if no user override configure UART CTS inputs to floating state
 #endif
 
+#if defined _APPLICATION_VALIDATION
+    #define _RESET_VECTOR  RESET_VECTOR_VALIDATION
+#elif defined INTERRUPT_VECTORS_IN_FLASH
+    #define _RESET_VECTOR   VECTOR_TABLE
+    const _RESET_VECTOR __vector_table;
+#else
+    #define _RESET_VECTOR  RESET_VECTOR
+#endif
+
 /* =================================================================== */
 /*                       local structure definitions                   */
 /* =================================================================== */
@@ -313,10 +322,6 @@ static unsigned char *_keil_ram_size(void)
 }
     #endif
 
-#if defined _GNU
-    extern const RESET_VECTOR reset_vect;                                // force GCC to link the reset table
-    volatile void *ptrTest1;
-#endif
 
 // main entry for the target code
 //
@@ -325,9 +330,6 @@ extern int main(void)
 #if defined MULTISTART
     MULTISTART_TABLE *ptrInfo;
     unsigned char *pucHeapStart;
-#endif
-#if defined _GNU
-    ptrTest1 = (void *)&reset_vect;                                      // force GCC to link the reset table
 #endif
 #if defined RANDOM_NUMBER_GENERATOR   
     ptrSeed = RANDOM_SEED_LOCATION;                                      // we put an uninitialised variable on to the stack for use as a random seed
@@ -437,33 +439,36 @@ extern void uEnable_Interrupt(void)
 extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void (*InterruptFunc)(void))
 {
     volatile unsigned long *ptrIntSet = IRQ0_31_SER_ADD;                 // {25}
-#if defined ARM_MATH_CM0PLUS                                             // only long word acesses are possible to the priority registers
+#if defined ARM_MATH_CM0PLUS || defined ARM_MATH_CM0                     // only long word acesses are possible to the priority registers
     volatile unsigned long *ptrPriority = (unsigned long *)IRQ0_3_PRIORITY_REGISTER_ADD;
     int iShift;
 #else
     volatile unsigned char *ptrPriority = IRQ0_3_PRIORITY_REGISTER_ADD;  // {25}
 #endif
+#if !defined INTERRUPT_VECTORS_IN_FLASH
     VECTOR_TABLE *ptrVect;
     void (**processor_ints)(void);
+#endif
 #if defined _WINDOWS                                                     // back up the present enabled interrupt registers
     unsigned long ulState0 = IRQ0_31_SER;
     unsigned long ulState1 = IRQ32_63_SER;
     unsigned long ulState2 = IRQ64_95_SER;                               // {17}
     IRQ0_31_SER = IRQ32_63_SER = IRQ0_31_CER = IRQ32_63_CER = IRQ64_95_CER = 0; // {17} reset registers
 #endif
-#if defined _WINDOWS
+#if !defined INTERRUPT_VECTORS_IN_FLASH
+    #if defined _WINDOWS
     ptrVect = (VECTOR_TABLE *)((unsigned char *)((unsigned char *)&vector_ram));
-#else
+    #else
     ptrVect = (VECTOR_TABLE *)(RAM_START_ADDRESS);
-#endif
+    #endif
     processor_ints = (void (**)(void))&ptrVect->processor_interrupts;
     processor_ints += iInterruptID;
     *processor_ints = InterruptFunc;
-
+#endif
     ptrIntSet += (iInterruptID/32);
     *ptrIntSet = (0x01 << (iInterruptID%32));                            // enable the interrupt
 #if defined _WINDOWS                                                     // check for valid interrupt priority range
-    #if defined ARM_MATH_CM0PLUS
+    #if defined ARM_MATH_CM0PLUS || defined ARM_MATH_CM0
     if (ucPriority >= 4) {
         _EXCEPTION("Invalid Cortex-M0+ priority being used!!");
     }
@@ -473,7 +478,7 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void (*
     }
     #endif
 #endif
-#if defined ARM_MATH_CM0PLUS
+#if defined ARM_MATH_CM0PLUS || defined ARM_MATH_CM0
     ptrPriority += (iInterruptID/4);                                     // move to the priority location used by this interrupt
     iShift = ((iInterruptID % 4) * 8);
     *ptrPriority = ((*ptrPriority & ~(0xff << iShift)) | (ucPriority << (iShift + __NVIC_PRIORITY_SHIFT)));
@@ -490,7 +495,6 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void (*
     IRQ64_95_CER  = IRQ64_95_SER;                                        // {17}
 #endif
 }
-
 
 
 // TICK interrupt
@@ -519,6 +523,8 @@ static __interrupt void _RealTimeInterrupt(void)
     #error "TICK value cannot be achieved with SYSTICK at this core frequency!!"
 #endif
 
+// Routine to initialise the tick interrupt (uses Cortex M7/M4/M0+ SysTick timer)
+//
 extern void fnStartTick(void)
 {
 #if !defined INTERRUPT_VECTORS_IN_FLASH
@@ -3090,6 +3096,7 @@ static void irq_SVCall(void)
 //
 static void irq_default(void)
 {
+    _EXCEPTION("undefined interrupt!!!");
 }
 
 // Delay loop for simple but accurate short delays (eg. for stabilisation delays)
@@ -3169,11 +3176,13 @@ extern void __init_gnu_data(void)
 //
 static void STM32_LowLevelInit(void)
 {
-#if !defined _MINIMUM_IRQ_INITIALISATION
-    void (**processor_ints)(void);
-#endif
+#if !defined INTERRUPT_VECTORS_IN_FLASH
+    #if !defined _MINIMUM_IRQ_INITIALISATION
+    void(**processor_ints)(void);
+    #endif
     VECTOR_TABLE *ptrVect;
-#if defined _STM32L031
+#endif
+#if defined _STM32L0x1
     RCC_CR = (RCC_CR_MSIRDY | RCC_CR_MSION);                             // set reset state - default is MSI at around 2.097MHz
     RCC_ICSCR = (RCC_ICSCR_MSIRANGE_2_097M);
 #elif defined _STM32L432
@@ -3185,7 +3194,7 @@ static void STM32_LowLevelInit(void)
 #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
     RCC_PLLCFGR = RCC_PLLCFGR_RESET_VALUE;                               // set the PLL configuration register to default
 #endif
-#if !defined USE_HSI_CLOCK && !defined _STM32L432 && !defined _STM32L031
+#if !defined USE_HSI_CLOCK && !defined _STM32L432 && !defined _STM32L0x1
     RCC_CR = (0x00000080 | RCC_CR_HSIRDY | RCC_CR_HSION | RCC_CR_HSEON); // enable the high-speed external clock
 #endif
 #if defined _STM32F7XX
@@ -3200,10 +3209,10 @@ static void STM32_LowLevelInit(void)
     FLASH_ACR = (FLASH_ACR_ICRST | FLASH_ACR_DCRST);                     // flush data and instruction cache
     FLASH_ACR = (FLASH_ACR_DCEN | FLASH_ACR_ICEN | FLASH_WAIT_STATES);   // set flash wait states appropriately and enable pre-fetch buffer and cache
     RCC_CFGR = (_RCC_CFGR_HPRE_SYSCLK | _RCC_CFGR_PPRE1_HCLK | _RCC_CFGR_PPRE2_HCLK); // prepare HCLK (AHB), PCLK1 and PCLK2 speeds
-#elif defined _STM32L031
+#elif defined _STM32L0x1
     FLASH_ACR = (FLASH_ACR_PRE_READ | FLASH_ACR_PRFTEN | FLASH_WAIT_STATES); // set flash wait states appropriately and enable pre-fetch buffer and cache
     RCC_CFGR = (_RCC_CFGR_HPRE_SYSCLK | _RCC_CFGR_PPRE1_HCLK | _RCC_CFGR_PPRE2_HCLK); // prepare HCLK (AHB), PCLK1 and PCLK2 speeds
-#elif defined _CONNECTIVITY_LINE
+#elif defined _CONNECTIVITY_LINE || defined _STM32F031
     FLASH_ACR = (FLASH_ACR_PRFTBE | FLASH_WAIT_STATES);                  // set flash wait states appropriately and enable pre-fetch buffer
     RCC_CFGR = (RCC_CFGR_HPRE_SYSCLK | RCC_CFGR_PPRE1_HCLK_DIV2 | RCC_CFGR_PPRE2_HCLK); // set HCLK to SYSCLK, PCLK2 to HCLK and PCLK1 to HCLK/2 - PCLK1 must not be greater than SYSCLK/2
 #else
@@ -3220,7 +3229,7 @@ static void STM32_LowLevelInit(void)
 #if defined DISABLE_PLL
     #if !defined USE_HSI_CLOCK && !defined USE_MSI_CLOCK
     RCC_CFGR |= RCC_CFGR_HSE_SELECT;                                     // set oscillator as direct source
-    #elif defined _STM32L031 && defined USE_MSI_CLOCK                    // set MSI frequency
+    #elif defined _STM32L0x1 && defined USE_MSI_CLOCK                    // set MSI frequency
         #if MSI_CLOCK != 2097000
     RCC_ICSCR = (RCC_ICSCR_MISRANGE_SETTING | RCC_CR_MSIRDY | RCC_CR_MSION); // set the MSI range value and use this register's value to control it
         #endif
@@ -3280,13 +3289,16 @@ static void STM32_LowLevelInit(void)
     #endif
     }
 #endif
-#if defined _WINDOWS
-    ptrVect = (VECTOR_TABLE *)((unsigned char *)((unsigned char *)&vector_ram));
+#if defined INTERRUPT_VECTORS_IN_FLASH                                   // {111}
+    VECTOR_TABLE_OFFSET_REG = ((unsigned long)&__vector_table);
 #else
-    ptrVect = (VECTOR_TABLE *)(RAM_START_ADDRESS);
-#endif
-    VECTOR_TABLE_OFFSET_REG = (unsigned long)ptrVect;                    // position the vector table at the bottom of RAM
-#if !defined _MINIMUM_IRQ_INITIALISATION
+    #if defined _WINDOWS
+    ptrVect = (VECTOR_TABLE *)((unsigned char *)((unsigned char *)&vector_ram));
+    #else
+    ptrVect = (VECTOR_TABLE *)(RAM_START_ADDRESS);                       // position the vector table at the bottom of RAM
+    #endif
+    VECTOR_TABLE_OFFSET_REG = (unsigned long)ptrVect; 
+    #if !defined _MINIMUM_IRQ_INITIALISATION
     ptrVect->ptrHardFault     = irq_hard_fault;
     ptrVect->ptrMemManagement = irq_memory_man;
     ptrVect->ptrBusFault      = irq_bus_fault;
@@ -3309,7 +3321,7 @@ static void STM32_LowLevelInit(void)
         }
         processor_ints++;
     } FOREVER_LOOP();
-#else
+    #else
     ptrVect->ptrHardFault     = irq_default;
     ptrVect->ptrMemManagement = irq_default;
     ptrVect->ptrBusFault      = irq_default;
@@ -3318,6 +3330,7 @@ static void STM32_LowLevelInit(void)
     ptrVect->ptrNMI           = irq_default;
     ptrVect->ptrPendSV        = irq_default;
     ptrVect->ptrSVCall        = irq_default;
+    #endif
 #endif
 #if defined DMA_MEMCPY_SET && !defined DEVICE_WITHOUT_DMA                // if uMemcpy()/uMemset() is to use DMA enable the DMA controller used by it
     #if MEMCPY_CHANNEL > 7
@@ -3337,24 +3350,35 @@ static void STM32_LowLevelInit(void)
 #if defined _WINDOWS
     fnUpdateOperatingDetails();                                          // {33} update operating details to be displayed in the simulator
 #endif
-#if defined MCO_CONNECTED_TO_MSI
+#if defined MCO_CONNECTED_TO_MSI || defined MCO_CONNECTED_TO_HSI
+    #if defined MCO_CONNECTED_TO_MSI
+        #define _RCC_CFGR_MCOSEL_INPUT      RCC_CFGR_MCOSEL_MSI          // selected MSI
+    #elif defined MCO_CONNECTED_TO_HSI
+        #define _RCC_CFGR_MCOSEL_INPUT      RCC_CFGR_MCOSEL_HSICLK       // selet HSI
+    #endif
     RCC_CFGR &= ~(RCC_CFGR_MCOSEL_MASK | RCC_CFGR_MCOPRE_MASK);          // ensure the fields are initially masked
     #if defined MCO_DIVIDE
         #if MCO_DIVIDE == 1
-    RCC_CFGR |= RCC_CFGR_MCOSEL_MSI;                                     // connect undivided MSI clock to MCO output
+    RCC_CFGR |= _RCC_CFGR_MCOSEL_INPUT;                                  // connect undivided MSI clock to MCO output
         #elif MCO_DIVIDE == 2
-    RCC_CFGR |= (RCC_CFGR_MCOPRE_2 | RCC_CFGR_MCOSEL_MSI);               // divide by 2 and connect MSI clock to MCO output
+    RCC_CFGR |= (RCC_CFGR_MCOPRE_2 | _RCC_CFGR_MCOSEL_INPUT);            // divide by 2 and connect selected clock to MCO output
         #elif MCO_DIVIDE == 4
-    RCC_CFGR |= (RCC_CFGR_MCOPRE_4 | RCC_CFGR_MCOSEL_MSI);               // divide by 4 and connect MSI clock to MCO output
+    RCC_CFGR |= (RCC_CFGR_MCOPRE_4 | _RCC_CFGR_MCOSEL_INPUT);            // divide by 4 and connect selected clock to MCO output
         #elif MCO_DIVIDE == 8
-    RCC_CFGR |= (RCC_CFGR_MCOPRE_8 | RCC_CFGR_MCOSEL_MSI);               // divide by 8 and connect MSI clock to MCO output
+    RCC_CFGR |= (RCC_CFGR_MCOPRE_8 | _RCC_CFGR_MCOSEL_INPUT);            // divide by 8 and connect selected clock to MCO output
         #elif MCO_DIVIDE == 16
-    RCC_CFGR |= (RCC_CFGR_MCOPRE_16 | RCC_CFGR_MCOSEL_MSI);              // divide by 16 and connect MSI clock to MCO output
+    RCC_CFGR |= (RCC_CFGR_MCOPRE_16 | _RCC_CFGR_MCOSEL_INPUT);           // divide by 16 and connect selected clock to MCO output
+        #elif (MCO_DIVIDE_MAX == 128) && (MCO_DIVIDE == 32)
+    RCC_CFGR |= (RCC_CFGR_MCOPRE_32 | _RCC_CFGR_MCOSEL_INPUT);           // divide by 32 and connect selected clock to MCO output
+        #elif (MCO_DIVIDE_MAX == 128) && (MCO_DIVIDE == 64)
+    RCC_CFGR |= (RCC_CFGR_MCOPRE_64 | _RCC_CFGR_MCOSEL_INPUT);           // divide by 64 and connect selected clock to MCO output
+        #elif (MCO_DIVIDE_MAX == 128) && (MCO_DIVIDE == 128)
+    RCC_CFGR |= (RCC_CFGR_MCOPRE_128 | _RCC_CFGR_MCOSEL_INPUT);          // divide by 128 and connect selected clock to MCO output
         #else
     #error "Invalid MCO prescale value!"
         #endif
     #else
-    RCC_CFGR |= RCC_CFGR_MCOSEL_MSI;                                     // connect undivided MSI clock to MCO output
+    RCC_CFGR |= _RCC_CFGR_MCOSEL_INPUT;                                  // connect undivided selected clock to MCO output
     #endif
     #if defined MCO_OUT_ON_B
     _CONFIG_PERIPHERAL_OUTPUT(B, (PERIPHERAL_SYS), (PORTB_BIT13), (OUTPUT_MEDIUM | OUTPUT_PUSH_PULL)); // MCO on PB13
@@ -3380,7 +3404,7 @@ static void _main2(void)
 //
 extern void start_application(unsigned long app_link_location)
 {
-    #if defined ARM_MATH_CM0PLUS                                         // {67} cortex-M0+ assembler code
+    #if defined ARM_MATH_CM0PLUS || defined ARM_MATH_CM0                 // {67} cortex-m0/cortex-M0+ assembler code
         #if !defined _WINDOWS
     asm(" ldr r1, [r0,#0]");                                             // get the stack pointer value from the program's reset vector
     asm(" mov sp, r1");                                                  // copy the value to the stack pointer
@@ -3429,16 +3453,95 @@ extern void prvSetupHardware(void)
 // The initial stack pointer and PC value - this is linked at address 0x00000000
 //
 #if defined COMPILE_IAR
-__root const RESET_VECTOR __vector_table @ ".intvec"                     // __root forces the function to be linked in IAR project
+__root const _RESET_VECTOR __vector_table @ ".intvec"                    // __root forces the function to be linked in IAR project
 #elif defined _GNU
-const RESET_VECTOR __attribute__((section(".vectors"))) reset_vect
+const _RESET_VECTOR __attribute__((section(".vectors"))) reset_vect
 #elif defined _COMPILE_KEIL
-__attribute__((section("RESET"))) const RESET_VECTOR reset_vect
+__attribute__((section("RESET"))) const _RESET_VECTOR reset_vect
 #else
-const RESET_VECTOR reset_vect
+const _RESET_VECTOR __vector_table
 #endif
 = {
+#if defined INTERRUPT_VECTORS_IN_FLASH
+    {
+#endif
     (void *)(RAM_START_ADDRESS + SIZE_OF_RAM - 4),                       // stack pointer to top of RAM (reserving one long word for random number)
     (void (*)(void))START_CODE
+#if defined INTERRUPT_VECTORS_IN_FLASH
+    },
+#endif
+#if defined _APPLICATION_VALIDATION 
+    { 0x87654321, 0xffffffff },                                          // signal that this application supports validation
+    { 0xffffffff, 0xffffffff },                                          // overwrite first location with 0x55aa33cc to validate the application
+#elif defined INTERRUPT_VECTORS_IN_FLASH                                 // presently used only by the _STM32L011 (vectors in flash to save space when little SRAM resources available)
+    #if defined _MINIMUM_IRQ_INITIALISATION
+    irq_default,
+    irq_default,
+    irq_default,
+    irq_default,
+    irq_default,
+    #else
+    irq_NMI,
+    irq_hard_fault,
+    irq_memory_man,
+    irq_bus_fault,
+    irq_usage_fault,
+    #endif
+    0,
+    0,
+    0,
+    0,
+    #if defined RUN_IN_FREE_RTOS
+    vPortSVCHandler,                                                     // FreeRTOS's SCV handler
+    irq_debug_monitor,
+    0,
+    xPortPendSVHandler,                                                  // FreeRTOS's PendSV handler
+    #elif defined _MINIMUM_IRQ_INITIALISATION
+    irq_default,
+    irq_default,
+    0,
+    irq_default,
+    #else
+    irq_SVCall,
+    irq_debug_monitor,
+    0,
+    irq_pend_sv,
+    #endif
+    _RealTimeInterrupt,                                                  // systick
+    {                                                                    // processor specific interrupts
+    irq_default,                                                         // 0
+    irq_default,                                                         // 1
+    irq_default,                                                         // 2
+    irq_default,                                                         // 3
+    irq_default,                                                         // 4
+    irq_default,                                                         // 5
+    irq_default,                                                         // 6
+    irq_default,                                                         // 7
+    irq_default,                                                         // 8
+    irq_default,                                                         // 9
+    irq_default,                                                         // 10
+    irq_default,                                                         // 11
+    irq_default,                                                         // 12
+    irq_default,                                                         // 13
+    irq_default,                                                         // 14
+    irq_default,                                                         // 15
+    irq_default,                                                         // 16
+    irq_default,                                                         // 17
+    irq_default,                                                         // 18
+    irq_default,                                                         // 19
+    irq_default,                                                         // 20
+    irq_default,                                                         // 21
+    irq_default,                                                         // 22
+	irq_default,                                                         // 23
+    irq_default,                                                         // 24
+    irq_default,                                                         // 25
+    irq_default,                                                         // 26
+    irq_default,                                                         // 27
+    #if defined SERIAL_INTERFACE
+    SCI2_Interrupt,                                                      // 28
+    #endif
+    irq_default                                                          // 29
+    }
+#endif
 };
 #endif

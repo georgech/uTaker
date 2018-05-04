@@ -1358,7 +1358,7 @@ static __interrupt void _RealTimeInterrupt(void)
     uEnable_Interrupt();
 }
 
-// Routine to initialise the tick interrupt (uses Cortex M4/M0+ SysTick timer, RTC or low power timer)
+// Routine to initialise the tick interrupt (uses Cortex M7/M4/M0+ SysTick timer, RTC or low power timer)
 //
 extern void fnStartTick(void)
 {
@@ -2666,7 +2666,7 @@ const _RESET_VECTOR __vector_table
         KINETIS_FLASH_CONFIGURATION_DATAFLASH_PROT
     }
     #endif
-#elif defined INTERRUPT_VECTORS_IN_FLASH                                 // {111} presently used only by the KE04, KEA8 and KL03 (vectors in flash to save space when little flash resources available)
+#elif defined INTERRUPT_VECTORS_IN_FLASH                                 // {111} presently used only by the KE04, KEA8 and KL03 (vectors in flash to save space when little SRAM resources available)
     #if defined _MINIMUM_IRQ_INITIALISATION
     irq_default,
     irq_default,
@@ -2814,7 +2814,6 @@ const _RESET_VECTOR __vector_table
     #endif
     }
 #endif
-
 };
 
 #if !defined _BM_BUILD && !(defined _APPLICATION_VALIDATION && defined _GNU)

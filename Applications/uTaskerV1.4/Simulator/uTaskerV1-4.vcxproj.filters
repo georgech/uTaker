@@ -99,6 +99,9 @@
     <Filter Include="WinSim\SIMluminary">
       <UniqueIdentifier>{93c2770d-0c7f-4f4e-bff7-d2993e9e70fe}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Hardware\NE64">
+      <UniqueIdentifier>{9c9b7be1-f6c6-49e0-a876-5c6e3de4d262}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\application.c">
@@ -1326,6 +1329,12 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis.h">
       <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\CMSIS_DSP\core_cm0.h">
+      <Filter>Hardware\CMSIS_DSP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\STM32F031_port.h">
+      <Filter>WinSim\SIMstm32</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

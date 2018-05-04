@@ -190,7 +190,7 @@ __interrupt static void _exti10_15_handler(void)
 #if defined _PORT_INT_CONFIG_CODE
         {
             INTERRUPT_SETUP *ptrSetup = (INTERRUPT_SETUP *)ptrSettings;
-    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432 || defined _STM32L031
+    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031
             unsigned long   *ptrMux = SYSCFG_EXTICR1_ADDR;
     #else
             unsigned long   *ptrMux = AFIO_EXTICR1_ADD;
@@ -219,8 +219,11 @@ __interrupt static void _exti10_15_handler(void)
     #elif defined _STM32L432
             POWER_UP(AHB1, (RCC_AHB2ENR_GPIOAEN << ptrSetup->int_port)); // ensure that the port is clocked
             POWER_UP(APB2, RCC_APB2ENR_SYSCFGEN);                        // power up the system configuration controller so that it can correctly multiplex the inputs to the external interrupt controller
-    #elif defined _STM32L031
+    #elif defined _STM32L0x1
             RCC_IOPENR |= ((RCC_IOPENR_IOPAEN) << ptrSetup->int_port);   // ensure that the port is clocked
+            POWER_UP(APB2, RCC_APB2ENR_SYSCFGEN);                        // power up the system configuration controller so that it can correctly multiplex the inputs to the external interrupt controller
+    #elif defined _STM32F031
+            POWER_UP(AHB, (RCC_AHBENR_IOPAEN << ptrSetup->int_port));    // ensure that the port is clocked
             POWER_UP(APB2, RCC_APB2ENR_SYSCFGEN);                        // power up the system configuration controller so that it can correctly multiplex the inputs to the external interrupt controller
     #else
             POWER_UP(APB2, (RCC_APB2ENR_IOPAEN << ptrSetup->int_port));  // ensure that the port is clocked

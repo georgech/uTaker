@@ -185,8 +185,10 @@
     //
     // Nucleo 32 range
     //
+      #define NUCLEO_F031K6                                              // evaluation boad with STM32F031 (cortex-m0)
+    //#define NUCLEO_L011K4                                              // evaluation boad with STM32L011 (cortex-m0+)
+    //#define NUCLEO_L031K6                                              // evaluation boad with STM32L031 (cortex-m0+)
     //#define NUCLEO_L432KC                                              // evaluation boad with STM32L432 (cortex-m4 with FPU)
-      #define NUCLEO_L031K6                                              // evaluation boad with STM32L032 (cortex-m0+)
 
     // Nucleo 144 range
     //
@@ -342,8 +344,8 @@
     #define KINETIS_KL03
     #define DEVICE_WITHOUT_CAN                                           // KL doesn't have CAN controller
     #define DEVICE_WITHOUT_ETHERNET                                      // KL doesn't have Ethernet controller
-    #define DEVICE_WITHOUT_USB                                           // KL02 doesn't have USB
-    #define INTERRUPT_VECTORS_IN_FLASH                                   // save some memory by keeping interrupt vectors in SRAM
+    #define DEVICE_WITHOUT_USB                                           // KL03 doesn't have USB
+    #define INTERRUPT_VECTORS_IN_FLASH                                   // save some memory by keeping interrupt vectors in FLASH
 #elif defined FRDM_KL05Z
     #define TARGET_HW            "FRDM_KL05Z Kinetis"
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((2 * 1024) * MEM_FACTOR)
@@ -360,7 +362,7 @@
     #define DEVICE_WITHOUT_CAN                                           // KL doesn't have CAN controller
     #define DEVICE_WITHOUT_ETHERNET                                      // KL doesn't have Ethernet controller
 #elif defined FRDM_KL25Z
-  //#define INTERRUPT_VECTORS_IN_FLASH
+  //#define INTERRUPT_VECTORS_IN_FLASH                                   // save some memory by keeping interrupt vectors in FLASH
   //#define FRDM_FXS_MULTI_B                                             // use connections for FRDM-FXS-MULTI-B
     #if defined FRDM_FXS_MULTI_B
         #define TARGET_HW        "FRDM-KL25Z + FRDM-FXS-MULTI-B"
@@ -934,7 +936,7 @@
     #define TARGET_HW            "LM3S2139 CAN DEVICE"
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((25 * 1024)*MEM_FACTOR)
 #elif defined NUCLEO_L432KC
-    #define TARGET_HW            "NUCLEO-L432KC (STM32L432)"             // 80MHz with FPU
+    #define TARGET_HW            "NUCLEO-XXXX (STM32L432)"             // 80MHz with FPU
     #define _STM32L4XX
     #define _STM32L432                                                   // part type
     #define STM32_FPU                                                    // FPU present
@@ -943,6 +945,25 @@
     #define DEVICE_WITHOUT_ETHERNET                                      // the STM32 doesn't have ethernet
     #define DEVICE_WITHOUT_DMA                                           // provisional during initial development
     #define DEVICE_WITHOUT_CAN                                           // this STM32L4 doesn't have CAN controller
+#elif defined NUCLEO_L011K4
+    #define TARGET_HW            "NUCLEO-STM32L031K6 (STM32L031K6)"      // 32MHz
+    #define _STM32L0                                                     // cortex-m0+
+    #define _STM32L0x1                                                   // part family
+    #define _STM32L011                                                   // part type
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)(900 * MEM_FACTOR)
+    #define DEVICE_WITHOUT_USB                                           // this STM32L device doesn't have USB
+    #define DEVICE_WITHOUT_ETHERNET                                      // this STM32L doesn't have ethernet
+    #define DEVICE_WITHOUT_DMA                                           // provisional during initial development
+    #define DEVICE_WITHOUT_CAN                                           // this STM32L doesn't have CAN controller
+    #define INTERRUPT_VECTORS_IN_FLASH                                   // save some memory by keeping interrupt vectors in FLASH
+#elif defined NUCLEO_F031K6
+    #define TARGET_HW            "NUCLEO-STM32F031K6 (STM32F031K6)"      // 48MHz
+    #define _STM32F0                                                     // cortex-m0
+    #define _STM32F0x1                                                   // part family
+    #define _STM32F031                                                   // part type
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((2 * 1024) * MEM_FACTOR)
+    #define DEVICE_WITHOUT_ETHERNET                                      // this STM32L doesn't have ethernet
+    #define DEVICE_WITHOUT_DMA                                           // provisional during initial development
 #elif defined NUCLEO_L031K6
     #define TARGET_HW            "NUCLEO-L031K6 (STM32L031K6)"           // 32MHz
     #define _STM32L0                                                     // cortex-m0+

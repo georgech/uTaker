@@ -39,6 +39,7 @@
     22.04.2017 Add ADC_TRIGGER_TPM and TEST_STEPPER options
     20.05.2017 Add Kinetis timer capture test                            {24}
     09.02.2018 Add ADC polling reference (rather than using end of conversion interrupt) {25}
+    03.05.2018 Corrected Kinetis internal temperature equation           {26}
 
     The file is otherwise not specifically linked in to the project since it is included by application.c when needed.
     The reason for ADC and timer configurations in a single file is that a HW timer is very often used togther with and ADC.
@@ -49,8 +50,8 @@
     #define _ADC_TIMER_CONFIG
 
     #if defined SUPPORT_ADC                                              // if HW support is enabled
-      //#define TEST_ADC                                                 // enable test of ADC operation
-          //#define ADC_INTERNAL_TEMPERATURE                             // force internal temperature channel to be used, when available
+        #define TEST_ADC                                                 // enable test of ADC operation
+            #define ADC_INTERNAL_TEMPERATURE                             // force internal temperature channel to be used, when available
           //#define TEST_POLL_ADC                                        // {25} poll ADC conversion complete rather than use end of conversion interrupt
       //#define TEST_AD_DA                                               // {14} enable test of reading ADC and writing (after delay) to DAC
           //#define ADC_TRIGGER_TPM                                      // use TPM module rather than PIT for ADC trigger (valid for KL parts)
@@ -422,11 +423,15 @@
             #if defined _KINETIS                                         // {11}
                 #if defined ADC_INTERNAL_TEMPERATURE
                     #define VTEMP_25_16BIT               ((VTEMP_25_MV * 0xffff) / ADC_REFERENCE_VOLTAGE)
+                    #define VTEMP_25_12BIT               (VTEMP_25_16BIT >> 4)
+                    #define VTEMP_25_10BIT               (VTEMP_25_16BIT >> 6)
                     #define TEMP_SENSOR_SLOPE_100_16BIT  ((TEMP_SENSOR_SLOPE_UV * 0xffff)/(10 * ADC_REFERENCE_VOLTAGE))
+                    #define TEMP_SENSOR_SLOPE_100_12BIT  (TEMP_SENSOR_SLOPE_100_16BIT >> 4)
+                    #define TEMP_SENSOR_SLOPE_100_10BIT  (TEMP_SENSOR_SLOPE_100_16BIT >> 6)
                     if (ADC_TRIGGER == ucInputMessage[MSG_INTERRUPT_EVENT]) { // convert the ADC reading to a temperature
-                        signed short ssDifference = (results.sADC_value[0] - (VTEMP_25_16BIT >> 4)); // convert references to 12 bit values
-                        signed long slTemperature100 = ((2500 - (ssDifference * (TEMP_SENSOR_SLOPE_100_16BIT >> 4))) + 50); // the approximate temperature *100, rounded up/down
-                        slTemperature100 /= 100;                         // rounded integer temperature value
+                        signed short ssDifference = (results.sADC_value[0] - VTEMP_25_12BIT); // convert references to 12 bit values
+                        signed long slTemperature100 = (2550 - ((ssDifference * 10000) / TEMP_SENSOR_SLOPE_100_12BIT)); // {26} the approximate temperature *100, rounded up/down
+                        slTemperature100 /= 100;                         // the approximate temperature rounded up/down to 1°C
                         fnDebugDec(slTemperature100, DISPLAY_NEGATIVE);
                         fnDebugMsg(" degC\r\n");
                     }

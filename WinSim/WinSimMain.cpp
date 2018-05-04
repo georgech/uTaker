@@ -607,6 +607,14 @@ unsigned long *pPixels = 0;
             #endif
             #define PORT_FIRST_LINE     320
             #define PORT_DISPLAY_LEFT   154
+        #elif defined _STM32F0
+            #if defined _EXE
+                #define CHIP_PACKAGE "stm32F0.bmp"
+            #else
+                #define CHIP_PACKAGE "..//..//..//Hardware//STM32//GUI//stm32F0.bmp"
+            #endif
+            #define PORT_FIRST_LINE     340
+            #define PORT_DISPLAY_LEFT   154
         #elif defined _STM32L0
             #if defined _EXE
                 #define CHIP_PACKAGE "stm32L0.bmp"

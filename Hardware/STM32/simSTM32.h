@@ -133,7 +133,7 @@ typedef struct stSTM32_RCC
     unsigned long RCC_PLLCFGR;
     unsigned long RCC_PLLSAI1CFGR;
     unsigned long ulRes0;
-    unsigned long RCC_CIR;
+    unsigned long RCC_CIER;
     unsigned long RCC_CIFR;
     unsigned long RCC_CICR;
     unsigned long ulRes1;
@@ -167,7 +167,7 @@ typedef struct stSTM32_RCC
     unsigned long RCC_CSR;
     unsigned long RCC_CRRCR;
     unsigned long RCC_CCCIPR2;
-#elif defined _STM32L031
+#elif defined _STM32L0x1
     unsigned long RCC_CR;
     unsigned long RCC_ICSCR;
     unsigned long ulRes0;
@@ -427,11 +427,9 @@ unsigned long SDIO_FIFO31;
 } STM32_SDIO;
 
 
-
-
 typedef struct stSTM32_FMI
 {
-#if defined _STM32L031
+#if defined _STM32L0x1
     unsigned long FLASH_ACR;
     unsigned long FLASH_PECR;
     unsigned long FLASH_PDKEYR;
@@ -476,7 +474,7 @@ unsigned long EXTI_PR;
 
 typedef struct stSTM32_GPIO
 {
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432 || defined _STM32L031
+#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031
     unsigned long GPIO_MODER;
     unsigned long GPIO_OTYPER;
     unsigned long GPIO_OSPEEDR;
@@ -487,7 +485,7 @@ typedef struct stSTM32_GPIO
     unsigned long GPIO_LCKR;
     unsigned long GPIO_AFRL;
     unsigned long GPIO_AFRH;
-    #if defined _STM32L432 || defined _STM32L031
+    #if defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031
         unsigned long GPIO_BRR;
     #endif
 #else
@@ -516,7 +514,7 @@ unsigned long AFIO_MAPR2;
 
 typedef struct stSTM32_USART
 {
-#if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1
+#if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031
     unsigned long UART_CR1;
     unsigned long UART_CR2;
     unsigned long UART_CR3;
@@ -542,7 +540,7 @@ typedef struct stSTM32_USART
 
 typedef struct stSTM32_UART
 {
-#if defined _STM32F7XX
+#if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031
     unsigned long UART_CR1;
     unsigned long UART_CR2;
     unsigned long UART_CR3;
@@ -572,7 +570,7 @@ unsigned long IWDG_KR;
 unsigned long IWDG_PR;
 unsigned long IWDG_RLR;
 unsigned long IWDG_SR;
-#if defined _STM32L432 || defined _STM32L031
+#if defined _STM32L432 || defined _STM32L0x1
     unsigned long  IWDG_WINR;
 #endif
 } STM32_IWDG;
@@ -908,7 +906,7 @@ unsigned short SPI2_I2SPR;
 } STM32_SPI_I2S;
 
 
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432 || defined _STM32L031
+#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031
 typedef struct stSTM32_SYSCFG
 {
 unsigned long SYSCFG_MEMRM;
@@ -1346,7 +1344,7 @@ typedef struct stSTR32M_PERIPH
     STM32_CAN            CAN;
     STM32_CAN_SLAVE      CAN_SLAVE;
 
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432 || defined _STM32L031
+#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031
     STM32_SPI_I2S        SPI_I2S[3];
     STM32_SYSCFG         SYSCFG;
     STM32_FSMC           FSMC;

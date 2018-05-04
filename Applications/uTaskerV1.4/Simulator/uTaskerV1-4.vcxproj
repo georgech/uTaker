@@ -1535,6 +1535,7 @@ Build_Kinetis_SSL.bat
     <ClInclude Include="..\..\..\Hardware\CMSIS_DSP\arm_math.h" />
     <ClInclude Include="..\..\..\Hardware\CMSIS_DSP\cmsis_compiler.h" />
     <ClInclude Include="..\..\..\Hardware\CMSIS_DSP\cmsis_gcc.h" />
+    <ClInclude Include="..\..\..\Hardware\CMSIS_DSP\core_cm0.h" />
     <ClInclude Include="..\..\..\Hardware\CMSIS_DSP\core_cm0plus.h" />
     <ClInclude Include="..\..\..\Hardware\CMSIS_DSP\core_cm3.h" />
     <ClInclude Include="..\..\..\Hardware\CMSIS_DSP\core_cm4.h" />
@@ -1622,6 +1623,7 @@ Build_Kinetis_SSL.bat
     <ClInclude Include="..\..\..\Hardware\STM32\spi_flash_STM32_sst25.h" />
     <ClInclude Include="..\..\..\Hardware\STM32\spi_flash_STM32_stmicro.h" />
     <ClInclude Include="..\..\..\Hardware\STM32\STM32.h" />
+    <ClInclude Include="..\..\..\Hardware\STM32\STM32F031_port.h" />
     <ClInclude Include="..\..\..\Hardware\STM32\STM32F100X_port.h" />
     <ClInclude Include="..\..\..\Hardware\STM32\STM32F105X_107X_port.h" />
     <ClInclude Include="..\..\..\Hardware\STM32\STM32F41X_port.h" />
