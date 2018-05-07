@@ -317,12 +317,12 @@ static const NETWORK_PARAMETERS network_default[IP_NETWORK_COUNT] = {
 const PARS cParameters = {
     PARAMETER_BLOCK_VERSION,                                             // version number for parameter validity control
     (unsigned short)(2 * 60),                                            // default telnet_timeout - 2 minutes
-    (CHAR_8 + NO_PARITY + ONE_STOP + USE_XON_OFF + CHAR_MODE),           // {43} serial interface settings
+    (CHAR_8 | NO_PARITY | ONE_STOP | USE_XON_OFF | CHAR_MODE),           // {43} serial interface settings
     23,                                                                  // TELNET port number
     {
-        (/*ACTIVE_DHCP + */ACTIVE_LOGIN + ACTIVE_FTP_SERVER /*+ ACTIVE_FTP_LOGIN*/ + ACTIVE_SNTP + ACTIVE_TIME_SERVER + ACTIVE_WEB_SERVER + ACTIVE_TELNET_SERVER + SMTP_LOGIN), // active servers (ACTIVE_DHCP and ACTIVE_FTP_LOGIN disabled)
+        (/*ACTIVE_DHCP | */ACTIVE_LOGIN | ACTIVE_FTP_SERVER /*| ACTIVE_FTP_LOGIN*/ | ACTIVE_SNTP | ACTIVE_TIME_SERVER | ACTIVE_WEB_SERVER | ACTIVE_TELNET_SERVER | SMTP_LOGIN), // active servers (ACTIVE_DHCP and ACTIVE_FTP_LOGIN disabled)
     #if (IP_NETWORK_COUNT > 1)
-        (/*ACTIVE_DHCP + */ACTIVE_LOGIN + ACTIVE_FTP_SERVER /*+ ACTIVE_FTP_LOGIN*/ + ACTIVE_SNTP + ACTIVE_TIME_SERVER + ACTIVE_WEB_SERVER + ACTIVE_TELNET_SERVER + SMTP_LOGIN), // active servers (ACTIVE_DHCP and ACTIVE_FTP_LOGIN disabled)
+        (/*ACTIVE_DHCP | */ACTIVE_LOGIN | ACTIVE_FTP_SERVER /*| ACTIVE_FTP_LOGIN*/ | ACTIVE_SNTP | ACTIVE_TIME_SERVER | ACTIVE_WEB_SERVER | ACTIVE_TELNET_SERVER | SMTP_LOGIN), // active servers (ACTIVE_DHCP and ACTIVE_FTP_LOGIN disabled)
     #endif
     },
     #if defined FRDM_KL03Z                                                   // this board has a capacitor connected to the LPUART0_RX pin so cannot use fast speeds

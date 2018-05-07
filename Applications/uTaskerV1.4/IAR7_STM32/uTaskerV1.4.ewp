@@ -1050,7 +1050,7 @@
         </option>
         <option>
           <name>OGChipSelectEditMenu</name>
-          <state>STM32L031K6	ST STM32L031K6</state>
+          <state>STM32L011G4	ST STM32L011G4</state>
         </option>
         <option>
           <name>GenLowLevelInterface</name>
@@ -1110,7 +1110,7 @@
         </option>
         <option>
           <name>GFPUDeviceSlave</name>
-          <state>STM32L031K6	ST STM32L031K6</state>
+          <state>STM32L011G4	ST STM32L011G4</state>
         </option>
         <option>
           <name>FPU2</name>
@@ -1561,7 +1561,7 @@
         <option>
           <name>OOCOutputFormat</name>
           <version>3</version>
-          <state>0</state>
+          <state>3</state>
         </option>
         <option>
           <name>OCOutputOverride</name>
@@ -1569,7 +1569,7 @@
         </option>
         <option>
           <name>OOCOutputFile</name>
-          <state>uTaskerV1.4.srec</state>
+          <state>uTaskerV1.4.bin</state>
         </option>
         <option>
           <name>OOCCommandLineProducer</name>
@@ -1688,7 +1688,7 @@
         </option>
         <option>
           <name>IlinkIcfFile</name>
-          <state>$PROJ_DIR$\settings\uTaskerSTM32_L031.icf</state>
+          <state>$PROJ_DIR$\settings\uTaskerSTM32_L011_FlashVect.icf</state>
         </option>
         <option>
           <name>IlinkIcfFileSlave</name>

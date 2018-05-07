@@ -49,6 +49,7 @@
     07.01.2017 Add UART_TIMED_TRANSMISSION mode                          {35}
     03.05.2017 Add optional modulo tx buffer alignment                   {36}
     09.05.2017 Add transmission pause mode                               {37}
+    05.05.2018 Add UART_HW_TRIGGERED_TX_MODE                             {38}
 
 */
 
@@ -683,7 +684,6 @@ static void send_next_byte(QUEUE_HANDLE channel, TTYQUE *ptTTYQue)       // inte
         }
         else {
             unsigned char ucNextByte = *(ptTTYQue->tty_queue.get);
-
 #if defined SERIAL_SUPPORT_ESCAPE
             if ((ptTTYQue->opn_mode & TX_ESC_MODE) != 0) {
                 if (ptTTYQue->ucState & ESCAPE_SEQUENCE) {
@@ -699,12 +699,30 @@ static void send_next_byte(QUEUE_HANDLE channel, TTYQUE *ptTTYQue)       // inte
 #if defined SERIAL_SUPPORT_DMA
             if ((ptTTYQue->ucDMA_mode & UART_TX_DMA) != 0) {             // DMA mode of operation
                 QUEUE_TRANSFER tx_length;
-                                                                         // calculate whether we can send block in one go or not
-                if ((ptTTYQue->tty_queue.get + ptTTYQue->tty_queue.chars) >= ptTTYQue->tty_queue.buffer_end) {
+                QUEUE_TRANSFER charactersWaiting = ptTTYQue->tty_queue.chars;
+    #if defined UART_HW_TRIGGERED_MODE_SUPPORTED                         // {38}
+                if ((ptTTYQue->opn_mode & UART_HW_TRIGGERED_TX_MODE) != 0) {
+                    charactersWaiting = *ptTTYQue->tty_queue.get++;      // the first two bytes in the queue are the message length
+                    charactersWaiting <<= 8;
+                    charactersWaiting |= *ptTTYQue->tty_queue.get++;
+                    ptTTYQue->tty_queue.chars -= 2;
+        #if defined _WINDOWS
+                    if (charactersWaiting > ptTTYQue->tty_queue.chars) {
+                        _EXCEPTION("Bad use of UART_HW_TRIGGERED_TX_MODE"); // the first two characters indicate the individual transmit message length
+                    }
+                    if (ptTTYQue->tty_queue.get >= ptTTYQue->tty_queue.buffer_end) {
+                        _EXCEPTION("Bad use of UART_HW_TRIGGERED_TX_MODE"); // a linear buffer is expected
+                    }
+        #endif
+                }
+    #endif
+                // Calculate whether we can send block in one go or not
+                //
+                if ((ptTTYQue->tty_queue.get + charactersWaiting) >= ptTTYQue->tty_queue.buffer_end) {
                     tx_length = (QUEUE_TRANSFER)(ptTTYQue->tty_queue.buffer_end - ptTTYQue->tty_queue.get); // single transfer up to the end of the buffer
                 }
                 else {
-                    tx_length = ptTTYQue->tty_queue.chars;               // single transfer block
+                    tx_length = charactersWaiting;                       // single transfer block
                 }
                 if (tx_length == 0) {
                     return;
@@ -1010,8 +1028,8 @@ extern void fnSciRxMsg(QUEUE_HANDLE channel)                             // {11}
 {
     TTYQUE *rx_ctl = rx_control[channel];
     #if defined SERIAL_SUPPORT_DMA && defined SERIAL_SUPPORT_DMA_RX
-    unsigned char *ptrNextHalfBuffer;
-    QUEUE_TRANSFER halfBufferLength;
+    unsigned char *ptrNextHalfBuffer = 0;
+    QUEUE_TRANSFER halfBufferLength = 0;
     if ((rx_ctl->ucDMA_mode & UART_RX_DMA) != 0) {
         halfBufferLength = rx_ctl->msgchars;
         rx_ctl->msgchars = fnGetDMACount(channel, halfBufferLength);     // get the actual received character count
@@ -1074,7 +1092,7 @@ extern void fnSciRxMsg(QUEUE_HANDLE channel)                             // {11}
             rx_ctl->tty_queue.chars++;                                   // include the length of next message
     #endif
     #if defined SERIAL_SUPPORT_DMA && defined SERIAL_SUPPORT_DMA_RX      // {27}
-            if (rx_ctl->ucDMA_mode & UART_RX_DMA) {
+            if ((rx_ctl->ucDMA_mode & UART_RX_DMA) != 0) {
                 rx_ctl->tty_queue.put = ptrNextHalfBuffer;               // set to next half of buffer
                 rx_ctl->msgchars = halfBufferLength;                     // reset for next message
             }

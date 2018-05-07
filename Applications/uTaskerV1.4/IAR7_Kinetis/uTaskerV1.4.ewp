@@ -89,7 +89,7 @@
         </option>
         <option>
           <name>OGChipSelectEditMenu</name>
-          <state>MK64FN1M0xxx12	NXP MK64FN1M0xxx12</state>
+          <state>MK66FN2M0xxx18	NXP MK66FN2M0xxx18</state>
         </option>
         <option>
           <name>GenLowLevelInterface</name>
@@ -149,7 +149,7 @@
         </option>
         <option>
           <name>GFPUDeviceSlave</name>
-          <state>MK64FN1M0xxx12	NXP MK64FN1M0xxx12</state>
+          <state>MK66FN2M0xxx18	NXP MK66FN2M0xxx18</state>
         </option>
         <option>
           <name>FPU2</name>
@@ -729,7 +729,7 @@
         </option>
         <option>
           <name>IlinkIcfFile</name>
-          <state>$PROJ_DIR$\settings\K_1M_256.icf</state>
+          <state>$PROJ_DIR$\settings\K_2M_256.icf</state>
         </option>
         <option>
           <name>IlinkIcfFileSlave</name>
@@ -3743,6 +3743,9 @@
   </file>
   <file>
     <name>$PROJ_DIR$\..\debug.c</name>
+  </file>
+  <file>
+    <name>$PROJ_DIR$\..\DMX512.c</name>
   </file>
   <file>
     <name>$PROJ_DIR$\..\FreeRTOSapplication.c</name>

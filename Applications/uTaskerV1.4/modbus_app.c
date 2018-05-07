@@ -93,9 +93,9 @@ static const MODBUS_PARS cMODBUS_default = {
     },
     {
     #if MODBUS_SERIAL_INTERFACES > 1
-        (CHAR_8 + NO_PARITY + ONE_STOP + CHAR_MODE),                     // serial interface settings (ASCII mode uses 7 bits) - serial port 0
+        (CHAR_8 | NO_PARITY | ONE_STOP | CHAR_MODE),                     // serial interface settings (ASCII mode uses 7 bits) - serial port 0
     #endif
-        (CHAR_8 + NO_PARITY + ONE_STOP + CHAR_MODE),                     // serial interface settings (ASCII mode uses 7 bits) - serial port 1
+        (CHAR_8 | NO_PARITY | ONE_STOP | CHAR_MODE),                     // serial interface settings (ASCII mode uses 7 bits) - serial port 1
     },
     {
     #if MODBUS_SERIAL_INTERFACES > 1

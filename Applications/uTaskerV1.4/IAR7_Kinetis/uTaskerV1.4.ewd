@@ -45,7 +45,7 @@
         </option>
         <option>
           <name>MemFile</name>
-          <state>$TOOLKIT_DIR$\CONFIG\debugger\NXP\MK20DX64xxx7.ddf</state>
+          <state>$TOOLKIT_DIR$\CONFIG\debugger\NXP\MK22FN512xxx12.ddf</state>
         </option>
         <option>
           <name>RunToEnable</name>
@@ -85,7 +85,7 @@
         </option>
         <option>
           <name>OCDynDriverList</name>
-          <state>PEMICRO_ID</state>
+          <state>JLINK_ID</state>
         </option>
         <option>
           <name>OCLastSavedByProductVersion</name>
@@ -113,7 +113,7 @@
         </option>
         <option>
           <name>FlashLoadersV3</name>
-          <state>$TOOLKIT_DIR$\config\flashloader\NXP\FlashKx0Dxxx16K_2K_1K.board</state>
+          <state>$TOOLKIT_DIR$\config\flashloader\NXP\FlashKxxFxxx128K.board</state>
         </option>
         <option>
           <name>OCImagesSuppressCheck1</name>

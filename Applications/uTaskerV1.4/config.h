@@ -1258,6 +1258,10 @@
   //#define USE_DMX512_MASTER                                            // DMX512 master
   //#define USE_DMX512_SLAVE                                             // DMX512 slave
       //#define USE_DMX_RDM                                              // additional remote device management support
+    #if defined USE_DMX512_MASTER
+          #define UART_BREAK_SUPPORT                                     // support break control in the UART driver
+          #define UART_HW_TRIGGERED_MODE_SUPPORTED
+    #endif
 
   //#define USE_PPP                                                      // allow TCP/IP on serial
       //#define USE_SLIP                                                 // use slip rather than PPP

@@ -50,7 +50,7 @@
     #define _ADC_TIMER_CONFIG
 
     #if defined SUPPORT_ADC                                              // if HW support is enabled
-        #define TEST_ADC                                                 // enable test of ADC operation
+      //#define TEST_ADC                                                 // enable test of ADC operation
             #define ADC_INTERNAL_TEMPERATURE                             // force internal temperature channel to be used, when available
           //#define TEST_POLL_ADC                                        // {25} poll ADC conversion complete rather than use end of conversion interrupt
       //#define TEST_AD_DA                                               // {14} enable test of reading ADC and writing (after delay) to DAC
@@ -88,7 +88,7 @@
         #endif
     #endif
     #if defined SUPPORT_LPTMR && (LPTMR_AVAILABLE > 0)                   // Kinetis low power timer {18}
-        #define TEST_LPTMR_PERIODIC                                      // test a user defined periodic interrupt
+     // #define TEST_LPTMR_PERIODIC                                      // test a user defined periodic interrupt
       //#define TEST_LPTMR_SINGLE_SHOT                                   // test a user defined single-shot interrupt
     #endif
     #if defined SUPPORT_DMA_TIMER                                        // M522XX DMA timers

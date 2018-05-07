@@ -365,7 +365,7 @@ static int fnPPP_ConfigEthernet(ETHTABLE *pars)
     tInterfaceParameters.ucFlowHighWater = 80;                           // set the flow control high and low water levels in %
     tInterfaceParameters.ucFlowLowWater = 20;
     #endif
-    tInterfaceParameters.Config = (CHAR_8 + NO_PARITY + ONE_STOP /*+ USE_XON_OFF*/ + CHAR_MODE);
+    tInterfaceParameters.Config = (CHAR_8 | NO_PARITY | ONE_STOP /*| USE_XON_OFF*/ | CHAR_MODE);
     #if defined SERIAL_SUPPORT_DMA
     tInterfaceParameters.ucDMAConfig = 0;
     #endif

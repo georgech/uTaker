@@ -99,6 +99,8 @@
     17.12.2017 Change uMemset() to match memset() parameters             {80}
     13.03.2018 Add UART_IDLE_LINE_INTERRUPT                              {81}
     16.03.2018 Add CONTROL_QUESTION_MARK                                 {82}
+    05.05.2018 Add UART_HW_TRIGGERED_TX_MODE                             {83}
+
 
 */
 
@@ -273,6 +275,7 @@
     #define UART_TIMED_TRANSMISSION_MODE 0x00040000                      // {72}
     #define UART_INVERT_TX               0x00080000                      // {78}
     #define UART_IDLE_LINE_INTERRUPT     0x00100000                      // {81}
+    #define UART_HW_TRIGGERED_TX_MODE    0x00200000                      // {83}
 #endif
 
 #define UART_TX_DMA                  0x01                                // UART uses DMA for transmission

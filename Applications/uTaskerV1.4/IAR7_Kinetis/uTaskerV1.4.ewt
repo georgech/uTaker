@@ -3741,6 +3741,9 @@
     <name>$PROJ_DIR$\..\debug.c</name>
   </file>
   <file>
+    <name>$PROJ_DIR$\..\DMX512.c</name>
+  </file>
+  <file>
     <name>$PROJ_DIR$\..\FreeRTOSapplication.c</name>
     <configuration>
       <name>Flash</name>

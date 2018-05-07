@@ -1862,7 +1862,7 @@ static void fnOpenUSB_UARTs(int iInterface)
     tInterfaceParameters.ucFlowHighWater = 80;                           // set the flow control high and low water levels in %
     tInterfaceParameters.ucFlowLowWater = 20;
         #endif
-    tInterfaceParameters.Config = (CHAR_8 + NO_PARITY + ONE_STOP + CHAR_MODE);
+    tInterfaceParameters.Config = (CHAR_8 | NO_PARITY | ONE_STOP | CHAR_MODE);
         #if defined SERIAL_SUPPORT_DMA
     tInterfaceParameters.ucDMAConfig = 0;                                // disable DMA
     tInterfaceParameters.ucDMAConfig = UART_TX_DMA;                      // activate DMA on transmission

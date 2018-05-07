@@ -24,6 +24,7 @@
     20.11.2017 Add KE15 PWM channel output enable                        {8}
     19.03.2018 Add PWM clock source from TRGMUX settings                 {9}
     10.04.2018 Add KL27 clock inputs                                     {10}
+    05.05.2018 Add user defined target register for DMA operation        {11}
 
 */
 
@@ -125,7 +126,11 @@ static __interrupt void _PWM_Interrupt_3(void)
     #if FLEX_TIMERS_AVAILABLE > 4
 static __interrupt void _PWM_Interrupt_4(void)
 {
+        #if defined TPMS_AVAILABLE                                       // TPM1
+    OR_ONE_TO_CLEAR(FTM4_SC, FTM_SC_TOF);                                // clear interrupt (write 1 to reset)
+        #else
     FTM4_SC &= ~(FTM_SC_TOF);                                            // clear interrupt (read when set and write 0 to reset)
+        #endif
     if (_PWM_TimerHandler[4] != 0) {                                     // if there is a user handler installed
         uDisable_Interrupt();
             _PWM_TimerHandler[4]();                                      // call user interrupt handler
@@ -136,7 +141,11 @@ static __interrupt void _PWM_Interrupt_4(void)
     #if FLEX_TIMERS_AVAILABLE > 5
 static __interrupt void _PWM_Interrupt_5(void)
 {
+        #if defined TPMS_AVAILABLE                                       // TPM2
+    OR_ONE_TO_CLEAR(FTM5_SC, FTM_SC_TOF);                                // clear interrupt (write 1 to reset)
+        #else
     FTM5_SC &= ~(FTM_SC_TOF);                                            // clear interrupt (read when set and write 0 to reset)
+        #endif
     if (_PWM_TimerHandler[5] != 0) {                                     // if there is a user handler installed
         uDisable_Interrupt();
             _PWM_TimerHandler[5]();                                      // call user interrupt handler
@@ -258,13 +267,13 @@ static __interrupt void _PWM_Interrupt_5(void)
                 }
                 break;
     #endif
-    #if FLEX_TIMERS_AVAILABLE > 4 && defined TPMS_AVAILABLE
+    #if FLEX_TIMERS_AVAILABLE > 4 && defined TPMS_AVAILABLE              // TPM1
             case 4:
         #if defined KINETIS_WITH_PCC && !defined KINETIS_KE15
                 SELECT_PCC_PERIPHERAL_SOURCE(FTM1, FTM1_PCC_SOURCE);     // select the PCC clock used by TPM 1
         #endif
                 POWER_UP_ATOMIC(2, TPM1);                                // ensure that the TPM module is powered up
-                iInterruptID = irq_FTM1_ID;
+                iInterruptID = irq_TPM1_ID;
                 iTPM_type = 1;
                 ptrFlexTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_4;
                 if ((ulMode & PWM_NO_OUTPUT) == 0) {                     // {6}
@@ -272,12 +281,12 @@ static __interrupt void _PWM_Interrupt_5(void)
                 }
                 break;
 
-            case 5:
+            case 5:                                                      // TPM2
         #if defined KINETIS_WITH_PCC && !defined KINETIS_KE15
                 SELECT_PCC_PERIPHERAL_SOURCE(FTM2, FTM2_PCC_SOURCE);     // select the PCC clock used by TPM 2
         #endif
                 POWER_UP_ATOMIC(2, TPM2);                                // ensure that the TPM module is powered up
-                iInterruptID = irq_FTM2_ID;
+                iInterruptID = irq_TPM2_ID;
                 ptrFlexTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_5;
                 iTPM_type = 1;
                 if ((ulMode & PWM_NO_OUTPUT) == 0) {                     // {6}
@@ -474,7 +483,7 @@ static __interrupt void _PWM_Interrupt_5(void)
             //
     #if !defined DEVICE_WITHOUT_DMA
             if ((ulMode & PWM_DMA_CHANNEL_ENABLE) != 0) {
-                ptrFlexTimer->FTM_channel[ucChannel].FTM_CSC |= (FTM_CSC_DMA | FTM_CSC_CHIE); // enable DMA trigger from this channel (also the interrupt needs to be enabled for the DMA to operate - interrupt is not generated in this configuration)
+                ptrFlexTimer->FTM_channel[ucChannel].FTM_CSC |= (FTM_CSC_DMA | FTM_CSC_CHIE); // enable DMA trigger from this channel (also the interrupt needs to be enabled for the DMA to operate - interrupt is however not generated in this configuration)
             }
     #endif
     #if !defined KINETIS_KL && !defined KINETIS_KE
@@ -490,7 +499,7 @@ static __interrupt void _PWM_Interrupt_5(void)
             }
     #if !defined DEVICE_WITHOUT_DMA                                      // {2}
             if ((ulMode & (PWM_FULL_BUFFER_DMA | PWM_HALF_BUFFER_DMA)) != 0) { // if DMA is being specified
-                unsigned long ulDMA_rules = (DMA_DIRECTION_OUTPUT | DMA_HALF_WORDS);
+                unsigned long ulDMA_rules = (DMA_DIRECTION_OUTPUT | DMA_HALF_WORDS); // default DMA rules
                 void *ptrRegister;
                 if ((ulMode & PWM_FULL_BUFFER_DMA_AUTO_REPEAT) != 0) {
                     ulDMA_rules |= DMA_AUTOREPEAT;
@@ -498,11 +507,25 @@ static __interrupt void _PWM_Interrupt_5(void)
                 if ((ulMode & PWM_HALF_BUFFER_DMA) != 0) {
                     ulDMA_rules |= DMA_HALF_BUFFER_INTERRUPT;
                 }
-                if ((ulMode & PWM_DMA_CONTROL_FREQUENCY) != 0) {         // {7}
-                    ptrRegister = (void *)&ptrFlexTimer->FTM_MOD;        // each DMA trigger causes a new frequency to be set
+                if ((ulMode & PWM_DMA_SPECIFY_DESTINATION) == 0) {       // {11}
+                    if ((ulMode & PWM_DMA_CONTROL_FREQUENCY) != 0) {     // {7}
+                        ptrRegister = (void *)&ptrFlexTimer->FTM_MOD;    // each DMA trigger causes a new frequency to be set
+                    }
+                    else {
+                        ptrRegister = (void *)&ptrFlexTimer->FTM_channel[ucChannel].FTM_CV; // each DMA trigger causes a new PWM value to be set
+                    }
                 }
                 else {
-                    ptrRegister = (void *)&ptrFlexTimer->FTM_channel[ucChannel].FTM_CV; // each DMA trigger causes a new PWM value to be set
+                    ptrRegister = ptrPWM_settings->ptrRegister;          // {11} else use the destination register as specified by the user
+                    if (((PWM_DMA_SPECIFY_LONG_WORD | PWM_DMA_SPECIFY_BYTE) & ulMode) != 0) { // and use the specified destination width
+                        ulDMA_rules &= ~(DMA_HALF_WORDS);
+                        if ((PWM_DMA_SPECIFY_LONG_WORD & ulMode) != 0) {
+                            ulDMA_rules |= (DMA_LONG_WORDS);
+                        }
+                        else {
+                            ulDMA_rules |= (DMA_BYTES);
+                        }
+                    }
                 }
                 fnConfigDMA_buffer(ptrPWM_settings->ucDmaChannel, ptrPWM_settings->usDmaTriggerSource, ptrPWM_settings->ulPWM_buffer_length, ptrPWM_settings->ptrPWM_Buffer, ptrRegister, ulDMA_rules, ptrPWM_settings->dma_int_handler, ptrPWM_settings->dma_int_priority); // source is the PWM buffer and destination is the PWM mark-space ratio register
                 fnDMA_BufferReset(ptrPWM_settings->ucDmaChannel, DMA_BUFFER_START);
@@ -514,8 +537,15 @@ static __interrupt void _PWM_Interrupt_5(void)
                 fnEnterInterrupt(iInterruptID, ptrPWM_settings->int_priority, _PWM_TimerInterrupt[ucFlexTimer]);
     #if defined KINETIS_KL
                 ulMode |= (FTM_SC_TOIE | FTM_SC_TOF);                    // enable interrupt [FTM_SC_TOF must be written with 1 to clear]
+    #elif FLEX_TIMERS_AVAILABLE > 4 && defined TPMS_AVAILABLE
+                if (iTPM_type != 0) {
+                    ulMode |= (FTM_SC_TOIE | FTM_SC_TOF);                // enable interrupt [FTM_SC_TOF must be written with 1 to clear]
+                }
+                else {
+                    ulMode |= (FTM_SC_TOIE);                             // enable interrupt 
+                }
     #else
-                ulMode |= (FTM_SC_TOIE);                                 // enable interrupt 
+                ulMode |= (FTM_SC_TOIE);                                 // enable interrupt
     #endif
             }
     #if defined KINETIS_KE15                                             // {8}

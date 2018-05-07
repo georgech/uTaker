@@ -1506,7 +1506,7 @@
             #define RTC_CLOCK_PRESCALER_2  100                           // 128, 256, 512, 1024, 2048, 100 or 1000 (valid for bus clock or 1kHz LPO clock)
     #endif
 #else
-  //#define SUPPORT_RTC                                                  // support real time clock
+    #define SUPPORT_RTC                                                  // support real time clock
     #define ALARM_TASK   TASK_APPLICATION                                // alarm is handled by the application task (handled by time keeper if not defined)
     #if defined TWR_KL46Z48M || defined TWR_KL43Z48M
         #define RTC_USES_RTC_CLKIN                                       // TWR-KL46Z48M and TWR-KL43Z48M have a 32kHz oscillator supplying an accurate clock and the OpenSDA interface supplies a clock on the FRDM-KL46Z as long as the debug interface is powered (not possible with P&E debugger version)
@@ -1528,27 +1528,27 @@
   //#define USE_FAST_INTERNAL_CLOCK                                      // select fast interal clock (4MHz) rather than slow (32kHz)
     #if defined KINETIS_K65 || defined KINETIS_K66                       // device with both flex timer and TPM
       //#define TPM_CLOCKED_FROM_MCGFFLCLK                               // TPM is clocked by MCGFFLCLK
-      //#define TPM_CLOCKED_FROM_IRC48M                                  // TPM is clocked by IRC48M
+        #define TPM_CLOCKED_FROM_IRC48M                                  // TPM is clocked by IRC48M
       //#define TPM_CLOCKED_FROM_USB1_PDF                                // TPM is clocked by USB1_PDF
                                                                          // default is to use MCGPLLCLK
         #define PERIPHERAL_CLOCK_DIVIDE          2                       // optional divider for these options (divide 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 5, 6, 7 or 8)
-        #define PERIPHERAL_CLOCK_DIVIDE_FRACTION 5                       // 0 or 5 (eg. PERIPHERAL_CLOCK_DIVIDE 2 and PERIPHERAL_CLOCK_DIVIDE_FRACTION 0 gives 2.0 and PERIPHERAL_CLOCK_DIVIDE_FRACTION 5 gives 2.5 divide)
+        #define PERIPHERAL_CLOCK_DIVIDE_FRACTION 0                       // 0 or 5 (eg. PERIPHERAL_CLOCK_DIVIDE 2 and PERIPHERAL_CLOCK_DIVIDE_FRACTION 0 gives 2.0 and PERIPHERAL_CLOCK_DIVIDE_FRACTION 5 gives 2.5 divide)
     #else
                                                                          // default is to use MCGPLLCLK/2 or MCGFLLCLK (depending on whether FLL or PLL is used)
     #endif
 #endif
 
-//#define SUPPORT_LPTMR                                                  // {28} support low power timer
+#define SUPPORT_LPTMR                                                    // {28} support low power timer
 #if defined SUPPORT_LPTMR
     //#define TICK_USES_LPTMR                                            // use low power timer for TICK so that it continues to operate in stop based low power modes
     //Select the clock used by the low power timer - if the timer if to continue running in low power modes the clock chosen should continue to run in that mode too
     //
-  //#define LPTMR_CLOCK_LPO                                              // clock the low power timer from LPO (1kHz)
+    #define LPTMR_CLOCK_LPO                                              // clock the low power timer from LPO (1kHz)
   //#define LPTMR_CLOCK_INTERNAL_30_40kHz                                // clock the low power timer from the 30..40kHz internal reference
-    #define LPTMR_CLOCK_INTERNAL_2MHz                                    // clock the low power timer from the 2MHz internal reference
+  //#define LPTMR_CLOCK_INTERNAL_2MHz                                    // clock the low power timer from the 2MHz internal reference
   //#define LPTMR_CLOCK_INTERNAL_4MHz                                    // clock the low power timer from the 4MHz internal reference
   //#define LPTMR_CLOCK_INTERNAL_8MHz                                    // clock the low power timer from the 8MHz internal reference
-  //#define LPTMR_CLOCK_EXTERNAL_32kHz                                   // clock the low power timer from external 32kHz reference
+    #define LPTMR_CLOCK_EXTERNAL_32kHz                                   // clock the low power timer from external 32kHz reference
   //#define LPTMR_CLOCK_OSCERCLK                                         // clock the low power timer from the external reference
     #if defined FRDM_K64F || defined FreeLON
         //#define LPTMR_PRESCALE   64                                    // when using the external oscillator add this pre-scaler value to the low power timer input
@@ -2619,7 +2619,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
             #define UART1_ON_C                                           // alternative UART1 pin mapping
             #define UART3_ON_B                                           // alternative UART3 pin mapping
             #define UART4_ON_C                                           // alternative UART4 pin mapping (Bluetooth connector)
-        #elif defined TEENSY_3_1
+        #elif defined TEENSY_3_1 || defined FRDM_K66F
             #define UART1_ON_C
         #endif
     #elif defined tinyK20
@@ -2938,7 +2938,11 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #endif
 
       //#define FTM2_0_ON_B                                              // FTM2 channel 0 on port B rather than port A
-      //#define FTM2_1_ON_B                                              // FTM2 channel 1 on port B rather than port A
+        #if defined FRDM_K66F
+            #define FTM2_1_ON_B                                          // FTM2 channel 1 on port B rather than port A
+        #else
+          //#define FTM2_1_ON_B                                          // FTM2 channel 1 on port B rather than port A
+        #endif
       //#define FTM2_0_ON_B_LOW
         #define FTM2_0_ON_B
         #define FTM2_1_ON_B_LOW
@@ -4965,7 +4969,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 
         #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(C, (SWITCH_2), PORT_PS_UP_ENABLE); _CONFIG_PORT_INPUT_FAST_HIGH(B, (SWITCH_3), PORT_PS_UP_ENABLE) // use fast access version (beware that this can only operate on half of the 32 bits at a time)
         #define WATCHDOG_DISABLE()      (_READ_PORT_MASK(C, SWITCH_2) == 0)  // pull this input down to disable watchdog (hold SW2 at reset)
-        #define ACTIVATE_WATCHDOG()     UNLOCK_WDOG(); WDOG_TOVALL = (2000/5); WDOG_TOVALH = 0; WDOG_STCTRLH = (WDOG_STCTRLH_STNDBYEN | WDOG_STCTRLH_WAITEN | WDOG_STCTRLH_STOPEN | WDOG_STCTRLH_WDOGEN | WDOG_STCTRLH_IRQRSTEN) // watchdog enabled to generate reset on 2s timeout (no further updates allowed)
+        #define ACTIVATE_WATCHDOG()     UNLOCK_WDOG(); WDOG_TOVALL = (2000/5); WDOG_TOVALH = 0; WDOG_STCTRLH = (WDOG_STCTRLH_STNDBYEN | WDOG_STCTRLH_WAITEN | /*WDOG_STCTRLH_STOPEN |*/ WDOG_STCTRLH_WDOGEN | WDOG_STCTRLH_IRQRSTEN) // watchdog enabled to generate reset on 2s timeout (no further updates allowed)
         #define TOGGLE_WATCHDOG_LED()   _TOGGLE_PORT(A, BLINK_LED)
 
         #if defined USE_MAINTENANCE && !defined REMOVE_PORT_INITIALISATIONS

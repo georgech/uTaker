@@ -271,7 +271,7 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
     #define MCG_WITHOUT_PLL
 #endif
 
-#if defined KINETIS_K66 && defined PERIPHERAL_CLOCK_DIVIDE
+#if defined KINETIS_K66 && defined PERIPHERAL_CLOCK_DIVIDE               // TPM and LPUART clock divide
     #if PERIPHERAL_CLOCK_DIVIDE_FRACTION == 5
         #if (PERIPHERAL_CLOCK_DIVIDE == 0)                               // divide by 0.5
             #define PERIPHERAL_CLOCK_DIVIDE_VALUE ((0 << 1) | 0x1)
@@ -285,7 +285,7 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
             #error Invalid peripheral divide value - integer must be 0, 1, 2 or 3 when used with a fraction (0.5)
         #endif
     #else
-        #if (PERIPHERAL_CLOCK_DIVIDE < 1) || (PERIPHERAL_CLOCK_DIVIDE < 8)
+        #if (PERIPHERAL_CLOCK_DIVIDE < 1) || (PERIPHERAL_CLOCK_DIVIDE > 8)
             #error Invalid peripheral divide value - must be 1, 2, 3, 4, 5, 6, 7 or 8
         #endif
         #define PERIPHERAL_CLOCK_DIVIDE_VALUE ((PERIPHERAL_CLOCK_DIVIDE - 1) << 1)
@@ -3877,7 +3877,7 @@ typedef struct stVECTOR_TABLE
     #if LPUARTS_AVAILABLE > 0
         #if defined KINETIS_KE15
             #define LPUART0_BLOCK              0x4006a000                // LPUART0
-        #elif defined KINETIS_K80 || defined KINETIS_KL28
+        #elif defined KINETIS_K80 || defined KINETIS_KL28 || defined KINETIS_K66 || defined KINETIS_K65
             #define LPUART0_BLOCK              0x400c4000                // LPUART0
         #elif defined KINETIS_KL
             #define LPUART0_BLOCK              0x40054000                // LPUART0
@@ -5968,14 +5968,14 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
       #define DMAMUX_CHCFG_SOURCE_UART2_TX       7                       // 0x07 UART2 TX
       #define DMAMUX_CHCFG_SOURCE_UART3_RX       8                       // 0x08 UART3 RX
       #define DMAMUX_CHCFG_SOURCE_UART3_TX       9                       // 0x09 UART3 TX
-    #if defined KINETIS_K21 || defined KINETIS_K22 || defined KINETIS_K24 || defined KINETIS_K64 || defined KINETIS_K66 || defined KINETIS_K80 || defined KINETIS_KV30
+    #if defined KINETIS_K21 || defined KINETIS_K22 || defined KINETIS_K24 || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_K80 || defined KINETIS_KV30
       #define DMAMUX_CHCFG_SOURCE_UART4_TX       10                      // 0x0a UART4 TX or RX
       #define DMAMUX_CHCFG_SOURCE_UART5_TX       11                      // 0x0b UART5 TX or RX
       #define DMAMUX_CHCFG_SOURCE_I2S0_RX        12                      // 0x0c I2S0 RX
       #define DMAMUX_CHCFG_SOURCE_I2S0_TX        13                      // 0x0d I2S0 TX
       #define DMAMUX_CHCFG_SOURCE_SPI0_RX        14                      // 0x0e SPI0 RX
       #define DMAMUX_CHCFG_SOURCE_SPI0_TX        15                      // 0x0f SPI0 TX
-        #if defined KINETIS_K66 || defined KINETIS_K80
+        #if defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_K80
       #define DMAMUX_CHCFG_SOURCE_SPI1_RX        16                      // 0x10 SPI1 RX
       #define DMAMUX_CHCFG_SOURCE_SPI1_TX        17                      // 0x11 SPI2 TX
       #define DMAMUX0_CHCFG_SOURCE_I2C0_3        18                      // 0x12 I2C0 (or I2C3)
@@ -5994,18 +5994,36 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
       #define DMAMUX_CHCFG_SOURCE_FTM0_C5        25                      // 0x19 FTM0 channel 5
       #define DMAMUX_CHCFG_SOURCE_FTM0_C6        26                      // 0x1a FTM0 channel 6
       #define DMAMUX_CHCFG_SOURCE_FTM0_C7        27                      // 0x1b FTM0 channel 7
-      #define DMAMUX0_CHCFG_SOURCE_FTM1_C0       28                      // 0x1c FTM1 channel 0
-      #define DMAMUX0_CHCFG_SOURCE_FTM1_C1       29                      // 0x1d FTM1 channel 1
-      #define DMAMUX0_CHCFG_SOURCE_FTM2_C0       30                      // 0x1e FTM2 channel 0
-      #define DMAMUX0_CHCFG_SOURCE_FTM2_C1       31                      // 0x1f FTM2 channel 1
+      #define DMAMUX0_CHCFG_SOURCE_FTM1_C0       28                      // 0x1c FTM1 channel 0 (or TPM1 - K66)
+        #if defined KINETIS_K65 || defined KINETIS_K66
+          #define DMAMUX0_CHCFG_SOURCE_TPM1_C0   28
+        #endif
+      #define DMAMUX0_CHCFG_SOURCE_FTM1_C1       29                      // 0x1d FTM1 channel 1 (or TPM1 - K66)
+        #if defined KINETIS_K65 || defined KINETIS_K66
+          #define DMAMUX0_CHCFG_SOURCE_TPM1_C1   29
+        #endif
+      #define DMAMUX0_CHCFG_SOURCE_FTM2_C0       30                      // 0x1e FTM2 channel 0 (or TPM2 - K66)
+        #if defined KINETIS_K65 || defined KINETIS_K66
+          #define DMAMUX0_CHCFG_SOURCE_TPM2_C0   30
+        #endif
+      #define DMAMUX0_CHCFG_SOURCE_FTM2_C1       31                      // 0x1f FTM2 channel 1 (or TPM2 - K66)
+        #if defined KINETIS_K65 || defined KINETIS_K66
+          #define DMAMUX0_CHCFG_SOURCE_TPM2_C1   31
+        #endif
       #define DMAMUX_CHCFG_SOURCE_FTM3_C0        32                      // 0x20 FTM0 channel 0
       #define DMAMUX_CHCFG_SOURCE_FTM3_C1        33                      // 0x21 FTM0 channel 1
       #define DMAMUX_CHCFG_SOURCE_FTM3_C2        34                      // 0x22 FTM0 channel 2
       #define DMAMUX_CHCFG_SOURCE_FTM3_C3        35                      // 0x23 FTM0 channel 3
       #define DMAMUX_CHCFG_SOURCE_FTM3_C4        36                      // 0x24 FTM0 channel 4
       #define DMAMUX_CHCFG_SOURCE_FTM3_C5        37                      // 0x25 FTM0 channel 5
-      #define DMAMUX_CHCFG_SOURCE_FTM3_C6        38                      // 0x26 FTM0 channel 6
-      #define DMAMUX_CHCFG_SOURCE_FTM3_C7        39                      // 0x27 FTM0 channel 7
+      #define DMAMUX_CHCFG_SOURCE_FTM3_C6        38                      // 0x26 FTM0 channel 6 (or SPI2 - K66)
+        #if defined KINETIS_K65 || defined KINETIS_K66
+          #define DMAMUX0_CHCFG_SOURCE_SPI2_RX   38
+        #endif
+      #define DMAMUX_CHCFG_SOURCE_FTM3_C7        39                      // 0x27 FTM0 channel 7 (or SPI2 - K66)
+        #if defined KINETIS_K65 || defined KINETIS_K66
+          #define DMAMUX0_CHCFG_SOURCE_SPI2_TX   39
+        #endif
     #else
       #define DMAMUX_CHCFG_SOURCE_UART4_RX       10                      // 0x0a UART4 RX
       #define DMAMUX_CHCFG_SOURCE_UART4_TX       11                      // 0x0b UART4 TX
@@ -6045,7 +6063,10 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
       #define DMAMUX0_CHCFG_SOURCE_ADC1          41                      // 0x29 ADC1
       #define DMAMUX0_CHCFG_SOURCE_CMP0          42                      // 0x2a CMP0
       #define DMAMUX0_CHCFG_SOURCE_CMP1          43                      // 0x2b CMP1
-      #define DMAMUX0_CHCFG_SOURCE_CMP2          44                      // 0x2c CMP2
+      #define DMAMUX0_CHCFG_SOURCE_CMP2          44                      // 0x2c CMP2 (or CMP3 - K66)
+        #if defined KINETIS_K65 || defined KINETIS_K66
+          #define DMAMUX0_CHCFG_SOURCE_CMP3      44
+        #endif
       #define DMAMUX_CHCFG_SOURCE_DAC0           45                      // 0x2d DAC0
       #define DMAMUX_CHCFG_SOURCE_DAC1           46                      // 0x2e DAC1
       #define DMAMUX0_CHCFG_SOURCE_CMT           47                      // 0x2f CMT
@@ -10204,7 +10225,7 @@ typedef struct stKINETIS_LPTMR_CTL
         #define SIM_SOPT4_FTM3TRG1SRC        0x80000000                  // FTM2 channel match trigger drives FTM3 hardware trigger 1 (rather than PDB output trigger 3)
       #endif
     #define SIM_SOPT5                        *(unsigned long*)(SIM_BLOCK + 0x1010) // System Options Register 5
-      #if defined KINETIS_K64
+      #if defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66
         #define SIM_SOPT5_UART0TXSRC_NORMAL  0x00000000                  // UART0 transmit data on TX pin
         #define SIM_SOPT5_UART0TXSRC_FTM1_0  0x00000001                  // UART0 transmit data on TX pin - modulated with FTM1 channel 0
         #define SIM_SOPT5_UART0TXSRC_FTM2_0  0x00000002                  // UART0 transmit data on TX pin - modulated with FTM2 channel 0
@@ -10217,6 +10238,14 @@ typedef struct stKINETIS_LPTMR_CTL
         #define SIM_SOPT5_UART1RXSRC_NORMAL  0x00000000                  // UART1 receive data from RX pin
         #define SIM_SOPT5_UART1RXSRC_CMP0    0x00000040                  // UART1 receive data from CMP0
         #define SIM_SOPT5_UART1RXSRC_CMP1    0x00000080                  // UART1 receive data from CMP1
+        #if defined KINETIS_K65 || defined KINETIS_K66
+            #define SIM_SOPT5_LPUART0TXSRC_NORMAL  0x00000000            // LPUART0 transmit data on TX pin
+            #define SIM_SOPT5_LPUART0TXSRC_TPM1_0  0x00010000            // LPUART0 transmit data on TX pin - modulated with TPM1 channel 0
+            #define SIM_SOPT5_LPUART0TXSRC_TPM2_0  0x00020000            // LPUART0 transmit data on TX pin - modulated with TPM2 channel 0
+            #define SIM_SOPT5_LPUART0RXSRC_NORMAL  0x00000000            // LPUART0 receive data from RX pin
+            #define SIM_SOPT5_LPUART0RXSRC_CMP0    0x00040000            // LPUART0 receive data from CMP0
+            #define SIM_SOPT5_LPUART0RXSRC_CMP1    0x00080000            // LPUART0 receive data from CMP1
+        #endif
       #endif
     #if !defined KINETIS_KL
         #define SIM_SOPT6                    *(unsigned long*)(SIM_BLOCK + 0x1014) // System Options Register 6
@@ -11426,6 +11455,13 @@ typedef struct stKINETIS_LPTMR_CTL
         #define PA_3_LPUART0_TX          PORT_MUX_ALT4
         #define PB_4_LPUART0_RX          PORT_MUX_ALT3
         #define PB_3_LPUART0_TX          PORT_MUX_ALT3
+    #elif defined KINETIS_K66
+        #define PD_8_LPUART0_RX          PORT_MUX_ALT5
+        #define PD_9_LPUART0_TX          PORT_MUX_ALT5
+        #define PA_1_LPUART0_RX          PORT_MUX_ALT5
+        #define PA_2_LPUART0_TX          PORT_MUX_ALT5
+        #define PE_9_LPUART0_RX          PORT_MUX_ALT5
+        #define PE_8_LPUART0_TX          PORT_MUX_ALT5
     #elif defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL43 || defined KINETIS_KL82 || defined KINETIS_K80
         #if defined KINETIS_K80 || defined KINETIS_KL28
             #define PA_15_LPUART0_RX     PORT_MUX_ALT3
@@ -14262,6 +14298,7 @@ typedef struct stKINETIS_CAN_CONTROL
         #define LPUART_STAT_MSBF         0x20000000                      // MSB first
         #define LPUART_STAT_RXEDGIF      0x40000000                      // LPUART_RX pin active edge interrupt flag (write '1' to clear)
         #define LPUART_STAT_LBKDIF       0x80000000                      // LIN break detect interrupt flag (write '1' to clear)
+    #define LPUART0_CTRL_ADD             (unsigned long *)(LPUART0_BLOCK + LPUART_OFFSET + 0x08)
     #define LPUART0_CTRL                 *(volatile unsigned long *)(LPUART0_BLOCK + LPUART_OFFSET + 0x08) // LPUART 0 Control Register
         #define LPUART_CTRL_PT_EVEN      0x00000000                      // parity even
         #define LPUART_CTRL_PT_ODD       0x00000001                      // parity odd
@@ -14424,6 +14461,7 @@ typedef struct stKINETIS_CAN_CONTROL
   #define UART_C1_RSRC                   0x20                            // receiver source select
   #define UART_C1_UARTSWAI               0x40                            // UART stops in wait mode
   #define UART_C1_LOOPS                  0x80                            // loop mode select
+#define UART0_C2_ADD                     (unsigned char *)(UART0_BLOCK + 0x03)
 #define UART0_C2                         *(unsigned char *)(UART0_BLOCK + 0x03) // UART 0 Control Register 2
   #define UART_C2_SBK                    0x01                            // send break
   #define UART_C2_RWU                    0x02                            // receiver wakeup control
@@ -14543,11 +14581,12 @@ typedef struct stKINETIS_CAN_CONTROL
 #define SET_UART_BAUD(ref, baud_rate, uart_clock)  UART##ref##_BDH = (unsigned char)(((((uart_clock/8/baud_rate) + 1)/2) >> 8) & 0x1f); UART##ref##_BDL = (unsigned char)(((uart_clock/8/baud_rate) + 1)/2)
 
 #define UART1_BDH                        *(volatile unsigned char *)(UART1_BLOCK + 0x00)  // UART 1 Baud Rate Registers: High
-#if defined KINETIS_KL
+#if defined KINETIS_KL && defined KINETIS_K65 || defined KINETIS_K66
   #define UART_BDH_SBNS                  0x20                            // stop bit number select (set for 2 stop bits)
 #endif
 #define UART1_BDL                        *(volatile unsigned char *)(UART1_BLOCK + 0x01)  // UART 1 Baud Rate Registers: Low
 #define UART1_C1                         *(unsigned char*)(UART1_BLOCK + 0x02)            // UART 1 Control Register 1
+#define UART1_C2_ADD                     (unsigned char *)(UART1_BLOCK + 0x03)
 #define UART1_C2                         *(unsigned char*)(UART1_BLOCK + 0x03)            // UART 1 Control Register 2
 #define UART1_S1                         *(volatile unsigned char*)(UART1_BLOCK + 0x04)   // UART 1 Status Register 1 (read-only)
 #define UART1_S2                         *(volatile unsigned char*)(UART1_BLOCK + 0x05)   // UART 1 Status Register 2
@@ -14588,6 +14627,7 @@ typedef struct stKINETIS_CAN_CONTROL
 #define UART2_BDH                        *(volatile unsigned char *)(UART2_BLOCK + 0x00)  // UART 2 Baud Rate Registers: High
 #define UART2_BDL                        *(volatile unsigned char *)(UART2_BLOCK + 0x01)  // UART 2 Baud Rate Registers: Low
 #define UART2_C1                         *(unsigned char*)(UART2_BLOCK + 0x02)            // UART 2 Control Register 1
+#define UART2_C2_ADD                     (unsigned char *)(UART2_BLOCK + 0x03)
 #define UART2_C2                         *(unsigned char*)(UART2_BLOCK + 0x03)            // UART 2 Control Register 2
 #define UART2_S1                         *(volatile unsigned char*)(UART2_BLOCK + 0x04)   // UART 2 Status Register 1 (read-only)
 #define UART2_S2                         *(volatile unsigned char*)(UART2_BLOCK + 0x05)   // UART 2 Status Register 2
@@ -14628,6 +14668,7 @@ typedef struct stKINETIS_CAN_CONTROL
 #define UART3_BDH                        *(volatile unsigned char *)(UART3_BLOCK + 0x00)  // UART 3 Baud Rate Registers: High
 #define UART3_BDL                        *(volatile unsigned char *)(UART3_BLOCK + 0x01)  // UART 3 Baud Rate Registers: Low
 #define UART3_C1                         *(unsigned char*)(UART3_BLOCK + 0x02)            // UART 3 Control Register 1
+#define UART3_C2_ADD                     (unsigned char *)(UART3_BLOCK + 0x03)
 #define UART3_C2                         *(unsigned char*)(UART3_BLOCK + 0x03)            // UART 3 Control Register 2
 #define UART3_S1                         *(volatile unsigned char*)(UART3_BLOCK + 0x04)   // UART 3 Status Register 1 (read-only)
 #define UART3_S2                         *(volatile unsigned char*)(UART3_BLOCK + 0x05)   // UART 3 Status Register 2
@@ -14666,6 +14707,7 @@ typedef struct stKINETIS_CAN_CONTROL
 #define UART4_BDH                        *(volatile unsigned char *)(UART4_BLOCK + 0x00)  // UART 4 Baud Rate Registers: High
 #define UART4_BDL                        *(volatile unsigned char *)(UART4_BLOCK + 0x01)  // UART 4 Baud Rate Registers: Low
 #define UART4_C1                         *(unsigned char*)(UART4_BLOCK + 0x02)            // UART 4 Control Register 1
+#define UART4_C2_ADD                     (unsigned char *)(UART4_BLOCK + 0x03)
 #define UART4_C2                         *(unsigned char*)(UART4_BLOCK + 0x03)            // UART 4 Control Register 2
 #define UART4_S1                         *(volatile unsigned char*)(UART4_BLOCK + 0x04)   // UART 4 Status Register 1 (read-only)
 #define UART4_S2                         *(volatile unsigned char*)(UART4_BLOCK + 0x05)   // UART 4 Status Register 2
@@ -14704,6 +14746,7 @@ typedef struct stKINETIS_CAN_CONTROL
 #define UART5_BDH                        *(volatile unsigned char *)(UART5_BLOCK + 0x00)  // UART 5 Baud Rate Registers: High
 #define UART5_BDL                        *(volatile unsigned char *)(UART5_BLOCK + 0x01)  // UART 5 Baud Rate Registers: Low
 #define UART5_C1                         *(unsigned char*)(UART5_BLOCK + 0x02)            // UART 5 Control Register 1
+#define UART5_C2_ADD                     (unsigned char *)(UART5_BLOCK + 0x03)
 #define UART5_C2                         *(unsigned char*)(UART5_BLOCK + 0x03)            // UART 5 Control Register 2
 #define UART5_S1                         *(volatile unsigned char*)(UART5_BLOCK + 0x04)   // UART 5 Status Register 1 (read-only)
 #define UART5_S2                         *(volatile unsigned char*)(UART5_BLOCK + 0x05)   // UART 5 Status Register 2
@@ -17517,6 +17560,11 @@ extern void fnSimPers(void);
 #else
     #define WRITE_ONE_TO_CLEAR(reg, flag)    reg = (flag)
 #endif
+#if defined _WINDOWS                                                     // clear when simulating
+    #define OR_ONE_TO_CLEAR(reg, flag)       reg &= ~(flag)
+#else
+    #define OR_ONE_TO_CLEAR(reg, flag)       reg |= (flag)
+#endif
 
 
 // Software references used when setting up interrupts
@@ -17578,7 +17626,29 @@ extern void fnSimPers(void);
     #define PWM_CLOCK             (TIMER_CLOCK)
 #else
     #define TIMER_CLOCK           (BUS_CLOCK)
-    #define PWM_CLOCK             (TIMER_CLOCK)                          // {107} - corrected from (SYSTEM_CLOCK/2)
+    #if defined KINETIS_K65 || defined KINETIS_K66
+        #if defined TPM_CLOCKED_FROM_OSCERCLK
+        #elif defined TPM_CLOCKED_FROM_MCGIRCLK
+        #elif defined TPM_CLOCKED_FROM_MCGFFLCLK
+        #elif defined TPM_CLOCKED_FROM_IRC48M
+            #define _TPM_PWM_CLOCK  (48000000)
+        #elif defined TPM_CLOCKED_FROM_USB1_PDF
+        #else
+            #define _TPM_PWM_CLOCK  (SYSTEM_CLOCK)
+        #endif
+        #if defined PERIPHERAL_CLOCK_DIVIDE
+            #if PERIPHERAL_CLOCK_DIVIDE_FRACTION == 5
+                #define PWM_CLOCK ((2 * _TPM_PWM_CLOCK)/((2 * PERIPHERAL_CLOCK_DIVIDE) + 1)))
+            #else
+                #define TPM_PWM_CLOCK (_TPM_PWM_CLOCK/PERIPHERAL_CLOCK_DIVIDE)
+            #endif
+        #else
+            #define TPM_PWM_CLOCK (_TPM_PWM_CLOCK)                       // undivided
+        #endif
+        #define PWM_CLOCK         (BUS_CLOCK)
+    #else
+        #define PWM_CLOCK         (TIMER_CLOCK)                          // {107} - corrected from (SYSTEM_CLOCK/2)
+    #endif
     #define PWM_FIXED_CLOCK       (MCGFFCLK)
 #endif
 
@@ -17596,11 +17666,12 @@ typedef struct stPWM_INTERRUPT_SETUP
     unsigned char    pwm_reference;                                      // PWM channel to be used (0..7)
     unsigned short   pwm_value;                                          // PWM percentage value
     unsigned short   pwm_frequency;                                      // base frequency
-    unsigned short   pwm_mode;                                           // PWM mode of operation
+    unsigned long    pwm_mode;                                           // PWM mode of operation
     #if !defined DEVICE_WITHOUT_DMA
         unsigned long    ulPWM_buffer_length;                            // length of the buffer used for DMA transfer to PWM
         void             (*dma_int_handler)(void);                       // DMA interrupt handler to be configured
-        unsigned short  *ptrPWM_Buffer;                                  // source buffer for DMA transfer to PWM
+        void            *ptrRegister;                                    // optional destination register (when neither PWM_DMA_CONTROL_PWM nor PWM_DMA_CONTROL_FREQUENCY are required)
+        void            *ptrPWM_Buffer;                                  // source buffer for DMA transfer to PWM
         unsigned short   usDmaTriggerSource;                             // source used to trigger DMA transfer - 8 bits used for register configuration and higher bits for additional information
         unsigned char    dma_int_priority;                               // DMA interrupt priority the user wants to set
         unsigned char    ucDmaChannel;                                   // DMA channel to be used
@@ -17614,57 +17685,80 @@ typedef struct stPWM_INTERRUPT_SETUP
 #define _TIMER_1                0x20
 #define _TIMER_2                0x40
 #define _TIMER_3                0x60
+#define _FTM_TIMER_0            _TIMER_0
+#define _FTM_TIMER_1            _TIMER_1
+#define _FTM_TIMER_2            _TIMER_2
+#define _FTM_TIMER_3            _TIMER_3
 #define _TPM_TIMER_1            0x80
 #define _TPM_TIMER_2            0xa0
 #define _TIMER_MODULE_MASK      0xe0
 #define _TIMER_MODULE_SHIFT     5
 
-#define PWM_PRESCALER_128       0x0007
-#define PWM_PRESCALER_64        0x0006
-#define PWM_PRESCALER_32        0x0005
-#define PWM_PRESCALER_16        0x0004
-#define PWM_PRESCALER_8         0x0003
-#define PWM_PRESCALER_4         0x0002
-#define PWM_PRESCALER_2         0x0001
-#define PWM_PRESCALER_1         0x0000
-#define PWM_PRESCALER_0         0x0000
-#define PWM_EDGE_ALIGNED        0x0000
-#define PWM_CENTER_ALIGNED      FTM_SC_CPWMS                             // 0x20
+#define PWM_PRESCALER_128           0x00000007
+#define PWM_PRESCALER_64            0x00000006
+#define PWM_PRESCALER_32            0x00000005
+#define PWM_PRESCALER_16            0x00000004
+#define PWM_PRESCALER_8             0x00000003
+#define PWM_PRESCALER_4             0x00000002
+#define PWM_PRESCALER_2             0x00000001
+#define PWM_PRESCALER_1             0x00000000
+#define PWM_PRESCALER_0             0x00000000
+#define PWM_EDGE_ALIGNED            0x00000000
+#define PWM_CENTER_ALIGNED          FTM_SC_CPWMS                         // 0x00000020
 #if defined TRGMUX_AVAILABLE
-    #define PWM_EXTERNAL_CLK    FTM_SC_CLKS_EXT                          // 0x10 - counter increments on rising edge of TPM_EXTCLK synchronised to the TPM counter clock
-    #define PWM_TRIGGER_CLK     FTM_SC_CLK_TRIGGER                       // 0x18 - counter increments on rising edge of trigger input
+    #define PWM_EXTERNAL_CLK        FTM_SC_CLKS_EXT                      // 0x00000010 - counter increments on rising edge of TPM_EXTCLK synchronised to the TPM counter clock
+    #define PWM_TRIGGER_CLK         FTM_SC_CLK_TRIGGER                   // 0x00000018 - counter increments on rising edge of trigger input
 #elif defined KINETIS_KL27
-    #define PWM_EXTERNAL_CLK    FTM_SC_CLKS_EXT                          // 0x10 - TPM_CLKIN0
-    #define PWM_SOURCE_CLKIN1   0x0100
-    #define PWM_EXTERNAL_CLK_1 (PWM_EXTERNAL_CLK | PWM_SOURCE_CLKIN1)    // use TPM_CLKIN1 rather than TPM_CLKIN0
-    #define PWM_TRIGGER_CLK     0x18                                     // this configuration is not valid for KL27 but is used to request its equivalent operation
+    #define PWM_EXTERNAL_CLK        FTM_SC_CLKS_EXT                      // 0x00000010 - TPM_CLKIN0
+    #define PWM_SOURCE_CLKIN1       0x00000100
+    #define PWM_EXTERNAL_CLK_1     (PWM_EXTERNAL_CLK | PWM_SOURCE_CLKIN1)// use TPM_CLKIN1 rather than TPM_CLKIN0
+    #define PWM_TRIGGER_CLK         0x00000018                           // this configuration is not valid for KL27 but is used to request its equivalent operation
 #else
-    #define PWM_EXTERNAL_CLK    FTM_SC_CLKS_EXT                          // 0x18
+    #define PWM_EXTERNAL_CLK        FTM_SC_CLKS_EXT                      // 0000000x18
 #endif
-#define PWM_FIXED_CLK           FTM_SC_CLKS_FIX                          // 0x10 presently not supported
-#define PWM_SYS_CLK             FTM_SC_CLKS_SYS                          // 0x08
-#define PWM_IRC48M_CLK          FTM_SC_CLKS_SYS                          // for use by device with IRC48M
-#define PWM_POLARITY            0x0080
-#define PWM_DMA_PERIOD_ENABLE   FTM_SC_DMA                               // 0x100 (only valid for KL)
-#define PWM_FULL_BUFFER_DMA     0x0200
-#define PWM_HALF_BUFFER_DMA     0x0400
-#define PWM_FULL_BUFFER_DMA_AUTO_REPEAT 0x0800
-#define PWM_NO_OUTPUT           0x1000                                   // {93} run PWM without connecting it to a physical output (for internal timing, for example triggering ADCs)
-#define PWM_DMA_CHANNEL_ENABLE  0x2000                                   // {93} enable the channel to trigger DMA
-#define PWM_DMA_CONTROL_PWM     0x0000
-#define PWM_DMA_CONTROL_FREQUENCY 0x4000
-#define PWM_TRIGGER_CLOCK_INVERT  0x8000
+#define PWM_FIXED_CLK               FTM_SC_CLKS_FIX                      // 0x00000010 presently not supported
+#define PWM_SYS_CLK                 FTM_SC_CLKS_SYS                      // 0x00000008
+#define PWM_IRC48M_CLK              FTM_SC_CLKS_SYS                      // for use by device with IRC48M
+#define PWM_POLARITY                0x00000080
+#define PWM_DMA_PERIOD_ENABLE       FTM_SC_DMA                           // 0x00000100 (only valid for KL)
+#define PWM_FULL_BUFFER_DMA         0x00000200
+#define PWM_HALF_BUFFER_DMA         0x00000400
+#define PWM_FULL_BUFFER_DMA_AUTO_REPEAT 0x00000800
+#define PWM_NO_OUTPUT               0x00001000                           // {93} run PWM without connecting it to a physical output (for internal timing, for example triggering ADCs)
+#define PWM_DMA_CHANNEL_ENABLE      0x00002000                           // {93} enable the channel to trigger DMA
+#define PWM_DMA_CONTROL_PWM         0x00000000
+#define PWM_DMA_CONTROL_FREQUENCY   0x00004000
+#define PWM_TRIGGER_CLOCK_INVERT    0x00008000
+#define PWM_DMA_SPECIFY_DESTINATION 0x00010000                           // ptrRegister is to be used (not used with PWM_DMA_CONTROL_FREQUENCY or PWM_DMA_CONTROL_PWM modes)
+#define PWM_DMA_SPECIFY_BYTE        0x00020000                           // used with PWM_DMA_SPECIFY_DESTINATION to specify the unit size
+#define PWM_DMA_SPECIFY_SHORT_WORD  0x00000000
+#define PWM_DMA_SPECIFY_LONG_WORD   0x00040000
 
 #define PWM_MODE_SETTINGS_MASK  (PWM_PRESCALER_128 | FTM_SC_CPWMS | FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS | PWM_DMA_PERIOD_ENABLE)
 
-#define PWM_FREQUENCY(frequency, prescaler)  (PWM_CLOCK/prescaler/frequency) // {83}
+#define PWM_FREQUENCY(frequency, prescaler)             (PWM_CLOCK/prescaler/frequency) // {83}
 #define PWM_FIXED_CLOCK_FREQUENCY(frequency, prescaler) (PWM_FIXED_CLOCK/prescaler/frequency)
+#define PWM_TPM_FREQUENCY(frequency, prescaler)         (TPM_PWM_CLOCK/prescaler/frequency)
+
 #if (((PWM_CLOCK/1000000) * 1000000) != PWM_CLOCK)                       // if the clock is not an exact MHz value
-    #define PWM_TIMER_US_DELAY(usec, prescaler)  ((unsigned long)(((double)PWM_CLOCK/(double)1000000) * usec)/prescaler)
+    #define PWM_TIMER_US_DELAY(usec, prescaler)         ((unsigned long)(((double)PWM_CLOCK/(double)1000000) * usec)/prescaler)
 #else
-    #define PWM_TIMER_US_DELAY(usec, prescaler)  (((PWM_CLOCK/1000000) * usec)/prescaler)
+    #define PWM_TIMER_US_DELAY(usec, prescaler)         (((PWM_CLOCK/1000000) * usec)/prescaler)
 #endif
-#define PWM_TIMER_MS_DELAY(msec, prescaler)  (((PWM_CLOCK/1000) * msec)/prescaler)
+#if (((PWM_FIXED_CLOCK/1000000) * 1000000) != PWM_FIXED_CLOCK)           // if the clock is not an exact MHz value
+    #define PWM_TIMER_FIXED_CLOCK_US_DELAY(usec, prescaler) ((unsigned long)(((double)PWM_FIXED_CLOCK/(double)1000000) * usec)/prescaler)
+#else
+    #define PWM_TIMER_FIXED_CLOCK_US_DELAY(usec, prescaler) (((PWM_FIXED_CLOCK/1000000) * usec)/prescaler)
+#endif
+#if (((TPM_PWM_CLOCK/1000000) * 1000000) != TPM_PWM_CLOCK)               // if the clock is not an exact MHz value
+    #define PWM_TPM_CLOCK_US_DELAY(usec, prescaler) ((unsigned long)(((double)TPM_PWM_CLOCK/(double)1000000) * usec)/prescaler)
+#else
+    #define PWM_TPM_CLOCK_US_DELAY(usec, prescaler) (((TPM_PWM_CLOCK/1000000) * usec)/prescaler)
+#endif
+
+#define PWM_TIMER_MS_DELAY(msec, prescaler)              (((PWM_CLOCK/1000) * msec)/prescaler)
+#define PWM_TIMER_FIXED_CLOCK_MS_DELAY(msec, prescaler)  (((PWM_FIXED_CLOCK/1000) * msec)/prescaler)
+#define PWM_TPM_MS_DELAY(msec, prescaler)                (((TPM_PWM_CLOCK/1000) * msec)/prescaler)
 
 #define _PWM_PERCENT(percent_pwm, frequency_value)       (unsigned short)((frequency_value * percent_pwm)/100)
 #define _PWM_TENTH_PERCENT(percent_pwm, frequency_value) (unsigned short)((frequency_value * percent_pwm)/1000)
