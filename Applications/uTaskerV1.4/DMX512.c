@@ -39,8 +39,12 @@
 #define DMX_SLOT_COUNT         512                                       // maximum DMX512 data length
 #define DMX512_TX_BUFFER_COUNT 2                                         // 2 buffers that can be prepared in advance
 
-//#define TEST_SECOND_CHANNEL                                            // This doesn't work completely due to problem with UART1/FTM2-CH0 modulation error
+//#define TEST_SECOND_CHANNEL                                            // this doesn't work completely due to problem with UART1/FTM2-CH0 modulation error
 #define DMX512_UART_1          1
+
+#define BREAK_START_INTERRUPT
+#define MAB_START_INTERRUPT
+#define MAB_STOP_INTERRUPT
 
 #define _DMX512_BREAK          PIT_US_DELAY(DMX512_BREAK)
 #define _DMX512_MAB            PIT_US_DELAY(DMX512_MAB)
@@ -86,11 +90,15 @@ static void fnStartDelay(unsigned long ulDelay, unsigned char ucEvent);
 /* =================================================================== */
 
 static unsigned char ucDMX512_HW_event = 0;
+static QUEUE_HANDLE    DMX512_PortID[2] = {NO_ID_ALLOCATED};
 
 // DMX512 transmit frame period interrupt
 //
 static void _frame_interrupt_0(void)
 {
+#if defined BREAK_START_INTERRUPT
+    _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_LOW(E, PORTE_BIT8, 0, (PORT_SRE_FAST | PORT_DSE_HIGH)); // start break generation
+#endif
 #if defined _WINDOWS
     if (ucDMX512_HW_event != 0) {                                        // ignore when frame interrupt arrives during actiity (simulator only)
         return;
@@ -106,6 +114,21 @@ static void _frame_interrupt_0(void)
   //fnStartDelay(_DMX512_BREAK, DMX512_START_MAB);
   //fnInterruptMessage(OWN_TASK, (unsigned char)(DMX512_TX_FRAME_COMPLETED));
 }
+
+#if defined MAB_START_INTERRUPT
+static void _mab_start_interrupt_0(void)
+{
+    _CONFIG_PERIPHERAL(E, 8, (PE_8_LPUART0_TX | UART_PULL_UPS));         // LPUART0_TX on PE8 (alt. function 5)
+}
+#endif
+
+#if defined MAB_START_INTERRUPT
+static void _mab_stop_interrupt_0(void)
+{
+    LPUART0_CTRL |= LPUART_CTRL_TE;
+  //fnDriver(DMX512_PortID[0], (TX_ON), MODIFY_TX);                      // start transmission of next queued message (thsi doesn't work since it configures the Tx again
+}
+#endif
 
 #if defined TEST_SECOND_CHANNEL
 // DMX512 transmit frame period interrupt
@@ -152,7 +175,6 @@ static void fnStartDelay(unsigned long ulDelay, unsigned char ucEvent)
 //
 extern void fnDMX512(TTASKTABLE *ptrTaskTable)
 {
-    static QUEUE_HANDLE    DMX512_PortID[2] = {NO_ID_ALLOCATED};
     static unsigned char   ucDMX512_tx_buffer[DMX_SLOT_COUNT + 1 + 2];
     QUEUE_HANDLE           PortIDInternal = ptrTaskTable->TaskID;       // queue ID for task input
     unsigned char          ucInputMessage[SMALL_QUEUE];                 // reserve space for receiving messages
@@ -186,7 +208,9 @@ extern void fnDMX512(TTASKTABLE *ptrTaskTable)
             //
             // This method is suitable for K66, using a PWM channel to control the break and period, plus a second channel to define the MAB
             //
+        #if !defined MAB_STOP_INTERRUPT
             static unsigned long enable_lpuart_tx = 0;
+        #endif
         #if defined TEST_SECOND_CHANNEL
             static unsigned char enable_uart_tx = 0;
         #endif
@@ -204,7 +228,7 @@ extern void fnDMX512(TTASKTABLE *ptrTaskTable)
             fnWrite(DMX512_PortID[0], ucDMX512_tx_buffer, (DMX_SLOT_COUNT + 1 + 2)); // prime first DMX512 frame
             ucDMX512_tx_buffer[2] = 1;
             fnWrite(DMX512_PortID[0], ucDMX512_tx_buffer, (DMX_SLOT_COUNT + 1 + 2)); // prime second DMX512 frame
-        #if DMX512_UART == 5 && (defined KINETIS_65 || defined KINETIS_K66)
+        #if DMX512_UART == 5 && (defined KINETIS_65 || defined KINETIS_K66) && !defined MAB_START_INTERRUPT
             SIM_SOPT5 |= SIM_SOPT5_LPUART0TXSRC_TPM1_0;                  // use modulation method for break
         #endif
 
@@ -229,13 +253,21 @@ extern void fnDMX512(TTASKTABLE *ptrTaskTable)
             pwm_setup.pwm_reference = (_TPM_TIMER_1 | 0);                // timer module 1, channel 0
             pwm_setup.pwm_frequency = (unsigned short)PWM_TPM_CLOCK_US_DELAY(DMX512_PERIOD, 16); // generate frame rate frequency on PWM output
             pwm_setup.pwm_value = ((pwm_setup.pwm_frequency * DMX512_BREAK)/DMX512_PERIOD); // output starts low (inverted polarity) and goes high after the break time
+            pwm_setup.int_priority = PRIORITY_HW_TIMER;                  // interrupt priority of cycle interrupt
+        #if defined MAB_START_INTERRUPT
+            pwm_setup.pwm_mode |= PWM_CHANNEL_INTERRUPT;                 // use channel interrupt to stop the break
+            pwm_setup.channel_int_handler = _mab_start_interrupt_0;
+        #endif
             fnConfigureInterrupt((void *)&pwm_setup);                    // configure and start
-            pwm_setup.pwm_reference = (_TPM_TIMER_1 | 1);                // timer module , channel 1
+            pwm_setup.pwm_reference = (_TPM_TIMER_1 | 1);                // timer module, channel 1
             pwm_setup.pwm_value = ((pwm_setup.pwm_frequency * (DMX512_BREAK + DMX512_MAB - 44))/DMX512_PERIOD); // second channel goes high after the MAB period to control the timing for the start of the frame transmission
             pwm_setup.int_handler = _frame_interrupt_0;                  // interrupt call-back on PWM cycle
-            pwm_setup.int_priority = PRIORITY_HW_TIMER;                  // interrupt priority of cycle interrupt
-            pwm_setup.pwm_mode |= (PWM_DMA_CHANNEL_ENABLE | PWM_FULL_BUFFER_DMA | PWM_FULL_BUFFER_DMA_AUTO_REPEAT | PWM_DMA_SPECIFY_DESTINATION | PWM_DMA_SPECIFY_LONG_WORD); // we use this to trigger DMA
+        #if defined MAB_STOP_INTERRUPT
+            pwm_setup.channel_int_handler = _mab_stop_interrupt_0;
+        #else
+            pwm_setup.pwm_mode &= ~(PWM_CHANNEL_INTERRUPT);
             pwm_setup.dma_int_handler = 0;
+            pwm_setup.pwm_mode |= (PWM_DMA_CHANNEL_ENABLE | PWM_FULL_BUFFER_DMA | PWM_FULL_BUFFER_DMA_AUTO_REPEAT | PWM_DMA_SPECIFY_DESTINATION | PWM_DMA_SPECIFY_LONG_WORD); // we use this to trigger DMA
             pwm_setup.ucDmaChannel = 1;
             pwm_setup.usDmaTriggerSource = DMAMUX0_CHCFG_SOURCE_TPM1_C1; // trigger on own match
             pwm_setup.ulPWM_buffer_length = sizeof(enable_lpuart_tx);
@@ -243,6 +275,7 @@ extern void fnDMX512(TTASKTABLE *ptrTaskTable)
             enable_lpuart_tx = LPUART0_CTRL;                             // get the idle value in the LPUART's control register
             enable_lpuart_tx |= LPUART_CTRL_TE;                          // construct the value to enable the transmission
             pwm_setup.ptrRegister = LPUART0_CTRL_ADD;                    // copy to the LPUART0 control register
+        #endif
             fnConfigureInterrupt((void *)&pwm_setup);                    // configure and start
 
         #if defined TEST_SECOND_CHANNEL

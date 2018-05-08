@@ -3143,19 +3143,19 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 // Define DMA channel use (channels and priorities must be unique for used peripherals) - {4}
 //
 #if defined irq_DMA4_ID
-    #define DMA_UART0_TX_CHANNEL   3                                     // use this DMA channel when using UART 0 for transmission driven by DMA
-    #define DMA_UART1_TX_CHANNEL   4                                     // use this DMA channel when using UART 1 for transmission driven by DMA
-    #define DMA_UART2_TX_CHANNEL   5                                     // use this DMA channel when using UART 2 for transmission driven by DMA
-    #define DMA_UART3_TX_CHANNEL   6                                     // use this DMA channel when using UART 3 for transmission driven by DMA
-    #define DMA_UART4_TX_CHANNEL   7                                     // use this DMA channel when using UART 4 for transmission driven by DMA
-    #define DMA_UART5_TX_CHANNEL   8                                     // use this DMA channel when using UART 5 for transmission driven by DMA
+    #define DMA_UART0_TX_CHANNEL   2                                     // use this DMA channel when using UART 0 for transmission driven by DMA
+    #define DMA_UART1_TX_CHANNEL   3                                     // use this DMA channel when using UART 1 for transmission driven by DMA
+    #define DMA_UART2_TX_CHANNEL   4                                     // use this DMA channel when using UART 2 for transmission driven by DMA
+    #define DMA_UART3_TX_CHANNEL   5                                     // use this DMA channel when using UART 3 for transmission driven by DMA
+    #define DMA_UART4_TX_CHANNEL   6                                     // use this DMA channel when using UART 4 for transmission driven by DMA
+    #define DMA_UART5_TX_CHANNEL   7                                     // use this DMA channel when using UART 5 for transmission driven by DMA
 
-    #define DMA_UART0_RX_CHANNEL   9                                     // use this DMA channel when using UART 0 for reception driven by DMA
-    #define DMA_UART1_RX_CHANNEL   10                                    // use this DMA channel when using UART 1 for reception driven by DMA
-    #define DMA_UART2_RX_CHANNEL   11                                    // use this DMA channel when using UART 2 for reception driven by DMA
-    #define DMA_UART3_RX_CHANNEL   12                                    // use this DMA channel when using UART 3 for reception driven by DMA
-    #define DMA_UART4_RX_CHANNEL   13                                    // use this DMA channel when using UART 4 for reception driven by DMA
-    #define DMA_UART5_RX_CHANNEL   14                                    // use this DMA channel when using UART 5 for reception driven by DMA
+    #define DMA_UART0_RX_CHANNEL   8                                     // use this DMA channel when using UART 0 for reception driven by DMA
+    #define DMA_UART1_RX_CHANNEL   9                                     // use this DMA channel when using UART 1 for reception driven by DMA
+    #define DMA_UART2_RX_CHANNEL   10                                    // use this DMA channel when using UART 2 for reception driven by DMA
+    #define DMA_UART3_RX_CHANNEL   11                                    // use this DMA channel when using UART 3 for reception driven by DMA
+    #define DMA_UART4_RX_CHANNEL   12                                    // use this DMA channel when using UART 4 for reception driven by DMA
+    #define DMA_UART5_RX_CHANNEL   13                                    // use this DMA channel when using UART 5 for reception driven by DMA
 
     #define DMA_UART0_TX_INT_PRIORITY  (PRIORITY_DMA3)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
     #define DMA_UART1_TX_INT_PRIORITY  (PRIORITY_DMA4)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used

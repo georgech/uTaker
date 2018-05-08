@@ -19,12 +19,13 @@
     16.12.2016 Correct PWM interrupt clear                               {4}
     04.01.2017 Don't adjust the RC clock setting when the processor is running from it {5}
     05.03.2017 Add PWM_NO_OUTPUT option to allow PWM channel operation without connecting to an output {6}
-    24.04.2017 Add DMA based freqence control opton (eg. for stepper motors) {7}
+    24.04.2017 Add DMA based frequence control opton (eg. for stepper motors) {7}
     20.05.2017 PWM output configuration moded to kinetis.c [kinetis_timer_pins.h] so that it can be shared by capture input use
     20.11.2017 Add KE15 PWM channel output enable                        {8}
     19.03.2018 Add PWM clock source from TRGMUX settings                 {9}
     10.04.2018 Add KL27 clock inputs                                     {10}
-    05.05.2018 Add user defined target register for DMA operation        {11}
+    05.05.2018 Add user defined target register option for DMA operation {11}
+    08.05.2018 Add channel interrupt support (in addition to period interrupts) {12}
 
 */
 
@@ -52,10 +53,34 @@ static __interrupt void _PWM_Interrupt_5(void);
     #endif
 
 /* =================================================================== */
+/*                              local consts                           */
+/* =================================================================== */
+
+static const unsigned char ucSumChannels[FLEX_TIMERS_AVAILABLE + 1] = {      // {12}
+    0,
+    FLEX_TIMERS_0_CHANNELS,
+    (FLEX_TIMERS_0_CHANNELS + FLEX_TIMERS_1_CHANNELS),
+#if FLEX_TIMERS_AVAILABLE > 2
+    (FLEX_TIMERS_0_CHANNELS + FLEX_TIMERS_1_CHANNELS + FLEX_TIMERS_2_CHANNELS),
+#endif
+#if FLEX_TIMERS_AVAILABLE > 3
+    (FLEX_TIMERS_0_CHANNELS + FLEX_TIMERS_1_CHANNELS + FLEX_TIMERS_2_CHANNELS + FLEX_TIMERS_3_CHANNELS),
+#endif
+#if FLEX_TIMERS_AVAILABLE > 4
+    (FLEX_TIMERS_0_CHANNELS + FLEX_TIMERS_1_CHANNELS + FLEX_TIMERS_2_CHANNELS + FLEX_TIMERS_3_CHANNELS + FLEX_TIMERS_4_CHANNELS),
+#endif
+#if FLEX_TIMERS_AVAILABLE > 5
+    (FLEX_TIMERS_0_CHANNELS + FLEX_TIMERS_1_CHANNELS + FLEX_TIMERS_2_CHANNELS + FLEX_TIMERS_3_CHANNELS + FLEX_TIMERS_4_CHANNELS + FLEX_TIMERS_5_CHANNELS),
+#endif
+};
+
+/* =================================================================== */
 /*                      local variable definitions                     */
 /* =================================================================== */
 
-static void (*_PWM_TimerHandler[FLEX_TIMERS_AVAILABLE])(void) = {0};     // user interrupt handlers
+static void (*_PWM_TimerHandler[FLEX_TIMERS_AVAILABLE])(void) = {0};     // user period interrupt handlers
+static void(*_PWM_ChannelHandler[FLEX_TIMERS_CHANNEL_COUNT])(void) = {0};// {12} user channel interrupt handlers
+static unsigned char ucEnabledChannelInterrupts = 0;
 
 static void (*_PWM_TimerInterrupt[FLEX_TIMERS_AVAILABLE])(void) = {
     _PWM_Interrupt_0,
@@ -80,8 +105,52 @@ static void (*_PWM_TimerInterrupt[FLEX_TIMERS_AVAILABLE])(void) = {
 /*                   PWM cycle Interrupt Handlers                      */
 /* =================================================================== */
 
+#if defined _WINDOWS                                                     // reset channel event flags when simulating
+static void fnResetChannelEventFlags(int iTimerRef, FLEX_TIMER_MODULE *ptrTimer)
+{
+    int iChannel = 0;
+    while (iChannel < (ucSumChannels[iTimerRef + 1] - ucSumChannels[iTimerRef])) { // for each channel
+        ptrTimer->FTM_channel[iChannel++].FTM_CSC &= ~FTM_CSC_CHF;       // reset the channel event flag
+    }
+}
+#endif
+
+
+static void fnHandleChannels(int iTimer, unsigned char ucPendingChannels)
+{
+    int iHandlerRef = ucSumChannels[iTimer];
+    unsigned char ucChannel = 0x1;
+    while (ucPendingChannels != 0) {                                     // while channels are pending
+        if ((ucPendingChannels & ucChannel) != 0) {                      // if interrupt pending on this channel
+            if (_PWM_ChannelHandler[iHandlerRef] != 0) {                 // if there is a user handler installed
+                uDisable_Interrupt();
+                    _PWM_ChannelHandler[iHandlerRef]();                  // call user interrupt handler
+                uEnable_Interrupt();
+            }
+            ucPendingChannels &= ~(ucChannel);                           // reset handled channel flag
+        }
+        iHandlerRef++;
+        ucChannel <<= 1;
+    }
+}
+
 static __interrupt void _PWM_Interrupt_0(void)
 {
+    unsigned char ucPendingChannels = (unsigned char)(FTM0_STATUS & ucEnabledChannelInterrupts);
+    if (ucPendingChannels != 0) {
+    #if defined KINETIS_KL
+        WRITE_ONE_TO_CLEAR(FTM0_STATUS, (FTM_STATUS_CH7F | FTM_STATUS_CH6F | FTM_STATUS_CH5F | FTM_STATUS_CH4F | FTM_STATUS_CH3F | FTM_STATUS_CH2F | FTM_STATUS_CH1F | FTM_STATUS_CH0F)); // reset the flags (hardware ensures that any flags being set between the previous read and the clear are not cleared)
+    #else
+        FTM0_STATUS &= ~(FTM_STATUS_CH7F | FTM_STATUS_CH6F | FTM_STATUS_CH5F | FTM_STATUS_CH4F | FTM_STATUS_CH3F | FTM_STATUS_CH2F | FTM_STATUS_CH1F | FTM_STATUS_CH0F); // reset the flags (hardware ensures that any flags being set between the previous read and the clear are not cleared)
+    #endif
+    #if defined _WINDOWS                                                 // reset channel event flags when simulating
+        fnResetChannelEventFlags(0, (FLEX_TIMER_MODULE *)FTM_BLOCK_0);
+    #endif
+        fnHandleChannels(0, ucPendingChannels);
+    }
+    if ((FTM0_SC & FTM_SC_TOF) == 0) {                                   // if no period interrupt we return (probably it was a channel interrupt)
+        return;
+    }
     FTM0_SC &= ~(FTM_SC_TOF);                                            // {4} clear interrupt (read when set and write 0 to reset)
     if (_PWM_TimerHandler[0] != 0) {                                     // if there is a user handler installed
         uDisable_Interrupt();
@@ -93,6 +162,21 @@ static __interrupt void _PWM_Interrupt_0(void)
     #if FLEX_TIMERS_AVAILABLE > 1
 static __interrupt void _PWM_Interrupt_1(void)
 {
+    unsigned char ucPendingChannels = (unsigned char)(FTM1_STATUS & ucEnabledChannelInterrupts);
+    if (ucPendingChannels != 0) {
+    #if defined KINETIS_KL
+        WRITE_ONE_TO_CLEAR(FTM1_STATUS, (FTM_STATUS_CH7F | FTM_STATUS_CH6F | FTM_STATUS_CH5F | FTM_STATUS_CH4F | FTM_STATUS_CH3F | FTM_STATUS_CH2F | FTM_STATUS_CH1F | FTM_STATUS_CH0F)); // reset the flags (hardware ensures that any flags being set between the previous read and the clear are not cleared)
+    #else
+        FTM1_STATUS &= ~(FTM_STATUS_CH7F | FTM_STATUS_CH6F | FTM_STATUS_CH5F | FTM_STATUS_CH4F | FTM_STATUS_CH3F | FTM_STATUS_CH2F | FTM_STATUS_CH1F | FTM_STATUS_CH0F); // reset the flags (hardware ensures that any flags being set between the previous read and the clear are not cleared)
+    #endif
+    #if defined _WINDOWS                                                 // reset channel event flags when simulating
+        fnResetChannelEventFlags(1, (FLEX_TIMER_MODULE *)FTM_BLOCK_1);
+    #endif
+        fnHandleChannels(1, ucPendingChannels);
+    }
+    if ((FTM1_SC & FTM_SC_TOF) == 0) {                                   // if no period interrupt we return (probably it was a channel interrupt)
+        return;
+    }
     FTM1_SC &= ~(FTM_SC_TOF);                                            // {4} clear interrupt (read when set and write 0 to reset)
     if (_PWM_TimerHandler[1] != 0) {                                     // if there is a user handler installed
         uDisable_Interrupt();
@@ -104,6 +188,21 @@ static __interrupt void _PWM_Interrupt_1(void)
     #if FLEX_TIMERS_AVAILABLE > 2
 static __interrupt void _PWM_Interrupt_2(void)
 {
+    unsigned char ucPendingChannels = (unsigned char)(FTM2_STATUS & ucEnabledChannelInterrupts);
+    if (ucPendingChannels != 0) {
+    #if defined KINETIS_KL
+        WRITE_ONE_TO_CLEAR(FTM2_STATUS, (FTM_STATUS_CH7F | FTM_STATUS_CH6F | FTM_STATUS_CH5F | FTM_STATUS_CH4F | FTM_STATUS_CH3F | FTM_STATUS_CH2F | FTM_STATUS_CH1F | FTM_STATUS_CH0F)); // reset the flags (hardware ensures that any flags being set between the previous read and the clear are not cleared)
+    #else
+        FTM2_STATUS &= ~(FTM_STATUS_CH7F | FTM_STATUS_CH6F | FTM_STATUS_CH5F | FTM_STATUS_CH4F | FTM_STATUS_CH3F | FTM_STATUS_CH2F | FTM_STATUS_CH1F | FTM_STATUS_CH0F); // reset the flags (hardware ensures that any flags being set between the previous read and the clear are not cleared)
+    #endif
+    #if defined _WINDOWS                                                 // reset channel event flags when simulating
+        fnResetChannelEventFlags(2, (FLEX_TIMER_MODULE *)FTM_BLOCK_2);
+    #endif
+        fnHandleChannels(2, ucPendingChannels);
+    }
+    if ((FTM2_SC & FTM_SC_TOF) == 0) {                                   // if no period interrupt we return (probably it was a channel interrupt)
+        return;
+    }
     FTM2_SC &= ~(FTM_SC_TOF);                                            // {4} clear interrupt (read when set and write 0 to reset)
     if (_PWM_TimerHandler[2] != 0) {                                     // if there is a user handler installed
         uDisable_Interrupt();
@@ -115,6 +214,21 @@ static __interrupt void _PWM_Interrupt_2(void)
     #if FLEX_TIMERS_AVAILABLE > 3
 static __interrupt void _PWM_Interrupt_3(void)
 {
+    unsigned char ucPendingChannels = (unsigned char)(FTM3_STATUS & ucEnabledChannelInterrupts);
+    if (ucPendingChannels != 0) {
+    #if defined KINETIS_KL
+        WRITE_ONE_TO_CLEAR(FTM3_STATUS, (FTM_STATUS_CH7F | FTM_STATUS_CH6F | FTM_STATUS_CH5F | FTM_STATUS_CH4F | FTM_STATUS_CH3F | FTM_STATUS_CH2F | FTM_STATUS_CH1F | FTM_STATUS_CH0F)); // reset the flags (hardware ensures that any flags being set between the previous read and the clear are not cleared)
+    #else
+        FTM3_STATUS &= ~(FTM_STATUS_CH7F | FTM_STATUS_CH6F | FTM_STATUS_CH5F | FTM_STATUS_CH4F | FTM_STATUS_CH3F | FTM_STATUS_CH2F | FTM_STATUS_CH1F | FTM_STATUS_CH0F); // reset the flags (hardware ensures that any flags being set between the previous read and the clear are not cleared)
+    #endif
+    #if defined _WINDOWS                                                 // reset channel event flags when simulating
+        fnResetChannelEventFlags(3, (FLEX_TIMER_MODULE *)FTM_BLOCK_3);
+    #endif
+        fnHandleChannels(3, ucPendingChannels);
+    }
+    if ((FTM3_SC & FTM_SC_TOF) == 0) {                                   // if no period interrupt we return (probably it was a channel interrupt)
+        return;
+    }
     FTM3_SC &= ~(FTM_SC_TOF);                                            // {4} clear interrupt (read when set and write 0 to reset)
     if (_PWM_TimerHandler[3] != 0) {                                     // if there is a user handler installed
         uDisable_Interrupt();
@@ -126,6 +240,21 @@ static __interrupt void _PWM_Interrupt_3(void)
     #if FLEX_TIMERS_AVAILABLE > 4
 static __interrupt void _PWM_Interrupt_4(void)
 {
+    unsigned char ucPendingChannels = (unsigned char)(FTM4_STATUS & ucEnabledChannelInterrupts);
+    if (ucPendingChannels != 0) {
+    #if defined KINETIS_KL || defined TPMS_AVAILABLE
+        WRITE_ONE_TO_CLEAR(FTM4_STATUS, (FTM_STATUS_CH7F | FTM_STATUS_CH6F | FTM_STATUS_CH5F | FTM_STATUS_CH4F | FTM_STATUS_CH3F | FTM_STATUS_CH2F | FTM_STATUS_CH1F | FTM_STATUS_CH0F)); // reset the flags (hardware ensures that any flags being set between the previous read and the clear are not cleared)
+    #else
+        FTM4_STATUS &= ~(FTM_STATUS_CH7F | FTM_STATUS_CH6F | FTM_STATUS_CH5F | FTM_STATUS_CH4F | FTM_STATUS_CH3F | FTM_STATUS_CH2F | FTM_STATUS_CH1F | FTM_STATUS_CH0F); // reset the flags (hardware ensures that any flags being set between the previous read and the clear are not cleared)
+    #endif
+    #if defined _WINDOWS                                                 // reset channel event flags when simulating
+        fnResetChannelEventFlags(4, (FLEX_TIMER_MODULE *)FTM_BLOCK_4);
+    #endif
+        fnHandleChannels(4, ucPendingChannels);
+    }
+    if ((FTM4_SC & FTM_SC_TOF) == 0) {                                   // if no period interrupt we return (probably it was a channel interrupt)
+        return;
+    }
         #if defined TPMS_AVAILABLE                                       // TPM1
     OR_ONE_TO_CLEAR(FTM4_SC, FTM_SC_TOF);                                // clear interrupt (write 1 to reset)
         #else
@@ -141,6 +270,21 @@ static __interrupt void _PWM_Interrupt_4(void)
     #if FLEX_TIMERS_AVAILABLE > 5
 static __interrupt void _PWM_Interrupt_5(void)
 {
+    unsigned char ucPendingChannels = (unsigned char)(FTM5_STATUS & ucEnabledChannelInterrupts);
+    if (ucPendingChannels != 0) {
+    #if defined KINETIS_KL || defined TPMS_AVAILABLE
+        WRITE_ONE_TO_CLEAR(FTM5_STATUS, (FTM_STATUS_CH7F | FTM_STATUS_CH6F | FTM_STATUS_CH5F | FTM_STATUS_CH4F | FTM_STATUS_CH3F | FTM_STATUS_CH2F | FTM_STATUS_CH1F | FTM_STATUS_CH0F)); // reset the flags (hardware ensures that any flags being set between the previous read and the clear are not cleared)
+    #else
+        FTM5_STATUS &= ~(FTM_STATUS_CH7F | FTM_STATUS_CH6F | FTM_STATUS_CH5F | FTM_STATUS_CH4F | FTM_STATUS_CH3F | FTM_STATUS_CH2F | FTM_STATUS_CH1F | FTM_STATUS_CH0F); // reset the flags (hardware ensures that any flags being set between the previous read and the clear are not cleared)
+    #endif
+    #if defined _WINDOWS                                                 // reset channel event flags when simulating
+        fnResetChannelEventFlags(5, (FLEX_TIMER_MODULE *)FTM_BLOCK_5);
+    #endif
+        fnHandleChannels(5, ucPendingChannels);
+    }
+    if ((FTM5_SC & FTM_SC_TOF) == 0) {                                   // if no period interrupt we return (probably it was a channel interrupt)
+        return;
+    }
         #if defined TPMS_AVAILABLE                                       // TPM2
     OR_ONE_TO_CLEAR(FTM5_SC, FTM_SC_TOF);                                // clear interrupt (write 1 to reset)
         #else
@@ -201,7 +345,7 @@ static __interrupt void _PWM_Interrupt_5(void)
                 iInterruptID = irq_FTM0_ID;
     #endif
                 if ((ulMode & PWM_NO_OUTPUT) == 0) {                     // {6}
-                    fnConfigTimerPin(0, (ptrPWM_settings->pwm_reference & ~_TIMER_MODULE_MASK), (PORT_SRE_FAST | PORT_DSE_HIGH)); // configure the PWM output pin
+                    fnConfigTimerPin(0, ucChannel, (PORT_SRE_FAST | PORT_DSE_HIGH)); // configure the PWM output pin
                 }
                 ptrFlexTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_0;
                 break;
@@ -217,7 +361,7 @@ static __interrupt void _PWM_Interrupt_5(void)
                 iInterruptID = irq_FTM1_ID;
         #endif
                 if ((ulMode & PWM_NO_OUTPUT) == 0) {                     // {6}
-                    fnConfigTimerPin(1, (ptrPWM_settings->pwm_reference & ~_TIMER_MODULE_MASK), (PORT_SRE_FAST | PORT_DSE_HIGH)); // configure the PWM output pin
+                    fnConfigTimerPin(1, ucChannel, (PORT_SRE_FAST | PORT_DSE_HIGH)); // configure the PWM output pin
                 }
                 ptrFlexTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_1;
                 break;
@@ -242,7 +386,7 @@ static __interrupt void _PWM_Interrupt_5(void)
                 iInterruptID = irq_FTM2_ID;
         #endif
                 if ((ulMode & PWM_NO_OUTPUT) == 0) {                     // {6}
-                    fnConfigTimerPin(2, (ptrPWM_settings->pwm_reference & ~_TIMER_MODULE_MASK), (PORT_SRE_FAST | PORT_DSE_HIGH)); // configure the PWM output pin
+                    fnConfigTimerPin(2, ucChannel, (PORT_SRE_FAST | PORT_DSE_HIGH)); // configure the PWM output pin
                 }
                 break;
     #endif
@@ -263,7 +407,7 @@ static __interrupt void _PWM_Interrupt_5(void)
         #endif
                 ptrFlexTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_3;
                 if ((ulMode & PWM_NO_OUTPUT) == 0) {                     // {6}
-                    fnConfigTimerPin(3, (ptrPWM_settings->pwm_reference & ~_TIMER_MODULE_MASK), (PORT_SRE_FAST | PORT_DSE_HIGH)); // configure the PWM output pin
+                    fnConfigTimerPin(3, ucChannel, (PORT_SRE_FAST | PORT_DSE_HIGH)); // configure the PWM output pin
                 }
                 break;
     #endif
@@ -277,7 +421,7 @@ static __interrupt void _PWM_Interrupt_5(void)
                 iTPM_type = 1;
                 ptrFlexTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_4;
                 if ((ulMode & PWM_NO_OUTPUT) == 0) {                     // {6}
-                    fnConfigTimerPin(4, (ptrPWM_settings->pwm_reference & ~_TIMER_MODULE_MASK), (PORT_SRE_FAST | PORT_DSE_HIGH)); // configure the PWM output pin
+                    fnConfigTimerPin(4, ucChannel, (PORT_SRE_FAST | PORT_DSE_HIGH)); // configure the PWM output pin
                 }
                 break;
 
@@ -290,7 +434,7 @@ static __interrupt void _PWM_Interrupt_5(void)
                 ptrFlexTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_5;
                 iTPM_type = 1;
                 if ((ulMode & PWM_NO_OUTPUT) == 0) {                     // {6}
-                    fnConfigTimerPin(5, (ptrPWM_settings->pwm_reference & ~_TIMER_MODULE_MASK), (PORT_SRE_FAST | PORT_DSE_HIGH)); // configure the PWM output pin
+                    fnConfigTimerPin(5, ucChannel, (PORT_SRE_FAST | PORT_DSE_HIGH)); // configure the PWM output pin
                 }
                 break;
     #endif
@@ -481,6 +625,7 @@ static __interrupt void _PWM_Interrupt_5(void)
             //
             //ptrFlexTimer->FTM_channel[ucChannel].FTM_CSC = (FTM_CSC_ELSA | FTM_CSC_MSA); // test line
             //
+            ucEnabledChannelInterrupts &= ~(1 << ucChannel);
     #if !defined DEVICE_WITHOUT_DMA
             if ((ulMode & PWM_DMA_CHANNEL_ENABLE) != 0) {
                 ptrFlexTimer->FTM_channel[ucChannel].FTM_CSC |= (FTM_CSC_DMA | FTM_CSC_CHIE); // enable DMA trigger from this channel (also the interrupt needs to be enabled for the DMA to operate - interrupt is however not generated in this configuration)
@@ -532,8 +677,8 @@ static __interrupt void _PWM_Interrupt_5(void)
             }
     #endif
             ulMode &= PWM_MODE_SETTINGS_MASK;                            // keep just the user's mode settings for the hardware
-            if (ptrPWM_settings->int_handler != 0) {                     // {3} if an interrupt handler is specified it is called at each period
-                _PWM_TimerHandler[ucFlexTimer] = ptrPWM_settings->int_handler;
+            if  (ptrPWM_settings->int_handler != 0) {                    // {3} if an interrupt handler is specified it is called at each period
+                _PWM_TimerHandler[ucFlexTimer] = ptrPWM_settings->int_handler; // period interrupt handler
                 fnEnterInterrupt(iInterruptID, ptrPWM_settings->int_priority, _PWM_TimerInterrupt[ucFlexTimer]);
     #if defined KINETIS_KL
                 ulMode |= (FTM_SC_TOIE | FTM_SC_TOF);                    // enable interrupt [FTM_SC_TOF must be written with 1 to clear]
@@ -547,6 +692,13 @@ static __interrupt void _PWM_Interrupt_5(void)
     #else
                 ulMode |= (FTM_SC_TOIE);                                 // enable interrupt
     #endif
+            }
+            if (((ptrPWM_settings->pwm_mode & PWM_CHANNEL_INTERRUPT) != 0) && (ptrPWM_settings->channel_int_handler != 0)) { // {12} if a channel match interrupt is to be generated
+                unsigned char ucChannelReference = (ucSumChannels[ucFlexTimer] + ucChannel);
+                _PWM_ChannelHandler[ucChannelReference] = ptrPWM_settings->channel_int_handler; // channel interrupt handler
+                fnEnterInterrupt(iInterruptID, ptrPWM_settings->int_priority, _PWM_TimerInterrupt[ucFlexTimer]);
+                ucEnabledChannelInterrupts |= (1 << ucChannel);
+                ptrFlexTimer->FTM_channel[ucChannel].FTM_CSC |= FTM_CSC_CHIE; // enable channel interrupt
             }
     #if defined KINETIS_KE15                                             // {8}
             ulMode |= (ptrFlexTimer->FTM_SC & (FTM_SC_PWMEN0 | FTM_SC_PWMEN1 | FTM_SC_PWMEN2 | FTM_SC_PWMEN3 | FTM_SC_PWMEN4 | FTM_SC_PWMEN5 | FTM_SC_PWMEN6 | FTM_SC_PWMEN7)); // preserve already set PWM outputs

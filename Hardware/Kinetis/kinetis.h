@@ -1489,8 +1489,8 @@ typedef struct stRESET_VECTOR
 // FlexTimer configuration
 //
 #if defined KINETIS_K66 || defined KINETIS_K80
-    #define FLEX_TIMERS_AVAILABLE   6                                    // 4 flex timers plus 2 TPMs
     #define TPMS_AVAILABLE          2                                    // TPM in addition to flex timers
+    #define FLEX_TIMERS_AVAILABLE   (4 + TPMS_AVAILABLE)                 // 4 flex timers plus 2 TPMs
 #elif defined KINETIS_KE18
     #define FLEX_TIMERS_AVAILABLE   4
 #elif defined KINETIS_K22 && (SIZE_OF_FLASH == (128 * 1024))
@@ -1512,28 +1512,42 @@ typedef struct stRESET_VECTOR
 #endif
 
 #if defined KINETIS_KL02 || defined KINETIS_KL03
-    #define FLEX_TIMERS_0_CHANNELS  2
-    #define FLEX_TIMERS_1_CHANNELS  2
+    #define FLEX_TIMERS_0_CHANNELS    2
+    #define FLEX_TIMERS_1_CHANNELS    2
+    #define FLEX_TIMERS_CHANNEL_COUNT (FLEX_TIMERS_0_CHANNELS + FLEX_TIMERS_1_CHANNELS)
 #elif defined KINETIS_KL04 || defined KINETIS_KL53
-    #define FLEX_TIMERS_0_CHANNELS  6
-    #define FLEX_TIMERS_1_CHANNELS  2
+    #define FLEX_TIMERS_0_CHANNELS    6
+    #define FLEX_TIMERS_1_CHANNELS    2
+    #define FLEX_TIMERS_CHANNEL_COUNT (FLEX_TIMERS_0_CHANNELS + FLEX_TIMERS_1_CHANNELS)
 #elif defined KINETIS_KE15
-    #define FLEX_TIMERS_0_CHANNELS  8
-    #define FLEX_TIMERS_1_CHANNELS  4
-    #define FLEX_TIMERS_2_CHANNELS  4
+    #define FLEX_TIMERS_0_CHANNELS    8
+    #define FLEX_TIMERS_1_CHANNELS    4
+    #define FLEX_TIMERS_2_CHANNELS    4
+    #define FLEX_TIMERS_CHANNEL_COUNT (FLEX_TIMERS_0_CHANNELS + FLEX_TIMERS_1_CHANNELS + FLEX_TIMERS_2_CHANNELS)
 #elif defined KINETIS_KE
-    #define FLEX_TIMERS_0_CHANNELS  2
-    #define FLEX_TIMERS_1_CHANNELS  2
-    #define FLEX_TIMERS_2_CHANNELS  6
+    #define FLEX_TIMERS_0_CHANNELS    2
+    #define FLEX_TIMERS_1_CHANNELS    2
+    #define FLEX_TIMERS_2_CHANNELS    6
+    #define FLEX_TIMERS_CHANNEL_COUNT (FLEX_TIMERS_0_CHANNELS + FLEX_TIMERS_1_CHANNELS + FLEX_TIMERS_2_CHANNELS)
 #elif defined KINETIS_KL28
-    #define FLEX_TIMERS_0_CHANNELS  6
-    #define FLEX_TIMERS_1_CHANNELS  2
-    #define FLEX_TIMERS_2_CHANNELS  2
+    #define FLEX_TIMERS_0_CHANNELS    6
+    #define FLEX_TIMERS_1_CHANNELS    2
+    #define FLEX_TIMERS_2_CHANNELS    2
+    #define FLEX_TIMERS_CHANNEL_COUNT (FLEX_TIMERS_0_CHANNELS + FLEX_TIMERS_1_CHANNELS + FLEX_TIMERS_2_CHANNELS)
+#elif defined KINETIS_K66 || defined KINETIS_K80
+    #define FLEX_TIMERS_0_CHANNELS    8
+    #define FLEX_TIMERS_1_CHANNELS    2
+    #define FLEX_TIMERS_2_CHANNELS    2
+    #define FLEX_TIMERS_3_CHANNELS    8
+    #define FLEX_TIMERS_4_CHANNELS    2
+    #define FLEX_TIMERS_5_CHANNELS    2
+    #define FLEX_TIMERS_CHANNEL_COUNT (FLEX_TIMERS_0_CHANNELS + FLEX_TIMERS_1_CHANNELS + FLEX_TIMERS_2_CHANNELS + FLEX_TIMERS_3_CHANNELS + FLEX_TIMERS_4_CHANNELS + FLEX_TIMERS_5_CHANNELS)
 #else
-    #define FLEX_TIMERS_0_CHANNELS  8
-    #define FLEX_TIMERS_1_CHANNELS  2
-    #define FLEX_TIMERS_2_CHANNELS  2
-    #define FLEX_TIMERS_3_CHANNELS  8
+    #define FLEX_TIMERS_0_CHANNELS    8
+    #define FLEX_TIMERS_1_CHANNELS    2
+    #define FLEX_TIMERS_2_CHANNELS    2
+    #define FLEX_TIMERS_3_CHANNELS    8
+    #define FLEX_TIMERS_CHANNEL_COUNT (FLEX_TIMERS_0_CHANNELS + FLEX_TIMERS_1_CHANNELS + FLEX_TIMERS_2_CHANNELS + FLEX_TIMERS_3_CHANNELS)
 #endif
 
 // ADC configuration
@@ -7619,6 +7633,15 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
 #define FTM0_MOD            *(unsigned long *)(FTM_BLOCK_0 + FTM_OFFSET_0 + 0x008) // FTM0 modulo (16 bit)
 #if defined KINETIS_KL28
     #define FTM0_STATUS     *(volatile unsigned long *)(FTM_BLOCK_0 + 0x01c) // FTM0 capture and compare status
+        #define FTM_STATUS_CH0F 0x00000001                               // a channel 0 event has occurred
+        #define FTM_STATUS_CH1F 0x00000002                               // a channel 1 event has occurred
+        #define FTM_STATUS_CH2F 0x00000004                               // a channel 2 event has occurred
+        #define FTM_STATUS_CH3F 0x00000008                               // a channel 3 event has occurred
+        #define FTM_STATUS_CH4F 0x00000010                               // a channel 4 event has occurred
+        #define FTM_STATUS_CH5F 0x00000020                               // a channel 5 event has occurred
+        #define FTM_STATUS_CH6F 0x00000040                               // a channel 6 event has occurred
+        #define FTM_STATUS_CH7F 0x00000080                               // a channel 7 event has occurred
+        #define FTM_STATUS_TOF  0x00000100                               // timer overflow has occurred
 #endif
 #define FTM0_C0SC           *(volatile unsigned long *)(FTM_BLOCK_0 + FTM_OFFSET_1 + 0x00c) // FTM0 channel 0 and control
   #define FTM_CSC_DMA       0x00000001                                   // enable DMA transfers
@@ -7651,7 +7674,16 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
         #define FTM0_FILTER     *(unsigned long *)(FTM_BLOCK_0 + 0x078)      // FTM0 filter control register
         #define FTM0_QDCTRL     *(unsigned long *)(FTM_BLOCK_0 + 0x080)      // FTM0 quadrature decoder control and status register
     #else
-        #define FTM0_STATUS     *(volatile unsigned long *)(FTM_BLOCK_0 + 0x050) // FTM0 Capture and Compare Status
+        #define FTM0_STATUS     *(volatile unsigned long *)(FTM_BLOCK_0 + 0x050) // FTM0 Capture and Compare Status (write '1' to clear)
+            #define FTM_STATUS_CH0F 0x00000001                               // a channel 0 event has occurred
+            #define FTM_STATUS_CH1F 0x00000002                               // a channel 1 event has occurred
+            #define FTM_STATUS_CH2F 0x00000004                               // a channel 2 event has occurred
+            #define FTM_STATUS_CH3F 0x00000008                               // a channel 3 event has occurred
+            #define FTM_STATUS_CH4F 0x00000010                               // a channel 4 event has occurred
+            #define FTM_STATUS_CH5F 0x00000020                               // a channel 5 event has occurred
+            #define FTM_STATUS_CH6F 0x00000040                               // a channel 6 event has occurred
+            #define FTM_STATUS_CH7F 0x00000080                               // a channel 7 event has occurred
+            #define FTM_STATUS_TOF  0x00000100                               // timer overflow has occurred
     #endif
     #define FTM0_CONF           *(unsigned long *)(FTM_BLOCK_0 + 0x084)      // FTM0 configuration
       #define FTM_CONF_DOZEEN   0x00000020                                   // FTM doze enable
@@ -7716,7 +7748,15 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
     #define FTM0_C7SC           *(volatile unsigned long *)(FTM_BLOCK_0 + 0x044) // FTM0 channel 7 and control
     #define FTM0_C7V            *(volatile unsigned long *)(FTM_BLOCK_0 + 0x048) // FTM0 channel 7 value (16 bit)
     #define FTM0_CNTIN          *(volatile unsigned long *)(FTM_BLOCK_0 + 0x04c) // FTM0 counter initial value (16 bit)
-    #define FTM0_STATUS         *(volatile unsigned long *)(FTM_BLOCK_0 + 0x050) // FTM0 capture and compare status
+    #define FTM0_STATUS         *(volatile unsigned long *)(FTM_BLOCK_0 + 0x050) // FTM0 capture and compare status (read-only for FlexTimers, write '1' to clear for TPM)
+        #define FTM_STATUS_CH0F 0x00000001                                   // a channel 0 event has occurred
+        #define FTM_STATUS_CH1F 0x00000002                                   // a channel 1 event has occurred
+        #define FTM_STATUS_CH2F 0x00000004                                   // a channel 2 event has occurred
+        #define FTM_STATUS_CH3F 0x00000008                                   // a channel 3 event has occurred
+        #define FTM_STATUS_CH4F 0x00000010                                   // a channel 4 event has occurred
+        #define FTM_STATUS_CH5F 0x00000020                                   // a channel 5 event has occurred
+        #define FTM_STATUS_CH6F 0x00000040                                   // a channel 6 event has occurred
+        #define FTM_STATUS_CH7F 0x00000080                                   // a channel 7 event has occurred
     #define FTM0_MODE           *(volatile unsigned long *)(FTM_BLOCK_0 + 0x054) // FTM0 features mode selection
       #define FTM_MODE_FTMEN    0x00000001                                   // FTM enable (can only be written when WPDIS is '1')
       #define FTM_MODE_INIT     0x00000002                                   // initialise the channels output (always read as '0')
@@ -7990,7 +8030,7 @@ typedef struct stFLEX_TIMER_MODULE
     volatile unsigned long FTM_STATUS;
 #endif
 #if defined KINETIS_KL || defined KINETIS_KE
-    FLEX_TIMER_CHANNEL FTM_channel[6];
+    FLEX_TIMER_CHANNEL FTM_channel[6];                                   // up to 6 chnnels per timer (some may have less)
     #if defined KINETIS_KL28
         unsigned long ulRes0[5];
         unsigned long FTM_COMBINE;
@@ -8008,7 +8048,7 @@ typedef struct stFLEX_TIMER_MODULE
     #endif
     unsigned long FTM_CONF;
 #else
-    FLEX_TIMER_CHANNEL FTM_channel[8];
+    FLEX_TIMER_CHANNEL FTM_channel[8];                                   // up to 8 chnnels per timer (some may have less)
     volatile unsigned long FTM_CNTIN;
     volatile unsigned long FTM_STATUS;
     unsigned long FTM_MODE;
@@ -17667,6 +17707,7 @@ typedef struct stPWM_INTERRUPT_SETUP
     unsigned short   pwm_value;                                          // PWM percentage value
     unsigned short   pwm_frequency;                                      // base frequency
     unsigned long    pwm_mode;                                           // PWM mode of operation
+    void             (*channel_int_handler)(void);                       // channel interrupt handler to be configured (requires also PWM_CHANNEL_INTERRUPT)
     #if !defined DEVICE_WITHOUT_DMA
         unsigned long    ulPWM_buffer_length;                            // length of the buffer used for DMA transfer to PWM
         void             (*dma_int_handler)(void);                       // DMA interrupt handler to be configured
@@ -17733,6 +17774,7 @@ typedef struct stPWM_INTERRUPT_SETUP
 #define PWM_DMA_SPECIFY_BYTE        0x00020000                           // used with PWM_DMA_SPECIFY_DESTINATION to specify the unit size
 #define PWM_DMA_SPECIFY_SHORT_WORD  0x00000000
 #define PWM_DMA_SPECIFY_LONG_WORD   0x00040000
+#define PWM_CHANNEL_INTERRUPT       0x00080000                           // chanel match interrupt (instead of, or in addition to period interrupt) - cannot be used together with DMA
 
 #define PWM_MODE_SETTINGS_MASK  (PWM_PRESCALER_128 | FTM_SC_CPWMS | FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS | PWM_DMA_PERIOD_ENABLE)
 

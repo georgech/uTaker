@@ -64,6 +64,7 @@
     12.09.2017 Add INTMUX support and LPUART2 using its interrupts       {46}
     26.09.2017 Add LPIT support                                          {47}
     04.11.2017 Add true rando number generator registers initialisation  {48}
+    08.05.2018 Added simulation of all FTM/TPM channel interrupts        {49}
  
 */  
                           
@@ -7681,7 +7682,7 @@ unsigned long fnGetFlexTimer_clock(int iChannel)
         break;
     #endif
     }
-    #if defined KINETIS_K65 || defined KINETIS_K66
+    #if (FLEX_TIMERS_AVAILABLE == 6) && (TPMS_AVAILABLE == 2)            // devices with 4 FTMs and 2 TPMs
     if ((iChannel == 4) || (iChannel == 5)) {                            // TPM
         ulClockSpeed = TPM_PWM_CLOCK;
     }
@@ -7739,6 +7740,51 @@ unsigned long fnGetFlexTimer_clock(int iChannel)
     #endif
     ulClockSpeed /= (1 << (ptrTimer->FTM_SC & FTM_SC_PS_128));           // apply pre-scaler
     return ulClockSpeed;
+}
+
+static int fnHandleFlexTimer(int iTimerRef, FLEX_TIMER_MODULE *ptrTimer, int iFlexTimerChannels, int iTPM_type) // {49}
+{
+    unsigned long ulCountIncrease = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)fnGetFlexTimer_clock(iTimerRef))/1000000);
+    int iTimerInterrupt = 0;
+    int iChannel = 0;
+    ulCountIncrease += ptrTimer->FTM_CNT;;                               // new counter value (assume up counting)
+    // Check for channel matches
+    //
+    while (iChannel < iFlexTimerChannels) {                              // for each channel
+        if (ulCountIncrease >= ptrTimer->FTM_channel[iChannel].FTM_CV) { // channel match
+            ptrTimer->FTM_channel[iChannel].FTM_CSC |= FTM_CSC_CHF;      // set the channel event flag
+            ptrTimer->FTM_STATUS |= (FTM_STATUS_CH0F << iChannel);       // set the event flag in the global status register
+            if ((ptrTimer->FTM_channel[iChannel].FTM_CSC & FTM_CSC_CHIE) != 0) { // if channel interrupt is enabled
+                if ((ptrTimer->FTM_channel[iChannel].FTM_CSC & FTM_CSC_DMA) != 0) { // if DMA is enabled
+                    _EXCEPTION("TO DO");
+                }
+                else {
+                    iTimerInterrupt = 1;                                 // mark that an interrupt is pending
+                }
+            }
+        }
+        iChannel++;
+    }
+    if (ulCountIncrease >= ptrTimer->FTM_MOD) {                          // period match
+        ptrTimer->FTM_SC |= FTM_SC_TOF;                                  // set overflow flag
+        if (iTPM_type != 0) {
+            ulCountIncrease -= ptrTimer->FTM_MOD;
+        }
+        else {
+            ptrTimer->FTM_CNT = ptrTimer->FTM_CNTIN;
+            if (ulCountIncrease > (0xffff + (ptrTimer->FTM_MOD - ptrTimer->FTM_CNTIN))) {
+                ulCountIncrease = (0xffff + (ptrTimer->FTM_MOD - ptrTimer->FTM_CNTIN));
+            }
+            while (ulCountIncrease >= ptrTimer->FTM_MOD) {
+                ulCountIncrease -= (ptrTimer->FTM_MOD - ptrTimer->FTM_CNTIN);
+            }
+        }
+    }
+    ptrTimer->FTM_CNT = ulCountIncrease;                                 // new counter value
+    if (((ptrTimer->FTM_SC & FTM_SC_TOIE) != 0) && ((ptrTimer->FTM_SC & FTM_SC_TOF) != 0)) { // if overflow occurred and interrupt enabled
+        iTimerInterrupt = 1;
+    }
+    return iTimerInterrupt;
 }
 #endif
 
@@ -8669,25 +8715,13 @@ extern int fnSimTimers(void)
 #endif
 #if defined SUPPORT_TIMER                                                // {29}
     if (IS_POWERED_UP(6, FTM0) &&((FTM0_SC & (FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)) != 0)) { // if the TPM/FlexTimer is powered and clocked
-        unsigned long ulCountIncrease = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)fnGetFlexTimer_clock(0)) / 1000000);
-        ulCountIncrease += FTM0_CNT;                                     // new counter value (assume up counting)
-        if (ulCountIncrease >= FTM0_MOD) {                               // match/overflow
-    #if defined KINETIS_KL || defined KINETIS_KE
-            FTM0_SC |= FTM_SC_TOF;                                       // set overflow flag
-            ulCountIncrease -= FTM0_MOD;
-    #else
-            FTM0_CNT = FTM0_CNTIN;
-            FTM0_SC |= FTM_SC_TOF;                                       // set overflow flag
-            if (ulCountIncrease > (0xffff + (FTM0_MOD - FTM0_CNTIN))) {
-                ulCountIncrease = (0xffff + (FTM0_MOD - FTM0_CNTIN));
-            }
-            while (ulCountIncrease >= FTM0_MOD) {
-                ulCountIncrease -= (FTM0_MOD - FTM0_CNTIN);
-            }
-    #endif
-        }
-        FTM0_CNT = ulCountIncrease;                                      // new counter value
-        if (((FTM0_SC & FTM_SC_TOIE) != 0) && ((FTM0_SC & FTM_SC_TOF) != 0)) { // if overflow occurred and interrupt enabled
+        #if defined KINETIS_KL || defined KINETIS_KE
+        int iTPM_Type = 1;
+        #else
+        int iTPM_Type = 0;
+        #endif
+        int iTimerInterrupt = fnHandleFlexTimer(0, (FLEX_TIMER_MODULE *)FTM_BLOCK_0, FLEX_TIMERS_0_CHANNELS, iTPM_Type);
+        if (iTimerInterrupt != 0) {
     #if defined KINETIS_KL
             if (fnGenInt(irq_TPM0_ID) != 0) {                            // if timer/PWM module 0 interrupt is not disabled
                 VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
@@ -8703,25 +8737,13 @@ extern int fnSimTimers(void)
     }
     #if FLEX_TIMERS_AVAILABLE > 1
     if (IS_POWERED_UP(6, FTM1) && ((FTM1_SC & (FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)) != 0)) { // if the TPM/FlexTimer is powered and clocked
-        unsigned long ulCountIncrease = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)fnGetFlexTimer_clock(1)) / 1000000);
-        ulCountIncrease += FTM1_CNT;                                     // new counter value (assume up counting)
-        if (ulCountIncrease >= FTM1_MOD) {                               // match
         #if defined KINETIS_KL || defined KINETIS_KE
-            FTM1_SC |= FTM_SC_TOF;                                       // set overflow flag
-            ulCountIncrease -= FTM1_MOD;
+        int iTPM_Type = 1;
         #else
-            FTM1_CNT = FTM1_CNTIN;
-            FTM1_SC |= FTM_SC_TOF;                                       // set overflow flag
-            if (ulCountIncrease > (0xffff + (FTM1_MOD - FTM1_CNTIN))) {
-                ulCountIncrease = (0xffff + (FTM1_MOD - FTM1_CNTIN));
-            }
-            while (ulCountIncrease >= FTM1_MOD) {
-                ulCountIncrease -= (FTM1_MOD - FTM1_CNTIN);
-            }
+        int iTPM_Type = 0;
         #endif
-        }
-        FTM1_CNT = ulCountIncrease;                                      // new counter value
-        if (((FTM1_SC & FTM_SC_TOIE) != 0) && ((FTM1_SC & FTM_SC_TOF) != 0)) { // if overflow occurred and interrupt enabled
+        int iTimerInterrupt = fnHandleFlexTimer(1, (FLEX_TIMER_MODULE *)FTM_BLOCK_1, FLEX_TIMERS_1_CHANNELS, iTPM_Type);
+        if (iTimerInterrupt != 0) {
         #if defined KINETIS_KL
             if (fnGenInt(irq_TPM1_ID) != 0) {                            // if timer/PWM module 1 interrupt is not disabled
                 VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
@@ -8755,25 +8777,13 @@ extern int fnSimTimers(void)
     if (IS_POWERED_UP(3, FTM2) &&((FTM2_SC & FTM_SC_CLKS_EXT) != 0))    // if the FlexTimer 2 is powered and clocked
         #endif
     {
-        unsigned long ulCountIncrease = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)fnGetFlexTimer_clock(2)) / 1000000);
-        ulCountIncrease += FTM2_CNT;                                     // new counter value (assume up counting)
-        if (ulCountIncrease >= FTM2_MOD) {                               // match
         #if defined KINETIS_KL || defined KINETIS_KE
-            FTM2_SC |= FTM_SC_TOF;                                       // set overflow flag
-            ulCountIncrease -= FTM2_MOD;
+        int iTPM_Type = 1;
         #else
-            FTM2_CNT = FTM2_CNTIN;
-            FTM2_SC |= FTM_SC_TOF;                                       // set overflow flag
-            if (ulCountIncrease > (0xffff + (FTM2_MOD - FTM2_CNTIN))) {
-                ulCountIncrease = (0xffff + (FTM2_MOD - FTM2_CNTIN));
-            }
-            while (ulCountIncrease >= FTM2_MOD) {
-                ulCountIncrease -= (FTM2_MOD - FTM2_CNTIN);
-            }
+        int iTPM_Type = 0;
         #endif
-        }
-        FTM2_CNT = ulCountIncrease;                                      // new counter value
-        if ((FTM2_SC & FTM_SC_TOIE) && (FTM2_SC & FTM_SC_TOF)) {         // if overflow occurred and interrupt enabled
+        int iTimerInterrupt = fnHandleFlexTimer(2, (FLEX_TIMER_MODULE *)FTM_BLOCK_2, FLEX_TIMERS_2_CHANNELS, iTPM_Type);
+        if (iTimerInterrupt != 0) {
         #if defined KINETIS_KL
             if (fnGenInt(irq_TPM2_ID) != 0) {                            // if timer/PWM module 2 interrupt is not disabled
                 VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
@@ -8795,25 +8805,13 @@ extern int fnSimTimers(void)
     if (((IS_POWERED_UP(3, FTM3)) != 0) && ((FTM3_SC & (FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)) != 0))
         #endif
     {                                                                    // if the FlexTimer 3 is powered and clocked
-        unsigned long ulCountIncrease = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)fnGetFlexTimer_clock(3))/1000000);
-        ulCountIncrease += FTM3_CNT;                                     // new counter value (assume up counting)
-        if (ulCountIncrease >= FTM3_MOD) {                               // match
         #if defined KINETIS_KL || defined KINETIS_KE
-            FTM3_SC |= FTM_SC_TOF;                                       // set overflow flag
-            ulCountIncrease -= FTM3_MOD;
+        int iTPM_Type = 1;
         #else
-            FTM3_CNT = FTM3_CNTIN;
-            FTM3_SC |= FTM_SC_TOF;                                       // set overflow flag
-            if (ulCountIncrease > (0xffff + (FTM3_MOD - FTM3_CNTIN))) {
-                ulCountIncrease = (0xffff + (FTM3_MOD - FTM3_CNTIN));
-            }
-            while (ulCountIncrease >= FTM3_MOD) {
-                ulCountIncrease -= (FTM3_MOD - FTM3_CNTIN);
-            }
+        int iTPM_Type = 0;
         #endif
-        }
-        FTM3_CNT = ulCountIncrease;                                      // new counter value
-        if (((FTM3_SC & FTM_SC_TOIE) != 0) && ((FTM3_SC & FTM_SC_TOF) != 0)) { // if overflow occurred and interrupt enabled
+        int iTimerInterrupt = fnHandleFlexTimer(3, (FLEX_TIMER_MODULE *)FTM_BLOCK_3, FLEX_TIMERS_3_CHANNELS, iTPM_Type);
+        if (iTimerInterrupt != 0) {
             if (fnGenInt(irq_FTM3_ID) != 0) {                            // if FlexTimer 3 interrupt is not disabled
                 VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                 ptrVect->processor_interrupts.irq_FTM3();                // call the interrupt handler
@@ -8823,14 +8821,8 @@ extern int fnSimTimers(void)
     #endif
     #if FLEX_TIMERS_AVAILABLE > 4 && defined TPMS_AVAILABLE              // TPM1
     if (((IS_POWERED_UP(2, TPM1)) != 0) && ((FTM4_SC & (FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)) != 0)) { // if the FlexTimer 4 (TPM1) is powered and clocked
-        unsigned long ulCountIncrease = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)fnGetFlexTimer_clock(4))/1000000);
-        ulCountIncrease += FTM4_CNT;                                     // new counter value (assume up counting)
-        if (ulCountIncrease >= FTM4_MOD) {                               // match
-            FTM4_SC |= FTM_SC_TOF;                                       // set overflow flag
-            ulCountIncrease -= FTM4_MOD;
-        }
-        FTM4_CNT = ulCountIncrease;                                      // new counter value
-        if (((FTM4_SC & FTM_SC_TOIE) != 0) && ((FTM4_SC & FTM_SC_TOF) != 0)) { // if overflow occurred and interrupt enabled
+        int iTimerInterrupt = fnHandleFlexTimer(4, (FLEX_TIMER_MODULE *)FTM_BLOCK_4, FLEX_TIMERS_4_CHANNELS, 1);
+        if (iTimerInterrupt != 0) {
             if (fnGenInt(irq_TPM1_ID) != 0) {                            // if FlexTimer 4 (TPM1) interrupt is not disabled
                 VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                 ptrVect->processor_interrupts.irq_TPM1();                // call the interrupt handler
@@ -8840,14 +8832,8 @@ extern int fnSimTimers(void)
     #endif
     #if FLEX_TIMERS_AVAILABLE > 5 && defined TPMS_AVAILABLE              // TPM2
     if (((IS_POWERED_UP(2, TPM2)) != 0) && ((FTM5_SC & (FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)) != 0)) { // if the FlexTimer 5 (TPM2) is powered and clocked
-        unsigned long ulCountIncrease = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)fnGetFlexTimer_clock(5))/1000000);
-        ulCountIncrease += FTM5_CNT;                                     // new counter value (assume up counting)
-        if (ulCountIncrease >= FTM5_MOD) {                               // match
-            FTM5_SC |= FTM_SC_TOF;                                       // set overflow flag
-            ulCountIncrease -= FTM5_MOD;
-        }
-        FTM5_CNT = ulCountIncrease;                                      // new counter value
-        if (((FTM5_SC & FTM_SC_TOIE) != 0) && ((FTM5_SC & FTM_SC_TOF) != 0)) { // if overflow occurred and interrupt enabled
+        int iTimerInterrupt = fnHandleFlexTimer(5, (FLEX_TIMER_MODULE *)FTM_BLOCK_5, FLEX_TIMERS_5_CHANNELS, 1);
+        if (iTimerInterrupt != 0) {
             if (fnGenInt(irq_TPM2_ID) != 0) {                            // if FlexTimer 5 (TPM2) interrupt is not disabled
                 VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                 ptrVect->processor_interrupts.irq_TPM2();                // call the interrupt handler
