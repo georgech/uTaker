@@ -52,14 +52,14 @@
     #include "kinetis_port_k30.h"
 #elif defined KINETIS_K40
     #include "kinetis_port_k40.h"
-#elif defined KINETIS_K50
-    #include "kinetis_port_k50.h"
 #elif defined KINETIS_K51
     #include "kinetis_port_k51.h"
 #elif defined KINETIS_K52
     #include "kinetis_port_k52.h"
 #elif defined KINETIS_K53
     #include "kinetis_port_k53.h"
+#elif defined KINETIS_K50
+    #include "kinetis_port_k50.h"
 #elif defined KINETIS_K61
     #include "kinetis_port_k61.h"
 #elif defined KINETIS_K70
@@ -238,7 +238,7 @@ extern void fnSetPortDetails(char *cPortDetails, int iPort, int iBit, unsigned l
         unsigned char *ptrList = _ptrPerFunctions;
         int _iPort = iPort;
         int _iBit = iBit;
-        while (_iPort--) {
+        while (_iPort-- != 0) {
             ptrList += (PORT_WIDTH);
         }
         while (_iBit--) {

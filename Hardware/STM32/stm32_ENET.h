@@ -652,7 +652,7 @@ extern int fnConfigEthernet(ETHTABLE *pars)
     ETH_MACA0LR = ((pars->ucMAC[3] << 24) | (pars->ucMAC[2] << 16) | (pars->ucMAC[1] << 8) | pars->ucMAC[0]);
 #endif
 
-    if (pars->usMode & PROMISCUOUS) {
+    if ((pars->usMode & PROMISCUOUS) != 0) {
         ETH_MACFFR = ETH_MACFFR_PM;
     }
 #if defined USE_IPV6
@@ -670,13 +670,13 @@ extern int fnConfigEthernet(ETHTABLE *pars)
     ulRegister = pars->usSizeRx;
     i = NUMBER_OF_RX_BUFFERS_IN_ETHERNET_DEVICE;
     ptrBuffer = uMallocAlign((MAX_MALLOC)(ulRegister * NUMBER_OF_RX_BUFFERS_IN_ETHERNET_DEVICE), 4);// create receiver buffer memory pool
-    ptrBd = uMallocAlign((MAX_MALLOC)(sizeof(STM32_BD)*NUMBER_OF_RX_BUFFERS_IN_ETHERNET_DEVICE), 4); // create a smaller pool of buffer descriptors
+    ptrBd = uMallocAlign((MAX_MALLOC)(sizeof(STM32_BD)  *NUMBER_OF_RX_BUFFERS_IN_ETHERNET_DEVICE), 4); // create a smaller pool of buffer descriptors
     ETH_DMARDLAR = (unsigned long)ptrBd;                                 // inform the MAC where the first buffer descriptor is located
 #if defined _WINDOWS
     ETH_DMACHRDR = ETH_DMARDLAR;
 #endif
     ptrRxBd = ptrBd;                                                     // remember where it starts
-    while (i--) {                                                        // initialise the buffer descriptors
+    while (i-- != 0) {                                                   // initialise the buffer descriptors
         ptrBd->bd_dma_buf1_address = ptrBuffer;                          // buffer location
         ptrBd->bd_word0 = RX_BD_WORD0_OWN;
         ptrBd->bd_word1 = (ulRegister | RX_BD_WORD1_RCH);                // size of frame which can be accepted in the buffer
@@ -695,11 +695,11 @@ extern int fnConfigEthernet(ETHTABLE *pars)
     i = NUMBER_OF_TX_BUFFERS_IN_ETHERNET_DEVICE;
 
     ptrBuffer = uMallocAlign((MAX_MALLOC)(ulRegister * NUMBER_OF_TX_BUFFERS_IN_ETHERNET_DEVICE), 4);// create transmitter buffer memory pool
-    ptrBd = uMallocAlign((MAX_MALLOC)(sizeof(STM32_BD)*NUMBER_OF_TX_BUFFERS_IN_ETHERNET_DEVICE), 4); // create a smaller pool of buffer descriptors
+    ptrBd = uMallocAlign((MAX_MALLOC)(sizeof(STM32_BD) * NUMBER_OF_TX_BUFFERS_IN_ETHERNET_DEVICE), 4); // create a smaller pool of buffer descriptors
 
     ETH_DMATDLAR = (unsigned long)ptrBd;                                 // inform the MAC where the first buffer descriptor is located
     ptrFirstTxBd = ptrTxBd = ptrBd;                                      // remember where it starts
-    while (i--) {                                                        // initialise the buffer descriptors
+    while (i-- != 0) {                                                   // initialise the buffer descriptors
         ptrBd->bd_dma_buf1_address = ptrBuffer;                          // set buffer address
         ptrBd->bd_word0 = TX_BD_WORD0_TCH;
         if (i == 0) {

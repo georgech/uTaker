@@ -129,6 +129,7 @@
     11.03.2018 Correct PWM clock source                                  {107}
     19.03.2018 Extend PWM configuration to use TRGMUX triggers as clock input {108}
     01.05.2018 Add SET_KUART_BAUD() SET_UART_BAUD() and SET_LPUART_BAUD() macros to directly change UART baud rates {109}
+    09.05.2018 Add cortex debug and trace registers                      {110}
 
 */
 
@@ -290,6 +291,10 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
         #endif
         #define PERIPHERAL_CLOCK_DIVIDE_VALUE ((PERIPHERAL_CLOCK_DIVIDE - 1) << 1)
     #endif
+#endif
+
+#if !defined KINETIS_KL && !defined KINETIS_KE
+    #define FLEXBUS_AVAILABLE
 #endif
 
 #if defined KINETIS_KE || defined KINETIS_KV10 || (defined KINETIS_KL && !defined KINETIS_KL82)
@@ -3642,6 +3647,10 @@ typedef struct stVECTOR_TABLE
     #define FGPIO_BLOCK                        GPIO_BLOCK                // fast GPIO alias to GPIO
 
     #define CORTEX_M4_BLOCK                    ((unsigned char *)(&kinetis.CORTEX_M4))
+    #if defined ARM_MATH_CM4 || defined ARM_MATH_CM7
+        #define CORTEX_M4_DEBUG                ((unsigned char *)(&kinetis.CORTEX_M4_DEBUG))
+        #define CORTEX_M4_DWT                  ((unsigned char *)(&kinetis.CORTEX_M4_TRACE)) // data watch and trace unit
+    #endif
 
     #define MCM_BLOCK                          ((unsigned char *)(&kinetis.MCM)) // {29} miscellaneous control module
     #if defined CAU_V1_AVAILABLE || defined CAU_V2_AVAILABLE
@@ -4065,6 +4074,10 @@ typedef struct stVECTOR_TABLE
     #define GPIO_BLOCK                         0x400ff000                // General Purpose IOs
 
     #define CORTEX_M4_BLOCK                    0xe000e000
+    #if defined ARM_MATH_CM4 || defined ARM_MATH_CM7
+        #define CORTEX_M4_DEBUG                0xe000edf0
+        #define CORTEX_M4_DWT                  0xe0001000                // data watch and trace unit
+    #endif
 
     #define MCM_BLOCK                          0xe0080000                // {29} Miscellaneous Control Module
     #if defined CAU_V1_AVAILABLE || defined CAU_V2_AVAILABLE
@@ -5198,7 +5211,7 @@ typedef struct stKINETIS_INTMUX
 #endif
 
 
-#if !defined KINETIS_KL
+#if !defined KINETIS_KL && !defined KINETIS_KE
 // FlexBus Module
 //
 #define CSAR0               *(unsigned long *)(FLEXBUS_ADD + 0x00)       // Chip Select Address Register - CS 0
@@ -11265,7 +11278,7 @@ typedef struct stKINETIS_LPTMR_CTL
     #define PE_3_TRACE_D1                PORT_MUX_ALT5
     #define PE_4_TRACE_D0                PORT_MUX_ALT5
 #endif
-#if defined KINETIS_K40
+#if defined KINETIS_K40 || defined KINETIS_K53
     #define PA_9_FB_AD16                 PORT_MUX_ALT5                   // Flex-Bus
     #define PA_10_FB_AD15                PORT_MUX_ALT5
     #define PA_24_FB_AD14                PORT_MUX_ALT5
@@ -18458,4 +18471,24 @@ extern int  fnIsPending(int iInterruptID);                               // {90}
 #if defined KINETIS_K_FPU
     #define FPCCR *(unsigned long *)(CORTEX_M4_BLOCK + 0xf34)            // floating point context control register
     #define __FPU_PRESENT  1
+#endif
+
+#if defined ARM_MATH_CM4 || defined ARM_MATH_CM7                         // {110}
+    // Cortex debug registers
+    //
+    #define DHCSR                     *(unsigned long *)(CORTEX_M4_DEBUG + 0x0)
+    #define DCRSR                     *(unsigned long *)(CORTEX_M4_DEBUG + 0x4)
+    #define DCRDR                     *(unsigned long *)(CORTEX_M4_DEBUG + 0x8)
+    #define DEMCR                     *(unsigned long *)(CORTEX_M4_DEBUG + 0xc)
+
+    // Cortex data watch adn trace unit
+    //
+    #define DWT_CTRL                  *(unsigned long *)(CORTEX_M4_DWT + 0x00)
+    #define DWT_CYCCNT                *(unsigned long *)(CORTEX_M4_DWT + 0x04)
+    #define DWT_CPICNT                *(unsigned long *)(CORTEX_M4_DWT + 0x08)
+    #define DWT_EXCCNT                *(unsigned long *)(CORTEX_M4_DWT + 0x0c)
+    #define DWT_SLEEPVNT              *(unsigned long *)(CORTEX_M4_DWT + 0x10)
+    #define DWT_LSUCNT                *(unsigned long *)(CORTEX_M4_DWT + 0x14)
+    #define DWT_FOLDCNT               *(unsigned long *)(CORTEX_M4_DWT + 0x18)
+    #define DWT_PCSR                  *(unsigned long *)(CORTEX_M4_DWT + 0x1c)
 #endif

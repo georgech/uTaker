@@ -52,6 +52,7 @@
     26.09.2017 Add LPIT support                                          {37}
     04.11.2017 Add true random number generator registers                {38}
     04.12.2017 Add LPI2C, MMDVSQ, TSTMR and RFSYS                        {39}
+    09.05.2018 Add cortex debug and trace registers                      {40}
 
 */  
 
@@ -189,6 +190,28 @@ typedef struct stKINETIS_CORTEX_M4
     unsigned long FPCCR;
 #endif
 } KINETIS_CORTEX_M4;
+
+#if defined ARM_MATH_CM4 || defined ARM_MATH_CM7                         // {40}
+typedef struct stKINETIS_CORTEX_M4_DEBUG
+{
+    unsigned long DHCSR;
+    unsigned long DCRSR;
+    unsigned long DCRDR;
+    unsigned long DEMCR;
+} KINETIS_CORTEX_M4_DEBUG;
+
+typedef struct stKINETIS_CORTEX_M4_TRACE
+{
+    unsigned long DWT_CTRL;
+    unsigned long DWT_CYCCNT;
+    unsigned long DWT_CPICNT;
+    unsigned long DWT_EXCCNT;
+    unsigned long DWT_SLEEPVNT;
+    unsigned long DWT_LSUCNT;
+    unsigned long DWT_FOLDCNT;
+    unsigned long DWT_PCSR;
+} KINETIS_CORTEX_M4_TRACE;
+#endif
 
 typedef struct stKINETIS_CORTEX_M4_REGS
 {
@@ -3834,6 +3857,10 @@ typedef struct stKINETIS_PERIPH
     KINETIS_MMDVSQ     MMDVSQ;                                           // {39}
 #endif
     KINETIS_CORTEX_M4  CORTEX_M4;
+#if defined ARM_MATH_CM4 || defined ARM_MATH_CM7                         // {40}
+    KINETIS_CORTEX_M4_DEBUG  CORTEX_M4_DEBUG;
+    KINETIS_CORTEX_M4_TRACE  CORTEX_M4_TRACE;
+#endif
     KINETIS_CORTEX_M4_REGS CORTEX_M4_REGS;                               // only for simulation use
 } KINETIS_PERIPH;
 
