@@ -18476,19 +18476,21 @@ extern int  fnIsPending(int iInterruptID);                               // {90}
 #if defined ARM_MATH_CM4 || defined ARM_MATH_CM7                         // {110}
     // Cortex debug registers
     //
-    #define DHCSR                     *(unsigned long *)(CORTEX_M4_DEBUG + 0x0)
-    #define DCRSR                     *(unsigned long *)(CORTEX_M4_DEBUG + 0x4)
-    #define DCRDR                     *(unsigned long *)(CORTEX_M4_DEBUG + 0x8)
-    #define DEMCR                     *(unsigned long *)(CORTEX_M4_DEBUG + 0xc)
+    #define DHCSR                     *(volatile unsigned long *)(CORTEX_M4_DEBUG + 0x0)
+        #define DHCSR_TRCENA          0x01000000                         // trace enable
+    #define DCRSR                     *(volatile unsigned long *)(CORTEX_M4_DEBUG + 0x4)
+    #define DCRDR                     *(volatile unsigned long *)(CORTEX_M4_DEBUG + 0x8)
+    #define DEMCR                     *(volatile unsigned long *)(CORTEX_M4_DEBUG + 0xc)
 
     // Cortex data watch adn trace unit
     //
-    #define DWT_CTRL                  *(unsigned long *)(CORTEX_M4_DWT + 0x00)
-    #define DWT_CYCCNT                *(unsigned long *)(CORTEX_M4_DWT + 0x04)
-    #define DWT_CPICNT                *(unsigned long *)(CORTEX_M4_DWT + 0x08)
-    #define DWT_EXCCNT                *(unsigned long *)(CORTEX_M4_DWT + 0x0c)
-    #define DWT_SLEEPVNT              *(unsigned long *)(CORTEX_M4_DWT + 0x10)
-    #define DWT_LSUCNT                *(unsigned long *)(CORTEX_M4_DWT + 0x14)
-    #define DWT_FOLDCNT               *(unsigned long *)(CORTEX_M4_DWT + 0x18)
-    #define DWT_PCSR                  *(unsigned long *)(CORTEX_M4_DWT + 0x1c)
+    #define DWT_CTRL                  *(volatile unsigned long *)(CORTEX_M4_DWT + 0x00)
+        #define DWT_CTRL_CYCCNTENA    0x00000001                         // enable the cycle counter
+    #define DWT_CYCCNT                *(volatile unsigned long *)(CORTEX_M4_DWT + 0x04)
+    #define DWT_CPICNT                *(volatile unsigned long *)(CORTEX_M4_DWT + 0x08)
+    #define DWT_EXCCNT                *(volatile unsigned long *)(CORTEX_M4_DWT + 0x0c)
+    #define DWT_SLEEPVNT              *(volatile unsigned long *)(CORTEX_M4_DWT + 0x10)
+    #define DWT_LSUCNT                *(volatile unsigned long *)(CORTEX_M4_DWT + 0x14)
+    #define DWT_FOLDCNT               *(volatile unsigned long *)(CORTEX_M4_DWT + 0x18)
+    #define DWT_PCSR                  *(volatile unsigned long *)(CORTEX_M4_DWT + 0x1c)
 #endif
