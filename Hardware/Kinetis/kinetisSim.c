@@ -10410,7 +10410,7 @@ extern void fnUpdateOperatingDetails(void)
     ulFlashClockSpeed = (MCGOUTCLK/(((SIM_CLKDIV1 >> 16) & 0xf) + 1));
     ptrBuffer = fnBufferDec(ulFlashClockSpeed, 0, ptrBuffer);
     #endif
-    #if defined FLEXBUS_AVAILABLE
+    #if defined FLEXBUS_AVAILABLE && defined MCGOUTCLK && defined SIM_CLKDIV1
     ptrBuffer = uStrcpy(ptrBuffer, ", FLEXBUS CLOCK = ");
     ulFlashClockSpeed = (MCGOUTCLK/(((SIM_CLKDIV1 >> 20) & 0xf) + 1));
     ptrBuffer = fnBufferDec(ulFlashClockSpeed, 0, ptrBuffer);

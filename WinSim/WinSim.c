@@ -1129,7 +1129,7 @@ static int fnSimulateActions(char *argv[])
 {
     int iReturn = 0;
     unsigned char *ucDo;
-    char *argv2[13];
+    char *argv2[16];
     int iThroughPut[16];
 
     iThroughPut[THROUGHPUT_UART0] = (iChannel0Speed + 1);                // start with internal UARTs 0..5
