@@ -636,6 +636,10 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
             fnAddARP(gatewayIP, gatewayMAC, &arp_details);               // temp for development
         }
 #endif
+      //extern void arm_abs_f32(float *pSrc,float * pDst, unsigned long blockSize);
+      //float fOutput;
+      //float fInput = (float)-1.2;
+      //arm_abs_f32(&fInput, &fOutput, 1);                               // test CMSIS fabs()
       //float fTest = fnFloatStrFloat("1235.0123");                      // test floating point input
       //fTest = fnFloatStrFloat("-0.000123");
       //fTest = fnFloatStrFloat("-456.123");

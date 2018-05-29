@@ -527,6 +527,9 @@
     <ClCompile Include="..\..\..\Hardware\Coldfire\M5223X.c">
       <Filter>Hardware\Coldfire</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\Hardware\CMSIS_DSP\arm_abs_f32.c">
+      <Filter>Hardware\CMSIS_DSP</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\ADC_Timers.h">

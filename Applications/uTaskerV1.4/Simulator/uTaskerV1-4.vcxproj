@@ -582,6 +582,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);;..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);;..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
     </ClCompile>
+    <ClCompile Include="..\..\..\Hardware\CMSIS_DSP\arm_abs_f32.c" />
     <ClCompile Include="..\..\..\Hardware\CMSIS_DSP\arm_cfft_f32.c" />
     <ClCompile Include="..\..\..\Hardware\CMSIS_DSP\arm_cfft_radix8_f32.c" />
     <ClCompile Include="..\..\..\Hardware\CMSIS_DSP\arm_cmplx_mag_f32.c" />

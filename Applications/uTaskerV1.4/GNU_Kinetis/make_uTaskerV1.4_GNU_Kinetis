@@ -31,6 +31,7 @@
 # 17.12.2017 Add secure_layer
 # 22.12.2017 Add mmcau_sha256_functions
 # 04.05.2018 Add DMX512.c
+# 29.05.2018 Add arm_abs_f32.c
 
 #
 # When changing the project target check that the C_FLAGS selection (just below) and the linker script file (at bottom) matches the processor being used
@@ -52,7 +53,7 @@ OBJS = Build/application.o Build/debug.o Build/webInterface.o Build/KeyScan.o Bu
        Build/mass_storage.o \
        Build/GLCD.o Build/LCD.o Build/FT_CoPro_Cmds.o  \
        Build/aes_mbedTLS.o Build/w_aes.o Build/aes_cbc.o Build/cbc128.o Build/aes_core.o \
-       Build/arm_bitreversal2.o Build/arm_cfft_f32.o Build/arm_cfft_radix8_f32.o Build/arm_cmplx_mag_f32.o Build/arm_common_tables.o Build/arm_const_structs.o Build/arm_max_f32.o Build/arm_sin_cos_f32.o \
+       Build/arm_bitreversal2.o Build/arm_cfft_f32.o Build/arm_cfft_radix8_f32.o Build/arm_cmplx_mag_f32.o Build/arm_common_tables.o Build/arm_const_structs.o Build/arm_max_f32.o Build/arm_sin_cos_f32.o Build/arm_abs_f32.o \
        Build/eth_drv.o Build/Driver.o Build/uMalloc.o Build/uTasker.o Build/Tty_drv.o Build/i2c_drv.o Build/USB_drv.o Build/uFile.o Build/Watchdog.o Build/GlobalTimer.o Build/time_keeper.o Build/low_power.o Build/can_drv.o \
        Build/Ethernet.o Build/arp.o Build/dhcp.o Build/dns.o Build/ftp.o Build/http.o Build/icmp.o Build/ip_utils.o Build/ip.o Build/pop3.o Build/smtp.o Build/snmp.o \
        Build/tcp.o Build/telnet.o Build/tftp.o Build/udp.o Build/webutils.o Build/NetBIOS.o Build/zero_config.o Build/ftp_client.o Build/igmp.o Build/ppp.o Build/mqtt.o Build/secure_layer.o \
@@ -401,6 +402,9 @@ Build/arm_max_f32.o : ../../../Hardware/CMSIS_DSP/arm_max_f32.c $(DEPENDS_CMSIS)
 
 Build/arm_sin_cos_f32.o : ../../../Hardware/CMSIS_DSP/arm_sin_cos_f32.c $(DEPENDS_CMSIS)
 		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../Hardware/CMSIS_DSP/arm_sin_cos_f32.c -o Build/arm_sin_cos_f32.o
+
+Build/arm_abs_f32.o : ../../../Hardware/CMSIS_DSP/arm_abs_f32.c $(DEPENDS_CMSIS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../Hardware/CMSIS_DSP/arm_abs_f32.c -o Build/arm_abs_f32.o
 
 # Free RTOS
 Build/tasks.o : ../../../FreeRTOS/Source/tasks.c $(DEPENDS_FREERTOS)
