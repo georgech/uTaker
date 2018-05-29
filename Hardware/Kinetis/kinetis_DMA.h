@@ -621,11 +621,11 @@ extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned short usDma
     POWER_UP_ATOMIC(6, DMAMUX0);                                         // enable DMA multiplexer 0
         #if defined TRGMUX_AVAILABLE
     if ((usDmaTriggerSource & DMAMUX_CHCFG_TRIG) != 0) {                 // triggered source (LPIT)
-#if defined _WINDOWS
+    #if defined _WINDOWS
         if ((usDmaTriggerSource >> 8) >= 4) {
             _EXCEPTION("Invalid LPIT periodic trigger source!");
         }
-#endif
+    #endif
         TRGMUX_DMAMUX0 = (TRGMUX_SEL_LPIT0_CHANNEL_0 + (usDmaTriggerSource >> 8)); // LPIT is connected to the DMAMUX
         usDmaTriggerSource = DMAMUX0_DMA0_CHCFG_SOURCE_PIT0;
     }
@@ -1026,5 +1026,4 @@ extern void *uMemset(void *ptrTo, int iValue, size_t Size)               // {7}
     return ptrTo;                                                        // return pointer to original buffer according to memset() declaration
 }
 #endif
-
 #endif

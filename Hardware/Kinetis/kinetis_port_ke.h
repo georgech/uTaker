@@ -816,6 +816,16 @@ static const char *cPer[PORTS_AVAILABLE_8_BIT][PORT_WIDTH * 4][8] = {    // KEA6
     #endif
     },
     {
+    #if defined KINETIS_KEAN64
+        {  "PTC0",         "-",            "FTM2_CH0",       "-",          "ADC0_SE8",    "-",            "-",                 "-"           }, // PTC0
+        {  "PTC1",         "-",            "FTM2_CH1",       "-",          "ADC0_SE9",    "-",            "-",                 "-"           }, // PTC1
+        {  "PTC2",         "FTM2_CH2",     "-",              "-",          "ADC0_SE10",   "-",            "-",                 "-"           }, // PTC2
+        {  "PTC3",         "FTM2_CH3",     "-",              "-",          "ADC0_SE11",   "-",            "-",                 "-"           }, // PTC3
+        {  "PTC4",         "RTCO",         "FTM1_CH0",       "ACMP0_IN2",  "SWD_CLK",     "-",            "-",                 "-"           }, // PTC4 (SWD_CLK default)
+        {  "PTC5",         "-",            "FTM1_CH1",       "-",          "RTCO",        "-",            "-",                 "-"           }, // PTC5
+        {  "PTC6",         "-",            "UART1_RX",       "-",          "-",           "-",            "-",                 "-"           }, // PTC6
+        {  "PTC7",         "-",            "UART1_TX",       "-",          "-",           "-",            "-",                 "-"           }, // PTC7
+    #else
         {  "PTC0",         "KBI1_P28",     "FTM2_CH0",       "-",          "ADC0_SE8",    "-",            "-",                 "-"           }, // PTC0
         {  "PTC1",         "KBI0_P17",     "FTM2_CH1",       "-",          "ADC0_SE9",    "-",            "-",                 "-"           }, // PTC1
         {  "PTC2",         "KBI0_P18",     "FTM2_CH2",       "-",          "ADC0_SE10",   "-",            "-",                 "-"           }, // PTC2
@@ -824,6 +834,7 @@ static const char *cPer[PORTS_AVAILABLE_8_BIT][PORT_WIDTH * 4][8] = {    // KEA6
         {  "PTC5",         "KBI0_P21",     "-",              "FTM1_CH1",   "-",           "RTC_CLKOUT",   "-",                 "-"           }, // PTC5
         {  "PTC6",         "KBI0_P22",     "UART1_RX",       "-",          "-",           "CAN0_RX",      "-",                 "-"           }, // PTC6
         {  "PTC7",         "KBI0_P23",     "UART1_TX",       "-",          "-",           "CAN0_TX",      "-",                 "-"           }, // PTC7
+    #endif
     },
     {
         {  "PTD0",         "KBI0_P24",     "FTM2_CH2",       "SPI1_SCK",   "-",           "-",            "-",                 "-"           }, // PTD0 (high current drive pin when operated as an output)
@@ -866,6 +877,16 @@ static const char *cPer[PORTS_AVAILABLE_8_BIT][PORT_WIDTH * 4][8] = {    // KEA6
         {  "PTG7",         "KBI1_P23",     "FTM2_CH5",       "SPI1_PCS",   "-",           "-",            "-",                 "-"           }, // PTG7
     },
     {
+    #if defined KINETIS_KEAN64
+        {  "PTH0",         "-",            "FTM2_CH0",       "-",          "-",           "-",            "-",                 "-"           }, // PTH0
+        {  "PTH1",         "-",            "FTM2_CH1",       "-",          "-",           "-",            "-",                 "-"           }, // PTH1
+        {  "PTH2",         "-",            "BUSOUT",         "-",          "-",           "-",            "-",                 "-"           }, // PTH2
+        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTH3
+        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTH4
+        {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTH5
+        {  "PTH6",         "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTH6
+        {  "PTH7",         "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTH7
+    #else
         {  "PTH0",         "KBI1_P24",     "FTM2_CH0",       "-",          "-",           "-",            "-",                 "-"           }, // PTH0
         {  "PTH1",         "KBI1_P25",     "FTM2_CH1",       "-",          "-",           "-",            "-",                 "-"           }, // PTH1
         {  "PTH2",         "KBI1_P26",     "BUSOUT",         "-",          "FTM1_CH0",    "CAN0_RX",      "-",                 "-"           }, // PTH2
@@ -874,6 +895,7 @@ static const char *cPer[PORTS_AVAILABLE_8_BIT][PORT_WIDTH * 4][8] = {    // KEA6
         {  "PTH5",         "KBI1_P29",     "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTH5
         {  "PTH6",         "KBI1_P30",     "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTH6
         {  "PTH7",         "KBI1_P31",     "PWT_IN1",        "-",          "-",           "-",            "-",                 "-"           }, // PTH7
+    #endif
     },
     {
         {  "PTI0",         "-",            "IRQ",            "UART2_RX",   "-",           "-",            "-",                 "-"           }, // PTI0

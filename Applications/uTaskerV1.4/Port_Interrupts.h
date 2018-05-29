@@ -34,7 +34,7 @@
     #define _PORT_INTS_CONFIG
 
     #if !defined K70F150M_12M && !defined TWR_K53N512 && !defined TWR_K40X256 && !defined TWR_K40D100M && !defined KWIKSTIK
-      //#define IRQ_TEST                                                 // test IRQ port interrupts
+        #define IRQ_TEST                                                 // test IRQ port interrupts
       //#define DMA_PORT_MIRRORING                                       // demonstrate using DMA to control one or more output ports to follow an input port
       //#define DMA_SPI_BURST                                            // {8} demonstrate input port triggering of an SPI burst using DMA
         #if defined SUPPORT_LOW_POWER && defined IRQ_TEST
@@ -134,7 +134,7 @@
 #if defined _PORT_INT_CODE && defined IRQ_TEST
 // Test routines to handle the IRQ test inputs
 //
-    #if !defined TEST_DS1307 && !(defined _M5225X && !defined INTERRUPT_TASK_PHY) && !defined _KINETIS  // use this input for RTC
+    #if !defined TEST_DS1307 && !(defined _M5225X && !defined INTERRUPT_TASK_PHY) && !defined _KINETIS && !defined _STM32 // use this input for RTC
 static void test_irq_1(void)
 {
     fnInterruptMessage(OWN_TASK, IRQ1_EVENT);                            // send an interrupt event to the task
@@ -149,7 +149,7 @@ static void test_irq_4(void)
   //_RE_ARM_PORT_INTERRUPT(A, 19, PORT_IRQC_RISING);                     // example of re-enabling or changing its sensitivity
     #endif
 }
-    #if !defined M52259DEMO && !defined _LPC23XX && !defined _LPC17XX
+    #if !defined M52259DEMO && !defined _LPC23XX && !defined _LPC17XX && !defined _STM32
 static void test_irq_5(void)
 {
     fnInterruptMessage(OWN_TASK, IRQ5_EVENT);                            // send an interrupt event to the task
@@ -164,13 +164,13 @@ static void test_nmi_7(void)
     ulNMI_event_count++;                                                 // mark that new event has occurred
     uTaskerStateChange(OWN_TASK, UTASKER_ACTIVATE);                      // safely schedule the task to handle the event
 }
-    #elif !defined _LPC23XX && !defined _LPC17XX && !defined _KINETIS
+    #elif !defined _LPC23XX && !defined _LPC17XX && !defined _KINETIS && !defined _STM32
 static void test_irq_7(void)
 {
     fnInterruptMessage(OWN_TASK, IRQ7_EVENT);                            // send an interrupt event to the task
 }
     #endif
-    #if !defined _M521X && !defined _KINETIS
+    #if !defined _M521X && !defined _KINETIS && !defined _STM32
 static void test_irq_11(void)
 {
     fnInterruptMessage(OWN_TASK, IRQ11_EVENT);                            // send an interrupt event to the task
@@ -338,7 +338,7 @@ static void fnInitIRQ(void)
                 #else
     interrupt_setup.int_port_bits  = PORTA_BIT5;                         // the IRQ input connected (LLWU_P1)
                 #endif
-            #elif defined TWR_KV31F120M
+            #elif defined TWR_KV31F120M || defined TWR_KM34Z50M
     interrupt_setup.int_port_bits  = PORTA_BIT4;                         // the IRQ input connected (SWITCH_3 on TWR_KV31F120M)
             #elif defined FRDM_K66F
     interrupt_setup.int_port_bits = PORTA_BIT10;                         // the IRQ input connected (SW3 on FRDM-K66F)
@@ -444,12 +444,12 @@ static void fnInitIRQ(void)
             #endif
     fnConfigureInterrupt((void *)&interrupt_setup);                      // configure interrupt
         #endif
-    #elif defined _STM32
+    #elif defined _STM32                                                 // connects only one input at a time
     interrupt_setup.int_type = PORT_INTERRUPT;                           // identifier when configuring
     interrupt_setup.int_handler = test_irq_4;                            // handling function
-    interrupt_setup.int_port = PORT_B;                                   // the port used
-    interrupt_setup.int_priority = 15;                                   // port interrupt priority (0..15:highest..lowest
-    interrupt_setup.int_port_bit = 12;                                   // the input connected
+    interrupt_setup.int_port = PORTB;                                    // the port used
+    interrupt_setup.int_priority = 15;                                   // port interrupt priority (0..15:highest..lowest)
+    interrupt_setup.int_port_bit = PORTB_BIT12;                          // the input connected
     interrupt_setup.int_port_sense = (IRQ_FALLING_EDGE);                 // interrupt on this edge
     fnConfigureInterrupt(&interrupt_setup);                              // configure test interrupt
     #elif defined _HW_SAM7X
@@ -468,7 +468,7 @@ static void fnInitIRQ(void)
 
     interrupt_setup.int_handler = test_irq_7;                            // handling function
     interrupt_setup.int_priority = PRIORITY_PIOB;                        // port interrupt priority
-    interrupt_setup.int_port = PORT_B;                                   // the port used
+    interrupt_setup.int_port = PORTB;                                    // the port used
     interrupt_setup.int_port_sense = (IRQ_RISING_EDGE | IRQ_GLITCH_ENABLE); // {1} interrupt on rising edges
     interrupt_setup.int_port_bits = (PB25);                              // the inputs connected
     fnConfigureInterrupt((void *)&interrupt_setup);                      // configure test interrupt
@@ -535,24 +535,24 @@ static void fnInitIRQ(void)
     #elif defined _LM3SXXXX
     interrupt_setup.int_type = PORT_INTERRUPT;                           // identifier when configuring
     interrupt_setup.int_handler = test_irq_4;                            // handling function
-    interrupt_setup.int_port = PORT_C;                                   // the port used
+    interrupt_setup.int_port = PORTC;                                    // the port used
     interrupt_setup.int_priority = 3;                                    // port interrupt priority
-    interrupt_setup.int_port_bit = 7;                                    // the input connected
+    interrupt_setup.int_port_bit = PORTC_BIT7;                           // the input connected
     interrupt_setup.int_port_characteristic = PULLUP_ON;                 // enable pull-up resistor at input
     interrupt_setup.int_port_sense = IRQ_RISING_EDGE;                    // interrupt on this edge
     fnConfigureInterrupt(&interrupt_setup);                              // configure test interrupt
-    interrupt_setup.int_port = PORT_A;                                   // the port used
-    interrupt_setup.int_port_bit = 7;                                    // the input connected
+    interrupt_setup.int_port = PORTA;                                    // the port used
+    interrupt_setup.int_port_bit = PORTA_BIT7;                           // the input connected
     interrupt_setup.int_handler = test_irq_1;                            // handling function
     fnConfigureInterrupt(&interrupt_setup);                              // configure test interrupt
-    interrupt_setup.int_port_bit = 6;                                    // the input connected
+    interrupt_setup.int_port_bit = PORTA_BIT6;                           // the input connected
     interrupt_setup.int_handler = test_irq_5;                            // handling function
     fnConfigureInterrupt(&interrupt_setup);                              // configure test interrupt
-    interrupt_setup.int_port_bit = 5;                                    // the input connected
+    interrupt_setup.int_port_bit = PORTA_BIT5;                           // the input connected
     interrupt_setup.int_port_sense = IRQ_FALLING_EDGE;                   // interrupt on this edge
     interrupt_setup.int_handler = test_irq_7;                            // handling function
     fnConfigureInterrupt(&interrupt_setup);                              // configure test interrupt
-    interrupt_setup.int_port_bit = 4;                                    // the input connected
+    interrupt_setup.int_port_bit = PORTA_BIT4;                           // the input connected
     interrupt_setup.int_handler = test_irq_11;                           // handling function
     fnConfigureInterrupt(&interrupt_setup);                              // configure test interrupt
     #elif defined _LPC23XX || defined _LPC17XX

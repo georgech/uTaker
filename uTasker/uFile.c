@@ -206,7 +206,7 @@ extern int fnSetPar(unsigned short usParameterReference, unsigned char *ucValue,
         ucValidPars ^= 0x3;                                              // swap blocks
     }
 
-    if (usParameterReference & TEMPORARY_PARAM_SET) {
+    if ((usParameterReference & TEMPORARY_PARAM_SET) != 0) {
         ucValidPars |= TEMP_PARS;
         ucValidPars ^= 0x3;                                              // swap blocks
     }
@@ -225,7 +225,7 @@ extern int fnGetPar(unsigned short usParameterReference, unsigned char *ucValue,
     unsigned char ucValidPars;
     unsigned char ucValidSet = PRESENT_VALID_BLOCK;
 
-    if (usParameterReference & TEMPORARY_PARAM_SET) {
+    if ((usParameterReference & TEMPORARY_PARAM_SET) != 0) {
         usParameterReference &= ~TEMPORARY_PARAM_SET;
         ucValidSet = PRESENT_TEMP_BLOCK;
     }

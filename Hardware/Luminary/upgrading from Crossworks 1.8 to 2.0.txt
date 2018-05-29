@@ -1,0 +1,12 @@
+1) Install the Texas Instrumennts Stellaris CPU Support Package.
+
+Open the hzp file. To do this you can right click on the solution node in the project explorer and select "Edit Solution As Text". 
+
+2) replace all occurences of Luminary_LM3S with LM3S
+
+3) remove c_user_include_directories="$(SamplesDir)/Luminary_Stellaris_Driver_Library" linker_additional_files="$(SamplesDir)/Luminary_Stellaris_Driver_Library/lib/libdriver.a"
+
+4) Ensure that the correct target is selected in target priperties - Crossworks 2.0 includes support for the newer Tempest devices, such as LM3S9B90
+
+That was it...
+

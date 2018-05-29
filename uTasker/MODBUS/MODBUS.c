@@ -3240,7 +3240,7 @@ static int fnTCP_Master_Send(MODBUS_RX_FUNCTION *modbus_rx_function)
 static int fnQueueMODBUS_Message(unsigned char ucMODBUSport, unsigned char *ptrData, unsigned short usDataLength, unsigned char ucType)
 {
     #if defined USE_MODBUS_MASTER && MODBUS_SERIAL_INTERFACES > 0
-    if ((ucMODBUSport < MODBUS_SERIAL_INTERFACES) && (!(ptrMODBUS_pars->ucModbusSerialPortMode[ucMODBUSport] & MODBUS_SERIAL_MASTER))) {
+    if ((ucMODBUSport < MODBUS_SERIAL_INTERFACES) && (0 == (ptrMODBUS_pars->ucModbusSerialPortMode[ucMODBUSport] & MODBUS_SERIAL_MASTER))) {
         return 0;                                                        // serial port with no master functionality can always send
     }
     #endif
@@ -3859,7 +3859,7 @@ extern int fnMODBUS_Master_send(unsigned char ucModbusPort, unsigned char ucSlav
     modbus_rx_function.ucFunctionCode = 0;
     if (ucModbusPort < MODBUS_SERIAL_INTERFACES) {
     #if MODBUS_SERIAL_INTERFACES > 0
-        if (ptrMODBUS_pars->ucModbusSerialPortMode[ucModbusPort] & MODBUS_MODE_ASCII) {
+        if ((ptrMODBUS_pars->ucModbusSerialPortMode[ucModbusPort] & MODBUS_MODE_ASCII) != 0) {
             modbus_rx_function.ucSourceType = ASCII_SERIAL_INPUT;
         }
         else {

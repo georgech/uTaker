@@ -134,7 +134,7 @@ extern void *uMalloc(MAX_MALLOC __size)
 #if defined _MALLOC_ALIGN
 extern void *uMallocAlign(MAX_MALLOC __size, unsigned short usAlign)     // {1}
 {
-    unsigned char *ptr = pucBottomOfHeap + present_HeapSize;
+    unsigned char *ptr = (pucBottomOfHeap + present_HeapSize);
     if ((unsigned long)ptr & (usAlign - 1)) {                            // ensure all memory is aligned on specified byte boundary
         ptr = (unsigned char *)((unsigned long)ptr & ~(usAlign - 1));
         ptr += usAlign;

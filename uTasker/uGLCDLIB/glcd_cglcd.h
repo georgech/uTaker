@@ -719,9 +719,9 @@ static void fnConfigureTouchInterrupt(void)
     interrupt_setup.int_type = PORT_INTERRUPT;                           // identifier when configuring
     interrupt_setup.int_handler = touch_interrupt;                       // handling function
     interrupt_setup.int_priority = PRIORITY_EXI10_15;                    // port interrupt priority
-    interrupt_setup.int_port = PORT_B;                                   // the port used
+    interrupt_setup.int_port = PORTB;                                    // the port used
     interrupt_setup.int_port_sense = (IRQ_FALLING_EDGE);                 // interrupt on this edge
-    interrupt_setup.int_port_bit = 14;                                   // the port input connected
+    interrupt_setup.int_port_bit = PORTB_BIT14;                          // the port input connected
     fnConfigureInterrupt((void *)&interrupt_setup);                      // configure touch controller interrupt
 }
 

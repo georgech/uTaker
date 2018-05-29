@@ -184,7 +184,11 @@ extern int fnConfigureRTC(void *ptrSettings)
     switch (ptr_rtc_setup->command & ~(RTC_DISABLE | RTC_INITIALISATION | RTC_SET_UTC | RTC_INCREMENT)) { // {51}
     case RTC_TIME_SETTING:                                               // set time to RTC
     #if !defined SUPPORT_SW_RTC && !(defined KINETIS_KE && !defined KINETIS_WITH_SRTC)
+        #if defined KINETIS_KM
+        POWER_UP_ATOMIC(5, IRTC);                                        // ensure the RTC is powered
+        #else
         POWER_UP_ATOMIC(6, RTC);                                         // ensure the RTC is powered
+        #endif
         RTC_SR = 0;                                                      // temporarily disable RTC to avoid potential interrupt
     #endif
         if ((ptr_rtc_setup->command & RTC_SET_UTC) != 0) {               // {51} allow setting from UTC seconds value
@@ -288,7 +292,11 @@ extern int fnConfigureRTC(void *ptrSettings)
     #elif defined SUPPORT_SW_RTC
         rtc_interrupt_handler[iIRQ] = ((INTERRUPT_SETUP *)ptrSettings)->int_handler; // enter the handling interrupt
     #else
+        #if defined KINETIS_KM
+        POWER_UP_ATOMIC(5, IRTC);                                        // enable access and interrupts to the RTC
+        #else
         POWER_UP_ATOMIC(6, RTC);                                         // enable access and interrupts to the RTC
+        #endif
         if ((RTC_SR & RTC_SR_TIF) != 0) {                                // if time invalid
         #if defined _WINDOWS
             unsigned long ulTSR = RTC_TSR;

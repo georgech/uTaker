@@ -885,7 +885,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
     #endif
     #if UARTS_AVAILABLE > 0
     case 3:                                                              // UART 4
-	    while (usLen-- !0 0) {
+	    while (usLen-- != 0) {
         #if defined _STM32F7XX
 		    UART4_RDR = *ptrDebugIn++;                                   // put received byte to input buffer
             UART4_ISR |= USART_ISR_RXNE;

@@ -221,7 +221,7 @@ static QUEUE_TRANSFER entry_tty(QUEUE_HANDLE channel, unsigned char *ptBuffer, Q
         ptTTYQue = (struct stTTYQue *)(que_ids[DriverID].input_buffer_control); // set to input control block
         if ((ptTTYQue->opn_mode & (MSG_MODE | MSG_BREAK_MODE)) != 0) {   // {26}
     #if defined (SUPPORT_MSG_CNT)
-            if (ptTTYQue->opn_mode & MSG_MODE_RX_CNT) {
+            if ((ptTTYQue->opn_mode & MSG_MODE_RX_CNT) != 0) {
                 rtn_val = (ptTTYQue->msgs + 1)/2;                        // in count mode we count the count and the actual message
             }
             else {
@@ -796,6 +796,22 @@ static void send_next_byte(QUEUE_HANDLE channel, TTYQUE *ptTTYQue)       // inte
     }
 }
 
+#if (defined SERIAL_SUPPORT_DMA && defined SERIAL_SUPPORT_DMA_RX && defined SERIAL_SUPPORT_RX_DMA_BREAK) || defined UART_BREAK_SUPPORT
+static void fnPostFrameEvent(UTASK_TASK destination_task, unsigned char ucEventType, QUEUE_HANDLE Channel, unsigned short usFrameLength)
+{
+    unsigned char int_message[HEADER_LENGTH + 4];                        // temporary buffer 
+    int_message[MSG_DESTINATION_NODE] = int_message[MSG_SOURCE_NODE] = INTERNAL_ROUTE;
+    int_message[MSG_DESTINATION_TASK] = (unsigned char)destination_task; // the task that is to receive the message
+    int_message[MSG_SOURCE_TASK] = TASK_TTY;                             // TTY task is used as source reference (although no task exists)
+    int_message[MSG_CONTENT_LENGTH] = 4;                                 // length of the message content
+    int_message[MSG_CONTENT_COMMAND] = ucEventType;                      // the message type
+    int_message[MSG_CONTENT_DATA_START] = (unsigned char)Channel;        // the UART channel that the reception is on
+    int_message[MSG_CONTENT_DATA_START + 1] = (unsigned char)(usFrameLength >> 8); // the frame content length that is waiting to be read
+    int_message[MSG_CONTENT_DATA_START + 2] = (unsigned char)(usFrameLength);
+    fnWrite(INTERNAL_ROUTE, int_message, sizeof(int_message));           // post the message
+}
+#endif
+
 /* =================================================================== */
 /*                         interrupt  interface routines               */
 /* =================================================================== */
@@ -816,12 +832,30 @@ extern void fnSciRxByte(unsigned char ch, QUEUE_HANDLE Channel)
 #if defined SERIAL_SUPPORT_DMA && defined SERIAL_SUPPORT_DMA_RX
     if ((rx_ctl->ucDMA_mode & UART_RX_DMA) != 0) {                       // new characters in the buffer - increment message count
         QUEUE_TRANSFER transfer_length = rx_ctl->tty_queue.buf_length;
+    #if defined SERIAL_SUPPORT_RX_DMA_BREAK
+        if ((UART_RX_DMA_BREAK & rx_ctl->ucDMA_mode) != 0) {             // break detected
+            QUEUE_TRANSFER OriginalLength = rx_ctl->tty_queue.chars;
+            fnPrepareRxDMA(Channel, (unsigned char *)(&(rx_ctl->tty_queue)), 0); // update the waiting data
+            OriginalLength = (rx_ctl->tty_queue.chars - OriginalLength); // the additional characters collected since the previous break
+            if (ch != 0) {                                               // first break after enabling the received so we ignore received data
+                rx_ctl->tty_queue.get += rx_ctl->tty_queue.chars;
+                if (rx_ctl->tty_queue.get >= rx_ctl->tty_queue.buffer_end) {
+                    rx_ctl->tty_queue.get -= rx_ctl->tty_queue.buf_length;
+                }
+                rx_ctl->tty_queue.chars = 0;
+            }
+            else {
+                fnPostFrameEvent(rx_ctl->wake_task, (unsigned char)TTY_BREAK_FRAME_RECEPTION, Channel, OriginalLength);
+            }
+            return;
+        }
+    #endif
         if ((rx_ctl->ucDMA_mode & UART_RX_DMA_HALF_BUFFER) != 0) {
             transfer_length /= 2;
         }
         rx_ctl->tty_queue.put += transfer_length;
         rx_ctl->tty_queue.chars += transfer_length;                      // {30} amount of characters that are ready to be read
-        if (rx_ctl->opn_mode & MSG_MODE_RX_CNT) {
+        if ((rx_ctl->opn_mode & MSG_MODE_RX_CNT) != 0) {
     #if defined MSG_CNT_WORD                                             // {10}
             transfer_length -= 2;
     #else
@@ -870,7 +904,7 @@ extern void fnSciRxByte(unsigned char ch, QUEUE_HANDLE Channel)
     }
 #else
     #if defined SUPPORT_MSG_MODE
-    if (MSG_MODE & rx_ctl->opn_mode) {
+    if ((MSG_MODE & rx_ctl->opn_mode) != 0) {
         if (rx_ctl->ucMessageTerminator == ch) {
             iBlockBuffer = 1;
         }
@@ -922,11 +956,11 @@ extern void fnSciRxByte(unsigned char ch, QUEUE_HANDLE Channel)
 
     if (iBlockBuffer == 0) {
         if (rx_ctl->tty_queue.chars < rx_ctl->tty_queue.buf_length) {    // never overwrite contents of buffer
-            ++rx_ctl->tty_queue.chars;
-#if defined (SUPPORT_MSG_CNT) && defined (SUPPORT_MSG_MODE)
+            rx_ctl->tty_queue.chars++;                                   // increment the total character count
+#if (defined SUPPORT_MSG_CNT && defined SUPPORT_MSG_MODE) || defined UART_BREAK_SUPPORT
             rx_ctl->msgchars++;                                          // update the present message length
 #endif
-            *(rx_ctl->tty_queue.put) = ch;                               // put received character in input buffer
+            *(rx_ctl->tty_queue.put) = ch;                               // put received character in to the input buffer
             if (++rx_ctl->tty_queue.put >= rx_ctl->tty_queue.buffer_end) { // wrap in circular buffer
                 rx_ctl->tty_queue.put = rx_ctl->tty_queue.QUEbuffer;     // wrap to beginning
             }
@@ -1030,7 +1064,7 @@ extern void fnSciRxMsg(QUEUE_HANDLE channel)                             // {11}
     #if defined SERIAL_SUPPORT_DMA && defined SERIAL_SUPPORT_DMA_RX
     unsigned char *ptrNextHalfBuffer = 0;
     QUEUE_TRANSFER halfBufferLength = 0;
-    if ((rx_ctl->ucDMA_mode & UART_RX_DMA) != 0) {
+    if ((rx_ctl->ucDMA_mode & UART_RX_DMA) != 0) {                       // if the received is operating in DMA mode
         halfBufferLength = rx_ctl->msgchars;
         rx_ctl->msgchars = fnGetDMACount(channel, halfBufferLength);     // get the actual received character count
 
@@ -1057,13 +1091,13 @@ extern void fnSciRxMsg(QUEUE_HANDLE channel)                             // {11}
         rx_ctl->tty_queue.chars += rx_ctl->msgchars;
     }
     #endif
-    if ((rx_ctl->opn_mode & MSG_BREAK_MODE) != 0) {
-        if ((rx_ctl->opn_mode & MSG_MODE_RX_CNT) != 0) {
+    if ((rx_ctl->opn_mode & MSG_BREAK_MODE) != 0) {                      // a break detection is signalling that the message reception is complete
+        if ((rx_ctl->opn_mode & MSG_MODE_RX_CNT) != 0) {                 // put the frame length into the receive buffer in receive count mode
     #if defined MSG_CNT_WORD
-            unsigned char *ptrLen = (unsigned char *)&rx_ctl->msgchars;
+            unsigned char *ptrLen = (unsigned char *)&rx_ctl->msgchars;  // the length is two bytes wide
     #endif
             unsigned char *ptrBuffer;
-            rx_ctl->msgs += 2;                                           // a new message length and data message is ready
+            rx_ctl->msgs += 2;                                           // a new message length and data message is ready (counted as two messages)
     #if defined MSG_CNT_WORD
             ptrBuffer = rx_ctl->tty_queue.put - rx_ctl->msgchars - 2;    // move back to start of this message
             rx_ctl->tty_queue.put += 2;
@@ -1097,14 +1131,17 @@ extern void fnSciRxMsg(QUEUE_HANDLE channel)                             // {11}
                 rx_ctl->msgchars = halfBufferLength;                     // reset for next message
             }
             else {
-                rx_ctl->msgchars = 0;                                    // reset for next message
+                rx_ctl->msgchars = 0;                                    // reset present message length for next message use
             }
     #else
             rx_ctl->msgchars = 0;                                        // reset for next message
     #endif
         }
         else {
-            rx_ctl->msgs++;
+            rx_ctl->msgs++;                                              // count the data that has been received as a single message
+            fnPostFrameEvent(rx_ctl->wake_task, (unsigned char)TTY_BREAK_FRAME_RECEPTION, channel, rx_ctl->msgchars);
+            rx_ctl->msgchars = 0;                                        // reset for next frame
+            return;
         }
         if (rx_ctl->wake_task != 0) {                                    // wake up an input task, if defined
             uTaskerStateChange(rx_ctl->wake_task, UTASKER_ACTIVATE);     // wake up service interface task

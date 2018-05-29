@@ -206,7 +206,7 @@ extern void fnTaskTCP(TTASKTABLE *ptrTaskTable)
     QUEUE_HANDLE PortIDInternal = ptrTaskTable->TaskID;                  // queue ID for task input
     unsigned char ucInputMessage[MEDIUM_MESSAGE];                        // reserve space for receiving messages
 
-    while (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH)) {      // check task input queue
+    while (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH) != 0) { // check task input queue
         switch (ucInputMessage[MSG_SOURCE_TASK]) {
             case TIMER_EVENT:
                 fnPollTCP();                                             // do TCP management on a periodic basis
@@ -2159,7 +2159,7 @@ static void fnPollTCP(void)
     for (Socket = 0; Socket < NO_OF_TCPSOCKETS; Socket++) {              // for each TCP socket
         switch (ptr_TCP->ucTCP_state) {
             case TCP_STATE_ESTABLISHED:
-                if ((ptr_TCP->ucTCPInternalFlags & TCP_CLOSEPENDING) && (ptr_TCP->ulNextTransmissionNumber == ptr_TCP->ulSendUnackedNumber)) {
+                if (((ptr_TCP->ucTCPInternalFlags & TCP_CLOSEPENDING) != 0) && (ptr_TCP->ulNextTransmissionNumber == ptr_TCP->ulSendUnackedNumber)) {
                     ptr_TCP->ulNextTransmissionNumber++;                 // we have a queued close and all data has now been acknowledged so perform the close
                     ptr_TCP->ucSendFlags = (TCP_FLAG_ACK | TCP_FLAG_FIN);
                     fnSendTCPControl(ptr_TCP);

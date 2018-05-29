@@ -176,7 +176,7 @@ __interrupt static void _exti10_15_handler(void)
         while (ulPending != 0) {
             if (ulPending & 0x00000001) {
                 uDisable_Interrupt();                                    // ensure call can not be interrupted
-                exti_handler[iInterrupt]();                              // call the user interrupt handler
+                    exti_handler[iInterrupt]();                          // call the user interrupt handler
                 uEnable_Interrupt();                                     // release
             }
             ulPending >>= 1;
@@ -195,8 +195,7 @@ __interrupt static void _exti10_15_handler(void)
     #else
             unsigned long   *ptrMux = AFIO_EXTICR1_ADD;
     #endif
-          //unsigned short   usPortBit = (0x1 << ptrSetup->int_port_bit);
-            unsigned short   usPortBit = (ptrSetup->int_port_bit);       // {35}
+            unsigned short   usPortBit = (ptrSetup->int_port_bit);
             int iInputRef = 0;
     #if defined _WINDOWS
             if (usPortBit == 0) {
@@ -230,8 +229,8 @@ __interrupt static void _exti10_15_handler(void)
             POWER_UP(APB2, (RCC_APB2ENR_AFIOEN));                        // power up the alternate-function I/O controller so that it can correctly multiplex the inputs to the external interrupt controller
     #endif
             ptrMux += (iInputRef/4);
-            *ptrMux &= ~(0x0000000f << (4 * (iInputRef %4)));            // select the input for the channel - mask out the position
-            *ptrMux |= (ptrSetup->int_port << (4 * (iInputRef %4)));     // select the port
+            *ptrMux &= ~(0x0000000f << (4 * (iInputRef%4)));             // select the input for the channel - mask out the position
+            *ptrMux |= (ptrSetup->int_port << (4 * (iInputRef%4)));      // select the port
             if ((ptrSetup->int_port_sense & IRQ_RISING_EDGE) != 0) {
                 EXTI_RTSR |= usPortBit;                                  // enable rising edge trigger
             }

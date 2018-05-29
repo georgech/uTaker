@@ -119,6 +119,108 @@ static __interrupt void _IRQ_isr(void)
         uEnable_Interrupt();
     }
 }
+    #elif defined irq_PT_ID                                              // used by KM34 where each port has 8 used pins (LSB) and a single interrupt is shared by all ports
+static void (*gpio_handlers[PORTS_AVAILABLE][8])(void) = {{0}};          // a handler for each possible port and pin
+
+// Interrupt routine called to handle shared interrupt
+//
+static __interrupt void _port_A_I_isr(void)                              // single interrupt shared by ports A to I
+{
+    int iPortReference = 0;
+    unsigned long ulSources;
+    unsigned long ulPortBit;
+    unsigned long ulPortGate = SIM_SCGC5_PORTA;
+    int iInterrupt;
+    KINETIS_PORT_INTERFACE *ptrPortControl = (KINETIS_PORT_INTERFACE *)PORT0_BLOCK;
+    while (iPortReference < PORTS_AVAILABLE) {                           // for each port
+        if ((SIM_SCGC5 & ulPortGate) != 0) {                             // if the port is not powered we skip checking it as a potential source
+            while ((ulSources = ptrPortControl->ISFR) != 0) {            // read which pins are generating interrupts on this port
+                ptrPortControl->ISFR = ulSources;                        // reset the edge sensitive ones that will be handled
+                ulPortBit = 0x00000001;
+                iInterrupt = 0;
+                while (ulSources != 0) {
+                    if ((ulSources & ulPortBit) != 0) {                  // pending interrupt detected on this input
+                        register unsigned long ulInterruptType = (ptrPortControl->PCR[iInterrupt] & PORT_IRQC_INT_MASK);
+                        uDisable_Interrupt();                            // ensure interrupts remain blocked when user callback operates
+                            gpio_handlers[iPortReference][iInterrupt](); // call the application handler (this is expected to clear level sensitive input sources)
+                            if ((ulInterruptType == PORT_IRQC_HIGH_LEVEL) || (ulInterruptType == PORT_IRQC_LOW_LEVEL)) { // if level sensitive type
+                                ptrPortControl->ISFR = ulPortBit;        // attempt to clear the level sensitive interrupt after the user has serviced it
+                            }
+                            ulSources &= ~ulPortBit;                         // clear the processed port pin interrupt
+                #if defined _WINDOWS
+                            ptrPortControl->ISFR &= ~ulPortBit;
+                #endif
+                        uEnable_Interrupt();
+                    }
+                    ulPortBit <<= 1;
+                    iInterrupt++;
+                }
+            }
+        }
+        ulPortGate <<= 1;                                                // move to next port
+        ptrPortControl++;
+        iPortReference++;
+    }
+}
+
+// This routine enters the user handler for a port interrupt. The handler can be assigned to multiple inputs
+//
+static void fnEnterPortInterruptHandler(INTERRUPT_SETUP *port_interrupt, unsigned long ulChars)
+{
+    register unsigned long ulPortBits = port_interrupt->int_port_bits;
+    register int ucPortRef = (int)(port_interrupt->int_port);
+    unsigned long ulBit = 0x00000001;
+    int port_bit = 0;
+    while (ulPortBits != 0) {                                            // for each enabled port bit
+        if ((ulPortBits & ulBit) != 0) {                                 // if this port bit is enabled
+            gpio_handlers[ucPortRef][port_bit] = port_interrupt->int_handler; // enter the application handler
+            if (port_interrupt->int_handler != 0) {
+                fnEnterInterrupt(irq_PT_ID, port_interrupt->int_priority, _port_A_I_isr); // ensure that the handler is entered
+            }
+            if ((port_interrupt->int_port_sense & PORT_KEEP_PERIPHERAL) != 0) { // if the interrupt/DMA is being added to a peripheral function
+                KINETIS_PORT_INTERFACE *ptrPortControl = (KINETIS_PORT_INTERFACE *)PORT0_BLOCK;
+                ptrPortControl += ucPortRef;
+                ptrPortControl->PCR[port_bit] = ((ptrPortControl->PCR[port_bit] & ~PORT_IRQC_INT_MASK) | ulChars); // modify only the interrupt property (it is assumed that the peripheral has been configured and the port is clocked)
+            }
+            else {
+                switch (ucPortRef) {
+                case 0:
+                    _CONFIG_PORT_INPUT(A, ulBit, ulChars);                   // configure the port bit as input with the required interrupt sensitivity and characteristics
+                    break;
+                case 1:
+                    _CONFIG_PORT_INPUT(B, ulBit, ulChars);                   // configure the port bit as input with the required interrupt sensitivity and characteristics
+                    break;
+                case 2:
+                    _CONFIG_PORT_INPUT(C, ulBit, ulChars);                   // configure the port bit as input with the required interrupt sensitivity and characteristics
+                    break;
+                case 3:
+                    _CONFIG_PORT_INPUT(D, ulBit, ulChars);                   // configure the port bit as input with the required interrupt sensitivity and characteristics
+                    break;
+                case 4:
+                    _CONFIG_PORT_INPUT(E, ulBit, ulChars);                   // configure the port bit as input with the required interrupt sensitivity and characteristics
+                    break;
+                case 5:
+                    _CONFIG_PORT_INPUT(F, ulBit, ulChars);                   // configure the port bit as input with the required interrupt sensitivity and characteristics
+                    break;
+                case 6:
+                    _CONFIG_PORT_INPUT(G, ulBit, ulChars);                   // configure the port bit as input with the required interrupt sensitivity and characteristics
+                    break;
+                case 7:
+                    _CONFIG_PORT_INPUT(H, ulBit, ulChars);                   // configure the port bit as input with the required interrupt sensitivity and characteristics
+                    break;
+                case 8:
+                    _CONFIG_PORT_INPUT(I, ulBit, ulChars);                   // configure the port bit as input with the required interrupt sensitivity and characteristics
+                    break;
+                }            }
+            ulPortBits &= ~ulBit;
+        }
+        ulBit <<= 1;
+        port_bit++;
+    }
+    _SIM_PORT_CHANGE;
+}
+
+
     #else
     #if !defined NO_PORT_INTERRUPTS_PORTA && (defined irq_PORT_A_E_ID || defined irq_PORTA_ID) // if port A is available abd support has not been removed
 static void (*gpio_handlers_A[PORT_WIDTH])(void) = {0};                  // a handler for each possible port A pin
@@ -670,7 +772,7 @@ static void fnEnterPortInterruptHandler(INTERRUPT_SETUP *port_interrupt, unsigne
     while (ulPortBits != 0) {                                            // for each enabled port bit
         if ((ulPortBits & ulBit) != 0) {                                 // if this port bit is enabled
             switch (ucPortRef) {                                         // switch on the port
-    #if !defined NO_PORT_INTERRUPTS_PORTA && (defined irq_PORTA_ID || defined irq_PORT_A_E_ID) // if port A support has not been removed
+    #if defined irq_PT_ID || (!defined NO_PORT_INTERRUPTS_PORTA && (defined irq_PORTA_ID || defined irq_PORT_A_E_ID)) // if port A support has not been removed
             case PORTA:                                                  // port A
         #if defined _WINDOWS && defined RESTRICTED_PORT_A_BITS
                 if ((ulBit & RESTRICTED_PORT_A_BITS) != 0) {
@@ -679,7 +781,9 @@ static void fnEnterPortInterruptHandler(INTERRUPT_SETUP *port_interrupt, unsigne
         #endif
                 gpio_handlers_A[port_bit] = port_interrupt->int_handler; // {26} enter the application handler
                 if (gpio_handlers_A[port_bit] != 0) {
-        #if defined irq_PORT_A_E_ID
+        #if defined irq_PT_ID
+                    fnEnterInterrupt(irq_PT_ID, port_interrupt->int_priority, _port_A_I_isr); // ensure that the handler for this port is entered
+        #elif defined irq_PORT_A_E_ID
                     fnEnterInterrupt(irq_PORT_A_E_ID, port_interrupt->int_priority, _port_A_E_isr); // ensure that the handler for this port is entered
         #else
                     fnEnterInterrupt(irq_PORTA_ID, port_interrupt->int_priority, _port_A_isr); // ensure that the handler for this port is entered

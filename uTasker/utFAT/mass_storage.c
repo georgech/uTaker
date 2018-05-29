@@ -5613,7 +5613,7 @@ static unsigned char fnLFN_checksum(CHAR *cPtrSFN_alias)
     #if defined UTFAT_LFN_WRITE_PATCH
 // Create a short file name alisas that does not represent a valid file name and minimises the risk
 // of causing problems with older systems supporting long file names and causing collision in a directory
-// This implementation is based on the original algorithm  used by VFAT which can be found at https://lkml.org/lkml/2009/6/26/313.
+// This implementation is based on the original algorithm used by VFAT which can be found at https://lkml.org/lkml/2009/6/26/313.
 // All credits go to the original author, whos comments are retained
 //
 static void fnCreateInvalidSFN_alias(CHAR cInvalidSFN_alias[12])         // the length includes the NT byte

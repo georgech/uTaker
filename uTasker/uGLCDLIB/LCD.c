@@ -118,11 +118,10 @@ extern void fnLCD(TTASKTABLE *ptrTaskTable)                              // LCD 
     QUEUE_HANDLE PortIDInternal = ptrTaskTable->TaskID;                  // queue ID for task input
     unsigned char ucInputMessage[MEDIUM_MESSAGE];                        // reserve space for receiving messages
 
-
     if (iState != STATE_LCD_READY) {
         iState = fnInitDisplay(iState);
 #if defined _WINDOWS
-        while (!iCompleted) {
+        while (0 == iCompleted) {
             iState = fnInitDisplay(iState);
         }
 #endif

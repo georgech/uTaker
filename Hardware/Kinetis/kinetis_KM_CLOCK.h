@@ -17,7 +17,7 @@
 */
 
 
-#if defined OSC_LOW_GAIN_MODE                                            // {66} if using low frequency low power mode no external resistor or load capacitors are used
+#if defined OSC_LOW_GAIN_MODE                                            // if using low frequency low power mode no external resistor or load capacitors are used
     #define MCG_C2_GAIN_MODE    0                                        // don't select high gain mode since the oscillator will not start
 #else
     #define MCG_C2_GAIN_MODE    MCG_C2_HGO                               // select high gain mode
@@ -57,11 +57,7 @@
 
 
 #if defined RUN_FROM_DEFAULT_CLOCK                                       // no configuration performed - remain in default clocked mode
-    #if defined ADC_CLOCK_ENABLED 
-    SIM_CLKDIV1 = (((SYSTEM_CLOCK_DIVIDE - 1) << 28) | ((BUS_CLOCK_DIVIDE - 1) << 16)  | ((ADC_CLOCK_DIVIDE - 1) << 12) | SIM_OUTDIV5EN); // prepare bus clock divides
-    #else
-    SIM_CLKDIV1 = (((SYSTEM_CLOCK_DIVIDE - 1) << 28) | ((BUS_CLOCK_DIVIDE - 1) << 16)  | SIM_CLKDIV5_ADC_8); // prepare bus clock divides
-    #endif
+    SIM_CLKDIV1 = ((SYSTEM_CLOCK_DIVIDE - 1) << 28);                     // prepare bus clock divides
     #if defined FLL_FACTOR
     MCG_C4 = ((MCG_C4 & ~(MCG_C4_DMX32 | MCG_C4_HIGH_RANGE)) | (_FLL_VALUE)); // adjust FLL factor to obtain the required operating frequency
     #endif

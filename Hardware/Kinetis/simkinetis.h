@@ -1714,7 +1714,7 @@ unsigned long PIT_TFLG1;
 } KINETIS_PIT;
 #endif
 
-
+#if FLEX_TIMERS_AVAILABLE > 0
 typedef struct stKINETIS_FTM
 {
 #if defined KINETIS_KL28
@@ -1785,7 +1785,7 @@ unsigned long FTM_C5V;
     unsigned long FTM_PWMLOAD;
 #endif
 } KINETIS_FTM;
-
+#endif
 
 typedef struct stKINETIS_ADC
 {
@@ -3730,7 +3730,9 @@ typedef struct stKINETIS_PERIPH
     KINETIS_PIT        PIT;
     #endif
 #endif
+#if FLEX_TIMERS_AVAILABLE > 0
     KINETIS_FTM        FTM[FLEX_TIMERS_AVAILABLE];
+#endif
     KINETIS_ADC        ADC0;
 #if ADC_CONTROLLERS > 2                                                  // {2}
     KINETIS_ADC        ADC2;
@@ -3905,21 +3907,23 @@ extern KINETIS_PERIPH kinetis;
 
 #define PIN_COUNT_24_PIN        1
 #define PIN_COUNT_32_PIN        2
-#define PIN_COUNT_48_PIN        3
-#define PIN_COUNT_64_PIN        4
-#define PIN_COUNT_80_PIN        5
-#define PIN_COUNT_81_PIN        6
-#define PIN_COUNT_100_PIN       7
-#define PIN_COUNT_121_PIN       8
-#define PIN_COUNT_144_PIN       9
-#define PIN_COUNT_196_PIN       10
-#define PIN_COUNT_256_PIN       11
+#define PIN_COUNT_44_PIN        3
+#define PIN_COUNT_48_PIN        4
+#define PIN_COUNT_64_PIN        5
+#define PIN_COUNT_80_PIN        6
+#define PIN_COUNT_81_PIN        7
+#define PIN_COUNT_100_PIN       8
+#define PIN_COUNT_121_PIN       9
+#define PIN_COUNT_144_PIN       10
+#define PIN_COUNT_196_PIN       11
+#define PIN_COUNT_256_PIN       12
 
 #define PACKAGE_LQFP            1
 #define PACKAGE_MAPBGA          2
 #define PACKAGE_BGA             PACKAGE_MAPBGA
 #define PACKAGE_QFN             3
 #define PACKAGE_WLCSP           4
+#define PACKAGE_LGA             5
 
 // Simuation references for specific peripherals
 //

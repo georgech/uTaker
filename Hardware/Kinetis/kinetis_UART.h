@@ -58,6 +58,9 @@
     #define UART_PULL_UPS 0
 #endif
 
+#if defined _WINDOWS
+    static void _fnConfigSimSCI(QUEUE_HANDLE Channel, TTYTABLE *pars, unsigned short usDivider, unsigned char ucFraction, unsigned long ulBusClock, unsigned long ulSpecialClock);
+#endif
 
 /* =================================================================== */
 /*                             constants                               */
@@ -215,10 +218,10 @@ static unsigned char ucUART_mask[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {0};
 #if defined UART_HW_TRIGGERED_MODE_SUPPORTED
     static unsigned char ucTriggeredTX_mode[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {0}; // {213}
 #endif
-
-#if defined _WINDOWS
-    static void _fnConfigSimSCI(QUEUE_HANDLE Channel, TTYTABLE *pars, unsigned short usDivider, unsigned char ucFraction, unsigned long ulBusClock, unsigned long ulSpecialClock);
+#if defined SERIAL_SUPPORT_RX_DMA_BREAK || defined UART_BREAK_SUPPORT
+    static unsigned char ucBreakSynchronised[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {0};
 #endif
+
 
 /* =================================================================== */
 /*                    Serial Interface - UART                          */
@@ -286,7 +289,16 @@ static __interrupt void _LPSCI0_Interrupt(void)                          // LPUA
         #endif
     unsigned long ulState = LPUART0_STAT;                                // status register on entry to the interrupt routine
     if (((ulState & LPUART_STAT_RDRF) & LPUART0_CTRL) != 0) {            // reception interrupt flag is set and the reception interrupt is enabled
-        fnSciRxByte((unsigned char)(LPUART0_DATA & ucUART_mask[LPUART0_CH_NUMBER]), LPUART0_CH_NUMBER); // receive data interrupt - read the byte (masked with character width)
+        #if defined UART_BREAK_SUPPORT
+        if (((LPUART0_BAUD & LPUART_BAUD_LBKDIE) != 0) && (ucBreakSynchronised[LPUART0_CH_NUMBER] == 0)) { // if in break framing mode we ignore reception until a first break has been detected
+            (void)LPUART0_DATA;                                          // read the received byte to reset the interrupt flag
+        }
+        else {
+        #endif
+            fnSciRxByte((unsigned char)(LPUART0_DATA & ucUART_mask[LPUART0_CH_NUMBER]), LPUART0_CH_NUMBER); // receive data interrupt - read the byte (masked with character width)
+        #if defined UART_BREAK_SUPPORT
+        }
+        #endif
         #if defined _WINDOWS
         LPUART0_STAT &= ~(LPUART_STAT_RDRF);                             // simulate reset of interrupt flag
         #endif
@@ -323,6 +335,21 @@ static __interrupt void _LPSCI0_Interrupt(void)                          // LPUA
                 fnUARTFrameTermination(LPUART0_CH_NUMBER);
             }
             #endif
+        }
+    }
+        #endif
+        #if defined SERIAL_SUPPORT_RX_DMA_BREAK || defined UART_BREAK_SUPPORT
+    if ((ulState & LPUART_STAT_LBKDIF) != 0) {                           // if a break has been detected
+        WRITE_ONE_TO_CLEAR(LPUART0_STAT, LPUART_STAT_LBKDIF);            // clear the flag
+        if ((LPUART0_BAUD & LPUART_BAUD_LBKDIE) != 0) {                  // if the interrupt is to be handled
+            #if defined SERIAL_SUPPORT_RX_DMA_BREA
+            fnSciRxByte((unsigned char)(ucBreakSynchronised[LPUART0_CH_NUMBER] == 0), LPUART0_CH_NUMBER); // handle the reception (it will ignore any data received before the first synchronisation)
+            #else
+            if (ucBreakSynchronised[LPUART0_CH_NUMBER] != 0) {           // if not the first break after enabling the receiver
+                fnSciRxMsg(LPUART0_CH_NUMBER);                           // break signals the end of a reception frame
+            }
+            #endif
+            ucBreakSynchronised[LPUART0_CH_NUMBER] = 1;                  // from this point on data will be accepted
         }
     }
         #endif
@@ -380,6 +407,15 @@ static __interrupt void _LPSCI1_Interrupt(void)                          // LPUA
             #endif
     }
         #endif
+        #if defined SERIAL_SUPPORT_RX_DMA_BREAK
+    if ((ulState & LPUART_STAT_LBKDIF) != 0) {                           // if a break has been detected
+        WRITE_ONE_TO_CLEAR(LPUART1_STAT, LPUART_STAT_LBKDIF);            // clear the flag
+        if ((LPUART1_BAUD & LPUART_BAUD_LBKDIE) != 0) {                  // if the interrupt is to be handled
+            fnSciRxByte((unsigned char)(ucBreakSynchronised[LPUART1_CH_NUMBER] == 0), LPUART1_CH_NUMBER); // handle the reception (it will ignore any data received before the first synchronisation)
+            ucBreakSynchronised[LPUART1_CH_NUMBER] = 1;                 // from this point on data will be accepted
+        }
+    }
+        #endif
 }
     #endif
 
@@ -420,6 +456,15 @@ static __interrupt void _LPSCI2_Interrupt(void)                          // LPUA
             fnUARTFrameTermination(2);
         }
             #endif
+    }
+        #endif
+        #if defined SERIAL_SUPPORT_RX_DMA_BREAK
+    if ((ulState & LPUART_STAT_LBKDIF) != 0) {                           // if a break has been detected
+        WRITE_ONE_TO_CLEAR(LPUART2_STAT, LPUART_STAT_LBKDIF);            // clear the flag
+        if ((LPUART2_BAUD & LPUART_BAUD_LBKDIE) != 0) {                  // if the interrupt is to be handled
+            fnSciRxByte((unsigned char)(ucBreakSynchronised[LPUART2_CH_NUMBER] == 0), LPUART2_CH_NUMBER); // handle the reception (it will ignore any data received before the first synchronisation)
+            ucBreakSynchronised[LPUART2_CH_NUMBER] = 1;                 // from this point on data will be accepted
+        }
     }
         #endif
 }
@@ -464,6 +509,15 @@ static __interrupt void _LPSCI3_Interrupt(void)                          // LPUA
             #endif
     }
         #endif
+        #if defined SERIAL_SUPPORT_RX_DMA_BREAK
+    if ((ulState & LPUART_STAT_LBKDIF) != 0) {                           // if a break has been detected
+        WRITE_ONE_TO_CLEAR(LPUART3_STAT, LPUART_STAT_LBKDIF);            // clear the flag
+        if ((LPUART3_BAUD & LPUART_BAUD_LBKDIE) != 0) {                  // if the interrupt is to be handled
+            fnSciRxByte((unsigned char)(ucBreakSynchronised[LPUART3_CH_NUMBER] == 0), LPUART3_CH_NUMBER); // handle the reception (it will ignore any data received before the first synchronisation)
+            ucBreakSynchronised[LPUART3_CH_NUMBER] = 1;                 // from this point on data will be accepted
+        }
+    }
+        #endif
 }
     #endif
 
@@ -504,6 +558,15 @@ static __interrupt void _LPSCI4_Interrupt(void)                          // LPUA
             fnUARTFrameTermination(4);
         }
             #endif
+    }
+        #endif
+        #if defined SERIAL_SUPPORT_RX_DMA_BREAK
+    if ((ulState & LPUART_STAT_LBKDIF) != 0) {                           // if a break has been detected
+        WRITE_ONE_TO_CLEAR(LPUART4_STAT, LPUART_STAT_LBKDIF);            // clear the flag
+        if ((LPUART4_BAUD & LPUART_BAUD_LBKDIE) != 0) {                  // if the interrupt is to be handled
+            fnSciRxByte((unsigned char)(ucBreakSynchronised[LPUART4_CH_NUMBER] == 0), LPUART4_CH_NUMBER); // handle the reception (it will ignore any data received before the first synchronisation)
+            ucBreakSynchronised[LPUART4_CH_NUMBER] = 1;                 // from this point on data will be accepted
+        }
     }
         #endif
 }
@@ -579,6 +642,9 @@ static __interrupt void _SCI0_Interrupt(void)                            // UART
         #if !defined fnUART1_HANDLER                                     // default reception handler (this can be defined by user code if required)
             #define fnUART1_HANDLER(data, channel) fnSciRxByte(data, channel)
         #endif
+        #if !defined fnUART1_break_HANDLER                               // default break handler (this can be defined by user code if required)
+            #define fnUART1_break_HANDLER(channel) fnSciRxMsg(channel)
+        #endif
 // UART 1 interrupt handler
 //
 static __interrupt void _SCI1_Interrupt(void)                            // UART 1 interrupt
@@ -594,7 +660,16 @@ static __interrupt void _SCI1_Interrupt(void)                            // UART
     {                                                                    // if the receiver is operating in DMA mode ignore reception interrupt flags
         #endif
         if (((ucState & UART_S1_RDRF) & UART1_C2) != 0) {                // reception interrupt flag is set and the reception interrupt is enabled
-            fnUART1_HANDLER((unsigned char)(UART1_D & ucUART_mask[1]), 1); // receive data interrupt - read the byte (masked with character width)
+        #if defined UART_BREAK_SUPPORT
+            if (((UART1_BDH & UART_BDH_LBKDIE) != 0) && (ucBreakSynchronised[1] == 0)) { // if in break framing mode we ignore reception until a first break has been detected
+                (void)UART1_D;                                           // read the received byte to reset the interrupt flag
+            }
+            else {
+        #endif
+                fnUART1_HANDLER((unsigned char)(UART1_D & ucUART_mask[1]), 1); // receive data interrupt - read the byte (masked with character width)
+        #if defined UART_BREAK_SUPPORT
+            }
+        #endif
         #if defined _WINDOWS
             UART1_S1 &= ~(UART_S1_RDRF);                                 // simulate reset of interrupt flag
         #endif
@@ -626,7 +701,7 @@ static __interrupt void _SCI1_Interrupt(void)                            // UART
     }
         #endif
         #if defined SUPPORT_LOW_POWER || defined UART_HW_TRIGGERED_MODE_SUPPORTED || ((defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE) // {96} transmitter using DMA
-    if ((UART1_C2 & UART_C2_TCIE) && (UART1_S1 & UART_S1_TC)) {          // transmit complete interrupt after final byte transmission together with low power operation
+    if (((UART1_C2 & UART_C2_TCIE) != 0) && ((UART1_S1 & UART_S1_TC) != 0)) { // transmit complete interrupt after final byte transmission together with low power operation
         UART1_C2 &= ~(UART_C2_TCIE);                                     // disable the interrupt
             #if defined SUPPORT_LOW_POWER
         ulPeripheralNeedsClock &= ~(UART1_TX_CLK_REQUIRED);              // confirmation that the final byte has been sent out on the line so the UART no longer needs a UART clock (stop mode doesn't needed to be blocked)
@@ -642,6 +717,21 @@ static __interrupt void _SCI1_Interrupt(void)                            // UART
             fnUARTFrameTermination(1);
         }
             #endif
+    }
+        #endif
+        #if defined SERIAL_SUPPORT_RX_DMA_BREAK || defined UART_BREAK_SUPPORT
+    if ((UART1_S2 & UART_S2_LBKDIF) != 0) {                              // if a break has been detected
+        WRITE_ONE_TO_CLEAR(UART1_S2, UART_S2_LBKDIF);                    // clear the flag
+        if ((UART1_BDH & UART_BDH_LBKDIE) != 0) {                        // if the interrupt is to be handled
+            #if defined SERIAL_SUPPORT_RX_DMA_BREAK
+            fnSciRxByte((unsigned char)(ucBreakSynchronised[1] == 0), 1);// handle the reception (it will ignore any data received before the first synchronisation)
+            #else
+            if (ucBreakSynchronised[1] != 0) {                           // if not the first break after enabling the receiver
+                fnUART1_break_HANDLER(1);                                // break signals the end of a reception frame
+            }
+            #endif
+            ucBreakSynchronised[1] = 1;                                  // from this point on data will be accepted
+        }
     }
         #endif
 }
@@ -1537,19 +1627,25 @@ static void fnCheckFreerunningDMA_reception(int channel, QUEQUE *tty_queue) // {
         #endif
 }
     #endif
-// Configure KL DMA for reception to a free-running modulo buffer and then enable reception (also configuring the RXD input)
+// Configure DMA for reception to a free-running modulo buffer and then enable reception (also configuring the RXD input)
 //
 static void fnEnableRxAndDMA(int channel, unsigned long buffer_length, unsigned long buffer_address, void *uart_data_reg) // {209}
 {
+    unsigned short usDMAMUX = (DMAMUX_CHCFG_SOURCE_UART0_RX + (2 * channel));
     #if defined SERIAL_SUPPORT_DMA_RX_FREERUN
         #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA              // {211}
     RxModulo[channel] = (QUEUE_TRANSFER)buffer_length;                   // this must be modulo 2 (16, 32, 64, 128...256k)
     ulDMA_progress[channel] = buffer_address;                            // destination must be modulo aligned
         #else
     ulDMA_progress[channel] = buffer_length;
+            #if ((defined KINETIS_K21 || defined KINETIS_K22) && (UARTS_AVAILABLE > 4)) || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66
+    if (channel > 3) {                                                   // channels 4 and above each share DMA source for TX and RX
+        usDMAMUX = (DMAMUX_CHCFG_SOURCE_UART3_RX + (channel - 3));
+    }
+            #endif
         #endif
     #endif
-    fnConfigDMA_buffer(UART_DMA_RX_CHANNEL[channel], (DMAMUX_CHCFG_SOURCE_UART0_RX + (2 * channel)), buffer_length, uart_data_reg, (void *)buffer_address, (DMA_DIRECTION_INPUT | DMA_BYTES), 0, 0);
+    fnConfigDMA_buffer(UART_DMA_RX_CHANNEL[channel], usDMAMUX, buffer_length, uart_data_reg, (void *)buffer_address, (DMA_DIRECTION_INPUT | DMA_BYTES), 0, 0);
     fnDMA_BufferReset(UART_DMA_RX_CHANNEL[channel], DMA_BUFFER_START);   // enable DMA operation
     fnRxOn(channel);                                                     // configure receiver pin and enable reception and its interrupt/DMA
 }
@@ -2308,12 +2404,18 @@ extern void fnTxOn(QUEUE_HANDLE Channel)
         _CONFIG_PERIPHERAL(A, 14, (PA_14_UART0_TX | UART_PULL_UPS));     // UART0_TX on PA14 (alt. function 3)
             #endif
         #endif
+        #if defined irq_UART0_1_ID                                       // devices which share UART 0/1 interrupt
+        fnEnterInterrupt(irq_UART0_1_ID, PRIORITY_UART0, _SCI0_Interrupt); // enter UART0 interrupt handler
+        #else
         fnEnterInterrupt(irq_UART0_ID, PRIORITY_UART0, _SCI0_Interrupt); // enter UART0 interrupt handler
+        #endif
         break;
         #endif
         #if UARTS_AVAILABLE > 1 && (LPUARTS_AVAILABLE < 2 || defined LPUARTS_PARALLEL)
     case 1:                                                              // configure the UART Tx 1 pin
-            #if defined KINETIS_KE
+            #if defined KINETIS_KM
+        _CONFIG_PERIPHERAL(I, 1, (PI_1_SCI1_TX | UART_PULL_UPS));        // UART1_TX on PI1 (alt. function 2)
+            #elif defined KINETIS_KE
         _CONFIG_PERIPHERAL(C, 7, (PC_7_UART1_TX | UART_PULL_UPS));       // UART1_TX on PC7 (alt. function 2)
             #elif defined KINETIS_KV10
         _CONFIG_PERIPHERAL(D, 1, (PD_1_UART1_TX | UART_PULL_UPS));       // UART1_TX on PD1 (alt. function 5)
@@ -2328,7 +2430,11 @@ extern void fnTxOn(QUEUE_HANDLE Channel)
         _CONFIG_PERIPHERAL(E, 0, (PE_0_UART1_TX | UART_PULL_UPS));       // UART1_TX on PE0 (alt. function 3)
                 #endif
             #endif
+            #if defined irq_UART0_1_ID                                   // devices which share UART 0/1 interrupt
+        fnEnterInterrupt(irq_UART0_1_ID, PRIORITY_UART1, _SCI1_Interrupt); // enter UART1 interrupt handler
+            #else
         fnEnterInterrupt(irq_UART1_ID, PRIORITY_UART1, _SCI1_Interrupt); // enter UART1 interrupt handler
+            #endif
         break;
         #endif
         #if (UARTS_AVAILABLE > 2 && (LPUARTS_AVAILABLE < 3 || defined LPUARTS_PARALLEL)) || (UARTS_AVAILABLE == 1 && LPUARTS_AVAILABLE == 2)
@@ -2353,7 +2459,11 @@ extern void fnTxOn(QUEUE_HANDLE Channel)
         _CONFIG_PERIPHERAL(D, 3, (PD_3_UART2_TX | UART_PULL_UPS));       // UART2_TX on PD3 (alt. function 3)
                 #endif
             #endif
+            #if defined irq_UART2_3_ID                                   // devices which share UART 2/3 interrupt
+        fnEnterInterrupt(irq_UART2_3_ID, PRIORITY_UART2, _SCI2_Interrupt); // enter UART2 interrupt handler
+            #else
         fnEnterInterrupt(irq_UART2_ID, PRIORITY_UART2, _SCI2_Interrupt); // enter UART2 interrupt handler
+            #endif
         break;
         #endif
         #if UARTS_AVAILABLE > 3
@@ -2367,7 +2477,11 @@ extern void fnTxOn(QUEUE_HANDLE Channel)
             #else
         _CONFIG_PERIPHERAL(E, 4, (PE_4_UART3_TX | UART_PULL_UPS));       // UART3_TX on PE4 (alt. function 3)
             #endif
+            #if defined irq_UART2_3_ID                                   // devices which share UART 2/3 interrupt
+        fnEnterInterrupt(irq_UART2_3_ID, PRIORITY_UART3, _SCI3_Interrupt); // enter UART3 interrupt handler
+            #else
         fnEnterInterrupt(irq_UART3_ID, PRIORITY_UART3, _SCI3_Interrupt); // enter UART3 interrupt handler
+            #endif
         break;
         #endif
         #if UARTS_AVAILABLE > 4
@@ -2634,12 +2748,18 @@ extern void fnRxOn(QUEUE_HANDLE Channel)
         _CONFIG_PERIPHERAL(A, 15, (PA_15_UART0_RX | UART_PULL_UPS));     // UART0_RX on PA15 (alt. function 3)
                 #endif
             #endif
+            #if defined irq_UART0_1_ID                                   // devices which share UART 0/1 interrupt
+        fnEnterInterrupt(irq_UART0_1_ID, PRIORITY_UART0, _SCI0_Interrupt); // enter UART0 interrupt handler
+            #else
         fnEnterInterrupt(irq_UART0_ID, PRIORITY_UART0, _SCI0_Interrupt); // enter UART0 interrupt handler
+            #endif
         break;
         #endif
         #if UARTS_AVAILABLE > 1 && LPUARTS_AVAILABLE < 2
     case 1:                                                              // configure the UART Rx 1 pin
-            #if defined KINETIS_KE
+            #if defined KINETIS_KM
+        _CONFIG_PERIPHERAL(I, 0, (PI_0_SCI1_TX | UART_PULL_UPS));       // UART1_RX on PI0 (alt. function 2)
+            #elif defined KINETIS_KE
         _CONFIG_PERIPHERAL(C, 6, (PC_6_UART1_RX | UART_PULL_UPS));       // UART1_RX on PC6 (alt. function 2)
             #elif defined KINETIS_KV10
         _CONFIG_PERIPHERAL(D, 0, (PD_0_UART1_RX | UART_PULL_UPS));       // UART1_RX on PD0 (alt. function 5)
@@ -2654,7 +2774,11 @@ extern void fnRxOn(QUEUE_HANDLE Channel)
         _CONFIG_PERIPHERAL(E, 1, (PE_1_UART1_RX | UART_PULL_UPS));       // UART1_RX on PE1 (alt. function 3)
                 #endif
             #endif
+            #if defined irq_UART0_1_ID                                   // devices which share UART 0/1 interrupt
+        fnEnterInterrupt(irq_UART0_1_ID, PRIORITY_UART1, _SCI1_Interrupt); // enter UART1 interrupt handler
+            #else
         fnEnterInterrupt(irq_UART1_ID, PRIORITY_UART1, _SCI1_Interrupt); // enter UART1 interrupt handler
+            #endif
         break;
         #endif
         #if (UARTS_AVAILABLE > 2 && LPUARTS_AVAILABLE < 3) || (UARTS_AVAILABLE == 1 && LPUARTS_AVAILABLE == 2)
@@ -2679,7 +2803,11 @@ extern void fnRxOn(QUEUE_HANDLE Channel)
         _CONFIG_PERIPHERAL(D, 2, (PD_2_UART2_RX | UART_PULL_UPS));       // UART2_RX on PD2 (alt. function 3)
                 #endif
             #endif
+            #if defined irq_UART2_3_ID                                   // devices which share UART 2/3 interrupt
+        fnEnterInterrupt(irq_UART2_3_ID, PRIORITY_UART2, _SCI2_Interrupt); // enter UART2 interrupt handler
+            #else
         fnEnterInterrupt(irq_UART2_ID, PRIORITY_UART2, _SCI2_Interrupt); // enter UART2 interrupt handler
+            #endif
         break;
         #endif
         #if UARTS_AVAILABLE > 3
@@ -2693,7 +2821,11 @@ extern void fnRxOn(QUEUE_HANDLE Channel)
             #else
         _CONFIG_PERIPHERAL(E, 5, (PE_5_UART3_RX | UART_PULL_UPS));       // UART3_RX on PE5 (alt. function 3)
             #endif
+            #if defined irq_UART2_3_ID                                   // devices which share UART 2/3 interrupt
+        fnEnterInterrupt(irq_UART2_3_ID, PRIORITY_UART3, _SCI3_Interrupt); // enter UART3 interrupt handler
+            #else
         fnEnterInterrupt(irq_UART3_ID, PRIORITY_UART3, _SCI3_Interrupt); // enter UART3 interrupt handler
+            #endif
         break;
         #endif
         #if UARTS_AVAILABLE > 4
@@ -2721,6 +2853,9 @@ extern void fnRxOn(QUEUE_HANDLE Channel)
         #if defined KINETIS_KE
     _SIM_PER_CHANGE;
         #endif
+    #endif
+    #if defined SERIAL_SUPPORT_RX_DMA_BREAK || defined UART_BREAK_SUPPORT
+    ucBreakSynchronised[Channel] = 0;                                    // each time the receiver is (re)enabled a break synchronisation is expected before data is accepted
     #endif
 }
 
@@ -2792,13 +2927,24 @@ static void fnConfigLPUART(QUEUE_HANDLE Channel, TTYTABLE *pars, KINETIS_LPUART_
         lpuart_reg->LPUART_BAUD &= ~LPUART_BAUD_TDMAE;                   // disable tx DMA so that tx interrupt mode can be used
     }
     #endif
+    lpuart_reg->LPUART_BAUD &= ~(LPUART_BAUD_LBKDIE);                    // disable break detection interrupt by default
     #if defined SERIAL_SUPPORT_DMA_RX                                    // {209}
     if ((pars->ucDMAConfig & UART_RX_DMA) != 0) {                        // dma required on receiver
         lpuart_reg->LPUART_CTRL &= ~(LPUART_CTRL_RIE);                   // ensure rx interrupt is not enabled
         lpuart_reg->LPUART_BAUD |= LPUART_BAUD_RDMAE;                    // use DMA rather than interrupts for reception
+        #if defined SERIAL_SUPPORT_RX_DMA_BREAK
+        if ((pars->ucDMAConfig & UART_RX_DMA_BREAK) != 0) {              // if breaks are to terminate reception
+            lpuart_reg->LPUART_BAUD |= LPUART_BAUD_LBKDIE;               // enable break detection interrupt
+        }
+        #endif
     }
     else {
         lpuart_reg->LPUART_BAUD &= ~LPUART_BAUD_RDMAE;                   // disable rx DMA so that rx interrupt mode can be used
+    }
+    #endif
+    #if defined UART_BREAK_SUPPORT
+    if ((pars->Config & MSG_BREAK_MODE) != 0) {                          // if reception breaks are to terminate reception
+        lpuart_reg->LPUART_BAUD |= LPUART_BAUD_LBKDIE;                   // enable break detection interrupt
     }
     #endif
     #if defined UART_EXTENDED_MODE
@@ -2956,8 +3102,8 @@ static void fnConfigUART(QUEUE_HANDLE Channel, TTYTABLE *pars, KINETIS_UART_CONT
         #else
         if ((uart_reg->UART_C2 & UART_C2_TIE) == 0) {                    // {203} if DMA has already been configured we leave it untouched
             unsigned short usDMAMUX = (DMAMUX_CHCFG_SOURCE_UART0_TX + (2 * Channel));
-            #if ((defined KINETIS_K21 || defined KINETIS_K22) && (UARTS_AVAILABLE > 4)) || defined KINETIS_K64
-            if (Channel > 3) {                                           // channels 4 and 5 each share DMA source for TX and RX
+            #if ((defined KINETIS_K21 || defined KINETIS_K22) && (UARTS_AVAILABLE > 4)) || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66
+            if (Channel > 3) {                                           // channels 4 and above each share DMA source for TX and RX
                 usDMAMUX = (DMAMUX_CHCFG_SOURCE_UART3_TX + (Channel - 3));
             }
             #endif
@@ -2995,12 +3141,23 @@ static void fnConfigUART(QUEUE_HANDLE Channel, TTYTABLE *pars, KINETIS_UART_CONT
             #else
         uart_reg->UART_C5 |= UART_C5_RDMAS;                              // use DMA rather than interrupts for reception
             #endif
+        #if defined SERIAL_SUPPORT_RX_DMA_BREAK
+        if ((pars->ucDMAConfig & UART_RX_DMA_BREAK) != 0) {              // if breaks are to terminate reception
+            uart_reg->UART_BDH |= (UART_BDH_LBKDIE);                     // enable break detection interrupt
+        }
+        #endif
         if ((pars->ucDMAConfig & (UART_RX_DMA_HALF_BUFFER | UART_RX_DMA_FULL_BUFFER)) != 0) { // if operating in half-buffer or full buffer mode
             unsigned long ulDMA_rules = (DMA_BYTES | DMA_DIRECTION_INPUT | DMA_SINGLE_CYCLE);
+            unsigned short usDMAMUX = (DMAMUX_CHCFG_SOURCE_UART0_RX + (2 * Channel));
+        #if ((defined KINETIS_K21 || defined KINETIS_K22) && (UARTS_AVAILABLE > 4)) || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66
+            if (Channel > 3) {                                           // channels 4 and above each share DMA source for TX and RX
+                usDMAMUX = (DMAMUX_CHCFG_SOURCE_UART3_RX + (Channel - 3));
+            }
+        #endif
             if ((pars->ucDMAConfig & UART_RX_DMA_HALF_BUFFER) != 0) {
                 ulDMA_rules |= DMA_HALF_BUFFER_INTERRUPT;
             }
-            fnConfigDMA_buffer(UART_DMA_RX_CHANNEL[Channel], (DMAMUX_CHCFG_SOURCE_UART0_RX + (2 * Channel)), pars->Rx_tx_sizes.RxQueueSize, (void *)&(uart_reg->UART_D), 0, ulDMA_rules, _uart_rx_dma_Interrupt[Channel], UART_DMA_RX_INT_PRIORITY[Channel]);
+            fnConfigDMA_buffer(UART_DMA_RX_CHANNEL[Channel], usDMAMUX, pars->Rx_tx_sizes.RxQueueSize, (void *)&(uart_reg->UART_D), 0, ulDMA_rules, _uart_rx_dma_Interrupt[Channel], UART_DMA_RX_INT_PRIORITY[Channel]);
         }
     }
     else {                                                               // interrupt driven receiver
@@ -3013,6 +3170,11 @@ static void fnConfigUART(QUEUE_HANDLE Channel, TTYTABLE *pars, KINETIS_UART_CONT
         }
             #else
         uart_reg->UART_C5 &= ~(UART_C5_RDMAS);                           // disable rx DMA so that rx interrupt mode can be used
+                #if defined UART_BREAK_SUPPORT
+        if ((pars->Config & MSG_BREAK_MODE) != 0) {                      // if reception breaks are to terminate reception
+            uart_reg->UART_BDH |= (UART_BDH_LBKDIE);                     // enable break detection interrupt
+        }
+                #endif
             #endif
     }
         #endif
@@ -3402,7 +3564,9 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
             #else
                 #define SPECIAL_UART_CLOCK    (SYSTEM_CLOCK)
             #endif
-            #if defined KINETIS_KV10
+            #if defined KINETIS_KM
+    if ((Channel & 1) != 0)                                              // UART1 and 3 are clocked from the core/system clock and the other from the bus clock
+            #elif defined KINETIS_KV10
     if (Channel < 1)                                                     // UART 0 is clocked from the core/system clock and the others from the bus clock
             #else
     if (Channel <= 1)                                                    // UARTs 0 and 1 are clocked from the core/system clock and the others from the bus clock
@@ -3452,7 +3616,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
             break;
         case SERIAL_BAUD_9600:
         #if defined KINETIS_KL || defined KINETIS_K80 || defined KINETIS_KE15
-            usDivider = (((SPECIAL_UART_CLOCK/8/19600) + 1)/2);          // {201} set 9600
+            usDivider = (((SPECIAL_UART_CLOCK/8/9600) + 1)/2);          // {201} set 9600
         #else
             ucFraction = (unsigned char)((float)((((float)SPECIAL_UART_CLOCK/(float)16/(float)9600) - (int)(SPECIAL_UART_CLOCK/16/9600)) * 32)); // calculate fraction
             usDivider = (SPECIAL_UART_CLOCK/16/9600);                   // set 9600

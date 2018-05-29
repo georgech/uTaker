@@ -326,6 +326,10 @@
 #define TX_ACTIVE         0x40
 #define RX_ACTIVE         0x80
 
+// TTY task messages
+//
+#define TTY_BREAK_FRAME_RECEPTION   1
+
 // USB shared states
 //
 #define USB_ENDPOINT_ACTIVE          0x0001
@@ -727,7 +731,7 @@ typedef struct stTTYQue
     #endif
     QUEQUE         tty_queue;                                            // the standard queue belonging to the TTY
     QUEUE_TRANSFER msgs;                                                 // the number of reception messages waiting in the input queue
-    #if (defined (SUPPORT_MSG_CNT) && defined (SUPPORT_MSG_MODE)) || defined SERIAL_SUPPORT_DMA // {35}
+    #if (defined SUPPORT_MSG_MODE && defined SUPPORT_MSG_CNT) || defined SERIAL_SUPPORT_DMA || defined UART_BREAK_SUPPORT // {35}
     QUEUE_TRANSFER msgchars;                                             // the number of characters in the present reception message
     #endif
     #if defined SUPPORT_FLOW_HIGH_LOW

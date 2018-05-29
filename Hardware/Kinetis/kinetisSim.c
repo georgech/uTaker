@@ -98,6 +98,15 @@ static unsigned long ulPort_in_A, ulPort_in_B, ulPort_in_C, ulPort_in_D, ulPort_
 #if PORTS_AVAILABLE > 5
     static unsigned long ulPort_in_F;
 #endif
+#if PORTS_AVAILABLE > 6
+    static unsigned long ulPort_in_G;
+#endif
+#if PORTS_AVAILABLE > 7
+    static unsigned long ulPort_in_H;
+#endif
+#if PORTS_AVAILABLE > 8
+    static unsigned long ulPort_in_I;
+#endif
 #if defined SERIAL_INTERFACE
     static int iUART_rx_Active[LPUARTS_AVAILABLE + UARTS_AVAILABLE] = {0};
 #endif
@@ -301,6 +310,12 @@ static const unsigned long ulDisabled[PORTS_AVAILABLE] = {
     0x0000009d,                                                          // port D disabled default pins
     0x04000070                                                           // port E disabled default pins
 #elif defined KINETIS_KW2X
+    0x00000000,                                                          // port A disabled default pins
+    0x00000000,                                                          // port B disabled default pins
+    0x00000030,                                                          // port C disabled default pins
+    0x0000000d,                                                          // port D disabled default pins
+    0x00000010                                                           // port E disabled default pins
+#elif defined KINETIS_KM
     0x00000000,                                                          // port A disabled default pins
     0x00000000,                                                          // port B disabled default pins
     0x00000030,                                                          // port C disabled default pins
@@ -966,7 +981,7 @@ static void fnSetDevice(unsigned long *port_inits)
     ENET_FTRL  = 0x000007ff;
     ENET_ATPER = 0x3b9aca00;
 #endif
-#if !defined KINETIS_KL && !defined KINETIS_KE                           // {24}
+#if PDB_AVAILABLE > 0
     PDB0_MOD   = 0x0000ffff;                                             // PDB {16}
     PDB0_IDLY  = 0x0000ffff;
 #endif
@@ -1001,7 +1016,7 @@ static void fnSetDevice(unsigned long *port_inits)
 #if PORTS_AVAILABLE > 5
     GPIOE_PDIR  = ulPort_in_F = *port_inits++;
 #endif
-#if !defined KINETIS_KL && !defined KINETIS_KE
+#if !defined KINETIS_KL && !defined KINETIS_KE && (FLEX_TIMERS_AVAILABLE > 0)
     FTM0_MODE = FTM_MODE_WPDIS;                                          // FlexTimer
     FTM1_MODE = FTM_MODE_WPDIS;
     FTM2_MODE = FTM_MODE_WPDIS;
@@ -1313,6 +1328,18 @@ extern unsigned long fnGetPresentPortState(int portNr)
     case _PORTF:
         return ((GPIOF_PDDR & GPIOF_PDOR) | (~GPIOF_PDDR & ulPort_in_F));
 #endif
+#if PORTS_AVAILABLE > 6
+    case _PORTG:
+        return ((GPIOG_PDDR & GPIOG_PDOR) | (~GPIOG_PDDR & ulPort_in_G));
+#endif
+#if PORTS_AVAILABLE > 7
+    case _PORTH:
+        return ((GPIOH_PDDR & GPIOH_PDOR) | (~GPIOH_PDDR & ulPort_in_H));
+#endif
+#if PORTS_AVAILABLE > 8
+    case _PORTI:
+        return ((GPIOI_PDDR & GPIOI_PDOR) | (~GPIOI_PDDR & ulPort_in_I));
+#endif
 #if defined _EXTERNAL_PORT_COUNT && _EXTERNAL_PORT_COUNT > 0             // {8}
     case _PORT_EXP_0:                                                    // external ports extensions
     case _PORT_EXP_1:
@@ -1430,6 +1457,18 @@ extern unsigned long fnGetPresentPortPeriph(int portNr)
     case _PORTF:
         return (ulPeripherals[5]);
 #endif
+#if PORTS_AVAILABLE > 6
+    case _PORTG:
+        return (ulPeripherals[6]);
+#endif
+#if PORTS_AVAILABLE > 7
+    case _PORTH:
+        return (ulPeripherals[7]);
+#endif
+#if PORTS_AVAILABLE > 8
+    case _PORTI:
+        return (ulPeripherals[8]);
+#endif
     default:
         return 0;
     }
@@ -1441,13 +1480,23 @@ extern unsigned long fnGetPresentPortPeriph(int portNr)
 extern int fnPortChanges(int iForce)
 {
     int iRtn = iFlagRefresh;
-    static unsigned long ulPortDir0 = 0, ulPortDir1 = 0, ulPortDir2 = 0, ulPortDir3 = 0, ulPortDir4 = 0;
     static unsigned long ulPortVal0 = 0, ulPortVal1 = 0, ulPortVal2 = 0, ulPortVal3 = 0, ulPortVal4 = 0;
     static unsigned long ulPortFunction0 = 0, ulPortFunction1 = 0, ulPortFunction2 = 0, ulPortFunction3 = 0, ulPortFunction4 = 0;
 #if PORTS_AVAILABLE > 5
     static unsigned long ulPortFunction5 = 0; 
-    static unsigned long ulPortDir5 = 0;
     static unsigned long ulPortVal5 = 0;
+#endif
+#if PORTS_AVAILABLE > 6
+    static unsigned long ulPortFunction6 = 0;
+    static unsigned long ulPortVal6 = 0;
+#endif
+#if PORTS_AVAILABLE > 7
+    static unsigned long ulPortFunction7 = 0;
+    static unsigned long ulPortVal7 = 0;
+#endif
+#if PORTS_AVAILABLE > 8
+    static unsigned long ulPortFunction8 = 0;
+    static unsigned long ulPortVal8 = 0;
 #endif
 #if defined _EXTERNAL_PORT_COUNT && _EXTERNAL_PORT_COUNT > 0             // {8}
     static unsigned long ulPortExtValue[_EXTERNAL_PORT_COUNT] = {0};
@@ -1498,6 +1547,33 @@ extern int fnPortChanges(int iForce)
     if ((ulNewValue != ulPortVal5) || (ulNewPortPer != ulPortFunction5)) {
         ulPortVal5 = ulNewValue;
         ulPortFunction5 = ulNewPortPer;
+        iRtn |= PORT_CHANGE;
+    }
+#endif
+#if PORTS_AVAILABLE > 6
+    ulNewValue = fnGetPresentPortState(_PORTG + 1);
+    ulNewPortPer = fnGetPresentPortPeriph(_PORTG + 1);
+    if ((ulNewValue != ulPortVal6) || (ulNewPortPer != ulPortFunction6)) {
+        ulPortVal6 = ulNewValue;
+        ulPortFunction6 = ulNewPortPer;
+        iRtn |= PORT_CHANGE;
+    }
+#endif
+#if PORTS_AVAILABLE > 7
+    ulNewValue = fnGetPresentPortState(_PORTH + 1);
+    ulNewPortPer = fnGetPresentPortPeriph(_PORTH + 1);
+    if ((ulNewValue != ulPortVal7) || (ulNewPortPer != ulPortFunction7)) {
+        ulPortVal7 = ulNewValue;
+        ulPortFunction7 = ulNewPortPer;
+        iRtn |= PORT_CHANGE;
+    }
+#endif
+#if PORTS_AVAILABLE > 8
+    ulNewValue = fnGetPresentPortState(_PORTI + 1);
+    ulNewPortPer = fnGetPresentPortPeriph(_PORTI + 1);
+    if ((ulNewValue != ulPortVal8) || (ulNewPortPer != ulPortFunction8)) {
+        ulPortVal8 = ulNewValue;
+        ulPortFunction8 = ulNewPortPer;
         iRtn |= PORT_CHANGE;
     }
 #endif
@@ -3626,7 +3702,7 @@ extern void fnSimPers(void)
                         break;
                     }
     #endif
-                    if ((FTM2_C0SC & (FTM_CSC_ELSA | FTM_CSC_ELSB)) && ((SIM_PINSEL0 & SIM_PINSEL_FTM1PS1) == 0)) {
+                    if (((FTM2_C0SC & (FTM_CSC_ELSA | FTM_CSC_ELSB)) != 0) && ((SIM_PINSEL0 & SIM_PINSEL_FTM2PS0) == 0)) {
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTC][iPin - 16] = PC_0_FTM2_CH0;                    
                     }
@@ -3651,7 +3727,7 @@ extern void fnSimPers(void)
                         break;
                     }
     #endif
-                    if ((FTM2_C1SC & (FTM_CSC_ELSA | FTM_CSC_ELSB)) && (!(SIM_PINSEL0 & SIM_PINSEL_FTM1PS1))) {
+                    if (((FTM2_C1SC & (FTM_CSC_ELSA | FTM_CSC_ELSB)) != 0) && (0 == (SIM_PINSEL0 & SIM_PINSEL_FTM1PS1))) {
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTC][iPin - 16] = PC_1_FTM2_CH1;                    
                     }
@@ -3756,7 +3832,7 @@ extern void fnSimPers(void)
     #endif
                     break;
                 case KE_PORTC_BIT5:
-                    if ((FTM1_C1SC & (FTM_CSC_ELSA | FTM_CSC_ELSB)) && (!(SIM_PINSEL0 & SIM_PINSEL_FTM1PS1))) {
+                    if (((FTM1_C1SC & (FTM_CSC_ELSA | FTM_CSC_ELSB)) != 0) && (0 == (SIM_PINSEL0 & SIM_PINSEL_FTM1PS1))) {
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTC][iPin - 16] = PC_5_FTM1_CH1;                    
                     }
@@ -3871,29 +3947,29 @@ extern void fnSimPers(void)
     #endif
                     break;
                 case KE_PORTD_BIT2:
-                    if (SPI1_C1 & SPI_C1_MSTR) {
+                    if ((SPI1_C1 & SPI_C1_MSTR) != 0) {
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTD][iPin - 24] = PD_2_SPI1_MISO;
                     }
     #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
-                    else if (KBI0_PE & 0x4000000) {                      // pin is enabled as keyboard interrupt
+                    else if ((KBI0_PE & 0x4000000) != 0) {               // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTD][iPin - 24] = PD_2_KBI0_P26;
                     }
     #else
-                    else if (KBI1_PE & 0x04) {                           // pin is enabled as keyboard interrupt
+                    else if ((KBI1_PE & 0x04) != 0) {                    // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTD][iPin - 24] = PD_2_KBI1_P2;
                     }
     #endif
                     break;
                 case KE_PORTD_BIT3:
-                    if (SPI1_C1 & SPI_C1_MSTR) {
+                    if ((SPI1_C1 & SPI_C1_MSTR) != 0) {
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTD][iPin - 24] = PD_3_SPI1_PCS0;
                     }
     #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
-                    else if (KBI0_PE & 0x8000000) {                      // pin is enabled as keyboard interrupt
+                    else if ((KBI0_PE & 0x8000000) != 0) {               // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTD][iPin - 24] = PD_3_KBI0_P27;
                     }
@@ -3972,13 +4048,13 @@ extern void fnSimPers(void)
                     }
     #endif
     #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
-                    if (KBI0_PE & 0x80000000) {                          // pin is enabled as keyboard interrupt
+                    if ((KBI0_PE & 0x80000000) != 0) {                   // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTD][iPin - 24] = PD_7_KBI0_P31;
                         break;
                     }
     #else
-                    if (KBI1_PE & 0x80) {                                // pin is enabled as keyboard interrupt
+                    if ((KBI1_PE & 0x80) != 0) {                         // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTD][iPin - 24] = PD_7_KBI1_P7;
                     }
@@ -4236,7 +4312,7 @@ extern void fnSimPers(void)
     #endif
                     break;
                 case KE_PORTH_BIT0:
-                    if ((FTM2_C0SC & (FTM_CSC_ELSA | FTM_CSC_ELSB)) && (SIM_PINSEL0 & SIM_PINSEL_FTM1PS1)) {
+                    if (((FTM2_C0SC & (FTM_CSC_ELSA | FTM_CSC_ELSB)) != 0) && ((SIM_PINSEL0 & SIM_PINSEL_FTM2PS0) != 0)) {
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTH][iPin - 24] = PH_0_FTM2_CH0;                    
                     }
@@ -4957,19 +5033,41 @@ static void fnPortInterrupt(int iPort, unsigned long ulNewState, unsigned long u
         PORTF_ISFR |= ulChangedBit;
         break;
     #endif
+    #if PORTS_AVAILABLE > 6
+    case _PORTG:
+        PORTG_ISFR |= ulChangedBit;
+        break;
+    #endif
+    #if PORTS_AVAILABLE > 7
+    case _PORTH:
+        PORTH_ISFR |= ulChangedBit;
+        break;
+    #endif
+    #if PORTS_AVAILABLE > 8
+    case _PORTI:
+        PORTI_ISFR |= ulChangedBit;
+        break;
+    #endif
     }
+    #if defined irq_PT_ID
+    iPortInterruptSource = irq_PT_ID;
+    #endif
     if (fnGenInt(iPortInterruptSource) != 0) {                           // if port interrupt is not disabled
         VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
         switch (iPort) {
         case _PORTA:
-    #if defined irq_PORT_A_E_ID
+    #if defined irq_PT_ID
+            ptrVect->processor_interrupts.irq_PT();                      // call port interrupt handler
+    #elif defined irq_PORT_A_E_ID
             ptrVect->processor_interrupts.irq_PORTA_E();                 // call port interrupt handler
     #else
             ptrVect->processor_interrupts.irq_PORTA();                   // call port interrupt handler
     #endif
             break;
         case _PORTB:
-    #if defined irq_PORT_B_C_D_ID                                        // shared port B/C/D interrupt vector
+    #if defined irq_PT_ID
+            ptrVect->processor_interrupts.irq_PT();                      // call port interrupt handler
+    #elif defined irq_PORT_B_C_D_ID                                      // shared port B/C/D interrupt vector
             ptrVect->processor_interrupts.irq_PORTB_C_D();               // call port interrupt handler
     #elif defined irq_PORTBCD_E_ID                                       // shared port B/C/D/E interrupt vector
             ptrVect->processor_interrupts.irq_PORTBCD_E();               // call port interrupt handler
@@ -4979,7 +5077,9 @@ static void fnPortInterrupt(int iPort, unsigned long ulNewState, unsigned long u
             break;
     #if PORTS_AVAILABLE > 2
         case _PORTC:
-        #if defined irq_PORTC_ID
+        #if defined irq_PT_ID
+            ptrVect->processor_interrupts.irq_PT();                      // call port interrupt handler
+        #elif defined irq_PORTC_ID
             ptrVect->processor_interrupts.irq_PORTC();                   // call port interrupt handler
         #elif defined irq_PORTBCD_E_ID                                   // shared port B/C/D/E interrupt vector
             ptrVect->processor_interrupts.irq_PORTBCD_E();               // call port interrupt handler
@@ -4990,7 +5090,9 @@ static void fnPortInterrupt(int iPort, unsigned long ulNewState, unsigned long u
     #endif
     #if PORTS_AVAILABLE > 3
         case _PORTD:
-        #if defined irq_PORTC_ID
+        #if defined irq_PT_ID
+            ptrVect->processor_interrupts.irq_PT();                      // call port interrupt handler
+        #elif defined irq_PORTC_ID
             ptrVect->processor_interrupts.irq_PORTD();                   // call port interrupt handler
         #elif defined irq_PORTBCD_E_ID                                   // shared port B/C/D/E interrupt vector
             ptrVect->processor_interrupts.irq_PORTBCD_E();               // call port interrupt handler
@@ -5001,7 +5103,9 @@ static void fnPortInterrupt(int iPort, unsigned long ulNewState, unsigned long u
     #endif
     #if PORTS_AVAILABLE > 4
         case _PORTE:
-        #if defined irq_PORTE_ID
+        #if defined irq_PT_ID
+            ptrVect->processor_interrupts.irq_PT();                      // call port interrupt handler
+        #elif defined irq_PORTE_ID
             ptrVect->processor_interrupts.irq_PORTE();                   // call port interrupt handler
         #elif defined irq_PORT_A_E_ID                                    // shared port A and E interrupt vector
             ptrVect->processor_interrupts.irq_PORTA_E();                 // call port interrupt handler
@@ -5012,9 +5116,26 @@ static void fnPortInterrupt(int iPort, unsigned long ulNewState, unsigned long u
     #endif
     #if PORTS_AVAILABLE > 5
         case _PORTF:
-    #if defined irq_PORTF_ID
+        #if defined irq_PT_ID
+            ptrVect->processor_interrupts.irq_PT();                      // call port interrupt handler
+        #elif defined irq_PORTF_ID
             ptrVect->processor_interrupts.irq_PORTF();                   // call port interrupt handler
+        #endif
+            break;
     #endif
+    #if PORTS_AVAILABLE > 6
+        case _PORTG:
+            ptrVect->processor_interrupts.irq_PT();                      // call port interrupt handler
+            break;
+    #endif
+    #if PORTS_AVAILABLE > 7
+        case _PORTH:
+            ptrVect->processor_interrupts.irq_PT();                      // call port interrupt handler
+            break;
+    #endif
+    #if PORTS_AVAILABLE > 8
+        case _PORTI:
+            ptrVect->processor_interrupts.irq_PT();                      // call port interrupt handler
             break;
     #endif
         }
@@ -5207,6 +5328,43 @@ static const unsigned char uart_type[LPUARTS_AVAILABLE + UARTS_AVAILABLE] = {
 };
 #endif
 
+#if LPUARTS_AVAILABLE > 0
+
+#if defined LPUARTS_PARALLEL
+    #define LPUART0_CH_NUMBER     UARTS_AVAILABLE
+    #define LPUART1_CH_NUMBER     (UARTS_AVAILABLE + 1)
+    #define LPUART2_CH_NUMBER     (UARTS_AVAILABLE + 2)
+    #define LPUART3_CH_NUMBER     (UARTS_AVAILABLE + 3)
+    #define LPUART4_CH_NUMBER     (UARTS_AVAILABLE + 4)
+    #define LPUART5_CH_NUMBER     (UARTS_AVAILABLE + 5)
+#else
+    #define LPUART0_CH_NUMBER     0
+    #define LPUART1_CH_NUMBER     1
+    #define LPUART2_CH_NUMBER     2
+    #define LPUART3_CH_NUMBER     3
+    #define LPUART4_CH_NUMBER     4
+    #define LPUART5_CH_NUMBER     5
+#endif
+
+static const unsigned char ucUART_channel[] = {
+    DMA_UART0_RX_CHANNEL,
+    #if (LPUARTS_AVAILABLE + UARTS_AVAILABLE) > 1
+    DMA_UART1_RX_CHANNEL,
+    #endif
+    #if (LPUARTS_AVAILABLE + UARTS_AVAILABLE) > 2
+    DMA_UART2_RX_CHANNEL,
+    #endif
+    #if (LPUARTS_AVAILABLE + UARTS_AVAILABLE) > 3
+    DMA_UART3_RX_CHANNEL,
+    #endif
+    #if (LPUARTS_AVAILABLE + UARTS_AVAILABLE) > 4
+    DMA_UART4_RX_CHANNEL,
+    #endif
+    #if (LPUARTS_AVAILABLE + UARTS_AVAILABLE) > 5
+    DMA_UART5_RX_CHANNEL
+    #endif
+};
+#endif
 
 // Simulate the reception of serial data by inserting bytes into the input buffer and calling interrupts
 //
@@ -5278,17 +5436,17 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
             #if defined SERIAL_SUPPORT_DMA
                 #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA
                             KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
-                            ptrDMA += DMA_UART0_RX_CHANNEL;
+                            ptrDMA += ucUART_channel[LPUART0_CH_NUMBER];
                             if ((ptrDMA->DMA_DCR & DMA_DCR_ERQ) != 0) { // if source enabled
-                                fnSimulateDMA(DMA_UART0_RX_CHANNEL);     // trigger DMA transfer on the UART's channel
+                                fnSimulateDMA(ucUART_channel[LPUART0_CH_NUMBER]); // trigger DMA transfer on the UART's channel
                                 LPUART0_STAT &= ~LPUART_STAT_RDRF;       // remove interrupt cause
                             }
                 #else
-                            if ((DMA_ERQ & (DMA_ERQ_ERQ0 << DMA_UART0_RX_CHANNEL)) != 0) { // if source enabled
+                            if ((DMA_ERQ & (DMA_ERQ_ERQ0 << ucUART_channel[LPUART0_CH_NUMBER])) != 0) { // if source enabled
                                 KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
-                                ptrDMA_TCD += DMA_UART0_RX_CHANNEL;
+                                ptrDMA_TCD += ucUART_channel[LPUART0_CH_NUMBER];
                                 ptrDMA_TCD->DMA_TCD_CSR |= (DMA_TCD_CSR_ACTIVE); // trigger
-                                fnSimulateDMA(DMA_UART0_RX_CHANNEL);     // trigger DMA transfer on the UART's channel
+                                fnSimulateDMA(ucUART_channel[LPUART0_CH_NUMBER]); // trigger DMA transfer on the UART's channel
                                 LPUART0_STAT &= ~LPUART_STAT_RDRF;       // remove interrupt cause
                             }
                 #endif
@@ -5334,17 +5492,17 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                 #if defined SERIAL_SUPPORT_DMA
                     #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA
                             KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
-                            ptrDMA += DMA_UART1_RX_CHANNEL;
+                            ptrDMA += ucUART_channel[LPUART1_CH_NUMBER];
                             if ((ptrDMA->DMA_DCR & DMA_DCR_ERQ) != 0) {  // if source enabled
-                                fnSimulateDMA(DMA_UART1_RX_CHANNEL);     // trigger DMA transfer on the UART's channel
+                                fnSimulateDMA(ucUART_channel[LPUART1_CH_NUMBER]); // trigger DMA transfer on the UART's channel
                                 LPUART1_STAT &= ~LPUART_STAT_RDRF;       // remove interrupt cause
                             }
                     #else
-                            if ((DMA_ERQ & (DMA_ERQ_ERQ0 << DMA_UART1_RX_CHANNEL)) != 0) { // if source enabled
+                            if ((DMA_ERQ & (DMA_ERQ_ERQ0 << ucUART_channel[LPUART1_CH_NUMBER])) != 0) { // if source enabled
                                 KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
-                                ptrDMA_TCD += DMA_UART1_RX_CHANNEL;
+                                ptrDMA_TCD += ucUART_channel[LPUART1_CH_NUMBER];
                                 ptrDMA_TCD->DMA_TCD_CSR |= (DMA_TCD_CSR_ACTIVE); // trigger
-                                fnSimulateDMA(DMA_UART1_RX_CHANNEL);     // trigger DMA transfer on the UART's channel
+                                fnSimulateDMA(ucUART_channel[LPUART1_CH_NUMBER]); // trigger DMA transfer on the UART's channel
                                 LPUART1_STAT &= ~LPUART_STAT_RDRF;       // remove interrupt cause
                             }
                     #endif
@@ -5398,17 +5556,17 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
             #if defined SERIAL_SUPPORT_DMA
                 #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA
                             KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
-                            ptrDMA += DMA_UART2_RX_CHANNEL;
+                            ptrDMA += cUART_channel[LPUART2_CH_NUMBER];
                             if ((ptrDMA->DMA_DCR & DMA_DCR_ERQ) != 0) {  // if source enabled
-                                fnSimulateDMA(DMA_UART2_RX_CHANNEL);     // trigger DMA transfer on the LPUART's channel
+                                fnSimulateDMA(cUART_channel[LPUART2_CH_NUMBER]); // trigger DMA transfer on the LPUART's channel
                                 LPUART2_STAT &= ~LPUART_STAT_RDRF;       // remove interrupt cause
                             }
                 #else
-                            if ((DMA_ERQ & (DMA_ERQ_ERQ0 << DMA_UART2_RX_CHANNEL)) != 0) { // if source enabled
+                            if ((DMA_ERQ & (DMA_ERQ_ERQ0 << cUART_channel[LPUART2_CH_NUMBER])) != 0) { // if source enabled
                                 KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
-                                ptrDMA_TCD += DMA_UART2_RX_CHANNEL;
+                                ptrDMA_TCD += cUART_channel[LPUART2_CH_NUMBER];
                                 ptrDMA_TCD->DMA_TCD_CSR |= (DMA_TCD_CSR_ACTIVE); // trigger
-                                fnSimulateDMA(DMA_UART2_RX_CHANNEL);     // trigger DMA transfer on the LPUART's channel
+                                fnSimulateDMA(cUART_channel[LPUART2_CH_NUMBER]); // trigger DMA transfer on the LPUART's channel
                                 LPUART2_STAT &= ~LPUART_STAT_RDRF;       // remove interrupt cause
                             }
                 #endif
@@ -5449,17 +5607,17 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
             #if defined SERIAL_SUPPORT_DMA && defined DMA_UART3_RX_CHANNEL
                 #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA
                             KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
-                            ptrDMA += DMA_UART3_RX_CHANNEL;
+                            ptrDMA += cUART_channel[LPUART3_CH_NUMBER];
                             if ((ptrDMA->DMA_DCR & DMA_DCR_ERQ) != 0) {  // if source enabled
-                                fnSimulateDMA(DMA_UART3_RX_CHANNEL);     // trigger DMA transfer on the LPUART's channel
+                                fnSimulateDMA(cUART_channel[LPUART3_CH_NUMBER]); // trigger DMA transfer on the LPUART's channel
                                 LPUART13STAT &= ~LPUART_STAT_RDRF;       // remove interrupt cause
                             }
                 #else
-                            if ((DMA_ERQ & (DMA_ERQ_ERQ0 << DMA_UART3_RX_CHANNEL)) != 0) { // if source enabled
+                            if ((DMA_ERQ & (DMA_ERQ_ERQ0 << cUART_channel[LPUART3_CH_NUMBER])) != 0) { // if source enabled
                                 KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
-                                ptrDMA_TCD += DMA_UART3_RX_CHANNEL;
+                                ptrDMA_TCD += cUART_channel[LPUART3_CH_NUMBER];
                                 ptrDMA_TCD->DMA_TCD_CSR |= (DMA_TCD_CSR_ACTIVE); // trigger
-                                fnSimulateDMA(DMA_UART3_RX_CHANNEL);     // trigger DMA transfer on the LPUART's channel
+                                fnSimulateDMA(cUART_channel[LPUART3_CH_NUMBER]); // trigger DMA transfer on the LPUART's channel
                                 LPUART3_STAT &= ~LPUART_STAT_RDRF;       // remove interrupt cause
                             }
                 #endif
@@ -5491,17 +5649,17 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
             #if defined SERIAL_SUPPORT_DMA && defined DMA_UART4_RX_CHANNEL
                 #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA
                             KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
-                            ptrDMA += DMA_UART4_RX_CHANNEL;
+                            ptrDMA += cUART_channel[LPUART4_CH_NUMBER];
                             if ((ptrDMA->DMA_DCR & DMA_DCR_ERQ) != 0) {  // if source enabled
-                                fnSimulateDMA(DMA_UART4_RX_CHANNEL);     // trigger DMA transfer on the LPUART's channel
+                                fnSimulateDMA(cUART_channel[LPUART4_CH_NUMBER]); // trigger DMA transfer on the LPUART's channel
                                 LPUART4_STAT &= ~LPUART_STAT_RDRF;       // remove interrupt cause
                             }
                 #else
-                            if ((DMA_ERQ & (DMA_ERQ_ERQ0 << DMA_UART4_RX_CHANNEL)) != 0) { // if source enabled
+                            if ((DMA_ERQ & (DMA_ERQ_ERQ0 << cUART_channel[LPUART4_CH_NUMBER])) != 0) { // if source enabled
                                 KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
-                                ptrDMA_TCD += DMA_UART4_RX_CHANNEL;
+                                ptrDMA_TCD += cUART_channel[LPUART4_CH_NUMBER];
                                 ptrDMA_TCD->DMA_TCD_CSR |= (DMA_TCD_CSR_ACTIVE); // trigger
-                                fnSimulateDMA(DMA_UART4_RX_CHANNEL);     // trigger DMA transfer on the LPUART's channel
+                                fnSimulateDMA(cUART_channel[LPUART4_CH_NUMBER]); // trigger DMA transfer on the LPUART's channel
                                 LPUART4_STAT &= ~LPUART_STAT_RDRF;       // remove interrupt cause
                             }
                 #endif
@@ -5557,10 +5715,17 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                     }
                     else {
             #endif
+            #if defined irq_UART0_1_ID                                   // when UARTs 0 and 1 share an interrupt
+                        if (fnGenInt(irq_UART0_1_ID) != 0) {             // if UART0/1 interrupt is not disabled
+                            VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                            ptrVect->processor_interrupts.irq_UART0_1(); // call the interrupt handler
+                        }
+            #else
                         if (fnGenInt(irq_UART0_ID) != 0) {               // if UART0 interrupt is not disabled
                             VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                             ptrVect->processor_interrupts.irq_UART0();   // call the interrupt handler
                         }
+           #endif
             #if !defined DEVICE_WITHOUT_DMA                              // if the device supports DMA
                     }
             #endif
@@ -5604,10 +5769,17 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                     }
                     else {
         #endif
+        #if defined irq_UART0_1_ID                                       // when UARTs 0 and 1 share an interrupt
+                        if (fnGenInt(irq_UART0_1_ID) != 0) {             // if UART0/1 interrupt is not disabled
+                            VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                            ptrVect->processor_interrupts.irq_UART0_1(); // call the interrupt handler
+                        }
+        #else
                         if (fnGenInt(irq_UART1_ID) != 0) {               // if UART1 interrupt is not disabled
                             VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                             ptrVect->processor_interrupts.irq_UART1();   // call the interrupt handler
                         }
+        #endif
         #if !defined DEVICE_WITHOUT_DMA                                  // if the device supports DMA
                     }
         #endif
@@ -5622,10 +5794,17 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
             if (ptrDebugIn == 0) {                                       // idle line detection
                 UART2_S1 |= UART_S1_IDLE;                                // mark idle line status
                 if ((UART2_C2 & UART_C2_ILIE) != 0) {                    // if the idle line interrupt is enabled
+        #if defined irq_UART2_3_ID                                       // when UARTs 2 and 3 share an interrupt
+                    if (fnGenInt(irq_UART2_3_ID) != 0) {                 // if UART2/3 interrupt is not disabled
+                        VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                        ptrVect->processor_interrupts.irq_UART2_3(); // call the interrupt handler
+                    }
+        #else
                     if (fnGenInt(irq_UART2_ID) != 0) {                   // if UART2 interrupt is not disabled
                         VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                         ptrVect->processor_interrupts.irq_UART2();       // call the interrupt handler
                     }
+        #endif
                 }
                 return;
             }
@@ -5662,10 +5841,17 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                     }
                     else {
         #endif
+        #if defined irq_UART2_3_ID                                       // when UARTs 2 and 3 share an interrupt
+                        if (fnGenInt(irq_UART2_3_ID) != 0) {             // if UART2/3 interrupt is not disabled
+                            VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                            ptrVect->processor_interrupts.irq_UART2_3();   // call the interrupt handler
+                        }
+        #else
                         if (fnGenInt(irq_UART2_ID) != 0) {               // if UART2 interrupt is not disabled
                             VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                             ptrVect->processor_interrupts.irq_UART2();   // call the interrupt handler
                         }
+        #endif
         #if !defined KINETIS_KE
                     }
         #endif
@@ -5693,10 +5879,17 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
         #endif
                     }
                     else {
+        #if defined irq_UART2_3_ID                                       // when UARTs 2 and 3 share an interrupt
+                        if (fnGenInt(irq_UART2_3_ID) != 0) {             // if UART2/3 interrupt is not disabled
+                            VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                            ptrVect->processor_interrupts.irq_UART2_3();   // call the interrupt handler
+                        }
+        #else
                         if (fnGenInt(irq_UART3_ID) != 0) {               // if UART3 interrupt is not disabled
                             VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                             ptrVect->processor_interrupts.irq_UART3();   // call the interrupt handler
                         }
+        #endif
                     }
                 }
             }
@@ -5844,10 +6037,17 @@ static void fnUART_Tx_int(int iChannel)
         if ((UART0_C2 & UART_C2_TE) != 0) {                              // if transmitter enabled
             UART0_S1 |= (UART_S1_TDRE | UART_S1_TC);                     // set interrupt cause
             if ((UART0_C2 & UART0_S1) != 0) {                            // if transmit interrupt type enabled
+            #if defined irq_UART0_1_ID                                   // when UARTs 0 and 1 share an interrupt
+                if (fnGenInt(irq_UART0_1_ID) != 0) {                     // if UART0/1 interrupt is not disabled
+                    VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                    ptrVect->processor_interrupts.irq_UART0_1();         // call the interrupt handler
+                }
+            #else
                 if (fnGenInt(irq_UART0_ID) != 0) {
                     VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                     ptrVect->processor_interrupts.irq_UART0();           // call the interrupt handler
                 }
+            #endif
             }
         }
         break;
@@ -5857,10 +6057,17 @@ static void fnUART_Tx_int(int iChannel)
         if (UART1_C2 & UART_C2_TE) {                                     // if transmitter enabled
             UART1_S1 |= (UART_S1_TDRE | UART_S1_TC);                     // set interrupt cause
             if ((UART1_C2 & UART1_S1) != 0) {                            // if transmit interrupt type enabled
+            #if defined irq_UART0_1_ID                                   // when UARTs 0 and 1 share an interrupt
+                if (fnGenInt(irq_UART0_1_ID) != 0) {                     // if UART0/1 interrupt is not disabled
+                    VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                    ptrVect->processor_interrupts.irq_UART0_1();         // call the interrupt handler
+                }
+            #else
                 if (fnGenInt(irq_UART1_ID) != 0) {
                     VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                     ptrVect->processor_interrupts.irq_UART1();           // call the interrupt handler
                 }
+            #endif
             }
         }
         break;
@@ -5870,10 +6077,17 @@ static void fnUART_Tx_int(int iChannel)
         if ((UART2_C2 & UART_C2_TE) != 0) {                              // if transmitter enabled
             UART2_S1 |= (UART_S1_TDRE | UART_S1_TC);                     // set interrupt cause
             if ((UART2_C2 & UART2_S1) != 0) {                            // if transmit interrupt type enabled
+            #if defined irq_UART2_3_ID                                   // when UARTs 2 and 3 share an interrupt
+                if (fnGenInt(irq_UART2_3_ID) != 0) {                     // if UART2/3 interrupt is not disabled
+                    VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                    ptrVect->processor_interrupts.irq_UART2_3();         // call the interrupt handler
+                }
+            #else
                 if (fnGenInt(irq_UART2_ID) != 0) {                       // if UART2 interrupt is not disabled
                     VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                     ptrVect->processor_interrupts.irq_UART2();           // call the interrupt handler
                 }
+            #endif
             }
         }
         break;
@@ -5883,10 +6097,17 @@ static void fnUART_Tx_int(int iChannel)
         if (UART3_C2 & UART_C2_TE) {                                     // if transmitter enabled
             UART3_S1 |= (UART_S1_TDRE | UART_S1_TC);                     // set interrupt cause
             if (UART3_C2 & UART3_S1) {                                   // if transmit interrupt type enabled
+            #if defined irq_UART2_3_ID                                   // when UARTs 2 and 3 share an interrupt
+                if (fnGenInt(irq_UART2_3_ID) != 0) {                     // if UART2/3 interrupt is not disabled
+                    VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                    ptrVect->processor_interrupts.irq_UART2_3();         // call the interrupt handler
+                }
+            #else
                 if (fnGenInt(irq_UART3_ID) != 0) {                       // if UART3 interrupt is not disabled
                     VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                     ptrVect->processor_interrupts.irq_UART3();           // call the interrupt handler
                 }
+            #endif
             }
         }
         break;
@@ -7232,6 +7453,198 @@ extern void fnSimulateModemChange(int iPort, unsigned long ulNewState, unsigned 
 //
 extern void fnSimulateBreak(int iPort)
 {
+    switch (iPort) {
+#if LPUARTS_AVAILABLE > 0
+#if defined LPUARTS_PARALLEL
+#define LPUART0_CH_NUMBER     UARTS_AVAILABLE
+#else
+#define LPUART0_CH_NUMBER     0
+#endif
+    case LPUART0_CH_NUMBER:                                              // LPUART 0
+        LPUART0_STAT |= LPUART_STAT_LBKDIF;                              // set the status flag
+        if ((LPUART0_BAUD & LPUART_BAUD_LBKDIE) != 0) {                  // if the break interrupt is enabled
+            if (fnGenInt(irq_LPUART0_ID) != 0) {                         // if LPUART1 interrupt is not disabled
+                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                ptrVect->processor_interrupts.irq_LPUART0();             // call the interrupt handler
+            }
+        }
+        break;
+#if LPUARTS_AVAILABLE > 1
+#if defined LPUARTS_PARALLEL
+#define LPUART1_CH_NUMBER     (UARTS_AVAILABLE + 1)
+#else
+#define LPUART1_CH_NUMBER     1
+#endif
+    case LPUART1_CH_NUMBER:                                              // LPUART 1
+        LPUART1_STAT |= LPUART_STAT_LBKDIF;                              // set the status flag
+        if ((LPUART1_BAUD & LPUART_BAUD_LBKDIE) != 0) {                  // if the break interrupt is enabled
+            if (fnGenInt(irq_LPUART1_ID) != 0) {                         // if LPUART1 interrupt is not disabled
+                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                ptrVect->processor_interrupts.irq_LPUART1();             // call the interrupt handler
+            }
+        }
+        break;
+#endif
+#if LPUARTS_AVAILABLE > 2
+#if defined LPUARTS_PARALLEL
+#define LPUART2_CH_NUMBER     (UARTS_AVAILABLE + 2)
+#else
+#define LPUART2_CH_NUMBER     2
+#endif
+    case LPUART2_CH_NUMBER:                                              // LPUART 2
+        LPUART2_STAT |= LPUART_STAT_LBKDIF;                              // set the status flag
+        if ((LPUART2_BAUD & LPUART_BAUD_LBKDIE) != 0) {                  // if the break interrupt is enabled
+            if (fnGenInt(irq_LPUART2_ID) != 0) {                         // if LPUART2 interrupt is not disabled
+                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                ptrVect->processor_interrupts.irq_LPUART2();             // call the interrupt handler
+            }
+        }
+        break;
+#endif
+#if LPUARTS_AVAILABLE > 3
+#if defined LPUARTS_PARALLEL
+#define LPUART3_CH_NUMBER     (UARTS_AVAILABLE + 3)
+#else
+#define LPUART3_CH_NUMBER     3
+#endif
+    case LPUART3_CH_NUMBER:                                              // LPUART 3
+        LPUART3_STAT |= LPUART_STAT_LBKDIF;                              // set the status flag
+        if ((LPUART3_BAUD & LPUART_BAUD_LBKDIE) != 0) {                  // if the break interrupt is enabled
+            if (fnGenInt(irq_LPUART3_ID) != 0) {                         // if LPUART3 interrupt is not disabled
+                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                ptrVect->processor_interrupts.irq_LPUART3();             // call the interrupt handler
+            }
+        }
+        break;
+#endif
+#if LPUARTS_AVAILABLE > 4
+#if defined LPUARTS_PARALLEL
+#define LPUART4_CH_NUMBER     (UARTS_AVAILABLE + 4)
+#else
+#define LPUART4_CH_NUMBER     4
+#endif
+    case LPUART4_CH_NUMBER:                                              // LPUART 4
+        LPUART4_STAT |= LPUART_STAT_LBKDIF;                              // set the status flag
+        if ((LPUART4_BAUD & LPUART_BAUD_LBKDIE) != 0) {                  // if the break interrupt is enabled
+            if (fnGenInt(irq_LPUART4_ID) != 0) {                         // if LPUART4 interrupt is not disabled
+                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                ptrVect->processor_interrupts.irq_LPUART4();             // call the interrupt handler
+            }
+        }
+        break;
+#endif
+#if LPUARTS_AVAILABLE > 5
+#if defined LPUARTS_PARALLEL
+#define LPUART5_CH_NUMBER     (UARTS_AVAILABLE + 5)
+#else
+#define LPUART5_CH_NUMBER     5
+#endif
+    case LPUART5_CH_NUMBER:                                              // LPUART 5
+        LPUART5_STAT |= LPUART_STAT_LBKDIF;                              // set the status flag
+        if ((LPUART5_BAUD & LPUART_BAUD_LBKDIE) != 0) {                  // if the break interrupt is enabled
+            if (fnGenInt(irq_LPUART5_ID) != 0) {                         // if LPUART5 interrupt is not disabled
+                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                ptrVect->processor_interrupts.irq_LPUART5();             // call the interrupt handler
+            }
+        }
+        break;
+#endif
+#endif
+#if UARTS_AVAILABLE > 0
+    case 0:
+        UART0_S2 |= UART_S2_LBKDIF;                                      // set break detected flag
+        if ((UART0_BDH & UART_BDH_LBKDIE) != 0) {                        // if break detection interrupt is enabled
+    #if defined irq_UART0_1_ID                                           // when UARTs 0 and 1 share an interrupt
+            if (fnGenInt(irq_UART0_1_ID) != 0) {                         // if UART0/1 interrupt is not disabled
+                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                ptrVect->processor_interrupts.irq_UART0_1();             // call the interrupt handler
+            }
+    #else
+            if (fnGenInt(irq_UART0_ID) != 0) {                           // if UART0 interrupt is not disabled
+                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                ptrVect->processor_interrupts.irq_UART0();               // call the interrupt handler
+            }
+    #endif
+        }
+        break;
+    #if UARTS_AVAILABLE > 1
+    case 1:
+        UART1_S2 |= UART_S2_LBKDIF;                                      // set break detected flag
+        if ((UART1_BDH & UART_BDH_LBKDIE) != 0) {                        // if break detection interrupt is enabled
+    #if defined irq_UART0_1_ID                                           // when UARTs 0 and 1 share an interrupt
+            if (fnGenInt(irq_UART0_1_ID) != 0) {                         // if UART0/1 interrupt is not disabled
+                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                ptrVect->processor_interrupts.irq_UART0_1();             // call the interrupt handler
+            }
+    #else
+            if (fnGenInt(irq_UART1_ID) != 0) {                           // if UART1 interrupt is not disabled
+                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                ptrVect->processor_interrupts.irq_UART1();               // call the interrupt handler
+            }
+    #endif
+        }
+        break;
+    #endif
+    #if UARTS_AVAILABLE > 2
+    case 2:
+        UART2_S2 |= UART_S2_LBKDIF;                                      // set break detected flag
+        if ((UART2_BDH & UART_BDH_LBKDIE) != 0) {                        // if break detection interrupt is enabled
+        #if defined irq_UART2_3_ID                                       // when UARTs 2 and 3 share an interrupt
+            if (fnGenInt(irq_UART2_3_ID) != 0) {                         // if UART2/3 interrupt is not disabled
+                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                ptrVect->processor_interrupts.irq_UART2_3();             // call the interrupt handler
+            }
+        #else
+            if (fnGenInt(irq_UART2_ID) != 0) {                           // if UART2 interrupt is not disabled
+                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                ptrVect->processor_interrupts.irq_UART2();               // call the interrupt handler
+            }
+        #endif
+        }
+        break;
+    #endif
+    #if UARTS_AVAILABLE > 3
+    case 3:
+        UART3_S2 |= UART_S2_LBKDIF;                                      // set break detected flag
+        if ((UART3_BDH & UART_BDH_LBKDIE) != 0) {                        // if break detection interrupt is enabled
+        #if defined irq_UART2_3_ID                                       // when UARTs 2 and 3 share an interrupt
+            if (fnGenInt(irq_UART2_3_ID) != 0) {                         // if UART2/3 interrupt is not disabled
+                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                ptrVect->processor_interrupts.irq_UART2_3();             // call the interrupt handler
+            }
+        #else
+            if (fnGenInt(irq_UART3_ID) != 0) {                           // if UART3 interrupt is not disabled
+                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                ptrVect->processor_interrupts.irq_UART3();               // call the interrupt handler
+            }
+        #endif
+        }
+        break;
+    #endif
+    #if UARTS_AVAILABLE > 4
+    case 4:
+        UART4_S2 |= UART_S2_LBKDIF;                                      // set break detected flag
+        if ((UART4_BDH & UART_BDH_LBKDIE) != 0) {                        // if break detection interrupt is enabled
+            if (fnGenInt(irq_UART4_ID) != 0) {                           // if UART4 interrupt is not disabled
+                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                ptrVect->processor_interrupts.irq_UART4();               // call the interrupt handler
+            }
+        }
+        break;
+    #endif
+    #if UARTS_AVAILABLE > 5
+    case 5:
+        UART5_S2 |= UART_S2_LBKDIF;                                      // set break detected flag
+        if ((UART5_BDH & UART_BDH_LBKDIE) != 0) {                        // if break detection interrupt is enabled
+            if (fnGenInt(irq_UART5_ID) != 0) {                           // if UART5 interrupt is not disabled
+                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                ptrVect->processor_interrupts.irq_UART5();               // call the interrupt handler
+            }
+        }
+        break;
+    #endif
+#endif
+    }
 }
 
 
@@ -7647,7 +8060,7 @@ static void fnTriggerADC(int iADC, int iHW_trigger)
 }
 #endif
 
-#if defined SUPPORT_TIMER
+#if defined SUPPORT_TIMER && (FLEX_TIMERS_AVAILABLE > 0)
 unsigned long fnGetFlexTimer_clock(int iChannel)
 {
     unsigned long ulClockSpeed = 0;
@@ -7771,13 +8184,17 @@ static int fnHandleFlexTimer(int iTimerRef, FLEX_TIMER_MODULE *ptrTimer, int iFl
             ulCountIncrease -= ptrTimer->FTM_MOD;
         }
         else {
-            ptrTimer->FTM_CNT = ptrTimer->FTM_CNTIN;
+    #if defined FTM0_CNTIN
+            ptrTimer->FTM_CNT = ptrTimer->FTM_CNTIN;                     // respect the counter initial value
             if (ulCountIncrease > (0xffff + (ptrTimer->FTM_MOD - ptrTimer->FTM_CNTIN))) {
                 ulCountIncrease = (0xffff + (ptrTimer->FTM_MOD - ptrTimer->FTM_CNTIN));
             }
             while (ulCountIncrease >= ptrTimer->FTM_MOD) {
                 ulCountIncrease -= (ptrTimer->FTM_MOD - ptrTimer->FTM_CNTIN);
             }
+    #else
+            ulCountIncrease -= ptrTimer->FTM_MOD;
+    #endif
         }
     }
     ptrTimer->FTM_CNT = ulCountIncrease;                                 // new counter value
@@ -7795,7 +8212,7 @@ extern int fnSimTimers(void)
 #if defined SERIAL_INTERFACE
     int iUART = 0;
 #endif
-#if !defined KINETIS_KL                                                  // {24}
+#if PDB_AVAILABLE > 0                                                    // {24}
     static int iPDB = 0;
     static int iPDB_interrupt_triggered = 0;
     static int iPDB_ch0_0_triggered = 0;
@@ -8113,7 +8530,7 @@ extern int fnSimTimers(void)
                 }
     #endif
                 if ((PIT_TCTRL0 & PIT_TCTRL_TIE) != 0) {                 // if PIT interrupt is enabled
-    #if defined KINETIS_KL && !defined KINETIS_KE                        // {24}
+    #if defined KINETIS_KL || defined KINETIS_KM                         // {24}
                     if (fnGenInt(irq_PIT_ID) != 0) {                     // if general PIT interrupt is not disabled
                         VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                         ptrVect->processor_interrupts.irq_PIT();         // call the shared interrupt handler
@@ -8153,7 +8570,7 @@ extern int fnSimTimers(void)
                 }
     #endif
                 if ((PIT_TCTRL1 & PIT_TCTRL_TIE) != 0) {                 // if PIT interrupt is enabled
-    #if defined KINETIS_KL && !defined KINETIS_KE                        // {24}
+    #if defined KINETIS_KL || defined KINETIS_KM                         // {24}
                     if (fnGenInt(irq_PIT_ID) != 0) {                     // if general PIT interrupt is not disabled
                         VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                         ptrVect->processor_interrupts.irq_PIT();         // call the shared interrupt handler
@@ -8170,7 +8587,7 @@ extern int fnSimTimers(void)
                 PIT_CVAL1 -= ulCount;
             }
         }
-    #if !defined KINETIS_KL && !defined KINETIS_KE                       // {24}
+    #if !defined KINETIS_KL && !defined KINETIS_KE && !defined KINETIS_KM // {24}
         if ((PIT_TCTRL2 & PIT_TCTRL_TEN) != 0) {                         // if PIT2 is enabled
             unsigned long ulCount = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)BUS_CLOCK)/1000000); // count in a tick period
             if (PIT_CVAL2 <= ulCount) {
@@ -8452,7 +8869,12 @@ extern int fnSimTimers(void)
     }
 #endif
 #if defined SUPPORT_LPTMR && (LPTMR_AVAILABLE > 0)                       // {35}
-    if (((IS_POWERED_UP(5, LPTMR0)) != 0) && ((LPTMR0_CSR & LPTMR_CSR_TEN) != 0)) { // if the low power timer is enabled and running
+    #if defined KINETIS_KM
+    if (((IS_POWERED_UP(6, LPTMR0)) != 0) && ((LPTMR0_CSR & LPTMR_CSR_TEN) != 0))
+    #else
+    if (((IS_POWERED_UP(5, LPTMR0)) != 0) && ((LPTMR0_CSR & LPTMR_CSR_TEN) != 0))
+    #endif
+    {                                                                    // if the low power timer is enabled and running
         unsigned long ulCount = 0;                                       // count in a tick period
         switch (LPTMR0_PSR & LPTMR_PSR_PCS_OSC0ERCLK) {
         case LPTMR_PSR_PCS_LPO:                                          // LPO source
@@ -8590,7 +9012,7 @@ extern int fnSimTimers(void)
     }
     #endif
 #endif
-#if !defined KINETIS_KL && !defined KINETIS_KE                           // {24}
+#if PDB_AVAILABLE > 0                                                    // {24}
     if (((SIM_SCGC6 & SIM_SCGC6_PDB) != 0) && ((PDB0_SC & PDB_SC_PDBEN) != 0)) { // {16} PDB powered and enabled
         if ((PDB0_SC & PDB_SC_TRGSEL_SW) == PDB_SC_TRGSEL_SW) {          // software triggered
             if ((PDB0_SC & PDB_SC_SWTRIG) != 0) {
@@ -8713,7 +9135,7 @@ extern int fnSimTimers(void)
     fnTriggerADC(3, 0);                                                  // handle software triggered ADC3
     #endif
 #endif
-#if defined SUPPORT_TIMER                                                // {29}
+#if defined SUPPORT_TIMER && !defined KINETIS_KM                         // {29}
     if (IS_POWERED_UP(6, FTM0) &&((FTM0_SC & (FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)) != 0)) { // if the TPM/FlexTimer is powered and clocked
         #if defined KINETIS_KL || defined KINETIS_KE
         int iTPM_Type = 1;

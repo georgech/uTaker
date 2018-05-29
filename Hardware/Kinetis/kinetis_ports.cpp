@@ -72,6 +72,8 @@
     #include "kinetis_port_kl.h"
 #elif defined KINETIS_KV                                                 // {7}
     #include "kinetis_port_kv.h"
+#elif defined KINETIS_KM
+    #include "kinetis_port_km.h"
 #elif defined KINETIS_KW2X
     #include "kinetis_port_kw.h"
 #else
@@ -95,7 +97,7 @@ static unsigned char *_ptrPerFunctions;
 
 extern void fnSetPortDetails(char *cPortDetails, int iPort, int iBit, unsigned long *ulPortStates, unsigned long *ulPortFunction, unsigned long *ulPortPeripheral, int iMaxLength)
 {
-#if defined KINETIS_K00 || defined KINETIS_K20 || defined KINETIS_K60 || defined KINETIS_K61 || defined KINETIS_K64 || defined KINETIS_K70 || defined KINETIS_K80 || defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_KV || defined KINETIS_KW2X || (defined KINETIS_K12 && (PIN_COUNT == PIN_COUNT_48_PIN)) // {1}{3}{7}
+#if defined KINETIS_K00 || defined KINETIS_K20 || defined KINETIS_K60 || defined KINETIS_K61 || defined KINETIS_K64 || defined KINETIS_K70 || defined KINETIS_K80 || defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_KV || defined KINETIS_KM || defined KINETIS_KW2X || (defined KINETIS_K12 && (PIN_COUNT == PIN_COUNT_48_PIN)) // {1}{3}{7}
     int i;
 #endif
     char *ptrBuf = cPortDetails;
@@ -143,6 +145,21 @@ extern void fnSetPortDetails(char *cPortDetails, int iPort, int iBit, unsigned l
         STRCPY(cPortDetails, "Port I");
         break;
 #else
+    #if PORTS_AVAILABLE > 6
+    case _PORTG:
+        STRCPY(cPortDetails, "Port G");
+        break;
+    #endif
+    #if PORTS_AVAILABLE > 7
+    case _PORTH:
+        STRCPY(cPortDetails, "Port H");
+        break;
+    #endif
+    #if PORTS_AVAILABLE > 8
+    case _PORTI:
+        STRCPY(cPortDetails, "Port I");
+        break;
+    #endif
     case (PORTS_AVAILABLE):                                              // {2}
         STRCPY(cPortDetails, "Analog: ");
     #if defined _PIN_COUNT
@@ -168,7 +185,7 @@ extern void fnSetPortDetails(char *cPortDetails, int iPort, int iBit, unsigned l
         return;
     }
 
-#if defined KINETIS_K00 || defined KINETIS_K20 || defined KINETIS_K60 || defined KINETIS_K61 || defined KINETIS_K64 || defined KINETIS_K70 || defined KINETIS_K80 || defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_KV || defined KINETIS_KW2X || (defined KINETIS_K12 && (PIN_COUNT == PIN_COUNT_48_PIN)) // {1}{3}{7}
+#if defined KINETIS_K00 || defined KINETIS_K20 || defined KINETIS_K60 || defined KINETIS_K61 || defined KINETIS_K64 || defined KINETIS_K70 || defined KINETIS_K80 || defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_KV || defined KINETIS_KM || defined KINETIS_KW2X || (defined KINETIS_K12 && (PIN_COUNT == PIN_COUNT_48_PIN)) // {1}{3}{7}
     SPRINTF(cBuf, " Bit %i Pin: ", iBit);
     STRCAT(cPortDetails, cBuf);
     if (*cPinNumber[iPort][iBit][_PIN_COUNT] == '-') {
@@ -267,7 +284,7 @@ extern void fnSetPortDetails(char *cPortDetails, int iPort, int iBit, unsigned l
 #endif
 }
 
-#if defined KINETIS_K00 || defined KINETIS_K20 || defined KINETIS_K60 || defined KINETIS_K61 || defined KINETIS_K64 || defined KINETIS_K70 || defined KINETIS_K80 || defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_KV || defined KINETIS_KW2X || (defined KINETIS_K12 && (PIN_COUNT == PIN_COUNT_48_PIN)) // {1}{3}{7}
+#if defined KINETIS_K00 || defined KINETIS_K20 || defined KINETIS_K60 || defined KINETIS_K61 || defined KINETIS_K64 || defined KINETIS_K70 || defined KINETIS_K80 || defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_KV || defined KINETIS_KM || defined KINETIS_KW2X || (defined KINETIS_K12 && (PIN_COUNT == PIN_COUNT_48_PIN)) // {1}{3}{7}
 extern unsigned long fnGetPortMask(int iPortNumber)
 {
     unsigned long ulPortMask = 0x00000000;

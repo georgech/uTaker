@@ -54,7 +54,7 @@ static unsigned char ucPITmodes = 0;                                     // PIT 
 /*                        PIT Interrupt Handlers                       */
 /* =================================================================== */
 
-    #if defined KINETIS_KL || defined LPITS_AVAILABLE
+    #if defined KINETIS_KL || defined KINETIS_KM || defined LPITS_AVAILABLE
 // KL device PIT, and LPIT,  have a single interrupt which is shared by all PIT channels
 //
 static __interrupt void _PIT_Interrupt(void)
@@ -93,7 +93,7 @@ static __interrupt void _PIT_Interrupt(void)
                 uDisable_Interrupt();
                     pit_interrupt_handler[iChannel]();                   // call handling function
                 uEnable_Interrupt();
-                if (IS_POWERED_UP(6, PIT) == 0) {                        // if the PIT module has been powered down we return rather than checking further channels
+                if (IS_POWERED_UP(6, PIT0) == 0) {                      // if the PIT module has been powered down we return rather than checking further channels
                     return;
                 }
             }
@@ -152,7 +152,7 @@ static void fnDisablePIT(int iPIT)
     ptrCtl += iPIT;
   //ptrCtl->PIT_TCTRL = 0;                                               // {11} disable the individual PIT
     uDisable_Interrupt();                                                // {2} protect the mode variable during modification
-        if (IS_POWERED_UP(6, PIT) != 0) {                                // {11} ignore if the PIT module is not powered up
+        if (IS_POWERED_UP(6, PIT0) != 0) {                               // {11} ignore if the PIT module is not powered up
             ptrCtl->PIT_TCTRL = 0;                                       // disable the individual PIT
             ucPITmodes &= ~((PIT_SINGLE_SHOT | PIT_PERIODIC) << (iPIT * 2)); // clear the PIT's mode flags
     #if !defined PIT_TIMER_USED_BY_PERFORMANCE_MONITOR                   // don't power the PITs down if one is being used for performance monitoring
@@ -161,9 +161,9 @@ static void fnDisablePIT(int iPIT)
                 LPIT0_MCR = 0;                                           // disable clocks to module since no more timers are active
                 PCC_LPIT0 = 0;
         #else
-                //POWER_UP_ATOMIC(6, PIT);                               // {2}{11} ensure that the module is powered up for the next operation
+                //POWER_UP_ATOMIC(6, PIT0);                              // {2}{11} ensure that the module is powered up for the next operation
                 PIT_MCR = PIT_MCR_MDIS;                                  // disable clocks to module since no more timers are active
-                POWER_DOWN_ATOMIC(6, PIT);                               // power down the PIT module
+                POWER_DOWN_ATOMIC(6, PIT0);                              // power down the PIT module
         #endif
             }
     #endif
@@ -191,7 +191,7 @@ static void fnDisablePIT(int iPIT)
             fnDisablePIT(PIT_settings->ucPIT);                           // stop PIT operation and power down when no other activity
             return;
         }
-      //POWER_UP_ATOMIC(6, PIT);                                         // {6}{5} ensure the PIT module is powered up
+      //POWER_UP_ATOMIC(6, PIT0);                                        // {6}{5} ensure the PIT module is powered up
         pit_interrupt_handler[PIT_settings->ucPIT] = PIT_settings->int_handler; // enter the user handler
         uDisable_Interrupt();                                            // {2} protect the mode variable during modification
     #if defined KINETIS_WITH_PCC
@@ -200,12 +200,12 @@ static void fnDisablePIT(int iPIT)
                 POWER_UP_ATOMIC(0, LPIT0);                               // power up the LPIT module         
             }
     #else
-            POWER_UP_ATOMIC(6, PIT);                                     // {5}{6} ensure the PIT module is powered up
+            POWER_UP_ATOMIC(6, PIT0);                                    // {5}{6} ensure the PIT module is powered up
     #endif
             ucPITmodes = ((ucPITmodes & ~((PIT_SINGLE_SHOT | PIT_PERIODIC) << (PIT_settings->ucPIT * 2))) | ((PIT_settings->mode & (PIT_SINGLE_SHOT | PIT_PERIODIC)) << (PIT_settings->ucPIT * 2))); // {5} [the variable protects from power downs from this point]
         uEnable_Interrupt();
         ptrCtl += PIT_settings->ucPIT;                                   // set the PIT (channel) to be configured
-      //POWER_UP_ATOMIC(6, PIT);                                         // {2} ensure the PIT module is powered up
+      //POWER_UP_ATOMIC(6, PIT0);                                        // {2} ensure the PIT module is powered up
   //#if defined ERRATA_ID_7914
       //(void)PIT_MCR;                                                   // dummy read of PIT_MCR to guaranty a minimum delay of two bus cycles after enabling the clock gate and not losing next write
   //#endif
@@ -215,7 +215,7 @@ static void fnDisablePIT(int iPIT)
         PIT_MCR = 0;                                                     // ensure the PIT module is clocked
     #endif
         if (PIT_settings->int_handler != 0) {                            // if an interrupt is required
-    #if defined KINETIS_KL || defined LPITS_AVAILABLE                    // {3} KL, and LPIT, devices have a single interrupt from the PIT channels
+    #if defined KINETIS_KL || defined KINETIS_KM ||defined LPITS_AVAILABLE // {3} KL, and LPIT, devices have a single interrupt from the PIT channels
             fnEnterInterrupt(irq_PIT_ID, PIT_settings->int_priority, _PIT_Interrupt); // ensure that the handler for the PIT module is entered
     #else
             switch (PIT_settings->ucPIT) {

@@ -2841,9 +2841,9 @@
 
     #define WATCHDOG_DISABLE()     (_READ_PORT_MASK(A, SWITCH_2) != 0)   // hold SW2 down at reset to disable watchdog
   //#define FORCE_BOOT()           (_READ_PORT_MASK(A, SWITCH_1) != 0)   // hold SW1 down at reset to force boot loader mode
-    // If the application has commanded a reset after writing the pattern 0x6723 into the boot mail box the serial loader mode should be started as well
+    // If the application has commanded a reset after writing RESET_TO_SERIAL_LOADER into the boot mail box the serial loader mode should be started as well
     //
-    #define FORCE_BOOT()           ((_READ_PORT_MASK(A, SWITCH_1) != 0) || (((SIM_SRSID & SIM_SRSID_SW) != 0) && (*(BOOT_MAIL_BOX) == 0x6723)))
+    #define FORCE_BOOT()           ((_READ_PORT_MASK(A, SWITCH_1) != 0) || (((SIM_SRSID & SIM_SRSID_SW) != 0) && (*(BOOT_MAIL_BOX) == RESET_TO_SERIAL_LOADER)))
 
     #define TOGGLE_WATCHDOG_LED()  _TOGGLE_PORT(A, BLINK_LED)
 #elif defined FRDM_KEAZ128Q80 || defined FRDM_KEAZ64Q64 || defined FRDM_KEAZN32Q64

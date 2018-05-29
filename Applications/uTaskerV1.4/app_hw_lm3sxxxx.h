@@ -471,7 +471,7 @@
 
 // FLASH based File System setup
 //
-#ifdef FLASH_FILE_SYSTEM
+#if defined FLASH_FILE_SYSTEM
     #if defined SPI_FILE_SYSTEM                                          // this is a test setup for external SPI FLASH, with the parameters at the end of internal FLASH
         #define uFILE_START (SPI_FLASH_START)                            // FLASH location end of internal FLASH
         #define PARAMETER_BLOCK_START (SPI_FLASH_START - PAR_BLOCK_SIZE) // FLASH location at 2 parameter blocks short of end of internal FLASH
@@ -486,6 +486,7 @@
             #define FILE_SYSTEM_SIZE (16*SINGLE_FILE_SIZE)               // 1Meg reserved for file system {35}
         #endif
     #else
+        #define FILE_GRANULARITY (1 * FLASH_GRANULARITY)                 // each file a multiple of 1k
         #if defined _TEMPEST_CLASS                                       // {21}
             #define PARAMETER_BLOCK_START 0x17000                        // FLASH location at 92k start
             #define uFILE_START 0x19000                                  // FLASH location at 100k start
@@ -573,21 +574,21 @@
         #define CTS_0_PORT_POWER   CGC_GPIOA
         #define CTS_0_PORT_ENABLE  GPIODEN_A
         #define CTS_0_PORT_DDR     GPIODIR_A
-        #define CTS_0_PORT         PORT_A
+        #define CTS_0_PORT         PORTA
         #define CTS_0_INT_PRIORITY 3
 
         #define CTS_1_PIN          PORTA_BIT7
         #define CTS_1_PORT_POWER   CGC_GPIOA
         #define CTS_1_PORT_ENABLE  GPIODEN_A
         #define CTS_1_PORT_DDR     GPIODIR_A
-        #define CTS_1_PORT         PORT_A
+        #define CTS_1_PORT         PORTA
         #define CTS_1_INT_PRIORITY 3
 
         #define CTS_2_PIN          PORTA_BIT6
         #define CTS_2_PORT_POWER   CGC_GPIOA
         #define CTS_2_PORT_ENABLE  GPIODEN_A
         #define CTS_2_PORT_DDR     GPIODIR_A
-        #define CTS_2_PORT         PORT_A
+        #define CTS_2_PORT         PORTA
         #define CTS_2_INT_PRIORITY 3
     #endif
 
@@ -618,11 +619,11 @@
     #define SC16IS7XX_SPI_TDR                    SSIDR_0
     #define SC16IS7XX_SPI_RDR                    SSIDR_0
     #define SC16IS7XX_SPI_SR                     SSISR_0
-    #define EXT_UART_0_1_INT_PORT                PORT_A
-    #define EXT_UART_0_1_INT_BIT                 1
+    #define EXT_UART_0_1_INT_PORT                PORTA
+    #define EXT_UART_0_1_INT_BIT                 PORTA_BIT1
     #define CHECK_UART_0_1_INT_PENDING()         _READ_PORT_MASK(A, PORT_BIT1)
 
-    #define PRIORITY_IRQ                         PORT_A_INTERRUPT_PRIORITY
+    #define PRIORITY_IRQ                         PORTA_INTERRUPT_PRIORITY
 #else
     #define TX_BUFFER_SIZE   (256)
     #define RX_BUFFER_SIZE   (256)
@@ -696,9 +697,9 @@
 
 // I2C Interface
 //
-#ifdef IIC_INTERFACE
-    #define OUR_IIC_CHANNEL         0                                    // use IIC0 for demo
-    #define NUMBER_IIC              CHIP_HAS_IIC                         // I2C channels available
+#if defined I2C_INTERFACE
+    #define OUR_I2C_CHANNEL         0                                    // use IIC0 for demo
+    #define NUMBER_I2C              CHIP_HAS_I2C                         // I2C channels available
 #endif
 
 #define USER_REG0_VALUE             0x00b61a00                           // MAC address in user registers (00-1a-b6-00-22-1d)
@@ -800,16 +801,16 @@
 #define PRIORITY_UART0             6
 #define PRIORITY_UART1             6
 #define PRIORITY_UART2             6
-#define PORT_A_INTERRUPT_PRIORITY  5
+#define PORTA_INTERRUPT_PRIORITY   5
 #define PRIORITY_HW_TIMER          5
 #define PRIORITY_TIMERS            5
 #define PRIORITY_USB_OTG           4
-#define PRIORITY_IIC0              4
-#define PRIORITY_IIC1              4
+#define PRIORITY_I2C0              4
+#define PRIORITY_I2C1              4
 #define PRIORITY_TWI               4
 #define PRIORITY_TICK_TIMER        3
 #define PRIORITY_ADC               2
-#define PORT_B_INTERRUPT_PRIORITY  2                                     // default if PB4 ADC trigger configured
+#define PORTB_INTERRUPT_PRIORITY   2                                     // default if PB4 ADC trigger configured
 #define PRIORITY_EMAC              1
 
 

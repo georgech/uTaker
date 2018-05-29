@@ -102,7 +102,7 @@
       //#define TEST_TIMER                                               // enable timer test(s)
         #if defined TEST_TIMER
             #if defined SUPPORT_PWM_MODULE                               // {9}
-              //#define TEST_PWM                                         // {1} test generating PWM output from timer
+                #define TEST_PWM                                         // {1} test generating PWM output from timer
               //#define TEST_STEPPER                                     // test generating stepper motor frequency patterns (use together with PWM)
             #endif
             #if defined SUPPORT_TIMER
@@ -1701,7 +1701,7 @@ static void fnConfigure_Timer(void)
     pwm_setup.pwm_reference = (_TIMER_0 | 0);                            // timer module 0, channel 0
     #elif defined FRDM_KE02Z40M
     pwm_setup.pwm_reference = (_TIMER_2 | 1);                            // timer module 2, channel 1 (red LED in RGB LED)
-    #elif defined FRDM_KL25Z || defined FRDM_KEAZN32Q64
+    #elif defined FRDM_KL25Z || defined FRDM_KEAZN32Q64 || defined TRK_KEA64
     pwm_setup.pwm_reference = (_TIMER_2 | 0);                            // timer module 2, channel 0 (red LED in RGB LED)
     #elif defined FRDM_KL26Z || defined FRDM_KL27Z || defined CAPUCCINO_KL27 || defined FRDM_KE15Z
     pwm_setup.pwm_reference = (_TIMER_0 | 2);                            // timer module 0, channel 2 (red LED in RGB LED)
@@ -1774,7 +1774,7 @@ static void fnConfigure_Timer(void)
     #endif
     #if defined FRDM_KL02Z || defined FRDM_KE02Z40M
     pwm_setup.pwm_reference = (_TIMER_1 | 0);                            // timer module 1, channel 0
-    #elif defined FRDM_KL03Z || defined FRDM_KEAZN32Q64
+    #elif defined FRDM_KL03Z || defined FRDM_KEAZN32Q64 || defined TRK_KEA64
     pwm_setup.pwm_reference = (_TIMER_1 | 1);                            // timer module 1, channel 1
     #elif defined FRDM_KL05Z
     pwm_setup.pwm_reference = (_TIMER_0 | 1);                            // timer module 0, channel 1

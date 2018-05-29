@@ -188,6 +188,11 @@ TCHAR szTitle[MAX_LOADSTRING];
 TCHAR szWindowClass[MAX_LOADSTRING];
 HWND ghWnd = NULL;
 
+extern "C"
+{
+    int catchKey = 0;
+}
+
 // Prototypes
 //
 ATOM                MyRegisterClass( HINSTANCE hInstance );
@@ -1068,7 +1073,7 @@ static void fnDisplayPorts(HDC hdc)
         #endif
     #endif
 #endif
-#if defined KINETIS_K00 || defined KINETIS_K20 || defined KINETIS_K60 || defined KINETIS_K61 || defined KINETIS_K64 || defined KINETIS_K64 || defined KINETIS_K70 || defined KINETIS_K80 || defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_KV || defined KINETIS_KW2X || (defined KINETIS_K12 && (PIN_COUNT == PIN_COUNT_48_PIN)) // {74}{82}{92}{96}
+#if defined KINETIS_K00 || defined KINETIS_K20 || defined KINETIS_K60 || defined KINETIS_K61 || defined KINETIS_K64 || defined KINETIS_K64 || defined KINETIS_K70 || defined KINETIS_K80 || defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_KV || defined KINETIS_KM || defined KINETIS_KW2X || (defined KINETIS_K12 && (PIN_COUNT == PIN_COUNT_48_PIN)) // {74}{82}{92}{96}
     #undef PORT_NAME_LENGTH
     #define PORT_NAME_LENGTH 9
     unsigned long ulMSB = (1 << (PORT_WIDTH - 1));
@@ -1318,7 +1323,7 @@ static void fnDisplayPorts(HDC hdc)
         if (fnJumpPort(i)) {
             goto _jump_entry;
         }
-#elif defined _STM32 || defined LPC1788 || defined _HW_SAM3X || defined KINETIS_K00 || defined KINETIS_K20 || defined KINETIS_K60 || defined KINETIS_K61 || defined KINETIS_K64 || defined KINETIS_K70 || defined KINETIS_K80 || defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_KV || defined KINETIS_KW2X || (defined KINETIS_K12 && (PIN_COUNT == PIN_COUNT_48_PIN)) // {72}{73}{74}{82}{92}{96}
+#elif defined _STM32 || defined LPC1788 || defined _HW_SAM3X || defined KINETIS_K00 || defined KINETIS_K20 || defined KINETIS_K60 || defined KINETIS_K61 || defined KINETIS_K64 || defined KINETIS_K70 || defined KINETIS_K80 || defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_KV || defined KINETIS_KM || defined KINETIS_KW2X || (defined KINETIS_K12 && (PIN_COUNT == PIN_COUNT_48_PIN)) // {72}{73}{74}{82}{92}{96}
         ulPortMask = fnGetPortMask(i);                                   // {71}
 #elif defined _HW_SAM7X                                                  // {21}
     #if defined _HW_SAM7S                                                // {48}
@@ -1445,7 +1450,7 @@ static void fnDisplayPorts(HDC hdc)
         }
     #endif
 #endif
-#if defined _KINETIS && !(defined KINETIS_K00 || defined KINETIS_K20 || defined KINETIS_K60 || defined KINETIS_K61 || defined KINETIS_K64 || defined KINETIS_K70 || defined KINETIS_K80 || defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_KV || defined KINETIS_KW2X) && !(defined KINETIS_K12 && (PIN_COUNT == PIN_COUNT_48_PIN)) // {70}{74}{82}{92}{96}
+#if defined _KINETIS && !(defined KINETIS_K00 || defined KINETIS_K20 || defined KINETIS_K60 || defined KINETIS_K61 || defined KINETIS_K64 || defined KINETIS_K70 || defined KINETIS_K80 || defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_KV || defined KINETIS_KM || defined KINETIS_KW2X) && !(defined KINETIS_K12 && (PIN_COUNT == PIN_COUNT_48_PIN)) // {70}{74}{82}{92}{96}
         if (i >= (_PORTS_AVAILABLE - 1)) {                               // {91}
     #if defined _EXT_PORT_28_BIT
             ulPortMask = 0xf0000000;
@@ -4513,6 +4518,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             break;
 
         case WM_KEYDOWN:
+            catchKey = wParam;
             if (0x10 == wParam) {                                        // shift key down {11}
                 iShiftPressed = 1;
             }

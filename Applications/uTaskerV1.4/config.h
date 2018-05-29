@@ -185,7 +185,7 @@
     //
     // Nucleo 32 range
     //
-      #define NUCLEO_F031K6                                              // evaluation boad with STM32F031 (cortex-m0)
+    //#define NUCLEO_F031K6                                              // evaluation boad with STM32F031 (cortex-m0)
     //#define NUCLEO_L011K4                                              // evaluation boad with STM32L011 (cortex-m0+)
     //#define NUCLEO_L031K6                                              // evaluation boad with STM32L031 (cortex-m0+)
     //#define NUCLEO_L432KC                                              // evaluation boad with STM32L432 (cortex-m4 with FPU)
@@ -198,7 +198,7 @@
 
     //#define STM3210C_EVAL                                              // evaluation board with STM32F107VCT
     //#define WISDOM_STM32F407                                           // evaluation board with STM32F407ZET6
-    //#define STM3240G_EVAL                                              // evaluation board with STM32F407IGH6
+      #define STM3240G_EVAL                                              // evaluation board with STM32F407IGH6
     //#define ST_MB913C_DISCOVERY                                        // discovery board with STM32F100RB
     //#define ST_MB997A_DISCOVERY                                        // discovery board with STM32F407VGT6
     //#define STM32F407ZG_SK                                             // IAR prototyping board with STM32F407ZGT6
@@ -451,6 +451,24 @@
     #define OUR_HEAP_SIZE   (HEAP_REQUIREMENTS)((12 * 1024) * MEM_FACTOR)
     #define DEVICE_WITHOUT_CAN                                           // KL doesn't have CAN controller
     #define DEVICE_WITHOUT_ETHERNET                                      // KL doesn't have Ethernet controller
+#elif defined TWR_KM34Z50M
+    #define TARGET_HW            "TWR-KM34Z50M"
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((5 * 1024) * MEM_FACTOR)
+    #define KINETIS_KM
+    #define KINETIS_KM34                                                 // specify the sub-family type
+    #define KINETIS_MAX_SPEED    50000000
+    #define DEVICE_WITHOUT_USB
+    #define DEVICE_WITHOUT_CAN
+    #define DEVICE_WITHOUT_ETHERNET
+#elif defined TWR_KM34Z75M
+    #define TARGET_HW            "TWR-KM34Z75M"
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((5 * 1024) * MEM_FACTOR)
+    #define KINETIS_KM
+    #define KINETIS_KM34                                                 // specify the sub-family type
+    #define KINETIS_MAX_SPEED    75000000
+    #define DEVICE_WITHOUT_USB
+    #define DEVICE_WITHOUT_CAN
+    #define DEVICE_WITHOUT_ETHERNET
 #elif defined TWR_KV10Z32
     #define TARGET_HW            "TWR-KV10Z32"
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((5 * 1024) * MEM_FACTOR)
@@ -1168,7 +1186,7 @@
     //#define NO_SLAVE_MODBUS_READ_WRITE_MULTIPLE_REGISTER
     //#define NO_SLAVE_MODBUS_READ_FIFO_QUEUE
     //#define NOTIFY_ONLY_COIL_CHANGES                                   // notify user of individual coil changes only
-      #define USE_MODBUS_MASTER                                          // master capability supported (either slave or master required)
+    //#define USE_MODBUS_MASTER                                          // master capability supported (either slave or master required)
     //#define NO_MASTER_MODBUS_READ_COILS                                // disable specific master public function support
     //#define NO_MASTER_MODBUS_READ_DISCRETE_INPUTS
     //#define NO_MASTER_MODBUS_READ_HOLDING_REGISTERS
@@ -1257,10 +1275,18 @@
 
   //#define USE_DMX512_MASTER                                            // DMX512 master
   //#define USE_DMX512_SLAVE                                             // DMX512 slave
-      //#define USE_DMX_RDM                                              // additional remote device management support
     #if defined USE_DMX512_MASTER
-          #define UART_BREAK_SUPPORT                                     // support break control in the UART driver
-          #define UART_HW_TRIGGERED_MODE_SUPPORTED
+        #define USE_DMX_RDM_MASTER                                       // additional remote device management support at master
+        #if defined USE_DMX_RDM_MASTER
+            #define UART_FRAME_COMPLETE                                  // call-back on trasmission frame termination
+        #else
+            #define UART_HW_TRIGGERED_MODE_SUPPORTED                     // allow queueing transmit frames that are started by enabling the transmitter
+        #endif
+    #endif
+    #if defined USE_DMX512_SLAVE
+        #define USE_DMX_RDM_SLAVE                                        // additional remote device management support at slave
+      //#define SERIAL_SUPPORT_RX_DMA_BREAK                              // allow free-running rx DMA operation that delivers frames after breaks are detected
+        #define UART_BREAK_SUPPORT                                       // interrupt driven break method
     #endif
 
   //#define USE_PPP                                                      // allow TCP/IP on serial
@@ -1281,7 +1307,7 @@
 #if defined DEVICE_WITHOUT_USB
     #define NUMBER_USB     0                                             // no physical queue needed
 #else
-  //#define USB_INTERFACE                                                // enable USB driver interface
+    #define USB_INTERFACE                                                // enable USB driver interface
     #if defined USB_INTERFACE
       //#define MICROSOFT_OS_STRING_DESCRIPTOR                           // support MODs
       //#define USB_HOST_SUPPORT                                         // host supported
@@ -1291,8 +1317,8 @@
             #define NUMBER_USB     (5 + 1)                               // physical queues (control plus 5 endpoints)
         #endif
         #if defined USB_DEVICE_SUPPORT                                   // define one or more device classes (multiple classes creates a composite device)
-          //#define USE_USB_CDC                                          // USB-CDC (use also for Modbus over USB)
-            #define USE_USB_MSD                                          // needs SD card to compile (or alternatives FLASH_FAT / SPI_FLASH_FAT / FAT_EMULATION)
+            #define USE_USB_CDC                                          // USB-CDC (use also for Modbus over USB)
+          //#define USE_USB_MSD                                          // needs SD card to compile (or alternatives FLASH_FAT / SPI_FLASH_FAT / FAT_EMULATION)
           //#define USE_USB_HID_MOUSE                                    // human interface device (mouse)
           //#define USE_USB_HID_KEYBOARD                                 // human interface device (keyboard)
               //#define USB_KEYBOARD_DELAY                               // enable inter-character delay control
@@ -1727,7 +1753,7 @@
           //#define USE_TIME_SERVER                                      // enable time server support - presently demo started in application
                 #define NUMBER_OF_TIME_SERVERS 3                         // number of time servers that are used
             #define MODBUS_TCP                                           // support MODBUS TCP protocol
-            #define USE_MQTT_CLIENT                                      // enable MQTT (message queuing telemetry transport) client support
+          //#define USE_MQTT_CLIENT                                      // enable MQTT (message queuing telemetry transport) client support
           //#define USE_MQTT_BROKER                                      // enable MQTT (message queuing telemetry transport) broker support
               //#define SECURE_MQTT                                      // MQTTS support
               //#define SUPPORT_CLIENT_SIDE_CERTIFICATE                  // support client certificate and private key
@@ -2094,7 +2120,7 @@
 // Segment LCD
 //
 #if defined KINETIS_K30 || defined KINETIS_K40 || defined KINETIS_K51 || defined KINETIS_K53 || defined KINETIS_KL40 // if processor supports SLCD
-    #define SUPPORT_SLCD                                                 // segment LCD
+  //#define SUPPORT_SLCD                                                 // segment LCD
 #endif
 
 // Graphical LCD
@@ -2129,8 +2155,9 @@
       //#define CGLCD_GLCD_MODE                                          // use colour LCD in GLCD compatible mode
       //#define KITRONIX_GLCD_MODE                                       // use colour TFT in GLCD compatible mode (IDM_L35_B)
       //#define MB785_GLCD_MODE                                          // use colour TFT in GLCD compatible mode (STM321C-EVAL)
-      //#define TFT2N0369_GLCD_MODE                                      // use colour TFT in GLCD compatible mode (TWR-LCD)
-        #define FT800_GLCD_MODE                                          // FTDI FT800 controller
+        #define TFT2N0369_GLCD_MODE                                      // use colour TFT in GLCD compatible mode (TWR-LCD)
+      //#define FT800_GLCD_MODE                                          // FTDI FT800 controller
+        #if defined FT800_GLCD_MODE
             #define FT_800_ENABLE                                        // select the FT800 display type
           //#define FT_801_ENABLE                                        // select the FT801 display type
           //#define FT_810_ENABLE                                        // select the FT810 display type
@@ -2141,6 +2168,7 @@
                 #define FT_81X_ENABLE
             #endif
             #define FT800_EMULATOR                                       // enable FTDI emulator (valid for all types and needs to be on to build with visual studio)
+        #endif
         #if defined TWR_K70F120M || defined K70F150M_12M
             #define TWR_LCD_RGB_GLCD_MODE                                // use colour TFT in GLCD compatible mode (TWR-LCD-RGB)
             #define TFT_GLCD_MODE                                        // use a TFT in GLCD compatible mode (only use together with LCD controller)
@@ -2403,7 +2431,9 @@
 #endif
 
 #if defined OPSYS_CONFIG                                                 // this is only used by the hardware module
-    #if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP// if we support Ethernet we define some constants for its (TCP/IP) use
+    #if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP || defined USE_DMX_RDM_MASTER || defined USE_DMX512_SLAVE
+        // If we support certain network operations we define some constants for its use
+        //
         const unsigned char cucNullMACIP[MAC_LENGTH] = { 0, 0, 0, 0, 0, 0 };
         const unsigned char cucBroadcast[MAC_LENGTH] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff }; // used also for broadcast IP
     #endif

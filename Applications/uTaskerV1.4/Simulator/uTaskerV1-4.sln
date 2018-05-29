@@ -12,6 +12,7 @@ Global
 		uTasker Kinetis plus GNU build|x86 = uTasker Kinetis plus GNU build|x86
 		uTasker Kinetis|x86 = uTasker Kinetis|x86
 		uTasker Luminary|x86 = uTasker Luminary|x86
+		uTasker STM32 plus GNU build|x86 = uTasker STM32 plus GNU build|x86
 		uTasker STM32|x86 = uTasker STM32|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
@@ -25,6 +26,8 @@ Global
 		{F08CCFCE-B19A-4F3C-9FA7-CF907BB6F36F}.uTasker Kinetis|x86.Build.0 = uTasker Kinetis|Win32
 		{F08CCFCE-B19A-4F3C-9FA7-CF907BB6F36F}.uTasker Luminary|x86.ActiveCfg = uTasker Luminary|Win32
 		{F08CCFCE-B19A-4F3C-9FA7-CF907BB6F36F}.uTasker Luminary|x86.Build.0 = uTasker Luminary|Win32
+		{F08CCFCE-B19A-4F3C-9FA7-CF907BB6F36F}.uTasker STM32 plus GNU build|x86.ActiveCfg = uTasker STM32 plus GNU build|Win32
+		{F08CCFCE-B19A-4F3C-9FA7-CF907BB6F36F}.uTasker STM32 plus GNU build|x86.Build.0 = uTasker STM32 plus GNU build|Win32
 		{F08CCFCE-B19A-4F3C-9FA7-CF907BB6F36F}.uTasker STM32|x86.ActiveCfg = uTasker STM32|Win32
 		{F08CCFCE-B19A-4F3C-9FA7-CF907BB6F36F}.uTasker STM32|x86.Build.0 = uTasker STM32|Win32
 	EndGlobalSection

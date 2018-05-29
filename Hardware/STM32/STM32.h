@@ -217,9 +217,9 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*I
     #define USARTS_AVAILABLE   1
     #define UARTS_AVAILABLE    0
     #define LPUARTS_AVAILABLE  0
-#else
-    #define USARTS_AVAILABLE   0
-    #define UARTS_AVAILABLE    (CHIP_HAS_UARTS)
+#else                                                                    // _STM32F4XX
+    #define USARTS_AVAILABLE   4                                         // numbering is USART1, USART2, USART3, USART6
+    #define UARTS_AVAILABLE    2                                         // numbering is UART4, UART5
     #define LPUARTS_AVAILABLE  0
 #endif
 
@@ -6696,7 +6696,7 @@ typedef struct stVECTOR_TABLE
 
 #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
     #define __POWER_UP_GPIO(ref)    RCC_AHB1ENR |= (RCC_AHB1ENR_GPIO##ref##EN)
-    #define __GPIO_IS_POWERED(ref)  (RCC_AHB1ENR & (RCC_AHB1ENR_IOPAEN << ref))
+    #define __GPIO_IS_POWERED(ref)  (RCC_AHB1ENR & (RCC_AHB1ENR_GPIOAEN << ref))
     #define __GPIO_IS_IN_RESET(ref) (RCC_AHB1RSTR & (RCC_AHB1RSTR_GPIOARST << ref))
 #elif defined _STM32L0x1
     #define __POWER_UP_GPIO(ref)    RCC_IOPENR |= (RCC_IOPENR_IOP##ref##EN)
@@ -7556,17 +7556,17 @@ typedef struct stVECTOR_TABLE
 #define IRQ_RISING_EDGE           0x01
 #define IRQ_FALLING_EDGE          0x02
 
-#define PORT_A                    0
-#define PORT_B                    1
-#define PORT_C                    2
-#define PORT_D                    3
-#define PORT_E                    4
-#define PORT_F                    5
-#define PORT_G                    6
-#define PORT_H                    7
-#define PORT_I                    8
-#define PORT_J                    9
-#define PORT_K                    10
+#define PORTA                     0
+#define PORTB                     1
+#define PORTC                     2
+#define PORTD                     3
+#define PORTE                     4
+#define PORTF                     5
+#define PORTG                     6
+#define PORTH                     7
+#define PORTI                     8
+#define PORTJ                     9
+#define PORTK                     10
 
 // Define interrupt setup structures to suit this processor
 //
@@ -7575,8 +7575,8 @@ typedef struct stINTERRUPT_SETUP
     void (*int_handler)(void);                                           // interrupt handler to be configured
     unsigned char    int_type;                                           // identifier for when configuring
     unsigned char    int_priority;                                       // priority the user wants to set
-    unsigned short   int_port_bit;                                       // {21} the input bit 0..15
-    unsigned char    int_port;                                           // input port eg. PORT_B
+    unsigned short   int_port_bit;                                       // {21} the input bit (eg. PORTA_BIT4)
+    unsigned char    int_port;                                           // input port eg. PORTB
     unsigned char    int_port_sense;                                     // level sensitive, falling, rising, both
 } INTERRUPT_SETUP;
 

@@ -465,9 +465,9 @@ static int fnGateway(int iType, MODBUS_RX_FUNCTION *modbus_rx_function)
 }
 #endif
 
-static unsigned char ucNexttestPort = 0;;
-
 #if defined USE_MODBUS_MASTER
+static unsigned char ucNexttestPort = 0;
+
 // This routine is called by the MODBUS interface after a master transaction to a slave has completed
 // It can be used to handle the response or error
 //

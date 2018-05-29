@@ -71,6 +71,7 @@
 #define TASK_TIME_KEEPER        'k'                                      // {12} time keeper task (RTC/SNTP)
 #define TASK_MQTT               'Q'                                      // {14} MQTT task
 #define TASK_DMX512             '5'                                      // {15} DMX512 task
+#define TASK_TTY                ' '                                      // pseudo task used to receive TTY event messages from
 
 #define TASK_STEPPER_MOTOR      '0'
 #define TASK_DEV_1              '1'

@@ -242,7 +242,8 @@
     #define DO_MENU_HELP_CAN        17                                   // {38}
     #define DO_MENU_HELP_ADVANCED   18                                   // {84}
     #define DO_MENU_HELP_FLEXIO     19
-    #define DO_HELP_UP              20                                   // go up menu tree
+    #define DO_MENU_HELP_DMX512     20
+    #define DO_HELP_UP              21                                   // go up menu tree
 
 #define DO_HARDWARE               1                                      // reference to hardware group of commands
     #define DO_RESET                0                                    // specific hardware command to reset target
@@ -538,6 +539,9 @@
     #define DO_DEBUG_CAN            8                                    // specific CAN command to dumy CAN register details
     #define DO_CLEAR_REMOTE_BUF     9                                    // specific CAN command to free message buffer used to receive a remote request that didn't return
 
+#define DO_DMX512                 14
+    #define DO_DISCOVERY            1
+
 #define MENU_HELP_LAN               1
 #define MENU_HELP_SERIAL            2
 #define MENU_HELP_IO                3
@@ -547,6 +551,7 @@
 #define MENU_HELP_I2C               7
 #define MENU_HELP_DISK              8
 #define MENU_HELP_FTP               9
+#define MENU_HELP_DMX512            9                                    // in place of FTP/MQTT menu
 #define MENU_HELP_CAN               10
 #define MENU_HELP_ADVANCED          11
 #define MENU_HELP_FLEXIO            11                                   // in place of MENU_HELP_ADVANCED
@@ -685,6 +690,8 @@ static const DEBUG_COMMAND tMainCommand[] = {
     {"8",                 "Go to utFAT disk interface",            DO_HELP,          DO_MENU_HELP_DISK }, // {17}
 #if defined USE_MQTT_CLIENT
     {"9",                 "FTP/TELNET/MQTT client commands",       DO_HELP,          DO_MENU_HELP_FTP_TELNET_MQTT }, // {37}
+#elif defined USE_DMX512_MASTER && defined USE_DMX_RDM_MASTER
+    {"9",                 "DMX512 commands",                       DO_HELP,          DO_MENU_HELP_DMX512 },
 #else
     {"9",                 "FTP/TELNET commands",                   DO_HELP,          DO_MENU_HELP_FTP_TELNET_MQTT },
 #endif
@@ -1063,6 +1070,14 @@ static const DEBUG_COMMAND tDiskCommand[] = {                            // {17}
     {"quit",              "Leave command mode",                    DO_TELNET,        DO_TELNET_QUIT},
 };
 
+#if !defined USE_MQTT_CLIENT && (defined USE_DMX512_MASTER && defined USE_DMX_RDM_MASTER)
+static const DEBUG_COMMAND tDMX512_Command[] = {
+    {"up",                "go to main menu",                       DO_HELP,          DO_HELP_UP },
+    {"discover",          "Execute RDM discovery",                 DO_DMX512,        DO_DISCOVERY },
+    {"help",              "Display menu specific help",            DO_HELP,          DO_MAIN_HELP },
+    {"quit",              "Leave command mode",                    DO_TELNET,        DO_TELNET_QUIT },
+};
+#else
 static const DEBUG_COMMAND tFTP_TELNET_Command[] = {                     // {37}
     {"up",                "go to main menu",                       DO_HELP,          DO_HELP_UP },
 #if defined USE_FTP_CLIENT
@@ -1128,6 +1143,7 @@ static const DEBUG_COMMAND tFTP_TELNET_Command[] = {                     // {37}
 #endif
     {"quit",              "Leave command mode",                    DO_TELNET,        DO_TELNET_QUIT },
 };
+#endif
 
 static const DEBUG_COMMAND tCANCommand[] = {                             // {38}
     {"up",                "go to main menu",                       DO_HELP,          DO_HELP_UP },
@@ -1169,7 +1185,6 @@ static const DEBUG_COMMAND tFlexioCommand[] = {
     #endif
     {"quit",              "Leave command mode",                    DO_TELNET,        DO_TELNET_QUIT},
 };
-
 #elif defined CMSIS_DSP_CFFT || defined CRYPTOGRAPHY || defined MMDVSQ_AVAILABLE
 static const DEBUG_COMMAND tAdvancedCommand[] = {                        // {84}
     {"up",                "go to main menu",                       DO_HELP,          DO_HELP_UP },
@@ -1213,6 +1228,8 @@ static const MENUS ucMenus[] = {
     { tDiskCommand,        13, (sizeof(tDiskCommand)/sizeof(DEBUG_COMMAND)),        "  Disk interface"}, // {17}
 #if defined USE_MQTT_CLIENT
     { tFTP_TELNET_Command, 15, (sizeof(tFTP_TELNET_Command)/sizeof(DEBUG_COMMAND)), "FTP/TELNET/MQTT" }, // {37}
+#elif defined USE_DMX512_MASTER && defined USE_DMX_RDM_MASTER
+    { tDMX512_Command,     15, (sizeof(tDMX512_Command)/sizeof(DEBUG_COMMAND)),     "DMX512 commands"},
 #else
     { tFTP_TELNET_Command, 15, (sizeof(tFTP_TELNET_Command)/sizeof(DEBUG_COMMAND)), "FTP/TELNET commands"}, // {37}
 #endif
@@ -3185,6 +3202,19 @@ static void fnDoServer(unsigned char ucType, CHAR *ptrInput)
         return;
     }
 }
+
+#if !defined USE_MQTT_CLIENT && (defined USE_DMX512_MASTER && defined USE_DMX_RDM_MASTER)
+extern void fnDMX512_discover(void);
+static void fnDoDMX512(unsigned char ucType, CHAR *ptrInput)
+{
+    switch (ucType) {
+    case DO_DISCOVERY:                                                   // perform DMX512 RDM discovery
+        fnDMX512_discover();
+        break;
+    }
+}
+#endif
+
 
 static void fnDoTelnet(unsigned char ucType, CHAR *ptrInput)
 {
@@ -6977,11 +7007,18 @@ static int fnDoCommand(unsigned char ucFunction, unsigned char ucType, CHAR *ptr
         else if (DO_MENU_HELP_DISK == ucType) {                          // {17}
             ucMenu = MENU_HELP_DISK;                                     // set SD-card disk menu
             return (fnDisplayHelp(0));                                   // large menu may require special handling
+        }    
+    #if !defined USE_MQTT_CLIENT && (defined USE_DMX512_MASTER && defined USE_DMX_RDM_MASTER)
+        else if (DO_MENU_HELP_DMX512 == ucType) {
+            ucMenu = MENU_HELP_DMX512;                                   // set DMX512 menu
+            return (fnDisplayHelp(0));                                   // large menu may require special handling
         }
+    #else
         else if (DO_MENU_HELP_FTP_TELNET_MQTT == ucType) {               // {37}
             ucMenu = MENU_HELP_FTP;                                      // set FTP/TELNET client menu
             return (fnDisplayHelp(0));                                   // large menu may require special handling
         }
+    #endif
         else if (DO_MENU_HELP_CAN == ucType) {                           // {38}
             ucMenu = MENU_HELP_CAN;                                      // set CAN menu
             return (fnDisplayHelp(0));                                   // large menu may require special handling
@@ -7020,6 +7057,12 @@ static int fnDoCommand(unsigned char ucFunction, unsigned char ucType, CHAR *ptr
 #if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST // {17}{81}
     case DO_DISK:
         return (fnDoDisk(ucType, ptrInput));                             // SD-card disk group
+#endif
+
+#if !defined USE_MQTT_CLIENT && (defined USE_DMX512_MASTER && defined USE_DMX_RDM_MASTER)
+    case DO_DMX512:
+        fnDoDMX512(ucType, ptrInput);
+        break;
 #endif
 
     case DO_TELNET:
@@ -8191,7 +8234,7 @@ extern int fnSaveNewPars(int iTemp)
     fnSetPar((PAR_DEVICE | TEMPORARY_PARAM_SET), (unsigned char *)&temp_pars->temp_parameters, sizeof(PARS)); // copy the new set to the swap buffer (temp)
 
     if (iTemp != SAVE_NEW_PARAMETERS_VALIDATE) {
-    #if defined ACTIVE_FILE_SYSTEM
+    #if defined USE_PAR_SWAP_BLOCK
        fnDelPar(SWAP_PARAMETER_BLOCK);                                   // delete old block and validate new one.
     #endif
        uMemcpy(parameters, &temp_pars->temp_parameters, sizeof(PARS));

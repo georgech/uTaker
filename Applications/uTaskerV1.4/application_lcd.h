@@ -165,7 +165,7 @@ is included by application.c when needed.
 //
 #if defined SUPPORT_LCD && defined HANDLE_TIMERS && !defined USE_TIME_SERVER
         case E_SHIFT_DISPLAY:                                            // timer event to command content movement
-            { 
+            {
                 static const unsigned char ucShiftRightCommand = 0x1c;   // command to shift content one position to right
                 static const unsigned char ucShiftLeftCommand  = 0x18;   // command to shift content one position to left
 

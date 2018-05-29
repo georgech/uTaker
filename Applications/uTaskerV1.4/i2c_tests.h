@@ -525,8 +525,8 @@ static void acc_data_ready(void)
             interrupt_setup.int_port_bits = PB30;                        // the input connected
     #elif defined _LM3SXXXX
             interrupt_setup.int_priority = 3;                            // port interrupt priority
-            interrupt_setup.int_port = PORT_C;                           // the port used
-            interrupt_setup.int_port_bit = 6;                            // the input connected
+            interrupt_setup.int_port = PORTC;                            // the port used
+            interrupt_setup.int_port_bit = PORTC_BIT6;                   // the input connected
             interrupt_setup.int_port_characteristic = PULLUP_ON;         // enable a pullup
     #elif defined _LPC23XX
             interrupt_setup.int_priority = 8;                            // port interrupt priority

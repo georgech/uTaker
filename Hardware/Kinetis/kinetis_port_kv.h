@@ -27,7 +27,7 @@
         #define _PIN_COUNT  1                                            // QFN
     #else
         #define _PIN_COUNT  2                                            // LQFP
-#endif
+#else
     #error "Package not clearly defined!!"
 #endif
 
@@ -443,7 +443,7 @@ static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][8] = {
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 }
     }
 };
-#elif defined KINETIS_KV31
+#elif defined KINETIS_KV31 || defined KINETIS_KM
 
 #if PIN_COUNT == PIN_COUNT_64_PIN                                        // 64 pin LQFP
     #define _PIN_COUNT      1

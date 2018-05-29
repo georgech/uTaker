@@ -116,6 +116,10 @@ typedef struct _PACK stGLCD_PIC {
     unsigned char  ucMode;
     unsigned short usX;
     unsigned short usY;
+#if defined GLCD_EXTENSION_1
+    unsigned short usOffsetY;
+    unsigned short usHeight;
+#endif
     GBITMAP       *ptrPic;                                               // this is guaranteed to be on a long word boundary
 } GLCD_PIC;
 
@@ -211,6 +215,9 @@ __PACK_OFF
 #define BLINKING_OBJECT         0x04
 #define KILL_BLINK_OBJECTS      0x04                                     // used together with scrolling command
 #define WINDOWED_PIC            0x08                                     // {5} GLCD_PIC_WINDOW type instead of GLCD_PIC
+#if defined GLCD_EXTENSION_1
+    #define SHOW_EXTRA          0x10
+#endif
 
 #define STYLE_MASK              0x0f
 #define STYLE_BACKGROUND_COLOR  0x00

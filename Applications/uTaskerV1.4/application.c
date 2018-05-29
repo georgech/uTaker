@@ -138,7 +138,6 @@
 
 #include "config.h"
 
-
 #define OWN_TASK                  TASK_APPLICATION
 
 #include "application_lcd.h"                                             // {46} LCD tests
@@ -325,8 +324,7 @@ const PARS cParameters = {
         (/*ACTIVE_DHCP | */ACTIVE_LOGIN | ACTIVE_FTP_SERVER /*| ACTIVE_FTP_LOGIN*/ | ACTIVE_SNTP | ACTIVE_TIME_SERVER | ACTIVE_WEB_SERVER | ACTIVE_TELNET_SERVER | SMTP_LOGIN), // active servers (ACTIVE_DHCP and ACTIVE_FTP_LOGIN disabled)
     #endif
     },
-    #if defined FRDM_KL03Z                                                   // this board has a capacitor connected to the LPUART0_RX pin so cannot use fast speeds
-  //SERIAL_BAUD_115200,
+    #if defined FRDM_KL03Z                                               // this board has a capacitor connected to the LPUART0_RX pin so cannot use fast speeds
     SERIAL_BAUD_19200,                                                   // baud rate of serial interface
     #else
     SERIAL_BAUD_115200,                                                  // baud rate of serial interface
@@ -1596,20 +1594,33 @@ extern QUEUE_HANDLE fnSetNewSerialMode(TTYTABLE *ptrInterfaceParameters, unsigne
         #endif
     #endif
     #if defined SUPPORT_HW_FLOW
-      //tInterfaceParameters.Config |= RTS_CTS;                              // enable RTS/CTS operation (HW flow control)
+      //tInterfaceParameters.Config |= RTS_CTS;                          // enable RTS/CTS operation (HW flow control)
     #endif
         ptrInterfaceParameters = &tInterfaceParameters;
     }
     if ((newSerialID = fnOpen(TYPE_TTY, ucDriverMode, ptrInterfaceParameters)) != NO_ID_ALLOCATED) { // open or change the channel with defined configurations (initially inactive)
-        fnDriver(newSerialID, (TX_ON | RX_ON), 0);                       // enable rx and tx
-        if ((ptrInterfaceParameters->Config & RTS_CTS) != 0) {           // {8} if HW flow control is being used
-            fnDriver(newSerialID, (MODIFY_INTERRUPT | ENABLE_CTS_CHANGE), 0); // activate CTS interrupt when working with HW flow control (this returns also the present control line states)
-            fnDriver(newSerialID, (MODIFY_CONTROL | SET_RTS), 0);        // activate RTS line when working with HW flow control
+        switch (ucDriverMode) {
+        case FOR_READ:
+            fnDriver(newSerialID, (RX_ON), 0);                           // enable rx
+            break;
+        case FOR_WRITE:
+            fnDriver(newSerialID, (TX_ON), 0);                           // enable tx
+            break;
+        case FOR_I_O:
+            fnDriver(newSerialID, (TX_ON | RX_ON), 0);                   // enable rx and tx
+            if ((ptrInterfaceParameters->Config & RTS_CTS) != 0) {       // {8} if HW flow control is being used
+                fnDriver(newSerialID, (MODIFY_INTERRUPT | ENABLE_CTS_CHANGE), 0); // activate CTS interrupt when working with HW flow control (this returns also the present control line states)
+                fnDriver(newSerialID, (MODIFY_CONTROL | SET_RTS), 0);    // activate RTS line when working with HW flow control
+            }
+            break;
+        default:
+            break;
         }
     }
     return newSerialID;
 }
 #endif
+
 #if defined SERIAL_INTERFACE && defined USE_J1708
 static void fnInitJ1708(void)
 {
@@ -2905,6 +2916,7 @@ extern void fnUserHWInit(void)
 //
 extern void fnQuickTask1(TTASKTABLE *ptrTaskTable)
 {
+  //uTaskerStateChange(TASK_DEV_2, UTASKER_POLLING);                     // use this to turn quicktask2 into a forever-loop type task (polling)
 }
 
 extern void fnQuickTask2(TTASKTABLE *ptrTaskTable)
@@ -2927,3 +2939,4 @@ extern void fnStepper(TTASKTABLE *ptrTaskTable)
     fnTestStepper();
 }
 #endif
+

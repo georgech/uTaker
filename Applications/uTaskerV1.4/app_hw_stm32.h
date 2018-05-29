@@ -529,14 +529,14 @@
             #define SDCARD_DETECTION()              (_READ_PORT_MASK(B, PORTB_BIT15) == 0)
 
             #define SDCARD_SINGLE_EDGE_INTERRUPT                         // port interrupts are not possible on both edges at the same time
-            #define SDCARD_DETECT_PORT              PORT_B
+            #define SDCARD_DETECT_PORT              PORTB
             #define SDCARD_DETECT_PIN               15
         #else
             #define CONFIGURE_SDCARD_DETECT_INPUT() _CONFIG_PORT_INPUT(H, PORTH_BIT13, (INPUT_PULL_UP | PULLUP_BIT13))
             #define SDCARD_DETECTION()              (_READ_PORT_MASK(H, PORTH_BIT13) == 0)
 
             #define SDCARD_SINGLE_EDGE_INTERRUPT                         // port interrupts are not possible on both edges at the same time
-            #define SDCARD_DETECT_PORT              PORT_H
+            #define SDCARD_DETECT_PORT              PORTH
             #define SDCARD_DETECT_PIN               13
         #endif
         #define PRIORITY_SDCARD_DETECT_PORT_INT 7
@@ -843,7 +843,7 @@
 #endif
 
 #if defined USE_IP
-    #define LAN_BUFFER_SIZE           /*1514*/1536                       // STM32 has ample space for full tx buffer
+    #define LAN_BUFFER_SIZE           1514                               // STM32 has ample space for full tx buffer
 #else
     #define LAN_BUFFER_SIZE           256                                // if using Ethernet without IP the buffer size can be set here
 #endif
@@ -1227,9 +1227,9 @@
     #define TOGGLE_WATCHDOG_LED()      _TOGGLE_PORT(D, BLINK_LED)        // blink the LED, if set as output
 
     #define INIT_WATCHDOG_DISABLE()    _CONFIG_PORT_INPUT(B, (USER_KEY_BUTTON), (INPUT_PULL_UP)) // PB9 configured as input with pull-up
-    #define WATCHDOG_DISABLE()         (!(_READ_PORT_MASK(B, (USER_KEY_BUTTON)))) // disable watchdog by holding the user button down at reset
+    #define WATCHDOG_DISABLE()         ((_READ_PORT_MASK(B, (USER_KEY_BUTTON))) == 0) // disable watchdog by holding the user button down at reset
 
-    #define PORT_EXP_TOUCH_IRQ_PORT    PORT_B                            // touch screen I2C port expander has interrupt in this port
+    #define PORT_EXP_TOUCH_IRQ_PORT    PORTB                             // touch screen I2C port expander has interrupt in this port
     #define PORT_EXP_TOUCH_IRQ_PORT_BIT 14                               // touch screen I2C port expander has interrupt in this port bit
     #define PORT_EXP_TOUCH_IRQ_PRIORITY PRIORITY_EXI10_15                // corresponding interrupt priority
 
@@ -1585,7 +1585,7 @@
         #define MDL_REV                0x00                              // model revision number
         #define PHY_IDENTIFIER         (0x20005c00 | (VNDR_MDL << 4) | MDL_REV) // NATIONAL DP83848 identifier
         #define PHY_INTERRUPT          PORTB_BIT14                       // use PHY interrupt
-        #define PHY_INT_PORT           PORT_B
+        #define PHY_INT_PORT           PORTB
         #define PHY_INT_PIN_STATE()    _READ_PORT_MASK(B, PHY_INTERRUPT)
     #elif defined ST_MB997A_DISCOVERY && defined EMBEST_BASE_BOARD       // {6}
         #define _LAN8720
@@ -1609,7 +1609,7 @@
         #define ETH_TXD_G                                                // locate TXD0 and TXD1 on port G rather than port B
         #define PHY_INTERRUPT          PORTA_BIT3                        // use PHY interrupt
         #define SUPPORT_PORT_INTERRUPTS                                  // support code for port interrupts due to the PHY interrupt
-        #define PHY_INT_PORT           PORT_A                            // interrupt on PA3
+        #define PHY_INT_PORT           PORTA                             // interrupt on PA3
         #define PHY_INT_PIN_STATE()    _READ_PORT_MASK(A, PHY_INTERRUPT)
     #elif defined STM32_P207
         #define ETHERNET_RMII                                            // use RMII Ethernet interface instead of MII
@@ -1619,7 +1619,7 @@
         #define ETH_TXD_G                                                // locate TXD0 and TXD1 on port G rather than port B
         #define PHY_INTERRUPT          PORTA_BIT3                        // use PHY interrupt
         #define SUPPORT_PORT_INTERRUPTS                                  // support code for port interrupts due to the PHY interrupt
-        #define PHY_INT_PORT           PORT_A                            // interrupt on PA3
+        #define PHY_INT_PORT           PORTA                             // interrupt on PA3
         #define PHY_INT_PIN_STATE()    _READ_PORT_MASK(A, PHY_INTERRUPT)
     #elif defined STM32F746G_DISCO || defined NUCLEO_F429ZI
         #define _LAN8742
@@ -1648,7 +1648,7 @@
         #define MDL_REV                0x00                              // model revision number
         #define PHY_IDENTIFIER         (0x20005c00 | (VNDR_MDL << 4) | MDL_REV) // NATIONAL DP83848 identifier
         #define PHY_INTERRUPT          PORTC_BIT13                       // use PHY interrupt on thsi pin
-        #define PHY_INT_PORT           PORT_C
+        #define PHY_INT_PORT           PORTC
         #define PHY_INT_PIN_STATE()    _READ_PORT_MASK(C, PHY_INTERRUPT)      
     #endif
 
@@ -1712,7 +1712,7 @@
     #endif
 
     #define SUPPORT_TOUCH_SCREEN                                         // touch screen operation via I2C touch controller and EXTI interrupt on PB14
-    #define RESET_IRQ_LINE()       fnSimulateInputChange(PORT_B, (15 - 14), SET_INPUT);
+    #define RESET_IRQ_LINE()       fnSimulateInputChange(PORTB, (15 - 14), SET_INPUT);
     #define GLCD_BACKLIGHT_CONTROL                                       // control TFT backlight using PWM - needs new connection
 
     #define BACK_LIGHT_MAX_INTENSITY()                                          
@@ -1767,7 +1767,7 @@
     #endif
 
   //#define SUPPORT_TOUCH_SCREEN                                         // touch screen operation via I2C touch controller and EXTI interrupt on PB14
-    #define RESET_IRQ_LINE()          fnSimulateInputChange(PORT_B, (15 - 14), SET_INPUT);
+    #define RESET_IRQ_LINE()          fnSimulateInputChange(PORTB, (15 - 14), SET_INPUT);
     #define GLCD_BACKLIGHT_CONTROL                                       // control TFT backlight using PWM - needs new connection
 
     #define BACK_LIGHT_MAX_INTENSITY()                                          

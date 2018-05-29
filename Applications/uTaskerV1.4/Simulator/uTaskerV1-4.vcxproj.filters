@@ -524,6 +524,9 @@
     <ClCompile Include="..\DMX512.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\Hardware\Coldfire\M5223X.c">
+      <Filter>Hardware\Coldfire</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\ADC_Timers.h">
@@ -1339,6 +1342,27 @@
     <ClInclude Include="..\..\..\Hardware\STM32\STM32F031_port.h">
       <Filter>WinSim\SIMstm32</Filter>
     </ClInclude>
+    <ClInclude Include="..\debug_hal_luminary.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Coldfire\M5223X.h">
+      <Filter>Hardware\Coldfire</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Coldfire\SimM5223X.h">
+      <Filter>Hardware\Coldfire</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Coldfire\spi_flash_m5223x_atmel.h">
+      <Filter>Hardware\Coldfire</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Coldfire\spi_flash_m5223x_sst25.h">
+      <Filter>Hardware\Coldfire</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Coldfire\spi_flash_m5223x_stmicro.h">
+      <Filter>Hardware\Coldfire</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_port_km.h">
+      <Filter>WinSim\SIMKinetis</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="cursor1.cur">
@@ -1378,6 +1402,23 @@
     <None Include="..\..\..\Hardware\Luminary\LM3SXXXX_startup_keil.s">
       <Filter>Hardware\Luminary</Filter>
     </None>
+    <None Include="..\..\..\Hardware\Coldfire\cstart_iar.s68">
+      <Filter>Hardware\Coldfire</Filter>
+    </None>
+    <None Include="..\..\..\Hardware\Coldfire\flash_config.s">
+      <Filter>Hardware\Coldfire</Filter>
+    </None>
+    <None Include="..\..\..\Hardware\Coldfire\flash_config_sec.s">
+      <Filter>Hardware\Coldfire</Filter>
+    </None>
+    <None Include="..\..\..\Hardware\Coldfire\Startup.s">
+      <Filter>Hardware\Coldfire</Filter>
+    </None>
+    <None Include="..\..\..\Hardware\Coldfire\Startup_gnu.s">
+      <Filter>Hardware\Coldfire</Filter>
+    </None>
+    <None Include="..\GNU_STM32\make_uTaskerV1.4_GNU_STM32" />
+    <None Include="..\GNU_STM32\Build_STM32.bat" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="uTasker.rc">

@@ -134,7 +134,7 @@ extern HWND ghWnd;
     static unsigned char ucRowEnd = 0;
     static unsigned char ucDisplayRamStart = 0;
     static unsigned char ucDisplayOffset = 0;
-    static unsigned char ucRemap = 0;
+    static unsigned char ucRemap[2] = {0};
     static unsigned char ucMCU_protection_status = 0x12;
     static unsigned char ucMuxRatio = 15;
     static unsigned char ucContrast = 0x80;
@@ -1501,7 +1501,7 @@ static void GraphicOLEDCommand(bool bRS, unsigned char ucByte)
 			ReleaseDC(ghWnd, hdc);  
 		} 
 
-        if (!(ucRemap & 0x04)) {                                         // horizontal address increment enabled
+        if ((ucRemap[0] & 0x04) == 0) {                                  // horizontal address increment enabled
             ulGraphicAdd++;
             if ((ulGraphicAdd % (GLCD_X/2)) > ucColumnEnd) {             // {11}
                 ulGraphicAdd += ((ulGraphicAdd % (GLCD_X/2) - ucColumnEnd) * 2);// {11}
@@ -1570,7 +1570,16 @@ static void GraphicOLEDCommand(bool bRS, unsigned char ucByte)
                 ucDisplayRamStart = ucByte;
                 break;
             case 0xa0:                                                   // remap setting in graphic display data ram
-                ucRemap = ucByte;
+    #if defined OLED_SSD1322
+                if (iCmdCnt == 1) {
+                    ucRemap[0] = ucByte;
+                }
+                else {
+                    ucRemap[1] = ucByte;
+                }
+    #else
+                ucRemap[0] = ucByte;
+    #endif
                 break;
             case 0x94:                                                   // icon register
                 switch (ucByte & 0xc0) {
@@ -1599,6 +1608,11 @@ static void GraphicOLEDCommand(bool bRS, unsigned char ucByte)
             case 0xb8:                                                   // gray scale pulse width lookup table
                 iCmdCnt = 15;                                            // command accepted, now collect fifteen command data bytes
                 break;
+    #if defined OLED_SSD1322
+            case 0xb4:                                                   // VSL selection
+            case 0xa0:                                                   // remap setting in graphic display data ram
+            case 0xd1:                                                   // display enhancement
+    #endif
             case 0x75:                                                   // set up row start and end address
             case 0x15:                                                   // set up column start and end address
                 iCmdCnt = 2;                                             // command accepted, now collect two command data bytes
@@ -1612,7 +1626,17 @@ static void GraphicOLEDCommand(bool bRS, unsigned char ucByte)
             case 0xa8:                                                   // set MUX ratio
             case 0xa2:                                                   // set display offset
             case 0xa1:                                                   // set display start line
+    #if defined OLED_SSD1322
+            case 0xab:                                                   // Vdd selection
+            case 0xb5:                                                   // set GPIO
+            case 0xb6:                                                   // second precharge period
+            case 0xbe:                                                   // set VCOM
+            case 0xc1:                                                   // set contrast
+            case 0xc7:                                                   // master contrast current
+            case 0xca:                                                   // MUX ratio
+    #else
             case 0xa0:                                                   // remap setting in graphic display data ram
+    #endif
             case 0x94:                                                   // icon register
             case 0x82:                                                   // second pre-charge speed
             case 0x81:                                                   // set contrast
@@ -1653,6 +1677,14 @@ static void GraphicOLEDCommand(bool bRS, unsigned char ucByte)
             case 0xa4:                                                   // set display mode - normal
                 iDisplayMode = MODE_NORMAL;
                 break;
+    #if defined OLED_SSD1322
+            case 0xa9:                                                   // exit partial display mode
+                break;
+            case 0xb9:                                                   // set default gray-scale table
+                break;
+            case 0x5c:                                                   // enable MCU to write data into RAM
+                break;
+    #endif
             default:
                 *(unsigned char *)0 = 0;                                 // non-implemented command
                 return;
