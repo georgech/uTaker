@@ -767,6 +767,15 @@ INITHW void fnInitHW(void)                                               // perf
     #if PORTS_AVAILABLE > 5
         PORT5_DEFAULT_INPUT,
     #endif
+    #if PORTS_AVAILABLE > 6
+        PORT6_DEFAULT_INPUT,
+    #endif
+    #if PORTS_AVAILABLE > 7
+        PORT7_DEFAULT_INPUT,
+    #endif
+    #if PORTS_AVAILABLE > 8
+        PORT8_DEFAULT_INPUT,
+    #endif
     #if defined SUPPORT_ADC                                              // {5}
         ((ADC0_0_START_VOLTAGE * 0xffff) / ADC_REFERENCE_VOLTAGE),
         ((ADC0_1_START_VOLTAGE * 0xffff) / ADC_REFERENCE_VOLTAGE),
@@ -887,7 +896,7 @@ INITHW void fnInitHW(void)                                               // perf
     fnInitIP();                                                          // initialise IP routines to run from SRAM
     #endif
 #endif
-#if !defined DEVICE_WITHOUT_DMA && (!defined KINETIS_KL || defined DEVICE_WITH_eDMA)
+#if !defined DEVICE_WITHOUT_DMA && ((!defined KINETIS_KL && !defined KINETIS_KM) || defined DEVICE_WITH_eDMA)
     #if defined KINETIS_WITH_PCC && !defined KINETIS_KE15                // powered up by default in KE15
     POWER_UP_ATOMIC(0, DMA0);                                            // power up the DMA module
     #endif
@@ -903,7 +912,7 @@ INITHW void fnInitHW(void)                                               // perf
 #endif
 #if defined DMA_MEMCPY_SET && !defined DEVICE_WITHOUT_DMA                // set the eDMA registers to a known zero state
     {
-    #if (!defined KINETIS_KL || defined DEVICE_WITH_eDMA)                // {80}
+    #if ((!defined KINETIS_KL && !defined KINETIS_KM) || defined DEVICE_WITH_eDMA) // {80}
         unsigned long *ptr_eDMAdes = (unsigned long *)eDMA_DESCRIPTORS;
         KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS; // {9}
         ptrDMA_TCD += DMA_MEMCPY_CHANNEL;                                // the DMA channel used for memory copy DMA

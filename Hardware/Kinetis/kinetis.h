@@ -293,7 +293,7 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
     #endif
 #endif
 
-#if !defined KINETIS_KL && !defined KINETIS_KE
+#if !defined KINETIS_KL && !defined KINETIS_KM && !defined KINETIS_KE
     #define FLEXBUS_AVAILABLE
 #endif
 
@@ -673,6 +673,8 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
     #else
         #if defined RUN_FROM_EXTERNAL_CLOCK
             #define MCGOUTCLK  (_EXTERNAL_CLOCK)                         // connected directly to input clock
+        #elif defined KINETIS_KM && defined RUN_FROM_DEFAULT_CLOCK
+            #define MCGOUTCLK  (FAST_ICR)                                // 4MHz IRC
         #elif defined RUN_FROM_DEFAULT_CLOCK
             #if defined FLL_FACTOR
                 #define MCGOUTCLK  ((32768) * FLL_FACTOR)                // assume tuned to 32768kHz
@@ -3451,7 +3453,7 @@ typedef struct stVECTOR_TABLE
 // Peripheral Register Blocks
 //
 #if defined _WINDOWS
-    #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA                  // {48}
+    #if (defined KINETIS_KL || defined KINETIS_KM) && !defined DEVICE_WITH_eDMA // {48}
         #if !defined DEVICE_WITHOUT_DMA
             #define DMA_BLOCK                  ((unsigned char *)(&kinetis.DMA)) // DMA Controller
         #endif
@@ -3556,7 +3558,7 @@ typedef struct stVECTOR_TABLE
             #define LPTMR_BLOCK_1              ((unsigned char *)(&kinetis.LPTMR[1]))
         #endif
     #endif
-    #if !defined KINETIS_KE && !defined KINETIS_KL
+    #if !defined KINETIS_KE && !defined KINETIS_KL && !defined KINETIS_KM
         #define AXBS_BLOCK                     ((unsigned char *)(&kinetis.AXBS)) // {50} Crossbar Switch
     #endif
     #define TSI_BLOCK                          ((unsigned char *)(&kinetis.TSI)) // Touch Sense Input Module
@@ -3765,7 +3767,7 @@ typedef struct stVECTOR_TABLE
         #define MMDVSQ_BLOCK                   ((unsigned char *)(&kinetis.MMDVSQ)) // memory-mapped divide and square root
     #endif
 #else
-    #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA                  // {48}
+    #if (defined KINETIS_KL || defined KINETIS_KM) && !defined DEVICE_WITH_eDMA // {48}
         #if !defined DEVICE_WITHOUT_DMA
             #define DMA_BLOCK                  0x40008100                // DMA Controller
         #endif
@@ -3898,16 +3900,18 @@ typedef struct stVECTOR_TABLE
             #endif
         #endif
     #endif
-    #if !defined KINETIS_KE && !defined KINETIS_KL
-        #define AXBS_BLOCK                     0x40004000                // {50} Crossbar Switch
+    #if !defined KINETIS_KE && !defined KINETIS_KL && !defined KINETIS_KM
+        #define AXBS_BLOCK                     0x40004000                // {50} crossbar switch
     #endif
-    #define TSI_BLOCK                          0x40045000                // Touch Sense Input Module
+    #define TSI_BLOCK                          0x40045000                // touch sense input module
     #if defined KINETIS_KE
-        #define SIM_BLOCK                      0x40048000                // System Integration Module
+        #define SIM_BLOCK                      0x40048000                // system integration module
+    #elif defined KINETIS_KM
+        #define SIM_BLOCK                      0x4003e000                // system integration module
     #elif defined KINETIS_KL28
-        #define SIM_BLOCK                      0x40074000                // System Integration Module
+        #define SIM_BLOCK                      0x40074000                // system integration module
     #else
-        #define SIM_BLOCK                      0x40047000                // System Integration Module
+        #define SIM_BLOCK                      0x40047000                // system integration module
     #endif
     #if defined KINETIS_KE && !defined KINETIS_KE15 
         #define PORT_BLOCK                     0x40049000                // Port block
@@ -3942,7 +3946,11 @@ typedef struct stVECTOR_TABLE
         #endif
     #endif
     #if !defined KINETIS_KL || defined KINETIS_KL82
-        #define WDOG_BLOCK                     0x40052000                // watchdog timer
+        #if defined KINETIS_KM
+            #define WDOG_BLOCK                 0x40053000                // watchdog timer
+        #else
+            #define WDOG_BLOCK                 0x40052000                // watchdog timer
+        #endif
     #endif
     #if defined CHIP_HAS_FLEXIO
         #if defined KINETIS_KL28
@@ -4216,7 +4224,7 @@ typedef struct stVECTOR_TABLE
 #endif
 
 
-#if defined KINETIS_KL && !defined DEVICE_WITH_eDMA                      // {48}
+#if (defined KINETIS_KL || defined KINETIS_KM) && !defined DEVICE_WITH_eDMA // {48}
   #if !defined DEVICE_WITHOUT_DMA
 // DMA Controller
 //
@@ -9574,7 +9582,7 @@ typedef struct stKINETIS_LPTMR_CTL
 } KINETIS_LPTMR_CTR;
 
 
-#if !defined KINETIS_KL && !defined KINETIS_KE && !defined CROSSBAR_SWITCH_LITE
+#if !defined KINETIS_KL && !defined KINETIS_KM && !defined KINETIS_KE && !defined CROSSBAR_SWITCH_LITE
 // Crossbar Switch                                                       {50}
 //
 #define AXBS_PRS0                        *(volatile unsigned long *)(AXBS_BLOCK + 0x000) // Priority Registers Slave 0
@@ -17194,112 +17202,200 @@ typedef struct stDAC_REGS                                                // {23}
 
 // GPIOs
 //
-#define GPIOA_ADD                        (volatile unsigned long*)(GPIO_BLOCK + 0x000)
-#define GPIOA_PDOR                       *(volatile unsigned long*)(GPIO_BLOCK + 0x000)   // Port A Data Output Register
-#define GPIOA_PSOR                       *(volatile unsigned long*)(GPIO_BLOCK + 0x004)   // Port A Set Output Register (write-only - always reads 0)
-#define GPIOA_PCOR                       *(volatile unsigned long*)(GPIO_BLOCK + 0x008)   // Port A Clear Output Register (write-only - always reads 0)
-#define GPIOA_PTOR                       *(volatile unsigned long*)(GPIO_BLOCK + 0x00c)   // Port A Toggle Output Register (write-only - always reads 0)
-#define GPIOA_PDIR                       *(volatile unsigned long*)(GPIO_BLOCK + 0x010)   // Port A Data Input Register (read-only)
-#define GPIOA_PDDR                       *(volatile unsigned long*)(GPIO_BLOCK + 0x014)   // Port A Data Direction Register
-    #define ATOMIC_GPIOA_PDDR_BIT0       BIT_BANDING_PERIPHERAL_ADDRESS((GPIO_BLOCK + 0x014), 0)
-    #define ATOMIC_GPIOA_PDDR_BIT1       BIT_BANDING_PERIPHERAL_ADDRESS((GPIO_BLOCK + 0x014), 1)
-#if defined KINETIS_KE && !defined KINETIS_KE15
-    #define GPIOA_PIDR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x018)   // Port A Input Disable Register
-#endif
-#if PORTS_AVAILABLE > 1
-    #define GPIOB_ADD                    (volatile unsigned long*)(GPIO_BLOCK + 0x040)
-    #define GPIOB_PDOR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x040)   // Port B Data Output Register
-    #define GPIOB_PSOR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x044)   // Port B Set Output Register (write-only - always reads 0)
-    #define GPIOB_PCOR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x048)   // Port B Clear Output Register (write-only - always reads 0)
-    #define GPIOB_PTOR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x04c)   // Port B Toggle Output Register (write-only - always reads 0)
-    #define GPIOB_PDIR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x050)   // Port B Data Input Register (read-only)
-    #define GPIOB_PDDR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x054)   // Port B Data Direction Register
-    #if defined KINETIS_KE && !defined KINETIS_KE15
-        #define GPIOB_PIDR               *(volatile unsigned long*)(GPIO_BLOCK + 0x058)   // Port B Input Disable Register
-    #endif
-#endif
-#if PORTS_AVAILABLE > 2
-    #define GPIOC_ADD                    (volatile unsigned long*)(GPIO_BLOCK + 0x080)
-    #define GPIOC_PDOR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x080)   // Port C Data Output Register
-    #define GPIOC_PSOR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x084)   // Port C Set Output Register (write-only - always reads 0)
-    #define GPIOC_PCOR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x088)   // Port C Clear Output Register (write-only - always reads 0)
-    #define GPIOC_PTOR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x08c)   // Port C Toggle Output Register (write-only - always reads 0)
-    #define GPIOC_PDIR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x090)   // Port C Data Input Register (read-only)
-    #define GPIOC_PDDR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x094)   // Port C Data Direction Register
-    #if defined KINETIS_KE && !defined KINETIS_KE15
-        #define GPIOC_PIDR               *(volatile unsigned long*)(GPIO_BLOCK + 0x098)   // Port C Input Disable Register
-    #endif
-#endif
-#if PORTS_AVAILABLE > 3
-    #define GPIOD_ADD                    (volatile unsigned long*)(GPIO_BLOCK + 0x0c0)
-    #define GPIOD_PDOR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x0c0)   // Port D Data Output Register
-    #define GPIOD_PSOR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x0c4)   // Port D Set Output Register (write-only - always reads 0)
-    #define GPIOD_PCOR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x0c8)   // Port D Clear Output Register (write-only - always reads 0)
-    #define GPIOD_PTOR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x0cc)   // Port D Toggle Output Register (write-only - always reads 0)
-    #define GPIOD_PDIR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x0d0)   // Port D Data Input Register (read-only)
-    #define GPIOD_PDDR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x0d4)   // Port D Data Direction Register
-#endif
-#if PORTS_AVAILABLE > 4
-    #define GPIOE_ADD                    (volatile unsigned long*)(GPIO_BLOCK + 0x100)
-    #define GPIOE_PDOR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x100)  // Port E Data Output Register
-    #define GPIOE_PSOR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x104)  // Port E Set Output Register (write-only - always reads 0)
-    #define GPIOE_PCOR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x108)  // Port E Clear Output Register (write-only - always reads 0)
-    #define GPIOE_PTOR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x10c)  // Port E Toggle Output Register (write-only - always reads 0)
-    #define GPIOE_PDIR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x110)  // Port E Data Input Register (read-only)
-    #define GPIOE_PDDR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x114)  // Port E Data Direction Register
-#endif
-#if PORTS_AVAILABLE > 5
-    #define GPIOF_ADD                    (volatile unsigned long*)(GPIO_BLOCK + 0x140)
-    #define GPIOF_PDOR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x140)  // Port F Data Output Register {11}
-    #define GPIOF_PSOR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x144)  // Port F Set Output Register (write-only - always reads 0)
-    #define GPIOF_PCOR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x148)  // Port F Clear Output Register (write-only - always reads 0)
-    #define GPIOF_PTOR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x14c)  // Port F Toggle Output Register (write-only - always reads 0)
-    #define GPIOF_PDIR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x150)  // Port F Data Input Register (read-only)
-    #define GPIOF_PDDR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x154)  // Port F Data Direction Register
-#endif
-#if PORTS_AVAILABLE > 6
-    #define GPIOG_ADD                    (volatile unsigned long*)(GPIO_BLOCK + 0x140)
-    #define GPIOG_PDOR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x140)  // Port G Data Output Register {11}
-    #define GPIOG_PSOR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x144)  // Port G Set Output Register (write-only - always reads 0)
-    #define GPIOG_PCOR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x148)  // Port G Clear Output Register (write-only - always reads 0)
-    #define GPIOG_PTOR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x14c)  // Port G Toggle Output Register (write-only - always reads 0)
-    #define GPIOG_PDIR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x150)  // Port G Data Input Register (read-only)
-    #define GPIOG_PDDR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x154)  // Port G Data Direction Register
-#endif
-#if PORTS_AVAILABLE > 7
-    #define GPIOH_ADD                    (volatile unsigned long*)(GPIO_BLOCK + 0x140)
-    #define GPIOH_PDOR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x140)  // Port H Data Output Register {11}
-    #define GPIOH_PSOR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x144)  // Port H Set Output Register (write-only - always reads 0)
-    #define GPIOH_PCOR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x148)  // Port H Clear Output Register (write-only - always reads 0)
-    #define GPIOH_PTOR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x14c)  // Port H Toggle Output Register (write-only - always reads 0)
-    #define GPIOH_PDIR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x150)  // Port H Data Input Register (read-only)
-    #define GPIOH_PDDR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x154)  // Port H Data Direction Register
-#endif
-#if PORTS_AVAILABLE > 8
-    #define GPIOI_ADD                    (volatile unsigned long*)(GPIO_BLOCK + 0x140)
-    #define GPIOI_PDOR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x140)  // Port I Data Output Register {11}
-    #define GPIOI_PSOR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x144)  // Port I Set Output Register (write-only - always reads 0)
-    #define GPIOI_PCOR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x148)  // Port I Clear Output Register (write-only - always reads 0)
-    #define GPIOI_PTOR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x14c)  // Port I Toggle Output Register (write-only - always reads 0)
-    #define GPIOI_PDIR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x150)  // Port I Data Input Register (read-only)
-    #define GPIOI_PDDR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x154)  // Port I Data Direction Register
-#endif
+#if defined KINETIS_KM
+    #define GPIOA_D_PDOR                     *(volatile unsigned long*)(GPIO_BLOCK + 0x000)   // port A..D data output register
+    #define GPIOA_PDOR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x000)   // port A data output register
+    #define GPIOB_PDOR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x001)   // port B data output register
+    #define GPIOC_PDOR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x002)   // port C data output register
+    #define GPIOD_PDOR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x003)   // port D data output register
 
-typedef struct stGPIO_RGS
-{
-    volatile unsigned long  PDOR;
-    volatile unsigned long  PSOR;
-    volatile unsigned long  PCOR;
-    volatile unsigned long  PTOR;
-    volatile unsigned long  PDIR;
-    volatile unsigned long  PDDR;
-    #if defined KINETIS_KE
-        volatile unsigned long  PIDR;
-        unsigned long  ulRes[9];
-    #else
-        unsigned long  ulRes[10];
+    #define GPIOA_D_PDIR                     *(volatile unsigned long*)(GPIO_BLOCK + 0x010)   // port A..D data input register (read-only)
+    #define GPIOA_PDIR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x010)   // port A data input register (read-only)
+    #define GPIOB_PDIR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x011)   // port B data input register (read-only)
+    #define GPIOC_PDIR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x012)   // port C data input register (read-only)
+    #define GPIOD_PDIR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x013)   // port D data input register (read-only)
+
+    #define GPIOA_D__PDDR                    *(volatile unsigned long*)(GPIO_BLOCK + 0x014)   // port A..D data direction register
+    #define GPIOA_PDDR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x014)   // port A data direction register
+    #define GPIOB_PDDR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x015)   // port B data direction register
+    #define GPIOC_PDDR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x016)   // port C data direction register
+    #define GPIOD_PDDR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x017)   // port D data direction register
+
+    #define GPIOA__D_GACR                    *(volatile unsigned long*)(GPIO_BLOCK + 0x01c)   // port A..D GPIO attribute checker register
+    #define GPIOA_GACR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x01c)   // port A GPIO attribute checker register
+    #define GPIOB_GACR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x01d)   // port B GPIO attribute checker register
+    #define GPIOC_GACR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x01e)   // port C GPIO attribute checker register
+    #define GPIOD_GACR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x01f)   // port D GPIO attribute checker register
+
+    #define GPIOE_H_PDOR                     *(volatile unsigned long*)(GPIO_BLOCK + 0x040)   // port E..H data output register
+    #define GPIOE_PDOR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x040)   // port E data output register
+    #define GPIOF_PDOR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x041)   // port F data output register
+    #define GPIOG_PDOR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x042)   // port G data output register
+    #define GPIOH_PDOR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x043)   // port H data output register
+
+    #define GPIOE_H_PDIR                     *(volatile unsigned long*)(GPIO_BLOCK + 0x050)   // port E..H data input register (read-only)
+    #define GPIOE_PDIR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x050)   // port E data input register (read-only)
+    #define GPIOF_PDIR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x051)   // port F data input register (read-only)
+    #define GPIOG_PDIR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x052)   // port G data input register (read-only)
+    #define GPIOH_PDIR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x053)   // port H data input register (read-only)
+
+    #define GPIOE_H_PDDR                     *(volatile unsigned long*)(GPIO_BLOCK + 0x054)   // port E..H data direction register
+    #define GPIOE_PDDR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x054)   // port E data direction register
+    #define GPIOF_PDDR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x055)   // port F data direction register
+    #define GPIOG_PDDR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x056)   // port G data direction register
+    #define GPIOH_PDDR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x057)   // port H data direction register
+
+    #define GPIOE_H_GACR                     *(volatile unsigned long*)(GPIO_BLOCK + 0x05c)   // port E..H GPIO attribute checker register
+    #define GPIOE_GACR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x05c)   // port E GPIO attribute checker register
+    #define GPIOF_GACR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x05d)   // port F GPIO attribute checker register
+    #define GPIOG_GACR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x05e)   // port G GPIO attribute checker register
+    #define GPIOH_GACR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x05f)   // port H GPIO attribute checker register
+
+    #define GPIOI_PDOR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x080)   // port I data output register
+
+    #define GPIOI_PDIR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x090)   // port I data input register (read-only)
+
+    #define GPIOI_PDDR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x094)   // port I data direction register
+
+    #define GPIOI_GACR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x09c)   // port I GPIO attribute checker register
+#else
+    #define GPIOA_ADD                        (volatile unsigned long*)(GPIO_BLOCK + 0x000)
+    #define GPIOA_PDOR                       *(volatile unsigned long*)(GPIO_BLOCK + 0x000)   // Port A Data Output Register
+    #define GPIOA_PSOR                       *(volatile unsigned long*)(GPIO_BLOCK + 0x004)   // Port A Set Output Register (write-only - always reads 0)
+    #define GPIOA_PCOR                       *(volatile unsigned long*)(GPIO_BLOCK + 0x008)   // Port A Clear Output Register (write-only - always reads 0)
+    #define GPIOA_PTOR                       *(volatile unsigned long*)(GPIO_BLOCK + 0x00c)   // Port A Toggle Output Register (write-only - always reads 0)
+    #define GPIOA_PDIR                       *(volatile unsigned long*)(GPIO_BLOCK + 0x010)   // Port A Data Input Register (read-only)
+    #define GPIOA_PDDR                       *(volatile unsigned long*)(GPIO_BLOCK + 0x014)   // Port A Data Direction Register
+        #define ATOMIC_GPIOA_PDDR_BIT0       BIT_BANDING_PERIPHERAL_ADDRESS((GPIO_BLOCK + 0x014), 0)
+        #define ATOMIC_GPIOA_PDDR_BIT1       BIT_BANDING_PERIPHERAL_ADDRESS((GPIO_BLOCK + 0x014), 1)
+        #define ATOMIC_GPIOA_PDDR_BIT2       BIT_BANDING_PERIPHERAL_ADDRESS((GPIO_BLOCK + 0x014), 2)
+        #define ATOMIC_GPIOA_PDDR_BIT3       BIT_BANDING_PERIPHERAL_ADDRESS((GPIO_BLOCK + 0x014), 3)
+        #define ATOMIC_GPIOA_PDDR_BIT4       BIT_BANDING_PERIPHERAL_ADDRESS((GPIO_BLOCK + 0x014), 4)
+        #define ATOMIC_GPIOA_PDDR_BIT5       BIT_BANDING_PERIPHERAL_ADDRESS((GPIO_BLOCK + 0x014), 5)
+        #define ATOMIC_GPIOA_PDDR_BIT6       BIT_BANDING_PERIPHERAL_ADDRESS((GPIO_BLOCK + 0x014), 6)
+        #define ATOMIC_GPIOA_PDDR_BIT7       BIT_BANDING_PERIPHERAL_ADDRESS((GPIO_BLOCK + 0x014), 7)
+        #define ATOMIC_GPIOA_PDDR_BIT8       BIT_BANDING_PERIPHERAL_ADDRESS((GPIO_BLOCK + 0x014), 8)
+        #define ATOMIC_GPIOA_PDDR_BIT9       BIT_BANDING_PERIPHERAL_ADDRESS((GPIO_BLOCK + 0x014), 9)
+        #define ATOMIC_GPIOA_PDDR_BIT10      BIT_BANDING_PERIPHERAL_ADDRESS((GPIO_BLOCK + 0x014), 10)
+        #define ATOMIC_GPIOA_PDDR_BIT11      BIT_BANDING_PERIPHERAL_ADDRESS((GPIO_BLOCK + 0x014), 11)
+        #define ATOMIC_GPIOA_PDDR_BIT12      BIT_BANDING_PERIPHERAL_ADDRESS((GPIO_BLOCK + 0x014), 12)
+        #define ATOMIC_GPIOA_PDDR_BIT13      BIT_BANDING_PERIPHERAL_ADDRESS((GPIO_BLOCK + 0x014), 13)
+        #define ATOMIC_GPIOA_PDDR_BIT14      BIT_BANDING_PERIPHERAL_ADDRESS((GPIO_BLOCK + 0x014), 14)
+        #define ATOMIC_GPIOA_PDDR_BIT15      BIT_BANDING_PERIPHERAL_ADDRESS((GPIO_BLOCK + 0x014), 15)
+        #define ATOMIC_GPIOA_PDDR_BIT16      BIT_BANDING_PERIPHERAL_ADDRESS((GPIO_BLOCK + 0x014), 16)
+        #define ATOMIC_GPIOA_PDDR_BIT17      BIT_BANDING_PERIPHERAL_ADDRESS((GPIO_BLOCK + 0x014), 17)
+        #define ATOMIC_GPIOA_PDDR_BIT18      BIT_BANDING_PERIPHERAL_ADDRESS((GPIO_BLOCK + 0x014), 18)
+        #define ATOMIC_GPIOA_PDDR_BIT19      BIT_BANDING_PERIPHERAL_ADDRESS((GPIO_BLOCK + 0x014), 19)
+        #define ATOMIC_GPIOA_PDDR_BIT20      BIT_BANDING_PERIPHERAL_ADDRESS((GPIO_BLOCK + 0x014), 20)
+        #define ATOMIC_GPIOA_PDDR_BIT21      BIT_BANDING_PERIPHERAL_ADDRESS((GPIO_BLOCK + 0x014), 21)
+        #define ATOMIC_GPIOA_PDDR_BIT22      BIT_BANDING_PERIPHERAL_ADDRESS((GPIO_BLOCK + 0x014), 22)
+        #define ATOMIC_GPIOA_PDDR_BIT23      BIT_BANDING_PERIPHERAL_ADDRESS((GPIO_BLOCK + 0x014), 23)
+        #define ATOMIC_GPIOA_PDDR_BIT24      BIT_BANDING_PERIPHERAL_ADDRESS((GPIO_BLOCK + 0x014), 24)
+        #define ATOMIC_GPIOA_PDDR_BIT25      BIT_BANDING_PERIPHERAL_ADDRESS((GPIO_BLOCK + 0x014), 25)
+        #define ATOMIC_GPIOA_PDDR_BIT26      BIT_BANDING_PERIPHERAL_ADDRESS((GPIO_BLOCK + 0x014), 26)
+        #define ATOMIC_GPIOA_PDDR_BIT27      BIT_BANDING_PERIPHERAL_ADDRESS((GPIO_BLOCK + 0x014), 27)
+        #define ATOMIC_GPIOA_PDDR_BIT28      BIT_BANDING_PERIPHERAL_ADDRESS((GPIO_BLOCK + 0x014), 28)
+        #define ATOMIC_GPIOA_PDDR_BIT29      BIT_BANDING_PERIPHERAL_ADDRESS((GPIO_BLOCK + 0x014), 29)
+        #define ATOMIC_GPIOA_PDDR_BIT30      BIT_BANDING_PERIPHERAL_ADDRESS((GPIO_BLOCK + 0x014), 30)
+        #define ATOMIC_GPIOA_PDDR_BIT31      BIT_BANDING_PERIPHERAL_ADDRESS((GPIO_BLOCK + 0x014), 31)
+    #if defined KINETIS_KE && !defined KINETIS_KE15
+        #define GPIOA_PIDR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x018)   // Port A Input Disable Register
     #endif
-} GPIO_REGS;
+    #if PORTS_AVAILABLE > 1
+        #define GPIOB_ADD                    (volatile unsigned long*)(GPIO_BLOCK + 0x040)
+        #define GPIOB_PDOR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x040)   // Port B Data Output Register
+        #define GPIOB_PSOR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x044)   // Port B Set Output Register (write-only - always reads 0)
+        #define GPIOB_PCOR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x048)   // Port B Clear Output Register (write-only - always reads 0)
+        #define GPIOB_PTOR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x04c)   // Port B Toggle Output Register (write-only - always reads 0)
+        #define GPIOB_PDIR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x050)   // Port B Data Input Register (read-only)
+        #define GPIOB_PDDR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x054)   // Port B Data Direction Register
+        #if defined KINETIS_KE && !defined KINETIS_KE15
+            #define GPIOB_PIDR               *(volatile unsigned long*)(GPIO_BLOCK + 0x058)   // Port B Input Disable Register
+        #endif
+    #endif
+    #if PORTS_AVAILABLE > 2
+        #define GPIOC_ADD                    (volatile unsigned long*)(GPIO_BLOCK + 0x080)
+        #define GPIOC_PDOR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x080)   // Port C Data Output Register
+        #define GPIOC_PSOR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x084)   // Port C Set Output Register (write-only - always reads 0)
+        #define GPIOC_PCOR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x088)   // Port C Clear Output Register (write-only - always reads 0)
+        #define GPIOC_PTOR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x08c)   // Port C Toggle Output Register (write-only - always reads 0)
+        #define GPIOC_PDIR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x090)   // Port C Data Input Register (read-only)
+        #define GPIOC_PDDR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x094)   // Port C Data Direction Register
+        #if defined KINETIS_KE && !defined KINETIS_KE15
+            #define GPIOC_PIDR               *(volatile unsigned long*)(GPIO_BLOCK + 0x098)   // Port C Input Disable Register
+        #endif
+    #endif
+    #if PORTS_AVAILABLE > 3
+        #define GPIOD_ADD                    (volatile unsigned long*)(GPIO_BLOCK + 0x0c0)
+        #define GPIOD_PDOR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x0c0)   // Port D Data Output Register
+        #define GPIOD_PSOR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x0c4)   // Port D Set Output Register (write-only - always reads 0)
+        #define GPIOD_PCOR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x0c8)   // Port D Clear Output Register (write-only - always reads 0)
+        #define GPIOD_PTOR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x0cc)   // Port D Toggle Output Register (write-only - always reads 0)
+        #define GPIOD_PDIR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x0d0)   // Port D Data Input Register (read-only)
+        #define GPIOD_PDDR                   *(volatile unsigned long*)(GPIO_BLOCK + 0x0d4)   // Port D Data Direction Register
+    #endif
+    #if PORTS_AVAILABLE > 4
+        #define GPIOE_ADD                    (volatile unsigned long*)(GPIO_BLOCK + 0x100)
+        #define GPIOE_PDOR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x100)  // Port E Data Output Register
+        #define GPIOE_PSOR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x104)  // Port E Set Output Register (write-only - always reads 0)
+        #define GPIOE_PCOR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x108)  // Port E Clear Output Register (write-only - always reads 0)
+        #define GPIOE_PTOR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x10c)  // Port E Toggle Output Register (write-only - always reads 0)
+        #define GPIOE_PDIR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x110)  // Port E Data Input Register (read-only)
+        #define GPIOE_PDDR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x114)  // Port E Data Direction Register
+    #endif
+    #if PORTS_AVAILABLE > 5
+        #define GPIOF_ADD                    (volatile unsigned long*)(GPIO_BLOCK + 0x140)
+        #define GPIOF_PDOR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x140)  // Port F Data Output Register {11}
+        #define GPIOF_PSOR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x144)  // Port F Set Output Register (write-only - always reads 0)
+        #define GPIOF_PCOR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x148)  // Port F Clear Output Register (write-only - always reads 0)
+        #define GPIOF_PTOR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x14c)  // Port F Toggle Output Register (write-only - always reads 0)
+        #define GPIOF_PDIR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x150)  // Port F Data Input Register (read-only)
+        #define GPIOF_PDDR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x154)  // Port F Data Direction Register
+    #endif
+    #if PORTS_AVAILABLE > 6
+        #define GPIOG_ADD                    (volatile unsigned long*)(GPIO_BLOCK + 0x140)
+        #define GPIOG_PDOR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x140)  // Port G Data Output Register {11}
+        #define GPIOG_PSOR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x144)  // Port G Set Output Register (write-only - always reads 0)
+        #define GPIOG_PCOR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x148)  // Port G Clear Output Register (write-only - always reads 0)
+        #define GPIOG_PTOR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x14c)  // Port G Toggle Output Register (write-only - always reads 0)
+        #define GPIOG_PDIR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x150)  // Port G Data Input Register (read-only)
+        #define GPIOG_PDDR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x154)  // Port G Data Direction Register
+    #endif
+    #if PORTS_AVAILABLE > 7
+        #define GPIOH_ADD                    (volatile unsigned long*)(GPIO_BLOCK + 0x140)
+        #define GPIOH_PDOR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x140)  // Port H Data Output Register {11}
+        #define GPIOH_PSOR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x144)  // Port H Set Output Register (write-only - always reads 0)
+        #define GPIOH_PCOR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x148)  // Port H Clear Output Register (write-only - always reads 0)
+        #define GPIOH_PTOR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x14c)  // Port H Toggle Output Register (write-only - always reads 0)
+        #define GPIOH_PDIR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x150)  // Port H Data Input Register (read-only)
+        #define GPIOH_PDDR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x154)  // Port H Data Direction Register
+    #endif
+    #if PORTS_AVAILABLE > 8
+        #define GPIOI_ADD                    (volatile unsigned long*)(GPIO_BLOCK + 0x140)
+        #define GPIOI_PDOR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x140)  // Port I Data Output Register {11}
+        #define GPIOI_PSOR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x144)  // Port I Set Output Register (write-only - always reads 0)
+        #define GPIOI_PCOR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x148)  // Port I Clear Output Register (write-only - always reads 0)
+        #define GPIOI_PTOR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x14c)  // Port I Toggle Output Register (write-only - always reads 0)
+        #define GPIOI_PDIR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x150)  // Port I Data Input Register (read-only)
+        #define GPIOI_PDDR                   *(volatile unsigned long *)(GPIO_BLOCK + 0x154)  // Port I Data Direction Register
+    #endif
+
+    typedef struct stGPIO_RGS
+    {
+        volatile unsigned long  PDOR;
+        volatile unsigned long  PSOR;
+        volatile unsigned long  PCOR;
+        volatile unsigned long  PTOR;
+        volatile unsigned long  PDIR;
+        volatile unsigned long  PDDR;
+    #if defined KINETIS_KE
+            volatile unsigned long  PIDR;
+            unsigned long  ulRes[9];
+    #else
+            unsigned long  ulRes[10];
+    #endif
+    } GPIO_REGS;
+#endif
 
 // Fast GPIOs
 //
@@ -17740,7 +17836,9 @@ extern void fnSimPers(void);
 
 // Toggle a port with a mask eg. _TOGGLE_PORT(D, PORTD_BIT3)
 //
-#if defined FGPIO_AVAILABLE
+#if defined KINETIS_KM
+    #define _TOGGLE_PORT(ref, mask)        GPIO##ref##_PDOR ^= (mask); _SIM_PORT_CHANGE
+#elif defined FGPIO_AVAILABLE
     #define _TOGGLE_PORT(ref, mask)        FGPIO##ref##_PTOR = (mask); _SIM_PORT_CHANGE
 #else
     #define _TOGGLE_PORT(ref, mask)        GPIO##ref##_PTOR = (mask); _SIM_PORT_CHANGE
@@ -17797,7 +17895,10 @@ extern void fnSimPers(void);
 #endif
 // Set and clear individual bits of a port eg. _SETBITS(B, (PORTB_BIT5 | PORTB_BIT19)) / _CLEARBITS(B, (PORTB_BIT5 | PORTB_BIT19))
 //
-#if defined FGPIO_AVAILABLE
+#if defined KINETIS_KM
+    #define _SETBITS(ref, pins)            FGPIO##ref##_PDOR |= (pins); _SIM_PORT_CHANGE
+    #define _CLEARBITS(ref, pins)          FGPIO##ref##_PDOR &= ~(pins); _SIM_PORT_CHANGE
+#elif defined FGPIO_AVAILABLE
     #define _SETBITS(ref, pins)            FGPIO##ref##_PSOR = (pins); _SIM_PORT_CHANGE
     #define _CLEARBITS(ref, pins)          FGPIO##ref##_PCOR = (pins); _SIM_PORT_CHANGE
 #else

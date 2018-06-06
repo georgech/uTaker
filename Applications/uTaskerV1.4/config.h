@@ -2455,7 +2455,7 @@
 // Low Power
 //
 #if !((defined K70F150M_12M || defined TWR_K70F120M || defined TWR_K60F120M || defined K60F150M_50M) && defined USB_INTERFACE) // don't use low power mode due to errata e7166
-    #if !defined RUN_IN_FREE_RTOS
+    #if !defined RUN_IN_FREE_RTOS                                        // low power mode is presety not supported together with FreeRTOS
         #define SUPPORT_LOW_POWER                                        // a low power task supervises power reduction when possible
           //#define LOW_POWER_CYCLING_MODE                               // allow low power cycle loop with a "Virtual Wake-up Interrupt Handler" - see video https://youtu.be/v4UnfcDiaE4
     #endif

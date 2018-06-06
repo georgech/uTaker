@@ -663,7 +663,7 @@
         #define BUS_CLOCK_DIVIDE 2                                       // divide by 1 or 2 to give bus and flash clock (maximum 20MHz)
     #endif
 #elif defined TWR_KM34Z50M || defined TWR_KM34Z75M
-    #define RUN_FROM_DEFAULT_CLOCK
+    #define RUN_FROM_DEFAULT_CLOCK                                       // default is 4MHz internal reference (requiring no configuration)
 #elif defined FRDM_KE15Z || defined TWR_KE18F || defined HVP_KE18F
     #define OSC_LOW_GAIN_MODE
     #define CRYSTAL_FREQUENCY    8000000                                 // 8MHz crystal
@@ -1515,7 +1515,9 @@
             #define RTC_CLOCK_PRESCALER_2  100                           // 128, 256, 512, 1024, 2048, 100 or 1000 (valid for bus clock or 1kHz LPO clock)
     #endif
 #else
-    #define SUPPORT_RTC                                                  // support real time clock
+    #if !defined KINETIS_KM                                              // KM's iRTC not yet supported
+        #define SUPPORT_RTC                                              // support real time clock
+    #endif
     #define ALARM_TASK   TASK_APPLICATION                                // alarm is handled by the application task (handled by time keeper if not defined)
     #if defined TWR_KL46Z48M || defined TWR_KL43Z48M
         #define RTC_USES_RTC_CLKIN                                       // TWR-KL46Z48M and TWR-KL43Z48M have a 32kHz oscillator supplying an accurate clock and the OpenSDA interface supplies a clock on the FRDM-KL46Z as long as the debug interface is powered (not possible with P&E debugger version)
@@ -6355,6 +6357,13 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define CONFIG_TEST_OUTPUT()
 
     #define KEYPAD "KeyPads/TWR-KM34Z50M.bmp"
+
+                                        // '0'            '1'     input state   center (x,   y)   0 = circle, radius, controlling port, controlling pin 
+        #define KEYPAD_LED_DEFINITIONS  {RGB(0,255,0),RGB(200,200,200),  1, {481, 193, 491, 199 }, _PORTE, DEMO_LED_1}, \
+                                        {RGB(255,0,0),RGB(200,200,200),  1, {481, 203, 491, 209 }, _PORTF, DEMO_LED_2}, \
+                                        {RGB(255,128,0),RGB(200,200,200),1, {481, 213, 491, 219 }, _PORTD, DEMO_LED_3}, \
+                                        {RGB(0,220,0),RGB(200,200,200),  1, {481, 223, 491, 229 }, _PORTC, DEMO_LED_4}
+
 #elif defined FRDM_KE15Z || defined TWR_KE18F || defined HVP_KE18F
     #define DEMO_LED_1             (PORTD_BIT16)                         // (green LED) if the port is changed (eg. A to D) the port macros will require appropriate adjustment too
     #define DEMO_LED_2             (PORTD_BIT0)                          // (red LED) if the port is changed (eg. A to D) the port macros will require appropriate adjustment too
@@ -7875,7 +7884,9 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 #endif
 #define PORT4_DEFAULT_INPUT        0xffffffff                            // port E
 #define PORT5_DEFAULT_INPUT        0xffffffff                            // port F
-
+#define PORT6_DEFAULT_INPUT        0xffffffff                            // port G
+#define PORT7_DEFAULT_INPUT        0xffffffff                            // port H
+#define PORT8_DEFAULT_INPUT        0xffffffff                            // port I
 
 // User port mapping
 //

@@ -1031,7 +1031,7 @@ extern QUEUE_TRANSFER fnTxByteDMA(QUEUE_HANDLE Channel, unsigned char *ptrStart,
         #if defined SUPPORT_LOW_POWER || (defined UART_EXTENDED_MODE && defined UART_TIMED_TRANSMISSION) || defined _WINDOWS
     KINETIS_UART_CONTROL *uart_reg = fnSelectChannel(Channel);
         #endif
-        #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA              // {81}
+        #if (defined KINETIS_KL || defined KINETIS_KM) && !defined DEVICE_WITH_eDMA // {81}
     KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
     ptrDMA += UART_DMA_TX_CHANNEL[Channel];
         #else
@@ -1063,7 +1063,7 @@ extern QUEUE_TRANSFER fnTxByteDMA(QUEUE_HANDLE Channel, unsigned char *ptrStart,
         #if LPUARTS_AVAILABLE > 0 && UARTS_AVAILABLE > 0
     }
         #endif    
-        #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA
+        #if (defined KINETIS_KL || defined KINETIS_KM) && !defined DEVICE_WITH_eDMA
             #if defined UART_EXTENDED_MODE && defined UART_TIMED_TRANSMISSION // {208}
     if ((tx_length > 1) && (ulInterCharTxDelay[Channel] != 0)) {         // if timed transmissions are required on this channel (linear buffer is always assumed and 7/8 bit characters)
        ptrDMA->DMA_DSR_BCR = DMA_DSR_BCR_DONE;                           // clear the DONE flag and clear errors etc. before starting the HW timer to trigger transfers
@@ -1110,7 +1110,7 @@ extern QUEUE_TRANSFER fnTxByteDMA(QUEUE_HANDLE Channel, unsigned char *ptrStart,
             #elif UARTS_AVAILABLE > 0
     uart_reg->UART_S1 &= ~(UART_S1_TDRE | UART_S1_TC);                   // mark transmitter presently not empty
             #endif
-            #if !defined KINETIS_KL || defined DEVICE_WITH_eDMA
+            #if ((!defined KINETIS_KL && !defined KINETIS_KM) || defined DEVICE_WITH_eDMA)
     ptrDMA_TCD->DMA_TCD_CSR |= DMA_TCD_CSR_ACTIVE;                       // trigger activity
             #endif
             #if defined UART_EXTENDED_MODE && defined UART_TIMED_TRANSMISSION

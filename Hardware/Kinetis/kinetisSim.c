@@ -829,7 +829,7 @@ static void fnSetDevice(unsigned long *port_inits)
     RTC_RAR     = (RTC_RAR_TSRW | RTC_RAR_TPRW | RTC_RAR_TARW| RTC_RAR_TCRW | RTC_RAR_CRW | RTC_RAR_SRW | RTC_RAR_LRW | RTC_RAR_IERW);
         #endif
     #endif
-    #if !defined KINETIS_KL && !defined KINETIS_KE && !defined CROSSBAR_SWITCH_LITE
+    #if !defined KINETIS_KL && !defined KINETIS_KM && !defined KINETIS_KE && !defined CROSSBAR_SWITCH_LITE
     AXBS_CRS0 = 0x76543210;                                              // {34} default crossbar switch settings
     AXBS_CRS1 = 0x76543210;
     AXBS_CRS2 = 0x76543210;
@@ -1000,21 +1000,35 @@ static void fnSetDevice(unsigned long *port_inits)
 #if defined DEVICE_WITH_SLCD
     LCD_GCR     = 0x08350003;                                            // SLCD
 #endif
-    GPIOA_PDIR  = ulPort_in_A = *port_inits++;                           // set port inputs to default states
+#if defined KINETIS_KM
+    #define PORT_CAST unsigned char
+#else
+    #define PORT_CAST unsigned long
+#endif
+    GPIOA_PDIR  = (PORT_CAST)(ulPort_in_A = *port_inits++);              // set port inputs to default states
 #if PORTS_AVAILABLE > 1
-    GPIOB_PDIR  = ulPort_in_B = *port_inits++;
+    GPIOB_PDIR  = (PORT_CAST)(ulPort_in_B = *port_inits++);
 #endif
 #if PORTS_AVAILABLE > 2
-    GPIOC_PDIR  = ulPort_in_C = *port_inits++;
+    GPIOC_PDIR  = (PORT_CAST)(ulPort_in_C = *port_inits++);
 #endif
 #if PORTS_AVAILABLE > 3
-    GPIOD_PDIR  = ulPort_in_D = *port_inits++;
+    GPIOD_PDIR  = (PORT_CAST)(ulPort_in_D = *port_inits++);
 #endif
 #if PORTS_AVAILABLE > 4
-    GPIOE_PDIR  = ulPort_in_E = *port_inits++;
+    GPIOE_PDIR  = (PORT_CAST)(ulPort_in_E = *port_inits++);
 #endif
 #if PORTS_AVAILABLE > 5
-    GPIOE_PDIR  = ulPort_in_F = *port_inits++;
+    GPIOF_PDIR  = (PORT_CAST)(ulPort_in_F = *port_inits++);
+#endif
+#if PORTS_AVAILABLE > 6
+    GPIOG_PDIR = (PORT_CAST)(ulPort_in_G = *port_inits++);
+#endif
+#if PORTS_AVAILABLE > 7
+    GPIOH_PDIR = (PORT_CAST)(ulPort_in_H = *port_inits++);
+#endif
+#if PORTS_AVAILABLE > 8
+    GPIOI_PDIR = (PORT_CAST)(ulPort_in_I = *port_inits++);
 #endif
 #if !defined KINETIS_KL && !defined KINETIS_KE && (FLEX_TIMERS_AVAILABLE > 0)
     FTM0_MODE = FTM_MODE_WPDIS;                                          // FlexTimer
@@ -3212,26 +3226,33 @@ static void fnSetPinCharacteristics(int iPortRef, unsigned long ulHigh, unsigned
 //
 extern void fnSimPorts(void)
 {
+#if !defined KINETIS_KM
     unsigned long ulNewState;
+#endif
 #if defined KINETIS_WITH_PCC
     if ((PCC_PORTA & PCC_CGC) != 0)                                      // if port is clocked
 #elif !defined KINETIS_KE
     if ((SIM_SCGC5 & SIM_SCGC5_PORTA) != 0)                              // if port is clocked
 #endif
     {
+#if defined KINETIS_KM
+        GPIOA_PDIR = ((unsigned char)(ulPort_in_A & ~GPIOA_PDDR) | (GPIOA_PDOR & GPIOA_PDDR)); // input state
+#else
         ulNewState = (GPIOA_PDOR | GPIOA_PSOR);                          // set bits from set register
         ulNewState &= ~(GPIOA_PCOR);                                     // clear bits from clear register
         ulNewState ^= GPIOA_PTOR;                                        // toggle bits from toggle register
         GPIOA_PDOR = ulNewState;
         GPIOA_PDIR = ((ulPort_in_A & ~GPIOA_PDDR) | (GPIOA_PDOR & GPIOA_PDDR)); // input state {10}
-#if !defined KINETIS_KE || defined KINETIS_KE15
+    #if !defined KINETIS_KE || defined KINETIS_KE15
         if ((PORTA_GPCLR != 0) || (PORTA_GPCHR != 0)) {
             fnSetPinCharacteristics(_PORTA, PORTA_GPCHR, PORTA_GPCLR);
         }
+    #endif
 #endif
     }
+#if !defined KINETIS_KM
     GPIOA_PTOR = GPIOA_PSOR = GPIOA_PCOR = 0;                            // registers always read 0
-
+#endif
 #if PORTS_AVAILABLE > 1
     #if defined KINETIS_WITH_PCC
     if ((PCC_PORTB & PCC_CGC) != 0)                                      // if port is clocked
@@ -3239,18 +3260,24 @@ extern void fnSimPorts(void)
     if ((SIM_SCGC5 & SIM_SCGC5_PORTB) != 0)                              // if port is clocked
     #endif
     {
+    #if defined KINETIS_KM
+        GPIOB_PDIR = ((unsigned char)(ulPort_in_B & ~GPIOB_PDDR) | (GPIOB_PDOR & GPIOB_PDDR)); // input state
+    #else
         ulNewState = (GPIOB_PDOR | GPIOB_PSOR);                          // set bits from set register
         ulNewState &= ~(GPIOB_PCOR);                                     // clear bits from clear register
         ulNewState ^= GPIOB_PTOR;                                        // toggle bits from toggle register
         GPIOB_PDOR = ulNewState;
         GPIOB_PDIR = ((ulPort_in_B & ~GPIOB_PDDR) | (GPIOB_PDOR & GPIOB_PDDR)); // input state {10}
-    #if !defined KINETIS_KE || defined KINETIS_KE15
+        #if !defined KINETIS_KE || defined KINETIS_KE15
         if ((PORTB_GPCLR != 0) || (PORTB_GPCHR != 0)) {
             fnSetPinCharacteristics(_PORTB, PORTB_GPCHR, PORTB_GPCLR);
         }
+        #endif
     #endif
     }
+    #if !defined KINETIS_KM
     GPIOB_PTOR = GPIOB_PSOR = GPIOB_PCOR = 0;                            // registers always read 0
+    #endif
 #endif
 #if PORTS_AVAILABLE > 2
     #if defined KINETIS_WITH_PCC
@@ -3259,18 +3286,24 @@ extern void fnSimPorts(void)
     if ((SIM_SCGC5 & SIM_SCGC5_PORTC) != 0)                              // if port is clocked
     #endif
     {
+    #if defined KINETIS_KM
+        GPIOC_PDIR = ((unsigned char)(ulPort_in_C & ~GPIOC_PDDR) | (GPIOC_PDOR & GPIOC_PDDR)); // input state
+    #else
         ulNewState = (GPIOC_PDOR | GPIOC_PSOR);                          // set bits from set register
         ulNewState &= ~(GPIOC_PCOR);                                     // clear bits from clear register
         ulNewState ^= GPIOC_PTOR;                                        // toggle bits from toggle register
         GPIOC_PDOR = ulNewState;
         GPIOC_PDIR = ((ulPort_in_C & ~GPIOC_PDDR) | (GPIOC_PDOR & GPIOC_PDDR)); // input state {10}
-    #if !defined KINETIS_KE || defined KINETIS_KE15
+        #if !defined KINETIS_KE || defined KINETIS_KE15
         if ((PORTC_GPCLR != 0) || (PORTC_GPCHR != 0)) {
             fnSetPinCharacteristics(_PORTC, PORTC_GPCHR, PORTC_GPCLR);
         }
+        #endif
     #endif
     }
+    #if !defined KINETIS_KM
     GPIOC_PTOR = GPIOC_PSOR = GPIOC_PCOR = 0;                            // registers always read 0
+    #endif
 #endif
 #if PORTS_AVAILABLE > 3
     #if defined KINETIS_WITH_PCC
@@ -3279,6 +3312,9 @@ extern void fnSimPorts(void)
     if ((SIM_SCGC5 & SIM_SCGC5_PORTD) != 0)                              // if port is clocked
     #endif
     {
+    #if defined KINETIS_KM
+        GPIOD_PDIR = ((unsigned char)(ulPort_in_D & ~GPIOD_PDDR) | (GPIOD_PDOR & GPIOD_PDDR)); // input state
+    #else
         ulNewState = (GPIOD_PDOR | GPIOD_PSOR);                          // set bits from set register
         ulNewState &= ~(GPIOD_PCOR);                                     // clear bits from clear register
         ulNewState ^= GPIOD_PTOR;                                        // toggle bits from toggle register
@@ -3287,15 +3323,20 @@ extern void fnSimPorts(void)
         if ((PORTD_GPCLR != 0) || (PORTD_GPCHR != 0)) {
             fnSetPinCharacteristics(_PORTD, PORTD_GPCHR, PORTD_GPCLR);
         }
+    #endif
     }
+    #if !defined KINETIS_KM
     GPIOD_PTOR = GPIOD_PSOR = GPIOD_PCOR = 0;                            // registers always read 0
-
+    #endif
     #if defined KINETIS_WITH_PCC
     if ((PCC_PORTE & PCC_CGC) != 0)                                      // if port is clocked
     #else
     if ((SIM_SCGC5 & SIM_SCGC5_PORTE) != 0)                              // if port is clocked
     #endif
     {
+    #if defined KINETIS_KM
+        GPIOE_PDIR = ((unsigned char)(ulPort_in_E & ~GPIOE_PDDR) | (GPIOE_PDOR & GPIOE_PDDR)); // input state
+    #else
         ulNewState = (GPIOE_PDOR | GPIOE_PSOR);                          // set bits from set register
         ulNewState &= ~(GPIOE_PCOR);                                     // clear bits from clear register
         ulNewState ^= GPIOE_PTOR;                                        // toggle bits from toggle register
@@ -3304,11 +3345,17 @@ extern void fnSimPorts(void)
         if ((PORTE_GPCLR != 0) || (PORTE_GPCHR != 0)) {
             fnSetPinCharacteristics(_PORTE, PORTE_GPCHR, PORTE_GPCLR);
         }
+    #endif
     }
+    #if !defined KINETIS_KM
     GPIOE_PTOR = GPIOE_PSOR = GPIOE_PCOR = 0;                            // registers always read 0
+    #endif
 #endif
 #if PORTS_AVAILABLE > 5
     if ((SIM_SCGC5 & SIM_SCGC5_PORTF) != 0) {                            // if port is clocked
+    #if defined KINETIS_KM
+        GPIOF_PDIR = ((unsigned char)(ulPort_in_F & ~GPIOF_PDDR) | (GPIOF_PDOR & GPIOF_PDDR)); // input state
+    #else
         ulNewState = (GPIOF_PDOR | GPIOF_PSOR);                          // set bits from set register
         ulNewState &= ~(GPIOF_PCOR);                                     // clear bits from clear register
         ulNewState ^= GPIOF_PTOR;                                        // toggle bits from toggle register
@@ -3317,8 +3364,68 @@ extern void fnSimPorts(void)
         if ((PORTF_GPCLR != 0) || (PORTF_GPCHR != 0)) {
             fnSetPinCharacteristics(_PORTF, PORTF_GPCHR, PORTF_GPCLR);
         }
+    #endif
     }
+    #if !defined KINETIS_KM
     GPIOF_PTOR = GPIOF_PSOR = GPIOF_PCOR = 0;                            // registers always read 0
+    #endif
+#endif
+#if PORTS_AVAILABLE > 6
+    if ((SIM_SCGC5 & SIM_SCGC5_PORTG) != 0) {                            // if port is clocked
+    #if defined KINETIS_KM
+        GPIOG_PDIR = ((unsigned char)(ulPort_in_G & ~GPIOG_PDDR) | (GPIOG_PDOR & GPIOG_PDDR)); // input state
+    #else
+        ulNewState = (GPIOG_PDOR | GPIOG_PSOR);                          // set bits from set register
+        ulNewState &= ~(GPIOG_PCOR);                                     // clear bits from clear register
+        ulNewState ^= GPIOG_PTOR;                                        // toggle bits from toggle register
+        GPIOG_PDOR = ulNewState;
+        GPIOG_PDIR = ((ulPort_in_G & ~GPIOG_PDDR) | (GPIOG_PDOR & GPIOG_PDDR)); // input state {10}
+        if ((PORTG_GPCLR != 0) || (PORTG_GPCHR != 0)) {
+            fnSetPinCharacteristics(_PORTG, PORTG_GPCHR, PORTG_GPCLR);
+        }
+    #endif
+    }
+    #if !defined KINETIS_KM
+    GPIOG_PTOR = GPIOG_PSOR = GPIOG_PCOR = 0;                            // registers always read 0
+    #endif
+#endif
+#if PORTS_AVAILABLE > 7
+    if ((SIM_SCGC5 & SIM_SCGC5_PORTH) != 0) {                            // if port is clocked
+    #if defined KINETIS_KM
+        GPIOH_PDIR = ((unsigned char)(ulPort_in_H & ~GPIOH_PDDR) | (GPIOH_PDOR & GPIOH_PDDR)); // input state
+    #else
+        ulNewState = (GPIOH_PDOR | GPIOH_PSOR);                          // set bits from set register
+        ulNewState &= ~(GPIOH_PCOR);                                     // clear bits from clear register
+        ulNewState ^= GPIOH_PTOR;                                        // toggle bits from toggle register
+        GPIOH_PDOR = ulNewState;
+        GPIOH_PDIR = ((ulPort_in_H & ~GPIOH_PDDR) | (GPIOH_PDOR & GPIOH_PDDR)); // input state {10}
+        if ((PORTH_GPCLR != 0) || (PORTH_GPCHR != 0)) {
+            fnSetPinCharacteristics(_PORTH, PORTH_GPCHR, PORTH_GPCLR);
+        }
+    #endif
+    }
+    #if !defined KINETIS_KM
+    GPIOH_PTOR = GPIOH_PSOR = GPIOH_PCOR = 0;                            // registers always read 0
+    #endif
+#endif
+#if PORTS_AVAILABLE > 8
+    if ((SIM_SCGC5 & SIM_SCGC5_PORTI) != 0) {                            // if port is clocked
+    #if defined KINETIS_KM
+        GPIOI_PDIR = ((unsigned char)(ulPort_in_I & ~GPIOI_PDDR) | (GPIOI_PDOR & GPIOI_PDDR)); // input state
+    #else
+        ulNewState = (GPIOI_PDOR | GPIOI_PSOR);                          // set bits from set register
+        ulNewState &= ~(GPIOI_PCOR);                                     // clear bits from clear register
+        ulNewState ^= GPIOI_PTOR;                                        // toggle bits from toggle register
+        GPIOI_PDOR = ulNewState;
+        GPIOI_PDIR = ((ulPort_in_I & ~GPIOI_PDDR) | (GPIOI_PDOR & GPIOI_PDDR)); // input state {10}
+        if ((PORTI_GPCLR != 0) || (PORTI_GPCHR != 0)) {
+            fnSetPinCharacteristics(_PORTI, PORTI_GPCHR, PORTI_GPCLR);
+        }
+    #endif
+    }
+    #if !defined KINETIS_KM
+    GPIOI_PTOR = GPIOI_PSOR = GPIOI_PCOR = 0;                            // registers always read 0
+    #endif
 #endif
 }
 
@@ -4493,7 +4600,7 @@ extern void fnSimPers(void)
 extern int fnSimulateDMA(int channel)                                    // {3}
 {
 #if !defined DEVICE_WITHOUT_DMA
-#if defined KINETIS_KL && !defined DEVICE_WITH_eDMA                      // {32}
+#if (defined KINETIS_KL || defined KINETIS_KM) && !defined DEVICE_WITH_eDMA // {32}
     KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
     ptrDMA += channel;
     if (((ptrDMA->DMA_DCR & (DMA_DCR_START | DMA_DCR_ERQ)) != 0) && ((ptrDMA->DMA_DSR_BCR & DMA_DSR_BCR_BCR_MASK) != 0)) { // sw commanded start or source request (ignore is no count value remaining)
@@ -4906,7 +5013,7 @@ static void fnHandleDMA_triggers(int iTriggerSource, int iDMAmux)
             }
         #endif
     #endif
-    #if !defined KINETIS_KL || defined DEVICE_WITH_eDMA
+    #if (!defined KINETIS_KL && !defined KINETIS_KM) || defined DEVICE_WITH_eDMA
             if ((DMA_ERQ & (DMA_ERQ_ERQ0 << iChannel)) != 0) {           // if the DMA channel is enabled
                 KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
                 ptrDMA_TCD += iChannel;
@@ -5695,7 +5802,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
             #if !defined DEVICE_WITHOUT_DMA                              // if the device supports DMA
                     if ((UART0_C5 & UART_C5_RDMAS) != 0) {               // {4} if the UART is operating in DMA reception mode
                 #if defined SERIAL_SUPPORT_DMA && defined DMA_UART0_RX_CHANNEL
-                    #if defined KINETIS_KL
+                    #if ((defined KINETIS_KL || defined KINETIS_KM) && !defined DEVICE_WITH_eDMA)
                         KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
                         ptrDMA += DMA_UART0_RX_CHANNEL;
                         if ((ptrDMA->DMA_DCR & DMA_DCR_ERQ) != 0) {      // if source enabled
@@ -5749,7 +5856,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
             #endif
                     {                                                    // {4} if the UART is operating in DMA reception mode
             #if defined SERIAL_SUPPORT_DMA && defined DMA_UART1_RX_CHANNEL
-                #if defined KINETIS_KL
+                #if ((defined KINETIS_KL || defined KINETIS_KM) && !defined DEVICE_WITH_eDMA)
                         KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
                         ptrDMA += DMA_UART1_RX_CHANNEL;
                         if ((ptrDMA->DMA_DCR & DMA_DCR_ERQ) != 0) {      // if source enabled
@@ -5821,7 +5928,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
             #endif
                     {                                                    // {4} if the UART is operating in DMA reception mode
             #if defined SERIAL_SUPPORT_DMA && defined DMA_UART2_RX_CHANNEL
-                #if defined KINETIS_KL
+                #if ((defined KINETIS_KL || defined KINETIS_KM) && !defined DEVICE_WITH_eDMA)
                         KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
                         ptrDMA += DMA_UART2_RX_CHANNEL;
                         if ((ptrDMA->DMA_DCR & DMA_DCR_ERQ) != 0) {      // if source enabled
@@ -5869,6 +5976,14 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                 if ((UART3_C2 & UART_C2_RIE) != 0) {                     // if reception interrupt is enabled
                     if ((UART3_C5 & UART_C5_RDMAS) != 0) {               // {4} if the UART is operating in DMA reception mode
         #if defined SERIAL_SUPPORT_DMA && defined DMA_UART3_RX_CHANNEL
+            #if ((defined KINETIS_KL || defined KINETIS_KM) && !defined DEVICE_WITH_eDMA)
+                        KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
+                        ptrDMA += DMA_UART3_RX_CHANNEL;
+                        if ((ptrDMA->DMA_DCR & DMA_DCR_ERQ) != 0) {      // if source enabled
+                            fnSimulateDMA(DMA_UART3_RX_CHANNEL);         // trigger DMA transfer on the UART's channel
+                            UART3_S1 &= ~UART_S1_RDRF;                   // remove interrupt cause
+                        }
+            #else
                         if (DMA_ERQ & (DMA_ERQ_ERQ0 << DMA_UART3_RX_CHANNEL)) { // if source enabled
                             KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
                             ptrDMA_TCD += DMA_UART3_RX_CHANNEL;
@@ -5876,6 +5991,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                             fnSimulateDMA(DMA_UART3_RX_CHANNEL);         // trigger DMA transfer on the UART's channel
                             UART3_S1 &= ~UART_S1_RDRF;                   // remove interrupt cause
                         }
+            #endif
         #endif
                     }
                     else {

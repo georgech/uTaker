@@ -145,7 +145,7 @@ static const unsigned char *_DMA_Interrupt[_DMA_CHANNEL_COUNT] = {
 // - either a complete or a half (not KL) buffer has been completed
 //
 static void (*_DMA_handler[DMA_CHANNEL_COUNT])(void) = {0};              // user DMA interrupt handlers
-#if defined KINETIS_KL && !defined DEVICE_WITH_eDMA
+#if (defined KINETIS_KL || defined KINETIS_KM) && !defined DEVICE_WITH_eDMA
     static unsigned long ulRepeatLength[DMA_CHANNEL_COUNT] = {0};        // {1}
     static unsigned char ucDirectionOutput[DMA_CHANNEL_COUNT] = {DMA_TRANSFER_INPUT};
     static unsigned char *ptrStart[DMA_CHANNEL_COUNT] = {0};
@@ -158,7 +158,7 @@ static void (*_DMA_handler[DMA_CHANNEL_COUNT])(void) = {0};              // user
 
 static void _DMA_Handler(int iChannel)
 {
-    #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA
+    #if (defined KINETIS_KL || defined KINETIS_KM) && !defined DEVICE_WITH_eDMA
     KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
     ptrDMA += iChannel;                                                  // move to the use DMA channel
         #if defined _WINDOWS
@@ -360,7 +360,7 @@ static __interrupt void _DMA_Interrupt_15(void)
 
 extern void fnDMA_BufferReset(int iChannel, int iAction)
 {
-    #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA
+    #if (defined KINETIS_KL || defined KINETIS_KM) && !defined DEVICE_WITH_eDMA
     KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
     ptrDMA += iChannel;
     if (iAction == DMA_BUFFER_START) {
@@ -453,7 +453,7 @@ extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned short usDma
 {
     unsigned char ucSize = (unsigned char)(ulRules & 0x07);              // transfer size 1, 2 or 4 bytes
 
-    #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA
+    #if (defined KINETIS_KL || defined KINETIS_KM) && !defined DEVICE_WITH_eDMA
     KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
         #if defined _WINDOWS
     if (ucDMA_channel >= DMA_CHANNEL_COUNT) {
@@ -712,7 +712,7 @@ extern void *uMemcpy(void *ptrTo, const void *ptrFrom, size_t Size)      // {9}
     #endif
 
     if (Size >= SMALLEST_DMA_COPY) {                                     // if large enough to be worthwhile
-    #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA                  // {80}
+    #if (defined KINETIS_KL || defined KINETIS_KM) && !defined DEVICE_WITH_eDMA // {80}
         KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
         ptrDMA += DMA_MEMCPY_CHANNEL;
         if (ptrDMA->DMA_DCR == 0) {                                      // if not already in use
@@ -948,7 +948,7 @@ extern void *uMemset(void *ptrTo, int iValue, size_t Size)               // {7}
     register unsigned char ucValue = (unsigned char)iValue;              // {7}
     
     if (Size >= SMALLEST_DMA_COPY) {                                     // if large enough to be worthwhile 
-    #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA                  // {80}
+    #if (defined KINETIS_KL || defined KINETIS_KM) && !defined DEVICE_WITH_eDMA // {80}
         KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
         ptrDMA += DMA_MEMCPY_CHANNEL;
         if (ptrDMA->DMA_DCR == 0) {                                      // if not already in use

@@ -244,7 +244,7 @@ typedef struct stKINETIS_CORTEX_M4_REGS
 
 #define INTERRUPT_MASKED 0x00000001
 
-#if defined KINETIS_KL && !defined DEVICE_WITH_eDMA                      // {18}
+#if (defined KINETIS_KL || defined KINETIS_KM) && !defined DEVICE_WITH_eDMA // {18}
     #if !defined DEVICE_WITHOUT_DMA
     typedef struct stKINETIS_KL_DMA
     {
@@ -3240,17 +3240,65 @@ typedef struct stKINETIS_DAC
 
 typedef struct stKINETIS_GPIO
 {
-unsigned long GPIO_PDOR;
-unsigned long GPIO_PSOR;
-unsigned long GPIO_PCOR;
-unsigned long GPIO_PTOR;
-unsigned long GPIO_PDIR;
-unsigned long GPIO_PDDR;
-#if defined KINETIS_KE
-    unsigned long GPIO_PIDR;
-    unsigned long ulRes[9];
+#if defined KINETIS_KM
+    #define GPIOA_PDOR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x000)   // port A data output register
+    #define GPIOB_PDOR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x001)   // port B data output register
+    #define GPIOC_PDOR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x002)   // port C data output register
+    #define GPIOD_PDOR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x003)   // port D data output register
+    unsigned char ucRes0[12];
+    #define GPIOA_PDIR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x010)   // port A data input register (read-only)
+    #define GPIOB_PDIR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x011)   // port B data input register (read-only)
+    #define GPIOC_PDIR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x012)   // port C data input register (read-only)
+    #define GPIOD_PDIR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x013)   // port D data input register (read-only)
+    #define GPIOA_PDDR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x014)   // port A data direction register
+    #define GPIOB_PDDR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x015)   // port B data direction register
+    #define GPIOC_PDDR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x016)   // port C data direction register
+    #define GPIOD_PDDR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x017)   // port D data direction register
+    unsigned char ucRes1[4];
+    #define GPIOA_GACR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x01c)   // port A GPIO attribute checker register
+    #define GPIOB_GACR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x01d)   // port B GPIO attribute checker register
+    #define GPIOC_GACR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x01e)   // port C GPIO attribute checker register
+    #define GPIOD_GACR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x01f)   // port D GPIO attribute checker register
+    unsigned char ucRes2[32];
+    #define GPIOE_PDOR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x040)   // port E data output register
+    #define GPIOF_PDOR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x041)   // port F data output register
+    #define GPIOG_PDOR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x042)   // port G data output register
+    #define GPIOH_PDOR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x043)   // port H data output register
+    unsigned char ucRes3[12];
+    #define GPIOE_PDIR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x050)   // port E data input register (read-only)
+    #define GPIOF_PDIR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x051)   // port F data input register (read-only)
+    #define GPIOG_PDIR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x052)   // port G data input register (read-only)
+    #define GPIOH_PDIR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x053)   // port H data input register (read-only)
+    #define GPIOE_PDDR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x054)   // port E data direction register
+    #define GPIOF_PDDR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x055)   // port F data direction register
+    #define GPIOG_PDDR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x056)   // port G data direction register
+    #define GPIOH_PDDR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x057)   // port H data direction register
+    unsigned char ucRes4[4];
+    #define GPIOE_GACR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x05c)   // port E GPIO attribute checker register
+    #define GPIOF_GACR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x05d)   // port F GPIO attribute checker register
+    #define GPIOG_GACR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x05e)   // port G GPIO attribute checker register
+    #define GPIOH_GACR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x05f)   // port H GPIO attribute checker register
+    unsigned char ucRes5[32];
+    #define GPIOI_PDOR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x080)   // port I data output register
+    unsigned char ucRes6[15];
+    #define GPIOI_PDIR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x090)   // port I data input register (read-only)
+    unsigned char ucRes7[3];
+    #define GPIOI_PDDR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x094)   // port I data direction register
+    unsigned char ucRes8[7];
+    #define GPIOI_GACR                       *(volatile unsigned char*)(GPIO_BLOCK + 0x09c)   // port I GPIO attribute checker register
 #else
-    unsigned long ulRes[10];
+    unsigned long GPIO_PDOR;
+    unsigned long GPIO_PSOR;
+    unsigned long GPIO_PCOR;
+    unsigned long GPIO_PTOR;
+    unsigned long GPIO_PDIR;
+    unsigned long GPIO_PDDR;
+    #if defined KINETIS_KE
+        unsigned long GPIO_PIDR;
+        unsigned long ulRes[9];
+    #else
+        unsigned long ulRes[10];
+    #endif
 #endif
 } KINETIS_GPIO;
 
@@ -3648,7 +3696,7 @@ typedef struct stKINETIS_QSPI                                            // {29}
 
 typedef struct stKINETIS_PERIPH
 {
-#if defined KINETIS_KL && !defined DEVICE_WITH_eDMA
+#if (defined KINETIS_KL || defined KINETIS_KM) && !defined DEVICE_WITH_eDMA
     #if !defined DEVICE_WITHOUT_DMA
     KINETIS_KL_DMA     DMA;                                              // {18}
     #endif
@@ -3743,7 +3791,7 @@ typedef struct stKINETIS_PERIPH
 #if !defined KINETIS_KE
     KINETIS_LPTMR      LPTMR[LPTMR_AVAILABLE];                           // {20}
 #endif
-#if !defined KINETIS_KE && !defined KINETIS_KL && !defined CROSSBAR_SWITCH_LITE
+#if !defined KINETIS_KE && !defined KINETIS_KL && !defined KINETIS_KM && !defined CROSSBAR_SWITCH_LITE
     KINETIS_AXBS       AXBS;                                             // {19}
 #endif
     KINETIS_TSI        TSI;
@@ -3844,7 +3892,11 @@ typedef struct stKINETIS_PERIPH
 #if DAC_CONTROLLERS > 0
     KINETIS_DAC        DAC[DAC_CONTROLLERS];
 #endif
+#if defined KINETIS_KM
+    KINETIS_GPIO       GPIO;
+#else
     KINETIS_GPIO       GPIO[PORTS_AVAILABLE];
+#endif
     KINETIS_MCM        MCM;                                              // {11}
 #if defined CAU_V1_AVAILABLE || defined CAU_V2_AVAILABLE
     KINETIS_MMCAU      MMCAU;                                            // {17}

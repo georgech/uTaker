@@ -669,8 +669,8 @@ static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][ALTERNATIVE_FUNCTIONS + 1] 
         {  "LCD18",        "PTH3",  "-",         "-",          "-",           "-",         "-",        "-"                 },
         {  "LCD19",        "PTH4",  "-",         "-",          "-",           "-",         "-",        "-"                 },
         {  "LCD20",        "PTH5",  "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "PTH6",  "SCI1_CTS",  "SPI1_SS_B",  "PXBAR_IN7",   "-",         "-",        "-"                 },
-        {  "-",            "PTH7",  "SCI1_RTS",  "SPI1_SCK",   "PXBAR_OUT7",  "-",         "-",        "-"                 },
+        {  "-",            "PTH6(od)",  "SCI1_CTS",  "SPI1_SS_B",  "PXBAR_IN7","-",        "-",        "-"                 }, // open drain
+        {  "-",            "PTH7(od)",  "SCI1_RTS",  "SPI1_SCK",   "PXBAR_OUT7","-",       "-",        "-"                 }, // open drain
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
@@ -699,7 +699,7 @@ static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][ALTERNATIVE_FUNCTIONS + 1] 
     {
         // ALT 0           ALT 1    ALT2         ALT 3         ALT 4          ALT 5        ALT 6       ALT 7
         {  "CMP0P5",       "PTI0",  "SCI1_RxD",  "PXBAR_IN8",  "SPI1_MISO",   "SPI1_MOSI", "-",        "-"                 }, // PORT I
-        {  "-",            "PTI1",  "SCI1_TxD",  "PXBAR_OUT8", "SPI1_MOSI",   "SPI1_MISO", "-",        "-"                 },
+        {  "-",            "PTI1(od)","SCI1_TxD","PXBAR_OUT8", "SPI1_MOSI",   "SPI1_MISO", "-",        "-"                 }, // open drain
         {  "LCD21",        "PTI2",  "-",         "-",          "-",           "-",         "-",        "-"                 },
         {  "LCD22",        "PTI3",  "-",         "-",          "-",           "-",         "-",        "-"                 },
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
