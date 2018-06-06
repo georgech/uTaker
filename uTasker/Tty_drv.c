@@ -668,7 +668,7 @@ static void send_next_byte(QUEUE_HANDLE channel, TTYQUE *ptTTYQue)       // inte
         if (ptTTYQue->tty_queue.chars == 0) {                            // are there more to send?
             ptTTYQue->ucState &= ~TX_ACTIVE;                             // transmission of a block has terminated
             fnClearTxInt(channel);                                       // clear interrupt
-#if defined (WAKE_BLOCKED_TX) && defined (SERIAL_SUPPORT_DMA)            // {2},{3}
+#if defined (WAKE_BLOCKED_TX) && defined (SERIAL_SUPPORT_DMA)            // {2}{3}
             fnWakeBlockedTx(ptTTYQue, 0);
 #endif
 #if defined UART_BREAK_SUPPORT
@@ -678,7 +678,7 @@ static void send_next_byte(QUEUE_HANDLE channel, TTYQUE *ptTTYQue)       // inte
 #endif
 #if defined UART_FRAME_COMPLETE                                          // {16}
             if ((ptTTYQue->opn_mode & INFORM_ON_FRAME_TRANSMISSION) != 0) {
-                fnUARTFrameTermination(channel);
+                fnUARTFrameTermination(channel);                         // this routine is supplied by the user
             }
 #endif
         }

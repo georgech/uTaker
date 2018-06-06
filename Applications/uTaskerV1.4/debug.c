@@ -8330,6 +8330,8 @@ extern QUEUE_TRANSFER fnNetworkTx(unsigned char *output_buffer, QUEUE_TRANSFER n
 
 #if defined _KINETIS
     #include "debug_hal_kinetis.h"                                       // {53}
+#elif defined _M5223X
+    #include "debug_hal_m522xx.h"
 #elif defined _STM32
     #include "debug_hal_stm32.h"
 #elif defined _LM3SXXXX

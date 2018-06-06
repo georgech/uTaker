@@ -1104,7 +1104,12 @@ extern void fnConfigUSB(QUEUE_HANDLE Channel, USBTABLE *pars)
   //case EXTERNAL_USB_CLOCK:
   //case SPECIAL_USB_CLOCK:                                              // use alternative clock input pin
     default:
-        _CONFIG_PERIPHERAL(E, 26, PE_26_USB_CLKIN);                      // USB_CLKIN on PE.26 (alt. function 7)
+    //#if defined USB_CLK_ON_PORT_A
+        _CONFIG_PERIPHERAL(A, 5, PA_5_USB_CLKIN);                        // USB_CLKIN on PTA5 (alt. function 2)
+    //#else
+        _CONFIG_PERIPHERAL(E, 26, PE_26_USB_CLKIN);                      // USB_CLKIN on PTE26 (alt. function 7)
+    //#endif
+        SIM_SOPT2 &= ~(SIM_SOPT2_USBSRC);                                // select external bypass clock (USB_CLKIN)
         break;
     }
     #if defined MPU_AVAILABLE                                            // devices with memory protection unit

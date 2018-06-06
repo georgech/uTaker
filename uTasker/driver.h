@@ -100,7 +100,7 @@
     13.03.2018 Add UART_IDLE_LINE_INTERRUPT                              {81}
     16.03.2018 Add CONTROL_QUESTION_MARK                                 {82}
     05.05.2018 Add UART_HW_TRIGGERED_TX_MODE                             {83}
-
+    01.06.2018 Add optional interrupt callbacks receptionHandler(), receiveBreakHandler() and frameCompleteHandler() {84}
 
 */
 
@@ -526,6 +526,15 @@ typedef struct stTTYtable {
     #if defined SUPPORT_FLOW_HIGH_LOW
     unsigned char  ucFlowHighWater;                                      // % of buffer full to stall flow
     unsigned char  ucFlowLowWater;                                       // % of buffer full to restart flow
+    #endif
+    #if defined USER_DEFINED_UART_RX_HANDLER                             // {84}
+    int (*receptionHandler)(unsigned char, QUEUE_LIMIT);
+    #endif
+    #if defined USER_DEFINED_UART_RX_BREAK_DETECTION
+    int (*receiveBreakHandler)(QUEUE_LIMIT);
+    #endif
+    #if defined USER_DEFINED_UART_TX_FRAME_COMPLETE
+    void (*txFrameCompleteHandler)(QUEUE_LIMIT);
     #endif
 } TTYTABLE;
 

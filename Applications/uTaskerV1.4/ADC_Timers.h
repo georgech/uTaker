@@ -40,6 +40,7 @@
     20.05.2017 Add Kinetis timer capture test                            {24}
     09.02.2018 Add ADC polling reference (rather than using end of conversion interrupt) {25}
     03.05.2018 Corrected Kinetis internal temperature equation           {26}
+    02.06.2018 Zero optional user UART callback handlers                 {27}
 
     The file is otherwise not specifically linked in to the project since it is included by application.c when needed.
     The reason for ADC and timer configurations in a single file is that a HW timer is very often used togther with and ADC.
@@ -1403,6 +1404,15 @@ static void fnConfigureTimedUART(void)
     #if defined SUPPORT_FLOW_HIGH_LOW
     tInterfaceParameters.ucFlowHighWater = 80;                           // set the flow control high and low water levels in %
     tInterfaceParameters.ucFlowLowWater = 20;
+    #endif
+    #if defined USER_DEFINED_UART_RX_HANDLER                             // {27}
+    tInterfaceParameters.receptionHandler = 0;
+    #endif
+    #if defined USER_DEFINED_UART_RX_BREAK_DETECTION
+    tInterfaceParameters.receiveBreakHandler = 0;
+    #endif
+    #if defined USER_DEFINED_UART_TX_FRAME_COMPLETE
+    tInterfaceParameters.txFrameCompleteHandler = 0;
     #endif
     tInterfaceParameters.Config = (CHAR_MODE | CHAR_8 | NO_PARITY | ONE_STOP | NO_HANDSHAKE | UART_TIMED_TRANSMISSION_MODE); // the output will be used in timer transmission mode
     #if defined SERIAL_SUPPORT_DMA

@@ -102,6 +102,9 @@
     <Filter Include="Hardware\NE64">
       <UniqueIdentifier>{9c9b7be1-f6c6-49e0-a876-5c6e3de4d262}</UniqueIdentifier>
     </Filter>
+    <Filter Include="WinSim\SIMcoldfire">
+      <UniqueIdentifier>{6cd5e5a3-42c8-4dff-8b20-04f6a6d158d0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\application.c">
@@ -529,6 +532,12 @@
     </ClCompile>
     <ClCompile Include="..\..\..\Hardware\CMSIS_DSP\arm_abs_f32.c">
       <Filter>Hardware\CMSIS_DSP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Hardware\Coldfire\M5223X_ports.cpp">
+      <Filter>WinSim\SIMcoldfire</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Hardware\Coldfire\M5223XSim.c">
+      <Filter>WinSim\SIMcoldfire</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1351,9 +1360,6 @@
     <ClInclude Include="..\..\..\Hardware\Coldfire\M5223X.h">
       <Filter>Hardware\Coldfire</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Hardware\Coldfire\SimM5223X.h">
-      <Filter>Hardware\Coldfire</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Coldfire\spi_flash_m5223x_atmel.h">
       <Filter>Hardware\Coldfire</Filter>
     </ClInclude>
@@ -1365,6 +1371,15 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_port_km.h">
       <Filter>WinSim\SIMKinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Coldfire\SimM5223X.h">
+      <Filter>WinSim\SIMcoldfire</Filter>
+    </ClInclude>
+    <ClInclude Include="..\app_hw_m5223x.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\debug_hal_m522xx.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1422,6 +1437,8 @@
     </None>
     <None Include="..\GNU_STM32\make_uTaskerV1.4_GNU_STM32" />
     <None Include="..\GNU_STM32\Build_STM32.bat" />
+    <None Include="..\GNU_ColdFire\make_uTaskerV1.4_GNU_M5223X" />
+    <None Include="..\GNU_ColdFire\Build_M5223X.bat" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="uTasker.rc">

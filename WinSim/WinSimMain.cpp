@@ -458,7 +458,7 @@ unsigned long *pPixels = 0;
         #if defined _EXE
             #define CHIP_PACKAGE "M5222X.bmp"
         #else
-            #define CHIP_PACKAGE "..//..//..//Hardware//M5223X//GUI//M5222X.bmp"
+            #define CHIP_PACKAGE "..//..//..//Hardware//Coldfire//GUI//M5222X.bmp"
         #endif
         #define USB_LEFT   180 
         #define USB_TOP    96
@@ -468,13 +468,13 @@ unsigned long *pPixels = 0;
         #if defined _EXE
             #define CHIP_PACKAGE "m5216.bmp"
         #else
-            #define CHIP_PACKAGE "..//..//..//Hardware//M5223X//GUI//m5216.bmp"
+            #define CHIP_PACKAGE "..//..//..//Hardware//Coldfire//GUI//m5216.bmp"
         #endif
     #elif defined _M520X                                                 // {53}
         #if defined _EXE
             #define CHIP_PACKAGE "m5208.bmp"
         #else
-            #define CHIP_PACKAGE "..//..//..//Hardware//M5223X//GUI//m5208.bmp"
+            #define CHIP_PACKAGE "..//..//..//Hardware//Coldfire//GUI//m5208.bmp"
         #endif
         static  RECT rect_LAN_LED = {282, 63, 333, 118};
         #undef PORT_TEXT_LENGTH
@@ -483,7 +483,7 @@ unsigned long *pPixels = 0;
         #if defined _EXE
             #define CHIP_PACKAGE "m5235.bmp"
         #else
-            #define CHIP_PACKAGE "..//..//..//Hardware//M5223X//GUI//m5235.bmp"
+            #define CHIP_PACKAGE "..//..//..//Hardware//Coldfire//GUI//m5235.bmp"
         #endif
         static  RECT rect_LAN_LED = {282, 63, 333, 118};
         #undef PORT_TEXT_LENGTH
@@ -492,7 +492,7 @@ unsigned long *pPixels = 0;
         #if defined _EXE
             #define CHIP_PACKAGE "m5282.bmp"
         #else
-            #define CHIP_PACKAGE "..//..//..//Hardware//M5223X//GUI//m5282.bmp"
+            #define CHIP_PACKAGE "..//..//..//Hardware//Coldfire//GUI//m5282.bmp"
         #endif
         #undef PORT_TEXT_LENGTH
         #define PORT_TEXT_LENGTH 13
@@ -501,7 +501,7 @@ unsigned long *pPixels = 0;
         #if defined _EXE
             #define CHIP_PACKAGE "m5282.bmp"
         #else
-            #define CHIP_PACKAGE "..//..//..//Hardware//M5223X//GUI//m5282.bmp"
+            #define CHIP_PACKAGE "..//..//..//Hardware//Coldfire//GUI//m5282.bmp"
         #endif
         #define DOUBLE_COLUMN_PORTS
         #define SECOND_PORT_COLUMN_OFFSET  170
@@ -510,19 +510,19 @@ unsigned long *pPixels = 0;
         #if defined _EXE
             #define CHIP_PACKAGE "M521XX.bmp"
         #else
-            #define CHIP_PACKAGE "..//..//..//Hardware//M5223X//GUI//M521XX.bmp"
+            #define CHIP_PACKAGE "..//..//..//Hardware//Coldfire//GUI//M521XX.bmp"
         #endif
     #elif defined _M521X                                                 // {32}
         #if defined _EXE
             #define CHIP_PACKAGE "M521X.bmp"
         #else
-            #define CHIP_PACKAGE "..//..//..//Hardware//M5223X//GUI//M521X.bmp"
+            #define CHIP_PACKAGE "..//..//..//Hardware//Coldfire//GUI//M521X.bmp"
         #endif
     #elif defined _M5221X
         #if defined _EXE
             #define CHIP_PACKAGE "M5221X.bmp"
         #else
-            #define CHIP_PACKAGE "..//..//..//Hardware//M5223X//GUI//M5221X.bmp"
+            #define CHIP_PACKAGE "..//..//..//Hardware//Coldfire//GUI//M5221X.bmp"
         #endif
         #define USB_LEFT   180 
         #define USB_TOP    96
@@ -532,7 +532,7 @@ unsigned long *pPixels = 0;
         #if defined _EXE
             #define CHIP_PACKAGE "kirin3.bmp"
         #else
-            #define CHIP_PACKAGE "..//..//..//Hardware//M5223X//GUI//kirin3.bmp"
+            #define CHIP_PACKAGE "..//..//..//Hardware//Coldfire//GUI//kirin3.bmp"
         #endif
         #define USB_LEFT   225 
         #define USB_TOP    111
@@ -543,7 +543,7 @@ unsigned long *pPixels = 0;
         #if defined _EXE
             #define CHIP_PACKAGE "M5223X.bmp"
         #else
-            #define CHIP_PACKAGE "..//..//..//Hardware//M5223X//GUI//M5223X.bmp"
+            #define CHIP_PACKAGE "..//..//..//Hardware//Coldfire//GUI//M5223X.bmp"
         #endif
         static  RECT rect_LAN_LED = {173, 85, 220, 140};
     #endif

@@ -128,6 +128,7 @@
     06.11.2017 Add reset cause to start-up message                       {107}
     04.05.2018 Change interface to fnSetNewSerialMode()                  {108}
     04.05.2018 Add DMX512                                                {109}
+    02.06.2018 Zero optional user UART callback handlers                 {110}
 
 */
 
@@ -612,7 +613,7 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
         if (size != 0) {                                                 // if not blank
             unsigned char ucMimeType = MIME_BINARY;
             fnEraseFlashSector(upload_location, (MAX_FILE_LENGTH)(MAX_SIZE_OF_BM_APPLICATION)); // ensure that the upload area is erased
-            uFileWrite(upload_location, temp, (size + 1));               // write the code to the upload file (thsi saves it in the correct file format)
+            uFileWrite(upload_location, temp, (size + 1));               // write the code to the upload file (this saves it in the correct file format)
             uFileCloseMime(upload_location, &ucMimeType);                // close file as binary type
         }
 #endif
@@ -1597,6 +1598,15 @@ extern QUEUE_HANDLE fnSetNewSerialMode(TTYTABLE *ptrInterfaceParameters, unsigne
       //tInterfaceParameters.ucDMAConfig = (UART_RX_DMA | UART_RX_DMA_HALF_BUFFER | UART_RX_DMA_FULL_BUFFER | UART_RX_DMA_BREAK));
         #endif
     #endif
+    #if defined USER_DEFINED_UART_RX_HANDLER                             // {110}
+        tInterfaceParameters.receptionHandler = 0;
+    #endif
+    #if defined USER_DEFINED_UART_RX_BREAK_DETECTION
+        tInterfaceParameters.receiveBreakHandler = 0;
+    #endif
+    #if defined USER_DEFINED_UART_TX_FRAME_COMPLETE
+        tInterfaceParameters.txFrameCompleteHandler = 0;
+    #endif
     #if defined SUPPORT_HW_FLOW
       //tInterfaceParameters.Config |= RTS_CTS;                          // enable RTS/CTS operation (HW flow control)
     #endif
@@ -1636,6 +1646,15 @@ static void fnInitJ1708(void)
     tInterfaceParameters.Rx_tx_sizes.TxQueueSize = 2;                    // output buffer size
     tInterfaceParameters.Task_to_wake = OWN_TASK;                        // wake self when messages have been received
     tInterfaceParameters.Config = (UART_INVERT_TX | CHAR_8 | NO_PARITY | ONE_STOP);
+    #if defined USER_DEFINED_UART_RX_HANDLER                             // {110}
+    tInterfaceParameters.receptionHandler = 0;
+    #endif
+    #if defined USER_DEFINED_UART_RX_BREAK_DETECTION
+    tInterfaceParameters.receiveBreakHandler = 0;
+    #endif
+    #if defined USER_DEFINED_UART_TX_FRAME_COMPLETE
+    tInterfaceParameters.txFrameCompleteHandler = 0;
+    #endif
     #if defined SERIAL_SUPPORT_DMA
     tInterfaceParameters.ucDMAConfig = 0;
     #endif
@@ -2732,6 +2751,15 @@ static QUEUE_HANDLE fnConfigRFC2217_uart(RFC2217_UART_SETTINGS *uart_config, uns
     #if defined SUPPORT_FLOW_HIGH_LOW
     tInterfaceParameters.ucFlowHighWater = 80;                            // set the flow control high and low water levels in %
     tInterfaceParameters.ucFlowLowWater = 20;
+    #endif
+    #if defined USER_DEFINED_UART_RX_HANDLER                             // {110}
+    tInterfaceParameters.receptionHandler = 0;
+    #endif
+    #if defined USER_DEFINED_UART_RX_BREAK_DETECTION
+    tInterfaceParameters.receiveBreakHandler = 0;
+    #endif
+    #if defined USER_DEFINED_UART_TX_FRAME_COMPLETE
+    tInterfaceParameters.txFrameCompleteHandler = 0;
     #endif
     #if defined SERIAL_SUPPORT_DMA
     tInterfaceParameters.ucDMAConfig = UART_TX_DMA;                      // activate DMA on transmission

@@ -11628,6 +11628,7 @@ typedef struct stKINETIS_LPTMR_CTL
     #define PE_26_ENET_1588_CLKIN        PORT_MUX_ALT2
 #endif
 
+#define PA_5_USB_CLKIN                   PORT_MUX_ALT2
 #define PE_26_USB_CLKIN                  PORT_MUX_ALT7
 
 #if defined KINETIS_KL43 || defined KINETIS_KL26
@@ -17995,7 +17996,7 @@ extern void fnSimPers(void);
     #define PWM_CLOCK             (TIMER_CLOCK)
 #else
     #define TIMER_CLOCK           (BUS_CLOCK)
-    #if defined KINETIS_K65 || defined KINETIS_K66
+    #if defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_K80
         #if defined TPM_CLOCKED_FROM_OSCERCLK
         #elif defined TPM_CLOCKED_FROM_MCGIRCLK
         #elif defined TPM_CLOCKED_FROM_MCGFFLCLK

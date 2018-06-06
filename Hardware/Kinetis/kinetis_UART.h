@@ -45,6 +45,8 @@
     13.03.2018 Add RTS/CTS flow control to devices without integrated modem control {212}
     25.03.2018 Rework of DMA routines to make use of generic DMA subroutines (code saving and better clarity) and allow KL parts to use full or half-buffer DMA interrupts
     05.05.2018 Add UART_HW_TRIGGERED_TX_MODE                             {213}
+    01.06.2018 Consolidate interrupt operation into a generic version (saves place and simplifies maintenance of increased feature set)
+    01.06.2018 Add option user callback options USER_DEFINED_UART_RX_HANDLER, USER_DEFINED_UART_RX_BREAK_DETECTION, USER_DEFINED_UART_TX_FRAME_COMPLETE
 
 */
 
@@ -71,7 +73,7 @@
 //
 #define UART_TYPE_LPUART 0
 #define UART_TYPE_UART   1
-static const unsigned char uart_type[LPUARTS_AVAILABLE + UARTS_AVAILABLE] = {  // UART type reference of each channel
+static const unsigned char uart_type[LPUARTS_AVAILABLE + UARTS_AVAILABLE] = { // UART type reference of each channel
     #if defined LPUARTS_PARALLEL
     UART_TYPE_UART,                                                      // UART0
         #if UARTS_AVAILABLE > 1
@@ -104,7 +106,7 @@ static const unsigned char uart_type[LPUARTS_AVAILABLE + UARTS_AVAILABLE] = {  /
 #endif
 
 #if defined SERIAL_SUPPORT_DMA                                           // {6} DMA support on transmission
-// DMA channel assignments to each UART transmitter
+// DMA channel assignments for each UART/LPUART transmitter
 //
 static const unsigned char UART_DMA_TX_CHANNEL[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {
     DMA_UART0_TX_CHANNEL, 
@@ -125,7 +127,7 @@ static const unsigned char UART_DMA_TX_CHANNEL[UARTS_AVAILABLE + LPUARTS_AVAILAB
     #endif
 };
 
-// DMA channel interrupt priority assignments for each UART transmitter
+// DMA channel interrupt priority assignments for each UART/LPUART transmitter
 //
 static const unsigned char UART_DMA_TX_INT_PRIORITY[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {
     DMA_UART0_TX_INT_PRIORITY, 
@@ -148,7 +150,7 @@ static const unsigned char UART_DMA_TX_INT_PRIORITY[UARTS_AVAILABLE + LPUARTS_AV
 #endif
 
  #if defined SERIAL_SUPPORT_DMA_RX                                       // DMA support on reception
-// DMA channel assignments to each UART receiver
+// DMA channel assignments for each UART/LPUART receiver
 //
 static const unsigned char UART_DMA_RX_CHANNEL[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {
         DMA_UART0_RX_CHANNEL, 
@@ -169,7 +171,7 @@ static const unsigned char UART_DMA_RX_CHANNEL[UARTS_AVAILABLE + LPUARTS_AVAILAB
     #endif
 };
 
-// DMA channel interrupt priority assignments for each UART receiver
+// DMA channel interrupt priority assignments for each UART/LPUART receiver
 //
 static const unsigned char UART_DMA_RX_INT_PRIORITY[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {
         DMA_UART0_RX_INT_PRIORITY, 
@@ -195,7 +197,7 @@ static const unsigned char UART_DMA_RX_INT_PRIORITY[UARTS_AVAILABLE + LPUARTS_AV
 /*                      local variable definitions                     */
 /* =================================================================== */
 
-static unsigned char ucUART_mask[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {0};
+static unsigned char ucUART_mask[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {0}; // used to mask 7 bit characters
 #if defined TRUE_UART_TX_2_STOPS
     static unsigned char ucStops[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {0};
 #endif
@@ -221,6 +223,15 @@ static unsigned char ucUART_mask[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {0};
 #if defined SERIAL_SUPPORT_RX_DMA_BREAK || defined UART_BREAK_SUPPORT
     static unsigned char ucBreakSynchronised[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {0};
 #endif
+#if defined USER_DEFINED_UART_RX_HANDLER
+    static int (*fnUserRxIrq[UARTS_AVAILABLE + LPUARTS_AVAILABLE])(unsigned char, QUEUE_LIMIT) = {0};
+#endif
+#if defined USER_DEFINED_UART_RX_BREAK_DETECTION
+    static int (*fnUserRxBreakIrq[UARTS_AVAILABLE + LPUARTS_AVAILABLE])(QUEUE_LIMIT) = {0};
+#endif
+#if defined USER_DEFINED_UART_TX_FRAME_COMPLETE
+    static void (*fnUserTxEndIrq[UARTS_AVAILABLE + LPUARTS_AVAILABLE])(QUEUE_LIMIT) = {0};
+#endif
 
 
 /* =================================================================== */
@@ -228,7 +239,7 @@ static unsigned char ucUART_mask[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {0};
 /* =================================================================== */
 
 
-// Collect a pointer to defined UART control block
+// Collect a pointer to referenced UART/LPUART control block
 //
 static void *fnSelectChannel(QUEUE_HANDLE Channel)
 {
@@ -278,81 +289,98 @@ static void *fnSelectChannel(QUEUE_HANDLE Channel)
 /* =================================================================== */
 
     #if LPUARTS_AVAILABLE > 0
-// LPUART 0 interrupt handler
-//
-static __interrupt void _LPSCI0_Interrupt(void)                          // LPUART 0 interrupt
+static __interrupt _LPUART_interrupt(KINETIS_LPUART_CONTROL *ptrLPUART, int LPUART_Reference) // generic LPUART interrupt handler
 {
-        #if defined LPUARTS_PARALLEL
-            #define LPUART0_CH_NUMBER     UARTS_AVAILABLE
-        #else
-            #define LPUART0_CH_NUMBER     0
-        #endif
-    unsigned long ulState = LPUART0_STAT;                                // status register on entry to the interrupt routine
-    if (((ulState & LPUART_STAT_RDRF) & LPUART0_CTRL) != 0) {            // reception interrupt flag is set and the reception interrupt is enabled
+    unsigned long ulState = ptrLPUART->LPUART_STAT;                      // status register on entry to the interrupt routine
+    if (((ulState & LPUART_STAT_RDRF) & ptrLPUART->LPUART_CTRL) != 0) {  // if reception interrupt flag is set and the reception interrupt is enabled
+        unsigned long ulRxData = ptrLPUART->LPUART_DATA;                 // read the received dat (which resets the reception interrupt flag)
         #if defined UART_BREAK_SUPPORT
-        if (((LPUART0_BAUD & LPUART_BAUD_LBKDIE) != 0) && (ucBreakSynchronised[LPUART0_CH_NUMBER] == 0)) { // if in break framing mode we ignore reception until a first break has been detected
-            (void)LPUART0_DATA;                                          // read the received byte to reset the interrupt flag
-        }
-        else {
+        if (((ptrLPUART->LPUART_BAUD & LPUART_BAUD_LBKDIE) == 0) || (ucBreakSynchronised[LPUART_Reference] != 0)) { // if in break framing mode we ignore reception until a first break has been detected
         #endif
-            fnSciRxByte((unsigned char)(LPUART0_DATA & ucUART_mask[LPUART0_CH_NUMBER]), LPUART0_CH_NUMBER); // receive data interrupt - read the byte (masked with character width)
+            ulRxData &= ucUART_mask[LPUART_Reference];                   // mask the received data with the character width
+        #if defined USER_DEFINED_UART_RX_HANDLER
+            if ((fnUserRxIrq[LPUART_Reference] == 0) || (fnUserRxIrq[LPUART_Reference]((unsigned char)ulRxData, (QUEUE_LIMIT)LPUART_Reference) != 0)) { // if a user reception handler is installed it is called - if it doesn't decide to handle the data the standard handler is used
+        #endif
+                fnSciRxByte((unsigned char)ulRxData, (QUEUE_LIMIT)LPUART_Reference); // receive data interrupt - the reception data (masked with character width)
+        #if defined USER_DEFINED_UART_RX_HANDLER
+            }
+        #endif
         #if defined UART_BREAK_SUPPORT
         }
         #endif
         #if defined _WINDOWS
-        LPUART0_STAT &= ~(LPUART_STAT_RDRF);                             // simulate reset of interrupt flag
+        ptrLPUART->LPUART_STAT &= ~(LPUART_STAT_RDRF);                   // simulate reset of interrupt flag (reset by read of the data)
         #endif
-        ulState = LPUART0_STAT;                                          // update the status register
+        ulState = ptrLPUART->LPUART_STAT;                                // update the status register
         if ((ulState & LPUART_STAT_OR) != 0) {                           // if the overrun flag is set at this point it means that an overrun took place between reading the status register on entry to the interrupt and reading the data register
-            LPUART0_STAT = ulState;                                      // {210} write the OR flag back to clear it and allow further operation
-          //(void)LPUART0_DATA;                                          // read the data register in order to clear the overrun flag and allow the receiver to continue operating
+            ptrLPUART->LPUART_STAT = ulState;                            // {210} write the OR flag back to clear it and allow further operation
         }
     }
         #if defined UART_EXTENDED_MODE && defined UART_SUPPORT_IDLE_LINE_INTERRUPT
-    else if (((ulState & LPUART_STAT_IDLE) & LPUART0_CTRL) != 0) {       // idle line interrupt
-        WRITE_ONE_TO_CLEAR(LPUART0_STAT, LPUART_STAT_IDLE);              // write the IDLE flag back to clear it
-        fnSciRxIdle(LPUART0_CH_NUMBER);                                  // call the idle line interrupt handler
+    else if (((ulState & LPUART_STAT_IDLE) & ptrLPUART->LPUART_CTRL) != 0) { // idle line interrupt flagged and enabled
+        WRITE_ONE_TO_CLEAR(ptrLPUART->LPUART_STAT, LPUART_STAT_IDLE);    // write the IDLE flag back to clear it
+        fnSciRxIdle((QUEUE_LIMIT)LPUART_Reference);                      // call the idle line interrupt handler
     }
         #endif
-    if (((ulState & LPUART_STAT_TDRE) & LPUART0_CTRL) != 0) {            // transmit buffer is empty and the transmit interrupt is enabled
-        fnSciTxByte(LPUART0_CH_NUMBER);                                  // transmit data empty interrupt - write next byte, if waiting
+    if (((ulState & LPUART_STAT_TDRE) & ptrLPUART->LPUART_CTRL) != 0) {  // if transmit buffer is empty and the transmit interrupt is enabled
+        fnSciTxByte((QUEUE_LIMIT)LPUART_Reference);                      // transmit data empty interrupt - write next byte, if waiting
     }
         #if defined SUPPORT_LOW_POWER || defined UART_HW_TRIGGERED_MODE_SUPPORTED || ((defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE)
-    if ((LPUART0_CTRL & LPUART_STAT_TC) != 0) {                          // transmit complete interrupt after final byte transmission
-        if ((LPUART0_STAT & LPUART_STAT_TC) != 0) {
-            LPUART0_CTRL &= ~(LPUART_CTRL_TCIE);                         // disable the interrupt
+    if (((ulState & LPUART_STAT_TC) & ptrLPUART->LPUART_CTRL) != 0) {    // if transmit complete interrupt after final byte transmission is enabled and flag set
+        ptrLPUART->LPUART_CTRL &= ~(LPUART_CTRL_TCIE);                   // disable the interrupt
             #if defined UART_HW_TRIGGERED_MODE_SUPPORTED
-            if (ucTriggeredTX_mode[LPUART0_CH_NUMBER] != 0) {            // {213}
-                LPUART0_CTRL &= ~(LPUART_CTRL_TE);                       // disable the transmitter before preparing next message
-                fnSciTxByte(LPUART0_CH_NUMBER);                          // prepare next message if waiting
-            }
+        if (ucTriggeredTX_mode[LPUART_Reference] != 0) {                 // {213}
+            ptrLPUART->LPUART_CTRL &= ~(LPUART_CTRL_TE);                 // disable the transmitter before preparing next message
+            fnSciTxByte(LPUART_Reference);                               // prepare next message if waiting
+        }
             #endif
             #if defined SUPPORT_LOW_POWER
-            ulPeripheralNeedsClock &= ~(UART0_TX_CLK_REQUIRED << LPUART0_CH_NUMBER); // confirmation that the final byte has been sent out on the line so the UART no longer needs a UART clock (stop mode doesn't needed to be blocked)
+        ulPeripheralNeedsClock &= ~(UART0_TX_CLK_REQUIRED << LPUART_Reference); // confirmation that the final byte has been sent out on the line so the LPUART no longer needs a UART clock (stop mode doesn't needed to be blocked)
             #endif
-            #if (defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE
-            if (ucReportEndOfFrame[LPUART0_CH_NUMBER] != 0) {            // if the end of frame call-back is enabled
-                fnUARTFrameTermination(LPUART0_CH_NUMBER);
-            }
-            #endif
+            #if defined USER_DEFINED_UART_TX_FRAME_COMPLETE
+        if (fnUserTxEndIrq[LPUART_Reference] != 0) {                    // if a transmission complete handler is installed it is called
+            fnUserTxEndIrq[LPUART_Reference]((QUEUE_LIMIT)LPUART_Reference);
         }
+            #elif (defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE
+        if (ucReportEndOfFrame[LPUART_Reference] != 0) {                // if the end of frame call-back is enabled
+            fnUARTFrameTermination(LPUART_Reference);
+        }
+            #endif
     }
         #endif
         #if defined SERIAL_SUPPORT_RX_DMA_BREAK || defined UART_BREAK_SUPPORT
     if ((ulState & LPUART_STAT_LBKDIF) != 0) {                           // if a break has been detected
         WRITE_ONE_TO_CLEAR(LPUART0_STAT, LPUART_STAT_LBKDIF);            // clear the flag
-        if ((LPUART0_BAUD & LPUART_BAUD_LBKDIE) != 0) {                  // if the interrupt is to be handled
-            #if defined SERIAL_SUPPORT_RX_DMA_BREA
-            fnSciRxByte((unsigned char)(ucBreakSynchronised[LPUART0_CH_NUMBER] == 0), LPUART0_CH_NUMBER); // handle the reception (it will ignore any data received before the first synchronisation)
+        if ((ptrLPUART->LPUART_BAUD & LPUART_BAUD_LBKDIE) != 0) {        // if the interrupt is to be handled
+            #if defined SERIAL_SUPPORT_RX_DMA_BREAK
+            fnSciRxByte((unsigned char)(ucBreakSynchronised[LPUART_Reference] == 0), (QUEUE_LIMIT)LPUART_Reference); // handle the reception (it will ignore any data received before the first synchronisation)
             #else
-            if (ucBreakSynchronised[LPUART0_CH_NUMBER] != 0) {           // if not the first break after enabling the receiver
-                fnSciRxMsg(LPUART0_CH_NUMBER);                           // break signals the end of a reception frame
+            if (ucBreakSynchronised[LPUART_Reference] != 0) {            // if not the first break after enabling the receiver
+                #if defined USER_DEFINED_UART_RX_BREAK_DETECTION
+                if ((fnUserRxBreakIrq[LPUART_Reference] == 0) || (fnUserRxBreakIrq[LPUART_Reference]((QUEUE_LIMIT)LPUART_Reference) != 0)) {
+                #endif
+                    fnSciRxMsg((QUEUE_LIMIT)LPUART_Reference);           // break signals the end of a reception frame
+                #if defined USER_DEFINED_UART_RX_BREAK_DETECTION
+                }
+                #endif
             }
             #endif
-            ucBreakSynchronised[LPUART0_CH_NUMBER] = 1;                  // from this point on data will be accepted
+            ucBreakSynchronised[LPUART_Reference] = 1;                   // from this point on data will be accepted
         }
     }
         #endif
+}
+
+// LPUART 0 interrupt handler
+//
+static __interrupt void _LPSCI0_Interrupt(void)                          // LPUART 0 interrupt
+{
+        #if defined LPUARTS_PARALLEL                                     // if both LPUARTs and UARTs are counted from 0 in the device
+            #define LPUART0_CH_NUMBER     UARTS_AVAILABLE                // we reference the LPUART as continuation of UARTs
+        #else
+            #define LPUART0_CH_NUMBER     0                              // referencing matches the LPUART number
+        #endif
+    _LPUART_interrupt((KINETIS_LPUART_CONTROL *)LPUART0_BLOCK, LPUART0_CH_NUMBER); // call generic LPUART handler
 }
     #endif
 
@@ -366,56 +394,7 @@ static __interrupt void _LPSCI1_Interrupt(void)                          // LPUA
         #else
             #define LPUART1_CH_NUMBER     1
         #endif
-    unsigned long ulState = LPUART1_STAT;                                // status register on entry to the interrupt routine
-    if (((ulState & LPUART_STAT_RDRF) & LPUART1_CTRL) != 0) {            // reception interrupt flag is set and the reception interrupt is enabled
-        fnSciRxByte((unsigned char)(LPUART1_DATA & ucUART_mask[LPUART1_CH_NUMBER]), LPUART1_CH_NUMBER); // receive data interrupt - read the byte (masked with character width)
-        #if defined _WINDOWS
-        LPUART1_STAT &= ~(LPUART_STAT_RDRF);                             // simulate reset of interrupt flag
-        #endif
-        ulState = LPUART1_STAT;                                          // update the status register
-        if ((ulState & LPUART_STAT_OR) != 0) {                           // if the overrun flag is set at this point it means that an overrun took place between reading the status register on entry to the interrupt and reading the data register
-            LPUART1_STAT = ulState;                                      // {210} write the OR flag back to clear it and allow further operation
-          //(void)LPUART1_DATA;                                          // read the data register in order to clear the overrun flag and allow the receiver to continue operating
-        }
-    }
-        #if defined UART_EXTENDED_MODE && defined UART_SUPPORT_IDLE_LINE_INTERRUPT
-    else if (((ulState & LPUART_STAT_IDLE) & LPUART0_CTRL) != 0) {       // idle line interrupt
-        WRITE_ONE_TO_CLEAR(LPUART1_STAT, LPUART_STAT_IDLE);              // write the IDLE flag back to clear it
-        fnSciRxIdle(1);                                                  // call the idle line interrupt handler
-    }
-        #endif
-
-    if (((ulState & LPUART_STAT_TDRE) & LPUART1_CTRL) != 0) {            // transmit buffer is empty and the transmit interrupt is enabled
-        fnSciTxByte(LPUART1_CH_NUMBER);                                  // transmit data empty interrupt - write next byte, if waiting
-    }
-        #if defined SUPPORT_LOW_POWER || defined UART_HW_TRIGGERED_MODE_SUPPORTED || ((defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE)
-    if (((LPUART1_STAT & LPUART_STAT_TC) & LPUART1_CTRL) != 0) {         // transmit complete interrupt after final byte transmission together with low power operation
-        LPUART1_CTRL &= ~(LPUART_CTRL_TCIE);                             // disable the interrupt
-            #if defined UART_HW_TRIGGERED_MODE_SUPPORTED
-        if (ucTriggeredTX_mode[LPUART1_CH_NUMBER] != 0) {                // {213}
-            LPUART1_CTRL &= ~(LPUART_CTRL_TE);                           // disable the transmitter before preparing next message
-            fnSciTxByte(LPUART1_CH_NUMBER);                              // prepare next message if waiting
-        }
-            #endif
-            #if defined SUPPORT_LOW_POWER
-        ulPeripheralNeedsClock &= ~(UART0_TX_CLK_REQUIRED << LPUART1_CH_NUMBER); // confirmation that the final byte has been sent out on the line so the UART no longer needs a UART clock (stop mode doesn't needed to be blocked)
-            #endif
-            #if (defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE
-        if (ucReportEndOfFrame[LPUART1_CH_NUMBER] != 0) {                // if the end of frame call-back is enabled
-            fnUARTFrameTermination(LPUART1_CH_NUMBER);
-        }
-            #endif
-    }
-        #endif
-        #if defined SERIAL_SUPPORT_RX_DMA_BREAK
-    if ((ulState & LPUART_STAT_LBKDIF) != 0) {                           // if a break has been detected
-        WRITE_ONE_TO_CLEAR(LPUART1_STAT, LPUART_STAT_LBKDIF);            // clear the flag
-        if ((LPUART1_BAUD & LPUART_BAUD_LBKDIE) != 0) {                  // if the interrupt is to be handled
-            fnSciRxByte((unsigned char)(ucBreakSynchronised[LPUART1_CH_NUMBER] == 0), LPUART1_CH_NUMBER); // handle the reception (it will ignore any data received before the first synchronisation)
-            ucBreakSynchronised[LPUART1_CH_NUMBER] = 1;                 // from this point on data will be accepted
-        }
-    }
-        #endif
+    _LPUART_interrupt((KINETIS_LPUART_CONTROL *)LPUART1_BLOCK, LPUART1_CH_NUMBER); // call generic LPUART handler
 }
     #endif
 
@@ -429,44 +408,7 @@ static __interrupt void _LPSCI2_Interrupt(void)                          // LPUA
         #else
             #define LPUART2_CH_NUMBER     2
         #endif
-    unsigned long ulState = LPUART2_STAT;                                // status register on entry to the interrupt routine
-    if (((ulState & LPUART_STAT_RDRF) & LPUART2_CTRL) != 0) {            // reception interrupt flag is set and the reception interrupt is enabled
-        fnSciRxByte((unsigned char)(LPUART2_DATA & ucUART_mask[LPUART2_CH_NUMBER]), LPUART2_CH_NUMBER); // receive data interrupt - read the byte (masked with character width)
-        #if defined _WINDOWS
-        LPUART2_STAT &= ~(LPUART_STAT_RDRF);                             // simulate reset of interrupt flag
-        #endif
-        ulState = LPUART2_STAT;                                          // update the status register
-        if ((ulState & LPUART_STAT_OR) != 0) {                           // if the overrun flag is set at this point it means that an overrun took place between reading the status register on entry to the interrupt and reading the data register
-            LPUART2_STAT = ulState;                                      // {210} write the OR flag back to clear it and allow further operation
-          //(void)LPUART2_DATA;                                          // read the data register in order to clear the overrun flag and allow the receiver to continue operating
-        }
-    }
-
-    if (((ulState & LPUART_STAT_TDRE) & LPUART2_CTRL) != 0) {            // transmit buffer is empty and the transmit interrupt is enabled
-        fnSciTxByte(LPUART2_CH_NUMBER);                                  // transmit data empty interrupt - write next byte, if waiting
-    }
-        #if defined SUPPORT_LOW_POWER || ((defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE)
-    if (((LPUART2_STAT & LPUART_STAT_TC) & LPUART2_CTRL) != 0) {         // transmit complete interrupt after final byte transmission together with low power operation
-        LPUART2_CTRL &= ~(LPUART_CTRL_TCIE);                             // disable the interrupt
-            #if defined SUPPORT_LOW_POWER
-        ulPeripheralNeedsClock &= ~(UART0_TX_CLK_REQUIRED << LPUART2_CH_NUMBER); // confirmation that the final byte has been sent out on the line so the UART no longer needs a UART clock (stop mode doesn't needed to be blocked)
-            #endif
-            #if (defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE
-        if (ucReportEndOfFrame[2] != 0) {                                // if the end of frame call-back is enabled
-            fnUARTFrameTermination(2);
-        }
-            #endif
-    }
-        #endif
-        #if defined SERIAL_SUPPORT_RX_DMA_BREAK
-    if ((ulState & LPUART_STAT_LBKDIF) != 0) {                           // if a break has been detected
-        WRITE_ONE_TO_CLEAR(LPUART2_STAT, LPUART_STAT_LBKDIF);            // clear the flag
-        if ((LPUART2_BAUD & LPUART_BAUD_LBKDIE) != 0) {                  // if the interrupt is to be handled
-            fnSciRxByte((unsigned char)(ucBreakSynchronised[LPUART2_CH_NUMBER] == 0), LPUART2_CH_NUMBER); // handle the reception (it will ignore any data received before the first synchronisation)
-            ucBreakSynchronised[LPUART2_CH_NUMBER] = 1;                 // from this point on data will be accepted
-        }
-    }
-        #endif
+    _LPUART_interrupt((KINETIS_LPUART_CONTROL *)LPUART2_BLOCK, LPUART2_CH_NUMBER); // call generic LPUART handler
 }
     #endif
 
@@ -480,44 +422,7 @@ static __interrupt void _LPSCI3_Interrupt(void)                          // LPUA
         #else
             #define LPUART3_CH_NUMBER     3
         #endif
-    unsigned long ulState = LPUART3_STAT;                                // status register on entry to the interrupt routine
-    if (((ulState & LPUART_STAT_RDRF) & LPUART3_CTRL) != 0) {            // reception interrupt flag is set and the reception interrupt is enabled
-        fnSciRxByte((unsigned char)(LPUART3_DATA & ucUART_mask[LPUART3_CH_NUMBER]), LPUART3_CH_NUMBER); // receive data interrupt - read the byte (masked with character width)
-        #if defined _WINDOWS
-        LPUART3_STAT &= ~(LPUART_STAT_RDRF);                             // simulate reset of interrupt flag
-        #endif
-        ulState = LPUART3_STAT;                                          // update the status register
-        if ((ulState & LPUART_STAT_OR) != 0) {                           // if the overrun flag is set at this point it means that an overrun took place between reading the status register on entry to the interrupt and reading the data register
-            LPUART3_STAT = ulState;                                      // {210} write the OR flag back to clear it and allow further operation
-          //(void )LPUART3_DATA;                                         // read the data register in order to clear the overrun flag and allow the receiver to continue operating
-        }
-    }
-
-    if (((ulState & LPUART_STAT_TDRE) & LPUART3_CTRL) != 0) {            // transmit buffer is empty and the transmit interrupt is enabled
-        fnSciTxByte(LPUART3_CH_NUMBER);                                  // transmit data empty interrupt - write next byte, if waiting
-    }
-        #if defined SUPPORT_LOW_POWER || ((defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE)
-    if (((LPUART3_STAT & LPUART_STAT_TC) & LPUART3_CTRL) != 0) {         // transmit complete interrupt after final byte transmission together with low power operation
-        LPUART3_CTRL &= ~(LPUART_CTRL_TCIE);                             // disable the interrupt
-            #if defined SUPPORT_LOW_POWER
-        ulPeripheralNeedsClock &= ~(UART0_TX_CLK_REQUIRED << LPUART3_CH_NUMBER); // confirmation that the final byte has been sent out on the line so the UART no longer needs a UART clock (stop mode doesn't needed to be blocked)
-            #endif
-            #if (defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE
-        if (ucReportEndOfFrame[3] != 0) {                                // if the end of frame call-back is enabled
-            fnUARTFrameTermination(3);
-        }
-            #endif
-    }
-        #endif
-        #if defined SERIAL_SUPPORT_RX_DMA_BREAK
-    if ((ulState & LPUART_STAT_LBKDIF) != 0) {                           // if a break has been detected
-        WRITE_ONE_TO_CLEAR(LPUART3_STAT, LPUART_STAT_LBKDIF);            // clear the flag
-        if ((LPUART3_BAUD & LPUART_BAUD_LBKDIE) != 0) {                  // if the interrupt is to be handled
-            fnSciRxByte((unsigned char)(ucBreakSynchronised[LPUART3_CH_NUMBER] == 0), LPUART3_CH_NUMBER); // handle the reception (it will ignore any data received before the first synchronisation)
-            ucBreakSynchronised[LPUART3_CH_NUMBER] = 1;                 // from this point on data will be accepted
-        }
-    }
-        #endif
+    _LPUART_interrupt((KINETIS_LPUART_CONTROL *)LPUART3_BLOCK, LPUART3_CH_NUMBER); // call generic LPUART handler
 }
     #endif
 
@@ -531,44 +436,7 @@ static __interrupt void _LPSCI4_Interrupt(void)                          // LPUA
         #else
             #define LPUART4_CH_NUMBER     4
         #endif
-    unsigned long ulState = LPUART4_STAT;                                // status register on entry to the interrupt routine
-    if (((ulState & LPUART_STAT_RDRF) & LPUART4_CTRL) != 0) {            // reception interrupt flag is set and the reception interrupt is enabled
-        fnSciRxByte((unsigned char)(LPUART4_DATA & ucUART_mask[LPUART4_CH_NUMBER]), LPUART4_CH_NUMBER); // receive data interrupt - read the byte (masked with character width)
-        #if defined _WINDOWS
-        LPUART4_STAT &= ~(LPUART_STAT_RDRF);                             // simulate reset of interrupt flag
-        #endif
-        ulState = LPUART4_STAT;                                          // update the status register
-        if ((ulState & LPUART_STAT_OR) != 0) {                           // if the overrun flag is set at this point it means that an overrun took place between reading the status register on entry to the interrupt and reading the data register
-            LPUART4_STAT = ulState;                                      // {210} write the OR flag back to clear it and allow further operation
-          //(void )LPUART4_DATA;                                         // read the data register in order to clear the overrun flag and allow the receiver to continue operating
-        }
-    }
-
-    if (((ulState & LPUART_STAT_TDRE) & LPUART4_CTRL) != 0) {            // transmit buffer is empty and the transmit interrupt is enabled
-        fnSciTxByte(LPUART4_CH_NUMBER);                                  // transmit data empty interrupt - write next byte, if waiting
-    }
-        #if defined SUPPORT_LOW_POWER || ((defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE)
-    if (((LPUART4_STAT & LPUART_STAT_TC) & LPUART4_CTRL) != 0) {         // transmit complete interrupt after final byte transmission together with low power operation
-        LPUART4_CTRL &= ~(LPUART_CTRL_TCIE);                             // disable the interrupt
-            #if defined SUPPORT_LOW_POWER
-        ulPeripheralNeedsClock &= ~(UART0_TX_CLK_REQUIRED << LPUART4_CH_NUMBER); // confirmation that the final byte has been sent out on the line so the UART no longer needs a UART clock (stop mode doesn't needed to be blocked)
-            #endif
-            #if (defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE
-        if (ucReportEndOfFrame[4] != 0) {                                // if the end of frame call-back is enabled
-            fnUARTFrameTermination(4);
-        }
-            #endif
-    }
-        #endif
-        #if defined SERIAL_SUPPORT_RX_DMA_BREAK
-    if ((ulState & LPUART_STAT_LBKDIF) != 0) {                           // if a break has been detected
-        WRITE_ONE_TO_CLEAR(LPUART4_STAT, LPUART_STAT_LBKDIF);            // clear the flag
-        if ((LPUART4_BAUD & LPUART_BAUD_LBKDIE) != 0) {                  // if the interrupt is to be handled
-            fnSciRxByte((unsigned char)(ucBreakSynchronised[LPUART4_CH_NUMBER] == 0), LPUART4_CH_NUMBER); // handle the reception (it will ignore any data received before the first synchronisation)
-            ucBreakSynchronised[LPUART4_CH_NUMBER] = 1;                 // from this point on data will be accepted
-        }
-    }
-        #endif
+    _LPUART_interrupt((KINETIS_LPUART_CONTROL *)LPUART4_BLOCK, LPUART4_CH_NUMBER); // call generic LPUART handler
 }
     #endif
 
@@ -577,39 +445,80 @@ static __interrupt void _LPSCI4_Interrupt(void)                          // LPUA
 /*                      UART interrupt handlers                        */
 /* =================================================================== */
 
+#if UARTS_AVAILABLE > 0
+    #define UART_DMA_RX_MODE   0x1
+    #define UART_DMA_TX_MODE   0x2
+    #if !defined fnUART0_HANDLER                                         // default reception handler (this can be defined by user code if required)
+        #define fnUART0_HANDLER(data, channel) fnSciRxByte(data, channel)
+    #endif
+    #if !defined fnUART1_HANDLER                                         // default reception handler (this can be defined by user code if required)
+        #define fnUART1_HANDLER(data, channel) fnSciRxByte(data, channel)
+    #endif
+    #if !defined fnUART2_HANDLER                                         // default reception handler (this can be defined by user code if required)
+        #define fnUART2_HANDLER(data, channel) fnSciRxByte(data, channel)
+    #endif
+    #if !defined fnUART3_HANDLER                                         // default reception handler (this can be defined by user code if required)
+        #define fnUART3_HANDLER(data, channel) fnSciRxByte(data, channel)
+    #endif
+    #if !defined fnUART4_HANDLER                                         // default reception handler (this can be defined by user code if required)
+        #define fnUART4_HANDLER(data, channel) fnSciRxByte(data, channel)
+    #endif
+    #if !defined fnUART5_HANDLER                                         // default reception handler (this can be defined by user code if required)
+        #define fnUART5_HANDLER(data, channel) fnSciRxByte(data, channel)
+    #endif
 
-    #if UARTS_AVAILABLE > 0 && (LPUARTS_AVAILABLE < 1 || defined LPUARTS_PARALLEL)
-        #if !defined fnUART0_HANDLER                                     // default reception handler (this can be defined by user code if required)
-            #define fnUART0_HANDLER(data, channel) fnSciRxByte(data, channel)
-        #endif
-// UART 0 interrupt handler
-//
-static __interrupt void _SCI0_Interrupt(void)                            // UART 0 interrupt
+static __interrupt void _UART_interrupt(KINETIS_UART_CONTROL *ptrUART, int UART_Reference, int iFlags)
 {
-    unsigned char ucState = UART0_S1;                                    // status register on entry to the interrupt routine
+    unsigned char ucState = ptrUART->UART_S1;                            // status register on entry to the interrupt routine
         #if defined SERIAL_SUPPORT_DMA                                   // {8}
-    if ((UART0_C5 & UART_C5_RDMAS) == 0) {                               // if the receiver is operating in DMA mode ignore reception interrupt flags
+    if ((iFlags & UART_DMA_RX_MODE) == 0) {                              // if the receiver is operating in DMA mode ignore reception interrupt flags
         #endif
-        if (((ucState & UART_S1_RDRF) & UART0_C2) != 0) {                // reception interrupt flag is set and the reception interrupt is enabled
-            fnUART0_HANDLER((unsigned char)(UART0_D & ucUART_mask[0]), 0); // receive data interrupt - read the byte (masked with character width)
-            #if defined _WINDOWS
-            UART0_S1 &= ~(UART_S1_RDRF);                                 // simulate reset of interrupt flag
-            #endif
-            ucState = UART0_S1;                                          // {92} update the status register
+        if (((ucState & UART_S1_RDRF) & ptrUART->UART_C2) != 0) {        // reception interrupt flag is set and the reception interrupt is enabled
+            unsigned char ucRxData = (ptrUART->UART_D & ucUART_mask[UART_Reference]); // read the data byte and mask it with the character length
+        #if defined USER_DEFINED_UART_RX_HANDLER
+            if ((fnUserRxIrq[UART_Reference] == 0) || (fnUserRxIrq[UART_Reference](ucRxData, (QUEUE_LIMIT)UART_Reference) != 0)) { // if a user reception handler is installed it is called - if it doesn't decide to handle the data the standard handler is used
+        #endif
+                switch (UART_Reference) {                                // for compatibility (to be phased out)
+                case 0:
+                    fnUART0_HANDLER(ucRxData, 0);                        // receive data interrupt - read the byte (masked with character width)
+                    break;
+                case 1:
+                    fnUART1_HANDLER(ucRxData, 1);                        // receive data interrupt - read the byte (masked with character width)
+                    break;
+                case 2:
+                    fnUART0_HANDLER(ucRxData, 2);                        // receive data interrupt - read the byte (masked with character width)
+                    break;
+                case 3:
+                    fnUART1_HANDLER(ucRxData, 3);                        // receive data interrupt - read the byte (masked with character width)
+                    break;
+                case 4:
+                    fnUART0_HANDLER(ucRxData, 4);                        // receive data interrupt - read the byte (masked with character width)
+                    break;
+                case 5:
+                    fnUART1_HANDLER(ucRxData, 5);                        // receive data interrupt - read the byte (masked with character width)
+                    break;
+                }
+        #if defined USER_DEFINED_UART_RX_HANDLER
+            }
+        #endif
+        #if defined _WINDOWS
+            ptrUART->UART_S1 &= ~(UART_S1_RDRF);                         // simulate reset of interrupt flag due to data read
+        #endif
+            ucState = ptrUART->UART_S1;                                  // {92} update the status register
             if ((ucState & UART_S1_OR) != 0) {                           // if the overrun flag is set at this point it means that an overrun took place between reading the status register on entry to the interrupt and reading the data register
-                (void)UART0_D;                                           // read the data register in order to clear the overrun flag and allow the receiver to continue operating
+                (void)ptrUART->UART_D;                                   // read the data register in order to clear the overrun flag and allow the receiver to continue operating
             }
         }
         #if defined SERIAL_SUPPORT_DMA
     }
         #endif
         #if defined SERIAL_SUPPORT_DMA                                   // {6}
-    if ((UART0_C5 & UART_C5_TDMAS) == 0) {                               // if the transmitter is operating in DMA mode ignore transmission interrupt flags
+    if ((iFlags & UART_DMA_TX_MODE) == 0) {                              // if the transmitter is operating in DMA mode ignore transmission interrupt flags
         #endif
-        if (((ucState & (UART_S1_TDRE | UART_S1_TC)) & UART0_C2) != 0) { // transmit buffer or transmit is empty and the corresponding interrupt is enabled
-            fnSciTxByte(0);                                              // transmit data empty interrupt - write next byte
+        if (((ucState & (UART_S1_TDRE | UART_S1_TC)) & ptrUART->UART_C2) != 0) { // transmit buffer or transmit is empty and the corresponding interrupt is enabled
+            fnSciTxByte((QUEUE_LIMIT)UART_Reference);                    // transmit data empty interrupt - write next byte
         #if defined TRUE_UART_TX_2_STOPS && defined SUPPORT_LOW_POWER
-            if (ucStops[0] != 0) {                                       // if the channel is working in true 2 stop bit mode it will always use the transmit complete interrupt and the peripheral idle control is performed in fnClearTxInt() instead
+            if (ucStops[UART_Reference] != 0) {                          // if the channel is working in true 2 stop bit mode it will always use the transmit complete interrupt and the peripheral idle control is performed in fnClearTxInt() instead
                 return;
             }
         #endif
@@ -618,391 +527,172 @@ static __interrupt void _SCI0_Interrupt(void)                            // UART
     }
         #endif
         #if defined SUPPORT_LOW_POWER || defined UART_HW_TRIGGERED_MODE_SUPPORTED || ((defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE) // {96}
-    if (((UART0_C2 & UART_C2_TCIE) != 0) && ((UART0_S1 & UART_S1_TC) != 0)) { // transmit complete interrupt after final byte transmission together with low power operation
-        UART0_C2 &= ~(UART_C2_TCIE);                                     // disable the interrupt
+    if (((ptrUART->UART_C2 & UART_C2_TCIE) != 0) && ((ptrUART->UART_S1 & UART_S1_TC) != 0)) { // transmit complete interrupt after final byte transmission together with low power operation
+        ptrUART->UART_C2 &= ~(UART_C2_TCIE);                             // disable the interrupt
             #if defined SUPPORT_LOW_POWER
-        ulPeripheralNeedsClock &= ~(UART0_TX_CLK_REQUIRED);              // confirmation that the final byte has been sent out on the line so the UART no longer needs a UART clock (stop mode doesn't needed to be blocked)
+        ulPeripheralNeedsClock &= ~((UART0_TX_CLK_REQUIRED << UART_Reference)); // confirmation that the final byte has been sent out on the line so the UART no longer needs a UART clock (stop mode doesn't needed to be blocked)
             #endif
             #if defined UART_HW_TRIGGERED_MODE_SUPPORTED                 // {213}
-        if (ucTriggeredTX_mode[0] != 0) {
-            UART0_C2 &= ~(UART_C2_TE);                                   // disable the transmitter before preparing next message
-            fnSciTxByte(0);                                              // prepare next message if waiting
+        if (ucTriggeredTX_mode[UART_Reference] != 0) {
+            ptrUART->UART_C2 &= ~(UART_C2_TE);                           // disable the transmitter before preparing next message
+            fnSciTxByte((QUEUE_LIMIT)UART_Reference);                    // prepare next message if waiting
         }
             #endif
-            #if (defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE
-        if (ucReportEndOfFrame[0] != 0) {                                // if the end of frame call-back is enabled
-            fnUARTFrameTermination(0);                                   // {200}
+            #if defined USER_DEFINED_UART_TX_FRAME_COMPLETE
+        if (fnUserTxEndIrq[UART_Reference] != 0) {                       // if a transmission complete handler is installed it is called
+            fnUserTxEndIrq[UART_Reference]((QUEUE_LIMIT)UART_Reference);
         }
-            #endif
-    }
-        #endif
-}
-    #endif
-    #if UARTS_AVAILABLE > 1 && (LPUARTS_AVAILABLE < 2 || defined LPUARTS_PARALLEL)
-        #if !defined fnUART1_HANDLER                                     // default reception handler (this can be defined by user code if required)
-            #define fnUART1_HANDLER(data, channel) fnSciRxByte(data, channel)
-        #endif
-        #if !defined fnUART1_break_HANDLER                               // default break handler (this can be defined by user code if required)
-            #define fnUART1_break_HANDLER(channel) fnSciRxMsg(channel)
-        #endif
-// UART 1 interrupt handler
-//
-static __interrupt void _SCI1_Interrupt(void)                            // UART 1 interrupt
-{
-    unsigned char ucState = UART1_S1;                                    // status register on entry to the interrupt routine
-
-        #if defined SERIAL_SUPPORT_DMA                                   // {8}
-            #if defined KINETIS_KL
-    if ((UART1_C4 & UART_C4_RDMAS) == 0) 
-            #else
-    if ((UART1_C5 & UART_C5_RDMAS) == 0) 
-            #endif
-    {                                                                    // if the receiver is operating in DMA mode ignore reception interrupt flags
-        #endif
-        if (((ucState & UART_S1_RDRF) & UART1_C2) != 0) {                // reception interrupt flag is set and the reception interrupt is enabled
-        #if defined UART_BREAK_SUPPORT
-            if (((UART1_BDH & UART_BDH_LBKDIE) != 0) && (ucBreakSynchronised[1] == 0)) { // if in break framing mode we ignore reception until a first break has been detected
-                (void)UART1_D;                                           // read the received byte to reset the interrupt flag
-            }
-            else {
-        #endif
-                fnUART1_HANDLER((unsigned char)(UART1_D & ucUART_mask[1]), 1); // receive data interrupt - read the byte (masked with character width)
-        #if defined UART_BREAK_SUPPORT
-            }
-        #endif
-        #if defined _WINDOWS
-            UART1_S1 &= ~(UART_S1_RDRF);                                 // simulate reset of interrupt flag
-        #endif
-            ucState = UART1_S1;                                          // {92} update the status register
-            if ((ucState & UART_S1_OR) !=  0) {                          // if the overrun flag is set at this point it means that an overrun took place between reading the status register on entry to the interrupt and reading the data register
-                (void)UART1_D;                                           // read the data register in order to clear the overrun flag and allow the receiver to continue operating
-            }
-        }
-        #if defined SERIAL_SUPPORT_DMA
-    }
-        #endif
-        #if defined SERIAL_SUPPORT_DMA                                   // {6}
-            #if defined KINETIS_KL
-    if ((UART1_C4 & UART_C4_TDMAS) == 0) 
-            #else
-    if ((UART1_C5 & UART_C5_TDMAS) == 0) 
-            #endif
-    {                                                                    // if the transmitter is operating in DMA mode ignore transmission interrupt flags
-        #endif
-        if ((ucState & (UART_S1_TDRE | UART_S1_TC)) & UART1_C2) {        // transmit buffer or transmit is empty and the corresponding interrupt is enabled
-            fnSciTxByte(1);                                              // transmit data empty interrupt - write next byte
-        #if defined TRUE_UART_TX_2_STOPS && defined SUPPORT_LOW_POWER
-            if (ucStops[1] != 0) {                                       // if the channel is working in true 2 stop bit mode it will always use the transmit complete interrupt and the peripheral idle control is performed in fnClearTxInt() instead
-                return;
-            }
-        #endif
-        }
-        #if defined SERIAL_SUPPORT_DMA
-    }
-        #endif
-        #if defined SUPPORT_LOW_POWER || defined UART_HW_TRIGGERED_MODE_SUPPORTED || ((defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE) // {96} transmitter using DMA
-    if (((UART1_C2 & UART_C2_TCIE) != 0) && ((UART1_S1 & UART_S1_TC) != 0)) { // transmit complete interrupt after final byte transmission together with low power operation
-        UART1_C2 &= ~(UART_C2_TCIE);                                     // disable the interrupt
-            #if defined SUPPORT_LOW_POWER
-        ulPeripheralNeedsClock &= ~(UART1_TX_CLK_REQUIRED);              // confirmation that the final byte has been sent out on the line so the UART no longer needs a UART clock (stop mode doesn't needed to be blocked)
-            #endif
-            #if defined UART_HW_TRIGGERED_MODE_SUPPORTED                 // {213}
-        if (ucTriggeredTX_mode[1] != 0) {
-            UART1_C2 &= ~(UART_C2_TE);                                   // disable the transmitter before preparing next message
-            fnSciTxByte(1);                                              // prepare next message if waiting
-        }
-            #endif
-            #if (defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE
-        if (ucReportEndOfFrame[1] != 0) {                                // if the end of frame call-back is enabled
-            fnUARTFrameTermination(1);
+            #elif (defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE
+        if (ucReportEndOfFrame[UART_Reference] != 0) {                   // if the end of frame call-back is enabled
+            fnUARTFrameTermination(UART_Reference);                      // {200}
         }
             #endif
     }
         #endif
         #if defined SERIAL_SUPPORT_RX_DMA_BREAK || defined UART_BREAK_SUPPORT
-    if ((UART1_S2 & UART_S2_LBKDIF) != 0) {                              // if a break has been detected
-        WRITE_ONE_TO_CLEAR(UART1_S2, UART_S2_LBKDIF);                    // clear the flag
-        if ((UART1_BDH & UART_BDH_LBKDIE) != 0) {                        // if the interrupt is to be handled
+    if ((ptrUART->UART_S2 & UART_S2_LBKDIF) != 0) {                      // if a break has been detected
+        WRITE_ONE_TO_CLEAR(ptrUART->UART_S2, UART_S2_LBKDIF);            // clear the flag
+        if ((ptrUART->UART_BDH & UART_BDH_LBKDIE) != 0) {                // if the interrupt is to be handled
             #if defined SERIAL_SUPPORT_RX_DMA_BREAK
-            fnSciRxByte((unsigned char)(ucBreakSynchronised[1] == 0), 1);// handle the reception (it will ignore any data received before the first synchronisation)
+            fnSciRxByte((unsigned char)(ucBreakSynchronised[UART_Reference] == 0), (QUEUE_LIMIT)UART_Reference);// handle the reception (it will ignore any data received before the first synchronisation)
             #else
-            if (ucBreakSynchronised[1] != 0) {                           // if not the first break after enabling the receiver
-                fnUART1_break_HANDLER(1);                                // break signals the end of a reception frame
+            if (ucBreakSynchronised[UART_Reference] != 0) {              // if not the first break after enabling the receiver
+                #if defined USER_DEFINED_UART_RX_BREAK_DETECTION
+                if ((fnUserRxBreakIrq[UART_Reference] == 0) || (fnUserRxBreakIrq[UART_Reference]((QUEUE_LIMIT)UART_Reference) != 0)) {
+                #endif
+                    fnSciRxMsg((QUEUE_LIMIT)UART_Reference);             // break signals the end of a reception frame
+                #if defined USER_DEFINED_UART_RX_BREAK_DETECTION
+                }
+                #endif
             }
             #endif
-            ucBreakSynchronised[1] = 1;                                  // from this point on data will be accepted
+            ucBreakSynchronised[UART_Reference] = 1;                     // from this point on data will be accepted
         }
     }
         #endif
 }
+#endif
+
+#if UARTS_AVAILABLE > 0 && (LPUARTS_AVAILABLE < 1 || defined LPUARTS_PARALLEL)
+// UART 0 interrupt handler
+//
+static __interrupt void _SCI0_Interrupt(void)                            // UART 0 interrupt
+{
+    int iFlags = 0;
+    #if defined SERIAL_SUPPORT_DMA
+    if ((UART0_C5 & UART_C5_RDMAS) != 0) {
+        iFlags = UART_DMA_RX_MODE;
+    }
+    if ((UART0_C5 & UART_C5_TDMAS) != 0) {
+        iFlags |= UART_DMA_TX_MODE;
+    }
     #endif
-    #if (UARTS_AVAILABLE > 2 && (LPUARTS_AVAILABLE < 3 || defined LPUARTS_PARALLEL)) || (UARTS_AVAILABLE == 1 && LPUARTS_AVAILABLE == 2)
-        #if !defined fnUART2_HANDLER                                     // default reception handler (this can be defined by user code if required)
-            #define fnUART2_HANDLER(data, channel) fnSciRxByte(data, channel)
+    _UART_interrupt((KINETIS_UART_CONTROL *)UART0_BLOCK, 0, iFlags);     // call generic UART handler
+}
+#endif
+#if UARTS_AVAILABLE > 1 && (LPUARTS_AVAILABLE < 2 || defined LPUARTS_PARALLEL)
+// UART 1 interrupt handler
+//
+static __interrupt void _SCI1_Interrupt(void)                            // UART 1 interrupt
+{
+    int iFlags = 0;
+    #if defined SERIAL_SUPPORT_DMA
+        #if defined KINETIS_KL
+    if ((UART1_C4 & UART_C4_RDMAS) != 0) {
+        iFlags = UART_DMA_RX_MODE;
+}
+    if ((UART1_C4 & UART_C4_TDMAS) != 0) {
+        iFlags |= UART_DMA_TX_MODE;
+    }
+        #else
+    if ((UART1_C5 & UART_C5_RDMAS) != 0) {
+        iFlags = UART_DMA_RX_MODE;
+    }
+    if ((UART1_C5 & UART_C5_TDMAS) != 0) {
+        iFlags |= UART_DMA_TX_MODE;
+    }
         #endif
+    #endif
+    _UART_interrupt((KINETIS_UART_CONTROL *)UART1_BLOCK, 1, iFlags);     // call generic UART handler
+}
+#endif
+#if (UARTS_AVAILABLE > 2 && (LPUARTS_AVAILABLE < 3 || defined LPUARTS_PARALLEL)) || (UARTS_AVAILABLE == 1 && LPUARTS_AVAILABLE == 2)
 // UART 2 interrupt handler
 //
 static __interrupt void _SCI2_Interrupt(void)                            // UART 2 interrupt
 {
-    unsigned char ucState = UART2_S1;                                    // status register on entry to the interrupt routine
-
-        #if defined SERIAL_SUPPORT_DMA                                   // {8}
-            #if defined KINETIS_KL &&  (UARTS_AVAILABLE > 1)
-    if ((UART2_C4 & UART_C4_RDMAS) == 0)                                 // if not operating in DMA reception mode
-            #else
-    if ((UART2_C5 & UART_C5_RDMAS) == 0)                                 // if not operating in DMA reception mode
-            #endif
-    {                                                                    // if the receiver is operating in DMA mode ignore reception interrupt flags
-        #endif
-        if (((ucState & UART_S1_RDRF) & UART2_C2) != 0) {                // reception interrupt flag is set and the reception interrupt is enabled
-            fnUART2_HANDLER((unsigned char)(UART2_D & ucUART_mask[2]), 2); // receive data interrupt - read the byte (masked with character width)
-        #if defined _WINDOWS
-            UART2_S1 &= ~(UART_S1_RDRF);                                 // simulate reset of interrupt flag
-        #endif
-            ucState = UART2_S1;                                          // {92} update the status register
-            if ((ucState & UART_S1_OR) != 0) {                           // if the overrun flag is set at this point it means that an overrun took place between reading the status register on entry to the interrupt and reading the data register
-                (void)UART2_D;                                           // read the data register in order to clear the overrun flag and allow the receiver to continue operating
-            }
-        }
-        #if defined SERIAL_SUPPORT_DMA
+    int iFlags = 0;
+    #if defined SERIAL_SUPPORT_DMA
+        #if defined KINETIS_KL && (UARTS_AVAILABLE > 1)
+    if ((UART2_C4 & UART_C4_RDMAS) != 0) {
+        iFlags = UART_DMA_RX_MODE;
     }
-            #if defined UART_EXTENDED_MODE && defined UART_SUPPORT_IDLE_LINE_INTERRUPT
-    else if (((ucState & UART_S1_IDLE) & UART2_C2) != 0) {               // idle line interrupt in DMA reception mode
-        // In order to clear the idle flag we need to read the data register
-        // - it is assumed that there is no risk of reading data that the DMA reception will be handling
-        //
-        (void)UART2_D;
-                #if defined _WINDOWS
-        UART2_S1 &= ~(UART_S1_IDLE);                                     // clear the idle line status flag
-                #endif
-        fnSciRxIdle(2);                                                  // call the idle line interrupt handler
+    if ((UART2_C4 & UART_C4_TDMAS) != 0) {
+        iFlags |= UART_DMA_TX_MODE;
     }
-            #endif
-        #endif
-        #if defined SERIAL_SUPPORT_DMA                                   // {6}
-            #if defined KINETIS_KL &&  (UARTS_AVAILABLE > 1)
-    if ((UART2_C4 & UART_C4_TDMAS) == 0)                                 // if not operating in DMA transmission mode
-            #else
-    if ((UART2_C5 & UART_C5_TDMAS) == 0)                                 // if not operating in DMA transmission mode
-            #endif
-    {                                                                    // if the transmitter is operating in DMA mode ignore transmission interrupt flags
-        #endif
-        if ((ucState & ((UART_S1_TDRE | UART_S1_TC)) & UART2_C2) != 0) { // transmit buffer or transmit is empty and the corresponding interrupt is enabled
-            fnSciTxByte(2);                                              // transmit data empty interrupt - write next byte
-        #if defined TRUE_UART_TX_2_STOPS && defined SUPPORT_LOW_POWER
-            if (ucStops[2] != 0) {                                       // if the channel is working in true 2 stop bit mode it will always use the transmit complete interrupt and the peripheral idle control is performed in fnClearTxInt() instead
-                return;
-            }
-        #endif
-        }
-        #if defined SERIAL_SUPPORT_DMA
+        #else
+    if ((UART2_C5 & UART_C5_RDMAS) != 0) {
+        iFlags = UART_DMA_RX_MODE;
+    }
+    if ((UART2_C5 & UART_C5_TDMAS) != 0) {
+        iFlags |= UART_DMA_TX_MODE;
     }
         #endif
-        #if defined SUPPORT_LOW_POWER || defined UART_HW_TRIGGERED_MODE_SUPPORTED || ((defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE) // {96} transmitter using DMA
-    if ((UART2_C2 & UART_C2_TCIE) && (UART2_S1 & UART_S1_TC)) {          // transmit complete interrupt after final byte transmission together with low power operation
-        UART2_C2 &= ~(UART_C2_TCIE);                                     // disable the interrupt
-            #if defined SUPPORT_LOW_POWER
-        ulPeripheralNeedsClock &= ~(UART2_TX_CLK_REQUIRED);              // confirmation that the final byte has been sent out on the line so the UART no longer needs a UART clock (stop mode doesn't needed to be blocked)
-            #endif
-            #if defined UART_HW_TRIGGERED_MODE_SUPPORTED                 // {213}
-        if (ucTriggeredTX_mode[2] != 0) {
-            UART2_C2 &= ~(UART_C2_TE);                                   // disable the transmitter before preparing next message
-            fnSciTxByte(2);                                              // prepare next message if waiting
-        }
-            #endif
-            #if (defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE
-        if (ucReportEndOfFrame[2] != 0) {                                // if the end of frame call-back is enabled
-            fnUARTFrameTermination(2);
-        }
-            #endif
-    }
-        #endif
-}
     #endif
-    #if UARTS_AVAILABLE > 3
-        #if !defined fnUART3_HANDLER                                     // default reception handler (this can be defined by user code if required)
-            #define fnUART3_HANDLER(data, channel) fnSciRxByte(data, channel)
-        #endif
+    _UART_interrupt((KINETIS_UART_CONTROL *)UART2_BLOCK, 2, iFlags);     // call generic UART handler
+}
+#endif
+#if UARTS_AVAILABLE > 3
 // UART 3 interrupt handler
 //
 static __interrupt void _SCI3_Interrupt(void)                            // UART 3 interrupt
 {
-    unsigned char ucState = UART3_S1;                                    // status register on entry to the interrupt routine
-
-        #if defined SERIAL_SUPPORT_DMA                                   // {8}
-    if ((UART3_C5 & UART_C5_RDMAS) == 0) {                               // if the receiver is operating in DMA mode ignore reception interrupt flags
-        #endif
-        if (((ucState & UART_S1_RDRF) & UART3_C2) != 0) {                // reception interrupt flag is set and the reception interrupt is enabled
-            fnUART3_HANDLER((unsigned char)(UART3_D & ucUART_mask[3]), 3); // receive data interrupt - read the byte (masked with character width)
-        #if defined _WINDOWS
-            UART3_S1 &= ~(UART_S1_RDRF);                                 // simulate reset of interrupt flag
-        #endif
-            ucState = UART3_S1;                                          // {92} update the status register
-            if ((ucState & UART_S1_OR) != 0) {                           // if the overrun flag is set at this point it means that an overrun took place between reading the status register on entry to the interrupt and reading the data register
-                (void)UART3_D;                                           // read the data register in order to clear the overrun flag and allow the receiver to continue operating
-            }
-        }
-        #if defined SERIAL_SUPPORT_DMA
+    int iFlags = 0;
+    #if defined SERIAL_SUPPORT_DMA
+    if ((UART3_C5 & UART_C5_RDMAS) != 0) {
+        iFlags = UART_DMA_RX_MODE;
     }
-        #endif
-        #if defined SERIAL_SUPPORT_DMA                                   // {6}
-    if ((UART3_C5 & UART_C5_TDMAS) == 0) {                               // if the transmitter is operating in DMA mode ignore transmission interrupt flags
-        #endif
-        if (((ucState & (UART_S1_TDRE | UART_S1_TC)) & UART3_C2) != 0) { // transmit buffer or transmit is empty and the corresponding interrupt is enabled
-            fnSciTxByte(3);                                              // transmit data empty interrupt - write next byte
-        #if defined TRUE_UART_TX_2_STOPS && defined SUPPORT_LOW_POWER
-            if (ucStops[3] != 0) {                                       // if the channel is working in true 2 stop bit mode it will always use the transmit complete interrupt and the peripheral idle control is performed in fnClearTxInt() instead
-                return;
-            }
-        #endif
-        }
-        #if defined SERIAL_SUPPORT_DMA
+    if ((UART3_C5 & UART_C5_TDMAS) != 0) {
+        iFlags |= UART_DMA_TX_MODE;
     }
-        #endif
-        #if defined SUPPORT_LOW_POWER || defined UART_HW_TRIGGERED_MODE_SUPPORTED || ((defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE) // {96} transmitter using DMA
-    if ((UART3_C2 & UART_C2_TCIE) && (UART3_S1 & UART_S1_TC)) {          // transmit complete interrupt after final byte transmission together with low power operation
-        UART3_C2 &= ~(UART_C2_TCIE);                                     // disable the interrupt
-            #if defined SUPPORT_LOW_POWER
-        ulPeripheralNeedsClock &= ~(UART3_TX_CLK_REQUIRED);              // confirmation that the final byte has been sent out on the line so the UART no longer needs a UART clock (stop mode doesn't needed to be blocked)
-            #endif
-            #if defined UART_HW_TRIGGERED_MODE_SUPPORTED                 // {213}
-        if (ucTriggeredTX_mode[3] != 0) {
-            UART3_C2 &= ~(UART_C2_TE);                                   // disable the transmitter before preparing next message
-            fnSciTxByte(3);                                              // prepare next message if waiting
-        }
-            #endif
-            #if (defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE
-        if (ucReportEndOfFrame[3] != 0) {                                // if the end of frame call-back is enabled
-            fnUARTFrameTermination(3);
-        }
-            #endif
-    }
-        #endif
-}
     #endif
-    #if UARTS_AVAILABLE > 4
-        #if !defined fnUART4_HANDLER                                     // default reception handler (this can be defined by user code if required)
-            #define fnUART4_HANDLER(data, channel) fnSciRxByte(data, channel)
-        #endif
+    _UART_interrupt((KINETIS_UART_CONTROL *)UART3_BLOCK, 3, iFlags);     // call generic UART handler
+}
+#endif
+#if UARTS_AVAILABLE > 4
 // UART 4 interrupt handler
 //
 static __interrupt void _SCI4_Interrupt(void)                            // UART 4 interrupt
 {
-    unsigned char ucState = UART4_S1;                                    // status register on entry to the interrupt routine
-
-        #if defined SERIAL_SUPPORT_DMA                                   // {8}
-    if ((UART4_C5 & UART_C5_RDMAS) == 0) {                               // if the receiver is operating in DMA mode ignore reception interrupt flags
-        #endif
-        if (((ucState & UART_S1_RDRF) & UART4_C2) != 0) {                // reception interrupt flag is set and the reception interrupt is enabled
-            fnUART4_HANDLER((unsigned char)(UART4_D & ucUART_mask[4]), 4); // receive data interrupt - read the byte (masked with character width)
-        #if defined _WINDOWS
-            UART4_S1 &= ~(UART_S1_RDRF);                                 // simulate reset of interrupt flag
-        #endif
-            ucState = UART4_S1;                                          // {92} update the status register
-            if ((ucState & UART_S1_OR) != 0) {                           // if the overrun flag is set at this point it means that an overrun took place between reading the status register on entry to the interrupt and reading the data register
-                (void)UART4_D;                                           // read the data register in order to clear the overrun flag and allow the receiver to continue operating
-            }
-        }
-        #if defined SERIAL_SUPPORT_DMA
+    int iFlags = 0;
+    #if defined SERIAL_SUPPORT_DMA
+    if ((UART4_C5 & UART_C5_RDMAS) != 0) {
+        iFlags = UART_DMA_RX_MODE;
     }
-        #endif
-        #if defined SERIAL_SUPPORT_DMA                                   // {6}
-    if ((UART4_C5 & UART_C5_TDMAS) == 0) {                               // if the transmitter is operating in DMA mode ignore transmission interrupt flags
-        #endif
-        if (((ucState & (UART_S1_TDRE | UART_S1_TC)) & UART4_C2) != 0) { // transmit buffer or transmit is empty and the corresponding interrupt is enabled
-            fnSciTxByte(4);                                              // transmit data empty interrupt - write next byte
-        #if defined TRUE_UART_TX_2_STOPS && defined SUPPORT_LOW_POWER
-            if (ucStops[4] != 0) {                                       // if the channel is working in true 2 stop bit mode it will always use the transmit complete interrupt and the peripheral idle control is performed in fnClearTxInt() instead
-                return;
-            }
-        #endif
-        }
-        #if defined SERIAL_SUPPORT_DMA
+    if ((UART4_C5 & UART_C5_TDMAS) != 0) {
+        iFlags |= UART_DMA_TX_MODE;
     }
-        #endif
-        #if defined SUPPORT_LOW_POWER || defined UART_HW_TRIGGERED_MODE_SUPPORTED || ((defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE) // {96} transmitter using DMA
-    if ((UART4_C2 & UART_C2_TCIE) && (UART4_S1 & UART_S1_TC)) {          // transmit complete interrupt after final byte transmission together with low power operation
-        UART4_C2 &= ~(UART_C2_TCIE);                                     // disable the interrupt
-            #if defined SUPPORT_LOW_POWER
-        ulPeripheralNeedsClock &= ~(UART4_TX_CLK_REQUIRED);              // confirmation that the final byte has been sent out on the line so the UART no longer needs a UART clock (stop mode doesn't needed to be blocked)
-            #endif
-            #if defined UART_HW_TRIGGERED_MODE_SUPPORTED 
-        if (ucTriggeredTX_mode[4] != 0) {                                // {213}
-            UART4_C2 &= ~(UART_C2_TE);                                   // disable the transmitter before preparing next message
-            fnSciTxByte(4);                                              // prepare next message if waiting
-        }
-            #endif
-            #if (defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE
-        if (ucReportEndOfFrame[4] != 0) {                                // if the end of frame call-back is enabled
-            fnUARTFrameTermination(4);
-        }
-            #endif
-    }
-        #endif
-}
     #endif
-    #if UARTS_AVAILABLE > 5
-        #if !defined fnUART5_HANDLER                                     // default reception handler (this can be defined by user code if required)
-            #define fnUART5_HANDLER(data, channel) fnSciRxByte(data, channel)
-        #endif
+    _UART_interrupt((KINETIS_UART_CONTROL *)UART4_BLOCK, 4, iFlags);     // call generic UART handler
+}
+#endif
+#if UARTS_AVAILABLE > 5
 // UART 5 interrupt handler
 //
 static __interrupt void _SCI5_Interrupt(void)                            // UART 5 interrupt
 {
-    unsigned char ucState = UART5_S1;                                    // status register on entry to the interrupt routine
-
-        #if defined SERIAL_SUPPORT_DMA                                   // {8}
-    if ((UART5_C5 & UART_C5_RDMAS) == 0) {                               // if the receiver is operating in DMA mode ignore reception interrupt flags
-        #endif
-        if (((ucState & UART_S1_RDRF) & UART5_C2) != 0) {                // reception interrupt flag is set and the reception interrupt is enabled
-            fnUART5_HANDLER((unsigned char)(UART5_D & ucUART_mask[5]), 5); // receive data interrupt - read the byte (masked with character width)
-        #if defined _WINDOWS
-            UART5_S1 &= ~(UART_S1_RDRF);                                 // simulate reset of interrupt flag
-        #endif
-            ucState = UART5_S1;                                          // {92} update the status register
-            if ((ucState & UART_S1_OR) != 0) {                           // if the overrun flag is set at this point it means that an overrun took place between reading the status register on entry to the interrupt and reading the data register
-                (void)UART5_D;                                           // read the data register in order to clear the overrun flag and allow the receiver to continue operating
-            }
-        }
-        #if defined SERIAL_SUPPORT_DMA
+    int iFlags = 0;
+    #if defined SERIAL_SUPPORT_DMA
+    if ((UART5_C5 & UART_C5_RDMAS) != 0) {
+        iFlags = UART_DMA_RX_MODE;
     }
-        #endif
-        #if defined SERIAL_SUPPORT_DMA                                   // {6}
-    if ((UART5_C5 & UART_C5_TDMAS) == 0) {                               // if the transmitter is operating in DMA mode ignore transmission interrupt flags
-        #endif
-        if (((ucState & (UART_S1_TDRE | UART_S1_TC)) & UART5_C2) != 0) { // transmit buffer or transmit is empty and the corresponding interrupt is enabled
-            fnSciTxByte(5);                                              // transmit data empty interrupt - write next byte
-        #if defined TRUE_UART_TX_2_STOPS && defined SUPPORT_LOW_POWER
-            if (ucStops[5] != 0) {                                       // if the channel is working in true 2 stop bit mode it will always use the transmit complete interrupt and the peripheral idle control is performed in fnClearTxInt() instead
-                return;
-            }
-        #endif
-        }
-        #if defined SERIAL_SUPPORT_DMA
+    if ((UART5_C5 & UART_C5_TDMAS) != 0) {
+        iFlags |= UART_DMA_TX_MODE;
     }
-        #endif
-        #if defined SUPPORT_LOW_POWER || defined UART_HW_TRIGGERED_MODE_SUPPORTED || ((defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE) // {96} transmitter using DMA
-    if ((UART5_C2 & UART_C2_TCIE) && (UART5_S1 & UART_S1_TC)) {          // transmit complete interrupt after final byte transmission together with low power operation
-        UART5_C2 &= ~(UART_C2_TCIE);                                     // disable the interrupt
-            #if defined SUPPORT_LOW_POWER
-        ulPeripheralNeedsClock &= ~(UART5_TX_CLK_REQUIRED);              // confirmation that the final byte has been sent out on the line so the UART no longer needs a UART clock (stop mode doesn't needed to be blocked)
-            #endif
-            #if defined UART_HW_TRIGGERED_MODE_SUPPORTED
-            if (ucTriggeredTX_mode[5] != 0) {                            // {213}
-                UART5_C2 &= ~(UART_C2_TE);                               // disable the transmitter before preparing next message
-                fnSciTxByte(5);                                          // prepare next message if waiting
-            }
-            #endif
-            #if (defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE
-            if (ucReportEndOfFrame[5] != 0) {                            // if the end of frame call-back is enabled
-                fnUARTFrameTermination(5);
-            }
-            #endif
-    }
-        #endif
-}
     #endif
-
+    _UART_interrupt((KINETIS_UART_CONTROL *)UART5_BLOCK, 5, iFlags);     // call generic UART handler
+}
+#endif
 
 // The TTY driver uses this call to send a byte of data over the serial port
 //
@@ -1156,223 +846,132 @@ extern void fnClearTxInt(QUEUE_HANDLE Channel)
 /*                LPUART/UART Tx DMA interrupt handlers                */
 /* =================================================================== */
 
-    #if defined SERIAL_SUPPORT_DMA                                       // {6}
+#if defined SERIAL_SUPPORT_DMA                                           // {6}
+    #if LPUARTS_AVAILABLE > 0
+static __interrupt void _lpuart_tx_dma_Interrupt(KINETIS_LPUART_CONTROL *ptrLPUART, int iLPUART_reference)
+{
+        #if defined UART_EXTENDED_MODE && defined UART_TIMED_TRANSMISSION// {208}
+    if (ulInterCharTxDelay[iLPUART_reference] != 0) {
+        fnStopTxTimer(iLPUART_reference);                                // stop the periodic timer that controlled byte transmissions
+    }
+        #endif
+        #if defined SUPPORT_LOW_POWER                                    // {96}
+    ulPeripheralNeedsClock &= ~(UART0_TX_CLK_REQUIRED << iLPUART_reference); // mark that this UART has completed transmission activity
+        #endif
+    fnSciTxByte((QUEUE_HANDLE)iLPUART_reference);                        // tty block transferred, send next, if available
+        #if defined SUPPORT_LOW_POWER                                    // {96}
+    if ((ulPeripheralNeedsClock & (UART0_TX_CLK_REQUIRED << iLPUART_reference)) == 0) { // if no further transmission was started we need to wait until the final byte has been transferred
+        ulPeripheralNeedsClock |= (UART0_TX_CLK_REQUIRED << iLPUART_reference); // block stop mode until the final interrupt arrives
+        ptrLPUART->LPUART_CTRL |= LPUART_CTRL_TCIE;                      // enable the LPUART transmit complete flag interrupt to detect transmission completion
+    }
+        #elif defined KINETIS_KL && defined UART_FRAME_END_COMPLETE
+    if (ucReportEndOfFrame[iLPUART_reference] != 0) {                    // if an end of frame interrupt is required
+        ptrLPUART->LPUART_CTRL |= LPUART_CTRL_TCIE;                      // enable LPUART transmit complete interrupt to signal when the complete last character has been sent
+    }
+        #endif
+}
+    #endif
 
-// Transmission UART DMA completion interrupt handlers
+    #if UARTS_AVAILABLE > 0
+static __interrupt void _uart_tx_dma_Interrupt(KINETIS_UART_CONTROL *ptrUART, int iUART_reference)
+{
+        #if defined UART_EXTENDED_MODE && defined UART_TIMED_TRANSMISSION// {208}
+    if (ulInterCharTxDelay[iUART_reference] != 0) {
+        fnStopTxTimer(iUART_reference0);                                 // stop the periodic timer that controlled byte transmissions
+    }
+        #endif
+        #if defined SUPPORT_LOW_POWER                                    // {96}
+    ulPeripheralNeedsClock &= ~(UART0_TX_CLK_REQUIRED << iUART_reference); // mark that this UART has completed transmission activity
+        #endif
+    fnSciTxByte((QUEUE_HANDLE)iUART_reference);                          // tty block transferred, send next, if available
+        #if defined SUPPORT_LOW_POWER                                    // {96}
+    if ((ulPeripheralNeedsClock & (UART0_TX_CLK_REQUIRED << iUART_reference)) == 0) { // if no further transmission was started we need to wait until the final byte has been transferred
+        ulPeripheralNeedsClock |= (UART0_TX_CLK_REQUIRED << iUART_reference); // block stop mode until the final interrupt arrives
+        ptrUART->UART_C2 |= UART_C2_TCIE;                                // enable the UART transmit complete flag interrupt to detect transmission completion
+    }
+        #elif defined KINETIS_KL && defined UART_FRAME_END_COMPLETE
+    if (ucReportEndOfFrame[iUART_reference] != 0) {                      // if an end of frame interrupt is required
+        ptrUART->UART_C2 |= UART_C2_TCIE;                                // enable UART transmit complete interrupt to signal when the complete last character has been sent
+    }
+        #endif
+}
+    #endif
+
+// Transmission UART/LPUART DMA completion interrupt handlers
 //
 static __interrupt void _uart0_tx_dma_Interrupt(void)
 {
-        #if defined UART_EXTENDED_MODE && defined UART_TIMED_TRANSMISSION// {208}
-    if (ulInterCharTxDelay[0] != 0) {
-        fnStopTxTimer(0);                                                // stop the periodic timer that controlled byte transmissions
-    }
-        #endif
-    #if defined SUPPORT_LOW_POWER                                        // {96}
-    ulPeripheralNeedsClock &= ~(UART0_TX_CLK_REQUIRED);                  // mark that this UART has completed transmission activity
-    #endif
-    fnSciTxByte(0);                                                      // tty block transferred, send next, if available
-    #if defined SUPPORT_LOW_POWER                                        // {96}
-    if ((ulPeripheralNeedsClock & UART0_TX_CLK_REQUIRED) == 0) {         // if no further transmission was started we need to wait until the final byte has been transferred
-        ulPeripheralNeedsClock |= UART0_TX_CLK_REQUIRED;                 // block stop mode until the final interrupt arrives
-        #if LPUARTS_AVAILABLE > 0 && !defined LPUARTS_PARALLEL
-        LPUART0_CTRL |= LPUART_CTRL_TCIE;                                // enable the LPUART transmit complete flag interrupt to detect transmission completion
-        #else
-        UART0_C2 |= UART_C2_TCIE;                                        // enable the UART transmit complete flag interrupt to detect transmission completion
-        #endif
-    }
-    #elif defined KINETIS_KL && defined UART_FRAME_END_COMPLETE
-    if (ucReportEndOfFrame[0] != 0) {                                    // if an end of frame interrupt is required
-        #if LPUARTS_AVAILABLE > 0 && !defined LPUARTS_PARALLEL
-        LPUART0_CTRL |= LPUART_CTRL_TCIE;                                // enable LPUART transmit complete interrupt to signal when the complete last character has been sent
-        #else
-        UART0_C2 |= UART_C2_TCIE;                                        // enable UART transmit complete interrupt to signal when the complete last character has been sent
-        #endif
-    }
+    #if LPUARTS_AVAILABLE > 0 && !defined LPUARTS_PARALLEL
+    _lpuart_tx_dma_Interrupt((KINETIS_LPUART_CONTROL *)LPUART0_BLOCK, 0);// handle LPUART method
+    #else
+    _uart_tx_dma_Interrupt((KINETIS_UART_CONTROL *)UART0_BLOCK, 0);      // handle UART method
     #endif
 }
+
     #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 1
 static __interrupt void _uart1_tx_dma_Interrupt(void)
 {
-        #if defined UART_EXTENDED_MODE && defined UART_TIMED_TRANSMISSION// {208}
-    if (ulInterCharTxDelay[1] != 0) {
-        fnStopTxTimer(1);                                                // stop the periodic timer that controlled byte transmissions
-    }
-        #endif
-        #if defined UART_HW_TRIGGERED_MODE_SUPPORTED                     // {213}
-    if (ucTriggeredTX_mode[1] != 0) {                                    // in this mode we need to wait for the UART transmission of the final byte to complete
-        UART1_C2 |= UART_C2_TCIE;                                        // enable the transmit complete flag interrupt to detect transmission completion
-        return;
-    }
-        #endif
-        #if defined SUPPORT_LOW_POWER                                    // {96}
-    ulPeripheralNeedsClock &= ~(UART1_TX_CLK_REQUIRED);                  // mark that this UART has completed transmission activity
-        #endif
-    fnSciTxByte(1);                                                      // tty block transferred, send next, if available
-        #if defined SUPPORT_LOW_POWER                                    // {96}
-    if ((ulPeripheralNeedsClock & UART1_TX_CLK_REQUIRED) == 0) {         // if no further transmission was started we need to wait until the final byte has been transferred
-        ulPeripheralNeedsClock |= UART1_TX_CLK_REQUIRED;                 // block stop mode until the final interrupt arrives
-            #if LPUARTS_AVAILABLE > 1 && !defined LPUARTS_PARALLEL
-        LPUART1_CTRL |= LPUART_CTRL_TCIE;                                // enable the LPUART transmit complete flag interrupt to detect transmission completion
-           #elif LPUARTS_AVAILABLE == 1 && !defined LPUARTS_PARALLEL
-        UART0_C2 |= UART_C2_TCIE;      
-            #else
-        UART1_C2 |= UART_C2_TCIE;                                        // enable the transmit complete flag interrupt to detect transmission completion
-            #endif
-    }
-    #elif defined KINETIS_KL && defined UART_FRAME_END_COMPLETE
-    if (ucReportEndOfFrame[1] != 0) {                                    // if an end of frame interrupt is required
         #if LPUARTS_AVAILABLE > 1 && !defined LPUARTS_PARALLEL
-        LPUART1_CTRL |= LPUART_CTRL_TCIE;                                // enable LPUART transmit complete interrupt to signal when the complete last character has been sent
+    _lpuart_tx_dma_Interrupt((KINETIS_LPUART_CONTROL *)LPUART1_BLOCK, 1);// handle LPUART method
         #elif LPUARTS_AVAILABLE == 1 && !defined LPUARTS_PARALLEL
-        UART0_C2 |= UART_C2_TCIE;                                        // enable UART transmit complete interrupt to signal when the complete last character has been sent
+    _uart_tx_dma_Interrupt((KINETIS_UART_CONTROL *)UART0_BLOCK, 1);      // handle UART method on UART0
         #else
-        UART1_C2 |= UART_C2_TCIE;                                        // enable UART transmit complete interrupt to signal when the complete last character has been sent
+    _uart_tx_dma_Interrupt((KINETIS_UART_CONTROL *)UART1_BLOCK, 1);      // handle UART method
         #endif
-    }
-    #endif
 }
     #endif
 
     #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 2
 static __interrupt void _uart2_tx_dma_Interrupt(void)
 {
-        #if defined UART_EXTENDED_MODE && defined UART_TIMED_TRANSMISSION// {208}
-    if (ulInterCharTxDelay[2] != 0) {
-        fnStopTxTimer(2);                                                // stop the periodic timer that controlled byte transmissions
-    }
-        #endif
-        #if defined SUPPORT_LOW_POWER                                    // {96}
-    ulPeripheralNeedsClock &= ~(UART2_TX_CLK_REQUIRED);                  // mark that this UART has completed transmission activity
-        #endif
-    fnSciTxByte(2);                                                      // tty block transferred, send next, if available
-        #if defined SUPPORT_LOW_POWER                                    // {96}
-    if ((ulPeripheralNeedsClock & UART2_TX_CLK_REQUIRED) == 0) {         // if no further transmission was started we need to wait until the final byte has been transferred
-        ulPeripheralNeedsClock |= UART2_TX_CLK_REQUIRED;                 // block stop mode until the final interrupt arrives
-            #if LPUARTS_AVAILABLE > 2 && !defined LPUARTS_PARALLEL
-        LPUART2_CTRL |= LPUART_CTRL_TCIE;                                // enable the LPUART transmit complete flag interrupt to detect transmission completion
-           #elif LPUARTS_AVAILABLE == 2 && defined LPUARTS_PARALLEL
-        UART0_C2 |= UART_C2_TCIE;      
-            #else
-        UART2_C2 |= UART_C2_TCIE;                                        // enable the transmit complete flag interrupt to detect transmission completion
-            #endif
-    }
-    #elif defined KINETIS_KL && defined UART_FRAME_END_COMPLETE
-    if (ucReportEndOfFrame[2] != 0) {                                    // if an end of frame interrupt is required
         #if LPUARTS_AVAILABLE > 2 && !defined LPUARTS_PARALLEL
-        LPUART2_CTRL |= LPUART_CTRL_TCIE;                                // enable LPUART transmit complete interrupt to signal when the complete last character has been sent
+    _lpuart_tx_dma_Interrupt((KINETIS_LPUART_CONTROL *)LPUART2_BLOCK, 2);// handle LPUART method
         #elif LPUARTS_AVAILABLE == 2 && defined LPUARTS_PARALLEL
-        UART0_C2 |= UART_C2_TCIE;                                        // enable UART transmit complete interrupt to signal when the complete last character has been sent
+    _uart_tx_dma_Interrupt((KINETIS_UART_CONTROL *)UART0_BLOCK, 2);      // handle UART method on UART0
         #else
-        UART2_C2 |= UART_C2_TCIE;                                        // enable UART transmit complete interrupt to signal when the complete last character has been sent
-        #endif
-    }
-    #endif
-}
-    #endif
-    #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 3
-static __interrupt void _uart3_tx_dma_Interrupt(void)
-{
-        #if defined UART_EXTENDED_MODE && defined UART_TIMED_TRANSMISSION// {208}
-    if (ulInterCharTxDelay[3] != 0) {
-        fnStopTxTimer(3);                                                // stop the periodic timer that controlled byte transmissions
-    }
-        #endif
-        #if defined SUPPORT_LOW_POWER                                    // {96}
-    ulPeripheralNeedsClock &= ~(UART3_TX_CLK_REQUIRED);                  // mark that this UART has completed transmission activity
-        #endif
-    fnSciTxByte(3);                                                      // tty block transferred, send next, if available
-        #if defined SUPPORT_LOW_POWER                                    // {96}
-    if ((ulPeripheralNeedsClock & UART3_TX_CLK_REQUIRED) == 0) {         // if no further transmission was started we need to wait until the final byte has been transferred
-        ulPeripheralNeedsClock |= UART3_TX_CLK_REQUIRED;                 // block stop mode until the final interrupt arrives
-            #if (LPUARTS_AVAILABLE > 3 && !defined LPUARTS_PARALLEL)
-        LPUART3_CTRL |= LPUART_CTRL_TCIE;                                // enable the LPUART transmit complete flag interrupt to detect transmission completion
-           #elif LPUARTS_AVAILABLE == 3 && !defined LPUARTS_PARALLEL
-        UART0_C2 |= UART_C2_TCIE;
-            #elif UARTS_AVAILABLE == 3                                   // K22
-        LPUART0_CTRL |= LPUART_CTRL_TCIE;
-            #else
-        UART3_C2 |= UART_C2_TCIE;                                        // enable the transmit complete flag interrupt to detect transmission completion
-            #endif
-    }
-    #elif defined KINETIS_KL && defined UART_FRAME_END_COMPLETE
-    if (ucReportEndOfFrame[3] != 0) {                                    // if an end of frame interrupt is required
-        #if LPUARTS_AVAILABLE > 3 && !defined LPUARTS_PARALLEL
-        LPUART3_CTRL |= LPUART_CTRL_TCIE;                                // enable LPUART transmit complete interrupt to signal when the complete last character has been sent
-        #elif LPUARTS_AVAILABLE == 3 && !defined LPUARTS_PARALLEL
-        UART0_C2 |= UART_C2_TCIE;                                        // enable UART transmit complete interrupt to signal when the complete last character has been sent
-        #else
-        UART3_C2 |= UART_C2_TCIE;                                        // enable UART transmit complete interrupt to signal when the complete last character has been sent
-        #endif
-    }
-    #endif
-}
-    #endif
-    #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 4
-static __interrupt void _uart4_tx_dma_Interrupt(void)
-{
-        #if defined SUPPORT_LOW_POWER                                    // {96}
-    ulPeripheralNeedsClock &= ~(UART4_TX_CLK_REQUIRED);                  // mark that this UART has completed transmission activity
-        #endif
-    fnSciTxByte(4);                                                      // tty block transferred, send next, if available
-        #if defined SUPPORT_LOW_POWER                                    // {96}
-    if ((ulPeripheralNeedsClock & UART4_TX_CLK_REQUIRED) == 0) {         // if no further transmission was started we need to wait until the final byte has been transferred
-        ulPeripheralNeedsClock |= UART4_TX_CLK_REQUIRED;                 // block stop mode until the final interrupt arrives
-            #if (LPUARTS_AVAILABLE > 3 && !defined LPUARTS_PARALLEL)
-        LPUART4_CTRL |= LPUART_CTRL_TCIE;                                // enable the LPUART transmit complete flag interrupt to detect transmission completion
-            #else
-        UART4_C2 |= UART_C2_TCIE;                                        // enable the transmit complete flag interrupt to detect transmission completion
-            #endif
-    }
-    #elif defined KINETIS_KL && defined UART_FRAME_END_COMPLETE
-    if (ucReportEndOfFrame[4] != 0) {                                    // if an end of frame interrupt is required
-        #if LPUARTS_AVAILABLE > 3 && !defined LPUARTS_PARALLEL
-        LPUART4_CTRL |= LPUART_CTRL_TCIE;                                // enable LPUART transmit complete interrupt to signal when the complete last character has been sent
-        #else
-        UART4_C2 |= UART_C2_TCIE;                                        // enable UART transmit complete interrupt to signal when the complete last character has been sent
-        #endif
-    }
-    #endif
-}
-    #endif
-    #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 5
-static __interrupt void _uart5_tx_dma_Interrupt(void)
-{
-        #if defined UART_HW_TRIGGERED_MODE_SUPPORTED                     // {213}
-    if (ucTriggeredTX_mode[5] != 0) {                                    // in this mode we need to wait for the UART transmission of the final byte to complete
-            #if LPUARTS_AVAILABLE == 1
-        LPUART0_CTRL |= LPUART_CTRL_TCIE;                                // enable the LPUART transmit complete flag interrupt to detect transmission completion
-            #else
-        UART5_C2 |= UART_C2_TCIE;                                        // enable the transmit complete flag interrupt to detect transmission completion
-            #endif
-        return;
-    }
-        #endif
-        #if defined SUPPORT_LOW_POWER                                    // {96}
-    ulPeripheralNeedsClock &= ~(UART5_TX_CLK_REQUIRED);                  // mark that this UART has completed transmission activity
-        #endif
-    fnSciTxByte(5);                                                      // tty block transferred, send next, if available
-        #if defined SUPPORT_LOW_POWER                                    // {96}
-    if ((ulPeripheralNeedsClock & UART5_TX_CLK_REQUIRED) == 0) {         // if no further transmission was started we need to wait until the final byte has been transferred
-        ulPeripheralNeedsClock |= UART5_TX_CLK_REQUIRED;                 // block stop mode until the final interrupt arrives
-            #if LPUARTS_AVAILABLE == 1
-        LPUART0_CTRL |= LPUART_CTRL_TCIE;                                // enable the LPUART transmit complete flag interrupt to detect transmission completion
-            #else
-        UART5_C2 |= UART_C2_TCIE;                                        // enable the transmit complete flag interrupt to detect transmission completion
-            #endif
-    }
-        #elif defined KINETIS_KL && defined UART_FRAME_END_COMPLETE
-    if (ucReportEndOfFrame[5] != 0) {                                    // if an end of frame interrupt is required
-            #if LPUARTS_AVAILABLE == 1
-        LPUART0_CTRL |= LPUART_CTRL_TCIE;                                // enable LPUART transmit complete interrupt to signal when the complete last character has been sent
-            #else
-        UART5_C2 |= UART_C2_TCIE;                                        // enable UART transmit complete interrupt to signal when the complete last character has been sent
-            #endif
-    }
+    _uart_tx_dma_Interrupt((KINETIS_UART_CONTROL *)UART2_BLOCK, 2);      // handle UART method
         #endif
 }
     #endif
 
-static void (*_uart_tx_dma_Interrupt[UARTS_AVAILABLE + LPUARTS_AVAILABLE])(void) = {
+    #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 3
+static __interrupt void _uart3_tx_dma_Interrupt(void)
+{
+        #if LPUARTS_AVAILABLE > 3 && !defined LPUARTS_PARALLEL
+    _lpuart_tx_dma_Interrupt((KINETIS_LPUART_CONTROL *)LPUART3_BLOCK, 3);// handle LPUART method
+        #elif LPUARTS_AVAILABLE == 3 && !defined LPUARTS_PARALLEL
+    _uart_tx_dma_Interrupt((KINETIS_UART_CONTROL *)UART0_BLOCK, 3);      // handle UART method on UART0
+        #elif UARTS_AVAILABLE == 3
+    _lpuart_tx_dma_Interrupt((KINETIS_LPUART_CONTROL *)LPUART0_BLOCK, 3);// handle LPUART method
+        #else
+    _uart_tx_dma_Interrupt((KINETIS_UART_CONTROL *)UART3_BLOCK, 3);      // handle UART method
+        #endif
+}
+    #endif
+
+    #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 4
+static __interrupt void _uart4_tx_dma_Interrupt(void)
+{
+        #if LPUARTS_AVAILABLE > 3 && !defined LPUARTS_PARALLEL
+    _lpuart_tx_dma_Interrupt((KINETIS_LPUART_CONTROL *)LPUART4_BLOCK, 4);// handle LPUART method
+        #else
+    _uart_tx_dma_Interrupt((KINETIS_UART_CONTROL *)UART4_BLOCK, 4);      // handle UART method
+        #endif
+}
+    #endif
+
+    #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 5
+static __interrupt void _uart5_tx_dma_Interrupt(void)
+{
+        #if LPUARTS_AVAILABLE == 1
+    _lpuart_tx_dma_Interrupt((KINETIS_LPUART_CONTROL *)LPUART0_BLOCK, 5);// handle LPUART method
+        #else
+    _uart_tx_dma_Interrupt((KINETIS_UART_CONTROL *)UART5_BLOCK, 5);      // handle UART method
+        #endif
+}
+    #endif
+
+static void (*_uart_tx_dma_Interrupts[UARTS_AVAILABLE + LPUARTS_AVAILABLE])(void) = {
     _uart0_tx_dma_Interrupt,
     #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 1
     _uart1_tx_dma_Interrupt,
@@ -2197,7 +1796,6 @@ extern QUEUE_TRANSFER fnControlLineInterrupt(QUEUE_HANDLE channel, unsigned shor
 }
     #endif                                                               // end SUPPORT_HW_FLOW
 
-
 // Enable transmission on the defined channel - including configuring the transmit data output
 //
 extern void fnTxOn(QUEUE_HANDLE Channel)
@@ -2918,7 +2516,7 @@ static void fnConfigLPUART(QUEUE_HANDLE Channel, TTYTABLE *pars, KINETIS_LPUART_
     #if defined SERIAL_SUPPORT_DMA
     if ((pars->ucDMAConfig & UART_TX_DMA) != 0) {                        // if transmission is to be DMA driven
         if ((lpuart_reg->LPUART_BAUD & LPUART_BAUD_TDMAE) == 0) {        // if the DMA has already been configured don't disturb it
-            fnConfigDMA_buffer(UART_DMA_TX_CHANNEL[Channel], (DMAMUX0_CHCFG_SOURCE_LPUART0_TX + (2 * (Channel - UARTS_AVAILABLE))), 0, 0, (void *)&(lpuart_reg->LPUART_DATA), (DMA_BYTES | DMA_DIRECTION_OUTPUT | DMA_SINGLE_CYCLE), _uart_tx_dma_Interrupt[Channel], UART_DMA_TX_INT_PRIORITY[Channel]);
+            fnConfigDMA_buffer(UART_DMA_TX_CHANNEL[Channel], (DMAMUX0_CHCFG_SOURCE_LPUART0_TX + (2 * (Channel - UARTS_AVAILABLE))), 0, 0, (void *)&(lpuart_reg->LPUART_DATA), (DMA_BYTES | DMA_DIRECTION_OUTPUT | DMA_SINGLE_CYCLE), _uart_tx_dma_Interrupts[Channel], UART_DMA_TX_INT_PRIORITY[Channel]);
             lpuart_reg->LPUART_CTRL &= ~(LPUART_CTRL_TIE | LPUART_CTRL_TCIE); // ensure tx interrupts are not enabled
             lpuart_reg->LPUART_BAUD |= LPUART_BAUD_TDMAE;                // use DMA rather than interrupts for transmission
         }
@@ -3083,7 +2681,7 @@ static void fnConfigUART(QUEUE_HANDLE Channel, TTYTABLE *pars, KINETIS_UART_CONT
             #endif
         if (0 == iConfigured) {
             uart_reg->UART_C2 &= ~(UART_C2_TIE | UART_C2_TCIE);          // ensure tx interrupt is not enabled
-            fnConfigDMA_buffer(UART_DMA_TX_CHANNEL[Channel], (DMAMUX_CHCFG_SOURCE_UART0_TX + (2 * Channel)), 0, 0, (void *)&(uart_reg->UART_D), (DMA_BYTES | DMA_DIRECTION_OUTPUT | DMA_SINGLE_CYCLE), _uart_tx_dma_Interrupt[Channel], UART_DMA_TX_INT_PRIORITY[Channel]);
+            fnConfigDMA_buffer(UART_DMA_TX_CHANNEL[Channel], (DMAMUX_CHCFG_SOURCE_UART0_TX + (2 * Channel)), 0, 0, (void *)&(uart_reg->UART_D), (DMA_BYTES | DMA_DIRECTION_OUTPUT | DMA_SINGLE_CYCLE), _uart_tx_dma_Interrupts[Channel], UART_DMA_TX_INT_PRIORITY[Channel]);
             #if UARTS_AVAILABLE > 1
             if (Channel == 0) {
                 uart_reg->UART_C5 |= UART_C5_TDMAS;                      // use DMA rather than interrupts for transmission
@@ -3108,7 +2706,7 @@ static void fnConfigUART(QUEUE_HANDLE Channel, TTYTABLE *pars, KINETIS_UART_CONT
             }
             #endif
             uart_reg->UART_C5 |= UART_C5_TDMAS;                          // use DMA rather than interrupts for transmission
-            fnConfigDMA_buffer(UART_DMA_TX_CHANNEL[Channel], usDMAMUX, 0, 0, (void *)&(uart_reg->UART_D), (DMA_BYTES | DMA_DIRECTION_OUTPUT | DMA_SINGLE_CYCLE), _uart_tx_dma_Interrupt[Channel], UART_DMA_TX_INT_PRIORITY[Channel]);
+            fnConfigDMA_buffer(UART_DMA_TX_CHANNEL[Channel], usDMAMUX, 0, 0, (void *)&(uart_reg->UART_D), (DMA_BYTES | DMA_DIRECTION_OUTPUT | DMA_SINGLE_CYCLE), _uart_tx_dma_Interrupts[Channel], UART_DMA_TX_INT_PRIORITY[Channel]);
             uart_reg->UART_C2 |= (UART_C2_TIE);                          // enable the tx dma request (DMA not yet enabled) rather than interrupt mode
         }
         #endif
@@ -3189,7 +2787,9 @@ extern void fnStartBreak(QUEUE_HANDLE channel)                           // {205
     #if defined USER_CODE_START_BREAK
     USER_CODE_START_BREAK();
     #endif
-    #if LPUARTS_AVAILABLE > 0
+    #if LPUARTS_AVAILABLE > 0 && UARTS_AVAILABLE == 0
+    ((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_CTRL |= LPUART_CTRL_SBK; // start sending break characters
+    #elif LPUARTS_AVAILABLE > 0
     if (uart_type[channel] == UART_TYPE_LPUART) {
         ((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_CTRL |= LPUART_CTRL_SBK; // start sending break characters
     }
@@ -3207,10 +2807,12 @@ extern void fnStartBreak(QUEUE_HANDLE channel)                           // {205
 extern void fnStopBreak(QUEUE_HANDLE channel)                            // {205}
 {
     KINETIS_UART_CONTROL *uart_reg = (KINETIS_UART_CONTROL *)fnSelectChannel(channel);
-#if defined USER_CODE_START_BREAK
+    #if defined USER_CODE_START_BREAK
     USER_CODE_START_BREAK();
     #endif
-    #if LPUARTS_AVAILABLE > 0
+    #if LPUARTS_AVAILABLE > 0 && UARTS_AVAILABLE == 0
+    ((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_CTRL &= ~LPUART_CTRL_SBK; // stop sending break characters
+    #elif LPUARTS_AVAILABLE > 0
     if (uart_type[channel] == UART_TYPE_LPUART) {
         ((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_CTRL &= ~LPUART_CTRL_SBK; // stop sending break characters
     }
@@ -3975,6 +3577,16 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
     uart_reg->UART_C4 = ucFraction;
         #endif
     fnConfigUART(Channel, pars, uart_reg, usDivider);                    // configure the UART
+    #endif
+
+    #if defined USER_DEFINED_UART_RX_HANDLER
+    fnUserRxIrq[Channel] = pars->receptionHandler;
+    #endif
+    #if defined USER_DEFINED_UART_RX_BREAK_DETECTION
+    fnUserRxBreakIrq[Channel] = pars->receiveBreakHandler;
+    #endif
+    #if defined USER_DEFINED_UART_TX_FRAME_COMPLETE
+    fnUserTxEndIrq[Channel] = pars->txFrameCompleteHandler;
     #endif
 
     #if defined _WINDOWS

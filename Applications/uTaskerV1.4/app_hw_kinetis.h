@@ -1540,7 +1540,7 @@
         #define TPM_CLOCKED_FROM_IRC48M                                  // TPM is clocked by IRC48M
       //#define TPM_CLOCKED_FROM_USB1_PDF                                // TPM is clocked by USB1_PDF
                                                                          // default is to use MCGPLLCLK
-        #define PERIPHERAL_CLOCK_DIVIDE          2                       // optional divider for these options (divide 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 5, 6, 7 or 8)
+        #define PERIPHERAL_CLOCK_DIVIDE          8                       // optional divider for these options (divide 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 5, 6, 7 or 8)
         #define PERIPHERAL_CLOCK_DIVIDE_FRACTION 0                       // 0 or 5 (eg. PERIPHERAL_CLOCK_DIVIDE 2 and PERIPHERAL_CLOCK_DIVIDE_FRACTION 0 gives 2.0 and PERIPHERAL_CLOCK_DIVIDE_FRACTION 5 gives 2.5 divide)
     #else
                                                                          // default is to use MCGPLLCLK/2 or MCGFLLCLK (depending on whether FLL or PLL is used)
@@ -2523,11 +2523,11 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define NUMBER_SERIAL   (UARTS_AVAILABLE + LPUARTS_AVAILABLE)        // the number of physical queues needed for serial interface(s)
     #define SIM_COM_EXTENDED                                             // COM ports defined from 1..255
     #define SERIAL_PORT_0    4                                           // if we open UART channel 0 we simulate using comx on the PC
-    #define SERIAL_PORT_1    4                                           // if we open UART channel 1 we simulate using comx on the PC
+    #define SERIAL_PORT_1    8                                           // if we open UART channel 1 we simulate using comx on the PC
     #define SERIAL_PORT_2    4                                           // if we open UART channel 2 we simulate using comx on the PC
     #define SERIAL_PORT_3    4                                           // if we open UART channel 3 we simulate using comx on the PC
     #define SERIAL_PORT_4    4                                           // if we open UART channel 4 we simulate using comx on the PC
-    #define SERIAL_PORT_5    4                                           // if we open UART channel 5 we simulate using comx on the PC
+    #define SERIAL_PORT_5    6                                           // if we open UART channel 5 we simulate using comx on the PC
 
     #if defined KWIKSTIK || defined TWR_K60F120M || defined K20FX512_120 || defined TWR_K21F120M || (defined TWR_K64F120M && (defined TWR_SER || defined TWR_SER2)) || (defined TWR_K60N512 && defined DEBUG_ON_VIRT_COM)
         #define DEMO_UART    5                                           // use UART 5
@@ -3648,7 +3648,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define PHY_RESET_HIGH()       _SETBITS(A, PORTA_BIT25)   
     #define PHY_RESET_20MS         INIT_PHY_RESET(); PHY_RESET_LOW(); fnDelayLoop((unsigned long)((float)20000 * (float)((float)25000000/(float)SYSTEM_CLOCK))); PHY_RESET_HIGH(); // 20ms PHY Reset (during this ext. CPU clock is not available) !
 
-    #define INIT_WATCHDOG_LED()    _CONFIG_DRIVE_PORT_OUTPUT_VALUE(D, (K60_LED_GREEN), (K60_LED_GREEN), (PORT_ODE | PORT_SRE_SLOW | PORT_DSE_HIGH)); // system blink
+    #define INIT_WATCHDOG_LED()    _CONFIG_DRIVE_PORT_OUTPUT_VALUE(D, (K60_LED_GREEN), (K60_LED_GREEN), (PORT_ODE | PORT_SRE_SLOW | PORT_DSE_HIGH)) // system blink
 
     #define INIT_WATCHDOG_DISABLE() 
     #define WATCHDOG_DISABLE()     (0)  
@@ -3928,13 +3928,6 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define MOUSE_DOWN()           0                                     // not used
     #define MOUSE_LEFT()           0                                     // not used
     #define MOUSE_RIGHT()          0                                     // not used
-
-    #if defined USE_DMX_RDM_SLAVE
-        extern void fnDMX512_slave_rx(unsigned char data, int channel);
-        #define fnUART1_HANDLER(data, channel) fnDMX512_slave_rx(data, channel)
-        extern void fnDMX512_break_rx(int channel);
-        #define fnUART1_break_HANDLER(channel) fnDMX512_break_rx(channel)
-    #endif
 #elif defined TEENSY_3_5 || defined TEENSY_3_6
     #define LED_RED            (PORTC_BIT5)                              // red LED - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
 

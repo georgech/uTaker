@@ -1296,7 +1296,7 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void (*
     *ptrPriority = ((*ptrPriority & ~(0xff << iShift)) | (ucPriority << (iShift + __NVIC_PRIORITY_SHIFT)));
 #else
     ptrPriority += iInterruptID;                                         // move to the priority location used by this interrupt
-    *ptrPriority = (ucPriority << __NVIC_PRIORITY_SHIFT);                // {48} define the interrupt's priority (16 levels for K and 4 levels for KE/KL)
+    *ptrPriority = (ucPriority << __NVIC_PRIORITY_SHIFT);                // {48} define the interrupt's priority (16 levels for Cortex-m4 and 4 levels for Cortex-m0+)
 #endif
     ptrIntSet += (iInterruptID/32);                                      // move to the interrupt enable register in which this interrupt is controlled
     *ptrIntSet = (0x01 << (iInterruptID % 32));                          // enable the interrupt
@@ -1983,8 +1983,8 @@ extern int fnClkout(int iClockSource)                                    // {120
     #if defined KINETIS_KL03
         _CONFIG_PERIPHERAL(B, 13, (PB_13_RTC_CLKOUT | PORT_SRE_SLOW | PORT_DSE_LOW)); // configure the RTC_CLKOUT pin
     #elif defined KINETIS_K64
-        _CONFIG_PERIPHERAL(E, 0, (PE_0_RTC_CLKOUT | PORT_SRE_SLOW | PORT_DSE_LOW)); // configure the RTC_CLKOUT pin
-      //_CONFIG_PERIPHERAL(E, 26, (PE_26_RTC_CLKOUT | PORT_SRE_SLOW | PORT_DSE_LOW)); // configure the RTC_CLKOUT pin
+      //_CONFIG_PERIPHERAL(E, 0, (PE_0_RTC_CLKOUT | PORT_SRE_SLOW | PORT_DSE_LOW)); // configure the RTC_CLKOUT pin (alt. 7)
+        _CONFIG_PERIPHERAL(E, 26, (PE_26_RTC_CLKOUT | PORT_SRE_SLOW | PORT_DSE_LOW)); // configure the RTC_CLKOUT pin (alt. 6)
     #endif
         return 0;
     #if defined KINETIS_K64

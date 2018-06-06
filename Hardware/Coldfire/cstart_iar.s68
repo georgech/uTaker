@@ -1,0 +1,109 @@
+;------------------------------------------------------------------------------
+;       C startup for ColdFire MCF52259
+;
+;       This module contains device configuration.
+;
+;------------------------------------------------------------------------------
+;       Copyright (c) 2007-2008 IAR Systems AB.
+;       $Revision: 1193 $
+;       23.03.2011 Modified for uTasker Coldfire V2 project
+;------------------------------------------------------------------------------
+
+;------------------------------------------------------------------------------
+;       Reset address (the processor loads the initial stack pointer and initial
+;       program counter from here)
+;------------------------------------------------------------------------------
+
+        PROGRAM ?M52259_RESET
+
+        RSEG    CSTACK:DATA(2)
+
+        EXTERN  ?CSTART_DEVICE
+        
+        COMMON  INTVEC:CODE(2)
+        ORG     0x00
+        DC32    SFE(CSTACK)                                              // initial stack pointer (initial SP)
+        DC32    ?CSTART_DEVICE                                           // start address (initial PC)
+        ENDMOD
+
+;------------------------------------------------------------------------------
+;       Clear CFM configuration field
+;------------------------------------------------------------------------------
+
+        PROGRAM ?M52259_CFM
+
+        RSEG    CFMCONFIG:CODE(1)
+        DC32    0x00000000
+        DC32    0x00000000
+        DC32    0x00000000
+        DC32    0x00000000
+        DC32    0x00000000
+        DC32    0x00000000
+        ENDMOD
+
+;------------------------------------------------------------------------------
+;       Device configuration.
+;------------------------------------------------------------------------------
+
+        MODULE  ?M52259_CSTART
+
+        RSEG    RCODE:CODE(1)
+
+        PUBLIC  __program_start
+        PUBLIC  mcf5xxx_wr_vbr
+        PUBLIC  byte_rev
+        PUBLIC  start_application
+        PUBLIC  ?CSTART_DEVICE
+        EXTERN  ?C_STARTUP
+        EXTERN  mcf52235_init
+
+#define _ASSEMBLER_CONFIG                                                // allow main configuration control flash speculation and other setting
+#define _M5223X
+#include "config.h"
+
+#define __SRAM 0x20000000
+#define RAMBAR0 0xC04
+#define RAMBAR1 0xC05
+#define IPSBAR_RESET 0x40000000
+#define __IPSBAR 0x40000000
+
+__program_start:
+?CSTART_DEVICE:                                                          // initial program counter value so the processor starts exectution from here
+        MOVE.W  #0x2700, SR                                              // set initial status register content - initerrupts disabled
+#if !defined _M520X
+        move.l  #__SRAM, d0                                              // initialize RAMBAR1: locate SRAM and validate it
+        add.l   #0x21,d0
+        movec.l d0, RAMBAR1
+        move.l  #__IPSBAR,d0                                             // initialize IPSBAR
+        add.l   #0x1,d0
+        MOVE.L  D0, (IPSBAR_RESET).L
+                                                                         // initialize FLASHBAR
+    #if defined FLASH_SPECULATION_ERROR_SOLVED                           // M5225X family have errata corrected
+        move.l  #0x121, d0                                               // no workaround 1 set value assuming FLASH is at low address
+    #else
+        move.l  #0x161, d0                                               // this is the workaround 1 due to the Internal FLASH Speculation error in the first devices
+    #endif
+        movec   d0,RAMBAR0
+#endif
+        jsr     (mcf52235_init).L                                        // call low-level hardware initialisation
+        JMP     (?C_STARTUP).L                                           // jump to IAR initialisation code which will then jump to main()
+
+mcf5xxx_wr_vbr:                                                          // sub-routine for access to VBR
+        MOVEC.L D0, VBR
+        rts	
+
+byte_rev:                                                                // sub routine for reversing bytes in a long word
+        BYTEREV.L D0
+        rts
+
+
+start_application:
+        MOVEA.L  D0, A0                                                  // load SP and the PC and let application continue...
+        MOVEA.L  (A0), SP
+        ADDQ.L   #4, A0
+        MOVEA.L  (A0), A0   
+        JMP (A0)                                                         // jump to the application
+
+        ENDMOD
+
+        END

@@ -705,6 +705,9 @@ static __interrupt void _PWM_Interrupt_5(void)
             ulMode |= (FTM_SC_PWMEN0 << ptrPWM_settings->pwm_reference); // enable the PWM channel output
     #endif
             ptrFlexTimer->FTM_SC = ulMode;                               // note that the mode is shared by all channels in the flex timer
+    #if defined _WINDOWS
+            ptrFlexTimer->FTM_SC &= ~(FTM_SC_TOF);                       // this is a write '1' to clear flag so we reset it when simulating
+    #endif
     #if defined KINETIS_KE
             _SIM_PER_CHANGE;                                             // update simulator ports
     #endif

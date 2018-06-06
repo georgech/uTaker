@@ -11,7 +11,7 @@
    File:   	    LM3SXXXX.h
    Project: 	Single Chip Embedded Internet
    ---------------------------------------------------------------------
-   Copyright (C) M.J.Butcher Consulting 2004..2011
+   Copyright (C) M.J.Butcher Consulting 2004..2018
    *********************************************************************
 
    16.12.2008 Add GPIO H interrupt for specific processors               {1}
@@ -766,7 +766,7 @@
     #define CHIP_HAS_CAN        1
 #endif
 
-// IIC
+// I2C
 //
 #if PART_DC2 & I2C1_PRESENT2
     #define CHIP_HAS_I2C        2
@@ -3292,7 +3292,7 @@ unsigned long UARTPCellID3;
 } LM3XXXXX_UART_CONTROL;
 
 
-// IIC Register Map
+// I2C Register Map
 //
 #define I2CMSA_0                    *(volatile unsigned long*)(I2C0_BLOCK + 0x000)        // Master 0 Slave Address
 #define I2CMCS_0                    *(volatile unsigned long*)(I2C0_BLOCK + 0x004)        // Master 0 Control/Status

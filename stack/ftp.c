@@ -55,6 +55,7 @@
     22.11.2014 Allow multiple control connections                        {39}
     23.11.2014 Correct data connection's use of the data tcp control object on first frame transmission when using passive mode {40}
     23.01.2015 Return 500 if an unknown command is received before or during authentication {41}
+    05.06.2018 Add NO_FTP_UFILE_WRITE option to not allow writes to uFileSystem when SD card is removed {42}
 
 */
 
@@ -633,7 +634,7 @@ static int fnFTPListener(USOCKET Socket, unsigned char ucEvent, unsigned char *u
 #endif
                 {
 #if defined FTP_UTFAT                                                    // {17}
-                    if (ptr_utDirectory->usDirectoryFlags & UTDIR_VALID) {
+                    if ((ptr_utDirectory->usDirectoryFlags & UTDIR_VALID) != 0) {
                       //utFile.ptr_utDirObject = ptr_utDirectory;
                         if (utOpenFile(fnStringTerminate(ucIp_Data + 5), &utFile, ptr_utDirectory, (UTFAT_OPEN_FOR_WRITE | UTFAT_CREATE | UTFAT_TRUNCATE)) != UTFAT_PATH_IS_FILE) { // {31}{34} open a file referenced to the directory object
                             return (fnSendFTP(MSG_FTP_DENIED, ptrFtp));  // file cannot be created or overwritten
@@ -641,7 +642,7 @@ static int fnFTPListener(USOCKET Socket, unsigned char ucEvent, unsigned char *u
                     }
                     else {
 #endif
-#if defined ACTIVE_FILE_SYSTEM
+#if defined ACTIVE_FILE_SYSTEM && !defined NO_FTP_UFILE_WRITE
                         ptrFtp->ptrFile = uOpenFile((CHAR *)(ucIp_Data + 5)); // get file pointer (to new file or file to overwrite)
     #if defined SUPPORT_MIME_IDENTIFIER
                         ptrFtp->ucMimeType = fnGetMimeType((CHAR *)(ucIp_Data + 5)); // get the type of file being saved
@@ -649,6 +650,8 @@ static int fnFTPListener(USOCKET Socket, unsigned char ucEvent, unsigned char *u
     #if defined SUB_FILE_SIZE
                         ptrFtp->ucSubFileInProgress = fnGetFileType((CHAR *)(ucIp_Data + 5)); // get file characteristics so that it is later handled correctly
     #endif
+#else
+                        return (fnSendFTP(MSG_FTP_DENIED, ptrFtp));      // {42} if writes are not allowed to uFileSystem deny access
 #endif
 #if defined FTP_UTFAT                                                    // {17}
                     }

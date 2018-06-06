@@ -11,7 +11,7 @@
    File:        app_hw_lm3sxxxx.h
    Project:     uTasker Demonstration project
    ---------------------------------------------------------------------
-   Copyright (C) M.J.Butcher Consulting 2004..2011
+   Copyright (C) M.J.Butcher Consulting 2004..2018
    *********************************************************************
    Application specific hardware configuration
 
@@ -698,7 +698,7 @@
 // I2C Interface
 //
 #if defined I2C_INTERFACE
-    #define OUR_I2C_CHANNEL         0                                    // use IIC0 for demo
+    #define OUR_I2C_CHANNEL         0                                    // use I2C0 for demo
     #define NUMBER_I2C              CHIP_HAS_I2C                         // I2C channels available
 #endif
 

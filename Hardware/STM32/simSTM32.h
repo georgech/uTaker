@@ -11,7 +11,7 @@
     File:      simSTM32.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2014
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     08.09.2012 Adapt RTC for F2/F4 devices                               {1}
     11.09.2012 Add SYSTEM_HANDLER_x_y_PRIORITY_REGISTERs                 {2}
@@ -643,7 +643,7 @@ typedef struct stSTM32_RTC
 } STM32_RTC;
 
 
-typedef struct stSTM32_IIC
+typedef struct stSTM32_I2C
 {
 unsigned long I2C_CR1;
 unsigned long I2C_CR2;
@@ -654,7 +654,7 @@ unsigned long I2C_SR1;
 unsigned long I2C_SR2;
 unsigned long I2C_CCR;
 unsigned long I2C_TRISE;
-} STM32_IIC;
+} STM32_I2C;
 
 
 typedef struct stSTM32_TIM2_3_4_5
@@ -1331,9 +1331,9 @@ typedef struct stSTR32M_PERIPH
     STM32_IWDG           IWDG;
     STM32_RTC            RTC;
 #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX       // {3}
-    STM32_IIC            IIC[3];
+    STM32_I2C            I2C[3];
 #else
-    STM32_IIC            IIC[2];
+    STM32_I2C            I2C[2];
 #endif
     STM32_TIM2_3_4_5     TIM2_3_4_5[4];
 #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX

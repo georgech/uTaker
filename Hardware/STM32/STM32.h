@@ -11,7 +11,7 @@
     File:      STM32.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     02.03.2012 Remove USB_FIFO_INTERMEDIATE_BUFFER to correctly handle buffered USB OUT flow control
     06.03.2012 Remove start_application() define
@@ -1017,10 +1017,10 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*I
     #endif
     #define RTC_BLOCK                   ((unsigned char *)(&STM32.RTC))        // RTC
     #define IWDG_BLOCK                  ((unsigned char *)(&STM32.IWDG))       // Independent Watchdog
-    #define I2C1_BLOCK                  ((unsigned char *)(&STM32.IIC[0]))     // I2C1
-    #define I2C2_BLOCK                  ((unsigned char *)(&STM32.IIC[1]))     // I2C2
-    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX          // {6}
-        #define I2C3_BLOCK              ((unsigned char *)(&STM32.IIC[2]))     // I2C3
+    #define I2C1_BLOCK                  ((unsigned char *)(&STM32.I2C[0]))     // I2C1
+    #define I2C2_BLOCK                  ((unsigned char *)(&STM32.I2C[1]))     // I2C2
+    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX         // {6}
+        #define I2C3_BLOCK              ((unsigned char *)(&STM32.I2C[2]))     // I2C3
     #endif
     #define TIM2_BLOCK                  ((unsigned char *)(&STM32.TIM2_3_4_5[0])) // TIM2
     #define TIM3_BLOCK                  ((unsigned char *)(&STM32.TIM2_3_4_5[1])) // TIM3
@@ -4584,9 +4584,9 @@ typedef struct stUSART_REG
 
 
 
-// IIC
+// I2C
 //
-#define I2C1_CR1                        *(volatile unsigned long *)(I2C1_BLOCK + 0x00) // IIC Control Register 1 IIC 1
+#define I2C1_CR1                        *(volatile unsigned long *)(I2C1_BLOCK + 0x00) // I2C Control Register 1 I2C 1
   #define I2C_CR1_PE                    0x0001                                         // peripheral enable
   #define I2C_CR1_SMBUS                 0x0002                                         // SMBus mode
   #define I2C_CR1_SMBTYPE               0x0008                                         // SMBus type - host
@@ -4601,17 +4601,17 @@ typedef struct stUSART_REG
   #define I2C_CR1_PEC                   0x1000                                         // packed error checking
   #define I2C_CR1_ALERT                 0x2000                                         // SMBus alert
   #define I2C_CR1_SWRST                 0x8000                                         // software reset
-#define I2C1_CR2                        *(volatile unsigned long *)(I2C1_BLOCK + 0x04) // IIC Control Register 2 IIC 1
+#define I2C1_CR2                        *(volatile unsigned long *)(I2C1_BLOCK + 0x04) // I2C Control Register 2 I2C 1
   #define I2C_CR2_FREQ_MASK             0x003f                                         // peripheral clock frequency mask
   #define I2C_CR2_ITERREN               0x0100                                         // error interrupt enable
   #define I2C_CR2_ITEVTEN               0x0200                                         // event interrupt enable
   #define I2C_CR2_ITBUFEN               0x0400                                         // buffer interrupt enable
   #define I2C_CR2_DMAEN                 0x0800                                         // DMA requests enable
   #define I2C_CR2_LAST                  0x1000                                         // DMA last transfer
-#define I2C1_OAR1                       *(volatile unsigned long *)(I2C1_BLOCK + 0x08) // IIC Own Address Register 1 IIC 1
-#define I2C1_OAR2                       *(volatile unsigned long *)(I2C1_BLOCK + 0x0c) // IIC Own Address Register 2 IIC 1
-#define I2C1_DR                         *(volatile unsigned long *)(I2C1_BLOCK + 0x10) // IIC Data Register IIC 1
-#define I2C1_SR1                        *(volatile unsigned long *)(I2C1_BLOCK + 0x14) // IIC Status Register 1 IIC 1
+#define I2C1_OAR1                       *(volatile unsigned long *)(I2C1_BLOCK + 0x08) // I2C Own Address Register 1 I2C 1
+#define I2C1_OAR2                       *(volatile unsigned long *)(I2C1_BLOCK + 0x0c) // I2C Own Address Register 2 I2C 1
+#define I2C1_DR                         *(volatile unsigned long *)(I2C1_BLOCK + 0x10) // I2C Data Register I2C 1
+#define I2C1_SR1                        *(volatile unsigned long *)(I2C1_BLOCK + 0x14) // I2C Status Register 1 I2C 1
   #define I2C_SR1_SB                    0x0001                                         // start bit (master mode)
   #define I2C_SR1_ADDR                  0x0002                                         // address sent/matched
   #define I2C_SR1_BTF                   0x0004                                         // byte transfer finished
@@ -4626,7 +4626,7 @@ typedef struct stUSART_REG
   #define I2C_SR1_PECERR                0x1000                                         // PEC error in reception (cleared by writing 0)
   #define I2C_SR1_TIMEOUT               0x4000                                         // timeout or tlow error (cleared by writing 0)
   #define I2C_SR1_SMBALERT              0x8000                                         // SMBus alert (cleared by writing 0)
-#define I2C1_SR2                        *(volatile unsigned long *)(I2C1_BLOCK + 0x18) // IIC Status Register 2 IIC 1 (read-only))
+#define I2C1_SR2                        *(volatile unsigned long *)(I2C1_BLOCK + 0x18) // I2C Status Register 2 I2C 1 (read-only))
   #define I2C_SR2_MSL                   0x0001                                         // master mode
   #define I2C_SR2_BUSY                  0x0002                                         // bus busy
   #define I2C_SR2_TRA                   0x0004                                         // transmitter/receiver
@@ -4635,30 +4635,30 @@ typedef struct stUSART_REG
   #define I2C_SR2_SMBHOST               0x0040                                         // SMBus host heaber (slave mode)
   #define I2C_SR2_DUALF                 0x0080                                         // dual flag (slave mode)
   #define I2C_SR2_PEC_MASK              0xff00                                         // packet error checking register
-#define I2C1_CCR                        *(volatile unsigned long *)(I2C1_BLOCK + 0x1c) // IIC Clock Control Register IIC 1 (configure only when I2C controller is disabled)
+#define I2C1_CCR                        *(volatile unsigned long *)(I2C1_BLOCK + 0x1c) // I2C Clock Control Register I2C 1 (configure only when I2C controller is disabled)
   #define I2C_CCR_DUTY_16_9             0x4000                                         // fast mode duty cycle
   #define I2C_CCR_FS                    0x8000                                         // fast I2C Mode
-#define I2C1_TRISE                      *(unsigned long *)(I2C1_BLOCK + 0x20)          // IIC Rise Time Control Register IIC 1 (configure only when I2C controller is disabled)
+#define I2C1_TRISE                      *(unsigned long *)(I2C1_BLOCK + 0x20)          // I2C Rise Time Control Register I2C 1 (configure only when I2C controller is disabled)
 
-#define I2C2_CR1                        *(volatile unsigned long *)(I2C2_BLOCK + 0x00) // IIC Control Register 1 IIC 2
-#define I2C2_CR2                        *(volatile unsigned long *)(I2C2_BLOCK + 0x04) // IIC Control Register 2 IIC 2
-#define I2C2_OAR1                       *(volatile unsigned long *)(I2C2_BLOCK + 0x08) // IIC Own Address Register 1 IIC 2
-#define I2C2_OAR2                       *(volatile unsigned long *)(I2C2_BLOCK + 0x0c) // IIC Own Address Register 2 IIC 2
-#define I2C2_DR                         *(volatile unsigned long *)(I2C2_BLOCK + 0x10) // IIC Data Register IIC 2
-#define I2C2_SR1                        *(volatile unsigned long *)(I2C2_BLOCK + 0x14) // IIC Status Register 1 IIC 2
-#define I2C2_SR2                        *(volatile unsigned long *)(I2C2_BLOCK + 0x18) // IIC Status Register 2 IIC 2
-#define I2C2_CCR                        *(volatile unsigned long *)(I2C2_BLOCK + 0x1c) // IIC Clock Control Register IIC 2
-#define I2C2_TRISE                      *(unsigned long *)(I2C2_BLOCK + 0x20)          // IIC Rise Time Control Register IIC 2 (configure only when I2C controller is disabled)
+#define I2C2_CR1                        *(volatile unsigned long *)(I2C2_BLOCK + 0x00) // I2C Control Register 1 I2C 2
+#define I2C2_CR2                        *(volatile unsigned long *)(I2C2_BLOCK + 0x04) // I2C Control Register 2 I2C 2
+#define I2C2_OAR1                       *(volatile unsigned long *)(I2C2_BLOCK + 0x08) // I2C Own Address Register 1 I2C 2
+#define I2C2_OAR2                       *(volatile unsigned long *)(I2C2_BLOCK + 0x0c) // I2C Own Address Register 2 I2C 2
+#define I2C2_DR                         *(volatile unsigned long *)(I2C2_BLOCK + 0x10) // I2C Data Register I2C 2
+#define I2C2_SR1                        *(volatile unsigned long *)(I2C2_BLOCK + 0x14) // I2C Status Register 1 I2C 2
+#define I2C2_SR2                        *(volatile unsigned long *)(I2C2_BLOCK + 0x18) // I2C Status Register 2 I2C 2
+#define I2C2_CCR                        *(volatile unsigned long *)(I2C2_BLOCK + 0x1c) // I2C Clock Control Register I2C 2
+#define I2C2_TRISE                      *(unsigned long *)(I2C2_BLOCK + 0x20)          // I2C Rise Time Control Register I2C 2 (configure only when I2C controller is disabled)
 
-#define I2C3_CR1                        *(volatile unsigned long *)(I2C3_BLOCK + 0x00) // IIC Control Register 1 IIC 3
-#define I2C3_CR2                        *(volatile unsigned long *)(I2C3_BLOCK + 0x04) // IIC Control Register 2 IIC 3
-#define I2C3_OAR1                       *(volatile unsigned long *)(I2C3_BLOCK + 0x08) // IIC Own Address Register 1 IIC 3
-#define I2C3_OAR2                       *(volatile unsigned long *)(I2C3_BLOCK + 0x0c) // IIC Own Address Register 2 IIC 3
-#define I2C3_DR                         *(volatile unsigned long *)(I2C3_BLOCK + 0x10) // IIC Data Register IIC 3
-#define I2C3_SR1                        *(volatile unsigned long *)(I2C3_BLOCK + 0x14) // IIC Status Register 1 IIC 3
-#define I2C3_SR2                        *(volatile unsigned long *)(I2C3_BLOCK + 0x18) // IIC Status Register 2 IIC 3
-#define I2C3_CCR                        *(volatile unsigned long *)(I2C3_BLOCK + 0x1c) // IIC Clock Control Register IIC 3
-#define I2C3_TRISE                      *(unsigned long *)(I2C3_BLOCK + 0x20)          // IIC Rise Time Control Register IIC 3 (configure only when I2C controller is disabled)
+#define I2C3_CR1                        *(volatile unsigned long *)(I2C3_BLOCK + 0x00) // I2C Control Register 1 I2C 3
+#define I2C3_CR2                        *(volatile unsigned long *)(I2C3_BLOCK + 0x04) // I2C Control Register 2 I2C 3
+#define I2C3_OAR1                       *(volatile unsigned long *)(I2C3_BLOCK + 0x08) // I2C Own Address Register 1 I2C 3
+#define I2C3_OAR2                       *(volatile unsigned long *)(I2C3_BLOCK + 0x0c) // I2C Own Address Register 2 I2C 3
+#define I2C3_DR                         *(volatile unsigned long *)(I2C3_BLOCK + 0x10) // I2C Data Register I2C 3
+#define I2C3_SR1                        *(volatile unsigned long *)(I2C3_BLOCK + 0x14) // I2C Status Register 1 I2C 3
+#define I2C3_SR2                        *(volatile unsigned long *)(I2C3_BLOCK + 0x18) // I2C Status Register 2 I2C 3
+#define I2C3_CCR                        *(volatile unsigned long *)(I2C3_BLOCK + 0x1c) // I2C Clock Control Register I2C 3
+#define I2C3_TRISE                      *(unsigned long *)(I2C3_BLOCK + 0x20)          // I2C Rise Time Control Register I2C 3 (configure only when I2C controller is disabled)
 
 
 typedef struct I2C_REGS

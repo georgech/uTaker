@@ -50,6 +50,8 @@
     18.01.2018 Removed fnGetUARTChannel() and replaced by modbus_uart_map look-up table - extend to 6 possible UARTs
     26.01.2018 Corrected 4th Kinetis serial modbus port's RTU timer      {1}
     26.01.2018 Use flex timers for Kinetis serial modbus ports 4 and 5 RTU timers {2}
+    02.06.2018 Add fixed read device identification basic response       {3}
+    02.06.2018 Zero optional user UART callback handlers                 {4}
 
 */
 
@@ -382,7 +384,7 @@ static const QUEUE_HANDLE modbus_uart_map[MODBUS_SERIAL_INTERFACES] = {
         #if !defined NO_SLAVE_MODBUS_GET_COMM_EVENT_LOG || !defined NO_SLAVE_MODBUS_GET_COMM_EVENT_COUNTER // {V1.02}
     static unsigned char  fnGetEvents(unsigned char *ptrBuf);
         #endif
-    static void fnSendMODBUS_transparent_response(MODBUS_RX_FUNCTION *modbus_rx_function, unsigned char *ptrData, unsigned short usLength);
+    static int fnSendMODBUS_transparent_response(MODBUS_RX_FUNCTION *modbus_rx_function, unsigned char *ptrData, unsigned short usLength);
     #endif
     #if defined MODBUS_RTU
     static void           fnConfigureInterspaceTimes(QUEUE_HANDLE Channel);
@@ -876,6 +878,15 @@ static QUEUE_HANDLE fnOpenSerialInterface(unsigned char ucMODBUSport)
     tInterfaceParameters.ucSpeed = ptrMODBUS_pars->ucSerialSpeed[ucMODBUSport]; // baud rate
     tInterfaceParameters.Rx_tx_sizes.RxQueueSize = MODBUS_RX_ASCII_SIZE; // input buffer size (adequate for maximum reception frame size)
     tInterfaceParameters.Rx_tx_sizes.TxQueueSize = MODBUS_TX_ASCII_SIZE; // output buffer size (adequate for maximum reception frame size)
+#if defined USER_DEFINED_UART_RX_HANDLER                                 // {4}
+    tInterfaceParameters.receptionHandler = 0;
+#endif
+#if defined USER_DEFINED_UART_RX_BREAK_DETECTION
+    tInterfaceParameters.receiveBreakHandler = 0;
+#endif
+#if defined USER_DEFINED_UART_TX_FRAME_COMPLETE
+    tInterfaceParameters.txFrameCompleteHandler = 0;
+#endif
     #if defined SUPPORT_FLOW_HIGH_LOW
     tInterfaceParameters.ucFlowHighWater = 100;                          // set the flow control high and low water levels in %
     tInterfaceParameters.ucFlowLowWater  = 0;
@@ -985,7 +996,7 @@ static void fnHandleASCIIInputs(unsigned char ucMODBUSport, unsigned char ucModb
                 if (usModbusInputLength[ucMODBUSport] == 1) {            // the address has been collected
                     unsigned char ucAddress = fnACSIIDecode2(ucModbusSerialInputBuffer); // extract the binary value
         #if defined MODBUS_SUPPORT_SERIAL_LINE_FUNCTIONS && defined MODBUS_SUPPORT_SERIAL_LINE_DIAGNOSTICS
-                    DiagnosticCounters[ucMODBUSport].usMessageCounter++; // count the number of messags detected on the bus, irrespecifive of whether being addressed or not
+                    DiagnosticCounters[ucMODBUSport].usMessageCounter++; // count the number of messages detected on the bus, irrespecifive of whether being addressed or not
         #endif
         #if defined USE_MODBUS_SLAVE && MODBUS_SHARED_SERIAL_INTERFACES > 0
                     if (ptrMODBUS_pars->ucModbusSerialPortMode[ucMODBUSport] & MODBUS_SERIAL_SLAVE) { // only slaves can have shared serial interfaces
@@ -2252,7 +2263,7 @@ static int fnHandleMODBUS_input(MODBUS_RX_FUNCTION *modbus_rx_function)
             }
         }
         else  {
-            if ((!(ptrMODBUS_pars->ucModbusSerialPortMode[modbus_rx_function->ucMODBUSport] & MODBUS_SERIAL_SLAVE)) || ((modbus_rx_function->ucSourceAddress != ptrMODBUS_pars->ucModbus_slave_address[modbus_rx_function->ucMODBUSport])
+            if ((0 == (ptrMODBUS_pars->ucModbusSerialPortMode[modbus_rx_function->ucMODBUSport] & MODBUS_SERIAL_SLAVE)) || ((modbus_rx_function->ucSourceAddress != ptrMODBUS_pars->ucModbus_slave_address[modbus_rx_function->ucMODBUSport])
             #if defined USE_MODBUS_SLAVE && MODBUS_SHARED_INTERFACES > 0
                 && (modbus_rx_function->ucMODBUSport == modbus_rx_function->ucMODBUS_Slaveport)
             #endif
@@ -3038,6 +3049,42 @@ _handle_local_slave:
             break;
         #endif
     #endif
+    #if !defined NO_SLAVE_MODBUS_READ_DEVICE_IDENTIFIER                  // {3}
+        case MODBUS_ENCAPSUL_INTERFACE_TRANSPORT:                        // 0x2b
+            if (*modbus_rx_function->data_content.user_data == MODBUS_ENCAP_READ_DEVICE_IDENTIFIER) { // modbus encapsulated interface type (0x0e)
+                unsigned char ucReadDeviceID_code = *(modbus_rx_function->data_content.user_data + 1);
+                unsigned char ucObjectId = *(modbus_rx_function->data_content.user_data + 2);
+                unsigned char ucResponse[34];                            // space for fixed basic response
+                switch (ucReadDeviceID_code) {
+                case MODBUS_ENCAP_READ_DEVICE_IDENTIFIER_CODE_BASIC:     // 0x01 - mandatory
+                    ucResponse[2] = MODBUS_ENCAP_READ_DEVICE_IDENTIFIER;
+                    ucResponse[3] = ucReadDeviceID_code;
+                    ucResponse[4] = 0x01;                                // basic identification conformity level
+                    ucResponse[5] = 0x00;                                // no more objects follow
+                    ucResponse[6] = 0x00;                                // next object ID
+                    ucResponse[7] = 3;                                   // return 3 objects
+                    ucResponse[8] = DEVICE_ID_OBJECT_NAME_VENDOR_NAME;   // object ID 0x00
+                    ucResponse[9] = 7;
+                    uMemcpy(&ucResponse[10], "uTasker", 7);
+                    ucResponse[17] = DEVICE_ID_OBJECT_NAME_PRODUCT_CODE; // object ID 0x01
+                    ucResponse[18] = 6;
+                    uMemcpy(&ucResponse[19], "MODBUS", 6);
+                    ucResponse[25] = DEVICE_ID_OBJECT_NAME_MAJOR_MONOR_REVISION; // object ID 0x02
+                    ucResponse[26] = 5;
+                    uMemcpy(&ucResponse[27], "V1.00", 5);
+                    iRtn = fnSendMODBUS_transparent_response(modbus_rx_function, ucResponse, 34);
+                    break;
+                case MODBUS_ENCAP_READ_DEVICE_IDENTIFIER_CODE_REGULAR:   // 0x02 - regular
+                case MODBUS_ENCAP_READ_DEVICE_IDENTIFIER_CODE_EXTENDED:  // 0x03 - extended
+                case MODBUS_ENCAP_READ_DEVICE_IDENTIFIER_CODE_SPECIFIC:  // 0x04
+                default:
+                    ucExceptionCode = MODBUS_EXCEPTION_CODE_3;           // illegal read device ID
+                    break;
+                }
+            }
+            // Fall-through intentionally to send an exception
+            //
+    #endif
       //case MODBUS_READ_FILE_RECORD:                                    // not supported
       //case MODBUS_WRITE_FILE_RECORD:                                   // not supported
       //case MODBUS_ENCAPSUL_INTERFACE_TRANSPORT:                        // not supported
@@ -3579,11 +3626,11 @@ static int fnSendMODBUS_response(MODBUS_RX_FUNCTION *modbus_rx_function, void *p
 #if defined MODBUS_SUPPORT_SERIAL_LINE_FUNCTIONS && defined USE_MODBUS_SLAVE
 // Transmit using a delivered buffer with space for the address and function at the start and a CRC at the end
 //
-static void fnSendMODBUS_transparent_response(MODBUS_RX_FUNCTION *modbus_rx_function, unsigned char *ptrData, unsigned short usLength)
+static int fnSendMODBUS_transparent_response(MODBUS_RX_FUNCTION *modbus_rx_function, unsigned char *ptrData, unsigned short usLength)
 {
     *ptrData = modbus_rx_function->ucSourceAddress;                      // enter the address
     *(ptrData + 1) = modbus_rx_function->ucFunctionCode;                 // enter the function code
-    fnMODBUS_transmit(modbus_rx_function, ptrData, usLength);
+    return (fnMODBUS_transmit(modbus_rx_function, ptrData, usLength));
 }
 #endif
 

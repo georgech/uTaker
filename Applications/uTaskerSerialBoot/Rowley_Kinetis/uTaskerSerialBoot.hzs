@@ -53,5 +53,5 @@
   <Watches active="0" update="Never"/>
  </Watch4>
  <Files/>
- <ARMCrossStudioWindow activeProject="uTaskerSerialBoot" fileDialogDefaultFilter="" autoConnectTarget="SEGGER J-Link" buildConfiguration="THUMB Release" debugSearchFileMap="" fileDialogInitialDirectory="D:/MJBC/Internal/Freescale/Kinetis/workspace/uTaskerV1.4.12_master/Applications/uTaskerSerialBoot" debugSearchPath="" autoConnectCapabilities="1663"/>
+ <ARMCrossStudioWindow activeProject="uTaskerSerialBoot" fileDialogDefaultFilter="*.c" autoConnectTarget="SEGGER J-Link" buildConfiguration="THUMB Release" debugSearchFileMap="" fileDialogInitialDirectory="D:/MJBC/Internal/Freescale/Kinetis/workspace/uTaskerV1.4.12_master/Applications/uTaskerSerialBoot" debugSearchPath="" autoConnectCapabilities="1663"/>
 </session>

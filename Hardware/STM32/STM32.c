@@ -11,7 +11,7 @@
     File:      STM32.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     02.03.2012 Improve endpoint NAK control and unblocking               {1}
     06.03.2012 Add start_application()                                   {3}
@@ -65,7 +65,7 @@
     extern void fnUpdateOperatingDetails(void);                          // {33}
     #define INITHW  extern
     extern void fnOpenDefaultHostAdapter(void);
-    #define _SIM_START_BIT     *ulReg |= IIC_START_BIT;
+    #define _SIM_START_BIT     *ulReg |= I2C_START_BIT;
     #define CLEAR_ALL_INTS     0x00000000
     #define START_CODE 0
     #define SIM_DMA(x) fnSimDMA(x);

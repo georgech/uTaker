@@ -5562,11 +5562,11 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                                 LPUART2_STAT &= ~LPUART_STAT_RDRF;       // remove interrupt cause
                             }
                 #else
-                            if ((DMA_ERQ & (DMA_ERQ_ERQ0 << cUART_channel[LPUART2_CH_NUMBER])) != 0) { // if source enabled
+                            if ((DMA_ERQ & (DMA_ERQ_ERQ0 << ucUART_channel[LPUART2_CH_NUMBER])) != 0) { // if source enabled
                                 KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
-                                ptrDMA_TCD += cUART_channel[LPUART2_CH_NUMBER];
+                                ptrDMA_TCD += ucUART_channel[LPUART2_CH_NUMBER];
                                 ptrDMA_TCD->DMA_TCD_CSR |= (DMA_TCD_CSR_ACTIVE); // trigger
-                                fnSimulateDMA(cUART_channel[LPUART2_CH_NUMBER]); // trigger DMA transfer on the LPUART's channel
+                                fnSimulateDMA(ucUART_channel[LPUART2_CH_NUMBER]); // trigger DMA transfer on the LPUART's channel
                                 LPUART2_STAT &= ~LPUART_STAT_RDRF;       // remove interrupt cause
                             }
                 #endif
@@ -5613,11 +5613,11 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                                 LPUART13STAT &= ~LPUART_STAT_RDRF;       // remove interrupt cause
                             }
                 #else
-                            if ((DMA_ERQ & (DMA_ERQ_ERQ0 << cUART_channel[LPUART3_CH_NUMBER])) != 0) { // if source enabled
+                            if ((DMA_ERQ & (DMA_ERQ_ERQ0 << ucUART_channel[LPUART3_CH_NUMBER])) != 0) { // if source enabled
                                 KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
-                                ptrDMA_TCD += cUART_channel[LPUART3_CH_NUMBER];
+                                ptrDMA_TCD += ucUART_channel[LPUART3_CH_NUMBER];
                                 ptrDMA_TCD->DMA_TCD_CSR |= (DMA_TCD_CSR_ACTIVE); // trigger
-                                fnSimulateDMA(cUART_channel[LPUART3_CH_NUMBER]); // trigger DMA transfer on the LPUART's channel
+                                fnSimulateDMA(ucUART_channel[LPUART3_CH_NUMBER]); // trigger DMA transfer on the LPUART's channel
                                 LPUART3_STAT &= ~LPUART_STAT_RDRF;       // remove interrupt cause
                             }
                 #endif
@@ -5655,11 +5655,11 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                                 LPUART4_STAT &= ~LPUART_STAT_RDRF;       // remove interrupt cause
                             }
                 #else
-                            if ((DMA_ERQ & (DMA_ERQ_ERQ0 << cUART_channel[LPUART4_CH_NUMBER])) != 0) { // if source enabled
+                            if ((DMA_ERQ & (DMA_ERQ_ERQ0 << ucUART_channel[LPUART4_CH_NUMBER])) != 0) { // if source enabled
                                 KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
-                                ptrDMA_TCD += cUART_channel[LPUART4_CH_NUMBER];
+                                ptrDMA_TCD += ucUART_channel[LPUART4_CH_NUMBER];
                                 ptrDMA_TCD->DMA_TCD_CSR |= (DMA_TCD_CSR_ACTIVE); // trigger
-                                fnSimulateDMA(cUART_channel[LPUART4_CH_NUMBER]); // trigger DMA transfer on the LPUART's channel
+                                fnSimulateDMA(ucUART_channel[LPUART4_CH_NUMBER]); // trigger DMA transfer on the LPUART's channel
                                 LPUART4_STAT &= ~LPUART_STAT_RDRF;       // remove interrupt cause
                             }
                 #endif
@@ -6019,6 +6019,32 @@ static void fnUART_Tx_int(int iChannel)
             #else
                         ptrVect->processor_interrupts.irq_LPUART2(); // call the interrupt handler
             #endif
+                    }
+                }
+            }
+            break;
+        #endif
+        #if (LPUARTS_AVAILABLE > 3) && (UARTS_AVAILABLE == 0)
+        case 3:
+            if ((LPUART3_CTRL & LPUART_CTRL_TE) != 0) {                      // if transmitter enabled
+                LPUART3_STAT |= (LPUART_STAT_TDRE | LPUART_STAT_TC);         // set interrupt cause
+                if ((LPUART3_CTRL & LPUART3_STAT) != 0) {                    // if transmit interrupt type enabled
+                    if (fnGenInt(irq_LPUART3_ID) != 0) {                     // if LPUART3 interrupt is not disabled
+                        VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                        ptrVect->processor_interrupts.irq_LPUART3(); // call the interrupt handler
+                    }
+                }
+            }
+            break;
+        #endif
+        #if (LPUARTS_AVAILABLE > 4) && (UARTS_AVAILABLE == 0)
+        case 4:
+            if ((LPUART4_CTRL & LPUART_CTRL_TE) != 0) {                      // if transmitter enabled
+                LPUART4_STAT |= (LPUART_STAT_TDRE | LPUART_STAT_TC);         // set interrupt cause
+                if ((LPUART4_CTRL & LPUART4_STAT) != 0) {                    // if transmit interrupt type enabled
+                    if (fnGenInt(irq_LPUART4_ID) != 0) {                     // if LPUART3 interrupt is not disabled
+                        VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                        ptrVect->processor_interrupts.irq_LPUART4(); // call the interrupt handler
                     }
                 }
             }
@@ -7834,9 +7860,9 @@ extern unsigned long fnSimDMA(char *argv[])
         #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 5
             case DMA_UART5_TX_CHANNEL:                                   // handle UART DMA transmission on UART 5
             #if UARTS_AVAILABLE == 5
-                if (LPUART0_BAUD & LPUART_BAUD_TDMAE)                    // if DMA operation is enabled
+                if ((LPUART0_BAUD & LPUART_BAUD_TDMAE) != 0)             // if DMA operation is enabled
             #else
-                if (UART5_C5 & UART_C5_TDMAS)                            // if DMA operation is enabled
+                if ((UART5_C5 & UART_C5_TDMAS) != 0)                     // if DMA operation is enabled
             #endif
                 {
                     ptrCnt = (int *)argv[THROUGHPUT_UART5];
@@ -8157,16 +8183,18 @@ unsigned long fnGetFlexTimer_clock(int iChannel)
 
 static int fnHandleFlexTimer(int iTimerRef, FLEX_TIMER_MODULE *ptrTimer, int iFlexTimerChannels, int iTPM_type) // {49}
 {
+    static int iChannelFired[FLEX_TIMERS_AVAILABLE][8] = {{0}};
     unsigned long ulCountIncrease = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)fnGetFlexTimer_clock(iTimerRef))/1000000);
     int iTimerInterrupt = 0;
     int iChannel = 0;
-    ulCountIncrease += ptrTimer->FTM_CNT;;                               // new counter value (assume up counting)
+    ulCountIncrease += ptrTimer->FTM_CNT;                                // new counter value (assume up counting)
     // Check for channel matches
     //
     while (iChannel < iFlexTimerChannels) {                              // for each channel
-        if (ulCountIncrease >= ptrTimer->FTM_channel[iChannel].FTM_CV) { // channel match
+        if ((iChannelFired[iTimerRef][iChannel] == 0) && (ulCountIncrease >= ptrTimer->FTM_channel[iChannel].FTM_CV)) { // channel match
             ptrTimer->FTM_channel[iChannel].FTM_CSC |= FTM_CSC_CHF;      // set the channel event flag
             ptrTimer->FTM_STATUS |= (FTM_STATUS_CH0F << iChannel);       // set the event flag in the global status register
+            iChannelFired[iTimerRef][iChannel] = 1;                      // block this channel from firing again before a new period starts
             if ((ptrTimer->FTM_channel[iChannel].FTM_CSC & FTM_CSC_CHIE) != 0) { // if channel interrupt is enabled
                 if ((ptrTimer->FTM_channel[iChannel].FTM_CSC & FTM_CSC_DMA) != 0) { // if DMA is enabled
                     _EXCEPTION("TO DO");
@@ -8179,6 +8207,7 @@ static int fnHandleFlexTimer(int iTimerRef, FLEX_TIMER_MODULE *ptrTimer, int iFl
         iChannel++;
     }
     if (ulCountIncrease >= ptrTimer->FTM_MOD) {                          // period match
+        memset(iChannelFired[iTimerRef], 0, sizeof(iChannelFired[iTimerRef])); // reset individual channel fired flags
         ptrTimer->FTM_SC |= FTM_SC_TOF;                                  // set overflow flag
         if (iTPM_type != 0) {
             ulCountIncrease -= ptrTimer->FTM_MOD;

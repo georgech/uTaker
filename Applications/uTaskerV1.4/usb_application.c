@@ -65,6 +65,7 @@
     14.02.2018 Allow operation in both device and host modes (decided at initialisation) {47}
     20.02.2018 When both host and device modes can operate handle CDC reception appropriately {48}
     04.05.2018 Change interface to fnSetNewSerialMode()                  {49}
+    02.06.2018 Zero optional user UART callback handlers                 {50}
 
 */
 
@@ -1870,6 +1871,15 @@ static void fnOpenUSB_UARTs(int iInterface)
         #if defined SUPPORT_HW_FLOW
   //tInterfaceParameters.Config |= RTS_CTS;                              // enable RTS/CTS operation
         #endif
+    #if defined USER_DEFINED_UART_RX_HANDLER                             // {50}
+    tInterfaceParameters.receptionHandler = 0;
+    #endif
+    #if defined USER_DEFINED_UART_RX_BREAK_DETECTION
+    tInterfaceParameters.receiveBreakHandler = 0;
+    #endif
+    #if defined USER_DEFINED_UART_TX_FRAME_COMPLETE
+    tInterfaceParameters.txFrameCompleteHandler = 0;
+    #endif
     if (iInterface == 0) {
         for (iUART = 0; iUART < (USB_CDC_VCOM_COUNT - 1); iUART++) {     // configure and open each UART attached to a USB-CDC connection
             tInterfaceParameters.Channel = UART_channels[iUART];         // set UART channel for serial use
@@ -4293,7 +4303,7 @@ static void fnConfigureUSB(void)
     tInterfaceParameters.queue_sizes.TxQueueSize = 0;                    // no tx buffering on control endpoint
     tInterfaceParameters.queue_sizes.RxQueueSize = 0;                    // no rx buffering on control endpoint
     #if defined _KINETIS                                                 // {18}{25}{26}{29}{30}
-    tInterfaceParameters.ucClockSource = INTERNAL_USB_CLOCK;             // use system clock and dividers
+    tInterfaceParameters.ucClockSource = INTERNAL_USB_CLOCK;             // use internal clock source
     #else
     tInterfaceParameters.ucClockSource = EXTERNAL_USB_CLOCK;             // use 48MHz crystal directly as USB clock (recommended for lowest jitter)
     #endif

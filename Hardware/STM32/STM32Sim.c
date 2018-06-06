@@ -11,7 +11,7 @@
     File:      STM32Sim.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     08.09.2012 Adapt RTC for F2/F4 devices                               {1}
     09.09.2012 Handle additional functions                               {2}
@@ -647,7 +647,7 @@ extern unsigned long fnSimInts(char *argv[])
         ptrCnt = (int *)argv[THROUGHPUT_I2C0];
         if (*ptrCnt) {
             if (--(*ptrCnt) == 0) {
-                iMasks |= I2C_INT0;                                      // enough IIC interupts handled in this tick period
+                iMasks |= I2C_INT0;                                      // enough I2C interupts handled in this tick period
             }
             else {
 #if defined I2C_INTERFACE
@@ -665,7 +665,7 @@ extern unsigned long fnSimInts(char *argv[])
         ptrCnt = (int *)argv[THROUGHPUT_I2C1];
         if (*ptrCnt) {
             if (--(*ptrCnt) == 0) {
-                iMasks |= I2C_INT1;                                      // enough IIC interupts handled in this tick period
+                iMasks |= I2C_INT1;                                      // enough I2C interupts handled in this tick period
             }
             else {
 #if defined I2C_INTERFACE
@@ -684,7 +684,7 @@ extern unsigned long fnSimInts(char *argv[])
         ptrCnt = (int *)argv[THROUGHPUT_I2C2];
         if (*ptrCnt) {
             if (--(*ptrCnt) == 0) {
-                iMasks |= I2C_INT2;                                      // enough IIC interupts handled in this tick period
+                iMasks |= I2C_INT2;                                      // enough I2C interupts handled in this tick period
             }
             else {
 #if defined I2C_INTERFACE

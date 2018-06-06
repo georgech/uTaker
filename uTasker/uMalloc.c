@@ -343,7 +343,6 @@ extern unsigned long uFree2(int iFreeRegion)
 #endif
 
 #if defined SUPPORT_UCALLOC                                              // {8}
-
 #define SECURITY_HEAP_SIZE (24 * 1024)
 #define BREAK_DOWN_BLOCKS_LIMIT  (4 * 1024)                              // break down holes of this size and larger by reallocating them in preference to filling smallest possibly hole
 #define HEAP_OBJECTS       200

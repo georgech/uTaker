@@ -15,7 +15,8 @@
     **********************************************************************
     02.02.2017 Adapt for us tick resolution (_TICK_RESOLUTION)
     11.04.2018 Merge with STM32 project
-    01.05.2018 Merge with Luminary projects
+    01.05.2018 Merge with Luminary project
+    06.06.2018 Merge with coldfire project
     
 */
 
@@ -149,14 +150,14 @@
     //#define EMCRAFT_K61F150M                                           // K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - http://www.utasker.com/kinetis/EMCRAFT_K61F150M.html
     //#define K61FN1_50M                                                 // board with 150MHz K61 and 50MHz clock (HS USB and KSZ8863 ethernet switch)
 
-    //#define FRDM_K64F                                                  // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
+      #define FRDM_K64F                                                  // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
     //#define TWR_K64F120M                                               // tower board http://www.utasker.com/kinetis/TWR-K64F120M.html
     //#define HEXIWEAR_K64F                                              // hexiwear - wearable development kit for IoT (K64FN1M0VDC12 main processor) http://www.hexiwear.com/
     //#define TEENSY_3_5                                                 // USB development board with K64FX512 - http://www.utasker.com/kinetis/TEENSY_3.5.html
     //#define FreeLON                                                    // K64 based with integrated LON
     //#define TWR_K65F180M                                               // tower board http://www.utasker.com/kinetis/TWR-K65F180M.html
     //#define K66FX1M0                                                   // development board with K66FX1M0
-      #define FRDM_K66F                                                  // freedom board http://www.utasker.com/kinetis/FRDM-K66F.html
+    //#define FRDM_K66F                                                  // freedom board http://www.utasker.com/kinetis/FRDM-K66F.html
     //#define TEENSY_3_6                                                 // USB development board with K66FX1M0 - http://www.utasker.com/kinetis/TEENSY_3.6.html
 
     //#define TWR_K70F120M                                               // K processors Cortex M4 with graphical LCD, Ethernet, USB, encryption, tamper - tower board http://www.utasker.com/kinetis/TWR-K70F120M.html
@@ -166,6 +167,22 @@
     //#define FRDM_K82F                                                  // K processors Cortex M4 with USB, encryption, tamper (scalable and secure) - freedom board http://www.utasker.com/kinetis/FRDM-K82F.html
     //#define TWR_POS_K81
     //#define TWR_K80F150M                                               // tower board http://www.utasker.com/kinetis/TWR-K80F150M.html
+#elif defined _M5223X
+    #define M52110BOARD                                                  // board for M52110 (basic CAN MCU)
+    //#define M5282EVB                                                   // with SDRAM interface and FEC
+    //#define M5282LITE                                                  // with SDRAM interface and FEC
+    //#define M5208EVB                                                   // EVB Board for M5208 (with SDRAM interface and FEC but no internal FLASH - up to 166MHz)
+    //#define M5235BCC                                                   // demo board for M5235 (with SDRAM interface and FEC but no internal FLASH - up to 150MHz)
+    //#define M5213EVB                                                   // EVB Board for M5213
+    //#define M52211EVB                                                  // EVB Board for M52211 (USB family)
+    //#define M52210DEMO                                                 // DEMO Board for M52210 (USB family)
+    //#define M52223EVB                                                  // EVB Board for M52223
+    //#define M52221DEMO                                                 // DEMO Board for M52221
+    //#define M52259EVB                                                  // EVB Board for M52259 (Kirin3)
+    //#define M52259DEMO                                                 // DEMO Board for M52259 (Kirin3)
+    //#define M52259_TOWER                                               // TWR-M52259 (Kirin3)
+    //#define M52235EVB                                                  // EVB Board for M52235
+    //#define M52233DEMO                                                 // DEMO Board for M52233
 #elif defined _LM3SXXXX                                                  // Luminary Micro Stellaris family
     //#define _LM3S10X                                                   // small package part - 28 SOIC
       #define EK_LM3S1968                                                // LUMINARY EVAL board without Ethernet
@@ -899,6 +916,80 @@
     #define KINETIS_REVISION_2
     #define DEVICE_WITHOUT_ETHERNET                                      // K82 doesn't have Ethernet controller
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((30 * 1024) * MEM_FACTOR)
+#elif defined M52223EVB
+    #define TARGET_HW       "M52223EVB"
+    #define OUR_HEAP_SIZE (HEAP_REQUIREMENTS)((6 * 1024) * MEM_FACTOR)
+    #define DEVICE_WITHOUT_ETHERNET                                      // M5222X has USB but no Ethernet
+#elif defined M52221DEMO
+    #define TARGET_HW       "M52221DEMO"
+    #define OUR_HEAP_SIZE (HEAP_REQUIREMENTS)((6 * 1024) * MEM_FACTOR)
+    #define DEVICE_WITHOUT_ETHERNET                                      // M5222X has USB but no Ethernet
+#elif defined M52211EVB
+    #define TARGET_HW       "M52211EVB"
+    #define DEVICE_WITHOUT_ETHERNET                                      // M5221X has USB but no Ethernet
+    #define OUR_HEAP_SIZE (HEAP_REQUIREMENTS)((6 * 1024) * MEM_FACTOR)
+#elif defined M52210DEMO
+    #define TARGET_HW       "M52210DEMO"
+    #define DEVICE_WITHOUT_ETHERNET                                      // M5221X has USB but no Ethernet
+    #define OUR_HEAP_SIZE (HEAP_REQUIREMENTS)((6 * 1024) * MEM_FACTOR)
+#elif defined M52110BOARD
+    #define TARGET_HW       "M52210BOARD"
+    #define DEVICE_WITHOUT_ETHERNET                                      // M521XX has neither USB nor Ethernet
+    #define DEVICE_WITHOUT_USB
+    #define OUR_HEAP_SIZE (HEAP_REQUIREMENTS)((6 * 1024)  *MEM_FACTOR)
+#elif defined M5213EVB
+    #define TARGET_HW       "M5213EVB"
+    #define DEVICE_WITHOUT_ETHERNET                                      // M521XX has neither USB nor Ethernet
+    #define DEVICE_WITHOUT_USB
+    #define OUR_HEAP_SIZE (HEAP_REQUIREMENTS)((10 * 1024) * MEM_FACTOR)
+#elif defined M52259EVB
+    #define TARGET_HW       "M52259 Kirin3 EVB"
+    #define FLASH_SPECULATION_ERROR_SOLVED                               // this family no longer suffers from FLASH speculation error
+    #define OUR_HEAP_SIZE (HEAP_REQUIREMENTS)((22.5 * 1024) * MEM_FACTOR)// we have the LAN buffers in HEAP and big RX/TX - a little more for USB
+    #define ETHERNET_AVAILABLE
+#elif defined M52259DEMO
+    #define TARGET_HW       "M52259 Kirin3 DEMO"
+    #define FLASH_SPECULATION_ERROR_SOLVED                               // this family no longer suffers from FLASH speculation error
+    #define OUR_HEAP_SIZE (HEAP_REQUIREMENTS)((22.5  *1024) * MEM_FACTOR)// we have the LAN buffers in HEAP and big RX/TX - a little more for USB
+    #define ETHERNET_AVAILABLE
+#elif defined M52259_TOWER
+    #define TARGET_HW       "M52259 Kirin3 TOWER"
+    #define FLASH_SPECULATION_ERROR_SOLVED                               // this family no longer suffers from FLASH speculation error
+    #define OUR_HEAP_SIZE (HEAP_REQUIREMENTS)((30 * 1024) * MEM_FACTOR)  // we have the LAN buffers in HEAP and big RX/TX - a little more for USB
+    #define ETHERNET_AVAILABLE
+#elif defined M5282EVB
+    #define TARGET_HW       "M5282EVB"
+    #define DEVICE_WITHOUT_USB
+    #define OUR_HEAP_SIZE (HEAP_REQUIREMENTS)((20 * 1024) * MEM_FACTOR)  // we have the LAN buffers in HEAP and big RX/TX
+#elif defined M5282LITE
+    #define TARGET_HW       "M5282LITE"
+    #define DEVICE_WITHOUT_USB
+    #define OUR_HEAP_SIZE (HEAP_REQUIREMENTS)((20 * 1024) * MEM_FACTOR)  // we have the LAN buffers in HEAP and big RX/TX
+#elif defined _M523X
+    #define TARGET_HW       "M5235BCC"
+    #define DEVICE_WITHOUT_USB                                           // M5235 has Ethernet but no USB
+    #define OUR_HEAP_SIZE (HEAP_REQUIREMENTS)((30 * 1024) * MEM_FACTOR)  // we have the LAN buffers in internal SRAM
+    #undef UNUSED_STACK_PATTERN                                          // since heap and stack are in different memories don't use stack monitoring
+#elif defined M5208EVB
+    #define TARGET_HW       "M5208EVB"
+    #define DEVICE_WITHOUT_USB                                           // M520X has Ethernet but no USB
+    #define OUR_HEAP_SIZE (HEAP_REQUIREMENTS)((30 * 1024) * MEM_FACTOR)  // we have the LAN buffers in internal SRAM
+    #undef UNUSED_STACK_PATTERN                                          // since heap and stack are in different memories don't use stack monitoring
+#elif defined M52235EVB
+    #define TARGET_HW       "M52235EVB"
+    #define DEVICE_WITHOUT_USB                                           // M52223x has Ethernet but no USB
+    #define OUR_HEAP_SIZE (HEAP_REQUIREMENTS)((21 * 1024) * MEM_FACTOR)  // we have the LAN buffers in HEAP and big RX/TX
+    #define ETHERNET_AVAILABLE
+#elif defined M52233DEMO
+    #define TARGET_HW       "M52233DEMO"
+    #define DEVICE_WITHOUT_USB                                           // M52223x has Ethernet but no USB
+    #define OUR_HEAP_SIZE (HEAP_REQUIREMENTS)((21 * 1024) * MEM_FACTOR)  // we have the LAN buffers in HEAP and big RX/TX
+    #define ETHERNET_AVAILABLE
+#elif defined M5282CU5
+    #define TARGET_HW       "M5282CU5"
+    #define DEVICE_WITHOUT_USB
+    #define OUR_HEAP_SIZE (HEAP_REQUIREMENTS)((20 * 1024) * MEM_FACTOR)  // we have the LAN buffers in HEAP and big RX/TX
+    #define ETHERNET_AVAILABLE
 #elif defined EK_LM3S9B95
     #define TARGET_HW            "LUMINARY LM3S9B95 BOARD"
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((25 * 1024)*MEM_FACTOR)
@@ -1278,7 +1369,7 @@
     #if defined USE_DMX512_MASTER
         #define USE_DMX_RDM_MASTER                                       // additional remote device management support at master
         #if defined USE_DMX_RDM_MASTER
-            #define UART_FRAME_COMPLETE                                  // call-back on trasmission frame termination
+            #define USER_DEFINED_UART_TX_FRAME_COMPLETE                  // user callback on completion of frame transmission
         #else
             #define UART_HW_TRIGGERED_MODE_SUPPORTED                     // allow queueing transmit frames that are started by enabling the transmitter
         #endif
@@ -1287,6 +1378,11 @@
         #define USE_DMX_RDM_SLAVE                                        // additional remote device management support at slave
       //#define SERIAL_SUPPORT_RX_DMA_BREAK                              // allow free-running rx DMA operation that delivers frames after breaks are detected
         #define UART_BREAK_SUPPORT                                       // interrupt driven break method
+        #define USER_DEFINED_UART_RX_HANDLER
+        #define USER_DEFINED_UART_RX_BREAK_DETECTION
+        #if defined USE_DMX_RDM_SLAVE
+            #define USER_DEFINED_UART_TX_FRAME_COMPLETE                  // user callback on completion of frame transmission
+        #endif
     #endif
 
   //#define USE_PPP                                                      // allow TCP/IP on serial

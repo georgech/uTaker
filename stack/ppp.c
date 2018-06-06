@@ -14,6 +14,7 @@
     Copyright (C) M.J.Butcher Consulting 2004..2018
     ********************************************************************
     09.05.2017 SLIP [RFC1055] implemented (PPP is not presently used but shows an initial test framework)
+    02.06.2018 Zero optional user UART callback handlers                 {1}
     
  */
 
@@ -364,6 +365,15 @@ static int fnPPP_ConfigEthernet(ETHTABLE *pars)
     #if defined SUPPORT_FLOW_HIGH_LOW
     tInterfaceParameters.ucFlowHighWater = 80;                           // set the flow control high and low water levels in %
     tInterfaceParameters.ucFlowLowWater = 20;
+    #endif
+    #if defined USER_DEFINED_UART_RX_HANDLER                             // {1}
+    tInterfaceParameters.receptionHandler = 0;
+    #endif
+    #if defined USER_DEFINED_UART_RX_BREAK_DETECTION
+    tInterfaceParameters.receiveBreakHandler = 0;
+    #endif
+    #if defined USER_DEFINED_UART_TX_FRAME_COMPLETE
+    tInterfaceParameters.txFrameCompleteHandler = 0;
     #endif
     tInterfaceParameters.Config = (CHAR_8 | NO_PARITY | ONE_STOP /*| USE_XON_OFF*/ | CHAR_MODE);
     #if defined SERIAL_SUPPORT_DMA

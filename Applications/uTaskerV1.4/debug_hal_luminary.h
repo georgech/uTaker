@@ -413,7 +413,7 @@ extern unsigned char fnAddResetCause(CHAR *ptrBuffer)
 }
 
 
-#if defined SUPPORT_LOW_POWER                                            // {12}
+#if defined SUPPORT_LOW_POWER
 extern void fnShowThisLowPowerMode(int iThisMode)
 {
 }
