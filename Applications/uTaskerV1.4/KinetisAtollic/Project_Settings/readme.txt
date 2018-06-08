@@ -6,3 +6,5 @@ To work with the one of your choice, delete the original project files at the to
 Update the copy of the project files here if needed so that they can later be restored when working with the project again, after having changed to a different IDE in the meantime.
 
 When working with Cortex-m4 parts with FPU and KDS select Float ABI selection to "FP instructions (hard)" plus FPU Type to "fpv6-sp-d16" for optimal performance, and remove when no FPU is available!
+
+The Atollic project can be used to build kinetis and STM32 targets.

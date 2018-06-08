@@ -79,3 +79,5 @@ Applications/uTaskerV1.4/Simulator/UART2.txt
 /SRAM/
 /FLASH/
 /uTaskerV1.4_FLASH
+/KinetisFLASH - uTaskerV1.4/
+/stm32FLASH/
