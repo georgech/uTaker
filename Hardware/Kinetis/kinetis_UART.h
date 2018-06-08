@@ -1230,7 +1230,7 @@ static void fnCheckFreerunningDMA_reception(int channel, QUEQUE *tty_queue) // {
 //
 static void fnEnableRxAndDMA(int channel, unsigned long buffer_length, unsigned long buffer_address, void *uart_data_reg) // {209}
 {
-    unsigned short usDMAMUX = (DMAMUX_CHCFG_SOURCE_UART0_RX + (2 * channel));
+    unsigned short usDMAMUX = (DMAMUX0_CHCFG_SOURCE_UART0_RX + (2 * channel));
     #if defined SERIAL_SUPPORT_DMA_RX_FREERUN
         #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA              // {211}
     RxModulo[channel] = (QUEUE_TRANSFER)buffer_length;                   // this must be modulo 2 (16, 32, 64, 128...256k)
@@ -1239,7 +1239,7 @@ static void fnEnableRxAndDMA(int channel, unsigned long buffer_length, unsigned 
     ulDMA_progress[channel] = buffer_length;
             #if ((defined KINETIS_K21 || defined KINETIS_K22) && (UARTS_AVAILABLE > 4)) || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66
     if (channel > 3) {                                                   // channels 4 and above each share DMA source for TX and RX
-        usDMAMUX = (DMAMUX_CHCFG_SOURCE_UART3_RX + (channel - 3));
+        usDMAMUX = (DMAMUX0_CHCFG_SOURCE_UART3_RX + (channel - 3));
     }
             #endif
         #endif
@@ -2681,7 +2681,7 @@ static void fnConfigUART(QUEUE_HANDLE Channel, TTYTABLE *pars, KINETIS_UART_CONT
             #endif
         if (0 == iConfigured) {
             uart_reg->UART_C2 &= ~(UART_C2_TIE | UART_C2_TCIE);          // ensure tx interrupt is not enabled
-            fnConfigDMA_buffer(UART_DMA_TX_CHANNEL[Channel], (DMAMUX_CHCFG_SOURCE_UART0_TX + (2 * Channel)), 0, 0, (void *)&(uart_reg->UART_D), (DMA_BYTES | DMA_DIRECTION_OUTPUT | DMA_SINGLE_CYCLE), _uart_tx_dma_Interrupts[Channel], UART_DMA_TX_INT_PRIORITY[Channel]);
+            fnConfigDMA_buffer(UART_DMA_TX_CHANNEL[Channel], (DMAMUX0_CHCFG_SOURCE_UART0_TX + (2 * Channel)), 0, 0, (void *)&(uart_reg->UART_D), (DMA_BYTES | DMA_DIRECTION_OUTPUT | DMA_SINGLE_CYCLE), _uart_tx_dma_Interrupts[Channel], UART_DMA_TX_INT_PRIORITY[Channel]);
             #if UARTS_AVAILABLE > 1
             if (Channel == 0) {
                 uart_reg->UART_C5 |= UART_C5_TDMAS;                      // use DMA rather than interrupts for transmission
@@ -2699,10 +2699,44 @@ static void fnConfigUART(QUEUE_HANDLE Channel, TTYTABLE *pars, KINETIS_UART_CONT
         }
         #else
         if ((uart_reg->UART_C2 & UART_C2_TIE) == 0) {                    // {203} if DMA has already been configured we leave it untouched
-            unsigned short usDMAMUX = (DMAMUX_CHCFG_SOURCE_UART0_TX + (2 * Channel));
+            #if defined KINETIS_KM                                       // UART0/1 an UART2/3 share channel assignment, resticted to certain DMAMUX channels
+            unsigned short usDMAMUX = (DMAMUX0_CHCFG_SOURCE_UART0_TX);
+            if (Channel < 2) {
+                usDMAMUX = (DMAMUX0_CHCFG_SOURCE_UART0_TX);              // valid for UART0 and UART1
+            }
+            else {
+                usDMAMUX = (DMAMUX0_CHCFG_SOURCE_UART2_TX);              // valid for UART2 and UART3
+            }
+                #if defined _WINDOWS
+            switch (Channel) {
+            case 0:
+                if ((UART_DMA_TX_CHANNEL[Channel] != 0) && (UART_DMA_TX_CHANNEL[Channel] != 3)) {
+                    _EXCEPTION("UART0 Tx is only possible of DMA channels 0 and 3!");
+                }
+                break;
+            case 1:
+                if ((UART_DMA_TX_CHANNEL[Channel] != 1) && (UART_DMA_TX_CHANNEL[Channel] != 2)) {
+                    _EXCEPTION("UART1 Tx is only possible of DMA channels 1 and 2!");
+                }
+                break;
+            case 2:
+                if ((UART_DMA_TX_CHANNEL[Channel] != 2) && (UART_DMA_TX_CHANNEL[Channel] != 3)) {
+                    _EXCEPTION("UART2 Tx is only possible of DMA channels 2 and 3!");
+                }
+                break;
+            case 3:
+                if ((UART_DMA_TX_CHANNEL[Channel] != 0) && (UART_DMA_TX_CHANNEL[Channel] != 1)) {
+                    _EXCEPTION("UART3 Tx is only possible of DMA channels 0 and 1!");
+                }
+                break;
+            }
+                #endif
+            #else
+            unsigned short usDMAMUX = (DMAMUX0_CHCFG_SOURCE_UART0_TX + (2 * Channel));
+            #endif
             #if ((defined KINETIS_K21 || defined KINETIS_K22) && (UARTS_AVAILABLE > 4)) || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66
             if (Channel > 3) {                                           // channels 4 and above each share DMA source for TX and RX
-                usDMAMUX = (DMAMUX_CHCFG_SOURCE_UART3_TX + (Channel - 3));
+                usDMAMUX = (DMAMUX0_CHCFG_SOURCE_UART3_TX + (Channel - 3));
             }
             #endif
             uart_reg->UART_C5 |= UART_C5_TDMAS;                          // use DMA rather than interrupts for transmission
@@ -2746,10 +2780,10 @@ static void fnConfigUART(QUEUE_HANDLE Channel, TTYTABLE *pars, KINETIS_UART_CONT
         #endif
         if ((pars->ucDMAConfig & (UART_RX_DMA_HALF_BUFFER | UART_RX_DMA_FULL_BUFFER)) != 0) { // if operating in half-buffer or full buffer mode
             unsigned long ulDMA_rules = (DMA_BYTES | DMA_DIRECTION_INPUT | DMA_SINGLE_CYCLE);
-            unsigned short usDMAMUX = (DMAMUX_CHCFG_SOURCE_UART0_RX + (2 * Channel));
+            unsigned short usDMAMUX = (DMAMUX0_CHCFG_SOURCE_UART0_RX + (2 * Channel));
         #if ((defined KINETIS_K21 || defined KINETIS_K22) && (UARTS_AVAILABLE > 4)) || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66
             if (Channel > 3) {                                           // channels 4 and above each share DMA source for TX and RX
-                usDMAMUX = (DMAMUX_CHCFG_SOURCE_UART3_RX + (Channel - 3));
+                usDMAMUX = (DMAMUX0_CHCFG_SOURCE_UART3_RX + (Channel - 3));
             }
         #endif
             if ((pars->ucDMAConfig & UART_RX_DMA_HALF_BUFFER) != 0) {

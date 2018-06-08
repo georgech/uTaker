@@ -542,8 +542,29 @@ extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned short usDma
             ptrDMA->DMA_DCR |= ulMod;                                    // the modulo setting
         }
     }
+        #if defined KINETIS_KM
+    switch (ucDMA_channel) {
+    case 0:
+        POWER_UP_ATOMIC(6, DMAMUX0);                                     // enable DMA multiplexer 0
+        DMAMUX0_CHCFG0 = (unsigned char)(usDmaTriggerSource | DMAMUX_CHCFG_ENBL); // connect trigger to DMA channel
+        break;
+    case 1:
+        POWER_UP_ATOMIC(6, DMAMUX1);                                     // enable DMA multiplexer 1
+        DMAMUX1_CHCFG0 = (unsigned char)(usDmaTriggerSource | DMAMUX_CHCFG_ENBL); // connect trigger to DMA channel
+        break;
+    case 2:
+        POWER_UP_ATOMIC(6, DMAMUX2);                                     // enable DMA multiplexer 2
+        DMAMUX2_CHCFG0 = (unsigned char)(usDmaTriggerSource | DMAMUX_CHCFG_ENBL); // connect trigger to DMA channel
+        break;
+    case 3:
+        POWER_UP_ATOMIC(6, DMAMUX3);                                     // enable DMA multiplexer 3
+        DMAMUX3_CHCFG0 = (unsigned char)(usDmaTriggerSource | DMAMUX_CHCFG_ENBL); // connect trigger to DMA channel
+        break;
+    }
+        #else
     POWER_UP_ATOMIC(6, DMAMUX0);                                         // enable DMA multiplexer 0
     *(unsigned char *)(DMAMUX0_BLOCK + ucDMA_channel) = (unsigned char)(usDmaTriggerSource | DMAMUX_CHCFG_ENBL); // connect trigger to DMA channel
+        #endif
     ptrDMA->DMA_DCR |= (DMA_DCR_CS | DMA_DCR_EADREQ);                    // enable peripheral request - single cycle for each request (asynchronous requests enabled in stop mode)
     #else                                                                // eDMA
     KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
@@ -643,21 +664,23 @@ extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned short usDma
         _EXCEPTION("Warning - peripheral DMA is using the alternative channel reserved for DMA based uMemcpy()!!");
     }
         #endif
+        #if !defined KINETIS_KM
     if (DMAMUX0_DMA0_CHCFG_SOURCE_PIT0 == usDmaTriggerSource) {
         if (ucDMA_channel != 0) {
-        #if defined LPITS_AVAILABLE
+            #if defined LPITS_AVAILABLE
             _EXCEPTION("LPIT triggers only operate on DMA channel 0!!");
-        #else
+            #else
             _EXCEPTION("PIT0 trigger only operates on DMA channel 0!!");
-        #endif
+            #endif
         }
-        #if defined ERRATA_ID_5746
+            #if defined ERRATA_ID_5746
         if ((ptrDMA->DMA_DCR & DMA_DCR_CS) != 0) {
             _EXCEPTION("PIT0 trigger generates two data transfers when in cycle-steal mode!!");
         }
-        #endif
+            #endif
     }
-        #if defined DMAMUX0_DMA0_CHCFG_SOURCE_PIT1
+        #endif
+        #if defined DMAMUX0_DMA0_CHCFG_SOURCE_PIT1 && !defined KINETIS_KM
     else if (DMAMUX0_DMA0_CHCFG_SOURCE_PIT1 == usDmaTriggerSource) {
         if (ucDMA_channel != 1) {
             _EXCEPTION("PIT1 trigger only operates on DMA channel 1!!");

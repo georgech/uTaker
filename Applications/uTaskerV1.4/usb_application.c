@@ -3749,7 +3749,7 @@ static void fnAudio(QUEUE_HANDLE audioHandle, QUEUE_TRANSFER queue_size)
 
     I2S_setup.ulI2S_SAI_buffer_length = queue_size;
     I2S_setup.ucDmaChannel = 0;                                          // use DMA channel 0
-    I2S_setup.usDmaTriggerSource = DMAMUX_CHCFG_SOURCE_I2S0_TX;          // trigger on I2S tx empty
+    I2S_setup.usDmaTriggerSource = DMAMUX0_CHCFG_SOURCE_I2S0_TX;         // trigger on I2S tx empty
     I2S_setup.int_handler = buffer_wrap;                                 // interrupt callback
     I2S_setup.ptrI2S_SAI_Buffer = ptrBufIn;                              // copy from the USB input buffer
     I2S_setup.I2S_SAI_mode = (I2S_SAI_CONFIG_TX | I2S_SAI_FULL_BUFFER_DMA | I2S_SAI_FULL_BUFFER_DMA_AUTO_REPEAT); // enable automatic KL DMA buffer restart using driver interrupt
@@ -3757,7 +3757,7 @@ static void fnAudio(QUEUE_HANDLE audioHandle, QUEUE_TRANSFER queue_size)
 
     I2S_setup.ucDmaChannel = 1;                                          // use DMA channel 1
     I2S_setup.int_handler = 0;                                           // no interrupt handler
-    I2S_setup.usDmaTriggerSource = DMAMUX_CHCFG_SOURCE_I2S0_RX;          // trigger on I2S rx availabe
+    I2S_setup.usDmaTriggerSource = DMAMUX0_CHCFG_SOURCE_I2S0_RX;         // trigger on I2S rx availabe
     I2S_setup.ptrI2S_SAI_Buffer = ptrBufIn;                              // copy to the USB output buffer
     I2S_setup.I2S_SAI_mode = (I2S_SAI_ENABLE_TX | I2S_SAI_ENABLE_RX | I2S_SAI_CONFIG_RX | I2S_SAI_FULL_BUFFER_DMA | I2S_SAI_FULL_BUFFER_DMA_AUTO_REPEAT); // enable automatic KL DMA buffer restart using driver interrupt
     fnConfigureInterrupt((void *)&I2S_setup);                            // configure I2S receiver

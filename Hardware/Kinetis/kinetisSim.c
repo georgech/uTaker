@@ -4989,7 +4989,7 @@ static void fnHandleDMA_triggers(int iTriggerSource, int iDMAmux)
     iTriggerSource &= ~(DMAMUX_CHCFG_TRIG);
     while (iChannel < iMuxChannels) {
         if ((*ptrMux++ & ~(DMAMUX_CHCFG_TRIG)) == (DMAMUX_CHCFG_ENBL | (unsigned char)iTriggerSource)) { // matching enabled trigger
-    #if defined _WINDOWS && !defined TRGMUX_AVAILABLE
+    #if defined _WINDOWS && !defined TRGMUX_AVAILABLE && !defined KINETIS_KM
             if ((DMAMUX0_DMA0_CHCFG_SOURCE_PIT0 & ~(DMAMUX_CHCFG_TRIG)) == (unsigned char)iTriggerSource) {
                 if (iChannel != 0) {
                     _EXCEPTION("PIT0 trigger only operates on DMA channel 0!!");
@@ -8658,7 +8658,9 @@ extern int fnSimTimers(void)
                 PIT_CVAL0 = PIT_LDVAL0;                                  // reload
                 PIT_CVAL0 -= ulCount;
                 PIT_TFLG0 = PIT_TFLG_TIF;                                // flag that a reload occurred
+    #if !defined KINETIS_KM
                 fnHandleDMA_triggers(DMAMUX0_DMA0_CHCFG_SOURCE_PIT0, 0); // handle DMA triggered on PIT0
+    #endif
     #if defined KINETIS_KE
                 if ((SIM_SOPT0 & SIM_SOPT_ADHWT_PIT0) != 0) {            // if PIT0 overflow is programmed to trigger ADC0 conversion
         #if defined SUPPORT_ADC
@@ -8702,7 +8704,7 @@ extern int fnSimTimers(void)
                 PIT_CVAL1 = PIT_LDVAL1;                                  // reload
                 PIT_CVAL1 -= ulCount;
                 PIT_TFLG1 = PIT_TFLG_TIF;                                // flag that a reload occurred
-    #if !defined KINETIS_KL28 && !defined KINETIS_KL82                   // not yet supported
+    #if !defined KINETIS_KL28 && !defined KINETIS_KL82 && !defined KINETIS_KM // not yet supported
                 fnHandleDMA_triggers(DMAMUX0_DMA0_CHCFG_SOURCE_PIT1, 0); // handle DMA triggered on PIT1
     #endif
     #if !defined KINETIS_KE && !defined KINETIS_WITH_PCC

@@ -1547,22 +1547,24 @@ typedef struct stKINETIS_FTFL
 typedef struct stKINETIS_DMAMUX
 {
 unsigned char DMAMUX_CHCFG0;
-unsigned char DMAMUX_CHCFG1;
-unsigned char DMAMUX_CHCFG2;
-unsigned char DMAMUX_CHCFG3;
-#if !defined KINETIS_KL
-    unsigned char DMAMUX_CHCFG4;
-    unsigned char DMAMUX_CHCFG5;
-    unsigned char DMAMUX_CHCFG6;
-    unsigned char DMAMUX_CHCFG7;
-    unsigned char DMAMUX_CHCFG8;
-    unsigned char DMAMUX_CHCFG9;
-    unsigned char DMAMUX_CHCFG10;
-    unsigned char DMAMUX_CHCFG11;
-    unsigned char DMAMUX_CHCFG12;
-    unsigned char DMAMUX_CHCFG13;
-    unsigned char DMAMUX_CHCFG14;
-    unsigned char DMAMUX_CHCFG15;
+#if !defined KINETIS_KM
+    unsigned char DMAMUX_CHCFG1;
+    unsigned char DMAMUX_CHCFG2;
+    unsigned char DMAMUX_CHCFG3;
+    #if !defined KINETIS_KL
+        unsigned char DMAMUX_CHCFG4;
+        unsigned char DMAMUX_CHCFG5;
+        unsigned char DMAMUX_CHCFG6;
+        unsigned char DMAMUX_CHCFG7;
+        unsigned char DMAMUX_CHCFG8;
+        unsigned char DMAMUX_CHCFG9;
+        unsigned char DMAMUX_CHCFG10;
+        unsigned char DMAMUX_CHCFG11;
+        unsigned char DMAMUX_CHCFG12;
+        unsigned char DMAMUX_CHCFG13;
+        unsigned char DMAMUX_CHCFG14;
+        unsigned char DMAMUX_CHCFG15;
+    #endif
 #endif
 } KINETIS_DMAMUX;
 
@@ -3753,7 +3755,9 @@ typedef struct stKINETIS_PERIPH
     #endif
 #endif
     KINETIS_FTFL       FTFL;
-#if defined KINETIS_K70 || (defined KINETIS_K60 && defined KINETIS_K_FPU)// {4}
+#if defined KINETIS_KM
+    KINETIS_DMAMUX     DMAMUX[4];
+#elif defined KINETIS_K70 || (defined KINETIS_K60 && defined KINETIS_K_FPU)// {4}
     KINETIS_DMAMUX     DMAMUX[2];
 #else
     KINETIS_DMAMUX     DMAMUX[1];
