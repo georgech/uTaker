@@ -487,7 +487,7 @@ static QUEUE_TRANSFER entry_tty(QUEUE_HANDLE channel, unsigned char *ptBuffer, Q
     return (rtn_val);
 }
 
-#if defined SERIAL_SUPPORT_DMA && (defined KINETIS_KL && !defined DEVICE_WITH_eDMA) // {36}
+#if defined SERIAL_SUPPORT_DMA && ((defined KINETIS_KL || defined KINETIS_KM) && !defined DEVICE_WITH_eDMA) // {36}
 static TTYQUE *fnGetControlBlock(QUEUE_TRANSFER queue_size, int iModulo)
 #else
 static TTYQUE *fnGetControlBlock(QUEUE_TRANSFER queue_size)
@@ -498,7 +498,7 @@ static TTYQUE *fnGetControlBlock(QUEUE_TRANSFER queue_size)
     if (NO_MEMORY == (ptTTYQue = (TTYQUE *)TTY_DRV_MALLOC(sizeof(struct stTTYQue)))) {
         return (0);                                                      // failed, no memory
     }
-#if defined SERIAL_SUPPORT_DMA && (defined KINETIS_KL && !defined DEVICE_WITH_eDMA) // {36}
+#if defined SERIAL_SUPPORT_DMA && ((defined KINETIS_KL || defined KINETIS_KM) && !defined DEVICE_WITH_eDMA) // {36}
     if (iModulo != 0) {
         if (NO_MEMORY == (ptTTYQue->tty_queue.QUEbuffer = (unsigned char *)TTY_DRV_MALLO_ALIGN(queue_size, queue_size))) {
             return (0);                                                  // failed, no memory
@@ -509,7 +509,7 @@ static TTYQUE *fnGetControlBlock(QUEUE_TRANSFER queue_size)
         if (NO_MEMORY == (ptTTYQue->tty_queue.QUEbuffer = (unsigned char *)TTY_DRV_MALLOC(queue_size))) {
             return (0);                                                  // failed, no memory
         }
-#if defined SERIAL_SUPPORT_DMA && (defined KINETIS_KL && !defined DEVICE_WITH_eDMA) // {36}
+#if defined SERIAL_SUPPORT_DMA && ((defined KINETIS_KL || defined KINETIS_KM) && !defined DEVICE_WITH_eDMA) // {36}
     }
 #endif
     ptTTYQue->tty_queue.get = ptTTYQue->tty_queue.put = ptTTYQue->tty_queue.buffer_end = ptTTYQue->tty_queue.QUEbuffer;
@@ -538,7 +538,7 @@ extern QUEUE_HANDLE fnOpenTTY(TTYTABLE *pars, unsigned char driver_mode)
     ptrQueue->CallAddress = entry_add;
 
     if ((driver_mode & FOR_WRITE) != 0) {                                // define transmitter
-#if defined SERIAL_SUPPORT_DMA && (defined KINETIS_KL && !defined DEVICE_WITH_eDMA) // {36}
+#if defined SERIAL_SUPPORT_DMA && ((defined KINETIS_KL || defined KINETIS_KM) && !defined DEVICE_WITH_eDMA) // {36}
         ptrQueue->output_buffer_control = (QUEQUE *)(tx_control[pars->Channel] = fnGetControlBlock(pars->Rx_tx_sizes.TxQueueSize, ((pars->ucDMAConfig & UART_TX_MODULO) != 0)));
 #else
         ptrQueue->output_buffer_control = (QUEQUE *)(tx_control[pars->Channel] = fnGetControlBlock(pars->Rx_tx_sizes.TxQueueSize));
@@ -547,7 +547,7 @@ extern QUEUE_HANDLE fnOpenTTY(TTYTABLE *pars, unsigned char driver_mode)
 
     if ((driver_mode & FOR_READ) != 0) {                                 // define receiver
         TTYQUE *ptTTYQue;
-#if defined SERIAL_SUPPORT_DMA && (defined KINETIS_KL && !defined DEVICE_WITH_eDMA) // {36}
+#if defined SERIAL_SUPPORT_DMA && ((defined KINETIS_KL || defined KINETIS_KM) && !defined DEVICE_WITH_eDMA) // {36}
         ptTTYQue = fnGetControlBlock(pars->Rx_tx_sizes.RxQueueSize, ((pars->ucDMAConfig & UART_RX_MODULO) != 0));
 #else
         ptTTYQue = fnGetControlBlock(pars->Rx_tx_sizes.RxQueueSize);

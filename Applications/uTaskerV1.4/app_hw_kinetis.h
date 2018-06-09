@@ -2590,7 +2590,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define PPP_UART             2                                       // use UART 2 for PPP
     #define FREEMASTER_UART_CH   1                                       // user UART 1 for FreeMaster via UART
     #if !defined DEVICE_WITHOUT_DMA
-        #if defined KINETIS_K_FPU || defined TWR_K20D50M || defined FRDM_K20D50M || defined tinyK20 || defined KINETIS_KL || defined KINETIS_KV
+        #if defined KINETIS_K_FPU || defined TWR_K20D50M || defined FRDM_K20D50M || defined tinyK20 || defined KINETIS_KL || defined KINETIS_KM || defined KINETIS_KV
             #define SERIAL_SUPPORT_DMA                                   // enable UART DMA support
             #define SERIAL_SUPPORT_DMA_RX                                // enable also DMA on receiver (used less that transmit DMA)
             #define SERIAL_SUPPORT_DMA_RX_FREERUN                        // support free-running reception mode

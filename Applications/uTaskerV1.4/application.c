@@ -1583,7 +1583,7 @@ extern QUEUE_HANDLE fnSetNewSerialMode(TTYTABLE *ptrInterfaceParameters, unsigne
     #endif
     #if defined SERIAL_SUPPORT_DMA
         #if defined FREE_RUNNING_RX_DMA_RECEPTION
-            #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA
+            #if (defined KINETIS_KL || defined KINETIS_KM) && !defined DEVICE_WITH_eDMA
       //tInterfaceParameters.ucDMAConfig = (UART_RX_DMA | UART_RX_MODULO); // modulo aligned reception memory is required by kinetis KL parts without eDMA in free-running DMA mode
         tInterfaceParameters.ucDMAConfig = (UART_RX_DMA | UART_RX_MODULO | UART_TX_DMA); // modulo aligned reception memory is required by kinetis KL parts without eDMA in free-running DMA mode
             #else

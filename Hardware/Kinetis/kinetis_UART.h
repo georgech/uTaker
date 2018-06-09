@@ -203,7 +203,7 @@ static unsigned char ucUART_mask[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {0}; // 
 #endif
 #if defined SERIAL_INTERFACE && defined SERIAL_SUPPORT_DMA_RX && defined SERIAL_SUPPORT_DMA_RX_FREERUN // {15}
     static unsigned long ulDMA_progress[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {0};
-    #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA                  // {209}
+    #if (defined KINETIS_KL || defined KINETIS_KM) && !defined DEVICE_WITH_eDMA // {209}
     static QUEUE_TRANSFER RxModulo[UARTS_AVAILABLE + LPUARTS_AVAILABLE];
     #endif
 #endif
@@ -1141,63 +1141,63 @@ static __interrupt void _uart0_rx_dma_Interrupt(void)
     fnSciRxByte(0, 0);                                                   // tty block ready for read
 }
 
-    #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 1
+        #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 1
 static __interrupt void _uart1_rx_dma_Interrupt(void)
 {
     fnSciRxByte(0, 1);                                                   // tty block ready for read
 }
-    #endif
-    #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 2
+        #endif
+        #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 2
 static __interrupt void _uart2_rx_dma_Interrupt(void)
 {
     fnSciRxByte(0, 2);                                                   // tty block ready for read
 }
-    #endif
-    #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 3
+        #endif
+        #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 3
 static __interrupt void _uart3_rx_dma_Interrupt(void)
 {
     fnSciRxByte(0, 3);                                                   // tty block ready for read
 }
-    #endif
-    #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 4
+        #endif
+        #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 4
 static __interrupt void _uart4_rx_dma_Interrupt(void)
 {
     fnSciRxByte(0, 4);                                                   // tty block ready for read
 }
-    #endif
-    #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 5
+        #endif
+        #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 5
 static __interrupt void _uart5_rx_dma_Interrupt(void)
 {
     fnSciRxByte(0, 5);                                                   // tty block ready for read
 }
-    #endif
+        #endif
 
 static void (*_uart_rx_dma_Interrupt[UARTS_AVAILABLE + LPUARTS_AVAILABLE])(void) = {
     _uart0_rx_dma_Interrupt,
-    #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 1
+        #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 1
     _uart1_rx_dma_Interrupt,
-    #endif
-    #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 2
+        #endif
+        #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 2
     _uart2_rx_dma_Interrupt,
-    #endif
-    #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 3
+        #endif
+        #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 3
     _uart3_rx_dma_Interrupt,
-    #endif
-    #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 4
+        #endif
+        #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 4
     _uart4_rx_dma_Interrupt,
-    #endif
-    #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 5
+        #endif
+        #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 5
     _uart5_rx_dma_Interrupt
-    #endif
+        #endif
 };
 
-    #if defined SERIAL_SUPPORT_DMA_RX_FREERUN
+        #if defined SERIAL_SUPPORT_DMA_RX_FREERUN
 // Check the progress of the channel's free-running DMA reception and update the TTY character account accordingly
 // - retrigger the DMA max. count on each check so that it never terminates
 //
 static void fnCheckFreerunningDMA_reception(int channel, QUEQUE *tty_queue) // {209}
 {
-        #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA              // {211}
+            #if (defined KINETIS_KL || defined KINETIS_KM) && !defined DEVICE_WITH_eDMA // {211}
     unsigned long ulDMA_rx;
     KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
     ptrDMA += UART_DMA_RX_CHANNEL[channel];                              // set the DMA channel that the UART channel is using
@@ -1210,7 +1210,7 @@ static void fnCheckFreerunningDMA_reception(int channel, QUEQUE *tty_queue) // {
     }
     ulDMA_progress[channel] = ulDMA_rx;                                  // remember this check state for future comparisons
     ptrDMA->DMA_DSR_BCR |= (0xffff0);                                    // retrigger maximum DMA transfer at each poll
-        #else
+            #else
     unsigned short usDMA_rx;
     KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
     ptrDMA_TCD += UART_DMA_RX_CHANNEL[channel];
@@ -1223,27 +1223,61 @@ static void fnCheckFreerunningDMA_reception(int channel, QUEQUE *tty_queue) // {
         tty_queue->chars += (ptrDMA_TCD->DMA_TCD_BITER_ELINK - usDMA_rx); // the extra number of characters received by DMA since last check
     }
     ulDMA_progress[channel] = usDMA_rx;                                  // remember the check state
-        #endif
+            #endif
 }
-    #endif
+        #endif
 // Configure DMA for reception to a free-running modulo buffer and then enable reception (also configuring the RXD input)
 //
 static void fnEnableRxAndDMA(int channel, unsigned long buffer_length, unsigned long buffer_address, void *uart_data_reg) // {209}
 {
+        #if defined KINETIS_KM                                           // UART0/1 an UART2/3 share channel assignment, resticted to certain DMAMUX channels
+    unsigned short usDMAMUX;
+    if (channel < 2) {
+        usDMAMUX = (DMAMUX0_CHCFG_SOURCE_UART0_RX);                      // valid for UART0 and UART1
+    }
+    else {
+        usDMAMUX = (DMAMUX0_CHCFG_SOURCE_UART2_RX);                      // valid for UART2 and UART3
+    }
+            #if defined _WINDOWS
+    switch (channel) {
+    case 0:
+        if ((UART_DMA_RX_CHANNEL[channel] != 0) && (UART_DMA_RX_CHANNEL[channel] != 3)) {
+            _EXCEPTION("UART0 Rx is only possible of DMA channels 0 and 3!");
+        }
+        break;
+    case 1:
+        if ((UART_DMA_RX_CHANNEL[channel] != 1) && (UART_DMA_RX_CHANNEL[channel] != 2)) {
+            _EXCEPTION("UART1 Rx is only possible of DMA channels 1 and 2!");
+        }
+        break;
+    case 2:
+        if ((UART_DMA_RX_CHANNEL[channel] != 2) && (UART_DMA_RX_CHANNEL[channel] != 3)) {
+            _EXCEPTION("UART2 Rx is only possible of DMA channels 2 and 3!");
+        }
+        break;
+    case 3:
+        if ((UART_DMA_RX_CHANNEL[channel] != 0) && (UART_DMA_RX_CHANNEL[channel] != 1)) {
+            _EXCEPTION("UART3 Rx is only possible of DMA channels 0 and 1!");
+        }
+        break;
+    }
+            #endif
+        #else
     unsigned short usDMAMUX = (DMAMUX0_CHCFG_SOURCE_UART0_RX + (2 * channel));
-    #if defined SERIAL_SUPPORT_DMA_RX_FREERUN
-        #if defined KINETIS_KL && !defined DEVICE_WITH_eDMA              // {211}
+        #endif
+        #if defined SERIAL_SUPPORT_DMA_RX_FREERUN
+            #if (defined KINETIS_KL || defined KINETIS_KM) && !defined DEVICE_WITH_eDMA // {211}
     RxModulo[channel] = (QUEUE_TRANSFER)buffer_length;                   // this must be modulo 2 (16, 32, 64, 128...256k)
     ulDMA_progress[channel] = buffer_address;                            // destination must be modulo aligned
-        #else
+            #else
     ulDMA_progress[channel] = buffer_length;
-            #if ((defined KINETIS_K21 || defined KINETIS_K22) && (UARTS_AVAILABLE > 4)) || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66
+                #if ((defined KINETIS_K21 || defined KINETIS_K22) && (UARTS_AVAILABLE > 4)) || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66
     if (channel > 3) {                                                   // channels 4 and above each share DMA source for TX and RX
         usDMAMUX = (DMAMUX0_CHCFG_SOURCE_UART3_RX + (channel - 3));
     }
+                #endif
             #endif
         #endif
-    #endif
     fnConfigDMA_buffer(UART_DMA_RX_CHANNEL[channel], usDMAMUX, buffer_length, uart_data_reg, (void *)buffer_address, (DMA_DIRECTION_INPUT | DMA_BYTES), 0, 0);
     fnDMA_BufferReset(UART_DMA_RX_CHANNEL[channel], DMA_BUFFER_START);   // enable DMA operation
     fnRxOn(channel);                                                     // configure receiver pin and enable reception and its interrupt/DMA
@@ -1253,13 +1287,13 @@ static void fnEnableRxAndDMA(int channel, unsigned long buffer_length, unsigned 
 //
 extern void fnPrepareRxDMA(QUEUE_HANDLE channel, unsigned char *ptrStart, QUEUE_TRANSFER rx_length)
 {
-    #if (UARTS_AVAILABLE > 0) || (LPUARTS_AVAILABLE > 0)
+        #if (UARTS_AVAILABLE > 0) || (LPUARTS_AVAILABLE > 0)
     KINETIS_UART_CONTROL *uart_reg = fnSelectChannel(channel);           // select the UART/LPUART channel register set
-    #endif
-    #if LPUARTS_AVAILABLE > 0                                            // if the device has LPUART(s)
-        #if UARTS_AVAILABLE > 0                                          // if also UARTs
-    if (uart_type[channel] == UART_TYPE_LPUART) {                        // LPUART channel
         #endif
+        #if LPUARTS_AVAILABLE > 0                                        // if the device has LPUART(s)
+            #if UARTS_AVAILABLE > 0                                      // if also UARTs
+    if (uart_type[channel] == UART_TYPE_LPUART) {                        // LPUART channel
+            #endif
         if ((((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_CTRL & LPUART_CTRL_RE) == 0) { // if receiver is not yet enabled
             fnEnableRxAndDMA(channel, rx_length, (unsigned long)ptrStart, (void *)&(((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_DATA)); // configure DMA and reception, including configuring the RXD input
         }
@@ -1267,25 +1301,24 @@ extern void fnPrepareRxDMA(QUEUE_HANDLE channel, unsigned char *ptrStart, QUEUE_
         else if (rx_length == 0) {                                       // call to update DMA progress
             fnCheckFreerunningDMA_reception(channel, (QUEQUE *)ptrStart);
         }
-    #endif
+            #endif
         return;
-        #if UARTS_AVAILABLE > 0                                          // if also UARTs
+            #if UARTS_AVAILABLE > 0                                      // if also UARTs
     }
-        #endif
-    #endif                                                               // end LPUART support
-
-    #if (UARTS_AVAILABLE > 0)                                            // if UARTs are available
+            #endif
+        #endif                                                           // end LPUART support
+        #if (UARTS_AVAILABLE > 0)                                        // if UARTs are available
     // UART channel
     //
     if ((uart_reg->UART_C2 & UART_C2_RE) == 0) {                         // if receiver not yet enabled
         fnEnableRxAndDMA(channel, rx_length, (unsigned long)ptrStart, (void *)&(uart_reg->UART_D)); // configure DMA and reception, including configuring the RXD input
     }
-        #if defined SERIAL_SUPPORT_DMA_RX_FREERUN                        // {15}
+            #if defined SERIAL_SUPPORT_DMA_RX_FREERUN                    // {15}
     else if (rx_length == 0) {                                           // call to update DMA progress
         fnCheckFreerunningDMA_reception(channel, (QUEQUE *)ptrStart);
     }
-        #endif                                                           // endif SERIAL_SUPPORT_DMA_RX_FREERUN
-    #endif                                                               // endif (UARTS_AVAILABLE > 0)
+            #endif
+        #endif
 }
     #endif                                                               // endif SERIAL_SUPPORT_DMA_RX
 
@@ -2700,7 +2733,7 @@ static void fnConfigUART(QUEUE_HANDLE Channel, TTYTABLE *pars, KINETIS_UART_CONT
         #else
         if ((uart_reg->UART_C2 & UART_C2_TIE) == 0) {                    // {203} if DMA has already been configured we leave it untouched
             #if defined KINETIS_KM                                       // UART0/1 an UART2/3 share channel assignment, resticted to certain DMAMUX channels
-            unsigned short usDMAMUX = (DMAMUX0_CHCFG_SOURCE_UART0_TX);
+            unsigned short usDMAMUX;
             if (Channel < 2) {
                 usDMAMUX = (DMAMUX0_CHCFG_SOURCE_UART0_TX);              // valid for UART0 and UART1
             }
