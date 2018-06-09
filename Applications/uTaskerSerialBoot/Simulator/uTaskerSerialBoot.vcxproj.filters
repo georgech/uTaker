@@ -45,6 +45,39 @@
     <Filter Include="uTasker\MODBUS">
       <UniqueIdentifier>{38363d42-4f15-4c4b-a187-b9403c68ba36}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Hardware\AVR32">
+      <UniqueIdentifier>{1d924f1d-046e-4982-861f-9c2346404968}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Hardware\Coldfire">
+      <UniqueIdentifier>{e6e6bd58-427c-46a8-8f00-371ffd0ff61e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Hardware\LPC2XXX">
+      <UniqueIdentifier>{63ffe96a-1396-49ba-a241-33a3f22a5126}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Hardware\LPC17XX">
+      <UniqueIdentifier>{00faf781-9b24-457f-ba2a-da3be92e7d18}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Hardware\Luminary">
+      <UniqueIdentifier>{8ea068ff-cf68-4e99-a3d4-1a98b3653e03}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Hardware\NE64">
+      <UniqueIdentifier>{18ddcbf4-5a3d-4489-8008-0bcb06329d9e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Hardware\SAM7">
+      <UniqueIdentifier>{d75ef931-07f0-4e4e-a26e-76de081167ba}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Hardware\STM32">
+      <UniqueIdentifier>{b70246b5-194a-447e-8af5-1e911667c947}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="WinSim\SIMcoldfire">
+      <UniqueIdentifier>{3a41c90f-1542-4556-be08-6cbf082657b8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="WinSim\SIMLuminary">
+      <UniqueIdentifier>{879db616-1269-45ea-a498-e0d4c47f26a5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="WinSim\SIMstm32">
+      <UniqueIdentifier>{c44045b1-8758-4d55-9f1e-33ea630aaa29}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\uTasker\Driver.c">
@@ -208,6 +241,15 @@
     </ClCompile>
     <ClCompile Include="..\modbus_app.c">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Hardware\STM32\STM32.c">
+      <Filter>Hardware\STM32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Hardware\STM32\STM32Sim.c">
+      <Filter>WinSim\SIMstm32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Hardware\STM32\STM32_ports.cpp">
+      <Filter>WinSim\SIMstm32</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -538,6 +580,66 @@
     <ClInclude Include="..\..\..\uTasker\MODBUS\modbus.h">
       <Filter>uTasker\MODBUS</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\spi_flash_STM32_atmel.h">
+      <Filter>Hardware\STM32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\spi_flash_STM32_MX66L.h">
+      <Filter>Hardware\STM32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\spi_flash_STM32_sst25.h">
+      <Filter>Hardware\STM32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\spi_flash_STM32_stmicro.h">
+      <Filter>Hardware\STM32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\STM32.h">
+      <Filter>Hardware\STM32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\stm32_ADC.h">
+      <Filter>Hardware\STM32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\stm32_ENET.h">
+      <Filter>Hardware\STM32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\stm32_FLASH.h">
+      <Filter>Hardware\STM32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\stm32_I2C.h">
+      <Filter>Hardware\STM32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\stm32_PORTS.h">
+      <Filter>Hardware\STM32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\stm32_TIMER.h">
+      <Filter>Hardware\STM32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\stm32_UART.h">
+      <Filter>Hardware\STM32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\STM32F7XX_port.h">
+      <Filter>WinSim\SIMstm32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\STM32F031_port.h">
+      <Filter>WinSim\SIMstm32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\STM32F41X_port.h">
+      <Filter>WinSim\SIMstm32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\STM32F100X_port.h">
+      <Filter>WinSim\SIMstm32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\STM32F105X_107X_port.h">
+      <Filter>WinSim\SIMstm32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\STM32L4XX_port.h">
+      <Filter>WinSim\SIMstm32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\STM32L031_port.h">
+      <Filter>WinSim\SIMstm32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\app_hw_stm32.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="cursor1.cur">
@@ -554,6 +656,11 @@
       <Filter>Hardware\Kinetis</Filter>
     </None>
     <None Include="..\GNU_Kinetis\Build_Kinetis.bat" />
+    <None Include="..\..\..\Hardware\STM32\STM32_keil_asm.s">
+      <Filter>Hardware\STM32</Filter>
+    </None>
+    <None Include="..\GNU_STM32\make_uTaskerSerialBoot_GNU_STM32" />
+    <None Include="..\GNU_STM32\Build_STM32.bat" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="uTasker.rc">

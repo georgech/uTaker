@@ -16,6 +16,7 @@
     02.02.2017 Adapt for us tick resolution (_TICK_RESOLUTION)
     05.10.2017 Add modbus configuration
     17.01.2018 Add I2C slave configuration
+    09.06.2018 Added STM32 targets
 
     See this video for details of building the serial loader with KDS: https://youtu.be/bilc_4Cr7eo
     See this video for details of building and using the serial loader's Ethernet loading method: https://youtu.be/g71PGlQy6eI
@@ -43,91 +44,104 @@
 
 // Major hardware dependent settings for this project (choice of board - select only one at a time)
 //
-//#define TRK_KEA64                                                      // EA ultra-reliable automotive processors Cortex-M0+ - starterTRAK board http://www.utasker.com/kinetis/TRK-KEA64.html
-//#define TRK_KEA128                                                     // starterTRAK board http://www.utasker.com/kinetis/TRK-KEA128.html
-//#define FRDM_KEAZN32Q64                                                // freedom board http://www.utasker.com/kinetis/FRDM-KEAZN32Q64.html
-//#define FRDM_KEAZ64Q64                                                 // freedom board http://www.utasker.com/kinetis/FRDM-KEAZ64Q64.html
-//#define FRDM_KEAZ128Q80                                                // freedom board http://www.utasker.com/kinetis/FRDM-KEAZ128Q80.html
+// Kinetis
+//
+#if defined _KINETIS                                                     // NXP Kinetis targets
+    //#define TRK_KEA64                                                  // EA ultra-reliable automotive processors Cortex-M0+ - starterTRAK board http://www.utasker.com/kinetis/TRK-KEA64.html
+    //#define TRK_KEA128                                                 // starterTRAK board http://www.utasker.com/kinetis/TRK-KEA128.html
+    //#define FRDM_KEAZN32Q64                                            // freedom board http://www.utasker.com/kinetis/FRDM-KEAZN32Q64.html
+    //#define FRDM_KEAZ64Q64                                             // freedom board http://www.utasker.com/kinetis/FRDM-KEAZ64Q64.html
+    //#define FRDM_KEAZ128Q80                                            // freedom board http://www.utasker.com/kinetis/FRDM-KEAZ128Q80.html
 
-//#define FRDM_KE02Z                                                     // E processors Cortex-M0+ / M4 (5V robust) - freedom board http://www.utasker.com/kinetis/FRDM-KE02Z.html
-//#define FRDM_KE02Z40M                                                  // freedom board http://www.utasker.com/kinetis/FRDM-KE02Z40M.html
-//#define FRDM_KE04Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KE04Z.html
-//#define FRDM_KE06Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KE06Z.html
-//#define FRDM_KE15Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KE15Z.html
+    //#define FRDM_KE02Z                                                 // E processors Cortex-M0+ / M4 (5V robust) - freedom board http://www.utasker.com/kinetis/FRDM-KE02Z.html
+    //#define FRDM_KE02Z40M                                              // freedom board http://www.utasker.com/kinetis/FRDM-KE02Z40M.html
+    //#define FRDM_KE04Z                                                 // freedom board http://www.utasker.com/kinetis/FRDM-KE04Z.html
+    //#define FRDM_KE06Z                                                 // freedom board http://www.utasker.com/kinetis/FRDM-KE06Z.html
+    //#define FRDM_KE15Z                                                 // freedom board http://www.utasker.com/kinetis/FRDM-KE15Z.html
 
-//#define FRDM_KL02Z                                                     // L processors Cortex-M0+ (ultra-low power) basic - freedom board http://www.utasker.com/kinetis/FRDM-KL02Z.html
-//#define FRDM_KL03Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL03Z.html
-//#define FRDM_KL05Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL05Z.html
+    //#define FRDM_KL02Z                                                 // L processors Cortex-M0+ (ultra-low power) basic - freedom board http://www.utasker.com/kinetis/FRDM-KL02Z.html
+    //#define FRDM_KL03Z                                                 // freedom board http://www.utasker.com/kinetis/FRDM-KL03Z.html
+    //#define FRDM_KL05Z                                                 // freedom board http://www.utasker.com/kinetis/FRDM-KL05Z.html
 
-#define FRDM_KL25Z                                                       // L processors Cortex-M0+ (ultra-low power) with USB - freedom board http://www.utasker.com/kinetis/FRDM-KL25Z.html
-//#define TWR_KL25Z48M                                                   // tower board http://www.utasker.com/kinetis/TWR-KL25Z48M.html
-//#define FRDM_KL26Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL26Z.html
-//#define TEENSY_LC                                                      // USB development board with KL26Z64 - http://www.utasker.com/kinetis/TEENSY_LC.html
-//#define FRDM_KL27Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL27Z.html
-//#define FRDM_KL28Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL28Z.html
-//#define FRDM_KL43Z                                                     // L processors Cortex-M0+ (ultra-low power) with USB and segment LCD - freedom board http://www.utasker.com/kinetis/FRDM-KL43Z.html
-//#define TWR_KL43Z48M                                                   // tower board http://www.utasker.com/kinetis/TWR-KL43Z48M.html
-//#define FRDM_KL46Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL46Z.html
-//#define TWR_KL46Z48M                                                   // tower board http://www.utasker.com/kinetis/TWR-KL46Z48M.html
+    //#define FRDM_KL25Z                                                 // L processors Cortex-M0+ (ultra-low power) with USB - freedom board http://www.utasker.com/kinetis/FRDM-KL25Z.html
+    //#define TWR_KL25Z48M                                               // tower board http://www.utasker.com/kinetis/TWR-KL25Z48M.html
+    //#define FRDM_KL26Z                                                 // freedom board http://www.utasker.com/kinetis/FRDM-KL26Z.html
+    //#define TEENSY_LC                                                  // USB development board with KL26Z64 - http://www.utasker.com/kinetis/TEENSY_LC.html
+    //#define FRDM_KL27Z                                                 // freedom board http://www.utasker.com/kinetis/FRDM-KL27Z.html
+    //#define FRDM_KL28Z                                                 // freedom board http://www.utasker.com/kinetis/FRDM-KL28Z.html
+    //#define FRDM_KL43Z                                                 // L processors Cortex-M0+ (ultra-low power) with USB and segment LCD - freedom board http://www.utasker.com/kinetis/FRDM-KL43Z.html
+    //#define TWR_KL43Z48M                                               // tower board http://www.utasker.com/kinetis/TWR-KL43Z48M.html
+    //#define FRDM_KL46Z                                                 // freedom board http://www.utasker.com/kinetis/FRDM-KL46Z.html
+    //#define TWR_KL46Z48M                                               // tower board http://www.utasker.com/kinetis/TWR-KL46Z48M.html
 
-//#define FRDM_KL82Z                                                     // freedom board http://www.utasker.com/kinetis/FRDM-KL82Z.html
+    //#define FRDM_KL82Z                                                 // freedom board http://www.utasker.com/kinetis/FRDM-KL82Z.html
 
-//#define TWR_KM34Z50M                                                   // M processors Cortex M0+ (metrology) - tower board http://www.utasker.com/kinetis/TWR-KM34Z50M.html
+    #define TWR_KM34Z50M                                                 // M processors Cortex M0+ (metrology) - tower board http://www.utasker.com/kinetis/TWR-KM34Z50M.html
+    //#define TWR_KM34Z75M                                               // tower board http://www.utasker.com/kinetis/TWR-KM34Z75M.html
 
-//#define TWR_KV10Z32                                                    // V processors Cortex M0+/M4 (M0+ - motor control and power conversion - low dynamic control) - tower board http://www.utasker.com/kinetis/TWR-KV10Z32.html
-//#define TWR_KV31F120M                                                  // (M4 - high dynamic control) - tower board http://www.utasker.com/kinetis/TWR-KV31F120M.html
-//#define TWR_KV58F220M                                                  // (M7 - motor control and power coversion, Ethernet)
+    //#define TWR_KV10Z32                                                // V processors Cortex M0+/M4 (M0+ - motor control and power conversion - low dynamic control) - tower board http://www.utasker.com/kinetis/TWR-KV10Z32.html
+    //#define TWR_KV31F120M                                              // (M4 - high dynamic control) - tower board http://www.utasker.com/kinetis/TWR-KV31F120M.html
+    //#define TWR_KV58F220M                                              // (M7 - motor control and power coversion, Ethernet)
 
-//#define TWR_KW21D256                                                   // W processors Cortex M0+/M4 (wireless connectivity) - tower board http://www.utasker.com/kinetis/TWR-KW21D256.html
-//#define TWR_KW24D512                                                   // tower board http://www.utasker.com/kinetis/TWR-KW24D512.html
-//#define HEXIWEAR_KW40Z                                                 // hexiwear - wearable development kit for IoT (KW40Z160 support wireless processor) http://www.hexiwear.com/
+    //#define TWR_KW21D256                                               // W processors Cortex M0+/M4 (wireless connectivity) - tower board http://www.utasker.com/kinetis/TWR-KW21D256.html
+    //#define TWR_KW24D512                                               // tower board http://www.utasker.com/kinetis/TWR-KW24D512.html
+    //#define HEXIWEAR_KW40Z                                             // hexiwear - wearable development kit for IoT (KW40Z160 support wireless processor) http://www.hexiwear.com/
 
-//#define K02F100M                                                       // development board with 100MHz K02F
-//#define K12D50M                                                        // development board with 50MHz K12
-//#define FRDM_K20D50M                                                   // K processors Cortex M4 (performance and integration) with USB - freedom board http://www.utasker.com/kinetis/FRDM-K20D50M.html
-//#define tinyK20                                                        // USB memory stick format board with SD card and 50MHz K20DX128 http://www.utasker.com/kinetis/tinyK20.html
-//#define TWR_K20D50M                                                    // tower board http://www.utasker.com/kinetis/TWR-K20D50M.html
-//#define TWR_K20D72M                                                    // tower board http://www.utasker.com/kinetis/TWR-K20D72M.html
-//#define TEENSY_3_1                                                     // USB development board with K20DX256 http://www.utasker.com/kinetis/TEENSY_3.1.html
-//#define K20FX512_120                                                   // development board with 120MHz K20F
-//#define TWR_K21D50M                                                    // tower board http://www.utasker.com/kinetis/TWR-K21D50M.html
-//#define TWR_K21F120M                                                   // tower board http://www.utasker.com/kinetis/TWR-K21F120M.html
-//#define tinyK22                                                        // USB memory stick format board with SD card and 120MHz K22FN512 http://www.utasker.com/kinetis/tinyK22.html
-//#define FRDM_K22F                                                      // freedom board http://www.utasker.com/kinetis/FRDM-K22F.html
-//#define TWR_K22F120M                                                   // tower board http://www.utasker.com/kinetis/TWR-K22F120M.html
-//#define BLAZE_K22                                                      // K22FN1M0 with 1.6" color display and touch http://www.utasker.com/kinetis/BLAZE_K22.html
-//#define TWR_K24F120M                                                   // tower board http://www.utasker.com/kinetis/TWR-K24F120M.html
-//#define K24FN1M0_120
-//#define K26FN2_180                                                     // development board with 180MHz K26F
+    //#define K02F100M                                                   // development board with 100MHz K02F
+    //#define K12D50M                                                    // development board with 50MHz K12
+    //#define FRDM_K20D50M                                               // K processors Cortex M4 (performance and integration) with USB - freedom board http://www.utasker.com/kinetis/FRDM-K20D50M.html
+    //#define tinyK20                                                    // USB memory stick format board with SD card and 50MHz K20DX128 http://www.utasker.com/kinetis/tinyK20.html
+    //#define TWR_K20D50M                                                // tower board http://www.utasker.com/kinetis/TWR-K20D50M.html
+    //#define TWR_K20D72M                                                // tower board http://www.utasker.com/kinetis/TWR-K20D72M.html
+    //#define TEENSY_3_1                                                 // USB development board with K20DX256 http://www.utasker.com/kinetis/TEENSY_3.1.html
+    //#define K20FX512_120                                               // development board with 120MHz K20F
+    //#define TWR_K21D50M                                                // tower board http://www.utasker.com/kinetis/TWR-K21D50M.html
+    //#define TWR_K21F120M                                               // tower board http://www.utasker.com/kinetis/TWR-K21F120M.html
+    //#define tinyK22                                                    // USB memory stick format board with SD card and 120MHz K22FN512 http://www.utasker.com/kinetis/tinyK22.html
+    //#define FRDM_K22F                                                  // freedom board http://www.utasker.com/kinetis/FRDM-K22F.html
+    //#define TWR_K22F120M                                               // tower board http://www.utasker.com/kinetis/TWR-K22F120M.html
+    //#define BLAZE_K22                                                  // K22FN1M0 with 1.6" color display and touch http://www.utasker.com/kinetis/BLAZE_K22.html
+    //#define TWR_K24F120M                                               // tower board http://www.utasker.com/kinetis/TWR-K24F120M.html
+    //#define K24FN1M0_120
+    //#define K26FN2_180                                                 // development board with 180MHz K26F
 
-//#define KWIKSTIK                                                       // K processors Cortex M4 with USB and segment LCD http://www.utasker.com/kinetis/KWIKSTIK.html
-//#define TWR_K40X256                                                    // tower board http://www.utasker.com/kinetis/TWR-K40X256.html
-//#define TWR_K40D100M                                                   // tower board http://www.utasker.com/kinetis/TWR-K40D100M.html
+    //#define KWIKSTIK                                                   // K processors Cortex M4 with USB and segment LCD http://www.utasker.com/kinetis/KWIKSTIK.html
+    //#define TWR_K40X256                                                // tower board http://www.utasker.com/kinetis/TWR-K40X256.html
+    //#define TWR_K40D100M                                               // tower board http://www.utasker.com/kinetis/TWR-K40D100M.html
 
-//#define TWR_K53N512                                                    // K processors Cortex M4 with Ethernet, USB, integrated measurement engine and segment LCD - tower board http://www.utasker.com/kinetis/TWR-K53N512.html
+    //#define TWR_K53N512                                                // K processors Cortex M4 with Ethernet, USB, integrated measurement engine and segment LCD - tower board http://www.utasker.com/kinetis/TWR-K53N512.html
 
-//#define TWR_K60N512                                                    // K processors Cortex M4 with Ethernet, USB, encryption, tamper - tower board http://www.utasker.com/kinetis/TWR-K60N512.html
-//#define TWR_K60D100M                                                   // tower board http://www.utasker.com/kinetis/TWR-K60D100M.html
-//#define TWR_K60F120M                                                   // tower board http://www.utasker.com/kinetis/TWR-K60F120M.html
-//#define K60F150M_50M                                                   // board with 150MHz K60 and 50MHz clock
+    //#define TWR_K60N512                                                // K processors Cortex M4 with Ethernet, USB, encryption, tamper - tower board http://www.utasker.com/kinetis/TWR-K60N512.html
+    //#define TWR_K60D100M                                               // tower board http://www.utasker.com/kinetis/TWR-K60D100M.html
+    //#define TWR_K60F120M                                               // tower board http://www.utasker.com/kinetis/TWR-K60F120M.html
+    //#define K60F150M_50M                                               // board with 150MHz K60 and 50MHz clock
 
-//#define EMCRAFT_K61F150M                                               // K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - http://www.utasker.com/kinetis/EMCRAFT_K61F150M.html
+    //#define EMCRAFT_K61F150M                                           // K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - http://www.utasker.com/kinetis/EMCRAFT_K61F150M.html
 
-//#define FRDM_K64F                                                      // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
-//#define TWR_K64F120M                                                   // tower board http://www.utasker.com/kinetis/TWR-K64F120M.html
-//#define HEXIWEAR_K64F                                                  // hexiwear - wearable development kit for IoT (K64FN1M0VDC12 main processor) http://www.hexiwear.com/
-//#define TEENSY_3_5                                                     // USB development board with K64FX512 - http://www.utasker.com/kinetis/TEENSY_3.5.html
-//#define TWR_K65F180M                                                   // tower board http://www.utasker.com/kinetis/TWR-K65F180M.html
-//#define K66FX1M0                                                       // development board with K66FX1M0
-//#define FRDM_K66F                                                      // freedom board http://www.utasker.com/kinetis/FRDM-K66F.html
-//#define TEENSY_3_6                                                     // USB development board with K66FX1M0 - http://www.utasker.com/kinetis/TEENSY_3.6.html
+    //#define FRDM_K64F                                                  // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
+    //#define TWR_K64F120M                                               // tower board http://www.utasker.com/kinetis/TWR-K64F120M.html
+    //#define HEXIWEAR_K64F                                              // hexiwear - wearable development kit for IoT (K64FN1M0VDC12 main processor) http://www.hexiwear.com/
+    //#define TEENSY_3_5                                                 // USB development board with K64FX512 - http://www.utasker.com/kinetis/TEENSY_3.5.html
+    //#define TWR_K65F180M                                               // tower board http://www.utasker.com/kinetis/TWR-K65F180M.html
+    //#define K66FX1M0                                                   // development board with K66FX1M0
+    //#define FRDM_K66F                                                  // freedom board http://www.utasker.com/kinetis/FRDM-K66F.html
+    //#define TEENSY_3_6                                                 // USB development board with K66FX1M0 - http://www.utasker.com/kinetis/TEENSY_3.6.html
 
-//#define TWR_K70F120M                                                   // K processors Cortex M4 with graphical LCD, Ethernet, USB, encryption, tamper - tower board http://www.utasker.com/kinetis/TWR-K70F120M.html
-//#define K70F150M_12M                                                   // development board with 150MHz K70 and 12MHz crystal
+    //#define TWR_K70F120M                                               // K processors Cortex M4 with graphical LCD, Ethernet, USB, encryption, tamper - tower board http://www.utasker.com/kinetis/TWR-K70F120M.html
+    //#define K70F150M_12M                                               // development board with 150MHz K70 and 12MHz crystal
 
-//#define FRDM_K82F                                                      // K processors Cortex M4 with USB, encryption, tamper (scalable and secure) - freedom board http://www.utasker.com/kinetis/FRDM-K82F.html
-//#define TWR_POS_K81
-//#define TWR_K80F150M                                                   // tower board http://www.utasker.com/kinetis/TWR-K80F150M.html
+    //#define FRDM_K82F                                                  // K processors Cortex M4 with USB, encryption, tamper (scalable and secure) - freedom board http://www.utasker.com/kinetis/FRDM-K82F.html
+    //#define TWR_POS_K81
+    //#define TWR_K80F150M                                               // tower board http://www.utasker.com/kinetis/TWR-K80F150M.html
+#elif defined _STM32
+    //#define STM3210C_EVAL                                              // evaluation board with STM32F107VCT
+    //#define STM3240G_EVAL                                              // evaluation board with STM32F407IGH6
+    //#define ST_MB913C_DISCOVERY                                        // discovery board with STM32F100RB
+    #define ST_MB997A_DISCOVERY                                          // discovery board with STM32F407VGT6
+    //#define STM32F405_BOARD                                            // board with STM32F405
+    //#define STM32F407ZG_SK                                             // IAR prototyping board with STM32F407ZGT6
+    //#define STM32_P207                                                 // Olimex prototyping board with STM32F207ZET6
+#endif
 
 #if defined FRDM_KE02Z
     #define KINETIS_KE
@@ -335,12 +349,23 @@
     #define DEVICE_WITHOUT_CAN
     #define KINETIS_REVISION_2
 #elif defined TWR_KM34Z50M
+    #define TARGET_HW            "TWR-KM34Z50M"
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((8 * 1024) * MEM_FACTOR)
     #define KINETIS_KM
+    #define KINETIS_KM34                                                 // specify the sub-family type
     #define KINETIS_MAX_SPEED    50000000
-    #define TARGET_HW       "TWR-KM34Z50M"
-    #define DEVICE_WITHOUT_ETHERNET                                      // KM doesn't have Ethernet controller
-    #define DEVICE_WITHOUT_USB                                           // KM doesn't have USB
-    #define OUR_HEAP_SIZE   (HEAP_REQUIREMENTS)((8 * 1024) * MEM_FACTOR)
+    #define DEVICE_WITHOUT_USB
+    #define DEVICE_WITHOUT_CAN
+    #define DEVICE_WITHOUT_ETHERNET
+#elif defined TWR_KM34Z75M
+    #define TARGET_HW            "TWR-KM34Z75M"
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((8 * 1024) * MEM_FACTOR)
+    #define KINETIS_KM
+    #define KINETIS_KM34                                                 // specify the sub-family type
+    #define KINETIS_MAX_SPEED    75000000
+    #define DEVICE_WITHOUT_USB
+    #define DEVICE_WITHOUT_CAN
+    #define DEVICE_WITHOUT_ETHERNET
 #elif defined TWR_KW21D256
     #define KINETIS_KW2X
     #define KINETIS_KW21
@@ -710,6 +735,53 @@
     #define KINETIS_REVISION_2
     #define DEVICE_WITHOUT_ETHERNET                                      // K82 doesn't have Ethernet controller
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((30 * 1024) * MEM_FACTOR)
+#elif defined STM3210C_EVAL
+    #define TARGET_HW       "STM3210C-EVAL (STM32F107VCT)"
+    #define _STM32F107X                                                  // part group
+    #define OUR_HEAP_SIZE (HEAP_REQUIREMENTS)((24 * 1024) * MEM_FACTOR)  // we have the LAN buffers in HEAP and big RX/TX
+#elif defined STM3240G_EVAL
+    #define _ERRATE_REV_A_Z                                              // activate (SDIO) workarounds for revisions A and Z
+    #define TARGET_HW       "STM3240C-EVAL (STM32F407IGH6)"
+    #define _STM32F4XX
+    #define _STM32F407
+    #define OUR_HEAP_SIZE (HEAP_REQUIREMENTS)((24 * 1024) * MEM_FACTOR)  // we have the LAN buffers in HEAP and big RX/TX
+#elif defined STM32F407ZG_SK
+    #define _ERRATE_REV_A_Z                                              // activate (SDIO) workarounds for revisions A and Z
+    #define TARGET_HW       "STM32F407ZG-SK"
+    #define _STM32F4XX
+    #define _STM32F407
+    #define OUR_HEAP_SIZE (HEAP_REQUIREMENTS)((32 * 1024) * MEM_FACTOR)
+#elif defined ST_MB997A_DISCOVERY
+    #define EMBEST_BASE_BOARD                                            // activate when available to use Ethernet and SD card
+    #define _ERRATE_REV_A_Z                                              // activate (SDIO) workarounds for revisions A and Z
+    #if defined EMBEST_BASE_BOARD
+        #define TARGET_HW       "MB997A DISCOVERY/MO (STM32F407VGT6)"
+    #else
+        #define TARGET_HW       "MB997A DISCOVERY (STM32F407VGT6)"
+        #define DEVICE_WITHOUT_ETHERNET                                  // board doesn't have Ethernet without base-board
+    #endif
+    #define _STM32F4XX
+    #define _STM32F407
+    #define OUR_HEAP_SIZE (HEAP_REQUIREMENTS)((32 * 1024) * MEM_FACTOR)
+#elif defined STM32F405_BOARD
+    #define TARGET_HW       "STM32F405 BOARD"
+    #define FINAL_HW
+    #define UREVERSEMEMCPY
+    #define DEVICE_WITHOUT_ETHERNET                                      // board doesn't have Ethernet
+    #define _STM32F4XX
+    #define _STM32F407
+    #define OUR_HEAP_SIZE (HEAP_REQUIREMENTS)((32 * 1024) * MEM_FACTOR)
+#elif defined ST_MB913C_DISCOVERY
+    #define TARGET_HW       "MB913C DISCOVERY (STM32F100RBT6B)"
+    #define _STM32F100X                                                  // part group
+    #define DEVICE_WITHOUT_ETHERNET                                      // STM32F100 doesn't have Ethernet
+    #define OUR_HEAP_SIZE (HEAP_REQUIREMENTS)((2 * 1024) * MEM_FACTOR)
+#elif defined STM32_P207
+    #define _ERRATE_REV_A_Z                                              // activate (SDIO) workarounds for revisions A and Z
+    #define TARGET_HW       "STM32-P207"
+    #define _STM32F2XX
+    #define _STM32F207
+    #define OUR_HEAP_SIZE (HEAP_REQUIREMENTS)((24 * 1024) * MEM_FACTOR)  // we have the LAN buffers in HEAP and big RX/TX
 #endif
 
 
@@ -856,9 +928,9 @@
           //#define DEVELOPERS_LOADER_PROTOCOL_VERSION_9                 // user protocol version 9 rather than obsolete Kinetis 8 (not completed at the moment)
             #define DEVELOPERS_LOADER_READ                               // support reading back program
             #define DEVELOPERS_LOADER_CRC                                // support CRC in communication
-        #define REMOVE_SREC_LOADING                                      // disable SREC (and Intel Hex) loading but keep debug output and the command line menu
+      //#define REMOVE_SREC_LOADING                                      // disable SREC (and Intel Hex) loading but keep debug output and the command line menu
         #if !defined REMOVE_SREC_LOADING
-            #define SUPPORT_INTEL_HEX_MODE                               // support Intel Hex mode together with SREC (auto-recognition)
+          //#define SUPPORT_INTEL_HEX_MODE                               // support Intel Hex mode together with SREC (auto-recognition)
           //#define EXCLUSIVE_INTEL_HEX_MODE                             // loading mode is exclusively Intel Hex (use with or without SUPPORT_INTEL_HEX_MODE)
         #endif
       //#define SERIAL_STATS                                             // keep statistics about serial interface use
@@ -898,7 +970,7 @@
 #if defined DEVICE_WITHOUT_USB || defined DWGB_SDCARD
     #define NUMBER_USB     0                                             // no physical queue needed
 #else
-    #define USB_INTERFACE                                                // enable USB driver interface
+  //#define USB_INTERFACE                                                // enable USB driver interface
     #if defined USB_INTERFACE
       //#define USE_USB_CDC                                              // allow SREC/iHex loading via virtual COM
         #define USB_MSD_DEVICE_LOADER                                    // USB-MSD device mode (the board appears as a hard-drive to the host)

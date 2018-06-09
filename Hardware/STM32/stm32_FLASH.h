@@ -45,6 +45,10 @@
 /*                      local variable definitions                     */
 /* =================================================================== */
 
+#if defined _WINDOWS
+    static unsigned long ulFlashLockState = 0;
+#endif
+
 /* =================================================================== */
 /*                     global variable definitions                     */
 /* =================================================================== */
@@ -63,10 +67,6 @@ static void fnConfigSPIFileSystem(void)
 #endif
 
 #if defined ACTIVE_FILE_SYSTEM || defined USE_PARAMETER_BLOCK
-    #if defined _WINDOWS
-static unsigned long ulFlashLockState = 0;
-    #endif
-
     #if defined SPI_FLASH_ENABLED
 // This routine reads data from the defined device into a buffer. The access details inform of the length to be read (already limited to maximum possible length for the device)
 // as well as the address in the specific device
@@ -662,7 +662,7 @@ extern int fnEraseFlashSector(unsigned char *ptrSector, MAX_FILE_LENGTH Length)
         #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
         _ulSectorSize = fnGetFlashSectorSize(ptrSector, &ulSectorNumber);
         #endif
-        Length += (((CAST_POINTER_ARITHMETIC)ptrSector) - ((CAST_POINTER_ARITHMETIC)ptrSector & ~(_ulSectorSize - 1)));
+        Length += (MAX_FILE_LENGTH)(((CAST_POINTER_ARITHMETIC)ptrSector) - ((CAST_POINTER_ARITHMETIC)ptrSector & ~(_ulSectorSize - 1)));
         ptrSector = (unsigned char *)((CAST_POINTER_ARITHMETIC)ptrSector & ~(_ulSectorSize - 1)); // set to sector boundary
         if ((FLASH_CR & FLASH_CR_LOCK) != 0) {                           // if the flash has not been unlocked, unlock it before erasing
             FLASH_KEYR = FLASH_KEYR_KEY1;
@@ -711,7 +711,7 @@ extern int fnEraseFlashSector(unsigned char *ptrSector, MAX_FILE_LENGTH Length)
             break;
         }
         ptrSector += _ulSectorSize;                                      // advance sector point to next internal flash sector
-        Length -= _ulSectorSize;
+        Length -= (MAX_FILE_LENGTH)_ulSectorSize;
     } FOREVER_LOOP();
     #endif
 #endif

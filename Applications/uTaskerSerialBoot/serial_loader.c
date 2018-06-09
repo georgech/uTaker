@@ -907,7 +907,7 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
             #if defined MEMORY_SWAP && defined ADD_FILE_OBJECT_AFTER_LOADING
                 fnEraseFlashSector((unsigned char *)(UTASKER_APP_START + (SIZE_OF_FLASH/2) - (2 * FLASH_GRANULARITY)), 0); // delete the firmware's file object
             #endif
-                if (fnEraseFlashSector((unsigned char *)UTASKER_APP_START, (UTASKER_APP_END - (unsigned char *)UTASKER_APP_START)) == 0) // delete application space {2}
+                if (fnEraseFlashSector((unsigned char *)UTASKER_APP_START, (MAX_FILE_LENGTH)(UTASKER_APP_END - (unsigned char *)UTASKER_APP_START)) == 0) // delete application space {2}
         #endif
                 {
                     fnDebugMsg("successful\r\n> ");

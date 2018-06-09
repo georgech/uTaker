@@ -1719,7 +1719,7 @@ typedef struct stRESET_VECTOR
 
 // SLCD configuration
 //
-#if defined KINETIS_K30 || defined KINETIS_K40 || defined KINETIS_K51 || defined KINETIS_K53 || defined KINETIS_KL46 || defined KINETIS_KL43
+#if defined KINETIS_K30 || defined KINETIS_K40 || defined KINETIS_K51 || defined KINETIS_K53 || defined KINETIS_KL46 || defined KINETIS_KL43 || defined KINETIS_KM34
     #define DEVICE_WITH_SLCD
 #endif
 
@@ -4166,7 +4166,9 @@ typedef struct stVECTOR_TABLE
     #if ADC_CONTROLLERS > 3
         #define ADC3_BLOCK                     0x400bc000                // ADC3
     #endif
-    #if defined KINETIS_K30 || defined KINETIS_K40 || defined KINETIS_K51 || defined KINETIS_K53
+    #if defined KINETIS_KM
+        #define SLCD_BASE_ADD                  0x40043000                // SLCD Controller
+    #elif defined KINETIS_K30 || defined KINETIS_K40 || defined KINETIS_K51 || defined KINETIS_K53
         #define SLCD_BASE_ADD                  0x400be000                // SLCD Controller
     #elif defined KINETIS_KL46 || defined KINETIS_KL43
         #define SLCD_BASE_ADD                  0x40053000                // SLCD Controller
@@ -16444,7 +16446,7 @@ typedef struct stUSB_HW
   #define LCD_GCR_ALTDIV_512 0x00003000                                  // LCD alternative clock divider factor 512
   #define LCD_GCR_FDCIEN     0x00004000                                  // LCD fault detect complete interrupt enable
   #define LCD_GCR_LCDIEN     0x00008000                                  // LCD frame frequency interrupt enable (LCDIF bit causes interrupt)
-  #if defined KINETIS_KL
+  #if defined KINETIS_KL || defined KINETIS_KM
       #define LCD_GCR_VSUPPLY  0x00020000
   #else
       #define LCD_GCR_VSUPPLY_VLL2 0x00000000                            // drive VLL2 internally from VDD

@@ -663,7 +663,7 @@
         #define BUS_CLOCK_DIVIDE 2                                       // divide by 1 or 2 to give bus and flash clock (maximum 20MHz)
     #endif
 #elif defined TWR_KM34Z50M || defined TWR_KM34Z75M
-    #define RUN_FROM_DEFAULT_CLOCK                                       // default is 4MHz internal reference (requiring no configuration)
+    #define RUN_FROM_DEFAULT_CLOCK                                       // default is 2MHz internal reference (requiring no configuration)
 #elif defined FRDM_KE15Z || defined TWR_KE18F || defined HVP_KE18F
     #define OSC_LOW_GAIN_MODE
     #define CRYSTAL_FREQUENCY    8000000                                 // 8MHz crystal
@@ -6350,7 +6350,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 
     #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(D, (SWITCH_1), PORT_PS_UP_ENABLE); _CONFIG_PORT_INPUT_FAST_LOW(E, (SWITCH_2), PORT_PS_UP_ENABLE) // configure as input
 
-    #define WATCHDOG_DISABLE()     (_READ_PORT_MASK(D, SWITCH_1) == 0)   // pull this input down to disable watchdog (hold SW1 at reset)
+    #define WATCHDOG_DISABLE()     (_READ_PORT_MASK(E, SWITCH_2) == 0)   // pull this input down to disable watchdog (hold SW2 at reset)
 
     #define ACTIVATE_WATCHDOG()    UNLOCK_WDOG(); WDOG_TOVALL = (2000/5); WDOG_TOVALH = 0; WDOG_STCTRLH = (WDOG_STCTRLH_STNDBYEN | WDOG_STCTRLH_WAITEN | WDOG_STCTRLH_STOPEN | WDOG_STCTRLH_WDOGEN) // watchdog enabled to generate reset on 2s timeout (no further updates allowed)
 
@@ -6364,6 +6364,22 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
                                         {RGB(255,128,0),RGB(200,200,200),1, {481, 213, 491, 219 }, _PORTD, DEMO_LED_3}, \
                                         {RGB(0,220,0),RGB(200,200,200),  1, {481, 223, 491, 229 }, _PORTC, DEMO_LED_4}
 
+    // SLCD configuration with clock from MCGIRCLK (2MHz) divided by 64
+    //
+    #define CONFIGURE_SLCD()       MCG_C1 |= MCG_C1_IRCLKEN; \
+                                   POWER_UP_ATOMIC(5, SLCD); \
+                                   LCD_GCR = ((0x0b000000 & LCD_GCR_RVTRIM_MASK) | LCD_GCR_CPSEL | LCD_GCR_LADJ_MASK | LCD_GCR_VSUPPLY | LCD_GCR_ALTDIV_64 | LCD_GCR_SOURCE | LCD_GCR_LCLK_1 | LCD_GCR_DUTY_4BP); \
+                                   LCD_AR = (LCD_AR_BRATE_MASK & 3); \
+                                   LCD_BPENL = (SLCD_PIN_14 | SLCD_PIN_15); \
+                                   LCD_BPENH = (SLCD_PIN_H_59 | SLCD_PIN_H_60); \
+                                   LCD_PENL = ((SLCD_PIN_20 | SLCD_PIN_24 | SLCD_PIN_26 | SLCD_PIN_27) | (SLCD_PIN_14 | SLCD_PIN_15)); \
+                                   LCD_PENH = ((SLCD_PIN_H_40 | SLCD_PIN_H_42 | SLCD_PIN_H_43 | SLCD_PIN_H_44) | (SLCD_PIN_H_59 | SLCD_PIN_H_60)); \
+                                   fnClearSLCD(); \
+                                   WRITE_SLCD(15TO12, 0x08040000); \
+                                   WRITE_SLCD(59TO56, 0x01000000); \
+                                   WRITE_SLCD(63TO60, 0x00000002); \
+                                   LCD_GCR = (LCD_GCR_LCDEN | (0x0b000000 & LCD_GCR_RVTRIM_MASK) | LCD_GCR_CPSEL | LCD_GCR_LADJ_MASK | LCD_GCR_VSUPPLY | LCD_GCR_ALTDIV_64 | LCD_GCR_SOURCE | LCD_GCR_LCLK_1 | LCD_GCR_DUTY_4BP);
+                                   
 #elif defined FRDM_KE15Z || defined TWR_KE18F || defined HVP_KE18F
     #define DEMO_LED_1             (PORTD_BIT16)                         // (green LED) if the port is changed (eg. A to D) the port macros will require appropriate adjustment too
     #define DEMO_LED_2             (PORTD_BIT0)                          // (red LED) if the port is changed (eg. A to D) the port macros will require appropriate adjustment too

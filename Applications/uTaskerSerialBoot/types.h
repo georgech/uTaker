@@ -17,6 +17,7 @@
     01.12.2010 Add RX6XX                                                 {2}
     04.01.2011 Add Kinetis                                               {3}
     01.02.2011 Add LPC17XX                                               {4}
+    09.06.2018 Add STM32                                                 {5}
 
 */
 
@@ -139,6 +140,9 @@ typedef char              CHAR;
 #endif
 #if defined _KINETIS                                                     // {3}
     #include "app_hw_kinetis.h"
+#endif
+#if defined _STM32                                                       // {5}
+    #include "app_hw_STM32.h"
 #endif
 #endif                                                                   // end not defined __TYPES__
 

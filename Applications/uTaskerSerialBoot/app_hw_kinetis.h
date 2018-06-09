@@ -377,11 +377,8 @@
     #define CLOCK_DIV            4                                       // input must be divided to 2MHz..4MHz range (/1 to /25 possible)
     #define CLOCK_MUL            36                                      // the PLL multiplication factor to achieve operating frequency of 48MHz (x24 to x55 possible)
     #define USB_CLOCK_GENERATED_INTERNALLY                               // use USB clock from internal source rather than external pin
-#elif defined TWR_KM34Z50M
-    #define CRYSTAL_FREQUENCY    8000000                                 // 8 MHz crystal
-    #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
-    #define CLOCK_DIV            4                                       // input must be divided to 2MHz..4MHz range (/1 to /25 possible)
-    #define CLOCK_MUL            24                                      // the PLL multiplication factor to achieve operating frequency of 48MHz (x24 to x55 possible)
+#elif defined TWR_KM34Z50M || defined TWR_KM34Z75M
+    #define RUN_FROM_DEFAULT_CLOCK                                       // default is 2MHz internal reference (requiring no configuration)
 #elif defined TWR_KW21D256
   //#define RUN_FROM_DEFAULT_CLOCK                                       // default mode is FLL Engaged Internal - the 32kHz IRC is multiplied by FLL factor of 640 to obtain 20.9715MHz nominal frequency (20MHz..25MHz)
     #define RUN_FROM_MODEM_CLK_OUT                                       // use 32MHz modem clock as source (defaults to 32.768kHz or 4MHz)
@@ -863,12 +860,13 @@
     #else
         #define SIZE_OF_FLASH   (128 * 1024)                             // 128k program FLASH
     #endif
-#elif defined TWR_KM34Z50M
-    #define PIN_COUNT           PIN_COUNT_100_PIN                        // 100 pin LQFP
-  //#define PIN_COUNT           PIN_COUNT_64_PIN                         // 64 pin LQFP
-  //#define PIN_COUNT           PIN_COUNT_44_PIN                         // LGA pin LGA
+#elif defined TWR_KM34Z50M || defined TWR_KM34Z75M
+  //#define PIN_COUNT           PIN_COUNT_44_PIN
+  //#define PIN_COUNT           PIN_COUNT_64_PIN
+    #define PIN_COUNT           PIN_COUNT_100_PIN
+    #define PACKAGE_TYPE        PACKAGE_LQFP                             // LQFP
+  //#define SIZE_OF_FLASH       (64 * 1024)                              // 64k program Flash
     #define SIZE_OF_FLASH       (128 * 1024)                             // 128k program Flash
-  //#define SIZE_OF_FLASH       (64 * 1024)
     #define SIZE_OF_RAM         (16 * 1024)                              // 16k SRAM
 #elif defined TWR_KW21D256
   //#define SIZE_OF_FLASH       (512 * 1024)                             // 512k program Flash
@@ -1190,7 +1188,7 @@
         #define LOADER_UART           4                                  // use UART 4
     #elif defined TWR_K70F120M || defined TWR_KL46Z48M || defined TWR_K21D50M || defined TWR_KL43Z48M || defined TRK_KEA128 || defined TRK_KEA64 || defined KL25_TEST_BOARD || defined TWR_K65F180M || defined K26FN2_180 || defined FRDM_KEAZN32Q64 || defined FRDM_KEAZ64Q64 || defined FRDM_KEAZ128Q80 || defined TEENSY_3_5 || defined TEENSY_3_6 || defined DWGB_SDCARD
         #define LOADER_UART           2                                  // the serial interface used by the serial loader
-    #elif defined TWR_K20D50M || defined TWR_K80F150M || defined tinyK20 || defined TWR_K20D72M || defined FRDM_KE02Z || defined FRDM_KE02Z40M || defined FRDM_KE06Z || defined FRDM_K22F || defined TWR_K22F120M || defined TWR_K24F120M || defined K24FN1M0_120 || defined TWR_K64F120M || defined TWR_KW21D256 || defined TWR_KW24D512 || defined BLAZE_K22 || defined tinyK22 || defined FRDM_KE15Z || ((defined K02F100M || defined K12D50M) && defined DEV5) || (defined TWR_K60D100M && defined DEV6)
+    #elif defined TWR_KM34Z50M || defined TWR_KM34Z75M || defined TWR_K20D50M || defined TWR_K80F150M || defined tinyK20 || defined TWR_K20D72M || defined FRDM_KE02Z || defined FRDM_KE02Z40M || defined FRDM_KE06Z || defined FRDM_K22F || defined TWR_K22F120M || defined TWR_K24F120M || defined K24FN1M0_120 || defined TWR_K64F120M || defined TWR_KW21D256 || defined TWR_KW24D512 || defined BLAZE_K22 || defined tinyK22 || defined FRDM_KE15Z || ((defined K02F100M || defined K12D50M) && defined DEV5) || (defined TWR_K60D100M && defined DEV6)
         #define LOADER_UART           1                                  // the serial interface used by the serial loader
     #elif defined K02F100M || defined K12D50M || defined FRDM_K20D50M || defined FRDM_KL46Z || defined FRDM_KL43Z || defined FRDM_KL25Z || defined FRDM_KL26Z || defined FRDM_KL27Z || defined FRDM_KL28Z || defined TEENSY_LC || defined TWR_KL25Z48M || defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined TEENSY_3_1 || defined FRDM_K64F || defined FRDM_KE04Z || defined TWR_KV10Z32 || defined TWR_KV31F120M || defined TWR_KV58F220M || defined FRDM_KL82Z || defined FRDM_K66F || defined HEXIWEAR_K64F || ((defined TWR_K40X256 || defined TWR_K40D100M) && defined DEBUG_ON_VIRT_COM)
         #define LOADER_UART           0                                  // the serial interface used by the serial loader
@@ -1485,18 +1483,22 @@
     #define DMA_UART0_TX_CHANNEL   1                                     // use this DMA channel when using UART 0 for transmission driven by DMA
     #define DMA_UART1_TX_CHANNEL   2                                     // use this DMA channel when using UART 1 for transmission driven by DMA
     #define DMA_UART2_TX_CHANNEL   3                                     // use this DMA channel when using UART 2 for transmission driven by DMA
+    #define DMA_UART3_TX_CHANNEL   0
 
     #define DMA_UART0_RX_CHANNEL   3                                     // use this DMA channel when using UART 0 for transmission driven by DMA
     #define DMA_UART1_RX_CHANNEL   1                                     // use this DMA channel when using UART 1 for transmission driven by DMA
     #define DMA_UART2_RX_CHANNEL   2                                     // use this DMA channel when using UART 2 for transmission driven by DMA
+    #define DMA_UART3_RX_CHANNEL   0
 
     #define DMA_UART0_TX_INT_PRIORITY  (PRIORITY_DMA1)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
     #define DMA_UART1_TX_INT_PRIORITY  (PRIORITY_DMA2)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
     #define DMA_UART2_TX_INT_PRIORITY  (PRIORITY_DMA3)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+    #define DMA_UART3_TX_INT_PRIORITY  (PRIORITY_DMA0)
 
     #define DMA_UART0_RX_INT_PRIORITY  (PRIORITY_DMA2)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
     #define DMA_UART1_RX_INT_PRIORITY  (PRIORITY_DMA0)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
     #define DMA_UART2_RX_INT_PRIORITY  (PRIORITY_DMA1)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+    #define DMA_UART3_RX_INT_PRIORITY  (PRIORITY_DMA0)
 
     #define DMA_MEMCPY_CHANNEL     0
 #endif
@@ -3149,7 +3151,7 @@
 
     #define TOGGLE_WATCHDOG_LED()  _TOGGLE_PORT(E, BLINK_LED); if (SIM_SCGC5 & SIM_SCGC5_SLCD) { TOGGLE_SLCD(23TO20, 0x0000000f); TOGGLE_SLCD(27TO24, 0x00000002); }
 
-    #define SLCD_FILE   "SLCD\\TWR-KM34Z50M.lcd"                         // SLCD simulation file in the simulator directory SLCD
+  //#define SLCD_FILE   "SLCD\\TWR-KM34Z50M.lcd"                         // SLCD simulation file in the simulator directory SLCD
   //#define BIG_PIXEL                                                    // show SLCD double size
     #define LCD_ON_COLOUR      (COLORREF)RGB(210, 220, 210)              // RGB colour of LCD when backlight is on
     #define LCD_OFF_COLOUR     (COLORREF)RGB(10, 10, 10)                 // RGB colour of LCD when backlight is off
@@ -3172,11 +3174,6 @@
                                    WRITE_SLCD(59TO56, 0x01000000); \
                                    WRITE_SLCD(63TO60, 0x00000002); \
                                    LCD_GCR = (LCD_GCR_LCDEN | (0x0b000000 & LCD_GCR_RVTRIM_MASK) | LCD_GCR_CPSEL | LCD_GCR_LADJ_MASK | LCD_GCR_VSUPPLY | LCD_GCR_ALTDIV_64 | LCD_GCR_SOURCE | LCD_GCR_LCLK_1 | LCD_GCR_DUTY_4BP);
-                                   
-    // Display "USb" in SLCD
-    //
-    #define DEL_USB_SYMBOL()       CLEAR_SLCD(27TO24, 0x060b0000); CLEAR_SLCD(43TO40, 0x0f0a000d); CLEAR_SLCD(47TO44, 0x00000002)
-    #define SET_USB_SYMBOL()       SET_SLCD(27TO24,   0x060b0000); SET_SLCD(43TO40,   0x0f0a000d); SET_SLCD(47TO44,   0x00000002)
 #elif defined TWR_KW21D256 || defined TWR_KW24D512
     #define BLINK_LED              (PORTD_BIT4)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
     #define SWITCH_1               (PORTC_BIT4)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
@@ -3746,12 +3743,19 @@
 #endif
 
 
-#define PORT0_DEFAULT_INPUT        0xffffffff
-#define PORT1_DEFAULT_INPUT        0xffffffff
-#define PORT2_DEFAULT_INPUT        0xffffffff
-#define PORT3_DEFAULT_INPUT        0xffffffff
-#define PORT4_DEFAULT_INPUT        0xffffffff
-#define PORT5_DEFAULT_INPUT        0xffffffff                            // K70
+#define PORT0_DEFAULT_INPUT        0xffffffff                            // initial input states for port simulator (port A)
+#define PORT1_DEFAULT_INPUT        0xffffffff                            // port B
+#define PORT2_DEFAULT_INPUT        0xffffffff                            // port C
+#if defined BLAZE_K22 && defined SDCARD_SUPPORT
+    #define PORT3_DEFAULT_INPUT    0xffffff7f                            // port D - PTD7 low to detect SD card by default
+#else
+    #define PORT3_DEFAULT_INPUT    0xffffffff                            // port D
+#endif
+#define PORT4_DEFAULT_INPUT        0xffffffff                            // port E
+#define PORT5_DEFAULT_INPUT        0xffffffff                            // port F
+#define PORT6_DEFAULT_INPUT        0xffffffff                            // port G
+#define PORT7_DEFAULT_INPUT        0xffffffff                            // port H
+#define PORT8_DEFAULT_INPUT        0xffffffff                            // port I
 
 #if defined KINETIS_KL                                                   // {5} KL doesn't have SIM_SCG1 and SIM_SCG3 registers
     #if defined USB_INTERFACE                                            // disable USB regulator, USB controller module, UARTs and SD card controller, disable peripheral interrupts and clear possible pending
