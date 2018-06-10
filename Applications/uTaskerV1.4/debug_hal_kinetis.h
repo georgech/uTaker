@@ -2271,11 +2271,14 @@ extern unsigned char fnAddResetCause(CHAR *ptrBuffer)
     else {                                                               // unexpected
         ptrStr = cUnknown;
     }
-#elif defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_KE15 || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000) // {7}
+#elif defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_KM || defined KINETIS_KE15 || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000) // {7}
     static const CHAR cHostDebug[]     = "Host debugger";
-    #if !defined KINETIS_KL && !defined KINETIS_KE
+    #if !defined KINETIS_KL && !defined KINETIS_KE && !defined KINETIS_KM
     static const CHAR cEZPORT[]        = "EZPORT";
-    static const CHAR cTamper[] = "tamper";
+    static const CHAR cTamper[]        = "tamper";
+    #endif
+    #if defined RCM_SRS0_LOL
+    static const CHAR cPLL_LockLoss[]  = "lost PLL lock";
     #endif
     static const CHAR cPerFailure[]    = "peripheral failure";
 
@@ -2288,6 +2291,11 @@ extern unsigned char fnAddResetCause(CHAR *ptrBuffer)
     else if ((RCM_SRS0 & RCM_SRS0_LOC) != 0) {                           // loss of external clock
         ptrStr = cClockLoss;
     }
+    #if defined RCM_SRS0_LOL
+    else if ((RCM_SRS0 & RCM_SRS0_LOL) != 0) {                           // loss of PLL lock
+        ptrStr = cPLL_LockLoss;
+    }
+    #endif
     else if ((RCM_SRS0 & RCM_SRS0_WDOG) != 0) {                          // watchdog
         ptrStr = cWatchdog;
     }
@@ -2302,7 +2310,7 @@ extern unsigned char fnAddResetCause(CHAR *ptrBuffer)
     else if ((RCM_SRS0 & RCM_SRS0_PIN) != 0) {                           // reset pin
         ptrStr = cResetInput;
     }
-    #if !defined KINETIS_KL && !defined KINETIS_KE
+    #if !defined KINETIS_KL && !defined KINETIS_KE && !defined KINETIS_KM
     else if ((RCM_SRS1 & RCM_SRS1_JTAG) != 0) {                          // jtag
         ptrStr = cJtag;
     }
@@ -2316,7 +2324,7 @@ extern unsigned char fnAddResetCause(CHAR *ptrBuffer)
     else if ((RCM_SRS1 & RCM_SRS1_MDM_AP) != 0) {                        // host debugger
         ptrStr = cHostDebug;
     }
-    #if !defined KINETIS_KL && !defined KINETIS_KE
+    #if !defined KINETIS_KL && !defined KINETIS_KE && !defined KINETIS_KM
     else if ((RCM_SRS1 & RCM_SRS1_EZPT) != 0) {                          // EZPORT reset
         ptrStr = cEZPORT;
     }
@@ -2324,7 +2332,7 @@ extern unsigned char fnAddResetCause(CHAR *ptrBuffer)
     else if ((RCM_SRS1 & RCM_SRS1_SACKERR) != 0) {                       // peripheral failed to acknowledge attempt to enter stop mode
         ptrStr = cPerFailure;
     }
-    #if !defined KINETIS_KL && !defined KINETIS_KE
+    #if !defined KINETIS_KL && !defined KINETIS_KE && !defined KINETIS_KM
     else if ((RCM_SRS1 & RCM_SRS1_TAMPER) != 0) {                        // tamper detect
         ptrStr = cTamper;
     }

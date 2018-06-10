@@ -55,11 +55,49 @@
 
 
 
-
-#if defined RUN_FROM_DEFAULT_CLOCK                                       // no configuration performed - remain in default clocked mode
+#if BUS_CLOCK_DIVIDE == 2
+    SIM_CLKDIV1 = (((SYSTEM_CLOCK_DIVIDE - 1) << 28) | (SIM_CLKDIV1_SYSCLKMODE)); // prepare bus clock divides
+#elif BUS_CLOCK_DIVIDE == 1
     SIM_CLKDIV1 = ((SYSTEM_CLOCK_DIVIDE - 1) << 28);                     // prepare bus clock divides
-    #if defined FLL_FACTOR
+#else
+    _EXCEPTION("Bus/Flash clock can be either equal to sysclock or divided by 2")
+#endif
+
+#if defined RUN_FROM_DEFAULT_CLOCK                                       // no configuration performed - remain in default clocked mode (4MHz IRC/2)
+#elif defined RUN_FROM_EXTERNAL_CLOCK || defined RUN_FROM_EXTERNAL_CLOCK_FLL
+    OSC0_CR = (OSC_CR_ERCLKEN | OSC_CR_EREFSTEN);                        // enable the oscillator and allow it to continue oscillating in stop mode
+    MCG_C7 = (MCG_C7_PLL32KREFSEL_IRC);                                  // select the OSC clock as external clock input to the FLL and 32kHz IRC as input to the 32k PLL
+    MCG_C2 = (MCG_C2_FREQ_RANGE | MCG_C2_GAIN_MODE | MCG_C2_EREFS | MCG_C2_LOCRE0 | MCG_C2_IRCS); // select crystal oscillator and select a suitable range
+    MCG_C1 = (MCG_C1_CLKS_EXTERN_CLK | MCG_C1_FRDIV_VALUE);              // switch to external source (the FLL input clock is set to as close to its input range as possible, although this is not absolutely necessary if the FLL will not be used)
+    #if defined RUN_FROM_EXTERNAL_CLOCK_FLL && defined FLL_FACTOR
     MCG_C4 = ((MCG_C4 & ~(MCG_C4_DMX32 | MCG_C4_HIGH_RANGE)) | (_FLL_VALUE)); // adjust FLL factor to obtain the required operating frequency
+    #endif
+    while ((MCG_S & MCG_S_OSCINIT) == 0) {                               // loop until the crystal source has been selected
+    #if defined _WINDOWS
+        MCG_S |= MCG_S_OSCINIT;                                          // set the flag indicating that the ocsillator initialisation has completed
+    #endif
+    }
+    while ((MCG_S & MCG_S_IREFST) != 0) {                                // loop until the FLL source is no longer the internal reference clock
+    #if defined _WINDOWS
+        MCG_S &= ~MCG_S_IREFST;
+    #endif
+    }
+    while ((MCG_S & MCG_S_CLKST_MASK) != MCG_S_CLKST_EXTERN_CLK) {       // loop until the external reference clock source is valid
+    #if defined _WINDOWS
+        MCG_S &= ~MCG_S_CLKST_MASK;
+        MCG_S |= MCG_S_CLKST_EXTERN_CLK;
+    #endif
+    }
+    MCG_C6 = (MCG_C6_CME | MCG_C6_PLLS_FLL);                             // select FLL (rather than PLL) and enable oscillator monitor
+    // At this point we are runing directly from the 8MHz external clock source
+    //
+    #if defined RUN_FROM_EXTERNAL_CLOCK_FLL
+    MCG_C1 = (MCG_C1_CLKS_PLL_FLL | MCG_C1_FRDIV_VALUE);                 // switch to FLL
+    while ((MCG_S & MCG_S_CLKST_MASK) != MCG_S_CLKST_FLL) {              // loop until the FLL clock source is valid
+        #if defined _WINDOWS
+        MCG_S &= ~MCG_S_CLKST_MASK;
+        #endif
+    }
     #endif
 #else
     #if defined EXTERNAL_CLOCK || defined CLOCK_FROM_RTC_OSCILLATOR      // first move from state FEI to state FBE
@@ -92,7 +130,8 @@
         #if defined FLL_FACTOR || defined RUN_FROM_EXTERNAL_CLOCK
     OSC0_CR = (OSC_CR_ERCLKEN | OSC_CR_EREFSTEN);                        // enable the oscillator and allow it to continue oscillating in stop mode
         #endif
-    MCG_C2 = (MCG_C2_FREQ_RANGE | MCG_C2_GAIN_MODE | MCG_C2_EREFS | MCG_C2_LOCRE0); // select crystal oscillator and select a suitable range
+    MCG_C7 = (MCG_C7_PLL32KREFSEL_IRC);                                  // select the OSC clock as external clock input to the FLL and 32kHz IRC as input to the 32k PLL
+    MCG_C2 = (MCG_C2_FREQ_RANGE | MCG_C2_GAIN_MODE | MCG_C2_EREFS | MCG_C2_LOCRE0 | MCG_C2_IRCS); // select crystal oscillator and select a suitable range
     MCG_C1 = (MCG_C1_CLKS_EXTERN_CLK | MCG_C1_FRDIV_VALUE);              // switch to external source (the FLL input clock is set to as close to its input range as possible, although this is not absolutely necessary if the FLL will not be used)
     while ((MCG_S & MCG_S_OSCINIT) == 0) {                               // loop until the crystal source has been selected
         #if defined _WINDOWS
@@ -127,34 +166,15 @@
         MCG_S |= MCG_S_CLKST_EXTERN_CLK;
             #endif
     }
-            #if defined RUN_FROM_EXTERNAL_CLOCK                          // {101}
-    SIM_CLKDIV1 = (((SYSTEM_CLOCK_DIVIDE - 1) << 28) | ((BUS_CLOCK_DIVIDE - 1) << 24) | ((FLEX_CLOCK_DIVIDE - 1) << 20) | ((FLASH_CLOCK_DIVIDE - 1) << 16)); // prepare bus clock divides
+            #if defined RUN_FROM_EXTERNAL_CLOCK
+                #if BUS_CLOCK_DIVIDE == 2
+    SIM_CLKDIV1 = (((SYSTEM_CLOCK_DIVIDE - 1) << 28) | (SIM_CLKDIV1_SYSCLKMODE)); // prepare bus clock divides
+                #elif BUS_CLOCK_DIVIDE == 1
+    SIM_CLKDIV1 = ((SYSTEM_CLOCK_DIVIDE - 1) << 28);                     // prepare bus clock divides
+                #else
+    _EXCEPTION("Bus/Flash clock can be either equal to sysclock or divided by 2")
+                #endif
             #endif
-        #endif
-        #if !defined FLL_FACTOR && !defined RUN_FROM_EXTERNAL_CLOCK      // {95}
-    MCG_C5 = ((CLOCK_DIV - 1) | MCG_C5_PLLSTEN0);                        // now move from state FEE to state PBE (or FBE) PLL remains enabled in normal stop modes
-    MCG_C6 = ((CLOCK_MUL - MCG_C6_VDIV0_LOWEST) | MCG_C6_PLLS);          // set the PLL multiplication factor
-    while ((MCG_S & MCG_S_PLLST) == 0) {                                 // loop until the PLLS clock source becomes valid
-            #if defined _WINDOWS
-        MCG_S |= MCG_S_PLLST;
-            #endif
-    }
-    while ((MCG_S & MCG_S_LOCK) == 0) {                                  // loop until PLL locks
-            #if defined _WINDOWS
-        MCG_S |= MCG_S_LOCK;
-            #endif
-    }
-    SIM_CLKDIV1 = (((SYSTEM_CLOCK_DIVIDE - 1) << 28) | ((BUS_CLOCK_DIVIDE - 1) << 24) | ((FLEX_CLOCK_DIVIDE - 1) << 20) | ((FLASH_CLOCK_DIVIDE - 1) << 16)); // prepare bus clock divides
-            #if defined HIGH_SPEED_RUN_MODE_AVAILABLE && defined HIGH_SPEED_RUN_MODE_REQUIRED
-    SMC_PMCTRL = SMC_PMCTRL_RUNM_HSRUN;                                  // {118} set high speed run mode (restrictions apply) so that the clock speeds can be obtained  
-            #endif
-    MCG_C1 = (MCG_C1_CLKS_PLL_FLL | MCG_C1_FRDIV_1024);                  // finally move from PBE to PEE mode - switch to PLL clock
-    while ((MCG_S & MCG_S_CLKST_MASK) != MCG_S_CLKST_PLL) {              // loop until the PLL clock is selected
-            #if defined _WINDOWS
-        MCG_S &= ~MCG_S_CLKST_MASK;
-        MCG_S |= MCG_S_CLKST_PLL;
-            #endif
-    }
         #endif
     #endif
 #endif

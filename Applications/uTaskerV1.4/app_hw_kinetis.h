@@ -663,7 +663,17 @@
         #define BUS_CLOCK_DIVIDE 2                                       // divide by 1 or 2 to give bus and flash clock (maximum 20MHz)
     #endif
 #elif defined TWR_KM34Z50M || defined TWR_KM34Z75M
-    #define RUN_FROM_DEFAULT_CLOCK                                       // default is 2MHz internal reference (requiring no configuration)
+    #define OSC_LOW_GAIN_MODE
+    #define CRYSTAL_FREQUENCY    8000000                                 // 8 MHz crystal
+    #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
+  //#define RUN_FROM_DEFAULT_CLOCK                                       // default is 2MHz internal reference (requiring no configuration)
+  //#define RUN_FROM_EXTERNAL_CLOCK                                      // run directly from 8MHz crystal clock
+    #define RUN_FROM_EXTERNAL_CLOCK_FLL                                  // run from FLL locked to 8MHz crystal clock (default is 31.25kHz x 640 = 20MHz)
+    #if defined RUN_FROM_EXTERNAL_CLOCK_FLL
+        #define FRDIVIDER        256                                     // divide the crsytal input by 256 to obtain 31.25kHz
+    #endif
+    #define FLL_FACTOR           1280                                    // specify the FLL factor to use (factors available are 640, 732, 1280, 1464, 1920, 2197, 2560 and 2929)
+
 #elif defined FRDM_KE15Z || defined TWR_KE18F || defined HVP_KE18F
     #define OSC_LOW_GAIN_MODE
     #define CRYSTAL_FREQUENCY    8000000                                 // 8MHz crystal

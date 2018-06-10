@@ -365,7 +365,7 @@ static void fnSetDevice(unsigned long *port_inits)
     FMC_PFB1CR = 0x3002001f;
 #endif
 
-#if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000) // {26}
+#if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_KM || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000) // {26}
     #if defined KINETIS_KL28
     RCM_VERID = 0x03000003;
     RCM_PARAM = 0x00002eef;
@@ -10936,6 +10936,13 @@ extern void fnUpdateOperatingDetails(void)
         #else
     ulBusClockSpeed = (MCGOUTCLK / (((SIM_CLKDIV1 >> 24) & 0xf) + 1));
         #endif
+    #elif defined KINETIS_KM
+    if ((SIM_CLKDIV1 & SIM_CLKDIV1_SYSCLKMODE) != 0) {
+        ulBusClockSpeed = (SYSTEM_CLOCK / 2);
+    }
+    else {
+        ulBusClockSpeed = (SYSTEM_CLOCK);
+    }
     #elif defined KINETIS_KV10
     ulBusClockSpeed = (SYSTEM_CLOCK/(((SIM_CLKDIV1 >> 16) & 0x7) + 1));
     #elif defined KINETIS_KE

@@ -121,7 +121,7 @@
             #define UTASKER_APP_END   (unsigned char *)(UTASKER_APP_START + (38 * 1024)) // end of application space - after maximum application size
         #endif
         #define INTERMEDIATE_PROG_BUFFER  (1 * 1024)                     // when UART speed greater than 57600 Baud is used an intermediate buffer is recommended
-    #elif defined FRDM_KL25Z || defined FRDM_KL26Z || defined tinyK20 || defined TWR_KL25Z48M || defined FRDM_KE06Z || defined TRK_KEA128 || defined FRDM_K20D50M // {17}
+    #elif defined FRDM_KL25Z || defined FRDM_KL26Z || defined tinyK20 || defined TWR_KL25Z48M || defined FRDM_KE06Z || defined TRK_KEA128 || defined FRDM_K20D50M || defined TWR_KM34Z50M || defined TWR_KM34Z75M // {17}
         #define UTASKER_APP_START     (32 * 1024)                        // application starts at this address
         #define UTASKER_APP_END       (unsigned char *)(UTASKER_APP_START + (64 * 1024)) // end of application space - after maximum application size
         #define INTERMEDIATE_PROG_BUFFER  (2 * 1024)                     // when UART speed greater than 57600 Baud is used an intermediate buffer is recommended

@@ -46,6 +46,7 @@
     03.08.2017 Add USB-MSD iHex/SREC content support                     {30}
     05.10.2017 Add modbus loading support (takes precedence over serial) {31}
     17.01.2018 Add I2C slave mode                                        {32}
+    09.06.2018 Add FREE_RUNNING_RX_DMA_RECEPTION mode for SREC/iHEX loader in order to avoid need for an intermediate programming buffer and XON/XOFF pause operation {33}
 
 */
 
@@ -188,7 +189,7 @@ typedef struct
         static unsigned char *fnBlankCheck(void);
         static void fnPrintScreen(void);
         #if !defined REMOVE_SREC_LOADING                                 // {17}
-            #if defined USE_USB_CDC && !defined SERIAL_INTERFACE
+            #if defined USE_USB_CDC && !defined SERIAL_INTERFACE || defined FREE_RUNNING_RX_DMA_RECEPTION // {33}
                 #undef INTERMEDIATE_PROG_BUFFER
             #else
                 #if defined INTERMEDIATE_PROG_BUFFER
@@ -198,9 +199,9 @@ typedef struct
             #endif
         #endif
     #elif defined REMOVE_SREC_LOADING && !defined USE_MODBUS
-        #define NEEDS_BLANK_CHECK
-        static unsigned char *fnBlankCheck(void);
         #if !defined KBOOT_LOADER
+            #define NEEDS_BLANK_CHECK
+            static unsigned char *fnBlankCheck(void);
             static int fnPerformBlankCheck(void);
             static void fnPrintScreen(void);
         #endif
@@ -308,16 +309,35 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
         tInterfaceParameters.Channel = LOADER_UART;                      // set UART channel for serial use
     #if defined KBOOT_LOADER                                             // {20}
         tInterfaceParameters.ucSpeed = SERIAL_BAUD_57600;                // fixed baud rate for kboot compatibility
-        tInterfaceParameters.Config = (CHAR_8 + NO_PARITY + ONE_STOP + CHAR_MODE); // ensure no XON/XOFF mode used since the transfer is binary
+        tInterfaceParameters.Config = (CHAR_8 | NO_PARITY | ONE_STOP | CHAR_MODE); // ensure no XON/XOFF mode used since the transfer is binary
     #elif defined DEVELOPERS_LOADER                                      // {23}
         tInterfaceParameters.ucSpeed = SERIAL_BAUD_115200;               // fixed baud rate for developer's loader
-        tInterfaceParameters.Config = (CHAR_8 + NO_PARITY + ONE_STOP + CHAR_MODE); // ensure no XON/XOFF mode used since the transfer is binary
+        tInterfaceParameters.Config = (CHAR_8 | NO_PARITY | ONE_STOP | CHAR_MODE); // ensure no XON/XOFF mode used since the transfer is binary
     #else
         tInterfaceParameters.ucSpeed = SERIAL_SPEED;                     // baud rate
-        tInterfaceParameters.Config = (CHAR_8 + NO_PARITY + ONE_STOP + USE_XON_OFF + CHAR_MODE);
+        tInterfaceParameters.Config = (CHAR_8 | NO_PARITY | ONE_STOP | USE_XON_OFF | CHAR_MODE);
     #endif
     #if defined SERIAL_SUPPORT_DMA
+        #if defined FREE_RUNNING_RX_DMA_RECEPTION                        // {33}
+            #if (defined KINETIS_KL || defined KINETIS_KM) && !defined DEVICE_WITH_eDMA
+        tInterfaceParameters.ucDMAConfig = (UART_RX_DMA | UART_RX_MODULO | UART_TX_DMA); // modulo aligned reception memory is required by kinetis KL parts without eDMA in free-running DMA mode
+            #else
+        tInterfaceParameters.ucDMAConfig = (UART_RX_DMA | UART_TX_DMA);
+            #endif
+        tInterfaceParameters.Config &= ~(USE_XON_OFF);                   // disable XON/XOFF flow control
+        uTaskerStateChange(OWN_TASK, UTASKER_POLLING);                   // set the task to polling mode to regularly check the receive buffer
+        #else
         tInterfaceParameters.ucDMAConfig = 0;
+        #endif
+    #endif
+    #if defined USER_DEFINED_UART_RX_HANDLER
+        tInterfaceParameters.receptionHandler = 0;
+    #endif
+    #if defined USER_DEFINED_UART_RX_BREAK_DETECTION
+        tInterfaceParameters.receiveBreakHandler = 0;
+    #endif
+    #if defined USER_DEFINED_UART_TX_FRAME_COMPLETE
+        tInterfaceParameters.txFrameCompleteHandler = 0;
     #endif
         tInterfaceParameters.Rx_tx_sizes.RxQueueSize = RX_BUFFER_SIZE;   // input buffer size
         tInterfaceParameters.Rx_tx_sizes.TxQueueSize = TX_BUFFER_SIZE;   // output buffer size

@@ -2938,7 +2938,7 @@ unsigned char MC_PMPROT;
 unsigned char MC_PMCTRL;
 } KINETIS_MC;
 
-#if defined KINETIS_K_FPU || defined KINETIS_KL ||defined KINETIS_KE15 ||  defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000) // {16}
+#if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_KM ||defined KINETIS_KE15 ||  defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000) // {16}
 
     typedef struct stKINETIS_SMC                                         // {21}
     {
@@ -3847,7 +3847,7 @@ typedef struct stKINETIS_PERIPH
     KINETIS_LPUART     LPUART[LPUARTS_AVAILABLE];
 #endif
     KINETIS_USB        USB;
-#if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_KE15 || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000) // {16}
+#if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_KM || defined KINETIS_KE15 || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000) // {16}
     KINETIS_SMC        SMC;                                              // {21}
     KINETIS_RCM        RCM;                                              // {5}
 #elif !defined KINETIS_KE && !defined KINETIS_KEA

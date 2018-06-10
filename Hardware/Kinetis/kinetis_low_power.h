@@ -241,7 +241,7 @@ static int fnPresentLP_mode(void)
         return STOP_MODE;
     }
     #else
-        #if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000)
+        #if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_KM || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000)
     if (((SMC_PMPROT & SMC_PMPROT_AVLP) != 0) && ((SMC_PMCTRL & SMC_PMCTRL_RUNM_VLPR) != 0)) {
         return VLPR_MODE;
     }
@@ -358,7 +358,7 @@ extern int fnGetLowPowerMode(void)                                       // {1}
 
 #if defined KINETIS_KE
     #define fnSetStopMode()    SYSTEM_CONTROL_REGISTER |= SLEEPDEEP
-#elif defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000)
+#elif defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_KM || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000)
     #define fnSetStopMode()    SMC_PMCTRL = (SMC_PMCTRL_STOPM_NORMAL | SMC_PMCTRL_RUNM_NORMAL); SYSTEM_CONTROL_REGISTER |= SLEEPDEEP
 #else
     #define fnSetStopMode()    MC_PMCTRL = (MC_PMCTRL_LPLLSM_NORMAL_STOP | MC_PMCTRL_RUNM_NORMAL_RUN); SYSTEM_CONTROL_REGISTER |= SLEEPDEEP
@@ -378,7 +378,7 @@ extern void fnSetLowPowerMode(int new_lp_mode)                           // {1}
         //
     case WAIT_MODE:                                                      // wait mode
     #if !defined KINETIS_KE
-        #if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000)
+        #if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_KM || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000)
         SMC_PMCTRL = (SMC_PMCTRL_STOPM_NORMAL | SMC_PMCTRL_RUNM_NORMAL);
         #else
         MC_PMCTRL = (MC_PMCTRL_LPLLSM_NORMAL_STOP | MC_PMCTRL_RUNM_NORMAL_RUN);
@@ -410,7 +410,7 @@ extern void fnSetLowPowerMode(int new_lp_mode)                           // {1}
     case VLPW_MODE:                                                      // VLPW
         #endif
     case VLPR_MODE:                                                      // VLPR
-        #if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000)
+        #if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_KM || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000)
       //SMC_PMPROT |= SMC_PMPROT_AVLP;                                   // {3} - set once in kinetis.c
         SMC_PMCTRL |= (SMC_PMCTRL_RUNM_VLPR | SMC_PMCTRL_LPWUI);         // VLPR is entered immediately and VLPW results if the sleep instruction is later executed
         #else
@@ -424,7 +424,7 @@ extern void fnSetLowPowerMode(int new_lp_mode)                           // {1}
         }
         break;
     case VLPS_MODE:                                                      // VLPS
-        #if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000)
+        #if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_KM || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000)
       //SMC_PMPROT |= SMC_PMPROT_AVLP;                                   // {3} - set once in kinetis.c
         SMC_PMCTRL = (SMC_PMCTRL_RUNM_NORMAL | SMC_PMCTRL_STOPM_VLPS | SMC_PMCTRL_LPWUI);
         #else
@@ -438,7 +438,7 @@ extern void fnSetLowPowerMode(int new_lp_mode)                           // {1}
         #if defined ERRATA_ID_7214
         _EXCEPTION("LLS not functional with this chip mask");
         #else
-            #if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000)
+            #if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_KM || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000)
       //SMC_PMPROT |= SMC_PMPROT_ALLS;                                   // {3} - set once in kinetis.c
         SMC_PMCTRL = (SMC_PMCTRL_RUNM_NORMAL | SMC_PMCTRL_STOPM_LLS);
             #else
@@ -472,7 +472,7 @@ extern void fnSetLowPowerMode(int new_lp_mode)                           // {1}
         break;
         #endif
     case VLLS0_MODE:                                                     // VLLS0
-        #if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000)
+        #if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_KM || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000)
       //SMC_PMPROT |= SMC_PMPROT_AVLLS;                                  // {3} - set once in kinetis.c
             #if defined KINETIS_KL || defined KINETIS_K22 || defined KINETIS_K65 || defined KINETIS_K66 // KL and select K devices
         SMC_STOPCTRL = (unsigned char)(SMC_STOPCTRL_VLLSM_VLLS0 | (new_lp_mode & LOW_POWER_OPTIONS));
@@ -487,7 +487,7 @@ extern void fnSetLowPowerMode(int new_lp_mode)                           // {1}
         SYSTEM_CONTROL_REGISTER |= SLEEPDEEP;
         break;
     case VLLS1_MODE:                                                     // VLLS1
-        #if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000)
+        #if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_KM || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000)
       //SMC_PMPROT |= SMC_PMPROT_AVLLS;                                  // {3} - set once in kinetis.c
             #if defined KINETIS_KL || defined KINETIS_K22 || defined KINETIS_K65 || defined KINETIS_K66 // KL and select K devices
         SMC_STOPCTRL = (unsigned char)(SMC_STOPCTRL_VLLSM_VLLS1 | (new_lp_mode & LOW_POWER_OPTIONS));
@@ -503,7 +503,7 @@ extern void fnSetLowPowerMode(int new_lp_mode)                           // {1}
         break;
         #if !defined KINETIS_KL
     case VLLS2_MODE:                                                     // VLLS2
-        #if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000)
+        #if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_KM || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000)
       //SMC_PMPROT |= SMC_PMPROT_AVLLS;                                   // {3} - set once in kinetis.c
             #if defined KINETIS_KL || defined KINETIS_K22 || defined KINETIS_K65 || defined KINETIS_K66 // KL and select K devices
         SMC_STOPCTRL = (unsigned char)(SMC_STOPCTRL_VLLSM_VLLS2 | (new_lp_mode & LOW_POWER_OPTIONS));
@@ -519,7 +519,7 @@ extern void fnSetLowPowerMode(int new_lp_mode)                           // {1}
         break;
         #endif
     case VLLS3_MODE:                                                     // VLLS3
-        #if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000)
+        #if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_KM || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000)
       //SMC_PMPROT |= SMC_PMPROT_AVLLS;                                  // {3} - set once in kinetis.c
             #if defined KINETIS_KL || defined KINETIS_K22 || defined KINETIS_K65 || defined KINETIS_K66 // KL and select K devices
         SMC_STOPCTRL = (unsigned char)(SMC_STOPCTRL_VLLSM_VLLS3 | (new_lp_mode & LOW_POWER_OPTIONS));

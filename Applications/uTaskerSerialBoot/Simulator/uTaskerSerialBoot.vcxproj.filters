@@ -640,6 +640,9 @@
     <ClInclude Include="..\app_hw_stm32.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_KM_CLOCK.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="cursor1.cur">

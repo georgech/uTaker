@@ -378,7 +378,16 @@
     #define CLOCK_MUL            36                                      // the PLL multiplication factor to achieve operating frequency of 48MHz (x24 to x55 possible)
     #define USB_CLOCK_GENERATED_INTERNALLY                               // use USB clock from internal source rather than external pin
 #elif defined TWR_KM34Z50M || defined TWR_KM34Z75M
-    #define RUN_FROM_DEFAULT_CLOCK                                       // default is 2MHz internal reference (requiring no configuration)
+    #define OSC_LOW_GAIN_MODE
+    #define CRYSTAL_FREQUENCY    8000000                                 // 8 MHz crystal
+    #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
+  //#define RUN_FROM_DEFAULT_CLOCK                                       // default is 2MHz internal reference (requiring no configuration)
+  //#define RUN_FROM_EXTERNAL_CLOCK                                      // run directly from 8MHz crystal clock
+    #define RUN_FROM_EXTERNAL_CLOCK_FLL                                  // run from FLL locked to 8MHz crystal clock (default is 31.25kHz x 640 = 20MHz)
+    #if defined RUN_FROM_EXTERNAL_CLOCK_FLL
+        #define FRDIVIDER        256                                     // divide the crsytal input by 256 to obtain 31.25kHz
+    #endif
+    #define FLL_FACTOR           1280                                    // specify the FLL factor to use (factors available are 640, 732, 1280, 1464, 1920, 2197, 2560 and 2929)
 #elif defined TWR_KW21D256
   //#define RUN_FROM_DEFAULT_CLOCK                                       // default mode is FLL Engaged Internal - the 32kHz IRC is multiplied by FLL factor of 640 to obtain 20.9715MHz nominal frequency (20MHz..25MHz)
     #define RUN_FROM_MODEM_CLK_OUT                                       // use 32MHz modem clock as source (defaults to 32.768kHz or 4MHz)
@@ -1268,6 +1277,9 @@
       //#define SERIAL_SUPPORT_DMA_RX_FREERUN                            // support free-running reception mode
     #endif
     #define LPUART_CHARACTERISTICS     0
+    #if !defined REMOVE_SREC_LOADING && !defined USE_MODBUS && !defined KBOOT_LOADER && !defined DEVELOPERS_LOADER && !defined DEVICE_WITHOUT_DMA
+        #define FREE_RUNNING_RX_DMA_RECEPTION                            // user free-running uart rx DMA for SREC/iHEX loader
+    #endif
 #else
     #define TX_BUFFER_SIZE   (256)
     #define RX_BUFFER_SIZE   (256)

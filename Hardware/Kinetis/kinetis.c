@@ -2511,7 +2511,7 @@ static void _LowLevelInit(void)
     CPACR |= (0xf << 20);                                                // enable access to FPU
 #endif
 #if defined SUPPORT_LOW_POWER
-    #if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000)
+    #if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_KM || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000)
         #if !defined SMC_PMPROT_LOW_POWER_LEVEL
             #if defined HIGH_SPEED_RUN_MODE_AVAILABLE
                 #define SMC_PMPROT_LOW_POWER_LEVEL (SMC_PMPROT_AVLLS | SMC_PMPROT_ALLS | SMC_PMPROT_AVLP | SMC_PMPROT_AHSRUN) // allow all low power modes if nothing else defined

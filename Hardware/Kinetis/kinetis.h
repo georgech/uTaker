@@ -297,7 +297,7 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
     #define FLEXBUS_AVAILABLE
 #endif
 
-#if defined KINETIS_KE || defined KINETIS_KV10 || (defined KINETIS_KL && !defined KINETIS_KL82)
+#if defined KINETIS_KE || defined KINETIS_KV10 || defined KINETIS_KM || (defined KINETIS_KL && !defined KINETIS_KL82)
     #define BUS_FLASH_CLOCK_SHARED                                       // bus and flash clocks are shared and so have the same speed
 #endif
 
@@ -539,6 +539,7 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
         #endif
     #endif
 #elif defined KINETIS_KE15
+#elif defined KINETIS_KM
 #elif defined RUN_FROM_DEFAULT_CLOCK                                     // K-series running from defaut clock
     #if defined FLL_FACTOR                                               // using FLL
         #define CLOCK_DIV   1
@@ -3679,7 +3680,7 @@ typedef struct stVECTOR_TABLE
         #define UART5_BLOCK                    ((unsigned char *)(&kinetis.UART[5]))
     #endif
     #define USB_BASE_ADD                       ((unsigned char *)(&kinetis.USB)) // USB-OTG Controller
-    #if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_KE15 || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000) // {43}
+    #if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_KM || defined KINETIS_KE15 || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000) // {43}
         #define SMC_BASE_ADD                   ((unsigned char *)(&kinetis.SMC)) // System Mode Controller
         #define RCM_BASE_ADD                   ((unsigned char *)(&kinetis.RCM)) // Reset Control Module
     #elif !defined KINETIS_KE && !defined KINETIS_KEA
@@ -3989,7 +3990,11 @@ typedef struct stVECTOR_TABLE
     #else
         #define MCG_BLOCK                      0x40064000                // multi-purpose clock generator
     #endif
-    #define OSC0_BLOCK                         0x40065000                // oscillator 0
+    #if defined KINETIS_KM
+        #define OSC0_BLOCK                     0x40066000                // oscillator 0
+    #else
+        #define OSC0_BLOCK                     0x40065000                // oscillator 0
+    #endif
     #if (I2C_AVAILABLE + LPI2C_AVAILABLE) > 0
         #if defined KINETIS_KL28
             #define I2C0_BLOCK                 0x400c0000                // LPI2C0
@@ -4104,17 +4109,20 @@ typedef struct stVECTOR_TABLE
         #endif
     #endif
     #if defined LLWU_AVAILABLE
-        #define LLWU_BLOCK                     0x4007c000                // {62} Low-Leakage Wakeup Unit
+        #define LLWU_BLOCK                     0x4007c000                // {62} low-leakage wakeup unit
     #endif
-    #define PMC_BLOCK                          0x4007d000                // Power Management Controller
+    #define PMC_BLOCK                          0x4007d000                // power management controller
     #if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_KE15 || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000) // {43}
-        #define SMC_BASE_ADD                   0x4007e000                // System Mode Controller
-        #define RCM_BASE_ADD                   0x4007f000                // Reset Control Module
+        #define SMC_BASE_ADD                   0x4007e000                // system mode controller
+        #define RCM_BASE_ADD                   0x4007f000                // reset control module
+    #elif defined KINETIS_KM
+        #define SMC_BASE_ADD                   0x4007e000                // system mode controller
+        #define RCM_BASE_ADD                   0x4007b000                // reset control module
     #elif !defined KINETIS_KE && !defined KINETIS_KEA
-        #define MC_BASE_ADD                    0x4007e000                // Mode Control
+        #define MC_BASE_ADD                    0x4007e000                // mode control
     #endif
     #if defined RNG_AVAILABLE
-        #define RNGB_BASE_ADD                  0x400a0000                // Random Number Generator
+        #define RNGB_BASE_ADD                  0x400a0000                // random number generator
         #if defined KINETIS_KW2X
             #define RNGA_BASE_ADD              0x40029000
         #else
@@ -10894,91 +10902,95 @@ typedef struct stKINETIS_LPTMR_CTL
       #define SIM_CLKDIV1_SYSTEM_14          0xd0000000
       #define SIM_CLKDIV1_SYSTEM_15          0xe0000000
       #define SIM_CLKDIV1_SYSTEM_16          0xf0000000
-    #if defined KINETIS_KL
-      #define SIM_CLKDIV1_BUS_1              0x00000000                  // divide value for the bus/peripheral clock
-      #define SIM_CLKDIV1_BUS_2              0x00010000
-      #define SIM_CLKDIV1_BUS_3              0x00020000
-      #define SIM_CLKDIV1_BUS_4              0x00030000
-      #define SIM_CLKDIV1_BUS_5              0x00040000
-      #define SIM_CLKDIV1_BUS_6              0x00050000
-      #define SIM_CLKDIV1_BUS_7              0x00060000
-      #define SIM_CLKDIV1_BUS_8              0x00070000
-      #define SIM_CLKDIV1_BUS_9              0x00080000
-      #define SIM_CLKDIV1_BUS_10             0x00090000
-      #define SIM_CLKDIV1_BUS_11             0x000a0000
-      #define SIM_CLKDIV1_BUS_12             0x000b0000
-      #define SIM_CLKDIV1_BUS_13             0x000c0000
-      #define SIM_CLKDIV1_BUS_14             0x000d0000
-      #define SIM_CLKDIV1_BUS_15             0x000e0000
-      #define SIM_CLKDIV1_BUS_16             0x000f0000
-    #elif defined KINETIS_KV
-      #define SIM_CLKDIV1_BUS_1              0x00000000                  // divide value for the bus/peripheral clock
-      #define SIM_CLKDIV1_BUS_2              0x00010000
-      #define SIM_CLKDIV1_BUS_3              0x00020000
-      #define SIM_CLKDIV1_BUS_4              0x00030000
-      #define SIM_CLKDIV1_BUS_5              0x00040000
-      #define SIM_CLKDIV1_BUS_6              0x00050000
-      #define SIM_CLKDIV1_BUS_7              0x00060000
-      #define SIM_CLKDIV1_BUS_8              0x00070000
-
-      #define SIM_CLKDIV5_ADC_1              0x00000000                  // divide value for the bus/peripheral clock
-      #define SIM_CLKDIV5_ADC_2              0x00001000
-      #define SIM_CLKDIV5_ADC_3              0x00002000
-      #define SIM_CLKDIV5_ADC_4              0x00003000
-      #define SIM_CLKDIV5_ADC_5              0x00004000
-      #define SIM_CLKDIV5_ADC_6              0x00005000
-      #define SIM_CLKDIV5_ADC_7              0x00006000
-      #define SIM_CLKDIV5_ADC_8              0x00007000
-      #define SIM_OUTDIV5EN                  0x00008000
+    #if defined KINETIS_KM
+        #define SIM_CLKDIV1_SYSCLKMODE       0x08000000                  // bus and flash clock are equal to SYSCLK divided by 2
     #else
-      #define SIM_CLKDIV1_BUS_1              0x00000000                  // divide value for the bus/peripheral clock
-      #define SIM_CLKDIV1_BUS_2              0x01000000
-      #define SIM_CLKDIV1_BUS_3              0x02000000
-      #define SIM_CLKDIV1_BUS_4              0x03000000
-      #define SIM_CLKDIV1_BUS_5              0x04000000
-      #define SIM_CLKDIV1_BUS_6              0x05000000
-      #define SIM_CLKDIV1_BUS_7              0x06000000
-      #define SIM_CLKDIV1_BUS_8              0x07000000
-      #define SIM_CLKDIV1_BUS_9              0x08000000
-      #define SIM_CLKDIV1_BUS_10             0x09000000
-      #define SIM_CLKDIV1_BUS_11             0x0a000000
-      #define SIM_CLKDIV1_BUS_12             0x0b000000
-      #define SIM_CLKDIV1_BUS_13             0x0c000000
-      #define SIM_CLKDIV1_BUS_14             0x0d000000
-      #define SIM_CLKDIV1_BUS_15             0x0e000000
-      #define SIM_CLKDIV1_BUS_16             0x0f000000
-      #define SIM_CLKDIV1_FLEX_1             0x00000000                  // divide value for the flex bus clock
-      #define SIM_CLKDIV1_FLEX_2             0x00100000
-      #define SIM_CLKDIV1_FLEX_3             0x00200000
-      #define SIM_CLKDIV1_FLEX_4             0x00300000
-      #define SIM_CLKDIV1_FLEX_5             0x00400000
-      #define SIM_CLKDIV1_FLEX_6             0x00500000
-      #define SIM_CLKDIV1_FLEX_7             0x00600000
-      #define SIM_CLKDIV1_FLEX_8             0x00700000
-      #define SIM_CLKDIV1_FLEX_9             0x00800000
-      #define SIM_CLKDIV1_FLEX_10            0x00900000
-      #define SIM_CLKDIV1_FLEX_11            0x00a00000
-      #define SIM_CLKDIV1_FLEX_12            0x00b00000
-      #define SIM_CLKDIV1_FLEX_13            0x00c00000
-      #define SIM_CLKDIV1_FLEX_14            0x00d00000
-      #define SIM_CLKDIV1_FLEX_15            0x00e00000
-      #define SIM_CLKDIV1_FLEX_16            0x00f00000
-      #define SIM_CLKDIV1_FLASH_1            0x00000000                  // divide value for the flash clock
-      #define SIM_CLKDIV1_FLASH_2            0x00010000
-      #define SIM_CLKDIV1_FLASH_3            0x00020000
-      #define SIM_CLKDIV1_FLASH_4            0x00030000
-      #define SIM_CLKDIV1_FLASH_5            0x00040000
-      #define SIM_CLKDIV1_FLASH_6            0x00050000
-      #define SIM_CLKDIV1_FLASH_7            0x00060000
-      #define SIM_CLKDIV1_FLASH_8            0x00070000
-      #define SIM_CLKDIV1_FLASH_9            0x00080000
-      #define SIM_CLKDIV1_FLASH_10           0x00090000
-      #define SIM_CLKDIV1_FLASH_11           0x000a0000
-      #define SIM_CLKDIV1_FLASH_12           0x000b0000
-      #define SIM_CLKDIV1_FLASH_13           0x000c0000
-      #define SIM_CLKDIV1_FLASH_14           0x000d0000
-      #define SIM_CLKDIV1_FLASH_15           0x000e0000
-      #define SIM_CLKDIV1_FLASH_16           0x000f0000
+        #if defined KINETIS_KL
+          #define SIM_CLKDIV1_BUS_1          0x00000000                  // divide value for the bus/peripheral clock
+          #define SIM_CLKDIV1_BUS_2          0x00010000
+          #define SIM_CLKDIV1_BUS_3          0x00020000
+          #define SIM_CLKDIV1_BUS_4          0x00030000
+          #define SIM_CLKDIV1_BUS_5          0x00040000
+          #define SIM_CLKDIV1_BUS_6          0x00050000
+          #define SIM_CLKDIV1_BUS_7          0x00060000
+          #define SIM_CLKDIV1_BUS_8          0x00070000
+          #define SIM_CLKDIV1_BUS_9          0x00080000
+          #define SIM_CLKDIV1_BUS_10         0x00090000
+          #define SIM_CLKDIV1_BUS_11         0x000a0000
+          #define SIM_CLKDIV1_BUS_12         0x000b0000
+          #define SIM_CLKDIV1_BUS_13         0x000c0000
+          #define SIM_CLKDIV1_BUS_14         0x000d0000
+          #define SIM_CLKDIV1_BUS_15         0x000e0000
+          #define SIM_CLKDIV1_BUS_16         0x000f0000
+        #elif defined KINETIS_KV
+          #define SIM_CLKDIV1_BUS_1          0x00000000                  // divide value for the bus/peripheral clock
+          #define SIM_CLKDIV1_BUS_2          0x00010000
+          #define SIM_CLKDIV1_BUS_3          0x00020000
+          #define SIM_CLKDIV1_BUS_4          0x00030000
+          #define SIM_CLKDIV1_BUS_5          0x00040000
+          #define SIM_CLKDIV1_BUS_6          0x00050000
+          #define SIM_CLKDIV1_BUS_7          0x00060000
+          #define SIM_CLKDIV1_BUS_8          0x00070000
+
+          #define SIM_CLKDIV5_ADC_1          0x00000000                  // divide value for the bus/peripheral clock
+          #define SIM_CLKDIV5_ADC_2          0x00001000
+          #define SIM_CLKDIV5_ADC_3          0x00002000
+          #define SIM_CLKDIV5_ADC_4          0x00003000
+          #define SIM_CLKDIV5_ADC_5          0x00004000
+          #define SIM_CLKDIV5_ADC_6          0x00005000
+          #define SIM_CLKDIV5_ADC_7          0x00006000
+          #define SIM_CLKDIV5_ADC_8          0x00007000
+          #define SIM_OUTDIV5EN              0x00008000
+        #else
+          #define SIM_CLKDIV1_BUS_1          0x00000000                  // divide value for the bus/peripheral clock
+          #define SIM_CLKDIV1_BUS_2          0x01000000
+          #define SIM_CLKDIV1_BUS_3          0x02000000
+          #define SIM_CLKDIV1_BUS_4          0x03000000
+          #define SIM_CLKDIV1_BUS_5          0x04000000
+          #define SIM_CLKDIV1_BUS_6          0x05000000
+          #define SIM_CLKDIV1_BUS_7          0x06000000
+          #define SIM_CLKDIV1_BUS_8          0x07000000
+          #define SIM_CLKDIV1_BUS_9          0x08000000
+          #define SIM_CLKDIV1_BUS_10         0x09000000
+          #define SIM_CLKDIV1_BUS_11         0x0a000000
+          #define SIM_CLKDIV1_BUS_12         0x0b000000
+          #define SIM_CLKDIV1_BUS_13         0x0c000000
+          #define SIM_CLKDIV1_BUS_14         0x0d000000
+          #define SIM_CLKDIV1_BUS_15         0x0e000000
+          #define SIM_CLKDIV1_BUS_16         0x0f000000
+          #define SIM_CLKDIV1_FLEX_1         0x00000000                  // divide value for the flex bus clock
+          #define SIM_CLKDIV1_FLEX_2         0x00100000
+          #define SIM_CLKDIV1_FLEX_3         0x00200000
+          #define SIM_CLKDIV1_FLEX_4         0x00300000
+          #define SIM_CLKDIV1_FLEX_5         0x00400000
+          #define SIM_CLKDIV1_FLEX_6         0x00500000
+          #define SIM_CLKDIV1_FLEX_7         0x00600000
+          #define SIM_CLKDIV1_FLEX_8         0x00700000
+          #define SIM_CLKDIV1_FLEX_9         0x00800000
+          #define SIM_CLKDIV1_FLEX_10        0x00900000
+          #define SIM_CLKDIV1_FLEX_11        0x00a00000
+          #define SIM_CLKDIV1_FLEX_12        0x00b00000
+          #define SIM_CLKDIV1_FLEX_13        0x00c00000
+          #define SIM_CLKDIV1_FLEX_14        0x00d00000
+          #define SIM_CLKDIV1_FLEX_15        0x00e00000
+          #define SIM_CLKDIV1_FLEX_16        0x00f00000
+          #define SIM_CLKDIV1_FLASH_1        0x00000000                  // divide value for the flash clock
+          #define SIM_CLKDIV1_FLASH_2        0x00010000
+          #define SIM_CLKDIV1_FLASH_3        0x00020000
+          #define SIM_CLKDIV1_FLASH_4        0x00030000
+          #define SIM_CLKDIV1_FLASH_5        0x00040000
+          #define SIM_CLKDIV1_FLASH_6        0x00050000
+          #define SIM_CLKDIV1_FLASH_7        0x00060000
+          #define SIM_CLKDIV1_FLASH_8        0x00070000
+          #define SIM_CLKDIV1_FLASH_9        0x00080000
+          #define SIM_CLKDIV1_FLASH_10       0x00090000
+          #define SIM_CLKDIV1_FLASH_11       0x000a0000
+          #define SIM_CLKDIV1_FLASH_12       0x000b0000
+          #define SIM_CLKDIV1_FLASH_13       0x000c0000
+          #define SIM_CLKDIV1_FLASH_14       0x000d0000
+          #define SIM_CLKDIV1_FLASH_15       0x000e0000
+          #define SIM_CLKDIV1_FLASH_16       0x000f0000
+        #endif
     #endif
     #if !defined KINETIS_KL || defined KINETIS_KL82
         #define SIM_CLKDIV2                  *(unsigned long *)(SIM_BLOCK + 0x1048) // System Clock Divider Register 2
@@ -13732,7 +13744,7 @@ typedef struct stKINETIS_LPTMR_CTL
       #define MCG_C1_FRDIV_256           0x18                            // when RANGE is not 0 the external reference is divided by 256
       #define MCG_C1_FRDIV_512           0x20                            // when RANGE is not 0 the external reference is divided by 512
       #define MCG_C1_FRDIV_1024          0x28                            // when RANGE is not 0 the external reference is divided by 1024
-          #if defined KINETIS_KL || defined KINETIS_HAS_IRC48M
+          #if defined KINETIS_KL || defined KINETIS_KM || defined KINETIS_HAS_IRC48M
       #define MCG_C1_FRDIV_1280          0x30                            // when RANGE is not 0 the external reference is divided by 1280
       #define MCG_C1_FRDIV_1536          0x38                            // when RANGE is not 0 the external reference is divided by 1536
           #endif
@@ -13752,7 +13764,7 @@ typedef struct stKINETIS_LPTMR_CTL
         #if defined KINETIS_KL
           #define MCG_C2_FCFTRIM         0x40                            // Fast Internal Reference Clock Fine Tune
         #endif
-        #if defined KINETIS_K_FPU || (KINETIS_MAX_SPEED > 100000000) || (defined KINETIS_KL && !defined KINETSI_KL03) || defined KINETIS_KW2X
+        #if defined KINETIS_K_FPU || (KINETIS_MAX_SPEED > 100000000) || (defined KINETIS_KL && !defined KINETSI_KL03) || defined KINETIS_KW2X || defined KINETIS_KM
           #define MCG_C2_LOCRE0          0x80                            // reset on loss of clock
         #else
           #define MCG_C2_LOCRE0          0x00
@@ -13784,14 +13796,16 @@ typedef struct stKINETIS_LPTMR_CTL
               #define MCG_C5_PLLCLKEN0       0x40
         #endif
         #define MCG_C6                   *(unsigned char *)(MCG_BLOCK + 0x05) // MSG Control 6 Register
-          #if (defined KINETIS_K_FPU || (KINETIS_MAX_SPEED > 100000000)) && !defined KINETIS_K21 && !defined KINETIS_K22 && !defined KINETIS_K24 && !defined KINETIS_K64 && !defined KINETIS_KV30
-              #define MCG_C6_VDIV0_LOWEST  16
-          #elif defined KINETIS_KL82
-              #define MCG_C6_VDIV0_LOWEST  16
-          #else
-              #define MCG_C6_VDIV0_LOWEST  24
+          #if !defined KINETIS_KM                                        // KINETIS_KM has 32k PLL with fixed value to control the PLL charge pump current that can't be changed and reads as 0
+              #if (defined KINETIS_K_FPU || (KINETIS_MAX_SPEED > 100000000)) && !defined KINETIS_K21 && !defined KINETIS_K22 && !defined KINETIS_K24 && !defined KINETIS_K64 && !defined KINETIS_KV30
+                  #define MCG_C6_VDIV0_LOWEST  16
+              #elif defined KINETIS_KL82
+                  #define MCG_C6_VDIV0_LOWEST  16
+              #else
+                  #define MCG_C6_VDIV0_LOWEST  24
+              #endif
+              #define MCG_C6_VDIV0_MASK         0x1f
           #endif
-          #define MCG_C6_VDIV0_MASK      0x1f
           #define MCG_C6_CME             0x20                            // clock monitor enable
           #define MCG_C6_PLLS_FLL        0x00                            // FLL select
           #define MCG_C6_PLLS            0x40                            // PLL select
@@ -13819,10 +13833,10 @@ typedef struct stKINETIS_LPTMR_CTL
         #define MCG_S_LOCK               0x40                            // PLL has acquired lock
         #define MCG_S_LOLS               0x80                            // PLL has lost lock since LOLS was last cleared
       #endif
-      #if (defined KINETIS_K_FPU || (KINETIS_MAX_SPEED > 100000000)) || defined KINETIS_REVISION_2 ||  defined KINETIS_KL || defined KINETIS_KV || defined KINETIS_KW2X
+      #if (defined KINETIS_K_FPU || (KINETIS_MAX_SPEED > 100000000)) || defined KINETIS_REVISION_2 ||  defined KINETIS_KL || defined KINETIS_KV || defined KINETIS_KW2X || defined KINETIS_KM
         #define MCG_SC                   *(volatile unsigned char *)(MCG_BLOCK + 0x08) // MSG status and control register
           #if !defined KINETIS_WITH_MCG_LITE
-              #define MCG_SC_LOCS0       0x01                            // 
+              #define MCG_SC_LOCS0       0x01                            // loss of clock status
           #endif
           #define MCG_SC_FCRDIV_1        0x00                            // internal fast clock divided by 1
           #define MCG_SC_FCRDIV_2        0x02                            // internal fast clock divided by 2
@@ -13843,36 +13857,44 @@ typedef struct stKINETIS_LPTMR_CTL
          #define MCG_ATCVL               *(unsigned char *)(MCG_BLOCK + 0x0b) // MSG Auto Trim Compare Value Low Register
         #endif
       #endif
-      #if defined KINETIS_K_FPU || (KINETIS_MAX_SPEED > 100000000) || defined KINETIS_REVISION_2 || defined KINETIS_KW2X
+      #if defined KINETIS_K_FPU || (KINETIS_MAX_SPEED > 100000000) || defined KINETIS_REVISION_2 || defined KINETIS_KW2X || defined KINETIS_KM
         #define MCG_C7                   *(unsigned char *)(MCG_BLOCK + 0x0c) // MSG Control 7 Register
           #define MCG_C7_OSCSEL_OSCCLK   0x00                            // MCG FLL external reference clock is OSCCLK (OSCCLK0)
-          #define MCG_C7_OSCSEL_32K      0x01                            // MCG FLL external reference clock is 32 kHz RTC Oscillator
+          #if defined KINETIS_KM
+            #define MCG_C7_PLL32KREFSEL_RTC  0x00                        // MCG - 32 kHz RTC oscillator selected as input to 32kHz PLL
+            #define MCG_C7_PLL32KREFSEL_IRC  0x40                        // MCG - 32 kHz IRC selected as input to 32kHz PLL
+            #define MCG_C7_PLL32KREFSEL_FLL  0x80                        // MCG - FLL FRDIV selected as input to 32kHz PLL
+          #else
+            #define MCG_C7_OSCSEL_32K    0x01                            // MCG FLL external reference clock is 32 kHz RTC Oscillator
+          #endif
         #if defined KINETIS_HAS_IRC48M
           #define MCG_C7_OSCSEL_IRC48MCLK 0x02                           // MCG FLL external reference clock is IRC48M (OSCCLK1)
         #endif
         #define MCG_C8                   *(volatile unsigned char *)(MCG_BLOCK + 0x0d) // MSG Control 8 Register
         #define MCG_C9                   *(volatile unsigned char *)(MCG_BLOCK + 0x0e) // MSG Control 9 Register
-        #define MCG_C10                  *(unsigned char *)(MCG_BLOCK + 0x0f) // MSG Control 10 Register
-        #if defined KINETIS_K_FPU || (KINETIS_MAX_SPEED > 100000000)
-            #define MCG_C11                  *(unsigned char *)(MCG_BLOCK + 0x10) // MSG Control 11 Register
-              #define MCG_C11_PRDIV1_MASK    0x07                        // PLL1 external reference divider
-              #define MCG_C11_PLLCS_PPL0     0x00                        // PLL0 output is selected as the MCG source when CLKS are programmed in PLL engaged external mode
-              #define MCG_C11_PLLCS_PPL1     0x10                        // PLL1 output is selected as the MCG source when CLKS are programmed in PLL engaged external mode
-              #define MCG_C11_PLLSTEN1       0x20                        // PLL1 and its clocks remain enabled if system is in normal stop mode
-              #define MCG_C11_PLLCLKEN1      0x40                        // enable MCGPLL1CLK, MCGPLL1CLK2X and MCGDDRCLK2 (as long as MCG is not in bypass mode)
-              #define MCG_C11_PLLREFSEL1_OSC0 0x00                       // select OSC0 clock source as external reference clock source for PLL1
-              #define MCG_C11_PLLREFSEL1_OSC1 0x80                       // select OSC1 clock source as external reference clock source for PLL1
-            #define MCG_C12                  *(unsigned char *)(MCG_BLOCK + 0x11) // MSG Control 12 Register
-              #define MCG_C12_VDIV1_MASK     0x1f                        // VCO1 divider
-              #define MCG_C12_VDIV1_LOWEST   16
-              #define MCG_C12_CME2           0x20                        // clock monitor enable 2
-              #define MCG_C12_LOLIE1         0x80                        // PLL1 lost of lock interrupt enable
-            #define MCG_S2                   *(volatile unsigned char *)(MCG_BLOCK + 0x12) // MSG Status 2 Register
-              #define MCG_S2_LOCKS2          0x01                        // loss of OSC1 external reference clock has occurred
-              #define MCG_S2_OSCINIT1        0x02                        // OSC1 has been initialised
-              #define MCG_S2_PLLCST          0x10                        // FLL reference course is internal reference clock
-              #define MCG_S2_LOCK1           0x40                        // PLL1 has acquired lock
-              #define MCG_S2_LOLS1           0x80                        // PLL1 has lost lock since LOLS1 was last cleared
+        #if !defined KINETIS_KM
+            #define MCG_C10                  *(unsigned char *)(MCG_BLOCK + 0x0f) // MSG Control 10 Register
+            #if defined KINETIS_K_FPU || (KINETIS_MAX_SPEED > 100000000)
+                #define MCG_C11                  *(unsigned char *)(MCG_BLOCK + 0x10) // MSG Control 11 Register
+                  #define MCG_C11_PRDIV1_MASK    0x07                    // PLL1 external reference divider
+                  #define MCG_C11_PLLCS_PPL0     0x00                    // PLL0 output is selected as the MCG source when CLKS are programmed in PLL engaged external mode
+                  #define MCG_C11_PLLCS_PPL1     0x10                    // PLL1 output is selected as the MCG source when CLKS are programmed in PLL engaged external mode
+                  #define MCG_C11_PLLSTEN1       0x20                    // PLL1 and its clocks remain enabled if system is in normal stop mode
+                  #define MCG_C11_PLLCLKEN1      0x40                    // enable MCGPLL1CLK, MCGPLL1CLK2X and MCGDDRCLK2 (as long as MCG is not in bypass mode)
+                  #define MCG_C11_PLLREFSEL1_OSC0 0x00                   // select OSC0 clock source as external reference clock source for PLL1
+                  #define MCG_C11_PLLREFSEL1_OSC1 0x80                   // select OSC1 clock source as external reference clock source for PLL1
+                #define MCG_C12                  *(unsigned char *)(MCG_BLOCK + 0x11) // MSG Control 12 Register
+                  #define MCG_C12_VDIV1_MASK     0x1f                    // VCO1 divider
+                  #define MCG_C12_VDIV1_LOWEST   16
+                  #define MCG_C12_CME2           0x20                    // clock monitor enable 2
+                  #define MCG_C12_LOLIE1         0x80                    // PLL1 lost of lock interrupt enable
+                #define MCG_S2                   *(volatile unsigned char *)(MCG_BLOCK + 0x12) // MSG Status 2 Register
+                  #define MCG_S2_LOCKS2          0x01                    // loss of OSC1 external reference clock has occurred
+                  #define MCG_S2_OSCINIT1        0x02                    // OSC1 has been initialised
+                  #define MCG_S2_PLLCST          0x10                    // FLL reference course is internal reference clock
+                  #define MCG_S2_LOCK1           0x40                    // PLL1 has acquired lock
+                  #define MCG_S2_LOLS1           0x80                    // PLL1 has lost lock since LOLS1 was last cleared
+            #endif
         #endif
       #elif !defined KINETIS_KL && !defined KINETIS_KV
           #define MCG_ATC                *(unsigned char *)(MCG_BLOCK + 0x08) // MSG Auto Trim Control Register
@@ -16059,7 +16081,7 @@ typedef struct stUSB_HW
 
 
 
-#if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_KE15 || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000) // {43}
+#if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_KM || defined KINETIS_KE15 || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000) // {43}
     // System Mode Controller
     //
     #define SMC_PMPROT       *(volatile unsigned char *)(SMC_BASE_ADD + 0x0) // power mode protection register (write-once)
@@ -16144,6 +16166,9 @@ typedef struct stUSB_HW
             #define RCM_SRS0_WAKEUP 0x01                                 // reset caused by LLWU wakeup source
             #define RCM_SRS0_LVD    0x02                                 // reset caused by low voltage trip or power on reset
             #define RCM_SRS0_LOC    0x04                                 // reset caused by loss of external clock
+        #if defined KINETIS_KM
+            #define RCM_SRS0_LOL    0x04                                 // reset caused by loss of PLL lock
+        #endif
             #define RCM_SRS0_WDOG   0x20                                 // reset caused by watchdog timeout
             #define RCM_SRS0_PIN    0x40                                 // reset caused by external reset pin
             #define RCM_SRS0_POR    0x80                                 // power on reset
