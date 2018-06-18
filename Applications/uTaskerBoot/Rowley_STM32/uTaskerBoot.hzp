@@ -1,0 +1,33 @@
+<!DOCTYPE CrossStudio_Project_File>
+<solution Name="uTaskerBoot" target="8" version="2">
+  <project Name="uTaskerBoot">
+    <configuration Name="Common" Placement="Flash" Target="STM32F100RB" arm_architecture="v7M" arm_core_type="Cortex-M3" arm_linker_fiq_stack_size="0" arm_linker_heap_size="128" arm_linker_irq_stack_size="0" arm_linker_jtag_pad_pre_dr="1" arm_linker_jtag_pad_pre_ir="5" arm_linker_stack_size="128" arm_simulator_memory_simulation_filename="$(TargetsDir)/STM32/STM32SimulatorMemory.dll" arm_simulator_memory_simulation_parameter="STM32F100RB;0x20000;0x2000" arm_target_debug_interface_type="ADIv5" arm_target_loader_applicable_loaders="Flash" arm_target_loader_default_loader="Flash" arm_target_loader_parameter="8000000" c_additional_options="-Wall;-Wextra" c_preprocessor_definitions="PACK_STRUCT_END=__attribute((packed));ALIGN_STRUCT_END=__attribute((aligned(4)))" c_system_include_directories="$(StudioDir)/include;$(StudioDir)/include/targets" c_user_include_directories=".;..\\..\\Source\\include;..\\..\\Source\\portable\\GCC\\ARM_CM3;..\\Common\\Include;..\\Common\\drivers\\ST\\STM32F10xFWLib\\inc;..\\Common\\ethernet\\uIP\\uip-1.0\\uip;webserver;LCD" link_include_startup_code="No" linker_memory_map_file="$(TargetsDir)/STM32/STM32F100RB_MemoryMap.xml" linker_printf_width_precision_supported="No" linker_scanf_fmt_level="int" linker_section_placement_file="$(StudioDir)/targets/Cortex_M/flash_placement.xml" oscillator_frequency="8MHz" project_directory="" project_type="Executable" property_groups_file_path="$(TargetsDir)/STM32/propertyGroups.xml" target_match_partname_script="MatchPartName(&quot;$(Target)&quot;)" target_reset_script="Reset()"/>
+    <configuration Name="RAM" Placement="RAM" linker_section_placement_file="$(StudioDir)/targets/Cortex_M/ram_placement.xml" target_reset_script="SRAMReset()"/>
+    <folder Name="Source Files">
+      <configuration Name="Common" filter="c;cpp;cxx;cc;h;s;asm;inc"/>
+      <file file_name="../uTaskerBootLoader.c"/>
+    </folder>
+    <folder Name="System Files">
+      <file file_name="uTaskerSTM32.ld">
+        <configuration Name="Common" file_type="Linker Script"/>
+        <configuration Name="THUMB Flash Release" build_exclude_from_build="Yes"/>
+      </file>
+      <file file_name="STM32_Target.js">
+        <configuration Name="Common" file_type="Target Script"/>
+      </file>
+      <file file_name="uTaskerSTM32_F4.ld">
+        <configuration Name="Common" file_type="Linker Script"/>
+      </file>
+    </folder>
+    <configuration Name="THUMB Flash Debug" Target="STM32F407VG" arm_architecture="v7EM" arm_core_type="Cortex-M4" arm_fpu_type="FPv4-SP-D16" arm_gcc_target="arm-unknown-eabi" arm_instruction_set="Thumb" arm_simulator_memory_simulation_parameter="STM32F407VG;0x100000;0x20000" build_quietly="Yes" c_preprocessor_definitions="_STM32; _GNU; ROWLEY;ROWLEY_2" c_user_include_directories="..\\" gcc_entry_point="main" gcc_optimization_level="None" link_include_standard_libraries="No" linker_memory_map_file="$(TargetsDir)/STM32/STM32F407VG_MemoryMap.xml" linker_output_format="bin"/>
+    <configuration Name="THUMB Flash Release" Target="STM32F417IG" arm_architecture="v7EM" arm_core_type="Cortex-M4" arm_fpu_type="FPv4-SP-D16" arm_gcc_target="arm-unknown-eabi" arm_instruction_set="Thumb" arm_library_instruction_set="Thumb" arm_simulator_memory_simulation_parameter="STM32F417IG;0x100000;0x20000" arm_target_flash_loader_file_path="" arm_target_loader_parameter="8000000" asm_additional_options="" build_quietly="Yes" c_preprocessor_definitions="_STM32; _GNU; ROWLEY;ROWLEY_2" c_user_include_directories="..\\" gcc_entry_point="main" gcc_optimization_level="Optimize For Size" link_include_standard_libraries="No" linker_memory_map_file="$(TargetsDir)/STM32/STM32F417IG_MemoryMap.xml" linker_output_format="bin" oscillator_frequency="8MHz" target_get_partname_script="GetPartName()" target_match_partname_script="MatchPartName(&quot;$(Target)&quot;)" target_reset_script="Reset()"/>
+    <folder Name="Hardware">
+      <file file_name="../../../Hardware/STM32/STM32.h"/>
+      <file file_name="../../../Hardware/STM32/STM32_boot.c"/>
+    </folder>
+    <folder Name="Headers"/>
+    <configuration Name="Flash" arm_target_flash_loader_file_path="$(TargetsDir)/STM32/Release/STM32F2xx_Loader_rpc.elf" arm_target_flash_loader_type="LIBMEM RPC Loader"/>
+  </project>
+  <configuration Name="THUMB Flash Debug" gcc_optimization_level="Optimize For Size" inherited_configurations="THUMB;Flash;Debug"/>
+  <configuration Name="THUMB Flash Release" inherited_configurations="THUMB;Flash;Release"/>
+</solution>
