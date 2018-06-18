@@ -81,6 +81,7 @@
 #if !defined _HARDWARE
 #define _HARDWARE
 
+#define __callback_interrupt                                             // used to better identify user routines that are called from driver interrupts
 
 // It is expected that the hardware support delivers the following functions
 //

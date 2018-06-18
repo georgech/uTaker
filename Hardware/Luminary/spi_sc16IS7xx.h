@@ -155,7 +155,6 @@ static unsigned char ucIER[NUMBER_EXTERNAL_SERIAL] = {0};                // back
 //
 static void fnSendExtSCI_byte(QUEUE_HANDLE Channel, unsigned char ucAddress, unsigned char ucData)
 {
-    unsigned long ulDummy;
     unsigned char ucRegAddress = (((Channel & 0x01) << 1) | (ucAddress << 3));
 #if NUMBER_EXTERNAL_SERIAL > 2
     if (Channel & 0x02) {                                                // drive the appropriate chip select line
@@ -169,15 +168,15 @@ static void fnSendExtSCI_byte(QUEUE_HANDLE Channel, unsigned char ucAddress, uns
 #endif
     SC16IS7XX_SPI_TDR = ucRegAddress;                                    // transmit the address
     while (!(SC16IS7XX_SPI_SR & SSI_RNE)) {                              // wait until tx byte has been sent and rx byte has been completely received
-#ifdef _WINDOWS
+#if defined _WINDOWS
         SC16IS7XX_SPI_SR |= SSI_RNE;
 #endif
     };
-    ulDummy = SC16IS7XX_SPI_RDR;                                         // reset receive data flag with dummy read - the rx data is not interesting here
+    (void)SC16IS7XX_SPI_RDR;                                             // reset receive data flag with dummy read - the rx data is not interesting here
     SC16IS7XX_SPI_TDR = ucData;                                          // transmit the single data byte
-    while (!(SC16IS7XX_SPI_SR & SSI_RNE)) {};                            // wait until tx byte has been sent and rx byte has been completely received
-    ulDummy = SC16IS7XX_SPI_RDR;                                         // reset receive data flag with dummy read - the rx data is not interesting here
-#ifdef _WINDOWS
+    while ((SC16IS7XX_SPI_SR & SSI_RNE) == 0) {};                        // wait until tx byte has been sent and rx byte has been completely received
+    (void)SC16IS7XX_SPI_RDR;                                             // reset receive data flag with dummy read - the rx data is not interesting here
+#if defined _WINDOWS
     _fnSimExtSCI(Channel, ucRegAddress, ucData);                         // simulate the transmission
 #endif
     DISABLE_CHIP_SELECTS_SC16IS7XX();                                    // always release all chips select lines when exiting

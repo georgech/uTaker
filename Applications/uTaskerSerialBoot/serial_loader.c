@@ -47,6 +47,7 @@
     05.10.2017 Add modbus loading support (takes precedence over serial) {31}
     17.01.2018 Add I2C slave mode                                        {32}
     09.06.2018 Add FREE_RUNNING_RX_DMA_RECEPTION mode for SREC/iHEX loader in order to avoid need for an intermediate programming buffer and XON/XOFF pause operation {33}
+    11.06.2018 Update KBOOT to V2.0.0
 
 */
 

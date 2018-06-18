@@ -1554,9 +1554,13 @@
                                                                          // default is to use MCGPLLCLK
         #define PERIPHERAL_CLOCK_DIVIDE          8                       // optional divider for these options (divide 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 5, 6, 7 or 8)
         #define PERIPHERAL_CLOCK_DIVIDE_FRACTION 0                       // 0 or 5 (eg. PERIPHERAL_CLOCK_DIVIDE 2 and PERIPHERAL_CLOCK_DIVIDE_FRACTION 0 gives 2.0 and PERIPHERAL_CLOCK_DIVIDE_FRACTION 5 gives 2.5 divide)
+
+        #define FTM_CLOCKED_FROM_MCGFFLCLK                               // FTM timers clocked from MCGFFLCLK (32kHz or external FLL reference)
     #else
                                                                          // default is to use MCGPLLCLK/2 or MCGFLLCLK (depending on whether FLL or PLL is used)
     #endif
+#elif defined KINETIS_K64
+  //#define FTM_CLOCKED_FROM_MCGFFLCLK                                   // FTM timers clocked from MCGFFLCLK (32kHz or external FLL reference)
 #endif
 
 #define SUPPORT_LPTMR                                                    // {28} support low power timer

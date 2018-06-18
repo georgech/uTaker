@@ -438,6 +438,11 @@ static __interrupt void _flexTimerInterrupt_3(void)
             else {
                 usFlexTimerMode[iTimerReference] |= (FTM_SC_CLKS_SYS | FTM_SC_TOF); // set mode to start (shared by all channels) - system clock with overflow interrupt enabled [FTM_SC_TOF must be written with 1 to clear]
             }
+    #elif defined FTM_CLOCKED_FROM_MCGFFLCLK
+            // Ensure that slow internal clock is enabled and selected for MCGFFCLK
+            //
+            MCG_C1 |= (MCG_C1_IRCLKEN | MCG_C1_IREFSTEN | MCG_C1_IREFS); // enable internal reference clock and allow it to continue running in stop modes, plus select it as FLL reference (MCGFFLCLK)
+            usFlexTimerMode[iTimerReference] |= (FTM_SC_CLKS_FIX);       // set fixed clock
     #else
             usFlexTimerMode[iTimerReference] |= (FTM_SC_CLKS_SYS);       // {1} set mode to start (shared by all channels) - system clock with overflow interrupt enabled [FTM_SC_TOF must be written with 0 to clear]
     #endif

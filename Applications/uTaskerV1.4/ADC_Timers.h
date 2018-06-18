@@ -103,12 +103,12 @@
       //#define TEST_TIMER                                               // enable timer test(s)
         #if defined TEST_TIMER
             #if defined SUPPORT_PWM_MODULE                               // {9}
-                #define TEST_PWM                                         // {1} test generating PWM output from timer
+              //#define TEST_PWM                                         // {1} test generating PWM output from timer
               //#define TEST_STEPPER                                     // test generating stepper motor frequency patterns (use together with PWM)
             #endif
             #if defined SUPPORT_TIMER
               //#define TEST_SINGLE_SHOT_TIMER                           // test single-shot mode
-              //#define TEST_PERIODIC_TIMER                              // test periodic interrupt mode
+                #define TEST_PERIODIC_TIMER                              // test periodic interrupt mode
               //#define TEST_ADC_TIMER                                   // test periodic ADC trigger mode (Luminary)
               //#define TEST_CAPTURE                                     // {6} test timer capture mode
             #endif
@@ -1550,7 +1550,7 @@ static void fnConfigure_GPT(void)
 
 #if defined _ADC_TIMER_ROUTINES && defined TEST_TIMER
     #if !((defined _KINETIS || defined _M5223X) && (defined TEST_PWM && !defined TEST_PERIODIC_TIMER))
-static void timer_int(void)
+static __callback_interrupt void timer_int(void)
 {
         #if defined TEST_CAPTURE && defined _KINETIS                     // {24}
     static volatile unsigned long ulLastCapture = 0;
@@ -1913,9 +1913,14 @@ static void fnConfigure_Timer(void)
     #elif defined _KINETIS                                               // {16} Kinetis FlexTimer
     timer_setup.timer_reference = 0;                                     // FlexTimer/TPM 0
         #if defined TEST_PERIODIC_TIMER
+            #if defined FTM_CLOCKED_FROM_MCGFFLCLK
+    timer_setup.timer_mode = (TIMER_PERIODIC);                           // period timer interrupt
+    timer_setup.timer_value = TIMER_MS_DELAY(64000);                     // 64s periodic interrupt
+            #else
   //timer_setup.timer_mode = (TIMER_PERIODIC | TIMER_EXT_CLK_1);         // period timer interrupt using external clocksource 1
     timer_setup.timer_mode = (TIMER_PERIODIC);                           // period timer interrupt
     timer_setup.timer_value = TIMER_MS_DELAY(150);                       // 150ms periodic interrupt
+            #endif
         #elif defined TEST_CAPTURE                                       // {24}
     timer_setup.capture_channel = 1;                                     // channel 1
     timer_setup.capture_prescaler = 128;                                 // 1, 2, ..128 possible

@@ -1232,10 +1232,10 @@ typedef struct stRESET_VECTOR
 #if defined SUPPORT_SW_RTC || (defined KINETIS_KL && defined RTC_USES_LPO_1kHz) || (defined KINETIS_KE && defined SUPPORT_RTC) || defined _BOOT_LOADER
      #define NON_INITIALISED_RAM_SIZE    (16 + PERSISTENT_RAM_SIZE)
 #else
-     #define NON_INITIALISED_RAM_SIZE    (4 + PERSISTENT_RAM_SIZE)
+     #define NON_INITIALISED_RAM_SIZE    (4 + PERSISTENT_RAM_SIZE)       // reserve a long word at the end of SRAM for use by random number and serial loader mailbox
 #endif
 
-#if ((defined KINETIS_KL && !defined KINETIS_KL02) || defined KINETIS_K22 || defined KINETIS_K64)
+#if ((defined KINETIS_KL && !defined KINETIS_KL02) || defined KINETIS_K22 || defined KINETIS_K64  || defined KINETIS_K65  || defined KINETIS_K66)
     #define CLKOUT_AVAILABLE
 #endif
 
@@ -1294,7 +1294,7 @@ typedef struct stRESET_VECTOR
 
 // UART configuration
 //
-#if defined KINETIS_KL03 || defined KINETIS_KL28 || defined KINETIS_KL82 || defined KINETIS_K80 || defined KINETIS_KE15 // devices exclusively with LPUARTs
+#if defined KINETIS_KL03 || defined KINETIS_KL28 || defined KINETIS_KL82 || defined KINETIS_K80 || defined KINETIS_KE15 || defined KINETIS_KW41 // devices exclusively with LPUARTs
     #define UARTS_AVAILABLE         0
 #elif defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66
     #define UARTS_AVAILABLE         5
@@ -1351,7 +1351,7 @@ typedef struct stRESET_VECTOR
     #define LPUARTS_AVAILABLE       5
 #elif defined KINETIS_KL28 || defined KINETIS_KL82 || defined KINETIS_KE15
     #define LPUARTS_AVAILABLE       3
-#elif defined KINETIS_KL03
+#elif defined KINETIS_KL03 || defined KINETIS_KW41
     #define LPUARTS_AVAILABLE       1
 #elif defined KINETIS_KV31 || defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66
     #define LPUARTS_AVAILABLE       1
@@ -1772,12 +1772,14 @@ typedef struct stRESET_VECTOR
 #if defined KINETIS_KE15 || defined KINETIS_KL82 || defined KINETIS_KL28
     #define DEVICE_WITH_eDMA
     #define eDMA_SHARES_INTERRUPTS                                       // DMA channel 4 shares an interrupt vector with channel 0, 5 with 1, 6 with 2 and 7 with 3
-    #define DMA_CHANNEL_COUNT    8
+    #define DMA_CHANNEL_COUNT        8
 #elif defined KINETIS_KE || defined KINETIS_KL02 || defined KINETIS_KL03 // devices that don't support DMA
     #define DEVICE_WITHOUT_DMA
 #elif defined KINETIS_K_FPU && !defined KINETIS_K21 && !defined KINETIS_K22 && !defined KINETIS_K24 && !defined KINETIS_K64 && !defined KINETIS_KV30
     #define DEVICE_WITH_TWO_DMA_GROUPS
     #define DMA_CHANNEL_COUNT        16
+#elif defined KINETIS_KM
+    #define DMA_CHANNEL_COUNT        4
 #else
     #if defined KINETIS_KL
         #define DMA_CHANNEL_COUNT    4
@@ -11091,6 +11093,11 @@ typedef struct stKINETIS_LPTMR_CTL
     #define ATOMIC_CHECK_REGISTER(bit_band_address) (*(volatile unsigned long *)bit_band_address != 0)
 #endif
 
+// Bit manipulation in variables protected for interrupts
+//
+#define PROTECTED_SET_VARIABLE(var, bits)      uDisable_Interrupt(); var |= (bits);  uEnable_Interrupt()
+#define PROTECTED_CLEAR_VARIABLE(var, bits)    uDisable_Interrupt(); var &= ~(bits); uEnable_Interrupt()
+
 #if defined KINETIS_KE
     #define POWER_UP(reg, module)              SIM_SCGC |= (module)      // power up a module (apply clock to it)
     #define POWER_DOWN(reg, module)            SIM_SCGC &= ~(module)     // power down a module (disable clock to it)
@@ -18181,7 +18188,6 @@ extern void fnSimPers(void);
     #endif
     #define PWM_CLOCK             (TIMER_CLOCK)
 #else
-    #define TIMER_CLOCK           (BUS_CLOCK)
     #if defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_K80
         #if defined TPM_CLOCKED_FROM_OSCERCLK
         #elif defined TPM_CLOCKED_FROM_MCGIRCLK
@@ -18201,8 +18207,21 @@ extern void fnSimPers(void);
         #else
             #define TPM_PWM_CLOCK (_TPM_PWM_CLOCK)                       // undivided
         #endif
-        #define PWM_CLOCK         (BUS_CLOCK)
+        #if defined FTM_CLOCKED_FROM_MCGFFLCLK
+            #define TIMER_CLOCK   (MCGFFCLK)
+        #else
+            #define TIMER_CLOCK   (BUS_CLOCK)
+        #endif
+        #define PWM_CLOCK         (TIMER_CLOCK)
+    #elif defined KINETIS_K64
+        #if defined FTM_CLOCKED_FROM_MCGFFLCLK
+            #define TIMER_CLOCK   (MCGFFCLK)
+        #else
+            #define TIMER_CLOCK   (BUS_CLOCK)
+        #endif
+        #define PWM_CLOCK         (TIMER_CLOCK)
     #else
+        #define TIMER_CLOCK       (BUS_CLOCK)
         #define PWM_CLOCK         (TIMER_CLOCK)                          // {107} - corrected from (SYSTEM_CLOCK/2)
     #endif
     #define PWM_FIXED_CLOCK       (MCGFFCLK)
@@ -18995,7 +19014,7 @@ extern int  fnIsPending(int iInterruptID);                               // {90}
     #define DCRDR                     *(volatile unsigned long *)(CORTEX_M4_DEBUG + 0x8)
     #define DEMCR                     *(volatile unsigned long *)(CORTEX_M4_DEBUG + 0xc)
 
-    // Cortex data watch adn trace unit
+    // Cortex data watch and trace unit
     //
     #define DWT_CTRL                  *(volatile unsigned long *)(CORTEX_M4_DWT + 0x00)
         #define DWT_CTRL_CYCCNTENA    0x00000001                         // enable the cycle counter

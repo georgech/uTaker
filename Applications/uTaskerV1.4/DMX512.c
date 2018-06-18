@@ -25,35 +25,35 @@
 
 #if defined USE_DMX512_MASTER || defined USE_DMX512_SLAVE
 
-#define OWN_TASK                  TASK_DMX512
+#define OWN_TASK                       TASK_DMX512
 
 /* =================================================================== */
 /*                          local definitions                          */
 /* =================================================================== */
 
 #if defined FRDM_K66F
-    #define DMX512_MASTER_UART      5                                    // K66 LPUART 0
-    #define DMX512_RDM_TE_MASTER    PORTB_BIT6                           // master's drive output
-    #define DMX512_RDM_TE_SLAVE     PORTB_BIT7                           // slave's drive output
-    #define DMX512_SLAVE_UART       3                                    // K66 UART 1
+    #define DMX512_MASTER_UART         5                                 // K66 LPUART 0
+    #define DMX512_RDM_TE_MASTER       PORTB_BIT6                        // master's drive output
+    #define DMX512_RDM_TE_SLAVE        PORTB_BIT7                        // slave's drive output
+    #define DMX512_SLAVE_UART          3                                 // K66 UART 3
 #elif defined FRDM_K82F
-    #define DMX512_MASTER_UART      3                                    // K82 LPUART 3
-    #define DMX512_RDM_TE_MASTER    PORTB_BIT6                           // master's drive output
-    #define DMX512_RDM_TE_SLAVE     PORTB_BIT7                           // slave's drive output
-    #define DMX512_SLAVE_UART       1                                    // K82 LPUART 1
+    #define DMX512_MASTER_UART         3                                 // K82 LPUART 3
+    #define DMX512_RDM_TE_MASTER       PORTB_BIT6                        // master's drive output
+    #define DMX512_RDM_TE_SLAVE        PORTB_BIT7                        // slave's drive output
+    #define DMX512_SLAVE_UART          1                                 // K82 LPUART 1
 #elif defined FRDM_KL27Z
-    #define DMX512_MASTER_UART      1
-    #define DMX512_SLAVE_UART       2
+    #define DMX512_MASTER_UART         1
+    #define DMX512_SLAVE_UART          2
 #endif
 #if defined _WINDOWS
-    #define DMX512_PERIOD          300000                                // 300m period
+    #define DMX512_PERIOD             300000                             // 300m period
 #else
-    #define DMX512_PERIOD          30000                                 // 30.000ms
+    #define DMX512_PERIOD             30000                              // 30.000ms
 #endif
-#define DMX512_BREAK               100                                   // 100us break time
-#define DMX512_MAB                 16                                    // 16us MAB time
-#define DMX_SLOT_COUNT             512                                   // maximum DMX512 data length
-#define DMX512_TX_BUFFER_COUNT     2                                     // 2 buffers that can be prepared in advance
+#define DMX512_MASTER_BREAK_DURATION  100                                // 100us break time
+#define DMX512_MASTER_MAB_DURATION    16                                 // 16us MAB time
+#define DMX_SLOT_COUNT                512                                // maximum DMX512 data length
+#define DMX512_TX_BUFFER_COUNT        2                                  // 2 buffers that can be prepared in advance
 
 #define DMX512_MASTER_INTERFACE_COUNT 1
 #define DMX512_SLAVE_INTERFACE_COUNT  1
@@ -67,23 +67,28 @@
 #endif
 
 #if defined USE_DMX_RDM_MASTER
-    #define DMX512_TX_BUFFER_SIZE    (DMX_SLOT_COUNT + 1)
+    #define DMX512_TX_BUFFER_SIZE     (DMX_SLOT_COUNT + 1)
 #else
-    #define DMX512_TX_BUFFER_SIZE    (DMX_SLOT_COUNT + 1 + 2)
+    #define DMX512_TX_BUFFER_SIZE     (DMX_SLOT_COUNT + 1 + 2)
 #endif
+
+#define RDM_SLAVE_BREAK_DURATION      100                                // 100us break time
+#define RDM_SLAVE_MAB_DURATION        16                                 // 16us MAB time
 
 #if defined FRDM_K66F || defined FRDM_K82F
     #if defined FRDM_K82F
-        #define START_DMX512_BREAK() _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_LOW(C, PORTC_BIT17, 0, (PORT_SRE_FAST | PORT_DSE_HIGH)) // start break generation by configuring pin as GPIO, drivng 0
-        #define END_DMX512_BREAK()   _CONFIG_PERIPHERAL(C, 17, (PC_17_LPUART3_TX | UART_PULL_UPS)) // LPUART3_TX on PTC17 (alt. function 3)
+        #define START_DMX512_MASTER_BREAK()          _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_LOW(C, PORTC_BIT17, 0, (PORT_SRE_FAST | PORT_DSE_HIGH)) // start break generation by configuring pin as GPIO, drivng 0
+        #define END_DMX512_MASTER_BREAK()            _CONFIG_PERIPHERAL(C, 17, (PC_17_LPUART3_TX | UART_PULL_UPS)) // LPUART3_TX on PTC17 (alt. function 3)
     #else
-        #define START_DMX512_BREAK() _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_LOW(E, PORTE_BIT8, 0, (PORT_SRE_FAST | PORT_DSE_HIGH)) // start break generation by configuring pin as GPIO, drivng 0
-        #define END_DMX512_BREAK()   _CONFIG_PERIPHERAL(E, 8, (PE_8_LPUART0_TX | UART_PULL_UPS)) // LPUART0_TX on PTE8 (alt. function 5)
+        #define START_DMX512_MASTER_BREAK()          _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_LOW(E, PORTE_BIT8, 0, (PORT_SRE_FAST | PORT_DSE_HIGH)) // start break generation by configuring pin as GPIO, drivng 0
+        #define END_DMX512_MASTER_BREAK()            _CONFIG_PERIPHERAL(E, 8, (PE_8_LPUART0_TX | UART_PULL_UPS)) // LPUART0_TX on PTE8 (alt. function 5)
+        #define START_DMX512_SLAVE_BREAK()           _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_LOW(E, PORTE_BIT4, 0, (PORT_SRE_FAST | PORT_DSE_HIGH)) // start break generation by configuring pin as GPIO, drivng 0
+        #define END_DMX512_SLAVE_BREAK()             _CONFIG_PERIPHERAL(E, 4, (PE_4_UART3_TX | UART_PULL_UPS)); // UART3_TX on PTE4 (alt. function 3)
     #endif
     #if defined USE_DMX_RDM_MASTER
-        #define START_DMX512_TX()    fnDriver(DMX512_Master_PortID, (TX_ON | PAUSE_TX), MODIFY_TX)  // release paused output buffer
+        #define START_DMX512_TX()                    fnDriver(DMX512_Master_PortID, (TX_ON | PAUSE_TX), MODIFY_TX)  // release paused output buffer
     #else
-        #define START_DMX512_TX()    LPUART0_CTRL |= (LPUART_CTRL_TE)    // enable the transmitter so that waiting frame starts
+        #define START_DMX512_TX()                    LPUART0_CTRL |= (LPUART_CTRL_TE)    // enable the transmitter so that waiting frame starts
     #endif
     #define DMX512_CONFIGURE_MASTER_DRIVE_OUTPUT()   _CONFIG_DRIVE_PORT_OUTPUT_VALUE(B, PORTB_BIT6, PORTB_BIT6, (PORT_SRE_SLOW | PORT_DSE_LOW))
     #define DMX512_MASTER_DRIVE_OUTPUT()             _SETBITS(B, PORTB_BIT6)
@@ -93,31 +98,31 @@
     #define DMX512_SLAVE_DRIVE_OUTPUT()              _SETBITS(B, PORTB_BIT5)
     #define DMX512_SET_SLAVE_INPUT()                 _CLEARBITS(B, PORTB_BIT5)
 #elif defined FRDM_KL27Z
-    #define START_DMX512_BREAK()   _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_LOW(E, PORTE_BIT0, 0, (PORT_SRE_FAST | PORT_DSE_HIGH)) // start break generation by configuring pin as GPIO, drivng 0
-    #define END_DMX512_BREAK()     _CONFIG_PERIPHERAL(E, 0, (PE_0_LPUART1_TX | UART_PULL_UPS)) // LPUART1_TX on PE0 (alt. function 3)
-    #define START_DMX512_TX()      LPUART1_CTRL |= LPUART_CTRL_TE;       // enable the transmitter so that waiting DMA starts
+    #define START_DMX512_MASTER_BREAK()              _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_LOW(E, PORTE_BIT0, 0, (PORT_SRE_FAST | PORT_DSE_HIGH)) // start break generation by configuring pin as GPIO, drivng 0
+    #define END_DMX512_MASTER_BREAK()                _CONFIG_PERIPHERAL(E, 0, (PE_0_LPUART1_TX | UART_PULL_UPS)) // LPUART1_TX on PE0 (alt. function 3)
+    #define START_DMX512_TX()                        LPUART1_CTRL |= LPUART_CTRL_TE;       // enable the transmitter so that waiting DMA starts
 #endif
-//#define START_DMX512_TX() fnDriver(DMX512_Master_PortID, (TX_ON), MODIFY_TX); // note that this doesn't work since it configures the Tx again
+//#define START_DMX512_TX()                          fnDriver(DMX512_Master_PortID, (TX_ON), MODIFY_TX); // note that this doesn't work since it configures the Tx again
 
-#define START_CODE_DMX512               0x00
-#define START_CODE_RDM                  0xcc
+#define START_CODE_DMX512                            0x00
+#define START_CODE_RDM                               0xcc
 
-#define DISC_UNIQUE_BRANCH_PREAMBLE     0xfe
-#define DISC_UNIQUE_PREAMBLE_SEPARATOR  0xaa
+#define DISC_UNIQUE_BRANCH_PREAMBLE                  0xfe
+#define DISC_UNIQUE_PREAMBLE_SEPARATOR               0xaa
 
-#define SUB_START_CODE_MESSAGE          0x01
+#define SUB_START_CODE_MESSAGE                       0x01
 
 // Interrupt events
 //
-#define DMX512_TX_NEXT_TRANSMISSION          1
-#define DMX512_RDM_RECEPTION_READY           2
-#define DMX512_RDM_BROADCAST_RECEPTION_READY 3
-#define DMX512_DMX_RECEPTION_READY           4
+#define DMX512_TX_NEXT_TRANSMISSION                  1
+#define DMX512_RDM_RECEPTION_READY                   2
+#define DMX512_RDM_BROADCAST_RECEPTION_READY         3
+#define DMX512_DMX_RECEPTION_READY                   4
 
 // Hardware timer interrupt events
 //
-#define DMX512_START_MAB                1
-#define DMX512_START_TX                 2
+#define DMX512_START_MAB                             1
+#define DMX512_START_TX                              2
 
 
 typedef struct stDMX512_RDM_PACKET
@@ -175,14 +180,53 @@ typedef struct stDMX512_RDM_DISC_UNIQUE_BRANCH_RESPONSE_PACKET
 #define MUTE_MESSAGE_CONTROL_FIELD_BOOT_LOADER_FLAG          0x0004
 #define MUTE_MESSAGE_CONTROL_FIELD_PROXIED_DEVICE_FLAG       0x0008
 
-#define DMX512_RDM_RESPONSE_TYPE_DISCOVERY_COMMAND_RESPONSE
-#define DMX512_RDM_RESPONSE_TYPE_GET_COMMAND_RESPONSE
-#define DMX512_RDM_RESPONSE_TYPE_SET_COMMAND_RESPONSE
-
 #define DMX512_RDM_RESPONSE_TYPE_ACK                         0x00
 #define DMX512_RDM_RESPONSE_TYPE_ACK_TIMER                   0x01
 #define DMX512_RDM_RESPONSE_TYPE_NACK_REASON                 0x02
 #define DMX512_RDM_RESPONSE_TYPE_ACK_OVERFLOW                0x03
+
+
+// RDM parameter ID defines
+//
+#define DMX_BLOCK_ADRESS                                     0x0140      // DMX512 setup category
+#define DMX_FAIL_MODE                                        0x0141
+#define DMX_STARTUP_MODE                                     0x0142
+
+#define DIMMER_INFO                                          0x0340      // dimmer settings category
+#define DIMMER_MINIMUM_LEVEL                                 0x0341
+#define DIMMER_MAXIMUM_LEVEL                                 0x0342
+#define DIMMER_CURVE                                         0x0343
+#define DIMMER_CURVE_DESCRIPTION                             0x0344
+#define DIMMER_OUTPUT_RESPONSE_TIME                          0x0345
+#define DIMMER_OUTPUT_RESPONSE_TIME_DESCRIPTION              0x0346
+#define DIMMER_MODULATION_FREQUENCY                          0x0347
+#define DIMMER_MODULATION_FREQUENCY_DESCRIPTION              0x0348
+
+#define BURN_IN                                              0x0440      // power/lamp settings category
+
+#define LOCK_PIN                                             0x0640      // configuration category
+#define LOCK_STATE                                           0x0641
+#define LOCK_STATE_DESCRIPTION                               0x0642
+
+#define IDENTIFY_MODE                                        0x1040      // control category
+#define PRESET_INFO                                          0x1041
+#define PRESET_STATUS                                        0x1042
+#define PRESET_MERGEMODE                                     0x1043
+#define POWER_ON_SELF_TEST                                   0x1044
+
+// Preset programmed defines
+//
+#define PRESET_NOT_PROGRAMMED                                0x00        // preset scene not programmed
+#define PRESET_PROGRAMMED                                    0x01        // preset scene programmed
+#define PRESET_PROGRAMMED_READ_ONLY                          0x02        // preset scene read-only, factory programmed
+
+// Merge mode defines
+//
+#define MERGEMODE_DEFAULT                                    0x00        // preset overrides DMX512 default behavior as defined in E1.20 PRESET_PLAYBACK
+#define MERGEMODE_HPT                                        0x01        // highest takes precedence on slot by slot basis
+#define MERGEMODE_LPT                                        0x02        // lowest change takes precedence from preset or DMX512 on slot by slot basis
+#define MERGEMODE_DMX_ONLY                                   0x03        // DMX512 only, reset ignored
+#define MERGEMODE_OTHER                                      0xff        // other (undefined) merge mode
 
 #define DMX512_RDM_DISCOVERY     0x01
 #define DMX512_RDM_GLOBAL_UNMUTE 0x02
@@ -192,6 +236,8 @@ typedef struct stDMX512_RDM_DISC_UNIQUE_BRANCH_RESPONSE_PACKET
 #define DMX512_INITIALISED       0x10
 #define DMX512_RDM_RESTART       0x40
 #define DMX512_RDM_RECEPTION     0x80
+
+#define MAX_DISCOVERY_REPEATS    3
 
 
 /* =================================================================== */
@@ -204,7 +250,7 @@ typedef struct stDMX512_RDM_DISC_UNIQUE_BRANCH_RESPONSE_PACKET
 /* =================================================================== */
 
 #if defined USE_DMX512_SLAVE || (defined USE_DMX512_MASTER && defined USE_DMX_RDM_MASTER)
-    static int fnHandleDMX512_frame(QUEUE_HANDLE uart_handle, unsigned short usFrameLength, int iBroadcast);
+    static int  fnHandleDMX512_frame(QUEUE_HANDLE uart_handle, unsigned short usFrameLength, int iBroadcast);
     static void fnHandleDMX(QUEUE_HANDLE uart_handle, DMX512_RDM_PACKET *ptrPacket, unsigned short usPacketLength);
 #endif
 #if defined USE_DMX_RDM_MASTER || defined USE_DMX_RDM_SLAVE
@@ -221,6 +267,8 @@ typedef struct stDMX512_RDM_DISC_UNIQUE_BRANCH_RESPONSE_PACKET
         #define RDM_MASTER_RECEPTION_DETECTED 1
         #define RDM_MASTER_VALID_RECEPTION    2
     static void fnDMX512_Master_TxFrameTermination(QUEUE_HANDLE channel);
+    static int  fnDiscoverNext(void);
+    static void fnDiscoverCollision(void);
 #endif
 #if defined USE_DMX_RDM_SLAVE
     static int fnDMX512_slave_rx(unsigned char data, QUEUE_HANDLE channel);
@@ -266,6 +314,7 @@ static unsigned char ucDMX512_HW_event = 0;
     static unsigned char ucLowerBoundUID[6] = {0};
     static unsigned char ucUpperBoundUID[6] = {0};
     static unsigned char ucMasterSourceUID[6] = {0xcb, 0xa9, 0x87, 0x65, 0x43, 0x21}; // master's UID
+    static int iDiscoveryRepetition = 0;
 #endif
 
 
@@ -415,8 +464,15 @@ extern void fnDMX512(TTASKTABLE *ptrTaskTable)
                     iResult = fnHandleRDM_MasterRx(DMX512_Master_PortID, ucUID, 0);
                     switch (iResult) {
                     case RDM_MASTER_NO_RECEPTION:                        // no slave activity detected
+                        if (fnDiscoverNext() != 0) {                     // decide whether to repeat, to try another segment or to terminate
+                            ucDMX512_state &= ~(DMX512_RDM_STATE_MASK);  // discover has completed
+                            usTxLength = fnConstructDMX512(ucDMX512_tx_buffer);  // construct next DMX512 frame
+                            fnWrite(DMX512_Master_PortID, ucDMX512_tx_buffer, usTxLength); // prepare next DMX512 frame in the output buffer (it will be released at the end of the MAB period)
+                            continue;                                    // terminate
+                        }
                         break;
                     case RDM_MASTER_RECEPTION_DETECTED:                  // invalid data or collision detected
+                        fnDiscoverCollision();                           // reduce the segment size
                         break;
                     case RDM_MASTER_VALID_RECEPTION:                     // a slave has been identified
                         fnSend_DMX512_RDM(DMX512_Master_PortID, DMX512_RDM_COMMAND_CLASS_DISCOVERY_COMMAND, DMX512_RDM_PARAMETER_ID_DISC_MUTE, ucUID, 0); // prepare a uncast mute to the slave that we have discovered
@@ -424,7 +480,7 @@ extern void fnDMX512(TTASKTABLE *ptrTaskTable)
                             ucDMX512_state &= ~(DMX512_RDM_STATE_MASK);
                             ucDMX512_state |= (DMX512_RDM_UNICAST_MUTE); // mark that we are sending a unicast mute
                         uEnable_Interrupt();
-                        break;
+                        continue;
                     }
                     // Fall through intentionally
                     //
@@ -504,7 +560,7 @@ static void _frame_interrupt(void)
         }
     }
     #endif
-    START_DMX512_BREAK();                                                // initiate the break
+    START_DMX512_MASTER_BREAK();                                         // initiate the break
     #if !defined USE_DMX_RDM_MASTER
     fnInterruptMessage(OWN_TASK, (unsigned char)(DMX512_TX_NEXT_TRANSMISSION)); // inform the application that a DMX512 frame is just starting and it should prepare the following frame content
     #endif
@@ -519,7 +575,7 @@ static void _mab_start_interrupt(void)
         return;
     }
     #endif
-    END_DMX512_BREAK();                                                  // remove the break condition (this is the start of the MAB period)
+    END_DMX512_MASTER_BREAK();                                           // remove the break condition (this is the start of the MAB period)
 }
 
 // Interrupt at the end of the MAB period
@@ -553,14 +609,14 @@ static void fnConfigureDMX512_framing(void)
     #else
     pwm_setup.pwm_frequency = (unsigned short)PWM_TPM_CLOCK_US_DELAY(DMX512_PERIOD, 16); // generate frame rate frequency on PWM output
     #endif
-    pwm_setup.pwm_value = ((pwm_setup.pwm_frequency * DMX512_BREAK) / DMX512_PERIOD); // output starts low (inverted polarity) and goes high after the break time
+    pwm_setup.pwm_value = ((pwm_setup.pwm_frequency * DMX512_MASTER_BREAK_DURATION) / DMX512_PERIOD); // output starts low (inverted polarity) and goes high after the break time
     pwm_setup.int_priority = PRIORITY_HW_TIMER;                          // interrupt priority of cycle interrupt
     pwm_setup.pwm_mode |= PWM_CHANNEL_INTERRUPT;                         // use channel interrupt to stop the break
     pwm_setup.channel_int_handler = _mab_start_interrupt;
-    START_DMX512_BREAK();                                                // generate the first break immediately
+    START_DMX512_MASTER_BREAK();                                         // generate the first break immediately
     fnConfigureInterrupt((void *)&pwm_setup);                            // configure and start
     pwm_setup.pwm_reference = (_TPM_TIMER_1 | 1);                        // timer module 1, channel 1
-    pwm_setup.pwm_value = ((pwm_setup.pwm_frequency * (DMX512_BREAK + DMX512_MAB - 44))/DMX512_PERIOD); // second channel goes high after the MAB period to control the timing for the start of the frame transmission
+    pwm_setup.pwm_value = ((pwm_setup.pwm_frequency * (DMX512_MASTER_BREAK_DURATION + DMX512_MASTER_MAB_DURATION - 44))/DMX512_PERIOD); // second channel goes high after the MAB period to control the timing for the start of the frame transmission
     pwm_setup.int_handler = _frame_interrupt;                            // interrupt call-back on PWM cycle
     pwm_setup.channel_int_handler = _mab_stop_interrupt;
     fnConfigureInterrupt((void *)&pwm_setup);                            // configure and start
@@ -603,6 +659,7 @@ static void fnRDM_timeout(void)
 {
     fnDriver(DMX512_Master_PortID, (RX_OFF), MODIFY_RX);                 // disable reception
     DMX512_MASTER_DRIVE_OUTPUT();                                        // drive the output again
+    ucDMX512_state &= ~(DMX512_RDM_RECEPTION);
     fnInterruptMessage(OWN_TASK, (unsigned char)(DMX512_TX_NEXT_TRANSMISSION));
 }
 
@@ -627,6 +684,25 @@ static void fnDMX512_Master_TxFrameTermination(QUEUE_HANDLE channel)
     fnDriver(DMX512_Master_PortID, (TX_OFF | PAUSE_TX), MODIFY_TX);      // set the transmitter to paused mode so that we can queue a subsequent message
 }
     #endif
+
+// The last discovery was unanswered
+// - decide whether to repeat, to try another segment or to terminate
+//
+static int fnDiscoverNext(void)
+{
+    if (++iDiscoveryRepetition >= MAX_DISCOVERY_REPEATS) {
+        return 1;                                                        // terminate
+    }
+    return 0;                                                            // allow repeat to take place
+}
+
+
+// A collision was detected so we reduce the scope of the discovery to try to identify the individual slaves
+//
+static void fnDiscoverCollision(void)
+{
+    iDiscoveryRepetition = 0;
+}
 #endif
 
 
@@ -667,11 +743,46 @@ static int fnHandleDMX512_frame(QUEUE_HANDLE uart_handle, unsigned short usFrame
 
 static void fnHandleDMX(QUEUE_HANDLE uart_handle, DMX512_RDM_PACKET *ptrPacket, unsigned short usPacketLength)
 {
-    // To do
+    // This is called when standard DMX512 data content has been received
     //
 }
 
     #if defined USE_DMX_RDM_SLAVE
+static void __callback_interrupt fnRDM_mab(void)
+{
+    fnDriver(DMX512_Slave_PortID, (TX_ON | PAUSE_TX), MODIFY_TX);        // release paused output buffer
+}
+
+static void __callback_interrupt fnRDM_break(void)
+{
+    fnStartDelay(PIT_US_DELAY(RDM_SLAVE_MAB_DURATION), fnRDM_mab);
+    END_DMX512_SLAVE_BREAK();                                            // stop sending a break condition
+}
+
+// The slave's turnaround timer interrupt
+//
+static void __callback_interrupt fnRDM_turnaround(void)
+{
+    if (iTurnAroundDelaySlave > 1) {                                     // if the slave has prepared data in the meantime
+        DMX512_SLAVE_DRIVE_OUTPUT();                                     // switch to transmission mode
+        if (iTurnAroundDelaySlave == 2) {
+            fnDriver(DMX512_Slave_PortID, (TX_ON | PAUSE_TX), MODIFY_TX);// release paused output buffer
+        }
+        else {
+            fnStartDelay(PIT_US_DELAY(RDM_SLAVE_BREAK_DURATION), fnRDM_break);
+            START_DMX512_SLAVE_BREAK();                                  // start sending a break condition
+        }
+    }
+    iTurnAroundDelaySlave = 0;                                           // slave may transmit now if it wasn't ready
+}
+
+// Interrupt callback on termination of slave transmit frame
+//
+static void __callback_interrupt fnDMX512_Slave_TxFrameTermination(QUEUE_HANDLE channel)
+{
+    DMX512_SET_SLAVE_INPUT();                                            // stop driving the bus
+}
+
 static void fnDMX512_discoveryResponse(QUEUE_HANDLE uart_handle, unsigned char ucLowerBound[6], unsigned char ucUpperBound[6])
 {
     DMX512_RDM_DISC_UNIQUE_BRANCH_RESPONSE_PACKET disc_unique_branch_response;
@@ -712,9 +823,9 @@ static void fnDMX512_discoveryResponse(QUEUE_HANDLE uart_handle, unsigned char u
             i = 0;                                                       // the turn around delay has already expired we we will release the message now
         }
     uEnable_Interrupt();
-    if (i == 0) {                                                        // if the turnaroudn time has already expired
+    if (i == 0) {                                                        // if the turnaround time has already expired
         DMX512_SLAVE_DRIVE_OUTPUT();                                     // switch to transmission mode
-        fnDriver(uart_handle, (TX_ON | PAUSE_TX), MODIFY_TX);            // release paused output buffer
+        fnDriver(uart_handle, (TX_ON | PAUSE_TX), MODIFY_TX);            // release paused output buffer - the discovery response has no break condition sent before it
     }
 }
 
@@ -725,7 +836,7 @@ static void fnHandleRDM_SlaveRx(QUEUE_HANDLE uart_handle, DMX512_RDM_PACKET *ptr
     DMX512_MESSAGE_DATA_BLOCK *ptrDataBlock = (DMX512_MESSAGE_DATA_BLOCK *)ptrPacket->ucMessageDataBlock;
     unsigned short usPID = ((ptrDataBlock->ucParameterID[0] << 8) | (ptrDataBlock->ucParameterID[1]));
     switch (ptrDataBlock->ucCommandClass) {
-    case DMX512_RDM_COMMAND_CLASS_DISCOVERY_COMMAND:
+    case DMX512_RDM_COMMAND_CLASS_DISCOVERY_COMMAND:                     // discovery
         switch (usPID) {
         case DMX512_RDM_PARAMETER_ID_DISC_UNIQUE_BRANCH:
             if (ptrDataBlock->ucParameterDataLength == 0x0c) {           // check the fixed length of the bounds is correct
@@ -744,35 +855,101 @@ static void fnHandleRDM_SlaveRx(QUEUE_HANDLE uart_handle, DMX512_RDM_PACKET *ptr
             return;
         }
         break;
+    case DMX512_RDM_COMMAND_CLASS_GET_COMMAND:                           // get
+        switch (usPID) {
+        // DMX512 setup category
+        //
+        case DMX_BLOCK_ADRESS:                                           // 0x0140
+        case DMX_FAIL_MODE:                                              // 0x0141
+        case DMX_STARTUP_MODE:                                           // 0x0142
+            break;
+        // Dimmer settings category
+        //
+        case DIMMER_INFO:                                                // 0x0340
+        case DIMMER_MINIMUM_LEVEL:                                       // 0x0341
+        case DIMMER_MAXIMUM_LEVEL:                                       // 0x0342
+        case DIMMER_CURVE:                                               // 0x0343
+        case DIMMER_CURVE_DESCRIPTION:                                   // 0x0344
+        case DIMMER_OUTPUT_RESPONSE_TIME:                                // 0x0345
+        case DIMMER_OUTPUT_RESPONSE_TIME_DESCRIPTION:                    // 0x0346
+        case DIMMER_MODULATION_FREQUENCY:                                // 0x0347
+        case DIMMER_MODULATION_FREQUENCY_DESCRIPTION:                    // 0x0348
+        // Power/lamp settings category
+        //
+        case BURN_IN:                                                    // 0x0440
+        // Configuration category
+        //
+        case LOCK_PIN:                                                   // 0x0640      
+        case LOCK_STATE:                                                 // 0x0641
+        case LOCK_STATE_DESCRIPTION:                                     // 0x0642
+        // Control category
+        //
+        case IDENTIFY_MODE:                                              // 0x1040      
+        case PRESET_INFO:                                                // 0x1041
+        case PRESET_STATUS:                                              // 0x1042
+        case PRESET_MERGEMODE:                                           // 0x1043
+        case POWER_ON_SELF_TEST:                                         // 0x1044
+        default:
+            return;
+        }
+        break;
+    case DMX512_RDM_COMMAND_CLASS_SET_COMMAND:                           // set
+        switch (usPID) {
+        // DMX512 setup category
+        //
+        case DMX_BLOCK_ADRESS:                                           // 0x0140
+        case DMX_FAIL_MODE:                                              // 0x0141
+        case DMX_STARTUP_MODE:                                           // 0x0142
+            break;
+        // Dimmer settings category
+        //
+        case DIMMER_MINIMUM_LEVEL:                                       // 0x0341
+        case DIMMER_MAXIMUM_LEVEL:                                       // 0x0342
+        case DIMMER_CURVE:                                               // 0x0343
+        case DIMMER_OUTPUT_RESPONSE_TIME:                                // 0x0345
+        case DIMMER_MODULATION_FREQUENCY:                                // 0x0347
+        // Power/lamp settings category
+        //
+        case BURN_IN:                                                    // 0x0440
+        // Configuration category
+        //
+        case LOCK_PIN:                                                   // 0x0640      
+        case LOCK_STATE:                                                 // 0x0641
+        // Control category
+        //
+        case IDENTIFY_MODE:                                              // 0x1040      
+        case PRESET_STATUS:                                              // 0x1042
+        case PRESET_MERGEMODE:                                           // 0x1043
+        case POWER_ON_SELF_TEST:                                         // 0x1044
+        default:
+            return;
+        }
+        break;
     default:
         return;
     }
     if (iBroadcast == 0) {                                               // when addressed as unicast there is a response returned
-        fnSend_DMX512_RDM(uart_handle, (ptrDataBlock->ucCommandClass + 1), usPID, (const unsigned char *)ptrPacket->ucDestinationUID, ptrPacket); // return response
+        if (fnSend_DMX512_RDM(uart_handle, (ptrDataBlock->ucCommandClass + 1), usPID, (const unsigned char *)ptrPacket->ucDestinationUID, ptrPacket) != 0) { // return response (sent after a break)
+            int iStartTx = 0;
+            uDisable_Interrupt();                                        // protect against the turnaround timer interrupt
+                if (iTurnAroundDelaySlave != 0) {                        // if the turnaround timer hasn't yet fired
+                    iTurnAroundDelaySlave = 3;                           // allow the turnaround timer to start the transmission as soon as it fires
+                }
+                else {
+                    iStartTx = 1;                                        // the turn around delay has already expired we we will release the message now
+                }
+            uEnable_Interrupt();
+            if (iStartTx != 0) {
+                fnStartDelay(PIT_US_DELAY(RDM_SLAVE_BREAK_DURATION), fnRDM_break);
+                START_DMX512_SLAVE_BREAK();                                  // start sending a break condition
+            }
+        }
     }
-}
-
-// The slave's turnaround timer interrupt
-//
-static void fnRDM_turnaround(void)
-{
-    if (iTurnAroundDelaySlave > 1) {                                     // if the slave has prepared data in the meantime
-        DMX512_SLAVE_DRIVE_OUTPUT();                                     // switch to transmission mode
-        fnDriver(DMX512_Slave_PortID, (TX_ON | PAUSE_TX), MODIFY_TX);    // release paused output buffer
-    }
-    iTurnAroundDelaySlave = 0;                                           // slave may transmit now if it wasn't ready
-}
-
-// Interrupt callback on termination of slave transmit frame
-//
-static void fnDMX512_Slave_TxFrameTermination(QUEUE_HANDLE channel)
-{
-    DMX512_SET_SLAVE_INPUT();                                            // stop driving the bus
 }
 
 // Due to strict timing requirements the receiver handles each individual reception interrupt directly
 //
-static int fnDMX512_slave_rx(unsigned char data, QUEUE_HANDLE channel)
+static int __callback_interrupt fnDMX512_slave_rx(unsigned char data, QUEUE_HANDLE channel)
 {
     if (iRxCount < sizeof(ucRxBuffer)) {                                 // as long as we have space in the reception buffer
         ucRxBuffer[iRxCount] = data;                                     // store the data byte into the input buffer
@@ -796,7 +973,7 @@ static int fnDMX512_slave_rx(unsigned char data, QUEUE_HANDLE channel)
                 }
                 break;
             case DISC_UNIQUE_PREAMBLE_SEPARATOR:
-                if (17 == (unsigned short)iRxCount) {                    // if a completedisc unique branch packet has been received
+                if (17 == (unsigned short)iRxCount) {                    // if a complete disc unique branch packet has been received
                 }
                 break;
             case START_CODE_RDM:
@@ -892,7 +1069,7 @@ static int fnSend_DMX512_RDM(QUEUE_HANDLE uart_handle, unsigned char ucCommandCl
         case DMX512_RDM_PARAMETER_ID_DISC_MUTE:                          // parameter IDs with no parameter data (master)
         case DMX512_RDM_PARAMETER_ID_DISC_UNMUTE:
     #if defined USE_DMX_RDM_SLAVE
-            if (iSlave != 0) {
+            if (iSlave != 0) {                                           // if the slave is responding
                 unsigned short usControlField = 0;                       // control field value
                 ptrDataBlock->ucParameterDataLength = 0x02;              // optional binding UID not used
                 ptrRDMpacket->ucMessageCount = 1;
@@ -1002,7 +1179,7 @@ static int fnHandleRDM_MasterRx(QUEUE_HANDLE uart_handle, unsigned char ucUID[6]
                     DMX512_MESSAGE_DATA_BLOCK *ptrDataBlock = (DMX512_MESSAGE_DATA_BLOCK *)ptrRDM_packet->ucMessageDataBlock;
                     usPID = (ptrDataBlock->ucParameterID[0] << 8);
                     usPID |= (ptrDataBlock->ucParameterID[1]);
-                    if (usExpected == usPID) {
+                    if (usExpected == usPID) {                           // if thsi is the PID that we are expecting
                         switch (usPID) {
                         case DMX512_RDM_PARAMETER_ID_DISC_MUTE:
                             if (ptrDataBlock->ucParameterDataLength == 2) { // control field in the response

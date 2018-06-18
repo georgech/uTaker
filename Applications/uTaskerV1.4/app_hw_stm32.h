@@ -1005,11 +1005,13 @@
 
     #if !defined USE_MAINTENANCE || defined REMOVE_PORT_INITIALISATIONS
         #define INIT_WATCHDOG_LED() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(B, (BLINK_LED), (BLINK_LED), (OUTPUT_SLOW | OUTPUT_PUSH_PULL))
+        #define CONFIG_TEST_OUTPUT() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(B, (LED2), (LED2), (OUTPUT_SLOW | OUTPUT_PUSH_PULL))
     #else
         #define INIT_WATCHDOG_LED()                                      // configured according to user parameters
+        #define CONFIG_TEST_OUTPUT()
     #endif
     #define TOGGLE_WATCHDOG_LED()      _TOGGLE_PORT(B, BLINK_LED)        // blink the LED, if set as output
-    #define CONFIG_TEST_OUTPUT()
+    #define TOGGLE_TEST_OUTPUT()       _TOGGLE_PORT(B, LED2)
 
     #define INIT_WATCHDOG_DISABLE()    _CONFIG_PORT_INPUT(A, (PORTA_BIT12), (INPUT_PULL_UP)) // PA12 configured as input with pull-up (CN3-5 on extension connector)
     #define WATCHDOG_DISABLE()         ((_READ_PORT_MASK(A, (PORTA_BIT12))) == 0)

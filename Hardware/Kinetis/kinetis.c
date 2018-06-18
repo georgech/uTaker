@@ -80,6 +80,8 @@
     #define INITHW  extern
     extern void fec_txf_isr(void);
     extern void fnSimulateDMA(int channel);
+    #define __disable_interrupt()
+    #define __enable_interrupt()
     #define START_CODE 0
     #if defined MMDVSQ_AVAILABLE                                         // {132}
         #include <math.h>
@@ -1028,9 +1030,6 @@ extern void uDisable_Interrupt(void)
     #endif
 #endif
     iInterruptLevel++;                                                   // monitor the level of disable nesting
-    if (iInterruptLevel > 1) {
-        iInterruptLevel = iInterruptLevel; // WHY??
-    }
 }
 
 // Routine to re-enable interrupts on leaving a critical region (IAR uses intrinsic function)
@@ -1049,7 +1048,7 @@ extern void uEnable_Interrupt(void)
         extern void fnExecutePendingInterrupts(int iRecursive);
         kinetis.CORTEX_M4_REGS.ulPRIMASK = 0;                            // unmask global interrupts
     #if defined RUN_IN_FREE_RTOS
-        fnExecutePendingInterrupts(0);                                   // pending interrupts that were blocked by the main mask can be executed now
+        fnExecutePendingInterrupts(0);                                   // pending interrupts that were blocked by the main task can be executed now
     #endif
 #else
     #if defined SYSTEM_NO_DISABLE_LEVEL
@@ -1991,9 +1990,12 @@ extern int fnClkout(int iClockSource)                                    // {120
     case RTC_CLOCK_OUT:
     #if defined KINETIS_KL03
         _CONFIG_PERIPHERAL(B, 13, (PB_13_RTC_CLKOUT | PORT_SRE_SLOW | PORT_DSE_LOW)); // configure the RTC_CLKOUT pin
-    #elif defined KINETIS_K64
-      //_CONFIG_PERIPHERAL(E, 0, (PE_0_RTC_CLKOUT | PORT_SRE_SLOW | PORT_DSE_LOW)); // configure the RTC_CLKOUT pin (alt. 7)
-        _CONFIG_PERIPHERAL(E, 26, (PE_26_RTC_CLKOUT | PORT_SRE_SLOW | PORT_DSE_LOW)); // configure the RTC_CLKOUT pin (alt. 6)
+    #elif defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66
+        #if defined RTC_CLKOUT_ON_PTE_LOW
+            _CONFIG_PERIPHERAL(E, 0, (PE_0_RTC_CLKOUT | PORT_SRE_SLOW | PORT_DSE_LOW)); // configure the RTC_CLKOUT pin (alt. 7)
+        #else
+            _CONFIG_PERIPHERAL(E, 26, (PE_26_RTC_CLKOUT | PORT_SRE_SLOW | PORT_DSE_LOW)); // configure the RTC_CLKOUT pin (alt. 6)
+        #endif
     #endif
         return 0;
     #if defined KINETIS_K64
@@ -2008,7 +2010,7 @@ extern int fnClkout(int iClockSource)                                    // {120
     _CONFIG_PERIPHERAL(A, 12, (PA_12_CLKOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); // configure the CLKOUT pin (PA_4_CLKOUT would be an alternative possibility)
     #elif defined KINETIS_KL05
     _CONFIG_PERIPHERAL(A, 15, (PA_15_CLKOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); // configure the CLKOUT pin (PA_4_CLKOUT would be an alternative possibility)
-    #elif defined KINETIS_K64 && (PIN_COUNT == PIN_COUNT_144_PIN)
+    #elif defined KINETIS_K64 && (PIN_COUNT == PIN_COUNT_144_PIN) && !defined _COMPILE_IAR // warning IAR may incorrectly evaluate this!
     _CONFIG_PERIPHERAL(A, 6, (PA_6_CLKOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); // configure the CLKOUT pin
     #else
     _CONFIG_PERIPHERAL(C, 3, (PC_3_CLKOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); // configure the CLKOUT pin

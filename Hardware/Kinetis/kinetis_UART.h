@@ -47,6 +47,7 @@
     05.05.2018 Add UART_HW_TRIGGERED_TX_MODE                             {213}
     01.06.2018 Consolidate interrupt operation into a generic version (saves place and simplifies maintenance of increased feature set)
     01.06.2018 Add option user callback options USER_DEFINED_UART_RX_HANDLER, USER_DEFINED_UART_RX_BREAK_DETECTION, USER_DEFINED_UART_TX_FRAME_COMPLETE
+    12.06.2018 Protect bit setting and clearing from other UART interrupts (with higher priority) using PROTECTED_SET_VARIABLE() and PROTECTED_SET_VARIABLE()
 
 */
 
@@ -289,7 +290,7 @@ static void *fnSelectChannel(QUEUE_HANDLE Channel)
 /* =================================================================== */
 
     #if LPUARTS_AVAILABLE > 0
-static __interrupt _LPUART_interrupt(KINETIS_LPUART_CONTROL *ptrLPUART, int LPUART_Reference) // generic LPUART interrupt handler
+static __interrupt void _LPUART_interrupt(KINETIS_LPUART_CONTROL *ptrLPUART, int LPUART_Reference) // generic LPUART interrupt handler
 {
     unsigned long ulState = ptrLPUART->LPUART_STAT;                      // status register on entry to the interrupt routine
     if (((ulState & LPUART_STAT_RDRF) & ptrLPUART->LPUART_CTRL) != 0) {  // if reception interrupt flag is set and the reception interrupt is enabled
@@ -335,7 +336,7 @@ static __interrupt _LPUART_interrupt(KINETIS_LPUART_CONTROL *ptrLPUART, int LPUA
         }
             #endif
             #if defined SUPPORT_LOW_POWER
-        ulPeripheralNeedsClock &= ~(UART0_TX_CLK_REQUIRED << LPUART_Reference); // confirmation that the final byte has been sent out on the line so the LPUART no longer needs a UART clock (stop mode doesn't needed to be blocked)
+        PROTECTED_CLEAR_VARIABLE(ulPeripheralNeedsClock, (UART0_TX_CLK_REQUIRED << LPUART_Reference)); // confirmation that the final byte has been sent out on the line so the LPUART no longer needs a UART clock (stop mode doesn't needed to be blocked)
             #endif
             #if defined USER_DEFINED_UART_TX_FRAME_COMPLETE
         if (fnUserTxEndIrq[LPUART_Reference] != 0) {                    // if a transmission complete handler is installed it is called
@@ -530,7 +531,7 @@ static __interrupt void _UART_interrupt(KINETIS_UART_CONTROL *ptrUART, int UART_
     if (((ptrUART->UART_C2 & UART_C2_TCIE) != 0) && ((ptrUART->UART_S1 & UART_S1_TC) != 0)) { // transmit complete interrupt after final byte transmission together with low power operation
         ptrUART->UART_C2 &= ~(UART_C2_TCIE);                             // disable the interrupt
             #if defined SUPPORT_LOW_POWER
-        ulPeripheralNeedsClock &= ~((UART0_TX_CLK_REQUIRED << UART_Reference)); // confirmation that the final byte has been sent out on the line so the UART no longer needs a UART clock (stop mode doesn't needed to be blocked)
+        PROTECTED_CLEAR_VARIABLE(ulPeripheralNeedsClock, (UART0_TX_CLK_REQUIRED << UART_Reference)); // confirmation that the final byte has been sent out on the line so the UART no longer needs a UART clock (stop mode doesn't needed to be blocked)
             #endif
             #if defined UART_HW_TRIGGERED_MODE_SUPPORTED                 // {213}
         if (ucTriggeredTX_mode[UART_Reference] != 0) {
@@ -713,7 +714,7 @@ extern int fnTxByte(QUEUE_HANDLE Channel, unsigned char ucTxByte)
             return 1;                                                    // LPUART transmitter is presently active
         }
         #if defined SUPPORT_LOW_POWER                                    // {96}
-        ulPeripheralNeedsClock |= (UART0_TX_CLK_REQUIRED << Channel);    // mark that this UART is in use
+        PROTECTED_SET_VARIABLE(ulPeripheralNeedsClock, (UART0_TX_CLK_REQUIRED << Channel)); // mark that this UART is in use
         ((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_STAT;               // read the status register to clear the transmit complete flag when the transmit data register is written
         #endif
         ((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_DATA = ucTxByte;    // send the character
@@ -733,7 +734,7 @@ extern int fnTxByte(QUEUE_HANDLE Channel, unsigned char ucTxByte)
             return 1;                                                    // UART transmitter is presently active
         }
         #if defined SUPPORT_LOW_POWER                                    // {96}
-        ulPeripheralNeedsClock |= (UART0_TX_CLK_REQUIRED << Channel);    // mark that this UART is in use
+        PROTECTED_SET_VARIABLE(ulPeripheralNeedsClock, (UART0_TX_CLK_REQUIRED << Channel)); // mark that this UART is in use
         (void)(uart_reg->UART_S1);                                       // read the status register to clear the transmit complete flag when the transmit data register is written
         #endif
         uart_reg->UART_D = ucTxByte;                                     // send the character
@@ -824,7 +825,7 @@ extern void fnClearTxInt(QUEUE_HANDLE Channel)
             #if defined TRUE_UART_TX_2_STOPS
     if (ucStops[Channel] != 0) {                                         // channel operating in true 2 stop bit mode (using the transmit complete interrupt rather than the buffer empty interrupt)
         uart_reg->UART_C2 &= ~(UART_C2_TIE | UART_C2_TCIE);              // disable the transmission interrupts since the buffer has been fully sent
-        ulPeripheralNeedsClock &= ~(UART0_TX_CLK_REQUIRED << Channel);   // this transmitter is now idle since its final bit has been sent (stop mode is no longer blocked)
+        PROTECTED_CLEAR_VARIABLE(ulPeripheralNeedsClock, (UART0_TX_CLK_REQUIRED << Channel)); // this transmitter is now idle since its final bit has been sent (stop mode is no longer blocked)
         return;
     }
     else {
@@ -856,12 +857,12 @@ static __interrupt void _lpuart_tx_dma_Interrupt(KINETIS_LPUART_CONTROL *ptrLPUA
     }
         #endif
         #if defined SUPPORT_LOW_POWER                                    // {96}
-    ulPeripheralNeedsClock &= ~(UART0_TX_CLK_REQUIRED << iLPUART_reference); // mark that this UART has completed transmission activity
+    PROTECTED_CLEAR_VARIABLE(ulPeripheralNeedsClock, (UART0_TX_CLK_REQUIRED << iLPUART_reference)); // mark that this UART has completed transmission activity
         #endif
     fnSciTxByte((QUEUE_HANDLE)iLPUART_reference);                        // tty block transferred, send next, if available
         #if defined SUPPORT_LOW_POWER                                    // {96}
     if ((ulPeripheralNeedsClock & (UART0_TX_CLK_REQUIRED << iLPUART_reference)) == 0) { // if no further transmission was started we need to wait until the final byte has been transferred
-        ulPeripheralNeedsClock |= (UART0_TX_CLK_REQUIRED << iLPUART_reference); // block stop mode until the final interrupt arrives
+        PROTECTED_SET_VARIABLE(ulPeripheralNeedsClock, (UART0_TX_CLK_REQUIRED << iLPUART_reference)); // block stop mode until the final interrupt arrives
         ptrLPUART->LPUART_CTRL |= LPUART_CTRL_TCIE;                      // enable the LPUART transmit complete flag interrupt to detect transmission completion
     }
         #elif defined KINETIS_KL && defined UART_FRAME_END_COMPLETE
@@ -881,12 +882,12 @@ static __interrupt void _uart_tx_dma_Interrupt(KINETIS_UART_CONTROL *ptrUART, in
     }
         #endif
         #if defined SUPPORT_LOW_POWER                                    // {96}
-    ulPeripheralNeedsClock &= ~(UART0_TX_CLK_REQUIRED << iUART_reference); // mark that this UART has completed transmission activity
+    PROTECTED_CLEAR_VARIABLE(ulPeripheralNeedsClock, (UART0_TX_CLK_REQUIRED << iUART_reference)); // mark that this UART has completed transmission activity
         #endif
     fnSciTxByte((QUEUE_HANDLE)iUART_reference);                          // tty block transferred, send next, if available
         #if defined SUPPORT_LOW_POWER                                    // {96}
     if ((ulPeripheralNeedsClock & (UART0_TX_CLK_REQUIRED << iUART_reference)) == 0) { // if no further transmission was started we need to wait until the final byte has been transferred
-        ulPeripheralNeedsClock |= (UART0_TX_CLK_REQUIRED << iUART_reference); // block stop mode until the final interrupt arrives
+        PROTECTED_SET_VARIABLE(ulPeripheralNeedsClock, (UART0_TX_CLK_REQUIRED << iUART_reference)); // block stop mode until the final interrupt arrives
         ptrUART->UART_C2 |= UART_C2_TCIE;                                // enable the UART transmit complete flag interrupt to detect transmission completion
     }
         #elif defined KINETIS_KL && defined UART_FRAME_END_COMPLETE
@@ -1045,7 +1046,7 @@ extern QUEUE_TRANSFER fnTxByteDMA(QUEUE_HANDLE Channel, unsigned char *ptrStart,
             #if defined SUPPORT_LOW_POWER
         (void)(((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_STAT);       // read the status register to clear the transmit complete flag when the transmit data register is written
                 #if defined SUPPORT_LOW_POWER    
-        ulPeripheralNeedsClock |= (UART0_TX_CLK_REQUIRED << Channel);    // mark that stop mode should be avoided until the transmit activity has completed
+        PROTECTED_SET_VARIABLE(ulPeripheralNeedsClock, (UART0_TX_CLK_REQUIRED << Channel)); // mark that stop mode should be avoided until the transmit activity has completed
                 #endif
         ((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_CTRL &= ~(LPUART_CTRL_TCIE); // disable transmit complete interrupt
             #endif
@@ -1076,14 +1077,14 @@ extern QUEUE_TRANSFER fnTxByteDMA(QUEUE_HANDLE Channel, unsigned char *ptrStart,
     ptrDMA->DMA_DSR_BCR = (tx_length & DMA_DSR_BCR_BCR_MASK);            // the number of service requests (the number of bytes to be transferred)
     ptrDMA->DMA_SAR = (unsigned long)ptrStart;                           // source is tty output buffer
             #if defined SUPPORT_LOW_POWER
-    ulPeripheralNeedsClock |= (UART0_TX_CLK_REQUIRED << Channel);        // mark that stop mode should be avoided until the transmit activity has completed
+    PROTECTED_SET_VARIABLE(ulPeripheralNeedsClock, (UART0_TX_CLK_REQUIRED << Channel)); // mark that stop mode should be avoided until the transmit activity has completed
             #endif
     ptrDMA->DMA_DCR |= DMA_DCR_ERQ;                                      // enable request source
         #else
     ptrDMA_TCD->DMA_TCD_BITER_ELINK = ptrDMA_TCD->DMA_TCD_CITER_ELINK = tx_length; // the number of service requests (the number of bytes to be transferred)
     ptrDMA_TCD->DMA_TCD_SADDR = (unsigned long)ptrStart;                 // source is tty output buffer's present location
             #if defined SUPPORT_LOW_POWER
-    ulPeripheralNeedsClock |= (UART0_TX_CLK_REQUIRED << Channel);        // mark that stop mode should be avoided until the transmit activity has completed
+    PROTECTED_SET_VARIABLE(ulPeripheralNeedsClock, (UART0_TX_CLK_REQUIRED << Channel)); // mark that stop mode should be avoided until the transmit activity has completed
             #endif
             #if defined UART_EXTENDED_MODE && defined UART_TIMED_TRANSMISSION // {208}
     if ((tx_length > 1) && (ulInterCharTxDelay[Channel] != 0)) {         // if timed transmissions are required on this channel (linear buffer is always assumed and 7/8 bit characters)

@@ -70,34 +70,37 @@ typedef char              CHAR;
     typedef unsigned int size_t;
 #endif
 
-#ifdef _HW_NE64
+#if defined _HW_NE64
     #include "../../Hardware/ne64/ne64.h"
 #endif
-#ifdef _HW_SAM7X
+#if defined _HW_SAM7X
     #include "../../Hardware/sam7x/sam7x.h"
 #endif
-#ifdef _M5223X
+#if defined  _M5223X
     #include "../../Hardware/M5223X/M5223x.h"
 #endif
-#ifdef _KINETIS
+#if defined  _KINETIS
     #include "../../Hardware/Kinetis/kinetis.h"
 #endif
-#ifdef _STR91XF
+#if defined _STM32
+    #include "../../Hardware/STM32/STM32.h"
+#endif
+#if defined  _STR91XF
     #include "../../Hardware/STR91XF/STR91XF.h"
 #endif
-#ifdef _LPC23XX
+#if defined  _LPC23XX
     #include "../../Hardware/LPC23XX/LPC23XX.h"
 #endif
-#ifdef _LPC17XX
+#if defined  _LPC17XX
     #include "../../Hardware/LPC17XX/LPC17XX.h"
 #endif
-#ifdef _LM3SXXXX
+#if defined  _LM3SXXXX
     #include "../../Hardware/LM3SXXXX/LM3SXXXX.h"
 #endif
-#ifdef _HW_AVR32
+#if defined  _HW_AVR32
     #include "../../Hardware/AVR32/AVR32.h"
 #endif
-#ifdef _RX6XX
+#if defined  _RX6XX
     #include "../../Hardware/RX6XX/RX6XX.h"
 #endif
 #endif

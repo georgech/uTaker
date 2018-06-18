@@ -321,12 +321,11 @@ static unsigned char *_keil_ram_size(void)
 //
 extern int _main(void)
 {	
-#ifdef MULTISTART
+#if defined MULTISTART
     MULTISTART_TABLE *prtInfo;
     unsigned char *pucHeapStart = HEAP_START_ADDRESS;
 #endif
-#ifdef RANDOM_NUMBER_GENERATOR
-    #define RANDOM_SEED_LOCATION (unsigned short *)(RAM_START_ADDRESS + SIZE_OF_RAM - 4) // location of a long word which is never initialised and so has a random power on value
+#if defined RANDOM_NUMBER_GENERATOR
   //unsigned short usRandomSeed;                                         // we put an uninitialised variable on to the stack for use as a random seed
     ptrSeed = RANDOM_SEED_LOCATION; // &usRandomSeed;                    // {35}
 #endif

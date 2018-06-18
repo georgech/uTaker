@@ -443,7 +443,7 @@ extern void fnInitCAN(CANTABLE *pars)
     ulCanCtrValue = fnOptimalCAN_clock(pars->usMode, pars->ulSpeed);
     ptrCAN_control->CAN_CTRL1 = (CLK_SRC_PERIPH_CLK & ulCanCtrValue);    // {4}{3}{65} select the clock source while the module is in disable mode
                                                                          // note that the crystal can be used and has better jitter performance than the PLL
-    ptrCAN_control->CAN_MCR &= ~CAN_MDIS;                                // move from disabled to freeze mode (un-synchronised to the CAN bus))
+    ptrCAN_control->CAN_MCR &= ~CAN_MDIS;                                // move from disabled to freeze mode (un-synchronised to the CAN bus)
     while ((ptrCAN_control->CAN_MCR & CAN_LPMACK) != 0) {                // wait for CAN controller to leave disabled mode
     #if defined _WINDOWS
         ptrCAN_control->CAN_MCR &= ~(CAN_LPMACK);

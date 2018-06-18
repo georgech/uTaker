@@ -11,26 +11,25 @@
     File:        STM32_boot.c
     Project:     Single Chip Embedded Internet - boot loader hardware support
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2012
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     06.03.2012 Add start_application()                                   {1}
     12.12.2012 Correct flash erase routine for F1 parts                  {2}
     02.10.2013 Correct STM32F1xx flash control                           {3}
     20.01.2017 Add 2MByte Flash support                                  {4}
-
-
+    18.06.2018 Change uMemset() to match memset() parameters             {5}
 
 
 */
 
-#ifdef _STM32
+#if defined _STM32
 
 /* =================================================================== */
 /*                           include files                             */
 /* =================================================================== */
 
 
-#ifdef _WINDOWS
+#if defined _WINDOWS
     #include "config.h"
     #define INITHW  extern
     #define START_CODE 0
@@ -834,7 +833,7 @@ extern int STM32_LowLevelInit(void)
     ptrVect->ptrPendSV        = irq_default;
     ptrVect->ptrSVCall        = irq_default;
 #endif
-#ifdef DMA_MEMCPY_SET                                                    // if uMemcpy()/uMemset() is to use DMA enble the DMA controller
+#if defined DMA_MEMCPY_SET                                               // if uMemcpy()/uMemset() is to use DMA enble the DMA controller
     #if MEMCPY_CHANNEL > 7
     POWER_UP(AHB1, RCC_AHB1ENR_DMA2EN);
     #else
@@ -902,19 +901,20 @@ const RESET_VECTOR reset_vect
 
 
 
-#ifdef _WINDOWS
+#if defined _WINDOWS
 // The following routines are only for simulator compatibility
 
 extern void *fnGetHeapStart(void) { return 0; }
 
 // memset implementation
 //
-extern void *uMemset(void *ptrTo, unsigned char ucValue, size_t Size)
+extern void *uMemset(void *ptrTo, int iValue, size_t Size)               // {5}
 {
+    unsigned char ucValue = (unsigned char)iValue;
     void *buffer = ptrTo;
     unsigned char *ptr = (unsigned char *)ptrTo;
 
-    while (Size--) {
+    while (Size-- != 0) {
         *ptr++ = ucValue;
     }
 
@@ -992,7 +992,7 @@ INITHW void fnInitHW(void)
         DD_DEFAULT_INPUT
     };
 
-//    __VECTOR_RAM[PIT0_VECTOR] = (unsigned long)fnDummyTick;
+//  __VECTOR_RAM[PIT0_VECTOR] = (unsigned long)fnDummyTick;
 
     fnInitialiseDevice((void *)ucPortPullups);
     STM32_LowLevelInit();

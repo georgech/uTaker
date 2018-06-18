@@ -4964,16 +4964,36 @@ extern int fnSimulateDMA(int channel)                                    // {3}
 static void fnHandleDMA_triggers(int iTriggerSource, int iDMAmux)
 {
 #if !defined DEVICE_WITHOUT_DMA
-    int iMuxChannels = DMA_CHANNEL_COUNT;
-    unsigned char *ptrMux = DMAMUX0_CHCFG_ADD;                           // check the channel multiplexers to see whether it connects to the port
-    int iChannel = 0;
-    if (iDMAmux == 1) {
-    #if defined DMAMUX1_CHCFG_ADD
-        ptrMux = DMAMUX0_CHCFG_ADD;
+    #if defined KINETIS_KM
+    int iMuxChannels = 1;                                                // KM DMA has one DMAMUX per channel
     #else
-        return;
+    int iMuxChannels = DMA_CHANNEL_COUNT;                                // DMAMUX has the same channel count as there are DMA channels
     #endif
+    unsigned char *ptrMux;
+    int iChannel = 0;
+    switch (iDMAmux) {
+    case 0:
+        ptrMux = DMAMUX0_CHCFG_ADD;
+        break;
+    #if defined DMAMUX1_CHCFG_ADD
+    case 1:
+        ptrMux = DMAMUX1_CHCFG_ADD;
+        break;
+    #endif
+    #if defined DMAMUX2_CHCFG_ADD
+    case 2:
+        ptrMux = DMAMUX2_CHCFG_ADD;
+        break;
+    #endif
+    #if defined DMAMUX3_CHCFG_ADD
+    case 3:
+        ptrMux = DMAMUX3_CHCFG_ADD;
+        break;
+    #endif
+    default:
+        return;
     }
+
     #if defined TRGMUX_AVAILABLE
     if ((iTriggerSource & DMAMUX_CHCFG_TRIG) != 0) {                     // periodic trigger (LPIT source)
         iTriggerSource >>= 8;                                            // the LPIT that is being checked for
@@ -8291,7 +8311,7 @@ unsigned long fnGetFlexTimer_clock(int iChannel)
         break;
     }
     #else
-    ulClockSpeed = BUS_CLOCK;
+    ulClockSpeed = PWM_CLOCK;
     #endif
     ulClockSpeed /= (1 << (ptrTimer->FTM_SC & FTM_SC_PS_128));           // apply pre-scaler
     return ulClockSpeed;

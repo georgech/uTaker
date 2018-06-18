@@ -43,6 +43,7 @@
     13.07.2017 Add w25q (windbond) spi flash option and a target for the FRDM-KL82Z
     17.07.2017 Add target for the FRDM-KL25Z
     27.02.2018 Add Macronix SPI flash                                    {26}
+    18.06.2018 Merge STM32 project
 
     See this video for details of buiding and checking the "Bare-Minimum" boot loader: https://youtu.be/lm3M-ZlaFLQ
 
@@ -57,7 +58,6 @@
 
 #define BOOT_LOADER                                                      // {4}
 
-#define TARGET_HW           "Bare-Minimum Boot"
 
 //#define SPI_SW_UPLOAD                                                  // new SW is located in SPI FLASH {1}{2}
 //#define SPI_FLASH_MX25L                                                // {26} use Macronix SPI flash rather than ATMEL
@@ -82,6 +82,7 @@
     #define _TICK_RESOLUTION     TICK_UNIT_MS(50)                        // {25} for simulator compatibility only
 
     #if defined _KINETIS                                                 // {20}
+        #define TARGET_HW           "Bare-Minimum Boot"
       //#define FRDM_KL25Z
       //#define FRDM_KL27Z
       //#define CAPUCCINO_KL27                                           // KL27 with 256k flash / 32k SRAM
@@ -807,6 +808,94 @@
             #define SPI_DATA_FLASH_SIZE         SPI_DATA_FLASH_0_SIZE
             #define CONFIGURE_CS_LINES()        FIO0SET = CS0_LINE; FIO0DIR |= CS0_LINE; _SIM_PORTS
         #endif
+    #elif defined _STM32
+      //#define STM3210C_EVAL                                            // evaluation board with STM32F107VCT
+      //#define STM3240G_EVAL                                            // evaluation board with STM32F407IGH6
+      //#define ST_MB913C_DISCOVERY                                      // discovery board with STM32F100RB
+        #define ST_MB997A_DISCOVERY                                       // discovery board with STM32F407VGT6
+        #if defined STM3210C_EVAL
+            #define TARGET_HW       "STM3210C-EVAL (STM32F107VCT)"
+        #elif defined STM3240G_EVAL
+            #define TARGET_HW       "STM3240C-EVAL (STM32F407IGH6)"
+        #elif defined ST_MB997A_DISCOVERY
+            #define TARGET_HW       "MB997A DISCOVERY (STM32F407VGT6)"
+        #elif defined ST_MB913C_DISCOVERY
+            #define TARGET_HW       "MB913C DISCOVERY (STM32F100RBT6B)"
+        #endif
+
+        #if defined STM3210C_EVAL                                        // STM32F107VCT (72MHz)
+            #define CRYSTAL_FREQ        25000000
+          //#define DISABLE_PLL                                          // run from clock source directly
+          //#define USE_HSI_CLOCK                                        // use internal HSI clock source
+            #define USE_PLL2_CLOCK                                       // use the PLL2 output as PLL input (don't use USE_HSI_CLOCK in this configuration)
+            #define PLL2_INPUT_DIV      5                                // clock input is divided by 5 to give 5MHz to the PLL2 input (range 1..16)
+            #define PLL2_VCO_MUL        8                                // the pll2 frequency is multiplied by 8 to 40MHz (range 8..14 or 16 or 20)
+            #define PLL_INPUT_DIV       5                                // 1..16 - should set the input to pll in the range 3..12MHz - not valid for HSI clock source
+            #define PLL_VCO_MUL         9                                // 4..9 where PLL out must be 18..72MHz. Also 65 is accepted as x6.5 (special case)
+            #define PIN_COUNT           PIN_COUNT_100_PIN
+            #define PACKAGE_TYPE        PACKAGE_LQFP
+            #define _STM32F107X                                          // part group
+            #define SIZE_OF_RAM         (64 * 1024)                      // 64k SRAM
+            #define SIZE_OF_FLASH       (256 * 1024)                     // 256k FLASH
+            #define PCLK1_DIVIDE        2
+            #define PCLK2_DIVIDE        1
+        #elif defined STM3240G_EVAL                                      // STM32F407IGH6 (168MHz)
+            #define CRYSTAL_FREQ        25000000
+          //#define DISABLE_PLL                                          // run from clock source directly
+          //#define USE_HSI_CLOCK                                        // use internal HSI clock source
+            #define PLL_INPUT_DIV       25                               // 2..64 - should set the input to pll in the range 1..2MHz (with preference near to 2MHz)
+            #define PLL_VCO_MUL         336                              // 64 ..432 where VCO must be 64..432MHz
+            #define PLL_POST_DIVIDE     2                                // post divide VCO by 2, 4, 6, or 8 to get the system clock speed
+            #define PIN_COUNT           PIN_COUNT_176_PIN
+            #define PACKAGE_TYPE        PACKAGE_BGA
+            #define _STM32F4XX
+            #define SIZE_OF_RAM         (128 * 1024)                     // 128k SRAM
+            #define SIZE_OF_CCM         (64 * 1024)                      // 64k Core Coupled Memory
+            #define SIZE_OF_FLASH       (1024 * 1024)                    // 1M FLASH
+            #define SUPPLY_VOLTAGE      SUPPLY_2_7__3_6                  // power supply is in the range 2.7V..3.6V
+            #define PCLK1_DIVIDE        4
+            #define PCLK2_DIVIDE        2
+            #define HCLK_DIVIDE         1
+        #elif defined ST_MB997A_DISCOVERY                                // STM32F407VGT6 (168MHz)
+            #define CRYSTAL_FREQ        8000000
+          //#define DISABLE_PLL                                          // run from clock source directly
+          //#define USE_HSI_CLOCK                                        // use internal HSI clock source
+            #define PLL_INPUT_DIV       4                                // 2..64 - should set the input to pll in the range 1..2MHz (with preference near to 2MHz)
+            #define PLL_VCO_MUL         168                              // 64 ..432 where VCO must be 64..432MHz
+            #define PLL_POST_DIVIDE     2                                // post divide VCO by 2, 4, 6, or 8 to get the system clock speed
+            #define PIN_COUNT           PIN_COUNT_100_PIN
+            #define PACKAGE_TYPE        PACKAGE_LQFP
+            #define _STM32F4XX
+            #define SIZE_OF_RAM         (128 * 1024)                     // 128k SRAM
+            #define SIZE_OF_CCM         (64 * 1024)                      // 64k Core Coupled Memory
+            #define SIZE_OF_FLASH       (1024 * 1024)                    // 1M FLASH
+            #define SUPPLY_VOLTAGE      SUPPLY_2_7__3_6                  // power supply is in the range 2.7V..3.6V
+            #define PCLK1_DIVIDE        4
+            #define PCLK2_DIVIDE        2
+            #define HCLK_DIVIDE         1
+        #elif defined ST_MB913C_DISCOVERY                                // STM32F100RB (24MHz)
+            #define CRYSTAL_FREQ        8000000
+          //#define DISABLE_PLL                                          // run from clock source directly
+          //#define USE_HSI_CLOCK                                        // use internal HSI clock source
+            #define PLL_INPUT_DIV       2                                // 1..16 - should set the input to pll in the range 1..24MHz (with preference near to 8MHz) - not valid for HSI clock source
+            #define PLL_VCO_MUL         6                                // 2 ..16 where PLL out must be 16..24MHz
+            #define _STM32F100X                                          // part group
+            #define SIZE_OF_RAM         (8 * 1024)                       // 8k SRAM
+            #define SIZE_OF_FLASH       (128 * 1024)                     // 128k FLASH
+            #define PIN_COUNT           PIN_COUNT_64_PIN
+            #define PACKAGE_TYPE        PACKAGE_LQFP
+            #define STM32F100RB                                          // exact processor type
+            #define PCLK1_DIVIDE        2
+            #define PCLK2_DIVIDE        1
+        #else
+                                                                         // other configurations can be added here
+        #endif
+
+        // Include the hardware header here
+        // - beware that the header delivers rules for subsequent parts of this header file but also accepts some rules from previous parts,
+        // therefore its position should only be moved after careful consideration of its consequences
+        //
+        #include "types.h"                                               // project specific type settings and the processor header at this location
     #endif
 
 

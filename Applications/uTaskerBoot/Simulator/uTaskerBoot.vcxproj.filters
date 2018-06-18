@@ -24,6 +24,12 @@
     <Filter Include="Hardware\KINETIS">
       <UniqueIdentifier>{bafcd213-8054-4934-a4f6-02039dfb0e06}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Hardware\STM32">
+      <UniqueIdentifier>{c057caa4-ab30-466b-899a-481b67493cad}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="WinSim\SIMstm32">
+      <UniqueIdentifier>{56aee2f1-eaae-4222-9ea2-133941815782}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\uTaskerBootLoader.c">
@@ -61,6 +67,15 @@
     </ClCompile>
     <ClCompile Include="..\..\..\WinSim\serial_dev.c">
       <Filter>WinSim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Hardware\STM32\STM32_boot.c">
+      <Filter>Hardware\STM32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Hardware\STM32\STM32Sim.c">
+      <Filter>WinSim\SIMstm32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Hardware\STM32\STM32_ports.cpp">
+      <Filter>WinSim\SIMstm32</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -127,6 +142,27 @@
     <ClInclude Include="..\..\..\Hardware\Kinetis\spi_flash_kinetis_MX25L.h">
       <Filter>Hardware\KINETIS</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\simSTM32.h">
+      <Filter>WinSim\SIMstm32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\spi_flash_STM32_atmel.h">
+      <Filter>Hardware\STM32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\spi_flash_STM32_MX66L.h">
+      <Filter>Hardware\STM32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\spi_flash_STM32_sst25.h">
+      <Filter>Hardware\STM32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\spi_flash_STM32_stmicro.h">
+      <Filter>Hardware\STM32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\STM32.h">
+      <Filter>Hardware\STM32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\stm32_FLASH.h">
+      <Filter>Hardware\STM32</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="cursor1.cur">
@@ -140,6 +176,9 @@
     </None>
     <None Include="..\GNU_Kinetis\make_uTaskerBoot_GNU_Kinetis" />
     <None Include="..\GNU_Kinetis\Build_Kinetis.bat" />
+    <None Include="..\..\..\Hardware\STM32\STM32_keil_asm.s">
+      <Filter>Hardware\STM32</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="uTasker.rc">

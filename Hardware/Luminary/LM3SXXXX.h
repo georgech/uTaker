@@ -86,6 +86,28 @@
 
 #define ARM_MATH_CM3
 
+#if defined _WINDOWS
+    extern unsigned char uninitialisedRAM[16];
+    #define BOOT_MAIL_BOX           (unsigned short *)&uninitialisedRAM[0]
+    #define RANDOM_SEED_LOCATION    (unsigned short *)&uninitialisedRAM[2]
+    #define RTC_SECONDS_LOCATION    (unsigned long *)&uninitialisedRAM[4]
+    #define RTC_ALARM_LOCATION      (unsigned long *)&uninitialisedRAM[8]
+    #define RTC_VALID_LOCATION      (unsigned short *)&uninitialisedRAM[12]
+    #define RTC_PRESCALER_LOCATION  (unsigned short *)&uninitialisedRAM[14]
+#else
+    #define BOOT_MAIL_BOX           (unsigned short *)(RAM_START_ADDRESS + (SIZE_OF_RAM - 2))
+    #define RANDOM_SEED_LOCATION    (unsigned short *)(RAM_START_ADDRESS + (SIZE_OF_RAM - 4)) // location of a short word which is never initialised and so has a random power on value
+    #define RTC_SECONDS_LOCATION    (unsigned long *)(RAM_START_ADDRESS + (SIZE_OF_RAM - 8))
+    #define RTC_ALARM_LOCATION      (unsigned long *)(RAM_START_ADDRESS + (SIZE_OF_RAM - 12))
+    #define RTC_VALID_LOCATION      (unsigned short *)(RAM_START_ADDRESS + (SIZE_OF_RAM - 14))
+    #define RTC_PRESCALER_LOCATION  (unsigned short *)(RAM_START_ADDRESS + (SIZE_OF_RAM - 16))
+#endif
+
+#if !defined PERSISTENT_RAM_SIZE
+    #define PERSISTENT_RAM_SIZE          0
+#endif
+#define NON_INITIALISED_RAM_SIZE         (4 + PERSISTENT_RAM_SIZE)       // reserve a long word at the end of SRAM for use by random number and serial loader mailbox
+
 // The Luminary-Micro devices sorted by class
 //
 #if defined _LM3S9B90 || defined _LM3S9B92 || defined _LM3S9B95 || defined _LM3S9B96
