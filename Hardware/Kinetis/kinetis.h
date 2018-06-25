@@ -3484,7 +3484,7 @@ typedef struct stVECTOR_TABLE
         #define DMAMUX1_BLOCK                  ((unsigned char *)(&kinetis.DMAMUX[1])) // DMAMUX1
         #define DMAMUX2_BLOCK                  ((unsigned char *)(&kinetis.DMAMUX[2])) // DMAMUX2
         #define DMAMUX3_BLOCK                  ((unsigned char *)(&kinetis.DMAMUX[3])) // DMAMUX3
-    #elif defined KINETIS_K70 || (defined KINETIS_K60 && defined KINETIS_K_FPU)
+    #elif defined DMAMUX1_AVAILABLE
         #define DMAMUX1_BLOCK                  ((unsigned char *)(&kinetis.DMAMUX[1])) // DMAMUX1
     #endif
     #if defined I2S_AVAILABLE
@@ -5852,13 +5852,13 @@ typedef struct stKINETIS_INTMUX
 #else
     #define FTFL_FSTAT          *(volatile unsigned char *)(FTFL_BLOCK + 0x00) // Flash Status Register
       #define FTFL_STAT_MGSTAT0  0x01                                    // error detected during sequence (read-only)
-      #define FTFL_STAT_FPVIOL   0x10                                    // Flash protection violation flag (write '1' to clear)
-      #define FTFL_STAT_ACCERR   0x20                                    // Flash access error flag (write '1' to clear)
+      #define FTFL_STAT_FPVIOL   0x10                                    // flash protection violation flag (write '1' to clear)
+      #define FTFL_STAT_ACCERR   0x20                                    // flash access error flag (write '1' to clear)
       #if defined KINETIS_K64 || defined KINETIS_K22 || defined KINETIS_KE15
         #define FTFL_STAT_RDCOLERR 0x40                                  // Read collision error flag (write '1' to clear)
       #endif
       #define FTFL_STAT_CCIF     0x80                                    // command complete interrupt flag (write '1' to clear)
-    #define FTFL_FCNFG          *(unsigned char *)(FTFL_BLOCK + 0x01)    // Flash Configuration Register
+    #define FTFL_FCNFG          *(unsigned char *)(FTFL_BLOCK + 0x01)    // flash Configuration Register
     #define FTFL_FSEC           *(volatile unsigned char *)(FTFL_BLOCK + 0x02) // flash security register (read-only)
       #define FTFL_FSEC_SEC_SECURE       0x00                            // MCU security status is secure
       #define FTFL_FSEC_SEC_UNSECURE     0x02                            // MCU security status is unsecure (standard shipping state of new devices)
@@ -5906,10 +5906,10 @@ typedef struct stKINETIS_INTMUX
       #define FTFL_FOPT_NMI_ENABLED       0x04                            // NMI pin/interrupts reset default to enabled (only functional on revision 2 parts)
     #endif
     #define FTFL_FCCOB3_0       *(unsigned long *)(FTFL_BLOCK + 0x04)    // long word address
-    #define FTFL_FCCOB3         *(unsigned char *)(FTFL_BLOCK + 0x04)    // Flash Common Command Object Registers
-    #define FTFL_FCCOB2         *(unsigned char *)(FTFL_BLOCK + 0x05)    // Flash Common Command Object Registers
-    #define FTFL_FCCOB1         *(unsigned char *)(FTFL_BLOCK + 0x06)    // Flash Common Command Object Registers
-    #define FTFL_FCCOB0         *(unsigned char *)(FTFL_BLOCK + 0x07)    // Flash Common Command Object Registers
+    #define FTFL_FCCOB3         *(unsigned char *)(FTFL_BLOCK + 0x04)    // flash common command object registers
+    #define FTFL_FCCOB2         *(unsigned char *)(FTFL_BLOCK + 0x05)    // flash common command object registers
+    #define FTFL_FCCOB1         *(unsigned char *)(FTFL_BLOCK + 0x06)    // flash common command object registers
+    #define FTFL_FCCOB0         *(unsigned char *)(FTFL_BLOCK + 0x07)    // flash common command object registers
       #define FCMD_READ_1S_BLOCK              0x00
       #define FCMD_READ_1S_SECTION            0x01
       #define FCMD_PROGRAM_CHECK              0x02
@@ -17655,6 +17655,39 @@ typedef struct stDAC_REGS                                                // {23}
 #else
   #define PORT_WIDTH                     32
 #endif
+
+#define PORT_BIT0                        0x00000001
+#define PORT_BIT1                        0x00000002
+#define PORT_BIT2                        0x00000004
+#define PORT_BIT3                        0x00000008
+#define PORT_BIT4                        0x00000010
+#define PORT_BIT5                        0x00000020
+#define PORT_BIT6                        0x00000040
+#define PORT_BIT7                        0x00000080
+#define PORT_BIT8                        0x00000100
+#define PORT_BIT9                        0x00000200
+#define PORT_BIT10                       0x00000400
+#define PORT_BIT11                       0x00000800
+#define PORT_BIT12                       0x00001000
+#define PORT_BIT13                       0x00002000
+#define PORT_BIT14                       0x00004000
+#define PORT_BIT15                       0x00008000
+#define PORT_BIT16                       0x00010000
+#define PORT_BIT17                       0x00020000
+#define PORT_BIT18                       0x00040000
+#define PORT_BIT19                       0x00080000
+#define PORT_BIT20                       0x00100000
+#define PORT_BIT21                       0x00200000
+#define PORT_BIT22                       0x00400000
+#define PORT_BIT23                       0x00800000
+#define PORT_BIT24                       0x01000000
+#define PORT_BIT25                       0x02000000
+#define PORT_BIT26                       0x04000000
+#define PORT_BIT27                       0x08000000
+#define PORT_BIT28                       0x10000000
+#define PORT_BIT29                       0x20000000
+#define PORT_BIT30                       0x40000000
+#define PORT_BIT31                       0x80000000
 
 #define PORTA_BIT0                       0x00000001
 #define PORTA_BIT1                       0x00000002

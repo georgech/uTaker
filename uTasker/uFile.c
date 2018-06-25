@@ -1076,7 +1076,7 @@ extern unsigned char *uOpenFileAppend(CHAR *ptrfileName)
     #endif
     #if defined FLASH_LINE_SIZE && FLASH_LINE_SIZE > 0                   // {6}
     if (LengthInProgress < (FLASH_LINE_SIZE - FILE_HEADER)) {            // save first FLASH line of file in backup buffer
-        size_t CopyLength = ((FLASH_LINE_SIZE - FILE_HEADER) - LengthInProgress); // {21} the length of the data that can be copied to the line buffer
+        MAX_FILE_LENGTH CopyLength = (MAX_FILE_LENGTH)((FLASH_LINE_SIZE - FILE_HEADER) - LengthInProgress); // {21} the length of the data that can be copied to the line buffer
         if (DataLength < CopyLength) {
             CopyLength = DataLength;
         }

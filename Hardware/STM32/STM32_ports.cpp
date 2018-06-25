@@ -70,31 +70,31 @@ extern void fnSetPortDetails(char *cPortDetails, int iPort, int iBit, unsigned l
     char cBuf[BUF1SIZE + 1];
 
     switch (iPort) {
-    case _GPIO_A:
+    case _PORTA:
         STRCPY(cPortDetails, "GPIO A");
         break;
-    case _GPIO_B:
+    case _PORTB:
         STRCPY(cPortDetails, "GPIO B");
         break;
-    case _GPIO_C:
+    case _PORTC:
         STRCPY(cPortDetails, "GPIO C");
         break;
-    case _GPIO_D:
+    case _PORTD:
         STRCPY(cPortDetails, "GPIO D");
         break;
-    case _GPIO_E:
+    case _PORTE:
         STRCPY(cPortDetails, "GPIO E");
         break;
-    case _GPIO_F:
+    case _PORTF:
         STRCPY(cPortDetails, "GPIO F");
         break;
-    case _GPIO_G:
+    case _PORTG:
         STRCPY(cPortDetails, "GPIO G");
         break;
-    case _GPIO_H:
+    case _PORTH:
         STRCPY(cPortDetails, "GPIO H");
         break;
-    case _GPIO_I:
+    case _PORTI:
         STRCPY(cPortDetails, "GPIO I");
         break;
     default:

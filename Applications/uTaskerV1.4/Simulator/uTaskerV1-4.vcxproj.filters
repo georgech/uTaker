@@ -1439,6 +1439,8 @@
     <None Include="..\GNU_STM32\Build_STM32.bat" />
     <None Include="..\GNU_ColdFire\make_uTaskerV1.4_GNU_M5223X" />
     <None Include="..\GNU_ColdFire\Build_M5223X.bat" />
+    <None Include="..\GNU_Luminary\make_uTaskerV1.4_GNU_Luminary" />
+    <None Include="..\GNU_Luminary\Build_Luminary.bat" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="uTasker.rc">

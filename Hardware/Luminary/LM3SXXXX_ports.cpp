@@ -88,10 +88,10 @@ extern void fnSetPortDetails(char *cPortDetails, int iPort, int iBit, unsigned l
     #endif
     iBit = (iPortLength - iBit - 1);                                     // bit position
     switch (iPort) {
-    case _GPIO_A:
+    case _PORTA:
         STRCPY(cPortDetails, "Port A");
         break;
-    case _GPIO_B:
+    case _PORTB:
         STRCPY(cPortDetails, "Port B");
     #if defined SUPPORT_ADC && (PART_DC1 & ADC1_PRESENT1)                // {6}
         if (ulPortPeripheral[iPort] & (0x01 << iBit)) {                  // analogue pin isolation set
@@ -106,10 +106,10 @@ extern void fnSetPortDetails(char *cPortDetails, int iPort, int iBit, unsigned l
         }
     #endif
         break;
-    case _GPIO_C:
+    case _PORTC:
         STRCPY(cPortDetails, "Port C");
         break;
-    case _GPIO_D:
+    case _PORTD:
         STRCPY(cPortDetails, "Port D");
     #if (defined _DUST_DEVIL_CLASS || defined _TEMPEST_CLASS) && defined SUPPORT_ADC && (PART_DC1 & ADC0_PRESENT1) // {2}
         if (ulPortPeripheral[iPort] & (0x01 << iBit)) {                              // analogue pin isolation set
@@ -148,7 +148,7 @@ extern void fnSetPortDetails(char *cPortDetails, int iPort, int iBit, unsigned l
         }
     #endif
         break;
-    case _GPIO_E:
+    case _PORTE:
         STRCPY(cPortDetails, "Port E");
     #if (defined _DUST_DEVIL_CLASS || defined _TEMPEST_CLASS) && defined SUPPORT_ADC && (PART_DC1 & ADC0_PRESENT1) // {2}
         if (ulPortPeripheral[iPort] & (0x01 << iBit)) {                              // analogue pin isolation set
@@ -181,16 +181,16 @@ extern void fnSetPortDetails(char *cPortDetails, int iPort, int iBit, unsigned l
         }
     #endif
         break;
-    case _GPIO_F:
+    case _PORTF:
         STRCPY(cPortDetails, "Port F");
         break;
-    case _GPIO_G:
+    case _PORTG:
         STRCPY(cPortDetails, "Port G");
         break;
-    case _GPIO_H:
+    case _PORTH:
         STRCPY(cPortDetails, "Port H");
         break;
-    case _GPIO_J:
+    case _PORTJ:
         STRCPY(cPortDetails, "Port J");
         break;
     case _GPIO_ADC:                                                      // {2}

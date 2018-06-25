@@ -19,6 +19,7 @@
     04.06.2013 Add USB-OTG to F1                                         {4}
     15.06.2014 Add F2/F4 DMA registers                                   {5}
     31.08.2017 Add ADC block                                             {6}
+    19.06.2018 Change _GPIO_x to _PORTx for global compatibiity          {7}
 
 */  
 
@@ -1366,16 +1367,16 @@ typedef struct stSTR32M_PERIPH
 
 extern STM32M_PERIPH  STM32;
 
-#define _GPIO_A                         0                                // References for display in simulator
-#define _GPIO_B                         1
-#define _GPIO_C                         2
-#define _GPIO_D                         3
-#define _GPIO_E                         4
-#define _GPIO_F                         5
-#define _GPIO_G                         6
-#define _GPIO_H                         7
-#define _GPIO_I                         8
-#define _GPIO_J                         9
-#define _GPIO_K                         10
+#define _PORTA                          0                                // references for display in simulator
+#define _PORTB                          1
+#define _PORTC                          2
+#define _PORTD                          3
+#define _PORTE                          4
+#define _PORTF                          5
+#define _PORTG                          6
+#define _PORTH                          7
+#define _PORTI                          8
+#define _PORTJ                          9
+#define _PORTK                          10
 
 #define _ADDITIONAL_FUNCTION            16

@@ -100,7 +100,7 @@ static TIMER_BLOCK *fnGetFreeTimer(void)
     TIMER_BLOCK *ptrTim = stTimer;
 
     while (iTimers++ < TIMER_QUANTITY) {
-        if (!ptrTim->OwnerTask) {
+        if (0 == ptrTim->OwnerTask) {
             return ptrTim;                                               // timer block is free
         }
         ptrTim++;
@@ -269,7 +269,7 @@ static void fnStartNewTimer(TIMER_BLOCK *ptrNewTimer)
         return;
     }
 #endif
-    if (!fnGetNotTimer(ptrNewTimer)) {                                   // start new mono-stable timer
+    if (0 == fnGetNotTimer(ptrNewTimer)) {                               // start new mono-stable timer
         uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)ptrNewTimer->TimerDelay, E_TIMER_FIRED); // if no other timer active, simply start ours
         NextFire = ptrNewTimer->TimerDelay;                              // the present delay
     }

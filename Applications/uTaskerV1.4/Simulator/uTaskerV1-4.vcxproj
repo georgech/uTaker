@@ -25,6 +25,10 @@
       <Configuration>uTasker Kinetis</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="uTasker Luminary plus GNU build|Win32">
+      <Configuration>uTasker Luminary plus GNU build</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="uTasker Luminary|Win32">
       <Configuration>uTasker Luminary</Configuration>
       <Platform>Win32</Platform>
@@ -98,6 +102,12 @@
     <CharacterSet>MultiByte</CharacterSet>
     <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
@@ -137,6 +147,10 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC60.props" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC60.props" />
+  </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
@@ -161,11 +175,13 @@
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</LinkIncremental>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</LinkIncremental>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</LinkIncremental>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</LinkIncremental>
     <PostBuildEventUseInBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">false</PostBuildEventUseInBuild>
     <PostBuildEventUseInBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire|Win32'">false</PostBuildEventUseInBuild>
     <PostBuildEventUseInBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">false</PostBuildEventUseInBuild>
     <PostBuildEventUseInBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</PostBuildEventUseInBuild>
     <PostBuildEventUseInBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">false</PostBuildEventUseInBuild>
+    <PostBuildEventUseInBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</PostBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">
     <ReferencePath>$(ReferencePath)</ReferencePath>
@@ -180,6 +196,9 @@
     <ReferencePath>$(ReferencePath)</ReferencePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">
+    <ReferencePath>$(ReferencePath)</ReferencePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">
     <ReferencePath>$(ReferencePath)</ReferencePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">
@@ -663,6 +682,59 @@ Build_STM32.bat
       </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">
+    <Midl>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MkTypLibCompatible>true</MkTypLibCompatible>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <TargetEnvironment>Win32</TargetEnvironment>
+      <TypeLibraryName>.\uTasker___Win32_uTasker_STM32_plus_GNU_build/uTaskerV1-4.tlb</TypeLibraryName>
+      <HeaderFileName>
+      </HeaderFileName>
+    </Midl>
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_LM3SXXXX;ETHEREAL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <PrecompiledHeaderOutputFile>.\uTasker___Win32_uTasker_Kinetis_build/uTaskerV1-4.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>.\uTasker___Win32_uTasker_Kinetis_build/</AssemblerListingLocation>
+      <ObjectFileName>.\uTasker___Win32_uTasker_Kinetis_build/</ObjectFileName>
+      <ProgramDataBaseFileName>.\uTasker___Win32_uTasker_Kinetis_build/</ProgramDataBaseFileName>
+      <BrowseInformation>true</BrowseInformation>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0809</Culture>
+      <AdditionalIncludeDirectories>..\..\..\WinSim\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Link>
+      <AdditionalDependencies>odbc32.lib;odbccp32.lib;wpcap.lib;ft8xxemu.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <AdditionalLibraryDirectories>.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Lib;.\..\..\..\WinSim\LCD\FT800;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <ProgramDatabaseFile>.\uTasker___Win32_uTasker_Kinetis_build/uTaskerV1-4.pdb</ProgramDatabaseFile>
+      <SubSystem>Windows</SubSystem>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+      <TargetMachine>MachineX86</TargetMachine>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+    </Link>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>.\uTasker___Win32_uTasker_Kinetis_build/uTaskerV1-4.bsc</OutputFile>
+    </Bscmake>
+    <PostBuildEvent>
+      <Command>cd ../GNU_Luminary
+Build_Luminary.bat</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\FreeRTOS\Source\croutine.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
@@ -670,6 +742,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);;..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);;..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);;..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
@@ -683,6 +756,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);;..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);;..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);;..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
@@ -696,6 +770,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);;..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);;..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);;..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
@@ -709,6 +784,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
@@ -722,6 +798,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);;..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);;..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);;..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
@@ -735,6 +812,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);;..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);;..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);;..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
@@ -748,6 +826,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);;..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);;..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);;..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
@@ -790,18 +869,26 @@ Build_STM32.bat
     <ClCompile Include="..\..\..\Hardware\Coldfire\M5223X.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">false</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\..\..\Hardware\Coldfire\M5223XSim.c" />
-    <ClCompile Include="..\..\..\Hardware\Coldfire\M5223X_ports.cpp" />
+    <ClCompile Include="..\..\..\Hardware\Coldfire\M5223XSim.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Hardware\Coldfire\M5223X_ports.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\..\..\Hardware\Kinetis\kinetis.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire|Win32'">false</ExcludedFromBuild>
@@ -812,6 +899,7 @@ Build_STM32.bat
     <ClCompile Include="..\..\..\Hardware\Kinetis\kinetisSim.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">false</ExcludedFromBuild>
@@ -823,6 +911,7 @@ Build_STM32.bat
     <ClCompile Include="..\..\..\Hardware\Kinetis\kinetis_ports.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">false</ExcludedFromBuild>
@@ -864,6 +953,7 @@ Build_STM32.bat
     <ClCompile Include="..\..\..\Hardware\STM32\STM32.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
@@ -873,6 +963,7 @@ Build_STM32.bat
     <ClCompile Include="..\..\..\Hardware\STM32\STM32Sim.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
@@ -882,6 +973,7 @@ Build_STM32.bat
     <ClCompile Include="..\..\..\Hardware\STM32\STM32_ports.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
@@ -912,6 +1004,7 @@ Build_STM32.bat
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">true</ExcludedFromBuild>
     </ClCompile>
@@ -921,6 +1014,7 @@ Build_STM32.bat
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">true</ExcludedFromBuild>
     </ClCompile>
@@ -930,6 +1024,7 @@ Build_STM32.bat
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">true</ExcludedFromBuild>
     </ClCompile>
@@ -939,6 +1034,7 @@ Build_STM32.bat
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">true</ExcludedFromBuild>
     </ClCompile>
@@ -948,6 +1044,7 @@ Build_STM32.bat
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">true</ExcludedFromBuild>
     </ClCompile>
@@ -957,6 +1054,7 @@ Build_STM32.bat
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">true</ExcludedFromBuild>
     </ClCompile>
@@ -966,6 +1064,7 @@ Build_STM32.bat
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">true</ExcludedFromBuild>
     </ClCompile>
@@ -975,6 +1074,7 @@ Build_STM32.bat
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">true</ExcludedFromBuild>
     </ClCompile>
@@ -984,6 +1084,7 @@ Build_STM32.bat
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">true</ExcludedFromBuild>
     </ClCompile>
@@ -993,6 +1094,7 @@ Build_STM32.bat
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">true</ExcludedFromBuild>
     </ClCompile>
@@ -1002,6 +1104,7 @@ Build_STM32.bat
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">true</ExcludedFromBuild>
     </ClCompile>
@@ -1011,6 +1114,7 @@ Build_STM32.bat
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">true</ExcludedFromBuild>
     </ClCompile>
@@ -1020,6 +1124,7 @@ Build_STM32.bat
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">true</ExcludedFromBuild>
     </ClCompile>
@@ -1029,6 +1134,7 @@ Build_STM32.bat
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">true</ExcludedFromBuild>
     </ClCompile>
@@ -1039,6 +1145,7 @@ Build_STM32.bat
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">true</ExcludedFromBuild>
     </ClCompile>
@@ -1048,6 +1155,7 @@ Build_STM32.bat
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">true</ExcludedFromBuild>
     </ClCompile>
@@ -1057,6 +1165,7 @@ Build_STM32.bat
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">true</ExcludedFromBuild>
     </ClCompile>
@@ -1066,6 +1175,7 @@ Build_STM32.bat
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">true</ExcludedFromBuild>
     </ClCompile>
@@ -1075,6 +1185,7 @@ Build_STM32.bat
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">true</ExcludedFromBuild>
     </ClCompile>
@@ -1084,6 +1195,7 @@ Build_STM32.bat
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">true</ExcludedFromBuild>
     </ClCompile>
@@ -1093,6 +1205,7 @@ Build_STM32.bat
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">true</ExcludedFromBuild>
     </ClCompile>
@@ -1102,6 +1215,7 @@ Build_STM32.bat
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">true</ExcludedFromBuild>
     </ClCompile>
@@ -1111,6 +1225,7 @@ Build_STM32.bat
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">true</ExcludedFromBuild>
     </ClCompile>
@@ -1120,6 +1235,7 @@ Build_STM32.bat
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">true</ExcludedFromBuild>
     </ClCompile>
@@ -1129,6 +1245,7 @@ Build_STM32.bat
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">true</ExcludedFromBuild>
     </ClCompile>
@@ -1138,6 +1255,7 @@ Build_STM32.bat
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">true</ExcludedFromBuild>
     </ClCompile>
@@ -1147,6 +1265,7 @@ Build_STM32.bat
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">true</ExcludedFromBuild>
     </ClCompile>
@@ -1156,6 +1275,7 @@ Build_STM32.bat
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">true</ExcludedFromBuild>
     </ClCompile>
@@ -1165,6 +1285,7 @@ Build_STM32.bat
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">true</ExcludedFromBuild>
     </ClCompile>
@@ -1185,6 +1306,7 @@ Build_STM32.bat
     <ClCompile Include="..\..\..\WinSim\serial_dev.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">false</ExcludedFromBuild>
@@ -1203,6 +1325,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1212,6 +1335,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\debug.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -1223,6 +1347,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1232,6 +1357,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\DMX512.c" />
     <ClCompile Include="..\FreeMaster.c" />
@@ -1241,6 +1367,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">.\..\.;.\..\..\..\WinSim\WpdPack_3_1\WpdPack\Include;.;%(AdditionalIncludeDirectories);..\..\..\FreeRTOS\Source\include;..\..\..\FreeRTOS\Source\portable\GCC\ARM_CM4F</AdditionalIncludeDirectories>
@@ -1258,6 +1385,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1267,6 +1395,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\modbus_app.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -1278,6 +1407,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1287,6 +1417,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\NetworkIndicator.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -1298,6 +1429,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1307,6 +1439,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\nRF24201.c" />
     <ClCompile Include="..\snmp_mib_handlers.c" />
@@ -1320,6 +1453,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1329,6 +1463,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\webInterface.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -1340,6 +1475,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1349,6 +1485,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\..\uTasker\can_drv.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -1360,6 +1497,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1369,6 +1507,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\..\uTasker\Driver.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -1380,6 +1519,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1389,6 +1529,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\..\uTasker\eth_drv.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -1400,6 +1541,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1409,6 +1551,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\..\uTasker\GlobalTimer.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -1420,6 +1563,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1429,6 +1573,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\..\uTasker\low_power.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -1440,6 +1585,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1449,6 +1595,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\..\uTasker\SSC_drv.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -1460,6 +1607,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1469,6 +1617,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\..\uTasker\Tty_drv.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -1480,6 +1629,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1489,6 +1639,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\..\uTasker\uFile.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -1500,6 +1651,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1509,6 +1661,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\..\uTasker\uMalloc.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -1520,6 +1673,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1529,6 +1683,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\..\uTasker\uNetwork.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -1540,6 +1695,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1549,6 +1705,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\..\uTasker\USB_drv.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -1560,6 +1717,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1569,6 +1727,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\..\uTasker\uTasker.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -1580,6 +1739,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1589,6 +1749,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\..\uTasker\Watchdog.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -1600,6 +1761,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1609,6 +1771,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\..\uTasker\MODBUS\MODBUS.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -1620,6 +1783,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1629,6 +1793,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\..\uTasker\uGLCDLIB\GLCD.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -1640,6 +1805,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1649,6 +1815,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\..\uTasker\uGLCDLIB\LCD.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -1660,6 +1827,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1669,6 +1837,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\..\uTasker\utFAT\mass_storage.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -1680,6 +1849,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1689,6 +1859,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\..\stack\arp.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -1700,6 +1871,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1709,6 +1881,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\..\stack\dhcp.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -1720,6 +1893,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1729,6 +1903,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\..\stack\dns.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -1740,6 +1915,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1749,6 +1925,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\..\stack\Ethernet.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -1760,6 +1937,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1769,6 +1947,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\..\stack\ftp.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -1780,6 +1959,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1789,6 +1969,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\..\stack\http.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -1800,6 +1981,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1809,6 +1991,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\..\stack\icmp.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -1820,6 +2003,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1829,6 +2013,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\..\stack\ip.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -1840,6 +2025,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1849,6 +2035,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\..\stack\ip_utils.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -1860,6 +2047,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1869,6 +2057,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\..\stack\NetBIOS.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -1880,6 +2069,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1889,6 +2079,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\..\stack\pop3.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -1900,6 +2091,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1909,6 +2101,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\..\stack\ppp.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -1920,6 +2113,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1929,6 +2123,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\..\stack\smtp.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -1940,6 +2135,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1949,6 +2145,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\..\stack\snmp.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -1960,6 +2157,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1969,6 +2167,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\..\stack\tcp.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -1980,6 +2179,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1989,6 +2189,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\..\stack\telnet.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -2000,6 +2201,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -2009,6 +2211,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\..\stack\tftp.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -2020,6 +2223,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -2029,6 +2233,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\..\stack\udp.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -2040,6 +2245,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -2049,6 +2255,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\..\stack\webutils.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -2060,6 +2267,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -2069,6 +2277,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\..\WinSim\Ethereal.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -2080,6 +2289,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -2089,6 +2299,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\..\WinSim\FileToDisk.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -2100,6 +2311,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -2109,6 +2321,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\..\WinSim\LCD\KeyPadSim.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -2120,6 +2333,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -2129,6 +2343,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\..\WinSim\LCD\LCDSim.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -2140,6 +2355,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -2149,6 +2365,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\..\WinSim\PortSim.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -2160,6 +2377,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -2169,6 +2387,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\..\WinSim\SDcard_sim.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -2180,6 +2399,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -2189,6 +2409,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\..\WinSim\WinPcap.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -2200,6 +2421,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -2209,6 +2431,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\..\WinSim\WinSim.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -2220,6 +2443,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -2229,6 +2453,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\..\WinSim\WinSimMain.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -2240,6 +2465,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -2249,6 +2475,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -2303,6 +2530,7 @@ Build_STM32.bat
     <ClInclude Include="..\..\..\Hardware\Coldfire\M5223X.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
@@ -2312,6 +2540,7 @@ Build_STM32.bat
     <ClInclude Include="..\..\..\Hardware\Coldfire\SimM5223X.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
@@ -2321,6 +2550,7 @@ Build_STM32.bat
     <ClInclude Include="..\..\..\Hardware\Coldfire\spi_flash_m5223x_atmel.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
@@ -2330,6 +2560,7 @@ Build_STM32.bat
     <ClInclude Include="..\..\..\Hardware\Coldfire\spi_flash_m5223x_sst25.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
@@ -2339,6 +2570,7 @@ Build_STM32.bat
     <ClInclude Include="..\..\..\Hardware\Coldfire\spi_flash_m5223x_stmicro.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
@@ -2423,26 +2655,110 @@ Build_STM32.bat
     <ClInclude Include="..\..\..\Hardware\Luminary\spi_flash_lm3s_sst25.h" />
     <ClInclude Include="..\..\..\Hardware\Luminary\spi_flash_lm3s_stmicro.h" />
     <ClInclude Include="..\..\..\Hardware\Luminary\spi_sc16IS7xx.h" />
-    <ClInclude Include="..\..\..\Hardware\STM32\simSTM32.h" />
-    <ClInclude Include="..\..\..\Hardware\STM32\spi_flash_STM32_atmel.h" />
-    <ClInclude Include="..\..\..\Hardware\STM32\spi_flash_STM32_MX66L.h" />
-    <ClInclude Include="..\..\..\Hardware\STM32\spi_flash_STM32_sst25.h" />
-    <ClInclude Include="..\..\..\Hardware\STM32\spi_flash_STM32_stmicro.h" />
-    <ClInclude Include="..\..\..\Hardware\STM32\STM32.h" />
-    <ClInclude Include="..\..\..\Hardware\STM32\STM32F031_port.h" />
-    <ClInclude Include="..\..\..\Hardware\STM32\STM32F100X_port.h" />
-    <ClInclude Include="..\..\..\Hardware\STM32\STM32F105X_107X_port.h" />
-    <ClInclude Include="..\..\..\Hardware\STM32\STM32F41X_port.h" />
-    <ClInclude Include="..\..\..\Hardware\STM32\STM32F7XX_port.h" />
-    <ClInclude Include="..\..\..\Hardware\STM32\STM32L031_port.h" />
-    <ClInclude Include="..\..\..\Hardware\STM32\STM32L4XX_port.h" />
-    <ClInclude Include="..\..\..\Hardware\STM32\stm32_ADC.h" />
-    <ClInclude Include="..\..\..\Hardware\STM32\stm32_ENET.h" />
-    <ClInclude Include="..\..\..\Hardware\STM32\stm32_FLASH.h" />
-    <ClInclude Include="..\..\..\Hardware\STM32\stm32_I2C.h" />
-    <ClInclude Include="..\..\..\Hardware\STM32\stm32_PORTS.h" />
-    <ClInclude Include="..\..\..\Hardware\STM32\stm32_TIMER.h" />
-    <ClInclude Include="..\..\..\Hardware\STM32\stm32_UART.h" />
+    <ClInclude Include="..\..\..\Hardware\STM32\simSTM32.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\spi_flash_STM32_atmel.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\spi_flash_STM32_MX66L.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\spi_flash_STM32_sst25.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\spi_flash_STM32_stmicro.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\STM32.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\STM32F031_port.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\STM32F100X_port.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\STM32F105X_107X_port.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\STM32F41X_port.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\STM32F7XX_port.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\STM32L031_port.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\STM32L4XX_port.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\stm32_ADC.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\stm32_ENET.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\stm32_FLASH.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\stm32_I2C.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\stm32_PORTS.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\stm32_TIMER.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\stm32_UART.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="..\..\..\stack\PPP\arch\cc.h" />
     <ClInclude Include="..\..\..\stack\PPP\arch\perf.h" />
     <ClInclude Include="..\..\..\stack\PPP\arch\sys_arch.h" />
@@ -2635,6 +2951,7 @@ Build_STM32.bat
     <None Include="..\..\..\Hardware\Coldfire\cstart_iar.s68">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
@@ -2644,6 +2961,7 @@ Build_STM32.bat
     <None Include="..\..\..\Hardware\Coldfire\flash_config.s">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
@@ -2653,6 +2971,7 @@ Build_STM32.bat
     <None Include="..\..\..\Hardware\Coldfire\flash_config_sec.s">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
@@ -2662,6 +2981,7 @@ Build_STM32.bat
     <None Include="..\..\..\Hardware\Coldfire\Startup.s">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
@@ -2671,6 +2991,7 @@ Build_STM32.bat
     <None Include="..\..\..\Hardware\Coldfire\Startup_gnu.s">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
@@ -2690,6 +3011,7 @@ Build_STM32.bat
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">true</ExcludedFromBuild>
@@ -2697,14 +3019,19 @@ Build_STM32.bat
     <None Include="..\..\..\Hardware\Kinetis\kinetis_asm.s" />
     <None Include="..\..\..\Hardware\Luminary\LM3SXXXX_asm.s">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
     </None>
     <None Include="..\..\..\Hardware\Luminary\LM3SXXXX_startup_keil.s">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
     </None>
     <None Include="..\..\..\Hardware\STM32\STM32_keil_asm.s">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
     </None>
     <None Include="..\GNU_ColdFire\Build_M5223X.bat" />
     <None Include="..\GNU_ColdFire\make_uTaskerV1.4_GNU_M5223X" />
@@ -2712,6 +3039,8 @@ Build_STM32.bat
     <None Include="..\GNU_Kinetis\Build_Kinetis_SSL.bat" />
     <None Include="..\GNU_Kinetis\make_uTaskerV1.4_GNU_Kinetis" />
     <None Include="..\GNU_Kinetis\make_uTaskerV1.4_SSL_GNU_Kinetis" />
+    <None Include="..\GNU_Luminary\Build_Luminary.bat" />
+    <None Include="..\GNU_Luminary\make_uTaskerV1.4_GNU_Luminary" />
     <None Include="..\GNU_STM32\Build_STM32.bat" />
     <None Include="..\GNU_STM32\make_uTaskerV1.4_GNU_STM32" />
     <None Include="cursor1.cur" />
@@ -2730,6 +3059,7 @@ Build_STM32.bat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -2739,6 +3069,7 @@ Build_STM32.bat
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

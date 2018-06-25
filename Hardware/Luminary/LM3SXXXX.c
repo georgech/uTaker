@@ -3021,7 +3021,7 @@ static void fnI2CInt(QUEUE_HANDLE Channel, LM3XXXXX_I2C_CONTROL *iic, I2CQue *pt
     #endif
     }
     else {
-        if (!(ptI2CQue->I2C_queue.chars)) {                              // all transmission complete
+        if (0 == ptI2CQue->I2C_queue.chars) {                            // all transmission complete
             iic->I2CMIMR = 0;                                            // disable further interrupts
             ptI2CQue->ucState = 0;
             if (ptI2CQue->wake_task ) {
@@ -3094,7 +3094,7 @@ void fnConfigI2C(I2CTABLE *pars)
         iic->I2CMTPR = ((MASTER_CLOCK / (2 * (SCL_LP + SCL_HP) * 50000)) - 1);
         break;
     }
-    #ifdef _WINDOWS
+    #if defined _WINDOWS
     fnConfigSimI2C(pars->Channel, (pars->usSpeed * 1000));
     #endif
 }

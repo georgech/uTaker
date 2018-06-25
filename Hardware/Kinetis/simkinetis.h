@@ -3757,7 +3757,7 @@ typedef struct stKINETIS_PERIPH
     KINETIS_FTFL       FTFL;
 #if defined KINETIS_KM
     KINETIS_DMAMUX     DMAMUX[4];
-#elif defined KINETIS_K70 || (defined KINETIS_K60 && defined KINETIS_K_FPU)// {4}
+#elif defined DMAMUX1_AVAILABLE                                          // {4}
     KINETIS_DMAMUX     DMAMUX[2];
 #else
     KINETIS_DMAMUX     DMAMUX[1];

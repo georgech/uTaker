@@ -1241,32 +1241,32 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
         ulGPIOIN[ucPort] &= ~usBit;                                      // set the input low
     }
     switch (ucPort) {
-    case _GPIO_A:
+    case _PORTA:
         GPIOA_IDR = ((ulGPIODDR[ucPort] & GPIOA_ODR) | (~ulGPIODDR[ucPort] & ulGPIOIN[ucPort]));
         break;
-    case _GPIO_B:
+    case _PORTB:
         GPIOB_IDR = ((ulGPIODDR[ucPort] & GPIOB_ODR) | (~ulGPIODDR[ucPort] & ulGPIOIN[ucPort]));
         break;
-    case _GPIO_C:
+    case _PORTC:
         GPIOC_IDR = ((ulGPIODDR[ucPort] & GPIOC_ODR) | (~ulGPIODDR[ucPort] & ulGPIOIN[ucPort]));
         break;
-    case _GPIO_D:
+    case _PORTD:
         GPIOD_IDR = ((ulGPIODDR[ucPort] & GPIOD_ODR) | (~ulGPIODDR[ucPort] & ulGPIOIN[ucPort]));
         break;
-    case _GPIO_E:
+    case _PORTE:
         GPIOE_IDR = ((ulGPIODDR[ucPort] & GPIOE_ODR) | (~ulGPIODDR[ucPort] & ulGPIOIN[ucPort]));
         break;
-    case _GPIO_F:
+    case _PORTF:
         GPIOF_IDR = ((ulGPIODDR[ucPort] & GPIOF_ODR) | (~ulGPIODDR[ucPort] & ulGPIOIN[ucPort]));
         break;
-    case _GPIO_G:
+    case _PORTG:
         GPIOG_IDR = ((ulGPIODDR[ucPort] & GPIOG_ODR) | (~ulGPIODDR[ucPort] & ulGPIOIN[ucPort]));
         break;
 #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
-    case _GPIO_H:
+    case _PORTH:
         GPIOH_IDR = ((ulGPIODDR[ucPort] & GPIOH_ODR) | (~ulGPIODDR[ucPort] & ulGPIOIN[ucPort]));
         break;
-    case _GPIO_I:
+    case _PORTI:
         GPIOI_IDR = ((ulGPIODDR[ucPort] & GPIOI_ODR) | (~ulGPIODDR[ucPort] & ulGPIOIN[ucPort]));
         break;
 #endif
@@ -1339,7 +1339,7 @@ static void fnUpdatePeripheral(int iPort, unsigned long ulPeriph)
     unsigned long ulMaskMode = 0x00000003;
     STM32_GPIO *ptrPort = &STM32.Ports[iPort];
     while (i < PORT_WIDTH) {
-        if ((iPort == _GPIO_H) && (i <= 1)) {                            // {2}
+        if ((iPort == _PORTH) && (i <= 1)) {                            // {2}
             if ((RCC_CR & RCC_CR_HSEON) != 0) {                          // if external oscillator is enabled
                 ucPortFunctions[iPort][i] = _ADDITIONAL_FUNCTION;        // OSC_IN and OSC_OUT enabled on PH0 and PH1
             }
@@ -1371,7 +1371,7 @@ static void fnUpdatePeripheral(int iPort, unsigned long ulPeriph)
 #else
     unsigned long ulBit = 0x00000001;
     switch (iPort) {
-    case _GPIO_A:
+    case _PORTA:
         while (i < PORT_WIDTH) {
             if (ulBit & ulPeriph) {                                      // for each port bit that has a peripheral function
                 switch (i) {
@@ -1449,7 +1449,7 @@ static void fnUpdatePeripheral(int iPort, unsigned long ulPeriph)
             ulBit <<= 1;
         }
         break;
-    case _GPIO_B:
+    case _PORTB:
         while (i < PORT_WIDTH) {
             if (ulBit & ulPeriph) {                                      // for each port bit that has a peripheral function
                 switch (i) {
@@ -1532,7 +1532,7 @@ static void fnUpdatePeripheral(int iPort, unsigned long ulPeriph)
             ulBit <<= 1;
         }
         break;
-    case _GPIO_C:
+    case _PORTC:
         while (i < PORT_WIDTH) {
             if (ulBit & ulPeriph) {                                      // for each port bit that has a peripheral function
                 switch (i) {
@@ -1586,7 +1586,7 @@ static void fnUpdatePeripheral(int iPort, unsigned long ulPeriph)
             ulBit <<= 1;
         }
         break;
-    case _GPIO_D:
+    case _PORTD:
         while (i < PORT_WIDTH) {
             if (ulBit & ulPeriph) {                                      // for each port bit that has a peripheral function
                 switch (i) {
@@ -1647,7 +1647,7 @@ static void fnUpdatePeripheral(int iPort, unsigned long ulPeriph)
             ulBit <<= 1;
         }
         break;
-    case _GPIO_E:
+    case _PORTE:
         while (i < PORT_WIDTH) {
             if (ulBit & ulPeriph) {                                      // for each port bit that has a peripheral function
                 switch (i) {
@@ -1659,7 +1659,7 @@ static void fnUpdatePeripheral(int iPort, unsigned long ulPeriph)
             ulBit <<= 1;
         }
         break;
-    case _GPIO_F:
+    case _PORTF:
         while (i < PORT_WIDTH) {
             if (ulBit & ulPeriph) {                                      // for each port bit that has a peripheral function
                 switch (i) {
@@ -1671,7 +1671,7 @@ static void fnUpdatePeripheral(int iPort, unsigned long ulPeriph)
             ulBit <<= 1;
         }
         break;
-    case _GPIO_G:
+    case _PORTG:
         while (i < PORT_WIDTH) {
             if (ulBit & ulPeriph) {                                      // for each port bit that has a peripheral function
                 switch (i) {
@@ -1707,49 +1707,49 @@ extern void fnSimPorts(void)
             iFlagRefresh = PORT_CHANGE;                                  // ensure that ports are updated when a direction changes
         }
         switch (iPort) {
-        case _GPIO_A:
+        case _PORTA:
             if ((GPIOA_ODR & ulGPIODDR[iPort]) != ulGPIODRIVE_VALUE[iPort]) {
                 ulGPIODRIVE_VALUE[iPort] = GPIOA_ODR & ulGPIODDR[iPort]; // new output driven state
                 GPIOA_IDR = ((ulGPIODDR[iPort] & GPIOA_ODR) | (~ulGPIODDR[iPort] & ulGPIOIN[iPort]));
                 iFlagRefresh = PORT_CHANGE;                              // ensure that ports are updated when an output state changes
             }
             break;
-        case _GPIO_B:
+        case _PORTB:
             if ((GPIOB_ODR & ulGPIODDR[iPort]) != ulGPIODRIVE_VALUE[iPort]) {
                 ulGPIODRIVE_VALUE[iPort] = GPIOB_ODR & ulGPIODDR[iPort]; // new output driven state
                 GPIOB_IDR = ((ulGPIODDR[iPort] & GPIOB_ODR) | (~ulGPIODDR[iPort] & ulGPIOIN[iPort]));
                 iFlagRefresh = PORT_CHANGE;                              // ensure that ports are updated when an output state changes
             }
             break;
-        case _GPIO_C:
+        case _PORTC:
             if ((GPIOC_ODR & ulGPIODDR[iPort]) != ulGPIODRIVE_VALUE[iPort]) {
                 ulGPIODRIVE_VALUE[iPort] = GPIOC_ODR & ulGPIODDR[iPort]; // new output driven state
                 GPIOC_IDR = ((ulGPIODDR[iPort] & GPIOC_ODR) | (~ulGPIODDR[iPort] & ulGPIOIN[iPort]));
                 iFlagRefresh = PORT_CHANGE;                              // ensure that ports are updated when an output state changes
             }
             break;
-        case _GPIO_D:
+        case _PORTD:
             if ((GPIOD_ODR & ulGPIODDR[iPort]) != ulGPIODRIVE_VALUE[iPort]) {
                 ulGPIODRIVE_VALUE[iPort] = GPIOD_ODR & ulGPIODDR[iPort]; // new output driven state
                 GPIOD_IDR = ((ulGPIODDR[iPort] & GPIOD_ODR) | (~ulGPIODDR[iPort] & ulGPIOIN[iPort]));
                 iFlagRefresh = PORT_CHANGE;                              // ensure that ports are updated when an output state changes
             }
             break;
-        case _GPIO_E:
+        case _PORTE:
             if ((GPIOE_ODR & ulGPIODDR[iPort]) != ulGPIODRIVE_VALUE[iPort]) {
                 ulGPIODRIVE_VALUE[iPort] = GPIOE_ODR & ulGPIODDR[iPort]; // new output driven state
                 GPIOE_IDR = ((ulGPIODDR[iPort] & GPIOE_ODR) | (~ulGPIODDR[iPort] & ulGPIOIN[iPort]));
                 iFlagRefresh = PORT_CHANGE;                              // ensure that ports are updated when an output state changes
             }
             break;
-        case _GPIO_F:
+        case _PORTF:
             if ((GPIOF_ODR & ulGPIODDR[iPort]) != ulGPIODRIVE_VALUE[iPort]) {
                 ulGPIODRIVE_VALUE[iPort] = GPIOF_ODR & ulGPIODDR[iPort]; // new output driven state
                 GPIOF_IDR = ((ulGPIODDR[iPort] & GPIOF_ODR) | (~ulGPIODDR[iPort] & ulGPIOIN[iPort]));
                 iFlagRefresh = PORT_CHANGE;                              // ensure that ports are updated when an output state changes
             }
             break;
-        case _GPIO_G:
+        case _PORTG:
             if ((GPIOG_ODR & ulGPIODDR[iPort]) != ulGPIODRIVE_VALUE[iPort]) {
                 ulGPIODRIVE_VALUE[iPort] = GPIOG_ODR & ulGPIODDR[iPort]; // new output driven state
                 GPIOG_IDR = ((ulGPIODDR[iPort] & GPIOG_ODR) | (~ulGPIODDR[iPort] & ulGPIOIN[iPort]));
@@ -1757,14 +1757,14 @@ extern void fnSimPorts(void)
             }
             break;
 #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
-        case _GPIO_H:
+        case _PORTH:
             if ((GPIOH_ODR & ulGPIODDR[iPort]) != ulGPIODRIVE_VALUE[iPort]) {
                 ulGPIODRIVE_VALUE[iPort] = GPIOH_ODR & ulGPIODDR[iPort]; // new output driven state
                 GPIOH_IDR = ((ulGPIODDR[iPort] & GPIOH_ODR) | (~ulGPIODDR[iPort] & ulGPIOIN[iPort]));
                 iFlagRefresh = PORT_CHANGE;                              // ensure that ports are updated when an output state changes
             }
             break;
-        case _GPIO_I:
+        case _PORTI:
             if ((GPIOI_ODR & ulGPIODDR[iPort]) != ulGPIODRIVE_VALUE[iPort]) {
                 ulGPIODRIVE_VALUE[iPort] = GPIOI_ODR & ulGPIODDR[iPort]; // new output driven state
                 GPIOI_IDR = ((ulGPIODDR[iPort] & GPIOI_ODR) | (~ulGPIODDR[iPort] & ulGPIOIN[iPort]));
@@ -1789,24 +1789,24 @@ extern unsigned long fnGetPresentPortState(int portNr)
 {
     portNr -= 1;
     switch (portNr) {
-    case _GPIO_A:
+    case _PORTA:
         return ((ulGPIODDR[portNr] & GPIOA_ODR) | (~ulGPIODDR[portNr] & ulGPIOIN[portNr]));
-    case _GPIO_B:
+    case _PORTB:
         return ((ulGPIODDR[portNr] & GPIOB_ODR) | (~ulGPIODDR[portNr] & ulGPIOIN[portNr]));
-    case _GPIO_C:
+    case _PORTC:
         return ((ulGPIODDR[portNr] & GPIOC_ODR) | (~ulGPIODDR[portNr] & ulGPIOIN[portNr]));
-    case _GPIO_D:
+    case _PORTD:
         return ((ulGPIODDR[portNr] & GPIOD_ODR) | (~ulGPIODDR[portNr] & ulGPIOIN[portNr]));
-    case _GPIO_E:
+    case _PORTE:
         return ((ulGPIODDR[portNr] & GPIOE_ODR) | (~ulGPIODDR[portNr] & ulGPIOIN[portNr]));
-    case _GPIO_F:
+    case _PORTF:
         return ((ulGPIODDR[portNr] & GPIOF_ODR) | (~ulGPIODDR[portNr] & ulGPIOIN[portNr]));
-    case _GPIO_G:
+    case _PORTG:
         return ((ulGPIODDR[portNr] & GPIOG_ODR) | (~ulGPIODDR[portNr] & ulGPIOIN[portNr]));
 #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
-    case _GPIO_H:
+    case _PORTH:
         return ((ulGPIODDR[portNr] & GPIOH_ODR) | (~ulGPIODDR[portNr] & ulGPIOIN[portNr]));
-    case _GPIO_I:
+    case _PORTI:
         return ((ulGPIODDR[portNr] & GPIOI_ODR) | (~ulGPIODDR[portNr] & ulGPIOIN[portNr]));
 #endif
     default:
@@ -1847,7 +1847,7 @@ static unsigned short fnGetPortType(int portNr, int iRequest, int i)
             i++;
         }
     #if !defined _STM32L0x1
-        if (portNr == _GPIO_H) {                                         // {2}
+        if (portNr == _PORTH) {                                         // {2}
             if ((RCC_CR & RCC_CR_HSEON) != 0) {                          // if external oscillator is enabled
                 usPeripherals |= (PORTH_BIT0 | PORTH_BIT1);              // OSC_IN and OSC_OUT enabled on PH0 and PH1
             }
@@ -1858,7 +1858,7 @@ static unsigned short fnGetPortType(int portNr, int iRequest, int i)
     unsigned long  ulReg;
 
     switch (portNr) {
-    case _GPIO_A:
+    case _PORTA:
         while (i < PORT_WIDTH) {
             if (i < 8) {
                 ulReg = GPIOA_CRL;
@@ -1946,7 +1946,7 @@ static unsigned short fnGetPortType(int portNr, int iRequest, int i)
             i++;
         }
         break;
-    case _GPIO_B:
+    case _PORTB:
         while (i < PORT_WIDTH) {
             if (i < 8) {
                 ulReg = GPIOB_CRL;
@@ -1997,7 +1997,7 @@ static unsigned short fnGetPortType(int portNr, int iRequest, int i)
             i++;
         }
         break;
-    case _GPIO_C:
+    case _PORTC:
         while (i < PORT_WIDTH) {
             if (i < 8) {
                 ulReg = GPIOC_CRL;
@@ -2048,7 +2048,7 @@ static unsigned short fnGetPortType(int portNr, int iRequest, int i)
             i++;
         }
         break;
-    case _GPIO_D:
+    case _PORTD:
         while (i < PORT_WIDTH) {
             if (i < 8) {
                 ulReg = GPIOD_CRL;
@@ -2114,7 +2114,7 @@ static unsigned short fnGetPortType(int portNr, int iRequest, int i)
             i++;
         }
         break;
-    case _GPIO_E:
+    case _PORTE:
         while (i < PORT_WIDTH) {
             if (i < 8) {
                 ulReg = GPIOE_CRL;
@@ -2146,7 +2146,7 @@ static unsigned short fnGetPortType(int portNr, int iRequest, int i)
             i++;
         }
         break;
-    case _GPIO_F:
+    case _PORTF:
         while (i < PORT_WIDTH) {
             if (i < 8) {
                 ulReg = GPIOF_CRL;
@@ -2178,7 +2178,7 @@ static unsigned short fnGetPortType(int portNr, int iRequest, int i)
             i++;
         }
         break;
-    case _GPIO_G:
+    case _PORTG:
         while (i < PORT_WIDTH) {
             if (i < 8) {
                 ulReg = GPIOG_CRL;

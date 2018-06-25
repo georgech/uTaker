@@ -1084,7 +1084,7 @@ extern void fnConfigSimI2C(QUEUE_HANDLE Channel, unsigned long ulSpeed)
 {
     switch (Channel) {
     case 0:
-        iI2C_Channel0Speed = ulSpeed/9/(10000000/TICK_RESOLUTION);       // approx. max. I2C bytes capable of transmitting/receiving in a tick period;
+        iI2C_Channel0Speed = ulSpeed/9/(1000000/TICK_RESOLUTION);        // approx. max. I2C bytes capable of transmitting/receiving in a tick period;
         break;
     case 1:
         iI2C_Channel1Speed = ulSpeed/9/(1000000/TICK_RESOLUTION);        // approx. max. I2C bytes capable of transmitting/receiving in a tick period;;

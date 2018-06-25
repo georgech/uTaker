@@ -391,31 +391,31 @@ static void fnSetDevice(unsigned long *ulPortInits)
     I2CMTPR_1 = 0x00000001;
 #endif
 #if PART_DC4 & GPIOA_PRESENT4
-    fnUpdatePeripherals(_GPIO_A, (unsigned char)GPIOAFSEL_A, (LM3XXXXX_PORT_CONTROL *)(GPIO_PORT_A_BLOCK + 0x03fc));
+    fnUpdatePeripherals(_PORTA, (unsigned char)GPIOAFSEL_A, (LM3XXXXX_PORT_CONTROL *)(GPIO_PORT_A_BLOCK + 0x03fc));
 #endif
 #if PART_DC4 & GPIOB_PRESENT4
-    fnUpdatePeripherals(_GPIO_B, (unsigned char)GPIOAFSEL_B, (LM3XXXXX_PORT_CONTROL *)(GPIO_PORT_B_BLOCK + 0x03fc));
+    fnUpdatePeripherals(_PORTB, (unsigned char)GPIOAFSEL_B, (LM3XXXXX_PORT_CONTROL *)(GPIO_PORT_B_BLOCK + 0x03fc));
 #endif
 #if PART_DC4 & GPIOC_PRESENT4
-    fnUpdatePeripherals(_GPIO_C, (unsigned char)GPIOAFSEL_C, (LM3XXXXX_PORT_CONTROL *)(GPIO_PORT_C_BLOCK + 0x03fc));
+    fnUpdatePeripherals(_PORTC, (unsigned char)GPIOAFSEL_C, (LM3XXXXX_PORT_CONTROL *)(GPIO_PORT_C_BLOCK + 0x03fc));
 #endif
 #if PART_DC4 & GPIOD_PRESENT4
-    fnUpdatePeripherals(_GPIO_D, (unsigned char)GPIOAFSEL_D, (LM3XXXXX_PORT_CONTROL *)(GPIO_PORT_D_BLOCK + 0x03fc));
+    fnUpdatePeripherals(_PORTD, (unsigned char)GPIOAFSEL_D, (LM3XXXXX_PORT_CONTROL *)(GPIO_PORT_D_BLOCK + 0x03fc));
 #endif
 #if PART_DC4 & GPIOE_PRESENT4
-    fnUpdatePeripherals(_GPIO_E, (unsigned char)GPIOAFSEL_E, (LM3XXXXX_PORT_CONTROL *)(GPIO_PORT_E_BLOCK + 0x03fc));
+    fnUpdatePeripherals(_PORTE, (unsigned char)GPIOAFSEL_E, (LM3XXXXX_PORT_CONTROL *)(GPIO_PORT_E_BLOCK + 0x03fc));
 #endif
 #if PART_DC4 & GPIOF_PRESENT4
-    fnUpdatePeripherals(_GPIO_F, (unsigned char)GPIOAFSEL_F, (LM3XXXXX_PORT_CONTROL *)(GPIO_PORT_F_BLOCK + 0x03fc));
+    fnUpdatePeripherals(_PORTF, (unsigned char)GPIOAFSEL_F, (LM3XXXXX_PORT_CONTROL *)(GPIO_PORT_F_BLOCK + 0x03fc));
 #endif
 #if PART_DC4 & GPIOG_PRESENT4
-    fnUpdatePeripherals(_GPIO_G, (unsigned char)GPIOAFSEL_G, (LM3XXXXX_PORT_CONTROL *)(GPIO_PORT_G_BLOCK + 0x03fc));
+    fnUpdatePeripherals(_PORTG, (unsigned char)GPIOAFSEL_G, (LM3XXXXX_PORT_CONTROL *)(GPIO_PORT_G_BLOCK + 0x03fc));
 #endif
 #if PART_DC4 & GPIOH_PRESENT4
-    fnUpdatePeripherals(_GPIO_H, (unsigned char)GPIOAFSEL_H, (LM3XXXXX_PORT_CONTROL *)(GPIO_PORT_H_BLOCK + 0x03fc));
+    fnUpdatePeripherals(_PORTH, (unsigned char)GPIOAFSEL_H, (LM3XXXXX_PORT_CONTROL *)(GPIO_PORT_H_BLOCK + 0x03fc));
 #endif
 #if PART_DC4 & GPIOJ_PRESENT4
-    fnUpdatePeripherals(_GPIO_J, (unsigned char)GPIOAFSEL_J, (LM3XXXXX_PORT_CONTROL *)(GPIO_PORT_J_BLOCK + 0x03fc));
+    fnUpdatePeripherals(_PORTJ, (unsigned char)GPIOAFSEL_J, (LM3XXXXX_PORT_CONTROL *)(GPIO_PORT_J_BLOCK + 0x03fc));
 #endif
 #if PART_DC1 & ADC0_PRESENT1                                             // {9}
     ADCPSSI_0     = (SS3_PRIORITY_3 | SS2_PRIORITY_2 | SS1_PRIORITY_1 | SS0_PRIORITY_0);
@@ -667,14 +667,14 @@ extern unsigned long fnSimInts(char *argv[])
     int *ptrCnt;
 
     if ((iInts & CHANNEL_0_SERIAL_INT) && (argv)) {
-        ptrCnt = (int *)argv[0];
+        ptrCnt = (int *)argv[THROUGHPUT_UART0];
         if (*ptrCnt) {
             if (--(*ptrCnt) == 0) {
                 iMasks |= CHANNEL_0_SERIAL_INT;                          // enough serial interupts handled in this tick period
             }
             else {
                 iInts &= ~CHANNEL_0_SERIAL_INT;                          // interrupt has been handled
-#ifdef SERIAL_INTERFACE
+#if defined SERIAL_INTERFACE
                 if ((unsigned char)UARTDR_0 == 0x13) {
                     (unsigned char)UARTDR_0 = 0x13;
                 }
@@ -688,14 +688,14 @@ extern unsigned long fnSimInts(char *argv[])
 
 #if CHIP_HAS_UARTS > 1
     if ((iInts & CHANNEL_1_SERIAL_INT) && (argv)) {
-        ptrCnt = (int *)argv[1];
+        ptrCnt = (int *)argv[THROUGHPUT_UART1];
         if (*ptrCnt) {
             if (--(*ptrCnt) == 0) {
                 iMasks |= CHANNEL_1_SERIAL_INT;                          // enough serial interupts handled in this tick period
             }
             else {
                 iInts &= ~CHANNEL_1_SERIAL_INT;                          // interrupt has been handled
-    #ifdef SERIAL_INTERFACE
+    #if defined SERIAL_INTERFACE
                 fnLogTx1(ucTxLast[1]);
                 ulNewActions |= SEND_COM_1;
                 fnUART_Tx_int(1);
@@ -706,7 +706,7 @@ extern unsigned long fnSimInts(char *argv[])
 #endif
 #if CHIP_HAS_UARTS > 2
     if ((iInts & CHANNEL_2_SERIAL_INT) && (argv)) {
-        ptrCnt = (int *)argv[2];                                         // {2}
+        ptrCnt = (int *)argv[THROUGHPUT_UART2];                          // {2}
         if (*ptrCnt) {
             if (--(*ptrCnt) == 0) {
                 iMasks |= CHANNEL_2_SERIAL_INT;                          // enough serial interupts handled in this tick period
@@ -725,7 +725,7 @@ extern unsigned long fnSimInts(char *argv[])
 
 #if NUMBER_EXTERNAL_SERIAL > 0                                           // {21}
 	if ((iInts & CHANNEL_0_EXT_SERIAL_INT) && (argv)) {
-        ptrCnt = (int *)argv[7];
+        ptrCnt = (int *)argv[THROUGHPUT_EXT_UART0];
         if (*ptrCnt) {
             if (--(*ptrCnt) == 0) {
                 iMasks |= CHANNEL_0_EXT_SERIAL_INT;                      // enough serial interupts handled in this tick period
@@ -740,7 +740,7 @@ extern unsigned long fnSimInts(char *argv[])
         }
 	}
 	if ((iInts & CHANNEL_1_EXT_SERIAL_INT) && (argv)) {
-        ptrCnt = (int *)argv[8];
+        ptrCnt = (int *)argv[THROUGHPUT_EXT_UART1];
         if (*ptrCnt) {
             if (--(*ptrCnt) == 0) {
                 iMasks |= CHANNEL_1_EXT_SERIAL_INT;                      // enough serial interupts handled in this tick period
@@ -756,7 +756,7 @@ extern unsigned long fnSimInts(char *argv[])
 	}
     #if NUMBER_EXTERNAL_SERIAL > 2
 	if ((iInts & CHANNEL_2_EXT_SERIAL_INT) && (argv)) {
-        ptrCnt = (int *)argv[9];
+        ptrCnt = (int *)argv[THROUGHPUT_EXT_UART2];
         if (*ptrCnt) {
             if (--(*ptrCnt) == 0) {
                 iMasks |= CHANNEL_2_EXT_SERIAL_INT;                      // enough serial interupts handled in this tick period
@@ -771,7 +771,7 @@ extern unsigned long fnSimInts(char *argv[])
         }
 	}
 	if ((iInts & CHANNEL_3_EXT_SERIAL_INT) && (argv)) {
-        ptrCnt = (int *)argv[10];
+        ptrCnt = (int *)argv[THROUGHPUT_EXT_UART3];
         if (*ptrCnt) {
             if (--(*ptrCnt) == 0) {
                 iMasks |= CHANNEL_3_EXT_SERIAL_INT;                      // enough serial interupts handled in this tick period
@@ -790,7 +790,7 @@ extern unsigned long fnSimInts(char *argv[])
 
     if ((iInts & I2C_INT0) != 0) {
         VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)((unsigned char *)((unsigned char *)&vector_ram + RESERVE_DMA_MEMORY));
-        ptrCnt = (int *)argv[3];
+        ptrCnt = (int *)argv[THROUGHPUT_I2C0];
         if (*ptrCnt) {
             if (--(*ptrCnt) == 0) {
                 iMasks |= I2C_INT0;                                      // enough I2C interupts handled in this tick period
@@ -814,7 +814,7 @@ extern unsigned long fnSimInts(char *argv[])
 
     if ((iInts & I2C_INT1) != 0) {
         VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)((unsigned char *)((unsigned char *)&vector_ram + RESERVE_DMA_MEMORY));
-        ptrCnt = (int *)argv[4];
+        ptrCnt = (int *)argv[THROUGHPUT_I2C1];
         if (*ptrCnt) {
             if (--(*ptrCnt) == 0) {
                 iMasks |= I2C_INT1;                                      // enough I2C interupts handled in this tick period
@@ -1737,50 +1737,50 @@ static unsigned char ucGetPortType(int portNr, int iRequest, int i)
     unsigned char ucBit = 0x01;
 
     switch (portNr) {
-    case _GPIO_A:
+    case _PORTA:
         while (i < 8) {
             ucPeripherals = 0xff;
             i++;
         }
         break;
-    case _GPIO_B:
+    case _PORTB:
         while (i < 8) {
             ucPeripherals = 0xff;
             i++;
         }
         break;
-    case _GPIO_C:
+    case _PORTC:
         while (i < 8) {
             ucPeripherals = 0xff;
             i++;
         }
         break;
-    case _GPIO_D:
+    case _PORTD:
         while (i < 8) {
             ucPeripherals = 0xff;
             i++;
         }
         break;
-    case _GPIO_E:
+    case _PORTE:
         while (i < 8) {
             ucPeripherals = 0xff;
             i++;
         }
         break;
-    case _GPIO_F:
+    case _PORTF:
         while (i < 8) {
             ucPeripherals = 0xff;
             i++;
         }
         break;
-    case _GPIO_G:
+    case _PORTG:
         while (i < 8) {
             ucPeripherals = 0xff;
             i++;
         }
         break;
 #if PART_DC4 & GPIOH_PRESENT4                                            // {3}
-    case _GPIO_H:
+    case _PORTH:
         while (i < 8) {
             ucPeripherals = 0xff;
             i++;
@@ -1788,7 +1788,7 @@ static unsigned char ucGetPortType(int portNr, int iRequest, int i)
         break;
 #endif
 #if PART_DC4 & GPIOJ_PRESENT4
-    case _GPIO_J:
+    case _PORTJ:
         while (i < 8) {
             ucPeripherals = 0xff;
             i++;
@@ -1848,7 +1848,7 @@ extern int fnPortChanges(int iForce)                                     // {8}
     }
     if (ucGPIO_per_A != GPIOAFSEL_A) {                                   // port function changed
         ucGPIO_per_A = GPIOAFSEL_A;
-        fnUpdatePeripherals(_GPIO_A, (unsigned char)GPIOAFSEL_A, (LM3XXXXX_PORT_CONTROL *)(GPIO_PORT_A_BLOCK + 0x03fc));
+        fnUpdatePeripherals(_PORTA, (unsigned char)GPIOAFSEL_A, (LM3XXXXX_PORT_CONTROL *)(GPIO_PORT_A_BLOCK + 0x03fc));
         iRtn |= PORT_CHANGE;                                             // port changed so redraw
     }
     ulOriginalInput = (ucPort_in_A & ~GPIODIR_A);
@@ -1859,7 +1859,7 @@ extern int fnPortChanges(int iForce)                                     // {8}
         ucPort_in_A = (unsigned char)GPIODATA_A;
         iRtn |= PORT_CHANGE;                                             // port changed so redraw
     }
-    fnCheckPortInterrupts(_GPIO_A, (unsigned char)ulOriginalInput);
+    fnCheckPortInterrupts(_PORTA, (unsigned char)ulOriginalInput);
 #endif
 #if PART_DC4 & GPIOB_PRESENT4
     if ((GPIODIR_B != ucGPIODIRB) || (GPIODATA_B != ucPort_out_B)) {
@@ -1872,7 +1872,7 @@ extern int fnPortChanges(int iForce)                                     // {8}
         ulChanges &= ~GPIOCR_B;
         GPIOAFSEL_B ^= ulChanges;                                        // revert any changes blocked by port protection
         ucGPIO_per_B = GPIOAFSEL_B;
-        fnUpdatePeripherals(_GPIO_B, (unsigned char)GPIOAFSEL_B, (LM3XXXXX_PORT_CONTROL *)(GPIO_PORT_B_BLOCK + 0x03fc));
+        fnUpdatePeripherals(_PORTB, (unsigned char)GPIOAFSEL_B, (LM3XXXXX_PORT_CONTROL *)(GPIO_PORT_B_BLOCK + 0x03fc));
         iRtn |= PORT_CHANGE;                                             // port changed so redraw
     }
     ulOriginalInput = (ucPort_in_B & ~GPIODIR_B);
@@ -1883,7 +1883,7 @@ extern int fnPortChanges(int iForce)                                     // {8}
         ucPort_in_B = (unsigned char)GPIODATA_B;
         iRtn |= PORT_CHANGE;                                             // port changed so redraw
     }
-    fnCheckPortInterrupts(_GPIO_B, (unsigned char)ulOriginalInput);
+    fnCheckPortInterrupts(_PORTB, (unsigned char)ulOriginalInput);
 #endif
 #if PART_DC4 & GPIOC_PRESENT4
     if ((GPIODIR_C != ucGPIODIRC) || (GPIODATA_C != ucPort_out_C)) {
@@ -1896,7 +1896,7 @@ extern int fnPortChanges(int iForce)                                     // {8}
     }
     if (ucGPIO_per_C != GPIOAFSEL_C) {                                   // port function changed
         ucGPIO_per_C = GPIOAFSEL_C;
-        fnUpdatePeripherals(_GPIO_C, (unsigned char)GPIOAFSEL_C, (LM3XXXXX_PORT_CONTROL *)(GPIO_PORT_C_BLOCK + 0x03fc));
+        fnUpdatePeripherals(_PORTC, (unsigned char)GPIOAFSEL_C, (LM3XXXXX_PORT_CONTROL *)(GPIO_PORT_C_BLOCK + 0x03fc));
         iRtn |= PORT_CHANGE;                                             // port changed so redraw
     }
     ulOriginalInput = (ucPort_in_C & ~GPIODIR_C);
@@ -1907,7 +1907,7 @@ extern int fnPortChanges(int iForce)                                     // {8}
         ucPort_in_C = (unsigned char)GPIODATA_C;
         iRtn |= PORT_CHANGE;                                             // port changed so redraw
     }
-    fnCheckPortInterrupts(_GPIO_C, (unsigned char)ulOriginalInput);
+    fnCheckPortInterrupts(_PORTC, (unsigned char)ulOriginalInput);
 #endif
 #if PART_DC4 & GPIOD_PRESENT4
     if ((GPIODIR_D != ucGPIODIRD) || (GPIODATA_D != ucPort_out_D)) {
@@ -1927,7 +1927,7 @@ extern int fnPortChanges(int iForce)                                     // {8}
     #endif
     if (ucGPIO_per_D != _reg) {                                          // port function changed
         ucGPIO_per_D = _reg;
-        fnUpdatePeripherals(_GPIO_D, (unsigned char)(_reg), (LM3XXXXX_PORT_CONTROL *)(GPIO_PORT_D_BLOCK + 0x03fc));
+        fnUpdatePeripherals(_PORTD, (unsigned char)(_reg), (LM3XXXXX_PORT_CONTROL *)(GPIO_PORT_D_BLOCK + 0x03fc));
         iRtn |= PORT_CHANGE;                                             // port changed so redraw
     }
     ulOriginalInput = (ucPort_in_D & ~GPIODIR_D);
@@ -1938,7 +1938,7 @@ extern int fnPortChanges(int iForce)                                     // {8}
         ucPort_in_D = (unsigned char)GPIODATA_D;
         iRtn |= PORT_CHANGE;                                             // port changed so redraw
     }
-    fnCheckPortInterrupts(_GPIO_D, (unsigned char)ulOriginalInput);
+    fnCheckPortInterrupts(_PORTD, (unsigned char)ulOriginalInput);
 #endif
 #if PART_DC4 & GPIOE_PRESENT4
     if ((GPIODIR_E != ucGPIODIRE) || (GPIODATA_E != ucPort_out_E)) {
@@ -1958,7 +1958,7 @@ extern int fnPortChanges(int iForce)                                     // {8}
     #endif
     if (ucGPIO_per_E != _reg) {                                          // port function changed
         ucGPIO_per_E = _reg;
-        fnUpdatePeripherals(_GPIO_E, (unsigned char)_reg, (LM3XXXXX_PORT_CONTROL *)(GPIO_PORT_E_BLOCK + 0x03fc));
+        fnUpdatePeripherals(_PORTE, (unsigned char)_reg, (LM3XXXXX_PORT_CONTROL *)(GPIO_PORT_E_BLOCK + 0x03fc));
         iRtn |= PORT_CHANGE;                                             // port changed so redraw
     }
     ulOriginalInput = (ucPort_in_E & ~GPIODIR_E);
@@ -1969,7 +1969,7 @@ extern int fnPortChanges(int iForce)                                     // {8}
         ucPort_in_E = (unsigned char)GPIODATA_E;
         iRtn |= PORT_CHANGE;                                             // port changed so redraw
     }
-    fnCheckPortInterrupts(_GPIO_E, (unsigned char)ulOriginalInput);
+    fnCheckPortInterrupts(_PORTE, (unsigned char)ulOriginalInput);
 #endif
 #if PART_DC4 & GPIOF_PRESENT4
     if ((GPIODIR_F != ucGPIODIRF) || (GPIODATA_F != ucPort_out_F)) {
@@ -1979,7 +1979,7 @@ extern int fnPortChanges(int iForce)                                     // {8}
     }
     if (ucGPIO_per_F != GPIOAFSEL_F) {                                   // port function changed
         ucGPIO_per_F = GPIOAFSEL_F;
-        fnUpdatePeripherals(_GPIO_F, (unsigned char)GPIOAFSEL_F, (LM3XXXXX_PORT_CONTROL *)(GPIO_PORT_F_BLOCK + 0x03fc));
+        fnUpdatePeripherals(_PORTF, (unsigned char)GPIOAFSEL_F, (LM3XXXXX_PORT_CONTROL *)(GPIO_PORT_F_BLOCK + 0x03fc));
         iRtn |= PORT_CHANGE;                                             // port changed so redraw
     }
     ulOriginalInput = (ucPort_in_F & ~GPIODIR_F);
@@ -1990,7 +1990,7 @@ extern int fnPortChanges(int iForce)                                     // {8}
         ucPort_in_F = (unsigned char)GPIODATA_F;
         iRtn |= PORT_CHANGE;                                             // port changed so redraw
     }
-    fnCheckPortInterrupts(_GPIO_F, (unsigned char)ulOriginalInput);
+    fnCheckPortInterrupts(_PORTF, (unsigned char)ulOriginalInput);
 #endif
 #if PART_DC4 & GPIOG_PRESENT4
     if ((GPIODIR_G != ucGPIODIRG) || (GPIODATA_G != ucPort_out_G)) {
@@ -2000,7 +2000,7 @@ extern int fnPortChanges(int iForce)                                     // {8}
     }
     if (ucGPIO_per_G != GPIOAFSEL_G) {                                   // port function changed
         ucGPIO_per_G = GPIOAFSEL_G;
-        fnUpdatePeripherals(_GPIO_G, (unsigned char)GPIOAFSEL_G, (LM3XXXXX_PORT_CONTROL *)(GPIO_PORT_G_BLOCK + 0x03fc));
+        fnUpdatePeripherals(_PORTG, (unsigned char)GPIOAFSEL_G, (LM3XXXXX_PORT_CONTROL *)(GPIO_PORT_G_BLOCK + 0x03fc));
         iRtn |= PORT_CHANGE;                                             // port changed so redraw
     }
     ulOriginalInput = (ucPort_in_G & ~GPIODIR_G);
@@ -2011,7 +2011,7 @@ extern int fnPortChanges(int iForce)                                     // {8}
         ucPort_in_G = (unsigned char)GPIODATA_G;
         iRtn |= PORT_CHANGE;                                             // port changed so redraw
     }
-    fnCheckPortInterrupts(_GPIO_G, (unsigned char)ulOriginalInput);
+    fnCheckPortInterrupts(_PORTG, (unsigned char)ulOriginalInput);
 #endif
 #if PART_DC4 & GPIOH_PRESENT4                                            // {3}
     if ((GPIODIR_H != ucGPIODIRH) || (GPIODATA_H != ucPort_out_H)) {
@@ -2021,7 +2021,7 @@ extern int fnPortChanges(int iForce)                                     // {8}
     }
     if (ucGPIO_per_H != GPIOAFSEL_H) {                                   // port function changed
         ucGPIO_per_H = GPIOAFSEL_H;
-        fnUpdatePeripherals(_GPIO_H, (unsigned char)GPIOAFSEL_H, (LM3XXXXX_PORT_CONTROL *)(GPIO_PORT_H_BLOCK + 0x03fc));
+        fnUpdatePeripherals(_PORTH, (unsigned char)GPIOAFSEL_H, (LM3XXXXX_PORT_CONTROL *)(GPIO_PORT_H_BLOCK + 0x03fc));
         iRtn |= PORT_CHANGE;                                             // port changed so redraw
     }
     ulOriginalInput = (ucPort_in_H & ~GPIODIR_H);
@@ -2032,7 +2032,7 @@ extern int fnPortChanges(int iForce)                                     // {8}
         ucPort_in_H = (unsigned char)GPIODATA_H;
         iRtn |= PORT_CHANGE;                                             // port changed so redraw
     }
-    fnCheckPortInterrupts(_GPIO_H, (unsigned char)ulOriginalInput);
+    fnCheckPortInterrupts(_PORTH, (unsigned char)ulOriginalInput);
 #endif
 #if PART_DC4 & GPIOJ_PRESENT4
     if ((GPIODIR_J != ucGPIODIRJ) || (GPIODATA_J != ucPort_out_J)) {
@@ -2042,7 +2042,7 @@ extern int fnPortChanges(int iForce)                                     // {8}
     }
     if (ucGPIO_per_J != GPIOAFSEL_J) {                                   // port function changed
         ucGPIO_per_J = GPIOAFSEL_J;
-        fnUpdatePeripherals(_GPIO_J, (unsigned char)GPIOAFSEL_J, (LM3XXXXX_PORT_CONTROL *)(GPIO_PORT_J_BLOCK + 0x03fc));
+        fnUpdatePeripherals(_PORTJ, (unsigned char)GPIOAFSEL_J, (LM3XXXXX_PORT_CONTROL *)(GPIO_PORT_J_BLOCK + 0x03fc));
         iRtn |= PORT_CHANGE;                                             // port changed so redraw
     }
     ulOriginalInput = (ucPort_in_J & ~GPIODIR_J);
@@ -2053,7 +2053,7 @@ extern int fnPortChanges(int iForce)                                     // {8}
         ucPort_in_J = (unsigned char)GPIODATA_J;
         iRtn |= PORT_CHANGE;                                             // port changed so redraw
     }
-    fnCheckPortInterrupts(_GPIO_J, (unsigned char)ulOriginalInput);
+    fnCheckPortInterrupts(_PORTJ, (unsigned char)ulOriginalInput);
 #endif
 #if (PORTS_AVAILABLE != _PORTS_AVAILABLE)                                // {9} dedicated ADC port
     if ((RCGC0 & CGC_SARADC0) != ulLastRCGC0) {
@@ -2081,63 +2081,63 @@ extern unsigned long fnGetPresentPortState(int portNr)
 {
     switch (portNr-1) {
 #if PART_DC4 & GPIOA_PRESENT4
-    case _GPIO_A:
+    case _PORTA:
     if ((!(RCGC2 & CGC_GPIOA)) || (SRCR2 & CGC_GPIOA)) {
         return ucPort_in_A;                                              // not clocked or in reset
     }
     return ((GPIODATA_A & GPIODEN_A) | (~GPIODEN_A & ucPort_in_A));      // only bits set to digital bits are driven
 #endif
 #if PART_DC4 & GPIOB_PRESENT4
-    case _GPIO_B:
+    case _PORTB:
     if ((!(RCGC2 & CGC_GPIOB)) || (SRCR2 & CGC_GPIOB)) {
         return ucPort_in_B;                                              // not clocked or in reset
     }
     return ((GPIODATA_B & GPIODEN_B) | (~GPIODEN_B & ucPort_in_B));      // only bits set to digital bits are driven
 #endif
 #if PART_DC4 & GPIOC_PRESENT4                               
-    case _GPIO_C:
+    case _PORTC:
     if ((!(RCGC2 & CGC_GPIOC)) || (SRCR2 & CGC_GPIOC)) {
         return ucPort_in_C;                                              // not clocked or in reset
     }
     return ((GPIODATA_C & GPIODEN_C) | (~GPIODEN_C & ucPort_in_C));      // only bits set to digital bits are driven
 #endif
 #if PART_DC4 & GPIOC_PRESENT4    
-    case _GPIO_D:
+    case _PORTD:
     if ((!(RCGC2 & CGC_GPIOD)) || (SRCR2 & CGC_GPIOD)) {
         return ucPort_in_D;                                              // not clocked or in reset
     }
     return ((GPIODATA_D & GPIODEN_D) | (~GPIODEN_D & ucPort_in_D));      // only bits set to digital bits are driven
 #endif
 #if PART_DC4 & GPIOE_PRESENT4
-    case _GPIO_E:
+    case _PORTE:
     if ((!(RCGC2 & CGC_GPIOE)) || (SRCR2 & CGC_GPIOE)) {
         return ucPort_in_E;                                              // not clocked or in reset
     }
     return ((GPIODATA_E & GPIODEN_E) | (~GPIODEN_E & ucPort_in_E));      // only bits set to digital bits are driven
 #endif
 #if PART_DC4 & GPIOF_PRESENT4
-    case _GPIO_F:
+    case _PORTF:
     if ((!(RCGC2 & CGC_GPIOF)) || (SRCR2 & CGC_GPIOF)) {
         return ucPort_in_F;                                              // not clocked or in reset
     }
     return ((GPIODATA_F & GPIODEN_F) | (~GPIODEN_F & ucPort_in_F));      // only bits set to digital bits are driven
 #endif
 #if PART_DC4 & GPIOG_PRESENT4
-    case _GPIO_G:
+    case _PORTG:
     if ((!(RCGC2 & CGC_GPIOG)) || (SRCR2 & CGC_GPIOG)) {
         return ucPort_in_G;                                              // not clocked or in reset
     }
     return ((GPIODATA_G & GPIODEN_G) | (~GPIODEN_G & ucPort_in_G));      // only bits set to digital bits are driven
 #endif
 #if PART_DC4 & GPIOH_PRESENT4                                            // {3}
-    case _GPIO_H:
+    case _PORTH:
     if ((!(RCGC2 & CGC_GPIOH)) || (SRCR2 & CGC_GPIOH)) {
         return ucPort_in_H;                                              // not clocked or in reset
     }
     return ((GPIODATA_H & GPIODEN_H) | (~GPIODEN_H & ucPort_in_H));      // only bits set to digital bits are driven
 #endif
 #if PART_DC4 & GPIOJ_PRESENT4
-    case _GPIO_J:
+    case _PORTJ:
     if ((!(RCGC2 & CGC_GPIOJ)) || (SRCR2 & CGC_GPIOJ)) {
         return ucPort_in_J;                                              // not clocked or in reset
     }
@@ -2153,63 +2153,63 @@ extern unsigned long fnGetPresentPortDir(int portNr)
 {
     switch (--portNr) {
 #if PART_DC4 & GPIOA_PRESENT4
-    case _GPIO_A:
+    case _PORTA:
     if ((!(RCGC2 & CGC_GPIOA)) || (SRCR2 & CGC_GPIOA)) {
         return 0;                                                        // not clocked or in reset
     }
     return (GPIODIR_A & ucGetPortType(portNr, GET_OUTPUTS, 0));          // non outputs returned as zeros
 #endif
 #if PART_DC4 & GPIOB_PRESENT4
-    case _GPIO_B:
+    case _PORTB:
     if ((!(RCGC2 & CGC_GPIOB)) || (SRCR2 & CGC_GPIOB)) {
         return 0;                                                        // not clocked or in reset
     }
     return (GPIODIR_B & ucGetPortType(portNr, GET_OUTPUTS, 0));          // non outputs returned as zeros
 #endif
 #if PART_DC4 & GPIOC_PRESENT4
-    case _GPIO_C:
+    case _PORTC:
     if ((!(RCGC2 & CGC_GPIOC)) || (SRCR2 & CGC_GPIOC)) {
         return 0;                                                        // not clocked or in reset
     }
     return (GPIODIR_C & ucGetPortType(portNr, GET_OUTPUTS, 0));          // non outputs returned as zeros
 #endif
 #if PART_DC4 & GPIOD_PRESENT4
-    case _GPIO_D:
+    case _PORTD:
     if ((!(RCGC2 & CGC_GPIOD)) || (SRCR2 & CGC_GPIOD)) {
         return 0;                                                        // not clocked or in reset
     }
     return (GPIODIR_D & ucGetPortType(portNr, GET_OUTPUTS, 0));          // non outputs returned as zeros
 #endif
 #if PART_DC4 & GPIOE_PRESENT4
-    case _GPIO_E:
+    case _PORTE:
     if ((!(RCGC2 & CGC_GPIOE)) || (SRCR2 & CGC_GPIOE)) {
         return 0;                                                        // not clocked or in reset
     }
     return (GPIODIR_E & ucGetPortType(portNr, GET_OUTPUTS, 0));          // non outputs returned as zeros
 #endif
 #if PART_DC4 & GPIOF_PRESENT4
-    case _GPIO_F:
+    case _PORTF:
     if ((!(RCGC2 & CGC_GPIOF)) || (SRCR2 & CGC_GPIOF)) {
         return 0;                                                        // not clocked or in reset
     }
     return (GPIODIR_F & ucGetPortType(portNr, GET_OUTPUTS, 0));          // non outputs returned as zeros
 #endif
 #if PART_DC4 & GPIOG_PRESENT4
-    case _GPIO_G:
+    case _PORTG:
     if ((!(RCGC2 & CGC_GPIOG)) || (SRCR2 & CGC_GPIOG)) {
         return 0;                                                        // not clocked or in reset
     }
     return (GPIODIR_G & ucGetPortType(portNr, GET_OUTPUTS, 0));          // non outputs returned as zeros
 #endif
 #if PART_DC4 & GPIOH_PRESENT4                                            // {3}
-    case _GPIO_H:
+    case _PORTH:
     if ((!(RCGC2 & CGC_GPIOH)) || (SRCR2 & CGC_GPIOH)) {
         return 0;                                                        // not clocked or in reset
     }
     return (GPIODIR_H & ucGetPortType(portNr, GET_OUTPUTS, 0));          // non outputs returned as zeros
 #endif
 #if PART_DC4 & GPIOJ_PRESENT4
-    case _GPIO_J:
+    case _PORTJ:
     if ((!(RCGC2 & CGC_GPIOJ)) || (SRCR2 & CGC_GPIOJ)) {
         return 0;                                                        // not clocked or in reset
     }
@@ -2225,19 +2225,19 @@ extern unsigned long fnGetPresentPortPeriph(int portNr)
     portNr--;
     switch (portNr) {
 #if PART_DC4 & GPIOA_PRESENT4
-    case _GPIO_A:
+    case _PORTA:
         return GPIOAFSEL_A;
 #endif
 #if PART_DC4 & GPIOB_PRESENT4
-    case _GPIO_B:
+    case _PORTB:
         return GPIOAFSEL_B;
 #endif
 #if PART_DC4 & GPIOC_PRESENT4
-    case _GPIO_C:
+    case _PORTC:
         return GPIOAFSEL_C;
 #endif
 #if PART_DC4 & GPIOD_PRESENT4
-    case _GPIO_D:
+    case _PORTD:
     #ifdef _DUST_DEVIL_CLASS
       //if (RCGC0 & CGC_SARADC0) {                                           // if ADC is enabled
             return (GPIOAFSEL_D | GPIOAMSEL_D);
@@ -2250,7 +2250,7 @@ extern unsigned long fnGetPresentPortPeriph(int portNr)
     #endif
 #endif
 #if PART_DC4 & GPIOE_PRESENT4
-    case _GPIO_E:
+    case _PORTE:
     #ifdef _DUST_DEVIL_CLASS
       //if (RCGC0 & CGC_SARADC0) {                                           // if ADC is enabled
             return (GPIOAFSEL_E | GPIOAMSEL_E);
@@ -2263,19 +2263,19 @@ extern unsigned long fnGetPresentPortPeriph(int portNr)
     #endif
 #endif
 #if PART_DC4 & GPIOF_PRESENT4
-    case _GPIO_F:
+    case _PORTF:
         return GPIOAFSEL_F;
 #endif
 #if PART_DC4 & GPIOG_PRESENT4
-    case _GPIO_G:
+    case _PORTG:
         return GPIOAFSEL_G;
 #endif
 #if PART_DC4 & GPIOH_PRESENT4                                            // {3}
-    case _GPIO_H:
+    case _PORTH:
         return GPIOAFSEL_H;
 #endif
 #if PART_DC4 & GPIOJ_PRESENT4
-    case _GPIO_J:
+    case _PORTJ:
         return GPIOAFSEL_J;
 #endif
 #if defined SUPPORT_ADC && (PART_DC1 & ADC0_PRESENT1) && (PORTS_AVAILABLE != _PORTS_AVAILABLE)
@@ -2400,7 +2400,7 @@ static void fnCheckPortInterrupts(unsigned char ucPort, unsigned char ucOriginal
     while (ucBit != 0) {
         switch (ucPort) {
 #if PART_DC4 & GPIOA_PRESENT4
-        case _GPIO_A: 
+        case _PORTA:
             if (!(GPIOIM_A & ucBit)) {
                 if (!GPIOIM_A) {                                         // no interrupts enabled on this prot
                     return;
@@ -2449,7 +2449,7 @@ static void fnCheckPortInterrupts(unsigned char ucPort, unsigned char ucOriginal
             break;
 #endif
 #if PART_DC4 & GPIOB_PRESENT4
-        case _GPIO_B: 
+        case _PORTB:
             if (!(GPIOIM_B & ucBit)) {
                 if (!GPIOIM_B) {                                         // no interrupts enabled on this prot
                     return;
@@ -2507,7 +2507,7 @@ static void fnCheckPortInterrupts(unsigned char ucPort, unsigned char ucOriginal
             break;
 #endif
 #if PART_DC4 & GPIOC_PRESENT4
-        case _GPIO_C: 
+        case _PORTC:
             if (!(GPIOIM_C & ucBit)) {
                 if (!GPIOIM_C) {                                         // no interrupts enabled on this prot
                     return;
@@ -2556,7 +2556,7 @@ static void fnCheckPortInterrupts(unsigned char ucPort, unsigned char ucOriginal
             break;
 #endif
 #if PART_DC4 & GPIOD_PRESENT4
-        case _GPIO_D: 
+        case _PORTD:
             if (!(GPIOIM_D & ucBit)) {
                 if (!GPIOIM_D) {                                         // no interrupts enabled on this prot
                     return;
@@ -2605,7 +2605,7 @@ static void fnCheckPortInterrupts(unsigned char ucPort, unsigned char ucOriginal
             break;
 #endif
 #if PART_DC4 & GPIOE_PRESENT4
-        case _GPIO_E: 
+        case _PORTE:
             if (!(GPIOIM_E & ucBit)) {
                 if (!GPIOIM_E) {                                         // no interrupts enabled on this prot
                     return;
@@ -2654,7 +2654,7 @@ static void fnCheckPortInterrupts(unsigned char ucPort, unsigned char ucOriginal
             break;
 #endif
 #if PART_DC4 & GPIOF_PRESENT4
-        case _GPIO_F: 
+        case _PORTF:
             if (!(GPIOIM_F & ucBit)) {
                 if (!GPIOIM_F) {                                         // no interrupts enabled on this prot
                     return;
@@ -2703,7 +2703,7 @@ static void fnCheckPortInterrupts(unsigned char ucPort, unsigned char ucOriginal
             break;
 #endif
 #if PART_DC4 & GPIOG_PRESENT4
-        case _GPIO_G: 
+        case _PORTG:
             if (!(GPIOIM_G & ucBit)) {
                 if (!GPIOIM_G) {                                         // no interrupts enabled on this prot
                     return;
@@ -2752,7 +2752,7 @@ static void fnCheckPortInterrupts(unsigned char ucPort, unsigned char ucOriginal
             break;
 #endif
 #if PART_DC4 & GPIOH_PRESENT4                                            // {3}
-         case _GPIO_H: 
+         case _PORTH:
             if (!(GPIOIM_H & ucBit)) {
                 if (!GPIOIM_H) {                                         // no interrupts enabled on this prot
                     return;
@@ -2801,7 +2801,7 @@ static void fnCheckPortInterrupts(unsigned char ucPort, unsigned char ucOriginal
             break;
 #endif
 #if PART_DC4 & GPIOJ_PRESENT4
-         case _GPIO_J: 
+         case _PORTJ:
             if (!(GPIOIM_J & ucBit)) {
                 if (!GPIOIM_J) {                                         // no interrupts enabled on this prot
                     return;
@@ -2863,7 +2863,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
 
     switch (ucPort) {
 #if PART_DC4 & GPIOA_PRESENT4
-    case _GPIO_A:                                                        
+    case _PORTA:
         if ((!(RCGC2 & CGC_GPIOA)) || (SRCR2 & CGC_GPIOA)) {
             return;                                                      // port not clocked or in reset
         }
@@ -2883,11 +2883,11 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
             ucPort_in_A &= ~ucBit;                                       // set the input low
             GPIODATA_A &= ~ucBit;
         }
-        fnCheckPortInterrupts(_GPIO_A, ucOriginalInput);
+        fnCheckPortInterrupts(_PORTA, ucOriginalInput);
         break;
 #endif
 #if PART_DC4 & GPIOB_PRESENT4
-    case _GPIO_B:
+    case _PORTB:
     #if defined SUPPORT_ADC && (PART_DC1 & ADC1_PRESENT1)                // {18}
         if (GPIOAMSEL_B & ucBit) {                                       // analogue pin isolation set
             if ((ucPortBit == 4) || (ucPortBit == 5)) {
@@ -2935,11 +2935,11 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
             ucPort_in_B &= ~ucBit;                                       // set the input low
             GPIODATA_B &= ~ucBit;
         }
-        fnCheckPortInterrupts(_GPIO_B, ucOriginalInput);
+        fnCheckPortInterrupts(_PORTB, ucOriginalInput);
         break;
 #endif
 #if PART_DC4 & GPIOC_PRESENT4
-    case _GPIO_C:
+    case _PORTC:
         if ((!(RCGC2 & CGC_GPIOC)) || (SRCR2 & CGC_GPIOC)) {
             return;                                                      // port not clocked or in reset
         }
@@ -2959,11 +2959,11 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
             ucPort_in_C &= ~ucBit;                                       // set the input low
             GPIODATA_C &= ~ucBit;
         }
-        fnCheckPortInterrupts(_GPIO_C, ucOriginalInput);
+        fnCheckPortInterrupts(_PORTC, ucOriginalInput);
         break;
 #endif
 #if PART_DC4 & GPIOD_PRESENT4
-    case _GPIO_D:
+    case _PORTD:
     #if (defined _DUST_DEVIL_CLASS || defined _TEMPEST_CLASS) && defined SUPPORT_ADC && (PART_DC1 & ADC0_PRESENT1) // {18}
         if (GPIOAMSEL_D & ucBit) {                                       // analogue pin isolation set
         #if !(PART_DC1 & ADC1_PRESENT1)
@@ -3035,11 +3035,11 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
             ucPort_in_D &= ~ucBit;                                       // set the input low
             GPIODATA_D &= ~ucBit;
         }
-        fnCheckPortInterrupts(_GPIO_D, ucOriginalInput);
+        fnCheckPortInterrupts(_PORTD, ucOriginalInput);
         break;
 #endif
 #if PART_DC4 & GPIOE_PRESENT4
-    case _GPIO_E:
+    case _PORTE:
     #if (defined _DUST_DEVIL_CLASS || defined _TEMPEST_CLASS) && defined SUPPORT_ADC && (PART_DC1 & ADC0_PRESENT1) // {18}
         if (GPIOAMSEL_E & ucBit) {                                       // analogue pin isolation set
         #if (PART_DC1 & ADC1_PRESENT1)
@@ -3106,11 +3106,11 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
             ucPort_in_E &= ~ucBit;                                       // set the input low
             GPIODATA_E &= ~ucBit;
         }
-        fnCheckPortInterrupts(_GPIO_E, ucOriginalInput);
+        fnCheckPortInterrupts(_PORTE, ucOriginalInput);
         break;
 #endif
 #if PART_DC4 & GPIOF_PRESENT4
-    case _GPIO_F:
+    case _PORTF:
         if ((!(RCGC2 & CGC_GPIOF)) || (SRCR2 & CGC_GPIOF)) {
             return;                                                      // port not clocked or in reset
         }
@@ -3130,11 +3130,11 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
             ucPort_in_F &= ~ucBit;                                       // set the input low
             GPIODATA_F &= ~ucBit;
         }
-        fnCheckPortInterrupts(_GPIO_F, ucOriginalInput);
+        fnCheckPortInterrupts(_PORTF, ucOriginalInput);
         break;
 #endif
 #if PART_DC4 & GPIOG_PRESENT4
-    case _GPIO_G:
+    case _PORTG:
         if ((!(RCGC2 & CGC_GPIOG)) || (SRCR2 & CGC_GPIOG)) {
             return;                                                      // port not clocked or in reset
         }
@@ -3154,11 +3154,11 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
             ucPort_in_G &= ~ucBit;                                       // set the input low
             GPIODATA_G &= ~ucBit;
         }
-        fnCheckPortInterrupts(_GPIO_G, ucOriginalInput);
+        fnCheckPortInterrupts(_PORTG, ucOriginalInput);
         break;
 #endif
 #if PART_DC4 & GPIOH_PRESENT4                                            // {3}
-    case _GPIO_H:
+    case _PORTH:
         if ((!(RCGC2 & CGC_GPIOH)) || (SRCR2 & CGC_GPIOH)) {
             return;                                                      // port not clocked or in reset
         }
@@ -3178,11 +3178,11 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
             ucPort_in_H &= ~ucBit;                                       // set the input low
             GPIODATA_H &= ~ucBit;
         }
-        fnCheckPortInterrupts(_GPIO_H, ucOriginalInput);
+        fnCheckPortInterrupts(_PORTH, ucOriginalInput);
         break;
 #endif
 #if PART_DC4 & GPIOJ_PRESENT4
-    case _GPIO_J:
+    case _PORTJ:
         if ((!(RCGC2 & CGC_GPIOJ)) || (SRCR2 & CGC_GPIOJ)) {
             return;                                                      // port not clocked or in reset
         }
@@ -3202,7 +3202,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
             ucPort_in_J &= ~ucBit;                                       // set the input low
             GPIODATA_J &= ~ucBit;
         }
-        fnCheckPortInterrupts(_GPIO_J, ucOriginalInput);
+        fnCheckPortInterrupts(_PORTJ, ucOriginalInput);
         break;
 #endif
 #if defined SUPPORT_ADC && (PART_DC1 & ADC0_PRESENT1) && (PORTS_AVAILABLE != _PORTS_AVAILABLE)

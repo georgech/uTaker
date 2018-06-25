@@ -7617,11 +7617,11 @@ extern void fnSimulateBreak(int iPort)
 {
     switch (iPort) {
 #if LPUARTS_AVAILABLE > 0
-#if defined LPUARTS_PARALLEL
-#define LPUART0_CH_NUMBER     UARTS_AVAILABLE
-#else
-#define LPUART0_CH_NUMBER     0
-#endif
+    #if defined LPUARTS_PARALLEL
+        #define LPUART0_CH_NUMBER     UARTS_AVAILABLE
+    #else
+        #define LPUART0_CH_NUMBER     0
+    #endif
     case LPUART0_CH_NUMBER:                                              // LPUART 0
         LPUART0_STAT |= LPUART_STAT_LBKDIF;                              // set the status flag
         if ((LPUART0_BAUD & LPUART_BAUD_LBKDIE) != 0) {                  // if the break interrupt is enabled
@@ -7632,11 +7632,11 @@ extern void fnSimulateBreak(int iPort)
         }
         break;
 #if LPUARTS_AVAILABLE > 1
-#if defined LPUARTS_PARALLEL
-#define LPUART1_CH_NUMBER     (UARTS_AVAILABLE + 1)
-#else
-#define LPUART1_CH_NUMBER     1
-#endif
+    #if defined LPUARTS_PARALLEL
+        #define LPUART1_CH_NUMBER     (UARTS_AVAILABLE + 1)
+    #else
+        #define LPUART1_CH_NUMBER     1
+    #endif
     case LPUART1_CH_NUMBER:                                              // LPUART 1
         LPUART1_STAT |= LPUART_STAT_LBKDIF;                              // set the status flag
         if ((LPUART1_BAUD & LPUART_BAUD_LBKDIE) != 0) {                  // if the break interrupt is enabled
@@ -7648,27 +7648,36 @@ extern void fnSimulateBreak(int iPort)
         break;
 #endif
 #if LPUARTS_AVAILABLE > 2
-#if defined LPUARTS_PARALLEL
-#define LPUART2_CH_NUMBER     (UARTS_AVAILABLE + 2)
-#else
-#define LPUART2_CH_NUMBER     2
-#endif
+    #if defined LPUARTS_PARALLEL
+        #define LPUART2_CH_NUMBER     (UARTS_AVAILABLE + 2)
+    #else
+        #define LPUART2_CH_NUMBER     2
+    #endif
     case LPUART2_CH_NUMBER:                                              // LPUART 2
         LPUART2_STAT |= LPUART_STAT_LBKDIF;                              // set the status flag
         if ((LPUART2_BAUD & LPUART_BAUD_LBKDIE) != 0) {                  // if the break interrupt is enabled
-            if (fnGenInt(irq_LPUART2_ID) != 0) {                         // if LPUART2 interrupt is not disabled
+    #if !defined irq_LPUART2_ID && defined INTMUX0_AVAILABLE
+            if (fnGenInt(irq_INTMUX0_0_ID + INTMUX_LPUART2) != 0)
+    #else
+            if (fnGenInt(irq_LPUART2_ID) != 0)
+    #endif
+            {                                                            // if LPUART2 interrupt is not disabled
                 VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-                ptrVect->processor_interrupts.irq_LPUART2();             // call the interrupt handler
+    #if !defined irq_LPUART2_ID
+                fnCallINTMUX(INTMUX_LPUART2, INTMUX0_PERIPHERAL_LPUART2, (unsigned char *)&ptrVect->processor_interrupts.irq_LPUART2);
+    #else
+                ptrVect->processor_interrupts.irq_LPUART2(); // call the interrupt handler
+    #endif
             }
         }
         break;
 #endif
 #if LPUARTS_AVAILABLE > 3
-#if defined LPUARTS_PARALLEL
-#define LPUART3_CH_NUMBER     (UARTS_AVAILABLE + 3)
-#else
-#define LPUART3_CH_NUMBER     3
-#endif
+    #if defined LPUARTS_PARALLEL
+        #define LPUART3_CH_NUMBER     (UARTS_AVAILABLE + 3)
+    #else
+        #define LPUART3_CH_NUMBER     3
+    #endif
     case LPUART3_CH_NUMBER:                                              // LPUART 3
         LPUART3_STAT |= LPUART_STAT_LBKDIF;                              // set the status flag
         if ((LPUART3_BAUD & LPUART_BAUD_LBKDIE) != 0) {                  // if the break interrupt is enabled
@@ -7680,11 +7689,11 @@ extern void fnSimulateBreak(int iPort)
         break;
 #endif
 #if LPUARTS_AVAILABLE > 4
-#if defined LPUARTS_PARALLEL
-#define LPUART4_CH_NUMBER     (UARTS_AVAILABLE + 4)
-#else
-#define LPUART4_CH_NUMBER     4
-#endif
+    #if defined LPUARTS_PARALLEL
+        #define LPUART4_CH_NUMBER     (UARTS_AVAILABLE + 4)
+    #else
+        #define LPUART4_CH_NUMBER     4
+    #endif
     case LPUART4_CH_NUMBER:                                              // LPUART 4
         LPUART4_STAT |= LPUART_STAT_LBKDIF;                              // set the status flag
         if ((LPUART4_BAUD & LPUART_BAUD_LBKDIE) != 0) {                  // if the break interrupt is enabled
@@ -7696,11 +7705,11 @@ extern void fnSimulateBreak(int iPort)
         break;
 #endif
 #if LPUARTS_AVAILABLE > 5
-#if defined LPUARTS_PARALLEL
-#define LPUART5_CH_NUMBER     (UARTS_AVAILABLE + 5)
-#else
-#define LPUART5_CH_NUMBER     5
-#endif
+    #if defined LPUARTS_PARALLEL
+        #define LPUART5_CH_NUMBER     (UARTS_AVAILABLE + 5)
+    #else
+        #define LPUART5_CH_NUMBER     5
+    #endif
     case LPUART5_CH_NUMBER:                                              // LPUART 5
         LPUART5_STAT |= LPUART_STAT_LBKDIF;                              // set the status flag
         if ((LPUART5_BAUD & LPUART_BAUD_LBKDIE) != 0) {                  // if the break interrupt is enabled

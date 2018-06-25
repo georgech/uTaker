@@ -583,7 +583,7 @@ static void fnGetPortInfo(int iFile, unsigned char ucPortNumber)
             return;
         }
         if (ucPortNumber == 'J') {
-            iPort = _GPIO_J;
+            iPort = _PORTJ;
         }
         else {
             iPort = (ucPortNumber - 'A');

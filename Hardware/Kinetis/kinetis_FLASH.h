@@ -89,18 +89,18 @@ static unsigned short fnFlashRoutine[] = {                               // to a
     #endif
 
 
-#if defined _WINDOWS
+    #if defined _WINDOWS
 static int fnFlashProtected(unsigned long *ptrWord)
 {
-    #if !defined FLASH_CONTROLLER_FTMRE
+        #if !defined FLASH_CONTROLLER_FTMRE
     unsigned long ulProtectionBlock = (1 << (((CAST_POINTER_ARITHMETIC)ptrWord) % (SIZE_OF_FLASH / 32)));
     if ((FTFL_FPROT3_0 & ulProtectionBlock) == 0) {
         return 1;                                                        // the area is protected
     }
-    #endif
+        #endif
     return 0;                                                            // the area is not protected
 }
-#endif
+    #endif
 
 static int fnFlashNow(unsigned char ucCommand, unsigned long *ptrWord, unsigned long *ptr_ulWord)
 {
@@ -589,7 +589,7 @@ static int fnWriteInternalFlash(ACCESS_DETAILS *ptrAccessDetails, unsigned char 
             }
         }
         #endif
-        BufferCopyLength = (FLASH_ROW_SIZE - ulBufferOffset);            // remaining buffer space to end of present backup buffer
+        BufferCopyLength = (MAX_FILE_LENGTH)(FLASH_ROW_SIZE - ulBufferOffset); // remaining buffer space to end of present backup buffer
         if (BufferCopyLength > Length) {                                 // limit in case the amount of bytes to be programmed is less than the long word or phrase involved
             BufferCopyLength = Length;
         }
@@ -911,7 +911,7 @@ extern int fnEraseFlashSector(unsigned char *ptrSector, MAX_FILE_LENGTH Length)
         AccessDetails.BlockLength = Length;
         switch (fnGetStorageType(ptrSector, &AccessDetails)) {           // get the storage type based on the memory location and also return the largest amount of data that can be read from a single device
         case _STORAGE_INTERNAL_FLASH:
-            Length += (((CAST_POINTER_ARITHMETIC)ptrSector) - ((CAST_POINTER_ARITHMETIC)ptrSector & ~(_FLASH_GRANULARITY - 1)));
+            Length += (MAX_FILE_LENGTH)(((CAST_POINTER_ARITHMETIC)ptrSector) - ((CAST_POINTER_ARITHMETIC)ptrSector & ~(_FLASH_GRANULARITY - 1)));
             ptrSector = (unsigned char *)((CAST_POINTER_ARITHMETIC)ptrSector & ~(_FLASH_GRANULARITY - 1)); // set to sector boundary
             if ((fnFlashNow(FCMD_ERASE_FLASH_SECTOR, (unsigned long *)(unsigned long)ptrSector, (unsigned long)0)) != 0) { // {53}
                 return -1;                                               // error

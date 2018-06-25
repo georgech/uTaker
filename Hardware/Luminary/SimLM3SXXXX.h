@@ -11,13 +11,15 @@
    File:   	    SimLM3SXXXX.h
    Project: 	Single Chip Embedded Internet
    ---------------------------------------------------------------------
-   Copyright (C) M.J.Butcher Consulting 2004..2011
+   Copyright (C) M.J.Butcher Consulting 2004..2018
    *********************************************************************
    16.12.2008 Add USB support                                            {1}
    05.02.2009 Add General Purpose Timer support                          {2}
    31.03.2009 Add ADC support                                            {3}
    05.12.2009 Add Tempest class                                          {4}
    27.12.2010 Add PWM module                                             {5}
+   19.06.2018 Change _GPIO_x to _PORTx for global compatibiity           {6}
+   20.06.2018 And external ports                                         {7}
 
 */  
 
@@ -928,18 +930,28 @@ typedef struct stLM3SXXXX_PERIPH
 
 extern LM3SXXXX_PERIPH  LM3Sxxxx;
 
+#define _PORTS_AVAILABLE_   PORTS_AVAILABLE
 
-#define _GPIO_A                         0                                // references for display in simulator
-#define _GPIO_B                         1
-#define _GPIO_C                         2
-#define _GPIO_D                         3
-#define _GPIO_E                         4
-#define _GPIO_F                         5
-#define _GPIO_G                         6
-#define _GPIO_H                         7
-#define _GPIO_J                         8
+#define _PORTA                  0                                        // {6} references for display in simulator
+#define _PORTB                  1
+#define _PORTC                  2
+#define _PORTD                  3
+#define _PORTE                  4
+#define _PORTF                  5
+#define _PORTG                  6
+#define _PORTH                  7
+#define _PORTJ                  8
 
-#define _GPIO_ADC                       9
+#define _GPIO_ADC               (_PORTS_AVAILABLE_)                      // dedicated ADC pins
+
+#define _PORT_EXP_0             (_PORTS_AVAILABLE_ + 1)                  // {7}
+#define _PORT_EXP_1             (_PORTS_AVAILABLE_ + 2)                  // these port numbers should be in order following the internal ports and a fictive ADC port
+#define _PORT_EXP_2             (_PORTS_AVAILABLE_ + 3)
+#define _PORT_EXP_3             (_PORTS_AVAILABLE_ + 4)
+#define _PORT_EXP_4             (_PORTS_AVAILABLE_ + 5)
+#define _PORT_EXP_5             (_PORTS_AVAILABLE_ + 6)
+#define _PORT_EXP_6             (_PORTS_AVAILABLE_ + 7)
+#define _PORT_EXP_7             (_PORTS_AVAILABLE_ + 8)
 
 
 
