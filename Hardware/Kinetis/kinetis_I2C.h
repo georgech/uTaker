@@ -46,10 +46,8 @@ static unsigned char ucCheckTxI2C = 0;                                   // {2}
 /*                     global variable definitions                     */
 /* =================================================================== */
 
-#if defined I2C_INTERFACE
-    extern I2CQue *I2C_rx_control[NUMBER_I2C];
-    extern I2CQue *I2C_tx_control[NUMBER_I2C];
-#endif
+extern I2CQue *I2C_rx_control[NUMBER_I2C];
+extern I2CQue *I2C_tx_control[NUMBER_I2C];
 
 /* =================================================================== */
 /*                        I2C Interrupt Handlers                       */
@@ -245,8 +243,8 @@ static void fnI2C_Handler(KINETIS_I2C_CONTROL *ptrI2C, int iChannel)     // gene
                 ucMessageLength[iChannel] = 0;                           // reset the present message length counter
             }
         }
-        else {                                                           //
-            if ((ptrTxControl->ucState & TX_ACTIVE) != 0) {
+        else {                                                           // not being addressed as slave
+            if ((ptrTxControl->ucState & TX_ACTIVE) != 0) {              // if transmitting
                 if ((ptrI2C->I2C_S & I2C_RXACK) != 0) {                  // no ack means that this is the final byte
                     fnLogEvent('a', ptrI2C->I2C_S);
                     ptrI2C->I2C_C1 = (I2C_IEN | I2C_IIEN);               // switch to receive mode
@@ -355,23 +353,27 @@ static void fnI2C_Handler(KINETIS_I2C_CONTROL *ptrI2C, int iChannel)     // gene
             ptrI2C->I2C_C1 = (I2C_IEN | I2C_MTX);                        // send stop condition and disable interrupts
             fnLogEvent('E', ptrI2C->I2C_C1);
             ptrTxControl->ucState &= ~(TX_WAIT | TX_ACTIVE | RX_ACTIVE);
-            if (ptrTxControl->wake_task != 0) {
+            if (ptrTxControl->wake_task != 0) {                          // if a wakeup task has been defined for transmission termination
                uTaskerStateChange(ptrTxControl->wake_task, UTASKER_ACTIVATE); // wake up owner task since the transmission has terminated
             }
         }
-        else {
+        else {                                                           // a further message is queued for transmission
             fnLogEvent('p', 0);
             fnTxI2C(ptrTxControl, iChannel);                             // we have another message to send so we can send a repeated start condition
         }
     }
 }
 
+// I2C0 interrupt handler
+//
 static __interrupt void _I2C_Interrupt_0(void)                           // I2C0 interrupt
 {
     fnI2C_Handler((KINETIS_I2C_CONTROL *)I2C0_BLOCK, 0);
 }
 
     #if NUMBER_I2C > 1
+// I2C1 interrupt handler
+//
 static __interrupt void _I2C_Interrupt_1(void)                           // I2C1 interrupt
 {
     fnI2C_Handler((KINETIS_I2C_CONTROL *)I2C1_BLOCK, 1);
@@ -379,6 +381,8 @@ static __interrupt void _I2C_Interrupt_1(void)                           // I2C1
     #endif
 
     #if NUMBER_I2C > 2
+// I2C2 interrupt handler
+//
 static __interrupt void _I2C_Interrupt_2(void)                           // I2C2 interrupt
 {
     fnI2C_Handler((KINETIS_I2C_CONTROL *)I2C2_BLOCK, 2);
@@ -386,9 +390,11 @@ static __interrupt void _I2C_Interrupt_2(void)                           // I2C2
     #endif
 
     #if NUMBER_I2C > 3
+// I2C3 interrupt handler
+//
 static __interrupt void _I2C_Interrupt_3(void)                           // I2C3 interrupt
 {
-    fnI2C_Handler((KINETIS_I2C_CONTROL *)I2C2_BLOCK, 3);
+    fnI2C_Handler((KINETIS_I2C_CONTROL *)I2C3_BLOCK, 3);
 }
     #endif
 

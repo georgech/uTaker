@@ -3320,7 +3320,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define INTMUX_WDOG0                INPUT_TO_INTMUX0_CHANNEL_0   // the WDOG extended interrupt is connected to INTMUX0 channel 0 (inherits INTMUX0 channel 0's priority)
         #define INTMUX_LPTMR1               INPUT_TO_INTMUX0_CHANNEL_0   // the LPTMR1 extended interrupt is connected to INTMUX0 channel 0 (inherits INTMUX0 channel 0's priority)
         #define INTMUX_LPUART2              INPUT_TO_INTMUX0_CHANNEL_1   // the LPUART2 extended interrupt is connected to INTMUX0 channel 1 (inherits INTMUX0 channel 1's priority)
-        #define INTMUX_I2C2                 INPUT_TO_INTMUX0_CHANNEL_2   // the I2C1 extended interrupt is connected to INTMUX0 channel 2 (inherits INTMUX0 channel 2's priority)
+        #define INTMUX_I2C1                 INPUT_TO_INTMUX0_CHANNEL_2   // the I2C1 extended interrupt is connected to INTMUX0 channel 2 (inherits INTMUX0 channel 2's priority)
         #define INTMUX_RTC_ALARM            INPUT_TO_INTMUX0_CHANNEL_3   // the RTC alarm extended interrupt is connected to INTMUX0 channel 3 (inherits INTMUX0 channel 3's priority)
     #endif
 #else

@@ -159,7 +159,7 @@
             static void fnStartWaveDisk(void);
         #endif
     #endif
-    #if defined SUPPORT_ADC && defined TEST_ADC && defined TEST_POLL_ADC
+    #if defined SUPPORT_ADC && defined TEST_ADC && defined TEST_POLL_ADC // {25}
         static int fnCheckADC(int iChannel);
     #endif
     #if defined TEST_PIT || defined TEST_DMA_DAC
@@ -213,8 +213,8 @@
             static const CHAR *adc_ref[3] = { "ADC0_DP0","ADC0_DM0","ADC1_DP0" };
             static int iAdcCnt = 0;
         #endif
-        #if defined TEST_ADC && defined TEST_POLL_ADC
-            static unsigned char ucADC_converting[ADC_CONTROLLERS] = { 0 };
+        #if defined TEST_ADC && defined TEST_POLL_ADC                    // {25}
+            static unsigned char ucADC_converting[ADC_CONTROLLERS] = {0};
         #endif
     #elif defined TEST_AD_DA                                             // {14}
         #if defined KINETIS_KL

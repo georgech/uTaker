@@ -200,11 +200,11 @@ static const unsigned long ulDisabled[PORTS_AVAILABLE] = {
     0x0000fc00,                                                          // port D disabled default pins
     0x1c001ff0                                                           // port E disabled default pins
 #elif defined KINETIS_K64
-    0x3f01ce60,                                                          // port A disabled default pins
-    0x00ff3300,                                                          // port B disabled default pins
-    0x000ff030,                                                          // port C disabled default pins
-    0x00007f9d,                                                          // port D disabled default pins
-    0x1c001ff0                                                           // port E disabled default pins
+    (PORTA_BIT29 | PORTA_BIT28 | PORTA_BIT27 | PORTA_BIT26 | PORTA_BIT25 | PORTA_BIT24 | PORTA_BIT16 | PORTA_BIT15 | PORTA_BIT14 | PORTA_BIT11 | PORTA_BIT10 | PORTA_BIT9 | PORTA_BIT6 | PORTA_BIT5), // port A disabled default pins
+    (PORTB_BIT23 | PORTB_BIT22 | PORTB_BIT21 | PORTB_BIT20 | PORTB_BIT19 | PORTB_BIT18 | PORTB_BIT17 | PORTB_BIT16 | PORTB_BIT13 | PORTB_BIT12 | PORTB_BIT9 | PORTB_BIT8), // port B disabled default pins
+    (PORTC_BIT19 | PORTC_BIT18 | PORTC_BIT17 | PORTC_BIT16 | PORTC_BIT15 | PORTC_BIT14 | PORTC_BIT13 | PORTC_BIT12 | PORTC_BIT5 | PORTC_BIT4), // port C disabled default pins
+    (PORTD_BIT15 | PORTD_BIT14 | PORTD_BIT13 | PORTD_BIT12 | PORTD_BIT11 | PORTD_BIT10 | PORTD_BIT9 | PORTD_BIT8 | PORTD_BIT7 | PORTD_BIT4 | PORTD_BIT3 | PORTD_BIT2 | PORTD_BIT0), // port D disabled default pins
+    (PORTE_BIT28 | PORTE_BIT27 | PORTE_BIT26 | PORTE_BIT12 | PORTE_BIT11 | PORTE_BIT10 | PORTE_BIT9 | PORTE_BIT8 | PORTE_BIT7 | PORTE_BIT6 | PORTE_BIT5 | PORTE_BIT4) // port E disabled default pins
 #elif defined KINETIS_K60
     0x3f01ce40,                                                          // port A disabled default pins
     0x00f00300,                                                          // port B disabled default pins
@@ -6524,9 +6524,14 @@ extern unsigned long fnSimInts(char *argv[])
 		        iInts &= ~I2C_INT1;                                      // interrupt has been handled
     #if I2C_AVAILABLE > 1
                 if ((I2C1_C1 & I2C_IEN) != 0) {                          // if I2C interrupt enabled
-                    if (fnGenInt(irq_I2C1_ID) != 0) {                    // if I2C interrupt is not disabled
+        #if !defined irq_I2C1_ID && defined INTMUX0_AVAILABLE
+                    if (fnGenInt(irq_INTMUX0_0_ID + INTMUX_I2C1) != 0)
+        #else
+                    if (fnGenInt(irq_I2C1_ID) != 0)                      // if I2C interrupt is not disabled
+        #endif
+                    {
                         VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-        #if !defined irq_I2C1_ID
+        #if !defined irq_I2C1_ID && defined INTMUX0_AVAILABLE
                         fnCallINTMUX(INTMUX_I2C1, INTMUX0_PERIPHERAL_I2C1, (unsigned char *)&ptrVect->processor_interrupts.irq_I2C1);
         #else
                         ptrVect->processor_interrupts.irq_I2C1();       // call the interrupt handler
@@ -7924,7 +7929,7 @@ extern unsigned long fnSimDMA(char *argv[])
                                 fnUART_Tx_int(2);                        // handle possible pending interrupt after DMA completion
                             }
             #if LPUARTS_AVAILABLE > 2 && !defined LPUARTS_PARALLEL
-	                        fnLogTx1((unsigned char)LPUART2_DATA);
+	                        fnLogTx2((unsigned char)LPUART2_DATA);
             #else
 	                        fnLogTx2(UART2_D);
             #endif
@@ -8892,14 +8897,14 @@ extern int fnSimTimers(void)
                     RTC_TSR = (RTC_TSR + 1);
                     RTC_SR |= RTC_SR_TAF;
                     if ((RTC_IER & RTC_IER_TAIE) != 0) {                 // interrupt on alarm enabled
-    #if !defined irq_LPUART2_ID && defined INTMUX0_AVAILABLE
+    #if !defined irq_RTC_ALARM_ID && defined INTMUX0_AVAILABLE
                         if (fnGenInt(irq_INTMUX0_0_ID + INTMUX_RTC_ALARM) != 0) // {46}
     #else
                         if (fnGenInt(irq_RTC_ALARM_ID) != 0)            // if RTC interrupt is not disabled
     #endif
                         {
                             VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-    #if !defined irq_LPUART2_ID && defined INTMUX0_AVAILABLE
+    #if !defined irq_RTC_ALARM_ID && defined INTMUX0_AVAILABLE
                             fnCallINTMUX(INTMUX_RTC_ALARM, INTMUX0_PERIPHERAL_RTC_ALARM, (unsigned char *)&ptrVect->processor_interrupts.irq_RTC_Alarm);
     #else
                             ptrVect->processor_interrupts.irq_RTC_ALARM(); // call the interrupt handler

@@ -6212,17 +6212,17 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
         #if defined KINETIS_K65 || defined KINETIS_K66
           #define DMAMUX0_CHCFG_SOURCE_TPM2_C1   31
         #endif
-      #define DMAMUX0_CHCFG_SOURCE_FTM3_C0       32                      // 0x20 FTM0 channel 0
-      #define DMAMUX0_CHCFG_SOURCE_FTM3_C1       33                      // 0x21 FTM0 channel 1
-      #define DMAMUX0_CHCFG_SOURCE_FTM3_C2       34                      // 0x22 FTM0 channel 2
-      #define DMAMUX0_CHCFG_SOURCE_FTM3_C3       35                      // 0x23 FTM0 channel 3
-      #define DMAMUX0_CHCFG_SOURCE_FTM3_C4       36                      // 0x24 FTM0 channel 4
-      #define DMAMUX0_CHCFG_SOURCE_FTM3_C5       37                      // 0x25 FTM0 channel 5
-      #define DMAMUX0_CHCFG_SOURCE_FTM3_C6       38                      // 0x26 FTM0 channel 6 (or SPI2 - K66)
+      #define DMAMUX0_CHCFG_SOURCE_FTM3_C0       32                      // 0x20 FTM3 channel 0
+      #define DMAMUX0_CHCFG_SOURCE_FTM3_C1       33                      // 0x21 FTM3 channel 1
+      #define DMAMUX0_CHCFG_SOURCE_FTM3_C2       34                      // 0x22 FTM3 channel 2
+      #define DMAMUX0_CHCFG_SOURCE_FTM3_C3       35                      // 0x23 FTM3 channel 3
+      #define DMAMUX0_CHCFG_SOURCE_FTM3_C4       36                      // 0x24 FTM3 channel 4
+      #define DMAMUX0_CHCFG_SOURCE_FTM3_C5       37                      // 0x25 FTM3 channel 5
+      #define DMAMUX0_CHCFG_SOURCE_FTM3_C6       38                      // 0x26 FTM3 channel 6 (or SPI2 - K66)
         #if defined KINETIS_K65 || defined KINETIS_K66
           #define DMAMUX0_CHCFG_SOURCE_SPI2_RX   38
         #endif
-      #define DMAMUX0_CHCFG_SOURCE_FTM3_C7       39                      // 0x27 FTM0 channel 7 (or SPI2 - K66)
+      #define DMAMUX0_CHCFG_SOURCE_FTM3_C7       39                      // 0x27 FTM3 channel 7 (or SPI2 - K66)
         #if defined KINETIS_K65 || defined KINETIS_K66
           #define DMAMUX0_CHCFG_SOURCE_SPI2_TX   39
         #endif
@@ -6290,7 +6290,7 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
       #define DMAMUX0_CHCFG_SOURCE_TPM1_OVERFLOW 55                      // 0x37 TPM1 overflow
       #define DMAMUX0_CHCFG_SOURCE_TPM2_OVERFLOW 56                      // 0x38 TPM2 overflow
       #define DMAMUX0_CHCFG_SOURCE_TSI           57                      // 0x39 TSI
-    #elif !defined KINETIS_K21
+    #elif !defined KINETIS_K21 && !defined KINETIS_K22
       #define DMAMUX0_CHCFG_SOURCE_FTM3_C4       54                      // 0x36 FTM3 channel 4
       #define DMAMUX0_CHCFG_SOURCE_FTM3_C5       55                      // 0x37 FTM3 channel 5
       #define DMAMUX0_CHCFG_SOURCE_FTM3_C6       56                      // 0x38 FTM3 channel 6
@@ -18714,6 +18714,7 @@ typedef struct stADC_SETUP
 #define ADC_GET_RESULT                  0x01000000
 #define ADC_DISABLE_ADC                 0x02000000
 #define ADC_SINGLE_ENDED_INPUT          0x00000000
+#define ADC_SINGLE_ENDED                (ADC_SINGLE_ENDED_INPUT)         // for compatibility
 #define ADC_DIFFERENTIAL_INPUT          0x04000000
 #define ADC_SINGLE_SHOT_MODE            0x00000000
 #define ADC_LOOP_MODE                   0x08000000
