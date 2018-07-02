@@ -1327,7 +1327,7 @@ static unsigned char   ucDebugCnt = 0;
 #if defined I2C_INTERFACE && (defined TEST_I2C_INTERFACE || defined I2C_MASTER_LOADER)
     extern QUEUE_HANDLE I2CPortID;
 #endif
-#if DISK_COUNT > 1
+#if defined DISK_COUNT && DISK_COUNT > 1                                 // if multiple disks are present
     static unsigned char ucPresentDisk = 0;
 #else
     #define ucPresentDisk                0

@@ -130,6 +130,7 @@
     19.03.2018 Extend PWM configuration to use TRGMUX triggers as clock input {108}
     01.05.2018 Add SET_KUART_BAUD() SET_UART_BAUD() and SET_LPUART_BAUD() macros to directly change UART baud rates {109}
     09.05.2018 Add cortex debug and trace registers                      {110}
+    02.07.2018 Moved package definitions from the simulation header to here so that cross compiled code can make decisions based on them {111}
 
 */
 
@@ -19060,3 +19061,25 @@ extern int  fnIsPending(int iInterruptID);                               // {90}
     #define DWT_FOLDCNT               *(volatile unsigned long *)(CORTEX_M4_DWT + 0x18)
     #define DWT_PCSR                  *(volatile unsigned long *)(CORTEX_M4_DWT + 0x1c)
 #endif
+
+// Package definitions                                                   {111}
+//
+#define PIN_COUNT_24_PIN        1
+#define PIN_COUNT_32_PIN        2
+#define PIN_COUNT_44_PIN        3
+#define PIN_COUNT_48_PIN        4
+#define PIN_COUNT_64_PIN        5
+#define PIN_COUNT_80_PIN        6
+#define PIN_COUNT_81_PIN        7
+#define PIN_COUNT_100_PIN       8
+#define PIN_COUNT_121_PIN       9
+#define PIN_COUNT_144_PIN       10
+#define PIN_COUNT_196_PIN       11
+#define PIN_COUNT_256_PIN       12
+
+#define PACKAGE_LQFP            1
+#define PACKAGE_MAPBGA          2
+#define PACKAGE_BGA             PACKAGE_MAPBGA
+#define PACKAGE_QFN             3
+#define PACKAGE_WLCSP           4
+#define PACKAGE_LGA             5

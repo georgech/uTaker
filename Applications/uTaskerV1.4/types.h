@@ -31,8 +31,7 @@
     22.12.2010 Add Kinetis                                               {9}
     09.08.2012 Add multiple networks/interface configuration             {10}
     06.03.2014 Add USER_INFO_MASK and USER_INFO_SHIFT                    {11}
-    13.04.2014 Add USOCKET configuration for two networks                {12}
-    02.02.2017 Adapt for us tick resolution                              {13}
+    13.04.2014 Add USOCKET configuration for two networks                {12}    
 
 */
 
@@ -56,12 +55,9 @@ typedef unsigned char     QUEUE_LIMIT;                                   // the 
 #define QUEUE_HANDLE      QUEUE_LIMIT                                    // as many queue handles as there are queues
 typedef unsigned short    QUEUE_TRANSFER;                                // the system supports transfers to 64k bytes
 typedef unsigned char     PHYSICAL_Q_LIMIT;                              // the system supports up to 255 physical queues
-#if (TICK_RESOLUTION < 50000)                                            // {13}
-    typedef unsigned long DELAY_LIMIT;                                   // delays up to 4G TICKs (1ms tick gives maximum 47.7 days)
-#else
-    typedef unsigned short DELAY_LIMIT;                                  // delays up to 64k TICKs (50ms tick gives maximum 54.6 minutes)
-#endif
-typedef unsigned short    MAX_MALLOC;                                    // upto 64k heap chunks
+typedef unsigned long     DELAY_LIMIT;                                   // delays up to 4G TICKs (1ms tick gives maximum 47.7 days)
+//typedef unsigned short  DELAY_LIMIT;                                   // delays up to 64k TICKs (50ms tick gives maximum 54.6 minutes)
+typedef unsigned short    MAX_MALLOC;                                    // up to 64k heap chunks
 typedef unsigned short    LENGTH_CHUNK_COUNT;                            // http string insertion and chunk counter for dynamic generation
 #if !defined _HW_NE64                                                    // {1}
     typedef unsigned long   MAX_FILE_LENGTH;                             // over 64k file lengths
@@ -110,10 +106,10 @@ typedef unsigned short    LENGTH_CHUNK_COUNT;                            // http
 // Note that USOCKET would be chosen as signed short to give adequate width for this example
 // Beware that SECURE_SOCKET_MODE is 0x40, 0x4000 or 0x40000000, depending on USOCKET width and should be left free in case secure socket layer is used
 //
-#if IP_NETWORK_COUNT > 1                                                 // {12}
+#if defined IP_NETWORK_COUNT && (IP_NETWORK_COUNT > 1)                   // {12}
     #if defined USE_SNMP
         typedef signed short         USOCKET;
-        #if IP_INTERFACE_COUNT > 1                                       // multiple interfaces
+        #if defined IP_INTERFACE_COUNT && (IP_INTERFACE_COUNT > 1)       // multiple interfaces
             #define INTERFACE_SHIFT  11
             #define INTERFACE_MASK   0x03                                // two interfaces supported
         #else
@@ -129,7 +125,7 @@ typedef unsigned short    LENGTH_CHUNK_COUNT;                            // http
         #define NETWORK_MASK         0x01                                // 2 networks possible
         #define SOCKET_NUMBER_MASK   0x3f                                // dual-network, 128 UDP and 128 TCP sockets possible
         #define NETWORK_SHIFT        6
-        #if IP_INTERFACE_COUNT > 1                                       // multiple interfaces
+        #if defined IP_INTERFACE_COUNT && (IP_INTERFACE_COUNT > 1)       // multiple interfaces
             typedef signed short     USOCKET;                            // socket support from 0..32k (negative values are errors)
             #define INTERFACE_SHIFT  7
             #define INTERFACE_MASK   0x07                                // three interfaces supported
@@ -141,7 +137,7 @@ typedef unsigned short    LENGTH_CHUNK_COUNT;                            // http
     #endif
 #else                                                                    // single network
     #if defined USE_SNMP                                                 // {11}
-        #if IP_INTERFACE_COUNT > 1
+        #if defined IP_INTERFACE_COUNT && (IP_INTERFACE_COUNT > 1)
             typedef signed short     USOCKET;                            // socket support from 0..32k (negative values are errors)
             #define INTERFACE_SHIFT  7
             #define INTERFACE_MASK   0x07                                // three interfaces supported
@@ -154,7 +150,7 @@ typedef unsigned short    LENGTH_CHUNK_COUNT;                            // http
         #define USER_INFO_MASK       0x03                                // 4 users supported
         #define SOCKET_NUMBER_MASK   0x1f                                // single network and interface with up to 4 user functions (USOCKET can be single byte width)
     #else
-        #if IP_INTERFACE_COUNT > 1
+        #if defined IP_INTERFACE_COUNT && (IP_INTERFACE_COUNT > 1)
             typedef signed short         USOCKET;                        // socket support from 0..63 (negative values are errors)
             #define SOCKET_NUMBER_MASK   0x001f                          // socket mask for 0..31
             #define INTERFACE_SHIFT      5                               // interface bit location

@@ -703,7 +703,7 @@ static int fnCheckADC(int iChannel)
 #else
 // This interrupt is called when the ADC level changes above programmed threshold (on one of the enabled channels)
 //
-static void adc_level_change_high(ADC_INTERRUPT_RESULT *adc_result)
+static void __callback_interrupt adc_level_change_high(ADC_INTERRUPT_RESULT *adc_result)
 {
         #if defined _KINETIS
     fnInterruptMessage(OWN_TASK, (unsigned char)(ADC_TRIGGER));
@@ -723,7 +723,7 @@ static void adc_level_change_high(ADC_INTERRUPT_RESULT *adc_result)
 #endif
 
 #if defined _KINETIS && (ADC_CONTROLLERS > 1)
-static void adc_range(ADC_INTERRUPT_RESULT *adc_result)
+static void __callback_interrupt adc_range(ADC_INTERRUPT_RESULT *adc_result)
 {
     #if defined _KINETIS
     fnInterruptMessage(OWN_TASK, (unsigned char)(ADC_TRIGGER_1));
@@ -739,7 +739,7 @@ static void adc_range(ADC_INTERRUPT_RESULT *adc_result)
 #if defined _M5223X
 // This interrupt is called when the ADC level changes below programmed threshold (on one of the enabled channels)
 //
-static void adc_level_change_low(ADC_INTERRUPT_RESULT *adc_result)
+static void __callback_interrupt adc_level_change_low(ADC_INTERRUPT_RESULT *adc_result)
 {
     fnInterruptMessage(OWN_TASK, (unsigned char)(ADC_LOW_0 + adc_result->ucADC_channel));
 }
@@ -750,7 +750,7 @@ static void adc_level_change_low(ADC_INTERRUPT_RESULT *adc_result)
 // Half buffer interrupt occurs each time the ADC DMA has filled half of the input buffer
 // - the ADC DMA operation will continue with the second half of the buffer so that the user has time to clear the existing data
 //
-static void half_buffer_interrupt(void)
+static void __callback_interrupt half_buffer_interrupt(void)
 {
     static unsigned char ucPingPong = 0;
     fnInterruptMessage(OWN_TASK, (unsigned char)(ADC_TRIGGER_1 + ucPingPong));
@@ -760,7 +760,7 @@ static void half_buffer_interrupt(void)
     #if PDB_AVAILABLE > 0 && defined HANDLE_PDB_INTERRUPT
 // If enabled, the PDB interrupt occurs at 8kHz
 //
-static void _pdb_interrupt(void)
+static void __callback_interrupt _pdb_interrupt(void)
 {
     _CONFIG_PORT_OUTPUT(A, (DEMO_LED_3), PORT_SRE_SLOW);                 // configure LED outputs for test purpose
     _TOGGLE_PORT(A, DEMO_LED_3);                                         // toggle LED for measurement purpose
@@ -1107,7 +1107,7 @@ static int iStopRecording = 0;
 
 // Interrupt routine to start/stop recording
 //
-static void fnStartStopRecording(void)
+static void __callback_interrupt fnStartStopRecording(void)
 {
     if (iStartRecording == 0) {                                          // if idle immediately start recording
         iStartRecording = 1;
@@ -1210,7 +1210,7 @@ static void fnSaveWaveToDisk(signed short *ptrInput, unsigned short usBufferLeng
 
 
 #if defined _ADC_TIMER_ROUTINES && defined SUPPORT_LPTMR && (defined TEST_LPTMR_PERIODIC || defined TEST_LPTMR_SINGLE_SHOT) // {18}
-static void low_power_timer_int(void)
+static void __callback_interrupt low_power_timer_int(void)
 {
     TOGGLE_TEST_OUTPUT();
 }
@@ -1431,7 +1431,7 @@ static void fnConfigureTimedUART(void)
 
 #if defined _ADC_TIMER_ROUTINES && defined RIT_TEST                      // {7}
 
-static void test_timer_int(void)
+static void __callback_interrupt test_timer_int(void)
 {
     static int iTimerTest = 0;
     RIT_SETUP rit_setup;                                                 // interrupt configuration parameters
@@ -1473,7 +1473,7 @@ static void fnConfigureRIT(void)
 #endif
 
 #if defined _ADC_TIMER_ROUTINES && defined  TEST_DMA_TIMER
-static void DMA_timer_int(void)
+static void __callback_interrupt DMA_timer_int(void)
 {
     static int iTimerTest = 0;
     DMA_TIMER_SETUP dma_timer_setup;                                     // interrupt configuration parameters
@@ -1526,7 +1526,7 @@ static void fnConfigure_DMA_Timer(void)
 #if defined _ADC_TIMER_ROUTINES && defined  TEST_GPT
 // Interrupt call back from general purpose timer test
 //
-static void gptimer_int(void)
+static void __callback_interrupt gptimer_int(void)
 {
     fnInterruptMessage(OWN_TASK, CAPTURE_COMPLETE_EVENT);
 }
@@ -1683,13 +1683,13 @@ static const unsigned short rampCountValue[] = {
 #endif
 
 
-static void fnEndOfRamp(void)
+static void __callback_interrupt fnEndOfRamp(void)
 {
     FTM0_SC = 0;                                                         // stop the PWM output when the sequence has completed
 }
 #endif  
 
-//static void PWM_IRQ(void)
+//static void __callback_interrupt PWM_IRQ(void)
 //{
 //    TOGGLE_TEST_OUTPUT();
 //}

@@ -2010,7 +2010,7 @@ extern int fnClkout(int iClockSource)                                    // {120
     _CONFIG_PERIPHERAL(A, 12, (PA_12_CLKOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); // configure the CLKOUT pin (PA_4_CLKOUT would be an alternative possibility)
     #elif defined KINETIS_KL05
     _CONFIG_PERIPHERAL(A, 15, (PA_15_CLKOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); // configure the CLKOUT pin (PA_4_CLKOUT would be an alternative possibility)
-    #elif defined KINETIS_K64 && (PIN_COUNT == PIN_COUNT_144_PIN) && !defined _COMPILE_IAR // warning IAR may incorrectly evaluate this!
+    #elif defined KINETIS_K64 && (PIN_COUNT == PIN_COUNT_144_PIN)
     _CONFIG_PERIPHERAL(A, 6, (PA_6_CLKOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); // configure the CLKOUT pin
     #else
     _CONFIG_PERIPHERAL(C, 3, (PC_3_CLKOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); // configure the CLKOUT pin

@@ -27,6 +27,7 @@ Revision History:
 0.2 - date 2013.08.19 - added few registers.
 1.0 - date 2013.12.10 - Version 1.0.
 2.0 - date 2014.11.24 - version 2.0 which includes support for FT81x series.
+02.07.2018 - uTasker modifictaion: remove defines ADC_DIFFERENTIAL and ADC_SINGLE_ENDED
 
  
 */
@@ -52,8 +53,8 @@ Revision History:
 
 #define FT800_VERSION "1.9.0".
 #define RAM_G_SIZE			256*1024L
-#define ADC_DIFFERENTIAL     1UL
-#define ADC_SINGLE_ENDED     0UL
+//#define ADC_DIFFERENTIAL     1UL
+//#define ADC_SINGLE_ENDED     0UL
 #define ADPCM_SAMPLES        2UL
 #define ALWAYS               7UL
 #define ARGB1555             0UL
@@ -349,8 +350,8 @@ Revision History:
 #define RAM_G_SIZE			1024*1024L
 #define FT81X_VERSION "1.0.4"
 
-#define ADC_DIFFERENTIAL     1UL
-#define ADC_SINGLE_ENDED     0UL
+//#define ADC_DIFFERENTIAL     1UL
+//#define ADC_SINGLE_ENDED     0UL
 #define ADPCM_SAMPLES        2UL
 #define ALWAYS               7UL
 #define ARGB1555             0UL

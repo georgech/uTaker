@@ -2541,7 +2541,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define SERIAL_PORT_0    4                                           // if we open UART channel 0 we simulate using comx on the PC
     #define SERIAL_PORT_1    8                                           // if we open UART channel 1 we simulate using comx on the PC
     #define SERIAL_PORT_2    4                                           // if we open UART channel 2 we simulate using comx on the PC
-    #define SERIAL_PORT_3    4                                           // if we open UART channel 3 we simulate using comx on the PC
+    #define SERIAL_PORT_3    6                                           // if we open UART channel 3 we simulate using comx on the PC
     #define SERIAL_PORT_4    4                                           // if we open UART channel 4 we simulate using comx on the PC
     #define SERIAL_PORT_5    6                                           // if we open UART channel 5 we simulate using comx on the PC
 
@@ -2644,8 +2644,11 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
             #define UART1_ON_C                                           // alternative UART1 pin mapping
             #define UART3_ON_B                                           // alternative UART3 pin mapping
             #define UART4_ON_C                                           // alternative UART4 pin mapping (Bluetooth connector)
-        #elif defined TEENSY_3_1 || defined FRDM_K66F
+        #elif defined TEENSY_3_1
             #define UART1_ON_C
+        #elif defined FRDM_K66F
+            #define UART1_ON_C
+            #define UART3_ON_C
         #endif
     #elif defined tinyK20
         #define UART1_ON_C

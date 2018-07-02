@@ -290,11 +290,13 @@ static void *fnSelectChannel(QUEUE_HANDLE Channel)
 /* =================================================================== */
 
     #if LPUARTS_AVAILABLE > 0
+// Generic LPUART interrupt handler
+//
 static __interrupt void _LPUART_interrupt(KINETIS_LPUART_CONTROL *ptrLPUART, int LPUART_Reference) // generic LPUART interrupt handler
 {
     unsigned long ulState = ptrLPUART->LPUART_STAT;                      // status register on entry to the interrupt routine
     if (((ulState & LPUART_STAT_RDRF) & ptrLPUART->LPUART_CTRL) != 0) {  // if reception interrupt flag is set and the reception interrupt is enabled
-        unsigned long ulRxData = ptrLPUART->LPUART_DATA;                 // read the received dat (which resets the reception interrupt flag)
+        unsigned long ulRxData = ptrLPUART->LPUART_DATA;                 // read the received data (which resets the reception interrupt flag)
         #if defined UART_BREAK_SUPPORT
         if (((ptrLPUART->LPUART_BAUD & LPUART_BAUD_LBKDIE) == 0) || (ucBreakSynchronised[LPUART_Reference] != 0)) { // if in break framing mode we ignore reception until a first break has been detected
         #endif
@@ -468,6 +470,8 @@ static __interrupt void _LPSCI4_Interrupt(void)                          // LPUA
         #define fnUART5_HANDLER(data, channel) fnSciRxByte(data, channel)
     #endif
 
+// Generic UART interrupt handler
+//
 static __interrupt void _UART_interrupt(KINETIS_UART_CONTROL *ptrUART, int UART_Reference, int iFlags)
 {
     unsigned char ucState = ptrUART->UART_S1;                            // status register on entry to the interrupt routine
@@ -475,31 +479,52 @@ static __interrupt void _UART_interrupt(KINETIS_UART_CONTROL *ptrUART, int UART_
     if ((iFlags & UART_DMA_RX_MODE) == 0) {                              // if the receiver is operating in DMA mode ignore reception interrupt flags
         #endif
         if (((ucState & UART_S1_RDRF) & ptrUART->UART_C2) != 0) {        // reception interrupt flag is set and the reception interrupt is enabled
-            unsigned char ucRxData = (ptrUART->UART_D & ucUART_mask[UART_Reference]); // read the data byte and mask it with the character length
-        #if defined USER_DEFINED_UART_RX_HANDLER
-            if ((fnUserRxIrq[UART_Reference] == 0) || (fnUserRxIrq[UART_Reference](ucRxData, (QUEUE_LIMIT)UART_Reference) != 0)) { // if a user reception handler is installed it is called - if it doesn't decide to handle the data the standard handler is used
-        #endif
-                switch (UART_Reference) {                                // for compatibility (to be phased out)
-                case 0:
-                    fnUART0_HANDLER(ucRxData, 0);                        // receive data interrupt - read the byte (masked with character width)
-                    break;
-                case 1:
-                    fnUART1_HANDLER(ucRxData, 1);                        // receive data interrupt - read the byte (masked with character width)
-                    break;
-                case 2:
-                    fnUART0_HANDLER(ucRxData, 2);                        // receive data interrupt - read the byte (masked with character width)
-                    break;
-                case 3:
-                    fnUART1_HANDLER(ucRxData, 3);                        // receive data interrupt - read the byte (masked with character width)
-                    break;
-                case 4:
-                    fnUART0_HANDLER(ucRxData, 4);                        // receive data interrupt - read the byte (masked with character width)
-                    break;
-                case 5:
-                    fnUART1_HANDLER(ucRxData, 5);                        // receive data interrupt - read the byte (masked with character width)
-                    break;
+            unsigned char ucRxData = ptrUART->UART_D;                    // read the received data (which resets the reception interrupt flag)
+        #if defined UART_BREAK_SUPPORT
+            if ((ucState & UART_S1_FE) != 0) {                           //  framing error signifies that a '0' was received at a stop bits location and it is used to detect a break character
+                if ((ptrUART->UART_BDH & UART_BDH_LBKDIE) != 0) {        // if break character peration is enabled (this register flag is used to signal the mode and not enable LIN break operation)
+                    if (ucBreakSynchronised[UART_Reference] != 0) {      // if not the first break after enabling the receiver
+                        #if defined USER_DEFINED_UART_RX_BREAK_DETECTION
+                        if ((fnUserRxBreakIrq[UART_Reference] == 0) || (fnUserRxBreakIrq[UART_Reference]((QUEUE_LIMIT)UART_Reference) != 0)) {
+                        #endif
+                            fnSciRxMsg((QUEUE_LIMIT)UART_Reference);     // break signals the end of a reception frame
+                        #if defined USER_DEFINED_UART_RX_BREAK_DETECTION
+                        }
+                        #endif
+                    }
+                    ucBreakSynchronised[UART_Reference] = 1;             // a first break character has been received and from thsi point on we accept data
                 }
+            }
+            else if (((ptrUART->UART_BDH & UART_BDH_LBKDIE) == 0) || (ucBreakSynchronised[UART_Reference] != 0)) { // if in break framing mode we ignore reception until a first break has been detected
+        #endif
+                ucRxData &= ucUART_mask[UART_Reference];                 // mask the received data with the character width
         #if defined USER_DEFINED_UART_RX_HANDLER
+                if ((fnUserRxIrq[UART_Reference] == 0) || (fnUserRxIrq[UART_Reference](ucRxData, (QUEUE_LIMIT)UART_Reference) != 0)) { // if a user reception handler is installed it is called - if it doesn't decide to handle the data the standard handler is used
+        #endif
+                    switch (UART_Reference) {                            // for compatibility (to be phased out)
+                    case 0:
+                        fnUART0_HANDLER(ucRxData, 0);                    // receive data interrupt - read the byte (masked with character width)
+                        break;
+                    case 1:
+                        fnUART1_HANDLER(ucRxData, 1);                    // receive data interrupt - read the byte (masked with character width)
+                        break;
+                    case 2:
+                        fnUART0_HANDLER(ucRxData, 2);                    // receive data interrupt - read the byte (masked with character width)
+                        break;
+                    case 3:
+                        fnUART1_HANDLER(ucRxData, 3);                    // receive data interrupt - read the byte (masked with character width)
+                        break;
+                    case 4:
+                        fnUART0_HANDLER(ucRxData, 4);                    // receive data interrupt - read the byte (masked with character width)
+                        break;
+                    case 5:
+                        fnUART1_HANDLER(ucRxData, 5);                    // receive data interrupt - read the byte (masked with character width)
+                        break;
+                    }
+        #if defined USER_DEFINED_UART_RX_HANDLER
+                }
+        #endif
+        #if defined UART_BREAK_SUPPORT
             }
         #endif
         #if defined _WINDOWS
@@ -550,9 +575,12 @@ static __interrupt void _UART_interrupt(KINETIS_UART_CONTROL *ptrUART, int UART_
             #endif
     }
         #endif
-        #if defined SERIAL_SUPPORT_RX_DMA_BREAK || defined UART_BREAK_SUPPORT
+        #if defined SERIAL_SUPPORT_RX_DMA_BREAK_ || defined UART_BREAK_SUPPORT_ // a method based on lin break detection is not used (see framing error code above)
     if ((ptrUART->UART_S2 & UART_S2_LBKDIF) != 0) {                      // if a break has been detected
-        WRITE_ONE_TO_CLEAR(ptrUART->UART_S2, UART_S2_LBKDIF);            // clear the flag
+        ptrUART->UART_S2 &= ~(UART_S2_LBKDE);                            // clear the flag (by writing with UART_S2_LBKDIF and disable the break detection because it otherwise blocks reception interrupts)
+            #if defined _WINDOWS
+        ptrUART->UART_S2 &= ~(UART_S2_LBKDIF);
+            #endif
         if ((ptrUART->UART_BDH & UART_BDH_LBKDIE) != 0) {                // if the interrupt is to be handled
             #if defined SERIAL_SUPPORT_RX_DMA_BREAK
             fnSciRxByte((unsigned char)(ucBreakSynchronised[UART_Reference] == 0), (QUEUE_LIMIT)UART_Reference);// handle the reception (it will ignore any data received before the first synchronisation)
@@ -2809,6 +2837,7 @@ static void fnConfigUART(QUEUE_HANDLE Channel, TTYTABLE *pars, KINETIS_UART_CONT
             #endif
         #if defined SERIAL_SUPPORT_RX_DMA_BREAK
         if ((pars->ucDMAConfig & UART_RX_DMA_BREAK) != 0) {              // if breaks are to terminate reception
+          //uart_reg->UART_S2 |= (UART_S2_LBKDE);                        // enable break detection operation
             uart_reg->UART_BDH |= (UART_BDH_LBKDIE);                     // enable break detection interrupt
         }
         #endif
@@ -2838,6 +2867,7 @@ static void fnConfigUART(QUEUE_HANDLE Channel, TTYTABLE *pars, KINETIS_UART_CONT
         uart_reg->UART_C5 &= ~(UART_C5_RDMAS);                           // disable rx DMA so that rx interrupt mode can be used
                 #if defined UART_BREAK_SUPPORT
         if ((pars->Config & MSG_BREAK_MODE) != 0) {                      // if reception breaks are to terminate reception
+          //uart_reg->UART_S2 |= (UART_S2_LBKDE);                        // enable break detection operation
             uart_reg->UART_BDH |= (UART_BDH_LBKDIE);                     // enable break detection interrupt
         }
                 #endif

@@ -39,8 +39,8 @@
 
 #define _TICK_RESOLUTION     TICK_UNIT_MS(50)                            // 50ms system tick period - max possible at 50MHz SYSTICK would be about 335ms !
 
-//#define REMOVE_PORT_INITIALISATIONS                                    // remove port initialisation and use demonstration to ensure that port configuration and use doesn't conflict with specific application development (exception is blink LED)
-//#define NO_PERIPHERAL_DEMONSTRATIONS                                   // disable peripheral demonstration code (ADC/I2C/CAN/port interrupts/etc.) so that they can't interfere with new application developments
+#define REMOVE_PORT_INITIALISATIONS                                      // remove port initialisation and use demonstration to ensure that port configuration and use doesn't conflict with specific application development (exception is blink LED)
+#define NO_PERIPHERAL_DEMONSTRATIONS                                     // disable peripheral demonstration code (ADC/I2C/CAN/port interrupts/etc.) so that they can't interfere with new application developments
 
 #define USE_MAINTENANCE                                                  // include the command line shell (on UART, USB-CDC and/or Telnet) with maintenance support for the application (remove to reduce project size for special tests or possibly running from limited RAM)
     #define PREVIOUS_COMMAND_BUFFERS  4                                  // allow the up-arrow to retrieve this many past commands
@@ -150,14 +150,14 @@
     //#define EMCRAFT_K61F150M                                           // K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - http://www.utasker.com/kinetis/EMCRAFT_K61F150M.html
     //#define K61FN1_50M                                                 // board with 150MHz K61 and 50MHz clock (HS USB and KSZ8863 ethernet switch)
 
-      #define FRDM_K64F                                                  // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
+    //#define FRDM_K64F                                                  // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
     //#define TWR_K64F120M                                               // tower board http://www.utasker.com/kinetis/TWR-K64F120M.html
     //#define HEXIWEAR_K64F                                              // hexiwear - wearable development kit for IoT (K64FN1M0VDC12 main processor) http://www.hexiwear.com/
     //#define TEENSY_3_5                                                 // USB development board with K64FX512 - http://www.utasker.com/kinetis/TEENSY_3.5.html
     //#define FreeLON                                                    // K64 based with integrated LON
     //#define TWR_K65F180M                                               // tower board http://www.utasker.com/kinetis/TWR-K65F180M.html
     //#define K66FX1M0                                                   // development board with K66FX1M0
-    //#define FRDM_K66F                                                  // freedom board http://www.utasker.com/kinetis/FRDM-K66F.html
+      #define FRDM_K66F                                                  // freedom board http://www.utasker.com/kinetis/FRDM-K66F.html
     //#define TEENSY_3_6                                                 // USB development board with K66FX1M0 - http://www.utasker.com/kinetis/TEENSY_3.6.html
 
     //#define TWR_K70F120M                                               // K processors Cortex M4 with graphical LCD, Ethernet, USB, encryption, tamper - tower board http://www.utasker.com/kinetis/TWR-K70F120M.html
@@ -202,7 +202,7 @@
     //
     // Nucleo 32 range
     //
-    //#define NUCLEO_F031K6                                              // evaluation boad with STM32F031 (cortex-m0)
+      #define NUCLEO_F031K6                                              // evaluation boad with STM32F031 (cortex-m0)
     //#define NUCLEO_L011K4                                              // evaluation boad with STM32L011 (cortex-m0+)
     //#define NUCLEO_L031K6                                              // evaluation boad with STM32L031 (cortex-m0+)
     //#define NUCLEO_L432KC                                              // evaluation boad with STM32L432 (cortex-m4 with FPU)
@@ -215,7 +215,7 @@
 
     //#define STM3210C_EVAL                                              // evaluation board with STM32F107VCT
     //#define WISDOM_STM32F407                                           // evaluation board with STM32F407ZET6
-      #define STM3240G_EVAL                                              // evaluation board with STM32F407IGH6
+    //#define STM3240G_EVAL                                              // evaluation board with STM32F407IGH6
     //#define ST_MB913C_DISCOVERY                                        // discovery board with STM32F100RB
     //#define ST_MB997A_DISCOVERY                                        // discovery board with STM32F407VGT6
     //#define STM32F407ZG_SK                                             // IAR prototyping board with STM32F407ZGT6
@@ -1244,7 +1244,7 @@
 //
 //#define USE_MODBUS                                                     // activate MODBUS support in the project
 #if defined USE_MODBUS
-    #define USE_MODBUS_SLAVE                                             // slave capability supported
+    //#define USE_MODBUS_SLAVE                                           // slave capability supported
     //#define NO_SLAVE_MODBUS_READ_COILS                                 // disable specific slave public function support
     //#define NO_SLAVE_MODBUS_READ_DISCRETE_INPUTS
     //#define NO_SLAVE_MODBUS_READ_HOLDING_REGISTERS
@@ -1394,7 +1394,7 @@
     #define NUMBER_EXTERNAL_SERIAL     0
 #endif
 
-#if defined USE_MODBUS && (defined MODBUS_GATE_WAY_QUEUE || defined MODBUS_RTU) && !defined SUPPORT_FLUSH
+#if !defined SUPPORT_FLUSH && ((defined USE_MODBUS && (defined MODBUS_GATE_WAY_QUEUE || defined MODBUS_RTU)) || defined USE_DMX_RDM_MASTER)
     #define SUPPORT_FLUSH                                                // support queue flush for use by the MODBUS gateway
 #endif
 
@@ -1403,7 +1403,7 @@
 #if defined DEVICE_WITHOUT_USB
     #define NUMBER_USB     0                                             // no physical queue needed
 #else
-    #define USB_INTERFACE                                                // enable USB driver interface
+  //#define USB_INTERFACE                                                // enable USB driver interface
     #if defined USB_INTERFACE
       //#define MICROSOFT_OS_STRING_DESCRIPTOR                           // support MODs
       //#define USB_HOST_SUPPORT                                         // host supported

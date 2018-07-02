@@ -1,0 +1,271 @@
+# Make file for uTasker V1.4 build for Luminary
+# Correct dependency of usb_application.c
+# 18.01.2009 Add SPI FLASH dependencies
+# 06.08.2009 Add OLED.c
+# 26.09.2009 Move GLCD.c to uGLCDLIB
+# 24.12.2009 Add mass_storage.c
+# 13.06.2010 Change Build/application.o: path to be compatible with Unix convention
+# 10.08.2010 Move LCD to uGLCDLIB directory
+# 11.09.2010 Generate GCC SREC from BM target
+# 03.11.2011 Add zero_config.c
+#
+
+# All objects (Hardware, application, uTasker, stack)
+#
+OBJS = Build/application.o Build/debug.o Build/webInterface.o Build/KeyScan.o Build/DMX512.o Build/NetworkIndicator.o Build/usb_application.o Build/snmp_mib_handlers.o Build/FreeMaster.o Build/nRF24201.o Build/FreeRTOSapplication.o \
+       Build/MODBUS.o Build/modbus_app.o \
+       Build/mass_storage.o \
+       Build/GLCD.o Build/LCD.o \
+       Build/eth_drv.o Build/Driver.o Build/uMalloc.o Build/uTasker.o Build/Tty_drv.o Build/i2c_drv.o Build/USB_drv.o Build/uFile.o Build/Watchdog.o Build/GlobalTimer.o Build/time_keeper.o Build/low_power.o \
+       Build/Ethernet.o Build/arp.o Build/dhcp.o Build/dns.o Build/ftp.o Build/http.o Build/icmp.o Build/ip_utils.o Build/ip.o Build/pop3.o Build/smtp.o Build/snmp.o \
+       Build/tcp.o Build/telnet.o Build/tftp.o Build/udp.o Build/webutils.o Build/NetBIOS.o Build/zero_config.o Build/ftp_client.o Build/igmp.o Build/ppp.o Build/mqtt.o
+
+
+OBJS2 = Build/LM3SXXXX.o
+
+OBJS2_BM = Build/LM3SXXXX_bm.o
+
+#General dependencies
+#
+DEPENDS = ../config.h ../app_hw_LM3SXXXX.h ../types.h ../TaskConfig.h ../../../uTasker/driver.h ../../../uTasker/usb.h ../../../uTasker/uTasker.h \
+       ../../../Hardware/hardware.h ../../../Hardware/Luminary/LM3SXXXX.h \
+       ../../../uTasker/MODBUS/modbus.h \
+       ../../../uTasker/utFAT/mass_storage.h \
+       ../../../uTasker/uGLCDLIB/glcd.h \
+       ../../../stack/tcpip.h
+
+INC     = -I../
+OPTS    = -D _GNU -D _LM3SXXXX -g -c -Os
+CC      = arm-none-eabi-gcc
+CC_LNK  = arm-none-eabi-g++
+CC_OBJ  = arm-none-eabi-objcopy
+CC_SIZE = arm-none-eabi-size
+
+# SPI FLASH dependencies
+#
+SPI_FLASH_DEP = ../../../Hardware/Luminary/spi_flash_lm3s_atmel.h \
+                ../../../Hardware/Luminary/spi_flash_lm3s_stmicro.h \
+				../../../Hardware/Luminary/spi_flash_lm3s_sst25.h
+
+
+# Compiler flags (thumb mode - little endian)
+#
+C_FLAGS = -mcpu=cortex-m3 -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections 
+
+
+
+all: uTaskerV1.4.elf
+
+# Application files
+#
+Build/application.o: ../application.c $(DEPENDS) ../application.h ../application_lcd.h ../app_user_files.h ../Port_Interrupts.h ../ADC_Timers.h ../widgets.h
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../application.c -o Build/application.o
+
+Build/debug.o: ../debug.c $(DEPENDS) ../application.h
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../debug.c -o Build/debug.o
+
+Build/webInterface.o: ../webInterface.c $(DEPENDS) ../application.h
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../webInterface.c -o Build/webInterface.o
+
+Build/usb_application.o: ../usb_application.c $(DEPENDS) ../application.h
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../usb_application.c -o Build/usb_application.o
+
+Build/KeyScan.o: ../KeyScan.c $(DEPENDS) ../application.h
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../KeyScan.c -o Build/KeyScan.o
+
+Build/OLED.o: ../OLED.c $(DEPENDS) ../application.h
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../OLED.c -o Build/OLED.o
+
+Build/NetworkIndicator.o: ../NetworkIndicator.c $(DEPENDS) ../application.h
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../NetworkIndicator.c -o Build/NetworkIndicator.o
+
+Build/snmp_mib_handlers.o: ../snmp_mib_handlers.c $(DEPENDS) ../application.h
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../snmp_mib_handlers.c -o Build/snmp_mib_handlers.o
+
+Build/FreeMaster.o: ../FreeMaster.c $(DEPENDS) ../application.h
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../FreeMaster.c -o Build/FreeMaster.o
+
+Build/nRF24201.o: ../nRF24201.c $(DEPENDS) ../application.h
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../nRF24201.c -o Build/nRF24201.o
+
+Build/FreeRTOSapplication.o: ../FreeRTOSapplication.c $(DEPENDS) $(DEPENDS_FREERTOS) ../application.h
+		$(CC) $(C_FLAGS) $(INC) $(FREERTOS_INCLUDE) $(OPTS) ../FreeRTOSapplication.c -o Build/FreeRTOSapplication.o
+
+
+# Hardware files
+#
+Build/LM3SXXXX.o: ../../../Hardware/Luminary/LM3SXXXX.c $(DEPENDS) $(SPI_FLASH_DEP)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../Hardware/Luminary/LM3SXXXX.c -o Build/LM3SXXXX.o
+
+
+
+# uTasker files
+#
+Build/uTasker.o: ../../../uTasker/uTasker.c $(DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../uTasker/uTasker.c -o Build/uTasker.o
+
+Build/eth_drv.o: ../../../uTasker/eth_drv.c $(DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../uTasker/eth_drv.c -o Build/eth_drv.o
+
+Build/Driver.o: ../../../uTasker/Driver.c $(DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../uTasker/Driver.c -o Build/Driver.o
+
+Build/uMalloc.o: ../../../uTasker/uMalloc.c $(DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../uTasker/uMalloc.c -o Build/uMalloc.o
+
+Build/Tty_drv.o: ../../../uTasker/Tty_drv.c $(DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../uTasker/Tty_drv.c -o Build/Tty_drv.o
+
+Build/i2c_drv.o: ../../../uTasker/i2c_drv.c $(DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../uTasker/i2c_drv.c -o Build/i2c_drv.o
+
+Build/USB_drv.o: ../../../uTasker/USB_drv.c $(DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../uTasker/USB_drv.c -o Build/USB_drv.o
+
+Build/uFile.o: ../../../uTasker/uFile.c $(DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../uTasker/uFile.c -o Build/uFile.o
+
+Build/Watchdog.o: ../../../uTasker/Watchdog.c $(DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../uTasker/Watchdog.c -o Build/Watchdog.o
+
+Build/GlobalTimer.o: ../../../uTasker/GlobalTimer.c $(DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../uTasker/GlobalTimer.c -o Build/GlobalTimer.o
+
+Build/time_keeper.o: ../../../uTasker/time_keeper.c $(DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../uTasker/time_keeper.c -o Build/time_keeper.o
+
+Build/low_power.o: ../../../uTasker/low_power.c $(DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../uTasker/low_power.c -o Build/low_power.o
+
+Build/DMX512.o: ../DMX512.c $(DEPENDS) ../application.h
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../DMX512.c -o Build/DMX512.o
+
+
+# uTasker TCP/IP files
+#
+Build/Ethernet.o: ../../../stack/Ethernet.c $(DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../stack/Ethernet.c -o Build/Ethernet.o
+
+Build/arp.o: ../../../stack/arp.c $(DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../stack/arp.c -o Build/arp.o
+
+Build/dhcp.o: ../../../stack/dhcp.c $(DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../stack/dhcp.c -o Build/dhcp.o
+
+Build/dns.o: ../../../stack/dns.c $(DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../stack/dns.c -o Build/dns.o
+
+Build/ftp.o: ../../../stack/ftp.c $(DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../stack/ftp.c -o Build/ftp.o
+
+Build/http.o: ../../../stack/http.c $(DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../stack/http.c -o Build/http.o
+
+Build/icmp.o: ../../../stack/icmp.c $(DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../stack/icmp.c -o Build/icmp.o
+
+Build/ip_utils.o: ../../../stack/ip_utils.c $(DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../stack/ip_utils.c -o Build/ip_utils.o
+
+Build/ip.o: ../../../stack/ip.c $(DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../stack/ip.c -o Build/ip.o
+
+Build/pop3.o: ../../../stack/pop3.c $(DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../stack/pop3.c -o Build/pop3.o
+
+Build/smtp.o: ../../../stack/smtp.c $(DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../stack/smtp.c -o Build/smtp.o
+
+Build/snmp.o: ../../../stack/snmp.c $(DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../stack/snmp.c -o Build/snmp.o
+
+Build/tcp.o: ../../../stack/tcp.c $(DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../stack/tcp.c -o Build/tcp.o
+
+Build/telnet.o: ../../../stack/telnet.c $(DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../stack/telnet.c -o Build/telnet.o
+
+Build/tftp.o: ../../../stack/tftp.c $(DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../stack/tftp.c -o Build/tftp.o
+
+Build/udp.o: ../../../stack/udp.c $(DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../stack/udp.c -o Build/udp.o
+
+Build/webutils.o: ../../../stack/webutils.c $(DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../stack/webutils.c -o Build/webutils.o
+
+Build/NetBIOS.o: ../../../stack/NetBIOS.c $(DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../stack/NetBIOS.c -o Build/NetBIOS.o
+
+Build/zero_config.o: ../../../stack/zero_config.c $(DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../stack/zero_config.c -o Build/zero_config.o
+
+Build/ftp_client.o: ../../../stack/ftp_client.c $(DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../stack/ftp_client.c -o Build/ftp_client.o
+
+Build/igmp.o: ../../../stack/igmp.c $(DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../stack/igmp.c -o Build/igmp.o
+
+Build/ppp.o: ../../../stack/ppp.c $(DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../stack/ppp.c -o Build/ppp.o
+
+Build/mqtt.o: ../../../stack/mqtt.c $(DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../stack/mqtt.c -o Build/mqtt.o
+
+
+# uGLCDLIB files
+#
+Build/GLCD.o: ../../../uTasker/uGLCDLIB/GLCD.c $(DEPENDS) ../application.h ../../../uTasker/uGLCDLIB/glcd_fonts.h ../../../uTasker/uGLCDLIB/glcd_samsung.h ../../../uTasker/uGLCDLIB/glcd_toshiba.h ../../../uTasker/uGLCDLIB/glcd_oled.h ../../../uTasker/uGLCDLIB/glcd_cglcd.h
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../uTasker/uGLCDLIB/GLCD.c -o Build/GLCD.o
+
+Build/LCD.o: ../../../uTasker/uGLCDLIB/LCD.c $(DEPENDS) ../application.h
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../uTasker/uGLCDLIB/LCD.c -o Build/LCD.o
+
+
+# utFAT files
+#
+Build/mass_storage.o: ../../../uTasker/utFAT/mass_storage.c $(DEPENDS) ../../../uTasker/utFAT/mass_storage.h
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../uTasker/utFAT/mass_storage.c -o Build/mass_storage.o
+
+# Special packages
+##################
+
+# MODBUS
+Build/MODBUS.o: ../../../uTasker/MODBUS/MODBUS.c $(DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../uTasker/MODBUS/MODBUS.c -o Build/MODBUS.o
+
+Build/modbus_app.o: ../modbus_app.c $(DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../modbus_app.c -o Build/modbus_app.o
+
+
+# Link
+# Create output file and show its size
+#
+uTaskerV1.4.elf: $(OBJS) $(OBJS2) uTaskerLM3SXXXX.ld
+	$(CC_LNK) $(C_FLAGS) -Os -g -TuTaskerLM3SXXXX.ld -nostartfiles -Xlinker --gc-sections -lm -Wl,-Map,"uTaskerV1.4.map" -o "uTaskerV1.4.elf" $(OBJS) $(OBJS2)
+	$(CC_OBJ) --only-section=.data --only-section=.init --only-section=.text --only-section=.rodata --only-section=.vectors --only-section=.f_config --output-target=srec uTaskerV1.4.elf uTaskerV1.4.srec
+	$(CC_OBJ) --only-section=.data --only-section=.init --only-section=.text --only-section=.rodata --only-section=.vectors --only-section=.f_config --output-target=ihex uTaskerV1.4.elf uTaskerV1.4.hex
+	$(CC_OBJ) --only-section=.data --only-section=.init --only-section=.text --only-section=.rodata --only-section=.vectors --only-section=.f_config --output-target=binary uTaskerV1.4.elf uTaskerV1.4.bin
+	$(CC_SIZE) uTaskerV1.4.elf
+
+uTaskerV1.4_BM.elf: $(OBJS) $(OBJS2_BM) uTaskerLM3SXXXX_BM.ld
+	$(CC_LNK) $(C_FLAGS) -Os -g -TuTaskerLM3SXXXX_BM.ld -nostartfiles -Xlinker --gc-sections -lm -Wl,-Map=uTaskerV1.4_BM.map -o uTaskerV1.4_BM.elf $(OBJS) $(OBJS2_BM)
+	$(CC_OBJ) --only-section=.data --only-section=.init --only-section=.text --only-section=.rodata --only-section=.vectors --output-target=srec uTaskerV1.4_BM.elf uTaskerV1.4_BM.srec
+	$(CC_OBJ) --only-section=.data --only-section=.init --only-section=.text --only-section=.rodata --only-section=.vectors --output-target=ihex uTaskerV1.4_BM.elf uTaskerV1.4_BM.hex
+	$(CC_OBJ) --only-section=.data --only-section=.init --only-section=.text --only-section=.rodata --only-section=.vectors --output-target=binary uTaskerV1.4_BM.elf uTaskerV1.4_BM.bin
+	$(CC_SIZE) uTaskerV1.4_BM.elf
+	$(CC) -v
+
+
+
+.PHONY: clean
+clean:
+	rm uTaskerV1.4.map
+	rm uTaskerV1.4.elf
+	rm uTaskerV1.4.bin
+	rm uTaskerV1.4.hex
+
+
+# *** EOF ***
+    
+    

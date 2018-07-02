@@ -5817,8 +5817,10 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
         if ((UART0_C2 & UART_C2_RE) != 0) {                              // if receiver enabled
             while (usLen-- != 0) {                                       // for each reception character
                 UART0_D = *ptrDebugIn++;
-                UART0_S1 |= UART_S1_RDRF;                                // set interrupt cause
-                if ((UART0_C2 & UART_C2_RIE) != 0) {                     // if reception interrupt is enabled
+                if ((UART0_S2 & UART_S2_LBKDE) == 0) {                   // don't set reception flag if break detection is enabled
+                    UART0_S1 |= UART_S1_RDRF;                            // set interrupt cause
+                }
+                if (((UART0_S1 & UART_S1_RDRF) != 0) && ((UART0_C2 & UART_C2_RIE) != 0)) { // if reception interrupt (or DMA) is enabled
             #if !defined DEVICE_WITHOUT_DMA                              // if the device supports DMA
                     if ((UART0_C5 & UART_C5_RDMAS) != 0) {               // {4} if the UART is operating in DMA reception mode
                 #if defined SERIAL_SUPPORT_DMA && defined DMA_UART0_RX_CHANNEL
@@ -5866,8 +5868,10 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
         if ((UART1_C2 & UART_C2_RE) != 0) {                              // if receiver enabled
             while (usLen-- != 0) {                                       // for each reception character
                 UART1_D = *ptrDebugIn++;                                 // save the received byte to the UART data register
-                UART1_S1 |= UART_S1_RDRF;                                // set interrupt cause
-                if ((UART1_C2 & UART_C2_RIE) != 0) {                     // if reception interrupt (or DMA) is enabled
+                if ((UART1_S2 & UART_S2_LBKDE) == 0) {                   // don't set reception flag if break detection is enabled
+                    UART1_S1 |= UART_S1_RDRF;                            // set interrupt cause
+                }
+                if (((UART1_S1 & UART_S1_RDRF) != 0) && ((UART1_C2 & UART_C2_RIE) != 0)) { // if reception interrupt (or dma) is enabled
         #if !defined DEVICE_WITHOUT_DMA                                  // if the device supports DMA
             #if defined KINETIS_KL
                     if ((UART1_C4 & UART_C4_RDMAS) != 0)                 // DMA mode
@@ -5938,8 +5942,10 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
             UART2_S1 &= ~(UART_S1_IDLE);
             while (usLen-- != 0) {                                       // for each reception character
                 UART2_D = *ptrDebugIn++;
-                UART2_S1 |= UART_S1_RDRF;                                // set interrupt cause
-                if ((UART2_C2 & UART_C2_RIE) != 0) {                     // if reception interrupt is enabled
+                if ((UART2_S2 & UART_S2_LBKDE) == 0) {                   // don't set reception flag if break detection is enabled
+                    UART2_S1 |= UART_S1_RDRF;                            // set interrupt cause
+                }
+                if (((UART2_S1 & UART_S1_RDRF) != 0) && ((UART2_C2 & UART_C2_RIE) != 0)) { // if reception interrupt (or dma) is enabled
         #if !defined KINETIS_KE
             #if defined KINETIS_KL &&  (UARTS_AVAILABLE > 1)
                     if ((UART2_C4 & UART_C4_RDMAS) != 0)                 // if DMA mode is enabled
@@ -5992,8 +5998,10 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
         if ((UART3_C2 & UART_C2_RE) != 0) {                              // if receiver enabled
             while (usLen-- != 0) {                                       // for each reception character
                 UART3_D = *ptrDebugIn++;
-                UART3_S1 |= UART_S1_RDRF;                                // set interrupt cause
-                if ((UART3_C2 & UART_C2_RIE) != 0) {                     // if reception interrupt is enabled
+                if ((UART3_S2 & UART_S2_LBKDE) == 0) {                   // don't set reception flag if break detection is enabled
+                    UART3_S1 |= UART_S1_RDRF;                            // set interrupt cause
+                }
+                if (((UART3_S1 & UART_S1_RDRF) != 0) && ((UART3_C2 & UART_C2_RIE) != 0)) { // if reception interrupt (or dma) is enabled
                     if ((UART3_C5 & UART_C5_RDMAS) != 0) {               // {4} if the UART is operating in DMA reception mode
         #if defined SERIAL_SUPPORT_DMA && defined DMA_UART3_RX_CHANNEL
             #if ((defined KINETIS_KL || defined KINETIS_KM) && !defined DEVICE_WITH_eDMA)
@@ -6037,8 +6045,10 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
         if ((UART4_C2 & UART_C2_RE) != 0) {                              // if receiver enabled
             while (usLen-- != 0) {                                       // for each reception character
                 UART4_D = *ptrDebugIn++;
-                UART4_S1 |= UART_S1_RDRF;                                // set interrupt cause
-                if ((UART4_C2 & UART_C2_RIE) != 0) {                     // if reception interrupt is enabled
+                if ((UART4_S2 & UART_S2_LBKDE) == 0) {                   // don't set reception flag if break detection is enabled
+                    UART4_S1 |= UART_S1_RDRF;                            // set interrupt cause
+                }
+                if (((UART4_S1 & UART_S1_RDRF) != 0) && ((UART4_C2 & UART_C2_RIE) != 0)) { // if reception interrupt (or dma) is enabled
                     if ((UART4_C5 & UART_C5_RDMAS) != 0) {               // {4} if the UART is operating in DMA reception mode
         #if defined SERIAL_SUPPORT_DMA && defined DMA_UART4_RX_CHANNEL
                         if ((DMA_ERQ & (DMA_ERQ_ERQ0 << DMA_UART4_RX_CHANNEL)) != 0) { // if source enabled
@@ -6066,8 +6076,10 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
         if ((UART5_C2 & UART_C2_RE) != 0) {                              // if receiver enabled
             while (usLen-- != 0) {                                       // for each reception character
                 UART5_D = *ptrDebugIn++;
-                UART5_S1 |= UART_S1_RDRF;                                // set interrupt cause
-                if ((UART5_C2 & UART_C2_RIE) != 0) {                     // if reception interrupt is enabled
+                if ((UART5_S2 & UART_S2_LBKDE) == 0) {                   // don't set reception flag if break detection is enabled
+                    UART5_S1 |= UART_S1_RDRF;                            // set interrupt cause
+                }
+                if (((UART5_S1 & UART_S1_RDRF) != 0) && ((UART5_C2 & UART_C2_RIE) != 0)) { // if reception interrupt (or dma) is enabled
                     if ((UART5_C5 & UART_C5_RDMAS) != 0) {               // {4} if the UART is operating in DMA reception mode
         #if defined SERIAL_SUPPORT_DMA && defined DMA_UART5_RX_CHANNEL
                         if ((DMA_ERQ & (DMA_ERQ_ERQ0 << DMA_UART5_RX_CHANNEL)) != 0) { // if source enabled
@@ -7728,8 +7740,10 @@ extern void fnSimulateBreak(int iPort)
 #endif
 #if UARTS_AVAILABLE > 0
     case 0:
-        UART0_S2 |= UART_S2_LBKDIF;                                      // set break detected flag
-        if ((UART0_BDH & UART_BDH_LBKDIE) != 0) {                        // if break detection interrupt is enabled
+        if ((UART0_S2 & UART_S2_LBKDE) != 0) {                           // if break detection is enabled
+            UART0_S2 |= UART_S2_LBKDIF;                                  // set break detected flag
+        }
+        if (((UART0_S2 & UART_S2_LBKDIF) != 0) && ((UART0_BDH & UART_BDH_LBKDIE) != 0)) { // if break detection interrupt is enabled
     #if defined irq_UART0_1_ID                                           // when UARTs 0 and 1 share an interrupt
             if (fnGenInt(irq_UART0_1_ID) != 0) {                         // if UART0/1 interrupt is not disabled
                 VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
@@ -7745,8 +7759,10 @@ extern void fnSimulateBreak(int iPort)
         break;
     #if UARTS_AVAILABLE > 1
     case 1:
-        UART1_S2 |= UART_S2_LBKDIF;                                      // set break detected flag
-        if ((UART1_BDH & UART_BDH_LBKDIE) != 0) {                        // if break detection interrupt is enabled
+        if ((UART1_S2 & UART_S2_LBKDE) != 0) {                           // if break detection is enabled
+            UART1_S2 |= UART_S2_LBKDIF;                                  // set break detected flag
+        }
+        if (((UART1_S2 & UART_S2_LBKDIF) != 0) && ((UART1_BDH & UART_BDH_LBKDIE) != 0)) { // if break detection interrupt is enabled
     #if defined irq_UART0_1_ID                                           // when UARTs 0 and 1 share an interrupt
             if (fnGenInt(irq_UART0_1_ID) != 0) {                         // if UART0/1 interrupt is not disabled
                 VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
@@ -7763,8 +7779,10 @@ extern void fnSimulateBreak(int iPort)
     #endif
     #if UARTS_AVAILABLE > 2
     case 2:
-        UART2_S2 |= UART_S2_LBKDIF;                                      // set break detected flag
-        if ((UART2_BDH & UART_BDH_LBKDIE) != 0) {                        // if break detection interrupt is enabled
+        if ((UART2_S2 & UART_S2_LBKDE) != 0) {                           // if break detection is enabled
+            UART2_S2 |= UART_S2_LBKDIF;                                  // set break detected flag
+        }
+        if (((UART2_S2 & UART_S2_LBKDIF) != 0) && ((UART2_BDH & UART_BDH_LBKDIE) != 0)) { // if break detection interrupt is enabled
         #if defined irq_UART2_3_ID                                       // when UARTs 2 and 3 share an interrupt
             if (fnGenInt(irq_UART2_3_ID) != 0) {                         // if UART2/3 interrupt is not disabled
                 VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
@@ -7781,8 +7799,10 @@ extern void fnSimulateBreak(int iPort)
     #endif
     #if UARTS_AVAILABLE > 3
     case 3:
-        UART3_S2 |= UART_S2_LBKDIF;                                      // set break detected flag
-        if ((UART3_BDH & UART_BDH_LBKDIE) != 0) {                        // if break detection interrupt is enabled
+        if ((UART3_S2 & UART_S2_LBKDE) != 0) {                           // if break detection is enabled
+            UART3_S2 |= UART_S2_LBKDIF;                                  // set break detected flag
+        }
+        if (((UART3_S2 & UART_S2_LBKDIF) != 0) && ((UART3_BDH & UART_BDH_LBKDIE) != 0)) { // if break detection interrupt is enabled
         #if defined irq_UART2_3_ID                                       // when UARTs 2 and 3 share an interrupt
             if (fnGenInt(irq_UART2_3_ID) != 0) {                         // if UART2/3 interrupt is not disabled
                 VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
@@ -7799,8 +7819,10 @@ extern void fnSimulateBreak(int iPort)
     #endif
     #if UARTS_AVAILABLE > 4
     case 4:
-        UART4_S2 |= UART_S2_LBKDIF;                                      // set break detected flag
-        if ((UART4_BDH & UART_BDH_LBKDIE) != 0) {                        // if break detection interrupt is enabled
+        if ((UART4_S2 & UART_S2_LBKDE) != 0) {                           // if break detection is enabled
+            UART4_S2 |= UART_S2_LBKDIF;                                  // set break detected flag
+        }
+        if (((UART4_S2 & UART_S2_LBKDIF) != 0) && ((UART4_BDH & UART_BDH_LBKDIE) != 0)) { // if break detection interrupt is enabled
             if (fnGenInt(irq_UART4_ID) != 0) {                           // if UART4 interrupt is not disabled
                 VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                 ptrVect->processor_interrupts.irq_UART4();               // call the interrupt handler
@@ -7810,8 +7832,10 @@ extern void fnSimulateBreak(int iPort)
     #endif
     #if UARTS_AVAILABLE > 5
     case 5:
-        UART5_S2 |= UART_S2_LBKDIF;                                      // set break detected flag
-        if ((UART5_BDH & UART_BDH_LBKDIE) != 0) {                        // if break detection interrupt is enabled
+        if ((UART5_S2 & UART_S2_LBKDE) != 0) {                           // if break detection is enabled
+            UART5_S2 |= UART_S2_LBKDIF;                                  // set break detected flag
+        }
+        if (((UART5_S2 & UART_S2_LBKDIF) != 0) && ((UART5_BDH & UART_BDH_LBKDIE) != 0)) { // if break detection interrupt is enabled
             if (fnGenInt(irq_UART5_ID) != 0) {                           // if UART5 interrupt is not disabled
                 VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                 ptrVect->processor_interrupts.irq_UART5();               // call the interrupt handler
