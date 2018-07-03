@@ -541,6 +541,7 @@
 
 #define DO_DMX512                 14
     #define DO_DISCOVERY            1
+    #define DO_DMX512_TX_SIZE       2
 
 #define MENU_HELP_LAN               1
 #define MENU_HELP_SERIAL            2
@@ -1070,10 +1071,13 @@ static const DEBUG_COMMAND tDiskCommand[] = {                            // {17}
     {"quit",              "Leave command mode",                    DO_TELNET,        DO_TELNET_QUIT},
 };
 
-#if !defined USE_MQTT_CLIENT && (defined USE_DMX512_MASTER && defined USE_DMX_RDM_MASTER)
+#if !defined USE_MQTT_CLIENT && defined USE_DMX512_MASTER
 static const DEBUG_COMMAND tDMX512_Command[] = {
     {"up",                "go to main menu",                       DO_HELP,          DO_HELP_UP },
+    {"txlen",             "set DMX512 tx length",                  DO_DMX512,        DO_DMX512_TX_SIZE },
+    #if defined USE_DMX_RDM_MASTER
     {"discover",          "Execute RDM discovery",                 DO_DMX512,        DO_DISCOVERY },
+    #endif
     {"help",              "Display menu specific help",            DO_HELP,          DO_MAIN_HELP },
     {"quit",              "Leave command mode",                    DO_TELNET,        DO_TELNET_QUIT },
 };
@@ -3203,17 +3207,27 @@ static void fnDoServer(unsigned char ucType, CHAR *ptrInput)
     }
 }
 
-#if !defined USE_MQTT_CLIENT && (defined USE_DMX512_MASTER && defined USE_DMX_RDM_MASTER)
+#if !defined USE_MQTT_CLIENT && defined USE_DMX512_MASTER
+extern unsigned short fnSetDmxFrameSize(unsigned short usLength);
+    #if defined  USE_DMX_RDM_MASTER
 extern void fnDMX512_discover(void);
+    #endif
 static void fnDoDMX512(unsigned char ucType, CHAR *ptrInput)
 {
     switch (ucType) {
+    #if defined  USE_DMX_RDM_MASTER
     case DO_DISCOVERY:                                                   // perform DMX512 RDM discovery
         fnDMX512_discover();
+        break;
+    #endif
+    case DO_DMX512_TX_SIZE:
+        fnDebugMsg("DMX512 Tx size = ");
+        fnDebugDec(fnSetDmxFrameSize((unsigned short)fnDecStrHex(ptrInput)), 0);
         break;
     }
 }
 #endif
+
 
 
 static void fnDoTelnet(unsigned char ucType, CHAR *ptrInput)

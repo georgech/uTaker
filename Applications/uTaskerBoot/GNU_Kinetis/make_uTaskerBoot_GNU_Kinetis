@@ -4,6 +4,7 @@
 # 20.04.2014 Add m0+ compile option and new linker script file name
 # 05.08.2014 Modified compiler and linker options to achieve around 7% smaller code size
 # 13.07.2017 Add peripheral and SPI Flash dependencies
+# 03.07.2018 Add -Wundef in order to discover any undefined definitions
 
 # All objects (Hardware, application, uTasker, stack)
 #
@@ -15,9 +16,9 @@ OBJS = Build/uTaskerBootLoader.o Build/kinetis_boot.o
 #
 DEPENDS = ../config.h ../types.h ../../../Hardware/hardware.h ../../../Hardware/Kinetis/kinetis.h 
 
-#C_FLAGS = -mcpu=cortex-m0 -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections
-C_FLAGS = -mcpu=cortex-m4 -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char  -ffunction-sections -fdata-sections  
-#C_FLAGS = -mcpu=cortex-m7 -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections 
+#C_FLAGS = -mcpu=cortex-m0 -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wundef
+C_FLAGS = -mcpu=cortex-m4 -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char  -ffunction-sections -fdata-sections -Wundef
+#C_FLAGS = -mcpu=cortex-m7 -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wundef
 
 OPTS    = -D _GNU -D _KINETIS -g -c -Os
 

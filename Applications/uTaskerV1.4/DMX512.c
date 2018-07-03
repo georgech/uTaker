@@ -287,6 +287,9 @@ typedef struct stDMX512_RDM_DISC_UNIQUE_BRANCH_RESPONSE_PACKET
     static void fnDMX512_Slave_TxFrameTermination(QUEUE_HANDLE channel);
     static void fnHandleRDM_SlaveRx(QUEUE_HANDLE uart_handle, DMX512_RDM_PACKET *ptrPacket, unsigned short usPacketLength, int iBroadcast);
 #endif
+#if (defined USE_DMX512_MASTER && defined USE_DMX_RDM_MASTER) || (defined USE_DMX512_SLAVE && defined USE_DMX_RDM_SLAVE)
+    static void fnStartDelay(unsigned long ulDelay_us, void(*int_handler)(void));
+#endif
 
 /* =================================================================== */
 /*                             constants                               */
@@ -660,8 +663,11 @@ static void fnConfigureDMX512_framing(void)
     fnConfigureInterrupt((void *)&pwm_setup);                            // configure and start
 }
 
+static unsigned short usFrameSize = DMX512_TX_BUFFER_SIZE;
+
 static unsigned short fnConstructDMX512(unsigned char *ptrFrameBuffer)
 {
+    static unsigned char ucFrameCounter = 0;
     unsigned char ucData = 0;
     int i = 0;
     #if !defined USE_DMX_RDM_MASTER
@@ -669,11 +675,26 @@ static unsigned short fnConstructDMX512(unsigned char *ptrFrameBuffer)
     ptrFrameBuffer[i++] = (unsigned char)(DMX_SLOT_COUNT + 1);
     #endif
     ptrFrameBuffer[i++] = START_CODE_DMX512;                             // DMX512 frame
-    while (i < DMX512_TX_BUFFER_SIZE) {
-        ptrFrameBuffer[i] = ++ucData;
+    ptrFrameBuffer[i++] = ucFrameCounter++;                              // add frame counter for verification purposes
+    while (i < (int)usFrameSize) {
+        ptrFrameBuffer[i] = ++ucData;                                    // add a content pattern
         i++;
     }
-    return (unsigned short)i;
+    return (unsigned short)i;                                            // return the content length
+}
+
+extern unsigned short fnSetDmxFrameSize(unsigned short usLength)
+{
+    if (usLength < 20) {
+        usFrameSize = 20;
+    }
+    else if (usLength > DMX512_TX_BUFFER_SIZE) {
+        usFrameSize = DMX512_TX_BUFFER_SIZE;
+    }
+    else {
+        usFrameSize = usLength;
+    }
+    return usFrameSize;
 }
 
     #if defined USE_DMX_RDM_MASTER
@@ -769,7 +790,8 @@ static void fnHandleDMX(QUEUE_HANDLE uart_handle, DMX512_RDM_PACKET *ptrPacket, 
 {
     // This is called when standard DMX512 data content has been received
     //
-    fnDebugDec(usPacketLength, WITH_CR_LF);
+    fnDebugHex(ptrPacket->ucSubStartCode, (sizeof(ptrPacket->ucSubStartCode) | WITH_SPACE)); // display the frame counter
+    fnDebugDec(usPacketLength, (WITH_SPACE| WITH_CR_LF));                // and the content length
 }
 
 static void __callback_interrupt fnRDM_mab(void)
@@ -974,11 +996,19 @@ static void fnHandleRDM_SlaveRx(QUEUE_HANDLE uart_handle, DMX512_RDM_PACKET *ptr
     }
 }
 
+static int iPingPong = 0;
+
+static void fnReportDMX512_rx(unsigned short usRxLength)
+{
+    usThisLength[iPingPong] = usRxLength;
+    fnInterruptMessage(OWN_TASK, (unsigned char)(DMX512_DMX_RECEPTION_READY_0 + iPingPong)); // inform the task that it should process the content
+    iPingPong ^= 1;                                                      // alternate between input buffers
+}
+
 // Due to strict timing requirements the receiver handles each individual reception interrupt directly
 //
 static int __callback_interrupt fnDMX512_slave_rx(unsigned char data, QUEUE_HANDLE channel)
 {
-    static int iPingPong = 0;
     if (iRxCount < sizeof(ucRxBuffer[0])) {                              // as long as we have space in the reception buffer
         ucRxBuffer[iPingPong][iRxCount] = data;                          // store the data byte into the input buffer
         if (iRxCount == 0) {                                             // if this is the first byte in a frame
@@ -995,10 +1025,8 @@ static int __callback_interrupt fnDMX512_slave_rx(unsigned char data, QUEUE_HAND
         else {
             switch (ucType) {                                            // the frame type being received
             case START_CODE_DMX512:                                      // receiving DMX512 data
-                if (iRxCount == (sizeof(ucRxBuffer[0]) - 1)) {           // expect fixed full-size frames
-                    usThisLength[iPingPong] = sizeof(ucRxBuffer[0]);
-                    fnInterruptMessage(OWN_TASK, (unsigned char)(DMX512_DMX_RECEPTION_READY_0 + iPingPong)); // inform the task that it should process the content
-                    iPingPong ^= 1;                                      // alternate between input buffers
+                if (iRxCount == (sizeof(ucRxBuffer[0]) - 1)) {           // full-size frame
+                    fnReportDMX512_rx((unsigned short)sizeof(ucRxBuffer[0]));
                 }
                 break;
             case DISC_UNIQUE_PREAMBLE_SEPARATOR:
@@ -1024,7 +1052,7 @@ static int __callback_interrupt fnDMX512_slave_rx(unsigned char data, QUEUE_HAND
                             iPingPong ^= 1;                              // alternate between input buffers
                         }
                     }
-                    iRxCount = 0;
+                    iRxCount = 0;                                        // reset for next frame
                     return 0;
                 }
                 break;
@@ -1041,7 +1069,12 @@ static int __callback_interrupt fnDMX512_slave_rx(unsigned char data, QUEUE_HAND
 //
 static int fnDMX512_break_rx(QUEUE_HANDLE channel)
 {
-  //usThisLength = (unsigned short)iRxCount;                             // the data bytes received in previous frame
+    if (iRxCount == 0) {                                                 // ignore the break if there has been no data collected or the frame length has already been reset
+        return 0;
+    }
+    if (iRxCount < (sizeof(ucRxBuffer[0]) - 1)) {                        // if a break is detected before the maximum frame size has been received we use it to close a DMX512 reception
+        fnReportDMX512_rx((unsigned short)iRxCount);
+    }
     iRxCount = 0;                                                        // reset for next frame
     return 0;                                                            // break handled and no standard handling required
 }
