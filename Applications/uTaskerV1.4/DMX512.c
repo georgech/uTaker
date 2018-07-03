@@ -50,7 +50,7 @@
     #define DMX512_MASTER_UART         1
     #define DMX512_SLAVE_UART          2
 #endif
-#if defined _WINDOWS_
+#if defined _WINDOWS
     #define DMX512_PERIOD             300000                             // 300m period
 #else
     #define DMX512_PERIOD             30000                              // 30.000ms
@@ -636,13 +636,13 @@ static void fnConfigureDMX512_framing(void)
     pwm_setup.pwm_mode = (/*PWM_SYS_CLK | */PWM_PRESCALER_128 | PWM_EDGE_ALIGNED | PWM_POLARITY/* | PWM_NO_OUTPUT*/); // clock PWM timer from the system clock with /16 pre-scaler (don't configure teh clock until all channels are set up)
     pwm_setup.pwm_frequency = (unsigned short)PWM_TIMER_US_DELAY(DMX512_PERIOD, 128); // generate frame rate frequency on PWM output
     #else
-    pwm_setup.pwm_mode = (PWM_SYS_CLK | PWM_PRESCALER_16 | PWM_EDGE_ALIGNED | PWM_POLARITY/* | PWM_NO_OUTPUT*/); // clock PWM timer from the system clock with /16 pre-scaler
+    pwm_setup.pwm_mode = (PWM_SYS_CLK | PWM_PRESCALER_32 | PWM_EDGE_ALIGNED | PWM_POLARITY/* | PWM_NO_OUTPUT*/); // clock PWM timer from the system clock with /32 pre-scaler
     pwm_setup.pwm_reference = (_TPM_TIMER_1 | 0);                        // timer module 1, channel 0
         #if defined _WINDOWS
     pwm_setup.pwm_mode |= PWM_PRESCALER_128;
     pwm_setup.pwm_frequency = (unsigned short)PWM_TPM_CLOCK_US_DELAY(DMX512_PERIOD, 128); // generate frame rate frequency on PWM output
         #else
-    pwm_setup.pwm_frequency = (unsigned short)PWM_TPM_CLOCK_US_DELAY(DMX512_PERIOD, 16); // generate frame rate frequency on PWM output
+    pwm_setup.pwm_frequency = (unsigned short)PWM_TPM_CLOCK_US_DELAY(DMX512_PERIOD, 32); // generate frame rate frequency on PWM output
         #endif
     #endif
     pwm_setup.pwm_value = ((pwm_setup.pwm_frequency * DMX512_MASTER_BREAK_DURATION)/DMX512_PERIOD); // output starts low (inverted polarity) and goes high after the break time

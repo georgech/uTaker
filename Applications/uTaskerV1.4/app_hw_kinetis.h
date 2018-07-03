@@ -1552,7 +1552,7 @@
         #define TPM_CLOCKED_FROM_IRC48M                                  // TPM is clocked by IRC48M
       //#define TPM_CLOCKED_FROM_USB1_PDF                                // TPM is clocked by USB1_PDF
                                                                          // default is to use MCGPLLCLK
-        #define PERIPHERAL_CLOCK_DIVIDE          8                       // optional divider for these options (divide 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 5, 6, 7 or 8)
+        #define PERIPHERAL_CLOCK_DIVIDE          4                       // optional divider for these options (divide 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 5, 6, 7 or 8)
         #define PERIPHERAL_CLOCK_DIVIDE_FRACTION 0                       // 0 or 5 (eg. PERIPHERAL_CLOCK_DIVIDE 2 and PERIPHERAL_CLOCK_DIVIDE_FRACTION 0 gives 2.0 and PERIPHERAL_CLOCK_DIVIDE_FRACTION 5 gives 2.5 divide)
 
         #define FTM_CLOCKED_FROM_MCGFFLCLK                               // FTM timers clocked from MCGFFLCLK (32kHz or external FLL reference)
