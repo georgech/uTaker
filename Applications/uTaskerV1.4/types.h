@@ -31,7 +31,8 @@
     22.12.2010 Add Kinetis                                               {9}
     09.08.2012 Add multiple networks/interface configuration             {10}
     06.03.2014 Add USER_INFO_MASK and USER_INFO_SHIFT                    {11}
-    13.04.2014 Add USOCKET configuration for two networks                {12}    
+    13.04.2014 Add USOCKET configuration for two networks                {12}
+    04.07.2018 Add package definition includes here                      {13}
 
 */
 
@@ -203,6 +204,7 @@ typedef char              CHAR;
 
 typedef unsigned int size_t;
 
+#include "../../Hardware/packages.h"                                     // {13} include the general package defines
 #if defined _HW_NE64
     #if defined (_CODE_WARRIOR) && !defined (_WINDOWS)
         #include "stdtypes.h"                                            // some non-standard typedefs required with this compiler
@@ -244,5 +246,3 @@ typedef unsigned int size_t;
 #endif
 
 #endif                                                                   // end not defined __TYPES__
-
-

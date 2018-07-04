@@ -316,9 +316,10 @@
             // Initialise for 100MHz(120MHz) from 50MHz external clock
             //
             #if defined KINETIS_K60 || defined KINETIS_K70
+                #define KINETIS_MAX_SPEED        100000000
                 #define RUN_FROM_DEFAULT_CLOCK                           // 32768Hz IRC
                 #if defined RUN_FROM_DEFAULT_CLOCK
-                  //#define FLL_FACTOR           2929                    // use FLL (factors available are 640, 732, 1280, 1464, 1920, 2197, 2560 and 2929)
+                    #define FLL_FACTOR           2929                    // use FLL (factors available are 640, 732, 1280, 1464, 1920, 2197, 2560 and 2929)
                     #define SYSTEM_CLOCK_DIVIDE  1
                     #define BUS_CLOCK_DIVIDE     2
                     #define FLASH_CLOCK_DIVIDE   4

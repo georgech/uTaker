@@ -11,7 +11,7 @@
    File:        LM3SXXXX.c [Luminary]
    Project:     Single Chip Embedded Internet
    ---------------------------------------------------------------------
-   Copyright (C) M.J.Butcher Consulting 2004..2011
+   Copyright (C) M.J.Butcher Consulting 2004..2018
    *********************************************************************
    04.12.2008 Add IAR5 support
    07.12.2008 Increase Ethernet buffer sizes to account for length in content and to ensure acceptance of long word writes {1}

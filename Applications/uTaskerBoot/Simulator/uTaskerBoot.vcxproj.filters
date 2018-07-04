@@ -163,6 +163,9 @@
     <ClInclude Include="..\..\..\Hardware\STM32\stm32_FLASH.h">
       <Filter>Hardware\STM32</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\packages.h">
+      <Filter>Hardware</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="cursor1.cur">
@@ -179,6 +182,8 @@
     <None Include="..\..\..\Hardware\STM32\STM32_keil_asm.s">
       <Filter>Hardware\STM32</Filter>
     </None>
+    <None Include="..\GNU_STM32\make_uTaskerBoot_GNU_STM32" />
+    <None Include="..\GNU_STM32\Build_STM32.bat" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="uTasker.rc">

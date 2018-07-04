@@ -531,7 +531,7 @@ static void fnConfigTimerPin(int iTimer, int iChannel, unsigned long ulCharacter
                     }
         break;
     #endif
-    #if (FLEX_TIMERS_AVAILABLE > 4) && defined TPMS_AVAILABLE
+    #if (FLEX_TIMERS_AVAILABLE > 4) && defined TPMS_AVAILABLE_TOO
     case 4:                                                              // timer 4
                     switch (iChannel) {                                  // configure appropriate pin for the timer signal
                     case 0:                                              // TPM 1, channel 0

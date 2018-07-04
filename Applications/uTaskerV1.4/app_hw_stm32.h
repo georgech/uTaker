@@ -1019,7 +1019,7 @@
     #define KEYPAD "KeyPads/NUCLEO32.bmp"
 
                                        // '0'            '1'   input state center (x,   y)   0 = circle, radius, controlling port, controlling pin 
-    #define KEYPAD_LED_DEFINITIONS     {RGB(50,50,50),RGB(0,255,0),  0, {118, 408, 127, 424}, _GPIO_B, LED1}
+    #define KEYPAD_LED_DEFINITIONS     {RGB(50,50,50),RGB(0,255,0),  0, {118, 408, 127, 424}, _PORTB, LED1}
 
 #elif defined STM3240G_EVAL
     #define JOYSTICK_SEL               0x80                              // I/O expander input
@@ -1084,15 +1084,15 @@
     #define KEYPAD_LEDS  4
 
                                        // '0'            '1'   input state center (x,   y)   0 = circle, radius, controlling port, controlling pin 
-    #define KEYPAD_LED_DEFINITIONS     {RGB(50,50,50),RGB(0,255,0),  1, {136, 363, 140, 368}, _GPIO_G, LED1}, \
-                                       {RGB(50,50,50),RGB(255,200,0),1, {130, 363, 134, 368}, _GPIO_G, LED2}, \
-                                       {RGB(50,50,50),RGB(255,0,0),  1, {124, 363, 128, 368}, _GPIO_I, LED3}, \
-                                       {RGB(50,50,50),RGB(0,0,255),  1, {118, 363, 122, 368}, _GPIO_C, LED4}
+    #define KEYPAD_LED_DEFINITIONS     {RGB(50,50,50),RGB(0,255,0),  1, {136, 363, 140, 368}, _PORTG, LED1}, \
+                                       {RGB(50,50,50),RGB(255,200,0),1, {130, 363, 134, 368}, _PORTG, LED2}, \
+                                       {RGB(50,50,50),RGB(255,0,0),  1, {124, 363, 128, 368}, _PORTI, LED3}, \
+                                       {RGB(50,50,50),RGB(0,0,255),  1, {118, 363, 122, 368}, _PORTC, LED4}
 
 
-    #define BUTTON_KEY_DEFINITIONS     {_GPIO_G, USER_KEY_BUTTON, {220, 372, 233, 386}}, \
-                                       {_GPIO_A, WAKEUP_BUTTON,   {119, 368, 135, 386}}, \
-                                       {_GPIO_C, TAMPER_BUTTON,   {156, 372, 171, 385}}
+    #define BUTTON_KEY_DEFINITIONS     {_PORTG, USER_KEY_BUTTON, {220, 372, 233, 386}}, \
+                                       {_PORTA, WAKEUP_BUTTON,   {119, 368, 135, 386}}, \
+                                       {_PORTC, TAMPER_BUTTON,   {156, 372, 171, 385}}
 
     #define KEYPAD "KeyPads/STM3241G-EVAL.bmp"
 #elif defined NUCLEO_F401RE
@@ -1132,10 +1132,10 @@
     #define KEYPAD_LEDS  4
 
                                        // '0'            '1'   input state center (x,   y)   0 = circle, radius, controlling port, controlling pin 
-    #define KEYPAD_LED_DEFINITIONS     {RGB(50, 50, 50),  RGB(0, 255, 0), 0, {185, 192, 192, 198}, _GPIO_A, LED1}
+    #define KEYPAD_LED_DEFINITIONS     {RGB(50, 50, 50),  RGB(0, 255, 0), 0, {185, 192, 192, 198}, _PORTA, LED1}
 
 
-    #define BUTTON_KEY_DEFINITIONS     {_GPIO_C, USER_BUTTON_B1, {105, 125, 124, 145}}
+    #define BUTTON_KEY_DEFINITIONS     {_PORTC, USER_BUTTON_B1, {105, 125, 124, 145}}
 
     #define KEYPAD "KeyPads/NUCLEO.bmp"
 #elif defined WISDOM_STM32F407
@@ -1178,16 +1178,16 @@
     #define KEYPAD_LEDS  4
 
                                        // '0'            '1'   input state center (x,   y)   0 = circle, radius, controlling port, controlling pin 
-    #define KEYPAD_LED_DEFINITIONS     {RGB(255,0,0),  RGB(50,50,50),1, {208, 220, 216, 228}, _GPIO_E, LED1}, \
-                                       {RGB(255,0,0),  RGB(50,50,50),1, {229, 218, 237, 225}, _GPIO_E, LED2}, \
-                                       {RGB(255,0,0),  RGB(50,50,50),1, {250, 213, 258, 222}, _GPIO_E, LED3}, \
-                                       {RGB(255,0,0),  RGB(50,50,50),1, {269, 211, 278, 219}, _GPIO_E, LED4}
+    #define KEYPAD_LED_DEFINITIONS     {RGB(255,0,0),  RGB(50,50,50),1, {208, 220, 216, 228}, _PORTE, LED1}, \
+                                       {RGB(255,0,0),  RGB(50,50,50),1, {229, 218, 237, 225}, _PORTE, LED2}, \
+                                       {RGB(255,0,0),  RGB(50,50,50),1, {250, 213, 258, 222}, _PORTE, LED3}, \
+                                       {RGB(255,0,0),  RGB(50,50,50),1, {269, 211, 278, 219}, _PORTE, LED4}
 
 
-    #define BUTTON_KEY_DEFINITIONS     {_GPIO_E, KEY_BUTTON_1, {227, 234, 242, 246}}, \
-                                       {_GPIO_E, KEY_BUTTON_2, {252, 230, 264, 241}}, \
-                                       {_GPIO_E, KEY_BUTTON_3, {274, 226, 287, 237}}, \
-                                       {_GPIO_E, KEY_BUTTON_4, {297, 221, 308, 233}}
+    #define BUTTON_KEY_DEFINITIONS     {_PORTE, KEY_BUTTON_1, {227, 234, 242, 246}}, \
+                                       {_PORTE, KEY_BUTTON_2, {252, 230, 264, 241}}, \
+                                       {_PORTE, KEY_BUTTON_3, {274, 226, 287, 237}}, \
+                                       {_PORTE, KEY_BUTTON_4, {297, 221, 308, 233}}
 
     #define KEYPAD "KeyPads/Wisdom_STM32F407.bmp"
 #elif defined STM3210C_EVAL
@@ -1255,15 +1255,15 @@
     #define KEYPAD_LEDS  4
 
                                        // '0'            '1'   input state center (x,   y)   0 = circle, radius, controlling port, controlling pin 
-    #define KEYPAD_LED_DEFINITIONS     {RGB(190,190,190),RGB(0,255,0),  1, {123, 365, 127, 370}, _GPIO_D, LED1}, \
-                                       {RGB(190,190,190),RGB(255,200,0),1, {117, 365, 121, 370}, _GPIO_D, LED2}, \
-                                       {RGB(190,190,190),RGB(255,0,0),  1, {111, 365, 115, 370}, _GPIO_D, LED3}, \
-                                       {RGB(190,190,190),RGB(0,0,255),  1, {105, 365, 109, 370}, _GPIO_D, LED4}
+    #define KEYPAD_LED_DEFINITIONS     {RGB(190,190,190),RGB(0,255,0),  1, {123, 365, 127, 370}, _PORTD, LED1}, \
+                                       {RGB(190,190,190),RGB(255,200,0),1, {117, 365, 121, 370}, _PORTD, LED2}, \
+                                       {RGB(190,190,190),RGB(255,0,0),  1, {111, 365, 115, 370}, _PORTD, LED3}, \
+                                       {RGB(190,190,190),RGB(0,0,255),  1, {105, 365, 109, 370}, _PORTD, LED4}
 
 
-    #define BUTTON_KEY_DEFINITIONS     {_GPIO_B, USER_KEY_BUTTON, {226, 374, 242, 388}}, \
-                                       {_GPIO_A, WAKEUP_BUTTON,   {111, 374, 126, 388}}, \
-                                       {_GPIO_C, TAMPER_BUTTON,   {155, 374, 171, 388}}
+    #define BUTTON_KEY_DEFINITIONS     {_PORTB, USER_KEY_BUTTON, {226, 374, 242, 388}}, \
+                                       {_PORTA, WAKEUP_BUTTON,   {111, 374, 126, 388}}, \
+                                       {_PORTC, TAMPER_BUTTON,   {155, 374, 171, 388}}
 
 
     #define KEYPAD "KeyPads/STM32F1-EVAL.bmp"
@@ -1315,13 +1315,13 @@
     #define KEYPAD_LEDS  4
 
                                        // '0'            '1'   input state center (x,   y)   0 = circle, radius, controlling port, controlling pin 
-    #define KEYPAD_LED_DEFINITIONS     {RGB(50,50,50),RGB(0,255,0),  1, {111, 257, 117, 262}, _GPIO_D, LED1}, \
-                                       {RGB(50,50,50),RGB(255,200,0),1, {125, 241, 134, 247}, _GPIO_D, LED2}, \
-                                       {RGB(50,50,50),RGB(255,0,0),  1, {142, 257, 148, 262}, _GPIO_D, LED3}, \
-                                       {RGB(50,50,50),RGB(0,0,255),  1, {125, 273, 134, 279}, _GPIO_D, LED4}
+    #define KEYPAD_LED_DEFINITIONS     {RGB(50,50,50),RGB(0,255,0),  1, {111, 257, 117, 262}, _PORTD, LED1}, \
+                                       {RGB(50,50,50),RGB(255,200,0),1, {125, 241, 134, 247}, _PORTD, LED2}, \
+                                       {RGB(50,50,50),RGB(255,0,0),  1, {142, 257, 148, 262}, _PORTD, LED3}, \
+                                       {RGB(50,50,50),RGB(0,0,255),  1, {125, 273, 134, 279}, _PORTD, LED4}
 
 
-    #define BUTTON_KEY_DEFINITIONS     {_GPIO_A, USER_KEY_BUTTON, {73, 248, 93, 268}},
+    #define BUTTON_KEY_DEFINITIONS     {_PORTA, USER_KEY_BUTTON, {73, 248, 93, 268}},
 
     #define KEYPAD "KeyPads/STM32F4-DISC.bmp"
 #elif defined NUCLEO_F429ZI
@@ -1369,12 +1369,12 @@
     #define KEYPAD_LEDS  3
 
                                         // '0'          '1'   input state center (x,   y)   0 = circle, radius, controlling port, controlling pin 
-    #define KEYPAD_LED_DEFINITIONS      {RGB(50,50,50), RGB(0,255,0),  0, {170, 128, 176, 136}, _GPIO_B, LED1}, \
-                                        {RGB(50,50,50), RGB(0,0,255),  0, {155, 128, 162, 136}, _GPIO_B, LED2}, \
-                                        {RGB(50,50,50), RGB(255,0,0),  0, {140, 128, 146, 136}, _GPIO_B, LED3}
+    #define KEYPAD_LED_DEFINITIONS      {RGB(50,50,50), RGB(0,255,0),  0, {170, 128, 176, 136}, _PORTB, LED1}, \
+                                        {RGB(50,50,50), RGB(0,0,255),  0, {155, 128, 162, 136}, _PORTB, LED2}, \
+                                        {RGB(50,50,50), RGB(255,0,0),  0, {140, 128, 146, 136}, _PORTB, LED3}
 
 
-    #define BUTTON_KEY_DEFINITIONS      {_GPIO_C, USERS_BUTTON,  {27, 586,  51, 607}}
+    #define BUTTON_KEY_DEFINITIONS      {_PORTC, USERS_BUTTON,  {27, 586,  51, 607}}
 
     #define KEYPAD "KeyPads/NUCLEO-144.bmp"
 
@@ -1433,15 +1433,15 @@
         #define KEYPAD_LEDS  4
 
                                            // '0'            '1'   input state center (x,   y)   0 = circle, radius, controlling port, controlling pin 
-        #define KEYPAD_LED_DEFINITIONS     {RGB(50,50,50),RGB(0,255,0),  0, {106, 210, 112, 215}, _GPIO_F, LED1}, \
-                                           {RGB(50,50,50),RGB(255,200,0),0, {106, 218, 112, 223}, _GPIO_F, LED2}, \
-                                           {RGB(50,50,50),RGB(255,0,0),  0, {106, 224, 112, 229}, _GPIO_F, LED3}, \
-                                           {RGB(50,50,50),RGB(0,255,0),  0, {106, 231, 112, 236}, _GPIO_F, LED4}
+        #define KEYPAD_LED_DEFINITIONS     {RGB(50,50,50),RGB(0,255,0),  0, {106, 210, 112, 215}, _PORTF, LED1}, \
+                                           {RGB(50,50,50),RGB(255,200,0),0, {106, 218, 112, 223}, _PORTF, LED2}, \
+                                           {RGB(50,50,50),RGB(255,0,0),  0, {106, 224, 112, 229}, _PORTF, LED3}, \
+                                           {RGB(50,50,50),RGB(0,255,0),  0, {106, 231, 112, 236}, _PORTF, LED4}
 
 
-        #define BUTTON_KEY_DEFINITIONS     {_GPIO_A, WKUP_BUTTON,   {21, 185, 43, 207}}, \
-                                           {_GPIO_C, TAMPER_BUTTON, {51, 55,  58, 64 }}, \
-                                           {_GPIO_G, USERS_BUTTON,  {21, 88,  40, 107}}, \
+        #define BUTTON_KEY_DEFINITIONS     {_PORTA, WKUP_BUTTON,   {21, 185, 43, 207}}, \
+                                           {_PORTC, TAMPER_BUTTON, {51, 55,  58, 64 }}, \
+                                           {_PORTG, USERS_BUTTON,  {21, 88,  40, 107}}, \
 
         #define KEYPAD "KeyPads/STM32F407ZG_SK.bmp"
     #else
@@ -1450,14 +1450,14 @@
         #define KEYPAD_LEDS  4
 
                                            // '0'            '1'   input state center (x,   y)   0 = circle, radius, controlling port, controlling pin 
-        #define KEYPAD_LED_DEFINITIONS     {RGB(50,50,50),RGB(0,255,0),  0, {294, 206, 0, 3}, _GPIO_F, LED1}, \
-                                           {RGB(50,50,50),RGB(255,200,0),0, {299, 203, 0, 3}, _GPIO_F, LED2}, \
-                                           {RGB(50,50,50),RGB(255,0,0),  0, {304, 200, 0, 3}, _GPIO_F, LED3}, \
-                                           {RGB(50,50,50),RGB(0,255,0),  0, {309, 197, 0, 3}, _GPIO_F, LED4}
+        #define KEYPAD_LED_DEFINITIONS     {RGB(50,50,50),RGB(0,255,0),  0, {294, 206, 0, 3}, _PORTF, LED1}, \
+                                           {RGB(50,50,50),RGB(255,200,0),0, {299, 203, 0, 3}, _PORTF, LED2}, \
+                                           {RGB(50,50,50),RGB(255,0,0),  0, {304, 200, 0, 3}, _PORTF, LED3}, \
+                                           {RGB(50,50,50),RGB(0,255,0),  0, {309, 197, 0, 3}, _PORTF, LED4}
 
 
-        #define BUTTON_KEY_DEFINITIONS     {_GPIO_A, WKUP_BUTTON,   {318, 258, 340, 279}}, \
-                                           {_GPIO_C, TAMPER_BUTTON, {215, 317, 240, 340}}, \
+        #define BUTTON_KEY_DEFINITIONS     {_PORTA, WKUP_BUTTON,   {318, 258, 340, 279}}, \
+                                           {_PORTC, TAMPER_BUTTON, {215, 317, 240, 340}}, \
 
         #define KEYPAD "KeyPads/STM32-P207.bmp"
     #endif
@@ -1505,11 +1505,11 @@
     #define KEYPAD_LEDS  2
 
                                        // '0'            '1'    input state center (x,   y)   0 = circle, radius, controlling port, controlling pin 
-    #define KEYPAD_LED_DEFINITIONS     {RGB(190,190,190),RGB(0,255,0), 1, {41,  482, 49,  502}, _GPIO_C, LED3}, \
-                                       {RGB(190,190,190),RGB(0,0,255), 1, {223, 482, 231, 502}, _GPIO_C, LED4}
+    #define KEYPAD_LED_DEFINITIONS     {RGB(190,190,190),RGB(0,255,0), 1, {41,  482, 49,  502}, _PORTC, LED3}, \
+                                       {RGB(190,190,190),RGB(0,0,255), 1, {223, 482, 231, 502}, _PORTC, LED4}
 
 
-    #define BUTTON_KEY_DEFINITIONS     {_GPIO_A, USER_KEY_BUTTON, {75, 425, 111, 457}},
+    #define BUTTON_KEY_DEFINITIONS     {_PORTA, USER_KEY_BUTTON, {75, 425, 111, 457}},
 
     #define KEYPAD "KeyPads/STM32F1-DISC.bmp"
 #elif defined STM32F746G_DISCO
@@ -1549,10 +1549,9 @@
     #define KEYPAD_LEDS  4
 
                                        // '0'            '1'        input state  center (x,   y)  0 = circle, radius, controlling port, controlling pin 
-    #define KEYPAD_LED_DEFINITIONS     {RGB(50, 50, 50), RGB(0, 255, 0), 0, {14, 163, 27, 168}, _GPIO_I, LED1}
+    #define KEYPAD_LED_DEFINITIONS     {RGB(50, 50, 50), RGB(0, 255, 0), 0, {14, 163, 27, 168}, _PORTI, LED1}
 
-
-    #define BUTTON_KEY_DEFINITIONS     {_GPIO_I, USER_KEY_BUTTON, {16, 235, 31, 250}}
+    #define BUTTON_KEY_DEFINITIONS     {_PORTI, USER_KEY_BUTTON, {16, 235, 31, 250}}
 
     #define KEYPAD "KeyPads/STM32F746-DISC.bmp"
 #endif
@@ -2066,7 +2065,7 @@
 
 
 
-#if KEY_COLUMNS > 0
+#if defined KEY_COLUMNS && (KEY_COLUMNS > 0)
     // Keypad (scan out D4..D7, scan in E0..E3)
     //
     #define KEY_ROW_IN_1           PORTE_BIT0

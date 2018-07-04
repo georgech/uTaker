@@ -11,7 +11,7 @@
 ;  File:        LM3SXXXX_startup_keil.s [Luminary]
 ;  Project:     Single Chip Embedded Internet
 ;  ---------------------------------------------------------------------
-;  Copyright (C) M.J.Butcher Consulting 2004..2010
+;  Copyright (C) M.J.Butcher Consulting 2004..2018
 ;  *********************************************************************
 ;
 ;  Normally there is no assembler startup code required when using the

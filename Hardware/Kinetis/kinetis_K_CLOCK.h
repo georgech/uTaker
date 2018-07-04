@@ -24,12 +24,14 @@
     #define MCG_C2_GAIN_MODE    MCG_C2_HGO                               // select high gain mode
 #endif
 
-#if CRYSTAL_FREQUENCY > 8000000                                          // crystal > 8MHz
-    #define MCG_C2_FREQ_RANGE     MCG_C2_RANGE_8M_32M
-#elif CRYSTAL_FREQUENCY >= 1000000                                       // crystal bwteeen 1MHz and 8MHz
-    #define MCG_C2_FREQ_RANGE     MCG_C2_RANGE_1M_8M
-#else                                                                    // assumed to be 32kHz crystal
-    #define MCG_C2_FREQ_RANGE     MCG_C2_RANGE_32K_40K
+#if defined CRYSTAL_FREQUENCY
+    #if CRYSTAL_FREQUENCY > 8000000                                      // crystal > 8MHz
+        #define MCG_C2_FREQ_RANGE     MCG_C2_RANGE_8M_32M
+    #elif CRYSTAL_FREQUENCY >= 1000000                                   // crystal bwteeen 1MHz and 8MHz
+        #define MCG_C2_FREQ_RANGE     MCG_C2_RANGE_1M_8M
+    #else                                                                // assumed to be 32kHz crystal
+        #define MCG_C2_FREQ_RANGE     MCG_C2_RANGE_32K_40K
+    #endif
 #endif
 
 #if !defined RUN_FROM_DEFAULT_CLOCK && !defined EXTERNAL_CLOCK && !defined CLOCK_FROM_RTC_OSCILLATOR // no configuration performed - remain in default clocked mode

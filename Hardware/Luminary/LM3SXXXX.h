@@ -533,16 +533,15 @@
 #define CODE_LM3S9B95           (0x6e << 16)
 #define CODE_LM3S9B96           (0x6f << 16)
 
+#define CODE_PIN_COUNT_28_PIN   (0x0  << 13)
+#define CODE_PIN_COUNT_48_PIN   (0x1  << 13)
+#define CODE_PIN_COUNT_64_PIN   (0x3  << 13)
+#define CODE_PIN_COUNT_100_PIN  (0x2  << 13)
+#define CODE_PIN_COUNT_108_PIN  (0x2  << 13)
 
-#define PIN_COUNT_28_PIN        (0x0  << 13)
-#define PIN_COUNT_48_PIN        (0x1  << 13)
-#define PIN_COUNT_64_PIN        (0x3  << 13)
-#define PIN_COUNT_100_PIN       (0x2  << 13)
-#define PIN_COUNT_108_PIN       (0x2  << 13)
-
-#define PACKAGE_SOIC            (0x0  << 3) 
-#define PACKAGE_LQFP            (0x1  << 3) 
-#define PACKAGE_BGA             (0x2  << 3) 
+#define CODE_PACKAGE_SOIC       (0x0  << 3) 
+#define CODE_PACKAGE_LQFP       (0x1  << 3) 
+#define CODE_PACKAGE_BGA        (0x2  << 3) 
 
 #if PART_CODE == CODE_LM3S101                                            // this part doesn't have these registers but values are set to configure the project
     #define PART_DC0            (0x00000000)
@@ -864,7 +863,7 @@
     #define PWM_AVAILABLE    3
 #elif PART_DC3 & PWM1_PRESENT3
     #define PWM_AVAILABLE    2
-#elif PART_DC3 & PWM04_PRESENT3
+#elif PART_DC3 & PWM4_PRESENT3
     #define PWM_AVAILABLE    1
 #endif
 

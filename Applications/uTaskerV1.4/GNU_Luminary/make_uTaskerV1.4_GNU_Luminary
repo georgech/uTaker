@@ -8,6 +8,8 @@
 # 10.08.2010 Move LCD to uGLCDLIB directory
 # 11.09.2010 Generate GCC SREC from BM target
 # 03.11.2011 Add zero_config.c
+# 03.07.2018 Add -Wundef in order to discover any undefined definitions
+# 04.07.2018 Add ../../../Hardware/packages.h
 #
 
 # All objects (Hardware, application, uTasker, stack)
@@ -50,7 +52,7 @@ SPI_FLASH_DEP = ../../../Hardware/Luminary/spi_flash_lm3s_atmel.h \
 
 # Compiler flags (thumb mode - little endian)
 #
-C_FLAGS = -mcpu=cortex-m3 -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections 
+C_FLAGS = -mcpu=cortex-m3 -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wundef 
 
 
 

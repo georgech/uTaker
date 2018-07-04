@@ -1,0 +1,69 @@
+# Make file for uTasker "Bare-minimum" boot loader build for STM32
+# 03.07.2018 Add -Wundef in order to discover any undefined definitions
+# 04.07.2018 Add ../../../Hardware/packages.h
+#
+
+# All objects (Hardware, application, uTasker, stack)
+#
+OBJS = Build/uTaskerBootLoader.o \
+       Build/STM32_boot.o
+
+#General dependencies
+#
+DEPENDS = ../config.h ../types.h  \
+       ../../../Hardware/hardware.h ../../../Hardware/packages.h \
+
+INC     = -I../../uTaskerBoot
+OPTS    = -D _GNU -D _STM32 -g -c -Os
+CC      = arm-none-eabi-gcc
+CC_OBJ  = arm-none-eabi-objcopy
+CC_SIZE = arm-none-eabi-size
+
+# SPI FLASH dependencies
+#
+SPI_FLASH_DEP = ../../../Hardware/STM32/spi_flash_STM32_atmel.h \
+                ../../../Hardware/STM32/spi_flash_STM32_stmicro.h \
+				../../../Hardware/STM32/spi_flash_STM32_sst25.h
+
+
+# Compiler flags (thumb mode - little endian)
+#
+#C_FLAGS = -mcpu=cortex-m3 -mlittle-endian -mthumb -Wall -Wstrict-prototypes -Wundef
+C_FLAGS = -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mlittle-endian -mthumb -Wall -Wstrict-prototypes -Wundef
+
+all: uTaskerBoot.elf
+
+# Application files
+#
+Build/uTaskerBootLoader.o: ../uTaskerBootLoader.c $(DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../uTaskerBootLoader.c -o Build/uTaskerBootLoader.o
+
+# Hardware files
+#
+Build/STM32_boot.o: ../../../Hardware/STM32/STM32_boot.c $(DEPENDS) $(SPI_FLASH_DEP)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../Hardware/STM32/STM32_boot.c -o Build/STM32_boot.o
+
+
+# Link
+# Create output file and show its size
+#
+uTaskerBoot.elf: $(OBJS) uTaskerSTM32.ld uTaskerSTM32_F4.ld
+	$(CC) $(C_FLAGS) -I../../uTaskerBoot -D _GNU -D _STM32 -g -Os -Wl,-Map=uTaskerBoot.map --no-gc-sections -nostartfiles -TuTaskerSTM32_F4.ld -o uTaskerBoot.elf $(OBJS)
+#	$(CC) $(C_FLAGS) -I../../uTaskerBoot -D _GNU -D _STM32 -g -Os -Wl,-Map=uTaskerBoot.map --no-gc-sections -nostartfiles -TuTaskerSTM32.ld -o uTaskerBoot.elf $(OBJS)
+	$(CC_OBJ) --only-section=.data --only-section=.init --only-section=.text --only-section=.rodata --only-section=.vectors --output-target=ihex uTaskerBoot.elf uTaskerBoot.hex
+	$(CC_OBJ) --only-section=.data --only-section=.init --only-section=.text --only-section=.rodata --only-section=.vectors --output-target=binary uTaskerBoot.elf uTaskerBoot.bin
+	$(CC_SIZE) uTaskerBoot.elf
+	$(CC) -v
+
+
+.PHONY: clean
+clean:
+	rm uTaskerBoot.map
+	rm uTaskerBoot.elf
+	rm uTaskerBoot.bin
+	rm uTaskerBoot.hex
+
+
+# *** EOF ***
+    
+    

@@ -208,7 +208,7 @@ static void fnSetDevice(unsigned short *port_inits)
 #else
     USART1_SR = 0x00c0;                                                  // USARTs and UARTs
     USART2_SR = 0x00c0;
-    #if USARTS_AVAILABLE > 2
+    #if USARTS_AVAILABLE > 2 && !defined USART3_NOT_PRESENT
     USART3_SR = 0x00c0;
     #endif
     #if UARTS_AVAILABLE > 0
@@ -481,7 +481,7 @@ extern unsigned long fnSimInts(char *argv[])
             }
         }
 	}
-#if USARTS_AVAILABLE > 2
+#if USARTS_AVAILABLE > 2 && !defined USART3_NOT_PRESENT
 	if (((iInts & CHANNEL_2_SERIAL_INT) != 0) && (argv != 0)) {
         ptrCnt = (int *)argv[THROUGHPUT_UART2];
         if (*ptrCnt != 0) {
@@ -865,7 +865,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
 	    }
         break;
     #endif
-    #if USARTS_AVAILABLE > 2
+    #if USARTS_AVAILABLE > 2 && !defined USART3_NOT_PRESENT
     case 2:                                                              // USART 3
 	    while (usLen-- != 0) {
         #if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1

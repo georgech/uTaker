@@ -22,6 +22,7 @@
     04.04.2010 Add LPC17XX support
     29.11.2010 Add RX6XX support
     29.03.2011 Add Kinetis support
+    04.07.2018 Add package definition includes here                      {3}
    
 */
 
@@ -69,6 +70,8 @@ typedef char              CHAR;
 #if !defined _CODE_WARRIOR_CF || defined _M5223X_BOOT                    // {1}
     typedef unsigned int size_t;
 #endif
+
+#include "../../Hardware/packages.h"                                     // {3} include the general package defines
 
 #if defined _HW_NE64
     #include "../../Hardware/ne64/ne64.h"

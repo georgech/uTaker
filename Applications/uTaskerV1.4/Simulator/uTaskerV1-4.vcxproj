@@ -2639,22 +2639,100 @@ Build_Luminary.bat</Command>
     <ClInclude Include="..\..\..\Hardware\Kinetis\spi_flash_kinetis_stmicro.h" />
     <ClInclude Include="..\..\..\Hardware\Kinetis\spi_flash_w25q.h" />
     <ClInclude Include="..\..\..\Hardware\Kinetis\spi_sc16IS7xx.h" />
-    <ClInclude Include="..\..\..\Hardware\Luminary\LM3S10X_port.h" />
-    <ClInclude Include="..\..\..\Hardware\Luminary\LM3S1968_port.h" />
-    <ClInclude Include="..\..\..\Hardware\Luminary\LM3S2110_port.h" />
-    <ClInclude Include="..\..\..\Hardware\Luminary\LM3S2139_port.h" />
-    <ClInclude Include="..\..\..\Hardware\Luminary\LM3S3748_port.h" />
-    <ClInclude Include="..\..\..\Hardware\Luminary\LM3S3768_port.h" />
-    <ClInclude Include="..\..\..\Hardware\Luminary\LM3S5732_port.h" />
-    <ClInclude Include="..\..\..\Hardware\Luminary\LM3S6965_port.h" />
-    <ClInclude Include="..\..\..\Hardware\Luminary\LM3S8962_port.h" />
-    <ClInclude Include="..\..\..\Hardware\Luminary\LM3S9B95_port.h" />
+    <ClInclude Include="..\..\..\Hardware\Luminary\LM3S10X_port.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Luminary\LM3S1968_port.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Luminary\LM3S2110_port.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Luminary\LM3S2139_port.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Luminary\LM3S3748_port.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Luminary\LM3S3768_port.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Luminary\LM3S5732_port.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Luminary\LM3S6965_port.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Luminary\LM3S8962_port.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Luminary\LM3S9B95_port.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Luminary\LM3SXXXX.h" />
-    <ClInclude Include="..\..\..\Hardware\Luminary\SimLM3SXXXX.h" />
+    <ClInclude Include="..\..\..\Hardware\Luminary\SimLM3SXXXX.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Luminary\spi_flash_lm3s_atmel.h" />
     <ClInclude Include="..\..\..\Hardware\Luminary\spi_flash_lm3s_sst25.h" />
     <ClInclude Include="..\..\..\Hardware\Luminary\spi_flash_lm3s_stmicro.h" />
     <ClInclude Include="..\..\..\Hardware\Luminary\spi_sc16IS7xx.h" />
+    <ClInclude Include="..\..\..\Hardware\packages.h" />
     <ClInclude Include="..\..\..\Hardware\STM32\simSTM32.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
@@ -2875,20 +2953,38 @@ Build_Luminary.bat</Command>
     <ClInclude Include="..\..\..\WinSim\Komodo\komodo.h" />
     <ClInclude Include="..\..\..\WinSim\LCD\lcd.h" />
     <ClInclude Include="..\ADC_Timers.h" />
-    <ClInclude Include="..\app_hw_kinetis.h" />
+    <ClInclude Include="..\app_hw_kinetis.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="..\app_hw_lm3sxxxx.h" />
-    <ClInclude Include="..\app_hw_m5223x.h" />
-    <ClInclude Include="..\app_hw_stm32.h" />
+    <ClInclude Include="..\app_hw_m5223x.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\app_hw_stm32.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="..\app_user_files.h" />
     <ClInclude Include="..\application.h" />
     <ClInclude Include="..\application_lcd.h" />
     <ClInclude Include="..\can_tests.h" />
     <ClInclude Include="..\config.h" />
     <ClInclude Include="..\..\..\uTasker\driver.h" />
-    <ClInclude Include="..\debug_hal_kinetis.h" />
+    <ClInclude Include="..\debug_hal_kinetis.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="..\debug_hal_luminary.h" />
-    <ClInclude Include="..\debug_hal_m522xx.h" />
-    <ClInclude Include="..\debug_hal_stm32.h" />
+    <ClInclude Include="..\debug_hal_m522xx.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\debug_hal_stm32.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="..\FreeRTOSConfig.h" />
     <ClInclude Include="..\i2c_tests.h" />
     <ClInclude Include="..\Port_Interrupts.h" />

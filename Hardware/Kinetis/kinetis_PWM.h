@@ -242,7 +242,7 @@ static __interrupt void _PWM_Interrupt_4(void)
 {
     unsigned char ucPendingChannels = (unsigned char)(FTM4_STATUS & ucEnabledChannelInterrupts);
     if (ucPendingChannels != 0) {
-    #if defined KINETIS_KL || defined TPMS_AVAILABLE
+    #if defined KINETIS_KL || defined TPMS_AVAILABLE_TOO
         WRITE_ONE_TO_CLEAR(FTM4_STATUS, (FTM_STATUS_CH7F | FTM_STATUS_CH6F | FTM_STATUS_CH5F | FTM_STATUS_CH4F | FTM_STATUS_CH3F | FTM_STATUS_CH2F | FTM_STATUS_CH1F | FTM_STATUS_CH0F)); // reset the flags (hardware ensures that any flags being set between the previous read and the clear are not cleared)
     #else
         FTM4_STATUS &= ~(FTM_STATUS_CH7F | FTM_STATUS_CH6F | FTM_STATUS_CH5F | FTM_STATUS_CH4F | FTM_STATUS_CH3F | FTM_STATUS_CH2F | FTM_STATUS_CH1F | FTM_STATUS_CH0F); // reset the flags (hardware ensures that any flags being set between the previous read and the clear are not cleared)
@@ -255,7 +255,7 @@ static __interrupt void _PWM_Interrupt_4(void)
     if ((FTM4_SC & FTM_SC_TOF) == 0) {                                   // if no period interrupt we return (probably it was a channel interrupt)
         return;
     }
-        #if defined TPMS_AVAILABLE                                       // TPM1
+        #if defined TPMS_AVAILABLE_TOO                                   // TPM1
     OR_ONE_TO_CLEAR(FTM4_SC, FTM_SC_TOF);                                // clear interrupt (write 1 to reset)
         #else
     FTM4_SC &= ~(FTM_SC_TOF);                                            // clear interrupt (read when set and write 0 to reset)
@@ -272,7 +272,7 @@ static __interrupt void _PWM_Interrupt_5(void)
 {
     unsigned char ucPendingChannels = (unsigned char)(FTM5_STATUS & ucEnabledChannelInterrupts);
     if (ucPendingChannels != 0) {
-    #if defined KINETIS_KL || defined TPMS_AVAILABLE
+    #if defined KINETIS_KL || defined TPMS_AVAILABLE_TOO
         WRITE_ONE_TO_CLEAR(FTM5_STATUS, (FTM_STATUS_CH7F | FTM_STATUS_CH6F | FTM_STATUS_CH5F | FTM_STATUS_CH4F | FTM_STATUS_CH3F | FTM_STATUS_CH2F | FTM_STATUS_CH1F | FTM_STATUS_CH0F)); // reset the flags (hardware ensures that any flags being set between the previous read and the clear are not cleared)
     #else
         FTM5_STATUS &= ~(FTM_STATUS_CH7F | FTM_STATUS_CH6F | FTM_STATUS_CH5F | FTM_STATUS_CH4F | FTM_STATUS_CH3F | FTM_STATUS_CH2F | FTM_STATUS_CH1F | FTM_STATUS_CH0F); // reset the flags (hardware ensures that any flags being set between the previous read and the clear are not cleared)
@@ -285,7 +285,7 @@ static __interrupt void _PWM_Interrupt_5(void)
     if ((FTM5_SC & FTM_SC_TOF) == 0) {                                   // if no period interrupt we return (probably it was a channel interrupt)
         return;
     }
-        #if defined TPMS_AVAILABLE                                       // TPM2
+        #if defined TPMS_AVAILABLE_TOO                                   // TPM2
     OR_ONE_TO_CLEAR(FTM5_SC, FTM_SC_TOF);                                // clear interrupt (write 1 to reset)
         #else
     FTM5_SC &= ~(FTM_SC_TOF);                                            // clear interrupt (read when set and write 0 to reset)
@@ -301,7 +301,7 @@ static __interrupt void _PWM_Interrupt_5(void)
 
 #if defined _PWM_CONFIG_CODE
         {
-    #if FLEX_TIMERS_AVAILABLE > 4 && defined TPMS_AVAILABLE
+    #if FLEX_TIMERS_AVAILABLE > 4 && defined TPMS_AVAILABLE_TOO
             int iTPM_type = 0;
     #endif
             PWM_INTERRUPT_SETUP *ptrPWM_settings = (PWM_INTERRUPT_SETUP *)ptrSettings;
@@ -411,7 +411,7 @@ static __interrupt void _PWM_Interrupt_5(void)
                 }
                 break;
     #endif
-    #if FLEX_TIMERS_AVAILABLE > 4 && defined TPMS_AVAILABLE              // TPM1
+    #if FLEX_TIMERS_AVAILABLE > 4 && defined TPMS_AVAILABLE_TOO          // TPM1
             case 4:
         #if defined KINETIS_WITH_PCC && !defined KINETIS_KE15
                 SELECT_PCC_PERIPHERAL_SOURCE(FTM1, FTM1_PCC_SOURCE);     // select the PCC clock used by TPM 1
@@ -448,7 +448,7 @@ static __interrupt void _PWM_Interrupt_5(void)
             ptrFlexTimer->FTM_CONF = FTM_DEBUG_BEHAVIOUR;                // set the debugging behaviour (whether the counter runs in debug mode and how the outputs react)
     #endif
             if (PWM_EXTERNAL_CLK == (ulMode & FTM_SC_CLKS_MASK)) {       // if external clock source is to be used program the clock input
-    #if FLEX_TIMERS_AVAILABLE > 4 && defined TPMS_AVAILABLE
+    #if FLEX_TIMERS_AVAILABLE > 4 && defined TPMS_AVAILABLE_TOO
                 if (iTPM_type != 0) {
                     ulMode &= ~(FTM_SC_CLKS_EXT);                        // convert FTM external clock to TPM external clock setting
                     ulMode |= FTM_SC_CLKS_FIX;
@@ -562,7 +562,7 @@ static __interrupt void _PWM_Interrupt_5(void)
                     _CONFIG_PERIPHERAL(A, 18, (PA_18_FTM_CLKIN0 | PORT_PS_UP_ENABLE)); // FTM_CLKIN0 on PA.18 (alt. function 4)
         #endif
     #endif
-    #if FLEX_TIMERS_AVAILABLE > 4 && defined TPMS_AVAILABLE
+    #if FLEX_TIMERS_AVAILABLE > 4 && defined TPMS_AVAILABLE_TOO
                 }
     #endif
     #if defined KINETIS_KL || defined KINETIS_KE
@@ -587,7 +587,7 @@ static __interrupt void _PWM_Interrupt_5(void)
                 ptrFlexTimer->FTM_CONF &= ~(FTM_CONF_TRGSRC_INTERNAL | FTM_CONF_TRGSEL_EXT_MASK); // ensure external trigger on trigger 0
             }
     #endif
-    #if FLEX_TIMERS_AVAILABLE > 4 && defined TPMS_AVAILABLE
+    #if FLEX_TIMERS_AVAILABLE > 4 && defined TPMS_AVAILABLE_TOO
             if (iTPM_type != 0) {
         #if defined TPM_CLOCKED_FROM_MCGIRCLK
             #if !defined RUN_FROM_LIRC                                   // if the processor is running from the the internal clock we don't change settings here
@@ -682,7 +682,7 @@ static __interrupt void _PWM_Interrupt_5(void)
                 fnEnterInterrupt(iInterruptID, ptrPWM_settings->int_priority, _PWM_TimerInterrupt[ucFlexTimer]);
     #if defined KINETIS_KL
                 ulMode |= (FTM_SC_TOIE | FTM_SC_TOF);                    // enable interrupt [FTM_SC_TOF must be written with 1 to clear]
-    #elif FLEX_TIMERS_AVAILABLE > 4 && defined TPMS_AVAILABLE
+    #elif FLEX_TIMERS_AVAILABLE > 4 && defined TPMS_AVAILABLE_TOO
                 if (iTPM_type != 0) {
                     ulMode |= (FTM_SC_TOIE | FTM_SC_TOF);                // enable interrupt [FTM_SC_TOF must be written with 1 to clear]
                 }

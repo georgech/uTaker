@@ -2585,7 +2585,7 @@ extern void fnMassStorage(TTASKTABLE *ptrTaskTable)
             }
             #endif
             #if defined SDCARD_SUPPORT
-            if ((DISK_SDCARD == iDiskNumber) && (GET_SDCARD_WP_STATE())) {
+            if ((DISK_SDCARD == iDiskNumber) && (GET_SDCARD_WP_STATE() != 0)) {
                 utDisks[iDiskNumber].usDiskFlags |= (DISK_MOUNTED | WRITE_PROTECTED_SD_CARD); // the write protected disk is now ready for use
                 fnMemoryDebugMsg(" (WP)");
             }

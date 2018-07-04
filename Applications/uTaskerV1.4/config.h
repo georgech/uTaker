@@ -24,7 +24,6 @@
 #if !defined __CONFIG__
     #define __CONFIG__
 
-
 ///////////////////////////////////////////////////////////////////////////
 //                                                                       // new users who would like to see just a blinking LED before enabling the project's many powerful features can set this
 //#define BLINKY                                                         // to give simplest scheduling of a single task called at 200ms rate that retriggers the watchdog and toggles the board's heartbeat LED
@@ -150,14 +149,14 @@
     //#define EMCRAFT_K61F150M                                           // K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - http://www.utasker.com/kinetis/EMCRAFT_K61F150M.html
     //#define K61FN1_50M                                                 // board with 150MHz K61 and 50MHz clock (HS USB and KSZ8863 ethernet switch)
 
-    //#define FRDM_K64F                                                  // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
+      #define FRDM_K64F                                                  // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
     //#define TWR_K64F120M                                               // tower board http://www.utasker.com/kinetis/TWR-K64F120M.html
     //#define HEXIWEAR_K64F                                              // hexiwear - wearable development kit for IoT (K64FN1M0VDC12 main processor) http://www.hexiwear.com/
     //#define TEENSY_3_5                                                 // USB development board with K64FX512 - http://www.utasker.com/kinetis/TEENSY_3.5.html
     //#define FreeLON                                                    // K64 based with integrated LON
     //#define TWR_K65F180M                                               // tower board http://www.utasker.com/kinetis/TWR-K65F180M.html
     //#define K66FX1M0                                                   // development board with K66FX1M0
-      #define FRDM_K66F                                                  // freedom board http://www.utasker.com/kinetis/FRDM-K66F.html
+    //#define FRDM_K66F                                                  // freedom board http://www.utasker.com/kinetis/FRDM-K66F.html
     //#define TEENSY_3_6                                                 // USB development board with K66FX1M0 - http://www.utasker.com/kinetis/TEENSY_3.6.html
 
     //#define TWR_K70F120M                                               // K processors Cortex M4 with graphical LCD, Ethernet, USB, encryption, tamper - tower board http://www.utasker.com/kinetis/TWR-K70F120M.html
@@ -185,10 +184,10 @@
     //#define M52233DEMO                                                 // DEMO Board for M52233
 #elif defined _LM3SXXXX                                                  // Luminary Micro Stellaris family
     //#define _LM3S10X                                                   // small package part - 28 SOIC
-      #define EK_LM3S1968                                                // LUMINARY EVAL board without Ethernet
+    //#define EK_LM3S1968                                                // LUMINARY EVAL board without Ethernet
     //#define EK_LM3S2110                                                // LUMINARY CAN DEVICE BOARD
     //#define EK_LM3S2139                                                // LUMINARY CAN DEVICE BOARD
-    //#define EK_LM3S3748                                                // LUMINARY EVAL board with USB HOST/DEVICE (100pin) + CGLCD
+      #define EK_LM3S3748                                                // LUMINARY EVAL board with USB HOST/DEVICE (100pin) + CGLCD
     //#define EK_LM3S3768                                                // LUMINARY EVAL board with USB HOST/DEVICE/OTG
     //#define EK_LM3S5732                                                // LUMINARY EVAL board with USB HOST/DEVICE (64pin)
     //#define EK_LM3S6965                                                // LUMINARY EVAL board with Ethernet
@@ -202,14 +201,14 @@
     //
     // Nucleo 32 range
     //
-      #define NUCLEO_F031K6                                              // evaluation boad with STM32F031 (cortex-m0)
+    //#define NUCLEO_F031K6                                              // evaluation boad with STM32F031 (cortex-m0)
     //#define NUCLEO_L011K4                                              // evaluation boad with STM32L011 (cortex-m0+)
     //#define NUCLEO_L031K6                                              // evaluation boad with STM32L031 (cortex-m0+)
     //#define NUCLEO_L432KC                                              // evaluation boad with STM32L432 (cortex-m4 with FPU)
 
     // Nucleo 144 range
     //
-    //#define NUCLEO_F401RE                                              // evaluation board with STM32F401RET6
+      #define NUCLEO_F401RE                                              // evaluation board with STM32F401RET6
     //#define NUCLEO_F429ZI                                              // evaluation board with STM32F429ZIT6
     //#define NUCLEO_L476RG                                              // evaluation board with STM32L476RGT6U
 
@@ -1586,7 +1585,7 @@
 
 // utFAT
 //
-//#define SDCARD_SUPPORT                                                 // SD-card interface
+#define SDCARD_SUPPORT                                                   // SD-card interface
 //#define FLASH_FAT                                                      // FAT in internal flash
 //#define SPI_FLASH_FAT                                                  // FAT in external SPI flash
     #define SIMPLE_FLASH                                                 // don't perform block management and wear-leveling

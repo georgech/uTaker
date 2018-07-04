@@ -37,7 +37,7 @@
     #define DMX512_RDM_TE_SLAVE        PORTB_BIT7                        // slave's drive output
     #define DMX512_SLAVE_UART          3                                 // K66 UART 3
 #elif defined FRDM_K64F
-    #define DMX512_MASTER_UART         2                                 // K64 LPUART 2
+    #define DMX512_MASTER_UART         2                                 // K64 UART 2
     #define DMX512_RDM_TE_MASTER       PORTB_BIT2                        // master's drive output
     #define DMX512_RDM_TE_SLAVE        PORTB_BIT3                        // slave's drive output
     #define DMX512_SLAVE_UART          3                                 // K64 UART 3
@@ -87,6 +87,8 @@
     #elif defined FRDM_K64F
         #define START_DMX512_MASTER_BREAK()          _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_LOW(D, PORTD_BIT3, 0, (PORT_SRE_FAST | PORT_DSE_HIGH)) // start break generation by configuring pin as GPIO, drivng 0
         #define END_DMX512_MASTER_BREAK()            _CONFIG_PERIPHERAL(D, 3, (PD_3_UART2_TX | UART_PULL_UPS)) // UART2_TX on PTD3 (alt. function 3)
+        #define START_DMX512_SLAVE_BREAK()           _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_LOW(B, PORTB_BIT11, 0, (PORT_SRE_FAST | PORT_DSE_HIGH)) // start break generation by configuring pin as GPIO, drivng 0
+        #define END_DMX512_SLAVE_BREAK()             _CONFIG_PERIPHERAL(B, 11, (PB_11_UART3_TX | UART_PULL_UPS)); // UART3_TX on PTB11 (alt. function 3)
     #else
         #define START_DMX512_MASTER_BREAK()          _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_LOW(E, PORTE_BIT8, 0, (PORT_SRE_FAST | PORT_DSE_HIGH)) // start break generation by configuring pin as GPIO, drivng 0
         #define END_DMX512_MASTER_BREAK()            _CONFIG_PERIPHERAL(E, 8, (PE_8_LPUART0_TX | UART_PULL_UPS)) // LPUART0_TX on PTE8 (alt. function 5)

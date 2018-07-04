@@ -8295,7 +8295,7 @@ unsigned long fnGetFlexTimer_clock(int iChannel)
         break;
     #endif
     }
-    #if (FLEX_TIMERS_AVAILABLE == 6) && (TPMS_AVAILABLE == 2)            // devices with 4 FTMs and 2 TPMs
+    #if (FLEX_TIMERS_AVAILABLE == 6) && (TPMS_AVAILABLE_TOO == 2)        // devices with 4 FTMs and 2 TPMs
     if ((iChannel == 4) || (iChannel == 5)) {                            // TPM
         ulClockSpeed = TPM_PWM_CLOCK;
     }
@@ -9446,7 +9446,7 @@ extern int fnSimTimers(void)
         }
     }
     #endif
-    #if FLEX_TIMERS_AVAILABLE > 4 && defined TPMS_AVAILABLE              // TPM1
+    #if FLEX_TIMERS_AVAILABLE > 4 && defined TPMS_AVAILABLE_TOO          // TPM1
     if (((IS_POWERED_UP(2, TPM1)) != 0) && ((FTM4_SC & (FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)) != 0)) { // if the FlexTimer 4 (TPM1) is powered and clocked
         int iTimerInterrupt = fnHandleFlexTimer(4, (FLEX_TIMER_MODULE *)FTM_BLOCK_4, FLEX_TIMERS_4_CHANNELS, 1);
         if (iTimerInterrupt != 0) {
@@ -9457,7 +9457,7 @@ extern int fnSimTimers(void)
         }
     }
     #endif
-    #if FLEX_TIMERS_AVAILABLE > 5 && defined TPMS_AVAILABLE              // TPM2
+    #if FLEX_TIMERS_AVAILABLE > 5 && defined TPMS_AVAILABLE_TOO          // TPM2
     if (((IS_POWERED_UP(2, TPM2)) != 0) && ((FTM5_SC & (FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)) != 0)) { // if the FlexTimer 5 (TPM2) is powered and clocked
         int iTimerInterrupt = fnHandleFlexTimer(5, (FLEX_TIMER_MODULE *)FTM_BLOCK_5, FLEX_TIMERS_5_CHANNELS, 1);
         if (iTimerInterrupt != 0) {

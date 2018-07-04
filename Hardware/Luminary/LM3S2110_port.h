@@ -11,7 +11,7 @@
    File:        LM3S2110_port.h
    Project:     Single Chip Embedded Internet
    ---------------------------------------------------------------------
-   Copyright (C) M.J.Butcher Consulting 2004..2011
+   Copyright (C) M.J.Butcher Consulting 2004..2018
    **********************************************************************
 
 */

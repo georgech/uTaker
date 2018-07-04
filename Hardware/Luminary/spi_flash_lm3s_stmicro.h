@@ -11,7 +11,7 @@
    File:        spi_flash_lm3s_stmicro.h [Luminary Micro]
    Project:     Single Chip Embedded Internet 
    ---------------------------------------------------------------------
-   Copyright (C) M.J.Butcher Consulting 2004..2011
+   Copyright (C) M.J.Butcher Consulting 2004..2018
    *********************************************************************
    This file contains SPI FLASH specific code for all chips that are supported.
    It is declared as a header so that projects do not need to specify that it is not to be compiled.

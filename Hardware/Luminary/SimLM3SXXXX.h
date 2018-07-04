@@ -930,7 +930,7 @@ typedef struct stLM3SXXXX_PERIPH
 
 extern LM3SXXXX_PERIPH  LM3Sxxxx;
 
-#define _PORTS_AVAILABLE_   PORTS_AVAILABLE
+#define _PORTS_AVAILABLE_       PORTS_AVAILABLE
 
 #define _PORTA                  0                                        // {6} references for display in simulator
 #define _PORTB                  1

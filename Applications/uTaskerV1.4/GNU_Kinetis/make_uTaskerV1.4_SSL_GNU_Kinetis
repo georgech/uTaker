@@ -4,6 +4,8 @@
 # 22.12.2017 Add mmcau_sha256_functions
 # 04.05.2018 Add DMX512.c
 # 29.05.2018 Add arm_abs_f32.c
+# 03.07.2018 Add -Wundef in order to discover any undefined definitions
+# 04.07.2018 Add ../../../Hardware/packages.h
 
 #
 # When changing the project target check that the C_FLAGS selection (justb elow) and the linker script file (at bottom) matches the processor being used
@@ -12,10 +14,10 @@
 
 # Compiler flags (thumb mode - little endian)
 # (set to Cortex-M4 or Cortex-M0+ accordingly)
-#C_FLAGS = -mcpu=cortex-m0plus -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections
-#C_FLAGS = -mcpu=cortex-m4 -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections 
-C_FLAGS = -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections 
-#C_FLAGS = -mcpu=cortex-m7 -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections 
+#C_FLAGS = -mcpu=cortex-m0plus -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wundef
+#C_FLAGS = -mcpu=cortex-m4 -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wundef
+C_FLAGS = -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wundef
+#C_FLAGS = -mcpu=cortex-m7 -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wundef
 
 
 # All objects (Hardware, application, uTasker, stack)
@@ -49,7 +51,7 @@ OBJS2_BM = Build/kinetis_bm.o
 #General dependencies
 #
 DEPENDS = ../config.h ../app_hw_kinetis.h ../types.h ../TaskConfig.h ../../../uTasker/driver.h ../../../uTasker/usb.h ../../../uTasker/uTasker.h \
-       ../../../Hardware/hardware.h ../../../Hardware/Kinetis/kinetis.h \
+       ../../../Hardware/hardware.h ../../../Hardware/packages.h ../../../Hardware/Kinetis/kinetis.h \
        ../../../uTasker/MODBUS/modbus.h \
        ../../../uTasker/utFAT/mass_storage.h \
        ../../../uTasker/uGLCDLIB/glcd.h ../../../uTasker/uGLCDLIB/FT_Gpu.h ../../../uTasker/uGLCDLIB/FT_CoPro_Cmds.h \

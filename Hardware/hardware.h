@@ -431,7 +431,6 @@ extern void fnClearSLCD(void);                                           // {25}
 #endif
 
 
-
 #define REMOTE_RF_INTERFACE  1
     #define REMOTE_RF_DISABLE_RX_TX       1
     #define REMOTE_RF_ENABLE_RX_TX        2

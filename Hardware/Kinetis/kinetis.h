@@ -130,7 +130,6 @@
     19.03.2018 Extend PWM configuration to use TRGMUX triggers as clock input {108}
     01.05.2018 Add SET_KUART_BAUD() SET_UART_BAUD() and SET_LPUART_BAUD() macros to directly change UART baud rates {109}
     09.05.2018 Add cortex debug and trace registers                      {110}
-    02.07.2018 Moved package definitions from the simulation header to here so that cross compiled code can make decisions based on them {111}
 
 */
 
@@ -1511,9 +1510,9 @@ typedef struct stRESET_VECTOR
 
 // FlexTimer configuration
 //
-#if defined KINETIS_K66 || defined KINETIS_K80
-    #define TPMS_AVAILABLE          2                                    // TPM in addition to flex timers
-    #define FLEX_TIMERS_AVAILABLE   (4 + TPMS_AVAILABLE)                 // 4 flex timers plus 2 TPMs
+#if defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_K80
+    #define TPMS_AVAILABLE_TOO      2                                    // TPM in addition to flex timers
+    #define FLEX_TIMERS_AVAILABLE   (4 + TPMS_AVAILABLE_TOO)             // 4 flex timers plus 2 TPMs
 #elif defined KINETIS_KE18
     #define FLEX_TIMERS_AVAILABLE   4
 #elif defined KINETIS_K22 && (SIZE_OF_FLASH == (128 * 1024))
@@ -1532,6 +1531,9 @@ typedef struct stRESET_VECTOR
     #define FLEX_TIMER_1_REDUCED                                         // reduced functionality on timer 1
 #elif defined KINETIS_KM
     #define FLEX_TIMERS_AVAILABLE   0
+#elif defined KINETIS_KL
+    #define TPMS_AVAILABLE                                               // TPM instead of flextimer
+    #define FLEX_TIMERS_AVAILABLE   3
 #else
     #define FLEX_TIMERS_AVAILABLE   3
 #endif
@@ -3728,7 +3730,7 @@ typedef struct stVECTOR_TABLE
         #define SDHC_BLOCK                     ((unsigned char *)(&kinetis.SDHC)) // SDHC
         #define FTM_BLOCK_2                    ((unsigned char *)(&kinetis.FTM[2])) // FlexTimer 2
         #define FTM_BLOCK_3                    ((unsigned char *)(&kinetis.FTM[3])) // FlexTimer 3
-        #if defined TPMS_AVAILABLE
+        #if defined TPMS_AVAILABLE_TOO
             #define FTM_BLOCK_4                ((unsigned char *)(&kinetis.FTM[4])) // TPM1
             #define FTM_BLOCK_5                ((unsigned char *)(&kinetis.FTM[5])) // TPM2
         #endif
@@ -4162,7 +4164,7 @@ typedef struct stVECTOR_TABLE
         #define SDHC_BLOCK                     0x400b1000                // SDHC
         #define FTM_BLOCK_2                    0x400b8000                // FlexTimer 2
         #define FTM_BLOCK_3                    0x400b9000                // FlexTimer 3
-        #if defined TPMS_AVAILABLE
+        #if defined TPMS_AVAILABLE_TOO
             #define FTM_BLOCK_4                0x400c9000                // TPM1
             #define FTM_BLOCK_5                0x400ca000                // TPM2
         #endif
@@ -8145,33 +8147,33 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
     #define FTM3_STATUS         *(volatile unsigned long *)(FTM_BLOCK_3 + 0x050) // FTM1 Capture and Compare Status
     #define FTM3_CONF           *(unsigned long *)(FTM_BLOCK_3 + 0x084)      // FTM1 Configuration
 #else
-    #define FTM3_C6SC           *(volatile unsigned long *)(FTM_BLOCK_3 + 0x03c) // FTM3 Channel 6 and Control
-    #define FTM3_C6V            *(volatile unsigned long *)(FTM_BLOCK_3 + 0x040) // FTM3 Channel 6 Value
-    #define FTM3_C7SC           *(volatile unsigned long *)(FTM_BLOCK_3 + 0x044) // FTM3 Channel 7 and Control
-    #define FTM3_C7V            *(volatile unsigned long *)(FTM_BLOCK_3 + 0x048) // FTM3 Channel 7 Value
-    #define FTM3_CNTIN          *(volatile unsigned long *)(FTM_BLOCK_3 + 0x04c) // FTM3 Counter Initial Value
-    #define FTM3_STATUS         *(volatile unsigned long *)(FTM_BLOCK_3 + 0x050) // FTM3 Capture and Compare Status
-    #define FTM3_MODE           *(unsigned long *)(FTM_BLOCK_3 + 0x054)  // FTM3 Features Mode Selection
-    #define FTM3_SYNC           *(unsigned long *)(FTM_BLOCK_3 + 0x058)  // FTM3 Synchronisation
-    #define FTM3_OUTINIT        *(unsigned long *)(FTM_BLOCK_3 + 0x05c)  // FTM3 Initial State for Channels Output
-    #define FTM3_OUTMASK        *(unsigned long *)(FTM_BLOCK_3 + 0x060)  // FTM3 Output Mask
-    #define FTM3_COMBINE        *(unsigned long *)(FTM_BLOCK_3 + 0x064)  // FTM3 Function for Linked Channels
-    #define FTM3_DEADTIME       *(unsigned long *)(FTM_BLOCK_3 + 0x068)  // FTM3 Deadtime Insertion Control
-    #define FTM3_EXTTRIG        *(unsigned long *)(FTM_BLOCK_3 + 0x06c)  // FTM3 External Trigger
-    #define FTM3_POL            *(unsigned long *)(FTM_BLOCK_3 + 0x070)  // FTM3 Channels Polarity
-    #define FTM3_FMS            *(unsigned long *)(FTM_BLOCK_3 + 0x074)  // FTM3 Fault Mode Status
-    #define FTM3_FILTER         *(unsigned long *)(FTM_BLOCK_3 + 0x078)  // FTM3 Input Capture Filter Control
-    #define FTM3_FLTCTRL        *(unsigned long *)(FTM_BLOCK_3 + 0x07c)  // FTM3 Fault Control
-    #define FTM3_QDCTRL         *(unsigned long *)(FTM_BLOCK_3 + 0x080)  // FTM3 Quadrature Decoder Control and Status
-    #define FTM3_CONF           *(unsigned long *)(FTM_BLOCK_3 + 0x084)  // FTM3 Configuration
-    #define FTM3_FLTPOL         *(unsigned long *)(FTM_BLOCK_3 + 0x088)  // FTM3 Fault Input Polarity
-    #define FTM3_SYNCONF        *(unsigned long *)(FTM_BLOCK_3 + 0x08c)  // FTM3 Synchronisation Configuration
-    #define FTM3_INVCTRL        *(unsigned long *)(FTM_BLOCK_3 + 0x090)  // FTM3 Inverting Control
-    #define FTM3_SWOCTRL        *(unsigned long *)(FTM_BLOCK_3 + 0x094)  // FTM3 Software Output Control
-    #define FTM3_PWMLOAD        *(unsigned long *)(FTM_BLOCK_3 + 0x098)  // FTM3 PWM Load
+    #define FTM3_C6SC           *(volatile unsigned long *)(FTM_BLOCK_3 + 0x03c) // FTM3 channel 6 and control
+    #define FTM3_C6V            *(volatile unsigned long *)(FTM_BLOCK_3 + 0x040) // FTM3 channel 6 value
+    #define FTM3_C7SC           *(volatile unsigned long *)(FTM_BLOCK_3 + 0x044) // FTM3 channel 7 and control
+    #define FTM3_C7V            *(volatile unsigned long *)(FTM_BLOCK_3 + 0x048) // FTM3 channel 7 value
+    #define FTM3_CNTIN          *(volatile unsigned long *)(FTM_BLOCK_3 + 0x04c) // FTM3 counter initial value
+    #define FTM3_STATUS         *(volatile unsigned long *)(FTM_BLOCK_3 + 0x050) // FTM3 capture and compare status
+    #define FTM3_MODE           *(unsigned long *)(FTM_BLOCK_3 + 0x054)  // FTM3 features mode selection
+    #define FTM3_SYNC           *(unsigned long *)(FTM_BLOCK_3 + 0x058)  // FTM3 synchronisation
+    #define FTM3_OUTINIT        *(unsigned long *)(FTM_BLOCK_3 + 0x05c)  // FTM3 initial state for channel's output
+    #define FTM3_OUTMASK        *(unsigned long *)(FTM_BLOCK_3 + 0x060)  // FTM3 output mask
+    #define FTM3_COMBINE        *(unsigned long *)(FTM_BLOCK_3 + 0x064)  // FTM3 function for linked channels
+    #define FTM3_DEADTIME       *(unsigned long *)(FTM_BLOCK_3 + 0x068)  // FTM3 deadtime insertion control
+    #define FTM3_EXTTRIG        *(unsigned long *)(FTM_BLOCK_3 + 0x06c)  // FTM3 external trigger
+    #define FTM3_POL            *(unsigned long *)(FTM_BLOCK_3 + 0x070)  // FTM3 channel's polarity
+    #define FTM3_FMS            *(unsigned long *)(FTM_BLOCK_3 + 0x074)  // FTM3 fault mode status
+    #define FTM3_FILTER         *(unsigned long *)(FTM_BLOCK_3 + 0x078)  // FTM3 input capture filter control
+    #define FTM3_FLTCTRL        *(unsigned long *)(FTM_BLOCK_3 + 0x07c)  // FTM3 fault control
+    #define FTM3_QDCTRL         *(unsigned long *)(FTM_BLOCK_3 + 0x080)  // FTM3 quadrature decoder control and status
+    #define FTM3_CONF           *(unsigned long *)(FTM_BLOCK_3 + 0x084)  // FTM3 configuration
+    #define FTM3_FLTPOL         *(unsigned long *)(FTM_BLOCK_3 + 0x088)  // FTM3 fault input polarity
+    #define FTM3_SYNCONF        *(unsigned long *)(FTM_BLOCK_3 + 0x08c)  // FTM3 synchronisation configuration
+    #define FTM3_INVCTRL        *(unsigned long *)(FTM_BLOCK_3 + 0x090)  // FTM3 inverting control
+    #define FTM3_SWOCTRL        *(unsigned long *)(FTM_BLOCK_3 + 0x094)  // FTM3 software output control
+    #define FTM3_PWMLOAD        *(unsigned long *)(FTM_BLOCK_3 + 0x098)  // FTM3 PWM load
 #endif
 
-#if defined TPMS_AVAILABLE                                               // TPM in addition to flex timers
+#if defined TPMS_AVAILABLE_TOO                                           // TPM in addition to flex timers
     #define FTM4_SC             *(volatile unsigned long *)(FTM_BLOCK_4 + 0x000) // TPM1 Status and Control (referenced as FTM4)
     #define FTM4_CNT            *(volatile unsigned long *)(FTM_BLOCK_4 + 0x004) // TPM1 Counter
     #define FTM4_MOD            *(unsigned long *)(FTM_BLOCK_4 + 0x008)      // TPM1 Modulo
@@ -10426,7 +10428,7 @@ typedef struct stKINETIS_LPTMR_CTL
                     #define SIM_SOPT2_UART0SRC_MCGIRCLK  0x0c000000      // LPUART0 clock source MCGIRCLK
                 #endif
                 #define SIM_SOPT2_SDHCSRC_CORE       0x00000000
-                #define SIM_SOPT2_SDHCSRC_MCG_IRC48M 0x10000000
+                #define SIM_SOPT2_SDHCSRC_MCG_IRC48M 0x10000000          // MCGFLLCLK, MCGPLL_CLK or IRC48M as selected by SIM_SOPT2[PLLFLLSEL]
                 #define SIM_SOPT2_SDHCSRC_OSCERCLK   0x20000000
                 #define SIM_SOPT2_SDHCSRC_EXT_BYPASS 0x30000000
             #elif defined KINETIS_K_FPU || (KINETIS_MAX_SPEED > 100000000)
@@ -18299,7 +18301,7 @@ typedef struct stPWM_INTERRUPT_SETUP
 #define _FTM_TIMER_1            _TIMER_1
 #define _FTM_TIMER_2            _TIMER_2
 #define _FTM_TIMER_3            _TIMER_3
-#if defined TPMS_AVAILABLE                                               // define used only by devices with both FlexTimers and TPM
+#if defined TPMS_AVAILABLE_TOO                                           // define used only by devices with both FlexTimers and TPM
     #define _TPM_TIMER_1        0x80                                     // considered as timer 4
     #define _TPM_TIMER_2        0xa0                                     // considered as timer 5
 #else
@@ -18354,9 +18356,19 @@ typedef struct stPWM_INTERRUPT_SETUP
 
 #define PWM_MODE_SETTINGS_MASK  (PWM_PRESCALER_128 | FTM_SC_CPWMS | FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS | PWM_DMA_PERIOD_ENABLE)
 
+#if defined TPMS_AVAILABLE_TOO || defined TPMS_AVAILABLE_TOO
+    #define PWM_TPM_FREQUENCY(frequency, prescaler)     (TPM_PWM_CLOCK/prescaler/frequency)
+    #if (((TPM_PWM_CLOCK/1000000) * 1000000) != TPM_PWM_CLOCK)           // if the clock is not an exact MHz value
+        #define PWM_TPM_CLOCK_US_DELAY(usec, prescaler) ((unsigned long)(((double)TPM_PWM_CLOCK/(double)1000000) * usec)/prescaler)
+    #else
+        #define PWM_TPM_CLOCK_US_DELAY(usec, prescaler) (((TPM_PWM_CLOCK/1000000) * usec)/prescaler)
+    #endif
+    #define PWM_TPM_MS_DELAY(msec, prescaler)            (((TPM_PWM_CLOCK/1000) * msec)/prescaler)
+#endif
+
 #define PWM_FREQUENCY(frequency, prescaler)             (PWM_CLOCK/prescaler/frequency) // {83}
 #define PWM_FIXED_CLOCK_FREQUENCY(frequency, prescaler) (PWM_FIXED_CLOCK/prescaler/frequency)
-#define PWM_TPM_FREQUENCY(frequency, prescaler)         (TPM_PWM_CLOCK/prescaler/frequency)
+
 
 #if (((PWM_CLOCK/1000000) * 1000000) != PWM_CLOCK)                       // if the clock is not an exact MHz value
     #define PWM_TIMER_US_DELAY(usec, prescaler)         ((unsigned long)(((double)PWM_CLOCK/(double)1000000) * usec)/prescaler)
@@ -18368,15 +18380,9 @@ typedef struct stPWM_INTERRUPT_SETUP
 #else
     #define PWM_TIMER_FIXED_CLOCK_US_DELAY(usec, prescaler) (((PWM_FIXED_CLOCK/1000000) * usec)/prescaler)
 #endif
-#if (((TPM_PWM_CLOCK/1000000) * 1000000) != TPM_PWM_CLOCK)               // if the clock is not an exact MHz value
-    #define PWM_TPM_CLOCK_US_DELAY(usec, prescaler) ((unsigned long)(((double)TPM_PWM_CLOCK/(double)1000000) * usec)/prescaler)
-#else
-    #define PWM_TPM_CLOCK_US_DELAY(usec, prescaler) (((TPM_PWM_CLOCK/1000000) * usec)/prescaler)
-#endif
 
 #define PWM_TIMER_MS_DELAY(msec, prescaler)              (((PWM_CLOCK/1000) * msec)/prescaler)
 #define PWM_TIMER_FIXED_CLOCK_MS_DELAY(msec, prescaler)  (((PWM_FIXED_CLOCK/1000) * msec)/prescaler)
-#define PWM_TPM_MS_DELAY(msec, prescaler)                (((TPM_PWM_CLOCK/1000) * msec)/prescaler)
 
 #define _PWM_PERCENT(percent_pwm, frequency_value)       (unsigned short)((frequency_value * percent_pwm)/100)
 #define _PWM_TENTH_PERCENT(percent_pwm, frequency_value) (unsigned short)((frequency_value * percent_pwm)/1000)
@@ -18396,59 +18402,59 @@ typedef struct stINTERRUPT_SETUP
     unsigned char    int_port;                                           // the port (PORTA..PORTI)
 } INTERRUPT_SETUP;
 
+#if defined SUPPORT_LPTMR
+    typedef struct stLPTMR_SETUP                                         // {51}
+    {
+        void (*int_handler)(void);                                       // interrupt handler to be configured
+        unsigned char    int_type;                                       // identifier for when configuring
+        unsigned char    int_priority;                                   // priority the user wants to set
 
-typedef struct stLPTMR_SETUP                                             // {51}
-{
-    void (*int_handler)(void);                                           // interrupt handler to be configured
-    unsigned char    int_type;                                           // identifier for when configuring
-    unsigned char    int_priority;                                       // priority the user wants to set
+        unsigned short   mode;                                           // periodic or single shot as well as trigger options
+        unsigned short   count_delay;                                    // the delay value (16 bit)
+        unsigned char    ucTimer;                                        // low power timer reference
+    } LPTMR_SETUP;
 
-    unsigned short   mode;                                               // periodic or single shot as well as trigger options
-    unsigned short   count_delay;                                        // the delay value (16 bit)
-    unsigned char    ucTimer;                                            // low power timer reference
-} LPTMR_SETUP;
+    #define LPTMR_PERIODIC       0x0001
+    #define LPTMR_SINGLE_SHOT    0x0002
+    #define LPTMR_TRIGGER_ADC0_A 0x0004
+    #define LPTMR_TRIGGER_ADC0_B 0x0008
+    #define LPTMR_TRIGGER_ADC1_A 0x0010
+    #define LPTMR_TRIGGER_ADC1_B 0x0020
+    #define LPTMR_TRIGGER_ADC2_A 0x0040
+    #define LPTMR_TRIGGER_ADC2_B 0x0080
+    #define LPTMR_TRIGGER_ADC3_A 0x0100
+    #define LPTMR_TRIGGER_ADC3_B 0x0200
+    #define LPTMR_STOP           0x8000
 
-#define LPTMR_PERIODIC       0x0001
-#define LPTMR_SINGLE_SHOT    0x0002
-#define LPTMR_TRIGGER_ADC0_A 0x0004
-#define LPTMR_TRIGGER_ADC0_B 0x0008
-#define LPTMR_TRIGGER_ADC1_A 0x0010
-#define LPTMR_TRIGGER_ADC1_B 0x0020
-#define LPTMR_TRIGGER_ADC2_A 0x0040
-#define LPTMR_TRIGGER_ADC2_B 0x0080
-#define LPTMR_TRIGGER_ADC3_A 0x0100
-#define LPTMR_TRIGGER_ADC3_B 0x0200
-#define LPTMR_STOP           0x8000
-
-#if defined LPTMR_CLOCK_LPO                                              // define the low power clock speed for calculations
-    #define LPTMR_CLOCK (1000)
-#elif defined LPTMR_CLOCK_INTERNAL_30_40kHz
-    #define LPTMR_CLOCK (35000)
-#elif defined LPTMR_CLOCK_INTERNAL_2MHz
-    #define LPTMR_CLOCK (2000000)
-#elif defined LPTMR_CLOCK_INTERNAL_4MHz
-    #define LPTMR_CLOCK (4000000)
-#elif defined LPTMR_CLOCK_INTERNAL_8MHz
-    #define LPTMR_CLOCK (8000000)
-#elif defined LPTMR_CLOCK_EXTERNAL_32kHz
-    #define LPTMR_CLOCK (32768)
-#else                                                                    // LPTMR_CLOCK_OSCERCLK
-    #if defined LPTMR_PRESCALE
-        #define LPTMR_CLOCK ((_EXTERNAL_CLOCK)/LPTMR_PRESCALE)
-    #else
-        #define LPTMR_CLOCK (_EXTERNAL_CLOCK)
+    #if defined LPTMR_CLOCK_LPO                                          // define the low power clock speed for calculations
+        #define LPTMR_CLOCK (1000)
+    #elif defined LPTMR_CLOCK_INTERNAL_30_40kHz
+        #define LPTMR_CLOCK (35000)
+    #elif defined LPTMR_CLOCK_INTERNAL_2MHz
+        #define LPTMR_CLOCK (2000000)
+    #elif defined LPTMR_CLOCK_INTERNAL_4MHz
+        #define LPTMR_CLOCK (4000000)
+    #elif defined LPTMR_CLOCK_INTERNAL_8MHz
+        #define LPTMR_CLOCK (8000000)
+    #elif defined LPTMR_CLOCK_EXTERNAL_32kHz
+        #define LPTMR_CLOCK (32768)
+    #else                                                                // LPTMR_CLOCK_OSCERCLK
+        #if defined LPTMR_PRESCALE
+            #define LPTMR_CLOCK ((_EXTERNAL_CLOCK)/LPTMR_PRESCALE)
+        #else
+            #define LPTMR_CLOCK (_EXTERNAL_CLOCK)
+        #endif
     #endif
-#endif
 
-#if LPTMR_CLOCK < 0xffff
-    #define LPTMR_US_DELAY(us_delay)  (((us_delay * LPTMR_CLOCK)/1000000) - 1) // macros for setting LPTMR interrupt times
-    #define LPTMR_MS_DELAY(ms_delay)  (((ms_delay * LPTMR_CLOCK)/1000) - 1)
-#else
-    #define LPTMR_US_DELAY(us_delay)  (((us_delay * (LPTMR_CLOCK/1000))/1000) - 1) // macros for setting LPTMR interrupt times
-    #define LPTMR_MS_DELAY(ms_delay)  ((ms_delay * (LPTMR_CLOCK/1000)) - 1) 
+    #if LPTMR_CLOCK < 0xffff
+        #define LPTMR_US_DELAY(us_delay)  (((us_delay * LPTMR_CLOCK)/1000000) - 1) // macros for setting LPTMR interrupt times
+        #define LPTMR_MS_DELAY(ms_delay)  (((ms_delay * LPTMR_CLOCK)/1000) - 1)
+    #else
+        #define LPTMR_US_DELAY(us_delay)  (((us_delay * (LPTMR_CLOCK/1000))/1000) - 1) // macros for setting LPTMR interrupt times
+        #define LPTMR_MS_DELAY(ms_delay)  ((ms_delay * (LPTMR_CLOCK/1000)) - 1) 
+    #endif
+    #define LPTMR_S_DELAY(s_delay)        ((s_delay * LPTMR_CLOCK) - 1)
 #endif
-#define LPTMR_S_DELAY(s_delay)        ((s_delay * LPTMR_CLOCK) - 1)
-
 
 typedef struct stI2S_SAI_SETUP
 {
@@ -19061,25 +19067,3 @@ extern int  fnIsPending(int iInterruptID);                               // {90}
     #define DWT_FOLDCNT               *(volatile unsigned long *)(CORTEX_M4_DWT + 0x18)
     #define DWT_PCSR                  *(volatile unsigned long *)(CORTEX_M4_DWT + 0x1c)
 #endif
-
-// Package definitions                                                   {111}
-//
-#define PIN_COUNT_24_PIN        1
-#define PIN_COUNT_32_PIN        2
-#define PIN_COUNT_44_PIN        3
-#define PIN_COUNT_48_PIN        4
-#define PIN_COUNT_64_PIN        5
-#define PIN_COUNT_80_PIN        6
-#define PIN_COUNT_81_PIN        7
-#define PIN_COUNT_100_PIN       8
-#define PIN_COUNT_121_PIN       9
-#define PIN_COUNT_144_PIN       10
-#define PIN_COUNT_196_PIN       11
-#define PIN_COUNT_256_PIN       12
-
-#define PACKAGE_LQFP            1
-#define PACKAGE_MAPBGA          2
-#define PACKAGE_BGA             PACKAGE_MAPBGA
-#define PACKAGE_QFN             3
-#define PACKAGE_WLCSP           4
-#define PACKAGE_LGA             5

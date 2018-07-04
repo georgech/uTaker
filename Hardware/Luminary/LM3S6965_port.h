@@ -11,7 +11,7 @@
    File:        LM3S6965_port.h
    Project:     Single Chip Embedded Internet
    ---------------------------------------------------------------------
-   Copyright (C) M.J.Butcher Consulting 2004..2011
+   Copyright (C) M.J.Butcher Consulting 2004..2018
    **********************************************************************
    01.04.2009 Add ADC support                                            {1}
 

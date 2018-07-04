@@ -92,7 +92,7 @@ static __interrupt void SCI2_Interrupt(void)
         fnSciTxByte(1);                                                  // transmit data empty interrupt
     }
 }
-#if USARTS_AVAILABLE > 2
+#if (USARTS_AVAILABLE > 2) && !defined USART3_NOT_PRESENT
 static __interrupt void SCI3_Interrupt(void)
 {
     while (((USART3_CR1 & USART_CR1_RXNEIE) != 0) && ((USART3_ISR & USART_ISR_RXNE) != 0)) { // if an enabled reception interrupt
@@ -209,7 +209,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
 #endif
         fnEnterInterrupt(irq_USART2_ID, PRIORITY_USART2, SCI2_Interrupt);// enter USART interrupt handler
         break;
-#if USARTS_AVAILABLE > 2
+#if (USARTS_AVAILABLE > 2) && !defined USART3_NOT_PRESENT
     case 2:
     #if defined _STM32L432
         RCC_APB1ENR1 |= (RCC_APB1ENR1_USART3EN);                         // enable clocks to USART3
@@ -256,6 +256,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         break;
 #endif
     default:
+        _EXCEPTION("Invalid U(S)ART!");
         return;
     }
 
@@ -636,7 +637,7 @@ extern void fnRxOn(QUEUE_HANDLE Channel)
         USART2_CR1 |= (USART_CR1_UE | USART_CR1_RE | USART_CR1_RXNEIE);  // enable the receiver with Rx interrupts
         break;
 #endif
-#if USARTS_AVAILABLE > 2
+#if (USARTS_AVAILABLE > 2) && !defined USART3_NOT_PRESENT
     case 2:                                                              // USART3
     #if defined USART3_FULL_REMAP
         _PERIPHERAL_REMAP(USART3_FULLY_REMAPPED);
@@ -650,7 +651,7 @@ extern void fnRxOn(QUEUE_HANDLE Channel)
         USART3_CR1 |= (USART_CR1_UE | USART_CR1_RE | USART_CR1_RXNEIE);  // enable the receiver with Rx interrupts
         break;
 #endif
-#if !defined _STM32L0x1 && !defined _STM32F031
+#if UARTS_AVAILABLE > 0
     case 3:
     #if defined _STM32L432                                               // LPUART1
         _CONFIG_PERIPHERAL_INPUT(A, (PERIPHERAL_LPUART1), (PORTA_BIT3), (UART_RX_INPUT_TYPE)); // RX 4 on PA3
@@ -660,7 +661,7 @@ extern void fnRxOn(QUEUE_HANDLE Channel)
     #endif
         break;
 #endif
-#if !defined _STM32L432 && !defined _STM32L0x1 && !defined _STM32F031
+#if UARTS_AVAILABLE > 1
     case 4:
         _CONFIG_PERIPHERAL_INPUT(D, (PERIPHERAL_USART4_5_6), (PORTD_BIT2), (UART_RX_INPUT_TYPE)); // RX 5 on PD2
         UART5_CR1 |= (USART_CR1_UE | USART_CR1_RE | USART_CR1_RXNEIE);   // enable the receiver with Rx interrupts
@@ -739,7 +740,7 @@ extern void fnTxOn(QUEUE_HANDLE Channel)
         USART2_CR1 |= (USART_CR1_UE | USART_CR1_TE);                     // enable the transmitter
         break;
 #endif
-#if USARTS_AVAILABLE > 2
+#if (USARTS_AVAILABLE > 2) && !defined USART3_NOT_PRESENT
     case 2:
     #if defined _WINDOWS
         USART3_CR1 |= (USART_CR1_UE | USART_CR1_TE);                     // enable the transmitter earlier when simulating so that the peripheral function can be detected
@@ -766,7 +767,7 @@ extern void fnTxOn(QUEUE_HANDLE Channel)
         UART4_CR1 |= (USART_CR1_UE | USART_CR1_TE);                      // enable the transmitter
         break;
 #endif
-#if !defined _STM32L432 && !defined _STM32L0x1 && !defined _STM32F031
+#if UARTS_AVAILABLE > 1
     case 4:
         _CONFIG_PERIPHERAL_OUTPUT(C, (PERIPHERAL_USART4_5_6), (PORTC_BIT12), (OUTPUT_MEDIUM | OUTPUT_PUSH_PULL)); // TX 5 on PC12
         UART5_CR1 |= (USART_CR1_UE | USART_CR1_TE);                      // enable the transmitter
@@ -821,7 +822,7 @@ extern void fnClearTxInt(QUEUE_HANDLE channel)
     case 1:
         USART2_CR1 &= ~(USART_CR1_TXEIE);                                // disable transmit interrupts
         break;
-#if USARTS_AVAILABLE > 2
+#if (USARTS_AVAILABLE > 2) && !defined USART3_NOT_PRESENT
     case 2:
         USART3_CR1 &= ~(USART_CR1_TXEIE);                                // disable transmit interrupts
         break;
@@ -904,7 +905,7 @@ extern int fnTxByte(QUEUE_HANDLE channel, unsigned char ucTxByte)
         iInts |= CHANNEL_1_SERIAL_INT;                                   // simulate interrupt
 #endif
         break;
-#if USARTS_AVAILABLE > 2
+#if (USARTS_AVAILABLE > 2) && !defined USART3_NOT_PRESENT
     case 2:                                                              // USART 3
         if ((USART3_ISR & USART_ISR_TXE) == 0) {
             return 1;                                                    // busy, wait

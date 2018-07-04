@@ -11,6 +11,8 @@
 # 16.10.2015 Add igmp.c and time_keeper.c
 # 02.11.2015 Add usb descriptor header dependencies
 # 16.11.2015 Add snmp_mib_handlers, FreeMaster and nRF24201
+# 03.07.2018 Add -Wundef in order to discover any undefined definitions
+# 04.07.2018 Add ../../../Hardware/packages.h
 #
 
 # All objects (Hardware, application, uTasker, stack)
@@ -29,12 +31,12 @@ INC       = -I../../uTaskerV1.4
 #General dependencies
 #
 DEPENDS = ../config.h ../app_hw_m5223x.h ../types.h ../TaskConfig.h ../../../uTasker/driver.h ../../../uTasker/usb.h ../../../uTasker/uTasker.h \
-       ../../../Hardware/hardware.h ../../../Hardware/M5223X/M5223X.h \
+       ../../../Hardware/hardware.h  ../../../Hardware/packages.h ../../../Hardware/M5223X/M5223X.h \
        ../../../uTasker/utFAT/mass_storage.h \
        ../../../uTasker/MODBUS/modbus.h \
        ../../../stack/tcpip.h
 
-FLAGS = -mcpu=52235 -Wall -Wstrict-prototypes -D _GNU -D _M5223X -g -c -Os
+FLAGS = -mcpu=52235 -Wall -Wstrict-prototypes -D _GNU -D _M5223X -g -c -Os -Wundef
 CC      = m68k-elf-gcc
 
 all: uTaskerV1.4.elf

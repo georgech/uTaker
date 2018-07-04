@@ -436,6 +436,7 @@
         #define SET_SD_DI_CS_HIGH()        _SETBITS(A, SPI_CS1_0)        // force DI and CS lines high ready for the initialisation sequence
         #define SET_SD_CS_LOW()            _CLEARBITS(A, SPI_CS1_0)      // assert the CS line of the SD card to be read
         #define SET_SD_CS_HIGH()           _SETBITS(A, SPI_CS1_0)        // negate the CS line of the SD card to be read
+        #define GET_SDCARD_WP_STATE()      0
     #elif defined IDM_L35_B
         // Configure to suit SD card SPI mode at between 100k and 400k
         //
@@ -963,10 +964,13 @@
     #define DEMO_DIGITAL_ENABLE        GPIODEN_F
     #define DEMO_LED_DDR               GPIODIR_F
     #define DEMO_LED_PORT              GPIODATA_F
-    #ifdef USE_MAINTENANCE
+    #if defined USE_MAINTENANCE
         #define ENABLE_LED_PORT()      _CONFIG_DRIVE_PORT_OUTPUT_VALUE(F, BLINK_LED, 0) // RCGC2 |= CGC_GPIOF; SRCR2 &= ~CGC_GPIOF; // clock port and ensure not in reset
     #else
         #define ENABLE_LED_PORT()      RCGC2 |= CGC_GPIOF; SRCR2 &= ~CGC_GPIOF; DEMO_DIGITAL_ENABLE = BLINK_LED; DEMO_LED_DDR = BLINK_LED; // clock port and ensure not in reset
+    #endif
+    #if !defined USE_MAINTENANCE || defined REMOVE_PORT_INITIALISATIONS
+        #define INIT_WATCHDOG_LED()    _CONFIG_DRIVE_PORT_OUTPUT_VALUE(F, (BLINK_LED), (BLINK_LED))
     #endif
     #define TOGGLE_WATCHDOG_LED()      _TOGGLE_PORT(F, BLINK_LED)        // blink the LED, if set as output
 #endif
@@ -1280,7 +1284,7 @@
 #define USER_PORT_16               GPIODATA_C
 #define USER_DDR_16                GPIODIR_C
 
-#if KEY_COLUMNS > 0
+#if defined KEY_COLUMNS && KEY_COLUMNS > 0
     // Keypad (scan out D4..D7, scan in E0..E3)                          // {12}
     //
     #define KEY_ROW_IN_1               PORTE_BIT0
@@ -1324,9 +1328,7 @@
     #define KEY_ROW_IN_PORT_3          GPIODATA_E
     #define KEY_ROW_IN_PORT_4          GPIODATA_E
 
-
-                                                                         // reset any changes ready for next scan sequence
-    #define RESET_SCAN()         
+    #define RESET_SCAN()                                                 // reset any changes ready for next scan sequence       
 
     #define INIT_KEY_SCAN()            _CONFIG_PORT_INPUT(E, (KEY_ROW_IN_1 | KEY_ROW_IN_2 | KEY_ROW_IN_3 | KEY_ROW_IN_4)); \
                                        GPIOPUR_E |= (KEY_ROW_IN_1 | KEY_ROW_IN_2 | KEY_ROW_IN_3 | KEY_ROW_IN_4); \

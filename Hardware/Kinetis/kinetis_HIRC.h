@@ -48,7 +48,9 @@
     #if !defined KINETIS_K64 && defined SUPPORT_RTC && !defined RTC_USES_RTC_CLKIN && !defined RTC_USES_LPO_1kHz
     MCG_C2 = MCG_C2_EREFS;                                               // request oscillator
     OSC0_CR |= (OSC_CR_ERCLKEN | OSC_CR_EREFSTEN);                       // enable the external reference clock and keep it enabled in stop mode
+        #if defined KINETIS_WITH_MCG_LITE
   //MCG_MC = MCG_MC_HIRCEN;                                              // this is optional and would allow the HIRC to run even when the processor is not working in HIRC mode
+        #endif
     #endif
     #if defined MCG_C1_CLKS_HIRC                                         // processor with MCG-Lite module
     SIM_CLKDIV1 = (((SYSTEM_CLOCK_DIVIDE - 1) << 28) | ((BUS_CLOCK_DIVIDE - 1) << 16)); // prepare bus clock divides

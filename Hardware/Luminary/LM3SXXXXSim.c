@@ -11,7 +11,7 @@
    File:        LM3SXXXXSim.c
    Project:     Single Chip Embedded Internet
    ---------------------------------------------------------------------
-   Copyright (C) M.J.Butcher Consulting 2004..2011
+   Copyright (C) M.J.Butcher Consulting 2004..2018
    *********************************************************************
    06.12.2008 Added additional serial receivers for the simulator        {1}
    06.12.2008 Corrected UART 2 transmission counter                      {2}
@@ -2279,8 +2279,8 @@ extern unsigned long fnGetPresentPortPeriph(int portNr)
         return GPIOAFSEL_J;
 #endif
 #if defined SUPPORT_ADC && (PART_DC1 & ADC0_PRESENT1) && (PORTS_AVAILABLE != _PORTS_AVAILABLE)
-    case (PORTS_AVAILABLE - 1):                                          // dedicated ADC port
-        if (RCGC0 & CGC_SARADC0) {
+    case (PORTS_AVAILABLE):                                              // dedicated ADC port
+        if ((RCGC0 & CGC_SARADC0) != 0) {
             return (0xffffffff);                                         // all ADC are active
         }
         else {
@@ -3206,7 +3206,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
         break;
 #endif
 #if defined SUPPORT_ADC && (PART_DC1 & ADC0_PRESENT1) && (PORTS_AVAILABLE != _PORTS_AVAILABLE)
-    case (PORTS_AVAILABLE - 1):                                          // dedicated ADC port
+    case (PORTS_AVAILABLE):                                              // dedicated ADC port
         if (iChange & (TOGGLE_INPUT | TOGGLE_INPUT_NEG)) {
             unsigned short usStepSize = ((ADC_SIM_STEP_SIZE) / ADC_REFERENCE_VOLTAGE);
 

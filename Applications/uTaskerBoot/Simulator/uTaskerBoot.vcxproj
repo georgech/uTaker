@@ -466,6 +466,7 @@ Build_Kinetis.bat</Command>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32 plus GCC build|Win32'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\packages.h" />
     <ClInclude Include="..\..\..\Hardware\STM32\simSTM32.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Win32 Debug and GNU target|Win32'">true</ExcludedFromBuild>
@@ -505,6 +506,8 @@ Build_Kinetis.bat</Command>
     </None>
     <None Include="..\GNU_Kinetis\Build_Kinetis.bat" />
     <None Include="..\GNU_Kinetis\make_uTaskerBoot_GNU_Kinetis" />
+    <None Include="..\GNU_STM32\Build_STM32.bat" />
+    <None Include="..\GNU_STM32\make_uTaskerBoot_GNU_STM32" />
     <None Include="cursor1.cur" />
     <None Include="small.ico" />
     <None Include="uTasker.ico" />

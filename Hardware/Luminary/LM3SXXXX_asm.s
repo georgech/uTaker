@@ -11,7 +11,7 @@
 // File:        LM3S6XXX_asm.s [Luminary]
 // Project:     Single Chip Embedded Internet
 // ---------------------------------------------------------------------
-// Copyright (C) M.J.Butcher Consulting 2004..2010
+// Copyright (C) M.J.Butcher Consulting 2004..2018
 // *********************************************************************
 //
 // This file contains assembler code needed to access some of the processor's registers (IAR)

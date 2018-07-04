@@ -24,7 +24,7 @@
 */
 
 
-#if defined USE_MAINTENANCE
+#if defined USE_MAINTENANCE && !defined REMOVE_PORT_INITIALISATIONS
 
 // Check the present state of a particular port
 //

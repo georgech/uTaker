@@ -9094,7 +9094,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define PRIORITY_SDCARD_DETECT_PORT_INT  PRIORITY_PORT_A_INT     // port priority when using card detect switch interrupt
         #define SDCARD_DETECT_PORT         PORTA                         // interrupt is on this port
         #define SDCARD_DETECT_PIN          SD_CARD_DETECTION             // interrupt pin
-    #elif !defined SDCARD_CONFIG_COMPLETE                                // TWR_K40X256 / KWIKSTIK / TWR_K40D100M
+    #elif !defined SDCARD_CONFIG_COMPLETE                                // TWR_K40X256 / KWIKSTIK / TWR_K40D100M / FRDM-k64F
         #if !defined KINETIS_KL && !defined KINETIS_KE
             #define SD_CONTROLLER_AVAILABLE                              // use SDHC controller rather than SPI
             #if defined KWIKSTIK_V3_V4
@@ -9118,9 +9118,21 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
                     #define POWER_UP_SD_CARD()     _CONFIG_PORT_INPUT(E, (WRITE_PROTECT_INPUT), (PORT_PS_UP_ENABLE)); SDHC_SYSCTL |= SDHC_SYSCTL_INITA; while (SDHC_SYSCTL & SDHC_SYSCTL_INITA) {}; // apply power to the SD card if appropriate (we use this to send 80 clocks)
                 #endif
             #endif
-            #define SDHC_SYSCTL_SPEED_SLOW     (SDHC_SYSCTL_SDCLKFS_128 | SDHC_SYSCTL_DVS_2)  // 390kHz when 100MHz clock
-            #define SDHC_SYSCTL_SPEED_FAST     (SDHC_SYSCTL_SDCLKFS_2 | SDHC_SYSCTL_DVS_2)    // 25MHz when 100MHz clock
-            #define SET_SPI_SD_INTERFACE_FULL_SPEED() fnSetSD_clock(SDHC_SYSCTL_SPEED_FAST); SDHC_PROCTL |= SDHC_PROCTL_DTW_4BIT
+            #if defined FRDM_K64F
+              //#define CLOCK_SDHC_FROM_OSCERCLK
+                #define CLOCK_SDHC_FROM_IRC48M
+                #if defined CLOCK_SHDC_FROM_OSCERCLK || defined CLOCK_SDHC_FROM_IRC48M // undivided OSCCLK
+                    #define SDHC_SYSCTL_SPEED_SLOW     (SDHC_SYSCTL_SDCLKFS_128 | SDHC_SYSCTL_DVS_1)  // 390kHz when 50MHz clock
+                    #define SDHC_SYSCTL_SPEED_FAST     (SDHC_SYSCTL_SDCLKFS_2 | SDHC_SYSCTL_DVS_1)    // 25MHz when 50MHz clock
+                #else
+                    #define SDHC_SYSCTL_SPEED_SLOW     (SDHC_SYSCTL_SDCLKFS_128 | SDHC_SYSCTL_DVS_2)  // 390kHz when 100MHz clock
+                    #define SDHC_SYSCTL_SPEED_FAST     (SDHC_SYSCTL_SDCLKFS_2 | SDHC_SYSCTL_DVS_2)    // 25MHz when 100MHz clock
+                #endif
+            #else
+                #define SDHC_SYSCTL_SPEED_SLOW         (SDHC_SYSCTL_SDCLKFS_128 | SDHC_SYSCTL_DVS_2)  // 390kHz when 100MHz clock
+                #define SDHC_SYSCTL_SPEED_FAST         (SDHC_SYSCTL_SDCLKFS_2 | SDHC_SYSCTL_DVS_2)    // 25MHz when 100MHz clock
+            #endif
+            #define SET_SPI_SD_INTERFACE_FULL_SPEED()  fnSetSD_clock(SDHC_SYSCTL_SPEED_FAST); SDHC_PROCTL |= SDHC_PROCTL_DTW_4BIT
         #elif defined FRDM_KL82Z || defined TWR_KL82Z72M
             // Configure to suit SD card SPI mode at between 100k and 400k
             //
@@ -9971,7 +9983,7 @@ typedef unsigned long LCD_CONTROL_PORT_SIZE;
 
 // Keypad
 //
-#if defined KEY_COLUMNS && KEY_COLUMNS > 0                               // matrix keypad
+#if defined KEY_COLUMNS && (KEY_COLUMNS > 0)                             // matrix keypad
     #if defined NET_K60
         #define KEY_ROW_IN_1           PORTD_BIT7
         #define KEY_ROW_IN_PORT_1      GPIOD_PDIR

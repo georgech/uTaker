@@ -18,6 +18,7 @@
     04.01.2011 Add Kinetis                                               {3}
     01.02.2011 Add LPC17XX                                               {4}
     09.06.2018 Add STM32                                                 {5}
+    04.07.2018 Add package definition includes here                      {6}
 
 */
 
@@ -100,6 +101,8 @@ typedef char              CHAR;
 #else
     typedef unsigned int size_t;
 #endif
+
+#include "../../Hardware/packages.h"                                     // {6} include the general package defines
 
 #if defined _HW_NE64
     #if defined (_CODE_WARRIOR) && !defined (_WINDOWS)

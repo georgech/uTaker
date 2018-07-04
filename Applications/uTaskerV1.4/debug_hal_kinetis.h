@@ -50,8 +50,7 @@
 */
 
 
-#if defined USE_MAINTENANCE
-#if !defined REMOVE_PORT_INITIALISATIONS
+#if defined USE_MAINTENANCE && !defined REMOVE_PORT_INITIALISATIONS
 // Check the present state of a particular port
 //
 extern int fnPortState(CHAR cPortBit)
@@ -1909,8 +1908,7 @@ extern void fnSetPortOut(unsigned char ucPortOutputs, int iInitialisation)
     }
 #endif
 }
-#endif                                                                   // end !defined REMOVE_PORT_INITIALISATIONS
-#endif                                                                   // end USE_MAINTENANCE
+#endif                                                                   // end USE_MAINTENANCE && !defined REMOVE_PORT_INITIALISATIONS
 
 #if defined EZPORT_CLONER && defined USE_MAINTENANCE && defined KEEP_DEBUG // {2}
 #if defined FRDM_K64F

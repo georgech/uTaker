@@ -11,7 +11,7 @@
    File:        LM3SXXXX_ports.c
    Project:     Single Chip Embedded Internet
    ---------------------------------------------------------------------
-   Copyright (C) M.J.Butcher Consulting 2004..2011
+   Copyright (C) M.J.Butcher Consulting 2004..2018
    **********************************************************************
    16.12.2008 Remove details of ports to external headers                {1}
    01.04.2009 Add ADC support                                            {2}
@@ -190,9 +190,11 @@ extern void fnSetPortDetails(char *cPortDetails, int iPort, int iBit, unsigned l
     case _PORTH:
         STRCPY(cPortDetails, "Port H");
         break;
+    #if __PORTS_AVAILABLE > 8
     case _PORTJ:
         STRCPY(cPortDetails, "Port J");
         break;
+    #endif
     case _GPIO_ADC:                                                      // {2}
         STRCPY(cPortDetails, "ADC inputs");
         iADC = iBit;

@@ -11,7 +11,7 @@
    File:        LM3S9B95_port.h
    Project:     Single Chip Embedded Internet
    ---------------------------------------------------------------------
-   Copyright (C) M.J.Butcher Consulting 2004..2011
+   Copyright (C) M.J.Butcher Consulting 2004..2018
    **********************************************************************
    05.11.2009 Add _LM3S9B90
    13.07.2010 Add ADC inputs

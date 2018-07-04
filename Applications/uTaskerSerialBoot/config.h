@@ -118,13 +118,13 @@
 
     //#define EMCRAFT_K61F150M                                           // K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - http://www.utasker.com/kinetis/EMCRAFT_K61F150M.html
 
-      #define FRDM_K64F                                                  // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
+    //#define FRDM_K64F                                                  // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
     //#define TWR_K64F120M                                               // tower board http://www.utasker.com/kinetis/TWR-K64F120M.html
     //#define HEXIWEAR_K64F                                              // hexiwear - wearable development kit for IoT (K64FN1M0VDC12 main processor) http://www.hexiwear.com/
     //#define TEENSY_3_5                                                 // USB development board with K64FX512 - http://www.utasker.com/kinetis/TEENSY_3.5.html
     //#define TWR_K65F180M                                               // tower board http://www.utasker.com/kinetis/TWR-K65F180M.html
     //#define K66FX1M0                                                   // development board with K66FX1M0
-    //#define FRDM_K66F                                                  // freedom board http://www.utasker.com/kinetis/FRDM-K66F.html
+      #define FRDM_K66F                                                  // freedom board http://www.utasker.com/kinetis/FRDM-K66F.html
     //#define TEENSY_3_6                                                 // USB development board with K66FX1M0 - http://www.utasker.com/kinetis/TEENSY_3.6.html
 
     //#define TWR_K70F120M                                               // K processors Cortex M4 with graphical LCD, Ethernet, USB, encryption, tamper - tower board http://www.utasker.com/kinetis/TWR-K70F120M.html
@@ -923,7 +923,7 @@
       //#define MODBUS_CRC_FROM_LOOKUP_TABLE                             // MODBUS RTU cyclic redundancy check performed with help of loop up table (requires 512 bytes FLASH table, but faster than calculation loop)
         #define REMOVE_SREC_LOADING
     #else
-        #define KBOOT_LOADER                                             // use KBOOT UART interface rather than SREC/iHex interface
+      //#define KBOOT_LOADER                                             // use KBOOT UART interface rather than SREC/iHex interface
       //#define DEVELOPERS_LOADER                                        // Freescale Developer's Bootloader (AN2295) compatible mode (rather than SREC/iHex)
           //#define DEVELOPERS_LOADER_PROTOCOL_VERSION_9                 // user protocol version 9 rather than obsolete Kinetis 8 (not completed at the moment)
             #define DEVELOPERS_LOADER_READ                               // support reading back program
@@ -974,7 +974,7 @@
     #if defined USB_INTERFACE
       //#define USE_USB_CDC                                              // allow SREC/iHex loading via virtual COM
         #define USB_MSD_DEVICE_LOADER                                    // USB-MSD device mode (the board appears as a hard-drive to the host)
-        #define USB_MSD_HOST_LOADER                                      // USB-MSD host mode (the board operates as host and can read new code from a memory stick)
+      //#define USB_MSD_HOST_LOADER                                      // USB-MSD host mode (the board operates as host and can read new code from a memory stick)
         #if defined USE_USB_CDC
             #undef SERIAL_INTERFACE                                      // remove the UART interface
             #define NUMBER_SERIAL          0
@@ -1020,7 +1020,7 @@
       //#define USE_USB_MSD                                              // full USB-MSD to SD card interface on USB (no emulated loader function) - requires SDCARD_SUPPORT (USB_MSD_DEVICE_LOADER can be disabled)
             #define DISK_COUNT         1                                 // single upload disk (set to 2 for two upload disks)
           //#define DEBUG_MAC                                            // activate debug output used to monitor the operation of MAC OS X
-        #define HID_LOADER                                               // Freescale HIDloader.exe or KBOOT compatible
+      //#define HID_LOADER                                               // Freescale HIDloader.exe or KBOOT compatible
             #define KBOOT_HID_LOADER                                     // select KBOOT mode of operation (rather than HIDloader.exe)
         #undef _NO_CHECK_QUEUE_INPUT
         #define WAKE_BLOCKED_USB_TX                                      // allow a blocked USB transmitter to continue after an interrupt event
@@ -1054,7 +1054,7 @@
 #endif
 
 #if !defined TWR_K20D50M && !defined FRDM_K20D50M && !defined FRDM_KL46Z && !defined FRDM_KL43Z && !defined TWR_KL46Z48M && !defined FRDM_KL26Z && !defined FRDM_KL27Z && !defined TWR_KL25Z48M && !defined FRDM_KL02Z && !defined FRDM_KL03Z && !defined FRDM_KL05Z && !defined FRDM_KE02Z && !defined FRDM_KE02Z40M && !defined FRDM_KE04Z && !defined TWR_K20D72M && !defined TWR_K21D50M && !defined TWR_K22F120M && !defined TWR_K24F120M && !defined K24FN1M0_120 && !defined FRDM_K22F && !defined TWR_KV10Z32 && !defined TWR_KV31F120M && !defined K66FX1M0 // boards have no SD card socket
-  //#define SDCARD_SUPPORT                                               // SD-card interface (only choose one of these options at a time)
+    #define SDCARD_SUPPORT                                               // SD-card interface (only choose one of these options at a time)
   //#define SPI_FLASH_FAT                                                // SPI flash
         #define SIMPLE_FLASH                                             // don't perform block management and wear-levelling
         #define FLASH_FAT_MANAGEMENT_ADDRESS     (SIZE_OF_FLASH)
@@ -1069,7 +1069,7 @@
         #define SUPPORT_FLUSH
     #endif
     #if defined SDCARD_SUPPORT
-        #if !defined DWGB_SDCARD
+        #if !defined DWGB_SDCARD && defined USE_USB_MSD
             #define UREVERSEMEMCPY                                       // required when SD card used in SPI mode
             #if !defined SPECIAL_VERSION_SDCARD && !defined DEV5 && !defined DEV6
                 #define SDCARD_ACCESS_WITHOUT_UTFAT                      // no utFAT interface (just low level access for USB-MSD operation)

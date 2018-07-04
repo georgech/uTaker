@@ -193,7 +193,10 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*I
     #define UARTS_AVAILABLE    4
     #define LPUARTS_AVAILABLE  0
 #elif defined _STM32F401
-    #define USARTS_AVAILABLE   6                                         // usarts 1, 2 and 6
+    #define USARTS_AVAILABLE   6                                         // 3 usable
+    #define USART3_NOT_PRESENT                                           // only USART1, 2 and 6 available/usable
+    #define UART4_NOT_PRESENT
+    #define UART5_NOT_PRESENT
     #define UARTS_AVAILABLE    0
     #define LPUARTS_AVAILABLE  0
 #elif defined _STM32L451 || defined _STM32L452 || defined _STM32L462
@@ -708,23 +711,6 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*I
     #define NO_ACCUMULATIVE_WORDS                                        // all FLASH writes must be 16 bits wide and 16 bit aligned
     #define MAX_SECTOR_PARS                 ((FLASH_GRANULARITY - 4)/2)  // the number of user bytes fitting into first parameter block in internal flash
 #endif
-
-#define PIN_COUNT_20_PIN  0
-#define PIN_COUNT_25_PIN  1
-#define PIN_COUNT_28_PIN  2
-#define PIN_COUNT_32_PIN  3
-#define PIN_COUNT_36_PIN  4
-#define PIN_COUNT_48_PIN  5
-#define PIN_COUNT_64_PIN  6
-#define PIN_COUNT_100_PIN 7
-#define PIN_COUNT_143_PIN 8
-#define PIN_COUNT_144_PIN 9
-#define PIN_COUNT_176_PIN 10
-#define PIN_COUNT_208_PIN 11
-#define PIN_COUNT_216_PIN 12
-
-#define PACKAGE_LQFP      0
-#define PACKAGE_BGA       1
 
 #define SUPPLY_1_8__2_1   0                                              // supplying F4 with reduced voltage reduces the fastest speed and increases required wait states
 #define SUPPLY_2_1__2_4   1
@@ -4485,40 +4471,42 @@ typedef struct stSTM32_ADC_REGS
     #define USART2_CR2                   *(volatile unsigned long *)(USART2_BLOCK + 0x10)  // USART2 control register 2
     #define USART2_CR3                   *(volatile unsigned long *)(USART2_BLOCK + 0x14)  // USART2 control register 3
     #define USART2_GTPR                  *(volatile unsigned long *)(USART2_BLOCK + 0x18)  // USART2 guard time and prescaler register
-
-    #define USART3_SR                    *(volatile unsigned long *)(USART3_BLOCK + 0x00)  // USART3 status register
-    #define USART3_ISR                   USART3_SR                       // for compatibility
-    #define USART3_DR                    *(volatile unsigned long *)(USART3_BLOCK + 0x04)  // USART3 data register
-    #define USART3_TDR                   USART3_DR                       // for compatibility
-    #define USART3_RDR                   USART3_DR
-    #define USART3_BRR                   *(volatile unsigned long *)(USART3_BLOCK + 0x08)  // USART3 baud rate register
-    #define USART3_CR1                   *(volatile unsigned long *)(USART3_BLOCK + 0x0c)  // USART3 control register 1
-    #define USART3_CR2                   *(volatile unsigned long *)(USART3_BLOCK + 0x10)  // USART3 control register 2
-    #define USART3_CR3                   *(volatile unsigned long *)(USART3_BLOCK + 0x14)  // USART3 control register 3
-    #define USART3_GTPR                  *(volatile unsigned long *)(USART3_BLOCK + 0x18)  // USART3 guard time and prescaler register
-
-    #define UART4_SR                     *(volatile unsigned long *)(UART4_BLOCK + 0x00)   // UART4 status register
-    #define UART4_ISR                    UART4_SR                        // for compatibility
-    #define UART4_DR                     *(volatile unsigned long *)(UART4_BLOCK + 0x04)   // UART4 data register
-    #define UART4_TDR                    UART4_DR                        // for compatibility
-    #define UART4_RDR                    UART4_DR
-    #define UART4_BRR                    *(volatile unsigned long *)(UART4_BLOCK + 0x08)   // UART4 baud rate register
-    #define UART4_CR1                    *(volatile unsigned long *)(UART4_BLOCK + 0x0c)   // UART4 control register 1
-    #define UART4_CR2                    *(volatile unsigned long *)(UART4_BLOCK + 0x10)   // UART4 control register 2
-    #define UART4_CR3                    *(volatile unsigned long *)(UART4_BLOCK + 0x14)   // UART4 control register 3
-    #define UART4_GTPR                   *(volatile unsigned long *)(UART4_BLOCK + 0x18)   // UART4 guard time and prescaler register
-
-    #define UART5_SR                     *(volatile unsigned long *)(UART5_BLOCK + 0x00)   // UART5 status register
-    #define UART5_ISR                    UART5_SR                        // for compatibility
-    #define UART5_DR                     *(volatile unsigned long *)(UART5_BLOCK + 0x04)   // UART5 data register
-    #define UART5_TDR                    UART5_DR                        // for compatibility
-    #define UART5_RDR                    UART5_DR
-    #define UART5_BRR                    *(volatile unsigned long *)(UART5_BLOCK + 0x08)   // UART5 baud rate register
-    #define UART5_CR1                    *(volatile unsigned long *)(UART5_BLOCK + 0x0c)   // UART5 control register 1
-    #define UART5_CR2                    *(volatile unsigned long *)(UART5_BLOCK + 0x10)   // UART5 control register 2
-    #define UART5_CR3                    *(volatile unsigned long *)(UART5_BLOCK + 0x14)   // UART5 control register 3
-    #define UART5_GTPR                   *(volatile unsigned long *)(UART5_BLOCK + 0x18)   // UART5 guard time and prescaler register
-
+    #if !defined USART3_NOT_PRESENT
+        #define USART3_SR                *(volatile unsigned long *)(USART3_BLOCK + 0x00)  // USART3 status register
+        #define USART3_ISR               USART3_SR                       // for compatibility
+        #define USART3_DR                *(volatile unsigned long *)(USART3_BLOCK + 0x04)  // USART3 data register
+        #define USART3_TDR               USART3_DR                       // for compatibility
+        #define USART3_RDR               USART3_DR
+        #define USART3_BRR               *(volatile unsigned long *)(USART3_BLOCK + 0x08)  // USART3 baud rate register
+        #define USART3_CR1               *(volatile unsigned long *)(USART3_BLOCK + 0x0c)  // USART3 control register 1
+        #define USART3_CR2               *(volatile unsigned long *)(USART3_BLOCK + 0x10)  // USART3 control register 2
+        #define USART3_CR3               *(volatile unsigned long *)(USART3_BLOCK + 0x14)  // USART3 control register 3
+        #define USART3_GTPR              *(volatile unsigned long *)(USART3_BLOCK + 0x18)  // USART3 guard time and prescaler register
+    #endif
+    #if !defined UART4_NOT_PRESENT
+        #define UART4_SR                 *(volatile unsigned long *)(UART4_BLOCK + 0x00)   // UART4 status register
+        #define UART4_ISR                UART4_SR                        // for compatibility
+        #define UART4_DR                 *(volatile unsigned long *)(UART4_BLOCK + 0x04)   // UART4 data register
+        #define UART4_TDR                UART4_DR                        // for compatibility
+        #define UART4_RDR                UART4_DR
+        #define UART4_BRR                *(volatile unsigned long *)(UART4_BLOCK + 0x08)   // UART4 baud rate register
+        #define UART4_CR1                *(volatile unsigned long *)(UART4_BLOCK + 0x0c)   // UART4 control register 1
+        #define UART4_CR2                *(volatile unsigned long *)(UART4_BLOCK + 0x10)   // UART4 control register 2
+        #define UART4_CR3                *(volatile unsigned long *)(UART4_BLOCK + 0x14)   // UART4 control register 3
+        #define UART4_GTPR               *(volatile unsigned long *)(UART4_BLOCK + 0x18)   // UART4 guard time and prescaler register
+    #endif
+    #if !defined UART5_NOT_PRESENT
+        #define UART5_SR                 *(volatile unsigned long *)(UART5_BLOCK + 0x00)   // UART5 status register
+        #define UART5_ISR                UART5_SR                        // for compatibility
+        #define UART5_DR                 *(volatile unsigned long *)(UART5_BLOCK + 0x04)   // UART5 data register
+        #define UART5_TDR                UART5_DR                        // for compatibility
+        #define UART5_RDR                UART5_DR
+        #define UART5_BRR                *(volatile unsigned long *)(UART5_BLOCK + 0x08)   // UART5 baud rate register
+        #define UART5_CR1                *(volatile unsigned long *)(UART5_BLOCK + 0x0c)   // UART5 control register 1
+        #define UART5_CR2                *(volatile unsigned long *)(UART5_BLOCK + 0x10)   // UART5 control register 2
+        #define UART5_CR3                *(volatile unsigned long *)(UART5_BLOCK + 0x14)   // UART5 control register 3
+        #define UART5_GTPR               *(volatile unsigned long *)(UART5_BLOCK + 0x18)   // UART5 guard time and prescaler register
+    #endif
     #if defined _STM32F2XX || defined _STM32F4XX
         #define USART6_SR                *(volatile unsigned long *)(USART6_BLOCK + 0x00)  // USART6 status register
         #define USART6_ISR               USART6_SR                       // for compatibility

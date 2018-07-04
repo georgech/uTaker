@@ -523,7 +523,7 @@ static int fnUpdateSoftware(int iAppState, UTFILE *ptr_utFile, UPLOAD_HEADER *pt
                 ulDeleteSize -= ulThisDeleteSize;
                 ptrInternalFlash += ulThisDeleteSize;
     #else
-                fnEraseFlashSector((unsigned char *)UTASKER_APP_START, (UTASKER_APP_END - (unsigned char *)UTASKER_APP_START)); // delete application space
+                fnEraseFlashSector((unsigned char *)UTASKER_APP_START, (MAX_FILE_LENGTH)(UTASKER_APP_END - (unsigned char *)UTASKER_APP_START)); // delete application space
     #endif
                 iNextState = STATE_DELETING_FLASH;
                 fnInterruptMessage(OWN_TASK, E_DO_NEXT);                 // schedule next

@@ -3,6 +3,8 @@
 # 21.04.2014 Add igmp.c
 # 26.05.2015 Add time_keeper.c
 # 26.05.2015 Add usb descriptor header dependencies
+# 03.07.2018 Add -Wundef in order to discover any undefined definitions
+# 04.07.2018 Add ../../../Hardware/packages.h
 #
 
 # All objects (Hardware, application, uTasker, stack)
@@ -20,7 +22,7 @@ OBJS = Build/application.o Build/debug.o Build/webInterface.o Build/KeyScan.o Bu
 #General dependencies
 #
 DEPENDS = ../config.h ../app_hw_STM32.h ../types.h ../TaskConfig.h ../../../uTasker/driver.h ../../../uTasker/usb.h ../../../uTasker/uTasker.h \
-       ../../../Hardware/hardware.h ../../../Hardware/STM32/STM32.h \
+       ../../../Hardware/hardware.h ../../../Hardware/packages.h ../../../Hardware/STM32/STM32.h \
        ../../../uTasker/MODBUS/modbus.h \
        ../../../uTasker/utFAT/mass_storage.h \
        ../../../uTasker/uGLCDLIB/glcd.h \
@@ -53,10 +55,10 @@ SPI_FLASH_DEP = ../../../Hardware/STM32/spi_flash_STM32_atmel.h \
 
 
 # (set to Cortex-M4 or Cortex-M0+ accordingly)
-#C_FLAGS = -mcpu=cortex-m0plus -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections
-#C_FLAGS = -mcpu=cortex-m4 -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections 
-C_FLAGS = -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections 
-#C_FLAGS = -mcpu=cortex-m7 -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections 
+#C_FLAGS = -mcpu=cortex-m0plus -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wundef
+#C_FLAGS = -mcpu=cortex-m4 -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wundef
+C_FLAGS = -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wundef
+#C_FLAGS = -mcpu=cortex-m7 -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wundef
 
 
 all: uTaskerV1.4.elf
