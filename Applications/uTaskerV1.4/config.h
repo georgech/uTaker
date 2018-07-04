@@ -38,8 +38,8 @@
 
 #define _TICK_RESOLUTION     TICK_UNIT_MS(50)                            // 50ms system tick period - max possible at 50MHz SYSTICK would be about 335ms !
 
-#define REMOVE_PORT_INITIALISATIONS                                      // remove port initialisation and use demonstration to ensure that port configuration and use doesn't conflict with specific application development (exception is blink LED)
-#define NO_PERIPHERAL_DEMONSTRATIONS                                     // disable peripheral demonstration code (ADC/I2C/CAN/port interrupts/etc.) so that they can't interfere with new application developments
+//#define REMOVE_PORT_INITIALISATIONS                                      // remove port initialisation and use demonstration to ensure that port configuration and use doesn't conflict with specific application development (exception is blink LED)
+//#define NO_PERIPHERAL_DEMONSTRATIONS                                   // disable peripheral demonstration code (ADC/I2C/CAN/port interrupts/etc.) so that they can't interfere with new application developments
 
 #define USE_MAINTENANCE                                                  // include the command line shell (on UART, USB-CDC and/or Telnet) with maintenance support for the application (remove to reduce project size for special tests or possibly running from limited RAM)
     #define PREVIOUS_COMMAND_BUFFERS  4                                  // allow the up-arrow to retrieve this many past commands
@@ -1392,6 +1392,8 @@
     #define NUMBER_SERIAL              0                                 // no physical queue needed
     #define NUMBER_EXTERNAL_SERIAL     0
 #endif
+
+//#define SPI_INTERFACE
 
 #if !defined SUPPORT_FLUSH && ((defined USE_MODBUS && (defined MODBUS_GATE_WAY_QUEUE || defined MODBUS_RTU)) || defined USE_DMX_RDM_MASTER)
     #define SUPPORT_FLUSH                                                // support queue flush for use by the MODBUS gateway

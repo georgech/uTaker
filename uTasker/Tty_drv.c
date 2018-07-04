@@ -8,7 +8,7 @@
     www.uTasker.com    Skype: M_J_Butcher
 
     ---------------------------------------------------------------------
-    File:      tty_drv.c
+    File:      Tty_drv.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
     Copyright (C) M.J.Butcher Consulting 2004..2018
@@ -182,8 +182,8 @@ static QUEUE_TRANSFER entry_tty(QUEUE_HANDLE channel, unsigned char *ptBuffer, Q
                     }
                 }
                 else if ((Counter & TX_OFF) != 0) {
-                    if ((Counter & PAUSE_TX) != 0) {                 // {37}
-                        ptTTYQue->ucState |= (TX_WAIT);              // pause transmission so that data can be added to the buffer without yet being released
+                    if ((Counter & PAUSE_TX) != 0) {                     // {37}
+                        ptTTYQue->ucState |= (TX_WAIT);                  // pause transmission so that data can be added to the buffer without yet being released
                     }
                     else {
                         fnTxOff(channel);
@@ -393,7 +393,7 @@ static QUEUE_TRANSFER entry_tty(QUEUE_HANDLE channel, unsigned char *ptBuffer, Q
             else {
                 break;
             }
-        } while (rtn_val--);
+        } while (rtn_val-- != 0);
     #endif
 
         return (ucMatch);
@@ -429,7 +429,7 @@ static QUEUE_TRANSFER entry_tty(QUEUE_HANDLE channel, unsigned char *ptBuffer, Q
         else {
             ptr = (unsigned char *)&ptTTYQue->ulSerialCounter[Counter];
             i = sizeof(ptTTYQue->ulSerialCounter[0]);
-            while (i--) {
+            while (i-- != 0) {
                 *ptBuffer++ = *ptr++;
             }
         }

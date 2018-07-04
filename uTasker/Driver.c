@@ -212,32 +212,32 @@ extern QUEUE_HANDLE fnOpen(unsigned char type_of_driver, unsigned char driver_mo
 
 #if defined CAN_INTERFACE
     case TYPE_CAN:
-        return (fnOpenCAN((CANTABLE*)pars, driver_mode));
+        return (fnOpenCAN((CANTABLE *)pars, driver_mode));
 #endif
 
 #if defined ETH_INTERFACE || (defined USB_CDC_RNDIS && defined USB_TO_TCP_IP) || defined USE_PPP
     case TYPE_ETHERNET:
-        return(fnOpenETHERNET((ETHTABLE*)pars, driver_mode));
+        return(fnOpenETHERNET((ETHTABLE *)pars, driver_mode));
 #endif
 
 #if defined SPI_INTERFACE
     case TYPE_SPI:
-        return (fnOpenSPI((SPITABLE*)pars, driver_mode));
+        return (fnOpenSPI((SPITABLE *)pars, driver_mode));
 #endif
 
 #if defined I2C_INTERFACE
     case TYPE_I2C:
-        return (fnOpenI2C((I2CTABLE*)pars));
+        return (fnOpenI2C((I2CTABLE *)pars));
 #endif
 
 #if defined USB_INTERFACE
     case TYPE_USB:
-        return (fnOpenUSB((USBTABLE*)pars, driver_mode));
+        return (fnOpenUSB((USBTABLE *)pars, driver_mode));
 #endif
 
 #if defined SSC_INTERFACE                                                // {15}
     case TYPE_SSC:
-        return (fnOpenSSC((SSCTABLE*)pars, driver_mode));
+        return (fnOpenSSC((SSCTABLE *)pars, driver_mode));
 #endif
 
 #if defined SUPPORT_FIFO_QUEUES

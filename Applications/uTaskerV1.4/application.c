@@ -129,6 +129,7 @@
     04.05.2018 Change interface to fnSetNewSerialMode()                  {108}
     04.05.2018 Add DMX512                                                {109}
     02.06.2018 Zero optional user UART callback handlers                 {110}
+    05.07.2018 Add SPI tests                                             {111}
 
 */
 
@@ -149,6 +150,7 @@
     #endif
     #include "Port_Interrupts.h"                                         // {46} port interrupt tests
     #include "can_tests.h"                                               // {46} CAN tests
+    #include "spi_tests.h"                                               // {111} SPI tests
 #endif
 #if defined SERIAL_INTERFACE && defined USE_J1708
     #define KINETIS_USES_FLEX_TIMER
@@ -803,7 +805,9 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
         #include "ADC_Timers.h"                                          // ADC and timer initialisation
     #undef  _ADC_TIMER_INIT
 #endif
-
+#if defined SPI_INTERFACE && defined TEST_SPI                            // {{111}}
+        fnInitSPIInterface();
+#endif
 #if defined CAN_INTERFACE && defined TEST_CAN                            // {39}
         fnInitCANInterface();                                            // {57}
 #endif
@@ -2076,14 +2080,15 @@ static unsigned long *fnRAM_test(int iBlockNumber, int iBlockCount)
     #define _PORT_INT_CODE
         #include "Port_Interrupts.h"                                     // port interrupt configuration code and interrupt handling
     #undef  _PORT_INT_CODE
-
     #define _ADC_TIMER_ROUTINES                                          // include ADC configuration and interrupt handlers
         #include "ADC_Timers.h"                                          // as well as PIT configuration and handling
     #undef  _ADC_TIMER_ROUTINES                                          // and DMA timer, GPT timer and gstandard timer configuration and handling
-
     #define _CAN_INIT_CODE
         #include "can_tests.h"                                           // CAN initialiation code and transmission routine
     #undef _CAN_INIT_CODE
+    #define _SPI_INIT_CODE
+        #include "spi_tests.h"                                           // SPI initialiation code and transmission routine
+    #undef _SPI_INIT_CODE
 #endif
 
 #if defined RTC_TEST                                                     // {3}
@@ -2345,7 +2350,6 @@ extern int uDatacopy(int iDisk, int iDataRef, unsigned char *ptrSectorData, cons
     return iAdded;                                                       // the length added to the buffer
 }
 
-
     #if SIZE_OF_FLASH >= (512 * 1024)
 // Analyse a linear data file in flash to determine its raw content length
 //
@@ -2478,7 +2482,6 @@ static void fnPrepareEmulatedFAT(void)
     #endif
 }
 #endif
-
 
 #if defined ETHERNET_BRIDGING && !defined USB_CDC_RNDIS && !defined USE_PPP // {75}
 // Example of bridging Ethernet reception content to the serial interface

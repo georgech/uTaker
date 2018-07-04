@@ -643,7 +643,7 @@ typedef struct stSPITABLE {
     QUEUE_DIMENSIONS Rx_tx_sizes;                                        // the desired rx and tx queue sizes
     UTASK_TASK     Task_to_wake;                                         // default task to wake when receive message available
     QUEUE_HANDLE   Channel;                                              // physical channel number 1,2,3...
-    unsigned char  ucMode;                                               // mode details
+    unsigned char  Config;                                               // mode details
 } SPITABLE;
 
 

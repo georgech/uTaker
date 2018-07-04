@@ -2245,7 +2245,7 @@ extern int fnEraseFlashSector(unsigned char *ptrSector, MAX_FILE_LENGTH Length)
         ptrSector = (unsigned char *)usTemp;
         while (ucDeleted < FLASH_GRANULARITY) {
             fnWaitWriteComplete();                                       // wait until free to write
-        #ifdef SPI_INTERFACE
+        #if defined SPI_INTERFACE
             fnWrite(SPI_handle, (unsigned char *)ucWriteEnable, sizeof(ucWriteEnable)); // prepare write
             fnWriteBytesEEPROM(ptrSector, ucDel, EEPROM_PAGE_SIZE);      // delete a page
         #else
@@ -2393,7 +2393,7 @@ extern int fnWriteBytesFlash(unsigned char *ucDestination, unsigned char *ucData
             usPageLength = (unsigned short)Length;
         }
         fnWaitWriteComplete();
-        #ifdef SPI_INTERFACE
+        #if defined SPI_INTERFACE
         fnWrite(SPI_handle, (unsigned char *)ucWriteEnable, sizeof(ucWriteEnable)); // prepare write
         fnWriteBytesEEPROM(ucDestination, ucData, usPageLength);         // write a page
         #else
@@ -2605,8 +2605,8 @@ extern int fnWriteBytesFlash(unsigned char *ucDestination, unsigned char *ucData
 //
 extern void fnGetParsFile(unsigned char *ParLocation, unsigned char *ptrValue, MAX_FILE_LENGTH Size)
 {
-#ifdef ACTIVE_FILE_SYSTEM
-    #ifdef _WINDOWS
+#if defined ACTIVE_FILE_SYSTEM
+    #if defined _WINDOWS
     if (iFetchingInternalMemory != 0) {
         uMemcpy(ptrValue, ParLocation, Size);
         iFetchingInternalMemory = 0;
@@ -2620,7 +2620,7 @@ extern void fnGetParsFile(unsigned char *ParLocation, unsigned char *ptrValue, M
     usRead[2] = (unsigned char)((unsigned short)ParLocation);
     usRead[3] = PREPARE_READ;
     fnWaitWriteComplete();                                               // ensure the chip is ready to be read
-        #ifdef SPI_INTERFACE
+        #if defined SPI_INTERFACE
     fnWrite(SPI_handle, usRead, sizeof(usRead));                         // set the read address
     fnRead(SPI_handle, ptrValue, usSize);                                // read from the device to the return buffer
         #else

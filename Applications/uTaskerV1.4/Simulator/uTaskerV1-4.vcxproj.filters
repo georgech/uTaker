@@ -539,6 +539,9 @@
     <ClCompile Include="..\..\..\Hardware\Coldfire\M5223XSim.c">
       <Filter>WinSim\SIMcoldfire</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\uTasker\SPI_drv.c">
+      <Filter>uTasker</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\ADC_Timers.h">
@@ -1383,6 +1386,12 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\packages.h">
       <Filter>Hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\spi_tests.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_SPI.h">
+      <Filter>Hardware\Kinetis</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -1541,6 +1541,12 @@ extern void fnRetriggerWatchdog(void)
     #include "kinetis_UART.h"                                            // include UART/LPUART hardware driver code
 #endif
 
+#if defined SPI_INTERFACE
+/* =================================================================== */
+/*                            SPI Interface                            */
+/* =================================================================== */
+    #include "kinetis_SPI.h"                                             // include SPI hardware driver code
+#endif
 
 #if defined CAN_INTERFACE
 /* =================================================================== */
