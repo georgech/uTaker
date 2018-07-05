@@ -35,8 +35,6 @@
     #define SPI_DRV_MALLO_ALIGN(x, y) uMallocAlign((MAX_MALLOC)(x), (unsigned short)(y))
 #endif
 
-#define NUMBER_SPI    1
-
 /* =================================================================== */
 /*                       local structure definitions                   */
 /* =================================================================== */
@@ -45,7 +43,8 @@
 /* =================================================================== */
 /*                 local function prototype declarations               */
 /* =================================================================== */
-static void send_next_byte(QUEUE_HANDLE channel, TTYQUE *ptTTYQue);
+
+static void send_next_SPI_byte(QUEUE_HANDLE channel, TTYQUE *ptTTYQue);
 
 /* =================================================================== */
 /*                             constants                               */
@@ -119,7 +118,7 @@ static QUEUE_TRANSFER entry_spi(QUEUE_HANDLE channel, unsigned char *ptBuffer, Q
                 if ((Counter & PAUSE_TX) != 0) { 
                     ptTTYQue->ucState &= ~(TX_WAIT);                     // remove pause
                     if ((ptTTYQue->ucState & (TX_ACTIVE)) == 0) {
-                        send_next_byte(channel, ptTTYQue);               // this is not done when the transmitter is already performing a transfer or if suspended
+                        send_next_SPI_byte(channel, ptTTYQue);           // this is not done when the transmitter is already performing a transfer or if suspended
                     }
                 }
                 else {
@@ -199,7 +198,7 @@ static QUEUE_TRANSFER entry_spi(QUEUE_HANDLE channel, unsigned char *ptBuffer, Q
                 rtn_val = fnFillBuf(&ptTTYQue->tty_queue, ptBuffer, Counter);
             uDisable_Interrupt();
             if ((ptTTYQue->ucState & (TX_WAIT | TX_ACTIVE)) == 0) {
-                send_next_byte(channel, ptTTYQue);                       // this is not done when the transmitter is already performing a transfer or if suspended
+                send_next_SPI_byte(channel, ptTTYQue);                   // this is not done when the transmitter is already performing a transfer or if suspended
             }
             uEnable_Interrupt();
             return (rtn_val);
@@ -453,7 +452,7 @@ extern QUEUE_HANDLE fnOpenSPI(SPITABLE *pars, unsigned char driver_mode)
 static void fnWakeBlockedTx(TTYQUE *ptTTYQue, QUEUE_TRANSFER low_water_level)
 {
     if ((ptTTYQue->wake_task != 0) && (ptTTYQue->tty_queue.chars <= low_water_level)) { // we have just reduced the buffer content adequately so inform a blocked task that it can continue writing
-        unsigned char tx_continue_message[ HEADER_LENGTH ]; // = { INTERNAL_ROUTE, INTERNAL_ROUTE , ptTTYQue->wake_task, INTERRUPT_EVENT, TX_FREE };  // define standard interrupt event
+        unsigned char tx_continue_message[HEADER_LENGTH]; // = { INTERNAL_ROUTE, INTERNAL_ROUTE , ptTTYQue->wake_task, INTERRUPT_EVENT, TX_FREE };  // define standard interrupt event
         tx_continue_message[MSG_DESTINATION_NODE] = INTERNAL_ROUTE;
         tx_continue_message[MSG_SOURCE_NODE]      = INTERNAL_ROUTE;
         tx_continue_message[MSG_DESTINATION_TASK] = ptTTYQue->wake_task;
@@ -466,7 +465,7 @@ static void fnWakeBlockedTx(TTYQUE *ptTTYQue, QUEUE_TRANSFER low_water_level)
 }
 #endif
 
-static void send_next_byte(QUEUE_HANDLE channel, TTYQUE *ptTTYQue)       // interrupts are assumed to be disabled here
+static void send_next_SPI_byte(QUEUE_HANDLE channel, TTYQUE *ptTTYQue)   // interrupts are assumed to be disabled here
 {
 #if defined SPI_SUPPORT_DMA
     if ((ptTTYQue->ucDMA_mode & UART_TX_DMA) != 0) {                     // DMA mode of operation
@@ -497,7 +496,7 @@ static void send_next_byte(QUEUE_HANDLE channel, TTYQUE *ptTTYQue)       // inte
 #endif
         if (ptTTYQue->tty_queue.chars == 0) {                            // are there more to send?
             ptTTYQue->ucState &= ~TX_ACTIVE;                             // transmission of a block has terminated
-            fnClearTxInt(channel);                                       // clear interrupt
+            fnClearSPITxInt(channel);                                    // clear interrupt
 #if defined (WAKE_BLOCKED_TX) && defined (SPI_SUPPORT_DMA)
             fnWakeBlockedTx(ptTTYQue, 0);
 #endif
@@ -586,7 +585,7 @@ static void send_next_byte(QUEUE_HANDLE channel, TTYQUE *ptTTYQue)       // inte
                 return;
             }
 #endif
-            fnTxByte(channel, ucNextByte);
+            fnTxSPIByte(channel, ucNextByte, (ptTTYQue->tty_queue.chars == 1));
 #if defined SERIAL_STATS
             ptTTYQue->ulSerialCounter[SERIAL_STATS_CHARS]++;
 #endif
@@ -611,7 +610,7 @@ static void send_next_byte(QUEUE_HANDLE channel, TTYQUE *ptTTYQue)       // inte
         }
     }
     else {
-        fnClearTxInt(channel);                                           // clear interrupt since we are not allowed to send at the moment
+        fnClearSPITxInt(channel);                                        // clear interrupt since we are not allowed to send at the moment
     }
 }
 
@@ -753,9 +752,9 @@ extern void fnSPIRxByte(unsigned char ch, QUEUE_HANDLE Channel)
 
 // The tx interrupt routine calls this
 //
-extern void fnSPITxByte(QUEUE_HANDLE Channel)
+extern void fnSPITxByte(QUEUE_HANDLE channel)
 {
-    send_next_byte(Channel, tx_control[Channel]);
+    send_next_SPI_byte(channel, tx_control[channel]);
 }
 
 #endif

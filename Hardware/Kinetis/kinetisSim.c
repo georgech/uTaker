@@ -5493,6 +5493,20 @@ static const unsigned char ucUART_channel[] = {
 };
 #endif
 
+extern void fnSimulateSPIIn(int iPort, unsigned char *ptrDebugIn, unsigned short usLen)
+{
+#if defined SPI_INTERFACE
+    VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+    while (usLen-- != 0) {                                               // for each byte
+        SPI0_POPR = *ptrDebugIn++;
+        SPI0_SR |= SPI_SR_RFDF;
+        if ((SPI0_RSER & SPI_SRER_RFDF_RE) != 0) {
+            ptrVect->processor_interrupts.irq_SPI0();                    // call the interrupt handler
+        }
+    }
+#endif
+}
+
 // Simulate the reception of serial data by inserting bytes into the input buffer and calling interrupts
 //
 extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned short usLen)
@@ -6622,6 +6636,28 @@ extern unsigned long fnSimInts(char *argv[])
             }
         }
 	}
+#endif
+#if defined SPI_INTERFACE
+    if ((iInts & CHANNEL_0_SPI_INT) != 0) {
+        iInts &= ~CHANNEL_0_SPI_INT;                                     // interrupt has been handled
+        if ((SPI0_RSER & SPI_SRER_TFFF_RE) != 0) {                       // if transmitter fifo not full interrupt enabled
+            if (fnGenInt(irq_SPI0_ID) != 0) {                            // if SPI0 interrupt is not disabled
+                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                ptrVect->processor_interrupts.irq_SPI0();                // call the interrupt handler
+            }
+        }
+    }
+    #if SPI_AVAILABLE > 1
+    if ((iInts & CHANNEL_1_SPI_INT) != 0) {
+        iInts &= ~CHANNEL_1_SPI_INT;                                     // interrupt has been handled
+        if ((SPI1_RSER & SPI_SRER_TFFF_RE) != 0) {                       // if transmitter fifo not full interrupt enabled
+            if (fnGenInt(irq_SPI1_ID) != 0) {                            // if SPI1 interrupt is not disabled
+                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                ptrVect->processor_interrupts.irq_SPI1();                // call the interrupt handler
+            }
+        }
+    }
+    #endif
 #endif
 #if defined USB_INTERFACE
     #if defined USB_HS_INTERFACE                                         // {12}

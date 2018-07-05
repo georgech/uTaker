@@ -591,7 +591,7 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
     #else
     unsigned char       ucInputMessage[64];                              // reserve space for receiving messages (if the UART rx debug size if set less than 64 we use a 64 byte input otherwise it may be too small (and cause buffer overflow when used))
     #endif
-    #if (defined SERIAL_INTERFACE && defined DEMO_UART) || (defined CAN_INTERFACE && defined TEST_CAN) || defined TEST_I2C // {32}{39}
+    #if (defined SERIAL_INTERFACE && defined DEMO_UART) || (defined CAN_INTERFACE && defined TEST_CAN) || defined TEST_I2C || (defined SPI_INTERFACE && defined TEST_SPI && defined TEST_SPI_SLAVE_MODE) // {32}{39}
     QUEUE_TRANSFER Length = 0;
     #endif
 
@@ -1122,6 +1122,10 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
     }
 #endif
 #if !defined NO_PERIPHERAL_DEMONSTRATIONS
+    #define _SPI_READ_CODE                                               // SPI reception checking
+        #include "spi_tests.h"                                           // include SPI code to handle reception
+    #undef _SPI_READ_CODE
+
     #define _I2C_READ_CODE                                               // I2C reception checking
     #if !defined BLAZE_K22
         #include "i2c_tests.h"                                           // include I2C code to handle reception

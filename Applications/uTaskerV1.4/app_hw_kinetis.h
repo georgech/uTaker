@@ -1637,7 +1637,7 @@
     #if defined SPI_FLASH_S25FL1_K
         #define CS0_LINE                    SPI_PUSHR_PCS0               // CS0 line used when SPI FLASH is enabled
     #else
-        #define CS0_LINE                    SPI_PUSHR_PCS5               // CS0 line used when SPI FLASH is enabled
+        #define CS0_LINE                    SPI_PUSHR_PCS5               // CS5 line used when SPI FLASH is enabled
     #endif
     #define CS1_LINE                                                     // CS1 line used when extended SPI FLASH is enabled
     #define CS2_LINE                                                     // CS2 line used when extended SPI FLASH is enabled
@@ -3393,6 +3393,9 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define PIT2_INTERRUPT_PRIORITY    4
     #define PIT3_INTERRUPT_PRIORITY    4
     #define PRIORITY_TICK_TIMER        3
+    #define PRIORITY_SPI0              3
+    #define PRIORITY_SPI1              3
+    #define PRIORITY_SPI2              3
     #define PRIORITY_ADC               2
     #define USB_PRIORITY               2
     #define PRIORITY_RTC               2

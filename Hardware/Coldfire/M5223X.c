@@ -5089,7 +5089,7 @@ static __interrupt__ void SPI_Interrupt(void)
 {
 }
 
-extern int fnTxSPIByte(QUEUE_HANDLE channel, unsigned char ucTxByte)
+extern int fnTxSPIByte(QUEUE_HANDLE channel, unsigned short usTxByte, int iLast)
 {
     return 0;
 }

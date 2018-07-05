@@ -429,13 +429,18 @@ _abort_multi:
         fnSimulateSerialIn((NUMBER_SERIAL + 3), (unsigned char*)argv[1], *(unsigned short *)argv[0]);
         break;
 #endif
-#if defined SPI_SIM_INTERFACE
+#if defined SPI_INTERFACE
     case RX_SPI0:
         fnSimulateSPIIn(0, (unsigned char *)argv[1], *(unsigned short *)argv[0]);
         break;
-
     case RX_SPI1:
         fnSimulateSPIIn(1, (unsigned char*)argv[1], *(unsigned short *)argv[0]);
+        break;
+    case RX_SPI2:
+        fnSimulateSPIIn(2, (unsigned char *)argv[1], *(unsigned short *)argv[0]);
+        break;
+    case RX_SPI3:
+        fnSimulateSPIIn(3, (unsigned char*)argv[1], *(unsigned short *)argv[0]);
         break;
 #endif
 #if defined SUPPORT_HW_FLOW                                              // {7}

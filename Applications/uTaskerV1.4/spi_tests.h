@@ -21,9 +21,9 @@
 #if defined SPI_INTERFACE && !defined _SPI_CONFIG
     #define _SPI_CONFIG
 
-    #define TEST_SPI                                                     // test SPI operation
-      //#define TEST_SPI_MASTER_MODE
-      //#define TEST_SPI_SLAVE_MODE
+  //#define TEST_SPI                                                     // test SPI operation
+        #define TEST_SPI_MASTER_MODE
+        #define TEST_SPI_SLAVE_MODE
 
 /* =================================================================== */
 /*                 local function prototype declarations               */
@@ -31,7 +31,9 @@
 
     #if defined SPI_INTERFACE && defined TEST_SPI
         static void fnInitSPIInterface(void);
-        static void fnSendSPI(int key);
+        #if defined TEST_SPI_MASTER_MODE
+            static void fnSendSPI(int key);
+        #endif
     #endif
 
 
@@ -40,9 +42,22 @@
 /* =================================================================== */
 
     #if defined SPI_INTERFACE && defined TEST_SPI
-        static QUEUE_HANDLE SPI_interface_ID;
+        static QUEUE_HANDLE SPI_master_ID = NO_ID_ALLOCATED;
+        #if defined TEST_SPI_SLAVE_MODE
+        static QUEUE_HANDLE SPI_slave_ID = NO_ID_ALLOCATED;
+        #endif
     #endif
 
+#endif
+
+
+#if defined _SPI_READ_CODE && defined SPI_INTERFACE && defined TEST_SPI && defined TEST_SPI_SLAVE_MODE
+    if ((Length = fnMsgs(SPI_slave_ID)) != 0) {                          // if SPI reception available
+        fnDebugMsg("SPI Rx:");
+        fnDebugDec(Length, WITH_CR_LF);
+        while (fnRead(SPI_slave_ID, ucInputMessage, 1) != 0) {           // while reception data available
+        }
+    }
 #endif
 
 
@@ -50,23 +65,28 @@
 static void fnInitSPIInterface(void)
 {
     SPITABLE tSPIParameters;                                             // table for passing information to driver
-    tSPIParameters.Channel = 0;                                          // spi 0
-    tSPIParameters.ucSpeed = SPI_100K;
+    #if defined TEST_SPI_MASTER_MODE
+    static const unsigned char ucTestTx[4] = { 1, 2, 3, 4 };
+    tSPIParameters.Channel = 1;                                          // SPI 1
+    tSPIParameters.ucSpeed = SPI_100K;                                   // master mode at 100kb/s
     tSPIParameters.Config = 0;
     tSPIParameters.Rx_tx_sizes.TxQueueSize = 128;
     tSPIParameters.Rx_tx_sizes.RxQueueSize = 128;
-    tSPIParameters.Task_to_wake = OWN_TASK;                              // wake us on buffer events
-    SPI_interface_ID = fnOpen(TYPE_SPI, FOR_I_O, &tSPIParameters);       // open interface
-}
-
-// Test interface for sending SPI messages to the specified channel
-//
-extern void fnSendSPI_message(int iChannel, unsigned char ucType, unsigned char *ptrData, unsigned char ucMessageLength)
-{
-}
-
-static void fnSendSPI(int key)
-{
+    tSPIParameters.Task_to_wake = OWN_TASK;                              // wake us on events
+    SPI_master_ID = fnOpen(TYPE_SPI, FOR_I_O, &tSPIParameters);          // open interface
+    #endif
+    #if defined TEST_SPI_SLAVE_MODE
+    tSPIParameters.Channel = 0;                                          // SPI 0
+    tSPIParameters.ucSpeed = 0;                                          // slave mode
+    tSPIParameters.Config = 0;
+    tSPIParameters.Rx_tx_sizes.TxQueueSize = 128;
+    tSPIParameters.Rx_tx_sizes.RxQueueSize = 128;
+    tSPIParameters.Task_to_wake = OWN_TASK;                              // wake us on events
+    SPI_slave_ID = fnOpen(TYPE_SPI, FOR_I_O, &tSPIParameters);           // open interface
+    #endif
+    #if defined TEST_SPI_MASTER_MODE
+    fnWrite(SPI_master_ID, (unsigned char *)ucTestTx, sizeof(ucTestTx)); // send a test transmission
+    #endif
 }
 #endif
 

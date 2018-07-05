@@ -1393,7 +1393,12 @@
     #define NUMBER_EXTERNAL_SERIAL     0
 #endif
 
-//#define SPI_INTERFACE
+//#define SPI_INTERFACE                                                  // enable SPI as serial driver type
+#if defined SPI_INTERFACE
+    #define NUMBER_SPI                 (SPI_AVAILABLE)
+#else
+    #define NUMBER_SPI                 0
+#endif
 
 #if !defined SUPPORT_FLUSH && ((defined USE_MODBUS && (defined MODBUS_GATE_WAY_QUEUE || defined MODBUS_RTU)) || defined USE_DMX_RDM_MASTER)
     #define SUPPORT_FLUSH                                                // support queue flush for use by the MODBUS gateway
@@ -2161,7 +2166,7 @@
     #define NUMBER_FIFO_QUEUES    0
 #endif
 
-#define PHYSICAL_QUEUES   (NUMBER_SERIAL + NUMBER_EXTERNAL_SERIAL + NUMBER_LAN + NUMBER_I2C + NUMBER_CAN + NUMBER_USB + NUMBER_MODBUS_QUEUES + NUMBER_FIFO_QUEUES) // the number of physical queues in the system
+#define PHYSICAL_QUEUES   (NUMBER_SERIAL + NUMBER_EXTERNAL_SERIAL + NUMBER_LAN + NUMBER_I2C + NUMBER_SPI + NUMBER_CAN + NUMBER_USB + NUMBER_MODBUS_QUEUES + NUMBER_FIFO_QUEUES) // the number of physical queues in the system
 
 #define RANDOM_NUMBER_GENERATOR                                          // support a random number generator (useful for DHCP and possibly DNS)
 

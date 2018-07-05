@@ -217,9 +217,10 @@ extern void fnSendSPIMessage(unsigned char *ptrData, QUEUE_TRANSFER Length);
  #define PREPARE_PAGE_WRITE    PREPARE_READ
  #define TERMINATE_WRITE       0x01
 
-extern int  fnTxSPIByte(QUEUE_HANDLE channel, unsigned char ucTxByte);
-extern void fnSPIRxByte(unsigned char ch, QUEUE_HANDLE Channel );
-extern void fnSPITxByte(QUEUE_HANDLE Channel );
+extern int  fnTxSPIByte(QUEUE_HANDLE channel, unsigned short usTxByte, int iLast);
+extern void fnSPIRxByte(unsigned char ch, QUEUE_HANDLE Channel);
+extern void fnSPITxByte(QUEUE_HANDLE Channel);
+extern void fnClearSPITxInt(QUEUE_HANDLE channel);
 
 extern void fnGetSPI_bytes(unsigned char *, MAX_FILE_LENGTH);
 

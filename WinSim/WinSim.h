@@ -96,11 +96,13 @@
 #define INITIALISE_OP_SYS_2  14 
 #define RX_SPI0              15                                          // {7}
 #define RX_SPI1              16
-#define INPUT_TOGGLE_NEG     17                                          // {15}
-#define RX_EXT_COM0          18
-#define RX_EXT_COM1          19
-#define RX_EXT_COM2          20
-#define RX_EXT_COM3          21
+#define RX_SPI2              17
+#define RX_SPI3              18
+#define INPUT_TOGGLE_NEG     19                                          // {15}
+#define RX_EXT_COM0          20
+#define RX_EXT_COM1          21
+#define RX_EXT_COM2          22
+#define RX_EXT_COM3          23
 
 #define SIM_TEST_RX_0        50
 #define SIM_TEST_RX_1        51
@@ -233,6 +235,11 @@
 #define CHANNEL_2_EXT_SERIAL_INT 0x00100000
 #define CHANNEL_3_EXT_SERIAL_INT 0x00200000
 #define USBHS_INT                0x00400000                              // {46}
+
+#define CHANNEL_0_SPI_INT    0x01000000
+#define CHANNEL_1_SPI_INT    0x02000000
+#define CHANNEL_2_SPI_INT    0x04000000
+#define CHANNEL_3_SPI_INT    0x08000000
 
 #define DMA_CONTROLLER_0     0x00000001
 #define DMA_CONTROLLER_1     0x00000002
