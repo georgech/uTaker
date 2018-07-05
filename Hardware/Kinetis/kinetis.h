@@ -6974,10 +6974,10 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
   #define SPI_SR_TXCTR      0x0000f000                                   // tx FIFO counter
   #define SPI_SR_RFDF       0x00020000                                   // rx drain flag - RxFIFO is not empty (write '1' to clear)
   #define SPI_SR_RFOF       0x00080000                                   // receive FIFO overflow flag (write '1' to clear)
-  #define SPI_SR_TFFF       0x02000000                                   // transmit FIFO fill flag - FIFO is not full
+  #define SPI_SR_TFFF       0x02000000                                   // transmit FIFO fill flag - FIFO is not full (write '1' to clear)
   #define SPI_SR_TFUF       0x08000000                                   // transmit FIFO underflow flag (write '1' to clear)
   #define SPI_SR_EOQF       0x10000000                                   // end of queue flag (write '1' to clear)
-  #define SPI_SR_TXRXS      0x40000000                                   // DSPI is in running state
+  #define SPI_SR_TXRXS      0x40000000                                   // DSPI is in running state (write '1' to clear)
   #define SPI_SR_TCF        0x80000000                                   // transfer complete (write '1' to clear)
 #define SPI0_RSER           *(volatile unsigned long *)(DSPI0_BLOCK + 0x30) // SPI0 DMA/Interrupt Request Select and Enable Register
   #define SPI_SRER_RFDF_DIRS 0x00010000                                  // receive FIFO drain DMA request select

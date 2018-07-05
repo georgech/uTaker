@@ -21,7 +21,7 @@
 #if defined SPI_INTERFACE && !defined _SPI_CONFIG
     #define _SPI_CONFIG
 
-  //#define TEST_SPI                                                     // test SPI operation
+    #define TEST_SPI                                                     // test SPI operation
         #define TEST_SPI_MASTER_MODE
         #define TEST_SPI_SLAVE_MODE
 
@@ -31,9 +31,6 @@
 
     #if defined SPI_INTERFACE && defined TEST_SPI
         static void fnInitSPIInterface(void);
-        #if defined TEST_SPI_MASTER_MODE
-            static void fnSendSPI(int key);
-        #endif
     #endif
 
 
@@ -54,9 +51,11 @@
 #if defined _SPI_READ_CODE && defined SPI_INTERFACE && defined TEST_SPI && defined TEST_SPI_SLAVE_MODE
     if ((Length = fnMsgs(SPI_slave_ID)) != 0) {                          // if SPI reception available
         fnDebugMsg("SPI Rx:");
-        fnDebugDec(Length, WITH_CR_LF);
+        fnDebugDec(Length, 0);
         while (fnRead(SPI_slave_ID, ucInputMessage, 1) != 0) {           // while reception data available
+            fnDebugHex(ucInputMessage[0], (sizeof(ucInputMessage[0]) | WITH_SPACE | WITH_LEADIN));
         }
+        fnDebugMsg("\r\n");
     }
 #endif
 
@@ -66,7 +65,7 @@ static void fnInitSPIInterface(void)
 {
     SPITABLE tSPIParameters;                                             // table for passing information to driver
     #if defined TEST_SPI_MASTER_MODE
-    static const unsigned char ucTestTx[4] = { 1, 2, 3, 4 };
+    static const unsigned char ucTestTx[] = { 1, 2, 4, 8, 16, 32, 64, 128 };
     tSPIParameters.Channel = 1;                                          // SPI 1
     tSPIParameters.ucSpeed = SPI_100K;                                   // master mode at 100kb/s
     tSPIParameters.Config = 0;

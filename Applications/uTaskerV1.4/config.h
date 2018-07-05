@@ -1592,7 +1592,7 @@
 
 // utFAT
 //
-#define SDCARD_SUPPORT                                                   // SD-card interface
+//#define SDCARD_SUPPORT                                                 // SD-card interface
 //#define FLASH_FAT                                                      // FAT in internal flash
 //#define SPI_FLASH_FAT                                                  // FAT in external SPI flash
     #define SIMPLE_FLASH                                                 // don't perform block management and wear-leveling
