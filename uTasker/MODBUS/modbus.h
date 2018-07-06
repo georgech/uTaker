@@ -20,13 +20,22 @@
     20.01.2010 Add ADJUST_READ_WRITE_MULTIPLE_REGISTER                    {V1.09}
     03.05.2010 Allow MODBUS_TCP_SERVERS 0 value to disable                {V1.10}
     25.08.2010 Extra configuration definitions for more verified configurations {V1.14}
+    06.07.2018 Move some default defines from modbus.c to here
 
 */
 
+// Set default define values when not specified
+//
+#if !defined MODBUS_SHARED_SERIAL_INTERFACES                             // if not specified
+    #define MODBUS_SHARED_SERIAL_INTERFACES     0                        // default to 0
+#endif
+#if !defined MODBUS_SHARED_TCP_INTERFACES                                // if not specified
+    #define MODBUS_SHARED_TCP_INTERFACES        0                        // default to 0
+#endif
 
 // MODBUS parameters
 //
-#define SLAVE_ID_LENGTH        20
+#define SLAVE_ID_LENGTH                         20
 typedef struct stMODBUS_PARS
 {
     unsigned char  ucModbusParVersion;                                   // version of MODBUS parameter block

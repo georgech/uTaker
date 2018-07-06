@@ -1062,6 +1062,7 @@ Build_STM32.bat
     </ClInclude>
     <ClInclude Include="..\app_hw_stm32.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\config.h" />
     <ClInclude Include="..\..\..\uTasker\driver.h" />

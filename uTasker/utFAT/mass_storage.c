@@ -1551,11 +1551,12 @@ static int utDeleteFlashSector(UTDISK *ptr_utDisk, unsigned long ulSectorNumber)
     #endif
 #endif
 
-
-#if SPI_FLASH_PAGE_LENGTH == 256
-    #define SPI_FLASH_FAT_SECTOR_SIZE     512
-#else
-    #define SPI_FLASH_FAT_SECTOR_SIZE     SPI_FLASH_PAGE_LENGTH          // 512 or 528
+#if defined SPI_FLASH_PAGE_LENGTH
+    #if SPI_FLASH_PAGE_LENGTH == 256
+        #define SPI_FLASH_FAT_SECTOR_SIZE     512
+    #else
+        #define SPI_FLASH_FAT_SECTOR_SIZE     SPI_FLASH_PAGE_LENGTH      // 512 or 528
+    #endif
 #endif
 
 #if defined SPI_FLASH_FAT

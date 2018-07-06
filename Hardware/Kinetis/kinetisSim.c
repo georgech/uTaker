@@ -4961,9 +4961,9 @@ extern int fnSimulateDMA(int channel)                                    // {3}
     return -1;                                                           // no operation
 }
 
+#if !defined DEVICE_WITHOUT_DMA
 static void fnHandleDMA_triggers(int iTriggerSource, int iDMAmux)
 {
-#if !defined DEVICE_WITHOUT_DMA
     #if defined KINETIS_KM
     int iMuxChannels = 1;                                                // KM DMA has one DMAMUX per channel
     #else
@@ -5046,8 +5046,8 @@ static void fnHandleDMA_triggers(int iTriggerSource, int iDMAmux)
         }
         iChannel++;
     }
-#endif
 }
+#endif
 
 // Handle port interrupts on input changes
 //
@@ -5091,19 +5091,21 @@ static void fnPortInterrupt(int iPort, unsigned long ulNewState, unsigned long u
         }
         break;
     }
+    #if !defined DEVICE_WITHOUT_DMA
     if ((*ptrPortConfig & PORT_IRQC_LOW_LEVEL) == 0) {                   // DMA trigger and not interrupt
-    #if defined DMAMUX1_CHCFG_SOURCE_PORTF
+        #if defined DMAMUX1_CHCFG_SOURCE_PORTF
         if (iPort == _PORTF) {
             fnHandleDMA_triggers(DMAMUX1_CHCFG_SOURCE_PORTF, 1);         // port F is on second DMAMUX
         }
         else {
-    #endif
+        #endif
             fnHandleDMA_triggers((DMAMUX0_CHCFG_SOURCE_PORTA + iPort), 0);
-    #if defined DMAMUX1_CHCFG_SOURCE_PORTF
+        #if defined DMAMUX1_CHCFG_SOURCE_PORTF
         }
-    #endif
+        #endif
         return;
     }
+    #endif
     *ptrPortConfig |= PORT_ISF;
     #if defined irq_PORTA_ID
     iPortInterruptSource = (irq_PORTA_ID + iPort);
@@ -5422,7 +5424,7 @@ extern void fnSimulateI2C(int iPort, unsigned char *ptrDebugIn, unsigned short u
 #define UART_TYPE_LPUART 0
 #define UART_TYPE_UART   1
 static const unsigned char uart_type[LPUARTS_AVAILABLE + UARTS_AVAILABLE] = {
-        #if defined LPUARTS_PARALLEL
+    #if defined LPUARTS_PARALLEL
     UART_TYPE_UART,                                                      // UART0
     UART_TYPE_UART,                                                      // UART1
     UART_TYPE_UART,                                                      // UART2
@@ -5447,50 +5449,51 @@ static const unsigned char uart_type[LPUARTS_AVAILABLE + UARTS_AVAILABLE] = {
     UART_TYPE_UART,                                                      // UART5
             #endif
     #endif
-        #else                                                            // KL43
+    #else                                                                // KL43
     UART_TYPE_LPUART,                                                    // LPUART0
     UART_TYPE_LPUART,                                                    // LPUART1
     UART_TYPE_UART,                                                      // UART2
-        #endif
+    #endif
 };
 #endif
 
 #if LPUARTS_AVAILABLE > 0
+    #if defined LPUARTS_PARALLEL
+        #define LPUART0_CH_NUMBER     UARTS_AVAILABLE
+        #define LPUART1_CH_NUMBER     (UARTS_AVAILABLE + 1)
+        #define LPUART2_CH_NUMBER     (UARTS_AVAILABLE + 2)
+        #define LPUART3_CH_NUMBER     (UARTS_AVAILABLE + 3)
+        #define LPUART4_CH_NUMBER     (UARTS_AVAILABLE + 4)
+        #define LPUART5_CH_NUMBER     (UARTS_AVAILABLE + 5)
+    #else
+        #define LPUART0_CH_NUMBER     0
+        #define LPUART1_CH_NUMBER     1
+        #define LPUART2_CH_NUMBER     2
+        #define LPUART3_CH_NUMBER     3
+        #define LPUART4_CH_NUMBER     4
+        #define LPUART5_CH_NUMBER     5
+    #endif
 
-#if defined LPUARTS_PARALLEL
-    #define LPUART0_CH_NUMBER     UARTS_AVAILABLE
-    #define LPUART1_CH_NUMBER     (UARTS_AVAILABLE + 1)
-    #define LPUART2_CH_NUMBER     (UARTS_AVAILABLE + 2)
-    #define LPUART3_CH_NUMBER     (UARTS_AVAILABLE + 3)
-    #define LPUART4_CH_NUMBER     (UARTS_AVAILABLE + 4)
-    #define LPUART5_CH_NUMBER     (UARTS_AVAILABLE + 5)
-#else
-    #define LPUART0_CH_NUMBER     0
-    #define LPUART1_CH_NUMBER     1
-    #define LPUART2_CH_NUMBER     2
-    #define LPUART3_CH_NUMBER     3
-    #define LPUART4_CH_NUMBER     4
-    #define LPUART5_CH_NUMBER     5
-#endif
-
+    #if defined SERIAL_INTERFACE && !defined DEVICE_WITHOUT_DMA
 static const unsigned char ucUART_channel[] = {
     DMA_UART0_RX_CHANNEL,
-    #if (LPUARTS_AVAILABLE + UARTS_AVAILABLE) > 1
+        #if (LPUARTS_AVAILABLE + UARTS_AVAILABLE) > 1
     DMA_UART1_RX_CHANNEL,
-    #endif
-    #if (LPUARTS_AVAILABLE + UARTS_AVAILABLE) > 2
+        #endif
+        #if (LPUARTS_AVAILABLE + UARTS_AVAILABLE) > 2
     DMA_UART2_RX_CHANNEL,
-    #endif
-    #if (LPUARTS_AVAILABLE + UARTS_AVAILABLE) > 3
+        #endif
+        #if (LPUARTS_AVAILABLE + UARTS_AVAILABLE) > 3
     DMA_UART3_RX_CHANNEL,
-    #endif
-    #if (LPUARTS_AVAILABLE + UARTS_AVAILABLE) > 4
+        #endif
+        #if (LPUARTS_AVAILABLE + UARTS_AVAILABLE) > 4
     DMA_UART4_RX_CHANNEL,
-    #endif
-    #if (LPUARTS_AVAILABLE + UARTS_AVAILABLE) > 5
+        #endif
+        #if (LPUARTS_AVAILABLE + UARTS_AVAILABLE) > 5
     DMA_UART5_RX_CHANNEL
-    #endif
+        #endif
 };
+    #endif
 #endif
 
 extern void fnSimulateSPIIn(int iPort, unsigned char *ptrDebugIn, unsigned short usLen)
@@ -8222,7 +8225,9 @@ static void fnTriggerADC(int iADC, int iHW_trigger)
             if ((iHW_trigger != 0) || ((ADC0_SC2 & ADC_SC2_ADTRG_HW) == 0)) { // hardware or software trigger
                 fnSimADC(0);                                             // perform ADC conversion
                 if ((ADC0_SC1A & ADC_SC1A_COCO) != 0) {                  // {40} if conversion has completed
+    #if !defined DEVICE_WITHOUT_DMA
                     fnHandleDMA_triggers(DMAMUX0_CHCFG_SOURCE_ADC0, 0);  // handle DMA triggered on ADC0 conversion
+    #endif
                     if ((ADC0_SC1A & ADC_SC1A_AIEN) != 0) {              // end of conversion interrupt enabled
                         if (fnGenInt(irq_ADC0_ID) != 0) {                // if ADC0 interrupt is not disabled
                             VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;

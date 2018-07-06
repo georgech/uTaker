@@ -278,10 +278,6 @@ static const QUEUE_HANDLE modbus_uart_map[MODBUS_SERIAL_INTERFACES] = {
     static _TIMER_INTERRUPT_SETUP timer_setup_RTS_negate[MODBUS_SERIAL_INTERFACES];
     #endif
 
-    #if !defined MODBUS_SHARED_SERIAL_INTERFACES
-        #define MODBUS_SHARED_SERIAL_INTERFACES 0
-    #endif
-
     #if defined MODBUS_SUPPORT_SERIAL_LINE_FUNCTIONS && defined MODBUS_SUPPORT_SERIAL_LINE_DIAGNOSTICS
     static unsigned char  ucListenOnlyMode[MODBUS_SERIAL_INTERFACES + MODBUS_SHARED_SERIAL_INTERFACES] = {0};
     static unsigned short usDiagnosticRegister[MODBUS_SERIAL_INTERFACES + MODBUS_SHARED_SERIAL_INTERFACES] = {0};
@@ -301,13 +297,6 @@ static const QUEUE_HANDLE modbus_uart_map[MODBUS_SERIAL_INTERFACES] = {
 #endif
 #if !defined MODBUS_TCP_MASTERS
     #define MODBUS_TCP_MASTERS              0
-#endif
-
-#if !defined MODBUS_SHARED_SERIAL_INTERFACES
-    #define MODBUS_SHARED_SERIAL_INTERFACES 0
-#endif
-#if !defined MODBUS_SHARED_TCP_INTERFACES
-    #define MODBUS_SHARED_TCP_INTERFACES 0
 #endif
 
 #define MODBUS_DELAY_LIST_LENGTH  (MODBUS_TCP_SERVERS + MODBUS_SERIAL_INTERFACES) // entry for each possible MODBUS slave
@@ -3049,7 +3038,7 @@ _handle_local_slave:
             break;
         #endif
     #endif
-    #if !defined NO_SLAVE_MODBUS_READ_DEVICE_IDENTIFIER                  // {3}
+    #if defined MODBUS_SUPPORT_SERIAL_LINE_FUNCTIONS && defined USE_MODBUS_SLAVE && (MODBUS_SERIAL_INTERFACES > 0) && !defined NO_SLAVE_MODBUS_READ_DEVICE_IDENTIFIER                  // {3}
         case MODBUS_ENCAPSUL_INTERFACE_TRANSPORT:                        // 0x2b
             if (*modbus_rx_function->data_content.user_data == MODBUS_ENCAP_READ_DEVICE_IDENTIFIER) { // modbus encapsulated interface type (0x0e)
                 unsigned char ucReadDeviceID_code = *(modbus_rx_function->data_content.user_data + 1);

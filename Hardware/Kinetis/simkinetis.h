@@ -1543,15 +1543,15 @@ typedef struct stKINETIS_FTFL
 #endif
 } KINETIS_FTFL;
 
-
+#if !defined DEVICE_WITHOUT_DMA
 typedef struct stKINETIS_DMAMUX
 {
 unsigned char DMAMUX_CHCFG0;
-#if !defined KINETIS_KM
+    #if !defined KINETIS_KM
     unsigned char DMAMUX_CHCFG1;
     unsigned char DMAMUX_CHCFG2;
     unsigned char DMAMUX_CHCFG3;
-    #if !defined KINETIS_KL
+        #if !defined KINETIS_KL
         unsigned char DMAMUX_CHCFG4;
         unsigned char DMAMUX_CHCFG5;
         unsigned char DMAMUX_CHCFG6;
@@ -1564,9 +1564,10 @@ unsigned char DMAMUX_CHCFG0;
         unsigned char DMAMUX_CHCFG13;
         unsigned char DMAMUX_CHCFG14;
         unsigned char DMAMUX_CHCFG15;
+        #endif
     #endif
-#endif
 } KINETIS_DMAMUX;
+#endif
 
 #if I2S_AVAILABLE > 0
 typedef struct st_KINETIS_I2S                                            // {28}
@@ -3759,7 +3760,7 @@ typedef struct stKINETIS_PERIPH
     KINETIS_DMAMUX     DMAMUX[4];
 #elif defined DMAMUX1_AVAILABLE                                          // {4}
     KINETIS_DMAMUX     DMAMUX[2];
-#else
+#elif !defined DEVICE_WITHOUT_DMA
     KINETIS_DMAMUX     DMAMUX[1];
 #endif
 #if I2S_AVAILABLE > 0

@@ -173,7 +173,7 @@ static int _fnWriteBytesFlash(unsigned char *ucDestination, unsigned char *ucDat
 #endif
 
 #if defined ACTIVE_FILE_SYSTEM
-    #if (SPI_FLASH_PAGE_LENGTH != 256 && SPI_FLASH_PAGE_LENGTH != 512) && (defined SPI_FILE_SYSTEM && defined FLASH_FILE_SYSTEM)
+    #if defined SPI_FLASH_PAGE_LENGTH && (SPI_FLASH_PAGE_LENGTH != 256 && SPI_FLASH_PAGE_LENGTH != 512) && (defined SPI_FILE_SYSTEM && defined FLASH_FILE_SYSTEM)
         static void fnGetLowerBoundary(MAX_FILE_LENGTH *length, MAX_FILE_LENGTH granularity)
         {
             MAX_FILE_LENGTH lower_boundary = granularity;
@@ -186,8 +186,8 @@ static int _fnWriteBytesFlash(unsigned char *ucDestination, unsigned char *ucDat
         #define ROUNDDOWN_BOUNDARY(length, GRANULARITY) fnGetLowerBoundary(&length, GRANULARITY);
         #define ROUNDUP_BOUNDARY(length, GRANULARITY)   fnGetLowerBoundary(&length, GRANULARITY); length += GRANULARITY  // {5}
     #else
-        #define ROUNDUP_BOUNDARY(length, GRANULARITY)  length &= ~(GRANULARITY-1); length += GRANULARITY  // {5}
-        #define ROUNDDOWN_BOUNDARY(length, GRANULARITY) length &= ~(GRANULARITY-1);                       // {5}
+        #define ROUNDUP_BOUNDARY(length, GRANULARITY)  length &= ~(GRANULARITY - 1); length += GRANULARITY // {5}
+        #define ROUNDDOWN_BOUNDARY(length, GRANULARITY) length &= ~(GRANULARITY - 1); // {5}
     #endif
 #endif                                                                   // {12}
 

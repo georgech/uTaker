@@ -28,7 +28,7 @@
    11.04.2009 Add RTS/CTS hardware flow control                          {11}
    05.06.2009 Correct I2C reception                                      {12}
    29.08.2009 Add timer frequency and PWM outputs                        {13}
-   08.09.2009 Add internal temperatire source to single-ended inputs     {14}
+   08.09.2009 Add internal temperature source to single-ended inputs     {14}
    11.09.2009 Add MULTIDROP_MODE support                                 {15}
    07.11.2009 Adjust PWM to 1/10 % from 1% steps using macro based value {16}
    11.11.2009 Add extended PLL configuration for use with LM3S9BXX devices to achieve more operating frequencies {17}

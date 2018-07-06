@@ -72,7 +72,6 @@ static __interrupt void int_spi_2_master(void)
 static __interrupt void int_spi_0_slave(void)
 {
     while ((SPI0_SR & SPI_SR_RFDF) != 0) {                               // while there is reception data waiting in the input fifo
-        TOGGLE_TEST_OUTPUT();
         fnSPIRxByte((unsigned char)SPI0_POPR, 0);                        // read the data and put it input the input buffer
         WRITE_ONE_TO_CLEAR(SPI0_SR, SPI_SR_RFDF);                        // clear the reception interrupt flag (after reading the data)
     }

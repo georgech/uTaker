@@ -482,7 +482,7 @@ static __interrupt void _UART_interrupt(KINETIS_UART_CONTROL *ptrUART, int UART_
             unsigned char ucRxData = ptrUART->UART_D;                    // read the received data (which resets the reception interrupt flag)
         #if defined UART_BREAK_SUPPORT
             if ((ucState & UART_S1_FE) != 0) {                           //  framing error signifies that a '0' was received at a stop bits location and it is used to detect a break character
-                if ((ptrUART->UART_BDH & UART_BDH_LBKDIE) != 0) {        // if break character peration is enabled (this register flag is used to signal the mode and not enable LIN break operation)
+                if ((ptrUART->UART_BDH & UART_BDH_LBKDIE) != 0) {        // if break character operation is enabled (this register flag is used to signal the mode and not enable LIN break operation)
                     if (ucBreakSynchronised[UART_Reference] != 0) {      // if not the first break after enabling the receiver
                         #if defined USER_DEFINED_UART_RX_BREAK_DETECTION
                         if ((fnUserRxBreakIrq[UART_Reference] == 0) || (fnUserRxBreakIrq[UART_Reference]((QUEUE_LIMIT)UART_Reference) != 0)) {
