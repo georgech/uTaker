@@ -75,6 +75,7 @@
     15.02.2016 Add fnDMA_BufferReset()                                   {47}
     31.01.2017 Add fnVirtualWakeupInterruptHandler()                     {48}
     04.12.2017 Add special arithmetic                                    {49}
+    08.07.2018 Add fnPowerFailureWarning()                               {50}
 
 */
 
@@ -272,6 +273,9 @@ extern void fnSetLowPowerMode(int);
 extern void fnResetBoard(void);
 #if !defined start_application
     extern void start_application(unsigned long);                        // {15} assembler jump to application
+#endif
+#if defined SUPPORT_LOW_VOLTAGE_DETECTION
+    extern __callback_interrupt int fnPowerFailureWarning(void);         // {50} power failure interrupt callback to be supplied by the user when enabled
 #endif
 
 // Special Arithmetic                                                    // {49}

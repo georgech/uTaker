@@ -67,6 +67,7 @@
     06.12.2017 Use TSTMR as time base for fnDelayLoop() when it is available {133}
     31.01.2018 If HSRUN mode is detected after a reset the RUN mode can be returned to avoid flash programming issues {134}
     07.03.2018 Add 25AA160 SPI EEPROM support                            {135}
+    08.07.2018 Add optional power loss interrupt support (SUPPORT_LOW_VOLTAGE_DETECTION) {136}
 
 */
 
@@ -1366,6 +1367,21 @@ static __interrupt void _RealTimeInterrupt(void)
     uEnable_Interrupt();
 }
 
+#if defined SUPPORT_LOW_VOLTAGE_DETECTION                                // {136} enable low voltage detection interrupt warning
+// Interrupt to warn that the voltage is close to the reset threshold
+// - the interrupt is disabled since in the case of power loss in progress it will not be possible to clear the interrupt flag
+// - the user callback can request the interrupt to be re-enabled and a clear be attempted by returing a non-zero value if it is prepared to handle multiple interrupts
+//
+static __interrupt void _low_voltage_irq(void)
+{
+    PMC_LVDSC2 &= ~(PMC_LVDSC2_LVWIE);                                   // disable further interrupts so that the processor can continue operation (it can decide to re-enable interrupts if desired)
+    if (fnPowerFailureWarning() != 0) {                                  // user supplied routine to handle power faiure (interrupt call back)
+        OR_ONE_TO_CLEAR(PMC_LVDSC2, (PMC_LVDSC2_LVWACK));                // acknowledge the interrupt and attempt to clear the flag (in the case of power loss in progress this will never be able to clear the flag)
+        PMC_LVDSC2 |= (PMC_LVDSC2);                                      // re-enable the interrupt
+    }
+}
+#endif
+
 // Routine to initialise the tick interrupt (uses Cortex M7/M4/M0+ SysTick timer, RTC or low power timer)
 //
 extern void fnStartTick(void)
@@ -1467,6 +1483,39 @@ extern void fnStartTick(void)
 #endif
 #if defined MONITOR_PERFORMANCE                                          // configure a timer that will be used to measure the duration of task operation
     INITIALISE_MONITOR_TIMER();
+#endif
+#if defined SUPPORT_LOW_VOLTAGE_DETECTION                                // {136} enable low voltage detection interrupt warning
+    #if !defined LOW_VOLTAGE_DETECTION_VOLTAGE_mV                        // if no value is defined we delault to 2.10V warning threshold and 1.6V reset threshold
+        #define LOW_VOLTAGE_DETECTION_VOLTAGE_mV   2100
+    #endif
+    fnEnterInterrupt(irq_LOW_VOLTAGE_ID, 0, _low_voltage_irq);           // enter highest priority interrupt to warn of failing voltage
+    #if LOW_VOLTAGE_DETECTION_VOLTAGE_mV > 2400                          // sensitive detection level
+    // K64 reference: high reset threshold is typically 2.56V
+    //
+    PMC_LVDSC1 = (PMC_LVDSC1_LVDV | PMC_LVDSC1_LVDRE | PMC_LVDSC1_LVDACK); // high voltage level trip with reset enabled (clear flag)
+        #if LOW_VOLTAGE_DETECTION_VOLTAGE_mV >= 3000
+    PMC_LVDSC2 = (PMC_LVDSC2_LVWV_HIGH | PMC_LVDSC2_LVWIE | PMC_LVDSC2_LVWACK); // enable low voltage warning interrupt (clear flag) 3.00V typical
+        #elif LOW_VOLTAGE_DETECTION_VOLTAGE_mV >= 2950
+    PMC_LVDSC2 = (PMC_LVDSC2_LVWV_MID2 | PMC_LVDSC2_LVWIE | PMC_LVDSC2_LVWACK); // enable low voltage warning interrupt (clear flag) 2.90V typical
+        #elif LOW_VOLTAGE_DETECTION_VOLTAGE_mV >= 2850
+    PMC_LVDSC2 = (PMC_LVDSC2_LVWV_MID1 | PMC_LVDSC2_LVWIE | PMC_LVDSC2_LVWACK); // enable low voltage warning interrupt (clear flag) 2.80V typical
+        #else
+    PMC_LVDSC2 = (PMC_LVDSC2_LVWV_LOW | PMC_LVDSC2_LVWIE | PMC_LVDSC2_LVWACK); // enable low voltage warning interrupt (clear flag) 2.70V typical
+        #endif
+    #else
+    // K64 reference: low reset threshold is typically 1.6V
+    //
+    PMC_LVDSC1 = (PMC_LVDSC1_LVDRE | PMC_LVDSC1_LVDACK);                 // low voltage level trip with reset enabled (clear flag)
+        #if LOW_VOLTAGE_DETECTION_VOLTAGE_mV > 2050
+    PMC_LVDSC2 = (PMC_LVDSC2_LVWV_HIGH | PMC_LVDSC2_LVWIE | PMC_LVDSC2_LVWACK); // enable low voltage warning interrupt (clear flag) 2.10V typical
+        #elif LOW_VOLTAGE_DETECTION_VOLTAGE_mV >= 1950
+    PMC_LVDSC2 = (PMC_LVDSC2_LVWV_MID2 | PMC_LVDSC2_LVWIE | PMC_LVDSC2_LVWACK); // enable low voltage warning interrupt (clear flag) 2.00V typical
+        #elif LOW_VOLTAGE_DETECTION_VOLTAGE_mV >= 1850
+    PMC_LVDSC2 = (PMC_LVDSC2_LVWV_MID1 | PMC_LVDSC2_LVWIE | PMC_LVDSC2_LVWACK); // enable low voltage warning interrupt (clear flag) 1.90V typical
+        #else
+    PMC_LVDSC2 = (PMC_LVDSC2_LVWV_LOW | PMC_LVDSC2_LVWIE | PMC_LVDSC2_LVWACK); // enable low voltage warning interrupt (clear flag) 1.80V typical
+        #endif
+    #endif
 #endif
 }
 

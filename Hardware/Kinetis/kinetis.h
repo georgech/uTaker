@@ -7382,9 +7382,9 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
 #else
     #define PMC_LVDSC1          *(volatile unsigned char *)(PMC_BLOCK + 0x0) // low voltage detect status and control 1 register
       #define PMC_LVDSC1_LVDV   0x01                                         // high trip point select
-      #define PMC_LVDSC1_LVDRE  0x10                                         // low voltage detect reset enable
+      #define PMC_LVDSC1_LVDRE  0x10                                         // low voltage detect reset enable (default i senabled)
       #define PMC_LVDSC1_LVDIE  0x20                                         // low voltage detect interrupt enable
-      #define PMC_LVDSC1_LVDACK 0x40                                         // write '1' to clear LVDF
+      #define PMC_LVDSC1_LVDACK 0x40                                         // write '1' to clear LVDF (reads always '0')
       #define PMC_LVDSC1_LVDF   0x80                                         // low voltage detect flag (read-only)
     #define PMC_LVDSC2          *(volatile unsigned char *)(PMC_BLOCK + 0x1) // low voltage detect status and control 2 register
       #define PMC_LVDSC2_LVWV_LOW  0x00                                      // low voltage warning voltage select - low

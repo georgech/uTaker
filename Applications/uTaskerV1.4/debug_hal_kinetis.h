@@ -46,6 +46,7 @@
     12.02.2017 Add FRDM_KL82Z and TWR_KL82Z72M
     10.08.2017 Add FRDM_KL28Z
     07.09.2017 Add HEXIWEAR_K64F
+    08.07.2018 Add power loss detection handler (fnPowerFailureWarning()) {14}
 
 */
 
@@ -2214,6 +2215,16 @@ static void fnCopyEz(unsigned long ulWriteAddress, unsigned char *ptrSource, int
 }
 #endif
 
+#if defined SUPPORT_LOW_VOLTAGE_DETECTION                                // {14}
+// Power failure user interrupt callback that can be used to save critical work
+//
+extern __callback_interrupt int fnPowerFailureWarning(void)
+{
+    fnDebugMsg("Power failing!!\r\n");
+    return 0;                                                            // don't re-enable detection interrupt since in the case of power loss it will continue to fire
+}
+#endif
+
 // Determine the cause of the last reset
 //
 extern unsigned char fnAddResetCause(CHAR *ptrBuffer)
@@ -2379,7 +2390,6 @@ extern unsigned char fnAddResetCause(CHAR *ptrBuffer)
     }
     return (uStrcpy(ptrBuffer, ptrStr) - ptrBuffer);                     // return the length of the string
 }
-
 
 #if defined SUPPORT_LOW_POWER                                            // {12}
 extern void fnShowThisLowPowerMode(int iThisMode)

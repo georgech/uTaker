@@ -157,7 +157,7 @@
         #define USB_CRYSTAL_LESS                                         // use 48MHz IRC as USB source (according to Freescale AN4905 - only possible in device mode) - this shoudl always be used if not external !!
       //#define USB_CLOCK_GENERATED_INTERNALLY                           // use USB clock from internal source rather than external pin - 120MHz is suitable from PLL
     #else
-      //#define USB_CRYSTAL_LESS                                         // use 48MHz IRC as USB source (according to Freescale AN4905 - only possible in device mode)
+        #define USB_CRYSTAL_LESS                                         // use 48MHz IRC as USB source (according to Freescale AN4905 - only possible in device mode)
       //#define USB_CLOCK_GENERATED_INTERNALLY                           // use USB clock from internal source rather than external pin - 120MHz is suitable from PLL
     #endif
 #elif defined TWR_K65F180M || defined FRDM_K66F || defined K66FX1M0 || defined TEENSY_3_6 || defined FRDM_KL82Z || defined TWR_KL82Z72M || defined FRDM_K28F
@@ -2898,6 +2898,8 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #endif
 #endif
 
+//#define SUPPORT_LOW_VOLTAGE_DETECTION                                  // enable a low voltage detection interrupt handler
+    #define LOW_VOLTAGE_DETECTION_VOLTAGE_mV       2900                  // 2.9V warning threshold
 
 #if PDB_AVAILABLE > 0
     #define SUPPORT_PDB                                                  // {19} support programmable delay block (can be used as timer and/or for triggering ADC/DAC)
