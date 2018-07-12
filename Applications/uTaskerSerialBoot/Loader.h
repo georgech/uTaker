@@ -369,6 +369,7 @@ extern void fnSetBacklight(void);
 #define T_COMMIT_BUFFER           3
 #define T_MESSAGE_TIMEOUT         4
 #define T_HOOKUP_TIMEOUT          4
+#define T_MASS_ERASE              5
 #define T_RECHECK_CARD            100
 
 // LDC to application

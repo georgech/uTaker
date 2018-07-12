@@ -86,6 +86,7 @@
 #define STATE_DEVELOPERS_READ       0x1000
 #define STATE_DEVELOPERS_QUIT       0x2000
 #define STATE_QUESTION_SWAP         0x4000
+#define STATE_ENTER_KEY             0x8000
 
 
 #define INTERMEDIATE_BUFFER_RESERVE 200
@@ -150,6 +151,11 @@
 #define KBOOT_SERIAL_PING                            0xa6
 #define KBOOT_SERIAL_PING_RESPONSE                   0xa7
 
+// Local controls
+//
+#define KBOOT_NO_ACTION                  0
+#define KBOOT_RESET_COMMANDED            1
+#define KBOOT_MASS_ERASE_COMMANDED       2
 #endif
 
 #if (defined USB_MSD_DEVICE_LOADER && (defined USB_MSD_ACCEPTS_SREC_FILES || defined USB_MSD_ACCEPTS_HEX_FILES)) || (((defined SERIAL_INTERFACE && !defined USE_MODBUS) || defined USE_USB_CDC) && !defined REMOVE_SREC_LOADING && !defined KBOOT_LOADER)
@@ -412,6 +418,11 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
                     iInputLength = 0;                                   // reset the message
                 }
 #endif
+#if defined KBOOT_LOADER && defined KBOOT_LOADER_MASS_ERASE_TO_UNLOCK
+                else if (T_MASS_ERASE == ucInputMessage[MSG_TIMER_EVENT]) {
+                    fnMassEraseFlash();                                  // this will completely erase FLASH content, unlocking any security. The code will no longer run after this command
+                }
+#endif
 #if defined SERIAL_INTERFACE && defined INTERMEDIATE_PROG_BUFFER && !defined REMOVE_SREC_LOADING && !defined KBOOT_LOADER && !defined DEVELOPERS_LOADER // {17}
                 else if (ucInputMessage[MSG_TIMER_EVENT] == T_COMMIT_BUFFER) {
                     if (fnFlashIntermediate() != 0) {                    // download has been temporarily suspended so write block to FLASH (without risk of rx overrun while programming)
@@ -576,8 +587,13 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
                             ucSerialInputMessage[5] = ucSerialInputMessage[3];
                             ucSerialInputMessage[2] = KBOOT_REPORT_ID_DATA_OUT; // for compatibility
                         }
-                        if (fnHandleKboot(SerialPortID, KBOOT_UART, (KBOOT_PACKET *)&ucSerialInputMessage[2]) != 0) { // generic kboot handling
+                        switch (fnHandleKboot(SerialPortID, KBOOT_UART, (KBOOT_PACKET *)&ucSerialInputMessage[2])) { // generic kboot handling
+                        case KBOOT_RESET_COMMANDED:
                             uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(1 * SEC), T_RESET);
+                            break;
+                        case KBOOT_MASS_ERASE_COMMANDED:
+                            uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(0.1 * SEC), T_MASS_ERASE);
+                            break;
                         }
                     }
                     iInputLength = 0;
@@ -871,6 +887,13 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
                             fnPerformBlankCheck();
                             break;
                         }
+        #if defined UNLOCK_BACKDOOR_KEY
+                        else if ((ucSerialInputMessage[1] == 'k') || (ucSerialInputMessage[1] == 'K')) {
+                            fnDebugMsg("\r\nEnter 8 byte hex key");
+                            iAppState = STATE_ENTER_KEY;
+                            break;
+                        }
+        #endif
                     }
                 }
                 fnDebugMsg(" ??\r\n> ");
@@ -894,6 +917,11 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
                 }
             }
             break;
+        #if defined UNLOCK_BACKDOOR_KEY
+        case STATE_ENTER_KEY:
+            _EXCEPTION("To complete"); // collect key for comparison and execute fnBackdoorUnlock()
+            break;
+        #endif
         #if defined MASS_ERASE
         case STATE_FINAL_MASS_DELETE:
         case STATE_QUESTION_MASS_DELETE:
@@ -910,7 +938,7 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
                     break;
                 }
                 else if(STATE_FINAL_MASS_DELETE == iAppState) {
-                    fnMassEraseFlash();                                  // this will completely erase FLASH content, unlocking any security. The code will no longer run after this command.
+                    fnMassEraseFlash();                                  // this will completely erase FLASH content, unlocking any security. The code will no longer run after this command
                     break;
                 }
         #endif
@@ -1186,6 +1214,9 @@ static void fnPrintScreen(void)
     #if !defined REMOVE_SREC_LOADING                                     // {17}
     fnDebugMsg("ld = start load\r\n");
     #endif
+    #if defined UNLOCK_BACKDOOR_KEY
+    fnDebugMsg("bk = backdoor key\r\n");
+    #endif
     #if defined MEMORY_SWAP
     fnDebugMsg("sw = swap memory\r\n");
     #else
@@ -1369,6 +1400,12 @@ static void fnHandlePropertyGet(unsigned long ulPropertyTag, unsigned long ulMem
         break;
     case PROPERTY_AVAILABLE_CMDS:                                        // 7
         ulResponseData[0] = SUPPORTED_KBOOT_COMMANDS;
+    #if defined KBOOT_LOADER_MASS_ERASE_TO_UNLOCK 
+        ulResponseData[0] |= KB_SUPPORTS_FLASH_ERASE_ALL_UNSECURE;
+    #endif
+    #if defined KBOOT_LOADER_BACKDOOR_KEY_TO_UNLOCK
+        ulResponseData[0] |= KB_SUPPORTS_FLASH_SECURITY_DISABLE;
+    #endif
         break;
     case PROPERTY_RESERVED_REGIONS:                                      // 12 (0x0c)
         iNoStatus = 0;
@@ -1387,6 +1424,9 @@ static void fnHandlePropertyGet(unsigned long ulPropertyTag, unsigned long ulMem
         ulResponseData[0] = ((FTMRH_FSEC & FTMRH_FSEC_SEC_UNSECURE_FLAG) == 0);
     #else
         ulResponseData[0] = ((FTFL_FSEC & FTFL_FSEC_SEC_UNSECURE) == 0);
+        #if defined _WINDOWS
+        ulResponseData[0] = 1;                                           // test secured stae behavior
+        #endif
     #endif
         break;
     default:
@@ -1441,12 +1481,23 @@ static void fnReturnResponse(QUEUE_HANDLE hInterface, int iInterfaceType, KBOOT_
     #endif
 }
 
+static void fnPrepareGenericResponse(KBOOT_PACKET *ptrKBOOT_response, int iInterfaceType)
+{
+    ptrKBOOT_response->ucLength[0] = 12;
+    ptrKBOOT_response->ucData[0] = 0xa0;
+    if (iInterfaceType == KBOOT_UART) {
+        ptrKBOOT_response->ucData[3] = 2;
+    }
+    else {
+        ptrKBOOT_response->ucData[2] = 2;
+    }
+}
 
 extern int fnHandleKboot(QUEUE_HANDLE hInterface, int iInterfaceType, KBOOT_PACKET *ptrKBOOT_packet)
 {
-    int iReturn = 0;
+    int iReturn = KBOOT_NO_ACTION;
     KBOOT_PACKET KBOOT_response;
-    uMemset(&KBOOT_response, 0, sizeof(KBOOT_response));
+    uMemset(&KBOOT_response, 0, sizeof(KBOOT_response));                 // zero the packet content
     switch (ptrKBOOT_packet->ucCommandType) {                            // the command
     case KBOOT_REPORT_ID_COMMAND_OUT:
         KBOOT_response.ucCommandType = KBOOT_REPORT_ID_COMMAND_IN;
@@ -1503,30 +1554,32 @@ extern int fnHandleKboot(QUEUE_HANDLE hInterface, int iInterfaceType, KBOOT_PACK
                     fnDebugHex(ulProg_length, (sizeof(ulLength) | WITH_LEADIN | WITH_CR_LF));
     #endif
                 }
-                KBOOT_response.ucLength[0] = 12;                         // generic response
-                KBOOT_response.ucData[0] = 0xa0;
-                if (iInterfaceType == KBOOT_UART) {
-                    KBOOT_response.ucData[3] = 2;
-                }
-                else {
-                    KBOOT_response.ucData[2] = 2;
-                }
+                fnPrepareGenericResponse(&KBOOT_response, iInterfaceType); // generic response
+              //KBOOT_response.ucLength[0] = 12;                         
+              //KBOOT_response.ucData[0] = 0xa0;
+              //if (iInterfaceType == KBOOT_UART) {
+              //    KBOOT_response.ucData[3] = 2;
+              //}
+              //else {
+              //    KBOOT_response.ucData[2] = 2;
+              //}
                 KBOOT_response.ucData[8] = ptrKBOOT_packet->ucData[0];
             }
             break;
         case KBOOT_COMMAND_TAG_RESET:                                    // 0x0b
-            iReturn = 1;                                                 // reset is required
-            KBOOT_response.ucLength[0] = 12;                             // generic response
-            KBOOT_response.ucData[0] = 0xa0;
+            iReturn = KBOOT_RESET_COMMANDED;                             // reset is required
+            fnPrepareGenericResponse(&KBOOT_response, iInterfaceType);   // generic response
+          //KBOOT_response.ucLength[0] = 12;                             // generic response
+          //KBOOT_response.ucData[0] = 0xa0;
             if (iInterfaceType == KBOOT_UART) {
-                KBOOT_response.ucData[3] = 2;
+          //    KBOOT_response.ucData[3] = 2;
                 fnDriver(hInterface, (RX_OFF), 0);                       // disable rx since we are resetting (to stop the host's ack triggering receive timer and losing reset timer)
     #if defined ADD_FILE_OBJECT_AFTER_LOADING
                 fileObjInfo.ptrShortFileName = "KBOOTSERBIN";            // define a name for the file (with default time/date)
     #endif
             }
             else {
-                KBOOT_response.ucData[2] = 2;
+          //    KBOOT_response.ucData[2] = 2;
     #if defined ADD_FILE_OBJECT_AFTER_LOADING
                 fileObjInfo.ptrShortFileName = "KBOOTUSBBIN";            // define a name for the file (with default time/date)
     #endif
@@ -1541,16 +1594,35 @@ extern int fnHandleKboot(QUEUE_HANDLE hInterface, int iInterfaceType, KBOOT_PACK
             fnDebugMsg("RESETTING\r\n");
     #endif
             break;
+    #if defined KBOOT_LOADER_MASS_ERASE_TO_UNLOCK
+        case KBOOT_COMMAND_TAG_MASS_ERASE:                               // 13 (0x0d)
+            iReturn = KBOOT_MASS_ERASE_COMMANDED;                        // respond with success and the perfrom a mass erase after a short delay
+            fnPrepareGenericResponse(&KBOOT_response, iInterfaceType);   // generic response
+            KBOOT_response.ucData[2] = 0x04;
+            KBOOT_response.ucData[8] = 0x0d;
+            break;
+    #endif
+    #if defined KBOOT_LOADER_BACKDOOR_KEY_TO_UNLOCK
+        case KBOOT_COMMAND_TAG_FLASH_SECURITY_DISABLE:                   // 6
+            {
+                unsigned long ulKey[2];
+                fnPrepareGenericResponse(&KBOOT_response, iInterfaceType);   // generic response
+                uMemcpy(ulKey, &ptrKBOOT_packet->ucData[4], sizeof(ulKey));
+                fnBackdoorUnlock(ulKey);
+                KBOOT_response.ucData[2] = 0x0c;
+                KBOOT_response.ucData[8] = 0x06;
+            }
+            break;
+    #endif
 
-        case KBOOT_COMMAND_TAG_ERASE_ALL:                                // the following are not yet used by KBOOT
-        case KBOOT_COMMAND_TAG_READ_MEMORY:
+        case KBOOT_COMMAND_TAG_READ_MEMORY:                              // the following are not yet used by KBOOT resp. supported
         case KBOOT_COMMAND_TAG_FILL_MEMORY:
-        case KBOOT_COMMAND_TAG_FLASH_SECURITY_DISABLE:
         case KBOOT_COMMAND_TAG_RECEIVE_SBFILE:
         case KBOOT_COMMAND_TAG_EXECUTE:
         case KBOOT_COMMAND_TAG_CALL:
         case KBOOT_COMMAND_TAG_SET_PROPERTY:
-        case KBOOT_COMMAND_TAG_MASS_ERASE:
+        case KBOOT_COMMAND_TAG_ERASE_ALL:
+        default:
             _EXCEPTION("Use detected - investigate....");
             break;
         }
@@ -1572,14 +1644,15 @@ extern int fnHandleKboot(QUEUE_HANDLE hInterface, int iInterfaceType, KBOOT_PACK
                 ulProg_length -= usBuff_length;
                 if (ulProg_length == 0) {                                // complete code has been received
                     KBOOT_response.ucCommandType = KBOOT_REPORT_ID_COMMAND_IN;
-                    KBOOT_response.ucLength[0] = 12;                     // generic response
-                    KBOOT_response.ucData[0] = 0xa0;
-                    if (iInterfaceType == KBOOT_UART) {
-                        KBOOT_response.ucData[3] = 2;
-                    }
-                    else {
-                        KBOOT_response.ucData[2] = 2;
-                    }
+                    fnPrepareGenericResponse(&KBOOT_response, iInterfaceType); // generic response
+                  //KBOOT_response.ucLength[0] = 12;                     // generic response
+                  //KBOOT_response.ucData[0] = 0xa0;
+                  //if (iInterfaceType == KBOOT_UART) {
+                  //    KBOOT_response.ucData[3] = 2;
+                  //}
+                  //else {
+                  //    KBOOT_response.ucData[2] = 2;
+                  //}
                     KBOOT_response.ucData[8] = KBOOT_COMMAND_TAG_WRITE_MEMORY;
     #if defined FLASH_ROW_SIZE && FLASH_ROW_SIZE > 0
                     fnWriteBytesFlash(0, 0, 0);                          // close any outstanding FLASH buffer

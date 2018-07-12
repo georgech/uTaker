@@ -317,8 +317,12 @@ static void fnConfigTimerPin(int iTimer, int iChannel, unsigned long ulCharacter
             #elif defined FTM2_0_ON_F
                         _CONFIG_PERIPHERAL(F, 0, (PF_0_FTM2_CH0 | ulCharacteristics)); // FTM2_CH0 on PF.0 (alt. function 2)
             #else
+                #if defined KINETIS_KE06
+                        SIM_PINSEL1 &= ~SIM_PINSEL1_FTM2PS0_MASK;
+                #else
                         SIM_PINSEL0 &= ~SIM_PINSEL_FTM2PS0;
                         SIM_PINSEL0 |= SIM_PINSEL_FTM2PS0;
+                #endif
                         _CONFIG_PERIPHERAL(C, 0, (PC_0_FTM2_CH0 | ulCharacteristics)); // FTM2_CH0 on PC.0 (alt. function 2)
             #endif
         #elif defined FTM2_0_ON_A && defined KINETIS_KL28

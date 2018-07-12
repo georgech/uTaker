@@ -329,6 +329,23 @@ static int fnFlashNow(unsigned char ucCommand, unsigned long *ptrWord, unsigned 
     #endif
         }
         break;
+    #if defined SUPPORT_BACKDOOR_ACCESS_KEY
+    case FCMD_VERIFY_BACKDOOR_ACCESS_KEY:
+        FTFL_FCCOB7_4 = *ptr_ulWord++;                                   // key bytes 0..3
+        FTFL_FCCOBB_8 = *ptr_ulWord;                                     // key bytes 4..7
+        #if defined _WINDOWS
+        if ((KINETIS_FLASH_CONFIGURATION_SECURITY & FTFL_FSEC_KEYEN_DISABLED) == FTFL_FSEC_KEYEN_ENABLED) { // if the backdoor access is enabled
+            if ((FTFL_FCCOB7_4 == ((BACKDOOR_KEY_0 << 24) | (BACKDOOR_KEY_1 << 16) | (BACKDOOR_KEY_2 << 8) | BACKDOOR_KEY_3)) && // and if the backdoor key matches
+                (FTFL_FCCOBB_8 == ((BACKDOOR_KEY_4 << 24) | (BACKDOOR_KEY_5 << 16) | (BACKDOOR_KEY_6 << 8) | BACKDOOR_KEY_7))) {
+                FTFL_FSEC |= (FTFL_FSEC_SEC_UNSECURE);                   // unsecured
+            }
+            else {
+                FTFL_FSTAT |= (FTFL_STAT_ACCERR);                        // set access error flag
+            }
+        }
+        #endif
+        break;
+    #endif
     #if defined SUPPORT_PROGRAM_ONCE                                     // {20}
     case FCMD_READ_ONCE:
         FTFL_FCCOB1 = (unsigned char)(*ptrWord);                         // record index (0..7) for FPU types or (0..15)
@@ -438,6 +455,13 @@ static int fnFlashNow(unsigned char ucCommand, unsigned long *ptrWord, unsigned 
 }
 #endif
 
+#if defined SUPPORT_BACKDOOR_ACCESS_KEY
+extern int fnBackdoorUnlock(unsigned long Key[2])
+{
+    return (fnFlashNow(FCMD_VERIFY_BACKDOOR_ACCESS_KEY, 0, Key) != 0);
+}
+#endif
+
 #if defined SUPPORT_PROGRAM_ONCE                                         // {20}
 // Read and write data from the program once area (64 bytes available which can only be programmed once in 4/8 byte blocks)
 // The length is the number of long words to be copied to/from the buffer - FPU devices write 8 bytes at a time other 4 bytes at a time
@@ -512,7 +536,13 @@ extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char u
 //
 extern int fnMassEraseFlash(void)
 {
-    return (fnFlashNow(FCMD_ERASE_ALL_BLOCKS, 0, 0));
+    int iRtn = fnFlashNow(FCMD_ERASE_ALL_BLOCKS, 0, 0);
+#if defined _WINDOWS
+    if (iRtn == 0) {
+        fnResetBoard();
+    }
+#endif
+    return iRtn;
 }
 #endif
 

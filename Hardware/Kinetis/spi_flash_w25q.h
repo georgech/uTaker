@@ -187,7 +187,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
                 }
             }
     #endif
-        } while (ucStatus & STATUS_BUSY);                                // until no longer busy
+        } while ((ucStatus & STATUS_BUSY) != 0);                         // until no longer busy
     }
     #if defined MANAGED_FILES
     else if (ucCommand == CHECK_SPI_FLASH_BUSY) {                        // pseudo command used to check device's status

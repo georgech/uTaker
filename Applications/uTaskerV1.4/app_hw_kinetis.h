@@ -656,11 +656,15 @@
     #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
     #define CLOCK_DIV            256                                     // input must be divided to 31.25kHz..39.06525kHz range (/1, 2, 4, 8, 16, 32, 64, 128, 256, 512 or 1024 possible)
                                                                          // this input is multiplied by 1280 to 40MHz..50MHz at the FLL output
-    #define SYSTEM_CLOCK_DIVIDE  1                                       // divide the clock output to give the system clock (maximum 40MHz) (/1, 2, 4, 8, 16, 32, 64 or 128 possible)
+
+    #define ICSOUTCLK_DIVIDE     1                                       // [BDIV to give ICSOUTCLK] divide the clock output to give the system clock (maximum 48MHz) (/1, 2, 4, 8, 16, 32, 64 or 128 possible)
+    #define SYSTEM_CLOCK_DIVIDE  1                                       // [OUTDIV1 to give core clock from ICSOUTCLK] divide the clock output to give the system clock (maximum 48MHz) (/1, 2, 3, 4 possible)
+  //#define TIMER_CLOCK_DIVIDE_2                                         // optionally clock timers from the ICSOUTCLK/2
+
     #if defined RUN_FROM_EXTERNAL_CLOCK
         #define BUS_CLOCK_DIVIDE 1                                       // divide by 1 or 2 to give bus and flash clock (maximum 20MHz)
     #else
-        #define BUS_CLOCK_DIVIDE 2                                       // divide by 1 or 2 to give bus and flash clock (maximum 20MHz)
+        #define BUS_CLOCK_DIVIDE 2                                       // [OUTDIV2] divide by 1 or 2 to give bus and flash clock (maximum 24MHz)
     #endif
 #elif defined TWR_KM34Z50M || defined TWR_KM34Z75M
     #define OSC_LOW_GAIN_MODE

@@ -3803,13 +3803,19 @@ extern void fnSimPers(void)
                     break;
                 case KE_PORTC_BIT0:
     #if defined KINETIS_KE02 || defined KINETIS_KE06
-                    if ((ADC0_APCTL1 & ADC_APCTL1_AD8) != 0) {           // if the ADC function is enabled
+                    if ((ADC0_APCTL1 & ADC_APCTL1_AD8) != 0) {           // if the ADC function is enabled it has priority
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTF][iPin - 16] = PC_0_ADC0_SE8;
                         break;
                     }
     #endif
-                    if (((FTM2_C0SC & (FTM_CSC_ELSA | FTM_CSC_ELSB)) != 0) && ((SIM_PINSEL0 & SIM_PINSEL_FTM2PS0) == 0)) {
+                    if (((FTM2_C0SC & (FTM_CSC_ELSA | FTM_CSC_ELSB)) != 0) &&
+    #if defined KINETIS_KE06
+                    ((SIM_PINSEL1 & SIM_PINSEL1_FTM2PS0_MASK) == SIM_PINSEL1_FTM2PS0_PTC0)
+    #else
+                        ((SIM_PINSEL0 & SIM_PINSEL_FTM2PS0) == 0)
+    #endif
+                    ) {
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTC][iPin - 16] = PC_0_FTM2_CH0;                    
                     }
@@ -4419,7 +4425,13 @@ extern void fnSimPers(void)
     #endif
                     break;
                 case KE_PORTH_BIT0:
-                    if (((FTM2_C0SC & (FTM_CSC_ELSA | FTM_CSC_ELSB)) != 0) && ((SIM_PINSEL0 & SIM_PINSEL_FTM2PS0) != 0)) {
+                    if (((FTM2_C0SC & (FTM_CSC_ELSA | FTM_CSC_ELSB)) != 0) &&
+    #if defined KINETIS_KE06
+                        ((SIM_PINSEL1 & SIM_PINSEL1_FTM2PS0_MASK) == SIM_PINSEL1_FTM2PS0_PTH0)
+    #else
+                        ((SIM_PINSEL0 & SIM_PINSEL_FTM2PS0) != 0)
+    #endif
+                        ) {
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTH][iPin - 24] = PH_0_FTM2_CH0;                    
                     }
@@ -8757,7 +8769,7 @@ extern int fnSimTimers(void)
                 PIT_CVAL0 = PIT_LDVAL0;                                  // reload
                 PIT_CVAL0 -= ulCount;
                 PIT_TFLG0 = PIT_TFLG_TIF;                                // flag that a reload occurred
-    #if !defined KINETIS_KM
+    #if !defined KINETIS_KM && !defined DEVICE_WITHOUT_DMA
                 fnHandleDMA_triggers(DMAMUX0_DMA0_CHCFG_SOURCE_PIT0, 0); // handle DMA triggered on PIT0
     #endif
     #if defined KINETIS_KE
@@ -8803,7 +8815,7 @@ extern int fnSimTimers(void)
                 PIT_CVAL1 = PIT_LDVAL1;                                  // reload
                 PIT_CVAL1 -= ulCount;
                 PIT_TFLG1 = PIT_TFLG_TIF;                                // flag that a reload occurred
-    #if !defined KINETIS_KL28 && !defined KINETIS_KL82 && !defined KINETIS_KM // not yet supported
+    #if !defined DEVICE_WITHOUT_DMA && !defined KINETIS_KL28 && !defined KINETIS_KL82 && !defined KINETIS_KM // not yet supported
                 fnHandleDMA_triggers(DMAMUX0_DMA0_CHCFG_SOURCE_PIT1, 0); // handle DMA triggered on PIT1
     #endif
     #if !defined KINETIS_KE && !defined KINETIS_WITH_PCC

@@ -38,6 +38,15 @@ SECTIONS
     KEEP(*(.f_config .f_config.*))
   }
 
+  __ARM_start__ = ALIGN(__data_load_end__ , 4);
+  .ARM.exidx ALIGN(__data_load_end__ , 4) :
+  {
+    __exidx_start = .;
+    *(.ARM.exidx* .gnu.linkonce.armexidx.*)
+    __exidx_end = .;
+  }
+  __ARM_end__ = __exidx_start + SIZEOF(.ARM.exidx);
+
   __init_load_start__ = __FLASH_segment_start__;
   .init ALIGN(__FLASH_segment_start__ , 4) :
   {

@@ -101,7 +101,6 @@
     18.03.2016 Add NMI_IN_FLASH option                                   {84}
     02.06.2016 Add ACMP and CMP                                          {85}
     20.07.2016 Enable MPU in K22 FN parts with 512k Flash                {86}
-    07.09.2016 correct KE operation directly from crystal source when bypassing FEE [RUN_FROM_EXTERNAL_CLOCK] {87}
     09.12.2016 Add PWT                                                   {88}
     26.01.2017 Add external clock source selection to timer interface    {89}
     31.01.2017 Add fnClearPending() and fnIsPending()                    {90}
@@ -408,101 +407,49 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
     #else
         #define MAX_HIGH_RANGE_XTAL   (20000000)
     #endif
-    #if !defined RUN_FROM_DEFAULT_CLOCK
-        #if ((CRYSTAL_FREQUENCY >= 4000000) && (CRYSTAL_FREQUENCY <= MAX_HIGH_RANGE_XTAL)) // select crystal range setting depending on the crystal used
-            #define _OSC_RANGE   (OSC_CR_RANGE_HIGH)
-        #elif ((CRYSTAL_FREQUENCY >= 31250) && (CRYSTAL_FREQUENCY <= 39063)) // {87}
-            #define _OSC_RANGE   (OSC_CR_RANGE_LOW)
-        #else
-            #error Invalid crystal frequency!! (either 32kHz range or 4MHz..MAX_HIGH_RANGE_XTAL)
+    #if defined KINETIS_KE06
+        #if (SYSTEM_CLOCK_DIVIDE < 1) || (SYSTEM_CLOCK_DIVIDE > 4)
+            #error Invalid system clock divide has been specified - valid are 1, 2, 3 or 4
         #endif
-        #if defined RUN_FROM_EXTERNAL_CLOCK                              // {87}
-             #define _FLL_VALUE (ICS_C1_RDIV_RANGE1_1024)                // value is not important when driven directly by oscillator input
+        #if (ICSOUTCLK_DIVIDE == 1)
+            #define _SYSCLK__DIV   (ICS_C2_BDIV_1)
+        #elif (ICSOUTCLK_DIVIDE == 2)
+            #define _SYSCLK__DIV   (ICS_C2_BDIV_2)
+        #elif (ICSOUTCLK_DIVIDE == 4)
+            #define _SYSCLK__DIV   (ICS_C2_BDIV_4)
+        #elif (ICSOUTCLK_DIVIDE == 8)
+            #define _SYSCLK__DIV   (ICS_C2_BDIV_8)
+        #elif (ICSOUTCLK_DIVIDE == 16)
+            #define _SYSCLK__DIV   (ICS_C2_BDIV_16)
+        #elif (ICSOUTCLK_DIVIDE == 32)
+            #define _SYSCLK__DIV   (ICS_C2_BDIV_32)
+        #elif (ICSOUTCLK_DIVIDE == 64)
+            #define _SYSCLK__DIV   (ICS_C2_BDIV_64)
+        #elif (ICSOUTCLK_DIVIDE == 128)
+            #define _SYSCLK__DIV   (ICS_C2_BDIV_128)
         #else
-            #if (CLOCK_DIV == 1)                                         // only possible with low frequency crystal
-                #if  (_OSC_RANGE == OSC_CR_RANGE_HIGH)
-                    #error Invalid clock divide from high frequency crystal
-                #else
-                    #define _FLL_VALUE (ICS_C1_RDIV_RANGE0_1)
-                #endif
-            #elif (CLOCK_DIV == 2)                                       // only possible with low frequency crystal
-                #if  (_OSC_RANGE == OSC_CR_RANGE_HIGH)
-                    #error Invalid clock divide from high frequency crystal
-                #else
-                    #define _FLL_VALUE (ICS_C1_RDIV_RANGE0_2)
-                #endif
-            #elif (CLOCK_DIV == 4)                                       // only possible with low frequency crystal
-                #if  (_OSC_RANGE == OSC_CR_RANGE_HIGH)
-                    #error Invalid clock divide from high frequency crystal
-                #else
-                    #define _FLL_VALUE (ICS_C1_RDIV_RANGE0_4)
-                #endif
-            #elif (CLOCK_DIV == 8)                                       // only possible with low frequency crystal
-                #if  (_OSC_RANGE == OSC_CR_RANGE_HIGH)
-                    #error Invalid clock divide from high frequency crystal
-                #else
-                    #define _FLL_VALUE (ICS_C1_RDIV_RANGE0_8)
-                #endif
-            #elif (CLOCK_DIV == 16)                                      // only possible with low frequency crystal
-                #if  (_OSC_RANGE == OSC_CR_RANGE_HIGH)
-                    #error Invalid clock divide from high frequency crystal
-                #else
-                    #define _FLL_VALUE (ICS_C1_RDIV_RANGE0_16)
-                #endif
-            #elif (CLOCK_DIV == 32)
-                #define _FLL_VALUE (MCG_C4_MID_HIGH_RANGE | MCG_C4_DMX32)
-            #elif (CLOCK_DIV == 64)
-                #define _FLL_VALUE (MCG_C4_HIGH_RANGE)
-            #elif (CLOCK_DIV == 128)
-                #if  (_OSC_RANGE == OSC_CR_RANGE_HIGH)
-                    #define _FLL_VALUE (ICS_C1_RDIV_RANGE1_128)
-                #else
-                    #define _FLL_VALUE (ICS_C1_RDIV_RANGE0_128)
-                #endif
-            #elif (CLOCK_DIV == 256)                                     // only possible with high frequency crystal
-                #if  (_OSC_RANGE == OSC_CR_RANGE_HIGH)
-                    #define _FLL_VALUE (ICS_C1_RDIV_RANGE1_256)
-                #else
-                    #error Invalid clock divide from low frequency crystal            
-                #endif
-            #elif (CLOCK_DIV == 512)                                     // only possible with high frequency crystal
-                #if  (_OSC_RANGE == OSC_CR_RANGE_HIGH)
-                    #define _FLL_VALUE (ICS_C1_RDIV_RANGE1_512)
-                #else
-                    #error Invalid clock divide from low frequency crystal            
-                #endif
-            #elif (CLOCK_DIV == 1024)                                    // only possible with high frequency crystal
-                #if  (_OSC_RANGE == OSC_CR_RANGE_HIGH)
-                    #define _FLL_VALUE (ICS_C1_RDIV_RANGE1_1024)
-                #else
-                    #error Invalid clock divide from low frequency crystal            
-                #endif
-            #else
-                #error Invalid input clock divide has been specified - valid are 1, 2, 4, 8, 16, 32, 64, 128, 256, 512 or 1024
-            #endif
-            #if (((_EXTERNAL_CLOCK / CLOCK_DIV) > 39066) || ((_EXTERNAL_CLOCK / CLOCK_DIV) < 31250))
-                #error Invalid FLL input frequency - 31.25kHz..39.06525kHz required
-            #endif
+            #error Invalid ICSOUTCLK divide has been specified - valid are 1, 2, 4, 8, 16, 32, 64 or 128
         #endif
-    #endif
-    #if (SYSTEM_CLOCK_DIVIDE == 1)
-        #define _SYSCLK__DIV   (ICS_C2_BDIV_1)
-    #elif (SYSTEM_CLOCK_DIVIDE == 2)
-        #define _SYSCLK__DIV   (ICS_C2_BDIV_2)
-    #elif (SYSTEM_CLOCK_DIVIDE == 4)
-        #define _SYSCLK__DIV   (ICS_C2_BDIV_4)
-    #elif (SYSTEM_CLOCK_DIVIDE == 8)
-        #define _SYSCLK__DIV   (ICS_C2_BDIV_8)
-    #elif (SYSTEM_CLOCK_DIVIDE == 16)
-        #define _SYSCLK__DIV   (ICS_C2_BDIV_16)
-    #elif (SYSTEM_CLOCK_DIVIDE == 32)
-        #define _SYSCLK__DIV   (ICS_C2_BDIV_32)
-    #elif (SYSTEM_CLOCK_DIVIDE == 64)
-        #define _SYSCLK__DIV   (ICS_C2_BDIV_64)
-    #elif (SYSTEM_CLOCK_DIVIDE == 128)
-        #define _SYSCLK__DIV   (ICS_C2_BDIV_128)
     #else
-        #error Invalid system clock (ICSCLK) divide has been specified - valid are 1, 2, 4, 8, 16, 32, 64 or 128
+        #if (SYSTEM_CLOCK_DIVIDE == 1)
+            #define _SYSCLK__DIV   (ICS_C2_BDIV_1)
+        #elif (SYSTEM_CLOCK_DIVIDE == 2)
+            #define _SYSCLK__DIV   (ICS_C2_BDIV_2)
+        #elif (SYSTEM_CLOCK_DIVIDE == 4)
+            #define _SYSCLK__DIV   (ICS_C2_BDIV_4)
+        #elif (SYSTEM_CLOCK_DIVIDE == 8)
+            #define _SYSCLK__DIV   (ICS_C2_BDIV_8)
+        #elif (SYSTEM_CLOCK_DIVIDE == 16)
+            #define _SYSCLK__DIV   (ICS_C2_BDIV_16)
+        #elif (SYSTEM_CLOCK_DIVIDE == 32)
+            #define _SYSCLK__DIV   (ICS_C2_BDIV_32)
+        #elif (SYSTEM_CLOCK_DIVIDE == 64)
+            #define _SYSCLK__DIV   (ICS_C2_BDIV_64)
+        #elif (SYSTEM_CLOCK_DIVIDE == 128)
+            #define _SYSCLK__DIV   (ICS_C2_BDIV_128)
+        #else
+            #error Invalid system clock (ICSCLK) divide has been specified - valid are 1, 2, 4, 8, 16, 32, 64 or 128
+        #endif
     #endif
     #if (BUS_CLOCK_DIVIDE != 1) && (BUS_CLOCK_DIVIDE != 2)
         #error Invalid bus clock divide has been specified - valid are 1 or 2
@@ -939,11 +886,21 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
     #elif defined RUN_FROM_DEFAULT_CLOCK
         #define ICSOUT_CLOCK   ((ICSIRCLK * CLOCK_MUL)/SYSTEM_CLOCK_DIVIDE)
     #else
-        #define ICSOUT_CLOCK   (((_EXTERNAL_CLOCK / CLOCK_DIV) * CLOCK_MUL)/SYSTEM_CLOCK_DIVIDE)
+        #if defined KINETIS_KE06
+            #define ICSOUT_CLOCK   (((_EXTERNAL_CLOCK / CLOCK_DIV) * CLOCK_MUL)/ICSOUTCLK_DIVIDE)
+        #else
+            #define ICSOUT_CLOCK   (((_EXTERNAL_CLOCK / CLOCK_DIV) * CLOCK_MUL)/SYSTEM_CLOCK_DIVIDE)
+        #endif
     #endif
-    #define SYSTEM_CLOCK   (ICSOUT_CLOCK)
-    #define CORE_CLOCK     (ICSOUT_CLOCK)
-    #define BUS_CLOCK      (ICSOUT_CLOCK/BUS_CLOCK_DIVIDE)
+    #if defined KINETIS_KE06
+        #define SYSTEM_CLOCK   (ICSOUT_CLOCK/SYSTEM_CLOCK_DIVIDE)
+        #define CORE_CLOCK     (SYSTEM_CLOCK)
+        #define BUS_CLOCK      (CORE_CLOCK/BUS_CLOCK_DIVIDE)             // bus and flash clock
+    #else
+        #define SYSTEM_CLOCK   (ICSOUT_CLOCK)
+        #define CORE_CLOCK     (ICSOUT_CLOCK)
+        #define BUS_CLOCK      (ICSOUT_CLOCK/BUS_CLOCK_DIVIDE)
+    #endif
     #if SYSTEM_CLOCK > KINETIS_MAX_SPEED
         #error ICSOUT/system frequency out of range: maximum KINETIS_MAX_SPEED
     #endif
@@ -6049,6 +6006,7 @@ typedef struct stRESET_VECTOR_VALIDATION                                 // {20}
 extern int fnProgramOnce(int iCommand, unsigned long *ptrBuffer, unsigned char ucBlockNumber, unsigned char ucLength);
     #define PROGRAM_ONCE_READ    0
     #define PROGRAM_ONCE_WRITE   1
+extern int fnBackdoorUnlock(unsigned long Key[2]);
 
 #if !defined DEVICE_WITHOUT_DMA
     // DMAMUX 0
@@ -10154,6 +10112,7 @@ typedef struct stKINETIS_LPTMR_CTL
           #define SIM_PINSEL1_FTM2PS0_PTC0   0x00000000                  // FTM2[0] mapped to PTC0
           #define SIM_PINSEL1_FTM2PS0_PTH0   0x00000001                  // FTM2[0] mapped to PTH0
           #define SIM_PINSEL1_FTM2PS0_PTF0   0x00000002                  // FTM2[0] mapped to PTF0
+          #define SIM_PINSEL1_FTM2PS0_MASK   0x00000003                  // FTM2[0] mapping mask
           #define SIM_PINSEL1_FTM2PS1_PTC1   0x00000000                  // FTM2[1] mapped to PTC1
           #define SIM_PINSEL1_FTM2PS1_PTH1   0x00000004                  // FTM2[1] mapped to PTH1
           #define SIM_PINSEL1_FTM2PS1_PTF1   0x00000008                  // FTM2[1] mapped to PTF1
@@ -10183,7 +10142,7 @@ typedef struct stKINETIS_LPTMR_CTL
             #define SIM_SCGC_BME_XOR         (volatile unsigned long *)(SIM_BLOCK + 0x0c + BME_XOR_OFFSET)
     #endif
       #define SIM_SCGC_RTC                   0x00000001
-      #define SIM_SCGC_PIT                   0x00000002
+      #define SIM_SCGC_PIT0                  0x00000002
       #define SIM_SCGC_PWT                   0x00000010
       #define SIM_SCGC_FTM0                  0x00000020
       #define SIM_SCGC_FTM1                  0x00000040
@@ -13956,7 +13915,7 @@ typedef struct stKINETIS_LPTMR_CTL
   #define OSC_CR_OSCINIT                 0x01                            // OSC initialisation (read-only) 
   #define OSC_CR_HGO                     0x02                            // high gain mode
   #define OSC_CR_RANGE_LOW               0x00                            // high frequency range 32kHz
-  #define OSC_CR_RANGE_HIGH              0x04                            // high frequency range 4..20MHz
+  #define OSC_CR_RANGE_HIGH              0x04                            // high frequency range 4..20MHz (4..24MHz KE06)
   #define OSC_CR_OSCOS_EXT               0x00                            // select external clock source as output clock
   #define OSC_CR_OSCOS_SOURCE            0x10                            // select oscillator clock source as output clock
   #define OSC_CR_OSCSTEN                 0x20                            // enable oscillator in stop mode

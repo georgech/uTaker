@@ -923,7 +923,9 @@
       //#define MODBUS_CRC_FROM_LOOKUP_TABLE                             // MODBUS RTU cyclic redundancy check performed with help of loop up table (requires 512 bytes FLASH table, but faster than calculation loop)
         #define REMOVE_SREC_LOADING
     #else
-      //#define KBOOT_LOADER                                             // use KBOOT UART interface rather than SREC/iHex interface
+        #define KBOOT_LOADER                                             // use KBOOT UART interface rather than SREC/iHex interface
+            #define KBOOT_LOADER_MASS_ERASE_TO_UNLOCK
+            #define KBOOT_LOADER_BACKDOOR_KEY_TO_UNLOCK
       //#define DEVELOPERS_LOADER                                        // Freescale Developer's Bootloader (AN2295) compatible mode (rather than SREC/iHex)
           //#define DEVELOPERS_LOADER_PROTOCOL_VERSION_9                 // user protocol version 9 rather than obsolete Kinetis 8 (not completed at the moment)
             #define DEVELOPERS_LOADER_READ                               // support reading back program

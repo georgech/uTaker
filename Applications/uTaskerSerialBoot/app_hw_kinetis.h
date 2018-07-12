@@ -1115,7 +1115,7 @@
 
 
 
-// FLASH configuration settings
+// FLASH configuration settings (neither all 0s nor all 1s are allowed)
 //
 #define BACKDOOR_KEY_0     0
 #define BACKDOOR_KEY_1     0
@@ -1124,7 +1124,13 @@
 #define BACKDOOR_KEY_4     0
 #define BACKDOOR_KEY_5     0
 #define BACKDOOR_KEY_6     0
-#define BACKDOOR_KEY_7     0
+#define BACKDOOR_KEY_7     1
+
+#if defined KBOOT_LOADER_BACKDOOR_KEY_TO_UNLOCK
+    #define SUPPORT_BACKDOOR_ACCESS_KEY                                  // enable unlocking code
+#else
+  //#define SUPPORT_BACKDOOR_ACCESS_KEY                                  // enable unlocking code
+#endif
 
 
 //#if defined FRDM_K64F                                                  // (removed since mbed bootloader has been corrected) since this board may be used with the MBED loader the flash configuration settings are left with all bits apart from security disable set at '1' - otherwise the MBED loader tends to crash
