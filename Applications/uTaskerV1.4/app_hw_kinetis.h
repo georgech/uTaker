@@ -1593,6 +1593,19 @@
     #endif
 #endif
 
+#define SUPPORT_PORT_INTERRUPTS                                          // support code for port interrupts (IRQ for KE/KEA devices) - see the following video showing port interrupt operation in a KL27: https://youtu.be/CubinvMuTwU
+  //#define PORT_INTERRUPT_USER_DISPATCHER                               // use a single port interrupt callback since the user dispatches according to interrupted input (valid also for low-leakage wakeup interrupts)
+    #if defined FRDM_KL03Z
+        #define NO_PORT_INTERRUPTS_PORTA                                 // remove port interrupt support from port A
+        #define NO_PORT_INTERRUPTS_PORTB                                 // remove port interrupt support from port B
+    #else
+      //#define NO_PORT_INTERRUPTS_PORTA                                 // remove port interrupt support from port A
+      //#define NO_PORT_INTERRUPTS_PORTB                                 // remove port interrupt support from port B
+      //#define NO_PORT_INTERRUPTS_PORTC                                 // remove port interrupt support from port C
+      //#define NO_PORT_INTERRUPTS_PORTD                                 // remove port interrupt support from port D
+      //#define NO_PORT_INTERRUPTS_PORTE                                 // remove port interrupt support from port E
+    #endif
+
 // Include the Kinetis hardware header here
 // - beware that the header delivers rules for subsequent parts of this header file but also accepts some rules from previous parts,
 // therefore its position should only be moved after careful consideration of its consequences
@@ -3021,18 +3034,6 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 #if !defined USE_DMX_RDM_MASTER
     #undef UART_FRAME_COMPLETE                                           // this can be disabled if not specifically needed for other purposes to MODBUS RS485 mode or DMX512 master
 #endif
-
-#define SUPPORT_PORT_INTERRUPTS                                          // support code for port interrupts (IRQ for KE/KEA devices) - see the following video showing port interrupt operation in a KL27: https://youtu.be/CubinvMuTwU
-    #if defined FRDM_KL03Z
-        #define NO_PORT_INTERRUPTS_PORTA                                 // remove port interrupt support from port A
-        #define NO_PORT_INTERRUPTS_PORTB                                 // remove port interrupt support from port B
-    #else
-      //#define NO_PORT_INTERRUPTS_PORTA                                 // remove port interrupt support from port A
-      //#define NO_PORT_INTERRUPTS_PORTB                                 // remove port interrupt support from port B
-      //#define NO_PORT_INTERRUPTS_PORTC                                 // remove port interrupt support from port C
-      //#define NO_PORT_INTERRUPTS_PORTD                                 // remove port interrupt support from port D
-      //#define NO_PORT_INTERRUPTS_PORTE                                 // remove port interrupt support from port E
-    #endif
 
 #if defined SUPPORT_LOW_POWER
     #define UART_PULL_UPS  (PORT_PS_UP_ENABLE)                           // activate pull-ups on UART lines to avoid them floating in low power modes (which causes leakage currents to flow)

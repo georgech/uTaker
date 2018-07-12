@@ -18374,7 +18374,11 @@ typedef struct stPWM_INTERRUPT_SETUP
 //
 typedef struct stINTERRUPT_SETUP
 {
-    void (*int_handler)(void);                                           // interrupt handler to be configured - a return value of 1 causes the level sensitive source to re cleared on return
+#if defined PORT_INTERRUPT_USER_DISPATCHER
+    void (*int_handler)(int);                                            // interrupt handler to be configured
+#else
+    void (*int_handler)(void);                                           // interrupt handler to be configured
+#endif
     unsigned char    int_type;                                           // identifier for when configuring
     unsigned char    int_priority;                                       // priority the user wants to set
 

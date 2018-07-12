@@ -273,7 +273,7 @@ extern int fnConfigureRTC(void *ptrSettings)
         }
     #if defined KINETIS_KE && !defined KINETIS_WITH_SRTC && defined SUPPORT_RTC
         POWER_UP_ATOMIC(6, RTC);                                         // ensure the KE's RTC is powered
-        rtc_interrupt_handler[iIRQ] = ((INTERRUPT_SETUP *)ptrSettings)->int_handler; // enter the handling interrupt
+        rtc_interrupt_handler[iIRQ] = ((RTC_SETUP *)ptrSettings)->int_handler; // enter the handling interrupt
         fnEnterInterrupt(irq_RTC_OVERFLOW_ID, PRIORITY_RTC, (void (*)(void))_rtc_handler); // enter interrupt handler
         #if defined RTC_USES_EXT_CLK
         RTC_MOD = (((_EXTERNAL_CLOCK)/RTC_CLOCK_PRESCALER_1) - 1);       // set the match value for 1s
@@ -290,7 +290,7 @@ extern int fnConfigureRTC(void *ptrSettings)
         }
         #endif
     #elif defined SUPPORT_SW_RTC
-        rtc_interrupt_handler[iIRQ] = ((INTERRUPT_SETUP *)ptrSettings)->int_handler; // enter the handling interrupt
+        rtc_interrupt_handler[iIRQ] = ((RTC_SETUP *)ptrSettings)->int_handler; // enter the handling interrupt
     #else
         #if defined KINETIS_KM
         POWER_UP_ATOMIC(5, IRTC);                                        // enable access and interrupts to the RTC
@@ -313,7 +313,7 @@ extern int fnConfigureRTC(void *ptrSettings)
             return WAIT_STABILISING_DELAY;                               // the oscillator requires some time to stabilise so the user should call again after this time has expired
         #endif
         }
-        rtc_interrupt_handler[iIRQ] = ((INTERRUPT_SETUP *)ptrSettings)->int_handler; // enter the handling interrupt
+        rtc_interrupt_handler[iIRQ] = ((RTC_SETUP *)ptrSettings)->int_handler; // enter the handling interrupt
         RTC_SR = 0;                                                      // temporarily disable RTC to avoid potentially missed seconds count
     #endif
         rtc_interrupts |= (0x01 << iIRQ);                                // flag interrupt(s) enabled

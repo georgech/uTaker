@@ -34,7 +34,7 @@
     #define _PORT_INTS_CONFIG
 
     #if !defined K70F150M_12M && !defined TWR_K53N512 && !defined TWR_K40X256 && !defined TWR_K40D100M && !defined KWIKSTIK
-      //#define IRQ_TEST                                                 // test IRQ port interrupts
+        #define IRQ_TEST                                                 // test IRQ port interrupts
       //#define DMA_PORT_MIRRORING                                       // demonstrate using DMA to control one or more output ports to follow an input port
       //#define DMA_SPI_BURST                                            // {8} demonstrate input port triggering of an SPI burst using DMA
         #if defined SUPPORT_LOW_POWER && defined IRQ_TEST
@@ -141,7 +141,11 @@ static void test_irq_1(void)
 }
     #endif
 
-static void test_irq_4(void)
+#if defined PORT_INTERRUPT_USER_DISPATCHER
+static void __callback_interrupt test_irq_4(int iPinRef)
+#else
+static void __callback_interrupt test_irq_4(void)
+#endif
 {
     fnInterruptMessage(OWN_TASK, IRQ4_EVENT);
     #if defined _KINETIS && !defined KINETIS_KE
@@ -150,7 +154,11 @@ static void test_irq_4(void)
     #endif
 }
     #if !defined M52259DEMO && !defined _LPC23XX && !defined _LPC17XX && !defined _STM32
-static void test_irq_5(void)
+#if defined PORT_INTERRUPT_USER_DISPATCHER
+static void __callback_interrupt test_irq_5(int iPinRef)
+#else
+static void __callback_interrupt test_irq_5(void)
+#endif
 {
     fnInterruptMessage(OWN_TASK, IRQ5_EVENT);                            // send an interrupt event to the task
 }

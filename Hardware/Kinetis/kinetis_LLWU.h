@@ -14,6 +14,7 @@
     Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     02.02.2017 Clear pending interrupt at LPTMR after module wakeup event {1}
+    12.07.2018 Add option to use single callback per port, with pin reference as callback parameter (PORT_INTERRUPT_USER_DISPATCHER)
 
 */
 
@@ -142,7 +143,11 @@ static const unsigned char cWakeupPorts[PORTS_AVAILABLE][PORT_WIDTH] = { // warn
 
 #define WAKEUP_SOURCES   (WAKEUP_SOURCES_0_7 + WAKEUP_SOURCES_8_15 + WAKEUP_SOURCES_MODULES)
 
-static void (*wakeup_handlers[WAKEUP_SOURCES])(void) = {0};              // support a user wakeup handler of each wakeup pin and module source
+#if defined PORT_INTERRUPT_USER_DISPATCHER
+    static void (*wakeup_handler)(int) = 0;                              // general user wakeup handler with wakeup source reference parameter
+#else
+    static void (*wakeup_handlers[WAKEUP_SOURCES])(void) = {0};          // support a user wakeup handler of each wakeup pin and module source
+#endif
 
 static void fnHandleWakeupSources(volatile unsigned char *prtFlagRegister, int iSouceStart)
 {
@@ -205,11 +210,19 @@ static void fnHandleWakeupSources(volatile unsigned char *prtFlagRegister, int i
                 *prtFlagRegister = ucBit;                                // reset the interrupt flag (write '1' to clear)
     #endif
             }
+    #if defined PORT_INTERRUPT_USER_DISPATCHER
+            if (wakeup_handler != 0) {                                   // if there is a general user handler
+                uDisable_Interrupt();                                    // ensure interrupts remain blocked when user callback operates
+                    wakeup_handler(iSouceStart);
+                uEnable_Interrupt();
+            }
+    #else
             if (wakeup_handlers[iSouceStart] != 0) {                     // if there is a user handler for the source
                 uDisable_Interrupt();                                    // ensure interrupts remain blocked when user callback operates
                     wakeup_handlers[iSouceStart]();
                 uEnable_Interrupt();
             }
+    #endif
         }
         iSouceStart++;
         ucBit <<= 1;
@@ -260,7 +273,11 @@ static __interrupt void _wakeup_isr(void)
         #endif
                 while (ulPortBits != 0) {                                // handle each module
                     if ((wakeup_interrupt->int_port_bits & ulBit) != 0) {// if the module wakeup is to be enabled
+        #if defined PORT_INTERRUPT_USER_DISPATCHER
+                        wakeup_handler = wakeup_interrupt->int_handler; // enter the general user interrupt handler
+        #else
                         wakeup_handlers[iBitRef + (WAKEUP_SOURCES_0_7 + WAKEUP_SOURCES_8_15)] = wakeup_interrupt->int_handler; // enter the user interrupt handler for this wakeup input
+        #endif
                         ulPortBits &= ~ulBit;
                     }
                     ulBit <<= 1;
@@ -319,7 +336,11 @@ static __interrupt void _wakeup_isr(void)
                             unsigned char *ptrWakeupEnable = (unsigned char *)LLWU_BLOCK + (cWakeupPorts[wakeup_interrupt->int_port][iBitRef]/4); // set the enable register pointer
                             unsigned char ucValueMask = (LLWU_PE_WUPE_MASK << iShift); // set the mask in the enable register
                             *ptrWakeupEnable &= ~ucValueMask;            // disable the wakeup functionality
+    #if defined PORT_INTERRUPT_USER_DISPATCHER
+                            wakeup_handler = wakeup_interrupt->int_handler; // enter the general user interrupt handler
+    #else
                             wakeup_handlers[cWakeupPorts[wakeup_interrupt->int_port][iBitRef]] = wakeup_interrupt->int_handler; // enter the user interrupt handler for this wakeup input
+    #endif
                             *ptrFlagRegister = (LLWU_F_WUF0 << (cWakeupPorts[wakeup_interrupt->int_port][iBitRef]%8)); // reset pending flags (the pending flag is cleared before enabling the interrupt source due to the fact that it may still be pending due to a wakeup from VLLSx, which entered via reset)
     #if defined _WINDOWS
                             *ptrFlagRegister = 0;
