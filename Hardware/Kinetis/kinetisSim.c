@@ -7790,24 +7790,26 @@ extern void fnSimulateBreak(int iPort)
 #endif
 #endif
 #if UARTS_AVAILABLE > 0
+    #if defined UART0_BLOCK
     case 0:
         if ((UART0_S2 & UART_S2_LBKDE) != 0) {                           // if break detection is enabled
             UART0_S2 |= UART_S2_LBKDIF;                                  // set break detected flag
         }
         if (((UART0_S2 & UART_S2_LBKDIF) != 0) && ((UART0_BDH & UART_BDH_LBKDIE) != 0)) { // if break detection interrupt is enabled
-    #if defined irq_UART0_1_ID                                           // when UARTs 0 and 1 share an interrupt
+        #if defined irq_UART0_1_ID                                       // when UARTs 0 and 1 share an interrupt
             if (fnGenInt(irq_UART0_1_ID) != 0) {                         // if UART0/1 interrupt is not disabled
                 VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                 ptrVect->processor_interrupts.irq_UART0_1();             // call the interrupt handler
             }
-    #else
+        #else
             if (fnGenInt(irq_UART0_ID) != 0) {                           // if UART0 interrupt is not disabled
                 VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                 ptrVect->processor_interrupts.irq_UART0();               // call the interrupt handler
             }
-    #endif
+        #endif
         }
         break;
+    #endif
     #if UARTS_AVAILABLE > 1
     case 1:
         if ((UART1_S2 & UART_S2_LBKDE) != 0) {                           // if break detection is enabled

@@ -237,7 +237,7 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*I
     #undef PLL_OUTPUT_FREQ
     #if defined USE_HSI_CLOCK
         #define PLL_OUTPUT_FREQ  HSI_FREQUENCY
-    #elif defined USE_MSI_CLOCK && defined _STM32L432
+    #elif defined USE_MSI_CLOCK && defined _STM32L432 || defined _STM32L4X5 || defined _STM32L4X6
         #define PLL_OUTPUT_FREQ  MSI_CLOCK
         #if defined MSI_CLOCK
             #if (MSI_CLOCK == 100000)
@@ -627,7 +627,7 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*I
             #define PLL_OUTPUT_FREQ  CRYSTAL_FREQ
         #endif
     #endif
-#elif defined _STM32L432 || defined _STM32L0x1
+#elif defined _STM32L432 || defined _STM32L0x1 || defined _STM32L4X5 || defined _STM32L4X6
 #elif defined _STM32F031
     #define PCLK1_DIVIDE      PCLK_DIVIDE                                // PCLK1 is equivalent to PCLK
     #define PCLK2_DIVIDE      PCLK_DIVIDE                                // PCLK2 is equivalent to PCLK
@@ -724,7 +724,7 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*I
 #define VCORE_RANGE_2     1
 #define VCORE_RANGE_3     2
 
-#if defined _STM32L432
+#if defined _STM32L432 || defined _STM32L4X5 || defined _STM32L4X6
     // Determine highest operating frequency and optimal wait states
     //
     #if CORE_VOLTAGE == VCORE_RANGE_2                                    // reduced core voltage operation
@@ -1034,7 +1034,7 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*I
     #define PWR_BLOCK                   ((unsigned char *)(&STM32.PWR))        // Power Control
     #define CAN1_BLOCK                  ((unsigned char *)(&STM32.CAN))        // bxCAN1
     #define CAN2_BLOCK                  ((unsigned char *)(&STM32.CAN_SLAVE))  // bxCAN2
-    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031
+    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
         #define SPI1_I2S_BLOCK          ((unsigned char *)(&STM32.SPI_I2S[0])) // SPI-I2S
         #define SPI2_I2S_BLOCK          ((unsigned char *)(&STM32.SPI_I2S[1])) // SPI-I2S
         #define SPI3_I2S_BLOCK          ((unsigned char *)(&STM32.SPI_I2S[2])) // SPI-I2S
@@ -1139,7 +1139,7 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*I
 
     #define CORTEX_M3_BLOCK             0xe000e000
     #define DBG_BLOCK                   0xe0042000
-#elif defined _STM32L432 || defined _STM32F031
+#elif defined _STM32L432 || defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
     // APB1 peripherals
     //
     #define TIM2_BLOCK                  0x40000000
@@ -1160,19 +1160,28 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*I
     #define USART2_BLOCK                0x40004400
     #define USART3_BLOCK                0x40004800
     #define UART4_BLOCK                 0x40004c00
+    #if defined _STM32L4X5 || defined _STM32L4X6
+        #define UART5_BLOCK             0x40005000
+    #endif
     #define I2C1_BLOCK                  0x40005400
     #define I2C2_BLOCK                  0x40005800
     #define I2C3_BLOCK                  0x40005c00
-    #define CRS_BLOCK                   0x40006000
+    #if !defined _STM32L4X5 && !defined _STM32L4X6
+        #define CRS_BLOCK               0x40006000
+    #endif
     #define CAN1_BLOCK                  0x40006400
-    #define USB_FS_BLOCK                0x40006800
-    #define USB_SRAM_BLOCK              0x40006c00
+    #if !defined _STM32L4X5 && !defined _STM32L4X6
+        #define USB_FS_BLOCK            0x40006800
+        #define USB_SRAM_BLOCK          0x40006c00
+    #endif
     #define PWR_BLOCK                   0x40007000
     #define DAC1_BLOCK                  0x40007400
     #define OPAMP_BLOCK                 0x40007800
     #define LPTIM1_BLOCK                0x40007c00
     #define LPUART1_BLOCK               0x40008000
-    #define I2C4_BLOCK                  0x40008400
+    #if !defined _STM32L4X5 && !defined _STM32L4X6
+        #define I2C4_BLOCK              0x40008400
+    #endif
     #define SWPMI1_BLOCK                0x40008800
     #define LPTIM2_BLOCK                0x40009400
 
@@ -1192,13 +1201,19 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*I
     #if defined _STM32F031
         #define SPI1_I2S1_BLOCK         0x40013000
     #endif
+    #if defined _STM32L4X5 || defined _STM32L4X6
+        #define TIM8_BLOCK              0x40013400
+    #endif
     #define USART1_BLOCK                0x40013800
     #define TIM15_BLOCK                 0x40014000
     #define TIM16_BLOCK                 0x40014400
-    #if defined _STM32F031
+    #if defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
         #define TIM17_BLOCK             0x40014800
     #endif
     #define SAI1_BLOCK                  0x40015400
+    #if defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
+        #define SAI2_BLOCK              0x40015800
+    #endif
     #if defined _STM32F031
         #define DBG_BLOCK               0x40015800
     #endif
@@ -1212,6 +1227,9 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*I
     #define FMI_BLOCK                   0x40022000
     #define CRC_BLOCK                   0x40023000
     #define TSC_BLOCK                   0x40024000
+    #if defined _STM32L4X5 || defined _STM32L4X6
+        #define DMA2D_BLOCK             0x4002B000
+    #endif
 
     // AHB2 peripherals
     //
@@ -1220,13 +1238,38 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*I
     #define GPIO_PORTC_BLOCK            0x48000800
     #define GPIO_PORTD_BLOCK            0x48000c00
     #define GPIO_PORTE_BLOCK            0x48001000
-    #if defined _STM32F031
+    #if defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
         #define GPIO_PORTF_BLOCK        0x48001400
     #endif
+    #if defined _STM32L4X5 || defined _STM32L4X6
+        #define GPIO_PORTG_BLOCK        0x48001800
+    #endif
     #define GPIO_PORTH_BLOCK            0x48001c00
+    #if defined _STM32L4X5 || defined _STM32L4X6
+        #define GPIO_PORTI_BLOCK        0x48002000
+        #define OTG_FS__BLOCK           0x50000000
+    #endif
     #define ADC_BLOCK                   0x50040000
+    #if defined _STM32L4X5 || defined _STM32L4X6
+        #define DCMI_BLOCK              0x50050000
+    #endif
     #define AES_BLOCK                   0x50060000
+    #if defined _STM32L4X5 || defined _STM32L4X6
+        #define HASH_BLOCK              0x50060400
+    #endif
     #define RNG_BLOCK                   0x50060800
+
+    // AHB3 peripherals
+    //
+    #if defined _STM32L4X5 || defined _STM32L4X6
+        #define FMC_BLOCK               0xa0000000
+    #endif
+
+    // AHB4 peripherals
+    //
+    #if defined _STM32L4X5 || defined _STM32L4X6
+        #define QUADSPI_BLOCK           0xa0001000
+    #endif
 
     #define CORTEX_M3_BLOCK             0xe000e000
     #define DBG_BLOCK                   0xe0042000
@@ -2583,7 +2626,7 @@ typedef struct stSTM32_BD
       #define RESET_CAUSE_FLAGS              (RCC_CSR_RMVF | RCC_CSR_PINRSTF | RCC_CSR_PORRSTF | RCC_CSR_SFTRSTF | RCC_CSR_IWDGRSTF | RCC_CSR_WWDGRSTF | RCC_CSR_LPWRRSTF)
     #define RCC_SSCGR                        *(volatile unsigned long *)(RCC_BLOCK + 0x80) // spread spectrum clock generation register
     #define RCC_PLLI2SCFGR                   *(volatile unsigned long *)(RCC_BLOCK + 0x84) // PLLI2S configuration register
-#elif defined _STM32L432
+#elif defined _STM32L432 || defined _STM32L4X5 || defined _STM32L4X6
     #define RCC_CR                           *(volatile unsigned long *)(RCC_BLOCK + 0x00) // clock control register
       #define RCC_CR_MSION                   0x00000001
       #define RCC_CR_MSIRDY                  0x00000002                  // read-only
@@ -2698,6 +2741,7 @@ typedef struct stSTM32_BD
       #define RCC_APB1ENR1_USART2EN          0x00020000
       #define RCC_APB1ENR1_USART3EN          0x00040000
       #define RCC_APB1ENR1_UART4EN           0x00080000
+      #define RCC_APB1ENR1_UART5EN           0x00100000
     #define RCC_APB1ENR2                     *(volatile unsigned long *)(RCC_BLOCK + 0x5c) // APB1 peripheral enable register 2
       #define RCC_APB1ENR2_LPUART1EN         0x00000001
     #define RCC_APB2ENR                      *(volatile unsigned long *)(RCC_BLOCK + 0x60) // APB2 peripheral enable register
@@ -5046,7 +5090,7 @@ typedef struct stTIM9_10_11_13_12_14_REGS
 
 // Ports
 //
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031
+#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
     #define GPIOA_MODER                 *(unsigned long *)(GPIO_PORTA_BLOCK + 0x00)           // Port A Mode Register
       #define GPIO_MODER_INPUT          0x0
       #define GPIO_MODER_OUTPUT         0x1
@@ -5070,8 +5114,11 @@ typedef struct stTIM9_10_11_13_12_14_REGS
     #define GPIOA_LCKR                  *(unsigned long *)(GPIO_PORTA_BLOCK + 0x1c)           // Port A Configuration Lock Register
     #define GPIOA_AFRL                  *(unsigned long *)(GPIO_PORTA_BLOCK + 0x20)           // Port A Alternate Function Low Register
     #define GPIOA_AFRH                  *(unsigned long *)(GPIO_PORTA_BLOCK + 0x24)           // Port A Alternate Function High Register
-    #if defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031
+    #if defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
         #define GPIOA_BRR               *(unsigned long *)(GPIO_PORTA_BLOCK + 0x28)           // Port A port bit reset register
+    #endif
+    #if defined _STM32L4X5 || defined _STM32L4X6
+        #define GPIOA_ASCR              *(unsigned long *)(GPIO_PORTA_BLOCK + 0x2c)           // Port A port analog switch control register
     #endif
 
     #define GPIOB_MODER                 *(unsigned long *)(GPIO_PORTB_BLOCK + 0x00)           // Port B Mode Register
@@ -5084,8 +5131,11 @@ typedef struct stTIM9_10_11_13_12_14_REGS
     #define GPIOB_LCKR                  *(unsigned long *)(GPIO_PORTB_BLOCK + 0x1c)           // Port B Configuration Lock Register
     #define GPIOB_AFRL                  *(unsigned long *)(GPIO_PORTB_BLOCK + 0x20)           // Port B Alternate Function Low Register
     #define GPIOB_AFRH                  *(unsigned long *)(GPIO_PORTB_BLOCK + 0x24)           // Port B Alternate Function High Register
-    #if defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031
+    #if defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
         #define GPIOB_BRR               *(unsigned long *)(GPIO_PORTB_BLOCK + 0x28)           // Port B port bit reset register
+    #endif
+    #if defined _STM32L4X5 || defined _STM32L4X6
+        #define GPIOB_ASCR              *(unsigned long *)(GPIO_PORTB_BLOCK + 0x2c)           // Port B port analog switch control register
     #endif
 
     #define GPIOC_MODER                 *(unsigned long *)(GPIO_PORTC_BLOCK + 0x00)           // Port C Mode Register
@@ -5098,8 +5148,11 @@ typedef struct stTIM9_10_11_13_12_14_REGS
     #define GPIOC_LCKR                  *(unsigned long *)(GPIO_PORTC_BLOCK + 0x1c)           // Port C Configuration Lock Register
     #define GPIOC_AFRL                  *(unsigned long *)(GPIO_PORTC_BLOCK + 0x20)           // Port C Alternate Function Low Register
     #define GPIOC_AFRH                  *(unsigned long *)(GPIO_PORTC_BLOCK + 0x24)           // Port C Alternate Function High Register
-    #if defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031
+    #if defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
         #define GPIOC_BRR               *(unsigned long *)(GPIO_PORTC_BLOCK + 0x28)           // Port C port bit reset register
+    #endif
+    #if defined _STM32L4X5 || defined _STM32L4X6
+        #define GPIOC_ASCR              *(unsigned long *)(GPIO_PORTC_BLOCK + 0x2c)           // Port C port analog switch control register
     #endif
 
     #define GPIOD_MODER                 *(unsigned long *)(GPIO_PORTD_BLOCK + 0x00)           // Port D Mode Register
@@ -5112,8 +5165,11 @@ typedef struct stTIM9_10_11_13_12_14_REGS
     #define GPIOD_LCKR                  *(unsigned long *)(GPIO_PORTD_BLOCK + 0x1c)           // Port D Configuration Lock Register
     #define GPIOD_AFRL                  *(unsigned long *)(GPIO_PORTD_BLOCK + 0x20)           // Port D Alternate Function Low Register
     #define GPIOD_AFRH                  *(unsigned long *)(GPIO_PORTD_BLOCK + 0x24)           // Port D Alternate Function High Register
-    #if defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031
+    #if defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
         #define GPIOD_BRR               *(unsigned long *)(GPIO_PORTD_BLOCK + 0x28)           // Port D port bit reset register
+    #endif
+    #if defined _STM32L4X5 || defined _STM32L4X6
+        #define GPIOD_ASCR              *(unsigned long *)(GPIO_PORTD_BLOCK + 0x2c)           // Port D port analog switch control register
     #endif
 
     #define GPIOE_MODER                 *(unsigned long *)(GPIO_PORTE_BLOCK + 0x00)           // Port E Mode Register
@@ -5126,8 +5182,11 @@ typedef struct stTIM9_10_11_13_12_14_REGS
     #define GPIOE_LCKR                  *(unsigned long *)(GPIO_PORTE_BLOCK + 0x1c)           // Port E Configuration Lock Register
     #define GPIOE_AFRL                  *(unsigned long *)(GPIO_PORTE_BLOCK + 0x20)           // Port E Alternate Function Low Register
     #define GPIOE_AFRH                  *(unsigned long *)(GPIO_PORTE_BLOCK + 0x24)           // Port E Alternate Function High Register
-    #if defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031
+    #if defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
         #define GPIOE_BRR               *(unsigned long *)(GPIO_PORTE_BLOCK + 0x28)           // Port E port bit reset register
+    #endif
+    #if defined _STM32L4X5 || defined _STM32L4X6
+        #define GPIOE_ASCR              *(unsigned long *)(GPIO_PORTE_BLOCK + 0x2c)           // Port E port analog switch control register
     #endif
 
     #define GPIOF_MODER                 *(unsigned long *)(GPIO_PORTF_BLOCK + 0x00)           // Port F Mode Register
@@ -5140,8 +5199,11 @@ typedef struct stTIM9_10_11_13_12_14_REGS
     #define GPIOF_LCKR                  *(unsigned long *)(GPIO_PORTF_BLOCK + 0x1c)           // Port F Configuration Lock Register
     #define GPIOF_AFRL                  *(unsigned long *)(GPIO_PORTF_BLOCK + 0x20)           // Port F Alternate Function Low Register
     #define GPIOF_AFRH                  *(unsigned long *)(GPIO_PORTF_BLOCK + 0x24)           // Port F Alternate Function High Register
-    #if defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031
+    #if defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
         #define GPIOF_BRR               *(unsigned long *)(GPIO_PORTF_BLOCK + 0x28)           // Port F port bit reset register
+    #endif
+    #if defined _STM32L4X5 || defined _STM32L4X6
+        #define GPIOF_ASCR              *(unsigned long *)(GPIO_PORTF_BLOCK + 0x2c)           // Port F port analog switch control register
     #endif
 
     #define GPIOG_MODER                 *(unsigned long *)(GPIO_PORTG_BLOCK + 0x00)           // Port G Mode Register
@@ -5154,8 +5216,11 @@ typedef struct stTIM9_10_11_13_12_14_REGS
     #define GPIOG_LCKR                  *(unsigned long *)(GPIO_PORTG_BLOCK + 0x1c)           // Port G Configuration Lock Register
     #define GPIOG_AFRL                  *(unsigned long *)(GPIO_PORTG_BLOCK + 0x20)           // Port G Alternate Function Low Register
     #define GPIOG_AFRH                  *(unsigned long *)(GPIO_PORTG_BLOCK + 0x24)           // Port G Alternate Function High Register
-    #if defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031
+    #if defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
         #define GPIOG_BRR               *(unsigned long *)(GPIO_PORTG_BLOCK + 0x28)           // Port G port bit reset register
+    #endif
+    #if defined _STM32L4X5 || defined _STM32L4X6
+        #define GPIOG_ASCR              *(unsigned long *)(GPIO_PORTG_BLOCK + 0x2c)           // Port G port analog switch control register
     #endif
 
     #define GPIOH_MODER                 *(unsigned long *)(GPIO_PORTH_BLOCK + 0x00)           // Port H Mode Register
@@ -5168,8 +5233,11 @@ typedef struct stTIM9_10_11_13_12_14_REGS
     #define GPIOH_LCKR                  *(unsigned long *)(GPIO_PORTH_BLOCK + 0x1c)           // Port H Configuration Lock Register
     #define GPIOH_AFRL                  *(unsigned long *)(GPIO_PORTH_BLOCK + 0x20)           // Port H Alternate Function Low Register
     #define GPIOH_AFRH                  *(unsigned long *)(GPIO_PORTH_BLOCK + 0x24)           // Port H Alternate Function High Register
-    #if defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031
+    #if defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
         #define GPIOH_BRR               *(unsigned long *)(GPIO_PORTH_BLOCK + 0x28)           // Port H port bit reset register
+    #endif
+    #if defined _STM32L4X5 || defined _STM32L4X6
+        #define GPIOH_ASCR              *(unsigned long *)(GPIO_PORTH_BLOCK + 0x2c)           // Port H port analog switch control register
     #endif
 
     #define GPIOI_MODER                 *(unsigned long *)(GPIO_PORTI_BLOCK + 0x00)           // Port I Mode Register
@@ -5182,8 +5250,11 @@ typedef struct stTIM9_10_11_13_12_14_REGS
     #define GPIOI_LCKR                  *(unsigned long *)(GPIO_PORTI_BLOCK + 0x1c)           // Port I Configuration Lock Register
     #define GPIOI_AFRL                  *(unsigned long *)(GPIO_PORTI_BLOCK + 0x20)           // Port I Alternate Function Low Register
     #define GPIOI_AFRH                  *(unsigned long *)(GPIO_PORTI_BLOCK + 0x24)           // Port I Alternate Function High Register
-    #if defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031
+    #if defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
         #define GPIOI_BRR               *(unsigned long *)(GPIO_PORTI_BLOCK + 0x28)           // Port I port bit reset register
+    #endif
+    #if defined _STM32L4X5 || defined _STM32L4X6
+        #define GPIOI_ASCR              *(unsigned long *)(GPIO_PORTI_BLOCK + 0x2c)           // Port I port analog switch control register
     #endif
 
   #if defined _STM32F7XX
@@ -6690,10 +6761,10 @@ typedef struct stVECTOR_TABLE
     #define __POWER_UP_GPIO(ref)    RCC_IOPENR |= (RCC_IOPENR_IOP##ref##EN)
     #define __GPIO_IS_POWERED(ref)  (RCC_IOPENR & (RCC_IOPENR_IOPAEN << ref))
     #define __GPIO_IS_IN_RESET(ref) (0)
-#elif defined _STM32L432
+#elif defined _STM32L432 || defined _STM32L4X5 || defined _STM32L4X6
     #define __POWER_UP_GPIO(ref)    RCC_AHB2ENR |= (RCC_AHB2ENR_GPIO##ref##EN)
-    #define __GPIO_IS_POWERED(ref)  (RCC_AHB2ENR & (RCC_AHB2ENR_IOPAEN << ref))
-    #define __GPIO_IS_IN_RESET(ref) (RCC_AHB2ENR & (RCC_AHB2ENR_IOPAEN << ref))
+    #define __GPIO_IS_POWERED(ref)  (RCC_AHB2ENR & (RCC_AHB2ENR_GPIOAEN << ref))
+    #define __GPIO_IS_IN_RESET(ref) (RCC_AHB2ENR & (RCC_AHB2ENR_GPIOAEN << ref))
 #elif defined _STM32F031
     #define __POWER_UP_GPIO(ref)    RCC_AHBENR |= (RCC_AHBENR_IOP##ref##EN)
     #define __GPIO_IS_POWERED(ref)  (RCC_AHBENR & (RCC_AHBENR << ref))
@@ -6708,7 +6779,7 @@ typedef struct stVECTOR_TABLE
 //
 // Configure pins as output, including enabling power eg. _CONFIG_PORT_OUTPUT(D, (PORTD_BIT4), (OUTPUT_SLOW | OUTPUT_PUSH_PULL));
 //
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031
+#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
     // First the port is powered and each pin set as output, then the characteristics are set to the speed and type registers {8}
     //
     #define _CONFIG_PORT_OUTPUT(ref, pins, characteristics) __POWER_UP_GPIO(ref); \
@@ -6829,7 +6900,7 @@ typedef struct stVECTOR_TABLE
 
 // Configure pins as input, including enabling power and digital use. eg. _CONFIG_PORT_INPUT(A, PORTA_BIT4, FLOATING_INPUT);
 //
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031
+#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
     // First the port is powered and each pin set as input, then the characteristics are set to the pullup/down register
     //
     #define _CONFIG_PORT_INPUT(ref, pins, characteristics) __POWER_UP_GPIO(ref); \
@@ -6907,7 +6978,7 @@ typedef struct stVECTOR_TABLE
 
 // Configure peripheral functions
 //
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031
+#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
     // Enable power to port, clear the pins to inputs and set alternative function and output characteristics, then set the specific function type {8}
     //
     #define _CONFIG_PERIPHERAL_OUTPUT(ref, per_func, pins, characteristics) __POWER_UP_GPIO(ref); \
@@ -7784,6 +7855,11 @@ typedef struct stADC_SETUP
     #define CHIP_HAS_LPUARTS     0
     #define CHIP_HAS_I2C         3
     #define CHIP_HAS_NO_I2C2
+#elif defined _STM32L4X5 || defined _STM32L4X6
+    #define PORTS_AVAILABLE      9
+    #define CHIP_HAS_UARTS       6
+    #define CHIP_HAS_LPUARTS     0
+    #define CHIP_HAS_I2C         3
 #else
     #define PORTS_AVAILABLE      5
     #define CHIP_HAS_UARTS       5

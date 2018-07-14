@@ -110,7 +110,7 @@ static void fnSetDevice(unsigned short *port_inits)
     GPIOE_IDR = ulGPIOIN[4] = *port_inits++;
     GPIOF_IDR = ulGPIOIN[5] = *port_inits++;
     GPIOG_IDR = ulGPIOIN[6] = *port_inits++;
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432
+#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432 || defined _STM32L4X5 || defined _STM32L4X6
     GPIOH_IDR = ulGPIOIN[7] = *port_inits++;
     GPIOI_IDR = ulGPIOIN[8] = *port_inits++;
     #if defined _STM32F7XX
@@ -123,11 +123,14 @@ static void fnSetDevice(unsigned short *port_inits)
     #else
     PWR_CR = PWR_CR_VOS;
     #endif
-    #if !defined _STM32L432
+    #if defined _STM32L4X5 || defined _STM32L4X6
+    RCC_AHB1ENR = RCC_AHB1ENR_FLASHEN;
+    RCC_PLLCFGR = 0x00001000;
+    #elif !defined _STM32L432
     RCC_AHB1ENR = RCC_AHB1ENR_CCMDATARAMEN;
     RCC_PLLCFGR = 0x24003010;
     #endif
-#elif defined _STM32L432
+#elif defined _STM32L432 || defined _STM32L4X5 || defined _STM32L4X6
     RCC_AHB1ENR = (RCC_AHB1ENR_FLASHEN);
 #elif defined _STM32L0x1
     RCC_AHBENR = RCC_AHBENR_MIFEN;
@@ -161,7 +164,7 @@ static void fnSetDevice(unsigned short *port_inits)
     GPIOD_MODER = 0xffffffff;
     GPIOE_MODER = 0xffffffff;
     GPIOH_MODER = 0xffffffff;
-#elif defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432 || defined _STM32F031
+#elif defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432 || defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
     GPIOA_MODER = 0xa8000000;
     GPIOB_MODER = 0x00000280;
     GPIOB_OSPEEDR = 0x000000c0;
@@ -1148,7 +1151,7 @@ static void fnHandleExti(unsigned short usOriginal, unsigned short usNew, unsign
 {
     VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
     int iInputCount = 0;
-    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031
+    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
     unsigned long *ptrMux = SYSCFG_EXTICR1_ADDR;
     #else
     unsigned long *ptrMux = AFIO_EXTICR1_ADD;
@@ -1333,7 +1336,7 @@ extern int fnSimulateEthernetIn(unsigned char *ucData, unsigned short usLen, int
 static void fnUpdatePeripheral(int iPort, unsigned long ulPeriph)
 {
     int i = 0;
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031
+#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
     int iHigh = 0;
     int iFunctionShift = 0;
     unsigned long ulMaskMode = 0x00000003;
@@ -1819,7 +1822,7 @@ static unsigned short fnGetPortType(int portNr, int iRequest, int i)
 {
     unsigned short usPeripherals = 0;
     unsigned short usBit = 0x0001;
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031
+#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
     unsigned long ulMask = 0x00000003;
     STM32_GPIO *ptrPort = &STM32.Ports[portNr];
     if (GET_OUTPUTS == iRequest) {

@@ -35,7 +35,7 @@
     #define STRCAT strcat
 #endif
 
-#if defined _STM32L432
+#if defined _STM32L432 || defined _STM32L496
     #include "STM32L4XX_port.h"
 #elif defined _STM32F031
     #include "STM32F031_port.h"

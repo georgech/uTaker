@@ -199,6 +199,51 @@
     #define HCLK_DIVIDE         1                                        // HCLK is divided by 1 (1, 2, 4, 8, 16, 64, 128 or 512 are possible) - max. 168MHz
     #define PCLK1_DIVIDE        4                                        // PCLK1 is HCLK divided by 4 (1, 2, 4, 8, or 16 are possible) - max. 42MHz
     #define PCLK2_DIVIDE        2                                        // PCLK2 is HCLK divided by 2 (1, 2, 4, 8, or 16 are possible) - max. 84MHz
+#elif defined NUCLEO_L476RG
+    #define SYSTICK_DIVIDE_8                                             // use HCLK/8 as SYSTICK clock
+    #define CRYSTAL_FREQ        32768                                    // when there is a 32kHz crystal it can be used for the RTC, LSCO or MCO (optionally divided)
+
+    #define MCO_CONNECTED_TO_MSI
+    #define MCO_DIVIDE          16                                       // 1, 2, 4, 8 or 16 possible (defaults to /1 if not specified)
+
+    #define USE_MSI_CLOCK                                                // use internal MSI clock source (4MHz default)
+    #define MSI_CLOCK           48000000                                 // 100kHz, 200kHz, 400kHz, 800kHz, 1MHz, 2MHz, 4MHz, 8MHz, 16MHz, 32MHz, 48MHz possible
+  //#define USE_HSI_CLOCK                                                // use internal HSI clock source (16MHz)
+    #define DISABLE_PLL                                                  // run from clock source directly
+
+    #define HCLK_DIVIDE         1                                        // 1,2,4,8,16,32,64,128,256 or 512
+    #define PCLK1_DIVIDE        2                                        // 1,2,4,8, or 16
+    #define PCLK2_DIVIDE        1                                        // 1,2,4,8, or 16
+
+    #define PIN_COUNT           PIN_COUNT_32_PIN
+    #define PACKAGE_TYPE        PACKAGE_QFN
+    #define SIZE_OF_RAM         (64 * 1024)                              // 64k SRAM
+    #define SIZE_OF_FLASH       (256 * 1024)                             // 256k FLASH
+
+    #define CORE_VOLTAGE        VCORE_RANGE_1                            // normal core voltage operation
+#elif defined NUCLEO_L496RG
+    #define SYSTICK_DIVIDE_8                                             // use HCLK/8 as SYSTICK clock
+    #define CRYSTAL_FREQ        32768                                    // when there is a 32kHz crystal it can be used for the RTC, LSCO or MCO (optionally divided)
+
+    #define MCO_CONNECTED_TO_MSI
+    #define MCO_DIVIDE          16                                       // 1, 2, 4, 8 or 16 possible (defaults to /1 if not specified)
+
+    #define USE_MSI_CLOCK                                                // use internal MSI clock source (4MHz default)
+    #define MSI_CLOCK           48000000                                 // 100kHz, 200kHz, 400kHz, 800kHz, 1MHz, 2MHz, 4MHz, 8MHz, 16MHz, 32MHz, 48MHz possible
+  //#define USE_HSI_CLOCK                                                // use internal HSI clock source (16MHz)
+    #define DISABLE_PLL                                                  // run from clock source directly
+
+    #define HCLK_DIVIDE         1                                        // 1,2,4,8,16,32,64,128,256 or 512
+    #define PCLK1_DIVIDE        2                                        // 1,2,4,8, or 16
+    #define PCLK2_DIVIDE        1                                        // 1,2,4,8, or 16
+
+    #define PIN_COUNT           PIN_COUNT_144_PIN
+    #define PACKAGE_TYPE        PACKAGE_LQFP
+    #define SIZE_OF_RAM         (256 * 1024)                             // 256k SRAM
+    #define SIZE_OF_RAM2        (64 * 1024)                              // 64k SRAM2 (with hardware parity check)
+    #define SIZE_OF_FLASH       (1024 * 1024)                            // 1M FLASH
+
+    #define CORE_VOLTAGE        VCORE_RANGE_1                            // normal core voltage operation
 #elif defined STM32F407ZG_SK
     #define CRYSTAL_FREQ        25000000
   //#define DISABLE_PLL                                                  // run from clock source directly
@@ -989,7 +1034,40 @@
     #define PRIORITY_EMAC              1
     #define PRIORITY_OTG_FS            1
 #endif
-#if defined NUCLEO_L432KC || defined NUCLEO_L031K6 || defined NUCLEO_L011K4 || defined NUCLEO_F031K6
+
+#if defined NUCLEO_L496RG
+    #define LED1                       PORTB_BIT14                        // green RED
+    #define LED2                       PORTB_BIT7                         // green LED
+    #define LED3                       PORTB_BIT5
+
+    #define DEMO_LED_1                 (LED1 >> 14)
+    #define DEMO_LED_2                 (LED2 >> 6)
+    #define DEMO_LED_3                 (LED3 >> 3)
+    #define DEMO_USER_PORTS            (DEMO_LED_1 | DEMO_LED_2 | DEMO_LED_3)
+
+    #define BLINK_LED                  LED1
+
+    #define DEMO_INPUT_PORT            GPIOB_IDR
+
+    #if !defined USE_MAINTENANCE || defined REMOVE_PORT_INITIALISATIONS
+        #define INIT_WATCHDOG_LED() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(B, (BLINK_LED), (BLINK_LED), (OUTPUT_SLOW | OUTPUT_PUSH_PULL))
+        #define CONFIG_TEST_OUTPUT() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(B, (LED2), (LED2), (OUTPUT_SLOW | OUTPUT_PUSH_PULL))
+    #else
+        #define INIT_WATCHDOG_LED()                                      // configured according to user parameters
+        #define CONFIG_TEST_OUTPUT()
+    #endif
+    #define TOGGLE_WATCHDOG_LED()      _TOGGLE_PORT(B, BLINK_LED)        // blink the LED, if set as output
+    #define TOGGLE_TEST_OUTPUT()       _TOGGLE_PORT(B, LED2)
+
+    #define INIT_WATCHDOG_DISABLE()    _CONFIG_PORT_INPUT(A, (PORTA_BIT12), (INPUT_PULL_UP)) // PA12 configured as input with pull-up (CN3-5 on extension connector)
+    #define WATCHDOG_DISABLE()         ((_READ_PORT_MASK(A, (PORTA_BIT12))) == 0)
+
+    #define KEYPAD "KeyPads/NUCLEO-L4XX.bmp"
+
+                                        // '0'            '1'   input state center (x,   y)   0 = circle, radius, controlling port, controlling pin 
+    #define KEYPAD_LED_DEFINITIONS     {RGB(50,50,50),RGB(255,0,0),  0, {119, 116, 128, 124}, _PORTB, LED1}, \
+                                       {RGB(50,50,50),RGB(0,0,255),  0, {135, 116, 141, 124}, _PORTB, LED2}
+#elif defined NUCLEO_L432KC || defined NUCLEO_L031K6 || defined NUCLEO_L011K4 || defined NUCLEO_F031K6
     #define LED1                       PORTB_BIT3                        // green LED
     #define LED2                       PORTB_BIT4
     #define LED3                       PORTB_BIT5
@@ -1018,9 +1096,8 @@
 
     #define KEYPAD "KeyPads/NUCLEO32.bmp"
 
-                                       // '0'            '1'   input state center (x,   y)   0 = circle, radius, controlling port, controlling pin 
+                                        // '0'            '1'   input state center (x,   y)   0 = circle, radius, controlling port, controlling pin 
     #define KEYPAD_LED_DEFINITIONS     {RGB(50,50,50),RGB(0,255,0),  0, {118, 408, 127, 424}, _PORTB, LED1}
-
 #elif defined STM3240G_EVAL
     #define JOYSTICK_SEL               0x80                              // I/O expander input
     #define JOYSTICK_DOWN              0x08                              // I/O expander input

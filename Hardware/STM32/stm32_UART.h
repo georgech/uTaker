@@ -202,7 +202,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         break;
 #endif
     case 1:
-#if defined _STM32L432
+#if defined _STM32L432 || defined _STM32L4X5 || defined _STM32L4X6
         RCC_APB1ENR1 |= (RCC_APB1ENR1_USART2EN);                         // enable clocks to USART2
 #else
         POWER_UP(APB1, RCC_APB1ENR_USART2EN);                            // enable clocks to USART2
@@ -211,7 +211,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         break;
 #if (USARTS_AVAILABLE > 2) && !defined USART3_NOT_PRESENT
     case 2:
-    #if defined _STM32L432
+    #if defined _STM32L432 || defined _STM32L4X5 || defined _STM32L4X6
         RCC_APB1ENR1 |= (RCC_APB1ENR1_USART3EN);                         // enable clocks to USART3
     #else
         POWER_UP(APB1, RCC_APB1ENR_USART3EN);                            // enable clocks to USART3
@@ -221,7 +221,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
 #endif
 #if UARTS_AVAILABLE > 0
     case 3:
-    #if defined _STM32L432
+    #if defined _STM32L432 || defined _STM32L4X5 || defined _STM32L4X6
         RCC_APB1ENR1 |= (RCC_APB1ENR1_UART4EN);                          // enable clocks to UART4
     #else
         POWER_UP(APB1, RCC_APB1ENR_UART4EN);                             // enable clocks to UART4
@@ -233,6 +233,8 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
     case 4:
     #if defined _STM32L432                                               // LPUART1
         RCC_APB1ENR2 |= (RCC_APB1ENR2_LPUART1EN);                        // enable clocks to LPUART1
+    #elif defined _STM32L4X5 || defined _STM32L4X6
+        RCC_APB1ENR1 |= (RCC_APB1ENR1_UART5EN);                          // enable clocks to UART5
     #else
         POWER_UP(APB1, RCC_APB1ENR_UART5EN);                             // enable clocks to UART5
     #endif
