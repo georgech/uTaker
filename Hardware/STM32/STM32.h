@@ -41,8 +41,7 @@
 */
 
 
-#ifdef _WINDOWS
-    #include "simSTM32.h"
+#if defined _WINDOWS
     #define _SIM_PORT_CHANGE   fnSimPorts();
     #define _EXCEPTION(x)      *(unsigned char *)0 = 0                   // generate exception when simulating
 #else
@@ -199,6 +198,10 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*I
     #define UART5_NOT_PRESENT
     #define UARTS_AVAILABLE    0
     #define LPUARTS_AVAILABLE  0
+#elif defined _STM32L4X5 || defined _STM32L4X6
+    #define USARTS_AVAILABLE   3                                         // numbering is USART1, USART2, USART3
+    #define UARTS_AVAILABLE    2                                         // numbering is UART4, UART5
+    #define LPUARTS_AVAILABLE  1                                         // numbering is LPUART1
 #elif defined _STM32L451 || defined _STM32L452 || defined _STM32L462
     #define USARTS_AVAILABLE   3
     #define UARTS_AVAILABLE    1
@@ -959,6 +962,7 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*I
 
 
 #if defined _WINDOWS
+    #include "simSTM32.h"
     #define ENET_BLOCK                  ((unsigned char *)(&STM32.ETH))        // Ethernet Controller
     #define RCC_BLOCK                   ((unsigned char *)(&STM32.RCC))        // Reset and Clock Control
     #define DMA1_BLOCK                  ((unsigned char *)(&STM32.DMAC[0]))    // DMA Controller 1
@@ -996,6 +1000,9 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*I
     #endif
     #if UARTS_AVAILABLE > 1
         #define UART5_BLOCK             ((unsigned char *)(&STM32.UART[1]))    // UART 5
+    #endif
+    #if LPUARTS_AVAILABLE > 0
+        #define LPUART1_BLOCK           ((unsigned char *)(&STM32.LPUART[0]))  // LPUART 1
     #endif
     #if defined _STM32F7XX || defined _STM32F429
         #define UART7_BLOCK             ((unsigned char *)(&STM32.UART[2]))    // UART 7
@@ -4257,7 +4264,7 @@ typedef struct stSTM32_ADC_REGS
 
 // USARTs
 //
-#if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031
+#if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
     #define USART1_CR1                   *(volatile unsigned long *)(USART1_BLOCK + 0x00)  // USART1 control register 1
       #define USART_CR1_UE               0x00000001                      // USART enable
       #define USART_CR1_RE               0x00000004                      // receiver enable
@@ -4402,42 +4409,54 @@ typedef struct stSTM32_ADC_REGS
     #define UART5_ICR                    *(volatile unsigned long *)(UART5_BLOCK + 0x20)  // UART5 interrupt flag clear register (write '1' to clear)
     #define UART5_RDR                    *(volatile unsigned long *)(UART5_BLOCK + 0x24)  // UART5 receive data register
     #define UART5_TDR                    *(volatile unsigned long *)(UART5_BLOCK + 0x28)  // UART5 transmit data register
-
-    #define USART6_CR1                   *(volatile unsigned long *)(USART6_BLOCK + 0x00)  // USART6 control register 1
-    #define USART6_CR2                   *(volatile unsigned long *)(USART6_BLOCK + 0x04)  // USART6 control register 2
-    #define USART6_CR3                   *(volatile unsigned long *)(USART6_BLOCK + 0x08)  // USART6 control register 3
-    #define USART6_BRR                   *(volatile unsigned long *)(USART6_BLOCK + 0x0c)  // USART6 baud rate register
-    #define USART6_GTPR                  *(volatile unsigned long *)(USART6_BLOCK + 0x10)  // USART6 guard time and prescaler register
-    #define USART6_RTOR                  *(volatile unsigned long *)(USART6_BLOCK + 0x14)  // USART6 receiver timeout register
-    #define USART6_RQR                   *(volatile unsigned long *)(USART6_BLOCK + 0x18)  // USART6 request register
-    #define USART6_ISR                   *(volatile unsigned long *)(USART6_BLOCK + 0x1c)  // USART6 interrupt and status register
-    #define USART6_ICR                   *(volatile unsigned long *)(USART6_BLOCK + 0x20)  // USART6 interrupt flag clear register (write '1' to clear)
-    #define USART6_RDR                   *(volatile unsigned long *)(USART6_BLOCK + 0x24)  // USART6 receive data register
-    #define USART6_TDR                   *(volatile unsigned long *)(USART6_BLOCK + 0x28)  // USART6 transmit data register
-
-    #define UART7_CR1                    *(volatile unsigned long *)(UART7_BLOCK + 0x00)  // UART7 control register 1
-    #define UART7_CR2                    *(volatile unsigned long *)(UART7_BLOCK + 0x04)  // UART7 control register 2
-    #define UART7_CR3                    *(volatile unsigned long *)(UART7_BLOCK + 0x08)  // UART7 control register 3
-    #define UART7_BRR                    *(volatile unsigned long *)(UART7_BLOCK + 0x0c)  // UART7 baud rate register
-    #define UART7_GTPR                   *(volatile unsigned long *)(UART7_BLOCK + 0x10)  // UART7 guard time and prescaler register
-    #define UART7_RTOR                   *(volatile unsigned long *)(UART7_BLOCK + 0x14)  // UART7 receiver timeout register
-    #define UART7_RQR                    *(volatile unsigned long *)(UART7_BLOCK + 0x18)  // UART7 request register
-    #define UART7_ISR                    *(volatile unsigned long *)(UART7_BLOCK + 0x1c)  // UART7 interrupt and status register
-    #define UART7_ICR                    *(volatile unsigned long *)(UART7_BLOCK + 0x20)  // UART7 interrupt flag clear register (write '1' to clear)
-    #define UART7_RDR                    *(volatile unsigned long *)(UART7_BLOCK + 0x24)  // UART7 receive data register
-    #define UART7_TDR                    *(volatile unsigned long *)(UART7_BLOCK + 0x28)  // UART7 transmit data register
-
-    #define UART8_CR1                    *(volatile unsigned long *)(UART8_BLOCK + 0x00)  // UART8 control register 1
-    #define UART8_CR2                    *(volatile unsigned long *)(UART8_BLOCK + 0x04)  // UART8 control register 2
-    #define UART8_CR3                    *(volatile unsigned long *)(UART8_BLOCK + 0x08)  // UART8 control register 3
-    #define UART8_BRR                    *(volatile unsigned long *)(UART8_BLOCK + 0x0c)  // UART8 baud rate register
-    #define UART8_GTPR                   *(volatile unsigned long *)(UART8_BLOCK + 0x10)  // UART8 guard time and prescaler register
-    #define UART8_RTOR                   *(volatile unsigned long *)(UART8_BLOCK + 0x14)  // UART8 receiver timeout register
-    #define UART8_RQR                    *(volatile unsigned long *)(UART8_BLOCK + 0x18)  // UART8 request register
-    #define UART8_ISR                    *(volatile unsigned long *)(UART8_BLOCK + 0x1c)  // UART8 interrupt and status register
-    #define UART8_ICR                    *(volatile unsigned long *)(UART8_BLOCK + 0x20)  // UART8 interrupt flag clear register (write '1' to clear)
-    #define UART8_RDR                    *(volatile unsigned long *)(UART8_BLOCK + 0x24)  // UART8 receive data register
-    #define UART8_TDR                    *(volatile unsigned long *)(UART8_BLOCK + 0x28)  // UART8 transmit data register
+    #if defined USART6_BLOCK
+        #define USART6_CR1               *(volatile unsigned long *)(USART6_BLOCK + 0x00)  // USART6 control register 1
+        #define USART6_CR2               *(volatile unsigned long *)(USART6_BLOCK + 0x04)  // USART6 control register 2
+        #define USART6_CR3               *(volatile unsigned long *)(USART6_BLOCK + 0x08)  // USART6 control register 3
+        #define USART6_BRR               *(volatile unsigned long *)(USART6_BLOCK + 0x0c)  // USART6 baud rate register
+        #define USART6_GTPR              *(volatile unsigned long *)(USART6_BLOCK + 0x10)  // USART6 guard time and prescaler register
+        #define USART6_RTOR              *(volatile unsigned long *)(USART6_BLOCK + 0x14)  // USART6 receiver timeout register
+        #define USART6_RQR               *(volatile unsigned long *)(USART6_BLOCK + 0x18)  // USART6 request register
+        #define USART6_ISR               *(volatile unsigned long *)(USART6_BLOCK + 0x1c)  // USART6 interrupt and status register
+        #define USART6_ICR               *(volatile unsigned long *)(USART6_BLOCK + 0x20)  // USART6 interrupt flag clear register (write '1' to clear)
+        #define USART6_RDR               *(volatile unsigned long *)(USART6_BLOCK + 0x24)  // USART6 receive data register
+        #define USART6_TDR               *(volatile unsigned long *)(USART6_BLOCK + 0x28)  // USART6 transmit data register
+    #endif
+    #if defined UART7_BLOCK
+        #define UART7_CR1                *(volatile unsigned long *)(UART7_BLOCK + 0x00)  // UART7 control register 1
+        #define UART7_CR2                *(volatile unsigned long *)(UART7_BLOCK + 0x04)  // UART7 control register 2
+        #define UART7_CR3                *(volatile unsigned long *)(UART7_BLOCK + 0x08)  // UART7 control register 3
+        #define UART7_BRR                *(volatile unsigned long *)(UART7_BLOCK + 0x0c)  // UART7 baud rate register
+        #define UART7_GTPR               *(volatile unsigned long *)(UART7_BLOCK + 0x10)  // UART7 guard time and prescaler register
+        #define UART7_RTOR               *(volatile unsigned long *)(UART7_BLOCK + 0x14)  // UART7 receiver timeout register
+        #define UART7_RQR                *(volatile unsigned long *)(UART7_BLOCK + 0x18)  // UART7 request register
+        #define UART7_ISR                *(volatile unsigned long *)(UART7_BLOCK + 0x1c)  // UART7 interrupt and status register
+        #define UART7_ICR                *(volatile unsigned long *)(UART7_BLOCK + 0x20)  // UART7 interrupt flag clear register (write '1' to clear)
+        #define UART7_RDR                *(volatile unsigned long *)(UART7_BLOCK + 0x24)  // UART7 receive data register
+        #define UART7_TDR                *(volatile unsigned long *)(UART7_BLOCK + 0x28)  // UART7 transmit data register
+    #endif
+    #if defined UART8_BLOCK
+        #define UART8_CR1                *(volatile unsigned long *)(UART8_BLOCK + 0x00) // UART8 control register 1
+        #define UART8_CR2                *(volatile unsigned long *)(UART8_BLOCK + 0x04) // UART8 control register 2
+        #define UART8_CR3                *(volatile unsigned long *)(UART8_BLOCK + 0x08) // UART8 control register 3
+        #define UART8_BRR                *(volatile unsigned long *)(UART8_BLOCK + 0x0c) // UART8 baud rate register
+        #define UART8_GTPR               *(volatile unsigned long *)(UART8_BLOCK + 0x10) // UART8 guard time and prescaler register
+        #define UART8_RTOR               *(volatile unsigned long *)(UART8_BLOCK + 0x14) // UART8 receiver timeout register
+        #define UART8_RQR                *(volatile unsigned long *)(UART8_BLOCK + 0x18) // UART8 request register
+        #define UART8_ISR                *(volatile unsigned long *)(UART8_BLOCK + 0x1c) // UART8 interrupt and status register
+        #define UART8_ICR                *(volatile unsigned long *)(UART8_BLOCK + 0x20) // UART8 interrupt flag clear register (write '1' to clear)
+        #define UART8_RDR                *(volatile unsigned long *)(UART8_BLOCK + 0x24) // UART8 receive data register
+        #define UART8_TDR                *(volatile unsigned long *)(UART8_BLOCK + 0x28) // UART8 transmit data register
+    #endif
+    #define LPUART1_CR1                  *(volatile unsigned long *)(LPUART1_BLOCK + 0x00) // LPUART1 control register 1
+    #define LPUART1_CR2                  *(volatile unsigned long *)(LPUART1_BLOCK + 0x04) // LPUART1 control register 2
+    #define LPUART1_CR3                  *(volatile unsigned long *)(LPUART1_BLOCK + 0x08) // LPUART1 control register 3
+    #define LPUART1_BRR                  *(volatile unsigned long *)(LPUART1_BLOCK + 0x0c) // LPUART1 baud rate register
+    #define LPUART1_RQR                  *(volatile unsigned long *)(LPUART1_BLOCK + 0x18) // LPUART1 request register
+    #define LPUART1_ISR                  *(volatile unsigned long *)(LPUART1_BLOCK + 0x1c) // LPUART1 interrupt and status register
+    #define LPUART1_ICR                  *(volatile unsigned long *)(LPUART1_BLOCK + 0x20) // LPUART1 interrupt flag clear register (write '1' to clear)
+    #define LPUART1_RDR                  *(volatile unsigned long *)(LPUART1_BLOCK + 0x24) // LPUART1 receive data register
+    #define LPUART1_TDR                  *(volatile unsigned long *)(LPUART1_BLOCK + 0x28) // LPUART1 transmit data register
 #else
     #define USART1_SR                    *(volatile unsigned long *)(USART1_BLOCK + 0x00)  // USART1 status register
     #define USART1_ISR                   USART1_SR                       // for compatibility
@@ -4591,7 +4610,7 @@ typedef struct stSTM32_ADC_REGS
 
 typedef struct stUSART_REG
 {
-#if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031
+#if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
     unsigned long UART_CR1;
     unsigned long UART_CR2;
     unsigned long UART_CR3;
@@ -5923,7 +5942,101 @@ typedef struct stRESET_VECTOR
 //
 typedef struct stPROCESSOR_IRQ
 {
-#if defined _STM32L0x1 || defined _STM32F031
+#if defined _STM32L4X5 || defined _STM32L4X6
+    void  (*irq_WindowsWatchdog)(void);                                  // 0
+    void  (*irq_PVD)(void);                                              // 1
+    void  (*irq_RTC_TAMPER)(void);                                       // 2
+    void  (*irq_RTC_WKUP)(void);                                         // 3
+    void  (*irq_FLASH)(void);                                            // 4
+    void  (*irq_RCC)(void);                                              // 5
+    void  (*irq_EXTI0)(void);                                            // 6
+    void  (*irq_EXTI1)(void);                                            // 7
+    void  (*irq_EXTI2)(void);                                            // 8
+    void  (*irq_EXTI3)(void);                                            // 9
+    void  (*irq_EXTI4)(void);                                            // 10
+    void  (*irq_DMA1_Channel1)(void);                                    // 11
+    void  (*irq_DMA1_Channel2)(void);                                    // 12
+    void  (*irq_DMA1_Channel3)(void);                                    // 13
+    void  (*irq_DMA1_Channel4)(void);                                    // 14
+    void  (*irq_DMA1_Channel5)(void);                                    // 15
+    void  (*irq_DMA1_Channel6)(void);                                    // 16
+    void  (*irq_DMA1_Channel7)(void);                                    // 17
+    void  (*irq_ADC1_2)(void);                                           // 18
+    void  (*irq_CAN1_TX)(void);                                          // 19
+    void  (*irq_CAN1_RX0)(void);                                         // 20
+    void  (*irq_CAN1_RX1)(void);                                         // 21
+    void  (*irq_CAN1_SCE)(void);                                         // 22
+    void  (*irq_EXTI9_5)(void);                                          // 23
+    void  (*irq_TIM1_BRK_TIM15)(void);                                   // 24
+    void  (*irq_TIM1_UP_TIM16)(void);                                    // 25
+    void  (*irq_TIM1_TRG_COM_TIM17)(void);                               // 26
+    void  (*irq_TIM1_CC)(void);                                          // 27
+    void  (*irq_TIM2)(void);                                             // 28
+    void  (*irq_TIM3)(void);                                             // 29
+    void  (*irq_TIM4)(void);                                             // 30
+    void  (*irq_I2C1_EV)(void);                                          // 31
+    void  (*irq_I2C1_ER)(void);                                          // 32
+    void  (*irq_I2C2_EV)(void);                                          // 33
+    void  (*irq_I2C2_ER)(void);                                          // 34
+    void  (*irq_SPI1)(void);                                             // 35
+    void  (*irq_SPI2)(void);                                             // 36
+    void  (*irq_USART1)(void);                                           // 37
+    void  (*irq_USART2)(void);                                           // 38
+    void  (*irq_USART3)(void);                                           // 39
+    void  (*irq_EXTI15_10)(void);                                        // 40
+    void  (*irq_RTC_ALARM)(void);                                        // 41
+    void  (*irq_DFSDM1_FLT3)(void);                                      // 42
+    void  (*irq_TIM8_BRK)(void);                                         // 43
+    void  (*irq_TIM8_UP)(void);                                          // 44
+    void  (*irq_TIM8_TRG_COM)(void);                                     // 45
+    void  (*irq_TIM8_CC)(void);                                          // 46
+    void  (*irq_ADC3)(void);                                             // 47
+    void  (*irq_FCM)(void);                                              // 48
+    void  (*irq_SDMMC1)(void);                                           // 49
+    void  (*irq_TIM5)(void);                                             // 50
+    void  (*irq_SPI3)(void);                                             // 51
+    void  (*irq_UART4)(void);                                            // 52
+    void  (*irq_UART5)(void);                                            // 53
+    void  (*irq_TIM6_DACUNDER)(void);                                    // 54
+    void  (*irq_TIM7)(void);                                             // 55
+    void  (*irq_DMA2_CH1)(void);                                         // 56
+    void  (*irq_DMA2_CH2)(void);                                         // 57
+    void  (*irq_DMA2_CH3)(void);                                         // 58
+    void  (*irq_DMA2_CH4)(void);                                         // 59
+    void  (*irq_DMA2_CH5)(void);                                         // 60
+    void  (*irq_DFSDM1_FLT0)(void);                                      // 61
+    void  (*irq_DFSDM1_FLT1)(void);                                      // 62
+    void  (*irq_DFSDM1_FLT2)(void);                                      // 63
+    void  (*irq_COMP)(void);                                             // 64
+    void  (*irq_LPTIM1)(void);                                           // 65
+    void  (*irq_LPTIM2)(void);                                           // 66
+    void  (*irq_USB_FS)(void);                                           // 67
+    void  (*irq_DMA2_CH6)(void);                                         // 68
+    void  (*irq_DMA2_CH7)(void);                                         // 69
+    void  (*irq_LPUART1)(void);                                          // 70
+    void  (*irq_QUADSPI)(void);                                          // 71
+    void  (*irq_I2C3_EV)(void);                                          // 72
+    void  (*irq_I2C3_ER)(void);                                          // 73
+    void  (*irq_SAI1)(void);                                             // 74
+    void  (*irq_SAI2)(void);                                             // 75
+    void  (*irq_SWPMI1)(void);                                           // 76
+    void  (*irq_TSC)(void);                                              // 77
+    void  (*irq_LCD)(void);                                              // 78
+    void  (*irq_AES)(void);                                              // 79
+    void  (*irq_RND)(void);                                              // 80
+    void  (*irq_FPU)(void);                                              // 81
+    #if defined _STM32L496 || defined _STM32L4A6
+        void  (*irq_HASH_CRS)(void);                                     // 82
+        void  (*irq_I2C4_EV)(void);                                      // 83
+        void  (*irq_I2C4_ER)(void);                                      // 84
+        void  (*irq_DCMI)(void);                                         // 85
+        void  (*irq_CAN2_TX)(void);                                      // 86
+        void  (*irq_CAN2_RX0)(void);                                     // 87
+        void  (*irq_CAN2_RX1)(void);                                     // 88
+        void  (*irq_CAN2_SCE)(void);                                     // 89
+        void  (*irq_DMA2D)(void);                                        // 90
+    #endif
+#elif defined _STM32L0x1 || defined _STM32F031
     void  (*irq_WindowsWatchdog)(void);                                  // 0
     void  (*irq_PVD)(void);                                              // 1
     void  (*irq_RTC)(void);                                              // 2
@@ -6110,19 +6223,6 @@ typedef struct stPROCESSOR_IRQ
 #endif
 } PROCESSOR_IRQ;
 
-#if defined _STM32L0x1
-    #define LAST_PROCESSOR_IRQ  irq_LPUART1_AES
-#elif defined _STM32F031
-    #define LAST_PROCESSOR_IRQ  irq_USB
-#elif defined _STM32F7XX
-    #define LAST_PROCESSOR_IRQ  irq_SPDIFRX
-#elif defined _STM32F429
-    #define LAST_PROCESSOR_IRQ  irq_UART8
-#elif defined _STM32F2XX || defined _STM32F4XX
-    #define LAST_PROCESSOR_IRQ  irq_FPU
-#else
-    #define LAST_PROCESSOR_IRQ  irq_OTG_FS
-#endif
 
 typedef struct stVECTOR_TABLE
 {
@@ -6144,19 +6244,32 @@ typedef struct stVECTOR_TABLE
 #define VECTOR_SIZE                      (sizeof(VECTOR_TABLE))
 
 #if defined _STM32L0x1
+    #define LAST_PROCESSOR_IRQ  irq_LPUART1_AES
     #define CHECK_VECTOR_SIZE            184                             // (16 + 29 + 1) = 46) * 4 - adequate for this processor
+#elif defined _STM32L4X5 || defined _STM32L4X6
+    #if defined _STM32L496 || defined _STM32L4
+        #define LAST_PROCESSOR_IRQ  irq_DMA2D
+        #define CHECK_VECTOR_SIZE        428                             // (16 + 90 + 1) = 107) * 4 - adequate for this processor
+    #else
+        #define LAST_PROCESSOR_IRQ  irq_FPU
+        #define CHECK_VECTOR_SIZE        392                             // (16 + 81 + 1) = 98) * 4 - adequate for this processor
+    #endif
 #elif defined _STM32F031
+    #define LAST_PROCESSOR_IRQ  irq_USB
     #define CHECK_VECTOR_SIZE            192                             // (16 + 31 + 1) = 48) * 4 - adequate for this processor
 #elif defined _STM32F7XX
+    #define LAST_PROCESSOR_IRQ  irq_SPDIFRX
     #define CHECK_VECTOR_SIZE            456                             // (16 + 97 + 1) = 114) * 4 - adequate for this processor
 #elif defined _STM32F429
+    #define LAST_PROCESSOR_IRQ  irq_UART8
     #define CHECK_VECTOR_SIZE            400                             // (16 + 83 + 1) = 100) * 4 - adequate for this processor
 #elif defined _STM32F2XX || defined _STM32F4XX
+    #define LAST_PROCESSOR_IRQ  irq_FPU
     #define CHECK_VECTOR_SIZE            392                             // (16 + 81 + 1) = 98) * 4 - adequate for this processor
 #else
+    #define LAST_PROCESSOR_IRQ  irq_OTG_FS
     #define CHECK_VECTOR_SIZE            336                             // (16 + 67 + 1) = 84) * 4 - adequate for this processor
 #endif
-
 
 
 
@@ -6336,7 +6449,101 @@ typedef struct stVECTOR_TABLE
 
 // Interrupt sources
 //
-#if defined _STM32L0x1 || defined _STM32F031
+#if defined _STM32L4X5 || defined _STM32L4X6
+    #define irq_WindowsWatchdog_ID        0
+    #define irq_PVD_ID                    1
+    #define irq_RTC_TAMPER_ID             2
+    #define irq_RTC_WKUP_ID               3
+    #define irq_FLASH_ID                  4
+    #define irq_RCC_ID                    5
+    #define irq_EXTI0_ID                  6
+    #define irq_EXTI1_ID                  7
+    #define irq_EXTI2_ID                  8
+    #define irq_EXTI3_ID                  9
+    #define irq_EXTI4_ID                  10
+    #define irq_DMA1_Channel1_ID          11
+    #define irq_DMA1_Channel2_ID          12
+    #define irq_DMA1_Channel3_ID          13
+    #define irq_DMA1_Channel4_ID          14
+    #define irq_DMA1_Channel5_ID          15
+    #define irq_DMA1_Channel6_ID          16
+    #define irq_DMA1_Channel7_ID          17
+    #define irq_ADC1_2                    18
+    #define irq_CAN1_TX                   19
+    #define irq_CAN1_RX0                  20
+    #define irq_CAN1_RX1                  21
+    #define irq_CAN1_SCE                  22
+    #define irq_EXTI9_5_ID                23
+    #define irq_TIM1_BRK_TIM15_ID         24
+    #define irq_TIM1_UP_TIM16_ID          25
+    #define irq_TIM1_TRG_COM_TIM17_ID     26
+    #define irq_TIM1_CC_ID                27
+    #define irq_TIM2_ID                   28
+    #define irq_TIM3_ID                   29
+    #define irq_TIM4_ID                   30
+    #define irq_I2C1_EV_ID                31
+    #define irq_I2C1_ER_ID                32
+    #define irq_I2C2_EV_ID                33
+    #define irq_I2C2_ER_ID                34
+    #define irq_SPI1_ID                   35
+    #define irq_SPI2_ID                   36
+    #define irq_USART1_ID                 37
+    #define irq_USART2_ID                 38
+    #define irq_USART3_ID                 39
+    #define irq_EXTI15_10_ID              40
+    #define irq_RTC_ALARM_ID              41
+    #define irq_DFSDM1_FLT3_ID            42
+    #define irq_TIM8_BRK_ID               43
+    #define irq_TIM8_UP_ID                44
+    #define irq_TIM8_TRG_COM_ID           45
+    #define irq_TIM8_CC_ID                46
+    #define irq_ADC3                      47
+    #define irq_FCM                       48
+    #define irq_SDMMC1                    49
+    #define irq_TIM5_ID                   50
+    #define irq_SPI3_ID                   51
+    #define irq_UART4_ID                  52
+    #define irq_UART5_ID                  53
+    #define irq_TIM6_DACUNDER_ID          54
+    #define irq_TIM7_ID                   55
+    #define irq_DMA2_CH1_ID               56
+    #define irq_DMA2_CH2_ID               57
+    #define irq_DMA2_CH3_ID               58
+    #define irq_DMA2_CH4_ID               59
+    #define irq_DMA2_CH5_ID               60
+    #define irq_DFSDM1_FLT0_ID            61
+    #define irq_DFSDM1_FLT1_ID            62
+    #define irq_DFSDM1_FLT2_ID            63
+    #define irq_COMP_ID                   64
+    #define irq_LPTIM1_ID                 65
+    #define irq_LPTIM2_ID                 66
+    #define irq_USB_FS_ID                 67
+    #define irq_DMA2_CH6_ID               68
+    #define irq_DMA2_CH7_ID               69
+    #define irq_LPUART1_ID                70
+    #define irq_QUADSPI_ID                71
+    #define irq_I2C3_EV_ID                72
+    #define irq_I2C3_ER_ID                73
+    #define irq_SAI1_ID                   74
+    #define irq_SAI2_ID                   75
+    #define irq_SWPMI1_ID                 76
+    #define irq_TSC_ID                    77
+    #define irq_LCD_ID                    78
+    #define irq_AES_ID                    79
+    #define irq_RND_ID                    80
+    #define irq_FPU_ID                    81
+    #if defined _STM32L496 || defined _STM32L4A6
+        #define irq_HASH_CRS_ID           82
+        #define irq_I2C4_EV_ID            83
+        #define irq_I2C4_ER_ID            84
+        #define irq_DCMI_ID               85
+        #define irq_CAN2_TX_ID            86
+        #define irq_CAN2_RX0_ID           87
+        #define irq_CAN2_RX1_ID           88
+        #define irq_CAN2_SCE_ID           89
+        #define irq_DMA2D_ID              90
+    #endif
+#elif defined _STM32L0x1 || defined _STM32F031
     #define irq_WindowsWatchdog_ID        0
     #define irq_PVD_ID                    1
     #define irq_RTC_ID                    2
@@ -6764,7 +6971,7 @@ typedef struct stVECTOR_TABLE
 #elif defined _STM32L432 || defined _STM32L4X5 || defined _STM32L4X6
     #define __POWER_UP_GPIO(ref)    RCC_AHB2ENR |= (RCC_AHB2ENR_GPIO##ref##EN)
     #define __GPIO_IS_POWERED(ref)  (RCC_AHB2ENR & (RCC_AHB2ENR_GPIOAEN << ref))
-    #define __GPIO_IS_IN_RESET(ref) (RCC_AHB2ENR & (RCC_AHB2ENR_GPIOAEN << ref))
+    #define __GPIO_IS_IN_RESET(ref) (RCC_AHB2RSTR & (RCC_AHB2RSTR_GPIOARST << ref))
 #elif defined _STM32F031
     #define __POWER_UP_GPIO(ref)    RCC_AHBENR |= (RCC_AHBENR_IOP##ref##EN)
     #define __GPIO_IS_POWERED(ref)  (RCC_AHBENR & (RCC_AHBENR << ref))
@@ -7189,6 +7396,24 @@ typedef struct stVECTOR_TABLE
         #define PERIPHERAL_SPI1_2             0x5
         #define PERIPHERAL_SPI3               0x6
         #define PERIPHERAL_USART1_2_3         0x7
+        #define PERIPHERAL_LPUART1            0x8
+        #define PERIPHERAL_CAN1_TSC           0x9
+        #define PERIPHERAL_USB_QUADSPI        0xa
+
+        #define PERIPHERAL_COMP1_COMP2_SWPMI1 0xc
+        #define PERIPHERAL_SAI1               0xd
+        #define PERIPHERAL_TIM2_15_16_LPTIM2  0xe
+        #define PERIPHERAL_EVENTOUT           0xf
+    #elif defined _STM32L4X5 || defined _STM32L4X6
+        #define PERIPHERAL_SYS                0x0
+        #define PERIPHERAL_TIM1_2_LPTIM1      0x1
+        #define PERIPHERAL_TIM1_2             0x2
+        #define PERIPHERAL_USART2             0x3
+        #define PERIPHERAL_I2C1_2_3           0x4
+        #define PERIPHERAL_SPI1_2             0x5
+        #define PERIPHERAL_SPI3               0x6
+        #define PERIPHERAL_USART1_2_3         0x7
+        #define PERIPHERAL_UART4_5            0x8
         #define PERIPHERAL_LPUART1            0x8
         #define PERIPHERAL_CAN1_TSC           0x9
         #define PERIPHERAL_USB_QUADSPI        0xa

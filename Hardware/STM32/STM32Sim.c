@@ -187,7 +187,7 @@ static void fnSetDevice(unsigned short *port_inits)
     GPIOG_CRH = 0x44444444;
 #endif
 
-#if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031
+#if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
     USART1_ISR = (0x02000000 | USART_ISR_TXE | USART_ISR_TC);
     USART2_ISR = (0x02000000 | USART_ISR_TXE | USART_ISR_TC);
     #if USARTS_AVAILABLE > 2
@@ -207,6 +207,9 @@ static void fnSetDevice(unsigned short *port_inits)
     #endif
     #if UARTS_AVAILABLE > 3
     UART8_ISR = (0x02000000 | USART_ISR_TXE | USART_ISR_TC);
+    #endif
+    #if LPUARTS_AVAILABLE > 0
+    LPUART1_ISR = (USART_ISR_TXE | USART_ISR_TC);
     #endif
 #else
     USART1_SR = 0x00c0;                                                  // USARTs and UARTs
@@ -323,7 +326,7 @@ extern void fnDeleteFlashSector(unsigned char *ptrSector)
 {
 	int i = FLASH_GRANULARITY;
 
-	while (i--) {
+	while (i-- != 0) {
 		*ptrSector++ = 0xff;
 	}
 }
@@ -444,7 +447,7 @@ extern unsigned long fnSimInts(char *argv[])
 		        iInts &= ~CHANNEL_0_SERIAL_INT;                          // interrupt has been handled
                 fnLogTx0((unsigned char)USART1_TDR);
                 ulNewActions |= SEND_COM_0;
-    #if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031
+    #if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
                 USART1_ISR |= USART_ISR_TXE;
     #else
                 USART1_SR |= USART_SR_TXE;
@@ -470,7 +473,7 @@ extern unsigned long fnSimInts(char *argv[])
 		        iInts &= ~CHANNEL_1_SERIAL_INT;                          // interrupt has been handled
                 fnLogTx1((unsigned char)USART2_TDR);
                 ulNewActions |= SEND_COM_1;
-    #if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031
+    #if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
                 USART2_ISR |= USART_ISR_TXE;
     #else
                 USART2_SR |= USART_SR_TXE;
@@ -496,7 +499,7 @@ extern unsigned long fnSimInts(char *argv[])
 		        iInts &= ~CHANNEL_2_SERIAL_INT;                          // interrupt has been handled
                 fnLogTx2((unsigned char)USART3_TDR);
                 ulNewActions |= SEND_COM_2;
-        #if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1
+        #if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32L4X5 || defined _STM32L4X6
                 USART3_ISR |= USART_ISR_TXE;
         #else
                 USART3_SR |= USART_SR_TXE;
@@ -523,7 +526,7 @@ extern unsigned long fnSimInts(char *argv[])
 		        iInts &= ~CHANNEL_3_SERIAL_INT;                          // interrupt has been handled
                 fnLogTx3((unsigned char)UART4_TDR);
                 ulNewActions |= SEND_COM_3;
-        #if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1
+        #if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32L4X5 || defined _STM32L4X6
                 UART4_ISR |= USART_ISR_TXE;
         #else
                 UART4_SR |= USART_SR_TXE;
@@ -550,7 +553,7 @@ extern unsigned long fnSimInts(char *argv[])
 		        iInts &= ~CHANNEL_4_SERIAL_INT;                          // interrupt has been handled
                 fnLogTx4((unsigned char)UART5_TDR);
                 ulNewActions |= SEND_COM_4;
-        #if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1
+        #if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32L4X5 || defined _STM32L4X6
                 UART5_ISR |= USART_ISR_TXE;
         #else
                 UART5_SR |= USART_SR_TXE;
@@ -565,7 +568,7 @@ extern unsigned long fnSimInts(char *argv[])
         }
 	}
 #endif
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L4X5 || defined _STM32L4X6
 	if ((iInts & CHANNEL_5_SERIAL_INT) && (argv)) {
         ptrCnt = (int *)argv[THROUGHPUT_UART5];
         if (*ptrCnt) {
@@ -575,18 +578,32 @@ extern unsigned long fnSimInts(char *argv[])
             else {
     #if defined SERIAL_INTERFACE
 		        iInts &= ~CHANNEL_5_SERIAL_INT;                          // interrupt has been handled
+        #if defined _STM32L4X5 || defined _STM32L4X6
+                fnLogTx5((unsigned char)LPUART1_TDR);
+        #else
                 fnLogTx5((unsigned char)USART6_TDR);
+        #endif
                 ulNewActions |= SEND_COM_5;
-    #if defined _STM32F7XX
+        #if defined _STM32F7XX
                 USART6_ISR |= USART_ISR_TXE;
-    #else
+        #elif defined _STM32L4X5 || defined _STM32L4X6
+                LPUART1_ISR |= USART_ISR_TXE;
+        #else
                 USART6_SR |= USART_SR_TXE;
-    #endif
+        #endif
+        #if defined _STM32L4X5 || defined _STM32L4X6
+                if (LPUART1_CR1 & USART_CR1_TXEIE) {                     // if tx interrupts enabled
+                    if (IRQ64_95_SER & (1 << (irq_LPUART1_ID - 64))) {   // if LPUART1 interrupt is not disabled
+                        ptrVect->processor_interrupts.irq_LPUART1();     // call the interrupt handler
+                    }
+                }
+        #else
                 if (USART6_CR1 & USART_CR1_TXEIE) {                      // if tx interrupts enabled
                     if (IRQ64_95_SER & (1 << (irq_USART6_ID - 64))) {    // if USART 6 interrupt is not disabled
                         ptrVect->processor_interrupts.irq_USART6();      // call the interrupt handler
                     }
                 }
+        #endif
     #endif
             }
         }
@@ -836,7 +853,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
     switch (iPort) {
     case 0:                                                              // USART 1
 	    while (usLen-- != 0) {
-    #if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031
+    #if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
 		    USART1_RDR = *ptrDebugIn++;                                  // put received byte to input buffer
             USART1_ISR |= USART_ISR_RXNE;
     #else
@@ -853,7 +870,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
     #if USARTS_AVAILABLE > 2
     case 1:                                                              // USART 2
 	    while (usLen-- != 0) {
-        #if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031
+        #if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
 		    USART2_RDR = *ptrDebugIn++;                                  // put received byte to input buffer
             USART2_ISR |= USART_ISR_RXNE;
         #else
@@ -871,7 +888,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
     #if USARTS_AVAILABLE > 2 && !defined USART3_NOT_PRESENT
     case 2:                                                              // USART 3
 	    while (usLen-- != 0) {
-        #if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1
+        #if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32L4X5 || defined _STM32L4X6
 		    USART3_RDR = *ptrDebugIn++;                                  // put received byte to input buffer
             USART3_ISR |= USART_ISR_RXNE;
         #else
@@ -889,7 +906,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
     #if UARTS_AVAILABLE > 0
     case 3:                                                              // UART 4
 	    while (usLen-- != 0) {
-        #if defined _STM32F7XX
+        #if defined _STM32F7XX || defined _STM32L4X5 || defined _STM32L4X6
 		    UART4_RDR = *ptrDebugIn++;                                   // put received byte to input buffer
             UART4_ISR |= USART_ISR_RXNE;
         #else
@@ -907,7 +924,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
     #if UARTS_AVAILABLE > 1
     case 4:                                                              // UART 5
 	    while (usLen-- != 0) {
-        #if defined _STM32F7XX
+        #if defined _STM32F7XX || defined _STM32L4X5 || defined _STM32L4X6
 		    UART5_RDR = *ptrDebugIn++;                                   // put received byte to input buffer
             UART5_ISR |= USART_ISR_RXNE;
         #else
@@ -935,6 +952,18 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
             if (USART6_CR1 & USART_CR1_RXNEIE) {                         // if rx interrupts enabled
                 if (IRQ64_95_SER & (1 << (irq_USART6_ID - 64))) {        // if USART 6 interrupt is not disabled
                     ptrVect->processor_interrupts.irq_USART6();          // call the interrupt handler
+                }
+            }
+	    }
+        break;
+    #elif defined _STM32L4X5 || defined _STM32L4X6
+    case 5:                                                              // LPUART 1
+	    while (usLen-- != 0) {
+		    LPUART1_RDR = *ptrDebugIn++;                                 // put received byte to input buffer
+            LPUART1_ISR |= USART_ISR_RXNE;
+            if (LPUART1_CR1 & USART_CR1_RXNEIE) {                        // if rx interrupts enabled
+                if (IRQ64_95_SER & (1 << (irq_LPUART1_ID - 64))) {       // if LPUART 1 interrupt is not disabled
+                    ptrVect->processor_interrupts.irq_LPUART1();         // call the interrupt handler
                 }
             }
 	    }

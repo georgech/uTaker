@@ -731,7 +731,7 @@
     #define SERIAL_PORT_2  8                                             // if we open UART channel 2 we simulate using this com port on the PC
     #define SERIAL_PORT_3  10                                            // if we open UART channel 3 we simulate using this com port on the PC
     #define SERIAL_PORT_4  12                                            // if we open UART channel 4 we simulate using this com port on the PC
-    #define SERIAL_PORT_5  14                                            // if we open UART channel 5 we simulate using this com port on the PC
+    #define SERIAL_PORT_5  4                                            // if we open UART channel 5 we simulate using this com port on the PC
     #define SERIAL_PORT_6  16                                            // if we open UART channel 6 we simulate using this com port on the PC
     #define SERIAL_PORT_7  18                                            // if we open UART channel 7 we simulate using this com port on the PC
 
@@ -740,6 +740,8 @@
 
     #if defined ST_MB913C_DISCOVERY
         #define DEMO_UART    2                                           // use UART channel 2 (USART 3 since ST USARTs count from 1)
+    #elif defined NUCLEO_L496RG
+        #define DEMO_UART    5                                           // use LPUART1 (channel 5) [0 = USART1, 1 = USART2, 2= USART3, 3 = UART4, 4 = UART5, 5 = LPUART1]
     #elif defined WISDOM_STM32F407 || defined STM32F746G_DISCO || defined NUCLEO_F031K6
         #define DEMO_UART    0                                           // use UART channel 0 (USART 1 since ST USARTs count from 1)
     #elif defined NUCLEO_F429ZI
@@ -747,7 +749,7 @@
     #elif defined STM3240G_EVAL || defined STM32_P207 || defined STM32F407ZG_SK 
         #define DEMO_UART    2                                           // use UART channel 2 (USART 3 since ST USARTs count from 1) - the STM3240G can't use USART 4 and SD card at the same time so needs a modification for this
       //#define DEMO_UART    3                                           // use UART channel 3 (USART 4 since ST USARTs count from 1)
-    #elif defined ST_MB997A_DISCOVERY && defined EMBEST_BASE_BOARD       // {6}
+    #elif (defined ST_MB997A_DISCOVERY && defined EMBEST_BASE_BOARD)     // {6}
         #define DEMO_UART    5                                           // use UART channel 5 (USART 6 since ST USARTs count from 1)
     #else
         #define DEMO_UART    1                                           // use UART channel 1 (USART 2 since ST USARTs count from 1)
@@ -1021,6 +1023,7 @@
     #define PRIORITY_USART1            6
     #define PRIORITY_USART2            6
     #define PRIORITY_USART3            6
+    #define PRIORITY_LPUART1           6
     #define PRIORITY_RTC               5
     #define PRIORITY_HW_TIMER          5
     #define PRIORITY_TIMERS            5
@@ -1039,6 +1042,8 @@
     #define LED1                       PORTB_BIT14                        // green RED
     #define LED2                       PORTB_BIT7                         // green LED
     #define LED3                       PORTB_BIT5
+
+    #define USR_BUTTON                 PORTC_BIT13
 
     #define DEMO_LED_1                 (LED1 >> 14)
     #define DEMO_LED_2                 (LED2 >> 6)
@@ -1059,14 +1064,18 @@
     #define TOGGLE_WATCHDOG_LED()      _TOGGLE_PORT(B, BLINK_LED)        // blink the LED, if set as output
     #define TOGGLE_TEST_OUTPUT()       _TOGGLE_PORT(B, LED2)
 
-    #define INIT_WATCHDOG_DISABLE()    _CONFIG_PORT_INPUT(A, (PORTA_BIT12), (INPUT_PULL_UP)) // PA12 configured as input with pull-up (CN3-5 on extension connector)
-    #define WATCHDOG_DISABLE()         ((_READ_PORT_MASK(A, (PORTA_BIT12))) == 0)
+    #define INIT_WATCHDOG_DISABLE()    _CONFIG_PORT_INPUT(C, (USR_BUTTON), (INPUT_PULL_DOWN)) // PC13 configured as input with pull-down (USER_BUTTON)
+    #define WATCHDOG_DISABLE()         ((_READ_PORT_MASK(C, (USR_BUTTON))) != 0)
 
     #define KEYPAD "KeyPads/NUCLEO-L4XX.bmp"
+
+    #define BUTTON_KEY_DEFINITIONS     {_PORTC, USR_BUTTON, {26, 497, 46, 517}}
+
 
                                         // '0'            '1'   input state center (x,   y)   0 = circle, radius, controlling port, controlling pin 
     #define KEYPAD_LED_DEFINITIONS     {RGB(50,50,50),RGB(255,0,0),  0, {119, 116, 128, 124}, _PORTB, LED1}, \
                                        {RGB(50,50,50),RGB(0,0,255),  0, {135, 116, 141, 124}, _PORTB, LED2}
+
 #elif defined NUCLEO_L432KC || defined NUCLEO_L031K6 || defined NUCLEO_L011K4 || defined NUCLEO_F031K6
     #define LED1                       PORTB_BIT3                        // green LED
     #define LED2                       PORTB_BIT4

@@ -2998,12 +2998,16 @@ Build_Luminary.bat</Command>
     <ClInclude Include="..\app_hw_kinetis.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\app_hw_lm3sxxxx.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\app_hw_m5223x.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
@@ -3012,6 +3016,8 @@ Build_Luminary.bat</Command>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\app_hw_stm32.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>

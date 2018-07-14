@@ -48,6 +48,9 @@ static USART_REG *fnSelectChannel(QUEUE_HANDLE Channel)
 #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
     case 5:
         return (USART_REG *)(USART6_BLOCK);
+#elif defined _STM32L4X5 || defined _STM32L4X6
+    case 5:
+        return (USART_REG *)(LPUART1_BLOCK);
 #endif
 #if defined _STM32F7XX || defined _STM32F429                             // {2}
     case 6:
@@ -144,6 +147,19 @@ static __interrupt void SCI6_Interrupt(void)
     #endif
     }
     while (((USART6_CR1 & USART_CR1_TXEIE) != 0) && ((USART6_ISR & USART_ISR_TXE) != 0)) { // if an enabled transmission interrupt
+        fnSciTxByte(5);                                                  // transmit data empty interrupt
+    }
+}
+#elif defined _STM32L4X5 || defined _STM32L4X6
+static __interrupt void SCI6_Interrupt(void)
+{
+    while (((LPUART1_CR1 & USART_CR1_RXNEIE) != 0) && ((LPUART1_ISR & USART_ISR_RXNE) != 0)) { // if an enabled reception interrupt
+        fnSciRxByte((unsigned char)LPUART1_RDR, 5);                      // receive data interrupt
+#if defined _WINDOWS
+        LPUART1_ISR &= ~USART_ISR_RXNE;
+#endif
+    }
+    while (((LPUART1_CR1 & USART_CR1_TXEIE) != 0) && ((LPUART1_ISR & USART_ISR_TXE) != 0)) { // if an enabled transmission interrupt
         fnSciTxByte(5);                                                  // transmit data empty interrupt
     }
 }
@@ -245,6 +261,11 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
     case 5:
         POWER_UP(APB2, RCC_APB2ENR_USART6EN);                            // enable clocks to USART6
         fnEnterInterrupt(irq_USART6_ID, PRIORITY_USART6, SCI6_Interrupt);// enter UART interrupt handler
+        break;
+#elif defined _STM32L4X5 || defined _STM32L4X6
+    case 5:
+        RCC_APB1ENR2 |= (RCC_APB1ENR2_LPUART1EN);                        // enable clocks to LPUART1
+        fnEnterInterrupt(irq_LPUART1_ID, PRIORITY_LPUART1, SCI6_Interrupt);// enter LPUART interrupt handler
         break;
 #endif
 #if defined _STM32F7XX || defined _STM32F429                             // {2}
@@ -531,6 +552,13 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
 #endif
 #if defined _STM32F7XX_ || defined _STM32L432 || defined _STM32L0x1
     USART_regs->UART_BRR = ulSpeed;                                      // set baud rate value
+#elif defined _STM32L4X5 || defined _STM32L4X6
+    if (5 == Channel) {                                                  // LPUART
+        USART_regs->UART_BRR = ulSpeed;                                  // set baud rate value
+    }
+    else {
+        USART_regs->UART_BRR = ((ulSpeed << 4) | ucFraction);            // set baud rate value
+    }
 #else
     USART_regs->UART_BRR = ((ulSpeed << 4) | ucFraction);                // set baud rate value
 #endif
@@ -564,7 +592,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
 
     if ((pars->Config & CHAR_7) == 0) {                                  // 7 bits is only possible when parity is enabled
         if ((pars->Config & (RS232_ODD_PARITY | RS232_EVEN_PARITY)) != 0) { // if parity is enable in 8 bit mode set 9 bit mode so that it is inserted at the 9th bit position
-#if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031
+#if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
             USART_regs->UART_CR1 |= USART_CR1_9BIT;
 #else
             USART_regs->UART_CR1 |= USART_CR1_M;
@@ -585,6 +613,13 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         fnConfigSimSCI(Channel, (PCLK2/((USART_regs->UART_BRR) * 16)), pars); // open a serial port on PC if desired
     #elif defined _STM32F031
         fnConfigSimSCI(Channel, (PCLK/((USART_regs->UART_BRR >> 4) * 16)), pars); // open a serial port on PC if desired
+    #elif defined _STM32L4X5 || defined _STM32L4X6
+        if (Channel == 5) {                                              // LPUART1
+            fnConfigSimSCI(Channel, (PCLK1 / ((USART_regs->UART_BRR) * 16)), pars); // open a serial port on PC if desired
+        }
+        else {
+            fnConfigSimSCI(Channel, (PCLK2 / ((USART_regs->UART_BRR >> 4) * 16)), pars); // open a serial port on PC if desired
+        }
     #else
         fnConfigSimSCI(Channel, (PCLK2/((USART_regs->UART_BRR >> 4) * 16)), pars); // open a serial port on PC if desired
     #endif
@@ -657,6 +692,9 @@ extern void fnRxOn(QUEUE_HANDLE Channel)
     case 3:
     #if defined _STM32L432                                               // LPUART1
         _CONFIG_PERIPHERAL_INPUT(A, (PERIPHERAL_LPUART1), (PORTA_BIT3), (UART_RX_INPUT_TYPE)); // RX 4 on PA3
+    #elif defined _STM32L4X5 || defined _STM32L4X6
+        _CONFIG_PERIPHERAL_INPUT(C, (PERIPHERAL_UART4_5), (PORTC_BIT11), (UART_RX_INPUT_TYPE)); // RX 4 on PC11
+        UART4_CR1 |= (USART_CR1_UE | USART_CR1_RE | USART_CR1_RXNEIE);   // enable the receiver with Rx interrupts
     #else
         _CONFIG_PERIPHERAL_INPUT(C, (PERIPHERAL_USART4_5_6), (PORTC_BIT11), (UART_RX_INPUT_TYPE)); // RX 4 on PC11
         UART4_CR1 |= (USART_CR1_UE | USART_CR1_RE | USART_CR1_RXNEIE);   // enable the receiver with Rx interrupts
@@ -665,7 +703,11 @@ extern void fnRxOn(QUEUE_HANDLE Channel)
 #endif
 #if UARTS_AVAILABLE > 1
     case 4:
+    #if defined _STM32L4X5 || defined _STM32L4X6
+        _CONFIG_PERIPHERAL_INPUT(D, (PERIPHERAL_UART4_5), (PORTD_BIT2), (UART_RX_INPUT_TYPE)); // RX 5 on PD2
+    #else
         _CONFIG_PERIPHERAL_INPUT(D, (PERIPHERAL_USART4_5_6), (PORTD_BIT2), (UART_RX_INPUT_TYPE)); // RX 5 on PD2
+    #endif
         UART5_CR1 |= (USART_CR1_UE | USART_CR1_RE | USART_CR1_RXNEIE);   // enable the receiver with Rx interrupts
         break;
 #endif
@@ -677,6 +719,11 @@ extern void fnRxOn(QUEUE_HANDLE Channel)
         _CONFIG_PERIPHERAL_INPUT(C, (PERIPHERAL_USART4_5_6), (PORTC_BIT7), (UART_RX_INPUT_TYPE)); // RX 6 on PC7
     #endif
         USART6_CR1 |= (USART_CR1_UE | USART_CR1_RE | USART_CR1_RXNEIE);   // enable the receiver with Rx interrupts
+        break;
+#elif defined _STM32L496 || defined _STM32L4
+    case 5:
+        _CONFIG_PERIPHERAL_INPUT(G, (PERIPHERAL_LPUART1), (PORTG_BIT8), (UART_RX_INPUT_TYPE)); // LP RX 1 on PG8
+        LPUART1_CR1 |= (USART_CR1_UE | USART_CR1_RE | USART_CR1_RXNEIE); // enable the receiver with Rx interrupts
         break;
 #endif
 #if defined _STM32F7XX || defined _STM32F429                             // {2}
@@ -763,6 +810,8 @@ extern void fnTxOn(QUEUE_HANDLE Channel)
     case 3:
     #if defined _STM32L432
         _CONFIG_PERIPHERAL_OUTPUT(A, (PERIPHERAL_LPUART1), (PORTA_BIT2), (OUTPUT_MEDIUM | OUTPUT_PUSH_PULL)); // TX 4 on PA2
+    #elif defined _STM32L4X5 || defined _STM32L4X6
+        _CONFIG_PERIPHERAL_OUTPUT(C, (PERIPHERAL_UART4_5), (PORTC_BIT10), (OUTPUT_MEDIUM | OUTPUT_PUSH_PULL)); // TX 4 on PC10
     #else
         _CONFIG_PERIPHERAL_OUTPUT(C, (PERIPHERAL_USART4_5_6), (PORTC_BIT10), (OUTPUT_MEDIUM | OUTPUT_PUSH_PULL)); // TX 4 on PC10
     #endif
@@ -771,7 +820,11 @@ extern void fnTxOn(QUEUE_HANDLE Channel)
 #endif
 #if UARTS_AVAILABLE > 1
     case 4:
+    #if defined _STM32L4X5 || defined _STM32L4X6
+        _CONFIG_PERIPHERAL_OUTPUT(C, (PERIPHERAL_UART4_5), (PORTC_BIT12), (OUTPUT_MEDIUM | OUTPUT_PUSH_PULL)); // TX 5 on PC12
+    #else
         _CONFIG_PERIPHERAL_OUTPUT(C, (PERIPHERAL_USART4_5_6), (PORTC_BIT12), (OUTPUT_MEDIUM | OUTPUT_PUSH_PULL)); // TX 5 on PC12
+    #endif
         UART5_CR1 |= (USART_CR1_UE | USART_CR1_TE);                      // enable the transmitter
         break;
 #endif
@@ -783,6 +836,11 @@ extern void fnTxOn(QUEUE_HANDLE Channel)
         _CONFIG_PERIPHERAL_OUTPUT(C, (PERIPHERAL_USART4_5_6), (PORTC_BIT6), (OUTPUT_MEDIUM | OUTPUT_PUSH_PULL)); // TX 6 on PC6
     #endif
         USART6_CR1 |= (USART_CR1_UE | USART_CR1_TE);                     // enable the transmitter
+        break;
+#elif defined _STM32L496 || defined _STM32L4
+    case 5:
+        _CONFIG_PERIPHERAL_OUTPUT(G, (PERIPHERAL_LPUART1), (PORTG_BIT7), (OUTPUT_MEDIUM | OUTPUT_PUSH_PULL)); // LP TX 1 on PG7
+        LPUART1_CR1 |= (USART_CR1_UE | USART_CR1_TE);                    // enable the transmitter
         break;
 #endif
 #if defined _STM32F7XX || defined _STM32F429                             // {2}
@@ -842,6 +900,10 @@ extern void fnClearTxInt(QUEUE_HANDLE channel)
 #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
     case 5:
         USART6_CR1 &= ~(USART_CR1_TXEIE);                                // disable transmit interrupts
+        break;
+#elif defined _STM32L4X5 || defined _STM32L4X6
+    case 5:
+        LPUART1_CR1 &= ~(USART_CR1_TXEIE);                               // disable transmit interrupts
         break;
 #endif
 #if defined _STM32F7XX || defined _STM32F429                             // {2}
@@ -971,6 +1033,22 @@ extern int fnTxByte(QUEUE_HANDLE channel, unsigned char ucTxByte)
     #endif
     #if defined _WINDOWS
         USART6_ISR &= ~USART_ISR_TXE;
+        iInts |= CHANNEL_5_SERIAL_INT;                                   // simulate interrupt
+    #endif
+        break;
+#elif defined _STM32L4X5 || defined _STM32L4X6
+    case 5:                                                              // LPUART1
+        if ((LPUART1_ISR & USART_ISR_TXE) == 0) {
+            return 1;                                                    // busy, wait
+        }
+        LPUART1_CR1 |= (USART_CR1_TXEIE);                                // ensure Tx interrupt is enabled
+    #if defined UART_EXTENDED_MODE && defined SERIAL_MULTIDROP_TX        // {18a}
+        LPUART1_TDR = ((ucExtendedWithTx[channel] << 8) | ucTxByte);     // send the byte with extended bits
+    #else
+        LPUART1_TDR = ucTxByte;                                          // send the byte
+    #endif
+    #if defined _WINDOWS
+        LPUART1_ISR &= ~USART_ISR_TXE;
         iInts |= CHANNEL_5_SERIAL_INT;                                   // simulate interrupt
     #endif
         break;

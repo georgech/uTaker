@@ -544,7 +544,7 @@ typedef struct stSTM32_USART
 
 typedef struct stSTM32_UART
 {
-#if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031
+#if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
     unsigned long UART_CR1;
     unsigned long UART_CR2;
     unsigned long UART_CR3;
@@ -566,6 +566,22 @@ typedef struct stSTM32_UART
     unsigned long UART_GTPR;
 #endif
 } STM32_UART;
+
+#if LPUARTS_AVAILABLE > 0
+typedef struct stSTM32_LPUART
+{
+    unsigned long LPUART_CR1;
+    unsigned long LPUART_CR2;
+    unsigned long LPUART_CR3;
+    unsigned long LPUART_BRR;
+    unsigned long ulRes[2];
+    unsigned long LPUART_RQR;
+    unsigned long LPUART_ISR;
+    unsigned long LPUART_ICR;
+    unsigned long LPUART_RDR;
+    unsigned long LPUART_TDR;
+} STM32_LPUART;
+#endif
 
 
 typedef struct stSTM32_IWDG
@@ -1321,16 +1337,13 @@ typedef struct stSTR32M_PERIPH
     STM32_FMI            FMI;
     STM32_EXTI           EXTI;
     STM32_GPIO           Ports[9];
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
-    STM32_USART          USART[4];
-#else
+#if !defined _STM32F2XX && !defined _STM32F4XX && !defined _STM32F7XX
     STM32_AFIO           AFIO;
-    STM32_USART          USART[3];
 #endif
-#if defined _STM32F7XX || defined _STM32F429
-    STM32_UART           UART[4];
-#else
-    STM32_UART           UART[2];
+    STM32_USART          USART[USARTS_AVAILABLE];
+    STM32_UART           UART[UARTS_AVAILABLE];
+#if LPUARTS_AVAILABLE > 0
+    STM32_LPUART         LPUART[LPUARTS_AVAILABLE];
 #endif
     STM32_IWDG           IWDG;
     STM32_RTC            RTC;

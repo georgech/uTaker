@@ -4506,7 +4506,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 
 
     #define CONFIGURE_MOUSE_INPUTS() _CONFIG_PORT_INPUT_FAST_HIGH(E, SWITCH_2, PORT_PS_UP_ENABLE)
-    #define MOUSE_LEFT_CLICK()     (!_READ_PORT_MASK(E, SWITCH_2))
+    #define MOUSE_LEFT_CLICK()     (_READ_PORT_MASK(E, SWITCH_2) == 0)
     #define MOUSE_UP()             (iUpTilt/4)                           // use accelerometer (see i2c_tests.h and TEST_MMA8451Q, based on I2C)
     #define MOUSE_DOWN()           (iDownTilt/4)
     #define MOUSE_LEFT()           (iLeftTilt/4)
