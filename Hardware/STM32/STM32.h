@@ -304,7 +304,7 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*I
 #endif
 #define SYSCLK          PLL_OUTPUT_FREQ
 
-#if defined _STM32L432 || defined _STM32L0x1
+#if defined _STM32L432 || defined _STM32L0x1 || defined _STM32L4X5 || defined _STM32L4X6
     #if defined DISABLE_PLL
     #else
     #endif
@@ -2668,8 +2668,8 @@ typedef struct stSTM32_BD
     #define RCC_CFGR                         *(volatile unsigned long *)(RCC_BLOCK + 0x08) // clock configuration register
       #define RCC_CFGR_MSI_SELECT            0x00000000                  // MSI selected as system clock
       #define RCC_CFGR_HSI16_SELECT          0x00000001                  // HSI16 selected as system clock
-      #define RCC_CFGR_HSE_SELECT            0x00000003                  // HSE selected as system clock
-      #define RCC_CFGR_PLL_SELECT            0x00000004                  // PLL selected as system clock
+      #define RCC_CFGR_HSE_SELECT            0x00000002                  // HSE selected as system clock
+      #define RCC_CFGR_PLL_SELECT            0x00000003                  // PLL selected as system clock
       #define RCC_CFGR_SYSCLK_MASK           0x00000003
       #define RCC_CFGR_MSI_USED              0x00000000                  // MSI used as system clock
       #define RCC_CFGR_HSI16_USED            0x00000004                  // HSI16 used as system clock
@@ -4153,7 +4153,7 @@ typedef struct stSTM32_ADC_REGS
         #define FLASH_ACR_PRFTEN              0x00000100                 // prefetch buffer enable
         #define FLASH_ACR_ARTEN               0x00000200                 // ART accelerator enable
         #define FLASH_ACR_ARTRS               0x00000800                 // ART accelerator reset
-    #elif defined _STM32F2XX || defined _STM32F4XX || defined _STM32L432
+    #elif defined _STM32F2XX || defined _STM32F4XX || defined _STM32L432 || defined _STM32L4X5 || defined _STM32L4X6
         #define FLASH_ACR_LATENCY_ZERO_WAIT   0x00000000                 // zero wait states when SYSCLK <= 30MHz (valid only for highest voltage)
         #define FLASH_ACR_LATENCY_ONE_WAIT    0x00000001                 // one wait state when SYSCLK > 30MHz
         #define FLASH_ACR_LATENCY_TWO_WAITS   0x00000002                 // two wait states when SYSCLK > 60MHz
@@ -4167,7 +4167,7 @@ typedef struct stSTM32_ADC_REGS
         #define FLASH_ACR_DCEN                0x00000400                 // data cache enable
         #define FLASH_ACR_ICRST               0x00000800                 // instruction cache reset (write only when D cache is disabled)
         #define FLASH_ACR_DCRST               0x00001000                 // data cache reset (write only when D cache is disabled)
-        #if defined _STM32L432
+        #if defined _STM32L432 || defined _STM32L4X5 || defined _STM32L4X6
             #define FLASH_ACR_RUN_PD          0x00002000                 // flash power-down during run or low power run mode
             #define FLASH_ACR_SLEEP_PD        0x00004000                 // flash power-down during sleep or low power sleep mode
         #endif

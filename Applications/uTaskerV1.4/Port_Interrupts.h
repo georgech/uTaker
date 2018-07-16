@@ -515,7 +515,7 @@ static void fnInitIRQ(void)
     interrupt_setup.int_port_sense = (IRQ_RISING_EDGE | IRQ_ENABLE_GLITCH_FILER); // interrupt on rising edge with active filter
     interrupt_setup.int_port_bits = (EXT_INT_0 | EXT_INT_3);             // the inputs connected
     fnConfigureInterrupt((void *)&interrupt_setup);                      // configure test interrupt
-    #elif _STR91XF
+    #elif defined _STR91XF
     interrupt_setup.int_type = PORT_INTERRUPT;                           // identifier when configuring
     interrupt_setup.int_handler = test_irq_4;                            // handling function
     interrupt_setup.int_priority = (0);                                  // port interrupt priority

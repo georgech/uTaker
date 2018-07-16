@@ -3185,7 +3185,7 @@ static void STM32_LowLevelInit(void)
 #if defined _STM32L0x1
     RCC_CR = (RCC_CR_MSIRDY | RCC_CR_MSION);                             // set reset state - default is MSI at around 2.097MHz
     RCC_ICSCR = (RCC_ICSCR_MSIRANGE_2_097M);
-#elif defined _STM32L432
+#elif defined _STM32L432 || defined _STM32L4X5 || defined _STM32L4X6
     RCC_CR = (RCC_CR_MSIRANGE_4M | RCC_CR_MSIRDY | RCC_CR_MSION);        // set reset state - default is MSI at around 4MHz
 #else
     RCC_CR = (0x00000080 | RCC_CR_HSIRDY | RCC_CR_HSION);                // set reset state - default is high-speed internal clock
@@ -3194,7 +3194,7 @@ static void STM32_LowLevelInit(void)
 #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
     RCC_PLLCFGR = RCC_PLLCFGR_RESET_VALUE;                               // set the PLL configuration register to default
 #endif
-#if !defined USE_HSI_CLOCK && !defined _STM32L432 && !defined _STM32L0x1
+#if !defined USE_HSI_CLOCK && !defined _STM32L432 && !defined _STM32L0x1 && !defined _STM32L4X5 && !defined _STM32L4X6
     RCC_CR = (0x00000080 | RCC_CR_HSIRDY | RCC_CR_HSION | RCC_CR_HSEON); // enable the high-speed external clock
 #endif
 #if defined _STM32F7XX
@@ -3205,7 +3205,7 @@ static void STM32_LowLevelInit(void)
     FLASH_ACR = (FLASH_ACR_ICRST | FLASH_ACR_DCRST);                     // flush data and instruction cache
     FLASH_ACR = (/*FLASH_ACR_PRFTEN | */FLASH_ACR_DCEN | FLASH_ACR_ICEN | FLASH_WAIT_STATES); // set flash wait states appropriately and enable pre-fetch buffer and cache
     RCC_CFGR = (_RCC_CFGR_HPRE_SYSCLK | _RCC_CFGR_PPRE1_HCLK | _RCC_CFGR_PPRE2_HCLK); // set HCLK (AHB), PCLK1 and PCLK2 speeds
-#elif defined _STM32L432
+#elif defined _STM32L432 || defined _STM32L4X5 || defined _STM32L4X6
     FLASH_ACR = (FLASH_ACR_ICRST | FLASH_ACR_DCRST);                     // flush data and instruction cache
     FLASH_ACR = (FLASH_ACR_DCEN | FLASH_ACR_ICEN | FLASH_WAIT_STATES);   // set flash wait states appropriately and enable pre-fetch buffer and cache
     RCC_CFGR = (_RCC_CFGR_HPRE_SYSCLK | _RCC_CFGR_PPRE1_HCLK | _RCC_CFGR_PPRE2_HCLK); // prepare HCLK (AHB), PCLK1 and PCLK2 speeds
@@ -3233,11 +3233,11 @@ static void STM32_LowLevelInit(void)
         #if MSI_CLOCK != 2097000
     RCC_ICSCR = (RCC_ICSCR_MISRANGE_SETTING | RCC_CR_MSIRDY | RCC_CR_MSION); // set the MSI range value and use this register's value to control it
         #endif
-    #elif defined _STM32L432 && defined USE_MSI_CLOCK                    // set MSI frequency
+    #elif (defined _STM32L432 || defined _STM32L4X5 || defined _STM32L4X6) && defined USE_MSI_CLOCK // set MSI frequency
         #if MSI_CLOCK != 4000000
     RCC_CR = (RCC_CR_MISRANGE_SETTING | RCC_CR_MSIRGSEL | RCC_CR_MSIRDY | RCC_CR_MSION); // set the MSI range value and use this register's value to control it
         #endif
-    #elif defined _STM32L432 && defined USE_HSI_CLOCK
+    #elif (defined _STM32L432 || defined _STM32L4X5 || defined _STM32L4X6) && defined USE_HSI_CLOCK
     RCC_CR |= (RCC_CR_HSION);                                            // turn on the 16MHz HSI oscillator
     RCC_CFGR |= (RCC_CFGR_HSI16_SELECT);                                 // switch from 4MHz MSI to HSE16
     #endif

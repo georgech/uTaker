@@ -430,6 +430,12 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
 #if defined _STM32L432 || defined _STM32L0x1
             ulSpeed = (PCLK1/300);                                       // set 300
 #else
+    #if defined _STM32L4X5 || defined _STM32L4X6
+            if (Channel == 5) {                                          // LPUART1
+                ulSpeed = (unsigned long)((unsigned long long)((unsigned long long)PCLK1 * (unsigned long long)256) / 300); // set 300
+                break;
+            }
+    #endif
             ulSpeed = (PCLK1/16/300);                                    // set 300
     #if !defined _STM32F7XX_
             ucFraction = (unsigned char)((float)((float)PCLK1/16/300 - (int)(PCLK1/16/300)) * 16); // {1}
@@ -440,6 +446,12 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
 #if defined _STM32L432 || defined _STM32L0x1
             ulSpeed = (PCLK1/600);                                       // set 600
 #else
+    #if defined _STM32L4X5 || defined _STM32L4X6
+            if (Channel == 5) {                                          // LPUART1
+                ulSpeed = (unsigned long)((unsigned long long)((unsigned long long)PCLK1 * (unsigned long long)256) / 600); // set 600
+                break;
+            }
+    #endif
             ulSpeed = (PCLK1/16/600);                                    // set 600
     #if !defined _STM32F7XX_
             ucFraction = (unsigned char)((float)((float)PCLK1/16/600 - (int)(PCLK1/16/600)) * 16); // {1}
@@ -450,6 +462,12 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
 #if defined _STM32L432 || defined _STM32L0x1
             ulSpeed = (PCLK1/1200);                                      // set 1200
 #else
+    #if defined _STM32L4X5 || defined _STM32L4X6
+            if (Channel == 5) {                                          // LPUART1
+                ulSpeed = (unsigned long)((unsigned long long)((unsigned long long)PCLK1 * (unsigned long long)256) / 1200); // set 1200
+                break;
+            }
+    #endif
             ulSpeed = (PCLK1/16/1200);                                   // set 1200
     #if !defined _STM32F7XX_
             ucFraction = (unsigned char)((float)((float)PCLK1/16/1200 - (int)(PCLK1/16/1200)) * 16);
@@ -460,6 +478,12 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
 #if defined _STM32L432 || defined _STM32L0x1
             ulSpeed = (PCLK1/2400);                                      // set 2400
 #else
+    #if defined _STM32L4X5 || defined _STM32L4X6
+            if (Channel == 5) {                                          // LPUART1
+                ulSpeed = (unsigned long)((unsigned long long)((unsigned long long)PCLK1 * (unsigned long long)256) / 2400); // set 2400
+                break;
+            }
+    #endif
             ulSpeed = (PCLK1/16/2400);                                   // set 2400
     #if !defined _STM32F7XX_
             ucFraction = (unsigned char)((float)((float)PCLK1/16/2400 - (int)(PCLK1/16/2400)) * 16);
@@ -470,6 +494,12 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
 #if defined _STM32L432 || defined _STM32L0x1
             ulSpeed = (PCLK1/4800);                                      // set 4800
 #else
+    #if defined _STM32L4X5 || defined _STM32L4X6
+            if (Channel == 5) {                                          // LPUART1
+                ulSpeed = (unsigned long)((unsigned long long)((unsigned long long)PCLK1 * (unsigned long long)256) / 4800); // set 4800
+                break;
+            }
+    #endif
             ulSpeed = (PCLK1/16/4800);                                   // set 4800
     #if !defined _STM32F7XX_
             ucFraction = (unsigned char)((float)((float)PCLK1/16/4800 - (int)(PCLK1/16/4800)) * 16);
@@ -480,6 +510,12 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
 #if defined _STM32L432 || defined _STM32L0x1
             ulSpeed = (PCLK1/9600);                                      // set 9600
 #else
+    #if defined _STM32L4X5 || defined _STM32L4X6
+            if (Channel == 5) {                                          // LPUART1
+                ulSpeed = (unsigned long)((unsigned long long)((unsigned long long)PCLK1 * (unsigned long long)256) / 9600); // set 9600
+                break;
+            }
+    #endif
             ulSpeed = (PCLK1/16/9600);                                   // set 9600
     #if !defined _STM32F7XX_
             ucFraction = (unsigned char)((float)((float)PCLK1/16/9600 - (int)(PCLK1/16/9600)) * 16);
@@ -490,6 +526,12 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
 #if defined _STM32L432 || defined _STM32L0x1
             ulSpeed = (PCLK1/14400);                                     // set 14400
 #else
+    #if defined _STM32L4X5 || defined _STM32L4X6
+            if (Channel == 5) {                                          // LPUART1
+                ulSpeed = (unsigned long)((unsigned long long)((unsigned long long)PCLK1 * (unsigned long long)256) / 14400); // set 14400
+                break;
+            }
+    #endif
             ulSpeed = (PCLK1/16/14400);                                  // set 14400
     #if !defined _STM32F7XX_
             ucFraction = (unsigned char)((float)((float)PCLK1/16/14400 - (int)(PCLK1/16/14400)) * 16);
@@ -501,6 +543,12 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
 #if defined _STM32L432 || defined _STM32L0x1
             ulSpeed = (PCLK1/19200);                                     // set 19200
 #else
+    #if defined _STM32L4X5 || defined _STM32L4X6
+            if (Channel == 5) {                                          // LPUART1
+                ulSpeed = (unsigned long)((unsigned long long)((unsigned long long)PCLK1 * (unsigned long long)256) / 19200); // set 19200
+                break;
+            }
+    #endif
             ulSpeed = (PCLK1/16/19200);                                  // set 19200
     #if !defined _STM32F7XX_
             ucFraction = (unsigned char)((float)((float)PCLK1/16/19200 - (int)(PCLK1/16/19200)) * 16);
@@ -511,6 +559,12 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
 #if defined _STM32L432 || defined _STM32L0x1
             ulSpeed = (PCLK1/38400);                                     // set 38400
 #else
+    #if defined _STM32L4X5 || defined _STM32L4X6
+            if (Channel == 5) {                                          // LPUART1
+                ulSpeed = (unsigned long)((unsigned long long)((unsigned long long)PCLK1 * (unsigned long long)256) / 38400); // set 38400
+                break;
+            }
+    #endif
             ulSpeed = (PCLK1/16/38400);                                  // set 38400
     #if !defined _STM32F7XX_
             ucFraction = (unsigned char)((float)((float)PCLK1/16/38400 - (int)(PCLK1/16/38400)) * 16);
@@ -521,6 +575,12 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
 #if defined _STM32L432 || defined _STM32L0x1
             ulSpeed = (PCLK1/57600);                                     // set 57600
 #else
+    #if defined _STM32L4X5 || defined _STM32L4X6
+            if (Channel == 5) {                                          // LPUART1
+                ulSpeed = (unsigned long)((unsigned long long)((unsigned long long)PCLK1 * (unsigned long long)256) / 57600); // set 57600
+                break;
+            }
+    #endif
             ulSpeed = (PCLK1/16/57600);                                  // set 57600
     #if !defined _STM32F7XX_
             ucFraction = (unsigned char)((float)((float)PCLK1/16/57600 - (int)(PCLK1/16/57600)) * 16);
@@ -531,6 +591,12 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
 #if defined _STM32L432 || defined _STM32L0x1
             ulSpeed = (PCLK1/115200);                                    // set 115200
 #else
+    #if defined _STM32L4X5 || defined _STM32L4X6
+            if (Channel == 5) {                                          // LPUART1
+                ulSpeed = (unsigned long)((unsigned long long)((unsigned long long)PCLK1 * (unsigned long long)256) / 115200); // set 115200
+                break;
+            }
+    #endif
             ulSpeed = (PCLK1/16/115200);                                 // set 115200
     #if !defined _STM32F7XX_
             ucFraction = (unsigned char)((float)((float)PCLK1/16/115200 - (int)(PCLK1/16/115200)) * 16);
@@ -541,6 +607,12 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
 #if defined _STM32L432 || defined _STM32L0x1
             ulSpeed = (PCLK1/230400);                                    // set 230400
 #else
+    #if defined _STM32L4X5 || defined _STM32L4X6
+            if (Channel == 5) {                                          // LPUART1
+                ulSpeed = (unsigned long)((unsigned long long)((unsigned long long)PCLK1 * (unsigned long long)256) / 230400); // set 230400
+                break;
+            }
+    #endif
             ulSpeed = (PCLK1/16/230400);                                 // set 230400
     #if !defined _STM32F7XX_
             ucFraction = (unsigned char)((float)((float)PCLK1/16/230400 - (int)(PCLK1/16/230400)) * 16);
@@ -554,6 +626,11 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
     USART_regs->UART_BRR = ulSpeed;                                      // set baud rate value
 #elif defined _STM32L4X5 || defined _STM32L4X6
     if (5 == Channel) {                                                  // LPUART
+#if defined _WINDOWS
+        if (ulSpeed < 0x300) {
+            _EXCEPTION("It is forbidden to write vales less that 0x300");
+        }
+#endif
         USART_regs->UART_BRR = ulSpeed;                                  // set baud rate value
     }
     else {
@@ -615,7 +692,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         fnConfigSimSCI(Channel, (PCLK/((USART_regs->UART_BRR >> 4) * 16)), pars); // open a serial port on PC if desired
     #elif defined _STM32L4X5 || defined _STM32L4X6
         if (Channel == 5) {                                              // LPUART1
-            fnConfigSimSCI(Channel, (PCLK1 / ((USART_regs->UART_BRR) * 16)), pars); // open a serial port on PC if desired
+            fnConfigSimSCI(Channel, (PCLK1 / ((USART_regs->UART_BRR) / 256)), pars); // open a serial port on PC if desired
         }
         else {
             fnConfigSimSCI(Channel, (PCLK2 / ((USART_regs->UART_BRR >> 4) * 16)), pars); // open a serial port on PC if desired
@@ -720,9 +797,17 @@ extern void fnRxOn(QUEUE_HANDLE Channel)
     #endif
         USART6_CR1 |= (USART_CR1_UE | USART_CR1_RE | USART_CR1_RXNEIE);   // enable the receiver with Rx interrupts
         break;
-#elif defined _STM32L496 || defined _STM32L4
+#elif defined _STM32L4X5 || defined _STM32L4X6
     case 5:
+    #if defined LPUART_REMAP_B
+        _CONFIG_PERIPHERAL_INPUT(B, (PERIPHERAL_LPUART1), (PORTB_BIT10), (UART_RX_INPUT_TYPE)); // LP RX 1 on PB10
+    #elif defined LPUART_REMAP_C
+        _CONFIG_PERIPHERAL_INPUT(B, (PERIPHERAL_LPUART1), (PORTC_BIT0), (UART_RX_INPUT_TYPE)); // LP RX 1 on PC0
+    #elif defined LPUART_REMAP_G
         _CONFIG_PERIPHERAL_INPUT(G, (PERIPHERAL_LPUART1), (PORTG_BIT8), (UART_RX_INPUT_TYPE)); // LP RX 1 on PG8
+    #else
+        _CONFIG_PERIPHERAL_INPUT(A, (PERIPHERAL_LPUART1), (PORTA_BIT3), (UART_RX_INPUT_TYPE)); // LP RX 1 on PA3
+    #endif
         LPUART1_CR1 |= (USART_CR1_UE | USART_CR1_RE | USART_CR1_RXNEIE); // enable the receiver with Rx interrupts
         break;
 #endif
@@ -837,9 +922,17 @@ extern void fnTxOn(QUEUE_HANDLE Channel)
     #endif
         USART6_CR1 |= (USART_CR1_UE | USART_CR1_TE);                     // enable the transmitter
         break;
-#elif defined _STM32L496 || defined _STM32L4
+#elif defined _STM32L4X5 || defined _STM32L4X6
     case 5:
+    #if defined LPUART_REMAP_B
+        _CONFIG_PERIPHERAL_OUTPUT(B, (PERIPHERAL_LPUART1), (PORTB_BIT11), (OUTPUT_MEDIUM | OUTPUT_PUSH_PULL)); // LP TX 1 on PB11
+    #elif defined LPUART_REMAP_C
+        _CONFIG_PERIPHERAL_OUTPUT(C, (PERIPHERAL_LPUART1), (PORTC_BIT1), (OUTPUT_MEDIUM | OUTPUT_PUSH_PULL)); // LP TX 1 on PC1
+    #elif defined LPUART_REMAP_G
         _CONFIG_PERIPHERAL_OUTPUT(G, (PERIPHERAL_LPUART1), (PORTG_BIT7), (OUTPUT_MEDIUM | OUTPUT_PUSH_PULL)); // LP TX 1 on PG7
+    #else
+        _CONFIG_PERIPHERAL_OUTPUT(A, (PERIPHERAL_LPUART1), (PORTA_BIT2), (OUTPUT_MEDIUM | OUTPUT_PUSH_PULL)); // LP TX 1 on PA2
+    #endif
         LPUART1_CR1 |= (USART_CR1_UE | USART_CR1_TE);                    // enable the transmitter
         break;
 #endif
