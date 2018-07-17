@@ -361,8 +361,13 @@ static void fnSetDevice(unsigned long *port_inits)
 
 #if !defined KINETIS_KL
     FMC_PFAPR  = 0x00f8003f;                                             // flash memory controller
+    #if defined KINETIS_K66
+    FMC_PFB01CR = 0x3004001f;
+    FMC_PFB23CR = 0x3004001f;
+    #else
     FMC_PFB0CR = 0x3002001f;
     FMC_PFB1CR = 0x3002001f;
+    #endif
 #endif
 
 #if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_KM || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000) // {26}

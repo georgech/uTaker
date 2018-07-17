@@ -49,8 +49,8 @@ extern CHAR *fnSetMAC(CHAR *ptr_input, unsigned char *ptrMac)
     for (i = 0; i < MAC_LENGTH; i++) {
         iLoop = 0;
         while ((*ptr_input >= '0') 
-    #if MAC_DELIMITER >= '0'
-            && !(*ptr_input == MAC_DELIMITER)
+    #if defined MAC_DELIMITER && MAC_DELIMITER >= '0'
+            && ((*ptr_input == MAC_DELIMITER) == 0)
     #endif
             ) {
             ptr_input++;

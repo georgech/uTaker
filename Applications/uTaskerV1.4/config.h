@@ -149,14 +149,14 @@
     //#define EMCRAFT_K61F150M                                           // K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - http://www.utasker.com/kinetis/EMCRAFT_K61F150M.html
     //#define K61FN1_50M                                                 // board with 150MHz K61 and 50MHz clock (HS USB and KSZ8863 ethernet switch)
 
-    //#define FRDM_K64F                                                  // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
+      #define FRDM_K64F                                                  // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
     //#define TWR_K64F120M                                               // tower board http://www.utasker.com/kinetis/TWR-K64F120M.html
     //#define HEXIWEAR_K64F                                              // hexiwear - wearable development kit for IoT (K64FN1M0VDC12 main processor) http://www.hexiwear.com/
     //#define TEENSY_3_5                                                 // USB development board with K64FX512 - http://www.utasker.com/kinetis/TEENSY_3.5.html
     //#define FreeLON                                                    // K64 based with integrated LON
     //#define TWR_K65F180M                                               // tower board http://www.utasker.com/kinetis/TWR-K65F180M.html
     //#define K66FX1M0                                                   // development board with K66FX1M0
-      #define FRDM_K66F                                                  // freedom board http://www.utasker.com/kinetis/FRDM-K66F.html
+    //#define FRDM_K66F                                                  // freedom board http://www.utasker.com/kinetis/FRDM-K66F.html
     //#define TEENSY_3_6                                                 // USB development board with K66FX1M0 - http://www.utasker.com/kinetis/TEENSY_3.6.html
 
     //#define TWR_K70F120M                                               // K processors Cortex M4 with graphical LCD, Ethernet, USB, encryption, tamper - tower board http://www.utasker.com/kinetis/TWR-K70F120M.html
@@ -1426,7 +1426,7 @@
 #if defined DEVICE_WITHOUT_USB
     #define NUMBER_USB     0                                             // no physical queue needed
 #else
-  //#define USB_INTERFACE                                                // enable USB driver interface
+    #define USB_INTERFACE                                                // enable USB driver interface
     #if defined USB_INTERFACE
       //#define MICROSOFT_OS_STRING_DESCRIPTOR                           // support MODs
       //#define USB_HOST_SUPPORT                                         // host supported
@@ -1437,7 +1437,7 @@
         #endif
         #if defined USB_DEVICE_SUPPORT                                   // define one or more device classes (multiple classes creates a composite device)
             #define USE_USB_CDC                                          // USB-CDC (use also for Modbus over USB)
-            #define USE_USB_MSD                                          // needs SD card to compile (or alternatives FLASH_FAT / SPI_FLASH_FAT / FAT_EMULATION)
+          //#define USE_USB_MSD                                          // needs SD card to compile (or alternatives FLASH_FAT / SPI_FLASH_FAT / FAT_EMULATION)
           //#define USE_USB_HID_MOUSE                                    // human interface device (mouse)
           //#define USE_USB_HID_KEYBOARD                                 // human interface device (keyboard)
               //#define USB_KEYBOARD_DELAY                               // enable inter-character delay control
@@ -1494,14 +1494,15 @@
               //#define FREEMASTER_CDC                                   // CDC instance for run-time debugging use (if USB_CDC_COUNT is 1 the single USB-CDC connection is used, otherwise the last instance is used)
                 #if defined USB_CDC_RNDIS
                     #define USB_CDC_RNDIS_COUNT       1                  // the number of RNDIS virtual network interfaces
-                    #define USB_CDC_VCOM_COUNT        1                  // the number of CDC virtual COM ports in composite device
-                    #define USB_CDC_COUNT             (USB_CDC_VCOM_COUNT + USB_CDC_RNDIS_COUNT) // number of USB-CDC deviceinterfaces
+                    #define USB_CDC_VCOM_COUNT        0                  // the number of CDC virtual COM ports in composite device (set to 0 when not used)
+                    #define USB_CDC_COUNT             (USB_CDC_VCOM_COUNT + USB_CDC_RNDIS_COUNT) // number of USB-CDC device interfaces
                     #if !defined DEVICE_WITHOUT_ETHERNET
                         #define USB_TO_ETHERNET                          // allow RNDIS to Ethernet operation (this doesn't need the TCP/IP stack but does activate the Ethernet driver)
                         #if defined USB_TO_ETHERNET
-                            #define NO_USB_ETHERNET_BRIDGING             // keep RNDIS and Ethernet networks separated (disable when there is no Ethernet interface)
+                          //#define NO_USB_ETHERNET_BRIDGING             // keep RNDIS and Ethernet networks separated (disable when there is no Ethernet interface)
                           //#define ETHERNET_FILTERED_BRIDGING           // enable non-promiscuous bridging from Ethernet to the RNDIS (without TCP/IP stack)
                           //#define ETHERNET_BRIDGING                    // allow bridging in parallel with TCP/IP stack (can be removed if there is no Ethernet interface)
+                            #define PURE_RNDIS_ETHERNET                  // remove all TCP/IP support and use RNDIS as pure RNDIS<->Ethernet adapter
                         #endif
                     #endif
                     #if !defined ETHERNET_FILTERED_BRIDGING              // if not operating as a pure USB-Ethernet adapter
@@ -1701,7 +1702,7 @@
         #define ENC424J600_INTERFACE                                     // using ENC424J600
     #endif
 #endif
-#if (defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP) && !defined BLINKY
+#if (defined ETH_INTERFACE || (defined USB_CDC_RNDIS && !defined PURE_RNDIS_ETHERNET) || defined USE_PPP) && !defined BLINKY
     #define MAC_DELIMITER  '-'                                           // used for display and entry of mac addresses
     #define IPV6_DELIMITER ':'                                           // used for display and entry of IPV6 addresses
     #define NUMBER_LAN     1                                             // one physical interface needed for LAN
@@ -2147,7 +2148,7 @@
 
         #define USER_NAME_AND_PASS                                       // routines for user name and password support
 
-        #if defined USE_TCP && ((defined USE_MQTT_CLIENT && defined SECURE_MQTT) || (defined USE_HTTP && (NO_OF_HTTPS_SESSIONS > 0))) // when these options are selected we require secure socket layer
+        #if defined USE_TCP && ((defined USE_MQTT_CLIENT && defined SECURE_MQTT) || (defined USE_HTTP && defined NO_OF_HTTPS_SESSIONS && (NO_OF_HTTPS_SESSIONS > 0))) // when these options are selected we require secure socket layer
             #define USE_SECURE_SOCKET_LAYER
             #define SUPPORT_UCALLOC
             #if (defined USE_MQTT_CLIENT && defined SECURE_MQTT)
@@ -2462,7 +2463,7 @@
     #define GLOBAL_TIMER_TASK
 #elif defined USE_IGMP && ((defined USE_IGMP_V2 || defined USE_IGMP_V3) || (IGMP_MAX_HOSTS > 1))
     #define GLOBAL_TIMER_TASK
-#elif defined USE_DHCP_CLIENT && (IP_NETWORK_COUNT > 1)
+#elif defined USE_DHCP_CLIENT && defined IP_NETWORK_COUNT &&  (IP_NETWORK_COUNT > 1)
     #define GLOBAL_TIMER_TASK
 #else
   //#define GLOBAL_TIMER_TASK                                            // enable a task for global timer tasks

@@ -637,6 +637,25 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
         #elif defined RUN_FROM_DEFAULT_CLOCK
             #if defined FLL_FACTOR
                 #define MCGOUTCLK  ((32768) * FLL_FACTOR)                // assume tuned to 32768kHz
+                #if (FLL_FACTOR == 640)
+                    #define _FLL_VALUE (MCG_C4_LOW_RANGE)
+                #elif (FLL_FACTOR == 732)
+                    #define _FLL_VALUE (MCG_C4_LOW_RANGE | MCG_C4_DMX32)
+                #elif (FLL_FACTOR == 1280)
+                    #define _FLL_VALUE (MCG_C4_MID_RANGE)
+                #elif (FLL_FACTOR == 1464)
+                    #define _FLL_VALUE (MCG_C4_MID_RANGE | MCG_C4_DMX32)
+                #elif (FLL_FACTOR == 1920)
+                    #define _FLL_VALUE (MCG_C4_MID_HIGH_RANGE)
+                #elif (FLL_FACTOR == 2197)
+                    #define _FLL_VALUE (MCG_C4_MID_HIGH_RANGE | MCG_C4_DMX32)
+                #elif (FLL_FACTOR == 2560)
+                    #define _FLL_VALUE (MCG_C4_HIGH_RANGE)
+                #elif (FLL_FACTOR == 2929)
+                    #define _FLL_VALUE (MCG_C4_HIGH_RANGE | MCG_C4_DMX32)
+                #else
+                    #error Invalid FLL factor has been specified - valid are 640, 732, 1280, 1464, 1920, 2197, 2560 or 2929
+                #endif
             #else
                 #define MCGOUTCLK  ((32768) * 640)                       // 20.971MHz nominal (20MHz..25MHz)
             #endif
@@ -5548,14 +5567,18 @@ typedef struct stKINETIS_INTMUX
       #define FMC_PFAPR_M6PFD     0x00400000                             // master 6 - pre-fetch disable
       #define FMC_PFAPR_M7PFD     0x00800000                             // master 7 - pre-fetch disable
       #define FMC_PFAPR_DEFAULT   (FMC_PFAPR_M0AP_RW | FMC_PFAPR_M1AP_RW | FMC_PFAPR_M2AP_RW | FMC_PFAPR_M3PFD | FMC_PFAPR_M4PFD | FMC_PFAPR_M5PFD | FMC_PFAPR_M6PFD | FMC_PFAPR_M0PFD)
-    #define FMC_PFB0CR          *(unsigned long *)(FMC_BLOCK + 0x004)    // Flash Bank 0 Control Registe
-      #define BANKDCE             0x00000010                             // data cache enable
-      #define BANKICE             0x00000008                             // instruction cache enable
-      #define BANK_DPE            0x00000004                             // bank data prefetch enable
-      #define BANKIPE             0x00000002                             // instruction prefetch enable
-      #define BANKSEBE            0x00000001                             // single entry buffer enable
-    #define FMC_PFB1CR          *(unsigned long *)(FMC_BLOCK + 0x008)    // Flash Bank 1 Control Register
-
+    #if defined KINETIS_K66
+        #define FMC_PFB01CR          *(unsigned long *)(FMC_BLOCK + 0x004)   // Flash Bank 0-1 Control Register
+        #define FMC_PFB23CR          *(unsigned long *)(FMC_BLOCK + 0x004)   // Flash Bank 2-3 Control Register
+    #else
+        #define FMC_PFB0CR          *(unsigned long *)(FMC_BLOCK + 0x004)    // Flash Bank 0 Control Register
+          #define BANKDCE             0x00000010                             // data cache enable
+          #define BANKICE             0x00000008                             // instruction cache enable
+          #define BANK_DPE            0x00000004                             // bank data prefetch enable
+          #define BANKIPE             0x00000002                             // instruction prefetch enable
+          #define BANKSEBE            0x00000001                             // single entry buffer enable
+        #define FMC_PFB1CR          *(unsigned long *)(FMC_BLOCK + 0x008)    // Flash Bank 1 Control Register
+    #endif
     #define FMC_TAGVDW0S0       *(unsigned long *)(FMC_BLOCK + 0x100)    // Cache Directory Storage
     #define FMC_TAGVDW0S1       *(unsigned long *)(FMC_BLOCK + 0x104)    // Cache Directory Storage
     #define FMC_TAGVDW0S2       *(unsigned long *)(FMC_BLOCK + 0x108)    // Cache Directory Storage
@@ -14991,7 +15014,7 @@ typedef struct stKINETIS_CAN_CONTROL
 // - SET_KUART_BAUD() is for use with the full UART as found in K parts and some KL part channels
 // - SET_UART_BAUD() is for use with UARTs that have no fraction divider, such as in most KL parts
 //
-#define SET_KUART_BAUD(ref, baud_rate, uart_clock) UART##ref##_C4 = (unsigned char)((float)((((float)uart_clock/(float)16/(float)baud_rate) - (int)(uart_clock/16/baud_rate)) * 32)); UART##ref##_BDH = (unsigned char)(((uart_clock/16/baud_rate) >> 8) & 0x1f); UART##ref##_BDL = (unsigned char)(uart_clock/16/baud_rate)
+#define SET_KUART_BAUD(ref, baud_rate, uart_clock) UART##ref##_C4 = (unsigned char)(((float)((((float)uart_clock/(float)16/(float)baud_rate) - (int)(uart_clock/16/baud_rate)) * 32)) + (float)0.5); UART##ref##_BDH = (unsigned char)(((uart_clock/16/baud_rate) >> 8) & 0x1f); UART##ref##_BDL = (unsigned char)(uart_clock/16/baud_rate)
 #define SET_UART_BAUD(ref, baud_rate, uart_clock)  UART##ref##_BDH = (unsigned char)(((((uart_clock/8/baud_rate) + 1)/2) >> 8) & 0x1f); UART##ref##_BDL = (unsigned char)(((uart_clock/8/baud_rate) + 1)/2)
 
 #define UART1_BDH                        *(volatile unsigned char *)(UART1_BLOCK + 0x00)  // UART 1 Baud Rate Registers: High

@@ -112,7 +112,7 @@ static int fnFlashNow(unsigned char ucCommand, unsigned long *ptrWord, unsigned 
         #define PROG_WORD_SIZE 30                                        // adequate space for the small program
         int i = 0;
         unsigned char *ptrThumb2 = (unsigned char *)fnFlashRoutine;
-        static unsigned short usProgSpace[PROG_WORD_SIZE] = {0};         // make space for the routine on stack (this will have an even boundary)
+        static unsigned short usProgSpace[PROG_WORD_SIZE] = {0};         // make space for the routine in static memory (this will have an even boundary)
 
         ptrThumb2 =  (unsigned char *)(((CAST_POINTER_ARITHMETIC)ptrThumb2) & ~0x1); // thumb 2 address
         while (i < PROG_WORD_SIZE) {                                     // copy program to SRAM

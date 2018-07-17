@@ -939,7 +939,9 @@ static const DEBUG_COMMAND tUSBCommand[] = {
     {"usb-serial",        "RS232<->USB mode (disconnect to quit)", DO_USB,           DO_USB_RS232_MODE },
         #endif
     {"usb-load",          "USB-SW download",                       DO_USB,           DO_USB_DOWNLOAD },
+        #if defined USB_CDC_VCOM_COUNT && (USB_CDC_VCOM_COUNT > 0)
     {"usb-tx",            "Test tx speed (send 10MByte data)",     DO_USB,           DO_USB_SPEED },
+        #endif
     #endif
     #if defined USE_USB_HID_KEYBOARD && defined SUPPORT_FIFO_QUEUES
     {"usb-kb",            "Keyboard input (disconnect to quit)",   DO_USB,           DO_USB_KEYBOARD }, // {77}
@@ -1494,7 +1496,7 @@ extern void fnDebug(TTASKTABLE *ptrTaskTable)
 
     while (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH) != 0) { // check task input queue
         switch (ucInputMessage[MSG_SOURCE_TASK]) {                       // switch depending on message source
-#if defined USE_MAINTENANCE && defined USB_INTERFACE && defined USE_USB_CDC
+#if defined USE_MAINTENANCE && defined USB_INTERFACE && defined USE_USB_CDC && defined USB_CDC_VCOM_COUNT && (USB_CDC_VCOM_COUNT > 0)
         case TIMER_EVENT:
             if (E_TIMER_START_USB_TX == ucInputMessage[MSG_TIMER_EVENT]) {
                 fnUSB_CDC_TX(1);                                         // start transmission of data to USB-CDC interface(s)
@@ -1535,7 +1537,7 @@ extern void fnDebug(TTASKTABLE *ptrTaskTable)
                 }
 #endif
             }
-#if defined USE_MAINTENANCE && defined USB_INTERFACE && defined USE_USB_CDC
+#if defined USE_MAINTENANCE && defined USB_INTERFACE && defined USE_USB_CDC && defined USB_CDC_VCOM_COUNT && (USB_CDC_VCOM_COUNT > 0)
             else if (E_USB_TX_CONTINUE == ucInputMessage[MSG_INTERRUPT_EVENT]) {
                 if (fnUSB_CDC_TX(0) != 0) {                              // continue transmission of data to USB-CDC interface(s)
                     return;
@@ -5091,10 +5093,12 @@ static void fnDoUSB(unsigned char ucType, CHAR *ptrInput)                // USB 
         #endif
         }
         break;
+        #if defined USB_CDC_VCOM_COUNT && (USB_CDC_VCOM_COUNT > 0)
     case DO_USB_SPEED:
         fnDebugMsg("Test starts in 1s - get ready to receive 10 MBytes of data....");
         uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(1 * SEC), E_TIMER_START_USB_TX);
         break;
+        #endif
     #endif
     #if defined USE_USB_HID_KEYBOARD && defined SUPPORT_FIFO_QUEUES
     case DO_USB_KEYBOARD:                                                // {77}

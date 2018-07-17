@@ -4212,7 +4212,7 @@ static void fnConfigureDeviceApplicationEndpoints(void)
 }
 #endif
 
-#if defined USE_MAINTENANCE && defined USB_INTERFACE && defined USE_USB_CDC
+#if defined USE_MAINTENANCE && defined USB_INTERFACE && defined USE_USB_CDC && defined USB_CDC_VCOM_COUNT && (USB_CDC_VCOM_COUNT > 0)
 extern int fnUSB_CDC_TX(int iStart)
 {
     static unsigned long ulTxCount[USB_CDC_VCOM_COUNT] = {0};

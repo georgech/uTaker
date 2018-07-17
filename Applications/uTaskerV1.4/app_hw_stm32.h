@@ -742,6 +742,7 @@
         #define DEMO_UART    2                                           // use UART channel 2 (USART 3 since ST USARTs count from 1)
     #elif defined NUCLEO_L496RG
         #define DEMO_UART    5                                           // use LPUART1 (channel 5) [0 = USART1, 1 = USART2, 2= USART3, 3 = UART4, 4 = UART5, 5 = LPUART1]
+        #define LPUART_REMAP_G                                           // STLink VCOM
     #elif defined WISDOM_STM32F407 || defined STM32F746G_DISCO || defined NUCLEO_F031K6
         #define DEMO_UART    0                                           // use UART channel 0 (USART 1 since ST USARTs count from 1)
     #elif defined NUCLEO_F429ZI

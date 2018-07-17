@@ -470,9 +470,11 @@
             #define BUS_CLOCK_DIVIDE     2                               // 80/2 to give 40MHz
         #endif
     #else
-        #define FLEX_CLOCK_DIVIDE    1                                   // 
-        #define FLASH_CLOCK_DIVIDE   1                                   // 
-        #define BUS_CLOCK_DIVIDE     1                                   // 
+      //#define FLL_FACTOR           1280                                // optionally set different FLL factor (640 [default], 732, 1280, 1464, 1920, 2197, 2560 or 2929 are possible) - clock dividers may need to be adjusted in order to respect frequency limits if increased
+        #define SYSTEM_CLOCK_DIVIDE  1                                   // system/core clock is set to the same frequency as MCGOUTCLK
+        #define FLEX_CLOCK_DIVIDE    1                                   // flex clock is set to the same frequency as MCGOUTCLK
+        #define FLASH_CLOCK_DIVIDE   1                                   // flash clock is set to the same frequency as MCGOUTCLK
+        #define BUS_CLOCK_DIVIDE     1                                   // bus clock is set to the same frequency as MCGOUTCLK
     #endif
     #define USB_CRYSTAL_LESS                                             // use 48MHz IRC as USB source (according to Freescale AN4905 - only possible in device mode)
   //#define USB_CLOCK_GENERATED_INTERNALLY                               // use USB clock from internal source rather than external pin - 120MHz is suitable
@@ -1762,7 +1764,7 @@
     #define WRITE_SPI_CMD0_LAST(byte)       SPI1_PUSHR = (byte | SPI_PUSHR_EOQ  | ulChipSelectLine | SPI_PUSHR_CTAS_CTAR0) // write final byte to output FIFO - this will negate the CS line when complete
     #define READ_SPI_FLASH_DATA()           (unsigned char)(SPI1_POPR)
     #define WAIT_SPI_RECEPTION_END()        while ((SPI1_SR & SPI_SR_RFDF) == 0) {}
-    #define CLEAR_RECEPTION_FLAG()          SPI1_SR |= SPI_SR_RFDF
+    #define CLEAR_RECEPTION_FLAG()          OR_ONE_TO_CLEAR(SPI1_SR, SPI_SR_RFDF)
     #define SET_SPI_FLASH_MODE()                                         // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
     #define REMOVE_SPI_FLASH_MODE()                                      // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
 #elif defined FRDM_KL46Z

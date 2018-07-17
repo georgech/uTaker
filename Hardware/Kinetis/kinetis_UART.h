@@ -3278,7 +3278,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #if defined KINETIS_KL || defined KINETIS_K80 || defined KINETIS_KE15
             usDivider = (((SPECIAL_UART_CLOCK/8/300) + 1)/2);            // {201} set 300
         #else
-            ucFraction = (unsigned char)((float)((((float)SPECIAL_UART_CLOCK/(float)16/(float)300) - (int)(SPECIAL_UART_CLOCK/16/300)) * 32)); // calculate fraction
+            ucFraction = (unsigned char)(((float)((((float)SPECIAL_UART_CLOCK/(float)16/(float)300) - (int)(SPECIAL_UART_CLOCK/16/300)) * 32)) + (float)0.5); // calculate fraction
             usDivider = (SPECIAL_UART_CLOCK/16/300);                     // set 300
         #endif
             break;
@@ -3286,7 +3286,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #if defined KINETIS_KL || defined KINETIS_K80 || defined KINETIS_KE15
             usDivider = (((SPECIAL_UART_CLOCK/8/600) + 1)/2);            // {201} set 600
         #else
-            ucFraction = (unsigned char)((float)((((float)SPECIAL_UART_CLOCK/(float)16/(float)600) - (int)(SPECIAL_UART_CLOCK/16/600)) * 32)); // calculate fraction
+            ucFraction = (unsigned char)(((float)((((float)SPECIAL_UART_CLOCK/(float)16/(float)600) - (int)(SPECIAL_UART_CLOCK/16/600)) * 32)) + (float)0.5); // calculate fraction
             usDivider = (SPECIAL_UART_CLOCK/16/600);                     // set 600
         #endif
             break;
@@ -3294,7 +3294,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #if defined KINETIS_KL || defined KINETIS_K80 || defined KINETIS_KE15
             usDivider = (((SPECIAL_UART_CLOCK/8/1200) + 1)/2);           // {201} set 1200
         #else
-            ucFraction = (unsigned char)((float)((((float)SPECIAL_UART_CLOCK/(float)16/(float)1200) - (int)(SPECIAL_UART_CLOCK/16/1200)) * 32)); // calculate fraction
+            ucFraction = (unsigned char)(((float)((((float)SPECIAL_UART_CLOCK/(float)16/(float)1200) - (int)(SPECIAL_UART_CLOCK/16/1200)) * 32)) + (float)0.5); // calculate fraction
             usDivider = (SPECIAL_UART_CLOCK/16/1200);                    // set 1200
         #endif
             break;
@@ -3302,7 +3302,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #if defined KINETIS_KL || defined KINETIS_K80 || defined KINETIS_KE15
             usDivider = (((SPECIAL_UART_CLOCK/8/2400) + 1)/2);           // {201} set 2400
         #else
-            ucFraction = (unsigned char)((float)((((float)SPECIAL_UART_CLOCK/(float)16/(float)2400) - (int)(SPECIAL_UART_CLOCK/16/2400)) * 32)); // calculate fraction
+            ucFraction = (unsigned char)(((float)((((float)SPECIAL_UART_CLOCK/(float)16/(float)2400) - (int)(SPECIAL_UART_CLOCK/16/2400)) * 32)) + (float)0.5); // calculate fraction
             usDivider = (SPECIAL_UART_CLOCK/16/2400);                    // set 2400
         #endif
             break;
@@ -3310,7 +3310,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #if defined KINETIS_KL || defined KINETIS_K80 || defined KINETIS_KE15
             usDivider = (((SPECIAL_UART_CLOCK/8/4800) + 1)/2);           // {201} set 4800
         #else
-            ucFraction = (unsigned char)((float)((((float)SPECIAL_UART_CLOCK/(float)16/(float)4800) - (int)(SPECIAL_UART_CLOCK/16/4800)) * 32)); // calculate fraction
+            ucFraction = (unsigned char)(((float)((((float)SPECIAL_UART_CLOCK/(float)16/(float)4800) - (int)(SPECIAL_UART_CLOCK/16/4800)) * 32)) + (float)0.5); // calculate fraction
             usDivider = (SPECIAL_UART_CLOCK/16/4800);                    // set 4800
         #endif
             break;
@@ -3318,7 +3318,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #if defined KINETIS_KL || defined KINETIS_K80 || defined KINETIS_KE15
             usDivider = (((SPECIAL_UART_CLOCK/8/9600) + 1)/2);          // {201} set 9600
         #else
-            ucFraction = (unsigned char)((float)((((float)SPECIAL_UART_CLOCK/(float)16/(float)9600) - (int)(SPECIAL_UART_CLOCK/16/9600)) * 32)); // calculate fraction
+            ucFraction = (unsigned char)(((float)((((float)SPECIAL_UART_CLOCK/(float)16/(float)9600) - (int)(SPECIAL_UART_CLOCK/16/9600)) * 32)) + (float)0.5); // calculate fraction
             usDivider = (SPECIAL_UART_CLOCK/16/9600);                   // set 9600
         #endif
             break;
@@ -3326,7 +3326,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #if defined KINETIS_KL || defined KINETIS_K80 || defined KINETIS_KE15
             usDivider = (((SPECIAL_UART_CLOCK/8/14400) + 1)/2);          // {201} set 14400
         #else
-            ucFraction = (unsigned char)((float)((((float)SPECIAL_UART_CLOCK/(float)16/(float)14400) - (int)(SPECIAL_UART_CLOCK/16/14400)) * 32)); // calculate fraction
+            ucFraction = (unsigned char)(((float)((((float)SPECIAL_UART_CLOCK/(float)16/(float)14400) - (int)(SPECIAL_UART_CLOCK/16/14400)) * 32)) + (float)0.5); // calculate fraction
             usDivider = (SPECIAL_UART_CLOCK/16/14400);                   // set 14400
         #endif
             break;
@@ -3335,7 +3335,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #if defined KINETIS_KL || defined KINETIS_K80 || defined KINETIS_KE15
             usDivider = (((SPECIAL_UART_CLOCK/8/19200) + 1)/2);          // {201} set 19200
         #else
-            ucFraction = (unsigned char)((float)((((float)SPECIAL_UART_CLOCK/(float)16/(float)19200) - (int)(SPECIAL_UART_CLOCK/16/19200)) * 32)); // calculate fraction
+            ucFraction = (unsigned char)(((float)((((float)SPECIAL_UART_CLOCK/(float)16/(float)19200) - (int)(SPECIAL_UART_CLOCK/16/19200)) * 32)) + (float)0.5); // calculate fraction
             usDivider = (SPECIAL_UART_CLOCK/16/19200);                   // set 19200
         #endif
             break;
@@ -3344,7 +3344,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
             #if defined KINETIS_KL || defined KINETIS_K80 || defined KINETIS_KE15
             usDivider = (((SPECIAL_UART_CLOCK/8/31250) + 1)/2);
             #else
-            ucFraction = (unsigned char)((float)((((float)SPECIAL_UART_CLOCK/(float)16/(float)31250) - (int)(SPECIAL_UART_CLOCK/16/31250)) * 32)); // calculate fraction
+            ucFraction = (unsigned char)(((float)((((float)SPECIAL_UART_CLOCK/(float)16/(float)31250) - (int)(SPECIAL_UART_CLOCK/16/31250)) * 32)) + (float)0.5); // calculate fraction
             usDivider = (SPECIAL_UART_CLOCK/16/31250);                   // set 31250
             #endif
             break;
@@ -3353,7 +3353,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #if defined KINETIS_KL || defined KINETIS_K80 || defined KINETIS_KE15
             usDivider = (((SPECIAL_UART_CLOCK/8/38400) + 1)/2);          // {201} set 38400
         #else
-            ucFraction = (unsigned char)((float)((((float)SPECIAL_UART_CLOCK/(float)16/(float)38400) - (int)(SPECIAL_UART_CLOCK/16/38400)) * 32)); // calculate fraction
+            ucFraction = (unsigned char)(((float)((((float)SPECIAL_UART_CLOCK/(float)16/(float)38400) - (int)(SPECIAL_UART_CLOCK/16/38400)) * 32)) + (float)0.5); // calculate fraction
             usDivider = (SPECIAL_UART_CLOCK/16/38400);                   // set 38400
         #endif
             break;
@@ -3361,7 +3361,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #if defined KINETIS_KL || defined KINETIS_K80 || defined KINETIS_KE15
             usDivider = (((SPECIAL_UART_CLOCK/8/57600) + 1)/2);          // {201} set 57600
         #else
-            ucFraction = (unsigned char)((float)((((float)SPECIAL_UART_CLOCK/(float)16/(float)57600) - (int)(SPECIAL_UART_CLOCK/16/57600)) * 32)); // calculate fraction
+            ucFraction = (unsigned char)(((float)((((float)SPECIAL_UART_CLOCK/(float)16/(float)57600) - (int)(SPECIAL_UART_CLOCK/16/57600)) * 32)) + (float)0.5); // calculate fraction
             usDivider = (SPECIAL_UART_CLOCK/16/57600);                   // set 57600
         #endif
             break;
@@ -3369,7 +3369,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #if defined KINETIS_KL || defined KINETIS_K80 || defined KINETIS_KE15
             usDivider = (((SPECIAL_UART_CLOCK/8/115200) + 1)/2);         // {201} set 115200
         #else
-            ucFraction = (unsigned char)((float)((((float)SPECIAL_UART_CLOCK/(float)16/(float)115200) - (int)(SPECIAL_UART_CLOCK/16/115200)) * 32)); // calculate fraction
+            ucFraction = (unsigned char)(((float)((((float)SPECIAL_UART_CLOCK/(float)16/(float)115200) - (int)(SPECIAL_UART_CLOCK/16/115200)) * 32)) + (float)0.5); // calculate fraction
             usDivider = (SPECIAL_UART_CLOCK/16/115200);                  // set 115200
         #endif
             break;
@@ -3377,7 +3377,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #if defined KINETIS_KL || defined KINETIS_K80 || defined KINETIS_KE15
             usDivider = (((SPECIAL_UART_CLOCK/8/230400) + 1)/2);         // {201} set 230400
         #else
-            ucFraction = (unsigned char)((float)((((float)SPECIAL_UART_CLOCK/(float)16/(float)230400) - (int)(SPECIAL_UART_CLOCK/16/230400)) * 32)); // calculate fraction
+            ucFraction = (unsigned char)(((float)((((float)SPECIAL_UART_CLOCK/(float)16/(float)230400) - (int)(SPECIAL_UART_CLOCK/16/230400)) * 32)) + (float)0.5); // calculate fraction
             usDivider = (SPECIAL_UART_CLOCK/16/230400);                  // set 230400
         #endif
             break;
@@ -3385,7 +3385,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #if defined KINETIS_KL || defined KINETIS_K80 || defined KINETIS_KE15
             usDivider = (((SPECIAL_UART_CLOCK/8/250000) + 1)/2);         // set 250000
         #else
-            ucFraction = (unsigned char)((float)((((float)SPECIAL_UART_CLOCK/(float)16/(float)250000) - (int)(SPECIAL_UART_CLOCK/16/250000)) * 32)); // calculate fraction
+            ucFraction = (unsigned char)(((float)((((float)SPECIAL_UART_CLOCK/(float)16/(float)250000) - (int)(SPECIAL_UART_CLOCK/16/250000)) * 32)) + (float)0.5); // calculate fraction
             usDivider = (SPECIAL_UART_CLOCK/16/250000);                  // set 250000
         #endif
             break;
@@ -3402,7 +3402,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #if (defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_K65 || defined KINETIS_K66) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)SPECIAL_LPUART_CLOCK/(float)(16 * 300)) + (float)0.5) * (float)2)/2); // best divider for 300
         #else
-                ucFraction = (unsigned char)((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)300) - (int)(BUS_CLOCK/16/300)) * 32)); // calculate fraction
+                ucFraction = (unsigned char)((float)(((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)300) - (int)(BUS_CLOCK/16/300)) * 32)) + (float)0.5); // calculate fraction
                 usDivider = (SPECIAL_LPUART_CLOCK/16/300);               // set 300
         #endif
                 break;
@@ -3410,7 +3410,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #if (defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_K65 || defined KINETIS_K66) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)SPECIAL_LPUART_CLOCK/(float)(16 * 600)) + (float)0.5) * (float)2)/2); // best divider for 600
         #else
-                ucFraction = (unsigned char)((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)600) - (int)(SPECIAL_LPUART_CLOCK/16/600)) * 32)); // calculate fraction
+                ucFraction = (unsigned char)(((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)600) - (int)(SPECIAL_LPUART_CLOCK/16/600)) * 32)) + (float)0.5); // calculate fraction
                 usDivider = (SPECIAL_LPUART_CLOCK/16/600);               // set 600
         #endif
                 break;
@@ -3418,7 +3418,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #if (defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_K65 || defined KINETIS_K66) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)SPECIAL_LPUART_CLOCK/(float)(16 * 1200)) + (float)0.5) * (float)2)/2); // best divider for 1200
         #else
-                ucFraction = (unsigned char)((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)1200) - (int)(SPECIAL_LPUART_CLOCK/16/1200)) * 32)); // calculate fraction
+                ucFraction = (unsigned char)(((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)1200) - (int)(SPECIAL_LPUART_CLOCK/16/1200)) * 32)) + (float)0.5); // calculate fraction
                 usDivider = (SPECIAL_LPUART_CLOCK/16/1200);              // set 1200
         #endif
                 break;
@@ -3426,7 +3426,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #if (defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_K65 || defined KINETIS_K66) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)SPECIAL_LPUART_CLOCK/(float)(16 * 2400)) + (float)0.5) * (float)2)/2); // best divider for 2400
         #else
-                ucFraction = (unsigned char)((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)2400) - (int)(SPECIAL_LPUART_CLOCK/16/2400)) * 32)); // calculate fractio
+                ucFraction = (unsigned char)(((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)2400) - (int)(SPECIAL_LPUART_CLOCK/16/2400)) * 32)) + (float)0.5); // calculate fractio
                 usDivider = (SPECIAL_LPUART_CLOCK/16/2400);              // set 2400
         #endif
                 break;
@@ -3434,7 +3434,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #if (defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_K65 || defined KINETIS_K66) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)SPECIAL_LPUART_CLOCK/(float)(16 * 4800)) + (float)0.5) * (float)2)/2); // best divider for 4800
         #else
-                ucFraction = (unsigned char)((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)4800) - (int)(SPECIAL_LPUART_CLOCK/16/4800)) * 32)); // calculate fraction
+                ucFraction = (unsigned char)(((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)4800) - (int)(SPECIAL_LPUART_CLOCK/16/4800)) * 32)) + (float)0.5); // calculate fraction
                 usDivider = (SPECIAL_LPUART_CLOCK/16/4800);              // set 4800
         #endif
                 break;
@@ -3442,7 +3442,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #if (defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_K65 || defined KINETIS_K66) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)SPECIAL_LPUART_CLOCK/(float)(16 * 9600)) + (float)0.5) * (float)2)/2); // best divider for 9600
         #else
-                ucFraction = (unsigned char)((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)9600) - (int)(SPECIAL_LPUART_CLOCK/16/9600)) * 32)); // calculate fraction
+                ucFraction = (unsigned char)(((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)9600) - (int)(SPECIAL_LPUART_CLOCK/16/9600)) * 32)) + (float)0.5); // calculate fraction
                 usDivider = (SPECIAL_LPUART_CLOCK/16/9600);              // set 9600
         #endif
                 break;
@@ -3450,7 +3450,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #if (defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_K65 || defined KINETIS_K66) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)SPECIAL_LPUART_CLOCK/(float)(16 * 14400)) + (float)0.5) * (float)2)/2); // best divider for 14400
         #else
-                ucFraction = (unsigned char)((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)14400) - (int)(SPECIAL_LPUART_CLOCK/16/14400)) * 32)); // calculate fraction
+                ucFraction = (unsigned char)(((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)14400) - (int)(SPECIAL_LPUART_CLOCK/16/14400)) * 32)) + (float)0.5); // calculate fraction
                 usDivider = (SPECIAL_LPUART_CLOCK/16/14400);             // set 14400
         #endif
                 break;
@@ -3459,7 +3459,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #if (defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_K65 || defined KINETIS_K66) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)SPECIAL_LPUART_CLOCK/(float)(16 * 19200)) + (float)0.5) * (float)2)/2); // best divider for 19200
         #else
-                ucFraction = (unsigned char)((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)19200) - (int)(SPECIAL_LPUART_CLOCK/16/19200)) * 32)); // calculate fraction
+                ucFraction = (unsigned char)(((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)19200) - (int)(SPECIAL_LPUART_CLOCK/16/19200)) * 32)) + (float)0.5); // calculate fraction
                 usDivider = (SPECIAL_LPUART_CLOCK/16/19200);             // set 19200
         #endif
                 break;
@@ -3468,7 +3468,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
             #if (defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_K65 || defined KINETIS_K66) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)SPECIAL_LPUART_CLOCK/(float)(16 * 31250)) + (float)0.5) * (float)2)/2); // best divider for 31250
             #else
-                ucFraction = (unsigned char)((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)31250) - (int)(SPECIAL_LPUART_CLOCK/16/ 31250)) * 32)); // calculate fraction
+                ucFraction = (unsigned char)(((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)31250) - (int)(SPECIAL_LPUART_CLOCK/16/ 31250)) * 32)) + (float)0.5); // calculate fraction
                 usDivider = (SPECIAL_LPUART_CLOCK/16/ 31250);            // set 31250
             #endif
                 break;
@@ -3477,7 +3477,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #if (defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_K65 || defined KINETIS_K66) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)SPECIAL_LPUART_CLOCK/(float)(16 * 38400)) + (float)0.5) * (float)2)/2); // best divider for 38400
         #else
-                ucFraction = (unsigned char)((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)38400) - (int)(SPECIAL_LPUART_CLOCK/16/38400)) * 32)); // calculate fraction
+                ucFraction = (unsigned char)(((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)38400) - (int)(SPECIAL_LPUART_CLOCK/16/38400)) * 32)) + (float)0.5); // calculate fraction
                 usDivider = (SPECIAL_LPUART_CLOCK/16/38400);             // set 38400
         #endif
                 break;
@@ -3485,7 +3485,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #if (defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_K65 || defined KINETIS_K66) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)SPECIAL_LPUART_CLOCK/(float)(16 * 57600)) + (float)0.5) * (float)2)/2); // best divider for 57600
         #else
-                ucFraction = (unsigned char)((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)57600) - (int)(SPECIAL_LPUART_CLOCK/16/57600)) * 32)); // calculate fraction
+                ucFraction = (unsigned char)(((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)57600) - (int)(SPECIAL_LPUART_CLOCK/16/57600)) * 32)) + (float)0.5); // calculate fraction
                 usDivider = (SPECIAL_LPUART_CLOCK/16/57600);             // set 57600
         #endif
                 break;
@@ -3493,7 +3493,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #if (defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_K65 || defined KINETIS_K66) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)SPECIAL_LPUART_CLOCK/(float)(16 * 115200)) + (float)0.5) * (float)2)/2); // best divider for 115200
         #else
-                ucFraction = (unsigned char)((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)115200) - (int)(SPECIAL_LPUART_CLOCK/16/115200)) * 32)); // calculate fraction
+                ucFraction = (unsigned char)(((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)115200) - (int)(SPECIAL_LPUART_CLOCK/16/115200)) * 32)) + (float)0.5); // calculate fraction
                 usDivider = (SPECIAL_LPUART_CLOCK/16/115200);            // set 115200
         #endif
                 break;
@@ -3501,7 +3501,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #if (defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_K65 || defined KINETIS_K66) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)SPECIAL_LPUART_CLOCK/(float)(16 * 230400)) + (float)0.5) * (float)2)/2); // best divider for 230400
         #else
-                ucFraction = (unsigned char)((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)230400) - (int)(SPECIAL_LPUART_CLOCK/16/230400)) * 32)); // calculate fraction
+                ucFraction = (unsigned char)(((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)230400) - (int)(SPECIAL_LPUART_CLOCK/16/230400)) * 32)) + (float)0.5); // calculate fraction
                 usDivider = (SPECIAL_LPUART_CLOCK/16/230400);            // set 230400
         #endif
                 break;
@@ -3509,7 +3509,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #if (defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_K65 || defined KINETIS_K66) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)SPECIAL_LPUART_CLOCK/(float)(16 * 250000)) + (float)0.5) * (float)2)/2); // best divider for 250000
         #else
-                ucFraction = (unsigned char)((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)250000) - (int)(SPECIAL_LPUART_CLOCK/16/ 250000)) * 32)); // calculate fraction
+                ucFraction = (unsigned char)(((float)((((float)SPECIAL_LPUART_CLOCK/(float)16/(float)250000) - (int)(SPECIAL_LPUART_CLOCK/16/ 250000)) * 32)) + (float)0.5); // calculate fraction
                 usDivider = (SPECIAL_LPUART_CLOCK/16/250000);            // set 250000
         #endif
                 break;
@@ -3523,7 +3523,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)BUS_CLOCK/(float)(16 * 300)) + (float)0.5) * (float)2)/2); // best divider for 300
         #else
-                ucFraction = (unsigned char)((float)((((float)BUS_CLOCK/(float)16/(float)300) - (int)(BUS_CLOCK/16/300)) * 32)); // calculate fraction
+                ucFraction = (unsigned char)(((float)((((float)BUS_CLOCK/(float)16/(float)300) - (int)(BUS_CLOCK/16/300)) * 32)) + (float)0.5); // calculate fraction
                 usDivider = (BUS_CLOCK/16/300);                          // set 300
         #endif
                 break;
@@ -3531,7 +3531,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)BUS_CLOCK/(float)(16 * 600)) + (float)0.5) * (float)2)/2); // best divider for 600
         #else
-                ucFraction = (unsigned char)((float)((((float)BUS_CLOCK/(float)16/(float)600) - (int)(BUS_CLOCK/16/600)) * 32)); // calculate fraction
+                ucFraction = (unsigned char)(((float)((((float)BUS_CLOCK/(float)16/(float)600) - (int)(BUS_CLOCK/16/600)) * 32)) + (float)0.5); // calculate fraction
                 usDivider = (BUS_CLOCK/16/600);                          // set 600
         #endif
                 break;
@@ -3539,7 +3539,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)BUS_CLOCK/(float)(16 * 1200)) + (float)0.5) * (float)2)/2); // best divider for 1200
         #else
-                ucFraction = (unsigned char)((float)((((float)BUS_CLOCK/(float)16/(float)1200) - (int)(BUS_CLOCK/16/1200)) * 32)); // calculate fraction
+                ucFraction = (unsigned char)(((float)((((float)BUS_CLOCK/(float)16/(float)1200) - (int)(BUS_CLOCK/16/1200)) * 32)) + (float)0.5); // calculate fraction
                 usDivider = (BUS_CLOCK/16/1200);                         // set 1200
         #endif
                 break;
@@ -3547,7 +3547,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)BUS_CLOCK/(float)(16 * 2400)) + (float)0.5) * (float)2)/2); // best divider for 2400
         #else
-                ucFraction = (unsigned char)((float)((((float)BUS_CLOCK/(float)16/(float)2400) - (int)(BUS_CLOCK/16/2400)) * 32)); // calculate fractio
+                ucFraction = (unsigned char)(((float)((((float)BUS_CLOCK/(float)16/(float)2400) - (int)(BUS_CLOCK/16/2400)) * 32)) + (float)0.5); // calculate fractio
                 usDivider = (BUS_CLOCK/16/2400);                         // set 2400
         #endif
                 break;
@@ -3555,7 +3555,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)BUS_CLOCK/(float)(16 * 4800)) + (float)0.5) * (float)2)/2); // best divider for 4800
         #else
-                ucFraction = (unsigned char)((float)((((float)BUS_CLOCK/(float)16/(float)4800) - (int)(BUS_CLOCK/16/4800)) * 32)); // calculate fraction
+                ucFraction = (unsigned char)(((float)((((float)BUS_CLOCK/(float)16/(float)4800) - (int)(BUS_CLOCK/16/4800)) * 32)) + (float)0.5); // calculate fraction
                 usDivider = (BUS_CLOCK/16/4800);                         // set 4800
         #endif
                 break;
@@ -3563,7 +3563,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)BUS_CLOCK/(float)(16 * 9600)) + (float)0.5) * (float)2)/2); // best divider for 9600
         #else
-                ucFraction = (unsigned char)((float)((((float)BUS_CLOCK/(float)16/(float)9600) - (int)(BUS_CLOCK/16/9600)) * 32)); // calculate fraction
+                ucFraction = (unsigned char)(((float)((((float)BUS_CLOCK/(float)16/(float)9600) - (int)(BUS_CLOCK/16/9600)) * 32)) + (float)0.5); // calculate fraction
                 usDivider = (BUS_CLOCK/16/9600);                         // set 9600
         #endif
                 break;
@@ -3580,7 +3580,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)BUS_CLOCK/(float)(16 * 19200)) + (float)0.5) * (float)2)/2); // best divider for 19200
         #else
-                ucFraction = (unsigned char)((float)((((float)BUS_CLOCK/(float)16/(float)19200) - (int)(BUS_CLOCK/16/19200)) * 32)); // calculate fraction
+                ucFraction = (unsigned char)((float)(((((float)BUS_CLOCK/(float)16/(float)19200) - (int)(BUS_CLOCK/16/19200)) * 32)) + (float)0.5); // calculate fraction
                 usDivider = (BUS_CLOCK/16/19200);                        // set 19200
         #endif
                 break;
@@ -3589,7 +3589,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
             #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)BUS_CLOCK/(float)(16 * 31250)) + (float)0.5) * (float)2)/2); // best divider for 31250
             #else
-                ucFraction = (unsigned char)((float)((((float)BUS_CLOCK/(float)16/(float)31250) - (int)(BUS_CLOCK/16/ 31250)) * 32)); // calculate fraction
+                ucFraction = (unsigned char)(((float)((((float)BUS_CLOCK/(float)16/(float)31250) - (int)(BUS_CLOCK/16/ 31250)) * 32)) + (float)0.5); // calculate fraction
                 usDivider = (BUS_CLOCK/16/ 31250);                       // set 31250
             #endif
                 break;
@@ -3598,7 +3598,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)BUS_CLOCK/(float)(16 * 38400)) + (float)0.5) * (float)2)/2); // best divider for 38400
         #else
-                ucFraction = (unsigned char)((float)((((float)BUS_CLOCK/(float)16/(float)38400) - (int)(BUS_CLOCK/16/38400)) * 32)); // calculate fraction
+                ucFraction = (unsigned char)(((float)((((float)BUS_CLOCK/(float)16/(float)38400) - (int)(BUS_CLOCK/16/38400)) * 32)) + (float)0.5); // calculate fraction
                 usDivider = (BUS_CLOCK/16/38400);                        // set 38400
         #endif
                 break;
@@ -3606,7 +3606,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)BUS_CLOCK/(float)(16 * 57600)) + (float)0.5) * (float)2)/2); // best divider for 57600
         #else
-                ucFraction = (unsigned char)((float)((((float)BUS_CLOCK/(float)16/(float)57600) - (int)(BUS_CLOCK/16/57600)) * 32)); // calculate fraction
+                ucFraction = (unsigned char)(((float)((((float)BUS_CLOCK/(float)16/(float)57600) - (int)(BUS_CLOCK/16/57600)) * 32)) + (float)0.5); // calculate fraction
                 usDivider = (BUS_CLOCK/16/57600);                        // set 57600
         #endif
                 break;
@@ -3614,7 +3614,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)BUS_CLOCK/(float)(16 * 115200)) + (float)0.5) * (float)2)/2); // best divider for 115200
         #else
-                ucFraction = (unsigned char)((float)((((float)BUS_CLOCK/(float)16/(float)115200) - (int)(BUS_CLOCK/16/115200)) * 32)); // calculate fraction
+                ucFraction = (unsigned char)(((float)((((float)BUS_CLOCK/(float)16/(float)115200) - (int)(BUS_CLOCK/16/115200)) * 32)) + (float)0.5); // calculate fraction
                 usDivider = (BUS_CLOCK/16/115200);                       // set 115200
         #endif
                 break;
@@ -3622,7 +3622,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)BUS_CLOCK/(float)(16 * 230400)) + (float)0.5) * (float)2)/2); // best divider for 230400
         #else
-                ucFraction = (unsigned char)((float)((((float)BUS_CLOCK/(float)16/(float)230400) - (int)(BUS_CLOCK/16/230400)) * 32)); // calculate fraction
+                ucFraction = (unsigned char)(((float)((((float)BUS_CLOCK/(float)16/(float)230400) - (int)(BUS_CLOCK/16/230400)) * 32)) + (float)0.5); // calculate fraction
                 usDivider = (BUS_CLOCK/16/230400);                       // set 230400
         #endif
                 break;
@@ -3630,7 +3630,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #if (defined KINETIS_KL || defined KINETIS_KE) && !defined K_STYLE_UART2
                 usDivider = (unsigned short)((((float)((float)BUS_CLOCK/(float)(16 * 250000)) + (float)0.5) * (float)2)/2); // best divider for 250000
         #else
-                ucFraction = (unsigned char)((float)((((float)BUS_CLOCK/(float)16/(float)250000) - (int)(BUS_CLOCK/16/250000)) * 32)); // calculate fraction
+                ucFraction = (unsigned char)(((float)((((float)BUS_CLOCK/(float)16/(float)250000) - (int)(BUS_CLOCK/16/250000)) * 32)) + (float)0.5); // calculate fraction
                 usDivider = (BUS_CLOCK/16/250000);                       // set 250000
         #endif
                 break;
