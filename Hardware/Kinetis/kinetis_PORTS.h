@@ -22,6 +22,7 @@
     31.07.2017 Add IRQ_DISABLE_INT support                               {5}
     12.10.2017 When shared port interrupts are handed, skip checking ports that are not powered up {6}
     12.07.2018 Add option to use single callback per port, with pin reference as callback parameter (PORT_INTERRUPT_USER_DISPATCHER)
+    19.07.2018 Modify port characteristics mask to allow interrupt fields to be disabled {7}
 
     See the following video showing port interrupt operation on a KL27: https://youtu.be/CubinvMuTwU
 
@@ -84,12 +85,12 @@ extern void fnConnectGPIO(int iPortRef, unsigned long ulPortBits, unsigned long 
         _EXCEPTION("The port that is being accessed is not available on this processor!!");
     }
         #endif
-    if ((PORT_PSEUDO_FLAG_SET_ONLY_PULLS & ulCharacteristics) != 0) {    // {115}
-        ulCharacteristics &= ~(PORT_PSEUDO_FLAG_SET_ONLY_PULLS | PORT_MUX_MASK | PORT_DSE_HIGH | PORT_ODE | PORT_PFE | PORT_SRE_SLOW);
-        ulMask = (PORT_PS_UP_ENABLE);                                    // modify only pull-up/down setting
+    if ((PORT_PSEUDO_FLAG_SET_ONLY_PULLS & ulCharacteristics) != 0) {    // {115} don't allow the multiplexer setting to be changed so that peripheral function setting is not modified
+        ulCharacteristics &= (PORT_IRQC_INT_MASK | PORT_LOCK | PORT_PS_UP_ENABLE); // {7} allow only these field to be set
+        ulMask = (PORT_IRQC_INT_MASK | PORT_PS_UP_ENABLE);               // {7} allow only these fields to be reset
     }
     else {
-        ulMask = (PORT_MUX_MASK | PORT_DSE_HIGH | PORT_ODE | PORT_PFE | PORT_SRE_SLOW | PORT_PS_UP_ENABLE);
+        ulMask = (PORT_IRQC_INT_MASK | PORT_MUX_MASK | PORT_DSE_HIGH | PORT_ODE | PORT_PFE | PORT_SRE_SLOW | PORT_PS_UP_ENABLE); // {7} allow all fields to be modified (set or reset)
     }
     while (ulPortBits != 0) {                                            // for each specified pin
         if ((ulPortBits & ulBit) != 0) {
