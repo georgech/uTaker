@@ -578,6 +578,28 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
         #if defined FLL_FACTOR
             #if defined RUN_FROM_HIRC_FLL
                 #define MCGOUTCLK      ((48000000/1536) * FLL_FACTOR)    // 48MHz/1536 IRC multiplied by the FLL factor
+            #elif defined _EXTERNAL_CLOCK
+                #if ((_EXTERNAL_CLOCK/32) <= 39062)
+                    #define FLL_INPUT_DIVIDE_VALUE    32
+                #elif ((_EXTERNAL_CLOCK/64) <= 39062)
+                    #define FLL_INPUT_DIVIDE_VALUE    64
+                #elif ((_EXTERNAL_CLOCK/128) <= 39062)
+                    #define FLL_INPUT_DIVIDE_VALUE    128
+                #elif ((_EXTERNAL_CLOCK/256) <= 39062)
+                    #define FLL_INPUT_DIVIDE_VALUE    256
+                #elif ((_EXTERNAL_CLOCK/512) <= 39062)
+                    #define FLL_INPUT_DIVIDE_VALUE    512
+                #elif ((_EXTERNAL_CLOCK/1024) <= 39062)
+                    #define FLL_INPUT_DIVIDE_VALUE    1024
+                #elif ((_EXTERNAL_CLOCK/1280) <= 39062)
+                    #define FLL_INPUT_DIVIDE_VALUE    1280
+                #elif ((_EXTERNAL_CLOCK/1536) <= 39062)
+                    #define FLL_INPUT_DIVIDE_VALUE    1536
+                #endif
+                #if (((_EXTERNAL_CLOCK/FLL_INPUT_DIVIDE_VALUE) > 39062) || (((_EXTERNAL_CLOCK/FLL_INPUT_DIVIDE_VALUE) < 31250)))
+                    #error Divided input frequency is not suitable for FLL (must be between 31.25kHz and 39.062kHz)!!
+                #endif
+                #define MCGOUTCLK      ((_EXTERNAL_CLOCK/FLL_INPUT_DIVIDE_VALUE) * FLL_FACTOR) // FLL input multiplied by the FLL factor
             #else
                 #define MCGOUTCLK      (32768 * FLL_FACTOR)              // 32kHz IRC multiplied by the FLL factor
             #endif
@@ -13736,32 +13758,54 @@ typedef struct stKINETIS_LPTMR_CTL
       #define MCG_C1_IREFSTEN            0x01                            // internal reference stop enable
       #define MCG_C1_IRCLKEN             0x02                            // internal reference clock enable
       #if defined KINETIS_WITH_MCG_LITE
-        #define MCG_C1_CLKS_HIRC         0x00                            // MCGOUTCLK selected from HIRC (HIRC mode)
-        #define MCG_C1_CLKS_LIRC         0x40                            // MCGOUTCLK selected from LIRC (LIRC2M or LIRC8M mode)
-        #define MCG_C1_CLKS_EXTERN_CLK   0x80                            // MCGOUTCLK selected from external reference clock (EXT mode)
+          #define MCG_C1_CLKS_HIRC           0x00                        // MCGOUTCLK selected from HIRC (HIRC mode)
+          #define MCG_C1_CLKS_LIRC           0x40                        // MCGOUTCLK selected from LIRC (LIRC2M or LIRC8M mode)
+          #define MCG_C1_CLKS_EXTERN_CLK     0x80                        // MCGOUTCLK selected from external reference clock (EXT mode)
       #else
-      #define MCG_C1_IREFS               0x04                            // select slow internal reference clock as source for FLL (rather than external reference clock)
-      #define MCG_C1_FRDIV_RANGE0_1      0x00                            // when RANGE is 0 the external reference is divided by 1
-      #define MCG_C1_FRDIV_RANGE0_2      0x08                            // when RANGE is 0 the external reference is divided by 2
-      #define MCG_C1_FRDIV_RANGE0_4      0x10                            // when RANGE is 0 the external reference is divided by 4
-      #define MCG_C1_FRDIV_RANGE0_8      0x18                            // when RANGE is 0 the external reference is divided by 8
-      #define MCG_C1_FRDIV_RANGE0_16     0x20                            // when RANGE is 0 the external reference is divided by 16
-      #define MCG_C1_FRDIV_RANGE0_32     0x28                            // when RANGE is 0 the external reference is divided by 32
-      #define MCG_C1_FRDIV_RANGE0_64     0x30                            // when RANGE is 0 the external reference is divided by 64
-      #define MCG_C1_FRDIV_RANGE0_128    0x38                            // when RANGE is 0 the external reference is divided by 128
-      #define MCG_C1_FRDIV_32            0x00                            // when RANGE is not 0 the external reference is divided by 32
-      #define MCG_C1_FRDIV_64            0x08                            // when RANGE is not 0 the external reference is divided by 64
-      #define MCG_C1_FRDIV_128           0x10                            // when RANGE is not 0 the external reference is divided by 128
-      #define MCG_C1_FRDIV_256           0x18                            // when RANGE is not 0 the external reference is divided by 256
-      #define MCG_C1_FRDIV_512           0x20                            // when RANGE is not 0 the external reference is divided by 512
-      #define MCG_C1_FRDIV_1024          0x28                            // when RANGE is not 0 the external reference is divided by 1024
-          #if defined KINETIS_KL || defined KINETIS_KM || defined KINETIS_HAS_IRC48M
-      #define MCG_C1_FRDIV_1280          0x30                            // when RANGE is not 0 the external reference is divided by 1280
-      #define MCG_C1_FRDIV_1536          0x38                            // when RANGE is not 0 the external reference is divided by 1536
+          #define MCG_C1_IREFS               0x04                        // select slow internal reference clock as source for FLL (rather than external reference clock)
+          #define MCG_C1_FRDIV_RANGE0_1      0x00                        // when RANGE is 0 the external reference is divided by 1
+          #define MCG_C1_FRDIV_RANGE0_2      0x08                        // when RANGE is 0 the external reference is divided by 2
+          #define MCG_C1_FRDIV_RANGE0_4      0x10                        // when RANGE is 0 the external reference is divided by 4
+          #define MCG_C1_FRDIV_RANGE0_8      0x18                        // when RANGE is 0 the external reference is divided by 8
+          #define MCG_C1_FRDIV_RANGE0_16     0x20                        // when RANGE is 0 the external reference is divided by 16
+          #define MCG_C1_FRDIV_RANGE0_32     0x28                        // when RANGE is 0 the external reference is divided by 32
+          #define MCG_C1_FRDIV_RANGE0_64     0x30                        // when RANGE is 0 the external reference is divided by 64
+          #define MCG_C1_FRDIV_RANGE0_128    0x38                        // when RANGE is 0 the external reference is divided by 128
+          #define MCG_C1_FRDIV_32            0x00                        // when RANGE is not 0 the external reference is divided by 32
+          #define MCG_C1_FRDIV_64            0x08                        // when RANGE is not 0 the external reference is divided by 64
+          #define MCG_C1_FRDIV_128           0x10                        // when RANGE is not 0 the external reference is divided by 128
+          #define MCG_C1_FRDIV_256           0x18                        // when RANGE is not 0 the external reference is divided by 256
+          #define MCG_C1_FRDIV_512           0x20                        // when RANGE is not 0 the external reference is divided by 512
+          #define MCG_C1_FRDIV_1024          0x28                        // when RANGE is not 0 the external reference is divided by 1024
+              #if defined KINETIS_KL || defined KINETIS_KM || defined KINETIS_HAS_IRC48M
+          #define MCG_C1_FRDIV_1280          0x30                        // when RANGE is not 0 the external reference is divided by 1280
+          #define MCG_C1_FRDIV_1536          0x38                        // when RANGE is not 0 the external reference is divided by 1536
+              #endif
+          #define MCG_C1_CLKS_PLL_FLL        0x00                        // MCGOUTCLK selected from either PLL or FLL, depending on PLLS control bit
+          #define MCG_C1_CLKS_INTERN_CLK     0x40                        // MCGOUTCLK selected from internal reference clock
+          #define MCG_C1_CLKS_EXTERN_CLK     0x80                        // MCGOUTCLK selected from external reference clock
+
+          #if defined FLL_INPUT_DIVIDE_VALUE
+              #if (FLL_INPUT_DIVIDE_VALUE == 32)
+                  #define MCG_C1_FRDIV_VALUE MCG_C1_FRDIV_32
+              #elif (FLL_INPUT_DIVIDE_VALUE == 64)
+                  #define MCG_C1_FRDIV_VALUE MCG_C1_FRDIV_64
+              #elif (FLL_INPUT_DIVIDE_VALUE == 128)
+                  #define MCG_C1_FRDIV_VALUE MCG_C1_FRDIV_128
+              #elif (FLL_INPUT_DIVIDE_VALUE == 256)
+                  #define MCG_C1_FRDIV_VALUE MCG_C1_FRDIV_256
+              #elif (FLL_INPUT_DIVIDE_VALUE == 512)
+                  #define MCG_C1_FRDIV_VALUE MCG_C1_FRDIV_512
+              #elif (FLL_INPUT_DIVIDE_VALUE == 1024)
+                  #define MCG_C1_FRDIV_VALUE MCG_C1_FRDIV_1024
+                  #if defined MCG_C1_FRDIV_1280
+              #elif (FLL_INPUT_DIVIDE_VALUE == 1280)
+                  #define MCG_C1_FRDIV_VALUE MCG_C1_FRDIV_1280
+              #elif (FLL_INPUT_DIVIDE_VALUE == 1536)
+                  #define MCG_C1_FRDIV_VALUE MCG_C1_FRDIV_1536
+                  #endif
+              #endif
           #endif
-      #define MCG_C1_CLKS_PLL_FLL        0x00                            // MCGOUTCLK selected from either PLL or FLL, depending on PLLS control bit
-      #define MCG_C1_CLKS_INTERN_CLK     0x40                            // MCGOUTCLK selected from internal reference clock
-      #define MCG_C1_CLKS_EXTERN_CLK     0x80                            // MCGOUTCLK selected from external reference clock
       #endif
     #define MCG_C2                       *(volatile unsigned char *)(MCG_BLOCK + 0x01) // MSG control 2 register
       #define MCG_C2_IRCS                0x01                            // select fast internal reference clock rather than slow one

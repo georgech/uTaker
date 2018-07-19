@@ -34,23 +34,31 @@
     #endif
 #endif
 
-#if !defined RUN_FROM_DEFAULT_CLOCK && !defined EXTERNAL_CLOCK && !defined CLOCK_FROM_RTC_OSCILLATOR // no configuration performed - remain in default clocked mode
+#if !defined RUN_FROM_DEFAULT_CLOCK && !defined EXTERNAL_CLOCK && !defined CLOCK_FROM_RTC_OSCILLATOR && !defined MCG_C1_FRDIV_VALUE // no configuration performed - remain in default clocked mode
     #if CRYSTAL_FREQUENCY == 8000000
         #define MCG_C1_FRDIV_VALUE    MCG_C1_FRDIV_256
+        #define FLL_INPUT_FREQUENCY   (CRYSTAL_FREQUENCY/256)
     #elif CRYSTAL_FREQUENCY == 16000000
         #define MCG_C1_FRDIV_VALUE    MCG_C1_FRDIV_512
+        #define FLL_INPUT_FREQUENCY   (CRYSTAL_FREQUENCY/512)
     #elif CRYSTAL_FREQUENCY == 24000000
         #define MCG_C1_FRDIV_VALUE    MCG_C1_FRDIV_1024
+        #define FLL_INPUT_FREQUENCY   (CRYSTAL_FREQUENCY/1024)
     #elif CRYSTAL_FREQUENCY >= 10000000 && CRYSTAL_FREQUENCY <= 12000000
         #define MCG_C1_FRDIV_VALUE    MCG_C1_FRDIV_256
+        #define FLL_INPUT_FREQUENCY   (CRYSTAL_FREQUENCY/256)
     #elif CRYSTAL_FREQUENCY == 4000000
         #define MCG_C1_FRDIV_VALUE    MCG_C1_FRDIV_128
+        #define FLL_INPUT_FREQUENCY   (CRYSTAL_FREQUENCY/128)
     #elif CRYSTAL_FREQUENCY == 32768
         #if !defined FLL_FACTOR
            #define MCG_C1_FRDIV_VALUE MCG_C1_FRDIV_RANGE0_1
         #endif
     #else
         #error crystal speed support needs to be added!
+    #endif
+    #if defined FLL_FACTOR && ((FLL_INPUT_FREQUENCY > 39062) || (FLL_INPUT_FREQUENCY < 31250))
+        #error Divided input frequency is not suitable for FLL (must be between 31.25kHz and 39.062kHz)!!
     #endif
 #endif
 
