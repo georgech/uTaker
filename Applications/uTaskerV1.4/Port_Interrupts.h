@@ -186,7 +186,8 @@ static void test_irq_11(void)
     #endif
 
 
-    #if defined DMA_SPI_BURST && defined FRDM_K64F                       // {8}
+
+    #if defined DMA_SPI_BURST && (defined FRDM_K64F || defined TWR_K80F150M) // {8}
 static void spi_half_buffer(void)
 {
     // This is called each time the SPI Rx buffer is half-full or full so that the previous half buffer content can be retrieved while the next half is still being filled
@@ -365,7 +366,7 @@ static void fnInitIRQ(void)
         static const unsigned long ulOutput = PORTC_BIT16;               // the output to be mirrored to
         fnConfigDMA_buffer(9, DMAMUX0_CHCFG_SOURCE_PORTB, sizeof(ulOutput), (void *)&ulOutput, (void *)&(((GPIO_REGS *)GPIOC_ADD)->PTOR), (DMA_FIXED_ADDRESSES | DMA_LONG_WORDS), 0, 0); // use DMA channel 9 without any interrupts (free-runnning)
     }
-        #elif defined DMA_SPI_BURST && defined FRDM_K64F                 // {8}
+        #elif defined DMA_SPI_BURST && (defined FRDM_K64F || defined TWR_K80F150M) // {8}
     // Initialise SPI interface
     //
     POWER_UP_ATOMIC(6, SPI0);
@@ -377,8 +378,12 @@ static void fnInitIRQ(void)
     SPI0_RSER = (SPI_SRER_TFFF_DIRS | SPI_SRER_TFFF_RE | SPI_SRER_RFDF_DIRS | SPI_SRER_RFDF_RE); // enable rx and tx DMA requests
     SPI0_CTAR0 = (SPI_CTAR_DBR | SPI_CTAR_FMSZ_8 | SPI_CTAR_PDT_7 | SPI_CTAR_BR_4 | SPI_CTAR_CPHA | SPI_CTAR_CPOL); // for 50MHz bus, 25MHz speed and 140ns min de-select time
 
-    interrupt_setup.int_port       = PORTE;                              // the port that the interrupt input is on
+    interrupt_setup.int_port       = PORTE;                              // the port that the interrupt/dma input is on
+    #if defined TWR_K80F150M
+    interrupt_setup.int_port_bits = PORTE_BIT4;
+    #else
     interrupt_setup.int_port_bits  = PORTE_BIT24;
+    #endif
     interrupt_setup.int_port_sense = (IRQ_FALLING_EDGE | PULLUP_ON | PORT_DMA_MODE); // DMA on falling edge
     interrupt_setup.int_handler = 0;                                     // no interrupt handler when using DMA
     {
@@ -402,16 +407,17 @@ static void fnInitIRQ(void)
         static const unsigned char ucDMA_start = ((DMA_ERQ_ERQ0 << (DMA_CHANNEL_FOR_SPI_TX - 8)) | (DMA_ERQ_ERQ0 << (DMA_CHANNEL_FOR_SPI_RX - 8))); // the value to be written to start the SPI DMA transfer
         static const unsigned long ulSPI_clear = (SPI_SR_RFDF | SPI_SR_RFOF | SPI_SR_TFUF | SPI_SR_EOQF | SPI_SR_TCF); // this is written to the SPI status register after the CS negates in order to clear flags and allow subsequent transfers
 
-        fnConfigDMA_buffer(DMA_CHANNEL_FOR_SPI_TX,    DMAMUX0_CHCFG_SOURCE_SPI0_TX, sizeof(ulSPI_TX),    (void *)ulSPI_TX,       (void *)SPI0_PUSHR_ADDR,                       (DMA_DIRECTION_OUTPUT | DMA_LONG_WORDS | DMA_SINGLE_CYCLE), 0, 0); // source is the tx buffer and destination is the SPI transmit register without interrupts (free-running)
-        fnConfigDMA_buffer(DMA_CHANNEL_FOR_SPI_RX,    DMAMUX0_CHCFG_SOURCE_SPI0_RX, sizeof(ucRxData),    (void *)SPI0_POPR_ADDR, (void *)ucRxData,                              (DMA_DIRECTION_INPUT | DMA_BYTES | DMA_HALF_BUFFER_INTERRUPT), spi_half_buffer, PRIORITY_DMA9); // source is the SPI reception register and destination is the input buffer with interrupt at half- and full buffer
+        fnConfigDMA_buffer(DMA_CHANNEL_FOR_SPI_TX,    DMAMUX0_CHCFG_SOURCE_SPI0_TX, sizeof(ulSPI_TX),    (void *)ulSPI_TX,       (void *)SPI0_PUSHR_ADDR,                      (DMA_DIRECTION_OUTPUT | DMA_LONG_WORDS | DMA_SINGLE_CYCLE), 0, 0); // source is the tx buffer and destination is the SPI transmit register without interrupts (free-running)
+        fnConfigDMA_buffer(DMA_CHANNEL_FOR_SPI_RX,    DMAMUX0_CHCFG_SOURCE_SPI0_RX, sizeof(ucRxData),    (void *)SPI0_POPR_ADDR, (void *)ucRxData,                             (DMA_DIRECTION_INPUT | DMA_BYTES | DMA_HALF_BUFFER_INTERRUPT), spi_half_buffer, PRIORITY_DMA9); // source is the SPI reception register and destination is the input buffer with interrupt at half- and full buffer
         fnConfigDMA_buffer(DMA_CHANNEL_FOR_PORT_EDGE, DMAMUX0_CHCFG_SOURCE_PORTE,  sizeof(ucDMA_start), (void *)&ucDMA_start,   (void *)(((unsigned char *)DMA_ERQ_ADDR) + 1), (DMA_FIXED_ADDRESSES | DMA_BYTES), 0, 0); // use DMA channel without any interrupts (free-runnning)
         fnDMA_BufferReset(DMA_CHANNEL_FOR_PORT_EDGE,  DMA_BUFFER_START); // enable the DMA operation - a falling edge on the port will now trigger SPI Tx and Rx DMA operation
-        fnConfigureInterrupt((void *)&interrupt_setup);                  // configure interrupt
+        fnConfigureInterrupt((void *)&interrupt_setup);                  // configure cs port DMA (falling edge)
         interrupt_setup.int_port = PORTD;                                // the port that the interrupt input is on
         interrupt_setup.int_port_bits = PORTD_BIT0;
-        interrupt_setup.int_port_sense = (IRQ_RISING_EDGE | PULLUP_ON | PORT_DMA_MODE | PORT_KEEP_PERIPHERAL); // DMA on rising edge (keep CS peripheral to trigger on the end of a transfer9
+        interrupt_setup.int_port_sense = (IRQ_RISING_EDGE | PULLUP_ON | PORT_DMA_MODE | PORT_KEEP_PERIPHERAL); // DMA on rising edge (keep CS peripheral to trigger on the end of a transfer
         fnConfigDMA_buffer(DMA_CHANNEL_FOR_CS_END, DMAMUX0_CHCFG_SOURCE_PORTD, sizeof(ulSPI_clear), (void *)&ulSPI_clear, (void *)SPI0_SR_ADDR, (DMA_FIXED_ADDRESSES | DMA_LONG_WORDS), 0, 0); // use DMA channel without any interrupts (free-runnning)
-        fnDMA_BufferReset(DMA_CHANNEL_FOR_CS_END, DMA_BUFFER_START);     // enable the DMA operation - a rising edge on the port will now a clear of the SPI status register
+        fnDMA_BufferReset(DMA_CHANNEL_FOR_CS_END, DMA_BUFFER_START);     // enable the DMA operation - a rising edge on the port will now a clear the the SPI status register
+        fnConfigureInterrupt((void *)&interrupt_setup);                  // configure cs port DMA (rising edge)
     }
         #else
             #if defined FRDM_KL25Z || defined FRDM_KL05Z || defined FRDM_KL27Z
@@ -421,9 +427,9 @@ static void fnInitIRQ(void)
             #else
     interrupt_setup.int_port_sense = (IRQ_FALLING_EDGE | PULLUP_ON);     // interrupt is to be falling edge sensitive
             #endif
-        #endif
     fnConfigureInterrupt((void *)&interrupt_setup);                      // configure interrupt
-        #if (defined DMA_PORT_MIRRORING || defined DMA_SPI_BURST) && defined FRDM_K64F // {7} put back the standard port sense
+        #endif
+        #if (defined DMA_PORT_MIRRORING || defined DMA_SPI_BURST) && (defined FRDM_K64F || defined TWR_K80F150M) // {7} put back the standard port sense
     interrupt_setup.int_port_sense = (IRQ_FALLING_EDGE | PULLUP_ON);     // interrupt is to be falling edge sensitive
         #endif
         #if (PORTS_AVAILABLE > 4) && (!defined KINETIS_KL || defined TEENSY_LC) && !defined TWR_K22F120M && !defined TWR_K20D50M && !defined TWR_K20D72M && !defined TWR_K53N512 && !defined TWR_K40D100M && !defined TWR_K21D50M && !defined TWR_K21F120M  && !defined FRDM_KE15Z

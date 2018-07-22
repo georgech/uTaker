@@ -48,6 +48,7 @@
     01.06.2018 Consolidate interrupt operation into a generic version (saves place and simplifies maintenance of increased feature set)
     01.06.2018 Add option user callback options USER_DEFINED_UART_RX_HANDLER, USER_DEFINED_UART_RX_BREAK_DETECTION, USER_DEFINED_UART_TX_FRAME_COMPLETE
     12.06.2018 Protect bit setting and clearing from other UART interrupts (with higher priority) using PROTECTED_SET_VARIABLE() and PROTECTED_SET_VARIABLE()
+    22.07.2018 Added fnPrepareRxDMA_mode() to handle generic configuration of rx DMA mode {214}
 
 */
 
@@ -202,10 +203,13 @@ static unsigned char ucUART_mask[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {0}; // 
 #if defined TRUE_UART_TX_2_STOPS
     static unsigned char ucStops[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {0};
 #endif
-#if defined SERIAL_INTERFACE && defined SERIAL_SUPPORT_DMA_RX && defined SERIAL_SUPPORT_DMA_RX_FREERUN // {15}
+#if defined SERIAL_INTERFACE && defined SERIAL_SUPPORT_DMA_RX
+    static unsigned long ulSerialDMA_rules[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {0}; // {214}
+    #if defined SERIAL_SUPPORT_DMA_RX_FREERUN
     static unsigned long ulDMA_progress[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {0};
-    #if (defined KINETIS_KL || defined KINETIS_KM) && !defined DEVICE_WITH_eDMA // {209}
+        #if (defined KINETIS_KL || defined KINETIS_KM) && !defined DEVICE_WITH_eDMA // {209}
     static QUEUE_TRANSFER RxModulo[UARTS_AVAILABLE + LPUARTS_AVAILABLE];
+        #endif
     #endif
 #endif
 #if defined SUPPORT_HW_FLOW && (defined KINETIS_KE || defined KINETIS_KL)
@@ -1293,21 +1297,31 @@ static void fnEnableRxAndDMA(int channel, unsigned long buffer_length, unsigned 
             #endif
         #else
     unsigned short usDMAMUX = (DMAMUX0_CHCFG_SOURCE_UART0_RX + (2 * channel));
+            #if ((defined KINETIS_K21 || defined KINETIS_K22) && (UARTS_AVAILABLE > 4)) || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66
+    if (channel > 3) {                                                   // channels 4 and above each share DMA source for TX and RX
+        usDMAMUX = (DMAMUX0_CHCFG_SOURCE_UART3_RX + (channel - 3));
+    }
+            #endif
         #endif
+    if ((ulSerialDMA_rules[channel] & DMA_HALF_BUFFER_INTERRUPT) != 0) { // for compatibility with the tty driver which is calling (it passes half the buffer length and we need the full buffer length)
+        buffer_length *= 2;
+    }
         #if defined SERIAL_SUPPORT_DMA_RX_FREERUN
             #if (defined KINETIS_KL || defined KINETIS_KM) && !defined DEVICE_WITH_eDMA // {211}
     RxModulo[channel] = (QUEUE_TRANSFER)buffer_length;                   // this must be modulo 2 (16, 32, 64, 128...256k)
     ulDMA_progress[channel] = buffer_address;                            // destination must be modulo aligned
             #else
     ulDMA_progress[channel] = buffer_length;
-                #if ((defined KINETIS_K21 || defined KINETIS_K22) && (UARTS_AVAILABLE > 4)) || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66
-    if (channel > 3) {                                                   // channels 4 and above each share DMA source for TX and RX
-        usDMAMUX = (DMAMUX0_CHCFG_SOURCE_UART3_RX + (channel - 3));
-    }
-                #endif
             #endif
+    if (ulSerialDMA_rules[channel] == 0) {                               // {214} if we are in free-running DMA Rx mode
+        fnConfigDMA_buffer(UART_DMA_RX_CHANNEL[channel], usDMAMUX, buffer_length, uart_data_reg, (void *)buffer_address, (DMA_DIRECTION_INPUT | DMA_BYTES), 0, 0); // no interrupt handler
+    }
+    else {
+        fnConfigDMA_buffer(UART_DMA_RX_CHANNEL[channel], usDMAMUX, buffer_length/*pars->Rx_tx_sizes.RxQueueSize*/, uart_data_reg, (void *)buffer_address, ulSerialDMA_rules[channel], _uart_rx_dma_Interrupt[channel], UART_DMA_RX_INT_PRIORITY[channel]); // configure DMA and enter interrupt on buffer completion (or half-completion)
+    }
+        #else
+    fnConfigDMA_buffer(UART_DMA_RX_CHANNEL[channel], usDMAMUX, buffer_length, uart_data_reg, (void *)buffer_address, ulSerialDMA_rules[channel], _uart_rx_dma_Interrupt[channel], UART_DMA_RX_INT_PRIORITY[channel]); // configure DMA and enter interrupt on buffer completion (or half-completion)
         #endif
-    fnConfigDMA_buffer(UART_DMA_RX_CHANNEL[channel], usDMAMUX, buffer_length, uart_data_reg, (void *)buffer_address, (DMA_DIRECTION_INPUT | DMA_BYTES), 0, 0);
     fnDMA_BufferReset(UART_DMA_RX_CHANNEL[channel], DMA_BUFFER_START);   // enable DMA operation
     fnRxOn(channel);                                                     // configure receiver pin and enable reception and its interrupt/DMA
 }
@@ -2546,6 +2560,27 @@ extern void fnRxOff(QUEUE_HANDLE Channel)
     #endif
 }
 
+#if defined SERIAL_SUPPORT_DMA_RX                                        // {214}
+// Prepare the receive DMA mode that is required
+//
+static void fnPrepareRxDMA_mode(unsigned char ucDMAConfig, QUEUE_HANDLE Channel)
+{
+    if ((ucDMAConfig & (UART_RX_DMA_HALF_BUFFER | UART_RX_DMA_FULL_BUFFER)) != 0) { // if operating in half-buffer or full buffer mode
+        unsigned long ulDMA_rules = (DMA_BYTES | DMA_DIRECTION_INPUT);
+        if ((ucDMAConfig & UART_RX_DMA_HALF_BUFFER) != 0) {
+            ulSerialDMA_rules[Channel] = (DMA_BYTES | DMA_DIRECTION_INPUT | DMA_HALF_BUFFER_INTERRUPT); // mark that we are not in free-running DMA Rx mode and require half-buffer and full interrupts
+        }
+        else {
+            ulSerialDMA_rules[Channel] = (DMA_BYTES | DMA_DIRECTION_INPUT); // mark that we are not in free-running DMA Rx mode and require full buffer interrupts
+        }
+        ulSerialDMA_rules[Channel] = ulDMA_rules;                    
+    }
+    else {
+        ulSerialDMA_rules[Channel] = 0;                              // mark that we are in free-running DMA Rx mode
+    }
+}
+#endif
+
 #if LPUARTS_AVAILABLE > 0
 // LPUART configuration
 //
@@ -2597,6 +2632,7 @@ static void fnConfigLPUART(QUEUE_HANDLE Channel, TTYTABLE *pars, KINETIS_LPUART_
             lpuart_reg->LPUART_BAUD |= LPUART_BAUD_LBKDIE;               // enable break detection interrupt
         }
         #endif
+        fnPrepareRxDMA_mode(pars->ucDMAConfig, Channel);                 // prepare the rx DMA mode that is required
     }
     else {
         lpuart_reg->LPUART_BAUD &= ~LPUART_BAUD_RDMAE;                   // disable rx DMA so that rx interrupt mode can be used
@@ -2837,23 +2873,10 @@ static void fnConfigUART(QUEUE_HANDLE Channel, TTYTABLE *pars, KINETIS_UART_CONT
             #endif
         #if defined SERIAL_SUPPORT_RX_DMA_BREAK
         if ((pars->ucDMAConfig & UART_RX_DMA_BREAK) != 0) {              // if breaks are to terminate reception
-          //uart_reg->UART_S2 |= (UART_S2_LBKDE);                        // enable break detection operation
             uart_reg->UART_BDH |= (UART_BDH_LBKDIE);                     // enable break detection interrupt
         }
         #endif
-        if ((pars->ucDMAConfig & (UART_RX_DMA_HALF_BUFFER | UART_RX_DMA_FULL_BUFFER)) != 0) { // if operating in half-buffer or full buffer mode
-            unsigned long ulDMA_rules = (DMA_BYTES | DMA_DIRECTION_INPUT | DMA_SINGLE_CYCLE);
-            unsigned short usDMAMUX = (DMAMUX0_CHCFG_SOURCE_UART0_RX + (2 * Channel));
-        #if ((defined KINETIS_K21 || defined KINETIS_K22) && (UARTS_AVAILABLE > 4)) || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66
-            if (Channel > 3) {                                           // channels 4 and above each share DMA source for TX and RX
-                usDMAMUX = (DMAMUX0_CHCFG_SOURCE_UART3_RX + (Channel - 3));
-            }
-        #endif
-            if ((pars->ucDMAConfig & UART_RX_DMA_HALF_BUFFER) != 0) {
-                ulDMA_rules |= DMA_HALF_BUFFER_INTERRUPT;
-            }
-            fnConfigDMA_buffer(UART_DMA_RX_CHANNEL[Channel], usDMAMUX, pars->Rx_tx_sizes.RxQueueSize, (void *)&(uart_reg->UART_D), 0, ulDMA_rules, _uart_rx_dma_Interrupt[Channel], UART_DMA_RX_INT_PRIORITY[Channel]);
-        }
+        fnPrepareRxDMA_mode(pars->ucDMAConfig, Channel);                 // prepare the rx DMA mode that is required
     }
     else {                                                               // interrupt driven receiver
             #if defined KINETIS_KL && (UARTS_AVAILABLE > 1)

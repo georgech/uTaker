@@ -195,20 +195,17 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
 #endif
 
 
-
 #define _MALLOC_ALIGN                                                    // support malloc with align option since LAN memory should be on specific boundary
 #define _ALIGN_HEAP_4                                                    // ensure long word alignment
 #define _LITTLE_ENDIAN                                                   // compile project in LITTLE ENDIAN mode since the kinetis is fixed in this mode
 
-
 #define SAVE_COMPLETE_FLASH                                              // when simulating, save complete flash contents and not just the file system contents
-
 
 #define CAST_POINTER_ARITHMETIC unsigned long                            // Kinetis uses 32 bit pointers
 
 // Mask/errata management  
 //
-#include "kinetis_errata.h"                                              // {61}
+#include "kinetis_errata.h"                                              // {61} include erratas for the mask being used
 
 #if defined KINETIS_KL || (defined KINETIS_KE && !defined KINETIS_KE18) || defined KINETIS_KV10 || defined KINETIS_KM
     #define ARM_MATH_CM0PLUS                                             // cortex-M0+ to be used
@@ -267,7 +264,7 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
     #endif
 #elif (defined KINETIS_KL03 || defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL43) // devices with MCG-Lite
     #define KINETIS_WITH_MCG_LITE
-#elif (defined KINETIS_KL02 || defined KINETIS_KL05)                     // devices with no PLL in MCG
+#elif (defined KINETIS_K02 || defined KINETIS_KL02 || defined KINETIS_KL05) // devices with no PLL in MCG
     #define MCG_WITHOUT_PLL
 #endif
 
@@ -329,10 +326,34 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
     #define HIGH_SPEED_RUN_MODE_AVAILABLE
 #endif
 
-#if (defined KINETIS_K_FPU || (KINETIS_MAX_SPEED > 100000000) || defined KINETIS_KL82) && !defined KINETIS_KV30 && !defined KINETIS_K21 && !defined KINETIS_K22 && !defined KINETIS_K24 && !defined KINETIS_K64
-    #if defined FLL_FACTOR                                               // using FLL
+#if defined KINETIS_K26 || defined KINETIS_KL28 || defined KINETIS_K63 || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_K80 || defined KINETIS_K02 || defined KINETIS_K63 || (defined KINETIS_K22 && ((SIZE_OF_FLASH == (512 * 1024)) || (SIZE_OF_FLASH == (128 * 1024)))) || defined KINETIS_K24 || defined KINETIS_KL43 || defined KINETIS_KL03 || defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL82 || defined KINETIS_KV30 || defined KINETIS_KE15
+    #define KINETIS_HAS_IRC48M                                           // device has IRC48M which can be used for crystal-less USB
+#endif
+
+// RTC configuration
+//
+#if defined KINETIS_KV || defined KINETIS_KL02 || defined KINETIS_K02
+    #define KINETIS_WITHOUT_RTC
+#elif defined KINETIS_KL82 || defined KINETIS_KL28
+    #define KINETIS_WITH_RTC_CRYSTAL
+#elif defined KINETIS_KE15
+    #define KINETIS_WITH_RTC_CRYSTAL
+    #define KINETIS_WITH_SRTC                                            // SRTC rather than standard KE type
+#elif !defined KINETIS_KL && !defined KINETIS_KE
+    #define KINETIS_WITH_RTC_CRYSTAL
+#endif
+
+#if defined RUN_FROM_DEFAULT_CLOCK || defined RUN_FROM_OSC_FLL || (defined MCG_WITHOUT_PLL && defined _EXTERNAL_CLOCK) || (defined KINETIS_HAS_IRC48M && defined RUN_FROM_HIRC_FLL) || (defined KINETIS_WITH_RTC_CRYSTAL && defined RUN_FROM_RTC_FLL)
+    // Clock configuration using FLL
+    //
+    #if defined FLL_FACTOR || (defined MCG_WITHOUT_PLL && defined _EXTERNAL_CLOCK)  // a FLL multiplication factor is being specified (rather than the default) [or a device without PLL is using external clock as FLL reference]
+        #if !defined FLL_FACTOR
+            #define FLL_FACTOR     (640)                                 // default value
+        #endif
         #define CLOCK_DIV   1
         #define CLOCK_MUL   FLL_FACTOR
+        // Check FLL multiplication factor
+        //
         #if (FLL_FACTOR == 640)
             #define _FLL_VALUE (MCG_C4_LOW_RANGE)
         #elif (FLL_FACTOR == 732)
@@ -352,6 +373,43 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
         #else
             #error Invalid FLL factor has been specified - valid are 640, 732, 1280, 1464, 1920, 2197, 2560 or 2929
         #endif
+
+        #if (defined KINETIS_HAS_IRC48M && defined RUN_FROM_HIRC_FLL)    // clock the FLL from IRC48M
+            #define FLL_INPUT_DIVIDE_VALUE    1536
+            #define MCGOUTCLK      ((48000000/1536) * FLL_FACTOR)        // 48MHz/1536 IRC multiplied by the FLL factor
+        #elif defined _EXTERNAL_CLOCK                                    // referencing FLL to external clock (or crystal) source
+            // Define the FLL input divider and check that the input range can be respected
+            //
+            #if ((_EXTERNAL_CLOCK/32) <= 39062)
+                #define FLL_INPUT_DIVIDE_VALUE    32
+            #elif ((_EXTERNAL_CLOCK/64) <= 39062)
+                #define FLL_INPUT_DIVIDE_VALUE    64
+            #elif ((_EXTERNAL_CLOCK/128) <= 39062)
+                #define FLL_INPUT_DIVIDE_VALUE    128
+            #elif ((_EXTERNAL_CLOCK/256) <= 39062)
+                #define FLL_INPUT_DIVIDE_VALUE    256
+            #elif ((_EXTERNAL_CLOCK/512) <= 39062)
+                #define FLL_INPUT_DIVIDE_VALUE    512
+            #elif ((_EXTERNAL_CLOCK/1024) <= 39062)
+                #define FLL_INPUT_DIVIDE_VALUE    1024
+            #elif ((_EXTERNAL_CLOCK/1280) <= 39062)
+                #define FLL_INPUT_DIVIDE_VALUE    1280
+            #elif ((_EXTERNAL_CLOCK/1536) <= 39062)
+                #define FLL_INPUT_DIVIDE_VALUE    1536
+            #endif
+            #if (((_EXTERNAL_CLOCK/FLL_INPUT_DIVIDE_VALUE) > 39062) || (((_EXTERNAL_CLOCK/FLL_INPUT_DIVIDE_VALUE) < 31250)))
+                #error Divided input frequency is not suitable for FLL (must be between 31.25kHz and 39.062kHz)!!
+            #endif
+            #define MCGOUTCLK      ((_EXTERNAL_CLOCK/FLL_INPUT_DIVIDE_VALUE) * FLL_FACTOR) // FLL input multiplied by the FLL factor
+        #else                                                            // referencing the FLL to the internal 32kHz IRC
+            #define FLL_INPUT_DIVIDE_VALUE    1
+            #define MCGOUTCLK      (32768 * FLL_FACTOR)                  // 32kHz IRC or external RTC multiplied by the FLL factor
+        #endif
+    #endif
+#endif
+
+#if (defined KINETIS_K_FPU || (KINETIS_MAX_SPEED > 100000000) || defined KINETIS_KL82) && !defined KINETIS_KV30 && !defined KINETIS_K21 && !defined KINETIS_K22 && !defined KINETIS_K24 && !defined KINETIS_K64
+    #if defined FLL_FACTOR                                               // using FLL
     #else
         #if defined CLOCK_DIV
             #if (CLOCK_DIV < 1) || (CLOCK_DIV > 8)
@@ -499,30 +557,8 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
 #elif defined KINETIS_KE15
 #elif defined KINETIS_KM
 #elif defined RUN_FROM_DEFAULT_CLOCK                                     // K-series running from defaut clock
-    #if defined FLL_FACTOR                                               // using FLL
-        #define CLOCK_DIV   1
-        #define CLOCK_MUL   FLL_FACTOR
-        #if (FLL_FACTOR == 640)
-            #define _FLL_VALUE (MCG_C4_LOW_RANGE)
-        #elif (FLL_FACTOR == 732)
-            #define _FLL_VALUE (MCG_C4_LOW_RANGE | MCG_C4_DMX32)
-        #elif (FLL_FACTOR == 1280)
-            #define _FLL_VALUE (MCG_C4_MID_RANGE)
-        #elif (FLL_FACTOR == 1464)
-            #define _FLL_VALUE (MCG_C4_MID_RANGE | MCG_C4_DMX32)
-        #elif (FLL_FACTOR == 1920)
-            #define _FLL_VALUE (MCG_C4_MID_HIGH_RANGE)
-        #elif (FLL_FACTOR == 2197)
-            #define _FLL_VALUE (MCG_C4_MID_HIGH_RANGE | MCG_C4_DMX32)
-        #elif (FLL_FACTOR == 2560)
-            #define _FLL_VALUE (MCG_C4_HIGH_RANGE)
-        #elif (FLL_FACTOR == 2929)
-            #define _FLL_VALUE (MCG_C4_HIGH_RANGE | MCG_C4_DMX32)
-        #else
-            #error Invalid FLL factor has been specified - valid are 640, 732, 1280, 1464, 1920, 2197, 2560 or 2929
-        #endif
-    #endif
 #elif defined CLOCK_FROM_RTC_OSCILLATOR
+#elif defined RUN_FROM_OSC_FLL
 #else                                                                    // default is K-series running from PLL sourced by the system oscillator
     #if (CLOCK_DIV < 1) || (CLOCK_DIV > 25)
         #error input divide must be between 1 and 25
@@ -536,6 +572,7 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
         #endif
     #endif
 #endif
+
 #if (SYSTEM_CLOCK_DIVIDE < 1) || (SYSTEM_CLOCK_DIVIDE > 16)
     #error the core/system clock divide value must be between 1 and 16
 #endif
@@ -575,35 +612,8 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
         #define DIVCORE_CLK            (MCGOUTCLK/SYSTEM_CLOCK_DIVIDE)   // core, DMA and USB clock
         #define DIVSLOW_CLK            (DIVCORE_CLK/BUS_CLOCK_DIVIDE)    // flash and bus clock
     #elif (defined KINETIS_K_FPU || (KINETIS_MAX_SPEED > 100000000) || defined KINETIS_KL82) && !defined KINETIS_K21 && !defined KINETIS_K22 && !defined KINETIS_K24 && !defined KINETIS_K64 && !defined KINETIS_KV30
-        #if defined FLL_FACTOR
-            #if defined RUN_FROM_HIRC_FLL
-                #define MCGOUTCLK      ((48000000/1536) * FLL_FACTOR)    // 48MHz/1536 IRC multiplied by the FLL factor
-            #elif defined _EXTERNAL_CLOCK
-                #if ((_EXTERNAL_CLOCK/32) <= 39062)
-                    #define FLL_INPUT_DIVIDE_VALUE    32
-                #elif ((_EXTERNAL_CLOCK/64) <= 39062)
-                    #define FLL_INPUT_DIVIDE_VALUE    64
-                #elif ((_EXTERNAL_CLOCK/128) <= 39062)
-                    #define FLL_INPUT_DIVIDE_VALUE    128
-                #elif ((_EXTERNAL_CLOCK/256) <= 39062)
-                    #define FLL_INPUT_DIVIDE_VALUE    256
-                #elif ((_EXTERNAL_CLOCK/512) <= 39062)
-                    #define FLL_INPUT_DIVIDE_VALUE    512
-                #elif ((_EXTERNAL_CLOCK/1024) <= 39062)
-                    #define FLL_INPUT_DIVIDE_VALUE    1024
-                #elif ((_EXTERNAL_CLOCK/1280) <= 39062)
-                    #define FLL_INPUT_DIVIDE_VALUE    1280
-                #elif ((_EXTERNAL_CLOCK/1536) <= 39062)
-                    #define FLL_INPUT_DIVIDE_VALUE    1536
-                #endif
-                #if (((_EXTERNAL_CLOCK/FLL_INPUT_DIVIDE_VALUE) > 39062) || (((_EXTERNAL_CLOCK/FLL_INPUT_DIVIDE_VALUE) < 31250)))
-                    #error Divided input frequency is not suitable for FLL (must be between 31.25kHz and 39.062kHz)!!
-                #endif
-                #define MCGOUTCLK      ((_EXTERNAL_CLOCK/FLL_INPUT_DIVIDE_VALUE) * FLL_FACTOR) // FLL input multiplied by the FLL factor
-            #else
-                #define MCGOUTCLK      (32768 * FLL_FACTOR)              // 32kHz IRC multiplied by the FLL factor
-            #endif
-        #elif defined RUN_FROM_HIRC
+        #if defined FLL_FACTOR                                           // run from FLL (see above)
+        #elif defined KINETIS_HAS_IRC48M && defined RUN_FROM_HIRC        // run directly from 48MHz IRC48M
             #define MCGOUTCLK          48000000
         #else
             #define MCGOUTCLK          (((_EXTERNAL_CLOCK/CLOCK_DIV) * CLOCK_MUL)/2) // up to 120MHz/150MHz (PLL0 clock output)
@@ -657,62 +667,7 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
         #elif defined KINETIS_KM && defined RUN_FROM_DEFAULT_CLOCK
             #define MCGOUTCLK  (FAST_ICR/2)                              // 4MHz IRC divided by 2
         #elif defined RUN_FROM_DEFAULT_CLOCK
-            #if defined FLL_FACTOR
-                #define MCGOUTCLK  ((32768) * FLL_FACTOR)                // assume tuned to 32768kHz
-                #if (FLL_FACTOR == 640)
-                    #define _FLL_VALUE (MCG_C4_LOW_RANGE)
-                #elif (FLL_FACTOR == 732)
-                    #define _FLL_VALUE (MCG_C4_LOW_RANGE | MCG_C4_DMX32)
-                #elif (FLL_FACTOR == 1280)
-                    #define _FLL_VALUE (MCG_C4_MID_RANGE)
-                #elif (FLL_FACTOR == 1464)
-                    #define _FLL_VALUE (MCG_C4_MID_RANGE | MCG_C4_DMX32)
-                #elif (FLL_FACTOR == 1920)
-                    #define _FLL_VALUE (MCG_C4_MID_HIGH_RANGE)
-                #elif (FLL_FACTOR == 2197)
-                    #define _FLL_VALUE (MCG_C4_MID_HIGH_RANGE | MCG_C4_DMX32)
-                #elif (FLL_FACTOR == 2560)
-                    #define _FLL_VALUE (MCG_C4_HIGH_RANGE)
-                #elif (FLL_FACTOR == 2929)
-                    #define _FLL_VALUE (MCG_C4_HIGH_RANGE | MCG_C4_DMX32)
-                #else
-                    #error Invalid FLL factor has been specified - valid are 640, 732, 1280, 1464, 1920, 2197, 2560 or 2929
-                #endif
-            #else
-                #define MCGOUTCLK  ((32768) * 640)                       // 20.971MHz nominal (20MHz..25MHz)
-            #endif
         #elif defined FLL_FACTOR                                         // FLL is to be used with input from the external source
-            #if !defined FRDIVIDER                                       // if no input divider for the FLL is defined default to 1
-                #if defined RUN_FROM_HIRC_FLL
-                    #define FRDIVIDER    1280                            // default the FLL input divider to 1280 to give 37500 (range 31.25kHz..39.0625kHz)
-                #else
-                    #define FRDIVIDER    1
-                #endif
-            #endif
-            #if (FLL_FACTOR == 640)
-                #define _FLL_VALUE (MCG_C4_LOW_RANGE)
-            #elif (FLL_FACTOR == 732)
-                #define _FLL_VALUE (MCG_C4_LOW_RANGE | MCG_C4_DMX32)
-            #elif (FLL_FACTOR == 1280)
-                #define _FLL_VALUE (MCG_C4_MID_RANGE)
-            #elif (FLL_FACTOR == 1464)
-                #define _FLL_VALUE (MCG_C4_MID_RANGE | MCG_C4_DMX32)
-            #elif (FLL_FACTOR == 1920)
-                #define _FLL_VALUE (MCG_C4_MID_HIGH_RANGE)
-            #elif (FLL_FACTOR == 2197)
-                #define _FLL_VALUE (MCG_C4_MID_HIGH_RANGE | MCG_C4_DMX32)
-            #elif (FLL_FACTOR == 2560)
-                #define _FLL_VALUE (MCG_C4_HIGH_RANGE)
-            #elif (FLL_FACTOR == 2929)
-                #define _FLL_VALUE (MCG_C4_HIGH_RANGE | MCG_C4_DMX32)
-            #else
-                #error Invalid FLL factor has been specified - valid are 640, 732, 1280, 1464, 1920, 2197, 2560 or 2929
-            #endif
-            #if defined CLOCK_FROM_RTC_OSCILLATOR
-                #define MCGOUTCLK  ((32768/FRDIVIDER) * FLL_FACTOR)// FLL clock output
-            #else
-                #define MCGOUTCLK  ((_EXTERNAL_CLOCK/FRDIVIDER) * FLL_FACTOR)// FLL clock output
-            #endif
         #elif defined CLOCK_FROM_RTC_OSCILLATOR                          // clock directly from RTC oscillator
             #define MCGOUTCLK   32768
         #else
@@ -1155,10 +1110,6 @@ typedef struct stRESET_VECTOR
     #define FLEXRAM_MAX_SECTION_COPY_SIZE (2 * 1024)
 #endif
 
-#if defined KINETIS_K26 || defined KINETIS_KL28 || defined KINETIS_K63 || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_K80 || defined KINETIS_K02 || defined KINETIS_K63 || (defined KINETIS_K22 && ((SIZE_OF_FLASH == (512 * 1024)) || (SIZE_OF_FLASH == (128 * 1024)))) || defined KINETIS_K24 || defined KINETIS_KL43 || defined KINETIS_KL03 || defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL82 || defined KINETIS_KV30 || defined KINETIS_KE15
-    #define KINETIS_HAS_IRC48M                                           // device has IRC48M which can be used for crystal-less USB
-#endif
-
 // Flash
 //
 #define FLASH_LINE_SIZE         8                                        // lines made up of 8 bytes to avoid file header problems with the FLASH characteristics
@@ -1497,18 +1448,6 @@ typedef struct stRESET_VECTOR
     #define PITS_AVAILABLE          4
 #endif
 
-// RTC configuration
-//
-#if defined KINETIS_KV || defined KINETIS_KL02 || defined KINETIS_K02
-    #define KINETIS_WITHOUT_RTC
-#elif defined KINETIS_KL82 || defined KINETIS_KL28
-    #define KINETIS_WITH_RTC_CRYSTAL
-#elif defined KINETIS_KE15
-    #define KINETIS_WITH_RTC_CRYSTAL
-    #define KINETIS_WITH_SRTC                                            // SRTC rather than standard KE type
-#elif !defined KINETIS_KL && !defined KINETIS_KE
-    #define KINETIS_WITH_RTC_CRYSTAL
-#endif
 
 // PWT configuration
 //
@@ -5090,19 +5029,21 @@ typedef struct stKINETIS_DMA_TDC
 } KINETIS_DMA_TDC;
 #endif
 
-#define DMA_BYTES                 0x00000001
-#define DMA_HALF_WORDS            0x00000002
-#define DMA_LONG_WORDS            0x00000004
-#define DMA_AUTOREPEAT            0x00000008
-#define DMA_HALF_BUFFER_INTERRUPT 0x00000010
-#define DMA_DIRECTION_INPUT       0x00000000
-#define DMA_DIRECTION_OUTPUT      0x00000020
-#define DMA_FIXED_ADDRESSES       0x00000040
-#define DMA_NO_MODULO             0x00000080
-#define DMA_SINGLE_CYCLE          0x00000100
-#define DMA_SW_TRIGGER            0x00000200
-#define DMA_INITIATE_TRANSFER     0x00000400
-#define DMA_WAIT_TERMINATION      0x00000800
+#define DMA_BYTES                    0x00000001
+#define DMA_HALF_WORDS               0x00000002
+#define DMA_LONG_WORDS               0x00000004
+#define DMA_AUTOREPEAT               0x00000008
+#define DMA_HALF_BUFFER_INTERRUPT    0x00000010
+#define DMA_DIRECTION_INPUT          0x00000000                          // fixed source address to buffer
+#define DMA_DIRECTION_OUTPUT         0x00000020                          // buffer to fixed destination address
+#define DMA_FIXED_ADDRESSES          0x00000040                          // neither source nor distination address is changed during the transfer
+#define DMA_NO_MODULO                0x00000080
+#define DMA_SINGLE_CYCLE             0x00000100
+#define DMA_SW_TRIGGER               0x00000200
+#define DMA_INITIATE_TRANSFER        0x00000400
+#define DMA_WAIT_TERMINATION         0x00000800
+#define DMA_BUFFER_BURST_MODE        0x00001000                          // complete buffer is transfered at each trigger
+#define DMA_DIRECTION_BUFFER_BUFFER  0x00002000                          // buffer to buffer
 #define DMA_SW_TRIGGER_WAIT_TERMINATION (DMA_SW_TRIGGER | DMA_INITIATE_TRANSFER | DMA_WAIT_TERMINATION)
 
 extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned short ucDmaTriggerSource, unsigned long ulBufLength, void *ptrBufSource, void *ptrBufDest, unsigned long ulRules, void(*int_handler)(void), int int_priority);
@@ -6193,8 +6134,12 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
           #define DMAMUX0_CHCFG_SOURCE_UART3_RX      8                   // 0x08 UART3 RX
           #define DMAMUX0_CHCFG_SOURCE_UART3_TX      9                   // 0x09 UART3 TX
         #if defined KINETIS_K21 || defined KINETIS_K22 || defined KINETIS_K24 || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_K80 || defined KINETIS_KV30
-          #define DMAMUX0_CHCFG_SOURCE_UART4_TX      10                  // 0x0a UART4 TX or RX
-          #define DMAMUX0_CHCFG_SOURCE_UART5_TX      11                  // 0x0b UART5 TX or RX
+          #define DMAMUX0_CHCFG_SOURCE_UART4_RX      10                  // 0x0a UART4 RX (or RX/TX)
+          #if defined KINETIS_K80
+            #define DMAMUX0_CHCFG_SOURCE_UART4_TX    11                  // 0x0b UART4 TX
+          #else
+            #define DMAMUX0_CHCFG_SOURCE_UART5_RX    11                  // 0x0b UART5 (TX or RX)
+          #endif
           #define DMAMUX0_CHCFG_SOURCE_I2S0_RX       12                  // 0x0c I2S0 RX
           #define DMAMUX0_CHCFG_SOURCE_I2S0_TX       13                  // 0x0d I2S0 TX
           #define DMAMUX0_CHCFG_SOURCE_SPI0_RX       14                  // 0x0e SPI0 RX
@@ -6218,7 +6163,7 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
           #define DMAMUX0_CHCFG_SOURCE_FTM0_C5        25                 // 0x19 FTM0 channel 5
           #define DMAMUX0_CHCFG_SOURCE_FTM0_C6        26                 // 0x1a FTM0 channel 6
           #define DMAMUX0_CHCFG_SOURCE_FTM0_C7        27                 // 0x1b FTM0 channel 7
-          #define DMAMUX0_CHCFG_SOURCE_FTM1_C0       28                  // 0x1c FTM1 channel 0 (or TPM1 - K66)
+          #define DMAMUX0_CHCFG_SOURCE_FTM1_C0        28                 // 0x1c FTM1 channel 0 (or TPM1 - K66)
             #if defined KINETIS_K65 || defined KINETIS_K66
               #define DMAMUX0_CHCFG_SOURCE_TPM1_C0   28
             #endif
@@ -6284,15 +6229,21 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
           #define DMAMUX0_CHCFG_SOURCE_IEEE1588_T3   39                  // 0x27 IEEE 1588 timer 3 (alternative)
          #endif
           #define DMAMUX0_CHCFG_SOURCE_ADC0          40                  // 0x28 ADC0
-          #define DMAMUX0_CHCFG_SOURCE_ADC1          41                  // 0x29 ADC1
+          #if ADC_CONTROLLERS > 1
+              #define DMAMUX0_CHCFG_SOURCE_ADC1      41                  // 0x29 ADC1
+          #endif
           #define DMAMUX0_CHCFG_SOURCE_CMP0          42                  // 0x2a CMP0
           #define DMAMUX0_CHCFG_SOURCE_CMP1          43                  // 0x2b CMP1
-          #define DMAMUX0_CHCFG_SOURCE_CMP2          44                  // 0x2c CMP2 (or CMP3 - K66)
-            #if defined KINETIS_K65 || defined KINETIS_K66
+          #if NUMBER_OF_COMPARATORS > 2
+              #define DMAMUX0_CHCFG_SOURCE_CMP2      44                  // 0x2c CMP2 (or CMP3 - K66)
+          #endif
+          #if defined KINETIS_K65 || defined KINETIS_K66
               #define DMAMUX0_CHCFG_SOURCE_CMP3      44
-            #endif
+          #endif
           #define DMAMUX0_CHCFG_SOURCE_DAC0          45                  // 0x2d DAC0
-          #define DMAMUX0_CHCFG_SOURCE_DAC1          46                  // 0x2e DAC1
+          #if DAC_CONTROLLERS > 1
+              #define DMAMUX0_CHCFG_SOURCE_DAC1      46                  // 0x2e DAC1
+          #endif
           #define DMAMUX0_CHCFG_SOURCE_CMT           47                  // 0x2f CMT
           #define DMAMUX0_CHCFG_SOURCE_PDB           48                  // 0x30 PDB
           #define DMAMUX0_CHCFG_SOURCE_PORTA         49                  // 0x31 port A
@@ -6312,7 +6263,7 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
           #define DMAMUX0_CHCFG_SOURCE_TPM1_OVERFLOW 55                  // 0x37 TPM1 overflow
           #define DMAMUX0_CHCFG_SOURCE_TPM2_OVERFLOW 56                  // 0x38 TPM2 overflow
           #define DMAMUX0_CHCFG_SOURCE_TSI           57                  // 0x39 TSI
-        #elif !defined KINETIS_K21 && !defined KINETIS_K22
+        #elif !defined KINETIS_K21 && !defined KINETIS_K22 && !defined KINETIS_K80
           #define DMAMUX0_CHCFG_SOURCE_FTM3_C4       54                  // 0x36 FTM3 channel 4
           #define DMAMUX0_CHCFG_SOURCE_FTM3_C5       55                  // 0x37 FTM3 channel 5
           #define DMAMUX0_CHCFG_SOURCE_FTM3_C6       56                  // 0x38 FTM3 channel 6
@@ -6336,7 +6287,11 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
           #define DMAMUX0_CHCFG_SOURCE_LPUART3_RX    DMAMUX0_CHCFG_SOURCE_UART3_RX
           #define DMAMUX0_CHCFG_SOURCE_LPUART3_TX    DMAMUX0_CHCFG_SOURCE_UART3_TX
           #define DMAMUX0_CHCFG_SOURCE_LPUART4_RX    DMAMUX0_CHCFG_SOURCE_UART4_RX
-          #define DMAMUX0_CHCFG_SOURCE_LPUART4_TX    DMAMUX0_CHCFG_SOURCE_UART4_TX
+          #if defined DMAMUX0_CHCFG_SOURCE_UART4_TX
+              #define DMAMUX0_CHCFG_SOURCE_LPUART4_TX  DMAMUX0_CHCFG_SOURCE_UART4_TX
+          #else
+              #define DMAMUX0_CHCFG_SOURCE_LPUART4_TX  DMAMUX0_CHCFG_SOURCE_UART4_RX // shared Rx/Tx channel
+          #endif
         #elif LPUARTS_AVAILABLE > 0
           #define DMAMUX0_CHCFG_SOURCE_LPUART0_RX    58                  // 0x3a LPUART0 RX
           #define DMAMUX0_CHCFG_SOURCE_LPUART0_TX    59                  // 0x3b LPUART0 TX
@@ -13817,12 +13772,28 @@ typedef struct stKINETIS_LPTMR_CTL
         #define MCG_C2_RANGE_1M_8M       0x10
         #define MCG_C2_RANGE_8M_32M      0x20
         #if defined KINETIS_KL
-          #define MCG_C2_FCFTRIM         0x40                            // Fast Internal Reference Clock Fine Tune
+            #define MCG_C2_FCFTRIM         0x40                            // Fast Internal Reference Clock Fine Tune
         #endif
         #if defined KINETIS_K_FPU || (KINETIS_MAX_SPEED > 100000000) || (defined KINETIS_KL && !defined KINETSI_KL03) || defined KINETIS_KW2X || defined KINETIS_KM
-          #define MCG_C2_LOCRE0          0x80                            // reset on loss of clock
+            #define MCG_C2_LOCRE0          0x80                          // reset on loss of clock
         #else
-          #define MCG_C2_LOCRE0          0x00
+            #define MCG_C2_LOCRE0          0x00
+        #endif
+
+        #if defined OSC_LOW_GAIN_MODE                                    // if using low frequency low power mode no external resistor or load capacitors are used
+            #define MCG_C2_GAIN_MODE    0                                // don't select high gain mode since the oscillator will not start
+        #else
+            #define MCG_C2_GAIN_MODE    MCG_C2_HGO                       // select high gain mode
+        #endif
+
+        #if defined CRYSTAL_FREQUENCY
+            #if CRYSTAL_FREQUENCY > 8000000                              // crystal > 8MHz
+                #define MCG_C2_FREQ_RANGE     MCG_C2_RANGE_8M_32M
+            #elif CRYSTAL_FREQUENCY >= 1000000                           // crystal bwteeen 1MHz and 8MHz
+                #define MCG_C2_FREQ_RANGE     MCG_C2_RANGE_1M_8M
+            #else                                                        // assumed to be 32kHz crystal
+                #define MCG_C2_FREQ_RANGE     MCG_C2_RANGE_32K_40K
+            #endif
         #endif
       #endif
     #if !defined KINETIS_WITH_MCG_LITE

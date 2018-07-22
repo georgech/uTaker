@@ -331,9 +331,9 @@ static unsigned long ulSectorWriteCount = 0;
 extern int fnGetSector(unsigned char *ptrBuf)
 {
     unsigned long *ptrData = (unsigned long *)ptrBuf;                    // the Kinetis driver ensures that the buffer is long word aligned
-#if READ_WATERMARK != 128
+    #if READ_WATERMARK != 128
     unsigned long *ptrTerminate = (ptrData + (512 / sizeof(unsigned long))); // end of sector buffer
-#endif
+    #endif
     int iFifoFill = 0;
     int iMonitorRead;                                                    // {62}
     #if defined _COMPILE_KEIL                                            // {47}
@@ -372,7 +372,6 @@ extern int fnGetSector(unsigned char *ptrBuf)
                 return UTFAT_DISK_READ_ERROR;                            // return with error
             }
         }
-
     #if (READ_WATERMARK == 128) && defined SDCARD_RX_DMA_CHANNEL && !defined DEVICE_WITHOUT_DMA && !defined _WINDOWS // {64}
         if (((CAST_POINTER_ARITHMETIC)ptrData & 0x3) == 0) {             // if long word aligned we can use DMA transfer
             // Note that the DMA copy is not necessarily faster than the loop copy but it allows interrupts to be handled without slowing the read

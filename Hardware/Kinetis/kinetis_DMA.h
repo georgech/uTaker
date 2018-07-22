@@ -576,7 +576,13 @@ extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned short usDma
         ptrDMA_TCD->DMA_TCD_DLASTSGA = 0;                                // no destination displacement on transmit buffer completion
     }
     else {
-        if ((ulRules & DMA_DIRECTION_OUTPUT) != 0) {                     // buffer to fixed output
+        if ((ulRules & DMA_DIRECTION_BUFFER_BUFFER) != 0) {              // buffer to buffer [note - not proven]
+            ptrDMA_TCD->DMA_TCD_SOFF = ucSize;                           // source increment (buffer)
+            ptrDMA_TCD->DMA_TCD_DOFF = ucSize;                           // destination increment (buffer)
+            ptrDMA_TCD->DMA_TCD_DLASTSGA = (-(signed long)(ulBufLength));// when the buffer has been filled set the destination back to the start of it
+            ptrDMA_TCD->DMA_TCD_SLAST = (-(signed long)(ulBufLength));   // when the buffer has been transmitted set the destination back to the start of it
+        }
+        else if ((ulRules & DMA_DIRECTION_OUTPUT) != 0) {                // buffer to fixed output
             ptrDMA_TCD->DMA_TCD_SOFF = ucSize;                           // source increment (buffer)
             ptrDMA_TCD->DMA_TCD_DOFF = 0;                                // destination not incremented
             ptrDMA_TCD->DMA_TCD_DLASTSGA = 0;                            // {3} no destination displacement on transmit buffer completion
@@ -584,7 +590,7 @@ extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned short usDma
         }
         else {                                                           // fixed input to buffer
             ptrDMA_TCD->DMA_TCD_SOFF = 0;                                // source not incremented
-            ptrDMA_TCD->DMA_TCD_DOFF = ucSize;                           // destination increment one word (buffer)
+            ptrDMA_TCD->DMA_TCD_DOFF = ucSize;                           // destination increment (buffer)
             ptrDMA_TCD->DMA_TCD_DLASTSGA = (-(signed long)(ulBufLength));// {3} when the buffer has been filled set the destination back to the start of it
             ptrDMA_TCD->DMA_TCD_SLAST = 0;                               // {3} no source displacement on receive buffer completion
         }
@@ -596,14 +602,13 @@ extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned short usDma
         ptrDMA_TCD->DMA_TCD_ATTR = (DMA_TCD_ATTR_DSIZE_8 | DMA_TCD_ATTR_SSIZE_8); // transfer sizes bytes
         break;
     case 2:                                                              // half-word
-        ptrDMA_TCD->DMA_TCD_ATTR = (DMA_TCD_ATTR_DSIZE_16 | DMA_TCD_ATTR_SSIZE_16); // transfer sizes words
+        ptrDMA_TCD->DMA_TCD_ATTR = (DMA_TCD_ATTR_DSIZE_16 | DMA_TCD_ATTR_SSIZE_16); // transfer sizes half-words
         break;
     case 4:                                                              // word
         ptrDMA_TCD->DMA_TCD_ATTR = (DMA_TCD_ATTR_DSIZE_32 | DMA_TCD_ATTR_SSIZE_32); // transfer sizes long words
         break;
     }
     ptrDMA_TCD->DMA_TCD_SADDR = (unsigned long)ptrBufSource;             // source buffer
-    ptrDMA_TCD->DMA_TCD_NBYTES_ML = ucSize;                              // each request starts a single transfer of this size
     _DMA_handler[ucDMA_channel] = int_handler;                           // user interrupt callback
     if (int_handler != 0) {                                              // if there is a buffer interrupt handler at the end of DMA buffer operation
         if ((ulRules & DMA_HALF_BUFFER_INTERRUPT) != 0) {
@@ -622,11 +627,9 @@ extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned short usDma
         ptrDMA_TCD->DMA_TCD_CSR = 0;                                     // free-running mode without any interrupt
     }
     if ((ulRules & DMA_SINGLE_CYCLE) != 0) {                             // {6}
-        ptrDMA_TCD->DMA_TCD_CSR |= DMA_TCD_CSR_DREQ;                     // stop the DMA activity once the transfer completes
+        ptrDMA_TCD->DMA_TCD_CSR |= DMA_TCD_CSR_DREQ;                     // stop the DMA activity once the single buffer transfer completes
     }
     ptrDMA_TCD->DMA_TCD_DADDR = (unsigned long)ptrBufDest;               // destination
-  //ptrDMA_TCD->DMA_TCD_DLASTSGA = 0;                                    // {3} no destination displacement on transmit buffer completion
-  //ptrDMA_TCD->DMA_TCD_SLAST = (-(signed long)(ulBufLength));           // {3} when the buffer has been transmitted set the destination back to the start of it
     if ((ulRules & DMA_SW_TRIGGER) != 0) {                               // {8} no peripheral trigger used - use software start
         ptrDMA_TCD->DMA_TCD_CITER_ELINK = 1;                             // one main loop iteration
         ptrDMA_TCD->DMA_TCD_NBYTES_ML = ulBufLength;                     // total number of bytes
@@ -638,7 +641,15 @@ extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned short usDma
         }
         return;                                                          
     }
-    ptrDMA_TCD->DMA_TCD_BITER_ELINK = ptrDMA_TCD->DMA_TCD_CITER_ELINK = (signed short)(ulBufLength/ucSize); // the number of service requests to be performed each cycle
+    if ((ulRules & DMA_BUFFER_BURST_MODE) != 0) {                        // if a single trigger is to start a complete buffer burst [note - not proven]
+        ptrDMA_TCD->DMA_TCD_NBYTES_ML = ulBufLength;                     // the transfer byte count
+        ptrDMA_TCD->DMA_TCD_CITER_ELINK = 1;                             // a cycle is complete after a single burst
+    }
+    else {
+        ptrDMA_TCD->DMA_TCD_NBYTES_ML = ucSize;                          // each request starts a single transfer of this size (minor byte transfer count)
+        ptrDMA_TCD->DMA_TCD_CITER_ELINK = (signed short)(ulBufLength / ucSize); // the number of service requests to be performed each buffer cycle
+    }
+    ptrDMA_TCD->DMA_TCD_BITER_ELINK = ptrDMA_TCD->DMA_TCD_CITER_ELINK;
     POWER_UP_ATOMIC(6, DMAMUX0);                                         // enable DMA multiplexer 0
         #if defined TRGMUX_AVAILABLE
     if ((usDmaTriggerSource & DMAMUX_CHCFG_TRIG) != 0) {                 // triggered source (LPIT)

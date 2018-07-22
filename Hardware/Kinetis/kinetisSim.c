@@ -4856,7 +4856,7 @@ extern int fnSimulateDMA(int channel)                                    // {3}
                 }
             }
             else {
-                while (ulMinorLoop-- != 0) {
+                while (ulMinorLoop-- != 0) {                             // minor loop count
                     *(unsigned char *)ptrDMA_TCD->DMA_TCD_DADDR = *(unsigned char *)ptrDMA_TCD->DMA_TCD_SADDR; // byte transfer
                     ptrDMA_TCD->DMA_TCD_DADDR = ptrDMA_TCD->DMA_TCD_DADDR + ptrDMA_TCD->DMA_TCD_DOFF;
                     ptrDMA_TCD->DMA_TCD_SADDR = ptrDMA_TCD->DMA_TCD_SADDR + ptrDMA_TCD->DMA_TCD_SOFF;
@@ -7956,14 +7956,14 @@ extern unsigned long fnSimDMA(char *argv[])
         #if ((UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 1)
             case DMA_UART1_TX_CHANNEL:                                   // handle UART DMA transmission on UART 1
             #if LPUARTS_AVAILABLE > 1 && !defined LPUARTS_PARALLEL
-                if (LPUART1_BAUD & LPUART_BAUD_TDMAE)                    // if DMA operation is enabled
+                if ((LPUART1_BAUD & LPUART_BAUD_TDMAE) != 0)             // if DMA operation is enabled
             #elif defined KINETIS_KL
-                if (UART1_C4 & UART_C4_TDMAS)
+                if ((UART1_C4 & UART_C4_TDMAS) != 0)
             #else
-                if (UART1_C5 & UART_C5_TDMAS)
+                if ((UART1_C5 & UART_C5_TDMAS) != 0)
             #endif
                 {                                                        // if DMA operation is enabled
-                    ptrCnt = (int *)argv[THROUGHPUT_UART1];
+                    ptrCnt = (int *)argv[THROUGHPUT_UART1];              // maximum UART throughput during a tick interval
                     if (*ptrCnt != 0) {
                         if (--(*ptrCnt) == 0) {
                             iMasks |= ulChannel;                         // enough serial DMA transfers handled in this tick period

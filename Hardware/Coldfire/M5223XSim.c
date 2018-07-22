@@ -1186,7 +1186,7 @@ extern unsigned long fnSimDMA(char *argv[])
         return 0;
     }
 
-    if (iDMA & DMA_CONTROLLER_0) {                                       // DMA 0 has work to do
+    if ((iDMA & DMA_CONTROLLER_0) != 0) {                                // DMA 0 has work to do
         unsigned long *ptrDMA = (unsigned long *)DMA_ADD;
         unsigned char *ptrSource = *(unsigned char **)ptrDMA++;
         unsigned char *ptrDestination = *(unsigned char **)ptrDMA++;
@@ -1269,7 +1269,7 @@ extern unsigned long fnSimDMA(char *argv[])
         }
     }
 
-    if (iDMA & DMA_CONTROLLER_1) {                                       // DMA 1 has work to do
+    if ((iDMA & DMA_CONTROLLER_1) != 0) {                                // DMA 1 has work to do
         unsigned long *ptrDMA = (unsigned long *)(DMA_ADD + DMA_CHAN_1_OFFSET);
         unsigned char *ptrSource = *(unsigned char **)ptrDMA++;
         unsigned char *ptrDestination = *(unsigned char **)ptrDMA++;
@@ -1352,7 +1352,7 @@ extern unsigned long fnSimDMA(char *argv[])
         }
     }
 
-    if (iDMA & DMA_CONTROLLER_2) {                                       // DMA 2 has work to do
+    if ((iDMA & DMA_CONTROLLER_2) != 0) {                                // DMA 2 has work to do
         unsigned long *ptrDMA = (unsigned long *)(DMA_ADD + 2*DMA_CHAN_1_OFFSET);
         unsigned char *ptrSource = *(unsigned char **)ptrDMA++;
         unsigned char *ptrDestination = *(unsigned char **)ptrDMA++;

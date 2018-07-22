@@ -233,9 +233,9 @@ static QUEUE_TRANSFER entry_tty(QUEUE_HANDLE channel, unsigned char *ptBuffer, Q
         }
         else {
     #if defined SERIAL_SUPPORT_DMA && defined SERIAL_SUPPORT_DMA_RX && defined SERIAL_SUPPORT_DMA_RX_FREERUN  // {33}
-        if ((ptTTYQue->ucDMA_mode & (UART_RX_DMA | UART_RX_DMA_FULL_BUFFER | UART_RX_DMA_HALF_BUFFER | UART_RX_DMA_BREAK)) == (UART_RX_DMA)) { // if receiver is free-running in DMA mode
-            fnPrepareRxDMA(channel, (unsigned char *)&(ptTTYQue->tty_queue), 0); // update the input with present DMA reception information
-        }
+            if ((ptTTYQue->ucDMA_mode & (UART_RX_DMA | UART_RX_DMA_FULL_BUFFER | UART_RX_DMA_HALF_BUFFER | UART_RX_DMA_BREAK)) == (UART_RX_DMA)) { // if receiver is free-running in DMA mode
+                fnPrepareRxDMA(channel, (unsigned char *)&(ptTTYQue->tty_queue), 0); // update the input with present DMA reception information
+            }
     #endif
             rtn_val = ptTTYQue->tty_queue.chars;
         }

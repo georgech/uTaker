@@ -99,7 +99,7 @@ static void fnHandleFlexTimer(FLEX_TIMER_MODULE *ptrFlexTimer, int iFlexTimerRef
     else
 #endif
     if ((ptrFlexTimer->FTM_SC & FTM_SC_TOF) != 0) {                     // flag will always be set but it has to be read at '1' before it can be reset
-        if ((usFlexTimerMode[iFlexTimerReference] & FLEX_TIMER_PERIODIC) != 0) {// if the timer is being used in periodic mode
+        if ((usFlexTimerMode[iFlexTimerReference] & FLEX_TIMER_PERIODIC) != 0) { // if the timer is being used in periodic mode
             ptrFlexTimer->FTM_SC = (usFlexTimerMode[iFlexTimerReference] & FTM_SC_USED_MASK); // reset interrupt and allow the FlexTimer to continue running for periodic interrupts
         }
         else {

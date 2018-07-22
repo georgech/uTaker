@@ -969,7 +969,7 @@ extern unsigned long fnSimDMA(char *argv[])
     unsigned long ulNewActions = 0;
 #if defined CHIP_HAS_uDMA
     DMA_CONTROL_STRUCTURE *ptrDmaControl;
-    if (iDMA & DMA_UART0_TRANSMIT_BIT) {                                 // UART 0 Tx DMA is active
+    if ((iDMA & DMA_UART0_TRANSMIT_BIT) != 0) {                          // UART 0 Tx DMA is active
         if ((UARTDMACTL_0 & TXDMAE) && (DMAENASET & DMA_UART0_TRANSMIT_BIT)) { // only when UART DMA operation is connected and channel enabled
             int *ptrCnt = (int *)argv[0];                                // the maximum number of characters that can be sent in a TICK period
             if (*ptrCnt != 0) {
@@ -991,7 +991,7 @@ extern unsigned long fnSimDMA(char *argv[])
         }
     }
     #if CHIP_HAS_UARTS > 1
-    if (iDMA & DMA_UART1_TRANSMIT_BIT) {                                 // UART 1 Tx DMA is active
+    if ((iDMA & DMA_UART1_TRANSMIT_BIT) != 0) {                          // UART 1 Tx DMA is active
         if ((UARTDMACTL_1 & TXDMAE) && (DMAENASET & DMA_UART1_TRANSMIT_BIT)) { // only when UART DMA operation is connected and channel enabled
             int *ptrCnt = (int *)argv[1];                                // the maximum number of characters that can be sent in a TICK period
             if (*ptrCnt != 0) {
@@ -1014,7 +1014,7 @@ extern unsigned long fnSimDMA(char *argv[])
     }
     #endif
     #if CHIP_HAS_UARTS > 2
-    if (iDMA & DMA_ALT_UART2_TRANSMIT_BIT_2) {                           // UART 2 Tx DMA is active
+    if ((iDMA & DMA_ALT_UART2_TRANSMIT_BIT_2) != 0) {                    // UART 2 Tx DMA is active
         if ((UARTDMACTL_2 & TXDMAE) && (DMAENASET & DMA_ALT_UART2_TRANSMIT_BIT_2)) { // only when UART DMA operation is connected and channel enabled
             int *ptrCnt = (int *)argv[2];                                // the maximum number of characters that can be sent in a TICK period
             if (*ptrCnt != 0) {

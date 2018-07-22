@@ -285,7 +285,7 @@
         #define FLEX_CLOCK_DIVIDE    2                                   // approx. 24MHz
         #define FLASH_CLOCK_DIVIDE   2                                   // approx. 24MHz 
         #define BUS_CLOCK_DIVIDE     1                                   // approx. 48MHz
-    #else                                                                // RUN_FROM_HIRC_FLL
+    #elif defined RUN_FROM_HIRC_FLL                                      // RUN_FROM_HIRC_FLL
         #define FLL_FACTOR           2197                                // use FLL for 68.65MHz from 48MHz/1536 IRC (factors available are 640, 732, 1280, 1464, 1920, 2197, 2560 and 2929)
         #define SYSTEM_CLOCK_DIVIDE  1
         #define BUS_CLOCK_DIVIDE     2                                   // 48MHz
@@ -342,14 +342,14 @@
     #define USB_CRYSTAL_LESS                                             // use 48MHz IRC as USB source (according to Freescale AN4905 - only possible in device mode)
     #define USB_CLOCK_GENERATED_INTERNALLY                               // use USB clock from internal source rather than external pin - 120MHz is suitable
 #elif defined TWR_K60N512 || defined TWR_K60D100M || defined KINETIS_K52 || defined TWR_K53N512 || defined KINETIS_K61 || defined KINETIS_K70
-  //#define CLOCK_FROM_RTC_OSCILLATOR                                    // clock from 32768Hz RTC oscillator circuit, either directly or from FLL
-  //#define RUN_FROM_DEFAULT_CLOCK
-    #if !defined CLOCK_FROM_RTC_OSCILLATOR
+  //#define CLOCK_FROM_RTC_OSCILLATOR                                    // clock from 32768Hz RTC oscillator circuit, either directly or from FLL (neither suitable for ethernet nor USB)
+  //#define RUN_FROM_DEFAULT_CLOCK                                       // clock from the IRC (neither suitable for ethernet nor USB)
+    #if !defined CLOCK_FROM_RTC_OSCILLATOR && !defined RUN_FROM_DEFAULT_CLOCK
         #define EXTERNAL_CLOCK           50000000                        // this must be 50MHz in order to use Ethernet in RMII mode
         #define _EXTERNAL_CLOCK          EXTERNAL_CLOCK
     #endif
     #if defined RUN_FROM_DEFAULT_CLOCK
-        #define FLL_FACTOR            2929                               // use FLL (factors available are 640, 732, 1280, 1464, 1920, 2197, 2560 and 2929)
+        #define FLL_FACTOR            2929                               // use FLL [95.977MHz] (factors available are 640, 732, 1280, 1464, 1920, 2197, 2560 and 2929)
         #if defined FLL_FACTOR
             #define SYSTEM_CLOCK_DIVIDE   1                              // 96MHz
             #define BUS_CLOCK_DIVIDE      2
@@ -362,7 +362,8 @@
             #define FLEX_CLOCK_DIVIDE     2
         #endif
     #elif defined CLOCK_FROM_RTC_OSCILLATOR
-        #define FLL_FACTOR            2929                               // use FLL (factors available are 640, 732, 1280, 1464, 1920, 2197, 2560 and 2929)
+        #define RUN_FROM_RTC_FLL                                         // use FLL
+        #define FLL_FACTOR            2929                               // use FLL [95.977MHz] (factors available are 640, 732, 1280, 1464, 1920, 2197, 2560 and 2929)
         #define SYSTEM_CLOCK_DIVIDE   1                                  // 96MHz
         #define BUS_CLOCK_DIVIDE      2
         #define FLASH_CLOCK_DIVIDE    4
@@ -431,7 +432,7 @@
 #elif defined FRDM_K22F || defined TWR_K22F120M || defined tinyK22
   //#define RUN_FROM_DEFAULT_CLOCK                                       // default mode is FLL Engaged Internal - the 32kHz IRC is multiplied by FLL factor of 640 to obtain 20.9715MHz nominal frequency (20MHz..25MHz)
   //#define RUN_FROM_LIRC                                                // clock directly from internal 4MHz RC clock
-    #define RUN_FROM_HIRC                                                // clock directly from internal 48MHz RC clock
+  //#define RUN_FROM_HIRC                                                // clock directly from internal 48MHz RC clock
   //#define RUN_FROM_HIRC_PLL                                            // use 48MHz RC clock as input to the PLL
   //#define RUN_FROM_HIRC_FLL                                            // use 48MHz RC clock as input to the FLL
     #if defined RUN_FROM_LIRC                                            // 4MHz
@@ -632,6 +633,7 @@
         #define OSC_LOW_GAIN_MODE                                        // oscillator without feedback resistor or load capacitors so use low gain mode
         #define CRYSTAL_FREQUENCY   32768                                // 32768 Hz crystal
         #define _EXTERNAL_CLOCK     CRYSTAL_FREQUENCY
+        #define RUN_FROM_EXTERNAL_CLOCK_FLL
         #define FLL_FACTOR          1464                                 // 48MHz these devices have no PLL so use FLL (factors available are 640, 732, 1280, 1464, 1920, 2197, 2560 and 2929)
         #define FLASH_CLOCK_DIVIDE  2                                    // 24MHz
     #endif
@@ -1544,7 +1546,7 @@
 #endif
 
 #define SUPPORT_TIMER                                                    // support hardware timer interrupt configuration (FlexTimer or TPM)
-  //#define SUPPORT_CAPTURE                                              // support capture mode of operation
+    #define SUPPORT_CAPTURE                                              // support capture mode of operation
 
 #if defined KINETIS_KL || defined KINETIS_K66
     #if defined KINETIS_KL82
@@ -2486,14 +2488,14 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 
 // FLASH configuration settings
 //
-#define BACKDOOR_KEY_0     0
-#define BACKDOOR_KEY_1     0
-#define BACKDOOR_KEY_2     0
-#define BACKDOOR_KEY_3     0
-#define BACKDOOR_KEY_4     0
-#define BACKDOOR_KEY_5     0
-#define BACKDOOR_KEY_6     0
-#define BACKDOOR_KEY_7     0
+#define BACKDOOR_KEY_0     0x00                                          // note that values with all 0x00 or all 0xff are not valid
+#define BACKDOOR_KEY_1     0x00
+#define BACKDOOR_KEY_2     0x00
+#define BACKDOOR_KEY_3     0x00
+#define BACKDOOR_KEY_4     0x00
+#define BACKDOOR_KEY_5     0x00
+#define BACKDOOR_KEY_6     0x00
+#define BACKDOOR_KEY_7     0x01
 
 
 #if defined FLASH_CONTROLLER_FTMRE
@@ -4736,6 +4738,14 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 
     #if defined TWR_K80F150M
         #define KEYPAD "KeyPads/TWR_K80F150M.bmp"
+
+                                        // '0'            '1'         input state   center (x,   y)   0 = circle, radius, controlling port, controlling pin 
+        #define KEYPAD_LED_DEFINITIONS  {RGB(255,75,0), RGB(200,200,200), 1, {339, 108, 347, 115 }, _PORTA, DEMO_LED_1}, \
+                                        {RGB(255,128,0),RGB(200,200,200), 1, {339, 118, 347, 125 }, _PORTA, DEMO_LED_2}, \
+                                        {RGB(0,255,0),  RGB(200,200,200), 1, {339, 127, 347, 134 }, _PORTA, DEMO_LED_3}
+
+        #define BUTTON_KEY_DEFINITIONS  {SWITCH_1_PORT, SWITCH_1, {338, 61, 350,  77}}, \
+                                        {SWITCH_2_PORT, SWITCH_2, {338, 87, 350, 100}}
     #elif defined FRDM_K82F
         #define KEYPAD "KeyPads/FRDM_K82F.bmp"
 
