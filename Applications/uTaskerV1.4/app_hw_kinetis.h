@@ -4739,10 +4739,16 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #if defined TWR_K80F150M
         #define KEYPAD "KeyPads/TWR_K80F150M.bmp"
 
+        #define MULTICOLOUR_LEDS        {0, 2}                           // single LED made up of entries 0, 1 and 2
+
                                         // '0'            '1'         input state   center (x,   y)   0 = circle, radius, controlling port, controlling pin 
-        #define KEYPAD_LED_DEFINITIONS  {RGB(255,75,0), RGB(200,200,200), 1, {339, 108, 347, 115 }, _PORTA, DEMO_LED_1}, \
+        #define KEYPAD_LED_DEFINITIONS  {RGB(255,0,0),  RGB(200,200,200), 1, {363, 114, 0, 5 }, _PORTA, DEMO_LED_1}, \
+                                        {RGB(0,255,0),  RGB(200,200,200), 1, {363, 114, 0, 5 }, _PORTA, DEMO_LED_2}, \
+                                        {RGB(0,0,255),  RGB(200,200,200), 1, {363, 114, 0, 5 }, _PORTA, DEMO_LED_3}, \
+                                        {RGB(255,75,0), RGB(200,200,200), 1, {339, 108, 347, 115 }, _PORTA, DEMO_LED_1}, \
                                         {RGB(255,128,0),RGB(200,200,200), 1, {339, 118, 347, 125 }, _PORTA, DEMO_LED_2}, \
                                         {RGB(0,255,0),  RGB(200,200,200), 1, {339, 127, 347, 134 }, _PORTA, DEMO_LED_3}
+
 
         #define BUTTON_KEY_DEFINITIONS  {SWITCH_1_PORT, SWITCH_1, {338, 61, 350,  77}}, \
                                         {SWITCH_2_PORT, SWITCH_2, {338, 87, 350, 100}}

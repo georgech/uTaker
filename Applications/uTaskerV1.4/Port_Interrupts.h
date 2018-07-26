@@ -416,7 +416,7 @@ static void fnInitIRQ(void)
         interrupt_setup.int_port_bits = PORTD_BIT0;
         interrupt_setup.int_port_sense = (IRQ_RISING_EDGE | PULLUP_ON | PORT_DMA_MODE | PORT_KEEP_PERIPHERAL); // DMA on rising edge (keep CS peripheral to trigger on the end of a transfer
         fnConfigDMA_buffer(DMA_CHANNEL_FOR_CS_END, DMAMUX0_CHCFG_SOURCE_PORTD, sizeof(ulSPI_clear), (void *)&ulSPI_clear, (void *)SPI0_SR_ADDR, (DMA_FIXED_ADDRESSES | DMA_LONG_WORDS), 0, 0); // use DMA channel without any interrupts (free-runnning)
-        fnDMA_BufferReset(DMA_CHANNEL_FOR_CS_END, DMA_BUFFER_START);     // enable the DMA operation - a rising edge on the port will now a clear the the SPI status register
+        fnDMA_BufferReset(DMA_CHANNEL_FOR_CS_END, DMA_BUFFER_START);     // enable the DMA operation - a rising edge on the port will now clear the the SPI status register
         fnConfigureInterrupt((void *)&interrupt_setup);                  // configure cs port DMA (rising edge)
     }
         #else

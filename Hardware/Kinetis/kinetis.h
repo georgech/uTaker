@@ -343,6 +343,29 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
     #define KINETIS_WITH_RTC_CRYSTAL
 #endif
 
+
+// Define the FLL input divider value if an external clock is being used (it must give an input reference frequency between 31.25kHz and 39.062kHz)
+//
+#if defined _EXTERNAL_CLOCK && !(defined KINETIS_HAS_IRC48M && defined RUN_FROM_HIRC_FLL)
+    #if ((_EXTERNAL_CLOCK/32) <= 39062)
+        #define FLL_INPUT_DIVIDE_VALUE    32
+    #elif ((_EXTERNAL_CLOCK/64) <= 39062)
+        #define FLL_INPUT_DIVIDE_VALUE    64
+    #elif ((_EXTERNAL_CLOCK/128) <= 39062)
+        #define FLL_INPUT_DIVIDE_VALUE    128
+    #elif ((_EXTERNAL_CLOCK/256) <= 39062)
+        #define FLL_INPUT_DIVIDE_VALUE    256
+    #elif ((_EXTERNAL_CLOCK/512) <= 39062)
+        #define FLL_INPUT_DIVIDE_VALUE    512
+    #elif ((_EXTERNAL_CLOCK/1024) <= 39062)
+        #define FLL_INPUT_DIVIDE_VALUE    1024
+    #elif ((_EXTERNAL_CLOCK/1280) <= 39062)
+        #define FLL_INPUT_DIVIDE_VALUE    1280
+    #elif ((_EXTERNAL_CLOCK/1536) <= 39062)
+        #define FLL_INPUT_DIVIDE_VALUE    1536
+    #endif
+#endif
+
 #if defined RUN_FROM_DEFAULT_CLOCK || defined RUN_FROM_OSC_FLL || (defined MCG_WITHOUT_PLL && defined _EXTERNAL_CLOCK) || (defined KINETIS_HAS_IRC48M && defined RUN_FROM_HIRC_FLL) || (defined KINETIS_WITH_RTC_CRYSTAL && defined RUN_FROM_RTC_FLL)
     // Clock configuration using FLL
     //
@@ -378,25 +401,8 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
             #define FLL_INPUT_DIVIDE_VALUE    1536
             #define MCGOUTCLK      ((48000000/1536) * FLL_FACTOR)        // 48MHz/1536 IRC multiplied by the FLL factor
         #elif defined _EXTERNAL_CLOCK                                    // referencing FLL to external clock (or crystal) source
-            // Define the FLL input divider and check that the input range can be respected
+            // Check that the input range can be respected
             //
-            #if ((_EXTERNAL_CLOCK/32) <= 39062)
-                #define FLL_INPUT_DIVIDE_VALUE    32
-            #elif ((_EXTERNAL_CLOCK/64) <= 39062)
-                #define FLL_INPUT_DIVIDE_VALUE    64
-            #elif ((_EXTERNAL_CLOCK/128) <= 39062)
-                #define FLL_INPUT_DIVIDE_VALUE    128
-            #elif ((_EXTERNAL_CLOCK/256) <= 39062)
-                #define FLL_INPUT_DIVIDE_VALUE    256
-            #elif ((_EXTERNAL_CLOCK/512) <= 39062)
-                #define FLL_INPUT_DIVIDE_VALUE    512
-            #elif ((_EXTERNAL_CLOCK/1024) <= 39062)
-                #define FLL_INPUT_DIVIDE_VALUE    1024
-            #elif ((_EXTERNAL_CLOCK/1280) <= 39062)
-                #define FLL_INPUT_DIVIDE_VALUE    1280
-            #elif ((_EXTERNAL_CLOCK/1536) <= 39062)
-                #define FLL_INPUT_DIVIDE_VALUE    1536
-            #endif
             #if (((_EXTERNAL_CLOCK/FLL_INPUT_DIVIDE_VALUE) > 39062) || (((_EXTERNAL_CLOCK/FLL_INPUT_DIVIDE_VALUE) < 31250)))
                 #error Divided input frequency is not suitable for FLL (must be between 31.25kHz and 39.062kHz)!!
             #endif

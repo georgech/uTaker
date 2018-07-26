@@ -399,7 +399,7 @@ extern int fnGetSector(unsigned char *ptrBuf)
     #if (READ_WATERMARK == 128) && defined SDCARD_RX_DMA_CHANNEL && !defined DEVICE_WITHOUT_DMA && !defined _WINDOWS
         }
     #endif
-    while ((SDHC_IRQSTAT & SDHC_IRQSTAT_TC) == 0) {                      // wait for complete transfer to complete
+    while ((SDHC_IRQSTAT & SDHC_IRQSTAT_TC) == 0) {                      // wait for transfer to complete
         if ((SDHC_PRSSTAT & SDHC_PRSSTAT_CCIHB) != 0) {                  // during block reads the data inhibit remains set and we use it to continue
             break;
         }
