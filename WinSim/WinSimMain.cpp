@@ -277,7 +277,7 @@ unsigned long *pPixels = 0;
     #define _EXTERNAL_PORT_COUNT   0
 #endif
 #if defined _KINETIS
-    #if defined KINETIS_KE && !defined KINETIS_KE15
+    #if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18
         #define _PORTS_AVAILABLE PORTS_AVAILABLE_8_BIT                   // 8 bit ports
     #else
         #define _PORTS_AVAILABLE (PORTS_AVAILABLE + 1)                   // add dedicated ADC port

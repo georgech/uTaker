@@ -17621,7 +17621,7 @@ typedef struct stDAC_REGS                                                // {23}
     } FGPIO_REGS;
 #endif
 
-#if defined KINETIS_KE && !defined KINETIS_KE15
+#if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18
   #define PORT_WIDTH                     8                               // 8 bit ports according to KE convention
 
   #define KE_PORTA                       0
