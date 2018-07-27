@@ -390,7 +390,7 @@ static __interrupt void _PWM_Interrupt_5(void)
                 }
                 break;
     #endif
-    #if FLEX_TIMERS_AVAILABLE > 3
+    #if FLEX_TIMERS_AVAILABLE > 3 && !defined KINETIS_KE18
             case 3:
         #if defined KINETIS_WITH_PCC && !defined KINETIS_KE15
                 SELECT_PCC_PERIPHERAL_SOURCE(FTM3, FTM3_PCC_SOURCE);     // select the PCC clock used by FlexTimer/TPM 3

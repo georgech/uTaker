@@ -309,7 +309,7 @@ static __interrupt void _flexTimerInterrupt_3(void)
         #endif
                 break;
     #endif
-    #if FLEX_TIMERS_AVAILABLE > 3
+    #if FLEX_TIMERS_AVAILABLE > 3 && !defined KINETIS_KE18
             case 3:
                 if ((ptrTimerSetup->timer_mode & TIMER_STOP) != 0) {
         #if defined KINETIS_WITH_PCC

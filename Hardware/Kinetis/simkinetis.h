@@ -1889,7 +1889,7 @@ typedef struct stKINETIS_RTC
 #endif
 } KINETIS_RTC;
 
- #if !defined KINETIS_KE
+#if LPTMR_AVAILABLE > 0
 typedef struct stKINETIS_LPTMR                                           // {20}
 {
 unsigned long LPTMR_CSR;
@@ -2134,7 +2134,7 @@ typedef struct stKINETIS_SIM
 #endif
 } KINETIS_SIM;
 
-#if defined KINETIS_KE && !defined KINETIS_KE15
+#if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18
     typedef struct stKINETIS_KE_PORT
     {
     #if (defined KINETIS_KE04 && (SIZE_OF_FLASH > (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
@@ -3793,7 +3793,7 @@ typedef struct stKINETIS_PERIPH
 #if !defined KINETIS_WITHOUT_RTC
     KINETIS_RTC        RTC;
 #endif
-#if !defined KINETIS_KE
+#if LPTMR_AVAILABLE > 0
     KINETIS_LPTMR      LPTMR[LPTMR_AVAILABLE];                           // {20}
 #endif
 #if !defined KINETIS_KE && !defined KINETIS_KL && !defined KINETIS_KM && !defined CROSSBAR_SWITCH_LITE
@@ -3801,7 +3801,7 @@ typedef struct stKINETIS_PERIPH
 #endif
     KINETIS_TSI        TSI;
     KINETIS_SIM        SIM;
-#if defined KINETIS_KE && !defined KINETIS_KE15
+#if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18
     KINETIS_KE_PORT    PORT;
 #else
     KINETIS_PORT       PORT[PORTS_AVAILABLE];
@@ -3823,7 +3823,7 @@ typedef struct stKINETIS_PERIPH
 #endif
 #if defined KINETIS_WITH_PCC                                             // {34}
     KINETIS_PCC        PCC;
-    #if !defined KINETIS_KE15
+    #if !defined KINETIS_KE15 && !defined KINETIS_KE18
     KINETIS_PCC2       PCC2;
     #endif
 #endif
@@ -3927,7 +3927,7 @@ typedef struct stKINETIS_PERIPH
 
 extern KINETIS_PERIPH kinetis;
 
-#if defined KINETIS_KE && !defined KINETIS_KE15
+#if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18
     #define _PORTS_AVAILABLE_   PORTS_AVAILABLE_8_BIT
 #else
     #define _PORTS_AVAILABLE_   PORTS_AVAILABLE

@@ -381,7 +381,7 @@ static void fnConfigTimerPin(int iTimer, int iChannel, unsigned long ulCharacter
                         break;
         #if FLEX_TIMERS_2_CHANNELS > 2
                     case 2:                                              // timer 2, channel 2
-            #if defined KINETIS_KE15
+            #if defined KINETIS_KE15 || defined KINETIS_KE18
                 #if defined TPM2_2_ON_D
                         _CONFIG_PERIPHERAL(D, 12, (PD_12_FTM2_CH2 | ulCharacteristics)); // FTM2_CH2 on PD.12 (alt. function 2)
                 #else
@@ -410,7 +410,7 @@ static void fnConfigTimerPin(int iTimer, int iChannel, unsigned long ulCharacter
         #endif
         #if FLEX_TIMERS_2_CHANNELS > 3
                     case 3:                                              // timer 2, channel 3
-            #if defined KINETIS_KE15
+            #if defined KINETIS_KE15 || defined KINETIS_KE18
                 #if defined TPM2_3_ON_D
                         _CONFIG_PERIPHERAL(D, 5, (PD_5_FTM2_CH3 | ulCharacteristics)); // FTM2_CH3 on PD.5 (alt. function 2)
                 #else
@@ -438,7 +438,7 @@ static void fnConfigTimerPin(int iTimer, int iChannel, unsigned long ulCharacter
             #endif
                         break;
         #endif
-        #if FLEX_TIMERS_2_CHANNELS > 4
+        #if FLEX_TIMERS_2_CHANNELS > 4 && !defined KINETIS_KE18
                     case 4:                                              // timer 2, channel 4
             #if defined FTM2_4_ON_G && defined SIM_PINSEL1
                         SIM_PINSEL1 |= SIM_PINSEL1_FTM2PS4;
@@ -451,7 +451,7 @@ static void fnConfigTimerPin(int iTimer, int iChannel, unsigned long ulCharacter
             #endif
                         break;
         #endif
-        #if FLEX_TIMERS_2_CHANNELS > 5
+        #if FLEX_TIMERS_2_CHANNELS > 5 && !defined KINETIS_KE18
                     case 5:                                              // timer 2, channel 5
             #if defined FTM2_5_ON_G && defined SIM_PINSEL1
                         SIM_PINSEL1 |= SIM_PINSEL1_FTM2PS5;

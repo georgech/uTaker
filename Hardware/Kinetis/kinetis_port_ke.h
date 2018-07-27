@@ -908,7 +908,7 @@ static const char *cPer[PORTS_AVAILABLE_8_BIT][PORT_WIDTH * 4][8] = {    // KEA6
         {  "PTI7",         "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTI7
     }
 };
-#elif defined KINETIS_KE15
+#elif defined KINETIS_KE15 || defined KINETIS_KE18
 #if PIN_COUNT == PIN_COUNT_100_PIN                                       // 100 pin LQFP
     #define _PIN_COUNT      0
 #elif PIN_COUNT == PIN_COUNT_64_PIN                                      // 64 pin LQFP

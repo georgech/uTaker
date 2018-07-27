@@ -1024,7 +1024,7 @@ extern int fnConfigPort(CHAR cPortBit, CHAR cType)
 //
 static void fnSetPortBit(unsigned short usBit, int iSetClr)
 {
-#if !defined FRDM_KL02Z && !defined tinyK20 && !defined FRDM_KL03Z && !defined FRDM_KL05Z && !defined FRDM_KE02Z && !defined FRDM_KE06Z && !defined FRDM_KE02Z40M && !defined TRK_KEA128 && !defined TRK_KEA64 && !defined TRK_KEA8 && !defined FRDM_KE04Z && !defined FRDM_K22F && !defined tinyK22 && !defined K70F150M_12M && !defined TWR_KL43Z48M && !defined TWR_KV31F120M && !defined FRDM_KV31F && !defined TWR_KW21D256 && !defined TWR_KW24D512 && !defined K20FX512_120 && !defined K60F150M_50M && !defined TWR_K65F180M && !defined FRDM_K66F && !defined FRDM_K82F && !defined BLAZE_K22 && !defined FRDM_KEAZN32Q64 && !defined FRDM_KEAZ64Q64 && !defined FRDM_KEAZ128Q80 && !defined TEENSY_3_5 && !defined TEENSY_3_6 && !defined FRDM_KL82Z && !defined TWR_KL82Z72M && !defined TRINAMIC_LANDUNGSBRUECKE && !defined FRDM_KE15Z && !defined TWR_KV46F150M & !defined TWR_KV58F220M && !defined KINETIS_KM // {9}
+#if !defined FRDM_KL02Z && !defined tinyK20 && !defined FRDM_KL03Z && !defined FRDM_KL05Z && !defined FRDM_KE02Z && !defined FRDM_KE06Z && !defined FRDM_KE02Z40M && !defined TRK_KEA128 && !defined TRK_KEA64 && !defined TRK_KEA8 && !defined FRDM_KE04Z && !defined FRDM_K22F && !defined tinyK22 && !defined K70F150M_12M && !defined TWR_KL43Z48M && !defined TWR_KV31F120M && !defined FRDM_KV31F && !defined TWR_KW21D256 && !defined TWR_KW24D512 && !defined K20FX512_120 && !defined K60F150M_50M && !defined TWR_K65F180M && !defined FRDM_K66F && !defined FRDM_K82F && !defined BLAZE_K22 && !defined FRDM_KEAZN32Q64 && !defined FRDM_KEAZ64Q64 && !defined FRDM_KEAZ128Q80 && !defined TEENSY_3_5 && !defined TEENSY_3_6 && !defined FRDM_KL82Z && !defined TWR_KL82Z72M && !defined TRINAMIC_LANDUNGSBRUECKE && !defined FRDM_KE15Z && !defined TWR_KE18F && !defined TWR_KV46F150M & !defined TWR_KV58F220M && !defined KINETIS_KM // {9}
     if (iSetClr != 0) {
         switch (usBit) {
         case 0x0001:
@@ -1136,7 +1136,7 @@ static void fnSetPortBit(unsigned short usBit, int iSetClr)
 //
 extern int fnUserPortState(CHAR cPortBit)
 {
-#if !defined FRDM_KL02Z && !defined tinyK20 && !defined FRDM_KL03Z && !defined FRDM_KL05Z && !defined FRDM_KE02Z && !defined FRDM_KE04Z && !defined FRDM_KE06Z && !defined FRDM_KE02Z40M&& !defined TRK_KEA128 && !defined TRK_KEA64 && !defined TRK_KEA8 && !defined FRDM_K22F && !defined tinyK22 && !defined K70F150M_12M && !defined TWR_KL43Z48M && !defined TWR_KV31F120M && !defined FRDM_KV31F && !defined TWR_KW21D256 && !defined TWR_KW24D512 && !defined K20FX512_120 && !defined K60F150M_50M && !defined TWR_K65F180M && !defined FRDM_K66F && !defined FRDM_K82F && !defined BLAZE_K22 && !defined FRDM_KEAZN32Q64 && !defined FRDM_KEAZ64Q64 && !defined FRDM_KEAZ128Q80 && !defined TEENSY_3_5 && !defined TEENSY_3_6 && !defined FRDM_KL82Z && !defined TWR_KL82Z72M && !defined TRINAMIC_LANDUNGSBRUECKE && !defined FRDM_KE15Z && !defined TWR_KV46F150M & !defined TWR_KV58F220M && !defined KINETIS_KM // {9}
+#if !defined FRDM_KL02Z && !defined tinyK20 && !defined FRDM_KL03Z && !defined FRDM_KL05Z && !defined FRDM_KE02Z && !defined FRDM_KE04Z && !defined FRDM_KE06Z && !defined FRDM_KE02Z40M&& !defined TRK_KEA128 && !defined TRK_KEA64 && !defined TRK_KEA8 && !defined FRDM_K22F && !defined tinyK22 && !defined K70F150M_12M && !defined TWR_KL43Z48M && !defined TWR_KV31F120M && !defined FRDM_KV31F && !defined TWR_KW21D256 && !defined TWR_KW24D512 && !defined K20FX512_120 && !defined K60F150M_50M && !defined TWR_K65F180M && !defined FRDM_K66F && !defined FRDM_K82F && !defined BLAZE_K22 && !defined FRDM_KEAZN32Q64 && !defined FRDM_KEAZ64Q64 && !defined FRDM_KEAZ128Q80 && !defined TEENSY_3_5 && !defined TEENSY_3_6 && !defined FRDM_KL82Z && !defined TWR_KL82Z72M && !defined TRINAMIC_LANDUNGSBRUECKE && !defined FRDM_KE15Z && !defined TWR_KE18F && !defined TWR_KV46F150M & !defined TWR_KV58F220M && !defined KINETIS_KM // {9}
     switch (cPortBit) {
     case 'a':
         return ((USER_PORT_1 & USER_PORT_1_BIT) != 0);
@@ -1181,7 +1181,7 @@ extern int fnUserPortState(CHAR cPortBit)
 //
 static int fnConfigOutputPort(CHAR cPortBit)
 {
-#if !defined FRDM_KL02Z && !defined tinyK20 && !defined FRDM_KL03Z && !defined FRDM_KL05Z && !defined FRDM_KE02Z && !defined FRDM_KE04Z && !defined FRDM_KE06Z && !defined FRDM_KE02Z40M && !defined TRK_KEA128 && !defined TRK_KEA64 && !defined TRK_KEA8 && !defined FRDM_K22F && !defined tinyK22 && !defined K70F150M_12M && !defined TWR_KL43Z48M && !defined TWR_KV31F120M && !defined FRDM_KV31F && !defined TWR_KW21D256 && !defined TWR_KW24D512 && !defined K20FX512_120 && !defined K60F150M_50M && !defined TWR_K65F180M && !defined FRDM_K66F && !defined FRDM_K82F && !defined BLAZE_K22 && !defined FRDM_KEAZN32Q64 && !defined FRDM_KEAZ64Q64 && !defined FRDM_KEAZ128Q80 && !defined TEENSY_3_5 && !defined TEENSY_3_6 && ! defined FRDM_KL82Z && !defined TWR_KL82Z72M && !defined TRINAMIC_LANDUNGSBRUECKE && !defined FRDM_KE15Z && !defined TWR_KV46F150M & !defined TWR_KV58F220M && !defined KINETIS_KM // {9}
+#if !defined FRDM_KL02Z && !defined tinyK20 && !defined FRDM_KL03Z && !defined FRDM_KL05Z && !defined FRDM_KE02Z && !defined FRDM_KE04Z && !defined FRDM_KE06Z && !defined FRDM_KE02Z40M && !defined TRK_KEA128 && !defined TRK_KEA64 && !defined TRK_KEA8 && !defined FRDM_K22F && !defined tinyK22 && !defined K70F150M_12M && !defined TWR_KL43Z48M && !defined TWR_KV31F120M && !defined FRDM_KV31F && !defined TWR_KW21D256 && !defined TWR_KW24D512 && !defined K20FX512_120 && !defined K60F150M_50M && !defined TWR_K65F180M && !defined FRDM_K66F && !defined FRDM_K82F && !defined BLAZE_K22 && !defined FRDM_KEAZN32Q64 && !defined FRDM_KEAZ64Q64 && !defined FRDM_KEAZ128Q80 && !defined TEENSY_3_5 && !defined TEENSY_3_6 && ! defined FRDM_KL82Z && !defined TWR_KL82Z72M && !defined TRINAMIC_LANDUNGSBRUECKE && !defined FRDM_KE15Z && !defined TWR_KE18F && !defined TWR_KV46F150M & !defined TWR_KV58F220M && !defined KINETIS_KM // {9}
     switch (cPortBit) {
     case 'a':
         _CONFIG_OUTPUT_PORT_1();        
@@ -1242,7 +1242,7 @@ static int fnConfigOutputPort(CHAR cPortBit)
 //
 extern int fnTogglePortOut(CHAR cPortBit)
 {
-#if !defined FRDM_KL02Z && !defined tinyK20 && !defined FRDM_KL03Z && !defined FRDM_KL05Z && !defined FRDM_KE02Z && !defined FRDM_KE04Z && !defined FRDM_KE06Z && !defined FRDM_KE02Z40M && !defined TRK_KEA128 && !defined TRK_KEA64 && !defined TRK_KEA8 && !defined FRDM_K22F && !defined tinyK22 && !defined K70F150M_12M && !defined TWR_KL43Z48M && !defined TWR_KV31F120M && !defined FRDM_KV31F && !defined TWR_KW21D256 && !defined TWR_KW24D512 && !defined K20FX512_120 && !defined K60F150M_50M && !defined FRDM_K82F && !defined BLAZE_K22 && !defined FRDM_KEAZN32Q64 && !defined FRDM_KEAZ64Q64 && !defined FRDM_KEAZ128Q80 && !defined FRDM_K66F && !defined TRINAMIC_LANDUNGSBRUECKE && !defined FRDM_KE15Z && !defined TWR_KV46F150M & !defined TWR_KV58F220M && !defined KINETIS_KM // {9}
+#if !defined FRDM_KL02Z && !defined tinyK20 && !defined FRDM_KL03Z && !defined FRDM_KL05Z && !defined FRDM_KE02Z && !defined FRDM_KE04Z && !defined FRDM_KE06Z && !defined FRDM_KE02Z40M && !defined TRK_KEA128 && !defined TRK_KEA64 && !defined TRK_KEA8 && !defined FRDM_K22F && !defined tinyK22 && !defined K70F150M_12M && !defined TWR_KL43Z48M && !defined TWR_KV31F120M && !defined FRDM_KV31F && !defined TWR_KW21D256 && !defined TWR_KW24D512 && !defined K20FX512_120 && !defined K60F150M_50M && !defined FRDM_K82F && !defined BLAZE_K22 && !defined FRDM_KEAZN32Q64 && !defined FRDM_KEAZ64Q64 && !defined FRDM_KEAZ128Q80 && !defined FRDM_K66F && !defined TRINAMIC_LANDUNGSBRUECKE && !defined FRDM_KE15Z && !defined TWR_KE18F && !defined TWR_KV46F150M & !defined TWR_KV58F220M && !defined KINETIS_KM // {9}
     switch (cPortBit) {
     case 'a':
         USER_TOGGLE_PORT_1 = USER_PORT_1_BIT;
@@ -2235,7 +2235,7 @@ extern unsigned char fnAddResetCause(CHAR *ptrBuffer)
     static const CHAR cJtag[]          = "JTAG";
     #endif
 #endif
-#if !(defined KINETIS_KE && !defined KINETIS_KE15)
+#if !(defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18)
     static const CHAR cWakeupOther[]   = "Wakeup";
     static const CHAR cWakeup[]        = "Wakeup reset";
 #endif
@@ -2247,7 +2247,7 @@ extern unsigned char fnAddResetCause(CHAR *ptrBuffer)
     static const CHAR cWatchdog[]      = "WDOG";
     static const CHAR cClockLoss[]     = "Clock loss";
     static const CHAR cUnknown[]       = "???";
-#if defined KINETIS_KE && !defined KINETIS_KE15                          // {11}
+#if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18 // {11}
     static const CHAR cHostDebug[]     = "Host debugger";
     static const CHAR cPerFailure[]    = "peripheral failure";
     if ((SIM_SRSID & SIM_SRSID_POR) != 0) {                              // power on reset

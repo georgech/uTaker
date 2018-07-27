@@ -2397,7 +2397,7 @@ static void _LowLevelInit(void)
     #endif
     }
     #if defined SUPPORT_LOW_POWER && (defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000))
-        #if defined SUPPORT_LPTMR                                        // ensure no interrupts pending after waking from VLLS modes via LPTMR
+        #if defined SUPPORT_LPTMR && LPTMR_AVAILABLE > 0                 // ensure no interrupts pending after waking from VLLS modes via LPTMR
     POWER_UP_ATOMIC(5, LPTMR0);                                          // power up the low power timer
     PMC_REGSC = PMC_REGSC_ACKISO;                                        // acknowledge the isolation mode to set certain peripherals and I/O pads back to normal run state
     LPTMR0_CSR = 0;                                                      // clear possible pending interrupt and stop the timer
@@ -2432,7 +2432,7 @@ static void _LowLevelInit(void)
 #endif
 // Include clock configuration code
 //
-#if defined KINETIS_KE && !defined KINETIS_KE15
+#if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18
     #include "kinetis_KE_CLOCK.h"                                        // KE and KEA clock configuration
 #elif defined RUN_FROM_HIRC || defined RUN_FROM_HIRC_FLL || defined RUN_FROM_HIRC_PLL // 48MHz
     #include "kinetis_HIRC.h"                                            // high speed internal clock

@@ -20,12 +20,12 @@
 */
 
     #if !defined RUN_FROM_DEFAULT_CLOCK
-        #if ((CRYSTAL_FREQUENCY >= 4000000) && (CRYSTAL_FREQUENCY <= MAX_HIGH_RANGE_XTAL)) // select crystal range setting depending on the crystal used
+        #if ((CRYSTAL_FREQUENCY >= MIN_HIGH_RANGE_XTAL) && (CRYSTAL_FREQUENCY <= MAX_HIGH_RANGE_XTAL)) // select crystal range setting depending on the crystal used
             #define _OSC_RANGE   (OSC_CR_RANGE_HIGH)
         #elif ((CRYSTAL_FREQUENCY >= 31250) && (CRYSTAL_FREQUENCY <= 39063)) // {1}
             #define _OSC_RANGE   (OSC_CR_RANGE_LOW)
         #else
-            #error Invalid crystal frequency!! (either 32kHz range or 4MHz..MAX_HIGH_RANGE_XTAL)
+            #error Invalid crystal frequency!! (either 32kHz range or MIN_HIGH_RANGE_XTAL..MAX_HIGH_RANGE_XTAL)
         #endif
         #if defined RUN_FROM_EXTERNAL_CLOCK                              // {1}
              #define _FLL_VALUE (ICS_C1_RDIV_RANGE1_1024)                // value is not important when driven directly by oscillator input

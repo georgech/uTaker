@@ -236,7 +236,7 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
 
 // Watchdog timer
 //
-#if defined KINETIS_KL28 || defined KINETIS_KE15
+#if defined KINETIS_KL28 || defined KINETIS_KE15 || defined KINETIS_KE18
     #define KINETIS_WITH_WDOG32
 #endif
 
@@ -255,12 +255,12 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
 
 // Clock setting/checking
 //
-#if defined KINETIS_KL28 || defined KINETIS_KE15                         // devices with SCG (system clock generator)
+#if defined KINETIS_KL28 || defined KINETIS_KE15 || defined KINETIS_KE18 // devices with SCG (system clock generator)
     #define KINETIS_WITH_SCG                                             // {91}
     #if defined KINETIS_KL28
-        #define PERIPHERAL_CLOCK_DIV_3                                   // the KL28 uses DIV3 a its peripheral clock
-    #elif defined KINETIS_KE15
-        #define PERIPHERAL_CLOCK_DIV_2                                   // the KE15 uses DIV2 a its peripheral clock
+        #define PERIPHERAL_CLOCK_DIV_3                                   // the KL28 uses DIV3 as its peripheral clock
+    #elif defined KINETIS_KE15 || defined KINETIS_KE18
+        #define PERIPHERAL_CLOCK_DIV_2                                   // the KE15 uses DIV2 as its peripheral clock
     #endif
 #elif (defined KINETIS_KL03 || defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL43) // devices with MCG-Lite
     #define KINETIS_WITH_MCG_LITE
@@ -336,7 +336,7 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
     #define KINETIS_WITHOUT_RTC
 #elif defined KINETIS_KL82 || defined KINETIS_KL28
     #define KINETIS_WITH_RTC_CRYSTAL
-#elif defined KINETIS_KE15
+#elif defined KINETIS_KE15 || defined KINETIS_KE18
     #define KINETIS_WITH_RTC_CRYSTAL
     #define KINETIS_WITH_SRTC                                            // SRTC rather than standard KE type
 #elif !defined KINETIS_KL && !defined KINETIS_KE
@@ -415,6 +415,10 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
 #endif
 
 #if (defined KINETIS_K_FPU || (KINETIS_MAX_SPEED > 100000000) || defined KINETIS_KL82) && !defined KINETIS_KV30 && !defined KINETIS_K21 && !defined KINETIS_K22 && !defined KINETIS_K24 && !defined KINETIS_K64
+    #if defined KINETIS_KE18
+        #define MIN_HIGH_RANGE_XTAL   (1000000)
+        #define MAX_HIGH_RANGE_XTAL   (32000000)
+    #endif
     #if defined FLL_FACTOR                                               // using FLL
     #else
         #if defined CLOCK_DIV
@@ -466,6 +470,7 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
     #else
         #define ICSIRCLK        37500                                    // trimmed internal 37.5kHz clock
     #endif
+    #define MIN_HIGH_RANGE_XTAL   (4000000)
     #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
         #define MAX_HIGH_RANGE_XTAL   (24000000)
     #else
@@ -601,7 +606,7 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
 
 // Clock definitions
 //
-#if !defined KINETIS_KE || defined KINETIS_KE15
+#if !defined KINETIS_KE || defined KINETIS_KE15 || defined KINETIS_KE18
     #if defined KINETIS_WITH_SCG
         #if defined RUN_FROM_HIRC                                        // high speed IRC
             #if defined RUN_FROM_HIRC_60MHz
@@ -788,7 +793,29 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
         #if FLASH_CLOCK > BUS_CLOCK
             #error flash clock may not be faster than the bus clock!
         #endif
-    #elif KINETIS_MAX_SPEED == 150000000                                 // 150MHz part                                            // {16}
+    #elif KINETIS_MAX_SPEED == 168000000                                 // 168MHz part
+        #if CORE_CLOCK > 168000000
+            #error PLL frequency out of range: maximum 180MHz
+        #endif
+        #if BUS_CLOCK > 60000000
+            #error bus clock frequency out of range: maximum 60MHz
+        #endif
+        #if BUS_CLOCK > CORE_CLOCK
+            #error bus clock may not be faster than the system clock!
+        #endif
+        #if FLEXBUS_CLOCK > 60000000
+            #error flex bus clock frequency out of range: maximum 60MHz
+        #endif
+        #if FLEXBUS_CLOCK > BUS_CLOCK
+            #error flex bus clock may not be faster than the bus clock!
+        #endif
+        #if FLASH_CLOCK > 28000000
+            #error flash clock frequency out of range: maximum 28MHz
+        #endif
+        #if FLASH_CLOCK > BUS_CLOCK
+            #error flash clock may not be faster than the bus clock!
+        #endif
+    #elif KINETIS_MAX_SPEED == 150000000                                 // 150MHz part
         #define KINETIS_MAX_DDR_SPEED  150000000                         // {28}
         #if CORE_CLOCK > 150000000
             #error PLL frequency out of range: maximum 120MHz
@@ -1260,7 +1287,7 @@ typedef struct stRESET_VECTOR
 
 // UART configuration
 //
-#if defined KINETIS_KL03 || defined KINETIS_KL28 || defined KINETIS_KL82 || defined KINETIS_K80 || defined KINETIS_KE15 || defined KINETIS_KW41 // devices exclusively with LPUARTs
+#if defined KINETIS_KL03 || defined KINETIS_KL28 || defined KINETIS_KL82 || defined KINETIS_K80 || defined KINETIS_KE15 || defined KINETIS_KE18 || defined KINETIS_KW41 // devices exclusively with LPUARTs
     #define UARTS_AVAILABLE         0
 #elif defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66
     #define UARTS_AVAILABLE         5
@@ -1315,7 +1342,7 @@ typedef struct stRESET_VECTOR
 //
 #if defined KINETIS_K80
     #define LPUARTS_AVAILABLE       5
-#elif defined KINETIS_KL28 || defined KINETIS_KL82 || defined KINETIS_KE15
+#elif defined KINETIS_KL28 || defined KINETIS_KL82 || defined KINETIS_KE15 || defined KINETIS_KE18
     #define LPUARTS_AVAILABLE       3
 #elif defined KINETIS_KL03 || defined KINETIS_KW41
     #define LPUARTS_AVAILABLE       1
@@ -1443,7 +1470,7 @@ typedef struct stRESET_VECTOR
 #elif defined KINETIS_KM
     #define PITS_AVAILABLE          2
 #elif defined KINETIS_KL || defined KINETIS_KE
-    #if defined KINETIS_KL28 || defined KINETIS_KE15
+    #if defined KINETIS_KL28 || defined KINETIS_KE15 || defined KINETIS_KE18
         #define LPITS_AVAILABLE     1
         #define LPIT_CHANNELS       4
         #define LPIT_INPUT_TRIGGERS 4
@@ -1505,6 +1532,12 @@ typedef struct stRESET_VECTOR
     #define FLEX_TIMERS_1_CHANNELS    4
     #define FLEX_TIMERS_2_CHANNELS    4
     #define FLEX_TIMERS_CHANNEL_COUNT (FLEX_TIMERS_0_CHANNELS + FLEX_TIMERS_1_CHANNELS + FLEX_TIMERS_2_CHANNELS)
+#elif defined KINETIS_KE15 || defined KINETIS_KE18
+    #define FLEX_TIMERS_0_CHANNELS    8
+    #define FLEX_TIMERS_1_CHANNELS    4
+    #define FLEX_TIMERS_2_CHANNELS    4
+    #define FLEX_TIMERS_3_CHANNELS    4
+    #define FLEX_TIMERS_CHANNEL_COUNT (FLEX_TIMERS_0_CHANNELS + FLEX_TIMERS_1_CHANNELS + FLEX_TIMERS_2_CHANNELS + FLEX_TIMERS_3_CHANNELS)
 #elif defined KINETIS_KE
     #define FLEX_TIMERS_0_CHANNELS    2
     #define FLEX_TIMERS_1_CHANNELS    2
@@ -1693,7 +1726,7 @@ typedef struct stRESET_VECTOR
 #if (defined KINETIS_KE || defined KINETIS_KL || defined KINETIS_KV10) && !defined KINETIS_KL17 && !defined KINETIS_KL27 && !defined KINETIS_KL43 && !defined KINETIS_KL46 // fast GPIO alias avaiable
     #define FGPIO_AVAILABLE
 #endif
-#if defined KINETIS_KE && !defined KINETIS_KE15
+#if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18
     #if defined KINETIS_KEA8
         #define PORTS_AVAILABLE 1
         #define PORTS_AVAILABLE_8_BIT  3
@@ -1726,7 +1759,7 @@ typedef struct stRESET_VECTOR
 
 // DMA configuration
 //
-#if defined KINETIS_KE15 || defined KINETIS_KL82 || defined KINETIS_KL28
+#if defined KINETIS_KE15 || defined KINETIS_KE18 || defined KINETIS_KL82 || defined KINETIS_KL28
     #define DEVICE_WITH_eDMA
     #define eDMA_SHARES_INTERRUPTS                                       // DMA channel 4 shares an interrupt vector with channel 0, 5 with 1, 6 with 2 and 7 with 3
     #define DMA_CHANNEL_COUNT        8
@@ -1757,39 +1790,39 @@ typedef struct stRESET_VECTOR
 //
 typedef struct stPROCESSOR_IRQ
 {
-#if defined KINETIS_KE15
-        void  (*irq_DMA0_0_4)(void);                                     // 0
-        void  (*irq_DMA0_1_5)(void);                                     // 1
-        void  (*irq_DMA0_2_6)(void);                                     // 2
-        void  (*irq_DMA0_3_7)(void);                                     // 3
-        void  (*irq_DMA0_ERROR)(void);                                   // 4
-        void  (*irq_Flash)(void);                                        // 5
-        void  (*irq_PMC)(void);                                          // 6
-        void  (*irq_PORTA_E)(void);                                      // 7
-        void  (*irq_LPI2C0)(void);                                       // 8
-        void  (*irq_LPI2C1)(void);                                       // 9
-        void  (*irq_LPSPI0)(void);                                       // 10
-        void  (*irq_LPSPI1)(void);                                       // 11
-        void  (*irq_LPUART0)(void);                                      // 12 status and error
-        void  (*irq_LPUART1)(void);                                      // 13 status and error
-        void  (*irq_LPUART2)(void);                                      // 14 status and error
-        void  (*irq_ADC0)(void);                                         // 15
-        void  (*CMP0)(void);                                             // 16
-        void  (*irq_FTM0)(void);                                         // 17
-        void  (*irq_FTM1)(void);                                         // 18
-        void  (*irq_FTM2)(void);                                         // 19
-        void  (*irq_RTC_ALARM)(void);                                    // 20 single interrupt for all sources
-        void  (*irq_CMP1)(void);                                         // 21
-        void  (*irq_LPIT0)(void);                                        // 22
-        void  (*irq_FlexIO)(void);                                       // 23
-        void  (*irq_TSI)(void);                                          // 24
-        void  (*irq_PDB0)(void);                                         // 25
-        void  (*irq_PORTB_C_D)(void);                                    // 26
-        void  (*irq_SCG)(void);                                          // 27
-        void  (*irq_WDOG0)(void);                                        // 28
-        void  (*irq_LPTMR_PWT)(void);                                    // 29
-        void  (*irq_ADC1)(void);                                         // 30
-        void  (*irq_RCM)(void);                                          // 31
+#if defined KINETIS_KE15 || defined KINETIS_KE18
+    void  (*irq_DMA0_0_4)(void);                                         // 0
+    void  (*irq_DMA0_1_5)(void);                                         // 1
+    void  (*irq_DMA0_2_6)(void);                                         // 2
+    void  (*irq_DMA0_3_7)(void);                                         // 3
+    void  (*irq_DMA0_ERROR)(void);                                       // 4
+    void  (*irq_Flash)(void);                                            // 5
+    void  (*irq_PMC)(void);                                              // 6
+    void  (*irq_PORTA_E)(void);                                          // 7
+    void  (*irq_LPI2C0)(void);                                           // 8
+    void  (*irq_LPI2C1)(void);                                           // 9
+    void  (*irq_LPSPI0)(void);                                           // 10
+    void  (*irq_LPSPI1)(void);                                           // 11
+    void  (*irq_LPUART0)(void);                                          // 12 status and error
+    void  (*irq_LPUART1)(void);                                          // 13 status and error
+    void  (*irq_LPUART2)(void);                                          // 14 status and error
+    void  (*irq_ADC0)(void);                                             // 15
+    void  (*CMP0)(void);                                                 // 16
+    void  (*irq_FTM0)(void);                                             // 17
+    void  (*irq_FTM1)(void);                                             // 18
+    void  (*irq_FTM2)(void);                                             // 19
+    void  (*irq_RTC_ALARM)(void);                                        // 20 single interrupt for all sources
+    void  (*irq_CMP1)(void);                                             // 21
+    void  (*irq_LPIT0)(void);                                            // 22
+    void  (*irq_FlexIO)(void);                                           // 23
+    void  (*irq_TSI)(void);                                              // 24
+    void  (*irq_PDB0)(void);                                             // 25
+    void  (*irq_PORTB_C_D)(void);                                        // 26
+    void  (*irq_SCG)(void);                                              // 27
+    void  (*irq_WDOG0)(void);                                            // 28
+    void  (*irq_LPTMR_PWT)(void);                                        // 29
+    void  (*irq_ADC1)(void);                                             // 30
+    void  (*irq_RCM)(void);                                              // 31
 #elif defined KINETIS_KE                                                 // {42}
     void  (*reserved0)(void);                                            // 0
     void  (*reserved1)(void);                                            // 1
@@ -2618,7 +2651,7 @@ typedef struct stVECTOR_TABLE
 
 // Interrupt sources
 //
-#if defined KINETIS_KE15
+#if defined KINETIS_KE15 || defined KINETIS_KE18
     #define irq_DMA0_0_4_ID               0                              // 0
     #define irq_DMA0_1_5_ID               1                              // 1
     #define irq_DMA0_2_6_ID               2                              // 2
@@ -3329,7 +3362,7 @@ typedef struct stVECTOR_TABLE
 
 #define VECTOR_SIZE                      (sizeof(VECTOR_TABLE))
 
-#if defined KINETIS_KE15
+#if defined KINETIS_KE15 || defined KINETIS_KE18
     #define LAST_PROCESSOR_IRQ     irq_RCM
     #define CHECK_VECTOR_SIZE                192                         // (16 + 31 + 1) = 48) * 4 - adequate for this processor [0xc0]
 #elif defined KINETIS_KE                                                 // {42}
@@ -3518,7 +3551,7 @@ typedef struct stVECTOR_TABLE
     #if !defined KINETIS_WITHOUT_RTC
         #define RTC_BLOCK                      ((unsigned char *)(&kinetis.RTC)) // RTC
     #endif
-    #if !defined KINETIS_KE
+    #if LPTMR_AVAILABLE > 0
         #define LPTMR_BLOCK_0                  ((unsigned char *)(&kinetis.LPTMR[0])) // {51} Low Power Timer
         #if LPTMR_AVAILABLE > 1
             #define LPTMR_BLOCK_1              ((unsigned char *)(&kinetis.LPTMR[1]))
@@ -3529,7 +3562,7 @@ typedef struct stVECTOR_TABLE
     #endif
     #define TSI_BLOCK                          ((unsigned char *)(&kinetis.TSI)) // Touch Sense Input Module
     #define SIM_BLOCK                          ((unsigned char *)(&kinetis.SIM)) // System Integration Module
-    #if defined KINETIS_KE && !defined KINETIS_KE15
+    #if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18
         #define PORT_BLOCK                     ((unsigned char *)(&kinetis.PORT)) // Port block
     #else
         #define PORT0_BLOCK                    ((unsigned char *)(&kinetis.PORT[0])) // Port Control and Interrupts
@@ -3677,8 +3710,11 @@ typedef struct stVECTOR_TABLE
     #if defined KINETIS_K70
         #define LCDC_BLOCK                     ((unsigned char *)(&kinetis.LCD)) // {60} LCD controller
     #endif
-    #if defined KINETIS_KE15
+    #if defined KINETIS_KE15 || defined KINETIS_KE18
         #define ADC1_BLOCK                     ((unsigned char *)(&kinetis.ADC1)) // ADC1
+        #if defined KINETIS_KE18
+            #define FTM_BLOCK_3                ((unsigned char *)(&kinetis.FTM[3])) // FlexTimer 3
+        #endif
     #elif !defined KINETIS_KL && !defined KINETIS_KE
         #if SPI_AVAILABLE > 2
             #define DSPI2_BLOCK                ((unsigned char *)(&kinetis.DSPI[2])) // DSPI2
@@ -3861,7 +3897,7 @@ typedef struct stVECTOR_TABLE
             #define RTC_BLOCK                  0x4003d000                // RTC
         #endif
     #endif
-    #if !defined KINETIS_KE
+    #if LPTMR_AVAILABLE > 0
         #if defined KINETIS_KL28
             #define LPTMR_BLOCK_0              0x40034000
             #define LPTMR_BLOCK_1              0x400b5000
@@ -3885,7 +3921,7 @@ typedef struct stVECTOR_TABLE
     #else
         #define SIM_BLOCK                      0x40047000                // system integration module
     #endif
-    #if defined KINETIS_KE && !defined KINETIS_KE15 
+    #if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18
         #define PORT_BLOCK                     0x40049000                // Port block
     #else
         #if defined KINETIS_KL28
@@ -4116,8 +4152,11 @@ typedef struct stVECTOR_TABLE
     #if defined KINETIS_K70
         #define LCDC_BLOCK                     0x400b6000                // {60} LCD controller
     #endif
-    #if defined KINETIS_KE15
+    #if defined KINETIS_KE15 || defined KINETIS_KE18
         #define ADC1_BLOCK                     0x40027000                // ADC1
+        #if defined KINETIS_KE18
+            #define FTM_BLOCK_3                0x400b9000                // FlexTimer 3
+        #endif
     #elif !defined KINETIS_KL && !defined KINETIS_KE
         #define SDHC_BLOCK                     0x400b1000                // SDHC
         #define FTM_BLOCK_2                    0x400b8000                // FlexTimer 2
@@ -8263,7 +8302,7 @@ typedef struct stFLEX_TIMER_MODULE
 
 // ADC
 //
-#if defined KINETIS_KE && !defined KINETIS_KE15
+#if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18
     #define ADC0_SC1            *(volatile unsigned long *)(ADC0_BLOCK + 0x00) // ADC0 Status and Control Register 1
       #define ADC_SC1A_ADCH_0          0x00000000                            // input channel select - channel 0 select (only single-ended)
       #define ADC_SC1A_ADCH_1          0x00000001                            // input channel select - channel 1 select (only single-ended)
@@ -8504,7 +8543,7 @@ typedef struct stFLEX_TIMER_MODULE
           #define ADC_SC3_CALF  0x00000040                                   // calibration failed flag (read-only)
       #endif
       #define ADC_SC3_CAL       0x00000080                                   // calibration
-    #if defined KINETIS_KE15
+    #if defined KINETIS_KE15 || defined KINETIS_KE18
         #define ADC0_BASE_OFS *(volatile unsigned long *)(ADC0_BLOCK + 0x098) // ADC0 base offset register
         #define ADC0_OFS        *(unsigned long *)(ADC0_BLOCK + 0x09c)       // ADC0 offset correction register
         #define ADC0_USR_OFS    *(unsigned long *)(ADC0_BLOCK + 0x0a0)       // ADC0 user offset correction register
@@ -8559,7 +8598,7 @@ typedef struct stFLEX_TIMER_MODULE
     #if ADC_CONTROLLERS > 1
         #define ADC1_SC1A       *(volatile unsigned long *)(ADC1_BLOCK + 0x000) // ADC1 status and control registers 1
         #define ADC1_SC1B       *(unsigned long *)(ADC1_BLOCK + 0x004)       // ADC1 status and control registers 1
-        #if defined KINETIS_KE15
+        #if defined KINETIS_KE15 || defined KINETIS_KE18
             #define ADC1_CFG1   *(unsigned long *)(ADC1_BLOCK + 0x040)       // ADC1 configuration register 1
             #define ADC1_CFG2   *(unsigned long *)(ADC1_BLOCK + 0x044)       // ADC1 configuration register 2
             #define ADC1_RA     *(volatile unsigned long *)(ADC1_BLOCK + 0x048) // ADC1a data result register (read-only)
@@ -9980,7 +10019,7 @@ typedef struct stKINETIS_LPTMR_CTL
 
 // System Integration Module
 //
-#if defined KINETIS_KE15
+#if defined KINETIS_KE15 || defined KINETIS_KE18
     #define SIM_CHIPCTL                      *(unsigned long *)(SIM_BLOCK + 0x04)  // chip control register
         #define SIM_CHIPCTL_ADC_INTERLEAVE_OFF  0x00000000               // no interleave channel
         #define SIM_CHIPCTL_ADC_INTERLEAVE_PTB0 0x00000001               // PTB0 to ADC0_SE4 and ADC1_SE14
@@ -11165,7 +11204,7 @@ typedef struct stKINETIS_LPTMR_CTL
 
 // Port Control and Interrupts
 //
-#if defined KINETIS_KE && !defined KINETIS_KE15
+#if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18
     #if (defined KINETIS_KE04 && (SIZE_OF_FLASH > (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
         #define PORT_IOFLT0              *(unsigned long *)(PORT_BLOCK + 0x00) // Port Filter Register 0
         #define PORT_IOFLT1              *(unsigned long *)(PORT_BLOCK + 0x04) // Port Filter Register 0
@@ -12460,7 +12499,7 @@ typedef struct stKINETIS_LPTMR_CTL
     #define PE_22_TPM2_CH0               PORT_MUX_ALT3
     #define PE_23_TPM2_CH1               PORT_MUX_ALT3
 #endif
-#if defined KINETIS_KE15
+#if defined KINETIS_KE15 || defined KINETIS_KE18
     #define PB_12_FTM0_CH0               PORT_MUX_ALT2
     #define PC_0_FTM0_CH0                PORT_MUX_ALT2
     #define PD_15_FTM0_CH0               PORT_MUX_ALT2
@@ -13249,7 +13288,7 @@ typedef struct stKINETIS_LPTMR_CTL
         #define PCC_CAN0                 *(volatile unsigned long *)(PCC_BLOCK + 0x090)
         #define PCC_CAN1                 *(volatile unsigned long *)(PCC_BLOCK + 0x094)
         #define PCC_FLEXTMR3             *(volatile unsigned long *)(PCC_BLOCK + 0x098)
-        #define PCC_ADC1                 *(volatile unsigned long *)(PCC_BLOCK + 0x09c))
+        #define PCC_ADC1                 *(volatile unsigned long *)(PCC_BLOCK + 0x09c)
         #define PCC_LPSPI0               *(volatile unsigned long *)(PCC_BLOCK + 0x0b0)
         #define PCC_LPSPI1               *(volatile unsigned long *)(PCC_BLOCK + 0x0b4)
         #define PCC_PDB1                 *(volatile unsigned long *)(PCC_BLOCK + 0x0c4)
@@ -13412,7 +13451,7 @@ typedef struct stKINETIS_LPTMR_CTL
             #define PCC_FTM2_BME_AND         PCC_TPM2_BME_AND
             #define PCC_FTM2_BME_XOR         PCC_TPM2_BME_XOR
     #endif
-    #define PCC_PIT                      PCC_LPIT0
+    #define PCC_PIT0                     PCC_LPIT0
     #define PCC_I2C0                     PCC_LPI2C0
         #define PCC_I2C0_BME_OR          PCC_LPI2C0_BME_OR
         #define PCC_I2C0_BME_AND         PCC_LPI2C0_BME_AND
@@ -18659,7 +18698,7 @@ typedef struct stADC_SETUP
     unsigned short   int_adc_offset;                                     // offset for input
     unsigned short   int_high_level_trigger;                             // trigger when higher than this level
     unsigned short   int_low_level_trigger;                              // trigger when lower than this level
-    #if !defined KINETIS_KE || defined KINETIS_KE15
+    #if !defined KINETIS_KE || defined KINETIS_KE15 || defined KINETIS_KE18
         #if defined KINETIS_KE15
             unsigned short int_adc_sample;                               // sampling details (sample time from 2 to 256 clocks)
         #else

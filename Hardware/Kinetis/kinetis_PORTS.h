@@ -33,7 +33,7 @@
 //
 extern void fnConnectGPIO(int iPortRef, unsigned long ulPortBits, unsigned long ulCharacteristics)
 {
-    #if defined KINETIS_KE && !defined KINETIS_KE15
+    #if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18
     unsigned long ulHighDrive = 0;
     unsigned long *ptrPullup = (PORT_PUEL_ADD + iPortRef);
     if (ulCharacteristics & PORT_PS_UP_ENABLE) {
@@ -106,7 +106,7 @@ extern void fnConnectGPIO(int iPortRef, unsigned long ulPortBits, unsigned long 
 #endif
 
 #if defined _PORT_INTERRUPT_CODE
-    #if defined KINETIS_KE && !defined KINETIS_KE15                      // KE uses external interrupt
+    #if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18 // KE uses external interrupt
 static void (*IRQ_handler)(void) = 0;                                    // handler for IRQ
 
 static __interrupt void _IRQ_isr(void)
@@ -1064,7 +1064,7 @@ static void fnEnterPortInterruptHandler(INTERRUPT_SETUP *port_interrupt, unsigne
 #if defined _PORT_INT_CONFIG_CODE
         {
             INTERRUPT_SETUP *port_interrupt = (INTERRUPT_SETUP *)ptrSettings;
-    #if defined KINETIS_KE && !defined KINETIS_KE15                      // KE uses external interrupt
+    #if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18 // KE uses external interrupt
         #if ((defined KINETIS_KE04 && (SIZE_OF_FLASH > (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA128)
             unsigned char ucPortPin = SIM_PINSEL_IRQPS_PTA5;             // default IRQ input
         #endif

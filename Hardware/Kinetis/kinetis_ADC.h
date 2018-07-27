@@ -26,7 +26,7 @@
 
 #if defined _ADC_INTERRUPT_CODE
 
-#if defined KINETIS_KE && !defined KINETIS_KE15
+#if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18
     #define KINETIS_KE_ADC                                               // ADC used by most KE/KEA parts)
 #endif
 
@@ -323,7 +323,7 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
                 ptrADC = (KINETIS_ADC_REGS *)ADC1_BLOCK;
             }
     #endif
-    #if ADC_CONTROLLERS > 2
+    #if ADC_CONTROLLERS > 2 && !defined KINETIS_KE18
             else if (ptrADC_settings->int_adc_controller == 2) {
                 irq_ADC_ID = irq_ADC2_ID;
                 ptrADC = (KINETIS_ADC_REGS *)ADC2_BLOCK;
@@ -503,7 +503,7 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
                     }
     #endif
     #if !defined KINETIS_KE_ADC
-        #if defined KINETIS_KE15
+        #if defined KINETIS_KE15 || defined KINETIS_KE18
                     ptrADC->ADC_CFG2 = (ptrADC_settings->int_adc_sample - 1);
             #if defined _WINDOWS
                     if ((ptrADC->ADC_CFG2 == 0) || (ptrADC->ADC_CFG2 > 255)) {

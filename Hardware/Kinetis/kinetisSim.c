@@ -110,7 +110,7 @@ static unsigned long ulPort_in_A, ulPort_in_B, ulPort_in_C, ulPort_in_D, ulPort_
 #if defined SERIAL_INTERFACE
     static int iUART_rx_Active[LPUARTS_AVAILABLE + UARTS_AVAILABLE] = {0};
 #endif
-#if defined KINETIS_KE && !defined KINETIS_KE15
+#if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18
     static unsigned char ucPortFunctions[PORTS_AVAILABLE_8_BIT][PORT_WIDTH] = {0};
 #else
     static unsigned char ucPortFunctions[PORTS_AVAILABLE][PORT_WIDTH] = {0};
@@ -492,7 +492,7 @@ static void fnSetDevice(unsigned long *port_inits)
     #endif
 #endif
 #if defined KINETIS_WITH_PCC                                             // {45}
-    #if defined KINETIS_KE15
+    #if defined KINETIS_KE15 || defined KINETIS_KE18
     PCC_DMA0 = (PCC_PR | PCC_CGC);
     PCC_FLASH = (PCC_PR | PCC_CGC);
     PCC_DMAMUX0 = PCC_PR;
@@ -508,7 +508,9 @@ static void fnSetDevice(unsigned long *port_inits)
     PCC_ADC0 = (PCC_PR | PCC_CGC);
     PCC_RTC = PCC_PR;
     PCC_LPTMR0 = PCC_PR;
+    #if !defined KINETIS_KE18
     PCC_TSI = PCC_PR;
+    #endif
     PCC_PORTA = PCC_PR;
     PCC_PORTB = PCC_PR;
     PCC_PORTC = PCC_PR;
@@ -565,7 +567,7 @@ static void fnSetDevice(unsigned long *port_inits)
     PCC_CMP1    = PCC_PR;
     #endif
 #endif
-#if defined KINETIS_KE && !defined KINETIS_KE15
+#if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18
     SIM_SCGC = (SIM_SCGC_FLASH | SIM_SCGC_SWD);
     SIM_SOPT0 = (SIM_SOPT_NMIE | SIM_SOPT_RSTPE | SIM_SOPT_SWDE);        // PTB4 functions as NMI, PTA5 pin functions as RESET, PTA4 and PTC4 function as single wire debug
 #elif defined KINETIS_KV
@@ -601,7 +603,7 @@ static void fnSetDevice(unsigned long *port_inits)
     PORTA_PCR3 = (PORT_PS_UP_ENABLE | PORT_DSE_HIGH | PORT_MUX_ALT7);
     PORTA_PCR4 = (PORT_PS_UP_ENABLE | PORT_DSE_HIGH | PORT_MUX_ALT7);
     #endif
-#elif defined KINETIS_KE && !defined KINETIS_KE15
+#elif defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18
     GPIOA_PIDR = 0xffffffff;                                             // port input disable registers
     #if PORTS_AVAILABLE > 1
     GPIOB_PIDR = 0xffffffff;
@@ -622,7 +624,7 @@ static void fnSetDevice(unsigned long *port_inits)
     PORTA_PCR3 = (PORT_PS_UP_ENABLE | PORT_DSE_HIGH | PORT_MUX_ALT7);
     PORTA_PCR4 = (PORT_PS_UP_ENABLE | PORT_DSE_HIGH | PORT_MUX_ALT7);
     PORTA_PCR20 = (PORT_PS_UP_ENABLE | PORT_DSE_HIGH | PORT_MUX_ALT7);
-#elif defined KINETIS_KE15
+#elif defined KINETIS_KE15 || defined KINETIS_KE18
     PORTD_PCR3 = (PORT_PS_UP_ENABLE | PORT_DSE_HIGH | PORT_MUX_ALT7);    // NMI
     PORTA_PCR5 = (PORT_PS_UP_ENABLE | PORT_DSE_HIGH | PORT_MUX_ALT7);    // reset
     PORTC_PCR4 = (PORT_PS_UP_ENABLE | PORT_DSE_HIGH | PORT_MUX_ALT7);    // SWD_CLK
@@ -867,7 +869,7 @@ static void fnSetDevice(unsigned long *port_inits)
     INTMUX0_CH2_CSR = 0x200;
     INTMUX0_CH3_CSR = 0x300;
 #endif
-#if defined KINETIS_KE15
+#if defined KINETIS_KE15 || defined KINETIS_KE18
     ADC0_SC1A = ADC_SC1A_ADCH_OFF;                                       // ADC0
     ADC0_SC1B = ADC_SC1A_ADCH_OFF;
     ADC0_CFG2 = 0x0000000c;
@@ -903,7 +905,7 @@ static void fnSetDevice(unsigned long *port_inits)
     ADC0_CLM0   = 0x00000020;
 #endif
 #if ADC_CONTROLLERS > 1
-    #if defined KINETIS_KE15
+    #if defined KINETIS_KE15 || defined KINETIS_KE18
     ADC1_SC1A = ADC_SC1A_ADCH_OFF;                                     // ADC1
     ADC1_SC1B = ADC_SC1A_ADCH_OFF;
     ADC1_CFG2 = 0x0000000c;
@@ -1609,12 +1611,12 @@ extern int fnPortChanges(int iForce)
     return iRtn;
 }
 
-#if defined KINETIS_KE && !defined KINETIS_KE15
+#if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18
 static void fnHandleIRQ(int iPort, unsigned long ulNewState, unsigned long ulChangedBit, unsigned long *ptrPortConfig)
 {
     switch (iPort) {                                                     // check ports that have potential interrupt functions
     case KE_PORTA:
-        if (ulChangedBit & KE_PORTA_BIT5) {
+        if ((ulChangedBit & KE_PORTA_BIT5) != 0) {
             if ((SIM_SOPT0 & SIM_SOPT_RSTPE) == 0) {                     // PTA5 not programmed as reset pin
     #if defined SIM_PINSEL_IRQPS_PTI6
                 if ((SIM_PINSEL0 & SIM_PINSEL_IRQPS_PTI6) != SIM_PINSEL_IRQPS_PTA5) {
@@ -2595,7 +2597,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
 #if defined KINETIS_KL
     static unsigned long ulTSI[61] = {0};
 #endif
-#if defined KINETIS_KE && !defined KINETIS_KE15
+#if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18
     unsigned long ulBit;
 #else
     unsigned long ulBit = (0x80000000 >> ucPortBit);
@@ -2608,7 +2610,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
         return;                                                          // if ADC we do not handle digital functions
     }
 #endif
-#if defined KINETIS_KE && !defined KINETIS_KE15                          // KE uses byte terminology but physically hve long word ports
+#if defined KINETIS_KE && !defined KINETIS_KE15  && !defined KINETIS_KE18// KE uses byte terminology but physically hve long word ports
     ulBit = (0x80000000 >> (ucPortBit + ((3 - (ucPort % 4)) * 8)));      // convert to long word port representation
     ucPort /= 4;
 #endif
@@ -2627,7 +2629,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
 #endif
             if (iChange == TOGGLE_INPUT) {
                 ulPort_in_A ^= ulBit;                                    // set new pin state
-#if !(defined KINETIS_KE && !defined KINETIS_KE15)
+#if !(defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18)
                 ptrPCR += (31 - ucPortBit);
 #endif
               //if ((*ptrPCR & PORT_MUX_ALT7) != PORT_MUX_GPIO) {        // {19} ignore register state if not connected
@@ -2638,7 +2640,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
             }
             else if (iChange == SET_INPUT) {
                 ulPort_in_A |= ulBit;
-#if !(defined KINETIS_KE && !defined KINETIS_KE15)
+#if !(defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18)
                 ptrPCR += (31 - ucPortBit);
 #endif
               //if ((*ptrPCR & PORT_MUX_ALT7) != PORT_MUX_GPIO) {        // {19} ignore register state if not connected
@@ -2648,7 +2650,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
             }
             else {
                 ulPort_in_A &= ~ulBit;
-#if !(defined KINETIS_KE && !defined KINETIS_KE15)
+#if !(defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18)
                 ptrPCR += (31 - ucPortBit);
 #endif
               //if ((*ptrPCR & PORT_MUX_ALT7) != PORT_MUX_GPIO) {        // {19} ignore register state if not connected
@@ -2660,7 +2662,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
 #if defined SUPPORT_LLWU && defined LLWU_AVAILABLE
                 fnWakeupInterrupt(_PORTA, ulPort_in_A, ulBit, ucPortBit);// handle wakeup events on the pin
 #endif
-#if defined KINETIS_KE && !defined KINETIS_KE15
+#if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18
                 fnPortInterrupt(_PORTA, ulPort_in_A, ulBit, 0);          // handle interrupts on the pin
 #else
                 fnPortInterrupt(_PORTA, ulPort_in_A, ulBit, ptrPCR);     // handle interrupts and DMA on the pin
@@ -2683,7 +2685,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
     #endif
             if (iChange == TOGGLE_INPUT) {
                 ulPort_in_B ^= ulBit;                                    // set new pin state
-    #if !(defined KINETIS_KE && !defined KINETIS_KE15)
+    #if !(defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18)
                 ptrPCR += (31 - ucPortBit);
     #endif
               //if ((*ptrPCR & PORT_MUX_ALT7) != PORT_MUX_GPIO) {        // {19} ignore register state if not connected
@@ -3441,18 +3443,18 @@ extern void fnSimPers(void)
 {
     int iPort = 0;
     int iPin = 0;
-#if !defined KINETIS_KE || defined KINETIS_KE15
+#if !defined KINETIS_KE || defined KINETIS_KE15 || defined KINETIS_KE18
     unsigned long *ptrPortPin;
 #endif
     unsigned long ulBit;
     for (iPort = 0; iPort < PORTS_AVAILABLE; iPort++) {
-#if !defined KINETIS_KE || defined KINETIS_KE15
+#if !defined KINETIS_KE || defined KINETIS_KE15 || defined KINETIS_KE18
         ptrPortPin = (unsigned long *)(PORT0_BLOCK + (iPort * sizeof(KINETIS_PORT)));
 #endif
         ulPeripherals[iPort] = 0;
         ulBit = 0x00000001;
         for (iPin = 0; iPin < 32; iPin++) {
-#if defined KINETIS_KE && !defined KINETIS_KE15
+#if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18
             // KE devices' peripheral functions are selected by the various peripherals that can use the pins. Each peripheral pin function has a priority and so the the one with highest is valid in case of multiple enabled peripherals on a pin
             // Peripheral can also have pin multiplexing options
             //
@@ -5070,7 +5072,7 @@ static void fnHandleDMA_triggers(int iTriggerSource, int iDMAmux)
 //
 static void fnPortInterrupt(int iPort, unsigned long ulNewState, unsigned long ulChangedBit, unsigned long *ptrPortConfig)
 {
-#if defined KINETIS_KE && !defined KINETIS_KE15
+#if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18
     if ((SIM_SCGC_IRQ & SIM_SCGC) != 0) {                                // if the IRQ module is enabled
         fnHandleIRQ(iPort, ulNewState, ulChangedBit, ptrPortConfig);
     }
@@ -8286,6 +8288,7 @@ static void fnTriggerADC(int iADC, int iHW_trigger)
             if ((ADC2_SC2 & ADC_SC2_ADTRG_HW) == 0) {                    // software trigger mode
                 fnSimADC(2);                                             // perform ADC conversion
                 if ((ADC2_SC1A & ADC_SC1A_COCO) != 0) {                  // {40} if conversion has completed
+        #if !defined KINETIS_KE18                                        // to be done
                     fnHandleDMA_triggers(DMAMUX1_CHCFG_SOURCE_ADC2, 1);  // handle DMA triggered on ADC2 conversion
                     if ((ADC2_SC1A & ADC_SC1A_AIEN) != 0) {              // end of conversion interrupt enabled
                         if (fnGenInt(irq_ADC2_ID) != 0) {                // if ADC2 interrupt is not disabled
@@ -8293,6 +8296,7 @@ static void fnTriggerADC(int iADC, int iHW_trigger)
                             ptrVect->processor_interrupts.irq_ADC2();    // call the interrupt handler
                         }
                     }
+        #endif
                 }
             }
         }
@@ -9187,10 +9191,17 @@ extern int fnSimTimers(void)
                     }
                 }
                 if ((LPTMR0_CSR & LPTMR_CSR_TIE) != 0) {                 // if LPTMR interrupt is enabled
+    #if defined irq_LPTMR_PWT_ID
+                    if (fnGenInt(irq_LPTMR_PWT_ID) != 0) {                  // if LPTMR interrupt is not disabled
+                        VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                        ptrVect->processor_interrupts.irq_LPTMR_PWT();      // call the interrupt handler
+                    }
+    #else
                     if (fnGenInt(irq_LPTMR0_ID) != 0) {                  // if LPTMR interrupt is not disabled
                         VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                         ptrVect->processor_interrupts.irq_LPTMR0();      // call the interrupt handler
                     }
+    #endif
                 }
             }
         }
@@ -9277,7 +9288,7 @@ extern int fnSimTimers(void)
     }
     #endif
 #endif
-#if PDB_AVAILABLE > 0                                                    // {24}
+#if PDB_AVAILABLE > 0 && !defined KINETIS_KE15 && !defined KINETIS_KE18  // {24}
     if (((SIM_SCGC6 & SIM_SCGC6_PDB) != 0) && ((PDB0_SC & PDB_SC_PDBEN) != 0)) { // {16} PDB powered and enabled
         if ((PDB0_SC & PDB_SC_TRGSEL_SW) == PDB_SC_TRGSEL_SW) {          // software triggered
             if ((PDB0_SC & PDB_SC_SWTRIG) != 0) {
@@ -9485,7 +9496,7 @@ extern int fnSimTimers(void)
         }
     }
     #endif
-    #if FLEX_TIMERS_AVAILABLE > 3
+    #if FLEX_TIMERS_AVAILABLE > 3 && !defined KINETIS_KE18
         #if defined KINETIS_K22_SF7
     if (((IS_POWERED_UP(6, FTM3)) != 0) && ((FTM3_SC & (FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)) != 0))
         #else
