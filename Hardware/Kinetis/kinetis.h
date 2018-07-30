@@ -793,7 +793,7 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
         #if FLASH_CLOCK > BUS_CLOCK
             #error flash clock may not be faster than the bus clock!
         #endif
-    #elif KINETIS_MAX_SPEED == 168000000                                 // 168MHz part
+    #elif KINETIS_MAX_SPEED == 168000000                                 // 168MHz part (KE18)
         #if CORE_CLOCK > 168000000
             #error PLL frequency out of range: maximum 180MHz
         #endif
@@ -802,12 +802,6 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
         #endif
         #if BUS_CLOCK > CORE_CLOCK
             #error bus clock may not be faster than the system clock!
-        #endif
-        #if FLEXBUS_CLOCK > 60000000
-            #error flex bus clock frequency out of range: maximum 60MHz
-        #endif
-        #if FLEXBUS_CLOCK > BUS_CLOCK
-            #error flex bus clock may not be faster than the bus clock!
         #endif
         #if FLASH_CLOCK > 28000000
             #error flash clock frequency out of range: maximum 28MHz

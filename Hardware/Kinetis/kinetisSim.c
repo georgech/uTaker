@@ -237,7 +237,7 @@ static const unsigned long ulDisabled[PORTS_AVAILABLE] = {
     0x000ff030,                                                          // port C disabled default pins
     0x0000ff9d,                                                          // port D disabled default pins
     0x1c001ff0                                                           // port E disabled default pins
-#elif defined KINETIS_KE15
+#elif defined KINETIS_KE15 || defined KINETIS_KE18
     0x0003ff00,                                                          // port A disabled default pins
     0x00038f00,                                                          // port B disabled default pins
     0x00003f00,                                                          // port C disabled default pins
@@ -1316,13 +1316,13 @@ static int fnGenInt(int iIrqID)
 //
 extern unsigned long fnGetPresentPortState(int portNr)
 {
-#if defined KINETIS_KE && !defined KINETIS_KE15
+#if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18
     int iShift;
 #else
     #define iShift 0
 #endif
     portNr--;
-#if defined KINETIS_KE && !defined KINETIS_KE15
+#if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18
     iShift = ((portNr % 4) * 8);
     portNr /= 4;                                                         // convert 8 bit port to 32 bit port
 #endif
@@ -1384,13 +1384,13 @@ extern unsigned long fnGetPresentPortDir(int portNr)
     unsigned long ulConnectedGPIO;
     unsigned long ulCheckedPin;
     unsigned long ulBit = 0x00000001;
-#if defined KINETIS_KE && !defined KINETIS_KE15
+#if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18
     int iShift;
 #else
     unsigned long *ptrPCR = (unsigned long *)PORT0_BLOCK;
 #endif
     portNr--;
-#if defined KINETIS_KE && !defined KINETIS_KE15
+#if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18
     iShift = ((portNr % 4) * 8);
     portNr /= 4;                                                         // convert 8 bit port to 32 bit port
 #else
@@ -1440,7 +1440,7 @@ extern unsigned long fnGetPresentPortDir(int portNr)
         return 0;
     }
     while (ulCheckedPin != 0) {
-#if !defined KINETIS_KE || defined KINETIS_KE15
+#if !defined KINETIS_KE || defined KINETIS_KE15 || defined KINETIS_KE18
         if ((*ptrPCR & PORT_MUX_MASK) != PORT_MUX_GPIO) {                // only connected port bits are considered as outputs
             ulConnectedGPIO &= ~ulBit;
         }
@@ -1455,11 +1455,11 @@ extern unsigned long fnGetPresentPortDir(int portNr)
 
 extern unsigned long fnGetPresentPortPeriph(int portNr)
 {
-#if defined KINETIS_KE && !defined KINETIS_KE15
+#if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18
     int iShift;
 #endif
     portNr--;
-#if defined KINETIS_KE && !defined KINETIS_KE15
+#if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18
     iShift = ((portNr % 4) * 8);
     portNr /= 4;                                                         // convert 8 bit port to 32 bit port
 #endif
@@ -2285,7 +2285,7 @@ static void fnHandleKBI(int iController, int iPort, unsigned long ulNewState, un
 #if defined SUPPORT_ADC                                                  // {2}
 static unsigned short fnConvertSimADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short usStandardValue)
 {
-    #if defined KINETIS_KE && !defined KINETIS_KE15
+    #if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18
     switch (ptrADC->ADC_SC3 & (ADC_CFG1_MODE_MASK)) {
     case ADC_CFG1_MODE_12:                                               // conversion mode - single-ended 12 bit
         usStandardValue >>= 4;
@@ -2696,7 +2696,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
             }
             else if (iChange == SET_INPUT) {
                 ulPort_in_B |= ulBit;
-    #if !(defined KINETIS_KE && !defined KINETIS_KE15)
+    #if !(defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18)
                 ptrPCR += (31 - ucPortBit);
     #endif
               //if ((*ptrPCR & PORT_MUX_ALT7) != PORT_MUX_GPIO) {        // {19} ignore register state if not connected
@@ -2706,7 +2706,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
             }
             else {
                 ulPort_in_B &= ~ulBit;
-    #if !(defined KINETIS_KE && !defined KINETIS_KE15)
+    #if !(defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18)
                 ptrPCR += (31 - ucPortBit);
     #endif
               //if ((*ptrPCR & PORT_MUX_ALT7) != PORT_MUX_GPIO) {        // {19} ignore register state if not connected
@@ -2718,7 +2718,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
     #if defined SUPPORT_LLWU && defined LLWU_AVAILABLE
                 fnWakeupInterrupt(_PORTB, ulPort_in_B, ulBit, ucPortBit);// handle wakeup events on the pin
     #endif
-    #if defined KINETIS_KE && !defined KINETIS_KE15
+    #if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18
                 fnPortInterrupt(_PORTB, ulPort_in_B, ulBit, 0);          // handle interrupts on the pin
     #else
                 fnPortInterrupt(_PORTB, ulPort_in_B, ulBit, ptrPCR);     // handle interrupts and DMA on the pin
@@ -2742,7 +2742,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
     #endif
             if (iChange == TOGGLE_INPUT) {
                 ulPort_in_C ^= ulBit;                                    // set new pin state
-    #if !(defined KINETIS_KE && !defined KINETIS_KE15)
+    #if !(defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18)
                 ptrPCR += (31 - ucPortBit);
     #endif
               //if ((*ptrPCR & PORT_MUX_ALT7) != PORT_MUX_GPIO) {        // {19} ignore register state if not connected
@@ -2753,7 +2753,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
             }
             else if (iChange == SET_INPUT) {
                 ulPort_in_C |= ulBit;
-    #if !(defined KINETIS_KE && !defined KINETIS_KE15)
+    #if !(defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18)
                 ptrPCR += (31 - ucPortBit);
     #endif
               //if ((*ptrPCR & PORT_MUX_ALT7) != PORT_MUX_GPIO) {        // {19} ignore register state if not connected
@@ -2763,7 +2763,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
             }
             else {
                 ulPort_in_C &= ~ulBit;
-    #if !(defined KINETIS_KE && !defined KINETIS_KE15)
+    #if !(defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18)
                 ptrPCR += (31 - ucPortBit);
     #endif
               //if ((*ptrPCR & PORT_MUX_ALT7) != PORT_MUX_GPIO) {        // {19} ignore register state if not connected
@@ -2775,7 +2775,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
     #if defined LLWU_AVAILABLE && defined SUPPORT_LLWU
                 fnWakeupInterrupt(_PORTC, ulPort_in_C, ulBit, ucPortBit);// handle wakeup events on the pin
     #endif
-    #if defined KINETIS_KE && !defined KINETIS_KE15
+    #if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18
                 fnPortInterrupt(_PORTC, ulPort_in_C, ulBit, 0);          // handle interrupts on the pin
     #else
                 fnPortInterrupt(_PORTC, ulPort_in_C, ulBit, ptrPCR);     // handle interrupts and DMA on the pin
@@ -2799,7 +2799,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
     #endif
             if (iChange == TOGGLE_INPUT) {
                 ulPort_in_D ^= ulBit;                                    // set new pin state
-    #if !(defined KINETIS_KE && !defined KINETIS_KE15)
+    #if !(defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18)
                 ptrPCR += (31 - ucPortBit);
     #endif
               //if ((*ptrPCR & PORT_MUX_ALT7) != PORT_MUX_GPIO) {        // {19} ignore register state if not connected
@@ -2810,7 +2810,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
             }
             else if (iChange == SET_INPUT) {
                 ulPort_in_D |= ulBit;
-    #if !(defined KINETIS_KE && !defined KINETIS_KE15)
+    #if !(defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18)
                 ptrPCR += (31 - ucPortBit);
     #endif
               //if ((*ptrPCR & PORT_MUX_ALT7) != PORT_MUX_GPIO) {        // {19} ignore register state if not connected
@@ -2820,7 +2820,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
             }
             else {
                 ulPort_in_D &= ~ulBit;
-    #if !(defined KINETIS_KE && !defined KINETIS_KE15)
+    #if !(defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18)
                 ptrPCR += (31 - ucPortBit);
     #endif
               //if ((*ptrPCR & PORT_MUX_ALT7) != PORT_MUX_GPIO) {        // {19} ignore register state if not connected
@@ -2850,7 +2850,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
     #endif
             if (iChange == TOGGLE_INPUT) {
                 ulPort_in_E ^= ulBit;                                    // set new pin state
-    #if !(defined KINETIS_KE && !defined KINETIS_KE15)
+    #if !(defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18)
                 ptrPCR += (31 - ucPortBit);
     #endif
               //if ((*ptrPCR & PORT_MUX_ALT7) != PORT_MUX_GPIO) {        // {19} ignore register state if not connected
@@ -2861,7 +2861,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
             }
             else if (iChange == SET_INPUT) {
                 ulPort_in_E |= ulBit;
-    #if !(defined KINETIS_KE && !defined KINETIS_KE15)
+    #if !(defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18)
                 ptrPCR += (31 - ucPortBit);
     #endif
               //if ((*ptrPCR & PORT_MUX_ALT7) != PORT_MUX_GPIO) {        // {19} ignore register state if not connected
@@ -2871,7 +2871,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
             }
             else {
                 ulPort_in_E &= ~ulBit;
-    #if !(defined KINETIS_KE && !defined KINETIS_KE15)
+    #if !(defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18)
                 ptrPCR += (31 - ucPortBit);
     #endif
               //if ((*ptrPCR & PORT_MUX_ALT7) != PORT_MUX_GPIO) {        // {19} ignore register state if not connected
@@ -2903,7 +2903,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
     #endif
             if (iChange == TOGGLE_INPUT) {
                 ulPort_in_F ^= ulBit;                                    // set new pin state
-    #if !(defined KINETIS_KE && !defined KINETIS_KE15)
+    #if !(defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18)
                 ptrPCR += (31 - ucPortBit);
     #endif
               //if ((*ptrPCR & PORT_MUX_ALT7) != PORT_MUX_GPIO) {        // {19} ignore register state if not connected
@@ -2914,7 +2914,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
             }
             else if (iChange == SET_INPUT) {
                 ulPort_in_F |= ulBit;
-    #if !(defined KINETIS_KE && !defined KINETIS_KE15)
+    #if !(defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18)
                 ptrPCR += (31 - ucPortBit);
     #endif
               //if ((*ptrPCR & PORT_MUX_ALT7) != PORT_MUX_GPIO) {        // {19} ignore register state if not connected
@@ -3197,16 +3197,16 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
 static void fnSetPinCharacteristics(int iPortRef, unsigned long ulHigh, unsigned long ulLow)
 {
     unsigned long ulBit = 0x00010000;
-#if !(defined KINETIS_KE && !defined KINETIS_KE15)
+#if !(defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18)
     unsigned long *ptrPCR = (unsigned long *)(PORT0_BLOCK + (iPortRef * 0x1000));
 #endif
     while (ulBit != 0) {
         if ((ulLow & ulBit) != 0) {
-#if !(defined KINETIS_KE && !defined KINETIS_KE15)
+#if !(defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18)
             *ptrPCR = (ulLow & 0x0000ffff);
 #endif
         }
-#if !(defined KINETIS_KE && !defined KINETIS_KE15)
+#if !(defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18)
         ptrPCR++;
 #endif
         ulBit <<= 1;
@@ -3214,16 +3214,16 @@ static void fnSetPinCharacteristics(int iPortRef, unsigned long ulHigh, unsigned
     ulBit = 0x00010000;
     while (ulBit != 0) {
         if ((ulHigh & ulBit) != 0) {
-#if !(defined KINETIS_KE && !defined KINETIS_KE15)
+#if !(defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18)
             *ptrPCR = (ulHigh & 0x0000ffff);
 #endif
         }
-#if !(defined KINETIS_KE && !defined KINETIS_KE15)
+#if !(defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18)
         ptrPCR++;
 #endif
         ulBit <<= 1;
     }
-#if !(defined KINETIS_KE && !defined KINETIS_KE15)
+#if !(defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18)
     *ptrPCR++ = 0;                                                       // clear the PORTx_GPCLR and PORTx_GPCHR registers, which read always 0
     *ptrPCR = 0;
 #endif
@@ -3250,7 +3250,7 @@ extern void fnSimPorts(void)
         ulNewState ^= GPIOA_PTOR;                                        // toggle bits from toggle register
         GPIOA_PDOR = ulNewState;
         GPIOA_PDIR = ((ulPort_in_A & ~GPIOA_PDDR) | (GPIOA_PDOR & GPIOA_PDDR)); // input state {10}
-    #if !defined KINETIS_KE || defined KINETIS_KE15
+    #if !defined KINETIS_KE || defined KINETIS_KE15 || defined KINETIS_KE18
         if ((PORTA_GPCLR != 0) || (PORTA_GPCHR != 0)) {
             fnSetPinCharacteristics(_PORTA, PORTA_GPCHR, PORTA_GPCLR);
         }
@@ -3275,7 +3275,7 @@ extern void fnSimPorts(void)
         ulNewState ^= GPIOB_PTOR;                                        // toggle bits from toggle register
         GPIOB_PDOR = ulNewState;
         GPIOB_PDIR = ((ulPort_in_B & ~GPIOB_PDDR) | (GPIOB_PDOR & GPIOB_PDDR)); // input state {10}
-        #if !defined KINETIS_KE || defined KINETIS_KE15
+        #if !defined KINETIS_KE || defined KINETIS_KE15 || defined KINETIS_KE18
         if ((PORTB_GPCLR != 0) || (PORTB_GPCHR != 0)) {
             fnSetPinCharacteristics(_PORTB, PORTB_GPCHR, PORTB_GPCLR);
         }
@@ -3301,7 +3301,7 @@ extern void fnSimPorts(void)
         ulNewState ^= GPIOC_PTOR;                                        // toggle bits from toggle register
         GPIOC_PDOR = ulNewState;
         GPIOC_PDIR = ((ulPort_in_C & ~GPIOC_PDDR) | (GPIOC_PDOR & GPIOC_PDDR)); // input state {10}
-        #if !defined KINETIS_KE || defined KINETIS_KE15
+        #if !defined KINETIS_KE || defined KINETIS_KE15 || defined KINETIS_KE18
         if ((PORTC_GPCLR != 0) || (PORTC_GPCHR != 0)) {
             fnSetPinCharacteristics(_PORTC, PORTC_GPCHR, PORTC_GPCLR);
         }
@@ -8438,7 +8438,7 @@ unsigned long fnGetFlexTimer_clock(int iChannel)
     else {
         ulClockSpeed = PWM_CLOCK;
     }
-    #elif defined KINETIS_KE15
+    #elif defined KINETIS_KE15 || defined KINETIS_KE18
     switch (ptrTimer->FTM_SC & (FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)) {
     case FTM_SC_CLKS_EXT:
         _EXCEPTION("Not supported");
@@ -8573,13 +8573,13 @@ extern int fnSimTimers(void)
 #if defined KINETIS_WITH_WDOG32
     if ((WDOG0_CS & WDOG_CS_EN) != 0) {                                  // if the watchdog is enabled
     #if TICK_RESOLUTION >= 1000
-        #if defined KINETIS_KE15
+        #if defined KINETIS_KE15 || defined KINETIS_KE18
         unsigned long ulCounter = ((128 * TICK_RESOLUTION)/1000);        // assume 128000Hz LPO clock
         #else
         unsigned long ulCounter = (TICK_RESOLUTION / 1000);              // assume 1000Hz LPO clock
         #endif
     #else
-        #if defined KINETIS_KE15
+        #if defined KINETIS_KE15 || defined KINETIS_KE18
         unsigned long ulCounter = 128;                                   // assume 128000Hz LPO clock
         #else
         unsigned long ulCounter = 1;                                     // assume 1000Hz LPO clock
@@ -9025,7 +9025,7 @@ extern int fnSimTimers(void)
     if ((RTC_SR & RTC_SR_TCE) != 0) {                                    // RTC is enabled
         if ((RTC_SR & RTC_SR_TIF) == 0) {                                // if invalid flag not set
             unsigned long ulCounter;
-    #if defined KINETIS_KE15
+    #if defined KINETIS_KE15 || defined KINETIS_KE18
             if ((RTC_CR & RTC_CR_LPOS_LPO) != 0) {
         #if TICK_RESOLUTION >= 1000
                 ulCounter = ((TICK_RESOLUTION/1000));                    // approximately 1kHz clock pulses in a TICK period (128kHz LPO divided by 128)

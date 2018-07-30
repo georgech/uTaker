@@ -54,6 +54,24 @@ static unsigned char ucPITmodes = 0;                                     // PIT 
 /*                        PIT Interrupt Handlers                       */
 /* =================================================================== */
 
+
+#if defined LPITS_AVAILABLE
+static int fnHandleLPIT(int iChannel)
+{
+    WRITE_ONE_TO_CLEAR(LPIT0_MSR, (LPIT_MSR_TIF0 << iChannel));          // clear pending interrupt
+    if ((ucPITmodes & (PIT_PERIODIC << (iChannel * 2))) == 0) {          // if not periodic mode (single-shot usage)
+        fnDisablePIT(iChannel);                                          // stop PIT operation and power down when no other activity
+    }
+    uDisable_Interrupt();
+        pit_interrupt_handler[iChannel]();                               // call handling function
+    uEnable_Interrupt();
+    if ((PCC_LPIT0 & PCC_CGC) == 0) {                                    // if the PIT module has been powered down we return rather than checking further channels
+        return 1;
+    }
+    return 0;
+}
+#endif
+
     #if defined KINETIS_KL || defined KINETIS_KM || (defined LPITS_AVAILABLE && !defined KINETIS_KE18)
 // KL device PIT, and LPIT, have a single interrupt which is shared by all PIT channels
 //
@@ -67,19 +85,8 @@ static __interrupt void _PIT_Interrupt(void)
     #if defined LPITS_AVAILABLE                                          // {9}
         if ((LPIT0_MIER & (LPIT_MIER_TIE0 << iChannel)) != 0) {          // interrupt is enabled on this channel
             if ((LPIT0_MSR & (LPIT_MSR_TIF0 << iChannel)) != 0) {        // interrupt is pending on this channel
-        #if defined _WINDOWS
-                LPIT0_MSR &= ~(LPIT_MSR_TIF0 << iChannel);               // clear pending interrupt
-        #else
-                LPIT0_MSR = (LPIT_MSR_TIF0 << iChannel);                 // clear pending interrupt
-        #endif
-                if ((ucPITmodes & (PIT_PERIODIC << (iChannel * 2))) == 0) { // if not periodic mode (single-shot usage)
-                    fnDisablePIT(iChannel);                              // stop PIT operation and power down when no other activity
-                }
-                uDisable_Interrupt();
-                    pit_interrupt_handler[iChannel]();                   // call handling function
-                uEnable_Interrupt();
-                if ((PCC_LPIT0 & PCC_CGC) == 0) {                        // if the PIT module has been powered down we return rather than checking further channels
-                    return;
+                if (fnHandleLPIT(iChannel) != 0) {
+                    return;                                              // no futher channels need checking so quit
                 }
             }
         }
@@ -93,7 +100,7 @@ static __interrupt void _PIT_Interrupt(void)
                 uDisable_Interrupt();
                     pit_interrupt_handler[iChannel]();                   // call handling function
                 uEnable_Interrupt();
-                if (IS_POWERED_UP(6, PIT0) == 0) {                      // if the PIT module has been powered down we return rather than checking further channels
+                if (IS_POWERED_UP(6, PIT0) == 0) {                       // if the PIT module has been powered down we return rather than checking further channels
                     return;
                 }
             }
@@ -105,11 +112,9 @@ static __interrupt void _PIT_Interrupt(void)
     #else
 // Common interrupt handler for all PITs
 //
+    #if !defined KINETIS_KE18
 static void _PIT_Handler(int iPIT)
 {
-    #if (defined LPITS_AVAILABLE && defined KINETIS_KE18)
-    _EXCEPTION("To do!");
-    #else
     KINETIS_PIT_CTL *ptrCtl = (KINETIS_PIT_CTL *)PIT_CTL_ADD;
     ptrCtl += iPIT;
     WRITE_ONE_TO_CLEAR(ptrCtl->PIT_TFLG, PIT_TFLG_TIF);                  // clear pending interrupts
@@ -119,33 +124,50 @@ static void _PIT_Handler(int iPIT)
     if ((ucPITmodes & (PIT_PERIODIC << (iPIT * 2))) == 0) {              // if not periodic mode (single-shot usage)
         fnDisablePIT(iPIT);                                              // stop PIT operation and power down when no other activity
     }
-    #endif
     uDisable_Interrupt();
         pit_interrupt_handler[iPIT]();                                   // call handling function
     uEnable_Interrupt();
 }
+    #endif
+
 static __interrupt void _PIT0_Interrupt(void)
 {
+    #if defined LPITS_AVAILABLE && defined KINETIS_KE18
+    fnHandleLPIT(0);                                                     // dedicated LPIT channel 0 interrupt
+    #else
     _PIT_Handler(0);
+    #endif
 }
 
 static __interrupt void _PIT1_Interrupt(void)
 {
+    #if defined LPITS_AVAILABLE && defined KINETIS_KE18
+    fnHandleLPIT(1);                                                     // dedicated LPIT channel 1 interrupt
+    #else
     _PIT_Handler(1);
+    #endif
 }
 
-        #if (defined PITS_AVAILABLE && (PITS_AVAILABLE > 2)) || (defined LPITS_AVAILABLE && (LPIT_CHANNELS > 2))
+    #if (defined PITS_AVAILABLE && (PITS_AVAILABLE > 2)) || (defined LPITS_AVAILABLE && (LPIT_CHANNELS > 2))
 static __interrupt void _PIT2_Interrupt(void)
 {
+        #if defined LPITS_AVAILABLE && defined KINETIS_KE18
+    fnHandleLPIT(2);                                                     // dedicated LPIT channel 2 interrupt
+        #else
     _PIT_Handler(2);
+        #endif
 }
 
 static __interrupt void _PIT3_Interrupt(void)
 {
+        #if defined LPITS_AVAILABLE && defined KINETIS_KE18
+    fnHandleLPIT(3);                                                     // dedicated LPIT channel 3 interrupt
+        #else
     _PIT_Handler(3);
-}
         #endif
+}
     #endif
+#endif
 
 // Stop PIT operation and power down when no other activity
 //
