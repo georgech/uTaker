@@ -54,8 +54,8 @@ static unsigned char ucPITmodes = 0;                                     // PIT 
 /*                        PIT Interrupt Handlers                       */
 /* =================================================================== */
 
-    #if defined KINETIS_KL || defined KINETIS_KM || defined LPITS_AVAILABLE
-// KL device PIT, and LPIT,  have a single interrupt which is shared by all PIT channels
+    #if defined KINETIS_KL || defined KINETIS_KM || (defined LPITS_AVAILABLE && !defined KINETIS_KE18)
+// KL device PIT, and LPIT, have a single interrupt which is shared by all PIT channels
 //
 static __interrupt void _PIT_Interrupt(void)
 {
@@ -107,6 +107,9 @@ static __interrupt void _PIT_Interrupt(void)
 //
 static void _PIT_Handler(int iPIT)
 {
+    #if (defined LPITS_AVAILABLE && defined KINETIS_KE18)
+    _EXCEPTION("To do!");
+    #else
     KINETIS_PIT_CTL *ptrCtl = (KINETIS_PIT_CTL *)PIT_CTL_ADD;
     ptrCtl += iPIT;
     WRITE_ONE_TO_CLEAR(ptrCtl->PIT_TFLG, PIT_TFLG_TIF);                  // clear pending interrupts
@@ -116,11 +119,11 @@ static void _PIT_Handler(int iPIT)
     if ((ucPITmodes & (PIT_PERIODIC << (iPIT * 2))) == 0) {              // if not periodic mode (single-shot usage)
         fnDisablePIT(iPIT);                                              // stop PIT operation and power down when no other activity
     }
+    #endif
     uDisable_Interrupt();
         pit_interrupt_handler[iPIT]();                                   // call handling function
     uEnable_Interrupt();
 }
-
 static __interrupt void _PIT0_Interrupt(void)
 {
     _PIT_Handler(0);
@@ -131,7 +134,7 @@ static __interrupt void _PIT1_Interrupt(void)
     _PIT_Handler(1);
 }
 
-        #if PITS_AVAILABLE > 2
+        #if (defined PITS_AVAILABLE && (PITS_AVAILABLE > 2)) || (defined LPITS_AVAILABLE && (LPIT_CHANNELS > 2))
 static __interrupt void _PIT2_Interrupt(void)
 {
     _PIT_Handler(2);
@@ -215,7 +218,7 @@ static void fnDisablePIT(int iPIT)
         PIT_MCR = 0;                                                     // ensure the PIT module is clocked
     #endif
         if (PIT_settings->int_handler != 0) {                            // if an interrupt is required
-    #if defined KINETIS_KL || defined KINETIS_KM ||defined LPITS_AVAILABLE // {3} KL, and LPIT, devices have a single interrupt from the PIT channels
+    #if defined KINETIS_KL || defined KINETIS_KM || (defined LPITS_AVAILABLE && !defined KINETIS_KE18) // {3} KL, and LPIT, devices have a single interrupt from the PIT channels
             fnEnterInterrupt(irq_PIT_ID, PIT_settings->int_priority, _PIT_Interrupt); // ensure that the handler for the PIT module is entered
     #else
             switch (PIT_settings->ucPIT) {
@@ -225,7 +228,7 @@ static void fnDisablePIT(int iPIT)
             case 1:
                 fnEnterInterrupt(irq_PIT1_ID, PIT_settings->int_priority, _PIT1_Interrupt); // ensure that the handler for this PIT is entered
                 break;
-         #if PITS_AVAILABLE > 2
+         #if (defined PITS_AVAILABLE && (PITS_AVAILABLE > 2)) || (defined LPITS_AVAILABLE && (LPIT_CHANNELS > 2))
             case 2:
                 fnEnterInterrupt(irq_PIT2_ID, PIT_settings->int_priority, _PIT2_Interrupt); // ensure that the handler for this PIT is entered
                 break;

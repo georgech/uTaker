@@ -290,7 +290,7 @@ extern unsigned long fnGetPortMask(int iPortNumber)
     unsigned long ulPortMask = 0x00000000;
     unsigned long ulMaskBit = 0x00000001;
     int i;
-    #if defined KINETIS_KE && !defined KINETIS_KE15
+    #if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18
     if (iPortNumber >= PORTS_AVAILABLE_8_BIT)
     #else
     if (iPortNumber >= (PORTS_AVAILABLE + 1))

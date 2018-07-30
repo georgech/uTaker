@@ -5582,10 +5582,17 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                 if (ptrDebugIn == 0) {                                   // idle line detection
                     LPUART0_STAT |= LPUART_STAT_IDLE;                    // mark idle line status
                     if ((LPUART0_CTRL & LPUART_CTRL_ILIE) != 0) {        // if the idle line interrupt is enabled
+        #if defined irq_LPUART0_RX_ID
+                        if (fnGenInt(irq_LPUART0_RX_ID) != 0) {         // if LPUART0 interrupt is not disabled
+                            VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                            ptrVect->processor_interrupts.irq_LPUART0_RX(); // call the interrupt handler
+                        }
+        #else
                         if (fnGenInt(irq_LPUART0_ID) != 0) {             // if LPUART0 interrupt is not disabled
                             VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                             ptrVect->processor_interrupts.irq_LPUART0(); // call the interrupt handler
                         }
+        #endif
                     }
                     return;
                 }
@@ -5617,10 +5624,17 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                         }
                         else {
         #endif
+        #if defined irq_LPUART0_RX_ID
+                            if (fnGenInt(irq_LPUART0_RX_ID) != 0) {      // if LPUART0 interrupt is not disabled
+                                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                                ptrVect->processor_interrupts.irq_LPUART0_RX(); // call the interrupt handler
+                            }
+        #else
                             if (fnGenInt(irq_LPUART0_ID) != 0) {         // if LPUART0 interrupt is not disabled
                                 VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                                 ptrVect->processor_interrupts.irq_LPUART0(); // call the interrupt handler
                             }
+        #endif
         #if !defined DEVICE_WITHOUT_DMA                                  // if the device supports DMA
                         }
         #endif
@@ -5638,10 +5652,17 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                 if (ptrDebugIn == 0) {                                   // idle line detection
                     LPUART1_STAT |= LPUART_STAT_IDLE;                    // mark idle line status
                     if ((LPUART1_CTRL & LPUART_CTRL_ILIE) != 0) {        // if the idle line interrupt is enabled
+            #if defined irq_LPUART1_RX_ID
+                        if (fnGenInt(irq_LPUART1_RX_ID) != 0) {         // if LPUART1 interrupt is not disabled
+                            VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                            ptrVect->processor_interrupts.irq_LPUART1_RX(); // call the interrupt handler
+                        }
+            #else
                         if (fnGenInt(irq_LPUART1_ID) != 0) {             // if LPUART1 interrupt is not disabled
                             VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                             ptrVect->processor_interrupts.irq_LPUART1(); // call the interrupt handler
                         }
+            #endif
                     }
                     return;
                 }
@@ -5673,13 +5694,20 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                         }
                         else {
             #endif
+            #if defined irq_LPUART1_RX_ID
+                            if (fnGenInt(irq_LPUART1_RX_ID) != 0) {      // if LPUART0 interrupt is not disabled
+                                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                                ptrVect->processor_interrupts.irq_LPUART1_RX(); // call the interrupt handler
+                            }
+            #else
                             if (fnGenInt(irq_LPUART1_ID) != 0) {         // if LPUART1 interrupt is not disabled
                                 VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                                 ptrVect->processor_interrupts.irq_LPUART1(); // call the interrupt handler
                             }
-                #if !defined DEVICE_WITHOUT_DMA                          // if the device supports DMA
+            #endif
+            #if !defined DEVICE_WITHOUT_DMA                              // if the device supports DMA
                         }
-                #endif
+            #endif
                     }
                 }
             }
@@ -5697,12 +5725,16 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                     if ((LPUART2_CTRL & LPUART_CTRL_ILIE) != 0) {        // if the idle line interrupt is enabled
             #if !defined irq_LPUART2_ID && defined INTMUX0_AVAILABLE
                         if (fnGenInt(irq_INTMUX0_0_ID + INTMUX_LPUART2) != 0) // {46}
+            #elif defined irq_LPUART2_RX_ID
+                        if (fnGenInt(irq_LPUART2_RX_ID) != 0)            // if LPUART2 interrupt is not disabled
             #else
                         if (fnGenInt(irq_LPUART2_ID) != 0)
             #endif
                         {                                                // if LPUART2 interrupt is not disabled
                             VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-            #if !defined irq_LPUART2_ID
+            #if defined irq_LPUART2_RX_ID
+                            ptrVect->processor_interrupts.irq_LPUART2_RX(); // call the interrupt handler
+            #elif !defined irq_LPUART2_ID
                             fnCallINTMUX(INTMUX_LPUART2, INTMUX0_PERIPHERAL_LPUART2, (unsigned char *)&ptrVect->processor_interrupts.irq_LPUART2);
             #else
                             ptrVect->processor_interrupts.irq_LPUART2(); // call the interrupt handler
@@ -5738,12 +5770,16 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                         else {
             #if !defined irq_LPUART2_ID && defined INTMUX0_AVAILABLE
                             if (fnGenInt(irq_INTMUX0_0_ID + INTMUX_LPUART2) != 0) // {46}
+            #elif defined irq_LPUART2_RX_ID
+                            if (fnGenInt(irq_LPUART2_RX_ID) != 0)        // if LPUART2 interrupt is not disabled
             #else
                             if (fnGenInt(irq_LPUART2_ID) != 0)
             #endif
                             {                                            // if LPUART2 interrupt is not disabled
                                 VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-            #if !defined irq_LPUART2_ID
+            #if defined irq_LPUART2_RX_ID
+                                ptrVect->processor_interrupts.irq_LPUART2_RX(); // call the interrupt handler
+            #elif !defined irq_LPUART2_ID
                                 fnCallINTMUX(INTMUX_LPUART2, INTMUX0_PERIPHERAL_LPUART2, (unsigned char *)&ptrVect->processor_interrupts.irq_LPUART2);
             #else
                                 ptrVect->processor_interrupts.irq_LPUART2(); // call the interrupt handler
@@ -6157,15 +6193,22 @@ static void fnUART_Tx_int(int iChannel)
         #if defined LPUARTS_PARALLEL
         case UARTS_AVAILABLE:
         #else
-        case 0:                                                              // LPUART0
+        case 0:                                                          // LPUART0
         #endif
-            if ((LPUART0_CTRL & LPUART_CTRL_TE) != 0) {                      // if transmitter enabled
-                LPUART0_STAT |= (LPUART_STAT_TDRE | LPUART_STAT_TC);         // set interrupt cause
-                if ((LPUART0_CTRL & LPUART0_STAT) != 0) {                    // if transmit interrupt type enabled
-                    if (fnGenInt(irq_LPUART0_ID) != 0) {                     // if LPUART0 interrupt is not disabled
+            if ((LPUART0_CTRL & LPUART_CTRL_TE) != 0) {                  // if transmitter enabled
+                LPUART0_STAT |= (LPUART_STAT_TDRE | LPUART_STAT_TC);     // set interrupt cause
+                if ((LPUART0_CTRL & LPUART0_STAT) != 0) {                // if transmit interrupt type enabled
+        #if defined irq_LPUART0_TX_ID
+                    if (fnGenInt(irq_LPUART0_TX_ID) != 0) {              // if LPUART0 tx interrupt is not disabled
                         VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-                        ptrVect->processor_interrupts.irq_LPUART0();         // call the interrupt handler
+                        ptrVect->processor_interrupts.irq_LPUART0_TX();  // call the interrupt handler
                     }
+        #else
+                    if (fnGenInt(irq_LPUART0_ID) != 0) {                 // if LPUART0 interrupt is not disabled
+                        VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                        ptrVect->processor_interrupts.irq_LPUART0();     // call the interrupt handler
+                    }
+        #endif
                 }
             }
             break;
@@ -6175,33 +6218,44 @@ static void fnUART_Tx_int(int iChannel)
             #else
         case 1:
             #endif
-            if ((LPUART1_CTRL & LPUART_CTRL_TE) != 0) {                      // if transmitter enabled
-                LPUART1_STAT |= (LPUART_STAT_TDRE | LPUART_STAT_TC);         // set interrupt cause
-                if ((LPUART1_CTRL & LPUART1_STAT) != 0) {                    // if transmit interrupt type enabled
-                    if (fnGenInt(irq_LPUART1_ID) != 0) {                     // if LPUART1 interrupt is not disabled
+            if ((LPUART1_CTRL & LPUART_CTRL_TE) != 0) {                  // if transmitter enabled
+                LPUART1_STAT |= (LPUART_STAT_TDRE | LPUART_STAT_TC);     // set interrupt cause
+                if ((LPUART1_CTRL & LPUART1_STAT) != 0) {                // if transmit interrupt type enabled
+            #if defined irq_LPUART1_TX_ID
+                    if (fnGenInt(irq_LPUART1_TX_ID) != 0) {              // if LPUART1 tx interrupt is not disabled
                         VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-                        ptrVect->processor_interrupts.irq_LPUART1();         // call the interrupt handler
+                        ptrVect->processor_interrupts.irq_LPUART1_TX();  // call the interrupt handler
                     }
+            #else
+                    if (fnGenInt(irq_LPUART1_ID) != 0) {                 // if LPUART1 interrupt is not disabled
+                        VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                        ptrVect->processor_interrupts.irq_LPUART1();     // call the interrupt handler
+                    }
+            #endif
                 }
             }
             break;
         #endif
         #if (LPUARTS_AVAILABLE > 2) && (UARTS_AVAILABLE == 0)
         case 2:
-            if ((LPUART2_CTRL & LPUART_CTRL_TE) != 0) {                      // if transmitter enabled
-                LPUART2_STAT |= (LPUART_STAT_TDRE | LPUART_STAT_TC);         // set interrupt cause
-                if ((LPUART2_CTRL & LPUART2_STAT) != 0) {                    // if transmit interrupt type enabled
+            if ((LPUART2_CTRL & LPUART_CTRL_TE) != 0) {                  // if transmitter enabled
+                LPUART2_STAT |= (LPUART_STAT_TDRE | LPUART_STAT_TC);     // set interrupt cause
+                if ((LPUART2_CTRL & LPUART2_STAT) != 0) {                // if transmit interrupt type enabled
             #if !defined irq_LPUART2_ID && defined INTMUX0_AVAILABLE
-                    if (fnGenInt(irq_INTMUX0_0_ID + INTMUX_LPUART2) != 0)    // {46}
+                    if (fnGenInt(irq_INTMUX0_0_ID + INTMUX_LPUART2) != 0)// {46}
+            #elif defined irq_LPUART2_TX_ID
+                    if (fnGenInt(irq_LPUART2_TX_ID) != 0)                // if LPUART2 tx interrupt is not disabled
             #else
                     if (fnGenInt(irq_LPUART2_ID) != 0)
             #endif
-                    {                                                        // if LPUART2 interrupt is not disabled
+                    {                                                    // if LPUART2 interrupt is not disabled
                         VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-            #if !defined irq_LPUART2_ID
+            #if defined irq_LPUART2_TX_ID
+                        ptrVect->processor_interrupts.irq_LPUART2_TX();  // call the interrupt handler
+            #elif !defined irq_LPUART2_ID
                         fnCallINTMUX(INTMUX_LPUART2, INTMUX0_PERIPHERAL_LPUART2, (unsigned char *)&ptrVect->processor_interrupts.irq_LPUART2);
             #else
-                        ptrVect->processor_interrupts.irq_LPUART2(); // call the interrupt handler
+                        ptrVect->processor_interrupts.irq_LPUART2();     // call the interrupt handler
             #endif
                     }
                 }
@@ -6210,12 +6264,12 @@ static void fnUART_Tx_int(int iChannel)
         #endif
         #if (LPUARTS_AVAILABLE > 3) && (UARTS_AVAILABLE == 0)
         case 3:
-            if ((LPUART3_CTRL & LPUART_CTRL_TE) != 0) {                      // if transmitter enabled
-                LPUART3_STAT |= (LPUART_STAT_TDRE | LPUART_STAT_TC);         // set interrupt cause
-                if ((LPUART3_CTRL & LPUART3_STAT) != 0) {                    // if transmit interrupt type enabled
-                    if (fnGenInt(irq_LPUART3_ID) != 0) {                     // if LPUART3 interrupt is not disabled
+            if ((LPUART3_CTRL & LPUART_CTRL_TE) != 0) {                  // if transmitter enabled
+                LPUART3_STAT |= (LPUART_STAT_TDRE | LPUART_STAT_TC);     // set interrupt cause
+                if ((LPUART3_CTRL & LPUART3_STAT) != 0) {                // if transmit interrupt type enabled
+                    if (fnGenInt(irq_LPUART3_ID) != 0) {                 // if LPUART3 interrupt is not disabled
                         VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-                        ptrVect->processor_interrupts.irq_LPUART3(); // call the interrupt handler
+                        ptrVect->processor_interrupts.irq_LPUART3();     // call the interrupt handler
                     }
                 }
             }
@@ -6223,12 +6277,12 @@ static void fnUART_Tx_int(int iChannel)
         #endif
         #if (LPUARTS_AVAILABLE > 4) && (UARTS_AVAILABLE == 0)
         case 4:
-            if ((LPUART4_CTRL & LPUART_CTRL_TE) != 0) {                      // if transmitter enabled
-                LPUART4_STAT |= (LPUART_STAT_TDRE | LPUART_STAT_TC);         // set interrupt cause
-                if ((LPUART4_CTRL & LPUART4_STAT) != 0) {                    // if transmit interrupt type enabled
-                    if (fnGenInt(irq_LPUART4_ID) != 0) {                     // if LPUART3 interrupt is not disabled
+            if ((LPUART4_CTRL & LPUART_CTRL_TE) != 0) {                  // if transmitter enabled
+                LPUART4_STAT |= (LPUART_STAT_TDRE | LPUART_STAT_TC);     // set interrupt cause
+                if ((LPUART4_CTRL & LPUART4_STAT) != 0) {                // if transmit interrupt type enabled
+                    if (fnGenInt(irq_LPUART4_ID) != 0) {                 // if LPUART3 interrupt is not disabled
                         VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-                        ptrVect->processor_interrupts.irq_LPUART4(); // call the interrupt handler
+                        ptrVect->processor_interrupts.irq_LPUART4();     // call the interrupt handler
                     }
                 }
             }
@@ -7700,10 +7754,17 @@ extern void fnSimulateBreak(int iPort)
     case LPUART0_CH_NUMBER:                                              // LPUART 0
         LPUART0_STAT |= LPUART_STAT_LBKDIF;                              // set the status flag
         if ((LPUART0_BAUD & LPUART_BAUD_LBKDIE) != 0) {                  // if the break interrupt is enabled
-            if (fnGenInt(irq_LPUART0_ID) != 0) {                         // if LPUART1 interrupt is not disabled
+    #if defined irq_LPUART0_RX_ID
+            if (fnGenInt(irq_LPUART0_RX_ID) != 0) {                      // if LPUART0 rx interrupt is not disabled
+                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                ptrVect->processor_interrupts.irq_LPUART0_RX();          // call the interrupt handler
+            }
+    #else
+            if (fnGenInt(irq_LPUART0_ID) != 0) {                         // if LPUART0 interrupt is not disabled
                 VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                 ptrVect->processor_interrupts.irq_LPUART0();             // call the interrupt handler
             }
+    #endif
         }
         break;
 #if LPUARTS_AVAILABLE > 1
@@ -7715,10 +7776,17 @@ extern void fnSimulateBreak(int iPort)
     case LPUART1_CH_NUMBER:                                              // LPUART 1
         LPUART1_STAT |= LPUART_STAT_LBKDIF;                              // set the status flag
         if ((LPUART1_BAUD & LPUART_BAUD_LBKDIE) != 0) {                  // if the break interrupt is enabled
+    #if defined irq_LPUART1_RX_ID
+            if (fnGenInt(irq_LPUART1_RX_ID) != 0) {                      // if LPUART1 rx interrupt is not disabled
+                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                ptrVect->processor_interrupts.irq_LPUART1_RX();          // call the interrupt handler
+            }
+    #else
             if (fnGenInt(irq_LPUART1_ID) != 0) {                         // if LPUART1 interrupt is not disabled
                 VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                 ptrVect->processor_interrupts.irq_LPUART1();             // call the interrupt handler
             }
+    #endif
         }
         break;
 #endif
@@ -7733,12 +7801,16 @@ extern void fnSimulateBreak(int iPort)
         if ((LPUART2_BAUD & LPUART_BAUD_LBKDIE) != 0) {                  // if the break interrupt is enabled
     #if !defined irq_LPUART2_ID && defined INTMUX0_AVAILABLE
             if (fnGenInt(irq_INTMUX0_0_ID + INTMUX_LPUART2) != 0)
+    #elif defined irq_LPUART2_RX_ID
+            if (fnGenInt(irq_LPUART2_RX_ID) != 0)                        // if LPUART2 rx interrupt is not disabled
     #else
             if (fnGenInt(irq_LPUART2_ID) != 0)
     #endif
             {                                                            // if LPUART2 interrupt is not disabled
                 VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-    #if !defined irq_LPUART2_ID
+    #if defined irq_LPUART1_RX_ID
+                ptrVect->processor_interrupts.irq_LPUART2_RX();          // call the interrupt handler
+    #elif !defined irq_LPUART2_ID
                 fnCallINTMUX(INTMUX_LPUART2, INTMUX0_PERIPHERAL_LPUART2, (unsigned char *)&ptrVect->processor_interrupts.irq_LPUART2);
     #else
                 ptrVect->processor_interrupts.irq_LPUART2(); // call the interrupt handler
@@ -8691,10 +8763,17 @@ extern int fnSimTimers(void)
                 LPIT0_MSR |= LPIT_MSR_TIF0;                              // flag that a reload occurred
                 fnHandleDMA_triggers(DMAMUX0_DMA0_CHCFG_SOURCE_PIT0, 0); // handle DMA triggered on LPIT0
                 if ((LPIT0_MIER & LPIT_MIER_TIE0) != 0) {                // if PIT interrupt is enabled
+        #if defined irq_LPIT0_CH0_ID
+                    if (fnGenInt(irq_LPIT0_CH0_ID) != 0) {               // if PIT channel interrupt is not disabled
+                        VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                        ptrVect->processor_interrupts.irq_LPIT0_CH0();   // call the interrupt handler
+                    }
+        #else
                     if (fnGenInt(irq_LPIT0_ID) != 0) {                   // if general PIT interrupt is not disabled
                         VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                         ptrVect->processor_interrupts.irq_LPIT0();       // call the shared interrupt handler
                     }
+        #endif
                 }
             }
             else {
@@ -8713,10 +8792,17 @@ extern int fnSimTimers(void)
                 fnHandleDMA_triggers(DMAMUX0_DMA0_CHCFG_SOURCE_PIT1, 0); // handle DMA triggered on LPIT1
         #endif
                 if ((LPIT0_MIER & LPIT_MIER_TIE1) != 0) {                // if PIT interrupt is enabled
+        #if defined irq_LPIT0_CH1_ID
+                    if (fnGenInt(irq_LPIT0_CH1_ID) != 0) {               // if PIT channel interrupt is not disabled
+                        VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                        ptrVect->processor_interrupts.irq_LPIT0_CH1();   // call the interrupt handler
+                    }
+        #else
                     if (fnGenInt(irq_LPIT0_ID) != 0) {                   // if general PIT interrupt is not disabled
                         VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                         ptrVect->processor_interrupts.irq_LPIT0();       // call the shared interrupt handler
                     }
+        #endif
                 }
             }
             else {
@@ -8735,10 +8821,17 @@ extern int fnSimTimers(void)
                 fnHandleDMA_triggers(DMAMUX0_DMA0_CHCFG_SOURCE_PIT2, 0); // handle DMA triggered on LPIT2
         #endif
                 if ((LPIT0_MIER & LPIT_MIER_TIE2) != 0) {                // if PIT interrupt is enabled
+        #if defined irq_LPIT0_CH2_ID
+                    if (fnGenInt(irq_LPIT0_CH2_ID) != 0) {               // if PIT channel interrupt is not disabled
+                        VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                        ptrVect->processor_interrupts.irq_LPIT0_CH2();   // call the interrupt handler
+                    }
+        #else
                     if (fnGenInt(irq_LPIT0_ID) != 0) {                   // if general PIT interrupt is not disabled
                         VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                         ptrVect->processor_interrupts.irq_LPIT0();       // call the shared interrupt handler
                     }
+        #endif
                 }
             }
             else {
@@ -8757,10 +8850,17 @@ extern int fnSimTimers(void)
                 fnHandleDMA_triggers(DMAMUX0_DMA0_CHCFG_SOURCE_PIT3, 0); // handle DMA triggered on LPIT3
         #endif
                 if ((LPIT0_MIER & LPIT_MIER_TIE3) != 0) {                // if PIT interrupt is enabled
+        #if defined irq_LPIT0_CH3_ID
+                    if (fnGenInt(irq_LPIT0_CH3_ID) != 0) {               // if PIT channel interrupt is not disabled
+                        VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                        ptrVect->processor_interrupts.irq_LPIT0_CH3();   // call the interrupt handler
+                    }
+        #else
                     if (fnGenInt(irq_LPIT0_ID) != 0) {                   // if general PIT interrupt is not disabled
                         VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                         ptrVect->processor_interrupts.irq_LPIT0();       // call the shared interrupt handler
                     }
+        #endif
                 }
             }
             else {

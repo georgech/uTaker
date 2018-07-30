@@ -171,12 +171,12 @@ typedef struct stDMX512_RDM_DISC_UNIQUE_BRANCH_RESPONSE_PACKET
 } DMX512_RDM_DISC_UNIQUE_BRANCH_RESPONSE_PACKET;
 
 
-#define DMX512_RDM_COMMAND_CLASS_GET_COMMAND                 0x10
-#define DMX512_RDM_COMMAND_CLASS_GET_COMMAND_RESPONSE        0x11
-#define DMX512_RDM_COMMAND_CLASS_SET_COMMAND                 0x20
-#define DMX512_RDM_COMMAND_CLASS_SET_COMMAND_RESPONSE        0x21
-#define DMX512_RDM_COMMAND_CLASS_DISCOVERY_COMMAND           0x30
-#define DMX512_RDM_COMMAND_CLASS_DISCOVERY_COMMAND_RESPONSE  0x31
+#define DMX512_RDM_COMMAND_CLASS_DISCOVERY_COMMAND           0x10
+#define DMX512_RDM_COMMAND_CLASS_DISCOVERY_COMMAND_RESPONSE  0x11
+#define DMX512_RDM_COMMAND_CLASS_GET_COMMAND                 0x20
+#define DMX512_RDM_COMMAND_CLASS_GET_COMMAND_RESPONSE        0x21
+#define DMX512_RDM_COMMAND_CLASS_SET_COMMAND                 0x30
+#define DMX512_RDM_COMMAND_CLASS_SET_COMMAND_RESPONSE        0x31
 
 #define DMX512_RDM_PARAMETER_ID_DISC_UNIQUE_BRANCH           0x0001      // required
 #define DMX512_RDM_PARAMETER_ID_DISC_MUTE                    0x0002      // required
@@ -625,7 +625,7 @@ static void _mab_stop_interrupt(void)
 static void fnConfigureDMX512_framing(void)
 {
     // Set up a periodic timer to control the frame rate
-    // - this method is suitable for kintis parts using a PWM channel to control the break and period, plus a second channel to define the MAB
+    // - this method is suitable for kinetis parts using a PWM channel to control the break and period, plus a second channel to define the MAB
     //
 
     // TPM1 setup
