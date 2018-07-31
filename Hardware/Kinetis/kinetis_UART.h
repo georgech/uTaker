@@ -49,6 +49,7 @@
     01.06.2018 Add option user callback options USER_DEFINED_UART_RX_HANDLER, USER_DEFINED_UART_RX_BREAK_DETECTION, USER_DEFINED_UART_TX_FRAME_COMPLETE
     12.06.2018 Protect bit setting and clearing from other UART interrupts (with higher priority) using PROTECTED_SET_VARIABLE() and PROTECTED_SET_VARIABLE()
     22.07.2018 Added fnPrepareRxDMA_mode() to handle generic configuration of rx DMA mode {214}
+    31.07.2018 Corrected shared DMA channel numbering between Rx and Tx  {215}
 
 */
 
@@ -1299,7 +1300,7 @@ static void fnEnableRxAndDMA(int channel, unsigned long buffer_length, unsigned 
     unsigned short usDMAMUX = (DMAMUX0_CHCFG_SOURCE_UART0_RX + (2 * channel));
             #if ((defined KINETIS_K21 || defined KINETIS_K22) && (UARTS_AVAILABLE > 4)) || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66
     if (channel > 3) {                                                   // channels 4 and above each share DMA source for TX and RX
-        usDMAMUX = (DMAMUX0_CHCFG_SOURCE_UART3_RX + (channel - 3));
+        usDMAMUX = (DMAMUX0_CHCFG_SOURCE_UART4_RX + (channel - 4));      // {215}
     }
             #endif
         #endif
