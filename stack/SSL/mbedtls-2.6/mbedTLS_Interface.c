@@ -28,15 +28,6 @@
 #include "mbedtls/ssl_internal.h"
 #include "mbedtls/platform.h"
 
-extern int fnSHA256(const unsigned char *ptrInput, unsigned char *ptrOutput, unsigned long ulLength, int iMode)
-{
-    mbedtls_sha256_context sha256;
-    mbedtls_sha256_starts(&sha256, 0);
-    mbedtls_sha256_update(&sha256, ptrInput, ulLength);
-    mbedtls_sha256_finish(&sha256, ptrOutput);
-    return 0;
-}
-
 typedef struct stUTASKER_MBEDSSL_SESSION
 {
     mbedtls_ssl_context  ssl;

@@ -21,6 +21,7 @@
     03.05.2010 Allow MODBUS_TCP_SERVERS 0 value to disable                {V1.10}
     25.08.2010 Extra configuration definitions for more verified configurations {V1.14}
     06.07.2018 Move some default defines from modbus.c to here
+    01.08.2018 fnSendMODBUS_response() made extern so that it can be used to send responses without a request {1}
 
 */
 
@@ -481,6 +482,13 @@ extern int fnMODBUS_transmit(MODBUS_RX_FUNCTION *modbus_rx_function, unsigned ch
   #define TCP_BINARY_INPUT                     0x02
   #define INTERMEDIATE_STEP_WITHOUT_RESPONSE   0x04
   #define ADJUST_READ_WRITE_MULTIPLE_REGISTER  0x08                      // {V1.09} special case where MODBUS_READ_HOLDING_REGISTERS is being used for MODBUS_READ_WRITE_MULTIPLE_REGISTER
+extern int fnSendMODBUS_response(MODBUS_RX_FUNCTION *modbus_rx_function, void *ptrData, unsigned short usLength, unsigned char ucShift); // {1}
+  #define SHIFT_BYTE_ALIGNED                   0x00
+  #define SHIFT_SHORT_WORD_ALIGNED             0x08
+  #define SHIFT_LONG_WORD_ALIGNED              0x10
+  #define NO_SHIFT_LENGTH_MUL_8                0x20
+  #define NO_SHIFT_REGISTER_VALUE              0x40
+  #define NO_SHIFT_FIFO_VALUE                  0x80
 
   #define NO_MODBUS_SOCKET_TO_SEND             -1                        // return values
   #define MODBUS_TCP_ESTABLISHING_CONNECTION   -2                        // no data sent yet but connection being established

@@ -7931,9 +7931,12 @@ extern void fnSimulateBreak(int iPort)
     #endif
     #if UARTS_AVAILABLE > 3
     case 3:
-        if ((UART3_S2 & UART_S2_LBKDE) != 0) {                           // if break detection is enabled
-            UART3_S2 |= UART_S2_LBKDIF;                                  // set break detected flag
+        if ((UART3_BDH & UART_BDH_LBKDIE) != 0) {                        // if break detection is enabled
+            UART3_S1 |= UART_S1_FE;                                      // set framing error flag
         }
+      //if ((UART3_S2 & UART_S2_LBKDE) != 0) {                           // if break detection is enabled
+      //    UART3_S2 |= UART_S2_LBKDIF;                                  // set break detected flag
+      //}
         if (((UART3_S2 & UART_S2_LBKDIF) != 0) && ((UART3_BDH & UART_BDH_LBKDIE) != 0)) { // if break detection interrupt is enabled
         #if defined irq_UART2_3_ID                                       // when UARTs 2 and 3 share an interrupt
             if (fnGenInt(irq_UART2_3_ID) != 0) {                         // if UART2/3 interrupt is not disabled

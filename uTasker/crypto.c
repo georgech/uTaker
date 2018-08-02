@@ -17,7 +17,7 @@
 */        
 
 #include "config.h"
-#if defined CRYPTOGRAPHY
+#if defined CRYPTOGRAPHY && defined CRYPTO_AES
     #if defined _WINDOWS || (!defined CAU_V1_AVAILABLE && !defined CAU_V2_AVAILABLE && !defined LTC_AVAILABLE)
         #undef NATIVE_AES_CAU
     #endif
@@ -498,6 +498,45 @@ extern int fnAES_Cipher(int iInstanceCommand, const unsigned char *ptrTextIn, un
             #endif
         #endif
     #endif
+    }
+    return 0;
+}
+#endif
+
+#if defined CRYPTOGRAPHY && defined CRYPTO_SHA
+
+#include "../../stack/SSL/mbedtls-2.6/mbedtls/config.h"
+#include "../../stack/SSL/mbedtls-2.6/mbedtls/ssl_internal.h"
+
+#if !defined USE_SECURE_SOCKET_LAYER                                     // dummy function pointers to satisfy mbedTLS SHA256 test functions that are otherwise not used
+    extern void *(*mbedtls_calloc)(size_t n, size_t size) = 0;
+    extern void(*mbedtls_free)(void *ptr) = 0;
+#endif
+
+extern int fnSHA256(const unsigned char *ptrInput, unsigned char *ptrOutput, unsigned long ulLength, int iMode)
+{
+    static mbedtls_sha256_context sha256;
+    switch (iMode) {
+    case 0:
+        mbedtls_sha256_starts(&sha256, 0);
+        mbedtls_sha256_update(&sha256, ptrInput, ulLength);
+        mbedtls_sha256_finish(&sha256, ptrOutput);
+        break;
+    case 1:
+        mbedtls_sha256_starts(&sha256, 0);
+        mbedtls_sha256_update(&sha256, ptrInput, ulLength);
+      //mbedtls_sha256_finish(&sha256, ptrOutput);
+        break;
+    case 2:
+      //mbedtls_sha256_starts(&sha256, 0);
+        mbedtls_sha256_update(&sha256, ptrInput, ulLength);
+      //mbedtls_sha256_finish(&sha256, ptrOutput);
+        break;
+    case 3:
+        //mbedtls_sha256_starts(&sha256, 0);
+        mbedtls_sha256_update(&sha256, ptrInput, ulLength);
+        mbedtls_sha256_finish(&sha256, ptrOutput);
+        break;
     }
     return 0;
 }

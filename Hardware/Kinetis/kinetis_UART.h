@@ -484,9 +484,12 @@ static __interrupt void _UART_interrupt(KINETIS_UART_CONTROL *ptrUART, int UART_
     if ((iFlags & UART_DMA_RX_MODE) == 0) {                              // if the receiver is operating in DMA mode ignore reception interrupt flags
         #endif
         if (((ucState & UART_S1_RDRF) & ptrUART->UART_C2) != 0) {        // reception interrupt flag is set and the reception interrupt is enabled
-            unsigned char ucRxData = ptrUART->UART_D;                    // read the received data (which resets the reception interrupt flag)
+            unsigned char ucRxData = ptrUART->UART_D;                    // read the received data (which resets the reception interrupt flag and framing error)
+        #if defined _WINDOWS
+            ptrUART->UART_S1 &= ~(UART_S1_FE);
+        #endif
         #if defined UART_BREAK_SUPPORT
-            if ((ucState & UART_S1_FE) != 0) {                           //  framing error signifies that a '0' was received at a stop bits location and it is used to detect a break character
+            if ((ucState & UART_S1_FE) != 0) {                           // framing error signifies that a '0' was received at a stop bits location and it is used to detect a break character
                 if ((ptrUART->UART_BDH & UART_BDH_LBKDIE) != 0) {        // if break character operation is enabled (this register flag is used to signal the mode and not enable LIN break operation)
                     if (ucBreakSynchronised[UART_Reference] != 0) {      // if not the first break after enabling the receiver
                         #if defined USER_DEFINED_UART_RX_BREAK_DETECTION
@@ -497,7 +500,7 @@ static __interrupt void _UART_interrupt(KINETIS_UART_CONTROL *ptrUART, int UART_
                         }
                         #endif
                     }
-                    ucBreakSynchronised[UART_Reference] = 1;             // a first break character has been received and from thsi point on we accept data
+                    ucBreakSynchronised[UART_Reference] = 1;             // a first break character has been received and from this point on we accept data
                 }
             }
             else if (((ptrUART->UART_BDH & UART_BDH_LBKDIE) == 0) || (ucBreakSynchronised[UART_Reference] != 0)) { // if in break framing mode we ignore reception until a first break has been detected

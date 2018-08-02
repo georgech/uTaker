@@ -52,6 +52,7 @@
     26.01.2018 Use flex timers for Kinetis serial modbus ports 4 and 5 RTU timers {2}
     02.06.2018 Add fixed read device identification basic response       {3}
     02.06.2018 Zero optional user UART callback handlers                 {4}
+    01.08.2018 fnSendMODBUS_response() made extern so that it can be used to send responses without a request {4}
 
 */
 
@@ -401,13 +402,6 @@ static int fnHandleMODBUS_input(MODBUS_RX_FUNCTION *modbus_rx_function);
     #if defined MODBUS_TCP
         static int fnMODBUSListener(USOCKET Socket, unsigned char ucEvent, unsigned char *ucIp_Data, unsigned short usPortLen);
     #endif
-    static int fnSendMODBUS_response(MODBUS_RX_FUNCTION *modbus_rx_function, void *ptrData, unsigned short usLength, unsigned char ucShift);
-    #define SHIFT_BYTE_ALIGNED       0x00
-    #define SHIFT_SHORT_WORD_ALIGNED 0x08
-    #define SHIFT_LONG_WORD_ALIGNED  0x10
-    #define NO_SHIFT_LENGTH_MUL_8    0x20
-    #define NO_SHIFT_REGISTER_VALUE  0x40
-    #define NO_SHIFT_FIFO_VALUE      0x80
     static int fnSendMODBUS_exception(MODBUS_RX_FUNCTION *modbus_rx_function, unsigned char ucExceptionCode);
 #endif
 
@@ -3453,7 +3447,7 @@ extern int fnMODBUS_transmit(MODBUS_RX_FUNCTION *modbus_rx_function, unsigned ch
 // This routine use used to construct a MODBUS response frame with address and function entries. It automatically handles bit based data (eg. coils) and short word data (eg. registers)
 // After frame construction it is passed to the transmit routine.
 //
-static int fnSendMODBUS_response(MODBUS_RX_FUNCTION *modbus_rx_function, void *ptrData, unsigned short usLength, unsigned char ucShift)
+extern int fnSendMODBUS_response(MODBUS_RX_FUNCTION *modbus_rx_function, void *ptrData, unsigned short usLength, unsigned char ucShift) // {4}
 {
     unsigned char ucData;
     int iTxLength = 3;
