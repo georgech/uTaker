@@ -462,7 +462,8 @@ extern QUEUE_TRANSFER fnFillBuf(QUEQUE *ptQUEQue, unsigned char *input_buffer, Q
 
     uDisable_Interrupt();                                                // protect entry into function, interrupts are reactivated in the function
     if ((ptQUEQue->chars + ptQUEQue->reserved_chars + nr_of_bytes) > ptQUEQue->buf_length) { // {25} check that there is space (including any reserved count)
-        nr_of_bytes = (ptQUEQue->buf_length - ptQUEQue->chars - ptQUEQue->reserved_chars); // {25} if not, cut message - user must ensure that this doesn't happen
+        nr_of_bytes = (ptQUEQue->buf_length - ptQUEQue->chars - ptQUEQue->reserved_chars); // {25} if not, cut message - user must ensure that this doesn't happen!
+        _EXCEPTION("Message cut in size due to lack of queue space - is this expected??");
     }
     ptQUEQue->reserved_chars += nr_of_bytes;                             // {25} the additional count that will be added during the copy
     FirstCopy = nr_of_bytes;

@@ -433,7 +433,7 @@ typedef struct stMODBUS_DELAY_LIST
     unsigned char  ucMODBUSport;                                         // the MODBUS port on which the request belongs to
     unsigned char  ucAddress;                                            // slave address
     unsigned char  ucFunction;                                           // function code
-#if defined USE_MODBUS_MASTER && defined MODBUS_DELAYED_RESPONSE         // {V1.14}
+#if defined MODBUS_DELAYED_RESPONSE                                      // {V1.14}
     unsigned char  ucRequest[MAX_QUEUED_REQUEST_LENGTH];                 // request content to be repeated once the application has prepared content
 #endif
 } MODBUS_DELAY_LIST;

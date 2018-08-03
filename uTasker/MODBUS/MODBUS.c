@@ -53,6 +53,7 @@
     02.06.2018 Add fixed read device identification basic response       {3}
     02.06.2018 Zero optional user UART callback handlers                 {4}
     01.08.2018 fnSendMODBUS_response() made extern so that it can be used to send responses without a request {4}
+    03.08.2018 Return exception when accesses to non-existent coils or discretes are attempted {5}
 
 */
 
@@ -2350,6 +2351,10 @@ _handle_local_slave:
                 else {
                     iType = PREPARE_DISCRETE_INPUTS;
                     bits = ptrMODBUS_table[_USER_PORT]->modbus_discrete_inputs;
+                }
+                if (bits == 0) {                                         // {5} if there are no coils/discretes supported
+                    ucExceptionCode = MODBUS_EXCEPTION_CODE_1;           // illegal function
+                    break;
                 }
                 if (modbus_rx_function->ucFunctionCode == MODBUS_WRITE_SINGLE_COIL) {
                     if ((usLength != 0x0000) && (usLength != 0xff00)) {  // neither on nor off
