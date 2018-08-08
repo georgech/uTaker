@@ -4053,7 +4053,7 @@ typedef struct stVECTOR_TABLE
     #else
         #define FTM_BLOCK_0                    0x40038000                // FlexTimer 0 (TPM0 in KL/KE)
         #define FTM_BLOCK_1                    0x40039000                // FlexTimer 1 (TPM1 in KL/KE)
-        #if defined KINETIS_KL || defined KINETIS_KE
+        #if defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66
             #define FTM_BLOCK_2                0x4003a000                // FlexTimer 2 (TPM2 in KL/KE)
         #endif
     #endif
@@ -4334,7 +4334,9 @@ typedef struct stVECTOR_TABLE
         #endif
     #elif !defined KINETIS_KL && !defined KINETIS_KE
         #define SDHC_BLOCK                     0x400b1000                // SDHC
-        #define FTM_BLOCK_2                    0x400b8000                // FlexTimer 2
+        #if !defined KINETIS_K64 && !defined KINETIS_K65 && !defined KINETIS_K66
+            #define FTM_BLOCK_2                0x400b8000                // FlexTimer 2
+        #endif
         #define FTM_BLOCK_3                    0x400b9000                // FlexTimer 3
         #if defined TPMS_AVAILABLE_TOO
             #define FTM_BLOCK_4                0x400c9000                // TPM1

@@ -304,7 +304,7 @@ extern int fnConfigureRTC(void *ptrSettings)
             RTC_SR = 0;                                                  // ensure stopped
             RTC_TSR = 0;                                                 // write to clear RTC_SR_TIF in status register when not yet enabled
         #if defined _WINDOWS
-            RTC_TSR = ulTSR;                                             // return the present time (since we always exercise the power up case but do have teh local time)
+            RTC_TSR = ulTSR;                                             // return the present time (since we always exercise the power up case but do have the local time)
         #endif
         #if defined KINETIS_WITH_RTC_CRYSTAL                             // {6} devices with RTC crystal oscillator circuity
             if ((RTC_CR & RTC_CR_OSCE) == 0) {                           // {8} the RTC oscillator may have been enabled in the clock initialisation where the clock is being supplied to other peripherals
