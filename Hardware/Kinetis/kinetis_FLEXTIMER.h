@@ -20,6 +20,7 @@
     26.04.2017 Add KL82 TPM clock input selection                        {5}
     20.05.2017 Add capture mode to Kinetis                               {6}
     07.02.2018 Ensure that the count value is reset to zero when starting timer {7}
+    09.08.2018 Add control to freeze and release an operating timer      {8}
 
 */
 
@@ -46,6 +47,7 @@ static __interrupt void _flexTimerInterrupt_3(void);
 
 static unsigned short usFlexTimerMode[FLEX_TIMERS_AVAILABLE] = {0};      // operating mode details of each FlexTimer
 static void (*_flexTimerHandler[FLEX_TIMERS_AVAILABLE])(void) = {0};     // user interrupt handlers
+static unsigned char ucClockSource[FLEX_TIMERS_AVAILABLE] = {0};         // {8} clock source backup for each FlexTimer
 
 static void (*_flexTimerInterrupt[FLEX_TIMERS_AVAILABLE])(void) = {
     _flexTimerInterrupt_0,
@@ -339,6 +341,16 @@ static __interrupt void _flexTimerInterrupt_3(void)
             default:
                 _EXCEPTION("FlexTimer is unavailable!!");
                 return;
+            }
+            if ((ptrTimerSetup->timer_mode & (TIMER_FREEZE | TIMER_CONTINUE)) != 0) { // {8}
+                if ((ptrTimerSetup->timer_mode & TIMER_FREEZE) != 0) {
+                    ucClockSource[iTimerReference] = (unsigned char)(ptrFlexTimer->FTM_SC & FTM_SC_CLKS_MASK); // back-up the original clock source
+                    ptrFlexTimer->FTM_SC &= ~(FTM_SC_CLKS_MASK);         // disable the clock so that the timer freezes
+                }
+                else {
+                    ptrFlexTimer->FTM_SC |= ucClockSource[iTimerReference]; // restore the clock so that the timer continues to run again
+                }
+                return;                                                  // work complete
             }
             ptrFlexTimer->FTM_SC = 0;                                    // ensure not operating
             if ((ptrFlexTimer->FTM_SC & FTM_SC_TOF) != 0) {              // ensure no pending interrupt

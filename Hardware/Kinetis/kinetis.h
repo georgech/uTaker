@@ -129,7 +129,7 @@
     19.03.2018 Extend PWM configuration to use TRGMUX triggers as clock input {108}
     01.05.2018 Add SET_KUART_BAUD() SET_UART_BAUD() and SET_LPUART_BAUD() macros to directly change UART baud rates {109}
     09.05.2018 Add cortex debug and trace registers                      {110}
-
+    09.08.2018 Add TIMER_FREEZE and TIMER_CONTINUE flags                 {111}
 */
 
 #if defined _WINDOWS
@@ -18428,6 +18428,8 @@ extern void fnSimPers(void);
 #define TIMER_DONT_DISTURB        0x0200
 #define TIMER_EXT_CLK_0           0x0400                                 // {89}
 #define TIMER_EXT_CLK_1           0x0800
+#define TIMER_FREEZE              0x1000                                 // {111}
+#define TIMER_CONTINUE            0x2000                                 // {111}
 #define TIMER_DMA_TRIGGER         0x4000
 #define TIMER_STOP                0x8000
 

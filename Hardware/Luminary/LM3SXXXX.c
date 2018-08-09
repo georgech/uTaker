@@ -3887,7 +3887,7 @@ unsigned char fnCAN_tx(QUEUE_HANDLE DriverID, unsigned char *ptBuffer, QUEUE_TRA
     #endif
 #endif
 
-#ifdef SUPPORT_TIMER                                                     // {5}
+#if defined SUPPORT_TIMER                                                 // {5}
 static void (*timer_handler[CHIP_HAS_GP_TIMER * 2])( void ) = {0};       // {30}
 static __interrupt void timer_0_irq(void)
 {
@@ -4377,7 +4377,7 @@ extern void fnConfigureInterrupt(void *ptrSettings)
         }
         break;
 #endif
-#ifdef SUPPORT_TIMER                                                     // {5}
+#if defined SUPPORT_TIMER                                                 // {5}
     case TIMER_INTERRUPT:                                                // {12}
         {
             int iTimer = (((TIMER_INTERRUPT_SETUP *)ptrSettings)->timer_reference); // the timer to use
