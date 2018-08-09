@@ -21,6 +21,7 @@
     20.05.2017 Add capture mode to Kinetis                               {6}
     07.02.2018 Ensure that the count value is reset to zero when starting timer {7}
     09.08.2018 Add control to freeze and release an operating timer      {8}
+    09.08.2018 Add TPM1 and TPM2 extension (for K65/K66/K80)             {9}
 
 */
 
@@ -39,6 +40,12 @@ static __interrupt void _flexTimerInterrupt_2(void);
     #endif
     #if FLEX_TIMERS_AVAILABLE > 3
 static __interrupt void _flexTimerInterrupt_3(void);
+    #endif
+    #if FLEX_TIMERS_AVAILABLE > 4
+static __interrupt void _flexTimerInterrupt_4(void);
+    #endif
+    #if FLEX_TIMERS_AVAILABLE > 5
+static __interrupt void _flexTimerInterrupt_5(void);
     #endif
 
 /* =================================================================== */
@@ -62,7 +69,13 @@ static void (*_flexTimerInterrupt[FLEX_TIMERS_AVAILABLE])(void) = {
     _flexTimerInterrupt_2,
     #endif
     #if FLEX_TIMERS_AVAILABLE > 3
-    _flexTimerInterrupt_3
+    _flexTimerInterrupt_3,
+    #endif
+    #if FLEX_TIMERS_AVAILABLE > 4
+    _flexTimerInterrupt_4,
+    #endif
+    #if FLEX_TIMERS_AVAILABLE > 5
+    _flexTimerInterrupt_5,
     #endif
 };
 
@@ -167,6 +180,18 @@ static __interrupt void _flexTimerInterrupt_2(void)
 static __interrupt void _flexTimerInterrupt_3(void)
 {
     fnHandleFlexTimer((FLEX_TIMER_MODULE *)FTM_BLOCK_3, 3);
+}
+    #endif
+    #if FLEX_TIMERS_AVAILABLE > 4
+static __interrupt void _flexTimerInterrupt_4(void)
+{
+    fnHandleFlexTimer((FLEX_TIMER_MODULE *)FTM_BLOCK_4, 4);
+}
+    #endif
+    #if FLEX_TIMERS_AVAILABLE > 5
+static __interrupt void _flexTimerInterrupt_5(void)
+{
+    fnHandleFlexTimer((FLEX_TIMER_MODULE *)FTM_BLOCK_5, 5);
 }
     #endif
 #endif
@@ -334,6 +359,34 @@ static __interrupt void _flexTimerInterrupt_3(void)
                 ptrFlexTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_3;
                 iInterruptID = irq_FTM3_ID;
         #if defined FLEX_TIMER_3_REDUCED
+                iReducedFunctionality = 1;
+        #endif
+                break;
+    #endif
+    #if FLEX_TIMERS_AVAILABLE > 4                                        // {9} K65/K66/K80 - TPM1
+            case 4:
+                if ((ptrTimerSetup->timer_mode & TIMER_STOP) != 0) {
+                    POWER_DOWN_ATOMIC(2, TPM1);
+                    return;
+                }
+                POWER_UP_ATOMIC(2, TPM1);                                // ensure that the FlexTimer module is powered up
+                ptrFlexTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_4;
+                iInterruptID = irq_TPM1_ID;
+        #if defined FLEX_TIMER_4_REDUCED
+                iReducedFunctionality = 1;
+        #endif
+                break;
+    #endif
+    #if FLEX_TIMERS_AVAILABLE > 5                                        // {9} K65/K66/K80 - TPM2
+            case 5:
+                if ((ptrTimerSetup->timer_mode & TIMER_STOP) != 0) {
+                    POWER_DOWN_ATOMIC(2, TPM2);
+                    return;
+                }
+                POWER_UP_ATOMIC(2, TPM2);                                // ensure that the FlexTimer module is powered up
+                ptrFlexTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_5;
+                iInterruptID = irq_TPM2_ID;
+        #if defined FLEX_TIMER_4_REDUCED
                 iReducedFunctionality = 1;
         #endif
                 break;
