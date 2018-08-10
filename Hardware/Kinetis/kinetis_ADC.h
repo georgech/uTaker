@@ -681,7 +681,7 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
         #endif
                 }
     #endif
-                if ((((ptrADC_settings->int_adc_mode & ADC_CHECK_CONVERSION) != 0) || ((ptrADC_settings->int_adc_mode & ADC_READ_ONLY) == 0)) && ((ptrADC->ADC_SC1A & ADC_SC1A_AIEN) == 0)) { // no interrupt and not simple read
+                if (((ptrADC_settings->int_adc_mode & ADC_CHECK_CONVERSION) != 0) || ((ptrADC->ADC_SC1A & ADC_SC1A_AIEN) == 0)) { // check the conversion state or a read interrupt and read without interrupt operation
                     while ((ptrADC->ADC_SC1A & ADC_SC1A_COCO) == 0) {    // wait for conversion to complete
     #if defined _WINDOWS
                         ptrADC->ADC_SC1A |= ADC_SC1A_COCO;               // set conversion complete flag

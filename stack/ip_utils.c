@@ -23,6 +23,7 @@
     14.06.2012 Add IPV6_STRING_ROUTINES option                           {8}
     18.07.2014 Modify fnStrIP() to allow any delimiter to terminate IP address fields {9}
     20.11.2014 Add trailing zero to IPv6 addresses ending with multiple zeroes {10}
+    10.08.2018 Move uStrEquiv() to Driver.c
 
 */
 
@@ -116,39 +117,11 @@ extern CHAR *fnIPStr(unsigned char *ptrIP, CHAR *cStr)
 {
     int i = IPV4_LENGTH;
 
-    while (--i) {
+    while (--i != 0) {
         cStr = _fnBufferDec(*ptrIP++, NO_TERMINATOR, cStr);
         *cStr++ = '.';
     }
     return (_fnBufferDec(*ptrIP, WITH_TERMINATOR, cStr));
-}
-#endif
-
-#if defined USE_IP || defined INTERNAL_USER_FILES || defined STR_EQUIV_ON// {3}{6}
-// Tries to match a string, where lower and upper case are treated as equal
-//
-extern unsigned short uStrEquiv(const CHAR *cInput, const CHAR *cMatch)
-{
-    unsigned short usMatch = 0;
-    CHAR cReference;
-
-    while ((cReference = *cMatch) != 0) {
-        if (*cInput != cReference) {
-            if (cReference >= 'a') {                                     // verify that it is not the case which doesn't match
-                cReference -= ('a' - 'A');                               // try capital match
-            }
-            else if (cReference >= 'A') {
-                cReference += ('a' - 'A');                               // try small match
-            }
-            if (*cInput != cReference) {                                 // last chance
-                return 0;
-            }
-        }
-        cMatch++;
-        cInput++;
-        usMatch++;
-    }
-    return usMatch;                                                      // return the length of match
 }
 #endif
 

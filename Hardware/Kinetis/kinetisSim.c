@@ -7932,12 +7932,12 @@ extern void fnSimulateBreak(int iPort)
     #if UARTS_AVAILABLE > 3
     case 3:
         if ((UART3_BDH & UART_BDH_LBKDIE) != 0) {                        // if break detection is enabled
-            UART3_S1 |= UART_S1_FE;                                      // set framing error flag
+            UART3_S1 |= (UART_S1_FE | UART_S1_RDRF);                     // set framing error flag
         }
       //if ((UART3_S2 & UART_S2_LBKDE) != 0) {                           // if break detection is enabled
       //    UART3_S2 |= UART_S2_LBKDIF;                                  // set break detected flag
       //}
-        if (((UART3_S2 & UART_S2_LBKDIF) != 0) && ((UART3_BDH & UART_BDH_LBKDIE) != 0)) { // if break detection interrupt is enabled
+        if (((UART3_S1 & UART_S1_FE) != 0) && ((UART3_BDH & UART_BDH_LBKDIE) != 0)) { // if break detection interrupt is enabled
         #if defined irq_UART2_3_ID                                       // when UARTs 2 and 3 share an interrupt
             if (fnGenInt(irq_UART2_3_ID) != 0) {                         // if UART2/3 interrupt is not disabled
                 VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
@@ -10135,7 +10135,7 @@ static unsigned long lcd_wf63to60 = 0;
 extern void fnSimulateSLCD(void)
 {
     #if defined SLCD_FILE
-        #if defined KINETIS_KL || defined KINETIS_KL43
+        #if defined KINETIS_KL || defined KINETIS_KL33 || defined KINETIS_KL43
     if (((SIM_SCGC5 & SIM_SCGC5_SLCD) == 0) || ((LCD_GCR & LCD_GCR_LCDEN) == 0)) { // if SLCD controller not enabled
         return;
     }

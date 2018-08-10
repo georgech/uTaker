@@ -38,7 +38,7 @@
 
 #define _TICK_RESOLUTION     TICK_UNIT_MS(50)                            // 50ms system tick period - max possible at 50MHz SYSTICK would be about 335ms !
 
-//#define REMOVE_PORT_INITIALISATIONS                                      // remove port initialisation and use demonstration to ensure that port configuration and use doesn't conflict with specific application development (exception is blink LED)
+//#define REMOVE_PORT_INITIALISATIONS                                    // remove port initialisation and use demonstration to ensure that port configuration and use doesn't conflict with specific application development (exception is blink LED)
 //#define NO_PERIPHERAL_DEMONSTRATIONS                                   // disable peripheral demonstration code (ADC/I2C/CAN/port interrupts/etc.) so that they can't interfere with new application developments
 
 #define USE_MAINTENANCE                                                  // include the command line shell (on UART, USB-CDC and/or Telnet) with maintenance support for the application (remove to reduce project size for special tests or possibly running from limited RAM)
@@ -94,6 +94,7 @@
     //#define CAPUCCINO_KL27                                             // http://www.utasker.com/kinetis/Capuccino-KL27.html
     //#define TWR_KL28Z72M                                               // tower board http://www.utasker.com/kinetis/FRDM-KL28Z72M
     //#define FRDM_KL28Z                                                 // freedom board http://www.utasker.com/kinetis/FRDM-KL28Z.html
+    //#define KL33Z64
     //#define FRDM_KL43Z                                                 // L processors Cortex-M0+ (ultra-low power) with USB and segment LCD - freedom board http://www.utasker.com/kinetis/FRDM-KL43Z.html
     //#define TWR_KL43Z48M                                               // tower board http://www.utasker.com/kinetis/TWR-KL43Z48M.html
     //#define FRDM_KL46Z                                                 // freedom board http://www.utasker.com/kinetis/FRDM-KL46Z.html
@@ -201,10 +202,10 @@
     //
     // Nucleo 32 range
     //
-    //#define NUCLEO_F031K6                                              // evaluation boad with STM32F031 (cortex-m0)
-    //#define NUCLEO_L011K4                                              // evaluation boad with STM32L011 (cortex-m0+)
-    //#define NUCLEO_L031K6                                              // evaluation boad with STM32L031 (cortex-m0+)
-    //#define NUCLEO_L432KC                                              // evaluation boad with STM32L432 (cortex-m4 with FPU)
+    //#define NUCLEO_F031K6                                              // evaluation board with STM32F031 (cortex-m0)
+    //#define NUCLEO_L011K4                                              // evaluation board with STM32L011 (cortex-m0+)
+    //#define NUCLEO_L031K6                                              // evaluation board with STM32L031 (cortex-m0+)
+    //#define NUCLEO_L432KC                                              // evaluation board with STM32L432 (cortex-m4 with FPU)
 
     // Nucleo 144 range
     //
@@ -530,6 +531,15 @@
     #define KINETIS_KL43
     #define DEVICE_WITHOUT_CAN                                           // KL doesn't have CAN controller
     #define DEVICE_WITHOUT_ETHERNET                                      // KL doesn't have Ethernet controller
+#elif defined KL33Z64
+    #define TARGET_HW            "KL33Z64"
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((4 * 1024) * MEM_FACTOR)
+    #define KINETIS_KL
+    #define KINETIS_KL30                                                 // specify the sub-family type due to SLCD capability
+    #define KINETIS_KL33
+    #define DEVICE_WITHOUT_CAN                                           // KL doesn't have CAN controller
+    #define DEVICE_WITHOUT_ETHERNET                                      // KL doesn't have Ethernet controller
+    #define DEVICE_WITHOUT_USB                                           // KL3x doesn't have USB
 #elif defined FRDM_KL43Z
     #define TARGET_HW            "FRDM-KL43Z"
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((18 * 1024) * MEM_FACTOR)
@@ -1426,7 +1436,7 @@
 #if defined DEVICE_WITHOUT_USB
     #define NUMBER_USB     0                                             // no physical queue needed
 #else
-    #define USB_INTERFACE                                                // enable USB driver interface
+  //#define USB_INTERFACE                                                // enable USB driver interface
     #if defined USB_INTERFACE
       //#define MICROSOFT_OS_STRING_DESCRIPTOR                           // support MODs
       //#define USB_HOST_SUPPORT                                         // host supported
@@ -1873,7 +1883,7 @@
           //#define USE_TIME_SERVER                                      // enable time server support - presently demo started in application
                 #define NUMBER_OF_TIME_SERVERS 3                         // number of time servers that are used
             #define MODBUS_TCP                                           // support MODBUS TCP protocol
-          //#define USE_MQTT_CLIENT                                      // enable MQTT (message queuing telemetry transport) client support
+            #define USE_MQTT_CLIENT                                      // enable MQTT (message queuing telemetry transport) client support
           //#define USE_MQTT_BROKER                                      // enable MQTT (message queuing telemetry transport) broker support
               //#define SECURE_MQTT                                      // MQTTS support
               //#define SUPPORT_CLIENT_SIDE_CERTIFICATE                  // support client certificate and private key
@@ -2194,13 +2204,13 @@
   //#define CRYPTO_OPEN_SSL                                              // use OpenSSL library code
   //#define CRYPTO_WOLF_SSL                                              // use wolfSSL library code
     #define CRYPTO_MBEDTLS                                               // use mbedTLS library code
-    #define CRYPTO_AES                                                   // use AES (advanced encryption standard) cypher
+  //#define CRYPTO_AES                                                   // use AES (advanced encryption standard) cypher
         #define MBEDTLS_AES_ROM_TABLES                                   // mbedTLS uses ROM tables for AES rather than calculating sbox and tables (costs 8k Flash, saves 8.5k RAM, loses about 70% performance)
         #define OPENSSL_AES_FULL_LOOP_UNROLL                             // unroll loops for improved performance (costs 4k Flash, gains about 20% performance)
       //#define NATIVE_AES_CAU                                           // use uTasker mmCAU (LTC) - only possible when the device has mmCAU (LTC) - simulation requires a SW library to be enabled for alternate use
           //#define AES_DISABLE_CAU                                      // force software implementation by disabling any available crypto accelerator (used mainly for testing CAU efficiency increase)
           //#define AES_DISABLE_LTC                                      // LTC has priority over CAU unless it is disabled (less devices support LTC - Low Power Trusted Cryptography)
-  //#define CRYPTO_SHA                                                   // use SHA (secure hash algorithm)
+    #define CRYPTO_SHA                                                   // use SHA (secure hash algorithm)
 
 // Signal Processing (DSP)
 //

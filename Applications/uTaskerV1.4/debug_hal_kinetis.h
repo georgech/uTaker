@@ -168,7 +168,7 @@ extern int fnPortState(CHAR cPortBit)
         return (((GPIOA_PDDR & GPIOA_PDOR & DEMO_LED_3) | (~GPIOA_PDDR & GPIOA_PDIR & DEMO_LED_3)) != 0);
     case '4':
         return (((GPIOA_PDDR & GPIOA_PDOR & DEMO_LED_4) | (~GPIOA_PDDR & GPIOA_PDIR & DEMO_LED_4)) != 0);
-#elif defined FRDM_KL43Z
+#elif defined FRDM_KL43Z || defined KL33Z64
     case '1':
         return (((GPIOE_PDDR & GPIOE_PDOR & DEMO_LED_1) | (~GPIOE_PDDR & GPIOE_PDIR & DEMO_LED_1)) != 0);
     case '2':
@@ -380,7 +380,7 @@ extern int fnPortInputConfig(CHAR cPortBit)
         return ((GPIOA_PDDR & DEMO_LED_3) == 0);
     case '4':
         return ((GPIOA_PDDR & DEMO_LED_4) == 0);
-#elif defined FRDM_KL43Z
+#elif defined FRDM_KL43Z || defined KL33Z64
     case '1':
         return ((GPIOE_PDDR & DEMO_LED_1) == 0);
     case '2':
@@ -667,7 +667,7 @@ extern int fnConfigPort(CHAR cPortBit, CHAR cType)
             _CONFIG_PORT_INPUT(C, ulPortBit, PORT_PS_UP_ENABLE);         // set port bit to input (on port C)
             break;
         }
-#elif defined FRDM_KL43Z
+#elif defined FRDM_KL43Z || defined KL33Z64
         switch (cPortBit) {
         case 0:
             _CONFIG_PORT_INPUT(E, ulPortBit, PORT_PS_UP_ENABLE);         // set port bit to input (on port E)
@@ -929,7 +929,7 @@ extern int fnConfigPort(CHAR cPortBit, CHAR cType)
             _CONFIG_PORT_OUTPUT(C, ulPortBit, PORT_SRE_SLOW);            // set port bit to output (on port C)
             break;
         }
-#elif defined FRDM_KL43Z
+#elif defined FRDM_KL43Z || defined KL33Z64
         switch (cPortBit) {
         case 0:
             _CONFIG_PORT_OUTPUT(E, ulPortBit, PORT_SRE_SLOW);            // set port bit to output (on port E)
@@ -1737,7 +1737,7 @@ extern void fnSetPortOut(unsigned char ucPortOutputs, int iInitialisation)
     else {
         _WRITE_PORT_MASK(A, (0), (DEMO_LED_4));
     }
-#elif defined FRDM_KL43Z
+#elif defined FRDM_KL43Z || defined KL33Z64
     if (iInitialisation != 0) {
         POWER_UP(5, (SIM_SCGC5_PORTD | SIM_SCGC5_PORTE | SIM_SCGC5_PORTB)); // ensure ports are powered before writing initial values
     }

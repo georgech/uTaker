@@ -101,6 +101,7 @@
     16.03.2018 Add CONTROL_QUESTION_MARK                                 {82}
     05.05.2018 Add UART_HW_TRIGGERED_TX_MODE                             {83}
     01.06.2018 Add optional interrupt callbacks receptionHandler(), receiveBreakHandler() and frameCompleteHandler() {84}
+    10.08.2018 Add uStrstr() and uStrstrCaseInsensitive()                {85}
 
 */
 
@@ -1048,7 +1049,8 @@ extern void uMemcpy_long(unsigned long *ptrTo, const unsigned long *ptrFrom, siz
 extern void *uReverseMemcpy(void *ptrTo, const void *ptrFrom, size_t Size); // {54}
 
 extern unsigned short uStrEquiv(const CHAR *ptrTo, const CHAR *ptrFrom);
-
+extern CHAR *uStrstr(const CHAR *ptrStringToScan, const CHAR *ptrStringToMatch); // {85}
+extern CHAR *uStrstrCaseInsensitive(const CHAR *ptrStringToScan, const CHAR *ptrStringToMatch); // 85}
 
 extern void uTaskerGlobalMonoTimer(UTASK_TASK OwnerTask, DELAY_LIMIT delay, unsigned char time_out_event);
 extern void uTaskerGlobalStopTimer(UTASK_TASK OwnerTask, unsigned char time_out_event);

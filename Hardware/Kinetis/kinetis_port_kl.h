@@ -2034,7 +2034,7 @@ static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][8] = {
         {  "-",            "PTE31", "EMVSIM0_VCCEN","TPM0_CH4","TPM2_CLKIN","LPI2C0_HREQ", "-",        "-"                 }
     }
 };
-#elif defined KINETIS_KL43
+#elif defined KINETIS_KL43 || defined KINETIS_KL33
     #if PACKAGE_MAPBGA == PACKAGE_TYPE
         #define _PIN_COUNT          0                                    // 64 pin MAPBGA
     #else

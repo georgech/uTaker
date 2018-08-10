@@ -684,13 +684,16 @@ static __interrupt void _SCI2_Interrupt(void)                            // UART
 //
 static __interrupt void _SCI3_Interrupt(void)                            // UART 3 interrupt
 {
-    int iFlags = 0;
+    int iFlags;
     #if defined SERIAL_SUPPORT_DMA
     if ((UART3_C5 & UART_C5_RDMAS) != 0) {
-        iFlags = UART_DMA_RX_MODE;
+        iFlags = UART_DMA_RX_MODE;                                       // receiver is in DMA mode
+    }
+    else {
+        iFlags = 0;                                                      // receiver is in interrupt mode
     }
     if ((UART3_C5 & UART_C5_TDMAS) != 0) {
-        iFlags |= UART_DMA_TX_MODE;
+        iFlags |= UART_DMA_TX_MODE;                                      // transmitter is in DMA mode (else interrupt mode)
     }
     #endif
     _UART_interrupt((KINETIS_UART_CONTROL *)UART3_BLOCK, 3, iFlags);     // call generic UART handler
@@ -1916,10 +1919,10 @@ extern void fnTxOn(QUEUE_HANDLE Channel)
             #else
             _CONFIG_PERIPHERAL(E, 8, (PE_8_LPUART0_TX | UART_PULL_UPS)); // LPUART0_TX on PE8 (alt. function 5)
             #endif
-        #elif defined KINETIS_KL43 || defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL82 || defined KINETIS_K80
+        #elif defined KINETIS_KL43 || defined KINETIS_KL33 || defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL82 || defined KINETIS_K80
             #if !defined KINETIS_K80 && defined LPUART0_ON_E
             _CONFIG_PERIPHERAL(E, 20, (PE_20_LPUART0_TX | UART_PULL_UPS)); // LPUART0_TX on PE20 (alt. function 4)
-            #elif defined KINETIS_KL43 && defined LPUART0_ON_D
+            #elif (defined KINETIS_KL43 || defined KINETIS_KL33) && defined LPUART0_ON_D
             _CONFIG_PERIPHERAL(D, 7, (PD_7_LPUART0_TX | UART_PULL_UPS)); // LPUART0_TX on PD7 (alt. function 3)
             #elif defined LPUART0_ON_B
             _CONFIG_PERIPHERAL(B, 17, (PB_17_LPUART0_TX | UART_PULL_UPS)); // LPUART0_TX on PB17 (alt. function 3)
@@ -1955,7 +1958,7 @@ extern void fnTxOn(QUEUE_HANDLE Channel)
             #else
         case (1):                                                        // LPUART 1
             #endif
-            #if defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL43 || defined KINETIS_K80
+            #if defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL33 || defined KINETIS_KL43 || defined KINETIS_K80
                 #if defined LPUART1_ON_E
                 _CONFIG_PERIPHERAL(E, 0, (PE_0_LPUART1_TX | UART_PULL_UPS)); // LPUART1_TX on PE0 (alt. function 3)
                 #elif defined LPUART1_ON_C
@@ -2267,10 +2270,10 @@ extern void fnRxOn(QUEUE_HANDLE Channel)
             #else
             _CONFIG_PERIPHERAL(E, 9, (PE_9_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PE9 (alt. function 5)
             #endif
-        #elif defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL43 || defined KINETIS_KL82 || defined KINETIS_K80
+        #elif defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL33 || defined KINETIS_KL43 || defined KINETIS_KL82 || defined KINETIS_K80
             #if !defined KINETIS_K80 && defined LPUART0_ON_E
             _CONFIG_PERIPHERAL(E, 21, (PE_21_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PE21 (alt. function 4)
-            #elif (defined KINETIS_KL43 || defined KINETIS_KL28 || defined KINETIS_K80) && defined LPUART0_ON_D
+            #elif (defined KINETIS_KL43 || defined KINETIS_KL33 || defined KINETIS_KL28 || defined KINETIS_K80) && defined LPUART0_ON_D
             _CONFIG_PERIPHERAL(D, 6, (PD_6_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PD6 (alt. function 3)
             #elif defined LPUART0_ON_B
             _CONFIG_PERIPHERAL(B, 16, (PB_16_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PB16 (alt. function 3)
@@ -2306,7 +2309,7 @@ extern void fnRxOn(QUEUE_HANDLE Channel)
             #else
         case (1):                                                        // LPUART 1
             #endif
-            #if defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL43 || defined KINETIS_K80
+            #if defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL33 || defined KINETIS_KL43 || defined KINETIS_K80
                 #if defined LPUART1_ON_E
             _CONFIG_PERIPHERAL(E, 1, (PE_1_LPUART1_RX | UART_PULL_UPS)); // LPUART1_RX on PE1 (alt. function 3)
                 #elif defined LPUART1_ON_C

@@ -209,6 +209,7 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
 
 #if defined KINETIS_KL || (defined KINETIS_KE && !defined KINETIS_KE18) || defined KINETIS_KV10 || defined KINETIS_KM
     #define ARM_MATH_CM0PLUS                                             // cortex-M0+ to be used
+    #define __ARM_FEATURE_DSP        0                                   // set here to quieten warning of undefined define in cmsis_gcc.h
     #define BME_OR_OFFSET    0x8000000                                   // {99} kinetis cortex-m0+ includes a bit manipulation engine and doesn't include bit-banding support
     #define BME_AND_OFFSET   0x4000000
     #define BME_XOR_OFFSET   0xc000000
@@ -262,7 +263,7 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
     #elif defined KINETIS_KE15 || defined KINETIS_KE18
         #define PERIPHERAL_CLOCK_DIV_2                                   // the KE15 uses DIV2 as its peripheral clock
     #endif
-#elif (defined KINETIS_KL03 || defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL43) // devices with MCG-Lite
+#elif (defined KINETIS_KL03 || defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL33 || defined KINETIS_KL43) // devices with MCG-Lite
     #define KINETIS_WITH_MCG_LITE
 #elif (defined KINETIS_K02 || defined KINETIS_KL02 || defined KINETIS_KL05) // devices with no PLL in MCG
     #define MCG_WITHOUT_PLL
@@ -326,7 +327,7 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
     #define HIGH_SPEED_RUN_MODE_AVAILABLE
 #endif
 
-#if defined KINETIS_K26 || defined KINETIS_KL28 || defined KINETIS_K63 || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_K80 || defined KINETIS_K02 || defined KINETIS_K63 || (defined KINETIS_K22 && ((SIZE_OF_FLASH == (512 * 1024)) || (SIZE_OF_FLASH == (128 * 1024)))) || defined KINETIS_K24 || defined KINETIS_KL43 || defined KINETIS_KL03 || defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL82 || defined KINETIS_KV30 || defined KINETIS_KE15
+#if defined KINETIS_K26 || defined KINETIS_KL28 || defined KINETIS_K63 || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_K80 || defined KINETIS_K02 || defined KINETIS_K63 || (defined KINETIS_K22 && ((SIZE_OF_FLASH == (512 * 1024)) || (SIZE_OF_FLASH == (128 * 1024)))) || defined KINETIS_K24 || defined KINETIS_KL33 || defined KINETIS_KL43 || defined KINETIS_KL03 || defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL82 || defined KINETIS_KV30 || defined KINETIS_KE15
     #define KINETIS_HAS_IRC48M                                           // device has IRC48M which can be used for crystal-less USB
 #endif
 
@@ -1285,9 +1286,9 @@ typedef struct stRESET_VECTOR
     #define UARTS_AVAILABLE         0
 #elif defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66
     #define UARTS_AVAILABLE         5
-#elif defined KINETIS_KL02 || defined KINETIS_KL05 || defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL43 || defined KINETIS_KEA8
+#elif defined KINETIS_KL02 || defined KINETIS_KL05 || defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL33 || defined KINETIS_KL43 || defined KINETIS_KEA8
     #define UARTS_AVAILABLE         1
-    #if defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL43
+    #if defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL33 || defined KINETIS_KL43
         #define K_STYLE_UART2                                            // KL parts with K type UART2
     #endif
 #elif defined KINETIS_KM
@@ -1343,7 +1344,7 @@ typedef struct stRESET_VECTOR
 #elif defined KINETIS_KV31 || defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66
     #define LPUARTS_AVAILABLE       1
     #define LPUARTS_PARALLEL                                             // LPUARTs and UARTs are counted from 0
-#elif defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL43
+#elif defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL33 || defined KINETIS_KL43
     #define LPUARTS_AVAILABLE       2
 #elif defined KINETIS_K22
     #if ((SIZE_OF_FLASH == (512 * 1024)) || (SIZE_OF_FLASH == (256 * 1024)) || (SIZE_OF_FLASH == (128 * 1024)))
@@ -1430,7 +1431,7 @@ typedef struct stRESET_VECTOR
 #elif defined KINETIS_KEAN64
     #define I2C_AVAILABLE                1
     #define LPI2C_AVAILABLE              0
-#elif defined KINETIS_KL02 || defined KINETIS_KL25 || defined KINETIS_KL43 || defined KINETIS_KL46 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128 || defined KINETIS_KV31 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL82 || defined KINETIS_KW2X
+#elif defined KINETIS_KL02 || defined KINETIS_KL25 || defined KINETIS_KL33 || defined KINETIS_KL43 || defined KINETIS_KL46 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128 || defined KINETIS_KV31 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL82 || defined KINETIS_KW2X
     #define I2C_AVAILABLE                2
     #define LPI2C_AVAILABLE              0
 #elif (KINETIS_MAX_SPEED  <= 50000000) || defined KINETIS_KV || defined KINETIS_K02
@@ -1704,20 +1705,20 @@ typedef struct stRESET_VECTOR
 
 // SLCD configuration
 //
-#if defined KINETIS_K30 || defined KINETIS_K40 || defined KINETIS_K51 || defined KINETIS_K53 || defined KINETIS_KL46 || defined KINETIS_KL43 || defined KINETIS_KM34
+#if defined KINETIS_K30 || defined KINETIS_K40 || defined KINETIS_K51 || defined KINETIS_K53 || defined KINETIS_KL46 || defined KINETIS_KL43 || defined KINETIS_KM34 || defined KINETIS_KL33
     #define DEVICE_WITH_SLCD
 #endif
 
 // FlexIO configuration
 //
-#if defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL43 || defined KINETIS_K80
+#if defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL33 || defined KINETIS_KL43 || defined KINETIS_K80
     #define CHIP_HAS_FLEXIO
 #endif
 
 
 // Define the number of ports that the processor has
 //
-#if (defined KINETIS_KE || defined KINETIS_KL || defined KINETIS_KV10) && !defined KINETIS_KL17 && !defined KINETIS_KL27 && !defined KINETIS_KL43 && !defined KINETIS_KL46 // fast GPIO alias avaiable
+#if (defined KINETIS_KE || defined KINETIS_KL || defined KINETIS_KV10) && !defined KINETIS_KL17 && !defined KINETIS_KL27 && !defined KINETIS_KL43 && !defined KINETIS_KL46 // fast GPIO alias available
     #define FGPIO_AVAILABLE
 #endif
 #if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18
@@ -4357,7 +4358,7 @@ typedef struct stVECTOR_TABLE
         #define SLCD_BASE_ADD                  0x40043000                // SLCD Controller
     #elif defined KINETIS_K30 || defined KINETIS_K40 || defined KINETIS_K51 || defined KINETIS_K53
         #define SLCD_BASE_ADD                  0x400be000                // SLCD Controller
-    #elif defined KINETIS_KL46 || defined KINETIS_KL43
+    #elif defined KINETIS_KL46 || defined KINETIS_KL43 || defined KINETIS_KL33
         #define SLCD_BASE_ADD                  0x40053000                // SLCD Controller
     #endif
     #if defined ETHERNET_AVAILABLE
@@ -6892,9 +6893,9 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
     #define LPSPI2_RSR          *(volatile unsigned long *)(LPSPI2_BLOCK + 0x70) // LPSPI2 receive status register (read-only)
     #define LPSPI2_RDR          *(volatile unsigned long *)(LPSPI2_BLOCK + 0x74) // LPSPI2 receive data register (read-only)
 #elif !defined DSPI_SPI                                                  // SPI instead of DSPI
-  #if defined KINETIS_KL17 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL43 || defined KINETIS_KL46 // KL devices supporting 16 bit words
+  #if defined KINETIS_KL17 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL43 || defined KINETIS_KL46 || defined KINETIS_KL33 // KL devices supporting 16 bit words
     #define SPI0_S              *(volatile unsigned char *)(SPI0_BLOCK + 0x0) // SPI0 status register (read only)
-    #if defined KINETIS_KL43
+    #if defined KINETIS_KL43 || defined KINETIS_KL33
       #define SPI_S_RFIFOEF     0x01                                     // receive FIFO empty flag
     #else
       #define SPI_S_RXFULLF     0x01                                     // receive FIFO empty flag
@@ -6904,7 +6905,7 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
       #define SPI_S_RNFULLF     0x08                                     // receive FIFO nearly full flag
       #define SPI_S_MODF        0x10                                     // master mode fault flag
       #define SPI_S_SPTEF       0x20                                     // SPI transmit buffer empty flag
-      #define SPI_S_SPMF        0x40                                     // SPI match flag
+      #define SPI_S_SPMF        0x40                                     // SPI match flag (write '1' to clear)
       #define SPI_S_SPRF        0x80                                     // SPI read buffer full flag
     #define SPI0_BR             *(unsigned char *)(SPI0_BLOCK + 0x1)     // SPI0 baud rate register
       #define SPI_BR_SPR_DIV_2   0x00                                    // baud rate divisor 2
@@ -10926,7 +10927,7 @@ typedef struct stKINETIS_LPTMR_CTL
           #if PORTS_AVAILABLE > 5
             #define SIM_SCGC5_PORTF              0x00004000
           #endif
-          #if (defined KINETIS_KL46 || defined KINETIS_KL43)
+          #if (defined KINETIS_KL46 || defined KINETIS_KL43 || defined KINETIS_KL33)
             #define SIM_SCGC5_SLCD               0x00080000
           #endif
           #if defined KINETIS_KL82
@@ -12088,7 +12089,7 @@ typedef struct stKINETIS_LPTMR_CTL
         #define PA_2_LPUART0_TX          PORT_MUX_ALT5
         #define PE_9_LPUART0_RX          PORT_MUX_ALT5
         #define PE_8_LPUART0_TX          PORT_MUX_ALT5
-    #elif defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL43 || defined KINETIS_KL82 || defined KINETIS_K80
+    #elif defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL33 || defined KINETIS_KL43 || defined KINETIS_KL82 || defined KINETIS_K80
         #if defined KINETIS_K80 || defined KINETIS_KL28
             #define PA_15_LPUART0_RX     PORT_MUX_ALT3
             #define PA_14_LPUART0_TX     PORT_MUX_ALT3
@@ -12101,7 +12102,7 @@ typedef struct stKINETIS_LPTMR_CTL
         #define PA_2_LPUART0_TX          PORT_MUX_ALT2
         #define PB_16_LPUART0_RX         PORT_MUX_ALT3
         #define PB_17_LPUART0_TX         PORT_MUX_ALT3
-        #if defined KINETIS_KL43 || defined KINETIS_KL28
+        #if defined KINETIS_KL43 || defined KINETIS_KL28 || defined KINETIS_KL33
             #define PD_6_LPUART0_RX      PORT_MUX_ALT3
             #define PD_7_LPUART0_TX      PORT_MUX_ALT3
         #endif
@@ -12127,7 +12128,7 @@ typedef struct stKINETIS_LPTMR_CTL
     #define PE_10_LPUART0_CTS            PORT_MUX_ALT5
 #endif
 #if LPUARTS_AVAILABLE > 1
-    #if defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL43 || defined KINETIS_K80
+    #if defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL33 || defined KINETIS_KL43 || defined KINETIS_K80
         #define PC_3_LPUART1_RX          PORT_MUX_ALT3
         #define PC_4_LPUART1_TX          PORT_MUX_ALT3
         #if !defined KINETIS_K80
@@ -12200,7 +12201,7 @@ typedef struct stKINETIS_LPTMR_CTL
     #define PE_24_I2C0_SCL               PORT_MUX_ALT5
     #define PD_11_I2C0_SDA               PORT_MUX_ALT3
     #define PD_10_I2C0_SCL               PORT_MUX_ALT3
-#elif defined KINETIS_K64 || defined KINETIS_KL17 || defined KINETIS_K24 || defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL43 || defined KINETIS_KL46
+#elif defined KINETIS_K64 || defined KINETIS_KL17 || defined KINETIS_K24 || defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL33 || defined KINETIS_KL43 || defined KINETIS_KL46
     #define PE_25_I2C0_SDA               PORT_MUX_ALT5
     #define PE_24_I2C0_SCL               PORT_MUX_ALT5
     #if defined KINETIS_KL17 || defined KINETIS_KL27
@@ -12349,7 +12350,7 @@ typedef struct stKINETIS_LPTMR_CTL
     #define PB_23_SPI0_PCS5              PORT_MUX_ALT3
 #endif
 
-#if defined KINETIS_KL46 || defined KINETIS_KL43 || defined KINETIS_KL17 || defined KINETIS_KL26 || defined KINETIS_KL27
+#if defined KINETIS_KL46 || defined KINETIS_KL43 || defined KINETIS_KL33 || defined KINETIS_KL17 || defined KINETIS_KL26 || defined KINETIS_KL27
     #define PD_2_SPI0_MISO               PORT_MUX_ALT5
     #define PD_3_SPI0_MOSI               PORT_MUX_ALT5
     #define PC_6_SPI0_MOSI               PORT_MUX_ALT2
@@ -12492,7 +12493,7 @@ typedef struct stKINETIS_LPTMR_CTL
     #define PE_0_SPI1_PCS1               PORT_MUX_ALT2
     #define PE_5_SPI1_PCS2               PORT_MUX_ALT2
     #define PE_6_SPI1_PCS3               PORT_MUX_ALT2
-    #if defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL43
+    #if defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL33 || defined KINETIS_KL43
         #define PE_0_SPI1_MISO           PORT_MUX_ALT2
         #define PE_1_SPI1_MISO           PORT_MUX_ALT5
         #define PB_16_SPI1_MOSI          PORT_MUX_ALT2
@@ -12656,7 +12657,7 @@ typedef struct stKINETIS_LPTMR_CTL
     #define PA_1_FTM2_CH0                PORT_MUX_ALT3
     #define PA_2_FTM2_CH0                PORT_MUX_ALT3
 #endif
-#if defined KINETIS_KL17 || defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL43
+#if defined KINETIS_KL17 || defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL33 || defined KINETIS_KL43
     #define PD_0_FTM0_CH0                PORT_MUX_ALT4
     #define PD_1_FTM0_CH1                PORT_MUX_ALT4
     #define PD_2_FTM0_CH2                PORT_MUX_ALT4
@@ -16709,7 +16710,7 @@ typedef struct stUSB_HW
   #define LCD_GCR_LCDSTP     0x00000100                                  // disable SLCD operation when CPU is in stop mode
   #define LCD_GCR_LCDWAIT    0x00000200                                  // disable SLCD operation when CPU is in wait mode
   #define LCD_GCR_ALTDIV_NONE 0x00000000                                 // LCD alternative clock divider - no divide
-  #if defined KINETIS_KL43
+  #if defined KINETIS_KL43 || defined KINETIS_KL33
     #define LCD_GCR_ALTDIV_64  0x00001000                                // LCD alternative clock divider factor 64
     #define LCD_GCR_ALTDIV_256 0x00002000                                // LCD alternative clock divider factor 256
   #else

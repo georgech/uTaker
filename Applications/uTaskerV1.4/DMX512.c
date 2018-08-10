@@ -896,11 +896,11 @@ static void fnHandleRDM_SlaveRx(QUEUE_HANDLE uart_handle, DMX512_RDM_PACKET *ptr
             break;
         case DMX512_RDM_PARAMETER_ID_DISC_MUTE:                          // mute on this port
             fnDebugMsg("Muted\r\n");
-            ucMuteFlag[ptrPacket->ucPortID_ResponseType/8] |= (1 << (ptrPacket->ucPortID_ResponseType%8));
+            ucMuteFlag[ptrPacket->ucPortID_ResponseType/8] |= (1 << (ptrPacket->ucPortID_ResponseType%8)); // set the mute flag so that we don't respond to any futher discovery requests
             break;
         case DMX512_RDM_PARAMETER_ID_DISC_UNMUTE:                        // unmute on this port
             fnDebugMsg("Unmuted\r\n");
-            ucMuteFlag[ptrPacket->ucPortID_ResponseType/8] &= ~(1 << (ptrPacket->ucPortID_ResponseType%8));
+            ucMuteFlag[ptrPacket->ucPortID_ResponseType/8] &= ~(1 << (ptrPacket->ucPortID_ResponseType%8)); // unmute so that we respond to discovery requestss
             break;
         default:
             return;
@@ -992,7 +992,7 @@ static void fnHandleRDM_SlaveRx(QUEUE_HANDLE uart_handle, DMX512_RDM_PACKET *ptr
             uEnable_Interrupt();
             if (iStartTx != 0) {
                 fnStartDelay(PIT_US_DELAY(RDM_SLAVE_BREAK_DURATION), fnRDM_break);
-                START_DMX512_SLAVE_BREAK();                                  // start sending a break condition
+                START_DMX512_SLAVE_BREAK();                              // start sending a break condition
             }
         }
     }
@@ -1087,7 +1087,7 @@ static unsigned short fnDMX512_RDM_checksum(DMX512_RDM_PACKET *ptrPacket, unsign
 {
     unsigned char *ptr_ucContent = (unsigned char *)ptrPacket;
     unsigned short usCheckSum = 0;
-    while (usPacketLength-- >= 2) {
+    while (usPacketLength-- != 0) {
         usCheckSum += *ptr_ucContent++;
     }
     return usCheckSum;
@@ -1111,7 +1111,7 @@ static int fnSend_DMX512_RDM(QUEUE_HANDLE uart_handle, unsigned char ucCommandCl
     #if defined USE_DMX_RDM_SLAVE
             uMemcpy(ptrRDMpacket->ucSourceUID, ucSlaveSourceUID, 6);     // add out source UID
             ptrRDMpacket->ucTransactionNumber = ptrPacket->ucTransactionNumber; // respond with the same transaction number that the master sent
-            ptrRDMpacket->ucPortID_ResponseType = ptrPacket->ucPortID_ResponseType; // respond from the same port ID that the matser sent
+            ptrRDMpacket->ucPortID_ResponseType = ptrPacket->ucPortID_ResponseType; // respond from the same port ID that the master sent
     #endif
         }
         else {
@@ -1207,7 +1207,7 @@ static int fnHandleRDM_MasterRx(QUEUE_HANDLE uart_handle, unsigned char ucUID[6]
                     ucUID[5] = (ucRDM_response[10] & ucRDM_response[11]);
                     usCheckSum = ((ucRDM_response[12] & ucRDM_response[13]) << 8);
                     usCheckSum |= (ucRDM_response[14] & ucRDM_response[15]);
-                    if (usCheckSum == fnDMX512_RDM_checksum((DMX512_RDM_PACKET *)ucUID, 6)) {
+                    if (usCheckSum == fnDMX512_RDM_checksum((DMX512_RDM_PACKET *)ucUID, 4)) {
                         // Valid data found
                         //
                         iResult = RDM_MASTER_VALID_RECEPTION;            // success

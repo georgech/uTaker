@@ -47,6 +47,7 @@
     01.03.2015 Control flush of input or output and return flushed content size {32}
     17.12.2017 Change uMemset() to match memset() parameters             {32}
     23.03.2018 Optimise /= 10 used by fnBufferDec() using look-up table  {33}
+    10.08.2018 Move uStrEquiv() from ip_utils.c to here and add uStrstr() and uStrstrCaseInsensitive() {34}
 
 */
 
@@ -1329,6 +1330,61 @@ extern int uStrlen(const CHAR *ptrStr)
     return iSize;                                                        // return the number of characters found before the null-terminator
 }
 #endif
+
+// Tries to match a string, where lower and upper case are treated as equal
+//
+extern unsigned short uStrEquiv(const CHAR *cInput, const CHAR *cMatch)  // {34}
+{
+    unsigned short usMatch = 0;
+    CHAR cReference;
+
+    while ((cReference = *cMatch) != 0) {
+        if (*cInput != cReference) {
+            if (cReference >= 'a') {                                     // verify that it is not the case which doesn't match
+                cReference -= ('a' - 'A');                               // try capital match
+            }
+            else if (cReference >= 'A') {
+                cReference += ('a' - 'A');                               // try small match
+            }
+            if (*cInput != cReference) {                                 // last chance
+                return 0;
+            }
+        }
+        cMatch++;
+        cInput++;
+        usMatch++;
+    }
+    return usMatch;                                                      // return the length of match
+}
+
+// strstr implementation
+//
+extern CHAR *uStrstr(const CHAR *ptrStringToScan, const CHAR *ptrStringToMatch) // {34}
+{
+    size_t MatchLength = uStrlen(ptrStringToMatch);                      // the length of the match required
+    while (*ptrStringToScan != 0) {                                      // scan the string
+        if (uMemcmp(ptrStringToScan, ptrStringToMatch, MatchLength) == 0) { // try to match the string
+            return (CHAR *)ptrStringToScan;                              // match found so return a pointer to its start location
+        }
+        ptrStringToScan++;
+    }
+    return 0;                                                            // string not found
+}
+
+// strstr implementation that is case insensitive
+//
+extern CHAR *uStrstrCaseInsensitive(const CHAR *ptrStringToScan, const CHAR *ptrStringToMatch) // {34}
+{
+    unsigned short usMatchLength;
+    while (*ptrStringToScan != 0) {                                      // scan the string
+        usMatchLength = uStrEquiv(ptrStringToScan, ptrStringToMatch);
+        if (usMatchLength != 0) {
+            return (CHAR *)ptrStringToScan;                              // match found so return a pointer to its start location
+        }
+        ptrStringToScan++;
+    }
+    return 0;                                                            // string not found
+}
 
 
 #if defined RUN_LOOPS_IN_RAM
