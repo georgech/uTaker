@@ -3217,8 +3217,8 @@ static void fnDoServer(unsigned char ucType, CHAR *ptrInput)
 extern unsigned short fnSetDmxFrameSize(unsigned short usLength);
     #if defined  USE_DMX_RDM_MASTER
 extern void fnDMX512_discover(void);
-extern void fnDMX512_set_address(unsigned short usDMX512_start_address);
-extern void fnDMX512_get_address(void);
+extern void fnDMX512_set_address(unsigned short usDMX512_start_address, int iSlaveRef);
+extern void fnDMX512_get_address(int iSlaveRef);
     #endif
 static void fnDoDMX512(unsigned char ucType, CHAR *ptrInput)
 {
@@ -3234,12 +3234,12 @@ static void fnDoDMX512(unsigned char ucType, CHAR *ptrInput)
                 fnDebugMsg("Illegal (1..512)");
             }
             else {
-                fnDMX512_set_address(usDMX512_start_address);
+                fnDMX512_set_address(usDMX512_start_address, 0);
             }
         }
         break;
     case DO_DMX512_GET_START_ADD:
-        fnDMX512_get_address();
+        fnDMX512_get_address(0);
         break;
     #endif
     case DO_DMX512_TX_SIZE:

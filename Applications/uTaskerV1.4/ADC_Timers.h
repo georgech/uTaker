@@ -52,7 +52,7 @@
 
     #if defined SUPPORT_ADC                                              // if HW support is enabled
       //#define TEST_ADC                                                 // enable test of ADC operation
-            #define ADC_INTERNAL_TEMPERATURE                             // force internal temperature channel to be used, when available
+          //#define ADC_INTERNAL_TEMPERATURE                             // force internal temperature channel to be used, when available
           //#define TEST_POLL_ADC                                        // {25} poll ADC conversion complete rather than use end of conversion interrupt
       //#define TEST_AD_DA                                               // {14} enable test of reading ADC and writing (after delay) to DAC
           //#define ADC_TRIGGER_TPM                                      // use TPM module rather than PIT for ADC trigger (valid for KL parts)
@@ -100,7 +100,7 @@
         #define GPT_CAPTURES     5                                       // when testing captures, collect this many values
     #endif
     #if defined SUPPORT_TIMER || defined SUPPORT_PWM_MODULE              // standard timers
-      //#define TEST_TIMER                                               // enable timer test(s)
+        #define TEST_TIMER                                               // enable timer test(s)
         #if defined TEST_TIMER
             #if defined SUPPORT_PWM_MODULE                               // {9}
               //#define TEST_PWM                                         // {1} test generating PWM output from timer

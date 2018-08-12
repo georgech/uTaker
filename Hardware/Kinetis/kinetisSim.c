@@ -7740,10 +7740,53 @@ extern void fnSimulateModemChange(int iPort, unsigned long ulNewState, unsigned 
 #endif
 }
 
+#if LPUARTS_AVAILABLE > 0
+static void fnGenericLPUARTBreakHandling(KINETIS_LPUART_CONTROL *ptrLPUART, int iPort, int LPUART_irq_ID, void (*irq_LPUART)(void), int iUseIntMux, int iMuxChannel, int iInterruptAssignment)
+{
+    ptrLPUART->LPUART_STAT |= (LPUART_STAT_LBKDIF | LPUART_STAT_RDRF);   // set the status flags
+    if ((ptrLPUART->LPUART_BAUD & LPUART_BAUD_LBKDIE) != 0) {            // if the break interrupt is enabled
+        ptrLPUART->LPUART_DATA = 0;                                      // a break character is seen as a data reception of 0
+        if (iUseIntMux != 0) {                                           // if teh interrupt is assigned via the interrupt multiplexer
+    #if defined INTMUX0_AVAILABLE
+            fnCallINTMUX(iMuxChannel, iInterruptAssignment, (unsigned char *)&irq_LPUART);
+    #else
+            _EXCEPTION("Interrupt multiplexer not available!");
+    #endif
+        }
+        else if (fnGenInt(LPUART_irq_ID) != 0) {                         // if LPUART interrupt is not disabled
+            irq_LPUART();                                                // call the interrupt handler
+        }
+    }
+    else {
+        unsigned char ucBreakChar = 0;
+        fnSimulateSerialIn(iPort, (unsigned char *)&ucBreakChar, 1);     // a break chactater is seen as a data reception of 0
+    }
+}
+#endif
+#if UARTS_AVAILABLE > 0
+static void fnGenericUARTBreakHandling(KINETIS_UART_CONTROL *ptrUART, int iPort, int UART_irq_ID, void (*irq_UART)(void), int iUseIntMux, int iMuxChannel, int iInterruptAssignment)
+{
+    if ((ptrUART->UART_BDH & UART_BDH_LBKDIE) != 0) {                    // if break detection is enabled
+        ptrUART->UART_S1 |= (UART_S1_FE | UART_S1_RDRF);                 // set framing error flag
+    }
+    if (((ptrUART->UART_S1 & UART_S1_FE) != 0) && ((ptrUART->UART_BDH & UART_BDH_LBKDIE) != 0)) { // if break detection interrupt is enabled
+        ptrUART->UART_D = 0;                                             // a break character is seen as a data reception of 0
+        if (fnGenInt(UART_irq_ID) != 0) {                                // if UART interrupt is not disabled
+            irq_UART();                                                  // call the interrupt handler
+        }
+    }
+    else {
+        unsigned char ucBreakChar = 0;
+        fnSimulateSerialIn(iPort, (unsigned char *)&ucBreakChar, 1);     // a break chactater is seen as a data reception of 0
+    }
+}
+#endif
+
 // UART Break detection simulation
 //
 extern void fnSimulateBreak(int iPort)
 {
+    VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
     switch (iPort) {
 #if LPUARTS_AVAILABLE > 0
     #if defined LPUARTS_PARALLEL
@@ -7752,21 +7795,13 @@ extern void fnSimulateBreak(int iPort)
         #define LPUART0_CH_NUMBER     0
     #endif
     case LPUART0_CH_NUMBER:                                              // LPUART 0
-        LPUART0_STAT |= LPUART_STAT_LBKDIF;                              // set the status flag
-        if ((LPUART0_BAUD & LPUART_BAUD_LBKDIE) != 0) {                  // if the break interrupt is enabled
     #if defined irq_LPUART0_RX_ID
-            if (fnGenInt(irq_LPUART0_RX_ID) != 0) {                      // if LPUART0 rx interrupt is not disabled
-                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-                ptrVect->processor_interrupts.irq_LPUART0_RX();          // call the interrupt handler
-            }
+        fnGenericLPUARTBreakHandling((KINETIS_LPUART_CONTROL *)LPUART0_BLOCK, iPort, irq_LPUART0_RX_ID, ptrVect->processor_interrupts.irq_LPUART0_RX, 0, 0, 0);
     #else
-            if (fnGenInt(irq_LPUART0_ID) != 0) {                         // if LPUART0 interrupt is not disabled
-                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-                ptrVect->processor_interrupts.irq_LPUART0();             // call the interrupt handler
-            }
+        fnGenericLPUARTBreakHandling((KINETIS_LPUART_CONTROL *)LPUART0_BLOCK, iPort, irq_LPUART0_ID, ptrVect->processor_interrupts.irq_LPUART0, 0, 0, 0);
     #endif
-        }
         break;
+#endif
 #if LPUARTS_AVAILABLE > 1
     #if defined LPUARTS_PARALLEL
         #define LPUART1_CH_NUMBER     (UARTS_AVAILABLE + 1)
@@ -7774,20 +7809,11 @@ extern void fnSimulateBreak(int iPort)
         #define LPUART1_CH_NUMBER     1
     #endif
     case LPUART1_CH_NUMBER:                                              // LPUART 1
-        LPUART1_STAT |= LPUART_STAT_LBKDIF;                              // set the status flag
-        if ((LPUART1_BAUD & LPUART_BAUD_LBKDIE) != 0) {                  // if the break interrupt is enabled
     #if defined irq_LPUART1_RX_ID
-            if (fnGenInt(irq_LPUART1_RX_ID) != 0) {                      // if LPUART1 rx interrupt is not disabled
-                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-                ptrVect->processor_interrupts.irq_LPUART1_RX();          // call the interrupt handler
-            }
+        fnGenericLPUARTBreakHandling((KINETIS_LPUART_CONTROL *)LPUART1_BLOCK, iPort, irq_LPUART1_RX_ID, ptrVect->processor_interrupts.irq_LPUART1_RX, 0, 0, 0);
     #else
-            if (fnGenInt(irq_LPUART1_ID) != 0) {                         // if LPUART1 interrupt is not disabled
-                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-                ptrVect->processor_interrupts.irq_LPUART1();             // call the interrupt handler
-            }
+        fnGenericLPUARTBreakHandling((KINETIS_LPUART_CONTROL *)LPUART1_BLOCK, iPort, irq_LPUART1_ID, ptrVect->processor_interrupts.irq_LPUART1, 0, 0, 0);
     #endif
-        }
         break;
 #endif
 #if LPUARTS_AVAILABLE > 2
@@ -7797,26 +7823,13 @@ extern void fnSimulateBreak(int iPort)
         #define LPUART2_CH_NUMBER     2
     #endif
     case LPUART2_CH_NUMBER:                                              // LPUART 2
-        LPUART2_STAT |= LPUART_STAT_LBKDIF;                              // set the status flag
-        if ((LPUART2_BAUD & LPUART_BAUD_LBKDIE) != 0) {                  // if the break interrupt is enabled
     #if !defined irq_LPUART2_ID && defined INTMUX0_AVAILABLE
-            if (fnGenInt(irq_INTMUX0_0_ID + INTMUX_LPUART2) != 0)
+        fnGenericLPUARTBreakHandling((KINETIS_LPUART_CONTROL *)LPUART2_BLOCK, iPort, (irq_INTMUX0_0_ID + INTMUX_LPUART2), ptrVect->processor_interrupts.irq_LPUART2, 1, INTMUX_LPUART2, INTMUX0_PERIPHERAL_LPUART2);
     #elif defined irq_LPUART2_RX_ID
-            if (fnGenInt(irq_LPUART2_RX_ID) != 0)                        // if LPUART2 rx interrupt is not disabled
+        fnGenericLPUARTBreakHandling((KINETIS_LPUART_CONTROL *)LPUART2_BLOCK, iPort, irq_LPUART2_RX_ID, ptrVect->processor_interrupts.irq_LPUART2, 0, 0, 0);
     #else
-            if (fnGenInt(irq_LPUART2_ID) != 0)
+        fnGenericLPUARTBreakHandling((KINETIS_LPUART_CONTROL *)LPUART2_BLOCK, iPort, irq_LPUART2_ID, ptrVect->processor_interrupts.irq_LPUART2, 0, 0, 0);
     #endif
-            {                                                            // if LPUART2 interrupt is not disabled
-                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-    #if defined irq_LPUART1_RX_ID
-                ptrVect->processor_interrupts.irq_LPUART2_RX();          // call the interrupt handler
-    #elif !defined irq_LPUART2_ID
-                fnCallINTMUX(INTMUX_LPUART2, INTMUX0_PERIPHERAL_LPUART2, (unsigned char *)&ptrVect->processor_interrupts.irq_LPUART2);
-    #else
-                ptrVect->processor_interrupts.irq_LPUART2(); // call the interrupt handler
-    #endif
-            }
-        }
         break;
 #endif
 #if LPUARTS_AVAILABLE > 3
@@ -7826,13 +7839,7 @@ extern void fnSimulateBreak(int iPort)
         #define LPUART3_CH_NUMBER     3
     #endif
     case LPUART3_CH_NUMBER:                                              // LPUART 3
-        LPUART3_STAT |= LPUART_STAT_LBKDIF;                              // set the status flag
-        if ((LPUART3_BAUD & LPUART_BAUD_LBKDIE) != 0) {                  // if the break interrupt is enabled
-            if (fnGenInt(irq_LPUART3_ID) != 0) {                         // if LPUART3 interrupt is not disabled
-                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-                ptrVect->processor_interrupts.irq_LPUART3();             // call the interrupt handler
-            }
-        }
+        fnGenericLPUARTBreakHandling((KINETIS_LPUART_CONTROL *)LPUART3_BLOCK, iPort, irq_LPUART3_ID, ptrVect->processor_interrupts.irq_LPUART3, 0, 0, 0);
         break;
 #endif
 #if LPUARTS_AVAILABLE > 4
@@ -7842,140 +7849,54 @@ extern void fnSimulateBreak(int iPort)
         #define LPUART4_CH_NUMBER     4
     #endif
     case LPUART4_CH_NUMBER:                                              // LPUART 4
-        LPUART4_STAT |= LPUART_STAT_LBKDIF;                              // set the status flag
-        if ((LPUART4_BAUD & LPUART_BAUD_LBKDIE) != 0) {                  // if the break interrupt is enabled
-            if (fnGenInt(irq_LPUART4_ID) != 0) {                         // if LPUART4 interrupt is not disabled
-                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-                ptrVect->processor_interrupts.irq_LPUART4();             // call the interrupt handler
-            }
-        }
+        fnGenericLPUARTBreakHandling((KINETIS_LPUART_CONTROL *)LPUART4_BLOCK, iPort, irq_LPUART4_ID, ptrVect->processor_interrupts.irq_LPUART4, 0, 0, 0);
         break;
-#endif
-#if LPUARTS_AVAILABLE > 5
-    #if defined LPUARTS_PARALLEL
-        #define LPUART5_CH_NUMBER     (UARTS_AVAILABLE + 5)
-    #else
-        #define LPUART5_CH_NUMBER     5
-    #endif
-    case LPUART5_CH_NUMBER:                                              // LPUART 5
-        LPUART5_STAT |= LPUART_STAT_LBKDIF;                              // set the status flag
-        if ((LPUART5_BAUD & LPUART_BAUD_LBKDIE) != 0) {                  // if the break interrupt is enabled
-            if (fnGenInt(irq_LPUART5_ID) != 0) {                         // if LPUART5 interrupt is not disabled
-                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-                ptrVect->processor_interrupts.irq_LPUART5();             // call the interrupt handler
-            }
-        }
-        break;
-#endif
 #endif
 #if UARTS_AVAILABLE > 0
     #if defined UART0_BLOCK
     case 0:
-        if ((UART0_S2 & UART_S2_LBKDE) != 0) {                           // if break detection is enabled
-            UART0_S2 |= UART_S2_LBKDIF;                                  // set break detected flag
-        }
-        if (((UART0_S2 & UART_S2_LBKDIF) != 0) && ((UART0_BDH & UART_BDH_LBKDIE) != 0)) { // if break detection interrupt is enabled
         #if defined irq_UART0_1_ID                                       // when UARTs 0 and 1 share an interrupt
-            if (fnGenInt(irq_UART0_1_ID) != 0) {                         // if UART0/1 interrupt is not disabled
-                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-                ptrVect->processor_interrupts.irq_UART0_1();             // call the interrupt handler
-            }
+        fnGenericUARTBreakHandling((KINETIS_UART_CONTROL *)UART0_BLOCK, iPort, irq_UART0_1_ID, ptrVect->processor_interrupts.irq_UART0_1, 0, 0, 0);
         #else
-            if (fnGenInt(irq_UART0_ID) != 0) {                           // if UART0 interrupt is not disabled
-                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-                ptrVect->processor_interrupts.irq_UART0();               // call the interrupt handler
-            }
+        fnGenericUARTBreakHandling((KINETIS_UART_CONTROL *)UART0_BLOCK, iPort, irq_UART0_ID, ptrVect->processor_interrupts.irq_UART0, 0, 0, 0);
         #endif
-        }
         break;
     #endif
     #if UARTS_AVAILABLE > 1
     case 1:
-        if ((UART1_S2 & UART_S2_LBKDE) != 0) {                           // if break detection is enabled
-            UART1_S2 |= UART_S2_LBKDIF;                                  // set break detected flag
-        }
-        if (((UART1_S2 & UART_S2_LBKDIF) != 0) && ((UART1_BDH & UART_BDH_LBKDIE) != 0)) { // if break detection interrupt is enabled
-    #if defined irq_UART0_1_ID                                           // when UARTs 0 and 1 share an interrupt
-            if (fnGenInt(irq_UART0_1_ID) != 0) {                         // if UART0/1 interrupt is not disabled
-                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-                ptrVect->processor_interrupts.irq_UART0_1();             // call the interrupt handler
-            }
-    #else
-            if (fnGenInt(irq_UART1_ID) != 0) {                           // if UART1 interrupt is not disabled
-                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-                ptrVect->processor_interrupts.irq_UART1();               // call the interrupt handler
-            }
-    #endif
-        }
+        #if defined irq_UART0_1_ID                                       // when UARTs 0 and 1 share an interrupt
+        fnGenericUARTBreakHandling((KINETIS_UART_CONTROL *)UART1_BLOCK, iPort, irq_UART0_1_ID, ptrVect->processor_interrupts.irq_UART0_1, 0, 0, 0);
+        #else
+        fnGenericUARTBreakHandling((KINETIS_UART_CONTROL *)UART1_BLOCK, iPort, irq_UART1_ID, ptrVect->processor_interrupts.irq_UART1, 0, 0, 0);
+        #endif
         break;
     #endif
     #if UARTS_AVAILABLE > 2
     case 2:
-        if ((UART2_S2 & UART_S2_LBKDE) != 0) {                           // if break detection is enabled
-            UART2_S2 |= UART_S2_LBKDIF;                                  // set break detected flag
-        }
-        if (((UART2_S2 & UART_S2_LBKDIF) != 0) && ((UART2_BDH & UART_BDH_LBKDIE) != 0)) { // if break detection interrupt is enabled
         #if defined irq_UART2_3_ID                                       // when UARTs 2 and 3 share an interrupt
-            if (fnGenInt(irq_UART2_3_ID) != 0) {                         // if UART2/3 interrupt is not disabled
-                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-                ptrVect->processor_interrupts.irq_UART2_3();             // call the interrupt handler
-            }
+        fnGenericUARTBreakHandling((KINETIS_UART_CONTROL *)UART2_BLOCK, iPort, irq_UART2_3_ID, ptrVect->processor_interrupts.irq_UART2_3, 0, 0, 0);
         #else
-            if (fnGenInt(irq_UART2_ID) != 0) {                           // if UART2 interrupt is not disabled
-                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-                ptrVect->processor_interrupts.irq_UART2();               // call the interrupt handler
-            }
+        fnGenericUARTBreakHandling((KINETIS_UART_CONTROL *)UART2_BLOCK, iPort, irq_UART2_ID, ptrVect->processor_interrupts.irq_UART2, 0, 0, 0);
         #endif
-        }
         break;
     #endif
     #if UARTS_AVAILABLE > 3
     case 3:
-        if ((UART3_BDH & UART_BDH_LBKDIE) != 0) {                        // if break detection is enabled
-            UART3_S1 |= (UART_S1_FE | UART_S1_RDRF);                     // set framing error flag
-        }
-      //if ((UART3_S2 & UART_S2_LBKDE) != 0) {                           // if break detection is enabled
-      //    UART3_S2 |= UART_S2_LBKDIF;                                  // set break detected flag
-      //}
-        if (((UART3_S1 & UART_S1_FE) != 0) && ((UART3_BDH & UART_BDH_LBKDIE) != 0)) { // if break detection interrupt is enabled
         #if defined irq_UART2_3_ID                                       // when UARTs 2 and 3 share an interrupt
-            if (fnGenInt(irq_UART2_3_ID) != 0) {                         // if UART2/3 interrupt is not disabled
-                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-                ptrVect->processor_interrupts.irq_UART2_3();             // call the interrupt handler
-            }
+        fnGenericUARTBreakHandling((KINETIS_UART_CONTROL *)UART3_BLOCK, iPort, irq_UART2_3_ID, ptrVect->processor_interrupts.irq_UART2_3, 0, 0, 0);
         #else
-            if (fnGenInt(irq_UART3_ID) != 0) {                           // if UART3 interrupt is not disabled
-                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-                ptrVect->processor_interrupts.irq_UART3();               // call the interrupt handler
-            }
+        fnGenericUARTBreakHandling((KINETIS_UART_CONTROL *)UART3_BLOCK, iPort, irq_UART3_ID, ptrVect->processor_interrupts.irq_UART3, 0, 0, 0);
         #endif
-        }
         break;
     #endif
     #if UARTS_AVAILABLE > 4
     case 4:
-        if ((UART4_S2 & UART_S2_LBKDE) != 0) {                           // if break detection is enabled
-            UART4_S2 |= UART_S2_LBKDIF;                                  // set break detected flag
-        }
-        if (((UART4_S2 & UART_S2_LBKDIF) != 0) && ((UART4_BDH & UART_BDH_LBKDIE) != 0)) { // if break detection interrupt is enabled
-            if (fnGenInt(irq_UART4_ID) != 0) {                           // if UART4 interrupt is not disabled
-                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-                ptrVect->processor_interrupts.irq_UART4();               // call the interrupt handler
-            }
-        }
+        fnGenericUARTBreakHandling((KINETIS_UART_CONTROL *)UART4_BLOCK, iPort, irq_UART4_ID, ptrVect->processor_interrupts.irq_UART4, 0, 0, 0);
         break;
     #endif
     #if UARTS_AVAILABLE > 5
     case 5:
-        if ((UART5_S2 & UART_S2_LBKDE) != 0) {                           // if break detection is enabled
-            UART5_S2 |= UART_S2_LBKDIF;                                  // set break detected flag
-        }
-        if (((UART5_S2 & UART_S2_LBKDIF) != 0) && ((UART5_BDH & UART_BDH_LBKDIE) != 0)) { // if break detection interrupt is enabled
-            if (fnGenInt(irq_UART5_ID) != 0) {                           // if UART5 interrupt is not disabled
-                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-                ptrVect->processor_interrupts.irq_UART5();               // call the interrupt handler
-            }
-        }
+        fnGenericUARTBreakHandling((KINETIS_UART_CONTROL *)UART5_BLOCK, iPort, irq_UART5_ID, ptrVect->processor_interrupts.irq_UART5, 0, 0, 0);
         break;
     #endif
 #endif
