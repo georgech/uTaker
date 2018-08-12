@@ -47,7 +47,7 @@
     #include "STM32F41X_port.h"
 #elif defined _STM32F107X || defined _STM32F105X
     #include "STM32F105X_107X_port.h"
-#elif defined _STM32F100X
+#elif defined _STM32F100X || defined _STM32F103X
     #include "STM32F100X_port.h"
 #endif
 

@@ -2675,7 +2675,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
             #define UART1_ON_C
         #elif defined FRDM_K66F
             #define UART1_ON_C
-            #define UART3_ON_C
+            #define UART3_ON_B
         #endif
     #elif defined tinyK20
         #define UART1_ON_C

@@ -542,6 +542,8 @@
 #define DO_DMX512                 14
     #define DO_DISCOVERY            1
     #define DO_DMX512_TX_SIZE       2
+    #define DO_DMX512_SET_START_ADD 3
+    #define DO_DMX512_GET_START_ADD 4
 
 #define MENU_HELP_LAN               1
 #define MENU_HELP_SERIAL            2
@@ -1079,6 +1081,8 @@ static const DEBUG_COMMAND tDMX512_Command[] = {
     {"txlen",             "set DMX512 tx length",                  DO_DMX512,        DO_DMX512_TX_SIZE },
     #if defined USE_DMX_RDM_MASTER
     {"discover",          "Execute RDM discovery",                 DO_DMX512,        DO_DISCOVERY },
+    {"start",             "Set start add",                         DO_DMX512,        DO_DMX512_SET_START_ADD },
+    {"get",               "Get start add",                         DO_DMX512,        DO_DMX512_GET_START_ADD },
     #endif
     {"help",              "Display menu specific help",            DO_HELP,          DO_MAIN_HELP },
     {"quit",              "Leave command mode",                    DO_TELNET,        DO_TELNET_QUIT },
@@ -3213,6 +3217,8 @@ static void fnDoServer(unsigned char ucType, CHAR *ptrInput)
 extern unsigned short fnSetDmxFrameSize(unsigned short usLength);
     #if defined  USE_DMX_RDM_MASTER
 extern void fnDMX512_discover(void);
+extern void fnDMX512_set_address(unsigned short usDMX512_start_address);
+extern void fnDMX512_get_address(void);
     #endif
 static void fnDoDMX512(unsigned char ucType, CHAR *ptrInput)
 {
@@ -3220,6 +3226,20 @@ static void fnDoDMX512(unsigned char ucType, CHAR *ptrInput)
     #if defined  USE_DMX_RDM_MASTER
     case DO_DISCOVERY:                                                   // perform DMX512 RDM discovery
         fnDMX512_discover();
+        break;
+    case DO_DMX512_SET_START_ADD:
+        {
+            unsigned short usDMX512_start_address = (unsigned short)fnDecStrHex(ptrInput);
+            if ((usDMX512_start_address == 0) || (usDMX512_start_address > 512)) {
+                fnDebugMsg("Illegal (1..512)");
+            }
+            else {
+                fnDMX512_set_address(usDMX512_start_address);
+            }
+        }
+        break;
+    case DO_DMX512_GET_START_ADD:
+        fnDMX512_get_address();
         break;
     #endif
     case DO_DMX512_TX_SIZE:
@@ -4024,7 +4044,9 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
               ALIGNED_BUFFER ciphertext = {0};
               ALIGNED_BUFFER recovered  = {0};
               int i;
+    #if defined CRYPTO_AES
               int iKeyLength;
+    #endif
               switch (ucType) {
     #if defined CRYPTO_AES
               case DO_AES128:
@@ -4039,17 +4061,24 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
     #endif
     #if defined CRYPTO_SHA
               case DO_SHA256:
-                  extern int fnSHA256(const unsigned char *ptrInput, unsigned char *ptrOutput, unsigned long ulLength, int iMode);
-                  TOGGLE_TEST_OUTPUT();
-                  fnSHA256(plaintext.ucData, recovered.ucData, sizeof(plaintext.ucData), 0);
-                  TOGGLE_TEST_OUTPUT();
-                  for (i = 0; i < 32; i++) {
-                      fnDebugHex(recovered.ucData[i], (WITH_SPACE | sizeof(unsigned char) | WITH_LEADIN));
+                  {
+                      extern int fnSHA256(const unsigned char *ptrInput, unsigned char *ptrOutput, unsigned long ulLength, int iMode);
+                      static const ALIGNED_BUFFER text = { 0, { '1', '2', '3', '4', '5', '6', '7', '8', '9'} };
+                      static const ALIGNED_BUFFER text2 = { 0, { '0' } };
+                      TOGGLE_TEST_OUTPUT();
+                      fnSHA256(text.ucData, recovered.ucData, 9, 0);
+
+                      fnSHA256(text.ucData, 0, 9, 1);
+                      fnSHA256(text2.ucData, recovered.ucData, 1, 3);
+                      TOGGLE_TEST_OUTPUT();
+                      for (i = 0; i < 32; i++) {
+                          fnDebugHex(recovered.ucData[i], (WITH_SPACE | sizeof(unsigned char) | WITH_LEADIN));
+                      }
                   }
                   return;
     #endif
               }
-
+    #if defined CRYPTO_AES
               TOGGLE_TEST_OUTPUT();
               fnAES_Init(AES_COMMAND_AES_SET_KEY_ENCRYPT, encryption_key.ucData, iKeyLength); // register the encryption key
               TOGGLE_TEST_OUTPUT();
@@ -4075,6 +4104,7 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
                   TOGGLE_TEST_OUTPUT();
                   fnDebugMsg(" failed\n\r");
               }
+    #endif
           }
           break;
 #endif
@@ -7884,9 +7914,11 @@ extern void fnInitialisePorts(void)
     fnSetPortOut(temp_pars->temp_parameters.ucUserOutputValues, 1);      // configure all user outputs to default states
 
     while (sPort < '8') {                                                // up to 8 demo port bits
-        cType = 'o';
         if ((ucUserOutputs & ucBit) == 0) {
             cType = 'i';
+        }
+        else {
+            cType = 'o';
         }
         fnConfigPort(sPort++, cType);                                    // configure port as input or output
         ucBit <<= 1;

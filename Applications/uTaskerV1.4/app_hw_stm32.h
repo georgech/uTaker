@@ -120,6 +120,21 @@
     #define SIZE_OF_FLASH       (32 * 1024)                              // 32k FLASH
 
     #define CORE_VOLTAGE        VCORE_RANGE_1                            // normal core voltage operation (1.65V..1.95V)
+#elif defined ARDUINO_BLUE_PILL
+    #define CRYSTAL_FREQ        8000000
+  //#define DISABLE_PLL                                                  // run from clock source directly
+  //#define USE_HSI_CLOCK                                                // use internal HSI clock source
+    #define USE_PLL2_CLOCK                                               // use the PLL2 output as PLL input (don't use USE_HSI_CLOCK in this configuration)
+    #define PLL2_INPUT_DIV      5                                        // clock input is divided by 5 to give 5MHz to the PLL2 input (range 1..16)
+    #define PLL2_VCO_MUL        8                                        // the pll2 frequency is multiplied by 8 to 40MHz (range 8..14 or 16 or 20)
+    #define PLL_INPUT_DIV       5                                        // 1..16 - should set the input to pll in the range 3..12MHz - not valid for HSI clock source
+    #define PLL_VCO_MUL         9                                        // 4..9 where PLL out must be 18..72MHz. Also 65 is accepted as x6.5 (special case)
+    #define PIN_COUNT           PIN_COUNT_48_PIN
+    #define PACKAGE_TYPE        PACKAGE_LQFP
+    #define SIZE_OF_RAM         (20 * 1024)                              // 20k SRAM
+    #define SIZE_OF_FLASH       (64 * 1024)                              // 64k FLASH
+    #define PCLK1_DIVIDE        2
+    #define PCLK2_DIVIDE        1
 #elif defined STM3210C_EVAL                                              // STM32F107VCT (72MHz)
     #define CRYSTAL_FREQ        25000000
   //#define DISABLE_PLL                                                  // run from clock source directly
@@ -585,7 +600,7 @@
             #define SDCARD_DETECT_PIN               13
         #endif
         #define PRIORITY_SDCARD_DETECT_PORT_INT 7
-    #elif defined STM3210C_EVAL || defined ST_MB913C_DISCOVERY
+    #elif defined STM3210C_EVAL || defined ST_MB913C_DISCOVERY || defined ARDUINO_BLUE_PILL
         // Configure to suit SD card SPI mode at between 100k and 400k
         //
         #define SPI_CS1_0             PORTA_BIT4
@@ -649,7 +664,7 @@
             #define FILE_SYSTEM_SIZE (124 * FILE_GRANULARITY)            // 512k reserved for file system (assuming 4k file size)
         #endif
     #else
-        #if (SIZE_OF_FLASH <= (32 * 1024))
+        #if (SIZE_OF_FLASH <= (64 * 1024))
             #define FILE_GRANULARITY (1 * FLASH_GRANULARITY)             // each file a multiple of page size
             #define FILE_SYSTEM_SIZE (1 * FILE_GRANULARITY)              // one page reserved for file system
             #define PARAMETER_BLOCK_START (FLASH_START_ADDRESS + SIZE_OF_FLASH - (2 * FLASH_GRANULARITY)) // FLASH location of parameter system
@@ -731,22 +746,20 @@
     #define SERIAL_PORT_2  8                                             // if we open UART channel 2 we simulate using this com port on the PC
     #define SERIAL_PORT_3  10                                            // if we open UART channel 3 we simulate using this com port on the PC
     #define SERIAL_PORT_4  12                                            // if we open UART channel 4 we simulate using this com port on the PC
-    #define SERIAL_PORT_5  4                                            // if we open UART channel 5 we simulate using this com port on the PC
+    #define SERIAL_PORT_5  4                                             // if we open UART channel 5 we simulate using this com port on the PC
     #define SERIAL_PORT_6  16                                            // if we open UART channel 6 we simulate using this com port on the PC
     #define SERIAL_PORT_7  18                                            // if we open UART channel 7 we simulate using this com port on the PC
 
   //#define SERIAL_SUPPORT_DMA                                           // enable UART DMA support
   //#define SUPPORT_HW_FLOW                                              // enable hardware flow control support
 
-    #if defined ST_MB913C_DISCOVERY
+    #if defined ST_MB913C_DISCOVERY || defined NUCLEO_F429ZI || defined ARDUINO_BLUE_PILL
         #define DEMO_UART    2                                           // use UART channel 2 (USART 3 since ST USARTs count from 1)
     #elif defined NUCLEO_L496RG
         #define DEMO_UART    5                                           // use LPUART1 (channel 5) [0 = USART1, 1 = USART2, 2= USART3, 3 = UART4, 4 = UART5, 5 = LPUART1]
         #define LPUART_REMAP_G                                           // STLink VCOM
     #elif defined WISDOM_STM32F407 || defined STM32F746G_DISCO || defined NUCLEO_F031K6
         #define DEMO_UART    0                                           // use UART channel 0 (USART 1 since ST USARTs count from 1)
-    #elif defined NUCLEO_F429ZI
-        #define DEMO_UART    2                                           // use UART channel 2 (USART 3 since ST USARTs count from 1)
     #elif defined STM3240G_EVAL || defined STM32_P207 || defined STM32F407ZG_SK 
         #define DEMO_UART    2                                           // use UART channel 2 (USART 3 since ST USARTs count from 1) - the STM3240G can't use USART 4 and SD card at the same time so needs a modification for this
       //#define DEMO_UART    3                                           // use UART channel 3 (USART 4 since ST USARTs count from 1)
@@ -823,7 +836,7 @@
     #define ADC12_15_START_VOLTAGE                 1500
 #endif
 
-//#define SUPPORT_TIMER                                                  // support hardware timer interrupt configuration
+#define SUPPORT_TIMER                                                    // support hardware timer interrupt configuration
 #if defined MODBUS_RTU && !defined SUPPORT_TIMER
     #define SUPPORT_TIMER                                                // MODBUS required HW timer in RTU mode
 #endif
@@ -1548,12 +1561,17 @@
 
         #define KEYPAD "KeyPads/STM32-P207.bmp"
     #endif
-#elif defined ST_MB913C_DISCOVERY                                        // F1
+#elif defined ST_MB913C_DISCOVERY || defined ARDUINO_BLUE_PILL           // F1
     #define USER_KEY_BUTTON            PORTA_BIT0
-    #define LED3                       PORTC_BIT9                        // green LED
-    #define LED4                       PORTC_BIT8                        // blue LED
-
-    #define PORT_SHIFT                 8
+    #if defined ARDUINO_BLUE_PILL
+        #define LED3                   PORTC_BIT13                       // red LED
+        #define LED4                   PORTC_BIT14
+        #define PORT_SHIFT             13
+    #else
+        #define LED3                   PORTC_BIT8                        // blue LED
+        #define LED4                   PORTC_BIT9                        // green LED
+        #define PORT_SHIFT                 8
+    #endif
 
     #define DEMO_LED_1                 (LED3 >> PORT_SHIFT)
     #define DEMO_LED_2                 (LED4 >> PORT_SHIFT)
@@ -1578,7 +1596,7 @@
     #define TOGGLE_WATCHDOG_LED()      _TOGGLE_PORT(C, BLINK_LED)        // blink the LED, if set as output
 
     #define INIT_WATCHDOG_DISABLE()    _CONFIG_PORT_INPUT(A, (USER_KEY_BUTTON), (INPUT_PULL_UP)) // PA0 configured as input with pull-up
-    #define WATCHDOG_DISABLE()         (!(_READ_PORT_MASK(A, (USER_KEY_BUTTON)))) // disable watchdog by holding the user button down at reset
+    #define WATCHDOG_DISABLE()         (0 == (_READ_PORT_MASK(A, (USER_KEY_BUTTON)))) // disable watchdog by holding the user button down at reset
 
     #define CONFIGURE_MOUSE_INPUTS()
     #define MOUSE_LEFT_CLICK()         0
@@ -1590,15 +1608,22 @@
     // LEDs                                                              {3}
     //
     #define KEYPAD_LEDS  2
+    #if defined ARDUINO_BLUE_PILL
+                                           // '0'            '1'    input state center (x,   y)   0 = circle, radius, controlling port, controlling pin 
+        #define KEYPAD_LED_DEFINITIONS     {RGB(255,0,0),RGB(20,20,20), 1, {650, 215, 666, 244}, _PORTC, LED3},
 
-                                       // '0'            '1'    input state center (x,   y)   0 = circle, radius, controlling port, controlling pin 
-    #define KEYPAD_LED_DEFINITIONS     {RGB(190,190,190),RGB(0,255,0), 1, {41,  482, 49,  502}, _PORTC, LED3}, \
-                                       {RGB(190,190,190),RGB(0,0,255), 1, {223, 482, 231, 502}, _PORTC, LED4}
+        #define BUTTON_KEY_DEFINITIONS     {_PORTA, USER_KEY_BUTTON, {580, 55, 608, 79}},
 
+        #define KEYPAD "KeyPads/BluePill.bmp"
+    #else
+                                           // '0'            '1'    input state center (x,   y)   0 = circle, radius, controlling port, controlling pin 
+        #define KEYPAD_LED_DEFINITIONS     {RGB(190,190,190),RGB(0,0,255), 1, {41,  482, 49,  502}, _PORTC, LED3}, \
+                                           {RGB(190,190,190),RGB(0,255,0), 1, {223, 482, 231, 502}, _PORTC, LED4}
 
-    #define BUTTON_KEY_DEFINITIONS     {_PORTA, USER_KEY_BUTTON, {75, 425, 111, 457}},
+        #define BUTTON_KEY_DEFINITIONS     {_PORTA, USER_KEY_BUTTON, {75, 425, 111, 457}},
 
-    #define KEYPAD "KeyPads/STM32F1-DISC.bmp"
+        #define KEYPAD "KeyPads/STM32F1-DISC.bmp"
+    #endif
 #elif defined STM32F746G_DISCO
     #define USER_KEY_BUTTON            PORTI_BIT11
 
@@ -2091,7 +2116,7 @@
     #endif
 
     #define POWER_UP_USER_PORTS()  POWER_UP(AHB1, RCC_AHB1ENR_GPIOBEN)
-#elif defined ST_MB913C_DISCOVERY
+#elif defined ST_MB913C_DISCOVERY || defined ARDUINO_BLUE_PILL
     // User port mapping
     //
     #define USER_PORT_1_BIT        PORTB_BIT0                            // use free PB pins on Eval board

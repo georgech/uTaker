@@ -112,6 +112,8 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*I
     #define ARM_MATH_CM0PLUS                                             // cortex-M0+ to be used
 #elif defined _STM32F7XX                                                 // cortex-M7
     #define ARM_MATH_CM7
+#elif defined _STM32F103X
+    #define ARM_MATH_CM3                                                 // cortex-M3 to be used
 #else
     #define ARM_MATH_CM4                                                 // cortex-M4 to be used
 #endif

@@ -114,6 +114,19 @@
 #endif
 //#define START_DMX512_TX()                          fnDriver(DMX512_Master_PortID, (TX_ON), MODIFY_TX); // note that this doesn't work since it configures the Tx again
 
+// PITs are used for timing purposes in RDM modes
+//
+#if defined USE_DMX512_MASTER && defined USE_DMX_RDM_MASTER
+    #if defined USE_DMX512_SLAVE && defined USE_DMX_RDM_SLAVE
+        #define MASTER_PIT_CHANNEL     1                                 // PITs to use when both master and slave modes are required
+        #define SLAVE_PIT_CHANNEL      0
+    #else
+        #define MASTER_PIT_CHANNEL     0                                 // PIT to use when only master mode is required
+    #endif
+#elif defined USE_DMX512_SLAVE && defined USE_DMX_RDM_SLAVE
+    #define SLAVE_PIT_CHANNEL          0                                 // PIT to use when only slave mode is required
+#endif
+
 #define START_CODE_DMX512                            0x00
 #define START_CODE_RDM                               0xcc
 
@@ -178,13 +191,41 @@ typedef struct stDMX512_RDM_DISC_UNIQUE_BRANCH_RESPONSE_PACKET
 #define DMX512_RDM_COMMAND_CLASS_SET_COMMAND                 0x30
 #define DMX512_RDM_COMMAND_CLASS_SET_COMMAND_RESPONSE        0x31
 
+// Category network management
+//
 #define DMX512_RDM_PARAMETER_ID_DISC_UNIQUE_BRANCH           0x0001      // required
 #define DMX512_RDM_PARAMETER_ID_DISC_MUTE                    0x0002      // required
 #define DMX512_RDM_PARAMETER_ID_DISC_UNMUTE                  0x0003      // required
+#define DMX512_RDM_PARAMETER_ID_PROXIED_DEVICES              0x0010
+#define DMX512_RDM_PARAMETER_ID_PROXIED_DEVICE_COUNT         0x0011
+#define DMX512_RDM_PARAMETER_ID_COMMS_STATUS                 0x0015
+// Category statis collection
+//
+#define DMX512_RDM_PARAMETER_ID_QUEUED_MESSAGE               0x0020
+#define DMX512_RDM_PARAMETER_ID_STATUS_MESSAGES              0x0030
+#define DMX512_RDM_PARAMETER_ID_STATUS_ID_DESCRIPTION        0x0031
+#define DMX512_RDM_PARAMETER_ID_CLEAR_STATUS_ID              0x0032
+#define DMX512_RDM_PARAMETER_ID_STATUS_REPORT_THRESHOLD      0x0033
+// Category RDM information
+//
 #define DMX512_RDM_PARAMETER_ID_SUPPORTED_PARAMETERS         0x0050      // required if supporting parameters beyond the minimum required set
 #define DMX512_RDM_PARAMETER_ID_PARAMETER_DESCRIPTION        0x0051      // required for manufacturer specific PIDs
+// Category product information
+//
 #define DMX512_RDM_PARAMETER_ID_DEVICE_INFO                  0x0060      // required
+#define DMX512_RDM_PARAMETER_ID_PRODUCT_DETAIL_ID_LIST       0x0070
+#define DMX512_RDM_PARAMETER_ID_DEVICE_MODEL_DESCRIPTION     0x0080
+#define DMX512_RDM_PARAMETER_ID_MANUFACTURER_LABEL           0x0081
+#define DMX512_RDM_PARAMETER_ID_FACTORY_DEFAULTS             0x0090
+#define DMX512_RDM_PARAMETER_ID_LANGUAGE_CAPABILITIES        0x00a0
+#define DMX512_RDM_PARAMETER_ID_LANGUAGE_                    0x00b0
 #define DMX512_RDM_PARAMETER_ID_SOFTWARE_VERSION_LABEL       0x00c0      // required
+#define DMX512_RDM_PARAMETER_ID_BOOT_SOFTWARE_VERSION_ID     0x00c1
+#define DMX512_RDM_PARAMETER_ID_BOOT_SOFTWARE_VERSION_LABEL  0x00c2
+// Category DMX512 setup
+//
+#define DMX512_RDM_PARAMETER_ID_DMX_PERSONALITY              0x00e0
+#define DMX512_RDM_PARAMETER_ID_DMX_PERSONALITY_DESCRIPTION  0x00e1
 #define DMX512_RDM_PARAMETER_ID_DMX_START_ADDRESS            0x00f0      // required if device uses a DMX512 slot
 #define DMX512_RDM_PARAMETER_ID_DEVICE_IDENTIFY              0x1000      // required
 
@@ -241,16 +282,18 @@ typedef struct stDMX512_RDM_DISC_UNIQUE_BRANCH_RESPONSE_PACKET
 #define MERGEMODE_DMX_ONLY                                   0x03        // DMX512 only, reset ignored
 #define MERGEMODE_OTHER                                      0xff        // other (undefined) merge mode
 
-#define DMX512_RDM_DISCOVERY     0x01
-#define DMX512_RDM_GLOBAL_UNMUTE 0x02
-#define DMX512_RDM_DISCOVERING   0x03
-#define DMX512_RDM_UNICAST_MUTE  0x04
-#define DMX512_RDM_STATE_MASK    0x0f
-#define DMX512_INITIALISED       0x10
-#define DMX512_RDM_RESTART       0x40
-#define DMX512_RDM_RECEPTION     0x80
+#define DMX512_RDM_DISCOVERY                                 0x01
+#define DMX512_RDM_TRANSMISSION                              0x02
+#define DMX512_RDM_GLOBAL_UNMUTE                             0x03
+#define DMX512_RDM_TRANSMITTING                              0x04
+#define DMX512_RDM_DISCOVERING                               0x05
+#define DMX512_RDM_UNICAST_MUTE                              0x06
+#define DMX512_RDM_STATE_MASK                                0x0f
+#define DMX512_INITIALISED                                   0x10
+#define DMX512_RDM_RESTART                                   0x40
+#define DMX512_RDM_RECEPTION                                 0x80
 
-#define MAX_DISCOVERY_REPEATS    3
+#define MAX_DISCOVERY_REPEATS                                3
 
 
 /* =================================================================== */
@@ -290,7 +333,7 @@ typedef struct stDMX512_RDM_DISC_UNIQUE_BRANCH_RESPONSE_PACKET
     static void fnHandleRDM_SlaveRx(QUEUE_HANDLE uart_handle, DMX512_RDM_PACKET *ptrPacket, unsigned short usPacketLength, int iBroadcast);
 #endif
 #if (defined USE_DMX512_MASTER && defined USE_DMX_RDM_MASTER) || (defined USE_DMX512_SLAVE && defined USE_DMX_RDM_SLAVE)
-    static void fnStartDelay(unsigned long ulDelay_us, void(*int_handler)(void));
+    static void fnStartDelay(unsigned long ulDelay_us, void(*int_handler)(void), int iPitChannel);
 #endif
 
 /* =================================================================== */
@@ -311,11 +354,21 @@ static unsigned char ucDMX512_state = 0;
 
 #if defined USE_DMX512_MASTER
     static QUEUE_HANDLE  DMX512_Master_PortID = NO_ID_ALLOCATED;
+    #if defined USE_DMX_RDM_MASTER
+    static unsigned char ucTransactionNumber = 0;                        // message transaction number
+    static unsigned char ucPortID = 0x01;
+    static unsigned char ucLowerBoundUID[6] = {0};
+    static unsigned char ucUpperBoundUID[6] = {0};
+    static unsigned char ucMasterSourceUID[6] = {0xcb, 0xa9, 0x87, 0x65, 0x43, 0x21}; // master's UID
+    static int iDiscoveryRepetition = 0;
+    static unsigned short usDMX512_master_start_address = 0;
+    static unsigned short usPresentCommand = 0;
+    static unsigned char usPresentClass = 0;
+    #endif
 #endif
 #if defined USE_DMX512_SLAVE
     static QUEUE_HANDLE  DMX512_Slave_PortID = NO_ID_ALLOCATED;
-#endif
-#if defined USE_DMX_RDM_SLAVE
+    #if defined USE_DMX_RDM_SLAVE
     static unsigned char ucMuteFlag[256/8] = {0};                        // mute flags (reset by default and after a DISC_UN_MUTE message) for each port ID
     static int iRxCount = 0;
     static int iTurnAroundDelaySlave = 0;
@@ -323,14 +376,8 @@ static unsigned char ucDMX512_state = 0;
     static unsigned short usThisLength[2] = {0};
     static unsigned char ucRxBuffer[2][DMX_RX_MAX_SLOT_COUNT + 1] = {{0}};
     static unsigned char ucSlaveSourceUID[6] = {0xcb, 0xa9, 0x87, 0x65, 0x43, 0x22}; // slave's UID
-#endif
-#if defined USE_DMX_RDM_MASTER
-    static unsigned char ucTransactionNumber = 0;                        // message transaction number
-    static unsigned char ucPortID = 0x01;
-    static unsigned char ucLowerBoundUID[6] = {0};
-    static unsigned char ucUpperBoundUID[6] = {0};
-    static unsigned char ucMasterSourceUID[6] = {0xcb, 0xa9, 0x87, 0x65, 0x43, 0x21}; // master's UID
-    static int iDiscoveryRepetition = 0;
+    static unsigned short usDMX512_slave_start_address = 0xffff;
+    #endif
 #endif
 
 
@@ -344,7 +391,7 @@ extern void fnDMX512(TTASKTABLE *ptrTaskTable)
     #if defined USE_DMX512_MASTER
         #if defined USE_DMX_RDM_MASTER
     int iResult;
-    unsigned char ucUID[6];
+    static unsigned char ucUID[6] = {0};
         #endif
     unsigned short usTxLength;
     #endif
@@ -367,6 +414,12 @@ extern void fnDMX512(TTASKTABLE *ptrTaskTable)
         DMX512_MASTER_DRIVE_OUTPUT();                                    // drive the transmitter line
             #if defined USER_DEFINED_UART_TX_FRAME_COMPLETE
         tInterfaceParameters.txFrameCompleteHandler = fnDMX512_Master_TxFrameTermination; // we require interrupt call back on the end of transmission (after second stop bit has completed)
+            #endif
+            #if defined USER_DEFINED_UART_RX_HANDLER
+        tInterfaceParameters.receptionHandler = 0;
+            #endif
+            #if defined USER_DEFINED_UART_RX_BREAK_DETECTION
+        tInterfaceParameters.receiveBreakHandler = 0;
             #endif
             #if defined FRDM_KL27Z && defined SERIAL_SUPPORT_RX_DMA_BREAK && defined SERIAL_SUPPORT_DMA_RX && defined SERIAL_SUPPORT_DMA_RX_FREERUN
         tInterfaceParameters.Rx_tx_sizes.RxQueueSize = 1024;             // input buffer size must be modulo size for free-running DMA use
@@ -469,7 +522,7 @@ extern void fnDMX512(TTASKTABLE *ptrTaskTable)
                     fnSend_DMX512_RDM(DMX512_Master_PortID, DMX512_RDM_COMMAND_CLASS_DISCOVERY_COMMAND, DMX512_RDM_PARAMETER_ID_DISC_UNMUTE, cucBroadcast, 0); // prepare a broadcast unmute so that all slaves will later respond
                     uDisable_Interrupt();
                         ucDMX512_state &= ~(DMX512_RDM_STATE_MASK);
-                        ucDMX512_state |= (DMX512_RDM_GLOBAL_UNMUTE);    // mark that we are sending a global unmute
+                        ucDMX512_state |= (DMX512_RDM_GLOBAL_UNMUTE);    // mark that we are sending a global unmute (there will be no response)
                     uEnable_Interrupt();
                     uMemset(ucLowerBoundUID, 0x00, 6);                   // initial lower bound
                     uMemset(ucUpperBoundUID, 0xff, 5);                   // initial upper bound
@@ -478,13 +531,13 @@ extern void fnDMX512(TTASKTABLE *ptrTaskTable)
                 case DMX512_RDM_DISCOVERING:
                     // Check whether slaves have been detected and choose the next bounds
                     //
-                    iResult = fnHandleRDM_MasterRx(DMX512_Master_PortID, ucUID, 0);
+                    iResult = fnHandleRDM_MasterRx(DMX512_Master_PortID, ucUID, 0); // read possible slave reception
                     switch (iResult) {
                     case RDM_MASTER_NO_RECEPTION:                        // no slave activity detected
                         if (fnDiscoverNext() != 0) {                     // decide whether to repeat, to try another segment or to terminate
-                            ucDMX512_state &= ~(DMX512_RDM_STATE_MASK);  // discover has completed
                             usTxLength = fnConstructDMX512(ucDMX512_tx_buffer);  // construct next DMX512 frame
                             fnWrite(DMX512_Master_PortID, ucDMX512_tx_buffer, usTxLength); // prepare next DMX512 frame in the output buffer (it will be released at the end of the MAB period)
+                            ucDMX512_state = (DMX512_INITIALISED | DMX512_RDM_RECEPTION | DMX512_RDM_RESTART); // discovery has completed
                             continue;                                    // terminate
                         }
                         break;
@@ -495,7 +548,7 @@ extern void fnDMX512(TTASKTABLE *ptrTaskTable)
                         fnSend_DMX512_RDM(DMX512_Master_PortID, DMX512_RDM_COMMAND_CLASS_DISCOVERY_COMMAND, DMX512_RDM_PARAMETER_ID_DISC_MUTE, ucUID, 0); // prepare a uncast mute to the slave that we have discovered
                         uDisable_Interrupt();
                             ucDMX512_state &= ~(DMX512_RDM_STATE_MASK);
-                            ucDMX512_state |= (DMX512_RDM_UNICAST_MUTE); // mark that we are sending a unicast mute
+                            ucDMX512_state |= (DMX512_RDM_UNICAST_MUTE | DMX512_RDM_RESTART); // mark that we are sending a unicast mute
                         uEnable_Interrupt();
                         continue;
                     }
@@ -509,10 +562,30 @@ extern void fnDMX512(TTASKTABLE *ptrTaskTable)
                     uEnable_Interrupt();
                     break;
                 case DMX512_RDM_UNICAST_MUTE:
-                    if (fnHandleRDM_MasterRx(DMX512_Master_PortID, 0, DMX512_RDM_PARAMETER_ID_DISC_MUTE) == 0) {
+                    if (fnHandleRDM_MasterRx(DMX512_Master_PortID, 0, DMX512_RDM_PARAMETER_ID_DISC_MUTE) == RDM_MASTER_VALID_RECEPTION) {
                         // Slave was successfully muted
                         //
+                        fnDebugMsg("Slave was muted\r\n");
                     }
+                    else {
+                        fnDebugMsg("Slave error!\r\n");
+                    }
+                    usTxLength = fnConstructDMX512(ucDMX512_tx_buffer);  // construct next DMX512 frame
+                    fnWrite(DMX512_Master_PortID, ucDMX512_tx_buffer, usTxLength); // prepare next DMX512 frame in the output buffer (it will be released at the end of the MAB period)
+                    ucDMX512_state = (DMX512_INITIALISED | DMX512_RDM_RECEPTION | DMX512_RDM_RESTART); // discovery has completed
+                    break;
+                case DMX512_RDM_TRANSMISSION:
+                    fnSend_DMX512_RDM(DMX512_Master_PortID, usPresentClass, usPresentCommand, ucUID, 0); // prepare a uncast mute to the slave that we have discovered
+                    uDisable_Interrupt();
+                        ucDMX512_state &= ~(DMX512_RDM_STATE_MASK);
+                        ucDMX512_state |= (DMX512_RDM_TRANSMITTING | DMX512_RDM_RESTART); // mark that we are sending a unicast mute
+                    uEnable_Interrupt();
+                    break;
+                case DMX512_RDM_TRANSMITTING:
+                    fnHandleRDM_MasterRx(DMX512_Master_PortID, 0, usPresentCommand);
+                    usTxLength = fnConstructDMX512(ucDMX512_tx_buffer);  // construct next DMX512 frame
+                    fnWrite(DMX512_Master_PortID, ucDMX512_tx_buffer, usTxLength); // prepare next DMX512 frame in the output buffer (it will be released at the end of the MAB period)
+                    ucDMX512_state = (DMX512_INITIALISED | DMX512_RDM_RECEPTION | DMX512_RDM_RESTART); // transmission has completed
                     break;
                 }
         #else
@@ -583,7 +656,7 @@ extern void fnDMX512(TTASKTABLE *ptrTaskTable)
 static void _frame_interrupt(void)
 {
     #if defined USE_DMX_RDM_MASTER
-    if ((ucDMX512_state & DMX512_RDM_RECEPTION) != 0) {
+    if ((ucDMX512_state & DMX512_RDM_RECEPTION) != 0) {                  // we are presently in reception mode
         if ((DMX512_RDM_RESTART & ucDMX512_state) != 0) {                // if a restart is queued
             ucDMX512_state &= ~(DMX512_RDM_RESTART | DMX512_RDM_RECEPTION); // reset the flags and allow the break to be sent
         }
@@ -603,7 +676,7 @@ static void _frame_interrupt(void)
 static void _mab_start_interrupt(void)
 {
     #if defined USE_DMX_RDM_MASTER
-    if ((ucDMX512_state & DMX512_RDM_RECEPTION) != 0) {
+    if ((ucDMX512_state & DMX512_RDM_RECEPTION) != 0) {                  // we are presently in reception mode
         return;
     }
     #endif
@@ -615,7 +688,7 @@ static void _mab_start_interrupt(void)
 static void _mab_stop_interrupt(void)
 {
     #if defined USE_DMX_RDM_MASTER
-    if ((ucDMX512_state & DMX512_RDM_RECEPTION) != 0) {
+    if ((ucDMX512_state & DMX512_RDM_RECEPTION) != 0) {                  // we are presently in reception mode
         return;
     }
     #endif
@@ -706,7 +779,7 @@ static void fnRDM_timeout(void)
 {
     fnDriver(DMX512_Master_PortID, (RX_OFF), MODIFY_RX);                 // disable reception
     DMX512_MASTER_DRIVE_OUTPUT();                                        // drive the output again
-    ucDMX512_state &= ~(DMX512_RDM_RECEPTION);
+  //ucDMX512_state &= ~(DMX512_RDM_RECEPTION);                           // no longer receiving
     fnInterruptMessage(OWN_TASK, (unsigned char)(DMX512_TX_NEXT_TRANSMISSION));
 }
 
@@ -717,13 +790,12 @@ static void fnDMX512_Master_TxFrameTermination(QUEUE_HANDLE channel)
     if ((ucDMX512_state & DMX512_RDM_STATE_MASK) > DMX512_RDM_GLOBAL_UNMUTE) { // if a RDM transmission was sent that expects a response
         DMX512_SET_MASTER_INPUT();                                       // stop driving the line so that slaves can respond
         fnDriver(DMX512_Master_PortID, (RX_ON), MODIFY_RX);              // enable the receiver
-        ucDMX512_state |= DMX512_RDM_RECEPTION;                          // mark that we are receiving
+        ucDMX512_state |= DMX512_RDM_RECEPTION;                          // mark that we are receiving and should not send breaks
         // A slave is expected to respond after a minimum delay of 176us and maximum of 2.8ms
         // discovery responses are data without a break but all other responses have a break before the data
-        // the master must not send a further RDM discovery message withing 5.8ms, or a normal message within 176us
+        // the master must not send a further RDM discovery message within 5.8ms, or a normal message within 176us
         //
-        fnStartDelay(PIT_US_DELAY(6000), fnRDM_timeout);                 // start timeout
-        return;
+        fnStartDelay(PIT_US_DELAY(6000), fnRDM_timeout, MASTER_PIT_CHANNEL); // start timeout
     }
     else {
         fnInterruptMessage(OWN_TASK, (unsigned char)(DMX512_TX_NEXT_TRANSMISSION)); // inform the application that a DMX512 frame is just starting and it should prepare the following frame content
@@ -753,7 +825,7 @@ static void fnDiscoverCollision(void)
 #endif
 
 #if (defined USE_DMX512_MASTER && defined USE_DMX_RDM_MASTER) || (defined USE_DMX512_SLAVE && defined USE_DMX_RDM_SLAVE)
-static void fnStartDelay(unsigned long ulDelay_us, void(*int_handler)(void))
+static void fnStartDelay(unsigned long ulDelay_us, void(*int_handler)(void), int iPitChannel)
 {
     PIT_SETUP pit_setup;                                                 // PIT interrupt configuration parameters
     pit_setup.int_type = PIT_INTERRUPT;
@@ -761,7 +833,7 @@ static void fnStartDelay(unsigned long ulDelay_us, void(*int_handler)(void))
     pit_setup.count_delay = ulDelay_us;
     pit_setup.mode = (PIT_SINGLE_SHOT);                                  // single shot timer mode
     pit_setup.int_handler = int_handler;
-    pit_setup.ucPIT = 0;
+    pit_setup.ucPIT = (unsigned char)iPitChannel;
     fnConfigureInterrupt((void *)&pit_setup);
 }
 #endif
@@ -778,6 +850,9 @@ static int fnHandleDMX512_frame(QUEUE_HANDLE uart_handle, unsigned char *ptrRxFr
     #if defined USE_DMX_RDM_SLAVE
     case START_CODE_RDM:                                                 // (0xcc) RDM content
         fnDebugMsg("Slave RDM rx: ");
+        if (iBroadcast == 0) {
+            fnDebugMsg("(U) ");
+        }
         fnHandleRDM_SlaveRx(uart_handle, (DMX512_RDM_PACKET *)ptrRxFrame, usFrameLength, iBroadcast);
         break;
     #endif
@@ -803,7 +878,7 @@ static void __callback_interrupt fnRDM_mab(void)
 
 static void __callback_interrupt fnRDM_break(void)
 {
-    fnStartDelay(PIT_US_DELAY(RDM_SLAVE_MAB_DURATION), fnRDM_mab);
+    fnStartDelay(PIT_US_DELAY(RDM_SLAVE_MAB_DURATION), fnRDM_mab, SLAVE_PIT_CHANNEL);
     END_DMX512_SLAVE_BREAK();                                            // stop sending a break condition
 }
 
@@ -817,7 +892,7 @@ static void __callback_interrupt fnRDM_turnaround(void)
             fnDriver(DMX512_Slave_PortID, (TX_ON | PAUSE_TX), MODIFY_TX);// release paused output buffer
         }
         else {
-            fnStartDelay(PIT_US_DELAY(RDM_SLAVE_BREAK_DURATION), fnRDM_break);
+            fnStartDelay(PIT_US_DELAY(RDM_SLAVE_BREAK_DURATION), fnRDM_break, SLAVE_PIT_CHANNEL);
             START_DMX512_SLAVE_BREAK();                                  // start sending a break condition
         }
     }
@@ -828,6 +903,7 @@ static void __callback_interrupt fnRDM_turnaround(void)
 //
 static void __callback_interrupt fnDMX512_Slave_TxFrameTermination(QUEUE_HANDLE channel)
 {
+    fnDriver(DMX512_Slave_PortID, (TX_OFF | PAUSE_TX), MODIFY_TX);       // pause output buffer so that responses can be queued again
     DMX512_SET_SLAVE_INPUT();                                            // stop driving the bus
 }
 
@@ -884,6 +960,7 @@ static void fnHandleRDM_SlaveRx(QUEUE_HANDLE uart_handle, DMX512_RDM_PACKET *ptr
 {
     DMX512_MESSAGE_DATA_BLOCK *ptrDataBlock = (DMX512_MESSAGE_DATA_BLOCK *)ptrPacket->ucMessageDataBlock;
     unsigned short usPID = ((ptrDataBlock->ucParameterID[0] << 8) | (ptrDataBlock->ucParameterID[1]));
+    unsigned char *ptr_ucData = ptrDataBlock->ucParameterData;
     switch (ptrDataBlock->ucCommandClass) {
     case DMX512_RDM_COMMAND_CLASS_DISCOVERY_COMMAND:                     // discovery
         switch (usPID) {
@@ -895,11 +972,13 @@ static void fnHandleRDM_SlaveRx(QUEUE_HANDLE uart_handle, DMX512_RDM_PACKET *ptr
             }
             break;
         case DMX512_RDM_PARAMETER_ID_DISC_MUTE:                          // mute on this port
-            fnDebugMsg("Muted\r\n");
+            fnDebugMsg("Muted on port");
+            fnDebugDec(ptrPacket->ucPortID_ResponseType, (WITH_CR_LF | WITH_SPACE));
             ucMuteFlag[ptrPacket->ucPortID_ResponseType/8] |= (1 << (ptrPacket->ucPortID_ResponseType%8)); // set the mute flag so that we don't respond to any futher discovery requests
             break;
         case DMX512_RDM_PARAMETER_ID_DISC_UNMUTE:                        // unmute on this port
-            fnDebugMsg("Unmuted\r\n");
+            fnDebugMsg("Um-muted on port");
+            fnDebugDec(ptrPacket->ucPortID_ResponseType, (WITH_CR_LF | WITH_SPACE));
             ucMuteFlag[ptrPacket->ucPortID_ResponseType/8] &= ~(1 << (ptrPacket->ucPortID_ResponseType%8)); // unmute so that we respond to discovery requestss
             break;
         default:
@@ -910,10 +989,11 @@ static void fnHandleRDM_SlaveRx(QUEUE_HANDLE uart_handle, DMX512_RDM_PACKET *ptr
         switch (usPID) {
         // DMX512 setup category
         //
+        case DMX512_RDM_PARAMETER_ID_DMX_START_ADDRESS:                  // 0x00f0 (support required if device uses a DMX512 slot)
+            break;
         case DMX_BLOCK_ADRESS:                                           // 0x0140
         case DMX_FAIL_MODE:                                              // 0x0141
         case DMX_STARTUP_MODE:                                           // 0x0142
-            break;
         // Dimmer settings category
         //
         case DIMMER_INFO:                                                // 0x0340
@@ -948,10 +1028,19 @@ static void fnHandleRDM_SlaveRx(QUEUE_HANDLE uart_handle, DMX512_RDM_PACKET *ptr
         switch (usPID) {
         // DMX512 setup category
         //
+        case DMX512_RDM_PARAMETER_ID_DMX_START_ADDRESS:                  // 0x00f0 (support required if device uses a DMX512 slot)
+    #if defined USE_DMX_RDM_SLAVE
+            if (ptrDataBlock->ucParameterDataLength == 2) {
+                usDMX512_slave_start_address = (*ptr_ucData++ << 8);     // set new DMX512 address
+                usDMX512_slave_start_address |= (*ptr_ucData);
+                fnDebugMsg("DMX512 start add = ");
+                fnDebugDec(usDMX512_slave_start_address, WITH_CR_LF);
+            }
+    #endif
+            break;
         case DMX_BLOCK_ADRESS:                                           // 0x0140
         case DMX_FAIL_MODE:                                              // 0x0141
         case DMX_STARTUP_MODE:                                           // 0x0142
-            break;
         // Dimmer settings category
         //
         case DIMMER_MINIMUM_LEVEL:                                       // 0x0341
@@ -991,7 +1080,7 @@ static void fnHandleRDM_SlaveRx(QUEUE_HANDLE uart_handle, DMX512_RDM_PACKET *ptr
                 }
             uEnable_Interrupt();
             if (iStartTx != 0) {
-                fnStartDelay(PIT_US_DELAY(RDM_SLAVE_BREAK_DURATION), fnRDM_break);
+                fnStartDelay(PIT_US_DELAY(RDM_SLAVE_BREAK_DURATION), fnRDM_break, SLAVE_PIT_CHANNEL);
                 START_DMX512_SLAVE_BREAK();                              // start sending a break condition
             }
         }
@@ -1044,7 +1133,7 @@ static int __callback_interrupt fnDMX512_slave_rx(unsigned char data, QUEUE_HAND
                         if (usCheckSum == fnDMX512_RDM_checksum((DMX512_RDM_PACKET *)ucRxBuffer[iPingPong], (usThisLength[iPingPong] - 1))) { // check that the checksum is correct
                             usThisLength[iPingPong]++;
                             iTurnAroundDelaySlave = 1;                   // no transmission is allowed until the minimum turnaround time has elapsed
-                            fnStartDelay(PIT_US_DELAY(200), fnRDM_turnaround); // 176us delay must be respected until the slave start sending either a packet or the break before it
+                            fnStartDelay(PIT_US_DELAY(200), fnRDM_turnaround, SLAVE_PIT_CHANNEL); // 176us delay must be respected until the slave start sending either a packet or the break before it
                             if (iUnicast != 0) {                         // handle unicast
                                 fnInterruptMessage(OWN_TASK, (unsigned char)(DMX512_RDM_RECEPTION_READY_0 + iPingPong)); // inform the task that it should process the content and send a reply
                             }
@@ -1109,7 +1198,7 @@ static int fnSend_DMX512_RDM(QUEUE_HANDLE uart_handle, unsigned char ucCommandCl
         uMemcpy(ptrRDMpacket->ucDestinationUID, ucDestinationUID, 6);
         if (iSlave != 0) {
     #if defined USE_DMX_RDM_SLAVE
-            uMemcpy(ptrRDMpacket->ucSourceUID, ucSlaveSourceUID, 6);     // add out source UID
+            uMemcpy(ptrRDMpacket->ucSourceUID, ucSlaveSourceUID, 6);     // add our source UID
             ptrRDMpacket->ucTransactionNumber = ptrPacket->ucTransactionNumber; // respond with the same transaction number that the master sent
             ptrRDMpacket->ucPortID_ResponseType = ptrPacket->ucPortID_ResponseType; // respond from the same port ID that the master sent
     #endif
@@ -1157,6 +1246,40 @@ static int fnSend_DMX512_RDM(QUEUE_HANDLE uart_handle, unsigned char ucCommandCl
             }
     #endif
             break;
+        case DMX512_RDM_PARAMETER_ID_DMX_START_ADDRESS:
+            if (DMX512_RDM_COMMAND_CLASS_GET_COMMAND == ucCommandClass) {
+                // Request with no additional data
+                //
+            }
+            else if (DMX512_RDM_COMMAND_CLASS_SET_COMMAND == ucCommandClass) {
+    #if defined USE_DMX_RDM_MASTER
+                if (iSlave == 0) {                                       // master sends its DMX512 start address to be set to the slave
+                    ptrDataBlock->ucParameterDataLength = 0x02;
+                    ptrRDMpacket->ucMessageCount = 1;
+                    *ptr_ucData = (unsigned char)(usDMX512_master_start_address >> 8);
+                    *(ptr_ucData + 1) = (unsigned char)(usDMX512_master_start_address);
+                    ptrCheckSum = (ptr_ucData + 2);
+                }
+    #endif
+            }
+    #if defined USE_DMX_RDM_SLAVE
+            else if (DMX512_RDM_COMMAND_CLASS_SET_COMMAND_RESPONSE == ucCommandClass) {
+                // Respond with no additional data
+                //
+            }
+            else if (DMX512_RDM_COMMAND_CLASS_GET_COMMAND_RESPONSE == ucCommandClass) {
+                if (iSlave != 0) {                                       // slave sends its DMX512 start address
+                    ptrDataBlock->ucParameterDataLength = 0x02;
+                    ptrRDMpacket->ucMessageCount = 1;
+                    *ptr_ucData = (unsigned char)(usDMX512_slave_start_address >> 8);
+                    *(ptr_ucData + 1) = (unsigned char)(usDMX512_slave_start_address);
+                    ptrCheckSum = (ptr_ucData + 2);
+                }
+            }
+    #endif
+            else {
+                return -1;                                               // illegal class
+            }
         }
         iLength = (ptrCheckSum - (unsigned char *)ptrRDMpacket);
         ptrRDMpacket->ucMessageLength = (unsigned char)iLength;
@@ -1167,7 +1290,7 @@ static int fnSend_DMX512_RDM(QUEUE_HANDLE uart_handle, unsigned char ucCommandCl
         return (fnWrite(uart_handle, ucDMX512_RDM_buffer, (QUEUE_TRANSFER)iLength)); // prepare next DMX512 RDM frame
     }
     else {
-        return -1;                                                       // this must never happen in order for the smaster tate machine to operate correctly
+        return -1;                                                       // this must never happen in order for the master state machine to operate correctly
     }
 }
     #endif
@@ -1177,10 +1300,31 @@ static int fnSend_DMX512_RDM(QUEUE_HANDLE uart_handle, unsigned char ucCommandCl
 //
 extern void fnDMX512_discover(void)
 {
-    ucDMX512_state = DMX512_RDM_DISCOVERY;                               // start discovery
+    if (ucDMX512_state == DMX512_INITIALISED) {                          // ignore if not in initialised state
+        ucDMX512_state = (DMX512_INITIALISED | DMX512_RDM_DISCOVERY);    // start discovery
+    }
 }
 
-// It is possible that slaves responded so we extract reception and handle its content here
+extern void fnDMX512_set_address(unsigned short usDMX512_start_address)
+{
+    if (ucDMX512_state == DMX512_INITIALISED) {                          // ignore if not in initialised state
+        usDMX512_master_start_address = usDMX512_start_address;          // DMX512 start address to be set to the slave
+        usPresentCommand = DMX512_RDM_PARAMETER_ID_DMX_START_ADDRESS;
+        usPresentClass = DMX512_RDM_COMMAND_CLASS_SET_COMMAND;
+        ucDMX512_state = (DMX512_INITIALISED | DMX512_RDM_TRANSMISSION); // start transmission
+    }
+}
+
+extern void fnDMX512_get_address(void)
+{
+    if (ucDMX512_state == DMX512_INITIALISED) {                          // ignore if not in initialised state
+        usPresentCommand = DMX512_RDM_PARAMETER_ID_DMX_START_ADDRESS;
+        usPresentClass = DMX512_RDM_COMMAND_CLASS_GET_COMMAND;
+        ucDMX512_state = (DMX512_INITIALISED | DMX512_RDM_TRANSMISSION); // start transmission
+    }
+}
+
+// It is possible that slave(s) responded so we extract reception and handle its content here
 //
 static int fnHandleRDM_MasterRx(QUEUE_HANDLE uart_handle, unsigned char ucUID[6], unsigned short usExpected)
 {
@@ -1188,8 +1332,8 @@ static int fnHandleRDM_MasterRx(QUEUE_HANDLE uart_handle, unsigned char ucUID[6]
     int iResult = RDM_MASTER_NO_RECEPTION;                               // assume no reception
     int iLength = 0;
     while (fnRead(uart_handle, &ucRDM_response[iLength], 1) != 0) {      // extract the DMX512 reception frame one byte at a time
-        iResult = RDM_MASTER_RECEPTION_DETECTED;                         // reception indicates that there was somethng received
-        if (iLength == 0) {
+        iResult = RDM_MASTER_RECEPTION_DETECTED;                         // reception indicates that there was something received
+        if (iLength == 0) {                                              // searching for the first character
             if (ucUID != 0) {                                            // response to a discovery
                 if (ucRDM_response[0] == DISC_UNIQUE_PREAMBLE_SEPARATOR) { // pre-amble separator [0xaa] (this must be detected for the frame to be decoded)
                     unsigned short usCheckSum;
@@ -1199,19 +1343,24 @@ static int fnHandleRDM_MasterRx(QUEUE_HANDLE uart_handle, unsigned char ucUID[6]
                     }
                     // Decode the data
                     //
-                    ucUID[0] = (ucRDM_response[0] & ucRDM_response[1]);
-                    ucUID[1] = (ucRDM_response[2] & ucRDM_response[3]);
-                    ucUID[2] = (ucRDM_response[4] & ucRDM_response[5]);
-                    ucUID[3] = (ucRDM_response[6] & ucRDM_response[7]);
-                    ucUID[4] = (ucRDM_response[8] & ucRDM_response[9]);
-                    ucUID[5] = (ucRDM_response[10] & ucRDM_response[11]);
                     usCheckSum = ((ucRDM_response[12] & ucRDM_response[13]) << 8);
                     usCheckSum |= (ucRDM_response[14] & ucRDM_response[15]);
-                    if (usCheckSum == fnDMX512_RDM_checksum((DMX512_RDM_PACKET *)ucUID, 4)) {
+                    if (usCheckSum == fnDMX512_RDM_checksum((DMX512_RDM_PACKET *)ucRDM_response, 12)) {
                         // Valid data found
                         //
+                        int i;
+                        ucUID[0] = (ucRDM_response[0] & ucRDM_response[1]);
+                        ucUID[1] = (ucRDM_response[2] & ucRDM_response[3]);
+                        ucUID[2] = (ucRDM_response[4] & ucRDM_response[5]);
+                        ucUID[3] = (ucRDM_response[6] & ucRDM_response[7]);
+                        ucUID[4] = (ucRDM_response[8] & ucRDM_response[9]);
+                        ucUID[5] = (ucRDM_response[10] & ucRDM_response[11]);
                         iResult = RDM_MASTER_VALID_RECEPTION;            // success
-                        break;
+                        fnDebugMsg("Slave found =");
+                        for (i = 0; i < 6; i++) {
+                            fnDebugHex(ucUID[i], (sizeof(ucUID[i]) | WITH_SPACE | WITH_LEADIN));
+                        }
+                        fnDebugMsg("\r\n");
                     }
                     break;
                 }
@@ -1219,7 +1368,7 @@ static int fnHandleRDM_MasterRx(QUEUE_HANDLE uart_handle, unsigned char ucUID[6]
                     break;
                 }
             }
-            else {
+            else {                                                       // else response to other request
                 if (ucRDM_response[0] != START_CODE_RDM) {               // if there is no valid RDM start code as first byte
                     break;
                 }
@@ -1231,8 +1380,9 @@ static int fnHandleRDM_MasterRx(QUEUE_HANDLE uart_handle, unsigned char ucUID[6]
         else {
             if (iLength++ == 2) {                                        // if the message length is ready
                 unsigned short usChecksum;
-                unsigned char usReceivedChecksum;
-                if (fnRead(uart_handle, &ucRDM_response[3], ucRDM_response[2]) != ucRDM_response[2]) { // read out the advertised length
+                unsigned short usReceivedChecksum;
+                unsigned char ucRemainingLength = (ucRDM_response[2] - 1);
+                if (fnRead(uart_handle, &ucRDM_response[3], ucRemainingLength) != ucRemainingLength) { // read out the advertised length
                     break;                                               // invalid size received
                 }
                 // Check the check sum of the received message
@@ -1246,7 +1396,7 @@ static int fnHandleRDM_MasterRx(QUEUE_HANDLE uart_handle, unsigned char ucUID[6]
                     DMX512_MESSAGE_DATA_BLOCK *ptrDataBlock = (DMX512_MESSAGE_DATA_BLOCK *)ptrRDM_packet->ucMessageDataBlock;
                     usPID = (ptrDataBlock->ucParameterID[0] << 8);
                     usPID |= (ptrDataBlock->ucParameterID[1]);
-                    if (usExpected == usPID) {                           // if thsi is the PID that we are expecting
+                    if (usExpected == usPID) {                           // if this is the PID that we are expecting
                         switch (usPID) {
                         case DMX512_RDM_PARAMETER_ID_DISC_MUTE:
                             if (ptrDataBlock->ucParameterDataLength == 2) { // control field in the response
@@ -1258,6 +1408,9 @@ static int fnHandleRDM_MasterRx(QUEUE_HANDLE uart_handle, unsigned char ucUID[6]
                             else {                                       // invalid length
                                 break;
                             }
+                            break;
+                        case DMX512_RDM_PARAMETER_ID_DMX_START_ADDRESS:
+                            fnDebugMsg("DMX512 start add response - OK\r\n");
                             break;
                         }
                         iResult = RDM_MASTER_VALID_RECEPTION;            // valid message content

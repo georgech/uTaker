@@ -2484,6 +2484,7 @@ static int fnSimulateDMA(unsigned char ucChannel, int iDMA)
     switch (iDMA) {
     case 1:
         break;
+    #if defined DMA2_S0CR
     case 2:
         // Only channel 0 support at present!!!
         //
@@ -2551,6 +2552,7 @@ static int fnSimulateDMA(unsigned char ucChannel, int iDMA)
             }
         }
         break;
+    #endif
     }
     return -1;                                                           // no operation
 }
@@ -2560,11 +2562,13 @@ static void fnHandleDMA_triggers(unsigned char ucChannel, int iDMA)
     switch (iDMA) {
     case 1:
         break;
+    #if defined DMA2_S0CR
     case 2:
         if (((DMA2_S0CR >> 25) & 0x7) == ucChannel) {                    // if the channel matches the DMA setting
             fnSimulateDMA(ucChannel, iDMA);
         }
         break;
+    #endif
     }
 }
 #endif

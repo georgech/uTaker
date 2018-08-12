@@ -98,21 +98,34 @@ extern int fnPortState(CHAR cPortBit)
     }
     #else                                                                // used when LEDs are all on the same port
     switch (cPortBit) {
+        #if defined LED1
     case '1':
         if ((DEMO_INPUT_PORT & LED1) != 0) {
             return 1;
         }
         break;
+        #endif
+        #if defined LED2
     case '2':
         if ((DEMO_INPUT_PORT & LED2) != 0) {
             return 1;
         }
         break;
+        #endif
+        #if defined LED3
     case '3':
         if ((DEMO_INPUT_PORT & LED3) != 0) {
             return 1;
         }
         break;
+        #endif
+        #if defined LED4
+    case '4':
+        if ((DEMO_INPUT_PORT & LED4) != 0) {
+            return 1;
+        }
+        break;
+        #endif
     default:
         break;
     }
@@ -396,7 +409,7 @@ extern int fnConfigPort(CHAR cPortBit, CHAR cType)
             _CONFIG_PORT_INPUT(A, (LED4), (INPUT_PULL_UP));              // configure as input with pull-up
             temp_pars->temp_parameters.ucUserOutputs &= ~DEMO_LED_4;     // set present bit as input
             break;
-#elif defined ST_MB913C_DISCOVERY
+#elif defined ST_MB913C_DISCOVERY || defined ARDUINO_BLUE_PILL
         case 0:
             _CONFIG_PORT_INPUT(C, (DEMO_LED_2 << PORT_SHIFT), (INPUT_PULL_UP)); // configure as input with pull-up
             temp_pars->temp_parameters.ucUserOutputs &= ~DEMO_LED_2;     // set present bit as input
@@ -546,7 +559,7 @@ extern int fnConfigPort(CHAR cPortBit, CHAR cType)
             temp_pars->temp_parameters.ucUserOutputs |= DEMO_LED_4;     // set present bit as output
             break;
 
-#elif defined ST_MB913C_DISCOVERY
+#elif defined ST_MB913C_DISCOVERY || defined ARDUINO_BLUE_PILL
         case 0:
             _CONFIG_PORT_OUTPUT(C, (DEMO_LED_2 << PORT_SHIFT), (OUTPUT_PUSH_PULL | OUTPUT_MEDIUM)); // configure as medium speed output with push-pull output
             temp_pars->temp_parameters.ucUserOutputs |= DEMO_LED_2;      // set present bit as output
