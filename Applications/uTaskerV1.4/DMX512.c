@@ -147,6 +147,10 @@
 #define DMX512_DMX_RECEPTION_READY_0                 6
 #define DMX512_DMX_RECEPTION_READY_1                 7
 
+// Timer events
+//
+#define DMX_TIMER_MASTER_DISCONNECTED                1
+
 // Hardware timer interrupt events
 //
 #define DMX512_START_MAB                             1
@@ -229,7 +233,52 @@ typedef struct stDMX512_RDM_DISC_UNIQUE_BRANCH_RESPONSE_PACKET
 #define DMX512_RDM_PARAMETER_ID_DMX_PERSONALITY              0x00e0
 #define DMX512_RDM_PARAMETER_ID_DMX_PERSONALITY_DESCRIPTION  0x00e1
 #define DMX512_RDM_PARAMETER_ID_DMX_START_ADDRESS            0x00f0      // required if device uses a DMX512 slot
-#define DMX512_RDM_PARAMETER_ID_DEVICE_IDENTIFY              0x1000      // required
+#define DMX512_RDM_PARAMETER_ID_SLOT_INFO                    0x0120
+#define DMX512_RDM_PARAMETER_ID_SLOT_DESCRIPTION             0x0121
+#define DMX512_RDM_PARAMETER_ID_DEFAULT_SLOT_VALUE           0x0122
+// Category sensors
+//
+#define DMX512_RDM_PARAMETER_ID_SENSOR_DEFINITION            0x0200
+#define DMX512_RDM_PARAMETER_ID_SENSOR_VALUE                 0x0201
+#define DMX512_RDM_PARAMETER_ID_RECORD_SENSORS               0x0202
+// Category dimmer settings
+//
+#define DMX512_RDM_PARAMETER_ID_DIMMER_INFO                  0x0340
+#define DMX512_RDM_PARAMETER_ID_DIMMER_MINIMUM_LEVEL         0x0341
+#define DMX512_RDM_PARAMETER_ID_DIMMER_MAXIMUM_LEVEL         0x0342
+#define DMX512_RDM_PARAMETER_ID_DIMMER_CURVE                 0x0343
+#define DMX512_RDM_PARAMETER_ID_DIMMER_CURVE_DESCRIPTION     0x0344
+#define DMX512_RDM_PARAMETER_ID_DIMMER_OUTPUT_RESPONSE_TIME  0x0345
+#define DMX512_RDM_PARAMETER_ID_DIMMER_OUTPUT_RESPONSE_TIME_DESCRIPTION   0x0346
+#define DMX512_RDM_PARAMETER_ID_DIMMER_MODULATION_FREQUENCY  0x0347
+#define DMX512_RDM_PARAMETER_ID_DIMMER_MODULATION_FREQUENCY_DESCRIPTION   0x0348
+// Category power/lamp settings
+//
+#define DMX512_RDM_PARAMETER_ID_DEVICE_HOURS                 0x0400
+#define DMX512_RDM_PARAMETER_ID_LAMP_HOURS                   0x0401
+#define DMX512_RDM_PARAMETER_ID_LAMP_STRIKES                 0x0402
+#define DMX512_RDM_PARAMETER_ID_LAMP_STATE                   0x0403
+#define DMX512_RDM_PARAMETER_ID_LAMP_ON_MODE                 0x0404
+#define DMX512_RDM_PARAMETER_ID_DEVICE_POWER_CYCLES          0x0405
+// Category display settings
+//
+#define DMX512_RDM_PARAMETER_ID_DISPLAY_INVERT               0x0500
+#define DMX512_RDM_PARAMETER_ID_DISPLAY_LEVEL                0x0501
+// Category configuration
+//
+#define DMX512_RDM_PARAMETER_ID_PAN_INVERT                   0x0600
+#define DMX512_RDM_PARAMETER_ID_TILT_INVERT                  0x0601
+#define DMX512_RDM_PARAMETER_ID_PAN_TILT_SWAP                0x0602
+#define DMX512_RDM_PARAMETER_ID_REAL_TIME_CLOCK              0x0603
+// Category control
+//
+#define DMX512_RDM_PARAMETER_ID_IDENTIFY_DEVICE              0x1000      // required
+#define DMX512_RDM_PARAMETER_ID_RESET_DEVICE                 0x1001
+#define DMX512_RDM_PARAMETER_ID_POWER_STATE                  0x1010
+#define DMX512_RDM_PARAMETER_ID_PERFORM_SELFTEST             0x1020
+#define DMX512_RDM_PARAMETER_ID_SELF_TEST_DESCRIPTION        0x1021
+#define DMX512_RDM_PARAMETER_ID_CAPTURE_PRESET               0x1030
+#define DMX512_RDM_PARAMETER_ID_PRESET_PLAYBACK              0x1031
 
 #define MUTE_MESSAGE_CONTROL_FIELD_MANAGED_PROXY_FLAG        0x0001
 #define MUTE_MESSAGE_CONTROL_FIELD_SUB_DEVICE_FLAG           0x0002
@@ -247,16 +296,6 @@ typedef struct stDMX512_RDM_DISC_UNIQUE_BRANCH_RESPONSE_PACKET
 #define DMX_BLOCK_ADRESS                                     0x0140      // DMX512 setup category
 #define DMX_FAIL_MODE                                        0x0141
 #define DMX_STARTUP_MODE                                     0x0142
-
-#define DIMMER_INFO                                          0x0340      // dimmer settings category
-#define DIMMER_MINIMUM_LEVEL                                 0x0341
-#define DIMMER_MAXIMUM_LEVEL                                 0x0342
-#define DIMMER_CURVE                                         0x0343
-#define DIMMER_CURVE_DESCRIPTION                             0x0344
-#define DIMMER_OUTPUT_RESPONSE_TIME                          0x0345
-#define DIMMER_OUTPUT_RESPONSE_TIME_DESCRIPTION              0x0346
-#define DIMMER_MODULATION_FREQUENCY                          0x0347
-#define DIMMER_MODULATION_FREQUENCY_DESCRIPTION              0x0348
 
 #define BURN_IN                                              0x0440      // power/lamp settings category
 
@@ -284,6 +323,7 @@ typedef struct stDMX512_RDM_DISC_UNIQUE_BRANCH_RESPONSE_PACKET
 #define MERGEMODE_DMX_ONLY                                   0x03        // DMX512 only, reset ignored
 #define MERGEMODE_OTHER                                      0xff        // other (undefined) merge mode
 
+#define DMX512_NON_INITIALISED                               0x00
 #define DMX512_RDM_DISCOVERY                                 0x01
 #define DMX512_RDM_TRANSMISSION                              0x02
 #define DMX512_RDM_GLOBAL_UNMUTE                             0x03
@@ -352,7 +392,7 @@ typedef struct stDMX512_RDM_DISC_UNIQUE_BRANCH_RESPONSE_PACKET
 /*                      local variable definitions                     */
 /* =================================================================== */
 
-static unsigned char ucDMX512_state = 0;
+static unsigned char ucDMX512_state = DMX512_NON_INITIALISED;
 
 #if defined USE_DMX512_MASTER
     static QUEUE_HANDLE  DMX512_Master_PortID = NO_ID_ALLOCATED;
@@ -372,11 +412,13 @@ static unsigned char ucDMX512_state = 0;
 #endif
 #if defined USE_DMX512_SLAVE
     static QUEUE_HANDLE  DMX512_Slave_PortID = NO_ID_ALLOCATED;
+    static unsigned char ucDMX512_master_received = 0;
     #if defined USE_DMX_RDM_SLAVE
     static unsigned char ucMuteFlag[256/8] = {0};                        // mute flags (reset by default and after a DISC_UN_MUTE message) for each port ID
     static int iRxCount = 0;
     static int iTurnAroundDelaySlave = 0;
     static unsigned char ucType = 0;
+    static int iPingPong = 0;
     static unsigned short usThisLength[2] = {0};
     static unsigned char ucRxBuffer[2][DMX_RX_MAX_SLOT_COUNT + 1] = {{0}};
     static unsigned char ucSlaveSourceUID[6] = {0xcb, 0xa9, 0x87, 0x65, 0x43, 0x22}; // slave's UID
@@ -389,6 +431,8 @@ static unsigned char ucDMX512_state = 0;
 //
 extern void fnDMX512(TTASKTABLE *ptrTaskTable)
 {
+    QUEUE_HANDLE  PortIDInternal = ptrTaskTable->TaskID;                 // queue ID for task input
+    unsigned char ucInputMessage[SMALL_QUEUE];                           // reserve space for receiving messages
     #if defined USE_DMX512_MASTER || (defined USE_DMX512_SLAVE && defined USE_DMX_RDM_SLAVE)
     unsigned char ucDMX512_tx_buffer[DMX512_TX_BUFFER_SIZE];
     #endif
@@ -398,8 +442,6 @@ extern void fnDMX512(TTASKTABLE *ptrTaskTable)
         #endif
     unsigned short usTxLength;
     #endif
-    QUEUE_HANDLE  PortIDInternal = ptrTaskTable->TaskID;                 // queue ID for task input
-    unsigned char ucInputMessage[SMALL_QUEUE];                           // reserve space for receiving messages
 
     if (ucDMX512_state == 0) {                                           // on initialisation
         unsigned char ucMode;
@@ -485,7 +527,7 @@ extern void fnDMX512(TTASKTABLE *ptrTaskTable)
         tInterfaceParameters.Config |= (MSG_BREAK_MODE);                 // use interrupt driven message mode reception with break detection
             #endif
             #if defined USER_DEFINED_UART_RX_HANDLER
-        tInterfaceParameters.receptionHandler = ?;                       // no handler
+        tInterfaceParameters.receptionHandler = 0;                       // no handler
             #endif
             #if defined USER_DEFINED_UART_RX_BREAK_DETECTION
         tInterfaceParameters.receiveBreakHandler = 0;                    // no handler
@@ -495,7 +537,9 @@ extern void fnDMX512(TTASKTABLE *ptrTaskTable)
         if (NO_ID_ALLOCATED == (DMX512_Slave_PortID = fnSetNewSerialMode(&tInterfaceParameters, ucMode))) { // open serial port for I/O
             return;                                                      // if the serial port could not be opened we quit
         }
+        #if defined USE_DMX_RDM_SLAVE
         fnDriver(DMX512_Slave_PortID, (TX_OFF | PAUSE_TX), MODIFY_TX);   // set the transmitter to paused mode so that we can queue a message
+        #endif
     #endif
         ucDMX512_state = DMX512_INITIALISED;
     }
@@ -504,7 +548,10 @@ extern void fnDMX512(TTASKTABLE *ptrTaskTable)
         switch (ucInputMessage[MSG_SOURCE_TASK]) {                       // switch depending on message source
         case TIMER_EVENT:
             switch (ucInputMessage[MSG_TIMER_EVENT]) {
-            case 0:
+            case DMX_TIMER_MASTER_DISCONNECTED:
+                fnFlush(SerialPortID, FLUSH_RX);                         // ensure receiver is empty for next use
+                ucDMX512_master_received = 0;
+                fnDebugMsg("Master DMX512 timeout\r\n");
                 break;
             default:
                 break;
@@ -593,7 +640,7 @@ extern void fnDMX512(TTASKTABLE *ptrTaskTable)
                 }
         #else
                 if (fnWrite(DMX512_Master_PortID, 0, DMX512_TX_BUFFER_SIZE) > 0) { // if there is free buffer space
-                    usTxLength = fnConstructDMX512(ucDMX512_tx_buffer);
+                    usTxLength = fnConstructDMX512(ucDMX512_tx_buffer);  // prepare the next DMX512 frame to be sent
                     fnWrite(DMX512_Master_PortID, ucDMX512_tx_buffer, usTxLength); // prepare next DMX512 frame
                 }
         #endif
@@ -637,7 +684,7 @@ extern void fnDMX512(TTASKTABLE *ptrTaskTable)
                         fnRead(DMX512_Slave_PortID, ucRxFrame, usFrameLength); // flush the remaining oversized data
                         break;
                     }
-                    fnRead(uart_handle, ucRxFrame, usFrameLength);       // extract the complete DMX512 reception frame
+                    fnRead(DMX512_Slave_PortID, ucRxFrame, usFrameLength); // extract the complete DMX512 reception frame
                     fnHandleDMX512_frame(DMX512_Slave_PortID, ucRxFrame, usFrameLength, 0); // handle the received frame
                     break;
                 }
@@ -849,6 +896,8 @@ static int fnHandleDMX512_frame(QUEUE_HANDLE uart_handle, unsigned char *ptrRxFr
     case START_CODE_DMX512:                                              // (0x00) DMX512 content
         fnDebugMsg("*");
         fnHandleDMX(uart_handle, (DMX512_RDM_PACKET *)ptrRxFrame, usFrameLength);
+        ucDMX512_master_received = 1;                                    // master has been detected
+        uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(1 * SEC), DMX_TIMER_MASTER_DISCONNECTED); // a period of one second without reception signifies a disconnected master
         break;
     #if defined USE_DMX_RDM_SLAVE
     case START_CODE_RDM:                                                 // (0xcc) RDM content
@@ -874,6 +923,7 @@ static void fnHandleDMX(QUEUE_HANDLE uart_handle, DMX512_RDM_PACKET *ptrPacket, 
     fnDebugDec(usPacketLength, (WITH_SPACE| WITH_CR_LF));                // and the content length
 }
 
+#if (defined USE_DMX512_SLAVE && defined USE_DMX_RDM_SLAVE)
 static void __callback_interrupt fnRDM_mab(void)
 {
     fnDriver(DMX512_Slave_PortID, (TX_ON | PAUSE_TX), MODIFY_TX);        // release paused output buffer
@@ -999,15 +1049,15 @@ static void fnHandleRDM_SlaveRx(QUEUE_HANDLE uart_handle, DMX512_RDM_PACKET *ptr
         case DMX_STARTUP_MODE:                                           // 0x0142
         // Dimmer settings category
         //
-        case DIMMER_INFO:                                                // 0x0340
-        case DIMMER_MINIMUM_LEVEL:                                       // 0x0341
-        case DIMMER_MAXIMUM_LEVEL:                                       // 0x0342
-        case DIMMER_CURVE:                                               // 0x0343
-        case DIMMER_CURVE_DESCRIPTION:                                   // 0x0344
-        case DIMMER_OUTPUT_RESPONSE_TIME:                                // 0x0345
-        case DIMMER_OUTPUT_RESPONSE_TIME_DESCRIPTION:                    // 0x0346
-        case DIMMER_MODULATION_FREQUENCY:                                // 0x0347
-        case DIMMER_MODULATION_FREQUENCY_DESCRIPTION:                    // 0x0348
+        case DMX512_RDM_PARAMETER_ID_DIMMER_INFO:                        // 0x0340
+        case DMX512_RDM_PARAMETER_ID_DIMMER_MINIMUM_LEVEL:               // 0x0341
+        case DMX512_RDM_PARAMETER_ID_DIMMER_MAXIMUM_LEVEL:               // 0x0342
+        case DMX512_RDM_PARAMETER_ID_DIMMER_CURVE:                       // 0x0343
+        case DMX512_RDM_PARAMETER_ID_DIMMER_CURVE_DESCRIPTION:           // 0x0344
+        case DMX512_RDM_PARAMETER_ID_DIMMER_OUTPUT_RESPONSE_TIME:        // 0x0345
+        case DMX512_RDM_PARAMETER_ID_DIMMER_OUTPUT_RESPONSE_TIME_DESCRIPTION: // 0x0346
+        case DMX512_RDM_PARAMETER_ID_DIMMER_MODULATION_FREQUENCY:        // 0x0347
+        case DMX512_RDM_PARAMETER_ID_DIMMER_MODULATION_FREQUENCY_DESCRIPTION:// 0x0348
         // Power/lamp settings category
         //
         case BURN_IN:                                                    // 0x0440
@@ -1046,11 +1096,11 @@ static void fnHandleRDM_SlaveRx(QUEUE_HANDLE uart_handle, DMX512_RDM_PACKET *ptr
         case DMX_STARTUP_MODE:                                           // 0x0142
         // Dimmer settings category
         //
-        case DIMMER_MINIMUM_LEVEL:                                       // 0x0341
-        case DIMMER_MAXIMUM_LEVEL:                                       // 0x0342
-        case DIMMER_CURVE:                                               // 0x0343
-        case DIMMER_OUTPUT_RESPONSE_TIME:                                // 0x0345
-        case DIMMER_MODULATION_FREQUENCY:                                // 0x0347
+        case DMX512_RDM_PARAMETER_ID_DIMMER_MINIMUM_LEVEL:               // 0x0341
+        case DMX512_RDM_PARAMETER_ID_DIMMER_MAXIMUM_LEVEL:               // 0x0342
+        case DMX512_RDM_PARAMETER_ID_DIMMER_CURVE:                       // 0x0343
+        case DMX512_RDM_PARAMETER_ID_DIMMER_OUTPUT_RESPONSE_TIME:        // 0x0345
+        case DMX512_RDM_PARAMETER_ID_DIMMER_MODULATION_FREQUENCY:        // 0x0347
         // Power/lamp settings category
         //
         case BURN_IN:                                                    // 0x0440
@@ -1090,8 +1140,6 @@ static void fnHandleRDM_SlaveRx(QUEUE_HANDLE uart_handle, DMX512_RDM_PACKET *ptr
         }
     }
 }
-
-static int iPingPong = 0;
 
 static void fnReportDMX512_rx(unsigned short usRxLength)
 {
@@ -1178,6 +1226,7 @@ static int fnDMX512_break_rx(QUEUE_HANDLE channel)
     return 0;                                                            // break handled and no standard handling required
 }
     #endif
+#endif
 
     #if defined USE_DMX_RDM_MASTER || defined USE_DMX_RDM_SLAVE
 static unsigned short fnDMX512_RDM_checksum(DMX512_RDM_PACKET *ptrPacket, unsigned short usPacketLength)
