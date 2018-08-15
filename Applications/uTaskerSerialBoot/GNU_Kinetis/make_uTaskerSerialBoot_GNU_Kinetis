@@ -10,7 +10,7 @@
 # 11.07.2015 Add usb_application.c
 # 23.10.2015 Add usb_host_loader, rename usb_loader.c to usb_device_loader.c, rename SDLoader.c to disk_loader.c rename Loader.c to serial_loader.c, and use new kinetis_USB_OTG.h
 # 05.10.2017 Add Modbus package
-# 30.11.2017 Add make_uTaskerV1.4_GNU_Kinetis to dependencies to ensure clean each time this file is modified
+# 30.11.2017 Add make_uTaskerSerialBoot_GNU_Kinetis to dependencies to ensure clean each time this file is modified
 # 03.07.2018 Add -Wundef in order to discover any undefined definitions
 
 
@@ -32,8 +32,6 @@ OBJS = Build/serial_loader.o Build/usb_device_loader.o Build/disk_loader.o Build
        Build/eth_drv.o Build/Driver.o Build/uMalloc.o Build/uTasker.o Build/Tty_drv.o Build/i2c_drv.o Build/USB_drv.o Build/uFile.o Build/Watchdog.o \
 	   Build/Ethernet.o Build/arp.o Build/ip.o Build/tftp.o Build/udp.o Build/tcp.o Build/http.o Build/dhcp.o Build/ip_utils.o Build/webutils.o Build/icmp.o
 
-
-
 #General dependencies
 #
 DEPENDS = ../config.h ../app_hw_kinetis.h ../Loader.h ../types.h ../TaskConfig.h ../../../uTasker/driver.h  ../../../uTasker/uTasker.h \
@@ -42,7 +40,7 @@ DEPENDS = ../config.h ../app_hw_kinetis.h ../Loader.h ../types.h ../TaskConfig.h
        ../../../uTasker/uGLCDLIB/glcd.h \
 	   ../../../stack/tcpip.h \
        ../../../Hardware/hardware.h ../../../Hardware/Kinetis/kinetis.h \
-       make_uTaskerV1.4_GNU_Kinetis
+       make_uTaskerSerialBoot_GNU_Kinetis
 
 # Hardware peripheral dependencies
 #
@@ -100,20 +98,20 @@ all: uTaskerSerialBoot.elf
 
 # Application files
 #
-Build/serial_loader.o: ../serial_loader.c $(DEPENDS) 
-		$(CC) $(C_FLAGS) -I../../uTaskerSerialBoot $(OPTS) ../serial_loader.c -o Build/serial_loader.o
+Build/serial_loader.o: ../serial_loader.c $(DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../serial_loader.c -o Build/serial_loader.o
 
 Build/usb_device_loader.o: ../usb_device_loader.c $(DEPENDS)
-		$(CC) $(C_FLAGS) -I../../uTaskerSerialBoot $(OPTS) ../usb_device_loader.c -o Build/usb_device_loader.o
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../usb_device_loader.c -o Build/usb_device_loader.o
 
 Build/disk_loader.o: ../disk_loader.c $(DEPENDS)
-		$(CC) $(C_FLAGS) -I../../uTaskerSerialBoot $(OPTS) ../disk_loader.c -o Build/disk_loader.o
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../disk_loader.c -o Build/disk_loader.o
 
 Build/usb_host_loader.o: ../usb_host_loader.c $(DEPENDS)
-		$(CC) $(C_FLAGS) -I../../uTaskerSerialBoot $(OPTS) ../usb_host_loader.c -o Build/usb_host_loader.o
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../usb_host_loader.c -o Build/usb_host_loader.o
 
 Build/usb_application.o: ../usb_application.c $(DEPENDS) ../usb_msd_descriptors.h
-		$(CC) $(C_FLAGS) -I../../uTaskerSerialBoot $(OPTS) ../usb_application.c -o Build/usb_application.o
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../usb_application.c -o Build/usb_application.o
 
 Build/webInterface.o: ../webInterface.c $(DEPENDS)
 		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../webInterface.c -o Build/webInterface.o
@@ -123,34 +121,34 @@ Build/webInterface.o: ../webInterface.c $(DEPENDS)
 # Hardware files
 #
 Build/kinetis.o: ../../../Hardware/Kinetis/kinetis.c $(DEPENDS) $(PERIPH_DEP) $(SPI_FLASH_DEP)
-		$(CC) $(C_FLAGS) -I../../uTaskerSerialBoot $(OPTS) ../../../Hardware/Kinetis/kinetis.c -o Build/kinetis.o
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../Hardware/Kinetis/kinetis.c -o Build/kinetis.o
 
 
 # uTasker files
 #
 Build/uTasker.o: ../../../uTasker/uTasker.c $(DEPENDS)
-		$(CC) $(C_FLAGS) -I../../uTaskerSerialBoot $(OPTS) ../../../uTasker/uTasker.c -o Build/uTasker.o
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../uTasker/uTasker.c -o Build/uTasker.o
 
 Build/Driver.o: ../../../uTasker/Driver.c $(DEPENDS)
-		$(CC) $(C_FLAGS) -I../../uTaskerSerialBoot $(OPTS) ../../../uTasker/Driver.c -o Build/Driver.o
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../uTasker/Driver.c -o Build/Driver.o
 
 Build/uMalloc.o: ../../../uTasker/uMalloc.c $(DEPENDS)
-		$(CC) $(C_FLAGS) -I../../uTaskerSerialBoot $(OPTS) ../../../uTasker/uMalloc.c -o Build/uMalloc.o
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../uTasker/uMalloc.c -o Build/uMalloc.o
 
 Build/Tty_drv.o: ../../../uTasker/Tty_drv.c $(DEPENDS)
-		$(CC) $(C_FLAGS) -I../../uTaskerSerialBoot $(OPTS) ../../../uTasker/Tty_drv.c -o Build/Tty_drv.o
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../uTasker/Tty_drv.c -o Build/Tty_drv.o
 
 Build/i2c_drv.o: ../../../uTasker/i2c_drv.c $(DEPENDS)
 		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../uTasker/i2c_drv.c -o Build/i2c_drv.o
 
 Build/USB_drv.o: ../../../uTasker/USB_drv.c $(DEPENDS)
-		$(CC) $(C_FLAGS) -I../../uTaskerSerialBoot $(OPTS) ../../../uTasker/USB_drv.c -o Build/USB_drv.o
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../uTasker/USB_drv.c -o Build/USB_drv.o
 
 Build/uFile.o: ../../../uTasker/uFile.c $(DEPENDS)
-		$(CC) $(C_FLAGS) -I../../uTaskerSerialBoot $(OPTS) ../../../uTasker/uFile.c -o Build/uFile.o
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../uTasker/uFile.c -o Build/uFile.o
 
 Build/Watchdog.o: ../../../uTasker/Watchdog.c $(DEPENDS)
-		$(CC) $(C_FLAGS) -I../../uTaskerSerialBoot $(OPTS) ../../../uTasker/Watchdog.c -o Build/Watchdog.o
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../uTasker/Watchdog.c -o Build/Watchdog.o
 
 Build/eth_drv.o: ../../../uTasker/eth_drv.c $(DEPENDS)
 		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../uTasker/eth_drv.c -o Build/eth_drv.o
@@ -218,7 +216,7 @@ Build/modbus_app.o: ../modbus_app.c $(DEPENDS)
 # Create output files and show program size
 #
 uTaskerSerialBoot.elf: $(OBJS) K_2M_256.ld K_1M_256.ld K_256_256.ld K_1M_128.ld K_512_64.ld K_256_64.ld K_128_16.ld K_64_16.ld KW_512_64.ld KW_256_32.ld KL_512_128.ld KL_256_32.ld KL_128_96.ld KL_128_16.ld KL_64_8.ld KL_32_4.ld KL_32_2.ld KV_32_8.ld KV_512_96.ld KE_256_32.ld KE_128_16.ld KE_64_4.ld KE_8_1.ld KEA_128_16.ld KEA_64_4.ld KM_128_16.ld
-	$(CC) $(C_FLAGS) -Os -g -TK_2M_256.ld -nostartfiles -Xlinker --gc-sections -Wl,-Map,"uTaskerSerialBoot.map" -o "uTaskerSerialBoot.elf" $(OBJS)
+	$(CC) $(C_FLAGS) -Os -g -TK_1M_256.ld -nostartfiles -Xlinker --gc-sections -Wl,-Map,"uTaskerSerialBoot.map" -o "uTaskerSerialBoot.elf" $(OBJS)
 	$(CC_OBJ) --output-target=srec uTaskerSerialBoot.elf uTaskerSerialBoot.s19
 	$(CC_OBJ) --output-target=ihex uTaskerSerialBoot.elf uTaskerSerialBoot.hex
 	$(CC_OBJ) --only-section=.data --only-section=.init --only-section=.text --only-section=.rodata --only-section=.vectors --only-section=.f_config --output-target=binary uTaskerSerialBoot.elf uTaskerSerialBoot.bin

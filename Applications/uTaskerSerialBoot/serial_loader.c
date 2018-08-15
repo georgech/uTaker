@@ -192,9 +192,7 @@ typedef struct
         #endif
     #elif !defined KBOOT_LOADER && !defined DEVELOPERS_LOADER && !defined REMOVE_SREC_LOADING
         #define NEEDS_BLANK_CHECK
-        static int fnPerformBlankCheck(void);
         static unsigned char *fnBlankCheck(void);
-        static void fnPrintScreen(void);
         #if !defined REMOVE_SREC_LOADING                                 // {17}
             #if defined USE_USB_CDC && !defined SERIAL_INTERFACE || defined FREE_RUNNING_RX_DMA_RECEPTION // {33}
                 #undef INTERMEDIATE_PROG_BUFFER
@@ -206,12 +204,16 @@ typedef struct
             #endif
         #endif
     #elif defined REMOVE_SREC_LOADING && !defined USE_MODBUS
-        #if !defined KBOOT_LOADER
+        #if (defined USB_INTERFACE && defined USB_MSD_DEVICE_LOADER) || !defined KBOOT_LOADER
             #define NEEDS_BLANK_CHECK
             static unsigned char *fnBlankCheck(void);
-            static int fnPerformBlankCheck(void);
-            static void fnPrintScreen(void);
         #endif
+    #endif
+    #if defined NEEDS_BLANK_CHECK && !defined KBOOT_LOADER
+        static int fnPerformBlankCheck(void);
+    #endif
+    #if !defined KBOOT_LOADER && !defined DEVELOPERS_LOADER
+        static void fnPrintScreen(void);
     #endif
 #endif
 #if ((defined SERIAL_INTERFACE || defined USE_USB_CDC) && defined DEVELOPERS_LOADER) || (defined I2C_INTERFACE && !defined BLAZE_K22)
@@ -1425,7 +1427,7 @@ static void fnHandlePropertyGet(unsigned long ulPropertyTag, unsigned long ulMem
     #else
         ulResponseData[0] = ((FTFL_FSEC & FTFL_FSEC_SEC_UNSECURE) == 0);
         #if defined _WINDOWS
-        ulResponseData[0] = 1;                                           // test secured stae behavior
+        ulResponseData[0] = 1;                                           // test secured state behavior
         #endif
     #endif
         break;
@@ -1606,7 +1608,7 @@ extern int fnHandleKboot(QUEUE_HANDLE hInterface, int iInterfaceType, KBOOT_PACK
         case KBOOT_COMMAND_TAG_FLASH_SECURITY_DISABLE:                   // 6
             {
                 unsigned long ulKey[2];
-                fnPrepareGenericResponse(&KBOOT_response, iInterfaceType);   // generic response
+                fnPrepareGenericResponse(&KBOOT_response, iInterfaceType); // generic response
                 uMemcpy(ulKey, &ptrKBOOT_packet->ucData[4], sizeof(ulKey));
                 fnBackdoorUnlock(ulKey);
                 KBOOT_response.ucData[2] = 0x0c;
@@ -2387,7 +2389,7 @@ extern void fnUserHWInit(void)
         #if defined SPI_SW_UPLOAD
             fnEraseFlashSector((unsigned char *)(SIZE_OF_FLASH + UPLOAD_OFFSET), (UTASKER_APP_END - (unsigned char *)UTASKER_APP_START)); // delete space in SPI FLASH
         #else
-            fnEraseFlashSector((unsigned char *)UTASKER_APP_START, (UTASKER_APP_END - (unsigned char *)UTASKER_APP_START)); // delete application space
+            fnEraseFlashSector((unsigned char *)UTASKER_APP_START,(MAX_FILE_LENGTH) (UTASKER_APP_END - (unsigned char *)UTASKER_APP_START)); // delete application space
         #endif
         }
     }

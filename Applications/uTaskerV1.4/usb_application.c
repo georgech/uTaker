@@ -91,10 +91,6 @@
     #define MODBUS_USB_CDC_COUNT            0
 #endif
 
-#if !defined USB_SPEC_VERSION                                            // {28}
-    #define USB_SPEC_VERSION                USB_SPEC_VERSION_1_1         // default is to report USB1.1 since it is equivalent to USB2.0 but requires one less descriptor exchange
-#endif
-
 #if defined USB_HOST_SUPPORT
     #define NUMBER_OF_HOST_ENDPOINTS             3                       // reserve 2 bulk endpoints for USB-MSD host as well as an interrupt endpoint (although not used, some memory sticks request this)
     #if defined USB_MSD_HOST

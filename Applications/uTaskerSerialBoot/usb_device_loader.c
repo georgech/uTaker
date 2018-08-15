@@ -86,10 +86,6 @@
 
 #define OWN_TASK                           TASK_USB
 
-#if !defined USB_SPEC_VERSION                                            // {10}
-    #define USB_SPEC_VERSION               USB_SPEC_VERSION_1_1          // default is to report USB1.1 since it is equivalent to USB2.0 but requires one less descriptor exchange
-#endif
-
 #if defined HID_LOADER && defined USB_MSD_DEVICE_LOADER                  // USB HID and MSD composite
     #if defined KBOOT_HID_LOADER                                         // {19}
         #if defined USB_SIMPLEX_ENDPOINTS
