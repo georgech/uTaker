@@ -30,6 +30,7 @@
     19.08.2017 Correct calculation of start address of preceding multiple memory device {201}
     13.10.2017 Replace KINETIS_KE dependancy by FLASH_CONTROLLER_FTMRE dependancy
     07.03.2018 Add 25AA160 SPI EEPROM support                            {202}
+    20.08.2018 Add use of block erase command when possible              {203}
 
 */
 
@@ -222,7 +223,10 @@ static int fnFlashNow(unsigned char ucCommand, unsigned long *ptrWord, unsigned 
     case FCMD_PROGRAM_EEPROM:
     case FCMD_ERASE_EEPROM_SECTOR:
     #endif
-    case FCMD_ERASE_FLASH_SECTOR:
+    #if defined FLASH_BLOCK_COUNT
+    case FCMD_ERASE_FLASH_BLOCK:                                         // {203} block erase
+    #endif
+    case FCMD_ERASE_FLASH_SECTOR:                                        // sector erase
     case FCMD_PROGRAM:
     #if defined FLEXFLASH_DATA                                           // {82} if working with FlashNMV in data flash mode
         if (ptrWord >= (unsigned long *)(SIZE_OF_FLASH - SIZE_OF_FLEXFLASH)) { // is the access a write/erase in FlexNVM
@@ -325,7 +329,22 @@ static int fnFlashNow(unsigned char ucCommand, unsigned long *ptrWord, unsigned 
     #endif
         else {
     #if defined _WINDOWS
-            fnDeleteFlashSector(fnGetFlashAdd((unsigned char *)ptrWord));// the sector erase must be phrase aligned ([2:0] = 0)
+        #if defined FLASH_BLOCK_COUNT                                    // {203}
+            if (FCMD_ERASE_FLASH_BLOCK == ucCommand) {
+                unsigned char *ptrFlash = fnGetFlashAdd((unsigned char *)ptrWord);
+                unsigned long ulSize = 0;
+                do {
+                    fnDeleteFlashSector(ptrFlash); // the sector erase must be phrase aligned ([2:0] = 0) or 128 bit aligned ([3:0] = 0) for some devices
+                    ulSize += FLASH_GRANULARITY;
+                    ptrFlash += FLASH_GRANULARITY;
+                } while (ulSize < FLASH_BLOCK_SIZE);
+            }
+            else {
+                fnDeleteFlashSector(fnGetFlashAdd((unsigned char *)ptrWord)); // the sector erase must be phrase aligned ([2:0] = 0) or 128 bit aligned ([3:0] = 0) for some devices
+            }
+        #else
+            fnDeleteFlashSector(fnGetFlashAdd((unsigned char *)ptrWord));// the sector erase must be phrase aligned ([2:0] = 0) or 128 bit aligned ([3:0] = 0) for some devices
+        #endif
     #endif
         }
         break;
@@ -943,6 +962,21 @@ extern int fnEraseFlashSector(unsigned char *ptrSector, MAX_FILE_LENGTH Length)
         case _STORAGE_INTERNAL_FLASH:
             Length += (MAX_FILE_LENGTH)(((CAST_POINTER_ARITHMETIC)ptrSector) - ((CAST_POINTER_ARITHMETIC)ptrSector & ~(_FLASH_GRANULARITY - 1)));
             ptrSector = (unsigned char *)((CAST_POINTER_ARITHMETIC)ptrSector & ~(_FLASH_GRANULARITY - 1)); // set to sector boundary
+        #if defined FLASH_BLOCK_COUNT                                    // {203} check whether a block erase can be performed
+            if (((CAST_POINTER_ARITHMETIC)ptrSector & (FLASH_BLOCK_SIZE - 1)) == 0) { // if the start address is on a block boundary
+                if (Length >= FLASH_BLOCK_SIZE) {                        // and the erase length encloses a block
+                    if ((fnFlashNow(FCMD_ERASE_FLASH_BLOCK, (unsigned long *)ptrSector, (unsigned long)0)) != 0) { // erase a single block
+                        return -1;                                       // error
+                    }
+                    if (Length <= FLASH_BLOCK_SIZE) {                    // if completed
+                        break;
+                    }
+                    ptrSector += FLASH_BLOCK_SIZE;
+                    Length -= FLASH_BLOCK_SIZE;
+                    continue;
+                }
+            }
+        #endif
             if ((fnFlashNow(FCMD_ERASE_FLASH_SECTOR, (unsigned long *)(unsigned long)ptrSector, (unsigned long)0)) != 0) { // {53}
                 return -1;                                               // error
             }
@@ -1015,9 +1049,24 @@ extern int fnEraseFlashSector(unsigned char *ptrSector, MAX_FILE_LENGTH Length)
         _FLASH_GRANULARITY = KE_EEPROM_GRANULARITY;                      // set EEPROM granularity
     }
         #endif
-    Length += (((CAST_POINTER_ARITHMETIC)ptrSector) - ((CAST_POINTER_ARITHMETIC)ptrSector & ~(_FLASH_GRANULARITY - 1)));
+    Length += (((CAST_POINTER_ARITHMETIC)ptrSector) - ((CAST_POINTER_ARITHMETIC)ptrSector & ~(_FLASH_GRANULARITY - 1))); // increase length to compensate if the address is not on a sector boundary
     ptrSector = (unsigned char *)((CAST_POINTER_ARITHMETIC)ptrSector & ~(_FLASH_GRANULARITY - 1)); // set to sector boundary
     do {
+        #if defined FLASH_BLOCK_COUNT                                    // {203} check whether a block erase can be performed
+        if (((CAST_POINTER_ARITHMETIC)ptrSector & (FLASH_BLOCK_SIZE - 1)) == 0) { // if the start address is on a block boundary
+            if (Length >= FLASH_BLOCK_SIZE) {                            // and the erase length encloses a block
+                if ((fnFlashNow(FCMD_ERASE_FLASH_BLOCK, (unsigned long *)ptrSector, (unsigned long)0)) != 0) { // erase a single block
+                    return -1;                                           // error
+                }
+                if (Length <= FLASH_BLOCK_SIZE) {                        // check whether entire deletion has completed
+                    break;
+                }
+                ptrSector += FLASH_BLOCK_SIZE;                           // advance sector point to next internal flash sector
+                Length -= FLASH_BLOCK_SIZE;
+                continue;
+            }
+        }
+        #endif
         if ((fnFlashNow(FCMD_ERASE_FLASH_SECTOR, (unsigned long *)ptrSector, (unsigned long)0)) != 0) { // erase a single sector
             return -1;                                                   // error
         }

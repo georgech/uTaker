@@ -324,6 +324,9 @@ extern "C" int fnGetADC_sim_channel(int iPort, int iBit)
         }
         return (((ADC_DEDICATED_MODULE[iBit] - 1) * 32) + ADC_DEDICATED_CHANNEL[iBit]);
     }
+    else if (iPort > _GPIO_ADC) {                                        // extended port - not expected to have ADC
+        return -1;
+    }
     else {                                                               // multiplexed port
     #if defined KINETIS_KE && !defined KINETIS_KE15
         if (ADC_MUX_CHANNEL[iPort][7 - iBit] == -1) {

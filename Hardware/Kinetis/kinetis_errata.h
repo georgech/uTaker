@@ -167,7 +167,7 @@
     #define ERRATA_ID_2671                                               // FMC: incorrect data returned during speculative access
     #define ERRATA_ID_2590                                               // FMC: master access protection encoding for write only access does not work as specified
     #define ERRATA_ID_2683                                               // FMC: program flash only configuration cache/page buffer bank control does not follow specification
-    #define ERRATA_ID_2644                                               // FMC: ppeculation logic is not supported on program flash only or program flash only with swap feature devices
+    #define ERRATA_ID_2644                                               // FMC: speculation logic is not supported on program flash only or program flash only with swap feature devices
     #define ERRATA_ID_2668                                               // FTFL: brown-out recovery during a 32-bit EEE write operation is not supported
     #define ERRATA_ID_3854                                               // FTFL: cannot connect to MCU via JTAG or EzPort interfaces after a Reset, POR, LVD event during a program sequence
     #define ERRATA_ID_2667                                               // FTFL: EEE brownout recovery after SETRAM command is not supported

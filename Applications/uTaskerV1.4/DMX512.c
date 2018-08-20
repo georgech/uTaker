@@ -669,10 +669,10 @@ extern void fnDMX512(TTASKTABLE *ptrTaskTable)
             switch (ucInputMessage[0]) {
             case TTY_BREAK_FRAME_RECEPTION:
                 {
-                    QUEUE_HANDLE Channel;
+                  //QUEUE_HANDLE Channel;
                     unsigned short usFrameLength;
                     unsigned char ucRxFrame[DMX_RX_MAX_SLOT_COUNT + 1];
-                    Channel = ucInputMessage[1];                         // uart channel that the frame has been received on
+                  //Channel = ucInputMessage[1];                         // uart channel that the frame has been received on
                     usFrameLength = ucInputMessage[2];
                     usFrameLength <<= 8;
                     usFrameLength |= ucInputMessage[3];                  // the length of the frame waiting in the UART buffer

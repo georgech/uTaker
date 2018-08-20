@@ -684,16 +684,13 @@ static __interrupt void _SCI2_Interrupt(void)                            // UART
 //
 static __interrupt void _SCI3_Interrupt(void)                            // UART 3 interrupt
 {
-    int iFlags;
+    int iFlags = 0;
     #if defined SERIAL_SUPPORT_DMA
     if ((UART3_C5 & UART_C5_RDMAS) != 0) {
-        iFlags = UART_DMA_RX_MODE;                                       // receiver is in DMA mode
-    }
-    else {
-        iFlags = 0;                                                      // receiver is in interrupt mode
+        iFlags = UART_DMA_RX_MODE;                                       // receiver is in DMA mode (else interrupt mode)
     }
     if ((UART3_C5 & UART_C5_TDMAS) != 0) {
-        iFlags |= UART_DMA_TX_MODE;                                      // transmitter is in DMA mode (else interrupt mode)
+        iFlags |= UART_DMA_TX_MODE;                                      // transmitter is in DMA mode
     }
     #endif
     _UART_interrupt((KINETIS_UART_CONTROL *)UART3_BLOCK, 3, iFlags);     // call generic UART handler

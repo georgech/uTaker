@@ -1112,6 +1112,13 @@ typedef struct stRESET_VECTOR
     #define PHRASE_PROGRAMMING_METHOD                                    // use phrase programming (aligned 8 byte block) rather than long word programming
 #endif
 
+#if (SIZE_OF_FLASH == (2 * 1024 * 1024))
+    #define FLASH_BLOCK_COUNT    4                                       // the flash is divided into 4 blocks
+#else
+    #define FLASH_BLOCK_COUNT    2                                       // the flash is divided into 2 blocks
+#endif
+#define FLASH_BLOCK_SIZE     (SIZE_OF_FLASH/FLASH_BLOCK_COUNT)
+
 #if defined KINETIS_KE15
     #define FLASH_CONTROLLER_FTFE                                        // FTFE type rather than standard KE type
     #define FLASH_CONTROLLER_FTFE_EXTENDED                               // FTFE type with extended features
