@@ -13995,7 +13995,7 @@ typedef struct stKINETIS_LPTMR_CTL
               #elif (FLL_INPUT_DIVIDE_VALUE == 1536)
                   #define MCG_C1_FRDIV_VALUE MCG_C1_FRDIV_1536
                   #endif
-              #else
+              #elif defined MCGFFLCLK_EXTERNAL || defined MCGFFLCLK_IRC48M
                   #error "Illegal value of FRDIV requested!!"
               #endif
           #endif
