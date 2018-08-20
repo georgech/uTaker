@@ -588,7 +588,7 @@ static __interrupt void _PWM_Interrupt_5(void)
             }
     #endif
     #if FLEX_TIMERS_AVAILABLE > 4 && defined TPMS_AVAILABLE_TOO
-            if (iTPM_type != 0) {
+            if (iTPM_type != 0) {                                        // configure for TPM operation
         #if defined TPM_CLOCKED_FROM_MCGIRCLK
             #if !defined RUN_FROM_LIRC                                   // if the processor is running from the the internal clock we don't change settings here
                 MCG_C1 |= (MCG_C1_IRCLKEN | MCG_C1_IREFSTEN);            // enable internal reference clock and allow it to continue running in stop modes

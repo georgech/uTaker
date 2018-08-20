@@ -103,12 +103,12 @@
         #define TEST_TIMER                                               // enable timer test(s)
         #if defined TEST_TIMER
             #if defined SUPPORT_PWM_MODULE                               // {9}
-              //#define TEST_PWM                                         // {1} test generating PWM output from timer
+                #define TEST_PWM                                         // {1} test generating PWM output from timer
               //#define TEST_STEPPER                                     // test generating stepper motor frequency patterns (use together with PWM)
             #endif
             #if defined SUPPORT_TIMER
               //#define TEST_SINGLE_SHOT_TIMER                           // test single-shot mode
-                #define TEST_PERIODIC_TIMER                              // test periodic interrupt mode
+              //#define TEST_PERIODIC_TIMER                              // test periodic interrupt mode
               //#define TEST_ADC_TIMER                                   // test periodic ADC trigger mode (Luminary)
               //#define TEST_CAPTURE                                     // {6} test timer capture mode
             #endif
@@ -1778,7 +1778,12 @@ static void fnConfigure_Timer(void)
     fnConfigureInterrupt((void *)&pwm_setup);                            // configure and start the PWM output
     return;
     #else
+        #if defined FTM_FLEXIBLE_CLOCKING
+    pwm_setup.pwm_mode = (PWM_FIXED_CLK | PWM_PRESCALER_1 | PWM_EDGE_ALIGNED);
+    pwm_setup.pwm_frequency = PWM_FIXED_CLOCK_FREQUENCY(1000, 1);        // generate 1000Hz on PWM output
+        #else
     pwm_setup.pwm_frequency = PWM_FREQUENCY(1000, 16);                   // generate 1000Hz on PWM output
+        #endif
     pwm_setup.pwm_value   = _PWM_PERCENT(20, pwm_setup.pwm_frequency);   // 20% PWM (high/low)
     fnConfigureInterrupt((void *)&pwm_setup);                            // enter configuration for PWM test
     #endif
@@ -1805,7 +1810,7 @@ static void fnConfigure_Timer(void)
     pwm_setup.pwm_frequency = 64;                                        // PWM1 period is defined by 64 PWM0 periods
     pwm_setup.pwm_value = 1;                                             // mark is defined by a single PWM0 clock cycle
     #else
-    pwm_setup.pwm_value  = _PWM_TENTH_PERCENT(706, pwm_setup.pwm_frequency); // 70.6% PWM (low/high) on different channel
+    pwm_setup.pwm_value = _PWM_TENTH_PERCENT(706, pwm_setup.pwm_frequency); // 70.6% PWM (low/high) on different channel
     #endif
     fnConfigureInterrupt((void *)&pwm_setup);
     #if defined FRDM_K64F                                                // generate 6 different PWM signals o flex timer 0
@@ -1914,8 +1919,8 @@ static void fnConfigure_Timer(void)
     timer_setup.timer_reference = 0;                                     // FlexTimer/TPM 0
         #if defined TEST_PERIODIC_TIMER
             #if defined FTM_CLOCKED_FROM_MCGFFLCLK
-    timer_setup.timer_mode = (TIMER_PERIODIC);                           // period timer interrupt
-    timer_setup.timer_value = TIMER_MS_DELAY(64000);                     // 64s periodic interrupt
+    timer_setup.timer_mode = (TIMER_PERIODIC | TIMER_FIXED_CLK);         // period timer interrupt clocked from fixed source
+    timer_setup.timer_value = TIMER_FIXED_CLOCK_MS_DELAY(6000);          // 6s periodic interrupt
             #else
   //timer_setup.timer_mode = (TIMER_PERIODIC | TIMER_EXT_CLK_1);         // period timer interrupt using external clocksource 1
     timer_setup.timer_mode = (TIMER_PERIODIC);                           // period timer interrupt

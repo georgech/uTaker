@@ -8360,7 +8360,43 @@ unsigned long fnGetFlexTimer_clock(int iChannel)
         ulClockSpeed = TPM_PWM_CLOCK;
     }
     else {
-        ulClockSpeed = PWM_CLOCK;
+        switch (ptrTimer->FTM_SC & (FTM_SC_CLKS_MASK)) {
+        case FTM_SC_CLKS_EXT:
+            _EXCEPTION("Not supported");
+            break;
+        case FTM_SC_CLKS_FIX:
+            if ((MCG_C1 & MCG_C1_IREFS) != 0) {                          // 32kHz IRC is being used as MCGFFCLK
+                if ((MCG_C1 & MCG_C1_IRCLKEN) != 0) {                    // check that the IRC 32kHz is enabled
+                    ulClockSpeed = SLOW_ICR;
+                }
+                else {
+                    _EXCEPTION("FTM is using MCGFFCLK derived form 32kHz IRC but the source is disabled!");
+                    ulClockSpeed = 0;
+                }
+            }
+            else {                                                       // external path is selected
+                switch (MCG_C7 & MCG_C7_OSCSEL_MASK) {
+                case MCG_C7_OSCSEL_OSCCLK:
+                    ulClockSpeed =_EXTERNAL_CLOCK;                       // crystal or external oscillator speed
+                    break;
+        #if defined MCG_C7_OSCSEL_32K
+                case MCG_C7_OSCSEL_32K:
+                    ulClockSpeed = 32768;
+                    break;
+        #endif
+        #if defined MCG_C7_OSCSEL_IRC48MCLK
+                case MCG_C7_OSCSEL_IRC48MCLK:
+                    ulClockSpeed = 48000000;
+                    break;
+        #endif
+                }
+                ulClockSpeed /= (MCGFFLCLK_FRDIV);                       // divide the input by FRDIV
+            }
+            break;
+        case FTM_SC_CLKS_SYS:
+            ulClockSpeed = BUS_CLOCK;                                    // bus clock
+            break;
+        }
     }
     #elif defined KINETIS_KE15 || defined KINETIS_KE18
     switch (ptrTimer->FTM_SC & (FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)) {
@@ -9493,7 +9529,7 @@ extern int fnSimTimers(void)
     }
     #endif
     #if FLEX_TIMERS_AVAILABLE > 2
-        #if defined KINETIS_KL || defined KINETIS_K22_SF7
+        #if defined KINETIS_KL || defined KINETIS_K22_SF7 || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66
     if (IS_POWERED_UP(6, FTM2) &&((FTM2_SC & (FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)) != 0))  // if the timer/PWM module is powered and clocked
         #else
     if (IS_POWERED_UP(3, FTM2) &&((FTM2_SC & FTM_SC_CLKS_EXT) != 0))    // if the FlexTimer 2 is powered and clocked

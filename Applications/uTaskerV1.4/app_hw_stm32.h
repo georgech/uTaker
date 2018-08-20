@@ -1760,7 +1760,7 @@
         #define VNDR_MDL               0x09                              // vendor model number
         #define MDL_REV                0x00                              // model revision number
         #define PHY_IDENTIFIER         (0x20005c00 | (VNDR_MDL << 4) | MDL_REV) // NATIONAL DP83848 identifier
-        #define PHY_INTERRUPT          PORTC_BIT13                       // use PHY interrupt on thsi pin
+        #define PHY_INTERRUPT          PORTC_BIT13                       // use PHY interrupt on this pin
         #define PHY_INT_PORT           PORTC
         #define PHY_INT_PIN_STATE()    _READ_PORT_MASK(C, PHY_INTERRUPT)      
     #endif

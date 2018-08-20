@@ -14,13 +14,14 @@
     Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     24.04.2018 Allow clocking from RTC crystal with automatic detection of revision 1 and revision 2 parts {1}
+    21.08.2018 Add MCGFFLCLK configuration when used for FlexTimer fixed clock {2}
 
 */
 
 
 // Initially the processor is in FEI (FLL engaged internal) - running from 20..25MHz internal clock (32.768kHz IRC x 640 FLL factor; 20.97MHz)
 //
-#if defined RUN_FROM_DEFAULT_CLOCK                                       // no configuration performed - remain in default clocked mode
+#if defined RUN_FROM_DEFAULT_CLOCK                                       // no configuration performed - remain in default clocked mode (FLL is used form 32kHz IRC)
     SIM_CLKDIV1 = (((SYSTEM_CLOCK_DIVIDE - 1) << 28) | ((BUS_CLOCK_DIVIDE - 1) << 24) | ((FLEX_CLOCK_DIVIDE - 1) << 20) | ((FLASH_CLOCK_DIVIDE - 1) << 16)); // prepare bus clock divides
     #if defined FLL_FACTOR                                               // if a different FLL multiplication factor is defined
     MCG_C4 = ((MCG_C4 & ~(MCG_C4_DMX32 | MCG_C4_HIGH_RANGE)) | (_FLL_VALUE)); // adjust FLL factor to obtain the required operating frequency
@@ -157,5 +158,27 @@
         #if defined PERIPHERAL_CLOCK_DIVIDE_VALUE                        // configure the optional peripheral clock divide early since it shouldn't be changed once LPUARTs or TPU have started using it
     SIM_CLKDIV3 = PERIPHERAL_CLOCK_DIVIDE_VALUE;
         #endif
+    #endif
+#endif
+
+#if defined FTM_FLEXIBLE_CLOCKING                                        // {2}
+    // When FTM flexible clocking is set together with an MCGFFCLK setting the MCGFFCLK is configured immediately and it is assumed that this will not interfere with FLL operation if used!
+    //
+    #if defined MCGFFLCLK_32kHz_IRC                                      // if the 32kHz IRC is used as MCGFFCLK
+    // Ensure that slow internal clock is enabled and selected for MCGFFCLK
+    //
+    MCG_C1 |= (MCG_C1_IRCLKEN | MCG_C1_IREFSTEN | MCG_C1_IREFS);         // enable internal reference clock and allow it to continue running in stop modes, plus select it as FLL reference (MCGFFLCLK)
+    #elif defined MCGFFLCLK_EXTERNAL
+    // Select external oscillator/crystal as source for MCGFFCK and the desired FRDIV divider
+    //
+    MCG_C1 &= ~(MCG_C1_IREFS | MCG_C1_FRDIV_RANGE0_128);                 // select external path as FLL reference (MCGFFLCLK)
+    MCG_C1 |= (MCG_C1_FRDIV_VALUE);                                      // set FRDIV value
+    MCG_C7 = MCG_C7_OSCSEL_OSCCLK;                                       // select the external oscillator path
+    #elif defined MCGFFLCLK_IRC48M
+    // Select 48MHz IRC48M as source for MCGFFCK and the desired FRDIV divider
+    //
+    MCG_C1 &= ~(MCG_C1_IREFS | MCG_C1_FRDIV_RANGE0_128);                 // select external path as FLL reference (MCGFFLCLK)
+    MCG_C1 |= (MCG_C1_FRDIV_VALUE);                                      // set FRDIV value
+    MCG_C7 = MCG_C7_OSCSEL_IRC48MCLK;                                    // set the IRC48M path
     #endif
 #endif

@@ -2439,7 +2439,7 @@ extern int fnGetSector(unsigned char *ptrBuf)
     return UTFAT_SUCCESS;                                                // read successfully terminated
 }
 
-// Read a specified amount of data from present SD card sector into the specified data buffer (usStart and usStop are offset from start of sector and avoid other data outseide of thsi range being overwritted)
+// Read a specified amount of data from present SD card sector into the specified data buffer (usStart and usStop are offset from start of sector and avoid other data outside of this range being overwritted)
 //
 extern int fnReadPartialSector(unsigned char *ptrBuf, unsigned short usStart, unsigned short usStop)
 {
@@ -2691,7 +2691,7 @@ extern int fnConfigureRTC(void *ptrSettings)
         if (ptr_rtc_setup->command & RTC_INITIALISATION) {
             POWER_UP(APB1, (RCC_APB1ENR_PWREN));                         // ensure that the power control module is enabled
             PWR_CR |= PWR_CR_DBP;                                        // disable backup domain write protection
-            if (!(RTC_ISR & RTC_ISR_INITS)) {                            // if the calendar has not yet been initialised (this in fact checks whether the year file is still at its default 0 value - which is the year 2000 - meaning that 2000 should never be set for thsi to be accurate)
+            if ((RTC_ISR & RTC_ISR_INITS) == 0) {                        // if the calendar has not yet been initialised (this in fact checks whether the year file is still at its default 0 value - which is the year 2000 - meaning that 2000 should never be set for this to be accurate)
                 if (!(RCC_BDCR & RCC_BDCR_LSEON)) {                      // if the external oscillator hasn't been enabled yet
                     RCC_BDCR |= RCC_BDCR_BDRST;                          // reset backup domain
                     RCC_BDCR &= ~(RCC_BDCR_BDRST | RCC_BDCR_LSEON | RCC_BDCR_LSEBYP); // remove reset

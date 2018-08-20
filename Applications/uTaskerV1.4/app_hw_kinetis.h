@@ -1554,7 +1554,7 @@
 #define SUPPORT_TIMER                                                    // support hardware timer interrupt configuration (FlexTimer or TPM)
     #define SUPPORT_CAPTURE                                              // support capture mode of operation
 
-#if defined KINETIS_KL || defined KINETIS_K66
+#if defined KINETIS_KL || defined KINETIS_K65 || defined KINETIS_K66
     #if defined KINETIS_KL82
       //#define TPM_CLOCKED_FROM_IRC48M                                  // TPM clock is connected to the IRC48MCLK
     #endif
@@ -1568,8 +1568,13 @@
                                                                          // default is to use MCGPLLCLK
         #define PERIPHERAL_CLOCK_DIVIDE          4                       // optional divider for these options (divide 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 5, 6, 7 or 8)
         #define PERIPHERAL_CLOCK_DIVIDE_FRACTION 0                       // 0 or 5 (eg. PERIPHERAL_CLOCK_DIVIDE 2 and PERIPHERAL_CLOCK_DIVIDE_FRACTION 0 gives 2.0 and PERIPHERAL_CLOCK_DIVIDE_FRACTION 5 gives 2.5 divide)
-
-        #define FTM_CLOCKED_FROM_MCGFFLCLK                               // FTM timers clocked from MCGFFLCLK (32kHz or external FLL reference)
+        #define FTM_FLEXIBLE_CLOCKING                                    // this has priority over FTM_CLOCKED_FROM_MCGFFLCLK and allows FlexTimer/TPM modules to be individually clocked from different sources (controlled by the clock setting passed by the API)
+      //#define MCGFFLCLK_32kHz_IRC                                      // MCGFFLCLK is 32kHz, derived from 32kHz IRC
+      //#define MCGFFLCLK_32kHz_RTC                                      // MCGFFLCLK is 32kHz, derived from 32kHz RTC oscillator
+        #define MCGFFLCLK_EXTERNAL                                       // MCGFFLCLK is derived from an exteral clock source with a user-definable FRDIV value
+      //#define MCGFFLCLK_IRC48M                                         // MCGFFLCLK is derived from 48MHz IRC48M source with a user-definable FRDIV value
+        #define MCGFFLCLK_FRDIV                  32                      // used with MCGFFLCLK_EXTERNAL or MCGFFLCLK_IRC48M configurations in order to specify the FRDIV value that is to be used to define the MCGFFLCLK frequency (values can be 32,64,128,256,512,1024,1280 or 1536)
+        #define FTM_CLOCKED_FROM_MCGFFLCLK                               // all FTM/TPM timers clocked from MCGFFLCLK (32kHz) - this is overridden when FTM_FLEXIBLE_CLOCKING is enabled
     #else
                                                                          // default is to use MCGPLLCLK/2 or MCGFLLCLK (depending on whether FLL or PLL is used)
     #endif

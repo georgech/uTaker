@@ -22,6 +22,8 @@
     07.02.2018 Ensure that the count value is reset to zero when starting timer {7}
     09.08.2018 Add control to freeze and release an operating timer      {8}
     09.08.2018 Add TPM1 and TPM2 extension (for K65/K66/K80)             {9}
+    21.08.2018 Add flexible clocking (fixed clock source on individual modules) {10}
+    21.08.2018 Correct FTM2 clock gating for K64, K65 and K66            {11}
 
 */
 
@@ -313,7 +315,7 @@ static __interrupt void _flexTimerInterrupt_5(void)
         #if defined KINETIS_WITH_PCC && !defined KINETIS_KE15
                 SELECT_PCC_PERIPHERAL_SOURCE(FTM2, FTM2_PCC_SOURCE);     // select the PCC clock used by FlexTimer/TPM 2
         #endif
-        #if defined KINETIS_KL || defined KINETIS_K22_SF7
+        #if defined KINETIS_KL || defined KINETIS_K22_SF7 || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66 // {11}
                 POWER_UP_ATOMIC(6, FTM2);                                // ensure that the FlexTimer module is powered up
         #else
                 POWER_UP_ATOMIC(3, FTM2);                                // ensure that the FlexTimer module is powered up
@@ -502,6 +504,14 @@ static __interrupt void _flexTimerInterrupt_5(void)
             }
             else {
                 usFlexTimerMode[iTimerReference] |= (FTM_SC_CLKS_SYS | FTM_SC_TOF); // set mode to start (shared by all channels) - system clock with overflow interrupt enabled [FTM_SC_TOF must be written with 1 to clear]
+            }
+    #elif defined FTM_FLEXIBLE_CLOCKING                                  // {11} support mixed individual clock sources (MCGFFCLK was set up during global clock initialisation)
+            usFlexTimerMode[iTimerReference] &= ~(FTM_SC_CLKS_MASK);
+            if (ptrTimerSetup->timer_mode & TIMER_FIXED_CLK) {
+                usFlexTimerMode[iTimerReference] |= (FTM_SC_CLKS_FIX);   // set fixed clock for this channel
+            }
+            else {
+                usFlexTimerMode[iTimerReference] |= (FTM_SC_CLKS_SYS);   // set mode to start (for this channel) - system clock with overflow interrupt enabled [FTM_SC_TOF must be written with 0 to clear]
             }
     #elif defined FTM_CLOCKED_FROM_MCGFFLCLK
             // Ensure that slow internal clock is enabled and selected for MCGFFCLK

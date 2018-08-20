@@ -345,9 +345,11 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
 #endif
 
 
-// Define the FLL input divider value if an external clock is being used (it must give an input reference frequency between 31.25kHz and 39.062kHz)
+// Define the FLL input divider value if an external clock is being used (it must give an input reference frequency between 31.25kHz and 39.062kHz for use as FLL input)
 //
-#if defined _EXTERNAL_CLOCK && !(defined KINETIS_HAS_IRC48M && defined RUN_FROM_HIRC_FLL)
+#if defined MCGFFLCLK_EXTERNAL || defined MCGFFLCLK_IRC48M               // if the user defines a specific FRDIV value to control the MCGFFLCLK frequency from an external or IRC48M clock the FLL input frequency range is not checked
+    #define FLL_INPUT_DIVIDE_VALUE    (MCGFFLCLK_FRDIV)                  // FLL input divide is user defined
+#elif defined _EXTERNAL_CLOCK && !(defined KINETIS_HAS_IRC48M && defined RUN_FROM_HIRC_FLL) // calculate the FRDIV divide vale in order to best respect the FLL input range
     #if ((_EXTERNAL_CLOCK/32) <= 39062)
         #define FLL_INPUT_DIVIDE_VALUE    32
     #elif ((_EXTERNAL_CLOCK/64) <= 39062)
@@ -716,7 +718,11 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
     #else
         #define MCGIRCLK       SLOW_ICR                                  // 30..40kHz (2MHz for devices with MCG Lite)
     #endif
-    #if defined EXTERNAL_CLOCK && !defined CLOCK_FROM_RTC_OSCILLATOR     // external oscillator used
+    #if defined MCGFFLCLK_EXTERNAL
+        #define MCGFFCLK      (_EXTERNAL_CLOCK/MCGFFLCLK_FRDIV)
+    #elif defined MCGFFLCLK_IRC48M
+        #define MCGFFCLK      (48000000/MCGFFLCLK_FRDIV)
+    #elif defined EXTERNAL_CLOCK && !defined CLOCK_FROM_RTC_OSCILLATOR   // external oscillator used
         #if EXTERNAL_CLOCK >= 8000000
             #define MCGFFCLK  (EXTERNAL_CLOCK/1024)
         #else
@@ -11029,7 +11035,7 @@ typedef struct stKINETIS_LPTMR_CTL
           #define SIM_SCGC6_PIT0                 0x00800000
           #define SIM_SCGC6_FTM0                 0x01000000              // TPM0 on KL/KE
           #define SIM_SCGC6_FTM1                 0x02000000              // TPM1 on KL/KE
-          #if defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_K22_SF7
+          #if defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_K22_SF7 || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66
               #define SIM_SCGC6_FTM2             0x04000000              // TPM2 on KL/KE
           #endif
           #define SIM_SCGC6_ADC0                 0x08000000
@@ -11071,7 +11077,7 @@ typedef struct stKINETIS_LPTMR_CTL
           #define SIM_SCGC6_SIM_SCGC6_PIT0       BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 23)
           #define SIM_SCGC6_SIM_SCGC6_FTM0       BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 24)
           #define SIM_SCGC6_SIM_SCGC6_FTM1       BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 25)
-          #if defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_K22_SF7
+          #if defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_K22_SF7 || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66
               #define SIM_SCGC6_SIM_SCGC6_FTM2   BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 26)
           #endif
           #define SIM_SCGC6_SIM_SCGC6_ADC0       BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x103c), 27)
@@ -13989,6 +13995,8 @@ typedef struct stKINETIS_LPTMR_CTL
               #elif (FLL_INPUT_DIVIDE_VALUE == 1536)
                   #define MCG_C1_FRDIV_VALUE MCG_C1_FRDIV_1536
                   #endif
+              #else
+                  #error "Illegal value of FRDIV requested!!"
               #endif
           #endif
       #endif
@@ -14126,6 +14134,7 @@ typedef struct stKINETIS_LPTMR_CTL
         #if defined KINETIS_HAS_IRC48M
           #define MCG_C7_OSCSEL_IRC48MCLK 0x02                           // MCG FLL external reference clock is IRC48M (OSCCLK1)
         #endif
+          #define MCG_C7_OSCSEL_MASK     0x03
         #define MCG_C8                   *(volatile unsigned char *)(MCG_BLOCK + 0x0d) // MSG Control 8 Register
         #define MCG_C9                   *(volatile unsigned char *)(MCG_BLOCK + 0x0e) // MSG Control 9 Register
         #if !defined KINETIS_KM
@@ -18429,9 +18438,12 @@ extern void fnSimPers(void);
 #define TIMER_CAPTURE_RISING      0x0002                                 // {97}
 #define TIMER_CAPTURE_FALLING     0x0004
 #define TIMER_CAPTURE_RISING_FALLING  (TIMER_CAPTURE_RISING | TIMER_CAPTURE_FALLING)
-#define TIMER_PERIODIC            0x0010
 #define TIMER_MS_VALUE            0x0000
 #define TIMER_US_VALUE            0x0020
+#define TIMER_PERIODIC            0x0010
+#define TIMER_FIXED_CLK           0x0040
+#define TIMER_SYS_CLK             0x0000
+#define TIMER_IRC48M_CLK          0x0080
 
 #define TIMER_DONT_DISTURB        0x0200
 #define TIMER_EXT_CLK_0           0x0400                                 // {89}
@@ -18491,7 +18503,7 @@ extern void fnSimPers(void);
         #else
             #define TPM_PWM_CLOCK (_TPM_PWM_CLOCK)                       // undivided
         #endif
-        #if defined FTM_CLOCKED_FROM_MCGFFLCLK
+        #if defined FTM_CLOCKED_FROM_MCGFFLCLK && !defined FTM_FLEXIBLE_CLOCKING
             #define TIMER_CLOCK   (MCGFFCLK)
         #else
             #define TIMER_CLOCK   (BUS_CLOCK)
@@ -18509,13 +18521,21 @@ extern void fnSimPers(void);
         #define PWM_CLOCK         (TIMER_CLOCK)                          // {107} - corrected from (SYSTEM_CLOCK/2)
     #endif
     #define PWM_FIXED_CLOCK       (MCGFFCLK)
+    #define TIMER_FIXED_CLOCK     (MCGFFCLK)
 #endif
 
-// FlexTimer delays
+// FlexTimer delays (system clock source)
 //
-#define TIMER_US_DELAY(usec)           (((usec) * (TIMER_CLOCK / 1000)) / 1000)
-#define TIMER_MS_DELAY(msec)           ((msec) * (TIMER_CLOCK / 1000))
-#define TIMER_FREQUENCY_VALUE(hertz)   (1000000/hertz)
+#define TIMER_US_DELAY(usec)                       (((usec) * (TIMER_CLOCK / 1000)) / 1000)
+#define TIMER_MS_DELAY(msec)                       ((msec) * (TIMER_CLOCK / 1000))
+#define TIMER_FREQUENCY_VALUE(hertz)               (1000000/hertz)
+
+// FlexTimer delays (fixed clock source)
+//
+#define TIMER_FIXED_CLOCK_US_DELAY(usec)           (((usec) * (MCGFFCLK / 1000)) / 1000)
+#define TIMER_FIXED_CLOCK_MS_DELAY(msec)           ((msec) * (MCGFFCLK / 1000))
+#define TIMER_FIXED_CLOCK_FREQUENCY_VALUE(hertz)   (1000000/hertz)
+
 
 typedef struct stPWM_INTERRUPT_SETUP
 {
@@ -18583,7 +18603,7 @@ typedef struct stPWM_INTERRUPT_SETUP
 #else
     #define PWM_EXTERNAL_CLK        FTM_SC_CLKS_EXT                      // 0000000x18
 #endif
-#define PWM_FIXED_CLK               FTM_SC_CLKS_FIX                      // 0x00000010 presently not supported
+#define PWM_FIXED_CLK               FTM_SC_CLKS_FIX                      // 0x00000010
 #define PWM_SYS_CLK                 FTM_SC_CLKS_SYS                      // 0x00000008
 #define PWM_IRC48M_CLK              FTM_SC_CLKS_SYS                      // for use by device with IRC48M
 #define PWM_POLARITY                0x00000080
@@ -18602,7 +18622,7 @@ typedef struct stPWM_INTERRUPT_SETUP
 #define PWM_DMA_SPECIFY_LONG_WORD   0x00040000
 #define PWM_CHANNEL_INTERRUPT       0x00080000                           // chanel match interrupt (instead of, or in addition to period interrupt) - cannot be used together with DMA
 
-#define PWM_MODE_SETTINGS_MASK  (PWM_PRESCALER_128 | FTM_SC_CPWMS | FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS | PWM_DMA_PERIOD_ENABLE)
+#define PWM_MODE_SETTINGS_MASK     (PWM_PRESCALER_128 | FTM_SC_CPWMS | FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS | PWM_DMA_PERIOD_ENABLE)
 
 #if defined TPMS_AVAILABLE_TOO || defined TPMS_AVAILABLE_TOO
     #define PWM_TPM_FREQUENCY(frequency, prescaler)     (TPM_PWM_CLOCK/prescaler/frequency)
@@ -18614,7 +18634,15 @@ typedef struct stPWM_INTERRUPT_SETUP
     #define PWM_TPM_MS_DELAY(msec, prescaler)            (((TPM_PWM_CLOCK/1000) * msec)/prescaler)
 #endif
 
-#if defined PWM_FIXED_CLOCK
+#if defined FTM_FLEXIBLE_CLOCKING
+    #define PWM_FIXED_CLOCK_FREQUENCY(frequency, prescaler) (MCGFFCLK/prescaler/frequency)
+    #if (((MCGFFCLK/1000000) * 1000000) != MCGFFCLK)                     // if the clock is not an exact MHz value
+        #define PWM_TIMER_FIXED_CLOCK_US_DELAY(usec, prescaler) ((unsigned long)(((double)MCGFFCLK/(double)1000000) * usec)/prescaler)
+    #else
+        #define PWM_TIMER_FIXED_CLOCK_US_DELAY(usec, prescaler) (((MCGFFCLK/1000000) * usec)/prescaler)
+    #endif
+    #define PWM_TIMER_FIXED_CLOCK_MS_DELAY(msec, prescaler)  (((MCGFFCLK/1000) * msec)/prescaler)
+#elif defined PWM_FIXED_CLOCK
     #define PWM_FIXED_CLOCK_FREQUENCY(frequency, prescaler) (PWM_FIXED_CLOCK/prescaler/frequency)
     #if (((PWM_FIXED_CLOCK/1000000) * 1000000) != PWM_FIXED_CLOCK)       // if the clock is not an exact MHz value
         #define PWM_TIMER_FIXED_CLOCK_US_DELAY(usec, prescaler) ((unsigned long)(((double)PWM_FIXED_CLOCK/(double)1000000) * usec)/prescaler)
