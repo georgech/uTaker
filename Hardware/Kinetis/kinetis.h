@@ -12651,7 +12651,7 @@ typedef struct stKINETIS_LPTMR_CTL
     #define PD_6_FTM0_CH6                PORT_MUX_ALT4
     #define PA_1_FTM0_CH6                PORT_MUX_ALT3
     #define PD_7_FTM0_CH7                PORT_MUX_ALT4
-    #if defined KINETIS_K80
+    #if defined KINETIS_K80 || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66
         #define PA_2_FTM0_CH7            PORT_MUX_ALT3
     #else
         #define PA_6_FTM0_CH7            PORT_MUX_ALT3

@@ -189,7 +189,7 @@ static void fnConfigTimerPin(int iTimer, int iChannel, unsigned long ulCharacter
                 #endif
             #elif defined FTM0_7_ON_D
                         _CONFIG_PERIPHERAL(D, 7, (PD_7_FTM0_CH7 | ulCharacteristics)); // FTM0_CH7 on PD.7 (alt. function 4)
-            #elif defined KINETIS_K80
+            #elif defined KINETIS_K80 || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66
                         _CONFIG_PERIPHERAL(A, 2, (PA_2_FTM0_CH7 | ulCharacteristics)); // FTM0_CH7 on PA.2 (alt. function 3)
             #else
                         _CONFIG_PERIPHERAL(A, 6, (PA_6_FTM0_CH7 | ulCharacteristics)); // FTM0_CH7 on PA.6 (alt. function 3)

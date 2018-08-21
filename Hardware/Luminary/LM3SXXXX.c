@@ -4384,7 +4384,7 @@ extern void fnConfigureInterrupt(void *ptrSettings)
             if (iTimer < CHIP_HAS_GP_TIMER) {                            // only handle when the referenced timer is available
                 TIMER_INTERRUPT_SETUP *ptrSetup = (TIMER_INTERRUPT_SETUP *)ptrSettings;
                 LM3XXXXX_GPT_CONTROL *timer_control = (LM3XXXXX_GPT_CONTROL *)GP_TIMER_0_BLOCK;
-                if (!(TIMER_DONT_DISTURB & ptrSetup->timer_mode)) {
+                if ((TIMER_DONT_DISTURB & ptrSetup->timer_mode) == 0) {
                     SRCR1 |= (CGC_TIMER0 << iTimer);                     // reset timer
                     timer_control += iTimer;                             // set to the timer's register block
                     if (ptrSetup->timer_mode & (TIMER_STOP_PWM_A | TIMER_STOP_PWM_B)) {
