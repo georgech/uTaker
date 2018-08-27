@@ -403,6 +403,7 @@
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((10 * 1024) * MEM_FACTOR)
     #if defined DEV5
         #define SDCARD_SUPPORT                                           // use SD card loading method
+        #define UREVERSEMEMCPY                                           // required when SD card used in SPI mode
     #endif
 #elif defined TWR_K20D50M
     #define KINETIS_K20
@@ -618,6 +619,7 @@
     #define OUR_HEAP_SIZE   (HEAP_REQUIREMENTS)((24 * 1024) * MEM_FACTOR)
     #if defined DEV6
         #define SDCARD_SUPPORT                                           // use SD card loading method
+        #define UREVERSEMEMCPY                                           // required when SD card used in SPI mode
     #endif
 #elif defined TWR_K60N512
     #define TARGET_HW       "TWR-K60N512"

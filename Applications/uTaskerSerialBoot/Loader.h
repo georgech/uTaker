@@ -161,7 +161,7 @@
         #define UTASKER_APP_START     (16 * 1024)                        // application starts at this address
         #define UTASKER_APP_END       (unsigned char *)(UTASKER_APP_START + (44 * 1024)) // end of application space - after maximum application size
     #else
-        #if defined FRDM_K64F && defined MEMORY_SWAP
+        #if (defined FRDM_K64F || defined FRDM_K66F) && defined MEMORY_SWAP
             #define UTASKER_APP_START     (SIZE_OF_FLASH/2)              // second half of flash memory is used by the next application
         #elif defined NXP_MSD_HOST                                       // if using NXP host stack the loader is larger in size
             #define UTASKER_APP_START     (64 * 1024)                    // application starts at this address

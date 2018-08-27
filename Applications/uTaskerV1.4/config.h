@@ -215,10 +215,10 @@
     //#define NUCLEO_L496RG                                              // evaluation board with STM32L496ZGT6U
 
     //#define ST_MB913C_DISCOVERY                                        // discovery board with STM32F100RB
-      #define ARDUINO_BLUE_PILL                                          // board with STM32F103C8T6
+    //#define ARDUINO_BLUE_PILL                                          // board with STM32F103C8T6
     //#define STM3210C_EVAL                                              // evaluation board with STM32F107VCT
     //#define STM32_P207                                                 // olimex prototyping board with STM32F207ZET6
-    //#define STM32F746G_DISCO                                           // evaluation board with STM32F746NGH6
+      #define STM32F746G_DISCO                                           // evaluation board with STM32F746NGH6
     //#define WISDOM_STM32F407                                           // evaluation board with STM32F407ZET6
     //#define STM3240G_EVAL                                              // evaluation board with STM32F407IGH6
     //#define ST_MB997A_DISCOVERY                                        // discovery board with STM32F407VGT6
@@ -1407,7 +1407,7 @@
         #endif
     #endif
     #if defined USE_DMX512_SLAVE
-        #define USE_DMX_RDM_SLAVE                                        // additional remote device management support at slave
+      //#define USE_DMX_RDM_SLAVE                                        // additional remote device management support at slave
       //#define SERIAL_SUPPORT_RX_DMA_BREAK                              // allow free-running rx DMA operation that delivers frames after breaks are detected
         #define UART_BREAK_SUPPORT                                       // interrupt driven break method
         #define USER_DEFINED_UART_RX_HANDLER
@@ -1433,7 +1433,7 @@
     #define NUMBER_SPI                 0
 #endif
 
-#if !defined SUPPORT_FLUSH && ((defined USE_MODBUS && (defined MODBUS_GATE_WAY_QUEUE || defined MODBUS_RTU)) || defined USE_DMX_RDM_MASTER)
+#if !defined SUPPORT_FLUSH && ((defined USE_MODBUS && (defined MODBUS_GATE_WAY_QUEUE || defined MODBUS_RTU)) || (defined USE_DMX512_MASTER && defined USE_DMX_RDM_MASTER) || defined USE_DMX512_SLAVE)
     #define SUPPORT_FLUSH                                                // support queue flush for use by the MODBUS gateway
 #endif
 

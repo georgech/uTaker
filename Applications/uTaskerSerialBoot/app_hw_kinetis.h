@@ -216,7 +216,7 @@
     #define USB_CRYSTAL_LESS                                             // use 48MHz IRC as USB source (according to Freescale AN4905 - only possible in device mode)
   //#define USB_CLOCK_GENERATED_INTERNALLY                               // use USB clock from internal source rather than external pin - 180MHz/120MHz is suitable from PLL
     #if defined MEMORY_SWAP && defined FRDM_K66F
-      //#define SUPPORT_SWAP_BLOCK                                       // support flash swap block
+        #define SUPPORT_SWAP_BLOCK                                       // support flash swap block
     #endif
 #elif defined TWR_KV31F120M
   //#define RUN_FROM_DEFAULT_CLOCK                                       // default mode is FLL Engaged Internal - the 32kHz IRC is multiplied by FLL factor of 640 to obtain 20.9715MHz nominal frequency (20MHz..25MHz)

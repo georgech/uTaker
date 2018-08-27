@@ -65,6 +65,7 @@
     26.09.2017 Add LPIT support                                          {47}
     04.11.2017 Add true rando number generator registers initialisation  {48}
     08.05.2018 Added simulation of all FTM/TPM channel interrupts        {49}
+    29.08.2018 Add input capture simulation                              {50}
  
 */  
                           
@@ -75,7 +76,7 @@
 
 #include "config.h"
 
-#if defined _KINETIS
+#if defined _KINETIS                                                     // only on Kinetis parts
 
 #if defined CAN_INTERFACE && defined SIM_KOMODO
     #include "..\..\WinSim\Komodo\komodo.h" 
@@ -2590,6 +2591,365 @@ static int fnHandleADCchange(int iChange, int iPort, unsigned char ucPortBit)
 }
 #endif
 
+#if defined SUPPORT_TIMER && (FLEX_TIMERS_AVAILABLE > 0)
+static int fnFlexTimerPowered(int iTimer)
+{
+    switch (iTimer) {
+    case 0:
+        return (IS_POWERED_UP(6, FTM0));
+    #if FLEX_TIMERS_AVAILABLE > 1
+    case 1:
+        return (IS_POWERED_UP(6, FTM1));
+    #endif
+    #if FLEX_TIMERS_AVAILABLE > 2
+    case 2:
+        #if defined KINETIS_KL || defined KINETIS_K22_SF7 || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66
+        return (IS_POWERED_UP(6, FTM2));
+        #else
+        return (IS_POWERED_UP(3, FTM2));
+        #endif
+    #endif
+    #if FLEX_TIMERS_AVAILABLE > 3
+    case 3:
+        #if defined KINETIS_K22_SF7
+        return (IS_POWERED_UP(6, FTM3));
+        #else
+        return (IS_POWERED_UP(3, FTM3));
+        #endif
+    #endif
+    #if FLEX_TIMERS_AVAILABLE > 4 && defined TPMS_AVAILABLE_TOO          // TPM1
+    case 4:
+        return (IS_POWERED_UP(2, TPM1));
+    #endif
+    #if FLEX_TIMERS_AVAILABLE > 5 && defined TPMS_AVAILABLE_TOO          // TPM2
+    case 5:
+        return (IS_POWERED_UP(2, TPM2));
+    #endif
+    default:
+        return 0;
+    }
+}
+
+static FLEX_TIMER_MODULE *fnGetFlexTimerReg(int iChannel)
+{
+    switch (iChannel) {
+    case 0:
+        return (FLEX_TIMER_MODULE *)FTM_BLOCK_0;
+    #if defined FTM_BLOCK_1
+    case 1:
+        return (FLEX_TIMER_MODULE *)FTM_BLOCK_1;
+    #endif
+    #if defined FTM_BLOCK_2
+    case 2:
+        return (FLEX_TIMER_MODULE *)FTM_BLOCK_2;
+    #endif
+    #if defined FTM_BLOCK_3
+    case 3:
+        return (FLEX_TIMER_MODULE *)FTM_BLOCK_3;
+    #endif
+    #if defined FTM_BLOCK_4
+    case 4:
+        return (FLEX_TIMER_MODULE *)FTM_BLOCK_4;
+    #endif
+    #if defined FTM_BLOCK_5
+    case 5:
+        return (FLEX_TIMER_MODULE *)FTM_BLOCK_5;
+    #endif
+    default:
+        return 0;
+    }
+}
+
+unsigned long fnGetFlexTimer_clock(int iChannel)
+{
+    unsigned long ulClockSpeed = 0;
+    FLEX_TIMER_MODULE *ptrTimer = fnGetFlexTimerReg(iChannel);
+    #if (FLEX_TIMERS_AVAILABLE == 6) && (TPMS_AVAILABLE_TOO == 2)        // devices with 4 FTMs and 2 TPMs
+    if ((iChannel == 4) || (iChannel == 5)) {                            // TPM
+        ulClockSpeed = TPM_PWM_CLOCK;
+    }
+    else {
+        switch (ptrTimer->FTM_SC & (FTM_SC_CLKS_MASK)) {
+        case FTM_SC_CLKS_EXT:
+            _EXCEPTION("Not supported");
+            break;
+        case FTM_SC_CLKS_FIX:
+            if ((MCG_C1 & MCG_C1_IREFS) != 0) {                          // 32kHz IRC is being used as MCGFFCLK
+                if ((MCG_C1 & MCG_C1_IRCLKEN) != 0) {                    // check that the IRC 32kHz is enabled
+                    ulClockSpeed = SLOW_ICR;
+                }
+                else {
+                    _EXCEPTION("FTM is using MCGFFCLK derived form 32kHz IRC but the source is disabled!");
+                    ulClockSpeed = 0;
+                }
+            }
+            else {                                                       // external path is selected
+                switch (MCG_C7 & MCG_C7_OSCSEL_MASK) {
+                case MCG_C7_OSCSEL_OSCCLK:
+                    ulClockSpeed =_EXTERNAL_CLOCK;                       // crystal or external oscillator speed
+                    break;
+        #if defined MCG_C7_OSCSEL_32K
+                case MCG_C7_OSCSEL_32K:
+                    ulClockSpeed = 32768;
+                    break;
+        #endif
+        #if defined MCG_C7_OSCSEL_IRC48MCLK
+                case MCG_C7_OSCSEL_IRC48MCLK:
+                    ulClockSpeed = 48000000;
+                    break;
+        #endif
+                }
+                ulClockSpeed /= (MCGFFLCLK_FRDIV);                       // divide the input by FRDIV
+            }
+            break;
+        case FTM_SC_CLKS_SYS:
+            ulClockSpeed = BUS_CLOCK;                                    // bus clock
+            break;
+        }
+    }
+    #elif defined KINETIS_KE15 || defined KINETIS_KE18
+    switch (ptrTimer->FTM_SC & (FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)) {
+    case FTM_SC_CLKS_EXT:
+        _EXCEPTION("Not supported");
+        break;
+    case FTM_SC_CLKS_FIX:
+        if ((SCG_SOSCCSR & SCG_SOSCCSR_SOSCERCLKEN) != 0) {
+            _EXCEPTION("Not supported");
+        }
+        else {
+            _EXCEPTION("SOSC_CLK needs to be enable for this use!");
+        }
+        break;
+    case FTM_SC_CLKS_SYS:
+        ulClockSpeed = DIVCORE_CLK;                                      // system clock
+        break;
+    }
+    #elif defined KINETIS_WITH_PCC
+    ulClockSpeed = fnGetPCC_clock((KINETIS_PERIPHERAL_FTM0 + iChannel)); // get the speed of the clock used by this module
+    #elif defined KINETIS_KL
+    switch (SIM_SOPT2 & SIM_SOPT2_TPMSRC_MCGIRCLK) {                     // {38}
+    case SIM_SOPT2_TPMSRC_MCGIRCLK:
+        ulClockSpeed = MCGIRCLK;
+      //ulCountIncrease = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)MCGIRCLK) / 1000000); // bus clocks in a period
+        if ((MCG_C2 & MCG_C2_IRCS) != 0) {                               // if fast clock
+            int prescaler = ((MCG_SC >> 1) & 0x7);                       // FCRDIV value
+            while (prescaler-- != 0) {
+                ulClockSpeed /= 2;                                       // FCRDIV prescale
+            }
+        }
+        break;
+    case SIM_SOPT2_TPMSRC_OSCERCLK:
+        #if defined OSCERCLK
+        ulClockSpeed = OSCERCLK;
+        #else
+        _EXCEPTION("No OSCERCLK available");
+        #endif
+        break;
+    case SIM_SOPT2_TPMSRC_MCG:
+        #if defined FLL_FACTOR
+        ulClockSpeed = MCGFLLCLK;
+        #else
+        ulClockSpeed = (MCGFLLCLK/2);
+        #endif
+        break;
+    }
+    #else
+    ulClockSpeed = PWM_CLOCK;
+    #endif
+    ulClockSpeed /= (1 << (ptrTimer->FTM_SC & FTM_SC_PS_128));           // apply pre-scaler
+    return ulClockSpeed;
+}
+
+static int fnHandleFlexTimer(int iTimerRef, FLEX_TIMER_MODULE *ptrTimer, int iFlexTimerChannels, int iTPM_type) // {49}
+{
+    static int iChannelFired[FLEX_TIMERS_AVAILABLE][8] = {{0}};
+    unsigned long ulCountIncrease = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)fnGetFlexTimer_clock(iTimerRef))/1000000);
+    int iTimerInterrupt = 0;
+    int iChannel = 0;
+    ulCountIncrease += ptrTimer->FTM_CNT;                                // new counter value (assume up counting)
+    // Check for channel matches
+    //
+    while (iChannel < iFlexTimerChannels) {                              // for each channel
+        if (((ptrTimer->FTM_channel[iChannel].FTM_CSC & (FTM_CSC_MSB | FTM_CSC_MSA)) != 0) || ((ptrTimer->FTM_SC & FTM_SC_CPWMS) != 0)) { // {50} not in input capture mode
+            if ((iChannelFired[iTimerRef][iChannel] == 0) && (ulCountIncrease >= ptrTimer->FTM_channel[iChannel].FTM_CV)) { // channel match
+                ptrTimer->FTM_channel[iChannel].FTM_CSC |= FTM_CSC_CHF;  // set the channel event flag
+                ptrTimer->FTM_STATUS |= (FTM_STATUS_CH0F << iChannel);   // set the event flag in the global status register
+                iChannelFired[iTimerRef][iChannel] = 1;                  // block this channel from firing again before a new period starts
+                if ((ptrTimer->FTM_channel[iChannel].FTM_CSC & FTM_CSC_CHIE) != 0) { // if channel interrupt is enabled
+                    if ((ptrTimer->FTM_channel[iChannel].FTM_CSC & FTM_CSC_DMA) != 0) { // if DMA is enabled
+                        _EXCEPTION("TO DO");
+                    }
+                    else {
+                        iTimerInterrupt = 1;                             // mark that an interrupt is pending
+                    }
+                }
+            }
+        }
+        iChannel++;
+    }
+    if (ulCountIncrease >= ptrTimer->FTM_MOD) {                          // period match
+        memset(iChannelFired[iTimerRef], 0, sizeof(iChannelFired[iTimerRef])); // reset individual channel fired flags
+        ptrTimer->FTM_SC |= FTM_SC_TOF;                                  // set overflow flag
+        if (iTPM_type != 0) {
+            ulCountIncrease -= ptrTimer->FTM_MOD;
+        }
+        else {
+    #if defined FTM0_CNTIN
+            ptrTimer->FTM_CNT = ptrTimer->FTM_CNTIN;                     // respect the counter initial value
+            if (ulCountIncrease > (0xffff + (ptrTimer->FTM_MOD - ptrTimer->FTM_CNTIN))) {
+                ulCountIncrease = (0xffff + (ptrTimer->FTM_MOD - ptrTimer->FTM_CNTIN));
+            }
+            while (ulCountIncrease >= ptrTimer->FTM_MOD) {
+                ulCountIncrease -= (ptrTimer->FTM_MOD - ptrTimer->FTM_CNTIN);
+            }
+    #else
+            ulCountIncrease -= ptrTimer->FTM_MOD;
+    #endif
+        }
+    }
+    ptrTimer->FTM_CNT = ulCountIncrease;                                 // new counter value
+    if (((ptrTimer->FTM_SC & FTM_SC_TOIE) != 0) && ((ptrTimer->FTM_SC & FTM_SC_TOF) != 0)) { // if overflow occurred and interrupt enabled
+        iTimerInterrupt = 1;
+    }
+    return iTimerInterrupt;
+}
+
+static void fnExecuteTimerInterrupt(int iTimerRef)
+{
+    switch (iTimerRef) {
+    case 0:
+    #if defined KINETIS_KL
+        if (fnGenInt(irq_TPM0_ID) != 0) {                                // if timer/PWM module 0 interrupt is not disabled
+            VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+            ptrVect->processor_interrupts.irq_TPM0();                    // call the interrupt handler
+        }
+    #else
+        if (fnGenInt(irq_FTM0_ID) != 0) {                                // if FlexTimer 0 interrupt is not disabled
+            VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+            ptrVect->processor_interrupts.irq_FTM0();                    // call the interrupt handler
+        }
+    #endif
+        break;
+    #if FLEX_TIMERS_AVAILABLE > 1
+    case 1:
+        #if defined KINETIS_KL
+        if (fnGenInt(irq_TPM1_ID) != 0) {                                // if timer/PWM module 1 interrupt is not disabled
+            VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+            ptrVect->processor_interrupts.irq_TPM1();                    // call the interrupt handler
+        }
+        #else
+        if (fnGenInt(irq_FTM1_ID) != 0) {                                // if FlexTimer 1 interrupt is not disabled
+            VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+            ptrVect->processor_interrupts.irq_FTM1();                    // call the interrupt handler
+        }
+        #endif
+        break;
+    #endif
+    #if FLEX_TIMERS_AVAILABLE > 2
+    case 2:
+        #if defined KINETIS_KL
+        if (fnGenInt(irq_TPM2_ID) != 0) {                                // if timer/PWM module 2 interrupt is not disabled
+            VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+            ptrVect->processor_interrupts.irq_TPM2();                    // call the interrupt handler
+        }
+        #else
+        if (fnGenInt(irq_FTM2_ID) != 0) {                                // if FlexTimer 2 interrupt is not disabled
+            VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+            ptrVect->processor_interrupts.irq_FTM2();                    // call the interrupt handler
+        }
+        #endif
+        break;
+    #endif
+    #if FLEX_TIMERS_AVAILABLE > 3
+    case 3:
+        if (fnGenInt(irq_FTM3_ID) != 0) {                                // if FlexTimer 3 interrupt is not disabled
+            VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+            ptrVect->processor_interrupts.irq_FTM3();                    // call the interrupt handler
+        }
+        break;
+    #endif
+    #if FLEX_TIMERS_AVAILABLE > 4 && defined TPMS_AVAILABLE_TOO          // TPM1
+    case 4:
+        if (fnGenInt(irq_TPM1_ID) != 0) {                                // if FlexTimer 4 (TPM1) interrupt is not disabled
+            VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+            ptrVect->processor_interrupts.irq_TPM1();                    // call the interrupt handler
+        }
+        break;
+    #endif
+    #if FLEX_TIMERS_AVAILABLE > 5 && defined TPMS_AVAILABLE_TOO          // TPM2
+    case 4:
+        if (fnGenInt(irq_TPM2_ID) != 0) {                                // if FlexTimer 5 (TPM2) interrupt is not disabled
+            VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+            ptrVect->processor_interrupts.irq_TPM2();                    // call the interrupt handler
+        }
+        break;
+    #endif
+    }
+}
+
+static unsigned long ulTimerPinEnabled[PORTS_AVAILABLE] = {0};
+static unsigned char ucPinTimerDetails[PORTS_AVAILABLE][PORT_WIDTH] = {0};
+
+extern void fnEnterTimer(int iPortRef, int iPinRef, int iTimer, int iChannel, int iOnOff)
+{
+    if (iOnOff != 0) {
+        ulTimerPinEnabled[iPortRef] |= (1 << iPinRef);                   // mark that this pin has been programmed for timer operation
+        ucPinTimerDetails[iPortRef][iPinRef] = (unsigned char)((iTimer << 4) | iChannel);
+    }
+    else {
+        ulTimerPinEnabled[iPortRef] &= ~(1 << iPinRef);                  // mark that this pin has not been programmed for timer operation
+    }
+}
+
+// Handle timer capture inputs {50}
+//
+static void fnHandleTimerInput(int iPort, unsigned long ulNewState, unsigned long ulChangedBit, unsigned long *ptrPortConfig)
+{
+    if ((ulTimerPinEnabled[iPort] & ulChangedBit) != 0) {                // handle input changes only when the pin is configured as a timer inputs
+        int iChannel;
+        int iTimer;
+        int iPinBit = 0;
+        while ((ulChangedBit & 1) == 0) {
+            ulChangedBit >>= 1;
+            iPinBit++;
+        }
+        ulChangedBit <<= iPinBit;
+        iTimer = (ucPinTimerDetails[iPort][iPinBit] >> 4);
+        iChannel = (ucPinTimerDetails[iPort][iPinBit] & 0x0f);
+        // If the timer is powered up
+        //
+        if (fnFlexTimerPowered(iTimer) != 0) {
+            FLEX_TIMER_MODULE *ptrTimer = fnGetFlexTimerReg(iTimer);
+            // The input is attached to a timer so we capture its present input value if the sense matches
+            //
+            switch (ptrTimer->FTM_channel[iChannel].FTM_CSC & (FTM_CSC_ELSA | FTM_CSC_ELSB)) {
+            case 0:                                                      // not in input capture moe
+                return;
+            case FTM_CSC_ELSA:                                           // rising edge capture
+                if ((ulNewState & ulChangedBit) == 0) {
+                    return;                                              // ignore a falling edge
+                }
+                break;
+            case FTM_CSC_ELSB:                                           // falling edge capture
+                if ((ulNewState & ulChangedBit) != 0) {
+                    return;                                              // ignore a rising edge
+                }
+                break;
+            case (FTM_CSC_ELSA | FTM_CSC_ELSB):
+                break;                                                   // accept any edge
+            }
+            // Capture event has take place
+            //
+            ptrTimer->FTM_channel[iChannel].FTM_CV = ptrTimer->FTM_CNT;  // capture the present timer count vlue
+            ptrTimer->FTM_channel[iChannel].FTM_CSC |= FTM_CSC_CHF;      // set the channel event flag
+            if ((ptrTimer->FTM_channel[iChannel].FTM_CSC & FTM_CSC_CHIE) != 0) { // if the channel's interrupt is enabled
+                fnExecuteTimerInterrupt(iTimer);
+            }
+        }
+    }
+}
+#endif
+
 // Simulate setting, clearing or toggling of an input pin
 //
 extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit, int iChange)
@@ -2666,6 +3026,9 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
                 fnPortInterrupt(_PORTA, ulPort_in_A, ulBit, 0);          // handle interrupts on the pin
 #else
                 fnPortInterrupt(_PORTA, ulPort_in_A, ulBit, ptrPCR);     // handle interrupts and DMA on the pin
+        #if defined SUPPORT_TIMER && (FLEX_TIMERS_AVAILABLE > 0)
+                fnHandleTimerInput(_PORTA, ulPort_in_A, ulBit, ptrPCR);  // {50}
+        #endif
 #endif
             }
         }
@@ -2722,6 +3085,9 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
                 fnPortInterrupt(_PORTB, ulPort_in_B, ulBit, 0);          // handle interrupts on the pin
     #else
                 fnPortInterrupt(_PORTB, ulPort_in_B, ulBit, ptrPCR);     // handle interrupts and DMA on the pin
+        #if defined SUPPORT_TIMER && (FLEX_TIMERS_AVAILABLE > 0)
+                fnHandleTimerInput(_PORTB, ulPort_in_B, ulBit, ptrPCR);  // {50}
+        #endif
     #endif
             }
         }
@@ -2779,6 +3145,9 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
                 fnPortInterrupt(_PORTC, ulPort_in_C, ulBit, 0);          // handle interrupts on the pin
     #else
                 fnPortInterrupt(_PORTC, ulPort_in_C, ulBit, ptrPCR);     // handle interrupts and DMA on the pin
+        #if defined SUPPORT_TIMER && (FLEX_TIMERS_AVAILABLE > 0)
+                fnHandleTimerInput(_PORTC, ulPort_in_C, ulBit, ptrPCR);  // {50}
+        #endif
     #endif
             }
         }
@@ -2833,6 +3202,9 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
                 fnWakeupInterrupt(_PORTD, ulPort_in_D, ulBit, ucPortBit);// handle wakeup events on the pin
     #endif
                 fnPortInterrupt(_PORTD, ulPort_in_D, ulBit, ptrPCR);     // handle interrupts and DMA on the pin
+    #if defined SUPPORT_TIMER && (FLEX_TIMERS_AVAILABLE > 0)
+                fnHandleTimerInput(_PORTD, ulPort_in_D, ulBit, ptrPCR);  // {50}
+    #endif
             }
         }
         break;
@@ -2884,6 +3256,9 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
                 fnWakeupInterrupt(_PORTE, ulPort_in_E, ulBit, ucPortBit);// handle wakeup events on the pin
     #endif
                 fnPortInterrupt(_PORTE, ulPort_in_E, ulBit, ptrPCR);     // handle interrupts and DMA on the pin
+    #if defined SUPPORT_TIMER && (FLEX_TIMERS_AVAILABLE > 0)
+                fnHandleTimerInput(_PORTE, ulPort_in_E, ulBit, ptrPCR);  // {50}
+    #endif
             }
         }
         break;
@@ -2935,6 +3310,9 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
                 fnWakeupInterrupt(_PORTF, ulPort_in_F, ulBit, ucPortBit);// handle wakeup events on the pin
     #endif
                 fnPortInterrupt(_PORTF, ulPort_in_F, ulBit, ptrPCR);     // handle interrupts and DMA on the pin
+    #if defined SUPPORT_TIMER && (FLEX_TIMERS_AVAILABLE > 0)
+                fnHandleTimerInput(_PORTF, ulPort_in_F, ulBit, ptrPCR);  // {50}
+    #endif
             }
         }
         break;
@@ -5067,6 +5445,7 @@ static void fnHandleDMA_triggers(int iTriggerSource, int iDMAmux)
     }
 }
 #endif
+
 
 // Handle port interrupts on input changes
 //
@@ -8169,7 +8548,6 @@ extern void fec_txf_isr(void)
 #endif
 
 #if (defined SUPPORT_RTC && !defined KINETIS_WITHOUT_RTC) || defined SUPPORT_SW_RTC
-
 #define NTP_TO_1970_TIME 2208988800u
 #define LEAP_YEAR(year) ((year%4)==0)                                    // valid from 1970 to 2038
 static const unsigned char monthDays[]={31,28,31,30,31,30,31,31,30,31,30,31};
@@ -8320,189 +8698,6 @@ static void fnTriggerADC(int iADC, int iHW_trigger)
 }
 #endif
 
-#if defined SUPPORT_TIMER && (FLEX_TIMERS_AVAILABLE > 0)
-unsigned long fnGetFlexTimer_clock(int iChannel)
-{
-    unsigned long ulClockSpeed = 0;
-    FLEX_TIMER_MODULE *ptrTimer;
-    switch (iChannel) {
-    case 0:
-        ptrTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_0;
-        break;
-    #if defined FTM_BLOCK_1
-    case 1:
-        ptrTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_1;
-        break;
-    #endif
-    #if defined FTM_BLOCK_2
-    case 2:
-        ptrTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_2;
-        break;
-    #endif
-    #if defined FTM_BLOCK_3
-    case 3:
-        ptrTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_3;
-        break;
-    #endif
-    #if defined FTM_BLOCK_4
-    case 4:
-        ptrTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_4;
-        break;
-    #endif
-    #if defined FTM_BLOCK_5
-    case 5:
-        ptrTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_5;
-        break;
-    #endif
-    }
-    #if (FLEX_TIMERS_AVAILABLE == 6) && (TPMS_AVAILABLE_TOO == 2)        // devices with 4 FTMs and 2 TPMs
-    if ((iChannel == 4) || (iChannel == 5)) {                            // TPM
-        ulClockSpeed = TPM_PWM_CLOCK;
-    }
-    else {
-        switch (ptrTimer->FTM_SC & (FTM_SC_CLKS_MASK)) {
-        case FTM_SC_CLKS_EXT:
-            _EXCEPTION("Not supported");
-            break;
-        case FTM_SC_CLKS_FIX:
-            if ((MCG_C1 & MCG_C1_IREFS) != 0) {                          // 32kHz IRC is being used as MCGFFCLK
-                if ((MCG_C1 & MCG_C1_IRCLKEN) != 0) {                    // check that the IRC 32kHz is enabled
-                    ulClockSpeed = SLOW_ICR;
-                }
-                else {
-                    _EXCEPTION("FTM is using MCGFFCLK derived form 32kHz IRC but the source is disabled!");
-                    ulClockSpeed = 0;
-                }
-            }
-            else {                                                       // external path is selected
-                switch (MCG_C7 & MCG_C7_OSCSEL_MASK) {
-                case MCG_C7_OSCSEL_OSCCLK:
-                    ulClockSpeed =_EXTERNAL_CLOCK;                       // crystal or external oscillator speed
-                    break;
-        #if defined MCG_C7_OSCSEL_32K
-                case MCG_C7_OSCSEL_32K:
-                    ulClockSpeed = 32768;
-                    break;
-        #endif
-        #if defined MCG_C7_OSCSEL_IRC48MCLK
-                case MCG_C7_OSCSEL_IRC48MCLK:
-                    ulClockSpeed = 48000000;
-                    break;
-        #endif
-                }
-                ulClockSpeed /= (MCGFFLCLK_FRDIV);                       // divide the input by FRDIV
-            }
-            break;
-        case FTM_SC_CLKS_SYS:
-            ulClockSpeed = BUS_CLOCK;                                    // bus clock
-            break;
-        }
-    }
-    #elif defined KINETIS_KE15 || defined KINETIS_KE18
-    switch (ptrTimer->FTM_SC & (FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)) {
-    case FTM_SC_CLKS_EXT:
-        _EXCEPTION("Not supported");
-        break;
-    case FTM_SC_CLKS_FIX:
-        if ((SCG_SOSCCSR & SCG_SOSCCSR_SOSCERCLKEN) != 0) {
-            _EXCEPTION("Not supported");
-        }
-        else {
-            _EXCEPTION("SOSC_CLK needs to be enable for this use!");
-        }
-        break;
-    case FTM_SC_CLKS_SYS:
-        ulClockSpeed = DIVCORE_CLK;                                      // system clock
-        break;
-    }
-    #elif defined KINETIS_WITH_PCC
-    ulClockSpeed = fnGetPCC_clock((KINETIS_PERIPHERAL_FTM0 + iChannel)); // get the speed of the clock used by this module
-    #elif defined KINETIS_KL
-    switch (SIM_SOPT2 & SIM_SOPT2_TPMSRC_MCGIRCLK) {                     // {38}
-    case SIM_SOPT2_TPMSRC_MCGIRCLK:
-        ulClockSpeed = MCGIRCLK;
-      //ulCountIncrease = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)MCGIRCLK) / 1000000); // bus clocks in a period
-        if ((MCG_C2 & MCG_C2_IRCS) != 0) {                               // if fast clock
-            int prescaler = ((MCG_SC >> 1) & 0x7);                       // FCRDIV value
-            while (prescaler-- != 0) {
-                ulClockSpeed /= 2;                                       // FCRDIV prescale
-            }
-        }
-        break;
-    case SIM_SOPT2_TPMSRC_OSCERCLK:
-        #if defined OSCERCLK
-        ulClockSpeed = OSCERCLK;
-        #else
-        _EXCEPTION("No OSCERCLK available");
-        #endif
-        break;
-    case SIM_SOPT2_TPMSRC_MCG:
-        #if defined FLL_FACTOR
-        ulClockSpeed = MCGFLLCLK;
-        #else
-        ulClockSpeed = (MCGFLLCLK/2);
-        #endif
-        break;
-    }
-    #else
-    ulClockSpeed = PWM_CLOCK;
-    #endif
-    ulClockSpeed /= (1 << (ptrTimer->FTM_SC & FTM_SC_PS_128));           // apply pre-scaler
-    return ulClockSpeed;
-}
-
-static int fnHandleFlexTimer(int iTimerRef, FLEX_TIMER_MODULE *ptrTimer, int iFlexTimerChannels, int iTPM_type) // {49}
-{
-    static int iChannelFired[FLEX_TIMERS_AVAILABLE][8] = {{0}};
-    unsigned long ulCountIncrease = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)fnGetFlexTimer_clock(iTimerRef))/1000000);
-    int iTimerInterrupt = 0;
-    int iChannel = 0;
-    ulCountIncrease += ptrTimer->FTM_CNT;                                // new counter value (assume up counting)
-    // Check for channel matches
-    //
-    while (iChannel < iFlexTimerChannels) {                              // for each channel
-        if ((iChannelFired[iTimerRef][iChannel] == 0) && (ulCountIncrease >= ptrTimer->FTM_channel[iChannel].FTM_CV)) { // channel match
-            ptrTimer->FTM_channel[iChannel].FTM_CSC |= FTM_CSC_CHF;      // set the channel event flag
-            ptrTimer->FTM_STATUS |= (FTM_STATUS_CH0F << iChannel);       // set the event flag in the global status register
-            iChannelFired[iTimerRef][iChannel] = 1;                      // block this channel from firing again before a new period starts
-            if ((ptrTimer->FTM_channel[iChannel].FTM_CSC & FTM_CSC_CHIE) != 0) { // if channel interrupt is enabled
-                if ((ptrTimer->FTM_channel[iChannel].FTM_CSC & FTM_CSC_DMA) != 0) { // if DMA is enabled
-                    _EXCEPTION("TO DO");
-                }
-                else {
-                    iTimerInterrupt = 1;                                 // mark that an interrupt is pending
-                }
-            }
-        }
-        iChannel++;
-    }
-    if (ulCountIncrease >= ptrTimer->FTM_MOD) {                          // period match
-        memset(iChannelFired[iTimerRef], 0, sizeof(iChannelFired[iTimerRef])); // reset individual channel fired flags
-        ptrTimer->FTM_SC |= FTM_SC_TOF;                                  // set overflow flag
-        if (iTPM_type != 0) {
-            ulCountIncrease -= ptrTimer->FTM_MOD;
-        }
-        else {
-    #if defined FTM0_CNTIN
-            ptrTimer->FTM_CNT = ptrTimer->FTM_CNTIN;                     // respect the counter initial value
-            if (ulCountIncrease > (0xffff + (ptrTimer->FTM_MOD - ptrTimer->FTM_CNTIN))) {
-                ulCountIncrease = (0xffff + (ptrTimer->FTM_MOD - ptrTimer->FTM_CNTIN));
-            }
-            while (ulCountIncrease >= ptrTimer->FTM_MOD) {
-                ulCountIncrease -= (ptrTimer->FTM_MOD - ptrTimer->FTM_CNTIN);
-            }
-    #else
-            ulCountIncrease -= ptrTimer->FTM_MOD;
-    #endif
-        }
-    }
-    ptrTimer->FTM_CNT = ulCountIncrease;                                 // new counter value
-    if (((ptrTimer->FTM_SC & FTM_SC_TOIE) != 0) && ((ptrTimer->FTM_SC & FTM_SC_TOF) != 0)) { // if overflow occurred and interrupt enabled
-        iTimerInterrupt = 1;
-    }
-    return iTimerInterrupt;
-}
-#endif
 
 // We can simulate timers during a tick here if required
 //
@@ -9472,7 +9667,7 @@ extern int fnSimTimers(void)
     #endif
 #endif
 #if defined SUPPORT_TIMER && !defined KINETIS_KM                         // {29}
-    if (IS_POWERED_UP(6, FTM0) &&((FTM0_SC & (FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)) != 0)) { // if the TPM/FlexTimer is powered and clocked
+    if ((fnFlexTimerPowered(0) != 0) && ((FTM0_SC & (FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)) != 0)) { // if the TPM/FlexTimer is powered and clocked
         #if defined KINETIS_KL || defined KINETIS_KE
         int iTPM_Type = 1;
         #else
@@ -9480,21 +9675,11 @@ extern int fnSimTimers(void)
         #endif
         int iTimerInterrupt = fnHandleFlexTimer(0, (FLEX_TIMER_MODULE *)FTM_BLOCK_0, FLEX_TIMERS_0_CHANNELS, iTPM_Type);
         if (iTimerInterrupt != 0) {
-    #if defined KINETIS_KL
-            if (fnGenInt(irq_TPM0_ID) != 0) {                            // if timer/PWM module 0 interrupt is not disabled
-                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-                ptrVect->processor_interrupts.irq_TPM0();                // call the interrupt handler
-            }
-    #else
-            if (fnGenInt(irq_FTM0_ID) != 0) {                            // if FlexTimer 0 interrupt is not disabled
-                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-                ptrVect->processor_interrupts.irq_FTM0();                // call the interrupt handler
-            }
-    #endif
+            fnExecuteTimerInterrupt(0);
         }
     }
     #if FLEX_TIMERS_AVAILABLE > 1
-    if (IS_POWERED_UP(6, FTM1) && ((FTM1_SC & (FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)) != 0)) { // if the TPM/FlexTimer is powered and clocked
+    if ((fnFlexTimerPowered(1) != 0) && ((FTM1_SC & (FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)) != 0)) { // if the TPM/FlexTimer is powered and clocked
         #if defined KINETIS_KL || defined KINETIS_KE
         int iTPM_Type = 1;
         #else
@@ -9502,17 +9687,7 @@ extern int fnSimTimers(void)
         #endif
         int iTimerInterrupt = fnHandleFlexTimer(1, (FLEX_TIMER_MODULE *)FTM_BLOCK_1, FLEX_TIMERS_1_CHANNELS, iTPM_Type);
         if (iTimerInterrupt != 0) {
-        #if defined KINETIS_KL
-            if (fnGenInt(irq_TPM1_ID) != 0) {                            // if timer/PWM module 1 interrupt is not disabled
-                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-                ptrVect->processor_interrupts.irq_TPM1();                // call the interrupt handler
-            }
-        #else
-            if (fnGenInt(irq_FTM1_ID) != 0) {                            // if FlexTimer 1 interrupt is not disabled
-                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-                ptrVect->processor_interrupts.irq_FTM1();                // call the interrupt handler
-            }
-        #endif
+            fnExecuteTimerInterrupt(1);
         }
         #if defined KINETIS_KL && defined SUPPORT_ADC && !defined KINETIS_WITH_PCC
         // Check for ADC triggers
@@ -9530,9 +9705,9 @@ extern int fnSimTimers(void)
     #endif
     #if FLEX_TIMERS_AVAILABLE > 2
         #if defined KINETIS_KL || defined KINETIS_K22_SF7 || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66
-    if (IS_POWERED_UP(6, FTM2) &&((FTM2_SC & (FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)) != 0))  // if the timer/PWM module is powered and clocked
+    if ((fnFlexTimerPowered(2) != 0) &&((FTM2_SC & (FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)) != 0)) // if the timer/PWM module is powered and clocked
         #else
-    if (IS_POWERED_UP(3, FTM2) &&((FTM2_SC & FTM_SC_CLKS_EXT) != 0))    // if the FlexTimer 2 is powered and clocked
+    if ((fnFlexTimerPowered(2) != 0) &&((FTM2_SC & FTM_SC_CLKS_EXT) != 0)) // if the FlexTimer 2 is powered and clocked
         #endif
     {
         #if defined KINETIS_KL || defined KINETIS_KE
@@ -9542,27 +9717,12 @@ extern int fnSimTimers(void)
         #endif
         int iTimerInterrupt = fnHandleFlexTimer(2, (FLEX_TIMER_MODULE *)FTM_BLOCK_2, FLEX_TIMERS_2_CHANNELS, iTPM_Type);
         if (iTimerInterrupt != 0) {
-        #if defined KINETIS_KL
-            if (fnGenInt(irq_TPM2_ID) != 0) {                            // if timer/PWM module 2 interrupt is not disabled
-                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-                ptrVect->processor_interrupts.irq_TPM2();                // call the interrupt handler
-            }
-        #else
-            if (fnGenInt(irq_FTM2_ID) != 0) {                            // if FlexTimer 2 interrupt is not disabled
-                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-                ptrVect->processor_interrupts.irq_FTM2();                // call the interrupt handler
-            }
-        #endif
+            fnExecuteTimerInterrupt(2);
         }
     }
     #endif
     #if FLEX_TIMERS_AVAILABLE > 3 && !defined KINETIS_KE18
-        #if defined KINETIS_K22_SF7
-    if (((IS_POWERED_UP(6, FTM3)) != 0) && ((FTM3_SC & (FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)) != 0))
-        #else
-    if (((IS_POWERED_UP(3, FTM3)) != 0) && ((FTM3_SC & (FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)) != 0))
-        #endif
-    {                                                                    // if the FlexTimer 3 is powered and clocked
+    if ((fnFlexTimerPowered(3) != 0) && ((FTM3_SC & (FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)) != 0)) { // if the FlexTimer 3 is powered and clocked
         #if defined KINETIS_KL || defined KINETIS_KE
         int iTPM_Type = 1;
         #else
@@ -9570,37 +9730,30 @@ extern int fnSimTimers(void)
         #endif
         int iTimerInterrupt = fnHandleFlexTimer(3, (FLEX_TIMER_MODULE *)FTM_BLOCK_3, FLEX_TIMERS_3_CHANNELS, iTPM_Type);
         if (iTimerInterrupt != 0) {
-            if (fnGenInt(irq_FTM3_ID) != 0) {                            // if FlexTimer 3 interrupt is not disabled
-                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-                ptrVect->processor_interrupts.irq_FTM3();                // call the interrupt handler
-            }
+            fnExecuteTimerInterrupt(3);
         }
     }
     #endif
     #if FLEX_TIMERS_AVAILABLE > 4 && defined TPMS_AVAILABLE_TOO          // TPM1
-    if (((IS_POWERED_UP(2, TPM1)) != 0) && ((FTM4_SC & (FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)) != 0)) { // if the FlexTimer 4 (TPM1) is powered and clocked
+    if ((fnFlexTimerPowered(4) != 0) && ((FTM4_SC & (FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)) != 0)) { // if the FlexTimer 4 (TPM1) is powered and clocked
         int iTimerInterrupt = fnHandleFlexTimer(4, (FLEX_TIMER_MODULE *)FTM_BLOCK_4, FLEX_TIMERS_4_CHANNELS, 1);
         if (iTimerInterrupt != 0) {
-            if (fnGenInt(irq_TPM1_ID) != 0) {                            // if FlexTimer 4 (TPM1) interrupt is not disabled
-                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-                ptrVect->processor_interrupts.irq_TPM1();                // call the interrupt handler
-            }
+            fnExecuteTimerInterrupt(4);
         }
     }
     #endif
     #if FLEX_TIMERS_AVAILABLE > 5 && defined TPMS_AVAILABLE_TOO          // TPM2
-    if (((IS_POWERED_UP(2, TPM2)) != 0) && ((FTM5_SC & (FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)) != 0)) { // if the FlexTimer 5 (TPM2) is powered and clocked
+    if ((fnFlexTimerPowered(5) != 0) && ((FTM5_SC & (FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS)) != 0)) { // if the FlexTimer 5 (TPM2) is powered and clocked
         int iTimerInterrupt = fnHandleFlexTimer(5, (FLEX_TIMER_MODULE *)FTM_BLOCK_5, FLEX_TIMERS_5_CHANNELS, 1);
         if (iTimerInterrupt != 0) {
-            if (fnGenInt(irq_TPM2_ID) != 0) {                            // if FlexTimer 5 (TPM2) interrupt is not disabled
-                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-                ptrVect->processor_interrupts.irq_TPM2();                // call the interrupt handler
-            }
+            fnExecuteTimerInterrupt(5);
         }
     }
     #endif
 #endif
 #if defined SERIAL_INTERFACE
+    // Idle line detection on UARTs
+    //
     while (iUART < (LPUARTS_AVAILABLE + UARTS_AVAILABLE)) {
         if (iUART_rx_Active[iUART] != 0) {                               // if the UART's input has been active
             if (iUART_rx_Active[iUART] == 1) {                           // detect idle line

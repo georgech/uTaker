@@ -24,6 +24,7 @@
     09.08.2018 Add TPM1 and TPM2 extension (for K65/K66/K80)             {9}
     21.08.2018 Add flexible clocking (fixed clock source on individual modules) {10}
     21.08.2018 Correct FTM2 clock gating for K64, K65 and K66            {11}
+    27.08.2018 Correct input capture mode pre-scaler setting             {12}
 
 */
 
@@ -422,8 +423,23 @@ static __interrupt void _flexTimerInterrupt_5(void)
             if ((ptrTimerSetup->timer_mode & TIMER_CAPTURE_RISING_FALLING) != 0) { // {6} if capture mode is required
                 unsigned long ulCharacteristics = PORT_PS_UP_ENABLE;
                 unsigned long ulEdge;
-                iPrescaler = ptrTimerSetup->capture_prescaler;           // the capture clock prescaler
-                ulDelay = 0xffff;                                        // set maximum count value so that the timer free-runs
+        #if defined _WINDOWS                                             // {12} check valid pre-scaler values
+                switch (ptrTimerSetup->capture_prescaler) {
+                case 1:
+                case 2:
+                case 4:
+                case 8:
+                case 16:
+                case 32:
+                case 64:
+                case 128:
+                    break;
+                default:
+                    _EXCEPTION("Invalid prescaler in input capture mode!! (1,2,4,8,16,32,64 or 128 allowed)");
+                    break;
+                }
+        #endif
+                ulDelay = (0xffff * ptrTimerSetup->capture_prescaler);   // {12} set maximum count value so that the timer free-runs
                 switch (ptrTimerSetup->timer_mode & TIMER_CAPTURE_RISING_FALLING) {
                 case TIMER_CAPTURE_RISING_FALLING:
                     ulEdge = (FTM_CSC_ELSA | FTM_CSC_ELSB);              // capture on rising and falling edges
@@ -442,27 +458,21 @@ static __interrupt void _flexTimerInterrupt_5(void)
                     _EXCEPTION("Invalid capture channel");
                 }
         #endif
-                fnConfigTimerPin(iTimerReference, ptrTimerSetup->capture_channel, ulCharacteristics);
+                fnConfigTimerPin(iTimerReference, ptrTimerSetup->capture_channel, ulCharacteristics); // configure the channel's input capture pin
                 ptrFlexTimer->FTM_channel[ptrTimerSetup->capture_channel].FTM_CSC = ulEdge; // program the edge sensitivity of the capture input
-        #if defined KINETIS_KL
+        #if defined KINETIS_KL                                           // flextimers default to their external channel interrupts
                 ptrFlexTimer->FTM_CONF |= (FTM_CONF_TRGSEL0 << ptrTimerSetup->capture_channel); // enable trigger source
-        #else
-                _EXCEPTION("Mode not available");
         #endif
             }
-            else {
     #endif
-                while (ulDelay > 0xffff) {                               // calculate the optimal prescaler setting
-                    if (iPrescaler >= 7) {
-                        ulDelay = 0xffff;                                // set maximum delay
-                        break;
-                    }
-                    iPrescaler++;
-                    ulDelay /= 2;
+            while (ulDelay > 0xffff) {                                   // calculate the optimal prescaler setting
+                if (iPrescaler >= 7) {
+                    ulDelay = 0xffff;                                    // set maximum delay
+                    break;
                 }
-    #if defined SUPPORT_CAPTURE
+                iPrescaler++;
+                ulDelay /= 2;
             }
-    #endif
             iPrescaler &= 0x7f;
             usFlexTimerMode[iTimerReference] = (unsigned short)iPrescaler;
             if ((ptrTimerSetup->timer_mode & TIMER_PERIODIC) != 0) {     // if periodic operation required
