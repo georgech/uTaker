@@ -20,7 +20,7 @@
 #if defined _WINDOWS
     extern void fnEnterTimer(int iPortRef, int iPinRef, int iTimer, int iChannel, int iOnOff);
 #else
-    #dfine fnEnterTimer(A, B, C, D, E)
+    #define fnEnterTimer(A, B, C, D, E)
 #endif
 
 // Timer pin configuration that can be used by PWM outputs or capture inputs
