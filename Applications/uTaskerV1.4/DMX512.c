@@ -421,7 +421,8 @@ static unsigned char ucDMX512_state = DMX512_NON_INITIALISED;
     static int iPingPong = 0;
     static unsigned short usThisLength[2] = {0};
     static unsigned char ucRxBuffer[2][DMX_RX_MAX_SLOT_COUNT + 1] = {{0}};
-    static unsigned char ucSlaveSourceUID[6] = {0xcb, 0xa9, 0x87, 0x65, 0x43, 0x22}; // slave's UID
+  //static unsigned char ucSlaveSourceUID[6] = {0xcb, 0xa9, 0x87, 0x65, 0x43, 0x22}; // slave's UID
+    static unsigned char ucSlaveSourceUID[6] = { 0x53, 0x49, 0x00, 0x00, 0x00, 0x01 }; // slave's UID
     static unsigned short usDMX512_slave_start_address = 0xffff;
     #endif
 #endif
@@ -1122,7 +1123,7 @@ static void fnHandleRDM_SlaveRx(QUEUE_HANDLE uart_handle, DMX512_RDM_PACKET *ptr
         return;
     }
     if (iBroadcast == 0) {                                               // when addressed as unicast there is a response returned
-        if (fnSend_DMX512_RDM(uart_handle, (ptrDataBlock->ucCommandClass + 1), usPID, (const unsigned char *)ptrPacket->ucDestinationUID, ptrPacket) > 0) { // return response (sent after a break)
+        if (fnSend_DMX512_RDM(uart_handle, (ptrDataBlock->ucCommandClass + 1), usPID, (const unsigned char *)ptrPacket->ucSourceUID, ptrPacket) > 0) { // return response (sent after a break)
             int iStartTx;
             uDisable_Interrupt();                                        // protect against the turnaround timer interrupt
                 if (iTurnAroundDelaySlave != 0) {                        // if the turnaround timer hasn't yet fired
@@ -1284,11 +1285,11 @@ static int fnSend_DMX512_RDM(QUEUE_HANDLE uart_handle, unsigned char ucCommandCl
     #if defined USE_DMX_RDM_SLAVE
             if (iSlave != 0) {                                           // if the slave is responding
                 unsigned short usControlField = 0;                       // control field value
-                ptrDataBlock->ucParameterDataLength = 0x02;              // optional binding UID not used
-                ptrRDMpacket->ucMessageCount = 1;
+                ptrDataBlock->ucParameterDataLength = 0x0;               // optional binding UID not used
+                ptrRDMpacket->ucMessageCount = 0;
                 *ptr_ucData = (unsigned char)(usControlField >> 8);
                 *(ptr_ucData + 1) = (unsigned char)(usControlField);
-                ptrCheckSum = (ptr_ucData + 2);
+                ptrCheckSum = ptr_ucData;
             }
     #endif
             break;
