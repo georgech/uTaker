@@ -2031,6 +2031,30 @@ unsigned long GPIOPCTL;
 #define PORT_BIT5                       0x20
 #define PORT_BIT6                       0x40
 #define PORT_BIT7                       0x80
+#define PORT_BIT8                       0x00000100                       // extended bit referencing for external devices
+#define PORT_BIT9                       0x00000200
+#define PORT_BIT10                      0x00000400
+#define PORT_BIT11                      0x00000800
+#define PORT_BIT12                      0x00001000
+#define PORT_BIT13                      0x00002000
+#define PORT_BIT14                      0x00004000
+#define PORT_BIT15                      0x00008000
+#define PORT_BIT16                      0x00010000
+#define PORT_BIT17                      0x00020000
+#define PORT_BIT18                      0x00040000
+#define PORT_BIT19                      0x00080000
+#define PORT_BIT20                      0x00100000
+#define PORT_BIT21                      0x00200000
+#define PORT_BIT22                      0x00400000
+#define PORT_BIT23                      0x00800000
+#define PORT_BIT24                      0x01000000
+#define PORT_BIT25                      0x02000000
+#define PORT_BIT26                      0x04000000
+#define PORT_BIT27                      0x08000000
+#define PORT_BIT28                      0x10000000
+#define PORT_BIT29                      0x20000000
+#define PORT_BIT30                      0x40000000
+#define PORT_BIT31                      0x80000000
 
 #define PORTA_BIT0                      0x01                             // port specific bit defines (for stronger code relationship, but same effect)
 #define PORTA_BIT1                      0x02

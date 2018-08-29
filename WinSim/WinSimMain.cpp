@@ -2249,6 +2249,9 @@ extern void fnSetLastPort(int iInputLastPort, int iInputPortBit)
     if (iInputLastPort == -1) {                                          // mouse moved away from an input so invalidate display
         return;
     }
+    if ((iInputPortBit & ~(PORT_WIDTH - 1)) != 0) {                      // ignore references to bits beyond the processor's pprt width
+        return;
+    }
     if (iInputPortBit == 0) {
         _EXCEPTION("Invalid port bit - please correct!!");
     }

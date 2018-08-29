@@ -112,120 +112,6 @@ static const unsigned char ucMAX6956_ADD[MAX6956_CNT] = {
     MAX6956_5_ADD,
     #endif
 };
-
-    #if !defined MAX6955_CNT
-// Get the data direction of port expander pins
-//
-extern unsigned long fnGetExtPortDirection(int iExtPortReference)
-{
-    int i;
-    switch (iExtPortReference) {
-    case _PORT_EXP_0:
-        #if MAX6955_CNT > 1
-    case _PORT_EXP_1:
-        #endif
-        #if MAX6955_CNT > 2
-    case _PORT_EXP_2:
-        #endif
-        #if MAX6955_CNT > 3
-    case _PORT_EXP_3:
-        #endif
-        #if MAX6955_CNT > 4
-    case _PORT_EXP_4:
-        #endif
-        i = (iExtPortReference - _PORT_EXP_0);
-        return (simMAX6956[i].ulLED | simMAX6956[i].ulOutput);                 // data direction is output as long as either GPIO out or LED drive
-    }
-    return 0;
-}
-
-// Get the pin state of port expander
-//
-extern unsigned long fnGetExtPortState(int iExtPortReference)
-{
-    unsigned long ulLED_on;
-    unsigned long ulGPIO_on;
-    int i;
-    switch (iExtPortReference) {
-    case _PORT_EXP_0:
-        #if MAX6955_CNT > 1
-    case _PORT_EXP_1:
-        #endif
-        #if MAX6955_CNT > 2
-    case _PORT_EXP_2:
-        #endif
-        #if MAX6955_CNT > 3
-    case _PORT_EXP_3:
-        #endif
-        #if MAX6955_CNT > 4
-    case _PORT_EXP_4:
-        #endif
-        i = (iExtPortReference - _PORT_EXP_0);
-        ulLED_on = ~((simMAX6956[i].ucRegs[0x44] | ((simMAX6956[i].ucRegs[0x4c]) << 8) | ((simMAX6956[i].ucRegs[0x54]) << 16) | ((simMAX6956[i].ucRegs[0x5c]) << 24)) & (simMAX6956[i].ulLED));
-        ulGPIO_on = ((simMAX6956[i].ucRegs[0x44] | ((simMAX6956[i].ucRegs[0x4c]) << 8) | ((simMAX6956[i].ucRegs[0x54]) << 16) | ((simMAX6956[i].ucRegs[0x5c]) << 24)) & (simMAX6956[i].ulOutput));
-        return (ulLED_on | ulGPIO_on);
-    }
-    return 0;
-}
-
-extern void fnSetI2CPort(int iExtPortReference, int iChange, unsigned long bit)
-{
-    unsigned char ucRegOffset = 0;
-    unsigned char ucBitShift = 0;
-    int i;
-
-    // Determine simMAX6956 instance associated with the expander port
-    //
-    switch (iExtPortReference) {
-    case _PORT_EXP_0:
-        #if MAX6955_CNT > 1
-    case _PORT_EXP_1:
-        #endif
-        #if MAX6955_CNT > 2
-    case _PORT_EXP_2:
-        #endif
-        #if MAX6955_CNT > 3
-    case _PORT_EXP_3:
-        #endif
-        #if MAX6955_CNT > 4
-    case _PORT_EXP_4:
-        #endif
-        i = (iExtPortReference - _PORT_EXP_0);
-        break;
-    default:
-        return;
-    }
-
-    // Determine port data register where the port bit lies
-    //
-    if ((bit >= PORTA_BIT0) && (bit <= PORTA_BIT7)) {
-        ucRegOffset = 0x44;
-        ucBitShift = 0;
-    }
-    else if ((bit >= PORTA_BIT8) && (bit <= PORTA_BIT15)) {
-        ucRegOffset = 0x4c;
-        ucBitShift = 8;
-    }
-    else if ((bit >= PORTA_BIT16) && (bit <= PORTA_BIT23)) {
-        ucRegOffset = 0x54;
-        ucBitShift = 16;
-    }
-    else if ((bit >= PORTA_BIT24) && (bit <= PORTA_BIT27)) {
-        ucRegOffset = 0x5c;
-        ucBitShift = 24;
-    }
-
-    if (iChange & (TOGGLE_INPUT | TOGGLE_INPUT_NEG)) {
-        simMAX6956[i].ucRegs[ucRegOffset] ^= (bit >> ucBitShift);        // toggle the input state
-    }
-    else if (iChange == SET_INPUT) {
-        simMAX6956[i].ucRegs[ucRegOffset] |= (bit >> ucBitShift);        // set the input high
-    }
-    else {
-        simMAX6956[i].ucRegs[ucRegOffset] &= ~(bit >> ucBitShift);       // set the input low
-    }
-}
-    #endif
 #endif
 
 /**************************************************************************/
@@ -310,29 +196,27 @@ static const unsigned char ucMAX6955_ADD[MAX6955_CNT] = {
     MAX6955_5_ADD,
 #endif
 };
+#endif
 
+#if (defined MAX6955_CNT && (MAX6955_CNT > 0)) || (defined MAX6956_CNT && (MAX6956_CNT > 0))
 // Get the data direction of port expander pins
 //
 extern unsigned long fnGetExtPortDirection(int iExtPortReference)
 {
-    #if defined MAX6956_CNT && (MAX6956_CNT > 0)
-    int iRef;
-    #endif
-    switch (iExtPortReference) {
-    case _PORT_EXP_0:
-        return (~(simMAX6955[0].Regs.port_configuration) & 0x1f);        // data direction is output if the port bit configuration is '0'
-    #if defined MAX6956_CNT
-    case _PORT_EXP_1:
-    case _PORT_EXP_2:
-    case _PORT_EXP_3:
-    case _PORT_EXP_4:
-    case _PORT_EXP_5:
-    case _PORT_EXP_6:
-    case _PORT_EXP_7:
-        iRef = (iExtPortReference - _PORT_EXP_1);
-        return (simMAX6956[iRef].ulLED | simMAX6956[iRef].ulOutput);     // data direction is output as long as either GPIO out or LED drive
-    #endif
+    #if (defined MAX6955_CNT && (MAX6955_CNT > 0))
+    if ((iExtPortReference >= FIRST_MAX6955_EXTERNAL_PORT) && (iExtPortReference < (FIRST_MAX6955_EXTERNAL_PORT + MAX6955_CNT))) {
+        int iRef;
+        iRef = (iExtPortReference - FIRST_MAX6955_EXTERNAL_PORT);
+        return (~(simMAX6955[iRef].Regs.port_configuration) & 0x1f);     // data direction is output if the port bit configuration is '0'
     }
+    #endif
+    #if defined MAX6956_CNT && (MAX6956_CNT > 0)
+    if ((iExtPortReference >= FIRST_MAX6956_EXTERNAL_PORT) && (iExtPortReference < (FIRST_MAX6956_EXTERNAL_PORT + MAX6956_CNT))) {
+        int iRef;
+        iRef = (iExtPortReference - FIRST_MAX6956_EXTERNAL_PORT);
+        return (simMAX6956[iRef].ulLED | simMAX6956[iRef].ulOutput);     // data direction is output as long as either GPIO out or LED drive
+    }
+    #endif
     return 0;
 }
 
@@ -340,25 +224,20 @@ extern unsigned long fnGetExtPortDirection(int iExtPortReference)
 //
 extern unsigned long fnGetExtPortState(int iExtPortReference)
 {
-    #if defined MAX6956_CNT && (MAX6956_CNT > 0)
-    int iRef;
-    #endif
-    switch (iExtPortReference) {
-    case _PORT_EXP_0:
-        return ((~(simMAX6955[0].Regs.port_configuration) & 0x1f) & (simMAX6955[0].Regs.gpio_data));
-        break;
-    #if defined MAX6956_CNT && (MAX6956_CNT > 0)
-    case _PORT_EXP_1:
-    case _PORT_EXP_2:
-    case _PORT_EXP_3:
-    case _PORT_EXP_4:
-    case _PORT_EXP_5:
-    case _PORT_EXP_6:
-    case _PORT_EXP_7:
-        iRef = (iExtPortReference - _PORT_EXP_1);
-        return (((~simMAX6956[iRef].ulPortOutput & simMAX6956[iRef].ulLED) | (simMAX6956[iRef].ulPortOutput & simMAX6956[iRef].ulOutput)) | (simMAX6956[iRef].ulPortInput & ~(simMAX6956[iRef].ulLED | simMAX6956[iRef].ulOutput)));
-    #endif
+    #if (defined MAX6955_CNT && (MAX6955_CNT > 0))
+    if ((iExtPortReference >= FIRST_MAX6955_EXTERNAL_PORT) && (iExtPortReference < (FIRST_MAX6955_EXTERNAL_PORT + MAX6955_CNT))) {
+        int iRef;
+        iRef = (iExtPortReference - FIRST_MAX6955_EXTERNAL_PORT);
+        return ((~(simMAX6955[iRef].Regs.port_configuration) & 0x1f) & (simMAX6955[iRef].Regs.gpio_data));
     }
+    #endif
+    #if defined MAX6956_CNT && (MAX6956_CNT > 0)
+    if ((iExtPortReference >= FIRST_MAX6956_EXTERNAL_PORT) && (iExtPortReference < (FIRST_MAX6956_EXTERNAL_PORT + MAX6956_CNT))) {
+        int iRef;
+        iRef = (iExtPortReference - FIRST_MAX6956_EXTERNAL_PORT);
+        return (((~simMAX6956[iRef].ulPortOutput & simMAX6956[iRef].ulLED) | (simMAX6956[iRef].ulPortOutput & simMAX6956[iRef].ulOutput)) | (simMAX6956[iRef].ulPortInput & ~(simMAX6956[iRef].ulLED | simMAX6956[iRef].ulOutput)));
+    }
+    #endif
     return (0);
 }
 
@@ -366,24 +245,15 @@ extern unsigned long fnGetExtPortState(int iExtPortReference)
 //
 extern void fnSetI2CPort(int iExtPortReference, int iChange, unsigned long bit)
 {
-    #if defined MAX6956_CNT && (MAX6956_CNT > 0)
-    int iRef;
+    #if (defined MAX6955_CNT && (MAX6955_CNT > 0))
+    if ((iExtPortReference >= FIRST_MAX6955_EXTERNAL_PORT) && (iExtPortReference < (FIRST_MAX6955_EXTERNAL_PORT + MAX6955_CNT))) {
+        return;
+    }
     #endif
-    unsigned char ucRegOffset = 0;
-    unsigned char ucBitShift = 0;
-
-    switch (iExtPortReference) {
-    case _PORT_EXP_0:
-        break;
     #if defined MAX6956_CNT && (MAX6956_CNT > 0)
-    case _PORT_EXP_1:
-    case _PORT_EXP_2:
-    case _PORT_EXP_3:
-    case _PORT_EXP_4:
-    case _PORT_EXP_5:
-    case _PORT_EXP_6:
-    case _PORT_EXP_7:
-        iRef = (iExtPortReference - _PORT_EXP_1);
+    if ((iExtPortReference >= FIRST_MAX6956_EXTERNAL_PORT) && (iExtPortReference < (FIRST_MAX6956_EXTERNAL_PORT + MAX6956_CNT))) {
+        int iRef;
+        iRef = (iExtPortReference - FIRST_MAX6956_EXTERNAL_PORT);
         if ((iChange & (TOGGLE_INPUT | TOGGLE_INPUT_NEG)) != 0) {
             simMAX6956[iRef].ulPortInput ^= (bit);                       // toggle the input state
         }
@@ -393,11 +263,8 @@ extern void fnSetI2CPort(int iExtPortReference, int iChange, unsigned long bit)
         else {
             simMAX6956[iRef].ulPortInput &= ~(bit);                      // set the input low
         }
-    #endif
-        break;
-    default:
-        return;
     }
+    #endif
 }
 #endif
 
@@ -1145,7 +1012,7 @@ static PCF8575 simPCF8575[PCF8575_CNT] = {{ADDRESS_PCF8575, 0}};
     //
     extern void fnSetI2CPort(int port, int iChange, unsigned long bit)
     {
-        int iPortIndex = (port - _PORT_EXP_0);
+        int iPortIndex = (port - _PORT_EXT_0);
         int iByteOffset = 0;
         if (iPortIndex >= PCF8575_CNT) {
             return;                                                      // invalid device
@@ -1175,7 +1042,7 @@ static PCF8575 simPCF8575[PCF8575_CNT] = {{ADDRESS_PCF8575, 0}};
     //
     extern unsigned long fnGetExtPortState(int iExtPortReference)
     {
-        int iPortIndex = (iExtPortReference - _PORT_EXP_0);
+        int iPortIndex = (iExtPortReference - _PORT_EXT_0);
         unsigned long ulPinState = 0xffffffff;
         if (iPortIndex >= PCF8575_CNT) {
             return 0;                                                    // invalid device
@@ -1189,7 +1056,7 @@ static PCF8575 simPCF8575[PCF8575_CNT] = {{ADDRESS_PCF8575, 0}};
     //
     extern unsigned long fnGetExtPortDirection(int iExtPortReference)
     {
-        int iPortIndex = (iExtPortReference - _PORT_EXP_0);
+        int iPortIndex = (iExtPortReference - _PORT_EXT_0);
         unsigned long ulPinState = 0xffffffff;                           // all ports set to '1' are considered to be outputs
         if (iPortIndex >= PCF8575_CNT) {
             return 0;                                                    // invalid device
@@ -1239,14 +1106,14 @@ static PCF8575 simPCF8575[PCF8575_CNT] = {{ADDRESS_PCF8575, 0}};
     extern unsigned long fnGetExtPortDirection(int iExtPortReference)
     {
         switch (iExtPortReference) {
-        case _PORT_EXP_0:
+        case _PORT_EXT_0:
             return (simPCA9539.regs[0].ucConfig0);
-        case _PORT_EXP_1:
+        case _PORT_EXT_1:
             return (simPCA9539.regs[0].ucConfig1);
     #if PCA9539_CNT > 1
-        case _PORT_EXP_2:
+        case _PORT_EXT_2:
             return (simPCA9539.regs[1].ucConfig0);
-        case _PORT_EXP_3:
+        case _PORT_EXT_3:
             return (simPCA9539.regs[1].ucConfig1);
     #endif
         }
@@ -1258,17 +1125,17 @@ static PCF8575 simPCF8575[PCF8575_CNT] = {{ADDRESS_PCF8575, 0}};
     extern unsigned long fnGetExtPortState(int iExtPortReference)
     {
         switch (iExtPortReference) {
-        case _PORT_EXP_0:
+        case _PORT_EXT_0:
             simPCA9539.regs[0].ucInput0 = ((simPCA9539.regs[0].ucConfig0 & simPCA9539.regs[0].ucOutput0) | (~(simPCA9539.regs[0].ucConfig0) & simPCA9539.external_input0[0]));
             return ((simPCA9539.regs[0].ucConfig0 & simPCA9539.regs[0].ucOutput0) | (~(simPCA9539.regs[0].ucConfig0) & simPCA9539.external_input0[0]));
-        case _PORT_EXP_1:
+        case _PORT_EXT_1:
             simPCA9539.regs[0].ucInput1 = ((simPCA9539.regs[0].ucConfig1 & simPCA9539.regs[0].ucOutput1) | (~(simPCA9539.regs[0].ucConfig1) & simPCA9539.external_input1[0]));
             return ((simPCA9539.regs[0].ucConfig1 & simPCA9539.regs[0].ucOutput1) | (~(simPCA9539.regs[0].ucConfig1) & simPCA9539.external_input1[0]));
     #if PCA9539_CNT > 1
-        case _PORT_EXP_2:
+        case _PORT_EXT_2:
             simPCA9539.regs[1].ucInput0 = ((simPCA9539.regs[1].ucConfig0 & simPCA9539.regs[1].ucOutput0) | (~(simPCA9539.regs[1].ucConfig0) & simPCA9539.external_input0[1]));
             return ((simPCA9539.regs[1].ucConfig0 & simPCA9539.regs[1].ucOutput0) | (~(simPCA9539.regs[1].ucConfig0) & simPCA9539.external_input0[1]));
-        case _PORT_EXP_3:
+        case _PORT_EXT_3:
             simPCA9539.regs[1].ucInput1 = ((simPCA9539.regs[1].ucConfig1 & simPCA9539.regs[1].ucOutput1) | (~(simPCA9539.regs[1].ucConfig1) & simPCA9539.external_input1[1]));
             return ((simPCA9539.regs[1].ucConfig1 & simPCA9539.regs[1].ucOutput1) | (~(simPCA9539.regs[1].ucConfig1) & simPCA9539.external_input1[1]));
     #endif
@@ -1281,7 +1148,7 @@ static PCF8575 simPCF8575[PCF8575_CNT] = {{ADDRESS_PCF8575, 0}};
     extern void fnSetI2CPort(int port, int iChange, unsigned long bit)
     {
         switch (port) {
-        case _PORT_EXP_0:
+        case _PORT_EXT_0:
             if (iChange & (TOGGLE_INPUT | TOGGLE_INPUT_NEG)) {
                 simPCA9539.external_input0[0] ^= bit;
             }
@@ -1293,7 +1160,7 @@ static PCF8575 simPCF8575[PCF8575_CNT] = {{ADDRESS_PCF8575, 0}};
             }             
             simPCA9539.regs[0].ucInput0 = ((simPCA9539.regs[0].ucConfig0 & simPCA9539.regs[0].ucOutput0) | (~(simPCA9539.regs[0].ucConfig0) & simPCA9539.external_input0[0]));
             break;
-        case _PORT_EXP_1:
+        case _PORT_EXT_1:
             if (iChange & (TOGGLE_INPUT | TOGGLE_INPUT_NEG)) {
                 simPCA9539.external_input1[0] ^= bit;
             }
@@ -1306,7 +1173,7 @@ static PCF8575 simPCF8575[PCF8575_CNT] = {{ADDRESS_PCF8575, 0}};
             simPCA9539.regs[0].ucInput1 = ((simPCA9539.regs[0].ucConfig1 & simPCA9539.regs[0].ucOutput1) | (~(simPCA9539.regs[0].ucConfig1) & simPCA9539.external_input1[0]));
             break;
     #if PCA9539_CNT > 1
-        case _PORT_EXP_2:
+        case _PORT_EXT_2:
             if (iChange & (TOGGLE_INPUT | TOGGLE_INPUT_NEG)) {
                 simPCA9539.external_input0[1] ^= bit;
             }
@@ -1318,7 +1185,7 @@ static PCF8575 simPCF8575[PCF8575_CNT] = {{ADDRESS_PCF8575, 0}};
             }             
             simPCA9539.regs[1].ucInput0 = ((simPCA9539.regs[1].ucConfig0 & simPCA9539.regs[1].ucOutput0) | (~(simPCA9539.regs[1].ucConfig0) & simPCA9539.external_input0[1]));
             break;
-        case _PORT_EXP_3:
+        case _PORT_EXT_3:
             if (iChange & (TOGGLE_INPUT | TOGGLE_INPUT_NEG)) {
                 simPCA9539.external_input1[1] ^= bit;
             }
@@ -1374,7 +1241,7 @@ static void fnInitialiseI2CDevices(void)                                 // {10}
     simFXOS8700.FXOS8700_registers.ucPL_CFG = 0x80;
     simFXOS8700.FXOS8700_registers.ucPL_BF_Zcomp = 0x44;
     simFXOS8700.FXOS8700_registers.ucP_L_Ths_Reg = 0x84;
-#if defined MAX6955_CNT
+#if defined MAX6955_CNT && (MAX6955_CNT > 0)
     i = 0;
     while (i < MAX6955_CNT) {
         simMAX6955[i].address = ucMAX6955_ADD[i];
@@ -1392,7 +1259,7 @@ static void fnInitialiseI2CDevices(void)                                 // {10}
         i++;
     }
 #endif
-#if defined MAX6956_CNT
+#if defined MAX6956_CNT && (MAX6956_CNT > 0)
     i = 0;
     while (i < MAX6956_CNT) {
         simMAX6956[i].address = ucMAX6956_ADD[i];
@@ -1420,7 +1287,7 @@ static void fnResetOthers(unsigned char ucAddress)
     if (ucAddress != simMAX543X.address) {
         simMAX543X.ucState = 0;
     }
-#if defined MAX6955_CNT
+#if defined MAX6955_CNT && (MAX6955_CNT > 0)
     i = 0;
     while (i < MAX6955_CNT) {
         if (ucAddress != simMAX6955[i].address) {                        // {13}
@@ -1429,7 +1296,7 @@ static void fnResetOthers(unsigned char ucAddress)
         i++;
     }
 #endif
-#if defined MAX6956_CNT
+#if defined MAX6956_CNT && (MAX6956_CNT > 0)
     i = 0;
     while (i < MAX6956_CNT) {
         if (ucAddress != simMAX6956[i].address) {                        // {12}
@@ -1918,7 +1785,7 @@ unsigned char fnSimI2C_devices(unsigned char ucType, unsigned char ucData)
                 i++;
             }
 #endif
-#if defined MAX6955_CNT
+#if defined MAX6955_CNT & (MAX6955_CNT > 0)
             i = 0;
             while (i < MAX6955_CNT) {
                 if ((ucData & ~0x01) == simMAX6955[i].address) {         // {13} port-expander/LED-display driver is being addressed
@@ -1928,7 +1795,7 @@ unsigned char fnSimI2C_devices(unsigned char ucType, unsigned char ucData)
                 i++;
             }
 #endif
-#if defined MAX6956_CNT
+#if defined MAX6956_CNT && (MAX6956_CNT > 0)
             i = 0;
             while (i < MAX6956_CNT) {
                 if ((ucData & ~0x01) == simMAX6956[i].address) {         // {12} port-expander/LED-driver is being addressed
@@ -2248,7 +2115,7 @@ unsigned char fnSimI2C_devices(unsigned char ucType, unsigned char ucData)
                 i++;
             }
 #endif
-#if defined MAX6955_CNT
+#if defined MAX6955_CNT && (MAX6955_CNT > 0)
             i = 0;
             while (i < MAX6955_CNT) {
                 if (simMAX6955[i].ucState == 1) {                        // MAX6955 is being written to
@@ -2306,7 +2173,7 @@ unsigned char fnSimI2C_devices(unsigned char ucType, unsigned char ucData)
                 i++;
             }
 #endif
-#if defined MAX6956_CNT
+#if defined MAX6956_CNT && (MAX6956_CNT > 0)
             i = 0;
             while (i < MAX6956_CNT) {
                 if (simMAX6956[i].ucState == 1) {                        // MAX6956 is being written to

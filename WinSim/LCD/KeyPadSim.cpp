@@ -23,6 +23,8 @@
     09.10.2012 Correct toggling of held buttons with right mouse click   {7}
     22.01.2013 Increase windows by 50px to ensure front panels have adequate room {8}
     09.04.2014 Display port details when hovering over board inputs      {9}
+    29.08.2018 Add optional mutually excluding button (automatic release of others when new one is pressed) {10}            
+    29.08.2018 Add optional sticky buttons (not released when the ESC key is pressed) {11}
 
 */
 
@@ -246,6 +248,95 @@ extern void fnsetKeypadState(char **ptr)
 }
 #endif
 
+#if defined BUTTON_KEY_DEFINITIONS
+extern void fnInjectInputChange(unsigned long ulPortRef, unsigned long ulPortBit, int iAction);
+
+static void fnPressButton(int i)
+{
+    if (iUserButtonStates[i] != 0) {
+        return;
+    }
+    iUserButtonStates[i] = 1;
+    switch (user_buttons[i].Port_Ref & (ANALOGUE_SWITCH_INPUT | POSITIVE_SWITCH_INPUT)) {
+    case 0:
+        fnInjectInputChange((user_buttons[i].Port_Ref & SWITCH_PORT_REF_MASK), user_buttons[i].Port_Bit, INPUT_TOGGLE_NEG); // force button to low state
+        break;
+    case ANALOGUE_SWITCH_INPUT:
+        fnInjectInputChange((user_buttons[i].Port_Ref & SWITCH_PORT_REF_MASK), user_buttons[i].Port_Bit, INPUT_TOGGLE_NEG_ANALOG); // force button to low state (large analog swing)
+        break;
+    case POSITIVE_SWITCH_INPUT:
+        fnInjectInputChange((user_buttons[i].Port_Ref & SWITCH_PORT_REF_MASK), user_buttons[i].Port_Bit, INPUT_TOGGLE_POS); // force button to high state
+        break;
+    case (ANALOGUE_SWITCH_INPUT | POSITIVE_SWITCH_INPUT):
+        fnInjectInputChange((user_buttons[i].Port_Ref & SWITCH_PORT_REF_MASK), user_buttons[i].Port_Bit, INPUT_TOGGLE_POS_ANALOG); // force button to high state (large analog swing)
+        break;
+    }
+}
+
+static void fnReleaseButton(int i)
+{
+    if (iUserButtonStates[i] == 0) {
+        return;
+    }
+    iUserButtonStates[i] = 0;
+    switch (user_buttons[i].Port_Ref & (ANALOGUE_SWITCH_INPUT | POSITIVE_SWITCH_INPUT)) {
+    case 0:
+        fnInjectInputChange((user_buttons[i].Port_Ref & SWITCH_PORT_REF_MASK), user_buttons[i].Port_Bit, INPUT_TOGGLE); // toggle button state
+        break;
+    case POSITIVE_SWITCH_INPUT:
+        fnInjectInputChange((user_buttons[i].Port_Ref & SWITCH_PORT_REF_MASK), user_buttons[i].Port_Bit, INPUT_TOGGLE_NEG); // toggle button state
+        break;
+    case ANALOGUE_SWITCH_INPUT:
+        fnInjectInputChange((user_buttons[i].Port_Ref & SWITCH_PORT_REF_MASK), user_buttons[i].Port_Bit, INPUT_TOGGLE_ANALOG); // toggle button state (large analog swing)
+        break;
+    case (ANALOGUE_SWITCH_INPUT | POSITIVE_SWITCH_INPUT):
+        fnInjectInputChange((user_buttons[i].Port_Ref & SWITCH_PORT_REF_MASK), user_buttons[i].Port_Bit, INPUT_TOGGLE_NEG_ANALOG); // toggle button state (large analog swing)
+        break;
+    }
+}
+
+    #if defined MUTUALLY_EXCLUSIVE_BUTTONS                               // {10}
+static const unsigned char ucGangedButtons[][2] = {
+    MUTUALLY_EXCLUSIVE_BUTTONS
+};
+#define MUTUALLY_EXCLUSIVE_BUTTON_COUNT (sizeof(ucGangedButtons)/2)
+
+static void fnReleaseGangedButtons(int iReference)
+{
+    int i;
+    for (i = 0; i < MUTUALLY_EXCLUSIVE_BUTTON_COUNT; i++) {
+        if ((iReference >= ucGangedButtons[i][0]) && (iReference <= ucGangedButtons[i][1])) { // the button has mutually exclusive partner button(s)
+            // Release all mutually exclusive buttons before applying the newly pressed one
+            //
+            int j = ucGangedButtons[i][0];
+            while (j <= ucGangedButtons[i][1]) {
+                if (iReference != j) {
+                    fnReleaseButton(j);
+                }
+                j++;
+            }
+            return;
+        }
+    }
+}
+    #endif
+#endif
+
+#if defined STICKY_BUTTONS
+static const unsigned char ucStickyButtons[] = STICKY_BUTTONS;
+
+static int fnStickyButton(int iRef)
+{
+    int i;
+    for (i = 0; i < sizeof(ucStickyButtons); i++) {
+        if (ucStickyButtons[i] == iRef) {
+            return 1;
+        }
+    }
+    return 0;
+}
+#endif
+
 extern int fnCheckKeypad(int x, int y, int iPressRelease)
 {
 #if defined KEYPAD_KEY_DEFINITIONS
@@ -258,16 +349,20 @@ extern int fnCheckKeypad(int x, int y, int iPressRelease)
     int i;
 #endif
 
-    if (x < 0) {
+    if (x < 0) {                                                         // release all key presses
 #if defined SUPPORT_KEY_SCAN
         memset(iKeyStates, 0, sizeof(iKeyStates));
 #endif
 #if defined BUTTON_KEY_DEFINITIONS                                       // {6}
     for (i = 0; i < (sizeof(user_buttons)/sizeof(USER_BUTTON)); i++) {
         if (iUserButtonStates[i] != 0) {                                 // originally pressed
-            extern void fnInjectInputChange(unsigned long ulPortRef, unsigned long ulPortBit, int iAction);
-            iUserButtonStates[i] = 0;
-            fnInjectInputChange((user_buttons[i].Port_Ref & SWITCH_PORT_REF_MASK), user_buttons[i].Port_Bit, INPUT_TOGGLE); // cause the input to toggle
+    #if defined STICKY_BUTTONS
+            if (fnStickyButton(i) == 0) {
+                fnReleaseButton(i);
+            }
+    #else
+            fnReleaseButton(i);
+    #endif
         }
     }
 #endif
@@ -310,43 +405,17 @@ extern int fnCheckKeypad(int x, int y, int iPressRelease)
                         if (iPressRelease != 0) {
                             if (iPressRelease == 2) {                    // {7} toggle
                                 if (iUserButtonStates[i] != 0) {         // already held
-                                    iUserButtonStates[i] = 0;
-                                    fnInjectInputChange((user_buttons[i].Port_Ref & 0x3fffffff), user_buttons[i].Port_Bit, INPUT_TOGGLE);
+                                    fnReleaseButton(i);
                                     continue;
                                 }
                             }
-                            iUserButtonStates[i] = 1;
-                            switch (user_buttons[i].Port_Ref & (ANALOGUE_SWITCH_INPUT | POSITIVE_SWITCH_INPUT)) {
-                            case 0:
-                                fnInjectInputChange((user_buttons[i].Port_Ref & SWITCH_PORT_REF_MASK), user_buttons[i].Port_Bit, INPUT_TOGGLE_NEG); // force button to low state
-                                break;
-                            case ANALOGUE_SWITCH_INPUT:
-                                fnInjectInputChange((user_buttons[i].Port_Ref & SWITCH_PORT_REF_MASK), user_buttons[i].Port_Bit, INPUT_TOGGLE_NEG_ANALOG); // force button to low state (large analog swing)
-                                break;
-                            case POSITIVE_SWITCH_INPUT:
-                                fnInjectInputChange((user_buttons[i].Port_Ref & SWITCH_PORT_REF_MASK), user_buttons[i].Port_Bit, INPUT_TOGGLE_POS); // force button to high state
-                                break;
-                            case (ANALOGUE_SWITCH_INPUT | POSITIVE_SWITCH_INPUT):
-                                fnInjectInputChange((user_buttons[i].Port_Ref & SWITCH_PORT_REF_MASK), user_buttons[i].Port_Bit, INPUT_TOGGLE_POS_ANALOG); // force button to high state (large analog swing)
-                                break;
-                            }                            
+    #if defined MUTUALLY_EXCLUSIVE_BUTTONS
+                            fnReleaseGangedButtons(i);                   // {10}
+    #endif
+                            fnPressButton(i);                            // pressed             
                         }
-                        else {
-                            iUserButtonStates[i] = 0;
-                            switch (user_buttons[i].Port_Ref & (ANALOGUE_SWITCH_INPUT | POSITIVE_SWITCH_INPUT)) {
-                            case 0:
-                                fnInjectInputChange((user_buttons[i].Port_Ref & SWITCH_PORT_REF_MASK), user_buttons[i].Port_Bit, INPUT_TOGGLE); // toggle button state
-                                break;
-                            case POSITIVE_SWITCH_INPUT:
-                                fnInjectInputChange((user_buttons[i].Port_Ref & SWITCH_PORT_REF_MASK), user_buttons[i].Port_Bit, INPUT_TOGGLE_NEG); // toggle button state
-                                break;
-                            case ANALOGUE_SWITCH_INPUT:
-                                fnInjectInputChange((user_buttons[i].Port_Ref & SWITCH_PORT_REF_MASK), user_buttons[i].Port_Bit, INPUT_TOGGLE_ANALOG); // toggle button state (large analog swing)
-                                break;
-                            case (ANALOGUE_SWITCH_INPUT | POSITIVE_SWITCH_INPUT):
-                                fnInjectInputChange((user_buttons[i].Port_Ref & SWITCH_PORT_REF_MASK), user_buttons[i].Port_Bit, INPUT_TOGGLE_NEG_ANALOG); // toggle button state (large analog swing)
-                                break;
-                            }  
+                        else {                                           // released
+                            fnReleaseButton(i); 
                         }
 		                InvalidateRect(ghWnd, &kb_rect, FALSE);
                       //break;                                           // {4} don't break when first area is detected so that multiple keys could be actuated

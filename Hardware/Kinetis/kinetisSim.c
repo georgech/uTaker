@@ -1363,14 +1363,14 @@ extern unsigned long fnGetPresentPortState(int portNr)
         return ((GPIOI_PDDR & GPIOI_PDOR) | (~GPIOI_PDDR & ulPort_in_I));
 #endif
 #if defined _EXTERNAL_PORT_COUNT && _EXTERNAL_PORT_COUNT > 0             // {8}
-    case _PORT_EXP_0:                                                    // external ports extensions
-    case _PORT_EXP_1:
-    case _PORT_EXP_2:
-    case _PORT_EXP_3:
-    case _PORT_EXP_4:
-    case _PORT_EXP_5:
-    case _PORT_EXP_6:
-    case _PORT_EXP_7:
+    case _PORT_EXT_0:                                                    // external ports extensions
+    case _PORT_EXT_1:
+    case _PORT_EXT_2:
+    case _PORT_EXT_3:
+    case _PORT_EXT_4:
+    case _PORT_EXT_5:
+    case _PORT_EXT_6:
+    case _PORT_EXT_7:
         return (fnGetExtPortState(portNr));                              // {8} pin states of external port
 #endif
     default:
@@ -1427,14 +1427,14 @@ extern unsigned long fnGetPresentPortDir(int portNr)
         break;
 #endif
 #if defined _EXTERNAL_PORT_COUNT && _EXTERNAL_PORT_COUNT > 0             // {8}
-    case _PORT_EXP_0:                                                    // {8} external ports extensions
-    case _PORT_EXP_1:
-    case _PORT_EXP_2:
-    case _PORT_EXP_3:
-    case _PORT_EXP_4:
-    case _PORT_EXP_5:
-    case _PORT_EXP_6:
-    case _PORT_EXP_7:
+    case _PORT_EXT_0:                                                    // {8} external ports extensions
+    case _PORT_EXT_1:
+    case _PORT_EXT_2:
+    case _PORT_EXT_3:
+    case _PORT_EXT_4:
+    case _PORT_EXT_5:
+    case _PORT_EXT_6:
+    case _PORT_EXT_7:
         return (fnGetExtPortDirection(portNr));
 #endif
     default:
@@ -1601,7 +1601,7 @@ extern int fnPortChanges(int iForce)
 #endif
 #if defined _EXTERNAL_PORT_COUNT && _EXTERNAL_PORT_COUNT > 0             // {8}
     while (iExPort < _EXTERNAL_PORT_COUNT) {                             // external ports extensions
-        ulNewValue = fnGetPresentPortState(iExPort + (_PORT_EXP_0 + 1));
+        ulNewValue = fnGetPresentPortState(iExPort + (_PORT_EXT_0 + 1));
         if (ulNewValue != ulPortExtValue[iExPort]) {
             ulPortExtValue[iExPort] = ulNewValue;
             iRtn |= PORT_CHANGE;
@@ -3555,14 +3555,14 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
         break;
 #endif
 #endif
-    case _PORT_EXP_0:                                                    // {8} external ports extensions
-    case _PORT_EXP_1:
-    case _PORT_EXP_2:
-    case _PORT_EXP_3:
-    case _PORT_EXP_4:
-    case _PORT_EXP_5:
-    case _PORT_EXP_6:
-    case _PORT_EXP_7:
+    case _PORT_EXT_0:                                                    // {8} external ports extensions
+    case _PORT_EXT_1:
+    case _PORT_EXT_2:
+    case _PORT_EXT_3:
+    case _PORT_EXT_4:
+    case _PORT_EXT_5:
+    case _PORT_EXT_6:
+    case _PORT_EXT_7:
 #if defined HANDLE_EXT_PORT
         HANDLE_EXT_PORT(ucPort, iChange, ulBit);
 #endif

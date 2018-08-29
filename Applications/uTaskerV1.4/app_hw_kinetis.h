@@ -3536,25 +3536,25 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define X_OFFSET             (192 + 207)
         #define I2C_LED_SPACE        15
         #define _I2C_OUTPUTS \
-            {RGB(0,255,0),     RGB(70,70,70), 1,  { (X_OFFSET - 360),                        (163 + Y_OFFSET), 0, 4 }, _PORT_EXP_0, PORTA_BIT8}, \
-            {RGB(0,255,0),     RGB(70,70,70), 1,  {((X_OFFSET + (1 * I2C_LED_SPACE)) - 360), (163 + Y_OFFSET), 0, 4 }, _PORT_EXP_0, PORTA_BIT9}, \
-            {RGB(0,255,0),     RGB(70,70,70), 1,  {((X_OFFSET + (2 * I2C_LED_SPACE)) - 360), (163 + Y_OFFSET), 0, 4 }, _PORT_EXP_0, PORTA_BIT10}, \
-            {RGB(0,255,0),     RGB(70,70,70), 1,  {((X_OFFSET + (3 * I2C_LED_SPACE)) - 360), (163 + Y_OFFSET), 0, 4 }, _PORT_EXP_0, PORTA_BIT11}, \
-            {RGB(0,255,0),     RGB(70,70,70), 1,  {((X_OFFSET + (4 * I2C_LED_SPACE)) - 360), (163 + Y_OFFSET), 0, 4 }, _PORT_EXP_0, PORTA_BIT12}, \
-            {RGB(0,255,0),     RGB(70,70,70), 1,  {((X_OFFSET + (5 * I2C_LED_SPACE)) - 360), (163 + Y_OFFSET), 0, 4 }, _PORT_EXP_0, PORTA_BIT13}, \
-            {RGB(0,255,0),     RGB(70,70,70), 1,  {((X_OFFSET + (6 * I2C_LED_SPACE)) - 360), (163 + Y_OFFSET), 0, 4 }, _PORT_EXP_0, PORTA_BIT14}, \
-            {RGB(0,255,0),     RGB(70,70,70), 1,  {((X_OFFSET + (7 * I2C_LED_SPACE)) - 360), (163 + Y_OFFSET), 0, 4 }, _PORT_EXP_0, PORTA_BIT15}
+            {RGB(0,255,0),     RGB(70,70,70), 1,  { (X_OFFSET - 360),                        (163 + Y_OFFSET), 0, 4 }, _PORT_EXT_0, PORTA_BIT8}, \
+            {RGB(0,255,0),     RGB(70,70,70), 1,  {((X_OFFSET + (1 * I2C_LED_SPACE)) - 360), (163 + Y_OFFSET), 0, 4 }, _PORT_EXT_0, PORTA_BIT9}, \
+            {RGB(0,255,0),     RGB(70,70,70), 1,  {((X_OFFSET + (2 * I2C_LED_SPACE)) - 360), (163 + Y_OFFSET), 0, 4 }, _PORT_EXT_0, PORTA_BIT10}, \
+            {RGB(0,255,0),     RGB(70,70,70), 1,  {((X_OFFSET + (3 * I2C_LED_SPACE)) - 360), (163 + Y_OFFSET), 0, 4 }, _PORT_EXT_0, PORTA_BIT11}, \
+            {RGB(0,255,0),     RGB(70,70,70), 1,  {((X_OFFSET + (4 * I2C_LED_SPACE)) - 360), (163 + Y_OFFSET), 0, 4 }, _PORT_EXT_0, PORTA_BIT12}, \
+            {RGB(0,255,0),     RGB(70,70,70), 1,  {((X_OFFSET + (5 * I2C_LED_SPACE)) - 360), (163 + Y_OFFSET), 0, 4 }, _PORT_EXT_0, PORTA_BIT13}, \
+            {RGB(0,255,0),     RGB(70,70,70), 1,  {((X_OFFSET + (6 * I2C_LED_SPACE)) - 360), (163 + Y_OFFSET), 0, 4 }, _PORT_EXT_0, PORTA_BIT14}, \
+            {RGB(0,255,0),     RGB(70,70,70), 1,  {((X_OFFSET + (7 * I2C_LED_SPACE)) - 360), (163 + Y_OFFSET), 0, 4 }, _PORT_EXT_0, PORTA_BIT15}
 
         #define I2C_INPUT_SPACE      15
         #define _I2C_INPUTS \
-            {_PORT_EXP_0, PORTA_BIT0, { 33,                          307,  46,                          317 }}, \
-            {_PORT_EXP_0, PORTA_BIT1, {(33 + (1 * I2C_INPUT_SPACE)), 307, (46 + (1 * I2C_INPUT_SPACE)), 317 }}, \
-            {_PORT_EXP_0, PORTA_BIT2, {(33 + (2 * I2C_INPUT_SPACE)), 307, (46 + (2 * I2C_INPUT_SPACE)), 317 }}, \
-            {_PORT_EXP_0, PORTA_BIT3, {(33 + (3 * I2C_INPUT_SPACE)), 307, (46 + (3 * I2C_INPUT_SPACE)), 317 }}, \
-            {_PORT_EXP_0, PORTA_BIT4, {(33 + (4 * I2C_INPUT_SPACE)), 307, (46 + (4 * I2C_INPUT_SPACE)), 317 }}, \
-            {_PORT_EXP_0, PORTA_BIT5, {(33 + (5 * I2C_INPUT_SPACE)), 307, (46 + (5 * I2C_INPUT_SPACE)), 317 }}, \
-            {_PORT_EXP_0, PORTA_BIT6, {(33 + (6 * I2C_INPUT_SPACE)), 307, (46 + (6 * I2C_INPUT_SPACE)), 317 }}, \
-            {_PORT_EXP_0, PORTA_BIT7, {(33 + (7 * I2C_INPUT_SPACE)), 307, (46 + (7 * I2C_INPUT_SPACE)), 317 }}
+            {_PORT_EXT_0, PORTA_BIT0, { 33,                          307,  46,                          317 }}, \
+            {_PORT_EXT_0, PORTA_BIT1, {(33 + (1 * I2C_INPUT_SPACE)), 307, (46 + (1 * I2C_INPUT_SPACE)), 317 }}, \
+            {_PORT_EXT_0, PORTA_BIT2, {(33 + (2 * I2C_INPUT_SPACE)), 307, (46 + (2 * I2C_INPUT_SPACE)), 317 }}, \
+            {_PORT_EXT_0, PORTA_BIT3, {(33 + (3 * I2C_INPUT_SPACE)), 307, (46 + (3 * I2C_INPUT_SPACE)), 317 }}, \
+            {_PORT_EXT_0, PORTA_BIT4, {(33 + (4 * I2C_INPUT_SPACE)), 307, (46 + (4 * I2C_INPUT_SPACE)), 317 }}, \
+            {_PORT_EXT_0, PORTA_BIT5, {(33 + (5 * I2C_INPUT_SPACE)), 307, (46 + (5 * I2C_INPUT_SPACE)), 317 }}, \
+            {_PORT_EXT_0, PORTA_BIT6, {(33 + (6 * I2C_INPUT_SPACE)), 307, (46 + (6 * I2C_INPUT_SPACE)), 317 }}, \
+            {_PORT_EXT_0, PORTA_BIT7, {(33 + (7 * I2C_INPUT_SPACE)), 307, (46 + (7 * I2C_INPUT_SPACE)), 317 }}
 
         #define _EXTERNAL_PORT_COUNT 1                                   // 1 external 16 bit port based on a port expander
         #define PCF8575_CNT          1                                   // port expander type and quantity

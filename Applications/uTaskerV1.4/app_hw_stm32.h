@@ -1160,9 +1160,9 @@
     #define INIT_WATCHDOG_DISABLE()    _CONFIG_PORT_INPUT(G, (USER_KEY_BUTTON), (INPUT_PULL_UP)) // PG15 configured as input with pull-up
     #define WATCHDOG_DISABLE()         ((_READ_PORT_MASK(G, (USER_KEY_BUTTON))) == 0) // disable watchdog by holding the user button down at reset
 
-    #define PORT_EXP_TOUCH_IRQ_PORT     PORT_I                           // touch screen I2C port expander has interrupt in this port
-    #define PORT_EXP_TOUCH_IRQ_PORT_BIT 2                                // touch screen I2C port expander has interrupt in this port bit
-    #define PORT_EXP_TOUCH_IRQ_PRIORITY PRIORITY_EXI2                    // corresponding interrupt priority
+    #define PORT_EXT_TOUCH_IRQ_PORT     PORT_I                           // touch screen I2C port expander has interrupt in this port
+    #define PORT_EXT_TOUCH_IRQ_PORT_BIT 2                                // touch screen I2C port expander has interrupt in this port bit
+    #define PORT_EXT_TOUCH_IRQ_PRIORITY PRIORITY_EXI2                    // corresponding interrupt priority
 
   //#define JOYSTICK_CONTROL                                             // enable the second I2C expender to monitor joystick inputs (use together with GLCD touch screen)
 
@@ -1331,9 +1331,9 @@
     #define INIT_WATCHDOG_DISABLE()    _CONFIG_PORT_INPUT(B, (USER_KEY_BUTTON), (INPUT_PULL_UP)) // PB9 configured as input with pull-up
     #define WATCHDOG_DISABLE()         ((_READ_PORT_MASK(B, (USER_KEY_BUTTON))) == 0) // disable watchdog by holding the user button down at reset
 
-    #define PORT_EXP_TOUCH_IRQ_PORT    PORTB                             // touch screen I2C port expander has interrupt in this port
-    #define PORT_EXP_TOUCH_IRQ_PORT_BIT 14                               // touch screen I2C port expander has interrupt in this port bit
-    #define PORT_EXP_TOUCH_IRQ_PRIORITY PRIORITY_EXI10_15                // corresponding interrupt priority
+    #define PORT_EXT_TOUCH_IRQ_PORT    PORTB                             // touch screen I2C port expander has interrupt in this port
+    #define PORT_EXT_TOUCH_IRQ_PORT_BIT 14                               // touch screen I2C port expander has interrupt in this port bit
+    #define PORT_EXT_TOUCH_IRQ_PRIORITY PRIORITY_EXI10_15                // corresponding interrupt priority
 
   //#define JOYSTICK_CONTROL                                             // enable the second I2C expender to monitor joystick inputs (use together with GLCD touch screen)
     #if defined JOYSTICK_CONTROL                                         // USB mouse requires joystick

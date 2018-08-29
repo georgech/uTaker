@@ -3199,7 +3199,7 @@ extern void fnSTMPE811(int iX, int iY);
 extern void fnPenPressed(int iX, int iY)
 {
     fnSTMPE811(iX, iY);
-    fnSimulateInputChange(PORT_EXP_TOUCH_IRQ_PORT, (15 - PORT_EXP_TOUCH_IRQ_PORT_BIT), CLEAR_INPUT);
+    fnSimulateInputChange(PORT_EXT_TOUCH_IRQ_PORT, (15 - PORT_EXT_TOUCH_IRQ_PORT_BIT), CLEAR_INPUT);
 }
 
 extern void fnPenMoved(int iX, int iY)
@@ -3210,7 +3210,7 @@ extern void fnPenMoved(int iX, int iY)
 extern void fnPenLifted(void)
 {
     fnSTMPE811(-1, -1);
-    fnSimulateInputChange(PORT_EXP_TOUCH_IRQ_PORT, (15 - PORT_EXP_TOUCH_IRQ_PORT_BIT), CLEAR_INPUT);
+    fnSimulateInputChange(PORT_EXT_TOUCH_IRQ_PORT, (15 - PORT_EXT_TOUCH_IRQ_PORT_BIT), CLEAR_INPUT);
 }
 #endif
 

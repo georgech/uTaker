@@ -3945,14 +3945,14 @@ extern KINETIS_PERIPH kinetis;
 
 #define _GPIO_ADC               (_PORTS_AVAILABLE_)                      // dedicated ADC pins
 
-#define _PORT_EXP_0             (_PORTS_AVAILABLE_ + 1)                  // {7}
-#define _PORT_EXP_1             (_PORTS_AVAILABLE_ + 2)                  // these port numbers should be in order following the internal ports and a fictive ADC port
-#define _PORT_EXP_2             (_PORTS_AVAILABLE_ + 3)
-#define _PORT_EXP_3             (_PORTS_AVAILABLE_ + 4)
-#define _PORT_EXP_4             (_PORTS_AVAILABLE_ + 5)
-#define _PORT_EXP_5             (_PORTS_AVAILABLE_ + 6)
-#define _PORT_EXP_6             (_PORTS_AVAILABLE_ + 7)
-#define _PORT_EXP_7             (_PORTS_AVAILABLE_ + 8)
+#define _PORT_EXT_0             (_PORTS_AVAILABLE_ + 1)                  // {7}
+#define _PORT_EXT_1             (_PORTS_AVAILABLE_ + 2)                  // these port numbers should be in order following the internal ports and a fictive ADC port
+#define _PORT_EXT_2             (_PORTS_AVAILABLE_ + 3)
+#define _PORT_EXT_3             (_PORTS_AVAILABLE_ + 4)
+#define _PORT_EXT_4             (_PORTS_AVAILABLE_ + 5)
+#define _PORT_EXT_5             (_PORTS_AVAILABLE_ + 6)
+#define _PORT_EXT_6             (_PORTS_AVAILABLE_ + 7)
+#define _PORT_EXT_7             (_PORTS_AVAILABLE_ + 8)
 
 
 #define _TOUCH_PORTA            30                                       // {3} touch senor input references on ports
