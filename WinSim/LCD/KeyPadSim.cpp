@@ -40,10 +40,11 @@ extern void fnSetLastPort(int iInputLastPort, int iInputPortBit);        // {9}
     #define DEFAULT_KEYPAD
 #endif
 
+RECT kb_rect;
+
 extern HWND ghWnd;
 
 static int cxDib, cyDib;
-static RECT kb_rect;
 static BITMAPFILEHEADER *pbmfh = 0;
 #if defined LCD_ON_KEYPAD
     static BITMAPFILEHEADER *pbmfh_backup = 0;
@@ -157,6 +158,9 @@ extern void DisplayKeyPad(HWND hwnd, RECT rt, RECT refresh_rect)
         kb_rect.bottom = rt.top + cyDib;
 #if defined KEYPAD_LED_DEFINITIONS                                       // {1}{5}
         fnConfigureKeypad_leds(kb_rect);
+#endif
+#if defined SUPPORT_LED_SEG_SIMULATION
+        fnSegLED(0, 0, 0, LED_SEGMENT_REFRESH);
 #endif
 	}
 

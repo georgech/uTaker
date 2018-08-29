@@ -972,7 +972,7 @@ extern int fnEraseFlashSector(unsigned char *ptrSector, MAX_FILE_LENGTH Length)
                         break;
                     }
                     ptrSector += FLASH_BLOCK_SIZE;
-                    Length -= FLASH_BLOCK_SIZE;
+                    Length -= (MAX_FILE_LENGTH)FLASH_BLOCK_SIZE;
                     continue;
                 }
             }

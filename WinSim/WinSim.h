@@ -443,6 +443,16 @@ extern void fnSimMatrixKB(void);
 #define KEY_CHANGED       0x01
 #define INPUT_CHANGED     0x02
 
+// Segment LED 
+//
+#if defined _EXCLUDE_WINDOWS_ && !defined _WINSIM_INCLUDE_
+    extern "C" void fnSegLED(int iDigit, unsigned char ucData, unsigned char ucMaxDigits, int iType);
+#else
+    extern void fnSegLED(int iDigit, unsigned char ucData, unsigned char ucMaxDigits, int iType);
+#endif
+    #define LED_SEGMENT_REFRESH       0
+    #define LED_14_SEGMENT_MAX9655    1
+
 // Ethernet interface
 //
 extern unsigned char *fnGetSimTxBufferAdd(void);
@@ -486,7 +496,6 @@ extern void fnSimCAN(int iChannel, int iBufferNumber, int iSpecial);     // {41}
   #define CAN_SIM_CHECK_RX    3                                          // {42}
   #define CAN_SIM_TERMINATE   4
 extern signed char fnGetCANOwner(int iChannel, int i);                   // {41}
-
 
 
 extern void fnInitTime(char *argv[]);

@@ -296,14 +296,15 @@ extern unsigned long fnGetPortMask(int iPortNumber)
     if (iPortNumber >= (PORTS_AVAILABLE + 1))
     #endif
     {                                                                    // {4} handle external port mask
-    #if defined _EXT_PORT_28_BIT
+    #if defined _EXT_PORT_32_BIT
+        return 0;
+    #elif defined _EXT_PORT_28_BIT
         return 0xf0000000;
     #elif defined _EXT_PORT_16_BIT
         return 0xffff0000;
     #else
-        return 0xffffff00;
+        return 0xffffff00;                                               // 8 bit external ports
     #endif
-        return 0;
     }
     for (i = 0; i < PORT_WIDTH; i++) {
         if (*cPinNumber[iPortNumber][i][_PIN_COUNT] == '-') {

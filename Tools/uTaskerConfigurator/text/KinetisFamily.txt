@@ -1,0 +1,1 @@
+Please select the Kinetis range that you would like to use, followed by the board that you are using or which serves as reference for the final hardware;  details can be modified later as required.

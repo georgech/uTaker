@@ -130,6 +130,7 @@
     02.02.2017 Allow sub-ms tick setting                                 {109}
     19.02.2017 Add FT800 emulation                                       {110}
     28.02.2017 Add UARTs 6 and 7                                         {111}
+    28.08.2018 Modify multicolour LED handling to allow multiple ones in any order {112}
 
     */
 
@@ -264,9 +265,9 @@ static int iLastBit;
 static int iPrevBit = -1;
 
 #if defined SUPPORT_LCD || defined SUPPORT_GLCD  || defined SUPPORT_OLED || defined SUPPORT_TFT || defined GLCD_COLOR // {104}
-static HDC clientDeviceContext = 0;
-static HDC lcd_device_context = 0;
-unsigned long *pPixels = 0;
+    static HDC clientDeviceContext = 0;
+    static HDC lcd_device_context = 0;
+    unsigned long *pPixels = 0;
 #endif
 
 #define TOGGLE_PORT    0
@@ -1413,12 +1414,14 @@ static void fnDisplayPorts(HDC hdc)
             cPorts[2] = 'T';
             cPorts[3] = '-';
             cPorts[4] = ((i - _PORTS_AVAILABLE) + '0');                  // supports 10 external 8 bit ports
-    #if defined _EXT_PORT_28_BIT
+    #if defined _EXT_PORT_32_BIT
+            ulPortMask = 0x00000000;
+    #elif defined _EXT_PORT_28_BIT
             ulPortMask = 0xf0000000;
-    #elif defined _EXT_PORT_16_BIT                                         // {91}
+    #elif defined _EXT_PORT_16_BIT                                       // {91}
             ulPortMask = 0xffff0000;
     #else
-            ulPortMask = 0xffffff00;
+            ulPortMask = 0xffffff00;                                     // 8 bit external ports
     #endif
             while (cPorts[iSpaces] != ' ') {                             // clear out any port name
                 cPorts[iSpaces++] = ' ';
@@ -1452,7 +1455,9 @@ static void fnDisplayPorts(HDC hdc)
 #endif
 #if defined _KINETIS && !(defined KINETIS_K00 || defined KINETIS_K20 || defined KINETIS_K60 || defined KINETIS_K61 || defined KINETIS_K64 || defined KINETIS_K70 || defined KINETIS_K80 || defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_KV || defined KINETIS_KM || defined KINETIS_KW2X) && !(defined KINETIS_K12 && (PIN_COUNT == PIN_COUNT_48_PIN)) // {70}{74}{82}{92}{96}
         if (i >= (_PORTS_AVAILABLE - 1)) {                               // {91}
-    #if defined _EXT_PORT_28_BIT
+    #if defined _EXT_PORT_32_BIT
+            ulPortMask = 0x00000000;
+    #elif defined _EXT_PORT_28_BIT
             ulPortMask = 0xf0000000;
     #elif defined _EXT_PORT_16_BIT    
             ulPortMask = 0xffff0000;
@@ -2463,7 +2468,7 @@ extern "C" void fnChangeUSBState(int iNewState)
 static void fnDisplayUSB(HDC hdc, RECT refresh_rect)                     // {14}
 {
     if ((refresh_rect.right < rect_USB_sign.left) || (refresh_rect.bottom < rect_USB_sign.top)) {
-        if (!iUSB_state_changed) {
+        if (iUSB_state_changed == 0) {
             return;
         }
     }
@@ -2831,11 +2836,25 @@ extern "C" void fnSound(int iFrequency)
 }
 #endif
 
+#if defined MULTICOLOUR_LEDS
+static int fnFindMulticolour(int led, int *ptrMultiLEDs)                 // {112}
+{
+    int iMulticolorLed = 0;
+    while (iMulticolorLed < sizeof(_multiLEDs) / sizeof(_multiLEDs[iMulticolorLed])) {
+        if (_multiLEDs[iMulticolorLed].iLED_start == led) {
+            *ptrMultiLEDs = iMulticolorLed;
+            return 0;
+        }
+        iMulticolorLed++;
+    }
+    return -1;                                                           // not found
+}
+#endif
 
 extern void fnDisplayKeypadLEDs(HDC hdc)
 {
 #if defined MULTICOLOUR_LEDS
-    int _led_multi_colour[3] = {0,0,0};
+    int _led_multi_colour[3];
     int iMultiLEDs = 0;
     int iCollectColour = 0;
     int iMultiStop = 0;
@@ -2845,21 +2864,16 @@ extern void fnDisplayKeypadLEDs(HDC hdc)
     int led = 0;
     while (led < _KEYPAD_LEDS) {                                         // for each LED in the list
 #if defined MULTICOLOUR_LEDS
-        if (_multiLEDs[iMultiLEDs].iLED_start == led) {                  // this LED is a mixture LED so we start collecting colours and only draw the final LED
-            _led_multi_colour[0] = 0;
-            _led_multi_colour[1] = 0;
-            _led_multi_colour[2] = 0;
-            iCollectColour = 1;                                          // we are collecting the colour
-        }
-        else if (iCollectColour == 0) {
-            _led_multi_colour[0] = 0;
-            _led_multi_colour[1] = 0;
-            _led_multi_colour[2] = 0;
-        }
-        else {
-            if (_multiLEDs[iMultiLEDs].iLED_end == led) {
-                iMultiStop = 1;
+        if (iCollectColour == 0) {                                       // not collecting a colour
+            if (fnFindMulticolour(led, &iMultiLEDs) == 0) {              // this LED is a mixture LED so we start collecting colours and only draw the final LED when all have been found
+                iCollectColour = 1;                                      // start collecting the colour
+                _led_multi_colour[0] = 0;
+                _led_multi_colour[1] = 0;
+                _led_multi_colour[2] = 0;
             }
+        }
+        else if (_multiLEDs[iMultiLEDs].iLED_end == led) {               // if collecting a colour we check whether we have reached the final one
+            iMultiStop = 1;
         }
         _ulPortFunction = ulPortFunction[keypad_leds[led].led_port];     // port pins defined as outputs
         _ulPortStates = ulPortStates[keypad_leds[led].led_port];         // port pin state (high or low)
@@ -2918,8 +2932,8 @@ extern void fnDisplayKeypadLEDs(HDC hdc)
 #endif
             _ulPortFunction = ulPortFunction[keypad_leds[led].led_port]; // port pins defined as outputs
             _ulPortStates = ulPortStates[keypad_leds[led].led_port];     // port pin state (high or low)
-            if ((_ulPortFunction & keypad_leds[led].led_port_bit)) {     // {97} port pin is an output
-                if (_ulPortStates & keypad_leds[led].led_port_bit) {     // port driving a '1'
+            if ((_ulPortFunction & keypad_leds[led].led_port_bit) != 0) {// {97} port pin is an output
+                if ((_ulPortStates & keypad_leds[led].led_port_bit) != 0) { // port driving a '1'
                     SelectObject(hdc, keypad_leds[led].led_1_colour);    // select the brush style for the '1' LED
                 }
                 else {                                                   // port driving a '0'
@@ -3192,7 +3206,7 @@ static void fnUART_string(int iUART, int iCOM, DWORD com_port_speed, UART_MODE_C
 
 #define USE_DIB
 
-int APIENTRY WinMain(HINSTANCE hInstance,
+extern int APIENTRY WinMain(HINSTANCE hInstance,
                      HINSTANCE hPrevInstance,
                      LPSTR     lpCmdLine,
                      int       nCmdShow )
@@ -3917,7 +3931,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
                         unsigned short usPortOffset = 1;
                         unsigned char ucPortNumber = 0;
                       //ucNumberOfPorts /= (3 * sizeof(unsigned long));  // {51}
-                        while (ucNumberOfPorts--) {                      // for each port
+                        while (ucNumberOfPorts-- != 0) {                 // for each port
                             ulPort = fnGetValue(doPtr + usPortOffset, sizeof(ulPort));
                             usPortOffset += sizeof(ulPort);
                             ulPortDDR = fnGetValue(doPtr + usPortOffset, sizeof(ulPort));
@@ -4258,7 +4272,6 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 #if defined SUPPORT_LCD || defined SUPPORT_GLCD || defined SUPPORT_OLED || defined SUPPORT_TFT || defined GLCD_COLOR || defined SLCD_FILE || defined SUPPORT_KEY_SCAN || defined KEYPAD || defined BUTTON_KEY_DEFINITIONS  // {35}{65}{83}
     int iLCD_Bottom = 0;
 #endif
-
     rt.right = UTASKER_WIN_WIDTH;                                        // basic windows size without LCD or keypad/panel
     rt.bottom = UTASKER_WIN_HEIGHT;
 

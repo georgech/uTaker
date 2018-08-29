@@ -35,6 +35,7 @@
     13.08.2013 Add ST7565S_GLCD_MODE                                     {18}
     15.03.2015 Introduce faster bitmap based LCD                         {19}
     19.02.2017 Add FT800 emulation                                       {20}
+    28.08.2018 Add segment LED simulation                                {21}
 
     */
 
@@ -48,6 +49,7 @@
 #include "config.h"
 #include "lcd.h"
 
+extern HWND ghWnd;
 
 #if (defined SUPPORT_LCD || defined SUPPORT_GLCD || defined SUPPORT_OLED || defined SUPPORT_TFT || defined GLCD_COLOR || defined SLCD_FILE) && !(defined FT800_EMULATOR && defined FT800_GLCD_MODE)  // {16}
 
@@ -59,8 +61,6 @@
 #endif
 
 extern void fnRedrawDisplay(void);
-
-extern HWND ghWnd;
 
 #if (defined SUPPORT_GLCD || defined SUPPORT_TFT || defined TFT_GLCD_MODE || defined GLCD_COLOR || defined SLCD_FILE) && !defined OLED_GLCD_MODE  // {6}{7}
     #define NON_DISPLAYED_X  0                                           // no non-visible pixels at the start of the display field
@@ -803,7 +803,7 @@ static void Initfont(void)
     font_tbl[0x2F].font_y7 = 0x00;    font_tbl[0x3F].font_y7 = 0x00;    font_tbl[0x4F].font_y7 = 0x00;    font_tbl[0x5F].font_y7 = 0x00;    font_tbl[0x6F].font_y7 = 0x00;    font_tbl[0x7F].font_y7 = 0x00;    font_tbl[0xAF].font_y7 = 0x00;    font_tbl[0xBF].font_y7 = 0x00;    font_tbl[0xCF].font_y7 = 0x00;    font_tbl[0xDF].font_y7 = 0x00;    font_tbl[0xEF].font_y7 = 0x00;    font_tbl[0xFF].font_y7 = 0x1f;        
 #endif
                    
-    for(UINT i = 0; i<16; i++) {                                         // invalid pattern 
+    for (int i = 0; i < 16; i++) {                                       // invalid pattern 
         font_tbl[i] = font_tbl[0x00];
         font_tbl[i+0x80] = font_tbl[0x20];
         font_tbl[i+0x90] = font_tbl[0x20];        
@@ -925,7 +925,7 @@ static unsigned char LCDCommand(BOOL bRS, ULONG ulCmd)
                 fnInvalidateLCD();
             }
 
-            if (!tDisplayMem.ucCursorBlinkOn) {
+            if (tDisplayMem.ucCursorBlinkOn == 0) {
                 ucBlinkCursor = 0;
             }
         }
@@ -949,7 +949,7 @@ static unsigned char LCDCommand(BOOL bRS, ULONG ulCmd)
             fnInvalidateLCD();
         }
     }
-    else {                                                               //read/write command
+    else {                                                               // read/write command
         if (tDisplayMem.ucRAMselect == CGRAM) {
             unsigned int *pCharLine = (UINT*)&font_tbl[tDisplayMem.ucCGRAMaddr/8].font_y0;
             pCharLine += (tDisplayMem.ucCGRAMaddr % 8);
@@ -3522,4 +3522,144 @@ static void fnDrawAllSegments(int iDrawType)
 }
 
 #endif
+#endif
+
+#if defined SUPPORT_LED_SEG_SIMULATION                                   // {21}
+
+#define LCD_SEGMENT_START_X    85
+#define LCD_SEGMENT_START_Y    183
+#define LCD_SEGMENT_WIDTH      32
+#define LCD_SEGMENT_LINE_WIDTH 6
+
+extern RECT kb_rect;
+
+static unsigned short font_14_MAX9655[128] = {
+    0x183f, 0x0018, 0x0336, 0x023c, 0x0319, 0x2125, 0x032f, 0x001a, 0x033f, 0x033d, 0x033b, 0x02fc, 0x0027, 0x00fc, 0x0327, 0x0123,
+    0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x03e4, 0x0f80, 0x03e7, 0x0331, 0x0c03, 0x03c4, 0x30c0, 0x0cc0, 
+    0x0000, 0x0018, 0x0041, 0x3fff, 0x03ee, 0x3f09, 0x3c68, 0x0800, 0x2800, 0x1400, 0x33c0, 0x03c0, 0x1000, 0x0300, 0x0186, 0x1800, 
+    0x183f, 0x0018, 0x0336, 0x023c, 0x0319, 0x2125, 0x032f, 0x001a, 0x033f, 0x033d, 0x00c0, 0x1040, 0x2800, 0x0304, 0x1400, 0x02b0,
+    0x0277, 0x033b, 0x02fc, 0x0027, 0x00fc, 0x0327, 0x0123, 0x022f, 0x031b, 0x00c0, 0x001e, 0x2903, 0x0007, 0x0c1b, 0x241b, 0x003f, 
+    0x0333, 0x203f, 0x2333, 0x032d, 0x00e0, 0x001f, 0x1803, 0x301b, 0x3c00, 0x0c80, 0x1824, 0x0027, 0x2400, 0x003c, 0x1830, 0x0004, 
+    0x0400, 0x033b, 0x02fc, 0x0027, 0x00fc, 0x0327, 0x0123, 0x022f, 0x031b, 0x00c0, 0x001e, 0x2903, 0x0007, 0x0c1b, 0x241b, 0x003f,
+    0x0333, 0x203f, 0x2333, 0x032d, 0x00e0, 0x001f, 0x1803, 0x301b, 0x3c00, 0x0c80, 0x1824, 0x2900, 0x00c0, 0x1600, 0x0312, 0x003f
+};
+
+static void fnDrawSegment14_MAX9655(int iX, int iY, int iWidth, unsigned char ucReference)
+{
+    // Draw background
+    //
+    unsigned short usCharacter;
+    int iSegment = 0;
+    int iHeight = (int)(iWidth * 1.4);
+    HDC hdc = GetDC(ghWnd);
+    COLORREF colour = RGB(20, 20, 20);
+    HPEN hPen;
+    HBRUSH brush = (HBRUSH)CreateSolidBrush(colour);                     // create a brush object using the mixture colour
+    SelectObject(hdc, brush);                                            // select the brush style for the LED draw
+    iX += kb_rect.left;
+    iY += kb_rect.top;
+    Rectangle(hdc, iX, iY, (iX + iWidth), (iY + iHeight));
+    usCharacter = font_14_MAX9655[ucReference & 0x7f];
+    hPen = CreatePen(PS_DOT, LCD_SEGMENT_LINE_WIDTH, RGB(230, 0, 0));
+    SelectObject(hdc, hPen);
+    while (usCharacter != 0) {
+        if ((usCharacter & 0x0001) != 0) {
+            switch (iSegment) {
+            case 0:                                                      // top left
+                MoveToEx(hdc, (iX + (LCD_SEGMENT_LINE_WIDTH/2)), (iY + (LCD_SEGMENT_LINE_WIDTH / 2)), 0);
+                LineTo(hdc, (iX + (LCD_SEGMENT_LINE_WIDTH / 2)), (iY + (iHeight / 2)));
+                break;
+            case 1:                                                      // bottom left
+                MoveToEx(hdc, (iX + (LCD_SEGMENT_LINE_WIDTH / 2)), (iY + (iHeight / 2)), 0);
+                LineTo(hdc, (iX + (LCD_SEGMENT_LINE_WIDTH / 2)), (iY + iHeight - (LCD_SEGMENT_LINE_WIDTH / 2)));
+                break;
+            case 2:                                                      // bottom
+                MoveToEx(hdc, (iX + (LCD_SEGMENT_LINE_WIDTH / 2)), (iY + iHeight - (LCD_SEGMENT_LINE_WIDTH / 2)), 0);
+                LineTo(hdc, (iX + iWidth - (LCD_SEGMENT_LINE_WIDTH / 2)), (iY + iHeight - (LCD_SEGMENT_LINE_WIDTH / 2)));
+                break;
+            case 3:                                                      // bottom right
+                MoveToEx(hdc, (iX + iWidth - (LCD_SEGMENT_LINE_WIDTH / 2)), (iY + (iHeight / 2)), 0);
+                LineTo(hdc, (iX + iWidth - (LCD_SEGMENT_LINE_WIDTH / 2)), (iY + iHeight - (LCD_SEGMENT_LINE_WIDTH / 2)));
+                break;
+            case 4:                                                      // top right
+                MoveToEx(hdc, (iX + iWidth - (LCD_SEGMENT_LINE_WIDTH / 2)), (iY + (LCD_SEGMENT_LINE_WIDTH / 2)), 0);
+                LineTo(hdc, (iX + iWidth - (LCD_SEGMENT_LINE_WIDTH / 2)), (iY + (iHeight / 2)));
+                break;
+            case 5:                                                      // top
+                MoveToEx(hdc, (iX + (LCD_SEGMENT_LINE_WIDTH / 2)), (iY + (LCD_SEGMENT_LINE_WIDTH / 2)), 0);
+                LineTo(hdc, (iX + iWidth - (LCD_SEGMENT_LINE_WIDTH / 2)), (iY + (LCD_SEGMENT_LINE_WIDTH / 2)));
+                break;
+            case 6:                                                      // top middle
+                MoveToEx(hdc, (iX + (iWidth/2)), (iY + (LCD_SEGMENT_LINE_WIDTH / 2)), 0);
+                LineTo(hdc, (iX + (iWidth/2)), (iY + (LCD_SEGMENT_LINE_WIDTH / 2) + (iWidth / 2)));
+                break;
+            case 7:                                                      // bottom middle
+                MoveToEx(hdc, (iX + (iWidth/2)), (iY + (LCD_SEGMENT_LINE_WIDTH / 2) + (iWidth / 2)), 0);
+                LineTo(hdc, (iX + (iWidth/2)), (iY + iHeight - (LCD_SEGMENT_LINE_WIDTH / 2)));
+                break;
+            case 8:                                                      // left middle
+                MoveToEx(hdc, (iX + (LCD_SEGMENT_LINE_WIDTH / 2)), (iY + (iHeight/2)), 0);
+                LineTo(hdc, (iX + (iWidth/2) - (LCD_SEGMENT_LINE_WIDTH / 2)), (iY + (iHeight/2)));
+                break;
+            case 9:                                                      // right middle
+                MoveToEx(hdc, (iX + (iWidth / 2)), (iY + (iHeight / 2)), 0);
+                LineTo(hdc, (iX + iWidth - (LCD_SEGMENT_LINE_WIDTH / 2)), (iY + (iHeight / 2)));
+                break;
+            case 10:                                                     // top left diagonal
+                MoveToEx(hdc, (iX + (LCD_SEGMENT_LINE_WIDTH / 2)), (iY + (LCD_SEGMENT_LINE_WIDTH / 2)), 0);
+                LineTo(hdc, (iX + (iWidth / 2)), (iY +  (iHeight / 2)));
+                break;
+            case 11:                                                     // top right diagonal
+                MoveToEx(hdc, (iX + iWidth - (LCD_SEGMENT_LINE_WIDTH / 2)), (iY + (LCD_SEGMENT_LINE_WIDTH / 2)), 0);
+                LineTo(hdc, (iX + (iWidth/2)), (iY + (iHeight/2)));
+                break;
+            case 12:                                                     // bottom left diagonal
+                MoveToEx(hdc, (iX + (iWidth / 2)), (iY +  (iHeight / 2)), 0);
+                LineTo(hdc, (iX + (LCD_SEGMENT_LINE_WIDTH / 2)), (iY + iHeight - (LCD_SEGMENT_LINE_WIDTH / 2)));
+                break;
+            case 13:                                                     // bottom right diagonal
+                MoveToEx(hdc, (iX + (iWidth / 2)), (iY + (iHeight / 2)), 0);
+                LineTo(hdc, (iX + iWidth - (LCD_SEGMENT_LINE_WIDTH / 2)), (iY + iHeight - (LCD_SEGMENT_LINE_WIDTH / 2)));
+                break;
+            }
+        }
+        usCharacter >>= 1;
+        iSegment++;
+    }
+}
+
+extern "C" void fnSegLED(int iDigit, unsigned char ucData, unsigned char ucMaxDigits, int iType)
+{
+    static unsigned char ucDigits[32] = {0};
+    static unsigned long ulDigitInitialised = 0;
+    static unsigned char ucMaxLED_digits = 0;
+    int i;
+    switch (iType) {
+    case LED_SEGMENT_REFRESH:
+        for (i = 0; i <= ucMaxLED_digits; i++) {
+            if ((ulDigitInitialised & (1 << i)) != 0) {
+                ulDigitInitialised &= ~(1 << i);
+                fnSegLED(i, ucDigits[i], ucMaxLED_digits, LED_14_SEGMENT_MAX9655);
+            }
+        }
+        break;
+    case LED_14_SEGMENT_MAX9655:
+        if (ucMaxDigits != 0) {
+            ucMaxLED_digits = ucMaxDigits;
+        }
+        if ((ulDigitInitialised & (1 << iDigit)) == 0) {
+            ulDigitInitialised |= (1 << iDigit);
+        }
+        else if (ucDigits[iDigit] == ucData) {
+            return;
+        }
+        ucDigits[iDigit] = ucData;                                       // new value
+        fnDrawSegment14_MAX9655((LCD_SEGMENT_START_X + (iDigit * (LCD_SEGMENT_WIDTH + 1))), LCD_SEGMENT_START_Y, LCD_SEGMENT_WIDTH, ucData);
+        break;
+    default:
+        _EXCEPTION("Non supported segment LED simulation type!");
+        break;
+    }
+
+}
 #endif
