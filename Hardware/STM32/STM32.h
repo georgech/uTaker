@@ -694,7 +694,7 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*I
         #error "PCLK1 speed is too high (max. 42MHz)!!"
     #endif
     #if PCLK2 > 84000000
-        #error "PCLK1 speed is too high (max. 84MHz)!!"
+        #error "PCLK2 speed is too high (max. 84MHz)!!"
     #endif
 #elif defined _STM32F2XX
     #if PCLK1 > 30000000

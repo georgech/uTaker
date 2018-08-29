@@ -26,6 +26,7 @@
     10.04.2018 Add KL27 clock inputs                                     {10}
     05.05.2018 Add user defined target register option for DMA operation {11}
     08.05.2018 Add channel interrupt support (in addition to period interrupts) {12}
+    29.08.2018 Correct FTM2 clock gating for K64, K65 and K66            {13}
 
 */
 
@@ -371,7 +372,7 @@ static __interrupt void _PWM_Interrupt_5(void)
         #if defined KINETIS_WITH_PCC && !defined KINETIS_KE15
                 SELECT_PCC_PERIPHERAL_SOURCE(FTM2, FTM2_PCC_SOURCE);     // select the PCC clock used by FlexTimer/TPM 2
         #endif
-        #if defined KINETIS_KL || defined KINETIS_K22_SF7
+        #if defined KINETIS_KL || defined KINETIS_K22_SF7 || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66 // {13}
                 POWER_UP_ATOMIC(6, FTM2);                                // ensure that the FlexTimer module is powered up
         #else
                 POWER_UP_ATOMIC(3, FTM2);                                // ensure that the FlexTimer module is powered up

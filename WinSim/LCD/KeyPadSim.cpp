@@ -322,7 +322,7 @@ static void fnReleaseGangedButtons(int iReference)
     #endif
 #endif
 
-#if defined STICKY_BUTTONS
+#if defined STICKY_BUTTONS                                               // {11}
 static const unsigned char ucStickyButtons[] = STICKY_BUTTONS;
 
 static int fnStickyButton(int iRef)
@@ -356,7 +356,7 @@ extern int fnCheckKeypad(int x, int y, int iPressRelease)
 #if defined BUTTON_KEY_DEFINITIONS                                       // {6}
     for (i = 0; i < (sizeof(user_buttons)/sizeof(USER_BUTTON)); i++) {
         if (iUserButtonStates[i] != 0) {                                 // originally pressed
-    #if defined STICKY_BUTTONS
+    #if defined STICKY_BUTTONS                                           // {11}
             if (fnStickyButton(i) == 0) {
                 fnReleaseButton(i);
             }

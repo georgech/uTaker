@@ -2877,7 +2877,7 @@ static void fnExecuteTimerInterrupt(int iTimerRef)
         break;
     #endif
     #if FLEX_TIMERS_AVAILABLE > 5 && defined TPMS_AVAILABLE_TOO          // TPM2
-    case 4:
+    case 5:
         if (fnGenInt(irq_TPM2_ID) != 0) {                                // if FlexTimer 5 (TPM2) interrupt is not disabled
             VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
             ptrVect->processor_interrupts.irq_TPM2();                    // call the interrupt handler

@@ -133,7 +133,7 @@ static void fnHandleFlexTimer(FLEX_TIMER_MODULE *ptrFlexTimer, int iFlexTimerRef
     #endif
     #if FLEX_TIMERS_AVAILABLE > 2
             case 2:
-        #if defined KINETIS_KL ||defined KINETIS_K22_SF7
+        #if defined KINETIS_KL ||defined KINETIS_K22_SF7 || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66
                 POWER_DOWN_ATOMIC(6, FTM2);
         #else
                 POWER_DOWN_ATOMIC(3, FTM2);
@@ -305,7 +305,7 @@ static __interrupt void _flexTimerInterrupt_5(void)
         #if defined KINETIS_WITH_PCC
                     PCC_FTM2 = 0;                                        // disable clocks to module
         #else
-            #if defined KINETIS_KL || defined KINETIS_K22_SF7
+            #if defined KINETIS_KL || defined KINETIS_K22_SF7 || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66
                     POWER_DOWN_ATOMIC(6, FTM2);
             #else
                     POWER_DOWN_ATOMIC(3, FTM2);
