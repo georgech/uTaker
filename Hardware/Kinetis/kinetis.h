@@ -215,8 +215,6 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
     #define BME_XOR_OFFSET   0xc000000
 #elif defined KINETIS_KV50                                               // cortex-M7
     #define ARM_MATH_CM7
-    #define BIT_BANDING_PERIPHERAL_ADDRESS(base, bit)    ((0x42000000 + (((CAST_POINTER_ARITHMETIC)(base) - 0x40000000) * 32)) + (4 * bit)) // bit banding address for a peripheral bit
-    #define BIT_BANDING_SRAM_ADDRESS(base, bit)          ((0x22000000 + (((CAST_POINTER_ARITHMETIC)(base) - 0x20000000) * 32)) + (4 * bit)) // bit banding address for an SRAM bit
 #else
     #define ARM_MATH_CM4                                                 // cortex-M4 to be used
     #define BIT_BANDING_PERIPHERAL_ADDRESS(base, bit)    ((0x42000000 + (((CAST_POINTER_ARITHMETIC)(base) - 0x40000000) * 32)) + (4 * bit)) // bit banding address for a peripheral bit
@@ -11230,14 +11228,17 @@ typedef struct stKINETIS_LPTMR_CTL
           #endif
           #define SIM_SCGC6_SAI0                 0x00008000
           #define SIM_SCGC6_I2S                  0x00008000
+          #if defined KINETIS_KV50
+              #define SIM_SCGC6_PDB1             0x00020000
+          #endif
           #define SIM_SCGC6_CRC                  0x00040000
           #define SIM_SCGC6_USBHS                0x00100000              // {25}
           #define SIM_SCGC6_USBDCD               0x00200000
-          #define SIM_SCGC6_PDB                  0x00400000
+          #define SIM_SCGC6_PDB0                 0x00400000
           #define SIM_SCGC6_PIT0                 0x00800000
           #define SIM_SCGC6_FTM0                 0x01000000              // TPM0 on KL/KE
           #define SIM_SCGC6_FTM1                 0x02000000              // TPM1 on KL/KE
-          #if defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_K22_SF7 || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66
+          #if defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_K22_SF7 || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_KV50
               #define SIM_SCGC6_FTM2             0x04000000              // TPM2 on KL/KE
           #endif
           #define SIM_SCGC6_ADC0                 0x08000000
@@ -11560,6 +11561,9 @@ typedef struct stKINETIS_LPTMR_CTL
                 #define POWER_UP_ATOMIC(reg, module)   *SIM_SCGC##reg##_BME_OR = (SIM_SCGC##reg##_##module)
                 #define POWER_DOWN_ATOMIC(reg, module) *SIM_SCGC##reg##_BME_AND = ~(SIM_SCGC##reg##_##module)
             #endif
+        #elif defined ARM_MATH_CM7
+            #define POWER_UP_ATOMIC(reg, module)   SIM_SCGC##reg |= (SIM_SCGC##reg##_##module)
+            #define POWER_DOWN_ATOMIC(reg, module) SIM_SCGC##reg &= ~(SIM_SCGC##reg##_##module)
         #else                                                            // cortex-m4
             #define POWER_UP_ATOMIC(reg, module)   ATOMIC_SET_REGISTER(SIM_SCGC##reg##_SIM_SCGC##reg##_##module) // {98}{102} power up a single module using bit-banding access (apply clock to it)
             #define POWER_DOWN_ATOMIC(reg, module) ATOMIC_CLEAR_REGISTER(SIM_SCGC##reg##_SIM_SCGC##reg##_##module) // {102} power down a single module using bit-banding access (disable clock to it)
@@ -11575,10 +11579,14 @@ typedef struct stKINETIS_LPTMR_CTL
     #endif
 #endif
 
-#if defined ARM_MATH_CM4 || defined ARM_MATH_CM7                         // {103}
+#if defined ARM_MATH_CM4                                                 // {103}
     #define ATOMIC_PERIPHERAL_BIT_REF_SET(reg, bit_ref)    ATOMIC_SET_REGISTER(BIT_BANDING_PERIPHERAL_ADDRESS((reg##_ADDR), bit_ref))
     #define ATOMIC_PERIPHERAL_BIT_REF_CLEAR(reg, bit_ref)  ATOMIC_CLEAR_REGISTER(BIT_BANDING_PERIPHERAL_ADDRESS((reg##_ADDR), bit_ref))
     #define ATOMIC_PERIPHERAL_BIT_REF_CHECK(reg, bit_ref)  ATOMIC_CHECK_REGISTER(BIT_BANDING_PERIPHERAL_ADDRESS((reg##_ADDR), bit_ref))
+#elif defined ARM_MATH_CM7
+    #define ATOMIC_PERIPHERAL_BIT_REF_SET(reg, bit_ref)    (reg |= (1 << bit_ref))
+    #define ATOMIC_PERIPHERAL_BIT_REF_CLEAR(reg, bit_ref)  (reg &= ~(1 << bit_ref))
+    #define ATOMIC_PERIPHERAL_BIT_REF_CHECK(reg, bit_ref)  ((reg & (1 << bit_ref)) != 0)
 #else
     #if defined _WINDOWS
         #define ATOMIC_PERIPHERAL_BIT_REF_SET(reg, bit_ref)   *(reg##_BME_OR - (BME_OR_OFFSET/sizeof(unsigned long))) |= (1 << bit_ref)

@@ -9544,7 +9544,7 @@ extern int fnSimTimers(void)
     #endif
 #endif
 #if PDB_AVAILABLE > 0 && !defined KINETIS_KE15 && !defined KINETIS_KE18  // {24}
-    if (((SIM_SCGC6 & SIM_SCGC6_PDB) != 0) && ((PDB0_SC & PDB_SC_PDBEN) != 0)) { // {16} PDB powered and enabled
+    if (((SIM_SCGC6 & SIM_SCGC6_PDB0) != 0) && ((PDB0_SC & PDB_SC_PDBEN) != 0)) { // {16} PDB powered and enabled
         if ((PDB0_SC & PDB_SC_TRGSEL_SW) == PDB_SC_TRGSEL_SW) {          // software triggered
             if ((PDB0_SC & PDB_SC_SWTRIG) != 0) {
                 PDB0_SC &= ~(PDB_SC_SWTRIG);                             // clear the software trigger

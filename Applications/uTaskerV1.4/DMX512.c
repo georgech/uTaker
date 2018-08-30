@@ -1316,8 +1316,8 @@ static int fnSend_DMX512_RDM(QUEUE_HANDLE uart_handle, unsigned char ucCommandCl
         #if defined USE_DMX_RDM_SLAVE
                 if (iSlave != 0) {                                       // if the slave is responding
                   //unsigned short usControlField = 0;                   // control field value
-                  //ptrDataBlock->ucParameterDataLength = 0x0;           // optional binding UID not used
-                  //ptrRDMpacket->ucMessageCount = 0;
+                  //ptrDataBlock->ucParameterDataLength = 2;             // optional binding UID not used
+                  //ptrRDMpacket->ucMessageCount = 1;
                   //*ptr_ucData = (unsigned char)(usControlField >> 8);
                   //*(ptr_ucData + 1) = (unsigned char)(usControlField);
                   //ptrCheckSum = ptr_ucData;
