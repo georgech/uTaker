@@ -13412,7 +13412,7 @@ typedef struct stKINETIS_LPTMR_CTL
             #define REFRESH_WDOG()           WDOG_REFRESH = WDOG_REFRESH_SEQUENCE_1; WDOG_REFRESH = WDOG_REFRESH_SEQUENCE_2 // this sequence must be performed within 16 bus cycles (it should be protected against interrupt disturbing this)
         #endif
     #else
-        #define WDOG_STCTRLH                 *(volatile unsigned short*)(WDOG_BLOCK + 0x00)   // watchdog status and control register: high
+        #define WDOG_STCTRLH                 *(volatile unsigned short *)(WDOG_BLOCK + 0x00) // watchdog status and control register: high
           #define WDOG_STCTRLH_WDOGEN        0x0001                      // watchdog enable
           #define WDOG_STCTRLH_CLKSRC        0x0002                      // watchdog clock source is alternative source (bus clock), rather than LPO
           #define WDOG_STCTRLH_IRQRSTEN      0x0004

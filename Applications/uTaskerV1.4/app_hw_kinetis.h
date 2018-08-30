@@ -7735,7 +7735,64 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         {RGB(255,0,0),   RGB(20,20,20), 1, {376, 163, 389, 167 }, _PORTD, DEMO_LED_8}, \
 
     #define KEYPAD "KeyPads/TWR_KV10Z32.bmp"
-#elif defined TWR_KV31F120M || defined TWR_KV46F150M || defined TWR_KV58F220M || defined FRDM_KV31F
+#elif defined TWR_KV58F220M
+    #define DEMO_LED_1             (PORTE_BIT11)                         // (red LED) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+    #define DEMO_LED_2             (PORTE_BIT12)                         // (green LED) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+    #define DEMO_LED_3             (PORTE_BIT29)                         // (blue LED) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+    #define DEMO_LED_4             (PORTE_BIT30)                         // (orange LED) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+    #define BLINK_LED              (DEMO_LED_1)
+    #define SWITCH_2               (PORTA_BIT4)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+    #define SWITCH_3               (PORTE_BIT4)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+    #define SWITCH_4               (PORTB_BIT5)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+    #define SWITCH_5               (PORTB_BIT4)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+
+    #define SWITCH_2_PORT          _PORTA
+    #define SWITCH_3_PORT          _PORTE
+    #define SWITCH_4_PORT          _PORTB
+    #define SWITCH_5_PORT          _PORTB
+
+    #if defined USE_MAINTENANCE && !defined REMOVE_PORT_INITIALISATIONS
+        #define INIT_WATCHDOG_LED()                                      // let the port set up do this (the user can disable blinking)
+    #else
+        #define INIT_WATCHDOG_LED() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(E, (BLINK_LED), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+    #endif
+
+    #define SHIFT_DEMO_LED_1        11                                   // since the port bits are spread out shift each to the lowest 4 bits
+    #define SHIFT_DEMO_LED_2        11
+    #define SHIFT_DEMO_LED_3        27
+    #define SHIFT_DEMO_LED_4        27
+
+    #define MAPPED_DEMO_LED_1       (DEMO_LED_1 >> SHIFT_DEMO_LED_1)
+    #define MAPPED_DEMO_LED_2       (DEMO_LED_2 >> SHIFT_DEMO_LED_2)
+    #define MAPPED_DEMO_LED_3       (DEMO_LED_3 << SHIFT_DEMO_LED_3)
+    #define MAPPED_DEMO_LED_4       (DEMO_LED_4 << SHIFT_DEMO_LED_4)
+
+    #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(E, (SWITCH_3), PORT_PS_UP_ENABLE) // configure as input
+    #define WATCHDOG_DISABLE()      (_READ_PORT_MASK(E, SWITCH_2) == 0)  // pull this input down at reset to disable watchdog [hold SW3]
+    #define ACTIVATE_WATCHDOG()     UNLOCK_WDOG(); WDOG_TOVALL = (2000/5); WDOG_TOVALH = 0; WDOG_STCTRLH = (WDOG_STCTRLH_STNDBYEN | WDOG_STCTRLH_WAITEN | WDOG_STCTRLH_STOPEN | WDOG_STCTRLH_WDOGEN) // 1.024s watchdog timeout
+    #define TOGGLE_WATCHDOG_LED()   _TOGGLE_PORT(E, BLINK_LED)
+
+    #define CONFIG_TEST_OUTPUT()                                         // we use DEMO_LED_2 which is configured by the user code (and can be disabled in parameters if required)
+    #define TOGGLE_TEST_OUTPUT()    _TOGGLE_PORT(E, DEMO_LED_2)
+    #define SET_TEST_OUTPUT()       _SETBITS(E, DEMO_LED_2)
+    #define CLEAR_TEST_OUTPUT()     _CLEARBITS(E, DEMO_LED_2)
+
+
+    #define BUTTON_KEY_DEFINITIONS  {SWITCH_2_PORT,    SWITCH_2,  {424, 163, 444, 181 }}, \
+                                    {SWITCH_3_PORT,    SWITCH_3,  {424, 192, 444, 209 }}, \
+                                    {SWITCH_4_PORT,    SWITCH_4,  {424, 220, 444, 237 }}, \
+                                    {SWITCH_5_PORT,    SWITCH_5,  {424, 252, 444, 267 }}
+                                    
+
+        // '0'          '1'           input state   center (x,   y)   0 = circle, radius, controlling port, controlling pin 
+    #define KEYPAD_LED_DEFINITIONS  \
+        {RGB(255, 0,   0), RGB(20,20,20), 1, {70,  95,   78,  115 }, _PORTE, BLINK_LED}, \
+        {RGB(0,   255, 0), RGB(20,20,20), 1, {84,  95,   91,  115 }, _PORTE, DEMO_LED_2}, \
+        {RGB(0,   0, 255), RGB(20,20,20), 1, {96,  95,   104, 115 }, _PORTE, DEMO_LED_3}, \
+        {RGB(128, 255, 0), RGB(20,20,20), 1, {110, 95,   115, 115 }, _PORTE, DEMO_LED_4},
+
+    #define KEYPAD "KeyPads/TWR_KV58F220M.bmp"
+#elif defined TWR_KV31F120M || defined TWR_KV46F150M || defined FRDM_KV31F
     #define DEMO_LED_1             (PORTD_BIT7)                          // (green LED) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
     #define DEMO_LED_2             (PORTB_BIT19)                         // (orange LED) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
     #define DEMO_LED_3             (PORTE_BIT0)                          // (red LED) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
@@ -7796,9 +7853,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 
     #define MULTICOLOUR_LEDS        {4, 6}                               // single LED made up of entries 4, 5 and 6
 
-    #if defined TWR_KV58F220M
-        #define KEYPAD "KeyPads/TWR_KV58F220M.bmp"
-    #elif defined TWR_KV46F150M
+    #if defined TWR_KV46F150M
         #define KEYPAD "KeyPads/TWR_KV46F150M.bmp"
     #elif defined FRDM_KV31F
         #define KEYPAD "KeyPads/FRDM_KV31F.bmp"

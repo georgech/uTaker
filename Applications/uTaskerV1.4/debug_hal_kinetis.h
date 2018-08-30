@@ -204,7 +204,7 @@ extern int fnPortState(CHAR cPortBit)
         return (((GPIOB_PDDR & GPIOB_PDOR & DEMO_LED_3) | (~GPIOB_PDDR & GPIOB_PDIR & DEMO_LED_3)) != 0);
     case '4':
         return (((GPIOC_PDDR & GPIOC_PDOR & DEMO_LED_4) | (~GPIOC_PDDR & GPIOC_PDIR & DEMO_LED_4)) != 0);
-#elif defined EMCRAFT_K70F120M || defined EMCRAFT_K61F150M || defined TWR_K64F120M
+#elif defined EMCRAFT_K70F120M || defined EMCRAFT_K61F150M || defined TWR_K64F120M || defined TWR_KV58F220M
     case '1':
         return (((GPIOE_PDDR & GPIOE_PDOR & DEMO_LED_1) | (~GPIOE_PDDR & GPIOE_PDIR & DEMO_LED_1)) != 0);
     case '2':
@@ -215,13 +215,13 @@ extern int fnPortState(CHAR cPortBit)
         return (((GPIOE_PDDR & GPIOE_PDOR & DEMO_LED_4) | (~GPIOE_PDDR & GPIOE_PDIR & DEMO_LED_4)) != 0);
 #elif defined K61FN1_50M
     case '1':
-        return (((GPIOB_PDDR & GPIOE_PDOR & DEMO_LED_1) | (~GPIOB_PDDR & GPIOE_PDIR & DEMO_LED_1)) != 0);
+        return (((GPIOB_PDDR & GPIOB_PDOR & DEMO_LED_1) | (~GPIOB_PDDR & GPIOB_PDIR & DEMO_LED_1)) != 0);
     case '2':
-        return (((GPIOB_PDDR & GPIOE_PDOR & DEMO_LED_2) | (~GPIOB_PDDR & GPIOE_PDIR & DEMO_LED_2)) != 0);
+        return (((GPIOB_PDDR & GPIOB_PDOR & DEMO_LED_2) | (~GPIOB_PDDR & GPIOB_PDIR & DEMO_LED_2)) != 0);
     case '3':
-        return (((GPIOB_PDDR & GPIOE_PDOR & DEMO_LED_3) | (~GPIOB_PDDR & GPIOE_PDIR & DEMO_LED_3)) != 0);
+        return (((GPIOB_PDDR & GPIOB_PDOR & DEMO_LED_3) | (~GPIOB_PDDR & GPIOB_PDIR & DEMO_LED_3)) != 0);
     case '4':
-        return (((GPIOA_PDDR & GPIOE_PDOR & DEMO_LED_4) | (~GPIOA_PDDR & GPIOE_PDIR & DEMO_LED_4)) != 0);
+        return (((GPIOA_PDDR & GPIOA_PDOR & DEMO_LED_4) | (~GPIOA_PDDR & GPIOA_PDIR & DEMO_LED_4)) != 0);
 #elif defined FRDM_K22F || defined TRINAMIC_LANDUNGSBRUECKE
     case '1':
         return (((GPIOA_PDDR & GPIOA_PDOR & DEMO_LED_1) | (~GPIOA_PDDR & GPIOA_PDIR & DEMO_LED_1)) != 0);
@@ -240,7 +240,7 @@ extern int fnPortState(CHAR cPortBit)
         return (((GPIOB_PDDR & GPIOB_PDOR & DEMO_LED_3) | (~GPIOB_PDDR & GPIOB_PDIR & DEMO_LED_3)) != 0);
     case '4':
         return (((GPIOB_PDDR & GPIOB_PDOR & DEMO_LED_4) | (~GPIOB_PDDR & GPIOB_PDIR & DEMO_LED_4)) != 0);
-#elif defined TWR_KV31F120M || defined TWR_KV46F150M || defined TWR_KV58F220M || defined FRDM_KV31F
+#elif defined TWR_KV31F120M || defined TWR_KV46F150M || defined FRDM_KV31F
     case '1':
         return (((GPIOD_PDDR & GPIOD_PDOR & DEMO_LED_1) | (~GPIOD_PDDR & GPIOD_PDIR & DEMO_LED_1)) != 0);
     case '2':
@@ -417,7 +417,7 @@ extern int fnPortInputConfig(CHAR cPortBit)
         return ((GPIOB_PDDR & DEMO_LED_3) == 0);
     case '4':
         return ((GPIOC_PDDR & DEMO_LED_4) == 0);
-#elif defined EMCRAFT_K70F120M || defined EMCRAFT_K61F150M || defined TWR_K64F120M
+#elif defined EMCRAFT_K70F120M || defined EMCRAFT_K61F150M || defined TWR_K64F120M || defined TWR_KV58F220M
     case '1':
         return ((GPIOE_PDDR & DEMO_LED_1) == 0);
     case '2':
@@ -536,7 +536,7 @@ extern int fnConfigPort(CHAR cPortBit, CHAR cType)
             _CONFIG_PORT_INPUT(A, ulPortBit, PORT_PS_UP_ENABLE);         // set port bit to input (on port A)
             break;
         }
-#elif defined TWR_KV31F120M || defined TWR_KV46F150M || defined TWR_KV58F220M || defined FRDM_KV31F
+#elif defined TWR_KV31F120M || defined TWR_KV46F150M || defined FRDM_KV31F
         switch (cPortBit) {
         case 0:
             _CONFIG_PORT_INPUT(D, ulPortBit, PORT_PS_UP_ENABLE);         // set port bit to input (on port D)
@@ -549,7 +549,7 @@ extern int fnConfigPort(CHAR cPortBit, CHAR cType)
             _CONFIG_PORT_INPUT(E, ulPortBit, PORT_PS_UP_ENABLE);         // set port bit to input (on port E)
             break;
         }
-#elif defined EMCRAFT_K70F120M || defined EMCRAFT_K61F150M || defined TWR_K64F120M
+#elif defined EMCRAFT_K70F120M || defined EMCRAFT_K61F150M || defined TWR_K64F120M || defined TWR_KV58F220M
         _CONFIG_PORT_INPUT(E, ulPortBit, PORT_PS_UP_ENABLE);             // set port bit to input (on port E)
 #elif defined TWR_K21D50M || defined tinyK20 || defined TWR_K21F120M || defined TWR_K22F120M || defined TWR_K24F120M || defined TWR_KW21D256 || defined TWR_KW24D512 || defined rcARM_KL26 || defined FRDM_KE15Z
         _CONFIG_PORT_INPUT(D, ulPortBit, PORT_PS_UP_ENABLE);             // set port bit to input (on port D)
@@ -798,7 +798,7 @@ extern int fnConfigPort(CHAR cPortBit, CHAR cType)
             _CONFIG_PORT_OUTPUT(A, ulPortBit, PORT_SRE_SLOW);            // set port bit to output (on port A)
             break;
         }
-#elif defined TWR_KV31F120M || defined TWR_KV46F150M || defined TWR_KV58F220M || defined FRDM_KV31F
+#elif defined TWR_KV31F120M || defined TWR_KV46F150M || defined FRDM_KV31F
         switch (cPortBit) {
         case 0:
             _CONFIG_PORT_OUTPUT(D, ulPortBit, PORT_SRE_SLOW);            // set port bit to output (on port D)
@@ -811,7 +811,7 @@ extern int fnConfigPort(CHAR cPortBit, CHAR cType)
             _CONFIG_PORT_OUTPUT(E, ulPortBit, PORT_SRE_SLOW);            // set port bit to output (on port E)
             break;
         }
-#elif defined EMCRAFT_K70F120M || defined EMCRAFT_K61F150M || defined TWR_K64F120M
+#elif defined EMCRAFT_K70F120M || defined EMCRAFT_K61F150M || defined TWR_K64F120M || defined TWR_KV58F220M
         _CONFIG_PORT_OUTPUT(E, ulPortBit, PORT_SRE_SLOW);                // set port bit to output (on port E)
 #elif defined TWR_K21D50M || defined tinyK20 || defined TWR_K21F120M || defined TWR_K22F120M || defined TWR_K24F120M || defined TWR_KW21D256 || defined TWR_KW24D512 || defined rcARM_KL26 || defined FRDM_KE15Z
         _CONFIG_PORT_OUTPUT(D, ulPortBit, PORT_SRE_SLOW);                // set port bit to output (on port D)
@@ -992,7 +992,7 @@ extern int fnConfigPort(CHAR cPortBit, CHAR cType)
         else {
             _CONFIG_PORT_OUTPUT(C, ulPortBit, PORT_SRE_SLOW);            // set port bit to output (on port C)
         }
-#elif defined EMCRAFT_K70F120M || defined EMCRAFT_K61F150M || defined TWR_K64F120M
+#elif defined EMCRAFT_K70F120M || defined EMCRAFT_K61F150M || defined TWR_K64F120M || defined TWR_KV58F220M
         _CONFIG_PORT_OUTPUT(E, ulPortBit, PORT_SRE_SLOW);                // set port bit to output (on port A)
 #elif defined FRDM_K66F
         switch (cPortBit) {
@@ -1465,7 +1465,7 @@ extern void fnSetPortOut(unsigned char ucPortOutputs, int iInitialisation)
     else {
         _WRITE_PORT_MASK(B, (0), (DEMO_LED_4));
     }
-#elif defined TWR_KV31F120M || defined TWR_KV46F150M || defined TWR_KV58F220M || defined FRDM_KV31F
+#elif defined TWR_KV31F120M || defined TWR_KV46F150M || defined FRDM_KV31F
     if (iInitialisation != 0) {
         POWER_UP(5, (SIM_SCGC5_PORTD | SIM_SCGC5_PORTB | SIM_SCGC5_PORTE)); // ensure ports are powered before writing initial values
     }
@@ -1861,7 +1861,7 @@ extern void fnSetPortOut(unsigned char ucPortOutputs, int iInitialisation)
         _CLEARBITS(A, DEMO_LED_4);
     }
     _WRITE_PORT_MASK(B, ulPortOutputSetting, (DEMO_LED_1 | DEMO_LED_2 | DEMO_LED_3));
-#elif defined EMCRAFT_K70F120M || defined EMCRAFT_K61F150M || defined TWR_K64F120M
+#elif defined EMCRAFT_K70F120M || defined EMCRAFT_K61F150M || defined TWR_K64F120M || defined TWR_KV58F220M
     unsigned long ulPortOutputSetting = 0;
     if (iInitialisation != 0) {
         POWER_UP_ATOMIC(5, PORTE);                                       // ensure port is powered before writing initial values
