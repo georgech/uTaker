@@ -18,6 +18,8 @@
 
 #include "config.h"
 
+#define OWN_TASK    TASK_WATCHDOG
+
 
 extern void fnTaskWatchdog(TTASKTABLE *ptrTaskTable)                     // watchdog called regularly
 {

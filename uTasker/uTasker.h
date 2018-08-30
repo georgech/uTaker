@@ -24,6 +24,7 @@
     06.11.2015 Modify fnStackFree() to allow worst-case used stack to be returned {6}
     31.01.2017 Add TICK_UNIT_MS() and TICK_UNIT_US()                     {7}
     10.01.2018 pucBottomOfHeap made extern                               {8}
+    30.08.2018 Add optional cInterruptWatchdog                           {9}
 
 */
 
@@ -208,6 +209,9 @@ extern NETWORK_LIMIT         OurNetworkNumber;                           // pres
 #endif
 #if defined MONITOR_PERFORMANCE
     extern unsigned long ulMaximumIdle;                                  // this value contains the maximum idle duration that has occurred - setting it to 0xffffffff causes the performance monitoring to be reset after the next schedule sequence
+#endif
+#if defined INTERRUPT_WATCHDOG_TASK                                      // {9}
+    extern CHAR cInterruptWatchdog;
 #endif
 extern unsigned char *pucBottomOfHeap;                                   // {8} the location of heap memory, which is the top of static variables
 

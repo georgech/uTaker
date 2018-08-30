@@ -53,6 +53,7 @@
 //#define IMMEDIATE_MEMORY_ALLOCATION                                    // immediately allocate all dynamic memory that will be used rather than doing it only when first used
 //#define SUPPORT_UFREE                                                  // we allow program memory to be freed when it has stopped
 #define UREVERSEMEMCPY                                                   // allow uReverseMemcpy() - useful for shifting buffers to right and improving efficiency of HTTP content generation (DMA based when possible)
+//#define INTERRUPT_WATCHDOG_TASK                                        // allow a watchdog task to be scheduled directly in the TICK interrupt (user code can temporarily set "cInterruptWatchdog = TASK_WATCHDOG;" to allow it to service the watchdog)
 
 #if defined _WINDOWS
     #define MEM_FACTOR 1.0                                               // Windows tends to use more memory so expand heap slightly in case of deviations
@@ -1407,7 +1408,7 @@
         #endif
     #endif
     #if defined USE_DMX512_SLAVE
-      //#define USE_DMX_RDM_SLAVE                                        // additional remote device management support at slave
+        #define USE_DMX_RDM_SLAVE                                        // additional remote device management support at slave
       //#define SERIAL_SUPPORT_RX_DMA_BREAK                              // allow free-running rx DMA operation that delivers frames after breaks are detected
         #define UART_BREAK_SUPPORT                                       // interrupt driven break method
         #define USER_DEFINED_UART_RX_HANDLER

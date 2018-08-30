@@ -2080,7 +2080,7 @@ extern void fnTxOn(QUEUE_HANDLE Channel)
         #else
             #if defined UART0_A_LOW
         _CONFIG_PERIPHERAL(A, 2, (PA_2_UART0_TX | UART_PULL_UPS));       // UART0_TX on PA2 (alt. function 2)
-            #elif defined UART0_ON_B_LOW && defined KINETIS_KV31
+            #elif defined UART0_ON_B_LOW && (defined KINETIS_KV31 || defined KINETIS_KV50)
         _CONFIG_PERIPHERAL(B, 1, (PB_1_UART0_TX | UART_PULL_UPS));       // UART0_TX on PB1 (alt. function 7)
             #elif defined UART0_ON_B
         _CONFIG_PERIPHERAL(B, 17, (PB_17_UART0_TX | UART_PULL_UPS));     // UART0_TX on PB17 (alt. function 3)
@@ -2434,7 +2434,7 @@ extern void fnRxOn(QUEUE_HANDLE Channel)
             #else
                 #if defined UART0_A_LOW
         _CONFIG_PERIPHERAL(A, 1, (PA_1_UART0_RX | UART_PULL_UPS));       // UART0_RX on PA1 (alt. function 2)
-                #elif defined UART0_ON_B_LOW && defined KINETIS_KV31
+                #elif defined UART0_ON_B_LOW && (defined KINETIS_KV31 || defined KINETIS_KV50)
         _CONFIG_PERIPHERAL(B, 0, (PB_0_UART0_RX | UART_PULL_UPS));       // UART0_RX on PB0 (alt. function 7)
                 #elif defined UART0_ON_B
         _CONFIG_PERIPHERAL(B, 16, (PB_16_UART0_RX | UART_PULL_UPS));     // UART0_RX on PB16 (alt. function 3)

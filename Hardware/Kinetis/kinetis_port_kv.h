@@ -13,24 +13,23 @@
     ---------------------------------------------------------------------
     Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
-    Supports KV10 and KV31
+    Supports KV10, KV31 and KV58
 
 */
 
 
 #if defined KINETIS_KV10
-
-#if PIN_COUNT == PIN_COUNT_48_PIN                                        // 48 pin LQFP
-    #define _PIN_COUNT      0
-#elif PIN_COUNT == PIN_COUNT_32_PIN                                      // 32 pin QFN/LQFP
-    #if PACKAGE_TYPE == PACKAGE_QFN
-        #define _PIN_COUNT  1                                            // QFN
+    #if PIN_COUNT == PIN_COUNT_48_PIN                                    // 48 pin LQFP
+        #define _PIN_COUNT      0
+    #elif PIN_COUNT == PIN_COUNT_32_PIN                                  // 32 pin QFN/LQFP
+        #if PACKAGE_TYPE == PACKAGE_QFN
+            #define _PIN_COUNT  1                                        // QFN
+        #else
+            #define _PIN_COUNT  2                                         // LQFP
+        #endif
     #else
-        #define _PIN_COUNT  2                                            // LQFP
-#else
-    #error "Package not clearly defined!!"
-#endif
-
+        #error "Package not clearly defined!!"
+    #endif
 
 #define ALTERNATIVE_FUNCTIONS   7                                        // GPIO plus 7 possible peripheral/extra/system functions
 
@@ -444,15 +443,13 @@ static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][8] = {
     }
 };
 #elif defined KINETIS_KV31 || defined KINETIS_KM
-
-#if PIN_COUNT == PIN_COUNT_64_PIN                                        // 64 pin LQFP
-    #define _PIN_COUNT      1
-#elif PIN_COUNT == PIN_COUNT_100_PIN                                     // 100 LQFP
-    #define _PIN_COUNT      0
-#else
-    #error "Package not clearly defined!!"
-#endif
-
+    #if PIN_COUNT == PIN_COUNT_64_PIN                                    // 64 pin LQFP
+        #define _PIN_COUNT      1
+    #elif PIN_COUNT == PIN_COUNT_100_PIN                                 // 100 LQFP
+        #define _PIN_COUNT      0
+    #else
+        #error "Package not clearly defined!!"
+    #endif
 
 #define ALTERNATIVE_FUNCTIONS   7                                        // GPIO plus 7 possible peripheral/extra/system functions
 
@@ -866,15 +863,20 @@ static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][8] = {
     }
 };
 #elif defined KINETIS_KV50
+    #if PIN_COUNT == PIN_COUNT_144_PIN                                       // 144 pin
+        #if PACKAGE_TYPE == PACKAGE_MAPBGA
+            #define _PIN_COUNT  0                                            // MAPBGA
+        #else
+            #define _PIN_COUNT  1                                            // LQFP
+        #endif
+    #elif PIN_COUNT == PIN_COUNT_100_PIN                                     // 100 LQFP
+        #define _PIN_COUNT  2
+    #else
+        #error "Package not clearly defined!!"
+    #endif
 
-#if PIN_COUNT == PIN_COUNT_144_PIN                                       // 144 LQFP
-    #define _PIN_COUNT      0
-#else
-    #error "Package not clearly defined!!"
-#endif
 
-
-#define ALTERNATIVE_FUNCTIONS   7                                        // GPIO plus 7 possible peripheral/extra/system functions
+#define ALTERNATIVE_FUNCTIONS   9                                        // GPIO plus 7 possible peripheral/extra/system functions
 
 static const char *cPinNumber[PORTS_AVAILABLE + 1][PORT_WIDTH][2] = {
     {

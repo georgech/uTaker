@@ -31,6 +31,7 @@
     04.06.2013 Added OS_MALLOC() default                                                     {17}
     02.02.2014 Add UTASKER_POLLING                                                           {18}
     22.07.2014 Add uGetTaskState()                                                           {19}
+    30.08.2018 Add optional INTERRUPT_WATCHDOG_TASK                                          {20}
 
 */
 
@@ -74,6 +75,10 @@ volatile UTASK_TICK uTaskerSystemTick = 0;                               // syst
 
 #if defined MONITOR_PERFORMANCE                                          // {15}
     unsigned long ulMaximumIdle = 0;
+#endif
+
+#if defined INTERRUPT_WATCHDOG_TASK                                      // {20}
+    CHAR cInterruptWatchdog = 0;
 #endif
 
 
@@ -620,6 +625,12 @@ extern void fnRtmkSystemTick(void)
             if ((int)(ptTaskTable->ucTaskState & UTASKER_SUSPENDED) == 0) { // as long as not suspended task
                 if ((int)(ptTaskTable->ucTaskState & UTASKER_POLLING) == 0) { // {18} as long as not in polling mode
                     ptTaskTable->ucTaskState = UTASKER_ACTIVATE;         // release task to run once
+#if defined INTERRUPT_WATCHDOG_TASK                                      // {20}
+                    if (*(ptTaskTable->pcTaskName) == cInterruptWatchdog) { // if this task to be be executed in the TICK interrupt
+                        ptTaskTable->ucTaskState = UTASKER_STOP;         // cancel task scheduling
+                        ptTaskTable->ptrTaskEntry(0);                    // call the with zero TTASKTABLE pointer
+                    }
+#endif
                 }
                 ptTaskTable->ucEvent = ptTimerList->ucEvent;             // enable event to be put to the input queue
             }

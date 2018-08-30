@@ -304,6 +304,14 @@
     #define USB_CLOCK_SOURCE_MCGPLL1CLK                                  // the clock source for the USB clock
     #define CLOCK_DIV_1          1                                       // input must be divided to 8MHz..16MHz range (/1 to /8 for FPU parts)
     #define CLOCK_MUL_1          20                                      // PLL1 multiplication factor to achieve operating frequency of 120MHz [suitable for FS USB and DDR2] (x16 to x47 possible - divided by 2 at VCC output)
+#elif defined TWR_KV58F220M
+    #define EXTERNAL_CLOCK       50000000                                // this must be 50MHz in order to use Ethernet in RMII mode
+    #define _EXTERNAL_CLOCK      EXTERNAL_CLOCK
+    #define CLOCK_DIV            5                                       // input must be divided to 8MHz..16MHz range (/1 to /8 for FPU parts)
+    #define CLOCK_MUL            32                                      // the PLL multiplication factor to achieve operating frequency of 160MHz (x16 to x47 possible - divided by 2 at VCO output)
+    #define FLEX_CLOCK_DIVIDE    8                                       // 160/8 to give 20MHz
+    #define BUS_CLOCK_DIVIDE     6                                       // 160/6 to give 26.667MHz
+    #define FLASH_CLOCK_DIVIDE   6                                       // 160/6 to give 26.667MHz
 #elif defined TWR_K60F120M || defined TWR_K70F120M || defined EMCRAFT_K70F120M || defined TWR_VF65GS10 // {9}
     #define EXTERNAL_CLOCK       50000000                                // this must be 50MHz in order to use Ethernet in RMII mode
     #define _EXTERNAL_CLOCK      EXTERNAL_CLOCK
@@ -379,7 +387,7 @@
         #endif
         #define USB_CLOCK_GENERATED_INTERNALLY                           // use USB clock from internal source rather than external pin
     #endif
-#elif defined TWR_KV31F120M || defined TWR_KV46F150M || defined TWR_KV58F220M || defined FRDM_KV31F
+#elif defined TWR_KV31F120M || defined TWR_KV46F150M || defined FRDM_KV31F
   //#define RUN_FROM_DEFAULT_CLOCK                                       // default mode is FLL Engaged Internal - the 32kHz IRC is multiplied by FLL factor of 640 to obtain 20.9715MHz nominal frequency (20MHz..25MHz)
     #if !defined RUN_FROM_DEFAULT_CLOCK
         #define OSC_LOW_GAIN_MODE
@@ -1081,8 +1089,8 @@
 #elif defined TWR_KV58F220M
     #define PIN_COUNT           PIN_COUNT_144_PIN
   //#define PIN_COUNT           PIN_COUNT_100_PIN                        // 100 pin package
-    #define PACKAGE_TYPE        PACKAGE_BGA                              // BGA
-  //#define PACKAGE_TYPE        PACKAGE_LQFP                             // LQFP
+  //#define PACKAGE_TYPE        PACKAGE_MAPBGA                           // BGA
+    #define PACKAGE_TYPE        PACKAGE_LQFP                             // LQFP
     #define SIZE_OF_FLASH       (1024 * 1024)                            // 1M program Flash
     #define SIZE_OF_RAM         (64 * 1024)                              // 64k SRAM (4 blocks of this size in total)
 #elif defined FRDM_KL25Z || defined TWR_KL25Z48M || defined RD_KL25_AGMP01 // {24}
@@ -1377,7 +1385,7 @@
     #define PHY_IDENTIFIER         0x00221550                            // MICREL KSZ8051 identifier
     #define FNRESETPHY()
     #define MII_MANAGEMENT_CLOCK_SPEED   2500000                         // 2.5MHz
-#elif defined TWR_K60F120M || defined K60F150M_50M || defined TWR_K70F120M || defined TWR_K53N512 || defined TWR_VF65GS10
+#elif defined TWR_K60F120M || defined K60F150M_50M || defined TWR_K70F120M || defined TWR_K53N512 || defined TWR_VF65GS10 || defined TWR_KV58F220M
   //#define JTAG_DEBUG_IN_USE_ERRATA_2541                                // pull the optional MII0_RXER line down to 0V to avoid disturbing JTAG_TRST - not needed when using SWD for debugging 
     #if defined K60F150M_50M
         #define ETHERNET_RMII                                            // RMII mode of operation instead of MII
@@ -1633,7 +1641,7 @@
     #endif
 #endif
 
-#if defined TWR_K60F120M || defined K60F150M_50M || defined TWR_K70F120M || defined TWR_K53N512 || defined TWR_VF65GS10
+#if defined TWR_K60F120M || defined K60F150M_50M || defined TWR_K70F120M || defined TWR_K53N512 || defined TWR_VF65GS10 || defined TWR_KV58F220M
     #if defined K60F150M_50M
         #define MII_MANAGEMENT_CLOCK_SPEED   2500000                     // 2.5MHz
     #else
@@ -2590,7 +2598,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #elif defined TWR_KM34Z50M || defined TWR_KM34Z75M ||defined TWR_K20D50M || defined TWR_K80F150M || defined tinyK20 || defined tinyK22 || defined TWR_K20D72M || defined NET_K60 || defined FRDM_KE02Z || defined FRDM_KE02Z40M || defined FRDM_KE06Z || defined FRDM_K22F || defined TWR_K22F120M || defined TWR_K24F120M || defined TWR_K64F120M || defined TWR_KW21D256 || defined TWR_KW24D512 || defined rcARM_KL26 || defined BLAZE_K22 || defined FRDM_KE15Z // {2}{16}{25}{30}
         #define DEMO_UART    1                                           // use UART 1
         #define RFC2217_UART 0
-    #elif defined K02F100M || defined FRDM_K20D50M || defined FRDM_KL46Z || defined FRDM_KL43Z || defined FRDM_KL25Z || defined FRDM_KL26Z || defined FRDM_KL27Z || defined FRDM_KL28Z || defined FRDM_KL82Z || defined TWR_KL82Z72M ||defined CAPUCCINO_KL27 || defined TEENSY_LC || defined TWR_KL25Z48M || defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined TRK_KEA8 || defined TEENSY_3_1 || defined FRDM_KE04Z || defined FRDM_K64F || defined FRDM_K66F || defined TWR_KV10Z32  || defined TWR_KV31F120M || defined FRDM_KV31F || ((defined TWR_K40X256 || defined TWR_K40D100M) && defined DEBUG_ON_VIRT_COM) || defined FreeLON || defined HEXIWEAR_K64F || defined TWR_KE18F || defined KL33Z64 // {21}{22}{24}{25}
+    #elif defined K02F100M || defined FRDM_K20D50M || defined FRDM_KL46Z || defined FRDM_KL43Z || defined FRDM_KL25Z || defined FRDM_KL26Z || defined FRDM_KL27Z || defined FRDM_KL28Z || defined FRDM_KL82Z || defined TWR_KL82Z72M ||defined CAPUCCINO_KL27 || defined TEENSY_LC || defined TWR_KL25Z48M || defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined TRK_KEA8 || defined TEENSY_3_1 || defined FRDM_KE04Z || defined FRDM_K64F || defined FRDM_K66F || defined TWR_KV10Z32  || defined TWR_KV31F120M || defined FRDM_KV31F || ((defined TWR_K40X256 || defined TWR_K40D100M) && defined DEBUG_ON_VIRT_COM) || defined FreeLON || defined HEXIWEAR_K64F || defined TWR_KE18F || defined KL33Z64 || defined TWR_KV58F220M // {21}{22}{24}{25}
         #define DEMO_UART    0                                           // use UART 0
         #define RFC2217_UART 1
     #elif defined NET_KBED                                               // {16}
@@ -2682,6 +2690,8 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
             #define UART1_ON_C
             #define UART3_ON_B
         #endif
+    #elif defined TWR_KV58F220M
+        #define UART0_ON_B_LOW
     #elif defined tinyK20
         #define UART1_ON_C
     #elif defined TWR_K21F120M

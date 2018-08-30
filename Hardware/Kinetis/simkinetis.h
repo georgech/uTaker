@@ -3114,7 +3114,7 @@ unsigned long LCD_WF63TO60;
 #endif
 
 
-#if defined KINETIS_K52 || defined KINETIS_K53 || defined KINETIS_K60 || defined KINETIS_K61 || defined KINETIS_K64 || defined KINETIS_K70
+#if defined ETHERNET_AVAILABLE
 typedef struct stKINETIS_EMAC
 {
 unsigned long ulRes;
@@ -3891,7 +3891,7 @@ typedef struct stKINETIS_PERIPH
 #if defined DEVICE_WITH_SLCD
     KINETIS_SLCD       SLCD;
 #endif
-#if defined KINETIS_K52 || defined KINETIS_K53 || defined KINETIS_K60 || defined KINETIS_K61 || defined KINETIS_K64 || defined KINETIS_K70
+#if defined ETHERNET_AVAILABLE
     KINETIS_EMAC       EMAC;
 #endif
 #if DAC_CONTROLLERS > 0

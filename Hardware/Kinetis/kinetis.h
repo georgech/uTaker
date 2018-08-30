@@ -270,7 +270,9 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
 #endif
 
 #if defined KINETIS_KV
-    #define KINETIS_MAX_SPEED       75000000
+    #if !defined KINETIS_MAX_SPEED
+        #define KINETIS_MAX_SPEED   75000000
+    #endif
 #elif defined KINETIS_KL
     #if defined KINETIS_WITH_SCG                                         // {91}
         #define KINETIS_MAX_SPEED   96000000                             // high speed run mode required for highest speed (72MHz in run mode)
@@ -1242,7 +1244,7 @@ typedef struct stRESET_VECTOR
 
 // Ethernet configuration
 //
-#if defined KINETIS_K50 || defined KINETIS_K60 || defined KINETIS_K70
+#if defined KINETIS_KV50 || defined KINETIS_K50 || defined KINETIS_K60 || defined KINETIS_K70
     #define ETHERNET_AVAILABLE
 #endif
 
@@ -1306,6 +1308,8 @@ typedef struct stRESET_VECTOR
     #endif
 #elif defined KINETIS_KM
     #define UARTS_AVAILABLE         4
+#elif defined KINETIS_KV50
+    #define UARTS_AVAILABLE         6
 #elif defined KINETIS_KV
     #if defined KINETIS_KV31
         #define UARTS_AVAILABLE     3
@@ -1447,6 +1451,9 @@ typedef struct stRESET_VECTOR
 #elif defined KINETIS_KL02 || defined KINETIS_KL25 || defined KINETIS_KL33 || defined KINETIS_KL43 || defined KINETIS_KL46 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128 || defined KINETIS_KV31 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL82 || defined KINETIS_KW2X
     #define I2C_AVAILABLE                2
     #define LPI2C_AVAILABLE              0
+#elif defined KINETIS_KV50
+    #define I2C_AVAILABLE                2
+    #define LPI2C_AVAILABLE              0
 #elif (KINETIS_MAX_SPEED  <= 50000000) || defined KINETIS_KV || defined KINETIS_K02
     #define I2C_AVAILABLE                1
     #define LPI2C_AVAILABLE              0
@@ -1582,7 +1589,7 @@ typedef struct stRESET_VECTOR
     #define ADC_CONTROLLERS         3
 #elif defined KINETIS_K80 || defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_K02 || defined KINETIS_K12 || ((defined KINETIS_K20 || defined KINETIS_K21) && (KINETIS_MAX_SPEED < 72000000))
     #define ADC_CONTROLLERS         1
-#elif defined KINETIS_KM
+#elif defined KINETIS_KM || defined KINETIS_KV50
     #define ADC_CONTROLLERS         1
 #else
     #define ADC_CONTROLLERS         2
@@ -1702,9 +1709,9 @@ typedef struct stRESET_VECTOR
 
 // RNG configuration
 //
-#if defined KINETIS_K60 || defined KINETIS_K70 || defined KINETIS_K80 || defined KINETIS_K52 || defined KINETIS_K53 || defined KINETIS_K24 || defined KINETIS_KL82
+#if defined KINETIS_K60 || defined KINETIS_K70 || defined KINETIS_K80 || defined KINETIS_K52 || defined KINETIS_K53 || defined KINETIS_K24 || defined KINETIS_KL82 || defined KINETIS_KV50
     #define RNG_AVAILABLE                                                // hardware based random number generator available
-    #if defined KINETIS_K80 || defined KINETIS_KL82
+    #if defined KINETIS_K80 || defined KINETIS_KL82 || defined KINETIS_KV50
         #define TRUE_RANDOM_NUMBER_GENERATOR                             // true random number generator is available
     #elif defined KINETIS_REVISION_2 || defined KINETIS_K70
         #define RANDOM_NUMBER_GENERATOR_A                                // random number generator A is available
@@ -2389,7 +2396,101 @@ typedef struct stPROCESSOR_IRQ
     #else
         void  (*irq_res_27)(void);                                       // 27
     #endif
-    #if defined KINETIS_K80
+    #if defined KINETIS_KV50
+        void  (*irq_UART5)(void);                                        // 28
+        void  (*irq_UART5_ERROR)(void);                                  // 29
+        void  (*irq_res_30)(void);                                       // 30
+        void  (*irq_UART0)(void);                                        // 31
+        void  (*irq_UART0_ERROR)(void);                                  // 32
+        void  (*irq_UART1)(void);                                        // 33
+        void  (*irq_UART1_ERROR)(void);                                  // 34
+        void  (*irq_UART2)(void);                                        // 35
+        void  (*irq_UART2_ERROR)(void);                                  // 36
+        void  (*irq_ADC0)(void);                                         // 37
+        void  (*irq_HSADC0_1)(void);                                     // 38
+        void  (*irq_HSADC0A)(void);                                      // 39
+        void  (*irq_CMP0)(void);                                         // 40
+        void  (*irq_CMP1)(void);                                         // 41
+        void  (*irq_FTM0)(void);                                         // 42
+        void  (*irq_FTM1)(void);                                         // 43
+        void  (*irq_UART3)(void);                                        // 44
+        void  (*irq_UART3_ERROR)(void);                                  // 45
+        void  (*irq_UART4)(void);                                        // 46
+        void  (*irq_UART4_ERROR)(void);                                  // 47
+        void  (*irq_PIT0)(void);                                         // 48
+        void  (*irq_PIT1)(void);                                         // 49
+        void  (*irq_PIT2)(void);                                         // 50
+        void  (*irq_PIT3)(void);                                         // 51
+        void  (*irq_PDB0)(void);                                         // 52
+        void  (*irq_FTM2)(void);                                         // 53
+        void  (*irq_XBARA)(void);                                        // 54
+        void  (*irq_PDB1)(void);                                         // 55
+        void  (*irq_DAC0)(void);                                         // 56
+        void  (*irq_MCG)(void);                                          // 57
+        void  (*irq_LPTMR0)(void);                                       // 58
+        void  (*irq_PORTA)(void);                                        // 59
+        void  (*irq_PORTB)(void);                                        // 60
+        void  (*irq_PORTC)(void);                                        // 61
+        void  (*irq_PORTD)(void);                                        // 62
+        void  (*irq_PORTE)(void);                                        // 63
+        void  (*irq_SOFTWARE)(void);                                     // 64
+        void  (*irq_SPI2)(void);                                         // 65
+        void  (*irq_ENC_Compare)(void);                                  // 66
+        void  (*irq_ENC_Home)(void);                                     // 67
+        void  (*irq_ENC_WDOG)(void);                                     // 68
+        void  (*irq_ENC_Index_Roll)(void);                               // 69
+        void  (*irq_CMP2)(void);                                         // 70
+        void  (*irq_FTM3)(void);                                         // 71
+        void  (*irq_res_72)(void);                                       // 72
+        void  (*irq_HSADC0B)(void);                                      // 73
+        void  (*irq_HSADC1_A)(void);                                     // 74
+        void  (*irq_CAN0_MESSAGE)(void);                                 // 75
+        void  (*irq_CAN0_BUS_OFF)(void);                                 // 76
+        void  (*irq_CAN0_ERROR)(void);                                   // 77
+        void  (*irq_CAN0_TX)(void);                                      // 78
+        void  (*irq_CAN0_RX)(void);                                      // 79
+        void  (*irq_CAN0_WAKE_UP)(void);                                 // 80
+        void  (*irq_PWM0_0_Compare)(void);                               // 81
+        void  (*irq_PWM0_0_Reload)(void);                                // 82
+        void  (*irq_PWM0_1_Compare)(void);                               // 83
+        void  (*irq_PWM0_1_Reload)(void);                                // 84
+        void  (*irq_PWM0_2_Compare)(void);                               // 85
+        void  (*irq_PWM0_2_Reload)(void);                                // 86
+        void  (*irq_PWM0_3_Compare)(void);                               // 87
+        void  (*irq_PWM0_3_Reload)(void);                                // 88
+        void  (*irq_PWM0_Captures)(void);                                // 89
+        void  (*irq_PWM0_Reload_Error)(void);                            // 90
+        void  (*irq_PWM0_Fault)(void);                                   // 91
+        void  (*irq_CMP3)(void);                                         // 92
+        void  (*irq_HSADC1_B)(void);                                     // 93
+        void  (*irq_CAN1_MESSAGE)(void);                                 // 94
+        void  (*irq_CAN1_BUS_OFF)(void);                                 // 95
+        void  (*irq_CAN1_ERROR)(void);                                   // 96
+        void  (*irq_CAN1_TX)(void);                                      // 97
+        void  (*irq_CAN1_RX)(void);                                      // 98
+        void  (*irq_CAN1_WAKE_UP)(void);                                 // 99
+        void  (*irq_ETH_IEEE1588)(void);                                 // 100
+        void  (*irq_ETH_TX)(void);                                       // 101
+        void  (*irq_ETH_RX)(void);                                       // 102
+        void  (*irq_ETH_ERR_MISC)(void);                                 // 103
+        void  (*irq_PWM1_0_Compare)(void);                               // 104
+        void  (*irq_PWM1_0_Reload)(void);                                // 105
+        void  (*irq_PWM1_1_Compare)(void);                               // 106
+        void  (*irq_PWM1_1_Reload)(void);                                // 107
+        void  (*irq_PWM1_2_Compare)(void);                               // 108
+        void  (*irq_PWM1_2_Reload)(void);                                // 109
+        void  (*irq_PWM1_3_Compare)(void);                               // 110
+        void  (*irq_PWM1_3_Reload)(void);                                // 111
+        void  (*irq_PWM1_Captures)(void);                                // 112
+        void  (*irq_PWM1_Reload_Error)(void);                            // 113
+        void  (*irq_PWM1_Fault)(void);                                   // 114
+        void  (*irq_CAN2_MESSAGE)(void);                                 // 115
+        void  (*irq_CAN2_BUS_OFF)(void);                                 // 116
+        void  (*irq_CAN2_ERROR)(void);                                   // 117
+        void  (*irq_CAN2_TX)(void);                                      // 118
+        void  (*irq_CAN2_RX)(void);                                      // 119
+        void  (*irq_CAN2_WAKE_UP)(void);                                 // 120
+    #elif defined KINETIS_K80
         void  (*irq_I2S0_TX)(void);                                      // 28
         void  (*irq_I2S0_RX)(void);                                      // 29
         void  (*irq_LPUART0)(void);                                      // 30
@@ -3290,7 +3391,101 @@ typedef struct stVECTOR_TABLE
     #if SPI_AVAILABLE > 1
         #define irq_SPI1_ID               27                             // 27
     #endif
-    #if defined KINETIS_K80
+    #if defined KINETIS_KV50
+        #define irq_UART5_ID              28                             // 28
+        #define irq_UART5_ERROR_ID        29                             // 29
+
+        #define irq_UART0_ID              31                             // 31
+        #define irq_UART0_ERROR_ID        32                             // 32
+        #define irq_UART1_ID              33                             // 33
+        #define irq_UART1_ERROR_ID        34                             // 34
+        #define irq_UART2_ID              35                             // 35
+        #define irq_UART2_ERROR_ID        36                             // 36
+        #define irq_ADC0_ID               37                             // 37
+        #define irq_HSADC0_1_ID           38                             // 38
+        #define irq_HSADC0A_ID            39                             // 39
+        #define irq_CMP0_ID               40                             // 40
+        #define irq_CMP1_ID               41                             // 41
+        #define irq_FTM0_ID               42                             // 42
+        #define irq_FTM1_ID               43                             // 43
+        #define irq_UART3_ID              44                             // 44
+        #define irq_UART3_ERROR_ID        45                             // 45
+        #define irq_UART4_ID              46                             // 46
+        #define irq_UART4_ERROR_ID        47                             // 47
+        #define irq_PIT0_ID               48                             // 48
+        #define irq_PIT1_ID               49                             // 49
+        #define irq_PIT2_ID               50                             // 50
+        #define irq_PIT3_ID               51                             // 51
+        #define irq_PDB0_ID               52                             // 52
+        #define irq_FTM2_ID               53                             // 53
+        #define irq_XBARA_ID              54                             // 54
+        #define irq_PDB1_ID               55                             // 55
+        #define irq_DAC0_ID               56                             // 56
+        #define irq_MCG_ID                57                             // 57
+        #define irq_LPTMR0_ID             58                             // 58
+        #define irq_PORTA_ID              59                             // 59
+        #define irq_PORTB_ID              60                             // 60
+        #define irq_PORTC_ID              61                             // 61
+        #define irq_PORTD_ID              62                             // 62
+        #define irq_PORTE_ID              63                             // 63
+        #define irq_SOFTWARE_ID           64                             // 64
+        #define irq_SPI2_ID               65                             // 65
+        #define irq_ENC_Compare_ID        66                             // 66
+        #define irq_ENC_Home_ID           67                             // 67
+        #define irq_ENC_WDOG_ID           68                             // 68
+        #define irq_ENC_Index_Roll_ID     69                             // 69
+        #define irq_CMP2_ID               70                             // 70
+        #define irq_FTM3_ID               71                             // 71
+
+        #define irq_HSADC0B_ID            73                             // 73
+        #define irq_HSADC1_A_ID           74                             // 74
+        #define irq_CAN0_MESSAGE_ID       75                             // 75
+        #define irq_CAN0_BUS_OFF_ID       76                             // 76
+        #define irq_CAN0_ERROR_ID         77                             // 77
+        #define irq_CAN0_TX_ID            78                             // 78
+        #define irq_CAN0_RX_ID            79                             // 79
+        #define irq_CAN0_WAKE_UP_ID       80                             // 80
+        #define irq_PWM0_0_Compare_ID     81                             // 81
+        #define irq_PWM0_0_Reload_ID      82                             // 82
+        #define irq_PWM0_1_Compare_ID     83                             // 83
+        #define irq_PWM0_1_Reload_ID      84                             // 84
+        #define irq_PWM0_2_Compare_ID     85                             // 85
+        #define irq_PWM0_2_Reload_ID      86                             // 86
+        #define irq_PWM0_3_Compare_ID     87                             // 87
+        #define irq_PWM0_3_Reload_ID      88                             // 88
+        #define irq_PWM0_Captures_ID      89                             // 89
+        #define irq_PWM0_Reload_Error_ID  90                             // 90
+        #define irq_PWM0_Fault_ID         91                             // 91
+        #define irq_CMP3_ID               92                             // 92
+        #define irq_HSADC1_B_ID           93                             // 93
+        #define irq_CAN1_MESSAGE_ID       94                             // 94
+        #define irq_CAN1_BUS_OFF_ID       95                             // 95
+        #define irq_CAN1_ERROR_ID         96                             // 96
+        #define irq_CAN1_TX_ID            97                             // 97
+        #define irq_CAN1_RX_ID            98                             // 98
+        #define irq_CAN1_WAKE_UP_ID       99                             // 99
+        #define irq_ETH_IEEE1588_ID       100                            // 100
+        #define irq_ETH_TX_ID             101                            // 101
+        #define irq_ETH_RX_ID             102                            // 102
+        #define irq_ETH_ERR_MISC_ID       103                            // 103
+        #define irq_PWM1_0_Compare_ID     104                            // 104
+        #define irq_PWM1_0_Reload_ID      105                            // 105
+        #define irq_PWM1_1_Compare_ID     106                            // 106
+        #define irq_PWM1_1_Reload_ID      107                            // 107
+        #define irq_PWM1_2_Compare_ID     108                            // 108
+        #define irq_PWM1_2_Reload_ID      109                            // 109
+        #define irq_PWM1_3_Compare_ID     110                            // 110
+        #define irq_PWM1_3_Reload_ID      111                            // 111
+        #define irq_PWM1_Captures_ID      112                            // 112
+        #define irq_PWM1_Reload_Error_ID  113                            // 113
+        #define irq_PWM1_Fault_ID         114                            // 114
+        #define irq_CAN2_MESSAGE_ID       115                            // 115
+        #define irq_CAN2_BUS_OFF_ID       116                            // 116
+        #define irq_CAN2_ERROR_ID         117                            // 117
+        #define irq_CAN2_TX_ID            118                            // 118
+        #define irq_CAN2_RX_ID            119                            // 119
+        #define irq_CAN2_WAKE_UP_ID       120                            // 120
+    #elif defined KINETIS_K80
         #define irq_I2S0_TX_ID            28                             // 28
         #define irq_I2S0_RX_ID            29                             // 29
         #define irq_LPUART0_ID            30                             // 30
@@ -3560,6 +3755,9 @@ typedef struct stVECTOR_TABLE
 #elif defined KINETIS_K02 || defined KINETIS_KW2X || defined KINETIS_K12
     #define LAST_PROCESSOR_IRQ     irq_SOFTWARE
     #define CHECK_VECTOR_SIZE                324                         // (16 + 64 + 1) = 81) * 4 - adequate for this processor [0x144]
+#elif defined KINETIS_KV50
+    #define LAST_PROCESSOR_IRQ     irq_CAN2_WAKE_UP
+    #define CHECK_VECTOR_SIZE                548                         // (16 + 120 + 1) = 137) * 4 - adequate for this processor [0x224]
 #elif defined KINETIS_KV30 || defined KINETIS_K22
     #define LAST_PROCESSOR_IRQ     irq_ADC1
     #define CHECK_VECTOR_SIZE                360                         // (16 + 73 + 1) = 90) * 4 - adequate for this processor [0x168]
@@ -11377,7 +11575,7 @@ typedef struct stKINETIS_LPTMR_CTL
     #endif
 #endif
 
-#if defined ARM_MATH_CM4                                                 // {103}
+#if defined ARM_MATH_CM4 || defined ARM_MATH_CM7                         // {103}
     #define ATOMIC_PERIPHERAL_BIT_REF_SET(reg, bit_ref)    ATOMIC_SET_REGISTER(BIT_BANDING_PERIPHERAL_ADDRESS((reg##_ADDR), bit_ref))
     #define ATOMIC_PERIPHERAL_BIT_REF_CLEAR(reg, bit_ref)  ATOMIC_CLEAR_REGISTER(BIT_BANDING_PERIPHERAL_ADDRESS((reg##_ADDR), bit_ref))
     #define ATOMIC_PERIPHERAL_BIT_REF_CHECK(reg, bit_ref)  ATOMIC_CHECK_REGISTER(BIT_BANDING_PERIPHERAL_ADDRESS((reg##_ADDR), bit_ref))
@@ -11997,7 +12195,7 @@ typedef struct stKINETIS_LPTMR_CTL
     #define PD_6_UART2_RX                PORT_MUX_ALT2
     #define PI_0_UART2_RX                PORT_MUX_ALT3
     #define PI_1_UART2_TX                PORT_MUX_ALT3
-#elif defined KINETIS_KV31
+#elif defined KINETIS_KV31 || defined KINETIS_KV50
     #define PB_1_UART0_TX                PORT_MUX_ALT7
     #define PB_0_UART0_RX                PORT_MUX_ALT7
 #elif defined KINETIS_KV10
