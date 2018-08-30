@@ -283,18 +283,29 @@
         #define UTASKER_APP_START      0x3000                            // location of application
         #define UTASK_APP_LENGTH       (MAX_FILE_LENGTH)(116 * 1024)     // 119k
     #else
-        #define UPLOAD_FILE_LOCATION   (unsigned char *)0x28400          // location in internal FLASH
-        #define UTASKER_APP_START      0x800                             // internal FLASH solution requires two 1k FLASH blocks for the boot code
-        #define UTASK_APP_LENGTH       (MAX_FILE_LENGTH)(94 * 1024)      // 94k
+        #if defined _DEV1
+            #define UPLOAD_FILE_LOCATION   (unsigned char *)0x28400      // location in internal FLASH
+            #define UTASKER_APP_START      0x1000                        // 4 x 1k FLASH blocks for the boot code
+            #define UTASK_APP_LENGTH       (MAX_FILE_LENGTH)(92 * 1024)  // 92k
+            #define _ENCRYPTED                                           // use encrypted loading
+        #else
+            #define UPLOAD_FILE_LOCATION   (unsigned char *)0x28400      // location in internal FLASH
+            #define UTASKER_APP_START      0x800                         // internal FLASH solution requires two 1k FLASH blocks for the boot code
+            #define UTASK_APP_LENGTH       (MAX_FILE_LENGTH)(94 * 1024)  // 94k
+          //#define _ENCRYPTED
+        #endif
     #endif
 
     static const unsigned char ucKey[] = {0x88, 0x26, 0x3b, 0x62, 0x90, 0xa1};
-    #define _ENCRYPTED
     #if defined _ENCRYPTED
         static const unsigned char ucDecrypt[] = {0xff, 0x25, 0xa7, 0x88, 0xf2, 0xe6, 0x81, 0x33, 0x87, 0x77};   // {2} - must be even in length (dividable by unsigned short)
         #define KEY_PRIME               0xafe1                           // never set to 0
         #define CODE_OFFSET             0x226a
-        #define VALID_VERSION_MAGIC_NUMBER  0x1235
+        #if defined _DEV1
+            #define VALID_VERSION_MAGIC_NUMBER  0xe002
+        #else
+            #define VALID_VERSION_MAGIC_NUMBER  0x1235
+        #endif
     #else
         #define VALID_VERSION_MAGIC_NUMBER  0x72ca                       // ensure encrypted version has different magic number
     #endif
@@ -377,7 +388,7 @@
 #endif
 
 
-#define BLOCK_SIZE 1024                                                  // the code is etrached and programmed in blocks of this size
+#define BLOCK_SIZE 1024                                                  // the code is extracted and programmed in blocks of this size
 
 /***********************************************************************/
 

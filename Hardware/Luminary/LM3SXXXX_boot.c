@@ -28,7 +28,7 @@
 /* =================================================================== */
 
 
-#ifdef _WINDOWS
+#if defined _WINDOWS
     #include "config.h"
     #include "../../WinSim\WinSim.h"
     #define INITHW  extern
@@ -36,7 +36,6 @@
     #define _SIM_PORT_CHANGE   fnSimPorts();                             // make sure simulator knows of change
     #define START_CODE 0
     #define _fnRAM_code fnCommandFlash
-    NETWORK_PARAMETERS network;
 #else
     #ifdef _GNU
         #define __root
@@ -72,11 +71,22 @@ extern void fnResetBoard(void)
     WDTLOAD = 0;                                                         // immediate timeout
     WDTCTL = WD_RESEN;                                                   // enable reset on second timeout
     WDTCTL = (WD_RESEN | WD_INTEN);                                      // enable watchdog and interrupt
-#ifndef _WINDOWS
+#if !defined _WINDOWS
     while (1) {}                                                         // wait for watchdog to fire
 #endif
 }
 
+#if !defined _COMPILE_KEIL                                               // Keil doesn't support in-line assembler in Thumb mode so an assembler file is required
+// Allow the jump to a foreign application as if it were a reset (load SP and PC)
+//
+extern void start_application(unsigned long app_link_location)           // {1}
+{
+    #if !defined _WINDOWS
+    asm(" ldr sp, [r0,#0]");
+    asm(" ldr pc, [r0,#4]");
+    #endif
+}
+#endif
 
 
 // CRC-16 routine
@@ -102,7 +112,7 @@ extern void *uMemcpy(void *ptrTo, const void *ptrFrom, size_t Size)
     unsigned char *ptr1 = (unsigned char *)ptrTo;
     unsigned char *ptr2 = (unsigned char *)ptrFrom;
 
-    while (Size--) {
+    while (Size-- != 0) {
         *ptr1++ = *ptr2++;
     }
 
@@ -450,7 +460,7 @@ extern int fnWriteBytesFlash(unsigned char *ucDestination, unsigned char *ucData
         #else
             fnCommandFlash(FLASH_WRITE, (CAST_POINTER_ARITHMETIC)ptrLong++, ulValue);// program the long word
         #endif
-            if (!Length) {
+            if (Length == 0) {
                 return 0;                                                // completed
             }
             ulValue = *ptrLong;
@@ -460,7 +470,7 @@ extern int fnWriteBytesFlash(unsigned char *ucDestination, unsigned char *ucData
             iByteInLong++;
         }
     }
-    #ifdef _RUN_FLASH_FROM_RAM
+    #if defined _RUN_FLASH_FROM_RAM
     uDisable_Interrupt();                                                // protect call from interrupts
     _fnRAM_code(FLASH_WRITE, (CAST_POINTER_ARITHMETIC)ptrLong, ulValue); // program the long word
     uEnable_Interrupt();                                                 // re-enable interrupts
@@ -734,48 +744,34 @@ extern int main(void)
     const RESET_VECTOR reset_vect
 #endif
 = {
-    (void *)(START_OF_SRAM + SIZE_OF_RAM),                               // stack pointer to top of RAM
+    (void *)(RAM_START_ADDRESS + SIZE_OF_RAM - 8),                       // stack pointer to top of RAM
     START_CODE
 };
 
 
+
+
+
+
+
+
+
+#if defined _WINDOWS
 // memset implementation
 //
-extern void *uMemset(void *ptrTo, unsigned char ucValue, size_t Size)
+extern void *uMemset(void *ptrTo, int iValue, size_t Size)
 {
+    unsigned char ucValue = (unsigned char)iValue;
     void *buffer = ptrTo;
     unsigned char *ptr = (unsigned char *)ptrTo;
 
-    while (Size--) {
+    while (Size-- != 0) {
         *ptr++ = ucValue;
     }
 
     return buffer;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#ifdef _WINDOWS
 // The following routines are only for simulator compatibility
 
 extern void *fnGetHeapStart(void) { return 0; }
@@ -849,7 +845,7 @@ extern void uTaskerSchedule( void )
 {
     static int iDone = 0;
 
-    if (!iDone) {
+    if (iDone == 0) {
         iDone = 1;
         uTaskerBoot();
     }

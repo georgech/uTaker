@@ -30,6 +30,12 @@
     <Filter Include="WinSim\SIMstm32">
       <UniqueIdentifier>{56aee2f1-eaae-4222-9ea2-133941815782}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Hardware\Luminary">
+      <UniqueIdentifier>{df598d53-f3b4-4586-9c50-f8c7522ee006}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="WinSim\SIMluminary">
+      <UniqueIdentifier>{6bda6716-fd43-4d41-9a14-4584796b3301}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\uTaskerBootLoader.c">
@@ -76,6 +82,15 @@
     </ClCompile>
     <ClCompile Include="..\..\..\Hardware\STM32\STM32_ports.cpp">
       <Filter>WinSim\SIMstm32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Hardware\Luminary\LM3SXXXX_boot.c">
+      <Filter>Hardware\Luminary</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Hardware\Luminary\LM3SXXXX_ports.cpp">
+      <Filter>WinSim\SIMluminary</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Hardware\Luminary\LM3SXXXXSim.c">
+      <Filter>WinSim\SIMluminary</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -166,6 +181,51 @@
     <ClInclude Include="..\..\..\Hardware\packages.h">
       <Filter>Hardware</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Luminary\spi_flash_lm3s_atmel.h">
+      <Filter>Hardware\Luminary</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Luminary\spi_flash_lm3s_sst25.h">
+      <Filter>Hardware\Luminary</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Luminary\spi_flash_lm3s_stmicro.h">
+      <Filter>Hardware\Luminary</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Luminary\LM3SXXXX.h">
+      <Filter>Hardware\Luminary</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Luminary\LM3S9B95_port.h">
+      <Filter>WinSim\SIMluminary</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Luminary\LM3S10X_port.h">
+      <Filter>WinSim\SIMluminary</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Luminary\LM3S1968_port.h">
+      <Filter>WinSim\SIMluminary</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Luminary\LM3S2110_port.h">
+      <Filter>WinSim\SIMluminary</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Luminary\LM3S2139_port.h">
+      <Filter>WinSim\SIMluminary</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Luminary\LM3S3748_port.h">
+      <Filter>WinSim\SIMluminary</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Luminary\LM3S3768_port.h">
+      <Filter>WinSim\SIMluminary</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Luminary\LM3S5732_port.h">
+      <Filter>WinSim\SIMluminary</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Luminary\LM3S6965_port.h">
+      <Filter>WinSim\SIMluminary</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Luminary\LM3S8962_port.h">
+      <Filter>WinSim\SIMluminary</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Luminary\SimLM3SXXXX.h">
+      <Filter>WinSim\SIMluminary</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="cursor1.cur">
@@ -184,6 +244,9 @@
     </None>
     <None Include="..\GNU_STM32\make_uTaskerBoot_GNU_STM32" />
     <None Include="..\GNU_STM32\Build_STM32.bat" />
+    <None Include="..\..\..\Hardware\Luminary\LM3SXXXX_asm.s">
+      <Filter>Hardware\Luminary</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="uTasker.rc">

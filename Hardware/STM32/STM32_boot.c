@@ -64,12 +64,12 @@ extern void fnResetBoard(void)
     APPLICATION_INT_RESET_CTR_REG = (VECTKEY | SYSRESETREQ);
 }
 
-#ifndef _COMPILE_KEIL                                                    // Keil doesn't support in-line assembler in Thumb mode so an assembler file is required
+#if !defined _COMPILE_KEIL                                               // Keil doesn't support in-line assembler in Thumb mode so an assembler file is required
 // Allow the jump to a foreign application as if it were a reset (load SP and PC)
 //
 extern void start_application(unsigned long app_link_location)           // {1}
 {
-    #ifndef _WINDOWS
+    #if !defined _WINDOWS
     asm(" ldr sp, [r0,#0]");
     asm(" ldr pc, [r0,#4]");
     #endif

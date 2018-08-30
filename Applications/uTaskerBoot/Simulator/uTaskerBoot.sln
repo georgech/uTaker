@@ -9,6 +9,8 @@ Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		uTaskerBoot_Kinetis plus GCC build|Win32 = uTaskerBoot_Kinetis plus GCC build|Win32
 		uTaskerBoot_Kinetis|Win32 = uTaskerBoot_Kinetis|Win32
+		uTaskerBoot_Luminary plus GCC build|Win32 = uTaskerBoot_Luminary plus GCC build|Win32
+		uTaskerBoot_Luminary|Win32 = uTaskerBoot_Luminary|Win32
 		uTaskerBoot_STM32 plus GCC build|Win32 = uTaskerBoot_STM32 plus GCC build|Win32
 		uTaskerBoot_STM32|Win32 = uTaskerBoot_STM32|Win32
 	EndGlobalSection
@@ -17,6 +19,10 @@ Global
 		{0E9D41E1-33BA-4CF4-B6DA-F17ECE8CDCEB}.uTaskerBoot_Kinetis plus GCC build|Win32.Build.0 = Win32 Debug and GNU target|Win32
 		{0E9D41E1-33BA-4CF4-B6DA-F17ECE8CDCEB}.uTaskerBoot_Kinetis|Win32.ActiveCfg = Debug|Win32
 		{0E9D41E1-33BA-4CF4-B6DA-F17ECE8CDCEB}.uTaskerBoot_Kinetis|Win32.Build.0 = Debug|Win32
+		{0E9D41E1-33BA-4CF4-B6DA-F17ECE8CDCEB}.uTaskerBoot_Luminary plus GCC build|Win32.ActiveCfg = uTaskerBoot_Luminary plus GCC build|Win32
+		{0E9D41E1-33BA-4CF4-B6DA-F17ECE8CDCEB}.uTaskerBoot_Luminary plus GCC build|Win32.Build.0 = uTaskerBoot_Luminary plus GCC build|Win32
+		{0E9D41E1-33BA-4CF4-B6DA-F17ECE8CDCEB}.uTaskerBoot_Luminary|Win32.ActiveCfg = uTaskerBoot_Luminary|Win32
+		{0E9D41E1-33BA-4CF4-B6DA-F17ECE8CDCEB}.uTaskerBoot_Luminary|Win32.Build.0 = uTaskerBoot_Luminary|Win32
 		{0E9D41E1-33BA-4CF4-B6DA-F17ECE8CDCEB}.uTaskerBoot_STM32 plus GCC build|Win32.ActiveCfg = uTaskerBoot_STM32 plus GCC build|Win32
 		{0E9D41E1-33BA-4CF4-B6DA-F17ECE8CDCEB}.uTaskerBoot_STM32 plus GCC build|Win32.Build.0 = uTaskerBoot_STM32 plus GCC build|Win32
 		{0E9D41E1-33BA-4CF4-B6DA-F17ECE8CDCEB}.uTaskerBoot_STM32|Win32.ActiveCfg = uTaskerBoot_STM32|Win32

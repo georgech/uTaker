@@ -44,6 +44,7 @@
     17.07.2017 Add target for the FRDM-KL25Z
     27.02.2018 Add Macronix SPI flash                                    {26}
     18.06.2018 Merge STM32 project
+    30.08.2018 Merge Luminary project
 
     See this video for details of buiding and checking the "Bare-Minimum" boot loader: https://youtu.be/lm3M-ZlaFLQ
 
@@ -82,7 +83,7 @@
     #define _TICK_RESOLUTION     TICK_UNIT_MS(50)                        // {25} for simulator compatibility only
 
     #if defined _KINETIS                                                 // {20}
-        #define TARGET_HW           "Bare-Minimum Boot"
+        #define TARGET_HW           "Bare-Minimum Boot - Kinetis"
       //#define FRDM_KL25Z
       //#define FRDM_KL27Z
       //#define CAPUCCINO_KL27                                           // KL27 with 256k flash / 32k SRAM
@@ -888,10 +889,51 @@
             #define STM32F100RB                                          // exact processor type
             #define PCLK1_DIVIDE        2
             #define PCLK2_DIVIDE        1
-        #else
-                                                                         // other configurations can be added here
+        #endif
+        // Include the hardware header here
+        // - beware that the header delivers rules for subsequent parts of this header file but also accepts some rules from previous parts,
+        // therefore its position should only be moved after careful consideration of its consequences
+        //
+        #include "types.h"                                               // project specific type settings and the processor header at this location
+    #elif defined _LM3SXXXX
+        #define TARGET_HW           "Bare-Minimum Boot - Luminary"
+      //#define _LM3S10X                                                 // Small package part
+      //#define _LM3S6965                                                // LUMINARY EVAL board with Ethernet
+      //#define _LM3S8962                                                // LUMINARY EVAL board with Ethernet and CAN
+        #define _LM3S1968                                                // LUMINARY EVAL board without Ethernet
+      //#define _LM3S5732                                                // LUMINARY EVAL board with USB HOST/DEVICE (64pin)
+      //#define _LM3S3748                                                // LUMINARY EVAL board with USB HOST/DEVICE (100pin)
+      //#define _LM3S3768                                                // LUMINARY EVAL board with USB HOST/DEVICE/OTG
+
+        #if defined _LM3S1968
+            #define _DEV1                                                // special configuration
+            #define CRYSTAL_FREQ        8000000
+            #define PLL_OUTPUT_FREQ     50000000                         // highest speed possible
+            #define PART_CODE           CODE_LM3S1968
+            #define PIN_COUNT           PIN_COUNT_100_PIN
+            #define PACKAGE_TYPE        PACKAGE_LQFP
+        #elif defined _LM3S6965
+            #define _LM3S6965
+            #define CRYSTAL_FREQ        8000000
+            #define PLL_OUTPUT_FREQ     50000000                         // highest speed possible
+            #define PART_CODE           CODE_LM3S6965
+            #define PIN_COUNT           PIN_COUNT_100_PIN
+            #define PACKAGE_TYPE        PACKAGE_LQFP
         #endif
 
+      //#define CRYSTAL_FREQ        8000000
+      //#define PLL_OUTPUT_FREQ     50000000                             // highest speed possible
+      //#define SIZE_OF_FLASH       (256*1024)
+      //#define SIZE_OF_RAM         (64*1024)
+
+        #define USER_REG0_VALUE             0x00b61a00                   // MAC address in user registers (00-1a-b6-00-22-1c)
+        #define USER_REG1_VALUE             0x001c2200
+
+        #if defined SPI_SW_UPLOAD
+            #define CS0_LINE            PORTA_BIT3                       // CS0 line used when SPI FLASH is enabled
+            #define SPI_CS0_PORT        GPIODATA_A
+            #define CONFIGURE_CS_LINES() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(A, CS0_LINE, CS0_LINE);
+        #endif
         // Include the hardware header here
         // - beware that the header delivers rules for subsequent parts of this header file but also accepts some rules from previous parts,
         // therefore its position should only be moved after careful consideration of its consequences

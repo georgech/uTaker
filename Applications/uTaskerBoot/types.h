@@ -98,7 +98,7 @@ typedef char              CHAR;
     #include "../../Hardware/LPC17XX/LPC17XX.h"
 #endif
 #if defined  _LM3SXXXX
-    #include "../../Hardware/LM3SXXXX/LM3SXXXX.h"
+    #include "../../Hardware/Luminary/LM3SXXXX.h"
 #endif
 #if defined  _HW_AVR32
     #include "../../Hardware/AVR32/AVR32.h"
