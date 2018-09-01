@@ -17,21 +17,6 @@
 */
 
 
-#if defined OSC_LOW_GAIN_MODE                                            // {66} if using low frequency low power mode no external resistor or load capacitors are used
-    #define MCG_C2_GAIN_MODE    0                                        // don't select high gain mode since the oscillator will not start
-#else
-    #define MCG_C2_GAIN_MODE    MCG_C2_HGO                               // select high gain mode
-#endif
-
-#if CRYSTAL_FREQUENCY > 8000000                                          // crystal > 8MHz
-    #define MCG_C2_FREQ_RANGE     MCG_C2_RANGE_8M_32M
-#elif CRYSTAL_FREQUENCY >= 1000000                                       // crystal bwteeen 1MHz and 8MHz
-    #define MCG_C2_FREQ_RANGE     MCG_C2_RANGE_1M_8M
-#else                                                                    // assumed to be 32kHz crystal
-    #define MCG_C2_FREQ_RANGE     MCG_C2_RANGE_32K_40K
-#endif
-
-
 #if !defined RUN_FROM_DEFAULT_CLOCK && !defined EXTERNAL_CLOCK           // no configuration performed - remain in default clocked mode
     #if CRYSTAL_FREQUENCY == 8000000
         #define MCG_C1_FRDIV_VALUE    MCG_C1_FRDIV_256
@@ -131,7 +116,7 @@
         MCG_S |= MCG_S_CLKST_EXTERN_CLK;
             #endif
     }
-            #if defined RUN_FROM_EXTERNAL_CLOCK                          // {101}
+            #if defined RUN_FROM_EXTERNAL_CLOCK                          // {101} run directly from the external clock
     SIM_CLKDIV1 = (((SYSTEM_CLOCK_DIVIDE - 1) << 28) | ((BUS_CLOCK_DIVIDE - 1) << 24) | ((FLEX_CLOCK_DIVIDE - 1) << 20) | ((FLASH_CLOCK_DIVIDE - 1) << 16)); // prepare bus clock divides
             #endif
         #endif

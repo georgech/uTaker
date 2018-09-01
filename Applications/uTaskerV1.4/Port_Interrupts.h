@@ -351,6 +351,8 @@ static void fnInitIRQ(void)
     interrupt_setup.int_port_bits  = PORTA_BIT4;                         // the IRQ input connected (SWITCH_3 on TWR_KV31F120M)
             #elif defined FRDM_K66F
     interrupt_setup.int_port_bits = PORTA_BIT10;                         // the IRQ input connected (SW3 on FRDM-K66F)
+            #elif defined TWR_KV58F220M
+    interrupt_setup.int_port_bits = PORTA_BIT4;                          // the IRQ input connected (SWITCH_2 on TWR_KV58F220M)
             #else
     interrupt_setup.int_port_bits  = PORTA_BIT19;                        // the IRQ input connected (SWITCH_1 on TWR_K60N512)
             #endif

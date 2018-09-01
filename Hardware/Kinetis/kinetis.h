@@ -323,7 +323,7 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
     #endif
 #endif
 
-#if (defined KINETIS_K22 && !defined KINETIS_FLEX && ((SIZE_OF_FLASH >= (128 * 1024)) && (SIZE_OF_FLASH <= (512 * 1024)))) || defined KINETIS_K80 || defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_KL28 || defined KINETIS_KL82 || defined KINETIS_KE15
+#if (defined KINETIS_K22 && !defined KINETIS_FLEX && ((SIZE_OF_FLASH >= (128 * 1024)) && (SIZE_OF_FLASH <= (512 * 1024)))) || defined KINETIS_K80 || defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_KL28 || defined KINETIS_KL82 || defined KINETIS_KE15 || defined KINETIS_KV50
     #define HIGH_SPEED_RUN_MODE_AVAILABLE
 #endif
 
@@ -756,6 +756,12 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
 
 #if defined KINETIS_K_FPU                                                // 120/150/180/220MHz device
     #if KINETIS_MAX_SPEED == 220000000                                   // 220MHz part (high-speed run mode)
+        #if (CORE_CLOCK > 16000000)
+            #define HIGH_SPEED_RUN_MODE_REQUIRED                         // to operate at the configured speeds the high speed mode (with restrictions) must be used
+            #if defined FLASH_ROUTINES || defined FLASH_FILE_SYSTEM
+                #error Flash writes/erase are not possible in high speed run mode!
+            #endif
+        #endif
         #if CORE_CLOCK > 220000000
             #error PLL frequency out of range: maximum 220MHz
         #endif
@@ -6267,7 +6273,13 @@ typedef struct stKINETIS_INTMUX
       #define FTFL_FSEC_KEYEN_ENABLED    0x80                            // backdoor key access enabled
       #define FTFL_FSEC_KEYEN_DISABLED   0xc0                            // backdoor key access disabled
     #define FTFL_FOPT           *(volatile unsigned char *)(FTFL_BLOCK + 0x03) // flash option register (read-only)
-    #if defined KINETIS_KE15
+    #if defined KINETIS_KV50
+      #define FTFL_FOPT_LPBOOT_CLK_DIV_2  0x00
+      #define FTFL_FOPT_LPBOOT_CLK_DIV_1  0x01
+      #define FTFL_FOPT_NMI_DISABLED      0x00
+      #define FTFL_FOPT_NMI_ENABLED       0x04
+      #define FTFL_FOPT_FAST_INIT         0x20
+    #elif defined KINETIS_KE15
       #define FTFL_FOPT_LPBOOT_CLK_DIV_2  0x00
       #define FTFL_FOPT_LPBOOT_CLK_DIV_1  0x01
       #define FTFL_FOPT_NMI_DISABLED      0x00

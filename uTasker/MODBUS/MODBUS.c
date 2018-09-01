@@ -54,6 +54,7 @@
     02.06.2018 Zero optional user UART callback handlers                 {4}
     01.08.2018 fnSendMODBUS_response() made extern so that it can be used to send responses without a request {4}
     03.08.2018 Return exception when accesses to non-existent coils or discretes are attempted {5}
+    31.08.2018 Add MODBUS_PRE_WRITE_CHECK option (informs user of registers that will be written so that they can be blocked if needed) {6}
 
 */
 
@@ -2571,6 +2572,18 @@ _handle_local_slave:
                         }
                         break;
                     }
+                    modbus_rx_function->usElementLength = 1;
+        #if defined MODBUS_PRE_WRITE_CHECK                               // {6}
+                    if (fnPreFunction[_USER_PORT] != 0) {
+                        if ((iExceptionStatus = fnPreFunction[_USER_PORT]((iType | PRE_WRITE_CHECK_FLAG), modbus_rx_function)) != 0) {// allow the application to prepare information if necessary
+                            ucExceptionCode = fnWaitException(iExceptionStatus, modbus_rx_function, MODBUS_EXCEPTION_CODE_4); // it is not possible to read the requested information, or it will be delayed
+                            break;
+                        }
+                        usLength = *(modbus_rx_function->data_content.user_data + 2); // extract the single register content again since the user function may have modified it
+                        usLength <<= 8;
+                        usLength |= *(modbus_rx_function->data_content.user_data + 3);
+                    }
+        #endif
                     if (MODBUS_MASK_WRITE_REGISTER == ucFunctionCode) {
                         unsigned short usOR_mask;
                         unsigned short usRegisterContent;
@@ -2590,7 +2603,6 @@ _handle_local_slave:
                         ptrData -= 3;
                         usAnswerLength = 4;
                     }
-                    modbus_rx_function->usElementLength = 1;
                     if ((fnPostFunction[_USER_PORT] != 0) && (fnPostFunction[_USER_PORT](UPDATE__HOLDING_REGISTERS, modbus_rx_function) != 0)) { // allow the application to react to change if necessary
                         ucExceptionCode = MODBUS_EXCEPTION_CODE_4;       // it is not possible to change the requested register
                         break;
@@ -2628,6 +2640,12 @@ _handle_local_slave:
                     }
                     if (ucFunctionCode == MODBUS_WRITE_MULTIPLE_REGISTERS) {
                         unsigned short usValue;
+        #if defined MODBUS_PRE_WRITE_CHECK                               // {6}
+                        if ((fnPreFunction[_USER_PORT] != 0) && ((iExceptionStatus = fnPreFunction[_USER_PORT]((iType | PRE_WRITE_CHECK_FLAG), modbus_rx_function)) != 0)) {// allow the application to prepare information if necessary
+                            ucExceptionCode = fnWaitException(iExceptionStatus, modbus_rx_function, MODBUS_EXCEPTION_CODE_4); // it is not possible to read the requested information, or it will be delayed
+                            break;
+                        }
+        #endif
                         usAddress -= regs->address_range.usStartAddress;
                         while (usLength-- != 0) {
                             usValue = *ptrData++;

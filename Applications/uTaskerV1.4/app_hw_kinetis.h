@@ -308,10 +308,18 @@
     #define EXTERNAL_CLOCK       50000000                                // this must be 50MHz in order to use Ethernet in RMII mode
     #define _EXTERNAL_CLOCK      EXTERNAL_CLOCK
     #define CLOCK_DIV            5                                       // input must be divided to 8MHz..16MHz range (/1 to /8 for FPU parts)
-    #define CLOCK_MUL            32                                      // the PLL multiplication factor to achieve operating frequency of 160MHz (x16 to x47 possible - divided by 2 at VCO output)
-    #define FLEX_CLOCK_DIVIDE    8                                       // 160/8 to give 20MHz
-    #define BUS_CLOCK_DIVIDE     6                                       // 160/6 to give 26.667MHz
-    #define FLASH_CLOCK_DIVIDE   6                                       // 160/6 to give 26.667MHz
+    #define USE_HIGH_SPEED_RUN_MODE
+    #if defined USE_HIGH_SPEED_RUN_MODE
+        #define CLOCK_MUL            44                                  // the PLL multiplication factor to achieve operating frequency of 160MHz (x16 to x47 possible - divided by 2 at VCO output)
+        #define FLEX_CLOCK_DIVIDE    11                                  // 220/11 to give 20MHz
+        #define BUS_CLOCK_DIVIDE     8                                   // 220/6 to give 27.5MHz
+        #define FLASH_CLOCK_DIVIDE   8                                   // 220/6 to give 27.5MHz
+    #else
+        #define CLOCK_MUL            32                                  // the PLL multiplication factor to achieve operating frequency of 160MHz (x16 to x47 possible - divided by 2 at VCO output)
+        #define FLEX_CLOCK_DIVIDE    8                                   // 160/8 to give 20MHz
+        #define BUS_CLOCK_DIVIDE     6                                   // 160/6 to give 26.667MHz
+        #define FLASH_CLOCK_DIVIDE   6                                   // 160/6 to give 26.667MHz
+    #endif
 #elif defined TWR_K60F120M || defined TWR_K70F120M || defined EMCRAFT_K70F120M || defined TWR_VF65GS10 // {9}
     #define EXTERNAL_CLOCK       50000000                                // this must be 50MHz in order to use Ethernet in RMII mode
     #define _EXTERNAL_CLOCK      EXTERNAL_CLOCK
@@ -2536,7 +2544,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #endif
     #if defined KINETIS_KL || defined KINETIS_KV || defined KINETIS_KE15
         #if defined ROM_BOOTLOADER
-            #if !defined FRDM_KL28Z && !defined KINETIS_KE15
+            #if !defined FRDM_KL28Z && !defined KINETIS_KE15 && !defined defined KINETIS_KV50
                 #define BOOTLOADER_ERRATA
             #endif
             #if defined TWR_KL43Z48M || defined FRDM_KL43Z || defined FRDM_KL03Z || defined FRDM_KL27Z || defined FRDM_KL28Z || defined FRDM_KL82Z || defined TWR_KL82Z72M || defined CAPUCCINO_KL27 || defined KINETIS_KE15 || defined KL33Z64
@@ -2546,6 +2554,8 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
             #else
                 #define KINETIS_FLASH_CONFIGURATION_NONVOL_OPTION  (FTFL_FOPT_LPBOOT_CLK_DIV_1 | FTFL_FOPT_RESET_PIN_ENABLED | FTFL_FOPT_BOOTSRC_SEL_FLASH | FTFL_FOPT_BOOTPIN_OPT_DISABLE | FTFL_FOPT_NMI_ENABLED)
             #endif
+        #elif defined KINETIS_KV50
+            #define KINETIS_FLASH_CONFIGURATION_NONVOL_OPTION  (FTFL_FOPT_LPBOOT_CLK_DIV_1 | FTFL_FOPT_NMI_DISABLED)
         #else
             #define KINETIS_FLASH_CONFIGURATION_NONVOL_OPTION  (FTFL_FOPT_LPBOOT_CLK_DIV_8 | FTFL_FOPT_RESET_PIN_ENABLED)
         #endif

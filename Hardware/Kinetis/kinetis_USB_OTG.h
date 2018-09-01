@@ -508,8 +508,13 @@ static __interrupt void _usb_otg_isr(void)
     unsigned char ucUSB_Int_status;
 
     usb_monitor("I", 0);                                                 // record activity for optional analysis purposes
-    
-    while ((ucUSB_Int_status = (unsigned char)(INT_STAT & INT_ENB)) != 0) { // read present status
+    FOREVER_LOOP() {                                                     // allow multiple interrupt cycles to be possible
+        ucUSB_Int_status = (unsigned char)INT_ENB;                       // the interrupts that we are concerned with
+        ucUSB_Int_status &= (unsigned char)INT_STAT;                     // mask with interrupt(s) that are pending at this moment in time
+        if (ucUSB_Int_status == 0) {                                     // if no (more) interrupt(s) pending we quit the service routine
+            usb_monitor("E", 0);                                         // record activity for optional analysis purposes
+            break;
+        }
         usb_monitor("S", ucUSB_Int_status);                              // record activity for optional analysis purposes
         if ((ucUSB_Int_status & ~TOK_DNE) != 0) {                        // check first for bus state changes
     #if defined USB_HOST_SUPPORT
@@ -769,7 +774,6 @@ static __interrupt void _usb_otg_isr(void)
     #endif      
         }
     }
-    usb_monitor("E", 0);                                                 // record activity for optional analysis purposes
 }
 
 // Set the transmit control and buffer to next active one and check whether it is free

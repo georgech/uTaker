@@ -522,6 +522,7 @@ extern unsigned long fnGetModbusLongWord(unsigned short *_ptrReg);       // read
 #define GET_EXCEPTION_STATUS                   7 
 #define GET_STATUS_WORD                        8
 #define PREPARE_FIFO_READ_DELAYED              9                         // same as PREPARE_FIFO_READ but as a result of a delayed response
+#define PRE_WRITE_CHECK_FLAG                   0x10
 
 
 #define UPDATE_COILS                           0
