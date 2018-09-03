@@ -798,13 +798,14 @@ static void fnSetDevice(unsigned long *port_inits)
     SDHC_WML       = 0x00100010;
     SDHC_VENDOR    = SDHC_VENDOR_EXTDMAEN;
     SDHC_HOSTVER   = 0x00001201;
-
+    #if NUMBER_OF_CAN_INTERFACES > 0
     CAN0_MCR       = 0xd890000f;                                         // FlexCAN
     CAN0_RXGMASK   = 0xffffffff;
     CAN0_RX14MASK  = 0xffffffff;
     CAN0_RX15MASK  = 0xffffffff;
     CAN0_CTRL2     = 0x00c00000;
     CAN0_RXFGMASK  = 0xffffffff;
+    #endif
     #if NUMBER_OF_CAN_INTERFACES > 1
     CAN1_MCR       = 0xd890000f;
     CAN1_RXGMASK   = 0xffffffff;

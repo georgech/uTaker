@@ -1597,7 +1597,7 @@ extern void fnRetriggerWatchdog(void)
     #include "kinetis_SPI.h"                                             // include SPI hardware driver code
 #endif
 
-#if defined CAN_INTERFACE
+#if defined CAN_INTERFACE && (NUMBER_OF_CAN_INTERFACES > 0)
 /* =================================================================== */
 /*                            FlexCAN/MSCAN                            */
 /* =================================================================== */

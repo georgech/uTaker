@@ -8,7 +8,7 @@
     www.uTasker.com    Skype: M_J_Butcher
     
     ---------------------------------------------------------------------
-    File:      kinetis_CAN.c
+    File:      kinetis_CAN.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
     Copyright (C) M.J.Butcher Consulting 2004..2018
@@ -41,9 +41,7 @@ typedef struct stCANQue
 /*                      local variable definitions                     */
 /* =================================================================== */
 
-#if defined CAN_INTERFACE
-    static CANQUE can_queue[NUMBER_OF_CAN_INTERFACES][NUMBER_CAN_MESSAGE_BUFFERS] = {{{0}}};
-#endif
+static CANQUE can_queue[NUMBER_OF_CAN_INTERFACES][NUMBER_CAN_MESSAGE_BUFFERS] = {{{0}}};
 
 
 static void fnCAN_Message(int iChannel)

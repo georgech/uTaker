@@ -3378,7 +3378,7 @@ typedef struct stKINETIS_MMDVSQ                                          // {39}
 } KINETIS_MMDVSQ;
 #endif
 
-
+#if defined NUMBER_OF_CAN_INTERFACES && (NUMBER_OF_CAN_INTERFACES > 0)
 typedef struct stKINETIS_CAN
 {
 unsigned long  CAN_MCR;
@@ -3435,6 +3435,7 @@ unsigned long  CAN_RXIMR13;
 unsigned long  CAN_RXIMR14;
 unsigned long  CAN_RXIMR15;
 } KINETIS_CAN;
+#endif
 
 
 #if defined CHIP_HAS_FLEXIO                                              // {23}
@@ -3733,12 +3734,14 @@ typedef struct stKINETIS_PERIPH
 #if defined KINETIS_KL || defined KINETIS_KE
     #if defined KINETIS_KE
     KINETIS_KBI        KBI[2];                                           // {22}
-    #if defined MSCAN_CAN_INTERFACE
+        #if defined MSCAN_CAN_INTERFACE
     KINETIS_MSCAN      MSCAN;                                            // {27}
-    #endif
+        #endif
     #endif
 #else
+    #if defined NUMBER_OF_CAN_INTERFACES && (NUMBER_OF_CAN_INTERFACES > 0)
     KINETIS_CAN        CAN[NUMBER_OF_CAN_INTERFACES];
+    #endif
     KINETIC_CRC        CRC;                                              // {6}
 #endif
 #if defined LLWU_AVAILABLE
