@@ -35,6 +35,7 @@
     13.11.2011 Add SAM3                                                  {20}
     06.08.2013 Enable FLASH operations when USE_PARAMETER_BLOCK is used  {21}
     28.04.2014 Allow FLASH_ROUTINES to enable flash simulation           {22}
+    03.09.2018 Add FRAM image support                                    {23}
 
 */
 
@@ -149,7 +150,10 @@
         #define SPI_FLASH_FILE "AT45DBXXX.ini"                           // {3}
     #endif
 #endif
-#if defined I2C_EEPROM_FILE_SYSTEM                                       // {18}
+#if defined FM24W256_CNT && (FM24W256_CNT > 0)                           // {23}
+    #define I2C_FRAM_FILE "FM24W256.ini"
+#endif
+#if defined I2C_EEPROM_FILE_SYSTEM || (defined M24M01_CNT && (M24M01_CNT > 0)) // {18}
     #define I2C_EEPROM_FILE "M24M01.ini"
 #endif
 #if defined EXT_FLASH_FILE_SYSTEM                                        // {19}
@@ -224,7 +228,7 @@ extern void fnPrimeFileSystem(void)
         fnInitSPI_DataFlash();                                           // set blank SPI file system
     }
 #endif
-#if defined I2C_EEPROM_FILE_SYSTEM                                       // {18}
+#if defined I2C_EEPROM_FILE_SYSTEM || (defined M24M01_CNT && (M24M01_CNT > 0)) // {18}
     #if _VC80_UPGRADE < 0x0600
 	iFileIni = _open(I2C_EEPROM_FILE, (_O_BINARY | _O_RDWR));
     #else
@@ -237,6 +241,21 @@ extern void fnPrimeFileSystem(void)
     }
     else {
         fnInitI2C_EEPROM();                                              // set blank I2C EEPROM
+    }
+#endif
+#if defined FM24W256_CNT && (FM24W256_CNT > 0)                           // {23}
+    #if _VC80_UPGRADE < 0x0600
+	iFileIni = _open(I2C_FRAM_FILE, (_O_BINARY | _O_RDWR));
+    #else
+	_sopen_s(&iFileIni, I2C_FRAM_FILE, (_O_BINARY | _O_RDWR), _SH_DENYWR, _S_IREAD);
+    #endif
+
+    if (iFileIni >= 0) {
+		_read(iFileIni, fnGetI2CFRAMStart(), fnGetI2CFRAMSize());
+	    _close(iFileIni);   
+    }
+    else {
+        fnInitI2C_FRAM();                                               // set blank I2C FRAM
     }
 #endif
 #if defined EXT_FLASH_FILE_SYSTEM                                        // {19}
@@ -326,7 +345,7 @@ extern void fnSaveFlashToFile(void)
 	    _close(iFileIni);        
     }
 #endif
-#if defined I2C_EEPROM_FILE_SYSTEM                                       // {18}
+#if defined I2C_EEPROM_FILE_SYSTEM || (defined M24M01_CNT && (M24M01_CNT > 0)) // {18}
     #if _VC80_UPGRADE < 0x0600
 	iFileIni = _open(I2C_EEPROM_FILE, (_O_BINARY | _O_TRUNC  | _O_CREAT | _O_RDWR ), _S_IREAD | _S_IWRITE );
     #else
@@ -335,6 +354,18 @@ extern void fnSaveFlashToFile(void)
 
     if (iFileIni >= 0) {
         _write(iFileIni, fnGetI2CEEPROMStart(), fnGetI2CEEPROMSize());   // save I2C EEPROM
+	    _close(iFileIni);        
+    }
+#endif
+#if defined FM24W256_CNT && (FM24W256_CNT > 0)                           // {23}
+    #if _VC80_UPGRADE < 0x0600
+	iFileIni = _open(I2C_FRAM_FILE, (_O_BINARY | _O_TRUNC  | _O_CREAT | _O_RDWR ), _S_IREAD | _S_IWRITE );
+    #else
+	_sopen_s(&iFileIni, I2C_FRAM_FILE, (_O_BINARY |  _O_TRUNC  | _O_CREAT | _O_RDWR), _SH_DENYNO, _S_IREAD | _S_IWRITE);
+    #endif
+
+    if (iFileIni >= 0) {
+        _write(iFileIni, fnGetI2CFRAMStart(), fnGetI2CFRAMSize());       // save I2C FRAM
 	    _close(iFileIni);        
     }
 #endif

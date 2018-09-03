@@ -69,6 +69,7 @@
     24.12.2016 Add SIM_I2C_OUT and fnInjectI2C()                         {51}
     28.02.2017 Add UARTs 6 and 7                                         {52}
     18.05.2017 Add fnLogRx()                                             {53}
+    03.08.2018 Add fnInitI2C_FRAM(), fnGetI2CFRAMStart() and fnGetI2CFRAMSize() {54}
  
 */
  
@@ -539,6 +540,10 @@ unsigned char fnSimI2C_devices(unsigned char ucType, unsigned char ucData);
 extern void fnInitI2C_EEPROM(void);                                      // {39}
 extern unsigned char *fnGetI2CEEPROMStart(void);
 extern unsigned long fnGetI2CEEPROMSize(void);
+
+extern void fnInitI2C_FRAM(void);                                        // {54}
+extern unsigned char *fnGetI2CFRAMStart(void);
+extern unsigned long fnGetI2CFRAMSize(void);
 
 extern void fnInitExtFlash(void);                                        // {40}
 extern unsigned char *fnGetExtFlashStart(void);

@@ -29,6 +29,7 @@
     09.04.2014 Added MMA8451Q, MMA7660F and FXOS8700 - 3/6-axis accelerometer/orientation/motion detection {11}
     28.12.2017 Added MAX6956                                              {12}
     20.06.2017 Added MAX6955                                              {13}
+    03.09.2018 Added FM24W256                                             {14}
 
 */                            
 
@@ -414,10 +415,66 @@ typedef struct stTIME_BLOCK_S
 } TIME_BLOCK_S;
 
 
+
+/**************************************************************************/
+/*                      FM24W256 FRAM                                     */
+/**************************************************************************/
+#if defined FM24W256_CNT && (FM24W256_CNT > 0)
+static unsigned char FM24W256_fram[FM24W256_CNT][32 * 1024] = {{0}}; // 32k FRAM
+
+typedef struct stFM24W256
+{
+    unsigned long  ulMaxFRAMLength;
+    unsigned char  address;
+    unsigned char  ucState;
+    unsigned char  ucRW;
+    unsigned long  ulInternalPointer;
+} FM24W256;
+
+static const unsigned char ucFM24W256_ADD[FM24W256_CNT] = {
+    FM24W256_0_ADD,
+    #if FM24W256_CNT > 1
+    FM24W256_1_ADD,
+    #endif
+    #if FM24W256_CNT > 2
+    FM24W256_2_ADD,
+    #endif
+    #if FM24W256_CNT > 3
+    FM24W256_3_ADD,
+    #endif
+    #if FM24W256_CNT > 4
+    FM24W256_4_ADD,
+    #endif
+    #if FM24W256_CNT > 5
+    FM24W256_5_ADD,
+    #endif
+};
+
+static FM24W256 simFM24W256[FM24W256_CNT] = {{0}};
+
+// Initialise to deleted state
+//
+extern void fnInitI2C_FRAM(void)
+{
+    memset(FM24W256_fram, 0xff, sizeof(FM24W256_fram));
+}
+
+extern unsigned char *fnGetI2CFRAMStart(void)
+{
+    return &FM24W256_fram[0][0];
+}
+
+extern unsigned long fnGetI2CFRAMSize(void)
+{
+    return (sizeof(FM24W256_fram));
+}
+#endif
+
 /**************************************************************************/
 /*                      M24M01 EEPROM                                     */
 /**************************************************************************/
 
+#if defined M24M01_CNT && (M24M01_CNT > 0)
 unsigned char M24M01_eeprom[2][128 * 1024];
 
 typedef struct stM24M01
@@ -438,7 +495,7 @@ static M24M01 simM24M01[2] = {                                           // two 
 //
 extern void fnInitI2C_EEPROM(void)
 {
-    uMemset(M24M01_eeprom, 0xff, sizeof(M24M01_eeprom));
+    memset(M24M01_eeprom, 0xff, sizeof(M24M01_eeprom));
 }
 
 extern unsigned char *fnGetI2CEEPROMStart(void)
@@ -450,6 +507,12 @@ extern unsigned long fnGetI2CEEPROMSize(void)
 {
     return (sizeof(M24M01_eeprom));
 }
+#endif
+
+/**************************************************************************/
+/*                      M24C01 EEPROM                                     */
+/**************************************************************************/
+
 typedef struct stEEPROM_24C01
 {     
     unsigned short usMaxEEPROMLength;
@@ -476,6 +539,12 @@ typedef struct stEEPROM_M24256
 
 static EEPROM_M24256 simM24256 = {(32 * 1024), 0xae, 64, 0};
 
+
+/**************************************************************************/
+/*                             DS3640                                     */
+/**************************************************************************/
+
+#if defined DS3640_CNT && (DS3640_CNT > 0)
 typedef struct stDS3640_DATA
 {     
     TIME_BLOCK_S   bTime;
@@ -497,6 +566,7 @@ typedef struct stDS3640
 } DS3640;
 
 static DS3640 simDS3640 = {0xa0, 0};
+#endif
 
 /**************************************************************************/
 /*        STMPE811 port expander with touch screen controller             */
@@ -1274,6 +1344,14 @@ static void fnInitialiseI2CDevices(void)                                 // {10}
         i++;
     }
 #endif
+#if defined FM24W256_CNT && (FM24W256_CNT > 0)                           // {14}
+    i = 0;
+    while (i < FM24W256_CNT) {
+        simFM24W256[i].address = ucFM24W256_ADD[i];
+        simFM24W256[i].ulMaxFRAMLength = sizeof(FM24W256_fram[FM24W256_CNT]);
+        i++;
+    }
+#endif
 }
 
 // When one particular device is addressed all others are reset using this routine
@@ -1305,6 +1383,15 @@ static void fnResetOthers(unsigned char ucAddress)
         i++;
     }
 #endif
+#if defined FM24W256_CNT && (FM24W256_CNT > 0)
+    i = 0;
+    while (i < FM24W256_CNT) {
+        if (ucAddress != simFM24W256[i].address) {                       // {12}
+            simFM24W256[i].ucState = 0;
+        }
+        i++;
+    }
+#endif
     if (ucAddress != simDS1307.address) {
         simDS1307.ucState = 0;
     }
@@ -1316,34 +1403,34 @@ static void fnResetOthers(unsigned char ucAddress)
     if (ucAddress != simWM8510.address) {
         simWM8510.ucState = 0;
     }
-
+#if defined M24M01_CNT && (M24M01_CNT > 0)
     if ((ucAddress & ~0x02) != simM24M01[0].address) {
         simM24M01[0].ucState = 0;
     }
     if ((ucAddress & ~0x02) != simM24M01[1].address) {
         simM24M01[1].ucState = 0;
     }
+#endif
     if (ucAddress != simM24256.address) {
         simM24256.ucState = 0;
     }
     if (ucAddress != sim24C01.address) {
         sim24C01.ucState = 0;
     }
+#if defined DS3640_CNT && (DS3640_CNT > 0)
     if (ucAddress != simDS3640.address) {
         simDS3640.ucState = 0;
     }
+#endif
     if (ucAddress != simLM80.address) {
         simLM80.ucState = 0;
     }
-
     if (ucAddress != simPCF8574.address) {
         simPCF8574.ucState = 0;
     }
-
     if (ucAddress != simLM75A.address) {                                 // {3}
         simLM75A.ucState = 0;
     }
-
     if (ucAddress != simSTMPE811.address) {                              // {5}
         simSTMPE811.ucState = 0;
     }
@@ -1550,7 +1637,7 @@ static void fnInitTimeDS1307(char *argv[])
     simDS1307.bTime.ucYear = ((ucTens << 4) + ucUnits);
 }
 
-
+#if defined DS3640_CNT && (DS3640_CNT > 0)
 // Initialise the simulated RTC from PC's clock
 //
 static void fnInitTimeDS3640(char *argv[])
@@ -1611,6 +1698,7 @@ static void fnInitTimeDS3640(char *argv[])
     simDS3640.ucData.bTime.ucSerialNumber[6] = 0x77;
     simDS3640.ucData.bTime.ucSerialNumber[7] = 0x88;
 }
+#endif
 
 
 
@@ -1623,7 +1711,9 @@ extern void fnInitTime(char *argv[])
     fnInitInternalRTC(argv);                                             // allow initialisation of an internal RTC
 #endif
     fnInitTimeDS1307(argv);
+#if defined DS3640_CNT && (DS3640_CNT > 0)
     fnInitTimeDS3640(argv);
+#endif
     fnInitialiseI2CDevices();                                            // {10} initialise also some register values at reset
 }
 
@@ -1689,6 +1779,7 @@ unsigned char fnSimI2C_devices(unsigned char ucType, unsigned char ucData)
             simWM8510.ucState = 1;
             simWM8510.ucRW = (ucData & 0x01);
         }
+#if defined M24M01_CNT && (M24M01_CNT > 0)
         else if ((ucData & ~0x03) == simM24M01[0].address) {
             simM24M01[0].ucRW = (ucData & 0x01);                         // being read or written
             if ((simM24M01[0].ucRW) && (simM24M01[0].ucState >= 3)) {    // repeated start after setting address and moving to sequential read mode
@@ -1709,6 +1800,7 @@ unsigned char fnSimI2C_devices(unsigned char ucType, unsigned char ucData)
                 simM24M01[1].ulInternalPointer = ((unsigned long)(ucData & 0x02) << 15); // extended address bit
             }
         }
+#endif
         else if ((ucData & ~0x01) == simM24256.address) {
             simM24256.ucState++;                                         // being addressed
             simM24256.ucRW = (ucData & 0x01);                            // being read or written
@@ -1723,6 +1815,7 @@ unsigned char fnSimI2C_devices(unsigned char ucType, unsigned char ucData)
                 sim24C01.ucState = 1;
             }
         }
+#if defined DS3640_CNT && (DS3640_CNT > 0)
         else if ((ucData & ~0x01) == simDS3640.address) {
             simDS3640.ucState++;                                         // being addressed
             simDS3640.ucRW = (ucData & 0x01);                            // being read or written
@@ -1730,6 +1823,7 @@ unsigned char fnSimI2C_devices(unsigned char ucType, unsigned char ucData)
                 simDS3640.ucState = 1;
             }
         }
+#endif
         else if ((ucData & ~0x01) == simMAX543X.address) {               // being addressed
             simMAX543X.ucState = 1;
             simMAX543X.ucRW = (ucData & 0x01);
@@ -1801,6 +1895,16 @@ unsigned char fnSimI2C_devices(unsigned char ucType, unsigned char ucData)
                 if ((ucData & ~0x01) == simMAX6956[i].address) {         // {12} port-expander/LED-driver is being addressed
                     simMAX6956[i].ucState = 1;
                     simMAX6956[i].ucRW = (ucData & 0x01);                // mark whether read or write
+                }
+                i++;
+            }
+#endif
+#if defined FM24W256_CNT && (FM24W256_CNT > 0)                           // {14}
+            i = 0;
+            while (i < FM24W256_CNT) {
+                if ((ucData & ~0x01) == simFM24W256[i].address) {        // fram is being addressed
+                    simFM24W256[i].ucState = 1;
+                    simFM24W256[i].ucRW = (ucData & 0x01);               // mark whether read or write
                 }
                 i++;
             }
@@ -1921,6 +2025,7 @@ unsigned char fnSimI2C_devices(unsigned char ucType, unsigned char ucData)
             simWM8510.usRegisters[simWM8510.ucInternalRegister] = simWM8510.usData;
             simWM8510.ucState = 0;
         }
+#if defined M24M01_CNT && (M24M01_CNT > 0)
         else if ((simM24M01[0].ucState == 3) && (simM24M01[0].ucRW == 0)) { // writing
             M24M01_eeprom[0][simM24M01[0].ulInternalPointer++] = ucData;
             if ((simM24M01[0].ulInternalPointer % 128) == 0) {           // handle page write
@@ -1957,6 +2062,7 @@ unsigned char fnSimI2C_devices(unsigned char ucType, unsigned char ucData)
             simM24256.usNextInternalAddress = (ucData << 8);             // set internal pointer (MSB)
             simM24256.ucState++;
         }
+#endif
         else if ((simM24256.ucState == 2) && (simM24256.ucRW == 0)) {    // being addressed for write
             simM24256.usNextInternalAddress |= ucData;                   // set internal pointer (LSB)
             simM24256.usInternalAddress = simM24256.usNextInternalAddress;
@@ -1980,10 +2086,12 @@ unsigned char fnSimI2C_devices(unsigned char ucType, unsigned char ucData)
             }
             sim24C01.ucState++;
         }
+#if defined DS3640_CNT && (DS3640_CNT > 0)
         else if ((simDS3640.ucState == 1) && (simDS3640.ucRW == 0)) {    // being addressed for write
             simDS3640.ucInternalPointer = ucData;                        // set internal pointer
             simDS3640.ucState++;
         }
+#endif
         else if ((simSTMPE811.ucState == 1) && (simSTMPE811.ucRW == 0)) {// {5} being addressed for write
             simSTMPE811.ucInternalPointer = ucData;                      // set internal pointer
             simSTMPE811.ucState++;
@@ -2006,6 +2114,7 @@ unsigned char fnSimI2C_devices(unsigned char ucType, unsigned char ucData)
             }
             simSTMPE811.ucInternalPointer++;
         }
+#if defined DS3640_CNT && (DS3640_CNT > 0)
         else if ((simDS3640.ucState >= 2) && (simDS3640.ucRW == 0)) {    // being addressed for write
             unsigned char *ptrData = (unsigned char *)&simDS3640.ucData;
             ptrData += simDS3640.ucInternalPointer;
@@ -2016,6 +2125,7 @@ unsigned char fnSimI2C_devices(unsigned char ucType, unsigned char ucData)
             *ptrData = ucData;                                           // write new data to device
             simDS3640.ucState++;
         }
+#endif
         else if ((simMAX543X.ucState == 1) && (simMAX543X.ucRW == 0)) {  // being addressed for write
             simMAX543X.ucCommand = ucData;                               // set command
             simMAX543X.ucState++;
@@ -2240,6 +2350,30 @@ unsigned char fnSimI2C_devices(unsigned char ucType, unsigned char ucData)
                 i++;
             }
 #endif
+#if defined FM24W256_CNT && (FM24W256_CNT > 0)
+            i = 0;
+            while (i < FM24W256_CNT) {
+                if (simFM24W256[i].ucState == 1) {                       // FRAM is being written to (collect address)
+                    simFM24W256[i].ulInternalPointer = ucData;           // MSB
+                    simFM24W256[i].ulInternalPointer <<= 8;
+                    simFM24W256[i].ucState++;
+                }
+                else if (simFM24W256[i].ucState == 2) {
+                    simFM24W256[i].ulInternalPointer |= ucData;          // LSB
+                    simFM24W256[i].ucState++;
+                }
+                else if (simFM24W256[i].ucState > 2) {                   // data being written
+                    FM24W256_fram[i][simFM24W256[i].ulInternalPointer] = ucData;
+                    if (simFM24W256[i].ulInternalPointer == (simFM24W256[i].ulMaxFRAMLength - 1)) {
+                        simFM24W256[i].ulInternalPointer = 0;
+                    }
+                    else {
+                        simFM24W256[i].ulInternalPointer++;
+                    }
+                }
+                i++;
+            }
+#endif
         }
         break;
 
@@ -2299,6 +2433,7 @@ unsigned char fnSimI2C_devices(unsigned char ucType, unsigned char ucData)
                 return 0;
             }
         }
+#if defined M24M01_CNT && (M24M01_CNT > 0)
         else if ((simM24M01[0].ucRW) && (simM24M01[0].ucState == 4)) {   // reading
             unsigned char ucReturn = M24M01_eeprom[0][simM24M01[0].ulInternalPointer++];
             if (simM24M01[0].ulInternalPointer >= simM24M01[0].ulMaxEEPROMLength) {
@@ -2313,6 +2448,7 @@ unsigned char fnSimI2C_devices(unsigned char ucType, unsigned char ucData)
             }
             return ucReturn;
         }
+#endif
         else if (simM24256.ucRW && (simM24256.ucState >= 4)) {           // repeated start - first byte is data (or following)
             unsigned char ucReturn = simM24256.ucEEPROM[simM24256.usInternalAddress++];
             if (simM24256.usInternalAddress >= simM24256.usMaxEEPROMLength) {
@@ -2327,6 +2463,7 @@ unsigned char fnSimI2C_devices(unsigned char ucType, unsigned char ucData)
             }
             return (ucReturn);
         }
+#if defined DS3640_CNT && (DS3640_CNT > 0)
         else if (simDS3640.ucRW && (simDS3640.ucState >= 3)) {           // repeated start - first byte is data
             unsigned char *ptrData = (unsigned char *)&simDS3640.ucData;
             unsigned char ucReturn;
@@ -2338,6 +2475,7 @@ unsigned char fnSimI2C_devices(unsigned char ucType, unsigned char ucData)
             ucReturn = *ptrData;
             return (ucReturn);
         }
+#endif
         else if (simSTMPE811.ucRW && (simSTMPE811.ucState != 0)) {       // {5} read from STMPE811
             unsigned char *ptrData = (unsigned char *)&simSTMPE811.CHIP_ID[0];
             ptrData += simSTMPE811.ucInternalPointer;
@@ -2500,6 +2638,22 @@ unsigned char fnSimI2C_devices(unsigned char ucType, unsigned char ucData)
                     }
                     if (simMAX6956[i].ucCommand < 0x7f) {                // increment the command register after each read
                         simMAX6956[i].ucCommand++;
+                    }
+                    return ucReturnValue;
+                }
+                i++;
+            }
+#endif
+#if defined FM24W256_CNT && (FM24W256_CNT > 0)                           // {14}
+            i = 0;
+            while (i < FM24W256_CNT) {
+                if ((simFM24W256[i].ucRW != 0) && (simFM24W256[i].ucState == 1)) { // {12} FRAM is being read from
+                    unsigned char ucReturnValue = FM24W256_fram[i][simFM24W256[i].ulInternalPointer];
+                    if (simFM24W256[i].ulInternalPointer == (simFM24W256[i].ulMaxFRAMLength - 1)) {
+                        simFM24W256[i].ulInternalPointer = 0;
+                    }
+                    else {
+                        simFM24W256[i].ulInternalPointer++;
                     }
                     return ucReturnValue;
                 }
