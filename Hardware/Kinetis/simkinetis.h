@@ -3738,11 +3738,7 @@ typedef struct stKINETIS_PERIPH
     #endif
     #endif
 #else
-    #if defined KINETIS_K20 && (KINETIS_MAX_SPEED == 72000000)
-    KINETIS_CAN        CAN[1];
-    #else
-    KINETIS_CAN        CAN[2];
-    #endif
+    KINETIS_CAN        CAN[NUMBER_OF_CAN_INTERFACES];
     KINETIC_CRC        CRC;                                              // {6}
 #endif
 #if defined LLWU_AVAILABLE

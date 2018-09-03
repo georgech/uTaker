@@ -756,7 +756,7 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
 
 #if defined KINETIS_K_FPU                                                // 120/150/180/220MHz device
     #if KINETIS_MAX_SPEED == 220000000                                   // 220MHz part (high-speed run mode)
-        #if (CORE_CLOCK > 16000000)
+        #if (CORE_CLOCK > 160000000)
             #define HIGH_SPEED_RUN_MODE_REQUIRED                         // to operate at the configured speeds the high speed mode (with restrictions) must be used
             #if defined FLASH_ROUTINES || defined FLASH_FILE_SYSTEM
                 #error Flash writes/erase are not possible in high speed run mode!
@@ -1583,6 +1583,14 @@ typedef struct stRESET_VECTOR
     #define FLEX_TIMERS_CHANNEL_COUNT (FLEX_TIMERS_0_CHANNELS + FLEX_TIMERS_1_CHANNELS + FLEX_TIMERS_2_CHANNELS + FLEX_TIMERS_3_CHANNELS)
 #endif
 
+#if defined _KINETIS_KV50
+    #define FLEXPWM_AVAILABLE
+#endif
+
+#if defined _KINETIS_KV50
+    #define CROSSBAR_MODULE_AVAILABLE
+#endif
+
 // ADC configuration
 //
 #if defined KINETIS_K61 || defined KINETIS_K70 || (((defined KINETIS_K60 && !defined KINETIS_K64 && !defined KINETIS_K65 && !defined KINETIS_K66) || (defined KINETIS_K20 && !defined KINETIS_K26 && !defined KINETIS_K21 && !defined KINETIS_K22 && !defined KINETIS_K24)) && (KINETIS_MAX_SPEED > 100000000))
@@ -1609,6 +1617,9 @@ typedef struct stRESET_VECTOR
     #define TEMP_SENSOR_SLOPE_UV        1620                             // typical internal temperature sensor slope uV/°C (3.3V VDD/VREF and < 3MHz ADC clock speed)
 #endif
 
+#if defined _KINETIS_KV50
+    #define HIGH_SPEED_ADC_AVAILABLE
+#endif
 
 // DAC configuration
 //
@@ -1624,7 +1635,9 @@ typedef struct stRESET_VECTOR
 
 // CAN configuration
 //
-#if defined KINETIS_K64 || (defined KINETIS_K24 && (SIZE_OF_FLASH == (1024 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+#if defined KINETIS_KV50
+    #define NUMBER_OF_CAN_INTERFACES 3
+#elif defined KINETIS_K64 || (defined KINETIS_K24 && (SIZE_OF_FLASH == (1024 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
     #define NUMBER_OF_CAN_INTERFACES 1
     #if defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
         #define MSCAN_CAN_INTERFACE                                      // MSCAN rather than FlexCAN
@@ -3905,6 +3918,9 @@ typedef struct stVECTOR_TABLE
         #if NUMBER_OF_CAN_INTERFACES > 1
             #define CAN1_BASE_ADD              ((unsigned char *)(&kinetis.CAN[1])) // FLEXCAN module 1
         #endif
+        #if NUMBER_OF_CAN_INTERFACES > 2
+            #define CAN2_BASE_ADD              ((unsigned char *)(&kinetis.CAN[2])) // FLEXCAN module 2
+        #endif
         #define CRC_BLOCK                      ((unsigned char *)(&kinetis.CRC)) // {8} CRC 
     #endif
     #if defined LLWU_AVAILABLE
@@ -4527,7 +4543,14 @@ typedef struct stVECTOR_TABLE
         #endif
     #endif
     #if NUMBER_OF_CAN_INTERFACES > 1
-        #define CAN1_BASE_ADD                  0x400a4000                // FLEXCAN module 1
+        #if defined KINETIS_KV50
+            #define CAN1_BASE_ADD              0x40025000                // FLEXCAN module 1
+        #else
+            #define CAN1_BASE_ADD              0x400a4000                // FLEXCAN module 1
+        #endif
+    #endif
+    #if NUMBER_OF_CAN_INTERFACES > 2
+        #define CAN2_BASE_ADD                  0x400a4000                // FLEXCAN module 2
     #endif
     #if !defined KINETIS_KL
         #define DSPI2_BLOCK                    0x400ac000                // DSPI2
@@ -11028,23 +11051,29 @@ typedef struct stKINETIS_LPTMR_CTL
           #define SIM_SCGC2_SIM_SCGC2_DAC1   BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x102c), 13)
         #define SIM_SCGC3                    *(volatile unsigned long *)(SIM_BLOCK + 0x1030)  // System Clock Gating Control Register 3
           #define SIM_SCGC3_RNGA             0x00000001                                       // {41}
-          #define SIM_SCGC3_RNGB             0x00000001
-          #define SIM_SCGC3_TRNG0            0x00000001
-          #define SIM_SCGC3_USBHS            0x00000002
-          #define SIM_SCGC3_USBHSPHY         0x00000004
-          #define SIM_SCGC3_USBHSDCD         0x00000008
-          #define SIM_SCGC3_FLEXCAN1         0x00000010
-          #define SIM_SCGC3_NFC              0x00000100
-          #define SIM_SCGC3_SPI2             0x00001000
-          #define SIM_SCGC3_DDR              0x00004000
-          #define SIM_SCGC3_SAI1             0x00008000
-          #define SIM_SCGC3_SDHC             0x00020000
-          #define SIM_SCGC3_LCDC             0x00400000
-          #define SIM_SCGC3_FTM2             0x01000000
-          #define SIM_SCGC3_FTM3             0x02000000
-          #define SIM_SCGC3_ADC1             0x08000000
-          #define SIM_SCGC3_ADC3             0x10000000
-          #define SIM_SCGC3_SLCD             0x40000000
+          #if defined KINETIS_KV50
+              #define SIM_SCGC3_TRNG0            0x00000001
+              #define SIM_SCGC3_FLEXCAN2         0x00000010
+              #define SIM_SCGC3_SPI2             0x00001000
+          #else
+              #define SIM_SCGC3_RNGB             0x00000001
+              #define SIM_SCGC3_TRNG0            0x00000001
+              #define SIM_SCGC3_USBHS            0x00000002
+              #define SIM_SCGC3_USBHSPHY         0x00000004
+              #define SIM_SCGC3_USBHSDCD         0x00000008
+              #define SIM_SCGC3_FLEXCAN1         0x00000010
+              #define SIM_SCGC3_NFC              0x00000100
+              #define SIM_SCGC3_SPI2             0x00001000
+              #define SIM_SCGC3_DDR              0x00004000
+              #define SIM_SCGC3_SAI1             0x00008000
+              #define SIM_SCGC3_SDHC             0x00020000
+              #define SIM_SCGC3_LCDC             0x00400000
+              #define SIM_SCGC3_FTM2             0x01000000
+              #define SIM_SCGC3_FTM3             0x02000000
+              #define SIM_SCGC3_ADC1             0x08000000
+              #define SIM_SCGC3_ADC3             0x10000000
+              #define SIM_SCGC3_SLCD             0x40000000
+          #endif
           // Bit-banding references
           //
           #define SIM_SCGC3_SIM_SCGC3_RNGA       BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1030), 0)
@@ -11220,7 +11249,11 @@ typedef struct stKINETIS_LPTMR_CTL
           #define SIM_SCGC6_SIM_LP               0x40000000
           #define SIM_SCGC6_SIM_HP               0x80000000
       #else
-          #if defined KINETIS_K22_SF7
+          #if defined KINETIS_KV50
+              #define SIM_SCGC6_FLEXCAN0         0x00000010
+              #define SIM_SCGC6_FLEXCAN1         0x00000020
+              #define SIM_SCGC6_FTM3             0x00000040
+          #elif defined KINETIS_K22_SF7
               #define SIM_SCGC6_FTM3             0x00000040
               #define SIM_SCGC6_ADC1             0x00000080
               #define SIM_SCGC6_DAC1             0x00000100
@@ -11257,7 +11290,7 @@ typedef struct stKINETIS_LPTMR_CTL
           #define SIM_SCGC6_ADC2                 0x10000000
           #define SIM_SCGC6_RTC                  0x20000000
           #define SIM_SCGC6_RTC_RF               0x40000000
-          #if defined KINETIS_KL || defined KINETIS_K22_SF7
+          #if defined KINETIS_KL || defined KINETIS_K22_SF7 || defined KINETIS_KV50
               #define SIM_SCGC6_DAC0             0x80000000
           #endif
           // Bit-banding references
@@ -11675,7 +11708,13 @@ typedef struct stKINETIS_LPTMR_CTL
       #define PORT_MUX_ALT6              0x00000600                                       // alternative 6
       #define PORT_MUX_ALT7              0x00000700                                       // alternative 7
      #endif
+    #if defined KINETIS_KV50
+      #define PORT_MUX_ALT8              0x00000800                                       // alternative 8
+      #define PORT_MUX_ALT9              0x00000900                                       // alternative 9
+      #define PORT_MUX_MASK              0x00000f00
+    #else
       #define PORT_MUX_MASK              0x00000700
+    #endif
       #define PORT_LOCK                  0x00008000                                       // lock register (bits 0..15) until next reset
       #define PORT_IRQC_DISABLED         0x00000000                                       // IRQ/DMA disabled
       #define PORT_IRQC_DMA_RISING       0x00010000                                       // DMA request on rising edge
@@ -12126,25 +12165,47 @@ typedef struct stKINETIS_LPTMR_CTL
     #define PB_19_FB_OE                  PORT_MUX_ALT5                   // {32}
 #endif
 
-#define PA_15_MII0_TXEN                  PORT_MUX_ALT4                   // Ethernet
-#define PB_0_MII0_MDIO                   PORT_MUX_ALT4
-#define PB_1_MII0_MDC                    PORT_MUX_ALT4
+#if defined KINETIS_KV50
+    #define PA_15_MII0_TXEN              PORT_MUX_ALT5                   // Ethernet
+    #define PB_0_MII0_MDIO               PORT_MUX_ALT8
+    #define PB_1_MII0_MDC                PORT_MUX_ALT8
+    #define PA_12_MII0_RXD1              PORT_MUX_ALT5
+    #define PA_13_MII0_RXD0              PORT_MUX_ALT5
+    #define PA_14_RMII0_CRS_DV           PORT_MUX_ALT5
+    #define PA_15_MII0_TXEN              PORT_MUX_ALT5
+    #define PA_16_MII0_TXD0              PORT_MUX_ALT5
+    #define PA_17_MII0_TXD1              PORT_MUX_ALT5
+    #define PA_9_MII0_RXD3               PORT_MUX_ALT5
+    #define PA_10_MII0_RXD2              PORT_MUX_ALT5
+    #define PA_11_MII0_RXCLK             PORT_MUX_ALT5
+    #define PA_24_MII0_TXD2              PORT_MUX_ALT5
+    #define PA_25_MII0_TXCLK             PORT_MUX_ALT5
+    #define PA_26_MII0_TXD3              PORT_MUX_ALT5
+    #define PA_27_MII0_CRS               PORT_MUX_ALT5
+    #define PA_28_MII0_TXER              PORT_MUX_ALT5
+    #define PA_29_MII0_COL               PORT_MUX_ALT5
+#else
+    #define PA_15_MII0_TXEN              PORT_MUX_ALT4                   // Ethernet
+    #define PB_0_MII0_MDIO               PORT_MUX_ALT4
+    #define PB_1_MII0_MDC                PORT_MUX_ALT4
+    #define PA_12_MII0_RXD1              PORT_MUX_ALT4
+    #define PA_13_MII0_RXD0              PORT_MUX_ALT4
+    #define PA_14_RMII0_CRS_DV           PORT_MUX_ALT4
+    #define PA_15_MII0_TXEN              PORT_MUX_ALT4
+    #define PA_16_MII0_TXD0              PORT_MUX_ALT4
+    #define PA_17_MII0_TXD1              PORT_MUX_ALT4
+    #define PA_9_MII0_RXD3               PORT_MUX_ALT4
+    #define PA_10_MII0_RXD2              PORT_MUX_ALT4
+    #define PA_11_MII0_RXCLK             PORT_MUX_ALT4
+    #define PA_24_MII0_TXD2              PORT_MUX_ALT4
+    #define PA_25_MII0_TXCLK             PORT_MUX_ALT4
+    #define PA_26_MII0_TXD3              PORT_MUX_ALT4
+    #define PA_27_MII0_CRS               PORT_MUX_ALT4
+    #define PA_28_MII0_TXER              PORT_MUX_ALT4
+    #define PA_29_MII0_COL               PORT_MUX_ALT4
+#endif
 #define PA_5_MII0_RXER                   PORT_MUX_ALT4
-#define PA_12_MII0_RXD1                  PORT_MUX_ALT4
-#define PA_13_MII0_RXD0                  PORT_MUX_ALT4
-#define PA_14_RMII0_CRS_DV               PORT_MUX_ALT4
-#define PA_15_MII0_TXEN                  PORT_MUX_ALT4
-#define PA_16_MII0_TXD0                  PORT_MUX_ALT4
-#define PA_17_MII0_TXD1                  PORT_MUX_ALT4
-#define PA_9_MII0_RXD3                   PORT_MUX_ALT4
-#define PA_10_MII0_RXD2                  PORT_MUX_ALT4
-#define PA_11_MII0_RXCLK                 PORT_MUX_ALT4
-#define PA_24_MII0_TXD2                  PORT_MUX_ALT4
-#define PA_25_MII0_TXCLK                 PORT_MUX_ALT4
-#define PA_26_MII0_TXD3                  PORT_MUX_ALT4
-#define PA_27_MII0_CRS                   PORT_MUX_ALT4
-#define PA_28_MII0_TXER                  PORT_MUX_ALT4
-#define PA_29_MII0_COL                   PORT_MUX_ALT4
+
 
 #if defined KINETIS_K65 || defined KINETIS_K66
     #define PA_7_MII0_MDIO               PORT_MUX_ALT5
@@ -12789,12 +12850,20 @@ typedef struct stKINETIS_LPTMR_CTL
 #else
     #define PA_12_CAN0_TX                PORT_MUX_ALT2                   // FlexCAN
     #define PA_13_CAN0_RX                PORT_MUX_ALT2
+    #if defined KINEIS_KV50
+        #define PB_16_CAN0_TX            PORT_MUX_ALT5
+        #define PB_17_CAN0_RX            PORT_MUX_ALT5
+    #endif
     #define PB_18_CAN0_TX                PORT_MUX_ALT2
     #define PB_19_CAN0_RX                PORT_MUX_ALT2
     #define PC_17_CAN1_TX                PORT_MUX_ALT2
     #define PC_16_CAN1_RX                PORT_MUX_ALT2
     #define PE_24_CAN1_TX                PORT_MUX_ALT2
     #define PE_25_CAN1_RX                PORT_MUX_ALT2
+    #define PA_14_CAN2_TX                PORT_MUX_ALT4
+    #define PA_15_CAN2_RX                PORT_MUX_ALT4
+    #define PA_6_CAN2_TX                 PORT_MUX_ALT2
+    #define PA_7_CAN2_RX                 PORT_MUX_ALT2
 #endif
 
 #define PF_0_GLCD_PCLK                   PORT_MUX_ALT7                   // {60} LCD
@@ -15015,6 +15084,61 @@ typedef struct stKINETIS_LPI2C_CONTROL
     #define CAN1_RXIMR13     *(unsigned long *)(CAN1_BASE_ADD + 0x8b4)   // CAN Rx Individual Mask Register 13
     #define CAN1_RXIMR14     *(unsigned long *)(CAN1_BASE_ADD + 0x8b8)   // CAN Rx Individual Mask Register 14
     #define CAN1_RXIMR15     *(unsigned long *)(CAN1_BASE_ADD + 0x8bc)   // CAN Rx Individual Mask Register 15
+#endif
+
+#if NUMBER_OF_CAN_INTERFACES > 2
+    #define CAN2_MCR         *(volatile unsigned long *)(CAN2_BASE_ADD + 0x0) // CAN Module Configuration Register (supervisor only)
+    #define CAN2_CTRL1       *(volatile unsigned long *)(CAN2_BASE_ADD + 0x4) // CAN Control Register 1
+    #define CAN2_TIMER       *(volatile unsigned long *)(CAN2_BASE_ADD + 0x8) // CAN Free running timer
+    #define CAN2_RXGMASK     *(unsigned long *)(CAN2_BASE_ADD + 0x10)    // CAN Rx Global mask
+    #define CAN2_RX14MASK    *(unsigned long *)(CAN2_BASE_ADD + 0x14)    // CAN Rx Buffer 14 mask
+    #define CAN2_RX15MASK    *(unsigned long *)(CAN2_BASE_ADD + 0x18)    // CAN Rx Buffer 15 mask
+    #define CAN2_ECR         *(volatile unsigned long *)(CAN2_BASE_ADD + 0x1c) // CAN Error Counter Register
+    #define CAN2_ESR1        *(volatile unsigned long *)(CAN2_BASE_ADD + 0x20) // CAN Error and Status 1 Register
+    #define CAN2_IMASK2      *(unsigned long *)(CAN2_BASE_ADD + 0x24)    // CAN Interrupt Mask Register 2
+    #define CAN2_IMASK1      *(unsigned long *)(CAN2_BASE_ADD + 0x28)    // CAN Interrupt Mask Register 1
+    #define CAN2_IFLAG2      *(unsigned long *)(CAN2_BASE_ADD + 0x2c)    // CAN Interrupt Flag Register 1
+    #define CAN2_IFLAG1      *(unsigned long *)(CAN2_BASE_ADD + 0x30)    // CAN Interrupt Flag Register 1
+    #define CAN2_CTRL2       *(unsigned long *)(CAN2_BASE_ADD + 0x34)    // CAN Control Register 2
+    #define CAN2_ESR2        *(volatile unsigned long *)(CAN2_BASE_ADD + 0x38) // CAN Error and Status Register 2
+
+    #define CAN2_CRCR        *(volatile unsigned long *)(CAN2_BASE_ADD + 0x44) // CAN CRC Register
+    #define CAN2_RXFGMASK    *(unsigned long *)(CAN2_BASE_ADD + 0x48)    // CAN FIFO Global mask Register
+    #define CAN2_RXFIR       *(volatile unsigned long *)(CAN2_BASE_ADD + 0x4c) // CAN FIFI Information Register (read-only)
+
+    #define MBUFF0_ADD_2     (KINETIS_CAN_BUF *)(CAN2_BASE_ADD + 0x80)   // CAN Message Buffer 0 (16 bytes)
+    #define MBUFF1_ADD_2     (KINETIS_CAN_BUF *)(CAN2_BASE_ADD + 0x90)   // CAN Message Buffer 1 (16 bytes)
+    #define MBUFF2_ADD_2     (KINETIS_CAN_BUF *)(CAN2_BASE_ADD + 0xa0)   // CAN Message Buffer 2 (16 bytes)
+    #define MBUFF3_ADD_2     (KINETIS_CAN_BUF *)(CAN2_BASE_ADD + 0xb0)   // CAN Message Buffer 3 (16 bytes)
+    #define MBUFF4_ADD_2     (KINETIS_CAN_BUF *)(CAN2_BASE_ADD + 0xc0)   // CAN Message Buffer 4 (16 bytes)
+    #define MBUFF5_ADD_2     (KINETIS_CAN_BUF *)(CAN2_BASE_ADD + 0xd0)   // CAN Message Buffer 5 (16 bytes)
+    #define MBUFF6_ADD_2     (KINETIS_CAN_BUF *)(CAN2_BASE_ADD + 0xe0)   // CAN Message Buffer 6 (16 bytes)
+    #define MBUFF7_ADD_2     (KINETIS_CAN_BUF *)(CAN2_BASE_ADD + 0xf0)   // CAN Message Buffer 7 (16 bytes)
+    #define MBUFF8_ADD_2     (KINETIS_CAN_BUF *)(CAN2_BASE_ADD + 0x100)  // CAN Message Buffer 8 (16 bytes)
+    #define MBUFF9_ADD_2     (KINETIS_CAN_BUF *)(CAN2_BASE_ADD + 0x110)  // CAN Message Buffer 9 (16 bytes)
+    #define MBUFF10_ADD_2    (KINETIS_CAN_BUF *)(CAN2_BASE_ADD + 0x120)  // CAN Message Buffer 10 (16 bytes)
+    #define MBUFF11_ADD_2    (KINETIS_CAN_BUF *)(CAN2_BASE_ADD + 0x130)  // CAN Message Buffer 11 (16 bytes)
+    #define MBUFF12_ADD_2    (KINETIS_CAN_BUF *)(CAN2_BASE_ADD + 0x140)  // CAN Message Buffer 12 (16 bytes)
+    #define MBUFF13_ADD_2    (KINETIS_CAN_BUF *)(CAN2_BASE_ADD + 0x150)  // CAN Message Buffer 13 (16 bytes)
+    #define MBUFF14_ADD_2    (KINETIS_CAN_BUF *)(CAN2_BASE_ADD + 0x160)  // CAN Message Buffer 14 (16 bytes)
+    #define MBUFF15_ADD_2    (KINETIS_CAN_BUF *)(CAN2_BASE_ADD + 0x170)  // CAN Message Buffer 15 (16 bytes)
+
+    #define CAN2_RXIMR0      *(unsigned long *)(CAN2_BASE_ADD + 0x880)   // CAN Rx Individual Mask Register 0
+    #define CAN2_RXIMR1      *(unsigned long *)(CAN2_BASE_ADD + 0x884)   // CAN Rx Individual Mask Register 1
+    #define CAN2_RXIMR2      *(unsigned long *)(CAN2_BASE_ADD + 0x888)   // CAN Rx Individual Mask Register 2
+    #define CAN2_RXIMR3      *(unsigned long *)(CAN2_BASE_ADD + 0x88c)   // CAN Rx Individual Mask Register 3
+    #define CAN2_RXIMR4      *(unsigned long *)(CAN2_BASE_ADD + 0x890)   // CAN Rx Individual Mask Register 4
+    #define CAN2_RXIMR5      *(unsigned long *)(CAN2_BASE_ADD + 0x894)   // CAN Rx Individual Mask Register 5
+    #define CAN2_RXIMR6      *(unsigned long *)(CAN2_BASE_ADD + 0x898)   // CAN Rx Individual Mask Register 6
+    #define CAN2_RXIMR7      *(unsigned long *)(CAN2_BASE_ADD + 0x89c)   // CAN Rx Individual Mask Register 7
+    #define CAN2_RXIMR8      *(unsigned long *)(CAN2_BASE_ADD + 0x8a0)   // CAN Rx Individual Mask Register 8
+    #define CAN2_RXIMR9      *(unsigned long *)(CAN2_BASE_ADD + 0x8a4)   // CAN Rx Individual Mask Register 9
+    #define CAN2_RXIMR10     *(unsigned long *)(CAN2_BASE_ADD + 0x8a8)   // CAN Rx Individual Mask Register 10
+    #define CAN2_RXIMR11     *(unsigned long *)(CAN2_BASE_ADD + 0x8ac)   // CAN Rx Individual Mask Register 11
+    #define CAN2_RXIMR12     *(unsigned long *)(CAN2_BASE_ADD + 0x8b0)   // CAN Rx Individual Mask Register 12
+    #define CAN2_RXIMR13     *(unsigned long *)(CAN2_BASE_ADD + 0x8b4)   // CAN Rx Individual Mask Register 13
+    #define CAN2_RXIMR14     *(unsigned long *)(CAN2_BASE_ADD + 0x8b8)   // CAN Rx Individual Mask Register 14
+    #define CAN2_RXIMR15     *(unsigned long *)(CAN2_BASE_ADD + 0x8bc)   // CAN Rx Individual Mask Register 15
 #endif
 
 #if defined MSCAN_CAN_INTERFACE

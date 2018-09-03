@@ -972,18 +972,18 @@ extern int fnConfigEthernet(ETHTABLE *pars)
     #endif
     #if defined MDIO_ON_PORTA                                            // {104}
         #if defined ETHERNET_MDIO_WITH_PULLUPS
-    _CONFIG_PERIPHERAL(A, 7, (PA_7_MII0_MDIO | PORT_PS_UP_ENABLE));      // MII0_MDIO on PB.0 (alt. function 4) with pullup enabled
+    _CONFIG_PERIPHERAL(A, 7, (PA_7_MII0_MDIO | PORT_PS_UP_ENABLE));      // MII0_MDIO on PB.0 (alt. function 4/5) with pullup enabled
         #else
-    _CONFIG_PERIPHERAL(A, 7, PA_7_MII0_MDIO);                            // MII0_MDIO on PB.0 (alt. function 4)
+    _CONFIG_PERIPHERAL(A, 7, PA_7_MII0_MDIO);                            // MII0_MDIO on PB.0 (alt. function 4/5)
         #endif
-    _CONFIG_PERIPHERAL(A, 8, PA_8_MII0_MDC);                             // MII0_MDC on PB.1 (alt. function 4)
+    _CONFIG_PERIPHERAL(A, 8, PA_8_MII0_MDC);                             // MII0_MDC on PB.1 (alt. function 4/5)
     #else
         #if defined ETHERNET_MDIO_WITH_PULLUPS
-    _CONFIG_PERIPHERAL(B, 0, (PB_0_MII0_MDIO | PORT_PS_UP_ENABLE));      // MII0_MDIO on PB.0 (alt. function 4) with pullup enabled
+    _CONFIG_PERIPHERAL(B, 0, (PB_0_MII0_MDIO | PORT_PS_UP_ENABLE));      // MII0_MDIO on PB.0 (alt. function 4/8) with pullup enabled
         #else
-    _CONFIG_PERIPHERAL(B, 0, PB_0_MII0_MDIO);                            // MII0_MDIO on PB.0 (alt. function 4)
+    _CONFIG_PERIPHERAL(B, 0, PB_0_MII0_MDIO);                            // MII0_MDIO on PB.0 (alt. function 4/8)
         #endif
-    _CONFIG_PERIPHERAL(B, 1, PB_1_MII0_MDC);                             // MII0_MDC on PB.1 (alt. function 4)
+    _CONFIG_PERIPHERAL(B, 1, PB_1_MII0_MDC);                             // MII0_MDC on PB.1 (alt. function 4/8)
     #endif
 
     #if defined JTAG_DEBUG_IN_USE_ERRATA_2541
@@ -991,12 +991,12 @@ extern int fnConfigEthernet(ETHTABLE *pars)
     #elif !defined NO_MII_RXER                                           // {103}
     _CONFIG_PERIPHERAL(A, 5, PA_5_MII0_RXER);                            // MII0_RXER on PA.5 (alt. function 4)
     #endif
-    _CONFIG_PERIPHERAL(A, 12, PA_12_MII0_RXD1);                          // MII0_RXD1 on PA.12 (alt. function 4)
-    _CONFIG_PERIPHERAL(A, 13, PA_13_MII0_RXD0);                          // MII0_RXD0 on PA.13 (alt. function 4)
-    _CONFIG_PERIPHERAL(A, 14, PA_14_RMII0_CRS_DV);                       // RMII0_CRS_DV/ MII0_RXDV on PA.14 (alt. function 4)
-    _CONFIG_PERIPHERAL(A, 15, PA_15_MII0_TXEN);                          // MII0_TXEN on PA.15 (alt. function 4)
-    _CONFIG_PERIPHERAL(A, 16, PA_16_MII0_TXD0);                          // MII0_TXD0 on PA.16 (alt. function 4)
-    _CONFIG_PERIPHERAL(A, 17, PA_17_MII0_TXD1);                          // MII0_TXD1 on PA.17 (alt. function 4)
+    _CONFIG_PERIPHERAL(A, 12, PA_12_MII0_RXD1);                          // MII0_RXD1 on PA.12 (alt. function 4/5)
+    _CONFIG_PERIPHERAL(A, 13, PA_13_MII0_RXD0);                          // MII0_RXD0 on PA.13 (alt. function 4/5)
+    _CONFIG_PERIPHERAL(A, 14, PA_14_RMII0_CRS_DV);                       // RMII0_CRS_DV/ MII0_RXDV on PA.14 (alt. function 4/5)
+    _CONFIG_PERIPHERAL(A, 15, PA_15_MII0_TXEN);                          // MII0_TXEN on PA.15 (alt. function 4/5)
+    _CONFIG_PERIPHERAL(A, 16, PA_16_MII0_TXD0);                          // MII0_TXD0 on PA.16 (alt. function 4/5)
+    _CONFIG_PERIPHERAL(A, 17, PA_17_MII0_TXD1);                          // MII0_TXD1 on PA.17 (alt. function 4/5)
     #if defined ETHERNET_RMII && defined ETHERNET_RMII_CLOCK_INPUT       // {14}
         #if defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66
     _CONFIG_PERIPHERAL(E, 26,  PE_26_ENET_1588_CLKIN);                   // select the pin function for external 50MHz clock input
@@ -1004,15 +1004,15 @@ extern int fnConfigEthernet(ETHTABLE *pars)
         #endif
     #endif
     #if !defined ETHERNET_RMII                                           // additional signals used in MII mode
-    _CONFIG_PERIPHERAL(A, 9,  PA_9_MII0_RXD3);                           // MII0_RXD3 on PA.9  (alt. function 4)
-    _CONFIG_PERIPHERAL(A, 10, PA_10_MII0_RXD2);                          // MII0_RXD2 on PA.10 (alt. function 4)
-    _CONFIG_PERIPHERAL(A, 11, PA_11_MII0_RXCLK);                         // MII0_RXCLK on PA.11 (alt. function 4)
-    _CONFIG_PERIPHERAL(A, 24, PA_24_MII0_TXD2);                          // MII0_TXD2 on PA.24 (alt. function 4)
-    _CONFIG_PERIPHERAL(A, 25, PA_25_MII0_TXCLK);                         // MII0_TXCLK on PA.25 (alt. function 4)
-    _CONFIG_PERIPHERAL(A, 26, PA_26_MII0_TXD3);                          // MII0_TXD3 on PA.26 (alt. function 4)
-    _CONFIG_PERIPHERAL(A, 27, PA_27_MII0_CRS);                           // MII0_CRS  on PA.27 (alt. function 4)
-    _CONFIG_PERIPHERAL(A, 28, PA_28_MII0_TXER);                          // MII0_TXER on PA.28 (alt. function 4)
-    _CONFIG_PERIPHERAL(A, 29, PA_29_MII0_COL);                           // MII0_COL  on PA.29 (alt. function 4)
+    _CONFIG_PERIPHERAL(A, 9,  PA_9_MII0_RXD3);                           // MII0_RXD3 on PA.9  (alt. function 4/5)
+    _CONFIG_PERIPHERAL(A, 10, PA_10_MII0_RXD2);                          // MII0_RXD2 on PA.10 (alt. function 4/5)
+    _CONFIG_PERIPHERAL(A, 11, PA_11_MII0_RXCLK);                         // MII0_RXCLK on PA.11 (alt. function 4/5)
+    _CONFIG_PERIPHERAL(A, 24, PA_24_MII0_TXD2);                          // MII0_TXD2 on PA.24 (alt. function 4/5)
+    _CONFIG_PERIPHERAL(A, 25, PA_25_MII0_TXCLK);                         // MII0_TXCLK on PA.25 (alt. function 4/5)
+    _CONFIG_PERIPHERAL(A, 26, PA_26_MII0_TXD3);                          // MII0_TXD3 on PA.26 (alt. function 4/5)
+    _CONFIG_PERIPHERAL(A, 27, PA_27_MII0_CRS);                           // MII0_CRS  on PA.27 (alt. function 4/5)
+    _CONFIG_PERIPHERAL(A, 28, PA_28_MII0_TXER);                          // MII0_TXER on PA.28 (alt. function 4/5)
+    _CONFIG_PERIPHERAL(A, 29, PA_29_MII0_COL);                           // MII0_COL  on PA.29 (alt. function 4/5)
     #endif
 
     FNRESETPHY();                                                        // control the reset line to the PHY to respect any power up delays if required

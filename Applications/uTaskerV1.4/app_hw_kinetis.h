@@ -308,9 +308,9 @@
     #define EXTERNAL_CLOCK       50000000                                // this must be 50MHz in order to use Ethernet in RMII mode
     #define _EXTERNAL_CLOCK      EXTERNAL_CLOCK
     #define CLOCK_DIV            5                                       // input must be divided to 8MHz..16MHz range (/1 to /8 for FPU parts)
-    #define USE_HIGH_SPEED_RUN_MODE
+  //#define USE_HIGH_SPEED_RUN_MODE                                      // operate in high speed RUN mode - note that flash programing is not possibel in thsi mode so NO_FLASH_SUPPORT should be disabled in config.h
     #if defined USE_HIGH_SPEED_RUN_MODE
-        #define CLOCK_MUL            44                                  // the PLL multiplication factor to achieve operating frequency of 160MHz (x16 to x47 possible - divided by 2 at VCO output)
+        #define CLOCK_MUL            44                                  // the PLL multiplication factor to achieve operating frequency of 220MHz (x16 to x47 possible - divided by 2 at VCO output)
         #define FLEX_CLOCK_DIVIDE    11                                  // 220/11 to give 20MHz
         #define BUS_CLOCK_DIVIDE     8                                   // 220/6 to give 27.5MHz
         #define FLASH_CLOCK_DIVIDE   8                                   // 220/6 to give 27.5MHz
@@ -1422,14 +1422,18 @@
         #define FNRESETPHY()
         #define PHY_IDENTIFIER         0x20005ca2                        // National/TI DP83849I identifier
         #define _DP83849I
-    #else  
+    #else                                                                // TWR_SER board
         #define ETHERNET_RMII                                            // RMII mode of operation instead of MII
         #define FORCE_PHY_CONFIG                                         // activate forced configuration
         #define POLL_PHY               10000                             // PHY detection is unreliable on this board so allow this many attempts
         #define FNFORCE_PHY_CONFIG()   
         #define PHY_ADDRESS            0x01                              // address of external PHY on board
         #define PHY_INTERRUPT_PORT     PORTB
-        #define PHY_INTERRUPT          PORTB_BIT7                        // IRQ4 is used as PHY interrupt input (set J6 to position 7-8 on TWR-SER board) - this is connected to PB.7
+        #if defined TWR_KV58F220M
+            #define PHY_INTERRUPT      PORTB_BIT8                        // IRQ1 is used as PHY interrupt input (set J6 to position 7-8 on TWR-SER board) - this is connected to PB.8
+        #else
+            #define PHY_INTERRUPT      PORTB_BIT7                        // IRQ1 is used as PHY interrupt input (set J6 to position 7-8 on TWR-SER board) - this is connected to PB.7
+        #endif
         #define PHY_IDENTIFIER         0x00221512                        // MICREL KSZ8041NL identifier
         #define FNRESETPHY()
         #if defined TWR_K53N512                                          // this tower board has a port output controlling the reset line on the elevator - it is set to an output driving '1' to avoid the PHY being held in reset
@@ -3424,6 +3428,13 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define PRIORITY_CAN1_RX           5
     #define PRIORITY_CAN1_WAKEUP       5
     #define PRIORITY_CAN1_IMEU         5
+    #define PRIORITY_CAN2_MESSAGE      5
+    #define PRIORITY_CAN2_BUS_OFF      5
+    #define PRIORITY_CAN2_ERROR        5
+    #define PRIORITY_CAN2_TX           5
+    #define PRIORITY_CAN2_RX           5
+    #define PRIORITY_CAN2_WAKEUP       5
+    #define PRIORITY_CAN2_IMEU         5
     #define PRIORITY_HW_TIMER          5
     #define PRIORITY_TIMERS            5
     #define PRIORITY_I2C0              4

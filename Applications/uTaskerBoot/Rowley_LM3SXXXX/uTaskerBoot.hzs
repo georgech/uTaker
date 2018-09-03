@@ -56,5 +56,5 @@
  <Files>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" useBinaryEdit="0" left="0" path="../../../Hardware/hardware.h" debugPath="../../../Hardware/hardware.h" selected="1" top="0" codecName="Default"/>
  </Files>
- <ARMCrossStudioWindow activeProject="uTaskerBoot" fileDialogDefaultFilter="" autoConnectTarget="/USB CrossConnect for ARM" buildConfiguration="THUMB Flash Release" debugSearchFileMap="" fileDialogInitialDirectory="D:/MJBC/Internal/Freescale/Kinetis/workspace/uTaskerV1.4.12_master/Hardware/Luminary" debugSearchPath="" autoConnectCapabilities="1919"/>
+ <ARMCrossStudioWindow activeProject="uTaskerBoot" fileDialogDefaultFilter="*.c" autoConnectTarget="/USB CrossConnect for ARM" buildConfiguration="THUMB Flash Release" debugSearchFileMap="" fileDialogInitialDirectory="D:/MJBC/Internal/Freescale/Kinetis/workspace/uTaskerV1.4.12_master/Hardware/Luminary" debugSearchPath="" autoConnectCapabilities="1919"/>
 </session>

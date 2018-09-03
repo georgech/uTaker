@@ -66,6 +66,7 @@
     04.11.2017 Add true rando number generator registers initialisation  {48}
     08.05.2018 Added simulation of all FTM/TPM channel interrupts        {49}
     29.08.2018 Add input capture simulation                              {50}
+    03.09.2018 Extend CAN support to 3 CAN controllers
  
 */  
                           
@@ -811,6 +812,14 @@ static void fnSetDevice(unsigned long *port_inits)
     CAN1_RX15MASK  = 0xffffffff;
     CAN1_CTRL2     = 0x00c00000;
     CAN1_RXFGMASK  = 0xffffffff;
+    #endif
+    #if NUMBER_OF_CAN_INTERFACES > 2
+    CAN2_MCR       = 0xd890000f;
+    CAN2_RXGMASK   = 0xffffffff;
+    CAN2_RX14MASK  = 0xffffffff;
+    CAN2_RX15MASK  = 0xffffffff;
+    CAN2_CTRL2     = 0x00c00000;
+    CAN2_RXFGMASK  = 0xffffffff;
     #endif
 #endif
 #if defined KINETIS_K80                                                  // QSPI
@@ -2603,7 +2612,7 @@ static int fnFlexTimerPowered(int iTimer)
     #endif
     #if FLEX_TIMERS_AVAILABLE > 2
     case 2:
-        #if defined KINETIS_KL || defined KINETIS_K22_SF7 || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66
+        #if defined KINETIS_KL || defined KINETIS_K22_SF7 || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_KV50
         return (IS_POWERED_UP(6, FTM2));
         #else
         return (IS_POWERED_UP(3, FTM2));
@@ -10362,19 +10371,24 @@ static void fnBufferSent(int iBuffer, int iRemote)
     KINETIS_CAN_CONTROL *ptrCAN_control;
 
     iBuffer &= 0x00ffffff;                                               // remove channel number
-    #if NUMBER_OF_CAN_INTERFACES > 1
-    if (iChannel != 0) {
-        ptrMessageBuffer = MBUFF0_ADD_1;
-        ptrCAN_control = (KINETIS_CAN_CONTROL *)CAN1_BASE_ADD;
-    }
-    else {
+    switch (iChannel) {
+    case 0:
         ptrMessageBuffer = MBUFF0_ADD_0;
         ptrCAN_control = (KINETIS_CAN_CONTROL *)CAN0_BASE_ADD;
-    }
-    #else
-    ptrMessageBuffer = MBUFF0_ADD_0;
-    ptrCAN_control = (KINETIS_CAN_CONTROL *)CAN0_BASE_ADD;
+        break;
+    #if NUMBER_OF_CAN_INTERFACES > 1
+    case 1:
+        ptrMessageBuffer = MBUFF0_ADD_1;
+        ptrCAN_control = (KINETIS_CAN_CONTROL *)CAN1_BASE_ADD;
+        break;
     #endif
+    #if NUMBER_OF_CAN_INTERFACES > 2
+    case 2:
+        ptrMessageBuffer = MBUFF0_ADD_2;
+        ptrCAN_control = (KINETIS_CAN_CONTROL *)CAN2_BASE_ADD;
+        break;
+    #endif
+    }
     ptrMessageBuffer += iBuffer;
 
     switch (iRemote) {        
@@ -10392,19 +10406,29 @@ static void fnBufferSent(int iBuffer, int iRemote)
             for (x = 0; x < MAX_TX_CAN_TRIES; x++) {                     // simulate frame transmission failing
                 ptrCAN_control->CAN_ESR1 |= (CAN_ACK_ERR | TXWRN | CAN_BUS_IDLE | CAN_ERROR_PASSIVE | ERRINT);
                 if (ptrCAN_control->CAN_CTRL1 & ERRMSK) {                // only generate interrupt when interrupt is enabled
-                    if (iChannel != 0) {
-    #if NUMBER_OF_CAN_INTERFACES > 1
-                        if (fnGenInt(irq_CAN1_ERROR_ID) != 0) {          // if CAN1 error interrupt is not disabled
-                            VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-                            ptrVect->processor_interrupts.irq_CAN1_ERROR(); // call the interrupt handler
-                        }
-    #endif
-                    }
-                    else {
+                    switch (iChannel) {
+                    case 0:
                         if (fnGenInt(irq_CAN0_ERROR_ID) != 0) {          // if CAN0 error interrupt is not disabled
                             VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                             ptrVect->processor_interrupts.irq_CAN0_ERROR(); // call the interrupt handler
                         }
+                        break;
+                    #if NUMBER_OF_CAN_INTERFACES > 1
+                    case 1:
+                        if (fnGenInt(irq_CAN1_ERROR_ID) != 0) {          // if CAN1 error interrupt is not disabled
+                            VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                            ptrVect->processor_interrupts.irq_CAN1_ERROR(); // call the interrupt handler
+                        }
+                        break;
+                    #endif
+                    #if NUMBER_OF_CAN_INTERFACES > 2
+                    case 2:
+                        if (fnGenInt(irq_CAN2_ERROR_ID) != 0) {          // if CAN2 error interrupt is not disabled
+                            VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                            ptrVect->processor_interrupts.irq_CAN2_ERROR(); // call the interrupt handler
+                        }
+                        break;
+                    #endif
                     }
                 }
             }
@@ -10433,19 +10457,29 @@ static void fnBufferSent(int iBuffer, int iRemote)
     case 15:
         ptrCAN_control->CAN_IFLAG1 |= (1 << iBuffer);                    // set interrupt flag for the buffer
         if (ptrCAN_control->CAN_IMASK1 & (1 << iBuffer)) {               // check whether the interrupt is enabled on this buffer
-            if (iChannel != 0) {
-    #if NUMBER_OF_CAN_INTERFACES > 1
-                if (fnGenInt(irq_CAN1_MESSAGE_ID) != 0) {                // if CAN1 message interrupt is not disabled
-                    VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-                    ptrVect->processor_interrupts.irq_CAN1_MESSAGE();    // call the interrupt handler
-                }
-    #endif
-            }
-            else {
+            switch (iChannel) {
+            case 0:
                 if (fnGenInt(irq_CAN0_MESSAGE_ID) != 0) {                // if CAN0 message interrupt is not disabled
                     VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                     ptrVect->processor_interrupts.irq_CAN0_MESSAGE();    // call the interrupt handler
                 }
+                break;
+    #if NUMBER_OF_CAN_INTERFACES > 1
+            case 1:
+                if (fnGenInt(irq_CAN1_MESSAGE_ID) != 0) {                // if CAN1 message interrupt is not disabled
+                    VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                    ptrVect->processor_interrupts.irq_CAN1_MESSAGE();    // call the interrupt handler
+                }
+                break;
+    #endif
+    #if NUMBER_OF_CAN_INTERFACES > 2
+            case 2:
+                if (fnGenInt(irq_CAN2_MESSAGE_ID) != 0) {                // if CAN2 message interrupt is not disabled
+                    VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                    ptrVect->processor_interrupts.irq_CAN2_MESSAGE();    // call the interrupt handler
+                }
+                break;
+    #endif
             }
         }
         break;
@@ -10471,19 +10505,24 @@ static void fnCAN_reception(int iChannel, unsigned char ucDataLength, unsigned c
     if ((ucDataLength == 0) && (iRemodeRequest == 0)) {
         return;                                                          // ignore when reception without data
     }
-    #if NUMBER_OF_CAN_INTERFACES > 1
-    if (iChannel != 0) {
-        ptrCAN_control = (KINETIS_CAN_CONTROL *)CAN1_BASE_ADD;
-        ptrMessageBuffer = MBUFF0_ADD_1;                                 // the first of 16 message buffers in the FlexCan module
-    }
-    else {
+    switch (iChannel) {
+    case 0:
+        ptrMessageBuffer = MBUFF0_ADD_0;
         ptrCAN_control = (KINETIS_CAN_CONTROL *)CAN0_BASE_ADD;
-        ptrMessageBuffer = MBUFF0_ADD_0;                                 // the first of 16 message buffers in the FlexCan module
-    }
-    #else
-    ptrCAN_control = (KINETIS_CAN_CONTROL *)CAN0_BASE_ADD;
-    ptrMessageBuffer = MBUFF0_ADD_0;                                 // the first of 16 message buffers in the FlexCan module
+        break;
+    #if NUMBER_OF_CAN_INTERFACES > 1
+    case 1:
+        ptrMessageBuffer = MBUFF0_ADD_1;
+        ptrCAN_control = (KINETIS_CAN_CONTROL *)CAN1_BASE_ADD;
+        break;
     #endif
+    #if NUMBER_OF_CAN_INTERFACES > 2
+    case 2:
+        ptrMessageBuffer = MBUFF0_ADD_2;
+        ptrCAN_control = (KINETIS_CAN_CONTROL *)CAN2_BASE_ADD;
+        break;
+    #endif
+    }
 
     if (iExtendedAddress == 0) {
         ulId <<= CAN_STANDARD_SHIFT;
@@ -10562,16 +10601,21 @@ static void fnCAN_reception(int iChannel, unsigned char ucDataLength, unsigned c
         i++;
     }
 
-    #if NUMBER_OF_CAN_INTERFACES > 1
-    if (iChannel != 0) {
-        ptrMessageBuffer = MBUFF0_ADD_1;
-    }
-    else {
+    switch (iChannel) {
+    case 0:
         ptrMessageBuffer = MBUFF0_ADD_0;
-    }
-    #else
-    ptrMessageBuffer = MBUFF0_ADD_0;
+        break;
+    #if NUMBER_OF_CAN_INTERFACES > 1
+    case 1:
+        ptrMessageBuffer = MBUFF0_ADD_1;
+        break;
     #endif
+    #if NUMBER_OF_CAN_INTERFACES > 2
+    case 2:
+        ptrMessageBuffer = MBUFF0_ADD_2;
+        break;
+    #endif
+    }
 
     if (iRxAvailable != 0) {
         i = 0;
@@ -10591,16 +10635,21 @@ static void fnCAN_reception(int iChannel, unsigned char ucDataLength, unsigned c
         return;                                                          // no reception buffer found so ignore
     }
 
-    #if NUMBER_OF_CAN_INTERFACES > 1
-    if (iChannel != 0) {
-        ptrMessageBuffer = MBUFF0_ADD_1;
-    }
-    else {
+    switch (iChannel) {
+    case 0:
         ptrMessageBuffer = MBUFF0_ADD_0;
-    }
-    #else
-    ptrMessageBuffer = MBUFF0_ADD_0;
+        break;
+    #if NUMBER_OF_CAN_INTERFACES > 1
+    case 1:
+        ptrMessageBuffer = MBUFF0_ADD_1;
+        break;
     #endif
+    #if NUMBER_OF_CAN_INTERFACES > 2
+    case 2:
+        ptrMessageBuffer = MBUFF0_ADD_2;
+        break;
+    #endif
+    }
     ptrMessageBuffer += ucBuffer;                                        // set the local simulate buffer correspondingly
 
     if (iOverrun != 0) {
@@ -10671,19 +10720,24 @@ extern void fnSimCAN(int iChannel, int iBufferNumber, int iSpecial)
         return;
     }
     #endif
-    #if NUMBER_OF_CAN_INTERFACES > 1
-    if (iChannel != 0) {
-        ptrCAN_control = (KINETIS_CAN_CONTROL *)CAN1_BASE_ADD;
-        ptrMessageBuffer = MBUFF0_ADD_1;                                 // the first of 16 message buffers in the FlexCan module
-    }
-    else {
+    switch (iChannel) {
+    case 0:
         ptrCAN_control = (KINETIS_CAN_CONTROL *)CAN0_BASE_ADD;
         ptrMessageBuffer = MBUFF0_ADD_0;                                 // the first of 16 message buffers in the FlexCan module
-    }
-    #else
-    ptrCAN_control = (KINETIS_CAN_CONTROL *)CAN0_BASE_ADD;
-    ptrMessageBuffer = MBUFF0_ADD_0;                                     // the first of 16 message buffers in the FlexCan module
+        break;
+    #if NUMBER_OF_CAN_INTERFACES > 1
+    case 1:
+        ptrCAN_control = (KINETIS_CAN_CONTROL *)CAN1_BASE_ADD;
+        ptrMessageBuffer = MBUFF0_ADD_1;                                 // the first of 16 message buffers in the FlexCan module
+        break;
     #endif
+    #if NUMBER_OF_CAN_INTERFACES > 2
+    case 2:
+        ptrCAN_control = (KINETIS_CAN_CONTROL *)CAN2_BASE_ADD;
+        ptrMessageBuffer = MBUFF0_ADD_2;                                 // the first of 16 message buffers in the FlexCan module
+        break;
+    #endif
+    }
 
     // Configuration changes
     //
