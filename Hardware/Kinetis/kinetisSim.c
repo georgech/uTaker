@@ -9619,7 +9619,9 @@ extern int fnSimTimers(void)
                     if ((PDB0_CH0C1 & PDB_C1_TOS_0) != 0) {              // if ADC0 A trigger is enabled
                         // ADC0 A conversion is triggered
                         //
+    #if defined SUPPORT_ADC
                         fnTriggerADC(0, 1);
+    #endif
                     }
                 }
             }
@@ -9629,7 +9631,9 @@ extern int fnSimTimers(void)
                     if ((PDB0_CH0C1 & PDB_C1_TOS_1) != 0) {              // if ADC0 B trigger is enabled
                         // ADC0 B conversion is triggered
                         //
+    #if defined SUPPORT_ADC
                         fnTriggerADC(0, 1);
+    #endif
                     }
                 }
             }
@@ -9640,7 +9644,9 @@ extern int fnSimTimers(void)
                     if ((PDB0_CH1C1 & PDB_C1_TOS_0) != 0) {              // if ADC1 A trigger is enabled
                         // ADC1 A conversion is triggered
                         //
+        #if defined SUPPORT_ADC
                         fnTriggerADC(1, 1);
+        #endif
                     }
                 }
             }
@@ -9650,7 +9656,9 @@ extern int fnSimTimers(void)
                     if ((PDB0_CH1C1 & PDB_C1_TOS_1) != 0) {              // if ADC1 B trigger is enabled
                         // ADC1 B conversion is triggered
                         //
+        #if defined SUPPORT_ADC
                         fnTriggerADC(1, 1);
+        #endif
                     }
                 }
             }
