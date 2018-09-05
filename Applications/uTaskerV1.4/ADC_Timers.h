@@ -41,6 +41,7 @@
     09.02.2018 Add ADC polling reference (rather than using end of conversion interrupt) {25}
     03.05.2018 Corrected Kinetis internal temperature equation           {26}
     02.06.2018 Zero optional user UART callback handlers                 {27}
+    05.09.2018 Add FFT_SAMPLED_INPUT option                              {28}
 
     The file is otherwise not specifically linked in to the project since it is included by application.c when needed.
     The reason for ADC and timer configurations in a single file is that a HW timer is very often used togther with and ADC.
@@ -58,6 +59,7 @@
           //#define ADC_TRIGGER_TPM                                      // use TPM module rather than PIT for ADC trigger (valid for KL parts)
           //#define VOICE_RECORDER                                       // {15} needs TEST_AD_DA and mass-storage and saves sampled input to SD card
           //#define HANDLE_PDB_INTERRUPT                                 // when the ADC is triggered by PDB handle also a PDB interrupt
+          //#define FFT_SAMPLED_INPUT                                    // perform half-buffer interrupt and analyse the data with FFT (requires CMSIS_DSP_CFFT and CMSIS_DSP_FFT_4096)
       //#define INTERNAL_TEMP                                            // {2} read also internal temperature (Luminary Micro)
 
         #if defined TEST_ADC && (defined _HW_SAM7X || defined _HW_AVR32) // SAM7X and AVR32 specific tests
@@ -100,7 +102,7 @@
         #define GPT_CAPTURES     5                                       // when testing captures, collect this many values
     #endif
     #if defined SUPPORT_TIMER || defined SUPPORT_PWM_MODULE              // standard timers
-        #define TEST_TIMER                                               // enable timer test(s)
+      //#define TEST_TIMER                                               // enable timer test(s)
         #if defined TEST_TIMER
             #if defined SUPPORT_PWM_MODULE                               // {9}
                 #define TEST_PWM                                         // {1} test generating PWM output from timer
@@ -223,6 +225,9 @@
             #define AD_DA_BUFFER_LENGTH    (8 * 1024)                    // buffer for 1s at 8k bytes/s
         #endif
         static signed short sADC_buffer[AD_DA_BUFFER_LENGTH] = {0};      // 16 bit samples
+        static float windowing_buffer[AD_DA_BUFFER_LENGTH/2] = {0};      // windowing coefficients
+        static float window_conversionFactor = 1.0;                      // scaling factor due to windowing
+        static float fft_magnitude_buffer[AD_DA_BUFFER_LENGTH/4];        // fft frequency amplitude output
     #elif defined TEST_AD_DA && (defined KINETIS_KL || defined KINETIS_KE)
         static signed short *ptrADC_buffer = 0;                          // pointer to aligned buffer - 16 bit samples 
     #endif
@@ -355,7 +360,9 @@
         #if defined TEST_AD_DA                                           // {14}
                 else if ((ADC_TRIGGER_1 == ucInputMessage[MSG_INTERRUPT_EVENT]) || (ADC_TRIGGER_2 == ucInputMessage[MSG_INTERRUPT_EVENT])) {
             #if !((defined VOICE_RECORDER && defined SDCARD_SUPPORT) || defined KINETIS_KE) // {15}
+                #if !defined FFT_SAMPLED_INPUT
                     int i;
+                #endif
             #endif
             #if defined KINETIS_KE
                     break;
@@ -369,7 +376,9 @@
                     }
                 #if defined VOICE_RECORDER && defined SDCARD_SUPPORT     // {15}
                     fnSaveWaveToDisk(ptrSample, (unsigned short)(AD_DA_BUFFER_LENGTH)); // if there is a disk ready, save the data to a file
-                #else
+                #elif defined FFT_SAMPLED_INPUT                          // preform an FFT analysis of the samples in the buffer
+                    fnFFT((void *)ptrSample, (void *)fft_magnitude_buffer, (AD_DA_BUFFER_LENGTH/2), 0, ((AD_DA_BUFFER_LENGTH/2) * sizeof(signed short)), windowing_buffer, window_conversionFactor, (FFT_INPUT_HALF_WORDS_SIGNED | FFT_OUTPUT_FLOATS | FFT_MAGNITUDE_RESULT)); // perform complex fast-fourier transform (the result is in the input buffer)
+                #elif defined KWIKSTIK                                   // remove input's DC bias, amplify the signal and then add the bias again             
                     for (i = 0; i < (AD_DA_BUFFER_LENGTH/2); i++) {      // for each sample in the buffer half
                         *ptrSample -= 0x0800;                            // remove DC bias
                         if (*ptrSample > (2047/16)) {                    // limit positive input value if needed (positive saturation)
@@ -746,15 +755,15 @@ static void __callback_interrupt adc_level_change_low(ADC_INTERRUPT_RESULT *adc_
 #endif
 
 #if defined TEST_AD_DA                                                   // {14}
-    #if (defined VOICE_RECORDER && defined SDCARD_SUPPORT) || defined KWIKSTIK
+    #if (defined VOICE_RECORDER && defined SDCARD_SUPPORT) || defined KWIKSTIK || defined FFT_SAMPLED_INPUT
 // Half buffer interrupt occurs each time the ADC DMA has filled half of the input buffer
 // - the ADC DMA operation will continue with the second half of the buffer so that the user has time to clear the existing data
 //
 static void __callback_interrupt half_buffer_interrupt(void)
 {
-    static unsigned char ucPingPong = 0;
-    fnInterruptMessage(OWN_TASK, (unsigned char)(ADC_TRIGGER_1 + ucPingPong));
-    ucPingPong ^= 1;
+    static int iPingPong = 0;
+    fnInterruptMessage(OWN_TASK, (unsigned char)(ADC_TRIGGER_1 + iPingPong)); // send alternating event to follow the half-buffer that is ready to be processed
+    iPingPong ^= 1;
 }
     #endif
     #if PDB_AVAILABLE > 0 && defined HANDLE_PDB_INTERRUPT
@@ -811,7 +820,11 @@ static void fnStart_ADC_Trigger(void)
     #endif
     //pdb_setup.pdb_mode = PDB_MONO_TIMER_INTERRUPT;                     // single-shot timer interrupt
     pdb_setup.prescaler = (PDB_PRESCALER_4 | PDB_MUL_1);                 // pre-scaler values of 1, 2, 4, 8, 16, 32, 64 and 128 are possible (with multipliers of 1, 10, 20 or 40)
+    #if defined FFT_SAMPLED_INPUT
+    pdb_setup.period = PDB_FREQUENCY(4, 1, 400000);                      // frequency of PDB cycle is 400kHz
+    #else
     pdb_setup.period = PDB_FREQUENCY(4, 1, 8000);                        // frequency of PDB cycle is 8kHz
+    #endif
     pdb_setup.int_match = 0;                                             // PDB interrupt/DMA at the start of the period so that it uses the old ADC value
     pdb_setup.ch0_delay_0 = pdb_setup.period;                            // ADC0 channel A trigger occurs at end of the PDB period
     pdb_setup.ch0_delay_1 = 0;
@@ -908,7 +921,11 @@ static void fnConfigureADC(void)
                 #else
     adc_setup.int_adc_bit = ADC_DM1_SINGLE;                              // potentiometer on K60/K70 tower boards
                 #endif
-    adc_setup.int_handler = 0;                                           // no interrupt
+                #if defined FFT_SAMPLED_INPUT
+    adc_setup.dma_int_handler = half_buffer_interrupt;                    // iAD_DA_BUFFER_LENGTH/4nterrupt called when the buffer is half full
+    window_conversionFactor = fnGenerateWindowFloat(windowing_buffer, (AD_DA_BUFFER_LENGTH/2), BLACKMANN_HARRIS_WINDOW); // calculate a window for use by the FFT
+                #endif
+    adc_setup.int_handler = 0;                                           // no ADC conversion interrupt
             #endif
             #if !defined DEVICE_WITHOUT_DMA
                 #if defined KINETIS_KL                                   // {21}
@@ -934,9 +951,17 @@ static void fnConfigureADC(void)
     adc_setup.dma_int_handler = 0;                                       // no user DMA interrupt call-back
                     #endif
                 #else
+                    #if defined FFT_SAMPLED_INPUT
+    adc_setup.int_adc_mode = (ulCalibrate | ADC_HALF_BUFFER_DMA | ADC_SELECT_INPUTS_A | ADC_CLOCK_BUS_DIV_2 | ADC_CLOCK_DIVIDE_1/* | ADC_SAMPLE_ACTIVATE_LONG*/ | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_ENDED_INPUT | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE | ADC_HW_TRIGGERED); // hardware triggering example (DMA to buffer with interrupt on half-buffer completion) - requires PDB set up afterwards
+                    #else
     adc_setup.int_adc_mode = (ulCalibrate | /*ADC_LOOP_MODE |*/ ADC_HALF_BUFFER_DMA | ADC_SELECT_INPUTS_A | ADC_CLOCK_BUS_DIV_2 | ADC_CLOCK_DIVIDE_8 | ADC_SAMPLE_ACTIVATE_LONG | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_ENDED_INPUT | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE | ADC_HW_TRIGGERED); // hardware triggering example (DMA to buffer with interrupt on half-buffer completion) - requires PDB set up afterwards
+                    #endif
                 #endif
+                #if defined FFT_SAMPLED_INPUT
+    adc_setup.int_adc_sample = (ADC_SAMPLE_HIGH_SPEED_CONFIG | ADC_SAMPLE_AVERAGING_OFF); // additional sampling clocks and hardware averaging
+                #else
     adc_setup.int_adc_sample = (ADC_SAMPLE_LONG_PLUS_12 | ADC_SAMPLE_AVERAGING_8); // additional sampling clocks and hardware averaging
+                #endif
             #endif
     adc_setup.int_adc_bit_b = ADC_TEMP_SENSOR;                           // input B is only valid when using HW triggered mode
         #elif defined KINETIS_KE15

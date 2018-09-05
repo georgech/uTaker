@@ -62,7 +62,8 @@ typedef struct stKINETIS_CORTEX_M4
 {
     unsigned long ulRes1;
     const unsigned long INT_CONT_TYPE;
-    unsigned long ulRes2[2];
+    unsigned long CORTEX_ACTLR;
+    unsigned long ulRes2;
     unsigned long SYSTICK_CSR;
     unsigned long SYSTICK_RELOAD;
     volatile unsigned long SYSTICK_CURRENT;

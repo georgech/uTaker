@@ -70,7 +70,7 @@ extern int fnFFT(void *ptrInputBuffer, void *ptrOutputBuffer, int iInputSamples,
     int iInput = iSampleOffset;                                          // original input offset
     int iCopyLimit = iInputBufferSize;
     int ifft_sample = 0;
-    switch (iInputSamples) {                                             // select the appropriate FFT values
+    switch (iInputSamples) {                                             // select the appropriate FFT coefficient values
     #if defined CMSIS_DSP_FFT_16
     case 16:
         ptrFFT_consts = &arm_cfft_sR_f32_len16;
@@ -124,7 +124,7 @@ extern int fnFFT(void *ptrInputBuffer, void *ptrOutputBuffer, int iInputSamples,
     switch (iInputOutputType & FFT_INPUT_MASK) {
     case FFT_INPUT_FLOATS:                                               // input samples are signed shorts
         {
-            float * _ptrInputBuffer = (float *)ptrInputBuffer;
+            float *_ptrInputBuffer = (float *)ptrInputBuffer;
             do {                                                         // transfer input from a circular input buffer to a linear fft buffer with complex sample inputs
                 if ((iCopyLimit - iInput) > iInputSamples){
                     iCopyLimit = (iInput + iInputSamples);
@@ -144,7 +144,7 @@ extern int fnFFT(void *ptrInputBuffer, void *ptrOutputBuffer, int iInputSamples,
         break;
     case FFT_INPUT_HALF_WORDS_SIGNED:                                    // input samples are signed shorts
         {
-            signed short * _ptrInputBuffer = (signed short *)ptrInputBuffer;
+            signed short *_ptrInputBuffer = (signed short *)ptrInputBuffer;
             do {                                                         // transfer input from a circular input buffer to a linear fft buffer with complex sample inputs
                 if ((iCopyLimit - iInput) > iInputSamples){
                     iCopyLimit = (iInput + iInputSamples);
@@ -199,12 +199,12 @@ extern int fnFFT(void *ptrInputBuffer, void *ptrOutputBuffer, int iInputSamples,
 #endif
 
 #if defined _WINDOWS
-#if !defined CMSIS_DSP_CFFT
-    #include "../../Hardware/CMSIS_DSP/arm_const_structs.h"              // include defines required for the use of ARM CMSIS FFT
-#endif
-#if !defined SINE_INSTANCES
-    #define SINE_INSTANCES 1
-#endif
+    #if !defined CMSIS_DSP_CFFT
+        #include "../../Hardware/CMSIS_DSP/arm_const_structs.h"          // include defines required for the use of ARM CMSIS FFT
+    #endif
+    #if !defined SINE_INSTANCES
+        #define SINE_INSTANCES 1
+    #endif
 extern void fnInjectSine(int instance, int iType, void *ptrData, unsigned short usLength)
 {
     #if !defined PI

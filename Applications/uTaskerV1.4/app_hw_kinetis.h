@@ -1313,6 +1313,7 @@
     #define SIZE_OF_FLASH       (1024 * 1024)                            // 1024k FLASH
     #define SIZE_OF_RAM         (128 * 1024)                             // 128k SRAM
 #elif defined TWR_K80F150M
+    #define MASK_1N03P
   //#define PIN_COUNT           PIN_COUNT_100_PIN                        // 100 pin LQFP package
     #define PIN_COUNT           PIN_COUNT_121_PIN                        // 121 pin XFBGA/WLCSP package
   //#define PIN_COUNT           PIN_COUNT_144_PIN                        // 141 pin LQFP package
@@ -1321,6 +1322,7 @@
     #define SIZE_OF_FLASH       (256 * 1024)                             // 256k FLASH
     #define SIZE_OF_RAM         (256 * 1024)                             // 256k SRAM
 #elif defined FRDM_K82F
+    #define MASK_1N03P
     #define PIN_COUNT           PIN_COUNT_100_PIN                        // 100 pin LQFP package
   //#define PIN_COUNT           PIN_COUNT_121_PIN                        // 121 pin XFBGA/WLCSP package
   //#define PIN_COUNT           PIN_COUNT_144_PIN                        // 141 pin LQFP package

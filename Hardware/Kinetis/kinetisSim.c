@@ -5261,8 +5261,8 @@ extern int fnSimulateDMA(int channel)                                    // {3}
                     DMA_ERQ &= ~(DMA_ERQ_ERQ0 << channel);
                     ptrDMA_TCD->DMA_TCD_CSR &= ~DMA_TCD_CSR_ACTIVE;      // completed
                 }
-                else {
-                    ptrDMA_TCD->DMA_TCD_CITER_ELINK = ptrDMA_TCD->DMA_TCD_BITER_ELINK;
+                else {                                                   // continuous operation
+                    ptrDMA_TCD->DMA_TCD_CITER_ELINK = ptrDMA_TCD->DMA_TCD_BITER_ELINK; // set back the main loop count value
                 }
                 ptrDMA_TCD->DMA_TCD_CSR |= DMA_TCD_CSR_DONE;
                 ptrDMA_TCD->DMA_TCD_DADDR += ptrDMA_TCD->DMA_TCD_DLASTSGA;
@@ -8651,7 +8651,7 @@ static void fnTriggerADC(int iADC, int iHW_trigger)
         if (IS_POWERED_UP(3, ADC1) && ((ADC1_SC1A & ADC_SC1A_ADCH_OFF) != ADC_SC1A_ADCH_OFF))
         #endif
         {                                                                // ADC1 powered up and operating
-            if ((ADC1_SC2 & ADC_SC2_ADTRG_HW) == 0) {                    // software trigger mode
+            if ((iHW_trigger != 0) || ((ADC1_SC2 & ADC_SC2_ADTRG_HW) == 0)) { // hardware or software trigger mode
                 fnSimADC(1);                                             // perform ADC conversion
                 if ((ADC1_SC1A & ADC_SC1A_COCO) != 0) {                  // {40} if conversion has completed
                     fnHandleDMA_triggers(DMAMUX0_CHCFG_SOURCE_ADC1, 0);  // handle DMA triggered on ADC1 conversion
@@ -8669,7 +8669,7 @@ static void fnTriggerADC(int iADC, int iHW_trigger)
     #if ADC_CONTROLLERS > 2
     case 2:                                                              // ADC2
         if ((IS_POWERED_UP(6, ADC2)) && ((ADC2_SC1A & ADC_SC1A_ADCH_OFF) != ADC_SC1A_ADCH_OFF)) { // ADC2 powered up and operating
-            if ((ADC2_SC2 & ADC_SC2_ADTRG_HW) == 0) {                    // software trigger mode
+            if ((iHW_trigger != 0) || ((ADC2_SC2 & ADC_SC2_ADTRG_HW) == 0)) { // hardware or software trigger mode
                 fnSimADC(2);                                             // perform ADC conversion
                 if ((ADC2_SC1A & ADC_SC1A_COCO) != 0) {                  // {40} if conversion has completed
         #if !defined KINETIS_KE18                                        // to be done
@@ -8689,7 +8689,7 @@ static void fnTriggerADC(int iADC, int iHW_trigger)
     #if ADC_CONTROLLERS > 3
     case 3:                                                              // ADC3
         if ((IS_POWERED_UP(3, ADC3)) && ((ADC3_SC1A & ADC_SC1A_ADCH_OFF) != ADC_SC1A_ADCH_OFF)) { // ADC3 powered up and operating
-            if ((ADC3_SC2 & ADC_SC2_ADTRG_HW) == 0) {                    // software trigger mode
+            if ((iHW_trigger != 0) || ((ADC3_SC2 & ADC_SC2_ADTRG_HW) == 0)) { // hardware or software trigger mode
                 fnSimADC(3);                                             // perform ADC conversion
                 if ((ADC3_SC1A & ADC_SC1A_COCO) != 0) {                  // {40} if conversion has completed
                     fnHandleDMA_triggers(DMAMUX1_CHCFG_SOURCE_ADC3, 1);  // handle DMA triggered on ADC3 conversion
@@ -9554,7 +9554,7 @@ extern int fnSimTimers(void)
     #endif
 #endif
 #if PDB_AVAILABLE > 0 && !defined KINETIS_KE15 && !defined KINETIS_KE18  // {24}
-    if (((SIM_SCGC6 & SIM_SCGC6_PDB0) != 0) && ((PDB0_SC & PDB_SC_PDBEN) != 0)) { // {16} PDB powered and enabled
+    if ((IS_POWERED_UP(6, PDB0)) && ((PDB0_SC & PDB_SC_PDBEN) != 0)) {   // {16} PDB powered and enabled
         if ((PDB0_SC & PDB_SC_TRGSEL_SW) == PDB_SC_TRGSEL_SW) {          // software triggered
             if ((PDB0_SC & PDB_SC_SWTRIG) != 0) {
                 PDB0_SC &= ~(PDB_SC_SWTRIG);                             // clear the software trigger
@@ -9563,8 +9563,8 @@ extern int fnSimTimers(void)
             }
         }
         if (iPDB != 0) {                                                 // if running
-            unsigned long ulPDB_count = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)BUS_CLOCK)/1000000);
-            switch (PDB0_SC & PDB_SC_MULT_40) {
+            unsigned long ulPDB_count = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)BUS_CLOCK)/1000000); // the count in a tick period (with no prescaer)
+            switch (PDB0_SC & PDB_SC_MULT_40) {                          // respect the pre-scaler multiplier
             case PDB_SC_MULT_1:
                 break;
             case PDB_SC_MULT_10:
@@ -9577,7 +9577,7 @@ extern int fnSimTimers(void)
                 ulPDB_count /= 40;
                 break;
             }
-            switch (PDB0_SC & PDB_SC_PRESCALER_128) {
+            switch (PDB0_SC & PDB_SC_PRESCALER_128) {                    // respect the pre-scaler
             case PDB_SC_PRESCALER_1:
                 break;
             case PDB_SC_PRESCALER_2:
@@ -9604,11 +9604,11 @@ extern int fnSimTimers(void)
             }
             ulPDB_count += PDB0_CNT;                                     // new count value
             if ((iPDB_interrupt_triggered == 0) && (ulPDB_count >= (PDB0_IDLY & 0xffff))) { // interrupt trigger reached
-                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                 iPDB_interrupt_triggered = 1;
-                if ((PDB0_SC & PDB_SC_PDBIE) != 0) {                     // if interrupt is enabled
+                if ((PDB0_SC & PDB_SC_PDBIE) != 0) {                     // ifperiod interrupt is enabled
                     PDB0_SC |= PDB_SC_PDBIF;                             // set the interrupt flag
                     if (fnGenInt(irq_PDB0_ID) != 0) {
+                        VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                         ptrVect->processor_interrupts.irq_PDB0();        // call the interrupt handler
                     }
                 }
@@ -9616,14 +9616,20 @@ extern int fnSimTimers(void)
             if ((iPDB_ch0_0_triggered == 0) && (ulPDB_count >= (PDB0_CH0DLY0 & 0xffff))) { // channel 0 delay 0 trigger reached
                 iPDB_ch0_0_triggered = 1;
                 if ((PDB0_CH0C1 & PDB_C1_EN_0) != 0) {                   // if pre-trigger enabled
-                    if ((PDB0_CH0C1 & PDB_C1_TOS_0) != 0) {              // if ADC0 trigger is enabled
+                    if ((PDB0_CH0C1 & PDB_C1_TOS_0) != 0) {              // if ADC0 A trigger is enabled
+                        // ADC0 A conversion is triggered
+                        //
+                        fnTriggerADC(0, 1);
                     }
                 }
             }
             if ((iPDB_ch0_1_triggered == 0) && (ulPDB_count >= (PDB0_CH0DLY1 & 0xffff))) { // channel 0 delay 1 trigger reached
                 iPDB_ch0_1_triggered = 1;
                 if ((PDB0_CH0C1 & PDB_C1_EN_1) != 0) {                   // if pre-trigger enabled
-                    if ((PDB0_CH0C1 & PDB_C1_TOS_1) != 0) {              // if ADC1 trigger is enabled
+                    if ((PDB0_CH0C1 & PDB_C1_TOS_1) != 0) {              // if ADC0 B trigger is enabled
+                        // ADC0 B conversion is triggered
+                        //
+                        fnTriggerADC(0, 1);
                     }
                 }
             }
@@ -9631,19 +9637,24 @@ extern int fnSimTimers(void)
             if ((iPDB_ch1_0_triggered == 0) && (ulPDB_count >= (PDB0_CH1DLY0 & 0xffff))) { // channel 1 delay 0 trigger reached
                 iPDB_ch1_0_triggered = 1;
                 if ((PDB0_CH1C1 & PDB_C1_EN_0) != 0) {                   // if pre-trigger enabled
-                    if ((PDB0_CH1C1 & PDB_C1_TOS_1) != 0) {              // if ADC1 trigger is enabled
+                    if ((PDB0_CH1C1 & PDB_C1_TOS_0) != 0) {              // if ADC1 A trigger is enabled
+                        // ADC1 A conversion is triggered
+                        //
+                        fnTriggerADC(1, 1);
                     }
                 }
             }
             if ((iPDB_ch1_1_triggered == 0) && (ulPDB_count >= (PDB0_CH1DLY1 & 0xffff))) { // channel 1 delay 1 trigger reached
                 iPDB_ch1_1_triggered = 1;
                 if ((PDB0_CH1C1 & PDB_C1_EN_1) != 0) {                   // if pre-trigger enabled
-                    if ((PDB0_CH1C1 & PDB_C1_TOS_1) != 0) {              // if ADC1 trigger is enabled
+                    if ((PDB0_CH1C1 & PDB_C1_TOS_1) != 0) {              // if ADC1 B trigger is enabled
+                        // ADC1 B conversion is triggered
+                        //
+                        fnTriggerADC(1, 1);
                     }
                 }
             }
     #endif
-            
             if (ulPDB_count >= (PDB0_MOD & 0xffff)) {                    // cycle complete
                 iPDB_interrupt_triggered = 0;
                 iPDB_ch0_0_triggered = 0;
@@ -9652,7 +9663,7 @@ extern int fnSimTimers(void)
                 iPDB_ch1_1_triggered = 0;
                 PDB0_CNT = 0;
                 if ((PDB0_SC & PDB_SC_CONT) == 0) {                      // single shot
-                    iPDB = 0;
+                    iPDB = 0;                                            // stop the operation
                 }
             }
             else {

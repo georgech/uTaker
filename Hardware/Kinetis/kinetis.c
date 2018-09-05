@@ -2423,6 +2423,9 @@ static void _LowLevelInit(void)
     FMC_PFB0CR &= ~(BANKDCE | BANKICE | BANKSEBE);                       // disable cache
     FMC_PFB1CR &= ~(BANKDCE | BANKICE | BANKSEBE);
 #endif
+#if defined ERRATA_ID_9005
+    CORTEX_ACTLR = CORTEX_ACTLR_DISDEFWBUF;                              // disable write buffer to avoid potential problem of a mismatch between the interrupt acknowledged by the interrupt controller and the vector fetched by the processor (only when MCU not used)
+#endif
 // Configure clock generator
 //
 #if defined HIGH_SPEED_RUN_MODE_AVAILABLE && !defined USE_HIGH_SPEED_RUN_MODE // {134}
@@ -2622,7 +2625,7 @@ extern void start_application(unsigned long app_link_location)
     asm(" ldr r0, [r0,#4]");                                             // get the program counter value from the program's reset vector
     asm(" blx r0");                                                      // jump to the start address
         #endif
-    #else                                                                // cortex-M3/M4 assembler code
+    #else                                                                // cortex-M3/M4/M7 assembler code
         #if !defined _WINDOWS
     asm(" ldr sp, [r0,#0]");                                             // load the stack pointer value from the program's reset vector
     asm(" ldr pc, [r0,#4]");                                             // load the program counter value from the program's reset vector to cause operation to continue from there

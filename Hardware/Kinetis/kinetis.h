@@ -19502,18 +19502,24 @@ extern int  fnIsPending(int iInterruptID);                               // {90}
 #else
     #define __NVIC_PRIORITY_SHIFT   4                                    // 16 levels of priority so shifted by (8 - 4 (number of implemented bits))
 #endif
+#define CORTEX_ACTLR                *(unsigned long *)(CORTEX_M4_BLOCK + 0x008) // auxiliary control register
+    #define CORTEX_ACTLR_DISMCYCINT 0x00000001                           // disable interruption of load multiple and store multiple instructions
+    #define CORTEX_ACTLR_DISDEFWBUF 0x00000002                           // disable write buffer use during default memory map accesses
+    #define CORTEX_ACTLR_DISFOLD    0x00000004                           // disable IT folding
+    #define CORTEX_ACTLR_DISFPCA    0x00000010                           // disable automatic update of CONTROL.FPCA
+    #define CORTEX_ACTLR_DISOOFP    0x00000020                           // disable FPU instructions competing out of order with respect to integer instructions
 
 // SYSTICK
 //
-#define SYSTICK_CSR                 *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x10) // SYSTICK Control and Status Register
+#define SYSTICK_CSR                 *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x010) // SYSTICK Control and Status Register
   #define SYSTICK_ENABLE            0x00000001                           // enable SYSTICK counter
   #define SYSTICK_TICKINT           0x00000002                           // interrupt on counter reload (reaching zero)
   #define SYSTICK_CORE_CLOCK        0x00000004                           // choose core clock as opposed to external reference clock
   #define SYSTICK_COUNTFLAG         0x00010000                           // '1' if the timer counted to 0 since the last time this register was read
-#define SYSTICK_RELOAD              *(unsigned long *)(CORTEX_M4_BLOCK + 0x14) // SYSTICK Reload value (24 bits are valid)
-#define SYSTICK_CURRENT             *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x18) // SYSTICK Current value - write any value to it to clear to 0
+#define SYSTICK_RELOAD              *(unsigned long *)(CORTEX_M4_BLOCK + 0x014) // SYSTICK Reload value (24 bits are valid)
+#define SYSTICK_CURRENT             *(volatile unsigned long *)(CORTEX_M4_BLOCK + 0x018) // SYSTICK Current value - write any value to it to clear to 0
   #define SYSTICK_COUNT_MASK        0x00ffffff                           // valid count width in registers
-#define SYSTICK_CALIB               *(const unsigned long *)(CORTEX_M4_BLOCK + 0x1c) // SYSTICK Calibration value (not available in Stellaris devices) (read-only)
+#define SYSTICK_CALIB               *(const unsigned long *)(CORTEX_M4_BLOCK + 0x01c) // SYSTICK Calibration value (not available in Stellaris devices) (read-only)
 
 // NVIC
 //

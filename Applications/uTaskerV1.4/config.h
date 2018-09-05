@@ -1221,6 +1221,9 @@
     #if defined (SPI_FILE_SYSTEM) || defined (FLASH_FILE_SYSTEM) || defined (NVRAM) || defined (I2C_EEPROM_FILE_SYSTEM) || defined SPI_EEPROM_FILE_SYSTEM || defined EXT_FLASH_FILE_SYSTEM
         #define ACTIVE_FILE_SYSTEM                                       // enable uFileSystem
     #endif
+    #if defined I2C_EEPROM_FILE_SYSTEM
+        #define M24M01_CNT    2                                          // use 2 x M24M01 for storae
+    #endif
 #endif
 
 #define SUPPORT_MIME_IDENTIFIER                                          // if the file type is to be handled (eg. when mixing HTML with JPGs etc.) this should be set - note that the file system header will be adjusted

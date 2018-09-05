@@ -425,6 +425,31 @@
     #define ERRATA_ID_9816                                               // USBHS: The USBHS module can cause non-deterministic Idd value until enabled
     #define ERRATA_ID_7919                                               // USBOTG: in certain situations, software updates to the Start of Frame Threshold Register (USBx_SOFTHLD) may lead to an End of Frame error condition
     #define ERRATA_ID_9359                                               // USBReg: in some conditions when using both VREG_INn inputs, the USB voltage regulator current limit can fall below specification
+#elif defined MASK_1N03P                                                 // K80, K81, K82
+    #define ERRATA_ID_8992                                               // AWIC: early NMI wakenot detected upon entry to stop mode from VLPR mode
+    #define ERRATA_ID_6939                                               // Core: interrupted loads to SP can cause erroneous behavior
+    #define ERRATA_ID_9005                                               // Core: Store immediate overlapping exception return operation might vector to incorrect interru
+    #define ERRATA_ID_6940                                               // Core: VDIV or VSQRT instructions might not complete correctly when very short ISRs are used
+    #define ERRATA_ID_9265                                               // FTM: incorrect match may be generated if intermediate load feature is used in toggle mode
+    #define ERRATA_ID_9457                                               // Kinetis Flashloader/ROM Bootloader: the peripheral auto-detect code in bootloader can falsely detect presence of SPI host causing non-responsive bootloader
+    #define ERRATA_ID_9274                                               // LTC: Data Size Register does not handle concurrent update requests for CCM or GCM
+    #define ERRATA_ID_9407                                               // LTC: writing individual bytes of PKHA RAM will cause adjacent bytes within the same 32-bit word to be corrupted
+    #define ERRATA_ID_7735                                               // MCG: IREFST status bit may set before the IREFS multiplexor switches the FLL reference clock
+    #define ERRATA_ID_9651                                               // QuadSPI: QuadSPI SDR clock limitation when core clock is greater than 100MHz
+    #define ERRATA_ID_9461                                               // QuadSPI: read data errors may occur with data learning in 4x sampling method
+    #define ERRATA_ID_9650                                               // QuadSPI: some QuadSPI implementations not supported
+    #define ERRATA_ID_9626                                               // ROM Bootloader: aliased QuadSPI address space is not supported by the Kinetis Bootloader command APIs
+    #define ERRATA_ID_9627                                               // ROM Bootloader: cannot boot into QuadSPI DDR mode
+    #define ERRATA_ID_3981                                               // SDHC: ADMA fails when data length in the last descriptor is less or equal to 4 bytes
+    #define ERRATA_ID_3982                                               // SDHC: ADMA transfer error when the block size is not a multiple of four
+    #define ERRATA_ID_4624                                               // SDHC: AutoCMD12 and R1b polling problem
+    #define ERRATA_ID_3977                                               // SDHC: does not support Infinite Block Transfer Mode
+    #define ERRATA_ID_4627                                               // SDHC: erroneous CMD CRC error and CMD Index error may occur on sending new CMD during data transfer
+    #define ERRATA_ID_3983                                               // SDHC: problem when ADMA2 last descriptor is LINK or NOP
+    #define ERRATA_ID_3984                                               // SDHC: eSDHC misses SDIO interrupt when CINT is disabled
+    #define ERRATA_ID_3978                                               // SDHC: Software cannot clear DMA interrupt status bit after read operation
+    #define ERRATA_ID_9625                                               // System: leakage is possible on some PORTE pins when VDD is greater than VDDIO_E
+    #define ERRATA_ID_8807                                               // USB: in host mode, transmission errors may occur when communicating with a low speed (LS) device through a USB hub
 #elif defined MASK_4N22D
 #elif defined MASK_4N30D
 #elif defined MASK_4N96B

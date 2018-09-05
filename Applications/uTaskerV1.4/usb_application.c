@@ -3795,7 +3795,7 @@ static void fnAudio(QUEUE_HANDLE audioHandle, QUEUE_TRANSFER queue_size)
 }
 
 #if defined AUDIO_FFT                                                    // {42}
-static float windowing_buffer[FFT_INPUT_SAMPLES] = { 0 };                // windowing coefficients
+static float windowing_buffer[FFT_INPUT_SAMPLES] = {0};                  // windowing coefficients
 static float window_conversionFactor = 1.0;                              // scaling factor due to windowing
 
 static void fnPerformFFT(int iBufferReference)
@@ -3827,7 +3827,7 @@ static void fnPerformFFT(int iBufferReference)
         iInputSample = 0;
         break;
     }
-    uMemcpy(&sRawInput[iOutputSample], &fft_buffer[iInputSample], iCopyLength * sizeof(signed short));
+    uMemcpy(&sRawInput[iOutputSample], &fft_buffer[iInputSample], (iCopyLength * sizeof(signed short)));
     fnFFT((void *)fft_buffer, (void *)fft_magnitude_buffer, FFT_INPUT_SAMPLES, iInputOffset, (FFT_INPUT_SAMPLES * sizeof(signed short)), windowing_buffer, window_conversionFactor, (FFT_INPUT_HALF_WORDS_SIGNED | FFT_OUTPUT_FLOATS | FFT_MAGNITUDE_RESULT)); // perform complex fast-fourier transform (the result is in the input buffer)
     #if defined BLAZE_K22
     fnDisplayFFT(fft_magnitude_buffer, sRawInput);                       // display FFT output on display
@@ -4187,7 +4187,7 @@ static void fnConfigureDeviceApplicationEndpoints(void)
     #endif
     #if defined USE_USB_AUDIO
         #if defined AUDIO_FFT                                            // {42}
-    window_conversionFactor = fnGenerateWindowFloat(windowing_buffer, FFT_INPUT_SAMPLES, BLACKMANN_HARRIS_WINDOW); // calculate a windows for use by the FFT
+    window_conversionFactor = fnGenerateWindowFloat(windowing_buffer, FFT_INPUT_SAMPLES, BLACKMANN_HARRIS_WINDOW); // calculate a window for use by the FFT
         #endif
     tInterfaceParameters.usEndpointSize = 96;                            // isochronous endpoint size
     tInterfaceParameters.Paired_RxEndpoint = endpointNumber;             // the endpoint used by the audio device for reception
