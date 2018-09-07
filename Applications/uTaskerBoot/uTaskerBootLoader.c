@@ -168,13 +168,20 @@
             #define UTASK_APP_LENGTH       FILE_SYSTEM_SIZE
         #endif
 
-        #if defined DEV3
+        #if defined KINETIS_K60 && defined DEV3
             static const unsigned char ucKey[] = {0x85, 0xa3, 0xbb, 0x09, 0x10, 0xf5};
             #define _ENCRYPTED
             static const unsigned char ucDecrypt[] = {0x65, 0x23, 0x91, 0x32, 0x88, 0xaa, 0x09, 0xa5, 0x98, 0xfd}; // must be even in length (dividable by unsigned short)
             #define KEY_PRIME               0x76a5                       // never set to 0
             #define CODE_OFFSET             0x109b
             #define VALID_VERSION_MAGIC_NUMBER  0x5432
+        #elif defined KINETIS_K12 && defined DEV2
+            static const unsigned char ucKey[] = {0xb7, 0x48, 0xb6, 0x53, 0x11, 0x24};
+            #define _ENCRYPTED
+            static const unsigned char ucDecrypt[] = {0xff, 0x25, 0xa7, 0x88, 0xf2, 0xe6, 0x81, 0x33, 0x87, 0x77}; // must be even in length (dividable by unsigned short)
+            #define KEY_PRIME               0xafe1                   // never set to 0
+            #define CODE_OFFSET             0xc298
+            #define VALID_VERSION_MAGIC_NUMBER  0xe020
         #else
             static const unsigned char ucKey[] = {0xb7, 0x48, 0xb6, 0x53, 0x11, 0x24};
           //#define _ENCRYPTED

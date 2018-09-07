@@ -50,6 +50,7 @@
    04.03.2011 Add small delay after ADC power up so that it can become ready before first access {33}
    01.04.2011 Add CC Studio support                                      {34}
    02.04.2011 Remove random seed from stack to a fixed location          {35}
+   07.09.2018 Add hardware operating details for simulator display       {36}
 
 */
 
@@ -61,10 +62,11 @@
 /*                           include files                             */
 /* =================================================================== */
 
-#ifdef _WINDOWS
+#if defined _WINDOWS
     #include "config.h"
     #define INITHW  extern
     extern void fnOpenDefaultHostAdapter(void);
+    extern void fnUpdateOperatingDetails(void);                          // {36}
     #define _SIM_PORT_CHANGE   fnSimPorts();                             // make sure simulator knows of change
     #define START_CODE 0
     #define _fnRAM_code fnCommandFlash
@@ -144,7 +146,7 @@
         #undef _SPI_DEFINES
     #endif
 #endif
-#ifdef FLASH_FILE_SYSTEM
+#if defined FLASH_FILE_SYSTEM
     static void fnInitFlash(void);
 #endif
 static void LM3SXXXX_LowLevelInit(void);
@@ -154,7 +156,7 @@ static void LM3SXXXX_LowLevelInit(void);
 /* =================================================================== */
 
 
-#ifdef ETH_INTERFACE
+#if defined ETH_INTERFACE
     static const unsigned char EMAC_RX_int_message[ HEADER_LENGTH ] = { 0, 0 , TASK_ETHERNET, INTERRUPT_EVENT, EMAC_RX_INTERRUPT };   // define fixed interrupt event
 #endif
 
@@ -5192,7 +5194,7 @@ static void LM3SXXXX_LowLevelInit( void)
     #endif
 
     while (!(RIS & PLLLRIS)) {                                           // wait for PLL to lock
-#ifdef _WINDOWS
+#if defined _WINDOWS
         RIS |= PLLLRIS;
 #endif
     }
@@ -5256,10 +5258,13 @@ static void LM3SXXXX_LowLevelInit( void)
     DMAALTBASE += RAM_START_ADDRESS;
     #endif
 #endif
-#ifdef _WINDOWS                                                          // check that the size of the interrupt vectors has not grown beyond that what is expected (increase its space in the script file if necessary!!)
+#if defined _WINDOWS                                                     // check that the size of the interrupt vectors has not grown beyond that what is expected (increase its space in the script file if necessary!!)
     if (VECTOR_SIZE > CHECK_VECTOR_SIZE) {
         *(unsigned char *)0 = 0;
     }
+#endif
+#if defined _WINDOWS
+    fnUpdateOperatingDetails();                                          // {36} update operating details to be displayed in the simulator
 #endif
 }
 

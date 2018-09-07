@@ -1131,7 +1131,7 @@ typedef struct stRESET_VECTOR
 #endif
 #define FLASH_BLOCK_SIZE     (SIZE_OF_FLASH/FLASH_BLOCK_COUNT)
 
-#if defined KINETIS_KE15
+#if defined KINETIS_KE15 || defined KINETIS_KE18
     #define FLASH_CONTROLLER_FTFE                                        // FTFE type rather than standard KE type
     #define FLASH_CONTROLLER_FTFE_EXTENDED                               // FTFE type with extended features
 #elif defined KINETIS_KE || defined KINETIS_KEA
@@ -6302,17 +6302,17 @@ typedef struct stKINETIS_INTMUX
       #define FTFL_FOPT_NMI_DISABLED      0x00
       #define FTFL_FOPT_NMI_ENABLED       0x04
       #define FTFL_FOPT_FAST_INIT         0x20
-    #elif defined KINETIS_KE15
+    #elif defined KINETIS_KE15 || defined KINETIS_KE18
       #define FTFL_FOPT_LPBOOT_CLK_DIV_2  0x00
       #define FTFL_FOPT_LPBOOT_CLK_DIV_1  0x01
-      #define FTFL_FOPT_NMI_DISABLED      0x00
-      #define FTFL_FOPT_NMI_ENABLED       0x04
       #define FTFL_FOPT_BOOTPIN_OPT_ENABLE  0x00                       // boot from ROM if the BOOTCFG0 input is asserted
       #define FTFL_FOPT_BOOTPIN_OPT_DISABLE 0x02                       // BOOTCFG0 input is not used
-      #define FTFL_FOPT_BOOTSRC_SEL_FLASH 0x00                         // boot from flash
-      #define FTFL_FOPT_BOOTSRC_SEL_ROM 0x80                           // boot from ROM
+      #define FTFL_FOPT_NMI_DISABLED      0x00
+      #define FTFL_FOPT_NMI_ENABLED       0x04
       #define FTFL_FOPT_RESET_PIN_DISABLED 0x00
       #define FTFL_FOPT_RESET_PIN_ENABLED 0x08
+      #define FTFL_FOPT_BOOTSRC_SEL_FLASH 0x00                         // boot from flash
+      #define FTFL_FOPT_BOOTSRC_SEL_ROM 0x80                           // boot from ROM
     #elif defined KINETIS_KL || defined KINETIS_KV
       #define FTFL_FOPT_LPBOOT_CLK_DIV_8  0x00
       #define FTFL_FOPT_LPBOOT_CLK_DIV_4  0x01
@@ -6621,20 +6621,21 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
           #define DMAMUX0_CHCFG_SOURCE_I2C0_3        18                  / 0x12 I2C0 (or I2C3)
           #define DMAMUX0_CHCFG_SOURCE_I2C1_2        19                  / 0x13 I2C1 (or I2C2)
             #else
-          #define DMAMUX0_CHCFG_SOURCE_SPI1_TX        16                 / 0x10 SPI1 TX or RX
-          #define DMAMUX0_CHCFG_SOURCE_SPI2_TX        17                 / 0x11 SPI2 TX or RX
-          #define DMAMUX0_CHCFG_SOURCE_I2C0          18                  / 0x12 I2C0 - DMAMUX0_CHCFG_xx are only available on DMA MUX 0
-          #define DMAMUX0_CHCFG_SOURCE_I2C1_2        19                  / 0x13 I2C1 (or I2C2)
+          #define DMAMUX0_CHCFG_SOURCE_SPI1_TX       16                  // 0x10 SPI1 TX or RX
+          #define DMAMUX0_CHCFG_SOURCE_SPI2_TX       17                  // 0x11 SPI2 TX or RX
+          #define DMAMUX0_CHCFG_SOURCE_I2C0          18                  // 0x12 I2C0 - DMAMUX0_CHCFG_xx are only available on DMA MUX 0
+          #define DMAMUX0_CHCFG_SOURCE_I2C1          19                  // 0x13 I2C1
+          #define DMAMUX0_CHCFG_SOURCE_I2C1_2        19                  // 0x13 I2C1 (or I2C2)
             #endif
-          #define DMAMUX0_CHCFG_SOURCE_FTM0_C0        20                 // 0x14 FTM0 channel 0
-          #define DMAMUX0_CHCFG_SOURCE_FTM0_C1        21                 // 0x15 FTM0 channel 1
-          #define DMAMUX0_CHCFG_SOURCE_FTM0_C2        22                 // 0x16 FTM0 channel 2
-          #define DMAMUX0_CHCFG_SOURCE_FTM0_C3        23                 // 0x17 FTM0 channel 3
-          #define DMAMUX0_CHCFG_SOURCE_FTM0_C4        24                 // 0x18 FTM0 channel 4
-          #define DMAMUX0_CHCFG_SOURCE_FTM0_C5        25                 // 0x19 FTM0 channel 5
-          #define DMAMUX0_CHCFG_SOURCE_FTM0_C6        26                 // 0x1a FTM0 channel 6
-          #define DMAMUX0_CHCFG_SOURCE_FTM0_C7        27                 // 0x1b FTM0 channel 7
-          #define DMAMUX0_CHCFG_SOURCE_FTM1_C0        28                 // 0x1c FTM1 channel 0 (or TPM1 - K66)
+          #define DMAMUX0_CHCFG_SOURCE_FTM0_C0       20                  // 0x14 FTM0 channel 0
+          #define DMAMUX0_CHCFG_SOURCE_FTM0_C1       21                  // 0x15 FTM0 channel 1
+          #define DMAMUX0_CHCFG_SOURCE_FTM0_C2       22                  // 0x16 FTM0 channel 2
+          #define DMAMUX0_CHCFG_SOURCE_FTM0_C3       23                  // 0x17 FTM0 channel 3
+          #define DMAMUX0_CHCFG_SOURCE_FTM0_C4       24                  // 0x18 FTM0 channel 4
+          #define DMAMUX0_CHCFG_SOURCE_FTM0_C5       25                  // 0x19 FTM0 channel 5
+          #define DMAMUX0_CHCFG_SOURCE_FTM0_C6       26                  // 0x1a FTM0 channel 6
+          #define DMAMUX0_CHCFG_SOURCE_FTM0_C7       27                  // 0x1b FTM0 channel 7
+          #define DMAMUX0_CHCFG_SOURCE_FTM1_C0       28                  // 0x1c FTM1 channel 0 (or TPM1 - K66)
             #if defined KINETIS_K65 || defined KINETIS_K66
               #define DMAMUX0_CHCFG_SOURCE_TPM1_C0   28
             #endif
@@ -6716,7 +6717,7 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
               #define DMAMUX0_CHCFG_SOURCE_DAC1      46                  // 0x2e DAC1
           #endif
           #define DMAMUX0_CHCFG_SOURCE_CMT           47                  // 0x2f CMT
-          #define DMAMUX0_CHCFG_SOURCE_PDB           48                  // 0x30 PDB
+          #define DMAMUX0_CHCFG_SOURCE_PDB0          48                  // 0x30 PDB 0
           #define DMAMUX0_CHCFG_SOURCE_PORTA         49                  // 0x31 port A
           #define DMAMUX0_CHCFG_SOURCE_PORTB         50                  // 0x32 port B
           #define DMAMUX0_CHCFG_SOURCE_PORTC         51                  // 0x33 port C
@@ -6734,7 +6735,7 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
           #define DMAMUX0_CHCFG_SOURCE_TPM1_OVERFLOW 55                  // 0x37 TPM1 overflow
           #define DMAMUX0_CHCFG_SOURCE_TPM2_OVERFLOW 56                  // 0x38 TPM2 overflow
           #define DMAMUX0_CHCFG_SOURCE_TSI           57                  // 0x39 TSI
-        #elif !defined KINETIS_K21 && !defined KINETIS_K22 && !defined KINETIS_K80
+        #elif !defined KINETIS_K21 && !defined KINETIS_K22 && !defined KINETIS_KV31 && !defined KINETIS_K80
           #define DMAMUX0_CHCFG_SOURCE_FTM3_C4       54                  // 0x36 FTM3 channel 4
           #define DMAMUX0_CHCFG_SOURCE_FTM3_C5       55                  // 0x37 FTM3 channel 5
           #define DMAMUX0_CHCFG_SOURCE_FTM3_C6       56                  // 0x38 FTM3 channel 6
@@ -12139,6 +12140,30 @@ typedef struct stKINETIS_LPTMR_CTL
     #define PE_12_FB_AD0                 PORT_MUX_ALT5
     #define PE_7_FB_CS0                  PORT_MUX_ALT5
     #define PD_15_FB_RW                  PORT_MUX_ALT5
+#elif defined KINETIS_KV50
+    #define PB_17_FB_AD16                PORT_MUX_ALT8                   // Flex-Bus
+    #define PB_18_FB_AD15                PORT_MUX_ALT8
+    #define PC_0_FB_AD14                 PORT_MUX_ALT8
+    #define PC_1_FB_AD13                 PORT_MUX_ALT8
+    #define PC_2_FB_AD12                 PORT_MUX_ALT8
+    #define PC_4_FB_AD11                 PORT_MUX_ALT8
+    #define PC_5_FB_AD10                 PORT_MUX_ALT8
+    #define PC_6_FB_AD9                  PORT_MUX_ALT8
+    #define PC_7_FB_AD8                  PORT_MUX_ALT8
+    #define PC_8_FB_AD7                  PORT_MUX_ALT8
+    #define PC_9_FB_AD6                  PORT_MUX_ALT8
+    #define PC_10_FB_AD5                 PORT_MUX_ALT8
+    #define PD_2_FB_AD4                  PORT_MUX_ALT8
+    #define PD_3_FB_AD3                  PORT_MUX_ALT8
+    #define PD_4_FB_AD2                  PORT_MUX_ALT8
+    #define PD_5_FB_AD1                  PORT_MUX_ALT8
+    #define PD_6_FB_AD0                  PORT_MUX_ALT8
+    #define PD_1_FB_CS0                  PORT_MUX_ALT8
+    #define PD_0_FB_ALE                  PORT_MUX_ALT8
+    #define PD_0_FB_CS1                  PORT_MUX_ALT8
+    #define PD_0_FB_TS                   PORT_MUX_ALT8
+    #define PC_11_FB_RW                  PORT_MUX_ALT8
+    #define PB_19_FB_OE                  PORT_MUX_ALT8
 #else                                                                    // K60
     #define PB_17_FB_AD16                PORT_MUX_ALT5                   // Flex-Bus
     #define PB_18_FB_AD15                PORT_MUX_ALT5
@@ -12279,6 +12304,10 @@ typedef struct stKINETIS_LPTMR_CTL
 #elif defined KINETIS_KV31 || defined KINETIS_KV50
     #define PB_1_UART0_TX                PORT_MUX_ALT7
     #define PB_0_UART0_RX                PORT_MUX_ALT7
+    #if defined KINETIS_KV50
+        #define PC_7_UART0_TX            PORT_MUX_ALT5
+        #define PC_6_UART0_TX            PORT_MUX_ALT5
+    #endif
 #elif defined KINETIS_KV10
     #define PD_1_UART1_TX                PORT_MUX_ALT5
     #define PD_0_UART1_RX                PORT_MUX_ALT5
@@ -12350,13 +12379,20 @@ typedef struct stKINETIS_LPTMR_CTL
     #define PF_10_UART3_CTS              PORT_MUX_ALT4
 #endif
 
-#define PC_15_UART4_TX                   PORT_MUX_ALT3                   // UART4
+#if defined KINETIS_KV50
+    #define PC_15_UART4_TX               PORT_MUX_ALT9                   // UART4
+    #define PC_14_UART4_RX               PORT_MUX_ALT9
+    #define PC_12_UART4_RTS              PORT_MUX_ALT9
+    #define PC_13_UART4_CTS              PORT_MUX_ALT9
+#else
+    #define PC_15_UART4_TX               PORT_MUX_ALT3                   // UART4
+    #define PC_14_UART4_RX               PORT_MUX_ALT3
+    #define PC_12_UART4_RTS              PORT_MUX_ALT3
+    #define PC_13_UART4_CTS              PORT_MUX_ALT3
+#endif
 #define PE_24_UART4_TX                   PORT_MUX_ALT3
-#define PC_14_UART4_RX                   PORT_MUX_ALT3
 #define PE_25_UART4_RX                   PORT_MUX_ALT3
-#define PC_12_UART4_RTS                  PORT_MUX_ALT3
 #define PE_27_UART4_RTS                  PORT_MUX_ALT3
-#define PC_13_UART4_CTS                  PORT_MUX_ALT3
 #define PE_26_UART4_CTS                  PORT_MUX_ALT3
 
 #define PD_9_UART5_TX                    PORT_MUX_ALT3                   // UART5
@@ -12862,8 +12898,10 @@ typedef struct stKINETIS_LPTMR_CTL
     #define PE_25_CAN1_RX                PORT_MUX_ALT2
     #define PA_14_CAN2_TX                PORT_MUX_ALT4
     #define PA_15_CAN2_RX                PORT_MUX_ALT4
-    #define PA_6_CAN2_TX                 PORT_MUX_ALT2
-    #define PA_7_CAN2_RX                 PORT_MUX_ALT2
+    #define PB_6_CAN2_TX                 PORT_MUX_ALT2
+    #define PB_7_CAN2_RX                 PORT_MUX_ALT2
+    #define PC_12_CAN2_TX                PORT_MUX_ALT2
+    #define PC_13_CAN2_RX                PORT_MUX_ALT2
 #endif
 
 #define PF_0_GLCD_PCLK                   PORT_MUX_ALT7                   // {60} LCD

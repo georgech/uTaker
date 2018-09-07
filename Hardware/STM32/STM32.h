@@ -8061,7 +8061,7 @@ typedef struct stADC_SETUP
     #define CHIP_HAS_LPUARTS     0
     #define CHIP_HAS_I2C         4
 #elif defined _STM32F429
-    #define PORTS_AVAILABLE      9
+    #define PORTS_AVAILABLE      11
     #define CHIP_HAS_UARTS       8
     #define CHIP_HAS_LPUARTS     0
     #define CHIP_HAS_I2C         3

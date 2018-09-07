@@ -42,7 +42,9 @@ extern float fnGenerateWindowFloat(float *ptrWindowBuffer, int iInputSamples, in
 }
 
 
-#if defined CMSIS_DSP_FFT_4096                                           // define the required dimension of the FFT input buffer based on the FFT size to be tested
+#if defined CMSIS_DSP_FFT_8092                                           // define the required dimension of the FFT input buffer based on the FFT size to be tested
+    #define MAX_FFT_BUFFER_LENGTH    (8092 * 2)
+#elif defined CMSIS_DSP_FFT_4096
     #define MAX_FFT_BUFFER_LENGTH    (4096 * 2)
 #elif defined CMSIS_DSP_FFT_2048
     #define MAX_FFT_BUFFER_LENGTH    (2048 * 2)
@@ -66,54 +68,119 @@ extern float fnGenerateWindowFloat(float *ptrWindowBuffer, int iInputSamples, in
 extern int fnFFT(void *ptrInputBuffer, void *ptrOutputBuffer, int iInputSamples, int iSampleOffset, int iInputBufferSize, float *ptrWindowingBuffer, float window_conversionFactor, int iInputOutputType)
 {
     float fft_buffer[MAX_FFT_BUFFER_LENGTH];                             // temporary working buffer (for complex inputs and so twice the size)
-    const arm_cfft_instance_f32 *ptrFFT_consts = 0;
+    #if defined CMSIS_DSP_CFFT_Q15
+    signed short fft_buffer_q15[MAX_FFT_BUFFER_LENGTH];                  // temporary working buffer (for complex inputs and so twice the size)
+    #endif
+    #if defined CMSIS_DSP_CFFT_FLOAT
+    const arm_cfft_instance_f32 *ptrFFT_consts_f32 = 0;
+    #endif
+    #if defined CMSIS_DSP_CFFT_Q15
+    const arm_cfft_instance_q15 *ptrFFT_consts_q15 = 0;;
+    #endif
     int iInput = iSampleOffset;                                          // original input offset
     int iCopyLimit = iInputBufferSize;
     int ifft_sample = 0;
     switch (iInputSamples) {                                             // select the appropriate FFT coefficient values
     #if defined CMSIS_DSP_FFT_16
     case 16:
-        ptrFFT_consts = &arm_cfft_sR_f32_len16;
+        #if defined CMSIS_DSP_CFFT_FLOAT
+        ptrFFT_consts_f32 = &arm_cfft_sR_f32_len16;
+        #endif
+        #if defined CMSIS_DSP_CFFT_Q15
+        ptrFFT_consts_q15 = &arm_cfft_sR_q15_len16;
+        #endif
         break;
     #endif
     #if defined CMSIS_DSP_FFT_32
     case 32:
-        ptrFFT_consts = &arm_cfft_sR_f32_len32;
+        #if defined CMSIS_DSP_CFFT_FLOAT
+        ptrFFT_consts_f32 = &arm_cfft_sR_f32_len32;
+        #endif
+        #if defined CMSIS_DSP_CFFT_Q15
+        ptrFFT_consts_q15 = &arm_cfft_sR_q15_len32;
+        #endif
         break;
     #endif
     #if defined CMSIS_DSP_FFT_64
     case 64:
-        ptrFFT_consts = &arm_cfft_sR_f32_len64;
+        #if defined CMSIS_DSP_CFFT_FLOAT
+        ptrFFT_consts_f32 = &arm_cfft_sR_f32_len64;
+        #endif
+        #if defined CMSIS_DSP_CFFT_Q15
+        ptrFFT_consts_q15 = &arm_cfft_sR_q15_len64;
+        #endif
         break;
     #endif
     #if defined CMSIS_DSP_FFT_128
     case 128:
-        ptrFFT_consts = &arm_cfft_sR_f32_len128;
+        #if defined CMSIS_DSP_CFFT_FLOAT
+        ptrFFT_consts_f32 = &arm_cfft_sR_f32_len128;
+        #endif
+        #if defined CMSIS_DSP_CFFT_Q15
+        ptrFFT_consts_q15 = &arm_cfft_sR_q15_len128;
+        #endif
         break;
     #endif
     #if defined CMSIS_DSP_FFT_256
     case 256:
-        ptrFFT_consts = &arm_cfft_sR_f32_len256;
+        #if defined CMSIS_DSP_CFFT_FLOAT
+        ptrFFT_consts_f32 = &arm_cfft_sR_f32_len256;
+        #endif
+        #if defined CMSIS_DSP_CFFT_Q15
+        ptrFFT_consts_q15 = &arm_cfft_sR_q15_len256;
+        #endif
         break;
     #endif
     #if defined CMSIS_DSP_FFT_512
     case 512:
-        ptrFFT_consts = &arm_cfft_sR_f32_len512;
+        #if defined CMSIS_DSP_CFFT_FLOAT
+        ptrFFT_consts_f32 = &arm_cfft_sR_f32_len512;
+        #endif
+        #if defined CMSIS_DSP_CFFT_Q15
+        ptrFFT_consts_q15 = &arm_cfft_sR_q15_len512;
+        #endif
         break;
     #endif
     #if defined CMSIS_DSP_FFT_1024
     case 1024:
-        ptrFFT_consts = &arm_cfft_sR_f32_len1024;
+        #if defined CMSIS_DSP_CFFT_FLOAT
+        ptrFFT_consts_f32 = &arm_cfft_sR_f32_len1024;
+        #endif
+        #if defined CMSIS_DSP_CFFT_Q15
+        ptrFFT_consts_q15 = &arm_cfft_sR_q15_len1024;
+        #endif
         break;
     #endif
     #if defined CMSIS_DSP_FFT_2048
     case 2048:
-        ptrFFT_consts = &arm_cfft_sR_f32_len2048;
+        #if defined CMSIS_DSP_CFFT_FLOAT
+        ptrFFT_consts_f32 = &arm_cfft_sR_f32_len2048;
+        #endif
+        #if defined CMSIS_DSP_CFFT_Q15
+        ptrFFT_consts_q15 = &arm_cfft_sR_q15_len2048;
+        #endif
         break;
     #endif
     #if defined CMSIS_DSP_FFT_4096
     case 4096:
-        ptrFFT_consts = &arm_cfft_sR_f32_len4096;
+        #if defined CMSIS_DSP_CFFT_FLOAT
+        ptrFFT_consts_f32 = &arm_cfft_sR_f32_len4096;
+        #endif
+        #if defined CMSIS_DSP_CFFT_Q15
+        ptrFFT_consts_q15 = &arm_cfft_sR_q15_len4096;
+        #endif
+        break;
+    #endif
+    #if defined CMSIS_DSP_FFT_8092
+    case 8192:
+        #if defined CMSIS_DSP_CFFT_FLOAT
+        ptrFFT_consts_f32 = &arm_cfft_sR_f32_len8192;
+        #endif
+        #if defined CMSIS_DSP_CFFT_Q15
+        ptrFFT_consts_q15 = &arm_cfft_sR_q15_len8192;
+        #endif
+        TOGGLE_TEST_OUTPUT();                                                // start measurement of processing time
+        return -1;
         break;
     #endif
     default:
@@ -122,7 +189,7 @@ extern int fnFFT(void *ptrInputBuffer, void *ptrOutputBuffer, int iInputSamples,
     }
     TOGGLE_TEST_OUTPUT();                                                // start measurement of processing time
     switch (iInputOutputType & FFT_INPUT_MASK) {
-    case FFT_INPUT_FLOATS:                                               // input samples are signed shorts
+    case FFT_INPUT_FLOATS:                                               // input samples are floats
         {
             float *_ptrInputBuffer = (float *)ptrInputBuffer;
             do {                                                         // transfer input from a circular input buffer to a linear fft buffer with complex sample inputs
@@ -168,10 +235,21 @@ extern int fnFFT(void *ptrInputBuffer, void *ptrOutputBuffer, int iInputSamples,
         return -1;
     }
     TOGGLE_TEST_OUTPUT();                                                // stop/start measurement of processing time
+    if ((iInputOutputType & FFT_CALCULATION_Q15) != 0) {
+        #if defined CMSIS_DSP_CFFT_Q15
+      //fft_buffer_q15[];                                                // copy the windowed input to the q15 buffer
+        arm_cfft_q15(ptrFFT_consts_q15, fft_buffer_q15, 0, 1);           // perform q15 FFT
+      //fft_buffer_q15[];                                                // copy result to the float buffer
+        #endif
+    }
+    else {
+    #if defined CMSIS_DSP_CFFT_FLOAT
+        arm_cfft_f32(ptrFFT_consts_f32, fft_buffer, 0, 1);               // perform an in-place complex FFT
+    #endif
+    }
+    TOGGLE_TEST_OUTPUT();                                                // stop/start measurement of processing time
     switch (iInputOutputType & FFT_OUTPUT_MASK) {
     case FFT_OUTPUT_FLOATS:
-        arm_cfft_f32(ptrFFT_consts, fft_buffer, 0, 1);                   // perform an in-place complex FFT
-        TOGGLE_TEST_OUTPUT();                                            // stop/start measurement of processing time
         if ((iInputOutputType & FFT_MAGNITUDE_RESULT) != 0) {            // if the magnitudes are required
             float *ptrFloatOutputBuffer = (float *)ptrOutputBuffer;
             iInputSamples /= 2;                                          // half the values are of interest (the second half is a mirrored version of the first half)

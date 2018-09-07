@@ -493,9 +493,12 @@ extern void fnInitCAN(CANTABLE *pars)
         POWER_UP_ATOMIC(3, FLEXCAN2);
         ptrCAN_control = (KINETIS_CAN_CONTROL *)CAN2_BASE_ADD;
         ptrMessageBuffer = MBUFF0_ADD_2;                                 // the first of 16 message buffers in the FlexCan module
-        #if defined CAN1_ON_PB
-        _CONFIG_PERIPHERAL(B, 6, PA_6_CAN2_TX);                          // CAN2_TX on PA14 (alt. function 2)
-        _CONFIG_PERIPHERAL(B, 7, PA_7_CAN2_RX);                          // CAN2_RX on PA15 (alt. function 2)
+        #if defined CAN2_ON_PC
+        _CONFIG_PERIPHERAL(C, 12, PC_12_CAN2_TX);                        // CAN2_TX on PC12 (alt. function 2)
+        _CONFIG_PERIPHERAL(C, 13, PC_13_CAN2_RX);                        // CAN2_RX on PC13 (alt. function 2)
+        #elif defined CAN2_ON_PB
+        _CONFIG_PERIPHERAL(B, 6, PB_6_CAN2_TX);                          // CAN2_TX on PB6 (alt. function 2)
+        _CONFIG_PERIPHERAL(B, 7, PB_7_CAN2_RX);                          // CAN2_RX on PB7 (alt. function 2)
         #else
         _CONFIG_PERIPHERAL(A, 14, PA_14_CAN2_TX);                        // CAN2_TX on PA14 (alt. function 4)
         _CONFIG_PERIPHERAL(A, 15, PA_15_CAN2_RX);                        // CAN2_RX on PA15 (alt. function 4)

@@ -838,10 +838,13 @@ Build_Luminary.bat</Command>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\..\..\Hardware\CMSIS_DSP\arm_bitreversal.c" />
     <ClCompile Include="..\..\..\Hardware\CMSIS_DSP\arm_cfft_f32.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\..\..\Hardware\CMSIS_DSP\arm_cfft_q15.c" />
+    <ClCompile Include="..\..\..\Hardware\CMSIS_DSP\arm_cfft_radix4_q15.c" />
     <ClCompile Include="..\..\..\Hardware\CMSIS_DSP\arm_cfft_radix8_f32.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">true</ExcludedFromBuild>
@@ -2813,6 +2816,7 @@ Build_Luminary.bat</Command>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</DeploymentContent>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\STM32F427_429_port.h" />
     <ClInclude Include="..\..\..\Hardware\STM32\STM32F7XX_port.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>

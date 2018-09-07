@@ -43,6 +43,8 @@
     #include "STM32L031_port.h"
 #elif defined _STM32F7XX
     #include "STM32F7XX_port.h"
+#elif defined _STM32F427 || defined _STM32F429
+    #include "STM32F427_429_port.h"
 #elif defined _STM32F2XX || defined _STM32F4XX
     #include "STM32F41X_port.h"
 #elif defined _STM32F107X || defined _STM32F105X

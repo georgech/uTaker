@@ -84,6 +84,8 @@
 
     #if defined _KINETIS                                                 // {20}
         #define TARGET_HW           "Bare-Minimum Boot - Kinetis"
+      //#define KINETIS_K12                                              // development board with K12
+          //#define DEV2                                                 // temporary development version
       //#define FRDM_KL25Z
       //#define FRDM_KL27Z
       //#define CAPUCCINO_KL27                                           // KL27 with 256k flash / 32k SRAM
@@ -313,6 +315,25 @@
             #define uFILE_START        (0)
             #define FILE_SYSTEM_SIZE   (SIZE_OF_FLASH)                   // 128k reserved for file system
             #define FILE_GRANULARITY   (1 * FLASH_GRANULARITY)           // each file a multiple of 4k
+        #elif defined KINETIS_K12
+            #define KINETIS_K10                                          // specify the sub-family
+            #define KINETIS_K12                                          // extra sub-family type precision
+
+            #define KINETIS_MAX_SPEED    50000000
+            #define RUN_FROM_DEFAULT_CLOCK                               // run from FLL default setting
+            #define FLL_FACTOR           1464                            // adjust FLL to give 47.972MHz
+            #define SYSTEM_CLOCK_DIVIDE  1                               // divide (1,2,3..16 possible) to get core clock of about 48MHz
+            #define BUS_CLOCK_DIVIDE     2                               // divide from core clock for bus and flash clock (1,2,3..8 possible) 24MHz
+            #define FLASH_CLOCK_DIVIDE   2
+
+            #define MASK_0N36M                                           // enable errata workarounds for this mask
+            #define PIN_COUNT            PIN_COUNT_48_PIN                // 48 pin LQFP package
+
+            #define SIZE_OF_RAM         (16 * 1024)                      // 16k SRAM
+            #define SIZE_OF_FLASH       (128 * 1024)                     // 128k program FLASH
+            #define FILE_GRANULARITY    (1 * FLASH_GRANULARITY)          // each file a multiple of 2k/4k
+            #define uFILE_START         0x14000                          // FLASH location at 80k start
+            #define FILE_SYSTEM_SIZE    (48 * 1024)                      // 48k reserved for file system
         #else
             // Initialise for 100MHz(120MHz) from 50MHz external clock
             //
@@ -355,7 +376,7 @@
             #define SIZE_OF_RAM        (64 * 1024)                       // suitable for K40, K60 and K70
 
             #define FILE_GRANULARITY   (1 * FLASH_GRANULARITY)           // each file a multiple of 2k/4k
-            #if defined DEV3
+            #if defined KINETIS_K60 && defined DEV3
                 #define uFILE_START        (250 * 1024)                  // FLASH location at 250k start
                 #define FILE_SYSTEM_SIZE   ((124 - 4) * 1024)            // 122k reserved for file system - maximum upload size (after 4k boot)
             #else

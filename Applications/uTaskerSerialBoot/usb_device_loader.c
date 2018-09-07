@@ -3184,7 +3184,7 @@ static int _fnWriteSector(unsigned char ucDisk, unsigned char *ptrBuffer, unsign
             iSoftwareState[ucDisk] = SW_PROGRAMMING;
         }
     #if defined READ_PASSWORD                                            // {2}
-        else {                                                           // when SW is already present monitor upload of a password file to unlock software uploade
+        else {                                                           // when SW is already present monitor upload of a password file to unlock software upload
         #if defined MAC_OS_X_WORKAROUND
             if ((ucAcceptUploads[ucDisk] != 0) && (ulNewWriteBlock[ucDisk] != 0)) {
                 int iContentType = fnCorrolateData(ucDisk, ptrBuffer, ulSectorNumber);

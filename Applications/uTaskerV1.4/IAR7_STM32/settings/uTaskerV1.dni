@@ -1,5 +1,5 @@
 [DebugChecksum]
-Checksum=-245403968
+Checksum=-2115962742
 [DisAssemblyWindow]
 NumStates=_ 1
 State 1=_ 1
@@ -72,7 +72,7 @@ LeaveTargetRunning=_ 0
 stlinkserialNo=69CAB789
 stlinkfoundProbes=
 [StLinkDriver]
-stlinkserialNo=87025431
+stlinkserialNo=67052653
 stlinkfoundProbes=
 CStepIntDis=_ 0
 LeaveTargetRunning=_ 0
@@ -125,12 +125,6 @@ ShowTimeLog=1
 SumEnabled=0
 ShowTimeSum=1
 SumSortOrder=0
-[DriverProfiling]
-Enabled=0
-Mode=3
-Graph=0
-Symbiont=0
-Exclusions=
 [Log file]
 LoggingEnabled=_ 0
 LogFile=_ ""
@@ -138,6 +132,12 @@ Category=_ 0
 [TermIOLog]
 LoggingEnabled=_ 0
 LogFile=_ ""
+[DriverProfiling]
+Enabled=0
+Mode=3
+Graph=0
+Symbiont=0
+Exclusions=
 [CallStackLog]
 Enabled=0
 [CallStackStripe]
@@ -149,7 +149,10 @@ Bp0=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\..\..\Hardware\STM32\STM32.c}.376.5" 0 0 1 "
 Bp1=_ 0 "EMUL_CODE" "0x0800C6DC" 0 0 1 "" 0 "" 0
 Bp2=_ 0 "EMUL_CODE" "0x0800073E" 0 0 1 "" 0 "" 0
 Bp3=_ 0 "EMUL_CODE" "0x0800E5A4" 0 0 1 "" 0 "" 0
-Count=4
+Bp4=_ 0 "EMUL_CODE" "0x0800E67C" 0 0 1 "" 0 "" 0
+Bp5=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\..\..\uTasker\Tty_drv.c}.669.13" 0 0 1 "" 0 "" 0
+Bp6=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\..\..\Hardware\STM32\stm32_UART.h}.156.5" 0 0 1 "" 0 "" 0
+Count=7
 [Aliases]
 Count=0
 SuppressDialog=0

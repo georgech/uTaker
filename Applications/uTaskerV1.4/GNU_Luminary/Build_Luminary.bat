@@ -1,4 +1,5 @@
-SET PATH=%PATH%;D:\Freescale\KDS_v3\Toolchain\bin
+rem SET PATH=%PATH%;D:\Freescale\KDS_v3\Toolchain\bin
+SET PATH=%PATH%;D:\Freescale\MCUXpressoIDE_10.1.1_606\ide\tools\bin
 SET PATH=%PATH%;../../../Tools
 make -f make_uTaskerV1.4_GNU_Luminary all
 uTaskerCombine "../../uTaskerBoot/GNU_Luminary/uTaskerBoot.bin" uTaskerV1.4_BM.bin 0x1000 uTaskerBM.bin uTaskerBM.hex

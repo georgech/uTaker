@@ -1191,6 +1191,9 @@ extern int fnFFT(void *ptrInputBuffer, void *ptrOutputBuffer, int iInputSamples,
     #define FFT_OUTPUT_FLOATS              0x060
     #define FFT_COMPLEX_RESULT             0x000
     #define FFT_MAGNITUDE_RESULT           0x100
+    #define FFT_CALCULATION_FLOAT          0x000
+    #define FFT_CALCULATION_Q15            0x200
+    #define FFT_CALCULATION_Q31            0x400
 #if defined _WINDOWS
 extern void fnInjectSine(int instance, int iType, void *ptrData, unsigned short usLength);
     #define INJECT_SINE_BYTES_UNSIGNED      0

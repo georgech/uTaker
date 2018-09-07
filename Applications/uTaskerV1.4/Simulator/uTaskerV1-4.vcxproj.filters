@@ -542,6 +542,15 @@
     <ClCompile Include="..\..\..\uTasker\SPI_drv.c">
       <Filter>uTasker</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\Hardware\CMSIS_DSP\arm_cfft_q15.c">
+      <Filter>Hardware\CMSIS_DSP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Hardware\CMSIS_DSP\arm_cfft_radix4_q15.c">
+      <Filter>Hardware\CMSIS_DSP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Hardware\CMSIS_DSP\arm_bitreversal.c">
+      <Filter>Hardware\CMSIS_DSP</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\ADC_Timers.h">
@@ -1392,6 +1401,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_SPI.h">
       <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\STM32F427_429_port.h">
+      <Filter>WinSim\SIMstm32</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

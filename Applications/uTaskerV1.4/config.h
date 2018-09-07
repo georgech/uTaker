@@ -211,7 +211,7 @@
     // Nucleo 144 range
     //
     //#define NUCLEO_F401RE                                              // evaluation board with STM32F401RET6
-    //#define NUCLEO_F429ZI                                              // evaluation board with STM32F429ZIT6
+      #define NUCLEO_F429ZI                                              // evaluation board with STM32F429ZIT6
     //#define NUCLEO_L476RG                                              // evaluation board with STM32L476RGT6U
     //#define NUCLEO_L496RG                                              // evaluation board with STM32L496ZGT6U
 
@@ -219,7 +219,7 @@
     //#define ARDUINO_BLUE_PILL                                          // board with STM32F103C8T6
     //#define STM3210C_EVAL                                              // evaluation board with STM32F107VCT
     //#define STM32_P207                                                 // olimex prototyping board with STM32F207ZET6
-      #define STM32F746G_DISCO                                           // evaluation board with STM32F746NGH6
+    //#define STM32F746G_DISCO                                           // evaluation board with STM32F746NGH6
     //#define WISDOM_STM32F407                                           // evaluation board with STM32F407ZET6
     //#define STM3240G_EVAL                                              // evaluation board with STM32F407IGH6
     //#define ST_MB997A_DISCOVERY                                        // discovery board with STM32F407VGT6
@@ -2226,8 +2226,11 @@
 //
 #if defined USE_USB_AUDIO && defined AUDIO_FFT
   //#define CMSIS_DSP_CFFT                                               // enable CMSIS CFFT support
+    #define CMSIS_DSP_CFFT_FLOAT
 #else
-  //#define CMSIS_DSP_CFFT                                               // enable FFT support - details at http://www.utasker.com/docs/uTasker/uTasker_DSP.pdf
+    #define CMSIS_DSP_CFFT                                               // enable FFT support - details at http://www.utasker.com/docs/uTasker/uTasker_DSP.pdf
+    #define CMSIS_DSP_CFFT_FLOAT
+  //#define CMSIS_DSP_CFFT_Q15
       //#define CMSIS_DSP_FFT_16                                         // enable 16 point FFT
       //#define CMSIS_DSP_FFT_32                                         // enable 32 point FFT
       //#define CMSIS_DSP_FFT_64                                         // enable 64 point FFT
@@ -2235,8 +2238,9 @@
       //#define CMSIS_DSP_FFT_256                                        // enable 256 point FFT
       //#define CMSIS_DSP_FFT_512                                        // enable 512 point FFT
         #define CMSIS_DSP_FFT_1024                                       // enable 1024 point FFT
-      //#define CMSIS_DSP_FFT_2048                                       // enable 2048 point FFT
-      //#define CMSIS_DSP_FFT_4096                                       // enable 4096 point FFT
+        #define CMSIS_DSP_FFT_2048                                       // enable 2048 point FFT
+        #define CMSIS_DSP_FFT_4096                                       // enable 4096 point FFT
+        #define CMSIS_DSP_FFT_8092                                       // enable 8092 point FFT
 #endif
 
 #define USE_CMSIS_SIN_COS                                                // use CMSIS sin/cos function for fast single-precision floating point operation
