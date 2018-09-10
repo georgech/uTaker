@@ -305,17 +305,11 @@ static void fnReleaseGangedButtons(int iReference)
 {
     int i;
     for (i = 0; i < MUTUALLY_EXCLUSIVE_BUTTON_COUNT; i++) {
-        if ((iReference >= ucGangedButtons[i][0]) && (iReference <= ucGangedButtons[i][1])) { // the button has mutually exclusive partner button(s)
-            // Release all mutually exclusive buttons before applying the newly pressed one
-            //
-            int j = ucGangedButtons[i][0];
-            while (j <= ucGangedButtons[i][1]) {
-                if (iReference != j) {
-                    fnReleaseButton(j);
-                }
-                j++;
-            }
-            return;
+        if (iReference == ucGangedButtons[i][0]) {                       // the button has mutually exclusive partner button(s)
+            fnReleaseButton(ucGangedButtons[i][1]);                      // release mutually exclusive button
+        }
+        else if (iReference == ucGangedButtons[i][1]) {                  // the button has mutually exclusive partner button(s)
+            fnReleaseButton(ucGangedButtons[i][0]);                      // release mutually exclusive button
         }
     }
 }

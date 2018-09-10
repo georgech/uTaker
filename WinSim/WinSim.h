@@ -530,12 +530,15 @@ extern int fnPutSimDiskData(unsigned char *ptrBuffer, unsigned char ucLUN, unsig
 
 // I2C devices
 //
-unsigned char fnSimI2C_devices(unsigned char ucType, unsigned char ucData);
-    #define I2C_ADDRESS     0
-    #define I2C_TX_DATA     1
-    #define I2C_RX_DATA     2
-    #define I2C_RX_COMPLETE 3
-    #define I2C_TX_COMPLETE 4
+extern unsigned char fnSimI2C_devices(unsigned char ucType, unsigned char ucData);
+    #define I2C_ADDRESS         0x00
+    #define I2C_TX_DATA         0x01
+    #define I2C_RX_DATA         0x02
+    #define I2C_RX_COMPLETE     0x03
+    #define I2C_TX_COMPLETE     0x04
+    #define SPI_MODE_CS_ASSERT  0x80                                     // allow the interface to be shared with SPI devices
+    #define SPI_MODE_CS_NEGATE  0x40
+    #define SPI_MODE_DATA       0xc0
 
 extern void fnInitI2C_EEPROM(void);                                      // {39}
 extern unsigned char *fnGetI2CEEPROMStart(void);
@@ -549,6 +552,8 @@ extern void fnInitExtFlash(void);                                        // {40}
 extern unsigned char *fnGetExtFlashStart(void);
 extern unsigned long fnGetExtFlashSize(void);
 
+// SPI devices
+//
 extern void fnInitSPI_Flash(void);
 extern unsigned char fnSimM95xxx(int iSimType, unsigned char ucTxByte, unsigned long ulSSEL);
     #define M95XXX_READ     0

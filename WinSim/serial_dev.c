@@ -30,6 +30,7 @@
     28.12.2017 Added MAX6956                                              {12}
     20.06.2017 Added MAX6955                                              {13}
     03.09.2018 Added FM24W256                                             {14}
+    10.09.2018 Added MAX6957                                              {15}
 
 */                            
 
@@ -116,6 +117,26 @@ static const unsigned char ucMAX6956_ADD[MAX6956_CNT] = {
 #endif
 
 /**************************************************************************/
+/*               Maxim MAX6957 (SPI) port-expander/LED driver             */
+/**************************************************************************/
+#if defined MAX6957_CNT
+
+typedef struct stMAX6957
+{     
+    unsigned char  ucState;
+    unsigned char  ucRW;
+    unsigned char  ucCommand;
+    unsigned long  ulOutput;
+    unsigned long  ulLED;
+    unsigned long  ulPortOutput;
+    unsigned long  ulPortInput;
+    unsigned char  ucRegs[0x5f];
+} MAX6957;
+
+static MAX6957 simMAX6957[MAX6957_CNT] = {{0}};                               // {15}
+#endif
+
+/**************************************************************************/
 /*                  Maxim MAX6955 port-expander/LED driver                */
 /**************************************************************************/
 #if defined MAX6955_CNT && (MAX6955_CNT > 0)                             // {13}
@@ -199,7 +220,7 @@ static const unsigned char ucMAX6955_ADD[MAX6955_CNT] = {
 };
 #endif
 
-#if (defined MAX6955_CNT && (MAX6955_CNT > 0)) || (defined MAX6956_CNT && (MAX6956_CNT > 0))
+#if (defined MAX6955_CNT && (MAX6955_CNT > 0)) || (defined MAX6956_CNT && (MAX6956_CNT > 0)) || (defined MAX6957_CNT && (MAX6957_CNT > 0))
 // Get the data direction of port expander pins
 //
 extern unsigned long fnGetExtPortDirection(int iExtPortReference)
@@ -216,6 +237,13 @@ extern unsigned long fnGetExtPortDirection(int iExtPortReference)
         int iRef;
         iRef = (iExtPortReference - FIRST_MAX6956_EXTERNAL_PORT);
         return (simMAX6956[iRef].ulLED | simMAX6956[iRef].ulOutput);     // data direction is output as long as either GPIO out or LED drive
+    }
+    #endif
+    #if defined MAX6957_CNT && (MAX6957_CNT > 0)
+    if ((iExtPortReference >= FIRST_MAX6957_EXTERNAL_PORT) && (iExtPortReference < (FIRST_MAX6957_EXTERNAL_PORT + MAX6957_CNT))) {
+        int iRef;
+        iRef = (iExtPortReference - FIRST_MAX6957_EXTERNAL_PORT);
+        return (simMAX6957[iRef].ulLED | simMAX6957[iRef].ulOutput);     // data direction is output as long as either GPIO out or LED drive
     }
     #endif
     return 0;
@@ -237,6 +265,13 @@ extern unsigned long fnGetExtPortState(int iExtPortReference)
         int iRef;
         iRef = (iExtPortReference - FIRST_MAX6956_EXTERNAL_PORT);
         return (((~simMAX6956[iRef].ulPortOutput & simMAX6956[iRef].ulLED) | (simMAX6956[iRef].ulPortOutput & simMAX6956[iRef].ulOutput)) | (simMAX6956[iRef].ulPortInput & ~(simMAX6956[iRef].ulLED | simMAX6956[iRef].ulOutput)));
+    }
+    #endif
+    #if defined MAX6957_CNT && (MAX6957_CNT > 0)
+    if ((iExtPortReference >= FIRST_MAX6957_EXTERNAL_PORT) && (iExtPortReference < (FIRST_MAX6957_EXTERNAL_PORT + MAX6957_CNT))) {
+        int iRef;
+        iRef = (iExtPortReference - FIRST_MAX6957_EXTERNAL_PORT);
+        return (((~simMAX6957[iRef].ulPortOutput & simMAX6957[iRef].ulLED) | (simMAX6957[iRef].ulPortOutput & simMAX6957[iRef].ulOutput)) | (simMAX6957[iRef].ulPortInput & ~(simMAX6957[iRef].ulLED | simMAX6957[iRef].ulOutput)));
     }
     #endif
     return (0);
@@ -1744,7 +1779,7 @@ extern int fnCheckRTC(void)
     return 0;
 }
 
-unsigned char fnSimI2C_devices(unsigned char ucType, unsigned char ucData)
+extern unsigned char fnSimI2C_devices(unsigned char ucType, unsigned char ucData)
 {
     switch (ucType) {
     case I2C_ADDRESS:
@@ -2666,6 +2701,100 @@ unsigned char fnSimI2C_devices(unsigned char ucType, unsigned char ucData)
     case I2C_RX_COMPLETE:
     case I2C_TX_COMPLETE:
         fnResetOthers(0);
+        break;
+
+    case SPI_MODE_CS_ASSERT:                                             // assert chip select to defined device
+#if defined MAX6957_CNT && (MAX6957_CNT > 0)
+        simMAX6957[ucData].ucState = 1;
+#endif
+        break;
+    case SPI_MODE_CS_NEGATE:                                             // negate chip select to defined device
+#if defined MAX6957_CNT && (MAX6957_CNT > 0)
+        simMAX6957[ucData].ucState = 0;
+#endif
+        break;
+    case SPI_MODE_DATA:                                                  // write data to the defined device
+#if defined MAX6957_CNT && (MAX6957_CNT > 0)
+    {
+            int i = 0;
+            while (i < MAX6957_CNT) {
+                if (simMAX6957[i].ucState == 1) {                        // MAX6957 is being written to
+                    simMAX6957[i].ucCommand = (ucData & 0x7f);           // the command address
+                    simMAX6957[i].ucState++;
+                }
+                else if (simMAX6957[i].ucState > 1) {                    // data being written
+                    unsigned char *ptr = (unsigned char *)&simMAX6957[i].ucRegs;
+                    ptr += simMAX6957[i].ucCommand;
+                    switch (simMAX6957[i].ucCommand) {
+                    case 0x04:                                           // configuration
+                        *ptr = ucData;                                   // set the data
+                        break;
+                    case 0x02:                                           // global current
+                        *ptr = ucData;                                   // set the data
+                        break;
+                    case 0x09:                                           // port configuration P7,P6,P5,P4
+                    case 0x0a:                                           // port configuration P11,P10,P9,P8
+                    case 0x0b:                                           // port configuration P15,P14,P13,P12
+                    case 0x0c:                                           // port configuration P19,P18,P17,P16
+                    case 0x0d:                                           // port configuration P23,P22,P21,P20
+                    case 0x0e:                                           // port configuration P27,P26,P25,P24
+                    case 0x0f:                                           // port configuration P31,P30,P29,P28
+                        {
+                            int iPortRef = (simMAX6957[i].ucCommand - 8);
+                            int j;
+                            unsigned long ulBit = (0x00000001 << (iPortRef * 4));
+                            *ptr = ucData;                               // set the data
+                            for (j = 0; j < 4; j++) {                    // for 4 pins
+                                switch (ucData & 0x03) {
+                                case 0:                                  // LED segment driver (0 is high impedance, 1 is open drain current sink)
+                                    simMAX6957[i].ulLED |= ulBit;        // this bit is an LED
+                                    simMAX6957[i].ulOutput &= ~ulBit;    // not GPIO output
+                                    break;
+                                case 1:                                  // GPIO output
+                                    simMAX6957[i].ulOutput |= ulBit;     // this bit is a GPIO output
+                                    simMAX6957[i].ulLED &= ~ulBit;       // this bit is not an LED
+                                    break;
+                                case 2:                                  // GPIO input without pullup
+                                case 3:                                  // GPIO input with pullup
+                                    simMAX6957[i].ulOutput &= ~ulBit;    // not GPIO output
+                                    simMAX6957[i].ulLED &= ~ulBit;       // this bit is not an LED
+                                    break;
+                                }
+                                ulBit <<= 1;
+                                ucData >>= 2;
+                            }
+                        }
+                        break;
+                    case 0x4c:                                               // write ports 19,18,17,16,15,14,13,12
+                        simMAX6957[i].ulPortOutput = ((simMAX6957[i].ulPortOutput & ~0x000ff000) | (ucData << 12));
+                        break;
+                    case 0x4e:                                               // write ports 21,20,19,18,17,16,15,14
+                        simMAX6957[i].ulPortOutput = ((simMAX6957[i].ulPortOutput & ~0x003fc000) | (ucData << 14));
+                        break;
+                    case 0x54:                                               // write ports 27,26,25,24,23,22,21,20
+                        simMAX6957[i].ulPortOutput = ((simMAX6957[i].ulPortOutput & ~0x0ff00000) | (ucData << 20));
+                        break;
+                    case 0x56:                                               // write ports 29,28,27,26,25,24,23,22
+                        simMAX6957[i].ulPortOutput = ((simMAX6957[i].ulPortOutput & ~0x3fc00000) | (ucData << 22));
+                        break;
+                    case 0x57:                                               // write ports 30,29,28,27,26,25,24,23
+                        simMAX6957[i].ulPortOutput = ((simMAX6957[i].ulPortOutput & ~0x7f800000) | (ucData << 23));
+                        break;
+                    case 0x5c:                                               // write ports 31,30,29 and 28
+                        simMAX6957[i].ulPortOutput = ((simMAX6957[i].ulPortOutput & ~0xf0000000) | ((ucData & 0x0f) << 28));
+                        break;
+                    default:
+                        _EXCEPTION("To do");
+                        break;
+                    }
+                    if (simMAX6957[i].ucCommand < 0x7f) {                    // increment the command register after each write
+                        simMAX6957[i].ucCommand++;
+                    }
+                }
+                i++;
+            }
+        }
+#endif
         break;
     }
     return 0;
