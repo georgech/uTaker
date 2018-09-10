@@ -28,8 +28,10 @@ SPI_FLASH_DEP = ../../../Hardware/STM32/spi_flash_STM32_atmel.h \
 
 # Compiler flags (thumb mode - little endian)
 #
-#C_FLAGS = -mcpu=cortex-m3 -mlittle-endian -mthumb -Wall -Wstrict-prototypes -Wundef
-C_FLAGS = -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mlittle-endian -mthumb -Wall -Wstrict-prototypes -Wundef
+
+#C_FLAGS = -mcpu=cortex-m3 -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char  -ffunction-sections -fdata-sections -Wundef
+C_FLAGS = -mcpu=cortex-m4 -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char  -ffunction-sections -fdata-sections -Wundef
+#C_FLAGS = -mcpu=cortex-m7 -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wundef
 
 all: uTaskerBoot.elf
 
@@ -48,8 +50,7 @@ Build/STM32_boot.o: ../../../Hardware/STM32/STM32_boot.c $(DEPENDS) $(SPI_FLASH_
 # Create output file and show its size
 #
 uTaskerBoot.elf: $(OBJS) uTaskerSTM32.ld uTaskerSTM32_F4.ld
-	$(CC) $(C_FLAGS) -I../../uTaskerBoot -D _GNU -D _STM32 -g -Os -Wl,-Map=uTaskerBoot.map --no-gc-sections -nostartfiles -TuTaskerSTM32_F4.ld -o uTaskerBoot.elf $(OBJS)
-#	$(CC) $(C_FLAGS) -I../../uTaskerBoot -D _GNU -D _STM32 -g -Os -Wl,-Map=uTaskerBoot.map --no-gc-sections -nostartfiles -TuTaskerSTM32.ld -o uTaskerBoot.elf $(OBJS)
+	$(CC) $(C_FLAGS) -Os -g -TuTaskerSTM32_F4.ld -nostartfiles -Xlinker --gc-sections -Wl,-Map,"uTaskerBoot.map" -o "uTaskerBoot.elf" $(OBJS)
 	$(CC_OBJ) --only-section=.data --only-section=.init --only-section=.text --only-section=.rodata --only-section=.vectors --output-target=ihex uTaskerBoot.elf uTaskerBoot.hex
 	$(CC_OBJ) --only-section=.data --only-section=.init --only-section=.text --only-section=.rodata --only-section=.vectors --output-target=binary uTaskerBoot.elf uTaskerBoot.bin
 	$(CC_SIZE) uTaskerBoot.elf

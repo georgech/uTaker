@@ -1,0 +1,57 @@
+# Make file for uTaskerBoot build for LM3SXXXX
+# 30.10.2010 added GCC version after build
+#
+
+# All objects (Hardware, application, uTasker, stack)
+#
+OBJS = Build/uTaskerBootLoader.o Build/LM3SXXXX_boot.o
+
+
+#General dependencies
+#
+DEPENDS = ../config.h ../types.h ../../../uTasker/driver.h ../../../uTasker/uTasker.h \
+          ../../../Hardware/hardware.h ../../../Hardware/Luminary/LM3SXXXX.h
+
+# SPI FLASH dependencies
+#
+SPI_FLASH_DEP = ../../../Hardware/Luminary/spi_flash_lm3s_atmel.h \
+                ../../../Hardware/Luminary/spi_flash_lm3s_stmicro.h \
+				../../../Hardware/Luminary/spi_flash_lm3s_sst25.h
+
+
+# Compiler flags (thumb mode - little endian)
+#
+C_FLAGS = -mcpu=cortex-m3 -mlittle-endian -mthumb -Wall -Wstrict-prototypes
+
+CC      = arm-none-eabi-gcc
+CC_OBJ  = arm-none-eabi-objcopy
+CC_SIZE = arm-none-eabi-size
+
+
+all: uTasker_boot.elf
+
+# Application files
+#
+Build/uTaskerBootLoader.o: ../uTaskerBootLoader.c $(DEPENDS)
+		arm-none-eabi-gcc $(C_FLAGS) -I../../uTaskerBoot -D _GNU -D _LM3SXXXX -g -c -Os ../uTaskerBootLoader.c -o Build/uTaskerBootLoader.o
+
+
+
+# Hardware files
+#
+Build/LM3SXXXX_boot.o: ../../../Hardware/Luminary/LM3SXXXX_boot.c $(DEPENDS) $(SPI_FLASH_DEP)
+		arm-none-eabi-gcc $(C_FLAGS) -I../../uTaskerBoot -D _GNU -D _LM3SXXXX -g -c -Os ../../../Hardware/Luminary/LM3SXXXX_boot.c -o Build/LM3SXXXX_boot.o
+
+
+# Link
+# Create output file and show its size
+#
+uTasker_boot.elf: $(OBJS) uTaskerBootLM3SXXXX.ld
+	$(CC) $(C_FLAGS) -Os -g -TuTaskerBootLM3SXXXX.ld -nostartfiles -Xlinker --gc-sections -Wl,-Map,"uTaskerBoot.map" -o "uTaskerBoot.elf" $(OBJS)
+	$(CC_OBJ) --output-target=binary uTaskerBoot.elf uTaskerBoot.bin
+	$(CC_SIZE)   uTaskerBoot.elf
+	$(CC) -v
+
+# *** EOF ***
+    
+    

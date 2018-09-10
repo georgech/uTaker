@@ -218,8 +218,9 @@ Build_Kinetis.bat</Command>
       <OutputFile>.\uTasker___Win32_Win32_Debug_and_GNU_target/uTaskerBoot.bsc</OutputFile>
     </Bscmake>
     <PostBuildEvent>
-      <Command>cd ..\GNU_Kinetis
-Build_Kinetis.bat</Command>
+      <Command>cd ..\GNU_LM3SXXXX
+Build_LM3SXXXX_BOOT.bat
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32 plus GCC build|Win32'">
@@ -271,8 +272,8 @@ Build_Kinetis.bat</Command>
       <OutputFile>.\uTasker___Win32_Win32_Debug_and_GNU_target/uTaskerBoot.bsc</OutputFile>
     </Bscmake>
     <PostBuildEvent>
-      <Command>cd ..\GNU_Kinetis
-Build_Kinetis.bat</Command>
+      <Command>cd ..\GNU_STM32
+Build_STM32.bat</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -430,6 +431,8 @@ Build_Kinetis.bat</Command>
     <ClCompile Include="..\..\..\Hardware\Kinetis\kinetis_boot.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32 plus GCC build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_Luminary plus GCC build|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\..\Hardware\Kinetis\kinetis_ports.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32 plus GCC build|Win32'">true</ExcludedFromBuild>
@@ -577,46 +580,68 @@ Build_Kinetis.bat</Command>
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32 plus GCC build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_Luminary plus GCC build|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_FLASH.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32 plus GCC build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_Luminary plus GCC build|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_HIRC.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32 plus GCC build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_Luminary plus GCC build|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_KE_CLOCK.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32 plus GCC build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_Luminary plus GCC build|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_KL_CLOCK.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32 plus GCC build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_Luminary plus GCC build|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_KM_CLOCK.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32 plus GCC build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_Luminary plus GCC build|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_KV_CLOCK.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32 plus GCC build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_Luminary plus GCC build|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_KW_CLOCK.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32 plus GCC build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_Luminary plus GCC build|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_K_CLOCK.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32 plus GCC build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_Luminary plus GCC build|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_MCG_LITE.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32 plus GCC build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_Luminary plus GCC build|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_PORTS.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32 plus GCC build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_Luminary plus GCC build|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\simkinetis.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32 plus GCC build|Win32'">true</ExcludedFromBuild>
@@ -625,26 +650,38 @@ Build_Kinetis.bat</Command>
     <ClInclude Include="..\..\..\Hardware\Kinetis\spi_flash_kinetis_atmel.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32 plus GCC build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_Luminary plus GCC build|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\spi_flash_kinetis_MX25L.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32 plus GCC build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_Luminary plus GCC build|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\spi_flash_kinetis_s25fl1-k.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32 plus GCC build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_Luminary plus GCC build|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\spi_flash_kinetis_sst25.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32 plus GCC build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_Luminary plus GCC build|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\spi_flash_kinetis_stmicro.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32 plus GCC build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_Luminary plus GCC build|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\spi_flash_w25q.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32 plus GCC build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_Luminary plus GCC build|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Luminary\LM3S10X_port.h" />
     <ClInclude Include="..\..\..\Hardware\Luminary\LM3S1968_port.h" />
@@ -656,7 +693,10 @@ Build_Kinetis.bat</Command>
     <ClInclude Include="..\..\..\Hardware\Luminary\LM3S6965_port.h" />
     <ClInclude Include="..\..\..\Hardware\Luminary\LM3S8962_port.h" />
     <ClInclude Include="..\..\..\Hardware\Luminary\LM3S9B95_port.h" />
-    <ClInclude Include="..\..\..\Hardware\Luminary\LM3SXXXX.h" />
+    <ClInclude Include="..\..\..\Hardware\Luminary\LM3SXXXX.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32 plus GCC build|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Luminary\SimLM3SXXXX.h" />
     <ClInclude Include="..\..\..\Hardware\Luminary\spi_flash_lm3s_atmel.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32|Win32'">true</ExcludedFromBuild>
@@ -721,6 +761,8 @@ Build_Kinetis.bat</Command>
     <None Include="..\..\..\Hardware\Luminary\LM3SXXXX_asm.s">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_Luminary plus GCC build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_Luminary|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32 plus GCC build|Win32'">true</ExcludedFromBuild>
     </None>
     <None Include="..\..\..\Hardware\STM32\STM32_keil_asm.s">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Win32 Debug and GNU target|Win32'">true</ExcludedFromBuild>
@@ -730,6 +772,8 @@ Build_Kinetis.bat</Command>
     </None>
     <None Include="..\GNU_Kinetis\Build_Kinetis.bat" />
     <None Include="..\GNU_Kinetis\make_uTaskerBoot_GNU_Kinetis" />
+    <None Include="..\GNU_LM3SXXXX\Build_LM3SXXXX_BOOT.bat" />
+    <None Include="..\GNU_LM3SXXXX\make_uTaskerBoot_GNU_LM3SXXXX" />
     <None Include="..\GNU_STM32\Build_STM32.bat" />
     <None Include="..\GNU_STM32\make_uTaskerBoot_GNU_STM32" />
     <None Include="cursor1.cur" />

@@ -21,7 +21,7 @@
 
 */
 
-#ifdef _LM3SXXXX
+#if defined _LM3SXXXX
 
 /* =================================================================== */
 /*                           include files                             */
@@ -127,7 +127,7 @@ static void fnCommandFlash(unsigned long ulCommand, unsigned long ptrAdd, unsign
     FMD = ulValue;                                                       // data value
     FMA = ptrAdd;                                                        // address in flash
     FMC = (WRKEY | ulCommand);                                           // command
-        #ifdef _WINDOWS
+        #if defined _WINDOWS
     switch (FMC & 0x0000000f) {
     case FLASH_WRITE:
         if ((~(*(unsigned long *)FMA)) & ulValue) {
@@ -145,12 +145,12 @@ static void fnCommandFlash(unsigned long ulCommand, unsigned long ptrAdd, unsign
     while (FMC & ulCommand) {}                                           // wait until the command has been executed (about 50us)
 }
 
-#ifdef _RUN_FLASH_FROM_RAM
+#if defined _RUN_FLASH_FROM_RAM
 // Initialise flash and routines in RAM ready for later use
 //
 static void fnInitFlash(void)
 {
-    #ifdef _RUN_FLASH_FROM_RAM
+    #if defined _RUN_FLASH_FROM_RAM
     #define PROG_WORD_SIZE 100                                           // adequate space for the small program
     static unsigned short usProgSpace[PROG_WORD_SIZE];                   // make space for the routine on stack (this will have an even boundary)
     unsigned char *ptrThumb2 = (unsigned char *)fnCommandFlash;
@@ -170,7 +170,7 @@ static void fnInitFlash(void)
 }
 #endif
 
-#ifdef SPI_SW_UPLOAD                                                     // {1}
+#if defined SPI_SW_UPLOAD                                                // {1}
     #if !defined SPI_FLASH_DEVICE_COUNT
         #define SPI_FLASH_DEVICE_COUNT 1
     #endif
@@ -183,7 +183,7 @@ static void fnInitFlash(void)
         #include "spi_flash_lm3s_sst25.h"
     #undef _SPI_FLASH_INTERFACE
 
-    #ifndef SPI_FLASH_SST25
+    #if !defined SPI_FLASH_SST25
 // Return the page number and optionally the address offset in the page
 //
 static unsigned short fnGetSPI_FLASH_location(unsigned char *ptrSector, unsigned short *usPageOffset)
@@ -303,7 +303,7 @@ extern void fnGetPars(unsigned char *ParLocation, unsigned char *ptrValue, MAX_F
         return;
     }
     #endif
-    #ifdef _WINDOWS
+    #if defined _WINDOWS
 	ParLocation += (unsigned long)ucFLASH;
     #endif
     uMemcpy(ptrValue, ParLocation, Size);                                // the LM3S uses a file system in FLASH with no access restrictions so we can simply copy the data
@@ -435,7 +435,7 @@ extern int fnWriteBytesFlash(unsigned char *ucDestination, unsigned char *ucData
     }
         #endif
 
-        #ifdef _WINDOWS
+        #if defined _WINDOWS
     ptrLong = (unsigned long *)((unsigned long)((unsigned long)ucDestination + (unsigned long)ucFLASH - FLASH_START_ADDRESS) & ~0x3);  // long address starting on
     iByteInLong = (ucDestination - FLASH_START_ADDRESS + (unsigned long)ucFLASH) - (unsigned char *)ptrLong;
         #else
@@ -444,7 +444,7 @@ extern int fnWriteBytesFlash(unsigned char *ucDestination, unsigned char *ucData
         #endif
     ulValue = *ptrLong;                                                  // present value at location
 
-    while (Length--) {
+    while (Length-- != 0) {
     #if defined (_LITTLE_ENDIAN) || defined (_WINDOWS)
         ulValue &= ~(0xff << (iByteInLong*8));                           // clear space for new byte
         ulValue |= (*ucData++ << (iByteInLong*8));                       // insert new byte
@@ -453,13 +453,13 @@ extern int fnWriteBytesFlash(unsigned char *ucDestination, unsigned char *ucData
         ulValue |= (*ucData++ << ((3 - iByteInLong)*8));                 // insert new byte
     #endif
         if (iByteInLong == 3) {                                          // can we write a long?
-        #ifdef _RUN_FLASH_FROM_RAM
+    #if defined _RUN_FLASH_FROM_RAM
             uDisable_Interrupt();                                        // protect call from interrupts
-            _fnRAM_code(FLASH_WRITE, (CAST_POINTER_ARITHMETIC)ptrLong++, ulValue); // program the long word
+                _fnRAM_code(FLASH_WRITE, (CAST_POINTER_ARITHMETIC)ptrLong++, ulValue); // program the long word
             uEnable_Interrupt();                                         // re-enable interrupts
-        #else
-            fnCommandFlash(FLASH_WRITE, (CAST_POINTER_ARITHMETIC)ptrLong++, ulValue);// program the long word
-        #endif
+    #else
+            fnCommandFlash(FLASH_WRITE, (CAST_POINTER_ARITHMETIC)ptrLong++, ulValue); // program the long word
+    #endif
             if (Length == 0) {
                 return 0;                                                // completed
             }
@@ -472,7 +472,7 @@ extern int fnWriteBytesFlash(unsigned char *ucDestination, unsigned char *ucData
     }
     #if defined _RUN_FLASH_FROM_RAM
     uDisable_Interrupt();                                                // protect call from interrupts
-    _fnRAM_code(FLASH_WRITE, (CAST_POINTER_ARITHMETIC)ptrLong, ulValue); // program the long word
+        _fnRAM_code(FLASH_WRITE, (CAST_POINTER_ARITHMETIC)ptrLong, ulValue); // program the long word
     uEnable_Interrupt();                                                 // re-enable interrupts
     #else
     fnCommandFlash(FLASH_WRITE, (CAST_POINTER_ARITHMETIC)ptrLong, ulValue); // program the long word
@@ -490,7 +490,7 @@ extern int fnEraseFlashSector(unsigned char *ptrSector, MAX_FILE_LENGTH Length)
     unsigned long ulPage = ((CAST_POINTER_ARITHMETIC)ptrSector & ~(FLASH_GRANULARITY-1)); // ensure page boundary
     ulPage -= FLASH_START_ADDRESS;
 #endif
-#ifdef PROTECTED_FILE
+#if defined PROTECTED_FILE
     int iUnprotected = 0;                                                // device presently protected
 #endif
     do {
@@ -597,9 +597,9 @@ extern int fnEraseFlashSector(unsigned char *ptrSector, MAX_FILE_LENGTH Length)
         }
         #endif
 
-        #ifdef _RUN_FLASH_FROM_RAM
+        #if defined _RUN_FLASH_FROM_RAM
         uDisable_Interrupt();                                             // protect the call from interrupts
-        _fnRAM_code(FLASH_ERASE, ulPage, 0);                              // command page erase
+            _fnRAM_code(FLASH_ERASE, ulPage, 0);                          // command page erase
         uEnable_Interrupt();                                              // enable interrupts again
         #else
         fnCommandFlash(FLASH_ERASE, ulPage, 0);                           // command page erase
@@ -613,7 +613,7 @@ extern int fnEraseFlashSector(unsigned char *ptrSector, MAX_FILE_LENGTH Length)
     #endif                                                               // #endif not SPI_FILE_SYSTEM
     } while (Length);
 
-#ifdef PROTECTED_FILE
+#if defined PROTECTED_FILE
     if (iUnprotected != 0) {                                             // protect device again on exit
     }
 #endif
@@ -692,8 +692,8 @@ extern void LM3SXXXX_LowLevelInit(void)
     RCC &= ~(PWRDN);                                                     // clear PLL power down bit
     RCC |= USESYSDIV;                                                    // enable system divide
 
-    while (!(RIS & PLLLRIS)) {                                           // wait for PLL to lock
-#ifdef _WINDOWS
+    while ((RIS & PLLLRIS) == 0) {                                       // wait for PLL to lock
+#if defined _WINDOWS
         RIS |= PLLLRIS;
 #endif
     }
@@ -704,8 +704,8 @@ extern void LM3SXXXX_LowLevelInit(void)
 #elif defined (_GNU)
     __init_gnu_data();
 #endif
-#ifndef _WINDOWS
-    #ifdef _RUN_FLASH_FROM_RAM
+#if !defined _WINDOWS
+    #if defined _RUN_FLASH_FROM_RAM
     fnInitFlash();
     #endif
     uTaskerBoot();
@@ -819,11 +819,11 @@ static void fnDummyTick(void)
 //
 INITHW void fnInitHW(void)                                               // perform hardware initialisation
 {
-#ifdef GLOBAL_HARDWARE_TIMER
+#if defined GLOBAL_HARDWARE_TIMER
   static __interrupt void hwtimer_interrupt(void);
   volatile unsigned int dummy;
 #endif
-#ifdef _WINDOWS
+#if defined _WINDOWS
     unsigned long ulPortPullups[] = {
         0xffffffff,                                                      // set the port states out of reset in the project file app_hw_lm3sxxxx.h
         0xffffffff,

@@ -2550,7 +2550,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #endif
     #if defined KINETIS_KL || defined KINETIS_KV || defined KINETIS_KE15
         #if defined ROM_BOOTLOADER
-            #if !defined FRDM_KL28Z && !defined KINETIS_KE15 && !defined defined KINETIS_KV50
+            #if !defined FRDM_KL28Z && !defined KINETIS_KE15 && !defined KINETIS_KV50
                 #define BOOTLOADER_ERRATA
             #endif
             #if defined TWR_KL43Z48M || defined FRDM_KL43Z || defined FRDM_KL03Z || defined FRDM_KL27Z || defined FRDM_KL28Z || defined FRDM_KL82Z || defined TWR_KL82Z72M || defined CAPUCCINO_KL27 || defined KINETIS_KE15 || defined KINETIS_KE15 || defined KL33Z64

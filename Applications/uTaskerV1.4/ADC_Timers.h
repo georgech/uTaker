@@ -60,6 +60,7 @@
           //#define VOICE_RECORDER                                       // {15} needs TEST_AD_DA and mass-storage and saves sampled input to SD card
           //#define HANDLE_PDB_INTERRUPT                                 // when the ADC is triggered by PDB handle also a PDB interrupt
           //#define FFT_SAMPLED_INPUT                                    // perform half-buffer interrupt and analyse the data with FFT (requires CMSIS_DSP_CFFT and CMSIS_DSP_FFT_4096)
+                #define FFT_FLOATING_POINT                               // perform floating point FFT with result in a floating point array, else q15
       //#define INTERNAL_TEMP                                            // {2} read also internal temperature (Luminary Micro)
 
         #if defined TEST_ADC && (defined _HW_SAM7X || defined _HW_AVR32) // SAM7X and AVR32 specific tests
@@ -221,13 +222,19 @@
     #elif defined TEST_AD_DA                                             // {14}
         #if defined KINETIS_KL
             #define AD_DA_BUFFER_LENGTH    (256)                         // buffer for 31.25ms at 8k bytes/s
+        #elif defined FFT_SAMPLED_INPUT
+            #define AD_DA_BUFFER_LENGTH    (4 * 1024)                    // buffer for 5ms at 400k bytes/s
+          //#define AD_DA_BUFFER_LENGTH    (8 * 1024)                    // buffer for 10.1ms at 400k bytes/s
+          //#define AD_DA_BUFFER_LENGTH    (16 * 1024)                   // buffer for 20.23ms at 400k bytes/s
         #else
             #define AD_DA_BUFFER_LENGTH    (8 * 1024)                    // buffer for 1s at 8k bytes/s
         #endif
         static signed short sADC_buffer[AD_DA_BUFFER_LENGTH] = {0};      // 16 bit samples
+        #if defined FFT_SAMPLED_INPUT
         static float windowing_buffer[AD_DA_BUFFER_LENGTH/2] = {0};      // windowing coefficients
         static float window_conversionFactor = 1.0;                      // scaling factor due to windowing
         static float fft_magnitude_buffer[AD_DA_BUFFER_LENGTH/4];        // fft frequency amplitude output
+        #endif
     #elif defined TEST_AD_DA && (defined KINETIS_KL || defined KINETIS_KE)
         static signed short *ptrADC_buffer = 0;                          // pointer to aligned buffer - 16 bit samples 
     #endif
@@ -359,11 +366,6 @@
                 }
         #if defined TEST_AD_DA                                           // {14}
                 else if ((ADC_TRIGGER_1 == ucInputMessage[MSG_INTERRUPT_EVENT]) || (ADC_TRIGGER_2 == ucInputMessage[MSG_INTERRUPT_EVENT])) {
-            #if !((defined VOICE_RECORDER && defined SDCARD_SUPPORT) || defined KINETIS_KE) // {15}
-                #if !defined FFT_SAMPLED_INPUT
-                    int i;
-                #endif
-            #endif
             #if defined KINETIS_KE
                     break;
             #else
@@ -377,18 +379,25 @@
                 #if defined VOICE_RECORDER && defined SDCARD_SUPPORT     // {15}
                     fnSaveWaveToDisk(ptrSample, (unsigned short)(AD_DA_BUFFER_LENGTH)); // if there is a disk ready, save the data to a file
                 #elif defined FFT_SAMPLED_INPUT                          // preform an FFT analysis of the samples in the buffer
-                    fnFFT((void *)ptrSample, (void *)fft_magnitude_buffer, (AD_DA_BUFFER_LENGTH/2), 0, ((AD_DA_BUFFER_LENGTH/2) * sizeof(signed short)), windowing_buffer, window_conversionFactor, (FFT_INPUT_HALF_WORDS_SIGNED | FFT_OUTPUT_FLOATS | FFT_MAGNITUDE_RESULT)); // perform complex fast-fourier transform (the result is in the input buffer)
-                #elif defined KWIKSTIK                                   // remove input's DC bias, amplify the signal and then add the bias again             
-                    for (i = 0; i < (AD_DA_BUFFER_LENGTH/2); i++) {      // for each sample in the buffer half
-                        *ptrSample -= 0x0800;                            // remove DC bias
-                        if (*ptrSample > (2047/16)) {                    // limit positive input value if needed (positive saturation)
-                            *ptrSample = (2047/16);                      // maximum positive input value
+                    #if defined FFT_FLOATING_POINT
+                    fnFFT((void *)ptrSample, (void *)fft_magnitude_buffer, (AD_DA_BUFFER_LENGTH/2), 0, ((AD_DA_BUFFER_LENGTH/2) * sizeof(signed short)), windowing_buffer, window_conversionFactor, (FFT_INPUT_HALF_WORDS_SIGNED | FFT_CALCULATION_FLOAT | FFT_OUTPUT_FLOATS | FFT_MAGNITUDE_RESULT)); // perform complex fast-fourier transform (the result is in the input buffer)
+                    #else
+                    fnFFT((void *)ptrSample, (void *)fft_magnitude_buffer, (AD_DA_BUFFER_LENGTH/2), 0, ((AD_DA_BUFFER_LENGTH/2) * sizeof(signed short)), windowing_buffer, window_conversionFactor, (FFT_INPUT_HALF_WORDS_SIGNED | FFT_CALCULATION_Q15 | FFT_OUTPUT_FLOATS | FFT_MAGNITUDE_RESULT)); // perform complex fast-fourier transform (the result is in the input buffer)
+                    #endif
+                #elif defined KWIKSTIK                                   // remove input's DC bias, amplify the signal and then add the bias again
+                    {
+                        int i;
+                        for (i = 0; i < (AD_DA_BUFFER_LENGTH/2); i++) {  // for each sample in the buffer half
+                            *ptrSample -= 0x0800;                        // remove DC bias
+                            if (*ptrSample > (2047/16)) {                // limit positive input value if needed (positive saturation)
+                                *ptrSample = (2047/16);                  // maximum positive input value
+                            }
+                            else if (*ptrSample < (-2048/16)) {          // limit negative input value if needed (negative saturation)
+                                *ptrSample = (-2048/16);                 // maximum negative input value
+                            }
+                            *ptrSample *= 16;                            // amplify the AC value
+                            *ptrSample++ += 0x0800;                      // add the DC bias again
                         }
-                        else if (*ptrSample < (-2048/16)) {              // limit negative input value if needed (negative saturation)
-                            *ptrSample = (-2048/16);                     // maximum negative input value
-                        }
-                        *ptrSample *= 16;                                // amplify the AC value
-                        *ptrSample++ += 0x0800;                          // add the DC bias again
                     }
                 #endif
             #endif
@@ -922,7 +931,7 @@ static void fnConfigureADC(void)
     adc_setup.int_adc_bit = ADC_DM1_SINGLE;                              // potentiometer on K60/K70 tower boards
                 #endif
                 #if defined FFT_SAMPLED_INPUT
-    adc_setup.dma_int_handler = half_buffer_interrupt;                    // iAD_DA_BUFFER_LENGTH/4nterrupt called when the buffer is half full
+    adc_setup.dma_int_handler = half_buffer_interrupt;                    // interrupt called when the buffer is half full
     window_conversionFactor = fnGenerateWindowFloat(windowing_buffer, (AD_DA_BUFFER_LENGTH/2), BLACKMANN_HARRIS_WINDOW); // calculate a window for use by the FFT
                 #endif
     adc_setup.int_handler = 0;                                           // no ADC conversion interrupt
@@ -952,7 +961,7 @@ static void fnConfigureADC(void)
                     #endif
                 #else
                     #if defined FFT_SAMPLED_INPUT
-    adc_setup.int_adc_mode = (ulCalibrate | ADC_HALF_BUFFER_DMA | ADC_SELECT_INPUTS_A | ADC_CLOCK_BUS_DIV_2 | ADC_CLOCK_DIVIDE_1/* | ADC_SAMPLE_ACTIVATE_LONG*/ | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_ENDED_INPUT | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE | ADC_HW_TRIGGERED); // hardware triggering example (DMA to buffer with interrupt on half-buffer completion) - requires PDB set up afterwards
+    adc_setup.int_adc_mode = (ulCalibrate | ADC_HALF_BUFFER_DMA | ADC_SELECT_INPUTS_A | ADC_CLOCK_BUS_DIV_2 | ADC_CLOCK_DIVIDE_2/* | ADC_SAMPLE_ACTIVATE_LONG*/ | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_ENDED_INPUT | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE | ADC_HW_TRIGGERED); // hardware triggering example (DMA to buffer with interrupt on half-buffer completion) - requires PDB set up afterwards
                     #else
     adc_setup.int_adc_mode = (ulCalibrate | /*ADC_LOOP_MODE |*/ ADC_HALF_BUFFER_DMA | ADC_SELECT_INPUTS_A | ADC_CLOCK_BUS_DIV_2 | ADC_CLOCK_DIVIDE_8 | ADC_SAMPLE_ACTIVATE_LONG | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_ENDED_INPUT | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE | ADC_HW_TRIGGERED); // hardware triggering example (DMA to buffer with interrupt on half-buffer completion) - requires PDB set up afterwards
                     #endif
@@ -1041,7 +1050,7 @@ static void fnConfigureADC(void)
         dac_setup.dac_mode |= DAC_FULL_BUFFER_DMA_AUTO_REPEAT;           // automated DMA restart (using interrupt) when not using modulo repetitions
         #else
         dac_setup.ucDmaChannel = 7;                                      // use DMA channel 7
-        dac_setup.usDmaTriggerSource = DMAMUX0_CHCFG_SOURCE_PDB;
+        dac_setup.usDmaTriggerSource = DMAMUX0_CHCFG_SOURCE_PDB0;
         dac_setup.ptrDAC_Buffer = (unsigned short *)sADC_buffer;         // DAC transmit buffer to be used (use the ADC buffer to create a digital delay line)
         dac_setup.ulDAC_buffer_length = sizeof(sADC_buffer);             // physical length of the buffer
         #endif

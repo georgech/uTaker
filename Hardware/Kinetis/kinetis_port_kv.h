@@ -13,7 +13,7 @@
     ---------------------------------------------------------------------
     Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
-    Supports KV10, KV31 and KV58 (Ports A,B,C completed)
+    Supports KV10, KV31 and KV58
 
 */
 
@@ -1217,22 +1217,22 @@ static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][ALTERNATIVE_FUNCTIONS + 1] 
     },
     {
         // ALT 0           ALT 1    ALT2         ALT 3         ALT 4          ALT 5        ALT 6       ALT 7        ALT 8       ALT 9
-        {  "-",            "PTD0/LLWU_P12","SPI0_PCS0","UART2_RTS_b","FTM3_CH0","FB_ALE/FB_CS1_b/FB_TS_b","LPUART0_RTS_b","-","-","-"}, // PORT D
-        {  "ADC0_SE5b",    "PTD1",  "SPI0_SCK",  "UART2_CTS_b","FTM3_CH1",    "FB_CS0_b",  "LPUAR0_CTS_b","-",      "-",        "-" },
-        {  "-",            "PTD2/LLWU_P13","SPI0_SOUT","UART2_RX","FTM3_CH2", "FB_AD4",    "LPUART0_RX","I2C0_SCL", "-",        "-" },
-        {  "-",            "PTD3",  "SPI0_SIN",  "UART2_TX",  "FTM3_CH3",     "FB_AD3",    "LPUART0_TX","I2C0_SDA", "-",        "-" },
-        {  "-",            "PTD4/LLWU_P14","SPI0_PCS1","UART0_RTS_b","FTM0_CH4","FB_AD2",  "EWM_IN",   "SPI1_PCS0", "-",        "-" },
-        {  "ADC0_SE6b",    "PTD5",  "SPI0_PCS2", "UART0_CTS_b","FTM0_CH5",    "FB_AD1",    "EWM_OUT_b","SPI1_SCK",  "-",        "-" },
-        {  "ADC0_SE7b",    "PTD6/LLWU_P15","SPI0_PCS3","UART0_RX","FTM0_CH6", "FB_AD0",    "FTM0_FLT0","SPI1_SOUT", "-",        "-" },
-        {  "-",            "PTD7",  "-",         "UART0_TX",   "FTM0_CH7",    "-",         "FTM0_FLT1","SPI1_SIN",  "-",        "-" },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-",         "-",        "-" },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-",         "-",        "-" },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-",         "-",        "-" },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-",         "-",        "-" },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-",         "-",        "-" },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-",         "-",        "-" },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-",         "-",        "-" },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-",         "-",        "-" },
+        {  "-",            "PTD0/LLWU_P12","SPI0_PCS0","UART2_RTS_b","FTM3_CH0","FTM0_CH0","FLEXPWM0_A0","-",      "FB_ALE/FB_CS1_b/FB_TS_b","FLEXPWM1_A0"}, // PORT D
+        {  "HSADC1A_CH11", "PTD1",  "SPI0_SCK",  "UART2_CTS_b","FTM3_CH1",    "FTM0_CH1",  "FLEXPWM0_B0","-",      "FB_CS0_b",  "FLEXPWM1_B0" },
+        {  "-",            "PTD2/LLWU_P13","SPI0_SOUT","UART2_RX","FTM3_CH2", "FTM0_CH2",  "FLEXPWM0_A1","I2C0_SCL","FB_AD4",   "FLEXPWM1_A1" },
+        {  "-",            "PTD3",  "SPI0_SIN",  "UART2_TX",  "FTM3_CH3",     "FTM0_CH3",  "FLEXPWM0_B1","I2C0_SDA","FB_AD3",   "FLEXPWM1_B1" },
+        {  "-",            "PTD4/LLWU_P14","SPI0_PCS1","UART0_RTS_b","FTM0_CH4","FTM0_CH4","EWM_IN",   "SPI1_PCS0", "FB_AD2",   "-" },
+        {  "HSADC1A_CH8",  "PTD5",  "SPI0_PCS2", "UART0_CTS_b/UART0_COL_b","FTM0_CH5","FLEXPWM0_B2","EWM_OUT_b","SPI1_SCK","FB_AD1","-" },
+        {  "HSADC1A_CH9",  "PTD6/LLWU_P15","SPI0_PCS3","UART0_RX","FTM0_CH6", "FTM1_CH0",  "FTM0_FLT0","SPI1_SOUT", "FB_AD0",   "-" },
+        {  "-",            "PTD7",  "-",         "UART0_TX",   "FTM0_CH7",    "FTM1_CH1",  "FTM0_FLT1","SPI1_SIN",  "-",        "-" },
+        {  "-",            "PTD8/LLWU_P24","I2C1_SCL","UART5_RX","-",         "-",         "FLEXPWM0_A3","-",       "FB_A16",   "-" },
+        {  "-",            "PTD9",  "I2C1_SDA",  "UART5_TX",   "-",           "-",         "FLEXPWM0_B3","-",       "FB_A17",   "-" },
+        {  "-",            "PD10",  "-",         "UART5_RTS_b","-",           "-",         "FLEXPWM0_A2","-",       "FB_A18",   "-" },
+        {  "-",            "PD11/LLWU_P25","SPI2_PCS0","UART5_CTS_b","-",     "-",         "FLEXPWM0_B2","-",       "FB_A19",   "-" },
+        {  "-",            "PD12",  "SPI2_SCK",  "FTM3_FLT0",  "XB_IN5",      "XB_OUT5",   "FLEXPWM0_A1","-",       "FB_A20",   "-" },
+        {  "-",            "PD13",  "SPI2_SOUT", "-",          "XB_IN7",      "XB_OUT7",   "FLEXPWM0_B1","-",       "FB_A21",   "-" },
+        {  "-",            "PD14",  "SPI2_SIN",  "-",          "XB_IN11",     "XB_OUT11",  "FLEXPWM0_A0","-",       "FB_A22",   "-" },
+        {  "-",            "PD15",  "SPI2_PCS1", "-",          "-",           "-",         "FLEXPWM0_B0","-",       "FB_A23",   "-" },
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-",         "-",        "-" },
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-",         "-",        "-" },
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-",         "-",        "-" },
@@ -1252,37 +1252,38 @@ static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][ALTERNATIVE_FUNCTIONS + 1] 
     },
     {
         // ALT 0           ALT 1    ALT2         ALT 3         ALT 4          ALT 5        ALT 6       ALT 7        ALT 8       ALT 9
-        {  "ADC1_SE4a",    "PTE0/CLKOUT32k","SPI1_PCS1","UART1_TX","-",       "-",         "I2C1_SDA", "-",         "-",        "-" }, // PORT E
-        {  "ADC1_SE5a",    "PTE1/LLWU_P0","SPI1_SOUT","UART1_RX","-",         "-",         "I2C1_SCL", "SPI1_SIN",  "-",        "-" },
-        {  "ADC1_SE6a",    "PTE2/LLWU_P1","SPI1_SCK","UART1_CTS_B","-",       "-",         "-",        "-",         "-",        "-" },
-        {  "ADC1_SE7a",    "PTE3",  "SPI1_SIN",  "UART1_RTS_B","-",           "-",         "-",        "SPI1_SOUT", "-",        "-" },
-        {  "-",            "PTE4/LLWU_P2","SPI1_PSC0","LPUART0_TX","-",       "-",         "-",        "-",         "-",        "-" },
-        {  "-",            "PTE5",  "SPI1_PSC2","LPUART0_RX",  "-",           "-",         "FTM3_CH0", "-",         "-",        "-" },
-        {  "-",            "PTE6",  "SPI1_PSC3","LPUART0_CTS_b","-",          "-",         "FTM3_CH1", "-",         "-",        "-" },
+        {  "HSADC0B_CH16/HSADC1A_CH0","PTE0","SPI1_PCS1","UART1_TX","XB_OUT10","XB_IN11",  "I2C1_SDA", "-",         "TRACE_CLKOUT","-" }, // PORT E
+        {  "HSADC0B_CH17/HSADC1A_CH1","PTE1/LLWU_P0","SPI1_SOUT","UART1_RX","XB_OUT11","XB_IN7","I2C1_SCL","-",     "TRACE_D3", "-" },
+
+        {  "HSADC0B_CH10/HSADC1B_CH0","PTE2/LLWU_P1","SPI1_SCK","UART1_CTS_B","-","-",     "-",        "-",         "TRACE_D2", "-" },
+        {  "HSADC0A_CH11/HSADC1B_CH1","PTE3","SPI1_SIN","UART1_RTS_B","-",    "-",         "-",        "-",         "TRACE_D1", "-" },
+        {  "HSADC0A_CH4/ADC0_SE2/ADC0_DP2","PTE4/LLWU_P2","SPI1_PSC0","UART3_TX","-","-",  "-",        "-",         "TRACE_D0", "-" },
+        {  "HSADC1A_CH5/ADC0_SE10/ADC0_DM2","PTE5","SPI1_PSC2","UART3_RX","-","FLEXPWM1_A0","FTM3_CH0","-",         "-",        "-" },
+        {  "HSADC1B_CH7/ADC0_SE4a","PTE6/LLWU_P16","SPI1_PSC3","UART3_CTS_b","-","FLEXPWM1_B0","FTM3_CH1","-",      "-",        "-" },
+        {  "-",            "PTE7",  "-",         "UART3_RTS_b","-",           "FLEXPWM1_A1","FTM3_CH2","-",         "-",        "-" },
+        {  "-",            "PTE8",  "-",         "UART5_TX",   "-",           "FLEXPWM1_B1","FTM3_CH3","-",         "-",        "-" },
+        {  "-",            "PTE9/LLWU_P17","-",  "UART5_RX",   "-",           "FLEXPWM1_A2","FTM3_CH4","-",         "-",        "-" },
+        {  "-",            "PTE10/LLWU_P18","-", "UART5_CTS_b","-",           "FLEXPWM1_B2","FTM3_CH5","-",         "-",        "-" },
+        {  "HSADC1A_CH6/ADC0_SE3/ADC0_DP3","PTE11","-","UART5_RTS_b","-",     "FLEXPWM1_A3","FTM3_CH6","-",         "-",        "-" },
+        {  "HSADC1B_CH6/ADC0_SE11/ADC0_DM3","PTE12","-","-",   "-",           "-",         "FTM3_CH7", "-",         "-",        "-" },
+        {  "-",            "PTE13", "-",         "-",          "-",           "-",         "-",        "-",         "-",        "-" },
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-",         "-",        "-" },
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-",         "-",        "-" },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-",         "-",        "-" },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-",         "-",        "-" },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-",         "-",        "-" },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-",         "-",        "-" },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-",         "-",        "-" },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-",         "-",        "-" },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-",         "-",        "-" },
-        {  "ADC0_SE4a",    "PTE16", "SPI0_PCS0", "UART2_TX",   "FTM_CLKIN0",  "-",         "FTM0_FLT3","-",         "-",        "-" },
-        {  "ADC0_SE5a",    "PTE17", "SPI0_SCK",  "UART2_RX",   "FTM_CLKIN1",  "-",         "LPTMR0_ALT3","-",       "-",        "-" },
-        {  "ADC0_SE6a",    "PTE18", "SPI0_SOUT", "UART2_CTS_b","I2C0_SDA",    "-",         "-",        "-",         "-",        "-" },
-        {  "ADC0_SE7a",    "PTE19", "SPI0_SIN",  "UART2_RTS_b","I2C0_SCL",    "-",         "-",        "-",         "-",        "-" },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-",         "-",        "-" },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-",         "-",        "-" },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-",         "-",        "-" },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-",         "-",        "-" },
-        {  "ADC0_SE17",    "PTE24", "-",         "FTM0_CH0",   "-",           "I2C0_SCL",  "EWM_OUT_b","-",         "-",        "-" },
-        {  "ADC0_SE18",    "PTE25", "-",         "FTM0_CH1",   "-",           "I2C0_SDA",  "EWM_IN",   "-",         "-",        "-" },
-        {  "-",            "PTE26/CLKOUT32K","-","-",          "-",           "-",         "-",        "-",         "-",        "-" },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-",         "-",        "-" },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-",         "-",        "-" },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-",         "-",        "-" },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-",         "-",        "-" },
+        {  "HSADC0A_CH0/ADC0_SE1/ADC0_DP1","PTE16","SPI0_PCS0","UART2_TX","FTM_CLKIN0","-","FTM0_FLT3","-",         "-",        "-" },
+        {  "HSADC0A_CH1/ADC0_SE9/ADC0_DM1","PTE17/LLWU_P19","SPI0_SCK","UART2_RX","FTM_CLKIN1","-","LPTMR0_ALT3","-","-",       "-" },
+        {  "HSADC0B_CH0/ADC0_SE5a","PTE18/LLWU_P20","SPI0_SOUT","UART2_CTS_b","I2C0_SDA","-","-",      "-",         "-",        "-" },
+        {  "HSADC0B_CH1/ADC0_SE6a","PTE19","SPI0_SIN","UART2_RTS_b","I2C0_SCL","-",        "CMP3_OUT", "-",         "-",        "-" },
+        {  "HSADC0A_CH8/ADC0_SE5b", "PTE20","-", "FTM1_CH0",   "UART0_TX",    "FTM1_QD_PHA","-",       "-",         "-",        "-" },
+        {  "HSADC0A_CH9/HSADC1A_CH7","PTE21","XB_IN9","FTM1_CH1","UART0_RX",  "FTM1_QD_PHB","-",       "-",         "-",        "-" },
+        {  "-",            "PTE22", "-",         "FTM2_CH0",   "XB_IN2",      "FTM2_QD_PHA","-",       "-",         "-",        "-" },
+        {  "-",            "PTE23", "-",         "FTM2_CH1",   "XB_IN3",      "FTM2_QD_PHB","-",       "-",         "-",        "-" },
+        {  "HSADC0B_CH4/HSADC1B_CH4","PTE24","CAN1_TX","FTM0_CH0","XB_IN2",   "I2C0_SCL",  "EWM_OUT_b","XB_OUT4",   "UART4_TX", "-" },
+        {  "HSADC0B_CH5/HSADC1B_CH5","PTE25/LLWU_P21","CAN1_RX","FTM0_CH1","XB_IN3","I2C0_SDA","EWM_IN","XB_OUT5",  "UART4_RX", "-" },
+        {  "-",            "PTE26", "ENET_1588_CLKIN","FTM0_CH4","-",         "-",         "-",        "-",         "UART4_CTS_b","-" },
+        {  "-",            "PTE27", "CAN2_TX",   "FTM0?CH4",   "-",           "-",         "-",        "-",         "UART4_RTS_b","-" },
+        {  "-",            "PTE28", "CAN2_RX",   "-",          "-",           "-",         "-",        "-",         "-",        "-" },
+        {  "HSADC0A_CH4/CMP1_IN5/CMP0_IN5","PTE29","-","FTM0_CH2","-",        "FTM_CLKIN0","-",        "-",         "-",        "-" },
+        {  "DAC0_OUT/CMP1_IN3/HSADC0A_CH5","PTE30","-","FTM0_CH3","-",        "FTM_CLKIN1","-",        "-",         "-",        "-" },
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-",         "-",        "-" }
     }
 };

@@ -508,7 +508,7 @@ INITHW void fnInitHW(void)                                               // perf
     uMemset(ulFlashRow, 0xff, FLASH_ROW_SIZE);                           // flush the intermediate FLASH buffer
 #endif
     INIT_WATCHDOG_LED();                                                 // allow user configuration of a blink LED
-    INIT_WATCHDOG_DISABLE();                                             // initialise ready for checking of watchdog diabled
+    INIT_WATCHDOG_DISABLE();                                             // initialise ready for checking of watchdog disabled
     if (WATCHDOG_DISABLE() == 0) {
         RCGC0 |= CGC_WDT;                                                // enable clocks to the watchdog module
         SRCR0 &= ~CGC_WDT;                                               // ensure watchdog module is not in reset
@@ -518,19 +518,19 @@ INITHW void fnInitHW(void)                                               // perf
         WDTCTL = WD_RESEN;                                               // enable reset on second timeout
         WDTCTL = (WD_RESEN | WD_INTEN);                                  // enable watchdog and interrupt
         WDTICR = 0;                                                      // retrigger the watchdog, causing reload from load register
-#ifdef _WINDOWS
+#if defined _WINDOWS
         WDTVALUE = WDTLOAD;                                              // latch the reload value to the counter
 #endif
         WDTLOCK = 0;                                                     // lock against further uncontrolled accesses
     }
 
-#ifdef _WINDOWS
+#if defined _WINDOWS
     fnSimPorts();                                                        // ensure port states are recognised
 #endif
 
     fnUserHWInit();                                                      // allow the user to initialise hardware specific things
 
-#ifdef _WINDOWS
+#if defined _WINDOWS
     fnSimPorts();                                                        // ensure port states are recognised
 #endif
 
@@ -546,11 +546,11 @@ INITHW void fnInitHW(void)                                               // perf
     fnConfigSPIFileSystem(SPI_2MEG);                                     // configure SPI interface for SPI file system and 2M speed
     #endif
 #endif
-#ifdef FLASH_FILE_SYSTEM
+#if defined FLASH_FILE_SYSTEM
     fnInitFlash();
 #endif
 
-#ifdef GLOBAL_HARDWARE_TIMER                                             // initialise the timer for use with global hardware timers
+#if defined GLOBAL_HARDWARE_TIMER                                        // initialise the timer for use with global hardware timers
     PMC_PCER = TC2;                                                      // enable clocks to timer 2 in PMC
     TC_CCR_2 = (TIM_CLKDIS | TIM_SWTRG);                                 // disable timer clock and reset timer
 
@@ -581,7 +581,7 @@ extern void fnRetriggerWatchdog(void)
 //
 extern void uDisable_Interrupt(void)
 {
-#ifdef _WINDOWS
+#if defined _WINDOWS
     LM3Sxxxx.CORTEX_M3_REGS.ulPRIMASK = INTERRUPT_MASKED;                // mark that interrupts are masked
 #else
     __disable_interrupt();                                               // disable interrupts to core
@@ -593,14 +593,14 @@ extern void uDisable_Interrupt(void)
 //
 extern void uEnable_Interrupt(void)
 {
-#ifdef _WINDOWS
-    if (!iInterruptLevel) {
+#if defined _WINDOWS
+    if (iInterruptLevel == 0) {
         *(int *)0 = 0;                                                   // basic error - cause simulator exception
         // A routine is enabling interrupt although they are presently off. This may not be a serious error but it is unexpected so best check why...
     }
 #endif
-    if (!(--iInterruptLevel)) {                                          // only when no more interrupt nesting,
-#ifdef _WINDOWS
+    if ((--iInterruptLevel) == 0) {                                      // only when no more interrupt nesting,
+#if defined _WINDOWS
         LM3Sxxxx.CORTEX_M3_REGS.ulPRIMASK = 0;                           // mark that interrupts are not masked
 #else
         __enable_interrupt();                                            // enable processor interrupts
@@ -613,7 +613,7 @@ extern void uEnable_Interrupt(void)
 static __interrupt void _RealTimeInterrupt(void)
 {
     INT_CONT_STATE_REG = PENDSTCLR;                                      // reset interrupt
-#ifdef _WINDOWS
+#if defined _WINDOWS
     INT_CONT_STATE_REG &= ~(PENDSTSET | PENDSTCLR);
 #endif
     uDisable_Interrupt();                                                // ensure tick handler can not be interrupted
@@ -630,7 +630,7 @@ static __interrupt void _RealTimeInterrupt(void)
 extern void fnStartTick(void)
 {
     VECTOR_TABLE *ptrVect;
-#ifdef _WINDOWS
+#if defined _WINDOWS
     ptrVect = (VECTOR_TABLE *)((unsigned char *)((unsigned char *)&vector_ram + RESERVE_DMA_MEMORY));
 #else
     ptrVect = (VECTOR_TABLE *)(RAM_START_ADDRESS + RESERVE_DMA_MEMORY);
@@ -640,14 +640,14 @@ extern void fnStartTick(void)
     ptrVect->ptrSysTick = _RealTimeInterrupt;                            // enter interrupt handler
     SYSTEM_HANDLER_12_15_PRIORITY_REGISTER |= (SYSTICK_PRIORITY << 24);  // enter the SYSTICK priority
     SYSTICK_CSR = (SYSTICK_CORE_CLOCK | SYSTICK_ENABLE | SYSTICK_TICKINT); // enable timer and its interrupt
-#ifdef _WINDOWS
+#if defined _WINDOWS
     SYSTICK_RELOAD &= SYSTICK_COUNT_MASK;                                // mask any values which are out of range
     SYSTICK_CURRENT = SYSTICK_RELOAD;                                    // prime the reload count
 #endif
 }
 
 
-#ifdef ETH_INTERFACE
+#if defined ETH_INTERFACE
 /* =================================================================== */
 /*                          Ethernet Interface                         */
 /* =================================================================== */

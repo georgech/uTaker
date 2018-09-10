@@ -247,6 +247,8 @@
     <None Include="..\..\..\Hardware\Luminary\LM3SXXXX_asm.s">
       <Filter>Hardware\Luminary</Filter>
     </None>
+    <None Include="..\GNU_LM3SXXXX\make_uTaskerBoot_GNU_LM3SXXXX" />
+    <None Include="..\GNU_LM3SXXXX\Build_LM3SXXXX_BOOT.bat" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="uTasker.rc">
