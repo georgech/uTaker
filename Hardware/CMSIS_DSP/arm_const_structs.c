@@ -91,9 +91,9 @@ const arm_cfft_instance_f32 arm_cfft_sR_f32_len4096 = {
 	4096, twiddleCoef_4096, armBitRevIndexTable4096, ARMBITREVINDEXTABLE4096_TABLE_LENGTH
 };
 #endif
-#if defined CMSIS_DSP_FFT_8092                                           // {uTasker}
+#if defined CMSIS_DSP_FFT_8192                                           // {uTasker}
 const arm_cfft_instance_f32 arm_cfft_sR_f32_len8192 = {
-	8092, twiddleCoef_4096, armBitRevIndexTable4096, ARMBITREVINDEXTABLE4096_TABLE_LENGTH
+	8192, twiddleCoef_8192, armBitRevIndexTable8192, ARMBITREVINDEXTABLE8192_TABLE_LENGTH
 };
 #endif
 #endif

@@ -223,9 +223,9 @@
         #if defined KINETIS_KL
             #define AD_DA_BUFFER_LENGTH    (256)                         // buffer for 31.25ms at 8k bytes/s
         #elif defined FFT_SAMPLED_INPUT
-            #define AD_DA_BUFFER_LENGTH    (4 * 1024)                    // buffer for 5ms at 400k bytes/s
+          //#define AD_DA_BUFFER_LENGTH    (4 * 1024)                    // buffer for 5ms at 400k bytes/s
           //#define AD_DA_BUFFER_LENGTH    (8 * 1024)                    // buffer for 10.1ms at 400k bytes/s
-          //#define AD_DA_BUFFER_LENGTH    (16 * 1024)                   // buffer for 20.23ms at 400k bytes/s
+            #define AD_DA_BUFFER_LENGTH    (16 * 1024)                   // buffer for 20.23ms at 400k bytes/s
         #else
             #define AD_DA_BUFFER_LENGTH    (8 * 1024)                    // buffer for 1s at 8k bytes/s
         #endif
@@ -380,9 +380,9 @@
                     fnSaveWaveToDisk(ptrSample, (unsigned short)(AD_DA_BUFFER_LENGTH)); // if there is a disk ready, save the data to a file
                 #elif defined FFT_SAMPLED_INPUT                          // preform an FFT analysis of the samples in the buffer
                     #if defined FFT_FLOATING_POINT
-                    fnFFT((void *)ptrSample, (void *)fft_magnitude_buffer, (AD_DA_BUFFER_LENGTH/2), 0, ((AD_DA_BUFFER_LENGTH/2) * sizeof(signed short)), windowing_buffer, window_conversionFactor, (FFT_INPUT_HALF_WORDS_SIGNED | FFT_CALCULATION_FLOAT | FFT_OUTPUT_FLOATS | FFT_MAGNITUDE_RESULT)); // perform complex fast-fourier transform (the result is in the input buffer)
+                    fnFFT((void *)ptrSample, (void *)fft_magnitude_buffer, (AD_DA_BUFFER_LENGTH/2), 0, ((AD_DA_BUFFER_LENGTH/2) * sizeof(signed short)), windowing_buffer, window_conversionFactor, (FFT_INPUT_HALF_WORDS_UNSIGNED | FFT_CALCULATION_FLOAT | FFT_OUTPUT_FLOATS | FFT_MAGNITUDE_RESULT/* | FFT_RAM_COEFFICIENTS*/)); // perform complex fast-fourier transform (the result is in the input buffer)
                     #else
-                    fnFFT((void *)ptrSample, (void *)fft_magnitude_buffer, (AD_DA_BUFFER_LENGTH/2), 0, ((AD_DA_BUFFER_LENGTH/2) * sizeof(signed short)), windowing_buffer, window_conversionFactor, (FFT_INPUT_HALF_WORDS_SIGNED | FFT_CALCULATION_Q15 | FFT_OUTPUT_FLOATS | FFT_MAGNITUDE_RESULT)); // perform complex fast-fourier transform (the result is in the input buffer)
+                    fnFFT((void *)ptrSample, (void *)fft_magnitude_buffer, (AD_DA_BUFFER_LENGTH/2), 0, ((AD_DA_BUFFER_LENGTH/2) * sizeof(signed short)), windowing_buffer, window_conversionFactor, (FFT_INPUT_HALF_WORDS_UNSIGNED | FFT_CALCULATION_Q15 | FFT_OUTPUT_FLOATS | FFT_MAGNITUDE_RESULT)); // perform complex fast-fourier transform (the result is in the input buffer)
                     #endif
                 #elif defined KWIKSTIK                                   // remove input's DC bias, amplify the signal and then add the bias again
                     {

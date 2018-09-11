@@ -151,14 +151,14 @@
     //#define EMCRAFT_K61F150M                                           // K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - http://www.utasker.com/kinetis/EMCRAFT_K61F150M.html
     //#define K61FN1_50M                                                 // board with 150MHz K61 and 50MHz clock (HS USB and KSZ8863 ethernet switch)
 
-    //#define FRDM_K64F                                                  // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
+      #define FRDM_K64F                                                  // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
     //#define TWR_K64F120M                                               // tower board http://www.utasker.com/kinetis/TWR-K64F120M.html
     //#define HEXIWEAR_K64F                                              // hexiwear - wearable development kit for IoT (K64FN1M0VDC12 main processor) http://www.hexiwear.com/
     //#define TEENSY_3_5                                                 // USB development board with K64FX512 - http://www.utasker.com/kinetis/TEENSY_3.5.html
     //#define FreeLON                                                    // K64 based with integrated LON
     //#define TWR_K65F180M                                               // tower board http://www.utasker.com/kinetis/TWR-K65F180M.html
     //#define K66FX1M0                                                   // development board with K66FX1M0
-      #define FRDM_K66F                                                  // freedom board http://www.utasker.com/kinetis/FRDM-K66F.html
+    //#define FRDM_K66F                                                  // freedom board http://www.utasker.com/kinetis/FRDM-K66F.html
     //#define TEENSY_3_6                                                 // USB development board with K66FX1M0 - http://www.utasker.com/kinetis/TEENSY_3.6.html
 
     //#define TWR_K70F120M                                               // K processors Cortex M4 with graphical LCD, Ethernet, USB, encryption, tamper - tower board http://www.utasker.com/kinetis/TWR-K70F120M.html
@@ -1280,7 +1280,7 @@
 //
 //#define USE_MODBUS                                                     // activate MODBUS support in the project
 #if defined USE_MODBUS
-    //#define USE_MODBUS_SLAVE                                           // slave capability supported
+      #define USE_MODBUS_SLAVE                                           // slave capability supported
     //#define NO_SLAVE_MODBUS_READ_COILS                                 // disable specific slave public function support
     //#define NO_SLAVE_MODBUS_READ_DISCRETE_INPUTS
     //#define NO_SLAVE_MODBUS_READ_HOLDING_REGISTERS
@@ -2228,10 +2228,10 @@
   //#define CMSIS_DSP_CFFT                                               // enable CMSIS CFFT support
     #define CMSIS_DSP_CFFT_FLOAT
 #else
-    #define CMSIS_DSP_CFFT                                               // enable FFT support - details at http://www.utasker.com/docs/uTasker/uTasker_DSP.pdf
-    #define CMSIS_DSP_CFFT_FLOAT
-  //#define CMSIS_DSP_CFFT_Q15
-      //#define CMSIS_DSP_FFT_16                                         // enable 16 point FFT
+  //#define CMSIS_DSP_CFFT                                               // enable FFT support - details at http://www.utasker.com/docs/uTasker/uTasker_DSP.pdf
+        #define CMSIS_DSP_CFFT_FLOAT
+      //#define CMSIS_DSP_CFFT_Q15
+        #define CMSIS_DSP_FFT_16                                         // enable 16 point FFT
       //#define CMSIS_DSP_FFT_32                                         // enable 32 point FFT
       //#define CMSIS_DSP_FFT_64                                         // enable 64 point FFT
       //#define CMSIS_DSP_FFT_128                                        // enable 128 point FFT
@@ -2240,7 +2240,7 @@
         #define CMSIS_DSP_FFT_1024                                       // enable 1024 point FFT
         #define CMSIS_DSP_FFT_2048                                       // enable 2048 point FFT
         #define CMSIS_DSP_FFT_4096                                       // enable 4096 point FFT
-        #define CMSIS_DSP_FFT_8092                                       // enable 8092 point FFT
+        #define CMSIS_DSP_FFT_8192                                       // enable 8192 point FFT
 #endif
 
 #define USE_CMSIS_SIN_COS                                                // use CMSIS sin/cos function for fast single-precision floating point operation

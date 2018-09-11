@@ -224,14 +224,14 @@ static void arm_bitreversal_32(uint32_t *pSrc, const uint16_t bitRevLen, const u
         temp2 = pSrc[iSwap2 + 1];                                        // backup imaginary value at swap location
         pSrc[iSwap2] = pSrc[iSwap1];                                     // swap real 1 to  2
         pSrc[iSwap2 + 1] = pSrc[iSwap1 + 1];                             // swap imaginary 1 to 2
-        pSrc[iSwap1] = temp1;                                            // swap real 2 tp 1
+        pSrc[iSwap1] = temp1;                                            // swap real 2 t0 1
         pSrc[iSwap1 + 1] = temp2;                                        // swap imaginary 2 to 1
         iLength -= 2;
     }
 }
 #endif
 
-#if defined CMSIS_DSP_FFT_16 || defined CMSIS_DSP_FFT_128 || defined CMSIS_DSP_FFT_1024 // {uTasker}
+#if defined CMSIS_DSP_FFT_16 || defined CMSIS_DSP_FFT_128 || defined CMSIS_DSP_FFT_1024 || defined CMSIS_DSP_FFT_8192 // {uTasker}
 static void arm_cfft_radix8by2_f32( arm_cfft_instance_f32 * S, float32_t * p1) 
 {
     uint32_t    L  = S->fftLen;
@@ -633,7 +633,10 @@ void arm_cfft_f32(
 #if defined CMSIS_DSP_FFT_1024                                           // {uTasker}
     case 1024:
 #endif
-#if defined CMSIS_DSP_FFT_16 || defined CMSIS_DSP_FFT_128 || defined CMSIS_DSP_FFT_1024 // {uTasker}
+#if defined CMSIS_DSP_FFT_8192                                           // {uTasker}
+    case 8192:
+#endif
+#if defined CMSIS_DSP_FFT_16 || defined CMSIS_DSP_FFT_128 || defined CMSIS_DSP_FFT_1024 || defined CMSIS_DSP_FFT_8192 // {uTasker}
         arm_cfft_radix8by2_f32((arm_cfft_instance_f32 *)S, p1);
         break;
 #endif

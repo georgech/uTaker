@@ -20,6 +20,14 @@
 #if defined CMSIS_DSP_CFFT
     #include "../../Hardware/CMSIS_DSP/arm_const_structs.h"              // include defines required for the use of ARM CMSIS FFT
 
+static size_t reverse_bits(size_t x, int n) {
+    size_t result = 0;
+    for (int i = 0; i < n; i++, x >>= 1) {
+        result = (result << 1) | (x & 1);
+    }
+    return result;
+}
+
 extern float fnGenerateWindowFloat(float *ptrWindowBuffer, int iInputSamples, int iWindowType)
 {
     #define coeffa0 (double)0.35875                                      // Blackmann-Harris cooefficients for the calculation
@@ -29,6 +37,47 @@ extern float fnGenerateWindowFloat(float *ptrWindowBuffer, int iInputSamples, in
     int i;
     float window_conversionFactor = 0;                                   // scaling factor due to windowing
     #if defined _WINDOWS
+
+
+#define FFT_LENGTH 16                                                                      // Compute levels = floor(log2(n))
+    int levels = 0;
+    {
+        int temp = FFT_LENGTH;
+
+        while (temp > 1) {
+            levels++;
+            temp >>= 1;
+        }
+        if (1u << levels != FFT_LENGTH)
+            return 0;  // n is not a power of 2
+    }
+
+    {
+        int iLengthOfIt = 0;
+        int iError = 0;
+        unsigned short x[10000];
+        // Bit-reversed addressing permutation
+        for (i = 0; i < FFT_LENGTH; i++) {
+            int j = reverse_bits(i, levels);
+            if (j > i) {
+                x[iLengthOfIt] = (i * sizeof(float) * 2);
+                if (armBitRevIndexTable_fixed_4096[iLengthOfIt] != x[iLengthOfIt]) {
+                    iError++;
+                }
+                iLengthOfIt++;
+                x[iLengthOfIt] = (j * sizeof(float) * 2);
+                if (armBitRevIndexTable_fixed_4096[iLengthOfIt] != x[iLengthOfIt]) {
+                    iError++;
+                }
+                iLengthOfIt++;
+            }
+        }
+        iLengthOfIt = iLengthOfIt;
+    }
+
+
+
+
     if (iWindowType != BLACKMANN_HARRIS_WINDOW) {
         _EXCEPTION("Only Blackmann-Harris windows supported!!");
     }
@@ -42,8 +91,8 @@ extern float fnGenerateWindowFloat(float *ptrWindowBuffer, int iInputSamples, in
 }
 
 
-#if defined CMSIS_DSP_FFT_8092                                           // define the required dimension of the FFT input buffer based on the FFT size to be tested
-    #define MAX_FFT_BUFFER_LENGTH    (8092 * 2)
+#if defined CMSIS_DSP_FFT_8192                                           // define the required dimension of the FFT input buffer based on the FFT size to be tested
+    #define MAX_FFT_BUFFER_LENGTH    (8192 * 2)
 #elif defined CMSIS_DSP_FFT_4096
     #define MAX_FFT_BUFFER_LENGTH    (4096 * 2)
 #elif defined CMSIS_DSP_FFT_2048
@@ -171,16 +220,30 @@ extern int fnFFT(void *ptrInputBuffer, void *ptrOutputBuffer, int iInputSamples,
         #endif
         break;
     #endif
-    #if defined CMSIS_DSP_FFT_8092
-    case 8192:
+    #if defined CMSIS_DSP_FFT_8192
+    case 8192:                                                           // added to CMSIS FFT code
         #if defined CMSIS_DSP_CFFT_FLOAT
-        ptrFFT_consts_f32 = &arm_cfft_sR_f32_len8192;
+        if ((iInputOutputType & FFT_RAM_COEFFICIENTS) != 0) {
+            static arm_cfft_instance_f32 *ram_arm_cfft_sR_f32_len8192 = 0;
+            if (ram_arm_cfft_sR_f32_len8192 == 0) {
+                ram_arm_cfft_sR_f32_len8192 = uMalloc(sizeof(arm_cfft_instance_f32));
+                ram_arm_cfft_sR_f32_len8192->bitRevLength = arm_cfft_sR_f32_len8192.bitRevLength;
+                ram_arm_cfft_sR_f32_len8192->fftLen = arm_cfft_sR_f32_len8192.fftLen;
+                ram_arm_cfft_sR_f32_len8192->pTwiddle = uMalloc(sizeof(float) * arm_cfft_sR_f32_len8192.fftLen);
+                memcpy((float *)(ram_arm_cfft_sR_f32_len8192->pTwiddle), arm_cfft_sR_f32_len8192.pTwiddle, (sizeof(float) * arm_cfft_sR_f32_len8192.fftLen * 2));
+              //ram_arm_cfft_sR_f32_len8192->pBitRevTable = uMalloc(sizeof(unsigned short) * arm_cfft_sR_f32_len8192.bitRevLength);
+              //memcpy((unsigned short *)(ram_arm_cfft_sR_f32_len8192->pBitRevTable), arm_cfft_sR_f32_len8192.pBitRevTable, (sizeof(unsigned short) * arm_cfft_sR_f32_len8192.bitRevLength));
+                ram_arm_cfft_sR_f32_len8192->pBitRevTable = arm_cfft_sR_f32_len8192.pBitRevTable;
+            }
+            ptrFFT_consts_f32 = ram_arm_cfft_sR_f32_len8192;
+        }
+        else {
+            ptrFFT_consts_f32 = &arm_cfft_sR_f32_len8192;
+        }
         #endif
         #if defined CMSIS_DSP_CFFT_Q15
         ptrFFT_consts_q15 = &arm_cfft_sR_q15_len8192;
         #endif
-        TOGGLE_TEST_OUTPUT();                                                // start measurement of processing time
-        return -1;
         break;
     #endif
     default:
@@ -197,9 +260,12 @@ extern int fnFFT(void *ptrInputBuffer, void *ptrOutputBuffer, int iInputSamples,
                     iCopyLimit = (iInput + iInputSamples);
                 }
                 while (iInput < iCopyLimit) {
+    #if defined _WINDOWS
+                    fnInjectSine(0, INJECT_SINE_FLOATS, &_ptrInputBuffer[iInput], sizeof(float)); // when simulating we inject a sine wave for test purposes
+    #endif
                     fft_buffer[ifft_sample] = _ptrInputBuffer[iInput++]; // transfer the input sample to the fft buffer (real component)
                     if (ptrWindowingBuffer != 0) {                       // if windowing is to be applied
-                        fft_buffer[ifft_sample] += *ptrWindowingBuffer++;// perform windowing
+                        fft_buffer[ifft_sample] *= *ptrWindowingBuffer++;// perform windowing
                     }
                     fft_buffer[++ifft_sample] = 0.0;                     // insert zeroed imaginary component
                     ++ifft_sample;
@@ -217,9 +283,35 @@ extern int fnFFT(void *ptrInputBuffer, void *ptrOutputBuffer, int iInputSamples,
                     iCopyLimit = (iInput + iInputSamples);
                 }
                 while (iInput < iCopyLimit) {
+    #if defined _WINDOWS
+                    fnInjectSine(0, INJECT_SINE_HALF_WORDS_SIGNED, &_ptrInputBuffer[iInput], sizeof(signed short)); // when simulating we inject a sine wave for test purposes
+    #endif
                     fft_buffer[ifft_sample] = _ptrInputBuffer[iInput++]; // transfer the input sample to the fft buffer (real component)
                     if (ptrWindowingBuffer != 0) {                       // if windowing is to be applied
-                        fft_buffer[ifft_sample] += *ptrWindowingBuffer++;// perform windowing
+                        fft_buffer[ifft_sample] *= *ptrWindowingBuffer++;// perform windowing
+                    }
+                    fft_buffer[++ifft_sample] = 0.0;                     // insert zeroed imaginary component
+                    ++ifft_sample;
+                }
+                iInput = 0;                                              // circle back to the input of the input buffer
+                iCopyLimit -= iSampleOffset;                             // set the new copy limit
+            } while (ifft_sample < (iInputSamples * 2));                 // until a complete complex input buffer has been prepared
+        }
+        break;
+    case FFT_INPUT_HALF_WORDS_UNSIGNED:                                  // input samples are unsigned shorts
+        {
+            signed short *_ptrInputBuffer = (unsigned short *)ptrInputBuffer;
+            do {                                                         // transfer input from a circular input buffer to a linear fft buffer with complex sample inputs
+                if ((iCopyLimit - iInput) > iInputSamples){
+                    iCopyLimit = (iInput + iInputSamples);
+                }
+                while (iInput < iCopyLimit) {
+    #if defined _WINDOWS
+                    fnInjectSine(0, INJECT_SINE_HALF_WORDS_UNSIGNED, &_ptrInputBuffer[iInput], sizeof(unsigned short)); // when simulating we inject a sine wave for test purposes
+    #endif
+                    fft_buffer[ifft_sample] = _ptrInputBuffer[iInput++]; // transfer the input sample to the fft buffer (real component)
+                    if (ptrWindowingBuffer != 0) {                       // if windowing is to be applied
+                        fft_buffer[ifft_sample] *= *ptrWindowingBuffer++;// perform windowing
                     }
                     fft_buffer[++ifft_sample] = 0.0;                     // insert zeroed imaginary component
                     ++ifft_sample;
@@ -288,7 +380,7 @@ extern void fnInjectSine(int instance, int iType, void *ptrData, unsigned short 
     #if !defined PI
         #define PI 3.14159265358979323846
     #endif
-    #define TEST_SIG_AMPLITUDE      0x0fff;
+    #define TEST_SIG_AMPLITUDE      0x0fff
     #define SAMPLING_FREQUENCY      48000.0
     #define TEST_FREQUENCY          4800
     #define INCREMENT_PHASE  ((2 * PI * TEST_FREQUENCY) / SAMPLING_FREQUENCY)
@@ -300,19 +392,29 @@ extern void fnInjectSine(int instance, int iType, void *ptrData, unsigned short 
         iInitalised[instance] = 1;
         phase_increment[instance] = INCREMENT_PHASE;
     }
-    if (iType != INJECT_SINE_HALF_WORDS_SIGNED) {
-        _EXCEPTION("Only signed shorts supported!!");
-    }
-    while (usLength >= sizeof(unsigned short)) {
-        result = sin(phase_angle[instance]);
-        result *= TEST_SIG_AMPLITUDE;
-        *(unsigned short *)ptrData = (signed short)result;
-        (unsigned long)ptrData = (unsigned long)ptrData + sizeof(unsigned short);
-        phase_angle[instance] += phase_increment[instance];
-        if (phase_angle[instance] >= (2 * PI)) {
-            phase_angle[instance] -= (2 * PI);
+    switch (iType) {
+    case INJECT_SINE_HALF_WORDS_SIGNED:
+    case INJECT_SINE_HALF_WORDS_UNSIGNED:
+        while (usLength >= sizeof(unsigned short)) {
+            result = sin(phase_angle[instance]);
+            result *= TEST_SIG_AMPLITUDE;
+            if (iType == INJECT_SINE_HALF_WORDS_UNSIGNED) {
+                *(signed short *)ptrData = (signed short)(result + TEST_SIG_AMPLITUDE);
+            }
+            else {
+                *(unsigned short *)ptrData = (signed short)result;
+            }
+            (unsigned long)ptrData = (unsigned long)ptrData + sizeof(unsigned short);
+            phase_angle[instance] += phase_increment[instance];
+            if (phase_angle[instance] >= (2 * PI)) {
+                phase_angle[instance] -= (2 * PI);
+            }
+            usLength -= sizeof(unsigned short);
         }
-        usLength -= sizeof(unsigned short);
+        break;
+    default:
+        _EXCEPTION("Only half-words supported!!");
+        break;
     }
 }
 #endif

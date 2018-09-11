@@ -57,6 +57,7 @@ extern const float32_t twiddleCoef_512[1024];
 extern const float32_t twiddleCoef_1024[2048];
 extern const float32_t twiddleCoef_2048[4096];
 extern const float32_t twiddleCoef_4096[8192];
+extern const float32_t twiddleCoef_8192[16384];                          // {uTasker}
 #define twiddleCoef twiddleCoef_4096
 extern const q31_t twiddleCoef_16_q31[24];
 extern const q31_t twiddleCoef_32_q31[48];
@@ -96,6 +97,7 @@ extern const float32_t twiddleCoef_rfft_4096[4096];
 #define ARMBITREVINDEXTABLE1024_TABLE_LENGTH ((uint16_t)1800)
 #define ARMBITREVINDEXTABLE2048_TABLE_LENGTH ((uint16_t)3808)
 #define ARMBITREVINDEXTABLE4096_TABLE_LENGTH ((uint16_t)4032)
+#define ARMBITREVINDEXTABLE8192_TABLE_LENGTH ((uint16_t)8064)            // {uTasker}
 
 extern const uint16_t armBitRevIndexTable16[ARMBITREVINDEXTABLE__16_TABLE_LENGTH];
 extern const uint16_t armBitRevIndexTable32[ARMBITREVINDEXTABLE__32_TABLE_LENGTH];
@@ -106,6 +108,7 @@ extern const uint16_t armBitRevIndexTable512[ARMBITREVINDEXTABLE_512_TABLE_LENGT
 extern const uint16_t armBitRevIndexTable1024[ARMBITREVINDEXTABLE1024_TABLE_LENGTH];
 extern const uint16_t armBitRevIndexTable2048[ARMBITREVINDEXTABLE2048_TABLE_LENGTH];
 extern const uint16_t armBitRevIndexTable4096[ARMBITREVINDEXTABLE4096_TABLE_LENGTH];
+extern const uint16_t armBitRevIndexTable8192[ARMBITREVINDEXTABLE8192_TABLE_LENGTH]; // {uTasker}
 
 /* fixed-point bit reversal tables */
 #define ARMBITREVINDEXTABLE_FIXED___16_TABLE_LENGTH ((uint16_t)12  )
@@ -117,6 +120,7 @@ extern const uint16_t armBitRevIndexTable4096[ARMBITREVINDEXTABLE4096_TABLE_LENG
 #define ARMBITREVINDEXTABLE_FIXED_1024_TABLE_LENGTH ((uint16_t)992 )
 #define ARMBITREVINDEXTABLE_FIXED_2048_TABLE_LENGTH ((uint16_t)1984)
 #define ARMBITREVINDEXTABLE_FIXED_4096_TABLE_LENGTH ((uint16_t)4032)
+
 
 extern const uint16_t armBitRevIndexTable_fixed_16[ARMBITREVINDEXTABLE_FIXED___16_TABLE_LENGTH];
 extern const uint16_t armBitRevIndexTable_fixed_32[ARMBITREVINDEXTABLE_FIXED___32_TABLE_LENGTH];

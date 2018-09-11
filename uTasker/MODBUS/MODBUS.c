@@ -3059,7 +3059,7 @@ _handle_local_slave:
         case MODBUS_ENCAPSUL_INTERFACE_TRANSPORT:                        // 0x2b
             if (*modbus_rx_function->data_content.user_data == MODBUS_ENCAP_READ_DEVICE_IDENTIFIER) { // modbus encapsulated interface type (0x0e)
                 unsigned char ucReadDeviceID_code = *(modbus_rx_function->data_content.user_data + 1);
-                unsigned char ucObjectId = *(modbus_rx_function->data_content.user_data + 2);
+              //unsigned char ucObjectId = *(modbus_rx_function->data_content.user_data + 2);
                 unsigned char ucResponse[34];                            // space for fixed basic response
                 switch (ucReadDeviceID_code) {
                 case MODBUS_ENCAP_READ_DEVICE_IDENTIFIER_CODE_BASIC:     // 0x01 - mandatory
