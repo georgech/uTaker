@@ -94,7 +94,7 @@ const arm_cfft_instance_f32 arm_cfft_sR_f32_len4096 = {
 #if defined CMSIS_DSP_FFT_8192                                           // {uTasker}
 const arm_cfft_instance_f32 arm_cfft_sR_f32_len8192 = {
     8192, twiddleCoef_8192, armBitRevIndexTable8192, ARMBITREVINDEXTABLE8192_TABLE_LENGTH // table is not yet correct
-  //8192, twiddleCoef_8192, armBitRevIndexTable4096, ARMBITREVINDEXTABLE4096_TABLE_LENGTH // wrong tabel but gives correct frequency in test (with folding)
+  //8192, twiddleCoef_8192, armBitRevIndexTable4096, ARMBITREVINDEXTABLE4096_TABLE_LENGTH // wrong table but gives correct frequency in test (but with folding)
 };
 #endif
 #endif

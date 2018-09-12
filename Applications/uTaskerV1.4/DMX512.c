@@ -442,7 +442,8 @@ static unsigned char ucDMX512_state = DMX512_NON_INITIALISED;
     static unsigned short usThisLength[2] = {0};
     static unsigned char ucRxBuffer[2][DMX_RX_MAX_SLOT_COUNT + 1] = {{0}};
   //static unsigned char ucSlaveSourceUID[6] = {0xcb, 0xa9, 0x87, 0x65, 0x43, 0x22}; // slave's UID
-    static unsigned char ucSlaveSourceUID[6] = { 0x53, 0x49, 0x00, 0x00, 0x00, 0x01 }; // slave's UID
+  //static unsigned char ucSlaveSourceUID[6] = { 0x53, 0x49, 0x00, 0x00, 0x00, 0x01 }; // slave's UID
+    static unsigned char ucSlaveSourceUID[6] = { 0x4c, 0x55, 0x00, 0x06, 0xdc, 0xf8 }; // slave's UID
     static unsigned short usDMX512_slave_start_address = 0xffff;
     #endif
 #endif
@@ -1063,6 +1064,10 @@ static void fnHandleRDM_SlaveRx(QUEUE_HANDLE uart_handle, DMX512_RDM_PACKET *ptr
         break;
     case DMX512_RDM_COMMAND_CLASS_GET_COMMAND:                           // get
         switch (usPID) {
+        // Category product information
+        //
+        case DMX512_RDM_PARAMETER_ID_MANUFACTURER_LABEL:                 // 0x0081
+            break;                                                       // supported
         // DMX512 setup category
         //
         case DMX512_RDM_PARAMETER_ID_DMX_START_ADDRESS:                  // 0x00f0 (support required if device uses a DMX512 slot)
@@ -1311,8 +1316,8 @@ static int fnSend_DMX512_RDM(QUEUE_HANDLE uart_handle, unsigned char ucCommandCl
         ptrDataBlock->ucParameterID[1] = (unsigned char)(usParameterID);
         if (usNackReason == RDM_RESPOND_WITH_ACK) {
             switch (usParameterID) {
-            case DMX512_RDM_PARAMETER_ID_DISC_MUTE:                      // parameter IDs with no parameter data (master)
-            case DMX512_RDM_PARAMETER_ID_DISC_UNMUTE:
+            case DMX512_RDM_PARAMETER_ID_DISC_MUTE:                      // 0x0002 parameter IDs with no parameter data (master)
+            case DMX512_RDM_PARAMETER_ID_DISC_UNMUTE:                    // 0x0003
         #if defined USE_DMX_RDM_SLAVE
                 if (iSlave != 0) {                                       // if the slave is responding
                   //unsigned short usControlField = 0;                   // control field value
@@ -1324,7 +1329,7 @@ static int fnSend_DMX512_RDM(QUEUE_HANDLE uart_handle, unsigned char ucCommandCl
                 }
         #endif
                 break;
-            case DMX512_RDM_PARAMETER_ID_DISC_UNIQUE_BRANCH:
+            case DMX512_RDM_PARAMETER_ID_DISC_UNIQUE_BRANCH:             // 0x0001
         #if defined USE_DMX_RDM_MASTER
                 if (iSlave == 0) {
                     ptrDataBlock->ucParameterDataLength = 0x0c;
@@ -1335,7 +1340,7 @@ static int fnSend_DMX512_RDM(QUEUE_HANDLE uart_handle, unsigned char ucCommandCl
                 }
         #endif
                 break;
-            case DMX512_RDM_PARAMETER_ID_DMX_START_ADDRESS:
+            case DMX512_RDM_PARAMETER_ID_DMX_START_ADDRESS:              // 0x00f0
                 if (DMX512_RDM_COMMAND_CLASS_GET_COMMAND == ucCommandClass) {
                     // Request with no additional data
                     //
@@ -1369,6 +1374,19 @@ static int fnSend_DMX512_RDM(QUEUE_HANDLE uart_handle, unsigned char ucCommandCl
                 else {
                     return -1;                                           // illegal class
                 }
+                break;
+            case DMX512_RDM_PARAMETER_ID_MANUFACTURER_LABEL:
+        #if defined USE_DMX_RDM_SLAVE
+                if (DMX512_RDM_COMMAND_CLASS_GET_COMMAND_RESPONSE == ucCommandClass) {
+                    if (iSlave != 0) {                                   // slave sends its manufacturer label
+                        unsigned char *ptrStart = ptr_ucData;
+                        ptr_ucData = (unsigned char *)uStrcpy((CHAR *)ptrStart, "LumenRadio"); // add the label
+                        ptrDataBlock->ucParameterDataLength = (unsigned char)(ptr_ucData - ptrStart); // the label length
+                        ptrRDMpacket->ucMessageCount = 0;                // not counted as message
+                        ptrCheckSum = ptr_ucData;                        // location of checksum to be added
+                    }
+                }
+        #endif
                 break;
             default:
                 return -1;
