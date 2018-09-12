@@ -175,8 +175,9 @@ static RECT rectLines[4];
 
 static ULONG cmd = 0;
 static int nibbel = 1;
-
-static void Initfont(void);    
+#if defined SUPPORT_LCD
+    static void Initfont(void);    
+#endif
 static void DrawLcdLine(HWND hwnd);
 extern void fnSizeLCD(int iProcessorHeight, int iProcessorWidth);
 
@@ -251,28 +252,26 @@ extern void LCDinit(int iLines, int iChars)
     tDisplayMem.ucCursorInc__Dec = 1;
 
     InitializeCriticalSection(&cs);                                      // start of critical region
-
-    Initfont();                                                          // initialise the font table
-    
+#if defined SUPPORT_LCD
+    Initfont();                                                          // initialise the font table    
     memset(tDisplayMem.ddrRam, ' ', sizeof(tDisplayMem.ddrRam));         // clear contents of character RAM
-    
+#endif
     tDisplayMem.init = 1;
     iLCD_initialise = 1;
 }
 
-
 static void fnInvalidateLCD(void)
 {
+#if defined SUPPORT_LCD
     for (int x = 0; x < 4; x++) {                                        // we mark all characters as invalid to ensure that they re-draw
         for (int y = 0; y < 40; y++) {
             usOldValue[x][y] = 0xffff;                                   // mark value invalid and must be re-freshed
         }
     }
+#endif
 }
 
-
 #if defined SUPPORT_TOUCH_SCREEN
-
 extern "C" void fnPenPressed(int iX, int iY);
 extern "C" void fnPenMoved(int iX, int iY);
 extern "C" void fnPenLifted(void);
@@ -331,9 +330,9 @@ extern int DisplayLCD(HWND hwnd, RECT rect)
     fnInvalidateLCD();                                                   // ensure complete text is re-drawn
 
     HBRUSH hBrush, hOldBrush;
-#if defined LCD_SIMULATE_BACKLIGHT
+    #if defined LCD_SIMULATE_BACKLIGHT
     nBackLightOn = nNewBacklight;                                        // new backlight state is only accepted when the redraw takes place
-#endif
+    #endif
     if (nBackLightOn != 0) {
         hBrush = CreateSolidBrush(LCD_ON_COLOUR);                        // set ON colour
     }
@@ -357,6 +356,7 @@ extern int DisplayLCD(HWND hwnd, RECT rect)
     ReleaseDC(hwnd, hdc);
     return rectLcd.bottom;
 }
+
 
 //
 // Redefine the size of the frame when the window is moved or resized
@@ -468,7 +468,7 @@ static void fnSizeLCD(int iProcessorHeight, int iProcessorWidth)
 #endif
 }
 
-
+#if defined SUPPORT_LCD
 // Character LCD Font initialisation
 //
 static void Initfont(void)
@@ -820,7 +820,6 @@ static void Initfont(void)
     font5x11[0xFF][0] = 0x1F;    font5x11[0xFF][1] =    0x1F, font5x11[0xFF][2] = 0x1F;
 }
 
-
 // Interpretation of received command
 //
 static unsigned char LCDCommand(BOOL bRS, ULONG ulCmd)
@@ -1020,6 +1019,7 @@ static unsigned char LCDCommand(BOOL bRS, ULONG ulCmd)
     }
     return 0;
 }
+#endif
 
 #if defined SUPPORT_GLCD || defined SUPPORT_TFT || defined GLCD_COLOR
     static unsigned short usAddressPointer = 0;
@@ -1500,8 +1500,12 @@ static void GraphicOLEDCommand(bool bRS, unsigned char ucByte)
 			}
 			ReleaseDC(ghWnd, hdc);  
 		} 
-
-        if ((ucRemap[0] & 0x04) == 0) {                                  // horizontal address increment enabled
+    #if defined OLED_SSD1322
+        if ((ucRemap[0] & 0x01) == 0)                                    // horizontal address increment enabled
+    #else
+        if ((ucRemap[0] & 0x04) == 0)                                    // horizontal address increment enabled
+    #endif
+        {
             ulGraphicAdd++;
             if ((ulGraphicAdd % (GLCD_X/2)) > ucColumnEnd) {             // {11}
                 ulGraphicAdd += ((ulGraphicAdd % (GLCD_X/2) - ucColumnEnd) * 2);// {11}
