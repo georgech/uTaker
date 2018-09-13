@@ -31,6 +31,7 @@
     20.06.2017 Added MAX6955                                              {13}
     03.09.2018 Added FM24W256                                             {14}
     10.09.2018 Added MAX6957                                              {15}
+    13.09.2018 Added SPI shift registers                                  {16}
 
 */                            
 
@@ -117,10 +118,33 @@ static const unsigned char ucMAX6956_ADD[MAX6956_CNT] = {
 #endif
 
 /**************************************************************************/
+/*                         SPI shift register                             */
+/**************************************************************************/
+#if defined SHIFT_REGISTER_IN_CNT
+typedef struct stSHIFT_REGISTER_IN
+{
+    unsigned char  ucState;
+    unsigned long  ulPortInput;
+    unsigned long  ulShift;
+} SHIFT_REGISTER_IN;
+
+static SHIFT_REGISTER_IN simShiftRegisterIn[SHIFT_REGISTER_IN_CNT] = {{0}}; // {16}
+#endif
+#if defined SHIFT_REGISTER_OUT_CNT
+typedef struct stSHIFT_REGISTER_OUT
+{
+    unsigned char  ucState;
+    unsigned long  ulPortOutput;
+    unsigned long  ulShift;
+} SHIFT_REGISTER_OUT;
+
+static SHIFT_REGISTER_OUT simShiftRegisterOut[SHIFT_REGISTER_OUT_CNT] = {{0}}; // {16}
+#endif
+
+/**************************************************************************/
 /*               Maxim MAX6957 (SPI) port-expander/LED driver             */
 /**************************************************************************/
 #if defined MAX6957_CNT
-
 typedef struct stMAX6957
 {     
     unsigned char  ucState;
@@ -220,7 +244,7 @@ static const unsigned char ucMAX6955_ADD[MAX6955_CNT] = {
 };
 #endif
 
-#if (defined MAX6955_CNT && (MAX6955_CNT > 0)) || (defined MAX6956_CNT && (MAX6956_CNT > 0)) || (defined MAX6957_CNT && (MAX6957_CNT > 0))
+#if (defined MAX6955_CNT && (MAX6955_CNT > 0)) || (defined MAX6956_CNT && (MAX6956_CNT > 0)) || (defined MAX6957_CNT && (MAX6957_CNT > 0)) || (defined SHIFT_REGISTER_IN_CNT && (SHIFT_REGISTER_IN_CNT > 0)) || (defined SHIFT_REGISTER_OUT_CNT && (SHIFT_REGISTER_OUT_CNT > 0))
 // Get the data direction of port expander pins
 //
 extern unsigned long fnGetExtPortDirection(int iExtPortReference)
@@ -244,6 +268,16 @@ extern unsigned long fnGetExtPortDirection(int iExtPortReference)
         int iRef;
         iRef = (iExtPortReference - FIRST_MAX6957_EXTERNAL_PORT);
         return (simMAX6957[iRef].ulLED | simMAX6957[iRef].ulOutput);     // data direction is output as long as either GPIO out or LED drive
+    }
+    #endif
+    #if (defined SHIFT_REGISTER_IN_CNT && (SHIFT_REGISTER_IN_CNT > 0))
+    if ((iExtPortReference >= FIRST_SHIFT_IN_REGISTER_EXTERNAL_PORT) && (iExtPortReference < (FIRST_SHIFT_IN_REGISTER_EXTERNAL_PORT + SHIFT_REGISTER_IN_CNT))) {
+        return 0;                                                        // always input
+    }
+    #endif
+    #if (defined SHIFT_REGISTER_OUT_CNT && (SHIFT_REGISTER_OUT_CNT > 0))
+    if ((iExtPortReference >= FIRST_SHIFT_OUT_REGISTER_EXTERNAL_PORT) && (iExtPortReference < (FIRST_SHIFT_OUT_REGISTER_EXTERNAL_PORT + SHIFT_REGISTER_OUT_CNT))) {
+        return 0xffffffff;                                               // always output
     }
     #endif
     return 0;
@@ -274,6 +308,16 @@ extern unsigned long fnGetExtPortState(int iExtPortReference)
         return (((~simMAX6957[iRef].ulPortOutput & simMAX6957[iRef].ulLED) | (simMAX6957[iRef].ulPortOutput & simMAX6957[iRef].ulOutput)) | (simMAX6957[iRef].ulPortInput & ~(simMAX6957[iRef].ulLED | simMAX6957[iRef].ulOutput)));
     }
     #endif
+    #if (defined SHIFT_REGISTER_IN_CNT && (SHIFT_REGISTER_IN_CNT > 0))
+    if ((iExtPortReference >= FIRST_SHIFT_IN_REGISTER_EXTERNAL_PORT) && (iExtPortReference < (FIRST_SHIFT_IN_REGISTER_EXTERNAL_PORT + SHIFT_REGISTER_IN_CNT))) {
+        return (simShiftRegisterIn[iExtPortReference - FIRST_SHIFT_IN_REGISTER_EXTERNAL_PORT].ulPortInput);
+    }
+    #endif
+    #if (defined SHIFT_REGISTER_OUT_CNT && (SHIFT_REGISTER_OUT_CNT > 0))
+    if ((iExtPortReference >= FIRST_SHIFT_OUT_REGISTER_EXTERNAL_PORT) && (iExtPortReference < (FIRST_SHIFT_OUT_REGISTER_EXTERNAL_PORT + SHIFT_REGISTER_OUT_CNT))) {
+        return simShiftRegisterOut[iExtPortReference - FIRST_SHIFT_OUT_REGISTER_EXTERNAL_PORT].ulPortOutput;
+    }
+    #endif
     return (0);
 }
 
@@ -298,6 +342,21 @@ extern void fnSetI2CPort(int iExtPortReference, int iChange, unsigned long bit)
         }
         else {
             simMAX6956[iRef].ulPortInput &= ~(bit);                      // set the input low
+        }
+    }
+    #endif
+    #if (defined SHIFT_REGISTER_IN_CNT && (SHIFT_REGISTER_IN_CNT > 0))
+    if ((iExtPortReference >= FIRST_SHIFT_IN_REGISTER_EXTERNAL_PORT) && (iExtPortReference < (FIRST_SHIFT_IN_REGISTER_EXTERNAL_PORT + SHIFT_REGISTER_IN_CNT))) {
+        int iRef;
+        iRef = (iExtPortReference - FIRST_SHIFT_IN_REGISTER_EXTERNAL_PORT);
+        if ((iChange & (TOGGLE_INPUT | TOGGLE_INPUT_NEG)) != 0) {
+            simShiftRegisterIn[iRef].ulPortInput ^= (bit);               // toggle the input state
+        }
+        else if (iChange == SET_INPUT) {
+            simShiftRegisterIn[iRef].ulPortInput |= (bit);               // set the input high
+        }
+        else {
+            simShiftRegisterIn[iRef].ulPortInput &= ~(bit);              // set the input low
         }
     }
     #endif
@@ -1384,6 +1443,13 @@ static void fnInitialiseI2CDevices(void)                                 // {10}
     while (i < FM24W256_CNT) {
         simFM24W256[i].address = ucFM24W256_ADD[i];
         simFM24W256[i].ulMaxFRAMLength = sizeof(FM24W256_fram[FM24W256_CNT]);
+        i++;
+    }
+#endif
+#if defined SHIFT_REGISTER_IN_CNT && (SHIFT_REGISTER_IN_CNT > 0)         // input shifters after output shifters
+    i = 0;
+    while (i < SHIFT_REGISTER_IN_CNT) {
+        simShiftRegisterIn[i].ulPortInput = 0xffffffff;                  // assume inputs default to '1'
         i++;
     }
 #endif
@@ -2705,15 +2771,74 @@ extern unsigned char fnSimI2C_devices(unsigned char ucType, unsigned char ucData
 
     case SPI_MODE_CS_ASSERT:                                             // assert chip select to defined device
 #if defined MAX6957_CNT && (MAX6957_CNT > 0)
-        simMAX6957[ucData].ucState = 1;
+        if ((ucData >= FIRST_MAX6957_EXTERNAL_PORT) && (ucData < (FIRST_MAX6957_EXTERNAL_PORT + MAX6957_CNT))) {
+            simMAX6957[ucData - FIRST_MAX6957_EXTERNAL_PORT].ucState = 1;
+        }
+#endif
+#if defined SHIFT_REGISTER_IN_CNT && (SHIFT_REGISTER_IN_CNT > 0)
+        if ((ucData >= FIRST_SHIFT_IN_REGISTER_EXTERNAL_PORT) && (ucData < (FIRST_SHIFT_IN_REGISTER_EXTERNAL_PORT + SHIFT_REGISTER_IN_CNT))) {
+            simShiftRegisterIn[ucData - FIRST_SHIFT_IN_REGISTER_EXTERNAL_PORT].ucState = 1;
+            simShiftRegisterIn[ucData - FIRST_SHIFT_IN_REGISTER_EXTERNAL_PORT].ulShift = simShiftRegisterIn[ucData - FIRST_SHIFT_IN_REGISTER_EXTERNAL_PORT].ulPortInput;
+        }
+#endif
+#if defined SHIFT_REGISTER_OUT_CNT && (SHIFT_REGISTER_OUT_CNT > 0)
+        if ((ucData >= FIRST_SHIFT_OUT_REGISTER_EXTERNAL_PORT) && (ucData < (FIRST_SHIFT_OUT_REGISTER_EXTERNAL_PORT + SHIFT_REGISTER_OUT_CNT))) {
+            simShiftRegisterOut[ucData - FIRST_SHIFT_OUT_REGISTER_EXTERNAL_PORT].ucState = 1;
+            simShiftRegisterOut[ucData - FIRST_SHIFT_OUT_REGISTER_EXTERNAL_PORT].ulShift = simShiftRegisterOut[ucData - FIRST_SHIFT_OUT_REGISTER_EXTERNAL_PORT].ulPortOutput;
+        }
 #endif
         break;
     case SPI_MODE_CS_NEGATE:                                             // negate chip select to defined device
 #if defined MAX6957_CNT && (MAX6957_CNT > 0)
-        simMAX6957[ucData].ucState = 0;
+        if ((ucData >= FIRST_MAX6957_EXTERNAL_PORT) && (ucData < (FIRST_MAX6957_EXTERNAL_PORT + MAX6957_CNT))) {
+            simMAX6957[ucData - FIRST_MAX6957_EXTERNAL_PORT].ucState = 0;
+        }
+#endif
+#if defined SHIFT_REGISTER_IN_CNT && (SHIFT_REGISTER_IN_CNT > 0)
+        if ((ucData >= FIRST_SHIFT_IN_REGISTER_EXTERNAL_PORT) && (ucData < (FIRST_SHIFT_IN_REGISTER_EXTERNAL_PORT + SHIFT_REGISTER_IN_CNT))) {
+            simShiftRegisterIn[ucData - FIRST_SHIFT_IN_REGISTER_EXTERNAL_PORT].ucState = 0;
+        }
+#endif
+#if defined SHIFT_REGISTER_OUT_CNT && (SHIFT_REGISTER_OUT_CNT > 0)
+        if ((ucData >= FIRST_SHIFT_OUT_REGISTER_EXTERNAL_PORT) && (ucData < (FIRST_SHIFT_OUT_REGISTER_EXTERNAL_PORT + SHIFT_REGISTER_OUT_CNT))) {
+            simShiftRegisterOut[ucData - FIRST_SHIFT_OUT_REGISTER_EXTERNAL_PORT].ucState = 0;
+            simShiftRegisterOut[ucData - FIRST_SHIFT_OUT_REGISTER_EXTERNAL_PORT].ulPortOutput = simShiftRegisterOut[ucData - FIRST_SHIFT_OUT_REGISTER_EXTERNAL_PORT].ulShift;
+        }
 #endif
         break;
     case SPI_MODE_DATA:                                                  // write data to the defined device
+#if defined SHIFT_REGISTER_OUT_CNT && (SHIFT_REGISTER_OUT_CNT > 0)
+    {
+        int i = 0;
+        unsigned char ucShiftOut;
+        while (i < SHIFT_REGISTER_OUT_CNT) {
+            if (simShiftRegisterOut[i].ucState != 0) {                   // if selected
+                ucShiftOut = (unsigned char)(simShiftRegisterOut[i].ulShift);
+                simShiftRegisterOut[i].ulShift >>= 8;                    // shift
+                simShiftRegisterOut[i].ulShift |= (ucData << 24);        // add new data (shifted in)
+                ucData = ucShiftOut;                                     // if multiple shift registers are selected the output of the previous ones is shifted to the input of the following ones
+            }
+            i++;
+        }
+    }
+#endif
+#if defined SHIFT_REGISTER_IN_CNT && (SHIFT_REGISTER_IN_CNT > 0)         // input shifters after output shifters
+    {
+        int i = (SHIFT_REGISTER_IN_CNT - 1);
+        unsigned char ucCarry = 0;
+        unsigned char ucReturn = 0;
+        while (i >= 0) {
+            if (simShiftRegisterIn[i].ucState != 0) {                    // if selected
+                ucReturn = (unsigned char)(simShiftRegisterIn[i].ulShift >> 24);
+                simShiftRegisterIn[i].ulShift <<= 8;
+                simShiftRegisterIn[i].ulShift |= (ucCarry);
+                ucCarry = ucReturn;
+            }
+            i--;
+        }
+        return ucCarry;
+    }
+#endif
 #if defined MAX6957_CNT && (MAX6957_CNT > 0)
     {
             int i = 0;

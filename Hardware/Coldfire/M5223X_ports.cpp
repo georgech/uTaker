@@ -286,12 +286,12 @@ extern void fnSetPortDetails(char *cPortDetails, int iPort, int iBit, unsigned l
             return;
         }
 #endif
-#ifndef _M52XX_SDRAM                                                     // {5}
+#if !defined _M52XX_SDRAM                                                // {5}
         iPortLength = 4;
 #endif
         break;
     case _PORT_DD:
-#ifdef _M5225X                                                           // {7}
+#if defined _M5225X                                                      // {7}
     #if defined CHIP_144_PIN
         STRCPY(cPortDetails, "Port DD");
     #else
@@ -313,7 +313,7 @@ extern void fnSetPortDetails(char *cPortDetails, int iPort, int iBit, unsigned l
     #endif
 #endif
         break;
-#ifdef _M5225X                                                           // {7}
+#if defined _M5225X                                                      // {7}
     case _PORT_TE:
     #if defined CHIP_144_PIN
         STRCPY(cPortDetails, "Port TE");

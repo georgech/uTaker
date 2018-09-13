@@ -1164,8 +1164,8 @@ extern unsigned long fnSimDMA(char *argv[])
     unsigned long ulNewActions = 0;
     int *ptrCnt;                                                         // {53}
 
-    if (!argv) {                                                         // memory to memory transfer
-        if (DMA_DCR3 & DCR_START) {
+    if (argv == 0) {                                                     // memory to memory transfer
+        if ((DMA_DCR3 & DCR_START) != 0) {
             unsigned long ulLength = (DMA_SR_BCR3 & DMA_BYTE_COUNT_MASK);
             unsigned char *ptrSource = (unsigned char *)DMA_SAR3;
             unsigned char *ptrDestination = (unsigned char *)DMA_DAR3;
@@ -1194,7 +1194,7 @@ extern unsigned long fnSimDMA(char *argv[])
         unsigned long ulLengthHandled = 0;
         unsigned long ulCommand = *ptrDMA--;
 
-        if (*ptrDMA & DMA_ABORTED) {                                     // {53} DMA transfer aborted
+        if ((*ptrDMA & DMA_ABORTED) != 0) {                              // {53} DMA transfer aborted
             iDMA &= ~DMA_CONTROLLER_0;                                   // no more DMA processing to be performed
         }
         else {
@@ -1202,8 +1202,8 @@ extern unsigned long fnSimDMA(char *argv[])
                 unsigned char *ptrReg = (unsigned char *)(UART_ADD + UCR_0_OFFSET);
                 ptrCnt = (int *)argv[THROUGHPUT_UART0];                  // {53}
                 if (*ptrCnt != 0) {
-                    if (*ptrReg == UART_TX_ENABLE) {                     // we expect the last command to be an enable command
-                        while (ulLength--) {                             // for each DMA transfer
+                    if ((*ptrReg == UART_TX_ENABLE) || (*ptrReg  == UART_RESET_CMD_PTR)) { // we expect the last command to be an enable command (or reset cmd pointer)
+                        while (ulLength-- != 0) {                        // for each DMA transfer
                             switch (ulCommand & DCR_SSIZE_LINE) {
                             case DCR_SSIZE_LONG:
                                 ptrDestination = fnSetDMADestination(ptrDestination, *(unsigned long *)ptrSource, ulCommand);
@@ -1285,8 +1285,8 @@ extern unsigned long fnSimDMA(char *argv[])
                 unsigned char *ptrReg = (unsigned char *)(UART_ADD + SCI_BLOCK_SIZE + UCR_0_OFFSET);
                 ptrCnt = (int *)argv[THROUGHPUT_UART1];                  // {53}
                 if (*ptrCnt != 0) {
-                    if (*ptrReg == UART_TX_ENABLE) {                     // we expect the last command to be an enable command
-                        while (ulLength--) {                             // for each DMA transfer
+                    if ((*ptrReg == UART_TX_ENABLE) || (*ptrReg == UART_RESET_CMD_PTR)) { // we expect the last command to be an enable command (or reset cmd pointer)
+                        while (ulLength-- != 0) {                        // for each DMA transfer
                             switch (ulCommand & DCR_SSIZE_LINE) {
                             case DCR_SSIZE_LONG:
                                 ptrDestination = fnSetDMADestination(ptrDestination, *(unsigned long *)ptrSource, ulCommand);
@@ -1368,8 +1368,8 @@ extern unsigned long fnSimDMA(char *argv[])
                 unsigned char *ptrReg = (unsigned char *)(UART_ADD + 2*SCI_BLOCK_SIZE + UCR_0_OFFSET);
                 ptrCnt = (int *)argv[THROUGHPUT_UART2];                  // {53}
                 if (*ptrCnt != 0) {
-                    if (*ptrReg == UART_TX_ENABLE) {                     // we expect the last command to be an enable command
-                        while (ulLength--) {                             // for each DMA transfer
+                    if ((*ptrReg == UART_TX_ENABLE) || (*ptrReg == UART_RESET_CMD_PTR)) { // we expect the last command to be an enable command (or reset cmd pointer)
+                        while (ulLength-- != 0) {                        // for each DMA transfer
                             switch (ulCommand & DCR_SSIZE_LINE) {
                             case DCR_SSIZE_LONG:
                                 ptrDestination = fnSetDMADestination(ptrDestination, *(unsigned long *)ptrSource, ulCommand);
@@ -3435,7 +3435,7 @@ extern int fnSimTimers(void)
     }
 #endif
 #if defined SUPPORT_RTC && !defined _M521X && !defined _M520X && !defined _M523X // {7}{61}{65}
-    if (RTCCTL & RTC_ENABLE) {                                           // if RTC is enabled
+    if ((RTCCTL & RTC_ENABLE) != 0) {                                    // if RTC is enabled
         static int iSecs = 0;
         if (++iSecs >= SEC) {                                            // 1 second period elapsed
             iSecs = 0;
@@ -3518,7 +3518,7 @@ extern int fnSimTimers(void)
         }
     }
 #if defined BACKUP_WATCHDOG_TIMER_AVAILABLE                              // {45}
-    if (WCR & BWT_EN) {                                                  // if backup watchdog timer is enabled
+    if ((WCR & BWT_EN) != 0) {                                           // if backup watchdog timer is enabled
         if (WSR == 0xaaaa) {                                             // assume watchdog timer has been reset since last check
             WSR = 0x3333;                                                // mark requires resetting again
             ulWatchdogTimer = 0;
@@ -3532,13 +3532,13 @@ extern int fnSimTimers(void)
         #if defined _M523X                                               // {65}
 			ulClocks = ((BUS_CLOCK/2/4096/1000)*TICK_RESOLUTION);
         #else
-            if (MCF_CLOCK_BWCR & BWDSEL_RELAX) {                         // clock from relaxation oscillator
+            if ((MCF_CLOCK_BWCR & BWDSEL_RELAX) != 0) {                  // clock from relaxation oscillator
                 if (MCF_CLOCK_OCHR & RELAX_OCOEN) {                      // check that the relaxation oscillator is enabled
                     ulClocks = (RELAXATION_OSCILLATOR_FREQ/4096/1000)*TICK_RESOLUTION;
                 }
             }
             else {                                                       // clock from system clock/2
-                ulClocks = ((BUS_CLOCK/2/4096/1000)*TICK_RESOLUTION);
+                ulClocks = (((BUS_CLOCK/2/4096/1000)*TICK_RESOLUTION)/1000);
             }
         #endif
     #endif
@@ -3554,7 +3554,7 @@ extern int fnSimTimers(void)
 
     // PIT timers
     //
-    if (PIT_PCSR_0 & PIT_EN) {                                           // {26} if PIT 0 is enabled
+    if ((PIT_PCSR_0 & PIT_EN) != 0) {                                    // {26} if PIT 0 is enabled
         unsigned long ulTickCount = (TICK_RESOLUTION * (BUS_CLOCK/2/1000)); // count with no prescaler
         int iPrescaler = ((PIT_PCSR_0 >> 8) & 0x0f);
         ulTickCount /= (1 << iPrescaler);
@@ -3576,7 +3576,7 @@ extern int fnSimTimers(void)
             }
         }
     }
-    if (PIT_PCSR_1 & PIT_EN) {                                           // {26} if PIT 1 is enabled
+    if ((PIT_PCSR_1 & PIT_EN) != 0) {                                    // {26} if PIT 1 is enabled
         unsigned long ulTickCount = (TICK_RESOLUTION * (BUS_CLOCK/2/1000)); // count with no prescaler
         int iPrescaler = ((PIT_PCSR_1 >> 8) & 0x0f);
         ulTickCount /= (1 << iPrescaler);
@@ -3601,7 +3601,7 @@ extern int fnSimTimers(void)
 
     // DMA Timer 0                                                       {20}
     //
-    if (DTMR0 & ENABLE_DMA_TIMER) {                                      // if timer 0 is enabled
+    if ((DTMR0 & ENABLE_DMA_TIMER) != 0) {                               // if timer 0 is enabled
         unsigned long ulTimerCount = ((TICK_RESOLUTION/1000) * (BUS_CLOCK/1000)); // timer count in a TICK period
         switch (DTMR0 & DMA_TIMER_STOP_COUNT_MASK) {
         case BUS_CLOCK_DIRECT:
@@ -3642,7 +3642,7 @@ extern int fnSimTimers(void)
 
     // DMA Timer 1                                                       {20}
     //
-    if (DTMR1 & ENABLE_DMA_TIMER) {                                      // if timer 1 is enabled
+    if ((DTMR1 & ENABLE_DMA_TIMER) != 0) {                               // if timer 1 is enabled
         unsigned long ulTimerCount = ((TICK_RESOLUTION/1000) * (BUS_CLOCK/1000)); // timer count in a TICK period
         switch (DTMR1 & DMA_TIMER_STOP_COUNT_MASK) {
         case BUS_CLOCK_DIRECT:
@@ -3683,7 +3683,7 @@ extern int fnSimTimers(void)
 
     // DMA Timer 2
     //
-    if (DTMR2 & ENABLE_DMA_TIMER) {                                      // if timer 2 is enabled
+    if ((DTMR2 & ENABLE_DMA_TIMER) != 0) {                               // if timer 2 is enabled
         unsigned long ulTimerCount = ((TICK_RESOLUTION/1000) * (BUS_CLOCK/1000)); // timer count in a TICK period
         switch (DTMR2 & DMA_TIMER_STOP_COUNT_MASK) {
         case BUS_CLOCK_DIRECT:
@@ -3724,7 +3724,7 @@ extern int fnSimTimers(void)
 
     // DMA Timer 3                                                       {4}
     //
-    if (DTMR3 & ENABLE_DMA_TIMER) {                                      // if timer 3 is enabled
+    if ((DTMR3 & ENABLE_DMA_TIMER) != 0) {                               // if timer 3 is enabled
         unsigned long ulTimerCount = ((TICK_RESOLUTION/1000) * (BUS_CLOCK/1000)); // timer count in a TICK period
         switch (DTMR3 & DMA_TIMER_STOP_COUNT_MASK) {
         case BUS_CLOCK_DIRECT:
@@ -3766,12 +3766,12 @@ extern int fnSimTimers(void)
 #if !defined _M520X && !defined _M523X                                   // {61}{65}
     // General Purpose Timer                                             // {42}
     //
-    if (GPTSCR1 & GPTEN) {                                               // if the timer module is operating
+    if ((GPTSCR1 & GPTEN) != 0) {                                        // if the timer module is operating
         if (GPTPACTL & (PGPT_PACLK_65536 | PGPT_PACLK_256 | PGPT_PACLK)) { // using pulse accumulation mode clock
                                                                          // pulse accululator not presently supported
         }
         else {                                                           // clocked from system clock and through prescaler
-            unsigned long ulTimerCount = (TICK_RESOLUTION * (BUS_CLOCK/2000)); // timer count in a TICK period with no prescaler
+            unsigned long ulTimerCount = ((TICK_RESOLUTION * (BUS_CLOCK/2000))/1000); // timer count in a TICK period with no prescaler
             unsigned long ulNewCount = GPTCNT;
             ulTimerCount >>= (GPTSCR2 & GPT_PRESCALE_128);               // prescale
             ulNewCount += ulTimerCount;                                  // new counter value
@@ -3787,14 +3787,14 @@ extern int fnSimTimers(void)
         }        
     }
 #endif
-    if (RESET_RCR & SOFT_RST) {                                          // {46} (just check bit)
-        if (iWatchdogFired) {
+    if ((RESET_RCR & SOFT_RST) != 0) {                                   // {46} (just check bit)
+        if (iWatchdogFired != 0) {
             return RESET_CARD_WATCHDOG;
         }
         return RESET_SIM_CARD;                                           // signal that the board needs to be reset
     }
 #if defined SUPPORT_ADC && !defined _M520X                               // {63}
-    if ((!(PPMRH & CDADC)) && (ADC_CTRL1 & START0)) {                    // ADC converter powered up and running
+    if (((PPMRH & CDADC) == 0) && ((ADC_CTRL1 & START0) != 0)) {         // ADC converter powered up and running
         fnTriggADC(0);                                                   // update all active channels
         if (ADC_CTRL1 & EOSIE0) {                                        // if end of conversion interrupt enabled
             ADC_ADSTAT |= (EOSI0);                                       // set flag
@@ -7787,7 +7787,7 @@ extern void fnSimUSB(int iType, int iEndpoint, USB_HW *ptrUSB_HW)
             int x;
             fnChangeUSBState(0);
             for (x = 0; x < NUMBER_OF_USB_ENDPOINTS; x++) {
-                fnLogUSB(x, 0, (unsigned char *)0xffffffff, 0);          // log reset on each endpoint
+                fnLogUSB(x, 0, 0, (unsigned char *)0xffffffff, 0);       // log reset on each endpoint
             }
         }
         break;
@@ -7802,7 +7802,7 @@ extern void fnSimUSB(int iType, int iEndpoint, USB_HW *ptrUSB_HW)
         fnChangeUSBState(1);
         break;
     case USB_SIM_STALL:
-        fnLogUSB(iEndpoint, 1, (unsigned char *)0xffffffff, 0);          // log stall
+        fnLogUSB(iEndpoint, 0, 1, (unsigned char *)0xffffffff, 0);       // log stall
         break;
     case USB_SIM_SUSPEND:
         fnChangeUSBState(0);
@@ -7845,7 +7845,7 @@ extern void fnCheckUSBOut(int iDevice, int iEndpoint)
             if (!(bufferDescriptor->ulUSB_BDControl & KEEP)) {           // if the KEEP bit is not set
                 bufferDescriptor->ulUSB_BDControl &= ~OWN;               // remove SIE ownership
             }
-            fnLogUSB(iEndpoint, usUSBLength, ptrUSBData, ((bufferDescriptor->ulUSB_BDControl & DATA_1) != 0));
+            fnLogUSB(iEndpoint, 0, usUSBLength, ptrUSBData, ((bufferDescriptor->ulUSB_BDControl & DATA_1) != 0));
             fnSimulateUSB(iDevice, iEndpoint, 0, 0, USB_IN_SUCCESS);     // generate tx interrupt
             ucTxBuffer[iEndpoint] ^= ODD_BANK;                           // toggle buffer
         }

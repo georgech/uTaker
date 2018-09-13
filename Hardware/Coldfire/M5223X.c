@@ -212,6 +212,7 @@
     09.10.2017 Corrected fnSetParameters() to operate with the updated method of committing and initial set of parameters to flash when they are blank. {189}
     16.10.2017 Allow DMA timer to be used without user callback          {190}
     06.06.2018 Change uMemset() to match memset() parameters             {191}
+    12.09.2018 Set next USB reception buffer to usb_hardware.ptrRxDatBuffer {192}
 
 */ 
 
@@ -6774,11 +6775,11 @@ static int fnProcessInput(int iEndpoint_ref, USB_HW *usb_hardware, unsigned char
     usb_hardware->ptrEndpoint = &usb_endpoints[iEndpoint_ref];           // mark the present transmit endpoint information for possible subroutine or response use
     if (!(usb_endpoints[iEndpoint_ref].ulEndpointSize & ALTERNATE_TX_BUFFER)) {  // set the next transmit pointer details
         usb_hardware->ptr_ulUSB_BDControl = &ptEndpointBD->usb_bd_tx_even.ulUSB_BDControl; // prepare hardware relevant data for the generic handler's use
-        usb_hardware->ptrDatBuffer = &ptEndpointBD->usb_bd_tx_even.ptrUSB_BD_Data;
+        usb_hardware->ptrTxDatBuffer = &ptEndpointBD->usb_bd_tx_even.ptrUSB_BD_Data;
     }
     else {
         usb_hardware->ptr_ulUSB_BDControl = &ptEndpointBD->usb_bd_tx_odd.ulUSB_BDControl; // prepare hardware relevant data for the generic handler's use
-        usb_hardware->ptrDatBuffer = &ptEndpointBD->usb_bd_tx_odd.ptrUSB_BD_Data;
+        usb_hardware->ptrTxDatBuffer = &ptEndpointBD->usb_bd_tx_odd.ptrUSB_BD_Data;
     }
 
     switch (fnUSB_handle_frame(ucFrameType, (unsigned char *)fnLE_add((CAST_POINTER_ARITHMETIC)ptUSB_BD_rx->ptrUSB_BD_Data), iEndpoint_ref, usb_hardware)) { // generic handler routine
@@ -6865,7 +6866,7 @@ static void usb_reset_timeout(void)
     CTL |= USB_EN_SOF_EN;                                                // start sending SOF packets
     usb_hardware.ptrEndpoint = &usb_endpoints[0]; 
     usb_hardware.ptr_ulUSB_BDControl = &ptEndpointBD->usb_bd_tx_even.ulUSB_BDControl;// first transmission is from even buffer
-    usb_hardware.ptrDatBuffer = &ptEndpointBD->usb_bd_tx_even.ptrUSB_BD_Data;
+    usb_hardware.ptrTxDatBuffer = &ptEndpointBD->usb_bd_tx_even.ptrUSB_BD_Data;
     if (fnUSB_handle_frame(USB_DEVICE_DETECTED, 0, ((CTL & JSTATE) != 0), &usb_hardware) == SEND_SETUP) { // generic handler routine
         while (CTL & TXSUSPEND_TOKENBUSY) {                              // wait if there is already a token in process
             if (INT_STAT & USB_RST) {                                    // reset state detected (don't know why)
@@ -7006,11 +7007,11 @@ static __interrupt__ void _usb_otg_isr(void)
                 usb_hardware.ptrEndpoint = &usb_endpoints[iEndpoint_ref];            
                 if (!(usb_hardware.ptrEndpoint->ulEndpointSize & ALTERNATE_TX_BUFFER)) { // set a pointer to the buffer descriptor of the next transmission buffer to use
                     usb_hardware.ptr_ulUSB_BDControl = &ptEndpointBD->usb_bd_tx_even.ulUSB_BDControl;
-                    usb_hardware.ptrDatBuffer = &ptEndpointBD->usb_bd_tx_even.ptrUSB_BD_Data;
+                    usb_hardware.ptrTxDatBuffer = &ptEndpointBD->usb_bd_tx_even.ptrUSB_BD_Data;
                 }
                 else {
                     usb_hardware.ptr_ulUSB_BDControl = &ptEndpointBD->usb_bd_tx_odd.ulUSB_BDControl;
-                    usb_hardware.ptrDatBuffer = &ptEndpointBD->usb_bd_tx_odd.ptrUSB_BD_Data;
+                    usb_hardware.ptrTxDatBuffer = &ptEndpointBD->usb_bd_tx_odd.ptrUSB_BD_Data;
                 }
                 iInterruptLevel = 1;                                     // ensure interrupts remain blocked when handling the next possible transmission
                 fnUSB_handle_frame(USB_TX_ACKED, 0, iEndpoint_ref, &usb_hardware); // handle ack event
@@ -7026,6 +7027,9 @@ static __interrupt__ void _usb_otg_isr(void)
                     ptUSB_BD = &ptEndpointBD->usb_bd_rx_even;            // data in even buffer
                     usb_hardware.ulRxControl = 0;
                 }
+    #if defined USB_DEVICE_SUPPORT
+                usb_hardware.ptrRxDatBuffer = &(ptUSB_BD->ptrUSB_BD_Data); // {192}
+    #endif
                 usb_hardware.usLength = GET_FRAME_LENGTH();              // the length of the present frame
                 switch (ptUSB_BD->ulUSB_BDControl & RX_PID_MASK) {
                 case (OUT_PID << RX_PID_SHIFT):                          // OUT frame - for any endpoint
@@ -7126,7 +7130,7 @@ extern int fnGetUSB_HW(int iEndpoint, USB_HW **ptr_usb_hardware)         // {187
                 return ENDPOINT_NOT_FREE;                                // endpoint is presently busy so no data may be copied
             }    
             (*ptr_usb_hardware)->ptr_ulUSB_BDControl = ptrThisControl;   // update the hardware pointers (only when the endpoint is free)
-            (*ptr_usb_hardware)->ptrDatBuffer = ptrThisBuffer;
+            (*ptr_usb_hardware)->ptrTxDatBuffer = ptrThisBuffer;
             #if defined USB_HOST_SUPPORT
             (*ptr_usb_hardware)->ucModeType = usb_hardware.ucModeType;
             #endif
@@ -7137,7 +7141,7 @@ extern int fnGetUSB_HW(int iEndpoint, USB_HW **ptr_usb_hardware)         // {187
 
 // The hardware interface used to activate USB endpoints
 //
-extern void fnActivateHWEndpoint(unsigned char ucEndpointType, unsigned char ucEndpointRef, unsigned short usEndpointLength, unsigned short usMaxEndpointLength)
+extern void fnActivateHWEndpoint(unsigned char ucEndpointType, unsigned char ucEndpointRef, unsigned short usEndpointLength, unsigned short usMaxEndpointLength, USB_ENDPOINT *ptrEndpoint)
 {
     M5222X_USB_ENDPOINT_BD *ptrEndpointBDT = ptrBDT;
     unsigned long  ulControlContent = (DTS | DATA_1);                    // prepare Data Toggle Synchronisation as default
@@ -7269,7 +7273,7 @@ extern int fnConsumeUSB_out(unsigned char ucEndpointRef)
         return USB_BUFFER_NO_DATA;
     }
     usLength = GET_FRAME_LENGTH();                                       // the number of bytes waiting in the buffer
-    if (fnEndpointData(ucEndpointRef, (unsigned char *)fnLE_add((CAST_POINTER_ARITHMETIC)ptUSB_BD->ptrUSB_BD_Data), usLength, OUT_DATA_RECEPTION) != MAINTAIN_OWNERSHIP) {
+    if (fnEndpointData(ucEndpointRef, (unsigned char *)fnLE_add((CAST_POINTER_ARITHMETIC)ptUSB_BD->ptrUSB_BD_Data), usLength, OUT_DATA_RECEPTION, 0) != MAINTAIN_OWNERSHIP) {
         ulBuffer |= (usb_endpoints[ucEndpointRef].ulEndpointSize & (USB_BYTE_CNT_MASK | DTS));// reception buffer size
         ptUSB_BD->ulUSB_BDControl = (ulBuffer | OWN);                    // re-enable reception on this endpoint
         usb_endpoints[ucEndpointRef].ulNextRxData0 &= (RX_DATA_TOGGLE);  // don't disturb this flag

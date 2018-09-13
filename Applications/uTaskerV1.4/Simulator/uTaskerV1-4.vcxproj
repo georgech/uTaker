@@ -838,13 +838,22 @@ Build_Luminary.bat</Command>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\..\..\Hardware\CMSIS_DSP\arm_bitreversal.c" />
+    <ClCompile Include="..\..\..\Hardware\CMSIS_DSP\arm_bitreversal.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\..\..\Hardware\CMSIS_DSP\arm_cfft_f32.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\..\..\Hardware\CMSIS_DSP\arm_cfft_q15.c" />
-    <ClCompile Include="..\..\..\Hardware\CMSIS_DSP\arm_cfft_radix4_q15.c" />
+    <ClCompile Include="..\..\..\Hardware\CMSIS_DSP\arm_cfft_q15.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Hardware\CMSIS_DSP\arm_cfft_radix4_q15.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\..\..\Hardware\CMSIS_DSP\arm_cfft_radix8_f32.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">true</ExcludedFromBuild>
@@ -2554,10 +2563,10 @@ Build_Luminary.bat</Command>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">false</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Coldfire\spi_flash_m5223x_atmel.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>

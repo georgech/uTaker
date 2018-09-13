@@ -98,6 +98,7 @@
     10.08.2013 Add PIT status register byte access                       {73}
     12.10.2013 Moved RANDOM_SEED_LOCATION to this header file and add BOOT_MAIL_BOX {74}
     20.10.2015 Add UTC seconds value to RTC_SETUP                        {75}
+    12.09.2018 Add ptrRxDatBuffer to USBHW struct                        {76}
 
 */
 
@@ -4197,7 +4198,8 @@ typedef struct stUSB_HW
     unsigned long  ulRxControl;
     unsigned long *ptr_ulUSB_BDControl;                                  // pointer to the presently valid buffer descriptor control entry
     USB_END_POINT *ptrEndpoint;
-    unsigned char **ptrDatBuffer;                                        // pointer to the next transmission buffer pointer
+    unsigned char **ptrTxDatBuffer;                                      // pointer to the next transmission buffer pointer
+    unsigned char **ptrRxDatBuffer;                                      // {76} pointer to the next reception buffer pointer
     unsigned short usLength;                                             // length information
     unsigned char  ucUSBAddress;                                         // our USB address                       
 } USB_HW;
@@ -4211,7 +4213,7 @@ typedef struct stUSB_HW
 #if defined _M5225X && defined USB_BIGENDIAN                             // this device supports big-endian mode so it is used for efficiency
     // MACRO for transmitting USB data from generic USB routines
     //
-    #define FNSEND_USB_DATA(pData, Len, iEndpoint, ptrUSB_HW) *ptrUSB_HW->ptrDatBuffer = fnLE_add_F((CAST_POINTER_ARITHMETIC)pData); \
+    #define FNSEND_USB_DATA(pData, Len, iEndpoint, ptrUSB_HW) *ptrUSB_HW->ptrTxDatBuffer = fnLE_add_F((CAST_POINTER_ARITHMETIC)pData); \
             *ptrUSB_HW->ptr_ulUSB_BDControl = (unsigned long)(((Len & USB_BYTE_CNT_MASK) << USB_CNT_SHIFT) | (OWN | ptrUSB_HW->ptrEndpoint->ulNextTxData0)); _SIM_USB(USB_SIM_TX, iEndpoint, ptrUSB_HW); ptrUSB_HW->ptrEndpoint->ulNextTxData0 ^= DATA_1; ptrUSB_HW->ptrEndpoint->ulEndpointSize ^= ALTERNATE_TX_BUFFER;
 
     // MACRO for transmitting zero data packet to control endpoints from generic USB routines
@@ -4226,7 +4228,7 @@ typedef struct stUSB_HW
 #else
     // MACRO for transmitting USB data from generic USB routines
     //
-    #define FNSEND_USB_DATA(pData, Len, iEndpoint, ptrUSB_HW) *ptrUSB_HW->ptrDatBuffer = fnLE_add_F((CAST_POINTER_ARITHMETIC)pData); \
+    #define FNSEND_USB_DATA(pData, Len, iEndpoint, ptrUSB_HW) *ptrUSB_HW->ptrTxDatBuffer = fnLE_add_F((CAST_POINTER_ARITHMETIC)pData); \
             *ptrUSB_HW->ptr_ulUSB_BDControl = (unsigned long)(((Len & 0xff) << USB_BYTE_CNT_SHIFT_LSB) | ((Len >> USB_BYTE_CNT_SHIFT_MSB) & 0x03) | (OWN | ptrUSB_HW->ptrEndpoint->ulNextTxData0)); _SIM_USB(USB_SIM_TX, iEndpoint, ptrUSB_HW); ptrUSB_HW->ptrEndpoint->ulNextTxData0 ^= DATA_1; ptrUSB_HW->ptrEndpoint->ulEndpointSize ^= ALTERNATE_TX_BUFFER;
 
     // MACRO for transmitting zero data packet to control endpoints from generic USB routines

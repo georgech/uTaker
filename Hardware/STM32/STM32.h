@@ -5838,7 +5838,7 @@ typedef struct stUSB_HW
     unsigned long  ulUSB_buffer[NUMBER_OF_USB_ENDPOINTS][64/sizeof(unsigned long)]; // linear, word aligned buffer large enough to hold largest single reception (there is one for each endpoint in case it is necessary to hold the input)
     USB_END_POINT *ptrEndpoint;
     unsigned char **ptrRxDatBuffer;                                      // pointer to the next reception buffer pointer
-    unsigned char **ptrDatBuffer;                                        // pointer to the next transmission buffer pointer
+    unsigned char **ptrTxDatBuffer;                                      // pointer to the next transmission buffer pointer
     unsigned short usLength;                                             // length of present input being handled
     unsigned short usStoredLength[NUMBER_OF_USB_ENDPOINTS];              // length information being held in the input buffer
     unsigned long  ucUSBAddress;                                         // our USB address                       

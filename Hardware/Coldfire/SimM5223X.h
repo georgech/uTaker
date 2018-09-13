@@ -1291,8 +1291,8 @@ typedef struct stM52235_PERIPH
     M5223X_CAN           SimCAN;
 #endif
     M5223X_CFM           SimCFM;
-#ifndef _M5222X
-    #ifndef _M5225X                                                      // {2}
+#if !defined _M5222X
+    #if !defined _M5225X                                                      // {2}
     M5223X_EPHY          SimEPHY;
     #endif
     M5223X_RNG           SimRNG;

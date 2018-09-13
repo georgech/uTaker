@@ -169,7 +169,7 @@
     //#define TWR_POS_K81
     //#define TWR_K80F150M                                               // tower board http://www.utasker.com/kinetis/TWR-K80F150M.html
 #elif defined _M5223X
-    #define M52110BOARD                                                  // board for M52110 (basic CAN MCU)
+    //#define M52110BOARD                                                // board for M52110 (basic CAN MCU)
     //#define M5282EVB                                                   // with SDRAM interface and FEC
     //#define M5282LITE                                                  // with SDRAM interface and FEC
     //#define M5208EVB                                                   // EVB Board for M5208 (with SDRAM interface and FEC but no internal FLASH - up to 166MHz)
@@ -180,7 +180,7 @@
     //#define M52223EVB                                                  // EVB Board for M52223
     //#define M52221DEMO                                                 // DEMO Board for M52221
     //#define M52259EVB                                                  // EVB Board for M52259 (Kirin3)
-    //#define M52259DEMO                                                 // DEMO Board for M52259 (Kirin3)
+      #define M52259DEMO                                                 // DEMO Board for M52259 (Kirin3)
     //#define M52259_TOWER                                               // TWR-M52259 (Kirin3)
     //#define M52235EVB                                                  // EVB Board for M52235
     //#define M52233DEMO                                                 // DEMO Board for M52233
@@ -930,60 +930,73 @@
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((30 * 1024) * MEM_FACTOR)
 #elif defined M52223EVB
     #define TARGET_HW       "M52223EVB"
+    #define _M5222X
     #define OUR_HEAP_SIZE (HEAP_REQUIREMENTS)((6 * 1024) * MEM_FACTOR)
     #define DEVICE_WITHOUT_ETHERNET                                      // M5222X has USB but no Ethernet
 #elif defined M52221DEMO
     #define TARGET_HW       "M52221DEMO"
+    #define _M5222X
     #define OUR_HEAP_SIZE (HEAP_REQUIREMENTS)((6 * 1024) * MEM_FACTOR)
     #define DEVICE_WITHOUT_ETHERNET                                      // M5222X has USB but no Ethernet
 #elif defined M52211EVB
     #define TARGET_HW       "M52211EVB"
+    #define _M5221X
     #define DEVICE_WITHOUT_ETHERNET                                      // M5221X has USB but no Ethernet
     #define OUR_HEAP_SIZE (HEAP_REQUIREMENTS)((6 * 1024) * MEM_FACTOR)
 #elif defined M52210DEMO
     #define TARGET_HW       "M52210DEMO"
+    #define _M5221X
     #define DEVICE_WITHOUT_ETHERNET                                      // M5221X has USB but no Ethernet
     #define OUR_HEAP_SIZE (HEAP_REQUIREMENTS)((6 * 1024) * MEM_FACTOR)
 #elif defined M52110BOARD
     #define TARGET_HW       "M52210BOARD"
+    #define _M521XX
     #define DEVICE_WITHOUT_ETHERNET                                      // M521XX has neither USB nor Ethernet
     #define DEVICE_WITHOUT_USB
     #define OUR_HEAP_SIZE (HEAP_REQUIREMENTS)((6 * 1024)  *MEM_FACTOR)
 #elif defined M5213EVB
     #define TARGET_HW       "M5213EVB"
+    #define _M521X
     #define DEVICE_WITHOUT_ETHERNET                                      // M521XX has neither USB nor Ethernet
     #define DEVICE_WITHOUT_USB
     #define OUR_HEAP_SIZE (HEAP_REQUIREMENTS)((10 * 1024) * MEM_FACTOR)
 #elif defined M52259EVB
     #define TARGET_HW       "M52259 Kirin3 EVB"
+    #define _M5225X
     #define FLASH_SPECULATION_ERROR_SOLVED                               // this family no longer suffers from FLASH speculation error
     #define OUR_HEAP_SIZE (HEAP_REQUIREMENTS)((22.5 * 1024) * MEM_FACTOR)// we have the LAN buffers in HEAP and big RX/TX - a little more for USB
     #define ETHERNET_AVAILABLE
 #elif defined M52259DEMO
     #define TARGET_HW       "M52259 Kirin3 DEMO"
+    #define _M5225X
     #define FLASH_SPECULATION_ERROR_SOLVED                               // this family no longer suffers from FLASH speculation error
     #define OUR_HEAP_SIZE (HEAP_REQUIREMENTS)((22.5  *1024) * MEM_FACTOR)// we have the LAN buffers in HEAP and big RX/TX - a little more for USB
     #define ETHERNET_AVAILABLE
 #elif defined M52259_TOWER
     #define TARGET_HW       "M52259 Kirin3 TOWER"
+    #define _M5225X
     #define FLASH_SPECULATION_ERROR_SOLVED                               // this family no longer suffers from FLASH speculation error
     #define OUR_HEAP_SIZE (HEAP_REQUIREMENTS)((30 * 1024) * MEM_FACTOR)  // we have the LAN buffers in HEAP and big RX/TX - a little more for USB
     #define ETHERNET_AVAILABLE
 #elif defined M5282EVB
     #define TARGET_HW       "M5282EVB"
+    #define _M528X
     #define DEVICE_WITHOUT_USB
     #define OUR_HEAP_SIZE (HEAP_REQUIREMENTS)((20 * 1024) * MEM_FACTOR)  // we have the LAN buffers in HEAP and big RX/TX
 #elif defined M5282LITE
     #define TARGET_HW       "M5282LITE"
+    #define _M528X
     #define DEVICE_WITHOUT_USB
     #define OUR_HEAP_SIZE (HEAP_REQUIREMENTS)((20 * 1024) * MEM_FACTOR)  // we have the LAN buffers in HEAP and big RX/TX
-#elif defined _M523X
+#elif defined M5235BCC
     #define TARGET_HW       "M5235BCC"
+    #define _M523X
     #define DEVICE_WITHOUT_USB                                           // M5235 has Ethernet but no USB
     #define OUR_HEAP_SIZE (HEAP_REQUIREMENTS)((30 * 1024) * MEM_FACTOR)  // we have the LAN buffers in internal SRAM
     #undef UNUSED_STACK_PATTERN                                          // since heap and stack are in different memories don't use stack monitoring
 #elif defined M5208EVB
     #define TARGET_HW       "M5208EVB"
+    #define _M520X
     #define DEVICE_WITHOUT_USB                                           // M520X has Ethernet but no USB
     #define OUR_HEAP_SIZE (HEAP_REQUIREMENTS)((30 * 1024) * MEM_FACTOR)  // we have the LAN buffers in internal SRAM
     #undef UNUSED_STACK_PATTERN                                          // since heap and stack are in different memories don't use stack monitoring
@@ -2226,9 +2239,9 @@
 //
 #if defined USE_USB_AUDIO && defined AUDIO_FFT
   //#define CMSIS_DSP_CFFT                                               // enable CMSIS CFFT support
-    #define CMSIS_DSP_CFFT_FLOAT
+        #define CMSIS_DSP_CFFT_FLOAT
 #else
-  //#define CMSIS_DSP_CFFT                                               // enable FFT support - details at http://www.utasker.com/docs/uTasker/uTasker_DSP.pdf
+ // #define CMSIS_DSP_CFFT                                               // enable FFT support - details at http://www.utasker.com/docs/uTasker/uTasker_DSP.pdf
         #define CMSIS_DSP_CFFT_FLOAT
       //#define CMSIS_DSP_CFFT_Q15
         #define CMSIS_DSP_FFT_16                                         // enable 16 point FFT
