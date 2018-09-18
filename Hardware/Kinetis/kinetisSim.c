@@ -2612,7 +2612,7 @@ static void fnWakeupInterrupt(int iPortReference, unsigned long ulPortState, uns
 extern int fnGetADC_sim_channel(int iPort, int iBit);
 static int fnHandleADCchange(int iChange, int iPort, unsigned char ucPortBit)
 {
-    if ((iChange & (TOGGLE_INPUT | TOGGLE_INPUT_NEG | TOGGLE_INPUT_POS)) != 0) {
+    if ((iChange & (TOGGLE_INPUT | TOGGLE_INPUT_NEG | TOGGLE_INPUT_POS | SET_INPUT)) != 0) {
         int iADC = 0;
         unsigned short usStepSize;
         signed int iAdcChannel = fnGetADC_sim_channel(iPort, (/*31 - */ucPortBit)); // {9}

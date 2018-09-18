@@ -264,6 +264,12 @@ static void fnPressButton(int i)
     iUserButtonStates[i] = 1;
     switch (user_buttons[i].Port_Ref & (ANALOGUE_SWITCH_INPUT | POSITIVE_SWITCH_INPUT)) {
     case 0:
+    #if defined EXTENDED_USER_BUTTONS                                    // {12}
+        if (user_buttons[i].iInverted != 0) {
+            fnInjectInputChange((user_buttons[i].Port_Ref & SWITCH_PORT_REF_MASK), user_buttons[i].Port_Bit, INPUT_TOGGLE_POS); // force button to high state
+            break;
+        }
+    #endif
         fnInjectInputChange((user_buttons[i].Port_Ref & SWITCH_PORT_REF_MASK), user_buttons[i].Port_Bit, INPUT_TOGGLE_NEG); // force button to low state
         break;
     case ANALOGUE_SWITCH_INPUT:

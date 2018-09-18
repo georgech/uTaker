@@ -382,7 +382,7 @@ _abort_multi:
         fnSimulateInputChange((unsigned char)*argv[0], (unsigned char)*argv[1], (TOGGLE_INPUT_POS | TOGGLE_INPUT_ANALOG));
         break;
     case INPUT_TOGGLE_POS:
-        fnSimulateInputChange((unsigned char)*argv[0], (unsigned char)*argv[1], TOGGLE_INPUT_POS);
+        fnSimulateInputChange((unsigned char)*argv[0], (unsigned char)*argv[1], SET_INPUT);
         break;
     case INPUT_TOGGLE_NEG:                                               // {19}
         fnSimulateInputChange((unsigned char)*argv[0], (unsigned char)*argv[1], TOGGLE_INPUT_NEG);
