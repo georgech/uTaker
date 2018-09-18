@@ -438,11 +438,20 @@ extern void fnSimulateKeyChange(int *intTable);
     #define TOGGLE_INPUT_NEG    0x04                                     // {15}
     #define TOGGLE_INPUT_POS    0x08                                     // {50}
     #define TOGGLE_INPUT_ANALOG 0x10                                     // {50}
+    #define DEFINE_INPUT        0x20
 
 extern void fnSimMatrixKB(void);
 
 #define KEY_CHANGED       0x01
 #define INPUT_CHANGED     0x02
+
+#if defined _EXCLUDE_WINDOWS_ && !defined _WINSIM_INCLUDE_
+    extern "C" void fnInitKeys(void);
+    extern "C" unsigned long fnKeyPadState(unsigned long ulInitialState, int iPortRef);
+#else
+    extern void fnInitKeys(void);
+    extern unsigned long fnKeyPadState(unsigned long ulInitialState, int iPortRef);
+#endif
 
 // Segment LED 
 //

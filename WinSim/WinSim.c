@@ -276,7 +276,10 @@ extern int main(int argc, char *argv[])
 
     switch (argc) {
     case INITIALISE_OP_SYSTEM:
-        fnInitTime(argv);
+        fnInitTime(argv);                                                // this also initialises simulated i2c/serial devices
+#if defined BUTTON_KEY_DEFINITIONS && defined EXTENDED_USER_BUTTONS
+        fnInitKeys();
+#endif
         fnSetProjectDetails(++argv);
 	    fnInitHW();                                                      // initialise hardware  
         fnSimPorts();                                                    // ensure simulator is aware of any hardware port initialisations

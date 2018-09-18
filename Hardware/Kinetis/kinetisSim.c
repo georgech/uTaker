@@ -67,6 +67,7 @@
     08.05.2018 Added simulation of all FTM/TPM channel interrupts        {49}
     29.08.2018 Add input capture simulation                              {50}
     03.09.2018 Extend CAN support to 3 CAN controllers
+    18.09.2018 Add key input port defaut override and extended port default states {51}
  
 */  
                           
@@ -347,6 +348,11 @@ static int iFlagRefresh = 0;
 #if defined KINETIS_KL                                                   // {24}
     static unsigned long ulCOPcounter = 0;
 #endif
+    #if defined KINETIS_KM
+    #define PORT_CAST unsigned char
+#else
+    #define PORT_CAST unsigned long
+#endif
 
 // Initialisation of all non-zero registers in the device
 //
@@ -358,6 +364,7 @@ static void fnSetDevice(unsigned long *port_inits)
     int i;
     int j;
 #endif
+    unsigned long initial_input_state;
 
     kinetis.CORTEX_M4_REGS.ulPRIMASK = INTERRUPT_MASKED;                 // interrupts are masked out of reset
 
@@ -1018,35 +1025,71 @@ static void fnSetDevice(unsigned long *port_inits)
 #if defined DEVICE_WITH_SLCD
     LCD_GCR     = 0x08350003;                                            // SLCD
 #endif
-#if defined KINETIS_KM
-    #define PORT_CAST unsigned char
-#else
-    #define PORT_CAST unsigned long
-#endif
-    GPIOA_PDIR  = (PORT_CAST)(ulPort_in_A = *port_inits++);              // set port inputs to default states
+    initial_input_state = fnKeyPadState(*port_inits++, _PORTA);          // {51} allow key input defaults override port input defaults
+    GPIOA_PDIR  = (PORT_CAST)(ulPort_in_A = initial_input_state);        // set port inputs to default states
 #if PORTS_AVAILABLE > 1
-    GPIOB_PDIR  = (PORT_CAST)(ulPort_in_B = *port_inits++);
+    initial_input_state = fnKeyPadState(*port_inits++, _PORTB);
+    GPIOB_PDIR  = (PORT_CAST)(ulPort_in_B = initial_input_state);
 #endif
 #if PORTS_AVAILABLE > 2
-    GPIOC_PDIR  = (PORT_CAST)(ulPort_in_C = *port_inits++);
+    initial_input_state = fnKeyPadState(*port_inits++, _PORTC);
+    GPIOC_PDIR  = (PORT_CAST)(ulPort_in_C = initial_input_state);
 #endif
 #if PORTS_AVAILABLE > 3
-    GPIOD_PDIR  = (PORT_CAST)(ulPort_in_D = *port_inits++);
+    initial_input_state = fnKeyPadState(*port_inits++, _PORTD);
+    GPIOD_PDIR  = (PORT_CAST)(ulPort_in_D = initial_input_state);
 #endif
 #if PORTS_AVAILABLE > 4
-    GPIOE_PDIR  = (PORT_CAST)(ulPort_in_E = *port_inits++);
+    initial_input_state = fnKeyPadState(*port_inits++, _PORTE);
+    GPIOE_PDIR  = (PORT_CAST)(ulPort_in_E = initial_input_state);
 #endif
 #if PORTS_AVAILABLE > 5
-    GPIOF_PDIR  = (PORT_CAST)(ulPort_in_F = *port_inits++);
+    initial_input_state = fnKeyPadState(*port_inits++, _PORTF);
+    GPIOF_PDIR  = (PORT_CAST)(ulPort_in_F = initial_input_state);
 #endif
 #if PORTS_AVAILABLE > 6
-    GPIOG_PDIR = (PORT_CAST)(ulPort_in_G = *port_inits++);
+    initial_input_state = fnKeyPadState(*port_inits++, _PORTG);
+    GPIOG_PDIR = (PORT_CAST)(ulPort_in_G = initial_input_state);
 #endif
 #if PORTS_AVAILABLE > 7
-    GPIOH_PDIR = (PORT_CAST)(ulPort_in_H = *port_inits++);
+    initial_input_state = fnKeyPadState(*port_inits++, _PORTH);
+    GPIOH_PDIR = (PORT_CAST)(ulPort_in_H = initial_input_state);
 #endif
 #if PORTS_AVAILABLE > 8
-    GPIOI_PDIR = (PORT_CAST)(ulPort_in_I = *port_inits++);
+    initial_input_state = fnKeyPadState(*port_inits++, _PORTI);
+    GPIOI_PDIR = (PORT_CAST)(ulPort_in_I = initial_input_state);
+#endif
+#if defined _EXTERNAL_PORT_COUNT && (_EXTERNAL_PORT_COUNT > 0) && defined PORT_EXT0_DEFAULT_INPUT // {51}
+    initial_input_state = fnKeyPadState(PORT_EXT0_DEFAULT_INPUT, _PORT_EXT_0);
+    fnSetI2CPort(_PORT_EXT_0, DEFINE_INPUT, initial_input_state);
+#endif
+#if defined _EXTERNAL_PORT_COUNT && (_EXTERNAL_PORT_COUNT > 1) && defined PORT_EXT1_DEFAULT_INPUT
+    initial_input_state = fnKeyPadState(PORT_EXT1_DEFAULT_INPUT, _PORT_EXT_1);
+    fnSetI2CPort(_PORT_EXT_1, DEFINE_INPUT, initial_input_state);
+#endif
+#if defined _EXTERNAL_PORT_COUNT && (_EXTERNAL_PORT_COUNT > 2) && defined PORT_EXT2_DEFAULT_INPUT
+    initial_input_state = fnKeyPadState(PORT_EXT2_DEFAULT_INPUT, _PORT_EXT_2);
+    fnSetI2CPort(_PORT_EXT_2, DEFINE_INPUT, initial_input_state);
+#endif
+#if defined _EXTERNAL_PORT_COUNT && (_EXTERNAL_PORT_COUNT > 3) && defined PORT_EXT3_DEFAULT_INPUT
+    initial_input_state = fnKeyPadState(PORT_EXT3_DEFAULT_INPUT, _PORT_EXT_3);
+    fnSetI2CPort(_PORT_EXT_3, DEFINE_INPUT, initial_input_state);
+#endif
+#if defined _EXTERNAL_PORT_COUNT && (_EXTERNAL_PORT_COUNT > 4) && defined PORT_EXT0_DEFAULT_INPUT
+    initial_input_state = fnKeyPadState(PORT_EXT4_DEFAULT_INPUT, _PORT_EXT_4);
+    fnSetI2CPort(_PORT_EXT_4, DEFINE_INPUT, initial_input_state);
+#endif
+#if defined _EXTERNAL_PORT_COUNT && (_EXTERNAL_PORT_COUNT > 5) && defined PORT_EXT1_DEFAULT_INPUT
+    initial_input_state = fnKeyPadState(PORT_EXT5_DEFAULT_INPUT, _PORT_EXT_5);
+    fnSetI2CPort(_PORT_EXT_5, DEFINE_INPUT, initial_input_state);
+#endif
+#if defined _EXTERNAL_PORT_COUNT && (_EXTERNAL_PORT_COUNT > 6) && defined PORT_EXT2_DEFAULT_INPUT
+    initial_input_state = fnKeyPadState(PORT_EXT6_DEFAULT_INPUT, _PORT_EXT_6);
+    fnSetI2CPort(_PORT_EXT_6, DEFINE_INPUT, initial_input_state);
+#endif
+#if defined _EXTERNAL_PORT_COUNT && (_EXTERNAL_PORT_COUNT > 7) && defined PORT_EXT3_DEFAULT_INPUT
+    initial_input_state = fnKeyPadState(PORT_EXT7_DEFAULT_INPUT, _PORT_EXT_7);
+    fnSetI2CPort(_PORT_EXT_7, DEFINE_INPUT, initial_input_state);
 #endif
 #if !defined KINETIS_KL && !defined KINETIS_KE && (FLEX_TIMERS_AVAILABLE > 0)
     FTM0_MODE = FTM_MODE_WPDIS;                                          // FlexTimer

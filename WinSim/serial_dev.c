@@ -349,7 +349,10 @@ extern void fnSetI2CPort(int iExtPortReference, int iChange, unsigned long bit)
     if ((iExtPortReference >= FIRST_SHIFT_IN_REGISTER_EXTERNAL_PORT) && (iExtPortReference < (FIRST_SHIFT_IN_REGISTER_EXTERNAL_PORT + SHIFT_REGISTER_IN_CNT))) {
         int iRef;
         iRef = (iExtPortReference - FIRST_SHIFT_IN_REGISTER_EXTERNAL_PORT);
-        if ((iChange & (TOGGLE_INPUT | TOGGLE_INPUT_NEG)) != 0) {
+        if ((iChange & DEFINE_INPUT) != 0) {
+            simShiftRegisterIn[iRef].ulPortInput = bit;                  // set port's complete value
+        }
+        else if ((iChange & (TOGGLE_INPUT | TOGGLE_INPUT_NEG)) != 0) {
             simShiftRegisterIn[iRef].ulPortInput ^= (bit);               // toggle the input state
         }
         else if (iChange == SET_INPUT) {
@@ -2827,16 +2830,20 @@ extern unsigned char fnSimI2C_devices(unsigned char ucType, unsigned char ucData
         int i = (SHIFT_REGISTER_IN_CNT - 1);
         unsigned char ucCarry = 0;
         unsigned char ucReturn = 0;
+        int iAddressed = 0;
         while (i >= 0) {
             if (simShiftRegisterIn[i].ucState != 0) {                    // if selected
                 ucReturn = (unsigned char)(simShiftRegisterIn[i].ulShift >> 24);
                 simShiftRegisterIn[i].ulShift <<= 8;
                 simShiftRegisterIn[i].ulShift |= (ucCarry);
                 ucCarry = ucReturn;
+                iAddressed = 1;
             }
             i--;
         }
-        return ucCarry;
+        if (iAddressed != 0) {
+            return ucCarry;
+        }
     }
 #endif
 #if defined MAX6957_CNT && (MAX6957_CNT > 0)

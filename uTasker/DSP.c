@@ -20,6 +20,7 @@
 #if defined CMSIS_DSP_CFFT
     #include "../../Hardware/CMSIS_DSP/arm_const_structs.h"              // include defines required for the use of ARM CMSIS FFT
 
+#if defined _WINDOWS
 static size_t reverse_bits(size_t x, int n) {
     size_t result = 0;
     for (int i = 0; i < n; i++, x >>= 1) {
@@ -27,6 +28,7 @@ static size_t reverse_bits(size_t x, int n) {
     }
     return result;
 }
+#endif
 
 extern float fnGenerateWindowFloat(float *ptrWindowBuffer, int iInputSamples, int iWindowType)
 {
@@ -300,7 +302,7 @@ extern int fnFFT(void *ptrInputBuffer, void *ptrOutputBuffer, int iInputSamples,
         break;
     case FFT_INPUT_HALF_WORDS_UNSIGNED:                                  // input samples are unsigned shorts
         {
-            signed short *_ptrInputBuffer = (unsigned short *)ptrInputBuffer;
+            unsigned short *_ptrInputBuffer = (unsigned short *)ptrInputBuffer;
             do {                                                         // transfer input from a circular input buffer to a linear fft buffer with complex sample inputs
                 if ((iCopyLimit - iInput) > iInputSamples){
                     iCopyLimit = (iInput + iInputSamples);

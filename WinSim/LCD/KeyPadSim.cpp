@@ -25,6 +25,7 @@
     09.04.2014 Display port details when hovering over board inputs      {9}
     29.08.2018 Add optional mutually excluding button (automatic release of others when new one is pressed) {10}            
     29.08.2018 Add optional sticky buttons (not released when the ESC key is pressed) {11}
+    18.09.2018 Add EXTENDED_USER_BUTTONS option                          {12}
 
 */
 
@@ -83,6 +84,10 @@ USER_KEY user_keys[] = {
         unsigned long  Port_Ref;
         unsigned long  Port_Bit;
         RECT       button_area;
+    #if defined EXTENDED_USER_BUTTONS                                    // {12}
+        int        iInverted;                                            // pressing the button has an inverted effect
+        int        iInitiallyOn;                                         // thsi can be set to represent a initially pressed state
+    #endif
     } USER_BUTTON;
 
 
@@ -463,4 +468,45 @@ extern int fnCheckKeypad(int x, int y, int iPressRelease)
     return 0;
 }
 
+#if defined BUTTON_KEY_DEFINITIONS && defined EXTENDED_USER_BUTTONS      // {12}
+// Set initial key press states for simulator image
+//
+extern void fnInitKeys(void)
+{
+    int i;
+    for (i = 0; i < (sizeof(user_buttons) / sizeof(USER_BUTTON)); i++) {
+        if (user_buttons[i].iInitiallyOn != 0) {
+            iUserButtonStates[i] = 1;                                    // pressed by default
+        }
+    }
+}
+
+// Set initial key input port state
+//
+extern unsigned long fnKeyPadState(unsigned long ulInitialState, int iPortRef)
+{
+    int i;
+    for (i = 0; i < (sizeof(user_buttons) / sizeof(USER_BUTTON)); i++) {
+        if (user_buttons[i].Port_Ref == iPortRef) {
+            if (user_buttons[i].iInitiallyOn != 0) {
+                if (user_buttons[i].iInverted != 0) {
+                    ulInitialState |= user_buttons[i].Port_Bit;
+                }
+                else {
+                    ulInitialState &= ~user_buttons[i].Port_Bit;
+                }
+            }
+            else if (user_buttons[i].iInverted != 0) {
+                ulInitialState &= ~user_buttons[i].Port_Bit;
+            }
+        }
+    }
+    return ulInitialState;
+}
+#else
+extern unsigned long fnKeyPadState(unsigned long ulInitialState, int iPortRef)
+{
+    return ulInitialState;
+}
+#endif
 #endif

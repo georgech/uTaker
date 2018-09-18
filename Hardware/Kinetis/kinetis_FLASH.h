@@ -430,6 +430,11 @@ static int fnFlashNow(unsigned char ucCommand, unsigned long *ptrWord, unsigned 
     #else
     fnRAM_code((volatile unsigned char *)FLASH_STATUS_REGISTER);         // execute the command from SRAM
     #endif
+    #if defined FMC_PFB0CR_                                              // prepared but needs testing
+    FMC_PFB0CR |= (FMC_PFBCR_CINV_WAY_0 | FMC_PFBCR_CINV_WAY_1 | FMC_PFBCR_CINV_WAY_2 | FMC_PFBCR_CINV_WAY_3); // invalidate cache to ensure that it has no stale flash content after a flash modification
+    #elif defined FMC_PFB01CR_
+    FMC_PFB01CR |= (FMC_PFBCR_CINV_WAY_0 | FMC_PFBCR_CINV_WAY_1 | FMC_PFBCR_CINV_WAY_2 | FMC_PFBCR_CINV_WAY_3); // invalidate cache to ensure that it has no stale flash content after a flash modification
+    #endif
     #if defined FLEXFLASH_DATA || (defined FLASH_CONTROLLER_FTMRE && (defined SIZE_OF_EEPROM && SIZE_OF_EEPROM > 0)) // {82}{109} if working with FlashNMV in data flash mode or EEPROM
     if (iNoInterruptDisable == 0) {
         uEnable_Interrupt();                                             // safe to accept interrupts again

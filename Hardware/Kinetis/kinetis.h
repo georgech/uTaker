@@ -5995,18 +5995,29 @@ typedef struct stKINETIS_INTMUX
       #define FMC_PFAPR_M6PFD     0x00400000                             // master 6 - pre-fetch disable
       #define FMC_PFAPR_M7PFD     0x00800000                             // master 7 - pre-fetch disable
       #define FMC_PFAPR_DEFAULT   (FMC_PFAPR_M0AP_RW | FMC_PFAPR_M1AP_RW | FMC_PFAPR_M2AP_RW | FMC_PFAPR_M3PFD | FMC_PFAPR_M4PFD | FMC_PFAPR_M5PFD | FMC_PFAPR_M6PFD | FMC_PFAPR_M0PFD)
-    #if defined KINETIS_K66
-        #define FMC_PFB01CR          *(unsigned long *)(FMC_BLOCK + 0x004)   // Flash Bank 0-1 Control Register
-        #define FMC_PFB23CR          *(unsigned long *)(FMC_BLOCK + 0x004)   // Flash Bank 2-3 Control Register
+    #if defined KINETIS_K65 || defined KINETIS_K66
+        #define FMC_PFB01CR          *(unsigned long *)(FMC_BLOCK + 0x004) // Flash Bank 0-1 Control Register
+        #define FMC_PFB23CR          *(unsigned long *)(FMC_BLOCK + 0x004) // Flash Bank 2-3 Control Register
     #else
-        #define FMC_PFB0CR          *(unsigned long *)(FMC_BLOCK + 0x004)    // Flash Bank 0 Control Register
-          #define BANKDCE             0x00000010                             // data cache enable
-          #define BANKICE             0x00000008                             // instruction cache enable
-          #define BANK_DPE            0x00000004                             // bank data prefetch enable
-          #define BANKIPE             0x00000002                             // instruction prefetch enable
-          #define BANKSEBE            0x00000001                             // single entry buffer enable
-        #define FMC_PFB1CR          *(unsigned long *)(FMC_BLOCK + 0x008)    // Flash Bank 1 Control Register
+        #define FMC_PFB0CR          *(volatile unsigned long *)(FMC_BLOCK + 0x004)// Flash Bank 0 Control Register
+        #define FMC_PFB1CR          *(unsigned long *)(FMC_BLOCK + 0x008)// Flash Bank 1 Control Register
     #endif
+          #define BANKSEBE            0x00000001                         // single entry buffer enable
+          #define BANKIPE             0x00000002                         // instruction prefetch enable
+          #define BANK_DPE            0x00000004                         // bank data prefetch enable
+          #define BANKICE             0x00000008                         // instruction cache enable
+          #define BANKDCE             0x00000010                         // data cache enable
+          #define FMC_PFBCR_CRC_LRU4  0x00000000                         // cache replacement control - LRU replacement algorithm per set across all four ways
+          #define FMC_PFBCR_CRC_LRU2  0x00000400                         // cache replacement control - LRU replacement algorithm [0-1] for prefetches, [2-3] for data
+          #define FMC_PFBCR_CRC_LRU3  0x00000600                         // cache replacement control - LRU replacement algorithm [0-2] for prefetches, [3] for data
+          #define FMC_PFBCR_BMW_32    0x00000000                         // bank memory with 32 bits (read-only)
+          #define FMC_PFBCR_BMW_64    0x00020000                         // bank memory with 64 bits (read-only)
+          #define FMC_PFBCR_BMW_128   0x00040000                         // bank memory with 128 bits (read-only)
+          #define FMC_PFBCR_S_B_INV   0x00080000                         // invalidate prefetch speulation buffer (write-one, reads 0)
+          #define FMC_PFBCR_CINV_WAY_0 0x00100000                        // cache invalidate way 0 (write-one, reads 0)
+          #define FMC_PFBCR_CINV_WAY_1 0x00200000                        // cache invalidate way 1 (write-one, reads 0)
+          #define FMC_PFBCR_CINV_WAY_2 0x00400000                        // cache invalidate way 2 (write-one, reads 0)
+          #define FMC_PFBCR_CINV_WAY_3 0x00800000                        // cache invalidate way 3 (write-one, reads 0)
     #define FMC_TAGVDW0S0       *(unsigned long *)(FMC_BLOCK + 0x100)    // Cache Directory Storage
     #define FMC_TAGVDW0S1       *(unsigned long *)(FMC_BLOCK + 0x104)    // Cache Directory Storage
     #define FMC_TAGVDW0S2       *(unsigned long *)(FMC_BLOCK + 0x108)    // Cache Directory Storage
