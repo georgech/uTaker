@@ -509,10 +509,26 @@ extern unsigned long fnKeyPadState(unsigned long ulInitialState, int iPortRef)
     }
     return ulInitialState;
 }
+
+extern void fnSyncKeyPadState(int iPortRef, unsigned long ulInput, int iOnOff)
+{
+    int i;
+    for (i = 0; i < (sizeof(user_buttons) / sizeof(USER_BUTTON)); i++) {
+        if (user_buttons[i].Port_Ref == iPortRef) {
+            if ((user_buttons[i].Port_Bit & ulInput) != 0) {
+                iUserButtonStates[i] = iOnOff;
+            }
+        }
+    }
+}
 #else
 extern unsigned long fnKeyPadState(unsigned long ulInitialState, int iPortRef)
 {
     return ulInitialState;
+}
+
+extern void fnSyncKeyPadState(int iPortRef, unsigned long ulInput, int iOnOff)
+{
 }
 #endif
 #endif

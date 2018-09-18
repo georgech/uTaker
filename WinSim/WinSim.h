@@ -448,9 +448,11 @@ extern void fnSimMatrixKB(void);
 #if defined _EXCLUDE_WINDOWS_ && !defined _WINSIM_INCLUDE_
     extern "C" void fnInitKeys(void);
     extern "C" unsigned long fnKeyPadState(unsigned long ulInitialState, int iPortRef);
+    extern "C" void fnSyncKeyPadState(int iPortRef, unsigned long ulInput, int iOnOff);
 #else
     extern void fnInitKeys(void);
     extern unsigned long fnKeyPadState(unsigned long ulInitialState, int iPortRef);
+    extern void fnSyncKeyPadState(int iPortRef, unsigned long ulInput, int iOnOff);
 #endif
 
 // Segment LED 
@@ -547,7 +549,11 @@ extern unsigned char fnSimI2C_devices(unsigned char ucType, unsigned char ucData
     #define I2C_TX_COMPLETE     0x04
     #define SPI_MODE_CS_ASSERT  0x80                                     // allow the interface to be shared with SPI devices
     #define SPI_MODE_CS_NEGATE  0x40
-    #define SPI_MODE_DATA       0xc0
+    #define SPI_MODE_DATA_0     0xc0                                     // data on SPI 0
+    #define SPI_MODE_DATA_1     0xc1                                     // data on SPI 1
+    #define SPI_MODE_DATA_2     0xc2                                     // data on SPI 2
+    #define SPI_MODE_DATA_3     0xc3                                     // data on SPI 3
+    #define SPI_MODE_DATA_4     0xc4                                     // data on SPI 4
 
 extern void fnInitI2C_EEPROM(void);                                      // {39}
 extern unsigned char *fnGetI2CEEPROMStart(void);
