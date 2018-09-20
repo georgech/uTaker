@@ -7570,7 +7570,7 @@ typedef struct stVECTOR_TABLE
 #else
     #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
         #define _SETBITS(ref, mask)        GPIO##ref##_BSRR = (mask & 0xffff)
-        #define _CLEARBITS(ref, mask)      GPIO##ref##_BSRR = ((mask & 0xffff) << 16) // the F2/F4 don't have a BRR register so the BSRR register needs to be used
+        #define _CLEARBITS(ref, mask)      GPIO##ref##_BSRR = ((unsigned long)(mask & 0xffff) << 16) // the F2/F4 don't have a BRR register so the BSRR register needs to be used
     #else
         #define _SETBITS(ref, mask)        GPIO##ref##_BSRR = (mask & 0xffff)
         #define _CLEARBITS(ref, mask)      GPIO##ref##_BRR  = (mask)
