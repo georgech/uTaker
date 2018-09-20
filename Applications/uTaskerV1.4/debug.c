@@ -6595,7 +6595,7 @@ static void fnDoFTP_TELNET_MQTT(unsigned char ucType, CHAR *ptrInput)
         break;
     case DO_FTP_USER_NAME:                                               // modify the user account name to be used with the FTP server
         {
-            int iStringLength = uStrlen(ptrInput);
+            size_t iStringLength = uStrlen(ptrInput);
             if (iStringLength > (sizeof(temp_pars->temp_parameters.cFTPUserName) - 1)) {
               iStringLength = (sizeof(temp_pars->temp_parameters.cFTPUserName) - 1);
             }
@@ -6604,7 +6604,7 @@ static void fnDoFTP_TELNET_MQTT(unsigned char ucType, CHAR *ptrInput)
         break;
     case DO_FTP_USER_PASS:                                             // modify the user account password to be used with the FTP server
       {
-          int iStringLength = uStrlen(ptrInput);
+          size_t iStringLength = uStrlen(ptrInput);
           if (iStringLength > (sizeof(temp_pars->temp_parameters.cFTPUserPass) - 1)) {
               iStringLength = (sizeof(temp_pars->temp_parameters.cFTPUserPass) - 1);
           }
@@ -7623,7 +7623,7 @@ extern int fnCommandInput(unsigned char *ptrData, unsigned short usLen, int iSou
             continue;
         }
         else if (ucEscapeSequence == ESCAPE_ARROWS) {                    // arrow direction expected
-            int iOriginalLength;
+            size_t iOriginalLength;
             switch (*ptrData) {
             case ARROW_LEFT_SEQUENCE:                                    // move left in buffer to edit
                 if (ucDebugCnt != 0) {
@@ -7658,7 +7658,7 @@ extern int fnCommandInput(unsigned char *ptrData, unsigned short usLen, int iSou
                 }
                 fnDebugMsg("\r");
                 fnDebugMsg(cDebugIn[iDebugBufferIndex]);
-                ucDebugCnt = uStrlen(cDebugIn[iDebugBufferIndex]);
+                ucDebugCnt = (unsigned char)uStrlen(cDebugIn[iDebugBufferIndex]);
                 continue;
             default:
                 break;

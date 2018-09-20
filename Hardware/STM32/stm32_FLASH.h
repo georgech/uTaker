@@ -458,6 +458,19 @@ static int fnWriteInternalFlash(ACCESS_DETAILS *ptrAccessDetails, unsigned char 
     return 0;
 }
 
+extern void fnProtectFlash(unsigned char *ptrSector, unsigned char ucProtection)
+{
+    _EXCEPTION("To do!!");
+}
+
+extern int fnUnprotectEraseProtectFlashSector(unsigned char *ptrSector)
+{
+    fnProtectFlash(ptrSector, UNPROTECT_SECTOR);
+    fnEraseFlashSector(ptrSector, 0);
+    fnProtectFlash(ptrSector, PROTECT_SECTOR);
+    return 0;
+}
+
         #if !defined ONLY_INTERNAL_FLASH_STORAGE
 
 // Search for the memory type that the starting address is in, return the type and restrict the largest length that can be read,written, erased from that location

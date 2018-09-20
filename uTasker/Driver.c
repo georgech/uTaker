@@ -1316,13 +1316,13 @@ extern CHAR *uStrcpy(CHAR *ptrTo, const CHAR *ptrFrom)
 //
 #if !defined uStrlen                                                     // {7}
     #if defined RUN_LOOPS_IN_RAM
-int (*uStrlen)(const CHAR *ptrStr);
+size_t(*uStrlen)(const CHAR *ptrStr);
 static int _uStrlen(const CHAR *ptrStr)
     #else
-extern int uStrlen(const CHAR *ptrStr)
+extern size_t uStrlen(const CHAR *ptrStr)
     #endif
 {
-    int iSize = 0;
+    size_t iSize = 0;
 
     while (*ptrStr++ != 0) {                                             // search for the null-terminator at the end of the string
         iSize++;
@@ -1434,7 +1434,7 @@ extern void fnInitDriver(void)                                           // {3}
     uStrcpy = (CHAR * (*)(CHAR *, const CHAR *))ptrNewMem;
     ptrNewMem += 500;
     memcpy(ptrNewMem, _uStrlen, 500);
-    uStrlen = (int (*)(const CHAR *))ptrNewMem;                          // {2}
+    uStrlen = (size_t(*)(const CHAR *))ptrNewMem;                        // {2}
     #else
         #if !defined DMA_MEMCPY_SET || defined DEVICE_WITHOUT_DMA
     uMemset = (void (*)(void *, unsigned char, size_t ))ptrNewMem;
@@ -1448,7 +1448,7 @@ extern void fnInitDriver(void)                                           // {3}
     ptrNewMem += (MAX_MALLOC)((CAST_POINTER_ARITHMETIC)_uStrcpy - (CAST_POINTER_ARITHMETIC)_uStrcmp);
     uStrcpy = (CHAR * (*)(CHAR *, const CHAR *))ptrNewMem;
     ptrNewMem += (MAX_MALLOC)((CAST_POINTER_ARITHMETIC)_uStrlen  - (CAST_POINTER_ARITHMETIC)_uStrcpy);
-    uStrlen = (int (*)(const CHAR *))ptrNewMem;                          // {2}
+    uStrlen = (size_t(*)(const CHAR *))ptrNewMem;                        // {2}
     #endif
 }
 #endif

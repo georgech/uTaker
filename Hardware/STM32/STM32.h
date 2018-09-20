@@ -51,7 +51,7 @@
     #endif
     #define _SIM_PORT_CHANGE
 #endif
-#ifndef __CONFIG__
+#if !defined __CONFIG__
     #include "config.h"
 #endif
 
@@ -74,6 +74,8 @@
     #define __PACK_ON 
     #define __PACK_OFF 
 #endif
+
+#define __interrupt
 
 // Cover functions to alow the application to access the PHY
 //

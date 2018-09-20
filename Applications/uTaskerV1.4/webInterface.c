@@ -1114,13 +1114,13 @@ static CHAR *fnInsertString(unsigned char *ptrBuffer, LENGTH_CHUNK_COUNT TxLengt
                 *usLengthToSend = 0;
                 return 0;
             }
-            *usLengthToSend = uStrlen(cPtr);
+            *usLengthToSend = (unsigned short)uStrlen(cPtr);
             return cPtr;
     #endif
 #endif
         case 'E':                                                        // display Email address
 #if defined USE_SMTP
-            *usLengthToSend = uStrlen(cEmailAdd);
+            *usLengthToSend = (unsigned short)uStrlen(cEmailAdd);
             return cEmailAdd;
 #else
             cValue[0] = ' ';

@@ -1508,7 +1508,7 @@ static signed short fnSendFTP(unsigned char ucMsg, FTP_INSTANCE *ptrFtp)
 #if defined FTP_UTFAT && UT_FTP_PATH_LENGTH > 0                          // {30}
         if (ptr_utDirectory->usDirectoryFlags & UTDIR_VALID) {
             uMemcpy(FTP_Data_Tx.ucTCP_Message, cFTPDir, 5);              // 257 "
-            usSize = uStrlen(ptr_utDirectory->ptrDirectoryPath);
+            usSize = (unsigned short)uStrlen(ptr_utDirectory->ptrDirectoryPath);
             if (usSize > 2) {
                 usSize -= 2;                                             // remove "D:" from front
             }

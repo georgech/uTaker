@@ -115,7 +115,7 @@ extern "C" {
 extern void *uMemcpy(void *ptrTo, const void *ptrFrom, size_t Size);
 extern void *uMemset(void *ptrTo, int ucValue, size_t Size);
 extern int   uMemcmp(const void *ptrTo, const void *ptrFrom, size_t Size);
-extern int   uStrlen(const char *ptrStr);
+extern size_t uStrlen(const char *ptrStr);
 
 #define memcpy(a,b,c) uMemcpy(a,b,c)
 #define memset(a,b,c) uMemset(a,b,c)

@@ -5695,7 +5695,7 @@ static int fnInsertLFN_name(OPEN_FILE_BLOCK *ptr_openBlock, UTFILE *ptr_utFile, 
     const CHAR *ptrLongFileName = ptr_openBlock->ptrLocalDirPath;        // {4}
     int i;
     int iFileObjectMoved = 0;
-    int iNameLength = uStrlen(ptrLongFileName);                          // length of long file name that must be saved
+    size_t iNameLength = uStrlen(ptrLongFileName);                       // length of long file name that must be saved
     unsigned char ucEntryLength = 1;                                     // smallest size that can be required by a LFN (SFN will be required after it too)
     const CHAR *ptrReverseLFN = (ptrLongFileName + iNameLength);         // set the LFN name pointer to the end of the string (terminator) since it is going to be copied in reverse order
     unsigned char ucNextCharacter = 0xff;                                // default is pad character

@@ -39,7 +39,7 @@ static int fnSNMP_callback(unsigned char ucEvent, unsigned char *data, unsigned 
 {
     switch (ucEvent) {
     case SNMP_COMMUNITY_CHECK_WRITE:
-        if (usLengthReference != uStrlen(cSNMP_communityWrite)) {
+        if (usLengthReference != (unsigned short)uStrlen(cSNMP_communityWrite)) {
             return SNMP_COMMUNITY_MISMATCH;                              // length mismatch
         }
         if (uMemcmp(cSNMP_communityWrite, data, usLengthReference) != 0) { // check that the SNMP request belongs to our community
@@ -47,7 +47,7 @@ static int fnSNMP_callback(unsigned char ucEvent, unsigned char *data, unsigned 
         }
         return SNMP_COMMUNITY_READ_WRITE;                                // allow read write access in this community
     case SNMP_COMMUNITY_CHECK_READ:                                      // check that a received community name matches the one expected
-        if (usLengthReference != uStrlen(cSNMP_communityRead)) {
+        if (usLengthReference != (unsigned short)uStrlen(cSNMP_communityRead)) {
             return SNMP_COMMUNITY_MISMATCH;                              // length mismatch
         }
         if (uMemcmp(cSNMP_communityRead, data, usLengthReference) != 0) { // check that the SNMP request belongs to our community

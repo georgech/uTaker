@@ -1929,7 +1929,7 @@ extern void *fnGetUSB_config_descriptor(unsigned short *usLength)
 static void fnSetSerialNumberString(CHAR *ptrSerialNumber) {             // {12}
     unsigned char ucDescriptorLength = (sizeof(USB_STRING_DESCRIPTOR) - 2);
     unsigned char *ptrString;
-    int iStringLength = (uStrlen(ptrSerialNumber) * 2);
+    size_t iStringLength = (uStrlen(ptrSerialNumber) * 2);
     if (iStringLength == 0) {
         ucDescriptorLength += 2;                                         // space for a null-terminator
     }

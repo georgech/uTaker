@@ -222,7 +222,7 @@ static int fnRegenerate(void)
         uStrcpy(ptrStr, "EHLO ");                                        // callback to get user name
         ptrUserInfo = fnUserCallback(SMTP_GET_DOMAIN, 0);
         uStrcpy((ptrStr + usDataLen), ptrUserInfo);
-        usDataLen = uStrlen(ptrStr);
+        usDataLen = (unsigned short)uStrlen(ptrStr);
         break;
 
 #if defined USE_SMTP_AUTHENTICATION
@@ -247,7 +247,7 @@ static int fnRegenerate(void)
         usDataLen = 12;
         ptrUserInfo = fnUserCallback(SMTP_GET_SENDER, 0);
         uStrcpy((ptrStr + usDataLen), ptrUserInfo);
-        usDataLen = uStrlen(ptrStr);
+        usDataLen = (unsigned short)uStrlen(ptrStr);
         *(ptrStr + usDataLen) = '>';
         usDataLen++;
         break;
@@ -257,7 +257,7 @@ static int fnRegenerate(void)
         usDataLen = 10;
         ptrUserInfo = fnUserCallback(SMTP_GET_DESTINATION, 0);
         uStrcpy((ptrStr + usDataLen), ptrUserInfo);
-        usDataLen = uStrlen(ptrStr);
+        usDataLen = (unsigned short)uStrlen(ptrStr);
         *(ptrStr + usDataLen) = '>';
         usDataLen++;
         break;
@@ -272,17 +272,17 @@ static int fnRegenerate(void)
         usDataLen = 4;
         ptrUserInfo = fnUserCallback(SMTP_GET_DESTINATION, 0);
         uStrcpy((ptrStr + usDataLen), ptrUserInfo);
-        usDataLen += uStrlen((CHAR *)ptrUserInfo);
+        usDataLen += (unsigned short)uStrlen((CHAR *)ptrUserInfo);
         uStrcpy(ptrStr + usDataLen, "\r\nSubject: ");
         usDataLen += 11;
         ptrUserInfo = fnUserCallback(SMTP_GET_SUBJECT, 0);
         uStrcpy((ptrStr + usDataLen), ptrUserInfo);
-        usDataLen += uStrlen((CHAR *)ptrUserInfo);
+        usDataLen += (unsigned short)uStrlen((CHAR *)ptrUserInfo);
         uStrcpy(ptrStr + usDataLen, "\r\nFrom: ");
         usDataLen += 8;
         ptrUserInfo = fnUserCallback(SMTP_GET_SENDER, 0);
         uStrcpy((ptrStr + usDataLen), ptrUserInfo);
-        usDataLen += uStrlen((CHAR *)ptrUserInfo);
+        usDataLen += (unsigned short)uStrlen((CHAR *)ptrUserInfo);
         uStrcpy(ptrStr + usDataLen, "\r\n");                             // insert empty row
         usDataLen += 2;
         usEmailTextPosition = 0;                                         // prepare for content transmission

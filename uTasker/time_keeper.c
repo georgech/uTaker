@@ -1759,18 +1759,18 @@ enum twilight c2tw(char c)
 	switch (c) {
 	case 'O':
 	case 'o':
-		return OFFICIAL;
+		return OFFICIAL_TWILIGHT;
 	case 'C':
 	case 'c':
-		return CIVIL;
+		return CIVIL_TWILIGHT;
 	case 'N':
 	case 'n':
-		return NAUTICAL;
+		return NAUTICAL_TWILIGHT;
 	case 'A':
 	case 'a':
-		return ASTRONOMICAL;
+		return ASTRONOMICAL_TWILIGHT;
 	default:
-		return UNKNOWN;
+		return UNKNOWN_TWILIGHT;
 	}
 }
 

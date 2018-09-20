@@ -370,7 +370,7 @@ extern int fnFTP_client_transfer(CHAR *ptrFilePath, int iMode)
 static void fnEnterPath(CHAR *ptrPath, const CHAR *ptrCommand)
 {
     CHAR *ptrEnd;
-    int iPathLength;
+    size_t iPathLength;
     if (ptrPath != 0) {
         iPathLength = uStrlen(ptrPath);
         if (iPathLength > MAX_FTP_CLIENT_PATH_LENGTH) {

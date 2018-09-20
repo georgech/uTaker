@@ -2758,7 +2758,7 @@ extern int fnSimTimers(void)
         else {
             ulTickCount = (unsigned long)((unsigned long long)((unsigned long long)TICK_RESOLUTION * (unsigned long long)HCLK)/8000000); // count per tick period from internal clock divided by 8
         }
-        if ((SYSTICK_CURRENT + 1) > ulTickCount) {
+        if (ulTickCount < SYSTICK_CURRENT) {
             SYSTICK_CURRENT -= ulTickCount;
         }
         else {

@@ -1226,7 +1226,7 @@ extern void fnFlushSerialRx(void)
 //
 extern CHAR *fnGetDHCP_host_name(unsigned char *ptr_ucHostNameLength, int iNetwork)
 {
-    *ptr_ucHostNameLength = uStrlen(temp_pars->temp_parameters.cDeviceIDName); // length of the name
+    *ptr_ucHostNameLength = (unsigned char)uStrlen(temp_pars->temp_parameters.cDeviceIDName); // length of the name
     return (temp_pars->temp_parameters.cDeviceIDName);                   // return pointer to the name to use
 }
 #endif
@@ -1603,7 +1603,8 @@ extern QUEUE_HANDLE fnSetNewSerialMode(TTYTABLE *ptrInterfaceParameters, unsigne
         #else
       //tInterfaceParameters.ucDMAConfig = 0;
         tInterfaceParameters.ucDMAConfig = UART_TX_DMA;                  // activate DMA on transmission
-      //tInterfaceParameters.ucDMAConfig = (UART_RX_DMA | UART_RX_DMA_HALF_BUFFER | UART_RX_DMA_FULL_BUFFER | UART_RX_DMA_BREAK));
+      //tInterfaceParameters.ucDMAConfig = (UART_RX_DMA | UART_RX_DMA_FULL_BUFFER);
+      //tInterfaceParameters.ucDMAConfig = (UART_RX_DMA | UART_RX_DMA_HALF_BUFFER | UART_RX_DMA_FULL_BUFFER | UART_RX_DMA_BREAK);
         #endif
     #endif
     #if defined USER_DEFINED_UART_RX_HANDLER                             // {110}
@@ -1885,7 +1886,7 @@ static void fnHandleGlobalTimers(unsigned char ucTimerEvent)
 //
 static void fnConfigUDP(void)
 {
-    if (!((MyUDP_Socket = fnGetUDP_socket(TOS_MINIMISE_DELAY, fnUDPListner, (UDP_OPT_SEND_CS | UDP_OPT_CHECK_CS))) < 0)) {
+    if ((MyUDP_Socket = fnGetUDP_socket(TOS_MINIMISE_DELAY, fnUDPListner, (UDP_OPT_SEND_CS | UDP_OPT_CHECK_CS))) >= 0) {
         fnBindSocket(MyUDP_Socket, MY_UDP_PORT);                         // bind socket
         ptrUDP_Frame    = uMalloc(sizeof(UDP_MESSAGE));                  // get some memory for UDP frame
     }

@@ -583,7 +583,7 @@ static void fnInsertStringNames(USER_FILE *ptrRAM_table)
 {
     CHAR temp[64];                                                       // {23}
     CHAR *new_string;
-    int iLength;
+    size_t iLength;
     while (ptrRAM_table->file_content != 0) {
         fnGetParsFile((unsigned char *)ptrRAM_table->fileName, (unsigned char *)temp, sizeof(temp)); // get a string
         iLength = uStrlen(temp);

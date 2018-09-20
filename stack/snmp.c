@@ -574,7 +574,7 @@ static unsigned char *fnAddASN1_string(const CHAR *cPtrString, unsigned char *uc
         usStringLength = 0;
     }
     else {
-        usStringLength = uStrlen(cPtrString);
+        usStringLength = (unsigned short)uStrlen(cPtrString);
     }
 
     if (iBufferSpace != 0) {

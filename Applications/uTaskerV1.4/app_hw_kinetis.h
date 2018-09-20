@@ -204,7 +204,7 @@
         #endif
         #define OSC_LOW_GAIN_MODE
         #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
-      //#define USE_HIGH_SPEED_RUN_MODE
+      //#define USE_HIGH_SPEED_RUN_MODE                                  // operate in high speed RUN mode - note that flash programing is not possible in this mode so NO_FLASH_SUPPORT should be disabled in config.h
         #if defined USE_HIGH_SPEED_RUN_MODE                              // high speed run mode allow faster operation but can't program/erase flash
             #if defined FRDM_KL82Z || defined TWR_KL82Z72M
                 #define CLOCK_MUL        16                              // the PLL multiplication factor to achieve operating frequency of 96MHz (x16 to x47 possible) [PLL output range 90..180MHz - VCO is PLL * 2]
@@ -308,7 +308,7 @@
     #define EXTERNAL_CLOCK       50000000                                // this must be 50MHz in order to use Ethernet in RMII mode
     #define _EXTERNAL_CLOCK      EXTERNAL_CLOCK
     #define CLOCK_DIV            5                                       // input must be divided to 8MHz..16MHz range (/1 to /8 for FPU parts)
-  //#define USE_HIGH_SPEED_RUN_MODE                                      // operate in high speed RUN mode - note that flash programing is not possibel in thsi mode so NO_FLASH_SUPPORT should be disabled in config.h
+  //#define USE_HIGH_SPEED_RUN_MODE                                      // operate in high speed RUN mode - note that flash programing is not possible in this mode so NO_FLASH_SUPPORT should be disabled in config.h
     #if defined USE_HIGH_SPEED_RUN_MODE
         #define CLOCK_MUL            44                                  // the PLL multiplication factor to achieve operating frequency of 220MHz (x16 to x47 possible - divided by 2 at VCO output)
         #define FLEX_CLOCK_DIVIDE    11                                  // 220/11 to give 20MHz
@@ -345,9 +345,9 @@
     #define OSC_LOW_GAIN_MODE
     #define CRYSTAL_FREQUENCY    12000000                                // 12 MHz crystal
     #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
-    #define USE_HIGH_SPEED_RUN_MODE
+    #define USE_HIGH_SPEED_RUN_MODE                                      // operate in high speed RUN mode - note that flash programing is not possible in this mode so NO_FLASH_SUPPORT should be disabled in config.h
     #define CLOCK_DIV            1                                       // input must be divided to 8MHz..16MHz range (/1 to /8 for 150MHz parts)
-    #if defined USE_HIGH_SPEED_RUN_MODE
+    #if defined USE_HIGH_SPEED_RUN_MODE                                  // operate in high speed RUN mode - note that flash programing is not possible in this mode so NO_FLASH_SUPPORT should be disabled in config.h
         #define CLOCK_MUL            25                                  // the PLL multiplication factor to achieve operating frequency of 150MHz (x16 to x47 possible - divided by 2 at VCO output)
         #define FLEX_CLOCK_DIVIDE    2                                   // 150/2 to give 75MHz
         #define FLASH_CLOCK_DIVIDE   6                                   // 150/6 to give 25MHz
@@ -459,7 +459,7 @@
     #elif !defined RUN_FROM_DEFAULT_CLOCK
         #define OSC_LOW_GAIN_MODE
         #define CRYSTAL_FREQUENCY    8000000                             // 8 MHz crystal on board
-      //#define USE_HIGH_SPEED_RUN_MODE
+      //#define USE_HIGH_SPEED_RUN_MODE                                  // operate in high speed RUN mode - note that flash programing is not possible in this mode so NO_FLASH_SUPPORT should be disabled in config.h
         #if defined USE_HIGH_SPEED_RUN_MODE                              // 120 MHz requires use of the high speed run mode (with restriction of not being able to program flash in that mode)
             #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
             #define CLOCK_DIV            2                               // input must be divided to 2MHz..4MHz range (/1 to /24)

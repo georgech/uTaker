@@ -104,7 +104,6 @@
 #if defined COMPILE_IAR                                                  // interrupt vector configuration as required by IAR compiler
     #pragma language=extended
 #endif
-#define __interrupt
 
 #if defined SPI_SW_UPLOAD || (defined SPI_FILE_SYSTEM && defined FLASH_FILE_SYSTEM)
     #define SPI_FLASH_ENABLED 
@@ -3420,7 +3419,7 @@ extern void start_application(unsigned long app_link_location)
 }
 #endif
 
-#if 1 /*defined RUN_IN_FREE_RTOS || defined _WINDOWS*/ // to satisfy FreeRTOS callbacks - even when FreeRTOS not linked
+#if !defined FREERTOS_NOT_COMPILED /*defined RUN_IN_FREE_RTOS || defined _WINDOWS*/ // to satisfy FreeRTOS callbacks - even when FreeRTOS not linked
 extern void *pvPortMalloc(int iSize)
 {
     return uMalloc((MAX_MALLOC)iSize);                                   // use uMalloc() which assumes that memory is never freed

@@ -2732,7 +2732,7 @@ unsigned long fnGetFlexTimer_clock(int iChannel)
                     ulClockSpeed = SLOW_ICR;
                 }
                 else {
-                    _EXCEPTION("FTM is using MCGFFCLK derived form 32kHz IRC but the source is disabled!");
+                    _EXCEPTION("FTM is using MCGFFCLK derived from 32kHz IRC but the source is disabled!");
                     ulClockSpeed = 0;
                 }
             }
@@ -2752,7 +2752,11 @@ unsigned long fnGetFlexTimer_clock(int iChannel)
                     break;
         #endif
                 }
+        #if defined MCGFFLCLK_FRDIV
                 ulClockSpeed /= (MCGFFLCLK_FRDIV);                       // divide the input by FRDIV
+        #else
+                _EXCEPTION("MCGFFLCLK_FRDIV is not specified!!");        // the FRDIV divide value used needs to be specified
+        #endif
             }
             break;
         case FTM_SC_CLKS_SYS:
@@ -8923,7 +8927,7 @@ extern int fnSimTimers(void)
         if ((SYSTICK_CSR & SYSTICK_CORE_CLOCK) != 0) {
             ulTickCount = (unsigned long)((unsigned long long)((unsigned long long)TICK_RESOLUTION * (unsigned long long)SYSTEM_CLOCK)/1000000); // count per tick period from internal clock
         }
-        if ((SYSTICK_CURRENT + 1) > ulTickCount) {
+        if (ulTickCount < SYSTICK_CURRENT) {
             SYSTICK_CURRENT -= ulTickCount;
         }
         else {

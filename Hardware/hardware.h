@@ -302,7 +302,8 @@ extern int  fnWriteBytesFlashNonBlocking(unsigned char *ucDestination, unsigned 
 extern void fnProtectFlash(unsigned char *ptrSector, unsigned char ucProtection);
   #define PROTECT_SECTOR   1
   #define UNPROTECT_SECTOR 0
-extern int fnMassEraseFlash(void);                                       // {14}
+extern int  fnUnprotectEraseProtectFlashSector(unsigned char *ptrSector);
+extern int  fnMassEraseFlash(void);                                      // {14}
 
 #if defined _WINDOWS
     extern unsigned char *fnGetFlashAdd(unsigned char *ucAdd);           // routine to map real hardware address to simulated FLASH

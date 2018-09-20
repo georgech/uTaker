@@ -2634,7 +2634,7 @@ extern void start_application(unsigned long app_link_location)
 }
 #endif
 
-#if 1 /*defined RUN_IN_FREE_RTOS || defined _WINDOWS*/ // to satisfy FreeRTOS callbacks - even when FreeRTOS not linked
+#if !defined FREERTOS_NOT_COMPILED /*defined RUN_IN_FREE_RTOS || defined _WINDOWS*/ // to satisfy FreeRTOS callbacks - even when FreeRTOS not linked
 extern void *pvPortMalloc(int iSize)
 {
     return uMalloc((MAX_MALLOC)iSize);                                   // use uMalloc() which assumes that memory is never freed

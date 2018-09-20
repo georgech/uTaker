@@ -1027,7 +1027,7 @@ extern void *uMallocAlign(MAX_MALLOC __size, unsigned short ucAlign);    // {2}
     extern int (*uMemcmp)(const void *ptrTo, const void *ptrFrom, size_t Size);
     extern int (*uStrcmp)(const CHAR *ptrTo, const CHAR *ptrFrom);
     extern CHAR *(*uStrcpy)(CHAR *ptrTo, const CHAR *ptrFrom);
-    extern int (*uStrlen)(const CHAR *ptrStr);
+    extern size_t (*uStrlen)(const CHAR *ptrStr);
     #if defined DMA_MEMCPY_SET && !defined DEVICE_WITHOUT_DMA
         extern void *uMemcpy(void *ptrTo, const void *ptrFrom, size_t Size);
         extern void *uMemset(void *ptrTo, int iValue, size_t Size);      // {80} use int as second parameter to match memset()
@@ -1041,7 +1041,7 @@ extern void *uMallocAlign(MAX_MALLOC __size, unsigned short ucAlign);    // {2}
     extern void *uMemset(void *ptrTo, int iValue, size_t Size);          // {80} use int as second parameter to match memset()
     extern int   uStrcmp(const CHAR *ptrTo, const CHAR *ptrFrom);
     extern CHAR *uStrcpy(CHAR *ptrTo, const CHAR *ptrFrom);
-    extern int   uStrlen(const CHAR *ptrStr);
+    extern size_t uStrlen(const CHAR *ptrStr);
 #endif
 
 extern void uMemset_long(unsigned long *ptrTo, unsigned long ulValue, size_t Size); // {19}
@@ -1366,11 +1366,11 @@ extern void fnAdjustLocalTime(unsigned char ucNewTimeZone, int iSNTP_active);
 
 enum twilight
 {
-	UNKNOWN = 0,
-	OFFICIAL,				// official sunrise and sunset
-	CIVIL,					// use civil twilight
-	NAUTICAL,				// use nautical twilight
-	ASTRONOMICAL			// use astronomical twilght
+    UNKNOWN_TWILIGHT = 0,
+    OFFICIAL_TWILIGHT,                                                   // official sunrise and sunset
+    CIVIL_TWILIGHT,                                                      // use civil twilight
+    NAUTICAL_TWILIGHT,                                                   // use nautical twilight
+    ASTRONOMICAL_TWILIGHT			                                     // use astronomical twilght
 };
 /*
 enum _direction
