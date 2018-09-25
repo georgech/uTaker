@@ -3464,7 +3464,7 @@ const _RESET_VECTOR __vector_table
 #if defined INTERRUPT_VECTORS_IN_FLASH
     {
 #endif
-    (void *)(RAM_START_ADDRESS + SIZE_OF_RAM - 4),                       // stack pointer to top of RAM (reserving one long word for random number)
+    (void *)(RAM_START_ADDRESS + (SIZE_OF_RAM - NON_INITIALISED_RAM_SIZE)), // stack pointer to top of RAM
     (void (*)(void))START_CODE
 #if defined INTERRUPT_VECTORS_IN_FLASH
     },
