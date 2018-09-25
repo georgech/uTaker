@@ -258,7 +258,7 @@ static int fnSingleByteFlashWrite(unsigned char *ucDestination, unsigned char uc
     #if defined _WINDOWS
     }
     #endif
-    while( (FLASH_SR & FLASH_SR_BSY) != 0) {}                             // wait until write operation completes
+    while ((FLASH_SR & FLASH_SR_BSY) != 0) {}                            // wait until write operation completes
     if ((FLASH_SR & (FLASH_SR_WRPERR | FLASH_SR_PGAERR | FLASH_SR_PGPERR | FLASH_SR_PGSERR)) != 0) { // check for errors
         return -1;                                                       // write error
     }
@@ -460,7 +460,11 @@ static int fnWriteInternalFlash(ACCESS_DETAILS *ptrAccessDetails, unsigned char 
 
 extern void fnProtectFlash(unsigned char *ptrSector, unsigned char ucProtection)
 {
-    _EXCEPTION("To do!!");
+    if (UNPROTECT_SECTOR == ucProtection) {                              // unprotect flash
+    }
+    else {                                                               // protect flash
+    }
+  //_EXCEPTION("To do!!");
 }
 
 extern int fnUnprotectEraseProtectFlashSector(unsigned char *ptrSector)

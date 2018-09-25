@@ -341,11 +341,11 @@
     #define CLOCK_DIV_1          5                                       // input must be divided to 8MHz..16MHz range (/1 to /8 for FPU parts) (Neets - BDR)
     #define CLOCK_MUL_1          24                                      // PLL1 multiplication factor to achieve operating frequency of 120MHz [suitable for FS USB] (x16 to x47 possible - divided by 2 at VCC output) (Neets - BDR)
 #elif defined TWR_K80F150M || defined FRDM_K82F
-  //#define USE_FAST_INTERNAL_CLOCK                                      // use 4MHz IRC as source for MCGIRCLK
+  //#define USE_FAST_INTERNAL_CLOCK                                      // use 4MHz IRC as source for MCGIRCLK (otherwise 32kHz)
     #define OSC_LOW_GAIN_MODE
     #define CRYSTAL_FREQUENCY    12000000                                // 12 MHz crystal
     #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
-    #define USE_HIGH_SPEED_RUN_MODE                                      // operate in high speed RUN mode - note that flash programing is not possible in this mode so NO_FLASH_SUPPORT should be disabled in config.h
+  //#define USE_HIGH_SPEED_RUN_MODE                                      // operate in high speed RUN mode - note that flash programing is not possible in this mode so NO_FLASH_SUPPORT should be disabled in config.h
     #define CLOCK_DIV            1                                       // input must be divided to 8MHz..16MHz range (/1 to /8 for 150MHz parts)
     #if defined USE_HIGH_SPEED_RUN_MODE                                  // operate in high speed RUN mode - note that flash programing is not possible in this mode so NO_FLASH_SUPPORT should be disabled in config.h
         #define CLOCK_MUL            25                                  // the PLL multiplication factor to achieve operating frequency of 150MHz (x16 to x47 possible - divided by 2 at VCO output)
@@ -1375,12 +1375,10 @@
         #define PHY_INTERRUPT          PORTB_BIT22                       // PHY interrupt input 
     #endif
     #define PHY_IDENTIFIER         0x00221555                            // MICREL KSZ8031NL identifier
-    #define FNRESETPHY()
-    #define MII_MANAGEMENT_CLOCK_SPEED    2500000                        // typ. 2,5MHz Speed
+    #define MII_MANAGEMENT_CLOCK_SPEED    2500000                        // typ. 2.5MHz Speed
 #elif defined K61FN1_50M
     #define ETHERNET_RMII                                                // RMII mode of operation instead of MII
     #define FNFORCE_PHY_CONFIG()                                         // dummy
-    #define FNRESETPHY()                                                 // dummy
     #define SCAN_PHY_ADD
     #define MII_MANAGEMENT_CLOCK_SPEED   2500000                         // 2.5MHz
 #elif defined EMCRAFT_K70F120M || defined EMCRAFT_K61F150M               // {9}
@@ -1393,7 +1391,6 @@
     #define PHY_INTERRUPT_PORT     PORTA
     #define PHY_INTERRUPT          PORTA_BIT27                           // IRQ1 is used as PHY interrupt input this is connected to PA.27
     #define PHY_IDENTIFIER         0x00221550                            // MICREL KSZ8051 identifier
-    #define FNRESETPHY()
     #define MII_MANAGEMENT_CLOCK_SPEED   2500000                         // 2.5MHz
 #elif defined TWR_K60F120M || defined K60F150M_50M || defined TWR_K70F120M || defined TWR_K53N512 || defined TWR_VF65GS10 || defined TWR_KV58F220M
   //#define JTAG_DEBUG_IN_USE_ERRATA_2541                                // pull the optional MII0_RXER line down to 0V to avoid disturbing JTAG_TRST - not needed when using SWD for debugging 
@@ -1414,14 +1411,12 @@
         #define CONFIG_PHY_STRAPS()    _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_LOW(A, (PORTA_BIT4 | PORTA_BIT14), 0, (PORT_SRE_SLOW | PORT_DSE_LOW))
         #define FNFORCE_PHY_CONFIG()   _SETBITS(A, PORTA_BIT4); fnDelayLoop(1000) // negate PHY reset with CONFIG2 held low
         #define _KSZ8051RNL                                              // specify phy type used
-        #define FNRESETPHY()
     #elif defined TWR_SER2                                               // {17}
         #define ETHERNET_RMII                                            // RMII mode of operation instead of MII
         #define PHY_POLL_LINK                                            // poll the link status since there is no interrupt connected
         #define INTERRUPT_TASK_PHY     TASK_NETWORK_INDICATOR            // link status reported to this task (do not use together with LAN_REPORT_ACTIVITY)
 
         #define PHY_ADDRESS            0x00                              // address of external PHY on board - channel A (channel B is 0x01)
-        #define FNRESETPHY()
         #define PHY_IDENTIFIER         0x20005ca2                        // National/TI DP83849I identifier
         #define _DP83849I
     #else                                                                // TWR_SER board
@@ -1437,7 +1432,6 @@
             #define PHY_INTERRUPT      PORTB_BIT7                        // IRQ1 is used as PHY interrupt input (set J6 to position 7-8 on TWR-SER board) - this is connected to PB.7
         #endif
         #define PHY_IDENTIFIER         0x00221512                        // MICREL KSZ8041NL identifier
-        #define FNRESETPHY()
         #if defined TWR_K53N512                                          // this tower board has a port output controlling the reset line on the elevator - it is set to an output driving '1' to avoid the PHY being held in reset
             #define RESET_PHY
             #define ASSERT_PHY_RST() _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_LOW(C, (RESETOUT), (RESETOUT), (PORT_SRE_SLOW | PORT_DSE_LOW))
@@ -1457,7 +1451,6 @@
         #define INTERRUPT_TASK_PHY     TASK_NETWORK_INDICATOR            // link status reported to this task (do not use together with LAN_REPORT_ACTIVITY)
 
         #define PHY_ADDRESS            0x00                              // address of external PHY on board - channel A (channel B is 0x01)
-        #define FNRESETPHY()
         #define PHY_IDENTIFIER         0x20005ca2                        // National/TI DP83849I identifier
         #define _DP83849I
         #if defined TWR_K65F180M
@@ -1494,13 +1487,21 @@
         #if !defined _PHY_KSZ8863
             #define PHY_IDENTIFIER         0x00221512                    // MICREL KSZ8041NL identifier
         #endif
-        #define FNRESETPHY()
     #endif
     #define MII_MANAGEMENT_CLOCK_SPEED     800000                        // reduced speed due to weak data line pull up resistor and long back-plane distance (warning - too low results in a divider overflow in MSCR)
+#elif defined FRDM_K66F && defined LAN8740_PHY
+    #define _LAN8740
+    #define PHY_ADDRESS            0x00                                  // address of PHY (MII mode)
+    #define VNDR_MDL               0x011                                 // vendor model number
+    #define MDL_REV                0x0                                   // model revision number
+    #define PHY_IDENTIFIER         (0x0007c000 | (VNDR_MDL << 4) | MDL_REV) // SMSC identifier
+    #define MII_MANAGEMENT_CLOCK_SPEED    2500000                        // typ. 2.5MHz Speed
+    #define PHY_POLL_LINK                                                // activate polling of the link state
+    #define INTERRUPT_TASK_PHY     TASK_NETWORK_INDICATOR                // link status reported to this task (do not use together with LAN_REPORT_ACTIVITY)
 #elif defined FRDM_K64F || defined FRDM_K66F || defined FreeLON
     #if defined FRDM_K66F
         #define ETHERNET_RMII_CLOCK_INPUT                                // the ENET_1588_CLKIN is used as clock since a 50MHz PHY clock is not available on EXTAL
-        #define MII_MANAGEMENT_CLOCK_SPEED    800000                     // due to weak pull-up we use a reduces clock speed
+        #define MII_MANAGEMENT_CLOCK_SPEED    800000                     // due to weak pull-up we use a reduced clock speed
     #else
         #define MII_MANAGEMENT_CLOCK_SPEED    2500000                    // typ. 2.5MHz Speed
     #endif
@@ -1510,7 +1511,6 @@
     #define FNFORCE_PHY_CONFIG()   
     #define PHY_ADDRESS            0x00                                  // address of external PHY on board
     #define PHY_IDENTIFIER         0x00221560                            // MICREL KSZ8081RNA identifier
-    #define FNRESETPHY()
     #define ETHERNET_MDIO_WITH_PULLUPS                                   // there is no pull-up on the FRDM board so enable one at the MDIO input
     #if defined FreeLON
         #define INTERRUPT_TASK_PHY     TASK_NETWORK_INDICATOR            // link status reported to this task (do not use together with LAN_REPORT_ACTIVITY)
@@ -2642,7 +2642,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
             #define LPUART_MCGPLLCLK                                     // clock the LPUARTs from MCGPLLCLK (this is used together with USB when the crystal-less clocking is not possible)
         #endif
       //#define LPUART_OSCERCLK                                          // clock the LPUART from the external clock
-        #define LPUART_MCGIRCLK                                          // clock the LPUART from MCGIRCLK (IRC8M/FCRDIV/LIRC_DIV2) - default if others are not defined
+      //#define LPUART_MCGIRCLK                                          // clock the LPUART from MCGIRCLK (IRC8M/FCRDIV/LIRC_DIV2) - default if others are not defined [32kHz if USE_FAST_INTERNAL_CLOCK is not set]
     #endif
     #if defined RUN_FROM_LIRC
         #define UART0_ClOCKED_FROM_MCGIRCLK

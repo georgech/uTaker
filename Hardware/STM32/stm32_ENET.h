@@ -118,7 +118,7 @@ extern signed char fnEthernetEvent(unsigned char *ucEvent, ETHERNET_FRAME *rx_fr
     #define READ_STATE             DP83848_PHY_STATUS_REGISTER
     #define SPEED_100M             SPEED_STATUS_10M
     #define FULL_DUPLEX_FLAG       DUPLEX_STATUS_FULL_DUPLEX
-#elif defined _LAN8720 || defined _LAN8742                               // {12}
+#elif defined _LAN8720 || defined _LAN8740 || defined _LAN8742           // {12}
     #define READ_INTERRUPT_FLAGS   (0x1d << ETH_MACMIIAR_MR_SHIFT)
     #define LINK_CHANGE_INTERRUPTS (0x0050)                              // auto-negotiation complete or link-down
     #define READ_STATE             (0x1f << ETH_MACMIIAR_MR_SHIFT)

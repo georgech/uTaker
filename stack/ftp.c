@@ -1285,10 +1285,10 @@ static unsigned short fnDoDir(CHAR *cMessage, FTP_INSTANCE *ptrFtp)
             if (ptrFiles != 0) {                                         // {36} internal file - this has a variable file length so we much be sure that we protect the buffer and quit if there will be no room to accept it
         #if defined _WINDOWS
                 if (user_files_not_in_code != 0) {
-                    sCompensation -= uStrlen(fnGetFlashAdd((unsigned char *)ptrFiles->fileName));
+                    sCompensation -= (unsigned short)uStrlen(fnGetFlashAdd((unsigned char *)ptrFiles->fileName));
                 }
                 else {
-                    sCompensation -= uStrlen(ptrFiles->fileName);
+                    sCompensation -= (unsigned short)uStrlen(ptrFiles->fileName);
                 }
         #else
                 sCompensation -= uStrlen(ptrFiles->fileName);

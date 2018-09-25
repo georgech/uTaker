@@ -529,6 +529,15 @@ static __interrupt void _fec_misc(void)
     #define PHY_LINK_100BASE_TX_HALF_DUPLEX 0x0001
     #define PHY_LINK_10BASE_T_FULL_DUPLEX   0x0007
     #define PHY_LINK_100BASE_TX_FULL_DUPLEX 0x0005
+#elif defined _LAN8720 || defined _LAN8740 || defined _LAN8742
+    #define PHY_INTERRUPT_REGISTER (0x1d)
+    #define PHY_LINK_STATE_CHANGE  (0x0050)                              // auto-negotiation complete or link-down
+    #define PHY_LINK_STATUS_REG    (0x1f)
+    #define PHY_LINK_MASK          (0x0014)
+    #define PHY_LINK_10BASE_T_FULL_DUPLEX   0x0014
+    #define PHY_LINK_100BASE_TX_FULL_DUPLEX 0x0018
+    #define PHY_LINK_100BASE_TX_HALF_DUPLEX 0x0008
+    #define PHY_LINK_10BASE_T_HALF_DUPLEX   0x0004
 #elif defined _KSZ8081RNA || defined _KSZ8051RNL                         // {84}{102}
     #define PHY_INTERRUPT_REGISTER KS8041_INTERRUPT_CONTROL_STATUS_REGISTER // 0x1b
     #define PHY_LINK_STATE_CHANGE  (PHY_LINK_UP_INT)                     // {100}
@@ -1015,7 +1024,9 @@ extern int fnConfigEthernet(ETHTABLE *pars)
     _CONFIG_PERIPHERAL(A, 29, PA_29_MII0_COL);                           // MII0_COL  on PA.29 (alt. function 4/5)
     #endif
 
-    FNRESETPHY();                                                        // control the reset line to the PHY to respect any power up delays if required
+    #if defined FNRESETPHY
+    FNRESETPHY();                                                        // optional control of the reset line to the PHY to respect any power up delays
+    #endif
                                                                          // EMAC initialisation
     ECR = RESET_FEC;                                                     // EMAC software reset
     #if !defined _WINDOWS

@@ -1742,7 +1742,7 @@
         #define PHY_IDENTIFIER         (0x0007c000 | (VNDR_MDL << 4) | MDL_REV) // SMSC identifier
         #define ETHERNET_RMII                                            // use RMII Ethernet interface instead of MII
         #if defined NUCLEO_F429ZI
-            #define  ETH_TXD1_B                                          // TXD1 on port B with TXD0 and TX_EN on port G
+            #define ETH_TXD1_B                                           // TXD1 on port B with TXD0 and TX_EN on port G
         #else
             #define ETH_TXD_TX_EN_G                                      // TXD0, TXD1 and TX_EN on port G
         #endif

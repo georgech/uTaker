@@ -1096,7 +1096,7 @@ extern int fnWriteBytesFlash(unsigned char *ucDestination, unsigned char *ucData
     ACCESS_DETAILS AccessDetails;
     AccessDetails.BlockLength = Length;
     #if !defined ONLY_INTERNAL_FLASH_STORAGE
-    FOREVER_LOOP() {//while (1/*Length != 0*/) {                         // {24} allow zero length write to ensure that open flash buffer can be closed
+    FOREVER_LOOP() {                                                     // {24} allow zero length write to ensure that open flash buffer can be closed
         switch (fnGetStorageType(ucDestination, &AccessDetails)) {       // get the storage type based on the memory location and also return the largest amount of data that can be read from a single device
         case _STORAGE_INTERNAL_FLASH:
             if (fnWriteInternalFlash(&AccessDetails, ucData) != 0) {

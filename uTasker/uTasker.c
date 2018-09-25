@@ -614,7 +614,9 @@ extern void fnRtmkSystemTick(void)
     TTIMETABLE *ptTimerList = tTimerList;
 
     uTaskerSystemTick++;                                                 // increment system tick
+#if defined TICK_INTERRUPT
     TICK_INTERRUPT();                                                    // {14} allow user code in the TICK interrupt routine
+#endif
     if (ptTimerList == 0) {
         return;                                                          // no timers in system (yet)
     }

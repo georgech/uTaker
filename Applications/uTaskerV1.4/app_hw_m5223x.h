@@ -940,7 +940,6 @@
     #define PHY_ADDRESS            0x01                                  // address of external PHY on board
     #define PHY_INTERRUPT          1                                     // IRQ1 is used as PHY interrupt input (set J6 to position 7-8)
     #define PHY_IDENTIFIER         0x00221512                            // MICREL KSZ8041NL identifier
-    #define FNRESETPHY()
     #define MII_MANAGEMENT_CLOCK_SPEED    800000                         // reduced speed due to weak data line pull up resistor and long back-plane distance (warning - too low results in a divider overflow in MSCR)
 #elif defined M52259EVB
     #define SCAN_PHY_ADD                                                 // PHY address is not defined exactly so it is scanned
@@ -953,13 +952,11 @@
     #define PHY_ADDRESS            0x01                                  // address of external PHY on board
     #define PHY_INTERRUPT          2                                     // IRQ2 is used as PHY interrupt input
     #define PHY_IDENTIFIER         0x0022561b                            // AMD Am79C875VC identifier
-    #define FNRESETPHY()
     #define MII_MANAGEMENT_CLOCK_SPEED    2500000                        // standard speed
 #elif defined M5282LITE                                                  // {68}
     #define PHY_ADDRESS            0x01                                  // address of external PHY on board
     #define PHY_INTERRUPT          6                                     // IRQ6 is used as PHY interrupt input
     #define PHY_IDENTIFIER         0x00221619                            // MICREL KS8721B identifier
-    #define FNRESETPHY() 
     #define MII_MANAGEMENT_CLOCK_SPEED    2500000                        // standard speed
 #elif defined M5208EVB                                                   // {69}
     #define SCAN_PHY_ADD                                                 // PHY address is not defined exactly so it is scanned
@@ -981,7 +978,6 @@
     #define PHY_ADDRESS            0x01                                  // address of external PHY on board
     #define PHY_INTERRUPT          6                                     // IRQ6 is used as PHY interrupt input
     #define PHY_IDENTIFIER         0x00221619                            // MICREL KS8721B identifier
-    #define FNRESETPHY()
     #define MII_MANAGEMENT_CLOCK_SPEED    2500000                        // standard speed
 #else
     #define MII_MANAGEMENT_CLOCK_SPEED    2500000                        // standard speed

@@ -2982,6 +2982,94 @@ extern QUEUE_TRANSFER fnGetDMACount(QUEUE_HANDLE channel, QUEUE_TRANSFER max_cou
 }
 #endif
 
+#if UARTS_AVAILABLE > 0
+#if defined SIM_SOPT2_UART0SRC_MCG                                       // if the UART clock is configurable
+// Configure the UART clock
+//
+static void fnConfigUART_clock(int Channel)
+{
+    #if defined UART0_ClOCKED_FROM_MCGIRCLK                              // clocked from internal 4MHz RC clock
+    SIM_SOPT2 |= (SIM_SOPT2_UART0SRC_MCGIRCLK);                          // enable UART0 clock source from MCGIRCLK
+    #elif defined UART0_ClOCKED_FROM_OSCERCLK
+    SIM_SOPT2 |= (SIM_SOPT2_UART0SRC_OSCERCLK << (2 * Channel));         // enable UART0 clock source from OSCERCLK
+    #else
+        #if !defined MCG_WITHOUT_PLL && !defined UART0_ClOCKED_FROM_MCGFFLCLK
+    SIM_SOPT2 |= (SIM_SOPT2_PLLFLLSEL | (SIM_SOPT2_UART0SRC_MCG << (2 * Channel))); // enable UART clock source from MCGPLLCLK/2
+        #else
+    SIM_SOPT2 |= (SIM_SOPT2_UART0SRC_MCG << (2 * Channel));              // enable UART clock source from MCGFFLCLK
+        #endif
+    #endif
+}
+#endif
+#endif
+
+#if LPUARTS_AVAILABLE > 0
+// Determine the LPUART clock frequency being
+//
+#if defined KINETIS_WITH_PCC                                             // same LPUART clock source for all used LPUARTs assumed
+    #define SPECIAL_LPUART_CLOCK  (FIRC_CLK)                             // fast clock assumed - 48MHz, 52MHz, 56MHz or 60MHz, depending on system clock configuration
+#else
+    #if defined LPUART_IRC48M                                            // use the IRC48M clock as UART clock
+        #if defined KINETIS_K65 || defined KINETIS_K66
+            #if defined PERIPHERAL_CLOCK_DIVIDE
+                #if PERIPHERAL_CLOCK_DIVIDE_FRACTION == 5
+                    #define SPECIAL_LPUART_CLOCK ((2 * 48000000)/((2 * PERIPHERAL_CLOCK_DIVIDE) + 1)))
+                #else
+                    #define SPECIAL_LPUART_CLOCK (48000000/PERIPHERAL_CLOCK_DIVIDE)
+                #endif
+            #else
+                #define SPECIAL_LPUART_CLOCK  (48000000)
+            #endif
+        #else
+            #define SPECIAL_LPUART_CLOCK  (48000000)
+        #endif
+    #elif defined LPUART_MCGPLLCLK
+        #define SPECIAL_LPUART_CLOCK   (MCGOUTCLK)
+    #elif defined LPUART_OSCERCLK                                        // clock the UART from the external clock
+        #define SPECIAL_LPUART_CLOCK  (_EXTERNAL_CLOCK)
+    #else
+        #define SPECIAL_LPUART_CLOCK  (MCGIRCLK)
+    #endif
+#endif
+
+#if !defined KINETIS_WITH_PCC
+// Configure the LPUART clock
+//
+static void fnConfigLPUART_clock(int Channel)
+{
+    #if defined LPUART_IRC48M                                            // use the IRC48M clock as UART clock
+        #if defined KINETIS_WITH_MCG_LITE
+    MCG_MC |= MCG_MC_HIRCEN;                                             // ensure that the IRC48M is operating, even when the processor is not in HIRC mode
+        #endif
+        #if defined SIM_SOPT2_LPUART0SRC_MCGIRCLK
+    SIM_SOPT2 = ((SIM_SOPT2 & ~(SIM_SOPT2_LPUART0SRC_MCGIRCLK)) | ((SIM_SOPT2_LPUART0SRC_IRC48M) | SIM_SOPT2_PLLFLLSEL_IRC48M)); // {3} select the 48MHz IRC48MHz clock as source for the particular LPUART
+        #else
+    SIM_SOPT2 = ((SIM_SOPT2 & ~(SIM_SOPT2_LPUARTSRC_MGC)) | (SIM_SOPT2_LPUARTSRC_SEL | SIM_SOPT2_PLLFLLSEL_IRC48M)); // {3} select the 48MHz IRC48MHz clock as source for all LPUARTs
+        #endif
+    #elif defined LPUART_MCGPLLCLK
+    SIM_SOPT2 = ((SIM_SOPT2 & ~(SIM_SOPT2_LPUART0SRC_MCGIRCLK << (2 * Channel)) | ((SIM_SOPT2_LPUART0SRC_IRC48M << (2 * Channel)) | SIM_SOPT2_PLLFLLSEL_PLL));
+    SIM_CLKDIV3 = SIM_CLKDIV3_PLLFLLDIV_2;                               // fixed clock
+    #elif defined LPUART_OSCERCLK                                        // clock the UART from the external clock
+    SIM_SOPT2 |= (SIM_SOPT2_LPUART0SRC_OSCERCLK << (2 * Channel));
+    #else                                                                // clock the UART from MCGIRCLK (IRC8M/FCRDIV/LIRC_DIV2)
+        #if !defined RUN_FROM_LIRC                                       // {206} if the processor is running from the the internal clock we don't change settings here
+    MCG_C1 |= (MCG_C1_IRCLKEN | MCG_C1_IREFSTEN);                        // ensure that the internal reference is enabled and runs in stop mode
+            #if defined USE_FAST_INTERNAL_CLOCK                          // {201}
+    MCG_SC = MCG_SC_FCRDIV_1;                                            // remove fast IRC divider
+    MCG_C2 |= MCG_C2_IRCS;                                               // select fast internal reference clock (4MHz [8MHz for devices with MCG Lite]) as MCGIRCLK
+            #else
+    MCG_C2 &= ~MCG_C2_IRCS;                                              // select slow internal reference clock (32kHz [2MHz for devices with MCG Lite]) as MCGIRCLK
+            #endif
+        #endif
+        #if defined SIM_SOPT2_UART0SRC_MCGIRCLK
+    SIM_SOPT2 |= (SIM_SOPT2_LPUART0SRC_MCGIRCLK << (2 * Channel));       // select the LPUART clock source to MCGIRCLK (dedicated channel)
+        #else
+    SIM_SOPT2 |= (SIM_SOPT2_LPUART0SRC_MGC << (2 * Channel));            // select the LPUART clock source to MCGIRCLK (general)
+        #endif
+    #endif
+}
+#endif
+#endif
 
 
 // General UART/LPUART configuration
@@ -3006,31 +3094,6 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
     #endif
     uart_reg = (KINETIS_UART_CONTROL *)fnSelectChannel(Channel);         // select the register set for use by this channel
     #if LPUARTS_AVAILABLE > 0                                            // if the device has low power UART(s)
-        #if defined KINETIS_WITH_PCC                                     // same LPUART clock source for all used LPUARTs assumed
-            #define SPECIAL_LPUART_CLOCK  (FIRC_CLK)                     // fast clock assumed - 48MHz, 52MHz, 56MHz or 60MHz, depending on system clock configuration
-        #else
-            #if defined LPUART_IRC48M                                    // use the IRC48M clock as UART clock
-                #if defined KINETIS_K65 || defined KINETIS_K66
-                    #if defined PERIPHERAL_CLOCK_DIVIDE
-                        #if PERIPHERAL_CLOCK_DIVIDE_FRACTION == 5
-                            #define SPECIAL_LPUART_CLOCK ((2 * 48000000)/((2 * PERIPHERAL_CLOCK_DIVIDE) + 1)))
-                        #else
-                            #define SPECIAL_LPUART_CLOCK (48000000/PERIPHERAL_CLOCK_DIVIDE)
-                        #endif
-                    #else
-                        #define SPECIAL_LPUART_CLOCK  (48000000)
-                    #endif
-                #else
-                    #define SPECIAL_LPUART_CLOCK  (48000000)
-                #endif
-            #elif defined LPUART_MCGPLLCLK
-                #define SPECIAL_LPUART_CLOCK   (MCGOUTCLK)
-            #elif defined LPUART_OSCERCLK                                // clock the UART from the external clock
-                #define SPECIAL_LPUART_CLOCK  (_EXTERNAL_CLOCK)
-            #else
-                #define SPECIAL_LPUART_CLOCK  (MCGIRCLK)
-            #endif
-        #endif
         #if UARTS_AVAILABLE > 0                                          // if LPUART(s) and also UART(s)
     if (uart_type[Channel] == UART_TYPE_LPUART) {                        // LPUART
         #endif
@@ -3051,36 +3114,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
             #else
             POWER_UP_ATOMIC(6, LPUART0);                                 // power up LPUART 0
             #endif
-            #if defined LPUART_IRC48M                                    // use the IRC48M clock as UART clock
-                #if defined KINETIS_WITH_MCG_LITE
-            MCG_MC |= MCG_MC_HIRCEN;                                     // ensure that the IRC48M is operating, even when the processor is not in HIRC mode
-                #endif
-                #if defined KINETIS_K80
-            SIM_SOPT2 = ((SIM_SOPT2 & ~(SIM_SOPT2_LPUARTSRC_MGC)) | (SIM_SOPT2_LPUARTSRC_SEL | SIM_SOPT2_PLLFLLSEL_IRC48M)); // {3} select the 48MHz IRC48MHz clock as source for the LPUART
-                #else
-            SIM_SOPT2 = ((SIM_SOPT2 & ~(SIM_SOPT2_UART0SRC_MCGIRCLK)) | (SIM_SOPT2_UART0SRC_IRC48M | SIM_SOPT2_PLLFLLSEL_IRC48M)); // {3} select the 48MHz IRC48MHz clock as source for the LPUART
-                #endif
-            #elif defined LPUART_MCGPLLCLK
-            SIM_SOPT2 = ((SIM_SOPT2 & ~(SIM_SOPT2_UART0SRC_MCGIRCLK)) | (SIM_SOPT2_UART0SRC_IRC48M | SIM_SOPT2_PLLFLLSEL_PLL));
-            SIM_CLKDIV3 = SIM_CLKDIV3_PLLFLLDIV_2;                       // fixed clock
-            #elif defined LPUART_OSCERCLK                                // clock the UART from the external clock
-            SIM_SOPT2 |= (SIM_SOPT2_UART0SRC_OSCERCLK);
-            #else                                                        // clock the UART from MCGIRCLK (IRC8M/FCRDIV/LIRC_DIV2)
-                #if !defined RUN_FROM_LIRC                               // {206} if the processor is running from the the internal clock we don't change settings here
-            MCG_C1 |= (MCG_C1_IRCLKEN | MCG_C1_IREFSTEN);                // ensure that the internal reference is enabled and runs in stop mode
-                    #if defined USE_FAST_INTERNAL_CLOCK                  // {201}
-            MCG_SC = MCG_SC_FCRDIV_1;                                    // remove fast IRC divider
-            MCG_C2 |= MCG_C2_IRCS;                                       // select fast internal reference clock (4MHz [8MHz for devices with MCG Lite]) as MCGIRCLK
-                    #else
-            MCG_C2 &= ~MCG_C2_IRCS;                                      // select slow internal reference clock (32kHz [2MHz for devices with MCG Lite]) as MCGIRCLK
-                    #endif
-                #endif
-                #if defined SIM_SOPT2_UART0SRC_MCGIRCLK
-            SIM_SOPT2 |= (SIM_SOPT2_UART0SRC_MCGIRCLK);                  // select the LPUART clock source to MCGIRCLK
-                #else
-            SIM_SOPT2 |= SIM_SOPT2_LPUARTSRC_MGC;                        // select the LPUART clock source to MCGIRCLK
-                #endif
-            #endif
+            fnConfigLPUART_clock(0);                                     // configure the clock source to be used
         #endif
             break;
         #if LPUARTS_AVAILABLE > 1
@@ -3098,27 +3132,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
                 #else
             POWER_UP_ATOMIC(2, LPUART1);                                 // power up LPUART 1
                 #endif
-                #if defined LPUART_IRC48M                                // use the IRC48M clock as UART clock
-                    #if defined KINETIS_WITH_MCG_LITE
-            MCG_MC |= MCG_MC_HIRCEN;                                     // ensure that the IRC48M is operating, even when the processor is not in HIRC mode
-                    #endif
-                    #if defined KINETIS_K80
-            SIM_SOPT2 = ((SIM_SOPT2 & ~(SIM_SOPT2_LPUARTSRC_MGC)) | (SIM_SOPT2_LPUARTSRC_SEL | SIM_SOPT2_PLLFLLSEL_IRC48M)); // {202} select the 48MHz IRC48MHz clock as source for the LPUART
-                    #else
-            SIM_SOPT2 = ((SIM_SOPT2 & ~(SIM_SOPT2_UART1SRC_MCGIRCLK)) | (SIM_SOPT2_UART1SRC_IRC48M | SIM_SOPT2_PLLFLLSEL_IRC48M)); // {202} select the 48MHz IRC48MHz clock as source for the LPUART
-                    #endif
-                #elif defined LPUART_MCGPLLCLK
-            SIM_SOPT2 = ((SIM_SOPT2 & ~(SIM_SOPT2_UART1SRC_MCGIRCLK)) | (SIM_SOPT2_UART1SRC_IRC48M | SIM_SOPT2_PLLFLLSEL_PLL));
-            SIM_CLKDIV3 = SIM_CLKDIV3_PLLFLLDIV_2;                       // fixed clock
-                #elif defined LPUART_OSCERCLK                            // clock the UART from the external clock
-            SIM_SOPT2 |= (SIM_SOPT2_UART1SRC_OSCERCLK);
-                #else                                                    // clock the UART from MCGIRCLK (IRC8M/FCRDIV/LIRC_DIV2)
-                    #if defined SIM_SOPT2_UART1SRC_MCGIRCLK
-            SIM_SOPT2 |= (SIM_SOPT2_UART1SRC_MCGIRCLK);                  // select the LPUART clock source to MCGIRCLK
-                    #else
-            SIM_SOPT2 |= SIM_SOPT2_LPUARTSRC_MGC;                        // select the LPUART clock source to MCGIRCLK
-                    #endif
-                #endif
+            fnConfigLPUART_clock(1);                                     // configure the clock source to be used
             #endif
             break;
         #endif
@@ -3137,27 +3151,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
                 #else
             POWER_UP_ATOMIC(2, LPUART2);                                 // power up LPUART 2
                 #endif
-                #if defined LPUART_IRC48M                                // use the IRC48M clock as UART clock
-                    #if defined KINETIS_WITH_MCG_LITE
-            MCG_MC |= MCG_MC_HIRCEN;                                     // ensure that the IRC48M is operating, even when the processor is not in HIRC mode
-                    #endif
-                    #if defined KINETIS_K80
-            SIM_SOPT2 = ((SIM_SOPT2 & ~(SIM_SOPT2_LPUARTSRC_MGC)) | (SIM_SOPT2_LPUARTSRC_SEL | SIM_SOPT2_PLLFLLSEL_IRC48M)); // select the 48MHz IRC48MHz clock as source for the LPUART
-                    #else
-            SIM_SOPT2 = ((SIM_SOPT2 & ~(SIM_SOPT2_UART2SRC_MCGIRCLK)) | (SIM_SOPT2_UART2SRC_IRC48M | SIM_SOPT2_PLLFLLSEL_IRC48M)); // select the 48MHz IRC48MHz clock as source for the LPUART
-                    #endif
-                #elif defined LPUART_MCGPLLCLK
-            SIM_SOPT2 = ((SIM_SOPT2 & ~(SIM_SOPT2_UART2SRC_MCGIRCLK)) | (SIM_SOPT2_UART2SRC_IRC48M | SIM_SOPT2_PLLFLLSEL_PLL));
-            SIM_CLKDIV3 = SIM_CLKDIV3_PLLFLLDIV_2;                       // fixed clock
-                #elif defined LPUART_OSCERCLK                            // clock the UART from the external clock
-            SIM_SOPT2 |= (SIM_SOPT2_UART2SRC_OSCERCLK);
-                #else                                                    // clock the UART from MCGIRCLK (IRC8M/FCRDIV/LIRC_DIV2)
-                    #if defined SIM_SOPT2_UART2SRC_MCGIRCLK              // select the LPUART clock source to MCGIRCLK
-            SIM_SOPT2 |= (SIM_SOPT2_UART2SRC_MCGIRCLK);
-                    #else
-            SIM_SOPT2 |= SIM_SOPT2_LPUARTSRC_MGC;                        // select the LPUART clock source to MCGIRCLK
-                    #endif
-                #endif
+            fnConfigLPUART_clock(2);                                     // configure the clock source to be used
             #endif
             break;
         #endif
@@ -3168,24 +3162,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         case (3):                                                        // LPUART 3
             #endif
             POWER_UP_ATOMIC(2, LPUART3);                                 // power up LPUART 3
-            #if defined LPUART_IRC48M                                    // use the IRC48M clock as UART clock
-                #if defined KINETIS_WITH_MCG_LITE
-            MCG_MC |= MCG_MC_HIRCEN;                                     // ensure that the IRC48M is operating, even when the processor is not in HIRC mode
-                #endif
-                #if defined KINETIS_K80
-            SIM_SOPT2 = ((SIM_SOPT2 & ~(SIM_SOPT2_LPUARTSRC_MGC)) | (SIM_SOPT2_LPUARTSRC_SEL | SIM_SOPT2_PLLFLLSEL_IRC48M)); // select the 48MHz IRC48MHz clock as source for the LPUART
-                #else
-            SIM_SOPT2 = ((SIM_SOPT2 & ~(SIM_SOPT2_UART1SRC_MCGIRCLK)) | (SIM_SOPT2_UART1SRC_IRC48M | SIM_SOPT2_PLLFLLSEL_IRC48M)); // select the 48MHz IRC48MHz clock as source for the LPUART
-                #endif
-            #elif defined LPUART_OSCERCLK                                // clock the UART from the external clock
-            SIM_SOPT2 |= (SIM_SOPT2_UART3SRC_OSCERCLK);
-            #else                                                        // clock the UART from MCGIRCLK (IRC8M/FCRDIV/LIRC_DIV2)
-                #if defined SIM_SOPT2_UART3SRC_MCGIRCLK
-            SIM_SOPT2 |= (SIM_SOPT2_UART3SRC_MCGIRCLK);                  // select the LPUART clock source to MCGIRCLK
-                #else
-            SIM_SOPT2 |= SIM_SOPT2_LPUARTSRC_MGC;                        // select the LPUART clock source to MCGIRCLK
-                #endif
-            #endif
+            fnConfigLPUART_clock(3);                                     // configure the clock source to be used
             break;
         #endif
         #if LPUARTS_AVAILABLE > 4
@@ -3195,24 +3172,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         case (4):                                                        // LPUART 4
             #endif
             POWER_UP_ATOMIC(2, LPUART4);                                 // power up LPUART 4
-            #if defined LPUART_IRC48M                                    // use the IRC48M clock as UART clock
-                #if defined KINETIS_WITH_MCG_LITE
-            MCG_MC |= MCG_MC_HIRCEN;                                     // ensure that the IRC48M is operating, even when the processor is not in HIRC mode
-                #endif
-                #if defined KINETIS_K80
-            SIM_SOPT2 = ((SIM_SOPT2 & ~(SIM_SOPT2_LPUARTSRC_MGC)) | (SIM_SOPT2_LPUARTSRC_SEL | SIM_SOPT2_PLLFLLSEL_IRC48M)); // select the 48MHz IRC48MHz clock as source for the LPUART
-                #else
-            SIM_SOPT2 = ((SIM_SOPT2 & ~(SIM_SOPT2_UART1SRC_MCGIRCLK)) | (SIM_SOPT2_UART1SRC_IRC48M | SIM_SOPT2_PLLFLLSEL_IRC48M)); // select the 48MHz IRC48MHz clock as source for the LPUART
-                #endif
-            #elif defined LPUART_OSCERCLK                                // clock the UART from the external clock
-            SIM_SOPT2 |= (SIM_SOPT2_UART4SRC_OSCERCLK);
-            #else                                                        // clock the UART from MCGIRCLK (IRC8M/FCRDIV/LIRC_DIV2)
-                #if defined SIM_SOPT2_UART4SRC_MCGIRCLK
-            SIM_SOPT2 |= (SIM_SOPT2_UART4SRC_MCGIRCLK);                  // select the LPUART clock source to MCGIRCLK
-                #else
-            SIM_SOPT2 |= SIM_SOPT2_LPUARTSRC_MGC;                        // select the LPUART clock source to MCGIRCLK
-                #endif
-            #endif
+            fnConfigLPUART_clock(4);                                     // configure the clock source to be used
             break;
         #endif
         default:
@@ -3233,44 +3193,49 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #if UARTS_AVAILABLE > 0 && (LPUARTS_AVAILABLE < 1 || defined LPUARTS_PARALLEL)
         case 0:
             POWER_UP_ATOMIC(4, UART0);                                   // power up UART 0
-            #if defined KINETIS_KL
-                #if defined UART0_ClOCKED_FROM_MCGIRCLK                  // clocked from internal 4MHz RC clock
-            SIM_SOPT2 |= (SIM_SOPT2_UART0SRC_MCGIRCLK);                  // enable UART0 clock source from MCGIRCLK
-                #elif defined UART0_ClOCKED_FROM_OSCERCLK
-            SIM_SOPT2 |= (SIM_SOPT2_UART0SRC_OSCERCLK);                  // enable UART0 clock source from OSCERCLK
-                #else
-                    #if !defined MCG_WITHOUT_PLL && !defined UART0_ClOCKED_FROM_MCGFFLCLK
-            SIM_SOPT2 |= (SIM_SOPT2_PLLFLLSEL | SIM_SOPT2_UART0SRC_MCG); // enable UART0 clock source from MCGPLLCLK/2
-                    #else
-            SIM_SOPT2 |= (SIM_SOPT2_UART0SRC_MCG);                       // enable UART0 clock source from MCGFFLCLK
-                    #endif
-                #endif
+            #if defined SIM_SOPT2_UART0SRC_MCG                           // devices that can define the UART0 clock source (otherwise fixed core clock)
+            fnConfigUART_clock(0);                                       // configure the clock source to be used
             #endif
             break;
         #endif
         #if UARTS_AVAILABLE > 1 && (LPUARTS_AVAILABLE < 2 || defined LPUARTS_PARALLEL)
         case 1:
             POWER_UP_ATOMIC(4, UART1);                                   // power up UART 1
+            #if defined SIM_SOPT2_UART1SRC_MCG                           // devices that can define the UART1 clock source (otherwise fixed core clock)
+            fnConfigUART_clock(1);                                       // configure the clock source to be used
+            #endif
             break;
         #endif
         #if (UARTS_AVAILABLE > 2 && (LPUARTS_AVAILABLE < 3 || defined LPUARTS_PARALLEL)) || (UARTS_AVAILABLE == 1 && LPUARTS_AVAILABLE == 2)
         case 2:
             POWER_UP_ATOMIC(4, UART2);                                   // power up UART 2
+            #if defined SIM_SOPT2_UART2SRC_MCG                           // devices that can define the UART2 clock source (otherwise fixed bus clock)
+            fnConfigUART_clock(2);                                       // configure the clock source to be used
+            #endif
             break;
         #endif
         #if UARTS_AVAILABLE > 3
         case 3:
             POWER_UP_ATOMIC(4, UART3);                                   // power up UART 3
+            #if defined SIM_SOPT2_UART3SRC_MCG                           // devices that can define the UART3 clock source (otherwise fixed bus clock)
+            fnConfigUART_clock(3);                                       // configure the clock source to be used
+            #endif
             break;
         #endif
         #if UARTS_AVAILABLE > 4
         case 4:
             POWER_UP_ATOMIC(1, UART4);                                   // power up UART 4
+            #if defined SIM_SOPT2_UART4SRC_MCG                           // devices that can define the UART4 clock source (otherwise fixed bus clock)
+            fnConfigUART_clock(4);                                       // configure the clock source to be used
+            #endif
             break;
         #endif
         #if UARTS_AVAILABLE > 5
         case 5:
             POWER_UP_ATOMIC(1, UART5);                                   // power up UART 5
+            #if defined SIM_SOPT2_UART4SRC_MCG                           // devices that can define the UART5 clock source (otherwise fixed bus clock)
+            fnConfigUART_clock(5);                                       // configure the clock source to be used
+            #endif
             break;
         #endif
         default:

@@ -2253,7 +2253,9 @@ extern int fnConfigEthernet(ETHTABLE *pars)                              // {151
     _CLEAR_FUNCTION(NQ, (CLEAR_FUNCTION_Q_BIT_3 | CLEAR_FUNCTION_Q_BIT_5)); // clear default IRQ function
   //PNQPAR &= ~((ALT_2_FUNCTION_Q << (2 * 3)) | (ALT_2_FUNCTION_Q << (2 * 5)));// clear default IRQ function
     PNQPAR |= (NQ_FEC_MDIO_FUNCTION | NQ_FEC_MDC_FUNCTION);              // set MII MDC and MDIO functions to NQ3 and NQ5 pins
-    FNRESETPHY();                                                        // control the reset line to the PHY to respect any power up delays if required
+    #if defined FNRESETPHY
+    FNRESETPHY();                                                        // optional control of the reset line to the PHY to respect any power up delays
+    #endif
 #elif defined _M52XX_SDRAM                                               // {122}
     PEHLPAR = (PEHLPAR_PELPA | PEHLPAR_PEHPA);                           // configure ports EL and EH as Ethernet
     PASPAR |= (AS_FEC_MDIO_FUNCTION | AS_FEC_MDC_FUNCTION);              // set MII MDC and MDIO functions to AS4 and AS5 pins
