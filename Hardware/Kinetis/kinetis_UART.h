@@ -3061,7 +3061,7 @@ static void fnConfigLPUART_clock(int Channel)
     MCG_C2 &= ~MCG_C2_IRCS;                                              // select slow internal reference clock (32kHz [2MHz for devices with MCG Lite]) as MCGIRCLK
             #endif
         #endif
-        #if defined SIM_SOPT2_UART0SRC_MCGIRCLK
+        #if defined SIM_SOPT2_LPUART0SRC_MCGIRCLK
     SIM_SOPT2 |= (SIM_SOPT2_LPUART0SRC_MCGIRCLK << (2 * Channel));       // select the LPUART clock source to MCGIRCLK (dedicated channel)
         #else
     SIM_SOPT2 |= (SIM_SOPT2_LPUART0SRC_MGC << (2 * Channel));            // select the LPUART clock source to MCGIRCLK (general)

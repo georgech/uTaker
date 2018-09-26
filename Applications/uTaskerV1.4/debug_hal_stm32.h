@@ -1353,11 +1353,11 @@ extern unsigned char fnAddResetCause(CHAR *ptrBuffer)
         ptrStr = cOBLReset;
     }
     #endif
-#if defined RCC_CSR_V18PWRRSTF
+    #if defined RCC_CSR_V18PWRRSTF
     else if ((ulRCC_CSR & RCC_CSR_V18PWRRSTF) != 0) {                    // 1.8V domain reset
         ptrStr = cV18PwrReset;
     }
-#endif
+    #endif
     else if ((ulRCC_CSR & RCC_CSR_SFTRSTF) != 0) {                       // software commanded reset
         ptrStr = cSoftware;
     }

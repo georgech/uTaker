@@ -531,4 +531,9 @@ extern void fnSyncKeyPadState(int iPortRef, unsigned long ulInput, int iOnOff)
 {
 }
 #endif
+#else
+extern unsigned long fnKeyPadState(unsigned long ulInitialState, int iPortRef)
+{
+    return ulInitialState;
+}
 #endif
