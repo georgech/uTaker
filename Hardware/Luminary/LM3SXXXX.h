@@ -46,6 +46,7 @@
    27.12.2010 Add PWM_CONFIGURATION                                      {30}
    27.12.2010 Add _LM3S1776                                              {31}
    22.02.2011 Add _LM3S9B96                                              {32}
+   25.09.2018 Make FMA (flash memory address) volatile                   {33}
 
 */
 
@@ -3419,21 +3420,21 @@ typedef struct stLM3XXXXX_I2C_CONTROL
 
 // FLASH Control Register Map
 //
-#define FMA                         *(unsigned long*)(FLASH_CONTROL_BLOCK + 0x00)         // FLASH Memory Address
-#define FMD                         *(volatile unsigned long*)(FLASH_CONTROL_BLOCK + 0x04)// FLASH Memory Data
-#define FMC                         *(volatile unsigned long*)(FLASH_CONTROL_BLOCK + 0x08)// FLASH Memory Control
+#define FMA                         *(volatile unsigned long*)(FLASH_CONTROL_BLOCK + 0x00) // {33} FLASH Memory Address
+#define FMD                         *(volatile unsigned long*)(FLASH_CONTROL_BLOCK + 0x04) // FLASH Memory Data
+#define FMC                         *(volatile unsigned long*)(FLASH_CONTROL_BLOCK + 0x08) // FLASH Memory Control
   #define WRKEY                     0xa4420000
   #define FLASH_WRITE               0x00000001
   #define FLASH_ERASE               0x00000002
   #define FLASH_MERASE              0x00000004
   #define FLASH_COMT                0x00000008
-#define FCRIS                       *(volatile unsigned long*)(FLASH_CONTROL_BLOCK + 0x0c)// FLASH Controller Raw Interrupt Status (read only)
+#define FCRIS                       *(volatile unsigned long*)(FLASH_CONTROL_BLOCK + 0x0c) // FLASH Controller Raw Interrupt Status (read only)
   #define ARIS                      0x00000001
   #define PRIS                      0x00000002
-#define FCIM                        *(unsigned long*)(FLASH_CONTROL_BLOCK + 0x10)         // FLASH Controller Interrupt Mask
+#define FCIM                        *(unsigned long*)(FLASH_CONTROL_BLOCK + 0x10) // FLASH Controller Interrupt Mask
   #define AMASK                     0x00000001
   #define PMASK                     0x00000002
-#define FCMISC                      *(volatile unsigned long*)(FLASH_CONTROL_BLOCK + 0x14)// FLASH Controller Masked Interrupt Status Clear
+#define FCMISC                      *(volatile unsigned long*)(FLASH_CONTROL_BLOCK + 0x14) // FLASH Controller Masked Interrupt Status Clear
   #define AMISC                     0x00000001
   #define PMISC                     0x00000002
 #ifdef _TEMPEST_CLASS                                                                     // {16}

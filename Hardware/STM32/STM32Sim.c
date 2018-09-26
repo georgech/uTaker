@@ -24,6 +24,7 @@
     28.02.2017 Add UARTs 7 and 8                                         {9}
     02.02.2017 Adapt for us tick resolution
     06.09.2017 Add ADC simulation                                        {10}
+    26.09.2018 Correct fnMapPortBit()                                    {11}
 
 */  
 
@@ -1040,19 +1041,17 @@ extern void fnSimulateBreak(int iPort)
 }
 
 #if defined SUPPORT_KEY_SCAN
-static unsigned char fnMapPortBit(unsigned char ucRealBit)
+static unsigned char fnMapPortBit(unsigned short usRealBit)              // {11}
 {
-    unsigned char ucBit = 0x80;
-    unsigned char ucRef = 0;
+    unsigned char ucBit = 0;
 
-    while (ucBit) {
-        if (ucRealBit & ucBit) {
-            break;
+    while (ucBit < 16) {
+        ucBit++;
+        if ((usRealBit & (1 << ucBit)) != 0) {
+            return (15 - ucBit);
         }
-        ucBit >>= 1;
-        ucRef++;
     }
-    return ucRef;
+    return 0;
 }
 
 
