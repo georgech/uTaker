@@ -127,7 +127,7 @@
         #define USB_PRODUCT_ID              0x1221                       // non-official test CDC PID
     #endif
 
-    #if defined USB_STRING_OPTION                                        // if our project supports strings
+    #if defined USB_STRING_OPTION && !defined _DEV2                      // if our project supports strings
         #define MANUFACTURER_STRING_INDEX       1                        // index must match with order in the string list
         #define PRODUCT_STRING_INDEX            2                        // to remove a particular string from the list set to zero
         #define SERIAL_NUMBER_STRING_INDEX      3

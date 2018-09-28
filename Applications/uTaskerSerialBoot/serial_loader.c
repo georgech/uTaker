@@ -251,6 +251,11 @@ typedef struct
 /*                      local variable definitions                     */
 /* =================================================================== */
 
+#else
+    #if defined USB_INTERFACE && defined USB_MSD_DEVICE_LOADER
+        #define NEEDS_BLANK_CHECK
+        static unsigned char *fnBlankCheck(void);
+    #endif
 #endif
 #if defined SREC_IHEX_REQUIRED || defined I2C_INTERFACE || (defined DEVELOPERS_LOADER && defined SERIAL_INTERFACE)
     #if defined FLASH_ROW_SIZE && FLASH_ROW_SIZE > 0

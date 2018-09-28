@@ -427,10 +427,15 @@
 #elif defined FRDM_KL43Z || defined FRDM_KL27Z
     #define OSC_LOW_GAIN_MODE
     #define CRYSTAL_FREQUENCY    32768                                   // 32kHz crystal
-    #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
-    #define RUN_FROM_HIRC                                                // clock from internal 48MHz RC clock
-  //#define RUN_FROM_LIRC                                                // clock from internal 8MHz RC clock
-    #define USB_CRYSTAL_LESS                                             // use 48MHz IRC as USB source (according to Freescale AN4905 - only possible in device mode) - rather than external pin
+    #if defined _DEV2
+        #define RUN_FROM_HIRC                                            // clock from internal 48MHz RC clock
+        #define USB_CRYSTAL_LESS                                         // use 48MHz IRC as USB source (according to Freescale AN4905 - only possible in device mode) - rather than external pin
+    #else
+        #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
+        #define RUN_FROM_HIRC                                            // clock from internal 48MHz RC clock
+      //#define RUN_FROM_LIRC                                            // clock from internal 8MHz RC clock
+        #define USB_CRYSTAL_LESS                                         // use 48MHz IRC as USB source (according to Freescale AN4905 - only possible in device mode) - rather than external pin
+    #endif
 #elif defined FRDM_KL28Z
     #define OSC_LOW_GAIN_MODE
     #define CRYSTAL_FREQUENCY    32768                                   // 32kHz crystal
@@ -1041,22 +1046,30 @@
     #define SIZE_OF_RAM         (16 * 1024)                              // 16k SRAM
   //#define SIZE_OF_RAM         (32 * 1024)                              // 32k SRAM
 #elif defined FRDM_KL27Z
-  //#define PIN_COUNT           PIN_COUNT_32_PIN
-  //#define PIN_COUNT           PIN_COUNT_48_PIN
-    #define PIN_COUNT           PIN_COUNT_64_PIN                         // 64 pin package
-  //#define PIN_COUNT           PIN_COUNT_100_PIN
-  //#define PIN_COUNT           PIN_COUNT_121_PIN
-    #define PACKAGE_TYPE        PACKAGE_LQFP                             // LQFP
-  //#define PACKAGE_TYPE        PACKAGE_QFN
-  //#define PACKAGE_TYPE        PACKAGE_BGA
-  //#define SIZE_OF_FLASH       (32 * 1024)                              // 32k program Flash
-    #define SIZE_OF_FLASH       (64 * 1024)                              // 64k program Flash
-  //#define SIZE_OF_FLASH       (128 * 1024)                             // 128k program Flash
-  //#define SIZE_OF_FLASH       (256 * 1024)                             // 256k program Flash
-  //#define SIZE_OF_RAM         (4 * 1024)                               // 4k SRAM
-  //#define SIZE_OF_RAM         (8 * 1024)                               // 8k SRAM
-    #define SIZE_OF_RAM         (16 * 1024)                              // 16k SRAM
-  //#define SIZE_OF_RAM         (32 * 1024)                              // 32k SRAM
+    #define ERRATE_1N87M
+    #if defined _DEV2
+        #define PIN_COUNT       PIN_COUNT_48_PIN
+        #define PACKAGE_TYPE    PACKAGE_QFN
+        #define SIZE_OF_FLASH   (256 * 1024)                             // 256k program Flash
+        #define SIZE_OF_RAM     (32 * 1024)                              // 32k SRAM
+    #else
+      //#define PIN_COUNT       PIN_COUNT_32_PIN
+      //#define PIN_COUNT       PIN_COUNT_48_PIN
+        #define PIN_COUNT       PIN_COUNT_64_PIN                         // 64 pin package
+      //#define PIN_COUNT       PIN_COUNT_100_PIN
+      //#define PIN_COUNT       PIN_COUNT_121_PIN
+        #define PACKAGE_TYPE    PACKAGE_LQFP                             // LQFP
+      //#define PACKAGE_TYPE    PACKAGE_QFN
+      //#define PACKAGE_TYPE    PACKAGE_BGA
+      //#define SIZE_OF_FLASH   (32 * 1024)                              // 32k program Flash
+        #define SIZE_OF_FLASH   (64 * 1024)                              // 64k program Flash
+      //#define SIZE_OF_FLASH   (128 * 1024)                             // 128k program Flash
+      //#define SIZE_OF_FLASH   (256 * 1024)                             // 256k program Flash
+      //#define SIZE_OF_RAM     (4 * 1024)                               // 4k SRAM
+      //#define SIZE_OF_RAM     (8 * 1024)                               // 8k SRAM
+        #define SIZE_OF_RAM     (16 * 1024)                              // 16k SRAM
+      //#define SIZE_OF_RAM     (32 * 1024)                              // 32k SRAM
+    #endif
 #elif defined FRDM_KL28Z
     #define MASK_1N52N                                                   // enable errata workarounds for this mask
     #define PIN_COUNT           PIN_COUNT_100_PIN                        // 100 pin package
@@ -3052,37 +3065,46 @@
 
     #define TOGGLE_WATCHDOG_LED()   _TOGGLE_PORT(E, BLINK_LED)
 #elif defined FRDM_KL27Z
-    #define BLINK_LED              (PORTB_BIT19)                         // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
-    #define SWITCH_1               (PORTA_BIT4)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
-    #define SWITCH_2               (PORTC_BIT1)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+    #if defined _DEV2
+        #define ERROR_LED              (PORTA_BIT4)
+        #define INIT_WATCHDOG_LED()    _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_LOW(A, (ERROR_LED), (ERROR_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+        #define TOGGLE_WATCHDOG_LED()  _TOGGLE_PORT(A, ERROR_LED)
+        #define INIT_WATCHDOG_DISABLE()
+        #define FORCE_BOOT()           1                                 // boot loader always entered
+        #define WATCHDOG_DISABLE()     0                                 // watchdog always enabled
+    #else
+        #define BLINK_LED              (PORTB_BIT19)                     // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+        #define SWITCH_1               (PORTA_BIT4)                      // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+        #define SWITCH_2               (PORTC_BIT1)                      // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
 
-    #define INIT_WATCHDOG_LED()    _CONFIG_DRIVE_PORT_OUTPUT_VALUE(B, (BLINK_LED), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH))
-    #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(A, (SWITCH_1), PORT_PS_UP_ENABLE); _CONFIG_PORT_INPUT_FAST_LOW(C, (SWITCH_2), PORT_PS_UP_ENABLE) // configure as input
+        #define INIT_WATCHDOG_LED()    _CONFIG_DRIVE_PORT_OUTPUT_VALUE(B, (BLINK_LED), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+        #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(A, (SWITCH_1), PORT_PS_UP_ENABLE); _CONFIG_PORT_INPUT_FAST_LOW(C, (SWITCH_2), PORT_PS_UP_ENABLE) // configure as input
 
-    #define WATCHDOG_DISABLE()     (_READ_PORT_MASK(C, SWITCH_2) == 0)   // pull this input down to disable watchdog
-    #define FORCE_BOOT()           (_READ_PORT_MASK(A, SWITCH_1) == 0)   // pull this input down to force boot loader mode
-    #define RETAIN_LOADER_MODE()   (_READ_PORT_MASK(A, SWITCH_1) == 0)
+        #define WATCHDOG_DISABLE()     (_READ_PORT_MASK(C, SWITCH_2) == 0) // pull this input down to disable watchdog
+        #define FORCE_BOOT()           (_READ_PORT_MASK(A, SWITCH_1) == 0) // pull this input down to force boot loader mode
+        #define RETAIN_LOADER_MODE()   (_READ_PORT_MASK(A, SWITCH_1) == 0)
 
-    #define TOGGLE_WATCHDOG_LED()   _TOGGLE_PORT(B, BLINK_LED)
+        #define TOGGLE_WATCHDOG_LED()   _TOGGLE_PORT(B, BLINK_LED)
 
-    #define _CONFIGURE_RTS_0_HIGH() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, (PORTC_BIT7), (PORTC_BIT7), (PORT_SRE_SLOW | PORT_DSE_HIGH))
-    #define _CONFIGURE_RTS_0_LOW()  _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, (PORTC_BIT7), (0), (PORT_SRE_SLOW | PORT_DSE_HIGH))
-    #define _SET_RTS_0_HIGH()       _SETBITS(C, PORTC_BIT7)
-    #define _SET_RTS_0_LOW()        _CLEARBITS(C, PORTC_BIT7)
+        #define _CONFIGURE_RTS_0_HIGH() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, (PORTC_BIT7), (PORTC_BIT7), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+        #define _CONFIGURE_RTS_0_LOW()  _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, (PORTC_BIT7), (0), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+        #define _SET_RTS_0_HIGH()       _SETBITS(C, PORTC_BIT7)
+        #define _SET_RTS_0_LOW()        _CLEARBITS(C, PORTC_BIT7)
 
-    #define _CONFIGURE_RTS_1_HIGH()
-    #define _CONFIGURE_RTS_1_LOW()
-    #define _SET_RTS_1_HIGH()
-    #define _SET_RTS_1_LOW()
+        #define _CONFIGURE_RTS_1_HIGH()
+        #define _CONFIGURE_RTS_1_LOW()
+        #define _SET_RTS_1_HIGH()
+        #define _SET_RTS_1_LOW()
 
-    #define _CONFIGURE_RTS_2_HIGH()
-    #define _CONFIGURE_RTS_2_LOW()
-    #define _SET_RTS_2_HIGH()
-    #define _SET_RTS_2_LOW()
+        #define _CONFIGURE_RTS_2_HIGH()
+        #define _CONFIGURE_RTS_2_LOW()
+        #define _SET_RTS_2_HIGH()
+        #define _SET_RTS_2_LOW()
 
-    #define USB_HOST_POWER_CONFIG()
-    #define USB_HOST_POWER_ON()                                          // the FRDM-K27Z doesn't have a USB power supply so must be modified for operation
-    #define USB_HOST_POWER_OFF()
+        #define USB_HOST_POWER_CONFIG()
+        #define USB_HOST_POWER_ON()                                      // the FRDM-K27Z doesn't have a USB power supply so must be modified for operation
+        #define USB_HOST_POWER_OFF()
+    #endif
 #elif defined TEENSY_LC
     #define BLINK_LED              (PORTC_BIT5)                          // (green LED) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
     #define SWITCH_1               (PORTB_BIT0)                          // (pin 16) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too

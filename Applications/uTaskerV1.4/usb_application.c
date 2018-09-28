@@ -78,6 +78,10 @@
 
 #if defined USB_INTERFACE || defined USB_HOST_SUPPORT                    // {1}
 
+#if defined FRDM_KL27Z && defined _DEV2
+    #include "../uTaskerSerialBoot/_DEV2.h"
+#endif
+
 /* =================================================================== */
 /*                          local definitions                          */
 /* =================================================================== */
@@ -456,7 +460,10 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
 #if defined USE_USB_HID_KEYBOARD && defined SUPPORT_FIFO_QUEUES
         keyboardQueue = fnOpen(TYPE_FIFO, FOR_I_O, (FIFO_LENGTH)64);     // open a FIFO queue (of 64 bytes length) for receiving input to be sent from the keyboard
 #endif
-#if defined USB_STRING_OPTION && defined USB_RUN_TIME_DEFINABLE_STRINGS  // if dynamic strings are supported, prepare a specific serial number ready for enumeration
+
+#if defined FRDM_KL27Z && defined _DEV2
+        fnInitialiseDEV2();
+#elif defined USB_STRING_OPTION && defined USB_RUN_TIME_DEFINABLE_STRINGS // if dynamic strings are supported, prepare a specific serial number ready for enumeration
         fnSetSerialNumberString(temp_pars->temp_parameters.cDeviceIDName); // construct a serial number string for USB use
 #endif
 #if defined USE_USB_CDC && defined SERIAL_INTERFACE && defined USB_SERIAL_CONNECTIONS && (USB_CDC_VCOM_COUNT > 1)
@@ -1921,7 +1928,7 @@ extern void *fnGetUSB_config_descriptor(unsigned short *usLength)
 #endif
 }
 
-#if defined USB_STRING_OPTION
+#if defined USB_STRING_OPTION && !defined _DEV2
     #if defined USB_RUN_TIME_DEFINABLE_STRINGS
 // This routine constructs a USB string descriptor for use by the USB interface during emumeration
 // - the new string has to respect the descriptor format (using UNICODE) and is built in preparation so that it can be passed in an interrupt
@@ -1929,12 +1936,12 @@ extern void *fnGetUSB_config_descriptor(unsigned short *usLength)
 static void fnSetSerialNumberString(CHAR *ptrSerialNumber) {             // {12}
     unsigned char ucDescriptorLength = (sizeof(USB_STRING_DESCRIPTOR) - 2);
     unsigned char *ptrString;
-    size_t iStringLength = (uStrlen(ptrSerialNumber) * 2);
-    if (iStringLength == 0) {
+    size_t StringLength = (uStrlen(ptrSerialNumber) * 2);
+    if (StringLength == 0) {
         ucDescriptorLength += 2;                                         // space for a null-terminator
     }
     else {
-        ucDescriptorLength += iStringLength;
+        ucDescriptorLength += (unsigned char)StringLength;
     }
     if (SerialNumberDescriptor == 0) {
         SerialNumberDescriptor = (USB_STRING_DESCRIPTOR *)uMalloc(ucDescriptorLength); // get memory to store the string descriptor
@@ -1942,7 +1949,7 @@ static void fnSetSerialNumberString(CHAR *ptrSerialNumber) {             // {12}
         SerialNumberDescriptor->bDescriptorType = DESCRIPTOR_TYPE_STRING;
     }
     ptrString = &SerialNumberDescriptor->unicode_string_space[0];
-    if (iStringLength == 0) {
+    if (StringLength == 0) {
         *ptrString++ = 0;                                                // when no string add a null-terminator
         *ptrString++ = 0;
     }

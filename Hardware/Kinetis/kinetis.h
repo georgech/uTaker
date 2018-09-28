@@ -10752,27 +10752,31 @@ typedef struct stKINETIS_LPTMR_CTL
             #define SIM_SOPT2_UARTSRC_IRC48M     0x04000000              // UART clock IRC48M
             #define SIM_SOPT2_UARTSRC_OSCERCLK   0x08000000              // UART clock source OSCERCLK
         #else
-            #define SIM_SOPT2_UART0SRC_DISABLED  0x00000000              // UART0 clock source disabled
-            #define SIM_SOPT2_UART0SRC_MCG       0x04000000              // UART0 clock MCGFLL or MCGPLLCLK/2
-            #define SIM_SOPT2_UART0SRC_IRC48M    0x04000000              // UART0 clock IRC48M (for KL03 and KL43)
-            #define SIM_SOPT2_UART0SRC_OSCERCLK  0x08000000              // UART0 clock source OSCERCLK
-            #define SIM_SOPT2_UART0SRC_MCGIRCLK  0x0c000000              // UART0 clock source MCGIRCLK
-            #define SIM_SOPT2_UART1SRC_DISABLED  0x00000000              // UART1 clock source disabled
-            #define SIM_SOPT2_UART1SRC_MCG       0x10000000              // UART1 clock MCGFLL or MCGPLLCLK/2
-            #define SIM_SOPT2_UART1SRC_IRC48M    0x10000000              // UART1 clock IRC48M (for KL03 and KL43)
-            #define SIM_SOPT2_UART1SRC_OSCERCLK  0x20000000              // UART1 clock source OSCERCLK
-            #define SIM_SOPT2_UART1SRC_MCGIRCLK  0x30000000              // UART1 clock source MCGIRCLK
-
-            #define SIM_SOPT2_LPUART0SRC_DISABLED  0x00000000            // LPUART0 clock source disabled
-            #define SIM_SOPT2_LPUART0SRC_MCG       0x04000000            // LPUART0 clock MCGFLL or MCGPLLCLK/2
-            #define SIM_SOPT2_LPUART0SRC_IRC48M    0x04000000            // LPUART0 clock IRC48M (for KL03 and KL43)
-            #define SIM_SOPT2_LPUART0SRC_OSCERCLK  0x08000000            // LPUART0 clock source OSCERCLK
-            #define SIM_SOPT2_LPUART0SRC_MCGIRCLK  0x0c000000            // LPUART0 clock source MCGIRCLK
-            #define SIM_SOPT2_LPUART1SRC_DISABLED  0x00000000            // LPUART1 clock source disabled
-            #define SIM_SOPT2_LPUART1SRC_MCG       0x10000000            // LPUART1 clock MCGFLL or MCGPLLCLK/2
-            #define SIM_SOPT2_LPUART1SRC_IRC48M    0x10000000            // LPUART1 clock IRC48M (for KL03 and KL43)
-            #define SIM_SOPT2_LPUART1SRC_OSCERCLK  0x20000000            // LPUART1 clock source OSCERCLK
-            #define SIM_SOPT2_LPUART1SRC_MCGIRCLK  0x30000000            // LPUART1 clock source MCGIRCLK
+            #if LPUARTS_AVAILABLE > 0
+                #define SIM_SOPT2_LPUART0SRC_DISABLED  0x00000000        // LPUART0 clock source disabled
+                #define SIM_SOPT2_LPUART0SRC_MCG       0x04000000        // LPUART0 clock MCGFLL or MCGPLLCLK/2
+                #define SIM_SOPT2_LPUART0SRC_IRC48M    0x04000000        // LPUART0 clock IRC48M (for KL03 and KL43)
+                #define SIM_SOPT2_LPUART0SRC_OSCERCLK  0x08000000        // LPUART0 clock source OSCERCLK
+                #define SIM_SOPT2_LPUART0SRC_MCGIRCLK  0x0c000000        // LPUART0 clock source MCGIRCLK
+            #endif
+            #if LPUARTS_AVAILABLE > 1
+                #define SIM_SOPT2_LPUART1SRC_DISABLED  0x00000000        // LPUART1 clock source disabled
+                #define SIM_SOPT2_LPUART1SRC_MCG       0x10000000        // LPUART1 clock MCGFLL or MCGPLLCLK/2
+                #define SIM_SOPT2_LPUART1SRC_IRC48M    0x10000000        // LPUART1 clock IRC48M (for KL03 and KL43)
+                #define SIM_SOPT2_LPUART1SRC_OSCERCLK  0x20000000        // LPUART1 clock source OSCERCLK
+                #define SIM_SOPT2_LPUART1SRC_MCGIRCLK  0x30000000        // LPUART1 clock source MCGIRCLK
+            #else
+                #define SIM_SOPT2_UART0SRC_DISABLED  0x00000000          // UART0 clock source disabled
+                #define SIM_SOPT2_UART0SRC_MCG       0x04000000          // UART0 clock MCGFLL or MCGPLLCLK/2
+                #define SIM_SOPT2_UART0SRC_IRC48M    0x04000000          // UART0 clock IRC48M (for KL03 and KL43)
+                #define SIM_SOPT2_UART0SRC_OSCERCLK  0x08000000          // UART0 clock source OSCERCLK
+                #define SIM_SOPT2_UART0SRC_MCGIRCLK  0x0c000000          // UART0 clock source MCGIRCLK
+                #define SIM_SOPT2_UART1SRC_DISABLED  0x00000000          // UART1 clock source disabled
+                #define SIM_SOPT2_UART1SRC_MCG       0x10000000          // UART1 clock MCGFLL or MCGPLLCLK/2
+                #define SIM_SOPT2_UART1SRC_IRC48M    0x10000000          // UART1 clock IRC48M (for KL03 and KL43)
+                #define SIM_SOPT2_UART1SRC_OSCERCLK  0x20000000          // UART1 clock source OSCERCLK
+                #define SIM_SOPT2_UART1SRC_MCGIRCLK  0x30000000          // UART1 clock source MCGIRCLK
+            #endif
         #endif
       #else
         #define SIM_SOPT2_MCGCLKSEL              0x00000001              // revision 1 parts only

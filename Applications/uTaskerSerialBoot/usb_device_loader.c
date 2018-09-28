@@ -63,6 +63,10 @@
 
 #if defined USB_INTERFACE && !defined USE_USB_MSD && (!defined USB_MSD_HOST_LOADER || defined USB_MSD_DEVICE_LOADER || defined USE_USB_CDC)
 
+#if defined FRDM_KL27Z && defined _DEV2
+    #include "_DEV2.h"
+#endif
+
 /* =================================================================== */
 /*                          local definitions                          */
 /* =================================================================== */
@@ -107,7 +111,19 @@
         #define NUMBER_OF_ENDPOINTS        1                             // uses just 1 IN interrupt endpoint
     #endif
 #elif defined USE_USB_CDC
-    #define NUMBER_OF_ENDPOINTS            3                             // uses 1 IN and 2 OUT bulk enpoints endpoints as well as 3 interrupt endpoint
+    #if defined USB_MSD_DEVICE_LOADER                                    // USB-CDC/USB-MSD composite
+        #if defined USB_SIMPLEX_ENDPOINTS
+            #define NUMBER_OF_ENDPOINTS    3                             // uses 1 IN/OUT bulk enpoint as well as 2 interrupt endpoint for CDC, plus 3 IN/OUT bulk endpoint for MSD
+        #else
+            #define NUMBER_OF_ENDPOINTS    5                             // uses 1 IN and 2 OUT bulk endpoints as well as 3 interrupt endpoint, plus 4 IN an 5 OUT bulk endpoints for MSD
+        #endif
+    #else
+        #if defined USB_SIMPLEX_ENDPOINTS
+            #define NUMBER_OF_ENDPOINTS    2                             // uses 1 IN/OUT bulk enpoint as well as 2 interrupt endpoint
+        #else
+            #define NUMBER_OF_ENDPOINTS    3                             // uses 1 IN and 2 OUT bulk endpoints as well as 3 interrupt endpoint
+        #endif
+    #endif
 #else
     #define NUMBER_OF_ENDPOINTS            2                             // USB-MSD uses 2 endpoints (1 IN and 1 OUT) in addition to the default control endpoint 0
 #endif
@@ -132,8 +148,20 @@
             #define USB_MSD_IN_ENDPOINT_NUMBER  3
         #endif
     #elif defined USE_USB_CDC                                            // {31}
-        #define USB_VENDOR_ID              0x15a2                        // Freescale vendor ID
-        #define USB_PRODUCT_ID             0x0044                        // uTasker Freescale development CDC product ID
+        #if defined USB_MSD_DEVICE_LOADER
+            #define USB_VENDOR_ID          0x15a2                        // Freescale vendor ID
+            #define USB_PRODUCT_ID         0x0045                        // MSD/CDC composite
+            #if defined USB_SIMPLEX_ENDPOINTS
+                #define USB_MSD_IN_ENDPOINT_NUMBER  3
+                #define USB_MSD_OUT_ENDPOINT_NUMBER 3
+            #else
+                #define USB_MSD_IN_ENDPOINT_NUMBER  4
+                #define USB_MSD_OUT_ENDPOINT_NUMBER 5
+            #endif
+        #else
+            #define USB_VENDOR_ID          0x15a2                        // Freescale vendor ID
+            #define USB_PRODUCT_ID         0x0044                        // uTasker Freescale development CDC product ID
+        #endif
     #else
         #define USB_VENDOR_ID              0x0425                        // MOTOROLA vendor ID {1}
         #define USB_PRODUCT_ID             0x03fc                        // uTasker Motorola MSD development product ID {1}
@@ -164,7 +192,7 @@
 
 #define USB_PRODUCT_RELEASE_NUMBER         0x0100                        // V1.0 (binary coded decimal)
 
-#if defined USB_STRING_OPTION                                            // if our project supports strings
+#if defined USB_STRING_OPTION && !defined _DEV2                          // if our project supports strings
     #define MANUFACTURER_STRING_INDEX      1                             // index must match with order in the string list
     #define PRODUCT_STRING_INDEX           2                             // to remove a particular string from the list set to zero
     #define SERIAL_NUMBER_STRING_INDEX     3
@@ -394,7 +422,7 @@ typedef struct _PACK stUSB_CONFIGURATION_DESCRIPTOR_COLLECTION
 #elif defined USE_USB_CDC                                                // {31}
     USB_CONFIGURATION_DESCRIPTOR               config_desc_cdc;          // compulsory configuration descriptor
                                                                          // the interface association descriptor is use as standard so that it achieves the same endpoint usage whether multiple CDC interfaces are used or not
-    USB_INTERFACE_ASSOCIATION_DESCRIPTOR       cdc_interface_0;          // if there are multiple CDC interfaces and interface association descriptor is required
+    USB_INTERFACE_ASSOCIATION_DESCRIPTOR       cdc_interface_0;          // if there are multiple CDC interfaces an interface association descriptor is required
 
     USB_INTERFACE_DESCRIPTOR                   interface_desc_0;         // interface descriptor
         USB_CDC_FUNCTIONAL_DESCRIPTOR_HEADER   CDC_func_header_0;        // CDC function descriptors due to class used
@@ -406,11 +434,16 @@ typedef struct _PACK stUSB_CONFIGURATION_DESCRIPTOR_COLLECTION
     USB_INTERFACE_DESCRIPTOR                   interface_desc_1;         // second interface descriptor
     USB_ENDPOINT_DESCRIPTOR                    endpoint_1;               // endpoints of second interface
     USB_ENDPOINT_DESCRIPTOR                    endpoint_2;
-#else                                                                    // USB-MSD
-    USB_CONFIGURATION_DESCRIPTOR               config_desc;              // compulsory configuration descriptor
-    USB_INTERFACE_DESCRIPTOR                   interface_desc_0;         // first interface descriptor
-    USB_ENDPOINT_DESCRIPTOR                    endpoint_1;               // end points of second interface
-    USB_ENDPOINT_DESCRIPTOR                    endpoint_2;
+    #if defined USB_MSD_DEVICE_LOADER                                    // composite USB-CDC/USB-MSD
+        USB_INTERFACE_DESCRIPTOR               interface_desc_msd;       // interface descriptor
+        USB_ENDPOINT_DESCRIPTOR                endpoint_msd_1;           // end points of interface
+        USB_ENDPOINT_DESCRIPTOR                endpoint_msd_2;
+    #endif
+#else                                                                    // stand-alone USB-MSD
+    USB_CONFIGURATION_DESCRIPTOR               config_desc_msd;          // compulsory configuration descriptor
+    USB_INTERFACE_DESCRIPTOR                   interface_desc_msd;       // first interface descriptor
+    USB_ENDPOINT_DESCRIPTOR                    endpoint_msd_1;           // end points of interface
+    USB_ENDPOINT_DESCRIPTOR                    endpoint_msd_2;
 #endif
 } USB_CONFIGURATION_DESCRIPTOR_COLLECTION;
 
@@ -807,7 +840,7 @@ static const USB_DEVICE_DESCRIPTOR device_descriptor = {                 // cons
     {LITTLE_SHORT_WORD_BYTES(USB_PRODUCT_ID)},                           // our product ID
     {LITTLE_SHORT_WORD_BYTES(USB_PRODUCT_RELEASE_NUMBER)},               // product release number
     #if defined USB_STRING_OPTION                                        // if we support strings add the data here
-    MANUFACTURER_STRING_INDEX, PRODUCT_STRING_INDEX, SERIAL_NUMBER_STRING_INDEX, // fixed string table indexes - note that mass storage class demainds that each device has a unique serial number of at least 12 digits length!
+    MANUFACTURER_STRING_INDEX, PRODUCT_STRING_INDEX, SERIAL_NUMBER_STRING_INDEX, // fixed string table indexes - note that mass storage class demands that each device has a unique serial number of at least 12 digits length!
     #else
     0,0,0,                                                               // used when no strings are supported
     #endif
@@ -821,7 +854,9 @@ static const USB_CONFIGURATION_DESCRIPTOR_COLLECTION config_descriptor = {
     DESCRIPTOR_TYPE_CONFIGURATION_LENGTH,                                // length (0x09)
     DESCRIPTOR_TYPE_CONFIGURATION,                                       // 0x02
     {LITTLE_SHORT_WORD_BYTES(sizeof(USB_CONFIGURATION_DESCRIPTOR_COLLECTION))}, // total length (little-endian)
-    #if (defined USB_MSD_DEVICE_LOADER && defined HID_LOADER) || defined USE_USB_CDC
+    #if defined USB_MSD_DEVICE_LOADER && defined USE_USB_CDC
+    3,                                                                   // CDC and MSD together have three interfaces
+    #elif (defined USB_MSD_DEVICE_LOADER && defined HID_LOADER) || defined USE_USB_CDC
     2,                                                                   // HID and MSD together have two interfaces, as does USB-CDC
     #else
     1,                                                                   // configuration number - mass storage and HID have only one configuration
@@ -1049,7 +1084,25 @@ static const USB_CONFIGURATION_DESCRIPTOR_COLLECTION config_descriptor = {
     {LITTLE_SHORT_WORD_BYTES(64)},                                       // endpoint FIFO size (little-endian - 64 bytes)
     0                                                                    // polling interval in ms - ignored for bulk
     },
-    #else                                                                // USB-MSD alone
+        #if defined USB_MSD_DEVICE_LOADER                                // composite USB-CDC/USB-MSD
+    {                                                                    // interface descriptor
+    DESCRIPTOR_TYPE_INTERFACE_LENGTH,                                    // length (0x09)
+    DESCRIPTOR_TYPE_INTERFACE,                                           // 0x04
+    2,                                                                   // interface number 0
+    0,                                                                   // alternative setting 0
+    2,                                                                   // 2 endpoints used by USB-MSD
+    INTERFACE_CLASS_MASS_STORAGE,                                        // interface class (0x08)
+    GENERIC_SCSI_MEDIA,                                                  // interface sub-class (0x06)
+    BULK_ONLY_TRANSPORT,                                                 // interface protocol (0x50)    // number of endpoints in addition to EP0
+            #if defined USB_STRING_OPTION
+    INTERFACE_STRING_INDEX,                                              // string index for interface
+            #else
+    0,                                                                   // zero when strings are not supported
+            #endif
+    },                                                                   // end of interface descriptor
+        #endif
+    #endif
+    #if defined USB_MSD_DEVICE_LOADER                                    // USB-MSD
         {                                                                // bulk out endpoint descriptor for the second interface
         DESCRIPTOR_TYPE_ENDPOINT_LENGTH,                                 // descriptor size in bytes (0x07)
         DESCRIPTOR_TYPE_ENDPOINT,                                        // end point descriptor (0x05)
@@ -1078,7 +1131,7 @@ static const USB_CONFIGURATION_DESCRIPTOR_COLLECTION config_descriptor = {
 };
 
 
-#if defined USB_STRING_OPTION                                            // if our project supports strings
+#if defined USB_STRING_OPTION && !defined _DEV2                          // if our project supports strings
                                                                          // the characters in the string must be entered as 16 bit unicode in little-endian order!!
                                                                          // the first entry is the length of the content (including the length and descriptor type string entries)
     static const unsigned char usb_language_string[] = {4,  DESCRIPTOR_TYPE_STRING, LITTLE_SHORT_WORD_BYTES(UNICODE_LANGUAGE_INDEX)}; // this is compulsory first string
@@ -1095,7 +1148,11 @@ static const USB_CONFIGURATION_DESCRIPTOR_COLLECTION config_descriptor = {
     #elif defined USE_USB_CDC                                            // {31}
         static const unsigned char manufacturer_str[]      = {10, DESCRIPTOR_TYPE_STRING, 'M',0, 'a',0, 'n',0, 'u',0};
         static const unsigned char product_str[]           = {16, DESCRIPTOR_TYPE_STRING, 'M',0, 'y',0, ' ',0, 'P',0, 'r',0, 'o',0, 'd',0};
-        static const unsigned char serial_number_str[]     = {10, DESCRIPTOR_TYPE_STRING, '0',0, '0',0, '0',0, '1',0};
+        #if defined USB_RUN_TIME_DEFINABLE_STRINGS
+        static const unsigned char serial_number_str[]   = {0};          // the application delivers this string (generated at run time)
+        #else
+        static const unsigned char serial_number_str[]   = {10, DESCRIPTOR_TYPE_STRING, '0',0, '0',0, '0',0, '1',0};
+        #endif
         static const unsigned char config_str[]            = {10, DESCRIPTOR_TYPE_STRING, 'C',0, 'o',0, 'n',0, 'f',0};
         static const unsigned char interface_str[]         = {8,  DESCRIPTOR_TYPE_STRING, 'I',0, 'n',0, 't',0};
         static const unsigned char *ucStringTable[]        = {usb_language_string, manufacturer_str, product_str, serial_number_str, config_str, interface_str};
@@ -1241,8 +1298,11 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
     unsigned char ucInputMessage[LARGE_MESSAGE];                         // reserve space for receiving messages
 
     if (USB_control == NO_ID_ALLOCATED) {                                // initialisation
-    #if defined USB_STRING_OPTION && defined USB_RUN_TIME_DEFINABLE_STRINGS // if dynamic strings are supported, prepare a specific serial number ready for enumeration
-        fnSetSerialNumberString(parameters->cDeviceIDName);              // construct a serial number string for USB use
+    #if defined FRDM_KL27Z && defined _DEV2
+        fnInitialiseDEV2();
+    #endif
+    #if defined USB_STRING_OPTION && defined USB_RUN_TIME_DEFINABLE_STRINGS && !defined _DEV2 // if dynamic strings are supported, prepare a specific serial number ready for enumeration
+        fnSetSerialNumberString("S/N-0123");                             // construct a serial number string for USB use (this can be modified to suit)
     #endif
     #if (defined KWIKSTIK || defined TWR_K40X256 || defined TWR_K40D100M || defined TWR_K53N512 || defined FRDM_KL46Z || defined FRDM_KL43Z || defined TWR_KL43Z48M || defined TWR_KL46Z48M) // {3}{6}
         CONFIGURE_SLCD();
@@ -1826,7 +1886,7 @@ extern void *fnGetUSB_config_descriptor(unsigned short *usLength)
     return (void *)&config_descriptor;
 }
 
-#if defined USB_STRING_OPTION
+#if defined USB_STRING_OPTION && !defined _DEV2
     #if defined USB_RUN_TIME_DEFINABLE_STRINGS
 // This routine constructs a USB string descriptor for use by the USB interface during emumeration
 // The new string has to respect the descriptor format (using UNICODE) and is built in preparation so that it can be passed in an interrupt
@@ -2061,7 +2121,7 @@ static int control_callback(unsigned char *ptrData, unsigned short length, int i
 static void fnConfigureUSB(void)
 {
     USBTABLE tInterfaceParameters;                                       // table for passing information to driver
-    #if !defined USE_USB_CDC
+    #if defined HID_LOADER || defined USB_MSD_DEVICE_LOADER
     QUEUE_HANDLE endpointNumber = 1;
     #endif
 
@@ -2115,6 +2175,37 @@ static void fnConfigureUSB(void)
     tInterfaceParameters.queue_sizes.TxQueueSize = 1024;                 // additional tx buffer
     USBPortID_HID = fnOpen(TYPE_USB, 0, &tInterfaceParameters);          // open the endpoints with defined configurations (initially inactive)
     #endif
+    #if defined USE_USB_CDC                                              // {31}
+    tInterfaceParameters.owner_task = TASK_APPLICATION;                  // loader task is woken on receptions
+    tInterfaceParameters.usConfig = USB_TERMINATING_ENDPOINT;            // configure the IN endpoint to terminate messages with a zero length frame is a block transmission equals the endpoint size
+    tInterfaceParameters.usEndpointSize = 64;
+    tInterfaceParameters.Paired_RxEndpoint = 1;                          // receiver (OUT)
+        #if defined USB_SIMPLEX_ENDPOINTS
+    tInterfaceParameters.Endpoint = 1;                                   // set USB endpoints to act as an input/output pair - transmitter (IN)
+        #else
+    tInterfaceParameters.Endpoint = 2;                                   // set USB endpoints to act as an input/output pair - transmitter (IN)
+        #endif
+    tInterfaceParameters.usb_callback = 0;                               // no call-back since we use rx buffer
+    tInterfaceParameters.queue_sizes.RxQueueSize = 256;                  // optional input queue (used only when no call-back defined)
+    tInterfaceParameters.queue_sizes.TxQueueSize = 256;                  // additional tx buffer
+        #if defined WAKE_BLOCKED_USB_TX
+    tInterfaceParameters.low_water_level = (tInterfaceParameters.queue_sizes.TxQueueSize/2); // TX_FREE event on half buffer empty
+        #endif
+    USBPortID_comms = fnOpen(TYPE_USB, 0, &tInterfaceParameters);        // open the endpoints with defined configurations (initially inactive)
+        #if defined USB_SIMPLEX_ENDPOINTS
+    tInterfaceParameters.Endpoint = 2;                                   // set interrupt endpoint
+        #else
+    tInterfaceParameters.Endpoint = 3;                                   // set interrupt endpoint
+        #endif
+    tInterfaceParameters.Paired_RxEndpoint = 0;                          // no pairing
+    tInterfaceParameters.owner_task = 0;                                 // don't wake task on reception
+    tInterfaceParameters.usb_callback = 0;                               // no call back function
+    tInterfaceParameters.queue_sizes.TxQueueSize = tInterfaceParameters.queue_sizes.RxQueueSize = 0; // no buffering
+    USBPortID_interrupt = fnOpen(TYPE_USB, 0, &tInterfaceParameters);    // open the endpoint with defined configurations (initially inactive)
+        #if defined USB_MSD_DEVICE_LOADER                                // CDC/MSD composite
+    endpointNumber = (tInterfaceParameters.Endpoint + 1);
+        #endif
+    #endif
     #if defined USB_MSD_DEVICE_LOADER
     tInterfaceParameters.Paired_RxEndpoint = endpointNumber;             // receiver (OUT)
         #if !defined USB_SIMPLEX_ENDPOINTS
@@ -2134,34 +2225,6 @@ static void fnConfigureUSB(void)
             #endif
         #endif
     USBPortID_MSD = fnOpen(TYPE_USB, 0, &tInterfaceParameters);          // open the endpoints with defined configurations (initially inactive)
-    #endif
-    #if defined USE_USB_CDC                                              // {31}
-    tInterfaceParameters.owner_task = TASK_APPLICATION;                  // loader task is woken on receptions
-    tInterfaceParameters.usConfig = USB_TERMINATING_ENDPOINT;            // configure the IN endpoint to terminate messages with a zero length frame is a block transmission equals the endpoint size
-    tInterfaceParameters.usEndpointSize = 64;
-    tInterfaceParameters.Paired_RxEndpoint = 1;                          // receiver (OUT)
-    #if defined USB_SIMPLEX_ENDPOINTS
-    tInterfaceParameters.Endpoint = 1;                                   // set USB endpoints to act as an input/output pair - transmitter (IN)
-    #else
-    tInterfaceParameters.Endpoint = 2;                                   // set USB endpoints to act as an input/output pair - transmitter (IN)
-    #endif
-    tInterfaceParameters.usb_callback = 0;                               // no call-back since we use rx buffer
-    tInterfaceParameters.queue_sizes.RxQueueSize = 256;                  // optional input queue (used only when no call-back defined)
-    tInterfaceParameters.queue_sizes.TxQueueSize = 256;                  // additional tx buffer
-        #if defined WAKE_BLOCKED_USB_TX
-    tInterfaceParameters.low_water_level = (tInterfaceParameters.queue_sizes.TxQueueSize/2); // TX_FREE event on half buffer empty
-        #endif
-    USBPortID_comms = fnOpen(TYPE_USB, 0, &tInterfaceParameters);        // open the endpoints with defined configurations (initially inactive)
-    #if defined USB_SIMPLEX_ENDPOINTS
-    tInterfaceParameters.Endpoint = 2;                                   // set interrupt endpoint
-    #else
-    tInterfaceParameters.Endpoint = 3;                                   // set interrupt endpoint
-    #endif
-    tInterfaceParameters.Paired_RxEndpoint = 0;                          // no pairing
-    tInterfaceParameters.owner_task = 0;                                 // don't wake task on reception
-    tInterfaceParameters.usb_callback = 0;                               // no call back function
-    tInterfaceParameters.queue_sizes.TxQueueSize = tInterfaceParameters.queue_sizes.RxQueueSize = 0; // no buffering
-    USBPortID_interrupt = fnOpen(TYPE_USB, 0, &tInterfaceParameters);    // open the endpoint with defined configurations (initially inactive)
     #endif
 }
 

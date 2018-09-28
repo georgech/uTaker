@@ -538,13 +538,18 @@
 #elif defined FRDM_KL43Z || defined FRDM_KL27Z || defined CAPUCCINO_KL27 || defined KL33Z64
     #define OSC_LOW_GAIN_MODE
     #define CRYSTAL_FREQUENCY    32768                                   // 32kHz crystal
-  //#define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
-    #define RUN_FROM_HIRC                                                // clock from internal 48MHz RC clock
-  //#define RUN_FROM_LIRC                                                // clock from internal 8MHz RC clock
-      //#define RUN_FROM_LIRC_2M                                         // clock from internal 2MHz RC clock
-    #define SYSTEM_CLOCK_DIVIDE  1                                       // system clock divider value (1..16)
-    #define BUS_CLOCK_DIVIDE     2                                       // bus and flash clock divider value (1..8)
-    #define USB_CRYSTAL_LESS                                             // use 48MHz HIRC as USB source (according to Freescale AN4905 - only possible in device mode) - rather than external pin
+    #if defined _DEV2
+        #define RUN_FROM_HIRC                                            // clock from internal 48MHz RC clock
+        #define USB_CRYSTAL_LESS                                         // use 48MHz HIRC as USB source (according to Freescale AN4905 - only possible in device mode) - rather than external pin
+    #else
+      //#define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
+        #define RUN_FROM_HIRC                                            // clock from internal 48MHz RC clock
+      //#define RUN_FROM_LIRC                                            // clock from internal 8MHz RC clock
+          //#define RUN_FROM_LIRC_2M                                     // clock from internal 2MHz RC clock
+        #define SYSTEM_CLOCK_DIVIDE  1                                   // system clock divider value (1..16)
+        #define BUS_CLOCK_DIVIDE     2                                   // bus and flash clock divider value (1..8)
+        #define USB_CRYSTAL_LESS                                         // use 48MHz HIRC as USB source (according to Freescale AN4905 - only possible in device mode) - rather than external pin
+    #endif
 #elif defined FRDM_KL28Z
     #define OSC_LOW_GAIN_MODE
     #define CRYSTAL_FREQUENCY    32768                                   // 32kHz crystal
@@ -1146,21 +1151,28 @@
     #define SIZE_OF_RAM         (8 * 1024)                               // 8k SRAM
 #elif defined FRDM_KL27Z
     #define ERRATE_1N87M
-  //#define PIN_COUNT           PIN_COUNT_32_PIN
-  //#define PIN_COUNT           PIN_COUNT_36_PIN
-  //#define PIN_COUNT           PIN_COUNT_48_PIN
-    #define PIN_COUNT           PIN_COUNT_64_PIN                         // 64 pin package
-    #define PACKAGE_TYPE        PACKAGE_LQFP                             // LQFP
-  //#define PACKAGE_TYPE        PACKAGE_QFN
-  //#define PACKAGE_TYPE        PACKAGE_MAPBGA
-  //#define SIZE_OF_FLASH       (32 * 1024)                              // 32k program Flash
-    #define SIZE_OF_FLASH       (64 * 1024)                              // 64k program Flash
-  //#define SIZE_OF_FLASH       (128 * 1024)                             // 128k program Flash
-  //#define SIZE_OF_FLASH       (256 * 1024)                             // 256k program Flash
-  //#define SIZE_OF_RAM         (4 * 1024)                               // 4k SRAM
-  //#define SIZE_OF_RAM         (8 * 1024)                               // 8k SRAM
-    #define SIZE_OF_RAM         (16 * 1024)                              // 16k SRAM
-  //#define SIZE_OF_RAM         (32 * 1024)                              // 32k SRAM
+    #if defined _DEV2
+        #define PIN_COUNT       PIN_COUNT_48_PIN
+        #define PACKAGE_TYPE    PACKAGE_QFN
+        #define SIZE_OF_FLASH   (256 * 1024)                             // 256k program Flash
+        #define SIZE_OF_RAM     (32 * 1024)                              // 32k SRAM
+    #else
+      //#define PIN_COUNT           PIN_COUNT_32_PIN
+      //#define PIN_COUNT           PIN_COUNT_36_PIN
+      //#define PIN_COUNT           PIN_COUNT_48_PIN
+        #define PIN_COUNT           PIN_COUNT_64_PIN                     // 64 pin package
+        #define PACKAGE_TYPE        PACKAGE_LQFP                         // LQFP
+      //#define PACKAGE_TYPE        PACKAGE_QFN
+      //#define PACKAGE_TYPE        PACKAGE_MAPBGA
+      //#define SIZE_OF_FLASH       (32 * 1024)                          // 32k program Flash
+        #define SIZE_OF_FLASH       (64 * 1024)                          // 64k program Flash
+      //#define SIZE_OF_FLASH       (128 * 1024)                         // 128k program Flash
+      //#define SIZE_OF_FLASH       (256 * 1024)                         // 256k program Flash
+      //#define SIZE_OF_RAM         (4 * 1024)                           // 4k SRAM
+      //#define SIZE_OF_RAM         (8 * 1024)                           // 8k SRAM
+        #define SIZE_OF_RAM         (16 * 1024)                          // 16k SRAM
+      //#define SIZE_OF_RAM         (32 * 1024)                          // 32k SRAM
+    #endif
 #elif defined CAPUCCINO_KL27
     #define PACKAGE_TYPE        PACKAGE_LQFP                             // LQFP
     #if defined DEV4
@@ -6959,7 +6971,10 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define SWITCH_1_PORT          _PORTA
     #define SWITCH_2_PORT          _PORTC
 
-    #if defined USE_MAINTENANCE && !defined REMOVE_PORT_INITIALISATIONS
+    #if defined _DEV2
+        #define ERROR_LED          (PORTA_BIT4)
+        #define INIT_WATCHDOG_LED() _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_LOW(A, (ERROR_LED), (ERROR_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+    #elif defined USE_MAINTENANCE && !defined REMOVE_PORT_INITIALISATIONS
         #define INIT_WATCHDOG_LED()                                      // let the port set up do this (the user can disable blinking)
     #else
         #define INIT_WATCHDOG_LED() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(B, (BLINK_LED), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH))
@@ -6978,7 +6993,11 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(C, (SWITCH_2), PORT_PS_UP_ENABLE) // configure as input
     #define WATCHDOG_DISABLE()      (_READ_PORT_MASK(C, SWITCH_2) == 0) // hold switch 2 pressed at reset to disable watchdog
     #define ACTIVATE_WATCHDOG()     SIM_COPC = (SIM_COPC_COPCLKS_1K | SIM_COPC_COPT_LONGEST) // 1.024s watchdog timeout
-    #define TOGGLE_WATCHDOG_LED()  _TOGGLE_PORT(B, BLINK_LED)
+    #if defined _DEV2
+        #define TOGGLE_WATCHDOG_LED()  _TOGGLE_PORT(A, ERROR_LED)
+    #else
+        #define TOGGLE_WATCHDOG_LED()  _TOGGLE_PORT(B, BLINK_LED)
+    #endif
 
     #if defined USE_MAINTENANCE && !defined REMOVE_PORT_INITIALISATIONS
         #define CONFIG_TEST_OUTPUT()                                     // we use DEMO_LED_2 which is configured by the user code (and can be disabled in parameters if required)

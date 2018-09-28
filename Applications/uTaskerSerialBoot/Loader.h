@@ -113,7 +113,10 @@
     #define ROOT_FILE_ENTRIES         4                                  // when USB MSD loader this many directory entries are set to the start of FLASH - the application start is shifted by this amount x 32 bytes
     #define ENABLE_READBACK                                              // allow USB to transfer present application to PC
     #if defined TEENSY_LC || defined FRDM_KL27Z
-        #if defined SPECIAL_VERSION
+        #if defined _DEV2
+            #define UTASKER_APP_START (0x8000)                           // 14k application starts at this address
+            #define UTASKER_APP_END   (unsigned char *)(UTASKER_APP_START + (48 * 1024) - (ROOT_FILE_ENTRIES * 32)) // end of application space - after maximum application size
+        #elif defined SPECIAL_VERSION
             #define UTASKER_APP_START (0x4000)                        // 14k application starts at this address
             #define UTASKER_APP_END   (unsigned char *)(UTASKER_APP_START + (48 * 1024) - (ROOT_FILE_ENTRIES * 32)) // end of application space - after maximum application size
         #else

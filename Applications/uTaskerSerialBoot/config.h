@@ -67,7 +67,7 @@
     //#define TWR_KL25Z48M                                               // tower board http://www.utasker.com/kinetis/TWR-KL25Z48M.html
     //#define FRDM_KL26Z                                                 // freedom board http://www.utasker.com/kinetis/FRDM-KL26Z.html
     //#define TEENSY_LC                                                  // USB development board with KL26Z64 - http://www.utasker.com/kinetis/TEENSY_LC.html
-    //#define FRDM_KL27Z                                                 // freedom board http://www.utasker.com/kinetis/FRDM-KL27Z.html
+      #define FRDM_KL27Z                                                 // freedom board http://www.utasker.com/kinetis/FRDM-KL27Z.html
     //#define FRDM_KL28Z                                                 // freedom board http://www.utasker.com/kinetis/FRDM-KL28Z.html
     //#define FRDM_KL43Z                                                 // L processors Cortex-M0+ (ultra-low power) with USB and segment LCD - freedom board http://www.utasker.com/kinetis/FRDM-KL43Z.html
     //#define TWR_KL43Z48M                                               // tower board http://www.utasker.com/kinetis/TWR-KL43Z48M.html
@@ -118,7 +118,7 @@
 
     //#define EMCRAFT_K61F150M                                           // K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - http://www.utasker.com/kinetis/EMCRAFT_K61F150M.html
 
-      #define FRDM_K64F                                                  // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
+    //#define FRDM_K64F                                                  // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
     //#define TWR_K64F120M                                               // tower board http://www.utasker.com/kinetis/TWR-K64F120M.html
     //#define HEXIWEAR_K64F                                              // hexiwear - wearable development kit for IoT (K64FN1M0VDC12 main processor) http://www.hexiwear.com/
     //#define TEENSY_3_5                                                 // USB development board with K64FX512 - http://www.utasker.com/kinetis/TEENSY_3.5.html
@@ -267,6 +267,7 @@
     #define OUR_HEAP_SIZE   (HEAP_REQUIREMENTS)((8 * 1024) * MEM_FACTOR)
     #define DEVICE_WITHOUT_ETHERNET                                      // KL doesn't have Ethernet controller
 #elif defined FRDM_KL27Z
+  //#define _DEV2                                                        // special development version
     #define TARGET_HW            "FRDM-KL27Z Kinetis"
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((10 * 1024) * MEM_FACTOR)
     #define KINETIS_KL
@@ -901,7 +902,7 @@
 #endif
 
 
-#if !(defined K70F150M_12M && !defined DWGB_SDCARD) && !defined KWIKSTIK && !(defined TEENSY_3_1 && defined SPECIAL_VERSION) && !defined BLAZE_K22
+#if !(defined K70F150M_12M && !defined DWGB_SDCARD) && !defined KWIKSTIK && !(defined TEENSY_3_1 && defined SPECIAL_VERSION) && !defined BLAZE_K22 && !(defined FRDM_KL27Z && defined _DEV2)
     #define SERIAL_INTERFACE                                             // enable serial interface driver
 #endif
 #if defined SERIAL_INTERFACE
@@ -1044,10 +1045,17 @@
             #endif
           //#define USB_SIMPLEX_ENDPOINTS                                // share IN and OUT on single endpoint
         #endif
-        #define USB_STRING_OPTION                                        // support optional string descriptors
+        #define USB_STRING_OPTION                                        // support optional string descriptors (host or device)
             #define USB_MAX_STRINGS                3                     // the maximum number of strings supported by host
             #define USB_MAX_STRING_LENGTH          16                    // the maximum length of each string supported by host (unicode characters)
-      //#define USB_RUN_TIME_DEFINABLE_STRINGS                           // enable USB string content to be defined at run time (variable)
+        #if defined _DEV2
+            #define USB_RUN_TIME_DEFINABLE_STRINGS                       // enable USB string content to be defined at run time (variable)
+            #if !defined USB_STRING_OPTION
+                #define USB_STRING_OPTION                                // support optional string descriptors
+            #endif
+        #else
+          //#define USB_RUN_TIME_DEFINABLE_STRINGS                       // enable USB string content to be defined at run time (variable)
+        #endif
       //#define USE_USB_OTG_CHARGE_PUMP                                  // enable charge pump control in the driver
         #if defined USE_USB_OTG_CHARGE_PUMP
             #define IIC_INTERFACE                                        // activate IIC interface since it will be needed
