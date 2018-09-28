@@ -38,6 +38,15 @@ SECTIONS
     KEEP(*(.f_config .f_config.*))
   }
 
+  __ARM_start__ = ALIGN(__data_load_end__ , 4);
+  .ARM.exidx ALIGN(__data_load_end__ , 4) :
+  {
+    __exidx_start = .;
+    *(.ARM.exidx* .gnu.linkonce.armexidx.*)
+    __exidx_end = .;
+  }
+  __ARM_end__ = __exidx_start + SIZEOF(.ARM.exidx);
+
   __init_load_start__ = __FLASH_segment_start__;
   .init ALIGN(__FLASH_segment_start__ , 4) :
   {
@@ -111,15 +120,6 @@ SECTIONS
   __data_end__ = __data_start__ + SIZEOF(.data);
 
   __data_load_end__ = __data_load_start__ + SIZEOF(.data);
-
-  __ARM_start__ = ALIGN(__data_load_end__ , 4);
-  .ARM.exidx ALIGN(__data_load_end__ , 4) :
-  {
-    __exidx_start = .;
-    *(.ARM.exidx* .gnu.linkonce.armexidx.*)
-    __exidx_end = .;
-  }
-  __ARM_end__ = __exidx_start + SIZEOF(.ARM.exidx);
 
 
   __FLASH_segment_used_end__ = ALIGN(__fast_load_start__ + SIZEOF(.fast) , 4) + SIZEOF(.data);

@@ -766,6 +766,7 @@ static STMPE811 simSTMPE811 = {0x82, 0, 0, 0,
 /*               SHT21 temperature and humidity sensor                    */
 /**************************************************************************/
 
+#if defined SHT21_CNT && SHT21_CNT > 0
 typedef struct stSHT21
 {     
 	unsigned char  address;
@@ -779,6 +780,7 @@ typedef struct stSHT21
 } SHT21;
 
 static SHT21 simSHT21 = {0x80, 0, 0, 0, 0x02, 0x61, 0x64, 0x55, 0x63, 0x52, 0x63}; // temperatire 20.0°C, humidity 42.5%
+#endif
 
 
 #if defined USE_USB_OTG_CHARGE_PUMP
@@ -1558,10 +1560,11 @@ static void fnResetOthers(unsigned char ucAddress)
     if (ucAddress != simSTMPE811.address) {                              // {5}
         simSTMPE811.ucState = 0;
     }
-
+#if defined SHT21_CNT && SHT21_CNT > 0
     if (ucAddress != simSHT21.address) {                                 // {6}
         simSHT21.ucState = 0;
     }
+#endif
 #if defined PCA9539_CNT                                                  // {8}
     i = 0;
     while (i < PCA9539_CNT) {
@@ -1968,10 +1971,12 @@ extern unsigned char fnSimI2C_devices(unsigned char ucType, unsigned char ucData
             simSTMPE811.ucState = 1;
             simSTMPE811.ucRW = (ucData & 0x01);
         }
+#if defined SHT21_CNT && SHT21_CNT > 0
         else if ((ucData & ~0x01) == simSHT21.address) {                 // {6} being addressed
             simSHT21.ucState = 1;
             simSHT21.ucRW = (ucData & 0x01);
         }
+#endif
 #if defined PCA9539_CNT
         else if ((ucData & ~0x01) == simPCA9539.address[0]) {            // {8}
             simPCA9539.ucState[0] = 1;
@@ -2134,10 +2139,12 @@ extern unsigned char fnSimI2C_devices(unsigned char ucType, unsigned char ucData
                 break;
             }
         }
+#if defined SHT21_CNT && SHT21_CNT > 0
         else if (simSHT21.ucState >= 1) {                                // {6} SHT21 being written to
             simSHT21.ucState++;
             simSHT21.ucInternalPointer = ucData;                         // commands to the temperature/humidity sensor
         }
+#endif
         else if (simWM8510.ucState == 1) {                               // WM8510 is being written to (command byte 1)
             simWM8510.ucInternalRegister = (ucData>>1);                  // register to be written
             simWM8510.usData = (ucData<<8);                              // save 9th bit
@@ -2457,6 +2464,12 @@ extern unsigned char fnSimI2C_devices(unsigned char ucType, unsigned char ucData
                             }
                         }
                         break;
+                    case 0x44:                                           // write ports 11,10,9,8,7,6,5,4
+                        simMAX6956[i].ulPortOutput = ((simMAX6956[i].ulPortOutput & ~0x00000ff0) | (ucData << 4));
+                        break;
+                    case 0x4c:                                           // write ports 19,18,17,16,15,14,13,12
+                        simMAX6956[i].ulPortOutput = ((simMAX6956[i].ulPortOutput & ~0x000ff000) | (ucData << 12));
+                        break;
                     case 0x54:                                           // write ports 27,26,25,24,23,22,21,20
                         simMAX6956[i].ulPortOutput = ((simMAX6956[i].ulPortOutput & ~0x0ff00000) | (ucData << 20));
                         break;
@@ -2669,6 +2682,7 @@ extern unsigned char fnSimI2C_devices(unsigned char ucType, unsigned char ucData
                 return 0xff;
             }
         }
+#if defined SHT21_CNT && SHT21_CNT > 0
         else if (simSHT21.ucRW && (simSHT21.ucState != 0)) {             // {6} SHT21 being read
             switch (simSHT21.ucInternalPointer) {
             case 0xe3:                                                   // trigger temperature measurement, hold master
@@ -2684,6 +2698,7 @@ extern unsigned char fnSimI2C_devices(unsigned char ucType, unsigned char ucData
             }
             return (0xff);
         }
+#endif
 #if defined PCA9539_CNT
         else if ((simPCA9539.ucState[0] != 0) && (simPCA9539.ucRW[0])) { // {8} setting internal register
             unsigned char *ptrReg = &simPCA9539.regs[0].ucInput0;

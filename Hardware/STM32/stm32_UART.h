@@ -15,6 +15,7 @@
     *********************************************************************
     03.03.2012 Correct UART fraction calculation                         {1}
     28.02.2017 Add UARTs 7 and 8                                         {2}
+    27.09.2018 Respect fraction when calculating the UART baud rate to display in simulator {3}
 
 */
 
@@ -698,7 +699,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
             fnConfigSimSCI(Channel, (PCLK2 / ((USART_regs->UART_BRR >> 4) * 16)), pars); // open a serial port on PC if desired
         }
     #else
-        fnConfigSimSCI(Channel, (PCLK2/((USART_regs->UART_BRR >> 4) * 16)), pars); // open a serial port on PC if desired
+        fnConfigSimSCI(Channel, (unsigned long)((float)PCLK2/(16 * ((float)(USART_regs->UART_BRR >> 4) + (float)((1.0/16)*(USART_regs->UART_BRR & 0xf))))), pars); // {3} open a serial port on PC if desired
     #endif
     }
     #if !defined _STM32F031
@@ -713,7 +714,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #elif defined _STM32F7XX_
         fnConfigSimSCI(Channel, (PCLK1/((USART_regs->UART_BRR) * 16)), pars); // open a serial port on PC if desired
         #else
-        fnConfigSimSCI(Channel, (PCLK1/((USART_regs->UART_BRR >> 4) * 16)), pars); // open a serial port on PC if desired
+        fnConfigSimSCI(Channel, (unsigned long)((float)PCLK1/(16 * ((float)(USART_regs->UART_BRR >> 4) + (float)((1.0/16)*(USART_regs->UART_BRR & 0xf))))), pars); // {3} open a serial port on PC if desired
         #endif
     }
     #endif

@@ -2722,11 +2722,31 @@ unsigned long fnGetFlexTimer_clock(int iChannel)
         ulClockSpeed = TPM_PWM_CLOCK;
     }
     else {
-        switch (ptrTimer->FTM_SC & (FTM_SC_CLKS_MASK)) {
-        case FTM_SC_CLKS_EXT:
-            _EXCEPTION("Not supported");
+        switch (ptrTimer->FTM_SC & (FTM_SC_CLKS_MASK)) {                 // switch on the clock source selected for the flextimer
+        case FTM_SC_CLKS_EXT:                                            // external clock source
+            switch (iChannel) {
+        #if defined FLEX_TIMER_0_CLOCK_SPEED
+            case 0:
+                return FLEX_TIMER_CH0_CLOCK_SPEED;
+        #endif
+        #if defined FLEX_TIMER_CH1_CLOCK_SPEED && (FLEX_TIMERS_AVAILABLE > 1)
+            case 1:
+                return FLEX_TIMER_1_CLOCK_SPEED;
+        #endif
+        #if defined FLEX_TIMER_CH2_CLOCK_SPEED && (FLEX_TIMERS_AVAILABLE > 2)
+            case 2:
+                return FLEX_TIMER_2_CLOCK_SPEED;
+        #endif
+        #if defined FLEX_TIMER_CH3_CLOCK_SPEED && (FLEX_TIMERS_AVAILABLE > 3)
+            case 3:
+                return FLEX_TIMER_3_CLOCK_SPEED;
+        #endif
+            default:
+                _EXCEPTION("External clock speed unknown!");
+                break;
+            }
             break;
-        case FTM_SC_CLKS_FIX:
+        case FTM_SC_CLKS_FIX:                                            // internal fixed clock source
             if ((MCG_C1 & MCG_C1_IREFS) != 0) {                          // 32kHz IRC is being used as MCGFFCLK
                 if ((MCG_C1 & MCG_C1_IRCLKEN) != 0) {                    // check that the IRC 32kHz is enabled
                     ulClockSpeed = SLOW_ICR;
@@ -2759,7 +2779,7 @@ unsigned long fnGetFlexTimer_clock(int iChannel)
         #endif
             }
             break;
-        case FTM_SC_CLKS_SYS:
+        case FTM_SC_CLKS_SYS:                                            // system clock
             ulClockSpeed = BUS_CLOCK;                                    // bus clock
             break;
         }

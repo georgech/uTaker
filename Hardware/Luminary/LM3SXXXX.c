@@ -2043,16 +2043,15 @@ extern QUEUE_TRANSFER fnControlLineInterrupt(QUEUE_HANDLE channel, unsigned shor
 /*                           FLASH driver                              */
 /* =================================================================== */
 
-#ifdef FLASH_FILE_SYSTEM
-
-// This routine to command FLASH - we put it in SRAM and run it with disabled interrupts
+#if defined FLASH_FILE_SYSTEM
+// Routine to command FLASH - we optionally put it in SRAM and run it with disabled interrupts (_RUN_FLASH_FROM_RAM)
 //
 static void fnCommandFlash(unsigned long ulCommand, unsigned long ptrAdd, unsigned long ulValue)
 {
     FMD = ulValue;                                                       // data value
     FMA = ptrAdd;                                                        // address in flash
     FMC = (WRKEY | ulCommand);                                           // command
-        #ifdef _WINDOWS
+        #if defined _WINDOWS
     switch (FMC & 0x0000000f) {
     case FLASH_WRITE:
         if ((~(*(unsigned long *)FMA)) & ulValue) {
@@ -2345,7 +2344,7 @@ extern int fnEraseFlashSector(unsigned char *ptrSector, MAX_FILE_LENGTH Length)
 
         WDTICR = 0;                                                       // {2} re-trigger the watchdog during this loop since a page erase requires at least 20ms. 156k erase can thus take over 6s!
 
-        #ifdef _RUN_FLASH_FROM_RAM
+        #if defined _RUN_FLASH_FROM_RAM
         uDisable_Interrupt();                                             // protect the call from interrupts
         _fnRAM_code(FLASH_ERASE, ulPage, 0);                              // command page erase
         uEnable_Interrupt();                                              // enable interrupts again

@@ -380,27 +380,6 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
         #endif
         #define CLOCK_DIV   1
         #define CLOCK_MUL   FLL_FACTOR
-        // Check FLL multiplication factor
-        //
-        #if (FLL_FACTOR == 640)
-            #define _FLL_VALUE (MCG_C4_LOW_RANGE)
-        #elif (FLL_FACTOR == 732)
-            #define _FLL_VALUE (MCG_C4_LOW_RANGE | MCG_C4_DMX32)
-        #elif (FLL_FACTOR == 1280)
-            #define _FLL_VALUE (MCG_C4_MID_RANGE)
-        #elif (FLL_FACTOR == 1464)
-            #define _FLL_VALUE (MCG_C4_MID_RANGE | MCG_C4_DMX32)
-        #elif (FLL_FACTOR == 1920)
-            #define _FLL_VALUE (MCG_C4_MID_HIGH_RANGE)
-        #elif (FLL_FACTOR == 2197)
-            #define _FLL_VALUE (MCG_C4_MID_HIGH_RANGE | MCG_C4_DMX32)
-        #elif (FLL_FACTOR == 2560)
-            #define _FLL_VALUE (MCG_C4_HIGH_RANGE)
-        #elif (FLL_FACTOR == 2929)
-            #define _FLL_VALUE (MCG_C4_HIGH_RANGE | MCG_C4_DMX32)
-        #else
-            #error Invalid FLL factor has been specified - valid are 640, 732, 1280, 1464, 1920, 2197, 2560 or 2929
-        #endif
 
         #if (defined KINETIS_HAS_IRC48M && defined RUN_FROM_HIRC_FLL)    // clock the FLL from IRC48M
             #define FLL_INPUT_DIVIDE_VALUE    1536
@@ -537,25 +516,6 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
     #if defined FLL_FACTOR                                               // FLL being used
         #define CLOCK_DIV   1
         #define CLOCK_MUL   FLL_FACTOR
-        #if (FLL_FACTOR == 640)
-            #define _FLL_VALUE (MCG_C4_LOW_RANGE)
-        #elif (FLL_FACTOR == 732)
-            #define _FLL_VALUE (MCG_C4_LOW_RANGE | MCG_C4_DMX32)
-        #elif (FLL_FACTOR == 1280)
-            #define _FLL_VALUE (MCG_C4_MID_RANGE)
-        #elif (FLL_FACTOR == 1464)
-            #define _FLL_VALUE (MCG_C4_MID_RANGE | MCG_C4_DMX32)
-        #elif (FLL_FACTOR == 1920)
-            #define _FLL_VALUE (MCG_C4_MID_HIGH_RANGE)
-        #elif (FLL_FACTOR == 2197)
-            #define _FLL_VALUE (MCG_C4_MID_HIGH_RANGE | MCG_C4_DMX32)
-        #elif (FLL_FACTOR == 2560)
-            #define _FLL_VALUE (MCG_C4_HIGH_RANGE)
-        #elif (FLL_FACTOR == 2929)
-            #define _FLL_VALUE (MCG_C4_HIGH_RANGE | MCG_C4_DMX32)
-        #else
-            #error Invalid FLL factor has been specified - valid are 640, 732, 1280, 1464, 1920, 2197, 2560 or 2929
-        #endif
     #elif defined KINETIS_WITH_MCG_LITE || defined RUN_FROM_LIRC || defined RUN_FROM_DEFAULT_CLOCK || defined KINETIS_WITH_SCG
     #else
         #if (CLOCK_DIV < 1) || (CLOCK_DIV > 25)
@@ -683,9 +643,12 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
         #elif defined KINETIS_KM && defined RUN_FROM_DEFAULT_CLOCK
             #define MCGOUTCLK  (FAST_ICR/2)                              // 4MHz IRC divided by 2
         #elif defined RUN_FROM_DEFAULT_CLOCK
-        #elif defined FLL_FACTOR                                         // FLL is to be used with input from the external source
-        #elif defined CLOCK_FROM_RTC_OSCILLATOR                          // clock directly from RTC oscillator
-            #define MCGOUTCLK   32768
+        #elif defined CLOCK_FROM_RTC_OSCILLATOR                          // clock from RTC oscillator
+            #if defined FLL_FACTOR                                       // FLL is to be used with input from the external source
+                #define MCGOUTCLK   (32768 * FLL_FACTOR)
+            #else
+                #define MCGOUTCLK   32768                                // clock directly from RTC oscillator
+            #endif
         #else
             #define MCGOUTCLK  ((_EXTERNAL_CLOCK/CLOCK_DIV) * CLOCK_MUL) // up to 100/120MHz (PLL0 clock output)
         #endif
@@ -14393,6 +14356,31 @@ typedef struct stKINETIS_LPTMR_CTL
         #define MCG_C4_MID_HIGH_RANGE    0x40
         #define MCG_C4_HIGH_RANGE        0x60
         #define MCG_C4_DMX32             0x80                            // DCO is fine-tuned for maximum frequency with 32.768 kHz
+
+        #if defined FLL_FACTOR
+            // Check FLL multiplication factor and define setting to be used
+            //
+            #if (FLL_FACTOR == 640)
+                #define _FLL_VALUE (MCG_C4_LOW_RANGE)
+            #elif (FLL_FACTOR == 732)
+                #define _FLL_VALUE (MCG_C4_LOW_RANGE | MCG_C4_DMX32)
+            #elif (FLL_FACTOR == 1280)
+                #define _FLL_VALUE (MCG_C4_MID_RANGE)
+            #elif (FLL_FACTOR == 1464)
+                #define _FLL_VALUE (MCG_C4_MID_RANGE | MCG_C4_DMX32)
+            #elif (FLL_FACTOR == 1920)
+                #define _FLL_VALUE (MCG_C4_MID_HIGH_RANGE)
+            #elif (FLL_FACTOR == 2197)
+                #define _FLL_VALUE (MCG_C4_MID_HIGH_RANGE | MCG_C4_DMX32)
+            #elif (FLL_FACTOR == 2560)
+                #define _FLL_VALUE (MCG_C4_HIGH_RANGE)
+            #elif (FLL_FACTOR == 2929)
+                #define _FLL_VALUE (MCG_C4_HIGH_RANGE | MCG_C4_DMX32)
+            #else
+                #error Invalid FLL factor has been specified - valid are 640, 732, 1280, 1464, 1920, 2197, 2560 or 2929
+            #endif
+        #endif
+
       #if defined KINETIS_KL05 || defined KINETIS_KL02 || defined KINETIS_K02
         #define MCG_C6                   *(unsigned char *)(MCG_BLOCK + 0x05) // MSG Control 6 Register
           #define MCG_C6_CME             0x20                            // clock monitor enable
